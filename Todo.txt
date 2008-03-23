@@ -1,4 +1,7 @@
 + Translating XIso source from spanish to english
++ Get the logging working with wm_CopyData
++ Port dll from c++ to delphi
+
 
 Adding a recent xbe and recent exe list to the menu
 
