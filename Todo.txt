@@ -1,0 +1,4 @@
++ Translating XIso source from spanish to english
+
+Adding a recent xbe and recent exe list to the menu
+

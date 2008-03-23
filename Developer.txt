@@ -1,0 +1,11 @@
+When you want to compile dxbx sources you need to following components.
+
+
+
+Cloothie DirectX 9 Header files - for directx support
+url: http://shadowtj.net/main/pages/programming/DelphiComponents.html
+
+
+
+
+if you wanne compile the original sources from cxbx ( http://www.caustik.com/cxbx/download.htm )
