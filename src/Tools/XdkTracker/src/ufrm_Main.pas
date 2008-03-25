@@ -482,14 +482,7 @@ begin
   GameList.Add(XInfo);
 end; // TfrmMain.InsertXDKInfo
 
-//------------------------------------------------------------------------------
 
-procedure TfrmMain.ImportGameList1Click(Sender: TObject);
-begin
-  ImportGameData;
-end; // TfrmMain.ImportGameList1Click
-
-//------------------------------------------------------------------------------
 
 end.
 

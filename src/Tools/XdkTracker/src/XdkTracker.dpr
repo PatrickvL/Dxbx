@@ -17,7 +17,5 @@ begin
   Application.Initialize;
   Application.Title := 'XDK Tracker';
   Application.CreateForm(TfrmMain, frmMain);
-  Application.CreateForm(Tfrm_Publisher, frm_Publisher);
-  Application.CreateForm(Tfrm_ImportGames, frm_ImportGames);
   Application.Run;
 end.
