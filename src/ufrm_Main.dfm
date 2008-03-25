@@ -1538,19 +1538,19 @@ object frm_Main: Tfrm_Main
       object DebugoutputGUI1: TMenuItem
         Caption = 'Debug output (GUI)'
         object Console1: TMenuItem
-          Action = actConsoleDebuGui
+          Action = actConsoleDebugGui
         end
         object File2: TMenuItem
           Action = actFileDebugGui
         end
       end
-      object DebugoutputKernal1: TMenuItem
+      object DebugoutputKernel1: TMenuItem
         Caption = 'Debug output (Kernel)'
         object Console2: TMenuItem
-          Action = actConsoleDebugKernal
+          Action = actConsoleDebugKernel
         end
         object File3: TMenuItem
-          Action = actFileDebugKernal
+          Action = actFileDebugKernel
         end
       end
     end
@@ -1688,27 +1688,27 @@ object frm_Main: Tfrm_Main
       Caption = '&File'
       OnExecute = actFileXbeInfoExecute
     end
-    object actConsoleDebuGui: TAction
+    object actConsoleDebugGui: TAction
       Category = 'View'
       Caption = '&Console'
       Checked = True
-      OnExecute = actConsoleDebuGuiExecute
+      OnExecute = actConsoleDebugGuiExecute
     end
     object actFileDebugGui: TAction
       Category = 'View'
       Caption = '&File'
       OnExecute = actFileDebugGuiExecute
     end
-    object actConsoleDebugKernal: TAction
+    object actConsoleDebugKernel: TAction
       Category = 'View'
       Caption = '&Console'
       Checked = True
-      OnExecute = actConsoleDebugKernalExecute
+      OnExecute = actConsoleDebugKernelExecute
     end
-    object actFileDebugKernal: TAction
+    object actFileDebugKernel: TAction
       Category = 'View'
       Caption = '&File'
-      OnExecute = actFileDebugKernalExecute
+      OnExecute = actFileDebugKernelExecute
     end
     object actExeGenWindowsTemp: TAction
       Category = 'Settings'

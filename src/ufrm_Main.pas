@@ -39,7 +39,7 @@ type
     N3: TMenuItem;
     Dumpxbeinfoto1: TMenuItem;
     DebugoutputGUI1: TMenuItem;
-    DebugoutputKernal1: TMenuItem;
+    DebugoutputKernel1: TMenuItem;
     ConfigControler1: TMenuItem;
     Configaudio1: TMenuItem;
     Configvideo1: TMenuItem;
@@ -70,10 +70,10 @@ type
     File4: TMenuItem;
     actConsoleXbeInfo: TAction;
     actFileXbeInfo: TAction;
-    actConsoleDebuGui: TAction;
+    actConsoleDebugGui: TAction;
     actFileDebugGui: TAction;
-    actConsoleDebugKernal: TAction;
-    actFileDebugKernal: TAction;
+    actConsoleDebugKernel: TAction;
+    actFileDebugKernel: TAction;
     AutomaticWindowsyemp1: TMenuItem;
     AutomaticDxbxpath1: TMenuItem;
     Manual1: TMenuItem;
@@ -114,10 +114,10 @@ type
     procedure FormCreate(Sender: TObject);
     procedure actConsoleXbeInfoExecute(Sender: TObject);
     procedure actFileXbeInfoExecute(Sender: TObject);
-    procedure actConsoleDebuGuiExecute(Sender: TObject);
+    procedure actConsoleDebugGuiExecute(Sender: TObject);
     procedure actFileDebugGuiExecute(Sender: TObject);
-    procedure actConsoleDebugKernalExecute(Sender: TObject);
-    procedure actFileDebugKernalExecute(Sender: TObject);
+    procedure actConsoleDebugKernelExecute(Sender: TObject);
+    procedure actFileDebugKernelExecute(Sender: TObject);
     procedure ActAboutExecute(Sender: TObject);
     procedure actCloseExecute(Sender: TObject);
     procedure actExeGenWindowsTempExecute(Sender: TObject);
@@ -132,9 +132,6 @@ type
     m_Xbe: TXbe;
     m_XbeFilename: string;
     m_ExeFilename: string;
-
-    m_KrnlDebug: DebugMode;
-    m_KrnlDebugFilename: string;
 
     m_AutoConvertToExe: EnumAutoConvert;
 
@@ -512,7 +509,7 @@ begin
 
   ReadSettingsIni;
 
-  CreateLogs;
+  CreateLogs(ltGui);
 
   if IsWindowsVista then begin
     sSkinManager1.SkinningRules := [srStdForms, srThirdParty];
@@ -554,20 +551,48 @@ begin
           actExeGenManual.Checked := True;
         end;
     end;
+    m_DxbxDebug	:= DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', 0));
+    m_DxbxDebugFilename := IniFile.ReadString('Settings', 'DxbxDebugFilename', '');
+    m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', 0));
+    m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
 
     IniFile.Free;
     // Set Menu checked options
-    actConsoleDebuGui.Checked := not hasGuiToFile;
-    actFileDebugGui.Checked := hasGuiToFile;
-
-    actConsoleDebugKernal.Checked := not hasLogKernelToFile;
-    actFileDebugKernal.Checked := hasLogKernelToFile;
+    case m_DxbxDebug of
+      DM_NONE    : begin
+                     actConsoleDebugGui.Checked := False;
+                     actFileDebugGui.Checked := False;
+                   end;
+      DM_CONSOLE : begin
+                     actConsoleDebugGui.Checked := True;
+                     actFileDebugGui.Checked := False;
+                   end;
+      DM_FILE    : begin
+                     actConsoleDebugGui.Checked := False;
+                     actFileDebugGui.Checked := True;
+                   end;
+    end;
+    case m_KrnlDebug of
+      DM_NONE    : begin
+                     actConsoleDebugKernel.Checked := False;
+                     actFileDebugKernel.Checked := False;
+                   end;
+      DM_CONSOLE : begin
+                     actConsoleDebugKernel.Checked := True;
+                     actFileDebugKernel.Checked := False;
+                   end;
+      DM_FILE    : begin
+                     actConsoleDebugKernel.Checked := False;
+                     actFileDebugKernel.Checked := True;
+                   end;
+    end;
+    
   end
   else begin
-    actConsoleDebuGui.Checked := True;
+    actConsoleDebugGui.Checked := False;
     actFileDebugGui.Checked := False;
-    actConsoleDebugKernal.Checked := True;
-    actFileDebugKernal.Checked := False;
+    actConsoleDebugKernel.Checked := False;
+    actFileDebugKernel.Checked := False;
 
     m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
     actExeGenWindowsTemp.Checked := True;
@@ -590,6 +615,10 @@ begin
     AUTO_CONVERT_XBE_PATH: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 2);
     AUTO_CONVERT_MANUAL: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 3);
   end;
+  IniFile.WriteInteger('Settings', 'DxbxDebug', ORD(m_DxbxDebug));
+  IniFile.WriteString('Settings', 'DxbxDebugFilename', m_DxbxDebugFilename);
+  IniFile.WriteInteger('Settings', 'KrnlDebug', ORD(m_KrnlDebug));
+  IniFile.WriteString('Settings', 'KrnlDebugFilename', m_KrnlDebugFilename);
 
   inifile.free;
 end; // Tfrm_Main.WriteSettingsIni
@@ -630,45 +659,58 @@ end; // Tfrm_Main.actFileXbeInfoExecute
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.actConsoleDebuGuiExecute(Sender: TObject);
+procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
-  actConsoleDebuGui.Checked := True;
-  actFileDebugGui.Checked := False;
-end; // Tfrm_Main.actConsoleDebuGuiExecute
+  if m_DxbxDebug = DM_CONSOLE then begin
+    actConsoleDebugGui.Checked := False;
+    m_DxbxDebug := DM_NONE;
+  end
+  else begin
+    actFileDebugGui.Checked := False;
+    actConsoleDebugGui.Checked := True;
+    m_DxbxDebug := DM_CONSOLE;
+  end;
+end; // Tfrm_Main.actConsoleDebugGuiExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
-  SaveDialog.FileName := 'DxbxDebug.txt';
-  SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
-
-  if SaveDialog.Execute then begin
-    actFileDebugGui.Checked := True;
-    actConsoleDebuGui.Checked := False;
+  if m_DxbxDebug = DM_FILE then begin
+    actFileDebugGui.Checked := FALSE;
+    m_DxbxDebug := DM_NONE;
+  end
+  else begin
+    SaveDialog.FileName := 'DxbxDebug.txt';
+    SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
+    if SaveDialog.Execute then begin
+      actConsoleDebugGui.Checked := False;
+      actFileDebugGui.Checked := True;
+      m_DxbxDebug := DM_FILE;
+    end;
   end;
 end; // Tfrm_Main.actFileDebugGuiExecute
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.actConsoleDebugKernalExecute(Sender: TObject);
+procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
-  actConsoleDebugKernal.Checked := True;
-  actFileDebugKernal.Checked := False;
-end; // Tfrm_Main.actConsoleDebugKernalExecute
+  actConsoleDebugKernel.Checked := True;
+  actFileDebugKernel.Checked := False;
+end; // Tfrm_Main.actConsoleDebugKernelExecute
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.actFileDebugKernalExecute(Sender: TObject);
+procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
-  SaveDialog.FileName := 'KernalDebug.txt';
+  SaveDialog.FileName := 'KernelDebug.txt';
   SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
 
   if SaveDialog.Execute then begin
-    actFileDebugKernal.Checked := True;
-    actConsoleDebugKernal.Checked := False;
+    actFileDebugKernel.Checked := True;
+    actConsoleDebugKernel.Checked := False;
   end;
-end; // Tfrm_Main.actFileDebugKernalExecute
+end; // Tfrm_Main.actFileDebugKernelExecute
 
 //------------------------------------------------------------------------------
 
