@@ -3,7 +3,7 @@ unit uEmu;
 interface
 
 uses
-  uEmuFS, uLogging;
+  uEmuFS, uLog;
 
   procedure EmuNoFunc; export;
 
