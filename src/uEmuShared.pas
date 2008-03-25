@@ -11,12 +11,14 @@ procedure EmuSharedCleanup;
 implementation
 
 Uses
-  uLogging;
+  uEnums, uLog, Dialogs;
 
 
 function EmuSharedInit : Boolean;
 begin
-  WriteLog( 'EmuSharedInit');
+  CreateLogs(ltKernel);
+  WriteLog('EmuSharedInit');
+  Showmessage('EmuSharedInit');
 
   // Ensure initialization only occurs once
   Result := True;
@@ -81,7 +83,8 @@ begin
         g_EmuShared->EmuShared::~EmuShared();
 
     UnmapViewOfFile(g_EmuShared);   *)
-end;    
+  CloseLogs;
+end;
 
 procedure SetXbePath(const path : String ); export;
 begin

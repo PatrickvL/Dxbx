@@ -18,7 +18,8 @@ uses
   uEmuShared in 'uEmuShared.pas',
   uEmu in 'uEmu.pas',
   uEnums in 'uEnums.pas',
-  uLog in 'uLog.pas';
+  uLog in 'uLog.pas',
+  uLogConsole in 'uLogConsole.pas' {frm_LogConsole};
 
 {$R *.res}
 
