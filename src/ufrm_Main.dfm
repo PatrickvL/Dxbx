@@ -1786,7 +1786,6 @@ object frm_Main: Tfrm_Main
     DOMVendorDesc = 'MSXML'
   end
   object sSkinManager1: TsSkinManager
-    IsDefault = False
     InternalSkins = <
       item
         Name = 'Cold (internal)'

@@ -167,7 +167,7 @@ implementation
 {$R *.DFM}
 
 uses
-  ufrm_About, IniFiles, uLog, g_EmuShared, uTools;
+  ufrm_About, IniFiles, uLog, g_EmuShared;
 
 //------------------------------------------------------------------------------
 
@@ -833,7 +833,6 @@ end; // Tfrm_Main.actExportLogoExecute
 procedure Tfrm_Main.actXdkTrackerExecute(Sender: TObject);
 begin
   if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then begin
-    KillApp('XDK Tracker');
     ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), nil, nil, SW_SHOWNORMAL);
   end;
 end; // Tfrm_Main.actXdkTrackerExecute
@@ -858,7 +857,6 @@ begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
     CreateXmlXbeDump(DumpFilePath);
 
-    KillApp('XDK Tracker');
     ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), '/XBEDUMP', nil, SW_SHOWNORMAL);
   end;
 end; // Tfrm_Main.actXdkTrackerXbeInfoExecute
