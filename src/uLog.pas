@@ -6,10 +6,10 @@ uses
   uEnums;
 
 var
-  m_DxbxDebug: DebugMode;
-  m_DxbxDebugFilename: string;
-  m_KrnlDebug: DebugMode;
-  m_KrnlDebugFilename: string;
+  m_DxbxDebug: DebugMode = DM_NONE;
+  m_DxbxDebugFilename: string = '';
+  m_KrnlDebug: DebugMode = DM_CONSOLE;
+  m_KrnlDebugFilename: string = '';
 
 procedure CreateLogs(aLogType: LogType = ltKernel);
 procedure CloseLogs;
@@ -19,30 +19,89 @@ procedure WriteLog(aText: string);
 implementation
 
 uses
-  uLogConsole;
+  uLogConsole, Dialogs;
 
 var
-  LogFile : TextFile;
+  LogMode     : DebugMode = DM_NONE;
+  LogFileOpen : Boolean = False;
+  LogFile     : TextFile;
 
-procedure CreateLogs(aLogType: LogType = ltKernel);
+procedure CreateLogs(aLogType: LogType);
 begin
-  frm_LogConsole := Tfrm_LogConsole.Create(nil);
   case aLogType of
-    ltGui    : frm_LogConsole.Caption := 'DXBX : Debug Console';
-    ltKernel : frm_LogConsole.Caption := 'DXBX : Kernel Debug Console';
+    ltGui    : begin
+                 case m_DxbxDebug of
+                   DM_NONE    : begin
+                                  CloseLogs;
+                                end;
+                   DM_CONSOLE : begin
+                                  try
+                                    frm_LogConsole := Tfrm_LogConsole.Create(nil);
+                                    frm_LogConsole.Caption := 'DXBX : Debug Console';
+                                    frm_LogConsole.Show;
+                                    LogMode := DM_CONSOLE;
+                                  finally
+                                  end;
+                                end;
+                   DM_FILE    : begin
+                                  try
+                                    AssignFile(LogFile, m_DxbxDebugFilename);
+                                    Rewrite(LogFile);
+                                    LogFileOpen := True;
+                                    LogMode := DM_FILE;
+                                  except
+                                    ShowMessage('Could not create log file');
+                                    LogMode := DM_NONE;
+                                  end;
+                                end;
+                 end;
+               end;
+    ltKernel : begin
+                 case m_KrnlDebug of
+                   DM_NONE    : begin
+                                  CloseLogs;
+                                end;
+                   DM_CONSOLE : begin
+                                  frm_LogConsole := Tfrm_LogConsole.Create(nil);
+                                  frm_LogConsole.Caption := 'DXBX : Kernel Debug Console';
+                                  frm_LogConsole.Show;
+                                  LogMode := DM_CONSOLE;
+                                end;
+                   DM_FILE    : begin
+                                  try
+                                    AssignFile(LogFile, m_KrnlDebugFilename);
+                                    Rewrite(LogFile);
+                                    LogFileOpen := True;
+                                    LogMode := DM_FILE;
+                                  except
+                                    ShowMessage('Could not create log file');
+                                    LogMode := DM_NONE;
+                                  end;
+                                end;
+                 end;
+               end;
   end;
-  frm_LogConsole.Show;
 end;
 
 procedure CloseLogs;
 begin
-  frm_LogConsole.Free;
+  if frm_LogConsole <> nil then begin
+    frm_LogConsole.Release;
+    frm_LogConsole := nil;
+  end;
+  if LogFileOpen then begin
+    CloseFile(LogFile);
+    LogFileOpen := False;
+  end;
+  LogMode := DM_NONE;
 End;
 
 procedure WriteLog(aText: string);
 begin
-  frm_LogConsole.Log.Lines.Add(aText);
+    case LogMode of
+      DM_CONSOLE : frm_LogConsole.Log.Lines.Add(aText);
+      DM_FILE    : WriteLn(LogFile, aText);
+    end;
 end;
-
 
 end.

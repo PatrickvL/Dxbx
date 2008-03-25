@@ -28,12 +28,14 @@ begin
 end;
 
 procedure EmuSwapFS;
-var dwInterceptionCount : Integer;
+const
+{$J+}
+  dwInterceptionCount : Integer = 0;
+{$J-}
 begin
     // Note that this is only the *approximate* interception count,
     // because not all interceptions swap the FS register, and some
     // non-interception code uses it
-    dwInterceptionCount := 0;
 
 {    mov ax, fs:[0x14]
     mov fs, ax}
