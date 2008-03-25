@@ -43,7 +43,6 @@ type
     procedure VisitCxbxForum1Click(Sender: TObject);
     procedure Exit2Click(Sender: TObject);
     procedure ExportGameList1Click(Sender: TObject);
-    procedure ImportGameList1Click(Sender: TObject);
   private
     { Private declarations }
     ApplicationDir: string;

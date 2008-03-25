@@ -521,7 +521,6 @@ object frmMain: TfrmMain
       Caption = '&File'
       object ImportGameList1: TMenuItem
         Caption = '&Import Game List'
-        OnClick = ImportGameList1Click
       end
       object ExportGameList1: TMenuItem
         Caption = '&Export Game List'
