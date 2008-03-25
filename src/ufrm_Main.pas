@@ -292,15 +292,15 @@ begin
   m_ExeFilename := '\0';
   m_XbeFilename := aFileName;
 
-  try
+  //try
     m_Xbe := TXbe.Create(m_XbeFilename);
 
     XbeLoaded;
     StatusBar.SimpleText := 'DXBX: ' + m_szAsciiTitle + ', Loaded';
-  except
+  {except
     Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     m_Xbe.Free;
-  end;
+  end;}
 end; // Tfrm_Main.OpenXbe
 
 //------------------------------------------------------------------------------
@@ -508,7 +508,6 @@ begin
   FApplicationDir := ExtractFilePath(Application.ExeName);
 
   ReadSettingsIni;
-
   CreateLogs(ltGui);
 
   if IsWindowsVista then begin
@@ -557,6 +556,7 @@ begin
     m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
 
     IniFile.Free;
+
     // Set Menu checked options
     case m_DxbxDebug of
       DM_NONE    : begin
@@ -664,11 +664,14 @@ begin
   if m_DxbxDebug = DM_CONSOLE then begin
     actConsoleDebugGui.Checked := False;
     m_DxbxDebug := DM_NONE;
+    CloseLogs;
   end
   else begin
+    CloseLogs;
     actFileDebugGui.Checked := False;
     actConsoleDebugGui.Checked := True;
     m_DxbxDebug := DM_CONSOLE;
+    CreateLogs(ltGui);
   end;
 end; // Tfrm_Main.actConsoleDebugGuiExecute
 
@@ -679,14 +682,18 @@ begin
   if m_DxbxDebug = DM_FILE then begin
     actFileDebugGui.Checked := FALSE;
     m_DxbxDebug := DM_NONE;
+    CloseLogs;
   end
   else begin
     SaveDialog.FileName := 'DxbxDebug.txt';
     SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
     if SaveDialog.Execute then begin
+      CloseLogs;
       actConsoleDebugGui.Checked := False;
       actFileDebugGui.Checked := True;
       m_DxbxDebug := DM_FILE;
+      m_DxbxDebugFilename := SaveDialog.Filename;
+      CreateLogs(ltGui);
     end;
   end;
 end; // Tfrm_Main.actFileDebugGuiExecute
