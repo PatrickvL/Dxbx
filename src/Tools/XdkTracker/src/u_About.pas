@@ -10,8 +10,8 @@ type
   Tfrm_About = class(TForm)
     Image1: TImage;
     Bevel1: TBevel;
-    mem_Credits: TMemo;
     lbl_Version: TLabel;
+    Label1: TLabel;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
