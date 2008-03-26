@@ -1558,6 +1558,7 @@ object frm_Main: Tfrm_Main
       Caption = '&Settings'
       object ConfigControler1: TMenuItem
         Action = actConfigController
+        Caption = 'Config Controllers'
       end
       object Configaudio1: TMenuItem
         Action = actConfigAudio
@@ -1786,7 +1787,6 @@ object frm_Main: Tfrm_Main
     DOMVendorDesc = 'MSXML'
   end
   object sSkinManager1: TsSkinManager
-    IsDefault = False
     InternalSkins = <
       item
         Name = 'Cold (internal)'
