@@ -22,6 +22,7 @@ uses
 
 begin
   Application.Initialize;
+  Application.Title := 'Dxbx';
   Application.CreateForm(Tfrm_Main, frm_Main);
   Application.Run;
 end.
