@@ -1,4 +1,5 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{a72fb3d5-96f2-4364-8799-bcbd7f364926}</ProjectGuid>
     <MainSource>XIso.dpr</MainSource>
@@ -13,20 +14,18 @@
     <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
     <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     <DCC_ExeOutput>..\..\..\..\bin\tools</DCC_ExeOutput>
-    <DCC_UnitSearchPath>..\dcu</DCC_UnitSearchPath>
-    <DCC_ResourcePath>..\dcu</DCC_ResourcePath>
-    <DCC_ObjPath>..\dcu</DCC_ObjPath>
-    <DCC_IncludePath>..\dcu</DCC_IncludePath>
     <DCC_Define>RELEASE</DCC_Define>
+    <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
+    <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
+    <DCC_HppOutput>..\dcu</DCC_HppOutput>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Version>7.0</Version>
     <DCC_ExeOutput>..\..\..\..\bin\tools</DCC_ExeOutput>
-    <DCC_UnitSearchPath>..\dcu</DCC_UnitSearchPath>
-    <DCC_ResourcePath>..\dcu</DCC_ResourcePath>
-    <DCC_ObjPath>..\dcu</DCC_ObjPath>
-    <DCC_IncludePath>..\dcu</DCC_IncludePath>
     <DCC_Define>DEBUG</DCC_Define>
+    <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
+    <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
+    <DCC_HppOutput>..\dcu</DCC_HppOutput>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>

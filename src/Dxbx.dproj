@@ -1,4 +1,5 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{dfe15b9f-6ef6-4a42-a1b9-6523d9ae17fe}</ProjectGuid>
     <MainSource>Dxbx.dpr</MainSource>
@@ -40,6 +41,7 @@
     <DCC_ObjPath>$(DELPHI)\Lib\Debug</DCC_ObjPath>
     <DCC_IncludePath>$(DELPHI)\Lib\Debug</DCC_IncludePath>
     <DCC_Define>DEBUG</DCC_Define>
+    <DCC_SymbolReferenceInfo>2</DCC_SymbolReferenceInfo>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
