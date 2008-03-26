@@ -1,9 +1,9 @@
 object frm_ControllerConfig: Tfrm_ControllerConfig
   Left = 271
   Top = 245
-  Caption = 'Controller Config'
-  ClientHeight = 234
-  ClientWidth = 516
+  Caption = 'Controllers Config'
+  ClientHeight = 311
+  ClientWidth = 545
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,21 +15,44 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
-    Left = 12
-    Top = 208
+    Left = 22
+    Top = 282
     Width = 497
     Height = 21
   end
   object Label1: TLabel
-    Left = 124
-    Top = 212
+    Left = 143
+    Top = 286
     Width = 293
     Height = 13
     Caption = 'Please choose one of the controller components from above...'
   end
+  object sTabControl1: TsTabControl
+    Left = 8
+    Top = 8
+    Width = 529
+    Height = 233
+    SkinData.SkinSection = 'PAGECONTROL'
+    TabOrder = 8
+    MultiLine = True
+    Tabs.Strings = (
+      'Controller 1'
+      'Controller 2'
+      'Controller 3'
+      'Controller 4')
+    TabIndex = 0
+    object chkForceFeedback: TCheckBox
+      Left = 384
+      Top = 203
+      Width = 101
+      Height = 17
+      Caption = 'Force feedback'
+      TabOrder = 0
+    end
+  end
   object GroupBox1: TGroupBox
-    Left = 4
-    Top = 4
+    Left = 16
+    Top = 36
     Width = 333
     Height = 81
     Caption = 'Analog Buttons'
@@ -100,8 +123,8 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     end
   end
   object GroupBox2: TGroupBox
-    Left = 344
-    Top = 4
+    Left = 356
+    Top = 36
     Width = 173
     Height = 81
     Caption = 'Analog Thumbstick (Left)'
@@ -140,8 +163,8 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     end
   end
   object GroupBox3: TGroupBox
-    Left = 4
-    Top = 88
+    Left = 16
+    Top = 120
     Width = 333
     Height = 81
     Caption = 'Digital Buttons'
@@ -194,26 +217,26 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
       Caption = 'Start'
       TabOrder = 5
     end
-    object btnLeftThump: TButton
+    object btnLeftThumb: TButton
       Left = 168
       Top = 48
       Width = 75
       Height = 25
-      Caption = 'Left Thump'
+      Caption = 'Left Thumb'
       TabOrder = 6
     end
-    object btn_RightThump: TButton
+    object btn_RightThumb: TButton
       Left = 248
       Top = 48
       Width = 75
       Height = 25
-      Caption = 'Right Thump'
+      Caption = 'Right Thumb'
       TabOrder = 7
     end
   end
   object GroupBox4: TGroupBox
-    Left = 344
-    Top = 88
+    Left = 356
+    Top = 120
     Width = 173
     Height = 81
     Caption = 'Analog Thumbstick (Right)'
@@ -252,8 +275,8 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     end
   end
   object btn_Accept: TButton
-    Left = 432
-    Top = 176
+    Left = 364
+    Top = 247
     Width = 75
     Height = 25
     Caption = 'Accept'
@@ -261,8 +284,8 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     TabOrder = 4
   end
   object btn_Cancel: TButton
-    Left = 352
-    Top = 176
+    Left = 444
+    Top = 247
     Width = 75
     Height = 25
     Caption = 'Cancel'
@@ -270,16 +293,16 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     TabOrder = 5
   end
   object btn_LoadConfig: TButton
-    Left = 12
-    Top = 176
+    Left = 24
+    Top = 207
     Width = 157
     Height = 25
     Caption = 'Load Configuration'
     TabOrder = 6
   end
   object btn_SaveConfig: TButton
-    Left = 176
-    Top = 176
+    Left = 187
+    Top = 206
     Width = 153
     Height = 25
     Caption = 'Save Configuration'

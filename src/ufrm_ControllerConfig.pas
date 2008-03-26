@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls;
+  StdCtrls, ExtCtrls, Tabs, sTabControl;
 
 type
   Tfrm_ControllerConfig = class(TForm)
@@ -30,8 +30,8 @@ type
     btn_DPadRight: TButton;
     btn_Back: TButton;
     btn_Start: TButton;
-    btnLeftThump: TButton;
-    btn_RightThump: TButton;
+    btnLeftThumb: TButton;
+    btn_RightThumb: TButton;
     btn_RightUp: TButton;
     btn_RightDown: TButton;
     btn_RightLeft: TButton;
@@ -42,6 +42,8 @@ type
     btn_SaveConfig: TButton;
     Bevel1: TBevel;
     Label1: TLabel;
+    sTabControl1: TsTabControl;
+    chkForceFeedback: TCheckBox;
   private
     { Private declarations }
   public

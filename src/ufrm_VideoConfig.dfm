@@ -100,8 +100,8 @@ object frm_VideoConfig: Tfrm_VideoConfig
     end
   end
   object btn_Accept: TButton
-    Left = 250
-    Top = 148
+    Left = 161
+    Top = 147
     Width = 75
     Height = 25
     Caption = 'Accept'
@@ -109,8 +109,8 @@ object frm_VideoConfig: Tfrm_VideoConfig
     TabOrder = 1
   end
   object btn_Cancel: TButton
-    Left = 170
-    Top = 148
+    Left = 242
+    Top = 145
     Width = 75
     Height = 25
     Caption = 'Cancel'
