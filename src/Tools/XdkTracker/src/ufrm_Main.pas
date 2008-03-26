@@ -47,6 +47,7 @@ type
     procedure VisitCxbxForum1Click(Sender: TObject);
     procedure Exit2Click(Sender: TObject);
     procedure ExportGameList1Click(Sender: TObject);
+    procedure ImportGameList1Click(Sender: TObject);
   private
     { Private declarations }
     ApplicationDir: string;
@@ -137,21 +138,21 @@ end; // TfrmMain.About1Click
 
 procedure TfrmMain.VisitShadowTjwebsite1Click(Sender: TObject);
 begin
-  ShellExecute(0, 'open', cWEBSITE_SHADOWTJ, nil, nil, SW_SHOWNORMAL);
+  ShellExecute(0, cOpen, cWEBSITE_SHADOWTJ, nil, nil, SW_SHOWNORMAL);
 end; // TfrmMain.VisitShadowTjwebsite1Click
 
 //------------------------------------------------------------------------------
 
 procedure TfrmMain.VisitCaustikswebsite1Click(Sender: TObject);
 begin
-  ShellExecute(0, 'open', cWEBSITE_CXBX, nil, nil, SW_SHOWNORMAL);
+  ShellExecute(0, cOpen, cWEBSITE_CXBX, nil, nil, SW_SHOWNORMAL);
 end; // TfrmMain.VisitCaustikswebsite1Click
 
 //------------------------------------------------------------------------------
 
 procedure TfrmMain.VisitCxbxForum1Click(Sender: TObject);
 begin
-  ShellExecute(0, 'open', 'http://forums.ngemu.com/cxbx-official-discussion/', nil, nil, SW_SHOWNORMAL);
+  ShellExecute(0, cOpen, cWEBSITE_FORUM, nil, nil, SW_SHOWNORMAL);
 end; // TfrmMain.VisitCxbxForum1Click
 
 //------------------------------------------------------------------------------
@@ -283,7 +284,6 @@ begin
 
       with frm_ImportGames do begin
         edt_Publisher.Text := Publisher;
-        edt_Date.text := FormatDateTime('dd/mm/yyyy', Date);
         for lIndex := 0 to ImportList.Count - 1 do begin
           with lst_Import.Items.Add do begin
             Caption := PXDKInfo(ImportList.Items[lIndex])^.GameName;
@@ -373,6 +373,11 @@ procedure TfrmMain.ExportGameList1Click(Sender: TObject);
 begin
   ExportGameData;
 end; // TfrmMain.ExportGameList1Click
+
+procedure TfrmMain.ImportGameList1Click(Sender: TObject);
+begin
+  ImportGameData;
+end; // TfrmMain.ImportGameList1Click
 
 //------------------------------------------------------------------------------
 

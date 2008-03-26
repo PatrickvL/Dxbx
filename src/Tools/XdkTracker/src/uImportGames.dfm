@@ -4,7 +4,7 @@ object frm_ImportGames: Tfrm_ImportGames
   BorderStyle = bsDialog
   Caption = 'Import Games'
   ClientHeight = 311
-  ClientWidth = 421
+  ClientWidth = 422
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,15 +12,16 @@ object frm_ImportGames: Tfrm_ImportGames
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  Position = poOwnerFormCenter
   DesignSize = (
-    421
+    422
     311)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
     Left = 4
     Top = 4
-    Width = 413
+    Width = 414
     Height = 273
     Anchors = [akLeft, akTop, akRight, akBottom]
     Shape = bsFrame
@@ -39,15 +40,8 @@ object frm_ImportGames: Tfrm_ImportGames
     Height = 13
     Caption = 'New Games:'
   end
-  object lbl_Date: TLabel
-    Left = 252
-    Top = 12
-    Width = 26
-    Height = 13
-    Caption = 'Date:'
-  end
   object btn_Cancel: TButton
-    Left = 338
+    Left = 339
     Top = 283
     Width = 75
     Height = 25
@@ -55,9 +49,10 @@ object frm_ImportGames: Tfrm_ImportGames
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 0
+    ExplicitLeft = 338
   end
   object btn_Ok: TButton
-    Left = 258
+    Left = 259
     Top = 283
     Width = 75
     Height = 25
@@ -65,6 +60,7 @@ object frm_ImportGames: Tfrm_ImportGames
     Caption = '&Ok'
     ModalResult = 1
     TabOrder = 1
+    ExplicitLeft = 258
   end
   object edt_Publisher: TEdit
     Left = 12
@@ -77,9 +73,9 @@ object frm_ImportGames: Tfrm_ImportGames
   end
   object lst_Import: TListView
     Left = 12
-    Top = 72
-    Width = 377
-    Height = 197
+    Top = 75
+    Width = 397
+    Height = 195
     Anchors = [akLeft, akTop, akRight, akBottom]
     Columns = <
       item
@@ -117,14 +113,5 @@ object frm_ImportGames: Tfrm_ImportGames
     RowSelect = True
     TabOrder = 3
     ViewStyle = vsReport
-  end
-  object edt_Date: TEdit
-    Left = 252
-    Top = 28
-    Width = 137
-    Height = 21
-    Color = clMenu
-    ReadOnly = True
-    TabOrder = 4
   end
 end

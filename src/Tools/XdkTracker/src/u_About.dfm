@@ -24,8 +24,8 @@ object frm_About: Tfrm_About
     Shape = bsFrame
   end
   object Image1: TImage
-    Left = 12
-    Top = 12
+    Left = 24
+    Top = 10
     Width = 224
     Height = 36
     AutoSize = True
@@ -926,25 +926,20 @@ object frm_About: Tfrm_About
     ParentColor = False
     ParentFont = False
   end
-  object mem_Credits: TMemo
+  object Label1: TLabel
     Left = 12
-    Top = 72
-    Width = 245
-    Height = 69
-    BorderStyle = bsNone
-    Color = clBlack
+    Top = 71
+    Width = 226
+    Height = 65
+    Caption = 
+      'Written by: Shadow_tj'#13#10'Original Source: Pro_Logic'#13#10#13#10'Credits to:' +
+      ' Pro_Logic, Caustik, KingOfC and the '#13#10'complete CXBX development' +
+      ' team.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clGreen
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = []
-    Lines.Strings = (
-      'Written by: Shadow_tj'
-      'Original Source: Pro_Logic'
-      ''
-      'Credits to: Pro_Logic, Caustik, KingOfC and the '
-      'complete CXBX development team.')
     ParentFont = False
-    TabOrder = 0
   end
 end

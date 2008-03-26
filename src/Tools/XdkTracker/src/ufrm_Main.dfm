@@ -12,6 +12,7 @@ object frmMain: TfrmMain
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
+  Position = poScreenCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -521,6 +522,7 @@ object frmMain: TfrmMain
       Caption = '&File'
       object ImportGameList1: TMenuItem
         Caption = '&Import Game List'
+        OnClick = ImportGameList1Click
       end
       object ExportGameList1: TMenuItem
         Caption = '&Export Game List'
