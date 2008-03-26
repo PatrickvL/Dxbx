@@ -152,6 +152,7 @@ type
     procedure ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean);
     function StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 
+    procedure SendCommandToXdkTracker;
   public
     FApplicationDir: string;
 
@@ -292,23 +293,38 @@ begin
   m_ExeFilename := '\0';
   m_XbeFilename := aFileName;
 
-  //try
+  try
     m_Xbe := TXbe.Create(m_XbeFilename);
 
     XbeLoaded;
     StatusBar.SimpleText := 'DXBX: ' + m_szAsciiTitle + ', Loaded';
-  {except
+  except
     Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     m_Xbe.Free;
-  end;}
-end; // Tfrm_Main.OpenXbe
+  end;
+end;
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.SaveXbe(aFileName: string);
 begin
 
-end; // Tfrm_Main.SaveXbe
+end;
+
+procedure Tfrm_Main.SendCommandToXdkTracker;
+{var
+  stringToSend : string;
+  copyDataStruct : TCopyDataStruct;}
+begin
+  { TODO : This is for sending a command to xdktracker that there is a new xml file }
+{  stringToSend := 'About Delphi Programming';
+
+  copyDataStruct.dwData := Integer(cdtString); //use it to identify the message contents
+  copyDataStruct.cbData := 1 + Length(stringToSend);
+  copyDataStruct.lpData := PChar(stringToSend);
+
+  SendData(copyDataStruct);}
+end;
 
 //------------------------------------------------------------------------------
 
@@ -856,7 +872,11 @@ begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
     CreateXmlXbeDump(DumpFilePath);
 
+    { TODO : 
+Check is xdktracker is open, when is closed. open an import
+when already open send xml update command to the tracker }
     ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), '/XBEDUMP', nil, SW_SHOWNORMAL);
+    //SendCommandToXdkTracker;
   end;
 end; // Tfrm_Main.actXdkTrackerXbeInfoExecute
 

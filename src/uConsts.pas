@@ -3,13 +3,10 @@ unit uConsts;
 interface
 
 const
-
   // Application Versions
   _DXBX_VERSION = '0.0.0.7';
-  _XDK_TRACKER_VERSION = '2.0.0.1';
+  _XDK_TRACKER_VERSION = '2.0.0.2';
 
-
-  _MagicNumber = 'XBEH';
   XOR_EP_DEBUG = $94859D4B; //Entry Point (Debug)
   XOR_EP_RETAIL = $A8FC57AB; // Entry Point (Retail)
   XOR_KT_DEBUG = $EFB1F152; // Kernel Thunk (Debug)
@@ -24,10 +21,12 @@ const
   // Websites
   cWEBSITE_CXBX = 'http://www.caustik.com/cxbx/';
   cWEBSITE_SHADOWTJ = 'http://www.shadowtj.org';
+  cWEBSITE_FORUM = 'http://forums.ngemu.com/cxbx-official-discussion/';
 
+  cOpen = 'open';
 
-
-
+  // Xbe File Format
+  _MagicNumber = 'XBEH';       
 
 implementation
 
