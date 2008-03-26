@@ -24,8 +24,7 @@ var
 
 implementation
 
-Uses
-  uConst;
+uses uConsts;
 
 {$R *.dfm}
 
@@ -33,7 +32,7 @@ Uses
 
 procedure Tfrm_About.FormCreate(Sender: TObject);
 begin
-  lbl_Version.Caption := 'Version: ' + version;
+  lbl_Version.Caption := 'Version: ' + _XDK_TRACKER_VERSION;
 end; // Tfrm_About.FormCreate
 
 //------------------------------------------------------------------------------

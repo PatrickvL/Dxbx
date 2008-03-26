@@ -582,7 +582,6 @@ object frmMain: TfrmMain
     DOMVendorDesc = 'MSXML'
   end
   object sSkinManager1: TsSkinManager
-    IsDefault = False
     InternalSkins = <
       item
         Name = 'Cold (internal)'
@@ -1348,7 +1347,7 @@ object frmMain: TfrmMain
     MenuSupport.ExtraLineFont.Style = []
     SkinDirectory = '.'
     SkinName = 'Cold (internal)'
-    SkinInfo = '5.2'
+    SkinInfo = '5.4'
     Left = 56
     Top = 168
   end

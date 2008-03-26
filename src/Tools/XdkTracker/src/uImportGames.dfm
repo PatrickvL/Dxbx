@@ -1,9 +1,10 @@
 object frm_ImportGames: Tfrm_ImportGames
   Left = 392
   Top = 282
+  BorderStyle = bsDialog
   Caption = 'Import Games'
-  ClientHeight = 301
-  ClientWidth = 395
+  ClientHeight = 311
+  ClientWidth = 421
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,15 +13,15 @@ object frm_ImportGames: Tfrm_ImportGames
   Font.Style = []
   OldCreateOrder = False
   DesignSize = (
-    395
-    301)
+    421
+    311)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
     Left = 4
     Top = 4
-    Width = 393
-    Height = 269
+    Width = 413
+    Height = 273
     Anchors = [akLeft, akTop, akRight, akBottom]
     Shape = bsFrame
   end
@@ -46,8 +47,8 @@ object frm_ImportGames: Tfrm_ImportGames
     Caption = 'Date:'
   end
   object btn_Cancel: TButton
-    Left = 320
-    Top = 280
+    Left = 338
+    Top = 283
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -56,8 +57,8 @@ object frm_ImportGames: Tfrm_ImportGames
     TabOrder = 0
   end
   object btn_Ok: TButton
-    Left = 240
-    Top = 280
+    Left = 258
+    Top = 283
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -78,7 +79,7 @@ object frm_ImportGames: Tfrm_ImportGames
     Left = 12
     Top = 72
     Width = 377
-    Height = 193
+    Height = 197
     Anchors = [akLeft, akTop, akRight, akBottom]
     Columns = <
       item

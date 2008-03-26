@@ -12,6 +12,10 @@ uses
   uData, xmldom, XMLIntf, msxmldom, XMLDoc, uXml, sStatusBar, sSkinProvider,
   sSkinManager;
 
+Const
+  cXDKLIST_LOADED = 'XDK List Loaded';
+  cNO_XDKLIST_LOADED = 'No XDK List Loaded';
+
 type
   TfrmMain = class(TForm)
     MainMenu1: TMainMenu;
@@ -71,10 +75,16 @@ type
 var
   frmMain: TfrmMain;
   GameList: TList;
+  mHandle: THandle;    // Mutexhandle
 
 implementation
 
-uses u_xdkversions, u_About, uConst, uPublisher, uImportGames;
+uses
+  u_xdkversions,
+  u_About,
+  uPublisher,
+  uImportGames,
+  uConsts;
 
 {$R *.dfm}
 
@@ -127,14 +137,14 @@ end; // TfrmMain.About1Click
 
 procedure TfrmMain.VisitShadowTjwebsite1Click(Sender: TObject);
 begin
-  ShellExecute(0, 'open', 'http://www.shadowtj.org', nil, nil, SW_SHOWNORMAL);
+  ShellExecute(0, 'open', cWEBSITE_SHADOWTJ, nil, nil, SW_SHOWNORMAL);
 end; // TfrmMain.VisitShadowTjwebsite1Click
 
 //------------------------------------------------------------------------------
 
 procedure TfrmMain.VisitCaustikswebsite1Click(Sender: TObject);
 begin
-  ShellExecute(0, 'open', 'http://www.caustik.com/cxbx/', nil, nil, SW_SHOWNORMAL);
+  ShellExecute(0, 'open', cWEBSITE_CXBX, nil, nil, SW_SHOWNORMAL);
 end; // TfrmMain.VisitCaustikswebsite1Click
 
 //------------------------------------------------------------------------------
@@ -159,6 +169,7 @@ var
 begin
   inherited;
   ApplicationDir := ExtractFilePath(Application.ExeName);
+  StatusBar1.SimpleText := cNO_XDKLIST_LOADED;
 
   GameList := TList.Create;
   LoadGameData;
@@ -184,7 +195,7 @@ end;
 
 destructor TfrmMain.Destroy;
 begin
-  SaveGameData(ApplicationDir + cGameDataFile, {aPublishedBy=} '');
+  SaveGameData(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=} '');
   GameList.Free;
   inherited;
 end; // TfrmMain.Destroy
@@ -242,8 +253,6 @@ begin
 
       InfoNode := XmlRootNode.ChildNodes.FindNode('PublishedInfo');
       Publisher := XML_ReadString(InfoNode, 'PublishedBy');
-
-      Date := StrToDateTime(InfoNode.ChildNodes.FindNode('Date').Text);
 
       InfoNode := XmlRootNode.ChildNodes.FindNode('GameList');
 
@@ -322,7 +331,7 @@ var
   GameNode: iXmlNode;
   XDKNodes: iXmlNode;
 begin
-  GameDataFilePath := ApplicationDir + cGameDataFile;
+  GameDataFilePath := ApplicationDir + cXDK_TRACKER_DATA_FILE;
   if FileExists(GameDataFilePath) then begin
     XMLDocument.Active := False;
     XMLDocument.LoadFromFile(GameDataFilePath);
@@ -353,6 +362,8 @@ begin
 
       GameNode := GameNode.NextSibling;
     end;
+
+    StatusBar1.SimpleText := cXDKLIST_LOADED;
   end;
 end; // TfrmMain.LoadGameData
 
@@ -377,11 +388,10 @@ begin
   if XMLDocument.Active then begin
     XMLDocument.ChildNodes.Clear;
     XmlRootNode := XMLDocument.AddChild('XDKINFO');
-    XmlRootNode.SetAttribute('Version', cXmlVersion);
+    XmlRootNode.SetAttribute('Version', cXDk_TRACKER_XML_VERSION);
 
     PublishedNode := XmlRootNode.AddChild('PublishedInfo');
 
-    XML_WriteDateTime(PublishedNode, 'Date', Now);
     XML_WriteString(PublishedNode, 'PublishedBy', aPublishedBy);
 
     GameListNode := XmlRootNode.AddChild('GameList');
@@ -480,7 +490,23 @@ begin
   XInfo^.XMV := XMV;
   GameList.Add(XInfo);
 end; // TfrmMain.InsertXDKInfo
+   
+//------------------------------------------------------------------------------
 
+initialization
+  mHandle := CreateMutex(nil, True, 'XYZ');
+  if GetLastError = ERROR_ALREADY_EXISTS then
+  begin
+    ShowMessage('Program is already running!');
+    halt;
+  end;
+
+//------------------------------------------------------------------------------
+
+finalization
+  if mHandle <> 0 then CloseHandle(mHandle)
+
+//------------------------------------------------------------------------------
 
 
 end.

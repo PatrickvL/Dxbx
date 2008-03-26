@@ -1,9 +1,10 @@
 object frm_Publisher: Tfrm_Publisher
   Left = 426
   Top = 312
+  BorderStyle = bsDialog
   Caption = 'Publisher'
-  ClientHeight = 84
-  ClientWidth = 266
+  ClientHeight = 94
+  ClientWidth = 276
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
