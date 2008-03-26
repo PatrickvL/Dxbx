@@ -8,8 +8,6 @@ uses
 
 procedure XML_WriteString(const aXMLNode: IXMLNode; const aElementName: string; const aString: string);
 function XML_ReadString(const aXMLNode: IXMLNode; const aElementName: string): string;
-procedure XML_WriteDateTime(const aXMLNode: IXMLNode; const aElementName: string; const aDateTime: TDateTime);
-
 
 implementation
 
@@ -31,11 +29,5 @@ begin
   else
     Result := '';
 end;
-
-procedure XML_WriteDateTime(const aXMLNode: IXMLNode; const aElementName: string; const aDateTime: TDateTime);
-begin
-  XML_WriteString(aXMLNode, aElementName, DateTimeToStr(aDateTime));
-end;
-
 
 end.

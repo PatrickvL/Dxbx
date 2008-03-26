@@ -403,8 +403,7 @@ begin
 
 
 
-
-  //TODO:
+    { TODO : Xbe path need to be registered to the dll }
   // register xbe path with Cxbx.dll
 //  g_EmuShared.SetXbePath( PChar ( m_Xbe.m_szPath ) );
 

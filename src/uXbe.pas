@@ -1116,10 +1116,6 @@ end; // TXbe.ExportLogoBitmap
 
 function TXbe.GetTLSData: DWord;
 begin
-  //TODO:
-  // if m_TLS == 0 then
-  //  Return := 0
-  //else
   Result := GetAddr(m_TLS.dwDataStartAddr);
 end; // TXbe.GetTLSData
 
