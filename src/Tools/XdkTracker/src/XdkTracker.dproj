@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-    <DCC_DependencyCheckOutputName>..\..\..\..\Bin\Tools\XdkTracker.exe</DCC_DependencyCheckOutputName>
+    <DCC_DependencyCheckOutputName>..\..\..\..\bin\tools\XdkTracker.exe</DCC_DependencyCheckOutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Version>7.0</Version>
@@ -20,10 +20,10 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Version>7.0</Version>
-    <DCC_ExeOutput>..\..\..\..\Bin\Tools</DCC_ExeOutput>
-    <DCC_DcuOutput>..\Dcu</DCC_DcuOutput>
-    <DCC_ObjOutput>..\Dcu</DCC_ObjOutput>
-    <DCC_HppOutput>..\Dcu</DCC_HppOutput>
+    <DCC_ExeOutput>..\..\..\..\bin\tools</DCC_ExeOutput>
+    <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
+    <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
+    <DCC_HppOutput>..\dcu</DCC_HppOutput>
     <DCC_Define>DEBUG</DCC_Define>
   </PropertyGroup>
   <ProjectExtensions>
