@@ -145,8 +145,6 @@ begin
 end;
 
 procedure TfrmXdkTracker.WMCopyData(var Msg: TWMCopyData);
-var Result : Integer;
-
   procedure HandleCopyDataString(
     copyDataStruct: PCopyDataStruct);
   var
@@ -251,7 +249,6 @@ var
   XDKNode: iXmlNode;
   lIndex: Integer;
   Publisher: string;
-  Date: TDateTime;
   GameName: string;
 begin
   if ImportDialog.Execute then begin
