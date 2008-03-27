@@ -1,4 +1,4 @@
-object Form2: TForm2
+object frmLanguage: TfrmLanguage
   Left = 528
   Top = 149
   BorderStyle = bsDialog
