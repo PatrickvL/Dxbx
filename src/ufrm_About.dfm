@@ -3,7 +3,7 @@ object frm_About: Tfrm_About
   Top = 341
   BorderStyle = bsDialog
   Caption = 'About'
-  ClientHeight = 255
+  ClientHeight = 202
   ClientWidth = 283
   Color = clBackground
   Font.Charset = DEFAULT_CHARSET
@@ -33,14 +33,14 @@ object frm_About: Tfrm_About
     Left = 16
     Top = 48
     Width = 248
-    Height = 182
+    Height = 143
     Caption = 
-      'Dxbx - Cxbx Delphi Port.'#13#10#13#10'Developers: Shadow_tj & Pcucho'#13#10#13#10'Th' +
-      'is project is here to let the world see that Delphi is '#13#10'not dea' +
-      'd, and we are still out there.'#13#10#13#10'And for those who want to play' +
-      ' commercial games....'#13#10'Just buy an xbox.'#13#10#13#10#13#10'SPECIAL THANKS TO:' +
-      ' '#13#10'ChecKeR for C++ translation to delphi with pointers '#13#10'and oth' +
-      'er things'
+      'Dxbx - Cxbx Delphi Port.'#13#10'Developers: Shadow_tj, Pcucho, Zomby a' +
+      'nd Wayo'#13#10#13#10'This project is here to let the world see that Delphi' +
+      ' is '#13#10'not dead, and we are still out there.'#13#10'And for those who w' +
+      'ant to play commercial games....'#13#10'Just buy an xbox.'#13#10#13#10'SPECIAL T' +
+      'HANKS TO: '#13#10'ChecKeR for C++ translation to delphi with pointers ' +
+      #13#10'and other things'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
     Font.Height = -11
