@@ -99,22 +99,12 @@ end;
 function LeerXBE(sXBE: string; var pXBE: TXBE): boolean;
 var
   fXBE: TFilestream;
-  PUBKEY1, PUBKEY2, PUBKEY3, PUBKEY4: DWORD;
 begin
-  result := False;
   fXBE := TFilestream.Create(sXBE, fmOpenReadWrite);
   fXBE.Read(pXBE.Cabecera, sizeof(pXBE.Cabecera));
   fXBE.Seek(pXBE.Cabecera.pDireccionCertificado - pXBE.Cabecera.dBaseXBE, soBeginning);
   fXBE.Read(pXBE.Certificado, sizeof(pXBE.Certificado));
-
-        //--- DWORDs extraidos de la clave publica RSA1
-  PUBKEY1 := $1B103FE6; //$80
-  PUBKEY2 := $8F95A2AD; //$90
-  PUBKEY3 := $14A34FA8; //$84
-  PUBKEY4 := $FB12BEFA; //$88
-
   fXBE.Free;
-
   result := True;
 end;
 

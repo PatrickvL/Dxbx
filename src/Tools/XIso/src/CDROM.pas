@@ -1555,7 +1555,7 @@ var
   PacketSize: Longword;
   xResult: Boolean;
   Size: Integer;
-  LBA0, LBA1, LBA2, LBA3, Size0, Size1, Size2, Size3: Byte;
+  LBA0, LBA1, LBA2, LBA3, Size0, Size1: Byte;
 begin
   Result := False;
   //---Conversion de Parametros---
@@ -1564,8 +1564,6 @@ begin
   LBA2 := ($00ff0000 and TopLBA) shr 16;
   LBA1 := ($0000ff00 and TopLBA) shr 8;
   LBA0 := ($000000ff and TopLBA);
-  Size3 := ($00ff0000 and Size) shr 24;
-  Size2 := ($00ff0000 and Size) shr 16;
   Size1 := ($0000ff00 and Size) shr 8;
   Size0 := ($000000ff and Size);
   //---Inicializacion de SCSI Request Block---
@@ -2036,7 +2034,6 @@ end;
 
 function TCDROM.GetConfiguration(HA_IDx, SCSI_IDx, LUNx: Byte; Opcion: word): TArray;
 var
-  Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
@@ -2101,7 +2098,6 @@ end;
 
 function TCDROM.ReadTrackInformation(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer; Tipo: byte): TInfoPista;
 var
-  Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
@@ -2579,7 +2575,6 @@ begin
       Result.PrimeraSesion := Buffer[2];
       Result.UltimaSesion := Buffer[3];
 
-      x := 4;
       for prueba := 0 to 2048 do
       begin
             Result.Matriz[prueba] := buffer[prueba];
@@ -2714,8 +2709,6 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  offset: Byte;
-  TamRes: integer;
 begin
   //---Inicializacion de SCSI Request Block (SRB)---
   pSRBPacket := @SRBPacket;
@@ -3182,7 +3175,6 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  i: integer;
 begin
   //---Inicializacion de SCSI Request Block---
   pSRBPacket := @SRBPacket;
@@ -3314,7 +3306,6 @@ end;
 
 function TCDROM.BorrarCDRW(HA_IDx, SCSI_IDx, LUNx: byte; TipoBorrado: TBorradoCDRW; PistaOsector: integer): Boolean;
 var
-  Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
@@ -3347,19 +3338,6 @@ begin
 
   //---Ejecuta el Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
- { if RequestSence(HA_IDx, SCSI_IDx, LUNx) = STATUS_CHKCOND then
-  begin
-         Result := False;
-  end
-  else
-  begin
-       if ErrorEnable then
-       begin
-            Error := ECDROMError.Create('Error al realizar el borrado de CDRW');
-            Error.ErrorCode := $00035a00;
-            raise Error;
-       end;
-  end;   }
 
   if Assigned(FOnModeSenseFinish) then
   begin
@@ -3523,7 +3501,6 @@ var
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
   xResult: Boolean;
-  Size: Integer;
   LBA0, LBA1, LBA2, LBA3: Byte;
 begin
   Result := False;
@@ -3593,7 +3570,6 @@ var
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
   xResult: Boolean;
-  Size: Integer;
   LBA0, LBA1, LBA2, LBA3: Byte;
 begin
   Result := False;
@@ -4300,7 +4276,6 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  Carga: byte;
   LBA0, LBA1, LBA2, LBA3: byte;
   LBAC0, LBAC1, LBAC2, LBAC3: byte;
 begin
