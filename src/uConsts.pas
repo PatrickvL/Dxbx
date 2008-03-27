@@ -28,6 +28,10 @@ const
   // Xbe File Format
   _MagicNumber = 'XBEH';       
 
+  // Limits
+  _RecentXbeLimit: Integer = 10;
+  _RecentExeLimit: Integer = 10;
+
 implementation
 
 end.

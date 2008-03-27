@@ -149,6 +149,11 @@ type
     procedure ReadSettingsIni;
     procedure WriteSettingsIni;
 
+    procedure RecentXbeAdd(aFileName: string);
+    procedure RecentExeAdd(aFileName: string);
+    procedure ReopenXbe(Sender: TObject);
+    procedure ReopenExe(Sender: TObject);
+
     procedure ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean);
     function StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 
@@ -168,7 +173,7 @@ implementation
 {$R *.DFM}
 
 uses
-  ufrm_About, IniFiles, uLog, g_EmuShared;
+  ufrm_About, IniFiles, uConsts, uLog, g_EmuShared;
 
 //------------------------------------------------------------------------------
 
@@ -203,7 +208,7 @@ begin
     end;
 
     OpenXbe(XbeOpenDialog.FileName);
-
+    RecentXbeAdd(XbeOpenDialog.FileName);
     Logbitmap1.Enabled := True;
     Dumpxbeinfoto1.Enabled := True;
   end;
@@ -252,6 +257,7 @@ begin
     end;
 
     ImportExe(XbeOpenDialog.FileName);
+    RecentExeAdd(XbeOpenDialog.FileName);
   end;
 end; // Tfrm_Main.actImportExeExecute
 
@@ -302,15 +308,16 @@ begin
     Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     m_Xbe.Free;
   end;
-end;
+end; // Tfrm_Main.OpenXbe
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.SaveXbe(aFileName: string);
 begin
 
-end;
+end; // Tfrm_Main.SaveXbe
 
+//------------------------------------------------------------------------------
 
 function Tfrm_Main.SendCommandToXdkTracker: Boolean;
 var
@@ -384,6 +391,7 @@ begin
       m_ExeFilename := filename;
       WriteLog(m_szAsciiTitle + ' was converted to .exe.');
       m_bExeChanged := False;
+      RecentExeAdd(filename);
     end
     else begin
       WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
@@ -556,6 +564,9 @@ procedure Tfrm_Main.ReadSettingsIni;
 var
   DxbxIniFilePath: string;
   IniFile: TIniFile;
+  RecentTMP: string;
+  RecentTMPList: TStringList;
+  I: Integer;
 begin
   DxbxIniFilePath := FApplicationDir + 'Dxbx.Ini';
   if FileExists(DxbxIniFilePath) then
@@ -587,8 +598,31 @@ begin
     m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', 0));
     m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
 
-    IniFile.Free;
+    // Read recent XBE files
+    RecentTMP := IniFile.ReadString('Recent', 'XBEs', '');
+    RecentTMPList := TStringList.Create;
+    RecentTMPList.Clear;
+    RecentTMPList.Delimiter := '|';
+    RecentTMPList.StrictDelimiter := True;
+    RecentTMPList.DelimitedText := RecentTMP;
+    RecentXbefiles1.Clear;
+    for I := 0 to RecentTMPList.Count - 1 do begin
+      RecentXbeAdd(RecentTMPList[I]);
+    end;
 
+    // Read recent EXE files
+    RecentTMP := IniFile.ReadString('Recent', 'EXEs', '');
+    RecentTMPList := TStringList.Create;
+    RecentTMPList.Clear;
+    RecentTMPList.Delimiter := '|';
+    RecentTMPList.StrictDelimiter;
+    RecentTMPList.DelimitedText := RecentTMP;
+    RecentExefiles1.Clear;
+    for I := 0 to RecentTMPList.Count - 1 do begin
+      RecentExeAdd(RecentTMPList[I]);
+    end;
+
+    IniFile.Free;
     // Set Menu checked options
     case m_DxbxDebug of
       DM_NONE: begin
@@ -630,10 +664,10 @@ begin
     actConsoleDebugKernel.Checked := True;
     actFileDebugKernel.Checked := False;
 
-    m_AutoConvertToExe := AUTO_CONVERT_MANUAL;
-    actExeGenWindowsTemp.Checked := False;
+    m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
+    actExeGenWindowsTemp.Checked := True;
     actExeGenDxbxPath.Checked := False;
-    actExeGenManual.Checked := True;
+    actExeGenManual.Checked := False;
   end;
 end; // Tfrm_Main.ReadSettingsIni
 
@@ -642,9 +676,30 @@ end; // Tfrm_Main.ReadSettingsIni
 procedure Tfrm_Main.WriteSettingsIni;
 var
   IniFile: TIniFile;
+  RecentTMP: string;
+  I: Integer;
 begin
   // het opslaan van de inifile
   IniFile := TIniFile.Create(FApplicationDir + 'Dxbx.Ini');
+
+  // Recent XBEs write
+  RecentTMP := '';
+  if RecentXbefiles1.Count >= 1 then
+    RecentTMP := RecentXbefiles1.Items[0].Hint;
+
+  for I := 1 to RecentXbefiles1.Count - 1 do begin
+    RecentTMP := RecentTMP + '|' + RecentXbefiles1.Items[I].Hint;
+  end;
+  IniFile.WriteString('Recent', 'XBEs', RecentTMP);
+
+  // Recent EXEs write
+  RecentTMP := '';
+  if RecentExefiles1.Count >= 1 then
+    RecentTMP := RecentExefiles1.Items[0].Hint;
+  for I := 0 to RecentExefiles1.Count - 1 do begin
+    RecentTMP := RecentTMP + '|' + RecentExefiles1.Items[I].Hint;
+  end;
+  IniFile.WriteString('Recent', 'EXEs', RecentTMP);
 
   case m_AutoConvertToExe of
     AUTO_CONVERT_WINDOWS_TEMP: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 1);
@@ -903,7 +958,6 @@ end; // Tfrm_Main.actXdkTrackerXbeInfoExecute
 procedure Tfrm_Main.CreateXmlXbeDump(aFileName: string);
 var
   XmlRootNode: iXmlNode;
-
   lIndex: Integer;
   Version: string;
 begin
@@ -934,5 +988,94 @@ end; // Tfrm_Main.CreateXmlXbeDump
 
 //------------------------------------------------------------------------------
 
-end.
+procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
+var
+  TempItem: TMenuItem;
+  I: Integer;
+begin
+  for I := 0 to RecentXbefiles1.Count - 1 do begin
+    if RecentXbefiles1.Items[I].Hint = aFileName then begin
+      RecentXbefiles1.Remove(RecentXbefiles1.Items[I]);
+      Break;
+    end;
+  end;
 
+  TempItem := TMenuItem.Create(RecentXbefiles1);
+  TempItem.Hint := aFileName;
+  TempItem.Caption := ExtractFileName(aFileName);
+  TempItem.OnClick := ReopenXbe;
+
+  while(RecentXbefiles1.Count >= _RecentXbeLimit) do begin
+    RecentXbefiles1.Remove(RecentXbefiles1.Items[9]);
+  end;
+
+  RecentXbefiles1.Insert(0,TempItem);
+  RecentXbefiles1.Enabled := True;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure Tfrm_Main.RecentExeAdd(aFileName: string);
+var
+  TempItem: TMenuItem;
+  I: Integer;
+begin
+  for I := 0 to RecentExefiles1.Count - 1 do begin
+    if RecentExefiles1.Items[I].Hint = aFileName then begin
+      RecentExefiles1.Remove(RecentExefiles1.Items[I]);
+      Break;
+    end;
+  end;
+
+  TempItem := TMenuItem.Create(RecentExefiles1);
+  TempItem.Hint := aFileName;
+  TempItem.Caption := ExtractFileName(aFileName);
+  TempItem.OnClick := ReopenExe;
+
+  while(RecentExefiles1.Count >= _RecentExeLimit) do begin
+    RecentExefiles1.Remove(RecentExefiles1.Items[9]);
+  end;
+  
+  RecentExefiles1.Insert(0,TempItem);
+  RecentExefiles1.Enabled := True;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure Tfrm_Main.ReopenXbe(Sender: TObject);
+var
+  TempItem: TMenuItem;
+begin
+  TempItem := Sender as TMenuItem;
+  if FileExists(TempItem.Hint) then begin
+    if Assigned(m_Xbe) then
+      CloseXbe();
+    OpenXbe(TempItem.Hint);
+    Logbitmap1.Enabled := True;
+    Dumpxbeinfoto1.Enabled := True;
+    RecentXbeAdd(TempItem.Hint)
+  end
+  else begin
+    Showmessage('Could not locate file : ' + TempItem.Hint);
+    RecentXbefiles1.Remove(TempItem);
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure Tfrm_Main.ReopenExe(Sender: TObject);
+var
+  TempItem: TMenuItem;
+begin
+  TempItem := Sender as TMenuItem;
+  if FileExists(TempItem.Hint) then begin
+    ShellExecute(application.Handle, 'open', PChar(TempItem.Hint), nil, nil, SW_SHOWDEFAULT);
+    RecentExeAdd(TempItem.Hint);
+  end
+  else begin
+    Showmessage('Could not locate file : ' + TempItem.Hint);
+    RecentExefiles1.Remove(TempItem);
+  end;
+end;
+
+end.
