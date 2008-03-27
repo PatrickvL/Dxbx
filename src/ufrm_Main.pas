@@ -152,7 +152,7 @@ type
     procedure ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean);
     function StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 
-    procedure SendCommandToXdkTracker;
+    function SendCommandToXdkTracker: Boolean;
   public
     FApplicationDir: string;
 
@@ -311,19 +311,36 @@ begin
 
 end;
 
-procedure Tfrm_Main.SendCommandToXdkTracker;
-{var
-  stringToSend : string;
-  copyDataStruct : TCopyDataStruct;}
-begin
-  { TODO : This is for sending a command to xdktracker that there is a new xml file }
-{  stringToSend := 'About Delphi Programming';
 
-  copyDataStruct.dwData := Integer(cdtString); //use it to identify the message contents
+function Tfrm_Main.SendCommandToXdkTracker: Boolean;
+var
+  stringToSend: string;
+  copyDataStruct: TCopyDataStruct;
+
+  function SendData(copyDataStruct: TCopyDataStruct): Boolean;
+  var
+    receiverHandle: THandle;
+    res: integer;
+  begin
+    Result := False;
+    receiverHandle := FindWindow(PChar('TfrmXdkTracker'), nil);
+    if receiverHandle = 0 then
+    begin
+      Exit;
+    end;
+
+    res := SendMessage(receiverHandle, WM_COPYDATA, Integer(Handle), Integer(@copyDataStruct));
+    if res > 0 then Result := True;
+  end;
+
+begin
+  stringToSend := 'READXML';
+
+  copyDataStruct.dwData := Integer(0); //use it to identify the message contents
   copyDataStruct.cbData := 1 + Length(stringToSend);
   copyDataStruct.lpData := PChar(stringToSend);
 
-  SendData(copyDataStruct);}
+  Result := SendData(copyDataStruct);
 end;
 
 //------------------------------------------------------------------------------
@@ -565,7 +582,7 @@ begin
           actExeGenManual.Checked := True;
         end;
     end;
-    m_DxbxDebug	:= DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', 0));
+    m_DxbxDebug := DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', 0));
     m_DxbxDebugFilename := IniFile.ReadString('Settings', 'DxbxDebugFilename', '');
     m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', 0));
     m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
@@ -574,45 +591,49 @@ begin
 
     // Set Menu checked options
     case m_DxbxDebug of
-      DM_NONE    : begin
-                     actConsoleDebugGui.Checked := False;
-                     actFileDebugGui.Checked := False;
-                   end;
-      DM_CONSOLE : begin
-                     actConsoleDebugGui.Checked := True;
-                     actFileDebugGui.Checked := False;
-                   end;
-      DM_FILE    : begin
-                     actConsoleDebugGui.Checked := False;
-                     actFileDebugGui.Checked := True;
-                   end;
+      DM_NONE: begin
+          actConsoleDebugGui.Checked := False;
+          actFileDebugGui.Checked := False;
+        end;
+      DM_CONSOLE: begin
+          actConsoleDebugGui.Checked := True;
+          actFileDebugGui.Checked := False;
+        end;
+      DM_FILE: begin
+          actConsoleDebugGui.Checked := False;
+          actFileDebugGui.Checked := True;
+        end;
     end;
     case m_KrnlDebug of
-      DM_NONE    : begin
-                     actConsoleDebugKernel.Checked := False;
-                     actFileDebugKernel.Checked := False;
-                   end;
-      DM_CONSOLE : begin
-                     actConsoleDebugKernel.Checked := True;
-                     actFileDebugKernel.Checked := False;
-                   end;
-      DM_FILE    : begin
-                     actConsoleDebugKernel.Checked := False;
-                     actFileDebugKernel.Checked := True;
-                   end;
+      DM_NONE: begin
+          actConsoleDebugKernel.Checked := False;
+          actFileDebugKernel.Checked := False;
+        end;
+      DM_CONSOLE: begin
+          actConsoleDebugKernel.Checked := True;
+          actFileDebugKernel.Checked := False;
+        end;
+      DM_FILE: begin
+          actConsoleDebugKernel.Checked := False;
+          actFileDebugKernel.Checked := True;
+        end;
     end;
-    
+
   end
   else begin
-    actConsoleDebugGui.Checked := False;
+    // Setting defaults
+    m_DxbxDebug := DM_CONSOLE;
+    m_KrnlDebug := DM_CONSOLE;
+
+    actConsoleDebugGui.Checked := True;
     actFileDebugGui.Checked := False;
-    actConsoleDebugKernel.Checked := False;
+    actConsoleDebugKernel.Checked := True;
     actFileDebugKernel.Checked := False;
 
-    m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
-    actExeGenWindowsTemp.Checked := True;
+    m_AutoConvertToExe := AUTO_CONVERT_MANUAL;
+    actExeGenWindowsTemp.Checked := False;
     actExeGenDxbxPath.Checked := False;
-    actExeGenManual.Checked := False;
+    actExeGenManual.Checked := True;
   end;
 end; // Tfrm_Main.ReadSettingsIni
 
@@ -872,11 +893,8 @@ begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
     CreateXmlXbeDump(DumpFilePath);
 
-    { TODO : 
-Check is xdktracker is open, when is closed. open an import
-when already open send xml update command to the tracker }
-    ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), '/XBEDUMP', nil, SW_SHOWNORMAL);
-    //SendCommandToXdkTracker;
+    if not SendCommandToXdkTracker then
+      ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), '/XBEDUMP', nil, SW_SHOWNORMAL);
   end;
 end; // Tfrm_Main.actXdkTrackerXbeInfoExecute
 
@@ -917,3 +935,4 @@ end; // Tfrm_Main.CreateXmlXbeDump
 //------------------------------------------------------------------------------
 
 end.
+

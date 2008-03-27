@@ -17,7 +17,7 @@ Const
   cNO_XDKLIST_LOADED = 'No XDK List Loaded';
 
 type
-  TfrmMain = class(TForm)
+  TfrmXdkTracker = class(TForm)
     MainMenu1: TMainMenu;
     Viewxdkversion1: TMenuItem;
     Viewxdkversion2: TMenuItem;
@@ -65,6 +65,9 @@ type
     procedure ImportGameData;
     procedure ExportGameData;
     procedure ImportXbeDump;
+
+    procedure WMCopyData(var Msg : TWMCopyData); message WM_COPYDATA;
+
   public
     { Public declarations }
 
@@ -74,7 +77,7 @@ type
   end;
 
 var
-  frmMain: TfrmMain;
+  frmXdkTracker: TfrmXdkTracker;
   GameList: TList;
   mHandle: THandle;    // Mutexhandle
 
@@ -99,7 +102,7 @@ begin
   Result := VerInfo.dwMajorVersion >= 6;
 end;
 
-procedure TfrmMain.Viewxdkversion2Click(Sender: TObject);
+procedure TfrmXdkTracker.Viewxdkversion2Click(Sender: TObject);
 var
   lIndex: Integer;
 begin
@@ -123,7 +126,7 @@ end; // TfrmMain.Viewxdkversion2Click
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.About1Click(Sender: TObject);
+procedure TfrmXdkTracker.About1Click(Sender: TObject);
 begin
   frm_About := Tfrm_About.Create(Application);
 
@@ -136,35 +139,56 @@ end; // TfrmMain.About1Click
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.VisitShadowTjwebsite1Click(Sender: TObject);
+procedure TfrmXdkTracker.VisitShadowTjwebsite1Click(Sender: TObject);
 begin
   ShellExecute(0, cOpen, cWEBSITE_SHADOWTJ, nil, nil, SW_SHOWNORMAL);
-end; // TfrmMain.VisitShadowTjwebsite1Click
+end;
+
+procedure TfrmXdkTracker.WMCopyData(var Msg: TWMCopyData);
+var Result : Integer;
+
+  procedure HandleCopyDataString(
+    copyDataStruct: PCopyDataStruct);
+  var
+    s : string;
+  begin
+    s := PChar(copyDataStruct.lpData);
+    if s = 'READXML' then
+      ImportXbeDump;
+  end;
+
+begin
+  case Msg.CopyDataStruct.dwData of
+    0 : HandleCopyDataString(Msg.CopyDataStruct);
+  end;
+  //Send something back
+  msg.Result := 1;
+end;
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.VisitCaustikswebsite1Click(Sender: TObject);
+procedure TfrmXdkTracker.VisitCaustikswebsite1Click(Sender: TObject);
 begin
   ShellExecute(0, cOpen, cWEBSITE_CXBX, nil, nil, SW_SHOWNORMAL);
 end; // TfrmMain.VisitCaustikswebsite1Click
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.VisitCxbxForum1Click(Sender: TObject);
+procedure TfrmXdkTracker.VisitCxbxForum1Click(Sender: TObject);
 begin
   ShellExecute(0, cOpen, cWEBSITE_FORUM, nil, nil, SW_SHOWNORMAL);
 end; // TfrmMain.VisitCxbxForum1Click
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.Exit2Click(Sender: TObject);
+procedure TfrmXdkTracker.Exit2Click(Sender: TObject);
 begin
   Close;
 end; // TfrmMain.Exit2Click
 
 //------------------------------------------------------------------------------
 
-constructor TfrmMain.Create(AOwner: TComponent);
+constructor TfrmXdkTracker.Create(AOwner: TComponent);
 var
   parameter: string;
 begin
@@ -182,7 +206,7 @@ begin
   end;
 end; // TfrmMain.Create
 
-procedure TfrmMain.FormCreate(Sender: TObject);
+procedure TfrmXdkTracker.FormCreate(Sender: TObject);
 begin
   if IsWindowsVista then begin
     sSkinManager1.SkinningRules := [srStdForms, srThirdParty];
@@ -194,7 +218,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-destructor TfrmMain.Destroy;
+destructor TfrmXdkTracker.Destroy;
 begin
   SaveGameData(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=} '');
   GameList.Free;
@@ -203,7 +227,7 @@ end; // TfrmMain.Destroy
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.ExportGameData;
+procedure TfrmXdkTracker.ExportGameData;
 begin
   frm_Publisher := Tfrm_Publisher.Create(Self);
 
@@ -219,7 +243,7 @@ end; // TfrmMain.ExportGameData
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.ImportGameData;
+procedure TfrmXdkTracker.ImportGameData;
 var
   xmlRootNode: iXmlNode;
   InfoNode: iXmlNode;
@@ -322,7 +346,7 @@ end; // TfrmMain.ImportGameData
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.LoadGameData;
+procedure TfrmXdkTracker.LoadGameData;
 var
   GameDataFilePath: string;
 
@@ -369,19 +393,19 @@ end; // TfrmMain.LoadGameData
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.ExportGameList1Click(Sender: TObject);
+procedure TfrmXdkTracker.ExportGameList1Click(Sender: TObject);
 begin
   ExportGameData;
 end; // TfrmMain.ExportGameList1Click
 
-procedure TfrmMain.ImportGameList1Click(Sender: TObject);
+procedure TfrmXdkTracker.ImportGameList1Click(Sender: TObject);
 begin
   ImportGameData;
 end; // TfrmMain.ImportGameList1Click
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.SaveGameData(const aFilePath, aPublishedBy: string);
+procedure TfrmXdkTracker.SaveGameData(const aFilePath, aPublishedBy: string);
 var
   XmlRootNode: iXmlNode;
   PublishedNode: iXmlNode;
@@ -422,7 +446,7 @@ begin
 end; // TfrmMain.SaveGameData
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.ImportXbeDump;
+procedure TfrmXdkTracker.ImportXbeDump;
 var
   DumpFilePath: string;
   RootNode: iXmlNode;
@@ -465,7 +489,7 @@ end; // TfrmMain.ImportXbeDump
 
 //------------------------------------------------------------------------------
 
-function TfrmMain.SearchGameName(GameName: string): Boolean;
+function TfrmXdkTracker.SearchGameName(GameName: string): Boolean;
 var
   lIndex: Integer;
 begin
@@ -481,7 +505,7 @@ end; // TfrmMain.SearchGameName
 
 //------------------------------------------------------------------------------
 
-procedure TfrmMain.InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT,
+procedure TfrmXdkTracker.InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT,
   D3D8, XGRAPHC, DSOUND, XMV: string);
 begin
   New(XInfo);
