@@ -284,7 +284,6 @@ begin
   ConstructorInit();
 
   RawSize := 0;
-
   F := FileOpen(aFileName, fmOpenRead);
   FileSz := GetFileSize(f, nil);
   FileClose(F);
@@ -305,13 +304,12 @@ begin
     MessageDlg('Unexpected end of file while reading Xbe Image Header', mtError, [mbOk], 0);
     Exit;
   end;
-
   AssignFile(XbeFile, aFileName);
+  FileMode := fmOpenRead;
   Reset(XbeFile);
   freemem(buffer);
   getmem(buffer, FileSz);
   BlockRead(XBeFile, Buffer^, FileSz, ReadBytes);
-
   // m_Header.dwMagic Read (4 Bytes)
   i := 0;
   for lIndex := 0 to 3 do begin
