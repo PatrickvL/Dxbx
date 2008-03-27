@@ -1,4 +1,4 @@
-object Form1: TForm1
+object frm_Main: Tfrm_Main
   Left = 230
   Top = 181
   Caption = 'xISO - DXBX Edition'

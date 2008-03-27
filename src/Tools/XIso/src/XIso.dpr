@@ -30,12 +30,12 @@ uses
   Messages,
   SysUtils,
   Reinit,
-  ufrm_Main in 'ufrm_Main.pas' {Form1},
+  ufrm_Main in 'ufrm_Main.pas' {frm_Main},
   uxiso in 'uxiso.pas',
   uxisomaker in 'uxisomaker.pas',
   Textos in 'Textos.pas',
-  ufrm_Language in 'ufrm_Language.pas' {Form2},
-  progreso in 'progreso.pas' {Form3},
+  ufrm_Language in 'ufrm_Language.pas' {frmLanguage},
+  ufrmProgress in 'ufrmProgress.pas' {frmProgress},
   GenerarXDFS in 'GenerarXDFS.pas',
   Grabacion in 'Grabacion.pas' {Form4},
   CreacionISO in 'CreacionISO.pas',
@@ -226,8 +226,8 @@ begin
 
   Application.Initialize;
   Application.Title := 'xISO 1.1.5';
-  Application.CreateForm(TForm1, Form1);
-  Application.CreateForm(TForm2, Form2);
+  Application.CreateForm(Tfrm_Main, frm_Main);
+  Application.CreateForm(TfrmLanguage, frmLanguage);
   Application.Run;
 end.
 

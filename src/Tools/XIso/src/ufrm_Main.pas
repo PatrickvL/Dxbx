@@ -31,7 +31,7 @@ uses
   Menus, ShellApi, ToolWin, Graphics, Registry, uxisomaker, xisomakerv3;
 
 type
-  TForm1 = class(TForm)
+  Tfrm_Main = class(TForm)
     OpenDialog1: TOpenDialog;
     Panel1: TPanel;
     TreeView1: TTreeView;
@@ -142,7 +142,7 @@ const
   OD_CD = 2;
 
 var
-  Form1: TForm1;
+  frm_Main: Tfrm_Main;
 
   NombreImagen: string;
   OrigenDatos: integer;
@@ -159,7 +159,7 @@ function QuitarComilla(Texto: string): string;
 
 implementation
 
-uses uxiso, xbe, Textos, ufrm_Language, progreso, Grabacion, FormCreacionISO;
+uses uxiso, xbe, Textos, ufrm_Language, ufrmProgress, Grabacion, FormCreacionISO;
 
 function IsWindowsVista: Boolean;
 var VerInfo: TOSVersioninfo;
@@ -171,8 +171,6 @@ end;
 
 {$R *.dfm}
 //{$R WinXP.res}
-
-
 
 function QuitarComilla(Texto: string): string;
 begin
@@ -215,7 +213,7 @@ procedure AsignarUnidadesAListas();
 var
   i: integer;
 begin
-  with Form1 do
+  with frm_Main do
   begin
     for i := 0 to CantidadUnidades - 1 do
     begin
@@ -227,9 +225,9 @@ end;
 
 procedure AsignarSCSIID(var HA, SCSI, LUN: byte);
 begin
-  HA := Unidades[Form1.cLectores.ItemIndex].HA;
-  SCSI := Unidades[Form1.cLectores.ItemIndex].SCSI;
-  LUN := Unidades[Form1.cLectores.ItemIndex].LUN;
+  HA := Unidades[frm_Main.cLectores.ItemIndex].HA;
+  SCSI := Unidades[frm_Main.cLectores.ItemIndex].SCSI;
+  LUN := Unidades[frm_Main.cLectores.ItemIndex].LUN;
 end;
 
 function SelectDirectory(const Caption: string; const Root: WideString;
@@ -267,11 +265,9 @@ begin
         lpszTitle := PChar(Caption);
         ulFlags := BIF_RETURNONLYFSDIRS or BIF_RETURNFSANCESTORS or BIF_EDITBOX or BIF_NEWDIALOGSTYLE;
       end;
-     //WindowList := DisableTaskWindows(0);
       try
         ItemIDList := ShBrowseForFolder(BrowseInfo);
       finally
-       // EnableTaskWindows(WindowList);
       end;
       Result := ItemIDList <> nil;
       if Result then
@@ -314,9 +310,6 @@ begin
 
   Result := True;
 end;
-
-//ORIGINAL: 01008B809C00000025FFFFFF003BC775
-//PARCHEADO: 01008B809C00000025FFFFFF003BC7EB
 
 function ParchearMediaCheck(sXBE: string): boolean;
 const
@@ -378,13 +371,12 @@ var
     Result := Info.hIcon;
   end;
 begin
-  Form1.Listview1.Items.BeginUpdate;
-  Form1.Listview1.Items.Clear;
+  frm_Main.Listview1.Items.BeginUpdate;
+  frm_Main.Listview1.Items.Clear;
   Icono := TIcon.Create;
   for i := 0 to xIISO.Lista.Count - 1 do
   begin
     Atributos := '';
-             //if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then continue;
     if PxFichero(xIISO.Lista.Items[i])^.DirPadre <> Directorio then continue;
     pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
     Sector := PxFichero(xIISO.Lista.Items[i])^.SectorIn;
@@ -396,13 +388,13 @@ begin
     if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_FICHERO) = XF_FICHERO then Atributos := Atributos + 'F';
     if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_NORMAL) = XF_NORMAL then Atributos := Atributos + 'N';
 
-    Fila := Form1.Listview1.Items.Add;
+    Fila := frm_Main.Listview1.Items.Add;
     Fila.Caption := pNombre;
     new(pSector);
     pSector^ := PxFichero(xIISO.Lista.Items[i])^.DirHijo;
     Fila.Data := pSector;
     Icono.Handle := GetAssociatedIcon(ExtractFileExt(pNombre), True);
-    Form1.ImageList1.ReplaceIcon(6, Icono);
+    frm_Main.ImageList1.ReplaceIcon(6, Icono);
     if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
       Fila.ImageIndex := 0
     else
@@ -414,10 +406,10 @@ begin
     Fila.SubItems.Add(IntToStr(PxFichero(xIISO.Lista.Items[i])^.pDer));
   end;
   Icono.Free;
-  Form1.Listview1.Items.EndUpdate;
+  frm_Main.Listview1.Items.EndUpdate;
 end;
 
-procedure TForm1.WMDROPFILES(var msg: TMessage);
+procedure Tfrm_Main.WMDROPFILES(var msg: TMessage);
 var
   dr: HDrop;
   nb: integer;
@@ -433,7 +425,7 @@ begin
     AbrirImagen(fn);
 end;
 
-procedure TForm1.AbrirImagen(Imagen: string);
+procedure Tfrm_Main.AbrirImagen(Imagen: string);
 var
   pDirSector: PInteger;
   pNombre: PChar;
@@ -444,7 +436,7 @@ begin
   NombreImagen := Imagen;
   if not AbrirXISO(NombreImagen) then
   begin
-    MessageBox(Form1.Handle, PChar(rcEngImagenNoXBOX), PChar(rcEngMensaje), MB_ICONINFORMATION or MB_OK);
+    MessageBox(frm_Main.Handle, PChar(rcEngImagenNoXBOX), PChar(rcEngMensaje), MB_ICONINFORMATION or MB_OK);
     Exit;
   end;
 
@@ -476,7 +468,7 @@ begin
   StatusBar1.Panels[2].Text := Format('%s: %d KB', [rcEngTamISO, xIISO.tamISO div 1024]);
 end;
 
-procedure TForm1.TreeView1Click(Sender: TObject);
+procedure Tfrm_Main.TreeView1Click(Sender: TObject);
 var
   Dir: integer;
 begin
@@ -488,7 +480,7 @@ begin
   LeerFicheros(Dir);
 end;
 
-procedure TForm1.ListView1Change(Sender: TObject; Item: TListItem;
+procedure Tfrm_Main.ListView1Change(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 begin
   if Listview1.SelCount = 0 then ToolButton2.Enabled := False
@@ -499,7 +491,7 @@ begin
     ToolButton9.Enabled := False;
 end;
 
-procedure TForm1.ListView1DblClick(Sender: TObject);
+procedure Tfrm_Main.ListView1DblClick(Sender: TObject);
 var
   Dir: PInteger;
   i: integer;
@@ -520,7 +512,7 @@ begin
     ToolButton2.Click;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   Parametro, CarpetaParametro: string;
   i: integer;
@@ -544,7 +536,7 @@ begin
   end
   else
   begin
-    MessageBox(Form1.Handle, PChar(rcEngInstalarASPI), nil, MB_OK or MB_ICONWARNING);
+    MessageBox(frm_Main.Handle, PChar(rcEngInstalarASPI), nil, MB_OK or MB_ICONWARNING);
   end;
 
   for i := 0 to ParamCount - 1 do
@@ -578,14 +570,14 @@ begin
         OD_IMAGEN: ExtraerFichero(NombreImagen, carpeta + pNombre, Sector, Tamano);
         OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, carpeta + pNombre, Sector, Tamano);
       end;
-    if Form1 <> nil then
+    if frm_Main <> nil then
     begin
-      Form1.ProgressBar1.StepIt;
+      frm_Main.ProgressBar1.StepIt;
       Application.ProcessMessages;
       Application.ProcessMessages;
       Application.ProcessMessages;
-      Form1.StatusBar1.Repaint;
-      Form1.StatusBar1.Refresh;
+      frm_Main.StatusBar1.Repaint;
+      frm_Main.StatusBar1.Refresh;
     end;
   end;
 end;
@@ -613,14 +605,14 @@ begin
         OD_IMAGEN: ExtraerFichero(NombreImagen, carpeta + pNombre, Sector, Tamano);
         OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, carpeta + pNombre, Sector, Tamano);
       end;
-    if Form1 <> nil then
+    if frm_Main <> nil then
     begin
-      Form1.ProgressBar1.StepIt;
+      frm_Main.ProgressBar1.StepIt;
       Application.ProcessMessages;
       Application.ProcessMessages;
       Application.ProcessMessages;
-      Form1.StatusBar1.Repaint;
-      Form1.StatusBar1.Refresh;
+      frm_Main.StatusBar1.Repaint;
+      frm_Main.StatusBar1.Refresh;
     end;
   end;
 end;
@@ -668,19 +660,18 @@ begin
       and (PxFichero(xIISO.Lista.Items[i])^.SectorIn <> 0) then
     begin
       Directorios.Add(xIISO.Lista.Items[i]);
-                  //GenerarFileListRec(F,PxFichero(xIISO.Lista.Items[i])^.DirHijo,Carpeta+pNombre+'\');
     end
     else
     begin
       WriteLn(F, FormatearSector(Sector) + ',' + Carpeta + pNombre);
     end;
 
-    Form1.ProgressBar1.StepIt;
+    frm_Main.ProgressBar1.StepIt;
     Application.ProcessMessages;
     Application.ProcessMessages;
     Application.ProcessMessages;
-    Form1.StatusBar1.Repaint;
-    Form1.StatusBar1.Refresh;
+    frm_Main.StatusBar1.Repaint;
+    frm_Main.StatusBar1.Refresh;
   end;
 
   for i := 0 to Directorios.Count - 1 do
@@ -699,17 +690,17 @@ var
 begin
   AssignFile(F, FileList);
   ReWrite(F);
-  Form1.ProgressBar1.Min := 0;
-  Form1.ProgressBar1.Max := xIISO.Lista.Count;
+  frm_Main.ProgressBar1.Min := 0;
+  frm_Main.ProgressBar1.Max := xIISO.Lista.Count;
   xIISO.Lista.Sort(CompararDirPadre);
   GenerarFileListRec(F, 0, '\', 0);
   CloseFile(F);
-  Form1.ProgressBar1.Position := 0;
-  Form1.StatusBar1.Repaint;
-  Form1.StatusBar1.Refresh;
+  frm_Main.ProgressBar1.Position := 0;
+  frm_Main.StatusBar1.Repaint;
+  frm_Main.StatusBar1.Refresh;
 end;
 
-procedure TForm1.PopupMenu1Popup(Sender: TObject);
+procedure Tfrm_Main.PopupMenu1Popup(Sender: TObject);
 begin
   if Listview1.Selected = nil then
   begin
@@ -747,7 +738,7 @@ begin
     end;
 end;
 
-procedure TForm1.StatusBar1DrawPanel(StatusBar: TStatusBar;
+procedure Tfrm_Main.StatusBar1DrawPanel(StatusBar: TStatusBar;
   Panel: TStatusPanel; const Rect: TRect);
 var
   R: TRect;
@@ -762,7 +753,7 @@ begin
   end;
 end;
 
-procedure TForm1.ExtraerFicheroyEjecutar1Click(Sender: TObject);
+procedure Tfrm_Main.ExtraerFicheroyEjecutar1Click(Sender: TObject);
 var
   tamano, sector, i: integer;
   nombre: string;
@@ -799,7 +790,7 @@ begin
   ShellExecute(0, 'open', PChar(DirTemp + nombre), nil, nil, SW_SHOW);
 end;
 
-procedure TForm1.Introducirfichero1Click(Sender: TObject);
+procedure Tfrm_Main.Introducirfichero1Click(Sender: TObject);
 var
   Sector, Tam, Ent, Resto, a: integer;
   Imagen, Fichero: TFileStream;
@@ -845,42 +836,42 @@ begin
   MessageBox(Handle, PChar(rcEngIntroducidoOK), PChar(rcEngMensaje), MB_OK or MB_ICONINFORMATION);
 end;
 
-procedure TForm1.Salir1Click(Sender: TObject);
+procedure Tfrm_Main.Salir1Click(Sender: TObject);
 begin
   Application.Terminate;
 end;
 
-procedure TForm1.XBEDevKitRetail1Click(Sender: TObject);
+procedure Tfrm_Main.XBEDevKitRetail1Click(Sender: TObject);
 begin
   if not OpenDialog2.Execute then exit;
   if not ParchearXBE(OpenDialog2.FileName) then
-    MessageBox(Form1.Handle, PChar(rcEngErrorAbrirXBE), PChar(rcEngError), MB_OK or MB_ICONERROR)
+    MessageBox(frm_Main.Handle, PChar(rcEngErrorAbrirXBE), PChar(rcEngError), MB_OK or MB_ICONERROR)
   else
-    MessageBox(Form1.Handle, PChar(rcEngParcheadoOK), PChar(rcEngMensaje), MB_OK or MB_ICONINFORMATION);
+    MessageBox(frm_Main.Handle, PChar(rcEngParcheadoOK), PChar(rcEngMensaje), MB_OK or MB_ICONINFORMATION);
 end;
 
 procedure CrearImagen(Carpeta: string; Fichero: string);
 begin
-  if Form3 = nil then
-    Form3 := TForm3.Create(Form1);
+  if frmProgress = nil then
+    frmProgress := frmProgress.Create(frm_Main);
   if (Carpeta <> '') then
-    progreso.Carpeta := Carpeta;
+    ufrmProgress.Carpeta := Carpeta;
   if (Fichero <> '') then
-    Form3.SaveDialog1.FileName := Fichero;
+    frmProgress.SaveDialog1.FileName := Fichero;
 
-  Form3.FormPadre := Form1;
-  Form3.ShowModal;
-  Form3.Free;
-  Form3 := nil;
+  frmProgress.FormPadre := frm_Main;
+  frmProgress.ShowModal;
+  frmProgress.Free;
+  frmProgress := nil;
 end;
 
-procedure TForm1.Crea1Click(Sender: TObject);
+procedure Tfrm_Main.Crea1Click(Sender: TObject);
 begin
-  if SelectDirectory(rcEngIntroduceDir, '', progreso.Carpeta) and SaveDialog1.Execute then
-    CrearImagen(progreso.Carpeta, SaveDialog1.Filename);
+  if SelectDirectory(rcEngIntroduceDir, '', ufrmProgress.Carpeta) and SaveDialog1.Execute then
+    CrearImagen(ufrmProgress.Carpeta, SaveDialog1.Filename);
 end;
 
-procedure TForm1.ToolButton2Click(Sender: TObject);
+procedure Tfrm_Main.ToolButton2Click(Sender: TObject);
 var
   tamano, sector, i: integer;
   nombre: string;
@@ -925,7 +916,7 @@ begin
   MessageBox(Handle, PChar(rcEngFinExtraccion), PChar(rcEngMensaje), MB_OK or MB_ICONINFORMATION);
 end;
 
-procedure TForm1.ToolButton1Click(Sender: TObject);
+procedure Tfrm_Main.ToolButton1Click(Sender: TObject);
 var
   carpeta: string;
   HA, SCSI, LUN: byte;
@@ -944,7 +935,7 @@ begin
   MessageBox(Handle, PChar(rcEngFinExtraccion), PChar(rcEngMensaje), MB_OK or MB_ICONINFORMATION);
 end;
 
-procedure TForm1.ToolButton4Click(Sender: TObject);
+procedure Tfrm_Main.ToolButton4Click(Sender: TObject);
 var
   pDirSector: PInteger;
   pNombre: PChar;
@@ -959,7 +950,7 @@ begin
   AsignarSCSIID(HA, SCSI, LUN);
   if not LeerXDVD(HA, SCSI, LUN, Unidad) then
   begin
-    MessageBox(Form1.Handle, PChar(rcEngDVDnoXBOX), Pchar(rcEngMensaje), MB_ICONINFORMATION or MB_OK);
+    MessageBox(frm_Main.Handle, PChar(rcEngDVDnoXBOX), Pchar(rcEngMensaje), MB_ICONINFORMATION or MB_OK);
     Exit;
   end;
 
@@ -991,7 +982,7 @@ begin
   StatusBar1.Panels[2].Text := Format('%s: %d KB', [rcEngTamISO, xIISO.tamISO div 1024]);
 end;
 
-procedure TForm1.ToolButton8Click(Sender: TObject);
+procedure Tfrm_Main.ToolButton8Click(Sender: TObject);
 var
   sXBE: TXBE;
   s: PWideChar;
@@ -1001,7 +992,7 @@ begin
   showmessage(s);
 end;
 
-procedure TForm1.ToolButton10Click(Sender: TObject);
+procedure Tfrm_Main.ToolButton10Click(Sender: TObject);
 begin
   if xIISO.Lista = nil then exit;
   if xIISO.Lista.Count = 0 then exit;
@@ -1009,28 +1000,28 @@ begin
   GenerarFileList(SaveDialog3.Filename);
 end;
 
-procedure TForm1.Opciones1Click(Sender: TObject);
+procedure Tfrm_Main.Opciones1Click(Sender: TObject);
 begin
-  Form2.ShowModal;
+  frmLanguage.ShowModal;
 end;
 
-procedure TForm1.AcercadexISO2Click(Sender: TObject);
+procedure Tfrm_Main.AcercadexISO2Click(Sender: TObject);
 begin
   MessageBox(Handle, PChar('xISO' + #13 + #13 + rcEngDesarrollado + ' Yursoft.' + #13 + rcEngManejoASPI + ' Yursoft' + #13 + rcEngLecturaXBOX + ' Yursoft' + #13 + rcEngEscrituraXBOX + ' Yursoft'), PChar(rcEngAcercaDe), MB_OK or MB_ICONINFORMATION);
 end;
 
-procedure TForm1.Sitiooficial1Click(Sender: TObject);
+procedure Tfrm_Main.Sitiooficial1Click(Sender: TObject);
 begin
   ShellExecute(0, 'open', 'http://www.yursoft.com', nil, nil, SW_SHOWNORMAL);
 end;
 
-procedure TForm1.ToolButton5Click(Sender: TObject);
+procedure Tfrm_Main.ToolButton5Click(Sender: TObject);
 begin
   if not OpenDialog1.Execute then exit;
   AbrirImagen(OpenDialog1.Filename);
 end;
 
-procedure TForm1.ExtensionesShell1Click(Sender: TObject);
+procedure Tfrm_Main.ExtensionesShell1Click(Sender: TObject);
 var
   Reg: TRegistry;
   S, T: string;
@@ -1085,21 +1076,18 @@ begin
 
   Reg.Free;
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
-
-//        'HKEY_CLASSES_ROOT\Directory\shell\xISO'
-//        'HKEY_CLASSES_ROOT\xISOFILE'
 end;
 
-procedure TForm1.AadirsoporteISO96601Click(Sender: TObject);
+procedure Tfrm_Main.AadirsoporteISO96601Click(Sender: TObject);
 begin
   if not OpenDialog1.Execute then Exit;
   if not XDFS2ISO9660(OpenDialog1.Filename) then
-    MessageBox(Form1.Handle, PChar(rcEngImagenNoXBOX), PChar(rcEngMensaje), MB_ICONINFORMATION or MB_OK)
+    MessageBox(frm_Main.Handle, PChar(rcEngImagenNoXBOX), PChar(rcEngMensaje), MB_ICONINFORMATION or MB_OK)
   else
-    MessageBox(Form1.Handle, PChar(rcEngISO9660ok), PChar(rcEngMensaje), MB_ICONINFORMATION or MB_OK);
+    MessageBox(frm_Main.Handle, PChar(rcEngISO9660ok), PChar(rcEngMensaje), MB_ICONINFORMATION or MB_OK);
 end;
 
-procedure TForm1.GrabarISO1Click(Sender: TObject);
+procedure Tfrm_Main.GrabarISO1Click(Sender: TObject);
 begin
   if Form4 = nil then Form4 := TForm4.Create(nil);
   Form4.ShowModal;
@@ -1107,7 +1095,7 @@ begin
   Form4 := nil;
 end;
 
-procedure TForm1.Extraercarpeta1Click(Sender: TObject);
+procedure Tfrm_Main.Extraercarpeta1Click(Sender: TObject);
 var
   carpeta: string;
   HA, SCSI, LUN: byte;
@@ -1130,13 +1118,13 @@ begin
   Statusbar1.Refresh;
 end;
 
-procedure TForm1.TreeView1KeyUp(Sender: TObject; var Key: Word;
+procedure Tfrm_Main.TreeView1KeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   TreeView1Click(Self);
 end;
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure Tfrm_Main.FormShow(Sender: TObject);
 begin
   if ProgressBar1 = nil then
   begin
@@ -1147,7 +1135,7 @@ begin
   end;
 end;
 
-procedure TForm1.ToolButton13Click(Sender: TObject);
+procedure Tfrm_Main.ToolButton13Click(Sender: TObject);
 begin
   if Form5 = nil then Form5 := TForm5.Create(Self);
   Form5.ShowModal;

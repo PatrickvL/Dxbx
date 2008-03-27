@@ -31,7 +31,7 @@ uses
   Dialogs, StdCtrls, Registry, Reinit;
 
 type
-  TForm2 = class(TForm)
+  TfrmLanguage = class(TForm)
     GroupBox1: TGroupBox;
     RadioButton1: TRadioButton;
     RadioButton2: TRadioButton;
@@ -45,7 +45,7 @@ type
   end;
 
 var
-  Form2: TForm2;
+  frmLanguage: TfrmLanguage;
 
 procedure SetLocalOverrides(FileName: string; LocaleOverride: string);
 
@@ -67,7 +67,7 @@ begin
   end;
 end;
 
-procedure TForm2.RadioButton1Click(Sender: TObject);
+procedure TfrmLanguage.RadioButton1Click(Sender: TObject);
 begin
   SetLocalOverrides(ParamStr(0), 'esp');
   if LoadNewResourceModule(LANG_SPANISH) <> 0 then
@@ -75,7 +75,7 @@ begin
         //MessageBox(0,'Reinicia el programa, para que surtan efecto los cambios','Mensaje',MB_OK);
 end;
 
-procedure TForm2.RadioButton2Click(Sender: TObject);
+procedure TfrmLanguage.RadioButton2Click(Sender: TObject);
 begin
   SetLocalOverrides(ParamStr(0), 'enu');
   if LoadNewResourceModule(LANG_ENGLISH) <> 0 then
@@ -83,7 +83,7 @@ begin
         //MessageBox(0,'Reboot the program for translate it.','Mensaje',MB_OK);
 end;
 
-procedure TForm2.FormCreate(Sender: TObject);
+procedure TfrmLanguage.FormCreate(Sender: TObject);
 var
   Reg: TRegistry;
   s: string;
