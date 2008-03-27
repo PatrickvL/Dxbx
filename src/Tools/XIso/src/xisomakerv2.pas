@@ -293,7 +293,6 @@ var
   Entrada: PEntradaDir;
 begin
   Result := 0;
-  Resto := 0;
   Lista := TList.Create();
 
   for i := 0 to Carpeta.Cantidad - 1 do
@@ -368,7 +367,6 @@ var
   Elem, Elem2: PEntradaDir;
   ListaAux: TList;
 begin
-  Cont := 0;
   ListaAux := TList.Create();
   for i := 0 to Lista.Count - 1 do
   begin
@@ -426,7 +424,6 @@ var
   Entrada: PEntradaDir;
   Atributos: Byte;
 begin
-  Atributos := 0;
   for i := 0 to lDirectorio.Count - 1 do
   begin
     Entrada := PEntradaDir(lDirectorio[i]);

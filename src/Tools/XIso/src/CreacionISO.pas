@@ -78,7 +78,6 @@ type
     function AgregarCarpeta(Carpeta: string): boolean;
     function AgregarCarpetaNueva(Carpeta: string): boolean;
     function EliminarFichero(Fichero: string): boolean;
-    function EliminarCarpeta(Carpeta: string): boolean;
     function Buscar(const id: integer; LContenido: TListaContenido): TListaContenido; overload;
     function Buscar(id: integer): TListaContenido; overload;
     function Mover(ElementoOrigen: PEntrada; ElementoDestino: PEntrada): boolean;
@@ -333,13 +332,6 @@ begin
   Result := True;
 end;
 
-function TAdminFicheros.EliminarCarpeta(Carpeta: string): boolean;
-begin
-  Result := False;
-
-  Result := True;
-end;
-
 function TAdminFicheros.Buscar(const id: integer; LContenido: TListaContenido): TListaContenido;
 var
   i: integer;
@@ -411,10 +403,9 @@ end;
 
 function TAdminFicheros.Avanzar(ListaNueva: TListaContenido): boolean;
 begin
-  Result := False;
   ListaAnterior := ListaNueva.Entrada[-1].NivelAnterior;
   ListaActual := ListaNueva;
-  Result := True;
+  Result := true;
 end;
 
 function TAdminFicheros.Retroceder: boolean;

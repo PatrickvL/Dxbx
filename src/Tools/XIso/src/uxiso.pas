@@ -96,7 +96,7 @@ implementation
 procedure ExtraerFichero(fichero: string; grabar: string; sector, tamano: int64);
 var
    fxiso,fguardar: TFilestream;
-   i,fin: int64;
+   fin: int64;
    buffer: array[0..2047] of byte;
 begin
      sector := sector+IMG_SECTOR-32;
@@ -256,7 +256,7 @@ end;
 function AbrirXISO(imagen: string): boolean;
 var
    Fichero: TFilestream;
-   i,NumIni: int64;
+   NumIni: int64;
 begin
         NumIni := 0;
         Result := False;

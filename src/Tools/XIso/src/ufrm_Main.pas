@@ -28,8 +28,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ShlObj, ActiveX, ExtCtrls, ImgList, CDROM, WIN32ASPI,
-  Menus, ShellApi, ToolWin, Graphics, Registry, uxisomaker, xisomakerv3,
-  sSkinProvider, sSkinManager;
+  Menus, ShellApi, ToolWin, Graphics, Registry, uxisomaker, xisomakerv3;
 
 type
   TForm1 = class(TForm)
@@ -90,8 +89,6 @@ type
     ToolButton13: TToolButton;
     ToolButton14: TToolButton;
     xISOStudio1: TMenuItem;
-    sSkinManager1: TsSkinManager;
-    sSkinProvider1: TsSkinProvider;
     procedure TreeView1Click(Sender: TObject);
     procedure ListView1Change(Sender: TObject; Item: TListItem;
       Change: TItemChange);
@@ -555,16 +552,7 @@ begin
     Parametro := Copy(ParamStr(i), 1, 2);
     if Parametro = '-o' then
       AbrirImagen(ParamStr(i + 1));
-  end;
-
-  if IsWindowsVista then begin
-    sSkinManager1.SkinningRules := [srStdForms, srThirdParty];
-  end
-  else begin
-    sSkinManager1.SkinningRules := [srStdForms, srStdDialogs, srThirdParty];
-  end;
-
-
+  end;  
 end;
 
 procedure ExtraerCD(HA, SCSI, LUN: byte; Directorio: integer; Carpeta: string);
