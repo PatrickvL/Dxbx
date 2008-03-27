@@ -38,7 +38,7 @@ type
   end;
 
 var
-   Imagen,Carpeta: string;
+  Imagen, Carpeta: string;
 
 implementation
 
@@ -48,10 +48,10 @@ uses uxisomaker, Textos;
 
 procedure TGenerarXDFS.Execute;
 begin
-     if not CrearXISO(Imagen, Carpeta) then
-       MessageBox(Handle,PChar(rcEngErrorCrearXISO),PChar(rcEngMensaje),MB_OK or MB_ICONERROR)
-     else
-       MessageBox(Handle,PChar(rcEngImagenCreadaOK),PChar(rcEngMensaje),MB_OK or MB_ICONINFORMATION);
+  if not CrearXISO(Imagen, Carpeta) then
+    MessageBox(Handle, PChar(rcEngErrorCrearXISO), PChar(rcEngMensaje), MB_OK or MB_ICONERROR)
+  else
+    MessageBox(Handle, PChar(rcEngImagenCreadaOK), PChar(rcEngMensaje), MB_OK or MB_ICONINFORMATION);
 end;
 
 end.

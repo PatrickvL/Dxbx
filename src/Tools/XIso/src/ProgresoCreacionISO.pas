@@ -38,7 +38,7 @@ type
   end;
 
 var
-   Estado: Boolean;
+  Estado: Boolean;
 
 implementation
 
@@ -46,22 +46,22 @@ implementation
 
 uses FormCreacionISO, xisomakerv2;
 
-procedure AvanzarProgreso(Fichero: String);
+procedure AvanzarProgreso(Fichero: string);
 begin
-        Form5.ProgressBar1.StepIt;
+  Form5.ProgressBar1.StepIt;
 end;
 
 procedure TProgresoCreacionISO.Execute;
 var
-   ManagerXISO: TAdminXISO;
+  ManagerXISO: TAdminXISO;
 begin
-        Estado := False;
-        if not Form5.SaveDialog1.Execute then Exit;
-        ManagerXISO := TAdminXISO.Create(Form5.Manager);
-        ManagerXISO.ProgresoxISO := AvanzarProgreso;
-        ManagerXISO.CrearXISO(Form5.SaveDialog1.FileName);
-        ManagerXISO.Free;
-        Estado := True;
+  Estado := False;
+  if not Form5.SaveDialog1.Execute then Exit;
+  ManagerXISO := TAdminXISO.Create(Form5.Manager);
+  ManagerXISO.ProgresoxISO := AvanzarProgreso;
+  ManagerXISO.CrearXISO(Form5.SaveDialog1.FileName);
+  ManagerXISO.Free;
+  Estado := True;
 end;
 
 end.

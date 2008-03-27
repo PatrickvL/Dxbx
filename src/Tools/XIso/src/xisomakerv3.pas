@@ -29,13 +29,13 @@ uses Windows, SysUtils, Classes, Dialogs;
 
 const
   XBOX_MEDIA_ID = 'MICROSOFT*XBOX*MEDIA';
-  
+
   XBOX_FILE_ATTRIBUTE_READONLY = $01;
-  XBOX_FILE_ATTRIBUTE_HIDDEN   = $02;
-  XBOX_FILE_ATTRIBUTE_SYSTEM   = $04;
-  XBOX_FILE_ATTRIBUTE_DIRECTORY= $10;
-  XBOX_FILE_ATTRIBUTE_FILE     = $20;
-  XBOX_FILE_ATTRIBUTE_NORMAL   = $80;
+  XBOX_FILE_ATTRIBUTE_HIDDEN = $02;
+  XBOX_FILE_ATTRIBUTE_SYSTEM = $04;
+  XBOX_FILE_ATTRIBUTE_DIRECTORY = $10;
+  XBOX_FILE_ATTRIBUTE_FILE = $20;
+  XBOX_FILE_ATTRIBUTE_NORMAL = $80;
 
 type
 {$A-}
@@ -61,7 +61,7 @@ type
 {$A+}
 
   TDirectoryList = class;
-  
+
   PFile = ^TFile;
   TFile = record
     FileName: string;
@@ -109,12 +109,14 @@ type
 implementation
 
 // Devuelve el offset del sector siguiente al pasado.
+
 function NextSector(Offset: int64): int64;
 begin
   Result := ((Offset div 2048) * 2048) + 2048;
 end;
 
 // Redondea el valor pasado a multiplo de un sector 2048 bytes.
+
 function OffsetToSector(Offset: int64): int64;
 begin
   if (Offset mod 2048) <> 0 then
@@ -124,6 +126,7 @@ begin
 end;
 
 ///////////// TDirectoryList //////////////
+
 function Compare(Item1, Item2: Pointer): Integer;
 begin
   Result := CompareText(PFile(Item1)^.FileName, PFile(Item2)^.FileName);
@@ -137,9 +140,9 @@ end;
 
 destructor TDirectoryList.Destroy;
 var
-   i: integer;
+  i: integer;
 begin
-  for i := 0 to Count-1 do
+  for i := 0 to Count - 1 do
   begin
     if IsDirectory(PFile(Items[i])) then
       if PFile(Items[i]).DirectoryPointer <> nil then
@@ -147,7 +150,7 @@ begin
         PFile(Items[i]).DirectoryPointer.Free;
         Dispose(PFile(Items[i]));
       end;
-  end;   
+  end;
   inherited;
 end;
 
@@ -173,6 +176,7 @@ end;
 
 
 ///////////// TXBOX_FILESYSTEM //////////////
+
 constructor TXBOX_FILESYSTEM.Create;
 begin
   Root := TDirectoryList.Create(nil);
@@ -189,14 +193,14 @@ end;
 
 function TXBOX_FILESYSTEM.SizeDirEntry(DirectoryList: TDirectoryList): integer;
 var
-   i,PositionDirEntry,SizeEntry: integer;
-   ListEntry: PFile;
+  i, PositionDirEntry, SizeEntry: integer;
+  ListEntry: PFile;
 begin
   Result := 0;
-  if DirectoryList = nil then Exit;  
+  if DirectoryList = nil then Exit;
 
   PositionDirEntry := 0;
-  for i := 0 to DirectoryList.Count-1 do
+  for i := 0 to DirectoryList.Count - 1 do
   begin
     ListEntry := DirectoryList.Entry(i);
 
@@ -210,12 +214,12 @@ begin
     if (PositionDirEntry mod 4) <> 0 then
       PositionDirEntry := PositionDirEntry + 4 - (PositionDirEntry mod 4);
 
-    if i <> DirectoryList.Count-1 then
+    if i <> DirectoryList.Count - 1 then
     begin
-      SizeEntry := 14 + Length(ExtractFileName(DirectoryList.Entry(i+1).FileName));
+      SizeEntry := 14 + Length(ExtractFileName(DirectoryList.Entry(i + 1).FileName));
       if (2048 - (PositionDirEntry mod 2048)) < SizeEntry then
         PositionDirEntry := NextSector(PositionDirEntry);
-    end;      
+    end;
   end;
   Result := PositionDirEntry;
 end;
@@ -223,50 +227,50 @@ end;
 
 procedure TXBOX_FILESYSTEM.MakeFileList(Directory: string; DirectoryList: TDirectoryList);
 var
-   SR: TSearchRec;
-   Entry: PFile;
+  SR: TSearchRec;
+  Entry: PFile;
 begin
   if Directory[Length(Directory)] <> '\' then
     Directory := Directory + '\';
 
-  if (FindFirst(Directory+'*.*',faArchive or faDirectory or faHidden or faSysFile or faReadOnly,SR) = 0) then
+  if (FindFirst(Directory + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
     repeat
       if (SR.Name[1] = '.') then Continue;
 
       New(Entry);
-      Entry.FileName := Directory+SR.Name;
+      Entry.FileName := Directory + SR.Name;
       Entry.Size := SR.Size;
       Entry.Attributes := SR.Attr;
       DirectoryList.AddEntry(Entry);
-      
+
       if (Entry.Attributes and faDirectory) = faDirectory then
       begin
         Entry.DirectoryPointer := TDirectoryList.Create(DirectoryList);
-        MakeFileList(Entry.FileName,Entry.DirectoryPointer);
+        MakeFileList(Entry.FileName, Entry.DirectoryPointer);
       end;
     until (FindNext(SR) <> 0);
     FindClose(SR);
-    DirectoryList.Sort(Compare);      
+    DirectoryList.Sort(Compare);
   end;
 end;
 
 
 function TXBOX_FILESYSTEM.NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: integer): integer;
 var
-   i,j: integer;
-   PositionDirEntry,SizeEntry,ReadIt: int64;
-   OffsetDirEntry: Int64;
-   F: TFilestream;
-   ListEntry: PFile;
-   Entry: TXBOX_FS_ENTRY;
-   s: string;
+  i, j: integer;
+  PositionDirEntry, SizeEntry, ReadIt: int64;
+  OffsetDirEntry: Int64;
+  F: TFilestream;
+  ListEntry: PFile;
+  Entry: TXBOX_FS_ENTRY;
+  s: string;
 begin
   if DirectoryList = nil then Exit;
 
   // Realizamos la asignación del Nodo Derecho de la entrada.
-  PositionDirEntry := 0;  
-  for i := 0 to DirectoryList.Count-1 do
+  PositionDirEntry := 0;
+  for i := 0 to DirectoryList.Count - 1 do
   begin
     ListEntry := DirectoryList.Entry(i);
 
@@ -285,34 +289,34 @@ begin
     else
       ListEntry.RecordSize := SizeEntry;
 
-    if i <> DirectoryList.Count-1 then
+    if i <> DirectoryList.Count - 1 then
     begin
-      SizeEntry := 14 + Length(ExtractFileName(DirectoryList.Entry(i+1).FileName));
+      SizeEntry := 14 + Length(ExtractFileName(DirectoryList.Entry(i + 1).FileName));
       if (2048 - (PositionDirEntry mod 2048)) < SizeEntry then
         PositionDirEntry := NextSector(PositionDirEntry);
     end;
 
-    if i = DirectoryList.Count-1 then
+    if i = DirectoryList.Count - 1 then
       ListEntry.RNode := 0
     else
-      ListEntry.RNode := PositionDirEntry div 4;      
+      ListEntry.RNode := PositionDirEntry div 4;
   end;
 
   // Offset of the directory.
   OffsetDirEntry := ISOStream.Position;
   NextSectorAvailable := NextSectorAvailable + OffsetToSector(SizeDirEntry(DirectoryList));
-  FillChar(Buffer,SizeOf(Buffer),$FF);
-  ISOStream.Write(Buffer,OffsetToSector(SizeDirEntry(DirectoryList))*2048);
-  ISOStream.Seek(NextSectorAvailable*2048,soBeginning);
+  FillChar(Buffer, SizeOf(Buffer), $FF);
+  ISOStream.Write(Buffer, OffsetToSector(SizeDirEntry(DirectoryList)) * 2048);
+  ISOStream.Seek(NextSectorAvailable * 2048, soBeginning);
   SetEndOfFile(ISOStream.Handle);
 
-  for i := 0 to DirectoryList.Count-1 do
+  for i := 0 to DirectoryList.Count - 1 do
   begin
     ListEntry := DirectoryList.Entry(i);
-   
+
     Entry.LNode := 0;
     Entry.RNode := ListEntry.RNode;
-    
+
     if DirectoryList.IsDirectory(ListEntry) then
     begin
       if not ListEntry.DirectoryPointer.Empty then
@@ -336,19 +340,19 @@ begin
     Entry.LongFileName := Length(ExtractFileName(ListEntry.FileName));
     Entry.Attributes := ListEntry.Attributes;
 
-    FillChar(Entry.FileName,SizeOf(Entry.FileName),$FF);
+    FillChar(Entry.FileName, SizeOf(Entry.FileName), $FF);
     s := ExtractFileName(ListEntry.FileName);
     for j := 1 to Length(s) do
-       Entry.FileName[j-1] := s[j];
+      Entry.FileName[j - 1] := s[j];
 
     // If the Entry is a Directory, we are going to process it.
     // else copy the file into the ISO.
     if DirectoryList.IsDirectory(ListEntry) then
-      NMakeISO(ISOStream,ListEntry.DirectoryPointer,NextSectorAvailable)
+      NMakeISO(ISOStream, ListEntry.DirectoryPointer, NextSectorAvailable)
     else
     begin
       try
-        F := TFilestream.Create(ListEntry.FileName,fmOpenRead or fmShareDenyNone);
+        F := TFilestream.Create(ListEntry.FileName, fmOpenRead or fmShareDenyNone);
       except
         F := nil;
       end;
@@ -358,87 +362,87 @@ begin
       begin
         while (F.Position < F.Size) do
         begin
-          ReadIt := F.Read(Buffer,SizeOf(Buffer));
-          ISOStream.Write(Buffer,ReadIt);
+          ReadIt := F.Read(Buffer, SizeOf(Buffer));
+          ISOStream.Write(Buffer, ReadIt);
         end;
         F.Free;
       end
       else
       begin
         j := 0;
-        FillChar(Buffer,SizeOf(Buffer),0);
+        FillChar(Buffer, SizeOf(Buffer), 0);
         while (j < (ListEntry.Size div SizeOf(Buffer))) do
         begin
-          ISOStream.Write(Buffer,SizeOf(Buffer));
-          j := j+1;
+          ISOStream.Write(Buffer, SizeOf(Buffer));
+          j := j + 1;
         end;
         if j <> ListEntry.Size then
-          ISOStream.Write(Buffer,ListEntry.Size-j);
+          ISOStream.Write(Buffer, ListEntry.Size - j);
       end;
-      
+
       if (ISOStream.Position mod 2048) <> 0 then
       begin
-          ISOStream.Seek(NextSector(ISOStream.Position),soBeginning);
-          SetEndOfFile(ISOStream.Handle);
+        ISOStream.Seek(NextSector(ISOStream.Position), soBeginning);
+        SetEndOfFile(ISOStream.Handle);
       end;
     end;
 
     // Comprobamos que el Entry entra en el sector actual, sino saltamos al siguiente.
     if (2048 - (ISOStream.Position mod 2048)) < ListEntry.RecordSize then
     begin
-      ISOStream.Seek(NextSector(ISOStream.Position),soBeginning);
+      ISOStream.Seek(NextSector(ISOStream.Position), soBeginning);
       SetEndOfFile(ISOStream.Handle);
     end;
 
     // Volvemos al punto donde dejamos la tabla de ficheros y copiamos la entrada
     // actual.
-    ISOStream.Seek(OffsetDirEntry,soBeginning);
+    ISOStream.Seek(OffsetDirEntry, soBeginning);
     if (2048 - (ISOStream.Position mod 2048)) < ListEntry.RecordSize then
-      ISOStream.Seek(NextSector(ISOStream.Position),soBeginning);
-    ISOStream.Write(Entry,ListEntry.RecordSize);
+      ISOStream.Seek(NextSector(ISOStream.Position), soBeginning);
+    ISOStream.Write(Entry, ListEntry.RecordSize);
     OffsetDirEntry := ISOStream.Position;
-    ISOStream.Seek(0,soEnd);
+    ISOStream.Seek(0, soEnd);
     // Despues de esto hemos vuelto al final de la ISO.
   end;
   // Comprobamos que el Entry entra en el sector actual, sino saltamos al siguiente.
   if (ISOStream.Position mod 2048) <> 0 then
   begin
-    ISOStream.Seek(NextSector(ISOStream.Position),soBeginning);
+    ISOStream.Seek(NextSector(ISOStream.Position), soBeginning);
     SetEndOfFile(ISOStream.Handle);
   end;
 end;
 
-procedure TXBOX_FILESYSTEM.MakeISO(ISOName: String);
+procedure TXBOX_FILESYSTEM.MakeISO(ISOName: string);
 var
-   F: TFilestream;
-   XBOX_VD: TXBOX_FS_VOLUME_DESCRIPTOR;
-   Sector: integer;
-   ActualDate: FILETIME;
+  F: TFilestream;
+  XBOX_VD: TXBOX_FS_VOLUME_DESCRIPTOR;
+  Sector: integer;
+  ActualDate: FILETIME;
 begin
   if not Root.Empty then
   begin
-    F := TFilestream.Create(ISOName,fmCreate);
-    F.Seek(65536,soBeginning);
+    F := TFilestream.Create(ISOName, fmCreate);
+    F.Seek(65536, soBeginning);
     SetEndOfFile(F.Handle);
 
     if RootSector < 33 then
       RootSector := 33;
     GetSystemTimeAsFileTime(ActualDate);
-          
-    FillChar(XBOX_VD,SizeOf(XBOX_VD),0);
+
+    FillChar(XBOX_VD, SizeOf(XBOX_VD), 0);
     XBOX_VD.IDIn := XBOX_MEDIA_ID;
     XBOX_VD.RootSector := RootSector;
     XBOX_VD.RootSize := SizeDirEntry(Root);
     XBOX_VD.FileTime := ActualDate;
     XBOX_VD.IDOut := XBOX_MEDIA_ID;
-    F.Write(XBOX_VD,SizeOf(XBOX_VD));
+    F.Write(XBOX_VD, SizeOf(XBOX_VD));
 
     // Establecemos el sector del raiz segun la variable RootSector.
-    F.Seek(RootSector*2048,soBeginning);
+    F.Seek(RootSector * 2048, soBeginning);
     SetEndOfFile(F.Handle);
 
     Sector := RootSector;
-    NMakeISO(F,Root,Sector);
+    NMakeISO(F, Root, Sector);
     F.Free;
   end;
 end;
@@ -446,7 +450,7 @@ end;
 function TXBOX_FILESYSTEM.Make(Directory: string; ISOName: string): Boolean;
 begin
   Result := False;
-  MakeFileList(Directory,Root);
+  MakeFileList(Directory, Root);
   MakeISO(ISOName);
   Result := True;
 end;

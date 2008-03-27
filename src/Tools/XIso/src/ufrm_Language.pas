@@ -69,17 +69,17 @@ end;
 
 procedure TForm2.RadioButton1Click(Sender: TObject);
 begin
-        SetLocalOverrides(ParamStr(0),'esp');
-        if LoadNewResourceModule(LANG_SPANISH) <> 0 then
-          ReinitializeForms;
+  SetLocalOverrides(ParamStr(0), 'esp');
+  if LoadNewResourceModule(LANG_SPANISH) <> 0 then
+    ReinitializeForms;
         //MessageBox(0,'Reinicia el programa, para que surtan efecto los cambios','Mensaje',MB_OK);
 end;
 
 procedure TForm2.RadioButton2Click(Sender: TObject);
 begin
-        SetLocalOverrides(ParamStr(0),'enu');
-        if LoadNewResourceModule(LANG_ENGLISH) <> 0 then
-          ReinitializeForms;
+  SetLocalOverrides(ParamStr(0), 'enu');
+  if LoadNewResourceModule(LANG_ENGLISH) <> 0 then
+    ReinitializeForms;
         //MessageBox(0,'Reboot the program for translate it.','Mensaje',MB_OK);
 end;
 
