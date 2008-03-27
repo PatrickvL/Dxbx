@@ -41,7 +41,7 @@
     <DCCReference Include="..\..\..\uXML.pas" />
     <DCCReference Include="uData.pas" />
     <DCCReference Include="ufrm_Main.pas">
-      <Form>frmMain</Form>
+      <Form>frmXdkTracker</Form>
     </DCCReference>
     <DCCReference Include="uImportGames.pas">
       <Form>frm_ImportGames</Form>
