@@ -552,7 +552,7 @@ begin
     Parametro := Copy(ParamStr(i), 1, 2);
     if Parametro = '-o' then
       AbrirImagen(ParamStr(i + 1));
-  end;  
+  end;
 end;
 
 procedure ExtraerCD(HA, SCSI, LUN: byte; Directorio: integer; Carpeta: string);
@@ -1156,4 +1156,3 @@ begin
 end;
 
 end.
-

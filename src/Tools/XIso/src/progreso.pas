@@ -52,7 +52,7 @@ type
 var
   Form3: TForm3;
   Cerrar: Boolean;
-  Carpeta: String;
+  Carpeta: string;
 
 implementation
 
@@ -61,65 +61,65 @@ uses Textos, uxisomaker, GenerarXDFS, ufrm_Main, FormCreacionISO;
 {$R *.dfm}
 
 var
-   Hilo: TGenerarXDFS;
+  Hilo: TGenerarXDFS;
 
-procedure AvanzarProgreso(Fichero: String);
+procedure AvanzarProgreso(Fichero: string);
 begin
-     Form3.ProgressBar1.StepIt;
+  Form3.ProgressBar1.StepIt;
 end;
 
 procedure Mensajes(Textos: string);
 begin
-     Form3.Memo1.Lines.Add(Textos);
+  Form3.Memo1.Lines.Add(Textos);
 end;
 
 procedure TForm3.FinCreacion(Sender: TObject);
 begin
-     ProgressBar1.Position := 0;
-     Button1.Caption := rcEngCerrar;
-     Cerrar := True;
+  ProgressBar1.Position := 0;
+  Button1.Caption := rcEngCerrar;
+  Cerrar := True;
 end;
 
 procedure TForm3.FormShow(Sender: TObject);
 begin
-     if FormPadre = Form1 then
-     begin
-       GenerarXDFS.Imagen := SaveDialog1.FileName;
-       GenerarXDFS.Carpeta := Carpeta;
-       uxisomaker.Parar := False;
-       ProgresoxISO := AvanzarProgreso;
-       MensajesxISO := Mensajes;
-       ProgressBar1.Position := 0;
-       ProgressBar1.Min := 0;
-       ProgressBar1.Max := NumeroFicheros(Carpeta);
+  if FormPadre = Form1 then
+  begin
+    GenerarXDFS.Imagen := SaveDialog1.FileName;
+    GenerarXDFS.Carpeta := Carpeta;
+    uxisomaker.Parar := False;
+    ProgresoxISO := AvanzarProgreso;
+    MensajesxISO := Mensajes;
+    ProgressBar1.Position := 0;
+    ProgressBar1.Min := 0;
+    ProgressBar1.Max := NumeroFicheros(Carpeta);
 
-       Cerrar := False;
-       Hilo := TGenerarXDFS.Create(True);
-       Hilo.OnTerminate := FinCreacion;
-       Hilo.Resume;
-       Hilo.FreeOnTerminate := True;
-     end
-     else
-     if FormPadre = Form5 then
-     begin
+    Cerrar := False;
+    Hilo := TGenerarXDFS.Create(True);
+    Hilo.OnTerminate := FinCreacion;
+    Hilo.Resume;
+    Hilo.FreeOnTerminate := True;
+  end
+  else
+    if FormPadre = Form5 then
+    begin
 
-     end;
+    end;
 end;
 
 procedure TForm3.Button1Click(Sender: TObject);
 begin
-     if Button1.Caption = rcEngParar then
-     begin
-       uxisomaker.Parar := True;
-       Button1.Caption := rcEngCerrar;
-     end
-     else
-     begin
-       if Cerrar then
-         Close
-       else
-         Showmessage( rcEngEsperarHilo );
-     end;
+  if Button1.Caption = rcEngParar then
+  begin
+    uxisomaker.Parar := True;
+    Button1.Caption := rcEngCerrar;
+  end
+  else
+  begin
+    if Cerrar then
+      Close
+    else
+      Showmessage(rcEngEsperarHilo);
+  end;
 end;
 
 end.

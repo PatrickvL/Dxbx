@@ -38,28 +38,5 @@
     <DelphiCompile Include="XIso.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="CreacionISO.pas" />
-    <DCCReference Include="FormCreacionISO.pas">
-      <Form>Form5</Form>
-    </DCCReference>
-    <DCCReference Include="GenerarXDFS.pas" />
-    <DCCReference Include="Grabacion.pas">
-      <Form>Form4</Form>
-    </DCCReference>
-    <DCCReference Include="progreso.pas">
-      <Form>Form3</Form>
-    </DCCReference>
-    <DCCReference Include="ProgresoCreacionISO.pas" />
-    <DCCReference Include="Textos.pas" />
-    <DCCReference Include="ufrm_Language.pas">
-      <Form>Form2</Form>
-    </DCCReference>
-    <DCCReference Include="ufrm_Main.pas">
-      <Form>Form1</Form>
-    </DCCReference>
-    <DCCReference Include="uxiso.pas" />
-    <DCCReference Include="uxisomaker.pas" />
-    <DCCReference Include="xisomakerv2.pas" />
-    <DCCReference Include="xisomakerv3.pas" />
   </ItemGroup>
 </Project>
