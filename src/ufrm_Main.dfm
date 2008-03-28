@@ -1457,6 +1457,7 @@ object frm_Main: Tfrm_Main
       end
       object CloseXbe1: TMenuItem
         Action = actCloseXbe
+        Enabled = False
       end
       object N2: TMenuItem
         Caption = '-'
@@ -1466,6 +1467,7 @@ object frm_Main: Tfrm_Main
       end
       object Exportexe1: TMenuItem
         Action = actExportExe
+        Enabled = False
       end
       object N6: TMenuItem
         Caption = '-'
@@ -1652,7 +1654,6 @@ object frm_Main: Tfrm_Main
     object actCloseXbe: TAction
       Category = 'File'
       Caption = 'Close Xbe'
-      Enabled = False
       OnExecute = actCloseXbeExecute
     end
     object actImportExe: TAction
@@ -1664,7 +1665,6 @@ object frm_Main: Tfrm_Main
     object actExportExe: TAction
       Category = 'File'
       Caption = 'Export Exe'
-      Enabled = False
       OnExecute = actExportExeExecute
     end
     object actSaveXbe: TAction
