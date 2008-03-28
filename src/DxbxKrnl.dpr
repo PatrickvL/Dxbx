@@ -35,7 +35,7 @@ begin
   else begin
     if Reason = DLL_PROCESS_DETACH then
       EmuSharedCleanup;
-  end; 
+  end;
 end;
 
 
