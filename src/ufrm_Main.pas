@@ -358,21 +358,21 @@ var
   i_EmuExe: TEmuExe;
 begin
   Result := False;
-  try
-    filename := 'default.exe';
+  filename := 'default.exe';
 
-    if x_filename = '' then begin
-      if ExeSaveDialog.execute then begin
-        filename := ExeSaveDialog.FileName;
-      end
-      else begin
-        MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
-        Exit;
-      end;
+  if x_filename = '' then begin
+    if ExeSaveDialog.execute then begin
+      filename := ExeSaveDialog.FileName;
     end
     else begin
-      filename := x_filename;
+      filename := '';
     end;
+  end
+  else begin
+    filename := x_filename;
+  end;
+
+  if filename <> '' then begin
 
     // ask permission to overwrite if file exists
     if x_bVerifyIfExists then begin
@@ -394,6 +394,7 @@ begin
         WriteLog(m_szAsciiTitle + ' was converted to .exe.');
         m_bExeChanged := False;
         RecentExeAdd(filename);
+        Result := True;
       end
       else begin
         WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
@@ -401,8 +402,6 @@ begin
     except
       MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
     end;
-  finally
-    Result := True;
   end;
 end; // Tfrm_Main.ConvertToExe
 
@@ -442,9 +441,11 @@ end; // Tfrm_Main.actConfigVideoExecute
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
+var FileConverted: Boolean;
 begin
   if Assigned(m_Xbe) then begin
-    if StartEmulation(m_AutoConvertToExe) then begin
+    FileConverted := StartEmulation(m_AutoConvertToExe);
+    if FileConverted then begin
 
 
 
@@ -534,7 +535,7 @@ begin
         try
           Result := ConvertToExe('', True);
         except
-        end;  
+        end;
       end;
     end;
   end;
@@ -1005,11 +1006,11 @@ begin
   TempItem.Caption := ExtractFileName(aFileName);
   TempItem.OnClick := ReopenXbe;
 
-  while(RecentXbefiles1.Count >= _RecentXbeLimit) do begin
+  while (RecentXbefiles1.Count >= _RecentXbeLimit) do begin
     RecentXbefiles1.Remove(RecentXbefiles1.Items[9]);
   end;
 
-  RecentXbefiles1.Insert(0,TempItem);
+  RecentXbefiles1.Insert(0, TempItem);
   RecentXbefiles1.Enabled := True;
 end;
 
@@ -1032,11 +1033,11 @@ begin
   TempItem.Caption := ExtractFileName(aFileName);
   TempItem.OnClick := ReopenExe;
 
-  while(RecentExefiles1.Count >= _RecentExeLimit) do begin
+  while (RecentExefiles1.Count >= _RecentExeLimit) do begin
     RecentExefiles1.Remove(RecentExefiles1.Items[9]);
   end;
-  
-  RecentExefiles1.Insert(0,TempItem);
+
+  RecentExefiles1.Insert(0, TempItem);
   RecentExefiles1.Enabled := True;
 end;
 
@@ -1079,3 +1080,4 @@ begin
 end;
 
 end.
+
