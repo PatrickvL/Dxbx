@@ -154,7 +154,7 @@ type
     procedure ReopenXbe(Sender: TObject);
     procedure ReopenExe(Sender: TObject);
 
-    procedure ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean);
+    function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): boolean;
     function StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 
     function SendCommandToXdkTracker: Boolean;
@@ -352,54 +352,58 @@ end;
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean);
+function Tfrm_Main.ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): boolean;
 var
   filename: string;
   i_EmuExe: TEmuExe;
 begin
-  filename := 'default.exe';
+  Result := False;
+  try
+    filename := 'default.exe';
 
-  if x_filename = '' then begin
-    if ExeSaveDialog.execute then begin
-      filename := ExeSaveDialog.FileName;
-    end
-    else begin
-      MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
-      Exit;
-    end;
-  end
-  else begin
-    filename := x_filename;
-  end;
-
-  // ask permission to overwrite if file exists
-  if x_bVerifyIfExists then begin
-    if FileExists(filename) then begin
-      if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then begin
-        Exit;
+    if x_filename = '' then begin
+      if ExeSaveDialog.execute then begin
+        filename := ExeSaveDialog.FileName;
       end
       else begin
-        DeleteFile(filename);
+        MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
+        Exit;
       end;
-    end;
-  end;
-
-  // convert file
-  try
-    i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename);
-    if i_EmuExe.doExport(filename) then begin
-      m_ExeFilename := filename;
-      WriteLog(m_szAsciiTitle + ' was converted to .exe.');
-      m_bExeChanged := False;
-      RecentExeAdd(filename);
     end
     else begin
-      WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
+      filename := x_filename;
     end;
-  except
-    MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
-  end;
 
+    // ask permission to overwrite if file exists
+    if x_bVerifyIfExists then begin
+      if FileExists(filename) then begin
+        if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then begin
+          Exit;
+        end
+        else begin
+          DeleteFile(filename);
+        end;
+      end;
+    end;
+
+    // convert file
+    try
+      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename);
+      if i_EmuExe.doExport(filename) then begin
+        m_ExeFilename := filename;
+        WriteLog(m_szAsciiTitle + ' was converted to .exe.');
+        m_bExeChanged := False;
+        RecentExeAdd(filename);
+      end
+      else begin
+        WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
+      end;
+    except
+      MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
+    end;
+  finally
+    Result := True;
+  end;
 end; // Tfrm_Main.ConvertToExe
 
 //------------------------------------------------------------------------------
@@ -515,26 +519,22 @@ begin
         begin
           szTempPath := GetTempDirectory;
           try
-            ConvertToExe(szTempPath + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), false);
-            Result := True;
+            Result := ConvertToExe(szTempPath + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), false);
           except
           end;
         end;
       AUTO_CONVERT_XBE_PATH:
         begin
           try
-            ConvertToExe(ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), false);
-            Result := True;
+            Result := ConvertToExe(ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), false);
           except
           end;
         end;
     else begin
         try
-          ConvertToExe('', True);
-          Result := True;
+          Result := ConvertToExe('', True);
         except
-        end;
-
+        end;  
       end;
     end;
   end;
