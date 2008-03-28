@@ -15,6 +15,7 @@ Uses
 
 Var
   m_XbePath : String;
+  g_EmuSharedRefCount : Integer;
 
 function EmuSharedInit : Boolean;
 begin
@@ -22,7 +23,6 @@ begin
   WriteLog('EmuSharedInit');
 
   // Ensure initialization only occurs once
-  Result := True;
 
   // Prevent multiple initializations
    // if(hMapObject != NULL)
@@ -69,21 +69,21 @@ begin
     // ******************************************************************
     // * Executed only on first initialization of shared memory
     // ******************************************************************
-  //  if(init)
-    //    g_EmuShared->EmuShared::EmuShared();
-
-   // g_EmuSharedRefCount++;    *)
+   { if init then
+       EmuShared();
+                }
+   Inc ( g_EmuSharedRefCount );
 end;
 
 procedure EmuSharedCleanup;
 begin
   WriteLog ( 'EmuSharedCleanup' );
-  (*  g_EmuSharedRefCount--;
+  Dec ( g_EmuSharedRefCount );
 
-    if(g_EmuSharedRefCount == 0)
-        g_EmuShared->EmuShared::~EmuShared();
+(*  if(g_EmuSharedRefCount = 0)
+    EmuShared();
 
-    UnmapViewOfFile(g_EmuShared);   *)
+  UnmapViewOfFile(g_EmuShared); *)
   CloseLogs;
 end;
 

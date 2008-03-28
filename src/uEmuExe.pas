@@ -645,13 +645,12 @@ begin
       //memcpy(pWriteCursor, x_Xbe->GetTLSData(), x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr);
       //pWriteCursor += x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
 
-      // ******************************************************************
-      // * patch prolog function parameters
-      // ******************************************************************
-
+  // ******************************************************************
+  // * patch prolog function parameters
+  // ******************************************************************
   WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
-      // Function Pointer
-      // AppendDWordToSubSection(i,6,EmuInit);
+  // Function Pointer
+  //AppendDWordToSubSection(i,6,EmuInit);
 
       // Param 8 : Entry
   AppendDWordToSubSection(i, 6, ep);
