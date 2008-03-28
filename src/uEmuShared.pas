@@ -11,8 +11,10 @@ procedure EmuSharedCleanup;
 implementation
 
 Uses
-  uEnums, uLog, Dialogs;
+  uEnums, uLog, Dialogs;    
 
+Var
+  m_XbePath : String;
 
 function EmuSharedInit : Boolean;
 begin
@@ -88,9 +90,9 @@ end;
 procedure SetXbePath(const path : String ); export;
 begin
   { TODO : Need to be translated from c to delphi }
-(*  Lock();
-  strcpy(m_XbePath, path);
-  Unlock(); *)
+  //Lock();
+  m_XbePath := Path;
+  //Unlock();
 end;
 
 

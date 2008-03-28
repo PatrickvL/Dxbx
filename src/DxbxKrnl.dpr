@@ -24,6 +24,7 @@ uses
 {$R *.res}
 
   Exports EmuNoFunc name '_EmuNoFunc@0';
+  Exports SetXbePath;
 
 
 procedure DllMain ( Reason : Integer );
