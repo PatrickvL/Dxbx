@@ -165,6 +165,8 @@ type
     procedure AfterConstruction; override;
   end;
 
+  procedure SetXbePath(const path : String ); external 'DxbxKrnl.dll';
+
 var
   frm_Main: Tfrm_Main;
 
@@ -325,9 +327,9 @@ end; // Tfrm_Main.OpenXbe
 
 procedure Tfrm_Main.SaveXbe(aFileName: string);
 begin
-
-end; // Tfrm_Main.SaveXbe
-
+  { TODO : Need to inserted }
+end;
+      
 //------------------------------------------------------------------------------
 
 function Tfrm_Main.SendCommandToXdkTracker: Boolean;
@@ -418,13 +420,6 @@ end; // Tfrm_Main.ConvertToExe
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.ImportExe(aFileName: string);
-begin
-
-end; // Tfrm_Main.ImportExe
-
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
 begin
   frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
@@ -458,42 +453,8 @@ begin
     FileConverted := StartEmulation(m_AutoConvertToExe);
     if FileConverted then begin
 
-
-
-    { TODO : Xbe path need to be registered to the dll }
-  // register xbe path with Cxbx.dll
-//  g_EmuShared.SetXbePath( PChar ( m_Xbe.m_szPath ) );
-
-
-  {g_EmuShared->SetXbePath(m_Xbe->m_szPath);
-
- // * shell exe
-
-        GetModuleFileName(NULL, szBuffer, 260);
-
-        sint32 spot=-1;
-        for(int v=0;v<260;v++)
-        {
-            if(szBuffer[v] == '\\')
-                spot = v;
-            else if(szBuffer[v] == '\0')
-                break;
-        }
-
-        {if(spot != -1)
-            szBuffer[spot] = '\0';
-
-        if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, szBuffer, SW_SHOWDEFAULT) <= 32)
-        {
-            MessageBox(m_hwnd, "Emulation failed.\n\nTry converting again. If this message repeats, the Xbe is not supported.", "Cxbx", MB_ICONSTOP | MB_OK);
-
-            printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
-        }
-       { else
-        {
-            printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
-        }
-   { }
+      // register xbe path with Cxbx.dll
+      SetXbePath( PChar ( m_Xbe.m_szPath ) );   
 
       try
         if FileExists(m_ExeFilename) then begin
@@ -568,7 +529,17 @@ begin
   else begin
     sSkinManager1.SkinningRules := [srStdForms, srStdDialogs, srThirdParty];
   end;
-end; // Tfrm_Main.FormCreate
+end; procedure Tfrm_Main.ImportExe(aFileName: string);
+begin
+
+end;
+
+procedure Tfrm_Main.LoadLogo;
+begin
+
+end;
+
+// Tfrm_Main.FormCreate
 
 //------------------------------------------------------------------------------
 
@@ -832,13 +803,6 @@ end; // Tfrm_Main.XbeLoaded
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.LoadLogo;
-begin
-
-end; // Tfrm_Main.LoadLogo
-
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.ActAboutExecute(Sender: TObject);
 begin
   frm_About := Tfrm_About.Create(Self);
@@ -919,7 +883,7 @@ begin
       end;
     end;
 
-  // export logo bitmap
+    // export logo bitmap
     lLogo := TImage.Create(nil);
     try
       m_Xbe.ExportLogoBitmap(lLogo);
@@ -1092,6 +1056,8 @@ begin
     RecentExefiles1.Remove(TempItem);
   end;
 end;
+    
+//------------------------------------------------------------------------------
 
 end.
 
