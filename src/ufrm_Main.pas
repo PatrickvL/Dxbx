@@ -184,6 +184,8 @@ begin
   GetVersionEx(VerInfo);
   Result := VerInfo.dwMajorVersion >= 6;
 end;
+     
+//------------------------------------------------------------------------------
 
 function GetTempDirectory: string;
 var
@@ -211,6 +213,8 @@ begin
     RecentXbeAdd(XbeOpenDialog.FileName);
     Logbitmap1.Enabled := True;
     Dumpxbeinfoto1.Enabled := True;
+    Exportexe1.Enabled := True;
+    CloseXbe1.Enabled := true;
   end;
 end; // Tfrm_Main.actOpenXbeExecute
 
@@ -287,6 +291,13 @@ end; // Tfrm_Main.FormClose
 procedure Tfrm_Main.CloseXbe;
 begin
   FreeAndNil(m_Xbe);
+  Logbitmap1.Enabled := False;
+  Dumpxbeinfoto1.Enabled := False;
+  Exportexe1.Enabled := False;
+  CloseXbe1.Enabled := False;
+
+  WriteLog('DXBX: ' + m_szAsciiTitle + '  Closed...');
+  StatusBar.SimpleText := 'DXBX:';       
 end; // Tfrm_Main.CloseXbe
 
 //------------------------------------------------------------------------------
@@ -1054,6 +1065,9 @@ begin
     OpenXbe(TempItem.Hint);
     Logbitmap1.Enabled := True;
     Dumpxbeinfoto1.Enabled := True;
+    Exportexe1.Enabled := True;
+    CloseXbe1.Enabled := true;
+
     RecentXbeAdd(TempItem.Hint)
   end
   else begin
