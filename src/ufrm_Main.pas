@@ -872,7 +872,7 @@ end; // Tfrm_Main.actExeGenManualExecute
 
 procedure Tfrm_Main.actExportLogoExecute(Sender: TObject);
 var
-  lLogo: TImage;
+  bmp: TBitmap;
 begin
   if LogoSaveDialog.Execute then begin
    // ask permission to overwrite if file exists
@@ -885,11 +885,13 @@ begin
       end;
     end;
 
-    // export logo bitmap
-    lLogo := TImage.Create(nil);
+  // export logo bitmap
+    bmp := TBitmap.Create;
     try
-      m_Xbe.ExportLogoBitmap(lLogo);
-      lLogo.Picture.SaveToFile(LogoSaveDialog.FileName);
+      bmp.Width := 100;
+      bmp.Height := 17;
+      m_Xbe.ExportLogoBitmap(bmp);
+      bmp.SaveToFile(LogoSaveDialog.FileName);
     finally
       WriteLog('DXBX: ' + m_szAsciiTitle + ' loaded.');
       WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');

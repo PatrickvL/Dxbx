@@ -194,7 +194,7 @@ type
 
     function DumpInformation(FileName: string = ''): Boolean;
     function GetAddr(x_dwVirtualAddress: DWord): integer;
-    procedure ExportLogoBitmap(ImgCont: TImage);
+    procedure ExportLogoBitmap(ImgCont: TBitmap);
 
     function GetTLSData: DWord;
 
@@ -1062,51 +1062,51 @@ end; // TXbe.GetAddr
 
 //------------------------------------------------------------------------------
 
-procedure TXbe.ExportLogoBitmap(ImgCont: Timage);
+procedure TXbe.ExportLogoBitmap(ImgCont: TBitmap);
 var
   x_Gray: array[0..100 * 17] of char;
   dwLength, o, lIndex, lIndex2, len, data: DWord;
   RLE: integer;
-  pos0, pos1, pos2: Byte;
+  pos0, pos1: Byte;
+  I: Integer;
 begin
   dwLength := m_Header.dwSizeofLogoBitmap;
   RLE := GetAddr(m_Header.dwLogoBitmapAddr);
   if RLE = 0 then begin
     exit
   end;
-
+  len := 0;
+  data := 0;
   o := 0;
   lIndex := 0;
   while lIndex < dwLength do begin
-    len := 0;
-    data := 0;
-    m_LogoRLE.m_Eight := Buffer[RLE];
-    m_LogoRLE.m_Sixteen[0] := Buffer[RLE + 1];
-    m_LogoRLE.m_Sixteen[1] := Buffer[RLE + 2];
 
-    Pos0 := ord(m_LogoRLE.m_Eight);
-    Pos1 := ord(m_LogoRLE.m_sixteen[0]);
-    Pos2 := ord(m_LogoRLE.m_sixteen[1]);
-    if GetBitEn(Pos0, 0) = 1 then begin
-      len := GetBitEn(Pos0, 1) * 1 + GetBitEn(Pos0, 2) * 2 + GetBitEn(Pos0, 3) * 4;
-      data := GetBitEn(Pos0, 4) * 1 + GetBitEn(Pos0, 5) * 2 + GetBitEn(Pos0, 6) * 4 + GetBitEn(Pos0, 7) * 8;
+    // Read 2 bytes.
+    Pos0 := ord(Buffer[RLE + lIndex]);
+    Pos1 := ord(Buffer[RLE + 1 + lIndex]);
+
+    if Pos0 and 1 = 1 then begin                          // Check if the bit 0 is set.
+      len := Pos0 shr 1 and 7;                            // Select the bits from 1 to 3
+      data := Pos0 shr 4 and 15;                          // Select the bits from 4 to 7
     end
     else begin
-      if GetBitEn(Pos2, 1) = 1 then begin
-        len := GetBitEn(Pos1, 2) * 1 + GetBitEn(Pos1, 3) * 2 + GetBitEn(pos1, 4) * 4 + GetBitEn(Pos1, 5) * 8 + GetBitEn(Pos1, 6) * 16 + GetBitEn(pos1, 7) * 32 + GetBitEn(Pos2, 0) * 64 + GetBitEn(Pos2, 1) * 128 + GetBitEn(pos2, 2) * 256 + GetBitEn(Pos1, 3) * 512;
-        data := GetBitEn(Pos2, 4) * 1 + GetBitEn(Pos2, 5) * 2 + GetBitEn(Pos2, 6) * 4 + GetBitEn(Pos2, 6) * 8;
-        inc(lIndex);
+      if Pos0 and 2 <> 1 then begin                       // Check if the bit 1 is set.
+        len := (Pos0 shr 2 and 63) + (Pos1 and 15)*256;   // Select the bits from 2 to 7 from the first byte (Pos0) and the bits from 0 to 3 from the second byte (Pos1) and form a number.
+        data := Pos1 shr 4 and 15;                        // Select the bits from 4 to 7 from the second byte (Pos1)
+        inc(lIndex);                                      // The index is incremented because 2 bytes were read.
       end;
     end;
     for lIndex2 := 0 to len - 1 do begin
       inc(o);
       if (o < 100 * 17) then begin
         x_Gray[o] := chr(data shl 4);
-        SetPixel(GetDC(ImgCont.Picture.Bitmap.Canvas.Handle), lIndex, lIndex2, RGB(ord(x_Gray[o]), ord(x_Gray[o]), ord(x_Gray[o])));
+        ImgCont.Canvas.Pixels[o mod 100, o div 100] := RGB(ord(x_Gray[o]), ord(x_Gray[o]), ord(x_Gray[o]));
+      end
+      else begin
+        Exit;
       end;
     end;
-    inc(lIndex);
-    RLE := RLE + 3;
+    inc(lIndex);                                          // Index increment
   end;
 end; // TXbe.ExportLogoBitmap
 
