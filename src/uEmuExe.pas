@@ -608,68 +608,80 @@ begin
   ep := m_Xbe.m_Header.dwEntryAddr;
   i := m_Header.m_sections - 1;
 
-     // ******************************************************************
-     // * decode entry point
-     // ******************************************************************
+  { TODO : here its going wrong }
+
+  // decode entry point
   if ((ep xor XOR_EP_RETAIL) > $01000000) then
     ep := ep xor XOR_EP_DEBUG
   else
     ep := ep xor XOR_EP_RETAIL;
 
   setlength(m_bzSection[i], m_SectionHeader[i].m_sizeof_raw);
+
+  // append prolog section
   AppendProlog(i);
   pWriteCursor := $100;
+
+  // append xbe header
   AppendXbeHeader(i, pWriteCursor);
   pWriteCursor := pWriteCursor + SizeOf(m_Xbe.m_Header);
+
+  // append xbe extra header bytes
   for c := 0 to (m_Xbe.m_Header.dwSizeofHeaders - sizeOf(m_Xbe.m_Header)) - 1 do begin
     m_bzSection[i][pWriteCursor] := m_Xbe.m_HeaderEx[c];
     Inc(pWriteCursor);
   end;
 
-      // append x_debug_filename
+  // append x_debug_filename
   for c := length(m_KrnlDebugFilename) to 259 do begin
     m_bzSection[i][pWriteCursor] := chr(0);
     Inc(pWriteCursor);
   end;
-      // append library versions
+
+  // append library versions
   for c := 0 to m_xbe.m_Header.dwLibraryVersions - 1 do begin
     AppendXbeLibVersion(i, pWriteCursor, c);
     pWriteCursor := pWriteCursor + sizeOf(m_xbe.m_LibraryVersion[c]);
   end;
 
-      // ******************************************************************
-      // * append TLS data
-      // ******************************************************************
-      // if(length(m_Xbe.m_TLS) <> 0) then begin
-  AppendTLS(i, pWriteCursor);
-      //memcpy(pWriteCursor, x_Xbe->GetTLSData(), x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr);
-      //pWriteCursor += x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
+{ TODO : this one need to be inserted, below is the c++ code }
+  // append TLS data
+  if(sizeOf(m_Xbe.m_TLS) <> 0) then begin
+    AppendTLS(i, pWriteCursor);
+    pWriteCursor := pWriteCursor + SizeOf ( m_Xbe.m_TLS );
 
-  // ******************************************************************
-  // * patch prolog function parameters
-  // ******************************************************************
+(*                memcpy(pWriteCursor, x_Xbe->GetTLSData(), x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr);
+                pWriteCursor += x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
+*)
+  end;
+
+  // patch prolog function parameters
   WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
-  // Function Pointer
-  //AppendDWordToSubSection(i,6,EmuInit);
 
-      // Param 8 : Entry
+  { TODO : this one need to be inserted }
+  // Function Pointer
+//  AppendDWordToSubSection(i,1,PChar ( 'EmuInit'));
+
+  { TODO : This are the paramaters that need to be inserted in EmuInit }
+  // Param 8 : Entry
   AppendDWordToSubSection(i, 6, ep);
 
-      // Param 7 : dwXbeHeaderSize
+  // Param 7 : dwXbeHeaderSize
   AppendDWordToSubSection(i, 11, m_Xbe.m_Header.dwSizeofHeaders);
 
-      // Param 6 : pXbeHeader
+  // Param 6 : pXbeHeader
   AppendDWordToSubSection(i, 16, WriteCursor);
   WriteCursor := WriteCursor + m_Xbe.m_Header.dwSizeofHeaders;
 
-       // Param 5 : szDebugFilename
+  // Param 5 : szDebugFilename
   AppendDWordToSubSection(i, 21, WriteCursor);
   WriteCursor := WriteCursor + 260;
 
-      // Param 4 : DbgMode
-      //  *(uint32 *)((uint32)m_bzSection[i] + 26) = x_debug_mode;
+  { TODO : this one need to be inserted }
+  // Param 4 : DbgMode
+  //  (uint32)m_bzSection[i] + 26) = x_debug_mode;
 
-      // Param 3 : pLibraryVersion
+  // Param 3 : pLibraryVersion
   if (length(m_Xbe.m_LibraryVersion) <> 0) then begin
     AppendDWordToSubSection(i, 31, WriteCursor);
     WriteCursor := WriteCursor + (16 * m_xbe.m_Header.dwLibraryVersions);
@@ -679,6 +691,7 @@ begin
     AppendDWordToSubSection(i, 31, 0);
   end;
 
+  { TODO : here we screwed up the tls again }
        // Param 2 : pTLS
       // if(length(m_Xbe.m_TLS) <> 0) then begin
   AppendDWordToSubSection(i, 36, WriteCursor);
@@ -700,7 +713,7 @@ begin
       // end;
 
 
-
+  { TODO : Below probably never finished translating }
   // END GENERATE SECTIONS  ------ END PART WE STUCK
  // ******************************************************************
  // * patch kernel thunk table
