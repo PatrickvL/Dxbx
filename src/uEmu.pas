@@ -9,6 +9,8 @@ procedure EmuNoFunc; export;
 procedure EmuInit; export;
 procedure EmuPanic; export;
 function EmuVerifyVersion( const szVersion : string ) : boolean; export;
+procedure EmuCleanup ( szErrorMessage : String ); export;
+procedure EmuCleanThread; export;
 
 implementation
 
@@ -426,6 +428,65 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
     return;
 }
+end;
+
+procedure EmuCleanThread;
+begin
+{
+    if(EmuIsXboxFS())
+        EmuSwapFS();    // Win2k/XP FS
+
+    EmuCleanupFS();
+
+    TerminateThread(GetCurrentThread(), 0);
+}
+end;
+
+procedure EmuCleanup ( szErrorMessage : String );
+begin
+    // ******************************************************************
+    // * Print out ErrorMessage (if exists)
+    // ******************************************************************
+(*    if(szErrorMessage != NULL)
+    {
+        char szBuffer1[255];
+        char szBuffer2[255];
+
+        va_list argp;
+
+        sprintf(szBuffer1, "Emu (0x%X): Recieved Fatal Message -> \n\n", GetCurrentThreadId());
+
+        va_start(argp, szErrorMessage);
+
+        vsprintf(szBuffer2, szErrorMessage, argp);
+
+        va_end(argp);
+
+        strcat(szBuffer1, szBuffer2);
+
+        printf("%s\n", szBuffer1);
+
+        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+    }
+
+    printf("CxbxKrnl: Terminating Process\n");
+    fflush(stdout);
+
+    // ******************************************************************
+    // * Cleanup debug output
+    // ******************************************************************
+    {
+        FreeConsole();
+
+        char buffer[16];
+
+        if(GetConsoleTitle(buffer, 16) != NULL)
+            freopen("nul", "w", stdout);
+    }
+
+    TerminateProcess(GetCurrentProcess(), 0);
+
+    return;  *)
 end;
 
 
