@@ -875,7 +875,7 @@ var
   bmp: TBitmap;
 begin
   if LogoSaveDialog.Execute then begin
-   // ask permission to overwrite if file exists
+    // ask permission to overwrite if file exists
     if FileExists(LogoSaveDialog.FileName) then begin
       if (MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrYes) then begin
         DeleteFile(LogoSaveDialog.FileName);
@@ -885,7 +885,7 @@ begin
       end;
     end;
 
-  // export logo bitmap
+    // export logo bitmap
     bmp := TBitmap.Create;
     try
       bmp.Width := 100;
@@ -893,7 +893,6 @@ begin
       m_Xbe.ExportLogoBitmap(bmp);
       bmp.SaveToFile(LogoSaveDialog.FileName);
     finally
-      WriteLog('DXBX: ' + m_szAsciiTitle + ' loaded.');
       WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
     end;
   end;
