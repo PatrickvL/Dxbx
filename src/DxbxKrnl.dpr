@@ -23,8 +23,10 @@ uses
 
 {$R *.res}
 
+  Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
+  Exports EmuPanic name '_EmuPanic@0';
   Exports EmuNoFunc name '_EmuNoFunc@0';
-  Exports SetXbePath;
+  Exports EmuInit name '_EmuInit@32';
 
 
 procedure DllMain ( Reason : Integer );

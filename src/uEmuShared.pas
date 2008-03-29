@@ -3,7 +3,7 @@ unit uEmuShared;
 interface
 
 
-procedure SetXbePath(const path : String ); export;
+//procedure SetXbePath(const path : String ); export;
 function EmuSharedInit : Boolean;
 procedure EmuSharedCleanup;
 
@@ -87,13 +87,13 @@ begin
   CloseLogs;
 end;
 
-procedure SetXbePath(const path : String ); export;
+(*procedure SetXbePath(const path : String ); export;
 begin
   { TODO : Need to be translated from c to delphi }
   //Lock();
   m_XbePath := Path;
   //Unlock();
-end;
+end;*)
 
 
 end.
