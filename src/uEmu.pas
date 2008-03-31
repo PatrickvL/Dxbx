@@ -3,7 +3,7 @@ unit uEmu;
 interface
 
 uses
-  uEmuFS, uLog, uConsts;
+  uEmuFS, uLog, uConsts, Windows;
 
 procedure EmuNoFunc; export;
 procedure EmuInit; export;
@@ -444,9 +444,7 @@ end;
 
 procedure EmuCleanup ( szErrorMessage : String );
 begin
-    // ******************************************************************
-    // * Print out ErrorMessage (if exists)
-    // ******************************************************************
+  // Print out ErrorMessage (if exists)
 (*    if(szErrorMessage != NULL)
     {
         char szBuffer1[255];
@@ -492,12 +490,11 @@ end;
 
 procedure EmuNoFunc; export;
 begin
-  //EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS();   // Win2k/XP FS
 
-  WriteLog('EmuNoFunc');
-  //printf("Emu (0x%X): EmuNoFunc()\n", GetCurrentThreadId());
+  WriteLog('Emu: EmuNoFunc' + IntToStr ( GetCurrentThreadId ));
 
-  //EmuSwapFS();   // XBox FS*)
+  EmuSwapFS();   // XBox FS*)
 end;
 
 function EmuVerifyVersion( const szVersion : string ) : boolean;
@@ -509,15 +506,13 @@ end;
 
 procedure EmuPanic; export;
 begin
-  // if (EmuIsXboxFS())
-  //   EmuSwapFS(); // Win2k/XP FS
+   if EmuIsXboxFS then
+     EmuSwapFS; // Win2k/XP FS
+  WriteLog('Emu: EmuPanic' + IntToStr( GetCurrentThreadId));
 
-  WriteLog('EmuPanic');
-  // printf("Emu(0 x%X): EmuPanic()\n", GetCurrentThreadId());
+  EmuCleanup('Kernel Panic!');
 
-  // EmuCleanup("Kernel Panic!");
-
-  // EmuSwapFS(); // XBox FS
+  EmuSwapFS(); // XBox FS
 end;
 
 end.

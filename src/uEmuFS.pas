@@ -3,6 +3,7 @@ unit uEmuFS;
 interface
 
 procedure EmuSwapFS;
+function EmuIsXboxFS : Boolean;
 
 var
   EmuAutoSleepRate : Integer = -1;
@@ -14,11 +15,15 @@ uses
   SysUtils;
 
 
-Function EmuIsXboxFS : Boolean;
+function EmuIsXboxFS : Boolean;
 var
   chk : char;
 begin
-  //  __asm
+
+{
+    unsigned char chk;
+
+    __asm
     {
         mov ah, fs:[0x16]
         mov chk, ah
@@ -40,9 +45,7 @@ begin
 {    mov ax, fs:[0x14]
     mov fs, ax}
 
-    // ******************************************************************
-    // * Every "N" interceptions, perform various periodic services
-    // ******************************************************************
+    // Every "N" interceptions, perform various periodic services
     if((dwInterceptionCount + 1) >= EmuAutoSleepRate) then
     begin
         // If we're in the Xbox FS, wait until the next swap
