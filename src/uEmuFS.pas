@@ -3,6 +3,7 @@ unit uEmuFS;
 interface
 
 procedure EmuSwapFS;
+procedure EmuCleanupFS;
 function EmuIsXboxFS : Boolean;
 
 var
@@ -58,5 +59,40 @@ begin
     end;
   end;
 end; // EmuSwapFS
+
+procedure EmuCleanupFS;
+var wSwapFS : Integer;
+begin
+(*{
+    uint16 wSwapFS = 0;
+
+    __asm
+    {
+        mov ax, fs:[0x14]   // FS.ArbitraryUserPointer
+        mov wSwapFS, ax
+    }
+
+    if(wSwapFS == 0)
+        return;
+
+    if(!EmuIsXboxFS())
+        EmuSwapFS();    // Xbox FS
+
+    uint08 *pTLSData = NULL;
+
+    __asm
+    {
+        mov eax, fs:[0x04]
+        mov pTLSData, eax
+    }
+
+    EmuSwapFS(); // Win2k/XP FS
+
+    if(pTLSData != 0)
+        delete[] pTLSData;
+
+    EmuDeallocateLDT(wSwapFS);
+}          *)
+end;
 
 end.

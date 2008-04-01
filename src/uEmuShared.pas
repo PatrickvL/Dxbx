@@ -11,7 +11,7 @@ procedure EmuSharedCleanup;
 implementation
 
 Uses
-  uEnums, uLog, Dialogs;    
+  uEnums, uLog, Dialogs, uMutex;
 
 Var
   m_XbePath : String;
@@ -80,20 +80,19 @@ begin
   WriteLog ( 'EmuSharedCleanup' );
   Dec ( g_EmuSharedRefCount );
 
-(*  if(g_EmuSharedRefCount = 0)
+  (*if(g_EmuSharedRefCount = 0)
     EmuShared();
 
-  UnmapViewOfFile(g_EmuShared); *)
+  UnmapViewOfFile(g_EmuShared);*)
   CloseLogs;
 end;
 
-(*procedure SetXbePath(const path : String ); export;
+procedure SetXbePath(const path : String ); export;
 begin
-  { TODO : Need to be translated from c to delphi }
-  //Lock();
+  Lock();
   m_XbePath := Path;
-  //Unlock();
-end;*)
+  Unlock();
+end;
 
 
 end.
