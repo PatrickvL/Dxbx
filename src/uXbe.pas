@@ -58,8 +58,8 @@ type
     dwLogoBitmapAddr: DWord; // 0x0170 - logo bitmap address
     dwSizeofLogoBitmap: DWord; // 0x0174 - logo bitmap size
   end;
+  P_XBE_HEADER = ^_XBE_HEADER;
   XBE_HEADER = _XBE_HEADER;
-
 
   _XBE_CERTIFICATE = packed record
     dwSize: DWord; // 0x0000 - size of certificate
@@ -125,6 +125,7 @@ type
             }
             //dwFlags;
   end;
+  P_XBE_LIBRARYVERSION = ^_XBE_LIBRARYVERSION;
   XBE_LIBRARYVERSION = _XBE_LIBRARYVERSION;
 
   _XBE_TLS = packed record
@@ -143,7 +144,7 @@ type
     dwSizeofZeroFill: DWord; // size of zero fill
     dwCharacteristics: DWord; // characteristics
   end;
-
+  P_XBE_TLS = ^_XBE_TLS;
   XBE_TLS = _XBE_TLS;
 
   _Eight = char;
@@ -275,9 +276,9 @@ end; // TXbe.ConstructorInit
 constructor TXbe.Create(aFileName: string);
 var
   ExeSize: LongInt;
-  lIndex, lIndex2: Integer;
+  lIndex, lIndex2: DWord;
   RawSize, RawAddr: DWord;
-  I: Integer;
+  I: DWord;
   F: THandle;
   ReadBytes, FileSz: DWord;
 begin
@@ -1066,9 +1067,8 @@ procedure TXbe.ExportLogoBitmap(ImgCont: TBitmap);
 var
   x_Gray: array[0..100 * 17] of char;
   dwLength, o, lIndex, lIndex2, len, data: DWord;
-  RLE: integer;
+  RLE: DWord;
   pos0, pos1: Byte;
-  I: Integer;
 begin
   dwLength := m_Header.dwSizeofLogoBitmap;
   RLE := GetAddr(m_Header.dwLogoBitmapAddr);
