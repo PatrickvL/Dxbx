@@ -519,6 +519,12 @@ begin
     return;  *)
 end;
 
+procedure EmuXRefFailure;
+begin
+  EmuSwapFS();    // Win2k/XP FS
+  EmuCleanup('XRef-only function body reached. Fatal Error.');
+end;
+
 
 procedure EmuNoFunc; export;
 begin
