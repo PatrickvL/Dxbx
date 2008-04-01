@@ -466,14 +466,12 @@ end;
 
 procedure EmuCleanThread;
 begin
-{
-    if(EmuIsXboxFS())
-        EmuSwapFS();    // Win2k/XP FS
+  if EmuIsXboxFS then
+      EmuSwapFS();    // Win2k/XP FS
 
-    EmuCleanupFS();
+  EmuCleanupFS;
 
-    TerminateThread(GetCurrentThread(), 0);
-}
+  TerminateThread(GetCurrentThread(), 0);
 end;
 
 procedure EmuCleanup ( szErrorMessage : String );

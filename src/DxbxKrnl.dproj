@@ -46,5 +46,6 @@
     <DCCReference Include="uLogConsole.pas">
       <Form>frm_LogConsole</Form>
     </DCCReference>
+    <DCCReference Include="uMutex.pas" />
   </ItemGroup>
 </Project>

@@ -20,7 +20,8 @@ uses
   uEnums in 'uEnums.pas',
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
-  uEmuFS in 'uEmuFS.pas';
+  uEmuFS in 'uEmuFS.pas',
+  uMutex in 'uMutex.pas';
 
 {$R *.res}
 
