@@ -3,10 +3,21 @@ unit uEmu;
 interface
 
 uses
-  uEmuFS, uLog, uConsts, Windows;
+  uEnums, uEmuFS, uXbe, uLog, uConsts, Windows;
+
+type
+  tEntryProc = Procedure();
+  pEntryProc = ^tEntryProc;
 
 procedure EmuNoFunc; export;
-procedure EmuInit; export;
+procedure EmuInit( pTLSData : pointer;
+                   pTLS : P_XBE_TLS;
+                   pLibraryVersion : P_XBE_LIBRARYVERSION;
+                   DbgMode : DebugMode;
+                   szDebugFilename : PChar;
+                   pXbeHeader : P_XBE_HEADER;
+                   dwXbeHeaderSize : DWord;
+                   Entry : pEntryProc ); export;
 procedure EmuPanic; export;
 function EmuVerifyVersion( const szVersion : string ) : boolean; export;
 procedure EmuCleanup ( szErrorMessage : String ); export;
@@ -14,11 +25,34 @@ procedure EmuCleanThread; export;
 
 implementation
 
+uses
+  SysUtils;
 
-
-procedure EmuInit; export;
+procedure EmuInit( pTLSData : pointer;
+                   pTLS : P_XBE_TLS;
+                   pLibraryVersion : P_XBE_LIBRARYVERSION;
+                   DbgMode : DebugMode;
+                   szDebugFilename : PChar;
+                   pXbeHeader : P_XBE_HEADER;
+                   dwXbeHeaderSize : DWord;
+                   Entry : pEntryProc ); export;
 begin
-  WriteLog('EmuInit');
+ {$IfDef DEBUG}
+ WriteLog('EmuInit');
+ WriteLog('(');
+ WriteLog(Format('  pTLSData         : 0x%.08X', [pTLSData]));
+ WriteLog(Format('  pTLS             : 0x%.08X', [pTLS]));
+ WriteLog(Format('  pLibraryVersion  : 0x%.08X', [pLibraryVersion]));
+ WriteLog(Format('  DebugConsole     : 0x%.08X', [Ord(DbgMode)]));
+ WriteLog(Format('  DebugFilename    : "%s"', [szDebugFilename]));
+ WriteLog(Format('  pXBEHeader       : 0x%.08X', [pXbeHeader]));
+ WriteLog(Format('  dwXBEHeaderSize  : 0x%.08X', [dwXbeHeaderSize]));
+ WriteLog(Format('  Entry            : 0x%.08X', [Entry]));
+ WriteLog(')');
+ {$Else}
+ WriteLog('EmuInit');
+ {$EndIF}
+
 
 {
 extern "C" CXBXKRNL_API void NTAPI EmuInit

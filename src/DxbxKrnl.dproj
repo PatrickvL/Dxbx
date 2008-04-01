@@ -39,6 +39,7 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <DCCReference Include="uEmu.pas" />
+    <DCCReference Include="uEmuFS.pas" />
     <DCCReference Include="uEmuShared.pas" />
     <DCCReference Include="uEnums.pas" />
     <DCCReference Include="uLog.pas" />
