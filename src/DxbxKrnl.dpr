@@ -21,6 +21,8 @@ uses
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uEmuFS in 'uEmuFS.pas',
+  uXbe in 'uXbe.pas',
+  uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas';
 
 {$R *.res}

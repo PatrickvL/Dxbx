@@ -19,7 +19,6 @@ Var
 
 function EmuSharedInit : Boolean;
 begin
-  CreateLogs(ltKernel);
   WriteLog('EmuSharedInit');
 
   // Ensure initialization only occurs once
