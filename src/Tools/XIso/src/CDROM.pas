@@ -1207,6 +1207,7 @@ begin
   //---Ejecutar Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
 
+  Result := False;
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
@@ -1263,6 +1264,7 @@ begin
   //---Ejecutar Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
 
+  Result := False;
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
@@ -1485,7 +1487,7 @@ var
 begin
   Result := False;
   LBAFinal := LBAFinal - LBAInicial;
-  if Leer then LeerEscribir := $02;
+  if Leer then LeerEscribir := $02 else LeerEscribir := $00;
   if Escribir then LeerEscribir := LeerEscribir + $01;
   LeerEscribir := LeerEscribir + (LUNx shl $05);
   //---Conversion de Parametros---
@@ -3021,6 +3023,7 @@ begin
                                                          }
 
   //---Ejecuta el Comando SCSI---
+  Result := False;
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
@@ -3133,6 +3136,7 @@ begin
 
 
   //---Ejecuta el Comando SCSI---
+  Result := False;
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
@@ -3202,6 +3206,7 @@ begin
 
 
   //---Ejecuta el Comando SCSI---
+  Result := False;
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin

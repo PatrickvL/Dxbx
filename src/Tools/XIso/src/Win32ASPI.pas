@@ -691,7 +691,7 @@ begin
     ASPIStatus := SendASPI32Command(pSRBPacket);
     if ASPIStatus = SS_PENDING then
     begin                                         // Modificado para que espere
-      if LimitTime = -1 then
+      if LimitTime = $FFFFFFFF then
         WaitStatus := WaitForSingleObject(hEvent, Infinite)
       else
         WaitStatus := WaitForSingleObject(hEvent, LimitTime); //Infinite);

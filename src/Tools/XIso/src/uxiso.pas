@@ -260,7 +260,6 @@ var
   NumIni: int64;
 begin
   NumIni := 0;
-  Result := False;
   Fichero := TFilestream.Create(imagen, fmOpenRead or fmShareDenyNone);
   with Fichero do
   begin

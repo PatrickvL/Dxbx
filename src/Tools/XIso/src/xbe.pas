@@ -79,20 +79,20 @@ implementation
 
 function mByte2DWORD(b3, b2, b1, b0: byte): Dword;
 begin
-  result := ((LongInt(b3) shl 24) and $FF000000) or
-    ((LongInt(b2) shl 16) and $00FF0000) or
-    ((LongInt(b1) shl 8) and $0000FF00) or
-    ((LongInt(b0)) and $000000FF);
+  result := ((DWord(b3) shl 24) and $FF000000) or
+    ((DWord(b2) shl 16) and $00FF0000) or
+    ((DWord(b1) shl 8) and $0000FF00) or
+    ((DWord(b0)) and $000000FF);
 end;
 
 //--- 4 Bytes a DWORD formato Intel
 
 function iByte2DWORD(b3, b2, b1, b0: byte): Dword;
 begin
-  result := ((LongInt(b0) shl 24) and $FF000000) or
-    ((LongInt(b1) shl 16) and $00FF0000) or
-    ((LongInt(b2) shl 8) and $0000FF00) or
-    ((LongInt(b3)) and $000000FF);
+  result := ((DWord(b0) shl 24) and $FF000000) or
+    ((DWord(b1) shl 16) and $00FF0000) or
+    ((DWord(b2) shl 8) and $0000FF00) or
+    ((DWord(b3)) and $000000FF);
 end;
 
 

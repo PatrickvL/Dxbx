@@ -449,7 +449,6 @@ end;
 
 function TXBOX_FILESYSTEM.Make(Directory: string; ISOName: string): Boolean;
 begin
-  Result := False;
   MakeFileList(Directory, Root);
   MakeISO(ISOName);
   Result := True;

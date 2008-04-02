@@ -296,7 +296,6 @@ end;
 
 function TAdminFicheros.AgregarCarpeta(Carpeta: string): boolean;
 begin
-  Result := False;
   if ListaAnterior = nil then
     AgregarCarpetaRec(Carpeta, @Lista)
   else
@@ -309,7 +308,6 @@ var
   Nuevo: PEntrada;
   C: TListaContenido;
 begin
-  Result := False;
   New(Nuevo);
   Nuevo.Id := GenerarID();
   Nuevo.Nombre := ExtractFileName(Carpeta);
@@ -327,7 +325,6 @@ end;
 
 function TAdminFicheros.EliminarFichero(Fichero: string): boolean;
 begin
-  Result := False;
   ListaActual.Eliminar(Fichero);
   Result := True;
 end;

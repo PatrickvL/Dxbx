@@ -698,6 +698,7 @@ begin
   frm_Main.ProgressBar1.Position := 0;
   frm_Main.StatusBar1.Repaint;
   frm_Main.StatusBar1.Refresh;
+  Result := True;
 end;
 
 procedure Tfrm_Main.PopupMenu1Popup(Sender: TObject);

@@ -827,7 +827,9 @@ begin
   else
     if PDirectorios(Item1)^.Nivel = PDirectorios(Item2)^.Nivel then Result := 0
     else
-      if PDirectorios(Item1)^.Nivel > PDirectorios(Item2)^.Nivel then Result := 1;
+      if PDirectorios(Item1)^.Nivel > PDirectorios(Item2)^.Nivel then Result := 1
+      else
+        Result := 0;
 end;
 
 function TAdminXISO.XDFS2ISO9660(Fichero: string): boolean;
