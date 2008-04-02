@@ -165,8 +165,7 @@ type
     procedure AfterConstruction; override;
   end;
 
-  { TODO : Need to be inserted later }
-  //procedure SetXbePath(const path : String ); external 'DxbxKrnl.dll';
+  procedure SetXbePath(const path : String ); external 'DxbxKrnl.dll';
 
 var
   frm_Main: Tfrm_Main;
@@ -455,8 +454,7 @@ begin
     if FileConverted then begin
 
       // register xbe path with Cxbx.dll
-      { TODO : Need to be inserted later }
-      //SetXbePath( PChar ( m_Xbe.m_szPath ) );
+      SetXbePath( PChar ( m_Xbe.m_szPath ) );
 
       try
         if FileExists(m_ExeFilename) then begin

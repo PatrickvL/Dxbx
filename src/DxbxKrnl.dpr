@@ -19,7 +19,7 @@ uses
   uEmu in 'uEmu.pas',
   uEnums in 'uEnums.pas',
   uLog in 'uLog.pas',
-  uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
+  uLogConsole in 'uLogConsole.pas',
   uEmuFS in 'uEmuFS.pas',
   uXbe in 'uXbe.pas',
   uConsts in 'uConsts.pas',
@@ -27,12 +27,18 @@ uses
 
 {$R *.res}
 
+
+
+  Exports SetLogMode;
+  Exports EmuInit;
+  Exports SetXbePath;
   Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
   Exports EmuPanic name '_EmuPanic@0';
   Exports EmuNoFunc name '_EmuNoFunc@0';
   Exports EmuInit name '_EmuInit@32';
   Exports EmuCleanup;
   Exports EmuCleanThread name '_EmuCleanThread@0';
+
 
 procedure DllMain ( Reason : Integer );
 begin

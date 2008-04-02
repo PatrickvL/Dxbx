@@ -14,6 +14,7 @@ var
 procedure CreateLogs(aLogType: LogType = ltKernel);
 procedure CloseLogs;
 procedure WriteLog(aText: string);
+procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
 
 implementation
@@ -25,6 +26,11 @@ var
   LogMode     : DebugMode = DM_NONE;
   LogFileOpen : Boolean = False;
   LogFile     : TextFile;
+
+procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
+begin
+  LogMode := aLogMode;
+end;
 
 procedure CreateLogs(aLogType: LogType);
 begin

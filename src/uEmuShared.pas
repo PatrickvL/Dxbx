@@ -3,7 +3,7 @@ unit uEmuShared;
 interface
 
 
-//procedure SetXbePath(const path : String ); export;
+procedure SetXbePath(const path : String ); export;
 function EmuSharedInit : Boolean;
 procedure EmuSharedCleanup;
 
