@@ -19,7 +19,7 @@ type
 implementation
 
 uses
-  uLog, Dialogs;
+  uLog, uExternals, Dialogs;
 
 
 { TEmuExe }
@@ -624,8 +624,6 @@ var
   ep := m_Xbe.m_Header.dwEntryAddr;
   i := m_Header.m_sections - 1;
 
-  { TODO : here its going wrong }
-
   // decode entry point
   if ((ep xor XOR_EP_RETAIL) > $01000000) then
     ep := ep xor XOR_EP_DEBUG
@@ -672,10 +670,10 @@ var
   WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
 
   // Function Pointer
-  KrnlHandle := LoadLibrary('DxbxKrnl.dll');
+  pEmuInit := @EmuInit;  // We need to access the procedure once so it's in memory
+  KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
   if KrnlHandle >= 32 then begin
-    pEmuInit := GetProcAddress(KrnlHandle, '_EmuInit@32');
-    WriteLog(Format('Export: EmuInit address : 0x%.08X', [DWord(pEmuInit)]));
+    pEmuInit := GetProcAddress(KrnlHandle, '_EmuInit@36');
     AppendDWordToSubSection(i,1,DWord(pEmuInit));
   end;
   FreeLibrary(KrnlHandle);
@@ -799,7 +797,6 @@ var
       Break;
     end;
   end;
-
 
   WriteLog('EmeExe: Finalizing Exe Files...OK');
 end; // TEmuExe.Create
