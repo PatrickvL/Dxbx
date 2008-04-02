@@ -10,7 +10,8 @@ type
   pEntryProc = ^tEntryProc;
 
 procedure EmuNoFunc; export;
-procedure EmuInit( pTLSData : pointer;
+procedure EmuInit( hwndParent : THandle;
+                   pTLSData : pointer;
                    pTLS : P_XBE_TLS;
                    pLibraryVersion : P_XBE_LIBRARYVERSION;
                    DbgMode : DebugMode;
@@ -28,7 +29,8 @@ implementation
 uses
   SysUtils, Dialogs;
 
-procedure EmuInit( pTLSData : pointer;
+procedure EmuInit( hwndParent : THandle;
+                   pTLSData : pointer;
                    pTLS : P_XBE_TLS;
                    pLibraryVersion : P_XBE_LIBRARYVERSION;
                    DbgMode : DebugMode;

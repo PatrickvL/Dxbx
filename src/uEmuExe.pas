@@ -12,7 +12,7 @@ type
   TEmuExe = class(TExe)
   private
   public
-    constructor Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFilename: string);
+    constructor Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFilename: string; hwndParent: THandle);
   end;
 
 
@@ -27,7 +27,7 @@ uses
 //------------------------------------------------------------------------------
 
 constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
-  m_KrnlDebugFilename: string);
+  m_KrnlDebugFilename: string; hwndParent: THandle);
 
   procedure AppendDWordToSection(SectionIdx: Integer; aDWord: DWord);
   var i: Integer;
@@ -588,8 +588,8 @@ var
   m_bzSection[i][$51] := 'd';
   m_bzSection[i][$52] := 'l';
   m_bzSection[i][$53] := 'l';
-  m_bzSection[i][$46] := chr(0);
-  m_bzSection[i][$47] := chr(0);
+  m_bzSection[i][$54] := chr(0);
+  m_bzSection[i][$55] := chr(0);
 {$ELSE}
   m_bzSection[i][$3A] := '_';
   m_bzSection[i][$3B] := 'E';
@@ -617,8 +617,8 @@ var
   m_bzSection[i][$51] := chr(0);
   m_bzSection[i][$52] := chr(0);
   m_bzSection[i][$53] := chr(0);
-  m_bzSection[i][$46] := chr(0);
-  m_bzSection[i][$47] := chr(0);
+  m_bzSection[i][$54] := chr(0);
+  m_bzSection[i][$55] := chr(0);
 {$ENDIF}
 
   ep := m_Xbe.m_Header.dwEntryAddr;
@@ -678,7 +678,6 @@ var
   end;
   FreeLibrary(KrnlHandle);
 
-  { TODO : This are the paramaters that need to be inserted in EmuInit }
   // Param 8 : Entry
   AppendDWordToSubSection(i, 6, ep);
 
@@ -707,27 +706,30 @@ var
   end;
 
   { TODO : here we screwed up the tls again }
-       // Param 2 : pTLS
-      // if(length(m_Xbe.m_TLS) <> 0) then begin
-  AppendDWordToSubSection(i, 36, WriteCursor);
-  WriteCursor := WriteCursor + sizeof(m_Xbe.m_TLS);
-      // end
-      // else
-      // begin
-      //   AppendDWordToSubSection(i,36,0);
-      // end;
+  // Param 2 : pTLS
+ //if(m_Xbe.m_TLS <> 0) then begin
+   AppendDWordToSubSection(i, 36, WriteCursor);
+   WriteCursor := WriteCursor + sizeof(m_Xbe.m_TLS);
+ //end
+ //else
+ //begin
+ //  AppendDWordToSubSection(i,36,0);
+ //end;
 
-      // Param 1 : pTLSData
-      // if(length(m_Xbe.m_TLS) <> 0) then begin
-  AppendDWordToSubSection(i, 41, WriteCursor);
-//         WriteCursor := WriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
-      // end
-      // else
-      // begin
-      // AppendDWordToSubSection(i,41,0);
-      // end;
+ // Param 1 : pTLSData
+// if(m_Xbe.m_TLS <> 0) then begin
+   AppendDWordToSubSection(i, 41, WriteCursor);
+   WriteCursor := WriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
+// end
+// else
+// begin
+//   AppendDWordToSubSection(i,41,0);
+// end;
 
+  // Param 0 : hwndParent
+  AppendDWordToSubSection(i, 46, hwndParent);
 
+  
   { TODO : Below probably never finished translating }
   // END GENERATE SECTIONS  ------ END PART WE STUCK
  // ******************************************************************
@@ -751,11 +753,12 @@ var
     virt_addr := m_SectionHeader[c].m_virtual_addr;
     virt_size := m_SectionHeader[c].m_virtual_size;
     if ((kt >= virt_addr + imag_base) and (kt < virt_addr + virt_size + imag_base)) then begin
+       WriteLog(Format('EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...', [v, kt]));
        m_bzSection[v][kt - virt_addr - imag_base] := m_bzSection[v][kt - virt_addr - imag_base];
 
     end;
   end;
-  }
+ }
 
   // update imcomplete header fields
   // calculate size of code / data / image
@@ -798,7 +801,7 @@ var
     end;
   end;
 
-  WriteLog('EmeExe: Finalizing Exe Files...OK');
+  WriteLog('EmuExe: Finalizing Exe Files...OK');
 end; // TEmuExe.Create
 
 //------------------------------------------------------------------------------

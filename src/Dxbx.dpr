@@ -16,7 +16,8 @@ uses
   uXML in 'uXML.pas',
   g_EmuShared in 'g_EmuShared.pas',
   uLog in 'uLog.pas',
-  uLogConsole in 'uLogConsole.pas' {frm_LogConsole};
+  uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
+  uExternals in 'uExternals.pas';
 
 {$R *.RES}
 

@@ -109,6 +109,7 @@
     <DCCReference Include="uEmuExe.pas" />
     <DCCReference Include="uEnums.pas" />
     <DCCReference Include="uExe.pas" />
+    <DCCReference Include="uExternals.pas" />
     <DCCReference Include="ufrm_About.pas">
       <Form>frm_About</Form>
     </DCCReference>
