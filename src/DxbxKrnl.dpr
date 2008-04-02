@@ -35,7 +35,7 @@ uses
   Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
   Exports EmuPanic name '_EmuPanic@0';
   Exports EmuNoFunc name '_EmuNoFunc@0';
-  Exports EmuInit name '_EmuInit@32';
+  Exports EmuInit name '_EmuInit@36';
   Exports EmuCleanup;
   Exports EmuCleanThread name '_EmuCleanThread@0';
 

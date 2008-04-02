@@ -401,7 +401,7 @@ begin
 
     // convert file
     try
-      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename);
+      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename,0);
       if i_EmuExe.doExport(filename) then begin
         m_ExeFilename := filename;
         WriteLog(m_szAsciiTitle + ' was converted to .exe.');
