@@ -1039,7 +1039,6 @@ var
 begin
   dwoffs := x_dwVirtualAddress - m_Header.dwBaseAddr;
   Result := 0;
-
   // offset in image header
   if dwoffs < m_Header.dwSizeofHeaders then begin
     result := dwOffs
@@ -1114,7 +1113,10 @@ end; // TXbe.ExportLogoBitmap
 
 function TXbe.GetTLSData: DWord;
 begin
-  Result := GetAddr(m_TLS.dwDataStartAddr);
+  if m_TLS.dwDataStartAddr = 0 then
+    Result := 0
+  else
+    Result := GetAddr(m_TLS.dwDataStartAddr);
 end; // TXbe.GetTLSData
 
 //------------------------------------------------------------------------------

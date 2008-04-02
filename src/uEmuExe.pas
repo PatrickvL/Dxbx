@@ -268,6 +268,19 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
     AppendDWordToSubSection(SectionIdx, SubIndex, m_Xbe.m_TLS.dwCharacteristics);
   end;
 
+  procedure AppendTLSData(SectionIdx: Integer; SubIndex: Dword);
+  var
+    i: DWord;
+    pTLSData : ^TVarCharArray;
+  begin
+    if m_Xbe.GetTLSData <> 0 then begin
+      pTLSData := Pointer(m_Xbe.GetTLSData);
+      for i := 0 to m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr - 1 do begin
+        m_bzSection[SectionIdx][SubIndex+i] := pTLSData^[i];
+      end;
+    end;
+  end;
+
 var
   i, d, v, c: integer;
 
@@ -647,15 +660,12 @@ var
     pWriteCursor := pWriteCursor + sizeOf(m_xbe.m_LibraryVersion[c]);
   end;
 
-{ TODO : this one need to be inserted, below is the c++ code }
   // append TLS data
   if(sizeOf(m_Xbe.m_TLS) <> 0) then begin
     AppendTLS(i, pWriteCursor);
     pWriteCursor := pWriteCursor + SizeOf ( m_Xbe.m_TLS );
-
-(*                memcpy(pWriteCursor, x_Xbe->GetTLSData(), x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr);
-                pWriteCursor += x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
-*)
+    AppendTLSData(i, pWriteCursor);
+    pWriteCursor := pWriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
   end;
 
   // patch prolog function parameters
