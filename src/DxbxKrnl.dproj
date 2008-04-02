@@ -38,6 +38,7 @@
     <DelphiCompile Include="DxbxKrnl.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
+    <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uEmu.pas" />
     <DCCReference Include="uEmuFS.pas" />
     <DCCReference Include="uEmuShared.pas" />
@@ -46,6 +47,7 @@
     <DCCReference Include="uLogConsole.pas">
       <Form>frm_LogConsole</Form>
     </DCCReference>
+    <DCCReference Include="uXbe.pas" />
     <DCCReference Include="uMutex.pas" />
   </ItemGroup>
 </Project>

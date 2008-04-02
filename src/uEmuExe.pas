@@ -19,7 +19,7 @@ type
 implementation
 
 uses
-  uLog;
+  uLog, Dialogs;
 
 
 { TEmuExe }
@@ -301,7 +301,10 @@ var
   WriteCursor: DWord;
   Flag: Byte;
 
-begin
+   KrnlHandle: Thandle;
+   pEmuInit: Pointer;
+
+   begin
   ConstructorInit();
 
   WriteLog('EmuExe: Generating Exe file...');
@@ -658,9 +661,14 @@ begin
   // patch prolog function parameters
   WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
 
-  { TODO : this one need to be inserted }
   // Function Pointer
-//  AppendDWordToSubSection(i,1,PChar ( 'EmuInit'));
+  KrnlHandle := LoadLibrary('DxbxKrnl.dll');
+  if KrnlHandle >= 32 then begin
+    pEmuInit := GetProcAddress(KrnlHandle, '_EmuInit@32');
+    WriteLog(Format('Export: EmuInit address : 0x%.08X', [DWord(pEmuInit)]));
+    AppendDWordToSubSection(i,1,DWord(pEmuInit));
+  end;
+  FreeLibrary(KrnlHandle);
 
   { TODO : This are the paramaters that need to be inserted in EmuInit }
   // Param 8 : Entry
@@ -677,9 +685,8 @@ begin
   AppendDWordToSubSection(i, 21, WriteCursor);
   WriteCursor := WriteCursor + 260;
 
-  { TODO : this one need to be inserted }
   // Param 4 : DbgMode
-  //  (uint32)m_bzSection[i] + 26) = x_debug_mode;
+  AppendDWordToSubSection(i, 26, DWord(m_KrnlDebug));
 
   // Param 3 : pLibraryVersion
   if (length(m_Xbe.m_LibraryVersion) <> 0) then begin
@@ -724,11 +731,11 @@ begin
 
   // decode kernel thunk address
   if ((kt xor XOR_KT_DEBUG) > $01000000) then begin
-    //kt := kt xor XOR_KT_RETAIL
+    kt := kt xor XOR_KT_RETAIL
   end
   else
   begin
-    //kt := kt xor XOR_KT_DEBUG;
+    kt := kt xor XOR_KT_DEBUG;
   end;
 
  { for c:=0 to m_Xbe.m_Header.dwSections do begin

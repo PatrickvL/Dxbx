@@ -17,7 +17,7 @@ procedure EmuInit( pTLSData : pointer;
                    szDebugFilename : PChar;
                    pXbeHeader : P_XBE_HEADER;
                    dwXbeHeaderSize : DWord;
-                   Entry : pEntryProc ); export;
+                   Entry : pEntryProc ); export; stdcall;
 procedure EmuPanic; export;
 function EmuVerifyVersion( const szVersion : string ) : boolean; export;
 procedure EmuCleanup ( szErrorMessage : String ); export;
@@ -26,7 +26,7 @@ procedure EmuCleanThread; export;
 implementation
 
 uses
-  SysUtils;
+  SysUtils, Dialogs;
 
 procedure EmuInit( pTLSData : pointer;
                    pTLS : P_XBE_TLS;
@@ -37,21 +37,19 @@ procedure EmuInit( pTLSData : pointer;
                    dwXbeHeaderSize : DWord;
                    Entry : pEntryProc ); export;
 begin
- {$IfDef DEBUG}
- WriteLog('EmuInit');
- WriteLog('(');
- WriteLog(Format('  pTLSData         : 0x%.08X', [pTLSData]));
- WriteLog(Format('  pTLS             : 0x%.08X', [pTLS]));
- WriteLog(Format('  pLibraryVersion  : 0x%.08X', [pLibraryVersion]));
- WriteLog(Format('  DebugConsole     : 0x%.08X', [Ord(DbgMode)]));
- WriteLog(Format('  DebugFilename    : "%s"', [szDebugFilename]));
- WriteLog(Format('  pXBEHeader       : 0x%.08X', [pXbeHeader]));
- WriteLog(Format('  dwXBEHeaderSize  : 0x%.08X', [dwXbeHeaderSize]));
- WriteLog(Format('  Entry            : 0x%.08X', [Entry]));
- WriteLog(')');
- {$Else}
- WriteLog('EmuInit');
- {$EndIF}
+  CreateLogs(ltKernel);
+
+  WriteLog('EmuInit');
+  WriteLog('(');
+  WriteLog(Format('  pTLSData         : 0x%.08X', [pTLSData]));
+  WriteLog(Format('  pTLS             : 0x%.08X', [pTLS]));
+  WriteLog(Format('  pLibraryVersion  : 0x%.08X', [pLibraryVersion]));
+  WriteLog(Format('  DebugConsole     : 0x%.08X', [Ord(DbgMode)]));
+  WriteLog(Format('  DebugFilename    : "%s"', [szDebugFilename]));
+  WriteLog(Format('  pXBEHeader       : 0x%.08X', [pXbeHeader]));
+  WriteLog(Format('  dwXBEHeaderSize  : 0x%.08X', [dwXbeHeaderSize]));
+  WriteLog(Format('  Entry            : 0x%.08X', [Entry]));
+  WriteLog(')');
 
 
 {

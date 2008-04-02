@@ -56,7 +56,7 @@ end;
 
 procedure Unlock;
 begin
-({
+{
     // Grab the lock, letting us look at the variables
     while(InterlockedCompareExchange((LPVOID*)&m_MutexLock, (LPVOID)1, (LPVOID)0))
 //    while (InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
