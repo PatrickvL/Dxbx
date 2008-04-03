@@ -102,6 +102,13 @@ begin
   Result := VerInfo.dwMajorVersion >= 6;
 end;
 
+function SortGameList(Item1, Item2: Pointer): Integer;
+begin
+  result := AnsiCompareText(PXDKINFO(Item1)^.GameName, PXDKINFO(Item2)^.GameName);
+end;
+
+//------------------------------------------------------------------------------
+
 procedure TfrmXdkTracker.Viewxdkversion2Click(Sender: TObject);
 var
   lIndex: Integer;
@@ -383,7 +390,7 @@ begin
 
       GameNode := GameNode.NextSibling;
     end;
-
+    Gamelist.Sort(SortGameList);
     StatusBar1.SimpleText := cXDKLIST_LOADED;
   end;
 end; // TfrmMain.LoadGameData
