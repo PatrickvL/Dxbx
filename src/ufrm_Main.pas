@@ -101,6 +101,8 @@ type
     StatusBar: TsStatusBar;
     sSkinManager1: TsSkinManager;
     sSkinProvider1: TsSkinProvider;
+    Image2: TImage;
+    Image3: TImage;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);

@@ -30,7 +30,7 @@ uses
 
 
   Exports SetLogMode;
-  Exports EmuInit;
+  Exports EmuInit name '_EmuInit@36';
   Exports SetXbePath;
   Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
   Exports EmuPanic name '_EmuPanic@0';
