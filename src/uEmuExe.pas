@@ -271,12 +271,12 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
   procedure AppendTLSData(SectionIdx: Integer; SubIndex: Dword);
   var
     i: DWord;
-    pTLSData : ^TVarCharArray;
+    pTLSData: ^TVarCharArray;
   begin
     if m_Xbe.GetTLSData <> 0 then begin
       pTLSData := Pointer(m_Xbe.GetTLSData);
       for i := 0 to m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr - 1 do begin
-        m_bzSection[SectionIdx][SubIndex+i] := pTLSData^[i];
+        m_bzSection[SectionIdx][SubIndex + i] := pTLSData^[i];
       end;
     end;
   end;
@@ -314,10 +314,10 @@ var
   WriteCursor: DWord;
   Flag: Byte;
 
-   KrnlHandle: Thandle;
-   pEmuInit: Pointer;
+  KrnlHandle: Thandle;
+  pEmuInit: Pointer;
 
-   begin
+begin
   ConstructorInit();
 
   WriteLog('EmuExe: Generating Exe file...');
@@ -659,9 +659,9 @@ var
   end;
 
   // append TLS data
-  if(sizeOf(m_Xbe.m_TLS) <> 0) then begin
+  if (sizeOf(m_Xbe.m_TLS) <> 0) then begin
     AppendTLS(i, pWriteCursor);
-    pWriteCursor := pWriteCursor + SizeOf ( m_Xbe.m_TLS );
+    pWriteCursor := pWriteCursor + SizeOf(m_Xbe.m_TLS);
     AppendTLSData(i, pWriteCursor);
     pWriteCursor := pWriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
   end;
@@ -670,11 +670,11 @@ var
   WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
 
   // Function Pointer
-  pEmuInit := @EmuInit;  // We need to access the procedure once so it's in memory
+  pEmuInit := @EmuInit; // We need to access the procedure once so it's in memory
   KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
   if KrnlHandle >= 32 then begin
     pEmuInit := GetProcAddress(KrnlHandle, '_EmuInit@36');
-    AppendDWordToSubSection(i,1,DWord(pEmuInit));
+    AppendDWordToSubSection(i, 1, DWord(pEmuInit));
   end;
   FreeLibrary(KrnlHandle);
 
@@ -705,32 +705,30 @@ var
     AppendDWordToSubSection(i, 31, 0);
   end;
 
-  { TODO : here we screwed up the tls again }
   // Param 2 : pTLS
- //if(m_Xbe.m_TLS <> 0) then begin
-   AppendDWordToSubSection(i, 36, WriteCursor);
-   WriteCursor := WriteCursor + sizeof(m_Xbe.m_TLS);
- //end
- //else
- //begin
- //  AppendDWordToSubSection(i,36,0);
- //end;
+  if (sizeOf(m_Xbe.m_TLS) <> 0) then begin
+    AppendDWordToSubSection(i, 36, WriteCursor);
+    WriteCursor := WriteCursor + sizeof(m_Xbe.m_TLS);
+  end
+  else
+  begin
+    AppendDWordToSubSection(i, 36, 0);
+  end;
 
  // Param 1 : pTLSData
-// if(m_Xbe.m_TLS <> 0) then begin
-   AppendDWordToSubSection(i, 41, WriteCursor);
-   WriteCursor := WriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
-// end
-// else
-// begin
-//   AppendDWordToSubSection(i,41,0);
-// end;
+  if (sizeOf(m_Xbe.m_TLS) <> 0) then begin
+    AppendDWordToSubSection(i, 41, WriteCursor);
+    WriteCursor := WriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
+  end
+  else
+  begin
+    AppendDWordToSubSection(i, 41, 0);
+  end;
 
   // Param 0 : hwndParent
   AppendDWordToSubSection(i, 46, hwndParent);
 
-  
-  { TODO : Below probably never finished translating }
+
   // END GENERATE SECTIONS  ------ END PART WE STUCK
  // ******************************************************************
  // * patch kernel thunk table
@@ -748,17 +746,17 @@ var
     kt := kt xor XOR_KT_DEBUG;
   end;
 
- { for c:=0 to m_Xbe.m_Header.dwSections do begin
+  for c := 0 to m_Xbe.m_Header.dwSections do begin
     imag_base := m_OptionalHeader.m_image_base;
     virt_addr := m_SectionHeader[c].m_virtual_addr;
     virt_size := m_SectionHeader[c].m_virtual_size;
     if ((kt >= virt_addr + imag_base) and (kt < virt_addr + virt_size + imag_base)) then begin
-       WriteLog(Format('EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...', [v, kt]));
-       m_bzSection[v][kt - virt_addr - imag_base] := m_bzSection[v][kt - virt_addr - imag_base];
+      WriteLog(Format('EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...', [v, kt]));
+      m_bzSection[v][kt - virt_addr - imag_base] := m_bzSection[v][kt - virt_addr - imag_base];
 
     end;
   end;
- }
+
 
   // update imcomplete header fields
   // calculate size of code / data / image
@@ -807,3 +805,4 @@ end; // TEmuExe.Create
 //------------------------------------------------------------------------------
 
 end.
+

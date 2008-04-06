@@ -210,7 +210,7 @@ begin
 
     if Assigned(m_Xbe) then
     begin
-      CloseXbe();
+      CloseXbe;
     end;
 
     OpenXbe(XbeOpenDialog.FileName);
