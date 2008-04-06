@@ -22,4 +22,8 @@ object Form1: TForm1
     TabOrder = 0
     OnClick = Button1Click
   end
+  object XbeOpenDialog: TOpenDialog
+    Left = 32
+    Top = 32
+  end
 end

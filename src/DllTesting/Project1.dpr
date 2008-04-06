@@ -19,7 +19,8 @@ uses
   ufrm_ControllerConfig in '..\ufrm_ControllerConfig.pas' {frm_ControllerConfig},
   uLogConsole in '..\uLogConsole.pas' {frm_LogConsole},
   uProlog in '..\uProlog.pas',
-  uMutex in '..\uMutex.pas';
+  uMutex in '..\uMutex.pas',
+  uExternals in '..\uExternals.pas';
 
 {$R *.res}
 
