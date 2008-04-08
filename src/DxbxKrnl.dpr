@@ -25,9 +25,7 @@ uses
   uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas';
 
-{$R *.res}
-
-
+{$R *.res}   
 
   Exports SetLogMode;
   Exports SetXbePath;
@@ -52,6 +50,7 @@ end;
 
 
 begin
+  CreateLogs ( ltKernel );
   DllProc := DllMain;
   DllProc( DLL_PROCESS_ATTACH );
 end.

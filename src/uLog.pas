@@ -91,10 +91,9 @@ end;
 
 procedure CloseLogs;
 begin
-  if frm_LogConsole <> nil then begin
-    frm_LogConsole.Release;
-    frm_LogConsole := nil;
-  end;
+  if Assigned ( frm_LogConsole ) then
+    frm_LogConsole.Close;
+
   if LogFileOpen then begin
     CloseFile(LogFile);
     LogFileOpen := False;
