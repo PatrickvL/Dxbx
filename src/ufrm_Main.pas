@@ -7,7 +7,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Menus, ActnList, ShellAPI, jpeg, ExtCtrls, ComCtrls,
   // Dxbx
-  uXbe, uEmuExe, uEnums, ufrm_ControllerConfig, ufrm_VideoConfig, xmldom,
+  uXbe, uEmuExe, uEnums, uExternals, ufrm_ControllerConfig, ufrm_VideoConfig, xmldom,
   XMLIntf, msxmldom, XMLDoc, uXml, sSkinProvider, sSkinManager, sStatusBar;
 
 
@@ -101,8 +101,9 @@ type
     StatusBar: TsStatusBar;
     sSkinManager1: TsSkinManager;
     sSkinProvider1: TsSkinProvider;
-    Image2: TImage;
-    Image3: TImage;
+    imgSignature1: TImage;
+    imgSignature2: TImage;
+    imgSignature3: TImage;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -166,8 +167,6 @@ type
     destructor Destroy; override;
     procedure AfterConstruction; override;
   end;
-
-  procedure SetXbePath(const path : String ); external 'DxbxKrnl.dll';
 
 var
   frm_Main: Tfrm_Main;

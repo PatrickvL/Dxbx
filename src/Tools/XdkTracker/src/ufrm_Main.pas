@@ -307,6 +307,7 @@ begin
         end;
         GameNode := GameNode.NextSibling;
       end;
+      ImportList.Sort(SortGameList);
 
       frm_ImportGames := Tfrm_ImportGames.Create(Self);
 
@@ -522,6 +523,8 @@ begin
   XInfo^.DSOUND := DSOUND;
   XInfo^.XMV := XMV;
   GameList.Add(XInfo);
+  GameList.Sort(SortGameList);
+
 end; // TfrmMain.InsertXDKInfo
    
 //------------------------------------------------------------------------------

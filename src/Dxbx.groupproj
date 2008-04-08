@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
-    <Projects Include="..\..\Dxbx - Copy\src\DxbxKrnl.dproj" />
+    <Projects Include="DllTesting\Project1.dproj" />
     <Projects Include="Dxbx.dproj" />
     <Projects Include="DxbxKrnl.dproj" />
     <Projects Include="Tools\XdkTracker\src\XdkTracker.dproj" />
@@ -44,15 +44,6 @@
     <MSBuild Projects="Tools\XIso\src\XIso.dproj" Targets="Make" />
   </Target>
   <Target Name="DxbxKrnl">
-    <MSBuild Projects="..\..\Dxbx - Copy\src\DxbxKrnl.dproj" Targets="" />
-  </Target>
-  <Target Name="DxbxKrnl:Clean">
-    <MSBuild Projects="..\..\Dxbx - Copy\src\DxbxKrnl.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="DxbxKrnl:Make">
-    <MSBuild Projects="..\..\Dxbx - Copy\src\DxbxKrnl.dproj" Targets="Make" />
-  </Target>
-  <Target Name="DxbxKrnl">
     <MSBuild Projects="DxbxKrnl.dproj" Targets="" />
   </Target>
   <Target Name="DxbxKrnl:Clean">
@@ -61,14 +52,23 @@
   <Target Name="DxbxKrnl:Make">
     <MSBuild Projects="DxbxKrnl.dproj" Targets="Make" />
   </Target>
+  <Target Name="Project1">
+    <MSBuild Projects="DllTesting\Project1.dproj" Targets="" />
+  </Target>
+  <Target Name="Project1:Clean">
+    <MSBuild Projects="DllTesting\Project1.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="Project1:Make">
+    <MSBuild Projects="DllTesting\Project1.dproj" Targets="Make" />
+  </Target>
   <Target Name="Build">
-    <CallTarget Targets="Dxbx;XdkTracker;XIso;DxbxKrnl;DxbxKrnl" />
+    <CallTarget Targets="Dxbx;XdkTracker;XIso;DxbxKrnl;Project1" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="Dxbx:Clean;XdkTracker:Clean;XIso:Clean;DxbxKrnl:Clean;DxbxKrnl:Clean" />
+    <CallTarget Targets="Dxbx:Clean;XdkTracker:Clean;XIso:Clean;DxbxKrnl:Clean;Project1:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="Dxbx:Make;XdkTracker:Make;XIso:Make;DxbxKrnl:Make;DxbxKrnl:Make" />
+    <CallTarget Targets="Dxbx:Make;XdkTracker:Make;XIso:Make;DxbxKrnl:Make;Project1:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>
