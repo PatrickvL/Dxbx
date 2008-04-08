@@ -729,11 +729,11 @@ begin
   AppendDWordToSubSection(i, 46, hwndParent);
 
 
-  // END GENERATE SECTIONS  ------ END PART WE STUCK
+  // END GENERATE SECTIONS  ------ WE STUCK HERE
  // ******************************************************************
  // * patch kernel thunk table
  // ******************************************************************
-  WriteLog('EmuExe: Hijacking Kernel Imports...');
+ (* WriteLog('EmuExe: Hijacking Kernel Imports...');
   // generate xbe sections
   kt := m_Xbe.m_Header.dwKernelImageThunkAddr;
 
@@ -746,21 +746,21 @@ begin
     kt := kt xor XOR_KT_DEBUG;
   end;
 
-  for c := 0 to m_Xbe.m_Header.dwSections do begin
+  for v := 0 to m_Xbe.m_Header.dwSections -1 do begin
     imag_base := m_OptionalHeader.m_image_base;
-    virt_addr := m_SectionHeader[c].m_virtual_addr;
-    virt_size := m_SectionHeader[c].m_virtual_size;
+    virt_addr := m_SectionHeader[v].m_virtual_addr;
+    virt_size := m_SectionHeader[v].m_virtual_size;
     if ((kt >= virt_addr + imag_base) and (kt < virt_addr + virt_size + imag_base)) then begin
       WriteLog(Format('EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...', [v, kt]));
       m_bzSection[v][kt - virt_addr - imag_base] := m_bzSection[v][kt - virt_addr - imag_base];
 
     end;
-  end;
+  end;*)
 
 
   // update imcomplete header fields
   // calculate size of code / data / image
-  SizeOf_Code := 0;
+  (*SizeOf_Code := 0;
   SizeOf_Data := 0;
   SizeOf_Undata := 0;
 
@@ -773,10 +773,10 @@ begin
     if (characteristics and IMAGE_SCN_CNT_INITIALIZED_DATA) <> 0 then begin
       Sizeof_data := Sizeof_Data + m_SectionHeader[v].m_sizeof_raw;
     end;
-  end;
+  end;*)
 
   // calculate size of image
-  SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
+ { SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
   SizeOf_Image := RoundUp(SizeOf_Image, PE_SEGM_ALIGN);
 
   // update optional header as necessary
@@ -797,7 +797,7 @@ begin
       m_optionalHeader.m_data_base := m_SectionHeader[v].m_virtual_addr;
       Break;
     end;
-  end;
+  end;   }
 
   WriteLog('EmuExe: Finalizing Exe Files...OK');
 end; // TEmuExe.Create

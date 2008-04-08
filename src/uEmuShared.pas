@@ -89,6 +89,7 @@ end;
 procedure SetXbePath(const path : String ); export;
 begin
   Lock();
+  WriteLog ( 'Emu: SetXbePath -  ' + path );
   m_XbePath := Path;
   Unlock();
 end;
