@@ -18,7 +18,7 @@ procedure EmuInit( hwndParent : THandle;
                    szDebugFilename : PChar;
                    pXbeHeader : P_XBE_HEADER;
                    dwXbeHeaderSize : DWord;
-                   Entry : pEntryProc ); export; stdcall;
+                   Entry : pEntryProc ); export; 
 procedure EmuPanic; export;
 function EmuVerifyVersion( const szVersion : string ) : boolean; export;
 procedure EmuCleanup ( szErrorMessage : String ); export;
