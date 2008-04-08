@@ -19,6 +19,8 @@ procedure EmuInit( hwndParent : THandle;
                    dwXbeHeaderSize : DWord;
                    Entry : pEntryProc );  stdcall; external 'DxbxKrnl.dll' name '_EmuInit@36';
 
+procedure SetXbePath(const path : String ); external 'DxbxKrnl.dll';
+
 implementation
 
 end.

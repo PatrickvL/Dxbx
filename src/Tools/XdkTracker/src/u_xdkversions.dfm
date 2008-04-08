@@ -66,8 +66,8 @@ object frm_Xdkversion: Tfrm_Xdkversion
       'All XDK Versions')
   end
   object mem_XdkVersions: TMemo
-    Left = 264
-    Top = 56
+    Left = 263
+    Top = 59
     Width = 212
     Height = 229
     Anchors = [akLeft, akTop, akRight]
@@ -83,7 +83,7 @@ object frm_Xdkversion: Tfrm_Xdkversion
   end
   object lst_Games: TListBox
     Left = 12
-    Top = 56
+    Top = 59
     Width = 245
     Height = 229
     Anchors = [akLeft, akTop, akBottom]
