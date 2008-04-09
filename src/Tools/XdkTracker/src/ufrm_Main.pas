@@ -111,21 +111,38 @@ end;
 
 procedure TfrmXdkTracker.Viewxdkversion2Click(Sender: TObject);
 var
-  lIndex: Integer;
+  lIndex : Integer;
+  XDKlist : TStringList;
 begin
   frm_xdkversion := Tfrm_xdkversion.Create(Application);
 
+  XDKlist := TStringList.Create;
+  XDKlist.Clear;
+  XDKlist.Duplicates := dupIgnore;
+  XDKlist.Sorted := True;
   with frm_XdkVersion do begin
     lst_Games.Clear;
-
     for lIndex := 0 to GameList.count - 1 do begin
-      lst_Games.Items.Add(PXDKInfo(GameList.Items[lIndex])^.GameName);
+      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XAPILIB);
+      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XBOXKRNL);
+      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.LIBCMT);
+      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.D3D8);
+      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XGRAPHC);
+      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.DSOUND);
+      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XMV);
     end;
+    cmb_gametype.Items.Clear;
+    cmb_gametype.Items.Add('All XDK Versions');
+    for lIndex := 0 to XDKlist.Count - 1 do begin
+      if XDKlist.Strings[lIndex] <> '' then
+        cmb_gametype.Items.Add(XDKlist.Strings[lIndex]);
+    end;
+    cmb_gametype.ItemIndex := 0;
   end;
-
+  frm_XdkVersion.FillGameList;
+  
   if frm_XdkVersion.ShowModal = mrOk then
   begin
-
   end;
 
   frm_XdkVersion.Free;

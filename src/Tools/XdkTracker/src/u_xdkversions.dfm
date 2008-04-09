@@ -13,6 +13,7 @@ object frm_Xdkversion: Tfrm_Xdkversion
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCreate = FormCreate
   DesignSize = (
     491
     299)
@@ -55,13 +56,15 @@ object frm_Xdkversion: Tfrm_Xdkversion
   end
   object cmb_gametype: TComboBox
     Left = 12
-    Top = 28
+    Top = 31
     Width = 245
     Height = 21
+    Style = csDropDownList
     ItemHeight = 13
     ItemIndex = 0
     TabOrder = 0
     Text = 'All XDK Versions'
+    OnChange = cmb_gametypeChange
     Items.Strings = (
       'All XDK Versions')
   end
