@@ -21,7 +21,6 @@ implementation
 uses
   uLog, uExternals, Dialogs;
 
-
 { TEmuExe }
 
 //------------------------------------------------------------------------------
@@ -283,6 +282,7 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
 
 var
   i, d, v, c: integer;
+  k, t : DWord;
 
   dwSectionCursor: LongInt;
   RawAddr: LongInt;
@@ -308,7 +308,9 @@ var
 
 
   TLS_DATA: DWord;
-  kt_tbl: Word;
+  kt_tbl: DWord;
+  kt_value : ^Dword;
+  ThunkTable : pThunkTable;
 
   pWriteCursor: DWord;
   WriteCursor: DWord;
@@ -739,33 +741,49 @@ begin
 
   // decode kernel thunk address
   if ((kt xor XOR_KT_DEBUG) > $01000000) then begin
-    kt := kt xor XOR_KT_RETAIL
+    kt := kt xor XOR_KT_RETAIL;
   end
   else
   begin
     kt := kt xor XOR_KT_DEBUG;
   end;
 
+  // locate section containing kernel thunk table
   for v := 0 to m_Xbe.m_Header.dwSections -1 do begin
     imag_base := m_OptionalHeader.m_image_base;
     virt_addr := m_SectionHeader[v].m_virtual_addr;
     virt_size := m_SectionHeader[v].m_virtual_size;
+
+    // modify kernel thunk table, if found
     if ((kt >= virt_addr + imag_base) and (kt < virt_addr + virt_size + imag_base)) then begin
       WriteLog(Format('EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...', [v, kt]));
-      { TODO : THIS NEED TO BE FIXED }
-    (*  m_bzSection[v][kt - virt_addr - imag_base] := m_bzSection[v][kt - virt_addr - imag_base];
-                uint32 *kt_tbl = (uint32*)//&m_bzSection[v][kt - virt_addr - imag_base];
-
-      (*          while(*kt_tbl != 0)
-                    *kt_tbl++ = KernelThunkTable[*kt_tbl & 0x7FFFFFFF];
-        *)
+      kt_tbl := kt - virt_addr - imag_base;
+      k := 0;
+      kt_value := @m_bzSection[v][kt_tbl+k];
+      pEmuInit := @EmuInit;  // We need to access the procedure once so it's in memory
+      KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
+      if KrnlHandle >= 32 then begin
+        ThunkTable := GetProcAddress(KrnlHandle, 'KernelThunkTable');
+        while kt_value^ <> 0 do begin
+          t := kt_value^ and $7FFFFFFF;
+          // TODO : We need access to the KernelThunkTable from the DLL
+          AppendDWordToSubSection(v,k,ThunkTable^[t]);
+          if t <> $FFFFFFFF then begin
+            WriteLog(Format('EmuExe: Thunk %.03d : *0x%.08X := 0x%.08X', [t, kt + k, kt_value^]));
+          end;
+          k := k + 4;
+          kt_value := @m_bzSection[v][kt_tbl+k];
+        end;
+      end;
+      FreeLibrary(KrnlHandle);
     end;
+
   end;
 
 
   // update imcomplete header fields
   // calculate size of code / data / image
-  (*SizeOf_Code := 0;
+  SizeOf_Code := 0;
   SizeOf_Data := 0;
   SizeOf_Undata := 0;
 
@@ -778,10 +796,10 @@ begin
     if (characteristics and IMAGE_SCN_CNT_INITIALIZED_DATA) <> 0 then begin
       Sizeof_data := Sizeof_Data + m_SectionHeader[v].m_sizeof_raw;
     end;
-  end;*)
+  end;
 
   // calculate size of image
- { SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
+  SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
   SizeOf_Image := RoundUp(SizeOf_Image, PE_SEGM_ALIGN);
 
   // update optional header as necessary
@@ -802,7 +820,7 @@ begin
       m_optionalHeader.m_data_base := m_SectionHeader[v].m_virtual_addr;
       Break;
     end;
-  end;   }
+  end;
 
   WriteLog('EmuExe: Finalizing Exe Files...OK');
 end; // TEmuExe.Create
@@ -810,4 +828,3 @@ end; // TEmuExe.Create
 //------------------------------------------------------------------------------
 
 end.
-

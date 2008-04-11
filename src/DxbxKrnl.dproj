@@ -43,6 +43,7 @@
     <DCCReference Include="uEmuFS.pas" />
     <DCCReference Include="uEmuShared.pas" />
     <DCCReference Include="uEnums.pas" />
+    <DCCReference Include="uKernelThunk.pas" />
     <DCCReference Include="uLog.pas" />
     <DCCReference Include="uLogConsole.pas">
       <Form>frm_LogConsole</Form>

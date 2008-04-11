@@ -19,11 +19,12 @@ uses
   uEmu in 'uEmu.pas',
   uEnums in 'uEnums.pas',
   uLog in 'uLog.pas',
-  uLogConsole in 'uLogConsole.pas',
+  uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uEmuFS in 'uEmuFS.pas',
   uXbe in 'uXbe.pas',
   uConsts in 'uConsts.pas',
-  uMutex in 'uMutex.pas';
+  uMutex in 'uMutex.pas',
+  uKernelThunk in 'uKernelThunk.pas';
 
 {$R *.res}   
 
@@ -35,7 +36,7 @@ uses
   Exports EmuInit name '_EmuInit@36';
   Exports EmuCleanup;
   Exports EmuCleanThread name '_EmuCleanThread@0';
-
+//  Exports KernelThunkTable;
 
 procedure DllMain ( Reason : Integer );
 begin

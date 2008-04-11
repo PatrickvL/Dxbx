@@ -777,20 +777,34 @@ end; // Tfrm_Main.actFileDebugGuiExecute
 
 procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
-  actConsoleDebugKernel.Checked := True;
-  actFileDebugKernel.Checked := False;
+  if m_KrnlDebug = DM_CONSOLE then begin
+    actConsoleDebugKernel.Checked := False;
+    m_KrnlDebug := DM_NONE;
+  end
+  else begin
+    actFileDebugKernel.Checked := False;
+    actConsoleDebugKernel.Checked := True;
+    m_KrnlDebug := DM_CONSOLE;
+  end;
 end; // Tfrm_Main.actConsoleDebugKernelExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
-  SaveDialog.FileName := 'KernelDebug.txt';
-  SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
-
-  if SaveDialog.Execute then begin
-    actFileDebugKernel.Checked := True;
-    actConsoleDebugKernel.Checked := False;
+  if m_KrnlDebug = DM_FILE then begin
+    actFileDebugKernel.Checked := FALSE;
+    m_KrnlDebug := DM_NONE;
+  end
+  else begin
+    SaveDialog.FileName := 'KernelDebug.txt';
+    SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
+    if SaveDialog.Execute then begin
+      actConsoleDebugKernel.Checked := False;
+      actFileDebugKernel.Checked := True;
+      m_KrnlDebug := DM_FILE;
+      m_KrnlDebugFilename := SaveDialog.Filename;
+    end;
   end;
 end; // Tfrm_Main.actFileDebugKernelExecute
 
