@@ -3,7 +3,7 @@ unit uEmuShared;
 interface
 
 
-procedure SetXbePath(const path : String ); export;
+procedure SetXbePath(const path : PChar ); export;
 function EmuSharedInit : Boolean;
 procedure EmuSharedCleanup;
 
@@ -86,7 +86,7 @@ begin
   CloseLogs;
 end;
 
-procedure SetXbePath(const path : String ); export;
+procedure SetXbePath(const path : PChar ); export;
 begin
   Lock();
   WriteLog ( 'Emu: SetXbePath -  ' + path );

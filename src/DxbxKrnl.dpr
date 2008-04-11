@@ -28,7 +28,7 @@ uses
 {$R *.res}   
 
   Exports SetLogMode;
-  Exports SetXbePath;
+  Exports SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z';
   Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
   Exports EmuPanic name '_EmuPanic@0';
   Exports EmuNoFunc name '_EmuNoFunc@0';
