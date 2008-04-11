@@ -8,6 +8,8 @@ Uses
 type
   tEntryProc = Procedure();
   pEntryProc = ^tEntryProc;
+  tThunkTable = packed array[0..366] of DWord;
+  pThunkTable = ^tThunkTable;
 
 procedure EmuInit( hwndParent : THandle;
                    pTLSData : pointer;
