@@ -5,7 +5,6 @@ interface
 uses uXbe, uExe, uEnums, Windows, SysUtils, BitsOps, uConsts, uProlog;
 
 type
-  TVarByteArray = array of Byte;
   TDWordArray = array[0..3] of char;
   TWordArray = array[0..1] of char;
 
