@@ -28,24 +28,25 @@ uses
 
 {$R *.res}   
 
-  Exports SetLogMode;
-  Exports SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z';
   Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
   Exports EmuPanic name '_EmuPanic@0';
   Exports EmuNoFunc name '_EmuNoFunc@0';
   Exports EmuInit name '_EmuInit@36';
   Exports EmuCleanup;
   Exports EmuCleanThread name '_EmuCleanThread@0';
-//  Exports KernelThunkTable;
+  Exports SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z';  // Name = "void EmuShared::SetXbePath (char conts*)"
+  { TODO : name need to be set }
+  Exports Init; // name must be "void EmuShared::Init (void)
+  //  Exports KernelThunkTable;
 
 procedure DllMain ( Reason : Integer );
 begin
   if Reason = DLL_PROCESS_ATTACH then begin
-     EmuSharedInit;
+     Init;
   end
   else begin
     if Reason = DLL_PROCESS_DETACH then
-      EmuSharedCleanup;
+      Cleanup;
   end;
 end;
 
