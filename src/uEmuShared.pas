@@ -4,8 +4,8 @@ interface
 
 
 procedure SetXbePath(const path : PChar ); export;
-function EmuSharedInit : Boolean;
-procedure EmuSharedCleanup;
+procedure Init; export;
+procedure Cleanup; export;
 
 
 implementation
@@ -17,7 +17,7 @@ Var
   m_XbePath : String;
   g_EmuSharedRefCount : Integer;
 
-function EmuSharedInit : Boolean;
+procedure Init;
 begin
   WriteLog('EmuSharedInit');
 
@@ -74,7 +74,7 @@ begin
    Inc ( g_EmuSharedRefCount );
 end;
 
-procedure EmuSharedCleanup;
+procedure Cleanup;
 begin
   WriteLog ( 'EmuSharedCleanup' );
   Dec ( g_EmuSharedRefCount );
