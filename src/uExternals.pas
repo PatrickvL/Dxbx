@@ -19,7 +19,7 @@ procedure EmuInit( hwndParent : THandle;
                    szDebugFilename : PChar;
                    pXbeHeader : P_XBE_HEADER;
                    dwXbeHeaderSize : DWord;
-                   Entry : pEntryProc );  stdcall; external 'DxbxKrnl.dll' name '_EmuInit@36';
+                   Entry : pEntryProc );  stdcall; external 'DxbxKrnl.dll' name '_EmuInit@36';    
 
 procedure SetXbePath(const path : PChar ); external 'DxbxKrnl.dll' name '?SetXbePath@EmuShared@@QAEXPBD@Z';
 
