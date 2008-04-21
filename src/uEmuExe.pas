@@ -728,7 +728,7 @@ begin
 
   // Param 0 : hwndParent
   AppendDWordToSubSection(i, 46, hwndParent);
-
+            
 
   // END GENERATE SECTIONS  ------ WE STUCK HERE
  // ******************************************************************
@@ -748,7 +748,7 @@ begin
   end;
 
   // locate section containing kernel thunk table
-  for v := 0 to m_Xbe.m_Header.dwSections -1 do begin
+ (* for v := 0 to m_Xbe.m_Header.dwSections -1 do begin
     imag_base := m_OptionalHeader.m_image_base;
     virt_addr := m_SectionHeader[v].m_virtual_addr;
     virt_size := m_SectionHeader[v].m_virtual_size;
@@ -777,7 +777,7 @@ begin
       FreeLibrary(KrnlHandle);
     end;
 
-  end;
+  end;     *)   
 
 
   // update imcomplete header fields
