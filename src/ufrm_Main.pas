@@ -141,6 +141,10 @@ type
 
     m_bExeChanged: boolean;
 
+    procedure SetExeGenWindowsTemp;
+    procedure SetExeGenXBEFolder;
+    procedure SetExeGenManual;
+
     procedure CloseXbe;
     procedure XbeLoaded;
     procedure LoadLogo;
@@ -188,7 +192,7 @@ begin
   GetVersionEx(VerInfo);
   Result := VerInfo.dwMajorVersion >= 6;
 end;
-     
+
 //------------------------------------------------------------------------------
 
 function GetTempDirectory: string;
@@ -301,7 +305,7 @@ begin
   CloseXbe1.Enabled := False;
 
   WriteLog('DXBX: ' + m_szAsciiTitle + '  Closed...');
-  StatusBar.SimpleText := 'DXBX:';       
+  StatusBar.SimpleText := 'DXBX:';
 end; // Tfrm_Main.CloseXbe
 
 //------------------------------------------------------------------------------
@@ -331,7 +335,7 @@ procedure Tfrm_Main.SaveXbe(aFileName: string);
 begin
   { TODO : Need to inserted }
 end;
-      
+
 //------------------------------------------------------------------------------
 
 function Tfrm_Main.SendCommandToXdkTracker: Boolean;
@@ -363,6 +367,36 @@ begin
   copyDataStruct.lpData := PChar(stringToSend);
 
   Result := SendData(copyDataStruct);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure Tfrm_Main.SetExeGenXBEFolder;
+begin
+  m_AutoConvertToExe := AUTO_CONVERT_XBE_PATH;
+  actExeGenWindowsTemp.Checked := False;
+  actExeGenDxbxPath.Checked := True;
+  actExeGenManual.Checked := False;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure Tfrm_Main.SetExeGenManual;
+begin
+  m_AutoConvertToExe := AUTO_CONVERT_MANUAL;
+  actExeGenWindowsTemp.Checked := False;
+  actExeGenDxbxPath.Checked := False;
+  actExeGenManual.Checked := True;
+end;
+
+//------------------------------------------------------------------------------
+
+procedure Tfrm_Main.SetExeGenWindowsTemp;
+begin
+  m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
+  actExeGenWindowsTemp.Checked := True;
+  actExeGenDxbxPath.Checked := False;
+  actExeGenManual.Checked := False;
 end;
 
 //------------------------------------------------------------------------------
@@ -403,7 +437,7 @@ begin
 
     // convert file
     try
-      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename,0);
+      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, 0);
       if i_EmuExe.doExport(filename) then begin
         m_ExeFilename := filename;
         WriteLog(m_szAsciiTitle + ' was converted to .exe.');
@@ -456,7 +490,7 @@ begin
     if FileConverted then begin
 
       // register xbe path with Cxbx.dll
-      SetXbePath( PChar ( m_Xbe.m_szPath ) );
+      SetXbePath(PChar(m_Xbe.m_szPath));
 
       try
         if FileExists(m_ExeFilename) then begin
@@ -531,17 +565,21 @@ begin
   else begin
     sSkinManager1.SkinningRules := [srStdForms, srStdDialogs, srThirdParty];
   end;
-end; procedure Tfrm_Main.ImportExe(aFileName: string);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure Tfrm_Main.ImportExe(aFileName: string);
 begin
 
 end;
+
+//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.LoadLogo;
 begin
 
 end;
-
-// Tfrm_Main.FormCreate
 
 //------------------------------------------------------------------------------
 
@@ -560,23 +598,16 @@ begin
 
     case IniFile.ReadInteger('Settings', 'AutoConvertToExe', 1) of
       1: begin
-          m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
-          actExeGenWindowsTemp.Checked := True;
-          actExeGenDxbxPath.Checked := False;
-          actExeGenManual.Checked := False;
+          SetExeGenWindowsTemp;
         end;
       2: begin
-          m_AutoConvertToExe := AUTO_CONVERT_XBE_PATH;
-          actExeGenWindowsTemp.Checked := False;
-          actExeGenDxbxPath.Checked := True;
-          actExeGenManual.Checked := False;
+          SetExeGenXBEFolder;
         end;
       3: begin
-          m_AutoConvertToExe := AUTO_CONVERT_MANUAL;
-          actExeGenWindowsTemp.Checked := False;
-          actExeGenDxbxPath.Checked := False;
-          actExeGenManual.Checked := True;
+          SetExeGenManual;
         end;
+    else
+       SetExeGenManual;
     end;
     m_DxbxDebug := DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', 0));
     m_DxbxDebugFilename := IniFile.ReadString('Settings', 'DxbxDebugFilename', '');
@@ -649,10 +680,7 @@ begin
     actConsoleDebugKernel.Checked := True;
     actFileDebugKernel.Checked := False;
 
-    m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
-    actExeGenWindowsTemp.Checked := True;
-    actExeGenDxbxPath.Checked := False;
-    actExeGenManual.Checked := False;
+    SetExeGenManual;
   end;
 end; // Tfrm_Main.ReadSettingsIni
 
@@ -1073,7 +1101,7 @@ begin
     RecentExefiles1.Remove(TempItem);
   end;
 end;
-    
+
 //------------------------------------------------------------------------------
 
 end.
