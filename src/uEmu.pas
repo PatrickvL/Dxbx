@@ -40,7 +40,7 @@ procedure EmuInit( hwndParent : THandle;
                    Entry : pEntryProc ); export;
 begin
   CreateLogs(ltKernel);
-  WriteLog('EmuInit');    
+  WriteLog('EmuInit');
 
    (*g_pTLS       = pTLS;
    g_pTLSData   = pTLSData;
@@ -432,6 +432,9 @@ end;
 
 procedure EmuCleanup ( szErrorMessage : String );
 begin
+  CreateLogs(ltKernel);
+  WriteLog('EmuInit');
+
   // Print out ErrorMessage (if exists)
 (*    if(szErrorMessage != NULL)
     {

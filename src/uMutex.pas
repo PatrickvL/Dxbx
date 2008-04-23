@@ -9,6 +9,7 @@ implementation
 
 procedure Lock;
 begin
+
 {
     while(true)
     {

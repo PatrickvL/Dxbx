@@ -19,7 +19,7 @@ Var
 
 procedure Init;
 begin
-  WriteLog('EmuSharedInit');
+  WriteLog('Init');
 
   // Ensure initialization only occurs once
 
