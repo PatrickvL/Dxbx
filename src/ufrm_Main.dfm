@@ -4503,7 +4503,6 @@ object frm_Main: Tfrm_Main
     object actImportExe: TAction
       Category = 'File'
       Caption = 'Import Exe'
-      Enabled = False
       OnExecute = actImportExeExecute
     end
     object actExportExe: TAction
