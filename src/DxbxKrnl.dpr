@@ -29,7 +29,7 @@ uses
 {$R *.res}   
 
   Exports
-    EmuInit name '_EmuInit@36',
+    CxbxKrnlInit,
     EmuNoFunc name '_EmuNoFunc@0',
     SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z';
 

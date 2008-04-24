@@ -35,7 +35,7 @@ begin
   XbeOpenDialog.Filter := 'Xbox Executables (*.xbe)|*.xbe';
   if XbeOpenDialog.Execute then begin
     OpenXbeFile( XbeOpenDialog.FileName );
-    EmuInit ( 0, nil, nil, nil, DM_CONSOLE, nil, 0, 0, nil );
+    CxbxKrnlInit ( 0, nil, nil, nil, DM_CONSOLE, nil, 0, 0, nil );
   end;
 end;
 
