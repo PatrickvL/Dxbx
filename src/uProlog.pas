@@ -24,9 +24,9 @@ var
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
-    $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
     $FF, $D6,                // call esi
     $C3, $CC, $CC, $CC, $CC, // ret
+    $CC, $CC, $CC, $CC, $CC,
     $CC, $CC, $CC, $CC, $CC,
     $CC, $CC, $CC, $CC, $CC,
     $CC, $CC, $CC, $CC, $CC,
