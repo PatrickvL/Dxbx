@@ -589,8 +589,6 @@ begin
   m_bzSection[i][$51] := 'd';
   m_bzSection[i][$52] := 'l';
   m_bzSection[i][$53] := 'l';
-  m_bzSection[i][$54] := chr(0);
-  m_bzSection[i][$55] := chr(0);
 {$ELSE}
   m_bzSection[i][$3A] := '_';
   m_bzSection[i][$3B] := 'E';
@@ -614,12 +612,6 @@ begin
   m_bzSection[i][$4D] := 'd';
   m_bzSection[i][$4E] := 'l';
   m_bzSection[i][$4F] := 'l';
-  m_bzSection[i][$50] := chr(0);
-  m_bzSection[i][$51] := chr(0);
-  m_bzSection[i][$52] := chr(0);
-  m_bzSection[i][$53] := chr(0);
-  m_bzSection[i][$54] := chr(0);
-  m_bzSection[i][$55] := chr(0);
 {$ENDIF}
 
   ep := m_Xbe.m_Header.dwEntryAddr;
@@ -674,7 +666,7 @@ begin
   pEmuInit := @EmuInit; // We need to access the procedure once so it's in memory
   KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
   if KrnlHandle >= 32 then begin
-    pEmuInit := GetProcAddress(KrnlHandle, '_EmuInit@36');
+    pEmuInit := GetProcAddress(KrnlHandle, '_EmuInit@32');
     AppendDWordToSubSection(i, 1, DWord(pEmuInit));
   end;
   FreeLibrary(KrnlHandle);
@@ -726,8 +718,9 @@ begin
     AppendDWordToSubSection(i, 41, 0);
   end;
 
+  // NO PAREM 0 THIS SCREW UP EXE To Much data overwriting dosstub
   // Param 0 : hwndParent
-  AppendDWordToSubSection(i, 46, hwndParent);
+//  AppendDWordToSubSection(i, 46, hwndParent);
             
 
   // END GENERATE SECTIONS  ------ WE STUCK HERE
