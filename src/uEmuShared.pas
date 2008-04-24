@@ -3,9 +3,9 @@ unit uEmuShared;
 interface
 
 
-procedure SetXbePath(const path : PChar ); export;
-procedure Init; export;
-procedure Cleanup; export;
+procedure SetXbePath(const path : PChar ); stdcall;
+procedure Init;
+procedure Cleanup; 
 
 
 implementation
@@ -86,13 +86,14 @@ begin
   CloseLogs;
 end;
 
-procedure SetXbePath(const path : PChar ); export;
+procedure SetXbePath(const path : PChar ); stdCall;
 begin
   Lock();
   WriteLog ( 'Emu: SetXbePath -  ' + path );
   m_XbePath := Path;
   Unlock();
 end;
+
 
 
 end.

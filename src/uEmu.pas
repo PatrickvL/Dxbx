@@ -9,7 +9,6 @@ type
   tEntryProc = Procedure();
   pEntryProc = ^tEntryProc;
 
-procedure EmuNoFunc; export;
 procedure EmuInit( hwndParent : THandle;
                    pTLSData : pointer;
                    pTLS : P_XBE_TLS;
@@ -18,11 +17,12 @@ procedure EmuInit( hwndParent : THandle;
                    szDebugFilename : PChar;
                    pXbeHeader : P_XBE_HEADER;
                    dwXbeHeaderSize : DWord;
-                   Entry : pEntryProc ); export;
+                   Entry : pEntryProc ); stdcall;
+(*procedure EmuNoFunc; export;
 procedure EmuPanic; export;
 function EmuVerifyVersion( const szVersion : string ) : boolean; export;
 procedure EmuCleanup ( szErrorMessage : String ); export;
-procedure EmuCleanThread; export;
+procedure EmuCleanThread; export;   *)
 
 implementation
 
@@ -37,7 +37,7 @@ procedure EmuInit( hwndParent : THandle;
                    szDebugFilename : PChar;
                    pXbeHeader : P_XBE_HEADER;
                    dwXbeHeaderSize : DWord;
-                   Entry : pEntryProc ); export;
+                   Entry : pEntryProc ); stdcall;
 begin
   CreateLogs(ltKernel);
   WriteLog('EmuInit');
@@ -485,7 +485,7 @@ begin
 end;
 
 
-procedure EmuNoFunc; export;
+procedure EmuNoFunc; stdcall;
 begin
   EmuSwapFS();   // Win2k/XP FS
 
@@ -501,7 +501,7 @@ begin
     Result := True;
 end;
 
-procedure EmuPanic; export;
+procedure EmuPanic; stdcall;
 begin
    if EmuIsXboxFS then
      EmuSwapFS; // Win2k/XP FS
@@ -511,6 +511,9 @@ begin
 
   EmuSwapFS(); // XBox FS
 end;
+
+exports
+  EmuPanic, EmuInit;
 
 end.
 
