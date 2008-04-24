@@ -333,7 +333,38 @@ end; // Tfrm_Main.OpenXbe
 
 procedure Tfrm_Main.SaveXbe(aFileName: string);
 begin
-  { TODO : Need to inserted }
+
+  (*
+	// ******************************************************************
+	// * ask permission to overwrite if file exists
+	// ******************************************************************
+	if(_access(x_filename, 0) != -1)
+	{
+		if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+			return;
+	}
+
+	// ******************************************************************
+	// * export xbe file
+	// ******************************************************************
+	{
+        m_Xbe->Export(x_filename);
+
+		if(m_Xbe->GetError() != 0)
+			MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+        else
+        {
+            char buffer[255];
+
+            sprintf(buffer, "%s was successfully saved.", m_Xbe->m_szAsciiTitle);
+
+            printf("WndMain: %s was successfully saved.\n", m_Xbe->m_szAsciiTitle);
+
+            MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
+
+            m_bXbeChanged = false;
+		}
+	} *)
 end;
 
 //------------------------------------------------------------------------------
@@ -571,14 +602,120 @@ end;
 
 procedure Tfrm_Main.ImportExe(aFileName: string);
 begin
+(*
+    m_XbeFilename[0] = '\0';
 
+    Exe *i_exe = new Exe(x_filename);
+
+    if(i_exe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, i_exe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+
+        delete i_exe;
+
+        return;
+    }
+
+    m_Xbe = new Xbe(i_exe, "Untitled", true);
+
+    if(m_Xbe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+
+        delete m_Xbe; m_Xbe = 0;
+
+        return;
+    }
+
+    // ******************************************************************
+	// * save this Exe to the list of recent files
+	// ******************************************************************
+    if(m_ExeFilename[0] != '\0')
+    {
+        bool found = false;
+
+        // if this filename already exists, temporarily remove it
+        for(int c=0, r=0;c<m_dwRecentExe;c++, r++)
+        {
+            if(strcmp(m_szRecentExe[c], m_ExeFilename) == 0)
+            {
+                found = true;
+                r++;
+            }
+
+            if(r != c)
+            {
+                if(m_szRecentExe[r] == 0 || r > m_dwRecentExe - 1)
+                    m_szRecentExe[c] = 0;
+                else
+                    strncpy(m_szRecentExe[c], m_szRecentExe[r], 259);
+            }
+        }
+
+        if(found)
+            m_dwRecentExe--;
+
+        // move all items down one, removing the last one if necessary
+        for(int v=RECENT_EXE_SIZE-1;v>0;v--)
+        {
+            if(m_szRecentExe[v-1] == 0)
+                m_szRecentExe[v] = 0;
+            else
+            {
+                if(m_szRecentExe[v] == 0)
+                    m_szRecentExe[v] = (char*)(*calloc(1, 260);
+                strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
+            }
+        }
+
+        // add new item as first index
+        {
+            if(m_szRecentExe[0] == 0)
+                m_szRecentExe[0] = (char*)(*calloc(1, 260);
+
+            strcpy(m_szRecentExe[0], m_ExeFilename);
+        }
+
+        if(m_dwRecentExe < RECENT_EXE_SIZE)
+            m_dwRecentExe++;
+    }
+
+    UpdateRecentFiles();
+
+    XbeLoaded();
+
+    m_bExeChanged = true;   *)
 end;
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.LoadLogo;
 begin
+   (* uint08 i_gray[100*17];
 
+    m_Xbe->ExportLogoBitmap(i_gray);
+
+    if(m_Xbe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
+
+        if(m_Xbe->IsFatal())
+            CloseXbe();
+
+        return;
+    }
+
+    uint32 v=0;
+    for(uint32 y=0;y<17;y++)
+    {
+        for(uint32 x=0;x<100;x++)
+        {
+            SetPixel(m_LogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
+            v++;
+        }
+    }
+
+    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);  *)
 end;
 
 //------------------------------------------------------------------------------
