@@ -18,7 +18,10 @@ procedure EmuInit( hwndParent : THandle;
                    pXbeHeader : P_XBE_HEADER;
                    dwXbeHeaderSize : DWord;
                    Entry : pEntryProc ); stdcall;
-(*procedure EmuNoFunc; export;
+
+procedure EmuNoFunc; stdcall;
+
+(*
 procedure EmuPanic; export;
 function EmuVerifyVersion( const szVersion : string ) : boolean; export;
 procedure EmuCleanup ( szErrorMessage : String ); export;
@@ -39,7 +42,7 @@ procedure EmuInit( hwndParent : THandle;
                    dwXbeHeaderSize : DWord;
                    Entry : pEntryProc ); stdcall;
 begin
-  CreateLogs(ltKernel);
+//  CreateLogs(ltKernel);
   WriteLog('EmuInit');
 
    (*g_pTLS       = pTLS;

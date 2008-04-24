@@ -30,12 +30,13 @@ uses
 
   Exports
     EmuInit name '_EmuInit@36',
+    EmuNoFunc name '_EmuNoFunc@0',
     SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z';
 
 
 (*  Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
   Exports EmuPanic name '_EmuPanic@0';
-  Exports EmuNoFunc name '_EmuNoFunc@0';
+  Exports ;
   Exports EmuCleanup;
   Exports EmuCleanThread name '_EmuCleanThread@0';
   { TODO : name need to be set }
