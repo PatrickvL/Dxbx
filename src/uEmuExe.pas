@@ -663,10 +663,10 @@ begin
   WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
 
   // Function Pointer
-  pEmuInit := @EmuInit; // We need to access the procedure once so it's in memory
+  pEmuInit := @CxbxKrnlInit; // We need to access the procedure once so it's in memory
   KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
   if KrnlHandle >= 32 then begin
-    pEmuInit := GetProcAddress(KrnlHandle, '_EmuInit@32');
+    pEmuInit := GetProcAddress(KrnlHandle, 'CxbxKrnlInit');
     AppendDWordToSubSection(i, 1, DWord(pEmuInit));
   end;
   FreeLibrary(KrnlHandle);

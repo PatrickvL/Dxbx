@@ -9,7 +9,7 @@ type
   tEntryProc = Procedure();
   pEntryProc = ^tEntryProc;
 
-procedure EmuInit( hwndParent : THandle;
+procedure CxbxKrnlInit( hwndParent : THandle;
                    pTLSData : pointer;
                    pTLS : P_XBE_TLS;
                    pLibraryVersion : P_XBE_LIBRARYVERSION;
@@ -32,15 +32,15 @@ implementation
 uses
   SysUtils, Dialogs;
 
-procedure EmuInit( hwndParent : THandle;
-                   pTLSData : pointer;
-                   pTLS : P_XBE_TLS;
-                   pLibraryVersion : P_XBE_LIBRARYVERSION;
-                   DbgMode : DebugMode;
-                   szDebugFilename : PChar;
-                   pXbeHeader : P_XBE_HEADER;
-                   dwXbeHeaderSize : DWord;
-                   Entry : pEntryProc ); stdcall;
+procedure CxbxKrnlInit( hwndParent : THandle;
+                        pTLSData : pointer;
+                        pTLS : P_XBE_TLS;
+                        pLibraryVersion : P_XBE_LIBRARYVERSION;
+                        DbgMode : DebugMode;
+                        szDebugFilename : PChar;
+                        pXbeHeader : P_XBE_HEADER;
+                        dwXbeHeaderSize : DWord;
+                        Entry : pEntryProc ); stdcall;
 begin
 //  CreateLogs(ltKernel);
   WriteLog('EmuInit');
@@ -516,7 +516,7 @@ begin
 end;
 
 exports
-  EmuPanic, EmuInit;
+  EmuPanic;
 
 end.
 
