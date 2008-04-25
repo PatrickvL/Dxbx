@@ -104,7 +104,7 @@ type
     imgSignature1: TImage;
     imgSignature2: TImage;
     imgSignature3: TImage;
-    Image2: TImage;
+    imgSignature4: TImage;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);

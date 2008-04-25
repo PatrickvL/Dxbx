@@ -5,6 +5,10 @@ interface
 uses
   Types;
 
+function CxbxKrnl_KernelThunkTable : pointer; stdcall;
+
+implementation
+
 var
   KernelThunkTable : packed array[0..366] of DWord = (
     $0000,                          // $0000 (0)
@@ -376,6 +380,10 @@ var
     $016E                           // $016E (366)
   );
 
-implementation
+
+function CxbxKrnl_KernelThunkTable : pointer; stdcall;
+begin
+  result := @KernelThunkTable;
+end;
 
 end.

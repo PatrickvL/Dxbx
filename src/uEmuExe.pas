@@ -549,7 +549,7 @@ begin
   m_bzSection[i][$0C] := chr(0);
 
   m_bzSection[i][$10] := chr(0);
-  AppendDWordToSubSection(i, $14, dwVirtAddr + $48);
+  AppendDWordToSubSection(i, $14, dwVirtAddr + $4A);
   AppendDWordToSubSection(i, $18, dwVirtAddr + $00);
   m_bzSection[i][$1C] := chr(0);
 
@@ -563,55 +563,59 @@ begin
   m_bzSection[i][$38] := chr($0001);
 
 {$IFDEF DEBUG}
-  m_bzSection[i][$3A] := '_';
-  m_bzSection[i][$3B] := 'E';
-  m_bzSection[i][$3C] := 'm';
-  m_bzSection[i][$3D] := 'u';
-  m_bzSection[i][$3E] := 'N';
-  m_bzSection[i][$3F] := 'o';
-  m_bzSection[i][$40] := 'F';
-  m_bzSection[i][$41] := 'u';
-  m_bzSection[i][$42] := 'n';
-  m_bzSection[i][$43] := 'c';
-  m_bzSection[i][$44] := '@';
-  m_bzSection[i][$45] := '0';
-  m_bzSection[i][$46] := chr(0);
-  m_bzSection[i][$47] := chr(0);
-  m_bzSection[i][$48] := 'D';
-  m_bzSection[i][$49] := 'x';
-  m_bzSection[i][$4A] := 'b';
+  m_bzSection[i][$3A] := 'C';
+  m_bzSection[i][$3B] := 'x';
+  m_bzSection[i][$3C] := 'b';
+  m_bzSection[i][$3D] := 'x';
+  m_bzSection[i][$3E] := 'K';
+  m_bzSection[i][$3F] := 'r';
+  m_bzSection[i][$40] := 'n';
+  m_bzSection[i][$41] := 'l';
+  m_bzSection[i][$42] := 'N';
+  m_bzSection[i][$43] := 'o';
+  m_bzSection[i][$44] := 'F';
+  m_bzSection[i][$45] := 'u';
+  m_bzSection[i][$46] := 'n';
+  m_bzSection[i][$47] := 'c';
+  m_bzSection[i][$48] := chr(0);
+  m_bzSection[i][$49] := chr(0);
+  m_bzSection[i][$4A] := 'D';
   m_bzSection[i][$4B] := 'x';
-  m_bzSection[i][$4C] := 'K';
-  m_bzSection[i][$4D] := 'r';
-  m_bzSection[i][$4E] := 'n';
-  m_bzSection[i][$4F] := 'l';
-  m_bzSection[i][$50] := '.';
-  m_bzSection[i][$51] := 'd';
-  m_bzSection[i][$52] := 'l';
-  m_bzSection[i][$53] := 'l';
+  m_bzSection[i][$4C] := 'b';
+  m_bzSection[i][$4D] := 'x';
+  m_bzSection[i][$4E] := 'K';
+  m_bzSection[i][$4F] := 'r';
+  m_bzSection[i][$50] := 'n';
+  m_bzSection[i][$51] := 'l';
+  m_bzSection[i][$52] := '.';
+  m_bzSection[i][$53] := 'd';
+  m_bzSection[i][$54] := 'l';
+  m_bzSection[i][$55] := 'l';
 {$ELSE}
-  m_bzSection[i][$3A] := '_';
-  m_bzSection[i][$3B] := 'E';
-  m_bzSection[i][$3C] := 'm';
-  m_bzSection[i][$3D] := 'u';
-  m_bzSection[i][$3E] := 'N';
-  m_bzSection[i][$3F] := 'o';
-  m_bzSection[i][$40] := 'F';
-  m_bzSection[i][$41] := 'u';
-  m_bzSection[i][$42] := 'n';
-  m_bzSection[i][$43] := 'c';
-  m_bzSection[i][$44] := '@';
-  m_bzSection[i][$45] := '0';
-  m_bzSection[i][$46] := chr(0);
-  m_bzSection[i][$47] := chr(0);
-  m_bzSection[i][$48] := 'D';
-  m_bzSection[i][$49] := 'x';
-  m_bzSection[i][$4A] := 'b';
+  m_bzSection[i][$3A] := 'C';
+  m_bzSection[i][$3B] := 'x';
+  m_bzSection[i][$3C] := 'b';
+  m_bzSection[i][$3D] := 'x';
+  m_bzSection[i][$3E] := 'K';
+  m_bzSection[i][$3F] := 'r';
+  m_bzSection[i][$40] := 'n';
+  m_bzSection[i][$41] := 'l';
+  m_bzSection[i][$42] := 'N';
+  m_bzSection[i][$43] := 'o';
+  m_bzSection[i][$44] := 'F';
+  m_bzSection[i][$45] := 'u';
+  m_bzSection[i][$46] := 'n';
+  m_bzSection[i][$47] := 'c';
+  m_bzSection[i][$48] := chr(0);
+  m_bzSection[i][$49] := chr(0);
+  m_bzSection[i][$4A] := 'D';
   m_bzSection[i][$4B] := 'x';
-  m_bzSection[i][$4C] := '.';
-  m_bzSection[i][$4D] := 'd';
-  m_bzSection[i][$4E] := 'l';
-  m_bzSection[i][$4F] := 'l';
+  m_bzSection[i][$4C] := 'b';
+  m_bzSection[i][$4D] := 'x';
+  m_bzSection[i][$4E] := '.';
+  m_bzSection[i][$4F] := 'd';
+  m_bzSection[i][$50] := 'l';
+  m_bzSection[i][$51] := 'l';
 {$ENDIF}
 
   ep := m_Xbe.m_Header.dwEntryAddr;
@@ -718,10 +722,9 @@ begin
     AppendDWordToSubSection(i, 41, 0);
   end;
 
-  // NO PAREM 0 THIS SCREW UP EXE To Much data overwriting dosstub
   // Param 0 : hwndParent
-//  AppendDWordToSubSection(i, 46, hwndParent);
-            
+  AppendDWordToSubSection(i, 46, hwndParent);
+
 
   // END GENERATE SECTIONS  ------ WE STUCK HERE
  // ******************************************************************
@@ -741,7 +744,7 @@ begin
   end;
 
   // locate section containing kernel thunk table
- (* for v := 0 to m_Xbe.m_Header.dwSections -1 do begin
+  for v := 0 to m_Xbe.m_Header.dwSections -1 do begin
     imag_base := m_OptionalHeader.m_image_base;
     virt_addr := m_SectionHeader[v].m_virtual_addr;
     virt_size := m_SectionHeader[v].m_virtual_size;
@@ -752,13 +755,14 @@ begin
       kt_tbl := kt - virt_addr - imag_base;
       k := 0;
       kt_value := @m_bzSection[v][kt_tbl+k];
-      pEmuInit := @EmuInit;  // We need to access the procedure once so it's in memory
+      pEmuInit := @CxbxKrnlInit;  // We need to access the procedure once so it's in memory
       KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
       if KrnlHandle >= 32 then begin
-        ThunkTable := GetProcAddress(KrnlHandle, 'KernelThunkTable');
+        ThunkTable := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable');
         while kt_value^ <> 0 do begin
           t := kt_value^ and $7FFFFFFF;
-          // TODO : We need access to the KernelThunkTable from the DLL
+          // TODO : This method works with cxbx's dll
+          //        Once exe creation is complete, we'll get the thunk table from our dll
           AppendDWordToSubSection(v,k,ThunkTable^[t]);
           if t <> $FFFFFFFF then begin
             WriteLog(Format('EmuExe: Thunk %.03d : *0x%.08X := 0x%.08X', [t, kt + k, kt_value^]));
@@ -770,7 +774,7 @@ begin
       FreeLibrary(KrnlHandle);
     end;
 
-  end;     *)   
+  end;
 
 
   // update imcomplete header fields

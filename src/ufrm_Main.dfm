@@ -2733,7 +2733,7 @@ object frm_Main: Tfrm_Main
       FFFF}
     Transparent = True
   end
-  object Image2: TImage
+  object imgSignature4: TImage
     Left = -11
     Top = 296
     Width = 145
