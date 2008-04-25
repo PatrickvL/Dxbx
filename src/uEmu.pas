@@ -19,7 +19,7 @@ procedure CxbxKrnlInit( hwndParent : THandle;
                    dwXbeHeaderSize : DWord;
                    Entry : pEntryProc ); stdcall;
 
-procedure EmuNoFunc; stdcall;
+procedure CxbxKrnlNoFunc; stdcall;
 
 (*
 procedure EmuPanic; export;
@@ -488,7 +488,7 @@ begin
 end;
 
 
-procedure EmuNoFunc; stdcall;
+procedure CxbxKrnlNoFunc; stdcall;
 begin
   EmuSwapFS();   // Win2k/XP FS
 

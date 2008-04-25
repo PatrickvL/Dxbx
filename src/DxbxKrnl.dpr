@@ -30,8 +30,9 @@ uses
 
   Exports
     CxbxKrnlInit,
-    EmuNoFunc name '_EmuNoFunc@0',
-    SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z';
+    CxbxKrnlNoFunc,
+    SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z',
+    CxbxKrnl_KernelThunkTable;
 
 
 (*  Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
