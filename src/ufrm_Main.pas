@@ -181,7 +181,7 @@ implementation
 {$R *.DFM}
 
 uses
-  ufrm_About, IniFiles, uConsts, uLog, g_EmuShared;
+  ufrm_About, IniFiles, uConsts, uLog;
 
 //------------------------------------------------------------------------------
 
@@ -525,7 +525,6 @@ begin
 
       try
         if FileExists(m_ExeFilename) then begin
-
           ShellExecute(application.Handle, 'open', PChar(m_ExeFilename), nil, nil, SW_SHOWDEFAULT);
           WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
         end

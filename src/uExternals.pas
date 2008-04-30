@@ -3,7 +3,7 @@ unit uExternals;
 interface
 
 Uses
-  Types, uEnums, uXbe;
+  Types, uEnums, uXbe, uConsts;
 
 type
   tEntryProc = Procedure();
@@ -19,10 +19,10 @@ procedure CxbxKrnlInit( hwndParent : THandle;
                         szDebugFilename : PChar;
                         pXbeHeader : P_XBE_HEADER;
                         dwXbeHeaderSize : DWord;
-                        Entry : pEntryProc );  stdcall; external 'DxbxKrnl.dll';    
+                        Entry : pEntryProc );  stdcall; external cDLLNAME;
 
-procedure SetXbePath(const path : PChar ); stdCall; external 'DxbxKrnl.dll' name '?SetXbePath@EmuShared@@QAEXPBD@Z';
-procedure CxbxKrnlNoFunc; stdCall; external 'DxbxKrnl.dll';
+procedure SetXbePath(const path : PChar ); stdCall; external cDLLNAME name '?SetXbePath@EmuShared@@QAEXPBD@Z';
+procedure CxbxKrnlNoFunc; stdCall; external cDLLNAME;
 
 implementation
 

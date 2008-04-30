@@ -4,9 +4,9 @@
   </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
+    <Projects Include="CxbxKrnl.dproj" />
     <Projects Include="DllTesting\Project1.dproj" />
     <Projects Include="Dxbx.dproj" />
-    <Projects Include="DxbxKrnl.dproj" />
     <Projects Include="Tools\XdkTracker\src\XdkTracker.dproj" />
     <Projects Include="Tools\XIso\src\XIso.dproj" />
   </ItemGroup>
@@ -43,14 +43,14 @@
   <Target Name="XIso:Make">
     <MSBuild Projects="Tools\XIso\src\XIso.dproj" Targets="Make" />
   </Target>
-  <Target Name="DxbxKrnl">
-    <MSBuild Projects="DxbxKrnl.dproj" Targets="" />
+  <Target Name="CxbxKrnl">
+    <MSBuild Projects="CxbxKrnl.dproj" Targets="" />
   </Target>
-  <Target Name="DxbxKrnl:Clean">
-    <MSBuild Projects="DxbxKrnl.dproj" Targets="Clean" />
+  <Target Name="CxbxKrnl:Clean">
+    <MSBuild Projects="CxbxKrnl.dproj" Targets="Clean" />
   </Target>
-  <Target Name="DxbxKrnl:Make">
-    <MSBuild Projects="DxbxKrnl.dproj" Targets="Make" />
+  <Target Name="CxbxKrnl:Make">
+    <MSBuild Projects="CxbxKrnl.dproj" Targets="Make" />
   </Target>
   <Target Name="Project1">
     <MSBuild Projects="DllTesting\Project1.dproj" Targets="" />
@@ -62,13 +62,13 @@
     <MSBuild Projects="DllTesting\Project1.dproj" Targets="Make" />
   </Target>
   <Target Name="Build">
-    <CallTarget Targets="Dxbx;XdkTracker;XIso;DxbxKrnl;Project1" />
+    <CallTarget Targets="Dxbx;XdkTracker;XIso;CxbxKrnl;Project1" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="Dxbx:Clean;XdkTracker:Clean;XIso:Clean;DxbxKrnl:Clean;Project1:Clean" />
+    <CallTarget Targets="Dxbx:Clean;XdkTracker:Clean;XIso:Clean;CxbxKrnl:Clean;Project1:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="Dxbx:Make;XdkTracker:Make;XIso:Make;DxbxKrnl:Make;Project1:Make" />
+    <CallTarget Targets="Dxbx:Make;XdkTracker:Make;XIso:Make;CxbxKrnl:Make;Project1:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>
