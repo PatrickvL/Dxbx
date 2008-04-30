@@ -7,7 +7,6 @@ uses
   uLog in '..\uLog.pas',
   BitsOps in '..\BitsOps.pas',
   CTime in '..\CTime.pas',
-  g_EmuShared in '..\g_EmuShared.pas',
   uConsts in '..\uConsts.pas',
   uEmu in '..\uEmu.pas',
   uEmuExe in '..\uEmuExe.pas',

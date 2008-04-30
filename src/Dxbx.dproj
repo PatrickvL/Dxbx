@@ -39,9 +39,7 @@
     <DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug;$(DELPHI)\Lib\Debug</DCC_ResourcePath>
     <DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug;$(DELPHI)\Lib\Debug</DCC_ObjPath>
     <DCC_IncludePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug;$(DELPHI)\Lib\Debug</DCC_IncludePath>
-    <DCC_Define>DEBUG</DCC_Define>
     <DCC_SymbolReferenceInfo>2</DCC_SymbolReferenceInfo>
-    <DCC_OutputXMLDocumentation>True</DCC_OutputXMLDocumentation>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
@@ -60,8 +58,18 @@
       
       
       
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+      <Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\5.0\Bpl\sJVCL_R.bpl">(untitled)</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
   <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
@@ -70,7 +78,6 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <DCCReference Include="CTime.pas" />
-    <DCCReference Include="g_EmuShared.pas" />
     <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uEmuExe.pas" />
     <DCCReference Include="uEnums.pas" />

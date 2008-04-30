@@ -110,8 +110,6 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
     end;
   end;
 
-
-
   procedure AppenddwInitFlags(SectionIdx: Integer);
   var i: Integer;
     iPos: Integer;
@@ -579,7 +577,7 @@ begin
   m_bzSection[i][$47] := 'c';
   m_bzSection[i][$48] := chr(0);
   m_bzSection[i][$49] := chr(0);
-  m_bzSection[i][$4A] := 'D';
+  m_bzSection[i][$4A] := 'C';
   m_bzSection[i][$4B] := 'x';
   m_bzSection[i][$4C] := 'b';
   m_bzSection[i][$4D] := 'x';
@@ -608,7 +606,7 @@ begin
   m_bzSection[i][$47] := 'c';
   m_bzSection[i][$48] := chr(0);
   m_bzSection[i][$49] := chr(0);
-  m_bzSection[i][$4A] := 'D';
+  m_bzSection[i][$4A] := 'C';
   m_bzSection[i][$4B] := 'x';
   m_bzSection[i][$4C] := 'b';
   m_bzSection[i][$4D] := 'x';
@@ -668,7 +666,7 @@ begin
 
   // Function Pointer
   pEmuInit := @CxbxKrnlInit; // We need to access the procedure once so it's in memory
-  KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
+  KrnlHandle := GetModuleHandle(cDLLNAME);
   if KrnlHandle >= 32 then begin
     pEmuInit := GetProcAddress(KrnlHandle, 'CxbxKrnlInit');
     AppendDWordToSubSection(i, 1, DWord(pEmuInit));
@@ -756,7 +754,7 @@ begin
       k := 0;
       kt_value := @m_bzSection[v][kt_tbl+k];
       pEmuInit := @CxbxKrnlInit;  // We need to access the procedure once so it's in memory
-      KrnlHandle := GetModuleHandle('DxbxKrnl.dll');
+      KrnlHandle := GetModuleHandle(cDLLNAME);
       if KrnlHandle >= 32 then begin
         ThunkTable := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable');
         while kt_value^ <> 0 do begin
