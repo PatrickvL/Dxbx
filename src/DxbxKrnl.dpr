@@ -25,15 +25,17 @@ uses
   uXbe in 'uXbe.pas',
   uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas',
-  uKernelThunk in 'uKernelThunk.pas';
+  uKernelThunk in 'uKernelThunk.pas',
+  uBitsOps in 'uBitsOps.pas',
+  uTime in 'uTime.pas';
 
 {$R *.res}   
 
-  Exports
-    CxbxKrnlInit,
-    CxbxKrnlNoFunc,
-    SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z',
-    CxbxKrnl_KernelThunkTable;
+exports
+  CxbxKrnlInit,
+  CxbxKrnlNoFunc,
+  SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z',
+  CxbxKrnl_KernelThunkTable;
 
 
 (*  Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
@@ -45,20 +47,19 @@ uses
   (*Exports Init; // name must be "void EmuShared::Init (void)
   //  Exports KernelThunkTable;*)
 
-procedure DllMain ( Reason : Integer );
+procedure DllMain(Reason: Integer);
 begin
-  if Reason = DLL_PROCESS_ATTACH then begin
-     Init;
-  end
-  else begin
+  if Reason = DLL_PROCESS_ATTACH then
+    Init
+  else
+  begin
     if Reason = DLL_PROCESS_DETACH then
       Cleanup;
   end;
 end;
 
-
 begin
-  CreateLogs ( ltKernel );
+  CreateLogs(ltKernel);
   DllProc := DllMain;
-  DllProc( DLL_PROCESS_ATTACH );
+  DllProc(DLL_PROCESS_ATTACH);
 end.

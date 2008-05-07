@@ -9,7 +9,6 @@ type
 
   LogType = (ltKernel, ltGui);
 
-
 implementation
 
 end.

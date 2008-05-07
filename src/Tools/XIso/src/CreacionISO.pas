@@ -25,69 +25,69 @@ unit CreacionISO;
 
 interface
 
-uses Classes, SysUtils, Windows, Messages, Dialogs;
+uses
+  // Delphi
+  Classes, SysUtils, Windows, Messages, Dialogs;
 
 type
-
-
   PListaContenido = ^TListaContenido;
   PEntrada = ^TEntrada;
 
   TListaContenido = class(TList)
   private
-    function Obtener(i: integer): PEntrada;
-    function Duplicado(Nombre: string): boolean;
+    function Obtener(i: Integer): PEntrada;
+    function Duplicado(Nombre: string): Boolean;
   public
     constructor Create;
-    function Insertar(Nuevo: PEntrada): boolean;
-    procedure Eliminar(i: integer); overload;
+    function Insertar(Nuevo: PEntrada): Boolean;
+    procedure Eliminar(i: Integer); overload;
     procedure Eliminar(Entrada: PEntrada); overload;
     procedure Eliminar(Nombre: string); overload;
-    property Entrada[i: integer]: PEntrada read Obtener;
-    function Cantidad: integer;
+    property Entrada[i: Integer]: PEntrada read Obtener;
+    function Cantidad: Integer;
   end;
 
   TEntrada = record
-    Id: integer;
+    Id: Integer;
     Nombre: string;
-    RutaCompleta: string;
-    Tamano: integer;
+    FullPath: string;
+    Tamano: Integer;
     FechaHora: TDateTime;
-    Atributos: integer;
+    Attributes: Integer;
     Contenido: TListaContenido;
     NivelAnterior: TListaContenido;
   end;
 
-  TAdminFicheros = class
+  TAdminFicheros = class(TObject)
   private
     Lista: TListaContenido;
     ListaAnterior: TListaContenido;
-    UltimoID: integer;
-    function GenerarID: integer;
+    UltimoID: Integer;
+    function GenerarID: Integer;
     procedure AgregarEntradaNula(L: TListaContenido; LAnterior: PListaContenido);
-    function AgregarCarpetaRec(Carpeta: string; LAnterior: PListaContenido): boolean;
-    procedure CantidadRec(L: TListaContenido; var N: integer);
-    function EsPadre(Padre: PEntrada; Hijo: PEntrada): boolean;
+    function AgregarCarpetaRec(Folder: string; LAnterior: PListaContenido): Boolean;
+    procedure CantidadRec(L: TListaContenido; var N: Integer);
+    function EsPadre(Padre: PEntrada; Hijo: PEntrada): Boolean;
   public
     ListaActual: TListaContenido;
 
     constructor Create;
     destructor Destroy; override;
     procedure Reiniciar;
-    function AgregarFichero(Fichero: string): boolean;
-    function AgregarCarpeta(Carpeta: string): boolean;
-    function AgregarCarpetaNueva(Carpeta: string): boolean;
-    function EliminarFichero(Fichero: string): boolean;
-    function Buscar(const id: integer; LContenido: TListaContenido): TListaContenido; overload;
-    function Buscar(id: integer): TListaContenido; overload;
-    function Mover(ElementoOrigen: PEntrada; ElementoDestino: PEntrada): boolean;
-    function Avanzar(ID: integer): boolean; overload;
-    function Avanzar(ListaNueva: TListaContenido): boolean; overload;
-    function Retroceder: boolean;
-    function Cantidad: integer;
+    function AgregarFichero(Fichero: string): Boolean;
+    function AgregarCarpeta(Folder: string): Boolean;
+    function AgregarCarpetaNueva(Folder: string): Boolean;
+    function EliminarFichero(Fichero: string): Boolean;
+    function Buscar(const id: Integer; LContenido: TListaContenido): TListaContenido; overload;
+    function Buscar(id: Integer): TListaContenido; overload;
+    function Mover(ElementoOrigen: PEntrada; ElementoDestino: PEntrada): Boolean;
+    function Avanzar(ID: Integer): Boolean; overload;
+    function Avanzar(ListaNueva: TListaContenido): Boolean; overload;
+    function Retroceder: Boolean;
+    function Cantidad: Integer;
     function Raiz: TListaContenido;
-    function EsDirectorio(Atributos: integer): boolean; overload;
-    function EsDirectorio(Entrada: PEntrada): boolean; overload;
+    function EsDirectorio(Attributes: Integer): Boolean; overload;
+    function EsDirectorio(Entrada: PEntrada): Boolean; overload;
   end;
 
 implementation
@@ -97,14 +97,14 @@ begin
   inherited;
 end;
 
-function TListaContenido.Obtener(i: integer): PEntrada;
+function TListaContenido.Obtener(i: Integer): PEntrada;
 begin
   Result := PEntrada(Self[i + 1]);
 end;
 
-function TListaContenido.Duplicado(Nombre: string): boolean;
+function TListaContenido.Duplicado(Nombre: string): Boolean;
 var
-  i: integer;
+  i: Integer;
 begin
   Result := False;
   Nombre := LowerCase(Nombre);
@@ -119,7 +119,7 @@ begin
   end;
 end;
 
-function TListaContenido.Insertar(Nuevo: PEntrada): boolean;
+function TListaContenido.Insertar(Nuevo: PEntrada): Boolean;
 begin
   Result := True;
   if Duplicado(Nuevo.Nombre) then
@@ -127,17 +127,18 @@ begin
     Result := False;
     Exit;
   end;
+
   Add(Nuevo);
 end;
 
-procedure TListaContenido.Eliminar(i: integer);
+procedure TListaContenido.Eliminar(i: Integer);
 begin
   Delete(i + 1);
 end;
 
 procedure TListaContenido.Eliminar(Entrada: PEntrada);
 var
-  i: integer;
+  i: Integer;
 begin
   for i := 1 to Self.Count - 1 do
   begin
@@ -151,7 +152,7 @@ end;
 
 procedure TListaContenido.Eliminar(Nombre: string);
 var
-  i: integer;
+  i: Integer;
 begin
   Nombre := LowerCase(Nombre);
 
@@ -165,7 +166,7 @@ begin
   end;
 end;
 
-function TListaContenido.Cantidad: integer;
+function TListaContenido.Cantidad: Integer;
 begin
   Result := Count - 1;
 end;
@@ -193,16 +194,16 @@ begin
   New(Nuevo);
   Nuevo.Id := GenerarID();
   Nuevo.Nombre := '';
-  Nuevo.RutaCompleta := '';
+  Nuevo.FullPath := '';
   Nuevo.Tamano := 0;
   Nuevo.FechaHora := Date;
-  Nuevo.Atributos := 0;
+  Nuevo.Attributes := 0;
   Nuevo.Contenido := nil;
   Nuevo.NivelAnterior := LAnterior^;
   L.Insertar(Nuevo);
 end;
 
-function TAdminFicheros.GenerarID: integer;
+function TAdminFicheros.GenerarID: Integer;
 begin
   Inc(UltimoID);
   Result := UltimoID;
@@ -213,7 +214,7 @@ begin
   Avanzar(Lista);
 end;
 
-function TAdminFicheros.AgregarFichero(Fichero: string): boolean;
+function TAdminFicheros.AgregarFichero(Fichero: string): Boolean;
 var
   Nuevo: PEntrada;
   F: TFileStream;
@@ -224,8 +225,8 @@ begin
     New(Nuevo);
     Nuevo.Id := GenerarID();
     Nuevo.Nombre := ExtractFileName(Fichero);
-    Nuevo.RutaCompleta := Fichero;
-    Nuevo.Atributos := GetFileAttributes(PChar(Fichero));
+    Nuevo.FullPath := Fichero;
+    Nuevo.Attributes := GetFileAttributes(PChar(Fichero));
     Nuevo.FechaHora := FileDateToDateTime(FileAge(Fichero));
     F := TFileStream.Create(Fichero, fmOpenRead);
     Nuevo.Tamano := F.Size;
@@ -237,27 +238,27 @@ begin
   end;
 end;
 
-function TAdminFicheros.AgregarCarpetaRec(Carpeta: string; LAnterior: PListaContenido): boolean;
+function TAdminFicheros.AgregarCarpetaRec(Folder: string; LAnterior: PListaContenido): Boolean;
 var
   SR: TSearchRec;
   Nuevo: PEntrada;
   C: TListaContenido;
 begin
-  if Carpeta[Length(Carpeta)] = '\' then
-    Carpeta[Length(Carpeta)] := ' ';
+  if Folder[Length(Folder)] = '\' then
+    Folder[Length(Folder)] := ' ';
 
-  Carpeta := Trim(Carpeta);
+  Folder := Trim(Folder);
 
-  if DirectoryExists(Carpeta) then
+  if DirectoryExists(Folder) then
   begin
           // Si no estamos introduciendo una unidad.
-    if Carpeta[Length(Carpeta)] <> ':' then
+    if Folder[Length(Folder)] <> ':' then
     begin
       New(Nuevo);
       Nuevo.Id := GenerarID();
-      Nuevo.Nombre := ExtractFileName(Carpeta);
-      Nuevo.RutaCompleta := Carpeta + '\';
-      Nuevo.Atributos := GetFileAttributes(PChar(Carpeta + '\'));
+      Nuevo.Nombre := ExtractFileName(Folder);
+      Nuevo.FullPath := Folder + '\';
+      Nuevo.Attributes := GetFileAttributes(PChar(Folder + '\'));
       Nuevo.FechaHora := 0;
       Nuevo.Tamano := 0;
       C := TListaContenido.Create;
@@ -272,21 +273,23 @@ begin
       C := ListaActual;
     end;
 
-    if (FindFirst(Carpeta + '\*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
+    if (FindFirst(Folder + '\*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
     begin
       repeat
-        if (SR.Name[1] = '.') then Continue;
+        if (SR.Name[1] = '.') then
+          Continue;
+          
         New(Nuevo);
         Nuevo.Id := GenerarID();
         Nuevo.Nombre := SR.Name;
-        Nuevo.RutaCompleta := Carpeta + '\' + SR.Name;
-        Nuevo.Atributos := GetFileAttributes(PChar(Carpeta + '\' + SR.Name));
+        Nuevo.FullPath := Folder + '\' + SR.Name;
+        Nuevo.Attributes := GetFileAttributes(PChar(Folder + '\' + SR.Name));
         Nuevo.FechaHora := FileDateToDateTime(SR.Time);
         Nuevo.Tamano := SR.Size;
         Nuevo.Contenido := nil;
         Nuevo.NivelAnterior := LAnterior^;
-        if Nuevo.Atributos and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
-          AgregarCarpetaRec(Carpeta + '\' + SR.Name, @C)
+        if Nuevo.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
+          AgregarCarpetaRec(Folder + '\' + SR.Name, @C)
         else
           C.Insertar(Nuevo);
       until (FindNext(SR) <> 0);
@@ -294,25 +297,25 @@ begin
   end;
 end;
 
-function TAdminFicheros.AgregarCarpeta(Carpeta: string): boolean;
+function TAdminFicheros.AgregarCarpeta(Folder: string): Boolean;
 begin
   if ListaAnterior = nil then
-    AgregarCarpetaRec(Carpeta, @Lista)
+    AgregarCarpetaRec(Folder, @Lista)
   else
-    AgregarCarpetaRec(Carpeta, @ListaActual);
+    AgregarCarpetaRec(Folder, @ListaActual);
   Result := True;
 end;
 
-function TAdminFicheros.AgregarCarpetaNueva(Carpeta: string): boolean;
+function TAdminFicheros.AgregarCarpetaNueva(Folder: string): Boolean;
 var
   Nuevo: PEntrada;
   C: TListaContenido;
 begin
   New(Nuevo);
   Nuevo.Id := GenerarID();
-  Nuevo.Nombre := ExtractFileName(Carpeta);
-  Nuevo.RutaCompleta := Carpeta;
-  Nuevo.Atributos := FILE_ATTRIBUTE_DIRECTORY;
+  Nuevo.Nombre := ExtractFileName(Folder);
+  Nuevo.FullPath := Folder;
+  Nuevo.Attributes := FILE_ATTRIBUTE_DIRECTORY;
   Nuevo.FechaHora := Date;
   Nuevo.Tamano := 0;
   C := TListaContenido.Create;
@@ -323,21 +326,21 @@ begin
   Result := True;
 end;
 
-function TAdminFicheros.EliminarFichero(Fichero: string): boolean;
+function TAdminFicheros.EliminarFichero(Fichero: string): Boolean;
 begin
   ListaActual.Eliminar(Fichero);
   Result := True;
 end;
 
-function TAdminFicheros.Buscar(const id: integer; LContenido: TListaContenido): TListaContenido;
+function TAdminFicheros.Buscar(const id: Integer; LContenido: TListaContenido): TListaContenido;
 var
-  i: integer;
+  i: Integer;
 begin
   Result := nil;
-
   for i := 0 to LContenido.Cantidad - 1 do
   begin
-    if Result <> nil then Exit;
+    if Result <> nil then
+      Exit;
 
     if LContenido.Entrada[i].Id = id then
     begin
@@ -345,40 +348,44 @@ begin
       Exit;
     end;
 
-    if EsDirectorio(LContenido.Entrada[i].Atributos) then
-    begin
+    if EsDirectorio(LContenido.Entrada[i].Attributes) then
       Result := Buscar(id, LContenido.Entrada[i].Contenido);
-    end;
   end;
 end;
 
-function TAdminFicheros.Buscar(id: integer): TListaContenido;
+function TAdminFicheros.Buscar(id: Integer): TListaContenido;
 begin
   Result := Buscar(id, Lista);
 end;
 
-function TAdminFicheros.Mover(ElementoOrigen: PEntrada; ElementoDestino: PEntrada): boolean;
+function TAdminFicheros.Mover(ElementoOrigen: PEntrada; ElementoDestino: PEntrada): Boolean;
 var
   Origen, Destino: TListaContenido;
 begin
   Result := False;
+  if ElementoOrigen = ElementoDestino then
+    Exit;
 
-  if ElementoOrigen = ElementoDestino then Exit;
-  if (EsDirectorio(ElementoOrigen)) and EsPadre(ElementoOrigen, ElementoDestino) then Exit;
+  if (EsDirectorio(ElementoOrigen)) and EsPadre(ElementoOrigen, ElementoDestino) then
+    Exit;
 
   Origen := Buscar(ElementoOrigen.Id);
   Destino := ElementoDestino.Contenido;
 
-  if (Origen = nil) or (Destino = nil) then Exit;
-  if not Destino.Insertar(ElementoOrigen) then Exit;
+  if (Origen = nil) or (Destino = nil) then
+    Exit;
+
+  if not Destino.Insertar(ElementoOrigen) then
+    Exit;
+
   Origen.Eliminar(ElementoOrigen);
 
   Result := True;
 end;
 
-function TAdminFicheros.Avanzar(ID: integer): boolean;
+function TAdminFicheros.Avanzar(ID: Integer): Boolean;
 var
-  i: integer;
+  i: Integer;
   Entrada: PEntrada;
 begin
   Result := False;
@@ -398,19 +405,20 @@ begin
   end;
 end;
 
-function TAdminFicheros.Avanzar(ListaNueva: TListaContenido): boolean;
+function TAdminFicheros.Avanzar(ListaNueva: TListaContenido): Boolean;
 begin
   ListaAnterior := ListaNueva.Entrada[-1].NivelAnterior;
   ListaActual := ListaNueva;
-  Result := true;
+  Result := True;
 end;
 
-function TAdminFicheros.Retroceder: boolean;
+function TAdminFicheros.Retroceder: Boolean;
 var
   P: TListaContenido;
 begin
   Result := False;
-  if (ListaAnterior = nil) then Exit;
+  if ListaAnterior = nil then
+    Exit;
 
   P := ListaActual.Entrada[-1].NivelAnterior;
   ListaAnterior := P.Entrada[-1].NivelAnterior;
@@ -419,9 +427,9 @@ begin
   Result := True;
 end;
 
-procedure TAdminFicheros.CantidadRec(L: TListaContenido; var N: integer);
+procedure TAdminFicheros.CantidadRec(L: TListaContenido; var N: Integer);
 var
-  i: integer;
+  i: Integer;
 begin
   for i := 0 to L.Cantidad - 1 do
   begin
@@ -431,7 +439,7 @@ begin
   end;
 end;
 
-function TAdminFicheros.Cantidad: integer;
+function TAdminFicheros.Cantidad: Integer;
 begin
   Result := 0;
   CantidadRec(Raiz(), Result);
@@ -442,28 +450,30 @@ begin
   Result := Lista;
 end;
 
-function TAdminFicheros.EsDirectorio(Atributos: integer): boolean;
+function TAdminFicheros.EsDirectorio(Attributes: Integer): Boolean;
 begin
-  if Atributos and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
+  if Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
     Result := True
   else
     Result := False;
 end;
 
-function TAdminFicheros.EsDirectorio(Entrada: PEntrada): boolean;
+function TAdminFicheros.EsDirectorio(Entrada: PEntrada): Boolean;
 begin
-  Result := EsDirectorio(Entrada.Atributos);
+  Result := EsDirectorio(Entrada.Attributes);
 end;
 
-function TAdminFicheros.EsPadre(Padre: PEntrada; Hijo: PEntrada): boolean;
+function TAdminFicheros.EsPadre(Padre: PEntrada; Hijo: PEntrada): Boolean;
 begin
   Result := False;
-  if (Padre = nil) or (Hijo = nil) then Exit;
+  if (Padre = nil) or (Hijo = nil) then
+    Exit;
+
   if Padre.Contenido.Entrada[-1].Id = Hijo.Id then
     Result := True
   else
   begin
-    if (Hijo.NivelAnterior <> nil) then
+    if Hijo.NivelAnterior <> nil then
       Result := EsPadre(Padre, Hijo.NivelAnterior.Entrada[-1]);
   end;
 end;

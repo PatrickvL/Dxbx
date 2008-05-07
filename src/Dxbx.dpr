@@ -11,12 +11,13 @@ uses
   uExe in 'uExe.pas',
   uConsts in 'uConsts.pas',
   ufrm_About in 'ufrm_About.pas' {frm_About},
-  CTime in 'CTime.pas',
   uProlog in 'uProlog.pas',
-  uXML in 'uXML.pas',
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uExternals in 'uExternals.pas',
+  uTime in 'uTime.pas',
+  uXML in 'uXML.pas',
+  uBitsOps in 'uBitsOps.pas',
   uWindows in 'uWindows.pas';
 
 {$R *.RES}

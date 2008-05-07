@@ -3,8 +3,9 @@ unit u_About;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, jpeg;
+  Dialogs, ExtCtrls, StdCtrls, JPeg;
 
 type
   Tfrm_About = class(TForm)
@@ -13,10 +14,6 @@ type
     lbl_Version: TLabel;
     Label1: TLabel;
     procedure FormCreate(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var
@@ -24,7 +21,9 @@ var
 
 implementation
 
-uses uConsts;
+uses
+  // Dxbx
+  uConsts;
 
 {$R *.dfm}
 

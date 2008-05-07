@@ -4,15 +4,15 @@ interface
 
 Type
   PXDKInfo = ^XDKInfo;
-  XDKInfo = Record
-    GameName : String;
-    XAPILIB  : String;
-    XBOXKRNL : String;
-    LIBCMT   : String;
-    D3D8     : String;
-    XGRAPHC  : String;
-    DSOUND   : String;
-    XMV      : String;
+  XDKInfo = record
+    GameName : string;
+    XAPILIB  : string;
+    XBOXKRNL : string;
+    LIBCMT   : string;
+    D3D8     : string;
+    XGRAPHC  : string;
+    DSOUND   : string;
+    XMV      : string;
   end;
 
 implementation

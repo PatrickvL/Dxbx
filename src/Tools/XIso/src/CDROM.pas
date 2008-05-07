@@ -25,7 +25,10 @@ unit CDROM;
 interface
 
 uses
-  Windows, SysUtils, Classes, MMSystem, Win32ASPI;
+  // Delphi
+  Windows, SysUtils, Classes, MMSystem,
+  // XIso
+  Win32ASPI;
 
 const
 //------------------------------------------------
@@ -169,6 +172,7 @@ type
     ProductID:    string;         //Product Identifier
     Revision:     string;         //Product Revision
   end;
+
   TMechanismType =  ( mt_Caddy,               //Caddy type loading mechanism
                       mt_Tray,                //Tray type loading mechanism
                       mt_PopUp,               //Pop-up type loading mechanism
@@ -177,6 +181,7 @@ type
                       mt_Reserved,
                       mt_Unknown
                     );
+
   TCDROMInfo = record
     LoadingMechanismType    : TMechanismType; //Tipo de mecanismo de carga
     DigitalPort1            : Boolean;        //Support DigitalPort1(IEC958)
@@ -219,18 +224,22 @@ type
     EnablePlayAudio         : Boolean;        //Enable issue PlayAudio/ReadSubcode command
     EnableComposite         : Boolean;        //Enable Trasfer Mixed Audio and Video Data Stream
   end;
+
   TMSF = record
     Minute  : Byte;
     Second  : Byte;
     Frame   : Byte;
   end;
+
   TISRCcode = record
     CountryCode   : string;     //Country Code
     VendorCode    : string;     //Owner Code
     RecordingYear : string;     //Recording Year
     SerialNumber  : string;     //Serial Number
   end;
+
   TAudioStatus = (as_NoSupport, as_Play, as_Pause, as_Stop, as_ErrorHalt, as_NoReport, as_Unknown);
+
   TSubChannel = record
     ADR           : Byte;         //Sub-channel(Q) Information Type
     AudioStatus   : TAudioStatus; //Audio Playing Status
@@ -240,9 +249,10 @@ type
     ISRCcode      : TISRCcode;    //ISRC code
     ATime         : TMSF;         //Absolute Address
     PTime         : TMSF;         //Relative Address
-    SubRAW        : array[0..11] of byte; // Devuelve el subcanal tal cual
+    SubRAW        : array[0..11] of Byte; // Devuelve el subcanal tal cual
   end;
-  TSesionInfo= record
+
+  TSesionInfo = record
     Sesion        : Byte;
     ADR           : Byte;
     DigitalCopy   : Boolean;    //Copy Control (true:permitted/false:prohibited)
@@ -265,13 +275,15 @@ type
     PFRAME        : Byte;
     PLBA          : Longword;
   end;
+
   TCCD = record
-    PistaInicial  : byte;
-    PistaFinal    : byte;
-    Pista         : byte;
+    PistaInicial  : Byte;
+    PistaFinal    : Byte;
+    Pista         : Byte;
     AddressMSF    : TMSF;
-    LBA           : longword; 
+    LBA           : longword;
   end;
+
   TTrackInfo = record
     StartAddress  : TMSF;       //Track Start Address
     StartAddressLBA: longword;
@@ -283,9 +295,10 @@ type
     ADR           : Byte;       //Tipo de informacion de Sub-channel(Q)
     ISRCcode      : TISRCcode;  //ISRC code
   end;
+
   TTOCInfo = record
     TrackNumber : Byte;
-    Matriz      : array[0..$800]of byte;    
+    Matriz      : array[0..$800]of Byte;
     StartTrack  : Byte;
     EndTrack    : Byte;
     TotalTime   : TMSF;
@@ -299,15 +312,15 @@ type
   end;
 
   TATIP = record
-    PotenciaEscritura: byte;
-    DDCD: boolean;
-    VelocidadRef: byte;
+    PotenciaEscritura: Byte;
+    DDCD: Boolean;
+    VelocidadRef: Byte;
     URU: Boolean;
-    TipoDisco: byte;
-    SubTipoDisco: byte;
-    A1Valido: boolean;
-    A2Valido: boolean;
-    A3Valido: boolean;    
+    TipoDisco: Byte;
+    SubTipoDisco: Byte;
+    A1Valido: Boolean;
+    A2Valido: Boolean;
+    A3Valido: Boolean;
     A1: longword;
     A2: longword;
     A3: longword;
@@ -317,13 +330,13 @@ type
   end;
 
   TCDLimites = record
-    Atip: byte;
-    LeadInMIN: byte;
-    LeadInSEG: byte;
-    LeadInFRA: byte;
-    LeadOutMIN: byte;
-    LeadOutSEG: byte;
-    LeadOutFRA: byte;
+    Atip: Byte;
+    LeadInMIN: Byte;
+    LeadInSEG: Byte;
+    LeadInFRA: Byte;
+    LeadOutMIN: Byte;
+    LeadOutSEG: Byte;
+    LeadOutFRA: Byte;
   end;
 
   TTiposMedio = ( tm_CDEstampado,
@@ -338,7 +351,7 @@ type
 
   TCDInfoAntiguo = record
     TipoMedio: TTiposMedio;
-    Reservado: byte;
+    Reservado: Byte;
     LongDatos: Word;
     LimitesCD: TCDLimites;
     ATIP: TATIP;
@@ -346,7 +359,7 @@ type
 
   TOPC = record
     Velocidad: word;  // En Kbytes
-    ValoresOPC: array[0..5] of byte;
+    ValoresOPC: array[0..5] of Byte;
   end;
 
   TEstadoUltimaSesion = ( us_Vacio,
@@ -370,30 +383,30 @@ type
                 bg_Completo );
 
   TCDInfo = record
-    Borrable: boolean; // Indica si se puede borrar
+    Borrable: Boolean; // Indica si se puede borrar
     EstadoUltimaSesion: TEstadoUltimaSesion;
     EstadoDisco: TEstadoDisco;
-    NumeroPrimeraPista: byte;
+    NumeroPrimeraPista: Byte;
     NumeroSesiones: word;
     PrimeraPistaEnUltimaSesion: word;
     UltimaPistaEnUltimaSesion: word;
-    DID_V: boolean; // Disc ID Valid (True= Valido Identificador de Disco, False=No Valido)
-    DBC_V: boolean; // Disc Bar Code (True= Codigo de Barras Valido, False= No valido)
-    URU: boolean;  // Unrestricted Use Disc (Disco sin restringimiento de Uso) True=Sin, False=Con
-    DBit: byte;
+    DID_V: Boolean; // Disc ID Valid (True= Valido Identificador de Disco, False=No Valido)
+    DBC_V: Boolean; // Disc Bar Code (True= Codigo de Barras Valido, False= No valido)
+    URU: Boolean;  // Unrestricted Use Disc (Disco sin restringimiento de Uso) True=Sin, False=Con
+    DBit: Byte;
     BGFormatoEstado: TBGEstado; // Background Format State. 
     TipoDisco: TTipoDisco;
-    IDDisco: integer;
-    InicioLeadInUltimaSesion: integer;
-    InicioLeadOut: integer;
-    CodigoBarras: int64;
-    NumOPC: integer; // Optimun Power Calibration (Calibracion Optima de Potencia)
+    IDDisco: Integer;
+    InicioLeadInUltimaSesion: Integer;
+    InicioLeadOut: Integer;
+    CodigoBarras: Int64;
+    NumOPC: Integer; // Optimun Power Calibration (Calibracion Optima de Potencia)
     OPC: array[0..99] of TOPC;
   end;
 
   TCapacidad = record
-    UltimoLBA: integer;
-    TamanoSector: integer; 
+    UltimoLBA: Integer;
+    TamanoSector: Integer; 
   end;
 
   TQSubcanalADR = ( qs_NoDevuelto,
@@ -417,109 +430,109 @@ type
     Blank: Boolean;
     PaqueteInc: Boolean;
     FP: Boolean;  // Paquete Incremental de tamaño fijado
-    ModoDatos: byte;
+    ModoDatos: Byte;
     LRA_V: Boolean;
     NWA_V: Boolean;
-    LBAPista: integer;
-    SigLBAGrabable: integer;
-    BloquesLibres: integer;
-    TamanoPista: integer;
-    TamanoBloquePInc: integer;
-    UltimaLBAGrabado: integer;
+    LBAPista: Integer;
+    SigLBAGrabable: Integer;
+    BloquesLibres: Integer;
+    TamanoPista: Integer;
+    TamanoBloquePInc: Integer;
+    UltimaLBAGrabado: Integer;
     
-    RestricGrabaParam: byte;
-    EstadoPista: byte;
-    DefSigLBAGrabable: byte;
+    RestricGrabaParam: Byte;
+    EstadoPista: Byte;
+    DefSigLBAGrabable: Byte;
   end;
 
   //--- Estructuras de respuestas de READ TOC ---
 
   TOC00 = record
-    Reservado: byte;
-    AdrControl: byte;
-    Pista: byte;
-    Reservado2: byte;
-    InicioLBA: integer;
+    Reservado: Byte;
+    AdrControl: Byte;
+    Pista: Byte;
+    Reservado2: Byte;
+    InicioLBA: Integer;
     InicioMSF: TMSF;
   end;
 
   TOC01 = record
-    Reservado: byte;
-    AdrControl: byte;
-    Sesion: byte;   // Primera Pista de la Ultima Sesion Cerrada
-    Reservado2: byte;
-    InicioLBA: integer;
+    Reservado: Byte;
+    AdrControl: Byte;
+    Sesion: Byte;   // Primera Pista de la Ultima Sesion Cerrada
+    Reservado2: Byte;
+    InicioLBA: Integer;
     InicioMSF: TMSF;
   end;
 
   TOC02 = record
-    NumeroSesion: byte;
-    AdrControl: byte;
-    TNO: byte;
-    POINT: byte;
-    Min: byte;
-    Sec: byte;
-    Frame: byte;
-    Zero: byte;  //Bits 7-4: HOUR, Bits 3-0: PHOUR
-    PMIN: byte;
-    PSEC: byte;
-    PFRAME: byte;
+    NumeroSesion: Byte;
+    AdrControl: Byte;
+    TNO: Byte;
+    POINT: Byte;
+    Min: Byte;
+    Sec: Byte;
+    Frame: Byte;
+    Zero: Byte;  //Bits 7-4: HOUR, Bits 3-0: PHOUR
+    PMIN: Byte;
+    PSEC: Byte;
+    PFRAME: Byte;
   end;
 
   ReadTOC00 = record
     Tamano: word;
-    PistaInicial: byte;
-    PistaFinal: byte;
+    PistaInicial: Byte;
+    PistaFinal: Byte;
     DatosPistas: array[0..99] of TOC00;
   end;
 
   ReadTOC01 = record
     Tamano: word;
-    SesionPrimera: byte;
-    SesionUltima: byte;
+    SesionPrimera: Byte;
+    SesionUltima: Byte;
     DatosSesion: array[0..99] of TOC01;    
   end;
 
   ReadTOC02 = record
     Tamano: word;
-    PistaInicial: byte;
-    PistaFinal: byte;
+    PistaInicial: Byte;
+    PistaFinal: Byte;
     DatosPistas: array[0..99] of TOC02;
   end;
 
   TModeSelectEscribir = record
-    CodigoPagina: byte; // $05
-    LongitudPagina: byte; // $32
-    Op1: byte; // 7:reser. 6:BUFE 5:LS_V 4:Simulacion 3-0:TipoEscritura
-    Op2: byte; // 7-6:Multisesion 5:FP 4:Copy 3-0:ModoPista
-    TipoBloque: byte; // 7-4:reser. 3-0:TipoBloque
-    LinkSize: byte; //Link Size ?¿
-    IAC: byte; //7-6:reser. 5-0:Codigo Aplicacion del Iniciador
-    FormatoSesion: byte; // Formato sesion
-    TamPaquete: integer; // Tamaño del Paquete
+    CodigoPagina: Byte; // $05
+    LongitudPagina: Byte; // $32
+    Op1: Byte; // 7:reser. 6:BUFE 5:LS_V 4:Simulacion 3-0:TipoEscritura
+    Op2: Byte; // 7-6:Multisesion 5:FP 4:Copy 3-0:ModoPista
+    TipoBloque: Byte; // 7-4:reser. 3-0:TipoBloque
+    LinkSize: Byte; //Link Size ?¿
+    IAC: Byte; //7-6:reser. 5-0:Codigo Aplicacion del Iniciador
+    FormatoSesion: Byte; // Formato sesion
+    TamPaquete: Integer; // Tamaño del Paquete
     DuracionPausa: word; // Duracion de pausa entre cada pista
     MCN: string[16]; // Media Catalog Number
     ISRC: string[16]; // International Standard Recordind Code
-    SubHeader: array[0..3] of byte; // SubHeader ¿?
-    VendorSpecific: array[0..3] of byte; // Especifico del fabricante
+    SubHeader: array[0..3] of Byte; // SubHeader ¿?
+    VendorSpecific: array[0..3] of Byte; // Especifico del fabricante
   end;
 
 {$A-}
   TCueSheet = record
-    CTLADR: byte;
-    TNO: byte;
-    Index: byte;
-    DataForm: byte;
-    SCMS: byte;
-    AMIN: byte;
-    ASEC: byte;
-    AFRAME: byte;
-    MCN: byte;
-    ISRC: byte;
+    CTLADR: Byte;
+    TNO: Byte;
+    Index: Byte;
+    DataForm: Byte;
+    SCMS: Byte;
+    AMIN: Byte;
+    ASEC: Byte;
+    AFRAME: Byte;
+    MCN: Byte;
+    ISRC: Byte;
   end;
 {$A+}
-  TArray = array[0..$FF] of byte;
-  TMensajeSense = procedure (SK, ASC, ASCQ: byte; Error: string) of object;
+  TArray = array[0..$FF] of Byte;
+  TMensajeSense = procedure (SK, ASC, ASCQ: Byte; Error: string) of object;
 //------------------------------------------------
 // CLASE CDROM
 //------------------------------------------------
@@ -541,7 +554,7 @@ type
     FOnPlayAudioFinish: TNotifyEvent;
     FOnSetStartStopUnitFinish: TNotifyEvent;
     FOnSetCDSpeedFinish: TNotifyEvent;
-    procedure MensajeSenseKey(SK: byte; ASC: byte; ASCQ: byte; TextoSense: string);    
+    procedure MensajeSenseKey(SK: Byte; ASC: Byte; ASCQ: Byte; TextoSense: string);    
   protected
   public
     constructor Create(AOwner: TComponent); override;
@@ -571,22 +584,22 @@ type
     function ModeSelect10_Errores(HA_IDx, SCSI_IDx, LUNx, Reintentos, Recuperar: Byte): Boolean;
     function ModeSense_Errores(HA_IDx, SCSI_IDx, LUNx, Reintentos: Byte): TArray;
     function LoadUnload(HA_IDx, SCSI_IDx, LUNx: Byte; Cargar: Boolean): Boolean;
-    function BorrarCDRW(HA_IDx, SCSI_IDx, LUNx: byte; TipoBorrado: TBorradoCDRW; PistaOsector: integer): Boolean;
+    function BorrarCDRW(HA_IDx, SCSI_IDx, LUNx: Byte; TipoBorrado: TBorradoCDRW; PistaOsector: Integer): Boolean;
     function SendEvent(HA_IDx, SCSI_IDx, LUNx: Byte): Boolean;
-    function ReadCapacity(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer): TCapacidad;
-    function SetReadAhead(HA_IDx, SCSI_IDx, LUNx: Byte; LBAIndice, LBACache: integer): Boolean;
+    function ReadCapacity(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer): TCapacidad;
+    function SetReadAhead(HA_IDx, SCSI_IDx, LUNx: Byte; LBAIndice, LBACache: Integer): Boolean;
     function PreventAllowRemoveMedium(HA_IDx, SCSI_IDx, LUNx: Byte; Prevenir: Boolean): Boolean;
-    function ReadTrackInformation(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer; Tipo: byte): TInfoPista;
-    function Seek6(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer): Boolean;
-    function Seek10(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer): Boolean;
-    function SetLimits(HA_IDx, SCSI_IDx, LUNx: Byte; LBAInicial, LBAFinal: integer; Leer,Escribir: Boolean): Boolean;
-    function HayCDMetido(HA_IDx, SCSI_IDx, LUNx: Byte): boolean;
-    function ModeSelectEscribir(HA,SCSI,LUN: byte; Parametros: TModeSelectEscribir): boolean;
-    function SendCuesheet(HA,SCSI,LUN: byte; Parametros: pointer; pistas: integer): boolean;
-    function Write10(HA,SCSI,LUN: byte; TopLBA: Integer; Cantidad: word; pBuffer: Pointer): Boolean;
-    function SynchronizeCache(HA,SCSI,LUN: byte; LBA: integer; Cantidad: word): boolean;
-    function CloseSessionTrack(HA,SCSI,LUN: byte; Sesion: boolean; Pista: boolean; nSesionPista: word): boolean;
-    function ReadDVDStructure(HA_IDx, SCSI_IDx, LUNx: Byte; Buffer: Pointer; Formato: integer = 0): Boolean;    
+    function ReadTrackInformation(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer; Tipo: Byte): TInfoPista;
+    function Seek6(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer): Boolean;
+    function Seek10(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer): Boolean;
+    function SetLimits(HA_IDx, SCSI_IDx, LUNx: Byte; LBAInicial, LBAFinal: Integer; Leer,Escribir: Boolean): Boolean;
+    function HayCDMetido(HA_IDx, SCSI_IDx, LUNx: Byte): Boolean;
+    function ModeSelectEscribir(HA,SCSI,LUN: Byte; Parametros: TModeSelectEscribir): Boolean;
+    function SendCuesheet(HA,SCSI,LUN: Byte; Parametros: pointer; pistas: Integer): Boolean;
+    function Write10(HA,SCSI,LUN: Byte; TopLBA: Integer; Cantidad: word; pBuffer: Pointer): Boolean;
+    function SynchronizeCache(HA,SCSI,LUN: Byte; LBA: Integer; Cantidad: word): Boolean;
+    function CloseSessionTrack(HA,SCSI,LUN: Byte; Sesion: Boolean; Pista: Boolean; nSesionPista: word): Boolean;
+    function ReadDVDStructure(HA_IDx, SCSI_IDx, LUNx: Byte; Buffer: Pointer; Formato: Integer = 0): Boolean;    
 
     function ReadDiscInformation(HA_IDx, SCSI_IDx, LUNx: Byte): TCDInfo;
     function GetConfiguration(HA_IDx, SCSI_IDx, LUNx: Byte; Opcion: word): TArray;
@@ -645,7 +658,7 @@ begin
   Result := (MSF.Minute * 60 * 75) + (MSF.Second * 75) + MSF.Frame;
 end;
 
-function Bytes2Integer(a,b,c,d: byte): integer;
+function Bytes2Integer(a,b,c,d: Byte): Integer;
 begin
      result := (a shl 24) or (b shl 16) or (c shl 8) or d;
 end;
@@ -762,8 +775,8 @@ const
          ASC7200 = 'Cerrado de sesion fallido';
          ASC7300 = 'Error en control del CD';
 
-procedure TCDROM.MensajeSenseKey(SK: byte; ASC: byte; ASCQ: byte; TextoSense: string);
- procedure M(SK, ASC, ASCQ: byte; Texto: string);
+procedure TCDROM.MensajeSenseKey(SK: Byte; ASC: Byte; ASCQ: Byte; TextoSense: string);
+ procedure M(SK, ASC, ASCQ: Byte; Texto: string);
  begin
        if Assigned(FEnError) then
           FEnError(SK, ASC, ASCQ, Texto);
@@ -1177,7 +1190,7 @@ end;
 //------------------
 // Funciones CD-ROM 
 //------------------
-function TCDROM.ReadDVDStructure(HA_IDx, SCSI_IDx, LUNx: Byte; Buffer: Pointer; Formato: integer = 0): Boolean;
+function TCDROM.ReadDVDStructure(HA_IDx, SCSI_IDx, LUNx: Byte; Buffer: Pointer; Formato: Integer = 0): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -1243,7 +1256,7 @@ var
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
   xResult: Boolean;
-  Prev: byte;
+  Prev: Byte;
 begin
   //---Conversion de parametros---
   if Prevenir then Prev := 1 else Prev := 0;
@@ -1293,7 +1306,7 @@ begin
   end;
 end;
 
-function TCDROM.Seek6(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer): Boolean;
+function TCDROM.Seek6(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -1356,7 +1369,7 @@ begin
   end;
 end;
 
-function TCDROM.Seek10(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer): Boolean;
+function TCDROM.Seek10(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -1421,13 +1434,13 @@ begin
   end;
 end;
 
-function TCDROM.HayCDMetido(HA_IDx, SCSI_IDx, LUNx: Byte): boolean;
+function TCDROM.HayCDMetido(HA_IDx, SCSI_IDx, LUNx: Byte): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
-  Buffer: array[0..SENSE_LEN-1] of byte;
+  Buffer: array[0..SENSE_LEN-1] of Byte;
   pBuffer: pointer;
   xResult: Boolean;
 begin
@@ -1475,7 +1488,7 @@ end;
   SetLimits: Establece los limites LBA donde los comando siguientes van a poder
              moverse.
 }
-function TCDROM.SetLimits(HA_IDx, SCSI_IDx, LUNx: Byte; LBAInicial, LBAFinal: integer; Leer,Escribir: Boolean): Boolean;
+function TCDROM.SetLimits(HA_IDx, SCSI_IDx, LUNx: Byte; LBAInicial, LBAFinal: Integer; Leer,Escribir: Boolean): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -1483,7 +1496,7 @@ var
   PacketSize: Longword;
   xResult: Boolean;
   LBA0, LBA1, LBA2, LBA3, LBAf0, LBAf1: Byte;
-  LeerEscribir: byte;
+  LeerEscribir: Byte;
 begin
   Result := False;
   LBAFinal := LBAFinal - LBAInicial;
@@ -1705,7 +1718,7 @@ begin
   end;
 end;
 
-function TCDROM.ReadCapacity(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer): TCapacidad;
+function TCDROM.ReadCapacity(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer): TCapacidad;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -2042,8 +2055,8 @@ var
   Buffer: TSRBBuffer;
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
-  xResult, R: boolean;
-  i: integer;
+  xResult, R: Boolean;
+  i: Integer;
 begin
   //---Inicializacion de SCSI Request Block---
   pSRBPacket := @SRBPacket;
@@ -2098,7 +2111,7 @@ begin
   end;
 end;
 
-function TCDROM.ReadTrackInformation(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: integer; Tipo: byte): TInfoPista;
+function TCDROM.ReadTrackInformation(HA_IDx, SCSI_IDx, LUNx: Byte; LBA: Integer; Tipo: Byte): TInfoPista;
 var
   SRBPacket: TSRB_ExecSCSICmd;
   pSRBPacket: PSRB_ExecSCSICmd;
@@ -2106,7 +2119,7 @@ var
   Buffer: TSRBBuffer;
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
-  xResult, R: boolean;
+  xResult, R: Boolean;
   LBA0, LBA1, LBA2, LBA3: Byte;
 begin
   //---Conversion Parametros---
@@ -2205,7 +2218,7 @@ var
   xResult: Boolean;
   tno, x, i: Byte;
   msf: TMSF;
-  prueba: integer;
+  prueba: Integer;
 begin
   Result.Sesiones := $ff;
   Result.PrimeraSesion := $ff;
@@ -2566,7 +2579,7 @@ begin
     SRBPacket.CDBByte[6] := 0;                    // NUMERO DE SESION
     SRBPacket.CDBByte[7] := $80;                  // MSB
     SRBPacket.CDBByte[8] := $00;                  // LSB
-    SRBPacket.CDBByte[9] := $80;                  // CONTROL BYTE (SI PONEMOS ESTE VALOR DEVUELVE TODO!!!PERFECTO PARA LAS SESIONES Y TAL
+    SRBPacket.CDBByte[9] := $80;                  // CONTROL Byte (SI PONEMOS ESTE VALOR DEVUELVE TODO!!!PERFECTO PARA LAS SESIONES Y TAL
 
     //---Ejecutamos Comando SCSI---
     xResult := ExecSCSICommand(pSRBPacket);
@@ -2616,7 +2629,7 @@ begin
   end;
 end;
 
-function TCDROM.ReadATIP(HA_IDx, SCSI_IDx, LUNx: byte): TATIP;
+function TCDROM.ReadATIP(HA_IDx, SCSI_IDx, LUNx: Byte): TATIP;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -3054,7 +3067,7 @@ begin
   if Assigned(FOnModeSenseFinish) then FOnModeSenseFinish(Self);
 end;
 
-function TCDROM.ModeSelectEscribir(HA,SCSI,LUN: byte; Parametros: TModeSelectEscribir): boolean;
+function TCDROM.ModeSelectEscribir(HA,SCSI,LUN: Byte; Parametros: TModeSelectEscribir): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -3064,8 +3077,8 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  PS1,PS2,PS3,PS4: byte;
-  i: integer;
+  PS1,PS2,PS3,PS4: Byte;
+  i: Integer;
 begin
   PS4 := ($ff000000 and Parametros.TamPaquete) shr 24;
   PS3 := ($00ff0000 and Parametros.TamPaquete) shr 16;
@@ -3169,7 +3182,7 @@ begin
   if Assigned(FOnModeSenseFinish) then FOnModeSenseFinish(Self);
 end;
 
-function TCDROM.SendCuesheet(HA,SCSI,LUN: byte; Parametros: pointer; pistas: integer): boolean;
+function TCDROM.SendCuesheet(HA,SCSI,LUN: Byte; Parametros: pointer; pistas: Integer): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -3248,7 +3261,7 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  i      : integer;
+  i      : Integer;
 begin
   //---Inicializacion de SCSI Request Block---
   pSRBPacket := @SRBPacket;
@@ -3309,7 +3322,7 @@ begin
   end;
 end;
 
-function TCDROM.BorrarCDRW(HA_IDx, SCSI_IDx, LUNx: byte; TipoBorrado: TBorradoCDRW; PistaOsector: integer): Boolean;
+function TCDROM.BorrarCDRW(HA_IDx, SCSI_IDx, LUNx: Byte; TipoBorrado: TBorradoCDRW; PistaOsector: Integer): Boolean;
 var
   SRBPacket: TSRB_ExecSCSICmd;
   pSRBPacket: PSRB_ExecSCSICmd;
@@ -3335,7 +3348,7 @@ begin
   SRBPacket.SRB_BufPointer := pBuffer;
   SRBPacket.SRB_CDBLen := 12;
   SRBPacket.CDBByte[0] := SCSI_BLANK;
-  SRBPacket.CDBByte[1] := ($1 shl 4) + byte(TipoBorrado);
+  SRBPacket.CDBByte[1] := ($1 shl 4) + Byte(TipoBorrado);
   SRBPacket.CDBByte[2] := Hi(Hi(PistaOsector));
   SRBPacket.CDBByte[3] := Lo(Hi(PistaOsector));
   SRBPacket.CDBByte[4] := Hi(Lo(PistaOsector));
@@ -3499,7 +3512,7 @@ begin
   if Assigned(FOnReadCDFinish) then FOnReadCDFinish(Self);
 end;
 
-function TCDROM.Write10(HA,SCSI,LUN: byte; TopLBA: Integer; Cantidad: word; pBuffer: Pointer): Boolean;
+function TCDROM.Write10(HA,SCSI,LUN: Byte; TopLBA: Integer; Cantidad: word; pBuffer: Pointer): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -3568,7 +3581,7 @@ begin
   if Assigned(FOnReadCDFinish) then FOnReadCDFinish(Self);
 end;
 
-function TCDROM.SynchronizeCache(HA,SCSI,LUN: byte; LBA: integer; Cantidad: word): boolean;
+function TCDROM.SynchronizeCache(HA,SCSI,LUN: Byte; LBA: Integer; Cantidad: word): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -3636,14 +3649,14 @@ begin
   if Assigned(FOnReadCDFinish) then FOnReadCDFinish(Self);
 end;
 
-function TCDROM.CloseSessionTrack(HA,SCSI,LUN: byte; Sesion: boolean; Pista: boolean; nSesionPista: word): boolean;
+function TCDROM.CloseSessionTrack(HA,SCSI,LUN: Byte; Sesion: Boolean; Pista: Boolean; nSesionPista: word): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
   pSRBPacket: PSRB_ExecSCSICmd;
   PacketSize: Longword;
   xResult: Boolean;
-  S,P: byte;
+  S,P: Byte;
 begin
   Result := False;
   S := 0;
@@ -4153,7 +4166,7 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  Carga: byte;
+  Carga: Byte;
 begin
   Result := False;
   //---Parametros---
@@ -4181,31 +4194,30 @@ begin
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-       Result := True
+      Result := True
     else
     begin
-         if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-         begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
 	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-                 Result := True;
-         end;
+          Result := True;
+      end;
     end;
   end;
 
   if not Result then
   begin
-       if ErrorEnable then
-       begin
-            Error := ECDROMError.Create('Error al abrir bandeja.');
-            Error.ErrorCode := $0003bb00;
-            raise Error;
-       end;
+    if ErrorEnable then
+    begin
+      Error := ECDROMError.Create('Error al abrir bandeja.');
+      Error.ErrorCode := $0003bb00;
+
+      raise Error;
+    end;
   end;
 
   if Assigned(FOnSetCDSpeedFinish) then
-  begin
-       FOnSetCDSpeedFinish(Self);
-  end;
+    FOnSetCDSpeedFinish(Self);
 end;
 
 function TCDROM.SendEvent(HA_IDx, SCSI_IDx, LUNx: Byte): Boolean;
@@ -4244,14 +4256,14 @@ begin
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-       Result := True
+      Result := True
     else
     begin
-         if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-         begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
 	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-                 Result := True;
-         end;
+          Result := True;
+      end;
     end;
   end;
 
@@ -4266,12 +4278,10 @@ begin
   end;
 
   if Assigned(FOnSetCDSpeedFinish) then
-  begin
-       FOnSetCDSpeedFinish(Self);
-  end;
+    FOnSetCDSpeedFinish(Self);
 end;
 
-function TCDROM.SetReadAhead(HA_IDx, SCSI_IDx, LUNx: Byte; LBAIndice, LBACache: integer): Boolean;
+function TCDROM.SetReadAhead(HA_IDx, SCSI_IDx, LUNx: Byte; LBAIndice, LBACache: Integer): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -4281,8 +4291,8 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  LBA0, LBA1, LBA2, LBA3: byte;
-  LBAC0, LBAC1, LBAC2, LBAC3: byte;
+  LBA0, LBA1, LBA2, LBA3: Byte;
+  LBAC0, LBAC1, LBAC2, LBAC3: Byte;
 begin
   Result := False;
   //---Conversion de parametros---
@@ -4350,9 +4360,7 @@ begin
   end;
 
   if Assigned(FOnSetCDSpeedFinish) then
-  begin
-       FOnSetCDSpeedFinish(Self);
-  end;
+    FOnSetCDSpeedFinish(Self);
 end;
 
 end.

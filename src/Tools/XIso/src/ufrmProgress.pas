@@ -51,53 +51,55 @@ type
 
 var
   frmProgress: TfrmProgress;
-  Cerrar: Boolean;
-  Carpeta: string;
+  Finished: Boolean;
+  Folder: string;
 
 implementation
 
-uses Textos, uxisomaker, GenerarXDFS, ufrm_Main, FormCreacionISO;
+uses
+  // Dxbx
+  TextConsts, uxisomaker, GenerateXDFS, ufrm_Main, FormCreacionISO;
 
 {$R *.dfm}
 
 var
-  Hilo: TGenerarXDFS;
+  Hilo: TGenerateXDFS;
 
-procedure AvanzarProgreso(Fichero: string);
+procedure AdvanceProgres(FileName: string);
 begin
   frmProgress.ProgressBar1.StepIt;
 end;
 
-procedure Mensajes(Textos: string);
+procedure LogMessage(Text: string);
 begin
-  frmProgress.Memo1.Lines.Add(Textos);
+  frmProgress.Memo1.Lines.Add(Text);
 end;
 
 procedure TfrmProgress.FinCreacion(Sender: TObject);
 begin
   ProgressBar1.Position := 0;
-  Button1.Caption := rcEngCerrar;
-  Cerrar := True;
+  Button1.Caption := SExit;
+  Finished := True;
 end;
 
 procedure TfrmProgress.FormShow(Sender: TObject);
 begin
   if FormPadre = frm_Main then
   begin
-    GenerarXDFS.Imagen := SaveDialog1.FileName;
-    GenerarXDFS.Carpeta := Carpeta;
+    GenerateXDFS.Imagen := SaveDialog1.FileName;
+    GenerateXDFS.Folder := Folder;
     uxisomaker.Parar := False;
-    ProgresoxISO := AvanzarProgreso;
-    MensajesxISO := Mensajes;
+    ProgresoxISO := AdvanceProgres;
+    MensajesxISO := LogMessage;
     ProgressBar1.Position := 0;
     ProgressBar1.Min := 0;
-    ProgressBar1.Max := NumeroFicheros(Carpeta);
+    ProgressBar1.Max := NumeroFicheros(Folder);
 
-    Cerrar := False;
-    Hilo := TGenerarXDFS.Create(True);
+    Finished := False;
+    Hilo := TGenerateXDFS.Create({CreateSuspended=}True);
+    Hilo.FreeOnTerminate := True;
     Hilo.OnTerminate := FinCreacion;
     Hilo.Resume;
-    Hilo.FreeOnTerminate := True;
   end
   else
     if FormPadre = Form5 then
@@ -108,17 +110,17 @@ end;
 
 procedure TfrmProgress.Button1Click(Sender: TObject);
 begin
-  if Button1.Caption = rcEngParar then
+  if Button1.Caption = SCancel then
   begin
     uxisomaker.Parar := True;
-    Button1.Caption := rcEngCerrar;
+    Button1.Caption := SExit;
   end
   else
   begin
-    if Cerrar then
+    if Finished then
       Close
     else
-      Showmessage(rcEngEsperarHilo);
+      ShowMessage(SEsperarHilo);
   end;
 end;
 

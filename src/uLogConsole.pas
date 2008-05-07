@@ -3,17 +3,16 @@ unit uLogConsole;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, sSkinProvider, sSkinManager;
+  Dialogs, StdCtrls,
+  // AlphaSkins
+  sSkinProvider, sSkinManager;
 
 type
   Tfrm_LogConsole = class(TForm)
     Log: TMemo;
     procedure FormCreate(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

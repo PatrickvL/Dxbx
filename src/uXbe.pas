@@ -2,17 +2,19 @@ unit uXbe;
 
 interface
 
-uses Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+uses
+  // Delphi
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Menus, Math, ActnList, ExtCtrls,
-  // DXBX
-  uConsts, uExe, BitsOps, CTime;
+  // Dxbx
+  uConsts, uExe, uBitsOps, uTime;
 
 type
-  LogType = (ltLog, ltFile);
+  TLogType = (ltLog, ltFile);
 
   _XBE_HEADER = packed record
-    dwMagic: array[0..3] of char; // 0x0000 - magic number [should be "XBEH"]
-    pbDigitalSignature: array[0..255] of char; // 0x0004 - digital signature
+    dwMagic: array[0..3] of Char; // 0x0000 - magic number [should be "XBEH"]
+    pbDigitalSignature: array[0..255] of Char; // 0x0004 - digital signature
     dwBaseAddr: DWord; // 0x0104 - base address
     dwSizeofHeaders: DWord; // 0x0108 - size of headers
     dwSizeofImage: DWord; // 0x010C - size of image
@@ -22,7 +24,7 @@ type
     dwSections: DWord; // 0x011C - number of sections
     dwSectionHeadersAddr: DWord; // 0x0120 - section headers address
 
-    dwInitFlags: array[0..3] of char; // 0x0124 - initialization flags
+    dwInitFlags: array[0..3] of Char; // 0x0124 - initialization flags
 
             //struct InitFlags                       // 0x0124 - initialization flags
             {
@@ -97,16 +99,16 @@ type
             }
            // dwFlags;
 
-    dwFlags: array[0..3] of char;
+    dwFlags: array[0..3] of Char;
     dwVirtualAddr: DWord; // virtual address
     dwVirtualSize: DWord; // virtual size
-    dwRawAddr: DWord; // file offset to raw data
-    dwSizeofRaw: DWord; // size of raw data
+    dwRawAddr: DWord; // file offset to raw Data
+    dwSizeofRaw: DWord; // size of raw Data
     dwSectionNameAddr: DWord; // section name addr
     dwSectionRefCount: DWord; // section reference count
     dwHeadSharedRefCountAddr: DWord; // head shared page reference count address
     dwTailSharedRefCountAddr: DWord; // tail shared page reference count address
-    bzSectionDigest: array[0..19] of CHAR; // section digest
+    bzSectionDigest: array[0..19] of Char; // section digest
   end;
   XBE_SECTIONHEADER = _XBE_SECTIONHEADER;
 
@@ -116,7 +118,7 @@ type
     wMajorVersion: Word; // major version
     wMinorVersion: Word; // minor version
     wBuildVersion: Word; // build version
-    dwFlags: array[0..1] of char;
+    dwFlags: array[0..1] of Char;
            { struct Flags
             {
                 uint16 QFEVersion       : 13;      // QFE Version
@@ -147,64 +149,62 @@ type
   P_XBE_TLS = ^_XBE_TLS;
   XBE_TLS = _XBE_TLS;
 
-  _Eight = char;
+  _Eight = Char;
     //Bit 0  : bType1
     //Bit 1,2,3  : Len
     //Bit 4,5,6,7 : Data
   Eight = _Eight;
 
-  _Sixteen = array[0..1] of char;
-    //from char[0]
+  _Sixteen = array[0..1] of Char;
+    //from Char[0]
     //Bit 0  : bType1
     //Bit 1  : bType2
-    //Bit 2,3,4,5,6,7 :len
-    //from char[2]
+    //Bit 2,3,4,5,6,7 :Len
+    //from Char[2]
     //Bit 0,1,2,3  : Len
     //Bit 4,5,6,7 : Data
   Sixteen = _Sixteen;
 
-  // used to encode / decode logo bitmap data
+  // used to encode / decode logo bitmap Data
   _LogoRLE = packed record
     m_Eight: Eight;
     m_Sixteen: Sixteen;
   end;
   LogoRLE = _LogoRLE;
 
-  TXbe = class
+  TXbe = class(TObject)
   private
     Buffer: PChar;
     m_KernelLibraryVersion: array of Char;
     m_XAPILibraryVersion: array of Char;
     m_Certificate: XBE_CERTIFICATE;
     procedure ConstructorInit;
+  protected
+    XbeFile: file of Char;
+    m_LogoRLE: LogoRLE;
   public
     m_szPath: string;
-    m_bzSection: array of TVarCharArray;
-    XbeFile: file of char;
-    m_LogoRLE: LogoRLE;
     m_Header: XBE_HEADER;
-    m_HeaderEx: array of Char;
     m_SectionHeader: array of XBE_SECTIONHEADER;
-    m_szSectionName: array of array of Char;
     m_LibraryVersion: array of XBE_LIBRARYVERSION;
+    m_szSectionName: array of array of Char;
+    m_HeaderEx: array of Char;
     m_TLS: XBE_TLS;
+    m_bzSection: array of TVarCharArray;
 
     constructor Create(aFileName: string);
     destructor Destroy; override;
 
-
     function DumpInformation(FileName: string = ''): Boolean;
-    function GetAddr(x_dwVirtualAddress: DWord): integer;
+    function GetAddr(x_dwVirtualAddress: DWord): Integer;
 
     procedure ExportLogoBitmap(ImgCont: TBitmap);
 
     function GetTLSData: DWord;
-
-  protected
   end;
 
-function GetDWordVal(arrPchar: PChar; i: integer): DWord;
-function GetWordVal(arrPchar: PChar; i: integer): Word;
+function GetDWordVal(ArrPChar: PChar; i: Integer): DWord;
+function GetWordVal(ArrPChar: PChar; i: Integer): Word;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
 var
@@ -219,42 +219,72 @@ uses
 
 function RoundUp(dwValue, dwMult: DWord): DWord;
 begin
-  if dwMult = 0 then begin
-    result := dwValue
-  end
-  else begin
-    result := dwValue - ((dwValue - 1) mod dwMult) + (dwMult - 1);
-  end;
+  if dwMult = 0 then
+    Result := dwValue
+  else
+    Result := dwValue - ((dwValue - 1) mod dwMult) + (dwMult - 1);
 end; // RoundUp
 
 //------------------------------------------------------------------------------
 
-function GetDWordVal(arrPchar: PChar; i: integer): DWord;
+function GetDWordVal(ArrPChar: PChar; i: Integer): DWord;
 begin
-  result := GetBitEn(ORD(arrPchar[i]), 0) * 1 + GetBitEn(ORD(arrPchar[i]), 1) * 2 + GetBitEn(ORD(arrPchar[i]), 2) * 4 +
-    GetBitEn(ORD(arrPchar[i]), 3) * 8 + GetBitEn(ORD(arrPchar[i]), 4) * 16 + GetBitEn(ORD(arrPchar[i]), 5) * 32 +
-    GetBitEn(ORD(arrPchar[i]), 6) * 64 + GetBitEn(ORD(arrPchar[i]), 7) * 128 +
-    GetBitEn(ORD(arrPchar[i + 1]), 0) * 256 + GetBitEn(ORD(arrPchar[i + 1]), 1) * 512 + GetBitEn(ORD(arrPchar[i + 1]), 2) * 1024 +
-    GetBitEn(ORD(arrPchar[i + 1]), 3) * 2048 + GetBitEn(ORD(arrPchar[i + 1]), 4) * 4096 + GetBitEn(ORD(arrPchar[i + 1]), 5) * 8192 +
-    GetBitEn(ORD(arrPchar[i + 1]), 6) * 16384 + GetBitEn(ORD(arrPchar[i + 1]), 7) * 32768 +
-    GetBitEn(ORD(arrPchar[i + 2]), 0) * 65536 + GetBitEn(ORD(arrPchar[i + 2]), 1) * ROUND(POWER(2, 17)) + GetBitEn(ORD(arrPchar[i + 2]), 2) * ROUND(POWER(2, 18)) +
-    GetBitEn(ORD(arrPchar[i + 2]), 3) * ROUND(POWER(2, 19)) + GetBitEn(ORD(arrPchar[i + 2]), 4) * ROUND(POWER(2, 20)) + GetBitEn(ORD(arrPchar[i + 2]), 5) * ROUND(POWER(2, 21)) +
-    GetBitEn(ORD(arrPchar[i + 2]), 6) * ROUND(POWER(2, 22)) + GetBitEn(ORD(arrPchar[i + 2]), 7) * ROUND(POWER(2, 23)) +
-    GetBitEn(ORD(arrPchar[i + 3]), 0) * ROUND(POWER(2, 24)) + GetBitEn(ORD(arrPchar[i + 3]), 1) * ROUND(POWER(2, 25)) + GetBitEn(ORD(arrPchar[i + 3]), 2) * ROUND(POWER(2, 26)) +
-    GetBitEn(ORD(arrPchar[i + 3]), 3) * ROUND(POWER(2, 27)) + GetBitEn(ORD(arrPchar[i + 3]), 4) * ROUND(POWER(2, 28)) + GetBitEn(ORD(arrPchar[i + 3]), 5) * ROUND(POWER(2, 29)) +
-    GetBitEn(ORD(arrPchar[i + 3]), 6) * ROUND(POWER(2, 30)) + GetBitEn(ORD(arrPchar[i + 3]), 7) * ROUND(POWER(2, 31));
+  Result :=
+    GetBitEn(Ord(ArrPChar[i]), 0) * 1 +
+    GetBitEn(Ord(ArrPChar[i]), 1) * 2 +
+    GetBitEn(Ord(ArrPChar[i]), 2) * 4 +
+    GetBitEn(Ord(ArrPChar[i]), 3) * 8 +
+    GetBitEn(Ord(ArrPChar[i]), 4) * 16 +
+    GetBitEn(Ord(ArrPChar[i]), 5) * 32 +
+    GetBitEn(Ord(ArrPChar[i]), 6) * 64 +
+    GetBitEn(Ord(ArrPChar[i]), 7) * 128 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 0) * 256 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 1) * 512 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 2) * 1024 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 3) * 2048 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 4) * 4096 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 5) * 8192 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 6) * 16384 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 7) * 32768 +
+    GetBitEn(Ord(ArrPChar[i + 2]), 0) * 65536 +
+    GetBitEn(Ord(ArrPChar[i + 2]), 1) * Round(POWER(2, 17)) +
+    GetBitEn(Ord(ArrPChar[i + 2]), 2) * Round(POWER(2, 18)) +
+    GetBitEn(Ord(ArrPChar[i + 2]), 3) * Round(POWER(2, 19)) +
+    GetBitEn(Ord(ArrPChar[i + 2]), 4) * Round(POWER(2, 20)) +
+    GetBitEn(Ord(ArrPChar[i + 2]), 5) * Round(POWER(2, 21)) +
+    GetBitEn(Ord(ArrPChar[i + 2]), 6) * Round(POWER(2, 22)) +
+    GetBitEn(Ord(ArrPChar[i + 2]), 7) * Round(POWER(2, 23)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 0) * Round(POWER(2, 24)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 1) * Round(POWER(2, 25)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 2) * Round(POWER(2, 26)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 3) * Round(POWER(2, 27)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 4) * Round(POWER(2, 28)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 5) * Round(POWER(2, 29)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 6) * Round(POWER(2, 30)) +
+    GetBitEn(Ord(ArrPChar[i + 3]), 7) * Round(POWER(2, 31));
 end; // GetDwordVal
 
 //------------------------------------------------------------------------------
 
-function GetWordVal(arrPchar: PChar; i: integer): Word;
+function GetWordVal(ArrPChar: PChar; i: Integer): Word;
 begin
-  result := GetBitEn(ORD(arrPchar[i]), 0) * 1 + GetBitEn(ORD(arrPchar[i]), 1) * 2 + GetBitEn(ORD(arrPchar[i]), 2) * 4 +
-    GetBitEn(ORD(arrPchar[i]), 3) * 8 + GetBitEn(ORD(arrPchar[i]), 4) * 16 + GetBitEn(ORD(arrPchar[i]), 5) * 32 +
-    GetBitEn(ORD(arrPchar[i]), 6) * 64 + GetBitEn(ORD(arrPchar[i]), 7) * 128 +
-    GetBitEn(ORD(arrPchar[i + 1]), 0) * 256 + GetBitEn(ORD(arrPchar[i + 1]), 1) * 512 + GetBitEn(ORD(arrPchar[i + 1]), 2) * 1024 +
-    GetBitEn(ORD(arrPchar[i + 1]), 3) * 2048 + GetBitEn(ORD(arrPchar[i + 1]), 4) * 4096 + GetBitEn(ORD(arrPchar[i + 1]), 5) * 8192 +
-    GetBitEn(ORD(arrPchar[i + 1]), 6) * 16384 + GetBitEn(ORD(arrPchar[i + 1]), 7) * 32768;
+  Result :=
+    GetBitEn(Ord(ArrPChar[i]), 0) * 1 +
+    GetBitEn(Ord(ArrPChar[i]), 1) * 2 +
+    GetBitEn(Ord(ArrPChar[i]), 2) * 4 +
+    GetBitEn(Ord(ArrPChar[i]), 3) * 8 +
+    GetBitEn(Ord(ArrPChar[i]), 4) * 16 +
+    GetBitEn(Ord(ArrPChar[i]), 5) * 32 +
+    GetBitEn(Ord(ArrPChar[i]), 6) * 64 +
+    GetBitEn(Ord(ArrPChar[i]), 7) * 128 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 0) * 256 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 1) * 512 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 2) * 1024 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 3) * 2048 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 4) * 4096 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 5) * 8192 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 6) * 16384 +
+    GetBitEn(Ord(ArrPChar[i + 1]), 7) * 32768;
 end; // GetDwordVal
 
 
@@ -287,14 +317,16 @@ begin
 
   RawSize := 0;
   F := FileOpen(aFileName, fmOpenRead);
-  FileSz := GetFileSize(f, nil);
+  FileSz := GetFileSize(F, nil);
   FileClose(F);
 
   // verify xbe file was opened
-  if FileSz = 0 then begin
+  if FileSz = 0 then
+  begin
     MessageDlg('Could not open Xbe file.', mtError, [mbOk], 0);
     Exit;
   end;
+
   WriteLog('DXBX: Opening Xbe file...OK');
 
   // remember xbe path
@@ -302,33 +334,39 @@ begin
   WriteLog('DXBX: Storing Xbe Path...Ok');
 
   // read xbe image header
-  if SizeOf(m_Header) > FileSz then begin
+  if SizeOf(m_Header) > FileSz then
+  begin
     MessageDlg('Unexpected end of file while reading Xbe Image Header', mtError, [mbOk], 0);
     Exit;
   end;
+
   AssignFile(XbeFile, aFileName);
   FileMode := fmOpenRead;
   Reset(XbeFile);
-  freemem(buffer);
-  getmem(buffer, FileSz);
+  FreeMem(Buffer);
+  GetMem(Buffer, FileSz);
   BlockRead(XBeFile, Buffer^, FileSz, ReadBytes);
   // m_Header.dwMagic Read (4 Bytes)
   i := 0;
-  for lIndex := 0 to 3 do begin
+  for lIndex := 0 to 3 do
+  begin
     m_Header.dwMagic[lIndex] := Buffer[i];
-    inc(i);
+    Inc(i);
   end;
 
-  if m_Header.dwMagic <> _MagicNumber then begin
+  if m_Header.dwMagic <> _MagicNumber then
+  begin
     MessageDlg('Invalid magic number in Xbe file', mtError, [mbOk], 0);
     Exit;
   end;
 
   // m_Header.pbDigitalSignature Read (256 Bytes)
-  for lIndex := 4 to 259 do begin
+  for lIndex := 4 to 259 do
+  begin
     m_Header.pbDigitalSignature[i - 4] := Buffer[i];
-    inc(i);
+    Inc(i);
   end;
+
   // m_Header.dwBaseAddr Read (4 bytes)
   m_Header.dwBaseAddr := GetDwordVal(Buffer, i);
   i := i + 4;
@@ -354,9 +392,9 @@ begin
   m_Header.dwSectionHeadersAddr := GetDwordVal(Buffer, i);
   i := i + 4;
   // m_Header.dwInitFlags Read (4 bytes)
-  for lIndex := 0 to 3 do begin
+  for lIndex := 0 to 3 do
     m_Header.dwInitFlags[lIndex] := Buffer[lIndex + i];
-  end;
+
   i := i + 4;
   // m_Header.dwEntryAddr Read (4 bytes)
   m_Header.dwEntryAddr := GetDwordVal(Buffer, i);
@@ -419,27 +457,30 @@ begin
   m_Header.dwSizeofLogoBitmap := GetDwordVal(Buffer, i);
   i := i + 4;
 
-
   WriteLog('DXBX: Reading Image Header...Ok');
 
   // Read Xbe Image Header Extra Bytes
-  if (m_Header.dwSizeofHeaders > SizeOf(m_Header)) then begin
+  if (m_Header.dwSizeofHeaders > SizeOf(m_Header)) then
+  begin
     WriteLog('DXBX: Reading Image Header Extra Bytes... NOT DONE YET');
   end;
 
-  ExeSize := RoundUp(m_Header.dwSizeofHeaders, $1000) - sizeof(m_Header);
+  ExeSize := RoundUp(m_Header.dwSizeofHeaders, $1000) - SizeOf(m_Header);
 
-  if SizeOf(m_HeaderEx) > FileSz then begin
+  if SizeOf(m_HeaderEx) > FileSz then
+  begin
     MessageDlg('Unexpected end of file while reading Xbe Image Header (Ex)', mtError, [mbOk], 0);
     Exit;
   end;
 
   try
     SetLength(m_HeaderEx, ExeSize);
-    for lIndex := 0 to ExeSize - 1 do begin
+    for lIndex := 0 to ExeSize - 1 do
+    begin
       m_HeaderEx[lIndex] := Buffer[i];
-      inc(i);
+      Inc(i);
     end;
+
     WriteLog('Ok');
   except
     WriteLog('Error');
@@ -459,18 +500,21 @@ begin
   i := i + 4;
 
   //m_Certificate.wszTitleName array of 40 widechar (2 bytes each wdchr so i need to store 80 bytes)
-  for lIndex := 0 to 39 do begin
-    m_Certificate.wszTitleName[lIndex] := WideChar(ord(Buffer[i]));
+  for lIndex := 0 to 39 do
+  begin
+    m_Certificate.wszTitleName[lIndex] := WideChar(Ord(Buffer[i]));
     i := i + 2;
   end;
 
   m_szAsciiTitle := WideCharToString(m_Certificate.wszTitleName);
 
   //m_Certificate.dwAlternateTitleId (4 bytes each element of the array)
-  for lIndex := 0 to 15 do begin
+  for lIndex := 0 to 15 do
+  begin
     m_Certificate.dwAlternateTitleId[lIndex] := GetDwordVal(Buffer, i);
     i := i + 4;
   end;
+
   //m_Certificate.dwAllowedMedia 4 bytes
   m_Certificate.dwAllowedMedia := GetDwordVal(Buffer, i);
   i := i + 4;
@@ -486,21 +530,22 @@ begin
   //m_Certificate.dwVersion 4 bytes
   m_Certificate.dwVersion := GetDwordVal(Buffer, i);
   i := i + 4;
-  //m_Certificate.bzLanKey 1 char
-  for lIndex := 0 to 15 do begin
+  //m_Certificate.bzLanKey 1 Char
+  for lIndex := 0 to 15 do
     m_Certificate.bzLanKey[lIndex] := Buffer[i + lIndex];
-  end;
+
   i := i + 16;
-  //m_Certificate.bzLanKey 1 char
-  for lIndex := 0 to 15 do begin
+  //m_Certificate.bzLanKey 1 Char
+  for lIndex := 0 to 15 do
     m_Certificate.bzSignatureKey[lIndex] := Buffer[i + lIndex];
-  end;
+
   i := i + 16;
-  //m_Certificate.bzLanKey array of array 16x16 char
-  for lIndex := 0 to 15 do begin
-    for lIndex2 := 0 to 15 do begin
+  //m_Certificate.bzLanKey array of array 16x16 Char
+  for lIndex := 0 to 15 do
+  begin
+    for lIndex2 := 0 to 15 do
       m_Certificate.bzTitleAlternateSignatureKey[lIndex][lIndex2] := Buffer[i + lIndex2];
-    end;
+
     i := i + 16;
   end;
 
@@ -512,13 +557,14 @@ begin
 
   SetLength(m_SectionHeader, m_Header.dwSections);
 
-  for lIndex := 0 to m_Header.dwSections - 1 do begin
+  for lIndex := 0 to m_Header.dwSections - 1 do
+  begin
     try
       //XbeFile.Read(m_SectionHeader[lIndex], SizeOf(XBE_SECTIONHEADER));
         //m_SectionHeader[].dwFlags 4 bytes
-      for lIndex2 := 0 to 3 do begin
+      for lIndex2 := 0 to 3 do
         m_SectionHeader[lIndex].dwFlags[lIndex2] := Buffer[i + lIndex2];
-      end;
+
       i := i + 4;
       // m_SectionHeader[].dwVirtualAddr 4 bytes
       m_SectionHeader[lIndex].dwVirtualAddr := GetDwordVal(Buffer, i);
@@ -545,43 +591,48 @@ begin
       m_SectionHeader[lIndex].dwTailSharedRefCountAddr := GetDwordVal(Buffer, i);
       i := i + 4;
       // m_SectionHeader[].bzSectionDigest 20 chars
-      for lIndex2 := 0 to 19 do begin
+      for lIndex2 := 0 to 19 do
         m_SectionHeader[lIndex].bzSectionDigest[lIndex2] := Buffer[i + lIndex2];
-      end;
+
       i := i + 20;
     except
       MessageDlg('Unexpected end of file while reading Xbe Section Header', mtError, [mbOk], 0);
     end;
+
     WriteLog('DXBX: Reading Section Header 0x%.04X...' + IntToStr(lIndex) + ' OK');
   end;
 
-  // read xbe section names
+  // Read xbe section names
   SetLength(m_szSectionName, m_Header.dwSections, 9);
-  for lIndex := 0 to m_Header.dwSections - 1 do begin
+  for lIndex := 0 to m_Header.dwSections - 1 do
+  begin
     RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
-    if m_SectionHeader[lIndex].dwSectionNameAddr <> 0 then begin
-      for lIndex2 := 0 to 8 do begin
-        m_szSectionName[lIndex][lIndex2] := buffer[RawAddr + lIndex2];
-        if ord(m_szSectionName[lIndex][lIndex2]) = 0 then begin
-          break;
-        end;
-      end;
-    end;
-  end;
+    if m_SectionHeader[lIndex].dwSectionNameAddr <> 0 then
+    begin
+      for lIndex2 := 0 to 8 do
+      begin
+        m_szSectionName[lIndex][lIndex2] := Buffer[RawAddr + lIndex2];
+        if Ord(m_szSectionName[lIndex][lIndex2]) = 0 then
+          Break;
+      end; // for lIndex2
+    end; // if
+  end; // for lIndex
 
-  // read xbe library versions
-  if m_Header.dwLibraryVersionsAddr <> 0 then begin
+  // Read xbe library versions
+  if m_Header.dwLibraryVersionsAddr <> 0 then
+  begin
     WriteLog('DXBX: Reading Library Versions...');
 
     i := m_Header.dwLibraryVersionsAddr - m_Header.dwBaseAddr;
 
     SetLength(m_LibraryVersion, m_Header.dwLibraryVersions);
 
-    for lIndex := 0 to m_Header.dwLibraryVersions - 1 do begin
+    for lIndex := 0 to m_Header.dwLibraryVersions - 1 do
+    begin
       WriteLog('DXBX: Reading Library Version 0x' + inttohex(lIndex, 4) + '....');
-      for lIndex2 := 0 to 7 do begin
+      for lIndex2 := 0 to 7 do
         m_LibraryVersion[lIndex].szName[lIndex2] := Buffer[i + lIndex2];
-      end;
+
       i := i + 8;
       m_LibraryVersion[lIndex].wMajorVersion := GetWordVal(Buffer, i);
       i := i + 2;
@@ -589,9 +640,9 @@ begin
       i := i + 2;
       m_LibraryVersion[lIndex].wBuildVersion := GetWordVal(Buffer, i);
       i := i + 2;
-      for lIndex2 := 0 to 1 do begin
+      for lIndex2 := 0 to 1 do
         m_LibraryVersion[lIndex].dwFlags[lIndex2] := Buffer[i + lIndex2];
-      end;
+
       i := i + 2;
     end;
 
@@ -602,10 +653,9 @@ begin
 
     i := m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr;
 
-    SetLength(m_KernelLibraryVersion, sizeof(m_LibraryVersion));
-    for lIndex := 0 to sizeof(m_LibraryVersion) - 1 do begin
-      m_KernelLibraryVersion[lIndex] := Buffer[lIndex + i]
-    end;
+    SetLength(m_KernelLibraryVersion, SizeOf(m_LibraryVersion));
+    for lIndex := 0 to SizeOf(m_LibraryVersion) - 1 do
+      m_KernelLibraryVersion[lIndex] := Buffer[lIndex + i];
 
     // read xbe xapi library version
     WriteLog('DXBX: Reading Xapi Library Version...');
@@ -613,17 +663,16 @@ begin
       MessageDlg('Could not locate Xapi Library Version', mtError, [mbOk], 0);
 
     i := m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr;
-    SetLength(m_XAPILibraryVersion, sizeof(m_LibraryVersion));
-    for lIndex := 0 to sizeof(m_LibraryVersion) - 1 do begin
-      m_XAPILibraryVersion[lIndex] := Buffer[lIndex + i]
-    end;
+    SetLength(m_XAPILibraryVersion, SizeOf(m_LibraryVersion));
+    for lIndex := 0 to SizeOf(m_LibraryVersion) - 1 do
+      m_XAPILibraryVersion[lIndex] := Buffer[lIndex + i];
 
     WriteLog('DXBX: Reading Sections...');
 
-
     SetLength(m_bzSection, m_Header.dwSections);
 
-    for lIndex := 0 to m_Header.dwSections - 1 do begin
+    for lIndex := 0 to m_Header.dwSections - 1 do
+    begin
       WriteLog('DXBX: Reading Section 0x' + inttohex(lIndex, 4) + '...');
 
       //Debug info of turok from cxbx
@@ -639,15 +688,14 @@ begin
 
       RawSize := m_SectionHeader[lIndex].dwSizeofRaw;
       RawAddr := m_SectionHeader[lIndex].dwRawAddr;
-      setlength(m_bzSection[lIndex], RawSize);
-      if RawSize = 0 then begin
+      SetLength(m_bzSection[lIndex], RawSize);
+      if RawSize = 0 then
         Break;
-      end;
+
       WriteLog('Ok');
 
-      for lIndex2 := 0 to Rawsize - 1 do begin
+      for lIndex2 := 0 to Rawsize - 1 do
         m_bzSection[lIndex][lIndex2] := Buffer[RawAddr + lIndex2];
-      end;
 
     end;
 
@@ -655,23 +703,25 @@ begin
       WriteLog('Unexpected end of file while reading Xbe Section');
   end;
 
-  if m_Header.dwTLSAddr <> 0 then begin
+  if m_Header.dwTLSAddr <> 0 then
+  begin
     WriteLog('DXBX: Reading Thread Local Storage...');
-    if GetAddr(m_Header.dwTLSAddr) <> 0 then begin
+    if GetAddr(m_Header.dwTLSAddr) <> 0 then
+    begin
       i := GetAddr(m_Header.dwTLSAddr);
-      m_TLS.dwDataStartAddr := GetDwordVal(buffer, i);
+      m_TLS.dwDataStartAddr := GetDwordVal(Buffer, i);
       i := i + 4;
-      m_TLS.dwDataEndAddr := GetDwordVal(buffer, i);
+      m_TLS.dwDataEndAddr := GetDwordVal(Buffer, i);
       i := i + 4;
-      m_TLS.dwTLSIndexAddr := GetDwordVal(buffer, i);
+      m_TLS.dwTLSIndexAddr := GetDwordVal(Buffer, i);
       i := i + 4;
-      m_TLS.dwTLSCallbackAddr := GetDwordVal(buffer, i);
+      m_TLS.dwTLSCallbackAddr := GetDwordVal(Buffer, i);
 
       i := i + 4;
-      m_TLS.dwSizeofZeroFill := GetDwordVal(buffer, i);
+      m_TLS.dwSizeofZeroFill := GetDwordVal(Buffer, i);
 
       i := i + 4;
-      m_TLS.dwCharacteristics := GetDwordVal(buffer, i);
+      m_TLS.dwCharacteristics := GetDwordVal(Buffer, i);
     end;
   end;
   closefile(XBeFile);
@@ -683,379 +733,358 @@ function TXbe.DumpInformation(FileName: string): Boolean;
 var
   FileEx: TextFile;
   lIndex, lIndex2: Integer;
-  tmpStr: string;
+  TmpStr: string;
   AsciiFilename: array[0..39] of Char;
-  tmpchr: char;
-  strAsciiFilename: string;
+  TmpChr: Char;
+  StrAsciiFilename: string;
   Flag, BIndex: Byte;
   QVersion: Word;
-  lType: LogType;
+  LogType: TLogType;
 
   DumpToFile: Boolean;
 
-  procedure LogEx(Text: string; lType: LogType);
+  procedure _LogEx(Text: string);
   begin
-    if lType = ltLog then begin
-      WriteLog(Text);
-    end
+    if LogType = ltLog then
+      WriteLog(Text)
     else
-    begin
       Writeln(FileEx, Text);
-    end;
   end;
+
 begin
-  DumpToFile := FileName <> '';
+  Result := True;
 
-  try
-    if DumpToFile then begin
-      AssignFile(FileEx, FileName);
-      Rewrite(FileEx);
-      LType := ltFile;
-    end
-    else begin
-      lType := ltLog;
-    end;
-
-    LogEx('XBE information generated by DXBX (Version ' + _DXBX_VERSION + ')', lType);
-    LogEx('', lType);
-
-    LogEx('Title identified as "' + m_szAsciiTitle + '"', lType);
-    LogEx('', lType);
-
-    LogEx('Dumping XBE file header...', lType);
-    LogEx('', lType);
-
-    LogEx('Magic Number                     : XBEH', lType);
-
-    LogEx('Digitial Signature               : <Hex Dump>', lType);
-    tmpStr := '';
-    lIndex2 := 0;
-    for lIndex := 0 to 255 do begin
-      tmpStr := tmpStr + intToHex(ord(m_Header.pbDigitalSignature[lIndex]), 2);
-
-      if lIndex2 = 15 then begin
-        LogEx('                                   ' + TmpStr, lType);
-        TmpStr := '';
-        lIndex2 := -1;
-      end;
-
-      Inc(lIndex2);
-    end;
-    LogEx('                                   </Hex Dump>', lType);
-
-    LogEx('Base Address                     : 0x' + IntToHex(m_Header.dwBaseAddr, 8), lType);
-    LogEx('Size of Headers                  : 0x' + IntToHex(m_Header.dwSizeofHeaders, 8), lType);
-    LogEx('Size of Image                    : 0x' + IntToHex(m_Header.dwSizeofImage, 8), lType);
-    LogEx('Size of Image Header             : 0x' + IntToHex(m_Header.dwSizeofImageHeader, 8), lType);
-    tmpStr := '';
-    DateTimeToString(tmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwTimeDate));
-    LogEx('TimeDate Stamp                   : 0x' + IntToHex(m_Header.dwTimeDate, 8) + ' (' + tmpstr + ')', lType);
-    LogEx('Certificate Address              : 0x' + IntToHex(m_Header.dwCertificateAddr, 8), lType);
-    LogEx('Number of Sections               : 0x' + IntToHEx(m_Header.dwSections, 8), lType);
-    LogEx('Section Headers Address          : 0x' + IntToHex(m_header.dwSectionHeadersAddr, 8), lType);
-
-
-    // print init flags
-    TmpStr := '';
-    TmpStr := 'Init Flags                       : 0x' + IntToHex(ord(m_Header.dwInitFlags[3]), 2) + IntToHex(ord(m_Header.dwInitFlags[2]), 2) + IntToHex(ord(m_Header.dwInitFlags[1]), 2) + IntToHex(ord(m_Header.dwInitFlags[0]), 2) + ' '; //IntToHex ( m_Header.dwInitFlags, 8));
-    Flag := ord(m_Header.dwInitFlags[0]);
-
-    if GetBitEn(Flag, 0) = 1 then begin
-      TmpStr := TmpStr + '[Mount Utility Drive] ';
-    end;
-
-    if GetBitEn(Flag, 1) = 1 then begin
-      TmpStr := TmpStr + '[Format Utility Drive] ';
-    end;
-
-    if GetBitEn(Flag, 2) = 1 then begin
-      TmpStr := TmpStr + '[Limit Devkit Run Time Memory to 64MB] ';
-    end;
-
-    if GetBitEn(Flag, 2) = 1 then begin
-      TmpStr := TmpStr + '[Setup Harddisk] ';
-    end;
-
-    LogEx(TmpStr, lType);
-
-    lIndex := GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
-    lIndex2 := 0;
-    tmpstr := '';
-    while lIndex2 < sizeof(AsciiFilename) do begin
-      tmpstr := tmpstr + WideChar(ord(Buffer[lIndex]));
-      inc(lIndex2);
-      lIndex := lIndex + 2;
-      if ord(Buffer[lIndex]) = 0 then begin
-        break;
-      end;
-    end;
-
-    //tmpstr := WideStringToString(AsciiFilename, 437);
-
-    strAsciiFilename := tmpStr;
-    tmpstr := '';
-    LogEx('Entry Point                      : 0x' + IntToHex(m_Header.dwEntryAddr, 8) + ' (Retail: 0x' + IntToHex(m_Header.dwEntryAddr xor XOR_EP_Retail, 8) + ', Debug: 0x' + IntToHex(m_Header.dwEntryAddr xor XOR_EP_DEBUG, 8) + ')', lType);
-    LogEx('TLS Address                      : 0x' + IntToHex(m_Header.dwTLSAddr, 8), lType);
-    LogEx('(PE) Stack Commit                : 0x' + IntToHex(m_Header.dwPeStackCommit, 8), lType);
-    LogEx('(PE) Heap Reserve                : 0x' + IntToHex(m_Header.dwPeHeapReserve, 8), lType);
-    LogEx('(PE) Heap Commit                 : 0x' + IntToHex(m_Header.dwPeHeapCommit, 8), lType);
-    LogEx('(PE) Base Address                : 0x' + IntToHex(m_Header.dwPeBaseAddr, 8), lType);
-    LogEx('(PE) Size of Image               : 0x' + IntToHex(m_Header.dwPeSizeofImage, 8), lType);
-    LogEx('(PE) Checksum                    : 0x' + IntToHex(m_Header.dwPeChecksum, 8), lType);
-
-    tmpStr := '';
-    DateTimeToString(tmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwPeTimeDate));
-    LogEx('(PE) TimeDate Stamp              : 0x' + IntToHex(m_Header.dwPeTimeDate, 8) + ' (' + tmpstr + ')', lType);
-
-    lIndex := GetAddr(m_Header.dwDebugPathnameAddr);
-    tmpStr := '';
-    tmpchr := Buffer[lIndex];
-    inc(lIndex);
-    while ord(tmpchr) <> 0 do begin
-      TmpStr := tmpStr + tmpchr;
-      tmpchr := Buffer[lIndex];
-      inc(lIndex);
-    end;
-    LogEx('Debug Pathname Address           : 0x' + IntToHex(m_Header.dwDebugPathnameAddr, 8) + ' ("' + TmpStr + '")', lType);
-
-    lIndex := GetAddr(m_Header.dwDebugFilenameAddr);
-    tmpStr := '';
-    tmpchr := Buffer[lIndex];
-    inc(lIndex);
-    while ord(tmpchr) <> 0 do begin
-      TmpStr := tmpStr + tmpchr;
-      tmpchr := Buffer[lIndex];
-      inc(lIndex);
-    end;
-    LogEx('Debug Filename Address           : 0x' + IntToHex(m_Header.dwDebugFilenameAddr, 8) + ' ("' + tmpstr + '")', lType);
-
-    LogEx('Debug Unicode filename Address   : 0x' + IntToHex(m_Header.dwDebugUnicodeFilenameAddr, 8) + ' (L"' + strAsciiFilename + '")', lType);
-    LogEx('Kernel Image Thunk Address       : 0x' + IntToHex(m_Header.dwKernelImageThunkAddr, 8) + ' (Retail: 0x' + IntToHex(m_Header.dwKernelImageThunkAddr xor XOR_KT_RETAIL, 8) + ', Debug: 0x' + IntToHex(m_Header.dwKernelImageThunkAddr xor XOR_KT_DEBUG, 8) + ')', lType);
-    LogEx('NonKernel Import Dir Address     : 0x' + IntToHex(m_Header.dwNonKernelImportDirAddr, 8), lType);
-    LogEx('Library Versions                 : 0x' + IntToHex(m_Header.dwLibraryVersions, 8), lType);
-    LogEx('Library Versions Address         : 0x' + IntToHex(m_Header.dwLibraryVersionsAddr, 8), lType);
-    LogEx('Kernel Library Version Address   : 0x' + IntToHex(m_Header.dwKernelLibraryVersionAddr, 8), lType);
-    LogEx('XAPI Library Version Address     : 0x' + IntToHex(m_Header.dwXAPILibraryVersionAddr, 8), lType);
-    LogEx('Logo Bitmap Address              : 0x' + IntToHex(m_Header.dwLogoBitmapAddr, 8), lType);
-    LogEx('Logo Bitmap Size                 : 0x' + IntToHex(m_Header.dwSizeofLogoBitmap, 8), lType);
-
-    LogEx('', lType);
-    LogEx('Dumping XBE Certificate...', lType);
-    LogEx('', lType);
-
-    LogEx('Size of Certificate              : 0x' + IntToHex(m_Certificate.dwSize, 8), lType);
-    tmpStr := '';
-    DateTimeToString(tmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Certificate.dwTimeDate));
-    LogEx('TimeDate Stamp                   : 0x' + IntToHex(m_Certificate.dwTimeDate, 8) + ' (' + TmpStr + ')', lType);
-    LogEx('Title ID                         : 0x' + IntToHex(m_Certificate.dwTitleId, 8), lType);
-    LogEx('Title                            : "' + m_szAsciiTitle + '"', lType);
-
-    // print alternate titles
-    LogEx('Alternate Titles IDs             : 0x' + IntToHex(m_Certificate.dwAlternateTitleId[0], 8), lType);
-    for lIndex := 1 to 15 do begin
-      LogEx('                                   0x' + IntToHex(m_Certificate.dwAlternateTitleId[lIndex], 8), lType);
-    end;
-
-    LogEx('Allowed Media                    : 0x' + IntToHex(m_Certificate.dwAllowedMedia, 8), lType);
-    LogEx('Game Region                      : 0x' + IntToHex(m_Certificate.dwGameRegion, 8), lType);
-    LogEx('Game Ratings                     : 0x' + IntToHex(m_Certificate.dwGameRatings, 8), lType);
-    LogEx('Disk Number                      : 0x' + IntToHex(m_Certificate.dwDiskNumber, 8), lType);
-    LogEx('Version                          : 0x' + IntToHex(m_Certificate.dwVersion, 8), lType);
-
-    // Print Lan Key
-    tmpStr := '';
-    for lIndex := 0 to 15 do begin
-      tmpStr := tmpStr + intToHex(ord(m_Certificate.bzLanKey[lIndex]), 2);
-    end;
-    LogEx('LAN Key                          : ' + tmpStr, lType);
-
-    // print signature key
-    tmpStr := '';
-    for lIndex := 0 to 15 do begin
-      tmpStr := tmpStr + intToHex(ord(m_Certificate.bzSignatureKey[lIndex]), 2);
-    end;
-    LogEx('Signature Key                    : ' + tmpStr, lType);
-
-    // print alternative signature keys
-    LogEx('Title Alternative Signature Keys : <Hex Dump>', lType);
-
-    for lIndex := 0 to 15 do begin
-      tmpStr := '';
-      for lIndex2 := 0 to 15 do begin
-        tmpStr := tmpStr + intToHex(ord(m_Certificate.bzTitleAlternateSignatureKey[lIndex][lIndex2]), 2);
-      end;
-      LogEx('                                   ' + tmpStr, lType);
-    end;
-    LogEx('                                   </Hex Dump>', lType);
-
-    // print section headers
-    LogEx('', lType);
-    LogEx('Dumping XBE Section Headers...', lType);
-    LogEx('', lType);
-    for lIndex := 0 to m_Header.dwSections - 1 do begin
-
-      TmpStr := '';
-      for lIndex2 := 0 to 8 do begin
-        if ord(m_szSectionName[lIndex][lIndex2]) <> 0 then begin
-          TmpStr := TmpStr + m_szSectionName[lIndex][lIndex2]
-        end
-        else begin
-          Break;
-        end;
-      end;
-
-      LogEx('Section Name                     : 0x' + IntToHex(ORD(m_SectionHeader[lIndex].dwSectionNameAddr), 8) + ' ("' + TmpStr + '")', lType);
-
-      TmpStr := '';
-      TmpStr := 'Flags                            : 0x' + inttohex(ord(m_SectionHeader[lIndex].dwFlags[3]), 2) + inttohex(ord(m_SectionHeader[lIndex].dwFlags[2]), 2) + inttohex(ord(m_SectionHeader[lIndex].dwFlags[1]), 2) + inttohex(ord(m_SectionHeader[lIndex].dwFlags[0]), 2);
-
-      Flag := Ord(m_SectionHeader[lIndex].dwFlags[0]);
-
-      TmpStr := TmpStr + ' '; // Insert open space
-      if GetBitEn(Flag, 0) = 1 then begin
-        TmpStr := TmpStr + '(Writable) ';
-      end;
-
-      if GetBitEn(Flag, 1) = 1 then begin
-        TmpStr := TmpStr + '(Preload) ';
-      end;
-
-      if GetBitEn(Flag, 2) = 1 then begin
-        TmpStr := TmpStr + '(Executable) ';
-      end;
-
-      if GetBitEn(Flag, 3) = 1 then begin
-        TmpStr := TmpStr + '(Inserted File) ';
-      end;
-
-      if GetBitEn(Flag, 4) = 1 then begin
-        TmpStr := TmpStr + '(Head Page RO) ';
-      end;
-
-      if GetBitEn(Flag, 5) = 1 then begin
-        TmpStr := TmpStr + '(Tail Page RO) ';
-      end;
-
-      LogEx(TmpStr, lType);
-
-      LogEx('Virtual Address                  : 0x' + IntToHex(m_SectionHeader[lIndex].dwVirtualAddr, 8), lType);
-      LogEx('Virtual Size                     : 0x' + IntToHex(m_SectionHeader[lIndex].dwVirtualSize, 8), lType);
-      LogEx('Raw Address                      : 0x' + IntToHex(m_SectionHeader[lIndex].dwRawAddr, 8), lType);
-      LogEx('Size of Raw                      : 0x' + IntToHex(m_SectionHeader[lIndex].dwSizeofRaw, 8), lType);
-      LogEx('Section Name Address             : 0x' + IntToHex(m_SectionHeader[lIndex].dwSectionNameAddr, 8), lType);
-      LogEx('Section Reference Count          : 0x' + IntToHex(m_SectionHeader[lIndex].dwSectionRefCount, 8), lType);
-      LogEx('Head Shared Reference Count Addr : 0x' + IntToHex(m_SectionHeader[lIndex].dwHeadSharedRefCountAddr, 8), lType);
-      LogEx('Tail Shared Reference Count Addr : 0x' + IntToHex(m_SectionHeader[lIndex].dwTailSharedRefCountAddr, 8), lType);
-      TmpStr := '';
-
-      for lIndex2 := 0 to 19 do begin
-        TmpStr := TmpStr + IntToHex(ord(m_SectionHeader[lIndex].bzSectionDigest[lIndex2]), 2);
-      end;
-
-      LogEx('Section Digest                   : ' + TmpStr, lType);
-      LogEx('', lType);
-    end;
-    // print library versions
-    LogEx('Dumping XBE Library Versions...', lType);
-    if (sizeof(m_LibraryVersion) = 0) or (m_Header.dwLibraryVersions = 0) then begin
-      LogEx('(This XBE contains no Library Versions)', lType);
-    end
-    else
-    begin
-      for lIndex := 0 to m_Header.dwLibraryVersions - 1 do begin
-        TmpStr := '';
-        for lIndex2 := 0 to 7 do begin
-          if m_LibraryVersion[lIndex].szName[lIndex2] <> #0 then begin
-            TmpStr := TmpStr + m_LibraryVersion[lIndex].szName[lIndex2];
-          end;
-        end;
-        LogEx('Library Name                     : ' + TmpStr, lType);
-        LogEx('Version                          : ' + inttostr(m_LibraryVersion[lIndex].wMajorVersion) + '.' + inttostr(m_LibraryVersion[lIndex].wMinorVersion) + '.' + inttostr(m_LibraryVersion[lIndex].wBuildVersion), lType);
-
-        //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
-
-        QVersion := 0;
-
-        Flag := Ord(m_LibraryVersion[lIndex].dwFlags[0]);
-
-        for bIndex := 0 to 7 do begin
-          QVersion := QVersion + GetBitEn(Flag, bIndex) * round(Power(2, bIndex));
-        end;
-
-        Flag := Ord(m_LibraryVersion[lIndex].dwFlags[1]);
-
-        for bIndex := 0 to 4 do begin
-          QVersion := QVersion + GetBitEn(Flag, BIndex) * round(Power(2, bIndex + 8));
-        end;
-       //end of bits maths
-
-        TmpStr := 'Flags                            : QFEVersion : 0x' + inttohex(QVersion, 4) + ', ';
-
-        if GetBitEn(Flag, 7) = 1 then begin
-          TmpStr := TmpStr + 'Debug, '
-        end
-        else begin
-          TmpStr := TmpStr + 'Retail, ';
-        end;
-
-        if (GetBitEn(Flag, 5) * 1 + GetBitEn(Flag, 6) * 2) = 0 then begin
-          TmpStr := TmpStr + 'Unapproved'
-        end
-        else
-          if (GetBitEn(Flag, 5) * 1 + GetBitEn(Flag, 6) * 2) = 1 then begin
-            TmpStr := TmpStr + 'Possibly Approved'
-          end
-          else begin
-            TmpStr := TmpStr + 'Approved';
-          end;
-
-        LogEx(TmpStr, lType);
-      end;
-    end;
-
-
-    LogEx('Dumping XBE TLS...', lType);
-    LogEx('Data Start Address               : 0x' + IntToHex(m_TLS.dwDataStartAddr, 8), lType);
-    LogEx('Data End Address                 : 0x' + IntToHex(m_TLS.dwDataEndAddr, 8), lType);
-    LogEx('TLS Index Address                : 0x' + IntToHex(m_TLS.dwTLSIndexAddr, 8), lType);
-    LogEx('TLS Callback Address             : 0x' + IntToHex(m_TLS.dwTLSCallbackAddr, 8), lType);
-    LogEx('Size of Zero Fill                : 0x' + IntToHex(m_TLS.dwSizeofZeroFill, 8), lType);
-    LogEx('Characteristics                  : 0x' + IntToHex(m_TLS.dwCharacteristics, 8), lType);
-
-
-    if DumpToFile then begin
-      CloseFile(FileEx);
-    end
-
-  finally
-    Result := True;
+  DumpToFile := (FileName <> '');
+  if DumpToFile then
+  begin
+    AssignFile(FileEx, FileName);
+    Rewrite(FileEx);
+    LogType := ltFile;
   end
+  else
+    LogType := ltLog;
+
+  _LogEx('XBE information generated by DXBX (Version ' + _DXBX_VERSION + ')');
+  _LogEx('');
+
+  _LogEx('Title identified as "' + m_szAsciiTitle + '"');
+  _LogEx('');
+
+  _LogEx('Dumping XBE file header...');
+  _LogEx('');
+
+  _LogEx('Magic Number                     : XBEH');
+
+  _LogEx('Digitial Signature               : <Hex Dump>');
+  TmpStr := '';
+  lIndex2 := 0;
+  for lIndex := 0 to 255 do
+  begin
+    TmpStr := TmpStr + intToHex(Ord(m_Header.pbDigitalSignature[lIndex]), 2);
+
+    if lIndex2 = 15 then
+    begin
+      _LogEx('                                   ' + TmpStr);
+      TmpStr := '';
+      lIndex2 := -1;
+    end;
+
+    Inc(lIndex2);
+  end;
+
+  _LogEx('                                   </Hex Dump>');
+  _LogEx('Base Address                     : 0x' + IntToHex(m_Header.dwBaseAddr, 8));
+  _LogEx('Size of Headers                  : 0x' + IntToHex(m_Header.dwSizeofHeaders, 8));
+  _LogEx('Size of Image                    : 0x' + IntToHex(m_Header.dwSizeofImage, 8));
+  _LogEx('Size of Image Header             : 0x' + IntToHex(m_Header.dwSizeofImageHeader, 8));
+  TmpStr := '';
+  DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwTimeDate));
+  _LogEx('TimeDate Stamp                   : 0x' + IntToHex(m_Header.dwTimeDate, 8) + ' (' + TmpStr + ')');
+  _LogEx('Certificate Address              : 0x' + IntToHex(m_Header.dwCertificateAddr, 8));
+  _LogEx('Number of Sections               : 0x' + IntToHEx(m_Header.dwSections, 8));
+  _LogEx('Section Headers Address          : 0x' + IntToHex(m_header.dwSectionHeadersAddr, 8));
+
+  // Print init flags
+  TmpStr := '';
+  TmpStr := 'Init Flags                       : 0x' + IntToHex(Ord(m_Header.dwInitFlags[3]), 2) + IntToHex(Ord(m_Header.dwInitFlags[2]), 2) + IntToHex(Ord(m_Header.dwInitFlags[1]), 2) + IntToHex(Ord(m_Header.dwInitFlags[0]), 2) + ' '; //IntToHex ( m_Header.dwInitFlags, 8));
+  Flag := Ord(m_Header.dwInitFlags[0]);
+
+  if GetBitEn(Flag, 0) > 0 then
+    TmpStr := TmpStr + '[Mount Utility Drive] ';
+
+  if GetBitEn(Flag, 1) > 0 then
+    TmpStr := TmpStr + '[Format Utility Drive] ';
+
+  if GetBitEn(Flag, 2) > 0 then
+    TmpStr := TmpStr + '[Limit Devkit Run Time Memory to 64MB] ';
+
+  if GetBitEn(Flag, 2) > 0 then
+    TmpStr := TmpStr + '[Setup Harddisk] ';
+
+  _LogEx(TmpStr);
+
+  lIndex := GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
+  lIndex2 := 0;
+  TmpStr := '';
+  while lIndex2 < SizeOf(AsciiFilename) do
+  begin
+    TmpStr := TmpStr + WideChar(Ord(Buffer[lIndex]));
+    Inc(lIndex2);
+    lIndex := lIndex + 2;
+    if Ord(Buffer[lIndex]) = 0 then
+      Break;
+  end;
+
+  //TmpStr := WideStringToString(AsciiFilename, 437);
+
+  StrAsciiFilename := TmpStr;
+  TmpStr := '';
+  _LogEx('Entry Point                      : 0x' + IntToHex(m_Header.dwEntryAddr, 8) + ' (Retail: 0x' + IntToHex(m_Header.dwEntryAddr xor XOR_EP_Retail, 8) + ', Debug: 0x' + IntToHex(m_Header.dwEntryAddr xor XOR_EP_DEBUG, 8) + ')');
+  _LogEx('TLS Address                      : 0x' + IntToHex(m_Header.dwTLSAddr, 8));
+  _LogEx('(PE) Stack Commit                : 0x' + IntToHex(m_Header.dwPeStackCommit, 8));
+  _LogEx('(PE) Heap Reserve                : 0x' + IntToHex(m_Header.dwPeHeapReserve, 8));
+  _LogEx('(PE) Heap Commit                 : 0x' + IntToHex(m_Header.dwPeHeapCommit, 8));
+  _LogEx('(PE) Base Address                : 0x' + IntToHex(m_Header.dwPeBaseAddr, 8));
+  _LogEx('(PE) Size of Image               : 0x' + IntToHex(m_Header.dwPeSizeofImage, 8));
+  _LogEx('(PE) Checksum                    : 0x' + IntToHex(m_Header.dwPeChecksum, 8));
+
+  TmpStr := '';
+  DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwPeTimeDate));
+  _LogEx('(PE) TimeDate Stamp              : 0x' + IntToHex(m_Header.dwPeTimeDate, 8) + ' (' + TmpStr + ')');
+
+  lIndex := GetAddr(m_Header.dwDebugPathnameAddr);
+  TmpStr := '';
+  TmpChr := Buffer[lIndex];
+  Inc(lIndex);
+  while Ord(TmpChr) <> 0 do
+  begin
+    TmpStr := TmpStr + TmpChr;
+    TmpChr := Buffer[lIndex];
+    Inc(lIndex);
+  end;
+    
+  _LogEx('Debug Pathname Address           : 0x' + IntToHex(m_Header.dwDebugPathnameAddr, 8) + ' ("' + TmpStr + '")');
+
+  lIndex := GetAddr(m_Header.dwDebugFilenameAddr);
+  TmpStr := '';
+  TmpChr := Buffer[lIndex];
+  Inc(lIndex);
+  while Ord(TmpChr) <> 0 do
+  begin
+    TmpStr := TmpStr + TmpChr;
+    TmpChr := Buffer[lIndex];
+    Inc(lIndex);
+  end;
+    
+  _LogEx('Debug Filename Address           : 0x' + IntToHex(m_Header.dwDebugFilenameAddr, 8) + ' ("' + TmpStr + '")');
+
+  _LogEx('Debug Unicode filename Address   : 0x' + IntToHex(m_Header.dwDebugUnicodeFilenameAddr, 8) + ' (L"' + StrAsciiFilename + '")');
+  _LogEx('Kernel Image Thunk Address       : 0x' + IntToHex(m_Header.dwKernelImageThunkAddr, 8) + ' (Retail: 0x' + IntToHex(m_Header.dwKernelImageThunkAddr xor XOR_KT_RETAIL, 8) + ', Debug: 0x' + IntToHex(m_Header.dwKernelImageThunkAddr xor XOR_KT_DEBUG, 8) + ')');
+  _LogEx('NonKernel Import Dir Address     : 0x' + IntToHex(m_Header.dwNonKernelImportDirAddr, 8));
+  _LogEx('Library Versions                 : 0x' + IntToHex(m_Header.dwLibraryVersions, 8));
+  _LogEx('Library Versions Address         : 0x' + IntToHex(m_Header.dwLibraryVersionsAddr, 8));
+  _LogEx('Kernel Library Version Address   : 0x' + IntToHex(m_Header.dwKernelLibraryVersionAddr, 8));
+  _LogEx('XAPI Library Version Address     : 0x' + IntToHex(m_Header.dwXAPILibraryVersionAddr, 8));
+  _LogEx('Logo Bitmap Address              : 0x' + IntToHex(m_Header.dwLogoBitmapAddr, 8));
+  _LogEx('Logo Bitmap Size                 : 0x' + IntToHex(m_Header.dwSizeofLogoBitmap, 8));
+
+  _LogEx('');
+  _LogEx('Dumping XBE Certificate...');
+  _LogEx('');
+
+  _LogEx('Size of Certificate              : 0x' + IntToHex(m_Certificate.dwSize, 8));
+  TmpStr := '';
+  DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Certificate.dwTimeDate));
+  _LogEx('TimeDate Stamp                   : 0x' + IntToHex(m_Certificate.dwTimeDate, 8) + ' (' + TmpStr + ')');
+  _LogEx('Title ID                         : 0x' + IntToHex(m_Certificate.dwTitleId, 8));
+  _LogEx('Title                            : "' + m_szAsciiTitle + '"');
+
+  // print alternate titles
+  _LogEx('Alternate Titles IDs             : 0x' + IntToHex(m_Certificate.dwAlternateTitleId[0], 8));
+  for lIndex := 1 to 15 do
+    _LogEx('                                   0x' + IntToHex(m_Certificate.dwAlternateTitleId[lIndex], 8));
+
+  _LogEx('Allowed Media                    : 0x' + IntToHex(m_Certificate.dwAllowedMedia, 8));
+  _LogEx('Game Region                      : 0x' + IntToHex(m_Certificate.dwGameRegion, 8));
+  _LogEx('Game Ratings                     : 0x' + IntToHex(m_Certificate.dwGameRatings, 8));
+  _LogEx('Disk Number                      : 0x' + IntToHex(m_Certificate.dwDiskNumber, 8));
+  _LogEx('Version                          : 0x' + IntToHex(m_Certificate.dwVersion, 8));
+
+  // Print Lan Key
+  TmpStr := '';
+  for lIndex := 0 to 15 do
+    TmpStr := TmpStr + intToHex(Ord(m_Certificate.bzLanKey[lIndex]), 2);
+
+  _LogEx('LAN Key                          : ' + TmpStr);
+
+  // print signature key
+  TmpStr := '';
+  for lIndex := 0 to 15 do
+    TmpStr := TmpStr + intToHex(Ord(m_Certificate.bzSignatureKey[lIndex]), 2);
+
+  _LogEx('Signature Key                    : ' + TmpStr);
+
+  // print alternative signature keys
+  _LogEx('Title Alternative Signature Keys : <Hex Dump>');
+
+  for lIndex := 0 to 15 do
+  begin
+    TmpStr := '';
+    for lIndex2 := 0 to 15 do
+      TmpStr := TmpStr + intToHex(Ord(m_Certificate.bzTitleAlternateSignatureKey[lIndex][lIndex2]), 2);
+
+    _LogEx('                                   ' + TmpStr);
+  end;
+
+  _LogEx('                                   </Hex Dump>');
+
+  // print section headers
+  _LogEx('');
+  _LogEx('Dumping XBE Section Headers...');
+  _LogEx('');
+  for lIndex := 0 to m_Header.dwSections - 1 do
+  begin
+    TmpStr := '';
+    for lIndex2 := 0 to 8 do
+    begin
+      if Ord(m_szSectionName[lIndex][lIndex2]) <> 0 then
+        TmpStr := TmpStr + m_szSectionName[lIndex][lIndex2]
+      else
+        Break;
+    end;
+
+    _LogEx('Section Name                     : 0x' + IntToHex(Ord(m_SectionHeader[lIndex].dwSectionNameAddr), 8) + ' ("' + TmpStr + '")');
+
+    TmpStr := '';
+    TmpStr := 'Flags                            : 0x' + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[3]), 2) + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[2]), 2) + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[1]), 2) + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[0]), 2);
+
+    Flag := Ord(m_SectionHeader[lIndex].dwFlags[0]);
+
+    TmpStr := TmpStr + ' '; // Insert open space
+    if GetBitEn(Flag, 0) > 0 then
+      TmpStr := TmpStr + '(Writable) ';
+
+    if GetBitEn(Flag, 1) > 0 then
+      TmpStr := TmpStr + '(Preload) ';
+
+    if GetBitEn(Flag, 2) > 0 then
+      TmpStr := TmpStr + '(Executable) ';
+
+    if GetBitEn(Flag, 3) > 0 then
+      TmpStr := TmpStr + '(Inserted File) ';
+
+    if GetBitEn(Flag, 4) > 0 then
+      TmpStr := TmpStr + '(Head Page RO) ';
+
+    if GetBitEn(Flag, 5) > 0 then
+      TmpStr := TmpStr + '(Tail Page RO) ';
+
+    _LogEx(TmpStr);
+
+    _LogEx('Virtual Address                  : 0x' + IntToHex(m_SectionHeader[lIndex].dwVirtualAddr, 8));
+    _LogEx('Virtual Size                     : 0x' + IntToHex(m_SectionHeader[lIndex].dwVirtualSize, 8));
+    _LogEx('Raw Address                      : 0x' + IntToHex(m_SectionHeader[lIndex].dwRawAddr, 8));
+    _LogEx('Size of Raw                      : 0x' + IntToHex(m_SectionHeader[lIndex].dwSizeofRaw, 8));
+    _LogEx('Section Name Address             : 0x' + IntToHex(m_SectionHeader[lIndex].dwSectionNameAddr, 8));
+    _LogEx('Section Reference Count          : 0x' + IntToHex(m_SectionHeader[lIndex].dwSectionRefCount, 8));
+    _LogEx('Head Shared Reference Count Addr : 0x' + IntToHex(m_SectionHeader[lIndex].dwHeadSharedRefCountAddr, 8));
+    _LogEx('Tail Shared Reference Count Addr : 0x' + IntToHex(m_SectionHeader[lIndex].dwTailSharedRefCountAddr, 8));
+    TmpStr := '';
+
+    for lIndex2 := 0 to 19 do
+      TmpStr := TmpStr + IntToHex(Ord(m_SectionHeader[lIndex].bzSectionDigest[lIndex2]), 2);
+
+    _LogEx('Section Digest                   : ' + TmpStr);
+    _LogEx('');
+  end;
+
+  // print library versions
+  _LogEx('Dumping XBE Library Versions...');
+  if (SizeOf(m_LibraryVersion) = 0) or (m_Header.dwLibraryVersions = 0) then
+    _LogEx('(This XBE contains no Library Versions)')
+  else
+  begin
+    for lIndex := 0 to m_Header.dwLibraryVersions - 1 do
+    begin
+      TmpStr := '';
+      for lIndex2 := 0 to 7 do
+      begin
+        if m_LibraryVersion[lIndex].szName[lIndex2] <> #0 then
+          TmpStr := TmpStr + m_LibraryVersion[lIndex].szName[lIndex2];
+      end;
+
+      _LogEx('Library Name                     : ' + TmpStr);
+      _LogEx('Version                          : ' + inttostr(m_LibraryVersion[lIndex].wMajorVersion) + '.' + inttostr(m_LibraryVersion[lIndex].wMinorVersion) + '.' + inttostr(m_LibraryVersion[lIndex].wBuildVersion));
+
+      //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
+
+      QVersion := 0;
+
+      Flag := Ord(m_LibraryVersion[lIndex].dwFlags[0]);
+      for bIndex := 0 to 7 do
+        QVersion := QVersion + GetBitEn(Flag, bIndex) * Round(Power(2, bIndex));
+
+      Flag := Ord(m_LibraryVersion[lIndex].dwFlags[1]);
+      for bIndex := 0 to 4 do
+        QVersion := QVersion + GetBitEn(Flag, BIndex) * Round(Power(2, bIndex + 8));
+
+     //end of bits maths
+
+      TmpStr := 'Flags                            : QFEVersion : 0x' + inttohex(QVersion, 4) + ', ';
+
+      if GetBitEn(Flag, 7) > 0 then
+        TmpStr := TmpStr + 'Debug, '
+      else
+        TmpStr := TmpStr + 'Retail, ';
+
+      if (GetBitEn(Flag, 5) * 1 + GetBitEn(Flag, 6) * 2) = 0 then
+        TmpStr := TmpStr + 'Unapproved'
+      else
+        if (GetBitEn(Flag, 5) * 1 + GetBitEn(Flag, 6) * 2) = 1 then
+          TmpStr := TmpStr + 'Possibly Approved'
+        else
+          TmpStr := TmpStr + 'Approved';
+
+      _LogEx(TmpStr);
+    end; // for lIndex
+  end;
+
+  _LogEx('Dumping XBE TLS...');
+  _LogEx('Data Start Address               : 0x' + IntToHex(m_TLS.dwDataStartAddr, 8));
+  _LogEx('Data End Address                 : 0x' + IntToHex(m_TLS.dwDataEndAddr, 8));
+  _LogEx('TLS Index Address                : 0x' + IntToHex(m_TLS.dwTLSIndexAddr, 8));
+  _LogEx('TLS Callback Address             : 0x' + IntToHex(m_TLS.dwTLSCallbackAddr, 8));
+  _LogEx('Size of Zero Fill                : 0x' + IntToHex(m_TLS.dwSizeofZeroFill, 8));
+  _LogEx('Characteristics                  : 0x' + IntToHex(m_TLS.dwCharacteristics, 8));
+
+  if DumpToFile then
+    CloseFile(FileEx);
 end; // TXbe.DumpInformation
 
 //------------------------------------------------------------------------------
 
-function TXbe.GetAddr(x_dwVirtualAddress: DWord): integer;
+function TXbe.GetAddr(x_dwVirtualAddress: DWord): Integer;
 var
   lIndex, VirtAddr, VirtSize, dwoffs: DWord;
 begin
   dwoffs := x_dwVirtualAddress - m_Header.dwBaseAddr;
   Result := 0;
   // offset in image header
-  if dwoffs < m_Header.dwSizeofHeaders then begin
-    result := dwOffs
-  end
-  else begin
+  if dwoffs < m_Header.dwSizeofHeaders then
+    Result := dwOffs
+  else
+  begin
     // offset in image header extra bytes
-    if dwoffs < m_Header.dwSizeofHeaders then begin
-      result := dwOffs //- sizeof(m_Header)
-    end
-    else begin
-      for lIndex := 0 to m_Header.dwSections - 1 do begin
+    if dwoffs < m_Header.dwSizeofHeaders then
+      Result := dwOffs //- SizeOf(m_Header)
+    else
+    begin
+      for lIndex := 0 to m_Header.dwSections - 1 do
+      begin
         VirtAddr := m_SectionHeader[lIndex].dwVirtualAddr;
         VirtSize := m_SectionHeader[lIndex].dwVirtualSize;
-        if ((x_dwVirtualAddress >= VirtAddr) and (x_dwVirtualAddress < (VirtAddr + VirtSize))) then begin
-          result := m_SectionHeader[lIndex].dwRawAddr + (x_dwVirtualAddress - VirtAddr);
-        end;
+        if (x_dwVirtualAddress >= VirtAddr) and (x_dwVirtualAddress < (VirtAddr + VirtSize)) then
+          Result := m_SectionHeader[lIndex].dwRawAddr + (x_dwVirtualAddress - VirtAddr);
       end;
     end;
   end;
@@ -1065,48 +1094,52 @@ end; // TXbe.GetAddr
 
 procedure TXbe.ExportLogoBitmap(ImgCont: TBitmap);
 var
-  x_Gray: array[0..100 * 17] of char;
-  dwLength, o, lIndex, lIndex2, len, data: DWord;
+  x_Gray: array[0..100 * 17] of Char;
+  dwLength, o, lIndex, lIndex2, Len, Data: DWord;
   RLE: DWord;
   pos0, pos1: Byte;
 begin
   dwLength := m_Header.dwSizeofLogoBitmap;
   RLE := GetAddr(m_Header.dwLogoBitmapAddr);
-  if RLE = 0 then begin
-    exit
-  end;
-  len := 0;
-  data := 0;
+  if RLE = 0 then
+    Exit;
+
+  Len := 0;
+  Data := 0;
   o := 0;
   lIndex := 0;
-  while lIndex < dwLength do begin
-
+  while lIndex < dwLength do
+  begin
     // Read 2 bytes.
-    Pos0 := ord(Buffer[RLE + lIndex]);
-    Pos1 := ord(Buffer[RLE + 1 + lIndex]);
+    Pos0 := Ord(Buffer[RLE + lIndex]);
+    Pos1 := Ord(Buffer[RLE + 1 + lIndex]);
 
-    if Pos0 and 1 = 1 then begin                          // Check if the bit 0 is set.
-      len := Pos0 shr 1 and 7;                            // Select the bits from 1 to 3
-      data := Pos0 shr 4 and 15;                          // Select the bits from 4 to 7
+    if (Pos0 and 1) > 0 then                              // Check if the bit 0 is set.
+    begin
+      Len := Pos0 shr 1 and 7;                            // Select the bits from 1 to 3
+      Data := Pos0 shr 4 and 15;                          // Select the bits from 4 to 7
     end
-    else begin
-      if Pos0 and 2 <> 1 then begin                       // Check if the bit 1 is set.
-        len := (Pos0 shr 2 and 63) + (Pos1 and 15)*256;   // Select the bits from 2 to 7 from the first byte (Pos0) and the bits from 0 to 3 from the second byte (Pos1) and form a number.
-        data := Pos1 shr 4 and 15;                        // Select the bits from 4 to 7 from the second byte (Pos1)
-        inc(lIndex);                                      // The index is incremented because 2 bytes were read.
+    else
+    begin
+      if (Pos0 and 2) > 0 then                             // Check if the bit 1 is set.
+      begin
+        Len := (Pos0 shr 2 and 63) + (Pos1 and 15)*256;   // Select the bits from 2 to 7 from the first byte (Pos0) and the bits from 0 to 3 from the second byte (Pos1) and form a number.
+        Data := Pos1 shr 4 and 15;                        // Select the bits from 4 to 7 from the second byte (Pos1)
+        Inc(lIndex);                                      // The index is incremented because 2 bytes were read.
       end;
     end;
-    for lIndex2 := 0 to len - 1 do begin
-      inc(o);
-      if (o < 100 * 17) then begin
-        x_Gray[o] := chr(data shl 4);
-        ImgCont.Canvas.Pixels[o mod 100, o div 100] := RGB(ord(x_Gray[o]), ord(x_Gray[o]), ord(x_Gray[o]));
-      end
-      else begin
+
+    for lIndex2 := 0 to Len - 1 do
+    begin
+      Inc(o);
+      if o >= 100 * 17 then
         Exit;
-      end;
+
+      x_Gray[o] := Chr(Data shl 4);
+      ImgCont.Canvas.Pixels[o mod 100, o div 100] := RGB(Ord(x_Gray[o]), Ord(x_Gray[o]), Ord(x_Gray[o]));
     end;
-    inc(lIndex);                                          // Index increment
+
+    Inc(lIndex);                                          // Index increment
   end;
 end; // TXbe.ExportLogoBitmap
 
@@ -1124,7 +1157,8 @@ end; // TXbe.GetTLSData
 
 destructor TXbe.Destroy;
 begin
-  freemem(Buffer);
+  FreeMem(Buffer);
+
   inherited;
 end;
 

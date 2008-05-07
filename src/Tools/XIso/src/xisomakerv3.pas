@@ -25,7 +25,9 @@ unit xisomakerv3;
 
 interface
 
-uses Windows, SysUtils, Classes, Dialogs;
+uses
+  // Delphi
+  Windows, SysUtils, Classes, Dialogs;
 
 const
   XBOX_MEDIA_ID = 'MICROSOFT*XBOX*MEDIA';
@@ -60,7 +62,7 @@ type
   end;
 {$A+}
 
-  TDirectoryList = class;
+  TDirectoryList = class; // forward
 
   PFile = ^TFile;
   TFile = record
@@ -79,23 +81,23 @@ type
     constructor Create(ParentDirectory: TDirectoryList);
     destructor Destroy; override;
     function IsDirectory(FileName: PFile): Boolean;
-    function AddEntry(FileName: PFile): integer;
-    function Entry(i: integer): PFile;
+    function AddEntry(FileName: PFile): Integer;
+    function Entry(i: Integer): PFile;
     function Empty: Boolean;
   end;
 
-  TXBOX_FILESYSTEM = class
+  TXBOX_FILESYSTEM = class(TObject)
   private
     // Buffer interno de objeto.
     Buffer: array[0..65535] of Byte;
     // Padre del arbol de ficheros.
     Root: TDirectoryList;
     // Devuelve el tamaño de una entrada de directorio.
-    function SizeDirEntry(DirectoryList: TDirectoryList): integer;
+    function SizeDirEntry(DirectoryList: TDirectoryList): Integer;
     // Crea apartir del parametro Directory la tabla de directorios y ficheros en DirectoryList como padre.
     procedure MakeFileList(Directory: string; DirectoryList: TDirectoryList);
     // Genera la tabla de ficheros de la imagen.
-    function NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: integer): integer;
+    function NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: Integer): Integer;
     // Genera el VD y llama a NMakeISO para generar el resto de la imagen.
     procedure MakeISO(ISOName: string);
   public
@@ -110,14 +112,14 @@ implementation
 
 // Devuelve el offset del sector siguiente al pasado.
 
-function NextSector(Offset: int64): int64;
+function NextSector(Offset: Int64): Int64;
 begin
   Result := ((Offset div 2048) * 2048) + 2048;
 end;
 
 // Redondea el valor pasado a multiplo de un sector 2048 bytes.
 
-function OffsetToSector(Offset: int64): int64;
+function OffsetToSector(Offset: Int64): Int64;
 begin
   if (Offset mod 2048) <> 0 then
     Result := (Offset div 2048) + 1
@@ -135,12 +137,13 @@ end;
 constructor TDirectoryList.Create(ParentDirectory: TDirectoryList);
 begin
   Parent := ParentDirectory;
+
   inherited Create;
 end;
 
 destructor TDirectoryList.Destroy;
 var
-  i: integer;
+  i: Integer;
 begin
   for i := 0 to Count - 1 do
   begin
@@ -151,7 +154,8 @@ begin
         Dispose(PFile(Items[i]));
       end;
   end;
-  inherited;
+
+  inherited Destroy;
 end;
 
 function TDirectoryList.IsDirectory(FileName: PFile): Boolean;
@@ -159,12 +163,12 @@ begin
   Result := (FileName.Attributes and XBOX_FILE_ATTRIBUTE_DIRECTORY) = XBOX_FILE_ATTRIBUTE_DIRECTORY;
 end;
 
-function TDirectoryList.AddEntry(FileName: PFile): integer;
+function TDirectoryList.AddEntry(FileName: PFile): Integer;
 begin
   Result := Add(FileName);
 end;
 
-function TDirectoryList.Entry(i: integer): PFile;
+function TDirectoryList.Entry(i: Integer): PFile;
 begin
   Result := PFile(Items[i]);
 end;
@@ -181,23 +185,26 @@ constructor TXBOX_FILESYSTEM.Create;
 begin
   Root := TDirectoryList.Create(nil);
   RootSector := 264;
-  inherited;
+
+  inherited Create;
 end;
 
 destructor TXBOX_FILESYSTEM.Destroy;
 begin
   Root.Free;
-  inherited;
+
+  inherited Destroy;
 end;
 
 
-function TXBOX_FILESYSTEM.SizeDirEntry(DirectoryList: TDirectoryList): integer;
+function TXBOX_FILESYSTEM.SizeDirEntry(DirectoryList: TDirectoryList): Integer;
 var
-  i, PositionDirEntry, SizeEntry: integer;
+  i, PositionDirEntry, SizeEntry: Integer;
   ListEntry: PFile;
 begin
   Result := 0;
-  if DirectoryList = nil then Exit;
+  if DirectoryList = nil then
+    Exit;
 
   PositionDirEntry := 0;
   for i := 0 to DirectoryList.Count - 1 do
@@ -236,7 +243,8 @@ begin
   if (FindFirst(Directory + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
     repeat
-      if (SR.Name[1] = '.') then Continue;
+      if SR.Name[1] = '.' then
+        Continue;
 
       New(Entry);
       Entry.FileName := Directory + SR.Name;
@@ -256,17 +264,18 @@ begin
 end;
 
 
-function TXBOX_FILESYSTEM.NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: integer): integer;
+function TXBOX_FILESYSTEM.NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: Integer): Integer;
 var
-  i, j: integer;
-  PositionDirEntry, SizeEntry, ReadIt: int64;
+  i, j: Integer;
+  PositionDirEntry, SizeEntry, ReadIt: Int64;
   OffsetDirEntry: Int64;
   F: TFilestream;
   ListEntry: PFile;
   Entry: TXBOX_FS_ENTRY;
   s: string;
 begin
-  if DirectoryList = nil then Exit;
+  if DirectoryList = nil then
+    Exit;
 
   // Realizamos la asignación del Nodo Derecho de la entrada.
   PositionDirEntry := 0;
@@ -416,7 +425,7 @@ procedure TXBOX_FILESYSTEM.MakeISO(ISOName: string);
 var
   F: TFilestream;
   XBOX_VD: TXBOX_FS_VOLUME_DESCRIPTOR;
-  Sector: integer;
+  Sector: Integer;
   ActualDate: FILETIME;
 begin
   if not Root.Empty then
@@ -427,6 +436,7 @@ begin
 
     if RootSector < 33 then
       RootSector := 33;
+
     GetSystemTimeAsFileTime(ActualDate);
 
     FillChar(XBOX_VD, SizeOf(XBOX_VD), 0);
