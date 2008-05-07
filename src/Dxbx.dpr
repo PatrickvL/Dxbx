@@ -16,7 +16,8 @@ uses
   uXML in 'uXML.pas',
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
-  uExternals in 'uExternals.pas';
+  uExternals in 'uExternals.pas',
+  uWindows in 'uWindows.pas';
 
 {$R *.RES}
 

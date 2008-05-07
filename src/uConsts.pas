@@ -12,7 +12,7 @@ const
 
 
   // Application Versions
-  _DXBX_VERSION = '0.0.0.7';
+  _DXBX_VERSION = '0.0.0.8';
   _XDK_TRACKER_VERSION = '2.0.0.2';
 
   XOR_EP_DEBUG  = $94859D4B; // Entry Point (Debug)

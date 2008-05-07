@@ -50,30 +50,6 @@
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\5.0\Bpl\sJVCL_R.bpl">(untitled)</Excluded_Packages>
@@ -107,6 +83,7 @@
       <Form>frm_LogConsole</Form>
     </DCCReference>
     <DCCReference Include="uProlog.pas" />
+    <DCCReference Include="uWindows.pas" />
     <DCCReference Include="uXbe.pas" />
     <DCCReference Include="uXML.pas" />
   </ItemGroup>
