@@ -6,7 +6,9 @@
   <ItemGroup>
     <Projects Include="CxbxKrnl.dproj" />
     <Projects Include="DllTesting\Project1.dproj" />
-    <Projects Include="Dxbx.dproj" />
+    <Projects Include="Dxbx.dproj">
+      <Dependencies>CxbxKrnl.dproj</Dependencies>
+    </Projects>
     <Projects Include="Tools\XdkTracker\src\XdkTracker.dproj" />
     <Projects Include="Tools\XIso\src\XIso.dproj" />
   </ItemGroup>
@@ -16,13 +18,13 @@
     <BorlandProject>
 <BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
-  <Target Name="Dxbx">
+  <Target Name="Dxbx" DependsOnTargets="CxbxKrnl">
     <MSBuild Projects="Dxbx.dproj" Targets="" />
   </Target>
-  <Target Name="Dxbx:Clean">
+  <Target Name="Dxbx:Clean" DependsOnTargets="CxbxKrnl:Clean">
     <MSBuild Projects="Dxbx.dproj" Targets="Clean" />
   </Target>
-  <Target Name="Dxbx:Make">
+  <Target Name="Dxbx:Make" DependsOnTargets="CxbxKrnl:Make">
     <MSBuild Projects="Dxbx.dproj" Targets="Make" />
   </Target>
   <Target Name="XdkTracker">
