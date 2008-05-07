@@ -28,7 +28,6 @@
     <DCC_HppOutput>..\dcu</DCC_HppOutput>
     <DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
     <DCC_RangeChecking>True</DCC_RangeChecking>
-    <DCC_OutputXMLDocumentation>True</DCC_OutputXMLDocumentation>
     <DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug</DCC_UnitSearchPath>
     <DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug</DCC_ResourcePath>
     <DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug</DCC_ObjPath>

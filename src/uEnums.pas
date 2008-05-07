@@ -4,7 +4,7 @@ interface
 
 type
   TDebugInfoType = (ditConsole, ditFile);
-  EnumAutoConvert = (AUTO_CONVERT_MANUAL, AUTO_CONVERT_XBE_PATH, AUTO_CONVERT_WINDOWS_TEMP);
+  EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
   DebugMode = (DM_NONE, DM_CONSOLE, DM_FILE);
 
   LogType = (ltKernel, ltGui);
