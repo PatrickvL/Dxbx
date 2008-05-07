@@ -1,0 +1,8 @@
+DXBX Changelog, this changelog has been implemented from version 0.0.8.
+So the changes from version 0.0.7 and below are not documented.
+
+
+Version 0.0.8:
+
+- Support recent opened xbe files.
+- Made a start with cxbxkrnl.dll implementation.
