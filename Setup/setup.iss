@@ -1,7 +1,7 @@
 [Setup]
 AppName=DXBX
-AppVerName=DXBX 0.0.0.7
-AppPublisher=Shadow_tj & Pcucho
+AppVerName=DXBX 0.0.0.8
+AppPublisher=Shadow_tj, Pcucho, Wayo & Zomby
 DefaultDirName={pf}\DXBX
 DefaultGroupName=DXBX
 OutputDir=F:\development\delphi\Projects\Dxbx\Dxbx\Setup
@@ -26,6 +26,7 @@ Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\Dxbx.exe"; DestDir: "{app}
 Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\Tools\*"; DestDir: "{app}\Tools"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\msvcrtd.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\DxbxKrnl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\CxbxKrnl.dll"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
