@@ -23,6 +23,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\Dxbx.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "F:\development\delphi\Projects\Dxbx\Dxbx\Readme.txt"; DestDir: "{app}";  Flags: isreadme
+Source: "F:\development\delphi\Projects\Dxbx\Dxbx\Changelog.txt"; DestDir: "{app}"; Flags: isreadme
 Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\Tools\*"; DestDir: "{app}\Tools"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\msvcrtd.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\DxbxKrnl.dll"; DestDir: "{app}"; Flags: ignoreversion
