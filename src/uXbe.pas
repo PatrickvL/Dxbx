@@ -195,6 +195,7 @@ type
 
     function DumpInformation(FileName: string = ''): Boolean;
     function GetAddr(x_dwVirtualAddress: DWord): integer;
+
     procedure ExportLogoBitmap(ImgCont: TBitmap);
 
     function GetTLSData: DWord;

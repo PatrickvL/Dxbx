@@ -141,9 +141,7 @@ type
 
     m_bExeChanged: boolean;
 
-    procedure SetExeGenWindowsTemp;
-    procedure SetExeGenXBEFolder;
-    procedure SetExeGenManual;
+    procedure SetExeGen( ConvertTo : EnumAutoConvert );
 
     procedure CloseXbe;
     procedure XbeLoaded;
@@ -181,35 +179,13 @@ implementation
 {$R *.DFM}
 
 uses
-  ufrm_About, IniFiles, uConsts, uLog;
-
-//------------------------------------------------------------------------------
-
-function IsWindowsVista: Boolean;
-var VerInfo: TOSVersioninfo;
-begin
-  VerInfo.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
-  GetVersionEx(VerInfo);
-  Result := VerInfo.dwMajorVersion >= 6;
-end;
-
-//------------------------------------------------------------------------------
-
-function GetTempDirectory: string;
-var
-  Buffer: array[0..Max_path] of char;
-begin
-  FillChar(Buffer, Max_Path + 1, 0);
-  GetTempPath(Max_path, Buffer);
-  Result := string(Buffer);
-  if Result[Length(Result)] <> '\' then Result := Result + '\';
-end;
+  ufrm_About, IniFiles, uConsts, uLog, uWindows;
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 begin
-  XbeOpenDialog.Filter := 'Xbox Executables (*.xbe)|*.xbe';
+  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
   if XbeOpenDialog.Execute then begin
 
     if Assigned(m_Xbe) then
@@ -237,7 +213,7 @@ end; // Tfrm_Main.actCloseXbeExecute
 
 procedure Tfrm_Main.actSaveXbeExecute(Sender: TObject);
 begin
-  SaveDialog.Filter := 'Xbox Executables (*.xbe)|*.xbe';
+  SaveDialog.Filter := DIALOG_FILTER_XBE;
   if m_XbeFilename <> '' then begin
     SaveXbe();
   end
@@ -260,7 +236,7 @@ end; // Tfrm_Main.actSaveXbeAsExecute
 
 procedure Tfrm_Main.actImportExeExecute(Sender: TObject);
 begin
-  XbeOpenDialog.Filter := 'Windows Executables (*.exe)|*.exe';
+  XbeOpenDialog.Filter := DIALOG_FILTER_EXE;
   if XbeOpenDialog.Execute then begin
 
     if Assigned(m_Xbe) then
@@ -304,7 +280,7 @@ begin
   Exportexe1.Enabled := False;
   CloseXbe1.Enabled := False;
 
-  WriteLog('DXBX: ' + m_szAsciiTitle + '  Closed...');
+  WriteLog( Format ( 'DXBX: %s Closed...', [m_szAsciiTitle]));
   StatusBar.SimpleText := 'DXBX:';
 end; // Tfrm_Main.CloseXbe
 
@@ -322,7 +298,7 @@ begin
     m_Xbe := TXbe.Create(m_XbeFilename);
 
     XbeLoaded;
-    StatusBar.SimpleText := 'DXBX: ' + m_szAsciiTitle + ', Loaded';
+    StatusBar.SimpleText := Format ( 'DXBX: %s Loaded', [m_szAsciiTitle]);
   except
     Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     m_Xbe.Free;
@@ -402,32 +378,12 @@ end;
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.SetExeGenXBEFolder;
+procedure Tfrm_Main.SetExeGen(ConvertTo: EnumAutoConvert);
 begin
-  m_AutoConvertToExe := AUTO_CONVERT_XBE_PATH;
-  actExeGenWindowsTemp.Checked := False;
-  actExeGenDxbxPath.Checked := True;
-  actExeGenManual.Checked := False;
-end;
-
-//------------------------------------------------------------------------------
-
-procedure Tfrm_Main.SetExeGenManual;
-begin
-  m_AutoConvertToExe := AUTO_CONVERT_MANUAL;
-  actExeGenWindowsTemp.Checked := False;
-  actExeGenDxbxPath.Checked := False;
-  actExeGenManual.Checked := True;
-end;
-
-//------------------------------------------------------------------------------
-
-procedure Tfrm_Main.SetExeGenWindowsTemp;
-begin
-  m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
-  actExeGenWindowsTemp.Checked := True;
-  actExeGenDxbxPath.Checked := False;
-  actExeGenManual.Checked := False;
+  m_AutoConvertToExe := ConvertTo;
+  actExeGenWindowsTemp.Checked := ConvertTo = CONVERT_TO_WINDOWSTEMP;
+  actExeGenDxbxPath.Checked := ConvertTo = CONVERT_TO_XBEPATH;
+  actExeGenManual.Checked := ConvertTo = CONVERT_TO_MANUAL;
 end;
 
 //------------------------------------------------------------------------------
@@ -554,7 +510,7 @@ begin
   // Convert Xbe to Exe, if necessary
   if (m_ExeFilename = '\0') or (m_bExeChanged) then begin
     case x_AutoConvert of
-      AUTO_CONVERT_WINDOWS_TEMP:
+      CONVERT_TO_WINDOWSTEMP:
         begin
           szTempPath := GetTempDirectory;
           try
@@ -562,7 +518,7 @@ begin
           except
           end;
         end;
-      AUTO_CONVERT_XBE_PATH:
+      CONVERT_TO_XBEPATH:
         begin
           try
             Result := ConvertToExe(ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), false);
@@ -583,7 +539,7 @@ end; // Tfrm_Main.StartEmulation
 
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 begin
-  m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
+  m_AutoConvertToExe := CONVERT_TO_WINDOWSTEMP;
   FApplicationDir := ExtractFilePath(Application.ExeName);
 
   ReadSettingsIni;
@@ -733,18 +689,13 @@ begin
     IniFile := TIniFile.Create(DxbxIniFilePath);
 
     case IniFile.ReadInteger('Settings', 'AutoConvertToExe', 1) of
-      1: begin
-          SetExeGenWindowsTemp;
-        end;
-      2: begin
-          SetExeGenXBEFolder;
-        end;
-      3: begin
-          SetExeGenManual;
-        end;
+      1: SetExeGen ( CONVERT_TO_WINDOWSTEMP );
+      2: SetExeGen ( CONVERT_TO_XBEPATH );
+      3: SetExeGen ( CONVERT_TO_MANUAL );
     else
-       SetExeGenManual;
+      SetExeGen ( CONVERT_TO_MANUAL );
     end;
+
     m_DxbxDebug := DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', 0));
     m_DxbxDebugFilename := IniFile.ReadString('Settings', 'DxbxDebugFilename', '');
     m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', 0));
@@ -816,7 +767,7 @@ begin
     actConsoleDebugKernel.Checked := True;
     actFileDebugKernel.Checked := False;
 
-    SetExeGenManual;
+    SetExeGen ( CONVERT_TO_MANUAL );
   end;
 end; // Tfrm_Main.ReadSettingsIni
 
@@ -851,9 +802,9 @@ begin
   IniFile.WriteString('Recent', 'EXEs', RecentTMP);
 
   case m_AutoConvertToExe of
-    AUTO_CONVERT_WINDOWS_TEMP: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 1);
-    AUTO_CONVERT_XBE_PATH: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 2);
-    AUTO_CONVERT_MANUAL: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 3);
+    CONVERT_TO_WINDOWSTEMP: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 1);
+    CONVERT_TO_XBEPATH: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 2);
+    CONVERT_TO_MANUAL: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 3);
   end;
   IniFile.WriteInteger('Settings', 'DxbxDebug', ORD(m_DxbxDebug));
   IniFile.WriteString('Settings', 'DxbxDebugFilename', m_DxbxDebugFilename);
@@ -881,7 +832,7 @@ end; // Tfrm_Main.actConsoleXbeInfoExecute
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
   SaveDialog.FileName := 'xbe.txt';
-  SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
+  SaveDialog.Filter := DIALOG_FILTER_TEXT;
 
   if SaveDialog.Execute then begin
     // ask permisssion to override if file exists
@@ -926,7 +877,7 @@ begin
   end
   else begin
     SaveDialog.FileName := 'DxbxDebug.txt';
-    SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
+    SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then begin
       CloseLogs;
       actConsoleDebugGui.Checked := False;
@@ -963,7 +914,7 @@ begin
   end
   else begin
     SaveDialog.FileName := 'KernelDebug.txt';
-    SaveDialog.Filter := 'Text Documents ( *.txt )|*.txt';
+    SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then begin
       actConsoleDebugKernel.Checked := False;
       actFileDebugKernel.Checked := True;
@@ -978,7 +929,7 @@ end; // Tfrm_Main.actFileDebugKernelExecute
 procedure Tfrm_Main.XbeLoaded;
 begin
   LoadLogo();
-  WriteLog('DXBX: ' + m_szAsciiTitle + ' loaded.');
+  WriteLog( Format ( 'DXBX: %s  loaded.', [m_szAsciiTitle]));
 end; // Tfrm_Main.XbeLoaded
 
 //------------------------------------------------------------------------------
@@ -1020,30 +971,21 @@ end; // Tfrm_Main.AfterConstruction
 
 procedure Tfrm_Main.actExeGenWindowsTempExecute(Sender: TObject);
 begin
-  m_AutoConvertToExe := AUTO_CONVERT_WINDOWS_TEMP;
-  actExeGenWindowsTemp.Checked := True;
-  actExeGenDxbxPath.Checked := False;
-  actExeGenManual.Checked := False;
+  SetExeGen (  CONVERT_TO_WINDOWSTEMP );
 end; // Tfrm_Main.actExeGenWindowsTempExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actExeGenDxbxPathExecute(Sender: TObject);
 begin
-  m_AutoConvertToExe := AUTO_CONVERT_XBE_PATH;
-  actExeGenWindowsTemp.Checked := False;
-  actExeGenDxbxPath.Checked := True;
-  actExeGenManual.Checked := False;
+  SetExeGen (  CONVERT_TO_XBEPATH );
 end; // Tfrm_Main.actExeGenDxbxPathExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actExeGenManualExecute(Sender: TObject);
 begin
-  m_AutoConvertToExe := AUTO_CONVERT_MANUAL;
-  actExeGenWindowsTemp.Checked := False;
-  actExeGenDxbxPath.Checked := False;
-  actExeGenManual.Checked := True;
+  SetExeGen (  CONVERT_TO_MANUAL );
 end; // Tfrm_Main.actExeGenManualExecute
 
 //------------------------------------------------------------------------------

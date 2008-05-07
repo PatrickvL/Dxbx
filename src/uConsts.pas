@@ -15,6 +15,13 @@ const
   _DXBX_VERSION = '0.0.0.8';
   _XDK_TRACKER_VERSION = '2.0.0.2';
 
+
+  // Dialog Filters
+  DIALOG_FILTER_TEXT = 'Text Documents ( *.txt )|*.txt';
+  DIALOG_FILTER_EXE = 'Windows Executables (*.exe)|*.exe';
+  DIALOG_FILTER_XBE = 'Xbox Executables (*.xbe)|*.xbe';
+
+
   XOR_EP_DEBUG  = $94859D4B; // Entry Point (Debug)
   XOR_EP_RETAIL = $A8FC57AB; // Entry Point (Retail)
   XOR_KT_DEBUG  = $EFB1F152; // Kernel Thunk (Debug)
