@@ -6,10 +6,11 @@ uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Menus, ActnList, ShellAPI, jpeg, ExtCtrls, ComCtrls,
+  xmldom, XMLIntf, msxmldom, XMLDoc,
+  // AlphaSkin
+  sSkinProvider, sSkinManager, sStatusBar,
   // Dxbx
-  uXbe, uEmuExe, uEnums, uExternals, ufrm_ControllerConfig, ufrm_VideoConfig, xmldom,
-  XMLIntf, msxmldom, XMLDoc, uXml, sSkinProvider, sSkinManager, sStatusBar;
-
+  uXml, uXbe, uEmuExe, uEnums, uExternals, ufrm_ControllerConfig, ufrm_VideoConfig;
 
 type
   Tfrm_Main = class(TForm)
@@ -132,14 +133,13 @@ type
     procedure actXIsoExecute(Sender: TObject);
     procedure actXdkTrackerXbeInfoExecute(Sender: TObject);
   private
-    { Private declarations }
     m_Xbe: TXbe;
     m_XbeFilename: string;
     m_ExeFilename: string;
 
     m_AutoConvertToExe: EnumAutoConvert;
 
-    m_bExeChanged: boolean;
+    m_bExeChanged: Boolean;
 
     procedure SetExeGen( ConvertTo : EnumAutoConvert );
 
@@ -160,7 +160,7 @@ type
     procedure ReopenXbe(Sender: TObject);
     procedure ReopenExe(Sender: TObject);
 
-    function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): boolean;
+    function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): Boolean;
     function StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 
     function SendCommandToXdkTracker: Boolean;
@@ -179,27 +179,28 @@ implementation
 {$R *.DFM}
 
 uses
-  ufrm_About, IniFiles, uConsts, uLog, uWindows;
+  // Delphi
+  IniFiles,
+  // Dxbx
+  ufrm_About, uConsts, uLog, uWindows;
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 begin
   XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
-  if XbeOpenDialog.Execute then begin
+  if not XbeOpenDialog.Execute then
+    Exit;
 
-    if Assigned(m_Xbe) then
-    begin
-      CloseXbe;
-    end;
+  if Assigned(m_Xbe) then
+    CloseXbe();
 
-    OpenXbe(XbeOpenDialog.FileName);
-    RecentXbeAdd(XbeOpenDialog.FileName);
-    Logbitmap1.Enabled := True;
-    Dumpxbeinfoto1.Enabled := True;
-    Exportexe1.Enabled := True;
-    CloseXbe1.Enabled := true;
-  end;
+  OpenXbe(XbeOpenDialog.Filename);
+  RecentXbeAdd(XbeOpenDialog.Filename);
+  Logbitmap1.Enabled := True;
+  Dumpxbeinfoto1.Enabled := True;
+  Exportexe1.Enabled := True;
+  CloseXbe1.Enabled := True;
 end; // Tfrm_Main.actOpenXbeExecute
 
 //------------------------------------------------------------------------------
@@ -214,14 +215,12 @@ end; // Tfrm_Main.actCloseXbeExecute
 procedure Tfrm_Main.actSaveXbeExecute(Sender: TObject);
 begin
   SaveDialog.Filter := DIALOG_FILTER_XBE;
-  if m_XbeFilename <> '' then begin
-    SaveXbe();
-  end
+  if m_XbeFilename <> '' then
+    SaveXbe()
   else
   begin
-    if SaveDialog.Execute then begin
-      SaveXbe(SaveDialog.FileName);
-    end;
+    if SaveDialog.Execute then
+      SaveXbe(SaveDialog.Filename);
   end;
 end; // Tfrm_Main.actSaveXbeExecute
 
@@ -229,7 +228,7 @@ end; // Tfrm_Main.actSaveXbeExecute
 
 procedure Tfrm_Main.actSaveXbeAsExecute(Sender: TObject);
 begin
-  SaveXbe(SaveDialog.FileName);
+  SaveXbe(SaveDialog.Filename);
 end; // Tfrm_Main.actSaveXbeAsExecute
 
 //------------------------------------------------------------------------------
@@ -237,15 +236,13 @@ end; // Tfrm_Main.actSaveXbeAsExecute
 procedure Tfrm_Main.actImportExeExecute(Sender: TObject);
 begin
   XbeOpenDialog.Filter := DIALOG_FILTER_EXE;
-  if XbeOpenDialog.Execute then begin
-
+  if XbeOpenDialog.Execute() then
+  begin
     if Assigned(m_Xbe) then
-    begin
       CloseXbe();
-    end;
 
-    ImportExe(XbeOpenDialog.FileName);
-    RecentExeAdd(XbeOpenDialog.FileName);
+    ImportExe(XbeOpenDialog.Filename);
+    RecentExeAdd(XbeOpenDialog.Filename);
   end;
 end; // Tfrm_Main.actImportExeExecute
 
@@ -253,21 +250,17 @@ end; // Tfrm_Main.actImportExeExecute
 
 procedure Tfrm_Main.actExportExeExecute(Sender: TObject);
 begin
-  ConvertToExe('', true);
+  ConvertToExe('', True);
 end; // Tfrm_Main.actExportExeExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  WriteSettingsIni;
-
-  CloseLogs;
-
+  WriteSettingsIni();
+  CloseLogs();
   if Assigned(m_Xbe) then
-  begin
     CloseXbe();
-  end;
 end; // Tfrm_Main.FormClose
 
 //------------------------------------------------------------------------------
@@ -294,10 +287,9 @@ begin
   m_ExeFilename := '\0';
   m_XbeFilename := aFileName;
 
+  m_Xbe := TXbe.Create(m_XbeFilename);
   try
-    m_Xbe := TXbe.Create(m_XbeFilename);
-
-    XbeLoaded;
+    XbeLoaded();
     StatusBar.SimpleText := Format ( 'DXBX: %s Loaded', [m_szAsciiTitle]);
   except
     Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
@@ -353,17 +345,16 @@ var
   function SendData(copyDataStruct: TCopyDataStruct): Boolean;
   var
     receiverHandle: THandle;
-    res: integer;
+    res: Integer;
   begin
     Result := False;
     receiverHandle := FindWindow(PChar('TfrmXdkTracker'), nil);
     if receiverHandle = 0 then
-    begin
       Exit;
-    end;
 
     res := SendMessage(receiverHandle, WM_COPYDATA, Integer(Handle), Integer(@copyDataStruct));
-    if res > 0 then Result := True;
+    if res > 0 then
+      Result := True;
   end;
 
 begin
@@ -388,53 +379,52 @@ end;
 
 //------------------------------------------------------------------------------
 
-function Tfrm_Main.ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): boolean;
+function Tfrm_Main.ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): Boolean;
 var
-  filename: string;
+  Filename: string;
   i_EmuExe: TEmuExe;
 begin
   Result := False;
-  filename := 'default.exe';
+  Filename := 'default.exe';
 
-  if x_filename = '' then begin
-    if ExeSaveDialog.execute then begin
-      filename := ExeSaveDialog.FileName;
-    end
-    else begin
-      filename := '';
-    end;
+  if x_filename = '' then
+  begin
+    if ExeSaveDialog.Execute then
+      Filename := ExeSaveDialog.Filename
+    else
+      Filename := '';
   end
-  else begin
-    filename := x_filename;
-  end;
+  else
+    Filename := x_filename;
 
-  if filename <> '' then begin
-
+  if Filename <> '' then
+  begin
     // ask permission to overwrite if file exists
-    if x_bVerifyIfExists then begin
-      if FileExists(filename) then begin
-        if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then begin
+    if x_bVerifyIfExists then
+    begin
+      if FileExists(Filename) then
+      begin
+        if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
           Exit;
-        end
-        else begin
-          DeleteFile(filename);
-        end;
+
+        DeleteFile(Filename);
       end;
     end;
 
     // convert file
     try
       i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, 0);
-      if i_EmuExe.doExport(filename) then begin
-        m_ExeFilename := filename;
+      if i_EmuExe.doExport(Filename) then
+      begin
+        m_ExeFilename := Filename;
         WriteLog(m_szAsciiTitle + ' was converted to .exe.');
         m_bExeChanged := False;
-        RecentExeAdd(filename);
+        RecentExeAdd(Filename);
         Result := True;
       end
-      else begin
+      else
         WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
-      end;
+
     except
       MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
     end;
@@ -447,7 +437,8 @@ procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
 begin
   frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
 
-  if frm_ControllerConfig.ShowModal = mrOk then begin
+  if frm_ControllerConfig.ShowModal = mrOk then
+  begin
 
   end;
 
@@ -460,7 +451,8 @@ procedure Tfrm_Main.actConfigVideoExecute(Sender: TObject);
 begin
   frm_VideoConfig := Tfrm_VideoConfig.Create(nil);
 
-  if frm_VideoConfig.ShowModal = mrOk then begin
+  if frm_VideoConfig.ShowModal = mrOk then
+  begin
 
   end;
 
@@ -472,19 +464,22 @@ end; // Tfrm_Main.actConfigVideoExecute
 procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
 var FileConverted: Boolean;
 begin
-  if Assigned(m_Xbe) then begin
+  if Assigned(m_Xbe) then
+  begin
     FileConverted := StartEmulation(m_AutoConvertToExe);
-    if FileConverted then begin
-
+    if FileConverted then
+    begin
       // register xbe path with Cxbx.dll
       SetXbePath(PChar(m_Xbe.m_szPath));
 
       try
-        if FileExists(m_ExeFilename) then begin
+        if FileExists(m_ExeFilename) then
+        begin
           ShellExecute(application.Handle, 'open', PChar(m_ExeFilename), nil, nil, SW_SHOWDEFAULT);
           WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
         end
-        else begin
+        else
+        begin
           Messagedlg(m_ExeFilename + ' does not exists.', mtError, [mbOk], 0);
           WriteLog('WndMain: ' + m_ExeFilename + ' does not exists.');
         end;
@@ -495,20 +490,20 @@ begin
     end;
 
   end
-  else begin
+  else
     MessageDlg('No xbe file loaded', mtInformation, [mbOk], 0);
-  end;
 end; // Tfrm_Main.ActStartEmulationExecute
 
 //------------------------------------------------------------------------------
 
-function Tfrm_Main.StartEmulation(x_AutoConvert: EnumAutoConvert): boolean;
+function Tfrm_Main.StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 var
   szTempPath: string;
 begin
   Result := False;
   // Convert Xbe to Exe, if necessary
-  if (m_ExeFilename = '\0') or (m_bExeChanged) then begin
+  if (m_ExeFilename = '\0') or (m_bExeChanged) then
+  begin
     case x_AutoConvert of
       CONVERT_TO_WINDOWSTEMP:
         begin
@@ -545,12 +540,10 @@ begin
   ReadSettingsIni;
   CreateLogs(ltGui);
 
-  if IsWindowsVista then begin
-    sSkinManager1.SkinningRules := [srStdForms, srThirdParty];
-  end
-  else begin
+  if IsWindowsVista then
+    sSkinManager1.SkinningRules := [srStdForms, srThirdParty]
+  else
     sSkinManager1.SkinningRules := [srStdForms, srStdDialogs, srThirdParty];
-  end;
 end;
 
 //------------------------------------------------------------------------------
@@ -589,7 +582,7 @@ begin
     {
         bool found = false;
 
-        // if this filename already exists, temporarily remove it
+        // if this Filename already exists, temporarily remove it
         for(int c=0, r=0;c<m_dwRecentExe;c++, r++)
         {
             if(strcmp(m_szRecentExe[c], m_ExeFilename) == 0)
@@ -721,9 +714,8 @@ begin
     RecentTMPList.StrictDelimiter;
     RecentTMPList.DelimitedText := RecentTMP;
     RecentExefiles1.Clear;
-    for I := 0 to RecentTMPList.Count - 1 do begin
+    for I := 0 to RecentTMPList.Count - 1 do
       RecentExeAdd(RecentTMPList[I]);
-    end;
 
     IniFile.Free;
     // Set Menu checked options
@@ -757,7 +749,8 @@ begin
     end;
 
   end
-  else begin
+  else
+  begin
     // Setting defaults
     m_DxbxDebug := DM_CONSOLE;
     m_KrnlDebug := DM_CONSOLE;
@@ -787,18 +780,18 @@ begin
   if RecentXbefiles1.Count >= 1 then
     RecentTMP := RecentXbefiles1.Items[0].Hint;
 
-  for I := 1 to RecentXbefiles1.Count - 1 do begin
+  for I := 1 to RecentXbefiles1.Count - 1 do
     RecentTMP := RecentTMP + '|' + RecentXbefiles1.Items[I].Hint;
-  end;
+
   IniFile.WriteString('Recent', 'XBEs', RecentTMP);
 
   // Recent EXEs write
   RecentTMP := '';
   if RecentExefiles1.Count >= 1 then
     RecentTMP := RecentExefiles1.Items[0].Hint;
-  for I := 0 to RecentExefiles1.Count - 1 do begin
+  for I := 0 to RecentExefiles1.Count - 1 do
     RecentTMP := RecentTMP + '|' + RecentExefiles1.Items[I].Hint;
-  end;
+
   IniFile.WriteString('Recent', 'EXEs', RecentTMP);
 
   case m_AutoConvertToExe of
@@ -806,6 +799,7 @@ begin
     CONVERT_TO_XBEPATH: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 2);
     CONVERT_TO_MANUAL: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 3);
   end;
+
   IniFile.WriteInteger('Settings', 'DxbxDebug', ORD(m_DxbxDebug));
   IniFile.WriteString('Settings', 'DxbxDebugFilename', m_DxbxDebugFilename);
   IniFile.WriteInteger('Settings', 'KrnlDebug', ORD(m_KrnlDebug));
@@ -819,30 +813,29 @@ end; // Tfrm_Main.WriteSettingsIni
 procedure Tfrm_Main.actConsoleXbeInfoExecute(Sender: TObject);
 begin
   // dump xbe information to debug console
-  if m_Xbe.DumpInformation then begin
+  if m_Xbe.DumpInformation then
+    WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.')
+  else
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.');
-  end
-  else begin
-    WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.');
-  end;
 end; // Tfrm_Main.actConsoleXbeInfoExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
-  SaveDialog.FileName := 'xbe.txt';
+  SaveDialog.Filename := 'xbe.txt';
   SaveDialog.Filter := DIALOG_FILTER_TEXT;
 
-  if SaveDialog.Execute then begin
+  if SaveDialog.Execute then
+  begin
     // ask permisssion to override if file exists
-    if FileExists(SaveDialog.FileName) then begin
-      if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrNo then begin
+    if FileExists(SaveDialog.Filename) then
+    begin
+      if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrNo then
         Exit;
-      end;
     end;
 
-    m_Xbe.DumpInformation(SaveDialog.FileName);
+    m_Xbe.DumpInformation(SaveDialog.Filename);
     WriteLog(m_szAsciiTitle + '''s .xbe info was successfully dumped.');
     MessageDlg(m_szAsciiTitle + '''s .xbe info was successfully dumped.', mtInformation, [mbOk], 0);
   end;
@@ -852,12 +845,14 @@ end; // Tfrm_Main.actFileXbeInfoExecute
 
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
-  if m_DxbxDebug = DM_CONSOLE then begin
+  if m_DxbxDebug = DM_CONSOLE then
+  begin
     actConsoleDebugGui.Checked := False;
     m_DxbxDebug := DM_NONE;
     CloseLogs;
   end
-  else begin
+  else
+  begin
     CloseLogs;
     actFileDebugGui.Checked := False;
     actConsoleDebugGui.Checked := True;
@@ -870,15 +865,18 @@ end; // Tfrm_Main.actConsoleDebugGuiExecute
 
 procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
-  if m_DxbxDebug = DM_FILE then begin
-    actFileDebugGui.Checked := FALSE;
+  if m_DxbxDebug = DM_FILE then
+  begin
+    actFileDebugGui.Checked := False;
     m_DxbxDebug := DM_NONE;
     CloseLogs;
   end
-  else begin
-    SaveDialog.FileName := 'DxbxDebug.txt';
+  else
+  begin
+    SaveDialog.Filename := 'DxbxDebug.txt';
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
-    if SaveDialog.Execute then begin
+    if SaveDialog.Execute then
+    begin
       CloseLogs;
       actConsoleDebugGui.Checked := False;
       actFileDebugGui.Checked := True;
@@ -893,11 +891,13 @@ end; // Tfrm_Main.actFileDebugGuiExecute
 
 procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
-  if m_KrnlDebug = DM_CONSOLE then begin
+  if m_KrnlDebug = DM_CONSOLE then
+  begin
     actConsoleDebugKernel.Checked := False;
     m_KrnlDebug := DM_NONE;
   end
-  else begin
+  else
+  begin
     actFileDebugKernel.Checked := False;
     actConsoleDebugKernel.Checked := True;
     m_KrnlDebug := DM_CONSOLE;
@@ -908,14 +908,17 @@ end; // Tfrm_Main.actConsoleDebugKernelExecute
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
-  if m_KrnlDebug = DM_FILE then begin
-    actFileDebugKernel.Checked := FALSE;
+  if m_KrnlDebug = DM_FILE then
+  begin
+    actFileDebugKernel.Checked := False;
     m_KrnlDebug := DM_NONE;
   end
-  else begin
-    SaveDialog.FileName := 'KernelDebug.txt';
+  else
+  begin
+    SaveDialog.Filename := 'KernelDebug.txt';
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
-    if SaveDialog.Execute then begin
+    if SaveDialog.Execute then
+    begin
       actConsoleDebugKernel.Checked := False;
       actFileDebugKernel.Checked := True;
       m_KrnlDebug := DM_FILE;
@@ -938,7 +941,8 @@ procedure Tfrm_Main.ActAboutExecute(Sender: TObject);
 begin
   frm_About := Tfrm_About.Create(Self);
 
-  if frm_About.ShowModal = mrOk then begin
+  if frm_About.ShowModal = mrOk then
+  begin
   end;
 
   frm_About.free;
@@ -994,27 +998,27 @@ procedure Tfrm_Main.actExportLogoExecute(Sender: TObject);
 var
   bmp: TBitmap;
 begin
-  if LogoSaveDialog.Execute then begin
-    // ask permission to overwrite if file exists
-    if FileExists(LogoSaveDialog.FileName) then begin
-      if (MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrYes) then begin
-        DeleteFile(LogoSaveDialog.FileName);
-      end
-      else begin
-        Exit;
-      end;
-    end;
+  if not LogoSaveDialog.Execute then
+    Exit;
 
-    // export logo bitmap
-    bmp := TBitmap.Create;
-    try
-      bmp.Width := 100;
-      bmp.Height := 17;
-      m_Xbe.ExportLogoBitmap(bmp);
-      bmp.SaveToFile(LogoSaveDialog.FileName);
-    finally
-      WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
-    end;
+  // ask permission to overwrite if file exists
+  if FileExists(LogoSaveDialog.Filename) then
+  begin
+    if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrYes then
+      DeleteFile(LogoSaveDialog.Filename)
+    else
+      Exit;
+  end;
+
+  // export logo bitmap
+  bmp := TBitmap.Create;
+  try
+    bmp.Width := 100;
+    bmp.Height := 17;
+    m_Xbe.ExportLogoBitmap(bmp);
+    bmp.SaveToFile(LogoSaveDialog.Filename);
+  finally
+    WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
   end;
 end; // Tfrm_Main.actExportLogoExecute
 
@@ -1022,18 +1026,16 @@ end; // Tfrm_Main.actExportLogoExecute
 
 procedure Tfrm_Main.actXdkTrackerExecute(Sender: TObject);
 begin
-  if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then begin
+  if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then
     ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), nil, nil, SW_SHOWNORMAL);
-  end;
 end; // Tfrm_Main.actXdkTrackerExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actXIsoExecute(Sender: TObject);
 begin
-  if FileExists(FApplicationDir + 'Tools\xIso.exe') then begin
+  if FileExists(FApplicationDir + 'Tools\xIso.exe') then
     ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\xIso.exe'), nil, nil, SW_SHOWNORMAL);
-  end;
 end; // Tfrm_Main.actXIsoExecute
 
 //------------------------------------------------------------------------------
@@ -1042,8 +1044,8 @@ procedure Tfrm_Main.actXdkTrackerXbeInfoExecute(Sender: TObject);
 var
   DumpFilePath: string;
 begin
-  if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then begin
-
+  if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then
+  begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
     CreateXmlXbeDump(DumpFilePath);
 
@@ -1061,12 +1063,13 @@ var
   Version: string;
 begin
   XMLDocument.Active := False;
-  XMLDocument.Active := true;
+  XMLDocument.Active := True;
   XmlRootNode := XMLDocument.AddChild('XDKINFO');
 
   XML_WriteString(XmlRootNode, 'Name', m_szAsciiTitle);
 
-  for lIndex := 0 to m_Xbe.m_Header.dwLibraryVersions - 1 do begin
+  for lIndex := 0 to m_Xbe.m_Header.dwLibraryVersions - 1 do
+  begin
     Version := IntToStr(m_Xbe.m_LibraryVersion[lIndex].wMajorVersion) + '.' +
       IntToStr(m_Xbe.m_LibraryVersion[lIndex].wMinorVersion) + '.' +
       IntToStr(m_Xbe.m_LibraryVersion[lIndex].wBuildVersion);
@@ -1092,8 +1095,10 @@ var
   TempItem: TMenuItem;
   I: Integer;
 begin
-  for I := 0 to RecentXbefiles1.Count - 1 do begin
-    if RecentXbefiles1.Items[I].Hint = aFileName then begin
+  for I := 0 to RecentXbefiles1.Count - 1 do
+  begin
+    if RecentXbefiles1.Items[I].Hint = aFileName then
+    begin
       RecentXbefiles1.Remove(RecentXbefiles1.Items[I]);
       Break;
     end;
@@ -1104,9 +1109,8 @@ begin
   TempItem.Caption := ExtractFileName(aFileName);
   TempItem.OnClick := ReopenXbe;
 
-  while (RecentXbefiles1.Count >= _RecentXbeLimit) do begin
+  while (RecentXbefiles1.Count >= _RecentXbeLimit) do
     RecentXbefiles1.Remove(RecentXbefiles1.Items[9]);
-  end;
 
   RecentXbefiles1.Insert(0, TempItem);
   RecentXbefiles1.Enabled := True;
@@ -1119,8 +1123,10 @@ var
   TempItem: TMenuItem;
   I: Integer;
 begin
-  for I := 0 to RecentExefiles1.Count - 1 do begin
-    if RecentExefiles1.Items[I].Hint = aFileName then begin
+  for I := 0 to RecentExefiles1.Count - 1 do
+  begin
+    if RecentExefiles1.Items[I].Hint = aFileName then
+    begin
       RecentExefiles1.Remove(RecentExefiles1.Items[I]);
       Break;
     end;
@@ -1131,9 +1137,8 @@ begin
   TempItem.Caption := ExtractFileName(aFileName);
   TempItem.OnClick := ReopenExe;
 
-  while (RecentExefiles1.Count >= _RecentExeLimit) do begin
+  while (RecentExefiles1.Count >= _RecentExeLimit) do
     RecentExefiles1.Remove(RecentExefiles1.Items[9]);
-  end;
 
   RecentExefiles1.Insert(0, TempItem);
   RecentExefiles1.Enabled := True;
@@ -1146,19 +1151,22 @@ var
   TempItem: TMenuItem;
 begin
   TempItem := Sender as TMenuItem;
-  if FileExists(TempItem.Hint) then begin
+  if FileExists(TempItem.Hint) then
+  begin
     if Assigned(m_Xbe) then
       CloseXbe();
+
     OpenXbe(TempItem.Hint);
     Logbitmap1.Enabled := True;
     Dumpxbeinfoto1.Enabled := True;
     Exportexe1.Enabled := True;
-    CloseXbe1.Enabled := true;
+    CloseXbe1.Enabled := True;
 
     RecentXbeAdd(TempItem.Hint)
   end
-  else begin
-    Showmessage('Could not locate file : ' + TempItem.Hint);
+  else
+  begin
+    ShowMessage('Could not locate file : ' + TempItem.Hint);
     RecentXbefiles1.Remove(TempItem);
   end;
 end;
@@ -1170,12 +1178,14 @@ var
   TempItem: TMenuItem;
 begin
   TempItem := Sender as TMenuItem;
-  if FileExists(TempItem.Hint) then begin
+  if FileExists(TempItem.Hint) then
+  begin
     ShellExecute(application.Handle, 'open', PChar(TempItem.Hint), nil, nil, SW_SHOWDEFAULT);
     RecentExeAdd(TempItem.Hint);
   end
-  else begin
-    Showmessage('Could not locate file : ' + TempItem.Hint);
+  else
+  begin
+    ShowMessage('Could not locate file : ' + TempItem.Hint);
     RecentExefiles1.Remove(TempItem);
   end;
 end;

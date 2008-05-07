@@ -3,9 +3,10 @@ unit uKernelThunk;
 interface
 
 uses
+  // Delphi
   Types;
 
-function CxbxKrnl_KernelThunkTable : pointer; stdcall;
+function CxbxKrnl_KernelThunkTable: Pointer; stdcall;
 
 implementation
 
@@ -381,9 +382,9 @@ var
   );
 
 
-function CxbxKrnl_KernelThunkTable : pointer; stdcall;
+function CxbxKrnl_KernelThunkTable: Pointer; stdcall;
 begin
-  result := @KernelThunkTable;
+  Result := @KernelThunkTable;
 end;
 
 end.

@@ -5,11 +5,11 @@ uses
   u_About in 'u_About.pas' {frm_About},
   ufrm_Main in 'ufrm_Main.pas' {frmXdkTracker},
   u_xdkversions in 'u_xdkversions.pas' {frm_Xdkversion},
-  uData in 'uData.pas',
   uPublisher in 'uPublisher.pas' {frm_Publisher},
   uImportGames in 'uImportGames.pas' {frm_ImportGames},
-  uXML in '..\..\..\uXML.pas',
-  uConsts in '..\..\..\uConsts.pas';
+  uData in 'uData.pas',
+  uConsts in '..\..\..\uConsts.pas',
+  uXML in '..\..\..\uXML.pas';
 
 {$R *.res}
 

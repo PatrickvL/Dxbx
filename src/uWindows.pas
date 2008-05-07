@@ -7,25 +7,28 @@ function GetTempDirectory: string;
 
 implementation
 
-Uses
+uses
+	// Delphi
   Windows;
 
 function IsWindowsVista: Boolean;
-var VerInfo: TOSVersioninfo;
+var
+  VerInfo: TOSVersioninfo;
 begin
   VerInfo.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
   GetVersionEx(VerInfo);
   Result := VerInfo.dwMajorVersion >= 6;
 end;
 
-function GetTempDirectory: string;
+function GetTempDirectory(): string;
 var
-  Buffer: array[0..Max_path] of char;
+  Buffer: array[0..Max_path] of Char;
 begin
   FillChar(Buffer, Max_Path + 1, 0);
   GetTempPath(Max_path, Buffer);
   Result := string(Buffer);
-  if Result[Length(Result)] <> '\' then Result := Result + '\';
+  if Result[Length(Result)] <> '\' then
+    Result := Result + '\';
 end;
 
 

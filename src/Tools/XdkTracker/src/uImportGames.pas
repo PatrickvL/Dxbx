@@ -3,6 +3,7 @@ unit uImportGames;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, StdCtrls, ExtCtrls;
 
@@ -15,10 +16,6 @@ type
     edt_Publisher: TEdit;
     lst_Import: TListView;
     lbl_NewGames: TLabel;
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

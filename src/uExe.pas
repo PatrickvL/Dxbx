@@ -56,8 +56,8 @@ type
 
   OptionalHeader = packed record
     m_magic: Word; // magic number [should be 0x010B]
-    m_linker_version_major: byte; // linker version [major]
-    m_linker_version_minor: byte; // linker version [minor]
+    m_linker_version_major: Byte; // linker version [major]
+    m_linker_version_minor: Byte; // linker version [minor]
     m_sizeof_code: DWord; // size of code
     m_sizeof_initialized_data: DWord; // size of initialized data
     m_sizeof_uninitialized_data: DWord; // size of uninitialized data
@@ -90,7 +90,7 @@ type
 
   // PE Section Header
   SectionHeader = packed record
-    m_name: array[0..7] of char; // name of section
+    m_name: array[0..7] of Char; // name of section
     m_virtual_size: DWord; // virtual size of segment
     m_virtual_addr: DWord; // virtual address of segment
     m_sizeof_raw: DWord; // size of raw data
@@ -102,8 +102,7 @@ type
     m_characteristics: DWord; // characteristics for this segment
   end;
 
-  TExe = class
-  private
+  TExe = class(TObject)
   public
     m_DOSHeader: DOSHeader;
     m_Header: Header;
@@ -333,7 +332,7 @@ end;
 function TExe.doExport(const x_szExeFilename: string): Boolean;
 var
   ExeFile: TFileStream;
-  lIndex: integer;
+  lIndex: Integer;
   RawSize, RawAddr: DWord;
 begin
   Result := True;
@@ -353,7 +352,7 @@ begin
     Result := False;
     MessageDlg('Could not write dos stub', mtError, [mbOk], 0);
     WriteLog('Export: Could not write dos stub');
-    exit;
+    Exit;
   end;
 
   WriteLog('Export: Writting DOS stub...OK');
@@ -376,12 +375,14 @@ begin
     Result := False;
     WriteLog('Export: Could not write PE optional header');
     MessageDlg('Could not write PE optional header', mtError, [mbOk], 0);
-    exit;
+    Exit;
   end;
+  
   WriteLog('Export: Writing Optional Header...OK');
 
   // write section headers
-  for lIndex := 0 to m_Header.m_sections - 1 do begin
+  for lIndex := 0 to m_Header.m_sections - 1 do
+  begin
     WriteLog('Export: Writing Section Header 0x' + IntToStr(lIndex) + '04X...');
     try
       ExeFile.Write(m_Sectionheader[lIndex], SIzeOf(m_SectionHeader[lIndex]));
@@ -389,9 +390,10 @@ begin
       WriteLog('Export: Could not write PE section header ' + IntToStr(lIndex));
       MessageDlg('Could not write PE section header ' + IntToStr(lIndex), mtError, [mbOk], 0);
       Result := False;
-      exit;
+      Exit;
     end;
   end;
+  
   WriteLog('Export: Writing Section Headers...OK');
 
   // write sections

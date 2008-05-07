@@ -4,32 +4,33 @@ interface
 
 procedure EmuSwapFS;
 procedure EmuCleanupFS;
-function EmuIsXboxFS : Boolean;
+function EmuIsXboxFS: Boolean;
 
 var
-  EmuAutoSleepRate : Integer = -1;
+  EmuAutoSleepRate: Integer = -1;
 
 implementation
 
 uses
+  // Delphi
   SysUtils;
 
-
-function EmuIsXboxFS : Boolean;
+function EmuIsXboxFS: Boolean;
 var
-  chk : char;
+  chk: Char;
 begin
   asm
     mov ah, fs:16h
     mov chk, ah
   end;
+
   Result := (chk = '1');
 end;
 
 procedure EmuSwapFS;
 const
 {$J+}
-  dwInterceptionCount : Integer = 0;
+  dwInterceptionCount: Integer = 0;
 {$J-}
 begin
   // Note that this is only the *approximate* interception count,
@@ -42,13 +43,11 @@ begin
   end;
 
   // Every "N" interceptions, perform various periodic services
-  if((dwInterceptionCount + 1) >= EmuAutoSleepRate) then
+  if (dwInterceptionCount + 1) >= EmuAutoSleepRate then
   begin
     // If we're in the Xbox FS, wait until the next swap
     if EmuIsXboxFS then
-    begin
-      Dec (dwInterceptionCount );
-    end
+      Dec(dwInterceptionCount)
     else
     begin
       // Yield!
@@ -61,7 +60,8 @@ begin
 end; // EmuSwapFS
 
 procedure EmuCleanupFS;
-var wSwapFS : Integer;
+//var
+//  wSwapFS: Integer;
 begin
 (*{
     uint16 wSwapFS = 0;

@@ -31,8 +31,6 @@ uses
 
 type
   TProgresoCreacionISO = class(TThread)
-  private
-    { Private declarations }
   protected
     procedure Execute; override;
   end;
@@ -42,23 +40,27 @@ var
 
 implementation
 
-{ ProgresoCreacionISO }
+uses
+  // XIso
+  FormCreacionISO, xisomakerv2;
 
-uses FormCreacionISO, xisomakerv2;
-
-procedure AvanzarProgreso(Fichero: string);
+procedure AdvanceProgres(FileName: string);
 begin
   Form5.ProgressBar1.StepIt;
 end;
+
+{ ProgresoCreacionISO }
 
 procedure TProgresoCreacionISO.Execute;
 var
   ManagerXISO: TAdminXISO;
 begin
   Estado := False;
-  if not Form5.SaveDialog1.Execute then Exit;
+  if not Form5.SaveDialog1.Execute then
+    Exit;
+    
   ManagerXISO := TAdminXISO.Create(Form5.Manager);
-  ManagerXISO.ProgresoxISO := AvanzarProgreso;
+  ManagerXISO.ProgresoxISO := AdvanceProgres;
   ManagerXISO.CrearXISO(Form5.SaveDialog1.FileName);
   ManagerXISO.Free;
   Estado := True;

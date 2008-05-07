@@ -33,69 +33,76 @@ uses
   ufrm_Main in 'ufrm_Main.pas' {frm_Main},
   uxiso in 'uxiso.pas',
   uxisomaker in 'uxisomaker.pas',
-  Textos in 'Textos.pas',
+  TextConsts in 'TextConsts.pas',
   ufrm_Language in 'ufrm_Language.pas' {frmLanguage},
   ufrmProgress in 'ufrmProgress.pas' {frmProgress},
-  GenerarXDFS in 'GenerarXDFS.pas',
+  GenerateXDFS in 'GenerateXDFS.pas',
   Grabacion in 'Grabacion.pas' {Form4},
   CreacionISO in 'CreacionISO.pas',
   FormCreacionISO in 'FormCreacionISO.pas' {Form5},
   ProgresoCreacionISO in 'ProgresoCreacionISO.pas',
   xisomakerv3 in 'xisomakerv3.pas',
-  xisomakerv2 in 'xisomakerv2.pas';
+  xisomakerv2 in 'xisomakerv2.pas',
+  Win32ASPI in 'Win32ASPI.pas',
+  CDROM in 'CDROM.pas';
 
 {$R *.res}
 
 var
-  Parametro, CarpetaParametro, ImagenParametro, S: string;
-  i, j: integer;
-  MensajesActivados: Boolean;
+  Parameter, CarpetaParametro, ImagenParametro, S: string;
+  i, j: Integer;
+  MessagesEnabled: Boolean;
   Idioma: LANGID;
 begin
   Idioma := GetUserDefaultLangID();
-  if (word(Idioma and $000F)) = LANG_SPANISH then
+  if Word(Idioma and $000F) = LANG_SPANISH then
   begin
-          //SetLocalOverrides(ParamStr(0),'esp');
+    // SetLocalOverrides(ParamStr(0),'esp');
     if LoadNewResourceModule(LANG_SPANISH) <> 0 then
       ReinitializeForms;
   end
   else
   begin
-          //SetLocalOverrides(ParamStr(0),'enu');
+    // SetLocalOverrides(ParamStr(0),'enu');
     if LoadNewResourceModule(LANG_ENGLISH) <> 0 then
       ReinitializeForms;
   end;
 
-  MensajesActivados := True;
+  MessagesEnabled := True;
   for j := 0 to ParamCount - 1 do
     if Copy(ParamStr(j), 1, 2) = '-n' then
     begin
-      MensajesActivados := False;
+      MessagesEnabled := False;
       Break;
     end;
+
   for i := 0 to ParamCount - 1 do
   begin
-    Parametro := Copy(ParamStr(i), 1, 2);
+    Parameter := Copy(ParamStr(i), 1, 2);
 
-    if Parametro = '-e' then
+    if Parameter = '-e' then
     begin
       OrigenDatos := OD_IMAGEN;
       if not AbrirXISO(ParamStr(i + 1)) then
       begin
-        if MensajesActivados then
-          MessageBox(Application.Handle, PChar(rcEngImagenNoXBOX), PChar('xISO'), MB_ICONWARNING or MB_OK);
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SImagenNoXBOX), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
         Exit;
       end;
+
       NombreImagen := ParamStr(i + 1);
 
       CarpetaParametro := '';
       for j := 0 to ParamCount - 1 do
         if Copy(ParamStr(j), 1, 2) = '-f' then
           CarpetaParametro := ParamStr(j + 1);
+
       if CarpetaParametro = '' then
       begin
-        if MensajesActivados then
-          MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
         Exit;
       end;
 
@@ -104,125 +111,139 @@ begin
 
       if not DirectoryExists(CarpetaParametro) then
       begin
-        if MensajesActivados then
-          MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
         Exit;
       end;
 
       ExtraerCD(0, 0, 0, 0, CarpetaParametro);
-      if MensajesActivados then
-        MessageBox(Application.Handle, PChar(rcEngFinExtraccion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
+      if MessagesEnabled then
+        MessageBox(Application.Handle, PChar(SFinExtraccion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
+
       Exit;
-    end
-    else
-      if Parametro = '-m' then
+    end;
+
+    if Parameter = '-m' then
+    begin
+      CarpetaParametro := '';
+      for j := 0 to ParamCount - 1 do
+        if Copy(ParamStr(j), 1, 2) = '-f' then
+          CarpetaParametro := ParamStr(j + 1);
+
+      if CarpetaParametro = '' then
       begin
-        CarpetaParametro := '';
-        for j := 0 to ParamCount - 1 do
-          if Copy(ParamStr(j), 1, 2) = '-f' then
-            CarpetaParametro := ParamStr(j + 1);
-        if CarpetaParametro = '' then
-        begin
-          if MensajesActivados then
-            MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
-          Exit;
-        end;
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
 
-        if not DirectoryExists(CarpetaParametro) then
-          ForceDirectories(CarpetaParametro);
-
-        if not DirectoryExists(CarpetaParametro) then
-        begin
-          if MensajesActivados then
-            MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
-          Exit;
-        end;
-
-        CrearImagen(CarpetaParametro, ParamStr(i + 1));
-                //MessageBox(Application.Handle, PChar(rcFinCreacion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
         Exit;
-      end
+      end;
+
+      if not DirectoryExists(CarpetaParametro) then
+        ForceDirectories(CarpetaParametro);
+
+      if not DirectoryExists(CarpetaParametro) then
+      begin
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
+        Exit;
+      end;
+
+      CrearImagen(CarpetaParametro, ParamStr(i + 1));
+      // MessageBox(Application.Handle, PChar(rcFinCreacion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
+      Exit;
+    end;
+
+    if Parameter = '-d' then
+    begin
+      CarpetaParametro := '';
+      for j := 0 to ParamCount - 1 do
+        if Copy(ParamStr(j), 1, 2) = '-f' then
+          CarpetaParametro := ParamStr(j + 1);
+
+      if CarpetaParametro = '' then
+      begin
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
+        Exit;
+      end;
+
+      if not DirectoryExists(CarpetaParametro) then
+        ForceDirectories(CarpetaParametro);
+
+      if not DirectoryExists(CarpetaParametro) then
+      begin
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
+        Exit;
+      end;
+
+      ImagenParametro := ParamStr(i + 1);
+      if ImagenParametro[Length(ImagenParametro)] = '\' then
+        ImagenParametro[Length(ImagenParametro)] := ' ';
+
+      ImagenParametro := ExtractFileName(ImagenParametro) + '.xiso';
+
+      CrearImagen(CarpetaParametro, ImagenParametro);
+      // MessageBox(Application.Handle, PChar(rcFinCreacion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
+      Exit;
+    end;
+
+    if Parameter = '-x' then
+    begin
+      OrigenDatos := OD_IMAGEN;
+      if not AbrirXISO(ParamStr(i + 1)) then
+      begin
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SImagenNoXBOX), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
+        Exit;
+      end;
+
+      NombreImagen := ParamStr(i + 1);
+
+      CarpetaParametro := '';
+      for j := 0 to ParamCount - 1 do
+        if Copy(ParamStr(j), 1, 2) = '-f' then
+          CarpetaParametro := ParamStr(j + 1);
+
+      if CarpetaParametro = '' then
+      begin
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
+
+        Exit;
+      end;
+
+
+      if lowercase(ExtractFileExt(ExtractFileName(NombreImagen))) = '.xiso' then
+        S := Copy(NombreImagen, 1, Length(NombreImagen) - 4)
       else
-        if Parametro = '-d' then
-        begin
-          CarpetaParametro := '';
-          for j := 0 to ParamCount - 1 do
-            if Copy(ParamStr(j), 1, 2) = '-f' then
-              CarpetaParametro := ParamStr(j + 1);
-          if CarpetaParametro = '' then
-          begin
-            if MensajesActivados then
-              MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
-            Exit;
-          end;
+        S := NombreImagen;
 
-          if not DirectoryExists(CarpetaParametro) then
-            ForceDirectories(CarpetaParametro);
+      CarpetaParametro := ExtractFilePath(CarpetaParametro) + Trim(ChangeFileExt(ExtractFileName(NombreImagen), ' ')) + '\';
 
-          if not DirectoryExists(CarpetaParametro) then
-          begin
-            if MensajesActivados then
-              MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
-            Exit;
-          end;
+      if not DirectoryExists(CarpetaParametro) then
+        CreateDir(CarpetaParametro);
 
-          ImagenParametro := ParamStr(i + 1);
-          if ImagenParametro[Length(ImagenParametro)] = '\' then
-            ImagenParametro[Length(ImagenParametro)] := ' ';
+      if not DirectoryExists(CarpetaParametro) then
+      begin
+        if MessagesEnabled then
+          MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
 
-          ImagenParametro := ExtractFileName(ImagenParametro) + '.xiso';
+        Exit;
+      end;
 
-          CrearImagen(CarpetaParametro, ImagenParametro);
-                //MessageBox(Application.Handle, PChar(rcFinCreacion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
-          Exit;
-        end
-        else
-          if Parametro = '-x' then
-          begin
-            OrigenDatos := OD_IMAGEN;
-            if not AbrirXISO(ParamStr(i + 1)) then
-            begin
-              if MensajesActivados then
-                MessageBox(Application.Handle, PChar(rcEngImagenNoXBOX), PChar('xISO'), MB_ICONWARNING or MB_OK);
-              Exit;
-            end;
-            NombreImagen := ParamStr(i + 1);
+      ExtraerCD(0, 0, 0, 0, CarpetaParametro);
+      if MessagesEnabled then
+        MessageBox(Application.Handle, PChar(SFinExtraccion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
 
-            CarpetaParametro := '';
-            for j := 0 to ParamCount - 1 do
-              if Copy(ParamStr(j), 1, 2) = '-f' then
-                CarpetaParametro := ParamStr(j + 1);
-            if CarpetaParametro = '' then
-            begin
-              if MensajesActivados then
-                MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
-              Exit;
-            end;
-
-
-            if lowercase(ExtractFileExt(ExtractFileName(NombreImagen))) = '.xiso' then
-              S := Copy(NombreImagen, 1, Length(NombreImagen) - 4)
-            else
-              S := NombreImagen;
-
-            CarpetaParametro := ExtractFilePath(CarpetaParametro) + Trim(ChangeFileExt(ExtractFileName(NombreImagen), ' ')) + '\';
-
-            if not DirectoryExists(CarpetaParametro) then
-              CreateDir(CarpetaParametro);
-
-            if not DirectoryExists(CarpetaParametro) then
-            begin
-              if MensajesActivados then
-                MessageBox(Application.Handle, PChar(rcEngCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
-              Exit;
-            end;
-
-            ExtraerCD(0, 0, 0, 0, CarpetaParametro);
-            if MensajesActivados then
-              MessageBox(Application.Handle, PChar(rcEngFinExtraccion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
-            Exit;
-          end;
-  end;
+      Exit;
+    end;
+  end; // for ParamCount
 
   Application.Initialize;
   Application.Title := 'xISO 1.1.5';

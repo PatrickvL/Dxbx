@@ -3,21 +3,25 @@ unit uEmu;
 interface
 
 uses
-  uEnums, uEmuFS, uXbe, uLog, uConsts, Windows;
+  // Delphi
+  Windows,
+  // Dxbx
+  uEnums, uEmuFS, uXbe, uLog, uConsts;
 
 type
-  tEntryProc = Procedure();
-  pEntryProc = ^tEntryProc;
+  TEntryProc = procedure();
+  PEntryProc = ^TEntryProc;
 
-procedure CxbxKrnlInit( hwndParent : THandle;
-                   pTLSData : pointer;
-                   pTLS : P_XBE_TLS;
-                   pLibraryVersion : P_XBE_LIBRARYVERSION;
-                   DbgMode : DebugMode;
-                   szDebugFilename : PChar;
-                   pXbeHeader : P_XBE_HEADER;
-                   dwXbeHeaderSize : DWord;
-                   Entry : pEntryProc ); stdcall;
+procedure CxbxKrnlInit(
+  hwndParent: THandle;
+  pTLSData: Pointer;
+  pTLS: P_XBE_TLS;
+  pLibraryVersion: P_XBE_LIBRARYVERSION;
+  DbgMode: DebugMode;
+  szDebugFilename: PChar;
+  pXbeHeader: P_XBE_HEADER;
+  dwXbeHeaderSize: DWord;
+  Entry: PEntryProc); stdcall;
 
 procedure CxbxKrnlNoFunc; stdcall;
 
@@ -30,17 +34,19 @@ procedure EmuCleanThread; export;   *)
 implementation
 
 uses
+  // Delphi
   SysUtils, Dialogs;
 
-procedure CxbxKrnlInit( hwndParent : THandle;
-                        pTLSData : pointer;
-                        pTLS : P_XBE_TLS;
-                        pLibraryVersion : P_XBE_LIBRARYVERSION;
-                        DbgMode : DebugMode;
-                        szDebugFilename : PChar;
-                        pXbeHeader : P_XBE_HEADER;
-                        dwXbeHeaderSize : DWord;
-                        Entry : pEntryProc ); stdcall;
+procedure CxbxKrnlInit(
+  hwndParent: THandle;
+  pTLSData: Pointer;
+  pTLS: P_XBE_TLS;
+  pLibraryVersion: P_XBE_LIBRARYVERSION;
+  DbgMode: DebugMode;
+  szDebugFilename: PChar;
+  pXbeHeader: P_XBE_HEADER;
+  dwXbeHeaderSize: DWord;
+  Entry: PEntryProc); stdcall;
 begin
 //  CreateLogs(ltKernel);
   WriteLog('EmuInit');
@@ -426,14 +432,14 @@ end;
 procedure EmuCleanThread;
 begin
   if EmuIsXboxFS then
-      EmuSwapFS();    // Win2k/XP FS
+    EmuSwapFS();    // Win2k/XP FS
 
   EmuCleanupFS;
 
   TerminateThread(GetCurrentThread(), 0);
 end;
 
-procedure EmuCleanup ( szErrorMessage : String );
+procedure EmuCleanup(szErrorMessage: string);
 begin
   CreateLogs(ltKernel);
   WriteLog('EmuInit');
@@ -497,18 +503,17 @@ begin
   EmuSwapFS();   // XBox FS*)
 end;
 
-function EmuVerifyVersion( const szVersion : string ) : boolean;
+function EmuVerifyVersion(const szVersion: string): Boolean;
 begin
-  Result := False;
-  if szVersion = _DXBX_VERSION then
-    Result := True;
+  Result := (szVersion = _DXBX_VERSION);
 end;
 
 procedure EmuPanic; stdcall;
 begin
-   if EmuIsXboxFS then
-     EmuSwapFS; // Win2k/XP FS
-  WriteLog('Emu: EmuPanic' + IntToStr( GetCurrentThreadId));
+  if EmuIsXboxFS then
+    EmuSwapFS; // Win2k/XP FS
+
+  WriteLog('Emu: EmuPanic' + IntToStr(GetCurrentThreadId));
 
   EmuCleanup('Kernel Panic!');
 

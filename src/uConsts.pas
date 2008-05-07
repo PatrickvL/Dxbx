@@ -3,13 +3,11 @@ unit uConsts;
 interface
 
 const
-
-  {$IFDEF _DEBUG}
-    cDLLNAME = 'CxbxKrnl.dll';
-  {$ELSE}
-    cDLLNAME = 'Cxbx.dll';
-  {$ENDIF}
-
+{$IFDEF _DEBUG}
+  cDLLNAME = 'CxbxKrnl.dll';
+{$ELSE}
+  cDLLNAME = 'Cxbx.dll';
+{$ENDIF}
 
   // Application Versions
   _DXBX_VERSION = '0.0.0.8';

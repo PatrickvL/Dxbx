@@ -2,20 +2,21 @@ unit uEmuShared;
 
 interface
 
-
-procedure SetXbePath(const path : PChar ); stdcall;
+procedure SetXbePath(const Path: PChar); stdcall;
 procedure Init;
-procedure Cleanup; 
-
+procedure Cleanup;
 
 implementation
 
-Uses
-  uEnums, uLog, Dialogs, uMutex;
+uses
+  // Delphi
+  Dialogs,
+  // Dxbx
+  uEnums, uLog, uMutex;
 
-Var
-  m_XbePath : String;
-  g_EmuSharedRefCount : Integer;
+var
+  m_XbePath: string;
+  g_EmuSharedRefCount: Integer;
 
 procedure Init;
 begin
@@ -71,13 +72,13 @@ begin
    { if init then
        EmuShared();
                 }
-   Inc ( g_EmuSharedRefCount );
+  Inc(g_EmuSharedRefCount);
 end;
 
 procedure Cleanup;
 begin
-  WriteLog ( 'EmuSharedCleanup' );
-  Dec ( g_EmuSharedRefCount );
+  WriteLog('EmuSharedCleanup');
+  Dec(g_EmuSharedRefCount);
 
   (*if(g_EmuSharedRefCount = 0)
     EmuShared();
@@ -86,14 +87,12 @@ begin
   CloseLogs;
 end;
 
-procedure SetXbePath(const path : PChar ); stdCall;
+procedure SetXbePath(const Path: PChar); stdcall;
 begin
   Lock();
-  WriteLog ( 'Emu: SetXbePath -  ' + path );
+  WriteLog('Emu: SetXbePath -  ' + Path);
   m_XbePath := Path;
   Unlock();
 end;
-
-
 
 end.

@@ -25,6 +25,7 @@ unit Win32ASPI;
 interface
 
 uses
+  // Delphi
   Windows, SysUtils, Classes, MMSystem;
 
 const
@@ -566,7 +567,7 @@ begin
 	      FHostAdapterInfo[HA_IDx].Align := (SRBPacket.HA_Unique[1] * $0100) + SRBPacket.HA_Unique[0];
         if (SRBPacket.HA_Unique[2] and $02) = $02 then
         begin
-          FHostAdapterInfo[HA_IDx].TxReport  := true;
+          FHostAdapterInfo[HA_IDx].TxReport  := True;
         end
         else
         begin

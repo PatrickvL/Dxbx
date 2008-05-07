@@ -3,6 +3,7 @@ unit uLog;
 interface
 
 uses
+  // Dxbx
   uEnums;
 
 var
@@ -20,7 +21,10 @@ procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 implementation
 
 uses
-  uLogConsole, Dialogs;
+  // Delphi
+  Dialogs,
+  // Dxbx
+  uLogConsole;
 
 var
   LogMode     : DebugMode = DM_NONE;
@@ -91,22 +95,24 @@ end;
 
 procedure CloseLogs;
 begin
-  if Assigned ( frm_LogConsole ) then
+  if Assigned(frm_LogConsole) then
     frm_LogConsole.Close;
 
-  if LogFileOpen then begin
+  if LogFileOpen then
+  begin
     CloseFile(LogFile);
     LogFileOpen := False;
   end;
+
   LogMode := DM_NONE;
-End;
+end;
 
 procedure WriteLog(aText: string);
 begin
-    case LogMode of
-      DM_CONSOLE : frm_LogConsole.Log.Lines.Add(aText);
-      DM_FILE    : WriteLn(LogFile, aText);
-    end;
+  case LogMode of
+    DM_CONSOLE : frm_LogConsole.Log.Lines.Add(aText);
+    DM_FILE    : WriteLn(LogFile, aText);
+  end;
 end;
 
 end.

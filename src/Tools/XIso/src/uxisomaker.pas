@@ -26,133 +26,137 @@ unit uxisomaker;
 
 interface
 
-uses Windows, Messages, Classes, SysUtils, Dialogs, uxiso, Textos;
+uses
+  // Delphi
+  Windows, Messages, Classes, SysUtils, Dialogs,
+  // Dxbx
+  uxiso, TextConsts;
 
 type
   TxISOProgreso = procedure(Fichero: string);
-  TxISOMensaje = procedure(Mensaje: string);
+  TxISOMensaje = procedure(aMessage: string);
 
 var
   ProgresoxISO: TxISOProgreso;
   MensajesxISO: TxISOMensaje;
   Parar: Boolean;
 
-function NumeroFicheros(Carpeta: string): integer;
-function CrearXISO(NombreImagen: string; Carpeta: string): Boolean;
-function EscanearXISO(Imagen: TFilestream; Carpeta: string; var SigSectorVacio: int64): Boolean;
-function XDFS2ISO9660(Fichero: string): boolean;
+function NumeroFicheros(Folder: string): Integer;
+function CrearXISO(NombreImagen: string; Folder: string): Boolean;
+function EscanearXISO(Imagen: TFilestream; Folder: string; var SigSectorVacio: Int64): Boolean;
+function XDFS2ISO9660(Fichero: string): Boolean;
 procedure AsignarNodos(var Lista: TList);
 
 implementation
 
 type
   PByteArray64 = ^TByteArray64;
-  TByteArray64 = array[0..65535] of byte;
+  TByteArray64 = array[0..65535] of Byte;
 
   PByteArray256 = ^TByteArray256;
-  TByteArray256 = array[0..262143] of byte;
+  TByteArray256 = array[0..262143] of Byte;
 
 {$A-}
   TxVD = record
-    IDIn: array[0..19] of char;
-    DirRaiz: integer;
-    TamRaiz: integer;
+    IDIn: array[0..19] of Char;
+    DirRaiz: Integer;
+    TamRaiz: Integer;
     FechaHora: FILETIME;
-    SinUso: array[0..1991] of byte;
-    IDOut: array[0..19] of char;
+    SinUso: array[0..1991] of Byte;
+    IDOut: array[0..19] of Char;
   end;
 
   pxFichero = ^TxFichero;
   TxFichero = record
-    pIzq: word;
-    pDer: word;
-    SectorIn: integer;
-    Tamano: integer;
-    Atributo: byte;
-    LongNombre: byte;
-    Nombre: array[0..255] of char;
+    pIzq: Word;
+    pDer: Word;
+    SectorIn: Integer;
+    Tamano: Integer;
+    Atributo: Byte;
+    LongNombre: Byte;
+    Nombre: array[0..255] of Char;
   end;
 {$A+}
 
   PEntradaDir = ^TEntradaDir;
   TEntradaDir = record
     Nombre: string;
-    Tamano: integer;
-    SectorIn: integer;
-    Sectores: integer;
+    Tamano: Integer;
+    SectorIn: Integer;
+    Sectores: Integer;
     Directorio: Boolean;
     NodoDer: Word;
     NodoIzq: Word;
-    Atributos: integer;
+    Attributes: Integer;
   end;
 
 {$A-}
   TFechaHora = record
-    Ano: byte;
-    Mes: byte;
-    Dia: byte;
+    Ano: Byte;
+    Mes: Byte;
+    Dia: Byte;
 
-    Hora: byte;
-    Minuto: byte;
-    Segundo: byte;
+    Hora: Byte;
+    Minuto: Byte;
+    Segundo: Byte;
 
     DifHora: shortint;
   end;
 
   TFechaHora2 = record
-    Ano: array[0..3] of char;
-    Mes: array[0..1] of char;
-    Dia: array[0..1] of char;
+    Ano: array[0..3] of Char;
+    Mes: array[0..1] of Char;
+    Dia: array[0..1] of Char;
 
-    Hora: array[0..1] of char;
-    Minuto: array[0..1] of char;
-    Segundo: array[0..1] of char;
+    Hora: array[0..1] of Char;
+    Minuto: array[0..1] of Char;
+    Segundo: array[0..1] of Char;
 
-    Cero1: array[0..1] of char;
+    Cero1: array[0..1] of Char;
 
-    Cero2: byte;
+    Cero2: Byte;
   end;
 
   TDirectorio_Raiz = record
-    Longitud: byte;
-    Extended: byte;
-    SectorLE: integer;
-    SectorBE: integer;
-    TamanoLE: integer;
-    TamanoBE: integer;
+    Longitud: Byte;
+    Extended: Byte;
+    SectorLE: Integer;
+    SectorBE: Integer;
+    TamanoLE: Integer;
+    TamanoBE: Integer;
     FechaHora: TFechaHora;
-    Atributos: byte; // 0 = Fichero, 1 = Fichero Oculto, 2 = Directorio, 3 = Directorio Oculto
-    FUnitSize: byte; // File Unit Size ???
-    IGapSize: byte; // Interleave Gap Size ???
-    VSeqSizeLE: word; // Volume Sequence Size ??? Little Endian
-    VSeqSizeBE: word; // Volume Sequence Size ??? Big Endian
-    LongNombre: byte; // Longitud del nombre
-    Nombre: byte; // Nombre del directorio
+    Attributes: Byte; // 0 = Fichero, 1 = Fichero Oculto, 2 = Directorio, 3 = Directorio Oculto
+    FUnitSize: Byte; // File Unit Size ???
+    IGapSize: Byte; // Interleave Gap Size ???
+    VSeqSizeLE: Word; // Volume Sequence Size ??? Little Endian
+    VSeqSizeBE: Word; // Volume Sequence Size ??? Big Endian
+    LongNombre: Byte; // Longitud del nombre
+    Nombre: Byte; // Nombre del directorio
   end;
 
   TPVD = record
     Id1: Byte; // 0 = Boot Record, 1 = PVD, 2 = SVD
                                         // 3 = VPD , 255 = Terminador de VD
-    CD001: array[0..4] of char; // Siempre CD001
-    Id2: byte; // Version del VD (Volume Descriptor)
-    Nulo2: byte; // 1 $00. No se usa.
-    IdSistema: array[0..31] of char; // Identificador del CD (interno)
-    Etiqueta: array[0..31] of char; // Etiqueta del CD.
-    Nulo3: array[0..7] of byte; // 8 $00
+    CD001: array[0..4] of Char; // Siempre CD001
+    Id2: Byte; // Version del VD (Volume Descriptor)
+    Nulo2: Byte; // 1 $00. No se usa.
+    IdSistema: array[0..31] of Char; // Identificador del CD (interno)
+    Etiqueta: array[0..31] of Char; // Etiqueta del CD.
+    Nulo3: array[0..7] of Byte; // 8 $00
     SectorTLE: Integer; // Tamaño total de la imagen en sectores. Little Endian
     SectorTBE: Integer; // Tamaño total de la imagen en sectores. Big Endian
-    Nulo4: array[0..31] of char; // 32 $00
+    Nulo4: array[0..31] of Char; // 32 $00
 
-    VStamLE: word; // Siempre $1. Tamaño del Volume Set. Little Endian
-    VStamBE: word; // Siempre $1. Tamaño del Volume Set. Big Endian
-    VSnumLE: word; // Siempre $1. Numero de Volume Sequence. Little Endian
-    VSnumBE: word; // Siempre $1. Numero de Volume Sequence. Big Endian
+    VStamLE: Word; // Siempre $1. Tamaño del Volume Set. Little Endian
+    VStamBE: Word; // Siempre $1. Tamaño del Volume Set. Big Endian
+    VSnumLE: Word; // Siempre $1. Numero de Volume Sequence. Little Endian
+    VSnumBE: Word; // Siempre $1. Numero de Volume Sequence. Big Endian
 
-    TSectLE: word; // Siempre 2048. Tamaño Sector. Little Endian
-    TSectBE: word; // Siempre 2048. Tamaño Sector. Big Endian
+    TSectLE: Word; // Siempre 2048. Tamaño Sector. Little Endian
+    TSectBE: Word; // Siempre 2048. Tamaño Sector. Big Endian
 
-    PTtamLE: integer; // Tamaño de la tabla de directorios. Little Endian
-    PTtamBE: integer; // Tamaño de la tabla de directorios. Big Endian
+    PTtamLE: Integer; // Tamaño de la tabla de directorios. Little Endian
+    PTtamBE: Integer; // Tamaño de la tabla de directorios. Big Endian
 
     PTLLE1: Integer; // Sector de la tabla de directorios tipo L 1. Little Endian
     PTLLE2: Integer; // Sector de la tabla de directorios tipo L 2. Little Endian
@@ -161,32 +165,32 @@ type
 
     DirRaiz: TDirectorio_Raiz;
 
-    NomVolume: array[0..127] of char; // Nombre del CD extendido 128 caracteres
-    NomPubli: array[0..127] of char; // Nombre del Publicador.
-    NomCreador: array[0..127] of char; // Nombre del creador del CD 128 caracteres
-    NomApplica: array[0..127] of char; // Nombre del programa con en el que se hizo
-    FichCopy: array[0..36] of char; // Copyrigh.txt
-    FichAbst: array[0..36] of char; // Abstract.txt
-    FichBibl: array[0..36] of char; // Bibliogr.txt
+    NomVolume: array[0..127] of Char; // Nombre del CD extendido 128 caracteres
+    NomPubli: array[0..127] of Char; // Nombre del Publicador.
+    NomCreador: array[0..127] of Char; // Nombre del creador del CD 128 caracteres
+    NomApplica: array[0..127] of Char; // Nombre del programa con en el que se hizo
+    FichCopy: array[0..36] of Char; // Copyrigh.txt
+    FichAbst: array[0..36] of Char; // Abstract.txt
+    FichBibl: array[0..36] of Char; // Bibliogr.txt
 
     FeHoCrea: TFechaHora2;
     FeHoModi: TFechaHora2;
     FeHoExpi: TFechaHora2;
     FeHoEfec: TFechaHora2;
 
-    VerEstruc: byte;
-    Cero: byte;
-    DatosApli: array[0..511] of char;
+    VerEstruc: Byte;
+    Cero: Byte;
+    DatosApli: array[0..511] of Char;
   end;
 
   PDirectorios = ^TDirectorios;
   TDirectorios = record
-    LongNombre: byte; // Longitud del nombre MAX 31 caracteres
-    Nulo: byte; // Numero de sectores en modo Extendido del directorio
+    LongNombre: Byte; // Longitud del nombre MAX 31 caracteres
+    Nulo: Byte; // Numero de sectores en modo Extendido del directorio
     Sector: Integer; // Sector donde se encuentra el Directorio
-    Nivel: word; // Nivel a que se encuentra el directorio sobre la raiz. Raiz = 1
-    Nombre: array[0..31] of char; // Nombre del directorio
-    Pad: byte; // Si la longitud del nombre es Impar se pone 1 sino no existe
+    Nivel: Word; // Nivel a que se encuentra el directorio sobre la raiz. Raiz = 1
+    Nombre: array[0..31] of Char; // Nombre del directorio
+    Pad: Byte; // Si la longitud del nombre es Impar se pone 1 sino no existe
   end;
 
   PTOC = ^TTOC;
@@ -204,11 +208,11 @@ type
     Minuto: Byte;
     Segundo: Byte;
     Zona: ShortInt;
-    Atributos: Byte;
+    Attributes: Byte;
     Nulo1: Byte;
     Nulo2: Byte;
-    VolumeSBE: array[0..1] of byte;
-    VolumeSLE: array[0..1] of byte;
+    VolumeSBE: array[0..1] of Byte;
+    VolumeSLE: array[0..1] of Byte;
     LongNombre: Byte;
     Nombre: array[0..49] of Char;
   end;
@@ -227,9 +231,9 @@ const
 
 //--- 4 Bytes a DWORD formato Motorola
 
-function Intel2Motorola(ValorInt32: integer): integer;
+function Intel2Motorola(ValorInt32: Integer): Integer;
 var
-  b3, b2, b1, b0: byte;
+  b3, b2, b1, b0: Byte;
 begin
   b0 := (ValorInt32 and $FF000000) shr 24; //Hi(Hi(ValorInt32));
   b1 := (ValorInt32 and $00FF0000) shr 16; //Hi(Lo(ValorInt32));
@@ -247,45 +251,48 @@ begin
   Result := (Lo(Valor) shl 8) or (Hi(Valor) shr 8);
 end;
 
-function NumeroFicheros(Carpeta: string): integer;
+function NumeroFicheros(Folder: string): Integer;
 var
   SR: TSearchRec;
 begin
   Result := 0;
 
-  if Carpeta[Length(Carpeta)] <> '\' then Carpeta := Carpeta + '\';
+  if Folder[Length(Folder)] <> '\' then Folder := Folder + '\';
 
-  if (FindFirst(Carpeta + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
+  if (FindFirst(Folder + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
     repeat
-      if (SR.Name[1] = '.') then Continue;
+      if SR.Name[1] = '.' then
+        Continue;
+        
       if (SR.Attr and faDirectory) = faDirectory then
-        Result := Result + NumeroFicheros(Carpeta + SR.Name + '\')
+        Result := Result + NumeroFicheros(Folder + SR.Name + '\')
       else
         Result := Result + 1;
     until (FindNext(SR) <> 0);
   end;
 end;
 
-function Tamano2Sector(Tamano: int64): int64;
+function Tamano2Sector(Tamano: Int64): Int64;
 begin
   Result := Tamano div 2048;
   if ((Tamano mod 2048) <> 0) then
     Result := Result + 1;
 end;
 
-function Vacio(Carpeta: string): integer;
+function Vacio(Folder: string): Integer;
 var
   SR: TSearchRec;
-  Ent, Resto: integer;
+  Ent, Resto: Integer;
   Entrada: PEntradaDir;
 begin
   Result := 0;
   Resto := 0;
-  if (FindFirst(Carpeta + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
+  if (FindFirst(Folder + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
     repeat
-      if (SR.Name[1] = '.') then continue;
+      if SR.Name[1] = '.' then
+        Continue;
 
       Ent := 14 + Length(SR.Name);
       Resto := ((4 - (Ent mod 4)) mod 4);
@@ -304,26 +311,28 @@ end;
 // Siempre es multiplo de 2048 (Tamaño Sector)
 // Si es 0 entonces el directorio es vacio
 
-function TamanoDirectorio(Carpeta: string): integer;
+function TamanoDirectorio(Folder: string): Integer;
 var
   SR: TSearchRec;
-  Ent, Resto, i: integer;
+  Ent, Resto, i: Integer;
   Lista: TList;
   Entrada: PEntradaDir;
 begin
   Result := 0;
   Resto := 0;
   Lista := TList.Create();
-  if (FindFirst(Carpeta + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
+  if (FindFirst(Folder + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
     repeat
-      if (SR.Name[1] = '.') then Continue;
-      new(Entrada);
+      if (SR.Name[1] = '.') then
+        Continue;
+
+      New(Entrada);
       Entrada.Nombre := SR.Name;
       Lista.Add(Entrada);
             { if (SR.Attr and faDirectory) = faDirectory then
              begin
-                  if Vacio(Carpeta+SR.Name+'\') = 0 then
+                  if Vacio(Folder+SR.Name+'\') = 0 then
                   begin
                         new(Entrada);
                         Entrada.Nombre := SR.Name;
@@ -403,7 +412,7 @@ end;
 
 procedure AsignarNodos(var Lista: TList);
 var
-  i, j, l, k, Cont: integer;
+  i, j, l, k, Cont: Integer;
   Elem, Elem2: PEntradaDir;
   ListaAux: TList;
 begin
@@ -441,11 +450,11 @@ begin
     Elem := PEntradaDir(ListaAux[i]);
           //Elem.NodoIzq := 0;
     k := Lista.IndexOf(Elem);
-    if (i = ListaAux.Count - 1) then
+    if i = (ListaAux.Count - 1) then
     begin
       PEntradaDir(Lista[k]).NodoIzq := 0;
       PEntradaDir(Lista[k]).NodoDer := 0;
-      break;
+      Break;
     end;
 
     Elem := PEntradaDir(ListaAux[i + 1]);
@@ -477,14 +486,14 @@ begin
   ListaAux.Free;
 end;
 
-procedure GenerarTabla(var lDirectorio: TList; var PosBuf: integer; Buffer: Pointer);
+procedure GenerarTabla(var lDirectorio: TList; var PosBuf: Integer; Buffer: Pointer);
 var
   xEntrada: TxFichero;
-  i, j: integer;
+  i, j: Integer;
   Entrada: PEntradaDir;
-  Atributos: Byte;
+  Attributes: Byte;
 begin
-  Atributos := 0;
+  Attributes := 0;
   for i := 0 to lDirectorio.Count - 1 do
   begin
     Entrada := PEntradaDir(lDirectorio[i]);
@@ -494,17 +503,17 @@ begin
     xEntrada.Tamano := Entrada.Tamano;
 
     if Entrada.Directorio then
-      Atributos := XF_DIRECTORIO
+      Attributes := XF_DIRECTORIO
     else
-      Atributos := XF_FICHERO;
+      Attributes := XF_FICHERO;
 
-    if (Entrada.Atributos and faReadOnly) = faReadOnly then Atributos := Atributos + XF_SOLOLECTURA;
-    if (Entrada.Atributos and faHidden) = faHidden then Atributos := Atributos + XF_OCULTO;
-    if (Entrada.Atributos and faSysFile) = faSysFile then Atributos := Atributos + XF_SISTEMA;
-               //if (Entrada.Atributos and faDirectory) = faDirectory then Atributos := Atributos + XF_DIRECTORIO;
-               //if (Entrada.Atributos and faArchive) = faArchive then Atributos := Atributos + XF_NORMAL;
+    if (Entrada.Attributes and faReadOnly) = faReadOnly then Attributes := Attributes + XF_SOLOLECTURA;
+    if (Entrada.Attributes and faHidden) = faHidden then Attributes := Attributes + XF_OCULTO;
+    if (Entrada.Attributes and faSysFile) = faSysFile then Attributes := Attributes + XF_SISTEMA;
+               //if (Entrada.Attributes and faDirectory) = faDirectory then Attributes := Attributes + XF_DIRECTORIO;
+               //if (Entrada.Attributes and faArchive) = faArchive then Attributes := Attributes + XF_NORMAL;
 
-    xEntrada.Atributo := Atributos;
+    xEntrada.Atributo := Attributes;
     xEntrada.LongNombre := Length(Entrada.Nombre);
 
     for j := 1 to Length(Entrada.Nombre) do
@@ -520,37 +529,37 @@ begin
 end;
 
 var
-  BufCopia: array[0..65535] of byte;
+  BufCopia: array[0..65535] of Byte;
 
-function EscanearXISO(Imagen: TFilestream; Carpeta: string; var SigSectorVacio: int64): Boolean;
+function EscanearXISO(Imagen: TFilestream; Folder: string; var SigSectorVacio: Int64): Boolean;
 var
   Buffer: Pointer;
   B1: PByteArray64;
   B2: PByteArray256;
-  TamBufRellenar: integer;
+  TamBufRellenar: Integer;
 
   SR: TSearchRec;
   lDirectorio, SubDirectorios: TList;
   xEntrada: TxFichero;
   Entrada: PEntradaDir;
   Fichero: TFileStream;
-  SectorTabla: int64;
-  PosBuf, i, long: integer;
-  Atributos: byte;
+  SectorTabla: Int64;
+  PosBuf, i, long: Integer;
+  Attributes: Byte;
   pNombre: PChar;
-  j, leido: integer;
+  j, leido: Integer;
 begin
-  if TamanoDirectorio(Carpeta) <= 65536 then
+  if TamanoDirectorio(Folder) <= 65536 then
   begin
-    new(B1);
+    New(B1);
     Buffer := B1;
     TamBufRellenar := 65536;
   end
   else
   begin
-    if TamanoDirectorio(Carpeta) > 65536 then
+    if TamanoDirectorio(Folder) > 65536 then
     begin
-      new(B2);
+      New(B2);
       Buffer := B2;
       TamBufRellenar := 262144;
     end;
@@ -561,21 +570,25 @@ begin
   SectorTabla := (SigSectorVacio - 1) * 2048;
   PosBuf := 0;
   Imagen.Seek(Imagen.Size, soBeginning);
-  MensajesxISO(rcEngEscaneandoCarpeta + Carpeta);
+  MensajesxISO(SEscaneandoCarpeta + Folder);
 
-  if (FindFirst(Carpeta + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
+  if (FindFirst(Folder + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
     repeat
-      if (SR.Name[1] = '.') then continue;
-      if Parar then Exit;
+      if SR.Name[1] = '.' then
+        Continue;
+        
+      if Parar then
+        Exit;
+        
             //if Assigned(ProgresoxISO) then
-            //  ProgresoxISO(Carpeta+SR.Name);
+            //  ProgresoxISO(Folder+SR.Name);
       New(Entrada);
       Entrada.Nombre := SR.Name;
       Entrada.Tamano := SR.Size;
       Entrada.Sectores := Tamano2Sector(SR.Size);
       Entrada.Directorio := (SR.Attr and faDirectory) = faDirectory;
-      Entrada.Atributos := SR.Attr;
+      Entrada.Attributes := SR.Attr;
 
       if not Entrada^.Directorio then //((SR.Attr and faArchive) = faArchive) or (SR.Attr = 0) then
       begin
@@ -589,7 +602,7 @@ begin
             // sino metemos el fichero en la lista de elementos del directorio
       if Entrada^.Directorio then
       begin
-        Entrada^.Tamano := TamanoDirectorio(Carpeta + SR.Name + '\');
+        Entrada^.Tamano := TamanoDirectorio(Folder + SR.Name + '\');
         Entrada^.Sectores := Tamano2Sector(Entrada^.Tamano);
 
                  // Si el directorio esta vacio entonces establecemos a 0 los parametros
@@ -621,14 +634,16 @@ begin
     for i := 0 to lDirectorio.Count - 1 do
     begin
       Entrada := PEntradaDir(lDirectorio[i]);
-      if Entrada.Directorio then continue;
+      if Entrada.Directorio then
+        Continue;
+
       Entrada^.SectorIn := SigSectorVacio;
       SigSectorVacio := SigSectorVacio + Entrada.Sectores;
     end;
 
-    MensajesxISO(rcEngGenerandoEntrada);
+    MensajesxISO(SGenerandoEntrada);
 
-    Fillchar(Buffer^, TamBufRellenar, $FF);
+    FillChar(Buffer^, TamBufRellenar, $FF);
     GenerarTabla(lDirectorio, PosBuf, Buffer);
           // Extendemos la entrada del directorio hasta alcanzar el final del sector con $FF
           // y grabamos la entrada del directorio en la imagen.
@@ -639,31 +654,37 @@ begin
           // Copiamos los ficheros dentro de la imagen
     for i := 0 to lDirectorio.Count - 1 do
     begin
-      if Parar then Exit;
+      if Parar then
+        Exit;
+          
       Entrada := PEntradaDir(lDirectorio[i]);
-      if Entrada.Directorio then continue;
-      Fichero := TFilestream.Create(Carpeta + Entrada.Nombre, fmOpenRead);
-      if Fichero = nil then continue;
+      if Entrada.Directorio then
+        Continue;
+        
+      Fichero := TFilestream.Create(Folder + Entrada.Nombre, fmOpenRead);
+      if Fichero = nil then
+        Continue;
+        
       while (Fichero.Position < Fichero.Size) do
       begin
         Imagen.Seek(Imagen.Size, soBeginning);
-        Fillchar(BufCopia, sizeof(BufCopia), 0);
+        FillChar(BufCopia, sizeof(BufCopia), 0);
         leido := Fichero.Read(BufCopia, sizeof(BufCopia));
         Imagen.Write(BufCopia, leido);
         if (leido mod 2048) <> 0 then
         begin
-          Fillchar(BufCopia, (((leido div 2048) + 1) * 2048) - leido, 0);
+          FillChar(BufCopia, (((leido div 2048) + 1) * 2048) - leido, 0);
           Imagen.Write(BufCopia, (((leido div 2048) + 1) * 2048) - leido);
         end;
                {     Imagen.Seek(Imagen.Size,soBeginning);
-                    Fillchar(BufCopia,sizeof(BufCopia),0);
+                    FillChar(BufCopia,sizeof(BufCopia),0);
                     Fichero.Read(BufCopia,sizeof(BufCopia));
                     Imagen.Write(BufCopia,sizeof(BufCopia));        }
       end;
       Fichero.Free;
                // 22 de Junio de 2002
       if Assigned(ProgresoxISO) then
-        ProgresoxISO(rcEngIntroduciendoFichero + Entrada.Nombre);
+        ProgresoxISO(SIntroduciendoFichero + Entrada.Nombre);
     end;
 
           // Nuevo: 18-06-2002
@@ -672,22 +693,24 @@ begin
           // Procesamos las subcarpetas
     for i := 0 to SubDirectorios.Count - 1 do
     begin
-      if Parar then Exit;
+      if Parar then
+        Exit;
+        
       j := lDirectorio.IndexOf(SubDirectorios[i]);
       PEntradaDir(lDirectorio[j])^.SectorIn := SigSectorVacio;
       SigSectorVacio := SigSectorVacio + PEntradaDir(lDirectorio[j])^.Sectores;
-      EscanearXISO(Imagen, Carpeta + PEntradaDir(SubDirectorios[i])^.Nombre + '\', SigSectorVacio);
+      EscanearXISO(Imagen, Folder + PEntradaDir(SubDirectorios[i])^.Nombre + '\', SigSectorVacio);
     end;
           // Nuevo: 18-06-2002
     lDirectorio.Sort(Comparar);
 
-    Fillchar(Buffer^, sizeof(Buffer^), $FF);
+    FillChar(Buffer^, sizeof(Buffer^), $FF);
     PosBuf := 0;
     GenerarTabla(lDirectorio, PosBuf, Buffer);
     if (PosBuf mod 2048) <> 0 then
       PosBuf := (PosBuf div 2048) * 2048 + 2048;
 
-    Imagen.Seek(SectorTabla - TamanoDirectorio(Carpeta) + 2048, soBeginning);
+    Imagen.Seek(SectorTabla - TamanoDirectorio(Folder) + 2048, soBeginning);
     Imagen.Write(Buffer^, PosBuf);
     Imagen.Seek(Imagen.Size, soBeginning);
 
@@ -700,54 +723,59 @@ begin
   Dispose(Buffer);
 end;
 
-function CrearXISO(NombreImagen: string; Carpeta: string): Boolean;
+function CrearXISO(NombreImagen: string; Folder: string): Boolean;
 var
   VD: TxVD;
   PVD: TPVD;
   Imagen: TFileStream;
   Buffer: PByteArray;
   FechaActual: FILETIME;
-  SectorInicio: int64;
-  i: integer;
-  b: array[0..8191] of byte;
+  SectorInicio: Int64;
+  i: Integer;
+  b: array[0..8191] of Byte;
 begin
-  if (Carpeta = '') or not DirectoryExists(Carpeta) then exit;
-  if Carpeta[Length(Carpeta)] <> '\' then Carpeta := Carpeta + '\';
+  if (Folder = '') or not DirectoryExists(Folder) then
+    Exit;
+    
+  if Folder[Length(Folder)] <> '\' then
+    Folder := Folder + '\';
 
      // Creamos las variables dinamicas e inicializamos
   Imagen := TFileStream.Create(NombreImagen, fmCreate);
-  if (Imagen = nil) then exit;
-  new(Buffer);
-  Fillchar(Buffer^, sizeof(Buffer^), $00);
-  Fillchar(VD, sizeof(VD), $00);
+  if Imagen = nil then
+    Exit;
+
+  New(Buffer);
+  FillChar(Buffer^, sizeof(Buffer^), $00);
+  FillChar(VD, sizeof(VD), $00);
 
      // Rellenamos el PVD y el xPVD
   GetSystemTimeAsFileTime(FechaActual);
   VD.IDIn := XBOX_MEDIA;
   VD.DirRaiz := SECTOR_RAIZ;
-  VD.TamRaiz := TamanoDirectorio(Carpeta);
+  VD.TamRaiz := TamanoDirectorio(Folder);
   VD.FechaHora := FechaActual;
   VD.IDOut := XBOX_MEDIA;
 
      // Escribimos el PVD (ISO 9660)
   Imagen.Write(Buffer^, sizeof(Buffer^));
-  MensajesxISO(rcEngEscritoPVD);
+  MensajesxISO(SEscritoPVD);
      // Escribimos el xPVD (XBOX Estandard)
   Imagen.Write(Buffer^, sizeof(Buffer^));
   Imagen.Write(VD, sizeof(VD));
-  MensajesxISO(rcEngEscritoXPVD);
+  MensajesxISO(SEscritoXPVD);
 
      // Iniciamos el escaneo, estructuracion y creacion de la imagen
   SectorInicio := SECTOR_RAIZ + 1;
-  SectorInicio := SectorInicio + (TamanoDirectorio(Carpeta) div 2048) - 1;
-  MensajesxISO(rcEngInicioCreacion);
-  Result := EscanearXISO(Imagen, Carpeta, SectorInicio);
+  SectorInicio := SectorInicio + (TamanoDirectorio(Folder) div 2048) - 1;
+  MensajesxISO(SInicioCreacion);
+  Result := EscanearXISO(Imagen, Folder, SectorInicio);
   if Parar then
-    MensajesxISO(rcEngParadaAnormal)
+    MensajesxISO(SParadaAnormal)
   else
-    MensajesxISO(rcEngFinCreacion);
+    MensajesxISO(SFinCreacion);
 
-  Fillchar(PVD, 2048, 0);
+  FillChar(PVD, 2048, 0);
   PVD.Id1 := 01;
   PVD.CD001 := 'CD001';
   PVD.Id2 := 01;
@@ -759,64 +787,64 @@ begin
   PVD.VSnumBE := 256;
   PVD.TSectLE := 2048;
   PVD.TSectBE := 8;
-  Fillchar(PVD.NomVolume, sizeof(PVD.NomVolume), $20);
-  Fillchar(PVD.NomPubli, sizeof(PVD.NomPubli), $20);
-  Fillchar(PVD.NomCreador, sizeof(PVD.NomCreador), $20);
-  Fillchar(PVD.NomApplica, sizeof(PVD.NomApplica), $20);
+  FillChar(PVD.NomVolume, sizeof(PVD.NomVolume), $20);
+  FillChar(PVD.NomPubli, sizeof(PVD.NomPubli), $20);
+  FillChar(PVD.NomCreador, sizeof(PVD.NomCreador), $20);
+  FillChar(PVD.NomApplica, sizeof(PVD.NomApplica), $20);
      //PVD.NomApplica := 'Creador XISO - Yursoft';
-  Fillchar(PVD.FichCopy, sizeof(PVD.FichCopy), $20);
-  Fillchar(PVD.FichAbst, sizeof(PVD.FichAbst), $20);
-  Fillchar(PVD.FichBibl, sizeof(PVD.FichBibl), $20);
-  Fillchar(PVD.FeHoCrea, sizeof(PVD.FeHoCrea) - 1, $30);
-  Fillchar(PVD.FeHoModi, sizeof(PVD.FeHoModi) - 1, $30);
-  Fillchar(PVD.FeHoExpi, sizeof(PVD.FeHoExpi) - 1, $30);
-  Fillchar(PVD.FeHoEfec, sizeof(PVD.FeHoEfec) - 1, $30);
+  FillChar(PVD.FichCopy, sizeof(PVD.FichCopy), $20);
+  FillChar(PVD.FichAbst, sizeof(PVD.FichAbst), $20);
+  FillChar(PVD.FichBibl, sizeof(PVD.FichBibl), $20);
+  FillChar(PVD.FeHoCrea, sizeof(PVD.FeHoCrea) - 1, $30);
+  FillChar(PVD.FeHoModi, sizeof(PVD.FeHoModi) - 1, $30);
+  FillChar(PVD.FeHoExpi, sizeof(PVD.FeHoExpi) - 1, $30);
+  FillChar(PVD.FeHoEfec, sizeof(PVD.FeHoEfec) - 1, $30);
   PVD.VerEstruc := 1;
 
   Imagen.Seek(32768, soBeginning);
   Imagen.Write(PVD, 2048);
 
-  Fillchar(PVD, 2048, 0);
+  FillChar(PVD, 2048, 0);
   PVD.Id1 := $FF;
   PVD.CD001 := 'CD001';
   PVD.Id2 := 01;
   Imagen.Write(PVD, 2048);
 
   Imagen.Seek(Imagen.Size, soBeginning);
-  Fillchar(Buffer^, sizeof(Buffer^), $00);
+  FillChar(Buffer^, sizeof(Buffer^), $00);
   for i := 1 to 32 do
     Imagen.Write(Buffer^, sizeof(Buffer^));
 
   Imagen.Free;
 end;
  {
-function CrearXISO(NombreImagen: string; Carpeta: string): Boolean;
+function CrearXISO(NombreImagen: string; Folder: string): Boolean;
 var
    VD: TxVD;
    PVD: TPVD;
    Imagen: TFileStream;
    Buffer: PByteArray;
    FechaActual: FILETIME;
-   SectorInicio: int64;
-   i: integer;
-   b: array[0..8191] of byte;
+   SectorInicio: Int64;
+   i: Integer;
+   b: array[0..8191] of Byte;
 begin
-     if (Carpeta = '') or not DirectoryExists(Carpeta) then exit;
-     if Carpeta[Length(Carpeta)] <> '\' then Carpeta := Carpeta + '\';
+     if (Folder = '') or not DirectoryExists(Folder) then exit;
+     if Folder[Length(Folder)] <> '\' then Folder := Folder + '\';
 
      // Creamos las variables dinamicas e inicializamos
      Imagen := TFileStream.Create(NombreImagen, fmCreate);
      if (Imagen = nil) then exit;
      new(Buffer);
-     Fillchar(Buffer^,sizeof(Buffer^),$00);
-     Fillchar(VD,sizeof(VD),$00);
+     FillChar(Buffer^,sizeof(Buffer^),$00);
+     FillChar(VD,sizeof(VD),$00);
 
      // Rellenamos el PVD y el xPVD
      GetSystemTimeAsFileTime(FechaActual);
      VD.IDIn      := XBOX_MEDIA;
      //VD.DirRaiz   := SECTOR_RAIZ;
      VD.DirRaiz := 198177;
-     VD.TamRaiz   := TamanoDirectorio(Carpeta);
+     VD.TamRaiz   := TamanoDirectorio(Folder);
      VD.FechaHora := FechaActual;
      VD.IDOut     := XBOX_MEDIA;
 
@@ -834,15 +862,15 @@ begin
 
      //SectorInicio := SECTOR_RAIZ+1;
      SectorInicio := 198177+1;
-     SectorInicio := SectorInicio + (TamanoDirectorio(Carpeta) div 2048)-1;
+     SectorInicio := SectorInicio + (TamanoDirectorio(Folder) div 2048)-1;
      MensajesxISO( rcInicioCreacion );
-     Result := EscanearXISO(Imagen,Carpeta,SectorInicio);
+     Result := EscanearXISO(Imagen,Folder,SectorInicio);
      if Parar then
        MensajesxISO( rcParadaAnormal )
      else
        MensajesxISO( rcFinCreacion );
 
-     Fillchar(PVD,2048,0);
+     FillChar(PVD,2048,0);
      PVD.Id1 := 01;
      PVD.CD001 := 'CD001';
      PVD.Id2 := 01;
@@ -854,31 +882,31 @@ begin
      PVD.VSnumBE := 256;
      PVD.TSectLE := 2048;
      PVD.TSectBE := 8;
-     Fillchar(PVD.NomVolume,sizeof(PVD.NomVolume),$20);
-     Fillchar(PVD.NomPubli,sizeof(PVD.NomPubli),$20);
-     Fillchar(PVD.NomCreador,sizeof(PVD.NomCreador),$20);
-     Fillchar(PVD.NomApplica,sizeof(PVD.NomApplica),$20);
+     FillChar(PVD.NomVolume,sizeof(PVD.NomVolume),$20);
+     FillChar(PVD.NomPubli,sizeof(PVD.NomPubli),$20);
+     FillChar(PVD.NomCreador,sizeof(PVD.NomCreador),$20);
+     FillChar(PVD.NomApplica,sizeof(PVD.NomApplica),$20);
      //PVD.NomApplica := 'Creador XISO - Yursoft';
-     Fillchar(PVD.FichCopy,sizeof(PVD.FichCopy),$20);
-     Fillchar(PVD.FichAbst,sizeof(PVD.FichAbst),$20);
-     Fillchar(PVD.FichBibl,sizeof(PVD.FichBibl),$20);
-     Fillchar(PVD.FeHoCrea,sizeof(PVD.FeHoCrea)-1,$30);
-     Fillchar(PVD.FeHoModi,sizeof(PVD.FeHoModi)-1,$30);
-     Fillchar(PVD.FeHoExpi,sizeof(PVD.FeHoExpi)-1,$30);
-     Fillchar(PVD.FeHoEfec,sizeof(PVD.FeHoEfec)-1,$30);
+     FillChar(PVD.FichCopy,sizeof(PVD.FichCopy),$20);
+     FillChar(PVD.FichAbst,sizeof(PVD.FichAbst),$20);
+     FillChar(PVD.FichBibl,sizeof(PVD.FichBibl),$20);
+     FillChar(PVD.FeHoCrea,sizeof(PVD.FeHoCrea)-1,$30);
+     FillChar(PVD.FeHoModi,sizeof(PVD.FeHoModi)-1,$30);
+     FillChar(PVD.FeHoExpi,sizeof(PVD.FeHoExpi)-1,$30);
+     FillChar(PVD.FeHoEfec,sizeof(PVD.FeHoEfec)-1,$30);
      PVD.VerEstruc := 1;
 
      Imagen.Seek(32768,soBeginning);
      Imagen.Write(PVD,2048);
 
-     Fillchar(PVD,2048,0);
+     FillChar(PVD,2048,0);
      PVD.Id1 := $FF;
      PVD.CD001 := 'CD001';
      PVD.Id2 := 01;
      Imagen.Write(PVD,2048);
 
      Imagen.Seek(Imagen.Size,soBeginning);
-     Fillchar(Buffer^,sizeof(Buffer^),$00);
+     FillChar(Buffer^,sizeof(Buffer^),$00);
      for i := 1 to 32 do
         Imagen.Write(Buffer^,sizeof(Buffer^));
 
@@ -896,27 +924,27 @@ begin
         Result := 0;
 end;
 
-function XDFS2ISO9660(Fichero: string): boolean;
+function XDFS2ISO9660(Fichero: string): Boolean;
 const
-  ByteNulo: byte = 0;
-  PuntoComa: array[0..1] of char = ';1';
+  ByteNulo: Byte = 0;
+  PuntoComa: array[0..1] of Char = ';1';
 var
-  i, j, t, d: integer;
+  i, j, t, d: Integer;
   XDFS: TFilestream;
   Entrada, EntradaPadre: uxiso.pxFichero;
   ListaDirectorios: TList;
   Directorio: PDirectorios;
   EntradaISO: PTOC;
   PVD: TPVD;
-  BufferDirectorios: array[0..65535] of byte;
-  PosBufDirectorios: integer;
-  PosicionTablaDirectorios: integer;
-  LongNombre: byte;
-  SectorDirectorioRaiz, OffsetDirectorio, OffsetRestaurado, OffsetDirectorios: int64;
+  BufferDirectorios: array[0..65535] of Byte;
+  PosBufDirectorios: Integer;
+  PosicionTablaDirectorios: Integer;
+  LongNombre: Byte;
+  SectorDirectorioRaiz, OffsetDirectorio, OffsetRestaurado, OffsetDirectorios: Int64;
 
-  procedure CrearTablaDirectorios(Modo: byte);
+  procedure CrearTablaDirectorios(Modo: Byte);
   var
-    i: integer;
+    i: Integer;
     OffIni: Integer;
   begin
     OffIni := XDFS.Position div 2048;
@@ -925,7 +953,7 @@ var
     ListaDirectorios.Clear;
      // Directorio raiz
     New(Directorio);
-    Fillchar(Directorio^, sizeof(Directorio^), 0);
+    FillChar(Directorio^, sizeof(Directorio^), 0);
     Directorio.LongNombre := 1;
     if Modo = 0 then
     begin
@@ -951,7 +979,7 @@ var
       if (Entrada.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
       begin
         New(Directorio);
-        Fillchar(Directorio^, sizeof(Directorio^), 0);
+        FillChar(Directorio^, sizeof(Directorio^), 0);
            {  if (Directorio.LongNombre mod 2) <> 0 then
              begin
                if Entrada^.LongNombre+1 > 32 then
@@ -987,7 +1015,7 @@ var
                PosBufDirectorios := ((PosBufDirectorios div 2048)+1)*2048;
              Move(Directorio^,BufferDirectorios[PosBufDirectorios],8+LongNombre);
              PosBufDirectorios := PosBufDirectorios + 8 + LongNombre;
-             // Si no estamos en un offset par, dejamos un byte en blanco.
+             // Si no estamos en un offset par, dejamos un Byte en blanco.
              if (PosBufDirectorios mod 2) <> 0 then
                PosBufDirectorios := PosBufDirectorios+1;    }
       end;
@@ -1015,7 +1043,7 @@ var
         PosBufDirectorios := ((PosBufDirectorios div 2048) + 1) * 2048;
       Move(Directorio^, BufferDirectorios[PosBufDirectorios], 8 + LongNombre);
       PosBufDirectorios := PosBufDirectorios + 8 + LongNombre;
-             // Si no estamos en un offset par, dejamos un byte en blanco.
+             // Si no estamos en un offset par, dejamos un Byte en blanco.
       if (PosBufDirectorios mod 2) <> 0 then
         PosBufDirectorios := PosBufDirectorios + 1;
     end;
@@ -1055,16 +1083,18 @@ var
 
   procedure CrearTablaFicheros;
   var
-    i, j, t, d: integer;
+    i, j, t, d: Integer;
   begin
-    new(EntradaISO);
+    New(EntradaISO);
     for i := -1 to xIISO.Lista.Count - 1 do
     begin
       OffsetDirectorio := XDFS.Position;
       if i <> -1 then
       begin
         EntradaPadre := uxiso.pxFichero(xIISO.Lista[i]);
-        if (EntradaPadre.Atributo and XF_DIRECTORIO) <> XF_DIRECTORIO then Continue;
+        if (EntradaPadre.Atributo and XF_DIRECTORIO) <> XF_DIRECTORIO then
+          Continue;
+          
         EntradaPadre.SectorIn := XDFS.Position div 2048;
         {if EntradaPadre.DirPadre = 0 then EntradaPadre.pIzq := 1
         else
@@ -1088,23 +1118,25 @@ var
       for j := i + 1 to xIISO.Lista.Count - 1 do
       begin
         Entrada := uxiso.pxFichero(xIISO.Lista[j]);
-        if Entrada^.DirPadre <> EntradaPadre.DirHijo then continue;
-        Fillchar(EntradaISO^, sizeof(EntradaISO^), 0);
+        if Entrada^.DirPadre <> EntradaPadre.DirHijo then
+          Continue;
+          
+        FillChar(EntradaISO^, sizeof(EntradaISO^), 0);
         EntradaISO.TamanoLE := Intel2Motorola(Entrada^.Tamano);
         EntradaISO.TamanoBE := Entrada^.Tamano;
         EntradaISO.PSectorLE := Intel2Motorola(Entrada^.SectorIn);
         EntradaISO.PSectorBE := Entrada^.SectorIn;
 
-         // Establecemos atributos. (HAY QUE AMPLIAR)
+         // Establecemos Attributes. (HAY QUE AMPLIAR)
         if (Entrada.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
-          EntradaISO.Atributos := 2
+          EntradaISO.Attributes := 2
         else
-          EntradaISO.Atributos := 0;
+          EntradaISO.Attributes := 0;
 
         if (Entrada.Atributo and XF_OCULTO) = XF_OCULTO then
-          EntradaISO.Atributos := EntradaISO.Atributos or 1;
+          EntradaISO.Attributes := EntradaISO.Attributes or 1;
 
-         // Copiamos el nombre del fichero/carpeta al buffer.
+         // Copiamos el nombre del fichero/Folder al buffer.
          {if Entrada^.LongNombre > 30 then
            LongNombre := 30
          else                  }
@@ -1124,14 +1156,14 @@ var
         for t := 1 to (((XDFS.Position div 2048) + 1) * 2048) - XDFS.Position do
           XDFS.Write(ByteNulo, 1);
 
-       // Generamos las 2 entradas iniciales de la carpeta. (68 bytes)
+       // Generamos las 2 entradas iniciales de la Folder. (68 bytes)
       EntradaISO.Tamano := $22;
       EntradaISO.Extent := 0;
       EntradaISO.PSectorBE := OffsetDirectorio div 2048;
       EntradaISO.PSectorLE := Intel2Motorola(OffsetDirectorio div 2048);
       EntradaISO.TamanoBE := (XDFS.Position - OffsetDirectorio);
       EntradaISO.TamanoLE := Intel2Motorola((XDFS.Position - OffsetDirectorio));
-      EntradaISO.Atributos := 2;
+      EntradaISO.Attributes := 2;
       EntradaISO.LongNombre := 1;
       EntradaISO.Nombre[0] := #00;
       OffsetRestaurado := XDFS.Position;
@@ -1148,7 +1180,7 @@ var
         PVD.DirRaiz.SectorBE := EntradaISO.PSectorLE;
         PVD.DirRaiz.TamanoLE := EntradaISO.TamanoBE;
         PVD.DirRaiz.TamanoBE := EntradaISO.TamanoLE;
-        PVD.DirRaiz.Atributos := 2;
+        PVD.DirRaiz.Attributes := 2;
         PVD.DirRaiz.LongNombre := 1;
         PVD.DirRaiz.Nombre := 0;
       end;
@@ -1156,20 +1188,23 @@ var
   end;
 begin
   Result := AbrirXISO(Fichero);
-  if not Result then Exit;
+  if not Result then
+    Exit;
+    
   ListaDirectorios := TList.Create;
   if ListaDirectorios = nil then
   begin
-    Showmessage('Please report this error to xiso@yursoft.com: ListaDirectorios');
+    ShowMessage('Please report this error to xiso@yursoft.com: ListaDirectorios');
     Exit;
   end;
+  
   XDFS := TFilestream.Create(Fichero, fmOpenReadWrite);
   XDFS.Seek(XDFS.Size, soBeginning);
 
   PosicionTablaDirectorios := XDFS.Size;
 
      // Rellenamos el PVD
-  Fillchar(PVD, sizeof(PVD), 0);
+  FillChar(PVD, sizeof(PVD), 0);
   PVD.Id1 := 01;
   PVD.CD001 := 'CD001';
   PVD.Id2 := 01;
@@ -1181,19 +1216,19 @@ begin
   PVD.VSnumBE := 256;
   PVD.TSectLE := 2048;
   PVD.TSectBE := 8;
-  Fillchar(PVD.NomVolume, sizeof(PVD.NomVolume), $20);
-  Fillchar(PVD.NomPubli, sizeof(PVD.NomPubli), $20);
-  Fillchar(PVD.NomCreador, sizeof(PVD.NomCreador), $20);
-  Fillchar(PVD.NomApplica, sizeof(PVD.NomApplica), $20);
+  FillChar(PVD.NomVolume, sizeof(PVD.NomVolume), $20);
+  FillChar(PVD.NomPubli, sizeof(PVD.NomPubli), $20);
+  FillChar(PVD.NomCreador, sizeof(PVD.NomCreador), $20);
+  FillChar(PVD.NomApplica, sizeof(PVD.NomApplica), $20);
   PVD.NomApplica := 'xISO - Yursoft';
      //PVD.NomApplica := 'Creador XISO - Yursoft';
-  Fillchar(PVD.FichCopy, sizeof(PVD.FichCopy), $20);
-  Fillchar(PVD.FichAbst, sizeof(PVD.FichAbst), $20);
-  Fillchar(PVD.FichBibl, sizeof(PVD.FichBibl), $20);
-  Fillchar(PVD.FeHoCrea, sizeof(PVD.FeHoCrea) - 1, $30);
-  Fillchar(PVD.FeHoModi, sizeof(PVD.FeHoModi) - 1, $30);
-  Fillchar(PVD.FeHoExpi, sizeof(PVD.FeHoExpi) - 1, $30);
-  Fillchar(PVD.FeHoEfec, sizeof(PVD.FeHoEfec) - 1, $30);
+  FillChar(PVD.FichCopy, sizeof(PVD.FichCopy), $20);
+  FillChar(PVD.FichAbst, sizeof(PVD.FichAbst), $20);
+  FillChar(PVD.FichBibl, sizeof(PVD.FichBibl), $20);
+  FillChar(PVD.FeHoCrea, sizeof(PVD.FeHoCrea) - 1, $30);
+  FillChar(PVD.FeHoModi, sizeof(PVD.FeHoModi) - 1, $30);
+  FillChar(PVD.FeHoExpi, sizeof(PVD.FeHoExpi) - 1, $30);
+  FillChar(PVD.FeHoEfec, sizeof(PVD.FeHoEfec) - 1, $30);
   PVD.VerEstruc := 1;
 
      // Tabla directorios Little Endian
@@ -1215,7 +1250,7 @@ begin
 
      // Rellenamos la imagen con 150 sectores para
   XDFS.Seek(XDFS.Size, soBeginning);
-  Fillchar(BufferDirectorios, sizeof(BufferDirectorios), $00);
+  FillChar(BufferDirectorios, sizeof(BufferDirectorios), $00);
   for i := 1 to 32 do
     XDFS.Write(BufferDirectorios, sizeof(BufferDirectorios));
 

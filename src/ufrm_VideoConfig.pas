@@ -3,8 +3,11 @@ unit ufrm_VideoConfig;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, DirectDraw;
+  StdCtrls,
+  //
+  DirectDraw;
 
 type
   Tfrm_VideoConfig = class(TForm)

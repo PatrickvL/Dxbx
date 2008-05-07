@@ -5,8 +5,6 @@ uses
   ufrm_Main in 'ufrm_Main.pas' {Form1},
   uXbe in '..\uXbe.pas',
   uLog in '..\uLog.pas',
-  BitsOps in '..\BitsOps.pas',
-  CTime in '..\CTime.pas',
   uConsts in '..\uConsts.pas',
   uEmu in '..\uEmu.pas',
   uEmuExe in '..\uEmuExe.pas',
@@ -18,8 +16,11 @@ uses
   ufrm_ControllerConfig in '..\ufrm_ControllerConfig.pas' {frm_ControllerConfig},
   uLogConsole in '..\uLogConsole.pas' {frm_LogConsole},
   uProlog in '..\uProlog.pas',
+  uExternals in '..\uExternals.pas',
+  uXML in '..\uXML.pas',
+  uBitsOps in '..\uBitsOps.pas',
   uMutex in '..\uMutex.pas',
-  uExternals in '..\uExternals.pas';
+  uTime in '..\uTime.pas';
 
 {$R *.res}
 

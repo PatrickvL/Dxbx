@@ -131,37 +131,37 @@ object frm_Main: Tfrm_Main
         Control = ToolBar1
         ImageIndex = -1
         MinHeight = 21
-        Width = 622
+        Width = 624
       end
       item
         Control = ToolBar3
         ImageIndex = -1
         MinHeight = 22
-        Width = 622
+        Width = 624
       end
       item
         Control = ToolBar2
         ImageIndex = -1
         MinHeight = 22
-        Width = 622
+        Width = 624
       end>
     object ToolBar1: TToolBar
-      Left = 11
+      Left = 9
       Top = 0
-      Width = 613
+      Width = 611
       Height = 21
       AutoSize = True
-      ButtonHeight = 0
-      ButtonWidth = 0
+      ButtonHeight = 21
+      ButtonWidth = 33
       Caption = 'ToolBar1'
       Menu = MainMenu1
       ShowCaptions = True
       TabOrder = 0
     end
     object ToolBar2: TToolBar
-      Left = 11
+      Left = 9
       Top = 47
-      Width = 613
+      Width = 611
       Height = 22
       AutoSize = True
       Caption = 'ToolBar2'
@@ -269,9 +269,9 @@ object frm_Main: Tfrm_Main
       end
     end
     object ToolBar3: TToolBar
-      Left = 11
+      Left = 9
       Top = 23
-      Width = 613
+      Width = 611
       Height = 22
       AutoSize = True
       Caption = 'ToolBar3'
@@ -700,7 +700,7 @@ object frm_Main: Tfrm_Main
     Left = 400
     Top = 192
     Bitmap = {
-      494C010118001D00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010118001A00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007000000001002000000000000070
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1635,7 +1635,7 @@ object frm_Main: Tfrm_Main
     Left = 400
     Top = 224
     Bitmap = {
-      494C010118001D00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010118001A00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007000000001002000000000000070
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
