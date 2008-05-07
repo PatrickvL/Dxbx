@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{378c4121-879a-4790-90ee-e47ed7dd702f}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+    <DCC_DependencyCheckOutputName>..\bin\CxbxKrnl.dll</DCC_DependencyCheckOutputName>
+    <MainSource>CxbxKrnl.dpr</MainSource>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Version>7.0</Version>
+    <DCC_DebugInformation>False</DCC_DebugInformation>
+    <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+    <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    <DCC_Define>RELEASE</DCC_Define>
+    <DCC_ExeOutput>..\bin</DCC_ExeOutput>
+    <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
+    <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
+    <DCC_HppOutput>..\dcu</DCC_HppOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Version>7.0</Version>
+    <DCC_Define>DEBUG</DCC_Define>
+    <DCC_ExeOutput>..\bin</DCC_ExeOutput>
+    <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
+    <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
+    <DCC_HppOutput>..\dcu</DCC_HppOutput>
+    <DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
+    <DCC_RangeChecking>True</DCC_RangeChecking>
+    <DCC_OutputXMLDocumentation>True</DCC_OutputXMLDocumentation>
+    <DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug</DCC_UnitSearchPath>
+    <DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug</DCC_ResourcePath>
+    <DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug</DCC_ObjPath>
+    <DCC_IncludePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;F:\DEVELO~1\delphi\Lib\JVCL33~1\jcl\lib\d11\debug</DCC_IncludePath>
+    <DCC_Optimize>False</DCC_Optimize>
+  </PropertyGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Delphi.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters><Parameters Name="HostApplication">F:\development\delphi\Projects\Dxbx\Dxbx\bin\Dxbx.exe</Parameters></Parameters><VersionInfo><VersionInfo Name="IncludeVerInfo">False</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">1033</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">CxbxKrnl.dpr</Source></Source><Excluded_Packages>
+      
+      
+      
+      <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+      <Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\5.0\Bpl\sJVCL_R.bpl">(untitled)</Excluded_Packages>
+    </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
+  <ItemGroup>
+    <DelphiCompile Include="CxbxKrnl.dpr">
+      <MainSource>MainSource</MainSource>
+    </DelphiCompile>
+    <DCCReference Include="uConsts.pas" />
+    <DCCReference Include="uEmu.pas" />
+    <DCCReference Include="uEmuFS.pas" />
+    <DCCReference Include="uEmuShared.pas" />
+    <DCCReference Include="uEnums.pas" />
+    <DCCReference Include="uKernelThunk.pas" />
+    <DCCReference Include="uLog.pas" />
+    <DCCReference Include="uLogConsole.pas">
+      <Form>frm_LogConsole</Form>
+    </DCCReference>
+    <DCCReference Include="uMutex.pas" />
+    <DCCReference Include="uXbe.pas" />
+  </ItemGroup>
+</Project>
