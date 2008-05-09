@@ -7,10 +7,11 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Menus, Math, ActnList, ExtCtrls,
   // Dxbx
-  uConsts, uExe, uBitsOps, uTime;
+  uConsts, uExe, uBitsOps, uTime, strUtils;
 
 type
   TLogType = (ltLog, ltFile);
+  TFileType = (ftXbe, ftExe);
 
   _XBE_HEADER = packed record
     dwMagic: array[0..3] of Char; // 0x0000 - magic number [should be "XBEH"]
@@ -192,7 +193,7 @@ type
     m_TLS: XBE_TLS;
     m_bzSection: array of TVarCharArray;
 
-    constructor Create(aFileName: string);
+    constructor Create(aFileName: string; FileType : TFileType );
     destructor Destroy; override;
 
     function DumpInformation(FileName: string = ''): Boolean;
@@ -304,7 +305,7 @@ end; // TXbe.ConstructorInit
 
 //------------------------------------------------------------------------------
 
-constructor TXbe.Create(aFileName: string);
+constructor TXbe.Create(aFileName: string; FileType : TFileType );
 var
   ExeSize: LongInt;
   lIndex, lIndex2: DWord;
@@ -312,7 +313,11 @@ var
   I: DWord;
   F: THandle;
   ReadBytes, FileSz: DWord;
+
+  sFileType : String;
 begin
+  sFileType := ifthen ( FileType = ftXbe, 'Xbe', 'Exe' );
+
   ConstructorInit();
 
   RawSize := 0;
@@ -323,20 +328,20 @@ begin
   // verify xbe file was opened
   if FileSz = 0 then
   begin
-    MessageDlg('Could not open Xbe file.', mtError, [mbOk], 0);
+    MessageDlg(Format('Could not open %s file', [sFileType]), mtError, [mbOk], 0);
     Exit;
   end;
 
-  WriteLog('DXBX: Opening Xbe file...OK');
+  WriteLog( Format ( 'DXBX: Opening %s file...OK', [sFileType]));
 
   // remember xbe path
   m_szPath := ExtractFilePath(aFileName);
-  WriteLog('DXBX: Storing Xbe Path...Ok');
+  WriteLog( Format ( 'DXBX: Storing %s Path...Ok', [sFileType]));
 
   // read xbe image header
   if SizeOf(m_Header) > FileSz then
   begin
-    MessageDlg('Unexpected end of file while reading Xbe Image Header', mtError, [mbOk], 0);
+    MessageDlg( Format ( 'Unexpected end of file while reading %s Image Header', [sFileType]), mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -356,7 +361,7 @@ begin
 
   if m_Header.dwMagic <> _MagicNumber then
   begin
-    MessageDlg('Invalid magic number in Xbe file', mtError, [mbOk], 0);
+    MessageDlg( Format ( 'Invalid magic number in %s file', [sFileType]) , mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -469,7 +474,7 @@ begin
 
   if SizeOf(m_HeaderEx) > FileSz then
   begin
-    MessageDlg('Unexpected end of file while reading Xbe Image Header (Ex)', mtError, [mbOk], 0);
+    MessageDlg(Format ('Unexpected end of file while reading %s Image Header (Ex)',[sFileType] ), mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -596,7 +601,7 @@ begin
 
       i := i + 20;
     except
-      MessageDlg('Unexpected end of file while reading Xbe Section Header', mtError, [mbOk], 0);
+      MessageDlg(Format ( 'Unexpected end of file while reading %s Section Header',[sFileType]) , mtError, [mbOk], 0);
     end;
 
     WriteLog('DXBX: Reading Section Header 0x%.04X...' + IntToStr(lIndex) + ' OK');
@@ -700,7 +705,7 @@ begin
     end;
 
     if lIndex2 < Rawsize then
-      WriteLog('Unexpected end of file while reading Xbe Section');
+      WriteLog( Format ( 'Unexpected end of file while reading %s Section', [sFileType] ));
   end;
 
   if m_Header.dwTLSAddr <> 0 then
