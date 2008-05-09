@@ -99,13 +99,13 @@ type
     XDKTracker2: TMenuItem;
     actXdkTrackerXbeInfo: TAction;
     XMLDocument: TXMLDocument;
-    StatusBar: TsStatusBar;
     sSkinManager1: TsSkinManager;
     sSkinProvider1: TsSkinProvider;
     imgSignature1: TImage;
     imgSignature2: TImage;
     imgSignature3: TImage;
     imgSignature4: TImage;
+    StatusBar: TsStatusBar;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -287,7 +287,7 @@ begin
   m_ExeFilename := '\0';
   m_XbeFilename := aFileName;
 
-  m_Xbe := TXbe.Create(m_XbeFilename);
+  m_Xbe := TXbe.Create(m_XbeFilename, ftXbe);
   try
     XbeLoaded();
     StatusBar.SimpleText := Format ( 'DXBX: %s Loaded', [m_szAsciiTitle]);
@@ -537,6 +537,8 @@ begin
   m_AutoConvertToExe := CONVERT_TO_WINDOWSTEMP;
   FApplicationDir := ExtractFilePath(Application.ExeName);
 
+  StatusBar.SimpleText := 'DXBX: No Xbe Loaded...';   
+
   ReadSettingsIni;
   CreateLogs(ltGui);
 
@@ -550,89 +552,18 @@ end;
 
 procedure Tfrm_Main.ImportExe(aFileName: string);
 begin
-(*
-    m_XbeFilename[0] = '\0';
-
-    Exe *i_exe = new Exe(x_filename);
-
-    if(i_exe->GetError() != 0)
-    {
-        MessageBox(m_hwnd, i_exe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-
-        delete i_exe;
-
-        return;
-    }
-
-    m_Xbe = new Xbe(i_exe, "Untitled", true);
-
-    if(m_Xbe->GetError() != 0)
-    {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-
-        delete m_Xbe; m_Xbe = 0;
-
-        return;
-    }
-
-    // ******************************************************************
-	// * save this Exe to the list of recent files
-	// ******************************************************************
-    if(m_ExeFilename[0] != '\0')
-    {
-        bool found = false;
-
-        // if this Filename already exists, temporarily remove it
-        for(int c=0, r=0;c<m_dwRecentExe;c++, r++)
-        {
-            if(strcmp(m_szRecentExe[c], m_ExeFilename) == 0)
-            {
-                found = true;
-                r++;
-            }
-
-            if(r != c)
-            {
-                if(m_szRecentExe[r] == 0 || r > m_dwRecentExe - 1)
-                    m_szRecentExe[c] = 0;
-                else
-                    strncpy(m_szRecentExe[c], m_szRecentExe[r], 259);
-            }
-        }
-
-        if(found)
-            m_dwRecentExe--;
-
-        // move all items down one, removing the last one if necessary
-        for(int v=RECENT_EXE_SIZE-1;v>0;v--)
-        {
-            if(m_szRecentExe[v-1] == 0)
-                m_szRecentExe[v] = 0;
-            else
-            {
-                if(m_szRecentExe[v] == 0)
-                    m_szRecentExe[v] = (char*)(*calloc(1, 260);
-                strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
-            }
-        }
-
-        // add new item as first index
-        {
-            if(m_szRecentExe[0] == 0)
-                m_szRecentExe[0] = (char*)(*calloc(1, 260);
-
-            strcpy(m_szRecentExe[0], m_ExeFilename);
-        }
-
-        if(m_dwRecentExe < RECENT_EXE_SIZE)
-            m_dwRecentExe++;
-    }
-
-    UpdateRecentFiles();
-
+  m_ExeFilename := '\0';
+                            
+  m_Xbe := TXbe.Create(aFileName, ftExe);
+  try
     XbeLoaded();
+    m_bExeChanged := true;
+    StatusBar.SimpleText := Format ( 'DXBX: %s Loaded', [m_szAsciiTitle]);
+  except
+    Messagedlg('Can not open Exe file.', mtWarning, [mbOk], 0);
+    m_Xbe.Free;
+  end;
 
-    m_bExeChanged = true;   *)
 end;
 
 //------------------------------------------------------------------------------
