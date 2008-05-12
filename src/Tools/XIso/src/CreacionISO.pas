@@ -94,7 +94,7 @@ implementation
 
 constructor TListaContenido.Create;
 begin
-  inherited;
+  inherited Create;
 end;
 
 function TListaContenido.Obtener(i: Integer): PEntrada;
@@ -178,13 +178,14 @@ begin
   ListaActual := Lista;
   ListaAnterior := nil;
   UltimoID := 0;
-  inherited;
+  inherited Create;
 end;
 
 destructor TAdminFicheros.Destroy;
 begin
   Lista.Free;
-  inherited;
+
+  inherited Destroy;
 end;
 
 procedure TAdminFicheros.AgregarEntradaNula(L: TListaContenido; LAnterior: PListaContenido);

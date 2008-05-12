@@ -13,7 +13,6 @@ type
   TWordArray = array[0..1] of Char;
 
   TEmuExe = class(TExe)
-  private
   public
     constructor Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFilename: string; hwndParent: THandle);
   end;
@@ -308,7 +307,7 @@ var
   SectionSize: LongInt;
   Characteristics: DWord;
 
-  raw_size: longint;
+  raw_size: LongInt;
   virt_size: DWord;
   virt_addr: DWord;
   ep: DWord;
@@ -329,7 +328,7 @@ var
   WriteCursor: DWord;
   Flag: Byte;
 
-  KrnlHandle: Thandle;
+  KrnlHandle: THandle;
   pEmuInit: Pointer;
 
 begin

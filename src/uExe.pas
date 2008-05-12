@@ -3,6 +3,7 @@ unit uExe;
 interface
 
 uses
+  // Delphi
   Dialogs, Windows, Classes, SysUtils;
 
 type
@@ -151,8 +152,8 @@ const
 implementation
 
 uses
+  // Dxbx
   uLog;
-
 
 { TExe }
 
@@ -175,10 +176,12 @@ begin
   ExeFile := TFileStream.Create(x_szFileName, fmOpenRead);
 
   // verify exe file was opened
-  if ExeFile.Size < 0 then begin
+  if ExeFile.Size < 0 then
+  begin
     WriteLog('Could not open Exe file.');
     Exit;
   end;
+  
   WriteLog('Exe: Opening Exe file... Ok');
 
   // ignore dos stub (if it exists)
@@ -336,8 +339,8 @@ var
   RawSize, RawAddr: DWord;
 begin
   Result := True;
-  ExeFile := TFileStream.Create(x_szExeFilename, fmCreate);
   try
+    ExeFile := TFileStream.Create(x_szExeFilename, fmCreate);
   except
     Result := False;
     WriteLog('Export: Could not open .exe file.');
@@ -377,7 +380,7 @@ begin
     MessageDlg('Could not write PE optional header', mtError, [mbOk], 0);
     Exit;
   end;
-  
+
   WriteLog('Export: Writing Optional Header...OK');
 
   // write section headers
@@ -393,11 +396,12 @@ begin
       Exit;
     end;
   end;
-  
+
   WriteLog('Export: Writing Section Headers...OK');
 
   // write sections
-  for lIndex := 0 to m_Header.m_sections - 1 do begin
+  for lIndex := 0 to m_Header.m_sections - 1 do
+  begin
 
     //Debug info of turok from cxbx
     //m_Header.m_sections = 13
@@ -418,21 +422,20 @@ begin
     RawSize := m_SectionHeader[lIndex].m_sizeof_raw;
     RawAddr := m_SectionHeader[lIndex].m_raw_addr;
 
-    ExeFIle.Seek(RawAddr, soFromBeginning);
+    ExeFile.Seek(RawAddr, soFromBeginning);
 
-    if RawSize = 0 then begin
-      Result := False;
-    end
-    else begin
-      try
-        ExeFIle.Write(Pointer(m_bzSection[lIndex])^, RawSize);
-      except
-        WriteLog('Export: Could not write PE section ' + IntToStr(lIndex));
-        MessageDlg('Could not write PE section ' + IntToStr(lIndex), mtError, [mbOk], 0);
-        WriteLog('Export: Writing Section 0x' + IntToStr(lIndex) + '.04X OK');
-        Exit;
-      end;
+    if RawSize = 0 then
+      Result := False
+    else
+    try
+      ExeFile.Write(Pointer(m_bzSection[lIndex])^, RawSize);
+    except
+      WriteLog('Export: Could not write PE section ' + IntToStr(lIndex));
+      MessageDlg('Could not write PE section ' + IntToStr(lIndex), mtError, [mbOk], 0);
+      WriteLog('Export: Writing Section 0x' + IntToStr(lIndex) + '.04X OK');
+      Exit;
     end;
+
     WriteLog('Export: Writing Sections...OK');
   end;
 

@@ -1,0 +1,42 @@
+Below follows a summary of the dxbx coding convention, which is basically the Delphi standard with some extra's added.
+The idea behind all these do's and dont's is to improve readability, searchability and maintainability (if that's a word).
+This is done because on average, code is read much more often than it's changed (some lines are written once and never changed, but will be encountered many times by many people when searching through the code).
+
+Rules on how code should look:
+- Indent with 2 spaces per level (do not use the TAB character).
+- Place begin/end, try/finally, try/except, and all other block delimiters on a new line, an extra indent level starts _inside_ those statement blocks.
+- In a class-declaration, always indicate the parent class (even when it's TObject, this improves searchability)
+- Prefix arguments with 'a', class types with 'T', interface types with 'I', record types with 'R', pointer types with 'P' - to seperate them from each other.
+- Prefix private and protected fields of a class with 'F', or 'My' (when the fiels references an instance that's owned by this class)
+- Prefix property getters with 'Get' and setters with 'Set'
+- Prefix inline methods with '_' to differentiate them from other methods
+- Always write symbols (within the same scope) in equal casing - which is PascalCase (also known as UpperCamelCase).
+- Only enumerate elements and arguments contradict the PascalCasing, by using a lowercase prefix (enums typically use a two- or three letter abbreviation of the type-name as prefix)
+- Reserved words are allways written in lowercase (including 'string').
+- Place one empty line below all statement blocks that break the flow of the code (ie: after each line with Exit, Continue, Break or raise in it)
+- Place only one statement per line (thus, for example no code after 'then', just place that on a new line)
+- Do not use begin/end pairs when only one statement is between them - this reduces unnessecary lines.
+- Do not align the type declarations of variables - or else you'll have a hard time finding all occurences of a ": Type".
+- Use one (and only one) space to separate variables, expression parts, arguments of method calls, etc.
+- Do not use spaces around method calling brackets - so CallAnyMethod(Like, This);
+- Declare argument and variable types directly appended to the symbol name - aLike: ThisType; aAnd: Pointer;
+- Write all compiler directives in UPPERCASE (IF, ENDIF, OPTIMIZATION ON, etc.)
+- Always call inherited with a full signature (methodname and arguments)
+
+Rules on how code should be written (best practices):
+- Use FreeAndNil instead of Free or Destroy wherevery possible (this will help prevent rogue pointers)
+- Use early-exits whereever possible (this reduces unnessecary nesting).
+- Counter variables should be named i, j, k, l, etc.
+- Reduce dependencies wherever possible (do _not_ blindly copy-paste an uses-clause over to a new unit!)
+- Place all 'used units' on a separate line, together with an end-of-line comment signigying the most frequently used symbols from that unit
+- Use constants and resourcestrings wherever possible.
+- Avoid the 'with' statement (this confuses more than it helps)
+- Try to avoid double-nesting methods
+- To aid translation, avoid concatenations (use formatting strings with numbered arguments instead).
+- Use the const argument modifier wherever possible (to help the optimizer do it's job properly and prevent you from accidently altering argument values)
+- Avoid multi-line comment delimiter pairs "(*", "*)" and "{", "}" (instead use the single line comment style : "//")
+- Avoid comments that add nothing to the understanding of the code - try to explain why code reads the way it does, not what it does (you can read that from the code itself)
+- Use empty brackets when calling a method without arguments - to signify it's a method-call instead of a variable/constant/property
+- Normally, name the argument of a property-setter 'aValue'.
+- Repeat the name of long methods at the end using a comment, like this : "end; // Type.Method"
+- When targeting different compilers, {$INCLUDE jedi.inc} to enable feature-checks instead of compiler versions (HAS_GENERICS is better than VER200 or even DELPHI2008_UP)

@@ -44,18 +44,6 @@
     <DelphiCompile Include="DxbxKrnl.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..uMutex.pas" />
-    <DCCReference Include="..\..\Utils\uBitsOps.pas" />
-    <DCCReference Include="..\..\Utils\uMutex.pas" />
-    <DCCReference Include="..\..\Utils\uTime.pas" />
-    <DCCReference Include="..\uMutex.pas" />
-    <DCCReference Include="..\UtilsuMutex.pas" />
-    <DCCReference Include="..\Utils\uMutex.pas" />
-    <DCCReference Include="..\UtiluMutex.pas" />
-    <DCCReference Include="..\UtiuMutex.pas" />
-    <DCCReference Include="..\UtuMutex.pas" />
-    <DCCReference Include="..\UuMutex.pas" />
-    <DCCReference Include=".uMutex.pas" />
     <DCCReference Include="uBitsOps.pas" />
     <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uEmu.pas" />

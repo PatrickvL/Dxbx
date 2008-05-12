@@ -498,7 +498,7 @@ procedure CxbxKrnlNoFunc; stdcall;
 begin
   EmuSwapFS();   // Win2k/XP FS
 
-  WriteLog('Emu: EmuNoFunc' + IntToStr ( GetCurrentThreadId ));
+  WriteLog('Emu: EmuNoFunc' + IntToStr(GetCurrentThreadId));
 
   EmuSwapFS();   // XBox FS*)
 end;

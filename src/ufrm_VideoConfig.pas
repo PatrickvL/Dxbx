@@ -26,10 +26,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure ComboReadOnly(Sender: TObject; var Key: Char);
   private
-    { Private declarations }
     FDirectDraw: IDirectDraw7;
-  public
-    { Public declarations }
   end;
 
 var
