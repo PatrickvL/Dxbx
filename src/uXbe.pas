@@ -5,9 +5,9 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Menus, Math, ActnList, ExtCtrls,
+  Menus, Math, ActnList, ExtCtrls, StrUtils,
   // Dxbx
-  uConsts, uExe, uBitsOps, uTime, strUtils;
+  uConsts, uExe, uBitsOps, uTime;
 
 type
   TLogType = (ltLog, ltFile);
@@ -193,7 +193,7 @@ type
     m_TLS: XBE_TLS;
     m_bzSection: array of TVarCharArray;
 
-    constructor Create(aFileName: string; FileType : TFileType );
+    constructor Create(aFileName: string; aFileType: TFileType);
     destructor Destroy; override;
 
     function DumpInformation(FileName: string = ''): Boolean;
@@ -214,6 +214,7 @@ var
 implementation
 
 uses
+  // Dxbx
   uLog;
 
 //------------------------------------------------------------------------------
@@ -305,7 +306,7 @@ end; // TXbe.ConstructorInit
 
 //------------------------------------------------------------------------------
 
-constructor TXbe.Create(aFileName: string; FileType : TFileType );
+constructor TXbe.Create(aFileName: string; aFileType: TFileType);
 var
   ExeSize: LongInt;
   lIndex, lIndex2: DWord;
@@ -313,10 +314,9 @@ var
   I: DWord;
   F: THandle;
   ReadBytes, FileSz: DWord;
-
-  sFileType : String;
+  sFileType: string;
 begin
-  sFileType := ifthen ( FileType = ftXbe, 'Xbe', 'Exe' );
+  sFileType := ifthen(aFileType = ftXbe, 'Xbe', 'Exe' );
 
   ConstructorInit();
 
@@ -332,16 +332,16 @@ begin
     Exit;
   end;
 
-  WriteLog( Format ( 'DXBX: Opening %s file...OK', [sFileType]));
+  WriteLog(Format('DXBX: Opening %s file...OK', [sFileType]));
 
   // remember xbe path
   m_szPath := ExtractFilePath(aFileName);
-  WriteLog( Format ( 'DXBX: Storing %s Path...Ok', [sFileType]));
+  WriteLog(Format('DXBX: Storing %s Path...Ok', [sFileType]));
 
   // read xbe image header
   if SizeOf(m_Header) > FileSz then
   begin
-    MessageDlg( Format ( 'Unexpected end of file while reading %s Image Header', [sFileType]), mtError, [mbOk], 0);
+    MessageDlg(Format('Unexpected end of file while reading %s Image Header', [sFileType]), mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -350,7 +350,7 @@ begin
   Reset(XbeFile);
   FreeMem(Buffer);
   GetMem(Buffer, FileSz);
-  BlockRead(XBeFile, Buffer^, FileSz, ReadBytes);
+  BlockRead(XbeFile, Buffer^, FileSz, ReadBytes);
   // m_Header.dwMagic Read (4 Bytes)
   i := 0;
   for lIndex := 0 to 3 do
@@ -634,7 +634,7 @@ begin
 
     for lIndex := 0 to m_Header.dwLibraryVersions - 1 do
     begin
-      WriteLog('DXBX: Reading Library Version 0x' + inttohex(lIndex, 4) + '....');
+      WriteLog('DXBX: Reading Library Version 0x' + IntToHex(lIndex, 4) + '....');
       for lIndex2 := 0 to 7 do
         m_LibraryVersion[lIndex].szName[lIndex2] := Buffer[i + lIndex2];
 
@@ -678,7 +678,7 @@ begin
 
     for lIndex := 0 to m_Header.dwSections - 1 do
     begin
-      WriteLog('DXBX: Reading Section 0x' + inttohex(lIndex, 4) + '...');
+      WriteLog('DXBX: Reading Section 0x' + IntToHex(lIndex, 4) + '...');
 
       //Debug info of turok from cxbx
       //v=0  RawSize: 1578256  RawAddr: 4096
@@ -705,7 +705,7 @@ begin
     end;
 
     if lIndex2 < Rawsize then
-      WriteLog( Format ( 'Unexpected end of file while reading %s Section', [sFileType] ));
+      WriteLog(Format('Unexpected end of file while reading %s Section', [sFileType] ));
   end;
 
   if m_Header.dwTLSAddr <> 0 then
@@ -729,7 +729,8 @@ begin
       m_TLS.dwCharacteristics := GetDwordVal(Buffer, i);
     end;
   end;
-  closefile(XBeFile);
+  
+  CloseFile(XbeFile);
 end; // TXbe.Create
 
 //------------------------------------------------------------------------------
@@ -785,7 +786,7 @@ begin
   lIndex2 := 0;
   for lIndex := 0 to 255 do
   begin
-    TmpStr := TmpStr + intToHex(Ord(m_Header.pbDigitalSignature[lIndex]), 2);
+    TmpStr := TmpStr + IntToHex(Ord(m_Header.pbDigitalSignature[lIndex]), 2);
 
     if lIndex2 = 15 then
     begin
@@ -806,7 +807,7 @@ begin
   DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwTimeDate));
   _LogEx('TimeDate Stamp                   : 0x' + IntToHex(m_Header.dwTimeDate, 8) + ' (' + TmpStr + ')');
   _LogEx('Certificate Address              : 0x' + IntToHex(m_Header.dwCertificateAddr, 8));
-  _LogEx('Number of Sections               : 0x' + IntToHEx(m_Header.dwSections, 8));
+  _LogEx('Number of Sections               : 0x' + IntToHex(m_Header.dwSections, 8));
   _LogEx('Section Headers Address          : 0x' + IntToHex(m_header.dwSectionHeadersAddr, 8));
 
   // Print init flags
@@ -918,14 +919,14 @@ begin
   // Print Lan Key
   TmpStr := '';
   for lIndex := 0 to 15 do
-    TmpStr := TmpStr + intToHex(Ord(m_Certificate.bzLanKey[lIndex]), 2);
+    TmpStr := TmpStr + IntToHex(Ord(m_Certificate.bzLanKey[lIndex]), 2);
 
   _LogEx('LAN Key                          : ' + TmpStr);
 
   // print signature key
   TmpStr := '';
   for lIndex := 0 to 15 do
-    TmpStr := TmpStr + intToHex(Ord(m_Certificate.bzSignatureKey[lIndex]), 2);
+    TmpStr := TmpStr + IntToHex(Ord(m_Certificate.bzSignatureKey[lIndex]), 2);
 
   _LogEx('Signature Key                    : ' + TmpStr);
 
@@ -936,7 +937,7 @@ begin
   begin
     TmpStr := '';
     for lIndex2 := 0 to 15 do
-      TmpStr := TmpStr + intToHex(Ord(m_Certificate.bzTitleAlternateSignatureKey[lIndex][lIndex2]), 2);
+      TmpStr := TmpStr + IntToHex(Ord(m_Certificate.bzTitleAlternateSignatureKey[lIndex][lIndex2]), 2);
 
     _LogEx('                                   ' + TmpStr);
   end;
@@ -961,7 +962,7 @@ begin
     _LogEx('Section Name                     : 0x' + IntToHex(Ord(m_SectionHeader[lIndex].dwSectionNameAddr), 8) + ' ("' + TmpStr + '")');
 
     TmpStr := '';
-    TmpStr := 'Flags                            : 0x' + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[3]), 2) + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[2]), 2) + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[1]), 2) + inttohex(Ord(m_SectionHeader[lIndex].dwFlags[0]), 2);
+    TmpStr := 'Flags                            : 0x' + IntToHex(Ord(m_SectionHeader[lIndex].dwFlags[3]), 2) + IntToHex(Ord(m_SectionHeader[lIndex].dwFlags[2]), 2) + IntToHex(Ord(m_SectionHeader[lIndex].dwFlags[1]), 2) + IntToHex(Ord(m_SectionHeader[lIndex].dwFlags[0]), 2);
 
     Flag := Ord(m_SectionHeader[lIndex].dwFlags[0]);
 
@@ -1035,7 +1036,7 @@ begin
 
      //end of bits maths
 
-      TmpStr := 'Flags                            : QFEVersion : 0x' + inttohex(QVersion, 4) + ', ';
+      TmpStr := 'Flags                            : QFEVersion : 0x' + IntToHex(QVersion, 4) + ', ';
 
       if GetBitEn(Flag, 7) > 0 then
         TmpStr := TmpStr + 'Debug, '
@@ -1164,7 +1165,7 @@ destructor TXbe.Destroy;
 begin
   FreeMem(Buffer);
 
-  inherited;
+  inherited Destroy;
 end;
 
 //------------------------------------------------------------------------------

@@ -4,9 +4,11 @@ interface
 
 uses
   // Delphi
-  Types,
+  Types, // for DWord
   // Dxbx
-  uConsts, uEnums, uXbe;
+  uConsts, // for cDLLName
+  uEnums, // for DebugMode
+  uXbe; // for P_XBE_TLS
 
 type
   TEntryProc = procedure();
@@ -14,17 +16,17 @@ type
   TThunkTable = packed array[0..366] of DWord;
   PThunkTable = ^TThunkTable;
 
-procedure CxbxKrnlInit( hwndParent : THandle;
-                        pTLSData : Pointer;
-                        pTLS : P_XBE_TLS;
-                        pLibraryVersion : P_XBE_LIBRARYVERSION;
-                        DbgMode : DebugMode;
-                        szDebugFilename : PChar;
-                        pXbeHeader : P_XBE_HEADER;
-                        dwXbeHeaderSize : DWord;
-                        Entry : PEntryProc );  stdcall; external cDLLNAME;
+procedure CxbxKrnlInit(hwndParent: THandle;
+                       pTLSData: Pointer;
+                       pTLS: P_XBE_TLS;
+                       pLibraryVersion: P_XBE_LIBRARYVERSION;
+                       DbgMode: DebugMode;
+                       szDebugFilename: PChar;
+                       pXbeHeader: P_XBE_HEADER;
+                       dwXbeHeaderSize: DWord;
+                       Entry: PEntryProc); stdcall; external cDLLNAME;
 
-procedure SetXbePath(const path : PChar ); stdcall; external cDLLNAME name '?SetXbePath@EmuShared@@QAEXPBD@Z';
+procedure SetXbePath(const path: PChar); stdcall; external cDLLNAME name '?SetXbePath@EmuShared@@QAEXPBD@Z';
 procedure CxbxKrnlNoFunc; stdcall; external cDLLNAME;
 
 implementation

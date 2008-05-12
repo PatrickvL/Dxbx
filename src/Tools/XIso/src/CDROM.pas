@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  title : CD-ROM Device Utility Component for Delphi 4
+//  title: CD-ROM Device Utility Component for Delphi 4
 //
 //  author: H.Gotou(E-mail: hgotou@ibm.net)
-//  date  : Jun 30,1999
-//  rev.  : 26.06.2001 por Yursoft  (yursoft@yursoft.com)
+//  date: Jun 30,1999
+//  rev.: 26.06.2001 por Yursoft  (yursoft@yursoft.com)
 //------------------------------------------------------------------------------
-//  note  : 1)This component requires installing Win32ASPI.pas and wnaspi32.dll.
+//  note: 1)This component requires installing Win32ASPI.pas and wnaspi32.dll.
 //------------------------------------------------------------------------------
 //  history :
 //    1.00.00 - May 05,1999
@@ -183,132 +183,132 @@ type
                     );
 
   TCDROMInfo = record
-    LoadingMechanismType    : TMechanismType; //Tipo de mecanismo de carga
-    DigitalPort1            : Boolean;        //Support DigitalPort1(IEC958)
-    DigitalPort2            : Boolean;        //Support DigitalPort2(IEC958)
-    MaxReadSpeed            : Word;           //Maximun Read Transfer Rate (kB/sec)
-    CurrentReadSpeed        : Word;           //Current Read Transfer Rate (kB/sec)
-    MaxWriteSpeed           : Word;           //Maximun Write Transfer Rate (kB/sec)
-    CurrentWriteSpeed       : Word;           //Current Write Transfer Rate (kB/sec)
-    DataBufferSize          : Word;           //Buffer Size of Data Stream
-    ChannelVolumeControl    : Boolean;        //Support Control Independent Channel Volume
-    ChannelMuteControl      : Boolean;        //Support Control Independent Channel Mute
-    VolumeLevels            : Word;           //Supported Volume Levels Value
-    BCKpolarity             : Boolean;        //Bit Clock Polarity (true:positive/false:negative)
-    LRCKform                : Boolean;        //L/R Clock Format (true:High=LeftChannel/false:High=RightChannel)
-    LSBfirst                : Boolean;        //Data Format (true:LSB first/false:MSB first)
-    BCKlength               : Byte;           //Bit Clock Length per Channel
-    SupportWriteCDR         : Boolean;        //Support Write CD-R disc
-    SupportWriteCDRW        : Boolean;        //Support Write CD-RW disc
-    SupportTestWrite        : Boolean;        //Support Test Write
-    SupportReadCDR          : Boolean;        //Support Read CD-R disc
-    SupportReadCDRW         : Boolean;        //Support Read CD-RW disc
-    SupportMethod2          : Boolean;        //Support Read Packet Wrote Disc
-    SupportMode2Form1       : Boolean;        //Support Read Mode2 Form1 disc
-    SupportMode2Form2       : Boolean;        //Support Read Mode2 Form2 disc
-    SupportMultiSession     : Boolean;        //Support Read MultiSession disc
-    SupportReadUPC          : Boolean;        //Support Read UPC/EAN code
-    SupportReadISRC         : Boolean;        //Support Read ISRC code
-    SupportReadBarCode      : Boolean;        //Support Read BarCode ID-code
-    SoftwareSlotSelection   : Boolean;        //Support Load/Unload command behavior of empty slot
+    LoadingMechanismType: TMechanismType; //Tipo de mecanismo de carga
+    DigitalPort1: Boolean;        //Support DigitalPort1(IEC958)
+    DigitalPort2: Boolean;        //Support DigitalPort2(IEC958)
+    MaxReadSpeed: Word;           //Maximun Read Transfer Rate (kB/sec)
+    CurrentReadSpeed: Word;           //Current Read Transfer Rate (kB/sec)
+    MaxWriteSpeed: Word;           //Maximun Write Transfer Rate (kB/sec)
+    CurrentWriteSpeed: Word;           //Current Write Transfer Rate (kB/sec)
+    DataBufferSize: Word;           //Buffer Size of Data Stream
+    ChannelVolumeControl: Boolean;        //Support Control Independent Channel Volume
+    ChannelMuteControl: Boolean;        //Support Control Independent Channel Mute
+    VolumeLevels: Word;           //Supported Volume Levels Value
+    BCKpolarity: Boolean;        //Bit Clock Polarity (true:positive/False:negative)
+    LRCKform: Boolean;        //L/R Clock Format (true:High=LeftChannel/False:High=RightChannel)
+    LSBfirst: Boolean;        //Data Format (true:LSB first/False:MSB first)
+    BCKlength: Byte;           //Bit Clock Length per Channel
+    SupportWriteCDR: Boolean;        //Support Write CD-R disc
+    SupportWriteCDRW: Boolean;        //Support Write CD-RW disc
+    SupportTestWrite: Boolean;        //Support Test Write
+    SupportReadCDR: Boolean;        //Support Read CD-R disc
+    SupportReadCDRW: Boolean;        //Support Read CD-RW disc
+    SupportMethod2: Boolean;        //Support Read Packet Wrote Disc
+    SupportMode2Form1: Boolean;        //Support Read Mode2 Form1 disc
+    SupportMode2Form2: Boolean;        //Support Read Mode2 Form2 disc
+    SupportMultiSession: Boolean;        //Support Read MultiSession disc
+    SupportReadUPC: Boolean;        //Support Read UPC/EAN code
+    SupportReadISRC: Boolean;        //Support Read ISRC code
+    SupportReadBarCode: Boolean;        //Support Read BarCode ID-code
+    SoftwareSlotSelection: Boolean;        //Support Load/Unload command behavior of empty slot
     SupportChangerDiscReport: Boolean;        //Support Changer Report Disc Present by Mechanism Status command
-    SupportEject            : Boolean;        //Support Eject command
-    SupportLock             : Boolean;        //Support Lock Media by Prevent/Allow command
-    LockStatus              : Boolean;        //Current Lock Status (true:prevent/false:allow)
-    PreventJumper           : Boolean;        //Prevent/Allow Jumper setting (true:prevent/false:allow)
-    SupportC2pointer        : Boolean;        //Support Read CD with C2 Pointer command
-    SupportReadCDDA         : Boolean;        //Support Read CDDA data
-    AccurateCDDA            : Boolean;        //Support Repeated Read CD command (Assured Position)
-    SupportReadSubcode      : Boolean;        //Support Transfer Subcode Data Block
-    SubcodeECC              : Boolean;        //Enable Error Correction of Subcode
-    EnablePlayAudio         : Boolean;        //Enable issue PlayAudio/ReadSubcode command
-    EnableComposite         : Boolean;        //Enable Trasfer Mixed Audio and Video Data Stream
+    SupportEject: Boolean;        //Support Eject command
+    SupportLock: Boolean;        //Support Lock Media by Prevent/Allow command
+    LockStatus: Boolean;        //Current Lock Status (true:prevent/False:allow)
+    PreventJumper: Boolean;        //Prevent/Allow Jumper setting (true:prevent/False:allow)
+    SupportC2pointer: Boolean;        //Support Read CD with C2 Pointer command
+    SupportReadCDDA: Boolean;        //Support Read CDDA data
+    AccurateCDDA: Boolean;        //Support Repeated Read CD command (Assured Position)
+    SupportReadSubcode: Boolean;        //Support Transfer Subcode Data Block
+    SubcodeECC: Boolean;        //Enable Error Correction of Subcode
+    EnablePlayAudio: Boolean;        //Enable issue PlayAudio/ReadSubcode command
+    EnableComposite: Boolean;        //Enable Trasfer Mixed Audio and Video Data Stream
   end;
 
   TMSF = record
-    Minute  : Byte;
-    Second  : Byte;
-    Frame   : Byte;
+    Minute: Byte;
+    Second: Byte;
+    Frame: Byte;
   end;
 
   TISRCcode = record
-    CountryCode   : string;     //Country Code
-    VendorCode    : string;     //Owner Code
-    RecordingYear : string;     //Recording Year
-    SerialNumber  : string;     //Serial Number
+    CountryCode: string;     //Country Code
+    VendorCode: string;     //Owner Code
+    RecordingYear: string;     //Recording Year
+    SerialNumber: string;     //Serial Number
   end;
 
   TAudioStatus = (as_NoSupport, as_Play, as_Pause, as_Stop, as_ErrorHalt, as_NoReport, as_Unknown);
 
   TSubChannel = record
-    ADR           : Byte;         //Sub-channel(Q) Information Type
-    AudioStatus   : TAudioStatus; //Audio Playing Status
-    Track         : Byte;         //Current Track
-    Index         : Byte;         //Current Index
-    UPCcode       : string;       //UPC/EAN code
-    ISRCcode      : TISRCcode;    //ISRC code
-    ATime         : TMSF;         //Absolute Address
-    PTime         : TMSF;         //Relative Address
-    SubRAW        : array[0..11] of Byte; // Devuelve el subcanal tal cual
+    ADR: Byte;         //Sub-channel(Q) Information Type
+    AudioStatus: TAudioStatus; //Audio Playing Status
+    Track: Byte;         //Current Track
+    Index: Byte;         //Current Index
+    UPCcode: string;       //UPC/EAN code
+    ISRCcode: TISRCcode;    //ISRC code
+    ATime: TMSF;         //Absolute Address
+    PTime: TMSF;         //Relative Address
+    SubRAW: array[0..11] of Byte; // Devuelve el subcanal tal cual
   end;
 
   TSesionInfo = record
-    Sesion        : Byte;
-    ADR           : Byte;
-    DigitalCopy   : Boolean;    //Copy Control (true:permitted/false:prohibited)
-    AudioData     : Boolean;    //Contents Attribute (true:Audio/false:Data)
-    AudioChannel  : Byte;       //Channel of Audio
-    Emphasis      : Boolean;    //Pre-Emphasis (true:emphasized/false:no emphasized)
-    ISRCcode      : TISRCcode;  //ISRC code
-    TNO           : Byte;       // TrackNO
-    Point         : Byte;
-    AMin          : Byte;
-    ASec          : Byte;
-    AFrame        : Byte;
-    ALBA          : Longword;
+    Sesion: Byte;
+    ADR: Byte;
+    DigitalCopy: Boolean;    //Copy Control (true:permitted/False:prohibited)
+    AudioData: Boolean;    //Contents Attribute (true:Audio/False:Data)
+    AudioChannel: Byte;       //Channel of Audio
+    Emphasis: Boolean;    //Pre-Emphasis (true:emphasized/False:no emphasized)
+    ISRCcode: TISRCcode;  //ISRC code
+    TNO: Byte;       // TrackNO
+    Point: Byte;
+    AMin: Byte;
+    ASec: Byte;
+    AFrame: Byte;
+    ALBA: Longword;
 
-    HOUR          : Byte;
-    PHOUR         : Byte;
+    HOUR: Byte;
+    PHOUR: Byte;
 
-    PMIN          : Byte;
-    PSEC          : Byte;
-    PFRAME        : Byte;
-    PLBA          : Longword;
+    PMIN: Byte;
+    PSEC: Byte;
+    PFRAME: Byte;
+    PLBA: Longword;
   end;
 
   TCCD = record
-    PistaInicial  : Byte;
-    PistaFinal    : Byte;
-    Pista         : Byte;
-    AddressMSF    : TMSF;
-    LBA           : longword;
+    PistaInicial: Byte;
+    PistaFinal: Byte;
+    Pista: Byte;
+    AddressMSF: TMSF;
+    LBA: longword;
   end;
 
   TTrackInfo = record
-    StartAddress  : TMSF;       //Track Start Address
+    StartAddress: TMSF;       //Track Start Address
     StartAddressLBA: longword;
-    Sesion        : Byte;
-    DigitalCopy   : Boolean;    //Copy Control (true:permitted/false:prohibited)
-    AudioData     : Boolean;    //Contents Attribute (true:Audio/false:Data)
-    AudioChannel  : Byte;       //Channel of Audio
-    Emphasis      : Boolean;    //Pre-Emphasis (true:emphasized/false:no emphasized)
-    ADR           : Byte;       //Tipo de informacion de Sub-channel(Q)
-    ISRCcode      : TISRCcode;  //ISRC code
+    Sesion: Byte;
+    DigitalCopy: Boolean;    //Copy Control (true:permitted/False:prohibited)
+    AudioData: Boolean;    //Contents Attribute (true:Audio/False:Data)
+    AudioChannel: Byte;       //Channel of Audio
+    Emphasis: Boolean;    //Pre-Emphasis (true:emphasized/False:no emphasized)
+    ADR: Byte;       //Tipo de informacion de Sub-channel(Q)
+    ISRCcode: TISRCcode;  //ISRC code
   end;
 
   TTOCInfo = record
-    TrackNumber : Byte;
-    Matriz      : array[0..$800]of Byte;
-    StartTrack  : Byte;
-    EndTrack    : Byte;
-    TotalTime   : TMSF;
-    Sesiones    : Byte;
+    TrackNumber: Byte;
+    Matriz: array[0..$800]of Byte;
+    StartTrack: Byte;
+    EndTrack: Byte;
+    TotalTime: TMSF;
+    Sesiones: Byte;
     PrimeraSesion: Byte;
     UltimaSesion: Byte;
     SesionesInfo: array [0..99] of TSesionInfo;
-    LeadOut     : TSesionInfo;
-    UPCcode     : string;       //Codigo UPC/EAN
-    TrackInfo   : array [0..99] of TTrackInfo;
+    LeadOut: TSesionInfo;
+    UPCcode: string;       //Codigo UPC/EAN
+    TrackInfo: array [0..99] of TTrackInfo;
   end;
 
   TATIP = record
@@ -557,7 +557,7 @@ type
     procedure MensajeSenseKey(SK: Byte; ASC: Byte; ASCQ: Byte; TextoSense: string);    
   protected
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
   published
     //---Utilidades---
@@ -633,9 +633,9 @@ end;
 
 { TCDROM }
 
-constructor TCDROM.Create(AOwner: TComponent);
+constructor TCDROM.Create(aOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited Create(aOwner);
 end;
 
 destructor TCDROM.Destroy;
@@ -660,7 +660,7 @@ end;
 
 function Bytes2Integer(a,b,c,d: Byte): Integer;
 begin
-     result := (a shl 24) or (b shl 16) or (c shl 8) or d;
+     Result := (a shl 24) or (b shl 16) or (c shl 8) or d;
 end;
 
 //*********************
@@ -776,13 +776,15 @@ const
          ASC7300 = 'Error en control del CD';
 
 procedure TCDROM.MensajeSenseKey(SK: Byte; ASC: Byte; ASCQ: Byte; TextoSense: string);
- procedure M(SK, ASC, ASCQ: Byte; Texto: string);
- begin
-       if Assigned(FEnError) then
-          FEnError(SK, ASC, ASCQ, Texto);
- end;
+
+  procedure M(SK, ASC, ASCQ: Byte; Texto: string);
+  begin
+    if Assigned(FEnError) then
+      FEnError(SK, ASC, ASCQ, Texto);
+  end;
+
 var
-        s: string;
+  s: string;
 begin
         case (ASC) of
           $00: s := ASC0000;
@@ -981,7 +983,7 @@ begin
       MensajeSenseKey(SRBPacket.SenseArea[2]and $0f, SRBPacket.SenseArea[12],SRBPacket.SenseArea[13], '');
     end;
   end;
-  If Assigned(FOnTestUnitReadyFinish) then
+  if Assigned(FOnTestUnitReadyFinish) then
   begin
     FOnTestUnitReadyFinish(Self);
   end;
@@ -1029,15 +1031,15 @@ begin
     begin
       Result := Buffer[2] and $0f;
       case Result of
-        0:      MensajeSenseKey(result,Buffer[12],Buffer[13],'Correcto');
-        2:      MensajeSenseKey(result,Buffer[12],Buffer[13],'Unidad no preparada');
-        4:      MensajeSenseKey(result,Buffer[12],Buffer[13],'Error de Hardware.');
-        5:      MensajeSenseKey(result,Buffer[12],Buffer[13],'Parametro ilegal al solicitar informacion a la unidad.');
-        6:      MensajeSenseKey(result,Buffer[12],Buffer[13],'La unidad ha sido resetada o ha cambiado de medio.');
-        7:      MensajeSenseKey(result,Buffer[12],Buffer[13],'Datos protegidos.');
-        11:     MensajeSenseKey(result,Buffer[12],Buffer[13],'Ha sido abortado el comando.');
-        14:     MensajeSenseKey(result,Buffer[12],Buffer[13],'Los datos de salida son distintos a los del origen.');
-        else    MensajeSenseKey(result,Buffer[12],Buffer[13],'Error desconocido al solicitar informacion a la unidad.');
+        0:      MensajeSenseKey(Result,Buffer[12],Buffer[13],'Correcto');
+        2:      MensajeSenseKey(Result,Buffer[12],Buffer[13],'Unidad no preparada');
+        4:      MensajeSenseKey(Result,Buffer[12],Buffer[13],'Error de Hardware.');
+        5:      MensajeSenseKey(Result,Buffer[12],Buffer[13],'Parametro ilegal al solicitar informacion a la unidad.');
+        6:      MensajeSenseKey(Result,Buffer[12],Buffer[13],'La unidad ha sido resetada o ha cambiado de medio.');
+        7:      MensajeSenseKey(Result,Buffer[12],Buffer[13],'Datos protegidos.');
+        11:     MensajeSenseKey(Result,Buffer[12],Buffer[13],'Ha sido abortado el comando.');
+        14:     MensajeSenseKey(Result,Buffer[12],Buffer[13],'Los datos de salida son distintos a los del origen.');
+        else    MensajeSenseKey(Result,Buffer[12],Buffer[13],'Error desconocido al solicitar informacion a la unidad.');
       end;
     end;
   end;
@@ -1157,20 +1159,20 @@ begin
     Result.DeviceStatus := ds_Unknown;
     Result.DeviceType := dt_Unknown;
     Result.DataFormat := df_Unknown;
-    Result.Removable := false;
+    Result.Removable := False;
     Result.ECMAVersion := 0;
     Result.ATAPIVersion := 0;
     Result.ANSIVersion := 0;
     Result.ISOVersion := 0;
-    Result.AENC := false;
-    Result.TrmlOP := false;
-    Result.RelAdr := false;
-    Result.WBus32 := false;
-    Result.WBus16 := false;
-    Result.SyncTx := false;
-    Result.Linked := false;
-    Result.CmdQue := false;
-    Result.SftRst := false;
+    Result.AENC := False;
+    Result.TrmlOP := False;
+    Result.RelAdr := False;
+    Result.WBus32 := False;
+    Result.WBus16 := False;
+    Result.SyncTx := False;
+    Result.Linked := False;
+    Result.CmdQue := False;
+    Result.SftRst := False;
     Result.VendorID := '';
     Result.ProductID := '';
     Result.Revision := '';
@@ -1629,10 +1631,10 @@ begin
       Error := ECDROMError.Create('Error al ejecutar comando "Read10".');
       Error.ErrorCode := $0003be00;
       //raise Error;
-      result := False;      
+      Result := False;      
     end;
   end;
-  If Assigned(FOnReadCDFinish) then
+  if Assigned(FOnReadCDFinish) then
   begin
     FOnReadCDFinish(Self);
   end;
@@ -1709,10 +1711,10 @@ begin
       Error := ECDROMError.Create('Error al ejecutar comando "Read12".');
       Error.ErrorCode := $0003be00;
       //raise Error;
-      result := False;
+      Result := False;
     end;
   end;
-  If Assigned(FOnReadCDFinish) then
+  if Assigned(FOnReadCDFinish) then
   begin
     FOnReadCDFinish(Self);
   end;
@@ -2041,7 +2043,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnReadSubChannelFinish) then
+  if Assigned(FOnReadSubChannelFinish) then
   begin
     FOnReadSubChannelFinish(Self);
   end;
@@ -2085,7 +2087,7 @@ begin
   if xResult then
   begin
         for i := 0 to 35 do
-            result[i] := buffer[i];
+            Result[i] := buffer[i];
   end;
 
   R := False;
@@ -2235,10 +2237,10 @@ begin
     Result.TrackInfo[tno].StartAddress.Minute := 0;
     Result.TrackInfo[tno].StartAddress.Second := 0;
     Result.TrackInfo[tno].StartAddress.Frame  := 0;
-    Result.TrackInfo[tno].DigitalCopy  := false;
-    Result.TrackInfo[tno].AudioData    := false;
+    Result.TrackInfo[tno].DigitalCopy  := False;
+    Result.TrackInfo[tno].AudioData    := False;
     Result.TrackInfo[tno].AudioChannel := 0;
-    Result.TrackInfo[tno].Emphasis     := false;
+    Result.TrackInfo[tno].Emphasis     := False;
     Result.TrackInfo[tno].ADR := 0;
     Result.TrackInfo[tno].ISRCcode.CountryCode := '';
     Result.TrackInfo[tno].ISRCcode.VendorCode := '';
@@ -2623,7 +2625,7 @@ begin
     end;
   end;
 
-  If Assigned(FOnReadTOCFinish) then
+  if Assigned(FOnReadTOCFinish) then
   begin
     FOnReadTOCFinish(Self);
   end;
@@ -2750,63 +2752,63 @@ begin
 
   if xResult then
   begin
-        result.Borrable := Boolean((Buffer[2] shl 3) shr 7);
+        Result.Borrable := Boolean((Buffer[2] shl 3) shr 7);
         case ((Buffer[2] shl 4) shr 6) of
-          $00: result.EstadoUltimaSesion := us_Vacio;
-          $01: result.EstadoUltimaSesion := us_Incompleta;
-          $02: result.EstadoUltimaSesion := us_ReserDanyada;
-          $03: result.EstadoUltimaSesion := us_Completada;
+          $00: Result.EstadoUltimaSesion := us_Vacio;
+          $01: Result.EstadoUltimaSesion := us_Incompleta;
+          $02: Result.EstadoUltimaSesion := us_ReserDanyada;
+          $03: Result.EstadoUltimaSesion := us_Completada;
         end;
 
         case ((Buffer[2] shl 6) shr 6) of
-          $00: result.EstadoDisco := ed_Vacio;
-          $01: result.EstadoDisco := ed_Incompleto;
-          $02: result.EstadoDisco := ed_Completo;
-          $03: result.EstadoDisco := ed_Otros;
+          $00: Result.EstadoDisco := ed_Vacio;
+          $01: Result.EstadoDisco := ed_Incompleto;
+          $02: Result.EstadoDisco := ed_Completo;
+          $03: Result.EstadoDisco := ed_Otros;
         end;
 
-        result.NumeroPrimeraPista := Buffer[3];
-        result.NumeroSesiones := (Buffer[9] shl 8) or Buffer[4];
-        result.PrimeraPistaEnUltimaSesion := (Buffer[10] shl 8) or Buffer[5];
-        result.UltimaPistaEnUltimaSesion := (Buffer[11] shl 8) or Buffer[6];
+        Result.NumeroPrimeraPista := Buffer[3];
+        Result.NumeroSesiones := (Buffer[9] shl 8) or Buffer[4];
+        Result.PrimeraPistaEnUltimaSesion := (Buffer[10] shl 8) or Buffer[5];
+        Result.UltimaPistaEnUltimaSesion := (Buffer[11] shl 8) or Buffer[6];
 
-        result.DID_V := Boolean(Buffer[7] shr 7);
-        result.DBC_V := Boolean((Buffer[7]shl 1) shr 7);
-        result.URU := Boolean((Buffer[7]shl 2) shr 7);
-        result.DBit := (Buffer[7]shl 5) shr 7;
+        Result.DID_V := Boolean(Buffer[7] shr 7);
+        Result.DBC_V := Boolean((Buffer[7]shl 1) shr 7);
+        Result.URU := Boolean((Buffer[7]shl 2) shr 7);
+        Result.DBit := (Buffer[7]shl 5) shr 7;
 
         case ((Buffer[7]shl 6) shr 7) of
-           $00: result.BGFormatoEstado := bg_NoFormateado;
-           $01: result.BGFormatoEstado := bg_SinCompletar;
-           $02: result.BGFormatoEstado := bg_FormatoEnProgreso;
-           $03: result.BGFormatoEstado := bg_Completo;
+           $00: Result.BGFormatoEstado := bg_NoFormateado;
+           $01: Result.BGFormatoEstado := bg_SinCompletar;
+           $02: Result.BGFormatoEstado := bg_FormatoEnProgreso;
+           $03: Result.BGFormatoEstado := bg_Completo;
         end;
 
         case (Buffer[8]) of
-          $00: result.TipoDisco := td_CDROM;
-          $01: result.TipoDisco := td_CDI;
-          $02: result.TipoDisco := td_CDROMXAoDDCD;
-          $03: result.TipoDisco := td_Indefinido;
-          else result.TipoDisco := td_Indefinido;
+          $00: Result.TipoDisco := td_CDROM;
+          $01: Result.TipoDisco := td_CDI;
+          $02: Result.TipoDisco := td_CDROMXAoDDCD;
+          $03: Result.TipoDisco := td_Indefinido;
+          else Result.TipoDisco := td_Indefinido;
         end;
 
-        result.IDDisco := ((Buffer[12] shl 24) or
+        Result.IDDisco := ((Buffer[12] shl 24) or
                            (Buffer[13] shl 16) or
                            (Buffer[14] shl 8) or
                            (Buffer[15]));
 
-        result.InicioLeadInUltimaSesion := ((Buffer[16] shl 24) or
+        Result.InicioLeadInUltimaSesion := ((Buffer[16] shl 24) or
                                             (Buffer[17] shl 16) or
                                             (Buffer[18] shl 8) or
                                             (Buffer[19]));
 
-        result.InicioLeadOut := ((Buffer[20] shl 24) or
+        Result.InicioLeadOut := ((Buffer[20] shl 24) or
                                  (Buffer[21] shl 16) or
                                  (Buffer[22] shl 8) or
                                  (Buffer[23]));
 
     // CREO QUE YA TA ARREGLADO....
-        result.CodigoBarras := ((((( (((Buffer[24] shl 8) or
+        Result.CodigoBarras := ((((( (((Buffer[24] shl 8) or
                                  (Buffer[25] shl 8)) or
                                  (Buffer[26] shl 8)) or
                                  (Buffer[27] shl 8)) or
@@ -2815,7 +2817,7 @@ begin
                                  (Buffer[30] shl 8)) or
                                  (Buffer[31]) );
 
-        result.NumOPC := Buffer[33];
+        Result.NumOPC := Buffer[33];
 
     // FALTA IMPLEMENTAR UNA ESTRUCTURA COMO VIENE EN LA PAGINA
     // 208 (172) del PDF de MMC3, CON LAS ENTRADAS DEL "OPC"    
@@ -2892,8 +2894,8 @@ begin
     Result.SupportReadUPC       := ((Buffer[offset+5] and $40) = $40);  //check Read UPC ID-code support
     Result.SupportReadBarCode   := ((Buffer[offset+5] and $80) = $80);  //check Read BarCode ID-code support
     Result.SupportLock          := ((Buffer[offset+6] and $01) = $01);  //check Lock Media by Prevent/Allow command support
-    Result.LockStatus           := ((Buffer[offset+6] and $02) = $02);  //check Current Lock Status (true:prevent/false:allow)
-    Result.PreventJumper        := ((Buffer[offset+6] and $04) = $04);  //check Prevent/Allow Jumper setting (true:prevent/false:allow)
+    Result.LockStatus           := ((Buffer[offset+6] and $02) = $02);  //check Current Lock Status (true:prevent/False:allow)
+    Result.PreventJumper        := ((Buffer[offset+6] and $04) = $04);  //check Prevent/Allow Jumper setting (true:prevent/False:allow)
     Result.SupportEject         := ((Buffer[offset+6] and $08) = $08);  //check Eject command support
     case (Buffer[offset+6] and $e0) of         //check Loading MEchanism Type
       $00:  Result.LoadingMechanismType := mt_Caddy;
@@ -2926,45 +2928,45 @@ begin
   else
   begin
     Result.LoadingMechanismType := mt_Unknown;
-    Result.DigitalPort1 := false;
-    Result.DigitalPort2 := false;
+    Result.DigitalPort1 := False;
+    Result.DigitalPort2 := False;
     Result.MaxReadSpeed := 0;
     Result.CurrentReadSpeed := 0;
     Result.MaxWriteSpeed := 0;
     Result.CurrentWriteSpeed := 0;
     Result.DataBufferSize := 0;
-    Result.ChannelVolumeControl := false;
-    Result.ChannelMuteControl := false;
+    Result.ChannelVolumeControl := False;
+    Result.ChannelMuteControl := False;
     Result.VolumeLevels := 0;
-    Result.BCKpolarity := false;
-    Result.LRCKform := false;
-    Result.LSBfirst := false;
+    Result.BCKpolarity := False;
+    Result.LRCKform := False;
+    Result.LSBfirst := False;
     Result.BCKlength := 0;
-    Result.SupportWriteCDR := false;
-    Result.SupportWriteCDRW := false;
-    Result.SupportTestWrite := false;
-    Result.SupportReadCDR := false;
-    Result.SupportReadCDRW := false;
-    Result.SupportMethod2 := false;
-    Result.SupportMode2Form1 := false;
-    Result.SupportMode2Form2 := false;
-    Result.SupportMultiSession := false;
-    Result.SupportReadISRC := false;
-    Result.SupportReadUPC := false;
-    Result.SupportReadBarCode := false;
-    Result.SoftwareSlotSelection := false;
-    Result.SupportChangerDiscReport := false;
-    Result.SupportEject := false;
-    Result.SupportLock := false;
-    Result.LockStatus := false;
-    Result.PreventJumper := false;
-    Result.SupportC2pointer := false;
-    Result.SupportReadCDDA := false;
-    Result.AccurateCDDA := false;
-    Result.SupportReadSubcode := false;
-    Result.SubcodeECC := false;
-    Result.EnablePlayAudio := false;
-    Result.EnableComposite := false;
+    Result.SupportWriteCDR := False;
+    Result.SupportWriteCDRW := False;
+    Result.SupportTestWrite := False;
+    Result.SupportReadCDR := False;
+    Result.SupportReadCDRW := False;
+    Result.SupportMethod2 := False;
+    Result.SupportMode2Form1 := False;
+    Result.SupportMode2Form2 := False;
+    Result.SupportMultiSession := False;
+    Result.SupportReadISRC := False;
+    Result.SupportReadUPC := False;
+    Result.SupportReadBarCode := False;
+    Result.SoftwareSlotSelection := False;
+    Result.SupportChangerDiscReport := False;
+    Result.SupportEject := False;
+    Result.SupportLock := False;
+    Result.LockStatus := False;
+    Result.PreventJumper := False;
+    Result.SupportC2pointer := False;
+    Result.SupportReadCDDA := False;
+    Result.AccurateCDDA := False;
+    Result.SupportReadSubcode := False;
+    Result.SubcodeECC := False;
+    Result.EnablePlayAudio := False;
+    Result.EnableComposite := False;
     if ErrorEnable then
     begin
       Error := ECDROMError.Create('Error al realizar Modo Sense');
@@ -2972,7 +2974,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnModeSenseFinish) then
+  if Assigned(FOnModeSenseFinish) then
   begin
     FOnModeSenseFinish(Self);
   end;
@@ -3057,7 +3059,7 @@ begin
   begin
        if ErrorEnable then
        begin
-            result := False;
+            Result := False;
             Error := ECDROMError.Create('Error al realizar la peticion de Errores');
             Error.ErrorCode := $00035a00;
             //raise Error;
@@ -3170,7 +3172,7 @@ begin
   begin
        if ErrorEnable then
        begin
-            result := False;
+            Result := False;
             Error := ECDROMError.Create('Error al realizar la peticion de Paginas de Escritura');
             Error.ErrorCode := $00035a00;
             //raise Error;
@@ -3240,7 +3242,7 @@ begin
   begin
        if ErrorEnable then
        begin
-            result := False;
+            Result := False;
             Error := ECDROMError.Create('Error al realizar SendCuesheet');
             Error.ErrorCode := $00035a00;
             //raise Error;
@@ -3261,7 +3263,7 @@ var
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
   xResult: Boolean;
-  i      : Integer;
+  i: Integer;
 begin
   //---Inicializacion de SCSI Request Block---
   pSRBPacket := @SRBPacket;
@@ -3292,7 +3294,7 @@ begin
       if SRBPacket.SRB_TargetStat = STATUS_GOOD then
       begin
            for i := 0 to 15 do
-               result[i] := buffer[i];
+               Result[i] := buffer[i];
       end
       else
       begin
@@ -3301,7 +3303,7 @@ begin
                 if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
                 begin
                      for i := 0 to 15 do
-                         result[i] := buffer[i];
+                         Result[i] := buffer[i];
                 end;
            end;
       end;
@@ -3780,7 +3782,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnPlayAudioMSFFinish) then
+  if Assigned(FOnPlayAudioMSFFinish) then
   begin
     FOnPlayAudioMSFFinish(Self);
   end;
@@ -3846,7 +3848,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnPlayAudioTrackFinish) then
+  if Assigned(FOnPlayAudioTrackFinish) then
   begin
     FOnPlayAudioTrackFinish(Self);
   end;
@@ -3915,7 +3917,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnPauseResumeFinish) then
+  if Assigned(FOnPauseResumeFinish) then
   begin
     FOnPauseResumeFinish(Self);
   end;
@@ -3997,7 +3999,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnPlayAudioFinish) then
+  if Assigned(FOnPlayAudioFinish) then
   begin
     FOnPlayAudioFinish(Self);
   end;
@@ -4076,7 +4078,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnSetStartStopUnitFinish) then
+  if Assigned(FOnSetStartStopUnitFinish) then
   begin
     FOnSetStartStopUnitFinish(Self);
   end;
@@ -4150,7 +4152,7 @@ begin
      // raise Error;
     end;
   end;
-  If Assigned(FOnSetCDSpeedFinish) then
+  if Assigned(FOnSetCDSpeedFinish) then
   begin
     FOnSetCDSpeedFinish(Self);
   end;
@@ -4269,12 +4271,12 @@ begin
 
   if not Result then
   begin
-       if ErrorEnable then
-       begin
-            Error := ECDROMError.Create('Error al enviar evento.');
-            Error.ErrorCode := $0003bb00;
-            raise Error;
-       end;
+    if ErrorEnable then
+    begin
+      Error := ECDROMError.Create('Error al enviar evento.');
+      Error.ErrorCode := $0003bb00;
+      raise Error;
+    end;
   end;
 
   if Assigned(FOnSetCDSpeedFinish) then

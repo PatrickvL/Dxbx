@@ -52,10 +52,8 @@ begin
   if Reason = DLL_PROCESS_ATTACH then
     Init
   else
-  begin
     if Reason = DLL_PROCESS_DETACH then
       Cleanup;
-  end;
 end;
 
 begin

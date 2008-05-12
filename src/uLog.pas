@@ -12,7 +12,7 @@ var
   m_KrnlDebug: DebugMode = DM_CONSOLE;
   m_KrnlDebugFilename: string = '';
 
-procedure CreateLogs(aLogType: LogType = ltKernel);
+procedure CreateLogs(aLogType: TLogType = ltKernel);
 procedure CloseLogs;
 procedure WriteLog(aText: string);
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
@@ -27,16 +27,16 @@ uses
   uLogConsole;
 
 var
-  LogMode     : DebugMode = DM_NONE;
-  LogFileOpen : Boolean = False;
-  LogFile     : TextFile;
+  LogMode: DebugMode = DM_NONE;
+  LogFileOpen: Boolean = False;
+  LogFile: TextFile;
 
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 begin
   LogMode := aLogMode;
 end;
 
-procedure CreateLogs(aLogType: LogType);
+procedure CreateLogs(aLogType: TLogType);
 begin
   case aLogType of
     ltGui    : begin
@@ -110,8 +110,8 @@ end;
 procedure WriteLog(aText: string);
 begin
   case LogMode of
-    DM_CONSOLE : frm_LogConsole.Log.Lines.Add(aText);
-    DM_FILE    : WriteLn(LogFile, aText);
+    DM_CONSOLE: frm_LogConsole.Log.Lines.Add(aText);
+    DM_FILE: WriteLn(LogFile, aText);
   end;
 end;
 

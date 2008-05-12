@@ -7,7 +7,7 @@ type
   EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
   DebugMode = (DM_NONE, DM_CONSOLE, DM_FILE);
 
-  LogType = (ltKernel, ltGui);
+  TLogType = (ltKernel, ltGui);
 
 implementation
 

@@ -1,4 +1,5 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{2cdd4a20-ce63-4033-8f8e-fbeeec49d9e8}</ProjectGuid>
     <MainSource>XdkTracker.dpr</MainSource>
@@ -37,17 +38,8 @@
     <DelphiCompile Include="XdkTracker.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..\..\..uConsts.pas" />
-    <DCCReference Include="..\..\..uXML.pas">
-      <ModuleName>uXML</ModuleName>
-    </DCCReference>
     <DCCReference Include="..\..\..\uConsts.pas" />
-    <DCCReference Include="..\..\.uConsts.pas" />
-    <DCCReference Include="..\..\.uXML.pas" />
-    <DCCReference Include="..\..\uConsts.pas" />
-    <DCCReference Include="..\..\Utils\uXML.pas" />
-    <DCCReference Include="..\..\uXML.pas" />
-    <DCCReference Include="..\Dxbx\uConsts.pas" />
+    <DCCReference Include="..\..\..\uXML.pas" />
     <DCCReference Include="uData.pas" />
     <DCCReference Include="ufrm_Main.pas">
       <Form>frmXdkTracker</Form>

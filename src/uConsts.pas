@@ -39,7 +39,7 @@ const
   cOpen = 'open';
 
   // Xbe File Format
-  _MagicNumber = 'XBEH';       
+  _MagicNumber = 'XBEH';
 
   // Limits
   _RecentXbeLimit: Integer = 10;

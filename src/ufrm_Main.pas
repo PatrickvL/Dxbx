@@ -141,7 +141,7 @@ type
 
     m_bExeChanged: Boolean;
 
-    procedure SetExeGen( ConvertTo : EnumAutoConvert );
+    procedure SetExeGen(ConvertTo: EnumAutoConvert);
 
     procedure CloseXbe;
     procedure XbeLoaded;
@@ -273,7 +273,7 @@ begin
   Exportexe1.Enabled := False;
   CloseXbe1.Enabled := False;
 
-  WriteLog( Format ( 'DXBX: %s Closed...', [m_szAsciiTitle]));
+  WriteLog(Format('DXBX: %s Closed...', [m_szAsciiTitle]));
   StatusBar.SimpleText := 'DXBX:';
 end; // Tfrm_Main.CloseXbe
 
@@ -290,7 +290,7 @@ begin
   m_Xbe := TXbe.Create(m_XbeFilename, ftXbe);
   try
     XbeLoaded();
-    StatusBar.SimpleText := Format ( 'DXBX: %s Loaded', [m_szAsciiTitle]);
+    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
   except
     Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     m_Xbe.Free;
@@ -330,7 +330,7 @@ begin
 
             MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
-            m_bXbeChanged = false;
+            m_bXbeChanged = False;
 		}
 	} *)
 end;
@@ -509,24 +509,23 @@ begin
         begin
           szTempPath := GetTempDirectory;
           try
-            Result := ConvertToExe(szTempPath + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), false);
+            Result := ConvertToExe(szTempPath + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), False);
           except
           end;
         end;
       CONVERT_TO_XBEPATH:
         begin
           try
-            Result := ConvertToExe(ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), false);
+            Result := ConvertToExe(ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), False);
           except
           end;
         end;
-    else begin
+    else
         try
           Result := ConvertToExe('', True);
         except
         end;
-      end;
-    end;
+    end; // case
   end;
 end; // Tfrm_Main.StartEmulation
 
@@ -557,8 +556,8 @@ begin
   m_Xbe := TXbe.Create(aFileName, ftExe);
   try
     XbeLoaded();
-    m_bExeChanged := true;
-    StatusBar.SimpleText := Format ( 'DXBX: %s Loaded', [m_szAsciiTitle]);
+    m_bExeChanged := True;
+    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
   except
     Messagedlg('Can not open Exe file.', mtWarning, [mbOk], 0);
     m_Xbe.Free;
@@ -613,16 +612,16 @@ begin
     IniFile := TIniFile.Create(DxbxIniFilePath);
 
     case IniFile.ReadInteger('Settings', 'AutoConvertToExe', 1) of
-      1: SetExeGen ( CONVERT_TO_WINDOWSTEMP );
-      2: SetExeGen ( CONVERT_TO_XBEPATH );
-      3: SetExeGen ( CONVERT_TO_MANUAL );
+      1: SetExeGen(CONVERT_TO_WINDOWSTEMP);
+      2: SetExeGen(CONVERT_TO_XBEPATH);
+      3: SetExeGen(CONVERT_TO_MANUAL);
     else
-      SetExeGen ( CONVERT_TO_MANUAL );
+      SetExeGen(CONVERT_TO_MANUAL);
     end;
 
-    m_DxbxDebug := DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', 0));
+    m_DxbxDebug := DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', Ord(DM_NONE)));
     m_DxbxDebugFilename := IniFile.ReadString('Settings', 'DxbxDebugFilename', '');
-    m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', 0));
+    m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(DM_NONE)));
     m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
 
     // Read recent XBE files
@@ -633,9 +632,8 @@ begin
     RecentTMPList.StrictDelimiter := True;
     RecentTMPList.DelimitedText := RecentTMP;
     RecentXbefiles1.Clear;
-    for I := 0 to RecentTMPList.Count - 1 do begin
+    for I := 0 to RecentTMPList.Count - 1 do
       RecentXbeAdd(RecentTMPList[I]);
-    end;
 
     // Read recent EXE files
     RecentTMP := IniFile.ReadString('Recent', 'EXEs', '');
@@ -863,7 +861,7 @@ end; // Tfrm_Main.actFileDebugKernelExecute
 procedure Tfrm_Main.XbeLoaded;
 begin
   LoadLogo();
-  WriteLog( Format ( 'DXBX: %s  loaded.', [m_szAsciiTitle]));
+  WriteLog(Format('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end; // Tfrm_Main.XbeLoaded
 
 //------------------------------------------------------------------------------
@@ -891,14 +889,14 @@ end; // Tfrm_Main.actCloseExecute
 destructor Tfrm_Main.Destroy;
 begin
   WriteSettingsIni;
-  inherited;
+  inherited Destroy;
 end; // Tfrm_Main.Create
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.AfterConstruction;
 begin
-  inherited;
+  inherited AfterConstruction;
   ReadSettingsIni;
 end; // Tfrm_Main.AfterConstruction
 
@@ -906,21 +904,21 @@ end; // Tfrm_Main.AfterConstruction
 
 procedure Tfrm_Main.actExeGenWindowsTempExecute(Sender: TObject);
 begin
-  SetExeGen (  CONVERT_TO_WINDOWSTEMP );
+  SetExeGen(CONVERT_TO_WINDOWSTEMP);
 end; // Tfrm_Main.actExeGenWindowsTempExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actExeGenDxbxPathExecute(Sender: TObject);
 begin
-  SetExeGen (  CONVERT_TO_XBEPATH );
+  SetExeGen(CONVERT_TO_XBEPATH);
 end; // Tfrm_Main.actExeGenDxbxPathExecute
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actExeGenManualExecute(Sender: TObject);
 begin
-  SetExeGen (  CONVERT_TO_MANUAL );
+  SetExeGen(CONVERT_TO_MANUAL);
 end; // Tfrm_Main.actExeGenManualExecute
 
 //------------------------------------------------------------------------------
@@ -989,7 +987,7 @@ end; // Tfrm_Main.actXdkTrackerXbeInfoExecute
 
 procedure Tfrm_Main.CreateXmlXbeDump(aFileName: string);
 var
-  XmlRootNode: iXmlNode;
+  XmlRootNode: IXmlNode;
   lIndex: Integer;
   Version: string;
 begin

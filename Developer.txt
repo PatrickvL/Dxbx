@@ -1,14 +1,37 @@
-When you want to compile dxbx sources you need to following components.
+Compiling
+---------
+
+When you want to compile dxbx sources you need to following :
+
+- Delphi version 2007 (only minimal changes needed to compile with other versions)
+
+- The latest version of the sourcecode (which you probably already have, given you're reading this)
+  Download them at http://sourceforge.net/projects/dxbx/ , or better, use the Subversion archive:
+  url: https://dxbx.svn.sourceforge.net/svnroot/dxbx
+  
+- Cloothie DirectX 9 Header files - for directx support
+  url: http://shadowtj.net/main/pages/programming/DelphiComponents.html
+
+- Alphaskins - for skins
+  url: http://www.alphaskins.com/
+
+To compile, open the Dxbx project group in Delphi and do a Build All.
+This will put new DLL's and EXE's in the dxbx/bin and dxbx/bin/tools folders.
 
 
+Development
+-----------
+All changes made to the sourcecode of dxbx should be contributed under the GPL license.
+It's best to add a GPL-header to each file to signify this fact.
+All code should conform to the dxbx coding convention (which is basically the Delphi standard with some extra's).
+To guarantee the correct working of  all new code, write unit-tests using DUnit.
+Never commit a change which breaks the build, test first!
 
-Cloothie DirectX 9 Header files - for directx support
-url: http://shadowtj.net/main/pages/programming/DelphiComponents.html
+Setup
+-----
+TODO
 
 
-Alphaskins - for skins
-url: http://www.alphaskins.com/
-
-
-
+Resources
+---------
 If you want to compile the original sources from cxbx ( http://www.caustik.com/cxbx/download.htm )

@@ -4,7 +4,7 @@ interface
 
 uses
   // Delphi
-  SysUtils, XMLIntf;
+  XMLIntf; // for IXMLNode
 
 procedure XML_WriteString(const aXMLNode: IXMLNode; const aElementName: string; const aString: string);
 function XML_ReadString(const aXMLNode: IXMLNode; const aElementName: string): string;

@@ -56,9 +56,6 @@
     <DelphiCompile Include="Dxbx.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..\..\Utils\uBitsOps.pas" />
-    <DCCReference Include="..\..\Utils\uTime.pas" />
-    <DCCReference Include="..\..\Utils\uXML.pas" />
     <DCCReference Include="uBitsOps.pas" />
     <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uEmuExe.pas" />

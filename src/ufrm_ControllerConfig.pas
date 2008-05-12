@@ -3,8 +3,11 @@ unit ufrm_ControllerConfig;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Tabs, sTabControl;
+  StdCtrls, ExtCtrls, Tabs,
+  // AlphaSkin
+  sTabControl;
 
 type
   Tfrm_ControllerConfig = class(TForm)
@@ -44,10 +47,6 @@ type
     Label1: TLabel;
     sTabControl1: TsTabControl;
     chkForceFeedback: TCheckBox;
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 

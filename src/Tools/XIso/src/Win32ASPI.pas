@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  title : Componente Win32 ASPI para Delphi 4/5/6/7
+//  title: Componente Win32 ASPI para Delphi 4/5/6/7
 //
-//  autor : H.Gotou(E-mail: hgotou@ibm.net)
-//  date  : Jun.30,1999
-//  rev.  : 26.06.2001 por Yursoft  (yursoft@yursoft.com)
+//  autor: H.Gotou(E-mail: hgotou@ibm.net)
+//  date: Jun.30,1999
+//  rev.: 26.06.2001 por Yursoft  (yursoft@yursoft.com)
 //------------------------------------------------------------------------------
-//  note  : 1)This component requires installing Win32ASPI.pas and wnaspi32.dll.
+//  note: 1)This component requires installing Win32ASPI.pas and wnaspi32.dll.
 //------------------------------------------------------------------------------
 //  history :
 //    1.00.00 - May 05,1999
@@ -118,19 +118,19 @@ type
                     dt_Unknown,
                     dt_Reserved);
   THAInfo = record                          //Host Adapter Information
-	  SCSI_ID     : Byte;	            //SCSI ID of Host Adapter
-	  ManagerID   : string;             //String describing the Manager
-	  Identifier  : string;             //String describing the Host Adapter
-	  Align       : Word;               //Buffer Alignment Mask Size
-          TxReport    : Boolean;            //Data Transfer Status Report Function Validity
-	  MaxTarget   : Byte;               //Maximun Target Number
-	  MaxPacket   : Longword;           //Maximum Packet Size
+	  SCSI_ID: Byte;               //SCSI ID of Host Adapter
+	  ManagerID: string;             //String describing the Manager
+	  Identifier: string;             //String describing the Host Adapter
+	  Align: Word;               //Buffer Alignment Mask Size
+          TxReport: Boolean;            //Data Transfer Status Report Function Validity
+	  MaxTarget: Byte;               //Maximun Target Number
+	  MaxPacket: Longword;           //Maximum Packet Size
   end;
   THAInfoList = array [0..255] of THAInfo;  //Host Adapter Information List
   TTargetType = Byte;                       //ASPI Target Type
   TDiskInfo = record                        //Hard Disk Information
-	  Heads       : Byte;               //Hard Disk Head Numbers
-	  Sectors     : Byte;	            //Hard Disk Sector Numbers
+	  Heads: Byte;               //Hard Disk Head Numbers
+	  Sectors: Byte;	            //Hard Disk Sector Numbers
   end;                 //$03ff
   TSRBBuffer = array [0..$03ff] of Byte;    //SCSI Request Block Buffer
   PSRBBuffer = ^TSRBBuffer;                 //Pointer of SCSI Request Block Buffer
@@ -141,105 +141,105 @@ type
 //------------------------------------------------------------------------------
 //1) HOST ADAPTER INQUIRY - SC_HA_INQUIRY
   TSRB_HAInquiry = record
-	  SRB_Cmd       : Byte;	                  //ASPI command code
-	  SRB_Status    : Byte;	                  //ASPI command status byte
-	  SRB_HaId      : Byte;	                  //ASPI host adapter number
-	  SRB_Flags     : Byte;	                  //ASPI request flags
-	  SRB_Hdr_Rsvd  : Longword;               //Reserved(=0)
-	  HA_Count      : Byte;	                  //Number of host adapters present
-	  HA_SCSI_ID    : Byte;	                  //SCSI ID of host adapter
-	  HA_ManagerId  : array [0..15] of Byte;  //String describing the manager
-	  HA_Identifier : array [0..15] of Byte;  //String describing the host adapter
-	  HA_Unique     : array [0..15] of Byte;  //Host Adapter Unique parameters
-	  HA_Rsvd1      : Word;
+	  SRB_Cmd: Byte;	                  //ASPI command code
+	  SRB_Status: Byte;	                  //ASPI command status byte
+	  SRB_HaId: Byte;	                  //ASPI host adapter number
+	  SRB_Flags: Byte;	                  //ASPI request flags
+	  SRB_Hdr_Rsvd: Longword;               //Reserved(=0)
+	  HA_Count: Byte;	                  //Number of host adapters present
+	  HA_SCSI_ID: Byte;	                  //SCSI ID of host adapter
+	  HA_ManagerId: array [0..15] of Byte;  //String describing the manager
+	  HA_Identifier: array [0..15] of Byte;  //String describing the host adapter
+	  HA_Unique: array [0..15] of Byte;  //Host Adapter Unique parameters
+	  HA_Rsvd1: Word;
   end;
   PSRB_HAInquiry = ^TSRB_HAInquiry;
 //2) GET DEVICE TYPE - SC_GET_DEV_TYPE
   TSRB_GDEVBlock = record
-    SRB_Cmd         : Byte;	            //ASPI command code
-	  SRB_Status      : Byte;	    //ASPI command status byte
-	  SRB_HaId        : Byte;	    //ASPI host adapter number
-	  SRB_Flags       : Byte;	    //Reserved(=0)
-	  SRB_Hdr_Rsvd    : Longword;	    //Reserved(=0)
-	  SRB_Target      : Byte;	    //Target's SCSI ID
-	  SRB_Lun         : Byte;	    //Target's LUNx number
-	  SRB_DeviceType  : Byte;	    //Target's peripheral device type
-	  SRB_Rsvd1       : Byte;
+    SRB_Cmd: Byte;	            //ASPI command code
+	  SRB_Status: Byte;	    //ASPI command status byte
+	  SRB_HaId: Byte;	    //ASPI host adapter number
+	  SRB_Flags: Byte;	    //Reserved(=0)
+	  SRB_Hdr_Rsvd: Longword;	    //Reserved(=0)
+	  SRB_Target: Byte;	    //Target's SCSI ID
+	  SRB_Lun: Byte;	    //Target's LUNx number
+	  SRB_DeviceType: Byte;	    //Target's peripheral device type
+	  SRB_Rsvd1: Byte;
   end;
   PSRB_GDEVBlock = ^TSRB_GDEVBlock;
 //3) EXECUTE SCSI COMMAND - SC_EXEC_SCSI_CMD
   TSRB_ExecSCSICmd = record
-    SRB_Cmd         : Byte;		                        //ASPI command code
-	  SRB_Status      : Byte;	                        //ASPI command status byte
-	  SRB_HaId        : Byte;		                //ASPI host adapter number
-	  SRB_Flags       : Byte;		                //ASPI request flags
-	  SRB_Hdr_Rsvd    : Longword;	                        //Reserved(=0)
-	  SRB_Target      : Byte;	                        //Target SCSI ID
-	  SRB_Lun         : Byte;		                //Target LUNx number
-	  SRB_Rsvd1       : Word;		                //Reserved for Alignment
-	  SRB_BufLen      : Longword;	                        //Data Allocation Length
-	  SRB_BufPointer  : Pointer;                            //Data Buffer Pointer
-	  SRB_SenseLen    : Byte;	                        //Sense Allocation Length
-	  SRB_CDBLen      : Byte;	                        //CDB Length
-	  SRB_HaStat      : Byte;	                        //Host Adapter Status
-	  SRB_TargetStat  : Byte;	                        //Target Status
-	  SRB_PostProc    : Longword;	                        //Post routine
-	  SRB_Rsvd2       : Pointer;	                        //Reserved
-	  SRB_Rsvd3       : array [0..15] of Byte;              //Reserved for alignment(=ALL 0)
-	  CDBByte         : TCDBByte;                           //SCSI Command Description Block
-          SenseArea       : array [0..SENSE_LEN+1] of Byte;     //Request Sense buffer
+    SRB_Cmd: Byte;		                        //ASPI command code
+	  SRB_Status: Byte;	                        //ASPI command status byte
+	  SRB_HaId: Byte;		                //ASPI host adapter number
+	  SRB_Flags: Byte;		                //ASPI request flags
+	  SRB_Hdr_Rsvd: Longword;	                        //Reserved(=0)
+	  SRB_Target: Byte;	                        //Target SCSI ID
+	  SRB_Lun: Byte;		                //Target LUNx number
+	  SRB_Rsvd1: Word;		                //Reserved for Alignment
+	  SRB_BufLen: Longword;	                        //Data Allocation Length
+	  SRB_BufPointer: Pointer;                            //Data Buffer Pointer
+	  SRB_SenseLen: Byte;	                        //Sense Allocation Length
+	  SRB_CDBLen: Byte;	                        //CDB Length
+	  SRB_HaStat: Byte;	                        //Host Adapter Status
+	  SRB_TargetStat: Byte;	                        //Target Status
+	  SRB_PostProc: Longword;	                        //Post routine
+	  SRB_Rsvd2: Pointer;	                        //Reserved
+	  SRB_Rsvd3: array [0..15] of Byte;              //Reserved for alignment(=ALL 0)
+	  CDBByte: TCDBByte;                           //SCSI Command Description Block
+          SenseArea: array [0..SENSE_LEN+1] of Byte;     //Request Sense buffer
   end;
   PSRB_ExecSCSICmd = ^TSRB_ExecSCSICmd;
 //4) ABORT SRB - SC_ABORT_SRB
   TSRB_Abort = record
-	  SRB_Cmd       : Byte;		    //ASPI command code
-	  SRB_Status    : Byte;	            //ASPI command status byte
-	  SRB_HaId      : Byte;		    //ASPI host adapter number
-	  SRB_Flags     : Byte;		    //Reserved(=0)
-	  SRB_Hdr_Rsvd  : Longword;	    //Reserved(=0)
-	  SRB_ToAbort   : Pointer;	    //Pointer to SRB to abort
+	  SRB_Cmd: Byte;		    //ASPI command code
+	  SRB_Status: Byte;	            //ASPI command status byte
+	  SRB_HaId: Byte;		    //ASPI host adapter number
+	  SRB_Flags: Byte;		    //Reserved(=0)
+	  SRB_Hdr_Rsvd: Longword;	    //Reserved(=0)
+	  SRB_ToAbort: Pointer;	    //Pointer to SRB to abort
   end;
   PSRB_Abort = ^TSRB_Abort;
 //5) BUS DEVICE RESET - SC_RESET_DEV
   TSRB_BusDeviceReset = record
-	  SRB_Cmd       : Byte;                         //ASPI command code
-	  SRB_Status    : Byte;	                        //ASPI command status byte
-	  SRB_HaId      : Byte;		                //ASPI host adapter number
-	  SRB_Flags     : Byte;		                //Reserved(=0)
-	  SRB_Hdr_Rsvd  : Longword;	                //Reserved(=0)
-	  SRB_Target    : Byte;	                        //Target SCSI ID
-	  SRB_Lun       : Byte;		                //Target LUNx number
-	  SRB_Rsvd1     : array [0..11] of Byte;        //Reserved for Alignment
-	  SRB_HaStat    : Byte; 	                //Host Adapter Status
-	  SRB_TargStat  : Byte;	                        //Target Status
-	  SRB_PostProc  : Pointer;	                //Post routine
-	  SRB_Rsvd2     : Pointer;	                //Reserved
-	  SRB_Rsvd3     : array [0..31] of Byte;        //Reserved(=ALL 0)
+	  SRB_Cmd: Byte;                         //ASPI command code
+	  SRB_Status: Byte;	                        //ASPI command status byte
+	  SRB_HaId: Byte;		                //ASPI host adapter number
+	  SRB_Flags: Byte;		                //Reserved(=0)
+	  SRB_Hdr_Rsvd: Longword;	                //Reserved(=0)
+	  SRB_Target: Byte;	                        //Target SCSI ID
+	  SRB_Lun: Byte;		                //Target LUNx number
+	  SRB_Rsvd1: array [0..11] of Byte;        //Reserved for Alignment
+	  SRB_HaStat: Byte; 	                //Host Adapter Status
+	  SRB_TargStat: Byte;	                        //Target Status
+	  SRB_PostProc: Pointer;	                //Post routine
+	  SRB_Rsvd2: Pointer;	                //Reserved
+	  SRB_Rsvd3: array [0..31] of Byte;        //Reserved(=ALL 0)
   end;
   PSRB_BusDeviceReset = ^TSRB_BusDeviceReset;
 //6) GET DISK INFORMATION - SC_GET_DISK_INFO
   TSRB_GetDiskInfo = record
-	  SRB_Cmd             : Byte;		              //ASPI command code
-	  SRB_Status          : Byte;	                      //ASPI command status byte
-	  SRB_HaId            : Byte;		              //ASPI host adapter number
-	  SRB_Flags           : Byte;		              //Reserved(=0)
-	  SRB_Hdr_Rsvd        : Longword;	              //Reserved(=0)
-	  SRB_Target          : Byte;	                      //Target SCSI ID
-	  SRB_Lun             : Byte;		              //Target LUNx number
-	  SRB_DriveFlags      : Byte;	                      //Driver flags
-	  SRB_Int13HDriveInfo : Byte;                         //Host Adapter Status
-	  SRB_Heads           : Byte;		              //Preferred number of heads translation
-	  SRB_Sectors         : Byte;	                      //Preferred number of sectors translation
-	  SRB_Rsvd1           : array [0..9] of Byte;         //Reserved(=ALL 0)
+	  SRB_Cmd: Byte;		              //ASPI command code
+	  SRB_Status: Byte;	                      //ASPI command status byte
+	  SRB_HaId: Byte;		              //ASPI host adapter number
+	  SRB_Flags: Byte;		              //Reserved(=0)
+	  SRB_Hdr_Rsvd: Longword;	              //Reserved(=0)
+	  SRB_Target: Byte;	                      //Target SCSI ID
+	  SRB_Lun: Byte;		              //Target LUNx number
+	  SRB_DriveFlags: Byte;	                      //Driver flags
+	  SRB_Int13HDriveInfo: Byte;                         //Host Adapter Status
+	  SRB_Heads: Byte;		              //Preferred number of heads translation
+	  SRB_Sectors: Byte;	                      //Preferred number of sectors translation
+	  SRB_Rsvd1: array [0..9] of Byte;         //Reserved(=ALL 0)
   end;
   PSRB_GetDiskInfo = ^TSRB_GetDiskInfo;
 //7) RESET SCSI BUS - SC_RESCAN_SCSI_BUS
   TSRB_RescanPort = record
-	  SRB_Cmd             : Byte;		              //ASPI command code
-	  SRB_Status          : Byte;	                      //ASPI command status byte
-	  SRB_HaId            : Byte;		              //ASPI host adapter number
-	  SRB_Flags           : Byte;		              //Reserved(=0)
-	  SRB_Hdr_Rsvd        : Longword;	              //Reserved(=0)
+	  SRB_Cmd: Byte;		              //ASPI command code
+	  SRB_Status: Byte;	                      //ASPI command status byte
+	  SRB_HaId: Byte;		              //ASPI host adapter number
+	  SRB_Flags: Byte;		              //Reserved(=0)
+	  SRB_Hdr_Rsvd: Longword;	              //Reserved(=0)
   end;
   PSRB_RescanPort = ^TSRB_RescanPort;
 //------------------------------------------------------------------------------
@@ -435,15 +435,15 @@ end;
 //-------------------------------
 procedure TWin32ASPI.GetSysInfo;
 var
-   SI : TSystemInfo;
-   OS : TOSVersionInfo;
-   MemStat : TMemoryStatus;
+   SI: TSystemInfo;
+   OS: TOSVersionInfo;
+   MemStat: TMemoryStatus;
 begin
    GetSystemInfo(SI);
    case Si.dwProcessorType of
-      386 : FCPU := 'i386';
-      486 : FCPU := 'i486';
-      586 : FCPU := 'Pentium';
+      386: FCPU := 'i386';
+      486: FCPU := 'i486';
+      586: FCPU := 'Pentium';
    end;
    MemStat.dwLength := SizeOf(TMemoryStatus);
    GlobalMemoryStatus(MemStat);
@@ -451,9 +451,9 @@ begin
    OS.dwOSVersionInfoSize := SizeOf(TOSVERSIONINFO);
    GetVersionEx(OS);
    case OS.dwPlatformId of
-      VER_PLATFORM_WIN32s        : FOperatingSystem := 'Windows 3.1';
-      VER_PLATFORM_WIN32_WINDOWS : FOperatingSystem := 'Windows 95/98/ME';
-      VER_PLATFORM_WIN32_NT	 : FOperatingSystem := 'Windows NT/2000/XP';
+      VER_PLATFORM_WIN32s: FOperatingSystem := 'Windows 3.1';
+      VER_PLATFORM_WIN32_WINDOWS: FOperatingSystem := 'Windows 95/98/ME';
+      VER_PLATFORM_WIN32_NT	: FOperatingSystem := 'Windows NT/2000/XP';
    end;
    FOsVersion := Format ('%d.%d', [OS.dwMajorVersion, OS.dwMinorVersion]);
    FOsBuild := Format('%d', [LOWORD(OS.dwBuildNumber)]);
@@ -548,7 +548,7 @@ begin
     end
     else
     begin
-      If ASPIStatus = SS_COMP then
+      if ASPIStatus = SS_COMP then
       begin
         Result := True;
         FHostAdapterInfo[HA_IDx].SCSI_ID := SRBPacket.HA_SCSI_ID;
@@ -595,7 +595,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnGetHostAdapterInquiryFinish) then
+  if Assigned(FOnGetHostAdapterInquiryFinish) then
   begin
     FOnGetHostAdapterInquiryFinish(Self);
   end;
@@ -649,7 +649,7 @@ begin
     end
     else
     begin
-      If ASPIStatus = SS_COMP then
+      if ASPIStatus = SS_COMP then
       begin
         FTargetTypeInfo := SRBPacket.SRB_DeviceType;
         Result := TDeviceType(SRBPacket.SRB_DeviceType);
@@ -665,7 +665,7 @@ begin
       raise Error;
     end;
   end;   }
-  If Assigned(FOnGetDeviceTypeFinish) then
+  if Assigned(FOnGetDeviceTypeFinish) then
   begin
     FOnGetDeviceTypeFinish(Self);
   end;
@@ -719,7 +719,7 @@ begin
       //raise Error;
     end;   
   end;
-  If Assigned(FOnExecSCSICommandFinish) then
+  if Assigned(FOnExecSCSICommandFinish) then
   begin
     FOnExecSCSICommandFinish(Self);
   end;
@@ -767,7 +767,7 @@ begin
       end;
     end;
     //---Check Result---
-    If ASPIStatus = SS_COMP then
+    if ASPIStatus = SS_COMP then
     begin
       Result := True;
     end;
@@ -781,7 +781,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnServiceAbortFinish) then
+  if Assigned(FOnServiceAbortFinish) then
   begin
     FOnServiceAbortFinish(Self);
   end;
@@ -836,7 +836,7 @@ begin
     end
     else
     begin
-      If ASPIStatus = SS_COMP then
+      if ASPIStatus = SS_COMP then
       begin
         Result := True;
       end;
@@ -851,7 +851,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnResetDeviceFinish) then
+  if Assigned(FOnResetDeviceFinish) then
   begin
     FOnResetDeviceFinish(Self);
   end;
@@ -906,7 +906,7 @@ begin
     end
     else
     begin
-      If ASPIStatus = SS_COMP then
+      if ASPIStatus = SS_COMP then
       begin
         Result := True;
         FDiskInfo.Heads := SRBPacket.SRB_Heads;
@@ -923,7 +923,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnGetDiskInfoFinish) then
+  if Assigned(FOnGetDiskInfoFinish) then
   begin
     FOnGetDiskInfoFinish(Self);
   end;
@@ -976,7 +976,7 @@ begin
     end
     else
     begin
-      If ASPIStatus = SS_COMP then
+      if ASPIStatus = SS_COMP then
       begin
         Result := True;
       end;
@@ -991,7 +991,7 @@ begin
       raise Error;
     end;
   end;
-  If Assigned(FOnRescanBusFinish) then
+  if Assigned(FOnRescanBusFinish) then
   begin
     FOnRescanBusFinish(Self);
   end;

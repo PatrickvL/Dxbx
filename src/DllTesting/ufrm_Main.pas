@@ -51,7 +51,7 @@ begin
   if Assigned(m_Xbe) then
     CloseXbe();
 
-  m_Xbe := TXbe.Create(aFileName);
+  m_Xbe := TXbe.Create(aFileName, ftXbe);
 end;
 
 end.

@@ -4,14 +4,14 @@ interface
 
 uses
   // Delphi
-  Types;
+  Types; // for DWord
 
 function CxbxKrnl_KernelThunkTable: Pointer; stdcall;
 
 implementation
 
 var
-  KernelThunkTable : packed array[0..366] of DWord = (
+  KernelThunkTable: packed array[0..366] of DWord = (
     $0000,                          // $0000 (0)
     $0001,                          // $0001 (1)
     $0002,                          // $0002 (2)

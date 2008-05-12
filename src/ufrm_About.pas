@@ -3,6 +3,7 @@ unit ufrm_About;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls;
 
@@ -22,7 +23,9 @@ var
 
 implementation
 
-uses uConsts;
+uses
+  // Dxbx
+  uConsts;
 
 {$R *.dfm}
 
