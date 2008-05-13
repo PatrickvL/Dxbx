@@ -4,8 +4,8 @@ Una simple unidad para manejo de bits de variables de 8, 16, 32 y 64 bits
 
 Ejemplo:
 
-var a: Byte;
-
+var
+  a: Byte;
 begin
   a:=2; ----> binario 00000010
   SetBitEn(a, 1, 2); ----> a = binario 00000110
@@ -17,7 +17,7 @@ Marcelo Limori - 14/FEB/07
 
 unit uBitsOps;
 
-interface{XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+interface
 
 procedure SetBitEn(var Variable: Byte; Value, Position: Byte); overload;//8 bits
 procedure SetBitEn(var Variable: ShortInt; Value, Position: Byte); overload;//(+/-) 8 bits
@@ -52,8 +52,9 @@ uses
 
 //Procedimientos genéricos para asignar y leer--------------------------------------------------------------------------
 
-procedure SetBitPtr(Variable: Pointer; Value, Position,Size: Byte);
-var Mask:Cardinal;
+procedure SetBitPtr(Variable: Pointer; Value, Position, Size: Byte);
+var
+  Mask: Cardinal;
 begin
   if Position > (Size - 1) then
     raise ERangeError.Create('Accessing a bit outside the maximum range');
@@ -90,7 +91,7 @@ begin
   SetBitPtr(@Variable, Value, Position, 8);
 end;
 
-function GetBitEn(Variable, Position: Byte): Byte;
+function GetBitEn(Variable: Byte; Position: Byte): Byte;
 begin
   Result := GetBitPtr(@Variable, Position, 8);
 end;
@@ -168,6 +169,7 @@ end;
 
 function GetBitEn(Variable: Int64; Position: Byte): Byte;//(+/-) 64 bits
 begin
+  // TODO : This won't work, as long as GetBitPtr uses a Cardinal instead of a Int64 cast!
   Result := GetBitPtr(@Variable, Position, 64);
 end;
 

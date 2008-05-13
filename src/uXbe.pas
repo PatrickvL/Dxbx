@@ -1,4 +1,23 @@
+(*
+    This file is part of Dxbx - a XBox emulator written in Delphi (ported over from cxbx)
+    Copyright (C) 2007 Shadow_tj and other members of the development team.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*)
 unit uXbe;
+
+{$INCLUDE Dxbx.inc}
 
 interface
 
@@ -14,8 +33,8 @@ type
   TFileType = (ftXbe, ftExe);
 
   _XBE_HEADER = packed record
-    dwMagic: array[0..3] of Char; // 0x0000 - magic number [should be "XBEH"]
-    pbDigitalSignature: array[0..255] of Char; // 0x0004 - digital signature
+    dwMagic: array[0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
+    pbDigitalSignature: array[0..255] of Byte; // 0x0004 - digital signature
     dwBaseAddr: DWord; // 0x0104 - base address
     dwSizeofHeaders: DWord; // 0x0108 - size of headers
     dwSizeofImage: DWord; // 0x010C - size of image
@@ -25,7 +44,7 @@ type
     dwSections: DWord; // 0x011C - number of sections
     dwSectionHeadersAddr: DWord; // 0x0120 - section headers address
 
-    dwInitFlags: array[0..3] of Char; // 0x0124 - initialization flags
+    dwInitFlags: array[0..3] of Byte; // 0x0124 - initialization flags
 
             //struct InitFlags                       // 0x0124 - initialization flags
             {
@@ -68,15 +87,15 @@ type
     dwSize: DWord; // 0x0000 - size of certificate
     dwTimeDate: DWord; // 0x0004 - timedate stamp
     dwTitleId: DWord; // 0x0008 - title id
-    wszTitleName: array[0..39] of widechar; // 0x000C - title name (unicode)
+    wszTitleName: array[0..39] of WideChar; // 0x000C - title name (unicode)
     dwAlternateTitleId: array[0..15] of Dword; // 0x005C - alternate title ids
     dwAllowedMedia: Dword; // 0x009C - allowed media types
     dwGameRegion: DWord; // 0x00A0 - game region
     dwGameRatings: DWord; // 0x00A4 - game ratings
     dwDiskNumber: DWord; // 0x00A8 - disk number
     dwVersion: Dword; // 0x00AC - version
-    bzLanKey: array[0..15] of Char; // 0x00B0 - lan key
-    bzSignatureKey: array[0..15] of Char; // 0x00C0 - signature key
+    bzLanKey: array[0..15] of AnsiChar; // 0x00B0 - lan key
+    bzSignatureKey: array[0..15] of AnsiChar; // 0x00C0 - signature key
     bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of Char; // 0x00D0 - alternate signature keys
   end;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
@@ -100,7 +119,7 @@ type
             }
            // dwFlags;
 
-    dwFlags: array[0..3] of Char;
+    dwFlags: array[0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
     dwVirtualSize: DWord; // virtual size
     dwRawAddr: DWord; // file offset to raw Data
@@ -115,11 +134,11 @@ type
 
 
   _XBE_LIBRARYVERSION = packed record
-    szName: array[0..7] of Char; // library name
+    szName: array[0..7] of AnsiChar; // library name
     wMajorVersion: Word; // major version
     wMinorVersion: Word; // minor version
     wBuildVersion: Word; // build version
-    dwFlags: array[0..1] of Char;
+    dwFlags: array[0..1] of Byte;
            { struct Flags
             {
                 uint16 QFEVersion       : 13;      // QFE Version
@@ -175,23 +194,23 @@ type
 
   TXbe = class(TObject)
   private
-    Buffer: PChar;
-    m_KernelLibraryVersion: array of Char;
-    m_XAPILibraryVersion: array of Char;
+    Buffer: PAnsiChar;
+    m_KernelLibraryVersion: array of AnsiChar;
+    m_XAPILibraryVersion: array of AnsiChar;
     m_Certificate: XBE_CERTIFICATE;
     procedure ConstructorInit;
   protected
-    XbeFile: file of Char;
+    XbeFile: file of Byte;
     m_LogoRLE: LogoRLE;
   public
     m_szPath: string;
     m_Header: XBE_HEADER;
     m_SectionHeader: array of XBE_SECTIONHEADER;
     m_LibraryVersion: array of XBE_LIBRARYVERSION;
-    m_szSectionName: array of array of Char;
-    m_HeaderEx: array of Char;
+    m_szSectionName: array of array of AnsiChar;
+    m_HeaderEx: array of Byte;
     m_TLS: XBE_TLS;
-    m_bzSection: array of TVarCharArray;
+    m_bzSection: array of TVarByteArray;
 
     constructor Create(aFileName: string; aFileType: TFileType);
     destructor Destroy; override;
@@ -204,8 +223,8 @@ type
     function GetTLSData: DWord;
   end;
 
-function GetDWordVal(ArrPChar: PChar; i: Integer): DWord;
-function GetWordVal(ArrPChar: PChar; i: Integer): Word;
+function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
+function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
 var
@@ -229,17 +248,23 @@ end; // RoundUp
 
 //------------------------------------------------------------------------------
 
-function GetDWordVal(ArrPChar: PChar; i: Integer): DWord;
+function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 begin
+  Result := (Ord(aBuffer[i + 0]) shl 0)
+          + (Ord(aBuffer[i + 1]) shl 8)
+          + (Ord(aBuffer[i + 2]) shl 16)
+          + (Ord(aBuffer[i + 3]) shl 24);
+(*
   Result :=
-    GetBitEn(Ord(ArrPChar[i]), 0) * 1 +
-    GetBitEn(Ord(ArrPChar[i]), 1) * 2 +
-    GetBitEn(Ord(ArrPChar[i]), 2) * 4 +
-    GetBitEn(Ord(ArrPChar[i]), 3) * 8 +
-    GetBitEn(Ord(ArrPChar[i]), 4) * 16 +
-    GetBitEn(Ord(ArrPChar[i]), 5) * 32 +
-    GetBitEn(Ord(ArrPChar[i]), 6) * 64 +
-    GetBitEn(Ord(ArrPChar[i]), 7) * 128 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 0) * 1 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 1) * 2 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 2) * 4 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 3) * 8 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 4) * 16 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 5) * 32 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 6) * 64 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 7) * 128 +
+
     GetBitEn(Ord(ArrPChar[i + 1]), 0) * 256 +
     GetBitEn(Ord(ArrPChar[i + 1]), 1) * 512 +
     GetBitEn(Ord(ArrPChar[i + 1]), 2) * 1024 +
@@ -248,6 +273,7 @@ begin
     GetBitEn(Ord(ArrPChar[i + 1]), 5) * 8192 +
     GetBitEn(Ord(ArrPChar[i + 1]), 6) * 16384 +
     GetBitEn(Ord(ArrPChar[i + 1]), 7) * 32768 +
+
     GetBitEn(Ord(ArrPChar[i + 2]), 0) * 65536 +
     GetBitEn(Ord(ArrPChar[i + 2]), 1) * Round(POWER(2, 17)) +
     GetBitEn(Ord(ArrPChar[i + 2]), 2) * Round(POWER(2, 18)) +
@@ -256,6 +282,7 @@ begin
     GetBitEn(Ord(ArrPChar[i + 2]), 5) * Round(POWER(2, 21)) +
     GetBitEn(Ord(ArrPChar[i + 2]), 6) * Round(POWER(2, 22)) +
     GetBitEn(Ord(ArrPChar[i + 2]), 7) * Round(POWER(2, 23)) +
+
     GetBitEn(Ord(ArrPChar[i + 3]), 0) * Round(POWER(2, 24)) +
     GetBitEn(Ord(ArrPChar[i + 3]), 1) * Round(POWER(2, 25)) +
     GetBitEn(Ord(ArrPChar[i + 3]), 2) * Round(POWER(2, 26)) +
@@ -264,21 +291,26 @@ begin
     GetBitEn(Ord(ArrPChar[i + 3]), 5) * Round(POWER(2, 29)) +
     GetBitEn(Ord(ArrPChar[i + 3]), 6) * Round(POWER(2, 30)) +
     GetBitEn(Ord(ArrPChar[i + 3]), 7) * Round(POWER(2, 31));
+*)
 end; // GetDwordVal
 
 //------------------------------------------------------------------------------
 
-function GetWordVal(ArrPChar: PChar; i: Integer): Word;
+function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 begin
+  Result := (Ord(aBuffer[i + 0]) shl 0)
+          + (Ord(aBuffer[i + 1]) shl 8);
+(*
   Result :=
-    GetBitEn(Ord(ArrPChar[i]), 0) * 1 +
-    GetBitEn(Ord(ArrPChar[i]), 1) * 2 +
-    GetBitEn(Ord(ArrPChar[i]), 2) * 4 +
-    GetBitEn(Ord(ArrPChar[i]), 3) * 8 +
-    GetBitEn(Ord(ArrPChar[i]), 4) * 16 +
-    GetBitEn(Ord(ArrPChar[i]), 5) * 32 +
-    GetBitEn(Ord(ArrPChar[i]), 6) * 64 +
-    GetBitEn(Ord(ArrPChar[i]), 7) * 128 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 0) * 1 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 1) * 2 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 2) * 4 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 3) * 8 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 4) * 16 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 5) * 32 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 6) * 64 +
+    GetBitEn(Ord(ArrPChar[i + 0]), 7) * 128 +
+
     GetBitEn(Ord(ArrPChar[i + 1]), 0) * 256 +
     GetBitEn(Ord(ArrPChar[i + 1]), 1) * 512 +
     GetBitEn(Ord(ArrPChar[i + 1]), 2) * 1024 +
@@ -287,7 +319,8 @@ begin
     GetBitEn(Ord(ArrPChar[i + 1]), 5) * 8192 +
     GetBitEn(Ord(ArrPChar[i + 1]), 6) * 16384 +
     GetBitEn(Ord(ArrPChar[i + 1]), 7) * 32768;
-end; // GetDwordVal
+*)
+end; // GetWordVal
 
 
 { TXbe }
@@ -348,9 +381,9 @@ begin
   AssignFile(XbeFile, aFileName);
   FileMode := fmOpenRead;
   Reset(XbeFile);
-  FreeMem(Buffer);
-  GetMem(Buffer, FileSz);
-  BlockRead(XbeFile, Buffer^, FileSz, ReadBytes);
+  FreeMem(Pointer(Buffer));
+  GetMem(Pointer(Buffer), FileSz);
+  BlockRead(XbeFile, Pointer(Buffer)^, FileSz, ReadBytes);
   // m_Header.dwMagic Read (4 Bytes)
   i := 0;
   for lIndex := 0 to 3 do
@@ -368,7 +401,7 @@ begin
   // m_Header.pbDigitalSignature Read (256 Bytes)
   for lIndex := 4 to 259 do
   begin
-    m_Header.pbDigitalSignature[i - 4] := Buffer[i];
+    m_Header.pbDigitalSignature[i - 4] := Byte(Buffer[i]);
     Inc(i);
   end;
 
@@ -398,7 +431,7 @@ begin
   i := i + 4;
   // m_Header.dwInitFlags Read (4 bytes)
   for lIndex := 0 to 3 do
-    m_Header.dwInitFlags[lIndex] := Buffer[lIndex + i];
+    m_Header.dwInitFlags[lIndex] := Byte(Buffer[lIndex + i]);
 
   i := i + 4;
   // m_Header.dwEntryAddr Read (4 bytes)
@@ -482,7 +515,7 @@ begin
     SetLength(m_HeaderEx, ExeSize);
     for lIndex := 0 to ExeSize - 1 do
     begin
-      m_HeaderEx[lIndex] := Buffer[i];
+      m_HeaderEx[lIndex] := Byte(Buffer[i]);
       Inc(i);
     end;
 
@@ -568,7 +601,7 @@ begin
       //XbeFile.Read(m_SectionHeader[lIndex], SizeOf(XBE_SECTIONHEADER));
         //m_SectionHeader[].dwFlags 4 bytes
       for lIndex2 := 0 to 3 do
-        m_SectionHeader[lIndex].dwFlags[lIndex2] := Buffer[i + lIndex2];
+        m_SectionHeader[lIndex].dwFlags[lIndex2] := Byte(Buffer[i + lIndex2]);
 
       i := i + 4;
       // m_SectionHeader[].dwVirtualAddr 4 bytes
@@ -604,7 +637,7 @@ begin
       MessageDlg(Format ( 'Unexpected end of file while reading %s Section Header',[sFileType]) , mtError, [mbOk], 0);
     end;
 
-    WriteLog('DXBX: Reading Section Header 0x%.04X...' + IntToStr(lIndex) + ' OK');
+    WriteLog(Format('DXBX: Reading Section Header 0x%.04x... OK', [lIndex]));
   end;
 
   // Read xbe section names
@@ -646,7 +679,7 @@ begin
       m_LibraryVersion[lIndex].wBuildVersion := GetWordVal(Buffer, i);
       i := i + 2;
       for lIndex2 := 0 to 1 do
-        m_LibraryVersion[lIndex].dwFlags[lIndex2] := Buffer[i + lIndex2];
+        m_LibraryVersion[lIndex].dwFlags[lIndex2] := Byte(Buffer[i + lIndex2]);
 
       i := i + 2;
     end;
@@ -699,12 +732,12 @@ begin
 
       WriteLog('Ok');
 
-      for lIndex2 := 0 to Rawsize - 1 do
-        m_bzSection[lIndex][lIndex2] := Buffer[RawAddr + lIndex2];
+      for lIndex2 := 0 to RawSize - 1 do
+        m_bzSection[lIndex][lIndex2] := Byte(Buffer[RawAddr + lIndex2]);
 
     end;
 
-    if lIndex2 < Rawsize then
+    if lIndex2 < RawSize then
       WriteLog(Format('Unexpected end of file while reading %s Section', [sFileType] ));
   end;
 
