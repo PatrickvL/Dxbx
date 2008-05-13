@@ -21,7 +21,7 @@ procedure CxbxKrnlInit(
   szDebugFilename: PChar;
   pXbeHeader: P_XBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: PEntryProc); stdcall;
+  Entry: PEntryProc); cdecl;
 
 procedure CxbxKrnlNoFunc; stdcall;
 
@@ -46,7 +46,7 @@ procedure CxbxKrnlInit(
   szDebugFilename: PChar;
   pXbeHeader: P_XBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: PEntryProc); stdcall;
+  Entry: PEntryProc); cdecl;
 begin
 //  CreateLogs(ltKernel);
   WriteLog('EmuInit');
