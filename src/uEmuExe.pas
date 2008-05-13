@@ -482,7 +482,7 @@ begin
 
     m_SectionHeader[v].m_characteristics := Flags;
 
-    WriteLog('EmuExe: Generating Section Header 0x%...' + IntToHex(v, 4) + ' OK');
+    WriteLog(Format('EmuExe: Generating Section Header 0x%.04x... OK', [v]));
   end;
 
   // generate .cxbximp section header
@@ -521,7 +521,7 @@ begin
   //  update import address table directory entry
   m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IAT].m_virtual_addr := m_SectionHeader[i].m_virtual_addr;
   m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IAT].m_size := $08;
-  WriteLog('EmuExe: Generating Section Header 0x%..' + IntToHex(i, 4) + '(.cxbximp)... OK');
+  WriteLog(Format('EmuExe: Generating Section Header 0x%.04x(.cxbximp)... OK', [i]));
 
   //  generate .cxbxplg section header
   i := m_Header.m_sections - 1;
@@ -561,7 +561,7 @@ begin
   // make this section readable and executable
   m_SectionHeader[i].m_characteristics := IMAGE_SCN_MEM_READ xor IMAGE_SCN_MEM_EXECUTE xor IMAGE_SCN_CNT_CODE;
 
-  WriteLog('EmuExe: Generating Section Header 0x%..' + IntToHex(i, 4) + '(.cxbxplg)... OK');
+  WriteLog(Format('EmuExe: Generating Section Header 0x%.04x(.cxbxplg)... OK', [i]));
 
 
   // GENERATE SECTIONS  ------ PART WE STUCK
@@ -576,7 +576,7 @@ begin
   for v := 0 to m_xbe.m_Header.dwSections - 1 do
   begin
     _CopySections(v);
-    WriteLog('EmuExe: Generating Section 0x' + IntToHex(v, 4) + '... OK');
+    WriteLog(Format('EmuExe: Generating Section 0x.04x... OK', [v]));
   end;
 
   i := m_Header.m_sections - 2;
