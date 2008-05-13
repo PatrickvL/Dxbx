@@ -26,7 +26,7 @@ uses
   Dialogs, Windows, Classes, SysUtils;
 
 type
-  TVarCharArray = array of Char;
+  TVarByteArray = array of Byte;
 
   DOSStub = array[0..183] of Byte;
   EndFilling1 = array[0..0] of Byte;
@@ -130,7 +130,7 @@ type
     m_OptionalHeader: OptionalHeader;
     m_SectionHeader: array of SectionHeader;
 
-    m_bzSection: array of TVarCharArray;
+    m_bzSection: array of TVarByteArray;
 
     constructor Create(x_szFilename: string);
     function GetAddr(x_dwVirtualAddress: DWord): ShortInt;

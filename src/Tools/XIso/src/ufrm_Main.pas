@@ -164,7 +164,8 @@ uses
   uxiso, xbe, TextConsts, ufrm_Language, ufrmProgress, Grabacion, FormCreacionISO;
 
 function IsWindowsVista: Boolean;
-var VerInfo: TOSVersioninfo;
+var
+  VerInfo: TOSVersioninfo;
 begin
   VerInfo.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
   GetVersionEx(VerInfo);
