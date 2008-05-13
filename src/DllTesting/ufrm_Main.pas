@@ -15,11 +15,9 @@ type
     XbeOpenDialog: TOpenDialog;
     procedure Button1Click(Sender: TObject);
   private
-    { Private declarations }
     procedure OpenXbeFile(aFileName: string);
     procedure CloseXbe;
   public
-    { Public declarations }
     m_Xbe: TXbe;
   end;
 

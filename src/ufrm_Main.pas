@@ -1,4 +1,23 @@
+(*
+    This file is part of Dxbx - a XBox emulator written in Delphi (ported over from cxbx)
+    Copyright (C) 2007 Shadow_tj and other members of the development team.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*)
 unit ufrm_Main;
+
+{$INCLUDE Dxbx.inc}
 
 interface
 
@@ -342,7 +361,7 @@ var
   stringToSend: string;
   copyDataStruct: TCopyDataStruct;
 
-  function SendData(copyDataStruct: TCopyDataStruct): Boolean;
+  function _SendData(copyDataStruct: TCopyDataStruct): Boolean;
   var
     receiverHandle: THandle;
     res: Integer;
@@ -364,7 +383,7 @@ begin
   copyDataStruct.cbData := 1 + Length(stringToSend);
   copyDataStruct.lpData := PChar(stringToSend);
 
-  Result := SendData(copyDataStruct);
+  Result := _SendData(copyDataStruct);
 end;
 
 //------------------------------------------------------------------------------
@@ -462,7 +481,8 @@ end; // Tfrm_Main.actConfigVideoExecute
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
-var FileConverted: Boolean;
+var
+  FileConverted: Boolean;
 begin
   if Assigned(m_Xbe) then
   begin
