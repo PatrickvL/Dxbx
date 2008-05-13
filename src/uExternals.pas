@@ -27,7 +27,7 @@ procedure CxbxKrnlInit(hwndParent: THandle;
                        Entry: PEntryProc); cdecl; external cDLLNAME;
 
 procedure SetXbePath(const path: PChar); stdcall; external cDLLNAME name '?SetXbePath@EmuShared@@QAEXPBD@Z';
-procedure CxbxKrnlNoFunc; stdcall; external cDLLNAME;
+procedure CxbxKrnlNoFunc; cdecl; external cDLLNAME;
 
 implementation
 
