@@ -11,7 +11,6 @@ library DxbxKrnl;
   using PChar or ShortString parameters. }
 
 uses
-  ShareMem,
   Windows,
   SysUtils,
   Dialogs,

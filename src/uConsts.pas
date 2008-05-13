@@ -3,7 +3,7 @@ unit uConsts;
 interface
 
 const
-{$IFDEF _DEBUG}
+{$IFDEF DEBUG}
   cDLLNAME = 'CxbxKrnl.dll';
 {$ELSE}
   cDLLNAME = 'Cxbx.dll';
