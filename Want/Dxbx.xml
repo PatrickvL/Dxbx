@@ -8,8 +8,6 @@
 
 
   <target name="prepare" >
-    <mkdir dir="${dcu}" />
-    <mkdir dir="${bin}" />
   </target>
 
 
