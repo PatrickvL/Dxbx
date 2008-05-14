@@ -193,15 +193,15 @@ begin
   ConstructorInit();
 
   ExeFile := TFileStream.Create(x_szFileName, fmOpenRead);
+  try
+    // verify exe file was opened
+    if ExeFile.Size < 0 then
+    begin
+      WriteLog('Could not open Exe file.');
+      Exit;
+    end;
 
-  // verify exe file was opened
-  if ExeFile.Size < 0 then
-  begin
-    WriteLog('Could not open Exe file.');
-    Exit;
-  end;
-  
-  WriteLog('Exe: Opening Exe file... Ok');
+    WriteLog('Exe: Opening Exe file... Ok');
 
   // ignore dos stub (if it exists)
  { try
@@ -348,7 +348,9 @@ cleanup:
 
     fclose(ExeFile);
         *)
-
+  finally
+    ExeFile.Free;
+  end;
 end;
 
 function TExe.doExport(const x_szExeFilename: string): Boolean;
@@ -356,6 +358,22 @@ var
   ExeFile: TFileStream;
   lIndex: Integer;
   RawSize, RawAddr: DWord;
+
+  function _Write(const aBlock; aSize: Integer; aDescription: string): Boolean;
+  begin
+    try
+      ExeFile.Write(aBlock, aSize);
+    except
+      Result := False;
+      MessageDlg('Could not write ' + aDescription, mtError, [mbOk], 0);
+      WriteLog('Export: Could not write ' + aDescription);
+      Exit;
+    end;
+
+    WriteLog('Export: Writing ' + aDescription + '...OK');
+    Result := True;
+  end;
+
 begin
   Result := True;
   try
@@ -365,110 +383,79 @@ begin
     WriteLog('Export: Could not open .exe file.');
     Exit;
   end;
-  WriteLog('Export: Opening Exe file...OK');
 
-  // write dos stub
   try
-    ExeFile.Write(bzDosStub, SizeOf(bzDosStub))
-  except
-    Result := False;
-    MessageDlg('Could not write dos stub', mtError, [mbOk], 0);
-    WriteLog('Export: Could not write dos stub');
-    Exit;
-  end;
+    WriteLog('Export: Opening Exe file...OK');
 
-  WriteLog('Export: Writting DOS stub...OK');
-
-  // write pe header
-  try
-    ExeFile.Write(m_Header, SizeOf(m_Header));
-  except
-    Result := False;
-    WriteLog('Export: Could not write PE header');
-    MessageDlg('Could not write PE header', mtError, [mbOk], 0);
-    Exit;
-  end;
-  WriteLog('Export: Writing PE Header...OK');
-
-  // write optional header
-  try
-    ExeFile.Write(m_OptionalHeader, SizeOf(m_OptionalHeader));
-  except
-    Result := False;
-    WriteLog('Export: Could not write PE optional header');
-    MessageDlg('Could not write PE optional header', mtError, [mbOk], 0);
-    Exit;
-  end;
-
-  WriteLog('Export: Writing Optional Header...OK');
-
-  // write section headers
-  for lIndex := 0 to m_Header.m_sections - 1 do
-  begin
-    WriteLog('Export: Writing Section Header 0x' + IntToStr(lIndex) + '04X...');
-    try
-      ExeFile.Write(m_Sectionheader[lIndex], SIzeOf(m_SectionHeader[lIndex]));
-    except
-      WriteLog('Export: Could not write PE section header ' + IntToStr(lIndex));
-      MessageDlg('Could not write PE section header ' + IntToStr(lIndex), mtError, [mbOk], 0);
-      Result := False;
+    // write DOS header
+    Result := _Write(bzDosStub, SizeOf(bzDosStub), 'DOS stub');
+    if not Result then
       Exit;
+
+    // write pe header
+    Result := _Write(m_Header, SizeOf(m_Header), 'PE header');
+    if not Result then
+      Exit;
+
+    // write optional header
+    Result := _Write(m_OptionalHeader, SizeOf(m_OptionalHeader), 'PE optional header');
+    if not Result then
+      Exit;
+
+    // write section headers
+    for lIndex := 0 to m_Header.m_sections - 1 do
+    begin
+      Result := _Write(m_Sectionheader[lIndex], SIzeOf(m_SectionHeader[lIndex]), 'PE section header 0x' + IntToHex(lIndex, 4));
+      if not Result then
+        Exit;
     end;
-  end;
 
-  WriteLog('Export: Writing Section Headers...OK');
+    WriteLog('Export: Writing Section Headers...OK');
 
-  // write sections
-  for lIndex := 0 to m_Header.m_sections - 1 do
-  begin
+    // write sections
+    for lIndex := 0 to m_Header.m_sections - 1 do
+    begin
 
-    //Debug info of turok from cxbx
-    //m_Header.m_sections = 13
-    //v = 0   RawwSize = 1578272  RawAddr = 4096
-    //v = 1   RawwSize = 76960    RawAddr = 1582368
-    //v = 2   RawwSize = 1344     RawAddr = 1659328
-    //v = 3   RawwSize = 36544    RawAddr = 1660672
-    //v = 4   RawwSize = 121280   RawAddr = 1697216
-    //v = 5   RawwSize = 160448   RawAddr = 1818496
-    //v = 6   RawwSize = 29024    RawAddr = 1978944
-    //v = 7   RawwSize = 246624   RawAddr = 2007968
-    //v = 8   RawwSize = 140192   RawAddr = 2254592
-    //v = 9   RawwSize =  29056   RawAddr = 2394784
-    //v = 10  RawwSize = 10240    RawAddr = 2423840
-    //v = 11  RawwSize = 128      RawAddr = 2434080
-    //v = 12  RawwSize = 69632    RawAddr = 2434208
-    //v = 13  RawwSize = 577      RawAddr = 305
-    RawSize := m_SectionHeader[lIndex].m_sizeof_raw;
-    RawAddr := m_SectionHeader[lIndex].m_raw_addr;
+      //Debug info of turok from cxbx
+      //m_Header.m_sections = 13
+      //v = 0   RawwSize = 1578272  RawAddr = 4096
+      //v = 1   RawwSize = 76960    RawAddr = 1582368
+      //v = 2   RawwSize = 1344     RawAddr = 1659328
+      //v = 3   RawwSize = 36544    RawAddr = 1660672
+      //v = 4   RawwSize = 121280   RawAddr = 1697216
+      //v = 5   RawwSize = 160448   RawAddr = 1818496
+      //v = 6   RawwSize = 29024    RawAddr = 1978944
+      //v = 7   RawwSize = 246624   RawAddr = 2007968
+      //v = 8   RawwSize = 140192   RawAddr = 2254592
+      //v = 9   RawwSize =  29056   RawAddr = 2394784
+      //v = 10  RawwSize = 10240    RawAddr = 2423840
+      //v = 11  RawwSize = 128      RawAddr = 2434080
+      //v = 12  RawwSize = 69632    RawAddr = 2434208
+      //v = 13  RawwSize = 577      RawAddr = 305
+      RawSize := m_SectionHeader[lIndex].m_sizeof_raw;
+      RawAddr := m_SectionHeader[lIndex].m_raw_addr;
 
-    ExeFile.Seek(RawAddr, soFromBeginning);
+      ExeFile.Seek(RawAddr, soFromBeginning);
 
-    if RawSize = 0 then
-      Result := False
-    else
-    try
-      ExeFile.Write(Pointer(m_bzSection[lIndex])^, RawSize);
-    except
-      WriteLog('Export: Could not write PE section ' + IntToStr(lIndex));
-      MessageDlg('Could not write PE section ' + IntToStr(lIndex), mtError, [mbOk], 0);
-      WriteLog('Export: Writing Section 0x' + IntToStr(lIndex) + '.04X OK');
-      Exit;
+      if RawSize = 0 then
+        Result := False
+      else
+        _Write(Pointer(m_bzSection[lIndex])^, RawSize, 'PE section 0x' + IntToHex(lIndex, 4));
     end;
 
     WriteLog('Export: Writing Sections...OK');
-  end;
 
- (* ExeFIle.Seek( 2437340, soFromBeginning );
-  for i := 0 to 963 do begin
-   ExeFile.Write( bzEndFilling1, Length ( bzEndFilling1 ) );
-  end;
+(*
+    ExeFile.Position := 2437340;
+    for i := 0 to 963 do
+     ExeFile.Write(bzEndFilling1, Length(bzEndFilling1));
 
-  for i := 0 to 65535 do begin
-    ExeFile.Write( bzEndFilling2, Length ( bzEndFilling2 ) );
-  end;    *)
-
-  ExeFile.Free;
-
+    for i := 0 to 65535 do
+      ExeFile.Write(bzEndFilling2, Length(bzEndFilling2));
+*)
+  finally
+    ExeFile.Free;
+  end; 
 end; // TExe.doExport
 
 //------------------------------------------------------------------------------
