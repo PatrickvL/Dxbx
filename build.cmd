@@ -8,6 +8,12 @@ echo **                                           **
 echo ***********************************************
 
 
+echo Remove Bin dir for clean build
+want\deltree /fBin /s
+
+echo Remove Dcu dir for clean build
+want\deltree /fDcu /s
+
 echo Create Bin dir.
 md Bin
 echo Create Dcu dir.
