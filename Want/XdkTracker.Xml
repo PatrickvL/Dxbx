@@ -1,0 +1,57 @@
+<project name="XdkTracker"
+         basedir="..\src\Tools\XdkTracker"
+         default="compile" >
+
+  <property name="want.master" value="%{want_master}" />
+
+  <property name="old.version"    value="?{release.ini:releases:current}" />
+  <regexp   property="old.build"  text="${old.version}" pattern="^.*\.([0-9]+)$" subst ="\1" />
+  
+  <property name="build" value="={1 + ${old.build}}" if="want.master" />
+  <property name="build" value="${old.build}"    unless="want.master" />
+  
+  <regexp property="version" text="${old.version}" pattern="\.[0-9]*$" subst=".${build}" />
+  <regexp property="comma.version" pattern="\." subst="," text="${version}" />
+
+  <tstamp>
+    <format property="when"      pattern="yyyy,mm,dd,HH,nn,ss" />
+    <format property="date.tag"  pattern="yyyy-mm-dd" />
+  </tstamp>
+
+  <property name="src"       value="${basedir}/src" />
+
+  <property name="bin" value="${basedir}/bin" />
+  <property name="dcu" value="${basedir}/dcu" />
+
+
+  <patternset id="sources" >
+    <include  name="${src}" />
+    <include  name="${src}/**" />
+  </patternset>
+
+
+  <target name="compile-XdkTracker"  depends="build">
+    <dcc basedir="${src}" source="XdkTracker.dpr">
+      <exeoutput path="${bin}" />
+      <dcuoutput path="${dcu}" />
+      <!-- optimize  value="true" / -->
+
+      <debug     value="true" />
+      <console   value="true" />
+    </dcc>
+  </target>
+
+
+
+  <target name="compile" depends="compile-XdkTracker">
+  </target> 
+
+  <target name="build" >
+    <ini file="release.ini" if="want.master" >
+      <write section="releases" key="current" value="${version}" />
+      <write section="releases" key="last_date" value="${date.tag}" />
+    </ini>
+  </target>
+
+
+</project>

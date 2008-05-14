@@ -1,0 +1,27 @@
+<project name="dxbx"
+         basedir=".."
+         default="compile" >
+
+  <property name="src"       value="${basedir}/src" />
+  <property name="bin" value="${basedir}/bin" />
+  <property name="dcu" value="${basedir}/dcu" />
+
+
+  <target name="prepare" >
+    <mkdir dir="${dcu}" />
+    <mkdir dir="${bin}" />
+  </target>
+
+
+  <target name="build" >
+  </target>
+
+  <target name="compile"  depends="prepare, build">
+    <dcc basedir="${src}" source="Dxbx.dpr">
+    </dcc>
+  </target>
+
+
+
+
+</project>
