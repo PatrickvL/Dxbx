@@ -576,7 +576,7 @@ begin
   for v := 0 to m_xbe.m_Header.dwSections - 1 do
   begin
     _CopySections(v);
-    WriteLog(Format('EmuExe: Generating Section 0x.04x... OK', [v]));
+    WriteLog(Format('EmuExe: Generating Section 0x%.04x... OK', [v]));
   end;
 
   i := m_Header.m_sections - 2;
@@ -701,7 +701,7 @@ begin
   end;
 
   // Append TLS data
-  if (SizeOf(m_Xbe.m_TLS) <> 0) then
+  if SizeOf(m_Xbe.m_TLS) <> 0 then
   begin
     _AppendTLS(i, pWriteCursor);
     pWriteCursor := pWriteCursor + SizeOf(m_Xbe.m_TLS);
@@ -841,7 +841,12 @@ begin
   end;
 
   // calculate size of image
+{$IFDEF OLD_CODE}
+  // PvL : The Round() call here might be better, but results in a small EXE-difference (compared to cxbx) :
   SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
+{$ELSE}
+  SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + m_OptionalHeader.m_sizeof_headers;
+{$ENDIF}
   SizeOf_Image := RoundUp(SizeOf_Image, PE_SEGM_ALIGN);
 
   // update optional header as necessary
