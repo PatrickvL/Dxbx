@@ -19,6 +19,10 @@ md Bin
 echo Create Dcu dir.
 md Dcu
 
+
+echo Copy Want\msvcrtd.dll to Bin dir
+copy Want\msvcrtd.dll Bin
+
 echo Build Dxbx
 want\want.exe -buildfile want\dxbx.xml 
 
