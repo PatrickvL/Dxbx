@@ -131,17 +131,14 @@ procedure ModificarEntrada(Sector: Int64; TamSector: Int64; var Numero: Int64; v
 var
   MemBuf: TMemoryStream;
   xFichero: TxFichero;
-  pNombre: PChar;
-  i: Int64;
   Offset: Int64;
   Total, j: Integer;
 begin
   if Sector = $FFFFFFFFFFFFFFFF then
     Exit;
 
-  i := Numero;
   offset := Sector * TAM_SECTOR;
-  offset := Fichero.Seek(offset, soBeginning);
+  Fichero.Seek(offset, soBeginning);
 
   MemBuf := TMemoryStream.Create();
   try
@@ -196,7 +193,6 @@ procedure LeerTablaFicheros(Sector: Int64; TamSector: Int64; var Numero: Int64; 
 var
   MemBuf: TMemoryStream;
   xFichero: pxFichero;
-  pNombre: PChar;
   i: Int64;
   Offset: Int64;
   Total, j: Integer;
@@ -206,7 +202,7 @@ begin
 
   i := Numero;
   offset := Sector * TAM_SECTOR;
-  offset := Fichero.Seek(offset, soBeginning);
+  Fichero.Seek(offset, soBeginning);
 
   MemBuf := TMemoryStream.Create();
   try
@@ -229,7 +225,6 @@ begin
 
       MemBuf.Read(xFichero^, 14);
       MemBuf.Read(xFichero.Nombre, xFichero.LongNombre);
-      pNombre := @xFichero.Nombre;
       xFichero.DirPadre := i;
 
       if (xFichero.pIzq = $FFFF) then
@@ -305,7 +300,7 @@ end;
 procedure ExtraerFicheroXDVD(HA, SCSI, LUN: Byte; Unidad: TCDROM; grabar: string; Sector, tamano: Int64);
 var
   fguardar: TFilestream;
-  i, fin, entero, resto, a: Int64;
+  entero, resto, a: Int64;
   buffer: array[0..32767] of Byte;
   r: Integer;
 
@@ -357,7 +352,6 @@ type
 var
   MemBuf: TMemoryStream;
   xFichero: pxFichero;
-  pNombre: PChar;
   i: Int64;
   SectoresLeer: Integer;
   Buffer: PByteBuffer;
@@ -386,7 +380,6 @@ begin
 
   MemBuf.Seek(0, soBeginning);
 
-  Total := 0;
   Total := TamSector div 2048;
   if TamSector mod 2048 <> 0 then
     Total := Total + 1;
@@ -401,7 +394,6 @@ begin
       xFichero.pIzq := $FFFF;
       MemBuf.Read(xFichero^, 14);
       MemBuf.Read(xFichero.Nombre, xFichero.LongNombre);
-      pNombre := @xFichero.Nombre;
       xFichero.DirPadre := i;
 
       if (xFichero.pIzq = $FFFF) then
@@ -442,7 +434,7 @@ end;
 function LeerXDVD(HA, SCSI, LUN: Byte; Unidad: TCDROM): Boolean;
 var
   Mem: TMemoryStream;
-  i, NumIni: Int64;
+  NumIni: Int64;
   Buffer: array[0..2047] of Byte;
   Alternativo: Boolean;
 begin

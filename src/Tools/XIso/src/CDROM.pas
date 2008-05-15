@@ -3332,7 +3332,6 @@ var
   Buffer: TSRBBuffer;
   pBuffer: PSRBBuffer;
   BufferSize: Longword;
-  xResult: Boolean;
 begin
   //---Inicializacion de SCSI Request Block---
   pSRBPacket := @SRBPacket;
@@ -3357,7 +3356,7 @@ begin
   SRBPacket.CDBByte[5] := Lo(Lo(PistaOsector));
 
   //---Ejecuta el Comando SCSI---
-  xResult := ExecSCSICommand(pSRBPacket);
+  Result := ExecSCSICommand(pSRBPacket);
 
   if Assigned(FOnModeSenseFinish) then
   begin
