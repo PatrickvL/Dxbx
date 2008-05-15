@@ -284,10 +284,8 @@ function Vacio(Folder: string): Integer;
 var
   SR: TSearchRec;
   Ent, Resto: Integer;
-  Entrada: PEntradaDir;
 begin
   Result := 0;
-  Resto := 0;
   if (FindFirst(Folder + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
     repeat
@@ -319,7 +317,6 @@ var
   Entrada: PEntradaDir;
 begin
   Result := 0;
-  Resto := 0;
   Lista := TList.Create();
   if (FindFirst(Folder + '*.*', faArchive or faDirectory or faHidden or faSysFile or faReadOnly, SR) = 0) then
   begin
@@ -416,7 +413,6 @@ var
   Elem, Elem2: PEntradaDir;
   ListaAux: TList;
 begin
-  Cont := 0;
   ListaAux := TList.Create();
   for i := 0 to Lista.Count - 1 do
   begin
@@ -493,7 +489,6 @@ var
   Entrada: PEntradaDir;
   Attributes: Byte;
 begin
-  Attributes := 0;
   for i := 0 to lDirectorio.Count - 1 do
   begin
     Entrada := PEntradaDir(lDirectorio[i]);
@@ -540,11 +535,10 @@ var
 
   SR: TSearchRec;
   lDirectorio, SubDirectorios: TList;
-  xEntrada: TxFichero;
   Entrada: PEntradaDir;
   Fichero: TFileStream;
   SectorTabla: Int64;
-  PosBuf, i, long: Integer;
+  PosBuf, i: Integer;
   Attributes: Byte;
   pNombre: PChar;
   j, leido: Integer;
@@ -621,7 +615,7 @@ begin
           // Introducimos ahora al final las carpetas
     for i := 0 to SubDirectorios.Count - 1 do
     begin
-      Entrada := PEntradaDir(SubDirectorios[i]);
+      PEntradaDir(SubDirectorios[i]);
       lDirectorio.Add(SubDirectorios[i]);
     end;
 

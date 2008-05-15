@@ -532,7 +532,7 @@ end;
 
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
-  Parameter, CarpetaParametro: string;
+  Parameter: string;
   i: Integer;
 begin
   DragAcceptFiles(Self.Handle, True);
