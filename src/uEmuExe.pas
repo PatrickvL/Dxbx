@@ -842,10 +842,11 @@ begin
 
   // calculate size of image
 {$IFDEF OLD_CODE}
-  // PvL : The Round() call here might be better, but results in a small EXE-difference (compared to cxbx) :
-  SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
-{$ELSE}
+  // The RoundUp is necessary to allow the generated exe to run under Vista
+  // This is actually a bug that needs to be corrected in CXBX too
   SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + m_OptionalHeader.m_sizeof_headers;
+{$ELSE}
+  SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
 {$ENDIF}
   SizeOf_Image := RoundUp(SizeOf_Image, PE_SEGM_ALIGN);
 
