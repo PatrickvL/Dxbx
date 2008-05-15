@@ -1,5 +1,5 @@
 <project name="XdkTracker"
-         basedir="..\src\Tools\XdkTracker"
+         basedir=".."
          default="compile" >
 
   <property name="want.master" value="%{want_master}" />
@@ -18,9 +18,9 @@
     <format property="date.tag"  pattern="yyyy-mm-dd" />
   </tstamp>
 
-  <property name="src"       value="${basedir}/src" />
+  <property name="src"       value="${basedir}/src/Tools/XdkTracker/src" />
 
-  <property name="bin" value="${basedir}/bin" />
+  <property name="bin" value="${basedir}/bin/Tools" />
   <property name="dcu" value="${basedir}/dcu" />
 
 
