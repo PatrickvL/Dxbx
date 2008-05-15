@@ -1,6 +1,6 @@
 
  Start         Length     Name                   Class
- 0001:00401000 000BB554H .text                   CODE
+ 0001:00401000 000BB560H .text                   CODE
  0002:004BD000 00001160H .itext                  ICODE
  0003:004BF000 00003E98H .data                   DATA
  0004:004C3000 00006714H .bss                    BSS
@@ -135,22 +135,22 @@ Detailed map of segments
  0001:000A42A8 0000079A C=CODE     S=.text    G=(none)   M=LoggerTask ACBP=A9
  0001:000A4A44 0000140E C=CODE     S=.text    G=(none)   M=ExecTasks ACBP=A9
  0001:000A5E54 00005066 C=CODE     S=.text    G=(none)   M=CVSTasks ACBP=A9
- 0001:000AAEBC 00005890 C=CODE     S=.text    G=(none)   M=DelphiTasks ACBP=A9
- 0001:000B074C 00000AED C=CODE     S=.text    G=(none)   M=DUnitTasks ACBP=A9
- 0001:000B123C 000007C2 C=CODE     S=.text    G=(none)   M=EchoTasks ACBP=A9
- 0001:000B1A00 00002D42 C=CODE     S=.text    G=(none)   M=EditTasks ACBP=A9
- 0001:000B4744 00001E22 C=CODE     S=.text    G=(none)   M=FileTasks ACBP=A9
- 0001:000B6568 000006EA C=CODE     S=.text    G=(none)   M=GZipTasks ACBP=A9
- 0001:000B6C54 00000932 C=CODE     S=.text    G=(none)   M=IniFileTasks ACBP=A9
- 0001:000B7588 00000952 C=CODE     S=.text    G=(none)   M=InnoSetupTasks ACBP=A9
- 0001:000B7EDC 0000030E C=CODE     S=.text    G=(none)   M=InputTasks ACBP=A9
- 0001:000B81EC 000003FA C=CODE     S=.text    G=(none)   M=LoadFileTasks ACBP=A9
- 0001:000B85E8 000008D2 C=CODE     S=.text    G=(none)   M=ZipTasks ACBP=A9
- 0001:000B8EBC 000006DE C=CODE     S=.text    G=(none)   M=WantTasks ACBP=A9
- 0001:000B959C 000003E2 C=CODE     S=.text    G=(none)   M=TempFileTasks ACBP=A9
- 0001:000B9980 00000ADE C=CODE     S=.text    G=(none)   M=StyleTasks ACBP=A9
- 0001:000BA460 00000A66 C=CODE     S=.text    G=(none)   M=XmlPropertyTasks ACBP=A9
- 0001:000BAEC8 0000068C C=CODE     S=.text    G=(none)   M=want     ACBP=A9
+ 0001:000AAEBC 0000589C C=CODE     S=.text    G=(none)   M=DelphiTasks ACBP=A9
+ 0001:000B0758 00000AED C=CODE     S=.text    G=(none)   M=DUnitTasks ACBP=A9
+ 0001:000B1248 000007C2 C=CODE     S=.text    G=(none)   M=EchoTasks ACBP=A9
+ 0001:000B1A0C 00002D42 C=CODE     S=.text    G=(none)   M=EditTasks ACBP=A9
+ 0001:000B4750 00001E22 C=CODE     S=.text    G=(none)   M=FileTasks ACBP=A9
+ 0001:000B6574 000006EA C=CODE     S=.text    G=(none)   M=GZipTasks ACBP=A9
+ 0001:000B6C60 00000932 C=CODE     S=.text    G=(none)   M=IniFileTasks ACBP=A9
+ 0001:000B7594 00000952 C=CODE     S=.text    G=(none)   M=InnoSetupTasks ACBP=A9
+ 0001:000B7EE8 0000030E C=CODE     S=.text    G=(none)   M=InputTasks ACBP=A9
+ 0001:000B81F8 000003FA C=CODE     S=.text    G=(none)   M=LoadFileTasks ACBP=A9
+ 0001:000B85F4 000008D2 C=CODE     S=.text    G=(none)   M=ZipTasks ACBP=A9
+ 0001:000B8EC8 000006DE C=CODE     S=.text    G=(none)   M=WantTasks ACBP=A9
+ 0001:000B95A8 000003E2 C=CODE     S=.text    G=(none)   M=TempFileTasks ACBP=A9
+ 0001:000B998C 00000ADE C=CODE     S=.text    G=(none)   M=StyleTasks ACBP=A9
+ 0001:000BA46C 00000A66 C=CODE     S=.text    G=(none)   M=XmlPropertyTasks ACBP=A9
+ 0001:000BAED4 0000068C C=CODE     S=.text    G=(none)   M=want     ACBP=A9
  0002:00000000 00000095 C=ICODE    S=.itext   G=(none)   M=System   ACBP=A9
  0002:00000098 00000011 C=ICODE    S=.itext   G=(none)   M=Windows  ACBP=A9
  0002:000000AC 00000088 C=ICODE    S=.itext   G=(none)   M=SysUtils ACBP=A9
@@ -2034,47 +2034,47 @@ Detailed map of segments
  0001:000AC3D8       DelphiTasks..TUsePackageElement
  0001:000AC514       DelphiTasks..TWarningElement
  0002:00000D38       DelphiTasks.DelphiTasks
- 0001:000B070C       DelphiTasks.Finalization
- 0001:000AD058       DelphiTasks.TCustomDelphiTask.BuildExecutable
- 0001:000ACFF4       DelphiTasks.TCustomDelphiTask.Execute
+ 0001:000B0718       DelphiTasks.Finalization
+ 0001:000AD064       DelphiTasks.TCustomDelphiTask.BuildExecutable
+ 0001:000AD000       DelphiTasks.TCustomDelphiTask.Execute
  0001:000AC7E0       DelphiTasks.TCustomDelphiTask.FindDelphi
  0001:000ACA14       DelphiTasks.TCustomDelphiTask.FindTool
- 0001:000ACDC4       DelphiTasks.TCustomDelphiTask.HandleOutputLine
+ 0001:000ACDD0       DelphiTasks.TCustomDelphiTask.HandleOutputLine
  0001:000ACB04       DelphiTasks.TCustomDelphiTask.ReadDelphiDir
- 0001:000ACC20       DelphiTasks.TCustomDelphiTask.ReadUserOption
- 0001:000ACCD8       DelphiTasks.TCustomDelphiTask.RootForVersion
- 0001:000B0318       DelphiTasks.TDefineElement.Init
- 0001:000AFD70       DelphiTasks.TDelphiCompileTask.AddDefine
- 0001:000AFE1C       DelphiTasks.TDelphiCompileTask.AddPackage
- 0001:000B00A8       DelphiTasks.TDelphiCompileTask.AddUnitAlias
- 0001:000B0078       DelphiTasks.TDelphiCompileTask.AddWarning
- 0001:000AD620       DelphiTasks.TDelphiCompileTask.BuildArguments
- 0001:000AD0C0       DelphiTasks.TDelphiCompileTask.Create
- 0001:000AFE74       DelphiTasks.TDelphiCompileTask.CreateIncludePath
- 0001:000AFE7C       DelphiTasks.TDelphiCompileTask.CreateObjectPath
- 0001:000AFE84       DelphiTasks.TDelphiCompileTask.CreateResourcePath
- 0001:000AFE6C       DelphiTasks.TDelphiCompileTask.CreateUnitPath
- 0001:000AD2F4       DelphiTasks.TDelphiCompileTask.Destroy
- 0001:000AD390       DelphiTasks.TDelphiCompileTask.Execute
- 0001:000AD33C       DelphiTasks.TDelphiCompileTask.Init
- 0001:000AD44C       DelphiTasks.TDelphiCompileTask.OutputPathElements
- 0001:000AD558       DelphiTasks.TDelphiCompileTask.PathOpt
- 0001:000AFCA0       DelphiTasks.TDelphiCompileTask.ReadLibraryPaths
- 0001:000AFE8C       DelphiTasks.TDelphiCompileTask.RestoreCFGs
- 0001:000AD42C       DelphiTasks.TDelphiCompileTask.TagName
- 0001:000AD364       DelphiTasks.TDelphiCompileTask.ToolName
- 0001:000B04B8       DelphiTasks.TOptionElement.dcc
- 0001:000B03F4       DelphiTasks.TPathSet.Create
- 0001:000B0438       DelphiTasks.TPathSet.SetPath
- 0001:000B0134       DelphiTasks.TResourceCompileTask.BuildArguments
- 0001:000B0200       DelphiTasks.TResourceCompileTask.Create
- 0001:000B023C       DelphiTasks.TResourceCompileTask.Execute
- 0001:000B02A0       DelphiTasks.TResourceCompileTask.Init
- 0001:000B02C8       DelphiTasks.TResourceCompileTask.TagName
- 0001:000B02EC       DelphiTasks.TResourceCompileTask.ToolName
- 0001:000B060C       DelphiTasks.TUnitAliasElement.Init
- 0001:000B04D0       DelphiTasks.TUsePackageElement.Init
- 0001:000B059C       DelphiTasks.TWarningElement.Init
+ 0001:000ACC2C       DelphiTasks.TCustomDelphiTask.ReadUserOption
+ 0001:000ACCE4       DelphiTasks.TCustomDelphiTask.RootForVersion
+ 0001:000B0324       DelphiTasks.TDefineElement.Init
+ 0001:000AFD7C       DelphiTasks.TDelphiCompileTask.AddDefine
+ 0001:000AFE28       DelphiTasks.TDelphiCompileTask.AddPackage
+ 0001:000B00B4       DelphiTasks.TDelphiCompileTask.AddUnitAlias
+ 0001:000B0084       DelphiTasks.TDelphiCompileTask.AddWarning
+ 0001:000AD62C       DelphiTasks.TDelphiCompileTask.BuildArguments
+ 0001:000AD0CC       DelphiTasks.TDelphiCompileTask.Create
+ 0001:000AFE80       DelphiTasks.TDelphiCompileTask.CreateIncludePath
+ 0001:000AFE88       DelphiTasks.TDelphiCompileTask.CreateObjectPath
+ 0001:000AFE90       DelphiTasks.TDelphiCompileTask.CreateResourcePath
+ 0001:000AFE78       DelphiTasks.TDelphiCompileTask.CreateUnitPath
+ 0001:000AD300       DelphiTasks.TDelphiCompileTask.Destroy
+ 0001:000AD39C       DelphiTasks.TDelphiCompileTask.Execute
+ 0001:000AD348       DelphiTasks.TDelphiCompileTask.Init
+ 0001:000AD458       DelphiTasks.TDelphiCompileTask.OutputPathElements
+ 0001:000AD564       DelphiTasks.TDelphiCompileTask.PathOpt
+ 0001:000AFCAC       DelphiTasks.TDelphiCompileTask.ReadLibraryPaths
+ 0001:000AFE98       DelphiTasks.TDelphiCompileTask.RestoreCFGs
+ 0001:000AD438       DelphiTasks.TDelphiCompileTask.TagName
+ 0001:000AD370       DelphiTasks.TDelphiCompileTask.ToolName
+ 0001:000B04C4       DelphiTasks.TOptionElement.dcc
+ 0001:000B0400       DelphiTasks.TPathSet.Create
+ 0001:000B0444       DelphiTasks.TPathSet.SetPath
+ 0001:000B0140       DelphiTasks.TResourceCompileTask.BuildArguments
+ 0001:000B020C       DelphiTasks.TResourceCompileTask.Create
+ 0001:000B0248       DelphiTasks.TResourceCompileTask.Execute
+ 0001:000B02AC       DelphiTasks.TResourceCompileTask.Init
+ 0001:000B02D4       DelphiTasks.TResourceCompileTask.TagName
+ 0001:000B02F8       DelphiTasks.TResourceCompileTask.ToolName
+ 0001:000B0618       DelphiTasks.TUnitAliasElement.Init
+ 0001:000B04DC       DelphiTasks.TUsePackageElement.Init
+ 0001:000B05A8       DelphiTasks.TWarningElement.Init
  0003:0000395C       DelphiTasks.WarningVersion
  0004:00006520       Dialogs..03
  0001:0005C7D8       Dialogs..TCommonDialog
@@ -2103,23 +2103,23 @@ Detailed map of segments
  0001:0005CAF8       Dialogs.TCommonDialog.WndProc
  0003:000028B4       Dialogs.WndProcPtrAtom
  0004:000066DC       DUnitTasks..2
- 0001:000B084C       DUnitTasks..TDUnitTask
+ 0001:000B0858       DUnitTasks..TDUnitTask
  0002:00000E48       DUnitTasks.DUnitTasks
- 0001:000B1204       DUnitTasks.Finalization
- 0001:000B0A34       DUnitTasks.TDUnitTask.AddError
- 0001:000B0B20       DUnitTasks.TDUnitTask.AddFailure
- 0001:000B0C0C       DUnitTasks.TDUnitTask.AddSuccess
- 0001:000B0D60       DUnitTasks.TDUnitTask.EndTest
- 0001:000B0FC8       DUnitTasks.TDUnitTask.Execute
- 0001:000B0FA0       DUnitTasks.TDUnitTask.Init
- 0001:000B09F4       DUnitTasks.TDUnitTask.QueryInterface
- 0001:000B0C94       DUnitTasks.TDUnitTask.ShouldRunTest
- 0001:000B0CC4       DUnitTasks.TDUnitTask.StartTest
- 0001:000B1154       DUnitTasks.TDUnitTask.Status
- 0001:000B0E1C       DUnitTasks.TDUnitTask.TestingEnds
- 0001:000B0DFC       DUnitTasks.TDUnitTask.TestingStarts
- 0001:000B0A1C       DUnitTasks.TDUnitTask._AddRef
- 0001:000B0A28       DUnitTasks.TDUnitTask._Release
+ 0001:000B1210       DUnitTasks.Finalization
+ 0001:000B0A40       DUnitTasks.TDUnitTask.AddError
+ 0001:000B0B2C       DUnitTasks.TDUnitTask.AddFailure
+ 0001:000B0C18       DUnitTasks.TDUnitTask.AddSuccess
+ 0001:000B0D6C       DUnitTasks.TDUnitTask.EndTest
+ 0001:000B0FD4       DUnitTasks.TDUnitTask.Execute
+ 0001:000B0FAC       DUnitTasks.TDUnitTask.Init
+ 0001:000B0A00       DUnitTasks.TDUnitTask.QueryInterface
+ 0001:000B0CA0       DUnitTasks.TDUnitTask.ShouldRunTest
+ 0001:000B0CD0       DUnitTasks.TDUnitTask.StartTest
+ 0001:000B1160       DUnitTasks.TDUnitTask.Status
+ 0001:000B0E28       DUnitTasks.TDUnitTask.TestingEnds
+ 0001:000B0E08       DUnitTasks.TDUnitTask.TestingStarts
+ 0001:000B0A28       DUnitTasks.TDUnitTask._AddRef
+ 0001:000B0A34       DUnitTasks.TDUnitTask._Release
  0004:000064EC       DwmApi..1
  0002:000006A8       DwmApi.DwmApi
  0001:0005A440       DwmApi.DwmCompositionEnabled
@@ -2130,70 +2130,70 @@ Detailed map of segments
  0004:000064F4       DwmApi._DwmExtendFrameIntoClientArea
  0004:000064F8       DwmApi._DwmIsCompositionEnabled
  0004:000066E0       EchoTasks..2
- 0001:000B123C       EchoTasks..TEchoTask
+ 0001:000B1248       EchoTasks..TEchoTask
  0002:00000E5C       EchoTasks.EchoTasks
- 0001:000B19D0       EchoTasks.Finalization
- 0001:000B1434       EchoTasks.TEchoTask.Create
- 0001:000B1470       EchoTasks.TEchoTask.Execute
- 0001:000B167C       EchoTasks.TEchoTask.FormatText
+ 0001:000B19DC       EchoTasks.Finalization
+ 0001:000B1440       EchoTasks.TEchoTask.Create
+ 0001:000B147C       EchoTasks.TEchoTask.Execute
+ 0001:000B1688       EchoTasks.TEchoTask.FormatText
  0004:000066E4       EditTasks..81
- 0001:000B2D68       EditTasks..TAppendElement
- 0001:000B1B70       EditTasks..TCustomEditElement
- 0001:000B2754       EditTasks..TDeleteElement
- 0001:000B1F94       EditTasks..TEditElement
- 0001:000B2874       EditTasks..TEditFileElement
- 0001:000B1A00       EditTasks..TEditTask
- 0001:000B2E8C       EditTasks..TEvalElement
- 0001:000B2634       EditTasks..TGlobalElement
- 0001:000B1C98       EditTasks..TGotoElement
- 0001:000B2C24       EditTasks..TInsertElement
- 0001:000B21F0       EditTasks..TPatternElement
- 0001:000B20B0       EditTasks..TPrintElement
- 0001:000B1DE4       EditTasks..TRangeElement
- 0001:000B29C8       EditTasks..TReadElement
- 0001:000B2348       EditTasks..TSearchElement
- 0001:000B249C       EditTasks..TSubstElement
- 0001:000B2AE4       EditTasks..TWriteElement
+ 0001:000B2D74       EditTasks..TAppendElement
+ 0001:000B1B7C       EditTasks..TCustomEditElement
+ 0001:000B2760       EditTasks..TDeleteElement
+ 0001:000B1FA0       EditTasks..TEditElement
+ 0001:000B2880       EditTasks..TEditFileElement
+ 0001:000B1A0C       EditTasks..TEditTask
+ 0001:000B2E98       EditTasks..TEvalElement
+ 0001:000B2640       EditTasks..TGlobalElement
+ 0001:000B1CA4       EditTasks..TGotoElement
+ 0001:000B2C30       EditTasks..TInsertElement
+ 0001:000B21FC       EditTasks..TPatternElement
+ 0001:000B20BC       EditTasks..TPrintElement
+ 0001:000B1DF0       EditTasks..TRangeElement
+ 0001:000B29D4       EditTasks..TReadElement
+ 0001:000B2354       EditTasks..TSearchElement
+ 0001:000B24A8       EditTasks..TSubstElement
+ 0001:000B2AF0       EditTasks..TWriteElement
  0002:00000E70       EditTasks.EditTasks
- 0001:000B4714       EditTasks.Finalization
- 0001:000B44A4       EditTasks.TAppendElement.TargetLine
- 0001:000B3568       EditTasks.TCustomEditElement.Perform
- 0001:000B35C0       EditTasks.TCustomEditElement.Perform
- 0001:000B3540       EditTasks.TCustomEditElement.Perform
- 0001:000B3C04       EditTasks.TDeleteElement.Perform
- 0001:000B3CE4       EditTasks.TEditFileElement.Perform
- 0001:000B2FA8       EditTasks.TEditTask.Create
- 0001:000B2FEC       EditTasks.TEditTask.Destroy
- 0001:000B3374       EditTasks.TEditTask.Execute
- 0001:000B3154       EditTasks.TEditTask.ParseLine
- 0001:000B330C       EditTasks.TEditTask.Perform
- 0001:000B32EC       EditTasks.TEditTask.SetDot
- 0001:000B301C       EditTasks.TEditTask.SetText
- 0001:000B4690       EditTasks.TEvalElement.Perform
- 0001:000B37F8       EditTasks.TGlobalElement.Perform
- 0001:000B35C4       EditTasks.TGotoElement.Init
- 0001:000B35EC       EditTasks.TGotoElement.Perform
- 0001:000B42B0       EditTasks.TInsertElement.Create
- 0001:000B42F4       EditTasks.TInsertElement.Destroy
- 0001:000B4324       EditTasks.TInsertElement.GetText
- 0001:000B4338       EditTasks.TInsertElement.Perform
- 0001:000B4454       EditTasks.TInsertElement.SetText
- 0001:000B44A0       EditTasks.TInsertElement.TargetLine
- 0001:000B3B60       EditTasks.TPrintElement.Create
- 0001:000B3B9C       EditTasks.TPrintElement.Perform
- 0001:000B3690       EditTasks.TRangeElement.Perform
- 0001:000B36D4       EditTasks.TRangeElement.Perform
- 0001:000B3764       EditTasks.TRangeElement.SetLine
- 0001:000B37BC       EditTasks.TRangeElement.SetRangeToAll
- 0001:000B3D38       EditTasks.TReadElement.Init
- 0001:000B3D60       EditTasks.TReadElement.Perform
- 0001:000B3974       EditTasks.TSearchElement.Perform
- 0001:000B3A54       EditTasks.TSearchElement.Perform
- 0001:000B44A8       EditTasks.TSubstElement.Init
- 0001:000B455C       EditTasks.TSubstElement.Perform
- 0001:000B44D0       EditTasks.TSubstElement.Perform
- 0001:000B3FFC       EditTasks.TWriteElement.Create
- 0001:000B4064       EditTasks.TWriteElement.Perform
+ 0001:000B4720       EditTasks.Finalization
+ 0001:000B44B0       EditTasks.TAppendElement.TargetLine
+ 0001:000B3574       EditTasks.TCustomEditElement.Perform
+ 0001:000B35CC       EditTasks.TCustomEditElement.Perform
+ 0001:000B354C       EditTasks.TCustomEditElement.Perform
+ 0001:000B3C10       EditTasks.TDeleteElement.Perform
+ 0001:000B3CF0       EditTasks.TEditFileElement.Perform
+ 0001:000B2FB4       EditTasks.TEditTask.Create
+ 0001:000B2FF8       EditTasks.TEditTask.Destroy
+ 0001:000B3380       EditTasks.TEditTask.Execute
+ 0001:000B3160       EditTasks.TEditTask.ParseLine
+ 0001:000B3318       EditTasks.TEditTask.Perform
+ 0001:000B32F8       EditTasks.TEditTask.SetDot
+ 0001:000B3028       EditTasks.TEditTask.SetText
+ 0001:000B469C       EditTasks.TEvalElement.Perform
+ 0001:000B3804       EditTasks.TGlobalElement.Perform
+ 0001:000B35D0       EditTasks.TGotoElement.Init
+ 0001:000B35F8       EditTasks.TGotoElement.Perform
+ 0001:000B42BC       EditTasks.TInsertElement.Create
+ 0001:000B4300       EditTasks.TInsertElement.Destroy
+ 0001:000B4330       EditTasks.TInsertElement.GetText
+ 0001:000B4344       EditTasks.TInsertElement.Perform
+ 0001:000B4460       EditTasks.TInsertElement.SetText
+ 0001:000B44AC       EditTasks.TInsertElement.TargetLine
+ 0001:000B3B6C       EditTasks.TPrintElement.Create
+ 0001:000B3BA8       EditTasks.TPrintElement.Perform
+ 0001:000B369C       EditTasks.TRangeElement.Perform
+ 0001:000B36E0       EditTasks.TRangeElement.Perform
+ 0001:000B3770       EditTasks.TRangeElement.SetLine
+ 0001:000B37C8       EditTasks.TRangeElement.SetRangeToAll
+ 0001:000B3D44       EditTasks.TReadElement.Init
+ 0001:000B3D6C       EditTasks.TReadElement.Perform
+ 0001:000B3980       EditTasks.TSearchElement.Perform
+ 0001:000B3A60       EditTasks.TSearchElement.Perform
+ 0001:000B44B4       EditTasks.TSubstElement.Init
+ 0001:000B4568       EditTasks.TSubstElement.Perform
+ 0001:000B44DC       EditTasks.TSubstElement.Perform
+ 0001:000B4008       EditTasks.TWriteElement.Create
+ 0001:000B4070       EditTasks.TWriteElement.Perform
  0004:000066C4       ExecTasks..5
  0001:000A4A44       ExecTasks..TArgElement
  0001:000A4BA4       ExecTasks..TCustomExecTask
@@ -2242,42 +2242,42 @@ Detailed map of segments
  0001:0005C6D0       ExtCtrls.TTimer.UpdateTimer
  0001:0005C65C       ExtCtrls.TTimer.WndProc
  0004:000066E8       FileTasks..01
- 0001:000B4FAC       FileTasks..TCopyTask
- 0001:000B4C80       FileTasks..TDeleteTask
- 0001:000B4884       FileTasks..TFileSetTask
- 0001:000B4744       FileTasks..TFileTask
- 0001:000B4A18       FileTasks..TMkDirTask
- 0001:000B4E30       FileTasks..TMoveCopyTask
- 0001:000B50C8       FileTasks..TMoveTask
- 0001:000B4B40       FileTasks..TTouchTask
+ 0001:000B4FB8       FileTasks..TCopyTask
+ 0001:000B4C8C       FileTasks..TDeleteTask
+ 0001:000B4890       FileTasks..TFileSetTask
+ 0001:000B4750       FileTasks..TFileTask
+ 0001:000B4A24       FileTasks..TMkDirTask
+ 0001:000B4E3C       FileTasks..TMoveCopyTask
+ 0001:000B50D4       FileTasks..TMoveTask
+ 0001:000B4B4C       FileTasks..TTouchTask
  0002:00000FA8       FileTasks.FileTasks
- 0001:000B6538       FileTasks.Finalization
- 0001:000B5EE0       FileTasks.TCopyTask.DoFiles
- 0001:000B60A4       FileTasks.TCopyTask.DoPaths
- 0001:000B57F0       FileTasks.TDeleteTask.AddDefaultPatterns
- 0001:000B58D8       FileTasks.TDeleteTask.DoFileset
- 0001:000B5BCC       FileTasks.TDeleteTask.SetFile
- 0001:000B532C       FileTasks.TFileSetTask.AddCommaSeparatedExcludes
- 0001:000B5288       FileTasks.TFileSetTask.AddCommaSeparatedIncludes
- 0001:000B5250       FileTasks.TFileSetTask.AddDefaultPatterns
- 0001:000B51E4       FileTasks.TFileSetTask.Create
- 0001:000B523C       FileTasks.TFileSetTask.CreateExclude
- 0001:000B53D0       FileTasks.TFileSetTask.CreateFileSet
- 0001:000B5228       FileTasks.TFileSetTask.CreateInclude
- 0001:000B5418       FileTasks.TFileSetTask.DoFileset
- 0001:000B541C       FileTasks.TFileSetTask.Execute
- 0001:000B5220       FileTasks.TFileSetTask.Init
- 0001:000B54D0       FileTasks.TFileSetTask.MyFileSet
- 0001:000B5514       FileTasks.TMkDirTask.Execute
- 0001:000B54F0       FileTasks.TMkDirTask.Init
- 0001:000B5D9C       FileTasks.TMoveCopyTask.DoFileset
- 0001:000B5C28       FileTasks.TMoveCopyTask.DoPaths
- 0001:000B5E48       FileTasks.TMoveCopyTask.Execute
- 0001:000B5E18       FileTasks.TMoveCopyTask.Init
- 0001:000B61B4       FileTasks.TMoveTask.DoFiles
- 0001:000B6378       FileTasks.TMoveTask.DoPaths
- 0001:000B572C       FileTasks.TTouchTask.Execute
- 0001:000B57C8       FileTasks.TTouchTask.Init
+ 0001:000B6544       FileTasks.Finalization
+ 0001:000B5EEC       FileTasks.TCopyTask.DoFiles
+ 0001:000B60B0       FileTasks.TCopyTask.DoPaths
+ 0001:000B57FC       FileTasks.TDeleteTask.AddDefaultPatterns
+ 0001:000B58E4       FileTasks.TDeleteTask.DoFileset
+ 0001:000B5BD8       FileTasks.TDeleteTask.SetFile
+ 0001:000B5338       FileTasks.TFileSetTask.AddCommaSeparatedExcludes
+ 0001:000B5294       FileTasks.TFileSetTask.AddCommaSeparatedIncludes
+ 0001:000B525C       FileTasks.TFileSetTask.AddDefaultPatterns
+ 0001:000B51F0       FileTasks.TFileSetTask.Create
+ 0001:000B5248       FileTasks.TFileSetTask.CreateExclude
+ 0001:000B53DC       FileTasks.TFileSetTask.CreateFileSet
+ 0001:000B5234       FileTasks.TFileSetTask.CreateInclude
+ 0001:000B5424       FileTasks.TFileSetTask.DoFileset
+ 0001:000B5428       FileTasks.TFileSetTask.Execute
+ 0001:000B522C       FileTasks.TFileSetTask.Init
+ 0001:000B54DC       FileTasks.TFileSetTask.MyFileSet
+ 0001:000B5520       FileTasks.TMkDirTask.Execute
+ 0001:000B54FC       FileTasks.TMkDirTask.Init
+ 0001:000B5DA8       FileTasks.TMoveCopyTask.DoFileset
+ 0001:000B5C34       FileTasks.TMoveCopyTask.DoPaths
+ 0001:000B5E54       FileTasks.TMoveCopyTask.Execute
+ 0001:000B5E24       FileTasks.TMoveCopyTask.Init
+ 0001:000B61C0       FileTasks.TMoveTask.DoFiles
+ 0001:000B6384       FileTasks.TMoveTask.DoPaths
+ 0001:000B5738       FileTasks.TTouchTask.Execute
+ 0001:000B57D4       FileTasks.TTouchTask.Init
  0004:000066AC       FilterElements..71
  0001:0009F638       FilterElements..TCustomFilterElement
  0001:000A09B0       FilterElements..TExpandPropertiesElement
@@ -3137,15 +3137,15 @@ Detailed map of segments
  0004:00006510       GraphUtil.MsImgInitialized
  0003:00002460       GraphUtil.WebNamedColors
  0004:000066EC       GZipTasks..3
- 0001:000B66EC       GZipTasks..TGUnzipTask
- 0001:000B6568       GZipTasks..TGZipTask
- 0001:000B6C24       GZipTasks.Finalization
+ 0001:000B66F8       GZipTasks..TGUnzipTask
+ 0001:000B6574       GZipTasks..TGZipTask
+ 0001:000B6C30       GZipTasks.Finalization
  0002:00000FF0       GZipTasks.GZipTasks
- 0001:000B6A88       GZipTasks.TGUnzipTask.Execute
- 0001:000B6A38       GZipTasks.TGUnzipTask.Init
- 0001:000B6894       GZipTasks.TGZipTask.Create
- 0001:000B6910       GZipTasks.TGZipTask.Execute
- 0001:000B68D0       GZipTasks.TGZipTask.Init
+ 0001:000B6A94       GZipTasks.TGUnzipTask.Execute
+ 0001:000B6A44       GZipTasks.TGUnzipTask.Init
+ 0001:000B68A0       GZipTasks.TGZipTask.Create
+ 0001:000B691C       GZipTasks.TGZipTask.Execute
+ 0001:000B68DC       GZipTasks.TGZipTask.Init
  0004:000064FC       HelpIntfs..2
  0001:0005A58C       HelpIntfs..EHelpSystemException
  0001:0005A76C       HelpIntfs..THelpManager
@@ -3320,39 +3320,39 @@ Detailed map of segments
  0001:00024894       IniFiles.TStringHash.ValueOf
  0003:00000C70       IniFiles.Values
  0004:000066F0       IniFileTasks..5
- 0001:000B6D90       IniFileTasks..TEntryElement
- 0001:000B6C54       IniFileTasks..TIniTask
- 0001:000B6F28       IniFileTasks..TReadElement
- 0001:000B70A0       IniFileTasks..TWriteElement
- 0001:000B7558       IniFileTasks.Finalization
+ 0001:000B6D9C       IniFileTasks..TEntryElement
+ 0001:000B6C60       IniFileTasks..TIniTask
+ 0001:000B6F34       IniFileTasks..TReadElement
+ 0001:000B70AC       IniFileTasks..TWriteElement
+ 0001:000B7564       IniFileTasks.Finalization
  0002:00001020       IniFileTasks.IniFileTasks
- 0001:000B7258       IniFileTasks.TEntryElement.Init
- 0001:000B73C4       IniFileTasks.TEntryElement.Perform
- 0001:000B71E8       IniFileTasks.TIniTask.Execute
- 0001:000B7230       IniFileTasks.TIniTask.Init
- 0001:000B73C8       IniFileTasks.TReadElement.Init
- 0001:000B74AC       IniFileTasks.TWriteElement.Init
- 0001:000B74B4       IniFileTasks.TWriteElement.Perform
+ 0001:000B7264       IniFileTasks.TEntryElement.Init
+ 0001:000B73D0       IniFileTasks.TEntryElement.Perform
+ 0001:000B71F4       IniFileTasks.TIniTask.Execute
+ 0001:000B723C       IniFileTasks.TIniTask.Init
+ 0001:000B73D4       IniFileTasks.TReadElement.Init
+ 0001:000B74B8       IniFileTasks.TWriteElement.Init
+ 0001:000B74C0       IniFileTasks.TWriteElement.Perform
  0004:000066F4       InnoSetupTasks..2
- 0001:000B7588       InnoSetupTasks..TInnoSetupCompileTask
- 0001:000B7EAC       InnoSetupTasks.Finalization
+ 0001:000B7594       InnoSetupTasks..TInnoSetupCompileTask
+ 0001:000B7EB8       InnoSetupTasks.Finalization
  0002:00001060       InnoSetupTasks.InnoSetupTasks
- 0001:000B7D20       InnoSetupTasks.TInnoSetupCompileTask.BuildArguments
- 0001:000B7B64       InnoSetupTasks.TInnoSetupCompileTask.BuildExecutable
- 0001:000B7BDC       InnoSetupTasks.TInnoSetupCompileTask.Create
- 0001:000B7C40       InnoSetupTasks.TInnoSetupCompileTask.Execute
- 0001:000B77AC       InnoSetupTasks.TInnoSetupCompileTask.FindISCC
- 0001:000B78FC       InnoSetupTasks.TInnoSetupCompileTask.HandleOutputLine
- 0001:000B7C18       InnoSetupTasks.TInnoSetupCompileTask.Init
- 0001:000B7CFC       InnoSetupTasks.TInnoSetupCompileTask.TagName
+ 0001:000B7D2C       InnoSetupTasks.TInnoSetupCompileTask.BuildArguments
+ 0001:000B7B70       InnoSetupTasks.TInnoSetupCompileTask.BuildExecutable
+ 0001:000B7BE8       InnoSetupTasks.TInnoSetupCompileTask.Create
+ 0001:000B7C4C       InnoSetupTasks.TInnoSetupCompileTask.Execute
+ 0001:000B77B8       InnoSetupTasks.TInnoSetupCompileTask.FindISCC
+ 0001:000B7908       InnoSetupTasks.TInnoSetupCompileTask.HandleOutputLine
+ 0001:000B7C24       InnoSetupTasks.TInnoSetupCompileTask.Init
+ 0001:000B7D08       InnoSetupTasks.TInnoSetupCompileTask.TagName
  0001:00038D90       InputRequest..TInputRequest
  0001:00038E08       InputRequest.TInputRequest.Create
  0001:00038E7C       InputRequest.TInputRequest.isInputValid
  0004:000066F8       InputTasks..2
- 0001:000B7EDC       InputTasks..TInputTask
- 0001:000B81BC       InputTasks.Finalization
+ 0001:000B7EE8       InputTasks..TInputTask
+ 0001:000B81C8       InputTasks.Finalization
  0002:00001084       InputTasks.InputTasks
- 0001:000B8078       InputTasks.TInputTask.Execute
+ 0001:000B8084       InputTasks.TInputTask.Execute
  0004:0000507C       JALAlgorithms..1
  0001:00047BF4       JALAlgorithms.Finalization
  0002:00000424       JALAlgorithms.JALAlgorithms
@@ -4594,11 +4594,11 @@ Detailed map of segments
  0001:00095A8C       JclTD32.TJclTD32InfoScanner.SourceNameFromAddr
  0001:00022E74       JclWin32.ImageRvaToVa
  0004:000066FC       LoadFileTasks..2
- 0001:000B81EC       LoadFileTasks..TLoadFileTask
- 0001:000B85B8       LoadFileTasks.Finalization
+ 0001:000B81F8       LoadFileTasks..TLoadFileTask
+ 0001:000B85C4       LoadFileTasks.Finalization
  0002:00001098       LoadFileTasks.LoadFileTasks
- 0001:000B8388       LoadFileTasks.TLoadFileTask.Execute
- 0001:000B8564       LoadFileTasks.TLoadFileTask.Init
+ 0001:000B8394       LoadFileTasks.TLoadFileTask.Execute
+ 0001:000B8570       LoadFileTasks.TLoadFileTask.Init
  0004:000066C0       LoggerTask..3
  0001:000A42E8       LoggerTask..TInfoElement
  0001:000A4450       LoggerTask..TLoggerTask
@@ -5075,18 +5075,18 @@ Detailed map of segments
  0001:0005CEB8       StdActns..THintAction
  0001:0005CFAC       StdActns.THintAction.Create
  0004:0000670C       StyleTasks..5
- 0001:000B9D64       StyleTasks..TOutputPropertyElement
- 0001:000B9BF4       StyleTasks..TParamElement
- 0001:000B99A4       StyleTasks..TStyleTask
- 0001:000BA430       StyleTasks.Finalization
+ 0001:000B9D70       StyleTasks..TOutputPropertyElement
+ 0001:000B9C00       StyleTasks..TParamElement
+ 0001:000B99B0       StyleTasks..TStyleTask
+ 0001:000BA43C       StyleTasks.Finalization
  0002:00001114       StyleTasks.StyleTasks
- 0001:000B9EE4       StyleTasks.TStyleTask.Create
- 0001:000B9F38       StyleTasks.TStyleTask.CreateOutputProperty
- 0001:000B9F5C       StyleTasks.TStyleTask.CreateParam
- 0001:000B9F80       StyleTasks.TStyleTask.Destroy
- 0001:000B9FB8       StyleTasks.TStyleTask.DoFileset
- 0001:000BA1CC       StyleTasks.TStyleTask.Execute
- 0001:000BA3D0       StyleTasks.TStyleTask.Init
+ 0001:000B9EF0       StyleTasks.TStyleTask.Create
+ 0001:000B9F44       StyleTasks.TStyleTask.CreateOutputProperty
+ 0001:000B9F68       StyleTasks.TStyleTask.CreateParam
+ 0001:000B9F8C       StyleTasks.TStyleTask.Destroy
+ 0001:000B9FC4       StyleTasks.TStyleTask.DoFileset
+ 0001:000BA1D8       StyleTasks.TStyleTask.Execute
+ 0001:000BA3DC       StyleTasks.TStyleTask.Init
  0001:00058EDC       SyncObjs..TCriticalSection
  0001:00058E78       SyncObjs..TSynchroObject
  0001:00058FBC       SyncObjs.TCriticalSection.Acquire
@@ -5886,11 +5886,11 @@ Detailed map of segments
  0003:000007D8       SysUtils.Win32Platform
  0001:0000E918       SysUtils.WrapText
  0004:00006708       TempFileTasks..2
- 0001:000B959C       TempFileTasks..TTempFileTask
- 0001:000B9950       TempFileTasks.Finalization
+ 0001:000B95A8       TempFileTasks..TTempFileTask
+ 0001:000B995C       TempFileTasks.Finalization
  0002:00001100       TempFileTasks.TempFileTasks
- 0001:000B9764       TempFileTasks.TTempFileTask.Execute
- 0001:000B9924       TempFileTasks.TTempFileTask.Init
+ 0001:000B9770       TempFileTasks.TTempFileTask.Execute
+ 0001:000B9930       TempFileTasks.TTempFileTask.Init
  0004:000066A0       TestFramework..41
  0001:0009A0B0       TestFramework..EBreakingTestFailure
  0001:00099FF4       TestFramework..EDunitException
@@ -6514,8 +6514,8 @@ Detailed map of segments
  0004:00004958       VarUtils.VarSub
  0002:0000014C       VarUtils.VarUtils
  0004:00004974       VarUtils.VarXor
- 0001:000BAF7C       want.Finalization
- 0001:000BAEC8       want.Run
+ 0001:000BAF88       want.Finalization
+ 0001:000BAED4       want.Run
  0002:0000113C       want.want
  0004:00005038       WantClasses..71
  0001:0003965C       WantClasses..ECircularTargetDependency
@@ -6639,13 +6639,13 @@ Detailed map of segments
  0001:000459C8       WantResources.Usage
  0002:000003B4       WantResources.WantResources
  0004:00006704       WantTasks..4
- 0001:000B8EBC       WantTasks..TCustomWantTask
- 0001:000B8FE4       WantTasks..TWantTask
- 0001:000B956C       WantTasks.Finalization
- 0001:000B916C       WantTasks.TWantTask.Create
- 0001:000B91C4       WantTasks.TWantTask.Destroy
- 0001:000B9354       WantTasks.TWantTask.Execute
- 0001:000B91F4       WantTasks.TWantTask.Init
+ 0001:000B8EC8       WantTasks..TCustomWantTask
+ 0001:000B8FF0       WantTasks..TWantTask
+ 0001:000B9578       WantTasks.Finalization
+ 0001:000B9178       WantTasks.TWantTask.Create
+ 0001:000B91D0       WantTasks.TWantTask.Destroy
+ 0001:000B9360       WantTasks.TWantTask.Execute
+ 0001:000B9200       WantTasks.TWantTask.Init
  0002:000010DC       WantTasks.WantTasks
  0004:00004FE8       WantUtils..1
  0001:00027714       WantUtils.ExpandEnvironmentVar
@@ -7067,16 +7067,16 @@ Detailed map of segments
  0001:000071C8       Windows.WritePrivateProfileString
  0001:00007900       Windows._CreateWindowEx
  0004:00006710       XmlPropertyTasks..2
- 0001:000BA64C       XmlPropertyTasks..EWantParseException
- 0001:000BA460       XmlPropertyTasks..TXmlPropertyTask
- 0001:000BADCC       XmlPropertyTasks.EWantParseException.Create
- 0001:000BAE98       XmlPropertyTasks.Finalization
- 0001:000BA6E4       XmlPropertyTasks.TXmlPropertyTask.Create
- 0001:000BA728       XmlPropertyTasks.TXmlPropertyTask.Execute
- 0001:000BA92C       XmlPropertyTasks.TXmlPropertyTask.GeneratePropertyName
- 0001:000BAA14       XmlPropertyTasks.TXmlPropertyTask.Init
- 0001:000BAA3C       XmlPropertyTasks.TXmlPropertyTask.ParseError
- 0001:000BAAA0       XmlPropertyTasks.TXmlPropertyTask.ParseXML
+ 0001:000BA658       XmlPropertyTasks..EWantParseException
+ 0001:000BA46C       XmlPropertyTasks..TXmlPropertyTask
+ 0001:000BADD8       XmlPropertyTasks.EWantParseException.Create
+ 0001:000BAEA4       XmlPropertyTasks.Finalization
+ 0001:000BA6F0       XmlPropertyTasks.TXmlPropertyTask.Create
+ 0001:000BA734       XmlPropertyTasks.TXmlPropertyTask.Execute
+ 0001:000BA938       XmlPropertyTasks.TXmlPropertyTask.GeneratePropertyName
+ 0001:000BAA20       XmlPropertyTasks.TXmlPropertyTask.Init
+ 0001:000BAA48       XmlPropertyTasks.TXmlPropertyTask.ParseError
+ 0001:000BAAAC       XmlPropertyTasks.TXmlPropertyTask.ParseXML
  0002:00001128       XmlPropertyTasks.XmlPropertyTasks
  0004:0000666C       XPerlRE..2
  0001:00092610       XPerlRE..TXRegexp
@@ -7125,15 +7125,15 @@ Detailed map of segments
  0001:0008B0B8       zip.zipOpenNewFileInZip
  0001:0008B5AC       zip.zipWriteInFileInZip
  0004:00006700       ZipTasks..3
- 0001:000B87DC       ZipTasks..TUnzipTask
- 0001:000B85E8       ZipTasks..TZipTask
- 0001:000B8E8C       ZipTasks.Finalization
- 0001:000B8CD8       ZipTasks.TUnzipTask.Execute
- 0001:000B8C88       ZipTasks.TUnzipTask.Init
- 0001:000B8980       ZipTasks.TZipTask.Create
- 0001:000B89E8       ZipTasks.TZipTask.DoFileset
- 0001:000B8BB8       ZipTasks.TZipTask.Execute
- 0001:000B89C0       ZipTasks.TZipTask.Init
+ 0001:000B87E8       ZipTasks..TUnzipTask
+ 0001:000B85F4       ZipTasks..TZipTask
+ 0001:000B8E98       ZipTasks.Finalization
+ 0001:000B8CE4       ZipTasks.TUnzipTask.Execute
+ 0001:000B8C94       ZipTasks.TUnzipTask.Init
+ 0001:000B898C       ZipTasks.TZipTask.Create
+ 0001:000B89F4       ZipTasks.TZipTask.DoFileset
+ 0001:000B8BC4       ZipTasks.TZipTask.Execute
+ 0001:000B89CC       ZipTasks.TZipTask.Init
  0002:000010AC       ZipTasks.ZipTasks
  0001:0008AC40       ziputils.ALLOC
  0001:0008AD08       ziputils.fclose
@@ -12798,236 +12798,236 @@ Detailed map of segments
  0001:000AC7E0       DelphiTasks.TCustomDelphiTask.FindDelphi
  0001:000ACA14       DelphiTasks.TCustomDelphiTask.FindTool
  0001:000ACB04       DelphiTasks.TCustomDelphiTask.ReadDelphiDir
- 0001:000ACC20       DelphiTasks.TCustomDelphiTask.ReadUserOption
- 0001:000ACCD8       DelphiTasks.TCustomDelphiTask.RootForVersion
- 0001:000ACDC4       DelphiTasks.TCustomDelphiTask.HandleOutputLine
- 0001:000ACFF4       DelphiTasks.TCustomDelphiTask.Execute
- 0001:000AD058       DelphiTasks.TCustomDelphiTask.BuildExecutable
- 0001:000AD0C0       DelphiTasks.TDelphiCompileTask.Create
- 0001:000AD2F4       DelphiTasks.TDelphiCompileTask.Destroy
- 0001:000AD33C       DelphiTasks.TDelphiCompileTask.Init
- 0001:000AD364       DelphiTasks.TDelphiCompileTask.ToolName
- 0001:000AD390       DelphiTasks.TDelphiCompileTask.Execute
- 0001:000AD42C       DelphiTasks.TDelphiCompileTask.TagName
- 0001:000AD44C       DelphiTasks.TDelphiCompileTask.OutputPathElements
- 0001:000AD558       DelphiTasks.TDelphiCompileTask.PathOpt
- 0001:000AD620       DelphiTasks.TDelphiCompileTask.BuildArguments
- 0001:000AFCA0       DelphiTasks.TDelphiCompileTask.ReadLibraryPaths
- 0001:000AFD70       DelphiTasks.TDelphiCompileTask.AddDefine
- 0001:000AFE1C       DelphiTasks.TDelphiCompileTask.AddPackage
- 0001:000AFE6C       DelphiTasks.TDelphiCompileTask.CreateUnitPath
- 0001:000AFE74       DelphiTasks.TDelphiCompileTask.CreateIncludePath
- 0001:000AFE7C       DelphiTasks.TDelphiCompileTask.CreateObjectPath
- 0001:000AFE84       DelphiTasks.TDelphiCompileTask.CreateResourcePath
- 0001:000AFE8C       DelphiTasks.TDelphiCompileTask.RestoreCFGs
- 0001:000B0078       DelphiTasks.TDelphiCompileTask.AddWarning
- 0001:000B00A8       DelphiTasks.TDelphiCompileTask.AddUnitAlias
- 0001:000B0134       DelphiTasks.TResourceCompileTask.BuildArguments
- 0001:000B0200       DelphiTasks.TResourceCompileTask.Create
- 0001:000B023C       DelphiTasks.TResourceCompileTask.Execute
- 0001:000B02A0       DelphiTasks.TResourceCompileTask.Init
- 0001:000B02C8       DelphiTasks.TResourceCompileTask.TagName
- 0001:000B02EC       DelphiTasks.TResourceCompileTask.ToolName
- 0001:000B0318       DelphiTasks.TDefineElement.Init
- 0001:000B03F4       DelphiTasks.TPathSet.Create
- 0001:000B0438       DelphiTasks.TPathSet.SetPath
- 0001:000B04B8       DelphiTasks.TOptionElement.dcc
- 0001:000B04D0       DelphiTasks.TUsePackageElement.Init
- 0001:000B059C       DelphiTasks.TWarningElement.Init
- 0001:000B060C       DelphiTasks.TUnitAliasElement.Init
- 0001:000B070C       DelphiTasks.Finalization
- 0001:000B084C       DUnitTasks..TDUnitTask
- 0001:000B09F4       DUnitTasks.TDUnitTask.QueryInterface
- 0001:000B0A1C       DUnitTasks.TDUnitTask._AddRef
- 0001:000B0A28       DUnitTasks.TDUnitTask._Release
- 0001:000B0A34       DUnitTasks.TDUnitTask.AddError
- 0001:000B0B20       DUnitTasks.TDUnitTask.AddFailure
- 0001:000B0C0C       DUnitTasks.TDUnitTask.AddSuccess
- 0001:000B0C94       DUnitTasks.TDUnitTask.ShouldRunTest
- 0001:000B0CC4       DUnitTasks.TDUnitTask.StartTest
- 0001:000B0D60       DUnitTasks.TDUnitTask.EndTest
- 0001:000B0DFC       DUnitTasks.TDUnitTask.TestingStarts
- 0001:000B0E1C       DUnitTasks.TDUnitTask.TestingEnds
- 0001:000B0FA0       DUnitTasks.TDUnitTask.Init
- 0001:000B0FC8       DUnitTasks.TDUnitTask.Execute
- 0001:000B1154       DUnitTasks.TDUnitTask.Status
- 0001:000B1204       DUnitTasks.Finalization
- 0001:000B123C       EchoTasks..TEchoTask
- 0001:000B1434       EchoTasks.TEchoTask.Create
- 0001:000B1470       EchoTasks.TEchoTask.Execute
- 0001:000B167C       EchoTasks.TEchoTask.FormatText
- 0001:000B19D0       EchoTasks.Finalization
- 0001:000B1A00       EditTasks..TEditTask
- 0001:000B1B70       EditTasks..TCustomEditElement
- 0001:000B1C98       EditTasks..TGotoElement
- 0001:000B1DE4       EditTasks..TRangeElement
- 0001:000B1F94       EditTasks..TEditElement
- 0001:000B20B0       EditTasks..TPrintElement
- 0001:000B21F0       EditTasks..TPatternElement
- 0001:000B2348       EditTasks..TSearchElement
- 0001:000B249C       EditTasks..TSubstElement
- 0001:000B2634       EditTasks..TGlobalElement
- 0001:000B2754       EditTasks..TDeleteElement
- 0001:000B2874       EditTasks..TEditFileElement
- 0001:000B29C8       EditTasks..TReadElement
- 0001:000B2AE4       EditTasks..TWriteElement
- 0001:000B2C24       EditTasks..TInsertElement
- 0001:000B2D68       EditTasks..TAppendElement
- 0001:000B2E8C       EditTasks..TEvalElement
- 0001:000B2FA8       EditTasks.TEditTask.Create
- 0001:000B2FEC       EditTasks.TEditTask.Destroy
- 0001:000B301C       EditTasks.TEditTask.SetText
- 0001:000B3154       EditTasks.TEditTask.ParseLine
- 0001:000B32EC       EditTasks.TEditTask.SetDot
- 0001:000B330C       EditTasks.TEditTask.Perform
- 0001:000B3374       EditTasks.TEditTask.Execute
- 0001:000B3540       EditTasks.TCustomEditElement.Perform
- 0001:000B3568       EditTasks.TCustomEditElement.Perform
- 0001:000B35C0       EditTasks.TCustomEditElement.Perform
- 0001:000B35C4       EditTasks.TGotoElement.Init
- 0001:000B35EC       EditTasks.TGotoElement.Perform
- 0001:000B3690       EditTasks.TRangeElement.Perform
- 0001:000B36D4       EditTasks.TRangeElement.Perform
- 0001:000B3764       EditTasks.TRangeElement.SetLine
- 0001:000B37BC       EditTasks.TRangeElement.SetRangeToAll
- 0001:000B37F8       EditTasks.TGlobalElement.Perform
- 0001:000B3974       EditTasks.TSearchElement.Perform
- 0001:000B3A54       EditTasks.TSearchElement.Perform
- 0001:000B3B60       EditTasks.TPrintElement.Create
- 0001:000B3B9C       EditTasks.TPrintElement.Perform
- 0001:000B3C04       EditTasks.TDeleteElement.Perform
- 0001:000B3CE4       EditTasks.TEditFileElement.Perform
- 0001:000B3D38       EditTasks.TReadElement.Init
- 0001:000B3D60       EditTasks.TReadElement.Perform
- 0001:000B3FFC       EditTasks.TWriteElement.Create
- 0001:000B4064       EditTasks.TWriteElement.Perform
- 0001:000B42B0       EditTasks.TInsertElement.Create
- 0001:000B42F4       EditTasks.TInsertElement.Destroy
- 0001:000B4324       EditTasks.TInsertElement.GetText
- 0001:000B4338       EditTasks.TInsertElement.Perform
- 0001:000B4454       EditTasks.TInsertElement.SetText
- 0001:000B44A0       EditTasks.TInsertElement.TargetLine
- 0001:000B44A4       EditTasks.TAppendElement.TargetLine
- 0001:000B44A8       EditTasks.TSubstElement.Init
- 0001:000B44D0       EditTasks.TSubstElement.Perform
- 0001:000B455C       EditTasks.TSubstElement.Perform
- 0001:000B4690       EditTasks.TEvalElement.Perform
- 0001:000B4714       EditTasks.Finalization
- 0001:000B4744       FileTasks..TFileTask
- 0001:000B4884       FileTasks..TFileSetTask
- 0001:000B4A18       FileTasks..TMkDirTask
- 0001:000B4B40       FileTasks..TTouchTask
- 0001:000B4C80       FileTasks..TDeleteTask
- 0001:000B4E30       FileTasks..TMoveCopyTask
- 0001:000B4FAC       FileTasks..TCopyTask
- 0001:000B50C8       FileTasks..TMoveTask
- 0001:000B51E4       FileTasks.TFileSetTask.Create
- 0001:000B5220       FileTasks.TFileSetTask.Init
- 0001:000B5228       FileTasks.TFileSetTask.CreateInclude
- 0001:000B523C       FileTasks.TFileSetTask.CreateExclude
- 0001:000B5250       FileTasks.TFileSetTask.AddDefaultPatterns
- 0001:000B5288       FileTasks.TFileSetTask.AddCommaSeparatedIncludes
- 0001:000B532C       FileTasks.TFileSetTask.AddCommaSeparatedExcludes
- 0001:000B53D0       FileTasks.TFileSetTask.CreateFileSet
- 0001:000B5418       FileTasks.TFileSetTask.DoFileset
- 0001:000B541C       FileTasks.TFileSetTask.Execute
- 0001:000B54D0       FileTasks.TFileSetTask.MyFileSet
- 0001:000B54F0       FileTasks.TMkDirTask.Init
- 0001:000B5514       FileTasks.TMkDirTask.Execute
- 0001:000B572C       FileTasks.TTouchTask.Execute
- 0001:000B57C8       FileTasks.TTouchTask.Init
- 0001:000B57F0       FileTasks.TDeleteTask.AddDefaultPatterns
- 0001:000B58D8       FileTasks.TDeleteTask.DoFileset
- 0001:000B5BCC       FileTasks.TDeleteTask.SetFile
- 0001:000B5C28       FileTasks.TMoveCopyTask.DoPaths
- 0001:000B5D9C       FileTasks.TMoveCopyTask.DoFileset
- 0001:000B5E18       FileTasks.TMoveCopyTask.Init
- 0001:000B5E48       FileTasks.TMoveCopyTask.Execute
- 0001:000B5EE0       FileTasks.TCopyTask.DoFiles
- 0001:000B60A4       FileTasks.TCopyTask.DoPaths
- 0001:000B61B4       FileTasks.TMoveTask.DoFiles
- 0001:000B6378       FileTasks.TMoveTask.DoPaths
- 0001:000B6538       FileTasks.Finalization
- 0001:000B6568       GZipTasks..TGZipTask
- 0001:000B66EC       GZipTasks..TGUnzipTask
- 0001:000B6894       GZipTasks.TGZipTask.Create
- 0001:000B68D0       GZipTasks.TGZipTask.Init
- 0001:000B6910       GZipTasks.TGZipTask.Execute
- 0001:000B6A38       GZipTasks.TGUnzipTask.Init
- 0001:000B6A88       GZipTasks.TGUnzipTask.Execute
- 0001:000B6C24       GZipTasks.Finalization
- 0001:000B6C54       IniFileTasks..TIniTask
- 0001:000B6D90       IniFileTasks..TEntryElement
- 0001:000B6F28       IniFileTasks..TReadElement
- 0001:000B70A0       IniFileTasks..TWriteElement
- 0001:000B71E8       IniFileTasks.TIniTask.Execute
- 0001:000B7230       IniFileTasks.TIniTask.Init
- 0001:000B7258       IniFileTasks.TEntryElement.Init
- 0001:000B73C4       IniFileTasks.TEntryElement.Perform
- 0001:000B73C8       IniFileTasks.TReadElement.Init
- 0001:000B74AC       IniFileTasks.TWriteElement.Init
- 0001:000B74B4       IniFileTasks.TWriteElement.Perform
- 0001:000B7558       IniFileTasks.Finalization
- 0001:000B7588       InnoSetupTasks..TInnoSetupCompileTask
- 0001:000B77AC       InnoSetupTasks.TInnoSetupCompileTask.FindISCC
- 0001:000B78FC       InnoSetupTasks.TInnoSetupCompileTask.HandleOutputLine
- 0001:000B7B64       InnoSetupTasks.TInnoSetupCompileTask.BuildExecutable
- 0001:000B7BDC       InnoSetupTasks.TInnoSetupCompileTask.Create
- 0001:000B7C18       InnoSetupTasks.TInnoSetupCompileTask.Init
- 0001:000B7C40       InnoSetupTasks.TInnoSetupCompileTask.Execute
- 0001:000B7CFC       InnoSetupTasks.TInnoSetupCompileTask.TagName
- 0001:000B7D20       InnoSetupTasks.TInnoSetupCompileTask.BuildArguments
- 0001:000B7EAC       InnoSetupTasks.Finalization
- 0001:000B7EDC       InputTasks..TInputTask
- 0001:000B8078       InputTasks.TInputTask.Execute
- 0001:000B81BC       InputTasks.Finalization
- 0001:000B81EC       LoadFileTasks..TLoadFileTask
- 0001:000B8388       LoadFileTasks.TLoadFileTask.Execute
- 0001:000B8564       LoadFileTasks.TLoadFileTask.Init
- 0001:000B85B8       LoadFileTasks.Finalization
- 0001:000B85E8       ZipTasks..TZipTask
- 0001:000B87DC       ZipTasks..TUnzipTask
- 0001:000B8980       ZipTasks.TZipTask.Create
- 0001:000B89C0       ZipTasks.TZipTask.Init
- 0001:000B89E8       ZipTasks.TZipTask.DoFileset
- 0001:000B8BB8       ZipTasks.TZipTask.Execute
- 0001:000B8C88       ZipTasks.TUnzipTask.Init
- 0001:000B8CD8       ZipTasks.TUnzipTask.Execute
- 0001:000B8E8C       ZipTasks.Finalization
- 0001:000B8EBC       WantTasks..TCustomWantTask
- 0001:000B8FE4       WantTasks..TWantTask
- 0001:000B916C       WantTasks.TWantTask.Create
- 0001:000B91C4       WantTasks.TWantTask.Destroy
- 0001:000B91F4       WantTasks.TWantTask.Init
- 0001:000B9354       WantTasks.TWantTask.Execute
- 0001:000B956C       WantTasks.Finalization
- 0001:000B959C       TempFileTasks..TTempFileTask
- 0001:000B9764       TempFileTasks.TTempFileTask.Execute
- 0001:000B9924       TempFileTasks.TTempFileTask.Init
- 0001:000B9950       TempFileTasks.Finalization
- 0001:000B99A4       StyleTasks..TStyleTask
- 0001:000B9BF4       StyleTasks..TParamElement
- 0001:000B9D64       StyleTasks..TOutputPropertyElement
- 0001:000B9EE4       StyleTasks.TStyleTask.Create
- 0001:000B9F38       StyleTasks.TStyleTask.CreateOutputProperty
- 0001:000B9F5C       StyleTasks.TStyleTask.CreateParam
- 0001:000B9F80       StyleTasks.TStyleTask.Destroy
- 0001:000B9FB8       StyleTasks.TStyleTask.DoFileset
- 0001:000BA1CC       StyleTasks.TStyleTask.Execute
- 0001:000BA3D0       StyleTasks.TStyleTask.Init
- 0001:000BA430       StyleTasks.Finalization
- 0001:000BA460       XmlPropertyTasks..TXmlPropertyTask
- 0001:000BA64C       XmlPropertyTasks..EWantParseException
- 0001:000BA6E4       XmlPropertyTasks.TXmlPropertyTask.Create
- 0001:000BA728       XmlPropertyTasks.TXmlPropertyTask.Execute
- 0001:000BA92C       XmlPropertyTasks.TXmlPropertyTask.GeneratePropertyName
- 0001:000BAA14       XmlPropertyTasks.TXmlPropertyTask.Init
- 0001:000BAA3C       XmlPropertyTasks.TXmlPropertyTask.ParseError
- 0001:000BAAA0       XmlPropertyTasks.TXmlPropertyTask.ParseXML
- 0001:000BADCC       XmlPropertyTasks.EWantParseException.Create
- 0001:000BAE98       XmlPropertyTasks.Finalization
- 0001:000BAEC8       want.Run
- 0001:000BAF7C       want.Finalization
+ 0001:000ACC2C       DelphiTasks.TCustomDelphiTask.ReadUserOption
+ 0001:000ACCE4       DelphiTasks.TCustomDelphiTask.RootForVersion
+ 0001:000ACDD0       DelphiTasks.TCustomDelphiTask.HandleOutputLine
+ 0001:000AD000       DelphiTasks.TCustomDelphiTask.Execute
+ 0001:000AD064       DelphiTasks.TCustomDelphiTask.BuildExecutable
+ 0001:000AD0CC       DelphiTasks.TDelphiCompileTask.Create
+ 0001:000AD300       DelphiTasks.TDelphiCompileTask.Destroy
+ 0001:000AD348       DelphiTasks.TDelphiCompileTask.Init
+ 0001:000AD370       DelphiTasks.TDelphiCompileTask.ToolName
+ 0001:000AD39C       DelphiTasks.TDelphiCompileTask.Execute
+ 0001:000AD438       DelphiTasks.TDelphiCompileTask.TagName
+ 0001:000AD458       DelphiTasks.TDelphiCompileTask.OutputPathElements
+ 0001:000AD564       DelphiTasks.TDelphiCompileTask.PathOpt
+ 0001:000AD62C       DelphiTasks.TDelphiCompileTask.BuildArguments
+ 0001:000AFCAC       DelphiTasks.TDelphiCompileTask.ReadLibraryPaths
+ 0001:000AFD7C       DelphiTasks.TDelphiCompileTask.AddDefine
+ 0001:000AFE28       DelphiTasks.TDelphiCompileTask.AddPackage
+ 0001:000AFE78       DelphiTasks.TDelphiCompileTask.CreateUnitPath
+ 0001:000AFE80       DelphiTasks.TDelphiCompileTask.CreateIncludePath
+ 0001:000AFE88       DelphiTasks.TDelphiCompileTask.CreateObjectPath
+ 0001:000AFE90       DelphiTasks.TDelphiCompileTask.CreateResourcePath
+ 0001:000AFE98       DelphiTasks.TDelphiCompileTask.RestoreCFGs
+ 0001:000B0084       DelphiTasks.TDelphiCompileTask.AddWarning
+ 0001:000B00B4       DelphiTasks.TDelphiCompileTask.AddUnitAlias
+ 0001:000B0140       DelphiTasks.TResourceCompileTask.BuildArguments
+ 0001:000B020C       DelphiTasks.TResourceCompileTask.Create
+ 0001:000B0248       DelphiTasks.TResourceCompileTask.Execute
+ 0001:000B02AC       DelphiTasks.TResourceCompileTask.Init
+ 0001:000B02D4       DelphiTasks.TResourceCompileTask.TagName
+ 0001:000B02F8       DelphiTasks.TResourceCompileTask.ToolName
+ 0001:000B0324       DelphiTasks.TDefineElement.Init
+ 0001:000B0400       DelphiTasks.TPathSet.Create
+ 0001:000B0444       DelphiTasks.TPathSet.SetPath
+ 0001:000B04C4       DelphiTasks.TOptionElement.dcc
+ 0001:000B04DC       DelphiTasks.TUsePackageElement.Init
+ 0001:000B05A8       DelphiTasks.TWarningElement.Init
+ 0001:000B0618       DelphiTasks.TUnitAliasElement.Init
+ 0001:000B0718       DelphiTasks.Finalization
+ 0001:000B0858       DUnitTasks..TDUnitTask
+ 0001:000B0A00       DUnitTasks.TDUnitTask.QueryInterface
+ 0001:000B0A28       DUnitTasks.TDUnitTask._AddRef
+ 0001:000B0A34       DUnitTasks.TDUnitTask._Release
+ 0001:000B0A40       DUnitTasks.TDUnitTask.AddError
+ 0001:000B0B2C       DUnitTasks.TDUnitTask.AddFailure
+ 0001:000B0C18       DUnitTasks.TDUnitTask.AddSuccess
+ 0001:000B0CA0       DUnitTasks.TDUnitTask.ShouldRunTest
+ 0001:000B0CD0       DUnitTasks.TDUnitTask.StartTest
+ 0001:000B0D6C       DUnitTasks.TDUnitTask.EndTest
+ 0001:000B0E08       DUnitTasks.TDUnitTask.TestingStarts
+ 0001:000B0E28       DUnitTasks.TDUnitTask.TestingEnds
+ 0001:000B0FAC       DUnitTasks.TDUnitTask.Init
+ 0001:000B0FD4       DUnitTasks.TDUnitTask.Execute
+ 0001:000B1160       DUnitTasks.TDUnitTask.Status
+ 0001:000B1210       DUnitTasks.Finalization
+ 0001:000B1248       EchoTasks..TEchoTask
+ 0001:000B1440       EchoTasks.TEchoTask.Create
+ 0001:000B147C       EchoTasks.TEchoTask.Execute
+ 0001:000B1688       EchoTasks.TEchoTask.FormatText
+ 0001:000B19DC       EchoTasks.Finalization
+ 0001:000B1A0C       EditTasks..TEditTask
+ 0001:000B1B7C       EditTasks..TCustomEditElement
+ 0001:000B1CA4       EditTasks..TGotoElement
+ 0001:000B1DF0       EditTasks..TRangeElement
+ 0001:000B1FA0       EditTasks..TEditElement
+ 0001:000B20BC       EditTasks..TPrintElement
+ 0001:000B21FC       EditTasks..TPatternElement
+ 0001:000B2354       EditTasks..TSearchElement
+ 0001:000B24A8       EditTasks..TSubstElement
+ 0001:000B2640       EditTasks..TGlobalElement
+ 0001:000B2760       EditTasks..TDeleteElement
+ 0001:000B2880       EditTasks..TEditFileElement
+ 0001:000B29D4       EditTasks..TReadElement
+ 0001:000B2AF0       EditTasks..TWriteElement
+ 0001:000B2C30       EditTasks..TInsertElement
+ 0001:000B2D74       EditTasks..TAppendElement
+ 0001:000B2E98       EditTasks..TEvalElement
+ 0001:000B2FB4       EditTasks.TEditTask.Create
+ 0001:000B2FF8       EditTasks.TEditTask.Destroy
+ 0001:000B3028       EditTasks.TEditTask.SetText
+ 0001:000B3160       EditTasks.TEditTask.ParseLine
+ 0001:000B32F8       EditTasks.TEditTask.SetDot
+ 0001:000B3318       EditTasks.TEditTask.Perform
+ 0001:000B3380       EditTasks.TEditTask.Execute
+ 0001:000B354C       EditTasks.TCustomEditElement.Perform
+ 0001:000B3574       EditTasks.TCustomEditElement.Perform
+ 0001:000B35CC       EditTasks.TCustomEditElement.Perform
+ 0001:000B35D0       EditTasks.TGotoElement.Init
+ 0001:000B35F8       EditTasks.TGotoElement.Perform
+ 0001:000B369C       EditTasks.TRangeElement.Perform
+ 0001:000B36E0       EditTasks.TRangeElement.Perform
+ 0001:000B3770       EditTasks.TRangeElement.SetLine
+ 0001:000B37C8       EditTasks.TRangeElement.SetRangeToAll
+ 0001:000B3804       EditTasks.TGlobalElement.Perform
+ 0001:000B3980       EditTasks.TSearchElement.Perform
+ 0001:000B3A60       EditTasks.TSearchElement.Perform
+ 0001:000B3B6C       EditTasks.TPrintElement.Create
+ 0001:000B3BA8       EditTasks.TPrintElement.Perform
+ 0001:000B3C10       EditTasks.TDeleteElement.Perform
+ 0001:000B3CF0       EditTasks.TEditFileElement.Perform
+ 0001:000B3D44       EditTasks.TReadElement.Init
+ 0001:000B3D6C       EditTasks.TReadElement.Perform
+ 0001:000B4008       EditTasks.TWriteElement.Create
+ 0001:000B4070       EditTasks.TWriteElement.Perform
+ 0001:000B42BC       EditTasks.TInsertElement.Create
+ 0001:000B4300       EditTasks.TInsertElement.Destroy
+ 0001:000B4330       EditTasks.TInsertElement.GetText
+ 0001:000B4344       EditTasks.TInsertElement.Perform
+ 0001:000B4460       EditTasks.TInsertElement.SetText
+ 0001:000B44AC       EditTasks.TInsertElement.TargetLine
+ 0001:000B44B0       EditTasks.TAppendElement.TargetLine
+ 0001:000B44B4       EditTasks.TSubstElement.Init
+ 0001:000B44DC       EditTasks.TSubstElement.Perform
+ 0001:000B4568       EditTasks.TSubstElement.Perform
+ 0001:000B469C       EditTasks.TEvalElement.Perform
+ 0001:000B4720       EditTasks.Finalization
+ 0001:000B4750       FileTasks..TFileTask
+ 0001:000B4890       FileTasks..TFileSetTask
+ 0001:000B4A24       FileTasks..TMkDirTask
+ 0001:000B4B4C       FileTasks..TTouchTask
+ 0001:000B4C8C       FileTasks..TDeleteTask
+ 0001:000B4E3C       FileTasks..TMoveCopyTask
+ 0001:000B4FB8       FileTasks..TCopyTask
+ 0001:000B50D4       FileTasks..TMoveTask
+ 0001:000B51F0       FileTasks.TFileSetTask.Create
+ 0001:000B522C       FileTasks.TFileSetTask.Init
+ 0001:000B5234       FileTasks.TFileSetTask.CreateInclude
+ 0001:000B5248       FileTasks.TFileSetTask.CreateExclude
+ 0001:000B525C       FileTasks.TFileSetTask.AddDefaultPatterns
+ 0001:000B5294       FileTasks.TFileSetTask.AddCommaSeparatedIncludes
+ 0001:000B5338       FileTasks.TFileSetTask.AddCommaSeparatedExcludes
+ 0001:000B53DC       FileTasks.TFileSetTask.CreateFileSet
+ 0001:000B5424       FileTasks.TFileSetTask.DoFileset
+ 0001:000B5428       FileTasks.TFileSetTask.Execute
+ 0001:000B54DC       FileTasks.TFileSetTask.MyFileSet
+ 0001:000B54FC       FileTasks.TMkDirTask.Init
+ 0001:000B5520       FileTasks.TMkDirTask.Execute
+ 0001:000B5738       FileTasks.TTouchTask.Execute
+ 0001:000B57D4       FileTasks.TTouchTask.Init
+ 0001:000B57FC       FileTasks.TDeleteTask.AddDefaultPatterns
+ 0001:000B58E4       FileTasks.TDeleteTask.DoFileset
+ 0001:000B5BD8       FileTasks.TDeleteTask.SetFile
+ 0001:000B5C34       FileTasks.TMoveCopyTask.DoPaths
+ 0001:000B5DA8       FileTasks.TMoveCopyTask.DoFileset
+ 0001:000B5E24       FileTasks.TMoveCopyTask.Init
+ 0001:000B5E54       FileTasks.TMoveCopyTask.Execute
+ 0001:000B5EEC       FileTasks.TCopyTask.DoFiles
+ 0001:000B60B0       FileTasks.TCopyTask.DoPaths
+ 0001:000B61C0       FileTasks.TMoveTask.DoFiles
+ 0001:000B6384       FileTasks.TMoveTask.DoPaths
+ 0001:000B6544       FileTasks.Finalization
+ 0001:000B6574       GZipTasks..TGZipTask
+ 0001:000B66F8       GZipTasks..TGUnzipTask
+ 0001:000B68A0       GZipTasks.TGZipTask.Create
+ 0001:000B68DC       GZipTasks.TGZipTask.Init
+ 0001:000B691C       GZipTasks.TGZipTask.Execute
+ 0001:000B6A44       GZipTasks.TGUnzipTask.Init
+ 0001:000B6A94       GZipTasks.TGUnzipTask.Execute
+ 0001:000B6C30       GZipTasks.Finalization
+ 0001:000B6C60       IniFileTasks..TIniTask
+ 0001:000B6D9C       IniFileTasks..TEntryElement
+ 0001:000B6F34       IniFileTasks..TReadElement
+ 0001:000B70AC       IniFileTasks..TWriteElement
+ 0001:000B71F4       IniFileTasks.TIniTask.Execute
+ 0001:000B723C       IniFileTasks.TIniTask.Init
+ 0001:000B7264       IniFileTasks.TEntryElement.Init
+ 0001:000B73D0       IniFileTasks.TEntryElement.Perform
+ 0001:000B73D4       IniFileTasks.TReadElement.Init
+ 0001:000B74B8       IniFileTasks.TWriteElement.Init
+ 0001:000B74C0       IniFileTasks.TWriteElement.Perform
+ 0001:000B7564       IniFileTasks.Finalization
+ 0001:000B7594       InnoSetupTasks..TInnoSetupCompileTask
+ 0001:000B77B8       InnoSetupTasks.TInnoSetupCompileTask.FindISCC
+ 0001:000B7908       InnoSetupTasks.TInnoSetupCompileTask.HandleOutputLine
+ 0001:000B7B70       InnoSetupTasks.TInnoSetupCompileTask.BuildExecutable
+ 0001:000B7BE8       InnoSetupTasks.TInnoSetupCompileTask.Create
+ 0001:000B7C24       InnoSetupTasks.TInnoSetupCompileTask.Init
+ 0001:000B7C4C       InnoSetupTasks.TInnoSetupCompileTask.Execute
+ 0001:000B7D08       InnoSetupTasks.TInnoSetupCompileTask.TagName
+ 0001:000B7D2C       InnoSetupTasks.TInnoSetupCompileTask.BuildArguments
+ 0001:000B7EB8       InnoSetupTasks.Finalization
+ 0001:000B7EE8       InputTasks..TInputTask
+ 0001:000B8084       InputTasks.TInputTask.Execute
+ 0001:000B81C8       InputTasks.Finalization
+ 0001:000B81F8       LoadFileTasks..TLoadFileTask
+ 0001:000B8394       LoadFileTasks.TLoadFileTask.Execute
+ 0001:000B8570       LoadFileTasks.TLoadFileTask.Init
+ 0001:000B85C4       LoadFileTasks.Finalization
+ 0001:000B85F4       ZipTasks..TZipTask
+ 0001:000B87E8       ZipTasks..TUnzipTask
+ 0001:000B898C       ZipTasks.TZipTask.Create
+ 0001:000B89CC       ZipTasks.TZipTask.Init
+ 0001:000B89F4       ZipTasks.TZipTask.DoFileset
+ 0001:000B8BC4       ZipTasks.TZipTask.Execute
+ 0001:000B8C94       ZipTasks.TUnzipTask.Init
+ 0001:000B8CE4       ZipTasks.TUnzipTask.Execute
+ 0001:000B8E98       ZipTasks.Finalization
+ 0001:000B8EC8       WantTasks..TCustomWantTask
+ 0001:000B8FF0       WantTasks..TWantTask
+ 0001:000B9178       WantTasks.TWantTask.Create
+ 0001:000B91D0       WantTasks.TWantTask.Destroy
+ 0001:000B9200       WantTasks.TWantTask.Init
+ 0001:000B9360       WantTasks.TWantTask.Execute
+ 0001:000B9578       WantTasks.Finalization
+ 0001:000B95A8       TempFileTasks..TTempFileTask
+ 0001:000B9770       TempFileTasks.TTempFileTask.Execute
+ 0001:000B9930       TempFileTasks.TTempFileTask.Init
+ 0001:000B995C       TempFileTasks.Finalization
+ 0001:000B99B0       StyleTasks..TStyleTask
+ 0001:000B9C00       StyleTasks..TParamElement
+ 0001:000B9D70       StyleTasks..TOutputPropertyElement
+ 0001:000B9EF0       StyleTasks.TStyleTask.Create
+ 0001:000B9F44       StyleTasks.TStyleTask.CreateOutputProperty
+ 0001:000B9F68       StyleTasks.TStyleTask.CreateParam
+ 0001:000B9F8C       StyleTasks.TStyleTask.Destroy
+ 0001:000B9FC4       StyleTasks.TStyleTask.DoFileset
+ 0001:000BA1D8       StyleTasks.TStyleTask.Execute
+ 0001:000BA3DC       StyleTasks.TStyleTask.Init
+ 0001:000BA43C       StyleTasks.Finalization
+ 0001:000BA46C       XmlPropertyTasks..TXmlPropertyTask
+ 0001:000BA658       XmlPropertyTasks..EWantParseException
+ 0001:000BA6F0       XmlPropertyTasks.TXmlPropertyTask.Create
+ 0001:000BA734       XmlPropertyTasks.TXmlPropertyTask.Execute
+ 0001:000BA938       XmlPropertyTasks.TXmlPropertyTask.GeneratePropertyName
+ 0001:000BAA20       XmlPropertyTasks.TXmlPropertyTask.Init
+ 0001:000BAA48       XmlPropertyTasks.TXmlPropertyTask.ParseError
+ 0001:000BAAAC       XmlPropertyTasks.TXmlPropertyTask.ParseXML
+ 0001:000BADD8       XmlPropertyTasks.EWantParseException.Create
+ 0001:000BAEA4       XmlPropertyTasks.Finalization
+ 0001:000BAED4       want.Run
+ 0001:000BAF88       want.Finalization
  0002:00000000       System.System
  0002:00000098       Windows.Windows
  0002:000000AC       SysUtils.SysUtils
@@ -17775,165 +17775,165 @@ Line numbers for CVSTasks(tasks\CVSTasks.pas) segment .itext
 
 Line numbers for DelphiTasks(tasks\DelphiTasks.pas) segment .text
 
-   389 0001:000AC7E0   390 0001:000AC815   391 0001:000AC824   392 0001:000AC832
-   394 0001:000AC838   396 0001:000AC847   397 0001:000AC84D   399 0001:000AC85A
-   400 0001:000AC86D   402 0001:000AC882   404 0001:000AC8A4   406 0001:000AC8B4
-   407 0001:000AC8B6   409 0001:000AC8E3   410 0001:000AC904   412 0001:000AC906
-   413 0001:000AC91A   415 0001:000AC920   416 0001:000AC93A   418 0001:000AC946
-   419 0001:000AC954   420 0001:000AC962   421 0001:000AC970   424 0001:000AC972
-   400 0001:000AC973   425 0001:000AC97A   430 0001:000ACA14   431 0001:000ACA41
-   433 0001:000ACA4E   434 0001:000ACA59   435 0001:000ACA64   436 0001:000ACA6F
-   437 0001:000ACA77   438 0001:000ACA83   440 0001:000ACA88   441 0001:000ACA8E
-   442 0001:000ACAB5   446 0001:000ACB04   447 0001:000ACB2E   449 0001:000ACB48
-   451 0001:000ACB55   452 0001:000ACB7D   460 0001:000ACC20   461 0001:000ACC5D
-   462 0001:000ACC9B   467 0001:000ACCD8   468 0001:000ACCFD   469 0001:000ACD0A
-   470 0001:000ACD1B   472 0001:000ACD28   473 0001:000ACD52   476 0001:000ACDC4
-   478 0001:000ACDF0   482 0001:000ACE21   483 0001:000ACE94   484 0001:000ACEB6
-   486 0001:000ACEC4   496 0001:000ACED2   497 0001:000ACEF4   498 0001:000ACF02
-   499 0001:000ACF13   501 0001:000ACF21   502 0001:000ACF2B   505 0001:000ACFF4
-   506 0001:000AD00B   507 0001:000AD012   508 0001:000AD02D   509 0001:000AD034
-   512 0001:000AD058   513 0001:000AD072   515 0001:000AD079   517 0001:000AD094
-   518 0001:000AD09D   523 0001:000AD0C0   524 0001:000AD0D2   525 0001:000AD0DB
-   526 0001:000AD0E2   528 0001:000AD0E6   529 0001:000AD0FA   530 0001:000AD10E
-   531 0001:000AD122   533 0001:000AD136   534 0001:000AD148   535 0001:000AD15A
-   537 0001:000AD16C   538 0001:000AD173   539 0001:000AD17A   541 0001:000AD181
-   542 0001:000AD188   543 0001:000AD18F   544 0001:000AD196   545 0001:000AD19D
-   546 0001:000AD1A4   547 0001:000AD1AB   548 0001:000AD1B2   549 0001:000AD1B9
-   550 0001:000AD1C0   551 0001:000AD1C7   552 0001:000AD1CE   553 0001:000AD1D5
-   554 0001:000AD1DC   555 0001:000AD1E3   556 0001:000AD1EA   557 0001:000AD1F1
-   558 0001:000AD1F8   559 0001:000AD1FF   560 0001:000AD206   561 0001:000AD20D
-   562 0001:000AD214   563 0001:000AD21B   564 0001:000AD222   565 0001:000AD22C
-   566 0001:000AD233   567 0001:000AD23A   568 0001:000AD241   569 0001:000AD248
-   570 0001:000AD24F   571 0001:000AD259   572 0001:000AD260   574 0001:000AD267
-   576 0001:000AD26E   578 0001:000AD275   579 0001:000AD280   580 0001:000AD28B
-   581 0001:000AD296   582 0001:000AD2A1   583 0001:000AD2AC   584 0001:000AD2B7
-   585 0001:000AD2C2   586 0001:000AD2CD   587 0001:000AD2D8   590 0001:000AD2F4
-   591 0001:000AD2FF   592 0001:000AD30A   593 0001:000AD315   594 0001:000AD320
-   595 0001:000AD32C   598 0001:000AD33C   599 0001:000AD33F   600 0001:000AD346
-   601 0001:000AD352   604 0001:000AD364   605 0001:000AD367   606 0001:000AD373
-   609 0001:000AD390   610 0001:000AD3AD   611 0001:000AD3D4   612 0001:000AD3E2
-   614 0001:000AD3F7   616 0001:000AD407   619 0001:000AD42C   620 0001:000AD42F
-   621 0001:000AD43B   627 0001:000AD44C   628 0001:000AD47E   629 0001:000AD486
-   631 0001:000AD498   632 0001:000AD4DA   633 0001:000AD4FC   629 0001:000AD4FD
-   634 0001:000AD502   637 0001:000AD558   638 0001:000AD58D   639 0001:000AD5D4
-   654 0001:000AD620   655 0001:000AD646   656 0001:000AD683   657 0001:000AD6B2
-   658 0001:000AD6BE   660 0001:000AD718   662 0001:000AD72B   664 0001:000AD73C
-   665 0001:000AD776   666 0001:000AD7A4   662 0001:000AD7A5   668 0001:000AD7A8
-   670 0001:000AD7B8   671 0001:000AD7C6   673 0001:000AD7DB   676 0001:000AD839
-   677 0001:000AD847   678 0001:000AD86E   680 0001:000AD88E   681 0001:000AD8B4
-   682 0001:000AD8E1   684 0001:000AD8FD   691 0001:000AD930   671 0001:000AD931
-   693 0001:000AD947   697 0001:000AD974   699 0001:000AD983   701 0001:000AD98F
-   702 0001:000AD9D2   705 0001:000ADA00   707 0001:000ADA0C   708 0001:000ADA4F
-   711 0001:000ADA7D   713 0001:000ADA89   714 0001:000ADACC   717 0001:000ADAFA
-   719 0001:000ADB06   720 0001:000ADB49   725 0001:000ADB77   727 0001:000ADB88
-   729 0001:000ADB94   730 0001:000ADBA3   734 0001:000ADBB3   736 0001:000ADBC4
-   738 0001:000ADBD0   739 0001:000ADBDF   743 0001:000ADBEF   745 0001:000ADC00
-   747 0001:000ADC0C   748 0001:000ADC1B   752 0001:000ADC2D   753 0001:000ADC3C
-   757 0001:000ADC4C   759 0001:000ADC5D   761 0001:000ADC69   762 0001:000ADC78
-   766 0001:000ADC8A   767 0001:000ADC99   773 0001:000ADCA9   775 0001:000ADCBA
-   777 0001:000ADCC6   778 0001:000ADCD5   781 0001:000ADCE7   784 0001:000ADCF7
-   786 0001:000ADD08   787 0001:000ADD14   790 0001:000ADD26   791 0001:000ADD35
-   795 0001:000ADD45   797 0001:000ADD56   798 0001:000ADD62   801 0001:000ADD74
-   802 0001:000ADD83   806 0001:000ADD93   808 0001:000ADDA4   809 0001:000ADDB0
-   812 0001:000ADDC2   813 0001:000ADDD1   817 0001:000ADDE1   819 0001:000ADDF2
-   820 0001:000ADDFE   823 0001:000ADE10   824 0001:000ADE1F   828 0001:000ADE2F
-   830 0001:000ADE51   831 0001:000ADE5D   832 0001:000ADE6F   833 0001:000ADE7B
-   835 0001:000ADE8D   838 0001:000ADE9D   840 0001:000ADEAE   841 0001:000ADEBA
-   844 0001:000ADECC   845 0001:000ADEDB   849 0001:000ADEEB   851 0001:000ADEFC
-   853 0001:000ADF08   854 0001:000ADF17   857 0001:000ADF29   860 0001:000ADF39
-   862 0001:000ADF4A   864 0001:000ADF56   865 0001:000ADF65   868 0001:000ADF77
-   871 0001:000ADF87   873 0001:000ADF98   874 0001:000ADFA4   877 0001:000ADFB6
-   878 0001:000ADFC5   882 0001:000ADFD5   884 0001:000ADFE6   885 0001:000ADFF2
-   888 0001:000AE004   889 0001:000AE013   893 0001:000AE023   895 0001:000AE034
-   896 0001:000AE040   899 0001:000AE052   900 0001:000AE061   904 0001:000AE071
-   906 0001:000AE082   907 0001:000AE08E   910 0001:000AE0A0   911 0001:000AE0AF
-   915 0001:000AE0BF   917 0001:000AE0D0   918 0001:000AE0DC   921 0001:000AE0EE
-   922 0001:000AE0FD   926 0001:000AE10D   928 0001:000AE11E   930 0001:000AE12A
-   931 0001:000AE139   934 0001:000AE14B   937 0001:000AE15B   939 0001:000AE16C
-   941 0001:000AE178   942 0001:000AE187   945 0001:000AE199   948 0001:000AE1A9
-   950 0001:000AE1BA   952 0001:000AE1C6   953 0001:000AE1D5   956 0001:000AE1E7
-   959 0001:000AE1F7   961 0001:000AE208   963 0001:000AE214   964 0001:000AE223
-   967 0001:000AE235   970 0001:000AE245   972 0001:000AE256   974 0001:000AE262
-   975 0001:000AE271   978 0001:000AE283   981 0001:000AE293   983 0001:000AE2A4
-   984 0001:000AE2B0   987 0001:000AE2C2   988 0001:000AE2D1   992 0001:000AE2E1
-   994 0001:000AE2F2   995 0001:000AE2FE   998 0001:000AE310   999 0001:000AE31F
-  1003 0001:000AE32F  1005 0001:000AE340  1007 0001:000AE34C  1008 0001:000AE35B
-  1011 0001:000AE36D  1014 0001:000AE37D  1016 0001:000AE392  1018 0001:000AE3AD
-  1019 0001:000AE3B2  1020 0001:000AE3E5  1023 0001:000AE41B  1026 0001:000AE450
-  1028 0001:000AE461  1029 0001:000AE46D  1032 0001:000AE47F  1033 0001:000AE48E
-  1037 0001:000AE49E  1039 0001:000AE4AF  1040 0001:000AE4C5  1042 0001:000AE4F1
-  1046 0001:000AE524  1048 0001:000AE541  1049 0001:000AE54D  1051 0001:000AE55F
-  1054 0001:000AE56E  1056 0001:000AE59C  1058 0001:000AE5A8  1059 0001:000AE5B7
-  1061 0001:000AE5C9  1063 0001:000AE5D5  1064 0001:000AE5E4  1068 0001:000AE5F4
-  1069 0001:000AE60C  1070 0001:000AE61E  1071 0001:000AE630  1074 0001:000AE640
-  1076 0001:000AE658  1077 0001:000AE697  1078 0001:000AE6CA  1074 0001:000AE6CB
-  1080 0001:000AE6CE  1082 0001:000AE6E4  1083 0001:000AE6F4  1085 0001:000AE70C
-  1086 0001:000AE74B  1087 0001:000AE77E  1083 0001:000AE77F  1088 0001:000AE782
-  1091 0001:000AE7A7  1093 0001:000AE7BC  1095 0001:000AE7C8  1097 0001:000AE7CF
-  1099 0001:000AE7DD  1100 0001:000AE7ED  1101 0001:000AE803  1103 0001:000AE81F
-  1105 0001:000AE839  1095 0001:000AE83D  1109 0001:000AE842  1111 0001:000AE86D
-  1113 0001:000AE885  1114 0001:000AE8C4  1115 0001:000AE8F7  1111 0001:000AE8F8
-  1117 0001:000AE8FB  1118 0001:000AE909  1120 0001:000AE92A  1122 0001:000AE93A
-  1123 0001:000AE949  1124 0001:000AE96D  1125 0001:000AE97B  1127 0001:000AE98E
-  1128 0001:000AE9B0  1130 0001:000AE9BD  1131 0001:000AE9F3  1132 0001:000AEA0C
-  1133 0001:000AEA25  1135 0001:000AEA3E  1125 0001:000AEA3F  1137 0001:000AEA55
-  1142 0001:000AEA6B  1144 0001:000AEA8C  1146 0001:000AEA9C  1147 0001:000AEAA7
-  1148 0001:000AEAC9  1149 0001:000AEAD6  1150 0001:000AEAEC  1151 0001:000AEB02
-  1152 0001:000AEB18  1154 0001:000AEB30  1156 0001:000AEB3C  1157 0001:000AEB52
-  1158 0001:000AEB68  1162 0001:000AEB7E  1163 0001:000AEBA8  1165 0001:000AEBED
-  1166 0001:000AEC17  1168 0001:000AEC5C  1169 0001:000AEC86  1171 0001:000AECCB
-  1172 0001:000AECF5  1173 0001:000AED3A  1196 0001:000AFCA0  1197 0001:000AFCBB
-  1199 0001:000AFD04  1203 0001:000AFD70  1204 0001:000AFDA5  1205 0001:000AFDB6
-  1207 0001:000AFDC9  1208 0001:000AFDE7  1211 0001:000AFE1C  1212 0001:000AFE3C
-  1213 0001:000AFE4A  1217 0001:000AFE6C  1218 0001:000AFE72  1222 0001:000AFE74
-  1223 0001:000AFE7A  1227 0001:000AFE7C  1228 0001:000AFE82  1232 0001:000AFE84
-  1233 0001:000AFE8A  1240 0001:000AFE8C  1241 0001:000AFEAC  1242 0001:000AFEBA
-  1244 0001:000AFECA  1245 0001:000AFEE9  1246 0001:000AFEF7  1248 0001:000AFF08
-  1249 0001:000AFF16  1250 0001:000AFF35  1251 0001:000AFF42  1252 0001:000AFF65
-  1253 0001:000AFF73  1246 0001:000AFF74  1255 0001:000AFF86  1258 0001:000AFFAE
-  1262 0001:000B0078  1263 0001:000B007E  1264 0001:000B0082  1266 0001:000B0094
-  1267 0001:000B00A3  1270 0001:000B00A8  1271 0001:000B00DA  1272 0001:000B0100
-  1277 0001:000B0134  1278 0001:000B0150  1280 0001:000B0159  1282 0001:000B0182
-  1283 0001:000B018B  1284 0001:000B01B4  1287 0001:000B0200  1288 0001:000B0212
-  1289 0001:000B021B  1290 0001:000B0222  1293 0001:000B023C  1294 0001:000B0253
-  1295 0001:000B0275  1296 0001:000B027C  1299 0001:000B02A0  1300 0001:000B02A3
-  1301 0001:000B02AA  1302 0001:000B02B6  1305 0001:000B02C8  1306 0001:000B02CB
-  1307 0001:000B02D7  1310 0001:000B02EC  1311 0001:000B02EF  1312 0001:000B02FB
-  1317 0001:000B0318  1318 0001:000B0337  1319 0001:000B033E  1321 0001:000B0349
-  1322 0001:000B0387  1323 0001:000B0393  1325 0001:000B03A5  1331 0001:000B03F4
-  1332 0001:000B0406  1333 0001:000B040F  1334 0001:000B0413  1335 0001:000B041D
-  1340 0001:000B0438  1341 0001:000B045F  1344 0001:000B046E  1345 0001:000B0478
-  1342 0001:000B0485  1347 0001:000B048B  1352 0001:000B04B8  1353 0001:000B04BB
-  1354 0001:000B04CD  1359 0001:000B04D0  1360 0001:000B04EF  1361 0001:000B04F6
-  1363 0001:000B0501  1364 0001:000B0535  1365 0001:000B0541  1367 0001:000B0550
-  1374 0001:000B059C  1375 0001:000B05A2  1376 0001:000B05A9  1378 0001:000B05B4
-  1379 0001:000B05D3  1381 0001:000B05E7  1386 0001:000B060C  1387 0001:000B062B
-  1388 0001:000B0632  1390 0001:000B063D  1391 0001:000B067B  1392 0001:000B069A
-  1394 0001:000B06AC
+   393 0001:000AC7E0   394 0001:000AC815   395 0001:000AC824   396 0001:000AC832
+   398 0001:000AC838   400 0001:000AC847   401 0001:000AC84D   403 0001:000AC85A
+   404 0001:000AC86D   406 0001:000AC882   408 0001:000AC8A4   410 0001:000AC8B4
+   411 0001:000AC8B6   413 0001:000AC8E3   414 0001:000AC904   416 0001:000AC906
+   417 0001:000AC91A   419 0001:000AC920   420 0001:000AC93A   422 0001:000AC946
+   423 0001:000AC954   424 0001:000AC962   425 0001:000AC970   428 0001:000AC972
+   404 0001:000AC973   429 0001:000AC97A   434 0001:000ACA14   435 0001:000ACA41
+   437 0001:000ACA4E   438 0001:000ACA59   439 0001:000ACA64   440 0001:000ACA6F
+   441 0001:000ACA77   442 0001:000ACA83   444 0001:000ACA88   445 0001:000ACA8E
+   446 0001:000ACAB5   450 0001:000ACB04   451 0001:000ACB2E   453 0001:000ACB48
+   456 0001:000ACB55   459 0001:000ACB62   460 0001:000ACB8A   468 0001:000ACC2C
+   469 0001:000ACC69   470 0001:000ACCA7   475 0001:000ACCE4   476 0001:000ACD09
+   477 0001:000ACD16   478 0001:000ACD27   480 0001:000ACD34   481 0001:000ACD5E
+   484 0001:000ACDD0   486 0001:000ACDFC   490 0001:000ACE2D   491 0001:000ACEA0
+   492 0001:000ACEC2   494 0001:000ACED0   504 0001:000ACEDE   505 0001:000ACF00
+   506 0001:000ACF0E   507 0001:000ACF1F   509 0001:000ACF2D   510 0001:000ACF37
+   513 0001:000AD000   514 0001:000AD017   515 0001:000AD01E   516 0001:000AD039
+   517 0001:000AD040   520 0001:000AD064   521 0001:000AD07E   523 0001:000AD085
+   525 0001:000AD0A0   526 0001:000AD0A9   531 0001:000AD0CC   532 0001:000AD0DE
+   533 0001:000AD0E7   534 0001:000AD0EE   536 0001:000AD0F2   537 0001:000AD106
+   538 0001:000AD11A   539 0001:000AD12E   541 0001:000AD142   542 0001:000AD154
+   543 0001:000AD166   545 0001:000AD178   546 0001:000AD17F   547 0001:000AD186
+   549 0001:000AD18D   550 0001:000AD194   551 0001:000AD19B   552 0001:000AD1A2
+   553 0001:000AD1A9   554 0001:000AD1B0   555 0001:000AD1B7   556 0001:000AD1BE
+   557 0001:000AD1C5   558 0001:000AD1CC   559 0001:000AD1D3   560 0001:000AD1DA
+   561 0001:000AD1E1   562 0001:000AD1E8   563 0001:000AD1EF   564 0001:000AD1F6
+   565 0001:000AD1FD   566 0001:000AD204   567 0001:000AD20B   568 0001:000AD212
+   569 0001:000AD219   570 0001:000AD220   571 0001:000AD227   572 0001:000AD22E
+   573 0001:000AD238   574 0001:000AD23F   575 0001:000AD246   576 0001:000AD24D
+   577 0001:000AD254   578 0001:000AD25B   579 0001:000AD265   580 0001:000AD26C
+   582 0001:000AD273   584 0001:000AD27A   586 0001:000AD281   587 0001:000AD28C
+   588 0001:000AD297   589 0001:000AD2A2   590 0001:000AD2AD   591 0001:000AD2B8
+   592 0001:000AD2C3   593 0001:000AD2CE   594 0001:000AD2D9   595 0001:000AD2E4
+   598 0001:000AD300   599 0001:000AD30B   600 0001:000AD316   601 0001:000AD321
+   602 0001:000AD32C   603 0001:000AD338   606 0001:000AD348   607 0001:000AD34B
+   608 0001:000AD352   609 0001:000AD35E   612 0001:000AD370   613 0001:000AD373
+   614 0001:000AD37F   617 0001:000AD39C   618 0001:000AD3B9   619 0001:000AD3E0
+   620 0001:000AD3EE   622 0001:000AD403   624 0001:000AD413   627 0001:000AD438
+   628 0001:000AD43B   629 0001:000AD447   635 0001:000AD458   636 0001:000AD48A
+   637 0001:000AD492   639 0001:000AD4A4   640 0001:000AD4E6   641 0001:000AD508
+   637 0001:000AD509   642 0001:000AD50E   645 0001:000AD564   646 0001:000AD599
+   647 0001:000AD5E0   662 0001:000AD62C   663 0001:000AD652   664 0001:000AD68F
+   665 0001:000AD6BE   666 0001:000AD6CA   668 0001:000AD724   670 0001:000AD737
+   672 0001:000AD748   673 0001:000AD782   674 0001:000AD7B0   670 0001:000AD7B1
+   676 0001:000AD7B4   678 0001:000AD7C4   679 0001:000AD7D2   681 0001:000AD7E7
+   684 0001:000AD845   685 0001:000AD853   686 0001:000AD87A   688 0001:000AD89A
+   689 0001:000AD8C0   690 0001:000AD8ED   692 0001:000AD909   699 0001:000AD93C
+   679 0001:000AD93D   701 0001:000AD953   705 0001:000AD980   707 0001:000AD98F
+   709 0001:000AD99B   710 0001:000AD9DE   713 0001:000ADA0C   715 0001:000ADA18
+   716 0001:000ADA5B   719 0001:000ADA89   721 0001:000ADA95   722 0001:000ADAD8
+   725 0001:000ADB06   727 0001:000ADB12   728 0001:000ADB55   733 0001:000ADB83
+   735 0001:000ADB94   737 0001:000ADBA0   738 0001:000ADBAF   742 0001:000ADBBF
+   744 0001:000ADBD0   746 0001:000ADBDC   747 0001:000ADBEB   751 0001:000ADBFB
+   753 0001:000ADC0C   755 0001:000ADC18   756 0001:000ADC27   760 0001:000ADC39
+   761 0001:000ADC48   765 0001:000ADC58   767 0001:000ADC69   769 0001:000ADC75
+   770 0001:000ADC84   774 0001:000ADC96   775 0001:000ADCA5   781 0001:000ADCB5
+   783 0001:000ADCC6   785 0001:000ADCD2   786 0001:000ADCE1   789 0001:000ADCF3
+   792 0001:000ADD03   794 0001:000ADD14   795 0001:000ADD20   798 0001:000ADD32
+   799 0001:000ADD41   803 0001:000ADD51   805 0001:000ADD62   806 0001:000ADD6E
+   809 0001:000ADD80   810 0001:000ADD8F   814 0001:000ADD9F   816 0001:000ADDB0
+   817 0001:000ADDBC   820 0001:000ADDCE   821 0001:000ADDDD   825 0001:000ADDED
+   827 0001:000ADDFE   828 0001:000ADE0A   831 0001:000ADE1C   832 0001:000ADE2B
+   836 0001:000ADE3B   838 0001:000ADE5D   839 0001:000ADE69   840 0001:000ADE7B
+   841 0001:000ADE87   843 0001:000ADE99   846 0001:000ADEA9   848 0001:000ADEBA
+   849 0001:000ADEC6   852 0001:000ADED8   853 0001:000ADEE7   857 0001:000ADEF7
+   859 0001:000ADF08   861 0001:000ADF14   862 0001:000ADF23   865 0001:000ADF35
+   868 0001:000ADF45   870 0001:000ADF56   872 0001:000ADF62   873 0001:000ADF71
+   876 0001:000ADF83   879 0001:000ADF93   881 0001:000ADFA4   882 0001:000ADFB0
+   885 0001:000ADFC2   886 0001:000ADFD1   890 0001:000ADFE1   892 0001:000ADFF2
+   893 0001:000ADFFE   896 0001:000AE010   897 0001:000AE01F   901 0001:000AE02F
+   903 0001:000AE040   904 0001:000AE04C   907 0001:000AE05E   908 0001:000AE06D
+   912 0001:000AE07D   914 0001:000AE08E   915 0001:000AE09A   918 0001:000AE0AC
+   919 0001:000AE0BB   923 0001:000AE0CB   925 0001:000AE0DC   926 0001:000AE0E8
+   929 0001:000AE0FA   930 0001:000AE109   934 0001:000AE119   936 0001:000AE12A
+   938 0001:000AE136   939 0001:000AE145   942 0001:000AE157   945 0001:000AE167
+   947 0001:000AE178   949 0001:000AE184   950 0001:000AE193   953 0001:000AE1A5
+   956 0001:000AE1B5   958 0001:000AE1C6   960 0001:000AE1D2   961 0001:000AE1E1
+   964 0001:000AE1F3   967 0001:000AE203   969 0001:000AE214   971 0001:000AE220
+   972 0001:000AE22F   975 0001:000AE241   978 0001:000AE251   980 0001:000AE262
+   982 0001:000AE26E   983 0001:000AE27D   986 0001:000AE28F   989 0001:000AE29F
+   991 0001:000AE2B0   992 0001:000AE2BC   995 0001:000AE2CE   996 0001:000AE2DD
+  1000 0001:000AE2ED  1002 0001:000AE2FE  1003 0001:000AE30A  1006 0001:000AE31C
+  1007 0001:000AE32B  1011 0001:000AE33B  1013 0001:000AE34C  1015 0001:000AE358
+  1016 0001:000AE367  1019 0001:000AE379  1022 0001:000AE389  1024 0001:000AE39E
+  1026 0001:000AE3B9  1027 0001:000AE3BE  1028 0001:000AE3F1  1031 0001:000AE427
+  1034 0001:000AE45C  1036 0001:000AE46D  1037 0001:000AE479  1040 0001:000AE48B
+  1041 0001:000AE49A  1045 0001:000AE4AA  1047 0001:000AE4BB  1048 0001:000AE4D1
+  1050 0001:000AE4FD  1054 0001:000AE530  1056 0001:000AE54D  1057 0001:000AE559
+  1059 0001:000AE56B  1062 0001:000AE57A  1064 0001:000AE5A8  1066 0001:000AE5B4
+  1067 0001:000AE5C3  1069 0001:000AE5D5  1071 0001:000AE5E1  1072 0001:000AE5F0
+  1076 0001:000AE600  1077 0001:000AE618  1078 0001:000AE62A  1079 0001:000AE63C
+  1082 0001:000AE64C  1084 0001:000AE664  1085 0001:000AE6A3  1086 0001:000AE6D6
+  1082 0001:000AE6D7  1088 0001:000AE6DA  1090 0001:000AE6F0  1091 0001:000AE700
+  1093 0001:000AE718  1094 0001:000AE757  1095 0001:000AE78A  1091 0001:000AE78B
+  1096 0001:000AE78E  1099 0001:000AE7B3  1101 0001:000AE7C8  1103 0001:000AE7D4
+  1105 0001:000AE7DB  1107 0001:000AE7E9  1108 0001:000AE7F9  1109 0001:000AE80F
+  1111 0001:000AE82B  1113 0001:000AE845  1103 0001:000AE849  1117 0001:000AE84E
+  1119 0001:000AE879  1121 0001:000AE891  1122 0001:000AE8D0  1123 0001:000AE903
+  1119 0001:000AE904  1125 0001:000AE907  1126 0001:000AE915  1128 0001:000AE936
+  1130 0001:000AE946  1131 0001:000AE955  1132 0001:000AE979  1133 0001:000AE987
+  1135 0001:000AE99A  1136 0001:000AE9BC  1138 0001:000AE9C9  1139 0001:000AE9FF
+  1140 0001:000AEA18  1141 0001:000AEA31  1143 0001:000AEA4A  1133 0001:000AEA4B
+  1145 0001:000AEA61  1150 0001:000AEA77  1152 0001:000AEA98  1154 0001:000AEAA8
+  1155 0001:000AEAB3  1156 0001:000AEAD5  1157 0001:000AEAE2  1158 0001:000AEAF8
+  1159 0001:000AEB0E  1160 0001:000AEB24  1162 0001:000AEB3C  1164 0001:000AEB48
+  1165 0001:000AEB5E  1166 0001:000AEB74  1170 0001:000AEB8A  1171 0001:000AEBB4
+  1173 0001:000AEBF9  1174 0001:000AEC23  1176 0001:000AEC68  1177 0001:000AEC92
+  1179 0001:000AECD7  1180 0001:000AED01  1181 0001:000AED46  1204 0001:000AFCAC
+  1205 0001:000AFCC7  1207 0001:000AFD10  1211 0001:000AFD7C  1212 0001:000AFDB1
+  1213 0001:000AFDC2  1215 0001:000AFDD5  1216 0001:000AFDF3  1219 0001:000AFE28
+  1220 0001:000AFE48  1221 0001:000AFE56  1225 0001:000AFE78  1226 0001:000AFE7E
+  1230 0001:000AFE80  1231 0001:000AFE86  1235 0001:000AFE88  1236 0001:000AFE8E
+  1240 0001:000AFE90  1241 0001:000AFE96  1248 0001:000AFE98  1249 0001:000AFEB8
+  1250 0001:000AFEC6  1252 0001:000AFED6  1253 0001:000AFEF5  1254 0001:000AFF03
+  1256 0001:000AFF14  1257 0001:000AFF22  1258 0001:000AFF41  1259 0001:000AFF4E
+  1260 0001:000AFF71  1261 0001:000AFF7F  1254 0001:000AFF80  1263 0001:000AFF92
+  1266 0001:000AFFBA  1270 0001:000B0084  1271 0001:000B008A  1272 0001:000B008E
+  1274 0001:000B00A0  1275 0001:000B00AF  1278 0001:000B00B4  1279 0001:000B00E6
+  1280 0001:000B010C  1285 0001:000B0140  1286 0001:000B015C  1288 0001:000B0165
+  1290 0001:000B018E  1291 0001:000B0197  1292 0001:000B01C0  1295 0001:000B020C
+  1296 0001:000B021E  1297 0001:000B0227  1298 0001:000B022E  1301 0001:000B0248
+  1302 0001:000B025F  1303 0001:000B0281  1304 0001:000B0288  1307 0001:000B02AC
+  1308 0001:000B02AF  1309 0001:000B02B6  1310 0001:000B02C2  1313 0001:000B02D4
+  1314 0001:000B02D7  1315 0001:000B02E3  1318 0001:000B02F8  1319 0001:000B02FB
+  1320 0001:000B0307  1325 0001:000B0324  1326 0001:000B0343  1327 0001:000B034A
+  1329 0001:000B0355  1330 0001:000B0393  1331 0001:000B039F  1333 0001:000B03B1
+  1339 0001:000B0400  1340 0001:000B0412  1341 0001:000B041B  1342 0001:000B041F
+  1343 0001:000B0429  1348 0001:000B0444  1349 0001:000B046B  1352 0001:000B047A
+  1353 0001:000B0484  1350 0001:000B0491  1355 0001:000B0497  1360 0001:000B04C4
+  1361 0001:000B04C7  1362 0001:000B04D9  1367 0001:000B04DC  1368 0001:000B04FB
+  1369 0001:000B0502  1371 0001:000B050D  1372 0001:000B0541  1373 0001:000B054D
+  1375 0001:000B055C  1382 0001:000B05A8  1383 0001:000B05AE  1384 0001:000B05B5
+  1386 0001:000B05C0  1387 0001:000B05DF  1389 0001:000B05F3  1394 0001:000B0618
+  1395 0001:000B0637  1396 0001:000B063E  1398 0001:000B0649  1399 0001:000B0687
+  1400 0001:000B06A6  1402 0001:000B06B8
 
 Line numbers for DelphiTasks(tasks\DelphiTasks.pas) segment .itext
 
-  1396 0002:00000D38  1397 0002:00000D64  1398 0002:00000D81  1404 0002:00000DB3
-  1406 0002:00000DD5  1407 0002:00000DE5  1409 0002:00000DF5
+  1404 0002:00000D38  1405 0002:00000D64  1406 0002:00000D81  1412 0002:00000DB3
+  1414 0002:00000DD5  1415 0002:00000DE5  1417 0002:00000DF5
 
 Line numbers for DUnitTasks(tasks\DUnitTasks.pas) segment .text
 
-    80 0001:000B09F4    81 0001:000B09FB    82 0001:000B0A0C    84 0001:000B0A10
-    85 0001:000B0A15    88 0001:000B0A1C    89 0001:000B0A1F    90 0001:000B0A24
-    93 0001:000B0A28    94 0001:000B0A2B    95 0001:000B0A30    98 0001:000B0A34
-    99 0001:000B0A5F   103 0001:000B0AC2   106 0001:000B0B20   107 0001:000B0B4B
-   112 0001:000B0BAE   115 0001:000B0C0C   116 0001:000B0C31   117 0001:000B0C58
-   120 0001:000B0C94   121 0001:000B0CA6   122 0001:000B0CA8   125 0001:000B0CC4
-   126 0001:000B0CEE   127 0001:000B0D1B   130 0001:000B0D60   131 0001:000B0D8A
-   132 0001:000B0DB7   135 0001:000B0DFC   136 0001:000B0DFD   137 0001:000B0E09
-   140 0001:000B0E1C   141 0001:000B0E3C   142 0001:000B0E4A   143 0001:000B0E55
-   146 0001:000B0E80   147 0001:000B0EA6   148 0001:000B0EB1   149 0001:000B0ED7
-   150 0001:000B0EE2   152 0001:000B0F08   155 0001:000B0FA0   156 0001:000B0FA3
-   157 0001:000B0FAA   158 0001:000B0FB6   163 0001:000B0FC8   164 0001:000B0FE7
-   165 0001:000B0FEF   166 0001:000B1013   167 0001:000B1021   168 0001:000B1050
-   169 0001:000B105E   170 0001:000B1081   172 0001:000B109D   176 0001:000B10D0
-   177 0001:000B10D7   178 0001:000B10D9   180 0001:000B10F0   183 0001:000B1154
-   184 0001:000B1181   185 0001:000B11BF   200 0001:000B1204   201 0001:000B1222
+    80 0001:000B0A00    81 0001:000B0A07    82 0001:000B0A18    84 0001:000B0A1C
+    85 0001:000B0A21    88 0001:000B0A28    89 0001:000B0A2B    90 0001:000B0A30
+    93 0001:000B0A34    94 0001:000B0A37    95 0001:000B0A3C    98 0001:000B0A40
+    99 0001:000B0A6B   103 0001:000B0ACE   106 0001:000B0B2C   107 0001:000B0B57
+   112 0001:000B0BBA   115 0001:000B0C18   116 0001:000B0C3D   117 0001:000B0C64
+   120 0001:000B0CA0   121 0001:000B0CB2   122 0001:000B0CB4   125 0001:000B0CD0
+   126 0001:000B0CFA   127 0001:000B0D27   130 0001:000B0D6C   131 0001:000B0D96
+   132 0001:000B0DC3   135 0001:000B0E08   136 0001:000B0E09   137 0001:000B0E15
+   140 0001:000B0E28   141 0001:000B0E48   142 0001:000B0E56   143 0001:000B0E61
+   146 0001:000B0E8C   147 0001:000B0EB2   148 0001:000B0EBD   149 0001:000B0EE3
+   150 0001:000B0EEE   152 0001:000B0F14   155 0001:000B0FAC   156 0001:000B0FAF
+   157 0001:000B0FB6   158 0001:000B0FC2   163 0001:000B0FD4   164 0001:000B0FF3
+   165 0001:000B0FFB   166 0001:000B101F   167 0001:000B102D   168 0001:000B105C
+   169 0001:000B106A   170 0001:000B108D   172 0001:000B10A9   176 0001:000B10DC
+   177 0001:000B10E3   178 0001:000B10E5   180 0001:000B10FC   183 0001:000B1160
+   184 0001:000B118D   185 0001:000B11CB   200 0001:000B1210   201 0001:000B122E
 
 Line numbers for DUnitTasks(tasks\DUnitTasks.pas) segment .itext
 
@@ -17941,20 +17941,20 @@ Line numbers for DUnitTasks(tasks\DUnitTasks.pas) segment .itext
 
 Line numbers for EchoTasks(tasks\EchoTasks.pas) segment .text
 
-    70 0001:000B1434    71 0001:000B1446    72 0001:000B144F    73 0001:000B1453
-    79 0001:000B1470    80 0001:000B1492    81 0001:000B1499    82 0001:000B14BE
-    83 0001:000B14C4    86 0001:000B14D7    87 0001:000B14DD    89 0001:000B1514
-    90 0001:000B1566    92 0001:000B1570    93 0001:000B158F    95 0001:000B15B7
-    96 0001:000B15C7    97 0001:000B15D9    98 0001:000B15F2   100 0001:000B15FD
-   109 0001:000B167C   110 0001:000B16A3   111 0001:000B16B2   112 0001:000B16C0
-   113 0001:000B16CE   116 0001:000B16D7   115 0001:000B16E1   119 0001:000B1700
-   121 0001:000B171C   123 0001:000B174B   124 0001:000B1776   126 0001:000B1782
-   128 0001:000B17A0   129 0001:000B17A3   131 0001:000B17A5   124 0001:000B17A6
-   132 0001:000B17A9   134 0001:000B17AF   119 0001:000B17B2   136 0001:000B17BB
-   139 0001:000B17C1   159 0001:000B17D9   140 0001:000B17E7   139 0001:000B1829
-   143 0001:000B182E   145 0001:000B1839   147 0001:000B1846   148 0001:000B1866
-   149 0001:000B18A4   150 0001:000B18B2   152 0001:000B18FA   153 0001:000B18FC
-   157 0001:000B1948   159 0001:000B1958
+    70 0001:000B1440    71 0001:000B1452    72 0001:000B145B    73 0001:000B145F
+    79 0001:000B147C    80 0001:000B149E    81 0001:000B14A5    82 0001:000B14CA
+    83 0001:000B14D0    86 0001:000B14E3    87 0001:000B14E9    89 0001:000B1520
+    90 0001:000B1572    92 0001:000B157C    93 0001:000B159B    95 0001:000B15C3
+    96 0001:000B15D3    97 0001:000B15E5    98 0001:000B15FE   100 0001:000B1609
+   109 0001:000B1688   110 0001:000B16AF   111 0001:000B16BE   112 0001:000B16CC
+   113 0001:000B16DA   116 0001:000B16E3   115 0001:000B16ED   119 0001:000B170C
+   121 0001:000B1728   123 0001:000B1757   124 0001:000B1782   126 0001:000B178E
+   128 0001:000B17AC   129 0001:000B17AF   131 0001:000B17B1   124 0001:000B17B2
+   132 0001:000B17B5   134 0001:000B17BB   119 0001:000B17BE   136 0001:000B17C7
+   139 0001:000B17CD   159 0001:000B17E5   140 0001:000B17F3   139 0001:000B1835
+   143 0001:000B183A   145 0001:000B1845   147 0001:000B1852   148 0001:000B1872
+   149 0001:000B18B0   150 0001:000B18BE   152 0001:000B1906   153 0001:000B1908
+   157 0001:000B1954   159 0001:000B1964
 
 Line numbers for EchoTasks(tasks\EchoTasks.pas) segment .itext
 
@@ -17962,73 +17962,73 @@ Line numbers for EchoTasks(tasks\EchoTasks.pas) segment .itext
 
 Line numbers for EditTasks(tasks\EditTasks.pas) segment .text
 
-   228 0001:000B2FA8   229 0001:000B2FBA   230 0001:000B2FC3   231 0001:000B2FD2
-   234 0001:000B2FEC   235 0001:000B2FF7   236 0001:000B2FFF   237 0001:000B300B
-   243 0001:000B301C   244 0001:000B3045   245 0001:000B3054   246 0001:000B3062
-   247 0001:000B3078   249 0001:000B307C   248 0001:000B307D   253 0001:000B309E
-   254 0001:000B30BA   255 0001:000B30C4   251 0001:000B30C5   260 0001:000B30D3
-   261 0001:000B30EB   258 0001:000B30EC   264 0001:000B3105   266 0001:000B3115
-   269 0001:000B3154   270 0001:000B317C   271 0001:000B3191   272 0001:000B3199
-   273 0001:000B31A8   274 0001:000B31B8   275 0001:000B31D7   276 0001:000B3216
-   277 0001:000B3235   279 0001:000B326D   280 0001:000B328E   283 0001:000B32EC
-   284 0001:000B32F2   285 0001:000B32F6   286 0001:000B3308   292 0001:000B330C
-   293 0001:000B3311   294 0001:000B331B   296 0001:000B332C   298 0001:000B3356
-   299 0001:000B3369   294 0001:000B336A   300 0001:000B336D   306 0001:000B3374
-   307 0001:000B3394   308 0001:000B33A2   309 0001:000B33AA   310 0001:000B33B6
-   311 0001:000B33BF   314 0001:000B33CC   315 0001:000B33F8   317 0001:000B3404
-   318 0001:000B3413   321 0001:000B3420   322 0001:000B342E   324 0001:000B343F
-   325 0001:000B3450   326 0001:000B3476   327 0001:000B3481   328 0001:000B34A3
-   329 0001:000B34AB   322 0001:000B34AC   331 0001:000B34BC   334 0001:000B34CF
-   340 0001:000B3540   341 0001:000B3547   342 0001:000B3563   348 0001:000B3568
-   349 0001:000B357A   350 0001:000B357C   351 0001:000B359E   350 0001:000B35B1
-   352 0001:000B35B4   356 0001:000B35C0   357 0001:000B35C2   362 0001:000B35C4
-   363 0001:000B35C7   364 0001:000B35CE   365 0001:000B35DA   368 0001:000B35EC
-   369 0001:000B360E   370 0001:000B3642   371 0001:000B3655   378 0001:000B3690
-   379 0001:000B3698   380 0001:000B36A4   382 0001:000B36B1   383 0001:000B36CD
-   388 0001:000B36D4   389 0001:000B36E5   390 0001:000B36F8   392 0001:000B370A
-   394 0001:000B3734   395 0001:000B3751   390 0001:000B3752   396 0001:000B3757
-   399 0001:000B3764   400 0001:000B3784   401 0001:000B378F   402 0001:000B379A
-   405 0001:000B37BC   406 0001:000B37BF   408 0001:000B37C3   409 0001:000B37D0
-   411 0001:000B37DD   419 0001:000B37F8   420 0001:000B381F   421 0001:000B3853
-   422 0001:000B3859   423 0001:000B3866   424 0001:000B386C   426 0001:000B3879
-   427 0001:000B387F   429 0001:000B388D   430 0001:000B389A   432 0001:000B38A7
-   436 0001:000B38C7   437 0001:000B38D1   438 0001:000B38F6   440 0001:000B3913
-   432 0001:000B3914   441 0001:000B3919   446 0001:000B3974   447 0001:000B3996
-   448 0001:000B399C   449 0001:000B39A9   450 0001:000B39AF   452 0001:000B39BA
-   454 0001:000B39EE   455 0001:000B39F4   457 0001:000B3A01   458 0001:000B3A0A
-   464 0001:000B3A54   465 0001:000B3A7B   466 0001:000B3A7E   467 0001:000B3A82
-   469 0001:000B3AA3   471 0001:000B3AC5   472 0001:000B3AD5   473 0001:000B3AD9
-   475 0001:000B3ADB   467 0001:000B3ADC   476 0001:000B3AE1   477 0001:000B3AE7
-   478 0001:000B3B10   483 0001:000B3B60   484 0001:000B3B72   485 0001:000B3B7B
-   486 0001:000B3B7F   489 0001:000B3B9C   490 0001:000B3BBE   491 0001:000B3BD9
-   492 0001:000B3BDC   499 0001:000B3C04   500 0001:000B3C2D   501 0001:000B3C6C
-   502 0001:000B3C90   501 0001:000B3C9A   503 0001:000B3C9D   504 0001:000B3CA0
-   509 0001:000B3CE4   510 0001:000B3CEB   512 0001:000B3CF1   513 0001:000B3CF7
-   516 0001:000B3D07   519 0001:000B3D12   520 0001:000B3D1B   525 0001:000B3D38
-   526 0001:000B3D3B   527 0001:000B3D42   528 0001:000B3D4E   537 0001:000B3D60
-   538 0001:000B3DA2   539 0001:000B3DB0   540 0001:000B3E01   541 0001:000B3E07
-   542 0001:000B3E16   543 0001:000B3E24   544 0001:000B3E43   545 0001:000B3E6B
-   547 0001:000B3E7F   548 0001:000B3ED6   549 0001:000B3EF7   550 0001:000B3F04
-   552 0001:000B3F11   554 0001:000B3F21   555 0001:000B3F3C   552 0001:000B3F3D
-   556 0001:000B3F42   557 0001:000B3F4A   545 0001:000B3F4D   559 0001:000B3F64
-   561 0001:000B3F74   566 0001:000B3FFC   567 0001:000B400E   568 0001:000B4017
-   569 0001:000B4024   570 0001:000B4031   576 0001:000B4064   577 0001:000B409F
-   578 0001:000B40A5   580 0001:000B4103   582 0001:000B415F   583 0001:000B4166
-   584 0001:000B4175   585 0001:000B4183   586 0001:000B4195   587 0001:000B41B0
-   588 0001:000B41D0   587 0001:000B41EC   589 0001:000B41EF   591 0001:000B4217
-   593 0001:000B4227   599 0001:000B42B0   600 0001:000B42C2   601 0001:000B42CB
-   602 0001:000B42DA   605 0001:000B42F4   606 0001:000B42FF   607 0001:000B4307
-   608 0001:000B4313   611 0001:000B4324   612 0001:000B432A   613 0001:000B4334
-   618 0001:000B4338   619 0001:000B435F   620 0001:000B4377   621 0001:000B43AC
-   623 0001:000B43B9   624 0001:000B43C4   628 0001:000B43D0   629 0001:000B43E0
-   628 0001:000B43FC   630 0001:000B4401   632 0001:000B440E   635 0001:000B4454
-   636 0001:000B4474   637 0001:000B447F   641 0001:000B44A0   642 0001:000B44A2
-   648 0001:000B44A4   649 0001:000B44A7   658 0001:000B44A8   659 0001:000B44AB
-   660 0001:000B44B2   661 0001:000B44BE   664 0001:000B44D0   665 0001:000B44F1
-   666 0001:000B4522   667 0001:000B4530   670 0001:000B455C   671 0001:000B4584
-   672 0001:000B458A   673 0001:000B4597   674 0001:000B459D   676 0001:000B45A8
-   677 0001:000B45AE   679 0001:000B45EE   681 0001:000B462C   682 0001:000B4635
-   687 0001:000B4690   688 0001:000B46B1   689 0001:000B46D8   690 0001:000B46E6
+   228 0001:000B2FB4   229 0001:000B2FC6   230 0001:000B2FCF   231 0001:000B2FDE
+   234 0001:000B2FF8   235 0001:000B3003   236 0001:000B300B   237 0001:000B3017
+   243 0001:000B3028   244 0001:000B3051   245 0001:000B3060   246 0001:000B306E
+   247 0001:000B3084   249 0001:000B3088   248 0001:000B3089   253 0001:000B30AA
+   254 0001:000B30C6   255 0001:000B30D0   251 0001:000B30D1   260 0001:000B30DF
+   261 0001:000B30F7   258 0001:000B30F8   264 0001:000B3111   266 0001:000B3121
+   269 0001:000B3160   270 0001:000B3188   271 0001:000B319D   272 0001:000B31A5
+   273 0001:000B31B4   274 0001:000B31C4   275 0001:000B31E3   276 0001:000B3222
+   277 0001:000B3241   279 0001:000B3279   280 0001:000B329A   283 0001:000B32F8
+   284 0001:000B32FE   285 0001:000B3302   286 0001:000B3314   292 0001:000B3318
+   293 0001:000B331D   294 0001:000B3327   296 0001:000B3338   298 0001:000B3362
+   299 0001:000B3375   294 0001:000B3376   300 0001:000B3379   306 0001:000B3380
+   307 0001:000B33A0   308 0001:000B33AE   309 0001:000B33B6   310 0001:000B33C2
+   311 0001:000B33CB   314 0001:000B33D8   315 0001:000B3404   317 0001:000B3410
+   318 0001:000B341F   321 0001:000B342C   322 0001:000B343A   324 0001:000B344B
+   325 0001:000B345C   326 0001:000B3482   327 0001:000B348D   328 0001:000B34AF
+   329 0001:000B34B7   322 0001:000B34B8   331 0001:000B34C8   334 0001:000B34DB
+   340 0001:000B354C   341 0001:000B3553   342 0001:000B356F   348 0001:000B3574
+   349 0001:000B3586   350 0001:000B3588   351 0001:000B35AA   350 0001:000B35BD
+   352 0001:000B35C0   356 0001:000B35CC   357 0001:000B35CE   362 0001:000B35D0
+   363 0001:000B35D3   364 0001:000B35DA   365 0001:000B35E6   368 0001:000B35F8
+   369 0001:000B361A   370 0001:000B364E   371 0001:000B3661   378 0001:000B369C
+   379 0001:000B36A4   380 0001:000B36B0   382 0001:000B36BD   383 0001:000B36D9
+   388 0001:000B36E0   389 0001:000B36F1   390 0001:000B3704   392 0001:000B3716
+   394 0001:000B3740   395 0001:000B375D   390 0001:000B375E   396 0001:000B3763
+   399 0001:000B3770   400 0001:000B3790   401 0001:000B379B   402 0001:000B37A6
+   405 0001:000B37C8   406 0001:000B37CB   408 0001:000B37CF   409 0001:000B37DC
+   411 0001:000B37E9   419 0001:000B3804   420 0001:000B382B   421 0001:000B385F
+   422 0001:000B3865   423 0001:000B3872   424 0001:000B3878   426 0001:000B3885
+   427 0001:000B388B   429 0001:000B3899   430 0001:000B38A6   432 0001:000B38B3
+   436 0001:000B38D3   437 0001:000B38DD   438 0001:000B3902   440 0001:000B391F
+   432 0001:000B3920   441 0001:000B3925   446 0001:000B3980   447 0001:000B39A2
+   448 0001:000B39A8   449 0001:000B39B5   450 0001:000B39BB   452 0001:000B39C6
+   454 0001:000B39FA   455 0001:000B3A00   457 0001:000B3A0D   458 0001:000B3A16
+   464 0001:000B3A60   465 0001:000B3A87   466 0001:000B3A8A   467 0001:000B3A8E
+   469 0001:000B3AAF   471 0001:000B3AD1   472 0001:000B3AE1   473 0001:000B3AE5
+   475 0001:000B3AE7   467 0001:000B3AE8   476 0001:000B3AED   477 0001:000B3AF3
+   478 0001:000B3B1C   483 0001:000B3B6C   484 0001:000B3B7E   485 0001:000B3B87
+   486 0001:000B3B8B   489 0001:000B3BA8   490 0001:000B3BCA   491 0001:000B3BE5
+   492 0001:000B3BE8   499 0001:000B3C10   500 0001:000B3C39   501 0001:000B3C78
+   502 0001:000B3C9C   501 0001:000B3CA6   503 0001:000B3CA9   504 0001:000B3CAC
+   509 0001:000B3CF0   510 0001:000B3CF7   512 0001:000B3CFD   513 0001:000B3D03
+   516 0001:000B3D13   519 0001:000B3D1E   520 0001:000B3D27   525 0001:000B3D44
+   526 0001:000B3D47   527 0001:000B3D4E   528 0001:000B3D5A   537 0001:000B3D6C
+   538 0001:000B3DAE   539 0001:000B3DBC   540 0001:000B3E0D   541 0001:000B3E13
+   542 0001:000B3E22   543 0001:000B3E30   544 0001:000B3E4F   545 0001:000B3E77
+   547 0001:000B3E8B   548 0001:000B3EE2   549 0001:000B3F03   550 0001:000B3F10
+   552 0001:000B3F1D   554 0001:000B3F2D   555 0001:000B3F48   552 0001:000B3F49
+   556 0001:000B3F4E   557 0001:000B3F56   545 0001:000B3F59   559 0001:000B3F70
+   561 0001:000B3F80   566 0001:000B4008   567 0001:000B401A   568 0001:000B4023
+   569 0001:000B4030   570 0001:000B403D   576 0001:000B4070   577 0001:000B40AB
+   578 0001:000B40B1   580 0001:000B410F   582 0001:000B416B   583 0001:000B4172
+   584 0001:000B4181   585 0001:000B418F   586 0001:000B41A1   587 0001:000B41BC
+   588 0001:000B41DC   587 0001:000B41F8   589 0001:000B41FB   591 0001:000B4223
+   593 0001:000B4233   599 0001:000B42BC   600 0001:000B42CE   601 0001:000B42D7
+   602 0001:000B42E6   605 0001:000B4300   606 0001:000B430B   607 0001:000B4313
+   608 0001:000B431F   611 0001:000B4330   612 0001:000B4336   613 0001:000B4340
+   618 0001:000B4344   619 0001:000B436B   620 0001:000B4383   621 0001:000B43B8
+   623 0001:000B43C5   624 0001:000B43D0   628 0001:000B43DC   629 0001:000B43EC
+   628 0001:000B4408   630 0001:000B440D   632 0001:000B441A   635 0001:000B4460
+   636 0001:000B4480   637 0001:000B448B   641 0001:000B44AC   642 0001:000B44AE
+   648 0001:000B44B0   649 0001:000B44B3   658 0001:000B44B4   659 0001:000B44B7
+   660 0001:000B44BE   661 0001:000B44CA   664 0001:000B44DC   665 0001:000B44FD
+   666 0001:000B452E   667 0001:000B453C   670 0001:000B4568   671 0001:000B4590
+   672 0001:000B4596   673 0001:000B45A3   674 0001:000B45A9   676 0001:000B45B4
+   677 0001:000B45BA   679 0001:000B45FA   681 0001:000B4638   682 0001:000B4641
+   687 0001:000B469C   688 0001:000B46BD   689 0001:000B46E4   690 0001:000B46F2
 
 Line numbers for EditTasks(tasks\EditTasks.pas) segment .itext
 
@@ -18037,51 +18037,51 @@ Line numbers for EditTasks(tasks\EditTasks.pas) segment .itext
 
 Line numbers for FileTasks(tasks\FileTasks.pas) segment .text
 
-   147 0001:000B51E4   148 0001:000B51F6   149 0001:000B51FF   150 0001:000B5203
-   154 0001:000B5220   155 0001:000B5225   158 0001:000B5228   159 0001:000B522B
-   160 0001:000B5237   163 0001:000B523C   164 0001:000B523F   165 0001:000B524B
-   170 0001:000B5250   171 0001:000B5255   173 0001:000B525B   174 0001:000B526C
-   175 0001:000B5276   173 0001:000B527F   177 0001:000B5282   183 0001:000B5288
-   184 0001:000B52B1   185 0001:000B52C4   186 0001:000B52D5   185 0001:000B52E8
-   187 0001:000B52EB   193 0001:000B532C   194 0001:000B5355   195 0001:000B5368
-   196 0001:000B5379   195 0001:000B538C   197 0001:000B538F   202 0001:000B53D0
-   203 0001:000B53D4   205 0001:000B53E4   206 0001:000B5404   207 0001:000B5412
-   212 0001:000B5418   217 0001:000B541C   218 0001:000B5436   219 0001:000B543D
-   220 0001:000B5447   222 0001:000B5458   224 0001:000B5461   226 0001:000B547B
-   227 0001:000B5493   230 0001:000B54A3   220 0001:000B54A4   231 0001:000B54A7
-   234 0001:000B54D0   235 0001:000B54D3   236 0001:000B54DF   237 0001:000B54E6
-   238 0001:000B54EB   243 0001:000B54F0   244 0001:000B54F3   245 0001:000B54FA
-   246 0001:000B5506   250 0001:000B5514   251 0001:000B5536   252 0001:000B557F
-   253 0001:000B5585   254 0001:000B5593   256 0001:000B55A3   257 0001:000B55AF
-   258 0001:000B55D8   259 0001:000B55F7   261 0001:000B5602   262 0001:000B561A
-   263 0001:000B5626   266 0001:000B564F   272 0001:000B572C   273 0001:000B5743
-   274 0001:000B5749   275 0001:000B5757   276 0001:000B5776   277 0001:000B5782
-   281 0001:000B57C8   282 0001:000B57CB   283 0001:000B57D2   284 0001:000B57DE
-   292 0001:000B57F0   293 0001:000B580C   296 0001:000B581E   297 0001:000B582D
-   301 0001:000B5850   302 0001:000B5857   304 0001:000B585D   305 0001:000B5875
-   306 0001:000B5886   305 0001:000B5895   309 0001:000B5898   317 0001:000B58D8
-   318 0001:000B58FC   320 0001:000B5905   321 0001:000B5931   323 0001:000B593B
-   324 0001:000B5941   326 0001:000B5954   327 0001:000B595A   328 0001:000B597E
-   329 0001:000B5984   331 0001:000B59C9   333 0001:000B5A16   335 0001:000B5A29
-   336 0001:000B5A37   337 0001:000B5A63   338 0001:000B5A6D   340 0001:000B5A78
-   341 0001:000B5A84   343 0001:000B5A90   344 0001:000B5ABD   347 0001:000B5AC9
-   333 0001:000B5ACA   349 0001:000B5AD3   352 0001:000B5BCC   353 0001:000B5BEC
-   354 0001:000B5BF7   355 0001:000B5C06   364 0001:000B5C28   365 0001:000B5C62
-   366 0001:000B5C8C   368 0001:000B5C9E   369 0001:000B5CAC   370 0001:000B5CB2
-   371 0001:000B5CD6   372 0001:000B5CED   366 0001:000B5CEE   373 0001:000B5CF3
-   379 0001:000B5D9C   380 0001:000B5DB7   382 0001:000B5DC0   383 0001:000B5DCA
-   385 0001:000B5DD7   386 0001:000B5DEA   389 0001:000B5E18   390 0001:000B5E1B
-   391 0001:000B5E22   392 0001:000B5E2E   395 0001:000B5E48   396 0001:000B5E68
-   397 0001:000B5E9C   398 0001:000B5EA3   403 0001:000B5EE0   404 0001:000B5F19
-   405 0001:000B5F65   406 0001:000B5F6F   408 0001:000B5F7F   409 0001:000B5F92
-   411 0001:000B5F9D   412 0001:000B5FA8   413 0001:000B5FB4   416 0001:000B6010
-   419 0001:000B60A4   420 0001:000B60DD   421 0001:000B60E9   422 0001:000B6136
-   423 0001:000B6146   428 0001:000B61B4   429 0001:000B61ED   430 0001:000B6239
-   431 0001:000B6243   433 0001:000B6253   434 0001:000B6266   436 0001:000B6271
-   437 0001:000B627C   438 0001:000B6288   441 0001:000B62E4   446 0001:000B6378
-   447 0001:000B63B1   448 0001:000B63DB   449 0001:000B63E7   450 0001:000B6434
-   452 0001:000B6444   454 0001:000B6453   455 0001:000B6462   456 0001:000B646F
-   452 0001:000B6470   457 0001:000B6475
+   147 0001:000B51F0   148 0001:000B5202   149 0001:000B520B   150 0001:000B520F
+   154 0001:000B522C   155 0001:000B5231   158 0001:000B5234   159 0001:000B5237
+   160 0001:000B5243   163 0001:000B5248   164 0001:000B524B   165 0001:000B5257
+   170 0001:000B525C   171 0001:000B5261   173 0001:000B5267   174 0001:000B5278
+   175 0001:000B5282   173 0001:000B528B   177 0001:000B528E   183 0001:000B5294
+   184 0001:000B52BD   185 0001:000B52D0   186 0001:000B52E1   185 0001:000B52F4
+   187 0001:000B52F7   193 0001:000B5338   194 0001:000B5361   195 0001:000B5374
+   196 0001:000B5385   195 0001:000B5398   197 0001:000B539B   202 0001:000B53DC
+   203 0001:000B53E0   205 0001:000B53F0   206 0001:000B5410   207 0001:000B541E
+   212 0001:000B5424   217 0001:000B5428   218 0001:000B5442   219 0001:000B5449
+   220 0001:000B5453   222 0001:000B5464   224 0001:000B546D   226 0001:000B5487
+   227 0001:000B549F   230 0001:000B54AF   220 0001:000B54B0   231 0001:000B54B3
+   234 0001:000B54DC   235 0001:000B54DF   236 0001:000B54EB   237 0001:000B54F2
+   238 0001:000B54F7   243 0001:000B54FC   244 0001:000B54FF   245 0001:000B5506
+   246 0001:000B5512   250 0001:000B5520   251 0001:000B5542   252 0001:000B558B
+   253 0001:000B5591   254 0001:000B559F   256 0001:000B55AF   257 0001:000B55BB
+   258 0001:000B55E4   259 0001:000B5603   261 0001:000B560E   262 0001:000B5626
+   263 0001:000B5632   266 0001:000B565B   272 0001:000B5738   273 0001:000B574F
+   274 0001:000B5755   275 0001:000B5763   276 0001:000B5782   277 0001:000B578E
+   281 0001:000B57D4   282 0001:000B57D7   283 0001:000B57DE   284 0001:000B57EA
+   292 0001:000B57FC   293 0001:000B5818   296 0001:000B582A   297 0001:000B5839
+   301 0001:000B585C   302 0001:000B5863   304 0001:000B5869   305 0001:000B5881
+   306 0001:000B5892   305 0001:000B58A1   309 0001:000B58A4   317 0001:000B58E4
+   318 0001:000B5908   320 0001:000B5911   321 0001:000B593D   323 0001:000B5947
+   324 0001:000B594D   326 0001:000B5960   327 0001:000B5966   328 0001:000B598A
+   329 0001:000B5990   331 0001:000B59D5   333 0001:000B5A22   335 0001:000B5A35
+   336 0001:000B5A43   337 0001:000B5A6F   338 0001:000B5A79   340 0001:000B5A84
+   341 0001:000B5A90   343 0001:000B5A9C   344 0001:000B5AC9   347 0001:000B5AD5
+   333 0001:000B5AD6   349 0001:000B5ADF   352 0001:000B5BD8   353 0001:000B5BF8
+   354 0001:000B5C03   355 0001:000B5C12   364 0001:000B5C34   365 0001:000B5C6E
+   366 0001:000B5C98   368 0001:000B5CAA   369 0001:000B5CB8   370 0001:000B5CBE
+   371 0001:000B5CE2   372 0001:000B5CF9   366 0001:000B5CFA   373 0001:000B5CFF
+   379 0001:000B5DA8   380 0001:000B5DC3   382 0001:000B5DCC   383 0001:000B5DD6
+   385 0001:000B5DE3   386 0001:000B5DF6   389 0001:000B5E24   390 0001:000B5E27
+   391 0001:000B5E2E   392 0001:000B5E3A   395 0001:000B5E54   396 0001:000B5E74
+   397 0001:000B5EA8   398 0001:000B5EAF   403 0001:000B5EEC   404 0001:000B5F25
+   405 0001:000B5F71   406 0001:000B5F7B   408 0001:000B5F8B   409 0001:000B5F9E
+   411 0001:000B5FA9   412 0001:000B5FB4   413 0001:000B5FC0   416 0001:000B601C
+   419 0001:000B60B0   420 0001:000B60E9   421 0001:000B60F5   422 0001:000B6142
+   423 0001:000B6152   428 0001:000B61C0   429 0001:000B61F9   430 0001:000B6245
+   431 0001:000B624F   433 0001:000B625F   434 0001:000B6272   436 0001:000B627D
+   437 0001:000B6288   438 0001:000B6294   441 0001:000B62F0   446 0001:000B6384
+   447 0001:000B63BD   448 0001:000B63E7   449 0001:000B63F3   450 0001:000B6440
+   452 0001:000B6450   454 0001:000B645F   455 0001:000B646E   456 0001:000B647B
+   452 0001:000B647C   457 0001:000B6481
 
 Line numbers for FileTasks(tasks\FileTasks.pas) segment .itext
 
@@ -18089,14 +18089,14 @@ Line numbers for FileTasks(tasks\FileTasks.pas) segment .itext
 
 Line numbers for GZipTasks(tasks\GZipTasks.pas) segment .text
 
-    80 0001:000B6894    81 0001:000B68A6    82 0001:000B68AF    83 0001:000B68B3
-    86 0001:000B68D0    87 0001:000B68D3    88 0001:000B68DA    89 0001:000B68E6
-    90 0001:000B68F2    95 0001:000B6910    96 0001:000B6931    97 0001:000B6938
-    98 0001:000B6943    99 0001:000B699F   101 0001:000B69A9   102 0001:000B69D7
-   108 0001:000B6A38   109 0001:000B6A3B   110 0001:000B6A42   111 0001:000B6A48
-   112 0001:000B6A56   118 0001:000B6A88   119 0001:000B6AA9   120 0001:000B6AB0
-   121 0001:000B6ABB   122 0001:000B6AD4   123 0001:000B6B30   124 0001:000B6B4D
-   126 0001:000B6B5D   127 0001:000B6B8B
+    80 0001:000B68A0    81 0001:000B68B2    82 0001:000B68BB    83 0001:000B68BF
+    86 0001:000B68DC    87 0001:000B68DF    88 0001:000B68E6    89 0001:000B68F2
+    90 0001:000B68FE    95 0001:000B691C    96 0001:000B693D    97 0001:000B6944
+    98 0001:000B694F    99 0001:000B69AB   101 0001:000B69B5   102 0001:000B69E3
+   108 0001:000B6A44   109 0001:000B6A47   110 0001:000B6A4E   111 0001:000B6A54
+   112 0001:000B6A62   118 0001:000B6A94   119 0001:000B6AB5   120 0001:000B6ABC
+   121 0001:000B6AC7   122 0001:000B6AE0   123 0001:000B6B3C   124 0001:000B6B59
+   126 0001:000B6B69   127 0001:000B6B97
 
 Line numbers for GZipTasks(tasks\GZipTasks.pas) segment .itext
 
@@ -18104,15 +18104,15 @@ Line numbers for GZipTasks(tasks\GZipTasks.pas) segment .itext
 
 Line numbers for IniFileTasks(tasks\IniFileTasks.pas) segment .text
 
-    90 0001:000B71E8    91 0001:000B71ED    92 0001:000B71FE    93 0001:000B7216
-    91 0001:000B7228    94 0001:000B722B    97 0001:000B7230    98 0001:000B7233
-    99 0001:000B723A   100 0001:000B7246   105 0001:000B7258   106 0001:000B7277
-   107 0001:000B727E   109 0001:000B729D   110 0001:000B72C7   112 0001:000B72EB
-   113 0001:000B7322   118 0001:000B73C4   123 0001:000B73C8   124 0001:000B73E3
-   125 0001:000B73EA   127 0001:000B73F6   128 0001:000B7415   129 0001:000B7423
-   131 0001:000B7460   133 0001:000B7470   139 0001:000B74AC   140 0001:000B74B1
-   143 0001:000B74B4   144 0001:000B74D0   146 0001:000B74D7   147 0001:000B74F6
-   148 0001:000B7504   150 0001:000B7523   152 0001:000B7533
+    90 0001:000B71F4    91 0001:000B71F9    92 0001:000B720A    93 0001:000B7222
+    91 0001:000B7234    94 0001:000B7237    97 0001:000B723C    98 0001:000B723F
+    99 0001:000B7246   100 0001:000B7252   105 0001:000B7264   106 0001:000B7283
+   107 0001:000B728A   109 0001:000B72A9   110 0001:000B72D3   112 0001:000B72F7
+   113 0001:000B732E   118 0001:000B73D0   123 0001:000B73D4   124 0001:000B73EF
+   125 0001:000B73F6   127 0001:000B7402   128 0001:000B7421   129 0001:000B742F
+   131 0001:000B746C   133 0001:000B747C   139 0001:000B74B8   140 0001:000B74BD
+   143 0001:000B74C0   144 0001:000B74DC   146 0001:000B74E3   147 0001:000B7502
+   148 0001:000B7510   150 0001:000B752F   152 0001:000B753F
 
 Line numbers for IniFileTasks(tasks\IniFileTasks.pas) segment .itext
 
@@ -18120,18 +18120,18 @@ Line numbers for IniFileTasks(tasks\IniFileTasks.pas) segment .itext
 
 Line numbers for InnoSetupTasks(tasks\InnoSetupTasks.pas) segment .text
 
-    99 0001:000B77AC   101 0001:000B77C8   102 0001:000B77DE   105 0001:000B77E8
-   106 0001:000B77FB   109 0001:000B780B   110 0001:000B7829   111 0001:000B7839
-   113 0001:000B7851   117 0001:000B78FC   118 0001:000B7928   121 0001:000B7959
-   122 0001:000B79CC   123 0001:000B79FF   125 0001:000B7A0D   126 0001:000B7A3D
-   127 0001:000B7A5C   128 0001:000B7A7B   129 0001:000B7A85   132 0001:000B7B64
-   133 0001:000B7B80   134 0001:000B7BA5   135 0001:000B7BAE   138 0001:000B7BDC
-   139 0001:000B7BEE   140 0001:000B7BF7   141 0001:000B7BFE   144 0001:000B7C18
-   145 0001:000B7C1B   146 0001:000B7C22   147 0001:000B7C2E   150 0001:000B7C40
-   151 0001:000B7C5B   152 0001:000B7C7A   153 0001:000B7C88   154 0001:000B7CAD
-   155 0001:000B7CC1   156 0001:000B7CC9   159 0001:000B7CFC   160 0001:000B7CFF
-   161 0001:000B7D0B   164 0001:000B7D20   166 0001:000B7D44   167 0001:000B7D79
-   168 0001:000B7D85   169 0001:000B7DAB   171 0001:000B7DCD   172 0001:000B7E1E
+    99 0001:000B77B8   101 0001:000B77D4   102 0001:000B77EA   105 0001:000B77F4
+   106 0001:000B7807   109 0001:000B7817   110 0001:000B7835   111 0001:000B7845
+   113 0001:000B785D   117 0001:000B7908   118 0001:000B7934   121 0001:000B7965
+   122 0001:000B79D8   123 0001:000B7A0B   125 0001:000B7A19   126 0001:000B7A49
+   127 0001:000B7A68   128 0001:000B7A87   129 0001:000B7A91   132 0001:000B7B70
+   133 0001:000B7B8C   134 0001:000B7BB1   135 0001:000B7BBA   138 0001:000B7BE8
+   139 0001:000B7BFA   140 0001:000B7C03   141 0001:000B7C0A   144 0001:000B7C24
+   145 0001:000B7C27   146 0001:000B7C2E   147 0001:000B7C3A   150 0001:000B7C4C
+   151 0001:000B7C67   152 0001:000B7C86   153 0001:000B7C94   154 0001:000B7CB9
+   155 0001:000B7CCD   156 0001:000B7CD5   159 0001:000B7D08   160 0001:000B7D0B
+   161 0001:000B7D17   164 0001:000B7D2C   166 0001:000B7D50   167 0001:000B7D85
+   168 0001:000B7D91   169 0001:000B7DB7   171 0001:000B7DD9   172 0001:000B7E2A
 
 Line numbers for InnoSetupTasks(tasks\InnoSetupTasks.pas) segment .itext
 
@@ -18139,10 +18139,10 @@ Line numbers for InnoSetupTasks(tasks\InnoSetupTasks.pas) segment .itext
 
 Line numbers for InputTasks(tasks\InputTasks.pas) segment .text
 
-    60 0001:000B8078    61 0001:000B8098    62 0001:000B80A0    64 0001:000B80B6
-    65 0001:000B80C5    66 0001:000B80D3    67 0001:000B80DD    68 0001:000B80EB
-    70 0001:000B8111    75 0001:000B8121    78 0001:000B8136    80 0001:000B8149
-    81 0001:000B8157    82 0001:000B8166    83 0001:000B817E
+    60 0001:000B8084    61 0001:000B80A4    62 0001:000B80AC    64 0001:000B80C2
+    65 0001:000B80D1    66 0001:000B80DF    67 0001:000B80E9    68 0001:000B80F7
+    70 0001:000B811D    75 0001:000B812D    78 0001:000B8142    80 0001:000B8155
+    81 0001:000B8163    82 0001:000B8172    83 0001:000B818A
 
 Line numbers for InputTasks(tasks\InputTasks.pas) segment .itext
 
@@ -18150,13 +18150,13 @@ Line numbers for InputTasks(tasks\InputTasks.pas) segment .itext
 
 Line numbers for LoadFileTasks(tasks\LoadFileTasks.pas) segment .text
 
-    76 0001:000B8388    77 0001:000B83B0    78 0001:000B83B8    79 0001:000B83C7
-    80 0001:000B83D5    81 0001:000B83E3    83 0001:000B8411    86 0001:000B8424
-    88 0001:000B8440    91 0001:000B845E    92 0001:000B8477    94 0001:000B8489
-    96 0001:000B84A2    98 0001:000B84DD    92 0001:000B84DE   100 0001:000B84E1
-    86 0001:000B84E4   101 0001:000B84ED   103 0001:000B84F9   106 0001:000B852B
-   108 0001:000B853B   111 0001:000B8564   112 0001:000B856A   113 0001:000B8571
-   114 0001:000B8590
+    76 0001:000B8394    77 0001:000B83BC    78 0001:000B83C4    79 0001:000B83D3
+    80 0001:000B83E1    81 0001:000B83EF    83 0001:000B841D    86 0001:000B8430
+    88 0001:000B844C    91 0001:000B846A    92 0001:000B8483    94 0001:000B8495
+    96 0001:000B84AE    98 0001:000B84E9    92 0001:000B84EA   100 0001:000B84ED
+    86 0001:000B84F0   101 0001:000B84F9   103 0001:000B8505   106 0001:000B8537
+   108 0001:000B8547   111 0001:000B8570   112 0001:000B8576   113 0001:000B857D
+   114 0001:000B859C
 
 Line numbers for LoadFileTasks(tasks\LoadFileTasks.pas) segment .itext
 
@@ -18164,20 +18164,20 @@ Line numbers for LoadFileTasks(tasks\LoadFileTasks.pas) segment .itext
 
 Line numbers for ZipTasks(tasks\ZipTasks.pas) segment .text
 
-    91 0001:000B8980    92 0001:000B8992    93 0001:000B899B    94 0001:000B899F
-    95 0001:000B89A3    98 0001:000B89C0    99 0001:000B89C3   100 0001:000B89CA
-   101 0001:000B89D6   107 0001:000B89E8   108 0001:000B8A1A   109 0001:000B8A4D
-   111 0001:000B8A61   113 0001:000B8A6B   115 0001:000B8A75   116 0001:000B8A81
-   118 0001:000B8A8E   120 0001:000B8AE6   122 0001:000B8AF8   123 0001:000B8B07
-   124 0001:000B8B1C   120 0001:000B8B1D   125 0001:000B8B22   128 0001:000B8BB8
-   129 0001:000B8BD5   130 0001:000B8BF9   131 0001:000B8C07   132 0001:000B8C21
-   133 0001:000B8C2F   134 0001:000B8C38   135 0001:000B8C3C   137 0001:000B8C51
-   139 0001:000B8C64   145 0001:000B8C88   146 0001:000B8C8B   147 0001:000B8C92
-   148 0001:000B8C98   149 0001:000B8CA6   155 0001:000B8CD8   156 0001:000B8D06
-   157 0001:000B8D12   158 0001:000B8D29   159 0001:000B8D43   162 0001:000B8D51
-   164 0001:000B8D61   166 0001:000B8D92   168 0001:000B8DA5   169 0001:000B8DBF
-   170 0001:000B8DDD   171 0001:000B8DE8   172 0001:000B8E02   166 0001:000B8E03
-   176 0001:000B8E15   178 0001:000B8E28
+    91 0001:000B898C    92 0001:000B899E    93 0001:000B89A7    94 0001:000B89AB
+    95 0001:000B89AF    98 0001:000B89CC    99 0001:000B89CF   100 0001:000B89D6
+   101 0001:000B89E2   107 0001:000B89F4   108 0001:000B8A26   109 0001:000B8A59
+   111 0001:000B8A6D   113 0001:000B8A77   115 0001:000B8A81   116 0001:000B8A8D
+   118 0001:000B8A9A   120 0001:000B8AF2   122 0001:000B8B04   123 0001:000B8B13
+   124 0001:000B8B28   120 0001:000B8B29   125 0001:000B8B2E   128 0001:000B8BC4
+   129 0001:000B8BE1   130 0001:000B8C05   131 0001:000B8C13   132 0001:000B8C2D
+   133 0001:000B8C3B   134 0001:000B8C44   135 0001:000B8C48   137 0001:000B8C5D
+   139 0001:000B8C70   145 0001:000B8C94   146 0001:000B8C97   147 0001:000B8C9E
+   148 0001:000B8CA4   149 0001:000B8CB2   155 0001:000B8CE4   156 0001:000B8D12
+   157 0001:000B8D1E   158 0001:000B8D35   159 0001:000B8D4F   162 0001:000B8D5D
+   164 0001:000B8D6D   166 0001:000B8D9E   168 0001:000B8DB1   169 0001:000B8DCB
+   170 0001:000B8DE9   171 0001:000B8DF4   172 0001:000B8E0E   166 0001:000B8E0F
+   176 0001:000B8E21   178 0001:000B8E34
 
 Line numbers for ZipTasks(tasks\ZipTasks.pas) segment .itext
 
@@ -18185,14 +18185,14 @@ Line numbers for ZipTasks(tasks\ZipTasks.pas) segment .itext
 
 Line numbers for WantTasks(tasks\WantTasks.pas) segment .text
 
-    78 0001:000B916C    79 0001:000B917E    80 0001:000B9187    81 0001:000B9198
-    82 0001:000B91A8    85 0001:000B91C4    86 0001:000B91CF    87 0001:000B91D7
-    88 0001:000B91E3    92 0001:000B91F4    93 0001:000B9215    94 0001:000B921C
-    95 0001:000B924C    96 0001:000B9288    97 0001:000B92D8   102 0001:000B9354
-   103 0001:000B9377   104 0001:000B938C   105 0001:000B93D0   106 0001:000B9424
-   107 0001:000B9432   108 0001:000B9441   109 0001:000B944F   110 0001:000B9462
-   111 0001:000B947A   112 0001:000B9490   114 0001:000B94B1   117 0001:000B94DC
-   118 0001:000B94DE   120 0001:000B94F5
+    78 0001:000B9178    79 0001:000B918A    80 0001:000B9193    81 0001:000B91A4
+    82 0001:000B91B4    85 0001:000B91D0    86 0001:000B91DB    87 0001:000B91E3
+    88 0001:000B91EF    92 0001:000B9200    93 0001:000B9221    94 0001:000B9228
+    95 0001:000B9258    96 0001:000B9294    97 0001:000B92E4   102 0001:000B9360
+   103 0001:000B9383   104 0001:000B9398   105 0001:000B93DC   106 0001:000B9430
+   107 0001:000B943E   108 0001:000B944D   109 0001:000B945B   110 0001:000B946E
+   111 0001:000B9486   112 0001:000B949C   114 0001:000B94BD   117 0001:000B94E8
+   118 0001:000B94EA   120 0001:000B9501
 
 Line numbers for WantTasks(tasks\WantTasks.pas) segment .itext
 
@@ -18200,11 +18200,11 @@ Line numbers for WantTasks(tasks\WantTasks.pas) segment .itext
 
 Line numbers for TempFileTasks(tasks\TempFileTasks.pas) segment .text
 
-    77 0001:000B9764    78 0001:000B9783    79 0001:000B978A    82 0001:000B9790
-    83 0001:000B979B    85 0001:000B97C5    86 0001:000B97CD    87 0001:000B97E8
-    90 0001:000B97ED    91 0001:000B982C    92 0001:000B9832    93 0001:000B983F
-    94 0001:000B984C    95 0001:000B9868    97 0001:000B9873    99 0001:000B9887
-   102 0001:000B9924   103 0001:000B9927   104 0001:000B992E   105 0001:000B993A
+    77 0001:000B9770    78 0001:000B978F    79 0001:000B9796    82 0001:000B979C
+    83 0001:000B97A7    85 0001:000B97D1    86 0001:000B97D9    87 0001:000B97F4
+    90 0001:000B97F9    91 0001:000B9838    92 0001:000B983E    93 0001:000B984B
+    94 0001:000B9858    95 0001:000B9874    97 0001:000B987F    99 0001:000B9893
+   102 0001:000B9930   103 0001:000B9933   104 0001:000B993A   105 0001:000B9946
 
 Line numbers for TempFileTasks(tasks\TempFileTasks.pas) segment .itext
 
@@ -18212,22 +18212,22 @@ Line numbers for TempFileTasks(tasks\TempFileTasks.pas) segment .itext
 
 Line numbers for StyleTasks(tasks\StyleTasks.pas) segment .text
 
-   102 0001:000B9EE4   103 0001:000B9EF6   104 0001:000B9EFF   105 0001:000B9F0E
-   106 0001:000B9F1D   109 0001:000B9F38   110 0001:000B9F3C   111 0001:000B9F4C
-   112 0001:000B9F56   115 0001:000B9F5C   116 0001:000B9F60   117 0001:000B9F70
-   118 0001:000B9F7A   121 0001:000B9F80   122 0001:000B9F8B   123 0001:000B9F93
-   124 0001:000B9F9B   125 0001:000B9FA7   131 0001:000B9FB8   132 0001:000B9FEA
-   133 0001:000B9FF3   134 0001:000BA01C   135 0001:000BA045   136 0001:000BA04F
-   137 0001:000BA05C   139 0001:000BA072   140 0001:000BA091   141 0001:000BA0CD
-   142 0001:000BA0DA   143 0001:000BA116   137 0001:000BA117   144 0001:000BA120
-   149 0001:000BA1CC   150 0001:000BA1F0   151 0001:000BA20F   152 0001:000BA21D
-   154 0001:000BA22A   155 0001:000BA23B   156 0001:000BA24D   151 0001:000BA24E
-   157 0001:000BA251   158 0001:000BA270   159 0001:000BA27E   161 0001:000BA28B
-   162 0001:000BA2A0   163 0001:000BA2B6   158 0001:000BA2B7   164 0001:000BA2BA
-   166 0001:000BA2C4   167 0001:000BA2FA   168 0001:000BA323   169 0001:000BA32D
-   172 0001:000BA361   173 0001:000BA368   176 0001:000BA3D0   177 0001:000BA3D4
-   178 0001:000BA3DB   179 0001:000BA3F0   180 0001:000BA3F4   181 0001:000BA400
-   182 0001:000BA40C
+   102 0001:000B9EF0   103 0001:000B9F02   104 0001:000B9F0B   105 0001:000B9F1A
+   106 0001:000B9F29   109 0001:000B9F44   110 0001:000B9F48   111 0001:000B9F58
+   112 0001:000B9F62   115 0001:000B9F68   116 0001:000B9F6C   117 0001:000B9F7C
+   118 0001:000B9F86   121 0001:000B9F8C   122 0001:000B9F97   123 0001:000B9F9F
+   124 0001:000B9FA7   125 0001:000B9FB3   131 0001:000B9FC4   132 0001:000B9FF6
+   133 0001:000B9FFF   134 0001:000BA028   135 0001:000BA051   136 0001:000BA05B
+   137 0001:000BA068   139 0001:000BA07E   140 0001:000BA09D   141 0001:000BA0D9
+   142 0001:000BA0E6   143 0001:000BA122   137 0001:000BA123   144 0001:000BA12C
+   149 0001:000BA1D8   150 0001:000BA1FC   151 0001:000BA21B   152 0001:000BA229
+   154 0001:000BA236   155 0001:000BA247   156 0001:000BA259   151 0001:000BA25A
+   157 0001:000BA25D   158 0001:000BA27C   159 0001:000BA28A   161 0001:000BA297
+   162 0001:000BA2AC   163 0001:000BA2C2   158 0001:000BA2C3   164 0001:000BA2C6
+   166 0001:000BA2D0   167 0001:000BA306   168 0001:000BA32F   169 0001:000BA339
+   172 0001:000BA36D   173 0001:000BA374   176 0001:000BA3DC   177 0001:000BA3E0
+   178 0001:000BA3E7   179 0001:000BA3FC   180 0001:000BA400   181 0001:000BA40C
+   182 0001:000BA418
 
 Line numbers for StyleTasks(tasks\StyleTasks.pas) segment .itext
 
@@ -18235,21 +18235,21 @@ Line numbers for StyleTasks(tasks\StyleTasks.pas) segment .itext
 
 Line numbers for XmlPropertyTasks(tasks\XmlPropertyTasks.pas) segment .text
 
-    86 0001:000BA6E4    87 0001:000BA6F6    88 0001:000BA6FF    89 0001:000BA703
-    90 0001:000BA707    91 0001:000BA70B    96 0001:000BA728    97 0001:000BA74C
-    98 0001:000BA75B   100 0001:000BA78A   101 0001:000BA7AC   102 0001:000BA7BA
-   103 0001:000BA7DB   104 0001:000BA7E2   106 0001:000BA820   107 0001:000BA822
-   108 0001:000BA86B   110 0001:000BA86D   111 0001:000BA8A5   114 0001:000BA8AF
-   118 0001:000BA92C   119 0001:000BA961   120 0001:000BA967   121 0001:000BA973
-   122 0001:000BA97A   123 0001:000BA984   124 0001:000BA992   125 0001:000BA9A4
-   126 0001:000BA9AE   127 0001:000BA9C4   130 0001:000BAA14   131 0001:000BAA17
-   132 0001:000BAA1E   133 0001:000BAA2A   136 0001:000BAA3C   137 0001:000BAA5C
-   138 0001:000BAA7B   149 0001:000BAAA0   151 0001:000BAADB   153 0001:000BAAEB
-   154 0001:000BAB09   156 0001:000BAB13   159 0001:000BAB2B   160 0001:000BAB60
-   157 0001:000BAB9C   164 0001:000BABA8   167 0001:000BABC3   169 0001:000BABF8
-   170 0001:000BAC16   165 0001:000BAC47   174 0001:000BAC57   176 0001:000BAC5B
-   179 0001:000BAC73   180 0001:000BACA8   177 0001:000BACB5   182 0001:000BACC1
-   187 0001:000BADCC   188 0001:000BAE02   189 0001:000BAE42
+    86 0001:000BA6F0    87 0001:000BA702    88 0001:000BA70B    89 0001:000BA70F
+    90 0001:000BA713    91 0001:000BA717    96 0001:000BA734    97 0001:000BA758
+    98 0001:000BA767   100 0001:000BA796   101 0001:000BA7B8   102 0001:000BA7C6
+   103 0001:000BA7E7   104 0001:000BA7EE   106 0001:000BA82C   107 0001:000BA82E
+   108 0001:000BA877   110 0001:000BA879   111 0001:000BA8B1   114 0001:000BA8BB
+   118 0001:000BA938   119 0001:000BA96D   120 0001:000BA973   121 0001:000BA97F
+   122 0001:000BA986   123 0001:000BA990   124 0001:000BA99E   125 0001:000BA9B0
+   126 0001:000BA9BA   127 0001:000BA9D0   130 0001:000BAA20   131 0001:000BAA23
+   132 0001:000BAA2A   133 0001:000BAA36   136 0001:000BAA48   137 0001:000BAA68
+   138 0001:000BAA87   149 0001:000BAAAC   151 0001:000BAAE7   153 0001:000BAAF7
+   154 0001:000BAB15   156 0001:000BAB1F   159 0001:000BAB37   160 0001:000BAB6C
+   157 0001:000BABA8   164 0001:000BABB4   167 0001:000BABCF   169 0001:000BAC04
+   170 0001:000BAC22   165 0001:000BAC53   174 0001:000BAC63   176 0001:000BAC67
+   179 0001:000BAC7F   180 0001:000BACB4   177 0001:000BACC1   182 0001:000BACCD
+   187 0001:000BADD8   188 0001:000BAE0E   189 0001:000BAE4E
 
 Line numbers for XmlPropertyTasks(tasks\XmlPropertyTasks.pas) segment .itext
 
@@ -18265,9 +18265,9 @@ Line numbers for WantStandardTasks(tasks\WantStandardTasks.pas) segment .text
 
 Line numbers for want(f:\development\delphi\want\src\want.dpr) segment .text
 
-   141 0001:000BAEC8   142 0001:000BAECF   143 0001:000BAEDD   144 0001:000BAEEC
-   145 0001:000BAEFA   147 0001:000BAF0F   151 0001:000BAF42   152 0001:000BAF4E
-   154 0001:000BAF50   155 0001:000BAF67   158 0001:000BAF76
+   141 0001:000BAED4   142 0001:000BAEDB   143 0001:000BAEE9   144 0001:000BAEF8
+   145 0001:000BAF06   147 0001:000BAF1B   151 0001:000BAF4E   152 0001:000BAF5A
+   154 0001:000BAF5C   155 0001:000BAF73   158 0001:000BAF82
 
 Line numbers for want(f:\development\delphi\want\src\want.dpr) segment .itext
 
@@ -18278,7 +18278,7 @@ Bound resource files
 c:\Program Files (x86)\CodeGear\RAD Studio\5.0\lib\controls.res
 wantver.res
 license.res
-C:\Users\henkjan\AppData\Local\Temp\dtf22CB.tmp
+C:\Users\henkjan\AppData\Local\Temp\dtf6EE8.tmp
 
 
 Program entry point at 0002:0000113C
