@@ -914,9 +914,9 @@ object frm_About: Tfrm_About
   object lbl_Version: TLabel
     Left = 12
     Top = 52
-    Width = 38
+    Width = 41
     Height = 13
-    Caption = 'Version:'
+    Caption = 'Version: '
     Color = clBlack
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clGreen

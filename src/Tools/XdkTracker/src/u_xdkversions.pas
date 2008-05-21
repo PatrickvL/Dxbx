@@ -36,10 +36,10 @@ type
     mem_XdkVersions: TMemo;
     lst_Games: TListBox;
     procedure lst_GamesClick(Sender: TObject);
-    procedure FillGameList;
     procedure cmb_gametypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   public
+    procedure FillGameList;
     procedure ShowXdkInfo;
   end;
 

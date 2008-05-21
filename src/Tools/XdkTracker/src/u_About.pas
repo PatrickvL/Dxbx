@@ -48,7 +48,7 @@ uses
 
 procedure Tfrm_About.FormCreate(Sender: TObject);
 begin
-  lbl_Version.Caption := 'Version: ' + _XDK_TRACKER_VERSION;
+  lbl_Version.Caption := lbl_Version.Caption + _XDK_TRACKER_VERSION;
 end; // Tfrm_About.FormCreate
 
 //------------------------------------------------------------------------------
