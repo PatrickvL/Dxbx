@@ -41,6 +41,10 @@ var
   MensajesxISO: TxISOMensaje;
   Parar: Boolean;
 
+  var
+  BufCopia: array[0..65535] of Byte;
+
+
 function NumeroFicheros(Folder: string): Integer;
 function CrearXISO(NombreImagen: string; Folder: string): Boolean;
 function EscanearXISO(Imagen: TFilestream; Folder: string; var SigSectorVacio: Int64): Boolean;
@@ -251,6 +255,8 @@ begin
   Result := (Lo(Valor) shl 8) or (Hi(Valor) shr 8);
 end;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 function NumeroFicheros(Folder: string): Integer;
 var
   SR: TSearchRec;
@@ -273,12 +279,17 @@ begin
   end;
 end;
 
+{$WARN SYMBOL_PLATFORM ON}
+
+
 function Tamano2Sector(Tamano: Int64): Int64;
 begin
   Result := Tamano div 2048;
   if ((Tamano mod 2048) <> 0) then
     Result := Result + 1;
 end;
+
+{$WARN SYMBOL_PLATFORM OFF}
 
 function Vacio(Folder: string): Integer;
 var
@@ -305,14 +316,19 @@ begin
   end;
 end;
 
+{$WARN SYMBOL_PLATFORM ON}
+
+
 // Funcion que devuelve el tamaño de un directorio.
 // Siempre es multiplo de 2048 (Tamaño Sector)
 // Si es 0 entonces el directorio es vacio
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 function TamanoDirectorio(Folder: string): Integer;
 var
   SR: TSearchRec;
-  Ent, Resto, i: Integer;
+  Ent, i: Integer;
   Lista: TList;
   Entrada: PEntradaDir;
 begin
@@ -391,6 +407,9 @@ begin
 
   Lista.Free;
 end;
+
+{$WARN SYMBOL_PLATFORM ON}
+
 
 function Comparar(Item1, Item2: Pointer): Integer;
 begin
@@ -482,6 +501,8 @@ begin
   ListaAux.Free;
 end;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 procedure GenerarTabla(var lDirectorio: TList; var PosBuf: Integer; Buffer: Pointer);
 var
   xEntrada: TxFichero;
@@ -523,8 +544,9 @@ begin
   end;
 end;
 
-var
-  BufCopia: array[0..65535] of Byte;
+{$WARN SYMBOL_PLATFORM ON}
+
+{$WARN SYMBOL_PLATFORM OFF}
 
 function EscanearXISO(Imagen: TFilestream; Folder: string; var SigSectorVacio: Int64): Boolean;
 var
@@ -539,10 +561,12 @@ var
   Fichero: TFileStream;
   SectorTabla: Int64;
   PosBuf, i: Integer;
-  Attributes: Byte;
-  pNombre: PChar;
   j, leido: Integer;
 begin
+  EscanearXISO := False;
+  Buffer := nil;
+  TamBufRellenar := -1;
+
   if TamanoDirectorio(Folder) <= 65536 then
   begin
     New(B1);
@@ -717,6 +741,9 @@ begin
   Dispose(Buffer);
 end;
 
+{$WARN SYMBOL_PLATFORM ON}
+
+
 function CrearXISO(NombreImagen: string; Folder: string): Boolean;
 var
   VD: TxVD;
@@ -726,8 +753,8 @@ var
   FechaActual: FILETIME;
   SectorInicio: Int64;
   i: Integer;
-  b: array[0..8191] of Byte;
 begin
+  Result := False;
   if (Folder = '') or not DirectoryExists(Folder) then
     Exit;
     
@@ -923,7 +950,7 @@ const
   ByteNulo: Byte = 0;
   PuntoComa: array[0..1] of Char = ';1';
 var
-  i, j, t, d: Integer;
+  i: Integer;
   XDFS: TFilestream;
   Entrada, EntradaPadre: uxiso.pxFichero;
   ListaDirectorios: TList;
@@ -1077,7 +1104,7 @@ var
 
   procedure CrearTablaFicheros;
   var
-    i, j, t, d: Integer;
+    i, j, t: Integer;
   begin
     New(EntradaISO);
     for i := -1 to xIISO.Lista.Count - 1 do
