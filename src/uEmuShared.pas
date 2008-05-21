@@ -31,7 +31,7 @@ uses
   // Delphi
   Dialogs,
   // Dxbx
-  uEnums, uLog, uMutex;
+  uTypes, uLog, uMutex;
 
 var
   m_XbePath: string;

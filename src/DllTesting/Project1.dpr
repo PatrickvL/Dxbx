@@ -10,7 +10,6 @@ uses
   uEmuExe in '..\uEmuExe.pas',
   uEmuFS in '..\uEmuFS.pas',
   uEmuShared in '..\uEmuShared.pas',
-  uEnums in '..\uEnums.pas',
   uExe in '..\uExe.pas',
   ufrm_About in '..\ufrm_About.pas' {frm_About},
   ufrm_ControllerConfig in '..\ufrm_ControllerConfig.pas' {frm_ControllerConfig},
@@ -20,7 +19,8 @@ uses
   uXML in '..\uXML.pas',
   uBitsOps in '..\uBitsOps.pas',
   uMutex in '..\uMutex.pas',
-  uTime in '..\uTime.pas';
+  uTime in '..\uTime.pas',
+  uTypes in '..\uTypes.pas';
 
 {$R *.res}
 

@@ -26,7 +26,6 @@ uses
   ufrm_VideoConfig in 'ufrm_VideoConfig.pas' {frm_VideoConfig},
   uXbe in 'uXbe.pas',
   uEmuExe in 'uEmuExe.pas',
-  uEnums in 'uEnums.pas',
   uExe in 'uExe.pas',
   uConsts in 'uConsts.pas',
   ufrm_About in 'ufrm_About.pas' {frm_About},
@@ -37,7 +36,8 @@ uses
   uTime in 'uTime.pas',
   uXML in 'uXML.pas',
   uBitsOps in 'uBitsOps.pas',
-  uWindows in 'uWindows.pas';
+  uWindows in 'uWindows.pas',
+  uTypes in 'uTypes.pas';
 
 {$R *.RES}
 

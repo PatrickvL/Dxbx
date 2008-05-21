@@ -22,8 +22,10 @@ unit uLog;
 interface
 
 uses
+  // Delphi
+  SysUtils,
   // Dxbx
-  uEnums;
+  uTypes;
 
 var
   m_DxbxDebug: DebugMode = DM_NONE;
@@ -57,65 +59,47 @@ end;
 
 procedure CreateLogs(aLogType: TLogType);
 begin
-  case aLogType of
-    ltGui    : begin
-                 case m_DxbxDebug of
-                   DM_NONE    : begin
-                                  CloseLogs;
-                                end;
-                   DM_CONSOLE : begin
-                                  try
-                                    frm_LogConsole := Tfrm_LogConsole.Create(nil);
-                                    frm_LogConsole.Caption := 'DXBX : Debug Console';
-                                    frm_LogConsole.Show;
-                                    LogMode := DM_CONSOLE;
-                                  finally
-                                  end;
-                                end;
-                   DM_FILE    : begin
-                                  try
-                                    AssignFile(LogFile, m_DxbxDebugFilename);
-                                    Rewrite(LogFile);
-                                    LogFileOpen := True;
-                                    LogMode := DM_FILE;
-                                  except
-                                    ShowMessage('Could not create log file');
-                                    LogMode := DM_NONE;
-                                  end;
-                                end;
-                 end;
-               end;
-    ltKernel : begin
-                 case m_KrnlDebug of
-                   DM_NONE    : begin
-                                  CloseLogs;
-                                end;
-                   DM_CONSOLE : begin
-                                  frm_LogConsole := Tfrm_LogConsole.Create(nil);
-                                  frm_LogConsole.Caption := 'DXBX : Kernel Debug Console';
-                                  frm_LogConsole.Show;
-                                  LogMode := DM_CONSOLE;
-                                end;
-                   DM_FILE    : begin
-                                  try
-                                    AssignFile(LogFile, m_KrnlDebugFilename);
-                                    Rewrite(LogFile);
-                                    LogFileOpen := True;
-                                    LogMode := DM_FILE;
-                                  except
-                                    ShowMessage('Could not create log file');
-                                    LogMode := DM_NONE;
-                                  end;
-                                end;
-                 end;
-               end;
-  end;
+  case m_DxbxDebug of
+    DM_NONE:
+      CloseLogs;
+
+    DM_CONSOLE:
+      try
+        frm_LogConsole := Tfrm_LogConsole.Create(nil);
+        if aLogType = ltGui then
+          frm_LogConsole.Caption := 'DXBX : Debug Console'
+        else // ltKernel
+          frm_LogConsole.Caption := 'DXBX : Kernel Debug Console';
+
+        frm_LogConsole.Show;
+        LogMode := DM_CONSOLE;
+      except
+        ShowMessage('Could not create log console');
+        FreeAndNil(frm_LogConsole);
+        LogMode := DM_NONE;
+      end;
+
+    DM_FILE:
+      try
+        if aLogType = ltGui then
+          AssignFile(LogFile, m_DxbxDebugFilename)
+        else // ltKernel
+          AssignFile(LogFile, m_KrnlDebugFilename);
+
+        LogFileOpen := True;
+
+        Rewrite(LogFile);
+        LogMode := DM_FILE;
+      except
+        ShowMessage('Could not create log file');
+        LogMode := DM_NONE;
+      end;
+  end; // case m_DxbxDebug
 end;
 
 procedure CloseLogs;
 begin
-  if Assigned(frm_LogConsole) then
-    frm_LogConsole.Close;
+  FreeAndNil(frm_LogConsole);
 
   if LogFileOpen then
   begin
@@ -129,8 +113,12 @@ end;
 procedure WriteLog(aText: string);
 begin
   case LogMode of
-    DM_CONSOLE: frm_LogConsole.Log.Lines.Add(aText);
-    DM_FILE: WriteLn(LogFile, aText);
+    DM_CONSOLE:
+      if Assigned(frm_LogConsole) then
+        frm_LogConsole.Log.Lines.Add(aText);
+    DM_FILE:
+      if LogFileOpen then
+        WriteLn(LogFile, aText);
   end;
 end;
 

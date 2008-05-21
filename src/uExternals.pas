@@ -26,7 +26,7 @@ uses
   Types, // for DWord
   // Dxbx
   uConsts, // for cDLLName
-  uEnums, // for DebugMode
+  uTypes, // for DebugMode
   uXbe; // for P_XBE_TLS
 
 type

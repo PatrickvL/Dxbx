@@ -26,7 +26,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Menus, Math, ActnList, ExtCtrls, StrUtils,
   // Dxbx
-  uConsts, uExe, uBitsOps, uTime;
+  uConsts, uTypes, uBitsOps, uTime;
 
 type
   TLogType = (ltLog, ltFile);
@@ -637,7 +637,7 @@ begin
       MessageDlg(Format ( 'Unexpected end of file while reading %s Section Header',[sFileType]) , mtError, [mbOk], 0);
     end;
 
-    WriteLog(Format('DXBX: Reading Section Header 0x%.04x... OK', [lIndex]));
+    WriteLog(Format('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]));
   end;
 
   // Read xbe section names
@@ -667,7 +667,7 @@ begin
 
     for lIndex := 0 to m_Header.dwLibraryVersions - 1 do
     begin
-      WriteLog(Format('DXBX: Reading Library Version 0x%.04x....', [lIndex]));
+      WriteLog(Format('DXBX: Reading Library Version 0x%.4x....', [lIndex]));
       for lIndex2 := 0 to 7 do
         m_LibraryVersion[lIndex].szName[lIndex2] := Buffer[i + lIndex2];
 
@@ -711,7 +711,7 @@ begin
 
     for lIndex := 0 to m_Header.dwSections - 1 do
     begin
-      WriteLog(Format('DXBX: Reading Section 0x%.04x...', [lIndex]));
+      WriteLog(Format('DXBX: Reading Section 0x%.4x...', [lIndex]));
 
       //Debug info of turok from cxbx
       //v=0  RawSize: 1578256  RawAddr: 4096
@@ -832,19 +832,19 @@ begin
   end;
 
   _LogEx('                                   </Hex Dump>');
-  _LogEx(Format('Base Address                     : 0x%.08x', [m_Header.dwBaseAddr]));
-  _LogEx(Format('Size of Headers                  : 0x%.08x', [m_Header.dwSizeofHeaders]));
-  _LogEx(Format('Size of Image                    : 0x%.08x', [m_Header.dwSizeofImage]));
-  _LogEx(Format('Size of Image Header             : 0x%.08x', [m_Header.dwSizeofImageHeader]));
+  _LogEx(Format('Base Address                     : 0x%.8x', [m_Header.dwBaseAddr]));
+  _LogEx(Format('Size of Headers                  : 0x%.8x', [m_Header.dwSizeofHeaders]));
+  _LogEx(Format('Size of Image                    : 0x%.8x', [m_Header.dwSizeofImage]));
+  _LogEx(Format('Size of Image Header             : 0x%.8x', [m_Header.dwSizeofImageHeader]));
   TmpStr := '';
   DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwTimeDate));
-  _LogEx(Format('TimeDate Stamp                   : 0x%.08x', [m_Header.dwTimeDate]) + ' (' + TmpStr + ')');
-  _LogEx(Format('Certificate Address              : 0x%.08x', [m_Header.dwCertificateAddr]));
-  _LogEx(Format('Number of Sections               : 0x%.08x', [m_Header.dwSections]));
-  _LogEx(Format('Section Headers Address          : 0x%.08x', [m_header.dwSectionHeadersAddr]));
+  _LogEx(Format('TimeDate Stamp                   : 0x%.8x', [m_Header.dwTimeDate]) + ' (' + TmpStr + ')');
+  _LogEx(Format('Certificate Address              : 0x%.8x', [m_Header.dwCertificateAddr]));
+  _LogEx(Format('Number of Sections               : 0x%.8x', [m_Header.dwSections]));
+  _LogEx(Format('Section Headers Address          : 0x%.8x', [m_header.dwSectionHeadersAddr]));
 
   // Print init flags
-  TmpStr := Format('Init Flags                       : 0x%.02x%.02x%.02x%.02x ', [m_Header.dwInitFlags[3], m_Header.dwInitFlags[2], m_Header.dwInitFlags[1], m_Header.dwInitFlags[0]]);
+  TmpStr := Format('Init Flags                       : 0x%.2x%.2x%.2x%.2x ', [m_Header.dwInitFlags[3], m_Header.dwInitFlags[2], m_Header.dwInitFlags[1], m_Header.dwInitFlags[0]]);
   Flag := Ord(m_Header.dwInitFlags[0]);
 
   if GetBitEn(Flag, 0) > 0 then
@@ -877,18 +877,18 @@ begin
 
   StrAsciiFilename := TmpStr;
   TmpStr := '';
-  _LogEx(Format('Entry Point                      : 0x%.08x (Retail: 0x%.08x, Debug: 0x%.08x)', [m_Header.dwEntryAddr, m_Header.dwEntryAddr xor XOR_EP_Retail, m_Header.dwEntryAddr xor XOR_EP_DEBUG]));
-  _LogEx(Format('TLS Address                      : 0x%.08x', [m_Header.dwTLSAddr]));
-  _LogEx(Format('(PE) Stack Commit                : 0x%.08x', [m_Header.dwPeStackCommit]));
-  _LogEx(Format('(PE) Heap Reserve                : 0x%.08x', [m_Header.dwPeHeapReserve]));
-  _LogEx(Format('(PE) Heap Commit                 : 0x%.08x', [m_Header.dwPeHeapCommit]));
-  _LogEx(Format('(PE) Base Address                : 0x%.08x', [m_Header.dwPeBaseAddr]));
-  _LogEx(Format('(PE) Size of Image               : 0x%.08x', [m_Header.dwPeSizeofImage]));
-  _LogEx(Format('(PE) Checksum                    : 0x%.08x', [m_Header.dwPeChecksum]));
+  _LogEx(Format('Entry Point                      : 0x%.8x (Retail: 0x%.8x, Debug: 0x%.8x)', [m_Header.dwEntryAddr, m_Header.dwEntryAddr xor XOR_EP_Retail, m_Header.dwEntryAddr xor XOR_EP_DEBUG]));
+  _LogEx(Format('TLS Address                      : 0x%.8x', [m_Header.dwTLSAddr]));
+  _LogEx(Format('(PE) Stack Commit                : 0x%.8x', [m_Header.dwPeStackCommit]));
+  _LogEx(Format('(PE) Heap Reserve                : 0x%.8x', [m_Header.dwPeHeapReserve]));
+  _LogEx(Format('(PE) Heap Commit                 : 0x%.8x', [m_Header.dwPeHeapCommit]));
+  _LogEx(Format('(PE) Base Address                : 0x%.8x', [m_Header.dwPeBaseAddr]));
+  _LogEx(Format('(PE) Size of Image               : 0x%.8x', [m_Header.dwPeSizeofImage]));
+  _LogEx(Format('(PE) Checksum                    : 0x%.8x', [m_Header.dwPeChecksum]));
 
   TmpStr := '';
   DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwPeTimeDate));
-  _LogEx(Format('(PE) TimeDate Stamp              : 0x%.08x (%s)', [m_Header.dwPeTimeDate, TmpStr]));
+  _LogEx(Format('(PE) TimeDate Stamp              : 0x%.8x (%s)', [m_Header.dwPeTimeDate, TmpStr]));
 
   lIndex := GetAddr(m_Header.dwDebugPathnameAddr);
   TmpStr := '';
@@ -901,7 +901,7 @@ begin
     Inc(lIndex);
   end;
     
-  _LogEx(Format('Debug Pathname Address           : 0x%.08x ("%s")', [m_Header.dwDebugPathnameAddr, TmpStr]));
+  _LogEx(Format('Debug Pathname Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathnameAddr, TmpStr]));
 
   lIndex := GetAddr(m_Header.dwDebugFilenameAddr);
   TmpStr := '';
@@ -914,39 +914,39 @@ begin
     Inc(lIndex);
   end;
     
-  _LogEx(Format('Debug Filename Address           : 0x%.08x ("%s")', [m_Header.dwDebugFilenameAddr, TmpStr]));
+  _LogEx(Format('Debug Filename Address           : 0x%.8x ("%s")', [m_Header.dwDebugFilenameAddr, TmpStr]));
 
-  _LogEx(Format('Debug Unicode filename Address   : 0x%.08x (L"%s")', [m_Header.dwDebugUnicodeFilenameAddr, StrAsciiFilename]));
-  _LogEx(Format('Kernel Image Thunk Address       : 0x%.08x (Retail: 0x%.08x, Debug: 0x%.08x)', [m_Header.dwKernelImageThunkAddr, m_Header.dwKernelImageThunkAddr xor XOR_KT_RETAIL, m_Header.dwKernelImageThunkAddr xor XOR_KT_DEBUG]));
-  _LogEx(Format('NonKernel Import Dir Address     : 0x%.08x', [m_Header.dwNonKernelImportDirAddr]));
-  _LogEx(Format('Library Versions                 : 0x%.08x', [m_Header.dwLibraryVersions]));
-  _LogEx(Format('Library Versions Address         : 0x%.08x', [m_Header.dwLibraryVersionsAddr]));
-  _LogEx(Format('Kernel Library Version Address   : 0x%.08x', [m_Header.dwKernelLibraryVersionAddr]));
-  _LogEx(Format('XAPI Library Version Address     : 0x%.08x', [m_Header.dwXAPILibraryVersionAddr]));
-  _LogEx(Format('Logo Bitmap Address              : 0x%.08x', [m_Header.dwLogoBitmapAddr]));
-  _LogEx(Format('Logo Bitmap Size                 : 0x%.08x', [m_Header.dwSizeofLogoBitmap]));
+  _LogEx(Format('Debug Unicode filename Address   : 0x%.8x (L"%s")', [m_Header.dwDebugUnicodeFilenameAddr, StrAsciiFilename]));
+  _LogEx(Format('Kernel Image Thunk Address       : 0x%.8x (Retail: 0x%.8x, Debug: 0x%.8x)', [m_Header.dwKernelImageThunkAddr, m_Header.dwKernelImageThunkAddr xor XOR_KT_RETAIL, m_Header.dwKernelImageThunkAddr xor XOR_KT_DEBUG]));
+  _LogEx(Format('NonKernel Import Dir Address     : 0x%.8x', [m_Header.dwNonKernelImportDirAddr]));
+  _LogEx(Format('Library Versions                 : 0x%.8x', [m_Header.dwLibraryVersions]));
+  _LogEx(Format('Library Versions Address         : 0x%.8x', [m_Header.dwLibraryVersionsAddr]));
+  _LogEx(Format('Kernel Library Version Address   : 0x%.8x', [m_Header.dwKernelLibraryVersionAddr]));
+  _LogEx(Format('XAPI Library Version Address     : 0x%.8x', [m_Header.dwXAPILibraryVersionAddr]));
+  _LogEx(Format('Logo Bitmap Address              : 0x%.8x', [m_Header.dwLogoBitmapAddr]));
+  _LogEx(Format('Logo Bitmap Size                 : 0x%.8x', [m_Header.dwSizeofLogoBitmap]));
 
   _LogEx('');
   _LogEx('Dumping XBE Certificate...');
   _LogEx('');
 
-  _LogEx(Format('Size of Certificate              : 0x%.08x', [m_Certificate.dwSize]));
+  _LogEx(Format('Size of Certificate              : 0x%.8x', [m_Certificate.dwSize]));
   TmpStr := '';
   DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Certificate.dwTimeDate));
-  _LogEx(Format('TimeDate Stamp                   : 0x%.08x (%s)', [m_Certificate.dwTimeDate, TmpStr]));
-  _LogEx(Format('Title ID                         : 0x%.08x', [m_Certificate.dwTitleId]));
+  _LogEx(Format('TimeDate Stamp                   : 0x%.8x (%s)', [m_Certificate.dwTimeDate, TmpStr]));
+  _LogEx(Format('Title ID                         : 0x%.8x', [m_Certificate.dwTitleId]));
   _LogEx(Format('Title                            : "%s"', [m_szAsciiTitle]));
 
   // print alternate titles
-  _LogEx(Format('Alternate Titles IDs             : 0x%.08x', [m_Certificate.dwAlternateTitleId[0]]));
+  _LogEx(Format('Alternate Titles IDs             : 0x%.8x', [m_Certificate.dwAlternateTitleId[0]]));
   for lIndex := 1 to 15 do
-    _LogEx(Format('                                   0x%.08x', [m_Certificate.dwAlternateTitleId[lIndex]]));
+    _LogEx(Format('                                   0x%.8x', [m_Certificate.dwAlternateTitleId[lIndex]]));
 
-  _LogEx(Format('Allowed Media                    : 0x%.08x', [m_Certificate.dwAllowedMedia]));
-  _LogEx(Format('Game Region                      : 0x%.08x', [m_Certificate.dwGameRegion]));
-  _LogEx(Format('Game Ratings                     : 0x%.08x', [m_Certificate.dwGameRatings]));
-  _LogEx(Format('Disk Number                      : 0x%.08x', [m_Certificate.dwDiskNumber]));
-  _LogEx(Format('Version                          : 0x%.08x', [m_Certificate.dwVersion]));
+  _LogEx(Format('Allowed Media                    : 0x%.8x', [m_Certificate.dwAllowedMedia]));
+  _LogEx(Format('Game Region                      : 0x%.8x', [m_Certificate.dwGameRegion]));
+  _LogEx(Format('Game Ratings                     : 0x%.8x', [m_Certificate.dwGameRatings]));
+  _LogEx(Format('Disk Number                      : 0x%.8x', [m_Certificate.dwDiskNumber]));
+  _LogEx(Format('Version                          : 0x%.8x', [m_Certificate.dwVersion]));
 
   // Print Lan Key
   TmpStr := '';
@@ -991,10 +991,10 @@ begin
         Break;
     end;
 
-    _LogEx(Format('Section Name                     : 0x%.08x ("%s")', [m_SectionHeader[lIndex].dwSectionNameAddr, TmpStr]));
+    _LogEx(Format('Section Name                     : 0x%.8x ("%s")', [m_SectionHeader[lIndex].dwSectionNameAddr, TmpStr]));
 
     TmpStr := '';
-    TmpStr := Format('Flags                            : 0x%.02x%.02x%.02x%.02x', [m_SectionHeader[lIndex].dwFlags[3], m_SectionHeader[lIndex].dwFlags[2], m_SectionHeader[lIndex].dwFlags[1], m_SectionHeader[lIndex].dwFlags[0]]);
+    TmpStr := Format('Flags                            : 0x%.2x%.2x%.2x%.2x', [m_SectionHeader[lIndex].dwFlags[3], m_SectionHeader[lIndex].dwFlags[2], m_SectionHeader[lIndex].dwFlags[1], m_SectionHeader[lIndex].dwFlags[0]]);
 
     Flag := Ord(m_SectionHeader[lIndex].dwFlags[0]);
 
@@ -1019,14 +1019,14 @@ begin
 
     _LogEx(TmpStr);
 
-    _LogEx(Format('Virtual Address                  : 0x%.08x', [m_SectionHeader[lIndex].dwVirtualAddr]));
-    _LogEx(Format('Virtual Size                     : 0x%.08x', [m_SectionHeader[lIndex].dwVirtualSize]));
-    _LogEx(Format('Raw Address                      : 0x%.08x', [m_SectionHeader[lIndex].dwRawAddr]));
-    _LogEx(Format('Size of Raw                      : 0x%.08x', [m_SectionHeader[lIndex].dwSizeofRaw]));
-    _LogEx(Format('Section Name Address             : 0x%.08x', [m_SectionHeader[lIndex].dwSectionNameAddr]));
-    _LogEx(Format('Section Reference Count          : 0x%.08x', [m_SectionHeader[lIndex].dwSectionRefCount]));
-    _LogEx(Format('Head Shared Reference Count Addr : 0x%.08x', [m_SectionHeader[lIndex].dwHeadSharedRefCountAddr]));
-    _LogEx(Format('Tail Shared Reference Count Addr : 0x%.08x', [m_SectionHeader[lIndex].dwTailSharedRefCountAddr]));
+    _LogEx(Format('Virtual Address                  : 0x%.8x', [m_SectionHeader[lIndex].dwVirtualAddr]));
+    _LogEx(Format('Virtual Size                     : 0x%.8x', [m_SectionHeader[lIndex].dwVirtualSize]));
+    _LogEx(Format('Raw Address                      : 0x%.8x', [m_SectionHeader[lIndex].dwRawAddr]));
+    _LogEx(Format('Size of Raw                      : 0x%.8x', [m_SectionHeader[lIndex].dwSizeofRaw]));
+    _LogEx(Format('Section Name Address             : 0x%.8x', [m_SectionHeader[lIndex].dwSectionNameAddr]));
+    _LogEx(Format('Section Reference Count          : 0x%.8x', [m_SectionHeader[lIndex].dwSectionRefCount]));
+    _LogEx(Format('Head Shared Reference Count Addr : 0x%.8x', [m_SectionHeader[lIndex].dwHeadSharedRefCountAddr]));
+    _LogEx(Format('Tail Shared Reference Count Addr : 0x%.8x', [m_SectionHeader[lIndex].dwTailSharedRefCountAddr]));
     TmpStr := '';
 
     for lIndex2 := 0 to 19 do
@@ -1068,7 +1068,7 @@ begin
 
      //end of bits maths
 
-      TmpStr := Format('Flags                            : QFEVersion : 0x%.04x, ', [QVersion]);
+      TmpStr := Format('Flags                            : QFEVersion : 0x%.4x, ', [QVersion]);
 
       if GetBitEn(Flag, 7) > 0 then
         TmpStr := TmpStr + 'Debug, '
@@ -1088,12 +1088,12 @@ begin
   end;
 
   _LogEx('Dumping XBE TLS...');
-  _LogEx(Format('Data Start Address               : 0x%.08x', [m_TLS.dwDataStartAddr]));
-  _LogEx(Format('Data End Address                 : 0x%.08x', [m_TLS.dwDataEndAddr]));
-  _LogEx(Format('TLS Index Address                : 0x%.08x', [m_TLS.dwTLSIndexAddr]));
-  _LogEx(Format('TLS Callback Address             : 0x%.08x', [m_TLS.dwTLSCallbackAddr]));
-  _LogEx(Format('Size of Zero Fill                : 0x%.08x', [m_TLS.dwSizeofZeroFill]));
-  _LogEx(Format('Characteristics                  : 0x%.08x', [m_TLS.dwCharacteristics]));
+  _LogEx(Format('Data Start Address               : 0x%.8x', [m_TLS.dwDataStartAddr]));
+  _LogEx(Format('Data End Address                 : 0x%.8x', [m_TLS.dwDataEndAddr]));
+  _LogEx(Format('TLS Index Address                : 0x%.8x', [m_TLS.dwTLSIndexAddr]));
+  _LogEx(Format('TLS Callback Address             : 0x%.8x', [m_TLS.dwTLSCallbackAddr]));
+  _LogEx(Format('Size of Zero Fill                : 0x%.8x', [m_TLS.dwSizeofZeroFill]));
+  _LogEx(Format('Characteristics                  : 0x%.8x', [m_TLS.dwCharacteristics]));
 
   if DumpToFile then
     CloseFile(FileEx);
