@@ -239,12 +239,15 @@ begin
   end;
 end;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 function TAdminFicheros.AgregarCarpetaRec(Folder: string; LAnterior: PListaContenido): Boolean;
 var
   SR: TSearchRec;
   Nuevo: PEntrada;
   C: TListaContenido;
 begin
+  Result := False;
   if Folder[Length(Folder)] = '\' then
     Folder[Length(Folder)] := ' ';
 
@@ -297,6 +300,9 @@ begin
     end;
   end;
 end;
+
+{$WARN SYMBOL_PLATFORM ON}
+
 
 function TAdminFicheros.AgregarCarpeta(Folder: string): Boolean;
 begin

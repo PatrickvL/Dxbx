@@ -425,12 +425,11 @@ end;
 procedure Tfrm_Main.WMDROPFILES(var msg: TMessage);
 var
   dr: HDrop;
-  nb: Integer;
   fn: array[0..254] of Char;
   ext: string;
 begin
   dr := msg.wparam;
-  nb := DragQueryFile(dr, $FFFFFFFF, fn, sizeof(fn));
+  DragQueryFile(dr, $FFFFFFFF, fn, sizeof(fn));
   DragQueryFile(dr, 0, fn, sizeof(fn));
   DragFinish(dr);
   ext := Lowercase(ExtractFileExt(fn));
@@ -665,7 +664,7 @@ end;
 
 procedure GenerarFileListRec(var F: TextFile; Directorio: Integer; Folder: string; SectorDirectorio: Integer);
 var
-  i, Sector, Tamano: Integer;
+  i, Sector: Integer;
   pNombre: PChar;
   Directorios: TList;
 begin
@@ -679,7 +678,6 @@ begin
 
     pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
     Sector := PxFichero(xIISO.Lista.Items[i])^.SectorIn;
-    Tamano := PxFichero(xIISO.Lista.Items[i])^.Tamano;
 
     if ((PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO)
       and (PxFichero(xIISO.Lista.Items[i])^.SectorIn <> 0) then

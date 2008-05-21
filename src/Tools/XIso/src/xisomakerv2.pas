@@ -292,7 +292,7 @@ end;    }
 
 function TAdminXISO.TamanoDirectorio(Folder: TListaContenido): Integer;
 var
-  Ent, Resto, i: Integer;
+  Ent, i: Integer;
   Lista: TList;
   Entrada: PEntradaDir;
 begin
@@ -421,6 +421,8 @@ begin
   ListaAux.Free;
 end;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 procedure TAdminXISO.GenerarTabla(var lDirectorio: TList; var PosBuf: Integer; Buffer: Pointer);
 var
   xEntrada: TxFichero;
@@ -463,6 +465,9 @@ begin
   end;
 end;
 
+{$WARN SYMBOL_PLATFORM ON}
+
+
 var
   BufCopia: array[0..65535] of Byte;
 
@@ -479,6 +484,11 @@ var
   SectorTabla: Int64;
   PosBuf, leido, i, j: Integer;
 begin
+  Fichero := Nil;
+  Buffer := Nil;
+  TamBufRellenar := -1;
+  Result := False;
+
   if TamanoDirectorio(Folder) <= 65536 then
   begin
     New(B1);
@@ -541,19 +551,19 @@ begin
     end;
   end;
 
-          // Introducimos ahora al final las carpetas
+  // Introducimos ahora al final las carpetas
   for i := 0 to SubDirectorios.Count - 1 do
   begin
-    Entrada := PEntradaDir(SubDirectorios[i]);
+    PEntradaDir(SubDirectorios[i]);
     lDirectorio.Add(SubDirectorios[i]);
   end;
 
-        // Nuevo: 18-6-2002
+  // Nuevo: 18-6-2002
   lDirectorio.Sort(Comparar);
 
   AsignarNodos(lDirectorio);
 
-        // Nuevo: 18-06-2002
+  // Nuevo: 18-06-2002
   for i := 0 to lDirectorio.Count - 1 do
   begin
     Entrada := PEntradaDir(lDirectorio[i]);
@@ -661,7 +671,9 @@ var
   SectorInicio: Int64;
   i: Integer;
 begin
-     // Creamos las variables dinamicas e inicializamos
+  Result := False;
+
+  // Creamos las variables dinamicas e inicializamos
   Imagen := TFileStream.Create(NombreImagen, fmCreate);
   if Imagen = nil then
     Exit;

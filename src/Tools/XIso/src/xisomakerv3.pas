@@ -231,6 +231,8 @@ begin
   Result := PositionDirEntry;
 end;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 
 procedure TXBOX_FILESYSTEM.MakeFileList(Directory: string; DirectoryList: TDirectoryList);
 var
@@ -263,6 +265,8 @@ begin
   end;
 end;
 
+{$WARN SYMBOL_PLATFORM ON}
+
 
 function TXBOX_FILESYSTEM.NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: Integer): Integer;
 var
@@ -274,6 +278,7 @@ var
   Entry: TXBOX_FS_ENTRY;
   s: string;
 begin
+  Result := -1;
   if DirectoryList = nil then
     Exit;
 
