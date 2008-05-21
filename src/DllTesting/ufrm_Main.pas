@@ -35,7 +35,7 @@ begin
   if XbeOpenDialog.Execute then
   begin
     OpenXbeFile(XbeOpenDialog.FileName);
-    CxbxKrnlInit(0, nil, nil, nil, DM_CONSOLE, nil, 0, 0, nil);
+    CxbxKrnlInit(0, nil, nil, nil, DM_CONSOLE, nil, nil, 0, nil);
   end;
 end;
 

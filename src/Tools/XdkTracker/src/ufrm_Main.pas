@@ -14,6 +14,7 @@ uses
 const
   cXDKLIST_LOADED = 'XDK List Loaded';
   cNO_XDKLIST_LOADED = 'No XDK List Loaded';
+  cVista_dwMajorVersion = 6;
 
 type
   TfrmXdkTracker = class(TForm)
@@ -54,8 +55,7 @@ type
 
     function SearchGameName(GameName: string): Boolean;
 
-    procedure InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT,
-      D3D8, XGRAPHC, DSOUND, XMV: string);
+    procedure InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT, D3D8, XGRAPHC, DSOUND, XMV: string);
 
     procedure LoadGameData;
     procedure SaveGameData(const aFilePath, aPublishedBy: string);
@@ -97,7 +97,7 @@ var
 begin
   VerInfo.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
   GetVersionEx(VerInfo);
-  Result := VerInfo.dwMajorVersion >= 6;
+  Result := VerInfo.dwMajorVersion >= cVista_dwMajorVersion;
 end;
 
 function SortGameList(Item1, Item2: Pointer): Integer;
@@ -334,17 +334,14 @@ begin
         edt_Publisher.Text := Publisher;
         for lIndex := 0 to ImportList.Count - 1 do
         begin
-          with lst_Import.Items.Add do
-          begin
-            Caption := PXDKInfo(ImportList.Items[lIndex])^.GameName;
-            SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XAPILIB);
-            SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XBOXKRNL);
-            SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.LIBCMT);
-            SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.D3D8);
-            SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XGRAPHC);
-            SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.DSOUND);
-            SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XMV);
-          end;
+            lst_Import.Items.Add.Caption := PXDKInfo(ImportList.Items[lIndex])^.GameName;
+            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XAPILIB);
+            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XBOXKRNL);
+            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.LIBCMT);
+            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.D3D8);
+            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XGRAPHC);
+            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.DSOUND);
+            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XMV);
         end;
       end;
 
@@ -537,8 +534,7 @@ end; // TfrmMain.SearchGameName
 
 //------------------------------------------------------------------------------
 
-procedure TfrmXdkTracker.InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT,
-  D3D8, XGRAPHC, DSOUND, XMV: string);
+procedure TfrmXdkTracker.InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT, D3D8, XGRAPHC, DSOUND, XMV: string);
 begin
   New(XInfo);
   XInfo^.GameName := GameName;
