@@ -73,7 +73,7 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
     end;
   end;
 
-  procedure _AppendProlog(SectionIdx: Integer);
+  {procedure _AppendProlog(SectionIdx: Integer);
   var
     i: Integer;
   begin
@@ -81,6 +81,21 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
     SetLength(m_bzSection[SectionIdx], Length(m_bzSection[SectionIdx]) + Length(Prolog));
     for i := 0 to Length(Prolog) - 1 do
       m_bzSection[SectionIdx][i] := Prolog[i];
+  end;       }
+
+  procedure _AppendProlog(SectionIdx: Integer);
+  var
+    i: Integer;
+    iPos: Integer;
+  begin
+    // Append prolog section
+    iPos := Length(m_bzSection[SectionIdx]);
+    SetLength(m_bzSection[SectionIdx], iPos + Length(Prolog));
+    for i := 0 to Length(Prolog) - 1 do
+    begin
+      m_bzSection[SectionIdx][iPos] := Prolog[i];;
+      Inc(iPos);
+    end;
   end;
 
   procedure _AppenddwMagic(SectionIdx: Integer);
