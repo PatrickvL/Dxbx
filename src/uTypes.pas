@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
-unit uEnums;
+unit uTypes;
 
 {$INCLUDE Dxbx.inc}
 
@@ -27,6 +27,8 @@ type
   DebugMode = (DM_NONE, DM_CONSOLE, DM_FILE);
 
   TLogType = (ltKernel, ltGui);
+
+  TVarByteArray = array of Byte;
 
 implementation
 

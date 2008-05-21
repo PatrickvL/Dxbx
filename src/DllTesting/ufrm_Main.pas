@@ -7,7 +7,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls,
   // Dxbx
-  uExternals, uXbe, uEnums, uEmu;
+  uExternals, uXbe, uTypes, uEmu;
 
 type
   TForm1 = class(TForm)

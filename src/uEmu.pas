@@ -25,7 +25,7 @@ uses
   // Delphi
   Windows,
   // Dxbx
-  uEnums, uEmuFS, uXbe, uLog, uConsts;
+  uConsts, uTypes, uLog, uXbe, uEmuFS;
 
 type
   TEntryProc = procedure();
@@ -107,14 +107,14 @@ begin
         WriteLog ( Format ( 'Emu (0x%X): Debug Trace Enabled.', GetCurrentThreadId );
 
         WriteLog('(');
-        WriteLog(Format('  pTLSData         : 0x%.08X', [pTLSData]));
-        WriteLog(Format('  pTLS             : 0x%.08X', [pTLS]));
-        WriteLog(Format('  pLibraryVersion  : 0x%.08X', [pLibraryVersion]));
-        WriteLog(Format('  DebugConsole     : 0x%.08X', [Ord(DbgMode)]));
+        WriteLog(Format('  pTLSData         : 0x%.8X', [pTLSData]));
+        WriteLog(Format('  pTLS             : 0x%.8X', [pTLS]));
+        WriteLog(Format('  pLibraryVersion  : 0x%.8X', [pLibraryVersion]));
+        WriteLog(Format('  DebugConsole     : 0x%.8X', [Ord(DbgMode)]));
         WriteLog(Format('  DebugFilename    : "%s"', [szDebugFilename]));
-        WriteLog(Format('  pXBEHeader       : 0x%.08X', [pXbeHeader]));
-        WriteLog(Format('  dwXBEHeaderSize  : 0x%.08X', [dwXbeHeaderSize]));
-        WriteLog(Format('  Entry            : 0x%.08X', [Entry]));
+        WriteLog(Format('  pXBEHeader       : 0x%.8X', [pXbeHeader]));
+        WriteLog(Format('  dwXBEHeaderSize  : 0x%.8X', [dwXbeHeaderSize]));
+        WriteLog(Format('  Entry            : 0x%.8X', [Entry]));
         WriteLog(')');
                GetCurrentThreadId(), pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
@@ -326,8 +326,8 @@ begin
               XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)(*((uint32)pFunc + 0x37);
               XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
 
-              printf("Emu (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
-              printf("Emu (0x%X): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
+              printf("Emu (0x%X): 0x%.8X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
+              printf("Emu (0x%X): 0x%.8X -> RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
              }
 {				        }
 {                    }
@@ -353,7 +353,7 @@ begin
                             for(int v=0;v<146;v++)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
 
-                            printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
+                            printf("Emu (0x%X): 0x%.8X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
                         }
 {                        else
                         {
@@ -382,7 +382,7 @@ begin
                                 for(int v=0;v<32*4;v++)
                                     XTL::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
 
-                                printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
+                                printf("Emu (0x%X): 0x%.8X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
                             }
 {                            else
                             {

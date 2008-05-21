@@ -34,7 +34,6 @@ uses
   Classes,
   uEmuShared in 'uEmuShared.pas',
   uEmu in 'uEmu.pas',
-  uEnums in 'uEnums.pas',
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uEmuFS in 'uEmuFS.pas',
@@ -43,7 +42,8 @@ uses
   uMutex in 'uMutex.pas',
   uKernelThunk in 'uKernelThunk.pas',
   uBitsOps in 'uBitsOps.pas',
-  uTime in 'uTime.pas';
+  uTime in 'uTime.pas',
+  uTypes in 'uTypes.pas';
 
 {$R *.res}   
 

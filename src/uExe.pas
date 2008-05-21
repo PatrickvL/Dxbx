@@ -23,11 +23,11 @@ interface
 
 uses
   // Delphi
-  Dialogs, Windows, Classes, SysUtils;
+  Dialogs, Windows, Classes, SysUtils,
+  // Dxbx
+  uTypes;
 
 type
-  TVarByteArray = array of Byte;
-
   DOSStub = array[0..183] of Byte;
   EndFilling1 = array[0..0] of Byte;
   EndFilling2 = array[0..0] of Byte;
@@ -278,7 +278,7 @@ begin
 
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
-            printf("Exe::Exe: Reading Section Header 0x%.04X...", v);
+            printf("Exe::Exe: Reading Section Header 0x%.4X...", v);
 
             if(fread(&m_SectionHeader[v], sizeof(SectionHeader), 1, ExeFile) != 1)
             {
@@ -302,7 +302,7 @@ begin
 
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
-            printf("Exe::Exe: Reading Section 0x%.04X...", v);
+            printf("Exe::Exe: Reading Section 0x%.4X...", v);
 
             uint32 raw_size = m_SectionHeader[v].m_sizeof_raw;
             uint32 raw_addr = m_SectionHeader[v].m_raw_addr;
@@ -375,7 +375,6 @@ var
   end;
 
 begin
-  Result := True;
   try
     ExeFile := TFileStream.Create(x_szExeFilename, fmCreate);
   except
@@ -405,7 +404,7 @@ begin
     // write section headers
     for lIndex := 0 to m_Header.m_sections - 1 do
     begin
-      Result := _Write(m_Sectionheader[lIndex], SIzeOf(m_SectionHeader[lIndex]), 'PE section header 0x' + IntToHex(lIndex, 4));
+      Result := _Write(m_Sectionheader[lIndex], SizeOf(m_SectionHeader[lIndex]), 'PE section header 0x' + IntToHex(lIndex, 4));
       if not Result then
         Exit;
     end;

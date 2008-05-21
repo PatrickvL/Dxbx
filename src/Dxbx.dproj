@@ -61,7 +61,6 @@
     <DCCReference Include="uBitsOps.pas" />
     <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uEmuExe.pas" />
-    <DCCReference Include="uEnums.pas" />
     <DCCReference Include="uExe.pas" />
     <DCCReference Include="uExternals.pas" />
     <DCCReference Include="ufrm_About.pas">
@@ -82,6 +81,7 @@
     </DCCReference>
     <DCCReference Include="uProlog.pas" />
     <DCCReference Include="uTime.pas" />
+    <DCCReference Include="uTypes.pas" />
     <DCCReference Include="uWindows.pas" />
     <DCCReference Include="uXbe.pas" />
     <DCCReference Include="uXML.pas" />

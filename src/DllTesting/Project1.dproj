@@ -38,7 +38,6 @@
     <DCCReference Include="..\uEmuExe.pas" />
     <DCCReference Include="..\uEmuFS.pas" />
     <DCCReference Include="..\uEmuShared.pas" />
-    <DCCReference Include="..\uEnums.pas" />
     <DCCReference Include="..\uExe.pas" />
     <DCCReference Include="..\uExternals.pas" />
     <DCCReference Include="..\ufrm_About.pas">
@@ -58,6 +57,7 @@
     <DCCReference Include="..\Utils\uTime.pas" />
     <DCCReference Include="..\Utils\uXML.pas" />
     <DCCReference Include="..\uTime.pas" />
+    <DCCReference Include="..\uTypes.pas" />
     <DCCReference Include="..\uXbe.pas" />
     <DCCReference Include="..\uXML.pas" />
     <DCCReference Include="ufrm_Main.pas">

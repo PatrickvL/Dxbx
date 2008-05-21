@@ -29,7 +29,8 @@ uses
   // AlphaSkin
   sSkinProvider, sSkinManager, sStatusBar,
   // Dxbx
-  uXml, uXbe, uEmuExe, uEnums, uExternals, ufrm_ControllerConfig, ufrm_VideoConfig;
+  uTypes, uXml, uXbe, uEmuExe, uExternals,
+  ufrm_ControllerConfig, ufrm_VideoConfig;
 
 type
   Tfrm_Main = class(TForm)
