@@ -555,13 +555,13 @@ begin
         xString := '';
         for n := 0 to 15 do
         begin
-          xString := xString + Chr(SRBPacket.HA_ManagerId[n]);
+          xString := xString + Char(SRBPacket.HA_ManagerId[n]);
         end;
         FHostAdapterInfo[HA_IDx].ManagerID := xString;
         xString := '';
         for n := 0 to 15 do
         begin
-          xString := xString + Chr(SRBPacket.HA_Identifier[n]);
+          xString := xString + Char(SRBPacket.HA_Identifier[n]);
         end;
         FHostAdapterInfo[HA_IDx].Identifier := xString;
 	      FHostAdapterInfo[HA_IDx].Align := (SRBPacket.HA_Unique[1] * $0100) + SRBPacket.HA_Unique[0];

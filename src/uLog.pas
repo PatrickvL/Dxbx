@@ -75,20 +75,20 @@ begin
         LogMode := DM_CONSOLE;
       except
         ShowMessage('Could not create log console');
-        FreeAndNil(frm_LogConsole);
+        FreeAndNil({var}frm_LogConsole);
         LogMode := DM_NONE;
       end;
 
     DM_FILE:
       try
         if aLogType = ltGui then
-          AssignFile(LogFile, m_DxbxDebugFilename)
+          AssignFile({var}LogFile, m_DxbxDebugFilename)
         else // ltKernel
-          AssignFile(LogFile, m_KrnlDebugFilename);
+          AssignFile({var}LogFile, m_KrnlDebugFilename);
 
         LogFileOpen := True;
 
-        Rewrite(LogFile);
+        Rewrite({var}LogFile);
         LogMode := DM_FILE;
       except
         ShowMessage('Could not create log file');
@@ -99,11 +99,11 @@ end;
 
 procedure CloseLogs;
 begin
-  FreeAndNil(frm_LogConsole);
+  FreeAndNil({var}frm_LogConsole);
 
   if LogFileOpen then
   begin
-    CloseFile(LogFile);
+    CloseFile({var}LogFile);
     LogFileOpen := False;
   end;
 
@@ -118,7 +118,7 @@ begin
         frm_LogConsole.Log.Lines.Add(aText);
     DM_FILE:
       if LogFileOpen then
-        WriteLn(LogFile, aText);
+        WriteLn({var}LogFile, aText);
   end;
 end;
 

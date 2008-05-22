@@ -21,6 +21,10 @@ unit uTypes;
 
 interface
 
+uses
+  // Delphi
+  Windows;
+
 type
   TDebugInfoType = (ditConsole, ditFile);
   EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
@@ -30,6 +34,11 @@ type
 
   TVarByteArray = array of Byte;
 
+  TDWordArray = array[0..10000] of DWord;
+  PDWordArray = ^TDWordArray;
+
+  PDWord = ^DWord;
+  
 implementation
 
 end.
