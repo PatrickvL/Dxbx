@@ -96,7 +96,7 @@ type
     dwVersion: Dword; // 0x00AC - version
     bzLanKey: array[0..15] of AnsiChar; // 0x00B0 - lan key
     bzSignatureKey: array[0..15] of AnsiChar; // 0x00C0 - signature key
-    bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of Char; // 0x00D0 - alternate signature keys
+    bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of AnsiChar; // 0x00D0 - alternate signature keys
   end;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
 
@@ -128,7 +128,7 @@ type
     dwSectionRefCount: DWord; // section reference count
     dwHeadSharedRefCountAddr: DWord; // head shared page reference count address
     dwTailSharedRefCountAddr: DWord; // tail shared page reference count address
-    bzSectionDigest: array[0..19] of Char; // section digest
+    bzSectionDigest: array[0..19] of AnsiChar; // section digest
   end;
   XBE_SECTIONHEADER = _XBE_SECTIONHEADER;
 
@@ -169,13 +169,13 @@ type
   P_XBE_TLS = ^_XBE_TLS;
   XBE_TLS = _XBE_TLS;
 
-  _Eight = Char;
+  _Eight = Byte; // AnsiChar?
     //Bit 0  : bType1
     //Bit 1,2,3  : Len
     //Bit 4,5,6,7 : Data
   Eight = _Eight;
 
-  _Sixteen = array[0..1] of Char;
+  _Sixteen = array[0..1] of Byte; // AnsiChar? Word?
     //from Char[0]
     //Bit 0  : bType1
     //Bit 1  : bType2
@@ -378,12 +378,12 @@ begin
     Exit;
   end;
 
-  AssignFile(XbeFile, aFileName);
+  AssignFile({var}XbeFile, aFileName);
   FileMode := fmOpenRead;
-  Reset(XbeFile);
-  FreeMem(Pointer(Buffer));
-  GetMem(Pointer(Buffer), FileSz);
-  BlockRead(XbeFile, Pointer(Buffer)^, FileSz, ReadBytes);
+  Reset({var}XbeFile);
+  FreeMem({var}Buffer);
+  GetMem({var}Buffer, FileSz);
+  BlockRead({var}XbeFile, Pointer(Buffer)^, FileSz, ReadBytes);
   // m_Header.dwMagic Read (4 Bytes)
   i := 0;
   for lIndex := 0 to 3 do
@@ -763,7 +763,7 @@ begin
     end;
   end;
   
-  CloseFile(XbeFile);
+  CloseFile({var}XbeFile);
 end; // TXbe.Create
 
 //------------------------------------------------------------------------------
@@ -773,8 +773,8 @@ var
   FileEx: TextFile;
   lIndex, lIndex2: Integer;
   TmpStr: string;
-  AsciiFilename: array[0..39] of Char;
-  TmpChr: Char;
+  AsciiFilename: array[0..39] of AnsiChar;
+  TmpChr: AnsiChar;
   StrAsciiFilename: string;
   Flag, BIndex: Byte;
   QVersion: Word;
@@ -796,8 +796,8 @@ begin
   DumpToFile := (FileName <> '');
   if DumpToFile then
   begin
-    AssignFile(FileEx, FileName);
-    Rewrite(FileEx);
+    AssignFile({var}FileEx, FileName);
+    Rewrite({var}FileEx);
     LogType := ltFile;
   end
   else
@@ -1132,7 +1132,7 @@ end; // TXbe.GetAddr
 
 procedure TXbe.ExportLogoBitmap(ImgCont: TBitmap);
 var
-  x_Gray: array[0..100 * 17] of Char;
+  x_Gray: array[0..100 * 17] of Byte;
   dwLength, o, lIndex, lIndex2, Len, Data: DWord;
   RLE: DWord;
   pos0, pos1: Byte;
@@ -1173,8 +1173,8 @@ begin
       if o >= 100 * 17 then
         Exit;
 
-      x_Gray[o] := Chr(Data shl 4);
-      ImgCont.Canvas.Pixels[o mod 100, o div 100] := RGB(Ord(x_Gray[o]), Ord(x_Gray[o]), Ord(x_Gray[o]));
+      x_Gray[o] := Byte(Data shl 4);
+      ImgCont.Canvas.Pixels[o mod 100, o div 100] := RGB(x_Gray[o], x_Gray[o], x_Gray[o]);
     end;
 
     Inc(lIndex);                                          // Index increment
@@ -1195,7 +1195,7 @@ end; // TXbe.GetTLSData
 
 destructor TXbe.Destroy;
 begin
-  FreeMem(Buffer);
+  FreeMem({var}Buffer);
 
   inherited Destroy;
 end;

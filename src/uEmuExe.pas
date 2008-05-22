@@ -32,8 +32,11 @@ type
   TWordArray = array[0..1] of Byte;
 
   TEmuExe = class(TExe)
+  protected
+    KrnlHandle: THandle;
   public
     constructor Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFilename: string; hwndParent: THandle);
+    destructor Destroy; override;
   end;
 
 
@@ -60,42 +63,34 @@ const
 constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
   m_KrnlDebugFilename: string; hwndParent: THandle);
 
-  procedure _WriteDWordToSectionPos(SectionIdx, iPos: Integer; aDWord: DWord);
-  var
-    i: Integer;
-    DWordArray: TDWordArray;
+  procedure _WriteDWordToAddr(const aAddr: Pointer; aDWord: DWord);
   begin
-    DWordArray := TDWordArray(aDWord);
-    for i := 0 to Length(DWordArray) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := DWordArray[i];
-      Inc(iPos);
-    end;
+    CopyMemory(aAddr, @aDWord, SizeOf(DWord));
   end;
 
-  {procedure _AppendProlog(SectionIdx: Integer);
-  var
-    i: Integer;
+  procedure _WriteDWordToSectionPos(SectionIdx, iPos: Integer; aDWord: DWord);
+//  var
+//    i: Integer;
+//    DWordArray: TDWordArray;
   begin
-    // Append prolog section
-    SetLength(m_bzSection[SectionIdx], Length(m_bzSection[SectionIdx]) + Length(Prolog));
-    for i := 0 to Length(Prolog) - 1 do
-      m_bzSection[SectionIdx][i] := Prolog[i];
-  end;       }
+//    DWordArray := TDWordArray(aDWord);
+    CopyMemory(@(m_bzSection[SectionIdx][iPos]), @aDWord, SizeOf(DWord));
+//    for i := 0 to Length(DWordArray) - 1 do
+//    begin
+//      m_bzSection[SectionIdx][iPos] := DWordArray[i];
+//      Inc(iPos);
+//    end;
+  end;
 
+(*
   procedure _AppendProlog(SectionIdx: Integer);
   var
-    i: Integer;
     iPos: Integer;
   begin
     // Append prolog section
     iPos := Length(m_bzSection[SectionIdx]);
     SetLength(m_bzSection[SectionIdx], iPos + Length(Prolog));
-    for i := 0 to Length(Prolog) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := Prolog[i];;
-      Inc(iPos);
-    end;
+    CopyMemory(@(m_bzSection[SectionIdx][iPos]), @(Prolog[0]), Length(Prolog));
   end;
 
   procedure _AppenddwMagic(SectionIdx: Integer);
@@ -154,34 +149,25 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
 
   procedure _AppenddwInitFlags(SectionIdx: Integer);
   var
-    i: Integer;
     iPos: Integer;
   begin
     // Append dwInitFlags to section
     iPos := Length(m_bzSection[SectionIdx]);
-    SetLength(m_bzSection[SectionIdx], Length(m_bzSection[SectionIdx]) + Length(m_XBe.m_Header.dwInitFlags));
-    for i := 0 to Length(m_XBe.m_Header.dwInitFlags) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := m_XBe.m_Header.dwInitFlags[i];
-      Inc(iPos);
-    end;
+    SetLength(m_bzSection[SectionIdx], Length(m_bzSection[SectionIdx]) + SizeOf(m_XBe.m_Header.dwInitFlags));
+    Move(m_XBe.m_Header.dwInitFlags[0], m_bzSection[SectionIdx][iPos], SizeOf(m_XBe.m_Header.dwInitFlags));
   end;
-
-  procedure _AppenddwInitFlagsSubI(SectionIdx: Integer; iPos: Dword);
-  var
-    i: Integer;
-  begin
-    for i := 0 to Length(m_XBe.m_Header.dwInitFlags) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := m_XBe.m_Header.dwInitFlags[i];
-      Inc(iPos);
-    end;
-  end;
+*)
 
   procedure _CopySections(Index: Integer);
   begin
-    m_bzSection[Index] := Copy(m_Xbe.m_bzSection[Index], 0, m_Xbe.m_SectionHeader[Index].dwSizeofRaw);
     SetLength(m_bzSection[Index], m_SectionHeader[Index].m_sizeof_raw);
+    CopyMemory(m_bzSection[Index], m_Xbe.m_bzSection[Index], m_Xbe.m_SectionHeader[Index].dwSizeofRaw);
+  end;
+
+(*
+  procedure _AppenddwInitFlagsSubI(SectionIdx: Integer; iPos: Dword);
+  begin
+    CopyMemory(@(m_bzSection[SectionIdx][iPos]), @(m_XBe.m_Header.dwInitFlags[0]), SizeOf(m_XBe.m_Header.dwInitFlags));
   end;
 
   procedure _AppendXbeHeader(SectionIdx: Integer; SubIndex: Dword);
@@ -248,7 +234,9 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
     SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwLogoBitmapAddr);
     _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwSizeofLogoBitmap); // Append dwSizeofLogoBitmap
   end;
+*)
 
+(*
   procedure _AppendXbeLibVersionSzName(SectionIdx: Integer; iPos: Dword; LibVersioNbr: Integer);
   var
     i: Integer;
@@ -297,7 +285,9 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
     SubIndex := SubIndex + SizeOf(m_Xbe.m_LibraryVersion[LibVersioNbr].wBuildVersion);
     _AppenddwLibVerFlagsSubI(SectionIdx, SubIndex, LibVersioNbr);
   end;
+*)
 
+(*
   procedure _AppendTLS(SectionIdx: Integer; SubIndex: Dword);
   begin
     _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwDataStartAddr);
@@ -312,7 +302,9 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
     SubIndex := SubIndex + SizeOf(m_Xbe.m_TLS.dwSizeofZeroFill);
     _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwCharacteristics);
   end;
+*)
 
+(*
   procedure _AppendTLSData(SectionIdx: Integer; SubIndex: Dword);
   var
     i: DWord;
@@ -325,6 +317,7 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
         m_bzSection[SectionIdx][SubIndex + i] := pTLSData^[i];
     end;
   end;
+*)
 
 var
   i, d, v, c: Integer;
@@ -354,18 +347,21 @@ var
 
 
   TLS_DATA: DWord;
-  kt_tbl: DWord;
-  kt_value: ^Dword;
+  kt_tbl: PDWordArray;
   ThunkTable: PThunkTable;
 
-  pWriteCursor: DWord;
+  pWriteCursor: PByte; // DWord ?
   WriteCursor: DWord;
   Flag: Byte;
 
-  KrnlHandle: THandle;
   pEmuInit: Pointer;
 
 begin
+  pEmuInit := @CxbxKrnlInit; // We need to access the procedure once so it's in memory
+
+  KrnlHandle := GetModuleHandle(cDLLNAME);
+  Assert(KrnlHandle >= 32);
+
   ConstructorInit();
 
   WriteLog('EmuExe: Generating Exe file...');
@@ -447,12 +443,12 @@ begin
   // generate xbe section headers
   for v := 0 to m_Xbe.m_Header.dwSections - 1 do
   begin
-    FillChar(m_SectionHeader[v].m_name, 8, Char(0));
     // generate xbe section name
+    FillChar(m_SectionHeader[v].m_name, 8, #0);
     for c := 0 to 7 do
     begin
       m_SectionHeader[v].m_name[c] := m_Xbe.m_szSectionName[v][c];
-      if Ord(m_SectionHeader[v].m_name[c]) = 0 then
+      if m_SectionHeader[v].m_name[c] = #0 then
         Break;
     end;
 
@@ -464,6 +460,7 @@ begin
     m_SectionHeader[v].m_virtual_addr := VirtAddr;
 
     // generate xbe section raw size / addr
+    // CXBX TODO: get this working such that m_sizeof_raw can be the actual raw size, not virtual size
     RawSize := RoundUp(m_Xbe.m_SectionHeader[v].dwVirtualSize, PE_FILE_ALIGN);
     RawAddr := dwSectionCursor;
 
@@ -479,8 +476,8 @@ begin
     m_SectionHeader[v].m_relocations := 0;
     m_SectionHeader[v].m_linenumbers := 0;
 
-    Flags := IMAGE_SCN_MEM_READ;
     // generate Flags for this xbe section
+    Flags := IMAGE_SCN_MEM_READ;
     if GetBitEn(Ord(m_Xbe.m_SectionHeader[v].dwFlags[0]), 2) > 0 then // Executable
       Flags := Flags or IMAGE_SCN_MEM_EXECUTE or IMAGE_SCN_CNT_CODE
     else
@@ -538,34 +535,41 @@ begin
   m_SectionHeader[i].m_name := '.cxbxplg';
 
   // generate .cxbxplg section virtual size / addr
-  virt_size := RoundUp(
-    m_OptionalHeader.m_image_base + $100 +
-    m_Xbe.m_Header.dwSizeofHeaders + 260 +
-    SizeOf(m_Xbe.m_LibraryVersion) * m_Xbe.m_Header.dwLibraryVersions +
-    SizeOf(m_Xbe.m_TLS) +
-    (m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr), $1000);
-  virt_addr := RoundUp(
-    m_SectionHeader[i - 1].m_virtual_addr +
-    m_SectionHeader[i - 1].m_virtual_size, PE_SEGM_ALIGN);
+  begin
+    virt_size := RoundUp(
+      m_OptionalHeader.m_image_base + $100 +
+      m_Xbe.m_Header.dwSizeofHeaders + 260 +
+      SizeOf(m_Xbe.m_LibraryVersion) * m_Xbe.m_Header.dwLibraryVersions +
+      SizeOf(m_Xbe.m_TLS) +
+      (m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr), $1000);
+    virt_addr := RoundUp(
+      m_SectionHeader[i - 1].m_virtual_addr +
+      m_SectionHeader[i - 1].m_virtual_size, PE_SEGM_ALIGN);
 
-  m_SectionHeader[i].m_virtual_size := virt_size;
-  m_SectionHeader[i].m_virtual_addr := virt_addr;
+    m_SectionHeader[i].m_virtual_size := virt_size;
+    m_SectionHeader[i].m_virtual_addr := virt_addr;
 
-  // our entry point should be the first bytes in this section
-  m_OptionalHeader.m_entry := virt_addr;
+    // our entry point should be the first bytes in this section
+    m_OptionalHeader.m_entry := virt_addr;
+  end;
 
   // generate .cxbxplg section raw size / addr
-  raw_size := RoundUp(m_SectionHeader[i].m_virtual_size, PE_FILE_ALIGN);
+  begin
+    raw_size := RoundUp(m_SectionHeader[i].m_virtual_size, PE_FILE_ALIGN);
 
-  m_SectionHeader[i].m_sizeof_raw := raw_size;
-  m_SectionHeader[i].m_raw_addr := dwSectionCursor;
+    m_SectionHeader[i].m_sizeof_raw := raw_size;
+    m_SectionHeader[i].m_raw_addr := dwSectionCursor;
+//    Inc(dwSectionCursor, raw_size);
+  end;
 
   // relocation / line numbers will not exist
-  m_SectionHeader[i].m_relocations_addr := 0;
-  m_SectionHeader[i].m_linenumbers_addr := 0;
+  begin
+    m_SectionHeader[i].m_relocations_addr := 0;
+    m_SectionHeader[i].m_linenumbers_addr := 0;
 
-  m_SectionHeader[i].m_relocations := 0;
-  m_SectionHeader[i].m_linenumbers := 0;
+    m_SectionHeader[i].m_relocations := 0;
+    m_SectionHeader[i].m_linenumbers := 0;
+  end;
 
   // make this section readable and executable
   m_SectionHeader[i].m_characteristics := IMAGE_SCN_MEM_READ xor IMAGE_SCN_MEM_EXECUTE xor IMAGE_SCN_CNT_CODE;
@@ -588,153 +592,184 @@ begin
     WriteLog(Format('EmuExe: Generating Section 0x%.4x... OK', [v]));
   end;
 
-  i := m_Header.m_sections - 2;
-
-  dwVirtAddr := m_SectionHeader[i].m_virtual_addr;
-  dwRawSize := m_SectionHeader[i].m_sizeof_raw;
-  SetLength(m_bzSection[i], dwRawSize);
-
-  _WriteDWordToSectionPos(i, $00, dwVirtAddr + $38);
-  _WriteDWordToSectionPos(i, $04, 0);
-  _WriteDWordToSectionPos(i, $08, dwVirtAddr + $30);
-  _WriteDWordToSectionPos(i, $0C, 0);
-
-  _WriteDWordToSectionPos(i, $10, 0);
-  _WriteDWordToSectionPos(i, $14, dwVirtAddr + $4A);
-  _WriteDWordToSectionPos(i, $18, dwVirtAddr + $00);
-  _WriteDWordToSectionPos(i, $1C, 0);
-
-  _WriteDWordToSectionPos(i, $20, 0);
-  _WriteDWordToSectionPos(i, $24, 0);
-  _WriteDWordToSectionPos(i, $28, 0);
-  _WriteDWordToSectionPos(i, $2C, 0);
-
-  _WriteDWordToSectionPos(i, $30, dwVirtAddr + $38);
-  _WriteDWordToSectionPos(i, $34, 0);
-  _WriteDWordToSectionPos(i, $38, $0001);
-
-  if UseDebugDLL then
-    CopyMemory(@(m_bzSection[i][$3A]), PChar(StrCxbxKrnlNoFunc00CxbxKrnl_dll), Length(StrCxbxKrnlNoFunc00CxbxKrnl_dll))
-  else
-    CopyMemory(@(m_bzSection[i][$3A]), PChar(StrCxbxKrnlNoFunc00Cxbx_dll), Length(StrCxbxKrnlNoFunc00Cxbx_dll));
-
-  ep := m_Xbe.m_Header.dwEntryAddr;
-  i := m_Header.m_sections - 1;
-
-  WriteLog(Format('EmuExe: Generating Section Header 0x%.4x(.cxbxplg)... OK', [i]));
-
-  // decode entry point
-  if ((ep xor XOR_EP_RETAIL) > $01000000) then
-    ep := ep xor XOR_EP_DEBUG
-  else
-    ep := ep xor XOR_EP_RETAIL;
-
-  SetLength(m_bzSection[i], m_SectionHeader[i].m_sizeof_raw);
-
-  // Append prolog section
-  _AppendProlog(i);
-  pWriteCursor := $100;
-
-  // Append xbe header
-  _AppendXbeHeader(i, pWriteCursor);
-  pWriteCursor := pWriteCursor + SizeOf(m_Xbe.m_Header);
-
-  // Append xbe extra header bytes
-  for c := 0 to (m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header)) - 1 do
+  // generate .cxbximp section
   begin
-    m_bzSection[i][pWriteCursor] := m_Xbe.m_HeaderEx[c];
-    Inc(pWriteCursor);
+    i := m_Header.m_sections - 2;
+    WriteLog(Format('EmuExe: Generating Section 0x%.4x (.cxbximp)... OK', [i]));
+
+    dwVirtAddr := m_SectionHeader[i].m_virtual_addr;
+    dwRawSize := m_SectionHeader[i].m_sizeof_raw;
+    SetLength(m_bzSection[i], dwRawSize);
+    ZeroMemory(m_bzSection[i], dwRawSize);
+
+    _WriteDWordToSectionPos(i, $00, dwVirtAddr + $38);
+    _WriteDWordToSectionPos(i, $04, 0);
+    _WriteDWordToSectionPos(i, $08, dwVirtAddr + $30);
+    _WriteDWordToSectionPos(i, $0C, 0);
+
+    _WriteDWordToSectionPos(i, $10, 0);
+    _WriteDWordToSectionPos(i, $14, dwVirtAddr + $4A);
+    _WriteDWordToSectionPos(i, $18, dwVirtAddr + $00);
+    _WriteDWordToSectionPos(i, $1C, 0);
+
+    _WriteDWordToSectionPos(i, $20, 0);
+    _WriteDWordToSectionPos(i, $24, 0);
+    _WriteDWordToSectionPos(i, $28, 0);
+    _WriteDWordToSectionPos(i, $2C, 0);
+
+    _WriteDWordToSectionPos(i, $30, dwVirtAddr + $38);
+    _WriteDWordToSectionPos(i, $34, 0);
+    _WriteDWordToSectionPos(i, $38, $0001);
+
+    if UseDebugDLL then
+      CopyMemory(@(m_bzSection[i][$3A]), PChar(StrCxbxKrnlNoFunc00CxbxKrnl_dll), Length(StrCxbxKrnlNoFunc00CxbxKrnl_dll))
+    else
+      CopyMemory(@(m_bzSection[i][$3A]), PChar(StrCxbxKrnlNoFunc00Cxbx_dll), Length(StrCxbxKrnlNoFunc00Cxbx_dll));
   end;
 
-  // Append x_debug_filename
-  for c := Length(m_KrnlDebugFilename) to 259 do
+  // generate .cxbxplg section
   begin
-    m_bzSection[i][pWriteCursor] := 0;
-    Inc(pWriteCursor);
-  end;
+    ep := m_Xbe.m_Header.dwEntryAddr;
+    i := m_Header.m_sections - 1;
 
-  // Append library versions
-  for c := 0 to m_xbe.m_Header.dwLibraryVersions - 1 do
-  begin
-    _AppendXbeLibVersion(i, pWriteCursor, c);
-    pWriteCursor := pWriteCursor + SizeOf(m_xbe.m_LibraryVersion[c]);
-  end;
+    WriteLog(Format('EmuExe: Generating Section Header 0x%.4x (.cxbxplg)... OK', [i]));
 
-  // Append TLS data
-  if SizeOf(m_Xbe.m_TLS) <> 0 then
-  begin
-    _AppendTLS(i, pWriteCursor);
-    pWriteCursor := pWriteCursor + SizeOf(m_Xbe.m_TLS);
-    _AppendTLSData(i, pWriteCursor);
-    pWriteCursor := pWriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
-  end;
+    // decode entry point
+    if ((ep xor XOR_EP_RETAIL) > $01000000) then
+      ep := ep xor XOR_EP_DEBUG
+    else
+      ep := ep xor XOR_EP_RETAIL;
 
-  // patch prolog function parameters
-  WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
+    SetLength(m_bzSection[i], m_SectionHeader[i].m_sizeof_raw);
 
-  // Function Pointer
-  pEmuInit := @CxbxKrnlInit; // We need to access the procedure once so it's in memory
-  KrnlHandle := GetModuleHandle(cDLLNAME);
-  if KrnlHandle >= 32 then
-  begin
+    pWriteCursor := @(m_bzSection[i][0]);
+
+    // Append prolog section
+(*
+    _AppendProlog(i);
+*)
+    CopyMemory(pWriteCursor, @(Prolog[0]), Length(Prolog));
+    Inc(pWriteCursor, $100);
+
+    // Append xbe header
+(*
+    _AppendXbeHeader(i, pWriteCursor);
+*)
+    CopyMemory(pWriteCursor, @(m_Xbe.m_Header), SizeOf(m_Xbe.m_Header));
+    Inc(pWriteCursor, SizeOf(m_Xbe.m_Header));
+
+    // Append xbe extra header bytes
+(*
+    for c := 0 to (m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header)) - 1 do
+    begin
+      m_bzSection[i][pWriteCursor] := m_Xbe.m_HeaderEx[c];
+      Inc(pWriteCursor);
+    end;
+*)
+    CopyMemory(pWriteCursor, @(m_Xbe.m_HeaderEx), m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header));
+    Dec(pWriteCursor, SizeOf(m_Xbe.m_Header));
+    Inc(pWriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
+
+    // Append x_debug_filename
+(*
+    for c := Length(m_KrnlDebugFilename) to 259 do
+    begin
+      m_bzSection[i][pWriteCursor] := 0;
+      Inc(pWriteCursor);
+    end;
+*)
+    SetLength(m_KrnlDebugFilename, 260);
+    CopyMemory(pWriteCursor, @(m_Xbe.m_HeaderEx), 260);
+    Inc(pWriteCursor, 260);
+
+    // Append library versions
+    for c := 0 to m_xbe.m_Header.dwLibraryVersions - 1 do
+    begin
+(*
+      _AppendXbeLibVersion(i, pWriteCursor, c);
+*)
+      CopyMemory(pWriteCursor, @(m_Xbe.m_LibraryVersion[c]), Sizeof(m_Xbe.m_LibraryVersion[c]));
+      Inc(pWriteCursor, SizeOf(m_xbe.m_LibraryVersion[c]));
+    end;
+
+    // Append TLS data
+    if SizeOf(m_Xbe.m_TLS) <> 0 then // TODO : m_TLS should be a pointer, tested with Assigned()
+    begin
+(*
+      _AppendTLS(i, pWriteCursor);
+*)
+      CopyMemory(pWriteCursor, @(m_Xbe.m_TLS), SizeOf(m_Xbe.m_TLS));
+      Inc(pWriteCursor, SizeOf(m_Xbe.m_TLS));
+
+(*
+      _AppendTLSData(i, pWriteCursor);
+*)
+      CopyMemory(pWriteCursor, Pointer(m_Xbe.GetTLSData()), m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+      Inc(pWriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+    end;
+
+    // patch prolog function parameters
+    WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
+
+    // Function Pointer
     pEmuInit := GetProcAddress(KrnlHandle, 'CxbxKrnlInit');
     _WriteDWordToSectionPos(i, 1, DWord(pEmuInit));
+// test
+pEmuInit := @CxbxKrnlInit;
+_WriteDWordToSectionPos(i, $81, DWord(pEmuInit));
+
+    // Param 8 : Entry
+    _WriteDWordToSectionPos(i, 6, ep);
+
+    // Param 7 : dwXbeHeaderSize
+    _WriteDWordToSectionPos(i, 11, m_Xbe.m_Header.dwSizeofHeaders);
+
+    // Param 6 : pXbeHeader
+    _WriteDWordToSectionPos(i, 16, WriteCursor);
+    Inc(WriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
+
+    // Param 5 : szDebugFilename
+    _WriteDWordToSectionPos(i, 21, WriteCursor);
+    Inc(WriteCursor, 260);
+
+    // Param 4 : DbgMode
+    _WriteDWordToSectionPos(i, 26, DWord(m_KrnlDebug));
+
+    // Param 3 : pLibraryVersion
+    if Length(m_Xbe.m_LibraryVersion) <> 0 then
+    begin
+      _WriteDWordToSectionPos(i, 31, WriteCursor);
+      Inc(WriteCursor, SizeOf(m_Xbe.m_LibraryVersion[0]) * m_xbe.m_Header.dwLibraryVersions);
+    end
+    else
+      _WriteDWordToSectionPos(i, 31, 0);
+
+    // Param 2 : pTLS
+    if SizeOf(m_Xbe.m_TLS) <> 0 then
+    begin
+      _WriteDWordToSectionPos(i, 36, WriteCursor);
+      Inc(WriteCursor, SizeOf(m_Xbe.m_TLS));
+    end
+    else
+      _WriteDWordToSectionPos(i, 36, 0);
+
+    // Param 1 : pTLSData
+    if SizeOf(m_Xbe.m_TLS) <> 0 then
+    begin
+      _WriteDWordToSectionPos(i, 41, WriteCursor);
+      Inc(WriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+    end
+    else
+      _WriteDWordToSectionPos(i, 41, 0);
+
+    // Param 0 : hwndParent
+    _WriteDWordToSectionPos(i, 46, hwndParent);
   end;
 
-  FreeLibrary(KrnlHandle);
-
-  // Param 8 : Entry
-  _WriteDWordToSectionPos(i, 6, ep);
-
-  // Param 7 : dwXbeHeaderSize
-  _WriteDWordToSectionPos(i, 11, m_Xbe.m_Header.dwSizeofHeaders);
-
-  // Param 6 : pXbeHeader
-  _WriteDWordToSectionPos(i, 16, WriteCursor);
-  WriteCursor := WriteCursor + m_Xbe.m_Header.dwSizeofHeaders;
-
-  // Param 5 : szDebugFilename
-  _WriteDWordToSectionPos(i, 21, WriteCursor);
-  WriteCursor := WriteCursor + 260;
-
-  // Param 4 : DbgMode
-  _WriteDWordToSectionPos(i, 26, DWord(m_KrnlDebug));
-
-  // Param 3 : pLibraryVersion
-  if Length(m_Xbe.m_LibraryVersion) <> 0 then
-  begin
-    _WriteDWordToSectionPos(i, 31, WriteCursor);
-    WriteCursor := WriteCursor + (16 * m_xbe.m_Header.dwLibraryVersions);
-  end
-  else
-    _WriteDWordToSectionPos(i, 31, 0);
-
-  // Param 2 : pTLS
-  if SizeOf(m_Xbe.m_TLS) <> 0 then
-  begin
-    _WriteDWordToSectionPos(i, 36, WriteCursor);
-    WriteCursor := WriteCursor + SizeOf(m_Xbe.m_TLS);
-  end
-  else
-    _WriteDWordToSectionPos(i, 36, 0);
-
-  // Param 1 : pTLSData
-  if SizeOf(m_Xbe.m_TLS) <> 0 then
-  begin
-    _WriteDWordToSectionPos(i, 41, WriteCursor);
-    WriteCursor := WriteCursor + m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr;
-  end
-  else
-    _WriteDWordToSectionPos(i, 41, 0);
-
-  // Param 0 : hwndParent
-  _WriteDWordToSectionPos(i, 46, hwndParent);
-
-
   // END GENERATE SECTIONS  ------ WE STUCK HERE
- // ******************************************************************
- // * patch kernel thunk table
- // ******************************************************************
+  // ******************************************************************
+  // * patch kernel thunk table
+  // ******************************************************************
   WriteLog('EmuExe: Hijacking Kernel Imports...');
   // generate xbe sections
   kt := m_Xbe.m_Header.dwKernelImageThunkAddr;
@@ -746,7 +781,8 @@ begin
     kt := kt xor XOR_KT_DEBUG;
 
   // locate section containing kernel thunk table
-  for v := 0 to m_Xbe.m_Header.dwSections -1 do
+  ThunkTable := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable');
+  for v := 0 to m_Xbe.m_Header.dwSections - 1 do
   begin
     imag_base := m_OptionalHeader.m_image_base;
     virt_addr := m_SectionHeader[v].m_virtual_addr;
@@ -756,29 +792,19 @@ begin
     if ((kt >= virt_addr + imag_base) and (kt < virt_addr + virt_size + imag_base)) then
     begin
       WriteLog(Format('EmuExe: Located Thunk Table in Section 0x%.4x (0x%.8X)...', [v, kt]));
-      kt_tbl := kt - virt_addr - imag_base;
+      kt_tbl := @(m_bzSection[v][kt - virt_addr - imag_base]);
       k := 0;
-      kt_value := @m_bzSection[v][kt_tbl+k];
-      pEmuInit := @CxbxKrnlInit;  // We need to access the procedure once so it's in memory
-      KrnlHandle := GetModuleHandle(cDLLNAME);
-      if KrnlHandle >= 32 then
+      while kt_tbl[k] <> 0 do
       begin
-        ThunkTable := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable');
-        while kt_value^ <> 0 do
-        begin
-          t := kt_value^ and $7FFFFFFF;
-          // TODO : This method works with cxbx's dll
-          //        Once exe creation is complete, we'll get the thunk table from our dll
-          _WriteDWordToSectionPos(v, k, ThunkTable^[t]);
-          if t <> $FFFFFFFF then
-            WriteLog(Format('EmuExe: Thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + k, kt_value^]));
+        t := kt_tbl[k] and $7FFFFFFF;
+        // TODO : This method works with cxbx's dll
+        //        Once exe creation is complete, we'll get the thunk table from our dll
+        _WriteDWordToAddr(@(kt_tbl[k]), ThunkTable[t]);
+        if t <> $FFFFFFFF then
+          WriteLog(Format('EmuExe: Thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + (k * 4), kt_tbl[k]]));
 
-          k := k + 4;
-          kt_value := @m_bzSection[v][kt_tbl+k];
-        end; // while
-      end; // ik KrnlHandle
-
-      FreeLibrary(KrnlHandle);
+        Inc(k);
+      end; // while
     end; // if
 
   end; // for
@@ -801,13 +827,9 @@ begin
   end;
 
   // calculate size of image
-{$IFDEF OLD_CODE}
   // The RoundUp is necessary to allow the generated exe to run under Vista
   // This is actually a bug that needs to be corrected in CXBX too
-  SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + m_OptionalHeader.m_sizeof_headers;
-{$ELSE}
   SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
-{$ENDIF}
   SizeOf_Image := RoundUp(SizeOf_Image, PE_SEGM_ALIGN);
 
   // update optional header as necessary
@@ -837,5 +859,12 @@ begin
 end; // TEmuExe.Create
 
 //------------------------------------------------------------------------------
+
+destructor TEmuExe.Destroy;
+begin
+  FreeLibrary(KrnlHandle);
+
+  inherited Destroy;
+end;
 
 end.

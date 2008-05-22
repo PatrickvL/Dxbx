@@ -287,7 +287,7 @@ end; // Tfrm_Main.FormClose
 
 procedure Tfrm_Main.CloseXbe;
 begin
-  FreeAndNil(m_Xbe);
+  FreeAndNil({var}m_Xbe);
   Logbitmap1.Enabled := False;
   Dumpxbeinfoto1.Enabled := False;
   Exportexe1.Enabled := False;
@@ -313,7 +313,7 @@ begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
   except
     Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-    m_Xbe.Free;
+    FreeAndNil({var}m_Xbe);
   end;
 end; // Tfrm_Main.OpenXbe
 
@@ -462,7 +462,7 @@ begin
 
   end;
 
-  frm_ControllerConfig.Free;
+  FreeAndNil({var}frm_ControllerConfig);
 end; // Tfrm_Main.actConfigControllerExecute
 
 //------------------------------------------------------------------------------
@@ -476,7 +476,7 @@ begin
 
   end;
 
-  frm_VideoConfig.Free;
+  FreeAndNil({var}frm_VideoConfig);
 end; // Tfrm_Main.actConfigVideoExecute
 
 //------------------------------------------------------------------------------
@@ -581,7 +581,7 @@ begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
   except
     Messagedlg('Can not open Exe file.', mtWarning, [mbOk], 0);
-    m_Xbe.Free;
+    FreeAndNil({var}m_Xbe);
   end;
 
 end;
@@ -667,7 +667,7 @@ begin
     for I := 0 to RecentTMPList.Count - 1 do
       RecentExeAdd(RecentTMPList[I]);
 
-    IniFile.Free;
+    FreeAndNil({var}IniFile);
     // Set Menu checked options
     case m_DxbxDebug of
       DM_NONE: begin
@@ -755,7 +755,7 @@ begin
   IniFile.WriteInteger('Settings', 'KrnlDebug', ORD(m_KrnlDebug));
   IniFile.WriteString('Settings', 'KrnlDebugFilename', m_KrnlDebugFilename);
 
-  inifile.free;
+  FreeAndNil({var}inifile);
 end; // Tfrm_Main.WriteSettingsIni
 
 //------------------------------------------------------------------------------
@@ -895,7 +895,7 @@ begin
   begin
   end;
 
-  frm_About.free;
+  FreeAndNil({var}frm_About);
 end; // Tfrm_Main.ActAboutExecute
 
 //------------------------------------------------------------------------------

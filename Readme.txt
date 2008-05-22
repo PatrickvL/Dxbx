@@ -19,7 +19,7 @@ Contributors:
 
 Shadow_tj (from Holland) - Main cxbx translation
 Zomby (from USA) - Vista compatibility, lots of fixups
-Pucho (from Argentinia) - XIso translation
+PCucho (from Argentinia) - XIso translation
 Yapel (from Spain) - XIso 
 PatrickvL (from Holland) - Style changes, little fixes
 Wayo - GetProcAddress trick with CxbxKrnlInit

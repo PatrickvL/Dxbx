@@ -147,7 +147,7 @@ begin
   begin
   end;
 
-  frm_XdkVersion.Free;
+  FreeAndNil({var}frm_XdkVersion);
 end; // TfrmMain.Viewxdkversion2Click
 
 //------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ begin
   begin
   end;
 
-  frm_About.free;
+  FreeAndNil({var}frm_About);
 end; // TfrmMain.About1Click
 
 //------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ end;
 destructor TfrmXdkTracker.Destroy;
 begin
   SaveGameData(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=} '');
-  GameList.Free;
+  FreeAndNil({var}GameList);
 
   inherited Destroy;
 end; // TfrmMain.Destroy
@@ -364,7 +364,7 @@ begin
 
       frm_ImportGames.Release;
 
-      ImportList.Free;
+      FreeAndNil({var}ImportList);
     end;
   end;
 end; // TfrmMain.ImportGameData

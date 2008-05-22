@@ -110,7 +110,7 @@ type
 
   // PE Section Header
   SectionHeader = packed record
-    m_name: array[0..7] of Char; // name of section
+    m_name: array[0..7] of AnsiChar; // name of section
     m_virtual_size: DWord; // virtual size of segment
     m_virtual_addr: DWord; // virtual address of segment
     m_sizeof_raw: DWord; // size of raw data
@@ -349,7 +349,7 @@ cleanup:
     fclose(ExeFile);
         *)
   finally
-    ExeFile.Free;
+    FreeAndNil({var}ExeFile);
   end;
 end;
 
@@ -453,8 +453,8 @@ begin
       ExeFile.Write(bzEndFilling2, Length(bzEndFilling2));
 *)
   finally
-    ExeFile.Free;
-  end; 
+    FreeAndNil({var}ExeFile);
+  end;
 end; // TExe.doExport
 
 //------------------------------------------------------------------------------
