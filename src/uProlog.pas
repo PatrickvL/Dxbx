@@ -45,7 +45,8 @@ var
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
     $FF, $D6,                // call esi
-    $C3, $CC, $CC, $CC, $CC, // ret
+    $C3,                     // ret
+    $CC, $CC, $CC, $CC, $CC, // int 3...
     $CC, $CC, $CC, $CC, $CC,
     $CC, $CC, $CC, $CC, $CC,
     $CC, $CC, $CC, $CC, $CC,
@@ -85,7 +86,7 @@ var
     $CC, $CC, $CC, $CC, $CC,
     $CC, $CC, $CC, $CC, $CC,
     $CC, $CC, $CC, $CC, $CC,
-    $CC, $CC, $CC, $CC);
+    $CC, $CC, $CC);
 
 
   EndFilling: array[0..524] of Byte = (

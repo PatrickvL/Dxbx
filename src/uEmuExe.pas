@@ -69,255 +69,15 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
   end;
 
   procedure _WriteDWordToSectionPos(SectionIdx, iPos: Integer; aDWord: DWord);
-//  var
-//    i: Integer;
-//    DWordArray: TDWordArray;
   begin
-//    DWordArray := TDWordArray(aDWord);
-    CopyMemory(@(m_bzSection[SectionIdx][iPos]), @aDWord, SizeOf(DWord));
-//    for i := 0 to Length(DWordArray) - 1 do
-//    begin
-//      m_bzSection[SectionIdx][iPos] := DWordArray[i];
-//      Inc(iPos);
-//    end;
+    _WriteDWordToAddr(@(m_bzSection[SectionIdx][iPos]), aDWord);
   end;
-
-(*
-  procedure _AppendProlog(SectionIdx: Integer);
-  var
-    iPos: Integer;
-  begin
-    // Append prolog section
-    iPos := Length(m_bzSection[SectionIdx]);
-    SetLength(m_bzSection[SectionIdx], iPos + Length(Prolog));
-    CopyMemory(@(m_bzSection[SectionIdx][iPos]), @(Prolog[0]), Length(Prolog));
-  end;
-
-  procedure _AppenddwMagic(SectionIdx: Integer);
-  var
-    i: Integer;
-    iPos: Integer;
-  begin
-    // Append dwMagic to section
-    iPos := Length(m_bzSection[SectionIdx]);
-    SetLength(m_bzSection[SectionIdx], Length(m_bzSection[SectionIdx]) + Length(m_xbe.m_Header.dwMagic));
-    for i := 0 to Length(m_xbe.m_Header.dwMagic) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := Byte(m_xbe.m_Header.dwMagic[i]);
-      Inc(iPos);
-    end;
-  end;
-
-  procedure _AppenddwMagicSubI(SectionIdx: Integer; iPos: Dword);
-  var
-    i: Integer;
-  begin
-    // Append dwMagic to section
-    for i := 0 to Length(m_xbe.m_Header.dwMagic) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := Byte(m_xbe.m_Header.dwMagic[i]);
-      Inc(iPos);
-    end;
-  end;
-
-  procedure _AppendpbDigitalSignature(SectionIdx: Integer);
-  var
-    i: Integer;
-    iPos: Integer;
-  begin
-    // Append pbDigitalSignature to section
-    iPos := Length(m_bzSection[SectionIdx]);
-    SetLength(m_bzSection[SectionIdx], Length(m_bzSection[SectionIdx]) + Length(m_Xbe.m_Header.pbDigitalSignature));
-    for i := 0 to Length(m_Xbe.m_Header.pbDigitalSignature) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := m_Xbe.m_Header.pbDigitalSignature[i];
-      Inc(iPos);
-    end;
-  end;
-
-  procedure _AppendpbDigitalSignatureSubI(SectionIdx: Integer; iPos: Dword);
-  var
-    i: Integer;
-  begin
-    // Append pbDigitalSignature to section
-    for i := 0 to Length(m_Xbe.m_Header.pbDigitalSignature) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := m_Xbe.m_Header.pbDigitalSignature[i];
-      Inc(iPos);
-    end;
-  end;
-
-  procedure _AppenddwInitFlags(SectionIdx: Integer);
-  var
-    iPos: Integer;
-  begin
-    // Append dwInitFlags to section
-    iPos := Length(m_bzSection[SectionIdx]);
-    SetLength(m_bzSection[SectionIdx], Length(m_bzSection[SectionIdx]) + SizeOf(m_XBe.m_Header.dwInitFlags));
-    Move(m_XBe.m_Header.dwInitFlags[0], m_bzSection[SectionIdx][iPos], SizeOf(m_XBe.m_Header.dwInitFlags));
-  end;
-*)
 
   procedure _CopySections(Index: Integer);
   begin
     SetLength(m_bzSection[Index], m_SectionHeader[Index].m_sizeof_raw);
     CopyMemory(m_bzSection[Index], m_Xbe.m_bzSection[Index], m_Xbe.m_SectionHeader[Index].dwSizeofRaw);
   end;
-
-(*
-  procedure _AppenddwInitFlagsSubI(SectionIdx: Integer; iPos: Dword);
-  begin
-    CopyMemory(@(m_bzSection[SectionIdx][iPos]), @(m_XBe.m_Header.dwInitFlags[0]), SizeOf(m_XBe.m_Header.dwInitFlags));
-  end;
-
-  procedure _AppendXbeHeader(SectionIdx: Integer; SubIndex: Dword);
-  begin
-    _AppenddwMagicSubI(SectionIdx, $100); // Append dwMagic
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwMagic);
-    _AppendpbDigitalSignatureSubI(SectionIdx, SubIndex); // Append Digital signature
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.pbDigitalSignature);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwBaseAddr); // Append DwBaseAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwBaseAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwSizeofHeaders); // Append dwSizeofHeaders
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwSizeofHeaders);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwSizeofImage); // Append dwSizeofImage
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwSizeofImage);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwSizeofImageHeader); // Append dwSizeofImageHeader
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwSizeofImageHeader);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwTimeDate); // Append dwTimeDate
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwTimeDate);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwCertificateAddr); // Append dwCertificateAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwCertificateAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwSections); // Append dwSections
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwSections);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwSectionHeadersAddr); // Append dwSectionHeadersAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwSectionHeadersAddr);
-    _AppenddwInitFlagsSubI(SectionIdx, SubIndex); // Append dwInitFlags
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwInitFlags);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwEntryAddr); // Append dwEntryAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwEntryAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwTLSAddr); // Append dwTLSAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwTLSAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwPeStackCommit); // Append dwPeStackCommit
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwPeStackCommit);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwPeHeapReserve); // Append dwPeHeapReserve
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwPeHeapReserve);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwPeHeapCommit); // Append dwPeHeapCommit
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwPeHeapReserve);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwPeBaseAddr); // Append dwPeBaseAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwPeBaseAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwPeSizeofImage); // Append dwPeSizeofImage
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwPeSizeofImage);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwPeChecksum); // Append dwPeChecksum
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwPeChecksum);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwPeTimeDate); // Append dwPeTimeDate
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwPeTimeDate);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwDebugPathnameAddr); // Append dwDebugPathNameAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwDebugPathnameAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwDebugFilenameAddr); // Append dwDebugFileNameAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwDebugFilenameAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwDebugUnicodeFilenameAddr); // Append dwDebugUnicodeFileNameAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwDebugUnicodeFilenameAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwKernelImageThunkAddr); // Append deKernelImageThunkAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwKernelImageThunkAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwNonKernelImportDirAddr); // Append dwNonKernelImportDirAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwNonKernelImportDirAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwLibraryVersions); // Append dwLibraryVersions
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwLibraryVersions);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwLibraryVersionsAddr); // Append dwLibraryVersionsAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwLibraryVersionsAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwKernelLibraryVersionAddr); // Append dwKernelLibraryVersionAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwKernelLibraryVersionAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwXAPILibraryVersionAddr); // Append dwXapiLibraryVersionAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwXAPILibraryVersionAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwLogoBitmapAddr); // Append dwLogoBitmapAddr
-    SubIndex := SubIndex + SizeOf(m_XBe.m_Header.dwLogoBitmapAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_XBe.m_Header.dwSizeofLogoBitmap); // Append dwSizeofLogoBitmap
-  end;
-*)
-
-(*
-  procedure _AppendXbeLibVersionSzName(SectionIdx: Integer; iPos: Dword; LibVersioNbr: Integer);
-  var
-    i: Integer;
-  begin
-    // Append pbDigitalSignature to section
-    for i := 0 to 7 do
-    begin
-      m_bzSection[SectionIdx][iPos] := Byte(m_Xbe.m_LibraryVersion[LibVersioNbr].szName[i]);
-      Inc(iPos);
-    end;
-  end;
-
-  procedure _AppenddwLibVerFlagsSubI(SectionIdx: Integer; iPos: Dword; LibVersioNbr: Integer);
-  var
-    i: Integer;
-  begin
-    for i := 0 to Length(m_Xbe.m_LibraryVersion[LibVersioNbr].dwFlags) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := m_Xbe.m_LibraryVersion[LibVersioNbr].dwFlags[i];
-      Inc(iPos);
-    end;
-  end;
-
-  procedure _AppendWordToSubSection(SectionIdx, iPos: Integer; aWord: Word);
-  var
-    i: Integer;
-    WordArray: TWordArray;
-  begin
-    WordArray := TWordArray(aWord);
-    for i := 0 to Length(WordArray) - 1 do
-    begin
-      m_bzSection[SectionIdx][iPos] := WordArray[i];
-      Inc(iPos);
-    end;
-  end;
-
-  procedure _AppendXbeLibVersion(SectionIdx: Integer; SubIndex: Dword; LibVersioNbr: Integer);
-  begin
-    _AppendXbeLibVersionSzName(SectionIdx, SubIndex, LibVersioNbr);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_LibraryVersion[LibVersioNbr].szName);
-    _AppendWordToSubSection(SectionIdx, SubIndex, m_Xbe.m_LibraryVersion[LibVersioNbr].wMajorVersion);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_LibraryVersion[LibVersioNbr].wMajorVersion);
-    _AppendWordToSubSection(SectionIdx, SubIndex, m_Xbe.m_LibraryVersion[LibVersioNbr].wMinorVersion);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_LibraryVersion[LibVersioNbr].wMinorVersion);
-    _AppendWordToSubSection(SectionIdx, SubIndex, m_Xbe.m_LibraryVersion[LibVersioNbr].wBuildVersion);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_LibraryVersion[LibVersioNbr].wBuildVersion);
-    _AppenddwLibVerFlagsSubI(SectionIdx, SubIndex, LibVersioNbr);
-  end;
-*)
-
-(*
-  procedure _AppendTLS(SectionIdx: Integer; SubIndex: Dword);
-  begin
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwDataStartAddr);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_TLS.dwDataStartAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwDataEndAddr);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_TLS.dwDataEndAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwTLSIndexAddr);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_TLS.dwTLSIndexAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwTLSCallbackAddr);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_TLS.dwTLSCallbackAddr);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwSizeofZeroFill);
-    SubIndex := SubIndex + SizeOf(m_Xbe.m_TLS.dwSizeofZeroFill);
-    _WriteDWordToSectionPos(SectionIdx, SubIndex, m_Xbe.m_TLS.dwCharacteristics);
-  end;
-*)
-
-(*
-  procedure _AppendTLSData(SectionIdx: Integer; SubIndex: Dword);
-  var
-    i: DWord;
-    pTLSData: ^TVarByteArray;
-  begin
-    if m_Xbe.GetTLSData <> 0 then
-    begin
-      pTLSData := Pointer(m_Xbe.GetTLSData);
-      for i := 0 to m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr - 1 do
-        m_bzSection[SectionIdx][SubIndex + i] := pTLSData^[i];
-    end;
-  end;
-*)
 
 var
   i, d, v, c: Integer;
@@ -355,7 +115,6 @@ var
   Flag: Byte;
 
   pEmuInit: Pointer;
-
 begin
   pEmuInit := @CxbxKrnlInit; // We need to access the procedure once so it's in memory
 
@@ -576,9 +335,6 @@ begin
 
   WriteLog(Format('EmuExe: Generating Section Header 0x%.4x(.cxbxplg)... OK', [i]));
 
-
-  // GENERATE SECTIONS  ------ PART WE STUCK
-
   // generate sections
   WriteLog('EmuExe: Generating Sections...');
 
@@ -645,39 +401,19 @@ begin
     pWriteCursor := @(m_bzSection[i][0]);
 
     // Append prolog section
-(*
-    _AppendProlog(i);
-*)
     CopyMemory(pWriteCursor, @(Prolog[0]), Length(Prolog));
     Inc(pWriteCursor, $100);
 
     // Append xbe header
-(*
-    _AppendXbeHeader(i, pWriteCursor);
-*)
     CopyMemory(pWriteCursor, @(m_Xbe.m_Header), SizeOf(m_Xbe.m_Header));
     Inc(pWriteCursor, SizeOf(m_Xbe.m_Header));
 
     // Append xbe extra header bytes
-(*
-    for c := 0 to (m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header)) - 1 do
-    begin
-      m_bzSection[i][pWriteCursor] := m_Xbe.m_HeaderEx[c];
-      Inc(pWriteCursor);
-    end;
-*)
     CopyMemory(pWriteCursor, @(m_Xbe.m_HeaderEx), m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header));
     Dec(pWriteCursor, SizeOf(m_Xbe.m_Header));
     Inc(pWriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
 
     // Append x_debug_filename
-(*
-    for c := Length(m_KrnlDebugFilename) to 259 do
-    begin
-      m_bzSection[i][pWriteCursor] := 0;
-      Inc(pWriteCursor);
-    end;
-*)
     SetLength(m_KrnlDebugFilename, 260);
     CopyMemory(pWriteCursor, @(m_Xbe.m_HeaderEx), 260);
     Inc(pWriteCursor, 260);
@@ -685,9 +421,6 @@ begin
     // Append library versions
     for c := 0 to m_xbe.m_Header.dwLibraryVersions - 1 do
     begin
-(*
-      _AppendXbeLibVersion(i, pWriteCursor, c);
-*)
       CopyMemory(pWriteCursor, @(m_Xbe.m_LibraryVersion[c]), Sizeof(m_Xbe.m_LibraryVersion[c]));
       Inc(pWriteCursor, SizeOf(m_xbe.m_LibraryVersion[c]));
     end;
@@ -695,15 +428,9 @@ begin
     // Append TLS data
     if SizeOf(m_Xbe.m_TLS) <> 0 then // TODO : m_TLS should be a pointer, tested with Assigned()
     begin
-(*
-      _AppendTLS(i, pWriteCursor);
-*)
       CopyMemory(pWriteCursor, @(m_Xbe.m_TLS), SizeOf(m_Xbe.m_TLS));
       Inc(pWriteCursor, SizeOf(m_Xbe.m_TLS));
 
-(*
-      _AppendTLSData(i, pWriteCursor);
-*)
       CopyMemory(pWriteCursor, Pointer(m_Xbe.GetTLSData()), m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
       Inc(pWriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
     end;
@@ -714,9 +441,6 @@ begin
     // Function Pointer
     pEmuInit := GetProcAddress(KrnlHandle, 'CxbxKrnlInit');
     _WriteDWordToSectionPos(i, 1, DWord(pEmuInit));
-// test
-pEmuInit := @CxbxKrnlInit;
-_WriteDWordToSectionPos(i, $81, DWord(pEmuInit));
 
     // Param 8 : Entry
     _WriteDWordToSectionPos(i, 6, ep);
@@ -733,7 +457,7 @@ _WriteDWordToSectionPos(i, $81, DWord(pEmuInit));
     Inc(WriteCursor, 260);
 
     // Param 4 : DbgMode
-    _WriteDWordToSectionPos(i, 26, DWord(m_KrnlDebug));
+    _WriteDWordToSectionPos(i, 26, Ord(m_KrnlDebug));
 
     // Param 3 : pLibraryVersion
     if Length(m_Xbe.m_LibraryVersion) <> 0 then
@@ -757,7 +481,7 @@ _WriteDWordToSectionPos(i, $81, DWord(pEmuInit));
     if SizeOf(m_Xbe.m_TLS) <> 0 then
     begin
       _WriteDWordToSectionPos(i, 41, WriteCursor);
-      Inc(WriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+//      Inc(WriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
     end
     else
       _WriteDWordToSectionPos(i, 41, 0);
@@ -766,7 +490,6 @@ _WriteDWordToSectionPos(i, $81, DWord(pEmuInit));
     _WriteDWordToSectionPos(i, 46, hwndParent);
   end;
 
-  // END GENERATE SECTIONS  ------ WE STUCK HERE
   // ******************************************************************
   // * patch kernel thunk table
   // ******************************************************************
@@ -809,34 +532,37 @@ _WriteDWordToSectionPos(i, $81, DWord(pEmuInit));
 
   end; // for
 
-
   // update imcomplete header fields
+  WriteLog('EmuExe: Finalizing Exe file...');
+
   // calculate size of code / data / image
-  SizeOf_Code := 0;
-  SizeOf_Data := 0;
-  SizeOf_Undata := 0;
-
-  for v := 0 to m_Header.m_sections - 1 do
   begin
-    Characteristics := m_SectionHeader[v].m_characteristics;
-    if ((Characteristics and IMAGE_SCN_MEM_EXECUTE) <> 0) or ((Characteristics and IMAGE_SCN_CNT_CODE) <> 0) then
-      SizeOf_Code := SizeOf_Code + m_SectionHeader[v].m_SizeOf_Raw;
+    SizeOf_Code := 0;
+    SizeOf_Data := 0;
+    SizeOf_Undata := 0;
 
-    if (Characteristics and IMAGE_SCN_CNT_INITIALIZED_DATA) <> 0 then
-      Sizeof_data := Sizeof_Data + m_SectionHeader[v].m_sizeof_raw;
+    for v := 0 to m_Header.m_sections - 1 do
+    begin
+      Characteristics := m_SectionHeader[v].m_characteristics;
+      if ((Characteristics and IMAGE_SCN_MEM_EXECUTE) <> 0) or ((Characteristics and IMAGE_SCN_CNT_CODE) <> 0) then
+        Inc(SizeOf_Code, m_SectionHeader[v].m_SizeOf_Raw);
+
+      if (Characteristics and IMAGE_SCN_CNT_INITIALIZED_DATA) <> 0 then
+        Inc(Sizeof_data, m_SectionHeader[v].m_sizeof_raw);
+    end;
+
+    // calculate size of image
+    // The RoundUp is necessary to allow the generated exe to run under Vista
+    // This is actually a bug that needs to be corrected in CXBX too
+    SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
+    SizeOf_Image := RoundUp(SizeOf_Image, PE_SEGM_ALIGN);
+
+    // update optional header as necessary
+    m_OptionalHeader.m_sizeof_code := sizeof_code;
+    m_OptionalHeader.m_sizeof_initialized_data := sizeof_data;
+    m_OptionalHeader.m_sizeof_uninitialized_data := sizeof_undata;
+    m_OptionalHeader.m_sizeof_image := sizeof_image;
   end;
-
-  // calculate size of image
-  // The RoundUp is necessary to allow the generated exe to run under Vista
-  // This is actually a bug that needs to be corrected in CXBX too
-  SizeOf_Image := SizeOf_Undata + SizeOf_Data + SizeOf_Code + RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
-  SizeOf_Image := RoundUp(SizeOf_Image, PE_SEGM_ALIGN);
-
-  // update optional header as necessary
-  m_OptionalHeader.m_sizeof_code := sizeof_code;
-  m_OptionalHeader.m_sizeof_initialized_data := sizeof_data;
-  m_OptionalHeader.m_sizeof_uninitialized_data := sizeof_undata;
-  m_OptionalHeader.m_sizeof_image := sizeof_image;
 
   // we'll set code base as the virtual address of the first section
   m_OptionalHeader.m_code_base := m_SectionHeader[0].m_virtual_addr;
@@ -847,8 +573,8 @@ _WriteDWordToSectionPos(i, $81, DWord(pEmuInit));
   for v := 0 to m_Header.m_sections - 1 do
   begin
     Characteristics := m_SectionHeader[v].m_characteristics;
-    if (   not ((Characteristics and IMAGE_SCN_MEM_EXECUTE) <> 0)
-        or not ((Characteristics and IMAGE_SCN_CNT_CODE) <> 0)) then
+    if (   ((Characteristics and IMAGE_SCN_MEM_EXECUTE) = 0)
+        or ((Characteristics and IMAGE_SCN_CNT_CODE) = 0)) then
     begin
       m_optionalHeader.m_data_base := m_SectionHeader[v].m_virtual_addr;
       Break;
