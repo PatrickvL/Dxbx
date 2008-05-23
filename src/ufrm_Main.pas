@@ -160,6 +160,7 @@ type
     m_AutoConvertToExe: EnumAutoConvert;
 
     m_bExeChanged: Boolean;
+    m_bCanStart: Boolean;
 
     procedure SetExeGen(ConvertTo: EnumAutoConvert);
 
@@ -312,7 +313,7 @@ begin
     XbeLoaded();
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
   except
-    Messagedlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     FreeAndNil({var}m_Xbe);
   end;
 end; // Tfrm_Main.OpenXbe
@@ -433,18 +434,21 @@ begin
 
     // convert file
     try
-      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, 0);
-      if i_EmuExe.doExport(Filename) then
-      begin
-        m_ExeFilename := Filename;
-        WriteLog(m_szAsciiTitle + ' was converted to .exe.');
-        m_bExeChanged := False;
-        RecentExeAdd(Filename);
-        Result := True;
-      end
-      else
-        WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
-
+      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, Self.Handle);
+      try
+        if i_EmuExe.doExport(Filename) then
+        begin
+          m_ExeFilename := Filename;
+          WriteLog(m_szAsciiTitle + ' was converted to .exe.');
+          m_bExeChanged := False;
+          RecentExeAdd(Filename);
+          Result := True;
+        end
+        else
+          WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
+      finally
+        FreeAndNil(i_EmuExe);    
+      end;
     except
       MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
     end;
@@ -496,16 +500,22 @@ begin
       try
         if FileExists(m_ExeFilename) then
         begin
-          ShellExecute(application.Handle, 'open', PChar(m_ExeFilename), nil, nil, SW_SHOWDEFAULT);
-          WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
+          m_bCanStart := (ShellExecute(Application.Handle, 'open', PChar(m_ExeFilename), nil, PChar(ExtractFilePath(m_ExeFilename)), SW_SHOWDEFAULT) >= 32);
+          if m_bCanStart then
+            WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.')
+          else
+          begin
+            WriteLog('WndMain: ' + m_szAsciiTitle + ' shell failed.');
+            TaskMessageDlg('Dxbx', 'Emulation failed.'#13#13'Try converting again. If this message repeats, the Xbe is not supported.', mtError, [{MB_ICONSTOP,}mbOK], 0);
+          end
         end
         else
         begin
-          Messagedlg(m_ExeFilename + ' does not exists.', mtError, [mbOk], 0);
+          MessageDlg(m_ExeFilename + ' does not exists.', mtError, [mbOk], 0);
           WriteLog('WndMain: ' + m_ExeFilename + ' does not exists.');
         end;
       except
-        Messagedlg('Emmulation failed. Try converting again. If this message repeats, the Xbe is not supported.', mtError, [mbOk], 0);
+        MessageDlg('Emmulation failed. Try converting again. If this message repeats, the Xbe is not supported.', mtError, [mbOk], 0);
         WriteLog('WndMain: ' + m_szAsciiTitle + 'shell failed.');
       end;
     end;
@@ -580,7 +590,7 @@ begin
     m_bExeChanged := True;
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
   except
-    Messagedlg('Can not open Exe file.', mtWarning, [mbOk], 0);
+    MessageDlg('Can not open Exe file.', mtWarning, [mbOk], 0);
     FreeAndNil({var}m_Xbe);
   end;
 
