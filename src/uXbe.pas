@@ -151,14 +151,6 @@ type
   XBE_LIBRARYVERSION = _XBE_LIBRARYVERSION;
 
   _XBE_TLS = packed record
-        {
-            uint32 dwDataStartAddr;             // raw start address
-            uint32 dwDataEndAddr;               // raw end address
-            uint32 dwTLSIndexAddr;              // tls index  address
-            uint32 dwTLSCallbackAddr;           // tls callback address
-            uint32 dwSizeofZeroFill;            // size of zero fill
-            uint32 dwCharacteristics;           // characteristics
-        }
     dwDataStartAddr: DWord; // raw start address
     dwDataEndAddr: DWord; // raw end address
     dwTLSIndexAddr: DWord; // tls index  address
@@ -194,6 +186,7 @@ type
 
   TXbe = class(TObject)
   private
+    MyFile: TMemoryStream;
     Buffer: PAnsiChar;
     m_KernelLibraryVersion: array of AnsiChar;
     m_XAPILibraryVersion: array of AnsiChar;
@@ -209,7 +202,7 @@ type
     m_LibraryVersion: array of XBE_LIBRARYVERSION;
     m_szSectionName: array of array of AnsiChar;
     m_HeaderEx: array of Byte;
-    m_TLS: XBE_TLS;
+    m_TLS: P_XBE_TLS;
     m_bzSection: array of TVarByteArray;
 
     constructor Create(aFileName: string; aFileType: TFileType);
@@ -328,38 +321,39 @@ end; // GetWordVal
 
 procedure TXbe.ConstructorInit;
 begin
-  {m_SectionHeader       := '';
-  m_szSectionName        := '';
-  m_LibraryVersion       := '';
-  m_KernelLibraryVersion := '';
-  m_XAPILibraryVersion   := '';
-  m_TLS                  := '';
-  m_bzSection            := '';}
+  FreeAndNil(MyFile);
+  Buffer := nil;
+
+  SetLength(m_HeaderEx, 0);
+  SetLength(m_SectionHeader, 0);
+  SetLength(m_szSectionName, 0);
+  SetLength(m_LibraryVersion, 0);
+  SetLength(m_KernelLibraryVersion, 0);
+  SetLength(m_XAPILibraryVersion, 0);
+  FreeMem({var}m_TLS);
+  SetLength(m_bzSection, 0);
 end; // TXbe.ConstructorInit
 
 //------------------------------------------------------------------------------
 
 constructor TXbe.Create(aFileName: string; aFileType: TFileType);
 var
-  ExeSize: LongInt;
+  ExSize: LongInt;
   lIndex, lIndex2: DWord;
   RawSize, RawAddr: DWord;
   I: DWord;
-  F: THandle;
-  ReadBytes, FileSz: DWord;
   sFileType: string;
 begin
-  sFileType := ifthen(aFileType = ftXbe, 'Xbe', 'Exe' );
+  sFileType := ifthen(aFileType = ftXbe, 'Xbe', 'Exe');
 
   ConstructorInit();
 
-  RawSize := 0;
-  F := FileOpen(aFileName, fmOpenRead);
-  FileSz := GetFileSize(F, nil);
-  FileClose(F);
-
+  MyFile := TMemoryStream.Create;
+  MyFile.LoadFromFile(aFileName);
+  Buffer := MyFile.Memory;
+  
   // verify xbe file was opened
-  if FileSz = 0 then
+  if MyFile.Size = 0 then
   begin
     MessageDlg(Format('Could not open %s file', [sFileType]), mtError, [mbOk], 0);
     Exit;
@@ -371,271 +365,53 @@ begin
   m_szPath := ExtractFilePath(aFileName);
   WriteLog(Format('DXBX: Storing %s Path...Ok', [sFileType]));
 
-  // read xbe image header
-  if SizeOf(m_Header) > FileSz then
+  if MyFile.Size < SizeOf(m_Header) then
   begin
     MessageDlg(Format('Unexpected end of file while reading %s Image Header', [sFileType]), mtError, [mbOk], 0);
     Exit;
   end;
 
-  AssignFile({var}XbeFile, aFileName);
-  FileMode := fmOpenRead;
-  Reset({var}XbeFile);
-  FreeMem({var}Buffer);
-  GetMem({var}Buffer, FileSz);
-  BlockRead({var}XbeFile, Pointer(Buffer)^, FileSz, ReadBytes);
-  // m_Header.dwMagic Read (4 Bytes)
   i := 0;
-  for lIndex := 0 to 3 do
-  begin
-    m_Header.dwMagic[lIndex] := Buffer[i];
-    Inc(i);
-  end;
-
+  CopyMemory(@m_Header, Buffer, SizeOf(m_Header));
+  Inc(i, SizeOf(m_Header));
+  
+  // check xbe image header
   if m_Header.dwMagic <> _MagicNumber then
   begin
     MessageDlg( Format ( 'Invalid magic number in %s file', [sFileType]) , mtError, [mbOk], 0);
     Exit;
   end;
 
-  // m_Header.pbDigitalSignature Read (256 Bytes)
-  for lIndex := 4 to 259 do
-  begin
-    m_Header.pbDigitalSignature[i - 4] := Byte(Buffer[i]);
-    Inc(i);
-  end;
-
-  // m_Header.dwBaseAddr Read (4 bytes)
-  m_Header.dwBaseAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwSizeofHeaders Read (4 bytes)
-  m_Header.dwSizeofHeaders := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwSizeofImage Read (4 bytes)
-  m_Header.dwSizeofImage := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwSizeofImageHeader Read (4 bytes)
-  m_Header.dwSizeofImageHeader := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwTimeDate Read (4 bytes)
-  m_Header.dwTimeDate := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwCertificateAddr Read (4 bytes)
-  m_Header.dwCertificateAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwSections Read (4 bytes)
-  m_Header.dwSections := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwSectionHeadersAddr Read (4 bytes)
-  m_Header.dwSectionHeadersAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwInitFlags Read (4 bytes)
-  for lIndex := 0 to 3 do
-    m_Header.dwInitFlags[lIndex] := Byte(Buffer[lIndex + i]);
-
-  i := i + 4;
-  // m_Header.dwEntryAddr Read (4 bytes)
-  m_Header.dwEntryAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwTLSAddr Read (4 bytes)
-  m_Header.dwTLSAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwPeStackCommit Read (4 bytes)
-  m_Header.dwPeStackCommit := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwPeHeapReserve Read (4 bytes)
-  m_Header.dwPeHeapReserve := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwPeHeapCommit Read (4 bytes)
-  m_Header.dwPeHeapCommit := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwPeBaseAddr Read (4 bytes)
-  m_Header.dwPeBaseAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwPeSizeofImage Read (4 bytes)
-  m_Header.dwPeSizeofImage := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwPeChecksum Read (4 bytes)
-  m_Header.dwPeChecksum := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwPeTimeDate Read (4 bytes)
-  m_Header.dwPeTimeDate := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwDebugPathnameAddr Read (4 bytes)
-  m_Header.dwDebugPathnameAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwDebugFilenameAddr Read (4 bytes)
-  m_Header.dwDebugFilenameAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwDebugUnicodeFilenameAddr Read (4 bytes)
-  m_Header.dwDebugUnicodeFilenameAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwKernelImageThunkAddr Read (4 bytes)
-  m_Header.dwKernelImageThunkAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwNonKernelImportDirAddr Read (4 bytes)
-  m_Header.dwNonKernelImportDirAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwLibraryVersions Read (4 bytes)
-  m_Header.dwLibraryVersions := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwLibraryVersionsAddr Read (4 bytes)
-  m_Header.dwLibraryVersionsAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwKernelLibraryVersionAddr Read (4 bytes)
-  m_Header.dwKernelLibraryVersionAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwXAPILibraryVersionAddr Read (4 bytes)
-  m_Header.dwXAPILibraryVersionAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwLogoBitmapAddr Read (4 bytes)
-  m_Header.dwLogoBitmapAddr := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Header.dwSizeofLogoBitmap Read (4 bytes)
-  m_Header.dwSizeofLogoBitmap := GetDwordVal(Buffer, i);
-  i := i + 4;
-
   WriteLog('DXBX: Reading Image Header...Ok');
+
+  ExSize := RoundUp(m_Header.dwSizeofHeaders, $1000) - SizeOf(m_Header);
 
   // Read Xbe Image Header Extra Bytes
   if (m_Header.dwSizeofHeaders > SizeOf(m_Header)) then
   begin
-    WriteLog('DXBX: Reading Image Header Extra Bytes... NOT DONE YET');
-  end;
+    WriteLog('DXBX: Reading Image Header Extra Bytes...');
 
-  ExeSize := RoundUp(m_Header.dwSizeofHeaders, $1000) - SizeOf(m_Header);
-
-  if SizeOf(m_HeaderEx) > FileSz then
-  begin
-    MessageDlg(Format ('Unexpected end of file while reading %s Image Header (Ex)',[sFileType] ), mtError, [mbOk], 0);
-    Exit;
-  end;
-
-  try
-    SetLength(m_HeaderEx, ExeSize);
-    for lIndex := 0 to ExeSize - 1 do
-    begin
-      m_HeaderEx[lIndex] := Byte(Buffer[i]);
-      Inc(i);
-    end;
-
-    WriteLog('Ok');
-  except
-    WriteLog('Error');
+    SetLength(m_HeaderEx, ExSize);
+    CopyMemory(m_HeaderEx, @(Buffer[i]), ExSize);
+//    Inc(i, ExSize);
   end;
 
   // read xbe certificate
   i := m_Header.dwCertificateAddr - m_Header.dwBaseAddr;
-
-  // m_Certificate.dwSize Read (4 bytes)
-  m_Certificate.dwSize := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Certificate.dwTimeDate Read (4 bytes)
-  m_Certificate.dwTimeDate := GetDwordVal(Buffer, i);
-  i := i + 4;
-  // m_Certificate.dwTitleId Read (4 bytes)
-  m_Certificate.dwTitleId := GetDwordVal(Buffer, i);
-  i := i + 4;
-
-  //m_Certificate.wszTitleName array of 40 widechar (2 bytes each wdchr so i need to store 80 bytes)
-  for lIndex := 0 to 39 do
-  begin
-    m_Certificate.wszTitleName[lIndex] := WideChar(Ord(Buffer[i]));
-    i := i + 2;
-  end;
-
-  m_szAsciiTitle := WideCharToString(m_Certificate.wszTitleName);
-
-  //m_Certificate.dwAlternateTitleId (4 bytes each element of the array)
-  for lIndex := 0 to 15 do
-  begin
-    m_Certificate.dwAlternateTitleId[lIndex] := GetDwordVal(Buffer, i);
-    i := i + 4;
-  end;
-
-  //m_Certificate.dwAllowedMedia 4 bytes
-  m_Certificate.dwAllowedMedia := GetDwordVal(Buffer, i);
-  i := i + 4;
-  //m_Certificate.dwGameRegion 4 bytes
-  m_Certificate.dwGameRegion := GetDwordVal(Buffer, i);
-  i := i + 4;
-  //m_Certificate.dwGameRatings 4 bytes
-  m_Certificate.dwGameRatings := GetDwordVal(Buffer, i);
-  i := i + 4;
-  //m_Certificate.dwDiskNumber 4 bytes
-  m_Certificate.dwDiskNumber := GetDwordVal(Buffer, i);
-  i := i + 4;
-  //m_Certificate.dwVersion 4 bytes
-  m_Certificate.dwVersion := GetDwordVal(Buffer, i);
-  i := i + 4;
-  //m_Certificate.bzLanKey 1 Char
-  for lIndex := 0 to 15 do
-    m_Certificate.bzLanKey[lIndex] := Buffer[i + lIndex];
-
-  i := i + 16;
-  //m_Certificate.bzLanKey 1 Char
-  for lIndex := 0 to 15 do
-    m_Certificate.bzSignatureKey[lIndex] := Buffer[i + lIndex];
-
-  i := i + 16;
-  //m_Certificate.bzLanKey array of array 16x16 Char
-  for lIndex := 0 to 15 do
-  begin
-    for lIndex2 := 0 to 15 do
-      m_Certificate.bzTitleAlternateSignatureKey[lIndex][lIndex2] := Buffer[i + lIndex2];
-
-    i := i + 16;
-  end;
+  CopyMemory(@m_Certificate, @(Buffer[i]), SizeOf(m_Certificate));
 
   WriteLog('DXBX: Reading Certificate...OK');
+
+  m_szAsciiTitle := WideCharToString(m_Certificate.wszTitleName);
   WriteLog('DXBX: Title identified as ' + m_szAsciiTitle);
 
   // read xbe section headers
   i := m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr;
-
   SetLength(m_SectionHeader, m_Header.dwSections);
-
   for lIndex := 0 to m_Header.dwSections - 1 do
   begin
-    try
-      //XbeFile.Read(m_SectionHeader[lIndex], SizeOf(XBE_SECTIONHEADER));
-        //m_SectionHeader[].dwFlags 4 bytes
-      for lIndex2 := 0 to 3 do
-        m_SectionHeader[lIndex].dwFlags[lIndex2] := Byte(Buffer[i + lIndex2]);
-
-      i := i + 4;
-      // m_SectionHeader[].dwVirtualAddr 4 bytes
-      m_SectionHeader[lIndex].dwVirtualAddr := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].dwVirtualSize 4 bytes
-      m_SectionHeader[lIndex].dwVirtualSize := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].dwRawAddr 4 bytes
-      m_SectionHeader[lIndex].dwRawAddr := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].dwSizeofRaw 4 bytes
-      m_SectionHeader[lIndex].dwSizeofRaw := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].dwSectionNameAddr 4 bytes
-      m_SectionHeader[lIndex].dwSectionNameAddr := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].dwSectionRefCount 4 bytes
-      m_SectionHeader[lIndex].dwSectionRefCount := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].dwHeadSharedRefCountAddr 4 bytes
-      m_SectionHeader[lIndex].dwHeadSharedRefCountAddr := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].dwTailSharedRefCountAddr 4 bytes
-      m_SectionHeader[lIndex].dwTailSharedRefCountAddr := GetDwordVal(Buffer, i);
-      i := i + 4;
-      // m_SectionHeader[].bzSectionDigest 20 chars
-      for lIndex2 := 0 to 19 do
-        m_SectionHeader[lIndex].bzSectionDigest[lIndex2] := Buffer[i + lIndex2];
-
-      i := i + 20;
-    except
-      MessageDlg(Format ( 'Unexpected end of file while reading %s Section Header',[sFileType]) , mtError, [mbOk], 0);
-    end;
+    CopyMemory(@(m_SectionHeader[lIndex]), @(Buffer[i]), SizeOf(m_SectionHeader[lIndex]));
+    Inc(i, SizeOf(m_SectionHeader[lIndex]));
 
     WriteLog(Format('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]));
   end;
@@ -664,24 +440,12 @@ begin
     i := m_Header.dwLibraryVersionsAddr - m_Header.dwBaseAddr;
 
     SetLength(m_LibraryVersion, m_Header.dwLibraryVersions);
-
     for lIndex := 0 to m_Header.dwLibraryVersions - 1 do
     begin
-      WriteLog(Format('DXBX: Reading Library Version 0x%.4x....', [lIndex]));
-      for lIndex2 := 0 to 7 do
-        m_LibraryVersion[lIndex].szName[lIndex2] := Buffer[i + lIndex2];
+      CopyMemory(@(m_LibraryVersion[lIndex]), @(Buffer[i]), SizeOf(m_LibraryVersion[lIndex]));
+      Inc(i, SizeOf(m_LibraryVersion[lIndex]));
 
-      i := i + 8;
-      m_LibraryVersion[lIndex].wMajorVersion := GetWordVal(Buffer, i);
-      i := i + 2;
-      m_LibraryVersion[lIndex].wMinorVersion := GetWordVal(Buffer, i);
-      i := i + 2;
-      m_LibraryVersion[lIndex].wBuildVersion := GetWordVal(Buffer, i);
-      i := i + 2;
-      for lIndex2 := 0 to 1 do
-        m_LibraryVersion[lIndex].dwFlags[lIndex2] := Byte(Buffer[i + lIndex2]);
-
-      i := i + 2;
+      WriteLog(Format('DXBX:Reading Library Version 0x%.4x... OK', [lIndex]));
     end;
 
     // read xbe kernel library version
@@ -690,10 +454,8 @@ begin
       MessageDlg('Could not locate kernel library version', mtError, [mbOk], 0);
 
     i := m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr;
-
     SetLength(m_KernelLibraryVersion, SizeOf(m_LibraryVersion));
-    for lIndex := 0 to SizeOf(m_LibraryVersion) - 1 do
-      m_KernelLibraryVersion[lIndex] := Buffer[lIndex + i];
+    CopyMemory(m_KernelLibraryVersion, @(Buffer[i]), SizeOf(m_LibraryVersion));
 
     // read xbe xapi library version
     WriteLog('DXBX: Reading Xapi Library Version...');
@@ -737,8 +499,8 @@ begin
 
     end;
 
-    if lIndex2 < RawSize then
-      WriteLog(Format('Unexpected end of file while reading %s Section', [sFileType] ));
+//    if lIndex2 < RawSize then
+//      WriteLog(Format('Unexpected end of file while reading %s Section', [sFileType] ));
   end;
 
   if m_Header.dwTLSAddr <> 0 then
@@ -746,6 +508,8 @@ begin
     WriteLog('DXBX: Reading Thread Local Storage...');
     if GetAddr(m_Header.dwTLSAddr) <> 0 then
     begin
+      m_TLS := AllocMem(SizeOf(XBE_TLS));
+
       i := GetAddr(m_Header.dwTLSAddr);
       m_TLS.dwDataStartAddr := GetDwordVal(Buffer, i);
       i := i + 4;
@@ -762,8 +526,6 @@ begin
       m_TLS.dwCharacteristics := GetDwordVal(Buffer, i);
     end;
   end;
-  
-  CloseFile({var}XbeFile);
 end; // TXbe.Create
 
 //------------------------------------------------------------------------------
@@ -773,7 +535,6 @@ var
   FileEx: TextFile;
   lIndex, lIndex2: Integer;
   TmpStr: string;
-  AsciiFilename: array[0..39] of AnsiChar;
   TmpChr: AnsiChar;
   StrAsciiFilename: string;
   Flag, BIndex: Byte;
@@ -864,7 +625,7 @@ begin
   lIndex := GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
   lIndex2 := 0;
   TmpStr := '';
-  while lIndex2 < SizeOf(AsciiFilename) do
+  while lIndex2 < 40 do
   begin
     TmpStr := TmpStr + WideChar(Ord(Buffer[lIndex]));
     Inc(lIndex2);
@@ -1038,6 +799,7 @@ begin
 
   // print library versions
   _LogEx('Dumping XBE Library Versions...');
+  _LogEx('');
   if (SizeOf(m_LibraryVersion) = 0) or (m_Header.dwLibraryVersions = 0) then
     _LogEx('(This XBE contains no Library Versions)')
   else
@@ -1053,6 +815,7 @@ begin
 
       _LogEx('Library Name                     : ' + TmpStr);
       _LogEx(Format('Version                          : %d.%d.%d', [m_LibraryVersion[lIndex].wMajorVersion, m_LibraryVersion[lIndex].wMinorVersion, m_LibraryVersion[lIndex].wBuildVersion]));
+      _LogEx('');
 
       //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
 
@@ -1088,6 +851,7 @@ begin
   end;
 
   _LogEx('Dumping XBE TLS...');
+  _LogEx('');
   _LogEx(Format('Data Start Address               : 0x%.8x', [m_TLS.dwDataStartAddr]));
   _LogEx(Format('Data End Address                 : 0x%.8x', [m_TLS.dwDataEndAddr]));
   _LogEx(Format('TLS Index Address                : 0x%.8x', [m_TLS.dwTLSIndexAddr]));
@@ -1195,7 +959,7 @@ end; // TXbe.GetTLSData
 
 destructor TXbe.Destroy;
 begin
-  FreeMem({var}Buffer);
+  ConstructorInit();
 
   inherited Destroy;
 end;
