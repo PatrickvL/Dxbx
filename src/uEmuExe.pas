@@ -23,7 +23,9 @@ interface
 
 uses
   // Delphi
-  Windows, SysUtils,
+  Windows,
+  SysUtils,
+  Math, // for IfThen
   // Dxbx
   uConsts, uTypes, uBitsOps, uProlog, uXbe, uExe;
 
@@ -298,8 +300,8 @@ begin
     virt_size := RoundUp(
       m_OptionalHeader.m_image_base + $100 +
       m_Xbe.m_Header.dwSizeofHeaders + 260 +
-      SizeOf(m_Xbe.m_LibraryVersion) * m_Xbe.m_Header.dwLibraryVersions +
-      SizeOf(m_Xbe.m_TLS) +
+      DWord(Length(m_Xbe.m_LibraryVersion) * Integer(m_Xbe.m_Header.dwLibraryVersions)) +
+      DWord(IfThen(Assigned(m_Xbe.m_TLS), SizeOF(XBE_TLS), 0)) +
       (m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr), $1000);
     virt_addr := RoundUp(
       m_SectionHeader[i - 1].m_virtual_addr +
@@ -402,20 +404,20 @@ begin
 
     // Append prolog section
     CopyMemory(pWriteCursor, @(Prolog[0]), Length(Prolog));
-    Inc(pWriteCursor, $100);
+    Inc(pWriteCursor, Length(Prolog));
 
     // Append xbe header
     CopyMemory(pWriteCursor, @(m_Xbe.m_Header), SizeOf(m_Xbe.m_Header));
     Inc(pWriteCursor, SizeOf(m_Xbe.m_Header));
 
     // Append xbe extra header bytes
-    CopyMemory(pWriteCursor, @(m_Xbe.m_HeaderEx), m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header));
+    CopyMemory(pWriteCursor, m_Xbe.m_HeaderEx, m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header));
     Dec(pWriteCursor, SizeOf(m_Xbe.m_Header));
     Inc(pWriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
 
     // Append x_debug_filename
     SetLength(m_KrnlDebugFilename, 260);
-    CopyMemory(pWriteCursor, @(m_Xbe.m_HeaderEx), 260);
+    CopyMemory(pWriteCursor, @(m_KrnlDebugFilename[1]), 260);
     Inc(pWriteCursor, 260);
 
     // Append library versions
@@ -426,13 +428,13 @@ begin
     end;
 
     // Append TLS data
-    if SizeOf(m_Xbe.m_TLS) <> 0 then // TODO : m_TLS should be a pointer, tested with Assigned()
+    if Assigned(m_Xbe.m_TLS) then
     begin
-      CopyMemory(pWriteCursor, @(m_Xbe.m_TLS), SizeOf(m_Xbe.m_TLS));
-      Inc(pWriteCursor, SizeOf(m_Xbe.m_TLS));
+      CopyMemory(pWriteCursor, m_Xbe.m_TLS, SizeOf(m_Xbe.m_TLS^));
+      Inc(pWriteCursor, SizeOf(m_Xbe.m_TLS^));
 
       CopyMemory(pWriteCursor, Pointer(m_Xbe.GetTLSData()), m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
-      Inc(pWriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+//      Inc(pWriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
     end;
 
     // patch prolog function parameters
@@ -469,16 +471,16 @@ begin
       _WriteDWordToSectionPos(i, 31, 0);
 
     // Param 2 : pTLS
-    if SizeOf(m_Xbe.m_TLS) <> 0 then
+    if Assigned(m_Xbe.m_TLS) then
     begin
       _WriteDWordToSectionPos(i, 36, WriteCursor);
-      Inc(WriteCursor, SizeOf(m_Xbe.m_TLS));
+      Inc(WriteCursor, SizeOf(m_Xbe.m_TLS^));
     end
     else
       _WriteDWordToSectionPos(i, 36, 0);
 
     // Param 1 : pTLSData
-    if SizeOf(m_Xbe.m_TLS) <> 0 then
+    if Assigned(m_Xbe.m_TLS) then
     begin
       _WriteDWordToSectionPos(i, 41, WriteCursor);
 //      Inc(WriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);

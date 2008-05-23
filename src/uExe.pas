@@ -133,7 +133,7 @@ type
     m_bzSection: array of TVarByteArray;
 
     constructor Create(x_szFilename: string);
-    function GetAddr(x_dwVirtualAddress: DWord): ShortInt;
+    function GetAddr(x_dwVirtualAddress: DWord): PByte;
     function doExport(const x_szExeFilename: string): Boolean;
     procedure ConstructorInit;
   end;
@@ -459,19 +459,25 @@ end; // TExe.doExport
 
 //------------------------------------------------------------------------------
 
-function TExe.GetAddr(x_dwVirtualAddress: DWord): ShortInt;
+function TExe.GetAddr(x_dwVirtualAddress: DWord): PByte;
+var
+  v: Integer;
+  virt_addr: DWord;
+  virt_size: DWord;
 begin
-//  for(uint32 v=0;v<m_Header.m_sections;v++)
-    {
-        uint32 virt_addr = m_SectionHeader[v].m_virtual_addr;
-        uint32 virt_size = m_SectionHeader[v].m_virtual_size;
+  for v := 0 to m_Header.m_sections - 1 do
+  begin
+    virt_addr := m_SectionHeader[v].m_virtual_addr;
+    virt_size := m_SectionHeader[v].m_virtual_size;
 
-        if( (x_dwVirtualAddress >= virt_addr) && (x_dwVirtualAddress < (virt_addr + virt_size)) )
-            return &m_bzSection[v][x_dwVirtualAddress - virt_addr];
-    }
+    if (x_dwVirtualAddress >= virt_addr) and (x_dwVirtualAddress < (virt_addr + virt_size)) then
+    begin
+      Result := @(m_bzSection[v][x_dwVirtualAddress - virt_addr]);
+      Exit;
+    end;
+  end;
 
-  //  return 0;
-  Result := 0;
+  Result := nil;
 end;
 
 //------------------------------------------------------------------------------
