@@ -22,11 +22,10 @@ unit uConsts;
 interface
 
 const
-{$IFDEF DEBUG}
-  cDLLNAME = 'CxbxKrnl.dll';
-{$ELSE}
-  cDLLNAME = 'Cxbx.dll';
-{$ENDIF}
+  CCXBXKRNLDLLNAME = 'CxbxKrnl.dll';
+  CCXBXDLLNAME = 'Cxbx.dll';
+  CDXBXKRNLDLLNAME = 'DxbxKrnl.dll';
+  CDXBXDLLNAME = 'Dxbx.dll';
 
   // Application Versions
   _DXBX_VERSION = '0.0.0.8';
@@ -59,6 +58,8 @@ const
 
   // Xbe File Format
   _MagicNumber = 'XBEH';
+
+  CSETXBEPATHMANGLEDNAME = '?SetXbePath@EmuShared@@QAEXPBD@Z';
 
   // Limits
   _RecentXbeLimit: Integer = 10;

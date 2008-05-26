@@ -495,7 +495,7 @@ begin
     if FileConverted then
     begin
       // register xbe path with Cxbx.dll
-      SetXbePath(PChar(m_Xbe.m_szPath));
+      CxbxKrnl_SetXbePath(PChar(m_Xbe.m_szPath));
 
       try
         if FileExists(m_ExeFilename) then
