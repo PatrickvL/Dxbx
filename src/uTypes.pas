@@ -25,6 +25,9 @@ uses
   // Delphi
   Windows;
 
+const
+  NUMBER_OF_THUNKS = 367;
+
 type
   TDebugInfoType = (ditConsole, ditFile);
   EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
@@ -38,7 +41,20 @@ type
   PDWordArray = ^TDWordArray;
 
   PDWord = ^DWord;
-  
+
+{$IF DECLARED(INT_PTR)}
+  IntPtr = INT_PTR;
+{$ELSE}
+  IntPtr = Integer;
+{$IFEND}
+    
+  TEntryProc = procedure();
+  PEntryProc = ^TEntryProc;
+
+  TThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
+  PThunkTable = ^TThunkTable;
+  TThunkMethod = function : PThunkTable; stdcall;
+
 implementation
 
 end.

@@ -41,6 +41,15 @@ type
     destructor Destroy; override;
   end;
 
+type
+  TUseDll = (udCxbxKrnl, udCxbx, udDxbxKrnl, udDxbx);
+
+const
+  DllToUse: TUseDLL = udDxbxKrnl; // TODO : Make this configurable (temporarily, until our own DLLs work)
+
+function GetDllDescription(const aDllToUse: TUseDll): string;
+function GetDllName(const aDllToUse: TUseDll): string;
+function GetNoFuncImport(const aDllToUse: TUseDll): string;
 
 implementation
 
@@ -48,11 +57,22 @@ uses
   // Dxbx
   uLog, uExternals;
 
-type
-  TUseDll = (udCxbxKrnl, udCxbx, udDxbxKrnl, udDxbx);
-
-const
-  DllToUse: TUseDLL = udCxbxKrnl; // TODO : Make this configurable (temporarily, until our own DLLs work)
+function GetDllDescription(const aDllToUse: TUseDll): string;
+begin
+  case aDllToUse of
+    udCxbxKrnl:
+      Result := 'Cxbx debug';
+    udCxbx:
+      Result := 'Cxbx';
+    udDxbxKrnl:
+      Result := 'Dxbx debug';
+{    udDxbx:
+      Result := 'Dxbx';}
+  else
+    Assert(False);
+    Result := '';
+  end;
+end;
 
 function GetDllName(const aDllToUse: TUseDll): string;
 begin
@@ -63,8 +83,8 @@ begin
       Result := CCXBXDLLNAME;
     udDxbxKrnl:
       Result := CDXBXKRNLDLLNAME;
-    udDxbx:
-      Result := CDXBXDLLNAME;
+{    udDxbx:
+      Result := CDXBXDLLNAME;}
   else
     Assert(False);
     Result := '';
@@ -128,6 +148,7 @@ var
 
   TLS_DATA: DWord;
   kt_tbl: PDWordArray;
+  ThunkMethod: TThunkMethod;
   ThunkTable: PThunkTable;
 
   pWriteCursor: PByte; // DWord ?
@@ -522,7 +543,18 @@ begin
     kt := kt xor XOR_KT_DEBUG;
 
   // locate section containing kernel thunk table
-  ThunkTable := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable');
+  if DLLToUse in [udCxbxKrnl, udCxbx] then
+    ThunkTable := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable')
+  else
+  begin
+    // Delphi doesn't support DLL's declaring an exported record,
+    // so our thunk is actually a method returning the thunk table :
+    ThunkMethod := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable');
+    Assert(Assigned(ThunkMethod));
+    // Call the method to get to the thunk table :
+    ThunkTable := ThunkMethod();
+  end;
+  
   for v := 0 to m_Xbe.m_Header.dwSections - 1 do
   begin
     imag_base := m_OptionalHeader.m_image_base;
@@ -540,6 +572,7 @@ begin
         t := kt_tbl[k] and $7FFFFFFF;
         // TODO : This method works with cxbx's dll
         //        Once exe creation is complete, we'll get the thunk table from our dll
+        Assert(t < NUMBER_OF_THUNKS);
         _WriteDWordToAddr(@(kt_tbl[k]), ThunkTable[t]);
         if t <> $FFFFFFFF then
           WriteLog(Format('EmuExe: Thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + (k * 4), kt_tbl[k]]));

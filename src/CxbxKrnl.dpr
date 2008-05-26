@@ -41,8 +41,8 @@ uses
   uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas',
   uKernelThunk in 'uKernelThunk.pas',
-  uTime in 'uTime.pas',
   uBitsOps in 'uBitsOps.pas',
+  uTime in 'uTime.pas',
   uTypes in 'uTypes.pas';
 
 {$R *.res}   
