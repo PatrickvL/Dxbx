@@ -26,7 +26,13 @@ uses
   uImportGames in 'uImportGames.pas' {frm_ImportGames},
   uData in 'uData.pas',
   uConsts in '..\..\..\uConsts.pas',
-  uXML in '..\..\..\uXML.pas';
+  uXbe in '..\..\..\uXbe.pas',
+  uTypes in '..\..\..\uTypes.pas',
+  uBitsOps in '..\..\..\uBitsOps.pas',
+  uTime in '..\..\..\uTime.pas',
+  uLog in '..\..\..\uLog.pas',
+  uLogConsole in '..\..\..\uLogConsole.pas' {frm_LogConsole},
+  uDxbxXml in '..\..\..\uDxbxXml.pas' {DxbxXml: TDataModule};
 
 {$R *.res}
 
@@ -34,5 +40,7 @@ begin
   Application.Initialize;
   Application.Title := 'XDK Tracker';
   Application.CreateForm(TfrmXdkTracker, frmXdkTracker);
+  Application.CreateForm(Tfrm_LogConsole, frm_LogConsole);
+  Application.CreateForm(TDxbxXml, DxbxXml);
   Application.Run;
 end.

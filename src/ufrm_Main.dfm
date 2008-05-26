@@ -4597,6 +4597,7 @@ object frm_Main: Tfrm_Main
     end
   end
   object XbeOpenDialog: TOpenDialog
+    FileName = 'default.xbe'
     Filter = 'Xbox Executable (*.xbe)|*.xbe'
     Left = 72
     Top = 12
@@ -4626,11 +4627,6 @@ object frm_Main: Tfrm_Main
     Filter = 'Windows Executable (*.exe)|*.exe'
     Left = 104
     Top = 44
-  end
-  object XMLDocument: TXMLDocument
-    Left = 136
-    Top = 13
-    DOMVendorDesc = 'MSXML'
   end
   object sSkinManager1: TsSkinManager
     IsDefault = False

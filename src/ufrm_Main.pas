@@ -25,11 +25,10 @@ uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Menus, ActnList, ShellAPI, jpeg, ExtCtrls, ComCtrls,
-  xmldom, XMLIntf, msxmldom, XMLDoc,
   // AlphaSkin
   sSkinProvider, sSkinManager, sStatusBar,
   // Dxbx
-  uTypes, uXml, uXbe, uEmuExe, uExternals,
+  uTypes, uXbe, uEmuExe, uExternals,
   ufrm_ControllerConfig, ufrm_VideoConfig;
 
 type
@@ -118,7 +117,6 @@ type
     N8: TMenuItem;
     XDKTracker2: TMenuItem;
     actXdkTrackerXbeInfo: TAction;
-    XMLDocument: TXMLDocument;
     sSkinManager1: TsSkinManager;
     sSkinProvider1: TsSkinProvider;
     imgSignature1: TImage;
@@ -165,13 +163,8 @@ type
     procedure SetExeGen(ConvertTo: EnumAutoConvert);
 
     procedure CloseXbe;
-    procedure XbeLoaded;
-    procedure LoadLogo;
-    procedure OpenXbe(aFileName: string);
     procedure SaveXbe(aFileName: string = '');
     procedure ImportExe(aFileName: string);
-
-    procedure CreateXmlXbeDump(aFileName: string);
 
     procedure ReadSettingsIni;
     procedure WriteSettingsIni;
@@ -202,6 +195,7 @@ implementation
 uses
   // Delphi
   IniFiles,
+  uDxbxXml,
   // Dxbx
   ufrm_About, uConsts, uLog, uWindows;
 
@@ -216,7 +210,7 @@ begin
   if Assigned(m_Xbe) then
     CloseXbe();
 
-  OpenXbe(XbeOpenDialog.Filename);
+  OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename, StatusBar );
   RecentXbeAdd(XbeOpenDialog.Filename);
   Logbitmap1.Enabled := True;
   Dumpxbeinfoto1.Enabled := True;
@@ -297,26 +291,6 @@ begin
   WriteLog(Format('DXBX: %s Closed...', [m_szAsciiTitle]));
   StatusBar.SimpleText := 'DXBX:';
 end; // Tfrm_Main.CloseXbe
-
-//------------------------------------------------------------------------------
-
-procedure Tfrm_Main.OpenXbe(aFileName: string);
-begin
-  if Assigned(m_Xbe) or not (FileExists(aFileName)) then
-    Exit;
-
-  m_ExeFilename := '\0';
-  m_XbeFilename := aFileName;
-
-  m_Xbe := TXbe.Create(m_XbeFilename, ftXbe);
-  try
-    XbeLoaded();
-    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-  except
-    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-    FreeAndNil({var}m_Xbe);
-  end;
-end; // Tfrm_Main.OpenXbe
 
 //------------------------------------------------------------------------------
 
@@ -598,37 +572,6 @@ end;
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.LoadLogo;
-begin
-   (* uint08 i_gray[100*17];
-
-    m_Xbe->ExportLogoBitmap(i_gray);
-
-    if(m_Xbe->GetError() != 0)
-    {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
-
-        if(m_Xbe->IsFatal())
-            CloseXbe();
-
-        return;
-    }
-
-    uint32 v=0;
-    for(uint32 y=0;y<17;y++)
-    {
-        for(uint32 x=0;x<100;x++)
-        {
-            SetPixel(m_LogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
-            v++;
-        }
-    }
-
-    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);  *)
-end;
-
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.ReadSettingsIni;
 var
   DxbxIniFilePath: string;
@@ -889,14 +832,6 @@ end; // Tfrm_Main.actFileDebugKernelExecute
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Main.XbeLoaded;
-begin
-  LoadLogo();
-  WriteLog(Format('DXBX: %s  loaded.', [m_szAsciiTitle]));
-end; // Tfrm_Main.XbeLoaded
-
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.ActAboutExecute(Sender: TObject);
 begin
   frm_About := Tfrm_About.Create(Self);
@@ -1007,46 +942,12 @@ begin
   if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then
   begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
-    CreateXmlXbeDump(DumpFilePath);
+    DxbxXml.CreateXmlXbeDump(DumpFilePath, m_Xbe);
 
     if not SendCommandToXdkTracker then
       ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), '/XBEDUMP', nil, SW_SHOWNORMAL);
   end;
 end; // Tfrm_Main.actXdkTrackerXbeInfoExecute
-
-//------------------------------------------------------------------------------
-
-procedure Tfrm_Main.CreateXmlXbeDump(aFileName: string);
-var
-  XmlRootNode: IXmlNode;
-  lIndex: Integer;
-  Version: string;
-begin
-  XMLDocument.Active := False;
-  XMLDocument.Active := True;
-  XmlRootNode := XMLDocument.AddChild('XDKINFO');
-
-  XML_WriteString(XmlRootNode, 'Name', m_szAsciiTitle);
-
-  for lIndex := 0 to m_Xbe.m_Header.dwLibraryVersions - 1 do
-  begin
-    Version := IntToStr(m_Xbe.m_LibraryVersion[lIndex].wMajorVersion) + '.' +
-      IntToStr(m_Xbe.m_LibraryVersion[lIndex].wMinorVersion) + '.' +
-      IntToStr(m_Xbe.m_LibraryVersion[lIndex].wBuildVersion);
-
-    case lIndex of
-      0: XML_WriteString(XmlRootNode, 'XAPILIB', Version);
-      1: XML_WriteString(XmlRootNode, 'XBOXKRNL', Version);
-      2: XML_WriteString(XmlRootNode, 'LIBCMT', Version);
-      3: XML_WriteString(XmlRootNode, 'D3D8', Version);
-      4: XML_WriteString(XmlRootNode, 'XGRAPHC', Version);
-      5: XML_WriteString(XmlRootNode, 'DSOUND', Version);
-      6: XML_WriteString(XmlRootNode, 'XMV', Version);
-    end;
-  end;
-
-  XMLDocument.SaveToFile(aFileName);
-end; // Tfrm_Main.CreateXmlXbeDump
 
 //------------------------------------------------------------------------------
 
@@ -1116,7 +1017,7 @@ begin
     if Assigned(m_Xbe) then
       CloseXbe();
 
-    OpenXbe(TempItem.Hint);
+    OpenXbe(TempItem.Hint, m_Xbe, m_ExeFilename, m_XbeFilename, StatusBar );
     Logbitmap1.Enabled := True;
     Dumpxbeinfoto1.Enabled := True;
     Exportexe1.Enabled := True;
