@@ -34,10 +34,10 @@ uses
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uExternals in 'uExternals.pas',
   uTime in 'uTime.pas',
-  uXML in 'uXML.pas',
   uBitsOps in 'uBitsOps.pas',
   uWindows in 'uWindows.pas',
-  uTypes in 'uTypes.pas';
+  uTypes in 'uTypes.pas',
+  uDxbxXml in 'uDxbxXml.pas' {DxbxXml: TDataModule};
 
 {$R *.RES}
 
@@ -45,6 +45,7 @@ begin
   Application.Initialize;
   Application.Title := 'Dxbx';
   Application.CreateForm(Tfrm_Main, frm_Main);
+  Application.CreateForm(TDxbxXml, DxbxXml);
   Application.Run;
 end.
 

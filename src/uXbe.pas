@@ -24,7 +24,7 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Menus, Math, ActnList, ExtCtrls, StrUtils,
+  Menus, Math, ActnList, ExtCtrls, StrUtils, sStatusBar,
   // Dxbx
   uConsts, uTypes, uBitsOps, uTime;
 
@@ -220,6 +220,11 @@ function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
+procedure OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String; aStatusBar : TsStatusBar );
+procedure XbeLoaded;
+procedure LoadLogo;
+
+
 var
   m_szAsciiTitle: string;
 
@@ -228,6 +233,63 @@ implementation
 uses
   // Dxbx
   uLog;
+
+
+procedure LoadLogo;
+begin
+   (* uint08 i_gray[100*17];
+
+    m_Xbe->ExportLogoBitmap(i_gray);
+
+    if(m_Xbe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
+
+        if(m_Xbe->IsFatal())
+            CloseXbe();
+
+        return;
+    }
+
+    uint32 v=0;
+    for(uint32 y=0;y<17;y++)
+    {
+        for(uint32 x=0;x<100;x++)
+        {
+            SetPixel(m_LogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
+            v++;
+        }
+    }
+
+    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);  *)
+end;
+
+
+procedure XbeLoaded;
+begin
+  LoadLogo();
+  WriteLog(Format('DXBX: %s  loaded.', [m_szAsciiTitle]));
+end;
+
+procedure OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String; aStatusBar : TsStatusBar );
+begin
+  if Assigned(aXbe) or not (FileExists(aFileName)) then
+    Exit;
+
+  aExeFilename := '\0';
+  aXbeFilename := aFileName;
+
+  aXbe := TXbe.Create(aXbeFilename, ftXbe);
+  try
+    XbeLoaded();
+    if Assigned ( aStatusBar ) then
+      aStatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+  except
+    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+    FreeAndNil(aXbe);
+  end;
+end;
+
 
 //------------------------------------------------------------------------------
 

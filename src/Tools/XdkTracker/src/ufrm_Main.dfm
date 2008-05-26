@@ -520,6 +520,13 @@ object frmXdkTracker: TfrmXdkTracker
     Top = 8
     object File2: TMenuItem
       Caption = '&File'
+      object GetXDKInfofromXbe1: TMenuItem
+        Caption = 'Get XDK Info from Xbe'
+        OnClick = GetXDKInfofromXbe1Click
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
       object ImportGameList1: TMenuItem
         Caption = '&Import Game List'
         OnClick = ImportGameList1Click
@@ -1385,5 +1392,11 @@ object frmXdkTracker: TfrmXdkTracker
     TitleButtons = <>
     Left = 88
     Top = 168
+  end
+  object XbeOpenDialog: TOpenDialog
+    FileName = 'default.xbe'
+    Filter = 'Xbox Executable (*.xbe)|*.xbe'
+    Left = 40
+    Top = 8
   end
 end

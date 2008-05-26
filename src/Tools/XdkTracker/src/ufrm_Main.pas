@@ -9,7 +9,7 @@ uses
   // AlphaSkin
   sStatusBar, sSkinProvider, sSkinManager,
   // Dxbx
-  uData, uXml;
+  uData;
 
 const
   cXDKLIST_LOADED = 'XDK List Loaded';
@@ -39,6 +39,9 @@ type
     sSkinManager1: TsSkinManager;
     sSkinProvider1: TsSkinProvider;
     StatusBar1: TsStatusBar;
+    N1: TMenuItem;
+    GetXDKInfofromXbe1: TMenuItem;
+    XbeOpenDialog: TOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure Viewxdkversion2Click(Sender: TObject);
     procedure About1Click(Sender: TObject);
@@ -47,6 +50,7 @@ type
     procedure VisitCxbxForum1Click(Sender: TObject);
     procedure Exit2Click(Sender: TObject);
     procedure ExportGameList1Click(Sender: TObject);
+    procedure GetXDKInfofromXbe1Click(Sender: TObject);
     procedure ImportGameList1Click(Sender: TObject);
   private
     ApplicationDir: string;
@@ -85,6 +89,8 @@ uses
   u_About,
   uPublisher,
   uImportGames,
+  uXbe,
+  uDxbxXml,
   uConsts;
 
 {$R *.dfm}
@@ -424,6 +430,27 @@ procedure TfrmXdkTracker.ExportGameList1Click(Sender: TObject);
 begin
   ExportGameData;
 end; // TfrmMain.ExportGameList1Click
+
+procedure TfrmXdkTracker.GetXDKInfofromXbe1Click(Sender: TObject);
+var
+  m_Xbe: TXbe;
+  m_XbeFilename: string;
+  m_ExeFilename: string;
+
+begin
+  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
+  m_Xbe := Nil;
+  if not XbeOpenDialog.Execute then
+    Exit;
+
+  OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename, nil );
+
+  begin
+    DxbxXml.CreateXmlXbeDump(ExtractFilePath(Application.ExeName) + 'Dump.dat', m_Xbe);
+    ImportXbeDump;
+  end;
+
+end;
 
 procedure TfrmXdkTracker.ImportGameList1Click(Sender: TObject);
 begin
