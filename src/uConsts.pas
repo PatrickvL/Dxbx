@@ -59,6 +59,8 @@ const
   // Xbe File Format
   _MagicNumber = 'XBEH';
 
+  CCXBXKRNLINIT = 'CxbxKrnlInit';
+  CXBXKRNL_KERNELTHUNKTABLE = 'CxbxKrnl_KernelThunkTable';
   CSETXBEPATHMANGLEDNAME = '?SetXbePath@EmuShared@@QAEXPBD@Z';
 
   // Limits

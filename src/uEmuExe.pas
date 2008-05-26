@@ -42,10 +42,11 @@ type
   end;
 
 type
-  TUseDll = (udCxbxKrnl, udCxbx, udDxbxKrnl, udDxbx);
+  // TODO : Remove Cxbx versions and add non-debug Dxbx version when our DLL starts working :
+  TUseDll = (udCxbxKrnl, udCxbx, udDxbxKrnl {, udDxbx});
 
-const
-  DllToUse: TUseDLL = udDxbxKrnl; // TODO : Make this configurable (temporarily, until our own DLLs work)
+var
+  DllToUse: TUseDLL = udCxbxKrnl;
 
 function GetDllDescription(const aDllToUse: TUseDll): string;
 function GetDllName(const aDllToUse: TUseDll): string;
@@ -115,7 +116,9 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
 
   procedure _CopySections(Index: Integer);
   begin
-    SetLength(m_bzSection[Index], m_SectionHeader[Index].m_sizeof_raw);
+    // Allocate needed section size + 4 bytes (needed to assure zero-termination of this section) :
+    SetLength(m_bzSection[Index], m_SectionHeader[Index].m_sizeof_raw + 4);
+    // Copy over all contents from the Xbe section :
     CopyMemory(m_bzSection[Index], m_Xbe.m_bzSection[Index], m_Xbe.m_SectionHeader[Index].dwSizeofRaw);
   end;
 
@@ -358,7 +361,9 @@ begin
 
     m_SectionHeader[i].m_sizeof_raw := raw_size;
     m_SectionHeader[i].m_raw_addr := dwSectionCursor;
-//    Inc(dwSectionCursor, raw_size);
+{$IFDEF KEEP_UNNECCESARY_CODE}
+    Inc(dwSectionCursor, raw_size);
+{$ENDIF}
   end;
 
   // relocation / line numbers will not exist
@@ -471,14 +476,16 @@ begin
       Inc(pWriteCursor, SizeOf(m_Xbe.m_TLS^));
 
       CopyMemory(pWriteCursor, Pointer(m_Xbe.GetTLSData()), m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
-//      Inc(pWriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+{$IFDEF KEEP_UNNECCESARY_CODE}
+      Inc(pWriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+{$ENDIF}
     end;
 
     // patch prolog function parameters
     WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
 
     // Function Pointer
-    pEmuInit := GetProcAddress(KrnlHandle, 'CxbxKrnlInit');
+    pEmuInit := GetProcAddress(KrnlHandle, CCXBXKRNLINIT);
     _WriteDWordToSectionPos(i, 1, DWord(pEmuInit));
 
     // Param 8 : Entry
@@ -496,7 +503,7 @@ begin
     Inc(WriteCursor, 260);
 
     // Param 4 : DbgMode
-    _WriteDWordToSectionPos(i, 26, Ord(m_KrnlDebug));
+    _WriteDWordToSectionPos(i, 26, DWord(Ord(m_KrnlDebug)));
 
     // Param 3 : pLibraryVersion
     if Length(m_Xbe.m_LibraryVersion) <> 0 then
@@ -520,7 +527,9 @@ begin
     if Assigned(m_Xbe.m_TLS) then
     begin
       _WriteDWordToSectionPos(i, 41, WriteCursor);
-//      Inc(WriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+{$IFDEF KEEP_UNNECCESARY_CODE}
+      Inc(WriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+{$ENDIF}
     end
     else
       _WriteDWordToSectionPos(i, 41, 0);
@@ -544,25 +553,27 @@ begin
 
   // locate section containing kernel thunk table
   if DLLToUse in [udCxbxKrnl, udCxbx] then
-    ThunkTable := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable')
+    ThunkTable := GetProcAddress(KrnlHandle, CXBXKRNL_KERNELTHUNKTABLE)
   else
   begin
     // Delphi doesn't support DLL's declaring an exported record,
     // so our thunk is actually a method returning the thunk table :
-    ThunkMethod := GetProcAddress(KrnlHandle, 'CxbxKrnl_KernelThunkTable');
+    ThunkMethod := GetProcAddress(KrnlHandle, CXBXKRNL_KERNELTHUNKTABLE);
     Assert(Assigned(ThunkMethod));
     // Call the method to get to the thunk table :
     ThunkTable := ThunkMethod();
   end;
-  
+
+  Assert(Assigned(ThunkTable));
+
+  imag_base := m_OptionalHeader.m_image_base;
   for v := 0 to m_Xbe.m_Header.dwSections - 1 do
   begin
-    imag_base := m_OptionalHeader.m_image_base;
     virt_addr := m_SectionHeader[v].m_virtual_addr;
     virt_size := m_SectionHeader[v].m_virtual_size;
 
     // modify kernel thunk table, if found
-    if ((kt >= virt_addr + imag_base) and (kt < virt_addr + virt_size + imag_base)) then
+    if ((kt >= imag_base + virt_addr) and (kt < imag_base + virt_addr + virt_size)) then
     begin
       WriteLog(Format('EmuExe: Located Thunk Table in Section 0x%.4x (0x%.8X)...', [v, kt]));
       kt_tbl := @(m_bzSection[v][kt - virt_addr - imag_base]);
@@ -570,12 +581,13 @@ begin
       while kt_tbl[k] <> 0 do
       begin
         t := kt_tbl[k] and $7FFFFFFF;
-        // TODO : This method works with cxbx's dll
-        //        Once exe creation is complete, we'll get the thunk table from our dll
-        Assert(t < NUMBER_OF_THUNKS);
-        _WriteDWordToAddr(@(kt_tbl[k]), ThunkTable[t]);
-        if t <> $FFFFFFFF then
+        if t < NUMBER_OF_THUNKS then
+        begin
+          _WriteDWordToAddr(@(kt_tbl[k]), ThunkTable[t]);
           WriteLog(Format('EmuExe: Thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + (k * 4), kt_tbl[k]]));
+        end
+        else
+          WriteLog(Format('EmuExe: Out-of-range thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + (k * 4), kt_tbl[k]]));
 
         Inc(k);
       end; // while
