@@ -124,6 +124,7 @@ type
     imgSignature3: TImage;
     imgSignature4: TImage;
     StatusBar: TsStatusBar;
+    DLLtouse1: TMenuItem;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -150,6 +151,7 @@ type
     procedure actXdkTrackerExecute(Sender: TObject);
     procedure actXIsoExecute(Sender: TObject);
     procedure actXdkTrackerXbeInfoExecute(Sender: TObject);
+    procedure actSwitchDLLExecute(Sender: TObject);
   private
     m_Xbe: TXbe;
     m_XbeFilename: string;
@@ -537,11 +539,25 @@ end; // Tfrm_Main.StartEmulation
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.FormCreate(Sender: TObject);
+
+  function _CreateDLLToUseMenuItem(const u: TUseDLL): TMenuItem;
+  begin
+    Result := TMenuItem.Create(DLLtouse1);
+    Result.Caption := GetDllDescription(u);
+    Result.Tag := Ord(u);
+    Result.OnClick := actSwitchDLLExecute;
+  end;
+
+var
+  u: TUseDLL;
 begin
   m_AutoConvertToExe := CONVERT_TO_WINDOWSTEMP;
   FApplicationDir := ExtractFilePath(Application.ExeName);
 
-  StatusBar.SimpleText := 'DXBX: No Xbe Loaded...';   
+  StatusBar.SimpleText := 'DXBX: No Xbe Loaded...';
+
+  for u := Low(TUseDLL) to High(TUseDLL) do
+    DLLtouse1.Add(_CreateDLLToUseMenuItem(u));
 
   ReadSettingsIni;
   CreateLogs(ltGui);
@@ -918,6 +934,13 @@ begin
 end; // Tfrm_Main.actExportLogoExecute
 
 //------------------------------------------------------------------------------
+
+procedure Tfrm_Main.actSwitchDLLExecute(Sender: TObject);
+begin
+  Assert(Sender is TMenuItem);
+
+  DLLToUse := TUseDLL(TMenuItem(Sender).Tag);
+end;
 
 procedure Tfrm_Main.actXdkTrackerExecute(Sender: TObject);
 begin
