@@ -8,3 +8,4 @@ Version 0.0.8:
 - Made a start with cxbxkrnl.dll implementation.
 - start made with documentation.
 - Updated to AlphaSkin version v5.45
+- XDKTracker can read xbe files for import xdk information
