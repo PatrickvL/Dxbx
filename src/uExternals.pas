@@ -29,13 +29,6 @@ uses
   uTypes, // for DebugMode
   uXbe; // for P_XBE_TLS
 
-type
-  TEntryProc = procedure();
-  PEntryProc = ^TEntryProc;
-
-  TThunkTable = packed array[0..366] of DWord;
-  PThunkTable = ^TThunkTable;
-
 // Note :
 // In order to place the address of these methods into the generated EXE
 // we are using GetProcAddress - but this will only result in the correct
