@@ -23,6 +23,9 @@ md Dcu
 echo Copy Want\msvcrtd.dll to Bin dir
 copy Want\msvcrtd.dll Bin
 
+echo Copy Want\CxbxKrnl.dll to Bin dir
+copy Want\CxbxKrnl.dll Bin
+
 echo Build Dxbx
 want\want.exe -buildfile want\dxbx.xml 
 
