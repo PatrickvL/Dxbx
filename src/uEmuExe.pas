@@ -416,8 +416,9 @@ begin
     Inc(pWriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
 
     // Append x_debug_filename
-    SetLength(m_KrnlDebugFilename, 260);
-    CopyMemory(pWriteCursor, @(m_KrnlDebugFilename[1]), 260);
+    FillMemory(pWriteCursor, 260, $00);
+    if length(m_KrnlDebugFilename) > 0 then
+      CopyMemory(pWriteCursor, @(m_KrnlDebugFilename[1]), length(m_KrnlDebugFilename));
     Inc(pWriteCursor, 260);
 
     // Append library versions
