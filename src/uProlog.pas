@@ -46,6 +46,7 @@ var
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
     $FF, $D6,                // call esi
     $C3,                     // ret
+    // NOTE : These $00's differ from Cxbx's $CC's, because of Vista compatibility :
     $00, $00, $00, $00, $00,
     $00, $00, $00, $00, $00,
     $00, $00, $00, $00, $00,

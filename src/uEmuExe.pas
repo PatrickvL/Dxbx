@@ -48,15 +48,33 @@ uses
   // Dxbx
   uLog, uExternals;
 
-const
-{$IFDEF DEBUG}
-  UseDebugDLL = True;
-{$ELSE}
-  UseDebugDLL = False;
-{$ENDIF}
+type
+  TUseDll = (udCxbxKrnl, udCxbx, udDxbxKrnl, udDxbx);
 
-  StrCxbxKrnlNoFunc00CxbxKrnl_dll = 'CxbxKrnlNoFunc'#0#0'CxbxKrnl.dll';
-  StrCxbxKrnlNoFunc00Cxbx_dll = 'CxbxKrnlNoFunc'#0#0'Cxbx.dll';
+const
+  DllToUse: TUseDLL = udCxbxKrnl; // TODO : Make this configurable (temporarily, until our own DLLs work)
+
+function GetDllName(const aDllToUse: TUseDll): string;
+begin
+  case aDllToUse of
+    udCxbxKrnl:
+      Result := CCXBXKRNLDLLNAME;
+    udCxbx:
+      Result := CCXBXDLLNAME;
+    udDxbxKrnl:
+      Result := CDXBXKRNLDLLNAME;
+    udDxbx:
+      Result := CDXBXDLLNAME;
+  else
+    Assert(False);
+    Result := '';
+  end;
+end;
+
+function GetNoFuncImport(const aDllToUse: TUseDll): string;
+begin
+  Result := 'CxbxKrnlNoFunc'#0#0 + GetDllName(aDllToUse);
+end;
 
 { TEmuExe }
 
@@ -117,10 +135,9 @@ var
   Flag: Byte;
 
   pEmuInit: Pointer;
+  NoFuncImport: string;
 begin
-  pEmuInit := @CxbxKrnlInit; // We need to access the procedure once so it's in memory
-
-  KrnlHandle := GetModuleHandle(cDLLNAME);
+  KrnlHandle := SafeLoadLibrary(GetDllName(DllToUse));
   Assert(KrnlHandle >= 32);
 
   ConstructorInit();
@@ -379,10 +396,8 @@ begin
     _WriteDWordToSectionPos(i, $34, 0);
     _WriteDWordToSectionPos(i, $38, $0001);
 
-    if UseDebugDLL then
-      CopyMemory(@(m_bzSection[i][$3A]), PChar(StrCxbxKrnlNoFunc00CxbxKrnl_dll), Length(StrCxbxKrnlNoFunc00CxbxKrnl_dll))
-    else
-      CopyMemory(@(m_bzSection[i][$3A]), PChar(StrCxbxKrnlNoFunc00Cxbx_dll), Length(StrCxbxKrnlNoFunc00Cxbx_dll));
+    NoFuncImport := GetNoFuncImport(DllToUse);
+    CopyMemory(@(m_bzSection[i][$3A]), PChar(NoFuncImport), Length(NoFuncImport));
   end;
 
   // generate .cxbxplg section
@@ -416,9 +431,9 @@ begin
     Inc(pWriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
 
     // Append x_debug_filename
-    FillMemory(pWriteCursor, 260, $00);
-    if length(m_KrnlDebugFilename) > 0 then
-      CopyMemory(pWriteCursor, @(m_KrnlDebugFilename[1]), length(m_KrnlDebugFilename));
+    ZeroMemory(pWriteCursor, 260);
+    if Length(m_KrnlDebugFilename) > 0 then
+      CopyMemory(pWriteCursor, @(m_KrnlDebugFilename[1]), Length(m_KrnlDebugFilename));
     Inc(pWriteCursor, 260);
 
     // Append library versions

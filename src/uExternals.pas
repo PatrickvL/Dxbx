@@ -25,7 +25,7 @@ uses
   // Delphi
   Types, // for DWord
   // Dxbx
-  uConsts, // for cDLLName
+  uConsts,
   uTypes, // for DebugMode
   uXbe; // for P_XBE_TLS
 
@@ -36,7 +36,7 @@ type
   TThunkTable = packed array[0..366] of DWord;
   PThunkTable = ^TThunkTable;
 
-procedure CxbxKrnlInit(hwndParent: THandle;
+procedure CxbxKrnl_Init(hwndParent: THandle;
                        pTLSData: Pointer;
                        pTLS: P_XBE_TLS;
                        pLibraryVersion: P_XBE_LIBRARYVERSION;
@@ -44,10 +44,38 @@ procedure CxbxKrnlInit(hwndParent: THandle;
                        szDebugFilename: PChar;
                        pXbeHeader: P_XBE_HEADER;
                        dwXbeHeaderSize: DWord;
-                       Entry: PEntryProc); cdecl; external cDLLNAME;
+                       Entry: PEntryProc); cdecl; external CCXBXKRNLDLLNAME;
+procedure Cxbx_Init(hwndParent: THandle;
+                       pTLSData: Pointer;
+                       pTLS: P_XBE_TLS;
+                       pLibraryVersion: P_XBE_LIBRARYVERSION;
+                       DbgMode: DebugMode;
+                       szDebugFilename: PChar;
+                       pXbeHeader: P_XBE_HEADER;
+                       dwXbeHeaderSize: DWord;
+                       Entry: PEntryProc); cdecl; external CCXBXDLLNAME;
+procedure DxbxKrnl_Init(hwndParent: THandle;
+                       pTLSData: Pointer;
+                       pTLS: P_XBE_TLS;
+                       pLibraryVersion: P_XBE_LIBRARYVERSION;
+                       DbgMode: DebugMode;
+                       szDebugFilename: PChar;
+                       pXbeHeader: P_XBE_HEADER;
+                       dwXbeHeaderSize: DWord;
+                       Entry: PEntryProc); cdecl; external CDXBXKRNLDLLNAME;
+(*
+procedure Dxbx_Init(hwndParent: THandle;
+                       pTLSData: Pointer;
+                       pTLS: P_XBE_TLS;
+                       pLibraryVersion: P_XBE_LIBRARYVERSION;
+                       DbgMode: DebugMode;
+                       szDebugFilename: PChar;
+                       pXbeHeader: P_XBE_HEADER;
+                       dwXbeHeaderSize: DWord;
+                       Entry: PEntryProc); cdecl; external CDXBXDLLNAME;
+*)
 
-procedure SetXbePath(const path: PChar); cdecl; external cDLLNAME name '?SetXbePath@EmuShared@@QAEXPBD@Z';
-procedure CxbxKrnlNoFunc; cdecl; external cDLLNAME;
+procedure CxbxKrnl_SetXbePath(const path: PChar); cdecl; external CCXBXKRNLDLLNAME name CSETXBEPATHMANGLEDNAME;
 
 implementation
 
