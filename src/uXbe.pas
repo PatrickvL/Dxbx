@@ -309,44 +309,6 @@ begin
           + (Ord(aBuffer[i + 1]) shl 8)
           + (Ord(aBuffer[i + 2]) shl 16)
           + (Ord(aBuffer[i + 3]) shl 24);
-(*
-  Result :=
-    GetBitEn(Ord(ArrPChar[i + 0]), 0) * 1 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 1) * 2 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 2) * 4 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 3) * 8 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 4) * 16 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 5) * 32 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 6) * 64 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 7) * 128 +
-
-    GetBitEn(Ord(ArrPChar[i + 1]), 0) * 256 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 1) * 512 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 2) * 1024 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 3) * 2048 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 4) * 4096 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 5) * 8192 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 6) * 16384 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 7) * 32768 +
-
-    GetBitEn(Ord(ArrPChar[i + 2]), 0) * 65536 +
-    GetBitEn(Ord(ArrPChar[i + 2]), 1) * Round(POWER(2, 17)) +
-    GetBitEn(Ord(ArrPChar[i + 2]), 2) * Round(POWER(2, 18)) +
-    GetBitEn(Ord(ArrPChar[i + 2]), 3) * Round(POWER(2, 19)) +
-    GetBitEn(Ord(ArrPChar[i + 2]), 4) * Round(POWER(2, 20)) +
-    GetBitEn(Ord(ArrPChar[i + 2]), 5) * Round(POWER(2, 21)) +
-    GetBitEn(Ord(ArrPChar[i + 2]), 6) * Round(POWER(2, 22)) +
-    GetBitEn(Ord(ArrPChar[i + 2]), 7) * Round(POWER(2, 23)) +
-
-    GetBitEn(Ord(ArrPChar[i + 3]), 0) * Round(POWER(2, 24)) +
-    GetBitEn(Ord(ArrPChar[i + 3]), 1) * Round(POWER(2, 25)) +
-    GetBitEn(Ord(ArrPChar[i + 3]), 2) * Round(POWER(2, 26)) +
-    GetBitEn(Ord(ArrPChar[i + 3]), 3) * Round(POWER(2, 27)) +
-    GetBitEn(Ord(ArrPChar[i + 3]), 4) * Round(POWER(2, 28)) +
-    GetBitEn(Ord(ArrPChar[i + 3]), 5) * Round(POWER(2, 29)) +
-    GetBitEn(Ord(ArrPChar[i + 3]), 6) * Round(POWER(2, 30)) +
-    GetBitEn(Ord(ArrPChar[i + 3]), 7) * Round(POWER(2, 31));
-*)
 end; // GetDwordVal
 
 //------------------------------------------------------------------------------
@@ -355,26 +317,6 @@ function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 begin
   Result := (Ord(aBuffer[i + 0]) shl 0)
           + (Ord(aBuffer[i + 1]) shl 8);
-(*
-  Result :=
-    GetBitEn(Ord(ArrPChar[i + 0]), 0) * 1 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 1) * 2 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 2) * 4 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 3) * 8 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 4) * 16 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 5) * 32 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 6) * 64 +
-    GetBitEn(Ord(ArrPChar[i + 0]), 7) * 128 +
-
-    GetBitEn(Ord(ArrPChar[i + 1]), 0) * 256 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 1) * 512 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 2) * 1024 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 3) * 2048 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 4) * 4096 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 5) * 8192 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 6) * 16384 +
-    GetBitEn(Ord(ArrPChar[i + 1]), 7) * 32768;
-*)
 end; // GetWordVal
 
 
@@ -599,7 +541,8 @@ var
   TmpStr: string;
   TmpChr: AnsiChar;
   StrAsciiFilename: string;
-  Flag, BIndex: Byte;
+  Flag: Byte;
+//  BIndex: Byte;
   QVersion: Word;
   LogType: TLogType;
 
@@ -881,8 +824,9 @@ begin
 
       //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
 
-      QVersion := 0;
-
+      QVersion :=  Ord(m_LibraryVersion[lIndex].dwFlags[0])
+               + ((Ord(m_LibraryVersion[lIndex].dwFlags[1]) and 31) shl 8);
+(*
       Flag := Ord(m_LibraryVersion[lIndex].dwFlags[0]);
       for bIndex := 0 to 7 do
         QVersion := QVersion + GetBitEn(Flag, bIndex) * Round(Power(2, bIndex));
@@ -892,6 +836,7 @@ begin
         QVersion := QVersion + GetBitEn(Flag, BIndex) * Round(Power(2, bIndex + 8));
 
      //end of bits maths
+*)
 
       TmpStr := Format('Flags                            : QFEVersion : 0x%.4x, ', [QVersion]);
 
@@ -900,10 +845,10 @@ begin
       else
         TmpStr := TmpStr + 'Retail, ';
 
-      if (GetBitEn(Flag, 5) * 1 + GetBitEn(Flag, 6) * 2) = 0 then
+      if (GetBitEn(Flag, 5) = 0) and (GetBitEn(Flag, 6) = 0) then
         TmpStr := TmpStr + 'Unapproved'
       else
-        if (GetBitEn(Flag, 5) * 1 + GetBitEn(Flag, 6) * 2) = 1 then
+        if (GetBitEn(Flag, 5) > 0) and (GetBitEn(Flag, 6) = 0) then
           TmpStr := TmpStr + 'Possibly Approved'
         else
           TmpStr := TmpStr + 'Approved';

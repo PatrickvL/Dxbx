@@ -36,6 +36,11 @@ type
   TThunkTable = packed array[0..366] of DWord;
   PThunkTable = ^TThunkTable;
 
+// Note :
+// In order to place the address of these methods into the generated EXE
+// we are using GetProcAddress - but this will only result in the correct
+// addresses when we link them statically inside this project also!
+
 procedure CxbxKrnl_Init(hwndParent: THandle;
                        pTLSData: Pointer;
                        pTLS: P_XBE_TLS;
