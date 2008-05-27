@@ -4358,8 +4358,6 @@ object frm_Main: Tfrm_Main
       object Patch1: TMenuItem
         Caption = 'Patch'
         Enabled = False
-        object TMenuItem
-        end
       end
       object N3: TMenuItem
         Caption = '-'
@@ -4428,6 +4426,12 @@ object frm_Main: Tfrm_Main
         object Manual1: TMenuItem
           Action = actExeGenManual
         end
+      end
+      object N9: TMenuItem
+        Caption = '-'
+      end
+      object UsesDlltype1: TMenuItem
+        Caption = 'Select dll to use'
       end
     end
     object Emulation1: TMenuItem
@@ -4629,7 +4633,6 @@ object frm_Main: Tfrm_Main
     Top = 44
   end
   object sSkinManager1: TsSkinManager
-    IsDefault = False
     InternalSkins = <
       item
         Name = 'Cold (Intern)'
