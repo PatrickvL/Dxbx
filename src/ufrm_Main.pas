@@ -124,7 +124,8 @@ type
     imgSignature3: TImage;
     imgSignature4: TImage;
     StatusBar: TsStatusBar;
-    DLLtouse1: TMenuItem;
+    N9: TMenuItem;
+    UsesDlltype1: TMenuItem;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -542,7 +543,7 @@ procedure Tfrm_Main.FormCreate(Sender: TObject);
 
   function _CreateDLLToUseMenuItem(const u: TUseDLL): TMenuItem;
   begin
-    Result := TMenuItem.Create(DLLtouse1);
+    Result := TMenuItem.Create(self);
     Result.Caption := GetDllDescription(u);
     Result.Tag := Ord(u);
     Result.OnClick := actSwitchDLLExecute;
@@ -556,8 +557,9 @@ begin
 
   StatusBar.SimpleText := 'DXBX: No Xbe Loaded...';
 
-  for u := Low(TUseDLL) to High(TUseDLL) do
-    DLLtouse1.Add(_CreateDLLToUseMenuItem(u));
+  for u := Low(TUseDLL) to High(TUseDLL) do begin
+    UsesDlltype1.add ( _CreateDLLToUseMenuItem(u) );
+  end;
 
   ReadSettingsIni;
   CreateLogs(ltGui);
