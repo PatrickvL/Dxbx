@@ -1,6 +1,6 @@
 [Setup]
 AppName=DXBX
-AppVerName=DXBX 0.0.0.8
+AppVerName=DXBX 0.0.0.8 Beta
 AppPublisher=Shadow_tj, Pcucho, Wayo & Zomby
 DefaultDirName={pf}\DXBX
 DefaultGroupName=DXBX
