@@ -98,6 +98,8 @@
   {$DEFINE SUPPORTS_METHODINFO}  // Compiler supports the METHODINFO directives (D10+)
 {$ENDIF}
 
+{$UNDEF SUPPORTS_INLINE_ASM} // Alas, as-of-yet Delphi can't do asm inlining...
+
 // Enable and disable a few compiler warnings :
 
 {$IFDEF SUPPORTS_PLATFORM_WARNINGS}
