@@ -17,11 +17,13 @@
 *)
 unit uEmuFS;
 
+{$INCLUDE Dxbx.inc}
+
 interface
 
-procedure EmuSwapFS;
+procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
 procedure EmuCleanupFS;
-function EmuIsXboxFS: Boolean;
+function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
 
 var
   EmuAutoSleepRate: Integer = -1;
@@ -77,39 +79,34 @@ begin
 end; // EmuSwapFS
 
 procedure EmuCleanupFS;
-//var
-//  wSwapFS: Integer;
+var
+  wSwapFS: Word;
+  pTLSData: PByte;
 begin
-(*{
-    uint16 wSwapFS = 0;
+  wSwapFS := 0;
 
-    __asm
-    {
-        mov ax, fs:[0x14]   // FS.ArbitraryUserPointer
-        mov wSwapFS, ax
-    }
+  asm
+    mov ax, fs:14h  // FS.ArbitraryUserPointer
+    mov wSwapFS, ax;
+  end;
 
-    if(wSwapFS == 0)
-        return;
+  if wSwapFS = 0 then
+    Exit;
 
-    if(!EmuIsXboxFS())
-        EmuSwapFS();    // Xbox FS
+  if not EmuIsXboxFS() then
+    EmuSwapFS();    // Xbox FS
 
-    uint08 *pTLSData = NULL;
+  asm
+    mov eax, fs:04h
+    mov pTLSData, eax
+  end;
 
-    __asm
-    {
-        mov eax, fs:[0x04]
-        mov pTLSData, eax
-    }
+  EmuSwapFS(); // Win2k/XP FS
 
-    EmuSwapFS(); // Win2k/XP FS
+  if pTLSData <> nil then
+    FreeMem(pTLSData);
 
-    if(pTLSData != 0)
-        delete[] pTLSData;
-
-    EmuDeallocateLDT(wSwapFS);
-}          *)
+// TODO :  EmuDeallocateLDT(wSwapFS);
 end;
 
 end.

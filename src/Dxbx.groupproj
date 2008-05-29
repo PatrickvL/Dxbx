@@ -4,7 +4,6 @@
   </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
-    <Projects Include="CxbxKrnl.dproj" />
     <Projects Include="Dxbx.dproj" />
     <Projects Include="DxbxKrnl.dproj" />
     <Projects Include="Tools\XdkTracker\src\XdkTracker.dproj" />
@@ -16,15 +15,6 @@
     <BorlandProject>
 <BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
-  <Target Name="XdkTracker">
-    <MSBuild Projects="Tools\XdkTracker\src\XdkTracker.dproj" Targets="" />
-  </Target>
-  <Target Name="XdkTracker:Clean">
-    <MSBuild Projects="Tools\XdkTracker\src\XdkTracker.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="XdkTracker:Make">
-    <MSBuild Projects="Tools\XdkTracker\src\XdkTracker.dproj" Targets="Make" />
-  </Target>
   <Target Name="XIso">
     <MSBuild Projects="Tools\XIso\src\XIso.dproj" Targets="" />
   </Target>
@@ -34,14 +24,14 @@
   <Target Name="XIso:Make">
     <MSBuild Projects="Tools\XIso\src\XIso.dproj" Targets="Make" />
   </Target>
-  <Target Name="Dxbx">
-    <MSBuild Projects="Dxbx.dproj" Targets="" />
+  <Target Name="XdkTracker">
+    <MSBuild Projects="Tools\XdkTracker\src\XdkTracker.dproj" Targets="" />
   </Target>
-  <Target Name="Dxbx:Clean">
-    <MSBuild Projects="Dxbx.dproj" Targets="Clean" />
+  <Target Name="XdkTracker:Clean">
+    <MSBuild Projects="Tools\XdkTracker\src\XdkTracker.dproj" Targets="Clean" />
   </Target>
-  <Target Name="Dxbx:Make">
-    <MSBuild Projects="Dxbx.dproj" Targets="Make" />
+  <Target Name="XdkTracker:Make">
+    <MSBuild Projects="Tools\XdkTracker\src\XdkTracker.dproj" Targets="Make" />
   </Target>
   <Target Name="DxbxKrnl">
     <MSBuild Projects="DxbxKrnl.dproj" Targets="" />
@@ -52,23 +42,23 @@
   <Target Name="DxbxKrnl:Make">
     <MSBuild Projects="DxbxKrnl.dproj" Targets="Make" />
   </Target>
-  <Target Name="CxbxKrnl">
-    <MSBuild Projects="CxbxKrnl.dproj" Targets="" />
+  <Target Name="Dxbx">
+    <MSBuild Projects="Dxbx.dproj" Targets="" />
   </Target>
-  <Target Name="CxbxKrnl:Clean">
-    <MSBuild Projects="CxbxKrnl.dproj" Targets="Clean" />
+  <Target Name="Dxbx:Clean">
+    <MSBuild Projects="Dxbx.dproj" Targets="Clean" />
   </Target>
-  <Target Name="CxbxKrnl:Make">
-    <MSBuild Projects="CxbxKrnl.dproj" Targets="Make" />
+  <Target Name="Dxbx:Make">
+    <MSBuild Projects="Dxbx.dproj" Targets="Make" />
   </Target>
   <Target Name="Build">
-    <CallTarget Targets="XdkTracker;XIso;Dxbx;DxbxKrnl;CxbxKrnl" />
+    <CallTarget Targets="XIso;XdkTracker;DxbxKrnl;Dxbx" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="XdkTracker:Clean;XIso:Clean;Dxbx:Clean;DxbxKrnl:Clean;CxbxKrnl:Clean" />
+    <CallTarget Targets="XIso:Clean;XdkTracker:Clean;DxbxKrnl:Clean;Dxbx:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="XdkTracker:Make;XIso:Make;Dxbx:Make;DxbxKrnl:Make;CxbxKrnl:Make" />
+    <CallTarget Targets="XIso:Make;XdkTracker:Make;DxbxKrnl:Make;Dxbx:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

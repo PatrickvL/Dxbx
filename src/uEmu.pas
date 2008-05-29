@@ -67,7 +67,6 @@ procedure CxbxKrnlInit(
   dwXbeHeaderSize: DWord;
   Entry: PEntryProc); cdecl;
 begin
-//  CreateLogs(ltKernel);
   WriteLog('EmuInit');
 
    (*g_pTLS       = pTLS;

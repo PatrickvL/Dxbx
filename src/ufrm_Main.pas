@@ -24,7 +24,7 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Menus, ActnList, ShellAPI, jpeg, ExtCtrls, ComCtrls,
+  Menus, ActnList, ShellAPI, jpeg, ExtCtrls, ComCtrls, GIFImg,
   // AlphaSkin
   sSkinProvider, sSkinManager, sStatusBar,
   // Dxbx
@@ -126,6 +126,7 @@ type
     StatusBar: TsStatusBar;
     N9: TMenuItem;
     UsesDlltype1: TMenuItem;
+    imgSignature5: TImage;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
