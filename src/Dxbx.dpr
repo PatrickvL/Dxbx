@@ -32,7 +32,6 @@ uses
   uProlog in 'uProlog.pas',
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
-  uExternals in 'uExternals.pas',
   uTime in 'uTime.pas',
   uBitsOps in 'uBitsOps.pas',
   uWindows in 'uWindows.pas',

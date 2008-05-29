@@ -28,7 +28,7 @@ uses
   // AlphaSkin
   sSkinProvider, sSkinManager, sStatusBar,
   // Dxbx
-  uTypes, uXbe, uEmuExe, uExternals,
+  uTypes, uXbe, uEmuExe,
   ufrm_ControllerConfig, ufrm_VideoConfig;
 
 type
@@ -466,6 +466,8 @@ end; // Tfrm_Main.actConfigVideoExecute
 procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
 var
   FileConverted: Boolean;
+  KrnlHandle: THandle;
+  SetXbePath: TSetXbePath;
 begin
   if Assigned(m_Xbe) then
   begin
@@ -473,7 +475,15 @@ begin
     if FileConverted then
     begin
       // register xbe path with Cxbx.dll
-      CxbxKrnl_SetXbePath(PChar(m_Xbe.m_szPath));
+      begin
+        // TODO : Reuse this handle from when we already had it in TEmuExe.Create :
+        KrnlHandle := SafeLoadLibrary(GetDllName(DllToUse));
+        Assert(KrnlHandle >= 32);
+        // Call the implementation from the configured DLLToUse :
+        @SetXbePath := GetProcAddress(KrnlHandle, CSETXBEPATHMANGLEDNAME);
+        Assert(Assigned(SetXbePath));
+        SetXbePath(PChar(m_Xbe.m_szPath));
+      end;
 
       try
         if FileExists(m_ExeFilename) then
