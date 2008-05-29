@@ -23,6 +23,7 @@ interface
 
 uses
   // Delphi
+  Windows,
   SysUtils,
   // Dxbx
   uTypes;
@@ -54,16 +55,25 @@ var
 
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 begin
+  WriteLog('SetLogMode(' + DebugModeToString(aLogMode) + ')');
   LogMode := aLogMode;
 end;
 
 procedure CreateLogs(aLogType: TLogType);
+var
+  OrigDxbxDebug: DebugMode;
 begin
+  WriteLog('CreateLogs(' + LogTypeToString(aLogType) + ')');
+  
+  OrigDxbxDebug := m_DxbxDebug;
+  m_DxbxDebug := DM_CONSOLE;
+
   case m_DxbxDebug of
     DM_NONE:
       CloseLogs;
 
     DM_CONSOLE:
+      if not Assigned(frm_LogConsole) then
       try
         frm_LogConsole := Tfrm_LogConsole.Create(nil);
         if aLogType = ltGui then
@@ -80,6 +90,7 @@ begin
       end;
 
     DM_FILE:
+      if not LogFileOpen then     
       try
         if aLogType = ltGui then
           AssignFile({var}LogFile, m_DxbxDebugFilename)
@@ -95,6 +106,8 @@ begin
         LogMode := DM_NONE;
       end;
   end; // case m_DxbxDebug
+
+  WriteLog('Started logging - original DebugMode was ' + DebugModeToString(OrigDxbxDebug));
 end;
 
 procedure CloseLogs;
@@ -111,14 +124,20 @@ begin
 end;
 
 procedure WriteLog(aText: string);
+
+  function _Text: string;
+  begin
+    Result := '[0x' + IntToHex(GetCurrentThreadID(), 4) + '] ' + aText;
+  end;
+
 begin
   case LogMode of
     DM_CONSOLE:
       if Assigned(frm_LogConsole) then
-        frm_LogConsole.Log.Lines.Add(aText);
+        frm_LogConsole.Log.Lines.Add(_Text());
     DM_FILE:
       if LogFileOpen then
-        WriteLn({var}LogFile, aText);
+        WriteLn({var}LogFile, _Text());
   end;
 end;
 

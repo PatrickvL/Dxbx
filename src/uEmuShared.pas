@@ -21,7 +21,8 @@ unit uEmuShared;
 
 interface
 
-procedure SetXbePath(const Path: PChar); cdecl;
+procedure SetXbePath(const Path: PChar); stdcall;
+
 procedure Init;
 procedure Cleanup;
 
@@ -39,7 +40,7 @@ var
 
 procedure Init;
 begin
-  WriteLog('Init');
+  WriteLog('Init'); // Note : Logging is useless when CreateLogs isn't called yet.
 
   // Ensure initialization only occurs once
 
@@ -106,7 +107,7 @@ begin
   CloseLogs;
 end;
 
-procedure SetXbePath(const Path: PChar); cdecl;
+procedure SetXbePath(const Path: PChar);
 begin
   Lock();
   WriteLog('Emu: SetXbePath -  ' + Path);

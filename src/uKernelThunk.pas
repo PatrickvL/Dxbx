@@ -27,13 +27,13 @@ uses
   uTypes,
   uLog; // for WriteLog
 
-function CxbxKrnl_KernelThunkTable: PThunkTable; stdcall;
+function CxbxKrnl_KernelThunkTable: PKernelThunkTable; stdcall;
 
 implementation
 
-procedure Unimplemented(const aIndex: Word); // stdcall ??
+procedure Unimplemented(const aIndex: Word);
 begin
-  WriteLog('Unimplemented method in thunk table index : ' + IntToStr(aIndex));
+  WriteLog('Unimplemented method in kernel thunk table, index 0x' + IntToHex(aIndex, 3));
 end;
 
 // These method will at least give us a message saying which indexes aren't implemented :
@@ -776,7 +776,7 @@ var
     @Panic_16E                           // $016E (366)
   );
 
-function CxbxKrnl_KernelThunkTable: PThunkTable; stdcall;
+function CxbxKrnl_KernelThunkTable: PKernelThunkTable;
 begin
   Result := @KernelThunkTable;
 end;

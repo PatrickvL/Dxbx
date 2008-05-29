@@ -19,6 +19,8 @@ unit uEmuExe;
 
 {$INCLUDE Dxbx.inc}
 
+{$OVERFLOWCHECKS OFF}
+
 interface
 
 uses
@@ -27,7 +29,7 @@ uses
   SysUtils,
   Math, // for IfThen
   // Dxbx
-  uConsts, uTypes, uBitsOps, uProlog, uXbe, uExe;
+  uConsts, uTypes, uLog, uBitsOps, uProlog, uXbe, uExe;
 
 type
   TDWordArray = array[0..3] of Byte;
@@ -53,10 +55,6 @@ function GetDllName(const aDllToUse: TUseDll): string;
 function GetNoFuncImport(const aDllToUse: TUseDll): string;
 
 implementation
-
-uses
-  // Dxbx
-  uLog, uExternals;
 
 function GetDllDescription(const aDllToUse: TUseDll): string;
 begin
@@ -147,12 +145,12 @@ var
   SizeOf_Undata: DWord;
   SizeOf_Image: DWord;
   Imag_Base: DWord;
-
+  DLLBase: DWord;
 
   TLS_DATA: DWord;
   kt_tbl: PDWordArray;
-  ThunkMethod: TThunkMethod;
-  ThunkTable: PThunkTable;
+  GetKernelThunkTable: TGetKernelThunkTable;
+  KernelThunkTable: PKernelThunkTable;
 
   pWriteCursor: PByte; // DWord ?
   WriteCursor: DWord;
@@ -484,9 +482,12 @@ begin
     // patch prolog function parameters
     WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
 
+    // TODO : Determine the actual ImageBase of the used DLL :
+    DLLBase := {CurrentDLLBase=}DWord(KrnlHandle) - {LoadTimeDLLBase=DLL.ImageBase=}$10000000;
+
     // Function Pointer
     pEmuInit := GetProcAddress(KrnlHandle, CCXBXKRNLINIT);
-    _WriteDWordToSectionPos(i, 1, DWord(pEmuInit));
+    _WriteDWordToSectionPos(i, 1, DWord(pEmuInit) -  DLLBase);
 
     // Param 8 : Entry
     _WriteDWordToSectionPos(i, 6, ep);
@@ -553,18 +554,18 @@ begin
 
   // locate section containing kernel thunk table
   if DLLToUse in [udCxbxKrnl, udCxbx] then
-    ThunkTable := GetProcAddress(KrnlHandle, CXBXKRNL_KERNELTHUNKTABLE)
+    KernelThunkTable := GetProcAddress(KrnlHandle, CXBXKRNL_KERNELTHUNKTABLE)
   else
   begin
     // Delphi doesn't support DLL's declaring an exported record,
     // so our thunk is actually a method returning the thunk table :
-    ThunkMethod := GetProcAddress(KrnlHandle, CXBXKRNL_KERNELTHUNKTABLE);
-    Assert(Assigned(ThunkMethod));
+    GetKernelThunkTable := GetProcAddress(KrnlHandle, CXBXKRNL_KERNELTHUNKTABLE);
+    Assert(Assigned(GetKernelThunkTable));
     // Call the method to get to the thunk table :
-    ThunkTable := ThunkMethod();
+    KernelThunkTable := GetKernelThunkTable();
   end;
 
-  Assert(Assigned(ThunkTable));
+  Assert(Assigned(KernelThunkTable));
 
   imag_base := m_OptionalHeader.m_image_base;
   for v := 0 to m_Xbe.m_Header.dwSections - 1 do
@@ -581,14 +582,18 @@ begin
       while kt_tbl[k] <> 0 do
       begin
         t := kt_tbl[k] and $7FFFFFFF;
-        if t < NUMBER_OF_THUNKS then
+        if  (t < NUMBER_OF_THUNKS)
+        and (DWord(KernelThunkTable[t]) > NUMBER_OF_THUNKS) then
         begin
-          _WriteDWordToAddr(@(kt_tbl[k]), ThunkTable[t]);
+          _WriteDWordToAddr(@(kt_tbl[k]), DWord(KernelThunkTable[t]) - DLLBase);
           WriteLog(Format('EmuExe: Thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + (k * 4), kt_tbl[k]]));
         end
         else
+        begin
+          _WriteDWordToAddr(@(kt_tbl[k]), t);
           WriteLog(Format('EmuExe: Out-of-range thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + (k * 4), kt_tbl[k]]));
-
+        end;
+        
         Inc(k);
       end; // while
     end; // if

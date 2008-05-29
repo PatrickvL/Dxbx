@@ -23,10 +23,7 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls,
-  // AlphaSkins
-  sSkinProvider, sSkinManager;
+  Classes, Controls, StdCtrls, Forms;
 
 type
   Tfrm_LogConsole = class(TForm)

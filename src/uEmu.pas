@@ -40,9 +40,9 @@ procedure CxbxKrnlInit(
   szDebugFilename: PChar;
   pXbeHeader: P_XBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: PEntryProc); cdecl;
+  Entry: PEntryProc); stdcall;
 
-procedure CxbxKrnlNoFunc; cdecl;
+procedure CxbxKrnlNoFunc; stdcall;
 
 (*
 procedure EmuPanic; export;
@@ -65,8 +65,11 @@ procedure CxbxKrnlInit(
   szDebugFilename: PChar;
   pXbeHeader: P_XBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: PEntryProc); cdecl;
+  Entry: PEntryProc);
 begin
+  SetLogMode(DbgMode);
+  CreateLogs(ltKernel); // Initialize logging interface
+
   WriteLog('EmuInit');
 
    (*g_pTLS       = pTLS;
@@ -83,14 +86,14 @@ begin
             freopen("CONOUT$", "wt", stdout);
             SetConsoleTitle("Cxbx : Kernel Debug Console");
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-            WriteLog( Format ('Emu (0x%X): Debug console allocated (DM_CONSOLE).', GetCurrentThreadId );
+            WriteLog( Format ('Emu: Debug console allocated (DM_CONSOLE).');
          end;
        end;
 
        DM_FILE : begin
          FreeConsole();
          freopen(szDebugFilename, "wt", stdout);
-         WriteLog( Format ( 'Emu (0x%X): Debug console allocated (DM_FILE).', GetCurrentThreadId );
+         WriteLog( Format ( 'Emu : Debug console allocated (DM_FILE).');
        end;
     else
       FreeConsole();
@@ -512,11 +515,11 @@ begin
 end;
 
 
-procedure CxbxKrnlNoFunc; cdecl;
+procedure CxbxKrnlNoFunc;
 begin
   EmuSwapFS();   // Win2k/XP FS
 
-  WriteLog('Emu: EmuNoFunc' + IntToStr(GetCurrentThreadId));
+  WriteLog('Emu: EmuNoFunc');
 
   EmuSwapFS();   // XBox FS*)
 end;
@@ -526,12 +529,12 @@ begin
   Result := (szVersion = _DXBX_VERSION);
 end;
 
-procedure EmuPanic; stdcall;
+procedure EmuPanic;
 begin
   if EmuIsXboxFS then
     EmuSwapFS; // Win2k/XP FS
 
-  WriteLog('Emu: EmuPanic' + IntToStr(GetCurrentThreadId));
+  WriteLog('Emu: EmuPanic');
 
   EmuCleanup('Kernel Panic!');
 
@@ -539,6 +542,7 @@ begin
 end;
 
 exports
+
   EmuPanic;
 
 end.

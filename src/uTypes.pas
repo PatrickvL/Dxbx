@@ -51,10 +51,37 @@ type
   TEntryProc = procedure();
   PEntryProc = ^TEntryProc;
 
-  TThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
-  PThunkTable = ^TThunkTable;
-  TThunkMethod = function : PThunkTable; stdcall;
+  TSetXbePath = procedure (const Path: PChar); stdcall;
+
+  TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
+  PKernelThunkTable = ^TKernelThunkTable;
+  
+  TGetKernelThunkTable = function : PKernelThunkTable; stdcall;
+
+function DebugModeToString(const aDebugMode: DebugMode): string;
+function LogTypeToString(const aLogType: TLogType): string;
 
 implementation
+
+function DebugModeToString(const aDebugMode: DebugMode): string;
+begin
+  case aDebugMode of
+    DM_NONE: Result := 'DM_NONE';
+    DM_CONSOLE: Result := 'DM_CONSOLE';
+    DM_FILE: Result := 'DM_FILE';
+  else
+    Result := '?Unknown?';
+  end;
+end;
+
+function LogTypeToString(const aLogType: TLogType): string;
+begin
+  case aLogType of
+    ltKernel: Result := 'ltKernel';
+    ltGui: Result := 'ltGui';
+  else
+    Result := '?Unknown?';
+  end;
+end;
 
 end.
