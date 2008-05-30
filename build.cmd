@@ -27,7 +27,7 @@ echo Copy Want\CxbxKrnl.dll to Bin dir
 copy Want\CxbxKrnl.dll Bin
 
 echo Build Dxbx
-want\want.exe -buildfile want\dxbx.xml 
+want\want.exe -buildfile want\dxbx.xml -verbose
 
 echo Build CxbxKrnl.dll
 want\want.exe -buildfile want\Cxbxkrnl.xml 

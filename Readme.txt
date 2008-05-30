@@ -23,5 +23,3 @@ PCucho (from Argentina) - XIso translation
 Yapel (from Spain) - XIso 
 PatrickvL (from Holland) - Style changes, little fixes
 Wayo (from Guatemala) - GetProcAddress trick with CxbxKrnlInit
-Unknown (from Iran) - ?
-Others - ?
