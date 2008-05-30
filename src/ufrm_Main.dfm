@@ -5600,6 +5600,33 @@ object frm_Main: Tfrm_Main
     SkinDirectory = '.'
     SkinName = 'Cold (Intern)'
     SkinInfo = '5.43'
+    ThirdParty.ThirdEdits = 
+      'TEdit'#13#10'TMemo'#13#10'TMaskEdit'#13#10'TLabeledEdit'#13#10'THotKey'#13#10'TListBox'#13#10'TCheck' +
+      'ListBox'#13#10'TDBListBox'#13#10'TRichEdit'#13#10'TDBMemo'#13#10'TSynEdit'#13#10'TSynMemo'#13#10'TDB' +
+      'SynEdit'#13#10'TDBLookupListBox'#13#10'TDBRichEdit'#13#10'TDBCtrlGrid'#13#10'TDateTimePi' +
+      'cker'#13#10'TDBEdit'
+    ThirdParty.ThirdButtons = 'TButton'
+    ThirdParty.ThirdBitBtns = 'TBitBtn'
+    ThirdParty.ThirdCheckBoxes = 
+      'TCheckBox'#13#10'TRadioButton'#13#10'TDBCheckBox'#13#10'TDBCheckBoxEh'#13#10'TGroupButto' +
+      'n'
+    ThirdParty.ThirdGroupBoxes = 'TGroupBox'#13#10'TDBRadioGroup'#13#10'TRadioGroup'
+    ThirdParty.ThirdListViews = 'TListView'
+    ThirdParty.ThirdPanels = 'TPanel'#13#10'TDBCtrlPanel'
+    ThirdParty.ThirdGrids = 
+      'TStringGrid'#13#10'TDrawGrid'#13#10'TRichView'#13#10'TDBRichViewEdit'#13#10'TRichViewEdi' +
+      't'#13#10'TDBRichView'#13#10'TwwDBGrid'#13#10'TAdvStringGrid'#13#10'TDBAdvGrid'#13#10'TValueLis' +
+      'tEditor'#13#10'TDBGrid'
+    ThirdParty.ThirdTreeViews = 'TTreeView'#13#10'TRzTreeView'#13#10'TDBTreeView'
+    ThirdParty.ThirdComboBoxes = 'TComboBox'#13#10'TColorBox'#13#10'TDBComboBox'
+    ThirdParty.ThirdWWEdits = 
+      'TDBLookupComboBox'#13#10'TwwDBComboBox'#13#10'TwwDBCustomCombo'#13#10'TwwDBCustomL' +
+      'ookupCombo'
+    ThirdParty.ThirdVirtualTrees = 
+      'TVirtualStringTree'#13#10'TVirtualStringTreeDB'#13#10'TEasyListview'#13#10'TVirtua' +
+      'lExplorerListview'#13#10'TVirtualExplorerTreeview'#13#10'TVirtualExplorerTre' +
+      'e'#13#10'TVirtualDrawTree'
+    ThirdParty.ThirdGridEh = 'TDBGridEh'
     Left = 232
     Top = 192
   end

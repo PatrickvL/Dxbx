@@ -162,7 +162,6 @@ type
     m_AutoConvertToExe: EnumAutoConvert;
 
     m_bExeChanged: Boolean;
-    m_bCanStart: Boolean;
 
     procedure SetExeGen(ConvertTo: EnumAutoConvert);
 
@@ -488,14 +487,8 @@ begin
       try
         if FileExists(m_ExeFilename) then
         begin
-          m_bCanStart := (ShellExecute(Application.Handle, 'open', PChar(m_ExeFilename), nil, PChar(ExtractFilePath(m_ExeFilename)), SW_SHOWDEFAULT) >= 32);
-          if m_bCanStart then
-            WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.')
-          else
-          begin
-            WriteLog('WndMain: ' + m_szAsciiTitle + ' shell failed.');
-            TaskMessageDlg('Dxbx', 'Emulation failed.'#13#13'Try converting again. If this message repeats, the Xbe is not supported.', mtError, [{MB_ICONSTOP,}mbOK], 0);
-          end
+          WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
+          WinExec(PChar(m_ExeFilename),SW_SHOWNORMAL);
         end
         else
         begin
