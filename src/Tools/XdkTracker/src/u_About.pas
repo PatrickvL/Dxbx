@@ -22,7 +22,10 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, JPeg;
+  Dialogs, ExtCtrls, StdCtrls, JPeg,
+  // Dxbx
+  uConsts;
+
 
 type
   Tfrm_About = class(TForm)
@@ -37,10 +40,6 @@ var
   frm_About: Tfrm_About;
 
 implementation
-
-uses
-  // Dxbx
-  uConsts;
 
 {$R *.dfm}
 

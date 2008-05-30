@@ -25,7 +25,9 @@ uses
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, DB,
   ADODB, Buttons,
   // Dxbx
-  ufrm_Main;
+  u_AddGame,
+  uData;
+
 
 type
   Tfrm_Xdkversion = class(TForm)
@@ -44,11 +46,10 @@ type
   end;
 
 var
+  GameList: TList;
   frm_Xdkversion: Tfrm_Xdkversion;
 
 implementation
-
-uses u_AddGame, uData;
 
 {$R *.dfm}
 

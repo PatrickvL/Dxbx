@@ -72,8 +72,6 @@ begin
 end;
 
 begin
-  CreateLogs(ltKernel); // TMP: Initialize logging interface
-
   DllProc := DllMain;
   DllProc(DLL_PROCESS_ATTACH);
 end.
