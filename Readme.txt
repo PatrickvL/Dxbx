@@ -3,7 +3,7 @@ Dxbx the Cxbx Delphi port.
 
 Introduction:
 
-Dxbx (a Delphi port of Cxbx) is an emulator for running Xbox 1 games on Windows 2000 and higher.
+Dxbx (a Delphi port of Cxbx) is an emulator for running Xbox games on Windows 2000 and higher.
 
 
 Prerequisites:
@@ -18,10 +18,10 @@ Special thanks:
 Contributors:
 
 Shadow_tj (from Holland) - Main cxbx translation
-Zomby (from USA) - Vista compatibility, lots of fixups
-PCucho (from Argentinia) - XIso translation
+Zomby (from Canada) - Vista compatibility, lots of fixups
+PCucho (from Argentina) - XIso translation
 Yapel (from Spain) - XIso 
 PatrickvL (from Holland) - Style changes, little fixes
-Wayo - GetProcAddress trick with CxbxKrnlInit
+Wayo (from Guatemala) - GetProcAddress trick with CxbxKrnlInit
 Unknown (from Iran) - ?
 Others - ?
