@@ -22,11 +22,8 @@ When you want to compile dxbx sources you need to following :
 
 To compile you got two options:
 
-1: open the Dxbx project group in Delphi and do a Build All.
-This will put new DLL's and EXE's in the dxbx/bin and dxbx/bin/tools folders.
-
-2: Run the Build.cmd script
-
+1: open the Dxbx project group in Delphi and do a Build All. This will put new DLL's and EXE's in the dxbx/bin and dxbx/bin/tools folders.
+2: Run the Build.cmd for using want build script. ( you need alphaskins and directx9 headers have placed in the librarie folder ).
 
 
 Development

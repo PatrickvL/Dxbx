@@ -8,6 +8,7 @@
   <property name="lib"       value="${basedir}/Libraries" />
 
   <property name="alphaskins"     value="${lib}/Alphaskins" />
+  <property name="directx9"     value="${lib}/DirectX9" />
 
 
   <target name="prepare" >
@@ -22,6 +23,7 @@
       <unitpath>
         <include name="${src}" />
         <include name="${alphaskins}" />
+        <include name="${directx9}" />
       </unitpath>
     </dcc>
   </target>
