@@ -21,7 +21,7 @@ unit uEmuShared;
 
 interface
 
-procedure SetXbePath(const Path: PChar); stdcall;
+procedure SetXbePath(const Path: PChar); cdecl;
 
 procedure Init;
 procedure Cleanup;

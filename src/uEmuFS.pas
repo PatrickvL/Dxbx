@@ -21,6 +21,10 @@ unit uEmuFS;
 
 interface
 
+uses
+  // Delphi
+  Windows; // for SwitchToThread
+
 procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
 procedure EmuCleanupFS;
 function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
@@ -29,10 +33,6 @@ var
   EmuAutoSleepRate: Integer = -1;
 
 implementation
-
-uses
-  // Delphi
-  SysUtils;
 
 function EmuIsXboxFS: Boolean;
 var
@@ -70,7 +70,7 @@ begin
     else
     begin
       // Yield!
-      Sleep(1);
+      SwitchToThread;
 
       // Back to Zero!
       dwInterceptionCount := 0;

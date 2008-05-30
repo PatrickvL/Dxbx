@@ -25,8 +25,10 @@ uses
   // Delphi
   Windows,
   SysUtils,
+  Dialogs,
   // Dxbx
-  uTypes;
+  uTypes,
+  uLogConsole;
 
 var
   m_DxbxDebug: DebugMode = DM_NONE;
@@ -42,31 +44,21 @@ procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
 implementation
 
-uses
-  // Delphi
-  Dialogs,
-  // Dxbx
-  uLogConsole;
-
 var
-  LogMode: DebugMode = DM_NONE;
   LogFileOpen: Boolean = False;
   LogFile: TextFile;
 
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 begin
   WriteLog('SetLogMode(' + DebugModeToString(aLogMode) + ')');
-  LogMode := aLogMode;
+  m_DxbxDebug := aLogMode;
 end;
 
 procedure CreateLogs(aLogType: TLogType);
 var
-  OrigDxbxDebug: DebugMode;
+  OutputFileName: string;
 begin
   WriteLog('CreateLogs(' + LogTypeToString(aLogType) + ')');
-  
-  OrigDxbxDebug := m_DxbxDebug;
-  m_DxbxDebug := DM_CONSOLE;
 
   case m_DxbxDebug of
     DM_NONE:
@@ -82,32 +74,34 @@ begin
           frm_LogConsole.Caption := 'DXBX : Kernel Debug Console';
 
         frm_LogConsole.Show;
-        LogMode := DM_CONSOLE;
       except
+        m_DxbxDebug := DM_NONE;
         ShowMessage('Could not create log console');
         FreeAndNil({var}frm_LogConsole);
-        LogMode := DM_NONE;
       end;
 
     DM_FILE:
-      if not LogFileOpen then     
+      if not LogFileOpen then
       try
         if aLogType = ltGui then
-          AssignFile({var}LogFile, m_DxbxDebugFilename)
-        else // ltKernel
-          AssignFile({var}LogFile, m_KrnlDebugFilename);
+          OutputFileName := m_DxbxDebugFilename
+        else
+          OutputFileName := m_KrnlDebugFilename;
 
+        if OutputFileName = '' then
+          OutputFileName := 'DxbxDebug.log';
+
+        AssignFile({var}LogFile, OutputFileName);
         LogFileOpen := True;
 
         Rewrite({var}LogFile);
-        LogMode := DM_FILE;
       except
+        m_DxbxDebug := DM_NONE;
         ShowMessage('Could not create log file');
-        LogMode := DM_NONE;
       end;
   end; // case m_DxbxDebug
 
-  WriteLog('Started logging - original DebugMode was ' + DebugModeToString(OrigDxbxDebug));
+  WriteLog('Started logging.');
 end;
 
 procedure CloseLogs;
@@ -120,7 +114,7 @@ begin
     LogFileOpen := False;
   end;
 
-  LogMode := DM_NONE;
+  m_DxbxDebug := DM_NONE;
 end;
 
 procedure WriteLog(aText: string);
@@ -131,13 +125,16 @@ procedure WriteLog(aText: string);
   end;
 
 begin
-  case LogMode of
+  case m_DxbxDebug of
     DM_CONSOLE:
       if Assigned(frm_LogConsole) then
         frm_LogConsole.Log.Lines.Add(_Text());
     DM_FILE:
       if LogFileOpen then
+      begin
         WriteLn({var}LogFile, _Text());
+        Flush({var}LogFile);
+      end;
   end;
 end;
 

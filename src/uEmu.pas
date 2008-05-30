@@ -24,8 +24,15 @@ interface
 uses
   // Delphi
   Windows,
+  Math, // IfThen
+  SysUtils,
+  Dialogs,
   // Dxbx
-  uConsts, uTypes, uLog, uXbe, uEmuFS;
+  uConsts,
+  uTypes,
+  uLog,
+  uXbe,
+  uEmuFS;
 
 type
   TEntryProc = procedure();
@@ -40,9 +47,9 @@ procedure CxbxKrnlInit(
   szDebugFilename: PChar;
   pXbeHeader: P_XBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: PEntryProc); stdcall;
+  Entry: PEntryProc); cdecl;
 
-procedure CxbxKrnlNoFunc; stdcall;
+procedure CxbxKrnlNoFunc; cdecl;
 
 (*
 procedure EmuPanic; export;
@@ -52,9 +59,15 @@ procedure EmuCleanThread; export;   *)
 
 implementation
 
-uses
-  // Delphi
-  SysUtils, Dialogs;
+var
+  g_hEmuParent: THandle;
+  g_pTLSData: Pointer;
+  g_pTLS: P_XBE_TLS;
+//  g_pLibraryVersion: P_XBE_LIBRARYVERSION;
+//  g_szDebugFilename: PChar;
+  g_pXbeHeader: P_XBE_HEADER;
+//  g_dwXbeHeaderSize: DWord;
+//  g_Entry: PEntryProc;
 
 procedure CxbxKrnlInit(
   hwndParent: THandle;
@@ -66,88 +79,70 @@ procedure CxbxKrnlInit(
   pXbeHeader: P_XBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: PEntryProc);
+var
+  old_protection: DWord;
+  MemXbeHeader: P_XBE_HEADER;
 begin
+  // debug console allocation (if configured)
   SetLogMode(DbgMode);
   CreateLogs(ltKernel); // Initialize logging interface
 
-  WriteLog('EmuInit');
+  WriteLog('EmuInit : Dxbx Version ' + _DXBX_VERSION);
 
-   (*g_pTLS       = pTLS;
-   g_pTLSData   = pTLSData;
-   g_pXbeHeader = pXbeHeader;
+  g_pTLS       := pTLS;
+  g_pTLSData   := pTLSData;
+  g_pXbeHeader := pXbeHeader;
+  g_hEmuParent := IfThen(IsWindow(hwndParent), hwndParent, 0);
 
- // For Unicode Conversions
- setlocale(LC_ALL, "English");
+  // For Unicode Conversions
+// TODO SetLocale(LC_ALL, 'English');
 
-    // debug console allocation (if configured)
-    case DbgMode of
-       DM_CONSOLE : begin
-         if AllocConsole() then begin
-            freopen("CONOUT$", "wt", stdout);
-            SetConsoleTitle("Cxbx : Kernel Debug Console");
-            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-            WriteLog( Format ('Emu: Debug console allocated (DM_CONSOLE).');
-         end;
-       end;
+  // debug trace
+  begin
+{.$IFDEF _DEBUG_TRACE}
+    WriteLog('EmuMain : Debug Trace Enabled.');
+    WriteLog('EmuMain : CxbxKrnlInit(');
+    WriteLog(Format('  hwndParent       : 0x%.8X', [hwndParent]));
+// TODO : For some reason, execution fails here?
+    WriteLog(Format('  pTLSData         : 0x%.8X', [pTLSData]));
+    WriteLog(Format('  pTLS             : 0x%.8X', [pTLS]));
+    WriteLog(Format('  pLibraryVersion  : 0x%.8X', [pLibraryVersion]));
+    WriteLog(Format('  DebugConsole     : 0x%.8X', [Ord(DbgMode)]));
+    WriteLog(Format('  DebugFilename    : "%s"', [szDebugFilename]));
+    WriteLog(Format('  pXBEHeader       : 0x%.8X', [pXbeHeader]));
+    WriteLog(Format('  dwXBEHeaderSize  : 0x%.8X', [dwXbeHeaderSize]));
+    WriteLog(Format('  Entry            : 0x%.8X', [Entry]));
+    WriteLog(')');
 
-       DM_FILE : begin
-         FreeConsole();
-         freopen(szDebugFilename, "wt", stdout);
-         WriteLog( Format ( 'Emu : Debug console allocated (DM_FILE).');
-       end;
-    else
-      FreeConsole();
-      char buffer[16];
-      if GetConsoleTitle(buffer, 16)) <> '' then
-        freopen("nul", "w", stdout);
-    end;
+{.$ELSE}
+//  WriteLog('EmuMain : Debug Trace Disabled.');
+{.$ENDIF}
+  end;
 
+  // Load the necessary pieces of XBEHeader
+  begin
+    MemXbeHeader := P_XBE_HEADER($00010000);
 
-    // debug trace
+WriteLog('VirtualProtect>');
+    VirtualProtect(MemXbeHeader, $1000, PAGE_READWRITE, {var}old_protection);
+WriteLog('<VirtualProtect');
 
-    {$IFDEF _DEBUG_TRACE}
-        WriteLog ( Format ( 'Emu (0x%X): Debug Trace Enabled.', GetCurrentThreadId );
+    // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
+    MemXbeHeader.dwSizeofHeaders   := pXbeHeader.dwSizeofHeaders;
+    MemXbeHeader.dwCertificateAddr := pXbeHeader.dwCertificateAddr;
+    MemXbeHeader.dwPeHeapReserve   := pXbeHeader.dwPeHeapReserve;
+    MemXbeHeader.dwPeHeapCommit    := pXbeHeader.dwPeHeapCommit;
 
-        WriteLog('(');
-        WriteLog(Format('  pTLSData         : 0x%.8X', [pTLSData]));
-        WriteLog(Format('  pTLS             : 0x%.8X', [pTLS]));
-        WriteLog(Format('  pLibraryVersion  : 0x%.8X', [pLibraryVersion]));
-        WriteLog(Format('  DebugConsole     : 0x%.8X', [Ord(DbgMode)]));
-        WriteLog(Format('  DebugFilename    : "%s"', [szDebugFilename]));
-        WriteLog(Format('  pXBEHeader       : 0x%.8X', [pXbeHeader]));
-        WriteLog(Format('  dwXBEHeaderSize  : 0x%.8X', [dwXbeHeaderSize]));
-        WriteLog(Format('  Entry            : 0x%.8X', [Entry]));
-        WriteLog(')');
-               GetCurrentThreadId(), pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
+    CopyMemory(@MemXbeHeader.dwInitFlags, @pXbeHeader.dwInitFlags, SizeOf(pXbeHeader.dwInitFlags));
 
-    {$ELSE}
-        WriteLog ( Format ( 'Emu (0x%X): Debug Trace Disabled.', GetCurrentThreadId );
-    {$ENDIF}
+//        memcpy((void*)(*pXbeHeader.dwCertificateAddr, &((uint08*)(*pXbeHeader)[pXbeHeader.dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+  end;
 
-
-
-    // Load the necessary pieces of XBEHeader
-        Xbe::Header *MemXbeHeader = (Xbe::Header*)(*0x00010000;
-(*
-        uint32 old_protection = 0;
-
-        VirtualProtect(MemXbeHeader, 0x1000, PAGE_READWRITE, &old_protection);
-
-        // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-        MemXbeHeader->dwSizeofHeaders   = pXbeHeader->dwSizeofHeaders;
-        MemXbeHeader->dwCertificateAddr = pXbeHeader->dwCertificateAddr;
-        MemXbeHeader->dwPeHeapReserve   = pXbeHeader->dwPeHeapReserve;
-        MemXbeHeader->dwPeHeapCommit    = pXbeHeader->dwPeHeapCommit;
-
-        memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
-
-        memcpy((void*)(*pXbeHeader->dwCertificateAddr, &((uint08*)(*pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
-
- // Initialize current directory
+  // Initialize current directory
 
 (*  char szBuffer[260];
 
-        g_EmuShared->GetXbePath(szBuffer);
+        g_EmuShared.GetXbePath(szBuffer);
 
         SetCurrentDirectory(szBuffer);
 
@@ -182,7 +177,7 @@ begin
         if(spot != -1)
             szBuffer[spot] = '\0';
 
-        Xbe::Certificate *pCertificate = (Xbe::Certificate*)(*pXbeHeader->dwCertificateAddr;
+        Xbe::Certificate *pCertificate = (Xbe::Certificate*)(*pXbeHeader.dwCertificateAddr;
 
         // Create TData Directory
 
@@ -190,7 +185,7 @@ begin
 
             CreateDirectory(szBuffer, NULL);
 
-            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate->dwTitleId);
+            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate.dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
 
@@ -206,7 +201,7 @@ begin
 
             CreateDirectory(szBuffer, NULL);
 
-            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate->dwTitleId);
+            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate.dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
 
@@ -223,7 +218,7 @@ begin
             CreateDirectory(szBuffer, NULL);
 
             //* is it necessary to make this directory title unique?
-            sprintf(&szBuffer[spot+10], "\\%08x", pCertificate->dwTitleId);
+            sprintf(&szBuffer[spot+10], "\\%08x", pCertificate.dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
             //*/
@@ -245,7 +240,7 @@ begin
 
         WriteLog( Format ( 'Emu (0x%X): Detected Microsoft XDK application...', GetCurrentThreadId );
 
-        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
+        uint32 dwLibraryVersions = pXbeHeader.dwLibraryVersions;
         uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
 
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
@@ -307,8 +302,8 @@ begin
                 {
                     if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
                     {
-                        uint32 lower = pXbeHeader->dwBaseAddr;
-                        uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+                        uint32 lower = pXbeHeader.dwBaseAddr;
+                        uint32 upper = pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
 
             // ******************************************************************
             // * Locate XapiProcessHeap
@@ -328,15 +323,15 @@ begin
               XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)(*((uint32)pFunc + 0x37);
               XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
 
-              printf("Emu (0x%X): 0x%.8X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
-              printf("Emu (0x%X): 0x%.8X -> RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
+              printf("Emu (0x%X): 0x%.8X . EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
+              printf("Emu (0x%X): 0x%.8X . RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
              }
 {				        }
 {                    }
 {			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
            {
-                        uint32 lower = pXbeHeader->dwBaseAddr;
-                        uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+                        uint32 lower = pXbeHeader.dwBaseAddr;
+                        uint32 upper = pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
 
             void *pFunc = EmuLocateFunction((OOVPA*)(*&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
 
@@ -462,8 +457,7 @@ end;
 
 procedure EmuCleanup(szErrorMessage: string);
 begin
-  CreateLogs(ltKernel);
-  WriteLog('EmuInit');
+  WriteLog('EmuCleanup : Recieved Fatal Message ->'#13#13 + szErrorMessage);
 
   // Print out ErrorMessage (if exists)
 (*    if(szErrorMessage != NULL)
@@ -521,7 +515,7 @@ begin
 
   WriteLog('Emu: EmuNoFunc');
 
-  EmuSwapFS();   // XBox FS*)
+  EmuSwapFS();   // XBox FS
 end;
 
 function EmuVerifyVersion(const szVersion: string): Boolean;
@@ -532,7 +526,7 @@ end;
 procedure EmuPanic;
 begin
   if EmuIsXboxFS then
-    EmuSwapFS; // Win2k/XP FS
+    EmuSwapFS(); // Win2k/XP FS
 
   WriteLog('Emu: EmuPanic');
 

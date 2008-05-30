@@ -9,7 +9,15 @@ uses
   // AlphaSkin
   sStatusBar, sSkinProvider, sSkinManager,
   // Dxbx
-  uData;
+  uData,
+  u_xdkversions,
+  u_About,
+  uPublisher,
+  uImportGames,
+  uXbe,
+  uDxbxXml,
+  uConsts;
+
 
 const
   cXDKLIST_LOADED = 'XDK List Loaded';
@@ -78,20 +86,9 @@ type
 
 var
   frmXdkTracker: TfrmXdkTracker;
-  GameList: TList;
   mHandle: THandle;    // Mutexhandle
 
 implementation
-
-uses
-  // Dxbx
-  u_xdkversions,
-  u_About,
-  uPublisher,
-  uImportGames,
-  uXbe,
-  uDxbxXml,
-  uConsts;
 
 {$R *.dfm}
 

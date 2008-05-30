@@ -51,12 +51,12 @@ type
   TEntryProc = procedure();
   PEntryProc = ^TEntryProc;
 
-  TSetXbePath = procedure (const Path: PChar); stdcall;
+  TSetXbePath = procedure (const Path: PChar); cdecl;
 
   TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
   PKernelThunkTable = ^TKernelThunkTable;
   
-  TGetKernelThunkTable = function : PKernelThunkTable; stdcall;
+  TGetKernelThunkTable = function : PKernelThunkTable; cdecl;
 
 function DebugModeToString(const aDebugMode: DebugMode): string;
 function LogTypeToString(const aLogType: TLogType): string;

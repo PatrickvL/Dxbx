@@ -26,7 +26,13 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Menus, Math, ActnList, ExtCtrls, StrUtils, sStatusBar,
   // Dxbx
-  uConsts, uTypes, uBitsOps, uTime;
+  uConsts,
+  uTypes,
+  uBitsOps,
+  uTime,
+  uLog;
+
+
 
 type
   TLogType = (ltLog, ltFile);
@@ -229,11 +235,6 @@ var
   m_szAsciiTitle: string;
 
 implementation
-
-uses
-  // Dxbx
-  uLog;
-
 
 procedure LoadLogo;
 begin
