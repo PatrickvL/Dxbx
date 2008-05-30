@@ -10,13 +10,23 @@ When you want to compile dxbx sources you need to following :
   url: https://dxbx.svn.sourceforge.net/svnroot/dxbx
   
 - Cloothie DirectX 9 Header files - for directx support
+  url: http://clootie.narod.ru/delphi/index.html
+
+  or
+
   url: http://shadowtj.net/main/pages/programming/DelphiComponents.html
+
 
 - Alphaskins - for skins
   url: http://www.alphaskins.com/
 
-To compile, open the Dxbx project group in Delphi and do a Build All.
+To compile you got two options:
+
+1: open the Dxbx project group in Delphi and do a Build All.
 This will put new DLL's and EXE's in the dxbx/bin and dxbx/bin/tools folders.
+
+2: Run the Build.cmd script
+
 
 
 Development

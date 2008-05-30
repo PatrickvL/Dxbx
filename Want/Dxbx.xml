@@ -5,6 +5,9 @@
   <property name="src"       value="${basedir}/src" />
   <property name="bin" value="${basedir}/bin" />
   <property name="dcu" value="${basedir}/dcu" />
+  <property name="lib"       value="${basedir}/Libraries" />
+
+  <property name="alphaskins"     value="${lib}/Alphaskins" />
 
 
   <target name="prepare" >
@@ -16,6 +19,10 @@
 
   <target name="compile"  depends="prepare, build">
     <dcc basedir="${src}" source="Dxbx.dpr">
+      <unitpath>
+        <include name="${src}" />
+        <include name="${alphaskins}" />
+      </unitpath>
     </dcc>
   </target>
 
