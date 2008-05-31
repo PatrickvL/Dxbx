@@ -440,9 +440,7 @@ begin
   if not XbeOpenDialog.Execute then
     Exit;
 
-  OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename, nil );
-
-  begin
+  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
     DxbxXml.CreateXmlXbeDump(ExtractFilePath(Application.ExeName) + 'Dump.dat', m_Xbe);
     ImportXbeDump;
   end;

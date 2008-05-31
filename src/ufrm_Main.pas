@@ -210,15 +210,21 @@ begin
   if not XbeOpenDialog.Execute then
     Exit;
 
-  if Assigned(m_Xbe) then
+  if Assigned(m_Xbe) then begin
     CloseXbe();
+  end;
 
-  OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename, StatusBar );
-  RecentXbeAdd(XbeOpenDialog.Filename);
-  Logbitmap1.Enabled := True;
-  Dumpxbeinfoto1.Enabled := True;
-  Exportexe1.Enabled := True;
-  CloseXbe1.Enabled := True;
+  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
+    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+    RecentXbeAdd(XbeOpenDialog.Filename);
+    Logbitmap1.Enabled := True;
+    Dumpxbeinfoto1.Enabled := True;
+    Exportexe1.Enabled := True;
+    CloseXbe1.Enabled := True;
+  end
+  else begin
+    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+  end;
 end; // Tfrm_Main.actOpenXbeExecute
 
 //------------------------------------------------------------------------------
@@ -1046,17 +1052,21 @@ begin
     if Assigned(m_Xbe) then
       CloseXbe();
 
-    OpenXbe(TempItem.Hint, m_Xbe, m_ExeFilename, m_XbeFilename, StatusBar );
-    Logbitmap1.Enabled := True;
-    Dumpxbeinfoto1.Enabled := True;
-    Exportexe1.Enabled := True;
-    CloseXbe1.Enabled := True;
-
-    RecentXbeAdd(TempItem.Hint)
+    if OpenXbe(TempItem.Hint, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
+      StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+      RecentXbeAdd(XbeOpenDialog.Filename);
+      Logbitmap1.Enabled := True;
+      Dumpxbeinfoto1.Enabled := True;
+      Exportexe1.Enabled := True;
+      CloseXbe1.Enabled := True;
+    end
+    else begin
+      MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+    end;
   end
   else
   begin
-    ShowMessage('Could not locate file : ' + TempItem.Hint);
+    MessageDlg('Could not locate file : ' + TempItem.Hint, mtWarning, [mbOk], 0);
     RecentXbefiles1.Remove(TempItem);
   end;
 end;
