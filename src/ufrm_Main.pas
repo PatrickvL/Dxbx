@@ -606,7 +606,7 @@ var
   IniFile: TIniFile;
   RecentTMP: string;
   RecentTMPList: TStringList;
-  I: Integer;
+  lIndex : Integer;
 begin
   DxbxIniFilePath := FApplicationDir + 'Dxbx.Ini';
   if FileExists(DxbxIniFilePath) then
@@ -626,6 +626,13 @@ begin
     m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(DM_NONE)));
     m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
 
+    // Dll settings
+    DLLToUse := TUseDLL(StrToInt (IniFile.ReadString( 'Settings', 'DllToUse', '0' )));
+    for lIndex := 0 to UsesDlltype1.Count - 1 do
+      UsesDlltype1.Items[lIndex].Checked := False;
+
+    UsesDlltype1.Items[Ord(DLLToUse)].Checked := True;
+
     // Read recent XBE files
     RecentTMP := IniFile.ReadString('Recent', 'XBEs', '');
     RecentTMPList := TStringList.Create;
@@ -634,8 +641,8 @@ begin
     RecentTMPList.StrictDelimiter := True;
     RecentTMPList.DelimitedText := RecentTMP;
     RecentXbefiles1.Clear;
-    for I := 0 to RecentTMPList.Count - 1 do
-      RecentXbeAdd(RecentTMPList[I]);
+    for lIndex := 0 to RecentTMPList.Count - 1 do
+      RecentXbeAdd(RecentTMPList[lIndex]);
 
     // Read recent EXE files
     RecentTMP := IniFile.ReadString('Recent', 'EXEs', '');
@@ -645,8 +652,8 @@ begin
     RecentTMPList.StrictDelimiter;
     RecentTMPList.DelimitedText := RecentTMP;
     RecentExefiles1.Clear;
-    for I := 0 to RecentTMPList.Count - 1 do
-      RecentExeAdd(RecentTMPList[I]);
+    for lIndex := 0 to RecentTMPList.Count - 1 do
+      RecentExeAdd(RecentTMPList[lIndex]);
 
     FreeAndNil({var}IniFile);
     // Set Menu checked options
@@ -735,6 +742,7 @@ begin
   IniFile.WriteString('Settings', 'DxbxDebugFilename', m_DxbxDebugFilename);
   IniFile.WriteInteger('Settings', 'KrnlDebug', ORD(m_KrnlDebug));
   IniFile.WriteString('Settings', 'KrnlDebugFilename', m_KrnlDebugFilename);
+  IniFile.WriteString('Settings', 'DllToUse', IntToStr (Ord(DLLToUse)) );
 
   FreeAndNil({var}inifile);
 end; // Tfrm_Main.WriteSettingsIni
@@ -948,8 +956,15 @@ end; // Tfrm_Main.actExportLogoExecute
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actSwitchDLLExecute(Sender: TObject);
+var
+  lIndex : Integer;
 begin
   Assert(Sender is TMenuItem);
+
+  for lIndex := 0 to UsesDlltype1.Count - 1 do
+    UsesDlltype1.Items[lIndex].Checked := False;
+
+  TMenuItem ( Sender ).Checked := True;
 
   DLLToUse := TUseDLL(TMenuItem(Sender).Tag);
 end;
