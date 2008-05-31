@@ -219,6 +219,7 @@ function TAdminFicheros.AgregarFichero(Fichero: string): Boolean;
 var
   Nuevo: PEntrada;
   F: TFileStream;
+  Age: TDateTime;
 begin
   Result := False;
   if FileExists(Fichero) then
@@ -228,7 +229,8 @@ begin
     Nuevo.Nombre := ExtractFileName(Fichero);
     Nuevo.FullPath := Fichero;
     Nuevo.Attributes := GetFileAttributes(PChar(Fichero));
-    Nuevo.FechaHora := FileDateToDateTime(FileAge(Fichero));
+    if FileAge(Fichero, {out}Age) then
+      Nuevo.FechaHora := FileDateToDateTime(Round(Age));
     F := TFileStream.Create(Fichero, fmOpenRead);
     Nuevo.Tamano := F.Size;
     F.Free;

@@ -17,6 +17,8 @@
 *)
 unit uKernelThunk;
 
+{$INCLUDE Dxbx.inc}
+
 interface
 
 uses

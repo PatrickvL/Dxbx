@@ -23,11 +23,11 @@ interface
 
 uses
   // Delphi
-  SysUtils, Windows;
+  Windows; // TTimeZoneInformation
 
 type
   TCTime = Int64;
-  
+
 const
   CTimeZero = 25569; //EncodeDate(1970, 1, 1);
   SecPerDay = 60 * 60 * 24;

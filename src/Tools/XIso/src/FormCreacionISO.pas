@@ -27,9 +27,15 @@ unit FormCreacionISO;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, CreacionISO, ComCtrls, StdCtrls, Menus, {FolderBrowser, } Buttons,
-  ShellAPI, ImgList, ToolWin, ExtCtrls;
+  ShellAPI, ImgList, ToolWin, ExtCtrls,
+  // Dxbx
+  TextConsts,
+  xisomakerv2,
+  ProgresoCreacionISO;
+
 
 type
   TForm5 = class(TForm)
@@ -107,10 +113,6 @@ var
 implementation
 
 {$R *.dfm}
-
-uses
-  // Dxbx
-  TextConsts, xisomakerv2, ProgresoCreacionISO;
 
 function GetAssociatedIcon(const AExtension: string; ASmall: Boolean): HIcon;
 var

@@ -27,7 +27,11 @@ unit ProgresoCreacionISO;
 interface
 
 uses
-  Classes;
+  // Delphi
+  Classes,
+  // XIso
+  xisomakerv2;
+
 
 type
   TProgresoCreacionISO = class(TThread)
@@ -41,8 +45,7 @@ var
 implementation
 
 uses
-  // XIso
-  FormCreacionISO, xisomakerv2;
+  FormCreacionISO; // TODO : remove all references from this unit to Form5 
 
 procedure AdvanceProgres(FileName: string);
 begin

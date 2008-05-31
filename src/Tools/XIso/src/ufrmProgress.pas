@@ -27,8 +27,15 @@ unit ufrmProgress;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, ComCtrls, StdCtrls;
+  Dialogs, ExtCtrls, ComCtrls, StdCtrls,
+  // XIso
+  TextConsts,
+  uxisomaker,
+  GenerateXDFS,
+  ufrm_Main,
+  FormCreacionISO;
 
 type
   TfrmProgress = class(TForm)
@@ -55,10 +62,6 @@ var
   Folder: string;
 
 implementation
-
-uses
-  // Dxbx
-  TextConsts, uxisomaker, GenerateXDFS, ufrm_Main, FormCreacionISO;
 
 {$R *.dfm}
 

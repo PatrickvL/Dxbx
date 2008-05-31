@@ -26,7 +26,11 @@ interface
 
 uses
   // Delphi
-  Classes, Windows;
+  Classes, Windows,
+  // XIso
+  TextConsts,
+  uxisomaker;
+
 
 type
   TGenerateXDFS = class(TThread)
@@ -38,10 +42,6 @@ var
   Imagen, Folder: string;
 
 implementation
-
-uses
-  // XIso
-  uxisomaker, TextConsts;
 
 { GenerateXDFS }
 

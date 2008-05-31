@@ -21,18 +21,17 @@ unit uEmuShared;
 
 interface
 
+uses
+  // Dxbx
+  uMutex,
+  uLog;
+
 procedure SetXbePath(const Path: PChar); cdecl;
 
 procedure Init;
 procedure Cleanup;
 
 implementation
-
-uses
-  // Delphi
-  Dialogs,
-  // Dxbx
-  uTypes, uLog, uMutex;
 
 var
   m_XbePath: string;

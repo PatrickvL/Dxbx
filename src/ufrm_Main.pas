@@ -23,13 +23,25 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Menus, ActnList, ShellAPI, jpeg, ExtCtrls, ComCtrls, GIFImg,
+  Windows, Messages, SysUtils, Classes,
+  Dialogs, ActnList, Forms, Menus,
+  Controls, ComCtrls, ExtCtrls,
+  Graphics, GIFImg, JPeg,
+  ShellAPI, IniFiles,
   // AlphaSkin
   sSkinProvider, sSkinManager, sStatusBar,
   // Dxbx
-  uTypes, uXbe, uEmuExe,
-  ufrm_ControllerConfig, ufrm_VideoConfig;
+  uTypes,
+  uConsts,
+  uLog,
+  uWindows,
+  uXbe,
+  uEmuExe,
+  uDxbxXml,
+  ufrm_ControllerConfig,
+  ufrm_VideoConfig,
+  ufrm_About;
+
 
 type
   Tfrm_Main = class(TForm)
@@ -194,13 +206,6 @@ var
 implementation
 
 {$R *.DFM}
-
-uses
-  // Delphi
-  IniFiles,
-  uDxbxXml,
-  // Dxbx
-  ufrm_About, uConsts, uLog, uWindows;
 
 //------------------------------------------------------------------------------
 

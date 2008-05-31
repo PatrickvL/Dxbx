@@ -23,10 +23,9 @@ interface
 
 uses
   // Delphi
-  Windows,
+  Windows, // DWord
   Math, // IfThen
-  SysUtils,
-  Dialogs,
+  SysUtils, // Format
   // Dxbx
   uConsts,
   uTypes,

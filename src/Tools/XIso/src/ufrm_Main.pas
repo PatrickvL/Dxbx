@@ -28,7 +28,17 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ShlObj, ActiveX, ExtCtrls, ImgList, CDROM, WIN32ASPI,
-  Menus, ShellApi, ToolWin, Graphics, Registry, uxisomaker, xisomakerv3;
+  Menus, ShellApi, ToolWin, Graphics, Registry,
+  // XIso
+  uxisomaker,
+  xisomakerv3,
+  uxiso,
+  xbe,
+  TextConsts,
+  ufrm_Language,
+  Grabacion,
+  FormCreacionISO;
+
 
 type
   Tfrm_Main = class(TForm)
@@ -159,9 +169,7 @@ function QuitarComilla(Texto: string): string;
 
 implementation
 
-uses
-  // Dxbx
-  uxiso, xbe, TextConsts, ufrm_Language, ufrmProgress, Grabacion, FormCreacionISO;
+uses ufrmProgress;
 
 function IsWindowsVista: Boolean;
 var

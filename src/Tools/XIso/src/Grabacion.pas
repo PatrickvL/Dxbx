@@ -31,7 +31,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, Buttons,
   // XIso
-  CDROM, WIN32ASPI;
+  CDROM, WIN32ASPI,
+  TextConsts;
+
 
 type
   TForm4 = class(TForm)
@@ -98,10 +100,6 @@ var
 implementation
 
 {$R *.dfm}
-
-uses
-  // Dxbx
-  TextConsts;
 
 procedure EscanearSCSI();
 var

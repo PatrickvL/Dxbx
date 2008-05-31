@@ -25,7 +25,9 @@ uses
   // Delphi
   Dialogs, Windows, Classes, SysUtils,
   // Dxbx
-  uTypes;
+  uTypes,
+  uLog;
+
 
 type
   DOSStub = array[0..183] of Byte;
@@ -169,10 +171,6 @@ const
 
 
 implementation
-
-uses
-  // Dxbx
-  uLog;
 
 { TExe }
 
