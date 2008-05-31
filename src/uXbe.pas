@@ -24,7 +24,7 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Menus, Math, ActnList, ExtCtrls, StrUtils, sStatusBar,
+  Menus, Math, ActnList, ExtCtrls, StrUtils,
   // Dxbx
   uConsts,
   uTypes,
@@ -226,7 +226,7 @@ function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
-procedure OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String; aStatusBar : TsStatusBar );
+Function OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String ) : Boolean;
 procedure XbeLoaded;
 procedure LoadLogo;
 
@@ -272,8 +272,9 @@ begin
   WriteLog(Format('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end;
 
-procedure OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String; aStatusBar : TsStatusBar );
+function OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String ) : Boolean;
 begin
+  Result := False;
   if Assigned(aXbe) or not (FileExists(aFileName)) then
     Exit;
 
@@ -283,10 +284,8 @@ begin
   aXbe := TXbe.Create(aXbeFilename, ftXbe);
   try
     XbeLoaded();
-    if Assigned ( aStatusBar ) then
-      aStatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+    Result := True;
   except
-    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     FreeAndNil(aXbe);
   end;
 end;
