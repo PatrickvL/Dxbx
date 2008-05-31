@@ -25,7 +25,6 @@ uses
   // Delphi
   Windows,
   SysUtils,
-  Dialogs,
   // Dxbx
   uTypes,
   uLogConsole;
@@ -76,8 +75,8 @@ begin
         frm_LogConsole.Show;
       except
         m_DxbxDebug := DM_NONE;
-        ShowMessage('Could not create log console');
         FreeAndNil({var}frm_LogConsole);
+        raise Exception.Create('Could not create log console');
       end;
 
     DM_FILE:
@@ -92,12 +91,12 @@ begin
           OutputFileName := 'DxbxDebug.log';
 
         AssignFile({var}LogFile, OutputFileName);
-        LogFileOpen := True;
 
         Rewrite({var}LogFile);
+        LogFileOpen := True;
       except
         m_DxbxDebug := DM_NONE;
-        ShowMessage('Could not create log file');
+        raise Exception.Create('Could not create log file');
       end;
   end; // case m_DxbxDebug
 

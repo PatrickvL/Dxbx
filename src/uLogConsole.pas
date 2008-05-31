@@ -23,7 +23,10 @@ interface
 
 uses
   // Delphi
-  Classes, Controls, StdCtrls, Forms;
+  Classes,
+  Controls,
+  StdCtrls,
+  Forms;
 
 type
   Tfrm_LogConsole = class(TForm)

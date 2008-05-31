@@ -19,6 +19,10 @@ unit uBitsOps;
 
 interface
 
+uses
+  // Delphi
+  SysUtils;  // ERangeError
+
 function GetBitEn(Variable: Byte; Position: Byte): Byte; overload;//8 bits
 function GetBitEn(Variable: ShortInt; Position: Byte): Byte; overload;//(+/-) 8 bits
 
@@ -29,10 +33,6 @@ function GetBitEn(Variable: Cardinal; Position: Byte): Byte; overload;//32 bits
 function GetBitEn(Variable: Integer; Position: Byte): Byte; overload;//(+/-) 32 bits
 
 implementation
-
-uses
-  // Delphi
-  SysUtils;
 
 //Procedimientos genéricos para asignar y leer--------------------------------------------------------------------------
 

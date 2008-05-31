@@ -23,8 +23,12 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Menus, Math, ActnList, ExtCtrls, StrUtils,
+  Windows, // for DWord
+  Classes,
+  SysUtils, // for Format
+  StrUtils, // for IfThen
+  Dialogs,  // for MessageDlg
+  Graphics, // for TBitmap
   // Dxbx
   uConsts,
   uTypes,
@@ -348,7 +352,7 @@ var
   I: DWord;
   sFileType: string;
 begin
-  sFileType := ifthen(aFileType = ftXbe, 'Xbe', 'Exe');
+  sFileType := IfThen(aFileType = ftXbe, 'Xbe', 'Exe');
 
   ConstructorInit();
 

@@ -21,14 +21,14 @@ unit uWindows;
 
 interface
 
+uses
+	// Delphi
+  Windows;
+
 function IsWindowsVista: Boolean;
 function GetTempDirectory: string;
 
 implementation
-
-uses
-	// Delphi
-  Windows;
 
 function IsWindowsVista: Boolean;
 var

@@ -28,10 +28,7 @@ library DxbxKrnl;
   using PChar or ShortString parameters. }
 
 uses
-  Windows,
-  SysUtils,
-  Dialogs,
-  Classes,
+  Windows, // for DLL_PROCESS_ATTACH
   uEmuShared in 'uEmuShared.pas',
   uEmu in 'uEmu.pas',
   uLog in 'uLog.pas',
