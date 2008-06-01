@@ -29,7 +29,7 @@ uses
   SysUtils,
   Math, // for IfThen
   // Dxbx
-  uConsts, uTypes, uLog, uBitsOps, uProlog, uXbe, uExe;
+  uConsts, uTypes, uLog, uProlog, uXbe, uExe;
 
 type
   TDWordArray = array[0..3] of Byte;
@@ -278,12 +278,12 @@ begin
 
     // generate Flags for this xbe section
     Flags := IMAGE_SCN_MEM_READ;
-    if GetBitEn(Ord(m_Xbe.m_SectionHeader[v].dwFlags[0]), 2) > 0 then // Executable
+    if (m_Xbe.m_SectionHeader[v].dwFlags[0] and XBE_SECTIONHEADER_FLAG_Executable) > 0 then
       Flags := Flags or IMAGE_SCN_MEM_EXECUTE or IMAGE_SCN_CNT_CODE
     else
       Flags := Flags or IMAGE_SCN_CNT_INITIALIZED_DATA;
 
-    if GetBitEn(Ord(m_Xbe.m_SectionHeader[v].dwFlags[0]), 0) > 0 then // Writable
+    if (m_Xbe.m_SectionHeader[v].dwFlags[0] and XBE_SECTIONHEADER_FLAG_Writable) > 0 then
       Flags := Flags or IMAGE_SCN_MEM_WRITE;
 
     m_SectionHeader[v].m_characteristics := Flags;

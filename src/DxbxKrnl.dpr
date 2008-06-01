@@ -28,7 +28,7 @@ library DxbxKrnl;
   using PChar or ShortString parameters. }
 
 uses
-  Windows, // for DLL_PROCESS_ATTACH
+  Windows,
   uEmuShared in 'uEmuShared.pas',
   uEmu in 'uEmu.pas',
   uLog in 'uLog.pas',
@@ -38,7 +38,6 @@ uses
   uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas',
   uKernelThunk in 'uKernelThunk.pas',
-  uBitsOps in 'uBitsOps.pas',
   uTime in 'uTime.pas',
   uTypes in 'uTypes.pas';
 

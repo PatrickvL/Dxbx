@@ -28,7 +28,6 @@ uses
   uConsts in '..\..\..\uConsts.pas',
   uXbe in '..\..\..\uXbe.pas',
   uTypes in '..\..\..\uTypes.pas',
-  uBitsOps in '..\..\..\uBitsOps.pas',
   uTime in '..\..\..\uTime.pas',
   uLog in '..\..\..\uLog.pas',
   uLogConsole in '..\..\..\uLogConsole.pas' {frm_LogConsole},
