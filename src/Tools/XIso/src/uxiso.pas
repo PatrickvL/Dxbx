@@ -97,27 +97,30 @@ implementation
 { SECCION DE LECTURA DESDE IMAGEN }
 
 procedure ExtraerFichero(fichero: string; grabar: string; sector, tamano: Int64);
+const
+  BufferSize = 1024 * 128; // was 2048
 var
   fxiso, fguardar: TFilestream;
   fin: Int64;
-  buffer: array[0..2047] of Byte;
+  buffer: array of Byte;
 begin
+  SetLength(Buffer, BufferSize);
   sector := sector + IMG_SECTOR - 32;
   fxiso := TFilestream.Create(fichero, fmOpenRead or fmShareDenyNone);
   fguardar := TFilestream.Create(grabar, fmCreate or fmShareDenyNone);
   fxiso.Seek(sector * TAM_SECTOR, soBeginning);
-  fin := ((Tamano div 2048) * 2048) + Sector * TAM_SECTOR;
+  fin := ((Tamano div BufferSize) * BufferSize) + Sector * TAM_SECTOR;
 
   while (fxiso.Position < fin) do
   begin
-    fxiso.Read(buffer, sizeof(buffer));
-    fguardar.Write(buffer, sizeof(buffer));
+    fxiso.Read(buffer[0], BufferSize);
+    fguardar.Write(buffer[0], BufferSize);
   end;
 
-  if (tamano mod 2048) <> 0 then
+  if (tamano mod BufferSize) <> 0 then
   begin
-    fxiso.Read(buffer, tamano mod 2048);
-    fguardar.Write(buffer, tamano mod 2048);
+    fxiso.Read(buffer[0], tamano mod BufferSize);
+    fguardar.Write(buffer[0], tamano mod BufferSize);
   end;
 
   fguardar.Free;
