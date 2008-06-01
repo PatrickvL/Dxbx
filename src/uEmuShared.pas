@@ -22,95 +22,165 @@ unit uEmuShared;
 interface
 
 uses
+  // Delphi
+  Windows,
+  SysUtils, // StrCopy
   // Dxbx
   uMutex,
-  uLog;
+  uLog,
+  uDxbxKrnlUtils;
+
+type
+  EmuShared = class(Mutex)
+  protected
+    m_XbePath: array [0..260-1] of AnsiChar;
+  public
+    // Each process needs to call this to initialize shared memory
+    class function Init: Boolean;
+    // Each process needs to call this to cleanup shared memory
+    class procedure Cleanup;
+    // Constructor / Deconstructor
+    constructor Create; override;
+    destructor Destroy; override;
+
+(*
+    // Xbox Video Accessors
+    procedure GetXBVideo(      XBVideo *video);
+    procedure SetXBVideo(const XBVideo *video);
+
+    // Xbox Controller Accessors
+    procedure GetXBController(      XBController *ctrl);
+    procedure SetXBController(const XBController *ctrl);
+*)
+
+    // Xbe Path Accessors
+    procedure GetXbePath(const Path: PChar);
+    procedure SetXbePath(const Path: PChar);
+  end;
 
 procedure SetXbePath(const Path: PChar); cdecl;
-
-procedure Init;
-procedure Cleanup;
 
 implementation
 
 var
-  m_XbePath: string;
-  g_EmuSharedRefCount: Integer;
+  hMapObject: THandle;
+  // Exported Global Shared Memory Pointer
+  g_EmuShared: EmuShared;
+  g_EmuSharedRefCount: Integer; // extern; ??
 
-procedure Init;
+procedure SetXbePath(const Path: PChar);
 begin
-  WriteLog('Init'); // Note : Logging is useless when CreateLogs isn't called yet.
+  g_EmuShared.SetXbePath(Path);
+end;
 
+{ EmuShared }
+
+class function EmuShared.Init: Boolean;
+begin
   // Ensure initialization only occurs once
+  Result := True;
+WriteLog('EmuShared.Init');
 
   // Prevent multiple initializations
-   // if(hMapObject != NULL)
-   //     return;
+  if hMapObject <> 0 then
+    Exit;
 
-    // ******************************************************************
-    // * Create the shared memory "file"
-    // ******************************************************************
-    {
-        hMapObject = CreateFileMapping
-        ( 
-            INVALID_HANDLE_VALUE,   // Paging file
-            NULL,                   // default security attributes
-            PAGE_READWRITE,         // read/write access
-            0,                      // size: high 32 bits
-            sizeof(EmuShared),      // size: low 32 bits
-            "Local\\EmuShared"      // name of map object
-        );
+  // Create the shared memory "file"
+  begin
+    hMapObject := CreateFileMapping(
+          INVALID_HANDLE_VALUE,   // Paging file
+          nil,                    // default security attributes
+          PAGE_READWRITE,         // read/write access
+          0,                      // size: high 32 bits
+          EmuShared.InstanceSize, // size: low 32 bits
+          'Local\\EmuShared'      // name of map object
+      );
 
-        if(hMapObject == NULL)
-			EmuCleanup("Could not map shared memory!");
+    if GetLastError() = ERROR_ALREADY_EXISTS then
+      Result := False;
 
-        if(GetLastError() == ERROR_ALREADY_EXISTS)
-            init = false;
-    }
+    if hMapObject = 0 then
+      CxbxKrnlCleanup('Could not map shared memory!');
 
-    // ******************************************************************
-    // * Memory map this file
-    // ******************************************************************
-    {
-//      g_EmuShared = (EmuShared*.MapViewOfFile
-        (
+  end;
+
+  // Memory map this file
+  begin
+     g_EmuShared := EmuShared(MapViewOfFile(
             hMapObject,     // object to map view of
             FILE_MAP_WRITE, // read/write access
             0,              // high offset:  map from
             0,              // low offset:   beginning
             0               // default: map entire file
-        );
+        ));
 
-        if(g_EmuShared == NULL) 
-			EmuCleanup("Could not map view of shared memory!");
-    }
+    if not Assigned(g_EmuShared) then
+			CxbxKrnlCleanup('Could not map view of shared memory!');
+  end;
 
-    // ******************************************************************
-    // * Executed only on first initialization of shared memory
-    // ******************************************************************
-   { if init then
-       EmuShared();
-                }
+  // Executed only on first initialization of shared memory
+  if Result then
+  begin
+    // WATCH OUT: Dirty trick to 'create' a fixed instance in memory :
+    ZeroMemory(@g_EmuShared, EmuShared.InstanceSize); // clear memory
+    PPointer(g_EmuShared)^ := EmuShared; // assign type
+    g_EmuShared.Create; // call constructor
+  end;
+
   Inc(g_EmuSharedRefCount);
 end;
 
-procedure Cleanup;
+class procedure EmuShared.Cleanup;
 begin
-  WriteLog('EmuSharedCleanup');
+WriteLog('EmuShared.Cleanup');
   Dec(g_EmuSharedRefCount);
 
-  (*if(g_EmuSharedRefCount = 0)
-    EmuShared();
+  if g_EmuSharedRefCount = 0 then
+  begin
+    g_EmuShared.Free;
 
-  UnmapViewOfFile(g_EmuShared);*)
+    UnmapViewOfFile(g_EmuShared);
+    g_EmuShared := nil;
+  end;
+
   CloseLogs;
 end;
 
-procedure SetXbePath(const Path: PChar);
+constructor EmuShared.Create;
+begin
+  inherited Create;
+//  m_XBController.Load('Software\Cxbx\XBController');
+//  m_XBVideo.Load('Software\Cxbx\XBVideo');
+end;
+
+destructor EmuShared.Destroy;
+begin
+//  m_XBController.Save('Software\Cxbx\XBController');
+//  m_XBVideo.Save('Software\Cxbx\XBVideo');
+  inherited Destroy;
+end;
+
+// Xbox Video Accessors
+//procedure EmuShared.GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
+//procedure EmuShared.SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
+
+// Xbox Controller Accessors
+//procedure EmuShared.GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
+//procedure EmuShared.SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+
+procedure EmuShared.GetXbePath(const Path: PChar);
 begin
   Lock();
-  WriteLog('Emu: SetXbePath -  ' + Path);
-  m_XbePath := Path;
+WriteLog('EmuShared.SetXbePath -  ' + Path);
+  StrCopy(path, m_XbePath);
+  Unlock();
+end;
+
+procedure EmuShared.SetXbePath(const Path: PChar);
+begin
+  Lock();
+WriteLog('EmuShared.SetXbePath -  ' + Path);
+  StrCopy(m_XbePath, path);
   Unlock();
 end;
 

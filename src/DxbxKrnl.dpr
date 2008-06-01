@@ -39,7 +39,8 @@ uses
   uMutex in 'uMutex.pas',
   uKernelThunk in 'uKernelThunk.pas',
   uTime in 'uTime.pas',
-  uTypes in 'uTypes.pas';
+  uTypes in 'uTypes.pas',
+  uDxbxKrnlUtils in 'DxbxKrnl\uDxbxKrnlUtils.pas';
 
 {$R *.res}   
 
@@ -61,13 +62,16 @@ exports
 procedure DllMain(Reason: Integer);
 begin
   if Reason = DLL_PROCESS_ATTACH then
-    Init
+    EmuShared.Init
   else
     if Reason = DLL_PROCESS_DETACH then
-      Cleanup;
+      EmuShared.Cleanup;
 end;
 
 begin
+SetLogMode(DM_CONSOLE);
+CreateLogs(ltKernel);
+
   DllProc := DllMain;
   DllProc(DLL_PROCESS_ATTACH);
 end.

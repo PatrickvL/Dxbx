@@ -217,7 +217,7 @@ function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
-Function OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String ) : Boolean;
+Function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
 procedure XbeLoaded;
 procedure LoadLogo;
 
@@ -263,7 +263,7 @@ begin
   WriteLog(Format('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end;
 
-function OpenXbe(aFileName: string; var aXbe : TXbe; Var aExeFilename, aXbeFilename : String ) : Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
 begin
   Result := False;
   if Assigned(aXbe) or not (FileExists(aFileName)) then

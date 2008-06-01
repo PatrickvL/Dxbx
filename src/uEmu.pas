@@ -31,7 +31,8 @@ uses
   uTypes,
   uLog,
   uXbe,
-  uEmuFS;
+  uEmuFS,
+  uDxbxKrnlUtils;
 
 type
   TEntryProc = procedure();
@@ -52,9 +53,9 @@ procedure CxbxKrnlNoFunc; cdecl;
 
 (*
 procedure EmuPanic; export;
-function EmuVerifyVersion( const szVersion : string ) : boolean; export;
-procedure EmuCleanup ( szErrorMessage : String ); export;
-procedure EmuCleanThread; export;   *)
+function EmuVerifyVersion(const szVersion: string ): Boolean; export;
+procedure EmuCleanThread; export;
+*)
 
 implementation
 
@@ -82,6 +83,8 @@ var
   old_protection: DWord;
   MemXbeHeader: P_XBE_HEADER;
 begin
+//  EmuSwapFS();   // Win2k/XP FS
+
   // debug console allocation (if configured)
   SetLogMode(DbgMode);
   CreateLogs(ltKernel); // Initialize logging interface
@@ -148,7 +151,7 @@ WriteLog('<VirtualProtect');
   g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
         if(g_hCurDir == INVALID_HANDLE_VALUE)
-   EmuCleanup("Could not map D:\\\n");
+   CxbxKrnlCleanup("Could not map D:\\\n");
 
 
  // Initialize T:\ and U:\ directories
@@ -191,7 +194,7 @@ WriteLog('<VirtualProtect');
             g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
             if(g_hTDrive == INVALID_HANDLE_VALUE)
-                EmuCleanup("Could not map T:\\\n");
+                CxbxKrnlCleanup("Could not map T:\\\n");
 
 
         // Create UData Directory
@@ -207,7 +210,7 @@ WriteLog('<VirtualProtect');
             g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
             if(g_hUDrive == INVALID_HANDLE_VALUE)
-                EmuCleanup("Could not map U:\\\n");
+                CxbxKrnlCleanup("Could not map U:\\\n");
 
 
         // Create ZData Directory
@@ -225,7 +228,7 @@ WriteLog('<VirtualProtect');
             g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
             if(g_hUDrive == INVALID_HANDLE_VALUE)
-                EmuCleanup("Could not map Z:\\\n");
+                CxbxKrnlCleanup("Could not map Z:\\\n");
 
 
 
@@ -441,7 +444,10 @@ WriteLog('<VirtualProtect');
     EmuCleanThread();
 
     return;
-}               *)
+}
+*)
+
+//  EmuSwapFS();   // XBox FS
 end;
 
 procedure EmuCleanThread;
@@ -454,57 +460,10 @@ begin
   TerminateThread(GetCurrentThread(), 0);
 end;
 
-procedure EmuCleanup(szErrorMessage: string);
-begin
-  WriteLog('EmuCleanup : Recieved Fatal Message ->'#13#13 + szErrorMessage);
-
-  // Print out ErrorMessage (if exists)
-(*    if(szErrorMessage != NULL)
-    {
-        char szBuffer1[255];
-        char szBuffer2[255];
-
-        va_list argp;
-
-        sprintf(szBuffer1, "Emu (0x%X): Recieved Fatal Message -> \n\n", GetCurrentThreadId());
-
-        va_start(argp, szErrorMessage);
-
-        vsprintf(szBuffer2, szErrorMessage, argp);
-
-        va_end(argp);
-
-        strcat(szBuffer1, szBuffer2);
-
-        printf("%s\n", szBuffer1);
-
-        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
-    }
-
-    printf("CxbxKrnl: Terminating Process\n");
-    fflush(stdout);
-
-    // ******************************************************************
-    // * Cleanup debug output
-    // ******************************************************************
-    {
-        FreeConsole();
-
-        char buffer[16];
-
-        if(GetConsoleTitle(buffer, 16) != NULL)
-            freopen("nul", "w", stdout);
-    }
-
-    TerminateProcess(GetCurrentProcess(), 0);
-
-    return;  *)
-end;
-
 procedure EmuXRefFailure;
 begin
   EmuSwapFS();    // Win2k/XP FS
-  EmuCleanup('XRef-only function body reached. Fatal Error.');
+  CxbxKrnlCleanup('XRef-only function body reached. Fatal Error.');
 end;
 
 
@@ -529,7 +488,7 @@ begin
 
   WriteLog('Emu: EmuPanic');
 
-  EmuCleanup('Kernel Panic!');
+  CxbxKrnlCleanup('Kernel Panic!');
 
   EmuSwapFS(); // XBox FS
 end;
