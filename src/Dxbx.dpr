@@ -33,7 +33,6 @@ uses
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uTime in 'uTime.pas',
-  uBitsOps in 'uBitsOps.pas',
   uWindows in 'uWindows.pas',
   uTypes in 'uTypes.pas',
   uDxbxXml in 'uDxbxXml.pas' {DxbxXml: TDataModule};

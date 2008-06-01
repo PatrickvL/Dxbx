@@ -32,11 +32,28 @@ uses
   // Dxbx
   uConsts,
   uTypes,
-  uBitsOps,
   uTime,
   uLog;
 
 
+const
+  XBE_INIT_FLAG_MountUtilityDrive  = $00000001;
+  XBE_INIT_FLAG_FormatUtilityDrive = $00000002;
+  XBE_INIT_FLAG_Limit64MB          = $00000004;
+  XBE_INIT_FLAG_DontSetupHarddisk  = $00000008;
+
+  XBE_SECTIONHEADER_FLAG_Writable     = $00000001;
+  XBE_SECTIONHEADER_FLAG_Preload      = $00000002;
+  XBE_SECTIONHEADER_FLAG_Executable   = $00000004;
+  XBE_SECTIONHEADER_FLAG_InsertedFile = $00000008;
+  XBE_SECTIONHEADER_FLAG_HeadPageRO   = $00000010;
+  XBE_SECTIONHEADER_FLAG_TailPageRO   = $00000020;
+
+  XBE_LIBRARYVERSION_FLAG_ApprovedNo       = $00;
+  XBE_LIBRARYVERSION_FLAG_ApprovedPossibly = $20;
+  XBE_LIBRARYVERSION_FLAG_ApprovedYes      = $40;
+  XBE_LIBRARYVERSION_FLAG_ApprovedMask     = $60;
+  XBE_LIBRARYVERSION_FLAG_DebugBuild       = $80;
 
 type
   TLogType = (ltLog, ltFile);
@@ -55,19 +72,6 @@ type
     dwSectionHeadersAddr: DWord; // 0x0120 - section headers address
 
     dwInitFlags: array[0..3] of Byte; // 0x0124 - initialization flags
-
-            //struct InitFlags                       // 0x0124 - initialization flags
-            {
-                uint32 bMountUtilityDrive   : 1;     // mount utility drive flag
-                uint32 bFormatUtilityDrive  : 1;     // format utility drive flag
-                uint32 bLimit64MB           : 1;     // limit development kit run time memory to 64mb flag
-                uint32 bDontSetupHarddisk   : 1;     // don't setup hard disk flag
-                uint32 Unused               : 4;     // unused (or unknown)
-                uint32 Unused_b1            : 8;     // unused (or unknown)
-                uint32 Unused_b2            : 8;     // unused (or unknown)
-                uint32 Unused_b3            : 8;     // unused (or unknown)
-            }
-            //dwInitFlags;
 
     dwEntryAddr: DWord; // 0x0128 - entry point address
     dwTLSAddr: DWord; // 0x012C - thread local storage directory address
@@ -112,23 +116,6 @@ type
 
 
   _XBE_SECTIONHEADER = packed record
-
-     { struct _Flags
-            {
-                uint32 bWritable        : 1;       // writable flag
-                uint32 bPreload         : 1;       // preload flag
-                uint32 bExecutable      : 1;       // executable flag
-                uint32 bInsertedFile    : 1;       // inserted file flag
-                uint32 bHeadPageRO      : 1;       // head page read only flag
-                uint32 bTailPageRO      : 1;       // tail page read only flag
-                uint32 Unused_a1        : 1;       // unused (or unknown)
-                uint32 Unused_a2        : 1;       // unused (or unknown)
-                uint32 Unused_b1        : 8;       // unused (or unknown)
-                uint32 Unused_b2        : 8;       // unused (or unknown)
-                uint32 Unused_b3        : 8;       // unused (or unknown)
-            }
-           // dwFlags;
-
     dwFlags: array[0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
     dwVirtualSize: DWord; // virtual size
@@ -617,16 +604,16 @@ begin
   TmpStr := Format('Init Flags                       : 0x%.2x%.2x%.2x%.2x ', [m_Header.dwInitFlags[3], m_Header.dwInitFlags[2], m_Header.dwInitFlags[1], m_Header.dwInitFlags[0]]);
   Flag := Ord(m_Header.dwInitFlags[0]);
 
-  if GetBitEn(Flag, 0) > 0 then
+  if (Flag and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
     TmpStr := TmpStr + '[Mount Utility Drive] ';
 
-  if GetBitEn(Flag, 1) > 0 then
+  if (Flag and XBE_INIT_FLAG_FormatUtilityDrive) > 0 then
     TmpStr := TmpStr + '[Format Utility Drive] ';
 
-  if GetBitEn(Flag, 2) > 0 then
+  if (Flag and XBE_INIT_FLAG_Limit64MB) > 0 then
     TmpStr := TmpStr + '[Limit Devkit Run Time Memory to 64MB] ';
 
-  if GetBitEn(Flag, 2) > 0 then
+  if (Flag and XBE_INIT_FLAG_DontSetupHarddisk) > 0 then
     TmpStr := TmpStr + '[Setup Harddisk] ';
 
   _LogEx(TmpStr);
@@ -769,22 +756,22 @@ begin
     Flag := Ord(m_SectionHeader[lIndex].dwFlags[0]);
 
     TmpStr := TmpStr + ' '; // Insert open space
-    if GetBitEn(Flag, 0) > 0 then
+    if (Flag and XBE_SECTIONHEADER_FLAG_Writable) > 0 then
       TmpStr := TmpStr + '(Writable) ';
 
-    if GetBitEn(Flag, 1) > 0 then
+    if (Flag and XBE_SECTIONHEADER_FLAG_Preload) > 0 then
       TmpStr := TmpStr + '(Preload) ';
 
-    if GetBitEn(Flag, 2) > 0 then
+    if (Flag and XBE_SECTIONHEADER_FLAG_Executable) > 0 then
       TmpStr := TmpStr + '(Executable) ';
 
-    if GetBitEn(Flag, 3) > 0 then
+    if (Flag and XBE_SECTIONHEADER_FLAG_InsertedFile) > 0 then
       TmpStr := TmpStr + '(Inserted File) ';
 
-    if GetBitEn(Flag, 4) > 0 then
+    if (Flag and XBE_SECTIONHEADER_FLAG_HeadPageRO) > 0 then
       TmpStr := TmpStr + '(Head Page RO) ';
 
-    if GetBitEn(Flag, 5) > 0 then
+    if (Flag and XBE_SECTIONHEADER_FLAG_TailPageRO) > 0 then
       TmpStr := TmpStr + '(Tail Page RO) ';
 
     _LogEx(TmpStr);
@@ -830,32 +817,23 @@ begin
 
       QVersion :=  Ord(m_LibraryVersion[lIndex].dwFlags[0])
                + ((Ord(m_LibraryVersion[lIndex].dwFlags[1]) and 31) shl 8);
-(*
-      Flag := Ord(m_LibraryVersion[lIndex].dwFlags[0]);
-      for bIndex := 0 to 7 do
-        QVersion := QVersion + GetBitEn(Flag, bIndex) * Round(Power(2, bIndex));
 
-      Flag := Ord(m_LibraryVersion[lIndex].dwFlags[1]);
-      for bIndex := 0 to 4 do
-        QVersion := QVersion + GetBitEn(Flag, BIndex) * Round(Power(2, bIndex + 8));
-
-     //end of bits maths
-*)
+      Flag := m_LibraryVersion[lIndex].dwFlags[1] and (not 31);
 
       TmpStr := Format('Flags                            : QFEVersion : 0x%.4x, ', [QVersion]);
 
-      if GetBitEn(Flag, 7) > 0 then
+      if (Flag and XBE_LIBRARYVERSION_FLAG_DebugBuild) > 0 then
         TmpStr := TmpStr + 'Debug, '
       else
         TmpStr := TmpStr + 'Retail, ';
 
-      if (GetBitEn(Flag, 5) = 0) and (GetBitEn(Flag, 6) = 0) then
-        TmpStr := TmpStr + 'Unapproved'
+      if (Flag and XBE_LIBRARYVERSION_FLAG_ApprovedYes) > 0 then
+        TmpStr := TmpStr + 'Approved'
       else
-        if (GetBitEn(Flag, 5) > 0) and (GetBitEn(Flag, 6) = 0) then
+        if (Flag and XBE_LIBRARYVERSION_FLAG_ApprovedPossibly) > 0 then
           TmpStr := TmpStr + 'Possibly Approved'
         else
-          TmpStr := TmpStr + 'Approved';
+          TmpStr := TmpStr + 'Unapproved';
 
       _LogEx(TmpStr);
     end; // for lIndex
