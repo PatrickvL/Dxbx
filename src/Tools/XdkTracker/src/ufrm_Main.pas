@@ -6,8 +6,6 @@ uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, Menus, ShellApi, ExtCtrls, JPeg, xmldom, XMLIntf, msxmldom, XMLDoc,
-  // AlphaSkin
-  sStatusBar, sSkinProvider, sSkinManager,
   // Dxbx
   uData,
   u_xdkversions,
@@ -44,13 +42,10 @@ type
     ImportDialog: TOpenDialog;
     ExportDialog: TSaveDialog;
     XMLDocument: TXMLDocument;
-    sSkinManager1: TsSkinManager;
-    sSkinProvider1: TsSkinProvider;
-    StatusBar1: TsStatusBar;
     N1: TMenuItem;
     GetXDKInfofromXbe1: TMenuItem;
     XbeOpenDialog: TOpenDialog;
-    procedure FormCreate(Sender: TObject);
+    StatusBar1: TStatusBar;
     procedure Viewxdkversion2Click(Sender: TObject);
     procedure About1Click(Sender: TObject);
     procedure VisitShadowTjwebsite1Click(Sender: TObject);
@@ -231,14 +226,6 @@ begin
   if Parameter = '/XBEDUMP' then
     ImportXbeDump;
 end; // TfrmMain.Create
-
-procedure TfrmXdkTracker.FormCreate(Sender: TObject);
-begin
-  if IsWindowsVista then
-    sSkinManager1.SkinningRules := [srStdForms, srThirdParty]
-  else
-    sSkinManager1.SkinningRules := [srStdForms, srStdDialogs, srThirdParty];
-end;
 
 //------------------------------------------------------------------------------
 

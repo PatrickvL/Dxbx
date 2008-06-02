@@ -26,7 +26,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Tabs,
   // AlphaSkin
-  sTabControl;
+  ComCtrls;
 
 type
   Tfrm_ControllerConfig = class(TForm)
@@ -64,7 +64,7 @@ type
     btn_SaveConfig: TButton;
     Bevel1: TBevel;
     Label1: TLabel;
-    sTabControl1: TsTabControl;
+    sTabControl1: TTabControl;
     chkForceFeedback: TCheckBox;
   end;
 

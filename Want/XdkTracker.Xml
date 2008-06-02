@@ -7,7 +7,6 @@
   <property name="dcu" value="${basedir}/dcu" />
   <property name="lib"       value="${basedir}/Libraries" />
 
-  <property name="alphaskins"     value="${lib}/Alphaskins" />
 
   <target name="prepare" >
   </target>
@@ -20,7 +19,6 @@
     <dcc basedir="${src}" source="XdkTracker.dpr">
       <unitpath>
         <include name="${src}" />
-        <include name="${alphaskins}" />
       </unitpath>
     </dcc>
   </target>
