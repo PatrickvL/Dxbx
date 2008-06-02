@@ -28,8 +28,6 @@ uses
   Controls, ComCtrls, ExtCtrls,
   Graphics, GIFImg, JPeg,
   ShellAPI, IniFiles,
-  // AlphaSkin
-  sSkinProvider, sSkinManager, sStatusBar,
   // Dxbx
   uTypes,
   uConsts,
@@ -129,16 +127,14 @@ type
     N8: TMenuItem;
     XDKTracker2: TMenuItem;
     actXdkTrackerXbeInfo: TAction;
-    sSkinManager1: TsSkinManager;
-    sSkinProvider1: TsSkinProvider;
     imgSignature1: TImage;
     imgSignature2: TImage;
     imgSignature3: TImage;
     imgSignature4: TImage;
-    StatusBar: TsStatusBar;
     N9: TMenuItem;
     UsesDlltype1: TMenuItem;
     imgSignature5: TImage;
+    StatusBar: TStatusBar;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -612,11 +608,6 @@ begin
 
   ReadSettingsIni;
   CreateLogs(ltGui);
-
-  if IsWindowsVista then
-    sSkinManager1.SkinningRules := [srStdForms, srThirdParty]
-  else
-    sSkinManager1.SkinningRules := [srStdForms, srStdDialogs, srThirdParty];
 end;
 
 //------------------------------------------------------------------------------

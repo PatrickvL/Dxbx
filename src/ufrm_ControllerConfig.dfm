@@ -27,14 +27,13 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     Height = 13
     Caption = 'Please choose one of the controller components from above...'
   end
-  object sTabControl1: TsTabControl
+  object sTabControl1: TTabControl
     Left = 8
     Top = 8
     Width = 529
     Height = 233
-    SkinData.SkinSection = 'PAGECONTROL'
-    TabOrder = 8
     MultiLine = True
+    TabOrder = 8
     Tabs.Strings = (
       'Controller 1'
       'Controller 2'
