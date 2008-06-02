@@ -193,6 +193,11 @@ type
     function StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 
     function SendCommandToXdkTracker: Boolean;
+
+    procedure ConvertXbeToExe ( aFileName : String );
+
+    procedure WMDROPFILES(var Msg: TMessage);
+    procedure LBWindowProc(var Message: TMessage);
   public
     FApplicationDir: string;
 
@@ -202,6 +207,8 @@ type
 
 var
   frm_Main: Tfrm_Main;
+  OldLBWindowProc: TWndMethod;
+
 
 implementation
 
@@ -441,7 +448,30 @@ begin
       MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
     end;
   end;
-end; // Tfrm_Main.ConvertToExe
+end;
+
+procedure Tfrm_Main.ConvertXbeToExe(aFileName: String);
+begin
+  if Assigned(m_Xbe) then begin
+    CloseXbe();
+  end;
+
+  if OpenXbe(aFileName, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
+    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+    RecentXbeAdd(aFileName);
+    Logbitmap1.Enabled := True;
+    Dumpxbeinfoto1.Enabled := True;
+    Exportexe1.Enabled := True;
+    CloseXbe1.Enabled := True;
+  end
+  else begin
+    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+  end;
+
+  ConvertToExe ( ChangeFileExt(aFileName, '.exe'), False );
+end;
+
+// Tfrm_Main.ConvertToExe
 
 //------------------------------------------------------------------------------
 
@@ -567,6 +597,10 @@ procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   u: TUseDLL;
 begin
+  OldLBWindowProc := frm_Main.WindowProc; // store defualt WindowProc
+  frm_Main.WindowProc := LBWindowProc; // replace default WindowProc
+  DragAcceptFiles(frm_Main.Handle, True); // now ListBox1 accept dropped files
+
   m_AutoConvertToExe := CONVERT_TO_WINDOWSTEMP;
   FApplicationDir := ExtractFilePath(Application.ExeName);
 
@@ -601,6 +635,14 @@ begin
     FreeAndNil({var}m_Xbe);
   end;
 
+end;
+
+procedure Tfrm_Main.LBWindowProc(var Message: TMessage);
+begin
+ if Message.Msg = WM_DROPFILES then
+    WMDROPFILES(Message); // handle WM_DROPFILES message
+  OldLBWindowProc(Message);
+  // call default ListBox1 WindowProc method to handle all other messages
 end;
 
 //------------------------------------------------------------------------------
@@ -708,6 +750,25 @@ begin
 end; // Tfrm_Main.ReadSettingsIni
 
 //------------------------------------------------------------------------------
+
+procedure Tfrm_Main.WMDROPFILES(var Msg: TMessage);
+var
+  pcFileName: PChar;
+  i, iSize, iFileCount: integer;
+begin
+  pcFileName := ''; // to avoid compiler warning message
+  iFileCount := DragQueryFile(Msg.wParam, $FFFFFFFF, pcFileName, 255);
+  for i := 0 to iFileCount - 1 do
+  begin
+    iSize := DragQueryFile(Msg.wParam, i, nil, 0) + 1;
+    pcFileName := StrAlloc(iSize);
+    DragQueryFile(Msg.wParam, i, pcFileName, iSize);
+    if FileExists(pcFileName) then
+      ConvertXbeToExe (pcFileName); 
+    StrDispose(pcFileName);
+  end;
+  DragFinish(Msg.wParam);
+end;
 
 procedure Tfrm_Main.WriteSettingsIni;
 var
@@ -895,6 +956,7 @@ end; // Tfrm_Main.actCloseExecute
 
 destructor Tfrm_Main.Destroy;
 begin
+  frm_Main.WindowProc := OldLBWindowProc;
   WriteSettingsIni;
   inherited Destroy;
 end; // Tfrm_Main.Create

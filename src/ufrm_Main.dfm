@@ -1436,9 +1436,7 @@ object frm_Main: Tfrm_Main
       EC5570C55B18AB658D3A1C5503784107C71541DB5CDC23FC113B0FF2549FD431
       54E61BEBA2056097FE01BFA62A8E86E2461BC6E3E6A462AAFCCFF29FBB157FFF
       D9}
-    ExplicitTop = -6
-    ExplicitWidth = 499
-    ExplicitHeight = 356
+    ExplicitWidth = 45
   end
   object imgSignature1: TImage
     Left = 312
