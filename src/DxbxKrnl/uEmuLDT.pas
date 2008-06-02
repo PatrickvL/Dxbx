@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
-unit uDxbxKrnlUtils;
+unit uEmuLDT;
 
 {$INCLUDE ..\Dxbx.inc}
 
@@ -25,37 +25,27 @@ uses
   // Delphi
   Windows,
   // Dxbx
-  uLog; // for WriteLog
-
-procedure CxbxKrnlCleanup(const szErrorMessage: string);
+  uConsts;
+  
+procedure EmuInitLDT;
 
 implementation
 
-procedure CxbxKrnlCleanup(const szErrorMessage: string);
 var
-  szBuffer1: string;
+  // Table of free LDT entries
+  FreeLDTEntries : array [00..MAXIMUM_XBOX_THREADS-1] of DWord;
+
+  // Critical section lock
+  EmuLDTLock: _RTL_CRITICAL_SECTION;
+
+procedure EmuInitLDT;
+var
+  v: Integer;
 begin
-  // Print out ErrorMessage (if exists)
-  if szErrorMessage <> '' then
-  begin
-    szBuffer1 := {Format}'CxbxKrnlCleanup : Recieved Fatal Message ->'#13#13 + szErrorMessage;
-    WriteLog(szBuffer1);
-    MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONEXCLAMATION);
-  end;
+  InitializeCriticalSection(EmuLDTLock);
 
-  WriteLog('DxbxKrnl: Terminating Process');
-//  FFlush(stdout);
-
-  // Cleanup debug output
-  CloseLogs();// FreeConsole();
-
-//        char buffer[16];
-//        if(GetConsoleTitle(buffer, 16) != NULL)
-//            freopen("nul", "w", stdout);
-
-  TerminateProcess(GetCurrentProcess(), 0);
-
-  Exit;
+  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
+    FreeLDTEntries[v] := DWord((v * 8) + 7 + 8);
 end;
 
 end.

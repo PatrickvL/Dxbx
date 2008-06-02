@@ -23,7 +23,9 @@ interface
 
 uses
   // Delphi
-  Windows;
+  Windows,
+  // Dxbx
+  uLog;
 
 type
   Mutex = class(TObject)
@@ -50,15 +52,17 @@ end;
 
 procedure Mutex.Lock;
 begin
+//WriteLog('Mutex.Lock>');
   while True do
   begin
     // Grab the lock, letting us look at the variables
-    while InterlockedCompareExchange(m_MutexLock, 1, 0) <> 0 do
+    while InterlockedCompareExchange(m_MutexLock, {Exchange}1, {Comperand}0) <> 0 do
       SwitchToThread;
 
     // Are we the the new owner?
-    if m_OwnerProcess <> 0 then
+    if m_OwnerProcess = 0 then
     begin
+//WriteLog('Mutex.Lock claimed');
       // Take ownership
       InterlockedExchange(m_OwnerProcess, GetCurrentProcessId());
       InterlockedExchange(m_OwnerThread, GetCurrentThreadId());
@@ -84,31 +88,37 @@ begin
       Continue;
     end;
 
+//WriteLog('Mutex.Lock Already locked - incrementing LockCount');
+
     // The mutex was already locked, but by us.  Just increment
     // the lock count and unlock the mutex itself.
-    InterlockedIncrement(&m_LockCount);
-    InterlockedExchange(&m_MutexLock, 0);
+    InterlockedIncrement(m_LockCount);
+    InterlockedExchange(m_MutexLock, 0);
 
     Exit;
   end;
+//WriteLog('Mutex.Lock<');
 end;
 
 procedure Mutex.Unlock;
 begin
+//WriteLog('Mutex.Unlock>');
   // Grab the lock, letting us look at the variables
-  while InterlockedCompareExchange(m_MutexLock, 1, 0) <> 0 do
+  while InterlockedCompareExchange(m_MutexLock, {Exchange}1, {Comperand}0) <> 0 do
     SwitchToThread;
 
   // Decrement the lock count
-  if InterlockedDecrement(m_LockCount) = 0 then
+  if InterlockedDecrement(m_LockCount) <= 0 then
   begin
     // Mark the mutex as now unused
     InterlockedExchange(m_OwnerProcess, 0);
     InterlockedExchange(m_OwnerThread, 0);
+  InterlockedExchange(m_LockCount, 0);
   end;
 
   // Unlock the mutex itself
   InterlockedExchange(m_MutexLock, 0);
+//WriteLog('Mutex.Unlock<');
 end;
 
 end.

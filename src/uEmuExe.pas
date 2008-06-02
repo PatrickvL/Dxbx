@@ -483,7 +483,7 @@ begin
     WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
 
     // TODO : Determine the actual ImageBase of the used DLL :
-    DLLBase := {CurrentDLLBase=}DWord(KrnlHandle) - {LoadTimeDLLBase=DLL.ImageBase=}$10000000;
+    DLLBase := {CurrentDLLBase=}DWord(KrnlHandle) - {LoadTimeDLLBase=DLL.ImageBase=}DLL_IMAGE_BASE;
 
     // Function Pointer
     pEmuInit := GetProcAddress(KrnlHandle, CCXBXKRNLINIT);

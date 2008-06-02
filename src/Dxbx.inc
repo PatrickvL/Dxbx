@@ -41,6 +41,8 @@
 {$WARNINGS ON}            // Generate compiler warning messages
 {$WRITEABLECONST OFF}     // Writeable typed constants (constants may not be changed)
 
+{$DEFINE _DEBUG_TRACE} // Cxbx uses this for extended debugging
+
 {$IFDEF DUNIT}
   // In Unit-test projects, do as much debugging as possible (see below):
   {$DEFINE _DEBUG}

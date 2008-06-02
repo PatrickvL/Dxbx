@@ -105,6 +105,7 @@ end;
 
 procedure CloseLogs;
 begin
+  WriteLog('Stop logging.');
   FreeAndNil({var}frm_LogConsole);
 
   if LogFileOpen then
@@ -137,4 +138,10 @@ begin
   end;
 end;
 
+initialization
+
+finalization
+
+  CloseLogs;
+  
 end.

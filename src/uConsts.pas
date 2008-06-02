@@ -22,6 +22,9 @@ unit uConsts;
 interface
 
 const
+  DLL_IMAGE_BASE = $10000000;
+  MAXIMUM_XBOX_THREADS = 256;
+    
   CCXBXKRNLDLLNAME = 'CxbxKrnl.dll';
   CCXBXDLLNAME = 'Cxbx.dll';
   CDXBXKRNLDLLNAME = 'DxbxKrnl.dll';
