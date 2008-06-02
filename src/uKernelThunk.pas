@@ -27,7 +27,8 @@ uses
   SysUtils, // for IntToStr
   // Dxbx
   uTypes,
-  uLog; // for WriteLog
+  uLog, // WriteLog
+  uEmuFS; // EmuSwapFS
 
 function CxbxKrnl_KernelThunkTable: PKernelThunkTable; cdecl;
 
@@ -35,7 +36,9 @@ implementation
 
 procedure Unimplemented(const aIndex: Word);
 begin
+  EmuSwapFS();    // Win2k/XP FS
   WriteLog('Unimplemented method in kernel thunk table, index 0x' + IntToHex(aIndex, 3));
+  EmuSwapFS();    // Xbox FS
 end;
 
 // These method will at least give us a message saying which indexes aren't implemented :

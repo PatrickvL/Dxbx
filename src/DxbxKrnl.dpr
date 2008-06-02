@@ -29,20 +29,25 @@ library DxbxKrnl;
 
 uses
   Windows,
+  SysUtils,
   uEmuShared in 'uEmuShared.pas',
-  uEmu in 'uEmu.pas',
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
-  uEmuFS in 'uEmuFS.pas',
   uXbe in 'uXbe.pas',
   uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas',
   uKernelThunk in 'uKernelThunk.pas',
   uTime in 'uTime.pas',
   uTypes in 'uTypes.pas',
-  uDxbxKrnlUtils in 'DxbxKrnl\uDxbxKrnlUtils.pas';
+  uDxbxKrnlUtils in 'DxbxKrnl\uDxbxKrnlUtils.pas',
+  uEmuLDT in 'DxbxKrnl\uEmuLDT.pas',
+  uDxbxKrnl in 'DxbxKrnl\uDxbxKrnl.pas',
+  uEmuFS in 'DxbxKrnl\uEmuFS.pas';
 
 {$R *.res}   
+
+// TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
+{$IMAGEBASE $10000000}
 
 exports
   CxbxKrnlInit,
@@ -69,9 +74,6 @@ begin
 end;
 
 begin
-SetLogMode(DM_CONSOLE);
-CreateLogs(ltKernel);
-
   DllProc := DllMain;
   DllProc(DLL_PROCESS_ATTACH);
 end.
