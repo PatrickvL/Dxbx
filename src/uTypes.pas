@@ -42,6 +42,9 @@ type
 
   PDWord = ^DWord;
 
+  UInt32 = Cardinal;
+  UInt16 = Word;
+
 {$IF DECLARED(INT_PTR)}
   IntPtr = INT_PTR;
 {$ELSE}

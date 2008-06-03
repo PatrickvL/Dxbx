@@ -42,7 +42,10 @@ uses
   uDxbxKrnlUtils in 'DxbxKrnl\uDxbxKrnlUtils.pas',
   uEmuLDT in 'DxbxKrnl\uEmuLDT.pas',
   uDxbxKrnl in 'DxbxKrnl\uDxbxKrnl.pas',
-  uEmuFS in 'DxbxKrnl\uEmuFS.pas';
+  uEmuFS in 'DxbxKrnl\uEmuFS.pas',
+  uEmu in 'DxbxKrnl\uEmu.pas',
+  uEmuD3D8 in 'DxbxKrnl\uEmuD3D8.pas',
+  uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas';
 
 {$R *.res}   
 

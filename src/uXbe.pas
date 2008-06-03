@@ -112,6 +112,7 @@ type
     bzSignatureKey: array[0..15] of AnsiChar; // 0x00C0 - signature key
     bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of AnsiChar; // 0x00D0 - alternate signature keys
   end;
+  P_XBE_CERTIFICATE = ^_XBE_CERTIFICATE;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
 
 
