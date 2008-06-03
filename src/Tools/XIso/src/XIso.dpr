@@ -48,6 +48,10 @@ uses
 
 {$R *.res}
 
+// Remove relocation table (generates smaller executables) :
+// (See http://hallvards.blogspot.com/2006/09/hack12-create-smaller-exe-files.html)
+{$SetPEFlags IMAGE_FILE_RELOCS_STRIPPED}
+
 var
   Parameter, CarpetaParametro, ImagenParametro, S: string;
   i, j: Integer;

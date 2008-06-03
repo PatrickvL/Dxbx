@@ -38,14 +38,19 @@ var
 procedure CreateLogs(aLogType: TLogType = ltKernel);
 procedure CloseLogs;
 procedure WriteLog(aText: string);
+procedure DbgPrintf(aStr: string);
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
-
 
 implementation
 
 var
   LogFileOpen: Boolean = False;
   LogFile: TextFile;
+
+procedure DbgPrintf(aStr: string);
+begin
+  WriteLog(aStr);
+end;
 
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 begin

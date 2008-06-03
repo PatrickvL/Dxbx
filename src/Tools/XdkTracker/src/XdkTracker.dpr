@@ -35,6 +35,10 @@ uses
 
 {$R *.res}
 
+// Remove relocation table (generates smaller executables) :
+// (See http://hallvards.blogspot.com/2006/09/hack12-create-smaller-exe-files.html)
+{$SetPEFlags 1} // 1 = Windows.IMAGE_FILE_RELOCS_STRIPPED
+
 begin
   Application.Initialize;
   Application.Title := 'XDK Tracker';

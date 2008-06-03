@@ -120,8 +120,8 @@ begin
 
   // copy global TLS to the current thread
   begin
-    uint32 dwCopySize := pTLS^.dwDataEndAddr - pTLS^.dwDataStartAddr;
-    uint32 dwZeroSize := pTLS^.dwSizeofZeroFill;
+    uint32 dwCopySize := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr;
+    uint32 dwZeroSize := pTLS.dwSizeofZeroFill;
 
     pNewTLS := (uint08)CxbxMalloc(dwCopySize + dwZeroSize + $100 (* + HACK: extra safety padding 0x100* ));
 
@@ -139,7 +139,7 @@ begin
 			DbgPrintf('EmuFS ($ mod X): TLS Data DumpArgs: array of const', GetCurrentThreadId());
             DbgPrintf('EmuFS ($ mod X): $ mod .08X: ', GetCurrentThreadId(), pNewTLS);
 
-			uint32 stop := pTLS^.dwDataEndAddr - pTLS^.dwDataStartAddr + pTLS^.dwSizeofZeroFill;
+			uint32 stop := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill;
 
 			for(uint32 v:=0;v<stop;v++)
 			begin
@@ -190,22 +190,22 @@ begin
   begin
     xboxkrnl.ETHREAD *EThread := (xboxkrnl.ETHREAD)CxbxMalloc(SizeOf(xboxkrnl.ETHREAD));
 
-    EThread^.Tcb.TlsData  := pNewTLS;
-    EThread^.UniqueThread := GetCurrentThreadId();
+    EThread.Tcb.TlsData  := pNewTLS;
+    EThread.UniqueThread := GetCurrentThreadId();
 
-    memcpy(@NewPcr^.NtTib, OrgNtTib, SizeOf(NT_TIB));
+    memcpy(@NewPcr.NtTib, OrgNtTib, SizeOf(NT_TIB));
 
-    NewPcr^.NtTib.Self := @NewPcr^.NtTib;
+    NewPcr.NtTib.Self := @NewPcr.NtTib;
 
-    NewPcr^.PrcbData.CurrentThread := (xboxkrnl.KTHREAD)EThread;
+    NewPcr.PrcbData.CurrentThread := (xboxkrnl.KTHREAD)EThread;
 
-    NewPcr^.Prcb := @NewPcr^.PrcbData;
+    NewPcr.Prcb := @NewPcr.PrcbData;
   end;
 
   // prepare TLS
   begin
     // TLS Index Address := 0
-    *(uint32)pTLS^.dwTLSIndexAddr := 0;
+    *(uint32)pTLS.dwTLSIndexAddr := 0;
 
     // dword @ pTLSData := pTLSData
     if(pNewTLS <> 0) then

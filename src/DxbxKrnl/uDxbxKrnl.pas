@@ -34,11 +34,16 @@ uses
   uXbe,
   uDxbxKrnlUtils,
   uEmuShared,
-  uEmuFS;
+  uEmu,
+  uEmuFS,
+  uEmuD3D8,
+  uHLEIntercept;
 
 type
   TEntryProc = procedure();
   PEntryProc = ^TEntryProc;
+
+function EmuVerifyVersion(const szVersion: string): Boolean; // export;
 
 procedure CxbxKrnlInit(
   hwndParent: THandle;
@@ -51,23 +56,31 @@ procedure CxbxKrnlInit(
   dwXbeHeaderSize: DWord;
   Entry: PEntryProc); cdecl;
 
-procedure CxbxKrnlNoFunc; cdecl;
-
+procedure CxbxKrnlRegisterThread(const hThread: THandle);
+procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
+procedure EmuXRefFailure;
 procedure EmuPanic(); // export;
-function EmuVerifyVersion(const szVersion: string): Boolean; // export;
-procedure EmuCleanThread(); // export;
+procedure CxbxKrnlNoFunc; cdecl;
 
 implementation
 
 var
-  DxbxKrnl_hEmuParent: THandle;
-  DxbxKrnl_TLSData: Pointer;
+  // ! thread local storage
   DxbxKrnl_TLS: P_XBE_TLS;
-//  g_pLibraryVersion: P_XBE_LIBRARYVERSION;
-//  g_szDebugFilename: PChar;
+  // thread local storage data
+  DxbxKrnl_TLSData: Pointer;
+  // xbe header structure
   DxbxKrnl_XbeHeader: P_XBE_HEADER;
-//  g_dwXbeHeaderSize: DWord;
-//  g_Entry: PEntryProc;
+  // parent window handle
+  DxbxKrnl_hEmuParent: THandle;
+
+  // thread handles
+  g_hThreads: array [0..MAXIMUM_XBOX_THREADS - 1] of THandle;
+
+function EmuVerifyVersion(const szVersion: string): Boolean;
+begin
+  Result := (szVersion = _DXBX_VERSION);
+end;
 
 procedure CxbxKrnlInit(
   hwndParent: THandle;
@@ -83,14 +96,15 @@ var
   MemXbeHeader: P_XBE_HEADER;
   old_protection: DWord;
   szBuffer, BasePath: string;
-  g_hCurDir: THandle;
-//  spot, v: Integer;
+  pCertificate: P_XBE_CERTIFICATE;
+  hDupHandle: THandle;
+//  v, r: Integer;
 begin
   // debug console allocation (if configured)
   SetLogMode(DbgMode);
   CreateLogs(ltKernel); // Initialize logging interface
 
-  WriteLog('EmuInit : Dxbx Version ' + _DXBX_VERSION);
+  DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
 
   // update caches
   DxbxKrnl_TLS := pTLS;
@@ -104,23 +118,23 @@ begin
   // debug trace
   begin
 {$IFDEF _DEBUG_TRACE}
-    WriteLog('EmuMain : Debug Trace Enabled.');
+    DbgPrintf('EmuMain : Debug Trace Enabled.');
     
-    WriteLog('EmuMain : 0x' + IntToHex(Integer(@CxbxKrnlInit), 8) + ' : CxbxKrnlInit(');
+    DbgPrintf('EmuMain : 0x' + IntToHex(Integer(@CxbxKrnlInit), 8) + ' : CxbxKrnlInit(');
     // TODO : For some reason, using Format() fails here?
-    WriteLog('  hwndParent       : 0x' + IntToHex(hwndParent, 8));
-    WriteLog('  pTLSData         : 0x' + IntToHex(Integer(pTLSData), 8));
-    WriteLog('  pTLS             : 0x' + IntToHex(Integer(pTLS), 8));
-    WriteLog('  pLibraryVersion  : 0x' + IntToHex(Integer(pLibraryVersion), 8) + ' ("' + PChar(pLibraryVersion) + '")');
-    WriteLog('  DebugConsole     : 0x' + IntToHex(Ord(DbgMode), 8));
-    WriteLog('  DebugFilename    : 0x' + IntToHex(Integer(szDebugFilename), 8) + ' ("' + szDebugFilename + '")');
-    WriteLog('  pXBEHeader       : 0x' + IntToHex(Integer(pXbeHeader), 8));
-    WriteLog('  dwXBEHeaderSize  : 0x' + IntToHex(dwXbeHeaderSize, 8));
-    WriteLog('  Entry            : 0x' + IntToHex(Integer(Entry), 8));
-    WriteLog(')');
+    DbgPrintf('  hwndParent       : 0x' + IntToHex(hwndParent, 8));
+    DbgPrintf('  pTLSData         : 0x' + IntToHex(Integer(pTLSData), 8));
+    DbgPrintf('  pTLS             : 0x' + IntToHex(Integer(pTLS), 8));
+    DbgPrintf('  pLibraryVersion  : 0x' + IntToHex(Integer(pLibraryVersion), 8) + ' ("' + PChar(pLibraryVersion) + '")');
+    DbgPrintf('  DebugConsole     : 0x' + IntToHex(Ord(DbgMode), 8));
+    DbgPrintf('  DebugFilename    : 0x' + IntToHex(Integer(szDebugFilename), 8) + ' ("' + szDebugFilename + '")');
+    DbgPrintf('  pXBEHeader       : 0x' + IntToHex(Integer(pXbeHeader), 8));
+    DbgPrintf('  dwXBEHeaderSize  : 0x' + IntToHex(dwXbeHeaderSize, 8));
+    DbgPrintf('  Entry            : 0x' + IntToHex(Integer(Entry), 8));
+    DbgPrintf(')');
 
 {$ELSE}
-    WriteLog('EmuMain : Debug Trace Disabled.');
+    DbgPrintf('EmuMain : Debug Trace Disabled.');
 {$ENDIF}
   end;
 
@@ -151,11 +165,13 @@ begin
     SetLength(szBuffer, GetCurrentDirectory(MAX_PATH, @(szBuffer[1])));
   end;
 
+  g_strCurDrive := szBuffer;
+
   g_hCurDir := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
   if g_hCurDir = INVALID_HANDLE_VALUE then
     CxbxKrnlCleanup('Could not map D:\');
 
-  WriteLog('EmuMain : CurDir = ' + szBuffer);
+  DbgPrintf('EmuMain : CurDir = ' + szBuffer);
 
   // initialize EmuDisk
   begin
@@ -167,70 +183,61 @@ begin
     CreateDirectory(PAnsiChar(BasePath), nil);
 
     // create EmuDisk directory
-    szBuffer := BasePath +'\EmuDisk';
+    szBuffer := BasePath + '\EmuDisk';
     CreateDirectory(PAnsiChar(szBuffer), nil);
 
     // create T:\ directory
     begin
-      szBuffer := BasePath +'\EmuDisk\T';
-      CreateDirectory(PAnsiChar(szBuffer), nil);
-(*
-      Xbe::Certificate *pCertificate = (Xbe::Certificate* )pXbeHeader->dwCertificateAddr;
-      sprintf(&szBuffer[spot+10], '\\%08x', pCertificate->dwTitleId);
-
+      szBuffer := BasePath + '\EmuDisk\T';
       CreateDirectory(PAnsiChar(szBuffer), nil);
 
-      g_strTDrive = strdup(szBuffer);
+      pCertificate := P_XBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
+      szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
+      CreateDirectory(PAnsiChar(szBuffer), nil);
 
-      g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+      g_strTDrive := szBuffer;
+      g_hTDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
       if g_hTDrive = INVALID_HANDLE_VALUE then
         CxbxKrnlCleanup('Could not map T:\\\n');
 
-      DbgPrintf('EmuMain (0x%X): T Data := %s\n', GetCurrentThreadId(), szBuffer);
-*)
+      DbgPrintf('EmuMain : T Data := ' + g_strTDrive);
     end;
 
     // create U:\ directory
     begin
-      szBuffer := BasePath +'\EmuDisk\U';
-      CreateDirectory(PAnsiChar(szBuffer), nil);
-(*
-      sprintf(&szBuffer[spot+10], "\\%08x", pCertificate->dwTitleId);
-
+      szBuffer := BasePath + '\EmuDisk\U';
       CreateDirectory(PAnsiChar(szBuffer), nil);
 
-      g_strUDrive = strdup(szBuffer);
+      szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
+      CreateDirectory(PAnsiChar(szBuffer), nil);
 
-      g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+      g_strUDrive := szBuffer;
+      g_hUDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
       if g_hUDrive = INVALID_HANDLE_VALUE then
-        CxbxKrnlCleanup('Could not map U:\\\n');
+        CxbxKrnlCleanup('Could not map U:\');
 
-      DbgPrintf('EmuMain (0x%X): U Data := %s\n', GetCurrentThreadId(), szBuffer);
-*)
+      DbgPrintf('EmuMain : U Data := ' + g_strUDrive);
     end;
 
     // create Z:\ directory
     begin
-      szBuffer := BasePath +'\EmuDisk\Z';
+      szBuffer := BasePath + '\EmuDisk\Z';
       CreateDirectory(PAnsiChar(szBuffer), nil);
-(*
-      //* is it necessary to make this directory title unique?
-      sprintf(&szBuffer[spot+10], '\\%08x', pCertificate->dwTitleId);
 
+      //(* is it necessary to make this directory title unique?
+      szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
       CreateDirectory(PAnsiChar(szBuffer), nil);
-      //*/
+      //*)
 
-      g_strZDrive = strdup(szBuffer);
-
-      g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+      g_strZDrive := szBuffer;
+      g_hZDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
       if g_hUDrive = INVALID_HANDLE_VALUE then
-        CxbxKrnlCleanup("Could not map Z:\\\n");
+        CxbxKrnlCleanup('Could not map Z:\');
 
-      DbgPrintf('EmuMain (0x%X): Z Data := %s\n', GetCurrentThreadId(), szBuffer);
-*)
+      DbgPrintf('EmuMain : Z Data := ' + g_strZDrive);
     end;
 
   end;
@@ -242,24 +249,22 @@ begin
     EmuGenerateFS(pTLS, pTLSData);
   end;
 
-(*
   // duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
   begin
-    HANDLE hDupHandle = NULL;
+    hDupHandle := 0;
 
-    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
     CxbxKrnlRegisterThread(hDupHandle);
   end;
 
-  DbgPrintf('EmuMain (0x%X): Initializing Direct3D.', GetCurrentThreadId());
+  DbgPrintf('EmuMain : Initializing Direct3D.');
 
-  XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+  XTL__EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
-  DbgPrintf('EmuMain (0x%X): Initial thread starting.\n', GetCurrentThreadId());
-*)
+  DbgPrintf('EmuMain : Initial thread starting.');
 
   // Xbe entry point
   try
@@ -271,23 +276,21 @@ begin
     //_asm int 3;
 
     (*
-    for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
-    {
-        bool bExclude = false;
-        for(int r=0;r<sizeof(funcExclude)/sizeof(uint32);r++)
-        {
-            if(funcAddr[v] == funcExclude[r])
-            {
-                bExclude = true;
+    for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do
+    begin
+        bool bExclude = False;
+        for r := 0 to (SizeOf(funcExclude / SizeOf(UInt32)) - 1 do
+        begin
+            if funcAddr[v] = funcExclude[r] then
+            begin
+                bExclude := True;
                 break;
-            }
-        }
+            end;
+        end;
 
-        if(!bExclude)
-        {
-            *(uint08* )(funcAddr[v]) = 0xCC;
-        }
-    }
+        if not bExclude then
+            *(uint08* )(funcAddr[v]) := 0xCC;
+    end
     //*)
 
     Entry^();
@@ -295,26 +298,45 @@ begin
     EmuSwapFS();   // Win2k/XP FS
   except
     on E: Exception do
-      WriteLog('EmuMain : Catched an exception : ' + E.Message); 
+      DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
 //    on(EmuException(GetExceptionInformation())) :
 //      printf('Emu: WARNING!! Problem with ExceptionFilter');
   end;
 
-  WriteLog('EmuMain : Initial thread ended.');
+  DbgPrintf('EmuMain : Initial thread ended.');
 
 //  FFlush(stdout);
-Sleep(10 * 1000); // TODO : Remove this!
-  EmuCleanThread();
 
-WriteLog('CxbxKrnlInit<');
+  CxbxKrnlTerminateThread();
 end;
 
-procedure EmuCleanThread(); // CxbxKrnlTerminateThread
+procedure CxbxKrnlRegisterThread(const hThread: THandle);
+var
+  v: Integer;
+begin
+  v := 0;
+  while v < MAXIMUM_XBOX_THREADS do
+  begin
+    if g_hThreads[v] = 0 then
+    begin
+      g_hThreads[v] := hThread;
+      Exit;
+    end;
+
+    Inc(v);
+  end;
+
+  CxbxKrnlCleanup('There are too many active threads!');
+end;
+
+procedure CxbxKrnlTerminateThread();
 begin
   if EmuIsXboxFS then
     EmuSwapFS();    // Win2k/XP FS
 
   EmuCleanupFS;
+
+Sleep(10 * 1000); // TODO : Remove this!
 
   TerminateThread(GetCurrentThread(), 0);
 end;
@@ -325,31 +347,25 @@ begin
   CxbxKrnlCleanup('XRef-only function body reached. Fatal Error.');
 end;
 
-
-procedure CxbxKrnlNoFunc;
-begin
-  EmuSwapFS();   // Win2k/XP FS
-
-  WriteLog('Emu: EmuNoFunc');
-
-  EmuSwapFS();   // XBox FS
-end;
-
-function EmuVerifyVersion(const szVersion: string): Boolean;
-begin
-  Result := (szVersion = _DXBX_VERSION);
-end;
-
 procedure EmuPanic();
 begin
   if EmuIsXboxFS then
     EmuSwapFS(); // Win2k/XP FS
 
-  WriteLog('Emu: EmuPanic');
+  DbgPrintf('Emu: EmuPanic');
 
   CxbxKrnlCleanup('Kernel Panic!');
 
   EmuSwapFS(); // XBox FS
+end;
+
+procedure CxbxKrnlNoFunc;
+begin
+  EmuSwapFS();   // Win2k/XP FS
+
+  DbgPrintf('EmuMain : CxbxKrnlNoFunc()');
+
+  EmuSwapFS();   // XBox FS
 end;
 
 exports
