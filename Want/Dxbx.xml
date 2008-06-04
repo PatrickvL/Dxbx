@@ -19,6 +19,8 @@
 
   <target name="compile"  depends="prepare, build">
     <dcc basedir="${src}" source="Dxbx.dpr">
+      <exeoutput path="${bin}" />
+      <dcuoutput path="${dcu}" />
       <unitpath>
         <include name="${src}" />
         <include name="${directx9}" />
