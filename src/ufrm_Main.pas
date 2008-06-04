@@ -790,6 +790,7 @@ begin
     actFileDebugGui.Checked := False;
     m_DxbxDebug := DM_NONE;
     CloseLogs;
+    AddjustMenu;
   end
   else
   begin
@@ -798,11 +799,10 @@ begin
     if SaveDialog.Execute then
     begin
       CloseLogs;
-      actConsoleDebugGui.Checked := False;
-      actFileDebugGui.Checked := True;
       m_DxbxDebug := DM_FILE;
-      m_DxbxDebugFilename := SaveDialog.Filename;
       CreateLogs(ltGui);
+      m_DxbxDebugFilename := SaveDialog.Filename;
+      AddjustMenu;
     end;
   end;
 end; // Tfrm_Main.actFileDebugGuiExecute
@@ -832,6 +832,7 @@ begin
   begin
     actFileDebugKernel.Checked := False;
     m_KrnlDebug := DM_NONE;
+    AddjustMenu;
   end
   else
   begin
@@ -839,10 +840,9 @@ begin
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
-      actConsoleDebugKernel.Checked := False;
-      actFileDebugKernel.Checked := True;
       m_KrnlDebug := DM_FILE;
       m_KrnlDebugFilename := SaveDialog.Filename;
+      AddjustMenu;
     end;
   end;
 end; // Tfrm_Main.actFileDebugKernelExecute
