@@ -3,7 +3,7 @@
          default="compile" >
 
   <property name="src"       value="${basedir}/src/Tools/XdkTracker/src" />
-  <property name="bin" value="${basedir}/bin" />
+  <property name="bin" value="${basedir}/bin/Tools" />
   <property name="dcu" value="${basedir}/dcu" />
   <property name="lib"       value="${basedir}/Libraries" />
 
@@ -17,6 +17,8 @@
 
   <target name="compile"  depends="prepare, build">
     <dcc basedir="${src}" source="XdkTracker.dpr">
+      <exeoutput path="${bin}" />
+      <dcuoutput path="${dcu}" />
       <unitpath>
         <include name="${src}" />
       </unitpath>

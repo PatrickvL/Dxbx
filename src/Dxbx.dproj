@@ -29,8 +29,6 @@
     <DCC_Optimize>False</DCC_Optimize>
     <DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
     <DCC_RangeChecking>True</DCC_RangeChecking>
-    <DCC_DebugInfoInExe>True</DCC_DebugInfoInExe>
-    <DCC_DebugVN>True</DCC_DebugVN>
     <DCC_ExeOutput>..\bin</DCC_ExeOutput>
     <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
     <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
@@ -55,8 +53,10 @@
       
       
       
-      <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+      <Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\5.0\Bpl\sJVCL_R.bpl">(untitled)</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
   <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
@@ -66,8 +66,8 @@
     </DelphiCompile>
     <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uDxbxXml.pas">
-      <DesignClass>TDataModule</DesignClass>
       <Form>DxbxXml</Form>
+      <DesignClass>TDataModule</DesignClass>
     </DCCReference>
     <DCCReference Include="uEmuExe.pas" />
     <DCCReference Include="uExe.pas" />
