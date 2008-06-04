@@ -1449,12 +1449,12 @@ object frm_Main: Tfrm_Main
   object MainMenu1: TMainMenu
     Left = 8
     Top = 12
-    object File1: TMenuItem
+    object mnu_File: TMenuItem
       Caption = '&File'
-      object OpenXbe1: TMenuItem
+      object mnu_OpenXbe: TMenuItem
         Action = actOpenXbe
       end
-      object CloseXbe1: TMenuItem
+      object mnu_CloseXbe: TMenuItem
         Action = actCloseXbe
         Enabled = False
       end
@@ -1464,7 +1464,7 @@ object frm_Main: Tfrm_Main
       object Importexe1: TMenuItem
         Action = actImportExe
       end
-      object Exportexe1: TMenuItem
+      object mnu_ExportExe: TMenuItem
         Action = actExportExe
         Enabled = False
       end
@@ -1480,11 +1480,11 @@ object frm_Main: Tfrm_Main
       object N7: TMenuItem
         Caption = '-'
       end
-      object RecentXbefiles1: TMenuItem
+      object mnu_RecentXbefiles: TMenuItem
         Caption = 'Recent Xbe files'
         Enabled = False
       end
-      object RecentExefiles1: TMenuItem
+      object mnu_RecentExefiles: TMenuItem
         Caption = 'Recent Exe files'
         Enabled = False
       end
@@ -1497,31 +1497,31 @@ object frm_Main: Tfrm_Main
     end
     object Edit1: TMenuItem
       Caption = '&Edit'
-      object Logbitmap1: TMenuItem
+      object mnu_Logbitmap: TMenuItem
         Caption = 'Logo bitmap'
         Enabled = False
         object Import1: TMenuItem
           Caption = 'Import'
           Enabled = False
         end
-        object Export1: TMenuItem
+        object mnu_ExportLogoBitmap: TMenuItem
           Action = actExportLogo
         end
       end
-      object Patch1: TMenuItem
+      object mnu_Patch: TMenuItem
         Caption = 'Patch'
         Enabled = False
       end
       object N3: TMenuItem
         Caption = '-'
       end
-      object Dumpxbeinfoto1: TMenuItem
+      object mnu_DumpxbeinfoTo: TMenuItem
         Caption = 'Dump xbe info to'
         Enabled = False
         object Console3: TMenuItem
           Action = actConsoleXbeInfo
         end
-        object File4: TMenuItem
+        object mnu_DumpXbeInfoToFile: TMenuItem
           Action = actFileXbeInfo
         end
         object N8: TMenuItem
@@ -1534,35 +1534,35 @@ object frm_Main: Tfrm_Main
     end
     object View1: TMenuItem
       Caption = '&View'
-      object DebugoutputGUI1: TMenuItem
+      object mnu_DebugoutputGUI: TMenuItem
         Caption = 'Debug output (GUI)'
-        object Console1: TMenuItem
+        object mnu_GuiOutputConsole: TMenuItem
           Action = actConsoleDebugGui
         end
-        object File2: TMenuItem
+        object mnu_DebugOutputGuiFile: TMenuItem
           Action = actFileDebugGui
         end
       end
-      object DebugoutputKernel1: TMenuItem
+      object mnu_DebugoutputKernel: TMenuItem
         Caption = 'Debug output (Kernel)'
-        object Console2: TMenuItem
+        object mnu_DebugKernelOutputConsole: TMenuItem
           Action = actConsoleDebugKernel
         end
-        object File3: TMenuItem
+        object mnu_DebugOutputKernelFile: TMenuItem
           Action = actFileDebugKernel
         end
       end
     end
     object Settings1: TMenuItem
       Caption = '&Settings'
-      object ConfigControler1: TMenuItem
+      object mnu_ConfigControler: TMenuItem
         Action = actConfigController
         Caption = 'Config Controllers'
       end
-      object Configaudio1: TMenuItem
+      object mnu_ConfigAudio: TMenuItem
         Action = actConfigAudio
       end
-      object Configvideo1: TMenuItem
+      object mnu_Configvideo: TMenuItem
         Action = actConfigVideo
       end
       object N4: TMenuItem
@@ -1570,10 +1570,10 @@ object frm_Main: Tfrm_Main
       end
       object Executablegeneration1: TMenuItem
         Caption = 'Executable generation'
-        object AutomaticWindowsyemp1: TMenuItem
+        object mnu_AutomaticWindowsyemp: TMenuItem
           Action = actExeGenWindowsTemp
         end
-        object AutomaticDxbxpath1: TMenuItem
+        object mnu_AutomaticDxbxpath: TMenuItem
           Action = actExeGenDxbxPath
         end
         object Manual1: TMenuItem
@@ -1610,8 +1610,8 @@ object frm_Main: Tfrm_Main
     end
     object Help1: TMenuItem
       Caption = '&Help'
-      object About1: TMenuItem
-        Action = ActAbout
+      object mnu_About: TMenuItem
+        Action = actAbout
       end
     end
   end
@@ -1624,10 +1624,10 @@ object frm_Main: Tfrm_Main
       ShortCut = 116
       OnExecute = ActStartEmulationExecute
     end
-    object ActAbout: TAction
+    object actAbout: TAction
       Category = 'About'
       Caption = 'About'
-      OnExecute = ActAboutExecute
+      OnExecute = actAboutExecute
     end
     object actConfigController: TAction
       Category = 'Settings'
