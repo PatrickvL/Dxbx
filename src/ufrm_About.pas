@@ -28,13 +28,19 @@ uses
   StdCtrls,
   Forms,
   // Dxbx
-  uConsts;
+  uConsts, jpeg, ExtCtrls, GIFImg, Graphics;
 
 
 type
   Tfrm_About = class(TForm)
     Label1: TLabel;
     lblAbout: TLabel;
+    Image1: TImage;
+    imgSignature2: TImage;
+    imgSignature3: TImage;
+    imgSignature4: TImage;
+    imgSignature5: TImage;
+    imgSignature1: TImage;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }

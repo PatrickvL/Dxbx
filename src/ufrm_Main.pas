@@ -38,7 +38,7 @@ uses
   uDxbxXml,
   ufrm_ControllerConfig,
   ufrm_VideoConfig,
-  ufrm_About;
+  ufrm_About, sSkinProvider, sSkinManager;
 
 
 type
@@ -127,13 +127,8 @@ type
     N8: TMenuItem;
     XDKTracker2: TMenuItem;
     actXdkTrackerXbeInfo: TAction;
-    imgSignature1: TImage;
-    imgSignature2: TImage;
-    imgSignature3: TImage;
-    imgSignature4: TImage;
     N9: TMenuItem;
     UsesDlltype1: TMenuItem;
-    imgSignature5: TImage;
     StatusBar: TStatusBar;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
