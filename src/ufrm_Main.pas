@@ -38,7 +38,7 @@ uses
   uDxbxXml,
   ufrm_ControllerConfig,
   ufrm_VideoConfig,
-  ufrm_About, sSkinProvider, sSkinManager;
+  ufrm_About;
 
 
 type
