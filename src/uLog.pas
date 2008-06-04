@@ -111,11 +111,11 @@ end;
 procedure CloseLogs;
 begin
   WriteLog('Stop logging.');
-  FreeAndNil({var}frm_LogConsole);
+  FreeAndNil(frm_LogConsole);
 
   if LogFileOpen then
   begin
-    CloseFile({var}LogFile);
+    CloseFile(LogFile);
     LogFileOpen := False;
   end;
 
