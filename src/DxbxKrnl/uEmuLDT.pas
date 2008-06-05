@@ -55,7 +55,7 @@ end;
 
 function EmuAllocateLDT(dwBaseAddr: uint32; dwLimit: uint32): uint16;
 var
-//  LDTEntry: NtDll.LDT_ENTRY;
+  LDTEntry: LDT_ENTRY;
   x: Integer;
 begin
   x := 0;
@@ -65,7 +65,7 @@ begin
   // Locate a free LDT entry
   begin
     while x < MAXIMUM_XBOX_THREADS do
-      if FreeLDTEntries[x] > 0 then
+      if FreeLDTEntries[x] = 0 then
         Inc(x)
       else
         Break;
@@ -80,12 +80,13 @@ begin
       Exit;
     end;
   end;
-(*
+
   // Set up selector information
   begin
     LDTEntry.BaseLow                    := WORD(dwBaseAddr and $FFFF);
-    LDTEntry.HighWord.Bits.BaseMid      := (dwBaseAddr shr 16) and $FF;
-    LDTEntry.HighWord.Bits.BaseHi       := (dwBaseAddr shr 24) and $FF;
+    LDTEntry.{HighWord.Bits.}BaseMid      := (dwBaseAddr shr 16) and $FF;
+    LDTEntry.{HighWord.Bits.}BaseHi       := (dwBaseAddr shr 24) and $FF;
+(* TODO
     LDTEntry.HighWord.Bits.cType        := $13; // RW data segment
     LDTEntry.HighWord.Bits.Dpl          := 3;    // user segment
     LDTEntry.HighWord.Bits.Pres         := 1;    // present
@@ -96,11 +97,12 @@ begin
 
     if LDTEntry.HighWord.Bits.Granularity > 0 then
       dwLimit := dwLimit shr 12;
+*)
 
     LDTEntry.LimitLow                   := WORD(dwLimit and $FFFF);
-    LDTEntry.HighWord.Bits.LimitHi      := (dwLimit shr 16) and $F;
+//    LDTEntry.HighWord.Bits.LimitHi      := (dwLimit shr 16) and $F;
   end;
-
+(*
   // Allocate selector
   begin
 //        using namespace NtDll;
@@ -124,15 +126,15 @@ begin
 end;
 
 procedure EmuDeallocateLDT(wSelector: uint16);
-//var
-//  LDTEntry: NtDll.LDT_ENTRY;
+var
+  LDTEntry: LDT_ENTRY;
 begin
   EnterCriticalSection(EmuLDTLock);
-(*
-  ZeroMemory(LDTEntry, SizeOf(LDTEntry));
 
-  NtDll.NtSetLdtEntries(wSelector, LDTEntry, 0, LDTEntry);
-*)
+  ZeroMemory(@LDTEntry, SizeOf(LDTEntry));
+
+//  NtDll.NtSetLdtEntries(wSelector, LDTEntry, 0, LDTEntry);
+
   FreeLDTEntries[(wSelector shr 3)-1] := wSelector;
 
   LeaveCriticalSection(EmuLDTLock);

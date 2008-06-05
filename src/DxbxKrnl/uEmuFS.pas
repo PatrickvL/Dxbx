@@ -117,16 +117,16 @@ end;
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: Pointer);
 var
   OrgNtTib: PNT_TIB;
-//  NewPcr: {xboxkrnl.}PKPCR;
   pNewTLS: PUInt08;
   NewFS, OrgFS: UInt16;
   dwCopySize, dwZeroSize: UInt32;
   Line: string;
   stop: UInt32;
   v: Integer;
-	bByte: PUInt8;
+  bByte: PUInt8;
   dwSize: uint32;
   NewPcr: PKPCR;
+  EThread: PETHREAD;
 begin
   pNewTLS := nil;
   NewFS := UInt16(-1);
@@ -159,12 +159,12 @@ begin
 				if (v mod $10) = 0 then
         begin
 					DbgPrintf(Line);
-          Line := 'EmuFS : $' + IntToHex(Integer(pNewTLS[v]), 8) + ': ';
+          Line := 'EmuFS : $' + IntToHex(Integer(@pNewTLS[v]), 8) + ': ';
         end;
 
 				bByte := PUInt8(Integer(pNewTLS) + v);
 
-				Line := Line + ' ' + IntToHex(Integer(bByte^), 2);
+				Line := Line + IntToHex(Integer(bByte^), 2);
 
 			end;
 
@@ -202,19 +202,19 @@ begin
     mov fs:[$14], ax
     mov fs:[$16], bh
   end;
-(*
+
   // generate TIB
   begin
-    xboxkrnl.ETHREAD *EThread := (xboxkrnl.ETHREAD)CxbxMalloc(SizeOf(xboxkrnl.ETHREAD));
+    EThread := xboxkrnl.PETHREAD(CxbxMalloc(SizeOf(xboxkrnl.ETHREAD)));
 
     EThread.Tcb.TlsData  := pNewTLS;
     EThread.UniqueThread := GetCurrentThreadId();
 
-    memcpy(@NewPcr.NtTib, OrgNtTib, SizeOf(NT_TIB));
+    CopyMemory(@NewPcr.NtTib, OrgNtTib, SizeOf(NT_TIB));
 
     NewPcr.NtTib.Self := @NewPcr.NtTib;
 
-    NewPcr.PrcbData.CurrentThread := (xboxkrnl.KTHREAD)EThread;
+    NewPcr.PrcbData.CurrentThread := xboxkrnl.PKTHREAD(EThread);
 
     NewPcr.Prcb := @NewPcr.PrcbData;
   end;
@@ -222,13 +222,13 @@ begin
   // prepare TLS
   begin
     // TLS Index Address := 0
-    *(uint32)pTLS.dwTLSIndexAddr := 0;
+    pTLS.dwTLSIndexAddr := 0;
 
     // dword @ pTLSData := pTLSData
     if Assigned(pNewTLS) then
-      *pNewTLS := pNewTLS;
+      PPointer(pNewTLS)^ := pNewTLS;
   end;
-*)
+
   // swap into "NewFS"
   EmuSwapFS();
 
@@ -282,7 +282,7 @@ begin
   if pTLSData <> nil then
     FreeMem(pTLSData);
 
-// TODO :  EmuDeallocateLDT(wSwapFS);
+  EmuDeallocateLDT(wSwapFS);
 end;
 
 end.
