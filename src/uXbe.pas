@@ -94,7 +94,7 @@ type
     dwLogoBitmapAddr: DWord; // 0x0170 - logo bitmap address
     dwSizeofLogoBitmap: DWord; // 0x0174 - logo bitmap size
   end;
-  P_XBE_HEADER = ^_XBE_HEADER;
+  PXBE_HEADER = ^_XBE_HEADER;
   XBE_HEADER = _XBE_HEADER;
 
   _XBE_CERTIFICATE = packed record
@@ -112,7 +112,7 @@ type
     bzSignatureKey: array[0..15] of AnsiChar; // 0x00C0 - signature key
     bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of AnsiChar; // 0x00D0 - alternate signature keys
   end;
-  P_XBE_CERTIFICATE = ^_XBE_CERTIFICATE;
+  PXBE_CERTIFICATE = ^_XBE_CERTIFICATE;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
 
 
@@ -145,7 +145,7 @@ type
             }
             //dwFlags;
   end;
-  P_XBE_LIBRARYVERSION = ^_XBE_LIBRARYVERSION;
+  PXBE_LIBRARYVERSION = ^_XBE_LIBRARYVERSION;
   XBE_LIBRARYVERSION = _XBE_LIBRARYVERSION;
 
   _XBE_TLS = packed record
@@ -156,7 +156,7 @@ type
     dwSizeofZeroFill: DWord; // size of zero fill
     dwCharacteristics: DWord; // characteristics
   end;
-  P_XBE_TLS = ^_XBE_TLS;
+  PXBE_TLS = ^_XBE_TLS;
   XBE_TLS = _XBE_TLS;
 
   _Eight = Byte; // AnsiChar?
@@ -200,7 +200,7 @@ type
     m_LibraryVersion: array of XBE_LIBRARYVERSION;
     m_szSectionName: array of array of AnsiChar;
     m_HeaderEx: array of Byte;
-    m_TLS: P_XBE_TLS;
+    m_TLS: PXBE_TLS;
     m_bzSection: array of TVarByteArray;
 
     constructor Create(aFileName: string; aFileType: TFileType);
@@ -441,7 +441,7 @@ begin
       CopyMemory(@(m_LibraryVersion[lIndex]), @(Buffer[i]), SizeOf(m_LibraryVersion[lIndex]));
       Inc(i, SizeOf(m_LibraryVersion[lIndex]));
 
-      WriteLog(Format('DXBX:Reading Library Version 0x%.4x... OK', [lIndex]));
+      WriteLog(Format('DXBX: Reading Library Version 0x%.4x... OK', [lIndex]));
     end;
 
     // read xbe kernel library version
@@ -469,8 +469,6 @@ begin
 
     for lIndex := 0 to m_Header.dwSections - 1 do
     begin
-      WriteLog(Format('DXBX: Reading Section 0x%.4x...', [lIndex]));
-
       //Debug info of turok from cxbx
       //v=0  RawSize: 1578256  RawAddr: 4096
       //v=2  RawSize: 1585152  RawAddr: 63024
@@ -488,7 +486,7 @@ begin
       if RawSize = 0 then
         Break;
 
-      WriteLog('Ok');
+      WriteLog(Format('DXBX: Reading Section 0x%.4x... OK', [lIndex]));
 
       for lIndex2 := 0 to RawSize - 1 do
         m_bzSection[lIndex][lIndex2] := Byte(Buffer[RawAddr + lIndex2]);

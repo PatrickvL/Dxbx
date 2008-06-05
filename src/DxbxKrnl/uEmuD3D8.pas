@@ -31,12 +31,12 @@ uses
   uEmuShared,
   uEmuFS;
 
-procedure XTL__EmuD3DInit(XbeHeader: P_XBE_HEADER; XbeHeaderSize: UInt32);
+procedure XTL__EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32);
 
 implementation
 
 
-procedure XTL__EmuD3DInit(XbeHeader: P_XBE_HEADER; XbeHeaderSize: UInt32);
+procedure XTL__EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32);
 (*
 var
   dwThreadId: DWORD;

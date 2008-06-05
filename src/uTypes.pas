@@ -46,6 +46,14 @@ type
 
   UInt32 = Cardinal;
   UInt16 = Word;
+  UInt8 = Byte;
+
+  PUInt32 = ^UInt32;
+  PUInt16 = ^UInt16;
+  PUInt8 = PAnsiChar;//^UInt8;
+
+  UInt08 = UInt8;
+  PUInt08 = PUInt8;
 
 {$IF DECLARED(INT_PTR)}
   IntPtr = INT_PTR;

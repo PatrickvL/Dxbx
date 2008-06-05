@@ -21,8 +21,11 @@ When you want to compile dxbx sources you need to following :
 
   url: http://shadowtj.net/main/pages/programming/DelphiComponents.html
 
+- JEDI API Library (for win32 API's - included)
+  url: http://jedi-apilib.sourceforge.net/
 
-- Alphaskins - for skins
+
+- Alphaskins - for skins (optional)
   url: http://www.alphaskins.com/
 
 To compile you got two options:
