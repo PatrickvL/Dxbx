@@ -23,16 +23,22 @@ interface
 
 uses
   // Delphi
-  Windows, // for SwitchToThread
+  Windows, // SwitchToThread
+  SysUtils, // IntToHex
+  // JEDI
+  JwaWinType,
   // Dxbx
+  XboxKrnl, // NT_TIB
+  uTypes,
   uLog,
   uXbe,
+  uEmuAlloc,
   uEmuLDT;
 
 
 procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
 procedure EmuInitFS;
-procedure EmuGenerateFS(pTLS: P_XBE_TLS; pTLSData: Pointer);
+procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: Pointer);
 procedure EmuCleanupFS;
 function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
 
@@ -108,51 +114,62 @@ begin
 end;
 
 // generate fs segment selector
-procedure EmuGenerateFS(pTLS: P_XBE_TLS; pTLSData: Pointer);
+procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: Pointer);
+var
+  OrgNtTib: PNT_TIB;
+//  NewPcr: {xboxkrnl.}PKPCR;
+  pNewTLS: PUInt08;
+  NewFS, OrgFS: UInt16;
+  dwCopySize, dwZeroSize: UInt32;
+  Line: string;
+  stop: UInt32;
+  v: Integer;
+	bByte: PUInt8;
+  dwSize: uint32;
+  NewPcr: PKPCR;
 begin
-(*
-  NT_TIB         *OrgNtTib;
-  xboxkrnl.KPCR *NewPcr;
-
-  uint08 *pNewTLS := 0;
-
-  uint16 NewFS := -1, OrgFS = -1;
+  pNewTLS := nil;
+  NewFS := UInt16(-1);
+  OrgFS := UInt16(-1);
 
   // copy global TLS to the current thread
   begin
-    uint32 dwCopySize := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr;
-    uint32 dwZeroSize := pTLS.dwSizeofZeroFill;
+    dwCopySize := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr;
+    dwZeroSize := pTLS.dwSizeofZeroFill;
 
-    pNewTLS := (uint08)CxbxMalloc(dwCopySize + dwZeroSize + $100 (* + HACK: extra safety padding 0x100* ));
+    pNewTLS := PUInt08(CxbxMalloc(dwCopySize + dwZeroSize + $100 { + HACK: extra safety padding 0x100}));
 
     FillChar(pNewTLS, 0, dwCopySize + dwZeroSize + $100);
-    memcpy(pNewTLS, pTLSData, dwCopySize);
+    CopyMemory(pNewTLS, pTLSData, dwCopySize);
   end;
 
   // dump raw TLS data
   begin
 {$IFDEF _DEBUG_TRACE}
-		if pNewTLS = 0 then
-			DbgPrintf('EmuFS ($ mod X): TLS Non-Existant (OK)', GetCurrentThreadId())
+		if pNewTLS = nil then
+			DbgPrintf('EmuFS : TLS Non-Existant (OK)')
 		else
 		begin
-			DbgPrintf('EmuFS ($ mod X): TLS Data DumpArgs: array of const', GetCurrentThreadId());
-            DbgPrintf('EmuFS ($ mod X): $ mod .08X: ', GetCurrentThreadId(), pNewTLS);
+      Line := 'EmuFS : TLS Data Dump...';
 
-			uint32 stop := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill;
+			stop := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill;
 
-			for(uint32 v:=0;v<stop;v++)
+			for v := 0 to stop - 1 do
 			begin
-				uint08 *bByte := (uint08)pNewTLS + v;
+				if (v mod $10) = 0 then
+        begin
+					DbgPrintf(Line);
+          Line := 'EmuFS : $' + IntToHex(Integer(pNewTLS[v]), 8) + ': ';
+        end;
 
-				DbgPrintf(' mod .01X', (uint32)*bByte);
+				bByte := PUInt8(Integer(pNewTLS) + v);
 
-				if((v+1) mod $10 = 0 and v+1<stop) then
-					DbgPrintf('EmuFS ($ mod X): $ mod .08X: ', GetCurrentThreadId(), ((uint32)pNewTLS + v));
-			 end;
+				Line := Line + ' ' + IntToHex(Integer(bByte^), 2);
 
-			DbgPrintf('');
-		 end;
+			end;
+
+			DbgPrintf(Line);
+	  end;
 {$ENDIF}
   end;
 
@@ -168,13 +185,13 @@ begin
 
   // allocate LDT entry
   begin
-    uint32 dwSize := SizeOf(xboxkrnl.KPCR);
+    dwSize := SizeOf(XboxKrnl.KPCR);
 
-    NewPcr := (xboxkrnl.KPCR)CxbxMalloc(dwSize);
+    NewPcr := xboxkrnl.PKPCR(CxbxMalloc(dwSize));
 
     FillChar(NewPcr, 0, SizeOf(NewPcr));
 
-    NewFS := EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
+    NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(IntPtr(NewPcr) + dwSize));
   end;
 
   // update "OrgFS" with NewFS and (bIsXboxFS = false)
@@ -185,7 +202,7 @@ begin
     mov fs:[$14], ax
     mov fs:[$16], bh
   end;
-
+(*
   // generate TIB
   begin
     xboxkrnl.ETHREAD *EThread := (xboxkrnl.ETHREAD)CxbxMalloc(SizeOf(xboxkrnl.ETHREAD));
@@ -208,10 +225,10 @@ begin
     *(uint32)pTLS.dwTLSIndexAddr := 0;
 
     // dword @ pTLSData := pTLSData
-    if(pNewTLS <> 0) then
-        *pNewTLS := pNewTLS;
+    if Assigned(pNewTLS) then
+      *pNewTLS := pNewTLS;
   end;
-
+*)
   // swap into "NewFS"
   EmuSwapFS();
 
@@ -233,8 +250,7 @@ begin
   // swap back into the "OrgFS"
   EmuSwapFS();
 
-  DbgPrintf('EmuFS ($ mod X): OrgFS:= mod d NewFS= mod d pTLS=$ mod .08X', GetCurrentThreadId(), OrgFS, NewFS, pTLS);
-*)
+  DbgPrintf('EmuFS : OrgFS=' + IntToStr(OrgFS) + ' NewFS=' + IntToStr(NewFS) + ' pTLS=$' + IntToHex(Integer(pTLS), 8));
 end;
 
 // cleanup fs segment selector emulation

@@ -32,7 +32,7 @@ uses
   uEmuFS;
 
 
-procedure EmuHLEIntercept(pLibraryVersion: P_XBE_LIBRARYVERSION; pXbeHeader: P_XBE_HEADER);
+procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 
 implementation
 
@@ -58,7 +58,7 @@ implementation
  std.vector<Pointer >.const_iterator vCacheInpIter;
 *)
 
-procedure EmuHLEIntercept(pLibraryVersion: P_XBE_LIBRARYVERSION; pXbeHeader: P_XBE_HEADER);
+procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 begin
 (*
     Xbe.Certificate *pCertificate := (Xbe.Certificate)pXbeHeader^.dwCertificateAddr;

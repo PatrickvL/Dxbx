@@ -33,7 +33,6 @@ uses
   uEmuShared in 'uEmuShared.pas',
   uLog in 'uLog.pas',
   uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
-  uXbe in 'uXbe.pas',
   uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas',
   uKernelThunk in 'uKernelThunk.pas',
@@ -45,7 +44,12 @@ uses
   uEmuFS in 'DxbxKrnl\uEmuFS.pas',
   uEmu in 'DxbxKrnl\uEmu.pas',
   uEmuD3D8 in 'DxbxKrnl\uEmuD3D8.pas',
-  uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas';
+  uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
+  uEmuAlloc in 'DxbxKrnl\uEmuAlloc.pas',
+  uXbe in 'uXbe.pas',
+  JwaWinType in '..\Libraries\jwapi\Win32API\JwaWinType.pas',
+  JwaWinNT in '..\Libraries\jwapi\Win32API\JwaWinNT.pas',
+  XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas';
 
 {$R *.res}   
 

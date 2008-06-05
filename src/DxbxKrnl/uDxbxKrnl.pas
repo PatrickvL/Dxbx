@@ -41,20 +41,20 @@ uses
 
 type
   TEntryProc = procedure();
-  PEntryProc = ^TEntryProc;
+//  PEntryProc = ^TEntryProc;
 
 function EmuVerifyVersion(const szVersion: string): Boolean; // export;
 
 procedure CxbxKrnlInit(
   hwndParent: THandle;
   pTLSData: Pointer;
-  pTLS: P_XBE_TLS;
-  pLibraryVersion: P_XBE_LIBRARYVERSION;
+  pTLS: PXBE_TLS;
+  pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: DebugMode;
   szDebugFilename: PChar;
-  pXbeHeader: P_XBE_HEADER;
+  pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: PEntryProc); cdecl;
+  Entry: TEntryProc); cdecl;
 
 procedure CxbxKrnlRegisterThread(const hThread: THandle);
 procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
@@ -66,11 +66,11 @@ implementation
 
 var
   // ! thread local storage
-  DxbxKrnl_TLS: P_XBE_TLS;
+  DxbxKrnl_TLS: PXBE_TLS;
   // thread local storage data
   DxbxKrnl_TLSData: Pointer;
   // xbe header structure
-  DxbxKrnl_XbeHeader: P_XBE_HEADER;
+  DxbxKrnl_XbeHeader: PXBE_HEADER;
   // parent window handle
   DxbxKrnl_hEmuParent: THandle;
 
@@ -85,18 +85,18 @@ end;
 procedure CxbxKrnlInit(
   hwndParent: THandle;
   pTLSData: Pointer;
-  pTLS: P_XBE_TLS;
-  pLibraryVersion: P_XBE_LIBRARYVERSION;
+  pTLS: PXBE_TLS;
+  pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: DebugMode;
   szDebugFilename: PChar;
-  pXbeHeader: P_XBE_HEADER;
+  pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: PEntryProc);
+  Entry: TEntryProc);
 var
-  MemXbeHeader: P_XBE_HEADER;
+  MemXbeHeader: PXBE_HEADER;
   old_protection: DWord;
   szBuffer, BasePath: string;
-  pCertificate: P_XBE_CERTIFICATE;
+  pCertificate: PXBE_CERTIFICATE;
   hDupHandle: THandle;
 //  v, r: Integer;
 begin
@@ -130,7 +130,7 @@ begin
     DbgPrintf('  DebugFilename    : 0x' + IntToHex(Integer(szDebugFilename), 8) + ' ("' + szDebugFilename + '")');
     DbgPrintf('  pXBEHeader       : 0x' + IntToHex(Integer(pXbeHeader), 8));
     DbgPrintf('  dwXBEHeaderSize  : 0x' + IntToHex(dwXbeHeaderSize, 8));
-    DbgPrintf('  Entry            : 0x' + IntToHex(Integer(Entry), 8));
+    DbgPrintf('  Entry            : 0x' + IntToHex(Integer(Addr(Entry)), 8));
     DbgPrintf(')');
 
 {$ELSE}
@@ -140,7 +140,7 @@ begin
 
   // Load the necessary pieces of XBEHeader
   begin
-    MemXbeHeader := P_XBE_HEADER($00010000);
+    MemXbeHeader := PXBE_HEADER($00010000);
 
     VirtualProtect(MemXbeHeader, $1000, PAGE_READWRITE, {var}old_protection);
 
@@ -171,7 +171,7 @@ begin
   if g_hCurDir = INVALID_HANDLE_VALUE then
     CxbxKrnlCleanup('Could not map D:\');
 
-  DbgPrintf('EmuMain : CurDir = ' + szBuffer);
+  DbgPrintf('EmuMain : CurDir := ' + szBuffer);
 
   // initialize EmuDisk
   begin
@@ -191,7 +191,7 @@ begin
       szBuffer := BasePath + '\EmuDisk\T';
       CreateDirectory(PAnsiChar(szBuffer), nil);
 
-      pCertificate := P_XBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
+      pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
       szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
       CreateDirectory(PAnsiChar(szBuffer), nil);
 
@@ -293,7 +293,7 @@ begin
     end
     //*)
 
-    Entry^();
+    Entry();
 
     EmuSwapFS();   // Win2k/XP FS
   except

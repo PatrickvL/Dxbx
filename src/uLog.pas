@@ -93,7 +93,7 @@ begin
           OutputFileName := m_KrnlDebugFilename;
 
         if OutputFileName = '' then
-          OutputFileName := 'DxbxDebug.log';
+          OutputFileName := 'DxbxKrnlDebug.txt';
 
         AssignFile({var}LogFile, OutputFileName);
 
