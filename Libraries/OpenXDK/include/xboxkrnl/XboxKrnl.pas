@@ -803,7 +803,6 @@ type
     UnknownB: array[0..$E4-1] of UCHAR; // 0x2C
   end;
 
-(*
 // ******************************************************************
 // * ETHREAD
 // ******************************************************************
@@ -812,14 +811,14 @@ type
 // *
 // ******************************************************************
 type
-	
-ETHREAD,*PETHREAD	= record  
-    struct _KTHREAD Tcb;
-               UnknownA: array[0..$1C-1] of UCHAR; // 0x110
-    DWORD           UniqueThread;   // 0x12C
+  PETHREAD = ^ETHREAD;
+  ETHREAD	= record
+    Tcb: KTHREAD;
+    UnknownA: array[0..$1C-1] of UCHAR; // 0x110
+    UniqueThread: DWORD;   // 0x12C
  end;
-*)
-// ******************************************************************
+
+ // ******************************************************************
 // * KPCRB
 // ******************************************************************
 // *
@@ -849,7 +848,7 @@ type
   KPCR	= record
     NtTib: NT_TIB;                                         // 0x00
     SelfPcr: PKPCR;                                        // 0x1C
-    Prcb: KPRCB;                                           // 0x20
+    Prcb: PKPRCB;                                          // 0x20
     Irql: UCHAR;                                           // 0x24
     PrcbData: KPRCB;                                       // 0x28
   end;
