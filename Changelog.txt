@@ -4,8 +4,11 @@ So the changes from version 0.0.7 and below are not documented.
 
 Version 0.0.8:
 
+- XDKTracker can read xbe files for import xdk information.
 - Support recent opened xbe files.
+- Dxbx supports drag-n-drop of .xbe files, generating a .exe in one go.
+- Dxbx generates a working relocation table now.
 - Made a start with cxbxkrnl.dll implementation.
-- start made with documentation.
-- Updated to AlphaSkin version v5.45
-- XDKTracker can read xbe files for import xdk information
+- Enough of Cxbx setup code has been translated to let actual Xbe code be executed(!)
+- Updated to AlphaSkin version v5.45 and removed the hard dependancy on it.
+- Made a start with documentation.

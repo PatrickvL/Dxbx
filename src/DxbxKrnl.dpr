@@ -49,7 +49,10 @@ uses
   uXbe in 'uXbe.pas',
   JwaWinType in '..\Libraries\jwapi\Win32API\JwaWinType.pas',
   JwaWinNT in '..\Libraries\jwapi\Win32API\JwaWinNT.pas',
-  XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas';
+  XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
+  JwaWinBase in '..\Libraries\jwapi\Win32API\JwaWinBase.pas',
+  JwaNative in '..\Libraries\jwapi\Win32API\JwaNative.pas',
+  JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas';
 
 {$R *.res}   
 

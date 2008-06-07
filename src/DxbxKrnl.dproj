@@ -42,6 +42,8 @@
       
       
       
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
@@ -51,6 +53,9 @@
     <DelphiCompile Include="DxbxKrnl.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
+    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaNative.pas" />
+    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaNtStatus.pas" />
+    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinBase.pas" />
     <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinNT.pas" />
     <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinType.pas" />
     <DCCReference Include="..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas" />

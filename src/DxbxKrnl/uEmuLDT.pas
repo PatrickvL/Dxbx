@@ -26,10 +26,13 @@ uses
   Windows,
   // JEDI
   JwaWinType,
+  JwaWinNT,
+  JwaNative, // NtSetLdtEntries
   // Dxbx
+uLog,
   uConsts,
   uDxbxKrnlUtils;
-  
+
 procedure EmuInitLDT;
 function EmuAllocateLDT(dwBaseAddr: uint32; dwLimit: uint32): uint16;
 procedure EmuDeallocateLDT(wSelector: uint16);
@@ -41,13 +44,13 @@ var
   FreeLDTEntries : array [00..MAXIMUM_XBOX_THREADS-1] of DWord;
 
   // Critical section lock
-  EmuLDTLock: _RTL_CRITICAL_SECTION;
+  EmuLDTLock: Windows._RTL_CRITICAL_SECTION;
 
 procedure EmuInitLDT;
 var
   v: Integer;
 begin
-  InitializeCriticalSection(EmuLDTLock);
+  InitializeCriticalSection({var}EmuLDTLock);
 
   for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
     FreeLDTEntries[v] := DWord((v * 8) + 7 + 8);
@@ -83,32 +86,32 @@ begin
 
   // Set up selector information
   begin
-    LDTEntry.BaseLow                    := WORD(dwBaseAddr and $FFFF);
-    LDTEntry.{HighWord.Bits.}BaseMid      := (dwBaseAddr shr 16) and $FF;
-    LDTEntry.{HighWord.Bits.}BaseHi       := (dwBaseAddr shr 24) and $FF;
-(* TODO
-    LDTEntry.HighWord.Bits.cType        := $13; // RW data segment
-    LDTEntry.HighWord.Bits.Dpl          := 3;    // user segment
-    LDTEntry.HighWord.Bits.Pres         := 1;    // present
-    LDTEntry.HighWord.Bits.Sys          := 0;
-    LDTEntry.HighWord.Bits.Reserved_0   := 0;
-    LDTEntry.HighWord.Bits.Default_Big  := 1;    // 386 segment
-    LDTEntry.HighWord.Bits.Granularity  := iif(dwLimit >= $00100000, 1, 0);
-
-    if LDTEntry.HighWord.Bits.Granularity > 0 then
+    LDTEntry.BaseLow      := WORD(dwBaseAddr and $FFFF);
+    LDTEntry.BaseMid      := (dwBaseAddr shr 16) and $FF;
+    LDTEntry.BaseHi       := (dwBaseAddr shr 24) and $FF;
+    LDTEntry.Flags1       := 0;
+    LDTEntry.Flags1       := LDTEntry.Flags1 or ($13 and LDTENTRY_FLAGS1_TYPE); // RW data segment
+    LDTEntry.Flags1       := LDTEntry.Flags1 or LDTENTRY_FLAGS1_DPL;  // user segment
+    LDTEntry.Flags1       := LDTEntry.Flags1 or LDTENTRY_FLAGS1_PRES;  // present
+    LDTEntry.Flags2       := 0;
+    LDTEntry.Flags2       := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_SYS);
+    LDTEntry.Flags2       := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_RESERVED_0);
+    LDTEntry.Flags2       := LDTEntry.Flags2 or (LDTENTRY_FLAGS2_DEFAULT_BIG); // 386 segment
+    if {LDTEntry.HighWord.Bits.Granularity=}dwLimit >= $00100000 then
+    begin
+      LDTEntry.Flags2     := LDTEntry.Flags2 or LDTENTRY_FLAGS2_GRANULARITY;
       dwLimit := dwLimit shr 12;
-*)
+    end;
 
-    LDTEntry.LimitLow                   := WORD(dwLimit and $FFFF);
-//    LDTEntry.HighWord.Bits.LimitHi      := (dwLimit shr 16) and $F;
+    LDTEntry.LimitLow     := WORD(dwLimit and $FFFF);
+    LDTEntry.Flags2       := LDTEntry.Flags2 or ((dwLimit shr 16) and LDTENTRY_FLAGS2_LIMITHI);
   end;
-(*
+
   // Allocate selector
   begin
-//        using namespace NtDll;
-
-    if not NT_SUCCESS(NtDll.NtSetLdtEntries((x*8)+7+8, LDTEntry, 0, LDTEntry)) then
+    if not NT_SUCCESS(NtSetLdtEntries((x * 8) + 7 + 8, LDTEntry, 0, LDTEntry)) then
     begin
+WriteLog(GetLastErrorString);
       LeaveCriticalSection(EmuLDTLock);
 
 			CxbxKrnlCleanup('Could not set LDT entries');
@@ -117,12 +120,12 @@ begin
       Exit;
     end;
   end;
-*)
+
   LeaveCriticalSection(EmuLDTLock);
 
   FreeLDTEntries[x] := 0;
 
-  Result := (x*8)+7+8;
+  Result := (x * 8) + 7 + 8;
 end;
 
 procedure EmuDeallocateLDT(wSelector: uint16);
@@ -133,7 +136,7 @@ begin
 
   ZeroMemory(@LDTEntry, SizeOf(LDTEntry));
 
-//  NtDll.NtSetLdtEntries(wSelector, LDTEntry, 0, LDTEntry);
+  NtSetLdtEntries(wSelector, LDTEntry, 0, LDTEntry);
 
   FreeLDTEntries[(wSelector shr 3)-1] := wSelector;
 
@@ -141,4 +144,3 @@ begin
 end;
 
 end.
-
