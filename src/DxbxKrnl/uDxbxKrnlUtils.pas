@@ -24,10 +24,14 @@ interface
 uses
   // Delphi
   Windows,
+  SysUtils,
   // Dxbx
   uLog; // for WriteLog
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
+
+function GetLastErrorString: string;
+function GetErrorString(const aError: DWord): string;
 
 implementation
 
@@ -56,6 +60,20 @@ begin
   TerminateProcess(GetCurrentProcess(), 0);
 
   Exit;
+end;
+
+function GetLastErrorString: string;
+begin
+  Result := GetErrorString(GetLastError);
+end;
+
+function GetErrorString(const aError: DWord): string;
+begin
+  Result := SysErrorMessage(aError);
+  if Result = '' then
+    Result := 'No description for error #' + IntToStr(aError)
+  else
+    Result := Result + ' (#' + IntToStr(aError) + ')';
 end;
 
 end.

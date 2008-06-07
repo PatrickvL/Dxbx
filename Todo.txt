@@ -1,11 +1,9 @@
- // * patch prolog function parameters
-  // ******************************************************************
-  WriteCursor := m_SectionHeader[i].m_virtual_addr + m_optionalHeader.m_image_base + $100;
-  // Function Pointer
-  //AppendDWordToSubSection(i,6,EmuInit);
+The following tasks are currently on the short-term TODO list :
 
+- Write a C-to-Pascal translation guide
 
-The EmuInit needs to be placed in the exe ...
-this is a mayor issue before the dll can do its work.... 
+- Translate EmuD3D8 to get some visual output of Dxbx calling actual Xbe code
 
-Dxbx generates other contents in .cxbxplg section than cxbx - this is probably because the .xbe reading is damaged.
+- Fix the difference in contents in the .cxbxplg section between Dxbx and Cxbx (this is probably because the .xbe reading is damaged)
+
+- Investigate how the HLE emulation should be translated
