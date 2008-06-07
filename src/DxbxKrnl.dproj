@@ -44,6 +44,8 @@
       
       
       
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
@@ -65,6 +67,7 @@
     <DCCReference Include="DxbxKrnl\uEmuAlloc.pas" />
     <DCCReference Include="DxbxKrnl\uEmuD3D8.pas" />
     <DCCReference Include="DxbxKrnl\uEmuFS.pas" />
+    <DCCReference Include="DxbxKrnl\uEmuKrnl.pas" />
     <DCCReference Include="DxbxKrnl\uEmuLDT.pas" />
     <DCCReference Include="DxbxKrnl\uHLEIntercept.pas" />
     <DCCReference Include="uConsts.pas" />

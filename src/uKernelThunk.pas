@@ -28,7 +28,8 @@ uses
   // Dxbx
   uTypes,
   uLog, // WriteLog
-  uEmuFS; // EmuSwapFS
+  uEmuFS, // EmuSwapFS
+  uEmuKrnl;
 
 function CxbxKrnl_KernelThunkTable: PKernelThunkTable; cdecl;
 
@@ -297,7 +298,7 @@ procedure Panic_0FB; stdcall; begin Unimplemented($0FB); end;
 procedure Panic_0FC; stdcall; begin Unimplemented($0FC); end;
 procedure Panic_0FD; stdcall; begin Unimplemented($0FD); end;
 procedure Panic_0FE; stdcall; begin Unimplemented($0FE); end;
-procedure Panic_0FF; stdcall; begin Unimplemented($0FF); end;
+//procedure Panic_0FF; stdcall; begin Unimplemented($0FF); end;
 procedure Panic_100; stdcall; begin Unimplemented($100); end;
 procedure Panic_101; stdcall; begin Unimplemented($101); end;
 procedure Panic_102; stdcall; begin Unimplemented($102); end;
@@ -667,7 +668,7 @@ var
     @Panic_0FC,                          // $00FC (252)
     @Panic_0FD,                          // $00FD (253)
     @Panic_0FE,                          // $00FE (254)
-    @Panic_0FF,                          // $00FF (255)
+    @PsCreateSystemThreadEx{Panic_0FF},  // $00FF (255)
     @Panic_100,                          // $0100 (256)
     @Panic_101,                          // $0101 (257)
     @Panic_102,                          // $0102 (258)
