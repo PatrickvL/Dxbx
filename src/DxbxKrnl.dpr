@@ -52,7 +52,8 @@ uses
   XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
   JwaWinBase in '..\Libraries\jwapi\Win32API\JwaWinBase.pas',
   JwaNative in '..\Libraries\jwapi\Win32API\JwaNative.pas',
-  JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas';
+  JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas',
+  uEmuKrnl in 'DxbxKrnl\uEmuKrnl.pas';
 
 {$R *.res}   
 

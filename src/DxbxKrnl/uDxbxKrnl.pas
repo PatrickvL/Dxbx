@@ -43,7 +43,7 @@ type
   TEntryProc = procedure();
 //  PEntryProc = ^TEntryProc;
 
-function EmuVerifyVersion(const szVersion: string): Boolean; // export;
+function CxbxKrnlVerifyVersion(const szVersion: string): Boolean; // export;
 
 procedure CxbxKrnlInit(
   hwndParent: THandle;
@@ -62,22 +62,22 @@ procedure EmuXRefFailure;
 procedure EmuPanic(); // export;
 procedure CxbxKrnlNoFunc; cdecl;
 
-implementation
-
 var
   // ! thread local storage
-  DxbxKrnl_TLS: PXBE_TLS;
+  CxbxKrnl_TLS: PXBE_TLS;
   // thread local storage data
-  DxbxKrnl_TLSData: Pointer;
+  CxbxKrnl_TLSData: Pointer;
   // xbe header structure
-  DxbxKrnl_XbeHeader: PXBE_HEADER;
+  CxbxKrnl_XbeHeader: PXBE_HEADER;
   // parent window handle
-  DxbxKrnl_hEmuParent: THandle;
+  CxbxKrnl_hEmuParent: THandle;
 
   // thread handles
   g_hThreads: array [0..MAXIMUM_XBOX_THREADS - 1] of THandle;
 
-function EmuVerifyVersion(const szVersion: string): Boolean;
+implementation
+
+function CxbxKrnlVerifyVersion(const szVersion: string): Boolean;
 begin
   Result := (szVersion = _DXBX_VERSION);
 end;
@@ -107,10 +107,10 @@ begin
   DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
 
   // update caches
-  DxbxKrnl_TLS := pTLS;
-  DxbxKrnl_TLSData := pTLSData;
-  DxbxKrnl_XbeHeader := pXbeHeader;
-  DxbxKrnl_hEmuParent := IfThen(IsWindow(hwndParent), hwndParent, 0);
+  CxbxKrnl_TLS := pTLS;
+  CxbxKrnl_TLSData := pTLSData;
+  CxbxKrnl_XbeHeader := pXbeHeader;
+  CxbxKrnl_hEmuParent := IfThen(IsWindow(hwndParent), hwndParent, 0);
 
   // For Unicode Conversions
 // TODO SetLocale(LC_ALL, 'English');
