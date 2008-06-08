@@ -230,7 +230,7 @@ procedure Panic_0B7; stdcall; begin Unimplemented($0B7); end;
 procedure Panic_0B8; stdcall; begin Unimplemented($0B8); end;
 procedure Panic_0B9; stdcall; begin Unimplemented($0B9); end;
 procedure Panic_0BA; stdcall; begin Unimplemented($0BA); end;
-procedure Panic_0BB; stdcall; begin Unimplemented($0BB); end;
+//procedure Panic_0BB; stdcall; begin Unimplemented($0BB); end;
 procedure Panic_0BC; stdcall; begin Unimplemented($0BC); end;
 procedure Panic_0BD; stdcall; begin Unimplemented($0BD); end;
 procedure Panic_0BE; stdcall; begin Unimplemented($0BE); end;
@@ -600,7 +600,7 @@ var
     @Panic_0B8,                          // $00B8 (184)
     @Panic_0B9,                          // $00B9 (185)
     @Panic_0BA,                          // $00BA (186)
-    @Panic_0BB,                          // $00BB (187)
+    @xboxkrnl_NtClose,                   // $00BB (187)
     @Panic_0BC,                          // $00BC (188)
     @Panic_0BD,                          // $00BD (189)
     @Panic_0BE,                          // $00BE (190)
@@ -668,7 +668,7 @@ var
     @Panic_0FC,                          // $00FC (252)
     @Panic_0FD,                          // $00FD (253)
     @Panic_0FE,                          // $00FE (254)
-    @PsCreateSystemThreadEx{Panic_0FF},  // $00FF (255)
+    @xboxkrnl_PsCreateSystemThreadEx,    // $00FF (255)
     @Panic_100,                          // $0100 (256)
     @Panic_101,                          // $0101 (257)
     @Panic_102,                          // $0102 (258)

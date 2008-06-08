@@ -53,7 +53,9 @@ uses
   JwaWinBase in '..\Libraries\jwapi\Win32API\JwaWinBase.pas',
   JwaNative in '..\Libraries\jwapi\Win32API\JwaNative.pas',
   JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas',
-  uEmuKrnl in 'DxbxKrnl\uEmuKrnl.pas';
+  uEmuKrnl in 'DxbxKrnl\uEmuKrnl.pas',
+  uEmuXapi in 'DxbxKrnl\uEmuXapi.pas',
+  uEmuFile in 'DxbxKrnl\uEmuFile.pas';
 
 {$R *.res}   
 
