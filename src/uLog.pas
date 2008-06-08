@@ -47,6 +47,8 @@ var
   LogFileOpen: Boolean = False;
   LogFile: TextFile;
 
+  DxbxLogLock: Windows._RTL_CRITICAL_SECTION;
+
 procedure DbgPrintf(aStr: string);
 begin
   WriteLog(aStr);
@@ -130,6 +132,8 @@ procedure WriteLog(aText: string);
   end;
 
 begin
+  EnterCriticalSection({var}DxbxLogLock);
+
   case m_DxbxDebug of
     DM_CONSOLE:
       if Assigned(frm_LogConsole) then
@@ -141,12 +145,16 @@ begin
         Flush({var}LogFile);
       end;
   end;
+  
+  LeaveCriticalSection({var}DxbxLogLock);
 end;
 
 initialization
 
+  InitializeCriticalSection({var}DxbxLogLock);
+
 finalization
 
   CloseLogs;
-  
+
 end.

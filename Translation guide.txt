@@ -1,1 +1,1 @@
-NTAPI -> stdcall
+NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)

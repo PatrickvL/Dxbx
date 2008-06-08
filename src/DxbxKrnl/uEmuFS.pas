@@ -159,7 +159,7 @@ begin
 				if (v mod $10) = 0 then
         begin
 					DbgPrintf(Line);
-          Line := 'EmuFS : $' + IntToHex(Integer(@pNewTLS[v]), 8) + ': ';
+          Line := 'EmuFS : 0x' + IntToHex(Integer(@pNewTLS[v]), 8) + ': ';
         end;
 
 				bByte := PUInt8(Integer(pNewTLS) + v);
