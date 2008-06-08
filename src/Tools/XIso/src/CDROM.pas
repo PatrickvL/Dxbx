@@ -33,27 +33,32 @@ uses
 const
 //------------------------------------------------
 // Definicion de constantes
+// Constants definition
 //------------------------------------------------
 //---------------
 //   Constantes
+//   Constants
 //---------------
 //Constantes Dispositivo
-  Max_Devices     = 256;  //Numero maximo de dispositivos
+//Device Constants
+  Max_Devices     = 256;  //Numero maximo de dispositivos (Max number of devices)
 //Constantes CD-ROM
-  ReadIn_Track    = $00;  //Pista Read-In
-  ReadOut_Track   = $aa;  //Pista Read-Out
+//CD-ROM Constants
+  ReadIn_Track    = $00;  //Pista Read-In (Read-In Tracks)
+  ReadOut_Track   = $aa;  //Pista Read-Out(Read-Out Tracks)
   FrameByte       = 2352;
 //---------------
-//   OpCodes (Escritos como SDK Adaptec)
+//   OpCodes (Escritos como SDK Adaptec)  (Written like SDK Adaptec)
 //---------------
 //OpCodes comunes
-  SCSI_TestUnitReady      = $00;  //Prueba de preparado la Unidad
+//Common OpCodes
+  SCSI_TestUnitReady      = $00;  //Prueba de preparado la Unidad (Unit Ready Test)
   SCSI_RequestSence       = $03;  //Request Sense
   SCSI_Inquiry            = $12;  //SCSI Inquiry
   SCSI_ModeSelect         = $55;  //Mode Select (10)
   SCSI_ModeSense          = $5a;  //Mode Sense
-  SCSI_GetConfiguration   = $46;  //Obtiene las diferentes configuraciones de la unidad
-  SCSI_HayCD              = $00;  //Hay CD metido o no
+  SCSI_GetConfiguration   = $46;  //Obtiene las diferentes configuraciones de la unidad (Gets the unit's different configurations)
+  SCSI_HayCD              = $00;  //Hay CD metido o no                                  (Check for a CD)
 //OpCodes CD-ROM
   SCSI_MediumRemoval      = $1e;  //Prohibicion/Permiso de sacar medio
   SCSI_ReadSubchannel     = $42;  //Leer Subcanal
