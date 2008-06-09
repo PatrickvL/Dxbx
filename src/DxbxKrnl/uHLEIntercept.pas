@@ -24,6 +24,8 @@ interface
 uses
   // Delphi
   Windows,
+  // Jedi
+  JwaWinType,
   // Dxbx
   uTypes,
   uDxbxKrnlUtils,
@@ -31,8 +33,9 @@ uses
   uEmuShared,
   uEmuFS;
 
-
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
+procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
+procedure  EmuXRefFailure();
 
 implementation
 
@@ -44,9 +47,8 @@ implementation
 //include 'EmuShared.h'
 //include 'HLEDataBase.h'
 
- function EmuLocateFunction(var Oovpa: OOVPA; lower: uint32; upper: uint32): Pointer;
- procedure  EmuInstallWrappers(var OovpaTable: OOVPATable; OovpaTableSize: uint32; var pXbeHeader: Xbe.Header);
- procedure  EmuXRefFailure();
+function EmuLocateFunction(var Oovpa: OOVPA; lower: uint32; upper: uint32): PVOID;
+procedure  EmuInstallWrappers(var OovpaTable: OOVPATable; OovpaTableSize: uint32; var pXbeHeader: Xbe.Header);
 
 //include <shlobj.h>
 //include <vector>
@@ -669,6 +671,19 @@ begin
      end;
 end;
 *)
+
+// install function interception wrapper
+procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
+var
+  RelativeJMPAddress: UInt32;
+begin
+  // Write JMP rel16 opcode (Jump near, displacement relative to next instruction) :
+  FunctionAddr^ := $E9;
+  // Calculate relative address :
+  RelativeJMPAddress := (uint32(WrapperAddr) - uint32(FunctionAddr) - 5);
+  // Write that after the JMP :
+  CopyMemory(Pointer(Integer(FunctionAddr) + 1), @RelativeJMPAddress, 4);
+end;
 
 // alert for the situation where an Xref function body is hit
 procedure EmuXRefFailure();

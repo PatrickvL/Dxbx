@@ -279,6 +279,7 @@ begin
     Result := True;
   except
     FreeAndNil(aXbe);
+    raise;
   end;
 end;
 
