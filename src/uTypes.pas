@@ -26,7 +26,7 @@ uses
   Windows;
 
 const
-  NUMBER_OF_THUNKS = 367;
+  NUMBER_OF_THUNKS = 379;
 
 type
   EMU_STATE = ( esNone, esFileOpen, esRunning );
