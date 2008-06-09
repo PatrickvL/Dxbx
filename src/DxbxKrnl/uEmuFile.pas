@@ -21,6 +21,8 @@ unit uEmuFile;
 
 interface
 
+{$IFDEF DXBX_EMUHANDLES}
+
 uses
   // Jedi
   JwaWinType,
@@ -32,8 +34,36 @@ const
 
 type
   // Wrapper of a handle object
-  TEmuHandle = class
+  TEmuHandle = class(TObject)
     // TODO
+  end;
+
+  // An NT fake object
+  TEmuNtObject = class(TObject) // TODO
+  private
+    RefCount: ULONG; // Reference count
+  protected
+    Name: PWideChar; // Object name (Unicode, because we handle after-conversion strings)
+    NameLength: ULONG;
+    PermanentFlag: Bool; // Permanent status
+  public
+    // Decrements the reference count of this object (never override)
+	  procedure NtClose();
+    // These functions mimic the Nt* calls
+
+    // Increments the reference count of this object
+    // For file handles, a whole new EmuFile structure is returned.
+    // For other objects (the default implementation), "self" is returned.
+	  function NtDuplicateObject(): TEmuNtObject; virtual;
+  end;
+
+  // Emulated file handle
+  TEmuNtFile = class(TEmuNtObject)
+  private
+    _File: HANDLE; // The Windows file handle
+    // Volume: TEmuNtVolume; // Pointer to the volume from which this came
+  public
+    // TODO : We need to override NtDuplicateObject in this case
   end;
 
 var
@@ -53,7 +83,11 @@ function IsEmuHandle(hFile: {xboxkrnl::}HANDLE): BOOL; inline
 function EmuHandleToPtr(hFile: {xboxkrnl::}HANDLE): TEmuHandle; inline;
 function PtrToEmuHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 
+{$ENDIF}
+
 implementation
+
+{$IFDEF DXBX_EMUHANDLES}
 
 // is hFile a 'special' emulated handle?
 function IsEmuHandle(hFile: {xboxkrnl::}HANDLE): BOOL; inline
@@ -72,6 +106,8 @@ function PtrToEmuHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 begin
   Result := HANDLE(uint32(apEmuHandle) + $80000000);
 end;
+
+{$ENDIF}
 
 end.
 

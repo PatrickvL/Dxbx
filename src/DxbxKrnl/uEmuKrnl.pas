@@ -420,7 +420,14 @@ function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall;
 function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall;
 function xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall;
 function xboxkrnl_PhyInitialize(): NTSTATUS; stdcall;
-function xboxkrnl_PsCreateSystemThread(): NTSTATUS; stdcall;
+function xboxkrnl_PsCreateSystemThread(
+  lpThreadAttributes: PULONG;              // SD
+  dwStackSize: DWORD;                      // initial stack size
+  lpStartAddress: PKSTART_ROUTINE;         // thread function
+  lpParameter: PVOID;                      // thread argument
+  dwCreationFlags: DWORD;                  // creation option
+  lpThreadId: PULONG                       // thread identifier
+): NTSTATUS; stdcall;
 function xboxkrnl_PsCreateSystemThreadEx(
   ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG;
@@ -573,7 +580,7 @@ type
     hStartedEvent: HANDLE;
   end;
 
-// PsCreateSystemThread proxy procedure
+// PsCreateSystemThread(Ex) proxy procedure
 //pragma warning(push)
 //pragma warning(disable: 4731)  // disable ebp modification warning
 function {WINAPI} PCSTProxy(Parameter: PPCSTProxyParam): Integer;//Word;
@@ -592,11 +599,11 @@ begin
   StartSuspended := Parameter.StartSuspended;
 
   DbgPrintf('EmuKrnl : PCSTProxy' +
-       #13'(' +
-       #13'   StartContext1       : 0x' + IntToHex(Integer(StartContext1), 8) +
-       #13'   StartContext2       : 0x' + IntToHex(Integer(StartContext2), 8) +
-       #13'   StartRoutine        : 0x' + IntToHex(Integer(Addr(StartRoutine)), 8) +
-       #13');');
+    #13#10'(' +
+    #13#10'   StartContext1       : 0x' + IntToHex(Integer(StartContext1), 8) +
+    #13#10'   StartContext2       : 0x' + IntToHex(Integer(StartContext2), 8) +
+    #13#10'   StartRoutine        : 0x' + IntToHex(Integer(Addr(StartRoutine)), 8) +
+    #13#10');');
 
   if StartSuspended then
     SuspendThread(GetCurrentThread());
@@ -633,6 +640,8 @@ begin
         jmp         esi
      end;
   except
+    on E: Exception do
+      DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
 //  __except(EmuException(GetExceptionInformation()))
 //    EmuWarning('Problem with ExceptionFilter not ');
   end;
@@ -1980,16 +1989,19 @@ end;
 
 // 0x00BB - NtClose
 function xboxkrnl_NtClose(Handle: THandle): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
+{$IFDEF DXBX_EMUHANDLES}
 var
   iEmuHandle: TEmuHandle;
+{$ENDIF}
 begin
   EmuSwapFS();   // Win2k/XP FS
 
   DbgPrintf('EmuKrnl : NtClose' +
-        #13'(' +
-        #13'   Handle              : 0x' + IntToHex(Integer(Handle), 8) +
-        #13');');
+    #13#10'(' +
+    #13#10'   Handle              : 0x' + IntToHex(Integer(Handle), 8) +
+    #13#10');');
 
+{$IFDEF DXBX_EMUHANDLES}
   // delete 'special' handles
   if IsEmuHandle(Handle) then
   begin
@@ -2000,6 +2012,7 @@ begin
     Result := STATUS_SUCCESS;
   end
   else // close normal handles
+{$ENDIF}
     Result := NtClose(Handle);
 
   EmuSwapFS();   // Xbox FS
@@ -2467,20 +2480,70 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_PsCreateSystemThread(): NTSTATUS; stdcall;
+function xboxkrnl_PsCreateSystemThread(
+  lpThreadAttributes: PULONG;              // SD
+  dwStackSize: DWORD;                      // initial stack size
+  lpStartAddress: PKSTART_ROUTINE;         // thread function
+  lpParameter: PVOID;                      // thread argument
+  dwCreationFlags: DWORD;                  // creation option
+  lpThreadId: PULONG                       // thread identifier
+): NTSTATUS; stdcall;
+var
+  ThreadHandle: HANDLE;
+  ThreadExtraSize: ULONG;
+  KernelStackSize: ULONG;
+  TlsDataSize: ULONG;
+  StartContext1: PVOID;
+  StartContext2: PVOID;
+  CreateSuspended: LONGBOOL;
+  DebugStack: LONGBOOL;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('PsCreateSystemThread');
+
+  // TODO : How to apply the local arguments like lpThreadAttributes ?
+  ThreadHandle := 0;
+  ThreadExtraSize := dwStackSize; // ??
+  KernelStackSize := dwStackSize; // ??
+  TlsDataSize := 0; // ??
+  StartContext1 := lpParameter; // ??
+  StartContext2 := nil; // ??
+  CreateSuspended := (dwCreationFlags and CREATE_SUSPENDED) > 0;
+  DebugStack := False; // ??
+
+  DbgPrintf('EmuKrnl : PsCreateSystemThread' +
+    #13#10'(' +
+    #13#10'   lpThreadAttributes  : 0x' + IntToHex(lpThreadAttributes^, 8) +
+    #13#10'   dwStackSize         : 0x' + IntToHex(dwStackSize, 8) +
+    #13#10'   lpStartAddress      : 0x' + IntToHex(Integer(Addr(lpStartAddress)), 8) +
+    #13#10'   lpParameter         : 0x' + IntToHex(Integer(lpParameter), 8) +
+    #13#10'   dwCreationFlags     : 0x' + IntToHex(Integer(dwCreationFlags), 8) +
+    #13#10'   ThreadId            : 0x' + IntToHex(Integer(Addr(lpThreadId)), 8) +
+    #13#10');');
+
+  // Pass-through to Ex-implementation :
+  Result := xboxkrnl_PsCreateSystemThreadEx(
+    {dummy}@ThreadHandle,
+    ThreadExtraSize,
+    KernelStackSize,
+    TlsDataSize,
+    {ThreadId=}lpThreadId,
+    StartContext1,
+    StartContext2,
+    CreateSuspended,
+    DebugStack,
+    {StartRoutine=}lpStartAddress
+    );
+
   EmuSwapFS(); // Xbox FS
 end;
 
 // 0x00FF - PsCreateSystemThreadEx
 function xboxkrnl_PsCreateSystemThreadEx(
-  ThreadHandle: PHANDLE;
+  ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG;
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
-  {out}ThreadId: PULONG {OPTIONAL};
+  ThreadId: PULONG; // out, optional
   StartContext1: PVOID;
   StartContext2: PVOID;
   CreateSuspended: LONGBOOL;
@@ -2494,18 +2557,18 @@ begin
   EmuSwapFS();   // Win2k/XP FS
 
   DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
-       #13'(' +
-       #13'   ThreadHandle        : 0x' + IntToHex(Integer(ThreadHandle^), 8) +
-       #13'   ThreadExtraSize     : 0x' + IntToHex(ThreadExtraSize, 8) +
-       #13'   KernelStackSize     : 0x' + IntToHex(KernelStackSize, 8) +
-       #13'   TlsDataSize         : 0x' + IntToHex(TlsDataSize, 8) +
-       #13'   ThreadId            : 0x' + IntToHex(Integer(Addr(ThreadId)), 8) +
-       #13'   StartContext1       : 0x' + IntToHex(Integer(StartContext1), 8) +
-       #13'   StartContext2       : 0x' + IntToHex(Integer(StartContext2), 8) +
-       #13'   CreateSuspended     : 0x' + IntToHex(Integer(CreateSuspended), 8) +
-       #13'   DebugStack          : 0x' + IntToHex(Integer(DebugStack), 8) +
-       #13'   StartRoutine        : 0x' + IntToHex(Integer(Addr(StartRoutine)), 8) +
-       #13');');
+    #13#10'(' +
+    #13#10'   ThreadHandle        : 0x' + IntToHex(Integer(ThreadHandle^), 8) +
+    #13#10'   ThreadExtraSize     : 0x' + IntToHex(ThreadExtraSize, 8) +
+    #13#10'   KernelStackSize     : 0x' + IntToHex(KernelStackSize, 8) +
+    #13#10'   TlsDataSize         : 0x' + IntToHex(TlsDataSize, 8) +
+    #13#10'   ThreadId            : 0x' + IntToHex(Integer(Addr(ThreadId)), 8) +
+    #13#10'   StartContext1       : 0x' + IntToHex(Integer(StartContext1), 8) +
+    #13#10'   StartContext2       : 0x' + IntToHex(Integer(StartContext2), 8) +
+    #13#10'   CreateSuspended     : 0x' + IntToHex(Integer(CreateSuspended), 8) +
+    #13#10'   DebugStack          : 0x' + IntToHex(Integer(DebugStack), 8) +
+    #13#10'   StartRoutine        : 0x' + IntToHex(Integer(Addr(StartRoutine)), 8) +
+    #13#10');');
 
   // create thread, using our special proxy technique
   begin
