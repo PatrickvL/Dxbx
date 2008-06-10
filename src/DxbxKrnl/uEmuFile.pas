@@ -60,7 +60,7 @@ type
   // Emulated file handle
   TEmuNtFile = class(TEmuNtObject)
   private
-    _File: HANDLE; // The Windows file handle
+    &File: HANDLE; // The Windows file handle
     // Volume: TEmuNtVolume; // Pointer to the volume from which this came
   public
     // TODO : We need to override NtDuplicateObject in this case

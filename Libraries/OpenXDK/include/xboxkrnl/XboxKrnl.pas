@@ -55,14 +55,15 @@ const XBSYSAPI = DECLSPEC_EXPORT;
 //undef  XBSYSAPI
 const XBSYSAPI =;
 //endif
+*)
 
 // ******************************************************************
 // * Null
 // ******************************************************************
-//ifndef NULL
-const 0 =                0;
-//endif
+const
+  NULL = nil;
 
+(*
 // ******************************************************************
 // * TRUE / FALSE
 // ******************************************************************
@@ -76,7 +77,7 @@ const TRUE =    1;
 // ******************************************************************
 // * CONST
 // ******************************************************************
-const CONST =;               
+const CONST =;
 
 // ******************************************************************
 // * VOID
@@ -85,11 +86,13 @@ const CONST =;
 type                  VOID = procedure;
     //#define VOID                void
 //endif
-
+*)
 // ******************************************************************
 // * Basic types
 // ******************************************************************
-type                  CHAR, CCHAR = Char;
+type
+  CCHAR = AnsiChar;
+(*
 type                 SmallInt, CSHORT = SmallInt;
 type                  LongInt = LongInt;
 type         UCHAR = Byte;
@@ -125,7 +128,14 @@ type              *PINT_PTR = INT_PTR;
 type                 *PVOID, *Pointer = VOID;
 type                 *THandle = procedure;
 type               *PHANDLE = THandle;
+*)
+type
+  // Because Delphi doesn't support forward declarations on record-pointers,
+  // you should be alert that all occurences of this type are actually meant
+  // to use PKDPC instead - so use typecasts where necessary!
+  _PKDPC = Pointer;
 
+(*
 // ******************************************************************
 // * LPSECURITY_ATTRIBUTES
 // ******************************************************************
@@ -148,7 +158,7 @@ const STATUS_UNRECOGNIZED_MEDIA =        ((DWORD   )$C0000014);
 const STATUS_NO_MEMORY =                 ((DWORD   )$C0000017L);    
 //endif
 const STATUS_ALERTED =                   ((DWORD   )$00000101);  
-const STATUS_USER_APC =                  ((DWORD   )$000000C0L);    
+const STATUS_USER_APC =                  ((DWORD   )$000000C0L);
 // The SCSI input buffer was too large (not necessarily an error!)
 const STATUS_DATA_OVERRUN =              ((DWORD   )$C000003CL);  
 const STATUS_INVALID_IMAGE_FORMAT =      ((DWORD   )$C000007BL);  
@@ -164,11 +174,11 @@ const STATUS_OBJECT_NAME_COLLISION =     ((DWORD   )$C0000035L);
 // ******************************************************************
 const PAGE_NOACCESS =          $01;     
 const PAGE_READONLY =          $02;     
-const PAGE_READWRITE =         $04;     
+const PAGE_READWRITE =         $04;
 const PAGE_WRITECOPY =         $08;     
 const PAGE_EXECUTE =           $10;     
 const PAGE_EXECUTE_READ =      $20;     
-const PAGE_EXECUTE_READWRITE = $40;     
+const PAGE_EXECUTE_READWRITE = $40;
 const PAGE_EXECUTE_WRITECOPY = $80;     
 const PAGE_GUARD =             $100;     
 const PAGE_NOCACHE =           $200;     
@@ -190,12 +200,15 @@ const UNALIGNED =;
 const OPTIONAL =;
 const IN =;
 const OUT =;
+*)
 
 // ******************************************************************
 // * KPROCESSOR_MODE
 // ******************************************************************
-type   KPROCESSOR_MODE = CCHAR;
+type
+  KPROCESSOR_MODE = CCHAR;
 
+(*
 // ******************************************************************
 // * MODE
 // ******************************************************************
@@ -611,25 +624,22 @@ const PCI_USB0_IRQ =                        1;
 const PCI_USB0_REGISTER_BASE =              $FED00000;
 const PCI_USB0_REGISTER_LENGTH =            $00001000;
 const PCI_USB0_OHCI_CONTROLLER =            $01C2;
+*)
 
 // ******************************************************************
 // * RETURN_FIRMWARE
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
- _RETURN_FIRMWARE
-begin 
-    ReturnFirmwareHalt          = $0,
-    ReturnFirmwareReboot        = $1,
-    ReturnFirmwareQuickReboot   = $2,
-    ReturnFirmwareHard          = $3,
-    ReturnFirmwareFatal         = $4,
-    ReturnFirmwareAll           = $5
- end;
-RETURN_FIRMWARE, *LPRETURN_FIRMWARE;
+  LPRETURN_FIRMWARE = ^RETURN_FIRMWARE;
+  RETURN_FIRMWARE = {enum}(
+    ReturnFirmwareHalt{=$0},
+    ReturnFirmwareReboot{=$1},
+    ReturnFirmwareQuickReboot{=$2},
+    ReturnFirmwareHard{=$3},
+    ReturnFirmwareFatal{=$4},
+    ReturnFirmwareAll{=$5});
 
+(*
 // ******************************************************************
 // * LAUNCH_DATA_HEADER
 // ******************************************************************
@@ -652,21 +662,21 @@ LAUNCH_DATA_PAGE,*PLAUNCH_DATA_PAGE	= record
                    Pad: array[0..492-1] of UCHAR;
                    LaunchData: array[0..3072-1] of UCHAR;
  end;
-
+*)
 // ******************************************************************
 // * DISPATCHER_HEADER
 // ******************************************************************
 type
-	
-DISPATCHER_HEADER	= record  
-    UCHAR       cType;           // 0x00
-    UCHAR       Absolute;       // 0x01
-    UCHAR       Size;           // 0x02
-    UCHAR       Inserted;       // 0x03
-    LongInt        SignalState;    // 0x04
-    LIST_ENTRY  WaitListHead;   // 0x08
+  DISPATCHER_HEADER	= record
+    cType: UCHAR;             // 0x00
+    &Absolute: UCHAR;         // 0x01
+    Size: UCHAR;              // 0x02
+    Inserted: UCHAR;          // 0x03
+    SignalState: LongInt;     // 0x04
+    WaitListHead: LIST_ENTRY; // 0x08
  end;
 
+(*
 // ******************************************************************
 // * TIMER_TYPE
 // ******************************************************************
@@ -680,20 +690,20 @@ begin
     SynchronizationTimer  = 1
  end;
 TIMER_TYPE;
-
+*)
 // ******************************************************************
 // * KTIMER (Timer Object)
 // ******************************************************************
 type
-	
-KTIMER,*PKTIMER	= record  
-    DISPATCHER_HEADER   Header;           // 0x00
-    ULARGE_INTEGER      DueTime;          // 0x10
-    LIST_ENTRY          TimerListEntry;   // 0x18
-    struct _KDPC       *Dpc;              // 0x20
-    LongInt                Period;           // 0x24
+  PKTIMER = ^KTIMER;
+  KTIMER	= record
+    Header: DISPATCHER_HEADER;    // 0x00
+    DueTime: ULARGE_INTEGER;      // 0x10
+    TimerListEntry: LIST_ENTRY;   // 0x18
+    Dpc: _PKDPC;                  // 0x20
+    Period: LongInt;              // 0x24
  end;
-
+(*
 // ******************************************************************
 // * PKSTART_ROUTINE
 // ******************************************************************
@@ -711,35 +721,37 @@ type  VOID (NTAPI *PKSTART_ROUTINE)
     IN PVOID StartContext2
 );
 
-struct _KDPC;
+*)
 
 // ******************************************************************
 // * PKDEFERRED_ROUTINE
 // ******************************************************************
-type  VOID (PKDEFERRED_ROUTINE)
-(
-    IN struct _KDPC *Dpc,
-    IN PVOID         DeferredContext,
-    IN PVOID         SystemArgument1,
-    IN PVOID         SystemArgument2
-);
+type
+  PKDEFERRED_ROUTINE = procedure(
+    Dpc: _PKDPC;
+    DeferredContext: PVOID;
+    SystemArgument1: PVOID;
+    SystemArgument2: PVOID
+  ); stdcall; // TODO : Is this indeed the necessary calling convention?
+
 
 // ******************************************************************
 // * KDPC (Deferred Procedure Call (DPC) Object)
 // ******************************************************************
 type
-	
-KDPC,*PKDPC	= record  
-    CSHORT              cType;               // 0x00
-    UCHAR               Number;             // 0x02
-    UCHAR               Importance;         // 0x03
-    LIST_ENTRY          DpcListEntry;       // 0x04
-    PKDEFERRED_ROUTINE  DeferredRoutine;    // 0x0C
-    PVOID               DeferredContext;
-    PVOID               SystemArgument1;
-    PVOID               SystemArgument2;
- end;
-
+  PKDPC = ^KDPC;
+  KDPC = record
+    cType: CSHORT;                       // 0x00
+    Number: UCHAR;                       // 0x02
+    Importance: UCHAR;                   // 0x03
+    DpcListEntry: LIST_ENTRY;            // 0x04
+    DeferredRoutine: PKDEFERRED_ROUTINE; // 0x0C
+    DeferredContext: PVOID;
+    SystemArgument1: PVOID;
+    SystemArgument2: PVOID;
+  end;
+  
+(*
 // ******************************************************************
 // * KOBJECTS
 // ******************************************************************
