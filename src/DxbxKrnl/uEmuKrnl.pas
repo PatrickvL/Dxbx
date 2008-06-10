@@ -30,6 +30,8 @@ uses
   JwaWinNT,
   JwaNative,
   JwaNTStatus,
+  // OpenXDK
+  XboxKrnl,
   // Dxbx
   uLog,
   uEmuFS,
@@ -192,7 +194,7 @@ function xboxkrnl_ExMutantObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_ExQueryPoolBlockSize(): NTSTATUS; stdcall;
 function xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
-  _Type: PDWORD; // out
+  &Type: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
@@ -238,10 +240,26 @@ function xboxkrnl_IoBuildSynchronousFsdRequest(): NTSTATUS; stdcall;
 function xboxkrnl_IoCheckShareAccess(): NTSTATUS; stdcall;
 function xboxkrnl_IoCompletionObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_IoCreateDevice(): NTSTATUS; stdcall;
-function xboxkrnl_IoCreateFile(): NTSTATUS; stdcall;
-function xboxkrnl_IoCreateSymbolicLink(): NTSTATUS; stdcall;
+function xboxkrnl_IoCreateFile(
+  FileHandle: PHANDLE; // out
+  DesiredAccess: ACCESS_MASK;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  IoStatusBlock: PIO_STATUS_BLOCK; // out
+  AllocationSize: PLARGE_INTEGER;
+  FileAttributes: ULONG;
+  ShareAccess: ULONG;
+  Disposition: ULONG;
+  CreateOptions: ULONG;
+  Options: ULONG
+  ): NTSTATUS; stdcall;
+function xboxkrnl_IoCreateSymbolicLink(
+  SymbolicLinkName: PSTRING;
+  DeviceName: PSTRING
+  ): NTSTATUS; stdcall;
 function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall;
-function xboxkrnl_IoDeleteSymbolicLink(): NTSTATUS; stdcall;
+function xboxkrnl_IoDeleteSymbolicLink(
+  SymbolicLinkName: PSTRING
+  ): NTSTATUS; stdcall;
 function xboxkrnl_IoDeviceObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_IoFileObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall;
@@ -271,7 +289,11 @@ function xboxkrnl_KeBugCheck(): NTSTATUS; stdcall;
 function xboxkrnl_KeBugCheckEx(): NTSTATUS; stdcall;
 function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall;
 function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_KeDelayExecutionThread(): NTSTATUS; stdcall;
+function xboxkrnl_KeDelayExecutionThread(
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: BOOLEAN;
+  Interval: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall;
 function xboxkrnl_KeEnterCriticalRegion(): NTSTATUS; stdcall;
 function xboxkrnl_MmGlobalData(): NTSTATUS; stdcall;
@@ -279,13 +301,20 @@ function xboxkrnl_KeGetCurrentIrql(): NTSTATUS; stdcall;
 function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeDeviceQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeDpc(): NTSTATUS; stdcall;
+function xboxkrnl_KeInitializeDpc(
+  Dpc: PKDPC;
+  DeferredRoutine: PKDEFERRED_ROUTINE;
+  DeferredContext: PVOID
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeEvent(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeInterrupt(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeMutant(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeQueue(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeSemaphore(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeTimerEx(): NTSTATUS; stdcall;
+function xboxkrnl_KeInitializeTimerEx(
+  Timer: PKTIMER;
+  &Type: TIMER_TYPE
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall;
 function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall;
 function xboxkrnl_KeInsertHeadQueue(): NTSTATUS; stdcall;
@@ -300,7 +329,9 @@ function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall;
 function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall;
 function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall;
 function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall;
-function xboxkrnl_KeQuerySystemTime(): NTSTATUS; stdcall;
+procedure xboxkrnl_KeQuerySystemTime(
+  CurrentTime: PLARGE_INTEGER
+  ); stdcall;
 function xboxkrnl_KeRaiseIrqlToDpcLevel(): NTSTATUS; stdcall;
 function xboxkrnl_KeRaiseIrqlToSynchLevel(): NTSTATUS; stdcall;
 function xboxkrnl_KeReleaseMutant(): NTSTATUS; stdcall;
@@ -321,7 +352,11 @@ function xboxkrnl_KeSetEvent(): NTSTATUS; stdcall;
 function xboxkrnl_KeSetEventBoostPriority(): NTSTATUS; stdcall;
 function xboxkrnl_KeSetPriorityProcess(): NTSTATUS; stdcall;
 function xboxkrnl_KeSetPriorityThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeSetTimer(): NTSTATUS; stdcall;
+function xboxkrnl_KeSetTimer(
+  Timer: PKTIMER;
+  DueTime: LARGE_INTEGER;
+  Dpc: PKDPC // OPTIONAL
+  ): BOOLEAN; stdcall;
 function xboxkrnl_KeSetTimerEx(): NTSTATUS; stdcall;
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall;
 function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall;
@@ -337,7 +372,9 @@ function xboxkrnl_KfLowerIrql(): NTSTATUS; stdcall;
 function xboxkrnl_KiBugCheckData(): NTSTATUS; stdcall;
 function xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
 function xboxkrnl_LaunchDataPage(): NTSTATUS; stdcall;
-function xboxkrnl_MmAllocateContiguousMemory(): NTSTATUS; stdcall;
+function xboxkrnl_MmAllocateContiguousMemory(
+  NumberOfBytes: ULONG
+  ): PVOID; stdcall;
 function xboxkrnl_MmAllocateContiguousMemoryEx(): NTSTATUS; stdcall;
 function xboxkrnl_MmAllocateSystemMemory(): NTSTATUS; stdcall;
 function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall;
@@ -410,7 +447,7 @@ function xboxkrnl_NtWaitForSingleObjectEx(): NTSTATUS; stdcall;
 function xboxkrnl_NtWaitForMultipleObjectsEx(): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pBuffer: dtU32; Length: dtU32; pByteOffset: dtU32): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall;
-function xboxkrnl_NtYieldExecution(): NTSTATUS; stdcall;
+procedure xboxkrnl_NtYieldExecution(); stdcall;
 function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall;
 function xboxkrnl_ObDirectoryObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall;
@@ -854,7 +891,7 @@ end;
 
 function xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
-  _Type: PDWORD; // out
+  &Type: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
@@ -1152,14 +1189,28 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoCreateFile(): NTSTATUS; stdcall;
+function xboxkrnl_IoCreateFile(
+  FileHandle: PHANDLE; // out
+  DesiredAccess: ACCESS_MASK;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  IoStatusBlock: PIO_STATUS_BLOCK; // out
+  AllocationSize: PLARGE_INTEGER;
+  FileAttributes: ULONG;
+  ShareAccess: ULONG;
+  Disposition: ULONG;
+  CreateOptions: ULONG;
+  Options: ULONG
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IoCreateFile');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoCreateSymbolicLink(): NTSTATUS; stdcall;
+function xboxkrnl_IoCreateSymbolicLink(
+  SymbolicLinkName: PSTRING;
+  DeviceName: PSTRING
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IoCreateSymbolicLink');
@@ -1173,7 +1224,9 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoDeleteSymbolicLink(): NTSTATUS; stdcall;
+function xboxkrnl_IoDeleteSymbolicLink(
+  SymbolicLinkName: PSTRING
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IoDeleteSymbolicLink');
@@ -1383,7 +1436,11 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KeDelayExecutionThread(): NTSTATUS; stdcall;
+function xboxkrnl_KeDelayExecutionThread(
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: BOOLEAN;
+  Interval: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('KeDelayExecutionThread');
@@ -1439,7 +1496,11 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KeInitializeDpc(): NTSTATUS; stdcall;
+function xboxkrnl_KeInitializeDpc(
+  Dpc: PKDPC;
+  DeferredRoutine: PKDEFERRED_ROUTINE;
+  DeferredContext: PVOID
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('KeInitializeDpc');
@@ -1481,7 +1542,10 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KeInitializeTimerEx(): NTSTATUS; stdcall;
+function xboxkrnl_KeInitializeTimerEx(
+  Timer: PKTIMER;
+  &Type: TIMER_TYPE
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('KeInitializeTimerEx');
@@ -1586,10 +1650,12 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KeQuerySystemTime(): NTSTATUS; stdcall;
+procedure xboxkrnl_KeQuerySystemTime(
+  CurrentTime: PLARGE_INTEGER
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('KeQuerySystemTime');
+  Unimplemented('KeQuerySystemTime');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -1733,10 +1799,15 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KeSetTimer(): NTSTATUS; stdcall;
+function xboxkrnl_KeSetTimer(
+  Timer: PKTIMER;
+  DueTime: LARGE_INTEGER;
+  Dpc: PKDPC // OPTIONAL
+  ): BOOLEAN; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('KeSetTimer');
+  Unimplemented('KeSetTimer');
+  Result := FALSE;
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -1845,10 +1916,13 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_MmAllocateContiguousMemory(): NTSTATUS; stdcall;
+function xboxkrnl_MmAllocateContiguousMemory(
+  NumberOfBytes: ULONG
+  ): PVOID; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('MmAllocateContiguousMemory');
+  Unimplemented('MmAllocateContiguousMemory');
+  Result := NULL;
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -2380,10 +2454,15 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtYieldExecution(): NTSTATUS; stdcall;
+procedure xboxkrnl_NtYieldExecution(); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('NtYieldExecution');
+
+  // NOTE: this eats up the debug log far too quickly
+  //DbgPrintf("EmuKrnl (0x%X): NtYieldExecution();\n", GetCurrentThreadId());
+
+  NtYieldExecution();
+  
   EmuSwapFS(); // Xbox FS
 end;
 
