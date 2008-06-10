@@ -20,8 +20,8 @@ program Dxbx;
 {$INCLUDE Dxbx.inc}
 
 uses
-  Forms,
   SysUtils,
+  Forms,
   ufrm_Main in 'ufrm_Main.pas' {frm_Main},
   ufrm_ControllerConfig in 'ufrm_ControllerConfig.pas' {frm_ControllerConfig},
   ufrm_VideoConfig in 'ufrm_VideoConfig.pas' {frm_VideoConfig},
@@ -36,7 +36,8 @@ uses
   uTime in 'uTime.pas',
   uWindows in 'uWindows.pas',
   uTypes in 'uTypes.pas',
-  uDxbxXml in 'uDxbxXml.pas' {DxbxXml: TDataModule};
+  uDxbxXml in 'uDxbxXml.pas' {DxbxXml: TDataModule},
+  uXbeConvert in 'uXbeConvert.pas';
 
 {$R *.RES}
 
@@ -44,31 +45,27 @@ uses
 // (See http://hallvards.blogspot.com/2006/09/hack12-create-smaller-exe-files.html)
 {$SetPEFlags 1} // 1 = Windows.IMAGE_FILE_RELOCS_STRIPPED
 
-
-procedure ConvertXbe( Param : String );
 var
-  XbeFile: string;
+  XBEFilePath: string;
   Xbe : TXbe;
   tmpstr1, tmpstr2 : string;
 begin
-  XbeFile := Copy(ParamStr(1), 3, Length(ParamStr(1)) - 1);
-  if FileExists ( XbeFile ) then begin
-    ConvertXbeToExe ( ChangeFileExt(XbeFile, '.exe'), tmpstr1, tmpstr2, Xbe, Application.Handle );
-  end;
-end;    
+  Application.Initialize;
+  Application.Title := 'Dxbx';
+  Application.CreateForm(Tfrm_Main, frm_Main);
+  XBEFilePath := ParamStr(1);
 
-
-begin
-  if ParamStr(1) <> '' then begin
-    if Uppercase(ParamStr(1)[2]) = 'F' then
-      ConvertXbe ( ParamStr(1) );
-  end
-  else begin
-    Application.Initialize;
-    Application.Title := 'Dxbx';
-    Application.CreateForm(Tfrm_Main, frm_Main);
-    Application.CreateForm(TDxbxXml, DxbxXml);
-    Application.Run;
+  if  (XBEFilePath <> '')
+  and SameText(ExtractFileExt(XBEFilePath), '.xbe')
+  and FileExists(XBEFilePath) then
+  begin
+    Xbe := nil; // prevent warning
+    if ConvertXbeToExe(XBEFilePath, tmpstr1, tmpstr2, Xbe, Application.Handle) then
+      Exit;
+    // TODO : Error logging should go here
   end;
+
+  Application.CreateForm(TDxbxXml, DxbxXml);
+  Application.Run;
 end.
 
