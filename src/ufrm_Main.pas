@@ -164,7 +164,7 @@ type
     m_bExeChanged: Boolean;
 
     m_AutoConvertToExe: EnumAutoConvert;
-    Emulation_State : EMU_STATE;
+    Emulation_State: EMU_STATE;
 
     procedure SetExeGen(ConvertTo: EnumAutoConvert);
 
@@ -182,12 +182,11 @@ type
     procedure ReopenXbe(Sender: TObject);
     procedure ReopenExe(Sender: TObject);
 
-    function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): Boolean;
+
     function StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 
     function SendCommandToXdkTracker: Boolean;
 
-    procedure ConvertXbeToExe ( aFileName : String );
 
     procedure WMDROPFILES(var Msg: TMessage);
     procedure LBWindowProc(var Message: TMessage);
@@ -221,7 +220,7 @@ begin
     CloseXbe();
   end;
 
-  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
+  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename) then begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
     RecentXbeAdd(XbeOpenDialog.Filename);
     Emulation_State := esFileOpen;
@@ -281,7 +280,17 @@ end; // Tfrm_Main.actImportExeExecute
 
 procedure Tfrm_Main.actExportExeExecute(Sender: TObject);
 begin
-  ConvertToExe('', True);
+  if ExeSaveDialog.Execute then begin
+    if ConvertToExe('', True, m_Xbe, Self.Handle) then begin
+      m_ExeFilename := ExeSaveDialog.FileName;
+      WriteLog(m_szAsciiTitle + ' was converted to .exe.');
+      m_bExeChanged := False;
+      RecentExeAdd(m_ExeFilename);
+    end
+    else begin
+      WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
+    end;
+  end;
 end; // Tfrm_Main.actExportExeExecute
 
 //------------------------------------------------------------------------------
@@ -298,7 +307,7 @@ end; // Tfrm_Main.FormClose
 
 procedure Tfrm_Main.CloseXbe;
 begin
-  FreeAndNil({var}m_Xbe);
+  FreeAndNil(m_Xbe);
   Emulation_State := esNone;
   AddjustMenu;
 
@@ -355,82 +364,6 @@ end;
 
 //------------------------------------------------------------------------------
 
-function Tfrm_Main.ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean): Boolean;
-var
-  Filename: string;
-  i_EmuExe: TEmuExe;
-begin
-  Result := False;
-  Filename := 'default.exe';
-
-  if x_filename = '' then
-  begin
-    if ExeSaveDialog.Execute then
-      Filename := ExeSaveDialog.Filename
-    else
-      Filename := '';
-  end
-  else
-    Filename := x_filename;
-
-  if Filename <> '' then
-  begin
-    // ask permission to overwrite if file exists
-    if x_bVerifyIfExists then
-    begin
-      if FileExists(Filename) then
-      begin
-        if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
-          Exit;
-
-        DeleteFile(Filename);
-      end;
-    end;
-
-    // convert file
-    try
-      i_EmuExe := TEmuExe.Create(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, Self.Handle);
-      try
-        if i_EmuExe.doExport(Filename) then
-        begin
-          m_ExeFilename := Filename;
-          WriteLog(m_szAsciiTitle + ' was converted to .exe.');
-          m_bExeChanged := False;
-          RecentExeAdd(Filename);
-          Result := True;
-        end
-        else
-          WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
-      finally
-        FreeAndNil(i_EmuExe);    
-      end;
-    except
-      MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
-    end;
-  end;
-end;
-
-procedure Tfrm_Main.ConvertXbeToExe(aFileName: String);
-begin
-  if Assigned(m_Xbe) then begin
-    CloseXbe();
-  end;
-
-  if OpenXbe(aFileName, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
-    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-    RecentXbeAdd(aFileName);
-    Emulation_State := esFileOpen;
-    AddjustMenu;
-
-    ConvertToExe ( ChangeFileExt(aFileName, '.exe'), False );
-  end
-  else begin
-    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-    Emulation_State := esNone;
-    AddjustMenu;
-  end;
-end;
-
 procedure Tfrm_Main.CreateDllMenuOptions;
   function _CreateDLLToUseMenuItem(const u: TUseDLL): TMenuItem;
   begin
@@ -443,7 +376,7 @@ var
   u: TUseDLL;
 begin
   for u := Low(TUseDLL) to High(TUseDLL) do begin
-    UsesDlltype1.add ( _CreateDLLToUseMenuItem(u) );
+    UsesDlltype1.add(_CreateDLLToUseMenuItem(u));
   end;
 end;
 
@@ -451,7 +384,7 @@ procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
 begin
   frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
 
-  if frm_ControllerConfig.ShowModal = mrOk then begin 
+  if frm_ControllerConfig.ShowModal = mrOk then begin
   end;
 
   FreeAndNil({var}frm_ControllerConfig);
@@ -497,7 +430,7 @@ begin
         if FileExists(m_ExeFilename) then
         begin
           WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
-          WinExec(PChar(m_ExeFilename),SW_SHOWNORMAL);
+          WinExec(PChar(m_ExeFilename), SW_SHOWNORMAL);
         end
         else
         begin
@@ -519,34 +452,33 @@ end; // Tfrm_Main.ActStartEmulationExecute
 
 function Tfrm_Main.StartEmulation(x_AutoConvert: EnumAutoConvert): Boolean;
 var
-  szTempPath: string;
+  FileName: string;
 begin
   Result := False;
   // Convert Xbe to Exe, if necessary
   if (m_ExeFilename = '\0') or (m_bExeChanged) then
   begin
     case x_AutoConvert of
-      CONVERT_TO_WINDOWSTEMP:
-        begin
-          szTempPath := GetTempDirectory;
-          try
-            Result := ConvertToExe(szTempPath + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), False);
-          except
-          end;
-        end;
-      CONVERT_TO_XBEPATH:
-        begin
-          try
-            Result := ConvertToExe(ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe')), False);
-          except
-          end;
-        end;
+      CONVERT_TO_WINDOWSTEMP: FileName := GetTempDirectory + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe'));
+      CONVERT_TO_XBEPATH: FileName := ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe'));
     else
-        try
-          Result := ConvertToExe('', True);
-        except
-        end;
+      FileName := ''; ;
     end; // case
+
+    try
+      Result := ConvertToExe(FileName, False, m_Xbe, self.Handle);
+    finally
+    end;
+
+    if Result then begin
+      m_ExeFilename := FileName;
+      WriteLog(m_szAsciiTitle + ' was converted to .exe.');
+      m_bExeChanged := False;
+      RecentExeAdd(m_ExeFilename);
+    end
+    else begin
+      WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
+    end;
   end;
 end; // Tfrm_Main.StartEmulation
 
@@ -567,7 +499,7 @@ begin
   ReadSettingsIni;
   CreateLogs(ltGui);
 
-  AddjustMenu;  
+  AddjustMenu;
 end;
 
 //------------------------------------------------------------------------------
@@ -575,7 +507,7 @@ end;
 procedure Tfrm_Main.ImportExe(aFileName: string);
 begin
   m_ExeFilename := '\0';
-                            
+
   m_Xbe := TXbe.Create(aFileName, ftExe);
   try
     XbeLoaded();
@@ -584,12 +516,12 @@ begin
   except
     MessageDlg('Can not open Exe file.', mtWarning, [mbOk], 0);
     FreeAndNil({var}m_Xbe);
-  end;     
+  end;
 end;
 
 procedure Tfrm_Main.LBWindowProc(var Message: TMessage);
 begin
- if Message.Msg = WM_DROPFILES then
+  if Message.Msg = WM_DROPFILES then
     WMDROPFILES(Message); // handle WM_DROPFILES message
   OldLBWindowProc(Message);
   // call default ListBox1 WindowProc method to handle all other messages
@@ -603,7 +535,7 @@ var
   IniFile: TIniFile;
   RecentTMP: string;
   RecentTMPList: TStringList;
-  lIndex : Integer;
+  lIndex: Integer;
 begin
   DxbxIniFilePath := FApplicationDir + 'Dxbx.Ini';
   if FileExists(DxbxIniFilePath) then
@@ -624,7 +556,7 @@ begin
     m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
 
     // Dll settings
-    DLLToUse := TUseDLL(StrToInt (IniFile.ReadString( 'Settings', 'DllToUse', '0' )));
+    DLLToUse := TUseDLL(StrToInt(IniFile.ReadString('Settings', 'DllToUse', '0')));
     for lIndex := 0 to UsesDlltype1.Count - 1 do
       UsesDlltype1.Items[lIndex].Checked := False;
 
@@ -678,8 +610,19 @@ begin
     iSize := DragQueryFile(Msg.wParam, i, nil, 0) + 1;
     pcFileName := StrAlloc(iSize);
     DragQueryFile(Msg.wParam, i, pcFileName, iSize);
-    if FileExists(pcFileName) then
-      ConvertXbeToExe (pcFileName);
+    if FileExists(pcFileName) then begin
+      if ConvertXbeToExe(pcFileName, m_ExeFilename, m_XbeFilename, m_Xbe, self.handle ) then begin
+        StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+        RecentXbeAdd(pcFileName);
+        Emulation_State := esFileOpen;
+      end
+      else begin
+        MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+        StatusBar.SimpleText := 'DXBX:';
+        Emulation_State := esNone;
+      end;
+      AddjustMenu;
+    end;
     StrDispose(pcFileName);
   end;
   DragFinish(Msg.wParam);
@@ -723,9 +666,9 @@ begin
   IniFile.WriteString('Settings', 'DxbxDebugFilename', m_DxbxDebugFilename);
   IniFile.WriteInteger('Settings', 'KrnlDebug', ORD(m_KrnlDebug));
   IniFile.WriteString('Settings', 'KrnlDebugFilename', m_KrnlDebugFilename);
-  IniFile.WriteString('Settings', 'DllToUse', IntToStr (Ord(DLLToUse)) );
+  IniFile.WriteString('Settings', 'DllToUse', IntToStr(Ord(DLLToUse)));
 
-  FreeAndNil({var}inifile);
+  FreeAndNil(inifile);
 end; // Tfrm_Main.WriteSettingsIni
 
 //------------------------------------------------------------------------------
@@ -983,14 +926,14 @@ end; // Tfrm_Main.actExportLogoExecute
 
 procedure Tfrm_Main.actSwitchDLLExecute(Sender: TObject);
 var
-  lIndex : Integer;
+  lIndex: Integer;
 begin
   Assert(Sender is TMenuItem);
 
   for lIndex := 0 to UsesDlltype1.Count - 1 do
     UsesDlltype1.Items[lIndex].Checked := False;
 
-  TMenuItem ( Sender ).Checked := True;
+  TMenuItem(Sender).Checked := True;
 
   DLLToUse := TUseDLL(TMenuItem(Sender).Tag);
 end;
@@ -1093,7 +1036,7 @@ begin
     if Assigned(m_Xbe) then
       CloseXbe();
 
-    if OpenXbe(TempItem.Hint, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
+    if OpenXbe(TempItem.Hint, m_Xbe, m_ExeFilename, m_XbeFilename) then begin
       StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
       RecentXbeAdd(XbeOpenDialog.Filename);
       mnu_Logbitmap.Enabled := True;

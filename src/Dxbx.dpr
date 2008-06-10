@@ -21,6 +21,7 @@ program Dxbx;
 
 uses
   Forms,
+  SysUtils,
   ufrm_Main in 'ufrm_Main.pas' {frm_Main},
   ufrm_ControllerConfig in 'ufrm_ControllerConfig.pas' {frm_ControllerConfig},
   ufrm_VideoConfig in 'ufrm_VideoConfig.pas' {frm_VideoConfig},
@@ -43,11 +44,31 @@ uses
 // (See http://hallvards.blogspot.com/2006/09/hack12-create-smaller-exe-files.html)
 {$SetPEFlags 1} // 1 = Windows.IMAGE_FILE_RELOCS_STRIPPED
 
+
+procedure ConvertXbe( Param : String );
+var
+  XbeFile: string;
+  Xbe : TXbe;
+  tmpstr1, tmpstr2 : string;
 begin
-  Application.Initialize;
-  Application.Title := 'Dxbx';
-  Application.CreateForm(Tfrm_Main, frm_Main);
-  Application.CreateForm(TDxbxXml, DxbxXml);
-  Application.Run;
+  XbeFile := Copy(ParamStr(1), 3, Length(ParamStr(1)) - 1);
+  if FileExists ( XbeFile ) then begin
+    ConvertXbeToExe ( ChangeFileExt(XbeFile, '.exe'), tmpstr1, tmpstr2, Xbe, Application.Handle );
+  end;
+end;    
+
+
+begin
+  if ParamStr(1) <> '' then begin
+    if Uppercase(ParamStr(1)[2]) = 'F' then
+      ConvertXbe ( ParamStr(1) );
+  end
+  else begin
+    Application.Initialize;
+    Application.Title := 'Dxbx';
+    Application.CreateForm(Tfrm_Main, frm_Main);
+    Application.CreateForm(TDxbxXml, DxbxXml);
+    Application.Run;
+  end;
 end.
 
