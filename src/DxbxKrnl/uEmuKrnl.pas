@@ -194,7 +194,7 @@ function xboxkrnl_ExMutantObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_ExQueryPoolBlockSize(): NTSTATUS; stdcall;
 function xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
-  &Type: PDWORD; // out
+  _Type: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
@@ -313,7 +313,7 @@ function xboxkrnl_KeInitializeQueue(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeSemaphore(): NTSTATUS; stdcall;
 function xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
-  &Type: TIMER_TYPE
+  _Type: TIMER_TYPE
   ): NTSTATUS; stdcall;
 function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall;
 function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall;
@@ -396,7 +396,9 @@ function xboxkrnl_MmUnmapIoSpace(): NTSTATUS; stdcall;
 function xboxkrnl_NtAllocateVirtualMemory(): NTSTATUS; stdcall;
 function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall;
 function xboxkrnl_NtClearEvent(): NTSTATUS; stdcall;
-function xboxkrnl_NtClose(Handle: THandle): NTSTATUS; stdcall; {EXPORTNUM(187)}
+function xboxkrnl_NtClose(
+  Handle: THandle
+  ): NTSTATUS; stdcall; {EXPORTNUM(187)}
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateEvent(pFileHandle: dtU32; pszUnknownArgs1: dtU32; pszUnknownArgs2: dtU32; pszUnknownArgs3: dtU32): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateFile(pFileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pIoStatusBlock: dtU32; AllocationSize: dtU32; FileAttributes: dtU32; ShareAccess: dtACCESS_MASK; CreateDisposition: dtCreateDisposition; CreateOptions: dtCreateOptions): NTSTATUS; stdcall;
@@ -671,6 +673,8 @@ begin
   try
     SetEvent(Parameter.hStartedEvent);
 
+DbgPrintf('EmuKrnl : PCSTProxy : DEBUG, this thread hangs somewhere after this line!');
+
     EmuSwapFS();   // Xbox FS
 
     asm
@@ -891,7 +895,7 @@ end;
 
 function xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
-  &Type: PDWORD; // out
+  _Type: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
@@ -1544,7 +1548,7 @@ end;
 
 function xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
-  &Type: TIMER_TYPE
+  _Type: TIMER_TYPE
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -2074,7 +2078,9 @@ begin
 end;
 
 // 0x00BB - NtClose
-function xboxkrnl_NtClose(Handle: THandle): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
+function xboxkrnl_NtClose(
+  Handle: THandle
+  ): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
 {$IFDEF DXBX_EMUHANDLES}
 var
   iEmuHandle: TEmuHandle;

@@ -669,7 +669,7 @@ LAUNCH_DATA_PAGE,*PLAUNCH_DATA_PAGE	= record
 type
   DISPATCHER_HEADER	= record
     cType: UCHAR;             // 0x00
-    &Absolute: UCHAR;         // 0x01
+    _Absolute: UCHAR;         // 0x01
     Size: UCHAR;              // 0x02
     Inserted: UCHAR;          // 0x03
     SignalState: LongInt;     // 0x04
