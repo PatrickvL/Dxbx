@@ -220,8 +220,6 @@ function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
 Function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
-function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean; aXbe : TXbe; aHandle : THandle): Boolean;
-Function ConvertXbeToExe ( aFileName, m_ExeFilename, m_XbeFilename : String; aXbe : TXbe; aHandle : THandle ) : Boolean;
 
 procedure XbeLoaded;
 procedure LoadLogo;
@@ -231,9 +229,6 @@ var
   m_szAsciiTitle: string;
 
 implementation
-
-uses
-  uEmuExe;
 
 procedure LoadLogo;
 begin
@@ -280,67 +275,13 @@ begin
   aExeFilename := '\0';
   aXbeFilename := aFileName;
 
-  aXbe := TXbe.Create(aXbeFilename, ftXbe);
+  {var}aXbe := TXbe.Create(aXbeFilename, ftXbe);
   try
     XbeLoaded();
     Result := True;
   except
     FreeAndNil(aXbe);
     raise;
-  end;
-end;
-
-//------------------------------------------------------------------------------
-
-function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean; aXbe : TXbe; aHandle : THandle): Boolean;
-var
-  i_EmuExe: TEmuExe;
-begin
-  Result := False;
-
-  if x_filename <> '' then
-  begin
-    // ask permission to overwrite if file exists
-    if x_bVerifyIfExists then
-    begin
-      if FileExists(x_filename) then
-      begin
-        if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
-          Exit;
-
-        DeleteFile(x_filename);
-      end;
-    end;
-
-    // convert file
-    try
-      i_EmuExe := TEmuExe.Create(aXbe, m_KrnlDebug, m_KrnlDebugFilename, aHandle);
-      try
-        if i_EmuExe.doExport(x_filename) then
-        begin
-          Result := True;
-        end;
-      finally
-        FreeAndNil(i_EmuExe);
-      end;
-    except
-      MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
-    end;
-  end;
-end;
-
-//------------------------------------------------------------------------------
-
-Function ConvertXbeToExe(aFileName, m_ExeFilename, m_XbeFilename : String; aXbe : TXbe; aHandle : THandle) : Boolean;
-begin
-  Result := False;
-  if Assigned(aXbe) then begin
-    FreeAndNil(aXbe);
-  end;
-
-  if OpenXbe(aFileName, aXbe, m_ExeFilename, m_XbeFilename ) then begin
-    ConvertToExe ( ChangeFileExt(aFileName, '.exe'), False, aXbe, aHandle );
-    Result := True;
   end;
 end;
 

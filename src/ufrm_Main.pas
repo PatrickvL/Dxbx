@@ -35,6 +35,7 @@ uses
   uWindows,
   uXbe,
   uEmuExe,
+  uXbeConvert,
   uDxbxXml,
   ufrm_ControllerConfig,
   ufrm_VideoConfig,

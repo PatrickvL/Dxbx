@@ -180,7 +180,7 @@ function xboxkrnl_DbgPrompt(): NTSTATUS; stdcall;
 function xboxkrnl_DbgUnLoadImageSymbols(): NTSTATUS; stdcall;
 function xboxkrnl_ExAcquireReadWriteLockExclusive(): NTSTATUS; stdcall;
 function xboxkrnl_ExAcquireReadWriteLockShared(): NTSTATUS; stdcall;
-function xboxkrnl_ExAllocatePool(): NTSTATUS; stdcall;
+function xboxkrnl_ExAllocatePool(NumberOfBytes: ULONG): NTSTATUS; stdcall;
 function xboxkrnl_ExAllocatePoolWithTag(): NTSTATUS; stdcall;
 function xboxkrnl_ExEventObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_ExFreePool(): NTSTATUS; stdcall;
@@ -190,7 +190,13 @@ function xboxkrnl_ExInterlockedAddLargeStatistic(): NTSTATUS; stdcall;
 function xboxkrnl_ExInterlockedCompareExchange64(): NTSTATUS; stdcall;
 function xboxkrnl_ExMutantObjectType(): NTSTATUS; stdcall;
 function xboxkrnl_ExQueryPoolBlockSize(): NTSTATUS; stdcall;
-function xboxkrnl_ExQueryNonVolatileSetting(): NTSTATUS; stdcall;
+function xboxkrnl_ExQueryNonVolatileSetting(
+  ValueIndex: DWORD;
+  _Type: PDWORD; // out
+  Value: PUCHAR; // out
+  ValueLength: SIZE_T;
+  ResultLength: PSIZE_T // out, OPTIONAL
+  ): NTSTATUS; stdcall;
 function xboxkrnl_ExReadWriteRefurbInfo(): NTSTATUS; stdcall;
 function xboxkrnl_ExRaiseException(): NTSTATUS; stdcall;
 function xboxkrnl_ExRaiseStatus(): NTSTATUS; stdcall;
@@ -203,7 +209,7 @@ function xboxkrnl_ExfInterlockedInsertTailList(): NTSTATUS; stdcall;
 function xboxkrnl_ExfInterlockedRemoveHeadList(): NTSTATUS; stdcall;
 function xboxkrnl_FscGetCacheSize(): NTSTATUS; stdcall;
 function xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall;
-function xboxkrnl_FscSetCacheSize(): NTSTATUS; stdcall;
+function xboxkrnl_FscSetCacheSize(uCachePages: ULONG): NTSTATUS; stdcall;
 function xboxkrnl_HalClearSoftwareInterrupt(): NTSTATUS; stdcall;
 function xboxkrnl_HalDisableSystemInterrupt(): NTSTATUS; stdcall;
 function xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall;
@@ -215,7 +221,7 @@ function xboxkrnl_HalReadSMBusValue(): NTSTATUS; stdcall;
 function xboxkrnl_HalReadWritePCISpace(): NTSTATUS; stdcall;
 function xboxkrnl_HalRegisterShutdownNotification(): NTSTATUS; stdcall;
 function xboxkrnl_HalRequestSoftwareInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_HalReturnToFirmware(): NTSTATUS; stdcall;
+function xboxkrnl_HalReturnToFirmware(Routine: RETURN_FIRMWARE): NTSTATUS; stdcall;
 function xboxkrnl_HalWriteSMBusValue(): NTSTATUS; stdcall;
 function xboxkrnl_InterlockedCompareExchange(): NTSTATUS; stdcall;
 function xboxkrnl_InterlockedDecrement(): NTSTATUS; stdcall;
@@ -776,7 +782,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExAllocatePool(): NTSTATUS; stdcall;
+function xboxkrnl_ExAllocatePool(NumberOfBytes: ULONG): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExAllocatePool');
@@ -846,7 +852,13 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExQueryNonVolatileSetting(): NTSTATUS; stdcall;
+function xboxkrnl_ExQueryNonVolatileSetting(
+  ValueIndex: DWORD;
+  _Type: PDWORD; // out
+  Value: PUCHAR; // out
+  ValueLength: SIZE_T;
+  ResultLength: PSIZE_T // out, OPTIONAL
+): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExQueryNonVolatileSetting');
@@ -937,7 +949,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_FscSetCacheSize(): NTSTATUS; stdcall;
+function xboxkrnl_FscSetCacheSize(uCachePages: ULONG): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('FscSetCacheSize');
@@ -1021,7 +1033,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalReturnToFirmware(): NTSTATUS; stdcall;
+function xboxkrnl_HalReturnToFirmware(Routine: RETURN_FIRMWARE): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalReturnToFirmware');
