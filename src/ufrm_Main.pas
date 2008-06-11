@@ -223,7 +223,6 @@ begin
 
   if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename) then begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-    RecentXbeAdd(XbeOpenDialog.Filename);
     Emulation_State := esFileOpen;
     AddjustMenu;
   end

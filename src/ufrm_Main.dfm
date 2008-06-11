@@ -1445,6 +1445,7 @@ object frm_Main: Tfrm_Main
     Width = 509
     Height = 19
     Panels = <>
+    SimplePanel = True
   end
   object MainMenu1: TMainMenu
     Left = 8
