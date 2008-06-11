@@ -1,5 +1,7 @@
 The following tasks are currently on the short-term TODO list :
 
+- Insert a conditional for Alphaskins, so developers dont have problems with it. 
+
 - Write a C-to-Pascal translation guide
 
 - Translate EmuD3D8 to get some visual output of Dxbx calling actual Xbe code
