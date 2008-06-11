@@ -336,14 +336,16 @@ begin
 
   EmuCleanupFS;
 
-Sleep(10 * 1000); // TODO : Remove this!
+if m_DxbxDebug = DM_CONSOLE then Sleep(10 * 1000); // TODO : Remove this!
 
   TerminateThread(GetCurrentThread(), 0);
 end;
 
-procedure EmuXRefFailure;
+// alert for the situation where an Xref function body is hit
+procedure EmuXRefFailure();
 begin
   EmuSwapFS();    // Win2k/XP FS
+
   CxbxKrnlCleanup('XRef-only function body reached. Fatal Error.');
 end;
 

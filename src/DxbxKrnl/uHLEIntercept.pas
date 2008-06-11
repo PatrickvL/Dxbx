@@ -35,7 +35,6 @@ uses
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
-procedure  EmuXRefFailure();
 
 implementation
 
@@ -134,7 +133,7 @@ begin
             // load function addresses
             //
 
-            if(bVerified) then 
+            if(bVerified) then
             begin 
                 while(true)
                 begin 
@@ -358,7 +357,7 @@ begin
                             DbgPrintf('HLE: $ mod .08X ^. EmuD3DDeferredRenderState', XTL.EmuD3DDeferredRenderState);
                          end;
                         else
-                        begin 
+                        begin
                             XTL.EmuD3DDeferredRenderState := 0;
                             EmuWarning('EmuD3DDeferredRenderState was not found not ');
                          end;
@@ -474,15 +473,21 @@ begin
     DbgPrintf('');
 
     Exit;
- end;
+  end;
+*)
+end;
 
 // install function interception wrapper
-    procedure EmuInstallWrapper(FunctionAddr: Pointer; WrapperAddr: Pointer);
-    uint08 *FuncBytes := (uint08)FunctionAddr;
-
-    *(uint08)@FuncBytes[0] := $E9;
-    *(uint32)@FuncBytes[1] := (uint32)WrapperAddr - (uint32)FunctionAddr - 5;
-*)
+procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
+var
+  RelativeJMPAddress: UInt32;
+begin
+  // Write JMP rel16 opcode (Jump near, displacement relative to next instruction) :
+  FunctionAddr^ := $E9;
+  // Calculate relative address :
+  RelativeJMPAddress := (uint32(WrapperAddr) - uint32(FunctionAddr) - 5);
+  // Write that after the JMP :
+  CopyMemory(Pointer(Integer(FunctionAddr) + 1), @RelativeJMPAddress, 4);
 end;
 
 (*
@@ -671,27 +676,6 @@ begin
      end;
 end;
 *)
-
-// install function interception wrapper
-procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
-var
-  RelativeJMPAddress: UInt32;
-begin
-  // Write JMP rel16 opcode (Jump near, displacement relative to next instruction) :
-  FunctionAddr^ := $E9;
-  // Calculate relative address :
-  RelativeJMPAddress := (uint32(WrapperAddr) - uint32(FunctionAddr) - 5);
-  // Write that after the JMP :
-  CopyMemory(Pointer(Integer(FunctionAddr) + 1), @RelativeJMPAddress, 4);
-end;
-
-// alert for the situation where an Xref function body is hit
-procedure EmuXRefFailure();
-begin
-  EmuSwapFS();    // Win2k/XP FS
-
-  CxbxKrnlCleanup('XRef-only body reached. Fatal Error.');
-end;
 
 end.
 

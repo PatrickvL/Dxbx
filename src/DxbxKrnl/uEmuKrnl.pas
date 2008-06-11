@@ -159,7 +159,6 @@ type
   dtU32 = Unknown;
   dtObjectAttributes = Unknown;
   dtACCESS_MASK = Unknown;
-  dtCreateDisposition = ULONG;
   dtCreateOptions = ULONG;
   dtBLOB = Unknown;
   dtFILE_INFORMATION_CLASSEnum = FILE_INFORMATION_CLASS;
