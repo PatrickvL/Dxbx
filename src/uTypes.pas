@@ -55,10 +55,10 @@ type
   UInt08 = UInt8;
   PUInt08 = PUInt8;
 
-{$IF DECLARED(INT_PTR)}
-  IntPtr = INT_PTR;
+{$IF DECLARED(UINT_PTR)}
+  IntPtr = UINT_PTR;
 {$ELSE}
-  IntPtr = Integer;
+  IntPtr = Cardinal;
 {$IFEND}
     
   TEntryProc = procedure();
