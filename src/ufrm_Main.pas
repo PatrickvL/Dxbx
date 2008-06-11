@@ -223,6 +223,7 @@ begin
 
   if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename) then begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+    RecentXbeAdd( XbeOpenDialog.Filename );
     Emulation_State := esFileOpen;
     AddjustMenu;
   end
@@ -833,8 +834,8 @@ begin
   actSaveXbe.Enabled := False;
   actSaveXbeAs.Enabled := False;
 
-  mnu_RecentXbefiles.Enabled := False;
-  mnu_RecentExefiles.Enabled := False;
+  mnu_RecentXbefiles.Enabled := mnu_RecentXbefiles.Count > 0;
+  mnu_RecentExefiles.Enabled := mnu_RecentExefiles.count > 0;
 
   actClose.Enabled := True;
 
@@ -859,9 +860,9 @@ begin
   if Emulation_State = esFileOpen then begin
     mnu_Logbitmap.Enabled := True;
     mnu_DumpxbeinfoTo.Enabled := True;
-    mnu_ExportExe.Enabled := True;
+    actExportExe.Enabled := True;
     mnu_CloseXbe.Enabled := True;
-    ActStartEmulation.Enabled := True;
+    actCloseXbe.Enabled := True;
   end;
 end;
 
@@ -986,7 +987,7 @@ begin
 
   TempItem := TMenuItem.Create(mnu_RecentXbefiles);
   TempItem.Hint := aFileName;
-  TempItem.Caption := ExtractFileName(aFileName);
+  TempItem.Caption := aFileName;
   TempItem.OnClick := ReopenXbe;
 
   while (mnu_RecentXbefiles.Count >= _RecentXbeLimit) do
@@ -1038,11 +1039,8 @@ begin
 
     if OpenXbe(TempItem.Hint, m_Xbe, m_ExeFilename, m_XbeFilename) then begin
       StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-      RecentXbeAdd(XbeOpenDialog.Filename);
-      mnu_Logbitmap.Enabled := True;
-      mnu_DumpxbeinfoTo.Enabled := True;
-      mnu_ExportExe.Enabled := True;
-      mnu_CloseXbe.Enabled := True;
+      Emulation_State := esFileOpen;
+      AddjustMenu;
     end
     else begin
       MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
@@ -1065,7 +1063,6 @@ begin
   if FileExists(TempItem.Hint) then
   begin
     ShellExecute(application.Handle, 'open', PChar(TempItem.Hint), nil, nil, SW_SHOWDEFAULT);
-    RecentExeAdd(TempItem.Hint);
   end
   else
   begin
