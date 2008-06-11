@@ -408,25 +408,12 @@ end; // Tfrm_Main.actConfigVideoExecute
 procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
 var
   FileConverted: Boolean;
-  KrnlHandle: THandle;
-  SetXbePath: TSetXbePath;
 begin
   if Assigned(m_Xbe) then
   begin
     FileConverted := StartEmulation(m_AutoConvertToExe);
     if FileConverted then
     begin
-      // register xbe path with Cxbx.dll
-      begin
-        // TODO : Reuse this handle from when we already had it in TEmuExe.Create :
-        KrnlHandle := SafeLoadLibrary(GetDllName(DllToUse));
-        Assert(KrnlHandle >= 32);
-        // Call the implementation from the configured DLLToUse :
-        @SetXbePath := GetProcAddress(KrnlHandle, CSETXBEPATHMANGLEDNAME);
-        Assert(Assigned(SetXbePath));
-        SetXbePath(PChar(m_Xbe.m_szPath));
-      end;
-
       try
         if FileExists(m_ExeFilename) then
         begin
@@ -463,7 +450,8 @@ begin
       CONVERT_TO_WINDOWSTEMP: FileName := GetTempDirectory + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe'));
       CONVERT_TO_XBEPATH: FileName := ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe'));
     else
-      FileName := ''; ;
+      if ExeSaveDialog.Execute then
+        FileName := ExeSaveDialog.FileName;
     end; // case
 
     try
