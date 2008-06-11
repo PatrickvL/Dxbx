@@ -55,7 +55,23 @@ uses
   JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas',
   uEmuKrnl in 'DxbxKrnl\uEmuKrnl.pas',
   uEmuXapi in 'DxbxKrnl\uEmuXapi.pas',
-  uEmuFile in 'DxbxKrnl\uEmuFile.pas';
+  uEmuFile in 'DxbxKrnl\uEmuFile.pas',
+  uEmuKrnlDbg in 'DxbxKrnl\uEmuKrnlDbg.pas',
+  uEmuKrnlEx in 'DxbxKrnl\uEmuKrnlEx.pas',
+  uEmuKrnlFs in 'DxbxKrnl\uEmuKrnlFs.pas',
+  uEmuKrnlHal in 'DxbxKrnl\uEmuKrnlHal.pas',
+  uEmuKrnlIo in 'DxbxKrnl\uEmuKrnlIo.pas',
+  uEmuKrnlKd in 'DxbxKrnl\uEmuKrnlKd.pas',
+  uEmuKrnlKe in 'DxbxKrnl\uEmuKrnlKe.pas',
+  uEmuKrnlMm in 'DxbxKrnl\uEmuKrnlMm.pas',
+  uEmuKrnlNt in 'DxbxKrnl\uEmuKrnlNt.pas',
+  uEmuKrnlOb in 'DxbxKrnl\uEmuKrnlOb.pas',
+  uEmuKrnlPs in 'DxbxKrnl\uEmuKrnlPs.pas',
+  uEmuKrnlRtl in 'DxbxKrnl\uEmuKrnlRtl.pas',
+  uEmuKrnlXbox in 'DxbxKrnl\uEmuKrnlXbox.pas',
+  uEmuKrnlXc in 'DxbxKrnl\uEmuKrnlXc.pas',
+  uEmuKrnlXe in 'DxbxKrnl\uEmuKrnlXe.pas',
+  uEmuKrnlAv in 'DxbxKrnl\uEmuKrnlAv.pas';
 
 {$R *.res}   
 

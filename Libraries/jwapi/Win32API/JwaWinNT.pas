@@ -9368,6 +9368,10 @@ function RtlQueryDepthSList; external 'ntdll.dll' name 'RtlQueryDepthSList';
 
 {$ENDIF JWA_INTERFACESECTION}
 
+{$WARNINGS OFF}
+
 {$IFNDEF JWA_OMIT_SECTIONS}
 end.
 {$ENDIF JWA_OMIT_SECTIONS}
+
+{$WARNINGS ON}

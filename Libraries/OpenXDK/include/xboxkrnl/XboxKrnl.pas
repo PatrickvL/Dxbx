@@ -213,16 +213,11 @@ type
 // * MODE
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
- _MODE
-begin 
+ MODE = (
     KernelMode,
     UserMode,
     MaximumMode
- end;
-MODE;
+ );
 
 // ******************************************************************
 // * WAIT_TYPE
@@ -325,12 +320,9 @@ FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION	= record
 // * FILE_INFORMATION_CLASS
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
- _FILE_INFORMATION_CLASS
-begin 
-    FileDirectoryInformation        = 1,
+ _FILE_INFORMATION_CLASS = (
+    FileFiller0,
+    FileDirectoryInformation, // = 1
     FileFullDirectoryInformation,
     FileBothDirectoryInformation,
     FileBasicInformation,
@@ -371,8 +363,9 @@ begin
     FileInheritContentIndexInformation,
     FileOleInformation,
     FileMaximumInformation
- end;
-FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
+ );
+  FILE_INFORMATION_CLASS = _FILE_INFORMATION_CLASS;
+  PFILE_INFORMATION_CLASS = ^FILE_INFORMATION_CLASS;
 
 // ******************************************************************
 // * CreateDisposition Values for NtCreateFile
@@ -467,31 +460,34 @@ FILE_DIRECTORY_INFORMATION	= record _FILE_DIRECTORY_INFORMATION
     ULONG           FileAttributes;
     ULONG           FileNameLength;
                 FileName: array[0..1-1] of CHAR;        // Offset: 0x40
- end;*******************************************
+ end;
+*)
+// *******************************************
 // * MM_STATISTICS
 // ******************************************************************
 type
-	
-MM_STATISTICS,*PMM_STATISTICS	= record  
-    ULONG   Length;
-    ULONG   TotalPhysicalPages;
-    ULONG   AvailablePages;
-    ULONG   VirtualMemoryBytesCommitted;
-    ULONG   VirtualMemoryBytesReserved;
-    ULONG   CachePagesCommitted;
-    ULONG   PoolPagesCommitted;
-    ULONG   StackPagesCommitted;
-    ULONG   ImagePagesCommitted;
- end;
+  PMM_STATISTICS = ^MM_STATISTICS;
+  MM_STATISTICS	= record
+    Length: ULONG;
+    TotalPhysicalPages: ULONG;
+    AvailablePages: ULONG;
+    VirtualMemoryBytesCommitted: ULONG;
+    VirtualMemoryBytesReserved: ULONG;
+    CachePagesCommitted: ULONG;
+    PoolPagesCommitted: ULONG;
+    StackPagesCommitted: ULONG;
+    ImagePagesCommitted: ULONG;
+  end;
 
+(*
 // ******************************************************************
 // * IO_STATUS_BLOCK *Same as Win2k/XP*
 // ******************************************************************
 type
 
-  u1	= record  
+  u1	= record
     union
-    begin 
+    begin
         NTSTATUS Status;
         PVOID    Pointer;
      end;;

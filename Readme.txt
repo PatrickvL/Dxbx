@@ -28,5 +28,5 @@ Shadow_tj (from Holland) - Main cxbx translation
 Zomby (from Canada) - Vista compatibility, lots of fixups
 PCucho (from Argentina) - XIso translation
 Yapel (from Spain) - XIso 
-PatrickvL (from Holland) - Style changes, little fixes
+PatrickvL (from Holland) - Coding Style changes, Code Relocation, Xbox Kernel API's
 Wayo (from Guatemala) - GetProcAddress trick with CxbxKrnlInit

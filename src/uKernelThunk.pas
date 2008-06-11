@@ -27,7 +27,23 @@ uses
   SysUtils, // for IntToStr
   // Dxbx
   uTypes,
-  uEmuKrnl;
+  uEmuKrnl,
+  uEmuKrnlAv,
+  uEmuKrnlDbg,
+  uEmuKrnlEx,
+  uEmuKrnlFs,
+  uEmuKrnlHal,
+  uEmuKrnlIo,
+  uEmuKrnlKd,
+  uEmuKrnlKe,
+  uEmuKrnlMm,
+  uEmuKrnlNt,
+  uEmuKrnlOb,
+  uEmuKrnlPs,
+  uEmuKrnlRtl,
+  uEmuKrnlXbox,
+  uEmuKrnlXc,
+  uEmuKrnlXe;
 
 function CxbxKrnl_KernelThunkTable: PKernelThunkTable; cdecl;
 
