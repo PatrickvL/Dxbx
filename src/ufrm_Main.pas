@@ -599,18 +599,24 @@ begin
     iSize := DragQueryFile(Msg.wParam, i, nil, 0) + 1;
     pcFileName := StrAlloc(iSize);
     DragQueryFile(Msg.wParam, i, pcFileName, iSize);
-    if FileExists(pcFileName) then begin
-      if ConvertXbeToExe(pcFileName, m_ExeFilename, m_XbeFilename, m_Xbe, self.handle ) then begin
+    if FileExists(pcFileName) then begin       
+
+      if Assigned(m_Xbe) then begin
+        CloseXbe();
+      end;
+
+      if OpenXbe(pcFileName, m_Xbe, m_ExeFilename, m_XbeFilename) then begin
         StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-        RecentXbeAdd(pcFileName);
+        RecentXbeAdd( XbeOpenDialog.Filename );
         Emulation_State := esFileOpen;
+        AddjustMenu;
       end
       else begin
         MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-        StatusBar.SimpleText := 'DXBX:';
         Emulation_State := esNone;
+        AddjustMenu;
       end;
-      AddjustMenu;
+
     end;
     StrDispose(pcFileName);
   end;
