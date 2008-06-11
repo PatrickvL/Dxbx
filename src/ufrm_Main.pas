@@ -863,6 +863,7 @@ begin
     actExportExe.Enabled := True;
     mnu_CloseXbe.Enabled := True;
     actCloseXbe.Enabled := True;
+    ActStartEmulation.Enabled := True;
   end;
 end;
 
