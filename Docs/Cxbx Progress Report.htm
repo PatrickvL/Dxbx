@@ -1,0 +1,328 @@
+<html>
+<head>
+    <title>
+    Cxbx Progress Report
+    </title>
+    <style type="text/css">
+    <!--
+
+        a:link
+        {
+            font-family:"verdana, arial";
+            font-size:12px;
+            color:#050404;
+            text-decoration:underline;
+        }
+
+        a:visited
+        {
+            font-family:"verdana, arial";
+            font-size:12px;
+            color:#050404;
+            text-decoration:underline;
+        }
+
+        a:hover
+        {
+            font-family:"verdana, arial";
+            font-size:12px;
+            color:#EEEEEE;
+            text-decoration:underline;
+        }
+
+        font.cbolder
+        {
+            font-family:"arial, helvetica";
+            font-size:22px;
+            color:#050404;
+        }
+
+        font.cnormal
+        {
+            font-family:"verdana, courier new";
+            font-size:12px;
+            color:#050404;
+        }
+
+    -->
+
+    </style>
+
+<meta http-equiv="Content-Type" content="text/html;charset=windows-1252">
+</head>
+<body bgcolor=#FFFFFF text=#000000 leftmargin=10 topmargin=10 rightmargin=10 bottommargin=10 marginwidth=10 marginheight=10>
+<font class="cnormal">
+Aaron Robinson - 03/22/03<br>
+2003 Student Project<br>
+Cxbx Xbox Emulator<br>
+</font><br>
+<font class="cbolder"><b>Cxbx Xbox Emulator Progress Report</b></font><br>
+<br>
+<table width=95% align="center">
+<tr>
+<td>
+<p align="justify">
+<font class="cnormal">
+<b>What is the purpose of this document?</b><br>
+<br>
+This document was written in March of 2003 in order to demonstrate progress on Aaron Robinson's student project. This project
+relates to the emulation of the Microsoft Xbox Game Console. At the time of writing this document, Cxbx was the only Xbox emulator
+known to be in development. It is also expected to be the first completed Xbox emulator.<br>
+<br>
+<b>What is Cxbx?</b><br>
+<br>
+Cxbx is an <i>Xbox Emulator</i>. This means that Cxbx is designed to execute software that was designed and compiled for the
+Xbox console system. The primary use of this tool is to run Xbox games on a PC. While there are many different types of emulation,
+all share one primary goal in common: <i>To accurately reproduce the behavior of a target system on the host system</i>.<br>
+<br>
+<table align="center">
+<tr>
+<td width=300><font class="cbolder"><b>Target System</b></font></td>
+<td><font class="cbolder"><b>:</b></font></td>
+<td width=300 align="right"><font class="cbolder"><b>Xbox Console</b></font></td>
+</tr>
+<tr>
+<td width=300><font class="cbolder"><b>Host System</b></font></td>
+<td><font class="cbolder"><b>:</b></font></td>
+<td width=300 align="right"><font class="cbolder"><b>Win32 PC</b></font></td>
+</tr>
+</table>
+<br>
+<b>About Console Emulation...</b><br>
+<br>
+The console emulation scene consists of gaming enthusiasts from all around the world. There are dozens of consoles that have been
+successfully emulated, and they are distributed freely all over the internet. Typically, an emulator is written by a software guru
+who has some genuine interest in the console being emulated, for one reason or another. Console emulators are almost never written
+for profit, instead as a private project out of sheer curiosity and personal interest. Console emulation has been talked about in
+many mainstream magazines, including Newsweek, Time Magazine, CNET, and 2600. Emulation websites receive tens of thousands of hits every day, as the
+scene is still extremely active.<br>
+<br>
+One of the major hurdles that arises when attempting to design and implement a console emulator is the severe lack of information. Where does
+a person go to gather information about a game console? Unfortunately, companies patent and protect all internal documentation, so most
+information must be completely reverse engineered. There are also often legal issues when writing an emulator. It is almost always illegal to
+distribute "ROM" images of console games, so emulators must not provide any help at obtaining these images. On the other hand, it is perfectly
+legal to distribute the emulator program itself, so long as no copyrighted ROM or other material is included. It is also important to know that
+it is legal to possess a ROM if you own the game.<br>
+<br>
+There are many reasons why a software programmer is willing to put time and effort into such a program. The main reason is that many
+people just really like the idea of playing their favorite console games on their PC.  There is also the issue of preserving games that
+may become obsolete and unavailable otherwise. With emulation, you can save a backup copy of the game and play it in the future even if
+your console has grown old and breaks.<br>
+<br>
+Emulation programming is typically very complex, and is rarely attempted by novice programmers. Emulation of older console systems involves
+very touchy and precise emulation of not only the theoretical hardware, but the bugs and glitches of the original system. Emulation of modern
+consoles involves very complicated 3-D graphics, audio, input, and systems programming, on top of the existing complexity of the overall design
+of an emulator.<br>
+<br>
+<b>Xbox Emulation Theory</b><br>
+<br>
+The Xbox shares many features of a modern PC. Emulating the Xbox is different from typical emulation in that much of the low level emulation
+becomes unnecessary. Since the Xbox consists of primarily PC hardware, there are tricks that can be used to take advantage of these similarities.
+Furthermore, the Xbox Kernel is a modified version of the Windows 2000 Kernel, meaning that High Level Emulation becomes extremely attractive.<br>
+<br>
+The goal of Cxbx is to run Xbox games. Xbox games are designed using a Microsoft tool called the "XDK". These games are programmed using an API
+that is similar to the Win32 API. Since the Target and Host APIs are similar, function interception and redirection is an attractive emulation method.
+Cxbx uses this method in part of it's emulation core.<br>
+<br>
+The executable file format on the Xbox is called XBE. This file format was not public information, and had to be reverse engineered. Building off
+preliminary reverse engineered information from other scene authors, I have released very detailed XBE documentation. This documentation includes
+source code for parsing XBE files, as well as source code for interpreting internal data structures. Since Cxbx is open source, there is also a wealth of
+example code available to the general public. In order to execute Xbox code on a PC platform, this file format needed to be converted to the Win32
+EXE file format. Cxbx does exactly this.<br>
+<br>
+<b>Cxbx High Level Overview</b><br>
+<br>
+Cxbx operates in several components. In order to take advantage of object oriented design, and for easy code management, the project is separated
+into several high level objects. <i>Figure 1</i> demonstrates an abstract, high level view of the Cxbx object interactions. An explanation of these interactions
+is detailed below.<br>
+<br>
+<br>
+<center>
+<img src="Cxbx Progress Report_files/CxbxOver.jpg"><br>
+<br>
+<i>Figure 1 : High Level Overview</i>
+</center>
+<p align="justify">
+<br>
+- <b>Cxbx GUI</b> is responsible for all initial user interactions, excluding controller input emulation and real-time emulation configuration. The Cxbx GUI
+is designed entirely in low footprint Win32 API. This is one of many design decisions that has allowed the overall size of the Cxbx
+project to be extremely small. The GUI allows the user to create (open) XBE files, modify if desired, save if desired, and convert to EXE. The user may then
+execute the converted file, thus beginning the visible emulation stage.<br>
+<br>
+<center>
+<img src="Cxbx Progress Report_files/CxbxProg.gif"><br>
+<br>
+<i>Figure 2 : Cxbx GUI</i>
+</center>
+<p align="justify">
+<br>
+- <b>Xbe Object</b> is responsible for loading and saving XBE files. The Xbe Object parses through raw binary data, loading all structures and converting data
+into understandable formats when necessary. The XBE file format documentation details the layout of this structure. It is important to remember that this is
+a proprietary and undocumented file format, and all information about it was obtained via reverse engineering. The file format conveniently lends itself to be
+relatively easily converted to EXE format, as XBE is a derivative of the PE (EXE) format.<br>
+<br>
+- <b>Exe Object</b> is responsible for loading and saving EXE files. The Exe Object can be constructed using an XBE file. This is where XBE is converted to EXE
+and <i>Prolog</i> code is inserted into the EXE. The XBE to EXE conversion process requires detailed knowledge of both file formats. Microsoft does not provide
+detailed documentation on the PE file format, and no documentation at all on the XBE file format. Because of this, unofficial documentation was used to understand
+the PE (EXE) file format, and the XBE file format was reverse engineered.<br>
+<br>
+- <b>EmuExe</b> represents the fully converted XBE file. After the conversion process, EmuExe contains all the data from the original Xbe, as well as additional
+"prolog" code which is used to initialize important emulation components. The conversion process ensures that all code will be loaded into memory at the correct
+location in virtual memory. When EmuExe is executed by the user (usually through the GUI component), the first piece of code to be executed is the prolog code.
+The prolog code then immediately transfers control over to the <i>Cxbx Krnl</i> object. Additionally, important <i>Kernel Function Hijacking</i> occurs at this
+phase. This technique is described later in this document.<br>
+<br>
+- <b>Cxbx Krnl</b> is where most of the real time emulation occurs. When EmuExe transfers control to <i>Cxbx Krnl's</i> "init" function, some very important events
+occur. First of all, an optional Debug Console is allocated. This aids in development tremendously. The next thing to occur is <i>High Level Function Hijacking</i>.
+This technique is explained in more detail later in this document. Overall, <i>Cxbx Krnl</i> is responsible for :<br>
+<br>
+<li>Initializing the emulated FS structure.</li>
+<li>Initializing the rendering window, Direct3D and DirectInput</li>
+<li>Hijacking important <i>High Level Functions</i></li>
+<li>Maintaining an emulation state</li>
+<li>Responding to (and emulating) all redirected Kernel and High Level Function calls</li>
+<li>Handling all user input, graphics, sound, disk i/o, ...</li>
+<p align="justify">
+<br>
+<br>
+<b>Kernel Function Hijacking</b><br>
+<br>
+Xbox software is written on top of a relatively light-weight kernel. In order to emulate the system on a high level, Cxbx must intercept and emulate all interactions
+between Xbox software and the Xbox Kernel. This is accomplished using <i>Kernel Function Hijacking</i>. Kernel functions are used by Xbox software using a mechanism
+called the <i>Kernel Thunk Table</i>. This table is used as a function lookup. When Xbox software wishes to execute a kernel function, it performs an indirect call
+in assembly. One example of an intercepted function would be "PsCreateSystemThreadEx". The thunk number for this particular kernel import happens to be 0xFF. The assembly code
+for this call would be:<br>
+<br>
+<center>call [KernelThunkTable + 0xFF]</center><br>
+<br>
+Notice that in order to intercept these functions, all thunk numbers and the address of the thunk table must be known. The thunk numbers happened to be quite easy to find,
+and the thunk table address is encoded inside the XBE file. Cxbx is able to decode the thunk table address and locate the thunk table in virtual memory. Then, Cxbx overwrites
+all of the pointers in that table to point to interception functions. For PsCreateSystemThread, the shell of this interception function looks something like this:<br>
+<br>
+<pre>
+<font face="lucida console">
+// ******************************************************************
+// * 0x00FF - PsCreateSystemThreadEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
+(
+    OUT PHANDLE         ThreadHandle,
+    IN  ULONG           ThreadExtraSize,
+    IN  ULONG           KernelStackSize,
+    IN  ULONG           TlsDataSize,
+    OUT PULONG          ThreadId OPTIONAL,
+    IN  PVOID           StartContext1,
+    IN  PVOID           StartContext2,
+    IN  BOOLEAN         CreateSuspended,
+    IN  BOOLEAN         DebugStack,
+    IN  PKSTART_ROUTINE StartRoutine
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+	// Emulation code
+
+    EmuXSwapFS();   // Xbox FS
+}
+</font>
+</pre>
+<center><i>Figure 3: Example interception function</i></center><br>
+<br>
+The exact actual behavior of this interception function is beyond the scope of this document. Notice that the exact calling conventions and parameters must exist in the
+interception function, or it will not operate correctly and will result in a crash.<br>
+<br>
+<b>High Level Function Hijacking</b><br>
+<br>
+While similar in some ways to <i>Kernel Function Hijacking</i>, <i>High Level Function Hijacking</i> is an entirely different beast. With HLF Hijacking, we are not lucky
+enough to have a simple lookup table to intercept. Instead, we must analyze the structure of the XBE itself and locate the function body using carefully generated function signatures.
+Cxbx accomplishes this daunting task using a special data type and technique I have invented specifically for this job. Consider the following chunk of assembly code :<br>
+<br>
+<pre>
+<font face="lucida console">
+sub_114D5                           sub_114D5       proc near               ; DATA XREF: start+5.o
+sub_114D5      <font color=#FF0000>8B 0D 18 01 01</font> 00                    <font color=#FF0000>mov     ecx, ds:10118h</font>
+sub_114D5+6    <font color=#FF0000>A1 08 01 01 00</font>                       <font color=#FF0000>mov     eax, ds:10108h</font>
+sub_114D5+B    2B C1                                sub     eax, ecx
+sub_114D5+D    05 00 00 01 00                       add     eax, 10000h
+sub_114D5+12   3B 01                                cmp     eax, [ecx]
+sub_114D5+14   73 02                                jnb     short loc_114ED
+sub_114D5+16   89 01                                mov     [ecx], eax
+sub_114D5+18                        
+sub_114D5+18                        loc_114ED:                              ; CODE XREF: sub_114D5+14.j
+sub_114D5+18   A1 F4 F1 02 00                       mov     eax, ds:dword_2F1F4
+sub_114D5+1D   2B 05 E4 F1 02 00                    sub     eax, ds:dword_2F1E4
+sub_114D5+23   8B 0D E8 F1 02 00                    mov     ecx, ds:dword_2F1E8
+sub_114D5+29   56                                   push    esi
+sub_114D5+2A   8D 44 08 0F                          lea     eax, [eax+ecx+0Fh]
+sub_114D5+2E   57                                   push    edi
+sub_114D5+2F   83 E0 F0                             and     eax, 0FFFFFFF0h
+sub_114D5+32   <font color=#FF0000>6A FC</font>                                <font color=#FF0000>push    0FFFFFFFCh</font>
+sub_114D5+34   59                                   pop     ecx
+sub_114D5+35   83 C0 04                             add     eax, 4
+sub_114D5+38   A3 14 14 03 00                       mov     dword_31414, eax
+sub_114D5+3D   99                                   cdq
+sub_114D5+3E   <font color=#FF0000>F7 F9</font>                                <font color=#FF0000>idiv    ecx</font>
+sub_114D5+40   8B 0D EC F1 02 00                    mov     ecx, ds:dword_2F1EC
+sub_114D5+46   33 F6                                xor     esi, esi
+sub_114D5+48   56                                   push    esi
+sub_114D5+49   56                                   push    esi
+sub_114D5+4A   56                                   push    esi
+sub_114D5+4B   68 66 14 01 00                       push    offset loc_11466
+sub_114D5+50   56                                   push    esi
+sub_114D5+51   56                                   push    esi
+sub_114D5+52   89 01                                mov     [ecx], eax
+sub_114D5+54   E8 F2 09 00 00                       call    sub_11F20
+sub_114D5+59   8B F8                                mov     edi, eax
+sub_114D5+5B   3B FE                                cmp     edi, esi
+sub_114D5+5D   <font color=#FF0000>75 0A</font>                                <font color=#FF0000>jnz     short loc_1153E</font>
+sub_114D5+5F   56                                   push    esi
+sub_114D5+60   6A 01                                push    1
+sub_114D5+62   6A 01                                push    1
+sub_114D5+64   E8 8C 05 00 00                       call    sub_11ACA
+sub_114D5+69                        
+sub_114D5+69                        loc_1153E:                              ; CODE XREF: sub_114D5+5D.j
+sub_114D5+69   57                                   push    edi
+sub_114D5+6A   E8 88 08 00 00                       call    sub_11DCC
+sub_114D5+6F   5F                                   pop     edi
+sub_114D5+70   5E                                   pop     esi
+sub_114D5+71   <font color=#FF0000>C3</font>                                   <font color=#FF0000>retn</font>
+sub_114D5+71                        sub_114D5       endp
+sub_114D5+71                        
+
+</font>
+</pre>
+<p align="justify">
+<center><i>Figure 4: Red text represents "important" (offset,value) pairs</i></center>
+<br>
+It is important to realize that this function, if compiled in a different executable, will not be exactly identical. Absolute and relative addresses are free to
+change during the linking phase, so we can not compute a simple hash to locate this function in a given piece of code. Instead, a special data structure was designed.<br>
+<br>
+- <b>Optimized Offset Value Pair Array</b><br>
+<br>
+In order to efficiently locate a given chunk of assembly code (i.e. a High Level Function), a database of (offset,value) pairs can be used. Offset represents the offset
+(in bytes) from the start of the function. Value represents the byte value at that location. With this datatype, we can locate the function by hand, and then write down
+important (offset,value) pairs. This process is time consuming, but very rewarding. Cxbx is able to successfully (and with no false identifications to date) identify High
+Level Functions inside an arbitrary XBE file. This is due to the fact that, statistically, carefully chosen (offset,value) pairs are capable of uniquely identifying relocatable
+code. The likelihood of falsely locating a function body is inversely proportional to the number of pairs combined with the rarity of those pairs.<br>
+<br>
+If you count the highlighted bytes in Figure 4, you will find 17 bytes of code. With the OOVPA datatype, it is possible to encode this as exactly 2+17+17 = 36 bytes. This is phenomenal
+in terms of efficiency.<br>
+<br>
+This process has an interesting side effect of making the programmer intimately familiar with x86 machine code and assembly. For example, glancing at the above code makes it
+obvious to me that this function is an initialization routine that is spawning off a thread with CreateThread. The routine is also checking the consistency of some values
+within the XBE header.<br>
+<br>
+- <b>Redirection</b><br>
+<br>
+Now that we have a mechanism with which to locate HLFs, it is a relatively simple task to redirect them. Since the original function will no longer be used, it is safe to overwrite
+the existing function body with a small piece of code that simply jumps to the interception function. Now, it is a matter of emulating these high level functions accurately. Once
+again, the behavior of these interception functions is outside of the scope of this document.<br>
+<br>
+</font>
+</td>
+</tr>
+</table>
+<br><br><br><br><br><br><br><br><br>
+</body>
+</html>
+<!-- This document saved from http://www.caustik.com/cxbx/download/progress.htm -->
