@@ -1,0 +1,47 @@
+
+*** HeadConv 4.20 (c) 2000/12/16 by Bob Swart (aka Dr.Bob - www.drbob42.com) ***
+    FINAL DELPHI-JEDI EDITION
+
+    version  date     comments
+    ==========================----------------------------
+    3.00 - 97/10/03 - first HeadConv command-line edition!
+    3.01 - 97/10/10 - generate only "dynamic" import units
+    3.02 - 97/10/13 - 3rd pass: convert all ": P" to "var"
+    3.03 - 97/10/13 - 3rd pass: don't do 3.02 for "PChar"s
+    3.04 - 97/10/14 - skip list of un-needed pointer types
+    3.05 - 97/10/15 - add a real typename to "_1" typedefs
+    3.06 - 97/10/15 - adjust the indentation (2) for types
+    3.07 - 97/10/15 - make "DLLHandle" of the THandle type
+    3.08 - 97/10/15 - 3rd pass: skip 3.02 within all types
+    3.09 - 97/10/16 - fixed problem with arrays and spaces
+    3.10 - 97/10/17 - fixed the typedef "_" prefix problem
+    3.11 - 97/10/17 - added multiple typedef names support
+    3.12 - 97/10/17 - added LPWSTR -> PWideChar conversion
+    3.13 - 97/11/03 - Pointer doesn't become "var :ointer"
+    3.14 - 97/11/04 - "cdecl" and optional win32 "stdcall"
+    3.15 - 97/11/04 - accepting a "void *" function result
+    3.16 - 97/11/07 - fixed a bug in comments for typedefs
+    3.17 - 97/11/11 - skip used comments in implementation
+    3.18 - 97/11/12 - added argument -o to force overwrite
+    3.19 - 97/11/12 - fixed problem with multiple typedefs
+    3.20 - 97/11/12 - suspend after __DR_BOB_HEADCONV_STOP
+                      restart with __DR_BOB_HEADCONV_START
+    3.21 - 97/11/13 - GetProcAddress case-sensitive import
+    3.22 - 97/11/14 - Assert around GetProcAddress results
+    3.23 - 97/11/14 - Created "procedure LoadDLL" for init
+    3.24 - 97/11/21 - re-introduced "static" import units!
+    3.25 - 98/04/12 - fixed a rare "type" conversion issue
+    4.00 - 99/07/17 - final HeadConv command-line edition!
+    4.20 - 00/12/16 - HeadConv Open Source Wizard edition!
+
+Usage: HeadConv filename
+  will generate the explicit (dynamic) Delphi import unit,
+  where filename.H is the C DLL header file.
+
+Command-line Arguments:
+  -o to force overwrite of pascal unit on disk
+
+  -x to force generation of eXplicit import unit (dynamic)
+  -m to force generation of iMplicit import unit (static)
+
+Example: HeadConv SAMPLE -o
