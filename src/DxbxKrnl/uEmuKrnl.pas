@@ -189,12 +189,24 @@ function xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SI
 function xboxkrnl_LaunchDataPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_PhyInitialize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_READ_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_READ_PORT_BUFFER_USHORT(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_READ_PORT_BUFFER_ULONG(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_WRITE_PORT_BUFFER_USHORT(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_WRITE_PORT_BUFFER_ULONG(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_READ_PORT_BUFFER_UCHAR(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_READ_PORT_BUFFER_USHORT(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_READ_PORT_BUFFER_ULONG(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_WRITE_PORT_BUFFER_USHORT(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_WRITE_PORT_BUFFER_ULONG(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -332,42 +344,54 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_READ_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall;
+function xboxkrnl_READ_PORT_BUFFER_UCHAR(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('READ_PORT_BUFFER_UCHAR');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_READ_PORT_BUFFER_USHORT(): NTSTATUS; stdcall;
+function xboxkrnl_READ_PORT_BUFFER_USHORT(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('READ_PORT_BUFFER_USHORT');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_READ_PORT_BUFFER_ULONG(): NTSTATUS; stdcall;
+function xboxkrnl_READ_PORT_BUFFER_ULONG(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('READ_PORT_BUFFER_ULONG');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall;
+function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('WRITE_PORT_BUFFER_UCHAR');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_WRITE_PORT_BUFFER_USHORT(): NTSTATUS; stdcall;
+function xboxkrnl_WRITE_PORT_BUFFER_USHORT(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('WRITE_PORT_BUFFER_USHORT');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_WRITE_PORT_BUFFER_ULONG(): NTSTATUS; stdcall;
+function xboxkrnl_WRITE_PORT_BUFFER_ULONG(
+  Arg1, Arg2, Arg3: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('WRITE_PORT_BUFFER_ULONG');

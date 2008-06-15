@@ -40,21 +40,43 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_ExAcquireReadWriteLockExclusive(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExAcquireReadWriteLockShared(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExAllocatePool(NumberOfBytes: ULONG): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+var
+  xboxkrnl_ExEventObjectType: POBJECT_TYPE = NULL;
+
+function xboxkrnl_ExAcquireReadWriteLockExclusive(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExAcquireReadWriteLockShared(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExAllocatePool(
+  NumberOfBytes: ULONG
+  ): PVOID; stdcall;
 function xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
   ): PVOID; stdcall;
-function xboxkrnl_ExEventObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExFreePool(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExInitializeReadWriteLock(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExInterlockedAddLargeInteger(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExInterlockedAddLargeStatistic(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExFreePool(
+  Block: PVOID
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExInitializeReadWriteLock(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExInterlockedAddLargeInteger(
+  Addend: PLARGE_INTEGER;
+  Increment: LARGE_INTEGER;
+  Lock: PKSPIN_LOCK   
+  ): LARGE_INTEGER; stdcall;
+procedure xboxkrnl_ExInterlockedAddLargeStatistic(
+  Addend: PLARGE_INTEGER;
+  Increment: ULONG
+  ); stdcall;
 function xboxkrnl_ExInterlockedCompareExchange64(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ExMutantObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExQueryPoolBlockSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExQueryPoolBlockSize(
+  PoolBlock: PVOID;
+  QuotaCharged: PBOOLEAN // OUT
+  ): SIZE_T; stdcall;
 function xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; // out
@@ -75,72 +97,87 @@ function xboxkrnl_ExfInterlockedRemoveHeadList(): NTSTATUS; stdcall; // UNKNOWN_
 
 implementation
 
-function xboxkrnl_ExAcquireReadWriteLockExclusive(): NTSTATUS; stdcall;
+function xboxkrnl_ExAcquireReadWriteLockExclusive(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExAcquireReadWriteLockExclusive');
+  // KeWaitForSingleObject
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExAcquireReadWriteLockShared(): NTSTATUS; stdcall;
+function xboxkrnl_ExAcquireReadWriteLockShared(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExAcquireReadWriteLockShared');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_ExAllocatePool(NumberOfBytes: ULONG): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('ExAllocatePool');
+  // KeWaitForSingleObject
   EmuSwapFS(); // Xbox FS
 end;
 
 // Differences from NT: There is no PoolType field, as the XBOX
 // only has 1 pool, the non-paged pool.
+function xboxkrnl_ExAllocatePool(
+  NumberOfBytes: ULONG
+  ): PVOID; stdcall;
+begin
+  EmuSwapFS(); // Win2k/XP FS
+  Unimplemented('ExAllocatePool');
+  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E{?}));
+  EmuSwapFS(); // Xbox FS
+end;
+
 function xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
   ): PVOID; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
+//  RtlAssert(NumberOfBytes > 0);
   Unimplemented('ExAllocatePoolWithTag');
   Result := nil;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExEventObjectType(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('ExEventObjectType');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_ExFreePool(): NTSTATUS; stdcall;
+procedure xboxkrnl_ExFreePool(
+  Block: PVOID
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExFreePool');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExInitializeReadWriteLock(): NTSTATUS; stdcall;
+function xboxkrnl_ExInitializeReadWriteLock(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExInitializeReadWriteLock');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExInterlockedAddLargeInteger(): NTSTATUS; stdcall;
+function xboxkrnl_ExInterlockedAddLargeInteger(
+  Addend: PLARGE_INTEGER;
+  Increment: LARGE_INTEGER;
+  Lock: PKSPIN_LOCK   
+  ): LARGE_INTEGER; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('ExInterlockedAddLargeInteger');
+  Unimplemented('ExInterlockedAddLargeInteger');
+  Result.QuadPart := 0;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExInterlockedAddLargeStatistic(): NTSTATUS; stdcall;
+procedure xboxkrnl_ExInterlockedAddLargeStatistic(
+  Addend: PLARGE_INTEGER;
+  Increment: ULONG
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('ExInterlockedAddLargeStatistic');
+  Unimplemented('ExInterlockedAddLargeStatistic');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -158,7 +195,10 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExQueryPoolBlockSize(): NTSTATUS; stdcall;
+function xboxkrnl_ExQueryPoolBlockSize(
+  PoolBlock: PVOID;
+  QuotaCharged: PBOOLEAN // OUT
+  ): SIZE_T; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExQueryPoolBlockSize');

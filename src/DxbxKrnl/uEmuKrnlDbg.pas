@@ -41,7 +41,9 @@ uses
   uDxbxKrnl;
 
 function xboxkrnl_DbgBreakPoint(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_DbgBreakPointWithStatus(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_DbgBreakPointWithStatus(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_DbgLoadImageSymbols(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_DbgPrint(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_DbgPrompt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -56,7 +58,9 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_DbgBreakPointWithStatus(): NTSTATUS; stdcall;
+function xboxkrnl_DbgBreakPointWithStatus(
+  Arg1: DWORD
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('DbgBreakPointWithStatus');
