@@ -71,7 +71,8 @@ uses
   uEmuKrnlXbox in 'DxbxKrnl\uEmuKrnlXbox.pas',
   uEmuKrnlXc in 'DxbxKrnl\uEmuKrnlXc.pas',
   uEmuKrnlXe in 'DxbxKrnl\uEmuKrnlXe.pas',
-  uEmuKrnlAv in 'DxbxKrnl\uEmuKrnlAv.pas';
+  uEmuKrnlAv in 'DxbxKrnl\uEmuKrnlAv.pas',
+  uHLEDatabase in 'DxbxKrnl\uHLEDatabase.pas';
 
 {$R *.res}   
 

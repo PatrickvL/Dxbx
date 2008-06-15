@@ -40,13 +40,13 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_IoAllocateIrp(): NTSTATUS; stdcall;
-function xboxkrnl_IoBuildAsynchronousFsdRequest(): NTSTATUS; stdcall;
-function xboxkrnl_IoBuildDeviceIoControlRequest(): NTSTATUS; stdcall;
-function xboxkrnl_IoBuildSynchronousFsdRequest(): NTSTATUS; stdcall;
-function xboxkrnl_IoCheckShareAccess(): NTSTATUS; stdcall;
-function xboxkrnl_IoCompletionObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_IoCreateDevice(): NTSTATUS; stdcall;
+function xboxkrnl_IoAllocateIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoBuildAsynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoBuildDeviceIoControlRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoBuildSynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoCheckShareAccess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoCompletionObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoCreateDevice(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoCreateFile(
   FileHandle: PHANDLE; // out
   DesiredAccess: ACCESS_MASK;
@@ -63,31 +63,31 @@ function xboxkrnl_IoCreateSymbolicLink(
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
   ): NTSTATUS; stdcall;
-function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall;
+function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDeleteSymbolicLink(
   SymbolicLinkName: PSTRING
   ): NTSTATUS; stdcall;
-function xboxkrnl_IoDeviceObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_IoFileObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall;
-function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall;
-function xboxkrnl_IoInvalidDeviceRequest(): NTSTATUS; stdcall;
-function xboxkrnl_IoQueryFileInformation(): NTSTATUS; stdcall;
-function xboxkrnl_IoQueryVolumeInformation(): NTSTATUS; stdcall;
-function xboxkrnl_IoQueueThreadIrp(): NTSTATUS; stdcall;
-function xboxkrnl_IoRemoveShareAccess(): NTSTATUS; stdcall;
-function xboxkrnl_IoSetIoCompletion(): NTSTATUS; stdcall;
-function xboxkrnl_IoSetShareAccess(): NTSTATUS; stdcall;
-function xboxkrnl_IoStartNextPacket(): NTSTATUS; stdcall;
-function xboxkrnl_IoStartNextPacketByKey(): NTSTATUS; stdcall;
-function xboxkrnl_IoStartPacket(): NTSTATUS; stdcall;
-function xboxkrnl_IoSynchronousDeviceIoControlRequest(): NTSTATUS; stdcall;
-function xboxkrnl_IoSynchronousFsdRequest(): NTSTATUS; stdcall;
-function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall;
-function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall;
-function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall;
-function xboxkrnl_IoDismountVolumeByName(): NTSTATUS; stdcall;
-function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall;
+function xboxkrnl_IoDeviceObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoFileObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoInvalidDeviceRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoQueryFileInformation(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoQueryVolumeInformation(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoQueueThreadIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoRemoveShareAccess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoSetShareAccess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoStartNextPacket(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoStartNextPacketByKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoStartPacket(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoSynchronousDeviceIoControlRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoSynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoDismountVolumeByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

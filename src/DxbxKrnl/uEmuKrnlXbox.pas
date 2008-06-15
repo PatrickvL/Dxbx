@@ -40,13 +40,13 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_XboxEEPROMKey(): NTSTATUS; stdcall;
-function xboxkrnl_XboxHardwareInfo(): NTSTATUS; stdcall;
-function xboxkrnl_XboxHDKey(): NTSTATUS; stdcall;
-function xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall;
-function xboxkrnl_XboxSignatureKey(): NTSTATUS; stdcall;
-function xboxkrnl_XboxLANKey(): NTSTATUS; stdcall;
-function xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall;
+function xboxkrnl_XboxEEPROMKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XboxHardwareInfo(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XboxHDKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XboxSignatureKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XboxLANKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

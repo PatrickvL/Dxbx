@@ -169,36 +169,36 @@ function Unimplemented(const aAPI: string): NTSTATUS;
 // The following API names are derived from Pedro's APILogger V2
 // See http://forums.xbox-scene.com/index.php?showtopic=456303
 
-function xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedCompareExchange(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedDecrement(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedIncrement(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedExchange(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedExchangeAdd(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedFlushSList(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedPopEntrySList(): NTSTATUS; stdcall;
-function xboxkrnl_InterlockedPushEntrySList(): NTSTATUS; stdcall;
-function xboxkrnl_KfRaiseIrql(): NTSTATUS; stdcall;
-function xboxkrnl_KfLowerIrql(): NTSTATUS; stdcall;
-function xboxkrnl_KiBugCheckData(): NTSTATUS; stdcall;
-function xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
-function xboxkrnl_LaunchDataPage(): NTSTATUS; stdcall;
-function xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall;
-function xboxkrnl_PhyInitialize(): NTSTATUS; stdcall;
-function xboxkrnl_READ_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall;
-function xboxkrnl_READ_PORT_BUFFER_USHORT(): NTSTATUS; stdcall;
-function xboxkrnl_READ_PORT_BUFFER_ULONG(): NTSTATUS; stdcall;
-function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall;
-function xboxkrnl_WRITE_PORT_BUFFER_USHORT(): NTSTATUS; stdcall;
-function xboxkrnl_WRITE_PORT_BUFFER_ULONG(): NTSTATUS; stdcall;
-function xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall;
-function xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall;
-function xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall;
-function xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall;
-function xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall;
-function xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall;
-function xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall;
-function xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall;
+function xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedCompareExchange(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedDecrement(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedIncrement(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedExchange(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedExchangeAdd(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedFlushSList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedPopEntrySList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_InterlockedPushEntrySList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KfRaiseIrql(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KfLowerIrql(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KiBugCheckData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_LaunchDataPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_PhyInitialize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_READ_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_READ_PORT_BUFFER_USHORT(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_READ_PORT_BUFFER_ULONG(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_WRITE_PORT_BUFFER_USHORT(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_WRITE_PORT_BUFFER_ULONG(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

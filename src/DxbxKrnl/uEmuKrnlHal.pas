@@ -40,25 +40,25 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_HalReadSMCTrayState(): NTSTATUS; stdcall;
-function xboxkrnl_HalClearSoftwareInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_HalDisableSystemInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall;
-function xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall;
-function xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall;
-function xboxkrnl_HalEnableSystemInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_HalGetInterruptVector(): NTSTATUS; stdcall;
-function xboxkrnl_HalReadSMBusValue(): NTSTATUS; stdcall;
-function xboxkrnl_HalReadWritePCISpace(): NTSTATUS; stdcall;
-function xboxkrnl_HalRegisterShutdownNotification(): NTSTATUS; stdcall;
-function xboxkrnl_HalRequestSoftwareInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_HalReturnToFirmware(Routine: RETURN_FIRMWARE): NTSTATUS; stdcall;
-function xboxkrnl_HalWriteSMBusValue(): NTSTATUS; stdcall;
-function xboxkrnl_HalBootSMCVideoMode(): NTSTATUS; stdcall;
-function xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall;
-function xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall;
-function xboxkrnl_HalEnableSecureTrayEject(): NTSTATUS; stdcall;
-function xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall;
+function xboxkrnl_HalReadSMCTrayState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalClearSoftwareInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalDisableSystemInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalEnableSystemInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalGetInterruptVector(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalReadSMBusValue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalReadWritePCISpace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalRegisterShutdownNotification(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalRequestSoftwareInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalReturnToFirmware(Routine: RETURN_FIRMWARE): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalWriteSMBusValue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalBootSMCVideoMode(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalEnableSecureTrayEject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

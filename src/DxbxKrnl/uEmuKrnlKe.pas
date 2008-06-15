@@ -40,90 +40,90 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeBoostPriorityThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeBugCheck(): NTSTATUS; stdcall;
-function xboxkrnl_KeBugCheckEx(): NTSTATUS; stdcall;
-function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall;
-function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall;
+function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeBoostPriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeBugCheck(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeBugCheckEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeDelayExecutionThread(
   WaitMode: KPROCESSOR_MODE;
-  Alertable: BOOLEAN;
+  Alertable: LONGBOOL;
   Interval: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_KeEnterCriticalRegion(): NTSTATUS; stdcall;
-function xboxkrnl_KeGetCurrentIrql(): NTSTATUS; stdcall;
-function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeDeviceQueue(): NTSTATUS; stdcall;
+function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeEnterCriticalRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeGetCurrentIrql(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInitializeDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeDpc(
   Dpc: PKDPC;
   DeferredRoutine: PKDEFERRED_ROUTINE;
   DeferredContext: PVOID
   ): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeEvent(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeInterrupt(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeMutant(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeInitializeSemaphore(): NTSTATUS; stdcall;
+function xboxkrnl_KeInitializeEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInitializeInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInitializeMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInitializeQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInitializeSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
   _Type: TIMER_TYPE
   ): NTSTATUS; stdcall;
-function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeInsertHeadQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeInsertQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeInsertQueueApc(): NTSTATUS; stdcall;
-function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall;
-function xboxkrnl_KeInterruptTime(): NTSTATUS; stdcall;
-function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall;
-function xboxkrnl_KeLeaveCriticalRegion(): NTSTATUS; stdcall;
-function xboxkrnl_KePulseEvent(): NTSTATUS; stdcall;
-function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall;
-function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall;
-function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall;
+function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInsertHeadQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInsertQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInsertQueueApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeInterruptTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeLeaveCriticalRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KePulseEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_KeQuerySystemTime(
   CurrentTime: PLARGE_INTEGER
   ); stdcall;
-function xboxkrnl_KeRaiseIrqlToDpcLevel(): NTSTATUS; stdcall;
-function xboxkrnl_KeRaiseIrqlToSynchLevel(): NTSTATUS; stdcall;
-function xboxkrnl_KeReleaseMutant(): NTSTATUS; stdcall;
-function xboxkrnl_KeReleaseSemaphore(): NTSTATUS; stdcall;
-function xboxkrnl_KeRemoveByKeyDeviceQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeRemoveDeviceQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeRemoveEntryDeviceQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeRemoveQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeRemoveQueueDpc(): NTSTATUS; stdcall;
-function xboxkrnl_KeResetEvent(): NTSTATUS; stdcall;
-function xboxkrnl_KeRestoreFloatingPointState(): NTSTATUS; stdcall;
-function xboxkrnl_KeResumeThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeRundownQueue(): NTSTATUS; stdcall;
-function xboxkrnl_KeSaveFloatingPointState(): NTSTATUS; stdcall;
-function xboxkrnl_KeSetBasePriorityThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeSetDisableBoostThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeSetEvent(): NTSTATUS; stdcall;
-function xboxkrnl_KeSetEventBoostPriority(): NTSTATUS; stdcall;
-function xboxkrnl_KeSetPriorityProcess(): NTSTATUS; stdcall;
-function xboxkrnl_KeSetPriorityThread(): NTSTATUS; stdcall;
+function xboxkrnl_KeRaiseIrqlToDpcLevel(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRaiseIrqlToSynchLevel(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeReleaseMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeReleaseSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRemoveByKeyDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRemoveDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRemoveEntryDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRemoveQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRemoveQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeResetEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRestoreFloatingPointState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeResumeThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRundownQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSaveFloatingPointState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetBasePriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetDisableBoostThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetEventBoostPriority(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetPriorityProcess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetPriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSetTimer(
   Timer: PKTIMER;
   DueTime: LARGE_INTEGER;
   Dpc: PKDPC // OPTIONAL
-  ): BOOLEAN; stdcall;
-function xboxkrnl_KeSetTimerEx(): NTSTATUS; stdcall;
-function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall;
-function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall;
-function xboxkrnl_KeSystemTime(): NTSTATUS; stdcall;
-function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall;
-function xboxkrnl_KeTickCount(): NTSTATUS; stdcall;
-function xboxkrnl_KeTimeIncrement(): NTSTATUS; stdcall;
-function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall;
-function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall;
+  ): LONGBOOL; stdcall;
+function xboxkrnl_KeSetTimerEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeTickCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeTimeIncrement(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
@@ -178,7 +178,7 @@ end;
 
 function xboxkrnl_KeDelayExecutionThread(
   WaitMode: KPROCESSOR_MODE;
-  Alertable: BOOLEAN;
+  Alertable: LONGBOOL;
   Interval: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 begin
@@ -536,7 +536,7 @@ function xboxkrnl_KeSetTimer(
   Timer: PKTIMER;
   DueTime: LARGE_INTEGER;
   Dpc: PKDPC // OPTIONAL
-  ): BOOLEAN; stdcall;
+  ): LONGBOOL; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Unimplemented('KeSetTimer');

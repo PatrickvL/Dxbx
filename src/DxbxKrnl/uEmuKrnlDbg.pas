@@ -40,12 +40,12 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_DbgBreakPoint(): NTSTATUS; stdcall;
-function xboxkrnl_DbgBreakPointWithStatus(): NTSTATUS; stdcall;
-function xboxkrnl_DbgLoadImageSymbols(): NTSTATUS; stdcall;
-function xboxkrnl_DbgPrint(): NTSTATUS; stdcall;
-function xboxkrnl_DbgPrompt(): NTSTATUS; stdcall;
-function xboxkrnl_DbgUnLoadImageSymbols(): NTSTATUS; stdcall;
+function xboxkrnl_DbgBreakPoint(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_DbgBreakPointWithStatus(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_DbgLoadImageSymbols(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_DbgPrint(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_DbgPrompt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_DbgUnLoadImageSymbols(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

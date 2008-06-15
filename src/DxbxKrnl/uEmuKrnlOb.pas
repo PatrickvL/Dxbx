@@ -40,19 +40,19 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall;
-function xboxkrnl_ObDirectoryObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall;
-function xboxkrnl_ObMakeTemporaryObject(): NTSTATUS; stdcall;
-function xboxkrnl_ObOpenObjectByName(): NTSTATUS; stdcall;
-function xboxkrnl_ObOpenObjectByPointer(): NTSTATUS; stdcall;
-function xboxkrnl_ObpObjectHandleTable(): NTSTATUS; stdcall;
-function xboxkrnl_ObReferenceObjectByHandle(): NTSTATUS; stdcall;
-function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall;
-function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall;
-function xboxkrnl_ObSymbolicLinkObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall;
-function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall;
+function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObDirectoryObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObMakeTemporaryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObOpenObjectByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObOpenObjectByPointer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObpObjectHandleTable(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObReferenceObjectByHandle(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObSymbolicLinkObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

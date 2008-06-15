@@ -40,44 +40,62 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_XcSHAInit(): NTSTATUS; stdcall;
-function xboxkrnl_XcSHAUpdate(): NTSTATUS; stdcall;
-function xboxkrnl_XcSHAFinal(): NTSTATUS; stdcall;
-function xboxkrnl_XcRC4Key(): NTSTATUS; stdcall;
-function xboxkrnl_XcRC4Crypt(): NTSTATUS; stdcall;
-function xboxkrnl_XcHMAC(): NTSTATUS; stdcall;
-function xboxkrnl_XcPKEncPublic(): NTSTATUS; stdcall;
-function xboxkrnl_XcPKDecPrivate(): NTSTATUS; stdcall;
-function xboxkrnl_XcPKGetKeyLen(): NTSTATUS; stdcall;
-function xboxkrnl_XcVerifyPKCS1Signature(): NTSTATUS; stdcall;
-function xboxkrnl_XcModExp(): NTSTATUS; stdcall;
-function xboxkrnl_XcDESKeyParity(): NTSTATUS; stdcall;
-function xboxkrnl_XcKeyTable(): NTSTATUS; stdcall;
-function xboxkrnl_XcBlockCrypt(): NTSTATUS; stdcall;
-function xboxkrnl_XcBlockCryptCBC(): NTSTATUS; stdcall;
-function xboxkrnl_XcCryptService(): NTSTATUS; stdcall;
-function xboxkrnl_XcUpdateCrypto(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcSHAInit(
+  pbSHAContext: PUCHAR
+  ); stdcall;
+procedure xboxkrnl_XcSHAUpdate(
+  pbSHAContext: PUCHAR;
+  pbInput: PUCHAR;
+  dwInputLength: ULONG
+  ); stdcall;
+procedure xboxkrnl_XcSHAFinal(
+  pbSHAContext: PUCHAR;
+  pbDigest: PUCHAR
+  ); stdcall;
+function xboxkrnl_XcRC4Key(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcRC4Crypt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcHMAC(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcPKEncPublic(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcPKDecPrivate(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcPKGetKeyLen(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcVerifyPKCS1Signature(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcModExp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcDESKeyParity(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcKeyTable(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcBlockCrypt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcBlockCryptCBC(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcCryptService(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XcUpdateCrypto(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
-function xboxkrnl_XcSHAInit(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcSHAInit(
+  pbSHAContext: PUCHAR
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('XcSHAInit');
+  Unimplemented('XcSHAInit');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_XcSHAUpdate(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcSHAUpdate(
+  pbSHAContext: PUCHAR;
+  pbInput: PUCHAR;
+  dwInputLength: ULONG
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('XcSHAUpdate');
+  Unimplemented('XcSHAUpdate');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_XcSHAFinal(): NTSTATUS; stdcall;
+procedure xboxkrnl_XcSHAFinal(
+  pbSHAContext: PUCHAR;
+  pbDigest: PUCHAR
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('XcSHAFinal');
+  Unimplemented('XcSHAFinal');
   EmuSwapFS(); // Xbox FS
 end;
 
