@@ -115,7 +115,7 @@ begin
         ));
 
     if not Assigned(g_EmuShared) then
-			CxbxKrnlCleanup('Could not map view of shared memory!');
+      CxbxKrnlCleanup('Could not map view of shared memory!');
   end;
 
   // Executed only on first initialization of shared memory

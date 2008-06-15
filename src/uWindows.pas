@@ -22,7 +22,7 @@ unit uWindows;
 interface
 
 uses
-	// Delphi
+  // Delphi
   Windows;
 
 function IsWindowsVista: Boolean;

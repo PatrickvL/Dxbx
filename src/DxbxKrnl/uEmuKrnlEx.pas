@@ -43,7 +43,10 @@ uses
 function xboxkrnl_ExAcquireReadWriteLockExclusive(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ExAcquireReadWriteLockShared(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ExAllocatePool(NumberOfBytes: ULONG): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ExAllocatePoolWithTag(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExAllocatePoolWithTag(
+  NumberOfBytes: SIZE_T;
+  Tag: ULONG
+  ): PVOID; stdcall;
 function xboxkrnl_ExEventObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ExFreePool(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ExInitializeReadWriteLock(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -93,10 +96,16 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_ExAllocatePoolWithTag(): NTSTATUS; stdcall;
+// Differences from NT: There is no PoolType field, as the XBOX
+// only has 1 pool, the non-paged pool.
+function xboxkrnl_ExAllocatePoolWithTag(
+  NumberOfBytes: SIZE_T;
+  Tag: ULONG
+  ): PVOID; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('ExAllocatePoolWithTag');
+  Unimplemented('ExAllocatePoolWithTag');
+  Result := nil;
   EmuSwapFS(); // Xbox FS
 end;
 

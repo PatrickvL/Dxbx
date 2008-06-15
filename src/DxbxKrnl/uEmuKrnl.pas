@@ -178,8 +178,12 @@ function xboxkrnl_InterlockedExchangeAdd(): NTSTATUS; stdcall; // UNKNOWN_SIGNAT
 function xboxkrnl_InterlockedFlushSList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_InterlockedPopEntrySList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_InterlockedPushEntrySList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KfRaiseIrql(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KfLowerIrql(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KfRaiseIrql(
+  NewIrql: UCHAR
+  ): UCHAR; stdcall;
+function xboxkrnl_KfLowerIrql(
+  NewIrql: UCHAR
+  ): UCHAR; stdcall;
 function xboxkrnl_KiBugCheckData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_LaunchDataPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -275,14 +279,18 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KfRaiseIrql(): NTSTATUS; stdcall;
+function xboxkrnl_KfRaiseIrql(
+  NewIrql: UCHAR
+  ): UCHAR; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('KfRaiseIrql');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KfLowerIrql(): NTSTATUS; stdcall;
+function xboxkrnl_KfLowerIrql(
+  NewIrql: UCHAR
+  ): UCHAR; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('KfLowerIrql');

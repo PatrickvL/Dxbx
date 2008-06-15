@@ -132,9 +132,9 @@ begin
   uint32 MEMORY_GUARD := $DEADFADE;
 
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
 
 begin 
     CXBX_ALLOC_NORMAL,
@@ -144,7 +144,7 @@ CXBX_ALLOC_TYPE;
 
 type
 
-CXBX_MEMORY_BLOCK	= record
+CXBX_MEMORY_BLOCK  = record
     procedure                      *pMem;
     Integer                     Size;
     Char                      *pFile;

@@ -114,7 +114,12 @@ function xboxkrnl_KeSetTimer(
   DueTime: LARGE_INTEGER;
   Dpc: PKDPC // OPTIONAL
   ): LONGBOOL; stdcall;
-function xboxkrnl_KeSetTimerEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetTimerEx(
+  Timer: PKTIMER;
+  DueTime: LARGE_INTEGER;
+  Period: LONG; // OPTIONAL
+  Dpc: PKDPC // OPTIONAL
+  ): LONGBOOL; stdcall;
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -544,10 +549,16 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_KeSetTimerEx(): NTSTATUS; stdcall;
+function xboxkrnl_KeSetTimerEx(
+  Timer: PKTIMER;
+  DueTime: LARGE_INTEGER;
+  Period: LONG; // OPTIONAL
+  Dpc: PKDPC // OPTIONAL
+  ): LONGBOOL; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('KeSetTimerEx');
+  Unimplemented('KeSetTimerEx');
+  Result := Low(Result);
   EmuSwapFS(); // Xbox FS
 end;
 

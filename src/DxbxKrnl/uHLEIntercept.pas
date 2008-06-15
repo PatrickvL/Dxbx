@@ -272,13 +272,13 @@ begin
                             begin 
                                 if(OrigBuildVersion = 4928) then 
                                 begin 
-					                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4928, lower, upper);
+                          pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4928, lower, upper);
                                     ProcessHeapOffs := $44;
                                     RtlCreateHeapOffs := $3B;
                                  end;
                                 else
                                 begin 
-					                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4361, lower, upper);
+                          pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4361, lower, upper);
                                     ProcessHeapOffs := $3E;
                                     RtlCreateHeapOffs := $37;
                                  end;

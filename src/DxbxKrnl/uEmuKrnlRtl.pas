@@ -52,7 +52,7 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-	_Message: PCHAR
+  _Message: PCHAR
   ); stdcall;
 function xboxkrnl_RtlCaptureContext(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -179,7 +179,7 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-	_Message: PCHAR
+  _Message: PCHAR
   ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
