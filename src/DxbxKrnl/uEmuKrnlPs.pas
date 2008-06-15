@@ -59,10 +59,12 @@ function xboxkrnl_PsCreateSystemThreadEx(
   CreateSuspended: LONGBOOL;
   DebugStack: LONGBOOL;
   StartRoutine: PKSTART_ROUTINE): NTSTATUS; stdcall; {EXPORTNUM(255)}
-function xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall;
-function xboxkrnl_PsSetCreateThreadNotifyRoutine(): NTSTATUS; stdcall;
-function xboxkrnl_PsTerminateSystemThread(): NTSTATUS; stdcall;
-function xboxkrnl_PsThreadObjectType(): NTSTATUS; stdcall;
+function xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_PsSetCreateThreadNotifyRoutine(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_PsTerminateSystemThread(
+  ExitStatus: NTSTATUS
+  ); stdcall;
+function xboxkrnl_PsThreadObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 
 implementation
@@ -310,10 +312,12 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_PsTerminateSystemThread(): NTSTATUS; stdcall;
+procedure xboxkrnl_PsTerminateSystemThread(
+  ExitStatus: NTSTATUS
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('PsTerminateSystemThread');
+  Unimplemented('PsTerminateSystemThread');
   EmuSwapFS(); // Xbox FS
 end;
 

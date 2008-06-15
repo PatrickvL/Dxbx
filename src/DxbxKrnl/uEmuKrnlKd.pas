@@ -40,8 +40,8 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_KdDebuggerEnabled(): NTSTATUS; stdcall;
-function xboxkrnl_KdDebuggerNotPresent(): NTSTATUS; stdcall;
+function xboxkrnl_KdDebuggerEnabled(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KdDebuggerNotPresent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

@@ -47,19 +47,19 @@ function xboxkrnl_NtAllocateVirtualMemory(
   AllocationType: DWORD;
   Protect: DWORD
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall;
+function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtClearEvent(
   EventHandle: HANDLE
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtClose(
   Handle: THandle
   ): NTSTATUS; stdcall; {EXPORTNUM(187)}
-function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
+function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtCreateEvent(
   EventHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
   EventType: EVENT_TYPE;
-  InitialState: BOOLEAN
+  InitialState: LONGBOOL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateFile(
   FileHandle: PHANDLE; // OUT
@@ -76,7 +76,7 @@ function xboxkrnl_NtCreateIoCompletion(FileHandle: dtU32; DesiredAccess: dtACCES
 function xboxkrnl_NtCreateMutant(
   MutantHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  InitialOwner: BOOLEAN
+  InitialOwner: LONGBOOL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateSemaphore(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateTimer(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
@@ -85,7 +85,7 @@ function xboxkrnl_NtDeviceIoControlFile(FileHandle: dtU32; Event: dtU32; pApcRou
 function xboxkrnl_NtDuplicateObject(
   SourceHandle: HANDLE;
   TargetHandle: PHANDLE;
-  Options: DWORD   
+  Options: DWORD
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtFlushBuffersFile(
   FileHandle: PVOID;
@@ -97,9 +97,9 @@ function xboxkrnl_NtFreeVirtualMemory(
   FreeType: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtFsControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; FsControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
-function xboxkrnl_NtOpenDirectoryObject(): NTSTATUS; stdcall;
+function xboxkrnl_NtOpenDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtOpenFile(
-  FileHandle: PHANDLE; // OUT 
+  FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
@@ -107,40 +107,118 @@ function xboxkrnl_NtOpenFile(
   OpenOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
-function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall;
-function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueueApcThread(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryDirectoryFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pFileInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum; pFileMask: dtANSI_STRING; RestartScan: dtU32): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryFullAttributesFile(pObjectAttributes: dtObjectAttributes; pAttributes: dtU32): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryInformationFile(FileHandle: dtU32; pIoStatusBlock: dtU32; pFileInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall;
-function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall;
-function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryVirtualMemory(): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryVolumeInformationFile(FileHandle: dtU32; pIoStatusBlock: dtU32; pFileSystemInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum): NTSTATUS; stdcall;
-function xboxkrnl_NtReadFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pBuffer: dtU32; Length: dtU32; pByteOffset: dtU32): NTSTATUS; stdcall;
-function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall;
-function xboxkrnl_NtReleaseMutant(): NTSTATUS; stdcall;
-function xboxkrnl_NtReleaseSemaphore(): NTSTATUS; stdcall;
-function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall;
-function xboxkrnl_NtResumeThread(): NTSTATUS; stdcall;
-function xboxkrnl_NtSetEvent(): NTSTATUS; stdcall;
-function xboxkrnl_NtSetInformationFile(FileHandle: dtU32; pIoStatusBlock: dtU32; FileInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum): NTSTATUS; stdcall;
-function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall;
-function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall;
-function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall;
-function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall;
-function xboxkrnl_NtSuspendThread(): NTSTATUS; stdcall;
-function xboxkrnl_NtUserIoApcDispatcher(): NTSTATUS; stdcall;
-function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall;
-function xboxkrnl_NtWaitForSingleObjectEx(): NTSTATUS; stdcall;
-function xboxkrnl_NtWaitForMultipleObjectsEx(): NTSTATUS; stdcall;
-function xboxkrnl_NtWriteFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pBuffer: dtU32; Length: dtU32; pByteOffset: dtU32): NTSTATUS; stdcall;
-function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall;
+function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueueApcThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryDirectoryFile(
+  FileHandle: HANDLE;
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PVOID; // Todo: define this routine's prototype
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK; // out
+  FileInformation: PFILE_DIRECTORY_INFORMATION; // out
+  Length: ULONG;
+  FileInformationClass: FILE_INFORMATION_CLASS;
+  FileMask: PSTRING;
+  RestartScan: LONGBOOL
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryFullAttributesFile(
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  Attributes: PVOID // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryInformationFile(
+  FileHandle: HANDLE;
+  IoStatusBlock: PIO_STATUS_BLOCK; //   OUT
+  FileInformation: PVOID; //   OUT
+  Length: ULONG;
+  FileInfo: FILE_INFORMATION_CLASS
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryVirtualMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryVolumeInformationFile(
+  FileHandle: HANDLE;
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  FileInformation: PFILE_FS_SIZE_INFORMATION; // OUT
+  Length: ULONG;
+  FileInformationClass: FS_INFORMATION_CLASS
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtReadFile(
+  FileHandle: HANDLE; // TODO: correct paramters
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PVOID; // OPTIONAL
+  ApcContext: PVOID;
+	IoStatusBlock: PVOID; // OUT
+	Buffer: PVOID; // OUT
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER   // OPTIONAL
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtReleaseMutant(
+  MutantHandle: HANDLE;
+  PreviousCount: PLONG // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtReleaseSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtResumeThread(
+  ThreadHandle: HANDLE;
+  PreviousSuspendCount: PULONG // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtSetEvent(
+  EventHandle: HANDLE;
+  PreviousState: PLONG // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtSetInformationFile(
+	FileHandle: HANDLE; // TODO: correct paramters
+	IoStatusBlock: PVOID; // OUT
+	FileInformation: PVOID;
+	Length:	ULONG;
+	FileInformationClass:	ULONG // dtFILE_INFORMATION_CLASSEnum
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSuspendThread(
+  ThreadHandle: HANDLE;
+  PreviousSuspendCount: PULONG // OUT OPTIONAL
+  ): NTSTATUS; stdcall;
+procedure xboxkrnl_NtUserIoApcDispatcher(
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK;
+  Reserved: ULONG
+  ); stdcall;
+function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtWaitForSingleObjectEx(
+  _Handle: HANDLE;
+  WaitMode: CHAR;
+  Alertable: LONGBOOL;
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtWaitForMultipleObjectsEx(
+  Count: ULONG;
+  Handles: PHANDLE;
+  WaitType: WAIT_TYPE;
+  WaitMode: CHAR;
+  Alertable: LONGBOOL;
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtWriteFile(
+	FileHandle: HANDLE; // TODO: correct paramters
+	Event: PVOID;
+	ApcRoutine:	PVOID;
+	ApcContext: PVOID;
+	IoStatusBlock: PVOID; // OUT
+	Buffer: PVOID;
+	Length: ULONG;
+	ByteOffset: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_NtYieldExecution(); stdcall;
 
 implementation
@@ -218,7 +296,7 @@ function xboxkrnl_NtCreateEvent(
   EventHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
   EventType: EVENT_TYPE;
-  InitialState: BOOLEAN
+  InitialState: LONGBOOL
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -253,7 +331,7 @@ end;
 function xboxkrnl_NtCreateMutant(
   MutantHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  InitialOwner: BOOLEAN
+  InitialOwner: LONGBOOL
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -377,7 +455,18 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtQueryDirectoryFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pFileInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum; pFileMask: dtANSI_STRING; RestartScan: dtU32): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryDirectoryFile(
+  FileHandle: HANDLE;
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PVOID; // Todo: define this routine's prototype
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK; // out
+  FileInformation: PFILE_DIRECTORY_INFORMATION; // out
+  Length: ULONG;
+  FileInformationClass: FILE_INFORMATION_CLASS;
+  FileMask: PSTRING;
+  RestartScan: LONGBOOL
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtQueryDirectoryFile');
@@ -398,14 +487,23 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtQueryFullAttributesFile(pObjectAttributes: dtObjectAttributes; pAttributes: dtU32): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryFullAttributesFile(
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  Attributes: PVOID // OUT
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtQueryFullAttributesFile');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtQueryInformationFile(FileHandle: dtU32; pIoStatusBlock: dtU32; pFileInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryInformationFile(
+  FileHandle: HANDLE;
+  IoStatusBlock: PIO_STATUS_BLOCK; //   OUT
+  FileInformation: PVOID; //   OUT
+  Length: ULONG;
+  FileInfo: FILE_INFORMATION_CLASS
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtQueryInformationFile');
@@ -454,14 +552,29 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtQueryVolumeInformationFile(FileHandle: dtU32; pIoStatusBlock: dtU32; pFileSystemInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryVolumeInformationFile(
+  FileHandle: HANDLE;
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  FileInformation: PFILE_FS_SIZE_INFORMATION; // OUT
+  Length: ULONG;
+  FileInformationClass: FS_INFORMATION_CLASS
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtQueryVolumeInformationFile');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtReadFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pBuffer: dtU32; Length: dtU32; pByteOffset: dtU32): NTSTATUS; stdcall;
+function xboxkrnl_NtReadFile(
+  FileHandle: HANDLE; // TODO: correct paramters
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PVOID; // OPTIONAL
+  ApcContext: PVOID;
+	IoStatusBlock: PVOID; // OUT
+	Buffer: PVOID; // OUT
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER   // OPTIONAL
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtReadFile');
@@ -475,7 +588,10 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtReleaseMutant(): NTSTATUS; stdcall;
+function xboxkrnl_NtReleaseMutant(
+  MutantHandle: HANDLE;
+  PreviousCount: PLONG // OUT    
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtReleaseMutant');
@@ -496,21 +612,33 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtResumeThread(): NTSTATUS; stdcall;
+function xboxkrnl_NtResumeThread(
+  ThreadHandle: HANDLE;
+  PreviousSuspendCount: PULONG // OUT
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtResumeThread');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtSetEvent(): NTSTATUS; stdcall;
+function xboxkrnl_NtSetEvent(
+  EventHandle: HANDLE;
+  PreviousState: PLONG // OUT
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtSetEvent');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtSetInformationFile(FileHandle: dtU32; pIoStatusBlock: dtU32; FileInformation: dtU32; Length: dtU32; FileInformationClass: dtFILE_INFORMATION_CLASSEnum): NTSTATUS; stdcall;
+function xboxkrnl_NtSetInformationFile(
+	FileHandle: HANDLE; // TODO: correct paramters
+	IoStatusBlock: PVOID; // OUT
+	FileInformation: PVOID;
+	Length:	ULONG;
+	FileInformationClass:	ULONG // dtFILE_INFORMATION_CLASSEnum
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtSetInformationFile');
@@ -545,17 +673,24 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtSuspendThread(): NTSTATUS; stdcall;
+function xboxkrnl_NtSuspendThread(
+  ThreadHandle: HANDLE;
+  PreviousSuspendCount: PULONG // OUT OPTIONAL
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtSuspendThread');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtUserIoApcDispatcher(): NTSTATUS; stdcall;
+procedure xboxkrnl_NtUserIoApcDispatcher(
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK;
+  Reserved: ULONG
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('NtUserIoApcDispatcher');
+  Unimplemented('NtUserIoApcDispatcher');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -566,21 +701,42 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtWaitForSingleObjectEx(): NTSTATUS; stdcall;
+function xboxkrnl_NtWaitForSingleObjectEx(
+  _Handle: HANDLE;
+  WaitMode: CHAR;
+  Alertable: LONGBOOL;
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtWaitForSingleObjectEx');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtWaitForMultipleObjectsEx(): NTSTATUS; stdcall;
+function xboxkrnl_NtWaitForMultipleObjectsEx(
+  Count: ULONG;
+  Handles: PHANDLE;
+  WaitType: WAIT_TYPE;
+  WaitMode: CHAR;
+  Alertable: LONGBOOL;
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtWaitForMultipleObjectsEx');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_NtWriteFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pBuffer: dtU32; Length: dtU32; pByteOffset: dtU32): NTSTATUS; stdcall;
+function xboxkrnl_NtWriteFile(
+	FileHandle: HANDLE; // TODO: correct paramters
+	Event: PVOID;
+	ApcRoutine:	PVOID;
+	ApcContext: PVOID;
+	IoStatusBlock: PVOID; // OUT
+	Buffer: PVOID;
+	Length: ULONG;
+	ByteOffset: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('NtWriteFile');

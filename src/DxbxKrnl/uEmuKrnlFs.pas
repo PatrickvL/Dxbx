@@ -40,9 +40,9 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_FscGetCacheSize(): NTSTATUS; stdcall;
-function xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall;
-function xboxkrnl_FscSetCacheSize(uCachePages: ULONG): NTSTATUS; stdcall;
+function xboxkrnl_FscGetCacheSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_FscSetCacheSize(uCachePages: ULONG): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

@@ -40,10 +40,10 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
-function xboxkrnl_XeLoadSection(): NTSTATUS; stdcall;
-function xboxkrnl_XeUnloadSection(): NTSTATUS; stdcall;
-function xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall;
+function xboxkrnl_XeImageFileName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XeLoadSection(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XeUnloadSection(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

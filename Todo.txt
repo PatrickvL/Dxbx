@@ -7,5 +7,10 @@ The following tasks are currently on the short-term TODO list :
 - Translate EmuD3D8 to get some visual output of Dxbx calling actual Xbe code
 
 - Fix the difference in contents in the .cxbxplg section between Dxbx and Cxbx (this is probably because the .xbe reading is damaged)
+  (Currently this difference is only seen with Fable the Lost Chapters)
 
 - Investigate how the HLE emulation should be translated
+
+- Implement all API's that are implemented by Cxbx
+
+- Determine all API's signatures that are not currently known (marked with UNKNOWN_SIGNATURE)

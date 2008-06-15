@@ -40,18 +40,18 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_ExAcquireReadWriteLockExclusive(): NTSTATUS; stdcall;
-function xboxkrnl_ExAcquireReadWriteLockShared(): NTSTATUS; stdcall;
-function xboxkrnl_ExAllocatePool(NumberOfBytes: ULONG): NTSTATUS; stdcall;
-function xboxkrnl_ExAllocatePoolWithTag(): NTSTATUS; stdcall;
-function xboxkrnl_ExEventObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_ExFreePool(): NTSTATUS; stdcall;
-function xboxkrnl_ExInitializeReadWriteLock(): NTSTATUS; stdcall;
-function xboxkrnl_ExInterlockedAddLargeInteger(): NTSTATUS; stdcall;
-function xboxkrnl_ExInterlockedAddLargeStatistic(): NTSTATUS; stdcall;
-function xboxkrnl_ExInterlockedCompareExchange64(): NTSTATUS; stdcall;
-function xboxkrnl_ExMutantObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_ExQueryPoolBlockSize(): NTSTATUS; stdcall;
+function xboxkrnl_ExAcquireReadWriteLockExclusive(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExAcquireReadWriteLockShared(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExAllocatePool(NumberOfBytes: ULONG): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExAllocatePoolWithTag(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExEventObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExFreePool(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExInitializeReadWriteLock(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExInterlockedAddLargeInteger(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExInterlockedAddLargeStatistic(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExInterlockedCompareExchange64(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExMutantObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExQueryPoolBlockSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; // out
@@ -59,16 +59,16 @@ function xboxkrnl_ExQueryNonVolatileSetting(
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
   ): NTSTATUS; stdcall;
-function xboxkrnl_ExReadWriteRefurbInfo(): NTSTATUS; stdcall;
-function xboxkrnl_ExRaiseException(): NTSTATUS; stdcall;
-function xboxkrnl_ExRaiseStatus(): NTSTATUS; stdcall;
-function xboxkrnl_ExReleaseReadWriteLock(): NTSTATUS; stdcall;
-function xboxkrnl_ExSaveNonVolatileSetting(): NTSTATUS; stdcall;
-function xboxkrnl_ExSemaphoreObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_ExTimerObjectType(): NTSTATUS; stdcall;
-function xboxkrnl_ExfInterlockedInsertHeadList(): NTSTATUS; stdcall;
-function xboxkrnl_ExfInterlockedInsertTailList(): NTSTATUS; stdcall;
-function xboxkrnl_ExfInterlockedRemoveHeadList(): NTSTATUS; stdcall;
+function xboxkrnl_ExReadWriteRefurbInfo(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExRaiseException(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExRaiseStatus(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExReleaseReadWriteLock(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExSaveNonVolatileSetting(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExSemaphoreObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExTimerObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExfInterlockedInsertHeadList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExfInterlockedInsertTailList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ExfInterlockedRemoveHeadList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

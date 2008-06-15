@@ -40,10 +40,10 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_AvGetSavedDataAddress(): NTSTATUS; stdcall;
-function xboxkrnl_AvSendTVEncoderOption(): NTSTATUS; stdcall;
-function xboxkrnl_AvSetDisplayMode(): NTSTATUS; stdcall;
-function xboxkrnl_AvSetSavedDataAddress(): NTSTATUS; stdcall;
+function xboxkrnl_AvGetSavedDataAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_AvSendTVEncoderOption(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_AvSetDisplayMode(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_AvSetSavedDataAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 

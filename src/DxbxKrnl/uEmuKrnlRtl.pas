@@ -40,76 +40,114 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_RtlAnsiStringToUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlAppendStringToString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlAppendUnicodeStringToString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlAppendUnicodeToString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlAssert(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCaptureContext(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCharToInteger(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCompareMemory(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCompareMemoryUlong(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCompareString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCompareUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCopyString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCopyUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlCreateUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlDowncaseUnicodeChar(): NTSTATUS; stdcall;
-function xboxkrnl_RtlDowncaseUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlEnterCriticalSection(): NTSTATUS; stdcall;
-function xboxkrnl_RtlEnterCriticalSectionAndRegion(): NTSTATUS; stdcall;
-function xboxkrnl_RtlEqualString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlEqualUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlExtendedIntegerMultiply(): NTSTATUS; stdcall;
-function xboxkrnl_RtlExtendedLargeIntegerDivide(): NTSTATUS; stdcall;
-function xboxkrnl_RtlExtendedMagicDivide(): NTSTATUS; stdcall;
-function xboxkrnl_RtlFillMemory(): NTSTATUS; stdcall;
-function xboxkrnl_RtlFillMemoryUlong(): NTSTATUS; stdcall;
-function xboxkrnl_RtlFreeAnsiString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlFreeUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlGetCallersAddress(): NTSTATUS; stdcall;
-function xboxkrnl_RtlInitAnsiString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlInitializeCriticalSection(): NTSTATUS; stdcall;
-function xboxkrnl_RtlIntegerToChar(): NTSTATUS; stdcall;
-function xboxkrnl_RtlIntegerToUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlLeaveCriticalSection(): NTSTATUS; stdcall;
-function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall;
-function xboxkrnl_RtlLowerChar(): NTSTATUS; stdcall;
-function xboxkrnl_RtlMapGenericMask(): NTSTATUS; stdcall;
-function xboxkrnl_RtlMoveMemory(): NTSTATUS; stdcall;
-function xboxkrnl_RtlMultiByteToUnicodeN(): NTSTATUS; stdcall;
-function xboxkrnl_RtlMultiByteToUnicodeSize(): NTSTATUS; stdcall;
-function xboxkrnl_RtlNtStatusToDosError(): NTSTATUS; stdcall;
-function xboxkrnl_RtlRaiseException(): NTSTATUS; stdcall;
-function xboxkrnl_RtlRaiseStatus(): NTSTATUS; stdcall;
-function xboxkrnl_RtlTimeFieldsToTime(): NTSTATUS; stdcall;
-function xboxkrnl_RtlTimeToTimeFields(): NTSTATUS; stdcall;
-function xboxkrnl_RtlTryEnterCriticalSection(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUlongByteSwap(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUnicodeStringToAnsiString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUnicodeStringToInteger(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUnicodeToMultiByteN(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUnicodeToMultiByteSize(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUnwind(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUpcaseUnicodeChar(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUpcaseUnicodeString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUpperChar(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUpperString(): NTSTATUS; stdcall;
-function xboxkrnl_RtlUshortByteSwap(): NTSTATUS; stdcall;
-function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall;
-function xboxkrnl_RtlZeroMemory(): NTSTATUS; stdcall;
-function xboxkrnl_RtlRip(): NTSTATUS; stdcall;
-function xboxkrnl_RtlSnprintf(): NTSTATUS; stdcall;
-function xboxkrnl_RtlSprintf(): NTSTATUS; stdcall;
-function xboxkrnl_RtlVsnprintf(): NTSTATUS; stdcall;
-function xboxkrnl_RtlVsprintf(): NTSTATUS; stdcall;
+function xboxkrnl_RtlAnsiStringToUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PSTRING;
+  AllocateDestinationString: UCHAR
+  ): NTSTATUS; stdcall;
+function xboxkrnl_RtlAppendStringToString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlAppendUnicodeStringToString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlAppendUnicodeToString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlAssert(
+  FailedAssertion: PVOID;
+  FileName: PVOID;
+  LineNumber: ULONG;
+	_Message: PCHAR
+  ); stdcall;
+function xboxkrnl_RtlCaptureContext(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCharToInteger(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCompareMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCompareMemoryUlong(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCompareString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCompareUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCopyString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCopyUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCreateUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlDowncaseUnicodeChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlDowncaseUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlEnterCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ); stdcall;
+function xboxkrnl_RtlEnterCriticalSectionAndRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlEqualString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlEqualUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlExtendedIntegerMultiply(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlExtendedLargeIntegerDivide(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlExtendedMagicDivide(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlFillMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlFillMemoryUlong(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlFreeAnsiString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlFreeUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlGetCallersAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlInitAnsiString(
+  DestinationString: PANSI_STRING; // OUT
+  SourceString: PCSZ
+  ): NTSTATUS; stdcall;
+function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlInitializeCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ); stdcall;
+function xboxkrnl_RtlIntegerToChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlIntegerToUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlLeaveCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ); stdcall;
+function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlLowerChar(
+  Character: CHAR
+  ): CHAR; stdcall;
+function xboxkrnl_RtlMapGenericMask(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlMoveMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlMultiByteToUnicodeN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlMultiByteToUnicodeSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlNtStatusToDosError(
+  Status: NTSTATUS
+  ): ULONG; stdcall;
+function xboxkrnl_RtlRaiseException(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlRaiseStatus(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlTimeFieldsToTime(
+  TimeFields: PTIME_FIELDS;
+  Time: PLARGE_INTEGER // OUT
+  ): LONGBOOL; stdcall;
+procedure xboxkrnl_RtlTimeToTimeFields(
+  Time: PLARGE_INTEGER;
+  TimeFields: PTIME_FIELDS // out
+  ); stdcall;
+function xboxkrnl_RtlTryEnterCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ): LONGBOOL; stdcall;
+function xboxkrnl_RtlUlongByteSwap(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUnicodeStringToAnsiString(
+  DestinationString: PSTRING; // OUT
+  SourceString: PUNICODE_STRING;
+  AllocateDestinationString: LONGBOOL
+  ): NTSTATUS; stdcall;
+function xboxkrnl_RtlUnicodeStringToInteger(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUnicodeToMultiByteN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUnicodeToMultiByteSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUnwind(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUpcaseUnicodeChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUpcaseUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUpperChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUpperString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUshortByteSwap(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlZeroMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlRip(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlSnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlSprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlVsnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlVsprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
-function xboxkrnl_RtlAnsiStringToUnicodeString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlAnsiStringToUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PSTRING;
+  AllocateDestinationString: UCHAR
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('RtlAnsiStringToUnicodeString');
@@ -137,10 +175,15 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlAssert(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlAssert(
+  FailedAssertion: PVOID;
+  FileName: PVOID;
+  LineNumber: ULONG;
+	_Message: PCHAR
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlAssert');
+  Unimplemented('RtlAssert');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -228,10 +271,12 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlEnterCriticalSection(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlEnterCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlEnterCriticalSection');
+  Unimplemented('RtlEnterCriticalSection');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -312,7 +357,10 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlInitAnsiString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlInitAnsiString(
+  DestinationString: PANSI_STRING; // OUT
+  SourceString: PCSZ
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('RtlInitAnsiString');
@@ -326,10 +374,12 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlInitializeCriticalSection(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlInitializeCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlInitializeCriticalSection');
+  Unimplemented('RtlInitializeCriticalSection');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -347,10 +397,12 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlLeaveCriticalSection(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlLeaveCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlLeaveCriticalSection');
+  Unimplemented('RtlLeaveCriticalSection');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -361,10 +413,13 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlLowerChar(): NTSTATUS; stdcall;
+function xboxkrnl_RtlLowerChar(
+  Character: CHAR
+  ): CHAR; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlLowerChar');
+  Unimplemented('RtlLowerChar');
+  Result := Low(Result);
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -396,7 +451,9 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlNtStatusToDosError(): NTSTATUS; stdcall;
+function xboxkrnl_RtlNtStatusToDosError(
+  Status: NTSTATUS
+  ): ULONG; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('RtlNtStatusToDosError');
@@ -417,24 +474,34 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlTimeFieldsToTime(): NTSTATUS; stdcall;
+function xboxkrnl_RtlTimeFieldsToTime(
+  TimeFields: PTIME_FIELDS;
+  Time: PLARGE_INTEGER // OUT
+  ): LONGBOOL; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlTimeFieldsToTime');
+  Unimplemented('RtlTimeFieldsToTime');
+  Result := Low(Result);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlTimeToTimeFields(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlTimeToTimeFields(
+  Time: PLARGE_INTEGER;
+  TimeFields: PTIME_FIELDS // out
+  ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlTimeToTimeFields');
+  Unimplemented('RtlTimeToTimeFields');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlTryEnterCriticalSection(): NTSTATUS; stdcall;
+function xboxkrnl_RtlTryEnterCriticalSection(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ): LONGBOOL; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('RtlTryEnterCriticalSection');
+  Unimplemented('RtlTryEnterCriticalSection');
+  Result := Low(Result);
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -445,7 +512,11 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_RtlUnicodeStringToAnsiString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUnicodeStringToAnsiString(
+  DestinationString: PSTRING; // OUT
+  SourceString: PUNICODE_STRING;
+  AllocateDestinationString: LONGBOOL
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('RtlUnicodeStringToAnsiString');

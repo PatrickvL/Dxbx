@@ -40,7 +40,7 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_MmGlobalData(): NTSTATUS; stdcall;
+function xboxkrnl_MmGlobalData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
@@ -53,11 +53,11 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
   ): NTSTATUS; stdcall;
 function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
-  Protect: ULONG 
+  Protect: ULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall;
-function xboxkrnl_MmCreateKernelStack(): NTSTATUS; stdcall;
-function xboxkrnl_MmDeleteKernelStack(): NTSTATUS; stdcall;
+function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmCreateKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmDeleteKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmFreeContiguousMemory(
 	BaseAddress: PVOID
   ): NTSTATUS; stdcall;
@@ -65,17 +65,17 @@ function xboxkrnl_MmFreeSystemMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_MmGetPhysicalAddress(): NTSTATUS; stdcall;
-function xboxkrnl_MmIsAddressValid(): NTSTATUS; stdcall;
-function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall;
-function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall;
-function xboxkrnl_MmMapIoSpace(): NTSTATUS; stdcall;
+function xboxkrnl_MmGetPhysicalAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmIsAddressValid(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmMapIoSpace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmPersistContiguousMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
-  Persist: BOOLEAN 
+  Persist: LONGBOOL
   ): NTSTATUS; stdcall;
-function xboxkrnl_MmQueryAddressProtect(): NTSTATUS; stdcall;
+function xboxkrnl_MmQueryAddressProtect(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmQueryAllocationSize(
   BaseAddress: PVOID
   ): NTSTATUS; stdcall;
@@ -85,14 +85,14 @@ function xboxkrnl_MmQueryStatistics(
 function xboxkrnl_MmSetAddressProtect(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
-  NewProtect: ULONG 
+  NewProtect: ULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_MmUnmapIoSpace(): NTSTATUS; stdcall;
-function xboxkrnl_MmDbgAllocateMemory(): NTSTATUS; stdcall;
-function xboxkrnl_MmDbgFreeMemory(): NTSTATUS; stdcall;
-function xboxkrnl_MmDbgQueryAvailablePages(): NTSTATUS; stdcall;
-function xboxkrnl_MmDbgReleaseAddress(): NTSTATUS; stdcall;
-function xboxkrnl_MmDbgWriteCheck(): NTSTATUS; stdcall;
+function xboxkrnl_MmUnmapIoSpace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmDbgAllocateMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmDbgFreeMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmDbgQueryAvailablePages(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmDbgReleaseAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmDbgWriteCheck(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
@@ -214,7 +214,7 @@ end;
 function xboxkrnl_MmPersistContiguousMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
-  Persist: BOOLEAN 
+  Persist: LONGBOOL 
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
