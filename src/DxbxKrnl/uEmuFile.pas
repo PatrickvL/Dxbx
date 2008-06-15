@@ -48,13 +48,13 @@ type
     PermanentFlag: Bool; // Permanent status
   public
     // Decrements the reference count of this object (never override)
-	  procedure NtClose();
+    procedure NtClose();
     // These functions mimic the Nt* calls
 
     // Increments the reference count of this object
     // For file handles, a whole new EmuFile structure is returned.
     // For other objects (the default implementation), "self" is returned.
-	  function NtDuplicateObject(): TEmuNtObject; virtual;
+    function NtDuplicateObject(): TEmuNtObject; virtual;
   end;
 
   // Emulated file handle

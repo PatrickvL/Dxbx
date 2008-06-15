@@ -46,10 +46,10 @@ function xboxkrnl_MmAllocateContiguousMemory(
   ): PVOID; stdcall;
 function xboxkrnl_MmAllocateContiguousMemoryEx(
   NumberOfBytes: ULONG;
-	LowestAcceptableAddress: PHYSICAL_ADDRESS;
-	HighestAcceptableAddress: PHYSICAL_ADDRESS;
-	Alignment: ULONG; //OPTIONAL
-	ProtectionType: ULONG
+  LowestAcceptableAddress: PHYSICAL_ADDRESS;
+  HighestAcceptableAddress: PHYSICAL_ADDRESS;
+  Alignment: ULONG; //OPTIONAL
+  ProtectionType: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
@@ -59,7 +59,7 @@ function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGN
 function xboxkrnl_MmCreateKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmDeleteKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmFreeContiguousMemory(
-	BaseAddress: PVOID
+  BaseAddress: PVOID
   ): NTSTATUS; stdcall;
 function xboxkrnl_MmFreeSystemMemory(
   BaseAddress: PVOID;
@@ -115,10 +115,10 @@ end;
 
 function xboxkrnl_MmAllocateContiguousMemoryEx(
   NumberOfBytes: ULONG;
-	LowestAcceptableAddress: PHYSICAL_ADDRESS;
-	HighestAcceptableAddress: PHYSICAL_ADDRESS;
-	Alignment: ULONG; //OPTIONAL
-	ProtectionType: ULONG
+  LowestAcceptableAddress: PHYSICAL_ADDRESS;
+  HighestAcceptableAddress: PHYSICAL_ADDRESS;
+  Alignment: ULONG; //OPTIONAL
+  ProtectionType: ULONG
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -158,7 +158,7 @@ begin
 end;
 
 function xboxkrnl_MmFreeContiguousMemory(
-	BaseAddress: PVOID 
+  BaseAddress: PVOID 
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS

@@ -1218,7 +1218,7 @@ begin
   SRBPacket.SRB_BufPointer := Buffer;
   SRBPacket.SRB_BufLen := 2048;
   SRBPacket.SRB_CDBLen := 12;
-	SRBPacket.CDBByte[0] := $AD;
+  SRBPacket.CDBByte[0] := $AD;
         SRBPacket.CDBByte[6] := 0; //Capa
         SRBPacket.CDBByte[7] := Formato;     
         SRBPacket.CDBByte[8] := $08;
@@ -1231,19 +1231,19 @@ begin
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+    begin
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
               end;
             end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -1278,7 +1278,7 @@ begin
   SRBPacket.SRB_Target := SCSI_IDx;
   SRBPacket.SRB_Lun := LUNx;
   SRBPacket.SRB_CDBLen := 12;
-	SRBPacket.CDBByte[0] := SCSI_MediumRemoval;
+  SRBPacket.CDBByte[0] := SCSI_MediumRemoval;
         SRBPacket.CDBByte[4] := Prev;
 
   //---Ejecutar Comando SCSI---
@@ -1288,19 +1288,19 @@ begin
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+    begin
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
               end;
             end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -1339,31 +1339,31 @@ begin
   SRBPacket.SRB_BufLen := 0;
   SRBPacket.SRB_BufPointer := nil;
   SRBPacket.SRB_CDBLen := 6;
-	SRBPacket.CDBByte[0] := SCSI_Seek6;
-	SRBPacket.CDBByte[1] := LBA2;  // MSB LBA 
-	SRBPacket.CDBByte[2] := LBA1;
-	SRBPacket.CDBByte[3] := LBA0;  // LSB LBA
-	SRBPacket.CDBByte[4] := 0;
-	SRBPacket.CDBByte[5] := 0;
+  SRBPacket.CDBByte[0] := SCSI_Seek6;
+  SRBPacket.CDBByte[1] := LBA2;  // MSB LBA 
+  SRBPacket.CDBByte[2] := LBA1;
+  SRBPacket.CDBByte[3] := LBA0;  // LSB LBA
+  SRBPacket.CDBByte[4] := 0;
+  SRBPacket.CDBByte[5] := 0;
 
   //---Ejecutar Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+    begin
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
               end;
             end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -1403,31 +1403,31 @@ begin
   SRBPacket.SRB_BufLen := 0;
   SRBPacket.SRB_BufPointer := nil;
   SRBPacket.SRB_CDBLen := 10;
-	SRBPacket.CDBByte[0] := SCSI_Seek10;
-	SRBPacket.CDBByte[1] := 0;
-	SRBPacket.CDBByte[2] := LBA3;   // MSB LBA
-	SRBPacket.CDBByte[3] := LBA2;
-	SRBPacket.CDBByte[4] := LBA1;
-	SRBPacket.CDBByte[5] := LBA0;   // LSB LBA
+  SRBPacket.CDBByte[0] := SCSI_Seek10;
+  SRBPacket.CDBByte[1] := 0;
+  SRBPacket.CDBByte[2] := LBA3;   // MSB LBA
+  SRBPacket.CDBByte[3] := LBA2;
+  SRBPacket.CDBByte[4] := LBA1;
+  SRBPacket.CDBByte[5] := LBA0;   // LSB LBA
 
   //---Ejecutar Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+    begin
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
               end;
             end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -1464,7 +1464,7 @@ begin
   SRBPacket.SRB_BufLen := SENSE_LEN;
   SRBPacket.SRB_BufPointer := pBuffer;
   SRBPacket.SRB_CDBLen := 6;
-	SRBPacket.CDBByte[0] := SCSI_HayCD;
+  SRBPacket.CDBByte[0] := SCSI_HayCD;
 
   //---Ejecutar Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
@@ -1473,9 +1473,9 @@ begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then Result := True
     else
     begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then  Result := True;
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then  Result := True;
             end;
     end;
   end;
@@ -1530,12 +1530,12 @@ begin
   SRBPacket.SRB_BufLen := 0;
   SRBPacket.SRB_BufPointer := nil;
   SRBPacket.SRB_CDBLen := 10;
-	SRBPacket.CDBByte[0] := SCSI_SetLimits;
-	SRBPacket.CDBByte[1] := LeerEscribir;
-	SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
-	SRBPacket.CDBByte[3] := LBA2;
-	SRBPacket.CDBByte[4] := LBA1;
-	SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
+  SRBPacket.CDBByte[0] := SCSI_SetLimits;
+  SRBPacket.CDBByte[1] := LeerEscribir;
+  SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
+  SRBPacket.CDBByte[3] := LBA2;
+  SRBPacket.CDBByte[4] := LBA1;
+  SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
         SRBPacket.CDBByte[7] := LBAf1;   // LSB LBA INICIO
         SRBPacket.CDBByte[8] := LBAf0;   // LSB LBA INICIO
 
@@ -1544,19 +1544,19 @@ begin
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+    begin
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
               end;
             end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -1599,34 +1599,34 @@ begin
   SRBPacket.SRB_BufLen := 2048 * Size;
   SRBPacket.SRB_BufPointer := pCDDABuffer;
   SRBPacket.SRB_CDBLen := 12;
-	SRBPacket.CDBByte[0] := SCSI_Read10;
-	SRBPacket.CDBByte[1] := 0;
-	SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
-	SRBPacket.CDBByte[3] := LBA2;
-	SRBPacket.CDBByte[4] := LBA1;
-	SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
-	SRBPacket.CDBByte[6] := 0;  // MSB LBA FINAL
-	SRBPacket.CDBByte[7] := Size1;
-	SRBPacket.CDBByte[8] := Size0;
+  SRBPacket.CDBByte[0] := SCSI_Read10;
+  SRBPacket.CDBByte[1] := 0;
+  SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
+  SRBPacket.CDBByte[3] := LBA2;
+  SRBPacket.CDBByte[4] := LBA1;
+  SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
+  SRBPacket.CDBByte[6] := 0;  // MSB LBA FINAL
+  SRBPacket.CDBByte[7] := Size1;
+  SRBPacket.CDBByte[8] := Size0;
         SRBPacket.CDBByte[9] := 0;  // LSB LBA FINAL
   //---Ejecutar Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+    begin
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
               end;
             end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -1677,15 +1677,15 @@ begin
   SRBPacket.SRB_BufLen := Size*2048;
   SRBPacket.SRB_BufPointer := pCDDABuffer;
   SRBPacket.SRB_CDBLen := 12;
-	SRBPacket.CDBByte[0] := SCSI_Read12;
-	SRBPacket.CDBByte[1] := 0;      // Bits: 4-DPO, 3-FUA, 2,1-Reservado, 0-RELADR
-	SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
-	SRBPacket.CDBByte[3] := LBA2;
-	SRBPacket.CDBByte[4] := LBA1;
-	SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
-	SRBPacket.CDBByte[6] := Size3;  // MSB LBA FINAL
-	SRBPacket.CDBByte[7] := Size2;
-	SRBPacket.CDBByte[8] := Size1;
+  SRBPacket.CDBByte[0] := SCSI_Read12;
+  SRBPacket.CDBByte[1] := 0;      // Bits: 4-DPO, 3-FUA, 2,1-Reservado, 0-RELADR
+  SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
+  SRBPacket.CDBByte[3] := LBA2;
+  SRBPacket.CDBByte[4] := LBA1;
+  SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
+  SRBPacket.CDBByte[6] := Size3;  // MSB LBA FINAL
+  SRBPacket.CDBByte[7] := Size2;
+  SRBPacket.CDBByte[8] := Size1;
         SRBPacket.CDBByte[9] := Size0;  // LSB LBA FINAL
         SRBPacket.CDBByte[10] := 0;     // Bits: 7- Streaming ?
         SRBPacket.CDBByte[11] := 0;     // Control
@@ -1694,19 +1694,19 @@ begin
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+    begin
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
               end;
             end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -1757,15 +1757,15 @@ begin
   SRBPacket.SRB_BufLen := 8;
   SRBPacket.SRB_BufPointer := pBuffer;
   SRBPacket.SRB_CDBLen := 10;
-	SRBPacket.CDBByte[0] := SCSI_ReadCapacity;
-	SRBPacket.CDBByte[1] := 0;      // Bits: 0-RELADR
-	SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
-	SRBPacket.CDBByte[3] := LBA2;
-	SRBPacket.CDBByte[4] := LBA1;
-	SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
-	SRBPacket.CDBByte[6] := 0;
+  SRBPacket.CDBByte[0] := SCSI_ReadCapacity;
+  SRBPacket.CDBByte[1] := 0;      // Bits: 0-RELADR
+  SRBPacket.CDBByte[2] := LBA3;   // MSB LBA INICIO
+  SRBPacket.CDBByte[3] := LBA2;
+  SRBPacket.CDBByte[4] := LBA1;
+  SRBPacket.CDBByte[5] := LBA0;   // LSB LBA INICIO
+  SRBPacket.CDBByte[6] := 0;
         SRBPacket.CDBByte[7] := 0;
-	SRBPacket.CDBByte[8] := 0;      // Bits: 0-PMI
+  SRBPacket.CDBByte[8] := 0;      // Bits: 0-PMI
         SRBPacket.CDBByte[9] := 0;      // Control          
   //---Ejecutar Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
@@ -1773,8 +1773,8 @@ begin
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
-	  begin
-	    Result.UltimoLBA := Bytes2Integer(Buffer[0],
+    begin
+      Result.UltimoLBA := Bytes2Integer(Buffer[0],
                                               Buffer[1],
                                               Buffer[2],
                                               Buffer[3]);
@@ -1782,14 +1782,14 @@ begin
                                                  Buffer[5],
                                                  Buffer[6],
                                                  Buffer[7]);
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result.UltimoLBA := Bytes2Integer(Buffer[0],
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result.UltimoLBA := Bytes2Integer(Buffer[0],
                                                   Buffer[1],
                                                   Buffer[2],
                                                   Buffer[3]);
@@ -1799,7 +1799,7 @@ begin
                                                      Buffer[7]);
               end;
             end;
-	  end;
+    end;
   end;
   if not xResult then
   begin
@@ -1852,27 +1852,27 @@ begin
   SRBPacket.SRB_BufPointer := pBuffer;
   SRBPacket.SRB_CDBLen     := 10;
   SRBPacket.CDBByte[0]     := SCSI_ReadSubchannel;
-	SRBPacket.CDBByte[1] := $02;              // Select MSF Address
-	SRBPacket.CDBByte[2] := $40;              // Select Sub-channel Q
-	SRBPacket.CDBByte[3] := ADR;              // Select Data Format ($02:UPC/EAN code/$03:ISRC code)
+  SRBPacket.CDBByte[1] := $02;              // Select MSF Address
+  SRBPacket.CDBByte[2] := $40;              // Select Sub-channel Q
+  SRBPacket.CDBByte[3] := ADR;              // Select Data Format ($02:UPC/EAN code/$03:ISRC code)
   case ADR of
     $00:  //Get All Subcode Data
     begin
-  	  SRBPacket.CDBByte[6] := Track;          // Track Number
-  	  SRBPacket.CDBByte[8] := 48;               // Load Data Size
+      SRBPacket.CDBByte[6] := Track;          // Track Number
+      SRBPacket.CDBByte[8] := 48;               // Load Data Size
     end;
     $01:  //Get Current Position
     begin
-  	  SRBPacket.CDBByte[8] := 16;               // Load Data Size
+      SRBPacket.CDBByte[8] := 16;               // Load Data Size
     end;
     $02:  //Get UPC/EAN code
     begin
-  	  SRBPacket.CDBByte[8] := 24;               // Load Data Size
+      SRBPacket.CDBByte[8] := 24;               // Load Data Size
     end;
     $03:  //Get ISRC code
     begin
-  	  SRBPacket.CDBByte[6] := Track;            // Track Number
-  	  SRBPacket.CDBByte[8] := 24;               // Load Data Size
+      SRBPacket.CDBByte[6] := Track;            // Track Number
+      SRBPacket.CDBByte[8] := 24;               // Load Data Size
     end;
   end;
   //---Ejecutamos Comando SCSI---
@@ -1922,30 +1922,30 @@ begin
         Result.PTime.Second := Buffer[14];
         Result.PTime.Frame := Buffer[15];
         if (Buffer[16] and $80) = $80 then
-	      begin
-	        for n := 17 to 31 do
-	        begin
-	          Result.UPCcode := Result.UPCcode + char(Buffer[n]);
-	        end;
-	      end;
-	      if (Buffer[32] and $80) = $80 then
-	      begin
-	        for n := 33 to 34 do
-	        begin
-	          Result.ISRCcode.CountryCode := Result.ISRCcode.CountryCode + char(Buffer[n]);
-	        end;
-	        for n := 35 to 37 do
-	        begin
-	          Result.ISRCcode.VendorCode := Result.ISRCcode.VendorCode + char(Buffer[n]);
-	        end;
-	        for n := 38 to 39 do
-	        begin
-	          Result.ISRCcode.RecordingYear := Result.ISRCcode.RecordingYear + char(Buffer[n]);
-	        end;
-	        for n := 40 to 43 do
-	        begin
-	          Result.ISRCcode.SerialNumber := Result.ISRCcode.SerialNumber + char(Buffer[n]);
-	        end;
+        begin
+          for n := 17 to 31 do
+          begin
+            Result.UPCcode := Result.UPCcode + char(Buffer[n]);
+          end;
+        end;
+        if (Buffer[32] and $80) = $80 then
+        begin
+          for n := 33 to 34 do
+          begin
+            Result.ISRCcode.CountryCode := Result.ISRCcode.CountryCode + char(Buffer[n]);
+          end;
+          for n := 35 to 37 do
+          begin
+            Result.ISRCcode.VendorCode := Result.ISRCcode.VendorCode + char(Buffer[n]);
+          end;
+          for n := 38 to 39 do
+          begin
+            Result.ISRCcode.RecordingYear := Result.ISRCcode.RecordingYear + char(Buffer[n]);
+          end;
+          for n := 40 to 43 do
+          begin
+            Result.ISRCcode.SerialNumber := Result.ISRCcode.SerialNumber + char(Buffer[n]);
+          end;
         end;
       end;
       $01:  //Get Current Position
@@ -1993,50 +1993,50 @@ begin
       $02:  //Get UPC/EAN code
       begin
         if (Buffer[8] and $80) = $80 then
-	      begin
-	        for n := 9 to 23 do
-	        begin
-	          Result.UPCcode := Result.UPCcode + char(Buffer[n]);
-	        end;
-	      end;
+        begin
+          for n := 9 to 23 do
+          begin
+            Result.UPCcode := Result.UPCcode + char(Buffer[n]);
+          end;
+        end;
       end;
       $03:  //Get ISRC code
       begin
-	      if (Buffer[8] and $80) = $80 then
-	      begin
-	        for n := 9 to 10 do
-	        begin
-	          Result.ISRCcode.CountryCode := Result.ISRCcode.CountryCode + char(Buffer[n]);
-	        end;
-	        for n := 11 to 13 do
-	        begin
-	          Result.ISRCcode.VendorCode := Result.ISRCcode.VendorCode + char(Buffer[n]);
-	        end;
-	        for n := 14 to 15 do
-	        begin
-	          Result.ISRCcode.RecordingYear := Result.ISRCcode.RecordingYear + char(Buffer[n]);
-	        end;
-	        for n := 16 to 19 do
-	        begin
-	          Result.ISRCcode.SerialNumber := Result.ISRCcode.SerialNumber + char(Buffer[n]);
-	        end;
+        if (Buffer[8] and $80) = $80 then
+        begin
+          for n := 9 to 10 do
+          begin
+            Result.ISRCcode.CountryCode := Result.ISRCcode.CountryCode + char(Buffer[n]);
+          end;
+          for n := 11 to 13 do
+          begin
+            Result.ISRCcode.VendorCode := Result.ISRCcode.VendorCode + char(Buffer[n]);
+          end;
+          for n := 14 to 15 do
+          begin
+            Result.ISRCcode.RecordingYear := Result.ISRCcode.RecordingYear + char(Buffer[n]);
+          end;
+          for n := 16 to 19 do
+          begin
+            Result.ISRCcode.SerialNumber := Result.ISRCcode.SerialNumber + char(Buffer[n]);
+          end;
         end;
       end;
     end;
     xResult := False;
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    xResult := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        xResult := True;
+      xResult := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          xResult := True;
         end;
-	    end;
+      end;
     end;
   end;
   if not xResult then
@@ -2100,13 +2100,13 @@ begin
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    R := True;
+      R := True;
     end
     else
     begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	         R := True;
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+           R := True;
     end;
   end;
   if not R then
@@ -2195,13 +2195,13 @@ begin
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    R := True;
+      R := True;
     end
     else
     begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	         R := True;
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+           R := True;
     end;
   end;
   if not R then
@@ -2270,9 +2270,9 @@ begin
   SRBPacket.CDBByte[0] := SCSI_ReadTOC;
   SRBPacket.CDBByte[1] := 0;                  // 2= MSF 0= LBA
   SRBPacket.CDBByte[2] := 0;                  // FORMATO DE TOC/PMA/ATIP
-	SRBPacket.CDBByte[6] := ReadIn_Track; // PISTA/SESION INICIAL
-	SRBPacket.CDBByte[7] := $06;          // TAMAÑO TOC MSB
-	SRBPacket.CDBByte[8] := $8c;          // TAMAÑO TOC LSB
+  SRBPacket.CDBByte[6] := ReadIn_Track; // PISTA/SESION INICIAL
+  SRBPacket.CDBByte[7] := $06;          // TAMAÑO TOC MSB
+  SRBPacket.CDBByte[8] := $8c;          // TAMAÑO TOC LSB
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
@@ -2306,7 +2306,7 @@ begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then xResult := True
     else
     begin
-  	  if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
           begin
                if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
                begin
@@ -2345,9 +2345,9 @@ begin
   SRBPacket.CDBByte[0] := SCSI_ReadTOC;
   SRBPacket.CDBByte[1] := 2;                  // SELECCIONAR FORMATO MSF
   SRBPacket.CDBByte[2] := 0;                  // FORMATO DE TOC/PMA/ATIP
-	SRBPacket.CDBByte[6] := ReadIn_Track; // PISTA/SESION INICIAL
-	SRBPacket.CDBByte[7] := $03;          // TAMAÑO TOC MSB
-	SRBPacket.CDBByte[8] := $24;          // TAMAÑO TOC LSB
+  SRBPacket.CDBByte[6] := ReadIn_Track; // PISTA/SESION INICIAL
+  SRBPacket.CDBByte[7] := $03;          // TAMAÑO TOC MSB
+  SRBPacket.CDBByte[8] := $24;          // TAMAÑO TOC LSB
         SRBPacket.CDBByte[9] := $00;          // Control ($80 o $40)
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
@@ -2381,7 +2381,7 @@ begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then xResult := True
     else
     begin
-  	  if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
           begin
                if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
                begin
@@ -2433,17 +2433,17 @@ begin
       
       if SRBPacket.SRB_TargetStat = STATUS_GOOD then
       begin
-	      xResult := True;
+        xResult := True;
       end
       else
       begin
-	      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	      begin
-	        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	        begin
-	          xResult := True;
+        if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+        begin
+          if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+          begin
+            xResult := True;
                 end;
-	      end;
+        end;
       end;
     end;
     if not xResult then
@@ -2537,17 +2537,17 @@ begin
 
       if SRBPacket.SRB_TargetStat = STATUS_GOOD then
       begin
-	      xResult := True;
+        xResult := True;
       end
       else
       begin
-	      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	      begin
-	        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	        begin
-	          xResult := True;
+        if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+        begin
+          if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+          begin
+            xResult := True;
                 end;
-	      end;
+        end;
       end;
     end;
     if not xResult then
@@ -2604,17 +2604,17 @@ begin
 
       if SRBPacket.SRB_TargetStat = STATUS_GOOD then
       begin
-	      xResult := True;
+        xResult := True;
       end
       else
       begin
-	      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	      begin
-	        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	        begin
-	          xResult := True;
+        if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+        begin
+          if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+          begin
+            xResult := True;
                 end;
-	      end;
+        end;
       end;
     end;
     if not xResult then
@@ -2665,9 +2665,9 @@ begin
   SRBPacket.CDBByte[0] := SCSI_ReadATIP;
   SRBPacket.CDBByte[1] := 2;                  // SELECCIONAR FORMATO MSF
   SRBPacket.CDBByte[2] := $04;                // FORMATO DE TOC/PMA/ATIP
-	SRBPacket.CDBByte[6] := 0;
-	SRBPacket.CDBByte[7] := $00;          // TAMAÑO TOC MSB
-	SRBPacket.CDBByte[8] := $30;          // TAMAÑO TOC LSB
+  SRBPacket.CDBByte[6] := 0;
+  SRBPacket.CDBByte[7] := $00;          // TAMAÑO TOC MSB
+  SRBPacket.CDBByte[8] := $30;          // TAMAÑO TOC LSB
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
@@ -2700,7 +2700,7 @@ begin
     end
     else
     begin
-  	  if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
           begin
                if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
                begin
@@ -3049,14 +3049,14 @@ begin
   begin
       if SRBPacket.SRB_TargetStat = STATUS_GOOD then
       begin
-	   Result := True;
+     Result := True;
       end
       else
       begin
            if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
            begin
                 if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	           Result := True;
+             Result := True;
            end;
       end;
   end
@@ -3162,14 +3162,14 @@ begin
   begin
       if SRBPacket.SRB_TargetStat = STATUS_GOOD then
       begin
-	   Result := True;
+     Result := True;
       end
       else
       begin
            if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
            begin
                 if RequestSence(HA, SCSI, LUN) = 0 then
-	           Result := True;
+             Result := True;
            end;
       end;
   end
@@ -3232,14 +3232,14 @@ begin
   begin
       if SRBPacket.SRB_TargetStat = STATUS_GOOD then
       begin
-	   Result := True;
+     Result := True;
       end
       else
       begin
            if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
            begin
                 if RequestSence(HA, SCSI, LUN) = 0 then
-	           Result := True;
+             Result := True;
            end;
       end;
   end
@@ -3395,31 +3395,31 @@ begin
   SRBPacket.SRB_BufPointer := pCDDABuffer;
   SRBPacket.SRB_CDBLen := 12;
   SRBPacket.CDBByte[0] := SCSI_ReadCDMSF;
-	SRBPacket.CDBByte[3] := TopMSF.Minute; // Start Minute
-	SRBPacket.CDBByte[4] := TopMSF.Second; // Start Second
-	SRBPacket.CDBByte[5] := TopMSF.Frame;  // Start Frame
-	SRBPacket.CDBByte[6] := EndMSF.Minute; // End Minute
-	SRBPacket.CDBByte[7] := EndMSF.Second; // End Second
-	SRBPacket.CDBByte[8] := EndMSF.Frame;  // End Frame
-	SRBPacket.CDBByte[9] := $10;           // Transfer User Data Only
+  SRBPacket.CDBByte[3] := TopMSF.Minute; // Start Minute
+  SRBPacket.CDBByte[4] := TopMSF.Second; // Start Second
+  SRBPacket.CDBByte[5] := TopMSF.Frame;  // Start Frame
+  SRBPacket.CDBByte[6] := EndMSF.Minute; // End Minute
+  SRBPacket.CDBByte[7] := EndMSF.Second; // End Second
+  SRBPacket.CDBByte[8] := EndMSF.Frame;  // End Frame
+  SRBPacket.CDBByte[9] := $10;           // Transfer User Data Only
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
         end;
       end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -3475,15 +3475,15 @@ begin
   SRBPacket.SRB_BufLen := (FrameByte+SCanal) * (Size);  // Calcula el tamaño del Buffer para extraer.
   SRBPacket.SRB_BufPointer := pCDDABuffer;   // Puntero al Buffer
   SRBPacket.SRB_CDBLen := 12;                // Longitud del CDB
-	SRBPacket.CDBByte[0] := SCSI_ReadCD; // Comando a realizar
-	SRBPacket.CDBByte[1] := 0;           // Tipo de Sector esperado
-	SRBPacket.CDBByte[2] := LBA3;        // LBA Inicio HH
-	SRBPacket.CDBByte[3] := LBA2;        // LBA Inicio HL
-	SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
-	SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
-	SRBPacket.CDBByte[6] := Size2;       // Read Size HL
-	SRBPacket.CDBByte[7] := Size1;       // Read Size LH
-	SRBPacket.CDBByte[8] := Size0;       // Read Size LL
+  SRBPacket.CDBByte[0] := SCSI_ReadCD; // Comando a realizar
+  SRBPacket.CDBByte[1] := 0;           // Tipo de Sector esperado
+  SRBPacket.CDBByte[2] := LBA3;        // LBA Inicio HH
+  SRBPacket.CDBByte[3] := LBA2;        // LBA Inicio HL
+  SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
+  SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
+  SRBPacket.CDBByte[6] := Size2;       // Read Size HL
+  SRBPacket.CDBByte[7] := Size1;       // Read Size LH
+  SRBPacket.CDBByte[8] := Size0;       // Read Size LL
         { 7: Cabecera Sync, 6,5: Cabecera, 4: Datos (2048 bytes), 3: EDC/ECC, 2,1: Error Flag, 0: Reservado }
         SRBPacket.CDBByte[9] := T_Sector;    // Modo de extraccion $F8=RAW 2352 bytes $78=2336 bytes $10=2048 bytes
         SRBPacket.CDBByte[10]:= Byte(SubCanal); // Subcanal $1=RAW P-W 96 bytes, $2=Subcanal Q: 16 bytes, $4=P-W R-W: 96 bytes
@@ -3494,13 +3494,13 @@ begin
   begin
        if SRBPacket.SRB_TargetStat = STATUS_GOOD then Result := True
        else
-	   begin
-	        if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	        begin
-	             if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+     begin
+          if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+          begin
+               if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
                           Result := True;
                 end;
-	   end;
+     end;
   end;
 
   if not Result then
@@ -3546,15 +3546,15 @@ begin
   SRBPacket.SRB_BufLen := (FrameByte * Cantidad);  // Calcula el tamaño del Buffer para extraer.
   SRBPacket.SRB_BufPointer := pBuffer;   // Puntero al Buffer
   SRBPacket.SRB_CDBLen := 10;                // Longitud del CDB
-	SRBPacket.CDBByte[0] := SCSI_Write10; // Comando a realizar
-	SRBPacket.CDBByte[1] := 0;
-	SRBPacket.CDBByte[2] := LBA3;        // LBA Inicio HH
-	SRBPacket.CDBByte[3] := LBA2;        // LBA Inicio HL
-	SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
-	SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
-	SRBPacket.CDBByte[6] := 0;
-	SRBPacket.CDBByte[7] := hi(Cantidad);
-	SRBPacket.CDBByte[8] := lo(Cantidad);
+  SRBPacket.CDBByte[0] := SCSI_Write10; // Comando a realizar
+  SRBPacket.CDBByte[1] := 0;
+  SRBPacket.CDBByte[2] := LBA3;        // LBA Inicio HH
+  SRBPacket.CDBByte[3] := LBA2;        // LBA Inicio HL
+  SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
+  SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
+  SRBPacket.CDBByte[6] := 0;
+  SRBPacket.CDBByte[7] := hi(Cantidad);
+  SRBPacket.CDBByte[8] := lo(Cantidad);
         SRBPacket.CDBByte[9] := 0;
 
   //---Ejecutamos Comando SCSI---
@@ -3563,13 +3563,13 @@ begin
   begin
        if SRBPacket.SRB_TargetStat = STATUS_GOOD then Result := True
        else
-	   begin
-	        if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	        begin
-	             if RequestSence(HA, SCSI, LUN) = 0 then
+     begin
+          if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+          begin
+               if RequestSence(HA, SCSI, LUN) = 0 then
                           Result := True;
                 end;
-	   end;
+     end;
   end;
 
   if not Result then
@@ -3614,15 +3614,15 @@ begin
   SRBPacket.SRB_BufLen := 0;
   SRBPacket.SRB_BufPointer := nil;   // Puntero al Buffer
   SRBPacket.SRB_CDBLen := 10;                // Longitud del CDB
-	SRBPacket.CDBByte[0] := SCSI_SynchronizeCache; // Comando a realizar
-	SRBPacket.CDBByte[1] := 2;           // $2: Actua inmediatamente
-	SRBPacket.CDBByte[2] := LBA3;        // LBA Inicio HH
-	SRBPacket.CDBByte[3] := LBA2;        // LBA Inicio HL
-	SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
-	SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
-	SRBPacket.CDBByte[6] := 0;
-	SRBPacket.CDBByte[7] := Hi(Cantidad);
-	SRBPacket.CDBByte[8] := Lo(Cantidad);
+  SRBPacket.CDBByte[0] := SCSI_SynchronizeCache; // Comando a realizar
+  SRBPacket.CDBByte[1] := 2;           // $2: Actua inmediatamente
+  SRBPacket.CDBByte[2] := LBA3;        // LBA Inicio HH
+  SRBPacket.CDBByte[3] := LBA2;        // LBA Inicio HL
+  SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
+  SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
+  SRBPacket.CDBByte[6] := 0;
+  SRBPacket.CDBByte[7] := Hi(Cantidad);
+  SRBPacket.CDBByte[8] := Lo(Cantidad);
         SRBPacket.CDBByte[9] := 0;
 
   //---Ejecutamos Comando SCSI---
@@ -3631,13 +3631,13 @@ begin
   begin
        if SRBPacket.SRB_TargetStat = STATUS_GOOD then Result := True
        else
-	   begin
-	        if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	        begin
-	             if RequestSence(HA, SCSI, LUN) = 0 then
+     begin
+          if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+          begin
+               if RequestSence(HA, SCSI, LUN) = 0 then
                           Result := True;
                 end;
-	   end;
+     end;
   end;
 
   if not Result then
@@ -3681,15 +3681,15 @@ begin
   SRBPacket.SRB_BufLen := 0;
   SRBPacket.SRB_BufPointer := nil;           // Puntero nulo de buffer
   SRBPacket.SRB_CDBLen := 10;                // Longitud del CDB
-	SRBPacket.CDBByte[0] := SCSI_CloseSessionTrack; // Comando a realizar
-	SRBPacket.CDBByte[1] := 1;           // $1: Actua inmediatamente
-	SRBPacket.CDBByte[2] := (S shl 1) or P; // Sesion Pista
-	SRBPacket.CDBByte[3] := 0;
-	SRBPacket.CDBByte[4] := Hi(nSesionPista);        // MSB nº Sesion/Pista
-	SRBPacket.CDBByte[5] := Lo(nSesionPista);        // LSB nº Sesion/Pista
-	SRBPacket.CDBByte[6] := 0;
-	SRBPacket.CDBByte[7] := 0;
-	SRBPacket.CDBByte[8] := 0;
+  SRBPacket.CDBByte[0] := SCSI_CloseSessionTrack; // Comando a realizar
+  SRBPacket.CDBByte[1] := 1;           // $1: Actua inmediatamente
+  SRBPacket.CDBByte[2] := (S shl 1) or P; // Sesion Pista
+  SRBPacket.CDBByte[3] := 0;
+  SRBPacket.CDBByte[4] := Hi(nSesionPista);        // MSB nº Sesion/Pista
+  SRBPacket.CDBByte[5] := Lo(nSesionPista);        // LSB nº Sesion/Pista
+  SRBPacket.CDBByte[6] := 0;
+  SRBPacket.CDBByte[7] := 0;
+  SRBPacket.CDBByte[8] := 0;
         SRBPacket.CDBByte[9] := 0;
 
   //---Ejecutamos Comando SCSI---
@@ -3698,13 +3698,13 @@ begin
   begin
        if SRBPacket.SRB_TargetStat = STATUS_GOOD then Result := True
        else
-	   begin
-	        if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	        begin
-	             if RequestSence(HA, SCSI, LUN) = 0 then
+     begin
+          if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+          begin
+               if RequestSence(HA, SCSI, LUN) = 0 then
                           Result := True;
                 end;
-	   end;
+     end;
   end;
 
   if not Result then
@@ -3752,30 +3752,30 @@ begin
   SRBPacket.SRB_BufPointer := pBuffer;
   SRBPacket.SRB_CDBLen := 10;
   SRBPacket.CDBByte[0] := SCSI_PlayAudioMSF;
-	SRBPacket.CDBByte[3] := TopMSF.Minute; // Start Minute
-	SRBPacket.CDBByte[4] := TopMSF.Second; // Start Second
-	SRBPacket.CDBByte[5] := TopMSF.Frame;  // Start Frame
-	SRBPacket.CDBByte[6] := EndMSF.Minute; // End Minute
-	SRBPacket.CDBByte[7] := EndMSF.Second; // End Second
-	SRBPacket.CDBByte[8] := EndMSF.Frame;  // End Frame
+  SRBPacket.CDBByte[3] := TopMSF.Minute; // Start Minute
+  SRBPacket.CDBByte[4] := TopMSF.Second; // Start Second
+  SRBPacket.CDBByte[5] := TopMSF.Frame;  // Start Frame
+  SRBPacket.CDBByte[6] := EndMSF.Minute; // End Minute
+  SRBPacket.CDBByte[7] := EndMSF.Second; // End Second
+  SRBPacket.CDBByte[8] := EndMSF.Frame;  // End Frame
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
         end;
-	    end;
-	  end;
+      end;
+    end;
   end;
   if not Result then
   begin
@@ -3819,29 +3819,29 @@ begin
   SRBPacket.SRB_BufPointer := pBuffer;
   SRBPacket.SRB_CDBLen := 10;
   SRBPacket.CDBByte[0] := SCSI_PlayAudioTrack;
-	SRBPacket.CDBByte[4] := TopTrack;   // Start Track
-	SRBPacket.CDBByte[5] := 0;          // Start Index
-	SRBPacket.CDBByte[7] := EndTrack;   // End Track
-	SRBPacket.CDBByte[8] := 1;          // End Index
-	SRBPacket.CDBByte[9] := 0;          // Control
+  SRBPacket.CDBByte[4] := TopTrack;   // Start Track
+  SRBPacket.CDBByte[5] := 0;          // Start Index
+  SRBPacket.CDBByte[7] := EndTrack;   // End Track
+  SRBPacket.CDBByte[8] := 1;          // End Index
+  SRBPacket.CDBByte[9] := 0;          // Control
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
         end;
-	    end;
-	  end;
+      end;
+    end;
   end;
   if not Result then
   begin
@@ -3887,11 +3887,11 @@ begin
   SRBPacket.CDBByte[0] := SCSI_PauseResume;
   if Resume then
   begin
-  	SRBPacket.CDBByte[8] := $01;  // Resume Pause
+    SRBPacket.CDBByte[8] := $01;  // Resume Pause
   end
   else
   begin
-  	SRBPacket.CDBByte[8] := $00;  // Pause
+    SRBPacket.CDBByte[8] := $00;  // Pause
   end;
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
@@ -3899,18 +3899,18 @@ begin
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
         end;
-	    end;
-	  end;
+      end;
+    end;
   end;
   if not Result then
   begin
@@ -3967,32 +3967,32 @@ begin
   SRBPacket.SRB_BufPointer := pBuffer;
   SRBPacket.SRB_CDBLen := 12;
   SRBPacket.CDBByte[0] := SCSI_PlayAudio;
-	SRBPacket.CDBByte[2] := LBA3;   // Start LBA HH
-	SRBPacket.CDBByte[3] := LBA2;   // Start LBA HL
-	SRBPacket.CDBByte[4] := LBA1;   // Start LBA LH
-	SRBPacket.CDBByte[5] := LBA0;   // Start LBA LL
-	SRBPacket.CDBByte[6] := Size3;  // Read Size HH
-	SRBPacket.CDBByte[7] := Size2;  // Read Size HL
-	SRBPacket.CDBByte[8] := Size1;  // Read Size LH
-	SRBPacket.CDBByte[9] := Size0;  // Read Size LL
+  SRBPacket.CDBByte[2] := LBA3;   // Start LBA HH
+  SRBPacket.CDBByte[3] := LBA2;   // Start LBA HL
+  SRBPacket.CDBByte[4] := LBA1;   // Start LBA LH
+  SRBPacket.CDBByte[5] := LBA0;   // Start LBA LL
+  SRBPacket.CDBByte[6] := Size3;  // Read Size HH
+  SRBPacket.CDBByte[7] := Size2;  // Read Size HL
+  SRBPacket.CDBByte[8] := Size1;  // Read Size LH
+  SRBPacket.CDBByte[9] := Size0;  // Read Size LL
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
         end;
-	    end;
-	  end;
+      end;
+    end;
   end;
   if not Result then
   begin
@@ -4041,17 +4041,17 @@ begin
   SRBPacket.CDBByte[0] := SCSI_StartStopUnit;
   if Eject then
   begin
-		SRBPacket.CDBByte[4] := $02;                // Eject Media
+    SRBPacket.CDBByte[4] := $02;                // Eject Media
   end
   else
   begin
     if MotorStop then
     begin
-  		SRBPacket.CDBByte[4] := $00;                // Stop Motor
+      SRBPacket.CDBByte[4] := $00;                // Stop Motor
     end
     else
     begin
-  		SRBPacket.CDBByte[4] := $03;                // Load Media
+      SRBPacket.CDBByte[4] := $03;                // Load Media
     end;
   end;
   //---Ejecutamos Comando SCSI---
@@ -4060,18 +4060,18 @@ begin
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
         end;
       end;
-	  end;
+    end;
   end;
   if not Result then
   begin
@@ -4123,10 +4123,10 @@ begin
   SRBPacket.SRB_CDBLen := 12;
   SRBPacket.CDBByte[0] := SCSI_SetCDSpeed;
         SRBPacket.CDBByte[1] := 0;                  // 0=CAV, 1= CLV    
-	SRBPacket.CDBByte[2] := Speed0;             // Velocidad Lectura H
-	SRBPacket.CDBByte[3] := Speed1;             // Velocidad Lectura L
-	SRBPacket.CDBByte[4] := Escrit0;            // Velocidad Escritura H
-	SRBPacket.CDBByte[5] := Escrit1;            // Velocidad Escritura L
+  SRBPacket.CDBByte[2] := Speed0;             // Velocidad Lectura H
+  SRBPacket.CDBByte[3] := Speed1;             // Velocidad Lectura L
+  SRBPacket.CDBByte[4] := Escrit0;            // Velocidad Escritura H
+  SRBPacket.CDBByte[5] := Escrit1;            // Velocidad Escritura L
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
 
@@ -4134,18 +4134,18 @@ begin
   begin
     if SRBPacket.SRB_TargetStat = STATUS_GOOD then
     begin
-	    Result := True;
-	  end
-	  else
-	  begin
-	    if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
-	    begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
-	      begin
-	        Result := True;
+      Result := True;
+    end
+    else
+    begin
+      if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
+      begin
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        begin
+          Result := True;
         end;
-	    end;
-	  end;
+      end;
+    end;
   end;
   if not Result then
   begin
@@ -4193,8 +4193,8 @@ begin
   SRBPacket.SRB_CDBLen := 12;
         SRBPacket.CDBByte[0] := SCSI_LoadUnloadCD;
         SRBPacket.CDBByte[1] := $1;
-	SRBPacket.CDBByte[4] := Carga;
-	SRBPacket.CDBByte[8] := $0;
+  SRBPacket.CDBByte[4] := Carga;
+  SRBPacket.CDBByte[8] := $0;
   //---Ejecuta el comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
@@ -4205,7 +4205,7 @@ begin
     begin
       if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
       begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
           Result := True;
       end;
     end;
@@ -4254,9 +4254,9 @@ begin
   SRBPacket.SRB_CDBLen := 12;
         SRBPacket.CDBByte[0] := $5D;
         SRBPacket.CDBByte[1] := $1;
-	SRBPacket.CDBByte[8] := 0;
+  SRBPacket.CDBByte[8] := 0;
         SRBPacket.CDBByte[9] := 0;
-	SRBPacket.CDBByte[11] := $0;
+  SRBPacket.CDBByte[11] := $0;
   //---Ejecuta el comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
   if xResult then
@@ -4267,7 +4267,7 @@ begin
     begin
       if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
       begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
           Result := True;
       end;
     end;
@@ -4331,13 +4331,13 @@ begin
         SRBPacket.CDBByte[1] := 0;
         SRBPacket.CDBByte[2] := LBA3;
         SRBPacket.CDBByte[3] := LBA2;
-	SRBPacket.CDBByte[4] := LBA1;
+  SRBPacket.CDBByte[4] := LBA1;
         SRBPacket.CDBByte[5] := LBA0;
         SRBPacket.CDBByte[6] := LBAC3;
         SRBPacket.CDBByte[7] := LBAC2;
         SRBPacket.CDBByte[8] := LBAC1;
         SRBPacket.CDBByte[9] := LBAC0;
-	SRBPacket.CDBByte[11] := $0;
+  SRBPacket.CDBByte[11] := $0;
 
   //---Ejecuta el comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
@@ -4349,7 +4349,7 @@ begin
     begin
          if SRBPacket.SRB_TargetStat = STATUS_CHKCOND then
          begin
-	      if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
+        if RequestSence(HA_IDx, SCSI_IDx, LUNx) = 0 then
                  Result := True;
          end;
     end;

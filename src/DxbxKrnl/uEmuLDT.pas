@@ -82,7 +82,7 @@ begin
     begin
       LeaveCriticalSection(EmuLDTLock);
 
-			CxbxKrnlCleanup('Could not locate free LDT entry (too many threads?)');
+      CxbxKrnlCleanup('Could not locate free LDT entry (too many threads?)');
 
       Result := 0;
       Exit;
@@ -119,7 +119,7 @@ begin
 WriteLog(GetLastErrorString);
       LeaveCriticalSection(EmuLDTLock);
 
-			CxbxKrnlCleanup('Could not set LDT entries');
+      CxbxKrnlCleanup('Could not set LDT entries');
 
       Result := 0;
       Exit;

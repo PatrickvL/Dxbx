@@ -146,30 +146,30 @@ begin
   // dump raw TLS data
   begin
 {$IFDEF _DEBUG_TRACE}
-		if pNewTLS = nil then
-			DbgPrintf('EmuFS : TLS Non-Existant (OK)')
-		else
-		begin
+    if pNewTLS = nil then
+      DbgPrintf('EmuFS : TLS Non-Existant (OK)')
+    else
+    begin
       Line := 'EmuFS : TLS Data Dump...';
 
-			stop := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill;
+      stop := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill;
 
-			for v := 0 to stop - 1 do
-			begin
-				if (v mod $10) = 0 then
+      for v := 0 to stop - 1 do
+      begin
+        if (v mod $10) = 0 then
         begin
-					DbgPrintf(Line);
+          DbgPrintf(Line);
           Line := 'EmuFS : 0x' + IntToHex(Integer(@pNewTLS[v]), 8) + ': ';
         end;
 
-				bByte := PUInt8(Integer(pNewTLS) + v);
+        bByte := PUInt8(Integer(pNewTLS) + v);
 
-				Line := Line + IntToHex(Integer(bByte^), 2);
+        Line := Line + IntToHex(Integer(bByte^), 2);
 
-			end;
+      end;
 
-			DbgPrintf(Line);
-	  end;
+      DbgPrintf(Line);
+    end;
 {$ENDIF}
   end;
 

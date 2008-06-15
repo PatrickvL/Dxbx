@@ -223,9 +223,9 @@ type
 // * WAIT_TYPE
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
  _WAIT_TYPE
 begin
     WaitAll = 0,
@@ -276,8 +276,8 @@ ULARGE_INTEGER, *PULARGE_INTEGER;
 // * STRING
 // ******************************************************************
 type
-	
-STRING,ANSI_STRING,*PSTRING,*PANSI_STRING	= record  
+  
+STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = record  
     USHORT  Length;
     USHORT  MaximumLength;
     PCHAR   Buffer;
@@ -287,8 +287,8 @@ STRING,ANSI_STRING,*PSTRING,*PANSI_STRING	= record
 // * UNICODE_STRING
 // ******************************************************************
 type
-	
-UNICODE_STRING,*PUNICODE_STRING	= record  
+  
+UNICODE_STRING,*PUNICODE_STRING  = record  
     USHORT  Length;
     USHORT  MaximumLength;
     USHORT *Buffer;
@@ -298,8 +298,8 @@ UNICODE_STRING,*PUNICODE_STRING	= record
 // * LIST_ENTRY
 // ******************************************************************
 type
-	
-LIST_ENTRY,*PLIST_ENTRY	= record  
+  
+LIST_ENTRY,*PLIST_ENTRY  = record  
     struct _LIST_ENTRY *Flink;
     struct _LIST_ENTRY *Blink;
  end;
@@ -308,8 +308,8 @@ LIST_ENTRY,*PLIST_ENTRY	= record
 // * FILE_FS_SIZE_INFORMATION
 // ******************************************************************
 type
-	
-FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION	= record  
+  
+FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = record  
     LARGE_INTEGER   TotalAllocationUnits;
     LARGE_INTEGER   AvailableAllocationUnits;
     ULONG           SectorsPerAllocationUnit;
@@ -414,8 +414,8 @@ const FILE_VALID_SET_FLAGS =                    $00000036;
 // * OBJECT_ATTRIBUTES
 // ******************************************************************
 type
-	
-OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES	= record  
+  
+OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES  = record  
     THandle  RootDirectory;
     PSTRING ObjectName;
     ULONG   Attributes;
@@ -425,9 +425,9 @@ OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES	= record
 // * FSINFOCLASS
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
  _FSINFOCLASS
 begin 
     FileFsVolumeInformation       = 1,
@@ -446,8 +446,8 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // * FILE_DIRECTORY_INFORMATION
 // ******************************************************************
 type
-	
-FILE_DIRECTORY_INFORMATION	= record _FILE_DIRECTORY_INFORMATION 
+  
+FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION 
  
     ULONG           NextEntryOffset;
     ULONG           FileIndex;
@@ -467,7 +467,7 @@ FILE_DIRECTORY_INFORMATION	= record _FILE_DIRECTORY_INFORMATION
 // ******************************************************************
 type
   PMM_STATISTICS = ^MM_STATISTICS;
-  MM_STATISTICS	= record
+  MM_STATISTICS  = record
     Length: ULONG;
     TotalPhysicalPages: ULONG;
     AvailablePages: ULONG;
@@ -485,7 +485,7 @@ type
 // ******************************************************************
 type
 
-  u1	= record
+  u1  = record
     union
     begin
         NTSTATUS Status;
@@ -500,9 +500,9 @@ IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 // * EVENT_TYPE
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
  _EVENT_TYPE
 begin 
     NotificationEvent = 0,
@@ -514,9 +514,9 @@ EVENT_TYPE;
 // * BUS_DATA_TYPE
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
  _BUS_DATA_TYPE
 begin 
     ConfigurationSpaceUndefined = $FF,
@@ -540,8 +540,8 @@ BUS_DATA_TYPE;
 // * PCI_SLOT_NUMBER
 // ******************************************************************
 type
-	
-    bits	= record  
+  
+    bits  = record  
     union
     begin 
         struct
@@ -564,8 +564,8 @@ const PCI_TYPE2_ADDRESSES =             5;
 // * PCI_COMMON_CONFIG
 // ******************************************************************
 type
-	
-    type0	= record  
+  
+    type0  = record  
     USHORT  VendorID;                   // 0x00 (ro)
     USHORT  DeviceID;                   // 0x02 (ro)
     USHORT  Command;                    // 0x04 Device control
@@ -640,8 +640,8 @@ type
 // * LAUNCH_DATA_HEADER
 // ******************************************************************
 type
-	
-LAUNCH_DATA_HEADER,*PLAUNCH_DATA_HEADER	= record  
+  
+LAUNCH_DATA_HEADER,*PLAUNCH_DATA_HEADER  = record  
     DWORD   dwLaunchDataType;
     DWORD   dwTitleId;
         szLaunchPath: array[0..520-1] of Char;
@@ -652,8 +652,8 @@ LAUNCH_DATA_HEADER,*PLAUNCH_DATA_HEADER	= record
 // * LAUNCH_DATA_PAGE
 // ******************************************************************
 type
-	
-LAUNCH_DATA_PAGE,*PLAUNCH_DATA_PAGE	= record  
+  
+LAUNCH_DATA_PAGE,*PLAUNCH_DATA_PAGE  = record  
     LAUNCH_DATA_HEADER  Header;
                    Pad: array[0..492-1] of UCHAR;
                    LaunchData: array[0..3072-1] of UCHAR;
@@ -663,7 +663,7 @@ LAUNCH_DATA_PAGE,*PLAUNCH_DATA_PAGE	= record
 // * DISPATCHER_HEADER
 // ******************************************************************
 type
-  DISPATCHER_HEADER	= record
+  DISPATCHER_HEADER  = record
     cType: UCHAR;             // 0x00
     _Absolute: UCHAR;         // 0x01
     Size: UCHAR;              // 0x02
@@ -677,9 +677,9 @@ type
 // * TIMER_TYPE
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
  _TIMER_TYPE
 begin 
     NotificationTimer     = 0,
@@ -692,7 +692,7 @@ TIMER_TYPE;
 // ******************************************************************
 type
   PKTIMER = ^KTIMER;
-  KTIMER	= record
+  KTIMER  = record
     Header: DISPATCHER_HEADER;    // 0x00
     DueTime: ULARGE_INTEGER;      // 0x10
     TimerListEntry: LIST_ENTRY;   // 0x18
@@ -752,9 +752,9 @@ type
 // * KOBJECTS
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
  _KOBJECTS
 begin 
     DpcObject = $13,
@@ -765,8 +765,8 @@ KOBJECTS, *PKOBJECTS;
 // * RTL_CRITICAL_SECTION
 // ******************************************************************
 type
-	
-RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION	= record  
+  
+RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = record  
                    Unknown: array[0..4-1] of DWORD;                                     // 0x00
     LongInt                LockCount;                                      // 0x10
     LongInt                RecursionCount;                                 // 0x14
@@ -805,7 +805,7 @@ type
 // ******************************************************************
 type
   PKTHREAD = ^KTHREAD;
-  KTHREAD	= record
+  KTHREAD  = record
     UnknownA: array[0..$28-1] of UCHAR;
     TlsData: PVOID;        // 0x28
     UnknownB: array[0..$E4-1] of UCHAR; // 0x2C
@@ -820,7 +820,7 @@ type
 // ******************************************************************
 type
   PETHREAD = ^ETHREAD;
-  ETHREAD	= record
+  ETHREAD  = record
     Tcb: KTHREAD;
     UnknownA: array[0..$1C-1] of UCHAR; // 0x110
     UniqueThread: DWORD;   // 0x12C
@@ -853,7 +853,7 @@ type
 // ******************************************************************
 type
   PKPCR = ^KPCR;
-  KPCR	= record
+  KPCR  = record
     NtTib: NT_TIB;                                         // 0x00
     SelfPcr: PKPCR;                                        // 0x1C
     Prcb: PKPRCB;                                          // 0x20
@@ -866,9 +866,9 @@ type
 // * EEPROM_INDEX
 // ******************************************************************
 type
-	(**** Convert following enum types to constants. ****
-	 **** e.g. v1 = n, where v1 is constant and n is the value ****
-	 **** if a constant has a value, do not assign a new value **** )
+  (**** Convert following enum types to constants. ****
+   **** e.g. v1 = n, where v1 is constant and n is the value ****
+   **** if a constant has a value, do not assign a new value **** )
  _EEPROM_INDEX
 begin 
     EEPROM_MISC = $11
@@ -879,8 +879,8 @@ EEPROM_INDEX, *PEEPROM_INDEX;
 // * XBOX_HARDWARE_INFO
 // ******************************************************************
 type
-	
-XBOX_HARDWARE_INFO	= record  
+  
+XBOX_HARDWARE_INFO  = record  
     ULONG Flags;
     UCHAR Unknown1;
     UCHAR Unknown2;
@@ -892,8 +892,8 @@ XBOX_HARDWARE_INFO	= record
 // * TIME_FIELDS
 // ******************************************************************
 type
-	
-TIME_FIELDS,*PTIME_FIELDS	= record  
+  
+TIME_FIELDS,*PTIME_FIELDS  = record  
     USHORT  Year;
     USHORT  Month;
     USHORT  Day;

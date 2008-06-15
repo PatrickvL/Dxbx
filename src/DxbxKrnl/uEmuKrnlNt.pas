@@ -153,8 +153,8 @@ function xboxkrnl_NtReadFile(
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // OPTIONAL
   ApcContext: PVOID;
-	IoStatusBlock: PVOID; // OUT
-	Buffer: PVOID; // OUT
+  IoStatusBlock: PVOID; // OUT
+  Buffer: PVOID; // OUT
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER   // OPTIONAL
   ): NTSTATUS; stdcall;
@@ -174,11 +174,11 @@ function xboxkrnl_NtSetEvent(
   PreviousState: PLONG // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetInformationFile(
-	FileHandle: HANDLE; // TODO: correct paramters
-	IoStatusBlock: PVOID; // OUT
-	FileInformation: PVOID;
-	Length:	ULONG;
-	FileInformationClass:	ULONG // dtFILE_INFORMATION_CLASSEnum
+  FileHandle: HANDLE; // TODO: correct paramters
+  IoStatusBlock: PVOID; // OUT
+  FileInformation: PVOID;
+  Length:  ULONG;
+  FileInformationClass:  ULONG // dtFILE_INFORMATION_CLASSEnum
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -209,14 +209,14 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFile(
-	FileHandle: HANDLE; // TODO: correct paramters
-	Event: PVOID;
-	ApcRoutine:	PVOID;
-	ApcContext: PVOID;
-	IoStatusBlock: PVOID; // OUT
-	Buffer: PVOID;
-	Length: ULONG;
-	ByteOffset: PLARGE_INTEGER
+  FileHandle: HANDLE; // TODO: correct paramters
+  Event: PVOID;
+  ApcRoutine:  PVOID;
+  ApcContext: PVOID;
+  IoStatusBlock: PVOID; // OUT
+  Buffer: PVOID;
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_NtYieldExecution(); stdcall;
@@ -570,8 +570,8 @@ function xboxkrnl_NtReadFile(
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // OPTIONAL
   ApcContext: PVOID;
-	IoStatusBlock: PVOID; // OUT
-	Buffer: PVOID; // OUT
+  IoStatusBlock: PVOID; // OUT
+  Buffer: PVOID; // OUT
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER   // OPTIONAL
   ): NTSTATUS; stdcall;
@@ -633,11 +633,11 @@ begin
 end;
 
 function xboxkrnl_NtSetInformationFile(
-	FileHandle: HANDLE; // TODO: correct paramters
-	IoStatusBlock: PVOID; // OUT
-	FileInformation: PVOID;
-	Length:	ULONG;
-	FileInformationClass:	ULONG // dtFILE_INFORMATION_CLASSEnum
+  FileHandle: HANDLE; // TODO: correct paramters
+  IoStatusBlock: PVOID; // OUT
+  FileInformation: PVOID;
+  Length:  ULONG;
+  FileInformationClass:  ULONG // dtFILE_INFORMATION_CLASSEnum
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -728,14 +728,14 @@ begin
 end;
 
 function xboxkrnl_NtWriteFile(
-	FileHandle: HANDLE; // TODO: correct paramters
-	Event: PVOID;
-	ApcRoutine:	PVOID;
-	ApcContext: PVOID;
-	IoStatusBlock: PVOID; // OUT
-	Buffer: PVOID;
-	Length: ULONG;
-	ByteOffset: PLARGE_INTEGER
+  FileHandle: HANDLE; // TODO: correct paramters
+  Event: PVOID;
+  ApcRoutine:  PVOID;
+  ApcContext: PVOID;
+  IoStatusBlock: PVOID; // OUT
+  Buffer: PVOID;
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
