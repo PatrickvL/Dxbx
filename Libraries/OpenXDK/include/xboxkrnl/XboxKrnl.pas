@@ -232,51 +232,46 @@ begin
     WaitAny = 1
  end;
 WAIT_TYPE;
+*)
 
 // ******************************************************************
 // * LARGE_INTEGER
 // ******************************************************************
-type  union _LARGE_INTEGER
-begin 
-    struct
-    begin 
-        DWORD   LowPart;
-        LongInt    HighPart;
-     end;
-    u;
+type
+  _LARGE_INTEGER = record
+    case Integer of
+    0: (
+      LowPart: DWORD;
+      HighPart: LongInt);
+    1: (
+      QuadPart: LONGLONG);
+  end;
 
-    LONGLONG QuadPart;
- end;
-LARGE_INTEGER, *PLARGE_INTEGER;
+  LARGE_INTEGER = _LARGE_INTEGER;
+  PLARGE_INTEGER = ^LARGE_INTEGER;
 
 // ******************************************************************
 // * ULARGE_INTEGER
 // ******************************************************************
-type  union _ULARGE_INTEGER
-begin 
-    struct
-    begin 
-        DWORD LowPart;
-        DWORD HighPart;
-     end;
-    u1;
+type
+  _ULARGE_INTEGER = record
+    case Integer of
+      0: (
+        LowPart: DWORD;
+        HighPart: DWORD);
+      1: (
+        QuadPart: ULONGLONG);
+  end;
 
-    struct
-    begin 
-        DWORD LowPart;
-        DWORD HighPart;
-     end;
-    u;
-
-    ULONGLONG QuadPart;
- end;
-ULARGE_INTEGER, *PULARGE_INTEGER;
-
+  ULARGE_INTEGER = _ULARGE_INTEGER;
+  PULARGE_INTEGER = ^ULARGE_INTEGER;
+  
+(*
 // ******************************************************************
 // * STRING
 // ******************************************************************
 type
-  
+
 STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = record  
     USHORT  Length;
     USHORT  MaximumLength;
@@ -1063,6 +1058,28 @@ begin
 
 
 *)
+
+//
+// Object Type Object
+//
+type
+  _OBJECT_TYPE = record
+(*
+    ERESOURCE Mutex;
+    LIST_ENTRY TypeList;
+    UNICODE_STRING Name;
+    PVOID DefaultObject;
+    ULONG Index;
+    ULONG TotalNumberOfObjects;
+    ULONG TotalNumberOfHandles;
+    ULONG HighWaterNumberOfObjects;
+    ULONG HighWaterNumberOfHandles;
+    OBJECT_TYPE_INITIALIZER TypeInfo;
+    ULONG Key;
+    ERESOURCE ObjectLocks[4];
+*)
+  end;
+  POBJECT_TYPE = ^_OBJECT_TYPE;
 
 implementation
 
