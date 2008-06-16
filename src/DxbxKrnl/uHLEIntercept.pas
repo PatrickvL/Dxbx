@@ -116,7 +116,7 @@ begin
     // open title's cache file
     //
 
-    StrFmt(@szCacheFileName[spot+9], '\ mod 08x.dat', pCertificate.dwTitleId);
+    StrFmt(@szCacheFileName[spot+9], '\%08x.dat', pCertificate.dwTitleId);
 
     FILE *pCacheFile := FileOpen(szCacheFileName, fmOpenRead);
 
@@ -160,7 +160,7 @@ begin
 
             vCacheInpIter := vCacheInp.begin();
 
-            DbgPrintf('HLE: Loaded HLE Cache for $ mod .08X', pCertificate.dwTitleId);
+            DbgPrintf('HLE: Loaded HLE Cache for $%.08X', pCertificate.dwTitleId);
          end;
 
         FileClose(pCacheFile);
@@ -183,7 +183,6 @@ begin
     if pLibraryVersion <> nil then
     begin
         DbgPrintf('HLE: Detected Microsoft XDK application...');
-
         dwLibraryVersions := pXbeHeader.dwLibraryVersions;
         dwHLEEntries := HLEDataBaseSize div SizeOf(HLEData);
 

@@ -161,8 +161,6 @@ type
   dtACCESS_MASK = Unknown;
   dtCreateOptions = ULONG;
   dtBLOB = Unknown;
-  dtFILE_INFORMATION_CLASSEnum = FILE_INFORMATION_CLASS;
-  dtANSI_STRING = AnsiString; // ??
 
 function Unimplemented(const aAPI: string): NTSTATUS;
 

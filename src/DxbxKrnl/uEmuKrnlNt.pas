@@ -178,7 +178,7 @@ function xboxkrnl_NtSetInformationFile(
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length:  ULONG;
-  FileInformationClass:  ULONG // dtFILE_INFORMATION_CLASSEnum
+  FileInformationClass:  FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -637,7 +637,7 @@ function xboxkrnl_NtSetInformationFile(
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length:  ULONG;
-  FileInformationClass:  ULONG // dtFILE_INFORMATION_CLASSEnum
+  FileInformationClass:  FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS

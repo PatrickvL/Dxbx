@@ -56,9 +56,9 @@ function xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
   ): PVOID; stdcall;
-function xboxkrnl_ExFreePool(
+procedure xboxkrnl_ExFreePool(
   Block: PVOID
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ); stdcall;
 function xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -146,7 +146,7 @@ procedure xboxkrnl_ExFreePool(
   ); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('ExFreePool');
+  Unimplemented('ExFreePool');
   EmuSwapFS(); // Xbox FS
 end;
 
