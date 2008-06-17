@@ -39,6 +39,10 @@ uses
   uEmuXapi,
   uEmuKrnl,
   uDxbxKrnl;
+  
+var
+  xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
+  xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
 
 function xboxkrnl_IoAllocateIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoBuildAsynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -67,8 +71,6 @@ function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDeleteSymbolicLink(
   SymbolicLinkName: PSTRING
   ): NTSTATUS; stdcall;
-function xboxkrnl_IoDeviceObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoFileObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoInvalidDeviceRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -181,20 +183,6 @@ function xboxkrnl_IoDeleteSymbolicLink(
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IoDeleteSymbolicLink');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_IoDeviceObjectType(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('IoDeviceObjectType');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_IoFileObjectType(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('IoFileObjectType');
   EmuSwapFS(); // Xbox FS
 end;
 

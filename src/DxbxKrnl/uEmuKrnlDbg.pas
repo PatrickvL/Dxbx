@@ -40,58 +40,90 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_DbgBreakPoint(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_DbgBreakPointWithStatus(
-  Arg1: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_DbgLoadImageSymbols(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_DbgPrint(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_DbgPrompt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_DbgUnLoadImageSymbols(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_DbgBreakPoint(
+  ); stdcall; // Source: JwaNative.pas
+procedure xboxkrnl_DbgBreakPointWithStatus(
+  Status: ULONG
+  ); stdcall; // Source: JwaNative.pas
+function xboxkrnl_DbgLoadImageSymbols(
+  Name: PANSI_STRING;
+  Base: PVOID;
+  ProcessId: ULONG_PTR
+  ): NTSTATUS; stdcall; // Source: ReactOS
+function xboxkrnl_DbgPrint(
+  Format: PCCH;
+  Args: array of const // TODO : Check if this is a correct translation of '...'
+  ): ULONG; stdcall; // Source: ReactOS - Uncertain
+function xboxkrnl_DbgPrompt(
+  Prompt: PCCH;
+  Response: PCH; // OUT
+  MaximumResponseLength: ULONG
+  ): ULONG; stdcall; // Source: ReactOS
+procedure xboxkrnl_DbgUnLoadImageSymbols(
+  Name: PANSI_STRING;
+  Base: PVOID;
+  ProcessId: ULONG_PTR
+  ); stdcall; // Source: ReactOS
 
 implementation
 
-function xboxkrnl_DbgBreakPoint(): NTSTATUS; stdcall;
+procedure xboxkrnl_DbgBreakPoint(
+  ); stdcall; // Source: JwaNative.pas
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('DbgBreakPoint');
+  Unimplemented('DbgBreakPoint');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_DbgBreakPointWithStatus(
-  Arg1: DWORD
-  ): NTSTATUS; stdcall;
+procedure xboxkrnl_DbgBreakPointWithStatus(
+  Status: ULONG
+  ); stdcall; // Source: JwaNative.pas
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('DbgBreakPointWithStatus');
+  Unimplemented('DbgBreakPointWithStatus');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_DbgLoadImageSymbols(): NTSTATUS; stdcall;
+function xboxkrnl_DbgLoadImageSymbols(
+  Name: PANSI_STRING;
+  Base: PVOID;
+  ProcessId: ULONG_PTR
+  ): NTSTATUS; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('DbgLoadImageSymbols');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_DbgPrint(): NTSTATUS; stdcall;
+function xboxkrnl_DbgPrint(
+  Format: PCCH;
+  Args: array of const // TODO : Check if this is a correct translation of '...'
+  ): ULONG; stdcall; // Source: ReactOS - Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('DbgPrint');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_DbgPrompt(): NTSTATUS; stdcall;
+function xboxkrnl_DbgPrompt(
+  Prompt: PCCH;
+  Response: PCH; // OUT
+  MaximumResponseLength: ULONG
+  ): ULONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('DbgPrompt');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_DbgUnLoadImageSymbols(): NTSTATUS; stdcall;
+procedure xboxkrnl_DbgUnLoadImageSymbols(
+  Name: PANSI_STRING;
+  Base: PVOID;
+  ProcessId: ULONG_PTR
+  ); stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('DbgUnLoadImageSymbols');
+  Unimplemented('DbgUnLoadImageSymbols');
   EmuSwapFS(); // Xbox FS
 end;
 
