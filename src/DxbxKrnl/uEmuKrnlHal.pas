@@ -40,7 +40,10 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_HalReadSMCTrayState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_HalReadSMCTrayState(
+  State: PDWORD;
+  Count: PDWORD
+  ); stdcall; // Source: OpenXdk
 function xboxkrnl_HalClearSoftwareInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalDisableSystemInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -48,12 +51,33 @@ function xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalEnableSystemInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalGetInterruptVector(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalReadSMBusValue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalReadWritePCISpace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_HalReadSMBusValue(
+  BusNumber: ULONG;
+  SlotNumber: ULONG;
+  RegisterNumber: ULONG;
+  Buffer: PVOID;
+  Length: ULONG;
+  WritePCISpace: LONGBOOL
+  ); stdcall; // Source: OpenXDK
+procedure xboxkrnl_HalReadWritePCISpace(
+  BusNumber: ULONG;
+  SlotNumber: ULONG;
+  RegisterNumber: ULONG;
+  Buffer: PVOID;
+  Length: ULONG;
+  WritePCISpace: LONGBOOL
+  ); stdcall; // Source: OpenXDK
 function xboxkrnl_HalRegisterShutdownNotification(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalRequestSoftwareInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalReturnToFirmware(Routine: RETURN_FIRMWARE): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalWriteSMBusValue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_HalReturnToFirmware(
+  Routine: RETURN_FIRMWARE
+  ); stdcall; // Source: OpenXDK
+function xboxkrnl_HalWriteSMBusValue(
+  Address: UCHAR;
+  Command: UCHAR;
+  WordFlag: BOOLEAN; // TODO : What should we use: LONGBOOL or WORDBOOL?
+  Value: ULONG
+  ): ULONG; stdcall; // Source: OpenXDK
 function xboxkrnl_HalBootSMCVideoMode(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -62,10 +86,13 @@ function xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall; // UNKNOWN_SI
 
 implementation
 
-function xboxkrnl_HalReadSMCTrayState(): NTSTATUS; stdcall;
+procedure xboxkrnl_HalReadSMCTrayState(
+  State: PDWORD;
+  Count: PDWORD
+  ); stdcall; // Source: OpenXdk
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalReadSMCTrayState');
+  Unimplemented('HalReadSMCTrayState');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -118,17 +145,31 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalReadSMBusValue(): NTSTATUS; stdcall;
+procedure xboxkrnl_HalReadSMBusValue(
+  BusNumber: ULONG;
+  SlotNumber: ULONG;
+  RegisterNumber: ULONG;
+  Buffer: PVOID;
+  Length: ULONG;
+  WritePCISpace: LONGBOOL
+  ); stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalReadSMBusValue');
+  Unimplemented('HalReadSMBusValue');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalReadWritePCISpace(): NTSTATUS; stdcall;
+procedure xboxkrnl_HalReadWritePCISpace(
+  BusNumber: ULONG;
+  SlotNumber: ULONG;
+  RegisterNumber: ULONG;
+  Buffer: PVOID;
+  Length: ULONG;
+  WritePCISpace: LONGBOOL
+  ); stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalReadWritePCISpace');
+  Unimplemented('HalReadWritePCISpace');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -146,14 +187,21 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalReturnToFirmware(Routine: RETURN_FIRMWARE): NTSTATUS; stdcall;
+procedure xboxkrnl_HalReturnToFirmware(
+  Routine: RETURN_FIRMWARE
+  ); stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalReturnToFirmware');
+  Unimplemented('HalReturnToFirmware');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalWriteSMBusValue(): NTSTATUS; stdcall;
+function xboxkrnl_HalWriteSMBusValue(
+  Address: UCHAR;
+  Command: UCHAR;
+  WordFlag: BOOLEAN; // TODO : What should we use: LONGBOOL or WORDBOOL?
+  Value: ULONG
+  ): ULONG; stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalWriteSMBusValue');

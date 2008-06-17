@@ -1060,7 +1060,7 @@ begin
 *)
 
 //
-// Object Type Object
+// DXBX Addition : Object Type Object
 //
 type
   _OBJECT_TYPE = record
@@ -1081,6 +1081,18 @@ type
   end;
   POBJECT_TYPE = ^_OBJECT_TYPE;
 
+//
+// DXBX Addition : Xbox Refurb Info - TODO : Complete this!
+//
+  _XBOX_REFURB_INFO = record
+    //
+    FirstBootTime: FILETIME;
+    //
+    PowerCycleCount: DWORD;
+    //
+  end;
+  XBOX_REFURB_INFO = _XBOX_REFURB_INFO;
+  PXBOX_REFURB_INFO = ^_XBOX_REFURB_INFO;
 implementation
 
 end.

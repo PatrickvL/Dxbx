@@ -189,22 +189,22 @@ function xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_PhyInitialize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_READ_PORT_BUFFER_UCHAR(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 function xboxkrnl_READ_PORT_BUFFER_USHORT(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 function xboxkrnl_READ_PORT_BUFFER_ULONG(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 function xboxkrnl_WRITE_PORT_BUFFER_USHORT(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 function xboxkrnl_WRITE_PORT_BUFFER_ULONG(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 function xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -344,7 +344,7 @@ end;
 
 function xboxkrnl_READ_PORT_BUFFER_UCHAR(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('READ_PORT_BUFFER_UCHAR');
@@ -353,7 +353,7 @@ end;
 
 function xboxkrnl_READ_PORT_BUFFER_USHORT(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('READ_PORT_BUFFER_USHORT');
@@ -362,7 +362,7 @@ end;
 
 function xboxkrnl_READ_PORT_BUFFER_ULONG(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('READ_PORT_BUFFER_ULONG');
@@ -371,7 +371,7 @@ end;
 
 function xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('WRITE_PORT_BUFFER_UCHAR');
@@ -380,7 +380,7 @@ end;
 
 function xboxkrnl_WRITE_PORT_BUFFER_USHORT(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('WRITE_PORT_BUFFER_USHORT');
@@ -389,7 +389,7 @@ end;
 
 function xboxkrnl_WRITE_PORT_BUFFER_ULONG(
   Arg1, Arg2, Arg3: DWORD
-  ): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('WRITE_PORT_BUFFER_ULONG');

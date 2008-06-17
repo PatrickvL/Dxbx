@@ -40,38 +40,69 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_AvGetSavedDataAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_AvSendTVEncoderOption(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_AvSetDisplayMode(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_AvSetSavedDataAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_AvGetSavedDataAddress(
+  ): PVOID; stdcall; // Source: OpenXDK
+procedure xboxkrnl_AvSendTVEncoderOption(
+  RegisterBase: PVOID;
+  Option: ULONG;
+  Param: ULONG;
+  Result: PULONG // OUT
+  ); stdcall; // Source: OpenXDK
+function xboxkrnl_AvSetDisplayMode(
+  RegisterBase: PVOID;
+  Step: ULONG;
+  Mode: ULONG;
+  Format: ULONG;
+  Pitch: ULONG;
+  FrameBuffer: ULONG
+  ): ULONG; stdcall; // Source: OpenXDK
+procedure xboxkrnl_AvSetSavedDataAddress(
+  Address: PVOID
+  ); stdcall; // Source: OpenXDK
 
 implementation
 
-function xboxkrnl_AvGetSavedDataAddress(): NTSTATUS; stdcall;
+function xboxkrnl_AvGetSavedDataAddress(
+  ): PVOID; stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('AvGetSavedDataAddress');
+  Unimplemented('AvGetSavedDataAddress');
+  Result := nil;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_AvSendTVEncoderOption(): NTSTATUS; stdcall;
+procedure xboxkrnl_AvSendTVEncoderOption(
+  RegisterBase: PVOID;
+  Option: ULONG;
+  Param: ULONG;
+  Result: PULONG // OUT
+  ); stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('AvSendTVEncoderOption');
+  Unimplemented('AvSendTVEncoderOption');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_AvSetDisplayMode(): NTSTATUS; stdcall;
+function xboxkrnl_AvSetDisplayMode(
+  RegisterBase: PVOID;
+  Step: ULONG;
+  Mode: ULONG;
+  Format: ULONG;
+  Pitch: ULONG;
+  FrameBuffer: ULONG
+  ): ULONG; stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('AvSetDisplayMode');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_AvSetSavedDataAddress(): NTSTATUS; stdcall;
+procedure xboxkrnl_AvSetSavedDataAddress(
+  Address: PVOID
+  ); stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('AvSetSavedDataAddress');
+  Unimplemented('AvSetSavedDataAddress');
   EmuSwapFS(); // Xbox FS
 end;
 
