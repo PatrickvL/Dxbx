@@ -38,6 +38,16 @@
     <Borland.ProjectType />
     <BorlandProject>
 <BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters><Parameters Name="HostApplication">D:\!Patrick_Sofware\XBox\Games\XBox Turok NTSC\Turok_dxbx_debug.exe</Parameters><Parameters Name="DebugCWD">D:\!Patrick_Sofware\XBox\Games\XBox Turok NTSC</Parameters><Parameters Name="DebugSourceDirs">D:\Workspaces\SVN\dxbx\src</Parameters></Parameters><VersionInfo><VersionInfo Name="IncludeVerInfo">False</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">1033</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">DxbxKrnl.dpr</Source></Source><Excluded_Packages>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
@@ -53,6 +63,11 @@
     <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinNT.pas" />
     <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinType.pas" />
     <DCCReference Include="..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uConvert.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uPushBuffer.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uState.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uVertexBuffer.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uVertexShader.pas" />
     <DCCReference Include="DxbxKrnl\uDxbxKrnl.pas" />
     <DCCReference Include="DxbxKrnl\uDxbxKrnlUtils.pas" />
     <DCCReference Include="DxbxKrnl\uEmu.pas" />
