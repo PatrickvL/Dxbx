@@ -1,3 +1,0 @@
-Special thanks to Caustik, for creating the original source code of cxbx.
-
-Without this code and amazing high tech cxbx application, we would never have started this project.

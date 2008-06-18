@@ -36,7 +36,6 @@ uses
   uTime,
   uLog;
 
-
 const
   XBE_INIT_FLAG_MountUtilityDrive  = $00000001;
   XBE_INIT_FLAG_FormatUtilityDrive = $00000002;
@@ -55,6 +54,13 @@ const
   XBE_LIBRARYVERSION_FLAG_ApprovedYes      = $40;
   XBE_LIBRARYVERSION_FLAG_ApprovedMask     = $60;
   XBE_LIBRARYVERSION_FLAG_DebugBuild       = $80;
+
+type
+  // Note : These types are copied from JwaWinType, so we don't have to include that unit :
+  CHAR = AnsiChar; // Dxbx assumption!
+  PCSZ = ^CHAR;
+  PVOID = Pointer;
+  LONG = Longint;
 
 type
   TLogType = (ltLog, ltFile);
@@ -117,6 +123,7 @@ type
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
 
 
+  // Source: Cxbx
   _XBE_SECTIONHEADER = packed record
     dwFlags: array[0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
@@ -131,6 +138,23 @@ type
   end;
   XBE_SECTIONHEADER = _XBE_SECTIONHEADER;
 
+  // Section headers - Source: XBMC
+  _XBE_SECTION = record
+    Flags: ULONG;
+    VirtualAddress: PVOID; // Virtual address (where this section loads in RAM)
+    VirtualSize: ULONG; // Virtual size (size of section in RAM; after FileSize it's 00'd)
+    FileAddress: ULONG; // File address (where in the file from which this section comes)
+    FileSize: ULONG; // File size (size of the section in the XBE file)
+    SectionName: PCSZ; // Pointer to section name
+    SectionReferenceCount: LONG; // Section reference count - when >= 1, section is loaded
+    HeadReferenceCount: PWORD; // Pointer to head shared page reference count
+    TailReferenceCount: PWORD; // Pointer to tail shared page reference count
+    ShaHash: array[0..5-1] of DWORD; // SHA hash.  Hash DWORD containing FileSize, then hash section.
+  end; // SizeOf() = 38
+  XBE_SECTION = _XBE_SECTION;
+  PXBE_SECTION = ^XBE_SECTION;
+
+  // TODO : Should we use _XBE_SECTIONHEADER or _XBE_SECTION ?
 
   _XBE_LIBRARYVERSION = packed record
     szName: array[0..7] of AnsiChar; // library name

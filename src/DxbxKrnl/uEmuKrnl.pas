@@ -159,7 +159,6 @@ type
   dtU32 = Unknown;
   dtObjectAttributes = Unknown;
   dtACCESS_MASK = Unknown;
-  dtCreateOptions = ULONG;
   dtBLOB = Unknown;
 
 function Unimplemented(const aAPI: string): NTSTATUS;

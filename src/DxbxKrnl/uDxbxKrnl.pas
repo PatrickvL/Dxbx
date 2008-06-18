@@ -253,7 +253,8 @@ begin
   begin
     hDupHandle := 0;
 
-    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+    if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS) then
+        DbgPrintf('EmuMain : Couldn''t duplicate handle!');
 
     CxbxKrnlRegisterThread(hDupHandle);
   end;

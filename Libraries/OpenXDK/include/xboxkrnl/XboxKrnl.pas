@@ -1084,6 +1084,7 @@ type
 //
 // DXBX Addition : Xbox Refurb Info - TODO : Complete this!
 //
+type
   _XBOX_REFURB_INFO = record
     //
     FirstBootTime: FILETIME;
@@ -1093,6 +1094,49 @@ type
   end;
   XBOX_REFURB_INFO = _XBOX_REFURB_INFO;
   PXBOX_REFURB_INFO = ^_XBOX_REFURB_INFO;
+
+//
+// DXBX Addition : Xbox Interrupt Mode - Source: ReactOS
+//
+type
+  KINTERRUPT_MODE = (LevelSensitive, Latched);
+
+//
+// DXBX Addition : Hardware Interface Type - Source: ReactOS
+//
+type
+  _INTERFACE_TYPE = (
+    InterfaceTypeUndefined = -1,
+    Internal,
+    Isa,
+    Eisa,
+    MicroChannel,
+    TurboChannel,
+    PCIBus,
+    VMEBus,
+    NuBus,
+    PCMCIABus,
+    CBus,
+    MPIBus,
+    MPSABus,
+    ProcessorInternal,
+    InternalPowerBus,
+    PNPISABus,
+    PNPBus,
+    MaximumInterfaceType
+  );
+  INTERFACE_TYPE = _INTERFACE_TYPE;
+  PINTERFACE_TYPE = ^INTERFACE_TYPE;
+
+//
+// DXBX Addition : Create Thread Notify Routine - Source: ReactOS
+//
+type
+ PCREATE_THREAD_NOTIFY_ROUTINE = procedure(
+   ProcessId: HANDLE;
+   ThreadId: HANDLE;
+   Create: LONGBOOL); stdcall;
+   
 implementation
 
 end.

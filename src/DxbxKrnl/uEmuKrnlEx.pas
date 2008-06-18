@@ -48,10 +48,10 @@ var
 
 function xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 function xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 function xboxkrnl_ExAllocatePool(
   NumberOfBytes: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
@@ -64,7 +64,7 @@ procedure xboxkrnl_ExFreePool(
   ); stdcall; // Source: ReactOS
 function xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 function xboxkrnl_ExInterlockedAddLargeInteger(
   Addend: PLARGE_INTEGER;
   Increment: LARGE_INTEGER;
@@ -104,7 +104,7 @@ procedure xboxkrnl_ExRaiseStatus(
   ); stdcall; // Source: ReactOS
 function xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 function xboxkrnl_ExSaveNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; //   OUT
@@ -131,7 +131,7 @@ implementation
 
 function xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExAcquireReadWriteLockExclusive');
@@ -141,7 +141,7 @@ end;
 
 function xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExAcquireReadWriteLockShared');
@@ -185,7 +185,7 @@ end;
 
 function xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExInitializeReadWriteLock');
@@ -285,7 +285,7 @@ end;
 
 function xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APIReporter - Uncertain
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('ExReleaseReadWriteLock');
