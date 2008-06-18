@@ -37,12 +37,10 @@ implementation
 
 
 procedure XTL__EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32);
-(*
 var
   dwThreadId: DWORD;
   hThread: THandle;
   hDupHandle: THandle;
-*)
 begin
 (*
   g_EmuShared.GetXBVideo(@g_XBVideo);

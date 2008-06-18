@@ -72,7 +72,8 @@ uses
   uEmuKrnlXc in 'DxbxKrnl\uEmuKrnlXc.pas',
   uEmuKrnlXe in 'DxbxKrnl\uEmuKrnlXe.pas',
   uEmuKrnlAv in 'DxbxKrnl\uEmuKrnlAv.pas',
-  uHLEDatabase in 'DxbxKrnl\uHLEDatabase.pas';
+  uHLEDatabase in 'DxbxKrnl\uHLEDatabase.pas',
+  uXbeVideo in 'uXbeVideo.pas';
 
 {$R *.res}   
 
