@@ -78,7 +78,13 @@ uses
   uPushBuffer in 'DxbxKrnl\EmuD3D8\uPushBuffer.pas',
   uState in 'DxbxKrnl\EmuD3D8\uState.pas',
   uVertexBuffer in 'DxbxKrnl\EmuD3D8\uVertexBuffer.pas',
-  uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas';
+  uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas',
+  uEmuD3D8Types in 'DxbxKrnl\uEmuD3D8Types.pas',
+  uEmuDInput in 'DxbxKrnl\uEmuDInput.pas',
+  uEmuDSound in 'DxbxKrnl\uEmuDSound.pas',
+  uEmuXG in 'DxbxKrnl\uEmuXG.pas',
+  uEmuXOnline in 'DxbxKrnl\uEmuXOnline.pas',
+  uEmuXTL in 'DxbxKrnl\uEmuXTL.pas';
 
 {$R *.res}   
 

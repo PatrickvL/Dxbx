@@ -73,6 +73,9 @@
     <DCCReference Include="DxbxKrnl\uEmu.pas" />
     <DCCReference Include="DxbxKrnl\uEmuAlloc.pas" />
     <DCCReference Include="DxbxKrnl\uEmuD3D8.pas" />
+    <DCCReference Include="DxbxKrnl\uEmuD3D8Types.pas" />
+    <DCCReference Include="DxbxKrnl\uEmuDInput.pas" />
+    <DCCReference Include="DxbxKrnl\uEmuDSound.pas" />
     <DCCReference Include="DxbxKrnl\uEmuFile.pas" />
     <DCCReference Include="DxbxKrnl\uEmuFS.pas" />
     <DCCReference Include="DxbxKrnl\uEmuKrnl.pas" />
@@ -94,6 +97,9 @@
     <DCCReference Include="DxbxKrnl\uEmuKrnlXe.pas" />
     <DCCReference Include="DxbxKrnl\uEmuLDT.pas" />
     <DCCReference Include="DxbxKrnl\uEmuXapi.pas" />
+    <DCCReference Include="DxbxKrnl\uEmuXG.pas" />
+    <DCCReference Include="DxbxKrnl\uEmuXOnline.pas" />
+    <DCCReference Include="DxbxKrnl\uEmuXTL.pas" />
     <DCCReference Include="DxbxKrnl\uHLEDatabase.pas" />
     <DCCReference Include="DxbxKrnl\uHLEIntercept.pas" />
     <DCCReference Include="uConsts.pas" />
