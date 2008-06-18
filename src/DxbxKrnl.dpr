@@ -73,7 +73,12 @@ uses
   uEmuKrnlXe in 'DxbxKrnl\uEmuKrnlXe.pas',
   uEmuKrnlAv in 'DxbxKrnl\uEmuKrnlAv.pas',
   uHLEDatabase in 'DxbxKrnl\uHLEDatabase.pas',
-  uXbVideo in 'uXbVideo.pas';
+  uXbVideo in 'uXbVideo.pas',
+  uConvert in 'DxbxKrnl\EmuD3D8\uConvert.pas',
+  uPushBuffer in 'DxbxKrnl\EmuD3D8\uPushBuffer.pas',
+  uState in 'DxbxKrnl\EmuD3D8\uState.pas',
+  uVertexBuffer in 'DxbxKrnl\EmuD3D8\uVertexBuffer.pas',
+  uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas';
 
 {$R *.res}   
 

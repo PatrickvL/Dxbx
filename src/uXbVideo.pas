@@ -18,6 +18,8 @@
 
 unit uXbVideo;
 
+{$INCLUDE ..\Dxbx.inc}
+
 interface
 
 implementation
