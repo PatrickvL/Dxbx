@@ -18,7 +18,7 @@
 
 unit uXbVideo;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 
