@@ -92,6 +92,6 @@
     <DCCReference Include="uTime.pas" />
     <DCCReference Include="uTypes.pas" />
     <DCCReference Include="uXbe.pas" />
-    <DCCReference Include="uXbeVideo.pas" />
+    <DCCReference Include="uXbVideo.pas" />
   </ItemGroup>
 </Project>
