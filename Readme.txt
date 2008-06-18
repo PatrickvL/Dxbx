@@ -2,7 +2,7 @@ Dxbx 0.0.8 the Cxbx Delphi port.
 
 
 Introduction:
-
+-------------
 Dxbx (a Delphi port of Cxbx) is an emulator for running Xbox games on Windows 2000 and higher.
 
 
@@ -14,16 +14,22 @@ When you press Start Emulation turok will start.
 
 
 Prerequisites:
-
+--------------
 
 Developer Notes:
-
+----------------
+See Developer.txt
 
 Special thanks:
+---------------
+Special thanks to Caustik, for creating the original source code of cxbx.
+Without this code and amazing high tech cxbx application, we would never have started this project.
+
+Robert Yates for his Xbox FLIRT filesS
 
 
 Contributors:
-
+-------------
 Shadow_tj (from Holland) - Main cxbx translation
 Zomby (from Canada) - Vista compatibility, lots of fixups
 PCucho (from Argentina) - XIso translation

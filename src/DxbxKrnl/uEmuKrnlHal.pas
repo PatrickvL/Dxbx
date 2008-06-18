@@ -40,17 +40,36 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
+var
+  xboxkrnl_HalBootSMCVideoMode: DWORD; // Source: OpenXDK
+
 procedure xboxkrnl_HalReadSMCTrayState(
   State: PDWORD;
   Count: PDWORD
   ); stdcall; // Source: OpenXdk
-function xboxkrnl_HalClearSoftwareInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalDisableSystemInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_HalClearSoftwareInterrupt(
+  Request: KIRQL
+  ); stdcall; // Source: ReactOS
+function xboxkrnl_HalDisableSystemInterrupt(
+  Vector: ULONG;
+  Irql: KIRQL
+  ): LONGBOOL; stdcall; // Source: ReactOS
 function xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalEnableSystemInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalGetInterruptVector(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalEnableSystemInterrupt(
+  Vector: ULONG;
+  Irql: KIRQL;
+  InterruptMode: KINTERRUPT_MODE
+  ): LONGBOOL; stdcall; // Source: ReactOS
+function xboxkrnl_HalGetInterruptVector(
+  InterfaceType: INTERFACE_TYPE;
+  BusNumber: ULONG;
+  BusInterruptLevel: ULONG;
+  BusInterruptVector: ULONG;
+  Irql: PKIRQL;
+  Affinity: PKAFFINITY
+  ): ULONG; stdcall; // Source: ReactOS
 procedure xboxkrnl_HalReadSMBusValue(
   BusNumber: ULONG;
   SlotNumber: ULONG;
@@ -67,8 +86,13 @@ procedure xboxkrnl_HalReadWritePCISpace(
   Length: ULONG;
   WritePCISpace: LONGBOOL
   ); stdcall; // Source: OpenXDK
-function xboxkrnl_HalRegisterShutdownNotification(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalRequestSoftwareInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_HalRegisterShutdownNotification(
+  Arg1: UNKNOWN;
+  Arg2: UNKNOWN
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+procedure xboxkrnl_HalRequestSoftwareInterrupt(
+  Request: KIRQL
+  ); stdcall; // Source: ReactOS
 procedure xboxkrnl_HalReturnToFirmware(
   Routine: RETURN_FIRMWARE
   ); stdcall; // Source: OpenXDK
@@ -78,10 +102,10 @@ function xboxkrnl_HalWriteSMBusValue(
   WordFlag: BOOLEAN; // TODO : What should we use: LONGBOOL or WORDBOOL?
   Value: ULONG
   ): ULONG; stdcall; // Source: OpenXDK
-function xboxkrnl_HalBootSMCVideoMode(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_HalEnableSecureTrayEject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_HalEnableSecureTrayEject(
+  ); stdcall; // Source: XBMC Undocumented.h
 function xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
@@ -96,17 +120,23 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalClearSoftwareInterrupt(): NTSTATUS; stdcall;
+procedure xboxkrnl_HalClearSoftwareInterrupt(
+  Request: KIRQL
+  ); stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalClearSoftwareInterrupt');
+  Unimplemented('HalClearSoftwareInterrupt');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalDisableSystemInterrupt(): NTSTATUS; stdcall;
+function xboxkrnl_HalDisableSystemInterrupt(
+  Vector: ULONG;
+  Irql: KIRQL
+  ): LONGBOOL; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalDisableSystemInterrupt');
+  Unimplemented('HalDisableSystemInterrupt');
+  Result := False;
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -131,14 +161,26 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalEnableSystemInterrupt(): NTSTATUS; stdcall;
+function xboxkrnl_HalEnableSystemInterrupt(
+  Vector: ULONG;
+  Irql: KIRQL;
+  InterruptMode: KINTERRUPT_MODE
+  ): LONGBOOL; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalEnableSystemInterrupt');
+  Unimplemented('HalEnableSystemInterrupt');
+  Result := False;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalGetInterruptVector(): NTSTATUS; stdcall;
+function xboxkrnl_HalGetInterruptVector(
+  InterfaceType: INTERFACE_TYPE;
+  BusNumber: ULONG;
+  BusInterruptLevel: ULONG;
+  BusInterruptVector: ULONG;
+  Irql: PKIRQL;
+  Affinity: PKAFFINITY
+  ): ULONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalGetInterruptVector');
@@ -173,17 +215,22 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalRegisterShutdownNotification(): NTSTATUS; stdcall;
+function xboxkrnl_HalRegisterShutdownNotification(
+  Arg1: UNKNOWN;
+  Arg2: UNKNOWN
+  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalRegisterShutdownNotification');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalRequestSoftwareInterrupt(): NTSTATUS; stdcall;
+procedure xboxkrnl_HalRequestSoftwareInterrupt(
+  Request: KIRQL
+  ); stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalRequestSoftwareInterrupt');
+  Unimplemented('HalRequestSoftwareInterrupt');
   EmuSwapFS(); // Xbox FS
 end;
 
@@ -208,13 +255,6 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalBootSMCVideoMode(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalBootSMCVideoMode');
-  EmuSwapFS(); // Xbox FS
-end;
-
 function xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -229,10 +269,16 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_HalEnableSecureTrayEject(): NTSTATUS; stdcall;
+// HalEnableSecureTrayEject:
+// Notifies the SMBUS that ejecting the DVD-ROM should not reset the system.
+// Note that this function can't really be called directly...
+//
+// New to the XBOX.
+procedure xboxkrnl_HalEnableSecureTrayEject(
+  ); stdcall; // Source: XBMC Undocumented.h
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('HalEnableSecureTrayEject');
+  Unimplemented('HalEnableSecureTrayEject');
   EmuSwapFS(); // Xbox FS
 end;
 

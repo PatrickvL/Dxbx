@@ -1,1 +1,10 @@
 NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
+
+
+Sources that might give you more insight into the Xbox Kernel API's :
+
+Cxbx SVN (martin's private branch is the most up to date)
+OpenXDK (only available as a download, no SVN)
+ReactOS SVN
+XBMC - Undocumented.h
+APILogger - APIReporter source

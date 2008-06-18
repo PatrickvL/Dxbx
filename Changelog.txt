@@ -12,3 +12,5 @@ Version 0.0.8:
 - Enough of Cxbx setup code has been translated to let actual Xbe code be executed(!)
 - Updated to AlphaSkin version v5.45 and removed the hard dependancy on it.
 - Made a start with documentation.
+- Made stubs for all 378 Kernel API stubs, including their most probable signature
+- Separated the Kernel API stubs over different source files, to ease paralel development

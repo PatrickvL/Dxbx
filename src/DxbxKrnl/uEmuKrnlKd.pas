@@ -40,24 +40,11 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_KdDebuggerEnabled(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KdDebuggerNotPresent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+var
+  xboxkrnl_KdDebuggerEnabled: LONGBOOL; // Source: ReactOS
+  xboxkrnl_KdDebuggerNotPresent: LONGBOOL; // Source: ReactOS
 
 implementation
-
-function xboxkrnl_KdDebuggerEnabled(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('KdDebuggerEnabled');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_KdDebuggerNotPresent(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('KdDebuggerNotPresent');
-  EmuSwapFS(); // Xbox FS
-end;
 
 end.
 

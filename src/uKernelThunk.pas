@@ -89,11 +89,11 @@ var
     {035}@xboxkrnl_FscGetCacheSize,
     {036}@xboxkrnl_FscInvalidateIdleBlocks,
     {037}@xboxkrnl_FscSetCacheSize,
-    {038}@xboxkrnl_HalClearSoftwareInterrupt, 
+    {038}@xboxkrnl_HalClearSoftwareInterrupt,
     {039}@xboxkrnl_HalDisableSystemInterrupt,
-    {040}@xboxkrnl_HalDiskCachePartitionCount,
-    {041}@xboxkrnl_HalDiskModelNumber,
-    {042}@xboxkrnl_HalDiskSerialNumber,
+    {040}@xboxkrnl_HalDiskCachePartitionCount, // TODO : variable ?
+    {041}@xboxkrnl_HalDiskModelNumber, // TODO : variable ?
+    {042}@xboxkrnl_HalDiskSerialNumber, // TODO : variable ?
     {043}@xboxkrnl_HalEnableSystemInterrupt,
     {044}@xboxkrnl_HalGetInterruptVector,
     {045}@xboxkrnl_HalReadSMBusValue,
@@ -102,6 +102,7 @@ var
     {048}@xboxkrnl_HalRequestSoftwareInterrupt,
     {049}@xboxkrnl_HalReturnToFirmware,
     {050}@xboxkrnl_HalWriteSMBusValue,
+// TODO : Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Ps and Xe
     {051}@xboxkrnl_InterlockedCompareExchange,
     {052}@xboxkrnl_InterlockedDecrement,
     {053}@xboxkrnl_InterlockedIncrement,
@@ -139,8 +140,8 @@ var
     {085}@xboxkrnl_IoSynchronousFsdRequest,
     {086}@xboxkrnl_IofCallDriver,
     {087}@xboxkrnl_IofCompleteRequest,
-    {088}@xboxkrnl_KdDebuggerEnabled,
-    {089}@xboxkrnl_KdDebuggerNotPresent,
+    {088}@xboxkrnl_KdDebuggerEnabled, // variable
+    {089}@xboxkrnl_KdDebuggerNotPresent, // variable
     {090}@xboxkrnl_IoDismountVolume,
     {091}@xboxkrnl_IoDismountVolumeByName,
     {092}@xboxkrnl_KeAlertResumeThread,
@@ -406,7 +407,7 @@ var
     {352}@xboxkrnl_RtlRip,
     {353}@xboxkrnl_XboxLANKey,
     {354}@xboxkrnl_XboxAlternateSignatureKeys,
-    {355}@xboxkrnl_XePublicKeyData,
+    {355}@xboxkrnl_XePublicKeyData, // TODO : variable ?
     {356}@xboxkrnl_HalBootSMCVideoMode,
     {357}@xboxkrnl_IdexChannelObject,
     {358}@xboxkrnl_HalIsResetOrShutdownPending,
