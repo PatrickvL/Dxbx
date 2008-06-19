@@ -24,4 +24,50 @@ interface
 
 implementation
 
+
+// ******************************************************************
+// * Static Variable(s)
+// ******************************************************************
+(* XBController g_XBController;*)
+
+// ******************************************************************
+// * func: XTL::EmuDInputInit
+// ******************************************************************
+function XTL_EmuDInputInit : Longbool;
+begin
+(*    g_EmuShared^.GetXBController(@g_XBController);
+
+    g_XBController.ListenBegin(g_hEmuWindow);
+
+    if(g_XBController.GetError()) then
+        result:= false;
+
+    result:= true;  *)
+ end;
+
+// ******************************************************************
+// * func: XTL::EmuDInputCleanup
+// ******************************************************************
+procedure XTL_EmuDInputCleanup();
+begin
+(*
+  g_XBController.ListenEnd();
+*)
+ end;
+
+// ******************************************************************
+// * func: XTL::EmuPollController
+// ******************************************************************
+(*procedure XTL_EmuDInputPoll(Controller: XTL.PXINPUT_STATE);
+begin
+    g_XBController.ListenPoll(Controller);
+
+    if(g_XBController.GetError()) then
+        MessageBox(0, g_XBController.GetError(), "Cxbx [*UNHANDLED not *]", MB_OK);  // TODO: Handle this!
+
+    Exit;
+ end; *)
+
+
+
 end.

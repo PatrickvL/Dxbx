@@ -24,24 +24,13 @@ interface
 
 implementation
 
-uint32  XTL.g_dwPrimaryPBCount := 0;
-uint32 *XTL.g_pPrimaryPB := 0;
-
-bool XTL.g_bStepPush := false;
-bool XTL.g_bSkipPush := false;
-bool XTL.g_bBrkPush  := false;
-
-bool g_bPBSkipPusher := false;
-
- procedure DbgDumpMesh(var pIndexData: WORD; dwCount: DWORD);
-
-procedure XTL.EmuExecutePushBuffer;
-(
+procedure XTL_EmuExecutePushBuffer;
+(*(
     X_D3DPushBuffer       *pPushBuffer,
     X_D3DFixup            *pFixup
-)
-begin 
-    if(pFixup <> 0) then 
+) *)
+begin
+(*    if(pFixup <> 0) then
         CxbxKrnlCleanup('PushBuffer has fixups');
 
     EmuExecutePushBufferRaw((DWORD)pPushBuffer^.Data);
@@ -53,13 +42,13 @@ begin
     // for current usages, we're always on stage 0
     XTL.X_D3DPixelContainer *pPixelContainer := (XTL.X_D3DPixelContainer)XTL.EmuD3DActiveTexture[0];
 
-    if(pPixelContainer = 0 or  not (pPixelContainer^.Common and X_D3DCOMMON_ISLOCKED)) then 
+    if(pPixelContainer = 0 or  not (pPixelContainer^.Common and X_D3DCOMMON_ISLOCKED)) then
         Exit;
 
     DWORD XBFormat := (pPixelContainer^.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
     DWORD dwBPP := 0;
 
-    if( not XTL.EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then 
+    if( not XTL.EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
         Exit;
 
     // remove lock
@@ -72,25 +61,25 @@ begin
     // unswizzle texture
     //
 
-    begin 
+    begin
         XTL.IDirect3DTexture8 *pTexture := pPixelContainer^.EmuTexture8;
 
         DWORD dwLevelCount := pTexture^.GetLevelCount();
 
         for(uint32 v:=0;v<dwLevelCount;v++)
-        begin 
+        begin
             XTL.D3DSURFACE_DESC SurfaceDesc;
 
             HRESULT hRet := pTexture^.GetLevelDesc(v, @SurfaceDesc);
 
-            if(FAILED(hRet)) then 
+            if(FAILED(hRet)) then
                 continue;
 
             //
             // perform unswizzle
             //
 
-            begin 
+            begin
                 XTL.D3DLOCKED_RECT LockedRect;
 
                 //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
@@ -99,7 +88,7 @@ begin
 
                 hRet := pTexture^.LockRect(v, @LockedRect, 0, 0);
 
-                if(FAILED(hRet)) then 
+                if(FAILED(hRet)) then
                     continue;
 
                 DWORD dwWidth := SurfaceDesc.Width;
@@ -126,13 +115,13 @@ begin
          end;
 
         DbgPrintf('Active texture was unswizzled');
-     end;
+     end; *)
  end;
 
-  procedure XTL.EmuExecutePushBufferRaw; DWORD                 *pdwPushData
+(*procedure XTL_EmuExecutePushBufferRaw; DWORD                 *pdwPushData
 )
-begin 
-    if(g_bSkipPush) then 
+begin
+    if(g_bSkipPush) then
         Exit;
 
     DWORD *pdwOrigPushData := pdwPushData;
@@ -283,8 +272,8 @@ begin
              end;
             *)
 
-            #ifdef _DEBUG_TRACK_PB
-            if(bShowPB) then 
+(*            #ifdef _DEBUG_TRACK_PB
+            if(bShowPB) then
             begin 
                 printf('NVPB_InlineVertexArray(Args: array of const)');
                 printf('  dwCount :  mod d', dwCount);
@@ -584,7 +573,7 @@ begin
                     begin 
                         g_pD3DDevice8^.DrawIndexedPrimitive
                         (
-                            PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, PrimitiveCount
+                            PCPrimitiveType, 0, (*dwCount*2*)(*8*1024*1024, 0, PrimitiveCount
                         );
                      end;
 
@@ -623,9 +612,9 @@ begin
         g_pD3DDevice8^.Present(0,0,0,0);
         Sleep(500);
      end;
- end;
+ end;       *)
 
-#ifdef _DEBUG_TRACK_PB
+(*#ifdef _DEBUG_TRACK_PB
 procedure DbgDumpMesh(var pIndexData: WORD; dwCount: DWORD);
 begin 
     if( not XTL.IsValidCurrentShader() or (dwCount = 0)) then 
@@ -749,7 +738,7 @@ begin
     // release ptr
     pActiveVB^.Unlock();
  end;
-//endif
+//endif           *)
 
 
 end.

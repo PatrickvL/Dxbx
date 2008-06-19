@@ -44,6 +44,12 @@
       
       
       
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
@@ -59,6 +65,11 @@
     <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinNT.pas" />
     <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinType.pas" />
     <DCCReference Include="..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uConvert.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uPushBuffer.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uState.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uVertexBuffer.pas" />
+    <DCCReference Include="DxbxKrnl\EmuD3D8\uVertexShader.pas" />
     <DCCReference Include="DxbxKrnl\uDxbxKrnl.pas" />
     <DCCReference Include="DxbxKrnl\uDxbxKrnlUtils.pas" />
     <DCCReference Include="DxbxKrnl\uEmu.pas" />

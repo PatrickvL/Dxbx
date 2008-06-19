@@ -24,4 +24,169 @@ interface
 
 implementation
 
+Uses Windows;
+
+// ******************************************************************
+// * func: EmuWSAStartup
+// ******************************************************************
+Function XTL_EmuWSAStartup : integer;
+(*(
+    WORD        wVersionRequested,
+    WSADATA    *lpWSAData
+) *)
+begin
+(*    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf('EmuXapi ($ mod X): EmuWSAStartup'
+           '("
+           "   wVersionRequested   : $ mod .08X"
+           "   lpWSAData           : $ mod .08X"
+           ");",
+           GetCurrentThreadId(), wVersionRequested, lpWSAData);
+
+    integer ret := XTL.WSAStartup(wVersionRequested, lpWSAData);
+
+    EmuSwapFS();   // XBox FS
+
+    result:= ret;  *)
+ end;
+
+// ******************************************************************
+// * func: EmuXNetStartup
+// ******************************************************************
+Function XTL_EmuXNetStartup : Integer;
+(*(
+     PVOID pDummy
+) *)
+begin
+(*    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi ($ mod X): EmuXNetStartup"
+           "("
+           "   pDummy              : $ mod .08X"
+           ");",
+           GetCurrentThreadId(), pDummy);
+
+    EmuSwapFS();   // XBox FS
+
+    // Fake Successfull...hehehe...sucker...hehehehehe
+    result:= 0;       *)
+ end;
+
+// ******************************************************************
+// * func: EmuXNetGetEthernetLinkStatus
+// ******************************************************************
+Function XTL_EmuXNetGetEthernetLinkStatus : DWORD;
+begin
+(*    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi ($ mod X): EmuXNetGetEthernetLinkStatus();", GetCurrentThreadId());
+
+    EmuSwapFS();   // XBox FS
+
+    // for now, no ethernet connection is available
+    result:= 0; *)
+ end;
+
+// ******************************************************************
+// * func: EmuThis::Emusocket
+// ******************************************************************
+(*SOCKET XTL.EmuThis.Emusocket
+(
+    integer   af,
+    integer   ctype,
+    integer   protocol
+)
+begin 
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emusocket"
+           "("
+           "   this                : $ mod .08X"
+           "   af                  : $ mod .08X"
+           "   ctype                : $ mod .08X"
+           "   protocol            : $ mod .08X"
+           ");",
+           GetCurrentThreadId(), this, af, ctype, protocol);
+
+    SOCKET ret = socket(af, ctype, protocol);
+
+    EmuSwapFS();   // XBox FS
+
+    result:= ret;
+ end;             *)
+
+// ******************************************************************
+// * func: EmuThis::Emubind
+// ******************************************************************
+(*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: integer): integer;
+begin 
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emubind"
+           "("
+           "   this                : $ mod .08X"
+           "   s                   : $ mod .08X"
+           "   name                : $ mod .08X"
+           "   namelen             : $ mod .08X"
+           ");",
+           GetCurrentThreadId(), this, s, name, namelen);
+
+    // TODO: Host-To-Network order if necessary (probably not?)
+
+    integer ret := bind(s, name, namelen);
+
+    EmuSwapFS();   // XBox FS
+
+    result:= ret;
+ end;              *)
+
+// ******************************************************************
+// * func: EmuThis::Emulisten
+// ******************************************************************
+(*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: integer): integer;
+begin 
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emulisten"
+           "("
+           "   this                : $ mod .08X"
+           "   s                   : $ mod .08X"
+           "   listen              : $ mod .08X"
+           ");",
+           GetCurrentThreadId(), this, s, backlog);
+
+    // TODO: Host-To-Network order if necessary (probably not?)
+
+    integer ret := listen(s, backlog);
+
+    EmuSwapFS();   // XBox FS
+
+    result:= ret;
+ end;              *)
+
+// ******************************************************************
+// * func: EmuThis::Emuioctlsocket
+// ******************************************************************
+(*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): integer;
+begin 
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emuioctlsocket"
+           "("
+           "   this                : $ mod .08X"
+           "   s                   : $ mod .08X"
+           "   cmd                 : $ mod .08X"
+           "   argp                : $ mod .08X"
+           ");",
+           GetCurrentThreadId(), this, s, cmd, argp);
+
+    integer ret := ioctlsocket(s, cmd, argp);
+
+    EmuSwapFS();   // XBox FS
+
+    result:= ret;
+ end;            *)
+
+
 end.
