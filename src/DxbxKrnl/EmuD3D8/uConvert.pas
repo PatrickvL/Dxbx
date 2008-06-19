@@ -25,18 +25,18 @@ interface
 implementation
 
 
-function XTL.EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): BOOL;
+(*function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
 begin 
     case(Format) of
-    begin 
-         $00:
-         $01:
-         $0B:
+         $00,
+         $01,
+         $0B: begin
             *pBPP := 1;
             result:= TRUE;
-         $02:
-         $03:
-         $04:
+         end;
+         $02,
+         $03,
+         $04,
          $05:
          $1A:
             *pBPP := 2;
@@ -48,10 +48,10 @@ begin
      end;
 
     result:= FALSE;
- end;
+ end;      *)
 
-XTL.D3DFORMAT XTL.EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
-begin 
+(*XTL.D3DFORMAT XTL.EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
+begin
     case(Format) of
     begin 
          $00: // Swizzled   (X_D3DFMT_L8)
@@ -144,9 +144,9 @@ begin
     CxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format ($ mod .08X)', Format);
 
     result:= (D3DFORMAT)Format;
- end;
+ end;                  *)
 
-XTL.X_D3DFORMAT XTL.EmuPC2XB_D3DFormat(D3DFORMAT Format)
+(*XTL.X_D3DFORMAT XTL.EmuPC2XB_D3DFormat(D3DFORMAT Format)
 begin 
     case(Format) of
     begin 
@@ -176,10 +176,10 @@ begin
     CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format ( mod d)', Format);
 
     result:= Format;
- end;
+ end;      *)
 
-DWORD XTL.EmuXB2PC_D3DLock(DWORD Flags)
-begin 
+(*Function XTL_EmuXB2PC_D3DLock(Flags : DWORD) : DWord;
+begin
 	DWORD NewFlags := 0;
 
 	// Need to convert the flags, TODO: fix the xbox extensions
@@ -201,10 +201,10 @@ begin
 	 end;
 
     result:= NewFlags;
- end;
+ end;         *)
 
 // lookup table for converting vertex count to primitive count
-UINT XTL.EmuD3DVertexToPrimitive[11][2] =
+(*UINT XTL.EmuD3DVertexToPrimitive[11][2] =
 begin 
     begin 0, 0),
     begin 1, 0),
@@ -217,27 +217,27 @@ begin
     begin 4, 0),
     begin 2, 2),
     begin 0, 0),
-);
+);      *)
 
 // conversion table for xbox->pc primitive types
-XTL.D3DPRIMITIVETYPE XTL.EmuPrimitiveTypeLookup[] =
-begin 
-    (* NULL                 = 0         *) (XTL::D3DPRIMITIVETYPE)0,
-    (* D3DPT_POINTLIST      = 1,        *) XTL::D3DPT_POINTLIST,
-    (* D3DPT_LINELIST       = 2,        *) XTL::D3DPT_LINELIST,
-    (* D3DPT_LINELOOP       = 3,  Xbox  *) XTL::D3DPT_LINESTRIP,
-    (* D3DPT_LINESTRIP      = 4,        *) XTL::D3DPT_LINESTRIP,
-    (* D3DPT_TRIANGLELIST   = 5,        *) XTL::D3DPT_TRIANGLELIST,
-    (* D3DPT_TRIANGLESTRIP  = 6,        *) XTL::D3DPT_TRIANGLESTRIP,
-    (* D3DPT_TRIANGLEFAN    = 7,        *) XTL::D3DPT_TRIANGLEFAN,
-    (* D3DPT_QUADLIST       = 8,  Xbox  *) XTL::D3DPT_TRIANGLELIST,
-    (* D3DPT_QUADSTRIP      = 9,  Xbox  *) XTL::D3DPT_TRIANGLELIST,
-    (* D3DPT_POLYGON        = 10, Xbox  *) XTL::D3DPT_TRIANGLELIST,
-    (* D3DPT_MAX            = 11,       *) (XTL::D3DPRIMITIVETYPE)11
-);
+(*XTL.D3DPRIMITIVETYPE XTL.EmuPrimitiveTypeLookup[] =
+begin
+     (XTL::D3DPRIMITIVETYPE)0,    // NULL                 = 0
+      XTL::D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
+      XTL::D3DPT_LINELIST,        // D3DPT_LINELIST       = 2,
+      XTL::D3DPT_LINESTRIP,       // D3DPT_LINELOOP       = 3,  Xbox
+      XTL::D3DPT_LINESTRIP,       // D3DPT_LINESTRIP      = 4,
+      XTL::D3DPT_TRIANGLELIST,    // D3DPT_TRIANGLELIST   = 5,
+      XTL::D3DPT_TRIANGLESTRIP,   // D3DPT_TRIANGLESTRIP  = 6,
+      XTL::D3DPT_TRIANGLEFAN,     // D3DPT_TRIANGLEFAN    = 7,
+      XTL::D3DPT_TRIANGLELIST,    // D3DPT_QUADLIST       = 8,  Xbox
+      XTL::D3DPT_TRIANGLELIST,    // D3DPT_QUADSTRIP      = 9,  Xbox
+      XTL::D3DPT_TRIANGLELIST,    // D3DPT_POLYGON        = 10, Xbox
+     (XTL::D3DPRIMITIVETYPE)11    // D3DPT_MAX            = 11,
+);*)
 
 // render state conversion table
-CONST DWORD XTL.EmuD3DRenderStateSimpleEncoded[174] =
+(*CONST DWORD XTL.EmuD3DRenderStateSimpleEncoded[174] =
 begin 
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
@@ -329,7 +329,7 @@ begin
     $00040358,     X_D3DRSSE_UNK,  // 168 - D3DRS_COLORWRITEENABLE
     X_D3DRSSE_UNK,  $00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 172
-);
+);            *)
 
 
 

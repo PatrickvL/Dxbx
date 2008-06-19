@@ -79,7 +79,12 @@ uses
   uEmuDSound in 'DxbxKrnl\uEmuDSound.pas',
   uEmuXG in 'DxbxKrnl\uEmuXG.pas',
   uEmuXOnline in 'DxbxKrnl\uEmuXOnline.pas',
-  uEmuXTL in 'DxbxKrnl\uEmuXTL.pas';
+  uEmuXTL in 'DxbxKrnl\uEmuXTL.pas',
+  uConvert in 'DxbxKrnl\EmuD3D8\uConvert.pas',
+  uPushBuffer in 'DxbxKrnl\EmuD3D8\uPushBuffer.pas',
+  uState in 'DxbxKrnl\EmuD3D8\uState.pas',
+  uVertexBuffer in 'DxbxKrnl\EmuD3D8\uVertexBuffer.pas',
+  uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas';
 
 {$R *.res}   
 

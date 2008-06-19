@@ -24,46 +24,36 @@ interface
 
 implementation
 
-const VERTEX_BUFFER_CACHE_SIZE = 64;
-const MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO: Trim the not used time
-
-// inline vertex buffer emulation
-XTL.DWORD                  *XTL.g_pIVBVertexBuffer := 0;
-XTL.X_D3DPRIMITIVETYPE      XTL.g_IVBPrimitiveType := XTL.X_D3DPT_INVALID;
-UINT                         XTL.g_IVBTblOffs := 0;
-struct XTL::_D3DIVB         *XTL.g_IVBTable := 0;
- DWORD                 XTL.g_IVBFVF := 0;
-
-  crctab: array[0..256-1] of Word;
 
   procedure CRC32Init;
-     boolean bFirstTime := true;
+  begin
+    (*boolean bFirstTime := true;
     integer i, j;
 
     Word crc;
 
-    if( not bFirstTime) then 
-    begin 
+    if( not bFirstTime) then
+    begin
         Exit;
      end;
     for(i := 0; i < 256; i++)
-    begin 
+    begin
         crc := i shl 24;
         for(j := 0; j < 8; j++)
-        begin 
-            if(crc and $80000000) then 
+        begin
+            if(crc and $80000000) then
                 crc := (crc shl 1) ^ $04c11db7;
             else
                 crc := crc shl 1;
          end;
         crctab[i] := crc;
      end;
-    bFirstTime := false;
+    bFirstTime := false;  *)
  end;
 
  function CRC32(var data: Byte; len: integer): Word;
-begin 
-    Word        cresult;
+begin
+   (* Word        cresult;
     integer                 i;;
     
     if(len < 4) abort() then ;
@@ -80,11 +70,12 @@ begin
         cresult := (cresult shl 8 or *data++) ^ crctab[cresult shr 24];
      end;
     
-    result:= ~cresult;
+    result:= ~cresult;       *)
  end;
 
-XTL.VertexPatcher.VertexPatcher()
-begin 
+
+(*XTL.VertexPatcher.VertexPatcher()
+begin
     this^.m_uiNbrStreams := 0;
     ZeroMemory(this^.m_pStreams, SizeOf(PATCHEDSTREAM) * MAX_NBR_STREAMS);
     this^.m_bPatched := false;
@@ -95,18 +86,18 @@ begin
  end;
 
 XTL.VertexPatcher.~VertexPatcher()
-begin 
- end;
+begin
+ end; *)
 
-procedure XTL.VertexPatcher.DumpCache;
-begin 
-    printf('--- Dumping streams cache ---');
+procedure XTL_VertexPatcher_DumpCache;
+begin
+(*    printf('--- Dumping streams cache ---');
     RTNode *pNode := g_PatchedStreamsCache.getHead();
     while(pNode)
-    begin 
+    begin
         CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )pNode^.pResource;
-        if(pCachedStream) then 
-        begin 
+        if(pCachedStream) then
+        begin
             // TODO: Write nicer dump presentation
             printf('Key: $ mod .08X Cache Hits:  mod d IsUP:  mod s OrigStride:  mod d NewStride:  mod d CRCCount:  mod d CRCFreq:  mod d Lengh:  mod d CRC32: $ mod .08X',
                    pNode^.uiKey, pCachedStream^.uiCacheHit, pCachedStream^.bIsUP ? 'YES' : 'NO',
@@ -116,12 +107,12 @@ begin
          end;
 
         pNode := pNode^.pNext;
-     end;
+     end;  *)
  end;
 
-procedure XTL.VertexPatcher.CacheStream(var pPatchDesc: VertexPatchDesc;
+(*procedure XTL.VertexPatcher.CacheStream(var pPatchDesc: VertexPatchDesc;
                                      UINT             uiStream)
-begin 
+begin
     UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
     XTL.D3DVERTEXBUFFER_DESC  Desc;
@@ -216,34 +207,34 @@ begin
     pCachedStream^.dwPrimitiveCount := pPatchDesc^.dwPrimitiveCount;
     pCachedStream^.lLastUsed := clock();
     g_PatchedStreamsCache.insert(uiKey, pCachedStream);
- end;
+ end;        *)
 
-procedure XTL.VertexPatcher.FreeCachedStream(pStream: Pointer);
-begin 
-    g_PatchedStreamsCache.Lock();
+procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer);
+begin
+(*    g_PatchedStreamsCache.Lock();
     CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )g_PatchedStreamsCache.get(pStream);
-    if(pCachedStream) then 
-    begin 
-        if(pCachedStream^.bIsUP and pCachedStream^.pStreamUP) then 
-        begin 
+    if(pCachedStream) then
+    begin
+        if(pCachedStream^.bIsUP and pCachedStream^.pStreamUP) then
+        begin
             CxbxFree(pCachedStream^.pStreamUP);
          end;
-        if(pCachedStream^.Stream.pOriginalStream) then 
-        begin 
+        if(pCachedStream^.Stream.pOriginalStream) then
+        begin
             pCachedStream^.Stream.pOriginalStream^.Release();
          end;
-        if(pCachedStream^.Stream.pPatchedStream) then 
-        begin 
+        if(pCachedStream^.Stream.pPatchedStream) then
+        begin
             pCachedStream^.Stream.pPatchedStream^.Release();
          end;
         CxbxFree(pCachedStream);
      end;
     g_PatchedStreamsCache.Unlock();
-    g_PatchedStreamsCache.remove(pStream);
+    g_PatchedStreamsCache.remove(pStream);  *)
  end;
 
-function XTL.VertexPatcher.ApplyCachedStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
-begin 
+(*function XTL.VertexPatcher.ApplyCachedStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+begin
     UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
     XTL.D3DVERTEXBUFFER_DESC  Desc;
@@ -251,13 +242,13 @@ begin
     UINT                       uiLength;
     bool                       bApplied := false;
     uint32                     uiKey;
-    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxMalloc(sizeof(CACHEDSTREAM));
+    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)(*CxbxMalloc(sizeof(CACHEDSTREAM));
 
-    if( not pPatchDesc^.pVertexStreamZeroData) then 
-    begin 
+    if( not pPatchDesc^.pVertexStreamZeroData) then
+    begin
         g_pD3DDevice8^.GetStreamSource(uiStream, @pOrigVertexBuffer, @uiStride);
-        if(FAILED(pOrigVertexBuffer^.GetDesc(@Desc))) then 
-        begin 
+        if(FAILED(pOrigVertexBuffer^.GetDesc(@Desc))) then
+        begin
             CxbxKrnlCleanup('Could not retrieve original buffer size');
          end;
         uiLength := Desc.Size;
@@ -265,10 +256,10 @@ begin
         //pCachedStream->bIsUP = false;
      end;
     else
-    begin 
+    begin
         // There should only be one stream (stream zero) in this case
-        if(uiStream <> 0) then 
-        begin 
+        if(uiStream <> 0) then
+        begin
             CxbxKrnlCleanup('Trying to find a cached Draw..UP with more than stream zero not ');
          end;
         uiStride  := pPatchDesc^.uiVertexStreamZeroStride;
@@ -282,58 +273,58 @@ begin
     g_PatchedStreamsCache.Lock();
 
     CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )g_PatchedStreamsCache.get(uiKey);
-    if(pCachedStream) then 
-    begin 
+    if(pCachedStream) then
+    begin
         pCachedStream^.lLastUsed := clock();
         pCachedStream^.uiCacheHit:= pCachedStream^.uiCacheHit + 1;
         bool bMismatch := false;
-        if(pCachedStream^.uiCount = (pCachedStream^.uiCheckFrequency - 1)) then 
-        begin 
-            if( not pPatchDesc^.pVertexStreamZeroData) then 
-            begin 
-                if(FAILED(pOrigVertexBuffer^.Lock(0, 0, (uint08)@pCalculateData, 0))) then 
-                begin 
+        if(pCachedStream^.uiCount = (pCachedStream^.uiCheckFrequency - 1)) then
+        begin
+            if( not pPatchDesc^.pVertexStreamZeroData) then
+            begin
+                if(FAILED(pOrigVertexBuffer^.Lock(0, 0, (uint08)@pCalculateData, 0))) then
+                begin
                     CxbxKrnlCleanup('Couldn't lock the original buffer');
                  end;
              end;
             // Use the cached stream length (which is a must for the UP stream)
             uint32 Checksum := CRC32((uint08)pCalculateData, pCachedStream^.uiLength);
-            if(Checksum = pCachedStream^.uiCRC32) then 
-            begin 
+            if(Checksum = pCachedStream^.uiCRC32) then
+            begin
                 // Take a while longer to check
-                if(pCachedStream^.uiCheckFrequency < 32*1024) then 
-                begin 
+                if(pCachedStream^.uiCheckFrequency < 32*1024) then
+                begin
                     pCachedStream^.uiCheckFrequency:= pCachedStream^.uiCheckFrequency * 2;
                  end;
                 pCachedStream^.uiCount := 0;
              end;
             else
-            begin 
+            begin
                 // TODO: Do something about this
-                if(pCachedStream^.bIsUP) then 
-                begin 
+                if(pCachedStream^.bIsUP) then
+                begin
                     FreeCachedStream(pCachedStream^.pStreamUP);
                  end;
                 else
-                begin 
+                begin
                     FreeCachedStream(pCachedStream^.Stream.pOriginalStream);
                  end;
                 pCachedStream := 0;
                 bMismatch := true;
              end;
-            if( not pPatchDesc^.pVertexStreamZeroData) then 
-            begin 
+            if( not pPatchDesc^.pVertexStreamZeroData) then
+            begin
                 pOrigVertexBuffer^.Unlock();
              end;
          end;
         else
-        begin 
+        begin
             pCachedStream^.uiCount:= pCachedStream^.uiCount + 1;
          end;
-        if( not bMismatch) then 
-        begin 
-            if( not pCachedStream^.bIsUP) then 
-            begin 
+        if( not bMismatch) then
+        begin
+            if( not pCachedStream^.bIsUP) then
+            begin
                 m_pStreams[uiStream].pOriginalStream := pOrigVertexBuffer;
                 m_pStreams[uiStream].uiOrigStride := uiStride;
                 g_pD3DDevice8^.SetStreamSource(uiStream, pCachedStream^.Stream.pPatchedStream, pCachedStream^.Stream.uiNewStride);
@@ -343,7 +334,7 @@ begin
                 m_pStreams[uiStream].uiNewStride := pCachedStream^.Stream.uiNewStride;
              end;
             else
-            begin 
+            begin
                 pPatchDesc^.pVertexStreamZeroData := pCachedStream^.pStreamUP;
                 pPatchDesc^.uiVertexStreamZeroStride := pCachedStream^.Stream.uiNewStride;
              end;
@@ -364,9 +355,9 @@ begin
      end;
 
     result:= bApplied;
- end;
+ end;                    *)
 
-function XTL.VertexPatcher.GetNbrStreams(var pPatchDesc: VertexPatchDesc): UINT;
+(*function XTL.VertexPatcher.GetNbrStreams(var pPatchDesc: VertexPatchDesc): UINT;
 begin 
     if(VshHandleIsVertexShader(g_CurrentVertexShader)) then 
     begin 
@@ -385,9 +376,9 @@ begin
         result:= 1;
      end;
     result:= 0;
- end;
+ end;        *)
 
-function XTL.VertexPatcher.PatchStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+(*function XTL.VertexPatcher.PatchStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
 begin 
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     if( not m_pDynamicPatch) then 
@@ -624,7 +615,7 @@ begin
                     printf('D3DVSDT_NONE / xbox ext. nsp /');
                     dwNewDataType := $FF;
                     break;
-                *)
+                *)(*
                 default:
                     CxbxKrnlCleanup('Unhandled stream ctype: $ mod .02X', pStreamPatch^.pTypes[uiType]);
                     break;
@@ -663,9 +654,9 @@ begin
     m_bPatched := true;
 
     result:= true;
- end;
+ end;        *)
 
-function XTL.VertexPatcher.PatchPrimitive(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+(*function XTL.VertexPatcher.PatchPrimitive(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
 begin 
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     // only quad and listloop are currently supported
@@ -840,9 +831,9 @@ begin
     m_bPatched := true;
 
     result:= true;
- end;
+ end;           *)
 
-function XTL.VertexPatcher.Apply(var pPatchDesc: VertexPatchDesc): bool;
+(*function XTL.VertexPatcher.Apply(var pPatchDesc: VertexPatchDesc): bool;
 begin 
     bool Patched := false;
     // Get the number of streams
@@ -873,52 +864,52 @@ begin
      end;
 
     result:= Patched;
- end;
+ end;         *)
 
-function XTL.VertexPatcher.Restore(): bool;
-begin 
-    if( not this->m_bPatched) then 
+function XTL_VertexPatcher_Restore: Longbool;
+begin
+(*    if( not this->m_bPatched) then
         result:= false;
 
     for(UINT uiStream := 0; uiStream < m_uiNbrStreams; uiStream++)
-    begin 
-        if(m_pStreams[uiStream].pOriginalStream <> 0 and m_pStreams[uiStream].pPatchedStream <> 0) then 
-        begin 
+    begin
+        if(m_pStreams[uiStream].pOriginalStream <> 0 and m_pStreams[uiStream].pPatchedStream <> 0) then
+        begin
             g_pD3DDevice8->SetStreamSource(0, m_pStreams[uiStream].pOriginalStream, m_pStreams[uiStream].uiOrigStride);
          end;
 
-        if(m_pStreams[uiStream].pOriginalStream <> 0) then 
-        begin 
+        if(m_pStreams[uiStream].pOriginalStream <> 0) then
+        begin
             UINT a := m_pStreams[uiStream].pOriginalStream->Release();
          end;
 
-        if(m_pStreams[uiStream].pPatchedStream <> 0) then 
-        begin 
+        if(m_pStreams[uiStream].pPatchedStream <> 0) then
+        begin
             UINT b := m_pStreams[uiStream].pPatchedStream->Release();
          end;
 
-        if( not m_pStreams[uiStream].bUsedCached) then 
-        begin 
+        if( not m_pStreams[uiStream].bUsedCached) then
+        begin
 
-            if(this->m_bAllocatedStreamZeroData) then 
-            begin 
+            if(this->m_bAllocatedStreamZeroData) then
+            begin
                 CxbxFree(m_pNewVertexStreamZeroData);
              end;
          end;
         else
-        begin 
+        begin
             m_pStreams[uiStream].bUsedCached := false;
          end;
 
      end;
 
-    result:= true;
+    result:= true;  *)
  end;
 
-VOID XTL.EmuFlushIVB()
-begin 
-    if(g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then 
-    begin 
+procedure XTL_EmuFlushIVB;
+begin
+(*    if(g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
+    begin
         XTL.EmuUpdateDeferredStates();
 
         DWORD *pdwVB := (DWORD)g_IVBTable;
@@ -966,17 +957,17 @@ begin
          IDirect3DTexture8 *pDummyTexture[4] := (0, 0, 0, 0);
 
         for(integer Stage:=0;Stage<4;Stage++)
-        begin 
-            if(pDummyTexture[Stage] = 0) then 
-            begin 
-                if(Stage = 0) then 
-                begin 
-                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then 
+        begin
+            if(pDummyTexture[Stage] = 0) then
+            begin
+                if(Stage = 0) then
+                begin
+                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                         CxbxKrnlCleanup('Could not create dummy texture not ');
                  end;
-                else if(Stage = 1) then 
-                begin 
-                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then 
+                else if(Stage = 1) then
+                begin
+                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                         CxbxKrnlCleanup('Could not create dummy texture not ');
                  end;
              end;
@@ -1025,34 +1016,34 @@ begin
         //*/
 
         for(uint v:=0;v<g_IVBTblOffs;v++)
-        begin 
+        begin
             DWORD dwPos := g_IVBFVF and D3DFVF_POSITION_MASK;
 
-            if(dwPos = D3DFVF_XYZRHW) then 
-            begin 
+            if(dwPos = D3DFVF_XYZRHW) then
+            begin
                 *(FLOAT)pdwVB++ := g_IVBTable[v].Position.x;
                 *(FLOAT)pdwVB++ := g_IVBTable[v].Position.y;
                 *(FLOAT)pdwVB++ := g_IVBTable[v].Position.z;
                 *(FLOAT)pdwVB++ := g_IVBTable[v].Rhw;
 
-                if(v = 0) then 
-                begin 
+                if(v = 0) then
+                begin
                     uiStride:= uiStride + (SizeOf(FLOAT)*4);
                  end;
 
                 DbgPrintf('IVB Position := ( mod f,  mod f,  mod f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
              end;
             else
-            begin 
+            begin
                 CxbxKrnlCleanup('Unsupported Position Mask (FVF := $ mod .08X)', g_IVBFVF);
              end;
 
-            if(g_IVBFVF and D3DFVF_DIFFUSE) then 
-            begin 
+            if(g_IVBFVF and D3DFVF_DIFFUSE) then
+            begin
                 *(DWORD)pdwVB++ := g_IVBTable[v].dwDiffuse;
 
-                if(v = 0) then 
-                begin 
+                if(v = 0) then
+                begin
                     uiStride:= uiStride + SizeOf(DWORD);
                  end;
 
@@ -1258,15 +1249,15 @@ begin
         g_IVBTblOffs := 0;
      end;
 
-    Exit;
+    Exit;        *)
  end;
 
-VOID XTL.EmuUpdateActiveTexture()
-begin 
+procedure XTL_EmuUpdateActiveTexture;
+begin
     //
     // DEBUGGING
     //
-    for(integer Stage:=0;Stage<4;Stage++)
+(*    for(integer Stage:=0;Stage<4;Stage++)
     begin 
         X_D3DResource *pTexture := EmuD3DActiveTexture[Stage];
 
@@ -1286,8 +1277,8 @@ begin
             BOOL  bCubemap := pPixelContainer->Format and X_D3DFORMAT_CUBEMAP;
 
             // Interpret Width/Height/BPP
-            if(X_Format = $07 (* X_D3DFMT_X8R8G8B8 *) || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */) then 
-            begin 
+            if(X_Format = $07 (* X_D3DFMT_X8R8G8B8 *)(* || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */) then
+            begin
                 bSwizzled := TRUE;
 
                 // Swizzled 32 Bit
@@ -1298,10 +1289,10 @@ begin
                 dwPitch  := dwWidth*4;
                 dwBPP := 4;
              end;
-            else if(X_Format = $05 (* X_D3DFMT_R5G6B5 *) then  || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                 or X_Format = $1D (* X_D3DFMT_LIN_A4R4G4B4 *) || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
-                 or X_Format = $28 (* X_D3DFMT_G8B8 *))
-            begin 
+            else if(X_Format = $05 (* X_D3DFMT_R5G6B5 *)(* then  || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
+                 or X_Format = $1D (* X_D3DFMT_LIN_A4R4G4B4 *)(* || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
+                 or X_Format = $28 (* X_D3DFMT_G8B8 *)(*)
+            begin
                 bSwizzled := TRUE;
 
                 // Swizzled 16 Bit
@@ -1312,8 +1303,8 @@ begin
                 dwPitch  := dwWidth*2;
                 dwBPP := 2;
              end;
-            else if(X_Format = $00 (* X_D3DFMT_L8 *) || X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */) then 
-            begin 
+            else if(X_Format = $00 (* X_D3DFMT_L8 *)(* || X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */) then
+            begin
                 bSwizzled := TRUE;
 
                 // Swizzled 8 Bit
@@ -1324,15 +1315,15 @@ begin
                 dwPitch  := dwWidth;
                 dwBPP := 1;
              end;
-            else if(X_Format = $1E (* X_D3DFMT_LIN_X8R8G8B8 *) || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */) then 
-            begin 
+            else if(X_Format = $1E (* X_D3DFMT_LIN_X8R8G8B8 *)(* || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */) then
+            begin
                 // Linear 32 Bit
                 dwWidth  := (pPixelContainer->Size and X_D3DSIZE_WIDTH_MASK) + 1;
                 dwHeight := ((pPixelContainer->Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
                 dwPitch  := (((pPixelContainer->Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP := 4;
              end;
-            else if(X_Format = $11 (* D3DFMT_LIN_R5G6B5 *)) then 
+            else if(X_Format = $11 (* D3DFMT_LIN_R5G6B5 *)(*) then
             begin 
                 // Linear 16 Bit
                 dwWidth  := (pPixelContainer->Size and X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1340,7 +1331,7 @@ begin
                 dwPitch  := (((pPixelContainer->Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP := 2;
              end;
-            else if(X_Format = $0C (* D3DFMT_DXT1 *) || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */) then 
+            else if(X_Format = $0C (* D3DFMT_DXT1 *)(* || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */) then
             begin 
                 bCompressed := TRUE;
 
@@ -1358,7 +1349,7 @@ begin
 
                 dwBPP := 1;
              end;
-            else if(X_Format = $24 (* D3DFMT_YUY2 *)) then 
+            else if(X_Format = $24 (* D3DFMT_YUY2 *)(*) then
             begin 
                 // Linear 32 Bit
                 dwWidth  := (pPixelContainer->Size and X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1455,7 +1446,7 @@ begin
 
         g_pD3DDevice8->SetTexture(Stage, pTexture->EmuTexture8);
         //*/
-     end;
+     end;        *)
  end;
 
 
