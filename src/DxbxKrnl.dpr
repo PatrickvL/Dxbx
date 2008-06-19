@@ -84,7 +84,8 @@ uses
   uPushBuffer in 'DxbxKrnl\EmuD3D8\uPushBuffer.pas',
   uState in 'DxbxKrnl\EmuD3D8\uState.pas',
   uVertexBuffer in 'DxbxKrnl\EmuD3D8\uVertexBuffer.pas',
-  uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas';
+  uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas',
+  uXBController in 'uXBController.pas';
 
 {$R *.res}   
 

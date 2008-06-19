@@ -28,6 +28,8 @@ uses
   // Dxbx
   uMutex,
   uLog,
+  uXbVideo,
+  uXBController,
   uDxbxKrnlUtils;
 
 type
@@ -44,15 +46,14 @@ type
     destructor Destroy; override;
     procedure DestroyNoFree;
 
-(*
+
     // Xbox Video Accessors
-    procedure GetXBVideo(      XBVideo *video);
-    procedure SetXBVideo(const XBVideo *video);
+    procedure GetXBVideo( video : XBVideo );
+    procedure SetXBVideo(const video : XBVideo );
 
     // Xbox Controller Accessors
-    procedure GetXBController(      XBController *ctrl);
-    procedure SetXBController(const XBController *ctrl);
-*)
+    procedure GetXBController( ctrl : XBController );
+    procedure SetXBController(const ctrl : XBController );
 
     // Xbe Path Accessors
     procedure GetXbePath(var Path: string);
@@ -149,8 +150,8 @@ end;
 constructor EmuShared.Create;
 begin
   inherited Create;
-//  m_XBController.Load('Software\Cxbx\XBController');
-//  m_XBVideo.Load('Software\Cxbx\XBVideo');
+  //m_XBController.Load('Software\Cxbx\XBController');
+  //m_XBVideo.Load('Software\Cxbx\XBVideo');
 end;
 
 procedure EmuShared.DestroyNoFree;
@@ -166,12 +167,30 @@ begin
 end;
 
 // Xbox Video Accessors
-//procedure EmuShared.GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
-//procedure EmuShared.SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
+procedure EmuShared.GetXBVideo( video : XBVideo );
+begin
+  { TODO : Need to be translated }
+  { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
+end;
+
+procedure EmuShared.SetXBVideo(const video : XBVideo );
+begin
+  { TODO : Need to be translated }
+  { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
+end;
 
 // Xbox Controller Accessors
-//procedure EmuShared.GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
-//procedure EmuShared.SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+procedure EmuShared.GetXBController( ctrl : XBController );
+begin
+  { TODO : Need to be translated }
+  { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
+end;
+
+procedure EmuShared.SetXBController(const ctrl : XBController );
+begin
+  { TODO : Need to be translated }
+  { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+end;
 
 procedure EmuShared.GetXbePath(var Path: string);
 begin
