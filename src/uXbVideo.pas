@@ -22,6 +22,16 @@ unit uXbVideo;
 
 interface
 
+
+type
+  XBVideo = class
+    private
+    public
+      procedure Load (const szRegistryKey : Char);
+      procedure Save (const szRegistryKey : Char );
+  end;
+
+
 implementation
 
 
@@ -40,8 +50,11 @@ XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 }
 *)
 
-// func: XBVideo::Load
-procedure XBVideo_Load(const szRegistryKey : Char);
+
+
+{ XBVideo }
+
+procedure XBVideo.Load(const szRegistryKey: Char);
 begin
 (*
 {
@@ -75,10 +88,7 @@ begin
 }        *)
 end;
 
-// ******************************************************************
-// * func: XBVideo::Save
-// ******************************************************************
-procedure XBVideo_Save(const szRegistryKey : Char );
+procedure XBVideo.Save(const szRegistryKey: Char);
 begin
 (*{
     // ******************************************************************
