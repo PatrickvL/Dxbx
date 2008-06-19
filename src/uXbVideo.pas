@@ -27,8 +27,8 @@ type
   XBVideo = class
     private
     public
-      procedure Load (const szRegistryKey : Char);
-      procedure Save (const szRegistryKey : Char );
+      procedure Load (const szRegistryKey : PChar);
+      procedure Save (const szRegistryKey : PChar );
   end;
 
 
@@ -54,7 +54,7 @@ XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 
 { XBVideo }
 
-procedure XBVideo.Load(const szRegistryKey: Char);
+procedure XBVideo.Load(const szRegistryKey: PChar);
 begin
 (*
 {
@@ -88,7 +88,7 @@ begin
 }        *)
 end;
 
-procedure XBVideo.Save(const szRegistryKey: Char);
+procedure XBVideo.Save(const szRegistryKey: PChar);
 begin
 (*{
     // ******************************************************************

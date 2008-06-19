@@ -36,6 +36,8 @@ type
   EmuShared = class(Mutex)
   protected
     m_XbePath: array [0..MAX_PATH-1] of AnsiChar;
+    m_XBController : XBController;
+    m_XBVideo : XBVideo;
   public
     // Each process needs to call this to initialize shared memory
     class function Init: Boolean;
@@ -45,8 +47,7 @@ type
     constructor Create; override;
     destructor Destroy; override;
     procedure DestroyNoFree;
-
-
+    
     // Xbox Video Accessors
     procedure GetXBVideo( video : XBVideo );
     procedure SetXBVideo(const video : XBVideo );
@@ -150,14 +151,14 @@ end;
 constructor EmuShared.Create;
 begin
   inherited Create;
-  //m_XBController.Load('Software\Cxbx\XBController');
-  //m_XBVideo.Load('Software\Cxbx\XBVideo');
+  m_XBController.Load(PChar ('Software\Cxbx\XBController'));
+  m_XBVideo.Load(PChar ('Software\Cxbx\XBVideo'));
 end;
 
 procedure EmuShared.DestroyNoFree;
 begin
-//  m_XBController.Save('Software\Cxbx\XBController');
-//  m_XBVideo.Save('Software\Cxbx\XBVideo');
+  m_XBController.Save(PChar ('Software\Cxbx\XBController'));
+  m_XBVideo.Save(PChar ('Software\Cxbx\XBVideo'));
 end;
 
 destructor EmuShared.Destroy;
