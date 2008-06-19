@@ -20,12 +20,15 @@ unit uXBController;
 
 interface
 
+
+Uses
+  uLog;
+
 {$INCLUDE Dxbx.inc}
 type
+   // Xbox Controller Object IDs
    XBCtrlObject = (
-    // ******************************************************************
-    // * Analog Axis
-    // ******************************************************************
+    // Analog Axis
     XBCTRL_OBJECT_LTHUMBPOSX = 0,
     XBCTRL_OBJECT_LTHUMBNEGX,
     XBCTRL_OBJECT_LTHUMBPOSY,
@@ -34,9 +37,7 @@ type
     XBCTRL_OBJECT_RTHUMBNEGX,
     XBCTRL_OBJECT_RTHUMBPOSY,
     XBCTRL_OBJECT_RTHUMBNEGY,
-    // ******************************************************************
-    // * Analog Buttons
-    // ******************************************************************
+    // Analog Buttons
     XBCTRL_OBJECT_A,
     XBCTRL_OBJECT_B,
     XBCTRL_OBJECT_X,
@@ -45,9 +46,7 @@ type
     XBCTRL_OBJECT_WHITE,
     XBCTRL_OBJECT_LTRIGGER,
     XBCTRL_OBJECT_RTRIGGER,
-    // ******************************************************************
-    // * Digital Buttons
-    // ******************************************************************
+    // Digital Buttons
     XBCTRL_OBJECT_DPADUP,
     XBCTRL_OBJECT_DPADDOWN,
     XBCTRL_OBJECT_DPADLEFT,
@@ -56,14 +55,19 @@ type
     XBCTRL_OBJECT_START,
     XBCTRL_OBJECT_LTHUMB,
     XBCTRL_OBJECT_RTHUMB,
-    // ******************************************************************
-    // * Total number of components
-    // ******************************************************************
+    // Total number of components
     XBCTRL_OBJECT_COUNT );
+
+  // DirectInput Enumeration Types
+  XBCtrlState = (
+    XBCTRL_STATE_NONE = 0,
+    XBCTRL_STATE_CONFIG,
+    XBCTRL_STATE_LISTEN );
 
 
   XBController = class
     private
+      m_CurrentState : XBCtrlState;
     public
       Constructor Create;
       procedure Load(szRegistryKey: PChar);
@@ -512,7 +516,7 @@ begin
 
     m_CurrentState := XBCTRL_STATE_CONFIG;
 
-    DInputInit(hwnd);
+    DInputInit(ahwnd);
 
     if(GetError() <> 0) then
         Exit;
@@ -521,9 +525,9 @@ begin
     lPrevMouseY := -1;
     lPrevMouseZ := -1;
 
-    CurConfigObject := object;
+    CurConfigObject := aobject;
 
-    Exit;   *)
+    Exit;     *)
 end;
 
 procedure XBController.ConfigEnd;
