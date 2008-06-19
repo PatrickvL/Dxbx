@@ -14,3 +14,5 @@ The following tasks are currently on the short-term TODO list :
 - Implement all API's that are implemented by Cxbx
 
 - Determine all API's signatures that are not currently known (marked with UNKNOWN_SIGNATURE)
+
+- Fix Dll Log to file option. 
