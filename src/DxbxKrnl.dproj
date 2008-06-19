@@ -94,6 +94,7 @@
     <DCCReference Include="DxbxKrnl\uHLEIntercept.pas" />
     <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uEmuShared.pas" />
+    <DCCReference Include="uError.pas" />
     <DCCReference Include="uKernelThunk.pas" />
     <DCCReference Include="uLog.pas" />
     <DCCReference Include="uLogConsole.pas">
