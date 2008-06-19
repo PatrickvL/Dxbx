@@ -73,16 +73,20 @@ type
 
       procedure ListenBegin(ahwnd: THandle);
       procedure ListenEnd;
+      procedure DInputInit(ahwnd: THandle);
+      procedure DInputCleanup;
+      procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: integer; dwFlags: integer);
+      procedure ReorderObjects(szDeviceName: PChar; pos: integer);
 
       Function DeviceIsUsed(szDeviceName: PChar): Longbool;
-
+      Function Insert(szDeviceName: PChar): integer;
       Function ConfigPoll(szStatus: PChar): Longbool;
-
   end;
 
 
 implementation
 
+{ TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: XBController::~XBController
 // ******************************************************************
@@ -92,247 +96,9 @@ begin
         ConfigEnd();
     else if(m_CurrentState = XBCTRL_STATE_LISTEN) then
         ListenEnd();
- end;  *)
-
-
-// ******************************************************************
-// * func: XBController::DInputInit
-// ******************************************************************
-(*procedure XBController.DInputInit(hwnd: HWND);
-begin
-    m_dwInputDeviceCount := 0;
-
-    // ******************************************************************
-    // * Create DirectInput Object
-    // ******************************************************************
-    begin
-        HRESULT hRet = XTL.DirectInput8Create
-        (
-            GetModuleHandle(0),
-            DIRECTINPUT_VERSION,
-            XTL.IID_IDirectInput8,
-            @m_pDirectInput8,
-            0
-        );
-
-        if(FAILED(hRet)) then 
-        begin
-            SetError('Could not initialized DirectInput8', true);
-            Exit;
-         end;
-     end;
-
-    // ******************************************************************
-    // * Create all the devices available (well...most of them)
-    // ******************************************************************
-    if(m_pDirectInput8 <> 0) then
-    begin
-        HRESULT hRet = m_pDirectInput8^.EnumDevices
-        (
-            DI8DEVCLASS_GAMECTRL,
-            WrapEnumGameCtrlCallback,
-            this,
-            DIEDFL_ATTACHEDONLY
-        );
-
-        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed("SysKeyboard")) then
-        begin 
-            hRet := m_pDirectInput8^.CreateDevice(XTL.GUID_SysKeyboard, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
-
-            if( not FAILED(hRet)) then
-            begin 
-                m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_KEYBOARD;
-
-                m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIKeyboard);
-             end;
-
-            if(m_CurrentState = XBCTRL_STATE_LISTEN) then 
-                ReorderObjects("SysKeyboard", m_dwInputDeviceCount - 1);
-         end;
-
-        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed("SysMouse")) then 
-        begin
-            hRet := m_pDirectInput8^.CreateDevice(XTL.GUID_SysMouse, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
-
-            if( not FAILED(hRet)) then 
-            begin
-                m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_MOUSE;
-
-                m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIMouse2);
-             end;
-
-            if(m_CurrentState = XBCTRL_STATE_LISTEN) then
-                ReorderObjects("SysMouse", m_dwInputDeviceCount - 1);
-         end;
-     end;
-
-    // ******************************************************************
-    // * Enumerate Controller objects
-    // ******************************************************************
-    for(m_dwCurObject:=0;m_dwCurObject<m_dwInputDeviceCount;m_dwCurObject++)
-        m_InputDevice[m_dwCurObject].m_Device^.EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL);
-
-    // ******************************************************************
-    // * Set cooperative level and acquire
-    // ******************************************************************
-    begin
-        for(integer v:=m_dwInputDeviceCount-1;v>=0;v--)
-        begin
-            m_InputDevice[v].m_Device^.SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
-            m_InputDevice[v].m_Device^.Acquire();
-
-            HRESULT hRet := m_InputDevice[v].m_Device^.Poll();
-
-            if(FAILED(hRet)) then
-            begin 
-                hRet := m_InputDevice[v].m_Device^.Acquire();
-
-                while(hRet = DIERR_INPUTLOST)
-                    hRet := m_InputDevice[v].m_Device^.Acquire();
-
-                if(hRet <> DIERR_INPUTLOST) then 
-                    break;
-             end;
-         end;
-     end;
  end;
 
-// ******************************************************************
-// * func: XBController::DInputCleanup
-// ******************************************************************
-procedure XBController.DInputCleanup();
-begin
-    for(integer v:=m_dwInputDeviceCount-1;v>=0;v--)
-    begin
-        m_InputDevice[v].m_Device^.Unacquire();
-        m_InputDevice[v].m_Device^.Release();
-        m_InputDevice[v].m_Device := 0;
-     end;
-
-    m_dwInputDeviceCount := 0;
-
-    if(m_pDirectInput8 <> 0) then 
-    begin 
-        m_pDirectInput8^.Release();
-        m_pDirectInput8 := 0;
-     end;
-
-    Exit;
- end;
-
-// ******************************************************************
-// * func: XBController::Map
-// ******************************************************************
-procedure XBController.Map(object: XBCtrlObject; szDeviceName: PChar; dwInfo: integer; dwFlags: integer);
-begin 
-    // Initialize InputMapping instance
-    m_ObjectConfig[object].dwDevice := Insert(szDeviceName);
-    m_ObjectConfig[object].dwInfo   := dwInfo;
-    m_ObjectConfig[object].dwFlags  := dwFlags;
-
-    // Purge unused device slots
-    for(integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
-    begin 
-        bool inuse := false;
-
-        for(integer r:=0;r<XBCTRL_OBJECT_COUNT;r++)
-        begin 
-            if(m_ObjectConfig[r].dwDevice = v) then
-                inuse:=true;
-         end;
-
-        if( not inuse) then 
-            m_DeviceName[v][0] := #0;
-     end;
- end;
-
-// ******************************************************************
-// * func: XBController::Insert
-// ******************************************************************
-function XBController.Insert(szDeviceName: PChar): integer;
-begin
-    integer v:=0;
-
-    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
-        if(StrComp(m_DeviceName[v], szDeviceName) = 0) then
-            result:= v;
-
-    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
-    begin
-        if(m_DeviceName[v][0] = #0) then
-        begin
-            strncpy(m_DeviceName[v], szDeviceName, 255);
-
-            result:= v;
-         end;
-     end;
-
-    MessageBox(0, "Unexpected Circumstance (Too Many Controller Devices) not  Please contact caustik not ", "Cxbx", MB_OK or MB_ICONEXCLAMATION);
-
-    ExitProcess(1);
-
-    result:= 0;
- end;
-
-// ******************************************************************
-// * func: XBController::ReorderObjects
-// ******************************************************************
-procedure XBController.ReorderObjects(szDeviceName: PChar; pos: integer);
-begin 
-    integer old := -1, v=0;
-
-    // locate old device name position
-    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
-    begin
-        if(StrComp(m_DeviceName[v], szDeviceName) = 0) then 
-        begin
-            old := v;
-            break;
-         end;
-     end;
-
-    // Swap names, if necessary
-    if(old <> pos) then 
-    begin
-        StrCopy(m_DeviceName[old], m_DeviceName[pos]);
-        StrCopy(m_DeviceName[pos], szDeviceName);
-     end;
-
-    // Update all old values
-    for(v:=0;v<XBCTRL_OBJECT_COUNT;v++)
-    begin 
-        if(m_ObjectConfig[v].dwDevice = old) then
-            m_ObjectConfig[v].dwDevice := pos;
-        else if(m_ObjectConfig[v].dwDevice = pos) then
-            m_ObjectConfig[v].dwDevice := old;
-     end;
-
-    Exit;
- end;
-
-// ******************************************************************
-// * func: XBController::EnumGameCtrlCallback
-// ******************************************************************
-function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
-begin 
-    if(m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
-        result:= DIENUM_CONTINUE;
-
-    HRESULT hRet := m_pDirectInput8^.CreateDevice(lpddi^.guidInstance, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
-
-    if( not FAILED(hRet)) then 
-    begin
-        m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
-
-        m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIJoystick);
-
-        if(m_CurrentState = XBCTRL_STATE_LISTEN) then 
-            ReorderObjects(lpddi^.tszInstanceName, m_dwInputDeviceCount - 1);
-     end;
-
-    result:= DIENUM_CONTINUE;
- end;
-
+{ TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: XBController::EnumObjectsCallback
 // ******************************************************************
@@ -384,6 +150,7 @@ begin
     result:= DIENUM_CONTINUE;
  end;
 
+ { TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: WrapEnumGameCtrlCallback
 // ******************************************************************
@@ -394,6 +161,7 @@ begin
     result:= context^.EnumGameCtrlCallback(lpddi);
  end;
 
+{ TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: WrapEnumObjectsCallback
 // ******************************************************************
@@ -404,6 +172,7 @@ begin
     result:= context^.EnumObjectsCallback(lpddoi);
  end;
 
+{ TODO : Need to be added to XBController }
 // ******************************************************************
 // * Input Device Name Lookup Table
 // ******************************************************************
@@ -425,16 +194,34 @@ begin
     // ******************************************************************
     "DPadUp", "DPadDown", "DPadLeft", "DPadRight",
     "Back", "Start", "LThumb", "RThumb",
-);       *)
+);       
 
 
+{ TODO : Need to be added to XBController }
+// ******************************************************************
+// * func: XBController::EnumGameCtrlCallback
+// ******************************************************************
+function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
+begin
+    if(m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
+        result:= DIENUM_CONTINUE;
 
+    HRESULT hRet := m_pDirectInput8^.CreateDevice(lpddi^.guidInstance, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
 
+    if( not FAILED(hRet)) then
+    begin
+        m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
 
+        m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIJoystick);
 
+        if(m_CurrentState = XBCTRL_STATE_LISTEN) then
+            ReorderObjects(lpddi^.tszInstanceName, m_dwInputDeviceCount - 1);
+     end;
 
+    result:= DIENUM_CONTINUE;
+ end;
 
-
+{ TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: XBController::ListenPoll
 // ******************************************************************
@@ -1089,6 +876,150 @@ begin
     result:= false;  *)
 end;
 
+procedure XBController.DInputCleanup;
+begin
+(*    for(integer v:=m_dwInputDeviceCount-1;v>=0;v--)
+    begin
+        m_InputDevice[v].m_Device^.Unacquire();
+        m_InputDevice[v].m_Device^.Release();
+        m_InputDevice[v].m_Device := 0;
+     end;
+
+    m_dwInputDeviceCount := 0;
+
+    if(m_pDirectInput8 <> 0) then
+    begin
+        m_pDirectInput8^.Release();
+        m_pDirectInput8 := 0;
+     end;
+
+    Exit;*)
+end;
+
+procedure XBController.DInputInit(ahwnd: THandle);
+begin
+(*    m_dwInputDeviceCount := 0;
+
+    // ******************************************************************
+    // * Create DirectInput Object
+    // ******************************************************************
+    begin
+        HRESULT hRet = XTL.DirectInput8Create
+        (
+            GetModuleHandle(0),
+            DIRECTINPUT_VERSION,
+            XTL.IID_IDirectInput8,
+            @m_pDirectInput8,
+            0
+        );
+
+        if(FAILED(hRet)) then
+        begin
+            SetError('Could not initialized DirectInput8', true);
+            Exit;
+         end;
+     end;
+
+    // ******************************************************************
+    // * Create all the devices available (well...most of them)
+    // ******************************************************************
+    if(m_pDirectInput8 <> 0) then
+    begin
+        HRESULT hRet = m_pDirectInput8^.EnumDevices
+        (
+            DI8DEVCLASS_GAMECTRL,
+            WrapEnumGameCtrlCallback,
+            this,
+            DIEDFL_ATTACHEDONLY
+        );
+
+        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed("SysKeyboard")) then
+        begin
+            hRet := m_pDirectInput8^.CreateDevice(XTL.GUID_SysKeyboard, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
+
+            if( not FAILED(hRet)) then
+            begin 
+                m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_KEYBOARD;
+
+                m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIKeyboard);
+             end;
+
+            if(m_CurrentState = XBCTRL_STATE_LISTEN) then 
+                ReorderObjects("SysKeyboard", m_dwInputDeviceCount - 1);
+         end;
+
+        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed("SysMouse")) then
+        begin
+            hRet := m_pDirectInput8^.CreateDevice(XTL.GUID_SysMouse, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
+
+            if( not FAILED(hRet)) then 
+            begin
+                m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_MOUSE;
+
+                m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIMouse2);
+             end;
+
+            if(m_CurrentState = XBCTRL_STATE_LISTEN) then
+                ReorderObjects("SysMouse", m_dwInputDeviceCount - 1);
+         end;
+     end;
+
+    // ******************************************************************
+    // * Enumerate Controller objects
+    // ******************************************************************
+    for(m_dwCurObject:=0;m_dwCurObject<m_dwInputDeviceCount;m_dwCurObject++)
+        m_InputDevice[m_dwCurObject].m_Device^.EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL);
+
+    // ******************************************************************
+    // * Set cooperative level and acquire
+    // ******************************************************************
+    begin
+        for(integer v:=m_dwInputDeviceCount-1;v>=0;v--)
+        begin
+            m_InputDevice[v].m_Device^.SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
+            m_InputDevice[v].m_Device^.Acquire();
+
+            HRESULT hRet := m_InputDevice[v].m_Device^.Poll();
+
+            if(FAILED(hRet)) then
+            begin 
+                hRet := m_InputDevice[v].m_Device^.Acquire();
+
+                while(hRet = DIERR_INPUTLOST)
+                    hRet := m_InputDevice[v].m_Device^.Acquire();
+
+                if(hRet <> DIERR_INPUTLOST) then 
+                    break;
+             end;
+         end;
+     end;*)
+end;
+
+function XBController.Insert(szDeviceName: PChar): integer;
+begin
+(*    integer v:=0;
+
+    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
+        if(StrComp(m_DeviceName[v], szDeviceName) = 0) then
+            result:= v;
+
+    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
+    begin
+        if(m_DeviceName[v][0] = #0) then
+        begin
+            strncpy(m_DeviceName[v], szDeviceName, 255);
+
+            result:= v;
+         end;
+     end;
+
+    MessageBox(0, "Unexpected Circumstance (Too Many Controller Devices) not  Please contact caustik not ", "Cxbx", MB_OK or MB_ICONEXCLAMATION);
+
+    ExitProcess(1);
+
+    result:= 0;*)
+end;
+
 procedure XBController.ListenBegin(ahwnd: THandle);
 begin
 (*    integer v:=0;
@@ -1193,6 +1124,63 @@ begin
             RegCloseKey(hKey);
          end;
      end;         *)
+end;
+
+procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo,
+  dwFlags: integer);
+begin
+    // Initialize InputMapping instance
+(*    m_ObjectConfig[object].dwDevice := Insert(szDeviceName);
+    m_ObjectConfig[object].dwInfo   := dwInfo;
+    m_ObjectConfig[object].dwFlags  := dwFlags;
+
+    // Purge unused device slots
+    for(integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
+    begin
+        bool inuse := false;
+
+        for(integer r:=0;r<XBCTRL_OBJECT_COUNT;r++)
+        begin
+            if(m_ObjectConfig[r].dwDevice = v) then
+                inuse:=true;
+         end;
+
+        if( not inuse) then
+            m_DeviceName[v][0] := #0;
+     end; *)
+end;
+
+procedure XBController.ReorderObjects(szDeviceName: PChar; pos: integer);
+begin
+   (* integer old := -1, v=0;
+
+    // locate old device name position
+    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
+    begin
+        if(StrComp(m_DeviceName[v], szDeviceName) = 0) then
+        begin
+            old := v;
+            break;
+         end;
+     end;
+
+    // Swap names, if necessary
+    if(old <> pos) then
+    begin
+        StrCopy(m_DeviceName[old], m_DeviceName[pos]);
+        StrCopy(m_DeviceName[pos], szDeviceName);
+     end;
+
+    // Update all old values
+    for(v:=0;v<XBCTRL_OBJECT_COUNT;v++)
+    begin 
+        if(m_ObjectConfig[v].dwDevice = old) then
+            m_ObjectConfig[v].dwDevice := pos;
+        else if(m_ObjectConfig[v].dwDevice = pos) then
+            m_ObjectConfig[v].dwDevice := old;
+     end;
+
+    Exit;*)
 end;
 
 procedure XBController.Save(szRegistryKey: PChar);
