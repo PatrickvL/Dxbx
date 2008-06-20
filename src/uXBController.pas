@@ -845,18 +845,18 @@ begin
 end;
 
 constructor XBController.Create;
+var
+  v : Integer;
 begin
-(*    m_CurrentState := XBCTRL_STATE_NONE;
+ (*   m_CurrentState := XBCTRL_STATE_NONE;
+    v:=0;
 
-    integer v:=0;
-
-    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
-    begin
+    for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
         m_DeviceName[v][0] := #0;
 
         m_InputDevice[v].m_Device := 0;
         m_InputDevice[v].m_Flags  := 0;
-     end;
+    end;
 
     for(v:=0;v<XBCTRL_OBJECT_COUNT;v++)
     begin
@@ -1029,20 +1029,23 @@ begin
 end;
 
 procedure XBController.ListenBegin(ahwnd: THandle);
+var
+  v : Integer;
 begin
-(*    integer v:=0;
+    v:=0;
 
     if(m_CurrentState <> XBCTRL_STATE_NONE) then
     begin
-        SetError('Invalid State', false);
+        { TODO : SetError is no yet implemented yet }
+        //SetError('Invalid State', false);
         Exit;
      end;
 
     m_CurrentState := XBCTRL_STATE_LISTEN;
 
-    DInputInit(hwnd);
+    DInputInit(ahwnd);
 
-    for(v:=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
+    (*for(v:=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
         m_DeviceName[v][0] := #0;
 
     for(v:=0;v<XBCTRL_OBJECT_COUNT;v++)
@@ -1052,16 +1055,17 @@ begin
             printf('Warning: Device Mapped to  mod s was not found not ', m_DeviceNameLookup[v]);
             m_ObjectConfig[v].dwDevice := -1;
          end;
-     end;
+     end; *)
 
-    Exit;*)
+    Exit;
 end;
 
 procedure XBController.ListenEnd;
 begin
-(*    if(m_CurrentState <> XBCTRL_STATE_LISTEN) then
+    if(m_CurrentState <> XBCTRL_STATE_LISTEN) then
     begin
-        SetError('Invalid State', false);
+        { TODO : SetError is no yet implemented yet }
+        //SetError('Invalid State', false);
         Exit;
      end;
 
@@ -1069,21 +1073,20 @@ begin
 
     m_CurrentState := XBCTRL_STATE_NONE;
 
-    Exit; *)
+    Exit;
 end;
 
 procedure XBController.Load(szRegistryKey: PChar);
 begin
-  (*  if(m_CurrentState <> XBCTRL_STATE_NONE) then
+    if(m_CurrentState <> XBCTRL_STATE_NONE) then
     begin
-        SetError('Invalid State', false);
+        { TODO : SetError is no yet implemented yet }
+        //SetError('Invalid State', false);
         Exit;
      end;
 
-    // ******************************************************************
-    // * Load Configuration from Registry
-    // ******************************************************************
-    begin
+    // Load Configuration from Registry
+    (*begin
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
@@ -1091,9 +1094,7 @@ begin
         begin
             integer v:=0;
 
-            // ******************************************************************
-            // * Load Device Names
-            // ******************************************************************
+            // Load Device Names
             begin
                  szValueName: array[0..64-1] of Char;
 
@@ -1193,16 +1194,17 @@ end;
 
 procedure XBController.Save(szRegistryKey: PChar);
 begin
-  (*  if(m_CurrentState <> XBCTRL_STATE_NONE) then
+    if(m_CurrentState <> XBCTRL_STATE_NONE) then
     begin
-        SetError('Invalid State', false);
+        { TODO : SetError is no yet implemented yet }
+        //SetError('Invalid State', false);
         Exit;
      end;
 
     // ******************************************************************
     // * Save Configuration to Registry
     // ******************************************************************
-    begin
+  (*  begin
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
