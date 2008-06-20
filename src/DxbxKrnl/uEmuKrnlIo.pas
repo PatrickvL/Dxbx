@@ -41,8 +41,8 @@ uses
   uDxbxKrnl;
   
 var
-  xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
-  xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
+  {070}xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
+  {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
 
 function xboxkrnl_IoAllocateIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoBuildAsynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE

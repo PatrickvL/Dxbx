@@ -40,16 +40,16 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_FscGetCacheSize(
+function {035}xboxkrnl_FscGetCacheSize(
   ): SIZE_T; stdcall; // Source: Dxbx - Uncertain
-function xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_FscSetCacheSize(
+function {036}xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {037}xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
   ): LONG; stdcall; // Source: Cxbx
 
 implementation
 
-function xboxkrnl_FscGetCacheSize(
+function {035}xboxkrnl_FscGetCacheSize(
   ): SIZE_T; stdcall; // Source: Dxbx - Uncertain
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -57,14 +57,14 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {036}xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('FscInvalidateIdleBlocks');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_FscSetCacheSize(
+function {037}xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
   ): LONG; stdcall; // Source: Cxbx
 begin

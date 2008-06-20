@@ -102,7 +102,6 @@ var
     {048}@xboxkrnl_HalRequestSoftwareInterrupt,
     {049}@xboxkrnl_HalReturnToFirmware,
     {050}@xboxkrnl_HalWriteSMBusValue,
-// TODO : Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Ps and Xe
     {051}@xboxkrnl_InterlockedCompareExchange,
     {052}@xboxkrnl_InterlockedDecrement,
     {053}@xboxkrnl_InterlockedIncrement,
@@ -111,6 +110,7 @@ var
     {056}@xboxkrnl_InterlockedFlushSList,
     {057}@xboxkrnl_InterlockedPopEntrySList,
     {058}@xboxkrnl_InterlockedPushEntrySList,
+// TODO : Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Ps and Xe
     {059}@xboxkrnl_IoAllocateIrp,
     {060}@xboxkrnl_IoBuildAsynchronousFsdRequest,
     {061}@xboxkrnl_IoBuildDeviceIoControlRequest,
@@ -408,7 +408,7 @@ var
     {353}@xboxkrnl_XboxLANKey,
     {354}@xboxkrnl_XboxAlternateSignatureKeys,
     {355}@xboxkrnl_XePublicKeyData, // TODO : variable ?
-    {356}@xboxkrnl_HalBootSMCVideoMode,
+    {356}@xboxkrnl_HalBootSMCVideoMode, // variable
     {357}@xboxkrnl_IdexChannelObject,
     {358}@xboxkrnl_HalIsResetOrShutdownPending,
     {359}@xboxkrnl_IoMarkIrpMustComplete,
