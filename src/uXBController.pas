@@ -508,9 +508,10 @@ begin
 
 procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
 begin
- (*   if(m_CurrentState <> XBCTRL_STATE_NONE) then
+    if(m_CurrentState <> XBCTRL_STATE_NONE) then
     begin
-        SetError('Invalid State', false);
+        { TODO : SetError is not implemented yet }
+        //SetError('Invalid State', false);
         Exit;
      end;
 
@@ -518,7 +519,8 @@ begin
 
     DInputInit(ahwnd);
 
-    if(GetError() <> 0) then
+    { TODO : Need to be translated / fixed }
+    (*if(GetError() <> 0) then
         Exit;
 
     lPrevMouseX := -1;
@@ -527,14 +529,15 @@ begin
 
     CurConfigObject := aobject;
 
-    Exit;     *)
+    Exit; *)
 end;
 
 procedure XBController.ConfigEnd;
 begin
-(*    if(m_CurrentState <> XBCTRL_STATE_CONFIG) then
+    if(m_CurrentState <> XBCTRL_STATE_CONFIG) then
     begin
-        SetError('Invalid State', false);
+        { TODO : SetError is not implemented yet }
+        //SetError('Invalid State', false);
         Exit;
      end;
 
@@ -542,18 +545,19 @@ begin
 
     m_CurrentState := XBCTRL_STATE_NONE;
 
-    Exit;  *)
+    Exit;
 end;
 
 function XBController.ConfigPoll(szStatus: PChar): Longbool;
 begin
-(*   if(m_CurrentState <> XBCTRL_STATE_CONFIG) then
+    if(m_CurrentState <> XBCTRL_STATE_CONFIG) then
     begin
-        SetError('Invalid State', false);
+        { TODO : SetError is not yet implemented }
+        //SetError('Invalid State', false);
         result:= false;
      end;
 
-    XTL.DIDEVICEINSTANCE        DeviceInstance;
+    (*XTL.DIDEVICEINSTANCE        DeviceInstance;
     XTL.DIDEVICEOBJECTINSTANCE  ObjectInstance;
 
     DeviceInstance.dwSize := SizeOf(XTL.DIDEVICEINSTANCE);
@@ -584,7 +588,7 @@ begin
         // ******************************************************************
         // * Detect Joystick Input
         // ******************************************************************
-        if(m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) then 
+        if(m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) then
         begin 
             XTL.DIJOYSTATE JoyState;
 
