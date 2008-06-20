@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows,
+  Messages,
   // Dxbx
   uLog,
   uTypes,
@@ -373,74 +374,77 @@ begin
 
 // rendering window message procedure
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT;
-begin 
-     (*bool bAutoPaused := false;
+var
+  bAutoPaused : Boolean;
+begin
+    bAutoPaused := false;
 
     case(msg) of
-    begin 
-         WM_DESTROY:
-        begin 
-            DeleteObject(g_hBgBrush);
+
+        WM_DESTROY:
+        begin
+            { TODO : g_hBgBrush not yet availible in delphi }
+            //DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
             result:= 0;
          end;
-        break;
 
          WM_SYSKEYDOWN:
         begin 
             if(wParam = VK_RETURN) then 
             begin 
                 ToggleFauxFullscreen(hWnd);
-             end;
+             end
             else if(wParam = VK_F4) then 
             begin 
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
              end;
          end;
-        break;
 
          WM_KEYDOWN:
         begin 
-            (*! disable fullscreen if we are set to faux mode, and faux fullscreen is active *)
- (*           if(wParam = VK_ESCAPE) then
+            // disable fullscreen if we are set to faux mode, and faux fullscreen is active
+            if(wParam = VK_ESCAPE) then
             begin 
-                if(g_XBVideo.GetFullscreen()) then 
-                begin 
+                { TODO : g_XBVideo is not yet availible in delphi }
+                (*if(g_XBVideo.GetFullscreen()) then
+                begin
                     SendMessage(hWnd, WM_CLOSE, 0, 0);
                  end;
-                else if(g_bIsFauxFullscreen) then 
-                begin 
+                else if(g_bIsFauxFullscreen) then
+                begin
                     ToggleFauxFullscreen(hWnd);
-                 end;
-             end;
+                 end; *)
+             end
             else if(wParam = VK_F8) then 
             begin 
-                g_bPrintfOn :=  not g_bPrintfOn;
-             end;
+                { TODO : g_bPrintfOn is not yet availible in delphi }
+                //g_bPrintfOn :=  not g_bPrintfOn;
+             end
             else if(wParam = VK_F9) then 
             begin 
-                XTL.g_bBrkPush := TRUE;
-             end;
+                { TODO : XTL.g_bBrkPush  is not yet availible in delphi }
+                //XTL.g_bBrkPush := TRUE;
+             end
             else if(wParam = VK_F10) then 
             begin 
                 ToggleFauxFullscreen(hWnd);
-             end;
+             end
             else if(wParam = VK_F11) then 
             begin 
-                if(g_iWireframe++ = 2) then 
-                    g_iWireframe := 0;
-             end;
+                { TODO : g_iWireframe  is not yet availible in delphi }
+                (*if(g_iWireframe++ = 2) then
+                    g_iWireframe := 0; *)
+             end
             else if(wParam = VK_F12) then 
             begin 
-                XTL.g_bStepPush :=  not XTL.g_bStepPush;
+//                XTL.g_bStepPush :=  not XTL.g_bStepPush;
              end;
          end;
-        break;
 
          WM_SIZE:
         begin 
-            case(wParam) of
-            begin 
+(*            case(wParam) of
                  SIZE_RESTORED:
                  SIZE_MAXIMIZED:
                 begin 
@@ -464,40 +468,35 @@ begin
                      end;
                  end;
                 break;
-             end;
+             end;           *)
          end;
-        break;
 
-         WM_CLOSE:
-            DestroyWindow(hWnd);
-            break;
+         WM_CLOSE: DestroyWindow(hWnd);
 
          WM_SETFOCUS:
         begin 
-            if(CxbxKrnl_hEmuParent <> 0) then 
-            begin 
+(*            if(CxbxKrnl_hEmuParent <> 0) then
+            begin
                 SetFocus(CxbxKrnl_hEmuParent);
-             end;
+             end;   *)
          end;
-        break;
 
          WM_SETCURSOR:
-        begin 
-            if(g_XBVideo.GetFullscreen() or g_bIsFauxFullscreen) then 
-            begin 
+        begin
+(*            if(g_XBVideo.GetFullscreen() or g_bIsFauxFullscreen) then
+            begin
                 SetCursor(0);
                 result:= 0;
              end;
 
-            result:= DefWindowProc(hWnd, msg, wParam, lParam);
+            result:= DefWindowProc(hWnd, msg, wParam, lParam); *)
          end;
-        break;
 
-        default:
+     else
             result:= DefWindowProc(hWnd, msg, wParam, lParam);
      end;
 
-    result:= 0;   *)
+    result:= 0;   
  end;
 
 // timing thread procedure
