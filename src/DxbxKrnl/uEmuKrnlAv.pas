@@ -40,15 +40,15 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_AvGetSavedDataAddress(
+function {001}xboxkrnl_AvGetSavedDataAddress(
   ): PVOID; stdcall; // Source: OpenXDK
-procedure xboxkrnl_AvSendTVEncoderOption(
+procedure {002}xboxkrnl_AvSendTVEncoderOption(
   RegisterBase: PVOID;
   Option: ULONG;
   Param: ULONG;
   Result: PULONG // OUT
   ); stdcall; // Source: OpenXDK
-function xboxkrnl_AvSetDisplayMode(
+function {003}xboxkrnl_AvSetDisplayMode(
   RegisterBase: PVOID;
   Step: ULONG;
   Mode: ULONG;
@@ -56,13 +56,13 @@ function xboxkrnl_AvSetDisplayMode(
   Pitch: ULONG;
   FrameBuffer: ULONG
   ): ULONG; stdcall; // Source: OpenXDK
-procedure xboxkrnl_AvSetSavedDataAddress(
+procedure {004}xboxkrnl_AvSetSavedDataAddress(
   Address: PVOID
   ); stdcall; // Source: OpenXDK
 
 implementation
 
-function xboxkrnl_AvGetSavedDataAddress(
+function {001}xboxkrnl_AvGetSavedDataAddress(
   ): PVOID; stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -71,7 +71,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure xboxkrnl_AvSendTVEncoderOption(
+procedure {002}xboxkrnl_AvSendTVEncoderOption(
   RegisterBase: PVOID;
   Option: ULONG;
   Param: ULONG;
@@ -83,7 +83,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_AvSetDisplayMode(
+function {003}xboxkrnl_AvSetDisplayMode(
   RegisterBase: PVOID;
   Step: ULONG;
   Mode: ULONG;
@@ -97,7 +97,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure xboxkrnl_AvSetSavedDataAddress(
+procedure {004}xboxkrnl_AvSetSavedDataAddress(
   Address: PVOID
   ); stdcall; // Source: OpenXDK
 begin

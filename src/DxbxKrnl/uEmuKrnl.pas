@@ -166,15 +166,37 @@ function Unimplemented(const aAPI: string): NTSTATUS;
 // The following API names are derived from Pedro's APILogger V2
 // See http://forums.xbox-scene.com/index.php?showtopic=456303
 
-function xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedCompareExchange(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedDecrement(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedIncrement(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedExchange(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedExchangeAdd(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedFlushSList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedPopEntrySList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_InterlockedPushEntrySList(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {000}xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+
+function {051}xboxkrnl_InterlockedCompareExchange(
+  var Destination: LONG; // out, volatile
+  Exchange: LONG;
+  Comparand: LONG
+  ): LONG; stdcall; // Source: ReactOS
+function {052}xboxkrnl_InterlockedDecrement(
+  var Addend: LONG // out, volatile
+  ): LONG; stdcall; // Source: ReactOS
+function {053}xboxkrnl_InterlockedIncrement(
+  var Addend: LONG // out, volatile
+  ): LONG; stdcall; // Source: ReactOS
+function {054}xboxkrnl_InterlockedExchange(
+  var Destination: LONG; // out, volatile
+  Value: LONG
+  ): LONG; stdcall; // Source: ReactOS
+function {055}xboxkrnl_InterlockedExchangeAdd(
+  var Addend: LONG; // out, volatile
+  Value: LONG
+  ): LONG; stdcall; // Source: ReactOS
+function {056}xboxkrnl_InterlockedFlushSList(
+  ListHead: PSLIST_HEADER
+  ): PSINGLE_LIST_ENTRY; stdcall; // Source: ReactOS
+function {057}xboxkrnl_InterlockedPopEntrySList(
+  ListHead: PSLIST_HEADER
+  ): PSLIST_ENTRY; stdcall; // Source: ReactOS
+function {058}xboxkrnl_InterlockedPushEntrySList(
+  ListHead: PSLIST_HEADER;
+  ListEntry: PSLIST_ENTRY
+  ): PSLIST_ENTRY; stdcall; // Source: ReactOS
 function xboxkrnl_KfRaiseIrql(
   NewIrql: UCHAR
   ): UCHAR; stdcall;
@@ -232,59 +254,81 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedCompareExchange(): NTSTATUS; stdcall;
+function {051}xboxkrnl_InterlockedCompareExchange(
+  var Destination: LONG; // out, volatile
+  Exchange: LONG;
+  Comparand: LONG
+  ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedCompareExchange');
+  Result := InterlockedCompareExchange(Destination, Exchange, Comparand);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedDecrement(): NTSTATUS; stdcall;
+function {052}xboxkrnl_InterlockedDecrement(
+  var Addend: LONG // out, volatile
+  ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedDecrement');
+  Result := InterlockedDecrement(Addend);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedIncrement(): NTSTATUS; stdcall;
+function {053}xboxkrnl_InterlockedIncrement(
+  var Addend: LONG // out, volatile
+  ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedIncrement');
+  Result := InterlockedIncrement(Addend);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedExchange(): NTSTATUS; stdcall;
+function {054}xboxkrnl_InterlockedExchange(
+  var Destination: LONG; // out, volatile
+  Value: LONG
+  ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedExchange');
+  Result := InterlockedExchange(Destination, Value);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedExchangeAdd(): NTSTATUS; stdcall;
+function {055}xboxkrnl_InterlockedExchangeAdd(
+  var Addend: LONG; // out, volatile
+  Value: LONG
+  ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedExchangeAdd');
+  Result := InterlockedExchangeAdd(Addend, Value);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedFlushSList(): NTSTATUS; stdcall;
+function {056}xboxkrnl_InterlockedFlushSList(
+  ListHead: PSLIST_HEADER
+  ): PSINGLE_LIST_ENTRY; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedFlushSList');
+  // TODO : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
+  Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedPopEntrySList(): NTSTATUS; stdcall;
+function {057}xboxkrnl_InterlockedPopEntrySList(
+  ListHead: PSLIST_HEADER
+  ): PSLIST_ENTRY; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedPopEntrySList');
+  Result := InterlockedPopEntrySList(ListHead);
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_InterlockedPushEntrySList(): NTSTATUS; stdcall;
+function {058}xboxkrnl_InterlockedPushEntrySList(
+  ListHead: PSLIST_HEADER;
+  ListEntry: PSLIST_ENTRY
+  ): PSLIST_ENTRY; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('InterlockedPushEntrySList');
+  Result := InterlockedPushEntrySList(ListHead, ListEntry);
   EmuSwapFS(); // Xbox FS
 end;
 
