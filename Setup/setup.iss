@@ -4,9 +4,9 @@ AppVerName=DXBX 0.0.0.8 Beta
 AppPublisher=Shadow_tj, Pcucho, Wayo & Zomby
 DefaultDirName={pf}\DXBX
 DefaultGroupName=DXBX
-OutputDir=F:\development\delphi\Projects\Dxbx\Dxbx\Setup
+OutputDir=..
 OutputBaseFilename=setup
-SetupIconFile=F:\development\delphi\Projects\Dxbx\Dxbx\src\Tools\XdkTracker\resource\Cxbx.ico
+SetupIconFile=..\src\Tools\XdkTracker\resource\Cxbx.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -22,13 +22,13 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\Dxbx.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "F:\development\delphi\Projects\Dxbx\Dxbx\Readme.txt"; DestDir: "{app}";  Flags: isreadme
-Source: "F:\development\delphi\Projects\Dxbx\Dxbx\Changelog.txt"; DestDir: "{app}"; Flags: isreadme
-Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\Tools\*"; DestDir: "{app}\Tools"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\msvcrtd.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\DxbxKrnl.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "F:\development\delphi\Projects\Dxbx\Dxbx\bin\CxbxKrnl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin\Dxbx.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\Readme.txt"; DestDir: "{app}";  Flags: isreadme
+Source: "..\Changelog.txt"; DestDir: "{app}"; Flags: isreadme
+Source: "..\bin\Tools\*"; DestDir: "{app}\Tools"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\bin\msvcrtd.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin\DxbxKrnl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin\CxbxKrnl.dll"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
