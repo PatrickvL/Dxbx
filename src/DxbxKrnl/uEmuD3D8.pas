@@ -29,12 +29,17 @@ uses
   uLog,
   uTypes,
   uXbe,
+  uXbVideo,
   uEmuShared,
   uEmuFS;
 
 procedure XTL__EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32);
 
 implementation
+
+Var
+  g_XBVideo : XBVideo;
+  g_hEmuWindow   : THandle = 0; // rendering window
 
 
 procedure XTL__EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32);
@@ -43,11 +48,12 @@ var
   hThread: THandle;
   hDupHandle: THandle;
 begin
-(*
-  g_EmuShared.GetXBVideo(@g_XBVideo);
 
-  if g_XBVideo.GetFullscreen() then
-    CxbxKrnl_hEmuParent := 0;
+  g_EmuShared.GetXBVideo(g_XBVideo);
+
+
+  (*if g_XBVideo.GetFullscreen() then
+    CxbxKrnl_hEmuParent := 0;  
 
   // cache XbeHeader and size of XbeHeader
   g_XbeHeader     := XbeHeader;

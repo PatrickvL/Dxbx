@@ -65,11 +65,12 @@ type
     XBCTRL_STATE_LISTEN );
 
 
-  XBController = class
+  XBController = record
     private
       m_CurrentState : XBCtrlState;
+      m_dwInputDeviceCount : Integer;
+      m_dwCurObject : Integer;
     public
-      Constructor Create;
       procedure Load(szRegistryKey: PChar);
       procedure Save(szRegistryKey: PChar);
       procedure ConfigBegin(ahwnd : THandle; aObject: XBCtrlObject);
@@ -89,6 +90,37 @@ type
 
 
 implementation
+
+// ******************************************************************
+// * func: XBController::XBController
+// ******************************************************************
+(*XBController::XBController()
+{
+    m_CurrentState = XBCTRL_STATE_NONE;
+
+    int v=0;
+
+    for(v=0;v<XBCTRL_MAX_DEVICES;v++)
+    {
+        m_DeviceName[v][0] = '\0';
+
+        m_InputDevice[v].m_Device = NULL;
+        m_InputDevice[v].m_Flags  = 0;
+    }
+
+    for(v=0;v<XBCTRL_OBJECT_COUNT;v++)
+    {
+        m_ObjectConfig[v].dwDevice = -1;
+        m_ObjectConfig[v].dwInfo   = -1;
+        m_ObjectConfig[v].dwFlags  = 0;
+    }
+
+    m_pDirectInput8 = NULL;
+
+    m_dwInputDeviceCount = 0;
+}    *)
+
+
 
 { TODO : Need to be added to XBController }
 // ******************************************************************
@@ -385,7 +417,7 @@ begin
                         wValue := 0;
                  end;
                 else if(dwFlags and DEVICE_FLAG_POSITIVE) then 
-                begin 
+                begin
                     if(wValue < 0) then 
                         wValue := 0;
                  end;
@@ -844,31 +876,6 @@ begin
     result:= false;*)
 end;
 
-constructor XBController.Create;
-var
-  v : Integer;
-begin
- (*   m_CurrentState := XBCTRL_STATE_NONE;
-    v:=0;
-
-    for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
-        m_DeviceName[v][0] := #0;
-
-        m_InputDevice[v].m_Device := 0;
-        m_InputDevice[v].m_Flags  := 0;
-    end;
-
-    for(v:=0;v<XBCTRL_OBJECT_COUNT;v++)
-    begin
-        m_ObjectConfig[v].dwDevice := -1;
-        m_ObjectConfig[v].dwInfo   := -1;
-        m_ObjectConfig[v].dwFlags  := 0;
-     end;
-
-    m_pDirectInput8 := 0;
-
-    m_dwInputDeviceCount := 0;   *)
-end;
 
 function XBController.DeviceIsUsed(szDeviceName: PChar): Longbool;
 begin
@@ -906,12 +913,12 @@ end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
 begin
-(*    m_dwInputDeviceCount := 0;
+    m_dwInputDeviceCount := 0;
 
     // ******************************************************************
     // * Create DirectInput Object
     // ******************************************************************
-    begin
+    (*begin
         HRESULT hRet = XTL.DirectInput8Create
         (
             GetModuleHandle(0),
@@ -1160,11 +1167,15 @@ begin
 end;
 
 procedure XBController.ReorderObjects(szDeviceName: PChar; pos: integer);
+var
+  Old : Integer;
+  v : Integer;
 begin
-   (* integer old := -1, v=0;
+    old := -1;
+    v := 0;
 
     // locate old device name position
-    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
+    (*for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
     begin
         if(StrComp(m_DeviceName[v], szDeviceName) = 0) then
         begin
