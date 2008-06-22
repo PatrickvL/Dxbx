@@ -22,42 +22,36 @@ unit uEmuDInput;
 
 interface
 
+uses
+  uEmuShared,
+  uEmu,
+  uXBController;
+
 implementation
 
+var
+  g_XBController : XBController;
 
-// ******************************************************************
-// * Static Variable(s)
-// ******************************************************************
-(* XBController g_XBController;*)
-
-// ******************************************************************
-// * func: XTL::EmuDInputInit
-// ******************************************************************
+// func: XTL::EmuDInputInit
 function XTL_EmuDInputInit : Longbool;
 begin
-(*    g_EmuShared^.GetXBController(@g_XBController);
+    g_EmuShared.GetXBController(g_XBController);
 
     g_XBController.ListenBegin(g_hEmuWindow);
 
-    if(g_XBController.GetError()) then
+    (*if(g_XBController.GetError()) then
         result:= false;
 
     result:= true;  *)
  end;
 
-// ******************************************************************
-// * func: XTL::EmuDInputCleanup
-// ******************************************************************
+// func: XTL::EmuDInputCleanup
 procedure XTL_EmuDInputCleanup();
 begin
-(*
   g_XBController.ListenEnd();
-*)
- end;
+end;
 
-// ******************************************************************
-// * func: XTL::EmuPollController
-// ******************************************************************
+// func: XTL::EmuPollController
 (*procedure XTL_EmuDInputPoll(Controller: XTL.PXINPUT_STATE);
 begin
     g_XBController.ListenPoll(Controller);

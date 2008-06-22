@@ -24,11 +24,16 @@ interface
 
 
 type
-  XBVideo = class
+  XBVideo = Record
     private
+      m_bFullscreen : Boolean;
     public
       procedure Load (const szRegistryKey : PChar);
       procedure Save (const szRegistryKey : PChar );
+
+      procedure SetFullscreen(bFullscreen : Boolean );
+      Function GetFullscreen : Boolean;
+
   end;
 
 
@@ -53,6 +58,11 @@ XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 
 
 { XBVideo }
+
+function XBVideo.GetFullscreen: Boolean;
+begin
+  Result := m_bFullscreen;
+end;
 
 procedure XBVideo.Load(const szRegistryKey: PChar);
 begin
@@ -121,6 +131,11 @@ begin
         }
     }
 }  *)
+end;
+
+procedure XBVideo.SetFullscreen(bFullscreen: Boolean);
+begin
+  m_bFullscreen := bFullscreen;
 end;
 
 end.
