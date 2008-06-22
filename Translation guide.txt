@@ -1,5 +1,7 @@
-NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
+Calling conventions should be translated as follows :
 
+NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
+__fastcall -> register
 
 Sources that might give you more insight into the Xbox Kernel API's :
 

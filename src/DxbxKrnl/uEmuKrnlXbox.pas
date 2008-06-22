@@ -40,59 +40,33 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_XboxEEPROMKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XboxHardwareInfo(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XboxHDKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XboxSignatureKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XboxLANKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+var
+  {321}xboxkrnl_XboxEEPROMKey: array [0..16-1] of UCHAR; // Source OpenXDK
+  {322}xboxkrnl_XboxHardwareInfo: XBOX_HARDWARE_INFO; // Source OpenXDK
+  {323}xboxkrnl_XboxHDKey: array [0..16-1] of UCHAR; // Source OpenXDK
+  {325}xboxkrnl_XboxSignatureKey: array [0..16-1] of BYTE; // Source OpenXDK
+
+function {324}xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {353}xboxkrnl_XboxLANKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {354}xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
-function xboxkrnl_XboxEEPROMKey(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('XboxEEPROMKey');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_XboxHardwareInfo(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('XboxHardwareInfo');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_XboxHDKey(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('XboxHDKey');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall;
+function {324}xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('XboxKrnlVersion');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_XboxSignatureKey(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('XboxSignatureKey');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_XboxLANKey(): NTSTATUS; stdcall;
+function {353}xboxkrnl_XboxLANKey(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('XboxLANKey');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall;
+function {354}xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('XboxAlternateSignatureKeys');
