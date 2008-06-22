@@ -52,7 +52,7 @@ function {355}xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATUR
 
 implementation
 
-function xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
+function {326}xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('XeImageFileName');
@@ -87,7 +87,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall;
+function {355}xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('XePublicKeyData');

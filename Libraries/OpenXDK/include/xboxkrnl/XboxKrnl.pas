@@ -630,30 +630,29 @@ type
     ReturnFirmwareFatal{=$4},
     ReturnFirmwareAll{=$5});
 
-(*
 // ******************************************************************
 // * LAUNCH_DATA_HEADER
 // ******************************************************************
 type
-  
-LAUNCH_DATA_HEADER,*PLAUNCH_DATA_HEADER  = record  
-    DWORD   dwLaunchDataType;
-    DWORD   dwTitleId;
-        szLaunchPath: array[0..520-1] of Char;
-    DWORD   dwFlags;
- end;
+  LAUNCH_DATA_HEADER = record
+    dwLaunchDataType: DWORD;
+    dwTitleId: DWORD;
+    szLaunchPath: array[0..520-1] of UCHAR;
+    dwFlags: DWORD;
+  end;
+  PLAUNCH_DATA_HEADER = ^LAUNCH_DATA_HEADER;
 
 // ******************************************************************
 // * LAUNCH_DATA_PAGE
 // ******************************************************************
 type
-  
-LAUNCH_DATA_PAGE,*PLAUNCH_DATA_PAGE  = record  
-    LAUNCH_DATA_HEADER  Header;
-                   Pad: array[0..492-1] of UCHAR;
-                   LaunchData: array[0..3072-1] of UCHAR;
- end;
-*)
+  LAUNCH_DATA_PAGE = record
+    Header: LAUNCH_DATA_HEADER;
+    Pad: array[0..492-1] of UCHAR;
+    LaunchData: array[0..3072-1] of UCHAR;
+  end;
+  PLAUNCH_DATA_PAGE = ^LAUNCH_DATA_PAGE;
+
 // ******************************************************************
 // * DISPATCHER_HEADER
 // ******************************************************************
@@ -869,20 +868,20 @@ begin
     EEPROM_MISC = $11
  end;
 EEPROM_INDEX, *PEEPROM_INDEX;
-
+*)
 // ******************************************************************
 // * XBOX_HARDWARE_INFO
 // ******************************************************************
 type
-  
-XBOX_HARDWARE_INFO  = record  
-    ULONG Flags;
-    UCHAR Unknown1;
-    UCHAR Unknown2;
-    UCHAR Unknown3;
-    UCHAR Unknown4;
- end;
+  XBOX_HARDWARE_INFO = record
+    Flags: ULONG;
+    Unknown1: UCHAR;
+    Unknown2: UCHAR;
+    Unknown3: UCHAR;
+    Unknown4: UCHAR;
+  end;
 
+(*
 // ******************************************************************
 // * TIME_FIELDS
 // ******************************************************************

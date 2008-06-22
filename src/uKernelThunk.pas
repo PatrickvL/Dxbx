@@ -110,15 +110,15 @@ var
     {056}@xboxkrnl_InterlockedFlushSList,
     {057}@xboxkrnl_InterlockedPopEntrySList,
     {058}@xboxkrnl_InterlockedPushEntrySList,
-// TODO : Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Ps and Xe
     {059}@xboxkrnl_IoAllocateIrp,
     {060}@xboxkrnl_IoBuildAsynchronousFsdRequest,
     {061}@xboxkrnl_IoBuildDeviceIoControlRequest,
     {062}@xboxkrnl_IoBuildSynchronousFsdRequest,
     {063}@xboxkrnl_IoCheckShareAccess,
-    {064}@xboxkrnl_IoCompletionObjectType,
+    {064}@xboxkrnl_IoCompletionObjectType, // variable
     {065}@xboxkrnl_IoCreateDevice,
     {066}@xboxkrnl_IoCreateFile,
+// TODO : Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Kf, Ps and Xe
     {067}@xboxkrnl_IoCreateSymbolicLink,
     {068}@xboxkrnl_IoDeleteDevice,
     {069}@xboxkrnl_IoDeleteSymbolicLink,
@@ -216,7 +216,7 @@ var
     {161}@xboxkrnl_KfLowerIrql,
     {162}@xboxkrnl_KiBugCheckData,
     {163}@xboxkrnl_KiUnlockDispatcherDatabase,
-    {164}@xboxkrnl_LaunchDataPage,
+    {164}@xboxkrnl_LaunchDataPage, // variable
     {165}@xboxkrnl_MmAllocateContiguousMemory,
     {166}@xboxkrnl_MmAllocateContiguousMemoryEx,
     {167}@xboxkrnl_MmAllocateSystemMemory,

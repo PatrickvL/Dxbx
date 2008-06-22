@@ -43,8 +43,8 @@ uses
 var
   {016}xboxkrnl_ExEventObjectType: POBJECT_TYPE = NULL;
   {022}xboxkrnl_ExMutantObjectType: POBJECT_TYPE = NULL;
-  {030}xboxkrnl_ExSemaphoreObjectType: POBJECT_TYPE;
-  {031}xboxkrnl_ExTimerObjectType: POBJECT_TYPE;
+  {030}xboxkrnl_ExSemaphoreObjectType: POBJECT_TYPE = NULL;
+  {031}xboxkrnl_ExTimerObjectType: POBJECT_TYPE = NULL;
 
 function {012}xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD

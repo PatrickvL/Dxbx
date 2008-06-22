@@ -39,19 +39,231 @@ uses
   uEmuXapi,
   uEmuKrnl,
   uDxbxKrnl;
+
+const
+  // TODO : Translate all other IRP defines from ReactOS
+  IRP_MJ_MAXIMUM_FUNCTION = $1b;
+
+type
+  _IRP = record
+    cType: CSHORT;
+    Size: USHORT;
+(*
+    MdlAddress: P_MDL;
+    Flags: ULONG;
+    union begin
+      MasterIrp: P_IRP;
+      IrpCount: LongInt; // volatile
+      SystemBuffer: PVOID;
+    end;
+    ThreadListEntry: LIST_ENTRY;
+    IoStatus: IO_STATUS_BLOCK;
+    RequestorMode: KPROCESSOR_MODE;
+    PendingReturned: BOOLEAN;
+    StackCount: CHAR;
+    CurrentLocation: CHAR;
+    Cancel: BOOLEAN;
+    CancelIrql: KIRQL;
+    ApcEnvironment: CCHAR;
+    AllocationFlags: UCHAR;
+    UserIosb: PIO_STATUS_BLOCK;
+    UserEvent: PKEVENT;
+
+    // TODO : Translate all below
+    union begin
+      struct begin
+        PIO_APC_ROUTINE  UserApcRoutine;
+        PVOID  UserApcContext;
+       end; AsynchronousParameters;
+      LARGE_INTEGER  AllocationSize;
+     end; Overlay;
+    volatile PDRIVER_CANCEL  CancelRoutine;
+    PVOID  UserBuffer;
+    union begin
+      struct begin
+        _ANONYMOUS_UNION union begin
+          KDEVICE_QUEUE_ENTRY  DeviceQueueEntry;
+          _ANONYMOUS_STRUCT struct begin
+              DriverContext: array[0..4-1] of PVOID;
+           end; DUMMYSTRUCTNAME;
+         end; DUMMYUNIONNAME;
+        PETHREAD  Thread;
+        PCHAR  AuxiliaryBuffer;
+        _ANONYMOUS_STRUCT struct begin
+          LIST_ENTRY  ListEntry;
+          _ANONYMOUS_UNION union begin
+            struct _IO_STACK_LOCATION  *CurrentStackLocation;
+            ULONG  PacketType;
+           end; DUMMYUNIONNAME;
+         end; DUMMYSTRUCTNAME;
+        struct _FILE_OBJECT  *OriginalFileObject;
+       end; Overlay;
+      KAPC  Apc;
+      PVOID  CompletionKey;
+     end; Tail;
+*)
+  end;
+  IRP = _IRP;
+  PIRP = ^IRP;
+
+  PDRIVER_EXTENSION = UNKNOWN; // TODO : Lookup in ReactOS
+  PFAST_IO_DISPATCH = UNKNOWN; // TODO : Lookup in ReactOS
+  PDRIVER_INITIALIZE = UNKNOWN; // TODO : Lookup in ReactOS
+  PDRIVER_STARTIO = UNKNOWN; // TODO : Lookup in ReactOS
+  PDRIVER_UNLOAD = UNKNOWN; // TODO : Lookup in ReactOS
+  PDRIVER_DISPATCH = UNKNOWN; // TODO : Lookup in ReactOS
+  PIO_TIMER_ROUTINE = UNKNOWN; // TODO : Lookup in ReactOS
+  PVPB = UNKNOWN; // TODO : Lookup in ReactOS
+  DEVICE_TYPE = UNKNOWN; // TODO : Lookup in ReactOS
+  KDEVICE_QUEUE = UNKNOWN; // TODO : Lookup in ReactOS
+  KEVENT = UNKNOWN; // TODO : Lookup in ReactOS
+  PKEVENT = ^KEVENT;
+  PDEVOBJ_EXTENSION = UNKNOWN; // TODO : Lookup in ReactOS
+
+  PDEVICE_OBJECT = ^DEVICE_OBJECT; // forward;
+
+//
+// I/O Timer Object
+//
+  _IO_TIMER = record // Source: ReactOS
+    _Type: USHORT;
+    TimerEnabled: USHORT;
+    IoTimerList: LIST_ENTRY;
+    TimerRoutine: PIO_TIMER_ROUTINE;
+    Context: PVOID;
+    DeviceObject: PDEVICE_OBJECT;
+  end;
+  IO_TIMER = _IO_TIMER;
+  PIO_TIMER = ^IO_TIMER;
+
+  _DRIVER_OBJECT = record // Source: ReactOS
+    _Type: CSHORT;
+    Size: CSHORT;
+    DeviceObject: PDEVICE_OBJECT;
+    Flags: ULONG;
+    DriverStart: PVOID;
+    DriverSize: ULONG;
+    DriverSection: PVOID;
+    DriverExtension: PDRIVER_EXTENSION;
+    DriverName: UNICODE_STRING;
+    HardwareDatabase: PUNICODE_STRING;
+    FastIoDispatch: PFAST_IO_DISPATCH;
+    DriverInit: PDRIVER_INITIALIZE;
+    DriverStartIo: PDRIVER_STARTIO;
+    DriverUnload: PDRIVER_UNLOAD;
+    MajorFunction: array [0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
+  end;
+  DRIVER_OBJECT = _DRIVER_OBJECT;
+  PDRIVER_OBJECT = ^DRIVER_OBJECT;
   
+  _DEVICE_OBJECT = record // Source: XBMC
+    _Type: CSHORT;
+    Size: USHORT;
+    ReferenceCount: LONG;
+    DriverObject: PDRIVER_OBJECT;
+    // Source: ReactOS
+    NextDevice: PDEVICE_OBJECT;
+    AttachedDevice: PDEVICE_OBJECT;
+    CurrentIrp: PIRP;
+    Timer: PIO_TIMER;
+    Flags: ULONG;
+    Characteristics: ULONG;
+    Vpb: PVPB; // volatile
+    DeviceExtension: PVOID;
+    DeviceType: DEVICE_TYPE;
+    StackSize: CCHAR;
+//    union {
+      ListEntry: LIST_ENTRY;
+//      Wcb: WAIT_CONTEXT_BLOCK;
+//    } Queue; // TODO
+    AlignmentRequirement: ULONG;
+    DeviceQueue: KDEVICE_QUEUE;
+    Dpc: KDPC;
+    ActiveThreadCount: ULONG;
+    SecurityDescriptor: PSECURITY_DESCRIPTOR;
+    DeviceLock: KEVENT;
+    SectorSize: USHORT;
+    Spare1: USHORT;
+    DeviceObjectExtension: PDEVOBJ_EXTENSION;
+    Reserved: PVOID;
+  end; // Source: XBMC / ReactOS
+  DEVICE_OBJECT = _DEVICE_OBJECT;
+
+  _FILE_OBJECT = record // Source: XBMC
+    _Type: CSHORT;
+    Size: CSHORT;
+    DeviceObject: PDEVICE_OBJECT;
+  	// ...
+  end;
+  FILE_OBJECT = _FILE_OBJECT;
+  PFILE_OBJECT = ^FILE_OBJECT;
+
+  _SHARE_ACCESS = record // Source: ReactOS
+    OpenCount: ULONG;
+    Readers: ULONG;
+    Writers: ULONG;
+    Deleters: ULONG;
+    SharedRead: ULONG;
+    SharedWrite: ULONG;
+    SharedDelete: ULONG;
+  end;
+  SHARE_ACCESS = _SHARE_ACCESS;
+  PSHARE_ACCESS = ^SHARE_ACCESS;
+
 var
+  {064}xboxkrnl_IoCompletionObjectType: POBJECT_TYPE = NULL; // Source: Dxbx
   {070}xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
   {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
 
-function xboxkrnl_IoAllocateIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoBuildAsynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoBuildDeviceIoControlRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoBuildSynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoCheckShareAccess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoCompletionObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoCreateDevice(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoCreateFile(
+function {059}xboxkrnl_IoAllocateIrp(
+  StackSize: CCHAR;
+  ChargeQuota: LONGBOOL // TODO : Should this be a WordBool??
+  ): PIRP; stdcall; // Source: ReactOS
+function {060}xboxkrnl_IoBuildAsynchronousFsdRequest(
+  MajorFunction: ULONG;
+  DeviceObject: PDEVICE_OBJECT;
+  Buffer: PVOID; // OUT OPTIONAL
+  Length: ULONG; // OPTIONAL,
+  StartingOffset: PLARGE_INTEGER; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK // OPTIONAL
+  ): PIRP; stdcall; // Source: ReactOS
+function {061}xboxkrnl_IoBuildDeviceIoControlRequest(
+  IoControlCode: ULONG;
+  DeviceObject: PDEVICE_OBJECT;
+  InputBuffer: PVOID; // OPTIONAL,
+  InputBufferLength: ULONG;
+  OutputBuffer: PVOID; // OUT OPTIONAL
+  OutputBufferLength: ULONG;
+  InternalDeviceIoControl: BOOLEAN;
+  Event: PKEVENT;
+  IoStatusBlock: PIO_STATUS_BLOCK // OUT 
+  ): PIRP; stdcall; // Source: ReactOS
+function {062}xboxkrnl_IoBuildSynchronousFsdRequest(
+  MajorFunction: ULONG;
+  DeviceObject: PDEVICE_OBJECT;
+  Buffer: PVOID; // OUT OPTIONAL,
+  Length: ULONG; // OPTIONAL,
+  StartingOffset: PLARGE_INTEGER; // OPTIONAL,
+  Event: PKEVENT;
+  IoStatusBlock: PIO_STATUS_BLOCK // OUT
+  ): PIRP; stdcall; // Source: ReactOS
+function {063}xboxkrnl_IoCheckShareAccess(
+  DesiredAccess: ACCESS_MASK;
+  DesiredShareAccess: ULONG;
+  FileObject: PFILE_OBJECT; // OUT
+  ShareAccess: PSHARE_ACCESS; // OUT
+  Update: BOOLEAN
+  ): NTSTATUS; stdcall; // Source: ReactOS
+function {065}xboxkrnl_IoCreateDevice(
+  DriverObject: PDRIVER_OBJECT;
+  DeviceExtensionSize: ULONG;
+  DeviceName: PUNICODE_STRING;
+  DeviceType: DEVICE_TYPE;
+  DeviceCharacteristics: ULONG;
+  Exclusive: BOOLEAN;
+  var DeviceObject: PDEVICE_OBJECT // out
+  ): NTSTATUS; stdcall; // Source: ReactOS
+function {066}xboxkrnl_IoCreateFile(
   FileHandle: PHANDLE; // out
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -62,7 +274,7 @@ function xboxkrnl_IoCreateFile(
   Disposition: ULONG;
   CreateOptions: ULONG;
   Options: ULONG
-  ): NTSTATUS; stdcall;
+  ): NTSTATUS; stdcall; // Source: Cxbx
 function xboxkrnl_IoCreateSymbolicLink(
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
@@ -93,56 +305,122 @@ function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall; // UNKNOWN_SIGNATU
 
 implementation
 
-function xboxkrnl_IoAllocateIrp(): NTSTATUS; stdcall;
+function {059}xboxkrnl_IoAllocateIrp(
+  StackSize: CCHAR;
+  ChargeQuota: LONGBOOL // TODO : Should this be a WordBool??
+  ): PIRP; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('IoAllocateIrp');
+  Unimplemented('IoAllocateIrp');
+  Result := nil;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoBuildAsynchronousFsdRequest(): NTSTATUS; stdcall;
+function {060}xboxkrnl_IoBuildAsynchronousFsdRequest(
+  MajorFunction: ULONG;
+  DeviceObject: PDEVICE_OBJECT;
+  Buffer: PVOID; // OUT OPTIONAL
+  Length: ULONG; // OPTIONAL,
+  StartingOffset: PLARGE_INTEGER; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK // OPTIONAL
+  ): PIRP; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('IoBuildAsynchronousFsdRequest');
+  Unimplemented('IoBuildAsynchronousFsdRequest');
+  Result := nil;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoBuildDeviceIoControlRequest(): NTSTATUS; stdcall;
+function {061}xboxkrnl_IoBuildDeviceIoControlRequest(
+  IoControlCode: ULONG;
+  DeviceObject: PDEVICE_OBJECT;
+  InputBuffer: PVOID; // OPTIONAL,
+  InputBufferLength: ULONG;
+  OutputBuffer: PVOID; // OUT OPTIONAL
+  OutputBufferLength: ULONG;
+  InternalDeviceIoControl: BOOLEAN;
+  Event: PKEVENT;
+  IoStatusBlock: PIO_STATUS_BLOCK // OUT
+  ): PIRP; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('IoBuildDeviceIoControlRequest');
+  Unimplemented('IoBuildDeviceIoControlRequest');
+  Result := nil;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoBuildSynchronousFsdRequest(): NTSTATUS; stdcall;
+function {062}xboxkrnl_IoBuildSynchronousFsdRequest(
+  MajorFunction: ULONG;
+  DeviceObject: PDEVICE_OBJECT;
+  Buffer: PVOID; // OUT OPTIONAL,
+  Length: ULONG; // OPTIONAL,
+  StartingOffset: PLARGE_INTEGER; // OPTIONAL,
+  Event: PKEVENT;
+  IoStatusBlock: PIO_STATUS_BLOCK // OUT
+  ): PIRP; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('IoBuildSynchronousFsdRequest');
+  Unimplemented('IoBuildSynchronousFsdRequest');
+  Result := nil;
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoCheckShareAccess(): NTSTATUS; stdcall;
+function {063}xboxkrnl_IoCheckShareAccess(
+  DesiredAccess: ACCESS_MASK;
+  DesiredShareAccess: ULONG;
+  FileObject: PFILE_OBJECT; // OUT
+  ShareAccess: PSHARE_ACCESS; // OUT
+  Update: BOOLEAN  
+  ): NTSTATUS; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IoCheckShareAccess');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoCompletionObjectType(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('IoCompletionObjectType');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_IoCreateDevice(): NTSTATUS; stdcall;
+// IoCreateDevice
+//
+// Allocates memory for and intializes a device object for use for
+// a driver.
+//
+// Parameters
+//    DriverObject
+//       Driver object passed by IO Manager when the driver was loaded.
+//
+//    DeviceExtensionSize
+//       Number of bytes for the device extension.
+//
+//    DeviceName
+//       Unicode name of device.
+//
+//    DeviceType
+//       Device type of the new device.
+//
+//    DeviceCharacteristics
+//       Bit mask of device characteristics.
+//
+//    Exclusive
+//       TRUE if only one thread can access the device at a time.
+//
+//    DeviceObject
+//       On successful return this parameter is filled by pointer to
+//       allocated device object.
+function {065}xboxkrnl_IoCreateDevice(
+  DriverObject: PDRIVER_OBJECT;
+  DeviceExtensionSize: ULONG;
+  DeviceName: PUNICODE_STRING;
+  DeviceType: DEVICE_TYPE;
+  DeviceCharacteristics: ULONG;
+  Exclusive: BOOLEAN;
+  var DeviceObject: PDEVICE_OBJECT // out
+  ): NTSTATUS; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IoCreateDevice');
   EmuSwapFS(); // Xbox FS
 end;
 
-function xboxkrnl_IoCreateFile(
+function {066}xboxkrnl_IoCreateFile(
   FileHandle: PHANDLE; // out
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -153,7 +431,7 @@ function xboxkrnl_IoCreateFile(
   Disposition: ULONG;
   CreateOptions: ULONG;
   Options: ULONG
-  ): NTSTATUS; stdcall;
+  ): NTSTATUS; stdcall; // Source: Cxbx
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IoCreateFile');
