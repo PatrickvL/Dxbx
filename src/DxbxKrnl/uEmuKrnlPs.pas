@@ -43,22 +43,22 @@ uses
 var
   {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE; // Source: OpenXDK - Uncertain
 
-function {254}xboxkrnl_PsCreateSystemThread(
+function {254} xboxkrnl_PsCreateSystemThread(
 (* XBMC says :
-	ThreadHandle: PHANDLE; // OUT
-	ThreadId: PULONG; // OUT, OPTIONAL
-	StartContext1: PVOID;
-	StartContext2: PVOID;
-	DebugStack: LONGBOOL
+ ThreadHandle: PHANDLE; // OUT
+ ThreadId: PULONG; // OUT, OPTIONAL
+ StartContext1: PVOID;
+ StartContext2: PVOID;
+ DebugStack: LONGBOOL
 *)
-  lpThreadAttributes: PULONG;              // SD
-  dwStackSize: DWORD;                      // initial stack size
-  lpStartAddress: PKSTART_ROUTINE;         // thread function
-  lpParameter: PVOID;                      // thread argument
-  dwCreationFlags: DWORD;                  // creation option
-  lpThreadId: PULONG                       // thread identifier
+  lpThreadAttributes: PULONG; // SD
+  dwStackSize: DWORD; // initial stack size
+  lpStartAddress: PKSTART_ROUTINE; // thread function
+  lpParameter: PVOID; // thread argument
+  dwCreationFlags: DWORD; // creation option
+  lpThreadId: PULONG // thread identifier
   ): NTSTATUS; stdcall; // Source: Cxbx - TODO : Should we use XBMC's version?
-function {255}xboxkrnl_PsCreateSystemThreadEx(
+function {255} xboxkrnl_PsCreateSystemThreadEx(
   ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
@@ -70,11 +70,11 @@ function {255}xboxkrnl_PsCreateSystemThreadEx(
   DebugStack: LONGBOOL;
   StartRoutine: PKSTART_ROUTINE
   ): NTSTATUS; stdcall; // Source: Cxbx / XBMC
-function {256}xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {257}xboxkrnl_PsSetCreateThreadNotifyRoutine(
+function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
   ): NTSTATUS; stdcall; // Source: ReactOS
-function {258}xboxkrnl_PsTerminateSystemThread(
+function {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
   ): NTSTATUS; stdcall; // Source : XBMC
 
@@ -98,6 +98,7 @@ type
 // PsCreateSystemThread(Ex) proxy procedure
 //pragma warning(push)
 //pragma warning(disable: 4731)  // disable ebp modification warning
+
 function {WINAPI} PCSTProxy(Parameter: PPCSTProxyParam): Integer; stdcall; //Word;
 label
   callComplete;
@@ -110,7 +111,7 @@ var
 begin
   StartContext1 := Parameter.StartContext1;
   StartContext2 := Parameter.StartContext2;
-  StartRoutine  := Parameter.StartRoutine;
+  StartRoutine := Parameter.StartRoutine;
   StartSuspended := Parameter.StartSuspended;
 
   DbgPrintf('EmuKrnl : PCSTProxy' +
@@ -128,24 +129,24 @@ begin
   // call thread notification routine(s)
   if Assigned(g_pfnThreadNotification) then
   begin
-    pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
+    pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
     DbgPrintf('EmKrnl : Calling pfnNotificationRoutine (0x' + IntToHex(Integer(Addr(pfnNotificationRoutine)), 8) + ')');
 
-    EmuSwapFS();   // Xbox FS
+    EmuSwapFS(); // Xbox FS
 
     pfnNotificationRoutine(True);
 
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(); // Win2k/XP FS
   end;
 
   // use the special calling convention
   try
     SetEvent(Parameter.hStartedEvent);
 
-DbgPrintf('EmuKrnl : PCSTProxy : DEBUG, this thread hangs somewhere after this line!');
+    DbgPrintf('EmuKrnl : PCSTProxy : DEBUG, this thread hangs somewhere after this line!');
 
-    EmuSwapFS();   // Xbox FS
+    EmuSwapFS(); // Xbox FS
 
     asm
         mov         esi, StartRoutine
@@ -155,7 +156,7 @@ DbgPrintf('EmuKrnl : PCSTProxy : DEBUG, this thread hangs somewhere after this l
         lea         ebp, [esp-4]
 //        jmp near    esi
         jmp         esi
-     end;
+    end;
   except
     on E: Exception do
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
@@ -163,20 +164,20 @@ DbgPrintf('EmuKrnl : PCSTProxy : DEBUG, this thread hangs somewhere after this l
 //    EmuWarning('Problem with ExceptionFilter not ');
   end;
 
-callComplete:
+  callComplete:
 
-  EmuSwapFS();    // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
   // call thread notification routine(s)
   if Assigned(g_pfnThreadNotification) then
   begin
-    pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
+    pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
-    EmuSwapFS();   // Xbox FS
+    EmuSwapFS(); // Xbox FS
 
     pfnNotificationRoutine(False);
 
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(); // Win2k/XP FS
   end;
 
   CxbxKrnlTerminateThread();
@@ -193,20 +194,21 @@ end;
 //     StartContext2, FALSE, DebugStack, PspSystemThreadStartup);
 //
 // New to the XBOX.  (It is too different from NT to be considered the same)
-function {254}xboxkrnl_PsCreateSystemThread(
+
+function {254} xboxkrnl_PsCreateSystemThread(
 (* XBMC says :
-	ThreadHandle: PHANDLE; // OUT
-	ThreadId: PULONG; // OUT, OPTIONAL
-	StartContext1: PVOID;
-	StartContext2: PVOID;
-	DebugStack: LONGBOOL
+ ThreadHandle: PHANDLE; // OUT
+ ThreadId: PULONG; // OUT, OPTIONAL
+ StartContext1: PVOID;
+ StartContext2: PVOID;
+ DebugStack: LONGBOOL
 *)
-  lpThreadAttributes: PULONG;              // SD
-  dwStackSize: DWORD;                      // initial stack size
-  lpStartAddress: PKSTART_ROUTINE;         // thread function
-  lpParameter: PVOID;                      // thread argument
-  dwCreationFlags: DWORD;                  // creation option
-  lpThreadId: PULONG                       // thread identifier
+  lpThreadAttributes: PULONG; // SD
+  dwStackSize: DWORD; // initial stack size
+  lpStartAddress: PKSTART_ROUTINE; // thread function
+  lpParameter: PVOID; // thread argument
+  dwCreationFlags: DWORD; // creation option
+  lpThreadId: PULONG // thread identifier
   ): NTSTATUS; stdcall; // Source: Cxbx - TODO : Should we use XBMC's version?
 var
   ThreadHandle: HANDLE;
@@ -273,7 +275,8 @@ end;
 // StartRoutine: Called when the thread is created
 //
 // New to the XBOX.
-function {255}xboxkrnl_PsCreateSystemThreadEx(
+
+function {255} xboxkrnl_PsCreateSystemThreadEx(
   ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
@@ -290,7 +293,7 @@ var
   hDupHandle: THandle;
   iPCSTProxyParam: PCSTProxyParam;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
     #13#10'(' +
@@ -311,11 +314,11 @@ begin
     // PCSTProxy is responsible for cleaning up this pointer
     iPCSTProxyParam.StartContext1 := StartContext1;
     iPCSTProxyParam.StartContext2 := StartContext2;
-    iPCSTProxyParam.StartRoutine  := StartRoutine;
+    iPCSTProxyParam.StartRoutine := StartRoutine;
     iPCSTProxyParam.StartSuspended := CreateSuspended;
     iPCSTProxyParam.hStartedEvent := CreateEvent(nil, False, False, nil);
 
-    ThreadHandle^ := BeginThread(nil, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
+    ThreadHandle^ := BeginThread(nil, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var} dwThreadId);
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
@@ -335,19 +338,19 @@ begin
       {out}ThreadId^ := dwThreadId;
   end;
 
-  EmuSwapFS();   // Xbox FS
+  EmuSwapFS(); // Xbox FS
 
   Result := STATUS_SUCCESS;
 end;
 
-function {256}xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall;
+function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('PsQueryStatistics');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {257}xboxkrnl_PsSetCreateThreadNotifyRoutine(
+function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
   ): NTSTATUS; stdcall; // Source: ReactOS
 begin
@@ -360,7 +363,8 @@ end;
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-function {258}xboxkrnl_PsTerminateSystemThread(
+
+function {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
   ): NTSTATUS; stdcall; // Source : XBMC
 begin
@@ -370,4 +374,3 @@ begin
 end;
 
 end.
-

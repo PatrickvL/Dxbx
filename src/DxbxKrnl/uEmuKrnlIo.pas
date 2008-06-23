@@ -42,7 +42,7 @@ uses
 
 const
   // TODO : Translate all other IRP defines from ReactOS
-  IRP_MJ_MAXIMUM_FUNCTION = $1b;
+  IRP_MJ_MAXIMUM_FUNCTION = $1B;
 
 type
   _IRP = record
@@ -151,11 +151,11 @@ type
     DriverInit: PDRIVER_INITIALIZE;
     DriverStartIo: PDRIVER_STARTIO;
     DriverUnload: PDRIVER_UNLOAD;
-    MajorFunction: array [0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
+    MajorFunction: array[0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
   end;
   DRIVER_OBJECT = _DRIVER_OBJECT;
   PDRIVER_OBJECT = ^DRIVER_OBJECT;
-  
+
   _DEVICE_OBJECT = record // Source: XBMC
     _Type: CSHORT;
     Size: USHORT;
@@ -173,7 +173,7 @@ type
     DeviceType: DEVICE_TYPE;
     StackSize: CCHAR;
 //    union {
-      ListEntry: LIST_ENTRY;
+    ListEntry: LIST_ENTRY;
 //      Wcb: WAIT_CONTEXT_BLOCK;
 //    } Queue; // TODO
     AlignmentRequirement: ULONG;
@@ -193,7 +193,7 @@ type
     _Type: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
-  	// ...
+   // ...
   end;
   FILE_OBJECT = _FILE_OBJECT;
   PFILE_OBJECT = ^FILE_OBJECT;
@@ -215,11 +215,11 @@ var
   {070}xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
   {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
 
-function {059}xboxkrnl_IoAllocateIrp(
+function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
   ChargeQuota: LONGBOOL // TODO : Should this be a WordBool??
   ): PIRP; stdcall; // Source: ReactOS
-function {060}xboxkrnl_IoBuildAsynchronousFsdRequest(
+function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   MajorFunction: ULONG;
   DeviceObject: PDEVICE_OBJECT;
   Buffer: PVOID; // OUT OPTIONAL
@@ -227,7 +227,7 @@ function {060}xboxkrnl_IoBuildAsynchronousFsdRequest(
   StartingOffset: PLARGE_INTEGER; // OPTIONAL
   IoStatusBlock: PIO_STATUS_BLOCK // OPTIONAL
   ): PIRP; stdcall; // Source: ReactOS
-function {061}xboxkrnl_IoBuildDeviceIoControlRequest(
+function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   IoControlCode: ULONG;
   DeviceObject: PDEVICE_OBJECT;
   InputBuffer: PVOID; // OPTIONAL,
@@ -236,9 +236,9 @@ function {061}xboxkrnl_IoBuildDeviceIoControlRequest(
   OutputBufferLength: ULONG;
   InternalDeviceIoControl: BOOLEAN;
   Event: PKEVENT;
-  IoStatusBlock: PIO_STATUS_BLOCK // OUT 
+  IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall; // Source: ReactOS
-function {062}xboxkrnl_IoBuildSynchronousFsdRequest(
+function {062} xboxkrnl_IoBuildSynchronousFsdRequest(
   MajorFunction: ULONG;
   DeviceObject: PDEVICE_OBJECT;
   Buffer: PVOID; // OUT OPTIONAL,
@@ -247,14 +247,14 @@ function {062}xboxkrnl_IoBuildSynchronousFsdRequest(
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall; // Source: ReactOS
-function {063}xboxkrnl_IoCheckShareAccess(
+function {063} xboxkrnl_IoCheckShareAccess(
   DesiredAccess: ACCESS_MASK;
   DesiredShareAccess: ULONG;
   FileObject: PFILE_OBJECT; // OUT
   ShareAccess: PSHARE_ACCESS; // OUT
   Update: BOOLEAN
   ): NTSTATUS; stdcall; // Source: ReactOS
-function {065}xboxkrnl_IoCreateDevice(
+function {065} xboxkrnl_IoCreateDevice(
   DriverObject: PDRIVER_OBJECT;
   DeviceExtensionSize: ULONG;
   DeviceName: PUNICODE_STRING;
@@ -263,7 +263,7 @@ function {065}xboxkrnl_IoCreateDevice(
   Exclusive: BOOLEAN;
   var DeviceObject: PDEVICE_OBJECT // out
   ): NTSTATUS; stdcall; // Source: ReactOS
-function {066}xboxkrnl_IoCreateFile(
+function {066} xboxkrnl_IoCreateFile(
   FileHandle: PHANDLE; // out
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -305,7 +305,7 @@ function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall; // UNKNOWN_SIGNATU
 
 implementation
 
-function {059}xboxkrnl_IoAllocateIrp(
+function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
   ChargeQuota: LONGBOOL // TODO : Should this be a WordBool??
   ): PIRP; stdcall; // Source: ReactOS
@@ -316,7 +316,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {060}xboxkrnl_IoBuildAsynchronousFsdRequest(
+function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   MajorFunction: ULONG;
   DeviceObject: PDEVICE_OBJECT;
   Buffer: PVOID; // OUT OPTIONAL
@@ -331,7 +331,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {061}xboxkrnl_IoBuildDeviceIoControlRequest(
+function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   IoControlCode: ULONG;
   DeviceObject: PDEVICE_OBJECT;
   InputBuffer: PVOID; // OPTIONAL,
@@ -349,7 +349,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {062}xboxkrnl_IoBuildSynchronousFsdRequest(
+function {062} xboxkrnl_IoBuildSynchronousFsdRequest(
   MajorFunction: ULONG;
   DeviceObject: PDEVICE_OBJECT;
   Buffer: PVOID; // OUT OPTIONAL,
@@ -365,12 +365,12 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {063}xboxkrnl_IoCheckShareAccess(
+function {063} xboxkrnl_IoCheckShareAccess(
   DesiredAccess: ACCESS_MASK;
   DesiredShareAccess: ULONG;
   FileObject: PFILE_OBJECT; // OUT
   ShareAccess: PSHARE_ACCESS; // OUT
-  Update: BOOLEAN  
+  Update: BOOLEAN
   ): NTSTATUS; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -405,7 +405,8 @@ end;
 //    DeviceObject
 //       On successful return this parameter is filled by pointer to
 //       allocated device object.
-function {065}xboxkrnl_IoCreateDevice(
+
+function {065} xboxkrnl_IoCreateDevice(
   DriverObject: PDRIVER_OBJECT;
   DeviceExtensionSize: ULONG;
   DeviceName: PUNICODE_STRING;
@@ -420,7 +421,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {066}xboxkrnl_IoCreateFile(
+function {066} xboxkrnl_IoCreateFile(
   FileHandle: PHANDLE; // out
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -598,4 +599,3 @@ begin
 end;
 
 end.
-

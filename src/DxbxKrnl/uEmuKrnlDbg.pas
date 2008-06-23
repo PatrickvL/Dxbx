@@ -40,26 +40,26 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-procedure {005}xboxkrnl_DbgBreakPoint(
+procedure {005} xboxkrnl_DbgBreakPoint(
   ); stdcall; // Source: JwaNative.pas
-procedure {006}xboxkrnl_DbgBreakPointWithStatus(
+procedure {006} xboxkrnl_DbgBreakPointWithStatus(
   Status: ULONG
   ); stdcall; // Source: JwaNative.pas
-function {007}xboxkrnl_DbgLoadImageSymbols(
+function {007} xboxkrnl_DbgLoadImageSymbols(
   Name: PANSI_STRING;
   Base: PVOID;
   ProcessId: ULONG_PTR
   ): NTSTATUS; stdcall; // Source: ReactOS
-function {008}xboxkrnl_DbgPrint(
+function {008} xboxkrnl_DbgPrint(
   Format: PCCH;
   Args: array of const // TODO : Check if this is a correct translation of '...'
   ): ULONG; stdcall; // Source: ReactOS - Uncertain
-function {010}xboxkrnl_DbgPrompt(
+function {010} xboxkrnl_DbgPrompt(
   Prompt: PCCH;
   Response: PCH; // OUT
   MaximumResponseLength: ULONG
   ): ULONG; stdcall; // Source: ReactOS
-procedure {011}xboxkrnl_DbgUnLoadImageSymbols(
+procedure {011} xboxkrnl_DbgUnLoadImageSymbols(
   Name: PANSI_STRING;
   Base: PVOID;
   ProcessId: ULONG_PTR
@@ -67,7 +67,7 @@ procedure {011}xboxkrnl_DbgUnLoadImageSymbols(
 
 implementation
 
-procedure {005}xboxkrnl_DbgBreakPoint(
+procedure {005} xboxkrnl_DbgBreakPoint(
   ); stdcall; // Source: JwaNative.pas
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -75,7 +75,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {006}xboxkrnl_DbgBreakPointWithStatus(
+procedure {006} xboxkrnl_DbgBreakPointWithStatus(
   Status: ULONG
   ); stdcall; // Source: JwaNative.pas
 begin
@@ -84,7 +84,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {007}xboxkrnl_DbgLoadImageSymbols(
+function {007} xboxkrnl_DbgLoadImageSymbols(
   Name: PANSI_STRING;
   Base: PVOID;
   ProcessId: ULONG_PTR
@@ -95,7 +95,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {008}xboxkrnl_DbgPrint(
+function {008} xboxkrnl_DbgPrint(
   Format: PCCH;
   Args: array of const // TODO : Check if this is a correct translation of '...'
   ): ULONG; stdcall; // Source: ReactOS - Uncertain
@@ -105,7 +105,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {010}xboxkrnl_DbgPrompt(
+function {010} xboxkrnl_DbgPrompt(
   Prompt: PCCH;
   Response: PCH; // OUT
   MaximumResponseLength: ULONG
@@ -116,7 +116,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {011}xboxkrnl_DbgUnLoadImageSymbols(
+procedure {011} xboxkrnl_DbgUnLoadImageSymbols(
   Name: PANSI_STRING;
   Base: PVOID;
   ProcessId: ULONG_PTR
@@ -128,4 +128,3 @@ begin
 end;
 
 end.
-

@@ -164,90 +164,90 @@ type
 function Unimplemented(const aAPI: string): NTSTATUS;
 
 var
-  {162}xboxkrnl_KiBugCheckData: array[0..5-1] of ULONG_PTR; // Source: ReactOS
+  {162}xboxkrnl_KiBugCheckData: array[0..5 - 1] of ULONG_PTR; // Source: ReactOS
   {164}xboxkrnl_LaunchDataPage: PLAUNCH_DATA_PAGE;
 
 // The following API names are derived from Pedro's APILogger V2
 // See http://forums.xbox-scene.com/index.php?showtopic=456303
 
-function {051}xboxkrnl_InterlockedCompareExchange(
+function {051} xboxkrnl_InterlockedCompareExchange(
   var Destination: LONG; // out, volatile
   Exchange: LONG;
   Comparand: LONG
   ): LONG; stdcall; // Source: ReactOS
-function {052}xboxkrnl_InterlockedDecrement(
+function {052} xboxkrnl_InterlockedDecrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
-function {053}xboxkrnl_InterlockedIncrement(
+function {053} xboxkrnl_InterlockedIncrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
-function {054}xboxkrnl_InterlockedExchange(
+function {054} xboxkrnl_InterlockedExchange(
   var Destination: LONG; // out, volatile
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
-function {055}xboxkrnl_InterlockedExchangeAdd(
+function {055} xboxkrnl_InterlockedExchangeAdd(
   var Addend: LONG; // out, volatile
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
-function {056}xboxkrnl_InterlockedFlushSList(
+function {056} xboxkrnl_InterlockedFlushSList(
   ListHead: PSLIST_HEADER
   ): PSINGLE_LIST_ENTRY; stdcall; // Source: ReactOS
-function {057}xboxkrnl_InterlockedPopEntrySList(
+function {057} xboxkrnl_InterlockedPopEntrySList(
   ListHead: PSLIST_HEADER
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
-function {058}xboxkrnl_InterlockedPushEntrySList(
+function {058} xboxkrnl_InterlockedPushEntrySList(
   ListHead: PSLIST_HEADER;
   ListEntry: PSLIST_ENTRY
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
-function {160}xboxkrnl_KfRaiseIrql(
+function {160} xboxkrnl_KfRaiseIrql(
   NewIrql: KIRQL
-	): KIRQL; register; // Source: ReactOS
-procedure {161}xboxkrnl_KfLowerIrql(
+  ): KIRQL; register; // Source: ReactOS
+procedure {161} xboxkrnl_KfLowerIrql(
   NewIrql: KIRQL
-	); register; // Source: ReactOS
-function {163}xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {252}xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {253}xboxkrnl_PhyInitialize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-procedure {329}xboxkrnl_READ_PORT_BUFFER_UCHAR(
+  ); register; // Source: ReactOS
+function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {252} xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {253} xboxkrnl_PhyInitialize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure {329} xboxkrnl_READ_PORT_BUFFER_UCHAR(
   Port: PUCHAR;
   Buffer: PUCHAR;
   Count: ULONG
   ); stdcall; // Source: ReactOS
-procedure {330}xboxkrnl_READ_PORT_BUFFER_USHORT(
+procedure {330} xboxkrnl_READ_PORT_BUFFER_USHORT(
   Port: PUSHORT;
   Buffer: PUSHORT;
   Count: ULONG
   ); stdcall; // Source: ReactOS
-procedure {331}xboxkrnl_READ_PORT_BUFFER_ULONG(
+procedure {331} xboxkrnl_READ_PORT_BUFFER_ULONG(
   Port: PULONG;
   Buffer: PULONG;
   Count: ULONG
   ); stdcall; // Source: ReactOS
-procedure {332}xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
+procedure {332} xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
   Port: PUCHAR;
   Buffer: PUCHAR;
   Count: ULONG
   ); stdcall; // Source: ReactOS
-procedure {333}xboxkrnl_WRITE_PORT_BUFFER_USHORT(
+procedure {333} xboxkrnl_WRITE_PORT_BUFFER_USHORT(
   Port: PUSHORT;
   Buffer: PUSHORT;
   Count: ULONG
   ); stdcall; // Source: ReactOS
-procedure {334}xboxkrnl_WRITE_PORT_BUFFER_ULONG(
+procedure {334} xboxkrnl_WRITE_PORT_BUFFER_ULONG(
   Port: PULONG;
   Buffer: PULONG;
   Count: ULONG
   ); stdcall; // Source: ReactOS
-function {357}xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {357} xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
-function {000}xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {367}xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {368}xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {369}xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {370}xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {371}xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {372}xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {373}xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {000} xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {367} xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {368} xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {369} xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {370} xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {371} xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {372} xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {373} xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
@@ -261,14 +261,14 @@ end;
 /// ########## Start of Xbox Kernel API's :
 /// ##########
 
-function {000}xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall;
+function {000} xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI000');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {051}xboxkrnl_InterlockedCompareExchange(
+function {051} xboxkrnl_InterlockedCompareExchange(
   var Destination: LONG; // out, volatile
   Exchange: LONG;
   Comparand: LONG
@@ -279,7 +279,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {052}xboxkrnl_InterlockedDecrement(
+function {052} xboxkrnl_InterlockedDecrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
 begin
@@ -288,7 +288,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {053}xboxkrnl_InterlockedIncrement(
+function {053} xboxkrnl_InterlockedIncrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
 begin
@@ -297,7 +297,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {054}xboxkrnl_InterlockedExchange(
+function {054} xboxkrnl_InterlockedExchange(
   var Destination: LONG; // out, volatile
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
@@ -307,7 +307,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {055}xboxkrnl_InterlockedExchangeAdd(
+function {055} xboxkrnl_InterlockedExchangeAdd(
   var Addend: LONG; // out, volatile
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
@@ -317,7 +317,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {056}xboxkrnl_InterlockedFlushSList(
+function {056} xboxkrnl_InterlockedFlushSList(
   ListHead: PSLIST_HEADER
   ): PSINGLE_LIST_ENTRY; stdcall; // Source: ReactOS
 begin
@@ -327,7 +327,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {057}xboxkrnl_InterlockedPopEntrySList(
+function {057} xboxkrnl_InterlockedPopEntrySList(
   ListHead: PSLIST_HEADER
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
 begin
@@ -336,7 +336,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {058}xboxkrnl_InterlockedPushEntrySList(
+function {058} xboxkrnl_InterlockedPushEntrySList(
   ListHead: PSLIST_HEADER;
   ListEntry: PSLIST_ENTRY
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
@@ -350,9 +350,10 @@ end;
 // NewIrql = Irql to raise to
 // RETURN VALUE previous irq level
 // NOTES Uses fastcall convention
-function {160}xboxkrnl_KfRaiseIrql(
+
+function {160} xboxkrnl_KfRaiseIrql(
   NewIrql: KIRQL
-	): KIRQL; register; // Source: ReactOS
+  ): KIRQL; register; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
   Unimplemented('KfRaiseIrql');
@@ -363,37 +364,38 @@ end;
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
 // NOTES Uses fastcall convention
-procedure {161}xboxkrnl_KfLowerIrql(
+
+procedure {161} xboxkrnl_KfLowerIrql(
   NewIrql: KIRQL
-	); register; // Source: ReactOS
+  ); register; // Source: ReactOS
 begin
   EmuSwapFS(); // Win2k/XP FS
   Unimplemented('KfLowerIrql');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {163}xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
+function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('KiUnlockDispatcherDatabase');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {252}xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall;
+function {252} xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('PhyGetLinkState');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {253}xboxkrnl_PhyInitialize(): NTSTATUS; stdcall;
+function {253} xboxkrnl_PhyInitialize(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('PhyInitialize');
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {329}xboxkrnl_READ_PORT_BUFFER_UCHAR(
+procedure {329} xboxkrnl_READ_PORT_BUFFER_UCHAR(
   Port: PUCHAR;
   Buffer: PUCHAR;
   Count: ULONG
@@ -404,7 +406,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {330}xboxkrnl_READ_PORT_BUFFER_USHORT(
+procedure {330} xboxkrnl_READ_PORT_BUFFER_USHORT(
   Port: PUSHORT;
   Buffer: PUSHORT;
   Count: ULONG
@@ -415,7 +417,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {331}xboxkrnl_READ_PORT_BUFFER_ULONG(
+procedure {331} xboxkrnl_READ_PORT_BUFFER_ULONG(
   Port: PULONG;
   Buffer: PULONG;
   Count: ULONG
@@ -426,7 +428,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {332}xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
+procedure {332} xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
   Port: PUCHAR;
   Buffer: PUCHAR;
   Count: ULONG
@@ -437,7 +439,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {333}xboxkrnl_WRITE_PORT_BUFFER_USHORT(
+procedure {333} xboxkrnl_WRITE_PORT_BUFFER_USHORT(
   Port: PUSHORT;
   Buffer: PUSHORT;
   Count: ULONG
@@ -448,7 +450,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {334}xboxkrnl_WRITE_PORT_BUFFER_ULONG(
+procedure {334} xboxkrnl_WRITE_PORT_BUFFER_ULONG(
   Port: PULONG;
   Buffer: PULONG;
   Count: ULONG
@@ -459,56 +461,56 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {357}xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall;
+function {357} xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('IdexChannelObject');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {367}xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall;
+function {367} xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI367');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {368}xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall;
+function {368} xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI368');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {369}xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall;
+function {369} xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI369');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {370}xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall;
+function {370} xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI370');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {371}xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall;
+function {371} xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI371');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {372}xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall;
+function {372} xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI372');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {373}xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall;
+function {373} xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('UnknownAPI373');

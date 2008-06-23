@@ -25,43 +25,46 @@ interface
 uses
   uEmuShared,
   uEmu,
+  XInput,
   uXBController;
 
 implementation
 
 var
-  g_XBController : XBController;
+  g_XBController: XBController;
 
 // func: XTL::EmuDInputInit
-function XTL_EmuDInputInit : Longbool;
-begin
-    g_EmuShared.GetXBController(g_XBController);
 
-    g_XBController.ListenBegin(g_hEmuWindow);
+function XTL_EmuDInputInit: Longbool;
+begin
+  g_EmuShared.GetXBController(g_XBController);
+
+  g_XBController.ListenBegin(g_hEmuWindow);
 
     (*if(g_XBController.GetError()) then
         result:= false;
 
     result:= true;  *)
- end;
+end;
 
 // func: XTL::EmuDInputCleanup
+
 procedure XTL_EmuDInputCleanup();
 begin
   g_XBController.ListenEnd();
 end;
 
 // func: XTL::EmuPollController
-(*procedure XTL_EmuDInputPoll(Controller: XTL.PXINPUT_STATE);
+
+procedure XTL_EmuDInputPoll(Controller: XINPUT_STATE);
 begin
-    g_XBController.ListenPoll(Controller);
+  (*g_XBController.ListenPoll(Controller);
 
-    if(g_XBController.GetError()) then
-        MessageBox(0, g_XBController.GetError(), "Cxbx [*UNHANDLED not *]", MB_OK);  // TODO: Handle this!
-
-    Exit;
- end; *)
+  if (g_XBController.GetError()) then
+    MessageBox(0, g_XBController.GetError(), "Cxbx[* UNHANDLED not * ]", MB_OK); // TODO: Handle this! *)
+end;
 
 
 
 end.
+

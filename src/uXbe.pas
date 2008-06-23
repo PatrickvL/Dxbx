@@ -28,7 +28,7 @@ uses
   Controls,
   SysUtils, // for Format
   StrUtils, // for IfThen
-  Dialogs,  // for MessageDlg
+  Dialogs, // for MessageDlg
   Graphics, // for TBitmap
   // Dxbx
   uConsts,
@@ -37,23 +37,23 @@ uses
   uLog;
 
 const
-  XBE_INIT_FLAG_MountUtilityDrive  = $00000001;
+  XBE_INIT_FLAG_MountUtilityDrive = $00000001;
   XBE_INIT_FLAG_FormatUtilityDrive = $00000002;
-  XBE_INIT_FLAG_Limit64MB          = $00000004;
-  XBE_INIT_FLAG_DontSetupHarddisk  = $00000008;
+  XBE_INIT_FLAG_Limit64MB = $00000004;
+  XBE_INIT_FLAG_DontSetupHarddisk = $00000008;
 
-  XBE_SECTIONHEADER_FLAG_Writable     = $00000001;
-  XBE_SECTIONHEADER_FLAG_Preload      = $00000002;
-  XBE_SECTIONHEADER_FLAG_Executable   = $00000004;
+  XBE_SECTIONHEADER_FLAG_Writable = $00000001;
+  XBE_SECTIONHEADER_FLAG_Preload = $00000002;
+  XBE_SECTIONHEADER_FLAG_Executable = $00000004;
   XBE_SECTIONHEADER_FLAG_InsertedFile = $00000008;
-  XBE_SECTIONHEADER_FLAG_HeadPageRO   = $00000010;
-  XBE_SECTIONHEADER_FLAG_TailPageRO   = $00000020;
+  XBE_SECTIONHEADER_FLAG_HeadPageRO = $00000010;
+  XBE_SECTIONHEADER_FLAG_TailPageRO = $00000020;
 
-  XBE_LIBRARYVERSION_FLAG_ApprovedNo       = $00;
+  XBE_LIBRARYVERSION_FLAG_ApprovedNo = $00;
   XBE_LIBRARYVERSION_FLAG_ApprovedPossibly = $20;
-  XBE_LIBRARYVERSION_FLAG_ApprovedYes      = $40;
-  XBE_LIBRARYVERSION_FLAG_ApprovedMask     = $60;
-  XBE_LIBRARYVERSION_FLAG_DebugBuild       = $80;
+  XBE_LIBRARYVERSION_FLAG_ApprovedYes = $40;
+  XBE_LIBRARYVERSION_FLAG_ApprovedMask = $60;
+  XBE_LIBRARYVERSION_FLAG_DebugBuild = $80;
 
 type
   // Note : These types are copied from JwaWinType, so we don't have to include that unit :
@@ -149,7 +149,7 @@ type
     SectionReferenceCount: LONG; // Section reference count - when >= 1, section is loaded
     HeadReferenceCount: PWORD; // Pointer to head shared page reference count
     TailReferenceCount: PWORD; // Pointer to tail shared page reference count
-    ShaHash: array[0..5-1] of DWORD; // SHA hash.  Hash DWORD containing FileSize, then hash section.
+    ShaHash: array[0..5 - 1] of DWORD; // SHA hash.  Hash DWORD containing FileSize, then hash section.
   end; // SizeOf() = 38
   XBE_SECTION = _XBE_SECTION;
   PXBE_SECTION = ^XBE_SECTION;
@@ -243,7 +243,7 @@ function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
-Function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
 
 procedure XbeLoaded;
 procedure LoadLogo;
@@ -324,9 +324,9 @@ end; // RoundUp
 function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 begin
   Result := (Ord(aBuffer[i + 0]) shl 0)
-          + (Ord(aBuffer[i + 1]) shl 8)
-          + (Ord(aBuffer[i + 2]) shl 16)
-          + (Ord(aBuffer[i + 3]) shl 24);
+    + (Ord(aBuffer[i + 1]) shl 8)
+    + (Ord(aBuffer[i + 2]) shl 16)
+    + (Ord(aBuffer[i + 3]) shl 24);
 end; // GetDwordVal
 
 //------------------------------------------------------------------------------
@@ -334,7 +334,7 @@ end; // GetDwordVal
 function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 begin
   Result := (Ord(aBuffer[i + 0]) shl 0)
-          + (Ord(aBuffer[i + 1]) shl 8);
+    + (Ord(aBuffer[i + 1]) shl 8);
 end; // GetWordVal
 
 
@@ -373,7 +373,7 @@ begin
   MyFile := TMemoryStream.Create;
   MyFile.LoadFromFile(aFileName);
   Buffer := MyFile.Memory;
-  
+
   // verify xbe file was opened
   if MyFile.Size = 0 then
   begin
@@ -396,11 +396,11 @@ begin
   i := 0;
   CopyMemory(@m_Header, Buffer, SizeOf(m_Header));
   Inc(i, SizeOf(m_Header));
-  
+
   // check xbe image header
   if m_Header.dwMagic <> _MagicNumber then
   begin
-    MessageDlg( Format ( 'Invalid magic number in %s file', [sFileType]) , mtError, [mbOk], 0);
+    MessageDlg(Format('Invalid magic number in %s file', [sFileType]), mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -682,7 +682,7 @@ begin
     TmpChr := Buffer[lIndex];
     Inc(lIndex);
   end;
-    
+
   _LogEx(Format('Debug Pathname Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathnameAddr, TmpStr]));
 
   lIndex := GetAddr(m_Header.dwDebugFilenameAddr);
@@ -695,7 +695,7 @@ begin
     TmpChr := Buffer[lIndex];
     Inc(lIndex);
   end;
-    
+
   _LogEx(Format('Debug Filename Address           : 0x%.8x ("%s")', [m_Header.dwDebugFilenameAddr, TmpStr]));
 
   _LogEx(Format('Debug Unicode filename Address   : 0x%.8x (L"%s")', [m_Header.dwDebugUnicodeFilenameAddr, StrAsciiFilename]));
@@ -840,8 +840,8 @@ begin
 
       //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
 
-      QVersion :=  Ord(m_LibraryVersion[lIndex].dwFlags[0])
-               + ((Ord(m_LibraryVersion[lIndex].dwFlags[1]) and 31) shl 8);
+      QVersion := Ord(m_LibraryVersion[lIndex].dwFlags[0])
+        + ((Ord(m_LibraryVersion[lIndex].dwFlags[1]) and 31) shl 8);
 
       Flag := m_LibraryVersion[lIndex].dwFlags[1] and (not 31);
 
@@ -930,18 +930,18 @@ begin
     Pos0 := Ord(Buffer[RLE + lIndex]);
     Pos1 := Ord(Buffer[RLE + 1 + lIndex]);
 
-    if (Pos0 and 1) > 0 then                              // Check if the bit 0 is set.
+    if (Pos0 and 1) > 0 then // Check if the bit 0 is set.
     begin
-      Len := Pos0 shr 1 and 7;                            // Select the bits from 1 to 3
-      Data := Pos0 shr 4 and 15;                          // Select the bits from 4 to 7
+      Len := Pos0 shr 1 and 7; // Select the bits from 1 to 3
+      Data := Pos0 shr 4 and 15; // Select the bits from 4 to 7
     end
     else
     begin
-      if (Pos0 and 2) > 0 then                             // Check if the bit 1 is set.
+      if (Pos0 and 2) > 0 then // Check if the bit 1 is set.
       begin
-        Len := (Pos0 shr 2 and 63) + (Pos1 and 15)*256;   // Select the bits from 2 to 7 from the first byte (Pos0) and the bits from 0 to 3 from the second byte (Pos1) and form a number.
-        Data := Pos1 shr 4 and 15;                        // Select the bits from 4 to 7 from the second byte (Pos1)
-        Inc(lIndex);                                      // The index is incremented because 2 bytes were read.
+        Len := (Pos0 shr 2 and 63) + (Pos1 and 15) * 256; // Select the bits from 2 to 7 from the first byte (Pos0) and the bits from 0 to 3 from the second byte (Pos1) and form a number.
+        Data := Pos1 shr 4 and 15; // Select the bits from 4 to 7 from the second byte (Pos1)
+        Inc(lIndex); // The index is incremented because 2 bytes were read.
       end;
     end;
 
@@ -955,7 +955,7 @@ begin
       ImgCont.Canvas.Pixels[o mod 100, o div 100] := RGB(x_Gray[o], x_Gray[o], x_Gray[o]);
     end;
 
-    Inc(lIndex);                                          // Index increment
+    Inc(lIndex); // Index increment
   end;
 end; // TXbe.ExportLogoBitmap
 

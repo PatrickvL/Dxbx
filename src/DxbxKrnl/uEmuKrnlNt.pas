@@ -156,7 +156,7 @@ function xboxkrnl_NtReadFile(
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID; // OUT
   Length: ULONG;
-  ByteOffset: PLARGE_INTEGER   // OPTIONAL
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtReleaseMutant(
@@ -177,8 +177,8 @@ function xboxkrnl_NtSetInformationFile(
   FileHandle: HANDLE; // TODO: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
-  Length:  ULONG;
-  FileInformationClass:  FILE_INFORMATION_CLASS
+  Length: ULONG;
+  FileInformationClass: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -211,7 +211,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
 function xboxkrnl_NtWriteFile(
   FileHandle: HANDLE; // TODO: correct paramters
   Event: PVOID;
-  ApcRoutine:  PVOID;
+  ApcRoutine: PVOID;
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID;
@@ -253,6 +253,7 @@ begin
 end;
 
 // 0x00BB - NtClose
+
 function xboxkrnl_NtClose(
   Handle: THandle
   ): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
@@ -261,7 +262,7 @@ var
   iEmuHandle: TEmuHandle;
 {$ENDIF}
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuKrnl : NtClose' +
     #13#10'(' +
@@ -282,7 +283,7 @@ begin
 {$ENDIF}
     Result := NtClose(Handle);
 
-  EmuSwapFS();   // Xbox FS
+  EmuSwapFS(); // Xbox FS
 end;
 
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
@@ -370,7 +371,7 @@ end;
 function xboxkrnl_NtDuplicateObject(
   SourceHandle: HANDLE;
   TargetHandle: PHANDLE;
-  Options: DWORD   
+  Options: DWORD
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -414,7 +415,7 @@ begin
 end;
 
 function xboxkrnl_NtOpenFile(
-  FileHandle: PHANDLE; // OUT 
+  FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
@@ -573,7 +574,7 @@ function xboxkrnl_NtReadFile(
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID; // OUT
   Length: ULONG;
-  ByteOffset: PLARGE_INTEGER   // OPTIONAL
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -590,7 +591,7 @@ end;
 
 function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
-  PreviousCount: PLONG // OUT    
+  PreviousCount: PLONG // OUT
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -636,8 +637,8 @@ function xboxkrnl_NtSetInformationFile(
   FileHandle: HANDLE; // TODO: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
-  Length:  ULONG;
-  FileInformationClass:  FILE_INFORMATION_CLASS
+  Length: ULONG;
+  FileInformationClass: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -730,7 +731,7 @@ end;
 function xboxkrnl_NtWriteFile(
   FileHandle: HANDLE; // TODO: correct paramters
   Event: PVOID;
-  ApcRoutine:  PVOID;
+  ApcRoutine: PVOID;
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID;
@@ -758,9 +759,8 @@ begin
   //DbgPrintf("EmuKrnl (0x%X): NtYieldExecution();\n", GetCurrentThreadId());
 
   NtYieldExecution();
-  
+
   EmuSwapFS(); // Xbox FS
 end;
 
 end.
-

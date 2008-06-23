@@ -36,11 +36,11 @@ uses
   uEmuLDT;
 
 
-procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
+procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
 procedure EmuInitFS;
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: Pointer);
 procedure EmuCleanupFS;
-function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM} inline; {$ENDIF}
+function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
 
 var
   // Xbox is a single process system, and because of this fact, demos
@@ -57,6 +57,7 @@ var
 implementation
 
 // is the current fs register the xbox emulation variety?
+
 function EmuIsXboxFS: Boolean;
 var
   chk: Byte;
@@ -73,6 +74,7 @@ end;
 // structure, and the Emu FS: structure. Before running Windows
 // code, you *must* swap over to Win2k/XP FS. Similarly, before
 // running Xbox code, you *must* swap back over to Emu FS.
+
 procedure EmuSwapFS();
 const
 {$J+}
@@ -108,12 +110,14 @@ begin
 end; // EmuSwapFS
 
 // initialize fs segment selector emulation
+
 procedure EmuInitFS();
 begin
   EmuInitLDT();
 end;
 
 // generate fs segment selector
+
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: Pointer);
 var
   OrgNtTib: PNT_TIB;
@@ -207,7 +211,7 @@ begin
   begin
     EThread := xboxkrnl.PETHREAD(CxbxMalloc(SizeOf(xboxkrnl.ETHREAD)));
 
-    EThread.Tcb.TlsData  := pNewTLS;
+    EThread.Tcb.TlsData := pNewTLS;
     EThread.UniqueThread := GetCurrentThreadId();
 
     CopyMemory(@NewPcr.NtTib, OrgNtTib, SizeOf(NT_TIB));
@@ -254,6 +258,7 @@ begin
 end;
 
 // cleanup fs segment selector emulation
+
 procedure EmuCleanupFS();
 var
   wSwapFS: Word;
@@ -270,7 +275,7 @@ begin
     Exit;
 
   if not EmuIsXboxFS() then
-    EmuSwapFS();    // Xbox FS
+    EmuSwapFS(); // Xbox FS
 
   asm
     mov eax, fs:04h

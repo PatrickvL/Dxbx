@@ -24,7 +24,7 @@ interface
 const
   DLL_IMAGE_BASE = $10000000;
   MAXIMUM_XBOX_THREADS = 256;
-    
+
   CCXBXKRNLDLLNAME = 'CxbxKrnl.dll';
   CCXBXDLLNAME = 'Cxbx.dll';
   CDXBXKRNLDLLNAME = 'DxbxKrnl.dll';
@@ -41,9 +41,9 @@ const
   DIALOG_FILTER_XBE = 'Xbox Executables (*.xbe)|*.xbe';
 
 
-  XOR_EP_DEBUG  = $94859D4B; // Entry Point (Debug)
+  XOR_EP_DEBUG = $94859D4B; // Entry Point (Debug)
   XOR_EP_RETAIL = $A8FC57AB; // Entry Point (Retail)
-  XOR_KT_DEBUG  = $EFB1F152; // Kernel Thunk (Debug)
+  XOR_KT_DEBUG = $EFB1F152; // Kernel Thunk (Debug)
   XOR_KT_RETAIL = $5B6D40B6; // Kernel Thunk (Retail)
 
   PE_FILE_ALIGN = $00000020; // File alignment

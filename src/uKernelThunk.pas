@@ -431,7 +431,7 @@ var
     {376}@xboxkrnl_MmDbgQueryAvailablePages,
     {377}@xboxkrnl_MmDbgReleaseAddress,
     {378}@xboxkrnl_MmDbgWriteCheck
-  );
+    );
 
 function CxbxKrnl_KernelThunkTable: PKernelThunkTable;
 begin

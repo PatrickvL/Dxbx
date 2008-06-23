@@ -28,6 +28,7 @@ implementation
 // ******************************************************************
 // * func: EmuUpdateDeferredStates
 // ******************************************************************
+
 procedure XTL_EmuUpdateDeferredStates;
 begin
 (*    using namespace XTL;
@@ -312,7 +313,7 @@ begin
         g_pD3DDevice8^.SetRenderState(D3DRS_AMBIENT, $FFFFFFFF);
         //*/
      end;  *)
- end;
+end;
 
 
 end.

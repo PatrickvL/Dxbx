@@ -46,82 +46,82 @@ var
   {030}xboxkrnl_ExSemaphoreObjectType: POBJECT_TYPE = NULL;
   {031}xboxkrnl_ExTimerObjectType: POBJECT_TYPE = NULL;
 
-function {012}xboxkrnl_ExAcquireReadWriteLockExclusive(
+function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-function {013}xboxkrnl_ExAcquireReadWriteLockShared(
+function {013} xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-function {014}xboxkrnl_ExAllocatePool(
+function {014} xboxkrnl_ExAllocatePool(
   NumberOfBytes: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
-function {015}xboxkrnl_ExAllocatePoolWithTag(
+function {015} xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
-procedure {017}xboxkrnl_ExFreePool(
+procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
   ); stdcall; // Source: ReactOS
-function {018}xboxkrnl_ExInitializeReadWriteLock(
+function {018} xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-function {019}xboxkrnl_ExInterlockedAddLargeInteger(
+function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Addend: PLARGE_INTEGER;
   Increment: LARGE_INTEGER;
   Lock: PKSPIN_LOCK
   ): LARGE_INTEGER; stdcall; // Source: ReactOS
-procedure {020}xboxkrnl_ExInterlockedAddLargeStatistic(
+procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   Addend: PLARGE_INTEGER;
   Increment: ULONG
   ); stdcall; // Source: ReactOS
-function {021}xboxkrnl_ExInterlockedCompareExchange64(
+function {021} xboxkrnl_ExInterlockedCompareExchange64(
   Destination: PLONGLONG; // OUT
   Exchange: PLONGLONG;
   Comparand: PLONGLONG;
   Lock: PKSPIN_LOCK
   ): LONGLONG; stdcall; // Source: ReactOS
-function {023}xboxkrnl_ExQueryPoolBlockSize(
+function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
   QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall; // Source: ReactOS
-function {024}xboxkrnl_ExQueryNonVolatileSetting(
+function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
   ): NTSTATUS; stdcall; // Source: OpenXDK
-function {025}xboxkrnl_ExReadWriteRefurbInfo(
+function {025} xboxkrnl_ExReadWriteRefurbInfo(
   Arg1: PXBOX_REFURB_INFO;
   Arg2Size: DWORD;
   Arg3: LONGBOOL
   ): NTSTATUS; stdcall; // Source: XBMC - Uncertain
-procedure {026}xboxkrnl_ExRaiseException(
+procedure {026} xboxkrnl_ExRaiseException(
   ExceptionRecord: PEXCEPTION_RECORD
   ); stdcall; // Source: ReactOS
-procedure {027}xboxkrnl_ExRaiseStatus(
+procedure {027} xboxkrnl_ExRaiseStatus(
   Status: NTSTATUS
   ); stdcall; // Source: ReactOS
-function {028}xboxkrnl_ExReleaseReadWriteLock(
+function {028} xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-function {029}xboxkrnl_ExSaveNonVolatileSetting(
+function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; //   OUT
   Value: PUCHAR;
   ValueLength: SIZE_T
   ): NTSTATUS; stdcall; // Source: OpenXDK
-function {032}xboxkrnl_ExfInterlockedInsertHeadList(
+function {032} xboxkrnl_ExfInterlockedInsertHeadList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
-function {033}xboxkrnl_ExfInterlockedInsertTailList(
+function {033} xboxkrnl_ExfInterlockedInsertTailList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
-function {034}xboxkrnl_ExfInterlockedRemoveHeadList(
+function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
@@ -129,7 +129,7 @@ function {034}xboxkrnl_ExfInterlockedRemoveHeadList(
 
 implementation
 
-function {012}xboxkrnl_ExAcquireReadWriteLockExclusive(
+function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
@@ -139,7 +139,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {013}xboxkrnl_ExAcquireReadWriteLockShared(
+function {013} xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
@@ -151,17 +151,18 @@ end;
 
 // Differences from NT: There is no PoolType field, as the XBOX
 // only has 1 pool, the non-paged pool.
-function {014}xboxkrnl_ExAllocatePool(
+
+function {014} xboxkrnl_ExAllocatePool(
   NumberOfBytes: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(); // Win2k/XP FS
   Unimplemented('ExAllocatePool');
-  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E{?}));
+  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E {?}));
   EmuSwapFS(); // Xbox FS
 end;
 
-function {015}xboxkrnl_ExAllocatePoolWithTag(
+function {015} xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
@@ -173,7 +174,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {017}xboxkrnl_ExFreePool(
+procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
   ); stdcall; // Source: ReactOS
 begin
@@ -183,7 +184,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {018}xboxkrnl_ExInitializeReadWriteLock(
+function {018} xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
@@ -192,7 +193,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {019}xboxkrnl_ExInterlockedAddLargeInteger(
+function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Addend: PLARGE_INTEGER;
   Increment: LARGE_INTEGER;
   Lock: PKSPIN_LOCK
@@ -204,7 +205,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {020}xboxkrnl_ExInterlockedAddLargeStatistic(
+procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   Addend: PLARGE_INTEGER;
   Increment: ULONG
   ); stdcall; // Source: ReactOS
@@ -214,7 +215,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {021}xboxkrnl_ExInterlockedCompareExchange64(
+function {021} xboxkrnl_ExInterlockedCompareExchange64(
   Destination: PLONGLONG; // OUT
   Exchange: PLONGLONG;
   Comparand: PLONGLONG;
@@ -226,7 +227,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {023}xboxkrnl_ExQueryPoolBlockSize(
+function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
   QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall; // Source: ReactOS
@@ -240,7 +241,8 @@ end;
 // this function, when first called, creates a "shadow" copy
 // of the EEPROM in RAM which is used in subsequent calls to Query,
 // and updated by ExSaveNonVolatileSetting.
-function {024}xboxkrnl_ExQueryNonVolatileSetting(
+
+function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; // out
   Value: PUCHAR; // out
@@ -253,7 +255,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {025}xboxkrnl_ExReadWriteRefurbInfo(
+function {025} xboxkrnl_ExReadWriteRefurbInfo(
   Arg1: PXBOX_REFURB_INFO;
   Arg2Size: DWORD;
   Arg3: LONGBOOL
@@ -264,7 +266,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {026}xboxkrnl_ExRaiseException(
+procedure {026} xboxkrnl_ExRaiseException(
   ExceptionRecord: PEXCEPTION_RECORD
   ); stdcall; // Source: ReactOS
 begin
@@ -274,7 +276,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {027}xboxkrnl_ExRaiseStatus(
+procedure {027} xboxkrnl_ExRaiseStatus(
   Status: NTSTATUS
   ); stdcall; // Source: ReactOS
 begin
@@ -283,7 +285,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {028}xboxkrnl_ExReleaseReadWriteLock(
+function {028} xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
@@ -292,7 +294,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {029}xboxkrnl_ExSaveNonVolatileSetting(
+function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; //   OUT
   Value: PUCHAR;
@@ -304,7 +306,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {032}xboxkrnl_ExfInterlockedInsertHeadList(
+function {032} xboxkrnl_ExfInterlockedInsertHeadList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
@@ -316,7 +318,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {033}xboxkrnl_ExfInterlockedInsertTailList(
+function {033} xboxkrnl_ExfInterlockedInsertTailList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
@@ -328,7 +330,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {034}xboxkrnl_ExfInterlockedRemoveHeadList(
+function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
@@ -340,4 +342,3 @@ begin
 end;
 
 end.
-

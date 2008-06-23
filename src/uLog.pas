@@ -145,7 +145,7 @@ begin
         Flush({var}LogFile);
       end;
   end;
-  
+
   LeaveCriticalSection({var}DxbxLogLock);
 end;
 
