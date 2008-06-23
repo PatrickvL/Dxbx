@@ -68,7 +68,7 @@ type
 
 var
   // Array of EmuHandles in the system
-  {EmuHandle.}Handles: array[0..EMU_MAX_HANDLES-1] of TEmuHandle;
+  {EmuHandle.}Handles: array[0..EMU_MAX_HANDLES - 1] of TEmuHandle;
 
   // Pointer to first free handle in array, or NULL if none
   {volatile EmuHandle.}FirstFree: TEmuHandle;
@@ -79,8 +79,8 @@ var
   // Lock on the handle system
   {EmuHandle.}HandleLock: _RTL_CRITICAL_SECTION;
 
-function IsEmuHandle(hFile: {xboxkrnl::}HANDLE): BOOL; inline
-function EmuHandleToPtr(hFile: {xboxkrnl::}HANDLE): TEmuHandle; inline;
+function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): BOOL; inline
+function EmuHandleToPtr(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
 function PtrToEmuHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 
 {$ENDIF}
@@ -90,18 +90,21 @@ implementation
 {$IFDEF DXBX_EMUHANDLES}
 
 // is hFile a 'special' emulated handle?
-function IsEmuHandle(hFile: {xboxkrnl::}HANDLE): BOOL; inline
+
+function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): BOOL; inline
 begin
   Result := (uint32(hFile) > $80000000) and (int32(hFile) <> -1);
 end;
 
 // convert from 'special' emulated handle to a pointer
-function EmuHandleToPtr(hFile: {xboxkrnl::}HANDLE): TEmuHandle; inline;
+
+function EmuHandleToPtr(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
 begin
   Result := TEmuHandle(uint32(hFile) - $80000000);
 end;
 
 // convert from 'special' emulated handle to a pointer
+
 function PtrToEmuHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 begin
   Result := HANDLE(uint32(apEmuHandle) + $80000000);
@@ -110,4 +113,3 @@ end;
 {$ENDIF}
 
 end.
-

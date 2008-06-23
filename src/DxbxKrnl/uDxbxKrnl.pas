@@ -73,7 +73,7 @@ var
   CxbxKrnl_hEmuParent: THandle;
 
   // thread handles
-  g_hThreads: array [0..MAXIMUM_XBOX_THREADS - 1] of THandle;
+  g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of THandle;
 
 implementation
 
@@ -119,7 +119,7 @@ begin
   begin
 {$IFDEF _DEBUG_TRACE}
     DbgPrintf('EmuMain : Debug Trace Enabled.');
-    
+
     DbgPrintf('EmuMain : 0x' + IntToHex(Integer(@CxbxKrnlInit), 8) + ' : CxbxKrnlInit(');
     // TODO : For some reason, using Format() fails here?
     DbgPrintf('  hwndParent       : 0x' + IntToHex(hwndParent, 8));
@@ -142,13 +142,13 @@ begin
   begin
     MemXbeHeader := PXBE_HEADER($00010000);
 
-    VirtualProtect(MemXbeHeader, $1000, PAGE_READWRITE, {var}old_protection);
+    VirtualProtect(MemXbeHeader, $1000, PAGE_READWRITE, {var} old_protection);
 
     // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-    MemXbeHeader.dwSizeofHeaders   := pXbeHeader.dwSizeofHeaders;
+    MemXbeHeader.dwSizeofHeaders := pXbeHeader.dwSizeofHeaders;
     MemXbeHeader.dwCertificateAddr := pXbeHeader.dwCertificateAddr;
-    MemXbeHeader.dwPeHeapReserve   := pXbeHeader.dwPeHeapReserve;
-    MemXbeHeader.dwPeHeapCommit    := pXbeHeader.dwPeHeapCommit;
+    MemXbeHeader.dwPeHeapReserve := pXbeHeader.dwPeHeapReserve;
+    MemXbeHeader.dwPeHeapCommit := pXbeHeader.dwPeHeapCommit;
 
     CopyMemory(@MemXbeHeader.dwInitFlags, @pXbeHeader.dwInitFlags, SizeOf(pXbeHeader.dwInitFlags));
     CopyMemory(Pointer(pXbeHeader.dwCertificateAddr), PChar(pXbeHeader) + pXbeHeader.dwCertificateAddr - $00010000, SizeOf(XBE_CERTIFICATE));
@@ -254,7 +254,7 @@ begin
     hDupHandle := 0;
 
     if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS) then
-        DbgPrintf('EmuMain : Couldn''t duplicate handle!');
+      DbgPrintf('EmuMain : Couldn''t duplicate handle!');
 
     CxbxKrnlRegisterThread(hDupHandle);
   end;
@@ -269,7 +269,7 @@ begin
 
   // Xbe entry point
   try
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(); // XBox FS
 
     // _USE_XGMATH Disabled in mesh :[
     // halo : dword_0_2E2D18
@@ -296,7 +296,7 @@ begin
 
     Entry();
 
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(); // Win2k/XP FS
   except
     on E: Exception do
       DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
@@ -333,19 +333,20 @@ end;
 procedure CxbxKrnlTerminateThread();
 begin
   if EmuIsXboxFS then
-    EmuSwapFS();    // Win2k/XP FS
+    EmuSwapFS(); // Win2k/XP FS
 
   EmuCleanupFS;
 
-if m_DxbxDebug = DM_CONSOLE then Sleep(10 * 1000); // TODO : Remove this!
+  if m_DxbxDebug = DM_CONSOLE then Sleep(10 * 1000); // TODO : Remove this!
 
   TerminateThread(GetCurrentThread(), 0);
 end;
 
 // alert for the situation where an Xref function body is hit
+
 procedure EmuXRefFailure();
 begin
-  EmuSwapFS();    // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
   CxbxKrnlCleanup('XRef-only function body reached. Fatal Error.');
 end;
@@ -364,11 +365,11 @@ end;
 
 procedure CxbxKrnlNoFunc;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuMain : CxbxKrnlNoFunc()');
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 end;
 
 exports
@@ -376,4 +377,3 @@ exports
   EmuPanic;
 
 end.
-

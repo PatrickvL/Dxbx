@@ -47,4 +47,3 @@ var
 implementation
 
 end.
-

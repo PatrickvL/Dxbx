@@ -147,24 +147,24 @@ type    LPSECURITY_ATTRIBUTES = Pointer;
 type                              NTSTATUS = LongInt;
 
 const NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
-const STATUS_SUCCESS =                   ((DWORD   )$00000000L);  
+const STATUS_SUCCESS =                   ((DWORD   )$00000000L);
 //ifndef STATUS_PENDING
-const STATUS_PENDING =                   ((DWORD   )$00000103L);    
+const STATUS_PENDING =                   ((DWORD   )$00000103L);
 //endif
-const STATUS_TIMER_RESUME_IGNORED =      ((DWORD   )$40000025L);  
-const STATUS_UNSUCCESSFUL =              ((DWORD   )$C0000001);  
-const STATUS_UNRECOGNIZED_MEDIA =        ((DWORD   )$C0000014);  
+const STATUS_TIMER_RESUME_IGNORED =      ((DWORD   )$40000025L);
+const STATUS_UNSUCCESSFUL =              ((DWORD   )$C0000001);
+const STATUS_UNRECOGNIZED_MEDIA =        ((DWORD   )$C0000014);
 //ifndef STATUS_NO_MEMORY
-const STATUS_NO_MEMORY =                 ((DWORD   )$C0000017L);    
+const STATUS_NO_MEMORY =                 ((DWORD   )$C0000017L);
 //endif
-const STATUS_ALERTED =                   ((DWORD   )$00000101);  
+const STATUS_ALERTED =                   ((DWORD   )$00000101);
 const STATUS_USER_APC =                  ((DWORD   )$000000C0L);
 // The SCSI input buffer was too large (not necessarily an error!)
-const STATUS_DATA_OVERRUN =              ((DWORD   )$C000003CL);  
-const STATUS_INVALID_IMAGE_FORMAT =      ((DWORD   )$C000007BL);  
-const STATUS_INSUFFICIENT_RESOURCES =    ((DWORD   )$C000009AL);  
-const STATUS_TOO_MANY_SECRETS =          ((DWORD   )$C0000156L);  
-const STATUS_XBE_REGION_MISMATCH =       ((DWORD   )$C0050001L);  
+const STATUS_DATA_OVERRUN =              ((DWORD   )$C000003CL);
+const STATUS_INVALID_IMAGE_FORMAT =      ((DWORD   )$C000007BL);
+const STATUS_INSUFFICIENT_RESOURCES =    ((DWORD   )$C000009AL);
+const STATUS_TOO_MANY_SECRETS =          ((DWORD   )$C0000156L);
+const STATUS_XBE_REGION_MISMATCH =       ((DWORD   )$C0050001L);
 const STATUS_XBE_MEDIA_MISMATCH =        ((DWORD   )$C0050002L);
 const STATUS_OBJECT_NAME_NOT_FOUND =     ((DWORD   )$C0000034L);
 const STATUS_OBJECT_NAME_COLLISION =     ((DWORD   )$C0000035L);
@@ -172,17 +172,17 @@ const STATUS_OBJECT_NAME_COLLISION =     ((DWORD   )$C0000035L);
 // ******************************************************************
 // * PAGE Masks
 // ******************************************************************
-const PAGE_NOACCESS =          $01;     
-const PAGE_READONLY =          $02;     
+const PAGE_NOACCESS =          $01;
+const PAGE_READONLY =          $02;
 const PAGE_READWRITE =         $04;
-const PAGE_WRITECOPY =         $08;     
-const PAGE_EXECUTE =           $10;     
-const PAGE_EXECUTE_READ =      $20;     
+const PAGE_WRITECOPY =         $08;
+const PAGE_EXECUTE =           $10;
+const PAGE_EXECUTE_READ =      $20;
 const PAGE_EXECUTE_READWRITE = $40;
-const PAGE_EXECUTE_WRITECOPY = $80;     
-const PAGE_GUARD =             $100;     
-const PAGE_NOCACHE =           $200;     
-const PAGE_WRITECOMBINE =      $400;     
+const PAGE_EXECUTE_WRITECOPY = $80;
+const PAGE_GUARD =             $100;
+const PAGE_NOCACHE =           $200;
+const PAGE_WRITECOMBINE =      $400;
 
 // ******************************************************************
 // * calling conventions
@@ -240,11 +240,11 @@ WAIT_TYPE;
 type
   _LARGE_INTEGER = record
     case Integer of
-    0: (
-      LowPart: DWORD;
-      HighPart: LongInt);
-    1: (
-      QuadPart: LONGLONG);
+      0: (
+        LowPart: DWORD;
+        HighPart: LongInt);
+      1: (
+        QuadPart: LONGLONG);
   end;
 
   LARGE_INTEGER = _LARGE_INTEGER;
@@ -265,14 +265,14 @@ type
 
   ULARGE_INTEGER = _ULARGE_INTEGER;
   PULARGE_INTEGER = ^ULARGE_INTEGER;
-  
+
 (*
 // ******************************************************************
 // * STRING
 // ******************************************************************
 type
 
-STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = record  
+STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = record
     USHORT  Length;
     USHORT  MaximumLength;
     PCHAR   Buffer;
@@ -282,8 +282,8 @@ STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = record
 // * UNICODE_STRING
 // ******************************************************************
 type
-  
-UNICODE_STRING,*PUNICODE_STRING  = record  
+
+UNICODE_STRING,*PUNICODE_STRING  = record
     USHORT  Length;
     USHORT  MaximumLength;
     USHORT *Buffer;
@@ -293,8 +293,8 @@ UNICODE_STRING,*PUNICODE_STRING  = record
 // * LIST_ENTRY
 // ******************************************************************
 type
-  
-LIST_ENTRY,*PLIST_ENTRY  = record  
+
+LIST_ENTRY,*PLIST_ENTRY  = record
     struct _LIST_ENTRY *Flink;
     struct _LIST_ENTRY *Blink;
  end;
@@ -303,8 +303,8 @@ LIST_ENTRY,*PLIST_ENTRY  = record
 // * FILE_FS_SIZE_INFORMATION
 // ******************************************************************
 type
-  
-FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = record  
+
+FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = record
     LARGE_INTEGER   TotalAllocationUnits;
     LARGE_INTEGER   AvailableAllocationUnits;
     ULONG           SectorsPerAllocationUnit;
@@ -409,8 +409,8 @@ const FILE_VALID_SET_FLAGS =                    $00000036;
 // * OBJECT_ATTRIBUTES
 // ******************************************************************
 type
-  
-OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES  = record  
+
+OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES  = record
     THandle  RootDirectory;
     PSTRING ObjectName;
     ULONG   Attributes;
@@ -424,7 +424,7 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value **** )
  _FSINFOCLASS
-begin 
+begin
     FileFsVolumeInformation       = 1,
     FileFsLabelInformation,      // 2
     FileFsSizeInformation,       // 3
@@ -441,8 +441,8 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // * FILE_DIRECTORY_INFORMATION
 // ******************************************************************
 type
-  
-FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION 
+
+FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION
  
     ULONG           NextEntryOffset;
     ULONG           FileIndex;
@@ -462,7 +462,7 @@ FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION
 // ******************************************************************
 type
   PMM_STATISTICS = ^MM_STATISTICS;
-  MM_STATISTICS  = record
+  MM_STATISTICS = record
     Length: ULONG;
     TotalPhysicalPages: ULONG;
     AvailablePages: ULONG;
@@ -499,7 +499,7 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value **** )
  _EVENT_TYPE
-begin 
+begin
     NotificationEvent = 0,
     SynchronizationEvent
  end;
@@ -513,7 +513,7 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value **** )
  _BUS_DATA_TYPE
-begin 
+begin
     ConfigurationSpaceUndefined = $FF,
     Cmos                        = $0,
     EisaConfiguration           = $1,
@@ -535,12 +535,12 @@ BUS_DATA_TYPE;
 // * PCI_SLOT_NUMBER
 // ******************************************************************
 type
-  
-    bits  = record  
+
+    bits  = record
     union
-    begin 
+    begin
         struct
-        begin 
+        begin
             ULONG   DeviceNumber:5;
             ULONG   FunctionNumber:3;
             ULONG   Reserved:24;
@@ -559,8 +559,8 @@ const PCI_TYPE2_ADDRESSES =             5;
 // * PCI_COMMON_CONFIG
 // ******************************************************************
 type
-  
-    type0  = record  
+
+    type0  = record
     USHORT  VendorID;                   // 0x00 (ro)
     USHORT  DeviceID;                   // 0x02 (ro)
     USHORT  Command;                    // 0x04 Device control
@@ -575,9 +575,9 @@ type
     UCHAR   BIST;                       // 0x0F Built in self test
 
     union
-    begin 
+    begin
         struct _PCI_HEADER_TYPE_0
-        begin 
+        begin
                BaseAddresses: array[0..PCI_TYPE0_ADDRESSES-1] of ULONG; // 0x10
             ULONG   CIS;
             USHORT  SubVendorID;
@@ -623,12 +623,12 @@ const PCI_USB0_OHCI_CONTROLLER =            $01C2;
 type
   LPRETURN_FIRMWARE = ^RETURN_FIRMWARE;
   RETURN_FIRMWARE = {enum}(
-    ReturnFirmwareHalt{=$0},
-    ReturnFirmwareReboot{=$1},
-    ReturnFirmwareQuickReboot{=$2},
-    ReturnFirmwareHard{=$3},
-    ReturnFirmwareFatal{=$4},
-    ReturnFirmwareAll{=$5});
+    ReturnFirmwareHalt {=$0},
+    ReturnFirmwareReboot {=$1},
+    ReturnFirmwareQuickReboot {=$2},
+    ReturnFirmwareHard {=$3},
+    ReturnFirmwareFatal {=$4},
+    ReturnFirmwareAll {=$5});
 
 // ******************************************************************
 // * LAUNCH_DATA_HEADER
@@ -637,7 +637,7 @@ type
   LAUNCH_DATA_HEADER = record
     dwLaunchDataType: DWORD;
     dwTitleId: DWORD;
-    szLaunchPath: array[0..520-1] of UCHAR;
+    szLaunchPath: array[0..520 - 1] of UCHAR;
     dwFlags: DWORD;
   end;
   PLAUNCH_DATA_HEADER = ^LAUNCH_DATA_HEADER;
@@ -648,8 +648,8 @@ type
 type
   LAUNCH_DATA_PAGE = record
     Header: LAUNCH_DATA_HEADER;
-    Pad: array[0..492-1] of UCHAR;
-    LaunchData: array[0..3072-1] of UCHAR;
+    Pad: array[0..492 - 1] of UCHAR;
+    LaunchData: array[0..3072 - 1] of UCHAR;
   end;
   PLAUNCH_DATA_PAGE = ^LAUNCH_DATA_PAGE;
 
@@ -657,14 +657,14 @@ type
 // * DISPATCHER_HEADER
 // ******************************************************************
 type
-  DISPATCHER_HEADER  = record
-    cType: UCHAR;             // 0x00
-    _Absolute: UCHAR;         // 0x01
-    Size: UCHAR;              // 0x02
-    Inserted: UCHAR;          // 0x03
-    SignalState: LongInt;     // 0x04
+  DISPATCHER_HEADER = record
+    cType: UCHAR; // 0x00
+    _Absolute: UCHAR; // 0x01
+    Size: UCHAR; // 0x02
+    Inserted: UCHAR; // 0x03
+    SignalState: LongInt; // 0x04
     WaitListHead: LIST_ENTRY; // 0x08
- end;
+  end;
 
 (*
 // ******************************************************************
@@ -675,7 +675,7 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value **** )
  _TIMER_TYPE
-begin 
+begin
     NotificationTimer     = 0,
     SynchronizationTimer  = 1
  end;
@@ -686,13 +686,13 @@ TIMER_TYPE;
 // ******************************************************************
 type
   PKTIMER = ^KTIMER;
-  KTIMER  = record
-    Header: DISPATCHER_HEADER;    // 0x00
-    DueTime: ULARGE_INTEGER;      // 0x10
-    TimerListEntry: LIST_ENTRY;   // 0x18
-    Dpc: _PKDPC;                  // 0x20
-    Period: LongInt;              // 0x24
- end;
+  KTIMER = record
+    Header: DISPATCHER_HEADER; // 0x00
+    DueTime: ULARGE_INTEGER; // 0x10
+    TimerListEntry: LIST_ENTRY; // 0x18
+    Dpc: _PKDPC; // 0x20
+    Period: LongInt; // 0x24
+  end;
 (*
 // ******************************************************************
 // * PKSTART_ROUTINE
@@ -722,7 +722,7 @@ type
     DeferredContext: PVOID;
     SystemArgument1: PVOID;
     SystemArgument2: PVOID
-  ); stdcall; // TODO : Is this indeed the necessary calling convention?
+    ); stdcall; // TODO : Is this indeed the necessary calling convention?
 
 
 // ******************************************************************
@@ -731,16 +731,16 @@ type
 type
   PKDPC = ^KDPC;
   KDPC = record
-    cType: CSHORT;                       // 0x00
-    Number: UCHAR;                       // 0x02
-    Importance: UCHAR;                   // 0x03
-    DpcListEntry: LIST_ENTRY;            // 0x04
+    cType: CSHORT; // 0x00
+    Number: UCHAR; // 0x02
+    Importance: UCHAR; // 0x03
+    DpcListEntry: LIST_ENTRY; // 0x04
     DeferredRoutine: PKDEFERRED_ROUTINE; // 0x0C
     DeferredContext: PVOID;
     SystemArgument1: PVOID;
     SystemArgument2: PVOID;
   end;
-  
+
 (*
 // ******************************************************************
 // * KOBJECTS
@@ -750,7 +750,7 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value **** )
  _KOBJECTS
-begin 
+begin
     DpcObject = $13,
  end;
 KOBJECTS, *PKOBJECTS;
@@ -759,8 +759,8 @@ KOBJECTS, *PKOBJECTS;
 // * RTL_CRITICAL_SECTION
 // ******************************************************************
 type
-  
-RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = record  
+
+RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = record
                    Unknown: array[0..4-1] of DWORD;                                     // 0x00
     LongInt                LockCount;                                      // 0x10
     LongInt                RecursionCount;                                 // 0x14
@@ -774,20 +774,20 @@ RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = record
 type
   PNT_TIB = ^NT_TIB;
   NT_TIB = record
-    ExceptionList: PEXCEPTION_REGISTRATION_RECORD;          // 0x00
-    StackBase: Pointer;              // 0x04
-    StackLimit: Pointer;             // 0x08
-    SubSystemTib: Pointer;           // 0x0C
+    ExceptionList: PEXCEPTION_REGISTRATION_RECORD; // 0x00
+    StackBase: Pointer; // 0x04
+    StackLimit: Pointer; // 0x08
+    SubSystemTib: Pointer; // 0x0C
 //    case Boolean of
 //      True: (
-        FiberData: Pointer;                                            // 0x10 for TIB
+    FiberData: Pointer; // 0x10 for TIB
 //        );
 //      False: (
 //        Version: ULONG;                                              // 0x10 for TEB (?)
 //        )
 //    end;
-    ArbitraryUserPointer: Pointer;   // 0x14
-    Self: PNT_TIB;                   // 0x18
+    ArbitraryUserPointer: Pointer; // 0x14
+    Self: PNT_TIB; // 0x18
   end;
 
 // ******************************************************************
@@ -799,10 +799,10 @@ type
 // ******************************************************************
 type
   PKTHREAD = ^KTHREAD;
-  KTHREAD  = record
-    UnknownA: array[0..$28-1] of UCHAR;
-    TlsData: PVOID;        // 0x28
-    UnknownB: array[0..$E4-1] of UCHAR; // 0x2C
+  KTHREAD = record
+    UnknownA: array[0..$28 - 1] of UCHAR;
+    TlsData: PVOID; // 0x28
+    UnknownB: array[0..$E4 - 1] of UCHAR; // 0x2C
   end;
 
 // ******************************************************************
@@ -814,11 +814,11 @@ type
 // ******************************************************************
 type
   PETHREAD = ^ETHREAD;
-  ETHREAD  = record
+  ETHREAD = record
     Tcb: KTHREAD;
-    UnknownA: array[0..$1C-1] of UCHAR; // 0x110
-    UniqueThread: DWORD;   // 0x12C
- end;
+    UnknownA: array[0..$1C - 1] of UCHAR; // 0x110
+    UniqueThread: DWORD; // 0x12C
+  end;
 
  // ******************************************************************
 // * KPCRB
@@ -830,12 +830,12 @@ type
 type
   PKPRCB = ^KPRCB;
   KPRCB = record
-    CurrentThread: PKTHREAD;                                 // 0x00, KPCR : 0x28
-    NextThread: PKTHREAD;                                    // 0x04, KPCR : 0x2C
-    IdleThread: PKTHREAD;                                    // 0x08, KPCR : 0x30
+    CurrentThread: PKTHREAD; // 0x00, KPCR : 0x28
+    NextThread: PKTHREAD; // 0x04, KPCR : 0x2C
+    IdleThread: PKTHREAD; // 0x08, KPCR : 0x30
 
     // This is the total size of the structure (presumably)
-    Unknown: array[0..$250-1] of UCHAR;                                // 0x0C, KPCR : 0x34
+    Unknown: array[0..$250 - 1] of UCHAR; // 0x0C, KPCR : 0x34
   end;
 
 // ******************************************************************
@@ -847,12 +847,12 @@ type
 // ******************************************************************
 type
   PKPCR = ^KPCR;
-  KPCR  = record
-    NtTib: NT_TIB;                                         // 0x00
-    SelfPcr: PKPCR;                                        // 0x1C
-    Prcb: PKPRCB;                                          // 0x20
-    Irql: UCHAR;                                           // 0x24
-    PrcbData: KPRCB;                                       // 0x28
+  KPCR = record
+    NtTib: NT_TIB; // 0x00
+    SelfPcr: PKPCR; // 0x1C
+    Prcb: PKPRCB; // 0x20
+    Irql: UCHAR; // 0x24
+    PrcbData: KPRCB; // 0x28
   end;
 
 (*
@@ -864,7 +864,7 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value **** )
  _EEPROM_INDEX
-begin 
+begin
     EEPROM_MISC = $11
  end;
 EEPROM_INDEX, *PEEPROM_INDEX;
@@ -886,8 +886,8 @@ type
 // * TIME_FIELDS
 // ******************************************************************
 type
-  
-TIME_FIELDS,*PTIME_FIELDS  = record  
+
+TIME_FIELDS,*PTIME_FIELDS  = record
     USHORT  Year;
     USHORT  Month;
     USHORT  Day;
@@ -906,7 +906,7 @@ TIME_FIELDS,*PTIME_FIELDS  = record
 // *
 // ******************************************************************
 INLINE  function READ_REGISTER_UCHAR(Address: PUCHAR): UCHAR;
-begin 
+begin
     result:= *(volatile UCHAR )Address;
  end;
 
@@ -918,7 +918,7 @@ begin
 // *
 // ******************************************************************
 INLINE  USHORT READ_REGISTER_USHORT(PUSHORT Address)
-begin 
+begin
     result:= *(volatile USHORT )Address;
  end;
 
@@ -930,7 +930,7 @@ begin
 // *
 // ******************************************************************
 INLINE  ULONG READ_REGISTER_ULONG(PULONG Address)
-begin 
+begin
     result:= *(volatile ULONG )Address;
  end;
 
@@ -944,9 +944,9 @@ begin
 // *
 // ******************************************************************
  VOID WRITE_REGISTER_function(Address: PVOID; Value: UCHAR): UCHAR;
-begin 
+begin
     asm
-    begin 
+    begin
         mov edx, Address
         mov ah, Value
         mov [edx], ah
@@ -964,9 +964,9 @@ begin
 // *
 // ******************************************************************
  VOID WRITE_REGISTER_USHORT(PVOID Address, USHORT Value)
-begin 
+begin
     asm
-    begin 
+    begin
         mov edx, Address
         mov ax, Value
         mov [edx], ax
@@ -984,9 +984,9 @@ begin
 // *
 // ******************************************************************
  VOID WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
-begin 
+begin
     asm
-    begin 
+    begin
         mov edx, Address
         mov eax, Value
         mov [edx], eax
@@ -1123,7 +1123,7 @@ type
     PNPISABus,
     PNPBus,
     MaximumInterfaceType
-  );
+    );
   INTERFACE_TYPE = _INTERFACE_TYPE;
   PINTERFACE_TYPE = ^INTERFACE_TYPE;
 
@@ -1131,11 +1131,11 @@ type
 // DXBX Addition : Create Thread Notify Routine - Source: ReactOS
 //
 type
- PCREATE_THREAD_NOTIFY_ROUTINE = procedure(
-   ProcessId: HANDLE;
-   ThreadId: HANDLE;
-   Create: LONGBOOL); stdcall;
-   
+  PCREATE_THREAD_NOTIFY_ROUTINE = procedure(
+    ProcessId: HANDLE;
+    ThreadId: HANDLE;
+    Create: LONGBOOL); stdcall;
+
 implementation
 
 end.

@@ -24,69 +24,68 @@ interface
 
 implementation
 
-Uses Windows;
+uses Windows, SysUtils,
+  uLog, uEmuFS;
 
-// ******************************************************************
-// * func: EmuWSAStartup
-// ******************************************************************
-Function XTL_EmuWSAStartup : integer;
+// func: EmuWSAStartup
+
+function XTL_EmuWSAStartup: integer;
+var
 (*(
     WORD        wVersionRequested,
     WSADATA    *lpWSAData
 ) *)
+  ret : Integer;
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS;   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($ mod X): EmuWSAStartup'
-           '("
-           "   wVersionRequested   : $ mod .08X"
-           "   lpWSAData           : $ mod .08X"
-           ");",
-           GetCurrentThreadId(), wVersionRequested, lpWSAData);
+    (*DbgPrintf(Format ('EmuXapi (% mod X): EmuWSAStartup' +
+           '( '+
+           '   wVersionRequested   : % mod .08X' +
+           '   lpWSAData           : % mod .08X' +
+           ');',
+           [GetCurrentThreadId(), wVersionRequested, lpWSAData]));
 
-    integer ret := XTL.WSAStartup(wVersionRequested, lpWSAData);
+    ret := XTL.WSAStartup(wVersionRequested, lpWSAData); *)
 
     EmuSwapFS();   // XBox FS
 
-    result:= ret;  *)
- end;
+    result:= ret;
+end;
 
-// ******************************************************************
-// * func: EmuXNetStartup
-// ******************************************************************
-Function XTL_EmuXNetStartup : Integer;
+// func: EmuXNetStartup
+
+function XTL_EmuXNetStartup: Integer;
 (*(
      PVOID pDummy
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuXapi ($ mod X): EmuXNetStartup"
+    (*DbgPrintf("EmuXapi ($ mod X): EmuXNetStartup"
            "("
            "   pDummy              : $ mod .08X"
            ");",
-           GetCurrentThreadId(), pDummy);
+           GetCurrentThreadId(), pDummy); *)
 
     EmuSwapFS();   // XBox FS
 
-    // Fake Successfull...hehehe...sucker...hehehehehe
-    result:= 0;       *)
- end;
+    (*// Fake Successfull...hehehe...sucker...hehehehehe *)
+    // Remark in cxbx code... wtf ??
+    result:= 0;
+end;
 
-// ******************************************************************
-// * func: EmuXNetGetEthernetLinkStatus
-// ******************************************************************
-Function XTL_EmuXNetGetEthernetLinkStatus : DWORD;
+// func: EmuXNetGetEthernetLinkStatus
+
+function XTL_EmuXNetGetEthernetLinkStatus: DWORD;
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
-
-    DbgPrintf("EmuXapi ($ mod X): EmuXNetGetEthernetLinkStatus();", GetCurrentThreadId());
-
+    EmuSwapFS();   // Win2k/XP FS
+    DbgPrintf( Format ('EmuXapi (% mod X): EmuXNetGetEthernetLinkStatus();', [GetCurrentThreadId]));
     EmuSwapFS();   // XBox FS
 
     // for now, no ethernet connection is available
-    result:= 0; *)
- end;
+    result:= 0; 
+end;
 
 // ******************************************************************
 // * func: EmuThis::Emusocket
@@ -97,7 +96,7 @@ begin
     integer   ctype,
     integer   protocol
 )
-begin 
+begin
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuXapi ($ mod X): EmuThis.Emusocket"
@@ -120,7 +119,7 @@ begin
 // * func: EmuThis::Emubind
 // ******************************************************************
 (*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: integer): integer;
-begin 
+begin
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuXapi ($ mod X): EmuThis.Emubind"
@@ -145,7 +144,7 @@ begin
 // * func: EmuThis::Emulisten
 // ******************************************************************
 (*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: integer): integer;
-begin 
+begin
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuXapi ($ mod X): EmuThis.Emulisten"
@@ -169,7 +168,7 @@ begin
 // * func: EmuThis::Emuioctlsocket
 // ******************************************************************
 (*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): integer;
-begin 
+begin
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuXapi ($ mod X): EmuThis.Emuioctlsocket"
@@ -187,6 +186,7 @@ begin
 
     result:= ret;
  end;            *)
-
+
+
 
 end.

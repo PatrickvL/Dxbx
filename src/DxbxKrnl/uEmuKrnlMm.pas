@@ -128,7 +128,7 @@ end;
 
 function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
-  Protect: ULONG 
+  Protect: ULONG
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -158,7 +158,7 @@ begin
 end;
 
 function xboxkrnl_MmFreeContiguousMemory(
-  BaseAddress: PVOID 
+  BaseAddress: PVOID
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -214,7 +214,7 @@ end;
 function xboxkrnl_MmPersistContiguousMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
-  Persist: LONGBOOL 
+  Persist: LONGBOOL
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -250,7 +250,7 @@ end;
 function xboxkrnl_MmSetAddressProtect(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
-  NewProtect: ULONG 
+  NewProtect: ULONG
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -301,4 +301,3 @@ begin
 end;
 
 end.
-

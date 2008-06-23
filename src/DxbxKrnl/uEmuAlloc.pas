@@ -121,7 +121,7 @@ const CxbxRtlSizeHeap(Heap, = Flags, pMem)       NtDll.RtlSizeHeap(Heap, Flags, 
 // * prevent name collisions
 // ******************************************************************
 namespace NtDll
-begin 
+begin
     //include 'EmuNtDll.h'
 );
 
@@ -136,7 +136,7 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value **** )
 
-begin 
+begin
     CXBX_ALLOC_NORMAL,
     CXBX_ALLOC_RTL
 end;
@@ -259,7 +259,7 @@ CXBX_MEMORY_BLOCK *RemoveMemoryBlock(Pointer pMem)
 begin
     CXBX_MEMORY_BLOCK *pFree := nil;
     if IsThisMemoryBlock(pMem, g_pFirstBlock) then
-    begin 
+    begin
         pFree := g_pFirstBlock;
         g_pFirstBlock := g_pFirstBlock.pNext;
         if pFree = g_pLastBlock then
@@ -268,11 +268,11 @@ begin
         end;
     end
     else
-    begin 
+    begin
         CXBX_MEMORY_BLOCK *pCur;
         CXBX_MEMORY_BLOCK *pPrev := 0;
         for(pCur := g_pFirstBlock; pCur; pCur = pCur.pNext)
-        begin 
+        begin
             if IsThisMemoryBlock(pMem, pCur) then
             begin
                 if pCur = g_pLastBlock then
@@ -298,7 +298,7 @@ begin
     CXBX_MEMORY_BLOCK *pCur;
 
     for(pCur := g_pFirstBlock; pCur; pCur = pCur.pNext)
-    begin 
+    begin
         if IsThisMemoryBlock(pMem, pCur) then
         begin
             Result := pCur;
@@ -312,11 +312,11 @@ end;
 // * FindMemoryBlockIn - Finds a memory block in the tracker
 // ******************************************************************
  CXBX_MEMORY_BLOCK *FindMemoryBlockIn( Pointer pMem)
-begin 
+begin
     CXBX_MEMORY_BLOCK *pCur;
 
     for(pCur := g_pFirstBlock; pCur; pCur = pCur.pNext)
-    begin 
+    begin
         if InThisMemoryBlock(pMem, pCur) then
         begin
             Result := pCur;
@@ -330,7 +330,7 @@ end;
 // * CxbxAllocDump - Dump the memory allocations
 // ******************************************************************
 procedure CxbxAllocDump(DumpData: bool);
-begin 
+begin
     g_MemoryMutex.Lock();
 
     CXBX_MEMORY_BLOCK *pCur;
@@ -357,7 +357,7 @@ begin
 // * CxbxMallocDebug - Debug track malloc
 // ******************************************************************
 function CxbxMallocDebug(Size: Integer; pFile: PChar; Line: Integer): Pointer;
-begin 
+begin
     Pointer pRetMem := 0;
     g_MemoryMutex.Lock();
 
@@ -389,13 +389,13 @@ end;
 // * CxbxCallocDebug - Debug track calloc
 // ******************************************************************
 function CxbxCallocDebug(NbrElements: Integer; ElementSize: Integer; pFile: PChar; Line: Integer): Pointer;
-begin 
+begin
     Pointer pRetMem := 0;
     g_MemoryMutex.Lock();
 
     Pointer pMem := calloc(NbrElements * ElementSize + 2 * SizeOf(MEMORY_GUARD), 1);
-    if not Assigned(pMem) then 
-    begin 
+    if not Assigned(pMem) then
+    begin
         printf('CxbxCallocDebug: Allocation failed'
                '    NbrElements:  mod d'
                '    ElementSize:  mod d'
@@ -404,7 +404,7 @@ begin
                NbrElements, ElementSize, pFile, Line);
     end
     else
-    begin 
+    begin
         CXBX_MEMORY_BLOCK *pBlock = InsertMemoryBlock(pMem,
                                                       NbrElements * ElementSize,
                                                       pFile,
@@ -424,16 +424,16 @@ begin
 procedure  CxbxFreeDebug(pMem: Pointer;
                     Char *pFile,
                     Integer   Line)
-begin 
-    if (pMem = 0) then 
-    begin 
+begin
+    if (pMem = 0) then
+    begin
         Exit;
      end;
     g_MemoryMutex.Lock();
 
     CXBX_MEMORY_BLOCK *pFree := RemoveMemoryBlock(pMem);
-    if not Assigned(pFree) then 
-    begin 
+    if not Assigned(pFree) then
+    begin
         printf('CxbxFreeDebug: Free on non-existent block: $ mod .08X not  '
                'Possibly a multiple Free.'
                '    File:  mod s'
@@ -471,8 +471,8 @@ begin
     g_MemoryMutex.Lock();
 
     Pointer pMem := NtDll.RtlAllocateHeap(Heap, Flags, Bytes + 2 * SizeOf(MEMORY_GUARD));
-    if not Assigned(pMem) then 
-    begin 
+    if not Assigned(pMem) then
+    begin
         printf('CxbxRtlAllocDebug: Allocation failed'
                '    Heap  : $ mod .08X'
                '    Flags : $ mod .08X'
@@ -482,7 +482,7 @@ begin
                Heap, Flags, Bytes, pFile, Line);
     end
     else
-    begin 
+    begin
         CXBX_MEMORY_BLOCK *pBlock = InsertMemoryBlock(pMem,
                                                       Bytes,
                                                       pFile,
@@ -500,7 +500,7 @@ begin
 // * CxbxRtlFreeDebug - Debug track RTL Free
 // ******************************************************************
 function  CxbxRtlFreeDebug(Heap: THandle; Flags: DWORD; pMem: PVOID; pFile: PChar; Line: Integer): BOOL;
-begin 
+begin
     BOOL Ret := False;
     if (pMem = 0) then
     begin
@@ -510,7 +510,7 @@ begin
 
     CXBX_MEMORY_BLOCK *pFree := RemoveMemoryBlock(pMem);
     if not Assigned(pFree) then
-    begin 
+    begin
         printf('CxbxRtlFreeDebug: Free on non-existent block: $ mod .08X not  '
                'Possibly a multiple Free.'
                '    File:  mod s'
@@ -519,8 +519,8 @@ begin
     end
     else
     begin
-        if not CheckIntegrity(pFree) then 
-        begin 
+        if not CheckIntegrity(pFree) then
+        begin
             printf('CxbxRtlFreeDebug: Free on damaged block'
                    '    Block   : $. mod 08X'
                    '    Allocation'
@@ -544,12 +544,12 @@ begin
 // * CxbxRtlReallocDebug - Debug track RTL realloc
 // ******************************************************************
 function CxbxRtlReallocDebug(Heap: THandle; Flags: DWORD; pMem: PVOID; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
-begin 
+begin
     Pointer pRetMem := 0;
     g_MemoryMutex.Lock();
 
     CXBX_MEMORY_BLOCK *pRealloc := FindMemoryBlock(pMem);
-    if not Assigned(pRealloc) then 
+    if not Assigned(pRealloc) then
     begin
         printf('CxbxRtlRealloc: realloc on non-existent block: $ mod .08X not  '
                '    File:  mod s'
@@ -557,7 +557,7 @@ begin
                pMem, pFile, Line);
     end
     else
-    begin 
+    begin
         if not CheckIntegrity(pRealloc) then
         begin
             printf('CxbxRtlReallocDebug: Realloc on damaged block'
@@ -577,8 +577,8 @@ begin
         Pointer pNewMem := NtDll.RtlReAllocateHeap(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * SizeOf(MEMORY_GUARD));
         Free(pRealloc.pFile);
         Free(pRealloc);
-        if not Assigned(pNewMem) then 
-        begin 
+        if not Assigned(pNewMem) then
+        begin
             printf('CxbxRtlReallocDebug: Reallocation failed'
                    '    Heap  : $ mod .08X'
                    '    Flags : $ mod .08X'
@@ -589,7 +589,7 @@ begin
                    Heap, Flags, pMem, Bytes, pFile, Line);
         end
         else
-        begin 
+        begin
             CXBX_MEMORY_BLOCK *pBlock = InsertMemoryBlock(pNewMem,
                                                           Bytes,
                                                           pFile,
@@ -611,7 +611,7 @@ SIZE_T CxbxRtlSizeHeapDebug(THandle Heap,
                             PVOID  pMem,
                             Char  *pFile,
                             Integer    Line)
-begin 
+begin
     SIZE_T Size := 0;
     g_MemoryMutex.Lock();
 

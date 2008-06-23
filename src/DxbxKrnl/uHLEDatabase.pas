@@ -24,13 +24,13 @@ interface
 uses
   // Jedi
   JwaWinType;
-  
+
 var
   szHLELastCompileTime: PChar; // extern
   HLEDataBaseSize: uint32; // extern
   UnResolvedXRefs: uint32; // extern
   bXRefFirstPass: bool; // extern
-  
+
 type
 // ******************************************************************
 // * HLEDataBase
@@ -50,4 +50,3 @@ type
 implementation
 
 end.
-

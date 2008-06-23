@@ -24,15 +24,15 @@ interface
 
 
 type
-  XBVideo = Record
+  XBVideo = record
     private
-      m_bFullscreen : Boolean;
+      m_bFullscreen: Boolean;
     public
-      procedure Load (const szRegistryKey : PChar);
-      procedure Save (const szRegistryKey : PChar );
+  procedure Load(const szRegistryKey: PChar);
+procedure Save(const szRegistryKey: PChar);
 
-      procedure SetFullscreen(bFullscreen : Boolean );
-      Function GetFullscreen : Boolean;
+procedure SetFullscreen(bFullscreen: Boolean);
+function GetFullscreen: Boolean;
 
   end;
 

@@ -34,9 +34,8 @@ var
   g_strUDrive: string = '';
   g_hZDrive: THandle = 0;
   g_strZDrive: string = '';
-  g_hEmuWindow : THandle;
+  g_hEmuWindow: THandle;
 
 implementation
 
 end.
-

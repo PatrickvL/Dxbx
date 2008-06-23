@@ -34,7 +34,7 @@ uses
   JwaWinNT,
   JwaNative, // NtSetLdtEntries
   // Dxbx
-uLog,
+  uLog,
   uConsts,
   uDxbxKrnlUtils;
 
@@ -46,7 +46,7 @@ implementation
 
 var
   // Table of free LDT entries
-  FreeLDTEntries : array [00..MAXIMUM_XBOX_THREADS-1] of DWord;
+  FreeLDTEntries: array[00..MAXIMUM_XBOX_THREADS - 1] of DWord;
 
   // Critical section lock
   EmuLDTLock: Windows._RTL_CRITICAL_SECTION;
@@ -91,32 +91,32 @@ begin
 
   // Set up selector information
   begin
-    LDTEntry.BaseLow      := WORD(dwBaseAddr and $FFFF);
-    LDTEntry.BaseMid      := (dwBaseAddr shr 16) and $FF;
-    LDTEntry.BaseHi       := (dwBaseAddr shr 24) and $FF;
-    LDTEntry.Flags1       := 0;
-    LDTEntry.Flags1       := LDTEntry.Flags1 or ($13 and LDTENTRY_FLAGS1_TYPE); // RW data segment
-    LDTEntry.Flags1       := LDTEntry.Flags1 or LDTENTRY_FLAGS1_DPL;  // user segment
-    LDTEntry.Flags1       := LDTEntry.Flags1 or LDTENTRY_FLAGS1_PRES;  // present
-    LDTEntry.Flags2       := 0;
-    LDTEntry.Flags2       := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_SYS);
-    LDTEntry.Flags2       := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_RESERVED_0);
-    LDTEntry.Flags2       := LDTEntry.Flags2 or (LDTENTRY_FLAGS2_DEFAULT_BIG); // 386 segment
-    if {LDTEntry.HighWord.Bits.Granularity=}dwLimit >= $00100000 then
+    LDTEntry.BaseLow := WORD(dwBaseAddr and $FFFF);
+    LDTEntry.BaseMid := (dwBaseAddr shr 16) and $FF;
+    LDTEntry.BaseHi := (dwBaseAddr shr 24) and $FF;
+    LDTEntry.Flags1 := 0;
+    LDTEntry.Flags1 := LDTEntry.Flags1 or ($13 and LDTENTRY_FLAGS1_TYPE); // RW data segment
+    LDTEntry.Flags1 := LDTEntry.Flags1 or LDTENTRY_FLAGS1_DPL; // user segment
+    LDTEntry.Flags1 := LDTEntry.Flags1 or LDTENTRY_FLAGS1_PRES; // present
+    LDTEntry.Flags2 := 0;
+    LDTEntry.Flags2 := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_SYS);
+    LDTEntry.Flags2 := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_RESERVED_0);
+    LDTEntry.Flags2 := LDTEntry.Flags2 or (LDTENTRY_FLAGS2_DEFAULT_BIG); // 386 segment
+    if {LDTEntry.HighWord.Bits.Granularity=} dwLimit >= $00100000 then
     begin
-      LDTEntry.Flags2     := LDTEntry.Flags2 or LDTENTRY_FLAGS2_GRANULARITY;
+      LDTEntry.Flags2 := LDTEntry.Flags2 or LDTENTRY_FLAGS2_GRANULARITY;
       dwLimit := dwLimit shr 12;
     end;
 
-    LDTEntry.LimitLow     := WORD(dwLimit and $FFFF);
-    LDTEntry.Flags2       := LDTEntry.Flags2 or ((dwLimit shr 16) and LDTENTRY_FLAGS2_LIMITHI);
+    LDTEntry.LimitLow := WORD(dwLimit and $FFFF);
+    LDTEntry.Flags2 := LDTEntry.Flags2 or ((dwLimit shr 16) and LDTENTRY_FLAGS2_LIMITHI);
   end;
 
   // Allocate selector
   begin
     if not NT_SUCCESS(NtSetLdtEntries((x * 8) + 7 + 8, LDTEntry, 0, LDTEntry)) then
     begin
-WriteLog(GetLastErrorString);
+      WriteLog(GetLastErrorString);
       LeaveCriticalSection(EmuLDTLock);
 
       CxbxKrnlCleanup('Could not set LDT entries');
@@ -143,7 +143,7 @@ begin
 
   NtSetLdtEntries(wSelector, LDTEntry, 0, LDTEntry);
 
-  FreeLDTEntries[(wSelector shr 3)-1] := wSelector;
+  FreeLDTEntries[(wSelector shr 3) - 1] := wSelector;
 
   LeaveCriticalSection(EmuLDTLock);
 end;

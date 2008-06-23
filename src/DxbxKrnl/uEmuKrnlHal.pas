@@ -43,26 +43,26 @@ uses
 var
   {356}xboxkrnl_HalBootSMCVideoMode: DWORD; // Source: OpenXDK
 
-procedure {009}xboxkrnl_HalReadSMCTrayState(
+procedure {009} xboxkrnl_HalReadSMCTrayState(
   State: PDWORD;
   Count: PDWORD
   ); stdcall; // Source: OpenXdk
-procedure {038}xboxkrnl_HalClearSoftwareInterrupt(
+procedure {038} xboxkrnl_HalClearSoftwareInterrupt(
   Request: KIRQL
   ); stdcall; // Source: ReactOS
-function {039}xboxkrnl_HalDisableSystemInterrupt(
+function {039} xboxkrnl_HalDisableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL
   ): LONGBOOL; stdcall; // Source: ReactOS
-function {040}xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {041}xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {042}xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {043}xboxkrnl_HalEnableSystemInterrupt(
+function {040} xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {041} xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {042} xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {043} xboxkrnl_HalEnableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL;
   InterruptMode: KINTERRUPT_MODE
   ): LONGBOOL; stdcall; // Source: ReactOS
-function {044}xboxkrnl_HalGetInterruptVector(
+function {044} xboxkrnl_HalGetInterruptVector(
   InterfaceType: INTERFACE_TYPE;
   BusNumber: ULONG;
   BusInterruptLevel: ULONG;
@@ -70,7 +70,7 @@ function {044}xboxkrnl_HalGetInterruptVector(
   Irql: PKIRQL;
   Affinity: PKAFFINITY
   ): ULONG; stdcall; // Source: ReactOS
-procedure {045}xboxkrnl_HalReadSMBusValue(
+procedure {045} xboxkrnl_HalReadSMBusValue(
   BusNumber: ULONG;
   SlotNumber: ULONG;
   RegisterNumber: ULONG;
@@ -78,7 +78,7 @@ procedure {045}xboxkrnl_HalReadSMBusValue(
   Length: ULONG;
   WritePCISpace: LONGBOOL
   ); stdcall; // Source: OpenXDK
-procedure {046}xboxkrnl_HalReadWritePCISpace(
+procedure {046} xboxkrnl_HalReadWritePCISpace(
   BusNumber: ULONG;
   SlotNumber: ULONG;
   RegisterNumber: ULONG;
@@ -86,31 +86,31 @@ procedure {046}xboxkrnl_HalReadWritePCISpace(
   Length: ULONG;
   WritePCISpace: LONGBOOL
   ); stdcall; // Source: OpenXDK
-function {047}xboxkrnl_HalRegisterShutdownNotification(
+function {047} xboxkrnl_HalRegisterShutdownNotification(
   Arg1: UNKNOWN;
   Arg2: UNKNOWN
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-procedure {048}xboxkrnl_HalRequestSoftwareInterrupt(
+procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
   Request: KIRQL
   ); stdcall; // Source: ReactOS
-procedure {049}xboxkrnl_HalReturnToFirmware(
+procedure {049} xboxkrnl_HalReturnToFirmware(
   Routine: RETURN_FIRMWARE
   ); stdcall; // Source: OpenXDK
-function {050}xboxkrnl_HalWriteSMBusValue(
+function {050} xboxkrnl_HalWriteSMBusValue(
   Address: UCHAR;
   Command: UCHAR;
   WordFlag: BOOLEAN; // TODO : What should we use: LONGBOOL or WORDBOOL?
   Value: ULONG
   ): ULONG; stdcall; // Source: OpenXDK
-function {358}xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {360}xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-procedure {365}xboxkrnl_HalEnableSecureTrayEject(
+function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {360} xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure {365} xboxkrnl_HalEnableSecureTrayEject(
   ); stdcall; // Source: XBMC Undocumented.h
-function {366}xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {366} xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
-procedure {009}xboxkrnl_HalReadSMCTrayState(
+procedure {009} xboxkrnl_HalReadSMCTrayState(
   State: PDWORD;
   Count: PDWORD
   ); stdcall; // Source: OpenXdk
@@ -120,7 +120,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {038}xboxkrnl_HalClearSoftwareInterrupt(
+procedure {038} xboxkrnl_HalClearSoftwareInterrupt(
   Request: KIRQL
   ); stdcall; // Source: ReactOS
 begin
@@ -129,7 +129,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {039}xboxkrnl_HalDisableSystemInterrupt(
+function {039} xboxkrnl_HalDisableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL
   ): LONGBOOL; stdcall; // Source: ReactOS
@@ -140,28 +140,28 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {040}xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall;
+function {040} xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalDiskCachePartitionCount');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {041}xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall;
+function {041} xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalDiskModelNumber');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {042}xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall;
+function {042} xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalDiskSerialNumber');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {043}xboxkrnl_HalEnableSystemInterrupt(
+function {043} xboxkrnl_HalEnableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL;
   InterruptMode: KINTERRUPT_MODE
@@ -173,7 +173,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {044}xboxkrnl_HalGetInterruptVector(
+function {044} xboxkrnl_HalGetInterruptVector(
   InterfaceType: INTERFACE_TYPE;
   BusNumber: ULONG;
   BusInterruptLevel: ULONG;
@@ -187,7 +187,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {045}xboxkrnl_HalReadSMBusValue(
+procedure {045} xboxkrnl_HalReadSMBusValue(
   BusNumber: ULONG;
   SlotNumber: ULONG;
   RegisterNumber: ULONG;
@@ -201,7 +201,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {046}xboxkrnl_HalReadWritePCISpace(
+procedure {046} xboxkrnl_HalReadWritePCISpace(
   BusNumber: ULONG;
   SlotNumber: ULONG;
   RegisterNumber: ULONG;
@@ -215,7 +215,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {047}xboxkrnl_HalRegisterShutdownNotification(
+function {047} xboxkrnl_HalRegisterShutdownNotification(
   Arg1: UNKNOWN;
   Arg2: UNKNOWN
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
@@ -225,7 +225,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {048}xboxkrnl_HalRequestSoftwareInterrupt(
+procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
   Request: KIRQL
   ); stdcall; // Source: ReactOS
 begin
@@ -234,7 +234,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure {049}xboxkrnl_HalReturnToFirmware(
+procedure {049} xboxkrnl_HalReturnToFirmware(
   Routine: RETURN_FIRMWARE
   ); stdcall; // Source: OpenXDK
 begin
@@ -243,7 +243,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {050}xboxkrnl_HalWriteSMBusValue(
+function {050} xboxkrnl_HalWriteSMBusValue(
   Address: UCHAR;
   Command: UCHAR;
   WordFlag: BOOLEAN; // TODO : What should we use: LONGBOOL or WORDBOOL?
@@ -255,14 +255,14 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {358}xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall;
+function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalIsResetOrShutdownPending');
   EmuSwapFS(); // Xbox FS
 end;
 
-function {360}xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall;
+function {360} xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalInitiateShutdown');
@@ -274,7 +274,8 @@ end;
 // Note that this function can't really be called directly...
 //
 // New to the XBOX.
-procedure {365}xboxkrnl_HalEnableSecureTrayEject(
+
+procedure {365} xboxkrnl_HalEnableSecureTrayEject(
   ); stdcall; // Source: XBMC Undocumented.h
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -282,7 +283,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {366}xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall;
+function {366} xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('HalWriteSMCScratchRegister');
@@ -290,4 +291,3 @@ begin
 end;
 
 end.
-

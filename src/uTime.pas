@@ -63,6 +63,7 @@ end;
   @param   codePage Code page to be used in conversion.
   @returns Converted ansi string.
 }
+
 function WideStringToString(const ws: WideString; codePage: Word): AnsiString;
 var
   l: Integer;
@@ -88,6 +89,7 @@ end; { WideStringToString }
   @param   codePage Code page to be used in conversion.
   @returns Converted wide string.
 }
+
 function StringToWideString(const s: AnsiString; codePage: Word): WideString;
 var
   l: Integer;

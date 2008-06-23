@@ -41,18 +41,18 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function {326}xboxkrnl_XeImageFileName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {327}xboxkrnl_XeLoadSection(
+function {326} xboxkrnl_XeImageFileName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {327} xboxkrnl_XeLoadSection(
   Section: PXBE_SECTION // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
-function {328}xboxkrnl_XeUnloadSection(
+function {328} xboxkrnl_XeUnloadSection(
   Section: PXBE_SECTION // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
-function {355}xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {355} xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
-function {326}xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
+function {326} xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('XeImageFileName');
@@ -64,7 +64,8 @@ end;
 // count is now above zero.
 //
 // New to the XBOX.
-function {327}xboxkrnl_XeLoadSection(
+
+function {327} xboxkrnl_XeLoadSection(
   Section: PXBE_SECTION // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 begin
@@ -78,7 +79,8 @@ end;
 // if the count is now below zero.
 //
 // New to the XBOX.
-function {328}xboxkrnl_XeUnloadSection(
+
+function {328} xboxkrnl_XeUnloadSection(
   Section: PXBE_SECTION // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 begin
@@ -87,7 +89,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function {355}xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall;
+function {355} xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('XePublicKeyData');
@@ -95,4 +97,3 @@ begin
 end;
 
 end.
-

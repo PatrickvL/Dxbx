@@ -22,7 +22,9 @@ interface
 
 
 Uses
-  uLog;
+  DirectInput,
+  uLog,
+  XInput;
 
 {$INCLUDE Dxbx.inc}
 type
@@ -255,18 +257,16 @@ begin
      end;
 
     result:= DIENUM_CONTINUE;
- end;
+ end;       *)
 
 { TODO : Need to be added to XBController }
-// ******************************************************************
-// * func: XBController::ListenPoll
-// ******************************************************************
-(*procedure XBController.ListenPoll(var Controller: XTL.XINPUT_STATE);
+// func: XBController::ListenPoll
+(*procedure XBController.ListenPoll(var Controller: PXINPUT_STATE);
 begin
     if(Controller = 0) then
         Exit;
 
-    XTL.LPDIRECTINPUTDEVICE8 pDevice:=0;
+    (*XTL.LPDIRECTINPUTDEVICE8 pDevice:=0;
 
     HRESULT hRet:=0;
     DWORD dwFlags:=0;
@@ -532,7 +532,7 @@ begin
      end;
 
     Exit;
- end;        *)
+ end;       *)
 
 
 
@@ -892,34 +892,37 @@ begin
 end;
 
 procedure XBController.DInputCleanup;
+var
+  v : Integer;
 begin
-(*    for(integer v:=m_dwInputDeviceCount-1;v>=0;v--)
-    begin
-        m_InputDevice[v].m_Device^.Unacquire();
-        m_InputDevice[v].m_Device^.Release();
-        m_InputDevice[v].m_Device := 0;
-     end;
+  for v := m_dwInputDeviceCount downto 0 do begin
+    (*
+    m_InputDevice[v].m_Device^.Unacquire();
+    m_InputDevice[v].m_Device^.Release();
+    m_InputDevice[v].m_Device := 0;
+    *)
+  end;
 
     m_dwInputDeviceCount := 0;
 
-    if(m_pDirectInput8 <> 0) then
+   (* if(m_pDirectInput8 <> 0) then
     begin
         m_pDirectInput8^.Release();
         m_pDirectInput8 := 0;
-     end;
+     end; *)
 
-    Exit;*)
+    Exit;
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
+var
+  hRet : HResult;
 begin
     m_dwInputDeviceCount := 0;
-
-    // ******************************************************************
-    // * Create DirectInput Object
-    // ******************************************************************
-    (*begin
-        HRESULT hRet = XTL.DirectInput8Create
+        (*
+    // Create DirectInput Object
+    begin
+        hRet = DirectInput8Create
         (
             GetModuleHandle(0),
             DIRECTINPUT_VERSION,
@@ -933,7 +936,7 @@ begin
             SetError('Could not initialized DirectInput8', true);
             Exit;
          end;
-     end;
+     end;    
 
     // ******************************************************************
     // * Create all the devices available (well...most of them)
@@ -1011,10 +1014,12 @@ begin
 end;
 
 function XBController.Insert(szDeviceName: PChar): integer;
+var
+  v : Integer;
 begin
-(*    integer v:=0;
+   v := 0;
 
-    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
+(*    for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
         if(StrComp(m_DeviceName[v], szDeviceName) = 0) then
             result:= v;
 

@@ -30,10 +30,10 @@ uses
 type
   Mutex = class(TObject)
   private
-    m_MutexLock: Integer;      // Mutex lock
-    m_OwnerProcess: Integer;   // Current owner process (or zero)
-    m_OwnerThread: Integer;    // Current owner thread
-    m_LockCount: Integer;      // Lock count within this thread
+    m_MutexLock: Integer; // Mutex lock
+    m_OwnerProcess: Integer; // Current owner process (or zero)
+    m_OwnerThread: Integer; // Current owner thread
+    m_LockCount: Integer; // Lock count within this thread
   public
     constructor Create; virtual;
     procedure Lock;
@@ -56,7 +56,7 @@ begin
   while True do
   begin
     // Grab the lock, letting us look at the variables
-    while InterlockedCompareExchange(m_MutexLock, {Exchange}1, {Comperand}0) <> 0 do
+    while InterlockedCompareExchange(m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
       SwitchToThread;
 
     // Are we the the new owner?
@@ -78,7 +78,7 @@ begin
     // the mutex lock and wait.  The reading need not be
     // interlocked.
     if (m_OwnerProcess <> Integer(GetCurrentProcessId()))
-    or (m_OwnerThread <> Integer(GetCurrentThreadId())) then
+      or (m_OwnerThread <> Integer(GetCurrentThreadId())) then
     begin
       // Unlock the mutex itself
       InterlockedExchange(m_MutexLock, 0);
@@ -104,7 +104,7 @@ procedure Mutex.Unlock;
 begin
 //WriteLog('Mutex.Unlock>');
   // Grab the lock, letting us look at the variables
-  while InterlockedCompareExchange(m_MutexLock, {Exchange}1, {Comperand}0) <> 0 do
+  while InterlockedCompareExchange(m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
     SwitchToThread;
 
   // Decrement the lock count
@@ -113,7 +113,7 @@ begin
     // Mark the mutex as now unused
     InterlockedExchange(m_OwnerProcess, 0);
     InterlockedExchange(m_OwnerThread, 0);
-  InterlockedExchange(m_LockCount, 0);
+    InterlockedExchange(m_LockCount, 0);
   end;
 
   // Unlock the mutex itself

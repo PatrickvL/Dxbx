@@ -29,7 +29,7 @@ const
   NUMBER_OF_THUNKS = 379;
 
 type
-  EMU_STATE = ( esNone, esFileOpen, esRunning );
+  EMU_STATE = (esNone, esFileOpen, esRunning);
 
   TDebugInfoType = (ditConsole, ditFile);
   EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
@@ -50,7 +50,7 @@ type
 
   PUInt32 = ^UInt32;
   PUInt16 = ^UInt16;
-  PUInt8 = PAnsiChar;//^UInt8;
+  PUInt8 = PAnsiChar; //^UInt8;
 
   UInt08 = UInt8;
   PUInt08 = PUInt8;
@@ -60,16 +60,16 @@ type
 {$ELSE}
   IntPtr = Cardinal;
 {$IFEND}
-    
+
   TEntryProc = procedure();
   PEntryProc = ^TEntryProc;
 
-  TSetXbePath = procedure (const Path: PChar); cdecl;
+  TSetXbePath = procedure(const Path: PChar); cdecl;
 
   TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
   PKernelThunkTable = ^TKernelThunkTable;
-  
-  TGetKernelThunkTable = function : PKernelThunkTable; cdecl;
+
+  TGetKernelThunkTable = function: PKernelThunkTable; cdecl;
 
 function DebugModeToString(const aDebugMode: DebugMode): string;
 function LogTypeToString(const aLogType: TLogType): string;
