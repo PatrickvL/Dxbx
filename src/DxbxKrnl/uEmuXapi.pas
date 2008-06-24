@@ -30,21 +30,20 @@ type
 
 implementation
 
-{$IFDEF HURT_ME_C} // ;-)
 
-var
+(*var
   // XInputSetState status waiters
   g_pXInputSetStateStatus: array[0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
   // XInputOpen handles
   g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of THandle;
+*)
 
-//include 'EmuXTL.h'
 
 // ******************************************************************
 // * func: EmuXapiApplyKernelPatches
 // ******************************************************************
-VOID WINAPI XTL.EmuXapiApplyKernelPatches()
+(*  VOID WINAPI XTL.EmuXapiApplyKernelPatches()
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -55,13 +54,13 @@ begin
     // we dont really feel like patching, now do we?
 
   Exit;
-end;
+end;     *)
 
 // ******************************************************************
 // * func: EmuXFormatUtilityDrive
 // ******************************************************************
 
-function WINAPI XTL.EmuXFormatUtilityDrive(): BOOL;
+(*function WINAPI XTL.EmuXFormatUtilityDrive(): BOOL;
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -72,13 +71,13 @@ begin
     // TODO: yeah... we'll format... riiiiight
 
   Result := True;
-end;
+end; *)
 
 //* ended up not fixing anything in panzer dragoon!
 // ******************************************************************
 // * func: EmuFindFirstFileA
 // ******************************************************************
-THandle WINAPI XTL.EmuFindFirstFileA
+(*THandle WINAPI XTL.EmuFindFirstFileA
 (
   in PAnsiChar lpFileName,
   out LPWIN32_FIND_DATA lpFindFileData
@@ -108,36 +107,36 @@ begin
 
   if (szBuffer <> 0) then
   begin
-        // trim this off
+    // trim this off
     if (szBuffer[0] = '' and szBuffer[1] = '?' and szBuffer[2] = '?' and szBuffer[3] = '') then
     begin
       szBuffer := szBuffer + 4;
     end;
 
-        // D:\ should map to current directory
+    // D:\ should map to current directory
     if ((szBuffer[0] = 'D' or szBuffer[0] = 'd') and szBuffer[1] = ':' and szBuffer[2] = '') then
     begin
       szBuffer := szBuffer + 3;
+    end
+    else if ((szBuffer[0] = 'T' or szBuffer[0] = 't') and szBuffer[1] = ':' and szBuffer[2] = '') then
+    begin
+      szBuffer := szBuffer + 3;
+
+      szRoot := g_strTDrive;
+    end
+    else if ((szBuffer[0] = 'U' or szBuffer[0] = 'u') and szBuffer[1] = ':' and szBuffer[2] = '') then
+    begin
+      szBuffer := szBuffer + 3;
+
+      szRoot := g_strUDrive;
+    end
+    else if ((szBuffer[0] = 'Z' or szBuffer[0] = 'z') and szBuffer[1] = ':' and szBuffer[2] = '') then
+    begin
+      szBuffer := szBuffer + 3;
+
+      szRoot := g_strZDrive;
     end;
-  else if ((szBuffer[0] = 'T' or szBuffer[0] = 't') and szBuffer[1] = ':' and szBuffer[2] = '') then
-  begin
-    szBuffer := szBuffer + 3;
-
-    szRoot := g_strTDrive;
   end;
-else if ((szBuffer[0] = 'U' or szBuffer[0] = 'u') and szBuffer[1] = ':' and szBuffer[2] = '') then
-begin
-  szBuffer := szBuffer + 3;
-
-  szRoot := g_strUDrive;
-end;
-else if ((szBuffer[0] = 'Z' or szBuffer[0] = 'z') and szBuffer[1] = ':' and szBuffer[2] = '') then
-begin
-  szBuffer := szBuffer + 3;
-
-  szRoot := g_strZDrive;
-end;
-end;
 
     //printf('af1 : %s\n', szRoot);
     //printf('af2 : %s\n', szBuffer);
@@ -146,35 +145,35 @@ end;
 
     //GetCurrentDirectory(MAX_PATH, szOldDir);
 
-SetCurrentDirectory(szRoot);
+  SetCurrentDirectory(szRoot);
 
-THandle hRet := FindFirstFile(szBuffer, lpFindFileData);
+  THandle hRet := FindFirstFile(szBuffer, lpFindFileData);
 
-if (not FAILED(hRet)) then
-begin
-  do
+  if (not FAILED(hRet)) then
   begin
-    BOOL bRet := FindNextFile(hRet, lpFindFileData);
+    do
+    begin
+      BOOL bRet := FindNextFile(hRet, lpFindFileData);
 
-    if (not bRet) then begin hRet := INVALID_HANDLE_VALUE; break; end;
+      if (not bRet) then begin hRet := INVALID_HANDLE_VALUE; break; end;
 
-    if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
-      break;
+      if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
+        break;
+    end;
+    while (True);
   end;
-  while (True);
-end;
 
     //SetCurrentDirectory(szOldDir);
 
-EmuSwapFS(); // XBox FS
+  EmuSwapFS(); // XBox FS
 
-Result := hRet;
-end;
+  Result := hRet;
+end;    *)
 
 // ******************************************************************
 // * func: EmuFindNextFileA
 // ******************************************************************
-BOOL WINAPI XTL.EmuFindNextFileA
+(*BOOL WINAPI XTL.EmuFindNextFileA
 (
   in THandle hFindFile,
   out LPWIN32_FIND_DATA lpFindFileData
@@ -211,13 +210,13 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := bRet;
-end;
+end;     *)
 //*/
 
 // ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
-PVOID WINAPI XTL.EmuRtlCreateHeap
+(*PVOID WINAPI XTL.EmuRtlCreateHeap
 (
   in ULONG Flags,
   in PVOID Base OPTIONAL,
@@ -251,12 +250,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := pRet;
-end;
+end;     *)
 
 // ******************************************************************
 // * func: EmuRtlAllocateHeap
 // ******************************************************************
-PVOID WINAPI XTL.EmuRtlAllocateHeap
+(*PVOID WINAPI XTL.EmuRtlAllocateHeap
 (
   in THandle hHeap,
   in DWORD dwFlags,
@@ -295,12 +294,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := pRet;
-end;
+end;      *)
 
 // ******************************************************************
 // * func: EmuRtlFreeHeap
 // ******************************************************************
-BOOL WINAPI XTL.EmuRtlFreeHeap
+(*BOOL WINAPI XTL.EmuRtlFreeHeap
 (
   in THandle hHeap,
   in DWORD dwFlags,
@@ -331,12 +330,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := bRet;
-end;
+end;      *)
 
 // ******************************************************************
 // * func: EmuRtlReAllocateHeap
 // ******************************************************************
-PVOID WINAPI XTL.EmuRtlReAllocateHeap
+(*PVOID WINAPI XTL.EmuRtlReAllocateHeap
 (
   in THandle hHeap,
   in DWORD dwFlags,
@@ -369,12 +368,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := pRet;
-end;
+end;      *)
 
 // ******************************************************************
 // * func: EmuRtlSizeHeap
 // ******************************************************************
-SIZE_T WINAPI XTL.EmuRtlSizeHeap
+(*SIZE_T WINAPI XTL.EmuRtlSizeHeap
 (
   in THandle hHeap,
   in DWORD dwFlags,
@@ -405,12 +404,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := ret;
-end;
+end;            *)
 
 // ******************************************************************
 // * func: EmuQueryPerformanceCounter
 // ******************************************************************
-BOOL WINAPI XTL.EmuQueryPerformanceCounter
+(*BOOL WINAPI XTL.EmuQueryPerformanceCounter
 (
   PLARGE_INTEGER lpPerformanceCount
   )
@@ -431,12 +430,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := bRet;
-end;
+end;        *)
 
 // ******************************************************************
 // * func: EmuQueryPerformanceFrequency
 // ******************************************************************
-BOOL WINAPI XTL.EmuQueryPerformanceFrequency
+(*BOOL WINAPI XTL.EmuQueryPerformanceFrequency
 (
   PLARGE_INTEGER lpFrequency
   )
@@ -454,12 +453,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := bRet;
-end;
+end;            *)
 
 // ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
-BOOL WINAPI XTL.EmuXMountUtilityDrive
+(*BOOL WINAPI XTL.EmuXMountUtilityDrive
 (
   BOOL fFormatClean
   )
@@ -477,12 +476,12 @@ begin
 {$ENDIF}
 
   Result := True;
-end;
+end;             *)
 
 // ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
-VOID WINAPI XTL.EmuXInitDevices
+(*VOID WINAPI XTL.EmuXInitDevices
 (
   DWORD Unknown1,
   PVOID Unknown2
@@ -514,12 +513,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Exit;
-end;
+end;            *)
 
 // ******************************************************************
 // * func: EmuXGetDevices
 // ******************************************************************
-DWORD WINAPI XTL.EmuXGetDevices
+(*DWORD WINAPI XTL.EmuXGetDevices
 (
   PXPP_DEVICE_TYPE DeviceType
   )
@@ -542,12 +541,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := ret;
-end;
+end;       *)
 
 // ******************************************************************
 // * func: EmuXGetDeviceChanges
 // ******************************************************************
-BOOL WINAPI XTL.EmuXGetDeviceChanges
+(*BOOL WINAPI XTL.EmuXGetDeviceChanges
 (
   PXPP_DEVICE_TYPE DeviceType,
   PDWORD pdwInsertions,
@@ -583,12 +582,12 @@ else
   EmuSwapFS(); // XBox FS
 
   Result := bRet;
-end;
+end;        *)
 
 // ******************************************************************
 // * func: EmuXInputOpen
 // ******************************************************************
-THandle WINAPI XTL.EmuXInputOpen
+(*THandle WINAPI XTL.EmuXInputOpen
 (
   in PXPP_DEVICE_TYPE DeviceType,
   in DWORD dwPort,
@@ -658,12 +657,12 @@ end;
 EmuSwapFS(); // XBox FS
 
 Result := (THandle)pph;
-end;
+end;                  *)
 
 // ******************************************************************
 // * func: EmuXInputClose
 // ******************************************************************
-VOID WINAPI XTL.EmuXInputClose
+(*VOID WINAPI XTL.EmuXInputClose
 (
   in THandle hDevice
   )
@@ -706,12 +705,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Exit;
- end;
+ end;    *)
 
 // ******************************************************************
 // * func: EmuXInputPoll
 // ******************************************************************
-DWORD WINAPI XTL.EmuXInputPoll
+(*DWORD WINAPI XTL.EmuXInputPoll
 (
     IN THandle hDevice
 )
@@ -766,12 +765,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ERROR_SUCCESS;
- end;
+ end;       *)
 
 // ******************************************************************
 // * func: EmuXInputGetCapabilities
 // ******************************************************************
-DWORD WINAPI XTL.EmuXInputGetCapabilities
+(*DWORD WINAPI XTL.EmuXInputGetCapabilities
 (
     IN  THandle               hDevice,
     OUT PXINPUT_CAPABILITIES pCapabilities
@@ -807,12 +806,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ret;
- end;
+ end;        *)
 
 // ******************************************************************
 // * func: EmuInputGetState
 // ******************************************************************
-DWORD WINAPI XTL.EmuXInputGetState
+(*DWORD WINAPI XTL.EmuXInputGetState
 (
     IN  THandle         hDevice,
     OUT PXINPUT_STATE  pState
@@ -860,12 +859,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ret;
- end;
+ end;            *)
 
 // ******************************************************************
 // * func: EmuInputGetState
 // ******************************************************************
-DWORD WINAPI XTL.EmuXInputSetState
+(*DWORD WINAPI XTL.EmuXInputSetState
 (
     IN     THandle           hDevice,
     IN OUT PXINPUT_FEEDBACK pFeedback
@@ -942,12 +941,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ret;
- end;
+ end;   *)
 
 // ******************************************************************
 // * func: EmuCreateMutex
 // ******************************************************************
-THandle WINAPI XTL.EmuCreateMutex
+(*THandle WINAPI XTL.EmuCreateMutex
 (
     LPSECURITY_ATTRIBUTES   lpMutexAttributes,
     BOOL                    bInitialOwner,
@@ -969,12 +968,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := hRet;
- end;
+ end;          *)
 
 // ******************************************************************
 // * func: EmuCloseHandle
 // ******************************************************************
-BOOL WINAPI XTL.EmuCloseHandle
+(*BOOL WINAPI XTL.EmuCloseHandle
 (
     THandle hObject
 )
@@ -992,12 +991,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;
+ end;          *)
 
 // ******************************************************************
 // * func: EmuSetThreadPriorityBoost
 // ******************************************************************
-BOOL WINAPI XTL.EmuSetThreadPriorityBoost
+(*BOOL WINAPI XTL.EmuSetThreadPriorityBoost
 (
     THandle  hThread,
     BOOL    DisablePriorityBoost
@@ -1020,12 +1019,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;
+ end;       *)
 
 // ******************************************************************
 // * func: EmuSetThreadPriority
 // ******************************************************************
-BOOL WINAPI XTL.EmuSetThreadPriority
+(*BOOL WINAPI XTL.EmuSetThreadPriority
 (
     THandle  hThread,
     integer     nPriority
@@ -1051,13 +1050,13 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;
+ end;        *)
 
 
 // ******************************************************************
 // * func: EmuGetThreadPriority
 // ******************************************************************
-integer WINAPI XTL.EmuGetThreadPriority
+(*integer WINAPI XTL.EmuGetThreadPriority
 (
     THandle  hThread
 )
@@ -1078,12 +1077,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := iRet;
- end;
+ end;              *)
 
 // ******************************************************************
 // * func: EmuGetExitCodeThread
 // ******************************************************************
-BOOL WINAPI XTL.EmuGetExitCodeThread
+(*BOOL WINAPI XTL.EmuGetExitCodeThread
 (
     THandle  hThread,
     LPDWORD lpExitCode
@@ -1103,12 +1102,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;
+ end;          *)
 
 // ******************************************************************
 // * func: EmuXapiInitProcess
 // ******************************************************************
-VOID WINAPI XTL.EmuXapiInitProcess()
+(*VOID WINAPI XTL.EmuXapiInitProcess()
 begin
     EmuSwapFS();   // Win2k/XP FS
 
@@ -1135,22 +1134,22 @@ begin
   end;
 
     Exit;
- end;
+ end;         *)
 
 // ******************************************************************
 // * data: EmuXapiProcessHeap
 // ******************************************************************
-PVOID* XTL.EmuXapiProcessHeap;
+(*PVOID* XTL.EmuXapiProcessHeap;*)
 
 // ******************************************************************
 // * func: g_pRtlCreateHeap
 // ******************************************************************
-XTL.pfRtlCreateHeap XTL.g_pRtlCreateHeap;
+(*XTL.pfRtlCreateHeap XTL.g_pRtlCreateHeap;*)
 
 // ******************************************************************
 // * func: EmuXapiThreadStartup
 // ******************************************************************
-VOID WINAPI XTL.EmuXapiThreadStartup
+(*VOID WINAPI XTL.EmuXapiThreadStartup
 (
     DWORD dwDummy1,
     DWORD dwDummy2
@@ -1184,9 +1183,9 @@ begin
     *)
 
     //_asm int 3;
-
+(*
   Exit;
-end;
+end; *)
 
 (* Too High Level!
 // ******************************************************************
@@ -1213,7 +1212,7 @@ begin
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************
-VOID WINAPI XTL.EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
+(*VOID WINAPI XTL.EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -1230,12 +1229,12 @@ begin
   EmuSwapFS(); // XBox FS
 
   Exit;
-end;
+end;           *)
 
 // ******************************************************************
 // * func: EmuXRegisterThreadNotifyRoutine
 // ******************************************************************
-VOID WINAPI XTL.EmuXRegisterThreadNotifyRoutine
+(*VOID WINAPI XTL.EmuXRegisterThreadNotifyRoutine
 (
   PXTHREAD_NOTIFICATION pThreadNotification,
   BOOL fRegister
@@ -1264,7 +1263,7 @@ else
   end;
 
   EmuSwapFS(); // XBox FS
-end;
+end;           *)
 
 (* Cxbx : not necessary?
 // ******************************************************************
@@ -1362,6 +1361,5 @@ begin
  end;
 *)
 
-{$ENDIF}
-
 end.
+
