@@ -30,6 +30,7 @@ uses
   Direct3D,
 
   // Dxbx
+  uEmuD3D8Types,
   uDxbxKrnlUtils,
   uEmuDInput,
   uEmu,
@@ -374,9 +375,9 @@ begin
     begin
       lRestore := GetWindowLong(hWnd, GWL_STYLE);
       lRestoreEx := GetWindowLong(hWnd, GWL_EXSTYLE);
-
-(*      GetWindowRect(hWnd, @lRect);
-*)
+      (*
+      GetWindowRect(hWnd, @lRect);
+      *)
     end;
 
     SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
@@ -1109,10 +1110,12 @@ begin
         g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() = 0) ? XTL.D3DDEVTYPE_HAL : XTL.D3DDEVTYPE_REF,
         EmuXB2PC_D3DFormat(AdapterFormat), Usage, (D3DRESOURCETYPE)RType, EmuXB2PC_D3DFormat(CheckFormat)
     );
+*)
 
     EmuSwapFS();   // XBox FS
 
-    result:= hRet;  *)
+(*    result:= hRet;
+*)
 end;
 
 { TODO : Need to be translated to delphi }
@@ -1410,12 +1413,12 @@ function XTL__EmuIDirect3D8_GetAdapterDisplayMode: HRESULT;
 begin
 (*    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 ($ mod X): EmuIDirect3D8_GetAdapterDisplayMode' +
+    DbgPrintf(Format ('EmuD3D8 (% mod X): EmuIDirect3D8_GetAdapterDisplayMode' +
            '(' +
-           '   Adapter                   : $ mod .08X' +
-           '   pMode                     : $ mod .08X' +
+           '   Adapter                   : % mod .08X' +
+           '   pMode                     : % mod .08X' +
            ');',
-           GetCurrentThreadId(), Adapter, pMode);
+           [GetCurrentThreadId, Adapter, pMode]));
 
     // NOTE: WARNING: We should cache the "Emulated" display mode and return
     // This value. We can initialize the cache with the default Xbox mode data.
@@ -1440,36 +1443,36 @@ begin
         pMode^.Width := 640;
         pMode^.Height := 480;
      end;
+*)
 
     EmuSwapFS();   // XBox FS
 
-    result:= hRet;   *)
+(*    result:= hRet;
+*)
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3D8_EnumAdapterModes
-// ******************************************************************
+
+// func: EmuIDirect3D8_EnumAdapterModes
 
 function XTL__EmuIDirect3D8_EnumAdapterModes: HRESULT;
-(*(
-    UINT                        Adapter,
-    UINT                        Mode,
-    X_D3DDISPLAYMODE           *pMode
-) *)
+(*var
+    Adapter : UINT;
+    Mode : UINT;
+    pMode : X_D3DDISPLAYMODE;
+    hRet : HRESULT;
+    ModeAdder : integer; *)
 begin
- (*   EmuSwapFS();   // Win2k/XP FS
+(*    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 ($ mod X): EmuIDirect3D8_EnumAdapterModes'
-           '('
-           '   Adapter                   : $ mod .08X'
-           '   Mode                      : $ mod .08X'
-           '   pMode                     : $ mod .08X'
+    DbgPrintf(Format ('EmuD3D8 (% mod X): EmuIDirect3D8_EnumAdapterModes' +
+           '(' +
+           '   Adapter                   : % mod .08X' +
+           '   Mode                      : % mod .08X' +
+           '   pMode                     : % mod .08X' +
            ');',
-           GetCurrentThreadId(), Adapter, Mode, pMode);
+           [GetCurrentThreadId(), Adapter, Mode, pMode]));
 
-    HRESULT hRet;
-
-     integer ModeAdder := 0;
+    ModeAdder := 0;
 
     if(Mode = 0) then
         ModeAdder := 0;
@@ -1509,10 +1512,12 @@ begin
     begin
         hRet := D3DERR_INVALIDCALL;
      end;
-
+*)
     EmuSwapFS();   // XBox FS
 
-    result:= hRet;  *)
+(*
+    result:= hRet;
+*)    
 end;
 
 // func: EmuIDirect3D8_KickOffAndWaitForIdle
@@ -4322,7 +4327,7 @@ begin
       if (FAILED(hRet)) then
         CxbxKrnlCleanup("CreateTexture Failed not ");
 
-        
+
       DbgPrintf("EmuIDirect3DResource8_Register($ mod X): Successfully Created Texture($ mod .08 X, $ mod .08 X)", GetCurrentThreadId(), pResource, pResource^.EmuTexture8);
     end; *)
 end;
@@ -8336,17 +8341,20 @@ end;
 // ******************************************************************
 
 function XTL__EmuIDirect3DDevice8_InsertFence: DWORD;
+var
+  dwRet: DWord;
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x mod X): EmuIDirect3DDevice8_InsertFence()", GetCurrentThreadId());
+  DbgPrintf(Format ('EmuD3D8 (0x mod X): EmuIDirect3DDevice8_InsertFence()', [GetCurrentThreadId()]));
 
- // TODO: Actually implement this
- DWORD dwRet := 0x8000BEEF;
+    // TODO: Actually implement this
+{ TODO : Need to be translated to delphi }
+(*    dwRet := 0x8000BEEF;
+*)
+  EmuSwapFS(); // XBox FS
 
-    EmuSwapFS();   // XBox FS
-
-    result:= dwRet; *)
+  result := dwRet;
 end;
 
 // ******************************************************************
@@ -8357,17 +8365,17 @@ procedure XTL__EmuIDirect3DDevice8_BlockOnFence;
 var
   Fence: DWord;
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x mod X): EmuIDirect3DDevice8_BlockOnFence"
-           "("
-           "   Fence                     : 0x mod .08X"
-           ");",
-           GetCurrentThreadId(), Fence);
+  DbgPrintf(Format('EmuD3D8 (0x mod X): EmuIDirect3DDevice8_BlockOnFence' +
+    '(' +
+    '   Fence                     : 0% mod .08X' +
+    ');',
+    [GetCurrentThreadId(), Fence]));
 
- // TODO: Implement
+    // TODO: Implement
 
-    EmuSwapFS();   // XBox FS*)
+  EmuSwapFS(); // XBox FS*)
 end;
 
 // ******************************************************************
@@ -8427,21 +8435,23 @@ function XTL__EmuIDirect3DDevice8_SetScissors: HRESULT;
  CONST D3DRECT  *pRects
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x mod X): EmuIDirect3DDevice8_SetScissors"
+{ TODO : Need to be translated to delphi }
+    (*DbgPrintf("EmuD3D8 (0x mod X): EmuIDirect3DDevice8_SetScissors"
            "("
      "   Count                     : 0x mod .08X"
      "   Exclusive                 : 0x mod .08X"
      "   pRects                    : 0x mod .08X"
            ");",
            GetCurrentThreadId(), Count, Exclusive, pRects);
+     *)
 
- // TODO: Implement
+    // TODO: Implement
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
- result:= D3D_OK;         *)
+  result := D3D_OK;
 end;
 
 

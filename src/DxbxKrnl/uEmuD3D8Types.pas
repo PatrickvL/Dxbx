@@ -25,17 +25,18 @@ interface
 Uses
   Windows;
 
+
 (*Type
   _X_D3DDISPLAYMODE = Record
     Width : Integer;
     Height : Integer;
     RefreshRate : Integer;
     Flags : DWord;
-    Format : X_D3DFORMAT ;
+    Format : X_D3DFORMAT;
   End;
 
-  X_D3DDISPLAYMODE = _X_D3DDISPLAYMODE; *)
-
+  X_D3DDISPLAYMODE = _X_D3DDISPLAYMODE;
+*)
 
 
 implementation
