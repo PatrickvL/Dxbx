@@ -266,8 +266,8 @@ begin
 
   DbgPrintf('EmuKrnl : NtClose' +
     #13#10'(' +
-    #13#10'   Handle              : 0x' + IntToHex(Integer(Handle), 8) +
-    #13#10');');
+    #13#10'   Handle              : 0x%.8x' +
+    #13#10');', [Handle]);
 
 {$IFDEF DXBX_EMUHANDLES}
   // delete 'special' handles
@@ -756,7 +756,7 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
   // NOTE: this eats up the debug log far too quickly
-  //DbgPrintf("EmuKrnl (0x%X): NtYieldExecution();\n", GetCurrentThreadId());
+  //DbgPrintf('EmuKrnl : NtYieldExecution();');
 
   NtYieldExecution();
 

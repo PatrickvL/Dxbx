@@ -23,7 +23,8 @@ interface
 
 uses
   // Delphi
-  Windows;
+  Windows,
+  SysUtils;
 
 const
   NUMBER_OF_THUNKS = 379;
@@ -73,8 +74,14 @@ type
 
 function DebugModeToString(const aDebugMode: DebugMode): string;
 function LogTypeToString(const aLogType: TLogType): string;
+function PointerToString(const aPointer: Pointer): string;
 
 implementation
+
+function PointerToString(const aPointer: Pointer): string;
+begin
+  Result := IntToHex(Integer(aPointer), 8);
+end;
 
 function DebugModeToString(const aDebugMode: DebugMode): string;
 begin

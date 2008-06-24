@@ -44,7 +44,7 @@ implementation
 (*
 XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 {
-    strcpy(m_szVideoResolution, "Automatic (Default)");
+    strcpy(m_szVideoResolution, 'Automatic (Default)');
 }
 *)
 
@@ -78,19 +78,19 @@ begin
             int v=0;
 
             dwType = REG_SZ; dwSize = 100;
-            RegQueryValueEx(hKey, "VideoResolution", NULL, &dwType, (PBYTE)m_szVideoResolution, &dwSize);
+            RegQueryValueEx(hKey, 'VideoResolution', NULL, &dwType, (PBYTE)m_szVideoResolution, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "DisplayAdapter", NULL, &dwType, (PBYTE)&m_dwDisplayAdapter, &dwSize);
+            RegQueryValueEx(hKey, 'DisplayAdapter', NULL, &dwType, (PBYTE)&m_dwDisplayAdapter, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "Direct3DDevice", NULL, &dwType, (PBYTE)&m_dwDirect3DDevice, &dwSize);
+            RegQueryValueEx(hKey, 'Direct3DDevice', NULL, &dwType, (PBYTE)&m_dwDirect3DDevice, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "Fullscreen", NULL, &dwType, (PBYTE)&m_bFullscreen, &dwSize);
+            RegQueryValueEx(hKey, 'Fullscreen', NULL, &dwType, (PBYTE)&m_bFullscreen, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "VSync", NULL, &dwType, (PBYTE)&m_bVSync, &dwSize);
+            RegQueryValueEx(hKey, 'VSync', NULL, &dwType, (PBYTE)&m_bVSync, &dwSize);
 
             RegCloseKey(hKey);
         }
@@ -113,19 +113,19 @@ begin
             int v=0;
 
             dwType = REG_SZ; dwSize = 100;
-            RegSetValueEx(hKey, "VideoResolution", 0, dwType, (PBYTE)m_szVideoResolution, dwSize);
+            RegSetValueEx(hKey, 'VideoResolution', 0, dwType, (PBYTE)m_szVideoResolution, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "DisplayAdapter", 0, dwType, (PBYTE)&m_dwDisplayAdapter, dwSize);
+            RegSetValueEx(hKey, 'DisplayAdapter', 0, dwType, (PBYTE)&m_dwDisplayAdapter, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "Direct3DDevice", 0, dwType, (PBYTE)&m_dwDirect3DDevice, dwSize);
+            RegSetValueEx(hKey, 'Direct3DDevice', 0, dwType, (PBYTE)&m_dwDirect3DDevice, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "Fullscreen", 0, dwType, (PBYTE)&m_bFullscreen, dwSize);
+            RegSetValueEx(hKey, 'Fullscreen', 0, dwType, (PBYTE)&m_bFullscreen, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "VSync", 0, dwType, (PBYTE)&m_bVSync, dwSize);
+            RegSetValueEx(hKey, 'VSync', 0, dwType, (PBYTE)&m_bVSync, dwSize);
 
             RegCloseKey(hKey);
         }

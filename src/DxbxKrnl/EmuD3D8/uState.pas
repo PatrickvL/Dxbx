@@ -109,7 +109,7 @@ begin
                 if(v <> 0  and v <> 1  and v <> 2 and v <> 3 and v <> 6  and v <> 10 and v <> 11 and v <> 13 then
                 and v <> 20 and v <> 23 and v <> 24 and v <> 25 and v <> 26 and v <> 27 and v <> 28 and v <> 29
                 and v <> 30 and v <> 31 and v <> 33)
-                    EmuWarning('Unhandled RenderState Change @  mod d ( mod d)', v, v + 82);
+                    EmuWarning('Unhandled RenderState Change @ %d (%d)', v, v + 82);
              end;
          end;
         //**/
@@ -183,7 +183,7 @@ begin
             if(pCur[12] <> X_D3DTSS_UNK) then
             begin
                 if(pCur[12] > 12 and  not (pCur[12] >= 17 and pCur[12] <= 21)) then
-                    CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_COLOROP Value ( mod d)", pCur[12]);
+                    CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)', pCur[12]);
 
                 g_pD3DDevice8^.SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
              end;
@@ -201,7 +201,7 @@ begin
             if(pCur[16] <> X_D3DTSS_UNK) then
             begin
                 if(pCur[16] > 12) then
-                    CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_ALPHAOP Value ( mod d)", pCur[16]);
+                    CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)', pCur[16]);
 
                 g_pD3DDevice8^.SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
              end;
@@ -246,7 +246,7 @@ begin
                      end;
 
                     if(pass) then
-                        EmuWarning("Unhandled TextureState Change @  mod d^. mod d", v, r);
+                        EmuWarning('Unhandled TextureState Change @ %d^.%d', v, r);
                  end;
              end;
             //**/

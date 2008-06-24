@@ -23,7 +23,10 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Classes;
+  Windows,
+//  Messages,
+  SysUtils,
+  Classes;
 
 
 function CxbxMalloc(x: Integer): Pointer;
@@ -184,7 +187,7 @@ begin
 
     if (uint32)GetMemStart(pBlock) <> MEMORY_GUARD then
     begin
-        printf('    Memory block corrupted at start, overwrite: $ mod .04X',
+        printf('    Memory block corrupted at start, overwrite: $%.04X',
                *(uint32)GetMemStart(pBlock));
         Integrity := False;
     end;
@@ -340,11 +343,11 @@ begin
     for(pCur := g_pFirstBlock; pCur; pCur = pCur.pNext)
     begin
         printf(''
-               '    Block: $ mod .08X'
-               '    Size :  mod d'
-               '    File :  mod s'
-               '    Line :  mod d'
-               '    cType :  mod s',
+               '    Block: $%.08X'
+               '    Size : %d'
+               '    File : %s'
+               '    Line : %d'
+               '    cType : %s',
                pCur.pMem, pCur.Size, pCur.pFile, pCur.Line,
                pCur.cType := CXBX_ALLOC_NORMAL ? 'NORMAL' : 'RTL');
         CheckIntegrity(pCur);
@@ -365,9 +368,9 @@ begin
     if not Assigned(pMem) then
     begin
         printf('CxbxMallocDebug: Allocation failed'
-               '    Size:  mod d'
-               '    File:  mod s'
-               '    Line:  mod d',
+               '    Size: %d'
+               '    File: %s'
+               '    Line: %d',
                Size, pFile, Line);
     end
     else
@@ -397,10 +400,10 @@ begin
     if not Assigned(pMem) then
     begin
         printf('CxbxCallocDebug: Allocation failed'
-               '    NbrElements:  mod d'
-               '    ElementSize:  mod d'
-               '    File       :  mod s'
-               '    Line       :  mod d',
+               '    NbrElements: %d'
+               '    ElementSize: %d'
+               '    File       : %s'
+               '    Line       : %d',
                NbrElements, ElementSize, pFile, Line);
     end
     else
@@ -434,10 +437,10 @@ begin
     CXBX_MEMORY_BLOCK *pFree := RemoveMemoryBlock(pMem);
     if not Assigned(pFree) then
     begin
-        printf('CxbxFreeDebug: Free on non-existent block: $ mod .08X not  '
+        printf('CxbxFreeDebug: Free on non-existent block: $%.08X not  '
                'Possibly a multiple Free.'
-               '    File:  mod s'
-               '    Line:  mod d',
+               '    File: %s'
+               '    Line: %d',
                pMem, pFile, Line);
     end
     else
@@ -445,13 +448,13 @@ begin
         if not CheckIntegrity(pFree) then
         begin
             printf('CxbxFreeDebug: Free on damaged block'
-                   '    Block   : $. mod 08X'
+                   '    Block   : $.%08X'
                    '    Allocation'
-                   '        File:  mod s'
-                   '        Line:  mod d'
+                   '        File: %s'
+                   '        Line: %d'
                    '    Free'
-                   '        File:  mod s'
-                   '        Line:  mod d',
+                   '        File: %s'
+                   '        Line: %d',
                    pFree.pMem, pFree.pFile, pFree.Line, pFile, Line);
         end;
         Free(GetMemStart(pFree));
@@ -474,11 +477,11 @@ begin
     if not Assigned(pMem) then
     begin
         printf('CxbxRtlAllocDebug: Allocation failed'
-               '    Heap  : $ mod .08X'
-               '    Flags : $ mod .08X'
-               '    Bytes :  mod d'
-               '    File  :  mod s'
-               '    Line  :  mod d',
+               '    Heap  : $%.08X'
+               '    Flags : $%.08X'
+               '    Bytes : %d'
+               '    File  : %s'
+               '    Line  : %d',
                Heap, Flags, Bytes, pFile, Line);
     end
     else
@@ -511,10 +514,10 @@ begin
     CXBX_MEMORY_BLOCK *pFree := RemoveMemoryBlock(pMem);
     if not Assigned(pFree) then
     begin
-        printf('CxbxRtlFreeDebug: Free on non-existent block: $ mod .08X not  '
+        printf('CxbxRtlFreeDebug: Free on non-existent block: $%.08X not  '
                'Possibly a multiple Free.'
-               '    File:  mod s'
-               '    Line:  mod d',
+               '    File: %s'
+               '    Line: %d',
                pMem, pFile, Line);
     end
     else
@@ -522,13 +525,13 @@ begin
         if not CheckIntegrity(pFree) then
         begin
             printf('CxbxRtlFreeDebug: Free on damaged block'
-                   '    Block   : $. mod 08X'
+                   '    Block   : $.%08X'
                    '    Allocation'
-                   '        File:  mod s'
-                   '        Line:  mod d'
+                   '        File: %s'
+                   '        Line: %d'
                    '    Free'
-                   '        File:  mod s'
-                   '        Line:  mod d',
+                   '        File: %s'
+                   '        Line: %d',
                    pFree.pMem, pFree.pFile, pFree.Line, pFile, Line);
          end;
         Ret := NtDll.RtlFreeHeap(Heap, Flags, GetMemStart(pFree));
@@ -551,9 +554,9 @@ begin
     CXBX_MEMORY_BLOCK *pRealloc := FindMemoryBlock(pMem);
     if not Assigned(pRealloc) then
     begin
-        printf('CxbxRtlRealloc: realloc on non-existent block: $ mod .08X not  '
-               '    File:  mod s'
-               '    Line:  mod d',
+        printf('CxbxRtlRealloc: realloc on non-existent block: $%.08X not  '
+               '    File: %s'
+               '    Line: %d',
                pMem, pFile, Line);
     end
     else
@@ -561,15 +564,15 @@ begin
         if not CheckIntegrity(pRealloc) then
         begin
             printf('CxbxRtlReallocDebug: Realloc on damaged block'
-                   '    Block   : $. mod 08X'
+                   '    Block   : $.%08X'
                    '    Allocation'
-                   '        Size:  mod d'
-                   '        File:  mod s'
-                   '        Line:  mod d'
+                   '        Size: %d'
+                   '        File: %s'
+                   '        Line: %d'
                    '    Reallocation'
-                   '        Size:  mod d'
-                   '        File:  mod s'
-                   '        Line:  mod d',
+                   '        Size: %d'
+                   '        File: %s'
+                   '        Line: %d',
                    pRealloc.pMem,
                    pRealloc.pFile, pRealloc.Size, pRealloc.Line,
                    Bytes, pFile, Line);
@@ -580,12 +583,12 @@ begin
         if not Assigned(pNewMem) then
         begin
             printf('CxbxRtlReallocDebug: Reallocation failed'
-                   '    Heap  : $ mod .08X'
-                   '    Flags : $ mod .08X'
-                   '    pMem  : $ mod .08X'
-                   '    Bytes :  mod d'
-                   '    File  :  mod s'
-                   '    Line  :  mod d',
+                   '    Heap  : $%.08X'
+                   '    Flags : $%.08X'
+                   '    pMem  : $%.08X'
+                   '    Bytes : %d'
+                   '    File  : %s'
+                   '    Line  : %d',
                    Heap, Flags, pMem, Bytes, pFile, Line);
         end
         else
@@ -618,9 +621,9 @@ begin
     CXBX_MEMORY_BLOCK *pBlock := FindMemoryBlock(pMem);
     if not Assigned(pBlock) then
     begin
-        printf('CxbxRtlSizeHeap: size heap on non-existent block: $ mod .08X not  '
-               '    File:  mod s'
-               '    Line:  mod d',
+        printf('CxbxRtlSizeHeap: size heap on non-existent block: $%.08X not  '
+               '    File: %s'
+               '    Line: %d',
                pMem, pFile, Line);
     end
     else
@@ -629,9 +632,9 @@ begin
                             - 2 * SizeOf(MEMORY_GUARD);
         if ActualSize <> pBlock.Size then
         begin
-            printf('CxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap:  mod d Tracker:  mod d'
-                   '    File  :  mod s'
-                   '    Line  :  mod d',
+            printf('CxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d'
+                   '    File  : %s'
+                   '    Line  : %d',
                    ActualSize,
                    pBlock.Size,
                    pFile,

@@ -55,7 +55,7 @@ begin
 
 //        char buffer[16];
 //        if(GetConsoleTitle(buffer, 16) != NULL)
-//            freopen("nul", "w", stdout);
+//            freopen('nul', 'w', stdout);
 
   TerminateProcess(GetCurrentProcess(), 0);
 

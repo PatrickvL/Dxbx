@@ -84,7 +84,7 @@ begin
 
                 //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
                 //    break;
-                //CxbxKrnlCleanup("Temporarily unsupported format for active texture unswizzle (0x%.08X)", SurfaceDesc.Format);
+                //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
 
                 hRet := pTexture^.LockRect(v, @LockedRect, 0, 0);
 
@@ -152,7 +152,7 @@ begin
 
         printf('');
         printf('');
-        printf('  PushBuffer@$ mod .08XArgs: array of const', pdwPushData);
+        printf('  PushBuffer@$%.08XArgs: array of const', pdwPushData);
         printf('');
 
         bShowPB := true;
@@ -196,7 +196,7 @@ begin
                 #ifdef _DEBUG_TRACK_PB
                 if(bShowPB) then
                 begin
-                    printf('PrimitiveType :=  mod d)', *pdwPushData);
+                    printf('PrimitiveType := %d)', *pdwPushData);
                  end;
                 //endif
 
@@ -253,7 +253,7 @@ begin
                 HRESULT hRet := g_pD3DDevice8^.CreateVertexBuffer(2047*SizeOf(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
 
                 if(FAILED(hRet)) then
-                    CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount :  mod d)', dwCount);
+                    CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', dwCount);
 
              end;
 
@@ -264,7 +264,7 @@ begin
                 HRESULT hRet := pVertexBuffer^.Lock(0, dwCount*4, @pData, 0);
 
                 if(FAILED(hRet)) then
-                    CxbxKrnlCleanup('Unable to lock vertex buffer cache for PushBuffer emulation ($1818, dwCount :  mod d)', dwCount);
+                    CxbxKrnlCleanup('Unable to lock vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', dwCount);
 
                 memcpy(pData, pVertexData, dwCount*4);
 
@@ -276,8 +276,8 @@ begin
             if(bShowPB) then
             begin
                 printf('NVPB_InlineVertexArray(Args: array of const)');
-                printf('  dwCount :  mod d', dwCount);
-                printf('  dwVertexShader : $ mod 08X', dwVertexShader);
+                printf('  dwCount : %d', dwCount);
+                printf('  dwVertexShader : $%08X', dwVertexShader);
              end;
             //endif
 
@@ -321,21 +321,21 @@ begin
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB) then
             begin
-                printf('  NVPB_FixLoop( mod d)", dwCount);
-                printf("");
-                printf("  Index Array DataArgs: array of const");
+                printf('  NVPB_FixLoop(%d)', dwCount);
+                printf('');
+                printf('  Index Array DataArgs: array of const');
 
                 WORD *pwVal := (WORD)(pdwPushData + 1);
 
                 for(uint s:=0;s<dwCount;s++)
                 begin
-                    if(s mod 8 := 0) printf("  ") then ;
+                    if(s%8 := 0) printf('  ') then ;
 
-                    printf("   mod .04X", *pwVal++);
+                    printf('  %.04X', *pwVal++);
                  end;
 
-                printf("");
-                printf("");
+                printf('');
+                printf('');
              end;
             //endif
 
@@ -368,7 +368,7 @@ begin
                  end;
 
                 if(FAILED(hRet)) then
-                    CxbxKrnlCleanup("Unable to create index buffer for PushBuffer emulation ($1808, dwCount :  mod d)", dwCount);
+                    CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1808, dwCount : %d)', dwCount);
 
                 // copy index data
                 begin
@@ -444,20 +444,20 @@ begin
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB) then
             begin
-                printf("  NVPB_InlineIndexArray($ mod .08X,  mod d)Args: array of const", pIndexData, dwCount);
-                printf("");
-                printf("  Index Array DataArgs: array of const");
+                printf('  NVPB_InlineIndexArray($%.08X, %d)Args: array of const', pIndexData, dwCount);
+                printf('');
+                printf('  Index Array DataArgs: array of const');
 
                 WORD *pwVal := (WORD)pIndexData;
 
                 for(uint s:=0;s<dwCount;s++)
                 begin
-                    if(s mod 8 := 0) printf("  ") then ;
+                    if(s%8 := 0) printf('  ') then ;
 
-                    printf("   mod .04X", *pwVal++);
+                    printf('  %.04X', *pwVal++);
                  end;
 
-                printf("");
+                printf('');
 
                 XTL.IDirect3DVertexBuffer8 *pActiveVB := 0;
 
@@ -480,13 +480,13 @@ begin
 
                 // print out stream data
                 begin
-                    printf("");
-                    printf("  Vertex Stream Data ($ mod .08X)Args: array of const", pActiveVB);
-                    printf("");
-                    printf("  Format :  mod d", VBDesc.Format);
-                    printf("  Size   :  mod d bytes", VBDesc.Size);
-                    printf("  FVF    : $ mod .08X", VBDesc.FVF);
-                    printf("");
+                    printf('');
+                    printf('  Vertex Stream Data ($%.08X)Args: array of const', pActiveVB);
+                    printf('');
+                    printf('  Format : %d', VBDesc.Format);
+                    printf('  Size   : %d bytes', VBDesc.Size);
+                    printf('  FVF    : $%.08X', VBDesc.FVF);
+                    printf('');
                  end;
 
                 // release ptr
@@ -520,7 +520,7 @@ begin
                  end;
 
                 if(FAILED(hRet)) then
-                    CxbxKrnlCleanup("Unable to create index buffer for PushBuffer emulation ($1800, dwCount :  mod d)", dwCount);
+                    CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1800, dwCount : %d)', dwCount);
 
                 // copy index data
                 begin
@@ -591,7 +591,7 @@ begin
          end;
         else
         begin
-            EmuWarning("Unknown PushBuffer Operation ($ mod .04X,  mod d)", dwMethod, dwCount);
+            EmuWarning('Unknown PushBuffer Operation ($%.04X, %d)', dwMethod, dwCount);
             Exit;
          end;
 
@@ -601,8 +601,8 @@ begin
     #ifdef _DEBUG_TRACK_PB
     if(bShowPB) then
     begin
-        printf("");
-        printf("CxbxDbg> ");
+        printf('');
+        printf('CxbxDbg> ');
         fflush(stdout);
      end;
     //endif
@@ -631,8 +631,8 @@ begin
     g_pD3DDevice8^.GetStreamSource(0, @pActiveVB, @uiStride);
 
      szFileName: array[0..128-1] of Char;
-    StrFmt(szFileName, "C:\CxbxMesh-$ mod .08X.x", pIndexData);
-    FILE *dbgVertices := FileOpen(szFileName, "wt");
+    StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
+    FILE *dbgVertices := FileOpen(szFileName, 'wt');
 
     // retrieve stream desc
     pActiveVB^.GetDesc(@VBDesc);
@@ -660,49 +660,49 @@ begin
         if(maxIndex > ((VBDesc.Size/uiStride) - 1)) then
             maxIndex := (VBDesc.Size / uiStride) - 1;
 
-        fprintf(dbgVertices, "xof 0303txt 0032");
-        fprintf(dbgVertices, "");
-        fprintf(dbgVertices, "//\n");
-        fprintf(dbgVertices, "//  Vertex Stream Data (0x%.08X)...\n", pActiveVB);
-        fprintf(dbgVertices, "//\n");
-        fprintf(dbgVertices, "//  Format : %d\n", VBDesc.Format);
-        fprintf(dbgVertices, "//  Size   : %d bytes\n", VBDesc.Size);
-        fprintf(dbgVertices, "//  FVF    : 0x%.08X\n", VBDesc.FVF);
-        fprintf(dbgVertices, "//  iCount : %d\n", dwCount/2);
-        fprintf(dbgVertices, "//\n");
-        fprintf(dbgVertices, "");
-        fprintf(dbgVertices, "Frame SCENE_ROOT begin ");
-        fprintf(dbgVertices, "");
-        fprintf(dbgVertices, "  FrameTransformMatrix begin ");
-        fprintf(dbgVertices, "    1.000000,0.000000,0.000000,0.000000,");
-        fprintf(dbgVertices, "    0.000000,1.000000,0.000000,0.000000,");
-        fprintf(dbgVertices, "    0.000000,0.000000,1.000000,0.000000,");
-        fprintf(dbgVertices, "    0.000000,0.000000,0.000000,1.000000;;");
-        fprintf(dbgVertices, "   end;");
-        fprintf(dbgVertices, "");
-        fprintf(dbgVertices, "  Frame Turok1 begin ");
-        fprintf(dbgVertices, "");
-        fprintf(dbgVertices, "    FrameTransformMatrix begin ");
-        fprintf(dbgVertices, "      1.000000,0.000000,0.000000,0.000000,");
-        fprintf(dbgVertices, "      0.000000,1.000000,0.000000,0.000000,");
-        fprintf(dbgVertices, "      0.000000,0.000000,1.000000,0.000000,");
-        fprintf(dbgVertices, "      0.000000,0.000000,0.000000,1.000000;;");
-        fprintf(dbgVertices, "     end;");
-        fprintf(dbgVertices, "");
-        fprintf(dbgVertices, "    Mesh begin ");
-        fprintf(dbgVertices, "       mod d;", maxIndex+1);
+        fprintf(dbgVertices, 'xof 0303txt 0032');
+        fprintf(dbgVertices, '');
+        fprintf(dbgVertices, '//\n');
+        fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...\n', pActiveVB);
+        fprintf(dbgVertices, '//\n');
+        fprintf(dbgVertices, '//  Format : %d\n', VBDesc.Format);
+        fprintf(dbgVertices, '//  Size   : %d bytes\n', VBDesc.Size);
+        fprintf(dbgVertices, '//  FVF    : 0x%.08X\n', VBDesc.FVF);
+        fprintf(dbgVertices, '//  iCount : %d\n', dwCount/2);
+        fprintf(dbgVertices, '//\n');
+        fprintf(dbgVertices, '');
+        fprintf(dbgVertices, 'Frame SCENE_ROOT begin ');
+        fprintf(dbgVertices, '');
+        fprintf(dbgVertices, '  FrameTransformMatrix begin ');
+        fprintf(dbgVertices, '    1.000000,0.000000,0.000000,0.000000,');
+        fprintf(dbgVertices, '    0.000000,1.000000,0.000000,0.000000,');
+        fprintf(dbgVertices, '    0.000000,0.000000,1.000000,0.000000,');
+        fprintf(dbgVertices, '    0.000000,0.000000,0.000000,1.000000;;');
+        fprintf(dbgVertices, '   end;');
+        fprintf(dbgVertices, '');
+        fprintf(dbgVertices, '  Frame Turok1 begin ');
+        fprintf(dbgVertices, '');
+        fprintf(dbgVertices, '    FrameTransformMatrix begin ');
+        fprintf(dbgVertices, '      1.000000,0.000000,0.000000,0.000000,');
+        fprintf(dbgVertices, '      0.000000,1.000000,0.000000,0.000000,');
+        fprintf(dbgVertices, '      0.000000,0.000000,1.000000,0.000000,');
+        fprintf(dbgVertices, '      0.000000,0.000000,0.000000,1.000000;;');
+        fprintf(dbgVertices, '     end;');
+        fprintf(dbgVertices, '');
+        fprintf(dbgVertices, '    Mesh begin ');
+        fprintf(dbgVertices, '      %d;', maxIndex+1);
 
         uint max := maxIndex+1;
         for(uint v:=0;v<max;v++)
         begin
-            fprintf(dbgVertices, "       mod f; mod f; mod f; mod s",
+            fprintf(dbgVertices, '      %f;%f;%f;%s',
                 *(FLOAT)@pVBData[v*uiStride+0],
                 *(FLOAT)@pVBData[v*uiStride+4],
                 *(FLOAT)@pVBData[v*uiStride+8],
-                (v < (max - 1)) ? "," : ";");
+                (v < (max - 1)) ? ',' : ';');
          end;
 
-        fprintf(dbgVertices, "       mod d;", dwCount - 2);
+        fprintf(dbgVertices, '      %d;', dwCount - 2);
 
         WORD *pwVal := (WORD)pIndexData;
 
@@ -716,8 +716,8 @@ begin
 
         for(uint i:=2;i<max;i++)
         begin
-            fprintf(dbgVertices, "      3; mod d, mod d, mod d; mod s",
-                a,b,c, (i < (max - 1)) ? "," : ";");
+            fprintf(dbgVertices, '      3;%d,%d,%d;%s',
+                a,b,c, (i < (max - 1)) ? ',' : ';');
 
             a := b;
             b := c;
@@ -728,9 +728,9 @@ begin
             lc := c;
          end;
 
-        fprintf(dbgVertices, "     end;");
-        fprintf(dbgVertices, "   end;");
-        fprintf(dbgVertices, " end;");
+        fprintf(dbgVertices, '     end;');
+        fprintf(dbgVertices, '   end;');
+        fprintf(dbgVertices, ' end;');
 
         FileClose(dbgVertices);
      end;
