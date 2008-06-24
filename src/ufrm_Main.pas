@@ -26,7 +26,7 @@ uses
   Windows, Messages, SysUtils, Classes,
   Dialogs, ActnList, Forms, Menus,
   Controls, ComCtrls, ExtCtrls,
-  Graphics, GIFImg, JPeg,
+  Graphics, JPeg,
   ShellAPI, IniFiles,
   // Dxbx
   uTypes,
