@@ -1606,7 +1606,7 @@ begin
 
 function XTL__EmuIDirect3DDevice8_BeginStateBlock: HRESULT;
 begin
-  Result := nil;
+  Result := 0;
   EmuSwapFS(); // Win2k/XP FS
   DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_BeginStateBlock()', [GetCurrentThreadId()]));
 
@@ -4322,8 +4322,9 @@ begin
       if (FAILED(hRet)) then
         CxbxKrnlCleanup("CreateTexture Failed not ");
 
+        
       DbgPrintf("EmuIDirect3DResource8_Register($ mod X): Successfully Created Texture($ mod .08 X, $ mod .08 X)", GetCurrentThreadId(), pResource, pResource^.EmuTexture8);
-    end; * )
+    end; *)
 end;
 
 (*
