@@ -30,6 +30,7 @@ type
 
 implementation
 
+{ TODO : Need to be translated to delphi }
 
 (*var
   // XInputSetState status waiters

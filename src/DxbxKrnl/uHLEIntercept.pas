@@ -82,6 +82,7 @@ begin
   DbgPrintf('*******************************************************************************');
   DbgPrintf('');
 
+  { TODO : need to be translated to delphi }
 (*
   //
   // initialize HLE cache file

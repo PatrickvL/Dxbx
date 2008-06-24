@@ -1112,7 +1112,7 @@ begin
     );
 *)
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
 (*    result:= hRet;
 *)
@@ -1445,7 +1445,7 @@ begin
      end;
 *)
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
 (*    result:= hRet;
 *)
@@ -1513,11 +1513,11 @@ begin
         hRet := D3DERR_INVALIDCALL;
      end;
 *)
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
 (*
     result:= hRet;
-*)    
+   *)
 end;
 
 // func: EmuIDirect3D8_KickOffAndWaitForIdle
@@ -7889,22 +7889,23 @@ function XTL__EmuIDirect3DDevice8_SetVertexShaderInputDirect: HRESULT;
     X_STREAMINPUT           *pStreamInputs
 ) *)
 begin
-  (*  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
     // debug trace
-    DbgPrintf( "EmuD3D8 ($ mod X): EmuIDirect3DDevice8_SelectVertexShaderDirect"
-               "("
-               "   pVAF                : $ mod .08X"
-               "   StreamCount         : $ mod .08X"
-               "   pStreamInputs       : $ mod .08X"
-               ");",
-               GetCurrentThreadId(), pVAF, StreamCount, pStreamInputs);
+    { TODO : variables not translated yet }
+    (*
+    DbgPrintf( Format ('EmuD3D8 ($ mod X): EmuIDirect3DDevice8_SelectVertexShaderDirect' +
+               '(' +
+               '   pVAF                : $ mod .08X' +
+               '   StreamCount         : $ mod .08X' +
+               '   pStreamInputs       : $ mod .08X' +
+               ');',
+               [GetCurrentThreadId(), pVAF, StreamCount, pStreamInputs]]);
+    *)
 
-    DbgPrintf("NOT YET IMPLEMENTED not ");
-
-    EmuSwapFS();   // Xbox FS
-
-    result:= 0; *)
+  DbgPrintf('NOT YET IMPLEMENTED not ');
+  EmuSwapFS(); // Xbox FS
+  result := 0;
 end;
 
 // ******************************************************************
@@ -7918,22 +7919,24 @@ function XTL__EmuIDirect3DDevice8_GetVertexShaderInput: HRESULT;
     X_STREAMINPUT      *pStreamInputs
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
     // debug trace
-    DbgPrintf( "EmuD3D8 ($ mod X): EmuIDirect3DDevice8_GetVertexShaderInput"
-               "("
-               "   pHandle             : $ mod .08X"
-               "   pStreamCount        : $ mod .08X"
-               "   pStreamInputs       : $ mod .08X"
-               ");",
-               GetCurrentThreadId(), pHandle, pStreamCount, pStreamInputs);
+    { TODO : variables not translated yet }
+    (*
+    DbgPrintf( Format ('EmuD3D8 (% mod X): EmuIDirect3DDevice8_GetVertexShaderInput' +
+               '(' +
+               '   pHandle             : % mod .08X' +
+               '   pStreamCount        : % mod .08X' +
+               '   pStreamInputs       : % mod .08X' +
+               ');',
+               [GetCurrentThreadId(), pHandle, pStreamCount, pStreamInputs]);
+    *)
 
-    DbgPrintf("NOT YET IMPLEMENTED not ");
+  DbgPrintf('NOT YET IMPLEMENTED not ');
 
-    EmuSwapFS();   // Xbox FS
-
-    result:= 0;    *)
+  EmuSwapFS(); // Xbox FS
+  result := 0;
 end;
 
 // ******************************************************************
@@ -8187,19 +8190,22 @@ function XTL__EmuIDirect3DTexture8_GetLevelDesc: HRESULT;
     X_D3DSURFACE_DESC* pDesc
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
     // debug trace
-    DbgPrintf( "EmuD3D8 (0x mod X): EmuIDirect3DTexture8_GetLevelDesc"
-               "("
-               "   Level                : 0x mod .08X"
-               "   pDesc                : 0x mod .08X"
-               ");",
-               GetCurrentThreadId(), Level,pDesc);
+    { TODO : variables not translated yet }
+    (*
+    DbgPrintf( Format ('EmuD3D8 (0x mod %): EmuIDirect3DTexture8_GetLevelDesc' +
+               '(' +
+               '   Level                : 0x mod .08%' +
+               '   pDesc                : 0x mod .08%' +
+               ');',
+               [GetCurrentThreadId(), Level,pDesc]));
+    *)
 
-    EmuSwapFS();   // Xbox FS
+  EmuSwapFS(); // Xbox FS
 
- result:= D3D_OK; *)
+  result := D3D_OK;
 end;
 
 // ******************************************************************
@@ -8346,7 +8352,7 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format ('EmuD3D8 (0x mod X): EmuIDirect3DDevice8_InsertFence()', [GetCurrentThreadId()]));
+  DbgPrintf(Format('EmuD3D8 (0x mod X): EmuIDirect3DDevice8_InsertFence()', [GetCurrentThreadId()]));
 
     // TODO: Actually implement this
 { TODO : Need to be translated to delphi }
