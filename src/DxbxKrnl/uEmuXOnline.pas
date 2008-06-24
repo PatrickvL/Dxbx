@@ -40,10 +40,10 @@ var
 begin
     EmuSwapFS;   // Win2k/XP FS
 
-    (*DbgPrintf(Format ('EmuXapi (% mod X): EmuWSAStartup' +
+    (*DbgPrintf(Format ('EmuXapi (0x&X): EmuWSAStartup' +
            '( '+
-           '   wVersionRequested   : % mod .08X' +
-           '   lpWSAData           : % mod .08X' +
+           '   wVersionRequested   : 0x%.08X' +
+           '   lpWSAData           : 0x%.08X' +
            ');',
            [GetCurrentThreadId(), wVersionRequested, lpWSAData]));
 
@@ -81,7 +81,7 @@ end;
 function XTL_EmuXNetGetEthernetLinkStatus: DWORD;
 begin
     EmuSwapFS();   // Win2k/XP FS
-    DbgPrintf( Format ('EmuXapi (% mod X): EmuXNetGetEthernetLinkStatus();', [GetCurrentThreadId]));
+    DbgPrintf( Format ('EmuXapi (0x% X): EmuXNetGetEthernetLinkStatus();', [GetCurrentThreadId]));
     EmuSwapFS();   // XBox FS
 
     // for now, no ethernet connection is available

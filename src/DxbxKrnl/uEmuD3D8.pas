@@ -1039,7 +1039,7 @@ function XTL__EmuIDirect3DDevice8_IsBusy: LongBOOL;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_IsBusy();', [GetCurrentThreadId()]));
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_IsBusy();');
 
   { TODO : EmuWarning not implemented yet in dxbx }
 (*
@@ -1166,7 +1166,7 @@ procedure XTL__EmuIDirect3DDevice8_EndPush(pPush: DWord);
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_EndPush(% mod .08X);', [GetCurrentThreadId(), pPush]));
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_EndPush(0x%.08X);', [pPush]));
 
     { TODO : Need to be translated to delphi }
     (*EmuExecutePushBufferRaw(g_pPrimaryPB);
@@ -1185,7 +1185,7 @@ function XTL__EmuIDirect3DDevice8_BeginVisibilityTest: HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_BeginVisibilityTest();', [GetCurrentThreadId()]));
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginVisibilityTest();');
 
   EmuSwapFS(); // XBox FS
 
@@ -1200,11 +1200,11 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_EndVisibilityTest' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_EndVisibilityTest' +
     '(' +
-    '   Index                     : % mod .08X' +
+    '   Index                     : 0x%.08X' +
     ');)',
-    [GetCurrentThreadId(), Index]));
+    [Index]));
 
   EmuSwapFS(); // XBox FS
 
@@ -1217,12 +1217,12 @@ procedure XTL__EmuIDirect3DDevice8_SetBackBufferScale(x, y: Single);
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_SetBackBufferScale' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_SetBackBufferScale' +
     '(' +
-    '   %                         :  mod f' +
-    '   %                         :  mod f' +
+    '   x                         :  0x%f' +
+    '   y                         :  0x%f' +
     ');',
-    [GetCurrentThreadId(), x, y]));
+    [x, y]));
 
     { TODO : Emuwarning not yet implemented into dxbx }
     (*
@@ -1297,12 +1297,12 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
     // debug trace
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_LoadVertexShader' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_LoadVertexShader' +
     '(' +
-    '   Handle              : % mod .08X' +
-    '   Address             : % mod .08X' +
+    '   Handle              : 0x%.08X' +
+    '   Address             : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), Handle, Address]));
+    [Handle, Address]));
 
 { TODO : Need to be translated to delphi }
 (*    if(Address < 136 and VshHandleIsVertexShader(Handle)) then
@@ -1330,12 +1330,12 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_SelectVertexShader' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_SelectVertexShader' +
     '(' +
-    '   Handle              : % mod .08X' +
-    '   Address             : % mod .08X' +
+    '   Handle              : 0x%.08X' +
+    '   Address             : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), Handle, Address]));
+    [Handle, Address]));
 
 { TODO : Need to be translated to delphi }
 (*    if(VshHandleIsVertexShader(Handle)) then
@@ -1374,11 +1374,11 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3D8_GetAdapterModeCount' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3D8_GetAdapterModeCount' +
     '(' +
-    '   Adapter                   : % mod .08X' +
+    '   Adapter                   : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), Adapter]));
+    [Adapter]));
 
 { TODO : Need to be translated to delphi }
 (*
@@ -1526,13 +1526,11 @@ procedure XTL__EmuIDirect3D8_KickOffAndWaitForIdle;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3D8_KickOffAndWaitForIdle()', [GetCurrentThreadId()]));
+  DbgPrintf('EmuD3D8 : EmuIDirect3D8_KickOffAndWaitForIdle()');
 
-    // TODO: Actually do something here?
+  // TODO: Actually do something here?
 
   EmuSwapFS(); // XBox FS
-
-  Exit;
 end;
 
 // * func: EmuIDirect3D8_KickOffAndWaitForIdle2
@@ -1541,12 +1539,12 @@ procedure XTL__EmuIDirect3D8_KickOffAndWaitForIdle2(dwDummy1, dwDummy2: DWORD);
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3D8_KickOffAndWaitForIdle' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3D8_KickOffAndWaitForIdle' +
     '(' +
-    '   dwDummy1            : % mod .08X' +
-    '   dwDummy2            : % mod .08X' +
+    '   dwDummy1            : 0x%.08X' +
+    '   dwDummy2            : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), dwDummy1, dwDummy2]));
+    [dwDummy1, dwDummy2]));
 
     // TODO: Actually do something here?
 
@@ -1613,7 +1611,7 @@ function XTL__EmuIDirect3DDevice8_BeginStateBlock: HRESULT;
 begin
   Result := 0;
   EmuSwapFS(); // Win2k/XP FS
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_BeginStateBlock()', [GetCurrentThreadId()]));
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginStateBlock()');
 
 { TODO : Need to be translated to delphi }
 (*    ULONG ret := g_pD3DDevice8^.BeginStateBlock();
@@ -1631,7 +1629,7 @@ function XTL__EmuIDirect3DDevice8_BeginStateBig: HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_BeginStateBig()', [GetCurrentThreadId()]));
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginStateBig()');
 { TODO : Need to be translated to delphi }
 (*    ULONG ret = g_pD3DDevice8->BeginStateBlock();
 *)
@@ -1650,11 +1648,11 @@ function XTL__EmuIDirect3DDevice8_CaptureStateBlock(Token: DWORD): HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_CaptureStateBlock' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_CaptureStateBlock' +
     '(' +
-    '   Token               : % mod .08X' +
+    '   Token               : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), Token]));
+    [Token]));
 
 { TODO : Need to be translated to delphi }
 (*    ULONG ret := g_pD3DDevice8^.CaptureStateBlock(Token);
@@ -1674,11 +1672,11 @@ function XTL__EmuIDirect3DDevice8_ApplyStateBlock(Token: DWORD): HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_ApplyStateBlock' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_ApplyStateBlock' +
     '(' +
-    '   Token               : % mod .08X' +
+    '   Token               : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), Token]));
+    [Token]));
 
 { TODO : Need to be translated to delphi }
 (*    ULONG ret := g_pD3DDevice8^.ApplyStateBlock(Token);
@@ -1697,11 +1695,11 @@ function XTL__EmuIDirect3DDevice8_EndStateBlock(pToken: DWORD): HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (% mod X): EmuIDirect3DDevice8_EndStateBlock' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_EndStateBlock' +
     '(' +
-    '   pToken              : % mod .08X' +
+    '   pToken              : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), pToken]));
+    [pToken]));
 
 { TODO : Need to be translated to delphi }
 (*    ULONG ret := g_pD3DDevice8^.EndStateBlock(pToken);
@@ -8352,7 +8350,7 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (0x mod X): EmuIDirect3DDevice8_InsertFence()', [GetCurrentThreadId()]));
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_InsertFence()');
 
     // TODO: Actually implement this
 { TODO : Need to be translated to delphi }
@@ -8373,11 +8371,11 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf(Format('EmuD3D8 (0x mod X): EmuIDirect3DDevice8_BlockOnFence' +
+  DbgPrintf(Format('EmuD3D8 : EmuIDirect3DDevice8_BlockOnFence' +
     '(' +
-    '   Fence                     : 0% mod .08X' +
+    '   Fence                     : 0x%.08X' +
     ');',
-    [GetCurrentThreadId(), Fence]));
+    [Fence]));
 
     // TODO: Implement
 
