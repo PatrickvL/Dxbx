@@ -44,7 +44,7 @@ var
 // ******************************************************************
 // * func: EmuXapiApplyKernelPatches
 // ******************************************************************
-  VOID WINAPI XTL.EmuXapiApplyKernelPatches()
+VOID WINAPI XTL.EmuXapiApplyKernelPatches()
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -535,9 +535,9 @@ begin
   DWORD ret := 0;
 
   if (DeviceType.Reserved[0] = 0 and DeviceType.Reserved[1] = 0 and DeviceType.Reserved[2] = 0 and DeviceType.Reserved[3] = 0) then
-    ret := (1 shl 0); // Return 1 Controller
-else
-  EmuWarning('Unknown DeviceType ($%.08X, $%.08X, $%.08X, $%.08X)', DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]);
+    ret := (1 shl 0) // Return 1 Controller
+  else
+    EmuWarning('Unknown DeviceType ($%.08X, $%.08X, $%.08X, $%.08X)', DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]);
 
   EmuSwapFS(); // XBox FS
 
