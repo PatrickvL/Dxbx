@@ -27,6 +27,7 @@ implementation
 uses Windows, SysUtils,
   uLog, uEmuFS;
 
+{ TODO : need to be translated to delphi }
 // func: EmuWSAStartup
 
 function XTL_EmuWSAStartup: integer;
