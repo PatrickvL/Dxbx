@@ -28,6 +28,10 @@ uses
   XInput,
   uXBController;
 
+
+procedure XTL_EmuDInputCleanup;
+
+
 implementation
 
 var
@@ -37,19 +41,19 @@ var
 
 function XTL_EmuDInputInit: Longbool;
 begin
+  Result := True;
   g_EmuShared.GetXBController(g_XBController);
 
   g_XBController.ListenBegin(g_hEmuWindow);
 
-    (*if(g_XBController.GetError()) then
-        result:= false;
+(*    if(g_XBController.GetError()) then
+        result:= false; *)
 
-    result:= true;  *)
 end;
 
 // func: XTL::EmuDInputCleanup
 
-procedure XTL_EmuDInputCleanup();
+procedure XTL_EmuDInputCleanup;
 begin
   g_XBController.ListenEnd();
 end;

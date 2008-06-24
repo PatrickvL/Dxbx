@@ -59,6 +59,7 @@ procedure CxbxKrnlInit(
 procedure CxbxKrnlRegisterThread(const hThread: THandle);
 procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
 procedure EmuXRefFailure;
+procedure CxbxKrnlResume();
 procedure EmuPanic(); // export;
 procedure CxbxKrnlNoFunc; cdecl;
 
@@ -351,6 +352,89 @@ begin
   CxbxKrnlCleanup('XRef-only function body reached. Fatal Error.');
 end;
 
+procedure CxbxKrnlResume();
+begin
+  if (not g_bEmuSuspended) then
+    Exit;
+
+    // remove 'paused' from rendering window caption text
+ (*   {
+        char szBuffer[256];
+
+        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+
+        GetWindowText(hWnd, szBuffer, 255);
+
+        szBuffer[strlen(szBuffer)-9] = '\0';
+
+        SetWindowText(hWnd, szBuffer);
+    }
+
+    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    {
+        if(g_hThreads[v] != NULL)
+        {
+            DWORD dwExitCode;
+
+            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+            {
+                // resume thread if it is active
+                ResumeThread(g_hThreads[v]);
+            }
+            else
+            {
+                // remove thread from thread list if it is dead
+                g_hThreads[v] = 0;
+            }
+        }
+    }
+
+    g_bEmuSuspended = false;
+}            *)
+end;
+
+procedure CxbxKrnlSuspend();
+begin
+
+  if (g_bEmuSuspended or g_bEmuException) then
+    Exit;
+
+(*    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    {
+        if(g_hThreads[v] != NULL)
+        {
+            DWORD dwExitCode;
+
+            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+            {
+                // suspend thread if it is active
+                SuspendThread(g_hThreads[v]);
+            }
+            else
+            {
+                // remove thread from thread list if it is dead
+                g_hThreads[v] = 0;
+            }
+        }
+    }
+
+    // append 'paused' to rendering window caption text
+    {
+        char szBuffer[256];
+
+        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+
+        GetWindowText(hWnd, szBuffer, 255 - 10);
+
+        strcat(szBuffer, " (paused)");
+        SetWindowText(hWnd, szBuffer);
+    }
+
+    g_bEmuSuspended = true;
+}         *)
+end;
+
+
 procedure EmuPanic();
 begin
   if EmuIsXboxFS then
@@ -377,3 +461,4 @@ exports
   EmuPanic;
 
 end.
+

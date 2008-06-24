@@ -35,7 +35,10 @@ var
   g_hZDrive: THandle = 0;
   g_strZDrive: string = '';
   g_hEmuWindow: THandle;
-
+  g_bPrintfOn : Boolean = true;
+  g_bEmuSuspended : Boolean = false;
+  g_bEmuException : Boolean = false;
+  
 implementation
 
 end.
