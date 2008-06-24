@@ -163,7 +163,7 @@ begin
         if (v mod $10) = 0 then
         begin
           DbgPrintf(Line);
-          Line := 'EmuFS : 0x' + IntToHex(Integer(@pNewTLS[v]), 8) + ': ';
+          Line := 'EmuFS : 0x' + PointerToString(@pNewTLS[v]) + ': ';
         end;
 
         bByte := PUInt8(Integer(pNewTLS) + v);
@@ -254,7 +254,7 @@ begin
   // swap back into the "OrgFS"
   EmuSwapFS();
 
-  DbgPrintf('EmuFS : OrgFS=' + IntToStr(OrgFS) + ' NewFS=' + IntToStr(NewFS) + ' pTLS=$' + IntToHex(Integer(pTLS), 8));
+  DbgPrintf('EmuFS : OrgFS=' + IntToStr(OrgFS) + ' NewFS=' + IntToStr(NewFS) + ' pTLS=$' + PointerToString(pTLS));
 end;
 
 // cleanup fs segment selector emulation

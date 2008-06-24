@@ -131,7 +131,7 @@ begin
   begin
     pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
-    DbgPrintf('EmKrnl : Calling pfnNotificationRoutine (0x' + IntToHex(Integer(Addr(pfnNotificationRoutine)), 8) + ')');
+    DbgPrintf('EmKrnl : Calling pfnNotificationRoutine (0x%.08x)', [Addr(pfnNotificationRoutine)]);
 
     EmuSwapFS(); // Xbox FS
 
@@ -161,7 +161,7 @@ begin
     on E: Exception do
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
 //  __except(EmuException(GetExceptionInformation()))
-//    EmuWarning('Problem with ExceptionFilter not ');
+//    EmuWarning('Problem with ExceptionFilter!');
   end;
 
   callComplete:

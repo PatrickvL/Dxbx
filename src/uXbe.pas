@@ -836,7 +836,6 @@ begin
 
       _LogEx('Library Name                     : ' + TmpStr);
       _LogEx(Format('Version                          : %d.%d.%d', [m_LibraryVersion[lIndex].wMajorVersion, m_LibraryVersion[lIndex].wMinorVersion, m_LibraryVersion[lIndex].wBuildVersion]));
-      _LogEx('');
 
       //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
 
@@ -861,6 +860,7 @@ begin
           TmpStr := TmpStr + 'Unapproved';
 
       _LogEx(TmpStr);
+      _LogEx('');
     end; // for lIndex
   end;
 

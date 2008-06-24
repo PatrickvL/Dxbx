@@ -24,8 +24,15 @@ interface
 
 implementation
 
-uses Windows, SysUtils,
-  uLog, uEmuFS;
+uses
+  // Delphi
+  Windows,
+  SysUtils,
+  // Jedi
+  JwaWinType,
+  // Dxbx
+  uLog,
+  uEmuFS;
 
 { TODO : need to be translated to delphi }
 // func: EmuWSAStartup
@@ -40,12 +47,12 @@ var
 begin
     EmuSwapFS;   // Win2k/XP FS
 
-    (*DbgPrintf(Format ('EmuXapi (0x&X): EmuWSAStartup' +
+    (*DbgPrintf('EmuXapi : EmuWSAStartup' +
            '( '+
            '   wVersionRequested   : 0x%.08X' +
            '   lpWSAData           : 0x%.08X' +
            ');',
-           [GetCurrentThreadId(), wVersionRequested, lpWSAData]));
+           [wVersionRequested, lpWSAData]));
 
     ret := XTL.WSAStartup(wVersionRequested, lpWSAData); *)
 
@@ -57,17 +64,16 @@ end;
 // func: EmuXNetStartup
 
 function XTL_EmuXNetStartup: Integer;
-(*(
-     PVOID pDummy
-) *)
+var
+  pDummy: PVOID;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    (*DbgPrintf("EmuXapi ($ mod X): EmuXNetStartup"
-           "("
-           "   pDummy              : $ mod .08X"
-           ");",
-           GetCurrentThreadId(), pDummy); *)
+    DbgPrintf('EmuXapi : EmuXNetStartup' +
+           #13#10'(' +
+           #13#10'   pDummy              : $%.08X' +
+           #13#10');',
+           [pDummy]);
 
     EmuSwapFS();   // XBox FS
 
@@ -81,7 +87,7 @@ end;
 function XTL_EmuXNetGetEthernetLinkStatus: DWORD;
 begin
     EmuSwapFS();   // Win2k/XP FS
-    DbgPrintf( Format ('EmuXapi (0x% X): EmuXNetGetEthernetLinkStatus();', [GetCurrentThreadId]));
+    DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
     EmuSwapFS();   // XBox FS
 
     // for now, no ethernet connection is available
@@ -100,14 +106,14 @@ end;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emusocket"
-           "("
-           "   this                : $ mod .08X"
-           "   af                  : $ mod .08X"
-           "   ctype                : $ mod .08X"
-           "   protocol            : $ mod .08X"
-           ");",
-           GetCurrentThreadId(), this, af, ctype, protocol);
+    DbgPrintf('EmuXapi ($%X): EmuThis.Emusocket'
+           '('
+           '   this                : $%.08X'
+           '   af                  : $%.08X'
+           '   ctype                : $%.08X'
+           '   protocol            : $%.08X'
+           ');',
+           [this, af, ctype, protocol);
 
     SOCKET ret = socket(af, ctype, protocol);
 
@@ -123,14 +129,14 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emubind"
-           "("
-           "   this                : $ mod .08X"
-           "   s                   : $ mod .08X"
-           "   name                : $ mod .08X"
-           "   namelen             : $ mod .08X"
-           ");",
-           GetCurrentThreadId(), this, s, name, namelen);
+    DbgPrintf('EmuXapi ($%X): EmuThis.Emubind'
+           '('
+           '   this                : $%.08X'
+           '   s                   : $%.08X'
+           '   name                : $%.08X'
+           '   namelen             : $%.08X'
+           ');',
+           [this, s, name, namelen);
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
@@ -148,13 +154,13 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emulisten"
-           "("
-           "   this                : $ mod .08X"
-           "   s                   : $ mod .08X"
-           "   listen              : $ mod .08X"
-           ");",
-           GetCurrentThreadId(), this, s, backlog);
+    DbgPrintf('EmuXapi ($%X): EmuThis.Emulisten'
+           '('
+           '   this                : $%.08X'
+           '   s                   : $%.08X'
+           '   listen              : $%.08X'
+           ');',
+           [this, s, backlog);
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
@@ -172,14 +178,14 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuXapi ($ mod X): EmuThis.Emuioctlsocket"
-           "("
-           "   this                : $ mod .08X"
-           "   s                   : $ mod .08X"
-           "   cmd                 : $ mod .08X"
-           "   argp                : $ mod .08X"
-           ");",
-           GetCurrentThreadId(), this, s, cmd, argp);
+    DbgPrintf('EmuXapi ($%X): EmuThis.Emuioctlsocket'
+           '('
+           '   this                : $%.08X'
+           '   s                   : $%.08X'
+           '   cmd                 : $%.08X'
+           '   argp                : $%.08X'
+           ');',
+           [this, s, cmd, argp]);
 
     integer ret := ioctlsocket(s, cmd, argp);
 

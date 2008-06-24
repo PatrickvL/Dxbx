@@ -23,9 +23,11 @@ unit uEmuDInput;
 interface
 
 uses
+  // 3rd party
+  XInput,
+  // Dxbx
   uEmuShared,
   uEmu,
-  XInput,
   uXBController;
 
 
@@ -65,7 +67,7 @@ begin
   (*g_XBController.ListenPoll(Controller);
 
   if (g_XBController.GetError()) then
-    MessageBox(0, g_XBController.GetError(), "Cxbx[* UNHANDLED not * ]", MB_OK); // TODO: Handle this! *)
+    MessageBox(0, g_XBController.GetError(), 'Cxbx[* UNHANDLED! *]', MB_OK); // TODO: Handle this! *)
 end;
 
 

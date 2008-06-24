@@ -25,6 +25,7 @@ uses
   // Delphi
   Windows,
   SysUtils,
+  Variants,
   // Dxbx
   uTypes,
   uLogConsole;
@@ -38,7 +39,8 @@ var
 procedure CreateLogs(aLogType: TLogType = ltKernel);
 procedure CloseLogs;
 procedure WriteLog(aText: string);
-procedure DbgPrintf(aStr: string);
+procedure DbgPrintf(aStr: string); overload;
+procedure DbgPrintf(aStr: string; Args: array of const); overload
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
 implementation
@@ -48,6 +50,92 @@ var
   LogFile: TextFile;
 
   DxbxLogLock: Windows._RTL_CRITICAL_SECTION;
+
+type
+  TVarRecType = Byte;
+
+function TVarRecTypeToString(const aVarRecType: TVarRecType): string;
+begin
+  case aVarRecType of
+    vtInteger: Result := 'vtInteger';
+    vtBoolean: Result := 'vtBoolean';
+    vtChar: Result := 'vtChar';
+    vtExtended: Result := 'vtExtended';
+    vtString: Result := 'vtString';
+    vtPointer: Result := 'vtPointer';
+    vtPChar: Result := 'vtPChar';
+    vtObject: Result := 'vtObject';
+    vtClass: Result := 'vtClass';
+    vtWideChar: Result := 'vtWideChar';
+    vtPWideChar: Result := 'vtPWideChar';
+    vtAnsiString: Result := 'vtAnsiString';
+    vtCurrency: Result := 'vtCurrency';
+    vtVariant: Result := 'vtVariant';
+    vtInterface: Result := 'vtInterface';
+    vtWideString: Result := 'vtWideString';
+    vtInt64: Result := 'vtInt64';
+  else
+    Result := 'Unknown:' + IntToStr(aVarRecType);
+  end;
+end;
+
+function TVarRecToString(const aVarRec: TVarRec): string;
+begin
+  Result := TVarRecTypeToString(aVarRec.VType) + ':';
+  case aVarRec.VType of
+    vtInteger: Result := Result + IntToStr(aVarRec.VInteger);
+//    vtBoolean: Result := Result + (aVarRec.V);
+    vtChar: Result := Result + aVarRec.VChar;
+//    vtExtended: Result := Result + (aVarRec.V);
+    vtString: Result := Result + aVarRec.VString^;
+    vtPointer: Result := Result + PointerToString(aVarRec.VPointer);
+    vtPChar: Result := Result + aVarRec.VPChar;
+//    vtObject: Result := Result + (aVarRec.V); //Object';
+//    vtClass: Result := Result + (aVarRec.V); //Class';
+//    vtWideChar: Result := Result + (aVarRec.V); //WideChar';
+//    vtPWideChar: Result := Result + (aVarRec.V); //PWideChar';
+//    vtAnsiString: Result := Result + (aVarRec.VAnsiString);
+//    vtCurrency: Result := Result + (aVarRec.V);
+    vtVariant: Result := Result + string(aVarRec.VVariant);
+//    vtInterface: Result := Result + (aVarRec.V);
+//    vtWideString: Result := Result + (aVarRec.V);
+    vtInt64: Result := Result + IntToStr(aVarRec.VInt64^);
+  else
+    Result := Result + 'Unknown';
+  end;
+end;
+
+procedure DbgPrintf(aStr: string; Args: array of const); // array of TVarRec actually
+var
+  i: Integer;
+begin
+  try
+    // First, change all pointers into integers, so those don't raise
+    // an EConvertError. (This is easier than having casts everywhere) :
+    for i := Low(Args) to High(Args) do
+    begin
+      case Args[i].VType of
+        vtPointer:
+          Args[i].VType := vtInteger; // The data doesn't have to be changed, because it's already in-place 
+      end;
+    end;
+    
+    // Now try to format the string, including it's arguments :
+    WriteLog(Format(aStr, Args));
+
+  except
+    on E: Exception do
+    begin
+      // When something went wrong, log as much details as we can get our hands on,
+      // so we have an opportunity to fix a wrong type via cast or whatever : 
+      WriteLog('Catched an exception! Type=' + E.ClassName);
+      WriteLog(E.Message);
+      WriteLog(aStr);
+      for i := Low(Args) to High(Args) do
+        WriteLog(TVarRecToString(Args[i]));
+    end;
+  end;
+end;
 
 procedure DbgPrintf(aStr: string);
 begin
@@ -107,7 +195,7 @@ begin
       end;
   end; // case m_DxbxDebug
 
-  WriteLog('Started logging.');
+  WriteLog('Started logging at ' + DateTimeToStr(Now));
 end;
 
 procedure CloseLogs;

@@ -98,7 +98,7 @@ begin
         if(pCachedStream) then
         begin
             // TODO: Write nicer dump presentation
-            printf('Key: $ mod .08X Cache Hits:  mod d IsUP:  mod s OrigStride:  mod d NewStride:  mod d CRCCount:  mod d CRCFreq:  mod d Lengh:  mod d CRC32: $ mod .08X',
+            printf('Key: $%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: $%.08X',
                    pNode^.uiKey, pCachedStream^.uiCacheHit, pCachedStream^.bIsUP ? 'YES' : 'NO',
                    pCachedStream^.Stream.uiOrigStride, pCachedStream^.Stream.uiNewStride,
                    pCachedStream^.uiCount, pCachedStream^.uiCheckFrequency,
@@ -133,10 +133,10 @@ begin
         begin
             if(pNode^.pResource) then
             begin
-                // First, check if there is an "expired" stream in the cache (not recently used)
+                // First, check if there is an 'expired' stream in the cache (not recently used)
                 if(((CACHEDSTREAM )pNode^.pResource)^.lLastUsed < (clock() + MAX_STREAM_NOT_USED_TIME)) then
                 begin
-                    printf(' not  not  not Found an old stream,  mod 2.2f', ((FLOAT)((clock() + MAX_STREAM_NOT_USED_TIME) - ((CACHEDSTREAM )pNode^.pResource)^.lLastUsed)) / (FLOAT)CLOCKS_PER_SEC);
+                    printf(' not  not  not Found an old stream, %2.2f', ((FLOAT)((clock() + MAX_STREAM_NOT_USED_TIME) - ((CACHEDSTREAM )pNode^.pResource)^.lLastUsed)) / (FLOAT)CLOCKS_PER_SEC);
                     uiKey := pNode^.uiKey;
                     break;
                  end;
@@ -180,7 +180,7 @@ begin
         // There should only be one stream (stream zero) in this case
         if(uiStream <> 0) then
         begin
-            CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero not ');
+            CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
          end;
         uiStride  := pPatchDesc^.uiVertexStreamZeroStride;
         pCalculateData := (uint08 )pPatchDesc^.pVertexStreamZeroData;
@@ -259,7 +259,7 @@ begin
         // There should only be one stream (stream zero) in this case
         if(uiStream <> 0) then
         begin
-            CxbxKrnlCleanup('Trying to find a cached Draw..UP with more than stream zero not ');
+            CxbxKrnlCleanup('Trying to find a cached Draw..UP with more than stream zero!');
          end;
         uiStride  := pPatchDesc^.uiVertexStreamZeroStride;
         pCalculateData := (uint08 )pPatchDesc^.pVertexStreamZeroData;
@@ -436,7 +436,7 @@ begin
         // There should only be one stream (stream zero) in this case
         if(uiStream <> 0) then
         begin
-            CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero not ');
+            CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
          end;
         uiStride  := pPatchDesc^.uiVertexStreamZeroStride;
         pOrigData := (uint08 )pPatchDesc^.pVertexStreamZeroData;
@@ -616,7 +616,7 @@ begin
                     break;
                 *)(*
                 default:
-                    CxbxKrnlCleanup('Unhandled stream ctype: $ mod .02X', pStreamPatch^.pTypes[uiType]);
+                    CxbxKrnlCleanup('Unhandled stream ctype: $%.02X', pStreamPatch^.pTypes[uiType]);
                     break;
              end;
          end;
@@ -628,7 +628,7 @@ begin
 
         if(FAILED(g_pD3DDevice8^.SetStreamSource(uiStream, pNewVertexBuffer, pStreamPatch^.ConvertedStride))) then
         begin
-            CxbxKrnlCleanup('Failed to set the ctype patched buffer as the new stream source not ');
+            CxbxKrnlCleanup('Failed to set the ctype patched buffer as the new stream source!');
          end;
         if(pStream^.pPatchedStream) then
         begin
@@ -664,7 +664,7 @@ begin
 
     if(pPatchDesc^.pVertexStreamZeroData and uiStream > 0) then
     begin
-        CxbxKrnlCleanup('Draw..UP call with more than one stream not ');
+        CxbxKrnlCleanup('Draw..UP call with more than one stream!');
      end;
 
     pStream^.uiOrigStride := 0;
@@ -915,7 +915,7 @@ begin
 
         UINT uiStride := 0;
 
-        DbgPrintf('g_IVBTblOffs :=  mod d', g_IVBTblOffs);
+        DbgPrintf('g_IVBTblOffs := %d', g_IVBTblOffs);
 
         // TEMP DEBUGGING
         //*
@@ -962,12 +962,12 @@ begin
                 if(Stage = 0) then
                 begin
                     if(D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
-                        CxbxKrnlCleanup('Could not create dummy texture not ');
+                        CxbxKrnlCleanup('Could not create dummy texture!');
                  end;
                 else if(Stage = 1) then
                 begin
                     if(D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
-                        CxbxKrnlCleanup('Could not create dummy texture not ');
+                        CxbxKrnlCleanup('Could not create dummy texture!');
                  end;
              end;
 
@@ -1030,11 +1030,11 @@ begin
                     uiStride:= uiStride + (SizeOf(FLOAT)*4);
                  end;
 
-                DbgPrintf('IVB Position := ( mod f,  mod f,  mod f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
+                DbgPrintf('IVB Position := (%f, %f, %f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
              end;
             else
             begin
-                CxbxKrnlCleanup('Unsupported Position Mask (FVF := $ mod .08X)', g_IVBFVF);
+                CxbxKrnlCleanup('Unsupported Position Mask (FVF := $%.08X)', g_IVBFVF);
              end;
 
             if(g_IVBFVF and D3DFVF_DIFFUSE) then
@@ -1046,7 +1046,7 @@ begin
                     uiStride:= uiStride + SizeOf(DWORD);
                  end;
 
-                DbgPrintf('IVB Diffuse := $ mod .08X', g_IVBTable[v].dwDiffuse);
+                DbgPrintf('IVB Diffuse := $%.08X', g_IVBTable[v].dwDiffuse);
              end;
 
             if(g_IVBFVF and D3DFVF_SPECULAR) then
@@ -1058,7 +1058,7 @@ begin
                     uiStride:= uiStride + SizeOf(DWORD);
                  end;
 
-                DbgPrintf('IVB Specular := $ mod .08X', g_IVBTable[v].dwSpecular);
+                DbgPrintf('IVB Specular := $%.08X', g_IVBTable[v].dwSpecular);
              end;
 
             DWORD dwTexN := (g_IVBFVF and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
@@ -1073,7 +1073,7 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
-                DbgPrintf('IVB TexCoord1 := ( mod f,  mod f end;', g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
+                DbgPrintf('IVB TexCoord1 := (%f, %f end;', g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
              end;
 
             if(dwTexN >= 2) then
@@ -1086,7 +1086,7 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
-                DbgPrintf('IVB TexCoord2 := ( mod f,  mod f end;', g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
+                DbgPrintf('IVB TexCoord2 := (%f, %f end;', g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
              end;
 
             if(dwTexN >= 3) then
@@ -1099,7 +1099,7 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
-                DbgPrintf('IVB TexCoord3 := ( mod f,  mod f end;", g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
+                DbgPrintf('IVB TexCoord3 := (%f, %f end;', g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
              end;
 
             if(dwTexN >= 4) then
@@ -1112,7 +1112,7 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
-                DbgPrintf("IVB TexCoord4 := ( mod f,  mod f end;", g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
+                DbgPrintf('IVB TexCoord4 := (%f, %f end;', g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
              end;
          end;
 
@@ -1148,7 +1148,7 @@ begin
 
              szBuffer: array[0..255-1] of Char;
 
-            StrFmt(szBuffer, "C:\Aaron\Textures\Texture-Active mod .03d ($ mod .08X).bmp", dwDumpTexture++, pTexture);
+            StrFmt(szBuffer, 'C:\Aaron\Textures\Texture-Active%.03d ($%.08X).bmp', dwDumpTexture++, pTexture);
 
             D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, 0);
          end;
@@ -1184,11 +1184,11 @@ begin
                     uiStride:= uiStride + (SizeOf(FLOAT)*3);
                  end;
 
-                DbgPrintf("IVB Position := ( mod f,  mod f,  mod f end;", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
+                DbgPrintf('IVB Position := (%f, %f, %f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
              end;
             else
             begin
-                CxbxKrnlCleanup("Unsupported Position Mask (FVF := $ mod .08X)", g_IVBFVF);
+                CxbxKrnlCleanup('Unsupported Position Mask (FVF := $%.08X)', g_IVBFVF);
              end;
 
             if(g_IVBFVF and D3DFVF_DIFFUSE) then
@@ -1200,7 +1200,7 @@ begin
                     uiStride:= uiStride + SizeOf(DWORD);
                  end;
 
-                DbgPrintf("IVB Diffuse := $ mod .08X", g_IVBTable[v].dwDiffuse);
+                DbgPrintf('IVB Diffuse := $%.08X', g_IVBTable[v].dwDiffuse);
              end;
 
             DWORD dwTexN := (g_IVBFVF and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
@@ -1215,7 +1215,7 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
-                DbgPrintf("IVB TexCoord1 := ( mod f,  mod f end;", g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
+                DbgPrintf('IVB TexCoord1 := (%f, %f end;', g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
              end;
          end;
 
@@ -1357,7 +1357,7 @@ else if (X_Format = $0C (* D3DFMT_DXT1 *) (* || X_Format == 0x0E /* D3DFMT_DXT2 
   end;
 else
   begin
-    CxbxKrnlCleanup("$ mod .08 X is not a supported format not ", X_Format);
+    CxbxKrnlCleanup('$%.08 X is not a supported format!', X_Format);
   end;
 
             // as we iterate through mipmap levels, we'll adjust the source resource offset

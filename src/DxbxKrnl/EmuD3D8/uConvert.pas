@@ -141,7 +141,7 @@ begin
             result:= D3DFMT_VERTEXDATA;
      end;
 
-    CxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format ($ mod .08X)', Format);
+    CxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', Format);
 
     result:= (D3DFORMAT)Format;
  end;                  *)
@@ -173,7 +173,7 @@ begin
             result:= $06;
      end;
 
-    CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format ( mod d)', Format);
+    CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', Format);
 
     result:= Format;
  end;      *)

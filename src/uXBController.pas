@@ -22,10 +22,12 @@ interface
 
 
 uses
+  // 3rd party
   DirectInput,
+  XInput,
+  // Dxbx
   uLog,
-  uError,
-  XInput;
+  uError;
 
 {$INCLUDE Dxbx.inc}
 type
@@ -220,19 +222,19 @@ begin
     // ******************************************************************
     // * Analog Axis
     // ******************************************************************
-    "LThumbPosX", "LThumbNegX", "LThumbPosY", "LThumbNegY",
-    "RThumbPosX", "RThumbNegX", "RThumbPosY", "RThumbNegY",
+    'LThumbPosX', 'LThumbNegX', 'LThumbPosY', 'LThumbNegY',
+    'RThumbPosX', 'RThumbNegX', 'RThumbPosY', 'RThumbNegY',
 
     // ******************************************************************
     // * Analog Buttons
     // ******************************************************************
-    "X", "Y", "A", "B", "White", "Black", "LTrigger", "RTrigger",
+    'X', 'Y', 'A', 'B', 'White', 'Black', 'LTrigger', 'RTrigger',
 
     // ******************************************************************
     // * Digital Buttons
     // ******************************************************************
-    "DPadUp", "DPadDown", "DPadLeft", "DPadRight",
-    "Back", "Start", "LThumb", "RThumb",
+    'DPadUp', 'DPadDown', 'DPadLeft', 'DPadRight',
+    'Back', 'Start', 'LThumb', 'RThumb',
 );
 
 
@@ -718,9 +720,9 @@ begin
 
                 Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-                printf('Cxbx: Detected  mod s mod s on  mod s', szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+                printf('Cxbx: Detected %s%s on %s', szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
-                StrFmt(szStatus, 'Success:  mod s Mapped to ' mod s mod s' on ' mod s' not ', m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
+                StrFmt(szStatus, 'Success: %s Mapped to '%s%s' on '%s'!', m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 
                 result:= true;
              end;
@@ -755,9 +757,9 @@ begin
             begin
                 Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
 
-                printf('Cxbx: Detected Key  mod d on SysKeyboard', dwHow);
+                printf('Cxbx: Detected Key %d on SysKeyboard', dwHow);
 
-                StrFmt(szStatus, 'Success:  mod s Mapped to Key  mod d on SysKeyboard', m_DeviceNameLookup[CurConfigObject], dwHow);
+                StrFmt(szStatus, 'Success: %s Mapped to Key %d on SysKeyboard', m_DeviceNameLookup[CurConfigObject], dwHow);
 
                 result:= true;
              end;
@@ -793,9 +795,9 @@ begin
             begin
                 Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
 
-                printf('Cxbx: Detected Button  mod d on SysMouse', dwHow);
+                printf('Cxbx: Detected Button %d on SysMouse', dwHow);
 
-                StrFmt(szStatus, 'Success:  mod s Mapped to Button  mod d on SysMouse', m_DeviceNameLookup[CurConfigObject], dwHow);
+                StrFmt(szStatus, 'Success: %s Mapped to Button %d on SysMouse', m_DeviceNameLookup[CurConfigObject], dwHow);
 
                 result:= true;
              end;
@@ -865,9 +867,9 @@ begin
 
                     Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
 
-                    printf('Cxbx: Detected Movement on the  mod s mod s on SysMouse', szDirection, szObjName);
+                    printf('Cxbx: Detected Movement on the %s%s on SysMouse', szDirection, szObjName);
 
-                    StrFmt(szStatus, 'Success:  mod s Mapped to  mod s mod s on SysMouse', m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
+                    StrFmt(szStatus, 'Success: %s Mapped to %s%s on SysMouse', m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
 
                     result:= true;
                  end;
@@ -955,7 +957,7 @@ begin
             DIEDFL_ATTACHEDONLY
         );
 
-        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed("SysKeyboard")) then
+        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed('SysKeyboard')) then
         begin
             hRet := m_pDirectInput8^.CreateDevice(XTL.GUID_SysKeyboard, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
 
@@ -967,10 +969,10 @@ begin
              end;
 
             if(m_CurrentState = XBCTRL_STATE_LISTEN) then
-                ReorderObjects("SysKeyboard", m_dwInputDeviceCount - 1);
+                ReorderObjects('SysKeyboard', m_dwInputDeviceCount - 1);
          end;
 
-        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed("SysMouse")) then
+        if(m_CurrentState = XBCTRL_STATE_CONFIG or DeviceIsUsed('SysMouse')) then
         begin
             hRet := m_pDirectInput8^.CreateDevice(XTL.GUID_SysMouse, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
 
@@ -982,7 +984,7 @@ begin
              end;
 
             if(m_CurrentState = XBCTRL_STATE_LISTEN) then
-                ReorderObjects("SysMouse", m_dwInputDeviceCount - 1);
+                ReorderObjects('SysMouse', m_dwInputDeviceCount - 1);
          end;
      end;
 
@@ -1038,7 +1040,7 @@ begin
          end;
      end;
 
-    MessageBox(0, "Unexpected Circumstance (Too Many Controller Devices) not  Please contact caustik not ", "Cxbx", MB_OK or MB_ICONEXCLAMATION);
+    MessageBox(0, 'Unexpected Circumstance (Too Many Controller Devices) not  Please contact caustik!', 'Cxbx', MB_OK or MB_ICONEXCLAMATION);
 
     ExitProcess(1);
 
@@ -1068,7 +1070,7 @@ begin
     begin
         if(m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount) then
         begin
-            printf('Warning: Device Mapped to  mod s was not found not ', m_DeviceNameLookup[v]);
+            printf('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
             m_ObjectConfig[v].dwDevice := -1;
          end;
      end; *)
@@ -1119,7 +1121,7 @@ begin
                     // default is a null string
                     m_DeviceName[v][0] := #0;
 
-                    StrFmt(szValueName, 'DeviceName $ mod .02X', v);
+                    StrFmt(szValueName, 'DeviceName $%.02X', v);
 
                     dwType := REG_SZ; dwSize = 260;
                     RegQueryValueEx(hKey, szValueName, 0, @dwType, (PBYTE)m_DeviceName[v], @dwSize);
@@ -1139,7 +1141,7 @@ begin
                     m_ObjectConfig[v].dwInfo   := -1;
                     m_ObjectConfig[v].dwFlags  := 0;
 
-                    StrFmt(szValueName, 'Object : ' mod s'', m_DeviceNameLookup[v]);
+                    StrFmt(szValueName, 'Object : '%s'', m_DeviceNameLookup[v]);
 
                     dwType := REG_BINARY; dwSize = SizeOf(XBCtrlObjectCfg);
                     RegQueryValueEx(hKey, szValueName, 0, @dwType, (PBYTE)@m_ObjectConfig[v], @dwSize);
@@ -1240,7 +1242,7 @@ begin
 
                 for(v:=0;v<XBCTRL_MAX_DEVICES;v++)
                 begin
-                    StrFmt(szValueName, 'DeviceName $ mod .02X', v);
+                    StrFmt(szValueName, 'DeviceName $%.02X', v);
 
                     dwType := REG_SZ; dwSize = 260;
 
@@ -1259,7 +1261,7 @@ begin
 
                 for(v:=0;v<XBCTRL_OBJECT_COUNT;v++)
                 begin
-                    StrFmt(szValueName, 'Object : ' mod s'', m_DeviceNameLookup[v]);
+                    StrFmt(szValueName, 'Object : '%s'', m_DeviceNameLookup[v]);
 
                     dwType := REG_BINARY; dwSize = SizeOf(XBCtrlObjectCfg);
 

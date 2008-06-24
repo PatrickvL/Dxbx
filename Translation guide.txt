@@ -3,6 +3,10 @@ Calling conventions should be translated as follows :
 NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
 __fastcall -> register
 
+When using CToPas, be aware of the following things:
+" mod " -> "%" (inside strings)
+" not " -> "!" (inside strings)
+
 Sources that might give you more insight into the Xbox Kernel API's :
 
 Cxbx SVN (martin's private branch is the most up to date)

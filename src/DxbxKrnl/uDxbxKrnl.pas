@@ -121,17 +121,16 @@ begin
 {$IFDEF _DEBUG_TRACE}
     DbgPrintf('EmuMain : Debug Trace Enabled.');
 
-    DbgPrintf('EmuMain : 0x' + IntToHex(Integer(@CxbxKrnlInit), 8) + ' : CxbxKrnlInit(');
-    // TODO : For some reason, using Format() fails here?
-    DbgPrintf('  hwndParent       : 0x' + IntToHex(hwndParent, 8));
-    DbgPrintf('  pTLSData         : 0x' + IntToHex(Integer(pTLSData), 8));
-    DbgPrintf('  pTLS             : 0x' + IntToHex(Integer(pTLS), 8));
-    DbgPrintf('  pLibraryVersion  : 0x' + IntToHex(Integer(pLibraryVersion), 8) + ' ("' + PChar(pLibraryVersion) + '")');
-    DbgPrintf('  DebugConsole     : 0x' + IntToHex(Ord(DbgMode), 8));
-    DbgPrintf('  DebugFilename    : 0x' + IntToHex(Integer(szDebugFilename), 8) + ' ("' + szDebugFilename + '")');
-    DbgPrintf('  pXBEHeader       : 0x' + IntToHex(Integer(pXbeHeader), 8));
-    DbgPrintf('  dwXBEHeaderSize  : 0x' + IntToHex(dwXbeHeaderSize, 8));
-    DbgPrintf('  Entry            : 0x' + IntToHex(Integer(Addr(Entry)), 8));
+    DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit(', [@CxbxKrnlInit]);
+    DbgPrintf('  hwndParent       : 0x%.8x', [hwndParent]);
+    DbgPrintf('  pTLSData         : 0x%.8x', [pTLSData]);
+    DbgPrintf('  pTLS             : 0x%.8x', [pTLS]);
+    DbgPrintf('  pLibraryVersion  : 0x%.8x ("%s")', [pLibraryVersion, PChar(pLibraryVersion)]);
+    DbgPrintf('  DebugConsole     : 0x%.8x', [Ord(DbgMode)]);
+    DbgPrintf('  DebugFilename    : 0x%.8x ("%s")', [Pointer(szDebugFilename), PChar(szDebugFilename)]);
+    DbgPrintf('  pXBEHeader       : 0x%.8x', [pXbeHeader]);
+    DbgPrintf('  dwXBEHeaderSize  : 0x%.8x', [dwXbeHeaderSize]);
+    DbgPrintf('  Entry            : 0x%.8x', [Addr(Entry)]);
     DbgPrintf(')');
 
 {$ELSE}
@@ -426,7 +425,7 @@ begin
 
         GetWindowText(hWnd, szBuffer, 255 - 10);
 
-        strcat(szBuffer, " (paused)");
+        strcat(szBuffer, ' (paused)');
         SetWindowText(hWnd, szBuffer);
     }
 
@@ -451,7 +450,7 @@ procedure CxbxKrnlNoFunc;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuMain : CxbxKrnlNoFunc()');
+  DbgPrintf('EmuMain : CxbxKrnlNoFunc();');
 
   EmuSwapFS(); // XBox FS
 end;

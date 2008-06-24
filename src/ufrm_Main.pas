@@ -282,8 +282,8 @@ end; // Tfrm_Main.actImportExeExecute
 procedure Tfrm_Main.actExportExeExecute(Sender: TObject);
 begin
   if ExeSaveDialog.Execute then begin
-    if ConvertToExe('', True, m_Xbe, Self.Handle) then begin
-      m_ExeFilename := ExeSaveDialog.FileName;
+    m_ExeFilename := ExeSaveDialog.FileName;
+    if ConvertToExe(m_ExeFilename, True, m_Xbe, Self.Handle) then begin
       WriteLog(m_szAsciiTitle + ' was converted to .exe.');
       m_bExeChanged := False;
       RecentExeAdd(m_ExeFilename);

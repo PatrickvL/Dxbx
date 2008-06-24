@@ -48,7 +48,7 @@ implementation
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
-  DbgPrintf('EmuXapi ($%X): EmuXapiApplyKernelPatches()', GetCurrentThreadId());
+  DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches()');
   EmuSwapFS(); // XBox FS
 {$ENDIF}
 
@@ -65,7 +65,7 @@ end;     *)
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
-  DbgPrintf('EmuXapi ($%X): EmuXFormatUtilityDrive()', GetCurrentThreadId());
+  DbgPrintf('EmuXapi : EmuXFormatUtilityDrive()');
   EmuSwapFS(); // XBox FS
 {$ENDIF}
 
@@ -86,12 +86,12 @@ end; *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuFindFirstFileA'
+  DbgPrintf('EmuXapi : EmuFindFirstFileA'
     '('
     '   lpFileName          : $%.08X (%s)'
     '   lpFindFileData      : $%.08X'
     ');',
-    GetCurrentThreadId(), lpFileName, lpFileName, lpFindFileData);
+    [lpFileName, lpFileName, lpFindFileData);
 
     //
     // TODO: this code is replicated in NtCreateFile. make this a function
@@ -182,12 +182,12 @@ end;    *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuFindNextFileA'
+  DbgPrintf('EmuXapi : EmuFindNextFileA'
     '('
     '   hFindFile           : $%.08X'
     '   lpFindFileData      : $%.08X'
     ');',
-    GetCurrentThreadId(), hFindFile, lpFindFileData);
+    [hFindFile, lpFindFileData);
 
     //
     // TODO: replace full directories with their shorthand (D:\, etc)
@@ -229,7 +229,7 @@ end;     *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuRtlCreateHeap'
+  DbgPrintf('EmuXapi : EmuRtlCreateHeap'
     '('
     '   Flags               : $%.08X'
     '   Base                : $%.08X'
@@ -238,7 +238,7 @@ begin
     '   Lock                : $%.08X'
     '   RtlHeapParams       : $%.08X'
     ');',
-    GetCurrentThreadId(), Flags, Base, Reserve, Commit, Lock, RtlHeapParams);
+    [Flags, Base, Reserve, Commit, Lock, RtlHeapParams);
 
   NtDll.RTL_HEAP_DEFINITION RtlHeapDefinition;
 
@@ -266,13 +266,13 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
     //* too much debug output
-  DbgPrintf('EmuXapi ($%X): EmuRtlAllocateHeap'
+  DbgPrintf('EmuXapi : EmuRtlAllocateHeap'
     '('
     '   hHeap               : $%.08X'
     '   dwFlags             : $%.08X'
     '   dwBytes             : $%.08X'
     ');',
-    GetCurrentThreadId(), hHeap, dwFlags, dwBytes);
+    [hHeap, dwFlags, dwBytes);
     //*/
 
   BYTE offs;
@@ -310,13 +310,13 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
     //* too much debug output
-  DbgPrintf('EmuXapi ($%X): EmuRtlFreeHeap'
+  DbgPrintf('EmuXapi : EmuRtlFreeHeap'
     '('
     '   hHeap               : $%.08X'
     '   dwFlags             : $%.08X'
     '   lpMem               : $%.08X'
     ');',
-    GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+    [hHeap, dwFlags, lpMem);
     //*/
 
   if (lpMem <> 0) then
@@ -347,14 +347,14 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
     //* too much debug output
-  DbgPrintf('EmuXapi ($%X): EmuRtlReAllocateHeap'
+  DbgPrintf('EmuXapi : EmuRtlReAllocateHeap'
     '('
     '   hHeap               : $%.08X'
     '   dwFlags             : $%.08X'
     '   lpMem               : $%.08X'
     '   dwBytes             : $%.08X'
     ');',
-    GetCurrentThreadId(), hHeap, dwFlags, lpMem, dwBytes);
+    [hHeap, dwFlags, lpMem, dwBytes);
    //*/
 
   if (lpMem <> 0) then
@@ -384,13 +384,13 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
     //* too much debug output
-  DbgPrintf('EmuXapi ($%X): EmuRtlSizeHeap'
+  DbgPrintf('EmuXapi : EmuRtlSizeHeap'
     '('
     '   hHeap               : $%.08X'
     '   dwFlags             : $%.08X'
     '   lpMem               : $%.08X'
     ');',
-    GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+    [hHeap, dwFlags, lpMem);
     //*/
 
   if (lpMem <> 0) then
@@ -417,11 +417,11 @@ end;            *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuQueryPerformanceCounter'
+  DbgPrintf('EmuXapi : EmuQueryPerformanceCounter'
     '('
     '   lpPerformanceCount  : $%.08X'
     ');',
-    GetCurrentThreadId(), lpPerformanceCount);
+    [lpPerformanceCount);
 
   BOOL bRet := QueryPerformanceCounter(lpPerformanceCount);
 
@@ -443,11 +443,11 @@ end;        *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuQueryPerformanceFrequency'
+  DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency'
     '('
     '   lpFrequency         : $%.08X'
     ');',
-    GetCurrentThreadId(), lpFrequency);
+    [lpFrequency);
 
   BOOL bRet := QueryPerformanceFrequency(lpFrequency);
 
@@ -467,11 +467,11 @@ begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(); // Win2k/XP FS
-    DbgPrintf('EmuXapi ($%X): EmuXMountUtilityDrive'
+    DbgPrintf('EmuXapi : EmuXMountUtilityDrive'
       '('
       '   fFormatClean        : $%.08X'
       ');',
-      GetCurrentThreadId(), fFormatClean);
+      [fFormatClean);
     EmuSwapFS(); // XBox FS
   end;
 {$ENDIF}
@@ -490,12 +490,12 @@ end;             *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuXInitDevices'
+  DbgPrintf('EmuXapi : EmuXInitDevices'
     '('
     '   Unknown1            : $%.08X'
     '   Unknown2            : $%.08X'
     ');',
-    GetCurrentThreadId(), Unknown1, Unknown2);
+    [Unknown1, Unknown2);
 
   integer v;
 
@@ -526,11 +526,11 @@ end;            *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuXGetDevices'
+  DbgPrintf('EmuXapi : EmuXGetDevices'
     '('
     '   DeviceType          : $%.08X'
     ');',
-    GetCurrentThreadId(), DeviceType);
+    [DeviceType);
 
   DWORD ret := 0;
 
@@ -556,13 +556,13 @@ end;       *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuXGetDeviceChanges'
+  DbgPrintf('EmuXapi : EmuXGetDeviceChanges'
     '('
     '   DeviceType          : $%.08X'
     '   pdwInsertions       : $%.08X'
     '   pdwRemovals         : $%.08X'
     ');',
-    GetCurrentThreadId(), DeviceType, pdwInsertions, pdwRemovals);
+    [DeviceType, pdwInsertions, pdwRemovals);
 
   BOOL bRet := False;
   BOOL bFirst := True;
@@ -598,14 +598,14 @@ end;        *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuXInputOpen'
+  DbgPrintf('EmuXapi : EmuXInputOpen'
     '('
     '   DeviceType          : $%.08X'
     '   dwPort              : $%.08X'
     '   dwSlot              : $%.08X'
     '   pPollingParameters  : $%.08X'
     ');',
-    GetCurrentThreadId(), DeviceType, dwPort, dwSlot, pPollingParameters);
+    [DeviceType, dwPort, dwSlot, pPollingParameters);
 
   POLLING_PARAMETERS_HANDLE * pph := 0;
 
@@ -670,11 +670,11 @@ end;                  *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuXInputClose'
+  DbgPrintf('EmuXapi : EmuXInputClose'
     '('
     '   hDevice             : $%.08X'
     ');',
-    GetCurrentThreadId(), hDevice);
+    [hDevice);
 
   POLLING_PARAMETERS_HANDLE * pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
@@ -718,11 +718,11 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuXInputPoll'
+    DbgPrintf('EmuXapi : EmuXInputPoll'
            '('
            '   hDevice             : $%.08X'
            ');',
-           GetCurrentThreadId(), hDevice);
+           [hDevice);
 
     POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
  
@@ -779,12 +779,12 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuXInputGetCapabilities'
+    DbgPrintf('EmuXapi : EmuXInputGetCapabilities'
            '('
            '   hDevice             : $%.08X'
            '   pCapabilities       : $%.08X'
            ');',
-           GetCurrentThreadId(), hDevice, pCapabilities);
+           [hDevice, pCapabilities);
 
     DWORD ret := ERROR_INVALID_HANDLE;
 
@@ -820,12 +820,12 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuXInputGetState'
+    DbgPrintf('EmuXapi : EmuXInputGetState'
            '('
            '   hDevice             : $%.08X'
            '   pState              : $%.08X'
            ');',
-           GetCurrentThreadId(), hDevice, pState);
+           [hDevice, pState);
 
     DWORD ret := ERROR_INVALID_HANDLE;
 
@@ -873,12 +873,12 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuXInputSetState'
+    DbgPrintf('EmuXapi : EmuXInputSetState'
            '('
            '   hDevice             : $%.08X'
            '   pFeedback           : $%.08X'
            ');',
-           GetCurrentThreadId(), hDevice, pFeedback);
+           [hDevice, pFeedback);
 
     DWORD ret := ERROR_IO_PENDING;
 
@@ -934,7 +934,7 @@ begin
 
             if (v = XINPUT_SETSTATE_SLOTS) then
             begin
-                CxbxKrnlCleanup('Ran out of XInputSetStateStatus slots not ');
+                CxbxKrnlCleanup('Ran out of XInputSetStateStatus slots!');
              end;
          end;
      end;
@@ -956,13 +956,13 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuCreateMutex'
+    DbgPrintf('EmuXapi : EmuCreateMutex'
            '('
            '   lpMutexAttributes   : $%.08X'
            '   bInitialOwner       : $%.08X'
            '   lpName              : $%.08X (%s)'
            ');',
-           GetCurrentThreadId(), lpMutexAttributes, bInitialOwner, lpName, lpName);
+           [lpMutexAttributes, bInitialOwner, lpName, lpName);
 
     THandle hRet := CreateMutex((SECURITY_ATTRIBUTES )lpMutexAttributes, bInitialOwner, lpName);
 
@@ -981,11 +981,11 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuCloseHandle'
+    DbgPrintf('EmuXapi : EmuCloseHandle'
            '('
            '   hObject             : $%.08X'
            ');',
-           GetCurrentThreadId(), hObject);
+           [hObject);
 
     BOOL bRet := CloseHandle(hObject);
 
@@ -1005,17 +1005,17 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuSetThreadPriorityBoost'
+    DbgPrintf('EmuXapi : EmuSetThreadPriorityBoost'
            '('
            '   hThread             : $%.08X'
            '   DisablePriorityBoost: $%.08X'
            ');',
-           GetCurrentThreadId(), hThread, DisablePriorityBoost);
+           [hThread, DisablePriorityBoost);
 
     BOOL bRet := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
     if (bRet = False) then
-        EmuWarning('SetThreadPriorityBoost Failed not ');
+        EmuWarning('SetThreadPriorityBoost Failed!');
 
     EmuSwapFS();   // XBox FS
 
@@ -1033,17 +1033,17 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuSetThreadPriority'
+    DbgPrintf('EmuXapi : EmuSetThreadPriority'
            '('
            '   hThread             : $%.08X'
            '   nPriority           : $%.08X'
            ');',
-           GetCurrentThreadId(), hThread, nPriority);
+           [hThread, nPriority);
 
     BOOL bRet := True;//SetThreadPriority(hThread, nPriority);
 
     if (bRet = False) then
-        EmuWarning('SetThreadPriority Failed not ');
+        EmuWarning('SetThreadPriority Failed!');
 
     // HACK!
     //Sleep(10);
@@ -1064,16 +1064,16 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuGetThreadPriority'
+    DbgPrintf('EmuXapi : EmuGetThreadPriority'
            '('
            '   hThread             : $%.08X'
            ');',
-           GetCurrentThreadId(), hThread);
+           [hThread);
 
     integer iRet := GetThreadPriority(hThread);
 
     if (iRet = THREAD_PRIORITY_ERROR_RETURN) then
-        EmuWarning('GetThreadPriority Failed not ');
+        EmuWarning('GetThreadPriority Failed!');
 
     EmuSwapFS();   // XBox FS
 
@@ -1091,12 +1091,12 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuGetExitCodeThread'
+    DbgPrintf('EmuXapi : EmuGetExitCodeThread'
            '('
            '   hThread             : $%.08X'
            '   lpExitCode          : $%.08X'
            ');',
-           GetCurrentThreadId(), hThread, lpExitCode);
+           [hThread, lpExitCode);
 
     BOOL bRet := GetExitCodeThread(hThread, lpExitCode);
 
@@ -1112,7 +1112,7 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuXapiInitProcess();', GetCurrentThreadId());
+    DbgPrintf('EmuXapi : EmuXapiInitProcess();');
 
  // call RtlCreateHeap
  begin
@@ -1158,12 +1158,12 @@ begin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): EmuXapiThreadStartup'
+    DbgPrintf('EmuXapi : EmuXapiThreadStartup'
            '('
            '   dwDummy1            : $%.08X'
            '   dwDummy2            : $%.08X'
            ');',
-            GetCurrentThreadId(), dwDummy1, dwDummy2);
+            [dwDummy1, dwDummy2);
 
     EmuSwapFS();   // XBox FS
 
@@ -1196,12 +1196,12 @@ XTL.NTSTATUS CDECL XTL.XapiSetupPerTitleDriveLetters(DWORD dwTitleId, PWideChar 
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): XapiSetupPerTitleDriveLetters'
+    DbgPrintf('EmuXapi : XapiSetupPerTitleDriveLetters'
            '('
            '   dwTitleId           : $%.08X'
            '   wszTitleName        : $%.08X'
            ');',
-            GetCurrentThreadId(), dwTitleId, wszTitleName);
+            [dwTitleId, wszTitleName);
 
     NTSTATUS ret := STATUS_SUCCESS;
 
@@ -1217,13 +1217,13 @@ begin
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuXapiBootDash'
+  DbgPrintf('EmuXapi : EmuXapiBootDash'
     '('
     '   UnknownA            : $%.08X'
     '   UnknownB            : $%.08X'
     '   UnknownC            : $%.08X'
     ');',
-    GetCurrentThreadId(), UnknownA, UnknownB, UnknownC);
+    [UnknownA, UnknownB, UnknownC);
 
   CxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
 
@@ -1243,12 +1243,12 @@ end;           *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi ($%X): EmuXRegisterThreadNotifyRoutine'
+  DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine'
     '('
     '   pThreadNotification : $%.08X ($%.08X)'
     '   fRegister           : $%.08X'
     ');',
-    GetCurrentThreadId(), pThreadNotification, pThreadNotification.pfnNotifyRoutine, fRegister);
+    [pThreadNotification, pThreadNotification.pfnNotifyRoutine, fRegister);
 
   if fRegister then
   begin
@@ -1277,11 +1277,11 @@ THandle WINAPI XTL.EmuXCalculateSignatureBegin
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): XCalculateSignatureBegin'
+    DbgPrintf('EmuXapi : XCalculateSignatureBegin'
            '('
            '   dwFlags             : $%.08X'
            ');',
-            GetCurrentThreadId(), dwFlags);
+            [dwFlags);
 
     EmuSwapFS();   // XBox FS
 
@@ -1300,12 +1300,12 @@ THandle WINAPI XTL.EmuXCalculateSignatureBeginEx
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): XCalculateSignatureBeginEx'
+    DbgPrintf('EmuXapi : XCalculateSignatureBeginEx'
            '('
            '   dwFlags             : $%.08X',
            '   dwAltTitleId        : $%.08X',
            ');',
-            GetCurrentThreadId(), dwFlags, dwAltTitleId);
+            [dwFlags, dwAltTitleId);
 
     EmuSwapFS();   // XBox FS
 
@@ -1325,13 +1325,13 @@ DWORD WINAPI XTL.EmuXCalculateSignatureUpdate
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): XCalculateSignatureUpdate'
+    DbgPrintf('EmuXapi : XCalculateSignatureUpdate'
            '('
            '   hCalcSig            : $%.08X',
            '   pbData              : $%.08X',
            '   cbData              : $%.08X',
            ');',
-            GetCurrentThreadId(), hCalcSig, pbData, cbData);
+            [hCalcSig, pbData, cbData);
 
     EmuSwapFS();   // XBox FS
 
@@ -1349,12 +1349,12 @@ DWORD WINAPI XTL.EmuXCalculateSignatureEnd
 begin
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi ($%X): XCalculateSignatureEnd'
+    DbgPrintf('EmuXapi : XCalculateSignatureEnd'
            '('
            '   hCalcSig            : $%.08X',
            '   pSignature          : $%.08X',
            ');',
-            GetCurrentThreadId(), hCalcSig, pSignature);
+            [hCalcSig, pSignature]);
 
     EmuSwapFS();   // XBox FS
 
