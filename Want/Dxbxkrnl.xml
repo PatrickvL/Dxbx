@@ -6,7 +6,11 @@
   <property name="src"       value="${basedir}/src" />
   <property name="bin" value="${basedir}/bin" />
   <property name="dcu" value="${basedir}/dcu" />
+  <property name="lib"       value="${basedir}/Libraries" />
 
+  <property name="directx9"     value="${lib}/DirectX9" />
+	
+	
   <target name="prepare" >
   </target>
 
@@ -20,7 +24,8 @@
       <dcuoutput path="${dcu}" />
       <unitpath>
         <include name="${src}" />
-      </unitpath>
+        <include name="${directx9}" />
+     </unitpath>
     </dcc>
   </target>
 
