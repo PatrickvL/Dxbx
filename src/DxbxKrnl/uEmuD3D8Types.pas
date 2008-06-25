@@ -29,9 +29,20 @@ uses
   Direct3D9
   ;
 
+Const
+  X_VSCM_96                   = 0;
+  X_VSCM_192                  = 1;
+  X_VSCM_192FIXEDPIPELINE     = 2;
+  X_VSCM_NONERESERVED         = 16;
+
+  // Vertex shader types
+  X_VST_NORMAL                = 1;
+  X_VST_READWRITE             = 2;
+  X_VST_STATE                 = 3;
 
 
 type
+  X_VERTEXSHADERCONSTANTMODE = DWORD;
   X_D3DFORMAT = Dword;
 
   _X_D3DPRESENT_PARAMETERS = record
