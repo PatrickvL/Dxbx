@@ -21,33 +21,46 @@ unit uVertexBuffer;
 {$INCLUDE ..\..\Dxbx.inc}
 
 interface
+Uses
+  Windows;
+
+
+
+Function VshHandleIsVertexShader(aHandle : DWORD) : boolean;
+
 
 implementation
 
 
+
+Function VshHandleIsVertexShader(aHandle : DWORD) : boolean;
+begin
+  { return (Handle & 0x80000000) ? TRUE : FALSE; }
+end;
+
 procedure CRC32Init;
 (*var
-  bFirstTime : Boolean = True;
-  i, j : Integer;
-  crc : Word; *)
+  bFirstTime: Boolean = True;
+  i, j: Integer;
+  crc: Word; *)
 begin
-(*    if( not bFirstTime) then
-    begin
-        Exit;
-     end;
+(*  if (not bFirstTime) then
+  begin
+    Exit;
+  end;
 
-    for i := 0 to 255 do begin
-      crc := i shl 24;
+  for i := 0 to 255 do begin
+    crc := i shl 24;
 
-      for j := 0 to 7 do begin
-            if(crc and $80000000) then
-                crc := (crc shl 1) ^ $04c11db7;
-            else
-                crc := crc shl 1;
-         end;
-        crctab[i] := crc;
-     end;
-    bFirstTime := false;  *)
+    for j := 0 to 7 do begin
+      if (crc and $80000000) then
+        crc := (crc shl 1)^$04C11DB7
+      else
+        crc := crc shl 1;
+    end;
+    crctab[i] := crc;
+  end;
+  bFirstTime := false; *)
 end;
 
 function CRC32(var data: Byte; len: integer): Word;
@@ -1291,17 +1304,17 @@ begin
             else if(X_Format = $05 (* X_D3DFMT_R5G6B5 *)(* then  || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
                  or X_Format = $1D (* X_D3DFMT_LIN_A4R4G4B4 *)(* || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
                  or X_Format = $28 (* X_D3DFMT_G8B8 *)(*)
-  begin
-    bSwizzled := TRUE;
+begin
+  bSwizzled := TRUE;
 
                 // Swizzled 16 Bit
-    dwWidth := 1 shl ((pPixelContainer - > Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-    dwHeight := 1 shl ((pPixelContainer - > Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-    dwMipMapLevels := (pPixelContainer - > Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-    dwDepth := 1; // HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-    dwPitch := dwWidth * 2;
-    dwBPP := 2;
-  end;
+  dwWidth := 1 shl ((pPixelContainer - > Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
+  dwHeight := 1 shl ((pPixelContainer - > Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
+  dwMipMapLevels := (pPixelContainer - > Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
+  dwDepth := 1; // HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+  dwPitch := dwWidth * 2;
+  dwBPP := 2;
+end;
 else if (X_Format = $00 (* X_D3DFMT_L8 *) (* || X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */) then
             begin
                 bSwizzled := TRUE;
@@ -1450,3 +1463,4 @@ end; *)
 
 
 end.
+
