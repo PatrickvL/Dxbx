@@ -8281,6 +8281,7 @@ begin
  result:= hRet;        *)
 end;
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3D8_GetDeviceCaps
 // ******************************************************************
@@ -8297,8 +8298,8 @@ begin
     DbgPrintf('EmuD3D8 : EmuIDirect3D8_GetDeviceCaps'
            '('
            '   Adapter                   : 0x%.08X'
-     '   DeviceType                : 0x%.08X'
-     '   pCaps                     : 0x%.08X'
+           '   DeviceType                : 0x%.08X'
+           '   pCaps                     : 0x%.08X'
            ');',
            Adapter, DeviceType, pCaps);
 
@@ -8309,38 +8310,36 @@ begin
     result:= hRet; *)
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3D8_SetPushBufferSize
-// ******************************************************************
-
+// func: EmuIDirect3D8_SetPushBufferSize
 function XTL__EmuIDirect3D8_SetPushBufferSize: HRESULT;
+var
+  hRet : HRESULT;
 (*(
  DWORD PushBufferSize,
  DWORD KickOffSize
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3D8_SetPushBufferSize'
+{ TODO : parameters not translated to delphi yet }
+(*    DbgPrintf('EmuD3D8 : EmuIDirect3D8_SetPushBufferSize'
            '('
            '   PushBufferSize            : 0x%.08X'
-     '   KickOffSize               : 0x%.08X'
+           '   KickOffSize               : 0x%.08X'
            ');',
            PushBufferSize, KickOffSize);
+*)
 
- HRESULT hRet := D3D_OK;
+    hRet := D3D_OK;
 
     // This is a Xbox extension, meaning there is no pc counterpart.
 
     EmuSwapFS();   // XBox FS
 
-    result:= hRet;    *)
+    result:= hRet;
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_InsertFence
-// ******************************************************************
-
+// func: EmuIDirect3DDevice8_InsertFence
 function XTL__EmuIDirect3DDevice8_InsertFence: DWORD;
 var
   dwRet: DWord;
@@ -8358,10 +8357,7 @@ begin
   result := dwRet;
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_BlockOnFence
-// ******************************************************************
-
+// func: EmuIDirect3DDevice8_BlockOnFence
 procedure XTL__EmuIDirect3DDevice8_BlockOnFence;
 var
   Fence: DWord;
@@ -8379,56 +8375,51 @@ begin
   EmuSwapFS(); // XBox FS*)
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DResource8_BlockUntilNotBusy
-// ******************************************************************
-
+// func: EmuIDirect3DResource8_BlockUntilNotBusy
 procedure XTL__EmuIDirect3DResource8_BlockUntilNotBusy;
 (*(
  X_D3DResource *pThis
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DResource8_BlockUntilNotBusy'
+{ TODO : parameters not translated to delphi yet }
+(*    DbgPrintf('EmuD3D8 : EmuIDirect3DResource8_BlockUntilNotBusy'
            '('
-     '   pThis                     : 0x%.08X'
+           '   pThis                     : 0x%.08X'
            ');',
            pThis);
+*)
 
- // TODO: Implement
+    // TODO: Implement
 
-    EmuSwapFS();   // XBox FS       *)
+    EmuSwapFS();   // XBox FS
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DVertexBuffer8_GetDesc
-// ******************************************************************
-
+// func: EmuIDirect3DVertexBuffer8_GetDesc
 procedure XTL__EmuIDirect3DVertexBuffer8_GetDesc;
 (*(
  X_D3DVertexBuffer    *pThis,
  D3DVERTEXBUFFER_DESC *pDesc
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DVertexBuffer8_GetDesc'
+    { TODO : parameters not translated to delphi yet }
+    (*DbgPrintf('EmuD3D8 : EmuIDirect3DVertexBuffer8_GetDesc'
            '('
-     '   pThis                     : 0x%.08X'
-     '   pDesc                     : 0x%.08X'
+           '   pThis                     : 0x%.08X'
+           '   pDesc                     : 0x%.08X'
            ');',
            pThis, pDesc);
+    *)
 
- // TODO: Implement
+    // TODO: Implement
 
-    EmuSwapFS();   // XBox FS     *)
+    EmuSwapFS();   // XBox FS
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_SetScissors
-// ******************************************************************
-
+// func: EmuIDirect3DDevice8_SetScissors
 function XTL__EmuIDirect3DDevice8_SetScissors: HRESULT;
 (*(
  DWORD          Count,
@@ -8438,7 +8429,7 @@ function XTL__EmuIDirect3DDevice8_SetScissors: HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-{ TODO : Need to be translated to delphi }
+{ TODO : parameters not translated to delphi yet }
     (*DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetScissors'
            '('
      '   Count                     : 0x%.08X'
