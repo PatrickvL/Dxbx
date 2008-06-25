@@ -21,19 +21,19 @@ unit uVertexBuffer;
 {$INCLUDE ..\..\Dxbx.inc}
 
 interface
-Uses
+uses
   Windows;
 
 
 
-Function VshHandleIsVertexShader(aHandle : DWORD) : boolean;
+function VshHandleIsVertexShader(aHandle: DWORD): boolean;
 
 
 implementation
 
 
 
-Function VshHandleIsVertexShader(aHandle : DWORD) : boolean;
+function VshHandleIsVertexShader(aHandle: DWORD): boolean;
 begin
   { return (Handle & 0x80000000) ? TRUE : FALSE; }
 end;
