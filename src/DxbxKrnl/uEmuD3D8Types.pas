@@ -22,23 +22,51 @@ unit uEmuD3D8Types;
 
 interface
 
-Uses
-  Windows;
+uses
+  // Windows
+  Windows,
+  // Directx
+  Direct3D9
+  ;
 
 
-(*Type
-  _X_D3DDISPLAYMODE = Record
-    Width : Integer;
-    Height : Integer;
-    RefreshRate : Integer;
-    Flags : DWord;
-    Format : X_D3DFORMAT;
-  End;
+
+type
+  X_D3DFORMAT = Dword;
+
+  _X_D3DPRESENT_PARAMETERS = record
+    BackBufferWidth: UINT;
+    BackBufferHeight: UINT;
+    BackBufferFormat: X_D3DFORMAT;
+    BackBufferCount: UINT;
+    MultiSampleType: D3DMULTISAMPLE_TYPE;
+    SwapEffect: D3DSWAPEFFECT;
+    hDeviceWindow: HWND;
+    Windowed: LongBool;
+    EnableAutoDepthStencil: LongBool;
+    AutoDepthStencilFormat: X_D3DFORMAT;
+    Flags: DWORD;
+    FullScreen_RefreshRateInHz: UINT;
+    FullScreen_PresentationInterval: UINT;
+    BufferSurfaces: array[0..2] of IDirect3DSurface9;
+    DepthStencilSurface: IDirect3DSurface9;
+  end;
+  
+  X_D3DPRESENT_PARAMETERS = _X_D3DPRESENT_PARAMETERS;
+
+  _X_D3DDISPLAYMODE = record
+    Width: Integer;
+    Height: Integer;
+    RefreshRate: Integer;
+    Flags: DWord;
+    Format: X_D3DFORMAT;
+  end;
 
   X_D3DDISPLAYMODE = _X_D3DDISPLAYMODE;
-*)
+
 
 
 implementation
 
 end.
+
