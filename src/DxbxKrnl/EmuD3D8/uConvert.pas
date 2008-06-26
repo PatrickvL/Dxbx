@@ -36,6 +36,7 @@ uses
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
 begin
+  result := FALSE;  // in cxbx is the result = false placed as last... bit strange.
   case (Format) of
     $00,
       $01,
@@ -57,8 +58,6 @@ begin
         result := TRUE;
       end;
   end;
-
-  result := FALSE;
 end;
 
 function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;

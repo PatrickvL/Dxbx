@@ -63,9 +63,7 @@ end;
 
 // func: EmuXNetStartup
 
-function XTL_EmuXNetStartup: Integer;
-var
-  pDummy: PVOID;
+function XTL_EmuXNetStartup( pDummy: PVOID ): Integer ;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
