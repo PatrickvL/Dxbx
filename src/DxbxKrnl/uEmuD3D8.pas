@@ -3570,16 +3570,14 @@ end;
 // * func: EmuIDirect3DDevice8_SetVertexData4f
 // ******************************************************************
 
-function XTL__EmuIDirect3DDevice8_SetVertexData4f: HRESULT;
+function XTL__EmuIDirect3DDevice8_SetVertexData4f : HRESULT;
 var
   hRet: HRESULT;
-(*(
-    integer     Register,
+(*    integer     Register,
     FLOAT   a,
     FLOAT   b,
     FLOAT   c,
-    FLOAT   d
-) *)
+    FLOAT   d*)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -5774,28 +5772,25 @@ end;
 // * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 // ******************************************************************
 
-procedure XTL__EmuIDirect3DDevice8_SetTextureState_TexCoordIndex;
-var
-  Stage: DWord;
-  Value: DWord;
+procedure XTL__EmuIDirect3DDevice8_SetTextureState_TexCoordIndex(  Stage: DWord; Value: DWord );
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTextureState_TexCoordIndex'
-           '('
-           '   Stage               : 0x%.08X'
-           '   Value               : 0x%.08X'
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTextureState_TexCoordIndex' +
+           '(' +
+           '   Stage               : 0x%.08X' +
+           '   Value               : 0x%.08X' +
            ');',
-           Stage, Value);
+           [Stage, Value]);
 
-    if(Value > $00030000) then
+{ TODO : Need to be translated to delphi }
+(*    if(Value > $00030000) then
         CxbxKrnlCleanup('EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', Value);
 
     g_pD3DDevice8^.SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+*)
 
     EmuSwapFS();   // XBox FS
-
-    Exit; *)
 end;
 
 // ******************************************************************
@@ -6049,19 +6044,18 @@ end;
 // * func: EmuIDirect3DDevice8_SetRenderState_FillMode
 // ******************************************************************
 
-procedure XTL__EmuIDirect3DDevice8_SetRenderState_FillMode;
-var
-  Value: DWord;
+procedure XTL__EmuIDirect3DDevice8_SetRenderState_FillMode( Value: DWord );
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_FillMode'
-           '('
-           '   Value               : 0x%.08X'
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_FillMode' +
+           '(' +
+           '   Value               : 0x%.08X' +
            ');',
-           Value);
+           [Value]);
 
-    DWORD dwFillMode;
+{ TODO : Need to be translated to delphi }
+(*    DWORD dwFillMode;
 
     if(g_iWireframe = 0) then
         dwFillMode := EmuXB2PC_D3DFILLMODE(Value);
@@ -6071,10 +6065,8 @@ begin
         dwFillMode := D3DFILL_POINT;
 
     g_pD3DDevice8^.SetRenderState(D3DRS_FILLMODE, dwFillMode);
-
+*)
     EmuSwapFS();   // XBox FS
-
-    Exit; *)
 end;
 
 // ******************************************************************
@@ -6240,33 +6232,31 @@ begin
 // * func: EmuIDirect3DDevice8_SetRenderState_VertexBlend
 // ******************************************************************
 
-procedure XTL__EmuIDirect3DDevice8_SetRenderState_VertexBlend;
-var
-  Value: DWord;
+procedure XTL__EmuIDirect3DDevice8_SetRenderState_VertexBlend ( Value: DWord );
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_VertexBlend'
-           '('
-           '   Value               : 0x%.08X'
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_VertexBlend' +
+           '(' +
+           '   Value               : 0x%.08X' +
            ');',
-           Value);
+           [Value]);
 
     // convert from Xbox direct3d to PC direct3d enumeration
     if(Value <= 1) then
-        Value := Value;
+        Value := Value
     else if(Value = 3) then
-        Value := 2;
+        Value := 2
     else if(Value = 5) then
-        Value := 3;
+        Value := 3
     else
-        CxbxKrnlCleanup('Unsupported D3DVERTEXBLENDFLAGS (%d)', Value);
+        CxbxKrnlCleanup(Format ('Unsupported D3DVERTEXBLENDFLAGS (%d)', [Value]));
 
-    g_pD3DDevice8->SetRenderState(D3DRS_VERTEXBLEND, Value);
+{ TODO : Need to be translated to delphi }
+(*    g_pD3DDevice8->SetRenderState(D3DRS_VERTEXBLEND, Value);
+*)
 
     EmuSwapFS();   // XBox FS
-
-    Exit; *)
 end;
 
 // ******************************************************************
@@ -6292,40 +6282,33 @@ end;
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 
-procedure XTL__EmuIDirect3DDevice8_SetRenderState_CullMode;
-var
-  Value: DWord;
+procedure XTL__EmuIDirect3DDevice8_SetRenderState_CullMode( Value: DWord );
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_CullMode'
-           '('
-           '   Value               : 0x%.08X'
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_CullMode' +
+           '(' +
+           '   Value               : 0x%.08X' +
            ');',
-           Value);
+           [Value]);
 
     // convert from Xbox D3D to PC D3D enumeration
     // TODO: XDK-Specific Tables? So far they are the same
     case(Value) of
-    begin
          0:
             Value := D3DCULL_NONE;
-            break;
          $900:
             Value := D3DCULL_CW;
-            break;
          $901:
             Value := D3DCULL_CCW;
-            break;
-        default:
-            CxbxKrnlCleanup('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', Value);
+    else
+       CxbxKrnlCleanup(Format ('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', [Value]));
      end;
 
-    g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, Value);
-
+{ TODO : Need to be translated to delphi }
+(*    g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, Value);
+*)
     EmuSwapFS();   // XBox FS
-
-    Exit; *)
 end;
 
 // ******************************************************************
@@ -6857,9 +6840,8 @@ end;
 
 // func: EmuIDirect3DDevice8_SetVertexShader
 
-function XTL__EmuIDirect3DDevice8_SetVertexShader: HRESULT;
+function XTL__EmuIDirect3DDevice8_SetVertexShader(aHandle: DWord): HRESULT;
 var
-  aHandle: DWord;
   hRet: HRESULT;
   RealHandle: DWORD;
 begin
