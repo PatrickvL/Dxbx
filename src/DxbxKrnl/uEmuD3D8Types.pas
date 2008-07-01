@@ -26,7 +26,7 @@ uses
   // Windows
   Windows,
   // Directx
-  Direct3D9
+  Direct3D8
   ;
 
 Const
@@ -59,8 +59,8 @@ type
     Flags: DWORD;
     FullScreen_RefreshRateInHz: UINT;
     FullScreen_PresentationInterval: UINT;
-    BufferSurfaces: array[0..2] of IDirect3DSurface9;
-    DepthStencilSurface: IDirect3DSurface9;
+    BufferSurfaces: array[0..2] of IDirect3DSurface8;
+    DepthStencilSurface: IDirect3DSurface8;
   end;
   
   X_D3DPRESENT_PARAMETERS = _X_D3DPRESENT_PARAMETERS;
@@ -74,8 +74,6 @@ type
   end;
 
   X_D3DDISPLAYMODE = _X_D3DDISPLAYMODE;
-
-
 
 implementation
 

@@ -22,6 +22,8 @@ unit uXbVideo;
 
 interface
 
+Uses
+  Windows;
 
 type
   XBVideo = record
@@ -30,14 +32,19 @@ type
     public
   procedure Load(const szRegistryKey: PChar);
 procedure Save(const szRegistryKey: PChar);
+Function GetDisplayAdapter : DWord;
 
 procedure SetFullscreen(bFullscreen: Boolean);
 function GetFullscreen: Boolean;
 
   end;
 
+var
+  m_dwDisplayAdapter : DWORD;
+
 
 implementation
+
 
 
 // func: XBVideo::XBVideo
@@ -58,6 +65,11 @@ XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 
 
 { XBVideo }
+
+Function XBVideo.GetDisplayAdapter : DWord;
+begin
+  Result := m_dwDisplayAdapter;
+end;
 
 function XBVideo.GetFullscreen: Boolean;
 begin

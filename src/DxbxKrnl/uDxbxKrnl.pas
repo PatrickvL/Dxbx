@@ -36,7 +36,6 @@ uses
   uEmuShared,
   uEmu,
   uEmuFS,
-  uEmuD3D8,
   uHLEIntercept;
 
 type
@@ -62,6 +61,8 @@ procedure EmuXRefFailure;
 procedure CxbxKrnlResume();
 procedure EmuPanic(); // export;
 procedure CxbxKrnlNoFunc; cdecl;
+procedure CxbxKrnlSuspend();
+
 
 var
   // ! thread local storage
@@ -261,7 +262,10 @@ begin
 
   DbgPrintf('EmuMain : Initializing Direct3D.');
 
+  { TODO : need to be translated to delphi }
+  (*
   XTL__EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+  *)
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 

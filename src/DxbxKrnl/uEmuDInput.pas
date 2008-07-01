@@ -23,6 +23,7 @@ unit uEmuDInput;
 interface
 
 uses
+  Dialogs,
   // 3rd party
   XInput,
   // Dxbx
@@ -64,10 +65,10 @@ end;
 
 procedure XTL_EmuDInputPoll(Controller: XINPUT_STATE);
 begin
-  (*g_XBController.ListenPoll(Controller);
+(*  g_XBController.ListenPoll(Controller);
 
-  if (g_XBController.GetError()) then
-    MessageBox(0, g_XBController.GetError(), 'Cxbx[* UNHANDLED! *]', MB_OK); // TODO: Handle this! *)
+  if (Error_GetError) then
+    MessageDlg(0, g_XBController.GetError(), 'Cxbx[* UNHANDLED! *]', MB_OK); // TODO: Handle this! *)
 end;
 
 
