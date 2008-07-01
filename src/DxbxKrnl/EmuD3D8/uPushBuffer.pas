@@ -22,6 +22,19 @@ unit uPushBuffer;
 
 interface
 
+var
+ (*g_dwPrimaryPBCount : uint32 = 0;
+ g_pPrimaryPB : uint32 = 0; *)
+
+
+ XTL_g_bStepPush : Boolean = false;
+ XTL_g_bSkipPush : Boolean = false;
+ XTL_g_bBrkPush : Boolean = false;
+
+ g_bPBSkipPusher : Boolean = false;
+
+
+
 implementation
 
 procedure XTL_EmuExecutePushBuffer;
