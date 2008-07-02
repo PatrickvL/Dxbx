@@ -235,7 +235,7 @@ begin
 
             if(dwVertexShader > $FFFF) then
             begin
-                CxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation not ');
+                CxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!');
                 dwVertexShader := 0;
              end;
             else if(dwVertexShader = 0) then
