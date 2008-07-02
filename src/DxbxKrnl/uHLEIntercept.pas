@@ -27,14 +27,16 @@ uses
   SysUtils,
   // Jedi
   JwaWinType,
-  // Dxbx
+  // Cxbx
   uTypes,
   uLog,
   uDxbxKrnlUtils,
   uXbe,
   uEmuShared,
   uEmuFS,
-  uHLEDatabase;
+  uHLEDatabase,
+  // Dxbx
+  DxLibraryAPIScanning;
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
@@ -197,6 +199,8 @@ begin
       DbgPrintf('HLE: Starting pass #' + IntToStr(p) + '...');
 
       LastUnResolvedXRefs := UnResolvedXRefs;
+
+      DxbxScanForLibraryAPIs(pXbeHeader);
 (*
             bool bFoundD3D := false;
             for (uint32 v:=0;v<dwLibraryVersions;v++)

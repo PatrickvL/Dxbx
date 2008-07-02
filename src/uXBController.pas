@@ -1036,7 +1036,7 @@ begin
      end;
   end;     *)
 
-  MessageBox(0, 'Unexpected Circumstance (Too Many Controller Devices) not  Please contact caustik!', 'Cxbx', MB_OK or MB_ICONEXCLAMATION);
+  MessageBox(0, 'Unexpected Circumstance (Too Many Controller Devices)! Please contact caustik!', 'Cxbx', MB_OK or MB_ICONEXCLAMATION);
 
   ExitProcess(1);
 end;

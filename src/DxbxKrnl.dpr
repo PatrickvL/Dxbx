@@ -86,9 +86,10 @@ uses
   uVertexBuffer in 'DxbxKrnl\EmuD3D8\uVertexBuffer.pas',
   uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas',
   uXBController in 'uXBController.pas',
-  uError in 'uError.pas';
-
-{$R *.res}   
+  uError in 'uError.pas',
+  uBitUtils in 'uBitUtils.pas',
+  uPatternScanner in 'uPatternScanner.pas',
+  DxLibraryAPIScanning in 'DxbxKrnl\DxLibraryAPIScanning.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
