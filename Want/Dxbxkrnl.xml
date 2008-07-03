@@ -7,7 +7,6 @@
   <property name="bin" value="${basedir}/bin" />
   <property name="dcu" value="${basedir}/dcu" />
   <property name="lib"       value="${basedir}/Libraries" />
-
   <property name="directx9"     value="${lib}/DirectX9" />
 	
 	
@@ -18,7 +17,11 @@
   <target name="build" >
   </target>
 
-  <target name="compile"  depends="prepare, build">
+  <target name="resources" depends="prepare" >
+    <brcc file="${src}/DxbxKrnl/PatternData.rc" output="${src}/DxbxKrnl/PatternData.res" />
+  </target>
+
+  <target name="compile"  depends="prepare, resources, build">
     <dcc basedir="${src}" source="DxbxKrnl.dpr">
       <exeoutput path="${bin}" />
       <dcuoutput path="${dcu}" />
