@@ -30,7 +30,8 @@ uses
   uXBE,
   uLog,
   uBitUtils,
-  uPatternScanner;
+  uPatternScanner,
+  uCRC16;
 
 procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
@@ -41,61 +42,94 @@ implementation
 
 procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
-  procedure _FindPattern(const aPatternLibrary: TList; const aAddress: PByte);
+  function _ComparePattern(const Pattern: PPattern; const aAddress: PByte): Integer;
   var
-    i: Integer;
-    Pattern: PPattern;
     b: Integer;
-    Found: Boolean;
   begin
-    // TODO : Once the patterns are sorted (or otherwise ordened),
-    // change this detection-code too!
-
-    // For now, NrOfAPIsDetected each pattern in the library :
-    for i := 0 to aPatternLibrary.Count - 1 do
+    // Loop over the first 32 pattern-bytes :
+    Result := 0;
+    for b := 0 to PATTERNSIZE - 1 do
     begin
-      Pattern := aPatternLibrary[i];
-
-      // Loop over the first 32 pattern-bytes :
-      Found := True;
-      for b := 0 to PATTERNSIZE - 1 do
+      // Test if this byte offset must be checked :
+      if TestBit(Pattern.PatternBytesToUseMask, b) then
       begin
-        // NrOfAPIsDetected if this byte offset must be checked :
-        if TestBit(Pattern.PatternBytesToUseMask, b) then
+        Result := Pattern.PatternBytes[b] - PByte(Integer(aAddress) + b)^;
+        if Result <> 0 then
+          Exit;
+      end;
+    end;
+
+    if Pattern.CRCLength > 0 then
+      Result := (Pattern.CRCValue - CalcCRC16(Pointer(Integer(aAddress) + PATTERNSIZE), Pattern.CRCLength));
+
+    // TODO : Test all referenced APIs
+
+    // TODO : Test trailing bytes too
+  end;
+
+  // Modified copy of the binary search code in TStringList.Find() :
+  function _FindPattern(const aPatternLibrary: TList; const aAddress: PByte; var Index: Integer): Boolean;
+  var
+    L, H, I, C: Integer;
+  begin
+    Result := False;
+    L := 0;
+    H := aPatternLibrary.Count - 1;
+    while L <= H do
+    begin
+      I := (L + H) shr 1;
+      C := _ComparePattern(PPattern(aPatternLibrary.List^[I]), aAddress);
+      if C < 0 then L := I + 1 else
+      begin
+        H := I - 1;
+        if C = 0 then
         begin
-          if Pattern.PatternBytes[b] <> PByte(Integer(aAddress) + b)^ then
-          begin
-            Found := False;
-            Break;
-          end;
+          Result := True;
+//          if Duplicates <> dupAccept then
+            L := I;
         end;
       end;
-
-      if Found then
-      begin
-        // TODO : We found a library-function! Administrate that somewhere...
-        DbgPrintf('DxbxHLE: 0x%.8x -> %s', [aAddress, Pattern.Name]);
-        Inc(NrOfAPIsDetected);
-        Exit;
-      end;
-
     end;
+
+    Index := L;
+  end;
+
+  procedure _FindAndRememberPattern(const aPatternLibrary: TList; const aAddress: PByte);
+  var
+    Index: Integer;
+    Pattern: PPattern;
+  begin
+    // Search if this address matches a pattern :
+    if not _FindPattern(aPatternLibrary, aAddress, {var}Index) then
+      Exit;
+
+    Pattern := PPattern(aPatternLibrary.List^[Index]);
+
+if Pattern.CRCLength > 0 then // DEBUG : Only print when CRC was used
+    // TODO : We found a library-function! Administrate that somewhere...
+    DbgPrintf('DxbxHLE: 0x%.8x -> %s', [aAddress, Pattern.Name]);
+    Inc(NrOfAPIsDetected);
   end;
 
 var
   PatternsXAPI5788: TList;
+  PatternsKrnl0000: TList;
   ByteScanLower, ByteScanUpper, p: PByte;
   Pattern: PPattern;
 begin
   PatternsXAPI5788 := GetSortedPatternList('5788xapilib');
+  PatternsKrnl0000 := GetSortedPatternList('0000xbox');
+  // TODO : What about other libraries and different versions ?
 
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
   ByteScanUpper := PByte(pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage);
+
   NrOfAPIsDetected := 0;
   p := ByteScanLower;
   while p <> ByteScanUpper do
   begin
-    _FindPattern(PatternsXAPI5788, p);
+    _FindAndRememberPattern(PatternsXAPI5788, p);
+    _FindAndRememberPattern(PatternsKrnl0000, p);
     Inc(p);
   end;
 end;
