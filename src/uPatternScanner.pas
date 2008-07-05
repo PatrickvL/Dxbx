@@ -23,8 +23,9 @@ interface
 
 uses
   // Delphi
-  Classes,
   Windows,
+  SysUtils,
+  Classes,
   // Dxbx
   uBitUtils;
 
@@ -39,7 +40,10 @@ type
     PatternBytesToUseMask: UInt32; // These 32 bits indicate which corresponding 32 bytes are used in the pattern
     PatternBytes: array [0..PATTERNSIZE - 1] of Byte;
     Name: string;
-    // TODO : Add CRC and other stuff here too!
+    CRCLength: Byte;
+    CRCValue: Word;
+    TotalLength: Word;
+    // TODO : Add referenced API's and trailing bytes here too!
   end;
 
 function GetSortedPatternList(const aPatternName: string): TList;
@@ -63,16 +67,50 @@ begin
   end;
 end;
 
+function PatternListCompare(Pattern1, Pattern2: PPattern): Integer;
+begin
+  Result := StrLComp(PAnsiChar(@(Pattern1.PatternBytes[0])),
+                     PAnsiChar(@(Pattern2.PatternBytes[0])),
+                     PATTERNSIZE);
+
+  if Result = 0 then
+    Result := Pattern1.CRCValue - Pattern2.CRCValue; // swap?
+end;
+
 function GetSortedPatternList(const aPatternName: string): TList;
 
-  procedure _ScanPatternLine(const aLine: PChar; const aLength: Integer);
+  function _ScanHexDigits(var aLine: PChar; var Value: Integer; Digits: Integer): Boolean;
+  begin
+    Value := 0;
+    while Digits > 0 do
+    begin
+      Result := ScanAndAddHexDigit(Value, aLine^);
+      if not Result then
+        Exit;
+
+      Inc(aLine);
+      Dec(Digits);
+    end;
+  end;
+
+  function _ScanHexByte(var aLine: PChar; var Value: Integer): Boolean;
+  begin
+    Result := _ScanHexDigits(aLine, Value, 2);
+  end;
+
+  function _ScanHexWord(var aLine: PChar; var Value: Integer): Boolean;
+  begin
+    Result := _ScanHexDigits(aLine, Value, 4);
+  end;
+
+  procedure _ScanPatternLine(aLine: PChar; const aLength: Integer);
   const
     PATTERN_START_OF_NAME = 85;
     PATTERN_VALID_NAME_CHARACTERS = ['_', 'a'..'z', 'A'..'Z', '0'..'9', '@'];
   var
     Pattern: PPattern;
     c, Value: Integer;
-    C1, C2: Char;
+    aStart: PChar;
   begin
     // Lines must at least be 86 characters long :
     if aLength < PATTERN_START_OF_NAME + 1 then
@@ -83,23 +121,48 @@ function GetSortedPatternList(const aPatternName: string): TList;
 
     for c := 0 to PATTERNSIZE - 1 do
     begin
-      C1 := aLine[(2*c) + 0];
-      C2 := aLine[(2*c) + 1];
-
-      Value := 0;
-      if  ScanAndAddHexDigit({var}Value, C1)
-      and ScanAndAddHexDigit({var}Value, C2) then
+      if _ScanHexByte({var}aLine, {var}Value) then
       begin
         Pattern.PatternBytes[c] := Byte(Value);
         SetBit(Pattern.PatternBytesToUseMask, c);
-      end;
+      end
+      else
+        Inc(aLine, 2);
     end;
 
-    c := PATTERN_START_OF_NAME;
-    while aLine[c] in PATTERN_VALID_NAME_CHARACTERS do
-      Inc(c);
+    Assert(aLine^ = ' ');
+    Inc(aLine);
 
-    SetString(Pattern.Name, aLine + PATTERN_START_OF_NAME, c - PATTERN_START_OF_NAME);
+    if _ScanHexByte(aLine, Value) then
+      Pattern.CRCLength := Byte(Value);
+    Assert(aLine^ = ' ');
+    Inc(aLine);
+
+    if _ScanHexWord(aLine, Value) then
+      Pattern.CRCValue := Word(Value);
+    Assert(aLine^ = ' ');
+    Inc(aLine);
+
+    if _ScanHexWord(aLine, Value) then
+      Pattern.TotalLength := Word(Value);
+    Assert(aLine^ = ' ');
+    Inc(aLine);
+
+    Assert(aLine^ = ':');
+    Inc(aLine);
+    if _ScanHexWord(aLine, Value) then
+      ; // Ignore offset
+    if aLine^ = '@' then
+      Inc(aLine);
+    Assert(aLine^ = ' ');
+    Inc(aLine);
+
+    aStart := aLine;
+    repeat
+      Inc(aLine);
+    until not (aLine^ in PATTERN_VALID_NAME_CHARACTERS);
+
+    SetString(Pattern.Name, aStart, aLine - aStart);
 
     Result.Add(Pattern);
   end;
@@ -134,7 +197,7 @@ begin
         Inc(p1);
     end;
 
-    // TODO : Sort the patterns
+    Result.Sort(@PatternListCompare);
 
   finally
     // Unlock the resources :

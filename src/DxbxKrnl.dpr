@@ -89,7 +89,8 @@ uses
   uError in 'uError.pas',
   uBitUtils in 'uBitUtils.pas',
   uPatternScanner in 'uPatternScanner.pas',
-  DxLibraryAPIScanning in 'DxbxKrnl\DxLibraryAPIScanning.pas';
+  DxLibraryAPIScanning in 'DxbxKrnl\DxLibraryAPIScanning.pas',
+  uCRC16 in 'uCRC16.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
