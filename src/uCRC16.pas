@@ -17,6 +17,8 @@
 *)
 unit uCRC16;
 
+{$DEFINE _OPTIMIZE_UNIT}
+
 {$INCLUDE Dxbx.inc}
 
 interface
@@ -26,9 +28,9 @@ function CalcCRC16(aBuffer: PByte; aLength: Integer): Word;
 implementation
 
 var
-  crc_tab16: array [0..255] of Word;
+  crc_tab16: array [Byte] of Word;
 
-procedure UpdateCRC16(var CRC: WORD; const aByte: Byte);
+procedure UpdateCRC16(var CRC: WORD; const aByte: Byte); inline;
 begin
   CRC := (CRC shr 8) xor crc_tab16[Lo(CRC) xor aByte];
 end;
@@ -36,32 +38,36 @@ end;
 function CalcCRC16(aBuffer: PByte; aLength: Integer): Word;
 begin
   Result := 0;
-  while aLength > 0 do
-  begin
+  if aLength <= 0 then
+    Exit;
+
+  repeat
     UpdateCRC16({var}Result, aBuffer^);
     Inc(aBuffer);
     Dec(aLength);
-  end;
+  until aLength = 0;
+
+  Result := Swap(not Result);
 end;
 
-// The function init_crc16_tab() is used  to  fill  the  array
-// for calculation of the CRC-16 with values.
+// This code is fully classified as 'CRC-16/X-KERMIT' - a deprecated CRC...
+// See http://homepages.tesco.net/~rainstorm/crc-catalogue.htm#crc.cat.kermit
 procedure init_crc16_tab;
 const
-  P_16 = Word($A001); // x^16, x^14, x^1
+  P_KERMIT = Word($8408);
 var
   i, j: Integer;
   crc, c: Word;
 begin
   for i := 0 to 255 do
   begin
-    crc := 0;
+    crc := $FFFF;
     c   := Word(i);
 
     for j := 0 to 7 do
     begin
       if ((crc xor c) and 1) > 0 then
-        crc := ( crc shr 1 ) xor P_16
+        crc := ( crc shr 1 ) xor P_KERMIT
       else
         crc :=   crc shr 1;
 
@@ -72,19 +78,9 @@ begin
   end;
 end;
 
-{$IFDEF DUNIT}
-const
-  TestCRC = $4521;
-  TestInput = 'ABC';
-{$ENDIF}
-
 initialization
 
   init_crc16_tab;
-
-{$IFDEF DUNIT}
-  Assert(TestCRC = CalcCRC16(Pointer(PAnsiChar(TestInput)), 3));
-{$ENDIF}
 
 end.
 

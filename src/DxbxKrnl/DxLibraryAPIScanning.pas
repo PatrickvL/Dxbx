@@ -17,6 +17,8 @@
 *)
 unit DxLibraryAPIScanning;
 
+{$DEFINE _OPTIMIZE_UNIT}
+
 {$INCLUDE ..\Dxbx.inc}
 
 interface
@@ -39,6 +41,7 @@ var
   NrOfAPIsDetected: Integer;
 
 implementation
+
 
 procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
@@ -105,7 +108,6 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
     Pattern := PPattern(aPatternLibrary.List^[Index]);
 
-if Pattern.CRCLength > 0 then // DEBUG : Only print when CRC was used
     // TODO : We found a library-function! Administrate that somewhere...
     DbgPrintf('DxbxHLE: 0x%.8x -> %s', [aAddress, Pattern.Name]);
     Inc(NrOfAPIsDetected);
