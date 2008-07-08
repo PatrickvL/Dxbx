@@ -99,7 +99,7 @@ type
 //pragma warning(push)
 //pragma warning(disable: 4731)  // disable ebp modification warning
 
-function {WINAPI} PCSTProxy(Parameter: PPCSTProxyParam): Integer; stdcall; //Word;
+function {WINAPI} PCSTProxy(Parameter: PPCSTProxyParam): Integer; //Word;
 label
   callComplete;
 var
