@@ -43,9 +43,9 @@ var
     WORD        wVersionRequested,
     WSADATA    *lpWSAData
 ) *)
-  ret : Integer;
+  ret: Integer;
 begin
-    EmuSwapFS;   // Win2k/XP FS
+  EmuSwapFS; // Win2k/XP FS
 
     (*DbgPrintf('EmuXapi : EmuWSAStartup' +
            '( '+
@@ -56,40 +56,40 @@ begin
 
     ret := XTL.WSAStartup(wVersionRequested, lpWSAData); *)
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    result:= ret;
+  result := ret;
 end;
 
 // func: EmuXNetStartup
 
-function XTL_EmuXNetStartup( pDummy: PVOID ): Integer ;
+function XTL_EmuXNetStartup(pDummy: PVOID): Integer;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuXNetStartup' +
-           #13#10'(' +
-           #13#10'   pDummy              : $%.08X' +
-           #13#10');',
-           [pDummy]);
+  DbgPrintf('EmuXapi : EmuXNetStartup' +
+    #13#10'(' +
+    #13#10'   pDummy              : $%.08X' +
+    #13#10');',
+    [pDummy]);
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
     (*// Fake Successfull...hehehe...sucker...hehehehehe *)
     // Remark in cxbx code... wtf ??
-    result:= 0;
+  result := 0;
 end;
 
 // func: EmuXNetGetEthernetLinkStatus
 
 function XTL_EmuXNetGetEthernetLinkStatus: DWORD;
 begin
-    EmuSwapFS();   // Win2k/XP FS
-    DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // Win2k/XP FS
+  DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
+  EmuSwapFS(); // XBox FS
 
-    // for now, no ethernet connection is available
-    result:= 0; 
+  // for now, no ethernet connection is available
+  result := 0;
 end;
 
 // ******************************************************************
@@ -195,3 +195,4 @@ begin
 
 
 end.
+

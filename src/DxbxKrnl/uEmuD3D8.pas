@@ -7426,10 +7426,10 @@ end;
 function XTL__EmuIDirect3DDevice8_SetRenderTarget: HRESULT;
 var
   hRet: HRESULT;
-(*(
-    X_D3DSurface    *pRenderTarget,
-    X_D3DSurface    *pNewZStencil
-) *)
+
+    (*    pRenderTarget : X_D3DSurface;
+        pNewZStencil : X_D3DSurface; *)
+
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -7712,43 +7712,39 @@ procedure XTL__EmuIDirect3DDevice8_SelectVertexShaderDirect;
     DWORD                    Address
 ) *)
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
     // debug trace
-    DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_SelectVertexShaderDirect'
-               '('
-               '   pVAF                : 0x%.08X'
-               '   Address             : 0x%.08X'
+    (*DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_SelectVertexShaderDirect' +
+               '(' +
+               '   pVAF                : 0x%.08X' +
+               '   Address             : 0x%.08X' +
                ');',
-               pVAF,Address);
+               [pVAF,Address]); *)
 
     DbgPrintf('NOT YET IMPLEMENTED!');
 
-    EmuSwapFS();   // Xbox FS       *)
+    EmuSwapFS();   // Xbox FS
 end;
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetShaderConstantMode
 // ******************************************************************
 
-procedure XTL__EmuIDirect3DDevice8_GetShaderConstantMode;
-(*(
-    DWORD *pMode
-) *)
+procedure XTL__EmuIDirect3DDevice8_GetShaderConstantMode( pMode : DWORD );
 begin
-(*    #ifdef _DEBUG_TRACE
-    begin
+  {$IFDEF _DEBUG_TRACE}
         EmuSwapFS();   // Win2k/XP FS
-        DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_GetShaderConstantMode'
-                   '('
-                   '   pMode               : 0x%.08X'
+        DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_GetShaderConstantMode' +
+                   '(' +
+                   '   pMode               : 0x%.08X' +
                    ');',
-                   pMode);
+                   [pMode]);
         EmuSwapFS();   // Xbox FS
-     end;
-    //endif
+  {$ENDIF}
 
-    if(pMode) then
+{ TODO : need to be translated to delphi }
+(*    if(pMode) then
     begin
         *pMode := g_VertexShaderConstantMode;
      end;         *)
@@ -7758,26 +7754,24 @@ end;
 // * func: EmuIDirect3DDevice8_GetVertexShader
 // ******************************************************************
 
-procedure XTL__EmuIDirect3DDevice8_GetVertexShader;
-(*(
-    DWORD *pHandle
-) *)
+procedure XTL__EmuIDirect3DDevice8_GetVertexShader( pHandle : DWORD );
 begin
-(*    EmuSwapFS();
+    EmuSwapFS();
 
     // debug trace
-    DbgPrintf( 'EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_GetVertexShader'
-               '('
-               '   pHandle               : 0x%.08X'
+    DbgPrintf( 'EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_GetVertexShader' +
+               '(' +
+               '   pHandle               : 0x%.08X' +
                ');',
-               pHandle);
+               [pHandle]);
 
-    if(pHandle) then
+{ TODO : need to be translated to delphi }
+(*    if(pHandle) then
     begin
         (pHandle) := g_CurrentVertexShader;
-     end;
+     end;              *)
 
-    EmuSwapFS();       *)
+    EmuSwapFS();
 end;
 
 // ******************************************************************
@@ -7811,9 +7805,7 @@ begin
     EmuSwapFS();   // XBox FS    *)
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_SetVertexShaderInputDirect
-// ******************************************************************
+// func: EmuIDirect3DDevice8_SetVertexShaderInputDirect
 
 function XTL__EmuIDirect3DDevice8_SetVertexShaderInputDirect: HRESULT;
 (*(
@@ -8165,13 +8157,13 @@ begin
     '   MultiSampleType      : 0x%.08X' +
     ');',
     [Adapter, DeviceType, SurfaceFormat, Windowed, MultiSampleType]);
-
+  *)
   if (Adapter <> D3DADAPTER_DEFAULT) then
   begin
     EmuWarning('Adapter is not D3DADAPTER_DEFAULT, correcting!');
     Adapter := D3DADAPTER_DEFAULT;
   end;
-
+  (*
   if (DeviceType = D3DDEVTYPE_FORCE_DWORD) then
     EmuWarning('DeviceType := D3DDEVTYPE_FORCE_DWORD');
 
