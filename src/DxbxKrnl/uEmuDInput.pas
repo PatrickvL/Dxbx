@@ -27,6 +27,7 @@ uses
   // 3rd party
   XInput,
   // Dxbx
+  uError,
   uEmuShared,
   uEmu,
   uXBController;
@@ -40,8 +41,7 @@ implementation
 var
   g_XBController: XBController;
 
-// func: XTL::EmuDInputInit
-
+// func: XTL::EmuDInputInit    
 function XTL_EmuDInputInit: Longbool;
 begin
   Result := True;
@@ -49,29 +49,24 @@ begin
 
   g_XBController.ListenBegin(g_hEmuWindow);
 
-(*    if(g_XBController.GetError()) then
-        result:= false; *)
-
+  if(Error_GetError <> '') then
+    result:= false;
 end;
 
 // func: XTL::EmuDInputCleanup
-
 procedure XTL_EmuDInputCleanup;
 begin
   g_XBController.ListenEnd();
 end;
 
 // func: XTL::EmuPollController
-
 procedure XTL_EmuDInputPoll(Controller: XINPUT_STATE);
 begin
-(*  g_XBController.ListenPoll(Controller);
+  g_XBController.ListenPoll(Controller);
 
-  if (Error_GetError) then
-    MessageDlg(0, g_XBController.GetError(), 'Cxbx[* UNHANDLED! *]', MB_OK); // TODO: Handle this! *)
+  if (Error_GetError <> '' ) then
+    MessageDlg( 'Dxbx[* UNHANDLED! *]', mtError, mbOK, 0 ); // TODO: Handle this! *)
 end;
-
-
 
 end.
 
