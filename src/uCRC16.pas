@@ -27,42 +27,24 @@ function CalcCRC16(aBuffer: PByte; aLength: Integer): Word;
 
 implementation
 
-var
-  crc_tab16: array [Byte] of Word;
+const
+  P_KERMIT = Word($8408);
 
-procedure UpdateCRC16(var CRC: WORD; const aByte: Byte); inline;
-begin
-  CRC := (CRC shr 8) xor crc_tab16[Lo(CRC) xor aByte];
-end;
-
+// This code is fully classified as 'CRC-16/X-KERMIT' - a deprecated CRC...
+// See http://homepages.tesco.net/~rainstorm/crc-catalogue.htm#crc.cat.kermit
 function CalcCRC16(aBuffer: PByte; aLength: Integer): Word;
+var
+  j: Integer;
+  crc, c: Word;
 begin
   Result := 0;
   if aLength <= 0 then
     Exit;
 
+  crc := $FFFF;
   repeat
-    UpdateCRC16({var}Result, aBuffer^);
+    c := aBuffer^;
     Inc(aBuffer);
-    Dec(aLength);
-  until aLength = 0;
-
-  Result := Swap(not Result);
-end;
-
-// This code is fully classified as 'CRC-16/X-KERMIT' - a deprecated CRC...
-// See http://homepages.tesco.net/~rainstorm/crc-catalogue.htm#crc.cat.kermit
-procedure init_crc16_tab;
-const
-  P_KERMIT = Word($8408);
-var
-  i, j: Integer;
-  crc, c: Word;
-begin
-  for i := 0 to 255 do
-  begin
-    crc := $FFFF;
-    c   := Word(i);
 
     for j := 0 to 7 do
     begin
@@ -74,13 +56,11 @@ begin
       c := c shr 1;
     end;
 
-    crc_tab16[i] := crc;
-  end;
+    Dec(aLength);
+  until aLength = 0;
+
+  Result := Swap(not crc);
 end;
-
-initialization
-
-  init_crc16_tab;
 
 end.
 
