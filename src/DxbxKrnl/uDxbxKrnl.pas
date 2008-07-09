@@ -79,6 +79,9 @@ var
 
 implementation
 
+Uses
+  uEmuD3D8;
+
 function CxbxKrnlVerifyVersion(const szVersion: string): Boolean;
 begin
   Result := (szVersion = _DXBX_VERSION);
@@ -262,10 +265,7 @@ begin
 
   DbgPrintf('EmuMain : Initializing Direct3D.');
 
-  { TODO : need to be translated to delphi }
-  (*
   XTL__EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
-  *)
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 

@@ -172,7 +172,6 @@ end;
 procedure EmuShared.GetXBVideo(var video: XBVideo);
 begin
   Lock();
-  //memcpy(video, &m_XBVideo, sizeof(XBVideo));
   video := m_XBVideo;
   Unlock();
 end;
@@ -180,7 +179,6 @@ end;
 procedure EmuShared.SetXBVideo(const video: XBVideo);
 begin
   Lock();
-  //memcpy(&m_XBVideo, video, sizeof(XBVideo));
   m_XBVideo := video;
   Unlock();
 end;
@@ -198,7 +196,6 @@ end;
 procedure EmuShared.SetXBController(const ctrl: XBController);
 begin
   Lock();
-  //memcpy(&m_XBController, ctrl, sizeof(XBController));
   m_XBController := ctrl;
   Unlock();
 end;

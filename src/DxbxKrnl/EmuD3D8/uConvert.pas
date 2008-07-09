@@ -26,12 +26,15 @@ implementation
 
 uses
   // Windows
-  Windows,
-  SysUtils,
+  Windows
+  , SysUtils
   // Dxbx
-  uEmuD3D8Types, uDxbxKrnlUtils,
+  , uEmuD3D8Types
+  , uDxbxKrnlUtils
+  , uEmu
+
   // Directx
-  Direct3D9;
+  , Direct3D9;
 
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
@@ -68,10 +71,7 @@ begin
 
     $01: // Swizzled   (X_D3DFMT_AL8) // NOTE: Hack: Alpha ignored, basically
       begin
-            { TODO : EmuWarning not implemented yet in Dxbx }
-            (*
-            EmuWarning('X_D3DFMT_AL8 ^. D3DFMT_L8');
-            *)
+        EmuWarning('X_D3DFMT_AL8 ^. D3DFMT_L8');
         result := D3DFMT_L8;
       end;
 
@@ -83,10 +83,7 @@ begin
 
     $1A: // Swizzled   (X_D3DFMT_A8L8)
       begin
-            { TODO : EmuWarning not implemented yet in Dxbx }
-            (*
-            EmuWarning('X_D3DFMT_A8L8 ^. D3DFMT_R5G6B5');
-            *)
+        EmuWarning('X_D3DFMT_A8L8 ^. D3DFMT_R5G6B5');
         result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
       end;
 
@@ -104,18 +101,12 @@ begin
 
     $16: // Linear     (X_D3DFMT_LIN_R8B8)
       begin
-            { TODO : EmuWarning not implemented yet in Dxbx }
-            (*
-            EmuWarning('X_D3DFMT_LIN_R8B8 ^. D3DFMT_R5G6B5');
-            *)
+        EmuWarning('X_D3DFMT_LIN_R8B8 ^. D3DFMT_R5G6B5');
         result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
       end;
     $3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
       begin
-            { TODO : EmuWarning not implemented yet in Dxbx }
-            (*
-            EmuWarning('X_D3DFMT_LIN_A8B8G8R8 ^. D3DFMT_A8R8G8B8');
-            *)
+        EmuWarning('X_D3DFMT_LIN_A8B8G8R8 ^. D3DFMT_A8R8G8B8');
         result := D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
       end;
 
@@ -144,10 +135,7 @@ begin
 
     $2B: // Swizzled   (X_D3DFMT_F24S8)
       begin
-             { TODO : EmuWarning not implemented yet in Dxbx }
-             (*
-            EmuWarning('X_D3DFMT_F24S8 ^. D3DFMT_D24S8');
-            *)
+        EmuWarning('X_D3DFMT_F24S8 ^. D3DFMT_D24S8');
         result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
       end;
 
@@ -170,7 +158,7 @@ begin
   result := D3DFORMAT(aFormat);
 end;
 
-(*function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
+function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
 begin
   case (aFormat) of
     D3DFMT_YUY2:
@@ -197,10 +185,10 @@ begin
   end;
 
   { TODO -oDxbx : aFormat is a record so can not be inserted into the string }
-  CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [aFormat]));
+(*  CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [aFormat]);
 
-  result := aFormat;
-end;                 *)
+  result := aFormat; *)
+end;                 
 
 (*Function XTL_EmuXB2PC_D3DLock(Flags : DWORD) : DWord;
 var
