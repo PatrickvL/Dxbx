@@ -32,20 +32,20 @@ uses
   , uEmuD3D8Types
   , uDxbxKrnlUtils
   , uEmu
-
+  , uLog
   // Directx
   , Direct3D9;
 
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
 begin
-  result := FALSE;  // in cxbx is the result = false placed as last... bit strange.
+  Result := FALSE;  // in cxbx is the Result = false placed as last... bit strange.
   case (Format) of
     $00,
       $01,
       $0B: begin
         pBPP := 1;
-        result := TRUE;
+        Result := TRUE;
       end;
     $02,
       $03,
@@ -53,12 +53,12 @@ begin
       $05,
       $1A: begin
         pBPP := 2;
-        result := TRUE;
+        Result := TRUE;
       end;
     $06,
       $07: begin
         pBPP := 4;
-        result := TRUE;
+        Result := TRUE;
       end;
   end;
 end;
@@ -67,127 +67,127 @@ function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
 begin
   case (aFormat) of
     $00: // Swizzled   (X_D3DFMT_L8)
-      result := D3DFMT_L8;
+      Result := D3DFMT_L8;
 
     $01: // Swizzled   (X_D3DFMT_AL8) // NOTE: Hack: Alpha ignored, basically
       begin
-        EmuWarning('X_D3DFMT_AL8 ^. D3DFMT_L8');
-        result := D3DFMT_L8;
+        EmuWarning('X_D3DFMT_AL8.D3DFMT_L8');
+        Result := D3DFMT_L8;
       end;
 
     $02: // Swizzled   (X_D3DFMT_A1R5G5B5)
-      result := D3DFMT_A1R5G5B5;
+      Result := D3DFMT_A1R5G5B5;
 
     $03: // Swizzled   (X_D3DFMT_X1R5G5B5)
-      result := D3DFMT_X1R5G5B5;
+      Result := D3DFMT_X1R5G5B5;
 
     $1A: // Swizzled   (X_D3DFMT_A8L8)
       begin
-        EmuWarning('X_D3DFMT_A8L8 ^. D3DFMT_R5G6B5');
-        result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
+        EmuWarning('X_D3DFMT_A8L8.D3DFMT_R5G6B5');
+        Result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
       end;
 
     $1D, // Linear     (X_D3DFMT_LIN_A4R4G4B4)
       $04: // Swizzled   (X_D3DFMT_A4R4G4B4)
-      result := D3DFMT_A4R4G4B4;
+      Result := D3DFMT_A4R4G4B4;
 
     $11, // Linear     (X_D3DFMT_LIN_R5G6B5)
       $05: // Swizzled   (X_D3DFMT_R5G6B5)
-      result := D3DFMT_R5G6B5;
+      Result := D3DFMT_R5G6B5;
 
     $12, // Linear     (X_D3DFMT_LIN_A8R8G8B8)
       $06: // Swizzled   (X_D3DFMT_A8R8G8B8)
-      result := D3DFMT_A8R8G8B8;
+      Result := D3DFMT_A8R8G8B8;
 
     $16: // Linear     (X_D3DFMT_LIN_R8B8)
       begin
-        EmuWarning('X_D3DFMT_LIN_R8B8 ^. D3DFMT_R5G6B5');
-        result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
+        EmuWarning('X_D3DFMT_LIN_R8B8.D3DFMT_R5G6B5');
+        Result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
       end;
     $3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
       begin
-        EmuWarning('X_D3DFMT_LIN_A8B8G8R8 ^. D3DFMT_A8R8G8B8');
-        result := D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
+        EmuWarning('X_D3DFMT_LIN_A8B8G8R8.D3DFMT_A8R8G8B8');
+        Result := D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
       end;
 
     $1E, // Linear     (X_D3DFMT_LIN_X8R8G8B8)
       $07: // Swizzled   (X_D3DFMT_X8R8G8B8)
-      result := D3DFMT_X8R8G8B8;
+      Result := D3DFMT_X8R8G8B8;
 
     $0B: // Swizzled   (X_D3DFMT_P8)
-      result := D3DFMT_P8;
+      Result := D3DFMT_P8;
 
     $0C: // Compressed (X_D3DFMT_DXT1)
-      result := D3DFMT_DXT1;
+      Result := D3DFMT_DXT1;
 
     $0E: // Compressed (X_D3DFMT_DXT2)
-      result := D3DFMT_DXT2;
+      Result := D3DFMT_DXT2;
 
     $0F: // Compressed (X_D3DFMT_DXT3)
-      result := D3DFMT_DXT3;
+      Result := D3DFMT_DXT3;
 
     $24: // Swizzled   (X_D3DFMT_YUV2)
-      result := D3DFMT_YUY2;
+      Result := D3DFMT_YUY2;
 
     $2E, // Linear     (X_D3DFMT_LIN_D24S8)
       $2A: // Swizzled   (X_D3DFMT_D24S8)
-      result := D3DFMT_D24S8;
+      Result := D3DFMT_D24S8;
 
     $2B: // Swizzled   (X_D3DFMT_F24S8)
       begin
-        EmuWarning('X_D3DFMT_F24S8 ^. D3DFMT_D24S8');
-        result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
+        EmuWarning('X_D3DFMT_F24S8.D3DFMT_D24S8');
+        Result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
       end;
 
     $30, // Linear     (X_D3DFMT_LIN_D16)
       $2C: // Swizzled   (X_D3DFMT_D16)
-      result := D3DFMT_D16;
+      Result := D3DFMT_D16;
 
     $28: // Swizzled   (X_D3DFMT_V8U8)
-      result := D3DFMT_V8U8;
+      Result := D3DFMT_V8U8;
 
     $33: // Swizzled   (X_D3DFMT_V16U16)
-      result := D3DFMT_V16U16;
+      Result := D3DFMT_V16U16;
 
     $64:
-      result := D3DFMT_VERTEXDATA;
+      Result := D3DFMT_VERTEXDATA;
   end;
 
-  CxbxKrnlCleanup(Format ('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]));
+  CxbxKrnlCleanup(DxbxFormat('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]));
 
-  result := D3DFORMAT(aFormat);
+  Result := D3DFORMAT(aFormat);
 end;
 
 function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
 begin
   case (aFormat) of
     D3DFMT_YUY2:
-      result := $24;
+      Result := $24;
     D3DFMT_R5G6B5:
-      result := $11; // Linear
+      Result := $11; // Linear
 //            return 0x05;      // Swizzled
     D3DFMT_D24S8:
-      result := $2A;
+      Result := $2A;
     D3DFMT_DXT3:
-      result := $0F;
+      Result := $0F;
     D3DFMT_DXT2:
-      result := $0E;
+      Result := $0E;
     D3DFMT_DXT1:
-      result := $0C;
+      Result := $0C;
     D3DFMT_A1R5G5B5: // Linear (X_D3DFMT_LIN_A1R5G5B5)
-      result := $10;
+      Result := $10;
     D3DFMT_X8R8G8B8:
-      result := $1E; // Linear (X_D3DFMT_LIN_X8R8G8B8)
+      Result := $1E; // Linear (X_D3DFMT_LIN_X8R8G8B8)
 //            return 0x07;      // Swizzled
     D3DFMT_A8R8G8B8:
 //            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
-      result := $06;
+      Result := $06;
   end;
 
   { TODO -oDxbx : aFormat is a record so can not be inserted into the string }
 (*  CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [aFormat]);
 
-  result := aFormat; *)
+  Result := aFormat; *)
 end;                 
 
 (*Function XTL_EmuXB2PC_D3DLock(Flags : DWORD) : DWord;
@@ -214,7 +214,7 @@ begin
   NewFlags:= NewFlags xor D3DLOCK_READONLY;
   end;
 
-    result:= NewFlags;
+    Result:= NewFlags;
  end;         *)
 
 // lookup table for converting vertex count to primitive count

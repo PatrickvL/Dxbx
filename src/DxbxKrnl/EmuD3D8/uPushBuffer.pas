@@ -27,11 +27,11 @@ var
  g_pPrimaryPB : uint32 = 0; *)
 
 
- XTL_g_bStepPush : Boolean = false;
- XTL_g_bSkipPush : Boolean = false;
- XTL_g_bBrkPush : Boolean = false;
+ XTL_g_bStepPush : Boolean = False;
+ XTL_g_bSkipPush : Boolean = False;
+ XTL_g_bBrkPush : Boolean = False;
 
- g_bPBSkipPusher : Boolean = false;
+ g_bPBSkipPusher : Boolean = False;
 
 
 
@@ -155,7 +155,7 @@ begin
     XTL.EmuUpdateDeferredStates();
 
     #ifdef _DEBUG_TRACK_PB
-    bool bShowPB := false;
+    bool bShowPB := False;
 
     g_PBTrackTotal.insert(pdwPushData);
 

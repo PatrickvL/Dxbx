@@ -39,6 +39,9 @@ var
 procedure CreateLogs(aLogType: TLogType = ltKernel);
 procedure CloseLogs;
 procedure WriteLog(aText: string);
+
+function DxbxFormat(aStr: string; Args: array of const): string;
+
 procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Args: array of const); overload
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
@@ -105,7 +108,7 @@ begin
   end;
 end;
 
-procedure DbgPrintf(aStr: string; Args: array of const); // array of TVarRec actually
+function DxbxFormat(aStr: string; Args: array of const): string; // array of TVarRec actually
 var
   i: Integer;
 begin
@@ -116,25 +119,30 @@ begin
     begin
       case Args[i].VType of
         vtPointer:
-          Args[i].VType := vtInteger; // The data doesn't have to be changed, because it's already in-place 
+          Args[i].VType := vtInteger; // The data doesn't have to be changed, because it's already in-place
       end;
     end;
-    
+
     // Now try to format the string, including it's arguments :
-    WriteLog(Format(aStr, Args));
+    Result := SysUtils.Format(aStr, Args);
 
   except
     on E: Exception do
     begin
       // When something went wrong, log as much details as we can get our hands on,
-      // so we have an opportunity to fix a wrong type via cast or whatever : 
-      WriteLog('Catched an exception! Type=' + E.ClassName);
-      WriteLog(E.Message);
-      WriteLog(aStr);
+      // so we have an opportunity to fix a wrong type via cast or whatever :
+      Result := 'Catched an exception! Type=' + E.ClassName +
+                #13#10 + E.Message +
+                #13#10 + aStr;
       for i := Low(Args) to High(Args) do
-        WriteLog(TVarRecToString(Args[i]));
+        Result := Result + #13#10 + TVarRecToString(Args[i]);
     end;
   end;
+end;
+
+procedure DbgPrintf(aStr: string; Args: array of const);
+begin
+  WriteLog(DxbxFormat(aStr, Args));
 end;
 
 procedure DbgPrintf(aStr: string);

@@ -41,7 +41,7 @@ implementation
 var
   g_XBController: XBController;
 
-// func: XTL::EmuDInputInit    
+// func: XTL::EmuDInputInit
 function XTL_EmuDInputInit: Longbool;
 begin
   Result := True;
@@ -49,8 +49,8 @@ begin
 
   g_XBController.ListenBegin(g_hEmuWindow);
 
-  if(Error_GetError <> '') then
-    result:= false;
+  if (Error_GetError <> '') then
+    Result := False;
 end;
 
 // func: XTL::EmuDInputCleanup
