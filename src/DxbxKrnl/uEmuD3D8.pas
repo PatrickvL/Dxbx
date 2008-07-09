@@ -6574,9 +6574,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_SetRenderState_YuvEnable
-// ******************************************************************
+// func: EmuIDirect3DDevice8_SetRenderState_YuvEnable
 
 procedure XTL__EmuIDirect3DDevice8_SetRenderState_YuvEnable(Value: DWord);
 begin
@@ -6588,16 +6586,12 @@ begin
     ');',
     [Value]);
 
-{ TODO : Emuwarning does not support extra parameters }
-(*  EmuWarning('YuvEnable not implemented (0x%.08X)', Value);
-*)
+  EmuWarning(Format ('YuvEnable not implemented (0x%.08X)', [Value] ));
 
   EmuSwapFS(); // XBox FS
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_SetTransform
-// ******************************************************************
+// func: EmuIDirect3DDevice8_SetTransform
 
 function XTL__EmuIDirect3DDevice8_SetTransform: HRESULT;
 var
@@ -6647,9 +6641,7 @@ begin
   result := hRet;
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_GetTransform
-// ******************************************************************
+// func: EmuIDirect3DDevice8_GetTransform
 
 function XTL__EmuIDirect3DDevice8_GetTransform: HRESULT;
 var
@@ -6678,9 +6670,7 @@ begin
   result := hRet;
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DVertexBuffer8_Lock
-// ******************************************************************
+// func: EmuIDirect3DVertexBuffer8_Lock
 
 procedure XTL__EmuIDirect3DVertexBuffer8_Lock;
 (*(
@@ -6715,9 +6705,7 @@ begin
     Exit;    *)
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DVertexBuffer8_Lock2
-// ******************************************************************
+// func: EmuIDirect3DVertexBuffer8_Lock2
 (*BYTE* WINAPI XTL.EmuIDirect3DVertexBuffer8_Lock2
 (
     X_D3DVertexBuffer  *ppVertexBuffer,
