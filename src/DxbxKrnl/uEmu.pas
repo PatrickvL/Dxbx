@@ -35,9 +35,9 @@ var
   g_hZDrive: THandle = 0;
   g_strZDrive: string = '';
   g_hEmuWindow: THandle;
-  g_bPrintfOn: Boolean = true;
-  g_bEmuSuspended: Boolean = false;
-  g_bEmuException: Boolean = false;
+  g_bPrintfOn: Boolean = True;
+  g_bEmuSuspended: Boolean = False;
+  g_bEmuException: Boolean = False;
 
 procedure EmuWarning(szWarningMessage: string);
 
@@ -117,7 +117,7 @@ begin
                     // go through and fix any other pointers in the ESI allocation chunk
                     begin
                         DWORD dwESI := e^.ContextRecord^.Esi;
-                        DWORD dwSize := EmuCheckAllocationSize((PVOID)dwESI, false);
+                        DWORD dwSize := EmuCheckAllocationSize((PVOID)dwESI, False);
 
                         // dword aligned
                         dwSize:= dwSize - 4 - dwSize mod 4;
@@ -140,7 +140,7 @@ begin
 
                     DbgPrintf("EmuMain ($ mod X): Halo Access Adjust 1 was applied not ", GetCurrentThreadId());
 
-                    g_bEmuException := false;
+                    g_bEmuException := False;
 
                     result:= EXCEPTION_CONTINUE_EXECUTION;
                  end;
@@ -157,7 +157,7 @@ begin
                     // go through and fix any other pointers in the 0x2DF1C8 allocation chunk
                     begin
                         DWORD dwPtr := *(DWORD)$2DF1C8;
-                        DWORD dwSize := EmuCheckAllocationSize((PVOID)dwPtr, false);
+                        DWORD dwSize := EmuCheckAllocationSize((PVOID)dwPtr, False);
 
                         // dword aligned
                         dwSize:= dwSize - 4 - dwSize mod 4;
@@ -173,7 +173,7 @@ begin
 
                     DbgPrintf("EmuMain ($ mod X): Halo Access Adjust 2 was applied not ", GetCurrentThreadId());
 
-                    g_bEmuException := false;
+                    g_bEmuException := False;
 
                     result:= EXCEPTION_CONTINUE_EXECUTION;
                  end;
@@ -195,7 +195,7 @@ begin
 
                     DbgPrintf("EmuMain ($ mod X): Battlestar Galactica Hack 1 was applied not ", GetCurrentThreadId());
 
-                    g_bEmuException := false;
+                    g_bEmuException := False;
 
                     result:= EXCEPTION_CONTINUE_EXECUTION;
                 //}
@@ -254,7 +254,7 @@ begin
             begin
                 printf("EmuMain ($ mod X): Ignored Breakpoint Exception", GetCurrentThreadId());
 
-                g_bEmuException := false;
+                g_bEmuException := False;
 
                 result:= EXCEPTION_CONTINUE_EXECUTION;
              end;
@@ -281,7 +281,7 @@ begin
          end;
      end;
 
-    g_bEmuException := false;
+    g_bEmuException := False;
 
   result := EXCEPTION_CONTINUE_SEARCH;
 end; *)

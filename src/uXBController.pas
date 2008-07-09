@@ -165,9 +165,9 @@ begin
         if(FAILED(hRet)) then
         begin
             if(hRet = E_NOTIMPL) then
-                result:= DIENUM_CONTINUE;
+                Result:= DIENUM_CONTINUE;
             else
-                result:= DIENUM_STOP;
+                Result:= DIENUM_STOP;
          end;
      end;
     else if(lpddoi^.dwType and DIDFT_BUTTON) then
@@ -186,13 +186,13 @@ begin
         if(FAILED(hRet)) then
         begin
             if(hRet = E_NOTIMPL) then
-                result:= DIENUM_CONTINUE;
+                Result:= DIENUM_CONTINUE;
             else
-                result:= DIENUM_STOP;
+                Result:= DIENUM_STOP;
          end;
      end;
 
-    result:= DIENUM_CONTINUE;
+    Result:= DIENUM_CONTINUE;
  end;
 
  { TODO : Need to be added to XBController }
@@ -203,7 +203,7 @@ function CALLBACK WrapEnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE; pvRef
 begin
     XBController *context := (XBController)pvRef;
 
-    result:= context^.EnumGameCtrlCallback(lpddi);
+    Result:= context^.EnumGameCtrlCallback(lpddi);
  end;
 
 { TODO : Need to be added to XBController }
@@ -214,7 +214,7 @@ function CALLBACK WrapEnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE;
 begin
     XBController *context := (XBController)pvRef;
 
-    result:= context^.EnumObjectsCallback(lpddoi);
+    Result:= context^.EnumObjectsCallback(lpddoi);
  end;
 
 { TODO : Need to be added to XBController }
@@ -249,7 +249,7 @@ begin
 function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
 begin
     if(m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
-        result:= DIENUM_CONTINUE;
+        Result:= DIENUM_CONTINUE;
 
     HRESULT hRet := m_pDirectInput8^.CreateDevice(lpddi^.guidInstance, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
 
@@ -263,7 +263,7 @@ begin
             ReorderObjects(lpddi^.tszInstanceName, m_dwInputDeviceCount - 1);
      end;
 
-    result:= DIENUM_CONTINUE;
+    Result:= DIENUM_CONTINUE;
  end;       *)
 
 { XBController }
@@ -545,7 +545,7 @@ procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
 begin
   if (m_CurrentState <> XBCTRL_STATE_NONE) then
   begin
-    Error_SetError('Invalid State', false);
+    Error_SetError('Invalid State', False);
     Exit;
   end;
 
@@ -570,7 +570,7 @@ procedure XBController.ConfigEnd;
 begin
   if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
   begin
-    Error_SetError('Invalid State', false);
+    Error_SetError('Invalid State', False);
     Exit;
   end;
 
@@ -580,12 +580,12 @@ end;
 
 function XBController.ConfigPoll(szStatus: PChar): Longbool;
 begin
-  result := false;
+  Result := False;
 
   if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
   begin
-    Error_SetError('Invalid State', false);
-    result := false;
+    Error_SetError('Invalid State', False);
+    Result := False;
   end;
 
     (*XTL.DIDEVICEINSTANCE        DeviceInstance;
@@ -719,7 +719,7 @@ begin
 
                 StrFmt(szStatus, 'Success: %s Mapped to '%s%s' on '%s'!', m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 
-                result:= true;
+                Result:= true;
              end;
          end;
         // ******************************************************************
@@ -756,7 +756,7 @@ begin
 
                 StrFmt(szStatus, 'Success: %s Mapped to Key %d on SysKeyboard', m_DeviceNameLookup[CurConfigObject], dwHow);
 
-                result:= true;
+                Result:= true;
              end;
          end;
         // ******************************************************************
@@ -794,7 +794,7 @@ begin
 
                 StrFmt(szStatus, 'Success: %s Mapped to Button %d on SysMouse', m_DeviceNameLookup[CurConfigObject], dwHow);
 
-                result:= true;
+                Result:= true;
              end;
             // ******************************************************************
             // * Check for Mouse Movement
@@ -866,19 +866,19 @@ begin
 
                     StrFmt(szStatus, 'Success: %s Mapped to %s%s on SysMouse', m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
 
-                    result:= true;
+                    Result:= true;
                  end;
              end;
          end;
      end;
 
-    result:= false;*)
+    Result:= False;*)
 end;
 
 
 function XBController.DeviceIsUsed(szDeviceName: PChar): Longbool;
 begin
-  result := false;
+  Result := False;
 
 
 (*    for(integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
@@ -886,7 +886,7 @@ begin
         if(m_DeviceName[v][0] <> #0) then
         begin
             if(strncmp(m_DeviceName[v], szDeviceName, 255) = 0) then
-                result:= true;
+                Result:= true;
          end;
      end; *)
 
@@ -1024,7 +1024,7 @@ begin
   { TODO : need to be translated to delphi }
   (*for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
-      result := v; *)
+      Result := v; *)
 
   { TODO : need to be translated to delphi }
 (*  for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
@@ -1032,7 +1032,7 @@ begin
     begin
       strncpy(m_DeviceName[v], szDeviceName, 255);
 
-      result := v;
+      Result := v;
      end;
   end;     *)
 
@@ -1049,7 +1049,7 @@ begin
 
   if (m_CurrentState <> XBCTRL_STATE_NONE) then
   begin
-    Error_SetError('Invalid State', false);
+    Error_SetError('Invalid State', False);
     Exit;
   end;
 
@@ -1075,7 +1075,7 @@ procedure XBController.ListenEnd;
 begin
   if (m_CurrentState <> XBCTRL_STATE_LISTEN) then
   begin
-    Error_SetError('Invalid State', false);
+    Error_SetError('Invalid State', False);
     Exit;
   end;
 
@@ -1092,7 +1092,7 @@ var
 begin
   if (m_CurrentState <> XBCTRL_STATE_NONE) then
   begin
-    Error_SetError('Invalid State', false);
+    Error_SetError('Invalid State', False);
     Exit;
   end;
 
@@ -1144,7 +1144,7 @@ begin
     // Purge unused device slots
     for(integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
     begin
-        bool inuse := false;
+        bool inuse := False;
 
         for(integer r:=0;r<XBCTRL_OBJECT_COUNT;r++)
         begin
@@ -1201,7 +1201,7 @@ var
 begin
   if (m_CurrentState <> XBCTRL_STATE_NONE) then
   begin
-    Error_SetError('Invalid State', false);
+    Error_SetError('Invalid State', False);
     Exit;
   end;
 

@@ -59,7 +59,7 @@ procedure  EmuInstallWrappers(var OovpaTable: OOVPATable; OovpaTableSize: uint32
 
  std.vector<Pointer > vCacheOut;
 
- bool bCacheInp := false;
+ bool bCacheInp := False;
  std.vector<Pointer > vCacheInp;
  std.vector<Pointer >.const_iterator vCacheInpIter;
 *)
@@ -125,7 +125,7 @@ begin
 
     if (pCacheFile <> 0) then
     begin
-        bool bVerified := false;
+        bool bVerified := False;
 
         //
         // verify last compiled timestamp
@@ -202,7 +202,7 @@ begin
 
       DxbxScanForLibraryAPIs(pXbeHeader);
 (*
-            bool bFoundD3D := false;
+            bool bFoundD3D := False;
             for (uint32 v:=0;v<dwLibraryVersions;v++)
             begin
                 uint16 MajorVersion := pLibraryVersion[v].wMajorVersion;
@@ -420,7 +420,7 @@ begin
 
                 DbgPrintf('HLE: * Searching HLE database for %s %d.%d.%d ...', pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
 
-                bool found:=false;
+                bool found:=False;
 
                 for (uint32 d:=0;d<dwHLEEntries;d++)
                 begin
@@ -441,7 +441,7 @@ begin
              end;
 *)
 
-      bXRefFirstPass := false;
+      bXRefFirstPass := False;
     end;
 
         // display Xref summary

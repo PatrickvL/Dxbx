@@ -58,7 +58,7 @@ begin
 
   EmuSwapFS(); // XBox FS
 
-  result := ret;
+  Result := ret;
 end;
 
 // func: EmuXNetStartup
@@ -77,7 +77,7 @@ begin
 
     (*// Fake Successfull...hehehe...sucker...hehehehehe *)
     // Remark in cxbx code... wtf ??
-  result := 0;
+  Result := 0;
 end;
 
 // func: EmuXNetGetEthernetLinkStatus
@@ -89,7 +89,7 @@ begin
   EmuSwapFS(); // XBox FS
 
   // for now, no ethernet connection is available
-  result := 0;
+  Result := 0;
 end;
 
 // ******************************************************************
@@ -117,7 +117,7 @@ begin
 
     EmuSwapFS();   // XBox FS
 
-    result:= ret;
+    Result:= ret;
  end;             *)
 
 // ******************************************************************
@@ -142,7 +142,7 @@ begin
 
     EmuSwapFS();   // XBox FS
 
-    result:= ret;
+    Result:= ret;
  end;              *)
 
 // ******************************************************************
@@ -166,7 +166,7 @@ begin
 
     EmuSwapFS();   // XBox FS
 
-    result:= ret;
+    Result:= ret;
  end;              *)
 
 // ******************************************************************
@@ -189,7 +189,7 @@ begin
 
     EmuSwapFS();   // XBox FS
 
-    result:= ret;
+    Result := ret;
  end;            *)
 
 
