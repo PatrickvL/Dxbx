@@ -44,6 +44,7 @@ type
     CRCValue: Word;
     TotalLength: Word;
     // TODO : Add referenced API's and trailing bytes here too!
+HitCount: Integer;
   end;
 
 function GetSortedPatternList(const aPatternName: string): TList;
@@ -68,13 +69,18 @@ begin
 end;
 
 function PatternListCompare(Pattern1, Pattern2: PPattern): Integer;
+var
+  i: Integer;
 begin
-  Result := StrLComp(PAnsiChar(@(Pattern1.PatternBytes[0])),
-                     PAnsiChar(@(Pattern2.PatternBytes[0])),
-                     PATTERNSIZE);
+  for i := 0 to PATTERNSIZE - 1 do
+  begin
+    Result := Integer(Pattern1.PatternBytes[i]) - Integer(Pattern2.PatternBytes[i]);
+    if Result <> 0 then
+      Exit;
+  end;
 
   if Result = 0 then
-    Result := Pattern1.CRCValue - Pattern2.CRCValue; // swap?
+    Result := Pattern1.CRCValue - Pattern2.CRCValue;
 end;
 
 function GetSortedPatternList(const aPatternName: string): TList;

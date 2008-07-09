@@ -28,7 +28,10 @@ interface
 uses
   // Delphi
   Classes,
+  SysUtils,
+  Contnrs,
   // Dxbx
+  uTypes,
   uXBE,
   uLog,
   uBitUtils,
@@ -42,10 +45,11 @@ var
 
 implementation
 
+{.$DEFINE BRUTE_FORCE}
 
 procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
-  function _ComparePattern(const Pattern: PPattern; const aAddress: PByte): Integer;
+  function _ComparePattern(const Pattern: PPattern; aAddress: PByte): Integer;
   var
     b: Integer;
   begin
@@ -56,20 +60,40 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
       // Test if this byte offset must be checked :
       if TestBit(Pattern.PatternBytesToUseMask, b) then
       begin
-        Result := Pattern.PatternBytes[b] - PByte(Integer(aAddress) + b)^;
+        Result := Integer(Pattern.PatternBytes[b]) - Integer(aAddress^);
         if Result <> 0 then
           Exit;
       end;
+
+      Inc(aAddress);
     end;
 
     if Pattern.CRCLength > 0 then
-      Result := (Pattern.CRCValue - CalcCRC16(Pointer(Integer(aAddress) + PATTERNSIZE), Pattern.CRCLength));
+      Result := Integer(Pattern.CRCValue) - Integer(CalcCRC16(aAddress, Pattern.CRCLength));
 
     // TODO : Test all referenced APIs
 
     // TODO : Test trailing bytes too
   end;
 
+{$IFDEF BRUTE_FORCE}
+  function _FindPattern(const aPatternLibrary: TList; const aAddress: PByte; var Index: Integer): Boolean;
+  var
+    i: Integer;
+  begin
+    for i := 0 to aPatternLibrary.Count - 1 do
+    begin
+      Result := _ComparePattern(PPattern(aPatternLibrary.List^[i]), aAddress) = 0;
+      if Result then
+      begin
+        {var}Index := i;
+        Exit;
+      end;
+    end;
+
+    Result := False;
+  end;
+{$ELSE}
   // Modified copy of the binary search code in TStringList.Find() :
   function _FindPattern(const aPatternLibrary: TList; const aAddress: PByte; var Index: Integer): Boolean;
   var
@@ -89,13 +113,14 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
         begin
           Result := True;
 //          if Duplicates <> dupAccept then
-            L := I;
+//            L := I;
         end;
       end;
     end;
 
     Index := L;
   end;
+{$ENDIF}
 
   procedure _FindAndRememberPattern(const aPatternLibrary: TList; const aAddress: PByte);
   var
@@ -108,33 +133,44 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
     Pattern := PPattern(aPatternLibrary.List^[Index]);
 
+Inc(Pattern.HitCount); if Pattern.HitCount > 1 then Exit;
+
     // TODO : We found a library-function! Administrate that somewhere...
     DbgPrintf('DxbxHLE: 0x%.8x -> %s', [aAddress, Pattern.Name]);
     Inc(NrOfAPIsDetected);
   end;
 
 var
-  PatternsXAPI5788: TList;
-  PatternsKrnl0000: TList;
+  AllPatterns: TObjectList;
   ByteScanLower, ByteScanUpper, p: PByte;
-  Pattern: PPattern;
+  i: Integer;
 begin
-  PatternsXAPI5788 := GetSortedPatternList('5788xapilib');
-  PatternsKrnl0000 := GetSortedPatternList('0000xbox');
-  // TODO : What about other libraries and different versions ?
+  AllPatterns := TObjectList.Create({OwnsObjects=}True);
+  try
+    AllPatterns.Add(GetSortedPatternList('4627minimal'));
+    AllPatterns.Add(GetSortedPatternList('5788minimal'));
+    // These are purely for testing purposes :
+    AllPatterns.Add(GetSortedPatternList('5788xapilib'));
+    AllPatterns.Add(GetSortedPatternList('0000xbox'));
+    // TODO : What about other libraries and different versions ?
 
-  ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
-  ByteScanUpper := PByte(pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage);
+    ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
+    ByteScanUpper := PByte(IntPtr(ByteScanLower) + pXbeHeader.dwSizeofImage);
 
-  NrOfAPIsDetected := 0;
-  p := ByteScanLower;
-  while p <> ByteScanUpper do
-  begin
-    _FindAndRememberPattern(PatternsXAPI5788, p);
-    _FindAndRememberPattern(PatternsKrnl0000, p);
-    Inc(p);
+    NrOfAPIsDetected := 0;
+    p := ByteScanLower;
+    while p <> ByteScanUpper do
+    begin
+      for i := 0 to AllPatterns.Count - 1 do
+        _FindAndRememberPattern(TList(AllPatterns[i]), p);
+
+      Inc(p);
+    end;
+  finally
+    FreeAndNil(AllPatterns);
   end;
+
+  DbgPrintf('DxbxHLE: %d APIs detected', [NrOfAPIsDetected]);
 end;
 
 end.
-

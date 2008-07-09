@@ -99,7 +99,8 @@ type
 //pragma warning(push)
 //pragma warning(disable: 4731)  // disable ebp modification warning
 
-function {WINAPI} PCSTProxy(Parameter: PPCSTProxyParam): Integer; //Word;
+// Note : The signature of this function should conform to System.TThreadFunc !
+function PCSTProxy(Parameter: PPCSTProxyParam): Integer;
 label
   callComplete;
 var
