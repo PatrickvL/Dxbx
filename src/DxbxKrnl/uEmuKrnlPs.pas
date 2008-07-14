@@ -38,7 +38,8 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl;
+  uDxbxKrnl,
+  uDxbxKrnlUtils;
 
 var
   {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE; // Source: OpenXDK - Uncertain
@@ -54,7 +55,7 @@ function {254} xboxkrnl_PsCreateSystemThread(
   lpThreadAttributes: PULONG; // SD
   dwStackSize: DWORD; // initial stack size
   lpStartAddress: PKSTART_ROUTINE; // thread function
-  lpParameter: PVOID; // thread argument
+  lpParameter: PVOID; // thread argument  
   dwCreationFlags: DWORD; // creation option
   lpThreadId: PULONG // thread identifier
   ): NTSTATUS; stdcall; // Source: Cxbx - TODO : Should we use XBMC's version?

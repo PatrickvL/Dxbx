@@ -79,9 +79,9 @@ type
     XBCTRL_STATE_LISTEN);
 
   XBCtrlObjectCfg = record
-    dwDevice: integer; // offset into m_InputDevice
-    dwInfo: integer; // extended information, depending on dwFlags
-    dwFlags: integer; // flags explaining the data format
+    dwDevice: Integer; // offset into m_InputDevice
+    dwInfo: Integer; // extended information, depending on dwFlags
+    dwFlags: Integer; // flags explaining the data format
   end;
 
   XBController = record
@@ -90,7 +90,7 @@ type
     m_dwInputDeviceCount: Integer;
     m_dwCurObject: Integer;
 
-    m_ObjectConfig: array[XBCtrlObject] of XBCtrlObjectCfg;
+    m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
 
     lPrevMouseX, lPrevMouseY, lPrevMouseZ: LongInt;
     CurConfigObject: XBCtrlObject;
@@ -106,11 +106,11 @@ procedure ListenBegin(ahwnd: THandle);
 procedure ListenEnd;
 procedure DInputInit(ahwnd: THandle);
 procedure DInputCleanup;
-procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: integer; dwFlags: integer);
-procedure ReorderObjects(szDeviceName: PChar; pos: integer);
+procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: Integer; dwFlags: Integer);
+procedure ReorderObjects(szDeviceName: PChar; aPos: Integer);
 
 function DeviceIsUsed(szDeviceName: PChar): Longbool;
-function Insert(szDeviceName: PChar): integer;
+function Insert(szDeviceName: PChar): Integer;
 function ConfigPoll(szStatus: PChar): Longbool;
   end;
 
@@ -309,11 +309,11 @@ begin
     // ******************************************************************
     // * Poll all devices
     // ******************************************************************
-    for(integer v:=0;v<XBCTRL_OBJECT_COUNT;v++)
+    for(Integer v:=0;v<XBCTRL_OBJECT_COUNT;v++)
     begin
-        integer dwDevice := m_ObjectConfig[v].dwDevice;
-        integer dwFlags  := m_ObjectConfig[v].dwFlags;
-        integer dwInfo   := m_ObjectConfig[v].dwInfo;
+        Integer dwDevice := m_ObjectConfig[v].dwDevice;
+        Integer dwFlags  := m_ObjectConfig[v].dwFlags;
+        Integer dwInfo   := m_ObjectConfig[v].dwInfo;
 
         if(dwDevice = -1) then
             continue;
@@ -561,7 +561,7 @@ end;
 
 procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
 begin
-  if (m_CurrentState <> XBCTRL_STATE_NONE) then
+  if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
     Error_SetError('Invalid State', False);
     Exit;
@@ -571,7 +571,7 @@ begin
 
   DInputInit(ahwnd);
 
-  if (Error_GetError <> 0) then
+  if Error_GetError <> '' then
     Exit;
 
   lPrevMouseX := -1;
@@ -583,7 +583,7 @@ end;
 
 procedure XBController.ConfigEnd;
 begin
-  if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
+  if m_CurrentState <> XBCTRL_STATE_CONFIG then
   begin
     Error_SetError('Invalid State', False);
     Exit;
@@ -597,7 +597,7 @@ function XBController.ConfigPoll(szStatus: PChar): Longbool;
 begin
   Result := False;
 
-  if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
+  if m_CurrentState <> XBCTRL_STATE_CONFIG then
   begin
     Error_SetError('Invalid State', False);
     Result := False;
@@ -612,7 +612,7 @@ begin
     // ******************************************************************
     // * Monitor for significant device state changes
     // ******************************************************************
-    for(integer v:=m_dwInputDeviceCount-1;v>=0;v--)
+    for(Integer v:=m_dwInputDeviceCount-1;v>=0;v--)
     begin
         // ******************************************************************
         // * Poll the current device
@@ -682,7 +682,7 @@ begin
              end;
             else
             begin
-                for(integer b:=0;b<2;b++)
+                for(Integer b:=0;b<2;b++)
                 begin
                     if(abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK) then
                     begin
@@ -695,7 +695,7 @@ begin
             (* temporarily disabled
             if(dwHow = -1) then
             begin
-                for(integer b:=0;b<4;b++)
+                for(Integer b:=0;b<4;b++)
                 begin
                     if(abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV) then
                     begin
@@ -707,7 +707,7 @@ begin
 
             if(dwHow = -1) then
             begin
-                for(integer b:=0;b<32;b++)
+                for(Integer b:=0;b<32;b++)
                 begin
                     if(JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON) then
                     begin
@@ -751,7 +751,7 @@ begin
             // ******************************************************************
             // * Check for Keyboard State Change
             // ******************************************************************
-            for(integer r:=0;r<256;r++)
+            for(Integer r:=0;r<256;r++)
             begin
                 if(KeyState[r] <> 0) then
                 begin
@@ -788,7 +788,7 @@ begin
             // ******************************************************************
             // * Detect Button State Change
             // ******************************************************************
-            for(integer r:=0;r<4;r++)
+            for(Integer r:=0;r<4;r++)
             begin
                 // 0x80 is the mask for button push
                 if(MouseState.rgbButtons[r] and $80) then
@@ -896,7 +896,7 @@ begin
   Result := False;
 
 
-(*    for(integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
+(*    for(Integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
     begin
         if(m_DeviceName[v][0] <> #0) then
         begin
@@ -911,7 +911,8 @@ procedure XBController.DInputCleanup;
 var
   v: Integer;
 begin
-  for v := m_dwInputDeviceCount downto 0 do begin
+  for v := m_dwInputDeviceCount downto 0 do
+  begin
     (*
     m_InputDevice[v].m_Device^.Unacquire();
     m_InputDevice[v].m_Device^.Release();
@@ -927,7 +928,7 @@ begin
         m_pDirectInput8 := 0;
      end; *)
 
-  Exit;
+//  Exit;
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
@@ -1008,7 +1009,7 @@ begin
     // * Set cooperative level and acquire
     // ******************************************************************
     begin
-        for(integer v:=m_dwInputDeviceCount-1;v>=0;v--)
+        for(Integer v:=m_dwInputDeviceCount-1;v>=0;v--)
         begin
             m_InputDevice[v].m_Device^.SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
             m_InputDevice[v].m_Device^.Acquire();
@@ -1029,19 +1030,19 @@ begin
      end;*)
 end;
 
-function XBController.Insert(szDeviceName: PChar): integer;
+function XBController.Insert(szDeviceName: PChar): Integer;
 var
-  v: Integer;
+  v: XBCtrlObject;
 begin
   Result := 0;
-  v := 0;
 
-  (*for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  (*for v := Low(XBCtrlObject) to High(XBCtrlObject) do
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
       Result := v; *)
 
   { TODO : need to be translated to delphi }
-(*  for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
+(*  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  begin
     if (m_DeviceName[v][0] = #0) then
     begin
       strncpy(m_DeviceName[v], szDeviceName, 255);
@@ -1057,11 +1058,9 @@ end;
 
 procedure XBController.ListenBegin(ahwnd: THandle);
 var
-  v: Integer;
+  v: XBCtrlObject;
 begin
-  v := 0;
-
-  if (m_CurrentState <> XBCTRL_STATE_NONE) then
+  if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
     Error_SetError('Invalid State', False);
     Exit;
@@ -1071,23 +1070,25 @@ begin
 
   DInputInit(ahwnd);
 
-{ TODO : need to be translated to delphi }
-(*    for(v:=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
-        m_DeviceName[v][0] := #0;
+{ TODO : need to be translated to Delphi }
+(*
+  for(v:=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
+      m_DeviceName[v][0] := #0;
 
-    for(v:=0;v<XBCTRL_OBJECT_COUNT;v++)
+  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  begin
+    if m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount then
     begin
-        if(m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount) then
-        begin
-            printf('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
-            m_ObjectConfig[v].dwDevice := -1;
-         end;
-     end; *)
+      printf('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
+      m_ObjectConfig[v].dwDevice := -1;
+    end;
+  end;
+*)
 end;
 
 procedure XBController.ListenEnd;
 begin
-  if (m_CurrentState <> XBCTRL_STATE_LISTEN) then
+  if m_CurrentState <> XBCTRL_STATE_LISTEN then
   begin
     Error_SetError('Invalid State', False);
     Exit;
@@ -1101,10 +1102,10 @@ procedure XBController.Load(szRegistryKey: PChar);
 var
   dwDisposition, dwType, dwSize: DWORD;
   ahKey: HKEY;
-  v: integer;
+  v: Integer;
   szValueName: array[0..64 - 1] of Char;
 begin
-  if (m_CurrentState <> XBCTRL_STATE_NONE) then
+  if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
     Error_SetError('Invalid State', False);
     Exit;
@@ -1147,62 +1148,65 @@ begin
   end;     *)
 end;
 
-procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo, dwFlags: integer);
+procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo, dwFlags: Integer);
 var
   v: Integer;
-  r: Integer;
-  inuse: boolean;
+  r: XBCtrlObject;
+  InUse: Boolean;
 begin
-    // Initialize InputMapping instance
+  // Initialize InputMapping instance
   m_ObjectConfig[aobject].dwDevice := Insert(szDeviceName);
   m_ObjectConfig[aobject].dwInfo := dwInfo;
   m_ObjectConfig[aobject].dwFlags := dwFlags;
 
-    // Purge unused device slots
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
-    inuse := False;
+  // Purge unused device slots
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  begin
+    InUse := False;
 
-    for r := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
-      if (m_ObjectConfig[r].dwDevice = v) then
-        inuse := true;
-    end;
+    for r := Low(XBCtrlObject) to High(XBCtrlObject) do
+      if m_ObjectConfig[r].dwDevice = v then
+        InUse := True;
 
-        (*if( not inuse) then
-            m_DeviceName[v][0] := #0; *)
+    (*if not InUse then
+        m_DeviceName[v][0] := #0; *)
   end;
 end;
 
-procedure XBController.ReorderObjects(szDeviceName: PChar; pos: integer);
+procedure XBController.ReorderObjects(szDeviceName: PChar; aPos: Integer);
 var
   Old: Integer;
-  v: Integer;
+  v: XBCtrlObject;
 begin
-  old := -1;
-  v := 0;
+  Old := -1;
 
-  // locate old device name position
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
+  // locate Old device name position
+  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  begin
      { TODO : need to be translated to delphi }
     (*if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
     begin
-      old := v;
+      Old := v;
       break;
     end; *)
   end;
 
   // Swap names, if necessary
-  if (old <> pos) then begin
+  if Old <> aPos then
+  begin
      { TODO : need to be translated to delphi }
-    (*StrCopy(m_DeviceName[old], m_DeviceName[pos]);
-    StrCopy(m_DeviceName[pos], szDeviceName); *)
+    (*StrCopy(m_DeviceName[Old], m_DeviceName[aPos]);
+    StrCopy(m_DeviceName[aPos], szDeviceName); *)
   end;
 
-  // Update all old values
-  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
-    if (m_ObjectConfig[v].dwDevice = old) then
-      m_ObjectConfig[v].dwDevice := pos
-    else if (m_ObjectConfig[v].dwDevice = pos) then
-      m_ObjectConfig[v].dwDevice := old;
+  // Update all Old values
+  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  begin
+    if m_ObjectConfig[v].dwDevice = Old then
+      m_ObjectConfig[v].dwDevice := aPos
+    else
+      if m_ObjectConfig[v].dwDevice = aPos then
+        m_ObjectConfig[v].dwDevice := Old;
   end;
 end;
 
@@ -1210,7 +1214,7 @@ procedure XBController.Save(szRegistryKey: PChar);
 var
   dwDisposition, dwType, dwSize: DWORD;
   ahKey: HKEY;
-  v: integer;
+  v: Integer;
   szValueName: array[0..64 - 1] of Char;
 begin
   if (m_CurrentState <> XBCTRL_STATE_NONE) then
