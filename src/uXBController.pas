@@ -73,28 +73,37 @@ type
     XBCTRL_STATE_CONFIG,
     XBCTRL_STATE_LISTEN);
 
+
+  XBCtrlObjectCfg = record
+    dwDevice : integer;   // offset into m_InputDevice
+    dwInfo : integer;    // extended information, depending on dwFlags
+    dwFlags : integer;    // flags explaining the data format
+  end;
+
   XBController = record
     private
       m_CurrentState: XBCtrlState;
-    m_dwInputDeviceCount: Integer;
-    m_dwCurObject: Integer;
+      m_dwInputDeviceCount: Integer;
+      m_dwCurObject: Integer;
+
+      m_ObjectConfig : Array [XBCTRL_OBJECT_COUNT] of XBCtrlObjectCfg;
     public
-  procedure Load(szRegistryKey: PChar);
-procedure Save(szRegistryKey: PChar);
-procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
-procedure ConfigEnd;
-procedure ListenPoll(var Controller: PXINPUT_STATE);
+      procedure Load(szRegistryKey: PChar);
+      procedure Save(szRegistryKey: PChar);
+      procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
+      procedure ConfigEnd;
+      procedure ListenPoll(var Controller: PXINPUT_STATE);
 
-procedure ListenBegin(ahwnd: THandle);
-procedure ListenEnd;
-procedure DInputInit(ahwnd: THandle);
-procedure DInputCleanup;
-procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: integer; dwFlags: integer);
-procedure ReorderObjects(szDeviceName: PChar; pos: integer);
+      procedure ListenBegin(ahwnd: THandle);
+      procedure ListenEnd;
+      procedure DInputInit(ahwnd: THandle);
+      procedure DInputCleanup;
+      procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: integer; dwFlags: integer);
+      procedure ReorderObjects(szDeviceName: PChar; pos: integer);
 
-function DeviceIsUsed(szDeviceName: PChar): Longbool;
-function Insert(szDeviceName: PChar): integer;
-function ConfigPoll(szStatus: PChar): Longbool;
+      function DeviceIsUsed(szDeviceName: PChar): Longbool;
+      function Insert(szDeviceName: PChar): integer;
+      function ConfigPoll(szStatus: PChar): Longbool;
   end;
 
 
