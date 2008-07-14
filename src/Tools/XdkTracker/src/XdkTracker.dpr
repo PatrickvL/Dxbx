@@ -30,8 +30,8 @@ uses
   uTypes in '..\..\..\uTypes.pas',
   uTime in '..\..\..\uTime.pas',
   uLog in '..\..\..\uLog.pas',
-  uLogConsole in '..\..\..\uLogConsole.pas' {frm_LogConsole},
-  uDxbxXml in '..\..\..\uDxbxXml.pas' {DxbxXml: TDataModule};
+  uDxbxXml in '..\..\..\uDxbxXml.pas' {DxbxXml: TDataModule},
+  uConsoleClass in '..\..\..\uConsoleClass.pas';
 
 {$R *.res}
 
@@ -43,7 +43,6 @@ begin
   Application.Initialize;
   Application.Title := 'XDK Tracker';
   Application.CreateForm(TfrmXdkTracker, frmXdkTracker);
-  Application.CreateForm(Tfrm_LogConsole, frm_LogConsole);
   Application.CreateForm(TDxbxXml, DxbxXml);
   Application.Run;
 end.

@@ -28,7 +28,7 @@ uses
   Variants,
   // Dxbx
   uTypes,
-  uLogConsole;
+  uConsoleClass;
 
 var
   m_DxbxDebug: DebugMode = DM_NONE;
@@ -167,18 +167,19 @@ begin
       CloseLogs;
 
     DM_CONSOLE:
-      if not Assigned(frm_LogConsole) then
+      if not Assigned(ConsoleControl) then
       try
-        frm_LogConsole := Tfrm_LogConsole.Create(nil);
+        ConsoleControl := TConsoleControl.Create;
         if aLogType = ltGui then
-          frm_LogConsole.Caption := 'DXBX : Debug Console'
+          ConsoleControl.SetWindowTitle('DXBX : Debug Console')
         else // ltKernel
-          frm_LogConsole.Caption := 'DXBX : Kernel Debug Console';
+          ConsoleControl.SetWindowTitle('DXBX : Kernel Debug Console');
 
-        frm_LogConsole.Show;
+        ConsoleControl.SetBackgroundColor(False, False, False, False); // = black
+        ConsoleControl.SetForegroundColor(False, True, False, False); // = lime
       except
         m_DxbxDebug := DM_NONE;
-        FreeAndNil({var}frm_LogConsole);
+        FreeAndNil({var}ConsoleControl);
         raise Exception.Create('Could not create log console');
       end;
 
@@ -209,7 +210,7 @@ end;
 procedure CloseLogs;
 begin
   WriteLog('Stop logging.');
-  FreeAndNil(frm_LogConsole);
+  FreeAndNil(ConsoleControl);
 
   if LogFileOpen then
   begin
@@ -232,8 +233,8 @@ begin
 
   case m_DxbxDebug of
     DM_CONSOLE:
-      if Assigned(frm_LogConsole) then
-        frm_LogConsole.Log.Lines.Add(_Text());
+      if Assigned(ConsoleControl) then
+        ConsoleControl.WriteTextLine(_Text());
     DM_FILE:
       if LogFileOpen then
       begin
