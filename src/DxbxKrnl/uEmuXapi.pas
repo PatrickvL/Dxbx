@@ -25,9 +25,10 @@ uses
   // Delphi
   Windows,
   // Dxbx
+  uTypes,
   uLog, // DbgPrintf
   uEmuFS, // EmuSwapFS
-  uDxbxKrnl; // CxbxKrnl_XbeHeader
+  uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
 
 type
 
@@ -1166,7 +1167,7 @@ begin
 
 //    PVOID dwResult := 0;
 
-    *XTL.EmuXapiProcessHeap := XTL.g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, @HeapParameters);
+// TODO    *XTL.EmuXapiProcessHeap := XTL.g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, @HeapParameters);
   end;
 
   Exit;

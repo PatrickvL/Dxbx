@@ -63,20 +63,6 @@ procedure EmuPanic(); // export;
 procedure CxbxKrnlNoFunc; cdecl;
 procedure CxbxKrnlSuspend();
 
-
-var
-  // ! thread local storage
-  CxbxKrnl_TLS: PXBE_TLS;
-  // thread local storage data
-  CxbxKrnl_TLSData: Pointer;
-  // xbe header structure
-  CxbxKrnl_XbeHeader: PXBE_HEADER;
-  // parent window handle
-  CxbxKrnl_hEmuParent: THandle;
-
-  // thread handles
-  g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of THandle;
-
 implementation
 
 Uses

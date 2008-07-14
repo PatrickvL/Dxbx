@@ -26,7 +26,9 @@ uses
   Windows,
   SysUtils,
   // Dxbx
-  uLog; // for WriteLog
+  uConsts,
+  uLog, // for WriteLog
+  uXBE; // PXBE_TLS
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
 
