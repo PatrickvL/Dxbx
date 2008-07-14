@@ -63,47 +63,55 @@ type
     XBCTRL_OBJECT_BACK,
     XBCTRL_OBJECT_START,
     XBCTRL_OBJECT_LTHUMB,
-    XBCTRL_OBJECT_RTHUMB,
-    // Total number of components
-    XBCTRL_OBJECT_COUNT);
+    XBCTRL_OBJECT_RTHUMB);
 
+const
+  // Total number of components
+  XBCTRL_OBJECT_COUNT = (Ord(High(XBCtrlObject)) - Ord(Low(XBCtrlObject)) + 1);
+
+  XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
+
+type
   // DirectInput Enumeration Types
   XBCtrlState = (
     XBCTRL_STATE_NONE = 0,
     XBCTRL_STATE_CONFIG,
     XBCTRL_STATE_LISTEN);
 
-
   XBCtrlObjectCfg = record
-    dwDevice : integer;   // offset into m_InputDevice
-    dwInfo : integer;    // extended information, depending on dwFlags
-    dwFlags : integer;    // flags explaining the data format
+    dwDevice: integer; // offset into m_InputDevice
+    dwInfo: integer; // extended information, depending on dwFlags
+    dwFlags: integer; // flags explaining the data format
   end;
 
   XBController = record
     private
       m_CurrentState: XBCtrlState;
-      m_dwInputDeviceCount: Integer;
-      m_dwCurObject: Integer;
+    m_dwInputDeviceCount: Integer;
+    m_dwCurObject: Integer;
 
-      m_ObjectConfig : Array [XBCTRL_OBJECT_COUNT] of XBCtrlObjectCfg;
+    m_ObjectConfig: array[XBCtrlObject] of XBCtrlObjectCfg;
+
+    lPrevMouseX, lPrevMouseY, lPrevMouseZ: LongInt;
+    CurConfigObject: XBCtrlObject;
+
     public
-      procedure Load(szRegistryKey: PChar);
-      procedure Save(szRegistryKey: PChar);
-      procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
-      procedure ConfigEnd;
-      procedure ListenPoll(var Controller: PXINPUT_STATE);
+  procedure Load(szRegistryKey: PChar);
+procedure Save(szRegistryKey: PChar);
+procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
+procedure ConfigEnd;
+procedure ListenPoll(var Controller: PXINPUT_STATE);
 
-      procedure ListenBegin(ahwnd: THandle);
-      procedure ListenEnd;
-      procedure DInputInit(ahwnd: THandle);
-      procedure DInputCleanup;
-      procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: integer; dwFlags: integer);
-      procedure ReorderObjects(szDeviceName: PChar; pos: integer);
+procedure ListenBegin(ahwnd: THandle);
+procedure ListenEnd;
+procedure DInputInit(ahwnd: THandle);
+procedure DInputCleanup;
+procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: integer; dwFlags: integer);
+procedure ReorderObjects(szDeviceName: PChar; pos: integer);
 
-      function DeviceIsUsed(szDeviceName: PChar): Longbool;
-      function Insert(szDeviceName: PChar): integer;
-      function ConfigPoll(szStatus: PChar): Longbool;
+function DeviceIsUsed(szDeviceName: PChar): Longbool;
+function Insert(szDeviceName: PChar): integer;
+function ConfigPoll(szStatus: PChar): Longbool;
   end;
 
 
@@ -279,6 +287,7 @@ begin
 
 
 // func: XBController::ListenPoll
+
 procedure XBController.ListenPoll(var Controller: PXINPUT_STATE);
 begin
 (*    if(Controller = 0) then
@@ -548,7 +557,7 @@ begin
              end;
          end;
      end;          *)
- end;
+end;
 
 procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
 begin
@@ -562,17 +571,14 @@ begin
 
   DInputInit(ahwnd);
 
-    { TODO : Need to be translated / fixed }
-    (*if(GetError() <> 0) then
-        Exit;
+  if (Error_GetError <> 0) then
+    Exit;
 
-    lPrevMouseX := -1;
-    lPrevMouseY := -1;
-    lPrevMouseZ := -1;
+  lPrevMouseX := -1;
+  lPrevMouseY := -1;
+  lPrevMouseZ := -1;
 
-    CurConfigObject := aobject;
-
-    Exit; *)
+  CurConfigObject := aobject;
 end;
 
 procedure XBController.ConfigEnd;
@@ -1030,7 +1036,6 @@ begin
   Result := 0;
   v := 0;
 
-  { TODO : need to be translated to delphi }
   (*for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
       Result := v; *)
@@ -1142,28 +1147,29 @@ begin
   end;     *)
 end;
 
-procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo,
-  dwFlags: integer);
+procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo, dwFlags: integer);
+var
+  v: Integer;
+  r: Integer;
+  inuse: boolean;
 begin
     // Initialize InputMapping instance
-(*    m_ObjectConfig[object].dwDevice := Insert(szDeviceName);
-    m_ObjectConfig[object].dwInfo   := dwInfo;
-    m_ObjectConfig[object].dwFlags  := dwFlags;
+  m_ObjectConfig[aobject].dwDevice := Insert(szDeviceName);
+  m_ObjectConfig[aobject].dwInfo := dwInfo;
+  m_ObjectConfig[aobject].dwFlags := dwFlags;
 
     // Purge unused device slots
-    for(integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
-    begin
-        bool inuse := False;
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
+    inuse := False;
 
-        for(integer r:=0;r<XBCTRL_OBJECT_COUNT;r++)
-        begin
-            if(m_ObjectConfig[r].dwDevice = v) then
-                inuse:=true;
-         end;
+    for r := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
+      if (m_ObjectConfig[r].dwDevice = v) then
+        inuse := true;
+    end;
 
-        if( not inuse) then
-            m_DeviceName[v][0] := #0;
-     end; *)
+        (*if( not inuse) then
+            m_DeviceName[v][0] := #0; *)
+  end;
 end;
 
 procedure XBController.ReorderObjects(szDeviceName: PChar; pos: integer);
@@ -1175,14 +1181,14 @@ begin
   v := 0;
 
   // locate old device name position
-  (*for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
      { TODO : need to be translated to delphi }
-    if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
+    (*if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
     begin
       old := v;
       break;
-    end;
-  end;   *)
+    end; *)
+  end;
 
   // Swap names, if necessary
   if (old <> pos) then begin
@@ -1192,13 +1198,12 @@ begin
   end;
 
   // Update all old values
-  (*for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
-    { TODO : need to be translated to delphi }
+  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
     if (m_ObjectConfig[v].dwDevice = old) then
       m_ObjectConfig[v].dwDevice := pos
     else if (m_ObjectConfig[v].dwDevice = pos) then
       m_ObjectConfig[v].dwDevice := old;
-  end;                                   *)
+  end;
 end;
 
 procedure XBController.Save(szRegistryKey: PChar);
