@@ -97,6 +97,8 @@ function GetSortedPatternList(const aPatternName: string): TList;
       Inc(aLine);
       Dec(Digits);
     end;
+    
+    Result := True;
   end;
 
   function _ScanHexByte(var aLine: PChar; var Value: Integer): Boolean;

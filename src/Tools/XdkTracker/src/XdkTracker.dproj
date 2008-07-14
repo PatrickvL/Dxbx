@@ -38,15 +38,13 @@
     <DelphiCompile Include="XdkTracker.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
+    <DCCReference Include="..\..\..\uConsoleClass.pas" />
     <DCCReference Include="..\..\..\uConsts.pas" />
     <DCCReference Include="..\..\..\uDxbxXml.pas">
       <DesignClass>TDataModule</DesignClass>
       <Form>DxbxXml</Form>
     </DCCReference>
     <DCCReference Include="..\..\..\uLog.pas" />
-    <DCCReference Include="..\..\..\uLogConsole.pas">
-      <Form>frm_LogConsole</Form>
-    </DCCReference>
     <DCCReference Include="..\..\..\uTime.pas" />
     <DCCReference Include="..\..\..\uTypes.pas" />
     <DCCReference Include="..\..\..\uXbe.pas" />

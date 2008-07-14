@@ -296,7 +296,7 @@ begin
   if Assigned(aXbe) or not (FileExists(aFileName)) then
     Exit;
 
-  aExeFilename := '\0';
+  aExeFilename := '';
   aXbeFilename := aFileName;
 
   {var}aXbe := TXbe.Create(aXbeFilename, ftXbe);

@@ -32,12 +32,12 @@ uses
   ufrm_About in 'ufrm_About.pas' {frm_About},
   uProlog in 'uProlog.pas',
   uLog in 'uLog.pas',
-  uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uTime in 'uTime.pas',
   uWindows in 'uWindows.pas',
   uTypes in 'uTypes.pas',
   uDxbxXml in 'uDxbxXml.pas' {DxbxXml: TDataModule},
-  uXbeConvert in 'uXbeConvert.pas';
+  uXbeConvert in 'uXbeConvert.pas',
+  uConsoleClass in 'uConsoleClass.pas';
 
 {$R *.RES}
 

@@ -32,7 +32,6 @@ uses
   SysUtils,
   uEmuShared in 'uEmuShared.pas',
   uLog in 'uLog.pas',
-  uLogConsole in 'uLogConsole.pas' {frm_LogConsole},
   uConsts in 'uConsts.pas',
   uMutex in 'uMutex.pas',
   uKernelThunk in 'uKernelThunk.pas',
