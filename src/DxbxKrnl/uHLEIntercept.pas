@@ -507,9 +507,9 @@ begin
   // Write JMP rel16 opcode (Jump near, displacement relative to next instruction) :
   FunctionAddr^ := $E9;
   // Calculate relative address :
-  RelativeJMPAddress := (uint32(WrapperAddr) - uint32(FunctionAddr) - 5);
+  RelativeJMPAddress := (IntPtr(WrapperAddr) - IntPtr(FunctionAddr) - 5);
   // Write that after the JMP :
-  CopyMemory(Pointer(Integer(FunctionAddr) + 1), @RelativeJMPAddress, 4);
+  CopyMemory(Pointer(IntPtr(FunctionAddr) + 1), @RelativeJMPAddress, 4);
 end;
 
 (*

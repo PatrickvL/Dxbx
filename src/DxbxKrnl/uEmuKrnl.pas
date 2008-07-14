@@ -364,7 +364,6 @@ end;
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
 // NOTES Uses fastcall convention
-
 procedure {161} xboxkrnl_KfLowerIrql(
   NewIrql: KIRQL
   ); register; // Source: ReactOS

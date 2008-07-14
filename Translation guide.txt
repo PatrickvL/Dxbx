@@ -1,6 +1,6 @@
 Calling conventions should be translated as follows :
-
-NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
+	
+WINAPI and NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
 __fastcall -> register
 
 When using CToPas, be aware of the following things:

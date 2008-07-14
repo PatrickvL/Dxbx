@@ -59,7 +59,7 @@ type
 {$IF DECLARED(UINT_PTR)}
   IntPtr = UINT_PTR;
 {$ELSE}
-  IntPtr = Cardinal;
+  IntPtr = UInt32;
 {$IFEND}
 
   TEntryProc = procedure();

@@ -38,7 +38,7 @@ var
 
 procedure CreateLogs(aLogType: TLogType = ltKernel);
 procedure CloseLogs;
-procedure WriteLog(aText: string);
+procedure WriteLog(const aText: string);
 
 function DxbxFormat(aStr: string; Args: array of const): string;
 
@@ -177,6 +177,7 @@ begin
 
         ConsoleControl.SetBackgroundColor(False, False, False, False); // = black
         ConsoleControl.SetForegroundColor(False, True, False, False); // = lime
+        ConsoleControl.HideCursor;
       except
         m_DxbxDebug := DM_NONE;
         FreeAndNil({var}ConsoleControl);
@@ -221,7 +222,7 @@ begin
   m_DxbxDebug := DM_NONE;
 end;
 
-procedure WriteLog(aText: string);
+procedure WriteLog(const aText: string);
 
   function _Text: string;
   begin
@@ -229,21 +230,30 @@ procedure WriteLog(aText: string);
   end;
 
 begin
-  EnterCriticalSection({var}DxbxLogLock);
-
   case m_DxbxDebug of
     DM_CONSOLE:
       if Assigned(ConsoleControl) then
-        ConsoleControl.WriteTextLine(_Text());
+      begin
+        EnterCriticalSection({var}DxbxLogLock);
+        try
+          ConsoleControl.WriteTextLine(_Text());
+        finally
+          LeaveCriticalSection({var}DxbxLogLock);
+        end;
+      end;
+      
     DM_FILE:
       if LogFileOpen then
       begin
-        WriteLn({var}LogFile, _Text());
-        Flush({var}LogFile);
+        EnterCriticalSection({var}DxbxLogLock);
+        try
+          WriteLn({var}LogFile, _Text());
+          Flush({var}LogFile);
+        finally
+          LeaveCriticalSection({var}DxbxLogLock);
+        end;
       end;
   end;
-
-  LeaveCriticalSection({var}DxbxLogLock);
 end;
 
 initialization

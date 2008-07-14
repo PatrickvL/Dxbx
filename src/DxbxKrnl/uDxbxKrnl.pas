@@ -341,8 +341,6 @@ begin
 
   EmuCleanupFS;
 
-  if m_DxbxDebug = DM_CONSOLE then Sleep(10 * 1000); // TODO : Remove this!
-
   TerminateThread(GetCurrentThread(), 0);
 end;
 

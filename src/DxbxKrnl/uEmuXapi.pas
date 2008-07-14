@@ -23,7 +23,11 @@ interface
 
 uses
   // Delphi
-  Windows;
+  Windows,
+  // Dxbx
+  uLog, // DbgPrintf
+  uEmuFS, // EmuSwapFS
+  uDxbxKrnl; // CxbxKrnl_XbeHeader
 
 type
 
@@ -49,6 +53,8 @@ type
 
 
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
+
+procedure XTL_EmuXapiInitProcess(); stdcall;
 
 implementation
 
@@ -1127,37 +1133,44 @@ begin
     Result := bRet;
  end;          *)
 
+type
+  RTL_HEAP_PARAMETERS = packed record
+    Length: UInt32;
+    // TODO!
+  end;
 // ******************************************************************
 // * func: EmuXapiInitProcess
 // ******************************************************************
-(*VOID WINAPI XTL.EmuXapiInitProcess()
+procedure XTL_EmuXapiInitProcess(); stdcall;
+const
+  HEAP_GROWABLE = $00000002;
+var
+  HeapParameters: RTL_HEAP_PARAMETERS;
+  dwPeHeapReserve: UInt32;
+  dwPeHeapCommit: UInt32;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuXapiInitProcess();');
+  DbgPrintf('EmuXapi : EmuXapiInitProcess();');
 
- // call RtlCreateHeap
- begin
-        RTL_HEAP_PARAMETERS HeapParameters;
+  // call RtlCreateHeap
+  begin
+    ZeroMemory(@HeapParameters, SizeOf(HeapParameters));
 
-  ZeroMemory(@HeapParameters, SizeOf(HeapParameters));
+    HeapParameters.Length := SizeOf(HeapParameters);
 
-        HeapParameters.Length := SizeOf(HeapParameters);
+    EmuSwapFS();   // XBox FS
 
-  EmuSwapFS();   // XBox FS
+    dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
+    dwPeHeapCommit  := CxbxKrnl_XbeHeader.dwPeHeapCommit;
 
-  uint32 dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
-  uint32 dwPeHeapCommit  := CxbxKrnl_XbeHeader.dwPeHeapCommit;
+//    PVOID dwResult := 0;
 
-        PVOID dwResult := 0;
-
-        const HEAP_GROWABLE = $00000002;
-
-        *XTL.EmuXapiProcessHeap := XTL.g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, @HeapParameters);
+    *XTL.EmuXapiProcessHeap := XTL.g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, @HeapParameters);
   end;
 
-    Exit;
- end;         *)
+  Exit;
+end;
 
 // ******************************************************************
 // * data: EmuXapiProcessHeap
