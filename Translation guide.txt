@@ -7,6 +7,46 @@ When using CToPas, be aware of the following things:
 " mod " -> "%" (inside strings)
 " not " -> "!" (inside strings)
 
+
+
+Converting C/C++ operators to Delphi:
+	-= operator
+
+		var1 -= var2;
+		{ this equates to: }
+		var1 := var1 - var2;
+
+
+	+= operator
+
+		var1 += var2;
+		{ this equates to: }
+		var1 := var1 + var2;
+	
+
+	&= operator
+
+		var1 &= var2;
+		{ this equates to: }
+		var1 := var1 AND var2;
+
+
+	|= operator
+		
+		var1 |= var2;
+		{ this equates to: }
+		var1 := var1 OR var2;
+
+
+	*= operator 
+	
+		var1 *= var2;
+		{ this equates to: }
+		var1 := var1 * var2;
+
+
+
+
 Sources that might give you more insight into the Xbox Kernel API's :
 
 Cxbx SVN (martin's private branch is the most up to date)

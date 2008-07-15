@@ -24,9 +24,11 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Tabs,
-  // AlphaSkin
-  ComCtrls;
+  StdCtrls, ExtCtrls, Tabs, ComCtrls
+
+  // Dxbx
+  , uXBController
+  ;
 
 type
   Tfrm_ControllerConfig = class(TForm)
@@ -66,15 +68,26 @@ type
     Label1: TLabel;
     sTabControl1: TTabControl;
     chkForceFeedback: TCheckBox;
+    procedure FormCreate(Sender: TObject);
+  private
+    g_XBController : XBController;
+
   end;
 
 
 var
   frm_ControllerConfig: Tfrm_ControllerConfig;
+  g_bHasChanges : Boolean = FALSE;
 
 implementation
 
 {$R *.DFM}
+
+procedure Tfrm_ControllerConfig.FormCreate(Sender: TObject);
+begin
+  // reset changes flag
+	g_bHasChanges := FALSE;
+end;
 
 
 

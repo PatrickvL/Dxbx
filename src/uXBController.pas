@@ -90,7 +90,10 @@ type
     m_dwInputDeviceCount: Integer;
     m_dwCurObject: Integer;
 
-    m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
+    // Device Names
+     m_DeviceName : Array [0..XBCTRL_MAX_DEVICES] of Array [0..260] of char;
+
+    m_ObjectConfig: array[XBCtrlObject] of XBCtrlObjectCfg;
 
     lPrevMouseX, lPrevMouseY, lPrevMouseZ: LongInt;
     CurConfigObject: XBCtrlObject;
@@ -892,19 +895,19 @@ end;
 
 
 function XBController.DeviceIsUsed(szDeviceName: PChar): Longbool;
+var
+  v: Integer;
 begin
   Result := False;
-
-
-(*    for(Integer v:=0;v<XBCTRL_MAX_DEVICES;v++)
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
+    if (m_DeviceName[v][0] <> #0) then
     begin
-        if(m_DeviceName[v][0] <> #0) then
-        begin
-            if(strncmp(m_DeviceName[v], szDeviceName, 255) = 0) then
-                Result:= true;
-         end;
-     end; *)
-
+      { TODO : Need to be translated to delphi }
+      (*
+      if (strncmp(m_DeviceName[v], szDeviceName, 255) = 0) then
+        Result := true;   *)
+    end;
+  end;
 end;
 
 procedure XBController.DInputCleanup;
@@ -913,6 +916,7 @@ var
 begin
   for v := m_dwInputDeviceCount downto 0 do
   begin
+    { TODO : Need to be translated to delphi }
     (*
     m_InputDevice[v].m_Device^.Unacquire();
     m_InputDevice[v].m_Device^.Release();
@@ -921,14 +925,12 @@ begin
   end;
 
   m_dwInputDeviceCount := 0;
-
-   (* if(m_pDirectInput8 <> 0) then
+    { TODO : Need to be translated to delphi }
+    (*if(m_pDirectInput8 <> 0) then
     begin
         m_pDirectInput8^.Release();
         m_pDirectInput8 := 0;
      end; *)
-
-//  Exit;
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
@@ -1032,24 +1034,23 @@ end;
 
 function XBController.Insert(szDeviceName: PChar): Integer;
 var
-  v: XBCtrlObject;
+  v: Integer;
 begin
   Result := 0;
 
-  (*for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  for v := 0 to XBCTRL_MAX_DEVICES -1 do
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
-      Result := v; *)
+      Result := v;
 
-  { TODO : need to be translated to delphi }
-(*  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  for v := 0 to XBCTRL_MAX_DEVICES -1 do
   begin
     if (m_DeviceName[v][0] = #0) then
     begin
-      strncpy(m_DeviceName[v], szDeviceName, 255);
-
-      Result := v;
+       { TODO : Need to be translated to delphi }
+//      strncpy(m_DeviceName[v], szDeviceName, 255);
+       Result := v;
      end;
-  end;     *)
+  end;
 
   MessageBox(0, 'Unexpected Circumstance (Too Many Controller Devices)! Please contact caustik!', 'Cxbx', MB_OK or MB_ICONEXCLAMATION);
 
@@ -1058,7 +1059,7 @@ end;
 
 procedure XBController.ListenBegin(ahwnd: THandle);
 var
-  v: XBCtrlObject;
+  v: Integer;
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -1070,20 +1071,19 @@ begin
 
   DInputInit(ahwnd);
 
-{ TODO : need to be translated to Delphi }
-(*
-  for(v:=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
+  for v := XBCTRL_MAX_DEVICES downto m_dwInputDeviceCount do
       m_DeviceName[v][0] := #0;
 
-  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  for v := 0 to XBCTRL_OBJECT_COUNT -1 do
   begin
-    if m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount then
+    (*f m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount then
     begin
-      printf('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
+      { TODO : Need to be translated to delphi }
+      (*
+      DbgPrintf('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
       m_ObjectConfig[v].dwDevice := -1;
-    end;
+    end;                                                                               *)
   end;
-*)
 end;
 
 procedure XBController.ListenEnd;
@@ -1112,40 +1112,40 @@ begin
   end;
 
   // Load Configuration from Registry
-
-  (*if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, 0, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, 0, @hKey, @dwDisposition) = ERROR_SUCCESS) then
+  if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
     v := 0;
 
     // Load Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
-        // default is a null string
-        { TODO : need to be translated to delphi }
-        (*m_DeviceName[v][0] := #0;
-
-        StrFmt(szValueName, 'DeviceName $%.02X', v);
-
-        dwType := REG_SZ; dwSize = 260;
-        RegQueryValueEx(hKey, szValueName, 0, @dwType, (PBYTE)m_DeviceName[v], @dwSize);
+      // default is a null string
+      m_DeviceName[v][0] := #0;
+      StrFmt(szValueName, 'DeviceName $%.02X', [v]);
+      dwType := REG_SZ;
+      dwSize := 260;
+      { TODO : Need to be translated to delphi }
+      (*
+      RegQueryValueEx(ahKey, szValueName, 0, @dwType, m_DeviceName[v], @dwSize); *)
     end;
 
     // Load Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
+        { TODO : Need to be translated to delphi }
         // default object configuration
-        { TODO : need to be translated to delphi }
-        (*
-        m_ObjectConfig[v].dwDevice := -1;
+        (*m_ObjectConfig[v].dwDevice := -1;
         m_ObjectConfig[v].dwInfo := -1;
         m_ObjectConfig[v].dwFlags := 0;
 
-        StrFmt(szValueName, 'Object : ' %s '', m_DeviceNameLookup[v]);
+        StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]); *)
 
-        dwType := REG_BINARY; dwSize = SizeOf(XBCtrlObjectCfg);
-        RegQueryValueEx(hKey, szValueName, 0, @dwType, (PBYTE)@m_ObjectConfig[v], @dwSize);
+      dwType := REG_BINARY;
+      dwSize := SizeOf(XBCtrlObjectCfg);
+        { TODO : Need to be translated to delphi }
+        (*RegQueryValueEx(hKey, szValueName, 0, @dwType, (PBYTE)@m_ObjectConfig[v], @dwSize);       *)
     end;
 
-    RegCloseKey(hKey);
-  end;     *)
+    RegCloseKey(ahKey);
+  end;
 end;
 
 procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo, dwFlags: Integer);
@@ -1168,45 +1168,44 @@ begin
       if m_ObjectConfig[r].dwDevice = v then
         InUse := True;
 
-    (*if not InUse then
-        m_DeviceName[v][0] := #0; *)
+    if not InUse then
+        m_DeviceName[v][0] := #0; 
   end;
 end;
 
 procedure XBController.ReorderObjects(szDeviceName: PChar; aPos: Integer);
 var
   Old: Integer;
-  v: XBCtrlObject;
+  v: integer;
 begin
   Old := -1;
 
   // locate Old device name position
-  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  for v := 0 to XBCTRL_MAX_DEVICES -1 do
   begin
-     { TODO : need to be translated to delphi }
-    (*if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
+    if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
     begin
       Old := v;
       break;
-    end; *)
+    end;
   end;
 
   // Swap names, if necessary
   if Old <> aPos then
   begin
-     { TODO : need to be translated to delphi }
-    (*StrCopy(m_DeviceName[Old], m_DeviceName[aPos]);
-    StrCopy(m_DeviceName[aPos], szDeviceName); *)
+    StrCopy(m_DeviceName[Old], m_DeviceName[aPos]);
+    StrCopy(m_DeviceName[aPos], szDeviceName); 
   end;
 
   // Update all Old values
-  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
+  for v := 0 to XBCTRL_OBJECT_COUNT -1 do
   begin
-    if m_ObjectConfig[v].dwDevice = Old then
+    { TODO : Need to be translated to delphi }
+    (*if m_ObjectConfig[v].dwDevice = Old then
       m_ObjectConfig[v].dwDevice := aPos
     else
       if m_ObjectConfig[v].dwDevice = aPos then
-        m_ObjectConfig[v].dwDevice := Old;
+        m_ObjectConfig[v].dwDevice := Old; *)
   end;
 end;
 
@@ -1224,36 +1223,38 @@ begin
   end;
 
   // Save Configuration to Registry
-  (*if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, 0, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, 0, @hKey, @dwDisposition) = ERROR_SUCCESS) then
+  if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, 0, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, 0, ahKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
     v := 0;
 
       // Save Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
-        { TODO : need to be translated to delphi }
-        (*StrFmt(szValueName, 'DeviceName $%.02X', v);
+        StrFmt(szValueName, 'DeviceName $%.02X', [v]);
 
-        dwType := REG_SZ; dwSize = 260;
+        dwType := REG_SZ;
+        dwSize := 260;
 
-        if (m_DeviceName[v][0] = #0) then
-          RegDeleteValue(hKey, szValueName)
+        { TODO : Need to be translated to delphi }
+        (*if (m_DeviceName[v][0] = #0) then
+          RegDeleteValue(ahKey, szValueName)
         else
-          RegSetValueEx(hKey, szValueName, 0, dwType, (PBYTE)m_DeviceName[v], dwSize);
+          RegSetValueEx(ahKey, szValueName, 0, dwType, m_DeviceName[v], dwSize); *)
     end;
 
       // Save Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
         { TODO : need to be translated to delphi }
-        StrFmt(szValueName, 'Object : ' %s '', m_DeviceNameLookup[v]);
+        (*StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]); *)
 
-        dwType := REG_BINARY; dwSize = SizeOf(XBCtrlObjectCfg);
+        dwType := REG_BINARY;
+        dwSize := SizeOf(XBCtrlObjectCfg);
 
-        if (m_ObjectConfig[v].dwDevice <> -1) then
-          RegSetValueEx(hKey, szValueName, 0, dwType, (PBYTE)@m_ObjectConfig[v], dwSize);
+        (* (m_ObjectConfig[v].dwDevice <> -1) then
+          RegSetValueEx(hKey, szValueName, 0, dwType, (PBYTE)@m_ObjectConfig[v], dwSize); *)
     end;
 
-    RegCloseKey(hKey);
-  end;                                                                                    *)
+    RegCloseKey(ahKey);
+  end;                                                                                    
 end;
 
 end.

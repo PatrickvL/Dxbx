@@ -12,6 +12,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
