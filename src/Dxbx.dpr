@@ -37,7 +37,32 @@ uses
   uTypes in 'uTypes.pas',
   uDxbxXml in 'uDxbxXml.pas' {DxbxXml: TDataModule},
   uXbeConvert in 'uXbeConvert.pas',
-  uConsoleClass in 'uConsoleClass.pas';
+  uConsoleClass in 'uConsoleClass.pas',
+  uXBController in 'uXBController.pas',
+  uEmuXapi in 'DxbxKrnl\uEmuXapi.pas',
+  uDxbxKrnlUtils in 'DxbxKrnl\uDxbxKrnlUtils.pas',
+  uEmuFS in 'DxbxKrnl\uEmuFS.pas',
+  uEmuLDT in 'DxbxKrnl\uEmuLDT.pas',
+  JwaNative in '..\Libraries\jwapi\Win32API\JwaNative.pas',
+  JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas',
+  JwaWinBase in '..\Libraries\jwapi\Win32API\JwaWinBase.pas',
+  JwaWinNT in '..\Libraries\jwapi\Win32API\JwaWinNT.pas',
+  JwaWinType in '..\Libraries\jwapi\Win32API\JwaWinType.pas',
+  uEmuAlloc in 'DxbxKrnl\uEmuAlloc.pas',
+  uEmuKrnl in 'DxbxKrnl\uEmuKrnl.pas',
+  XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
+  uEmuFile in 'DxbxKrnl\uEmuFile.pas',
+  uDxbxKrnl in 'DxbxKrnl\uDxbxKrnl.pas',
+  uEmu in 'DxbxKrnl\uEmu.pas',
+  uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
+  uHLEDatabase in 'DxbxKrnl\uHLEDatabase.pas',
+  DxLibraryAPIScanning in 'DxbxKrnl\DxLibraryAPIScanning.pas',
+  uEmuD3D8 in 'DxbxKrnl\uEmuD3D8.pas',
+  uConvert in 'DxbxKrnl\EmuD3D8\uConvert.pas',
+  uEmuD3D8Types in 'DxbxKrnl\uEmuD3D8Types.pas',
+  uEmuDInput in 'DxbxKrnl\uEmuDInput.pas',
+  uPushBuffer in 'DxbxKrnl\EmuD3D8\uPushBuffer.pas',
+  uVertexBuffer in 'DxbxKrnl\EmuD3D8\uVertexBuffer.pas';
 
 {$R *.RES}
 
