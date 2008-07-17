@@ -28,31 +28,10 @@ uses
   uTypes,
   uLog, // DbgPrintf
   uEmuFS, // EmuSwapFS
+  uXBController,
   uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
 
 type
-
-// * XINPUT_GAMEPAD
-  _XINPUT_GAMEPAD = record
-    wButtons: WORD;
-    bAnalogButtons: array[0..7] of BYTE;
-    sThumbLX: SHORT;
-    sThumbLY: SHORT;
-    sThumbRX: SHORT;
-    sThumbRY: SHORT;
-  end;
-
-  PXINPUT_GAMEPAD = _XINPUT_GAMEPAD;
-
-  // XINPUT_STATE
-  _XINPUT_STATE = record
-    dwPacketNumber: DWORD;
-    Gamepad: _XINPUT_GAMEPAD;
-  end;
-
-  PXINPUT_STATE = _XINPUT_STATE;
-
-
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
 procedure XTL_EmuXapiInitProcess(); stdcall;

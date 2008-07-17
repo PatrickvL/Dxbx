@@ -6,6 +6,7 @@
   <ItemGroup>
     <Projects Include="Dxbx.dproj" />
     <Projects Include="DxbxKrnl.dproj" />
+    <Projects Include="Tools\PatternCodeGenerator\PatternCodeGenerator.dproj" />
     <Projects Include="Tools\XdkTracker\src\XdkTracker.dproj" />
     <Projects Include="Tools\XIso\src\XIso.dproj" />
   </ItemGroup>
@@ -51,14 +52,23 @@
   <Target Name="Dxbx:Make">
     <MSBuild Projects="Dxbx.dproj" Targets="Make" />
   </Target>
+  <Target Name="PatternCodeGenerator">
+    <MSBuild Projects="Tools\PatternCodeGenerator\PatternCodeGenerator.dproj" Targets="" />
+  </Target>
+  <Target Name="PatternCodeGenerator:Clean">
+    <MSBuild Projects="Tools\PatternCodeGenerator\PatternCodeGenerator.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="PatternCodeGenerator:Make">
+    <MSBuild Projects="Tools\PatternCodeGenerator\PatternCodeGenerator.dproj" Targets="Make" />
+  </Target>
   <Target Name="Build">
-    <CallTarget Targets="XIso;XdkTracker;DxbxKrnl;Dxbx" />
+    <CallTarget Targets="XIso;XdkTracker;DxbxKrnl;Dxbx;PatternCodeGenerator" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="XIso:Clean;XdkTracker:Clean;DxbxKrnl:Clean;Dxbx:Clean" />
+    <CallTarget Targets="XIso:Clean;XdkTracker:Clean;DxbxKrnl:Clean;Dxbx:Clean;PatternCodeGenerator:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="XIso:Make;XdkTracker:Make;DxbxKrnl:Make;Dxbx:Make" />
+    <CallTarget Targets="XIso:Make;XdkTracker:Make;DxbxKrnl:Make;Dxbx:Make;PatternCodeGenerator:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

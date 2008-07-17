@@ -20,6 +20,7 @@ unit uXBController;
 
 interface
 
+{$INCLUDE Dxbx.inc}
 
 uses
   Windows,
@@ -29,11 +30,8 @@ uses
   XInput,
   // Dxbx
   uLog,
-  uEmuXapi,
   uError;
 
-
-{$INCLUDE Dxbx.inc}
 type
    // Xbox Controller Object IDs
   XBCtrlObject = (
@@ -83,6 +81,27 @@ type
     dwInfo: Integer; // extended information, depending on dwFlags
     dwFlags: Integer; // flags explaining the data format
   end;
+
+
+// * XINPUT_GAMEPAD
+  _XINPUT_GAMEPAD = record
+    wButtons: WORD;
+    bAnalogButtons: array[0..7] of BYTE;
+    sThumbLX: SHORT;
+    sThumbLY: SHORT;
+    sThumbRX: SHORT;
+    sThumbRY: SHORT;
+  end;
+
+  PXINPUT_GAMEPAD = _XINPUT_GAMEPAD;
+
+  // XINPUT_STATE
+  _XINPUT_STATE = record
+    dwPacketNumber: DWORD;
+    Gamepad: _XINPUT_GAMEPAD;
+  end;
+
+  PXINPUT_STATE = _XINPUT_STATE;
 
   XBController = record
     private

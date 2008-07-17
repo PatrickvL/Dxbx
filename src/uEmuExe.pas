@@ -288,7 +288,7 @@ begin
 
     m_SectionHeader[v].m_characteristics := Flags;
 
-    WriteLog(Format('EmuExe: Generating Section Header 0x%.4x... OK', [v]));
+    DbgPrintf('EmuExe: Generating Section Header 0x%.4x... OK', [v]);
   end;
 
   // generate .cxbximp section header
@@ -327,7 +327,7 @@ begin
   //  update import address table directory entry
   m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IAT].m_virtual_addr := m_SectionHeader[i].m_virtual_addr;
   m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IAT].m_size := $08;
-  WriteLog(Format('EmuExe: Generating Section Header 0x%.4x(.cxbximp)... OK', [i]));
+  DbgPrintf('EmuExe: Generating Section Header 0x%.4x(.cxbximp)... OK', [i]);
 
   //  generate .cxbxplg section header
   i := m_Header.m_sections - 1;
@@ -376,7 +376,7 @@ begin
   // make this section readable and executable
   m_SectionHeader[i].m_characteristics := IMAGE_SCN_MEM_READ xor IMAGE_SCN_MEM_EXECUTE xor IMAGE_SCN_CNT_CODE;
 
-  WriteLog(Format('EmuExe: Generating Section Header 0x%.4x(.cxbxplg)... OK', [i]));
+  DbgPrintf('EmuExe: Generating Section Header 0x%.4x(.cxbxplg)... OK', [i]);
 
   // generate sections
   WriteLog('EmuExe: Generating Sections...');
@@ -429,7 +429,7 @@ begin
     ep := m_Xbe.m_Header.dwEntryAddr;
     i := m_Header.m_sections - 1;
 
-    WriteLog(Format('EmuExe: Generating Section Header 0x%.4x (.cxbxplg)... OK', [i]));
+    DbgPrintf('EmuExe: Generating Section Header 0x%.4x (.cxbxplg)... OK', [i]);
 
     // decode entry point
     if ((ep xor XOR_EP_RETAIL) > $01000000) then
