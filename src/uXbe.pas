@@ -435,7 +435,7 @@ begin
     CopyMemory(@(m_SectionHeader[lIndex]), @(Buffer[i]), SizeOf(m_SectionHeader[lIndex]));
     Inc(i, SizeOf(m_SectionHeader[lIndex]));
 
-    WriteLog(DxbxFormat('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]));
+    DbgPrintf('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]);
   end;
 
   // Read xbe section names

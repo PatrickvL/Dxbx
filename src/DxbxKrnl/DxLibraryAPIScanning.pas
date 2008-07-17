@@ -23,8 +23,6 @@ unit DxLibraryAPIScanning;
 
 interface
 
-{$R 'DxbxKrnl\PatternData.res' 'DxbxKrnl\PatternData.rc'}
-
 uses
   // Delphi
   Classes,
@@ -35,7 +33,8 @@ uses
   uXBE,
   uLog,
   uBitUtils,
-  uPatternScanner,
+  uPatterns,
+  uXboxLibraryUtils,
   uCRC16;
 
 procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
@@ -49,7 +48,7 @@ implementation
 
 procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
-  function _ComparePattern(const Pattern: PPattern; aAddress: PByte): Integer;
+  function _ComparePattern(const aXboxLibraryFunction: PXboxLibraryFunction; aAddress: PByte): Integer;
   var
     b: Integer;
   begin
@@ -58,9 +57,9 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
     for b := 0 to PATTERNSIZE - 1 do
     begin
       // Test if this byte offset must be checked :
-      if TestBit(Pattern.PatternBytesToUseMask, b) then
+      if TestBit(aXboxLibraryFunction.Pattern.BytesToUseMask, b) then
       begin
-        Result := Integer(Pattern.PatternBytes[b]) - Integer(aAddress^);
+        Result := Integer(aXboxLibraryFunction.Pattern.Bytes[b]) - Integer(aAddress^);
         if Result <> 0 then
           Exit;
       end;
@@ -68,8 +67,8 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
       Inc(aAddress);
     end;
 
-    if Pattern.CRCLength > 0 then
-      Result := Integer(Pattern.CRCValue) - Integer(CalcCRC16(aAddress, Pattern.CRCLength));
+    if aXboxLibraryFunction.CRCLength > 0 then
+      Result := Integer(aXboxLibraryFunction.CRCValue) - Integer(CalcCRC16(aAddress, aXboxLibraryFunction.CRCLength));
 
     // TODO : Test all referenced APIs
 
@@ -77,13 +76,13 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
   end;
 
 {$IFDEF BRUTE_FORCE}
-  function _FindPattern(const aPatternLibrary: TList; const aAddress: PByte; var Index: Integer): Boolean;
+  function _FindPattern(const aPatternLibrary: TPatternArray; const aCount: Integer; const aAddress: PByte; var Index: Integer): Boolean;
   var
     i: Integer;
   begin
-    for i := 0 to aPatternLibrary.Count - 1 do
+    for i := 0 to aCount - 1 do
     begin
-      Result := _ComparePattern(PPattern(aPatternLibrary.List^[i]), aAddress) = 0;
+      Result := _ComparePattern(RXboxLibraryFunction(@(aPatternLibrary[i])), aAddress) = 0;
       if Result then
       begin
         {var}Index := i;
@@ -95,17 +94,17 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
   end;
 {$ELSE}
   // Modified copy of the binary search code in TStringList.Find() :
-  function _FindPattern(const aPatternLibrary: TList; const aAddress: PByte; var Index: Integer): Boolean;
+  function _FindPattern(const aPatternLibrary: TPatternArray; const aCount: Integer; const aAddress: PByte; var Index: Integer): Boolean;
   var
     L, H, I, C: Integer;
   begin
     Result := False;
     L := 0;
-    H := aPatternLibrary.Count - 1;
+    H := aCount - 1;
     while L <= H do
     begin
       I := (L + H) shr 1;
-      C := _ComparePattern(PPattern(aPatternLibrary.List^[I]), aAddress);
+      C := _ComparePattern(PXboxLibraryFunction(@(aPatternLibrary[I])), aAddress);
       if C < 0 then L := I + 1 else
       begin
         H := I - 1;
@@ -122,16 +121,16 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
   end;
 {$ENDIF}
 
-  procedure _FindAndRememberPattern(const aPatternLibrary: TList; const aAddress: PByte);
+  procedure _FindAndRememberPattern(const aXboxLibraryInfo: RXboxLibraryInfo; const aAddress: PByte);
   var
     Index: Integer;
-    Pattern: PPattern;
+    Pattern: PXboxLibraryFunction;
   begin
     // Search if this address matches a pattern :
-    if not _FindPattern(aPatternLibrary, aAddress, {var}Index) then
+    if not _FindPattern(TPatternArray(aXboxLibraryInfo.PatternArray), aXboxLibraryInfo.NrPatterns, aAddress, {var}Index) then
       Exit;
 
-    Pattern := PPattern(aPatternLibrary.List^[Index]);
+    Pattern := PXboxLibraryFunction(@(TPatternArray(aXboxLibraryInfo.PatternArray)[Index]));
 
 Inc(Pattern.HitCount); if Pattern.HitCount > 1 then Exit;
 
@@ -141,33 +140,20 @@ Inc(Pattern.HitCount); if Pattern.HitCount > 1 then Exit;
   end;
 
 var
-  AllPatterns: TObjectList;
   ByteScanLower, ByteScanUpper, p: PByte;
   i: Integer;
 begin
-  AllPatterns := TObjectList.Create({OwnsObjects=}True);
-  try
-    AllPatterns.Add(GetSortedPatternList('4627minimal'));
-    AllPatterns.Add(GetSortedPatternList('5788minimal'));
-    // These are purely for testing purposes :
-    AllPatterns.Add(GetSortedPatternList('5788xapilib'));
-    AllPatterns.Add(GetSortedPatternList('0000xbox'));
-    // TODO : What about other libraries and different versions ?
+  ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
+  ByteScanUpper := PByte(IntPtr(ByteScanLower) + pXbeHeader.dwSizeofImage);
 
-    ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
-    ByteScanUpper := PByte(IntPtr(ByteScanLower) + pXbeHeader.dwSizeofImage);
+  NrOfAPIsDetected := 0;
+  p := ByteScanLower;
+  while p <> ByteScanUpper do
+  begin
+    for i := 0 to Length(AllPatternArrays) - 1 do
+      _FindAndRememberPattern(AllPatternArrays[i], p);
 
-    NrOfAPIsDetected := 0;
-    p := ByteScanLower;
-    while p <> ByteScanUpper do
-    begin
-      for i := 0 to AllPatterns.Count - 1 do
-        _FindAndRememberPattern(TList(AllPatterns[i]), p);
-
-      Inc(p);
-    end;
-  finally
-    FreeAndNil(AllPatterns);
+    Inc(p);
   end;
 
   DbgPrintf('DxbxHLE: %d APIs detected', [NrOfAPIsDetected]);

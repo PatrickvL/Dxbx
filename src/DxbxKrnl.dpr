@@ -43,7 +43,6 @@ uses
   uEmuFS in 'DxbxKrnl\uEmuFS.pas',
   uEmu in 'DxbxKrnl\uEmu.pas',
   uEmuD3D8 in 'DxbxKrnl\uEmuD3D8.pas',
-  uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
   uEmuAlloc in 'DxbxKrnl\uEmuAlloc.pas',
   uXbe in 'uXbe.pas',
   JwaWinType in '..\Libraries\jwapi\Win32API\JwaWinType.pas',
@@ -90,7 +89,11 @@ uses
   uPatternScanner in 'uPatternScanner.pas',
   DxLibraryAPIScanning in 'DxbxKrnl\DxLibraryAPIScanning.pas',
   uCRC16 in 'uCRC16.pas',
-  uConsoleClass in 'uConsoleClass.pas';
+  uConsoleClass in 'uConsoleClass.pas',
+  uXboxLibraryPatches in 'DxbxKrnl\uXboxLibraryPatches.pas',
+  uXboxLibraryUtils in 'uXboxLibraryUtils.pas',
+  uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
+  uPatterns in 'Tools\PatternCodeGenerator\uPatterns.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
