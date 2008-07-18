@@ -22,7 +22,28 @@ unit uVertexShader;
 
 interface
 
+Uses
+  Windows
+  , uEmuD3D8Types;
+
+function VshHandleIsVertexShader(aHandle: DWORD): boolean;
+Function VshHandleGetVertexShader(aHandle : DWORD) : X_D3DVertexShader;
+
+
 implementation
+
+
+
+function VshHandleIsVertexShader(aHandle: DWORD): boolean;
+begin
+  result := (ahandle and $8000000) <> 0; 
+end;
+
+Function VshHandleGetVertexShader(aHandle : DWORD) : X_D3DVertexShader;
+begin
+(*  Result :=  aHandle and $7FFFFFFF; *)
+{ return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }
+end;
 
 
 end.

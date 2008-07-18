@@ -28,33 +28,29 @@ uses
   // Delphi
   Windows,
   SysUtils,
+  Winsock,
   // Jedi
   JwaWinType,
   // Dxbx
   uLog,
   uEmuFS;
 
-{ TODO : need to be translated to delphi }
 // func: EmuWSAStartup
 
-function XTL_EmuWSAStartup: integer;
+function XTL_EmuWSAStartup(wVersionRequested: WORD; lpWSAData: WSADATA): integer;
 var
-(*(
-    WORD        wVersionRequested,
-    WSADATA    *lpWSAData
-) *)
   ret: Integer;
 begin
   EmuSwapFS; // Win2k/XP FS
 
-    (*DbgPrintf('EmuXapi : EmuWSAStartup' +
-           '( '+
-           '   wVersionRequested   : 0x%.08X' +
-           '   lpWSAData           : 0x%.08X' +
-           ');',
-           [wVersionRequested, lpWSAData]));
+  DbgPrintf('EmuXapi : EmuWSAStartup' +
+    '( ' +
+    '   wVersionRequested   : 0x%.08X' +
+    '   lpWSAData           : 0x%.08X' +
+    ');',
+    [wVersionRequested, @lpWSAData]);
 
-    ret := XTL.WSAStartup(wVersionRequested, lpWSAData); *)
+  ret := WSAStartup(wVersionRequested, lpWSAData);
 
   EmuSwapFS(); // XBox FS
 
