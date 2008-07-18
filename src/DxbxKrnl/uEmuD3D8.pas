@@ -1399,7 +1399,7 @@ begin
     '   Adapter                   : 0x%.08X' +
     '   pMode                     : 0x%.08X' +
     ');',
-    [IntToStr(Adapter), @pMode]);
+    [@Adapter, @pMode]);
 
     { TODO : need to be translated to delphi }
     // NOTE: WARNING: We should cache the 'Emulated' display mode and return
@@ -1446,7 +1446,7 @@ begin
     '   Mode                      : 0x%.08X' +
     '   pMode                     : 0x%.08X' +
     ');',
-    [IntToStr(Adapter), IntToStr(Mode), @pMode]);
+    [@Adapter, @Mode, @pMode]);
 
 
   ModeAdder := 0;
