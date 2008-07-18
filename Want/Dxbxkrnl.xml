@@ -18,7 +18,6 @@
   </target>
 
   <target name="resources" depends="prepare" >
-    <brcc file="${src}/DxbxKrnl/PatternData.rc" output="${src}/DxbxKrnl/PatternData.res" />
   </target>
 
   <target name="compile"  depends="prepare, resources, build">
