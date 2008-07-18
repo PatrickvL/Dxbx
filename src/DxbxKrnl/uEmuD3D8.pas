@@ -403,7 +403,8 @@ begin
 
     end;
 
-    SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
+    { TODO : need to be translated to delphi }
+    (*SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);*)
     ShowWindow(hWnd, SW_MAXIMIZE);
     SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOMOVE);
   end
