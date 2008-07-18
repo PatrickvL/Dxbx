@@ -3900,7 +3900,7 @@ begin
     pBackBuffer.UnlockRect();
   end;
 
-  hRet := g_pD3DDevice8.Present(0, 0, 0, 0);
+  hRet := g_pD3DDevice8.Present(Nil, Nil, 0, Nil);
   EmuSwapFS(); // XBox FS
 
   Result := hRet;
@@ -5392,7 +5392,7 @@ begin
 
   if (Enable = False and (g_pDDSOverlay7 <> nil)) then
   begin
-    g_pDDSOverlay7.UpdateOverlay(0, g_pDDSPrimary, 0, DDOVER_HIDE, 0);
+    g_pDDSOverlay7.UpdateOverlay(Nil, g_pDDSPrimary, Nil, DDOVER_HIDE, Nil);
 
         // cleanup overlay clipper
     if (g_pDDClipper <> nil) then

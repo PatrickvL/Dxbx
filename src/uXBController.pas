@@ -23,14 +23,13 @@ interface
 {$INCLUDE Dxbx.inc}
 
 uses
-  Windows,
-  SysUtils,
+  Windows
+  , SysUtils
   // 3rd party
-  DirectInput,
-  XInput,
+  , DirectInput
   // Dxbx
-  uLog,
-  uError;
+  , uLog
+  , uError;
 
 type
    // Xbox Controller Object IDs
@@ -103,6 +102,12 @@ type
 
   PXINPUT_STATE = _XINPUT_STATE;
 
+  { TODO : Need to be translated to delphi }
+  InputDevice = record
+    (*XTL__LPDIRECTINPUTDEVICE8 m_Device; *)
+    m_Flags: integer;
+  end;
+
   XBController = record
     private
       m_CurrentState: XBCtrlState;
@@ -110,7 +115,8 @@ type
     m_dwCurObject: Integer;
 
     // Device Names
-     m_DeviceName : Array [0..XBCTRL_MAX_DEVICES] of Array [0..260] of char;
+    m_DeviceName: array[0..XBCTRL_MAX_DEVICES] of array[0..260] of char;
+    m_InputDevice: array[0..XBCTRL_MAX_DEVICES] of InputDevice;
 
     m_ObjectConfig: array[XBCtrlObject] of XBCtrlObjectCfg;
 
@@ -138,6 +144,9 @@ function ConfigPoll(szStatus: PChar): Longbool;
 
 
 implementation
+
+Uses
+  uEmuDInput;
 
 // ******************************************************************
 // * func: XBController::XBController
@@ -311,34 +320,41 @@ begin
 // func: XBController::ListenPoll
 
 procedure XBController.ListenPoll(var Controller: PXINPUT_STATE);
-begin
-(*    if(Controller = 0) then
-        Exit;
+(*var
+  hRet: HRESULT;
+  v: Integer;
 
+  dwDevice: Integer;
+  dwFlags: Integer;
+  dwInfo: Integer;
+
+  wValue: SmallInt; *)
+begin
+  (*if (Controller = Nil) then
+    Exit;
+
+    { TODO : Need to be translated to delphi }
     XTL.LPDIRECTINPUTDEVICE8 pDevice:=0;
 
-    HRESULT hRet:=0;
-    DWORD dwFlags:=0;
+  hRet := 0;
+  dwFlags := 0;
 
-    // ******************************************************************
-    // * Default values necessary for axis
-    // ******************************************************************
-    Controller^.Gamepad.sThumbLX := 0;
-    Controller^.Gamepad.sThumbLY := 0;
-    Controller^.Gamepad.sThumbRX := 0;
-    Controller^.Gamepad.sThumbRY := 0;
+    // Default values necessary for axis
+  Controller.Gamepad.sThumbLX := 0;
+  Controller.Gamepad.sThumbLY := 0;
+  Controller.Gamepad.sThumbRX := 0;
+  Controller.Gamepad.sThumbRY := 0;
 
-    // ******************************************************************
-    // * Poll all devices
-    // ******************************************************************
-    for(Integer v:=0;v<XBCTRL_OBJECT_COUNT;v++)
-    begin
-        Integer dwDevice := m_ObjectConfig[v].dwDevice;
-        Integer dwFlags  := m_ObjectConfig[v].dwFlags;
-        Integer dwInfo   := m_ObjectConfig[v].dwInfo;
+    // Poll all devices
 
-        if(dwDevice = -1) then
-            continue;
+  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+  begin
+    dwDevice := m_ObjectConfig[v].dwDevice;
+    dwFlags := m_ObjectConfig[v].dwFlags;
+    dwInfo := m_ObjectConfig[v].dwInfo;
+
+    if (dwDevice = -1) then
+      continue;
 
         pDevice := m_InputDevice[dwDevice].m_Device;
 
@@ -352,12 +368,10 @@ begin
                 hRet := pDevice^.Acquire();
          end;
 
-        SmallInt wValue := 0;
+    wValue := 0;
 
-        // ******************************************************************
-        // * Interpret PC Joystick Input
-        // ******************************************************************
-        if(dwFlags and DEVICE_FLAG_JOYSTICK) then
+        // Interpret PC Joystick Input
+        (*if(dwFlags and DEVICE_FLAG_JOYSTICK) then
         begin
             XTL.DIJOYSTATE JoyState := (0);
 
@@ -391,10 +405,8 @@ begin
                 else
                     wValue := 0;
              end;
-         end;
-        // ******************************************************************
-        // * Interpret PC KeyBoard Input
-        // ******************************************************************
+         end
+        // Interpret PC KeyBoard Input
         else if(dwFlags and DEVICE_FLAG_KEYBOARD) then
         begin
             BYTE KeyboardState[256] := (0);
@@ -408,10 +420,8 @@ begin
                 wValue := 32767;
             else
                 wValue := 0;
-         end;
-        // ******************************************************************
-        // * Interpret PC Mouse Input
-        // ******************************************************************
+         end
+        // Interpret PC Mouse Input
         else if(dwFlags and DEVICE_FLAG_MOUSE) then
         begin
             XTL.DIMOUSESTATE2 MouseState := (0);
@@ -476,109 +486,85 @@ begin
         // ******************************************************************
         // * Map Xbox Joystick Input
         // ******************************************************************
-        if(v >= XBCTRL_OBJECT_LTHUMBPOSX and v <= XBCTRL_OBJECT_RTHUMB) then
-        begin
-            case(v) of
-            begin
-                 XBCTRL_OBJECT_LTHUMBPOSY:
-                    Controller^.Gamepad.sThumbLY:= Controller^.Gamepad.sThumbLY + wValue;
-                    break;
-                 XBCTRL_OBJECT_LTHUMBNEGY:
-                    Controller^.Gamepad.sThumbLY:= Controller^.Gamepad.sThumbLY - wValue;
-                    break;
-                 XBCTRL_OBJECT_RTHUMBPOSY:
-                    Controller^.Gamepad.sThumbRY:= Controller^.Gamepad.sThumbRY + wValue;
-                    break;
-                 XBCTRL_OBJECT_RTHUMBNEGY:
-                    Controller^.Gamepad.sThumbRY:= Controller^.Gamepad.sThumbRY - wValue;
-                    break;
-                 XBCTRL_OBJECT_LTHUMBPOSX:
-                    Controller^.Gamepad.sThumbLX:= Controller^.Gamepad.sThumbLX + wValue;
-                    break;
-                 XBCTRL_OBJECT_LTHUMBNEGX:
-                    Controller^.Gamepad.sThumbLX:= Controller^.Gamepad.sThumbLX - wValue;
-                    break;
-                 XBCTRL_OBJECT_RTHUMBPOSX:
-                    Controller^.Gamepad.sThumbRX:= Controller^.Gamepad.sThumbRX + wValue;
-                    break;
-                 XBCTRL_OBJECT_RTHUMBNEGX:
-                    Controller^.Gamepad.sThumbRX:= Controller^.Gamepad.sThumbRX - wValue;
-                    break;
-                 XBCTRL_OBJECT_A:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_B:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_X:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_Y:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_WHITE:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_BLACK:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_LTRIGGER:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_RTRIGGER:
-                    Controller^.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] := (wValue / 128);
-                    break;
-                 XBCTRL_OBJECT_DPADUP:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_UP;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_DPAD_UP;
-                    break;
-                 XBCTRL_OBJECT_DPADDOWN:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_DOWN;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_DPAD_DOWN;
-                    break;
-                 XBCTRL_OBJECT_DPADLEFT:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_LEFT;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_DPAD_LEFT;
-                    break;
-                 XBCTRL_OBJECT_DPADRIGHT:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_RIGHT;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_DPAD_RIGHT;
-                    break;
-                 XBCTRL_OBJECT_BACK:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_BACK;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_BACK;
-                    break;
-                 XBCTRL_OBJECT_START:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_START;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_START;
-                    break;
-                 XBCTRL_OBJECT_LTHUMB:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_LEFT_THUMB;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_LEFT_THUMB;
-                    break;
-                 XBCTRL_OBJECT_RTHUMB:
-                    if(wValue > 0) then
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons or XINPUT_GAMEPAD_RIGHT_THUMB;
-                    else
-                        Controller^.Gamepad.wButtons:= Controller^.Gamepad.wButtons and ~XINPUT_GAMEPAD_RIGHT_THUMB;
-                    break;
-             end;
-         end;
-     end;          *)
+    if (v >= XBCTRL_OBJECT_LTHUMBPOSX) and (v <= XBCTRL_OBJECT_RTHUMB) then
+    begin
+      case (v) of
+        XBCTRL_OBJECT_LTHUMBPOSY:
+          Controller.Gamepad.sThumbLY := Controller.Gamepad.sThumbLY + wValue;
+        XBCTRL_OBJECT_LTHUMBNEGY:
+          Controller.Gamepad.sThumbLY := Controller.Gamepad.sThumbLY - wValue;
+        XBCTRL_OBJECT_RTHUMBPOSY:
+          Controller.Gamepad.sThumbRY := Controller.Gamepad.sThumbRY + wValue;
+        XBCTRL_OBJECT_RTHUMBNEGY:
+          Controller.Gamepad.sThumbRY := Controller.Gamepad.sThumbRY - wValue;
+        XBCTRL_OBJECT_LTHUMBPOSX:
+          Controller.Gamepad.sThumbLX := Controller.Gamepad.sThumbLX + wValue;
+        XBCTRL_OBJECT_LTHUMBNEGX:
+          Controller.Gamepad.sThumbLX := Controller.Gamepad.sThumbLX - wValue;
+        XBCTRL_OBJECT_RTHUMBPOSX:
+          Controller.Gamepad.sThumbRX := Controller.Gamepad.sThumbRX + wValue;
+        XBCTRL_OBJECT_RTHUMBNEGX:
+          Controller.Gamepad.sThumbRX := Controller.Gamepad.sThumbRX - wValue;
+        XBCTRL_OBJECT_A:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] := (wValue / 128);
+        XBCTRL_OBJECT_B:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] := (wValue / 128);
+        XBCTRL_OBJECT_X:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] := (wValue / 128);
+        XBCTRL_OBJECT_Y:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] := (wValue / 128);
+        XBCTRL_OBJECT_WHITE:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] := (wValue / 128);
+        XBCTRL_OBJECT_BLACK:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] := (wValue / 128);
+        XBCTRL_OBJECT_LTRIGGER:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] := (wValue / 128);
+        XBCTRL_OBJECT_RTRIGGER:
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] := (wValue / 128);
+        XBCTRL_OBJECT_DPADUP: begin
+            if (wValue > 0) then
+              Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_UP
+            else
+              Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_DPAD_UP;
+          end;
+        XBCTRL_OBJECT_DPADDOWN:
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_DOWN
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_DPAD_DOWN;
+        XBCTRL_OBJECT_DPADLEFT:
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_LEFT
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_DPAD_LEFT;
+        XBCTRL_OBJECT_DPADRIGHT:
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_RIGHT
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_DPAD_RIGHT;
+        XBCTRL_OBJECT_BACK:
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_BACK
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_BACK;
+        XBCTRL_OBJECT_START:
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_START
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_START;
+        XBCTRL_OBJECT_LTHUMB:
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_LEFT_THUMB
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_LEFT_THUMB;
+        XBCTRL_OBJECT_RTHUMB:
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_RIGHT_THUMB
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_RIGHT_THUMB;
+      end;
+    end;
+  end;    *)
 end;
 
 procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
@@ -616,6 +602,11 @@ begin
 end;
 
 function XBController.ConfigPoll(szStatus: PChar): Longbool;
+(*var
+  v: Integer;
+  hRet: HRESULT;
+  dwHow: DWORD;
+  dwFlags: DWORD; *)
 begin
   Result := False;
 
@@ -625,22 +616,20 @@ begin
     Result := False;
   end;
 
+    { TODO : Need to be translated to delphi }
     (*XTL.DIDEVICEINSTANCE        DeviceInstance;
     XTL.DIDEVICEOBJECTINSTANCE  ObjectInstance;
 
     DeviceInstance.dwSize := SizeOf(XTL.DIDEVICEINSTANCE);
     ObjectInstance.dwSize := SizeOf(XTL.DIDEVICEOBJECTINSTANCE);
 
-    // ******************************************************************
-    // * Monitor for significant device state changes
-    // ******************************************************************
-    for(Integer v:=m_dwInputDeviceCount-1;v>=0;v--)
+  // Monitor for significant device state changes
+  for v := m_dwInputDeviceCount downto 0 do
+  begin
+    // Poll the current device
     begin
-        // ******************************************************************
-        // * Poll the current device
-        // ******************************************************************
-        begin
-            HRESULT hRet := m_InputDevice[v].m_Device^.Poll();
+             { TODO : Need to be translated to delphi }
+            (*hRet := m_InputDevice[v].m_Device^.Poll();
 
             if(FAILED(hRet)) then
             begin
@@ -649,70 +638,70 @@ begin
                 while(hRet = DIERR_INPUTLOST)
                     hRet := m_InputDevice[v].m_Device^.Acquire();
              end;
-         end;
+    end;
 
-        DWORD dwHow := -1, dwFlags = m_InputDevice[v].m_Flags;
+    dwHow := -1;
+    dwFlags = m_InputDevice[v].m_Flags;
 
-        // ******************************************************************
-        // * Detect Joystick Input
-        // ******************************************************************
-        if(m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) then
-        begin
-            XTL.DIJOYSTATE JoyState;
+    // Detect Joystick Input
+
+    if (m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) then
+    begin
+      XTL.DIJOYSTATE JoyState;
 
             // ******************************************************************
             // * Get Joystick State
             // ******************************************************************
-            begin
-                HRESULT hRet := m_InputDevice[v].m_Device^.GetDeviceState(SizeOf(XTL.DIJOYSTATE), @JoyState);
+      begin
+        HRESULT hRet := m_InputDevice[v].m_Device^.GetDeviceState(SizeOf(XTL.DIJOYSTATE), @JoyState);
 
-                if(FAILED(hRet)) then
-                    continue;
-             end;
+        if (FAILED(hRet)) then
+          continue;
+      end;
 
-            dwFlags := DEVICE_FLAG_JOYSTICK;
+      dwFlags := DEVICE_FLAG_JOYSTICK;
 
-            if(abs(JoyState.lX) > DETECT_SENSITIVITY_JOYSTICK) then
-            begin
-                dwHow   := FIELD_OFFSET(XTL.DIJOYSTATE, lX);
-                dwFlags:= dwFlags or (JoyState.lX > 0) ? (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
-             end;
-            else if(abs(JoyState.lY) > DETECT_SENSITIVITY_JOYSTICK) then
-            begin
-                dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lY);
-                dwFlags:= dwFlags or (JoyState.lY > 0) ? (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
-             end;
-            else if(abs(JoyState.lZ) > DETECT_SENSITIVITY_JOYSTICK) then
-            begin
-                dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lZ);
-                dwFlags:= dwFlags or (JoyState.lZ > 0) ? (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
-             end;
-            else if(abs(JoyState.lRx) > DETECT_SENSITIVITY_JOYSTICK) then
-            begin
-                dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lRx);
-                dwFlags:= dwFlags or (JoyState.lRx > 0) ? (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
-             end;
-            else if(abs(JoyState.lRy) > DETECT_SENSITIVITY_JOYSTICK) then
-            begin
-                dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lRy);
-                dwFlags:= dwFlags or (JoyState.lRy > 0) ? (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
-             end;
-            else if(abs(JoyState.lRz) > DETECT_SENSITIVITY_JOYSTICK) then
-            begin
-                dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lRz);
-                dwFlags:= dwFlags or (JoyState.lRz > 0) ? (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
-             end;
-            else
-            begin
-                for(Integer b:=0;b<2;b++)
-                begin
-                    if(abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK) then
-                    begin
-                        dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, rglSlider[b]);
-                        dwFlags:= dwFlags or (JoyState.rglSlider[b] > 0) ? (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
-                     end;
-                 end;
-             end;
+      if (abs(JoyState.lX) > DETECT_SENSITIVITY_JOYSTICK) then
+      begin
+        dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lX);
+        dwFlags := dwFlags or (JoyState.lX > 0)?(DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE): (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
+      end
+    else if (abs(JoyState.lY) > DETECT_SENSITIVITY_JOYSTICK) then
+    begin
+      dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lY);
+      dwFlags := dwFlags or (JoyState.lY > 0)?(DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE): (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
+    end;
+else if (abs(JoyState.lZ) > DETECT_SENSITIVITY_JOYSTICK) then
+begin
+  dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lZ);
+  dwFlags := dwFlags or (JoyState.lZ > 0)?(DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE): (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
+end;
+else if (abs(JoyState.lRx) > DETECT_SENSITIVITY_JOYSTICK) then
+begin
+  dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lRx);
+  dwFlags := dwFlags or (JoyState.lRx > 0)?(DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE): (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
+end;
+else if (abs(JoyState.lRy) > DETECT_SENSITIVITY_JOYSTICK) then
+begin
+  dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lRy);
+  dwFlags := dwFlags or (JoyState.lRy > 0)?(DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE): (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
+end;
+else if (abs(JoyState.lRz) > DETECT_SENSITIVITY_JOYSTICK) then
+begin
+  dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, lRz);
+  dwFlags := dwFlags or (JoyState.lRz > 0)?(DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE): (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
+end;
+else
+  begin
+    for (Integer b := 0; b < 2; b + +)
+    begin
+      if (abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK) then
+      begin
+        dwHow := FIELD_OFFSET(XTL.DIJOYSTATE, rglSlider[b]);
+        dwFlags := dwFlags or (JoyState.rglSlider[b] > 0)?(DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE): (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE);
+      end;
+    end;
+  end;
 
             (* temporarily disabled
             if(dwHow = -1) then
@@ -953,8 +942,8 @@ begin
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
-var
-  hRet: HResult;
+(*var
+  hRet: HResult; *)
 begin
   m_dwInputDeviceCount := 0;
         (*
@@ -1057,18 +1046,18 @@ var
 begin
   Result := 0;
 
-  for v := 0 to XBCTRL_MAX_DEVICES -1 do
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
       Result := v;
 
-  for v := 0 to XBCTRL_MAX_DEVICES -1 do
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
   begin
     if (m_DeviceName[v][0] = #0) then
     begin
-       { TODO : Need to be translated to delphi }
-//      strncpy(m_DeviceName[v], szDeviceName, 255);
-       Result := v;
-     end;
+      { TODO : Need to be translated to delphi }
+      (*m_DeviceName[v] := szDeviceName; *)
+      Result := v;
+    end;
   end;
 
   MessageBox(0, 'Unexpected Circumstance (Too Many Controller Devices)! Please contact caustik!', 'Cxbx', MB_OK or MB_ICONEXCLAMATION);
@@ -1091,17 +1080,16 @@ begin
   DInputInit(ahwnd);
 
   for v := XBCTRL_MAX_DEVICES downto m_dwInputDeviceCount do
-      m_DeviceName[v][0] := #0;
+    m_DeviceName[v][0] := #0;
 
-  for v := 0 to XBCTRL_OBJECT_COUNT -1 do
+  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
   begin
-    (*f m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount then
+    { TODO : Need to be translated to delphi }
+    (*if m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount then
     begin
-      { TODO : Need to be translated to delphi }
-      (*
-      DbgPrintf('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
+      DbgPrintf(Format ('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
       m_ObjectConfig[v].dwDevice := -1;
-    end;                                                                               *)
+    end;                                                                                      *)
   end;
 end;
 
@@ -1119,7 +1107,8 @@ end;
 
 procedure XBController.Load(szRegistryKey: PChar);
 var
-  dwDisposition, dwType, dwSize: DWORD;
+  (*dwType, dwSize: DWORD; *)
+  dwDisposition: DWORD;
   ahKey: HKEY;
   v: Integer;
   szValueName: array[0..64 - 1] of Char;
@@ -1133,35 +1122,34 @@ begin
   // Load Configuration from Registry
   if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
-    v := 0;
-
     // Load Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
       // default is a null string
       m_DeviceName[v][0] := #0;
       StrFmt(szValueName, 'DeviceName $%.02X', [v]);
-      dwType := REG_SZ;
-      dwSize := 260;
       { TODO : Need to be translated to delphi }
       (*
+      dwType := REG_SZ;
+      dwSize := 260;
       RegQueryValueEx(ahKey, szValueName, 0, @dwType, m_DeviceName[v], @dwSize); *)
     end;
 
+    { TODO : Need to be translated to delphi }
     // Load Object Configuration
-    for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
-        { TODO : Need to be translated to delphi }
-        // default object configuration
-        (*m_ObjectConfig[v].dwDevice := -1;
-        m_ObjectConfig[v].dwInfo := -1;
-        m_ObjectConfig[v].dwFlags := 0;
+    (*for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
+      // default object configuration
+      m_ObjectConfig[v].dwDevice := -1;
+      m_ObjectConfig[v].dwInfo := -1;
+      m_ObjectConfig[v].dwFlags := 0;
 
-        StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]); *)
+        { TODO : Need to be translated to delphi }
+        (*StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]);
 
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
         { TODO : Need to be translated to delphi }
-        (*RegQueryValueEx(hKey, szValueName, 0, @dwType, (PBYTE)@m_ObjectConfig[v], @dwSize);       *)
-    end;
+        (*RegQueryValueEx(hKey, szValueName, 0, @dwType, (PBYTE)@m_ObjectConfig[v], @dwSize);
+    end; *)
 
     RegCloseKey(ahKey);
   end;
@@ -1188,7 +1176,7 @@ begin
         InUse := True;
 
     if not InUse then
-        m_DeviceName[v][0] := #0; 
+      m_DeviceName[v][0] := #0;
   end;
 end;
 
@@ -1200,7 +1188,7 @@ begin
   Old := -1;
 
   // locate Old device name position
-  for v := 0 to XBCTRL_MAX_DEVICES -1 do
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
   begin
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
     begin
@@ -1213,11 +1201,11 @@ begin
   if Old <> aPos then
   begin
     StrCopy(m_DeviceName[Old], m_DeviceName[aPos]);
-    StrCopy(m_DeviceName[aPos], szDeviceName); 
+    StrCopy(m_DeviceName[aPos], szDeviceName);
   end;
 
   // Update all Old values
-  for v := 0 to XBCTRL_OBJECT_COUNT -1 do
+  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
   begin
     { TODO : Need to be translated to delphi }
     (*if m_ObjectConfig[v].dwDevice = Old then
@@ -1230,7 +1218,8 @@ end;
 
 procedure XBController.Save(szRegistryKey: PChar);
 var
-  dwDisposition, dwType, dwSize: DWORD;
+  (*dwType, dwSize: DWORD; *)
+  dwDisposition : DWORD;
   ahKey: HKEY;
   v: Integer;
   szValueName: array[0..64 - 1] of Char;
@@ -1242,38 +1231,36 @@ begin
   end;
 
   // Save Configuration to Registry
-  if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, 0, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, 0, ahKey, @dwDisposition) = ERROR_SUCCESS) then
+  if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, Nil, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, Nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
-    v := 0;
-
-      // Save Device Names
+    // Save Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
-        StrFmt(szValueName, 'DeviceName $%.02X', [v]);
+      StrFmt(szValueName, 'DeviceName $%.02X', [v]);
 
-        dwType := REG_SZ;
-        dwSize := 260;
+      { TODO : Need to be translated to delphi }
+      (*dwType := REG_SZ;
+      dwSize := 260;
 
-        { TODO : Need to be translated to delphi }
-        (*if (m_DeviceName[v][0] = #0) then
-          RegDeleteValue(ahKey, szValueName)
-        else
-          RegSetValueEx(ahKey, szValueName, 0, dwType, m_DeviceName[v], dwSize); *)
+      if (m_DeviceName[v][0] = #0) then
+        RegDeleteValue(ahKey, szValueName)
+      else
+        RegSetValueEx(ahKey, szValueName, 0, dwType, m_DeviceName[v], dwSize); *)
     end;
 
-      // Save Object Configuration
-    for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
         { TODO : need to be translated to delphi }
-        (*StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]); *)
+    // Save Object Configuration
+    (*for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
+    StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]);
 
-        dwType := REG_BINARY;
-        dwSize := SizeOf(XBCtrlObjectCfg);
+      dwType := REG_BINARY;
+      dwSize := SizeOf(XBCtrlObjectCfg);
 
-        (* (m_ObjectConfig[v].dwDevice <> -1) then
-          RegSetValueEx(hKey, szValueName, 0, dwType, (PBYTE)@m_ObjectConfig[v], dwSize); *)
-    end;
+        if (m_ObjectConfig[v].dwDevice <> -1) then
+          RegSetValueEx(hKey, szValueName, 0, dwType, (PBYTE)@m_ObjectConfig[v], dwSize);
+    end; *)
 
     RegCloseKey(ahKey);
-  end;                                                                                    
+  end;
 end;
 
 end.

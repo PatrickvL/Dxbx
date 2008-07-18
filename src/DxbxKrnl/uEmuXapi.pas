@@ -49,10 +49,8 @@ implementation
 *)
 
 
-// ******************************************************************
-// * func: EmuXapiApplyKernelPatches
-// ******************************************************************
-(*  VOID WINAPI XTL.EmuXapiApplyKernelPatches()
+// func: EmuXapiApplyKernelPatches
+procedure XTL__EmuXapiApplyKernelPatches();
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -63,13 +61,11 @@ begin
     // we dont really feel like patching, now do we?
 
   Exit;
-end;     *)
+end;
 
-// ******************************************************************
-// * func: EmuXFormatUtilityDrive
-// ******************************************************************
+// func: EmuXFormatUtilityDrive
 
-(*function WINAPI XTL.EmuXFormatUtilityDrive(): BOOL;
+function XTL__EmuXFormatUtilityDrive(): BOOL;
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -80,12 +76,9 @@ begin
     // TODO: yeah... we'll format... riiiiight
 
   Result := True;
-end; *)
+end;
 
-//* ended up not fixing anything in panzer dragoon!
-// ******************************************************************
-// * func: EmuFindFirstFileA
-// ******************************************************************
+// func: EmuFindFirstFileA
 (*THandle WINAPI XTL.EmuFindFirstFileA
 (
   in PAnsiChar lpFileName,
