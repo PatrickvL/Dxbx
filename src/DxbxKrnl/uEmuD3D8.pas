@@ -966,36 +966,36 @@ begin
 // ensure a given width/height are powers of 2
 
 procedure EmuAdjustPower2(var dwWidth: UINT; var dwHeight: UINT);
+var
+  NewWidth, NewHeight: uInt;
+  v: Integer;
+  mask: integer;
 begin
-(*    UINT NewWidth:=0, NewHeight=0;
+  for v := 0 to 31 do begin
+    mask := 1 shl v;
 
-    integer v;
-
-    for(v:=0;v<32;v++)
-    begin
-        integer mask := 1 shl v;
-
-        if(dwWidth and mask) then
+        { TODO : need to be translated to delphi }
+        (*if(dwWidth and mask) then
             NewWidth := mask;
 
         if(dwHeight and mask) then
-            NewHeight := mask;
-     end;
+            NewHeight := mask; *)
+  end;
 
-    if(dwWidth <> NewWidth) then
-    begin
-        NewWidth:= NewWidth shl 1;
-        EmuWarning('Needed to resize width (%d.%d)', *dwWidth, NewWidth);
-     end;
+  if (dwWidth <> NewWidth) then
+  begin
+    NewWidth := NewWidth shl 1;
+    EmuWarning(Format('Needed to resize width (%d.%d)', [dwWidth, NewWidth]));
+  end;
 
-    if(dwHeight <> NewHeight) then
-    begin
-        NewHeight:= NewHeight shl 1;
-        EmuWarning('Needed to resize height (%d.%d)', *dwHeight, NewHeight);
-     end;
+  if (dwHeight <> NewHeight) then
+  begin
+    NewHeight := NewHeight shl 1;
+    EmuWarning(Format('Needed to resize height (%d.%d)', [dwHeight, NewHeight]));
+  end;
 
-    *dwWidth := NewWidth;
-    *dwHeight := NewHeight;      *)
+  dwWidth := NewWidth;
+  dwHeight := NewHeight;
 end;
 
 // func: EmuIDirect3D8_CreateDevice
@@ -1015,7 +1015,7 @@ begin
   Result := 0;
   EmuSwapFS(); // Win2k/XP FS
 
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3D8_CreateDevice' +
+   (* DbgPrintf('EmuD3D8 : EmuIDirect3D8_CreateDevice' +
            '(' +
            '   Adapter                   : 0x%.08X' +
            '   DeviceType                : 0x%.08X' +
@@ -1189,54 +1189,42 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_BeginVisibilityTest
-
 function XTL__EmuIDirect3DDevice8_BeginVisibilityTest: HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
-
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginVisibilityTest();');
-
   EmuSwapFS(); // XBox FS
-
   Result := D3D_OK;
 end;
 
 // func: EmuIDirect3DDevice8_EndVisibilityTest
-
 function XTL__EmuIDirect3DDevice8_EndVisibilityTest(Index: DWord): HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
-
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_EndVisibilityTest' +
     '(' +
     '   Index                     : 0x%.08X' +
     ');)',
     [Index]);
-
   EmuSwapFS(); // XBox FS
-
   Result := D3D_OK;
 end;
 
 // func: EmuIDirect3DDevice8_SetBackBufferScale
-
 procedure XTL__EmuIDirect3DDevice8_SetBackBufferScale(x, y: Single);
 begin
   EmuSwapFS(); // Win2k/XP FS
-
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetBackBufferScale' +
     '(' +
     '   x                         :  0x%f' +
     '   y                         :  0x%f' +
     ');',
     [x, y]);
-
   EmuWarning('SetBackBufferScale ignored');
   EmuSwapFS(); // XBox FS
 end;
 
-// func: EmuIDirect3DDevice8_GetVisibilityTestResult
-
+// func: EmuIDirect3DDevice8_GetVisibilityTestResult  
 function XTL__EmuIDirect3DDevice8_GetVisibilityTestResult: HRESULT;
 (*(
     DWORD                       Index,
@@ -1270,24 +1258,19 @@ end;
 { TODO : Need to be translated to delphi }
 // func: EmuIDirect3DDevice8_GetDeviceCaps
 
-procedure XTL__EmuIDirect3DDevice8_GetDeviceCaps;
-(*(
-    D3DCAPS8                   *pCaps
-) *)
+procedure XTL__EmuIDirect3DDevice8_GetDeviceCaps( pCaps : D3DCAPS8 );
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
-
+    EmuSwapFS();   // Win2k/XP FS
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDeviceCaps' +
            '(' +
            '   pCaps                     : 0x%.08X' +
            ');',
-           pCaps);
+           [@pCaps]);
 
-    g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() := 0) ? XTL.D3DDEVTYPE_HAL : XTL.D3DDEVTYPE_REF, pCaps);
-
+    { TODO : need to be translated to delphi }
+    (*g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() := 0) ? XTL.D3DDEVTYPE_HAL : XTL.D3DDEVTYPE_REF, pCaps);
+    *)
     EmuSwapFS();   // XBox FS
-
-    Exit;*)
 end;
 
 // func: EmuIDirect3DDevice8_LoadVertexShader
@@ -1296,7 +1279,7 @@ function XTL__EmuIDirect3DDevice8_LoadVertexShader(Handle: DWord; Address: DWord
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-    // debug trace
+  // debug trace
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_LoadVertexShader' +
     '(' +
     '   Handle              : 0x%.08X' +
@@ -1317,7 +1300,6 @@ begin
 *)
 
   EmuSwapFS(); // Xbox FS
-
   Result := D3D_OK;
 end;
 
@@ -1363,8 +1345,7 @@ begin
   Result := D3D_OK;
 end;
 
-// * func: EmuIDirect3D8_GetAdapterModeCount
-
+// func: EmuIDirect3D8_GetAdapterModeCount  
 function XTL__EmuIDirect3D8_GetAdapterModeCount(Adapter: DWord): DWord;
 var
   ret: UINT;
@@ -1406,17 +1387,17 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  { TODO : need to be translated to delphi }
-  (*DbgPrintf('EmuD3D8 : EmuIDirect3D8_GetAdapterDisplayMode' +
+  DbgPrintf('EmuD3D8 : EmuIDirect3D8_GetAdapterDisplayMode' +
     '(' +
     '   Adapter                   : 0x%.08X' +
     '   pMode                     : 0x%.08X' +
     ');',
-    [Adapter, pMode]);
+    [IntToStr(Adapter), @pMode]);
 
+    { TODO : need to be translated to delphi }
     // NOTE: WARNING: We should cache the 'Emulated' display mode and return
     // This value. We can initialize the cache with the default Xbox mode data.
-  hRet := g_pD3D8.GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), pMode as D3DDISPLAYMODE);
+(*  hRet := g_pD3D8.GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), pMode as D3DDISPLAYMODE);
 
     // make adjustments to the parameters to make sense with windows direct3d
   begin
@@ -1441,7 +1422,6 @@ end;
 
 
 // func: EmuIDirect3D8_EnumAdapterModes
-
 function XTL__EmuIDirect3D8_EnumAdapterModes(Adapter: UINT; Mode: UINT; pMode: X_D3DDISPLAYMODE): HRESULT;
 var
 
@@ -1452,14 +1432,14 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3D8_EnumAdapterModes' +
+    DbgPrintf('EmuD3D8 : EmuIDirect3D8_EnumAdapterModes' +
            '(' +
            '   Adapter                   : 0x%.08X' +
            '   Mode                      : 0x%.08X' +
            '   pMode                     : 0x%.08X' +
            ');',
-           [Adapter, Mode, pMode]);
-*)
+           [IntToStr(Adapter), IntToStr(Mode), @pMode]);
+
 
   ModeAdder := 0;
 
@@ -1512,33 +1492,25 @@ begin
 end;
 
 // func: EmuIDirect3D8_KickOffAndWaitForIdle
-
 procedure XTL__EmuIDirect3D8_KickOffAndWaitForIdle;
 begin
   EmuSwapFS(); // Win2k/XP FS
-
   DbgPrintf('EmuD3D8 : EmuIDirect3D8_KickOffAndWaitForIdle();');
-
   // TODO: Actually do something here?
-
   EmuSwapFS(); // XBox FS
 end;
 
-// func: EmuIDirect3D8_KickOffAndWaitForIdle2
-
+// func: EmuIDirect3D8_KickOffAndWaitForIdle2 
 procedure XTL__EmuIDirect3D8_KickOffAndWaitForIdle2(dwDummy1, dwDummy2: DWORD);
 begin
   EmuSwapFS(); // Win2k/XP FS
-
   DbgPrintf('EmuD3D8 : EmuIDirect3D8_KickOffAndWaitForIdle' +
     '(' +
     '   dwDummy1            : 0x%.08X' +
     '   dwDummy2            : 0x%.08X' +
     ');',
     [dwDummy1, dwDummy2]);
-
     // TODO: Actually do something here?
-
   EmuSwapFS(); // XBox FS
 end;
 
@@ -1917,11 +1889,11 @@ end;
 { TODO : Need to be translated to delphi }
 // func: EmuIDirect3DDevice8_SetViewport
 
-function XTL__EmuIDirect3DDevice8_SetViewport( pViewport : D3DVIEWPORT8 ): HRESULT;
+function XTL__EmuIDirect3DDevice8_SetViewport(pViewport: D3DVIEWPORT8): HRESULT;
 var
   hRet: HRESULT;
-  dwWidth : DWORD;
-  dwHeight : DWORD;
+  dwWidth: DWORD;
+  dwHeight: DWORD;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -1933,40 +1905,40 @@ begin
            pViewport, pViewport.X, pViewport.Y, pViewport.Width,
            pViewport.Height, pViewport.MinZ, pViewport.MaxZ); *)
 
-    dwWidth  := pViewport.Width;
-    dwHeight := pViewport.Height;
+  dwWidth := pViewport.Width;
+  dwHeight := pViewport.Height;
 
     // resize to fit screen (otherwise crashes occur)
+  begin
+    if (dwWidth <> 640) then
     begin
-        if(dwWidth <> 640) then
-        begin
-            EmuWarning('Resizing Viewport.Width to 640');
-            pViewport.Width := 640;
-         end;
+      EmuWarning('Resizing Viewport.Width to 640');
+      pViewport.Width := 640;
+    end;
 
-        if(dwHeight <> 480) then
-        begin
-            EmuWarning('Resizing Viewport.Height to 480');
-            pViewport.Height := 480;
-         end;
-     end;
+    if (dwHeight <> 480) then
+    begin
+      EmuWarning('Resizing Viewport.Height to 480');
+      pViewport.Height := 480;
+    end;
+  end;
 
-    hRet := g_pD3DDevice8.SetViewport(pViewport);
+  hRet := g_pD3DDevice8.SetViewport(pViewport);
 
     // restore originals
-    begin
-        if(dwWidth > 640) then
-            pViewport.Width := dwWidth;
+  begin
+    if (dwWidth > 640) then
+      pViewport.Width := dwWidth;
 
-        if(dwHeight > 480) then
-            pViewport.Height := dwHeight;
-     end;
+    if (dwHeight > 480) then
+      pViewport.Height := dwHeight;
+  end;
 
-    if(FAILED(hRet)) then
-    begin
-        EmuWarning('Unable to set viewport!');
-        hRet := D3D_OK;
-     end;   
+  if (FAILED(hRet)) then
+  begin
+    EmuWarning('Unable to set viewport!');
+    hRet := D3D_OK;
+  end;
 
   EmuSwapFS(); // Xbox FS
   Result := hRet;
@@ -2003,16 +1975,16 @@ end;
 // func: EmuIDirect3DDevice8_GetViewportOffsetAndScale
 
 procedure XTL__EmuIDirect3DDevice8_GetViewportOffsetAndScale;
-Var
-     fScaleX : Single;
-     fScaleY : Single;
-     fScaleZ : Single;
-     fOffsetX : Single;
-     fOffsetY : Single;
-     Viewport : D3DVIEWPORT8;
+var
+  fScaleX: Single;
+  fScaleY: Single;
+  fScaleZ: Single;
+  fOffsetX: Single;
+  fOffsetY: Single;
+  Viewport: D3DVIEWPORT8;
 (*pOffset : D3DXVECTOR4; pScale : D3DXVECTOR4*)
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
 { TODO : Need to be translated to delphi }
 (*    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetViewportOffsetAndScale'
@@ -2022,15 +1994,15 @@ begin
            ');',
            [pOffset,pScale]); *)
 
-    fScaleX := 1.0;
-    fScaleY := 1.0;
-    fScaleZ := 1.0;
-    fOffsetX := 0.5 + 1.0/32;
-    fOffsetY := 0.5 + 1.0/32;
+  fScaleX := 1.0;
+  fScaleY := 1.0;
+  fScaleZ := 1.0;
+  fOffsetX := 0.5 + 1.0 / 32;
+  fOffsetY := 0.5 + 1.0 / 32;
 
-    EmuSwapFS();
-    XTL__EmuIDirect3DDevice8_GetViewport(Viewport);
-    EmuSwapFS();
+  EmuSwapFS();
+  XTL__EmuIDirect3DDevice8_GetViewport(Viewport);
+  EmuSwapFS();
 
     { TODO : Need to be translated to delphi }
     (*pScale.x := 1.0;
@@ -2055,7 +2027,7 @@ begin
     pOffset.w := 0;   *)
 
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 end;
 
 { TODO : Need to be translated to delphi }
