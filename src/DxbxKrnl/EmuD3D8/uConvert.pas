@@ -39,7 +39,7 @@ uses
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
 begin
-  Result := FALSE;  // in cxbx is the Result = false placed as last... bit strange.
+  Result := FALSE; // in cxbx is the Result = false placed as last... bit strange.
   case (Format) of
     $00,
       $01,
@@ -151,11 +151,13 @@ begin
 
     $64:
       Result := D3DFMT_VERTEXDATA;
+
+  else begin
+      CxbxKrnlCleanup(DxbxFormat('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]));
+      Result := D3DFORMAT(aFormat);
+    end;
   end;
 
-  CxbxKrnlCleanup(DxbxFormat('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]));
-
-  Result := D3DFORMAT(aFormat);
 end;
 
 function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
@@ -182,13 +184,12 @@ begin
     D3DFMT_A8R8G8B8:
 //            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
       Result := $06;
+  else begin
+      CxbxKrnlCleanup(Format('EmuPC2XB_D3DFormat: Unknown Format (%d)', [@aFormat]));
+      Result := X_D3DFORMAT(aFormat);
+    end;
   end;
-
-  { TODO -oDxbx : aFormat is a record so can not be inserted into the string }
-(*  CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [aFormat]);
-
-  Result := aFormat; *)
-end;                 
+end;
 
 (*Function XTL_EmuXB2PC_D3DLock(Flags : DWORD) : DWord;
 var

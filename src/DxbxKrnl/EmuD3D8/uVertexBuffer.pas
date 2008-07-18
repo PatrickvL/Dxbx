@@ -913,9 +913,9 @@ begin
             m_pStreams[uiStream].bUsedCached := false;
          end;
 
-     end;
+     end;       *)
 
-    result:= true;  *)
+    result:= true;  
 end;
 
 procedure XTL_EmuFlushIVB;
