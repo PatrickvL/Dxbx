@@ -25,24 +25,14 @@ uses
   Windows;
 
 
-
-function VshHandleIsVertexShader(aHandle: DWORD): boolean;
-
-
 implementation
 
 
-
-function VshHandleIsVertexShader(aHandle: DWORD): boolean;
-begin
-  { return (Handle & 0x80000000) ? TRUE : FALSE; }
-end;
-
-procedure CRC32Init;
-(*var
+(*procedure CRC32Init;
+var
   bFirstTime: Boolean = True;
   i, j: Integer;
-  crc: Word; *)
+  crc: Word;
 begin
 (*  if (not bFirstTime) then
   begin
@@ -60,12 +50,12 @@ begin
     end;
     crctab[i] := crc;
   end;
-  bFirstTime := false; *)
-end;
+  bFirstTime := false;
+end;          *)
 
-function CRC32(var data: Byte; len: integer): Word;
+(*function CRC32(var data: Byte; len: integer): Word;
 begin
-   (* Word        cresult;
+    Word        cresult;
     integer                 i;;
 
     if(len < 4) abort() then ;
@@ -82,8 +72,8 @@ begin
         cresult := (cresult shl 8 or *data++) ^ crctab[cresult shr 24];
      end;
 
-    result:= ~cresult;       *)
-end;
+    result:= ~cresult;
+end; *)
 
 
 (*XTL.VertexPatcher.VertexPatcher()

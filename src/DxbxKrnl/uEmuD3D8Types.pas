@@ -45,6 +45,17 @@ type
   X_VERTEXSHADERCONSTANTMODE = DWORD;
   X_D3DFORMAT = Dword;
 
+
+
+   X_D3DVertexShader = Record
+    UnknownA : DWORD;
+    Handle : DWORD;
+    UnknownB : DWORD;
+    Flags : DWORD;
+    UnknownC : Array [0..59] of DWORD;
+   End;
+
+
   _X_D3DPRESENT_PARAMETERS = record
     BackBufferWidth: UINT;
     BackBufferHeight: UINT;

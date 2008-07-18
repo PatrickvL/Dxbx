@@ -37,6 +37,7 @@ uses
   uDxbxKrnlUtils,
   uEmuDInput,
   uPushBuffer,
+  uVertexShader,
   uEmu,
   uLog,
   uTypes,
@@ -395,10 +396,10 @@ begin
     end
     else
     begin
-      lRestore := GetWindowLong(hWnd, GWL_STYLE);
-      lRestoreEx := GetWindowLong(hWnd, GWL_EXSTYLE);
       { TODO : need to be translated to delphi }
       (*
+      lRestore := GetWindowLong(hWnd, GWL_STYLE);
+      lRestoreEx := GetWindowLong(hWnd, GWL_EXSTYLE);
       GetWindowRect(hWnd, @lRect); *)
 
     end;
@@ -437,8 +438,8 @@ var
 begin
   bAutoPaused := False;
 
+  Result := 0;
   case (msg) of
-
     WM_DESTROY:
       begin
         DeleteObject(g_hBgBrush);
@@ -546,8 +547,6 @@ begin
   else
     Result := DefWindowProc(hWnd, msg, wParam, lParam);
   end;
-
-  Result := 0;
 end;
 
 // timing thread procedure
@@ -974,10 +973,10 @@ var
   mask: integer;
 begin
   for v := 0 to 31 do begin
-    mask := 1 shl v;
-
         { TODO : need to be translated to delphi }
-        (*if(dwWidth and mask) then
+    (*mask := 1 shl v;
+
+        if(dwWidth and mask) then
             NewWidth := mask;
 
         if(dwHeight and mask) then
@@ -1981,7 +1980,7 @@ end;
 
 // func: EmuIDirect3DDevice8_GetViewportOffsetAndScale
 
-procedure XTL__EmuIDirect3DDevice8_GetViewportOffsetAndScale;
+procedure XTL__EmuIDirect3DDevice8_GetViewportOffsetAndScale( pOffset : TD3DXVECTOR4; pScale : TD3DXVECTOR4 );
 var
   fScaleX: Single;
   fScaleY: Single;
@@ -1989,17 +1988,16 @@ var
   fOffsetX: Single;
   fOffsetY: Single;
   Viewport: D3DVIEWPORT8;
-(*pOffset : D3DXVECTOR4; pScale : D3DXVECTOR4*)
+
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-{ TODO : Need to be translated to delphi }
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetViewportOffsetAndScale'
-           '('
-           '   pOffset             : 0x%.08X'
-           '   pScale              : 0x%.08X'
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetViewportOffsetAndScale' +
+           '(' +
+           '   pOffset             : 0x%.08X' +
+           '   pScale              : 0x%.08X' +
            ');',
-           [pOffset,pScale]); *)
+           [@pOffset,@pScale]);
 
   fScaleX := 1.0;
   fScaleY := 1.0;
@@ -2011,8 +2009,7 @@ begin
   XTL__EmuIDirect3DDevice8_GetViewport(Viewport);
   EmuSwapFS();
 
-    { TODO : Need to be translated to delphi }
-    (*pScale.x := 1.0;
+    pScale.x := 1.0;
     pScale.y := 1.0;
     pScale.z := 1.0;
     pScale.w := 1.0;
@@ -2031,7 +2028,7 @@ begin
     pOffset.x := Viewport.Width * fScaleX * 0.5 + Viewport.X * fScaleX + fOffsetX;
     pOffset.y := Viewport.Height * fScaleY * 0.5 + Viewport.Y * fScaleY + fOffsetY;
     pOffset.z := Viewport.MinZ * fScaleZ;
-    pOffset.w := 0;   *)
+    pOffset.w := 0;   
 
 
   EmuSwapFS(); // XBox FS
@@ -6680,32 +6677,31 @@ begin
 
   g_CurrentVertexShader := aHandle;
 
-    (* What have you been trying to do here?  --- CXBX COMMENTS
+    { What have you been trying to do here?  --- CXBX COMMENTS
     XTL.D3DXVECTOR4 vOffset;
     XTL.D3DXVECTOR4 vScale;
 
     EmuSwapFS();
     EmuIDirect3DDevice8_GetViewportOffsetAndScale(@vOffset, @vScale);
     EmuSwapFS();
-    *)
+    }
 
   if (g_VertexShaderConstantMode <> X_VSCM_NONERESERVED) then
   begin
-        //g_pD3DDevice8->SetVertexShaderConstant( 58, &vScale, 1 );   -- MARKED OUT IN CXBX
+        //g_pD3DDevice8.SetVertexShaderConstant( 58, &vScale, 1 );   -- MARKED OUT IN CXBX
         //g_pD3DDevice8->SetVertexShaderConstant( 59, &vOffset, 1 );  -- MARKED OUT IN CXBX
   end;
 
-  { TODO -oDxbx : need to be translated to delphi }
-  (*if (VshHandleIsVertexShader(aHandle)) then
+  if (VshHandleIsVertexShader(aHandle)) then
   begin
-    RealHandle := ((VERTEX_SHADER)(VshHandleGetVertexShader(Handle)) - > Handle) - > Handle;
+    { TODO : Need to be translated to delphi }
+    (*RealHandle := VshHandleGetVertexShader(Handle)) - > Handle) - > Handle; *)
   end
   else
   begin
-    RealHandle := Handle;
+    RealHandle := aHandle;
   end;
-  hRet := g_pD3DDevice8 - > SetVertexShader(RealHandle);
-  *)
+  hRet := g_pD3DDevice8.SetVertexShader(RealHandle);
 
   EmuSwapFS(); // XBox FS
 
