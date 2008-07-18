@@ -32,35 +32,6 @@ uses
   uEmu,
   uXBController;
 
-
-
-{///****************************************************************** }
-{///* offsets into analog button array }
-{///****************************************************************** }
-const
-  XINPUT_GAMEPAD_A = 0;
-  XINPUT_GAMEPAD_B = 1;
-  XINPUT_GAMEPAD_X = 2;
-  XINPUT_GAMEPAD_Y = 3;
-  XINPUT_GAMEPAD_BLACK = 4;
-  XINPUT_GAMEPAD_WHITE = 5;
-  XINPUT_GAMEPAD_LEFT_TRIGGER = 6;
-  XINPUT_GAMEPAD_RIGHT_TRIGGER = 7;
-
-{///****************************************************************** }
-{///* masks for digital buttons }
-{///****************************************************************** }
-const
-  XINPUT_GAMEPAD_DPAD_UP = $00000001;
-  XINPUT_GAMEPAD_DPAD_DOWN = $00000002;
-  XINPUT_GAMEPAD_DPAD_LEFT = $00000004;
-  XINPUT_GAMEPAD_DPAD_RIGHT = $00000008;
-  XINPUT_GAMEPAD_START = $00000010;
-  XINPUT_GAMEPAD_BACK = $00000020;
-  XINPUT_GAMEPAD_LEFT_THUMB = $00000040;
-  XINPUT_GAMEPAD_RIGHT_THUMB = $00000080;
-
-
 procedure XTL_EmuDInputCleanup;
 
 
