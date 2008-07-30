@@ -1,0 +1,40 @@
+<project name="PatternCodeGenerator"
+         basedir=".."
+         default="compile" >
+
+
+  <property name="src"       value="${basedir}/src/Tools/PatternCodeGenerator" />
+  <property name="bin" value="${basedir}/bin/Tools" />
+  <property name="dcu" value="${basedir}/dcu" />
+  <property name="lib"       value="${basedir}/Libraries" />
+  <property name="JediInc"     value="${lib}/jwapi/Common" />
+
+
+	
+  <target name="prepare" >
+  </target>
+
+
+  <target name="build" >
+  </target>
+
+  <target name="resources" depends="prepare" >
+  </target>
+
+
+  <target name="compile" depends="prepare, resources, build">
+    <dcc basedir="${src}" source="PatternCodeGenerator.dpr">
+      <exeoutput path="${bin}" />
+      <dcuoutput path="${dcu}" />
+      <unitpath>
+        <include name="${src}" />
+        <include name="${JediInc}" />
+     </unitpath>
+
+    </dcc>
+  </target> 
+
+
+
+
+</project>
