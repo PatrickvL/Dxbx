@@ -22,9 +22,17 @@ unit uPushBuffer;
 
 interface
 
+uses
+    Windows;
+
+
+
+procedure XTL_EmuExecutePushBufferRaw ( pdwPushData : DWORD );
+
+
 var
- (*g_dwPrimaryPBCount : uint32 = 0;
- g_pPrimaryPB : uint32 = 0; *)
+ g_dwPrimaryPBCount : LongInt = 0;
+ g_pPrimaryPB : LongInt = 0;
 
 
  XTL_g_bStepPush : Boolean = False;
@@ -35,7 +43,10 @@ var
 
 
 
+
 implementation
+
+
 
 procedure XTL_EmuExecutePushBuffer;
 (*(
@@ -131,15 +142,16 @@ begin
      end; *)
 end;
 
-(*procedure XTL_EmuExecutePushBufferRaw; DWORD                 *pdwPushData
-)
+procedure XTL_EmuExecutePushBufferRaw ( pdwPushData : DWORD );
+var
+  pdwOrigPushData : DWORD;
 begin
-    if(g_bSkipPush) then
+    if(XTL_g_bSkipPush) then
         Exit;
 
-    DWORD *pdwOrigPushData := pdwPushData;
+    pdwOrigPushData := pdwPushData;
 
-    PVOID pIndexData := 0;
+    (*PVOID pIndexData := 0;
     PVOID pVertexData := 0;
 
     DWORD dwVertexShader := -1;
@@ -259,7 +271,7 @@ begin
                 dwStride:= dwStride + ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*SizeOf(FLOAT)*2;
              end;
 
-            (*
+            {
             // create cached vertex buffer only once, with maxed out size
             if(pVertexBuffer = 0) then
             begin
@@ -283,9 +295,9 @@ begin
 
                 pVertexBuffer^.Unlock();
              end;
-            *)
+            }
 
-(*            #ifdef _DEBUG_TRACK_PB
+            #ifdef _DEBUG_TRACK_PB
             if(bShowPB) then
             begin
                 printf('NVPB_InlineVertexArray(Args: array of const)');
@@ -586,7 +598,7 @@ begin
                     begin
                         g_pD3DDevice8^.DrawIndexedPrimitive
                         (
-                            PCPrimitiveType, 0, (*dwCount*2*)(*8*1024*1024, 0, PrimitiveCount
+                            PCPrimitiveType, 0, (*dwCount*2*)(*8*1024*1024, 0, PrimitiveCount     *)(*
                         );
                      end;
 
@@ -624,8 +636,8 @@ begin
     begin
         g_pD3DDevice8^.Present(0,0,0,0);
         Sleep(500);
-     end;
- end;       *)
+     end;             *)
+ end;
 
 (*#ifdef _DEBUG_TRACK_PB
 procedure DbgDumpMesh(var pIndexData: WORD; dwCount: DWORD);

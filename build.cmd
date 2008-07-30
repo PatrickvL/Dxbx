@@ -41,4 +41,9 @@ want\want.exe -buildfile want\XdkTracker.xml
 echo Build XIso
 want\want.exe -buildfile want\XIso.xml 
 
+echo Build PatternCodeGenerator
+want\want.exe -buildfile want\PatternCodeGenerator.xml 
+
+
+
 pause

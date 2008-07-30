@@ -22,8 +22,28 @@ unit uVertexBuffer;
 
 interface
 uses
-  Windows;
+  Windows
+  , Direct3D
+  , D3DX8;
 
+type
+
+  _D3DIVB = record
+    Position: TD3DXVECTOR3; // Position
+    Rhw: FLOAT; // Rhw
+    dwSpecular: DWord; // Specular
+    dwDiffuse: DWord; // Diffuse
+    Normal: TD3DXVECTOR3; // Normal
+    TexCoord1: TD3DXVECTOR2; // TexCoord1
+    TexCoord2: TD3DXVECTOR2; // TexCoord2
+    TexCoord3: TD3DXVECTOR2; // TexCoord3
+    TexCoord4: TD3DXVECTOR2; // TexCoord4
+  end;
+
+
+var
+  g_IVBTblOffs: UInt = 0;
+  g_IVBTable: _D3DIVB;
 
 implementation
 
@@ -905,7 +925,7 @@ begin
 
      end;       *)
 
-    result:= true;  
+  result := true;
 end;
 
 procedure XTL_EmuFlushIVB;
@@ -1449,7 +1469,7 @@ end;
 g_pD3DDevice8 - > SetTexture(Stage, pTexture - > EmuTexture8);
 
 end;
-end; *)
+end; * )     *)
 
 
 end.

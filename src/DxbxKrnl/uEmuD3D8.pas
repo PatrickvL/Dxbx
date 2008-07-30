@@ -921,48 +921,51 @@ begin
  end;  *)
 
 // check if a resource has been registered yet (if not, register it)
-(*procedure EmuVerifyResourceIsRegistered(var pResource: XTL.X_D3DResource);
+
+procedure EmuVerifyResourceIsRegistered(var pResource: X_D3DResource);
 begin
     // 0xEEEEEEEE and 0xFFFFFFFF are somehow set in Halo :(
-    if(pResource.Lock <> 0 and pResource.Lock <> $EEEEEEEE and pResource.Lock <> $FFFFFFFF) then
-        Exit;
+{ TODO : Need to be translated to delphi }
+  (*if (pResource.Lock <> 0 and pResource.Lock <> $EEEEEEEE and pResource.Lock <> $FFFFFFFF) then
+    Exit;
 
     // Already 'Registered' implicitly
-    if((IsSpecialResource(pResource.Data) and ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_D3DREND) or (pResource.Data and X_D3DRESOURCE_DATA_FLAG_D3DSTEN))) then
-      or (pResource.Data = $B00BBABE))
-        Exit;
+  if ((IsSpecialResource(pResource.Data) and ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_D3DREND) or (pResource.Data and X_D3DRESOURCE_DATA_FLAG_D3DSTEN))) then
+    or (pResource.Data = $B00BBABE))
+    Exit;
 
-    integer v:=0;
+  integer v := 0;
 
-    for(v:=0;v<16;v++)
+  for (v := 0; v < 16; v + +)
+  begin
+    if (pCache[v].Data = pResource.Data and pResource.Data <> 0) then
     begin
-        if(pCache[v].Data = pResource.Data and pResource.Data <> 0) then
-        begin
-            pResource.EmuResource8 := pCache[v].EmuResource8;
-            Exit;
-         end;
-     end;
+      pResource.EmuResource8 := pCache[v].EmuResource8;
+      Exit;
+    end;
+  end;
 
-    EmuSwapFS();    // XBox FS;
-    XTL.EmuIDirect3DResource8_Register(pResource, 0(*(PVOID)pResource->Data*)//);
-(*    EmuSwapFS();    // Win2k/XP FS
+  EmuSwapFS(); // XBox FS;
+  { TODO : Need to be translated to delphi }
+(*  XTL.EmuIDirect3DResource8_Register(pResource, 0 (*(PVOID)pResource->Data*)//);
+(*  EmuSwapFS(); // Win2k/XP FS
 
-    if(pResource.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+  if (pResource.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+  begin
+    for (v := 0; v < 16; v + +)
     begin
-        for(v:=0;v<16;v++)
-        begin
-            if(pCache[v].Data = 0) then
-            begin
-                pCache[v].Data := pResource.Data;
-                pCache[v].EmuResource8 := pResource.EmuResource8;
-                break;
-             end;
+      if (pCache[v].Data = 0) then
+      begin
+        pCache[v].Data := pResource.Data;
+        pCache[v].EmuResource8 := pResource.EmuResource8;
+        break;
+      end;
 
-            if(v = 16) then
-                CxbxKrnlCleanup('X_D3DResource cache is maxed out!');
-         end;
-     end;
- end;        *)
+      if (v = 16) then
+        CxbxKrnlCleanup('X_D3DResource cache is maxed out!');
+    end;
+  end;      *)
+end;
 
 // ensure a given width/height are powers of 2
 
@@ -1064,111 +1067,104 @@ begin
   Result := False;
 end;
 
-{ TODO : Need to be translated to delphi }
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_GetCreationParameters
-// ******************************************************************
-(*procedure XTL.EmuIDirect3DDevice8_GetCreationParameters(D3DDEVICE_CREATION_PARAMETERS *pParameters)
+// func: EmuIDirect3DDevice8_GetCreationParameters
+
+procedure XTL_EmuIDirect3DDevice8_GetCreationParameters(pParameters: D3DDEVICE_CREATION_PARAMETERS);
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetCreationParameters'
-           '('
-           '   pParameters               : 0x%.08X'
-           ');',
-           pParameters);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetCreationParameters' +
+    '(' +
+    '   pParameters               : 0x%.08X' +
+    ');',
+    [@pParameters]);
 
-    pParameters.AdapterOrdinal := D3DADAPTER_DEFAULT;
-    pParameters.DeviceType := D3DDEVTYPE_HAL;
-    pParameters.hFocusWindow := 0;
-    pParameters.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
+  pParameters.AdapterOrdinal := D3DADAPTER_DEFAULT;
+  pParameters.DeviceType := D3DDEVTYPE_HAL;
+  pParameters.hFocusWindow := 0;
+  pParameters.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Exit;
- end; *)
+  Exit;
+end;
 
 
 // func: EmuIDirect3D8_CheckDeviceFormat
 
-function XTL__EmuIDirect3D8_CheckDeviceFormat: HRESULT;
+function XTL__EmuIDirect3D8_CheckDeviceFormat(Adapter: UINT; DeviceType: D3DDEVTYPE;
+  AdapterFormat: D3DFORMAT; Usage: DWORD; RType: X_D3DRESOURCETYPE; CheckFormat: X_D3DFORMAT): HRESULT;
 var
   hRet: HRESULT;
-
-(*  (
-   Adapter : UINT; DeviceType : D3DDEVTYPE;
-  AdapterFormat : D3DFORMAT; Usage : DWORD; RType : X_D3DRESOURCETYPE; CheckFormat : X_D3DFORMAT
-  ) *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3D8_CheckDeviceFormat' +
-           '(' +
-           '   Adapter                   : 0x%.08X' +
-           '   DeviceType                : 0x%.08X' +
-           '   AdapterFormat             : 0x%.08X' +
-           '   Usage                     : 0x%.08X' +
-           '   RType                     : 0x%.08X' +
-           '   CheckFormat               : 0x%.08X' +
-           ');',
-           [Adapter, DeviceType, AdapterFormat,
-           Usage, RType, CheckFormat]);
+  DbgPrintf('EmuD3D8 : EmuIDirect3D8_CheckDeviceFormat' +
+    '(' +
+    '   Adapter                   : 0x%.08X' +
+    '   DeviceType                : 0x%.08X' +
+    '   AdapterFormat             : 0x%.08X' +
+    '   Usage                     : 0x%.08X' +
+    '   RType                     : 0x%.08X' +
+    '   CheckFormat               : 0x%.08X' +
+    ');',
+    [Adapter, @DeviceType, @AdapterFormat,
+    Usage, @RType, CheckFormat]);
 
-    if(RType > 7) then
-        CxbxKrnlCleanup('RType > 7');
+  if (Ord(RType) > 7) then
+    CxbxKrnlCleanup('RType > 7');
 
-    hRet = g_pD3D8.CheckDeviceFormat
-    (
-        g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() = 0) ? XTL.D3DDEVTYPE_HAL : XTL.D3DDEVTYPE_REF,
-        EmuXB2PC_D3DAdapterFormat), Usage, (D3DRESOURCETYPE)RType, EmuXB2PC_D3DCheckFormat)
-    ); *)
+  { TODO : Need to be translated to delphi }
+  (*hRet := g_pD3D8.CheckDeviceFormat(
+    g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() = 0)? XTL.D3DDEVTYPE_HAL: XTL.D3DDEVTYPE_REF,
+    EmuXB2PC_D3DAdapterFormat), Usage, (D3DRESOURCETYPE)RType, EmuXB2PC_D3DCheckFormat)); *)
 
 
   EmuSwapFS(); // XBox FS
   Result := hRet;
 end;
 
-{ TODO : Need to be translated to delphi }
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_GetDisplayFieldStatus
-// ******************************************************************
-(*procedure XTL__EmuIDirect3DDevice8_GetDisplayFieldStatus(X_D3DFIELD_STATUS *pFieldStatus)
+// func: EmuIDirect3DDevice8_GetDisplayFieldStatus
+
+procedure XTL__EmuIDirect3DDevice8_GetDisplayFieldStatus(pFieldStatus: X_D3DFIELD_STATUS);
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDisplayFieldStatus'
-           '('
-           '   pFieldStatus              : 0x%.08X'
-           ');',
-           pFieldStatus);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDisplayFieldStatus' +
+    '(' +
+    '   pFieldStatus              : 0x%.08X' +
+    ');',
+    [@pFieldStatus]);
 
-    pFieldStatus.Field := (g_VBData.VBlank%2 = 0) ? X_D3DFIELD_ODD : X_D3DFIELD_EVEN;
-    pFieldStatus.VBlankCount := g_VBData.VBlank;
+    { TODO : Need to be translated to delphi }
+    (*pFieldStatus.Field := (g_VBData.VBlank%2 = 0) ? X_D3DFIELD_ODD : X_D3DFIELD_EVEN;
+    pFieldStatus.VBlankCount := g_VBData.VBlank; *)
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Exit;
- end;*)
+  Exit;
+end;
 
-{ TODO : Need to be translated to delphi }
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_BeginPush
-// ******************************************************************
-(*PDWORD WINAPI XTL.EmuIDirect3DDevice8_BeginPush(DWORD Count)
+// func: EmuIDirect3DDevice8_BeginPush
+
+function XTL_EmuIDirect3DDevice8_BeginPush(Count: DWORD): DWORD;
+var
+  pRet: DWORD;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginPush(%d);', Count);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginPush(%d);', [Count]);
 
-    DWORD *pRet := new DWORD[Count];
+    { TODO : Need to be translated to delphi }
+    (*DWORD *pRet := new DWORD[Count];
 
     g_dwPrimaryPBCount := Count;
-    g_pPrimaryPB := pRet;
+    g_pPrimaryPB := pRet; *)
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Result:= pRet;
- end;*)
+  Result := pRet;
+end;
 
 // func: EmuIDirect3DDevice8_EndPush
 
@@ -1178,12 +1174,13 @@ begin
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_EndPush(0x%.08X);', [pPush]);
 
+  XTL_EmuExecutePushBufferRaw(g_pPrimaryPB);
+
     { TODO : Need to be translated to delphi }
-    (*EmuExecutePushBufferRaw(g_pPrimaryPB);
+    (*
+    delete[] g_pPrimaryPB; *)
 
-    delete[] g_pPrimaryPB;
-
-    g_pPrimaryPB := 0; *)
+  g_pPrimaryPB := 0;
 
 
   EmuSwapFS(); // XBox FS
@@ -1239,6 +1236,7 @@ function XTL__EmuIDirect3DDevice8_GetVisibilityTestResult: HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
+{ TODO : Need to be translated to delphi }
 (*  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVisibilityTestResult' +
            '(' +
            '   Index                     : 0x%.08X' +
@@ -1260,7 +1258,6 @@ begin
   Result := D3D_OK;
 end;
 
-{ TODO : Need to be translated to delphi }
 // func: EmuIDirect3DDevice8_GetDeviceCaps
 
 procedure XTL__EmuIDirect3DDevice8_GetDeviceCaps(pCaps: D3DCAPS8);
@@ -1558,21 +1555,22 @@ begin
 
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_AddRef
-// ******************************************************************
-(*ULONG WINAPI XTL.EmuIDirect3DDevice8_AddRef()
+// func: EmuIDirect3DDevice8_AddRef
+
+function XTL_EmuIDirect3DDevice8_AddRef(): ULONG;
+var
+  ret: ULONG;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_AddRef()');
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_AddRef()');
 
-    ULONG ret := g_pD3DDevice8.AddRef();
-
-    EmuSwapFS();   // XBox FS
-
-    Result:= ret;
- end;      *)
+    { TODO : Need to be translated to delphi }
+    (*
+    ret := g_pD3DDevice8.AddRef(); *)
+  EmuSwapFS(); // XBox FS
+  Result := ret;
+end;
 
 // func: EmuIDirect3DDevice8_BeginStateBlock
 
@@ -1760,23 +1758,20 @@ begin
   Result := hRet;
 end;
 
-{ TODO : Need to be translated to delphi }
 // func: EmuIDirect3DDevice8_GetGammaRamp
 
-procedure XTL__EmuIDirect3DDevice8_GetGammaRamp;
-(*(
-    X_D3DGAMMARAMP     *pRamp
-) *)
+procedure XTL__EmuIDirect3DDevice8_GetGammaRamp(pRamp: X_D3DGAMMARAMP);
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetGammaRamp' +
-           '(' +
-           '   pRamp               : 0x%.08X' +
-           ');',
-           pRamp);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetGammaRamp' +
+    '(' +
+    '   pRamp               : 0x%.08X' +
+    ');',
+    [@pRamp]);
 
-    D3DGAMMARAMP *pGammaRamp := (D3DGAMMARAMP )malloc(SizeOf(D3DGAMMARAMP));
+    { TODO : Need to be translated to delphi }
+    (*D3DGAMMARAMP *pGammaRamp := (D3DGAMMARAMP )malloc(SizeOf(D3DGAMMARAMP));
 
     g_pD3DDevice8.GetGammaRamp(pGammaRamp);
 
@@ -1787,11 +1782,9 @@ begin
         pRamp.blue[v] := (BYTE)pGammaRamp.blue[v];
      end;
 
-    free(pGammaRamp);
+    free(pGammaRamp); *)
 
-    EmuSwapFS();   // Xbox FS
-
-    Exit; *)
+  EmuSwapFS(); // Xbox FS
 end;
 
 { TODO : Need to be translated to delphi }
@@ -1894,7 +1887,6 @@ begin
     Exit;   *)
 end;
 
-{ TODO : Need to be translated to delphi }
 // func: EmuIDirect3DDevice8_SetViewport
 
 function XTL__EmuIDirect3DDevice8_SetViewport(pViewport: D3DVIEWPORT8): HRESULT;
@@ -1980,7 +1972,7 @@ end;
 
 // func: EmuIDirect3DDevice8_GetViewportOffsetAndScale
 
-procedure XTL__EmuIDirect3DDevice8_GetViewportOffsetAndScale( pOffset : TD3DXVECTOR4; pScale : TD3DXVECTOR4 );
+procedure XTL__EmuIDirect3DDevice8_GetViewportOffsetAndScale(pOffset: TD3DXVECTOR4; pScale: TD3DXVECTOR4);
 var
   fScaleX: Single;
   fScaleY: Single;
@@ -1992,12 +1984,12 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetViewportOffsetAndScale' +
-           '(' +
-           '   pOffset             : 0x%.08X' +
-           '   pScale              : 0x%.08X' +
-           ');',
-           [@pOffset,@pScale]);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetViewportOffsetAndScale' +
+    '(' +
+    '   pOffset             : 0x%.08X' +
+    '   pScale              : 0x%.08X' +
+    ');',
+    [@pOffset, @pScale]);
 
   fScaleX := 1.0;
   fScaleY := 1.0;
@@ -2009,57 +2001,50 @@ begin
   XTL__EmuIDirect3DDevice8_GetViewport(Viewport);
   EmuSwapFS();
 
-    pScale.x := 1.0;
-    pScale.y := 1.0;
-    pScale.z := 1.0;
-    pScale.w := 1.0;
+  pScale.x := 1.0;
+  pScale.y := 1.0;
+  pScale.z := 1.0;
+  pScale.w := 1.0;
 
-    pOffset.x := 0.0;
-    pOffset.y := 0.0;
-    pOffset.z := 0.0;
-    pOffset.w := 0.0;
+  pOffset.x := 0.0;
+  pOffset.y := 0.0;
+  pOffset.z := 0.0;
+  pOffset.w := 0.0;
 
 
-    pScale.x := Viewport.Width * 0.5 * fScaleX;
-    pScale.y := Viewport.Height * -0.5 * fScaleY;
-    pScale.z := (Viewport.MaxZ - Viewport.MinZ) * fScaleZ;
-    pScale.w := 0;
+  pScale.x := Viewport.Width * 0.5 * fScaleX;
+  pScale.y := Viewport.Height * -0.5 * fScaleY;
+  pScale.z := (Viewport.MaxZ - Viewport.MinZ) * fScaleZ;
+  pScale.w := 0;
 
-    pOffset.x := Viewport.Width * fScaleX * 0.5 + Viewport.X * fScaleX + fOffsetX;
-    pOffset.y := Viewport.Height * fScaleY * 0.5 + Viewport.Y * fScaleY + fOffsetY;
-    pOffset.z := Viewport.MinZ * fScaleZ;
-    pOffset.w := 0;   
+  pOffset.x := Viewport.Width * fScaleX * 0.5 + Viewport.X * fScaleX + fOffsetX;
+  pOffset.y := Viewport.Height * fScaleY * 0.5 + Viewport.Y * fScaleY + fOffsetY;
+  pOffset.z := Viewport.MinZ * fScaleZ;
+  pOffset.w := 0;
 
 
   EmuSwapFS(); // XBox FS
 end;
 
-{ TODO : Need to be translated to delphi }
 // func: EmuIDirect3DDevice8_SetShaderConstantMode
 
-function XTL__EmuIDirect3DDevice8_SetShaderConstantMode: HRESULT;
-(*(
-    XTL.X_VERTEXSHADERCONSTANTMODE Mode
-) *)
+function XTL__EmuIDirect3DDevice8_SetShaderConstantMode(Mode: X_VERTEXSHADERCONSTANTMODE): HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-{ TODO : Need to be translated to delphi }
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetShaderConstantMode'
-           '('
-           '   Mode                : 0x%.08X'
-           ');',
-           Mode);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetShaderConstantMode' +
+    '(' +
+    '   Mode                : 0x%.08X' +
+    ');',
+    [Mode]);
 
-    g_VertexShaderConstantMode := Mode;
-*)
+  g_VertexShaderConstantMode := Mode;
   EmuSwapFS(); // Xbox FS
 
   Result := S_OK;
 end;
 
 
-{ TODO : Need to be translated to delphi }
 // func: EmuIDirect3DDevice8_Reset
 
 function XTL__EmuIDirect3DDevice8_Reset(pPresentationParameters: X_D3DPRESENT_PARAMETERS): HRESULT;
@@ -2106,7 +2091,7 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_GetRenderTarget2
-
+{ TODO : Need to be translated to delphi }
 (*XTL.X_D3DSurface * WINAPI XTL.EmuIDirect3DDevice8_GetRenderTarget2()
 begin
     EmuSwapFS();   // Win2k/XP FS
@@ -2125,6 +2110,7 @@ begin
  end; *)
 
 // func: EmuIDirect3DDevice8_GetDepthStencilSurface
+{ TODO : Need to be translated to delphi }
 
 function XTL__EmuIDirect3DDevice8_GetDepthStencilSurface: HRESULT;
 (*(
@@ -2153,6 +2139,7 @@ begin
   Result := D3D_OK;
 end;
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDepthStencilSurface2
 // ******************************************************************
@@ -2177,6 +2164,7 @@ begin
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTile
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 function XTL__EmuIDirect3DDevice8_GetTile: HRESULT;
 (*Index : DWORD; pTile : X_D3DTILE*)
@@ -2203,6 +2191,7 @@ end;
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTileNoWait
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 function XTL__EmuIDirect3DDevice8_SetTileNoWait: HRESULT;
 (*(
@@ -2389,6 +2378,7 @@ end;
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetPixelShaderConstant
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 procedure XTL__EmuIDirect3DDevice8_SetPixelShaderConstant;
 (*(
@@ -2415,6 +2405,7 @@ end;
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 function XTL__EmuIDirect3DDevice8_SetVertexShaderConstant: HRESULT;
 var
@@ -2467,6 +2458,7 @@ begin
   Result := hRet;
 end;
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant1
 // ******************************************************************
@@ -2495,6 +2487,7 @@ begin
     Exit;
  end; *)
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant4
 // ******************************************************************
@@ -2523,6 +2516,7 @@ begin
     Exit;
  end; *)
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
 // ******************************************************************
@@ -2553,6 +2547,7 @@ begin
     Exit;
  end; *)
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DeletePixelShader
 // ******************************************************************
@@ -2598,17 +2593,13 @@ begin
     ');',
     [pFunction, pHandle]);
 
-    // redirect to windows d3d
-   { TODO : Need to be translated to delphi }
-(*  hRet := g_pD3DDevice8.CreatePixelShader(pFunction, pHandle);*)
+  // redirect to windows d3d
+  hRet := g_pD3DDevice8.CreatePixelShader(@pFunction, pHandle);
 
   if (FAILED(hRet)) then
   begin
-        { TODO : Need to be translated to delphi }
-        (*pHandle := X_PIXELSHADER_FAKE_HANDLE;*)
-
+    pHandle := X_PIXELSHADER_FAKE_HANDLE;
     EmuWarning('We`re lying about the creation of a pixel shader!');
-
     hRet := D3D_OK;
   end;
 
@@ -2688,6 +2679,7 @@ begin
   Result := hRet;
 end;
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture2
 // ******************************************************************
@@ -2723,6 +2715,7 @@ begin
  end;                  *)
 
 // func: EmuIDirect3DDevice8_CreateTexture
+{ TODO : Need to be translated to delphi }
 
 function XTL_EmuIDirect3DDevice8_CreateTexture: HRESULT;
 var
@@ -3294,6 +3287,7 @@ begin
   Result := hRet;
 end;
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SwitchTexture
 // ******************************************************************
@@ -3516,6 +3510,7 @@ end;
 function XTL__EmuIDirect3DDevice8_SetVertexData4f(aRegister: integer; a: FLOAT; b: FLOAT; c: FLOAT; d: FLOAT): HRESULT;
 var
   hRet: HRESULT;
+  o: integer;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -3534,12 +3529,12 @@ begin
   case (aRegister) of
     0: // D3DVSDE_POSITION
       begin
-        (*integer o := g_IVBTblOffs;
+        (*o := g_IVBTblOffs;
 
         g_IVBTable[o].Position.x := a; //vertices[o*2+0];//a;
         g_IVBTable[o].Position.y := b; //vertices[o*2+1];//b;
         g_IVBTable[o].Position.z := c;
-        g_IVBTable[o].Rhw := 1.0 f;
+        g_IVBTable[o].Rhw := 1.0;
 
         g_IVBTblOffs := g_IVBTblOffs + 1;
 
@@ -3740,6 +3735,7 @@ end;
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_RunPushBuffer
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 procedure XTL__EmuIDirect3DDevice8_RunPushBuffer;
 (*(
@@ -3897,7 +3893,7 @@ begin
     pBackBuffer.UnlockRect();
   end;
 
-  hRet := g_pD3DDevice8.Present(Nil, Nil, 0, Nil);
+  hRet := g_pD3DDevice8.Present(nil, nil, 0, nil);
   EmuSwapFS(); // XBox FS
 
   Result := hRet;
@@ -3906,6 +3902,7 @@ end;
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Register
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 function XTL__EmuIDirect3DResource8_Register: HRESULT;
 (*(
@@ -4563,6 +4560,7 @@ EmuSwapFS(); // XBox FS
 Result := hRet; *)
 end;
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DResource8_AddRef
 // ******************************************************************
@@ -4593,6 +4591,7 @@ begin
     Result:= uRet;
  end; *)
 
+ { TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
@@ -4699,6 +4698,7 @@ begin
   Result := False;
 end;
 
+{ TODO : Need to be translated to delphi }
 // ******************************************************************
 // * func: EmuIDirect3DResource8_GetType
 // ******************************************************************
@@ -4726,6 +4726,7 @@ begin
 // ******************************************************************
 // * func: EmuLock2DSurface
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 procedure XTL__EmuLock2DSurface;
 (*(
@@ -4762,6 +4763,7 @@ end;
 // ******************************************************************
 // * func: EmuGet2DSurfaceDesc
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 procedure XTL__EmuGet2DSurfaceDesc;
 (*(
@@ -4847,6 +4849,7 @@ end;
 // ******************************************************************
 // * func: EmuGet2DSurfaceDescD
 // ******************************************************************
+{ TODO : Need to be translated to delphi }
 
 procedure XTL__EmuGet2DSurfaceDescD;
 (*(
@@ -5010,32 +5013,27 @@ begin
   Result := hRet;
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DBaseTexture8_GetLevelCount
-// ******************************************************************
+// func: EmuIDirect3DBaseTexture8_GetLevelCount
 
-function XTL__EmuIDirect3DBaseTexture8_GetLevelCount: DWORD;
+function XTL__EmuIDirect3DBaseTexture8_GetLevelCount(pThis: X_D3DBaseTexture): DWORD;
 var
   dwRet: DWORD;
-(*(
-    X_D3DBaseTexture   *pThis
-) *)
+  pBaseTexture8: IDirect3DBaseTexture8;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-{ TODO : Need to be translated to delphi }
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3DBaseTexture8_GetLevelCount'
-           '('
-           '   pThis               : 0x%.08X'
-           ');',
-           pThis);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DBaseTexture8_GetLevelCount' +
+    '(' +
+    '   pThis               : 0x%.08X' +
+    ');',
+    [@pThis]);
 
-    EmuVerifyResourceIsRegistered(pThis);
+  { TODO : Need to be translated to delphi }
+  (*EmuVerifyResourceIsRegistered(pThis);
 
-    IDirect3DBaseTexture8 *pBaseTexture8 := pThis.EmuBaseTexture8;
+  pBaseTexture8 := pThis.EmuBaseTexture8;
 
-    DWORD dwRet := pBaseTexture8.GetLevelCount();
-*)
+  dwRet := pBaseTexture8.GetLevelCount(); *)
   EmuSwapFS(); // XBox FS
 
   Result := dwRet;
@@ -5389,7 +5387,7 @@ begin
 
   if (Enable = False and (g_pDDSOverlay7 <> nil)) then
   begin
-    g_pDDSOverlay7.UpdateOverlay(Nil, g_pDDSPrimary, Nil, DDOVER_HIDE, Nil);
+    g_pDDSOverlay7.UpdateOverlay(nil, g_pDDSPrimary, nil, DDOVER_HIDE, nil);
 
         // cleanup overlay clipper
     if (g_pDDClipper <> nil) then
@@ -5925,11 +5923,11 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_SetRenderState_FillMode
-// ******************************************************************
+// func: EmuIDirect3DDevice8_SetRenderState_FillMode
 
 procedure XTL__EmuIDirect3DDevice8_SetRenderState_FillMode(Value: DWord);
+var
+  dwFillMode: DWORD;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -5939,9 +5937,9 @@ begin
     ');',
     [Value]);
 
-{ TODO : Need to be translated to delphi }
-(*    DWORD dwFillMode;
 
+    { TODO : Need to be translated to delphi }
+    (*
     if(g_iWireframe = 0) then
         dwFillMode := EmuXB2PC_D3DFILLMODE(Value);
     else if(g_iWireframe = 1) then
@@ -5950,7 +5948,8 @@ begin
         dwFillMode := D3DFILL_POINT;
 
     g_pD3DDevice8.SetRenderState(D3DRS_FILLMODE, dwFillMode);
-*)
+
+  *)
   EmuSwapFS(); // XBox FS
 end;
 
@@ -5988,9 +5987,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_SetRenderState_Simple
-// ******************************************************************
+// func: EmuIDirect3DDevice8_SetRenderState_Simple
 (*VOID __fastcall XTL.EmuIDirect3DDevice8_SetRenderState_Simple
 (
     DWORD Method,
