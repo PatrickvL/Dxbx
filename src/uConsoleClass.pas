@@ -14,6 +14,10 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  
+    Note : This file is used under acknowledgement and formal permission
+           of the original author, Stefan Lechner (stefan@die-lechners.de).
+    
 *)
 unit uConsoleClass;
 

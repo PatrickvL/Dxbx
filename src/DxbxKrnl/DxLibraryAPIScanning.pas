@@ -17,6 +17,8 @@
 *)
 unit DxLibraryAPIScanning;
 
+{$DEFINE DO_BINARY_PATTERN_SEARCH}
+
 {$DEFINE _OPTIMIZE_UNIT}
 
 {$INCLUDE ..\Dxbx.inc}
@@ -25,6 +27,7 @@ interface
 
 uses
   // Delphi
+  Windows,
   Classes,
   SysUtils,
   Contnrs,
@@ -33,20 +36,35 @@ uses
   uXBE,
   uLog,
   uBitUtils,
-  uPatterns,
+  uPatterns, // auto-generated unit, containing AllPatternArrays
   uXboxLibraryUtils,
   uCRC16;
 
-procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
+type
+  TDetectedFunctions = class(TObject)
+  protected
+    FList: TList;
+    function GetItem(Index: Integer): PDetectedXboxLibraryFunction;
+  public
+    function Count: Integer;
+    property Items[Index: Integer]: PDetectedXboxLibraryFunction read GetItem; default;
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Clear;
+    function New(const aInfo: PXboxLibraryFunction): PDetectedXboxLibraryFunction;
+    function FindByName(const aName: string): PDetectedXboxLibraryFunction;
+    function FindByAddress(const aAddress: TCodePointer): PDetectedXboxLibraryFunction;
+  end;
+  
+procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 
 var
-  NrOfAPIsDetected: Integer;
+  DetectedFunctions: TDetectedFunctions;
 
 implementation
 
-{.$DEFINE BRUTE_FORCE}
-
-procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
+function TestLibraryOnAddress(const aXboxLibraryInfo: PXboxLibraryInfo; const aAddress: PByte): PXboxLibraryFunction;
 
   function _ComparePattern(const aXboxLibraryFunction: PXboxLibraryFunction; aAddress: PByte): Integer;
   var
@@ -70,31 +88,14 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
     if aXboxLibraryFunction.CRCLength > 0 then
       Result := Integer(aXboxLibraryFunction.CRCValue) - Integer(CalcCRC16(aAddress, aXboxLibraryFunction.CRCLength));
 
-    // TODO : Test all referenced APIs
-
-    // TODO : Test trailing bytes too
+    // TODO : Include data & test-code for : Cross-referenced APIs
+    // TODO : Include data & test-code for : Trailing bytes
   end;
 
-{$IFDEF BRUTE_FORCE}
-  function _FindPattern(const aPatternLibrary: TPatternArray; const aCount: Integer; const aAddress: PByte; var Index: Integer): Boolean;
-  var
-    i: Integer;
-  begin
-    for i := 0 to aCount - 1 do
-    begin
-      Result := _ComparePattern(RXboxLibraryFunction(@(aPatternLibrary[i])), aAddress) = 0;
-      if Result then
-      begin
-        {var}Index := i;
-        Exit;
-      end;
-    end;
+{$IFDEF DO_BINARY_PATTERN_SEARCH}
 
-    Result := False;
-  end;
-{$ELSE}
-  // Modified copy of the binary search code in TStringList.Find() :
-  function _FindPattern(const aPatternLibrary: TPatternArray; const aCount: Integer; const aAddress: PByte; var Index: Integer): Boolean;
+  // Modified copy of the binary search code in TList.Find() :
+  function _FindPattern(const aPatternLibrary: TSortedPatterns; const aCount: Integer; const aAddress: PByte; var Index: Integer): Boolean;
   var
     L, H, I, C: Integer;
   begin
@@ -104,7 +105,7 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
     while L <= H do
     begin
       I := (L + H) shr 1;
-      C := _ComparePattern(PXboxLibraryFunction(@(aPatternLibrary[I])), aAddress);
+      C := _ComparePattern(aPatternLibrary[I], aAddress);
       if C < 0 then L := I + 1 else
       begin
         H := I - 1;
@@ -119,44 +120,245 @@ procedure DxbxScanForLibraryAPIs(const pXbeHeader: PXBE_HEADER);
 
     Index := L;
   end;
-{$ENDIF}
 
-  procedure _FindAndRememberPattern(const aXboxLibraryInfo: RXboxLibraryInfo; const aAddress: PByte);
+{$ELSE} // not DO_BINARY_PATTERN_SEARCH
+
+  function _FindPattern(const aPatternLibrary: TSortedPatterns; const aCount: Integer; const aAddress: PByte; var Index: Integer): Boolean;
   var
-    Index: Integer;
-    Pattern: PXboxLibraryFunction;
+    i: Integer;
+  begin
+    for i := 0 to aCount - 1 do
+    begin
+      Result := _ComparePattern(aPatternLibrary[i], aAddress) = 0;
+      if Result then
+      begin
+        {var}Index := i;
+        Exit;
+      end;
+    end;
+
+    Result := False;
+  end;
+  
+{$ENDIF ~DO_BINARY_PATTERN_SEARCH}
+
+var
+  Index: Integer;
+begin
+  // Search if this address matches a pattern :
+  if _FindPattern(aXboxLibraryInfo.SortedPatterns, Length(aXboxLibraryInfo.SortedPatterns), aAddress, {var}Index) then
+    Result := aXboxLibraryInfo.SortedPatterns[Index]
+  else
+    Result := nil;
+end; // TestLibraryOnAddress
+
+procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+
+  function _SortPatternArray(const aPatternArray: TPatternArray): TSortedPatterns;
+  var
+    List: TList;
+    i, Len: Integer;
+  begin
+    // We use a TList here, because it has an easy Sort method that array's lack...
+    List := TList.Create;
+    try
+      // Build up a list of pointers to the patterns :
+      Len := Length(aPatternArray);
+      List.Count := Len;
+      for i := 0 to Len - 1 do
+        List[i] := @(aPatternArray[i]);
+
+      // Sort them in such a way that finding them can be done via bin-search :
+      List.Sort(@PatternList_PatternCompare);
+
+      // Transport the result over into a dynamic array :
+      SetLength(Result, Len);
+      for i := 0 to Len - 1 do
+        Result[i] := List[i];
+    finally
+      FreeAndNil(List);
+    end;
+  end;
+
+  function _FindAndRememberPattern(const aXboxLibraryInfo: PXboxLibraryInfo; const aAddress: PByte): PXboxLibraryFunction;
+  var
+    Detected: PDetectedXboxLibraryFunction;
   begin
     // Search if this address matches a pattern :
-    if not _FindPattern(TPatternArray(aXboxLibraryInfo.PatternArray), aXboxLibraryInfo.NrPatterns, aAddress, {var}Index) then
+    Result := TestLibraryOnAddress(aXboxLibraryInfo, aAddress);
+    if Result = nil then
       Exit;
 
-    Pattern := PXboxLibraryFunction(@(TPatternArray(aXboxLibraryInfo.PatternArray)[Index]));
+    // Now that it's found, see if it was already registered :
+    Detected := DetectedFunctions.FindByName(Result.Name);
+    if Assigned(Detected) then
+    begin
+      // Count the number of thimes it was found (should stay at 1) :
+      Inc(Detected.HitCount);
+      Exit;
+    end;
 
-Inc(Pattern.HitCount); if Pattern.HitCount > 1 then Exit;
+    // Newly detected functions are registered here (including their range,
+    // which will come in handy when debugging) :
+    Detected := DetectedFunctions.New(Result);
+    Detected.CodeStart := TCodePointer(aAddress);
+    Detected.CodeEnd := TCodePointer(IntPtr(aAddress) + Result.TotalLength);
+    Detected.HitCount := 1;
 
-    // TODO : We found a library-function! Administrate that somewhere...
-    DbgPrintf('DxbxHLE: 0x%.8x -> %s', [aAddress, Pattern.Name]);
-    Inc(NrOfAPIsDetected);
+    DbgPrintf('DxbxHLE : 0x%.8x -> %s', [aAddress, Result.Name]);
+  end;
+
+  procedure _ScanMemoryRangeForLibraryPatterns(const ByteScanLower, ByteScanUpper: PByte;
+    const aXboxLibraryInfo: PXboxLibraryInfo);
+  var
+    p: PByte;
+  begin
+    p := ByteScanLower;
+    while p <> ByteScanUpper do
+    begin
+      _FindAndRememberPattern(aXboxLibraryInfo, p);
+      Inc(p);
+    end;
   end;
 
 var
-  ByteScanLower, ByteScanUpper, p: PByte;
-  i: Integer;
+  ByteScanLower, ByteScanUpper: PByte;
+  i, j, PrevCount: Integer;
+  CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
+  CurrentLibName: string;
+  CurrentXboxLibraryInfo: PXboxLibraryInfo;
 begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
   ByteScanUpper := PByte(IntPtr(ByteScanLower) + pXbeHeader.dwSizeofImage);
 
-  NrOfAPIsDetected := 0;
-  p := ByteScanLower;
-  while p <> ByteScanUpper do
-  begin
-    for i := 0 to Length(AllPatternArrays) - 1 do
-      _FindAndRememberPattern(AllPatternArrays[i], p);
+  DetectedFunctions.Clear;
 
-    Inc(p);
+  // Sort all pattern arrays, to enable binary searching :
+  for i := 0 to Length(AllXboxLibraries) - 1 do
+    AllXboxLibraries[i].SortedPatterns := _SortPatternArray(AllXboxLibraries[i].PatternArray);
+
+  // Loop over all libraries :
+  CurrentXbeLibraryVersion := pLibraryVersion;
+  if not Assigned(CurrentXbeLibraryVersion) then
+  begin
+    DbgPrintf('DxbxHLE : No XBE library versions to scan!');
+    Exit;
   end;
 
-  DbgPrintf('DxbxHLE: %d APIs detected', [NrOfAPIsDetected]);
+  // Loop over all library versions :
+  PrevCount := 0;
+  for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
+  begin
+    CurrentLibName := Copy(CurrentXbeLibraryVersion.szName, 1, 8);
+    DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
+
+    // Find the patterns the fit this library exactly (version and name) :
+    for j := 0 to Length(AllXboxLibraries) - 1 do
+    begin
+      CurrentXboxLibraryInfo := @(AllXboxLibraries[j]);
+      // Take LibVersion and LibName into account (don't scan outside active lib+version) :
+      if  (CurrentXboxLibraryInfo.LibVersion = CurrentXbeLibraryVersion.wBuildVersion)
+      and (StrLIComp(PAnsiChar(CurrentXboxLibraryInfo.LibName), PAnsiChar(CurrentLibName), 8) = 0) then
+      begin
+        // Once found, scan the memory for functions from this library :
+        _ScanMemoryRangeForLibraryPatterns(ByteScanLower, ByteScanUpper, CurrentXboxLibraryInfo);
+        Break;
+      end;
+    end;
+
+    DbgPrintf('DxbxHLE : Detected %d APIs from "%s"', [DetectedFunctions.Count - PrevCount, CurrentLibName]);
+    PrevCount := DetectedFunctions.Count;
+
+    // Skip to the next library :
+    Inc(CurrentXbeLibraryVersion);
+  end;
+
+  DbgPrintf('DxbxHLE : Detected a total of %d APIs', [DetectedFunctions.Count]);
 end;
+
+{ TDetectedFunctions }
+
+constructor TDetectedFunctions.Create;
+begin
+  inherited Create;
+
+  FList := TList.Create;
+end;
+
+destructor TDetectedFunctions.Destroy;
+begin
+  Clear;
+  FreeAndNil(FList);
+
+  inherited Destroy;
+end;
+
+function TDetectedFunctions.Count: Integer;
+begin
+  Result := FList.Count;
+end;
+
+function TDetectedFunctions.GetItem(Index: Integer): PDetectedXboxLibraryFunction;
+begin
+  Result := PDetectedXboxLibraryFunction(FList[Index]);
+end;
+
+procedure TDetectedFunctions.Clear;
+var
+  i: Integer;
+  DetectedFunction: PDetectedXboxLibraryFunction;
+begin
+  for i := 0 to FList.Count - 1 do
+  begin
+    DetectedFunction := Items[i];
+    Dispose(DetectedFunction);
+  end;
+
+  FList.Clear;
+end;
+
+function TDetectedFunctions.New(const aInfo: PXboxLibraryFunction): PDetectedXboxLibraryFunction;
+begin
+  Result := AllocMem(SizeOf(RDetectedXboxLibraryFunction));
+  ZeroMemory(Result, SizeOf(RDetectedXboxLibraryFunction));
+  Result.Info := aInfo;
+  FList.Add(Result);
+end;
+
+function TDetectedFunctions.FindByName(const aName: string): PDetectedXboxLibraryFunction;
+var
+  i: Integer;
+begin
+  for i := 0 to FList.Count - 1 do
+  begin
+    Result := Items[i];
+    if SameText(Result.Info.Name, aName) then
+      Exit;
+  end;
+
+  Result := nil;
+end;
+
+function TDetectedFunctions.FindByAddress(const aAddress: TCodePointer): PDetectedXboxLibraryFunction;
+var
+  i: Integer;
+begin
+  for i := 0 to FList.Count - 1 do
+  begin
+    Result := Items[i];
+    if (IntPtr(Result.CodeStart) <= IntPtr(aAddress)) and (IntPtr(aAddress) <= IntPtr(Result.CodeEnd)) then
+      Exit;
+  end;
+
+  Result := nil;
+end;
+
+initialization
+
+  DetectedFunctions := TDetectedFunctions.Create;
+
+finalization
+
+  FreeAndNil(DetectedFunctions);
 
 end.
