@@ -25,6 +25,8 @@ uses
   // Delphi
   Windows,
   SysUtils, // StrCopy
+  // Jcl
+  JclDebug,
   // Dxbx
   uMutex,
   uLog,
@@ -88,6 +90,9 @@ begin
   if hMapObject <> 0 then
     Exit;
 
+  // Start tracking exceptions using JclDebug
+  JclStartExceptionTracking;
+
   // Create the shared memory "file"
   begin
     hMapObject := CreateFileMapping(
@@ -143,6 +148,8 @@ begin
 
     UnmapViewOfFile(g_EmuShared);
     g_EmuShared := nil;
+
+    JclStopExceptionTracking;
   end;
 
   CloseLogs;

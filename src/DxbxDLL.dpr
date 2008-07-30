@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
-library DxbxKrnl;
+library DxbxDLL;
 
 { Important note about DLL memory management: ShareMem must be the
   first unit in your library's USES clause AND your project's (select
@@ -45,12 +45,7 @@ uses
   uEmuD3D8 in 'DxbxKrnl\uEmuD3D8.pas',
   uEmuAlloc in 'DxbxKrnl\uEmuAlloc.pas',
   uXbe in 'uXbe.pas',
-  JwaWinType in '..\Libraries\jwapi\Win32API\JwaWinType.pas',
-  JwaWinNT in '..\Libraries\jwapi\Win32API\JwaWinNT.pas',
   XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
-  JwaWinBase in '..\Libraries\jwapi\Win32API\JwaWinBase.pas',
-  JwaNative in '..\Libraries\jwapi\Win32API\JwaNative.pas',
-  JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas',
   uEmuKrnl in 'DxbxKrnl\uEmuKrnl.pas',
   uEmuXapi in 'DxbxKrnl\uEmuXapi.pas',
   uEmuFile in 'DxbxKrnl\uEmuFile.pas',
@@ -94,12 +89,7 @@ uses
   uXboxLibraryUtils in 'uXboxLibraryUtils.pas',
   uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
   uPatterns in 'Tools\PatternCodeGenerator\uPatterns.pas',
-  uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas',
-  JclTD32 in '..\Libraries\Jcl\windows\JclTD32.pas',
-  JclDebug in '..\Libraries\Jcl\windows\JclDebug.pas',
-  JclPeImage in '..\Libraries\Jcl\windows\JclPeImage.pas',
-  JclFileUtils in '..\Libraries\Jcl\common\JclFileUtils.pas',
-  JclSynch in '..\Libraries\Jcl\common\JclSynch.pas';
+  uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}

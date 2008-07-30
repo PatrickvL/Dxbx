@@ -24,6 +24,8 @@ interface
 uses
   // Delphi
   Windows,
+  // Jedi
+  JwaWinType,
   // Dxbx
   uTypes,
   uLog, // DbgPrintf
@@ -35,6 +37,7 @@ type
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
 procedure XTL_EmuXapiInitProcess(); stdcall;
+function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID;  RtlHeapParams: PVOID): PVOID; stdcall;
 
 implementation
 
@@ -215,44 +218,45 @@ begin
 end;     *)
 //*/
 
+type
+  RTL_HEAP_DEFINITION = record Length: Integer; end; // TODO
+  
 // ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
-(*PVOID WINAPI XTL.EmuRtlCreateHeap
+function XTL_EmuRtlCreateHeap
 (
-  in ULONG Flags,
-  in PVOID Base OPTIONAL,
-  in ULONG Reserve OPTIONAL,
-  in ULONG Commit,
-  in PVOID Lock OPTIONAL,
-  in PVOID RtlHeapParams OPTIONAL
-  )
+  Flags: ULONG;
+  Base: PVOID; // OPTIONAL
+  Reserve: ULONG; // OPTIONAL
+  Commit: ULONG;
+  Lock: PVOID; // OPTIONAL
+  RtlHeapParams: PVOID // OPTIONAL
+  ): PVOID; stdcall;
+var
+  RtlHeapDefinition: RTL_HEAP_DEFINITION;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuRtlCreateHeap'
-    '('
-    '   Flags               : $%.08X'
-    '   Base                : $%.08X'
-    '   Reserve             : $%.08X'
-    '   Commit              : $%.08X'
-    '   Lock                : $%.08X'
-    '   RtlHeapParams       : $%.08X'
-    ');',
-    [Flags, Base, Reserve, Commit, Lock, RtlHeapParams);
-
-  NtDll.RTL_HEAP_DEFINITION RtlHeapDefinition;
+  DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
+    #13#10'(' +
+    #13#10'   Flags               : $%.08X' +
+    #13#10'   Base                : $%.08X' +
+    #13#10'   Reserve             : $%.08X' +
+    #13#10'   Commit              : $%.08X' +
+    #13#10'   Lock                : $%.08X' +
+    #13#10'   RtlHeapParams       : $%.08X' +
+    #13#10');',
+    [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
 
   ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
 
   RtlHeapDefinition.Length := SizeOf(RtlHeapDefinition);
 
-  PVOID pRet := NtDll.RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition);
+// TODO Dxbx :  Result := NtDll.RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition);
 
   EmuSwapFS(); // XBox FS
-
-  Result := pRet;
-end;     *)
+end;
 
 // ******************************************************************
 // * func: EmuRtlAllocateHeap
@@ -622,14 +626,15 @@ begin
 
         memcpy(@pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
       end;
+    end
     else
     begin
       pph.pPollingParameters := 0;
     end;
 
     g_hInputHandle[dwPort] := pph;
-  end;
-else
+  end
+  else
   begin
     pph := (POLLING_PARAMETERS_HANDLE)g_hInputHandle[dwPort];
 
@@ -641,25 +646,26 @@ else
       end;
 
       memcpy(@pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
-    end;
-else
-  begin
-    if (pph.pPollingParameters <> 0) then
+    end
+    else
     begin
-      delete pph.pPollingParameters;
+      if (pph.pPollingParameters <> 0) then
+      begin
+        delete pph.pPollingParameters;
 
-      pph.pPollingParameters := 0;
+        pph.pPollingParameters := 0;
+      end;
     end;
   end;
+
+  pph.dwPort := dwPort;
+  end;
+
+  EmuSwapFS(); // XBox FS
+
+  Result := (THandle)pph;
 end;
-
-pph.dwPort := dwPort;
-end;
-
-EmuSwapFS(); // XBox FS
-
-Result := (THandle)pph;
-end;                  *)
+*)
 
 // ******************************************************************
 // * func: EmuXInputClose
@@ -707,7 +713,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Exit;
- end;    *)
+end;    *)
 
 // ******************************************************************
 // * func: EmuXInputPoll
@@ -726,7 +732,7 @@ begin
            [hDevice);
 
     POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
- 
+
     //
     // Poll input
     //
@@ -767,7 +773,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ERROR_SUCCESS;
- end;       *)
+end;       *)
 
 // ******************************************************************
 // * func: EmuXInputGetCapabilities
@@ -808,7 +814,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ret;
- end;        *)
+end;        *)
 
 // ******************************************************************
 // * func: EmuInputGetState
@@ -861,7 +867,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ret;
- end;            *)
+end;            *)
 
 // ******************************************************************
 // * func: EmuInputGetState
@@ -943,7 +949,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ret;
- end;   *)
+end;   *)
 
 // ******************************************************************
 // * func: EmuCreateMutex
@@ -970,7 +976,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := hRet;
- end;          *)
+end;          *)
 
 // ******************************************************************
 // * func: EmuCloseHandle
@@ -993,7 +999,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;          *)
+end;          *)
 
 // ******************************************************************
 // * func: EmuSetThreadPriorityBoost
@@ -1021,7 +1027,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;       *)
+end;       *)
 
 // ******************************************************************
 // * func: EmuSetThreadPriority
@@ -1052,7 +1058,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;        *)
+end;        *)
 
 
 // ******************************************************************
@@ -1079,7 +1085,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := iRet;
- end;              *)
+end;              *)
 
 // ******************************************************************
 // * func: EmuGetExitCodeThread
@@ -1104,7 +1110,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := bRet;
- end;          *)
+end;          *)
 
 type
   RTL_HEAP_PARAMETERS = packed record
@@ -1264,8 +1270,8 @@ begin
       CxbxKrnlCleanup('Multiple thread notification routines installed (caustik can fix this not )');
 
     g_pfnThreadNotification := pThreadNotification.pfnNotifyRoutine;
-  end;
-else
+  end
+  else
   begin
     if (g_pfnThreadNotification <> 0) then
       g_pfnThreadNotification := 0;
@@ -1295,7 +1301,7 @@ begin
 
     // return a fake handle value for now
     Result := (PVOID)$AAAAAAAA;
- end;
+end;
 
 // ******************************************************************
 // * func: EmuXCalculateSignatureBeginEx
@@ -1319,7 +1325,7 @@ begin
 
     // return a fake handle value for now
     Result := PVOID($AAAAAAAA);
- end;
+end;
 
 // ******************************************************************
 // * func: EmuXCalculateSignatureUpdate
@@ -1344,7 +1350,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ERROR_SUCCESS;
- end;
+end;
 
 // ******************************************************************
 // * func: EmuXCalculateSignatureEnd
@@ -1367,7 +1373,7 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ERROR_SUCCESS;
- end;
+end;
 *)
 
 end.

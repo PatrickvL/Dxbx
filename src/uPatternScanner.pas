@@ -50,21 +50,6 @@ begin
   end;
 end;
 
-function PatternListCompare(Pattern1, Pattern2: PXboxLibraryFunction): Integer;
-var
-  i: Integer;
-begin
-  for i := 0 to PATTERNSIZE - 1 do
-  begin
-    Result := Integer(Pattern1.Pattern.Bytes[i]) - Integer(Pattern2.Pattern.Bytes[i]);
-    if Result <> 0 then
-      Exit;
-  end;
-
-  if Result = 0 then
-    Result := Pattern1.CRCValue - Pattern2.CRCValue;
-end;
-
 function ConvertPatternsToSortedList(const aPatterns: PChar): TList;
 
   function _ScanHexDigits(var aLine: PChar; var Value: Integer; Digits: Integer): Boolean;
@@ -184,7 +169,7 @@ begin
       Inc(p1);
   end;
 
-  Result.Sort(@PatternListCompare);
+  Result.Sort(@PatternList_NameCompare);
 end;
 
 end.

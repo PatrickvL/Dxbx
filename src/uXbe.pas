@@ -486,8 +486,9 @@ begin
 
     i := m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr;
     SetLength(m_XAPILibraryVersion, SizeOf(m_LibraryVersion));
-    for lIndex := 0 to SizeOf(m_LibraryVersion) - 1 do
-      m_XAPILibraryVersion[lIndex] := Buffer[lIndex + i];
+    CopyMemory(m_XAPILibraryVersion, @(Buffer[i]), SizeOf(m_LibraryVersion));
+//was:for lIndex := 0 to SizeOf(m_LibraryVersion) - 1 do
+//      m_XAPILibraryVersion[lIndex] := Buffer[lIndex + i];
 
     WriteLog('DXBX: Reading Sections...');
 

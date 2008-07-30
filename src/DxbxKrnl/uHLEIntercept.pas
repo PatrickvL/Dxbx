@@ -36,10 +36,13 @@ uses
   uEmuFS,
   uHLEDatabase,
   // Dxbx
-  DxLibraryAPIScanning;
+  uXboxLibraryUtils,
+  DxLibraryAPIScanning,
+  uXboxLibraryPatches;
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
+procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 
 implementation
 
@@ -52,8 +55,6 @@ implementation
 //include 'HLEDataBase.h'
 
 function EmuLocateFunction(var Oovpa: OOVPA; lower: uint32; upper: uint32): PVOID;
-procedure  EmuInstallWrappers(var OovpaTable: OOVPATable; OovpaTableSize: uint32; var pXbeHeader: Xbe.Header);
-
 //include <shlobj.h>
 //include <vector>
 
@@ -65,9 +66,9 @@ procedure  EmuInstallWrappers(var OovpaTable: OOVPATable; OovpaTableSize: uint32
 *)
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
+(*
 var
-  pCertificate: PXBE_CERTIFICATE;
-//     szCacheFileName: array[0..260-1] of Char;
+//  pCertificate: PXBE_CERTIFICATE;
   dwLibraryVersions: uint32;
   dwHLEEntries: uint32;
 
@@ -75,119 +76,27 @@ var
   OrigUnResolvedXRefs: uint32;
 
   p: Integer;
-begin
-  pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
-
-  DbgPrintf('');
-  DbgPrintf('*******************************************************************************');
-  DbgPrintf('* Dxbx High Level Emulation database last modified ' + szHLELastCompileTime);
-  DbgPrintf('*******************************************************************************');
-  DbgPrintf('');
-
-  { TODO : need to be translated to delphi }
-(*
-  //
-  // initialize HLE cache file
-  //
-
-  begin
-    SHGetSpecialFolderPath(0, szCacheFileName, CSIDL_APPDATA, TRUE);
-
-    StrCat(szCacheFileName, '\Cxbx');
-
-    CreateDirectory(szCacheFileName, 0);
-
-    sint32 spot := -1;
-
-    for (integer v:=0;v<260;v++)
-    begin
-        if (szCacheFileName[v] := '') then  begin  spot = v;  end;
-        else if (szCacheFileName[v] := #0) then  begin  break;  end;
-     end;
-
-    if (spot <> -1) then  begin  szCacheFileName[spot] := #0;  end;
-
-    //
-    // create HLECache directory
-    //
-
-    StrCopy(@szCacheFileName[spot], '\HLECache');
-
-    CreateDirectory(szCacheFileName, 0);
-
-    //
-    // open title's cache file
-    //
-
-    StrFmt(@szCacheFileName[spot+9], '\%08x.dat', pCertificate.dwTitleId);
-
-    FILE *pCacheFile := FileOpen(szCacheFileName, fmOpenRead);
-
-    if (pCacheFile <> 0) then
-    begin
-        bool bVerified := False;
-
-        //
-        // verify last compiled timestamp
-        //
-
-         szCacheLastCompileTime: array[0..64-1] of Char;
-
-        FillChar(szCacheLastCompileTime, 0, 64);
-
-        if (FileRead(szCacheLastCompileTime, 64, 1, pCacheFile) = 1) then
-        begin
-            if (StrComp(szCacheLastCompileTime, szHLELastCompileTime) = 0) then
-            begin
-                bVerified := true;
-             end;
-         end;
-
-        //
-        // load function addresses
-        //
-
-        if (bVerified) then
-        begin
-            while(true)
-            begin
-                Pointer cur;
-
-                if (FileRead(@cur, 4, 1, pCacheFile) <> 1) then
-                    break;
-
-                vCacheInp.push_back(cur);
-             end;
-
-            bCacheInp := true;
-
-            vCacheInpIter := vCacheInp.begin();
-
-            DbgPrintf('HLE: Loaded HLE Cache for $%.08X', pCertificate.dwTitleId);
-         end;
-
-        FileClose(pCacheFile);
-     end;
-  end;
 *)
-    //
-    // initialize openxdk emulation (TODO)
-    //
+begin
+//  pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
 
+  // initialize openxdk emulation (TODO)
   if pLibraryVersion = nil then
   begin
-    DbgPrintf('HLE: Detected OpenXDK application...');
+    DbgPrintf('HLE: Detected OpenXDK application... cannot patch!');
+    Exit;
   end;
 
-    //
-    // initialize Microsoft XDK emulation
-    //
+  // initialize Microsoft XDK emulation
+  DbgPrintf('HLE: Detected Microsoft XDK application...');
 
-  if pLibraryVersion <> nil then
-  begin
-    DbgPrintf('HLE: Detected Microsoft XDK application...');
-    dwLibraryVersions := pXbeHeader.dwLibraryVersions;
-    dwHLEEntries := HLEDataBaseSize div SizeOf(HLEData);
+  DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
+
+  EmuInstallWrappers(pXbeHeader);
+
+(*
+  dwLibraryVersions := pXbeHeader.dwLibraryVersions;
+  dwHLEEntries := HLEDataBaseSize div SizeOf(HLEData);
 
     LastUnResolvedXRefs := UnResolvedXRefs + 1;
     OrigUnResolvedXRefs := UnResolvedXRefs;
@@ -200,300 +109,246 @@ begin
 
       LastUnResolvedXRefs := UnResolvedXRefs;
 
-      DxbxScanForLibraryAPIs(pXbeHeader);
-(*
-            bool bFoundD3D := False;
-            for (uint32 v:=0;v<dwLibraryVersions;v++)
+      bool bFoundD3D := False;
+      for (uint32 v:=0;v<dwLibraryVersions;v++)
+      begin
+        uint16 MajorVersion := pLibraryVersion[v].wMajorVersion;
+        uint16 MinorVersion := pLibraryVersion[v].wMinorVersion;
+        uint16 BuildVersion := pLibraryVersion[v].wBuildVersion;
+        uint16 OrigBuildVersion := BuildVersion;
+
+        // aliases
+        if BuildVersion = 4928 then
+          BuildVersion := 4627;
+
+        if BuildVersion = 5659 then
+          BuildVersion := 5558;
+
+        Char szLibraryName[9] := (0);
+        for c := 0 to 7 do
+          szLibraryName[c] := pLibraryVersion[v].szName[c];
+
+        // TODO: HACK: These libraries are packed into one database
+        if StrComp(szLibraryName, 'D3DX8') = 0 then
+          StrCopy(szLibraryName, 'D3D8');
+
+        if StrComp(szLibraryName, 'D3D8') = 0 then
+        begin
+          if (bFoundD3D) then
+          begin
+              //DbgPrintf("Redundant\n");
+              continue;
+          end;
+
+          bFoundD3D := true;
+        end;
+
+        if bXRefFirstPass then
+        begin
+          if (StrComp('XAPILIB', szLibraryName) = 0) and (MajorVersion = 1) and (MinorVersion = 0)
+          and ((BuildVersion = 3911) or (BuildVersion = 4034) or (BuildVersion = 4134) or (BuildVersion = 4361) or
+               (BuildVersion = 4432) or (BuildVersion = 4627) or (BuildVersion = 5558) or (BuildVersion = 5849)) then
+          begin
+            uint32 lower := pXbeHeader.dwBaseAddr;
+            uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
+
+            // locate XapiProcessHeap
             begin
-                uint16 MajorVersion := pLibraryVersion[v].wMajorVersion;
-                uint16 MinorVersion := pLibraryVersion[v].wMinorVersion;
-                uint16 BuildVersion := pLibraryVersion[v].wBuildVersion;
-                uint16 OrigBuildVersion := BuildVersion;
+              Pointer pFunc := 0;
+              uint ProcessHeapOffs;
+              uint RtlCreateHeapOffs;
 
-                // aliases
-                if (BuildVersion := 4928) then  begin  BuildVersion = 4627;  end;
-                if (BuildVersion := 5659) then  begin  BuildVersion = 5558;  end;
+              if (BuildVersion >= 5849) then
+              begin
+                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5849, lower, upper);
+                ProcessHeapOffs := $51;
+                RtlCreateHeapOffs := $4A;
+              end
+              else if (BuildVersion >= 5558) then
+              begin
+                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5558, lower, upper);
 
-                Char szLibraryName[9] := (0);
+                // 5659 has an updated function
+                if (pFunc = 0) then
+                  pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5659, lower, upper);
 
-                for (uint32 c:=0;c<8;c++)
+                ProcessHeapOffs := $51;
+                RtlCreateHeapOffs := $4A;
+              end
+              else if (BuildVersion >= 4361) then
+              begin
+                if (OrigBuildVersion = 4928) then
                 begin
-                    szLibraryName[c] := pLibraryVersion[v].szName[c];
-                 end;
-
-                // TODO: HACK: These libraries are packed into one database
-                if (StrComp(szLibraryName, 'D3DX8') = 0) then
+                  pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4928, lower, upper);
+                  ProcessHeapOffs := $44;
+                  RtlCreateHeapOffs := $3B;
+                end
+                else
                 begin
-                    StrCopy(szLibraryName, 'D3D8');
-                 end;
+                  pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4361, lower, upper);
+                  ProcessHeapOffs := $3E;
+                  RtlCreateHeapOffs := $37;
+                end;
+              end
+              else // 3911, 4034, 4134
+              begin
+                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_3911, lower, upper);
+                ProcessHeapOffs := $3E;
+                RtlCreateHeapOffs := $37;
+              end;
 
-                if (StrComp(szLibraryName, 'D3D8') = 0) then
+              if (pFunc <> 0) then
+              begin
+                XTL.EmuXapiProcessHeap := *(PVOID)((uint32)pFunc + ProcessHeapOffs);
+
+                XTL.g_pRtlCreateHeap := *(XTL.pfRtlCreateHeap)((uint32)pFunc + RtlCreateHeapOffs);
+                XTL.g_pRtlCreateHeap := (XTL.pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL.g_pRtlCreateHeap + RtlCreateHeapOffs + $04);
+
+                DbgPrintf('HLE: $%.08X . EmuXapiProcessHeap', XTL.EmuXapiProcessHeap);
+                DbgPrintf('HLE: $%.08X . g_pRtlCreateHeap', XTL.g_pRtlCreateHeap);
+              end;
+            end;
+          end // not XAPILIB
+          else
+            if (StrComp('D3D8', szLibraryName) = 0) and (MajorVersion = 1) and (MinorVersion = 0)
+            and ((BuildVersion = 3925) or (BuildVersion = 4134) or (BuildVersion = 4361) or (BuildVersion = 4432) or
+                 (BuildVersion = 4627) or (BuildVersion = 5558) or (BuildVersion = 5849)) then
+            begin
+              uint32 lower := pXbeHeader.dwBaseAddr;
+              uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
+
+              Pointer pFunc := nil;
+
+              if (BuildVersion = 3925) then
+                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
+              else if (BuildVersion < 5558) then
+                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
+              else
+                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_5558, lower, upper);
+
+              // locate D3DDeferredRenderState
+              if Assigned(pFunc) then
+              begin
+                // offset for stencil cull enable render state in the deferred render state buffer
+                integer patchOffset := 0;
+
+                if (BuildVersion = 3925) then
                 begin
-                    if (bFoundD3D) then
-                    begin
-                        //DbgPrintf("Redundant\n");
-                        continue;
-                     end;
-
-                    bFoundD3D := true;
-                 end;
-
-                if (bXRefFirstPass) then
+                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $25) - $19F + 72*4);  // TODO: Clean up (?)
+                  patchOffset := 142*4 - 72*4; // TODO: Verify
+                end
+                else if (BuildVersion = 4134) then
                 begin
-                    if (StrComp('XAPILIB', szLibraryName) then  = 0 and MajorVersion = 1 and MinorVersion = 0 and
-                        (BuildVersion = 3911 or BuildVersion = 4034 or BuildVersion = 4134 or BuildVersion = 4361
-                      or BuildVersion = 4432 or BuildVersion = 4627 or BuildVersion = 5558 or BuildVersion = 5849))
-                    begin
-                        uint32 lower := pXbeHeader.dwBaseAddr;
-                        uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
-
-                        // locate XapiProcessHeap
-                        begin
-                            Pointer pFunc := 0;
-                            uint ProcessHeapOffs;
-                            uint RtlCreateHeapOffs;
-
-                            if (BuildVersion >= 5849) then
-                            begin
-                                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5849, lower, upper);
-                                ProcessHeapOffs := $51;
-                                RtlCreateHeapOffs := $4A;
-                             end;
-                            else if (BuildVersion >= 5558) then
-                            begin
-                                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5558, lower, upper);
-
-                                // 5659 has an updated function
-                                if (pFunc = 0) then
-                                begin
-                                    pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5659, lower, upper);
-                                 end;
-
-                                ProcessHeapOffs := $51;
-                                RtlCreateHeapOffs := $4A;
-                             end;
-                            else if (BuildVersion >= 4361) then
-                            begin
-                                if (OrigBuildVersion = 4928) then
-                                begin
-                          pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4928, lower, upper);
-                                    ProcessHeapOffs := $44;
-                                    RtlCreateHeapOffs := $3B;
-                                 end;
-                                else
-                                begin
-                          pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4361, lower, upper);
-                                    ProcessHeapOffs := $3E;
-                                    RtlCreateHeapOffs := $37;
-                                 end;
-                             end;
-                            else // 3911, 4034, 4134
-                            begin
-                                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_3911, lower, upper);
-                                ProcessHeapOffs := $3E;
-                                RtlCreateHeapOffs := $37;
-                             end;
-
-                            if (pFunc <> 0) then
-                            begin
-                                XTL.EmuXapiProcessHeap := *(PVOID)((uint32)pFunc + ProcessHeapOffs);
-
-                                XTL.g_pRtlCreateHeap := *(XTL.pfRtlCreateHeap)((uint32)pFunc + RtlCreateHeapOffs);
-                                XTL.g_pRtlCreateHeap := (XTL.pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL.g_pRtlCreateHeap + RtlCreateHeapOffs + $04);
-
-                                DbgPrintf('HLE: $%.08X . EmuXapiProcessHeap', XTL.EmuXapiProcessHeap);
-                                DbgPrintf('HLE: $%.08X . g_pRtlCreateHeap', XTL.g_pRtlCreateHeap);
-                             end;
-                         end;
-                     end;
-                    else if (StrComp('D3D8', szLibraryName) then  = 0 and MajorVersion = 1 and MinorVersion = 0  and
-                        (BuildVersion = 3925 or BuildVersion = 4134 or BuildVersion = 4361 or BuildVersion = 4432
-                      or BuildVersion = 4627 or BuildVersion = 5558 or BuildVersion = 5849))
-                    begin
-                        uint32 lower := pXbeHeader.dwBaseAddr;
-                        uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
-
-                        Pointer pFunc := 0;
-
-                        if (BuildVersion = 3925) then
-                            pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
-                        else if (BuildVersion < 5558) then
-                            pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
-                        else
-                            pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_5558, lower, upper);
-
-                        // locate D3DDeferredRenderState
-                        if (pFunc <> 0) then
-                        begin
-                            // offset for stencil cull enable render state in the deferred render state buffer
-                            integer patchOffset := 0;
-
-                            if (BuildVersion = 3925) then
-                            begin
-                                XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $25) - $19F + 72*4);  // TODO: Clean up (?)
-                                patchOffset := 142*4 - 72*4; // TODO: Verify
-                             end;
-                            else if (BuildVersion = 4134) then
-                            begin
-                                XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $248 + 82*4);  // TODO: Verify
-                                patchOffset := 142*4 - 82*4;
-                             end;
-                            else if (BuildVersion = 4361) then
-                            begin
-                                XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $200 + 82*4);
-                                patchOffset := 142*4 - 82*4;
-                             end;
-                            else if (BuildVersion = 4432) then
-                            begin
-                                XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $204 + 83*4);
-                                patchOffset := 143*4 - 83*4;
-                             end;
-                            else if (BuildVersion = 4627) then
-                            begin
-                                XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
-                                patchOffset := 162*4 - 92*4;
-                             end;
-                            else if (BuildVersion = 5558 or BuildVersion = 5849) then
-                            begin
-                                // WARNING: Not thoroughly tested (just seemed very correct right away)
-                                XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
-                                patchOffset := 162*4 - 92*4;
-                             end;
-
-                            XRefDataBase[XREF_D3DDEVICE]                   := *(DWORD)((DWORD)pFunc + $03);
-                            XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 0*4;
-                            XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 1*4;
-                            XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 2*4;
-                            XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 3*4;
-
-                            for (integer v:=0;v<44;v++)
-                            begin
-                                XTL.EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
-                             end;
-
-                            DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL.EmuD3DDeferredRenderState);
-                         end;
-                        else
-                        begin
-                            XTL.EmuD3DDeferredRenderState := 0;
-                            EmuWarning('EmuD3DDeferredRenderState was not found!');
-                         end;
-
-                        // locate D3DDeferredTextureState
-                        begin
-                            pFunc := 0;
-
-                            if (BuildVersion = 3925) then
-                                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
-                            else if (BuildVersion = 4134) then
-                                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
-                            else if (BuildVersion = 4361 or BuildVersion = 4432) then
-                                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
-                            else if (BuildVersion = 4627 or BuildVersion = 5558 or BuildVersion = 5849) then
-                                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
-
-                            if (pFunc <> 0) then
-                            begin
-                                if (BuildVersion = 3925) then  // 0x18F180
-                                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
-                                else if (BuildVersion = 4134) then
-                                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
-                                else
-                                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
-
-                                for (integer s:=0;s<4;s++)
-                                begin
-                                    for (integer v:=0;v<32;v++)
-                                        XTL.EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
-                                 end;
-
-                                DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState', XTL.EmuD3DDeferredTextureState);
-                             end;
-                            else
-                            begin
-                                XTL.EmuD3DDeferredTextureState := 0;
-                                CxbxKrnlCleanup('EmuD3DDeferredTextureState was not found!');
-                             end;
-                         end;
-                     end;
-                 end;
-
-                DbgPrintf('HLE: * Searching HLE database for %s %d.%d.%d ...', pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
-
-                bool found:=False;
-
-                for (uint32 d:=0;d<dwHLEEntries;d++)
+                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $248 + 82*4);  // TODO: Verify
+                  patchOffset := 142*4 - 82*4;
+                end
+                else if (BuildVersion = 4361) then
                 begin
-                    if (BuildVersion <> HLEDataBase[d].BuildVersion
-                    or MinorVersion <> HLEDataBase[d].MinorVersion
-                    or MajorVersion <> HLEDataBase[d].MajorVersion
-                    or StrComp(szLibraryName, HLEDataBase[d].Library) <> 0) then
-                      Continue;
+                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $200 + 82*4);
+                  patchOffset := 142*4 - 82*4;
+                end
+                else if (BuildVersion = 4432) then
+                begin
+                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $204 + 83*4);
+                  patchOffset := 143*4 - 83*4;
+                end
+                else if (BuildVersion = 4627) then
+                begin
+                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+                  patchOffset := 162*4 - 92*4;
+                end
+                else if (BuildVersion = 5558 or BuildVersion = 5849) then
+                begin
+                  // WARNING: Not thoroughly tested (just seemed very correct right away)
+                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+                  patchOffset := 162*4 - 92*4;
+                end;
 
-                    found := true;
+                XRefDataBase[XREF_D3DDEVICE]                   := *(DWORD)((DWORD)pFunc + $03);
+                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 0*4;
+                XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 1*4;
+                XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 2*4;
+                XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 3*4;
 
-                    DbgPrintf('Found');
+                for (integer v:=0;v<44;v++)
+                  XTL.EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
-                    EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, pXbeHeader);
-                 end;
+                DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL.EmuD3DDeferredRenderState);
+              end
+              else
+              begin
+                XTL.EmuD3DDeferredRenderState := 0;
+                EmuWarning('EmuD3DDeferredRenderState was not found!');
+              end;
 
-                if (not found) then DbgPrintf('Skipped');
-             end;
-*)
+              // locate D3DDeferredTextureState
+              begin
+                pFunc := 0;
+
+                if (BuildVersion = 3925) then
+                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
+                else if (BuildVersion = 4134) then
+                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
+                else if (BuildVersion = 4361 or BuildVersion = 4432) then
+                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
+                else if (BuildVersion = 4627 or BuildVersion = 5558 or BuildVersion = 5849) then
+                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
+
+                if (pFunc <> 0) then
+                begin
+                  if (BuildVersion = 3925) then  // 0x18F180
+                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
+                  else if (BuildVersion = 4134) then
+                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
+                  else
+                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
+
+                  for (integer s:=0;s<4;s++)
+                  begin
+                    for (integer v:=0;v<32;v++)
+                      XTL.EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
+                  end;
+
+                  DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState', XTL.EmuD3DDeferredTextureState);
+                end
+                else
+                begin
+                  XTL.EmuD3DDeferredTextureState := 0;
+                  CxbxKrnlCleanup('EmuD3DDeferredTextureState was not found!');
+                end;
+              end;
+
+          end;
+        end;
+
+        DbgPrintf('HLE: * Searching HLE database for %s %d.%d.%d ...', pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
+
+        bool found:=False;
+
+        for (uint32 d:=0;d<dwHLEEntries;d++)
+        begin
+          if (BuildVersion <> HLEDataBase[d].BuildVersion
+          or MinorVersion <> HLEDataBase[d].MinorVersion
+          or MajorVersion <> HLEDataBase[d].MajorVersion
+          or StrComp(szLibraryName, HLEDataBase[d].Library) <> 0) then
+            Continue;
+
+          found := true;
+
+          DbgPrintf('Found');
+
+          EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, pXbeHeader);
+        end;
+
+        if (not found) then
+          DbgPrintf('Skipped');
+      end;
 
       bXRefFirstPass := False;
     end;
 
-        // display Xref summary
+    // display Xref summary
     DbgPrintf('HLE: Resolved ' + IntToStr(OrigUnResolvedXRefs - UnResolvedXRefs) + ' cross reference(s)');
-  end;
-(*
-    vCacheInp.empty();
-
-    //
-    // update cache file
-    //
-
-    if (vCacheOut.size() > 0) then
-    begin
-        FILE *pCacheFile := FileOpen(szCacheFileName, fmOpenWrite);
-
-        if (pCacheFile <> 0) then
-        begin
-            DbgPrintf('HLE: Saving HLE Cache for $%.08XArgs: array of const', pCertificate.dwTitleId);
-
-            //
-            // write last compiled timestamp
-            //
-
-             szCacheLastCompileTime: array[0..64-1] of Char;
-
-            FillChar(szCacheLastCompileTime, 0, 64);
-
-            StrCopy(szCacheLastCompileTime, szHLELastCompileTime);
-
-            FileWrite(szCacheLastCompileTime, 64, 1, pCacheFile);
-
-            //
-            // write function addresses
-            //
-
-            std.vector<Pointer >.const_iterator cur;
-
-            for (cur := vCacheOut.begin();cur <> vCacheOut.end(); ++cur)
-            begin
-                FileWrite( and (cur), 4, 1, pCacheFile);
-             end;
-         end;
-
-        FileClose(pCacheFile);
-     end;
-
-    vCacheOut.empty();
-
-    DbgPrintf('');
-
-    Exit;
   end;
 *)
 end;
@@ -654,49 +509,40 @@ begin
      end;
 
     result:= 0;
- end;
-
-// install function interception wrappers
-  procedure EmuInstallWrappers(var OovpaTable: OOVPATable; OovpaTableSize: uint32; var pXbeHeader: Xbe.Header);
-    uint32 lower := pXbeHeader.dwBaseAddr;
-    uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
-
-    // traverse the full OOVPA table
-    for (uint32 a:=0;a<OovpaTableSize/SizeOf(OOVPATable);a++)
-    begin
-        OOVPA *Oovpa := OovpaTable[a].Oovpa;
-
-        Pointer pFunc := 0;
-
-        if (bCacheInp and (vCacheInpIter <> vCacheInp.end())) then
-        begin
-            pFunc := (vCacheInpIter);
-
-            ++vCacheInpIter;
-         end;
-        else
-        begin
-            pFunc := EmuLocateFunction(Oovpa, lower, upper);
-            vCacheOut.push_back(pFunc);
-         end;
-
-        if (pFunc <> 0) then
-        begin
-            #ifdef _DEBUG_TRACE
-            DbgPrintf('HLE: $%.08X . %s', pFunc, OovpaTable[a].szFuncName);
-            //endif
-
-            if (OovpaTable[a].lpRedirect = 0) then
-            begin
-                EmuInstallWrapper(pFunc, EmuXRefFailure);
-             end;
-            else
-            begin
-                EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
-             end;
-         end;
-     end;
 end;
 *)
+
+// install function interception wrappers
+procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
+var
+  i: Integer;
+  DetectedFunction: PDetectedXboxLibraryFunction;
+  OrgCode: TCodePointer;
+  Patch: TXboxLibraryPatch;
+  NewCode: TCodePointer;
+begin
+  DbgPrintf('HLE : Installing patches for %d detected functions :', [DetectedFunctions.Count]);
+
+  for i := 0 to DetectedFunctions.Count - 1 do
+  begin
+    DetectedFunction := DetectedFunctions[i];
+
+    OrgCode := DetectedFunction.CodeStart;
+
+    Patch := XboxFunctionNameToLibraryPatch(DetectedFunction.Info.Name);
+
+    if Patch <> xlp_Unknown then
+    begin
+      NewCode := XboxLibraryPatchToPatch(Patch);
+      Assert(Assigned(NewCode));
+
+{$IFDEF _DEBUG_TRACE}
+      DbgPrintf('HLE : $%.08X . %s -> $%.08X', [OrgCode, DetectedFunction.Info.Name, NewCode]);
+{$ENDIF}
+
+      EmuInstallWrapper(OrgCode, NewCode);
+    end;
+  end;
+end;
 
 end.

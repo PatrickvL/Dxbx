@@ -39,7 +39,8 @@ uses
   uEmuXapi,
   uEmuKrnl,
   uDxbxKrnl,
-  uDxbxKrnlUtils;
+  uDxbxKrnlUtils,
+  uDxbxDebugUtils;
 
 var
   {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE; // Source: OpenXDK - Uncertain
@@ -149,8 +150,8 @@ begin
     DbgPrintf('EmuKrnl : PCSTProxy : DEBUG, this thread hangs somewhere after this line!');
 
     EmuSwapFS(); // Xbox FS
-
-    asm
+    try
+      asm
         mov         esi, StartRoutine
         push        StartContext2
         push        StartContext1
@@ -158,17 +159,21 @@ begin
         lea         ebp, [esp-4]
 //        jmp near    esi
         jmp         esi
+      end;
+    finally
+callComplete:
+      EmuSwapFS(); // Win2k/XP FS
     end;
+
   except
     on E: Exception do
+    begin
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
+      DbgPrintf(JclLastExceptStackListToString(False));
 //  __except(EmuException(GetExceptionInformation()))
 //    EmuWarning('Problem with ExceptionFilter!');
+    end;
   end;
-
-  callComplete:
-
-  EmuSwapFS(); // Win2k/XP FS
 
   // call thread notification routine(s)
   if Assigned(g_pfnThreadNotification) then

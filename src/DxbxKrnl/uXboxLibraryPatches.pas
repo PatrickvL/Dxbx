@@ -26,20 +26,19 @@ uses
   uXboxLibraryUtils,
   uEmuXapi;
 
-type
-  TCode = Pointer;
-
 // This method returns the actual patch function address for each patched method.
-function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCode;
+function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
 
 implementation
 
-function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCode;
+function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
 begin
   case aValue of
     xlp_XapiInitProcess:
       Result := @XTL_EmuXapiInitProcess;
-  else
+    xlp_RtlCreateHeap:
+      Result := @XTL_EmuRtlCreateHeap;
+  else // xlp_Unknown and new, unimplemented
     Result := nil;
     Assert(False);
   end;

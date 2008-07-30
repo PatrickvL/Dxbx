@@ -33,6 +33,7 @@ uses
   uLog,
   uXbe,
   uDxbxKrnlUtils,
+  uDxbxDebugUtils,
   uEmuShared,
   uEmu,
   uEmuFS,
@@ -289,9 +290,12 @@ begin
     EmuSwapFS(); // Win2k/XP FS
   except
     on E: Exception do
+    begin
       DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
+      DbgPrintf(JclLastExceptStackListToString);
 //    on(EmuException(GetExceptionInformation())) :
 //      printf('Emu: WARNING!! Problem with ExceptionFilter');
+    end;
   end;
 
   DbgPrintf('EmuMain : Initial thread ended.');
