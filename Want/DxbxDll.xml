@@ -1,4 +1,4 @@
-<project name="Dxbxkrnl.dll"
+<project name="DxbxDll.dll"
          basedir=".."
          default="compile" >
 
@@ -8,7 +8,9 @@
   <property name="dcu" 		value="${basedir}/dcu" />
   <property name="lib"       	value="${basedir}/Libraries" />
   <property name="directx9"     value="${lib}/DirectX9" />
-  <property name="JclIncludes"  value="${lib}/Jcl" />	
+  <property name="Jcl"  	value="${lib}/Jcl" />	
+  <property name="JclWindows"  	value="${lib}/Jcl/windows" />	
+  <property name="JclCommen"  	value="${lib}/Jcl/common" />	
 	
   <target name="prepare" >
   </target>
@@ -21,13 +23,15 @@
   </target>
 
   <target name="compile"  depends="prepare, resources, build">
-    <dcc basedir="${src}" source="DxbxKrnl.dpr">
+    <dcc basedir="${src}" source="DxbxDll.dpr">
       <exeoutput path="${bin}" />
       <dcuoutput path="${dcu}" />
       <unitpath>
         <include name="${src}" />
         <include name="${directx9}" />
-        <include name="${JclIncludes}" />
+        <include name="${JclWindows}" />
+        <include name="${JclCommen}" />
+        <include name="${Jcl}" />
      </unitpath>
     </dcc>
   </target>
