@@ -24,6 +24,7 @@ interface
 uses
   Windows
   , Direct3D
+  , uLog
   , D3DX8;
 
 type
@@ -113,8 +114,8 @@ begin
 
 procedure XTL_VertexPatcher_DumpCache;
 begin
-(*    printf('--- Dumping streams cache ---');
-    RTNode *pNode := g_PatchedStreamsCache.getHead();
+    DbgPrintf('--- Dumping streams cache ---');
+    (*RTNode *pNode := g_PatchedStreamsCache.getHead();
     while(pNode)
     begin
         CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )pNode^.pResource;

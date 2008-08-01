@@ -3510,7 +3510,7 @@ end;
 function XTL__EmuIDirect3DDevice8_SetVertexData4f(aRegister: integer; a: FLOAT; b: FLOAT; c: FLOAT; d: FLOAT): HRESULT;
 var
   hRet: HRESULT;
-  o: integer;
+(*  o: integer;*)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -3530,7 +3530,6 @@ begin
     0: // D3DVSDE_POSITION
       begin
         (*o := g_IVBTblOffs;
-
         g_IVBTable[o].Position.x := a; //vertices[o*2+0];//a;
         g_IVBTable[o].Position.y := b; //vertices[o*2+1];//b;
         g_IVBTable[o].Position.z := c;
@@ -3543,8 +3542,7 @@ begin
 
     3: // D3DVSDE_DIFFUSE
       begin
-        (*integer o := g_IVBTblOffs;
-
+        (*o := g_IVBTblOffs;
         DWORD ca := FtoDW(d) shl 24;
         DWORD cr := FtoDW(a) shl 16;
         DWORD cg := FtoDW(b) shl 8;
@@ -3557,8 +3555,7 @@ begin
 
     4: // D3DVSDE_SPECULAR
       begin
-        (*integer o := g_IVBTblOffs;
-
+        (*o := g_IVBTblOffs;
         DWORD ca := FtoDW(d) shl 24;
         DWORD cr := FtoDW(a) shl 16;
         DWORD cg := FtoDW(b) shl 8;
@@ -5926,8 +5923,8 @@ end;
 // func: EmuIDirect3DDevice8_SetRenderState_FillMode
 
 procedure XTL__EmuIDirect3DDevice8_SetRenderState_FillMode(Value: DWord);
-var
-  dwFillMode: DWORD;
+(*var
+  dwFillMode: DWORD; *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -6435,24 +6432,21 @@ end;
 
 // func: EmuIDirect3DDevice8_SetTransform
 
-function XTL__EmuIDirect3DDevice8_SetTransform: HRESULT;
+function XTL__EmuIDirect3DDevice8_SetTransform ( State : D3DTRANSFORMSTATETYPE;
+    pMatrix : D3DMATRIX ): HRESULT;
 var
   hRet: HRESULT;
-(*(
-    D3DTRANSFORMSTATETYPE State,
-    CONST D3DMATRIX      *pMatrix
-) *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-{ TODO : Need to be translated to delphi }
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTransform'
-           '('
-           '   State               : 0x%.08X'
-           '   pMatrix             : 0x%.08X'
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTransform' +
+           '(' +
+           '   State               : 0x%.08X' +
+           '   pMatrix             : 0x%.08X' +
            ');',
-           State, pMatrix);
+           [@State, @pMatrix]);
 
+    { TODO : Need to be translated to delphi }
     (*
     printf('pMatrix (%d)', State);
     printf('begin ');
@@ -6485,30 +6479,25 @@ end;
 
 // func: EmuIDirect3DDevice8_GetTransform
 
-function XTL__EmuIDirect3DDevice8_GetTransform: HRESULT;
+function XTL__EmuIDirect3DDevice8_GetTransform(State: D3DTRANSFORMSTATETYPE; pMatrix: D3DMATRIX): HRESULT;
 var
   hRet: HRESULT;
-(*(
-    D3DTRANSFORMSTATETYPE State,
-    D3DMATRIX            *pMatrix
-) *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-{ TODO : Need to be translated to delphi }
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetTransform'
-           '('
-           '   State               : 0x%.08X'
-           '   pMatrix             : 0x%.08X'
-           ');',
-           State, pMatrix);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetTransform' +
+    '(' +
+    '   State               : 0x%.08X' +
+    '   pMatrix             : 0x%.08X' +
+    ');',
+    [@State, @pMatrix]);
 
-    State := EmuXB2PC_D3DTS(State);
+    { TODO : Need to be translated to delphi }
+    (*State := EmuXB2PC_D3DTS(State);
 
     HRESULT hRet := g_pD3DDevice8->GetTransform(State, pMatrix);
 *)
   EmuSwapFS(); // XBox FS
-
   Result := hRet;
 end;
 
@@ -6608,11 +6597,9 @@ begin
 function XTL__EmuIDirect3DDevice8_SetStreamSource: HRESULT;
 var
   hRet: HRESULT;
-(*(
-    UINT                StreamNumber,
-    X_D3DVertexBuffer  *pStreamData,
-    UINT                Stride
-)       *)
+    (*StreamNumber : UINT;
+    pStreamData : X_D3DVertexBuffer;
+    Stride : UINT; *)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
