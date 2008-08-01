@@ -38,7 +38,7 @@ uses
 
 procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
 procedure EmuInitFS;
-procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: Pointer);
+procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 procedure EmuCleanupFS;
 function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
 
@@ -117,8 +117,7 @@ begin
 end;
 
 // generate fs segment selector
-
-procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: Pointer);
+procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 var
   OrgNtTib: PNT_TIB;
   pNewTLS: PUInt08;
@@ -143,7 +142,7 @@ begin
 
     pNewTLS := PUInt08(CxbxMalloc(dwCopySize + dwZeroSize + $100 { + HACK: extra safety padding 0x100}));
 
-    FillChar(pNewTLS, 0, dwCopySize + dwZeroSize + $100);
+    FillChar(pNewTLS^, dwCopySize + dwZeroSize + $100, #0);
     CopyMemory(pNewTLS, pTLSData, dwCopySize);
   end;
 
@@ -156,7 +155,7 @@ begin
     begin
       Line := 'EmuFS : TLS Data Dump...';
 
-      stop := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill;
+      stop := pTLS.dwDataEndAddr - (pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill);
 
       for v := 0 to stop - 1 do
       begin
@@ -193,7 +192,7 @@ begin
 
     NewPcr := xboxkrnl.PKPCR(CxbxMalloc(dwSize));
 
-    FillChar(NewPcr, 0, SizeOf(NewPcr));
+    FillChar(NewPcr^, SizeOf(NewPcr), #0);
 
     NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(IntPtr(NewPcr) + dwSize));
   end;
