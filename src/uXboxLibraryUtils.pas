@@ -35,7 +35,8 @@ type
   TXboxLibraryPatch = (
     xlp_Unknown,
     xlp_XapiInitProcess,
-    xlp_RtlCreateHeap
+    xlp_RtlCreateHeap,
+    xlp_XapiApplyKernelPatches
     );
 
   PPattern32 = ^RPattern32;
@@ -76,6 +77,7 @@ type
     LibVersion: Integer;
     LibName: string;
     PatternArray: TPatternArray;
+    PatternLength: Integer;
     SortedPatterns: TSortedPatterns
   end;
 
@@ -137,19 +139,18 @@ begin
     Delete(Result, i, MaxInt);
 end;
 
+const
+  PatchNames: array [TXboxLibraryPatch] of string = (
+    {xlp_Unknown=}'UNKNOWN',
+    {xlp_XapiInitProcess=}'_XapiInitProcess@0',
+    {xlp_RtlCreateHeap=}'_RtlCreateHeap@24',
+    {xlp_XapiApplyKernelPatches=}'_XapiApplyKernelPatches@0'
+  );
+
 function XboxLibraryPatchToFunctionName(const aValue: TXboxLibraryPatch): string;
 begin
-  case aValue of
-    xlp_Unknown:
-      Result := 'UNKNOWN';
-    xlp_XapiInitProcess:
-      Result := '_XapiInitProcess@0';
-    xlp_RtlCreateHeap:
-      Result := '_RtlCreateHeap@24';
-  else
-    Result := '';
-    Assert(False);
-  end;
+  Result := PatchNames[aValue];
+  Assert(Result <> '');
 end;
 
 function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibraryPatch;

@@ -32,7 +32,7 @@ uses
   uEmu,
   uXBController;
 
-procedure XTL_EmuDInputCleanup;
+procedure XTL_EmuDInputCleanup; stdcall;
 
 
 implementation

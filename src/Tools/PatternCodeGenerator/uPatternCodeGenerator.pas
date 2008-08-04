@@ -64,6 +64,7 @@ function GeneratePatternUnit(const aPatternFiles: TStrings): Integer;
   function _ConvertPatternListToConstCode(
     const aPatternList: TList;
     const aPatternArrayName: string;
+    var aPatternLengthStr: string;
     out IsFullDebugLibrary: Boolean): string;
   var
     SeparatorChar: Char;
@@ -102,7 +103,7 @@ function GeneratePatternUnit(const aPatternFiles: TStrings): Integer;
       end;
 
       // Test if all functions are debug-only :
-      IsFullDebugLibrary := (NrPatchFunctions = 0);
+      {out}IsFullDebugLibrary := (NrPatchFunctions = 0);
       if IsFullDebugLibrary then
         WriteString(#13#10'{$IFDEF _DEBUG_TRACE}');
 
@@ -111,15 +112,12 @@ function GeneratePatternUnit(const aPatternFiles: TStrings): Integer;
       WriteString(aPatternArrayName);
       WriteString(': array [0..');
       if IsFullDebugLibrary then
-        WriteString(IntToStr(NrDebugFunctions - 1))
+        {var}aPatternLengthStr := IntToStr(NrDebugFunctions - 1)
       else
-      begin
-        WriteString('{$IFDEF _DEBUG_TRACE}');
-        WriteString(IntToStr(NrPatchFunctions + NrDebugFunctions - 1));
-        WriteString('{$ELSE}');
-        WriteString(IntToStr(NrPatchFunctions - 1));
-        WriteString('{$ENDIF}');
-      end;
+        {var}aPatternLengthStr := Format('{$IFDEF _DEBUG_TRACE}%d{$ELSE}%d{$ENDIF}', [
+          NrPatchFunctions + NrDebugFunctions - 1, NrPatchFunctions - 1]);
+
+      WriteString(aPatternLengthStr);
       WriteString('] of RXboxLibraryFunction = (');
 
       // Loop twice over the patterns, first for the functions to be patched
@@ -195,7 +193,7 @@ var
   Input: TMemoryStream;
   i: Integer;
   PatternFilePath, LibVersionStr, LibName: string;
-  PatternArrayName, PatternArraysInfo: string;
+  PatternArrayName, PatternLengthStr, PatternArraysInfo: string;
   SortedPatternList: TList;
   IsFullDebugLibrary: Boolean;
   SeparatorChar: Char;
@@ -232,7 +230,12 @@ begin
       SortedPatternList := ConvertPatternsToSortedList(Input.Memory);
       try
         // Convert them to const-code into the output unit :
-        UnitLines.Add(_ConvertPatternListToConstCode(SortedPatternList, PatternArrayName, {out}IsFullDebugLibrary));
+        UnitLines.Add(
+          _ConvertPatternListToConstCode(
+            SortedPatternList,
+            PatternArrayName,
+            {var}PatternLengthStr,
+            {out}IsFullDebugLibrary));
 
         // Check if we need to enter a Debug section :
         if IsFullDebugLibrary <> InDebugCode then
@@ -247,8 +250,8 @@ begin
 
         // Append the information about this array to the overview :
         PatternArraysInfo := PatternArraysInfo +
-          Format(#13#10' %s(LibVersion:%s;LibName:''%s'';PatternArray:@%s)',
-            [SeparatorChar, LibVersionStr, LibName, PatternArrayName]);
+          Format(#13#10' %s(LibVersion:%s;LibName:''%s'';PatternArray:@%s;PatternLength:%s)',
+            [SeparatorChar, LibVersionStr, LibName, PatternArrayName, PatternLengthStr]);
 
         if IsFullDebugLibrary then
         begin

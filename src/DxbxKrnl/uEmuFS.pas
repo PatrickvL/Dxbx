@@ -146,7 +146,7 @@ begin
 
     pNewTLS := PUInt08(CxbxMalloc(dwCopySize + dwZeroSize + $100 { + HACK: extra safety padding 0x100}));
 
-    FillChar(pNewTLS^, dwCopySize + dwZeroSize + $100, #0);
+    ZeroMemory(pNewTLS, dwCopySize + dwZeroSize + $100);
     CopyMemory(pNewTLS, pTLSData, dwCopySize);
   end;
 
@@ -159,7 +159,7 @@ begin
     begin
       Line := 'EmuFS : TLS Data Dump...';
 
-      stop := pTLS.dwDataEndAddr - (pTLS.dwDataStartAddr + pTLS.dwSizeofZeroFill);
+      stop := (pTLS.dwDataEndAddr - pTLS.dwDataStartAddr) + pTLS.dwSizeofZeroFill;
 
       for v := 0 to stop - 1 do
       begin
@@ -196,7 +196,7 @@ begin
 
     NewPcr := xboxkrnl.PKPCR(CxbxMalloc(dwSize));
 
-    FillChar(NewPcr^, SizeOf(NewPcr), #0);
+    ZeroMemory(NewPcr, SizeOf(NewPcr));
 
     NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(IntPtr(NewPcr) + dwSize));
   end;
