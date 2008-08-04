@@ -31,17 +31,17 @@ function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
 
 implementation
 
+const
+  PatchFunctions: array [TXboxLibraryPatch] of TCodePointer = (
+    {xlp_Unknown=}nil,
+    {xlp_XapiInitProcess=}@XTL_EmuXapiInitProcess,
+    {xlp_RtlCreateHeap=}@XTL_EmuRtlCreateHeap,
+    {xlp_XapiApplyKernelPatches=}@XTL_EmuXapiApplyKernelPatches
+  );
+
 function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
 begin
-  case aValue of
-    xlp_XapiInitProcess:
-      Result := @XTL_EmuXapiInitProcess;
-    xlp_RtlCreateHeap:
-      Result := @XTL_EmuRtlCreateHeap;
-  else // xlp_Unknown and new, unimplemented
-    Result := nil;
-    Assert(False);
-  end;
+  Result := PatchFunctions[aValue];
 end;
 
 end.

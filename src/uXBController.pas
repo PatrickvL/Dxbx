@@ -131,7 +131,7 @@ type
 
   { TODO : Need to be translated to delphi }
   InputDevice = record
-    (*XTL__LPDIRECTINPUTDEVICE8 m_Device; *)
+    (*XTL_LPDIRECTINPUTDEVICE8 m_Device; *)
     m_Flags: integer;
   end;
 

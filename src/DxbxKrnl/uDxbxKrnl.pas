@@ -252,7 +252,7 @@ begin
 
   DbgPrintf('EmuMain : Initializing Direct3D.');
 
-  XTL__EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+  XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 

@@ -38,6 +38,7 @@ type
 
 procedure XTL_EmuXapiInitProcess(); stdcall;
 function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID;  RtlHeapParams: PVOID): PVOID; stdcall;
+procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 
 implementation
 
@@ -53,7 +54,7 @@ implementation
 
 
 // func: EmuXapiApplyKernelPatches
-procedure XTL__EmuXapiApplyKernelPatches();
+procedure XTL_EmuXapiApplyKernelPatches();
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -68,7 +69,7 @@ end;
 
 // func: EmuXFormatUtilityDrive
 
-function XTL__EmuXFormatUtilityDrive(): BOOL;
+function XTL_EmuXFormatUtilityDrive(): BOOL;
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -220,7 +221,7 @@ end;     *)
 
 type
   RTL_HEAP_DEFINITION = record Length: Integer; end; // TODO
-  
+
 // ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************

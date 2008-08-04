@@ -244,7 +244,7 @@ begin
   for v := 0 to m_Xbe.m_Header.dwSections - 1 do
   begin
     // generate xbe section name
-    FillChar(m_SectionHeader[v].m_name, 8, #0);
+    ZeroMemory(@(m_SectionHeader[v].m_name[0]), 8);
     for c := 0 to 7 do
     begin
       m_SectionHeader[v].m_name[c] := m_Xbe.m_szSectionName[v][c];

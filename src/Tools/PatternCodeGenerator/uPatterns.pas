@@ -5202,8 +5202,9 @@ Patterns_4627_xmv: array [0..66] of RXboxLibraryFunction = (
 );
 {$ENDIF ~_DEBUG_TRACE}
 
-Patterns_5788_xapilib: array [0..{$IFDEF _DEBUG_TRACE}667{$ELSE}1{$ENDIF}] of RXboxLibraryFunction = (
+Patterns_5788_xapilib: array [0..{$IFDEF _DEBUG_TRACE}667{$ELSE}2{$ENDIF}] of RXboxLibraryFunction = (
   (Name:'_RtlCreateHeap@24';Pattern:(BytesToUseMask:$FFFFF087;Bytes:($6A,$68,$68,$00,$00,$00,$00,$E8,$00,$00,$00,$00,$33,$F6,$89,$75,$E4,$33,$DB,$6A,$0C,$59,$33,$C0,$8D,$7D,$88,$F3,$AB,$8B,$45,$1C));CRCLength:20;CRCValue:$8ECE;TotalLength:1060)
+ ,(Name:'_XapiApplyKernelPatches@0';Pattern:(BytesToUseMask:$FFFFE1E1;Bytes:($A1,$00,$00,$00,$00,$8B,$00,$8B,$0D,$00,$00,$00,$00,$0F,$B7,$49,$04,$D1,$E8,$F6,$D0,$24,$01,$81,$F9,$68,$0F,$00,$00,$56,$74,$4B));CRCLength:108;CRCValue:$98DC;TotalLength:197)
  ,(Name:'_XapiInitProcess@0';Pattern:(BytesToUseMask:$21F0FFFF;Bytes:($55,$8B,$EC,$83,$EC,$34,$53,$56,$57,$33,$DB,$43,$53,$33,$F6,$68,$00,$00,$00,$00,$89,$75,$FC,$FF,$15,$00,$00,$00,$00,$E8,$00,$00));CRCLength:0;CRCValue:$0000;TotalLength:381)
 {$IFDEF _DEBUG_TRACE}
  ,(Name:'?AddComplete@IUsbDevice@@QAEXJ@Z';Pattern:(BytesToUseMask:$F0FFFFFF;Bytes:($55,$8B,$EC,$83,$EC,$0C,$53,$56,$8B,$F1,$33,$C9,$41,$33,$DB,$39,$5D,$08,$57,$89,$4D,$FC,$C6,$05,$00,$00,$00,$00,$07,$7D,$11,$81));CRCLength:45;CRCValue:$C785;TotalLength:396)
@@ -5762,7 +5763,6 @@ Patterns_5788_xapilib: array [0..{$IFDEF _DEBUG_TRACE}667{$ELSE}1{$ENDIF}] of RX
  ,(Name:'_XWriteStatStore@20';Pattern:(BytesToUseMask:$FFFFFFFF;Bytes:($55,$8B,$EC,$8B,$45,$14,$83,$F8,$01,$74,$0F,$83,$F8,$02,$74,$0A,$83,$F8,$03,$74,$05,$6A,$57,$58,$EB,$1C,$FF,$75,$18,$50,$FF,$75));CRCLength:8;CRCValue:$21AD;TotalLength:58)
  ,(Name:'_XWriteTitleInfoAndRebootA@20';Pattern:(BytesToUseMask:$FE1FFFFF;Bytes:($55,$8B,$EC,$FF,$75,$18,$FF,$75,$14,$FF,$75,$10,$6A,$01,$FF,$75,$0C,$FF,$75,$08,$E8,$00,$00,$00,$00,$85,$C0,$7C,$1F,$64,$A1,$20));CRCLength:24;CRCValue:$FBC0;TotalLength:71)
  ,(Name:'_XWriteTitleInfoNoReboot@24';Pattern:(BytesToUseMask:$0C3FFF0F;Bytes:($55,$8B,$EC,$A1,$00,$00,$00,$00,$83,$38,$00,$56,$BE,$00,$10,$00,$00,$75,$0F,$56,$FF,$15,$00,$00,$00,$00,$8B,$0D,$00,$00,$00,$00));CRCLength:3;CRCValue:$65FB;TotalLength:225)
- ,(Name:'_XapiApplyKernelPatches@0';Pattern:(BytesToUseMask:$FFFFE1E1;Bytes:($A1,$00,$00,$00,$00,$8B,$00,$8B,$0D,$00,$00,$00,$00,$0F,$B7,$49,$04,$D1,$E8,$F6,$D0,$24,$01,$81,$F9,$68,$0F,$00,$00,$56,$74,$4B));CRCLength:108;CRCValue:$98DC;TotalLength:197)
  ,(Name:'_XapiAutoPowerDownTimeout@16';Pattern:(BytesToUseMask:$000387C3;Bytes:($83,$3D,$00,$00,$00,$00,$00,$74,$06,$FF,$15,$00,$00,$00,$00,$C2,$10,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00));CRCLength:0;CRCValue:$0000;TotalLength:18)
  ,(Name:'_XapiBootToDash@12';Pattern:(BytesToUseMask:$FFFFFFFF;Bytes:($55,$8B,$EC,$81,$EC,$00,$0C,$00,$00,$A1,$18,$01,$01,$00,$81,$78,$08,$00,$00,$FE,$FF,$74,$45,$57,$33,$C0,$B9,$00,$03,$00,$00,$8D));CRCLength:51;CRCValue:$1850;TotalLength:101)
  ,(Name:'_XapiCallThreadNotifyRoutines@4';Pattern:(BytesToUseMask:$FC21870F;Bytes:($53,$56,$57,$BB,$00,$00,$00,$00,$53,$FF,$15,$00,$00,$00,$00,$8B,$35,$00,$00,$00,$00,$BF,$00,$00,$00,$00,$EB,$0B,$FF,$74,$24,$10));CRCLength:14;CRCValue:$955A;TotalLength:56)
@@ -5879,16 +5879,16 @@ Patterns_5788_xapilib: array [0..{$IFDEF _DEBUG_TRACE}667{$ELSE}1{$ENDIF}] of RX
 
 AllXboxLibraries: array[0..{$IFDEF _DEBUG_TRACE}6{$ELSE}1{$ENDIF}] of RXboxLibraryInfo = (
 {$IFDEF _DEBUG_TRACE}
-  (LibVersion:4627;LibName:'d3d8';PatternArray:@Patterns_4627_d3d8),
-  (LibVersion:4627;LibName:'d3dx8';PatternArray:@Patterns_4627_d3dx8),
-  (LibVersion:4627;LibName:'dsound';PatternArray:@Patterns_4627_dsound),
+  (LibVersion:4627;LibName:'d3d8';PatternArray:@Patterns_4627_d3d8;PatternLength:831),
+  (LibVersion:4627;LibName:'d3dx8';PatternArray:@Patterns_4627_d3dx8;PatternLength:1564),
+  (LibVersion:4627;LibName:'dsound';PatternArray:@Patterns_4627_dsound;PatternLength:962),
 {$ENDIF}
-  (LibVersion:4627;LibName:'xapilib';PatternArray:@Patterns_4627_xapilib)
+  (LibVersion:4627;LibName:'xapilib';PatternArray:@Patterns_4627_xapilib;PatternLength:{$IFDEF _DEBUG_TRACE}596{$ELSE}1{$ENDIF})
 {$IFDEF _DEBUG_TRACE}
- ,(LibVersion:4627;LibName:'xgraphc';PatternArray:@Patterns_4627_xgraphc)
- ,(LibVersion:4627;LibName:'xmv';PatternArray:@Patterns_4627_xmv)
+ ,(LibVersion:4627;LibName:'xgraphc';PatternArray:@Patterns_4627_xgraphc;PatternLength:1145)
+ ,(LibVersion:4627;LibName:'xmv';PatternArray:@Patterns_4627_xmv;PatternLength:66)
 {$ENDIF}
- ,(LibVersion:5788;LibName:'xapilib';PatternArray:@Patterns_5788_xapilib)
+ ,(LibVersion:5788;LibName:'xapilib';PatternArray:@Patterns_5788_xapilib;PatternLength:{$IFDEF _DEBUG_TRACE}667{$ELSE}2{$ENDIF})
 );
 
 implementation end.

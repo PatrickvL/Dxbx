@@ -43,7 +43,7 @@ function GetTempDirectory(): string;
 var
   Buffer: array[0..Max_path] of Char;
 begin
-  FillChar(Buffer, Max_Path + 1, #0);
+  ZeroMemory(@(Buffer[0]), Max_Path + 1);
   GetTempPath(Max_path, Buffer);
   Result := string(Buffer);
   if Result[Length(Result)] <> '\' then

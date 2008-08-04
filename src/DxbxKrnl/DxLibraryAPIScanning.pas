@@ -154,16 +154,15 @@ end; // TestLibraryOnAddress
 
 procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 
-  function _SortPatternArray(const aPatternArray: TPatternArray): TSortedPatterns;
+  function _SortPatternArray(const aPatternArray: TPatternArray; const Len: Integer): TSortedPatterns;
   var
     List: TList;
-    i, Len: Integer;
+    i: Integer;
   begin
     // We use a TList here, because it has an easy Sort method that array's lack...
     List := TList.Create;
     try
       // Build up a list of pointers to the patterns :
-      Len := Length(aPatternArray);
       List.Count := Len;
       for i := 0 to Len - 1 do
         List[i] := @(aPatternArray[i]);
@@ -193,7 +192,7 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
     Detected := DetectedFunctions.FindByName(Result.Name);
     if Assigned(Detected) then
     begin
-      // Count the number of thimes it was found (should stay at 1) :
+      // Count the number of times it was found (should stay at 1) :
       Inc(Detected.HitCount);
       Exit;
     end;
@@ -235,7 +234,7 @@ begin
 
   // Sort all pattern arrays, to enable binary searching :
   for i := 0 to Length(AllXboxLibraries) - 1 do
-    AllXboxLibraries[i].SortedPatterns := _SortPatternArray(AllXboxLibraries[i].PatternArray);
+    AllXboxLibraries[i].SortedPatterns := _SortPatternArray(AllXboxLibraries[i].PatternArray, AllXboxLibraries[i].PatternLength, );
 
   // Loop over all libraries :
   CurrentXbeLibraryVersion := pLibraryVersion;

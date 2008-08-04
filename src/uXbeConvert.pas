@@ -55,7 +55,8 @@ begin
         if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
           Exit;
 
-        DeleteFile(x_filename);
+        if not DeleteFile(x_filename) then
+          RaiseLastOSError;
       end;
     end;
 
@@ -71,8 +72,11 @@ begin
         FreeAndNil(i_EmuExe);
       end;
     except
-      MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
+      Result := False;
     end;
+
+    if not Result then
+      MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
   end;
 end;
 

@@ -90,8 +90,10 @@ begin
   if hMapObject <> 0 then
     Exit;
 
+{$IFDEF DXBX_USE_JCLDEBUG}
   // Start tracking exceptions using JclDebug
   JclStartExceptionTracking;
+{$ENDIF}
 
   // Create the shared memory "file"
   begin
@@ -149,7 +151,9 @@ begin
     UnmapViewOfFile(g_EmuShared);
     g_EmuShared := nil;
 
+{$IFDEF DXBX_USE_JCLDEBUG}
     JclStopExceptionTracking;
+{$ENDIF}
   end;
 
   CloseLogs;
