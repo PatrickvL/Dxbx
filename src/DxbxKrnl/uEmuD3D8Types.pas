@@ -185,7 +185,13 @@ type
 
   end;
 
+  X_D3DCubeTexture = Class( X_D3DBaseTexture)
 
+  end;
+
+  X_D3DVolumeTexture = Class( X_D3DBaseTexture )
+
+  end;
 
 implementation
 
