@@ -36,7 +36,8 @@ type
     xlp_Unknown,
     xlp_XapiInitProcess,
     xlp_RtlCreateHeap,
-    xlp_XapiApplyKernelPatches
+    xlp_XapiApplyKernelPatches,
+    xlp_XapiThreadStartup
     );
 
   PPattern32 = ^RPattern32;
@@ -144,7 +145,8 @@ const
     {xlp_Unknown=}'UNKNOWN',
     {xlp_XapiInitProcess=}'_XapiInitProcess@0',
     {xlp_RtlCreateHeap=}'_RtlCreateHeap@24',
-    {xlp_XapiApplyKernelPatches=}'_XapiApplyKernelPatches@0'
+    {xlp_XapiApplyKernelPatches=}'_XapiApplyKernelPatches@0',
+    {xlp_XapiThreadStartup=}'_XapiThreadStartup@8'
   );
 
 function XboxLibraryPatchToFunctionName(const aValue: TXboxLibraryPatch): string;

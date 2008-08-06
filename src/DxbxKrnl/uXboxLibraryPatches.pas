@@ -36,7 +36,8 @@ const
     {xlp_Unknown=}nil,
     {xlp_XapiInitProcess=}@XTL_EmuXapiInitProcess,
     {xlp_RtlCreateHeap=}@XTL_EmuRtlCreateHeap,
-    {xlp_XapiApplyKernelPatches=}@XTL_EmuXapiApplyKernelPatches
+    {xlp_XapiApplyKernelPatches=}@XTL_EmuXapiApplyKernelPatches,
+    {xlp_XapiThreadStartup=}@XTL_EmuXapiThreadStartup
   );
 
 function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
