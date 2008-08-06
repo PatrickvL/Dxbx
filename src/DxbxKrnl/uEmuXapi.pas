@@ -36,7 +36,10 @@ uses
 type
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
+  ProcedureStdCall = procedure; stdcall;
+
 procedure XTL_EmuXapiInitProcess(); stdcall;
+procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
 function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID;  RtlHeapParams: PVOID): PVOID; stdcall;
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 
@@ -1165,23 +1168,21 @@ end;
 // ******************************************************************
 // * func: EmuXapiThreadStartup
 // ******************************************************************
-(*VOID WINAPI XTL.EmuXapiThreadStartup
-(
-    DWORD dwDummy1,
-    DWORD dwDummy2
-)
+procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuXapiThreadStartup'
-           '('
-           '   dwDummy1            : $%.08X'
-           '   dwDummy2            : $%.08X'
-           ');',
-            [dwDummy1, dwDummy2);
+  DbgPrintf('EmuXapi : EmuXapiThreadStartup' +
+    #13#10'(' +
+    #13#10'   dwDummy1            : 0x%.08X' +
+    #13#10'   dwDummy2            : 0x%.08X' +
+    #13#10');',
+    [dwDummy1, dwDummy2]);
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS();   // XBox FS
 
+  ProcedureStdCall(dwDumm1)();
+(*
     type  integer (__stdcall *pfDummyFunc)(DWORD dwDummy);
 
     pfDummyFunc func := (pfDummyFunc)dwDummy1;
@@ -1190,18 +1191,18 @@ begin
 
     // TODO: Call thread notify routines ?
 
-    (*
+    ( *
     asm
     begin
         push dwDummy2
         call dwDummy1
      end;
-    *)
-
+    * )
+*)
     //_asm int 3;
-(*
   Exit;
-end; *)
+end;
+(*
 
 (* Too High Level!
 // ******************************************************************

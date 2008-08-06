@@ -123,15 +123,15 @@ var
   pNewTLS: PUInt08;
   NewFS, OrgFS: UInt16;
   dwCopySize, dwZeroSize: UInt32;
-  (*bByte: PUInt8; *)
+{$IFDEF _DEBUG_TRACE}
+  stop: UInt32;
+  v: UInt32;
+  bByte: PUInt8;
+  Line: string;
+{$ENDIF}
   dwSize: uint32;
   NewPcr: PKPCR;
   EThread: PETHREAD;
-
-  {$IFDEF _DEBUG_TRACE}
-    Line: string;
-  {$ENDIF}
-  
 begin
   pNewTLS := nil;
   NewFS := UInt16(-1);
