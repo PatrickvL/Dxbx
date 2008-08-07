@@ -1181,7 +1181,7 @@ begin
 
   EmuSwapFS();   // XBox FS
 
-  ProcedureStdCall(dwDumm1)();
+  ProcedureStdCall(dwDummy1)();
 (*
     type  integer (__stdcall *pfDummyFunc)(DWORD dwDummy);
 
