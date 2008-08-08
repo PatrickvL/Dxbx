@@ -61,9 +61,7 @@ end;
 // func: XTL::EmuPollController
 procedure XTL_EmuDInputPoll(Controller: XINPUT_STATE);
 begin
-  (*g_XBController.ListenPoll(Controller);
-  *)
-
+  g_XBController.ListenPoll(Controller);
   if (Error_GetError <> '' ) then
     ShowMessage( 'Dxbx[* UNHANDLED! *]'); // TODO: Handle this! *)
 end;
