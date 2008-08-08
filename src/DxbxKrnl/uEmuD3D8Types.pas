@@ -189,6 +189,10 @@ type
 
   end;
 
+
+  X_D3DSurface = class (X_D3DPixelContainer)
+  end;
+
   X_D3DVolumeTexture = Class( X_D3DBaseTexture )
 
   end;
