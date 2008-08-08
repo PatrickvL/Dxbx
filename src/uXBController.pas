@@ -27,6 +27,7 @@ uses
   , SysUtils
   // 3rd party
   , DirectInput
+  , XInput
   // Dxbx
   , uLog
   , uError;
@@ -155,7 +156,7 @@ type
 procedure Save(szRegistryKey: PChar);
 procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
 procedure ConfigEnd;
-procedure ListenPoll(var Controller: PXINPUT_STATE);
+procedure ListenPoll(var Controller: XINPUT_STATE);
 
 procedure ListenBegin(ahwnd: THandle);
 procedure ListenEnd;
@@ -343,7 +344,7 @@ begin
 
 // func: XBController::ListenPoll
 
-procedure XBController.ListenPoll(var Controller: PXINPUT_STATE);
+procedure XBController.ListenPoll(var Controller: XINPUT_STATE);
 (*var
   hRet: HRESULT;
   v: Integer;
