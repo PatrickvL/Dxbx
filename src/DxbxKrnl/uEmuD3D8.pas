@@ -1880,7 +1880,7 @@ begin
                '   cType                : 0x%.08X' +
                '   ppBackBuffer        : 0x%.08X' +
                ');',
-               [BackBuffer, cType, ppBackBuffer]);
+               [BackBuffer, @cType, ppBackBuffer]);
         EmuSwapFS();   // Xbox FS
      end;
 {$ENDIF}
