@@ -143,15 +143,15 @@ begin
 end;
 
 procedure XTL_EmuExecutePushBufferRaw ( pdwPushData : DWORD );
-var
-  pdwOrigPushData : DWORD;
+(*var
+  pdwOrigPushData : DWORD; *)
 begin
     if(XTL_g_bSkipPush) then
         Exit;
 
-    pdwOrigPushData := pdwPushData;
+(*    pdwOrigPushData := pdwPushData;
 
-    (*PVOID pIndexData := 0;
+    PVOID pIndexData := 0;
     PVOID pVertexData := 0;
 
     DWORD dwVertexShader := -1;

@@ -240,6 +240,7 @@ function XTL_EmuRtlCreateHeap
 var
   RtlHeapDefinition: RTL_HEAP_DEFINITION;
 begin
+  Result := Nil;
   EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
