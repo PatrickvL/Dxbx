@@ -17,21 +17,60 @@
 *)
 unit uData;
 
+{$INCLUDE ..\..\..\DXBX.inc}
+
 interface
 
+uses
+  // Delphi
+  SysUtils,
+  Classes;
+
 type
-  PXDKInfo = ^RXDKInfo;
-  RXDKInfo = record
+  TXDKInfo = class(TObject)
+  protected
+    MyLibVersions: TStringList;
+  public
     GameName: string;
-    XAPILIB: string;
-    XBOXKRNL: string;
-    LIBCMT: string;
-    D3D8: string;
-    XGRAPHC: string;
-    DSOUND: string;
-    XMV: string;
+
+    property LibVersions: TStringList read MyLibVersions;
+
+    constructor Create;
+    destructor Destroy; override;
+
+    function MatchesVersion(const aVersion: string): Boolean;
   end;
 
 implementation
+
+{ TXDKInfo }
+
+constructor TXDKInfo.Create;
+begin
+  inherited Create;
+
+  MyLibVersions := TStringList.Create;
+end;
+
+destructor TXDKInfo.Destroy;
+begin
+  FreeAndNil(MyLibVersions);
+
+  inherited Destroy;
+end;
+
+function TXDKInfo.MatchesVersion(const aVersion: string): Boolean;
+var
+  i: Integer;
+begin
+  for i := 0 to LibVersions.Count - 1 do
+    if LibVersions.ValueFromIndex[i] = aVersion then
+    begin
+      Result := True;
+      Exit;
+    end;
+
+  Result := False;
+end;
 
 end.

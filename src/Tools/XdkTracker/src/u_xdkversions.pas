@@ -21,9 +21,7 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, ComCtrls, DB,
-  ADODB, Buttons,
+  SysUtils, Classes, Contnrs, Controls, StdCtrls, ExtCtrls, Forms, 
   // Dxbx
   u_AddGame,
   uData;
@@ -40,13 +38,14 @@ type
     procedure lst_GamesClick(Sender: TObject);
     procedure cmb_gametypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+  protected
+    GameList: TObjectList;
   public
-    procedure FillGameList;
+    procedure FillGameList(const aGameList: TObjectList);
     procedure ShowXdkInfo;
   end;
 
 var
-  GameList: TList;
   frm_Xdkversion: Tfrm_Xdkversion;
 
 implementation
@@ -60,33 +59,29 @@ var
 
 procedure Tfrm_Xdkversion.cmb_gametypeChange(Sender: TObject);
 begin
-  FillGameList;
+  if Assigned(GameList) then
+    FillGameList(GameList);
 end; // Tfrm_Xdkversion.cmb_gametypeChange
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Xdkversion.FillGameList;
+procedure Tfrm_Xdkversion.FillGameList(const aGameList: TObjectList);
 var
   lIndex: Integer;
 begin
+  GameList := aGameList;
   FilteredList.Clear;
   for lIndex := 0 to GameList.Count - 1 do
   begin
     if (cmb_gametype.ItemIndex = 0)
-    or (PXDKInfo(GameList.Items[lIndex])^.XAPILIB = cmb_gametype.Text)
-    or (PXDKInfo(GameList.Items[lIndex])^.XBOXKRNL = cmb_gametype.Text)
-    or (PXDKInfo(GameList.Items[lIndex])^.LIBCMT = cmb_gametype.Text)
-    or (PXDKInfo(GameList.Items[lIndex])^.D3D8 = cmb_gametype.Text)
-    or (PXDKInfo(GameList.Items[lIndex])^.XGRAPHC = cmb_gametype.Text)
-    or (PXDKInfo(GameList.Items[lIndex])^.DSOUND = cmb_gametype.Text)
-    or (PXDKInfo(GameList.Items[lIndex])^.XMV = cmb_gametype.Text) then
+    or TXDKInfo(GameList[lIndex]).MatchesVersion(cmb_gametype.Text) then
       FilteredList.Add(Gamelist.Items[lIndex]);
   end;
 
   lst_Games.Clear;
   mem_XdkVersions.Clear;
   for lIndex := 0 to FilteredList.Count - 1 do
-    lst_Games.Items.Add(PXDKInfo(FilteredList.Items[lIndex])^.GameName);
+    lst_Games.Items.Add(TXDKInfo(FilteredList.Items[lIndex]).GameName);
 end; // Tfrm_Xdkversion.FillGameList
 
 //------------------------------------------------------------------------------
@@ -106,17 +101,20 @@ end; // Tfrm_Xdkversion.lst_GamesClick
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Xdkversion.ShowXdkInfo;
+var
+  XDKInfo: TXDKInfo;
+  i: Integer;
 begin
   mem_XdkVersions.Clear;
   if lst_Games.ItemIndex <> -1 then
   begin
-    mem_XdkVersions.Lines.Add('XAPILIB  : ' + PXDKInfo(FilteredList.Items[lst_Games.ItemIndex])^.XAPILIB);
-    mem_XdkVersions.Lines.Add('XBOXKRNL : ' + PXDKInfo(FilteredList.Items[lst_Games.ItemIndex])^.XBOXKRNL);
-    mem_XdkVersions.Lines.Add('LIBCMT   : ' + PXDKInfo(FilteredList.Items[lst_Games.ItemIndex])^.LIBCMT);
-    mem_XdkVersions.Lines.Add('D3D8     : ' + PXDKInfo(FilteredList.Items[lst_Games.ItemIndex])^.D3D8);
-    mem_XdkVersions.Lines.Add('XGRAPHC  : ' + PXDKInfo(FilteredList.Items[lst_Games.ItemIndex])^.XGRAPHC);
-    mem_XdkVersions.Lines.Add('DSOUND   : ' + PXDKInfo(FilteredList.Items[lst_Games.ItemIndex])^.DSOUND);
-    mem_XdkVersions.Lines.Add('XMV      : ' + PXDKInfo(FilteredList.Items[lst_Games.ItemIndex])^.XMV);
+    XDKInfo := TXDKInfo(FilteredList.Items[lst_Games.ItemIndex]);
+    Assert(Assigned(XDKInfo));
+    
+    for i := 0 to XDKInfo.LibVersions.Count - 1 do
+      mem_XdkVersions.Lines.Add(Format('%-8s : %s', [
+        XDKInfo.LibVersions.Names[i],
+        XDKInfo.LibVersions.ValueFromIndex[i]]));
   end;
 end; // Tfrm_Xdkversion.ShowXdkInfo
 

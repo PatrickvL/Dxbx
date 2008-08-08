@@ -35,21 +35,15 @@ uses
 type
   TDxbxXml = class(TDataModule)
     XMLDocument: TXMLDocument;
-  private
-    { Private declarations }
   public
-    { Public declarations }
     procedure CreateXmlXbeDump(aFileName: string; aXbe : TXbe);
-
   end;
 
 var
   DxbxXml: TDxbxXml;
 
-
 procedure XML_WriteString(const aXMLNode: IXMLNode; const aElementName: string; const aString: string);
 function XML_ReadString(const aXMLNode: IXMLNode; const aElementName: string): string;
-
 
 implementation
 
@@ -61,6 +55,7 @@ procedure TDxbxXml.CreateXmlXbeDump(aFileName: string; aXbe: TXbe);
 var
   XmlRootNode: IXmlNode;
   lIndex: Integer;
+  LibName: string;
   Version: string;
 begin
   XMLDocument.Active := False;
@@ -71,19 +66,12 @@ begin
 
   for lIndex := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
   begin
+    LibName := Copy(aXbe.m_LibraryVersion[lIndex].szName, 1, 8);
     Version := IntToStr(aXbe.m_LibraryVersion[lIndex].wMajorVersion) + '.' +
       IntToStr(aXbe.m_LibraryVersion[lIndex].wMinorVersion) + '.' +
       IntToStr(aXbe.m_LibraryVersion[lIndex].wBuildVersion);
 
-    case lIndex of
-      0: XML_WriteString(XmlRootNode, 'XAPILIB', Version);
-      1: XML_WriteString(XmlRootNode, 'XBOXKRNL', Version);
-      2: XML_WriteString(XmlRootNode, 'LIBCMT', Version);
-      3: XML_WriteString(XmlRootNode, 'D3D8', Version);
-      4: XML_WriteString(XmlRootNode, 'XGRAPHC', Version);
-      5: XML_WriteString(XmlRootNode, 'DSOUND', Version);
-      6: XML_WriteString(XmlRootNode, 'XMV', Version);
-    end;
+    XML_WriteString(XmlRootNode, LibName, Version);
   end;
 
   XMLDocument.SaveToFile(aFileName);
