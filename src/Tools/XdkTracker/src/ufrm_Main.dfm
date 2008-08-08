@@ -2,7 +2,7 @@ object frmXdkTracker: TfrmXdkTracker
   Left = 262
   Top = 194
   Caption = 'XDK Tacker'
-  ClientHeight = 439
+  ClientHeight = 458
   ClientWidth = 590
   Color = clBlack
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object frmXdkTracker: TfrmXdkTracker
     Left = 0
     Top = 0
     Width = 590
-    Height = 420
+    Height = 439
     Align = alClient
     Picture.Data = {
       0A544A504547496D616765B53B0000FFD8FFE000104A46494600010201004800
@@ -506,7 +506,7 @@ object frmXdkTracker: TfrmXdkTracker
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 420
+    Top = 439
     Width = 590
     Height = 19
     Panels = <>
@@ -559,7 +559,7 @@ object frmXdkTracker: TfrmXdkTracker
         OnClick = VisitCaustikswebsite1Click
       end
       object VisitCxbxForum1: TMenuItem
-        Caption = 'Visit Cxbx &Forum'
+        Caption = 'Visit Dxbx &Forum'
         OnClick = VisitCxbxForum1Click
       end
       object N2: TMenuItem

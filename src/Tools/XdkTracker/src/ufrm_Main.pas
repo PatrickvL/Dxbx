@@ -4,8 +4,9 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, Menus, ShellApi, ExtCtrls, JPeg, xmldom, XMLIntf, msxmldom, XMLDoc,
+  Windows, SysUtils, Classes, Messages,
+  Contnrs, Controls, Forms, Dialogs, ComCtrls, Menus, ExtCtrls, ShellApi,
+  xmldom, XMLIntf, msxmldom, XMLDoc,
   // Dxbx
   uData,
   u_xdkversions,
@@ -14,7 +15,7 @@ uses
   uImportGames,
   uXbe,
   uDxbxXml,
-  uConsts;
+  uConsts, jpeg;
 
 
 const
@@ -59,10 +60,11 @@ type
     ApplicationDir: string;
 
     ImportList: TList;
+    GameList: TObjectList;
 
     function SearchGameName(GameName: string): Boolean;
 
-    procedure InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT, D3D8, XGRAPHC, DSOUND, XMV: string);
+    procedure InsertXDKInfo(XInfo: TXDKInfo);
 
     procedure LoadGameData;
     procedure SaveGameData(const aFilePath, aPublishedBy: string);
@@ -74,7 +76,7 @@ type
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
 
   public
-    XInfo: PXDKInfo;
+    XInfo: TXDKInfo;
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
   end;
@@ -91,7 +93,7 @@ implementation
 
 function IsWindowsVista: Boolean;
 var
-  VerInfo: TOSVersioninfo;
+  VerInfo: TOSVersionInfo;
 begin
   VerInfo.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
   GetVersionEx(VerInfo);
@@ -100,15 +102,16 @@ end;
 
 function SortGameList(Item1, Item2: Pointer): Integer;
 begin
-  Result := AnsiCompareText(PXDKInfo(Item1)^.GameName, PXDKInfo(Item2)^.GameName);
+  Result := AnsiCompareText(TXDKInfo(Item1).GameName, TXDKInfo(Item2).GameName);
 end;
 
 //------------------------------------------------------------------------------
 
 procedure TfrmXdkTracker.Viewxdkversion2Click(Sender: TObject);
 var
-  lIndex: Integer;
+  lIndex, j: Integer;
   XDKlist: TStringList;
+  XDKInfo: TXDKInfo;
 begin
   frm_xdkversion := Tfrm_xdkversion.Create(Application);
 
@@ -121,13 +124,9 @@ begin
     lst_Games.Clear;
     for lIndex := 0 to GameList.Count - 1 do
     begin
-      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XAPILIB);
-      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XBOXKRNL);
-      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.LIBCMT);
-      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.D3D8);
-      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XGRAPHC);
-      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.DSOUND);
-      XDKlist.Add(PXDKInfo(GameList.Items[lIndex])^.XMV);
+      XDKInfo := TXDKInfo(GameList.Items[lIndex]);
+      for j := 0 to XDKInfo.LibVersions.Count - 1 do
+        XDKlist.Add(XDKInfo.LibVersions.ValueFromIndex[j]);
     end;
 
     cmb_gametype.Items.Clear;
@@ -139,7 +138,7 @@ begin
     cmb_gametype.ItemIndex := 0;
   end;
 
-  frm_XdkVersion.FillGameList;
+  frm_XdkVersion.FillGameList(GameList);
 
   if frm_XdkVersion.ShowModal = mrOk then
   begin
@@ -219,7 +218,7 @@ begin
   ApplicationDir := ExtractFilePath(Application.ExeName);
   StatusBar1.SimpleText := cNO_XDKLIST_LOADED;
 
-  GameList := TList.Create;
+  GameList := TObjectList.Create({OwnsObjects=}True);
   LoadGameData;
 
   Parameter := ParamStr(1);
@@ -251,15 +250,34 @@ end; // TfrmMain.ExportGameData
 
 //------------------------------------------------------------------------------
 
+function _ReadGameFromNode(const GameNode: IXmlNode): TXDKInfo;
+var
+  XDKNode, LibNode: IXmlNode;
+begin
+  Result := TXDKInfo.Create;
+  Result.GameName := XML_ReadString(GameNode, 'Name');
+  XDKNode := GameNode.ChildNodes.FindNode('XDKVersions');
+  if Assigned(XDKNode) then
+  begin
+    LibNode := XDKNode.ChildNodes.First;
+    while Assigned(LibNode) do
+    begin
+      Result.LibVersions.Values[LibNode.LocalName] := LibNode.Text;
+      LibNode := LibNode.NextSibling;
+    end;
+  end;
+end;
+
 procedure TfrmXdkTracker.ImportGameData;
 var
   xmlRootNode: IXmlNode;
   InfoNode: IXmlNode;
   GameNode: IXmlNode;
-  XDKNode: IXmlNode;
   lIndex: Integer;
   Publisher: string;
   GameName: string;
+  Line: TListItem;
+  XDKInfo: TXDKInfo;
 begin
   if ImportDialog.Execute then
   begin
@@ -295,20 +313,7 @@ begin
         GameName := XML_ReadString(GameNode, 'Name');
         if not SearchGameName(GameName) then
         begin
-          New(XInfo);
-          XInfo.GameName := XML_ReadString(GameNode, 'Name');
-          XDKNode := GameNode.ChildNodes.FindNode('XDKVersions');
-          if Assigned(XDKNode) then
-          begin
-            XInfo.XAPILIB := XML_ReadString(XDKNode, 'XAPILIB');
-            XInfo.XBOXKRNL := XML_ReadString(XDKNode, 'XBOXKRNL');
-            XInfo.LIBCMT := XML_ReadString(XDKNode, 'LIBCMT');
-            XInfo.D3D8 := XML_ReadString(XDKNode, 'D3D8');
-            XInfo.XGRAPHC := XML_ReadString(XDKNode, 'XGRAPHC');
-            XInfo.DSOUND := XML_ReadString(XDKNode, 'DSOUND');
-            XInfo.XMV := XML_ReadString(XDKNode, 'XMV');
-          end;
-
+          XInfo := _ReadGameFromNode(GameNode);
           ImportList.Add(XInfo);
         end;
 
@@ -324,32 +329,23 @@ begin
         edt_Publisher.Text := Publisher;
         for lIndex := 0 to ImportList.Count - 1 do
         begin
-            lst_Import.Items.Add.Caption := PXDKInfo(ImportList.Items[lIndex])^.GameName;
-            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XAPILIB);
-            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XBOXKRNL);
-            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.LIBCMT);
-            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.D3D8);
-            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XGRAPHC);
-            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.DSOUND);
-            lst_Import.Items.Add.SubItems.Add(PXDKInfo(ImportList.Items[lIndex])^.XMV);
+          XDKInfo := TXDKInfo(ImportList.Items[lIndex]);
+          Line := lst_Import.Items.Add;
+          Line.Caption := XDKInfo.GameName;
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XAPILIB']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XBOXKRNL']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['LIBCMT']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['D3D8']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XGRAPHC']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['DSOUND']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XMV']);
         end;
       end;
 
       if frm_ImportGames.ShowModal = mrOk then
       begin
         for lIndex := 0 to ImportList.Count - 1 do
-        begin
-          New(XInfo);
-          XInfo.GameName := PXDKInfo(ImportList.Items[lIndex])^.GameName;
-          XInfo.XAPILIB := PXDKInfo(ImportList.Items[lIndex])^.XAPILIB;
-          XInfo.XBOXKRNL := PXDKInfo(ImportList.Items[lIndex])^.XBOXKRNL;
-          XInfo.LIBCMT := PXDKInfo(ImportList.Items[lIndex])^.LIBCMT;
-          XInfo.D3D8 := PXDKInfo(ImportList.Items[lIndex])^.D3D8;
-          XInfo.XGRAPHC := PXDKInfo(ImportList.Items[lIndex])^.XGRAPHC;
-          XInfo.DSOUND := PXDKInfo(ImportList.Items[lIndex])^.DSOUND;
-          XInfo.XMV := PXDKInfo(ImportList.Items[lIndex])^.XMV;
-          GameList.Add(XInfo);
-        end;
+          InsertXDKInfo(ImportList[lIndex]);
       end;
 
       frm_ImportGames.Release;
@@ -368,7 +364,6 @@ var
   XmlRoot: IXmlNode;
   GameListNode: IXmlNode;
   GameNode: IXmlNode;
-  XDKNodes: IXmlNode;
 begin
   GameDataFilePath := ApplicationDir + cXDK_TRACKER_DATA_FILE;
   if FileExists(GameDataFilePath) then
@@ -384,21 +379,8 @@ begin
     while Assigned(GameNode) do
     begin
 
-      New(XInfo);
-      XInfo.GameName := XML_ReadString(GameNode, 'Name');
-
-      XDKNodes := GameNode.ChildNodes.FindNode('XDKVersions');
-
-      XInfo.XAPILIB := XML_ReadString(XDKNodes, 'XAPILIB');
-      XInfo.XBOXKRNL := XML_ReadString(XDKNodes, 'XBOXKRNL');
-      XInfo.LIBCMT := XML_ReadString(XDKNodes, 'LIBCMT');
-      XInfo.D3D8 := XML_ReadString(XDKNodes, 'D3D8');
-      XInfo.XGRAPHC := XML_ReadString(XDKNodes, 'XGRAPHC');
-      XInfo.DSOUND := XML_ReadString(XDKNodes, 'DSOUND');
-      XInfo.XMV := XML_ReadString(XDKNodes, 'XMV');
-
-      if XInfo.GameName <> '' then
-        GameList.Add(XInfo);
+      XInfo := _ReadGameFromNode(GameNode);
+      InsertXDKInfo(XInfo);
 
       GameNode := GameNode.NextSibling;
     end;
@@ -420,18 +402,17 @@ var
   m_Xbe: TXbe;
   m_XbeFilename: string;
   m_ExeFilename: string;
-
 begin
   XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
   m_Xbe := Nil;
   if not XbeOpenDialog.Execute then
     Exit;
 
-  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename ) then begin
+  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename ) then
+  begin
     DxbxXml.CreateXmlXbeDump(ExtractFilePath(Application.ExeName) + 'Dump.dat', m_Xbe);
     ImportXbeDump;
   end;
-
 end;
 
 procedure TfrmXdkTracker.ImportGameList1Click(Sender: TObject);
@@ -448,7 +429,8 @@ var
   GameListNode: IXmlNode;
   GameNode: IXmlNode;
   XDKnode: IXmlNode;
-  lIndex: Integer;
+  lIndex, j: Integer;
+  XDKInfo: TXDKInfo;
 begin
   if XMLDocument.Active then
   begin
@@ -464,18 +446,14 @@ begin
 
     for lIndex := 0 to GameList.Count - 1 do
     begin
+      XDKInfo := TXDKInfo(GameList.Items[lIndex]);
       GameNode := GameListNode.AddChild('Game');
 
-      XML_WriteString(GameNode, 'Name', PXDKInfo(GameList.Items[lIndex])^.GameName);
+      XML_WriteString(GameNode, 'Name', XDKInfo.GameName);
       XDKnode := GameNode.AddChild('XDKVersions');
 
-      XML_WriteString(XDKnode, 'XAPILIB', PXDKInfo(GameList.Items[lIndex])^.XAPILIB);
-      XML_WriteString(XDKnode, 'XBOXKRNL', PXDKInfo(GameList.Items[lIndex])^.XBOXKRNL);
-      XML_WriteString(XDKnode, 'LIBCMT', PXDKInfo(GameList.Items[lIndex])^.LIBCMT);
-      XML_WriteString(XDKnode, 'D3D8', PXDKInfo(GameList.Items[lIndex])^.D3D8);
-      XML_WriteString(XDKnode, 'XGRAPHC', PXDKInfo(GameList.Items[lIndex])^.XGRAPHC);
-      XML_WriteString(XDKnode, 'DSOUND', PXDKInfo(GameList.Items[lIndex])^.DSOUND);
-      XML_WriteString(XDKnode, 'XMV', PXDKInfo(GameList.Items[lIndex])^.XMV);
+      for j := 0 to XDKInfo.LibVersions.Count - 1 do
+        XML_WriteString(XDKnode, XDKInfo.LibVersions.Names[j], XDKInfo.LibVersions.ValueFromIndex[j]);
     end;
 
     XMLDocument.SaveToFile(aFilePath);
@@ -504,20 +482,7 @@ begin
     while Assigned(GameNode) do
     begin
       if not SearchGameName(XML_ReadString(GameNode, 'Name')) then
-      begin
-        if Assigned(GameNode.ChildNodes.FindNode('XDKVersions')) then
-          GameNode := GameNode.ChildNodes.FindNode('XDKVersions');
-
-        InsertXDKInfo(
-          XML_ReadString(GameNode, 'Name'),
-          XML_ReadString(GameNode, 'XAPILIB'),
-          XML_ReadString(GameNode, 'XBOXKRNL'),
-          XML_ReadString(GameNode, 'LIBCMT'),
-          XML_ReadString(GameNode, 'D3D8'),
-          XML_ReadString(GameNode, 'XGRAPHC'),
-          XML_ReadString(GameNode, 'DSOUND'),
-          XML_ReadString(GameNode, 'XMV'));
-      end;
+        InsertXDKInfo(_ReadGameFromNode(GameNode));
 
       GameNode := GameNode.NextSibling;
     end;
@@ -534,7 +499,7 @@ var
 begin
   Result := False;
   for lIndex := 0 to GameList.Count - 1 do
-    if PXDKInfo(GameList.Items[lIndex])^.GameName = GameName then
+    if TXDKInfo(GameList.Items[lIndex]).GameName = GameName then
     begin
       Result := True;
       Break;
@@ -543,17 +508,15 @@ end; // TfrmMain.SearchGameName
 
 //------------------------------------------------------------------------------
 
-procedure TfrmXdkTracker.InsertXDKInfo(GameName, XAPILIB, XBOXKRNL, LIBCMT, D3D8, XGRAPHC, DSOUND, XMV: string);
+procedure TfrmXdkTracker.InsertXDKInfo(XInfo: TXDKInfo);
 begin
-  New(XInfo);
-  XInfo^.GameName := GameName;
-  XInfo^.XAPILIB := XAPILIB;
-  XInfo^.XBOXKRNL := XBOXKRNL;
-  XInfo^.LIBCMT := LIBCMT;
-  XInfo^.D3D8 := D3D8;
-  XInfo^.XGRAPHC := XGRAPHC;
-  XInfo^.DSOUND := DSOUND;
-  XInfo^.XMV := XMV;
+  if XInfo.GameName = '' then
+  begin
+    FreeAndNil(XInfo);
+    Exit;
+  end;
+
+  XInfo.LibVersions.Sort;
   GameList.Add(XInfo);
   GameList.Sort(SortGameList);
 end; // TfrmMain.InsertXDKInfo

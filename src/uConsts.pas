@@ -55,7 +55,7 @@ const
   // Websites
   cWEBSITE_CXBX = 'http://www.caustik.com/cxbx/';
   cWEBSITE_SHADOWTJ = 'http://www.shadowtj.org';
-  cWEBSITE_FORUM = 'http://forums.ngemu.com/cxbx-official-discussion/';
+  cWEBSITE_FORUM = 'http://forums.ngemu.com/dxbx-official-discussion/';
 
   cOpen = 'open';
 
