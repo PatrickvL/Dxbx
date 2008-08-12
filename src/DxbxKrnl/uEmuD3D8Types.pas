@@ -181,6 +181,10 @@ type
     Size: DWORD;
   end;
 
+  X_D3DVertexBuffer = Class ( X_D3DResource )
+
+  end;
+
   X_D3DBaseTexture = Class(X_D3DPixelContainer)
 
   end;
@@ -196,6 +200,29 @@ type
   X_D3DVolumeTexture = Class( X_D3DBaseTexture )
 
   end;
+
+  _X_STREAMINPUT = record
+    VertexBuffer : X_D3DVertexBuffer;
+    Stride : UINT;
+    Offset : UINT;
+  end;
+
+  X_STREAMINPUT = _X_STREAMINPUT;
+
+  _X_VERTEXSHADERINPUT = Record
+    IndexOfStream : DWORD;
+    Offset : DWORD;
+    Format : DWORD;
+    TesselationType : BYTE;
+    TesselationSource : BYTE;
+  End;
+
+  X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
+
+  _X_VERTEXATTRIBUTEFORMAT = record
+    pVertexShaderInput : Array [0..15] of X_VERTEXSHADERINPUT;
+  end;
+  X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
 
 implementation
 
