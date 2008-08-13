@@ -334,11 +334,22 @@ begin
           Line.Caption := XDKInfo.GameName;
           Line.SubItems.Add(XDKInfo.LibVersions.Values['XAPILIB']);
           Line.SubItems.Add(XDKInfo.LibVersions.Values['XBOXKRNL']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['LIBCPMT']);
           Line.SubItems.Add(XDKInfo.LibVersions.Values['LIBCMT']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['LIBC']);
           Line.SubItems.Add(XDKInfo.LibVersions.Values['D3D8']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['D3DX8']);
           Line.SubItems.Add(XDKInfo.LibVersions.Values['XGRAPHC']);
           Line.SubItems.Add(XDKInfo.LibVersions.Values['DSOUND']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XVOICE']);
           Line.SubItems.Add(XDKInfo.LibVersions.Values['XMV']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XONLINES']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['UIX']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['VOICMAIL']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XVOCREC']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['XACTENG']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['CalcSig']);
+          Line.SubItems.Add(XDKInfo.LibVersions.Values['DMUSIC']);
         end;
       end;
 
