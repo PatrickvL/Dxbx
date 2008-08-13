@@ -1,10 +1,9 @@
 object frm_ImportGames: Tfrm_ImportGames
   Left = 392
   Top = 282
-  BorderStyle = bsDialog
   Caption = 'Import Games'
-  ClientHeight = 311
-  ClientWidth = 422
+  ClientHeight = 309
+  ClientWidth = 420
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,17 +13,19 @@ object frm_ImportGames: Tfrm_ImportGames
   OldCreateOrder = False
   Position = poOwnerFormCenter
   DesignSize = (
-    422
-    311)
+    420
+    309)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
     Left = 4
     Top = 4
-    Width = 414
-    Height = 273
+    Width = 412
+    Height = 271
     Anchors = [akLeft, akTop, akRight, akBottom]
     Shape = bsFrame
+    ExplicitWidth = 414
+    ExplicitHeight = 273
   end
   object lbl_Publisher: TLabel
     Left = 12
@@ -41,26 +42,28 @@ object frm_ImportGames: Tfrm_ImportGames
     Caption = 'New Games:'
   end
   object btn_Cancel: TButton
-    Left = 339
-    Top = 283
+    Left = 337
+    Top = 281
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 0
-    ExplicitLeft = 338
+    ExplicitLeft = 339
+    ExplicitTop = 283
   end
   object btn_Ok: TButton
-    Left = 259
-    Top = 283
+    Left = 257
+    Top = 281
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '&Ok'
     ModalResult = 1
     TabOrder = 1
-    ExplicitLeft = 258
+    ExplicitLeft = 259
+    ExplicitTop = 283
   end
   object edt_Publisher: TEdit
     Left = 12
@@ -74,8 +77,8 @@ object frm_ImportGames: Tfrm_ImportGames
   object lst_Import: TListView
     Left = 12
     Top = 75
-    Width = 397
-    Height = 195
+    Width = 395
+    Height = 193
     Anchors = [akLeft, akTop, akRight, akBottom]
     Columns = <
       item
@@ -91,11 +94,23 @@ object frm_ImportGames: Tfrm_ImportGames
         Width = 75
       end
       item
+        Caption = 'LIBCPMT'
+        Width = 75
+      end
+      item
         Caption = 'LIBCMT'
         Width = 75
       end
       item
+        Caption = 'LIBC'
+        Width = 75
+      end
+      item
         Caption = 'D3D8'
+        Width = 75
+      end
+      item
+        Caption = 'D3DX8'
         Width = 75
       end
       item
@@ -107,7 +122,39 @@ object frm_ImportGames: Tfrm_ImportGames
         Width = 75
       end
       item
+        Caption = 'XVOICE'
+        Width = 75
+      end
+      item
         Caption = 'XMV'
+        Width = 75
+      end
+      item
+        Caption = 'XONLINES'
+        Width = 75
+      end
+      item
+        Caption = 'UIX'
+        Width = 75
+      end
+      item
+        Caption = 'VOICMAIL'
+        Width = 75
+      end
+      item
+        Caption = 'XVOCREC'
+        Width = 75
+      end
+      item
+        Caption = 'XACTENG'
+        Width = 75
+      end
+      item
+        Caption = 'CalcSig'
+        Width = 75
+      end
+      item
+        Caption = 'DMUSIC'
         Width = 75
       end>
     RowSelect = True
