@@ -40,6 +40,7 @@
     </DelphiCompile>
     <DCCReference Include="..\..\..\uConsoleClass.pas" />
     <DCCReference Include="..\..\..\uConsts.pas" />
+    <DCCReference Include="..\..\..\uDxbxUtils.pas" />
     <DCCReference Include="..\..\..\uDxbxXml.pas">
       <DesignClass>TDataModule</DesignClass>
       <Form>DxbxXml</Form>

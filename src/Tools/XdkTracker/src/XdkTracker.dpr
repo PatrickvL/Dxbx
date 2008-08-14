@@ -31,7 +31,8 @@ uses
   uTime in '..\..\..\uTime.pas',
   uLog in '..\..\..\uLog.pas',
   uDxbxXml in '..\..\..\uDxbxXml.pas' {DxbxXml: TDataModule},
-  uConsoleClass in '..\..\..\uConsoleClass.pas';
+  uConsoleClass in '..\..\..\uConsoleClass.pas',
+  uDxbxUtils in '..\..\..\uDxbxUtils.pas';
 
 {$R *.res}
 

@@ -4,10 +4,11 @@ interface
 
 uses
   // Delphi
-  Windows, SysUtils, Classes, Messages,
+  Windows, SysUtils, Classes, Messages, FileCtrl,
   Contnrs, Controls, Forms, Dialogs, ComCtrls, Menus, ExtCtrls, ShellApi,
   xmldom, XMLIntf, msxmldom, XMLDoc,
   // Dxbx
+  uDxbxUtils,
   uData,
   u_xdkversions,
   u_About,
@@ -47,6 +48,7 @@ type
     GetXDKInfofromXbe1: TMenuItem;
     XbeOpenDialog: TOpenDialog;
     StatusBar1: TStatusBar;
+    ImportTxtDumps1: TMenuItem;
     procedure Viewxdkversion2Click(Sender: TObject);
     procedure About1Click(Sender: TObject);
     procedure VisitShadowTjwebsite1Click(Sender: TObject);
@@ -56,6 +58,7 @@ type
     procedure ExportGameList1Click(Sender: TObject);
     procedure GetXDKInfofromXbe1Click(Sender: TObject);
     procedure ImportGameList1Click(Sender: TObject);
+    procedure ImportTxtDumps1Click(Sender: TObject);
   private
     ApplicationDir: string;
 
@@ -69,9 +72,12 @@ type
     procedure LoadGameData;
     procedure SaveGameData(const aFilePath, aPublishedBy: string);
 
+    procedure ShowImportList(const ImportList: TList; Publisher: string);
+
     procedure ImportGameData;
     procedure ExportGameData;
     procedure ImportXbeDump;
+    procedure ImportTxtDumps(const aTxtDumpsFolder: TFileName);
 
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
 
@@ -222,8 +228,11 @@ begin
   LoadGameData;
 
   Parameter := ParamStr(1);
-  if Parameter = '/XBEDUMP' then
+  if SameText(Parameter, '/XBEDUMP') then
     ImportXbeDump;
+
+  if SameText(Parameter, '/TxtDumps') then
+    ImportTxtDumps(ParamStr(2));
 end; // TfrmMain.Create
 
 //------------------------------------------------------------------------------
@@ -268,6 +277,69 @@ begin
   end;
 end;
 
+procedure TfrmXdkTracker.ShowImportList(const ImportList: TList; Publisher: string);
+var
+  lIndex: Integer;
+  LibNames: TStringList;
+  Line: TListItem;
+  XDKInfo: TXDKInfo;
+  j: Integer;
+begin
+  ImportList.Sort(SortGameList);
+
+  LibNames := TStringList.Create;
+  LibNames.Sorted := True;
+  LibNames.Duplicates := dupIgnore;
+  
+  for lIndex := 0 to ImportList.Count - 1 do
+  begin
+    XDKInfo := TXDKInfo(ImportList.Items[lIndex]);
+    for j := 0 to XDKInfo.LibVersions.Count - 1 do
+      LibNames.Add(XDKInfo.LibVersions.Names[j]);
+  end;
+
+
+  frm_ImportGames := Tfrm_ImportGames.Create(Self);
+
+  with frm_ImportGames do
+  begin
+    edt_Publisher.Text := Publisher;
+
+    lst_Import.Columns.Clear;
+    with lst_Import.Columns.Add do
+    begin
+      Caption := 'Game Name';
+      Width := 250;
+    end;
+
+    for j := 0 to LibNames.Count - 1 do
+      with lst_Import.Columns.Add do
+      begin
+        Caption := LibNames[j];;
+        Width := 75;
+      end;
+
+    for lIndex := 0 to ImportList.Count - 1 do
+    begin
+      XDKInfo := TXDKInfo(ImportList.Items[lIndex]);
+      Line := lst_Import.Items.Add;
+      Line.Caption := XDKInfo.GameName;
+      for j := 0 to LibNames.Count - 1 do
+        Line.SubItems.Add(XDKInfo.LibVersions.Values[LibNames[j]]);
+    end;
+  end;
+
+  if frm_ImportGames.ShowModal = mrOk then
+  begin
+    for lIndex := 0 to ImportList.Count - 1 do
+      InsertXDKInfo(ImportList[lIndex]);
+
+    GameList.Sort(SortGameList);
+  end;
+
+  frm_ImportGames.Release;
+end;
+
 procedure TfrmXdkTracker.ImportGameData;
 var
   xmlRootNode: IXmlNode;
@@ -276,8 +348,6 @@ var
   lIndex: Integer;
   Publisher: string;
   GameName: string;
-  Line: TListItem;
-  XDKInfo: TXDKInfo;
 begin
   if ImportDialog.Execute then
   begin
@@ -320,46 +390,7 @@ begin
         GameNode := GameNode.NextSibling;
       end;
 
-      ImportList.Sort(SortGameList);
-
-      frm_ImportGames := Tfrm_ImportGames.Create(Self);
-
-      with frm_ImportGames do
-      begin
-        edt_Publisher.Text := Publisher;
-        for lIndex := 0 to ImportList.Count - 1 do
-        begin
-          XDKInfo := TXDKInfo(ImportList.Items[lIndex]);
-          Line := lst_Import.Items.Add;
-          Line.Caption := XDKInfo.GameName;
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XAPILIB']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XBOXKRNL']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['LIBCPMT']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['LIBCMT']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['LIBC']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['D3D8']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['D3DX8']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XGRAPHC']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['DSOUND']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XVOICE']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XMV']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XONLINES']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['UIX']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['VOICMAIL']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XVOCREC']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['XACTENG']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['CalcSig']);
-          Line.SubItems.Add(XDKInfo.LibVersions.Values['DMUSIC']);
-        end;
-      end;
-
-      if frm_ImportGames.ShowModal = mrOk then
-      begin
-        for lIndex := 0 to ImportList.Count - 1 do
-          InsertXDKInfo(ImportList[lIndex]);
-      end;
-
-      frm_ImportGames.Release;
+      ShowImportList(ImportList, Publisher);
 
       FreeAndNil({var}ImportList);
     end;
@@ -375,6 +406,7 @@ var
   XmlRoot: IXmlNode;
   GameListNode: IXmlNode;
   GameNode: IXmlNode;
+  ImportList: TList;
 begin
   GameDataFilePath := ApplicationDir + cXDK_TRACKER_DATA_FILE;
   if FileExists(GameDataFilePath) then
@@ -387,16 +419,20 @@ begin
     GameListNode := XmlRoot.ChildNodes.FindNode('GameList');
 
     GameNode := GameListNode.ChildNodes.FindNode('Game');
+    ImportList := TList.Create;
     while Assigned(GameNode) do
     begin
 
       XInfo := _ReadGameFromNode(GameNode);
-      InsertXDKInfo(XInfo);
+      ImportList.Add(XInfo);
 
       GameNode := GameNode.NextSibling;
     end;
 
-    Gamelist.Sort(SortGameList);
+    ShowImportList(ImportList, '');
+
+    FreeAndNil(ImportList);
+
     StatusBar1.SimpleText := cXDKLIST_LOADED;
   end;
 end; // TfrmMain.LoadGameData
@@ -502,6 +538,68 @@ begin
   end;
 end; // TfrmMain.ImportXbeDump
 
+procedure TfrmXdkTracker.ImportTxtDumps(const aTxtDumpsFolder: TFileName);
+var
+  FileNames, FileContents: TStringList;
+  i, j, k: Integer;
+  GameName, LibName, LibVersion: string;
+  XDKInfo: TXDKInfo;
+begin
+  FileNames := TStringList.Create;
+  FileContents := TStringList.Create;
+  ImportList := TList.Create;
+  try
+    FindFiles(aTxtDumpsFolder, '*.txt', FileNames);
+
+    for i := 0 to FileNames.Count - 1 do
+    begin
+      GameName := ChangeFileExt(ExtractFileName(FileNames[i]), '');
+      if SearchGameName(GameName) then
+        Continue;
+
+      FileContents.LoadFromFile(FileNames[i]);
+
+      XDKInfo := TXDKInfo.Create;
+      XDKInfo.GameName := GameName;
+      j := 0;
+      while j < FileContents.Count do
+      begin
+        if StartsWithText(FileContents[j], 'Library Name') then
+        begin
+          k := Pos(':', FileContents[j]);
+          LibName := Trim(Copy(FileContents[j], k + 1, MaxInt));
+          Inc(j);
+          k := Pos(':', FileContents[j]);
+          LibVersion := Trim(Copy(FileContents[j], k + 1, MaxInt));
+          XDKInfo.LibVersions.Values[LibName] := LibVersion;
+        end;
+
+        Inc(j);
+      end;
+
+      if XDKInfo.LibVersions.Count > 0 then
+        ImportList.Add(XDKInfo)
+      else
+        FreeAndNil(XDKInfo);
+
+    end;
+
+    ShowImportList(ImportList, '');
+
+  finally
+    FreeAndNil(ImportList);
+    FreeAndNil(FileContents);
+    FreeAndNil(FileNames);
+  end;
+end;
+procedure TfrmXdkTracker.ImportTxtDumps1Click(Sender: TObject);
+var
+  TxtDumpsFolder: string;
+begin
+  if SelectDirectory(TxtDumpsFolder, [], 0) then
+    ImportTxtDumps(TxtDumpsFolder);
+end;
+
 //------------------------------------------------------------------------------
 
 function TfrmXdkTracker.SearchGameName(GameName: string): Boolean;
@@ -529,7 +627,6 @@ begin
 
   XInfo.LibVersions.Sort;
   GameList.Add(XInfo);
-  GameList.Sort(SortGameList);
 end; // TfrmMain.InsertXDKInfo
    
 //------------------------------------------------------------------------------
