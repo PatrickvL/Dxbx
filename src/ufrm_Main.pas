@@ -661,7 +661,7 @@ end; // Tfrm_Main.actConsoleXbeInfoExecute
 
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
-  SaveDialog.Filename := 'xbe.txt';
+  SaveDialog.Filename := m_Xbe.DetermineDumpFileName;
   SaveDialog.Filter := DIALOG_FILTER_TEXT;
 
   if SaveDialog.Execute then

@@ -20,6 +20,7 @@
   </target>
 
   <target name="resources" depends="prepare" >
+    <brcc file="${src}/Tools/PatternTrieBuilder/StoredTrie.rc" output="${src}/Tools/PatternTrieBuilder/StoredTrie.res" />
   </target>
 
   <target name="compile"  depends="prepare, resources, build">

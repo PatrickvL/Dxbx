@@ -1,18 +1,30 @@
-The following tasks are currently on the short-term TODO list :
+The following tasks are currently on our near-term TODO list :
 
 - Insert a conditional for Alphaskins, so developers dont have problems with it. 
 
 - Write a C-to-Pascal translation guide
 
-- Translate EmuD3D8 to get some visual output of Dxbx calling actual Xbe code
-
 - Fix the difference in contents in the .cxbxplg section between Dxbx and Cxbx (this is probably because the .xbe reading is damaged)
   (Currently this difference is only seen with Fable the Lost Chapters)
 
-- Investigate how the HLE emulation should be translated
+- Translate/Implement all Kernel API's that are implemented by Cxbx
 
-- Implement all API's that are implemented by Cxbx
+- Translate all emu-patches that are implemented by Cxbx
 
-- Determine all API's signatures that are not currently known (marked with UNKNOWN_SIGNATURE)
+- Translate EmuD3D8 to get some visual output of Dxbx calling actual Xbe code
 
-- Fix Dll Log to file option. 
+- Determine all Kernel API's signatures that are not currently known (marked with UNKNOWN_SIGNATURE)
+
+- Extract the complete set of libraries that we currently keep in XdkTracker in such a way
+  that we can automate the pattern-generation with a script, which should also convert
+  the resulting pattern-collection into a 'stored pattern trie' (by calling PatternTrieBuilder)
+  
+- Detection of functions should honour the actual library version again (perhaps returning the closest version number?)
+
+- Resolve differences between functions that end up in the same leaf, by adding extra data.
+  For example, we could add the offset and value of the first fixed byte that's fixed in all functions,
+  but has a unique value per function (more than one such tuple could be needed).
+  
+- Transform the StringTable in the Signature resource into a SuffixTree
+  (which will make strings slower to read, but much more compact in storage).
+  
