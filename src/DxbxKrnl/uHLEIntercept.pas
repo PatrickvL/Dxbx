@@ -516,7 +516,7 @@ end;
 procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 var
   i: Integer;
-  DetectedFunction: PDetectedXboxLibraryFunction;
+  DetectedFunction: PDetectedVersionedXboxLibraryFunction;
   OrgCode: TCodePointer;
   Patch: TXboxLibraryPatch;
   NewCode: TCodePointer;
@@ -529,7 +529,7 @@ begin
 
     OrgCode := DetectedFunction.CodeStart;
 
-    Patch := XboxFunctionNameToLibraryPatch(DetectedFunction.Info.Name);
+    Patch := XboxFunctionNameToLibraryPatch(DetectedFunction.FunctionName);
 
     if Patch <> xlp_Unknown then
     begin
@@ -537,7 +537,7 @@ begin
       Assert(Assigned(NewCode));
 
 {$IFDEF _DEBUG_TRACE}
-      DbgPrintf('HLE : $%.08X (%s) -> $%.08X (XTL_Emu%s)', [OrgCode, DetectedFunction.Info.Name, NewCode, XboxLibraryPatchToString(Patch)]);
+      DbgPrintf('HLE : $%.08X (%s) -> $%.08X (XTL_Emu%s)', [OrgCode, DetectedFunction.FunctionName, NewCode, XboxLibraryPatchToString(Patch)]);
 {$ENDIF}
 
       EmuInstallWrapper(OrgCode, NewCode);

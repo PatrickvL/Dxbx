@@ -24,12 +24,13 @@ interface
 uses
   // Delphi
   SysUtils,
-  // Dxbx
-  uTypes;
+  Classes; // MaxListSize
 
 const
   PATTERNSIZE = 32; // A pattern is 32 bytes long
 
+  PatternDontCareValue = Word($FFFF);
+  
 type
   // This enumerate type contains all Xbox library functions that we patch.
   TXboxLibraryPatch = (
@@ -40,47 +41,143 @@ type
     xlp_XapiThreadStartup
     );
 
-  PPattern32 = ^RPattern32;
-  // This record contains one span of 32 function bytes,
-  // including a bitmask indicating which bytes are static.
-  // (Non-static bytes must be ignored in detection routines).
-  RPattern32 = record
-    BytesToUseMask: UInt32; // These 32 bits indicate which corresponding 32 bytes are used in the pattern
-    Bytes: array [0..PATTERNSIZE - 1] of Byte;
+  PVersionedXboxLibrary = ^RVersionedXboxLibrary;
+  RVersionedXboxLibrary = record
+    LibVersion: Integer;
+    LibName: string;
   end;
 
-  PXboxLibraryFunction = ^RXboxLibraryFunction;
-  // This record contains everything we need to detect an Xbox library function.
-  RXboxLibraryFunction = record
+  PVersionedXboxLibraryFunction = ^RVersionedXboxLibraryFunction;
+  RVersionedXboxLibraryFunction = record
+    VersionedXboxLibrary: PVersionedXboxLibrary;
     Name: string;
-    Pattern: RPattern32;
     CRCLength: Byte;
     CRCValue: Word;
     TotalLength: Word;
-    // TODO : Add referenced API's and trailing bytes here too!
   end;
-
   TCodePointer = type Pointer;
 
-  PDetectedXboxLibraryFunction = ^RDetectedXboxLibraryFunction;
-  RDetectedXboxLibraryFunction = record
-    Info: PXboxLibraryFunction;
+  PDetectedVersionedXboxLibraryFunction = ^RDetectedVersionedXboxLibraryFunction;
+  RDetectedVersionedXboxLibraryFunction = record
+    VersionedXboxLibrary: PVersionedXboxLibrary;
+    FunctionName: string;
     HitCount: Integer;
     CodeStart: TCodePointer;
     CodeEnd: TCodePointer;
   end;
 
-  TPatternArray = array of RXboxLibraryFunction;
-  TSortedPatterns = array of PXboxLibraryFunction;
+  TLibVersion = Word; // The 4-digit version number of an XDK library
 
-  PXboxLibraryInfo = ^RXboxLibraryInfo;
-  RXboxLibraryInfo = record
-    LibVersion: Integer;
-    LibName: string;
-    PatternArray: TPatternArray;
-    PatternLength: Integer;
-    SortedPatterns: TSortedPatterns
+  BaseIndexType = Word; // A Word will suffice while we store less than 65536 strings & functions.
+
+  PByteOffset = ^TByteOffset;
+  TByteOffset = type Cardinal; /// Use this everywhere a location in the Trie's persistent storage is needed.
+
+  TStringTableIndex = type BaseIndexType; /// Use this everywhere a string is uniquely identified.
+
+  {$A1} // Make sure all the following records are byte-aligned for best space-usage :
+
+  RStoredStringTable = record
+    NrStrings: BaseIndexType; /// The number of strings in this table (no duplicates, sorted for faster searching)
+    StringOffsets: TByteOffset; /// The start of the string table (each string is one TByteOffset into the AnsiCharData)
+    AnsiCharData: TByteOffset; /// The start of the actual string data (AnsiChars, no separators)
   end;
+
+  PStringOffsetList = ^TStringOffsetList;
+  TStringOffsetList = array[0..MaxListSize-1] of TByteOffset;
+
+  TLibraryIndex = type Byte; /// Use this everywhere a library is uniquely identified.
+
+  RStoredLibrary = record
+    LibVersion: TLibVersion; /// The version number of this library
+    LibNameIndex: TStringTableIndex; // The name of this library, in the form of an index into the StringTable.
+  end;
+
+  RStoredLibraryTable = record
+    NrOfLibraries: Word; /// The number of libraries in this table
+    LibrariesOffset: TByteOffset; /// The location of the first stored library
+  end;
+
+{$IFDEF _DEBUG_TRACE}
+  // A function occurs in two locations - per library and global.
+  /// This record contains the global function information.
+  PStoredGlobalFunction = ^RStoredGlobalFunction;
+  RStoredGlobalFunction = record
+    FunctionNameIndex: TStringTableIndex; /// This record only has the index to the name of this function.
+  end;
+
+  PGlobalFunctionList = ^TGlobalFunctionList;
+  TGlobalFunctionList = array[0..MaxListSize-1] of RStoredGlobalFunction;
+{$ENDIF}
+
+  // Global functions can be indicated using a number in the range [0..NrOfFunctions-1].
+  // These unique global function numbers can be put in a to-be generated code unit,
+  // so we can refer to them by number, instead of name. This saves quite some space
+  // in release-builds, because with this method we won't even need to store the
+  // function-names in the file anymore. (All this is yet to-be-done/TODO for now.)
+  RStoredGlobalFunctionTable = record
+    NrOfFunctions: BaseIndexType; /// The number of global functions in this table
+{$IFDEF _DEBUG_TRACE}
+    GlobalFunctionsOffset: TByteOffset; /// The location of the first stored function
+{$ENDIF}
+  end;
+
+  TFunctionIndex = type BaseIndexType; /// Use this everywhere a function is uniquely identified.
+
+  // A function occurs in two locations - per library and global.
+  // This record contains the per-library function information.
+  PStoredLibraryFunction = ^RStoredLibraryFunction;
+  RStoredLibraryFunction = record
+    GlobalFunctionIndex: TFunctionIndex; /// The unique index of this function in the RStoredGlobalFunctionTable
+    LibraryIndex: TLibraryIndex; /// The unique index of the libray containing this function
+    CRCLength: Byte;
+    CRCValue: Word;
+    FunctionLength: Word;
+  end;
+
+  PStoredTrieNode = ^RStoredTrieNode;
+  RStoredTrieNode = record
+    NextSiblingOffset: TByteOffset;
+    NrChildrenByte1: Byte;
+    // The next byte is optional, only used when the actual number of
+    // children is larger than 128 (see TPatternTrie.Save._WriteTrieNodes):
+    NrChildrenByte2: Byte;
+    // The rest of this record cannot be defined as a static type,
+    // but has this layout :
+    //
+    // For every stretch of fixed bytes, a header byte is given first.
+    //
+    // The bits of this header byte are defined as, "nnnnnctt", where:
+    //
+    // nnnnn : 5 bits indicating the number [0..31] of fixed bytes that follow
+    // c : 1 continue bit - if set more stretches follow after this one
+    // tt : 2 bits, indicating the Node Type Flags (see below)
+    //
+    // The specified number of fixed bytes follow directly after this.
+    //
+    // The "don't care" bytes are not stored in the output,
+    // but the amount of them is indicated by the Node Type Flags.
+  end;
+
+  PStoredSignatureTrieHeader = ^RStoredSignatureTrieHeader;
+  RStoredSignatureTrieHeader = record
+    Header: array[0..5] of AnsiChar; // Chosen so this record becomes a nice 32 bytes large
+    StringTable: RStoredStringTable;
+    LibraryTable: RStoredLibraryTable;
+    GlobalFunctionTable: RStoredGlobalFunctionTable;
+    TrieRootNode: TByteOffset; /// The location of the root of the Trie, this location contains a RStoredTrieNode
+  end;
+
+const
+  // Node Type Flags :
+  NODE_5BITFIXED_0WILDCARDS = 0;
+  NODE_5BITFIXED_4WILDCARDS = 1;
+  NODE_5BITFIXED_8WILDCARDS = 2;
+  NODE_5BITFIXED_ALLWILDCARDS = 3; // No followup-bit normally, which enables:
+
+  // The "ALLFIXED" flag is used to indicate a full stretch of 32 fixed values,
+  // which couldn't otherwise be specified with the 5 bits reserved for that :
+  NODE_ALLFIXED = 7;
 
 // This method creates a somewhat readable string for each patched method.
 function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
@@ -92,38 +189,7 @@ function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibra
 
 function IsXboxLibraryPatch(const aFunctionName: string): Boolean;
 
-function PatternList_NameCompare(Pattern1, Pattern2: PXboxLibraryFunction): Integer;
-function PatternList_PatternCompare(Pattern1, Pattern2: PXboxLibraryFunction): Integer;
-
 implementation
-
-function PatternList_PatternCompare(Pattern1, Pattern2: PXboxLibraryFunction): Integer;
-var
-  i: Integer;
-begin
-  for i := 0 to PATTERNSIZE - 1 do
-  begin
-    Result := Integer(Pattern1.Pattern.Bytes[i]) - Integer(Pattern2.Pattern.Bytes[i]);
-    if Result <> 0 then
-      Exit;
-  end;
-
-  if Result = 0 then
-    Result := Pattern1.CRCValue - Pattern2.CRCValue;
-end;
-
-function PatternList_NameCompare(Pattern1, Pattern2: PXboxLibraryFunction): Integer;
-begin
-  if not Assigned(Pattern2) then
-  begin
-    Result := 1;
-    Exit;
-  end;
-
-  Result := CompareStr(Pattern1.Name, Pattern2.Name);
-  if Result = 0 then
-    Result := PatternList_PatternCompare(Pattern1, Pattern2);
-end;
 
 function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
 var

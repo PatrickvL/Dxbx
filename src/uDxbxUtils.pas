@@ -38,7 +38,25 @@ function StartsWithText(const aString, aPrefix: string): Boolean;
 
 procedure Swap(var aElement1, aElement2); overload;
 
+function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
+
 implementation
+
+function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
+const
+  InvalidNTFSFilePathChars: set of Char = [#0..#31] + ['/', '\', ':', '*', '?', '"', '<', '>', '|', #127];
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 1 to Length(aFilePath) do
+  begin
+    if aFilePath[i] in InvalidNTFSFilePathChars then
+      Result := Result + aReplacement
+    else
+      Result := Result + aFilePath[i];
+  end;
+end;
 
 procedure Swap(var aElement1, aElement2);
 var

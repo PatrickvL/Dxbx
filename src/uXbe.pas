@@ -34,7 +34,8 @@ uses
   uConsts,
   uTypes,
   uTime,
-  uLog;
+  uLog,
+  uDxbxUtils;
 
 const
   XBE_INIT_FLAG_MountUtilityDrive = $00000001;
@@ -231,6 +232,7 @@ type
     constructor Create(aFileName: string; aFileType: TFileType);
     destructor Destroy; override;
 
+    function DetermineDumpFileName: string;
     function DumpInformation(FileName: string = ''): Boolean;
     function GetAddr(x_dwVirtualAddress: DWord): Integer;
 
@@ -548,6 +550,22 @@ begin
     end;
   end;
 end; // TXbe.Create
+
+//------------------------------------------------------------------------------
+
+function TXbe.DetermineDumpFileName: string;
+begin
+  Result := WideCharToString(m_Certificate.wszTitleName);
+  Result := FixInvalidFilePath(Result, '_');
+
+  if (m_Certificate.dwGameRegion and 4) > 0 then
+    Result := Result + '-PAL'
+  else
+    if (m_Certificate.dwGameRegion and 1) > 0 then
+      Result := Result + '-NTSC';
+
+  Result := Result + '.txt';
+end;
 
 //------------------------------------------------------------------------------
 

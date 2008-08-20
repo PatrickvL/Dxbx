@@ -89,7 +89,7 @@ end;
 
 function TDxbxAPIDebugInfoSource.GetLocationInfo(const aAddr: Pointer; var Info: TJclLocationInfo): Boolean;
 var
-  DetectedFunction: PDetectedXboxLibraryFunction;
+  DetectedFunction: PDetectedVersionedXboxLibraryFunction;
 begin
   DetectedFunction := DetectedFunctions.FindByAddress(TCodePointer(aAddr));
   Result := Assigned(DetectedFunction);
@@ -100,9 +100,9 @@ begin
   begin
     Address := Pointer(DetectedFunction.CodeStart); // Error address
 //    UnitName: string;               // Name of Delphi unit
-    ProcedureName := DetectedFunction.Info.Name; // Procedure name
+    ProcedureName := DetectedFunction.FunctionName;
     OffsetFromProcName := Integer(IntPtr(aAddr) - IntPtr(Address)); // Offset from Address to ProcedureName symbol location
-//    LineNumber: Integer;            // Line number
+//    LineNumber: Integer;
 //    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
 //    SourceName: string;             // Module file name
     Info.DebugInfo := Self; // Location object

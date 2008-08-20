@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
-program PatternCodeGenerator;
+program PatternTrieBuilder;
 
 {$INCLUDE ..\..\Dxbx.inc}
 
@@ -23,15 +23,13 @@ program PatternCodeGenerator;
 
 uses
   SysUtils,
-  uPatternCodeGenerator in 'uPatternCodeGenerator.pas',
   uXboxLibraryUtils in '..\..\uXboxLibraryUtils.pas',
-  uTypes in '..\..\uTypes.pas',
-  uPatternScanner in '..\..\uPatternScanner.pas',
-  uBitUtils in '..\..\uBitUtils.pas';
+  uPatternsToTrie in 'uPatternsToTrie.pas',
+  uDxbxUtils in '..\..\uDxbxUtils.pas';
 
 begin
   try
-    PatternCodeGenerator_Main;
+    PatternToTrie_Main;
   except
     on E:Exception do
       Writeln(E.Classname, ': ', E.Message);

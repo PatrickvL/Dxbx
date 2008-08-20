@@ -27,6 +27,8 @@ library DxbxDLL;
   with your DLL. To avoid using BORLNDMM.DLL, pass string information
   using PChar or ShortString parameters. }
 
+{$R 'Tools\PatternTrieBuilder\StoredTrie.res' 'Tools\PatternTrieBuilder\StoredTrie.rc'}
+
 uses
   Windows,
   SysUtils,
@@ -81,14 +83,12 @@ uses
   uXBController in 'uXBController.pas',
   uError in 'uError.pas',
   uBitUtils in 'uBitUtils.pas',
-  uPatternScanner in 'uPatternScanner.pas',
   DxLibraryAPIScanning in 'DxbxKrnl\DxLibraryAPIScanning.pas',
   uCRC16 in 'uCRC16.pas',
   uConsoleClass in 'uConsoleClass.pas',
   uXboxLibraryPatches in 'DxbxKrnl\uXboxLibraryPatches.pas',
   uXboxLibraryUtils in 'uXboxLibraryUtils.pas',
   uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
-  uPatterns in 'Tools\PatternCodeGenerator\uPatterns.pas',
   uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
