@@ -1,10 +1,9 @@
 object frm_Xdkversion: Tfrm_Xdkversion
   Left = 281
   Top = 178
-  BorderStyle = bsDialog
   Caption = 'Game List'
-  ClientHeight = 299
-  ClientWidth = 491
+  ClientHeight = 297
+  ClientWidth = 489
   Color = clBlack
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,17 +14,19 @@ object frm_Xdkversion: Tfrm_Xdkversion
   Position = poMainFormCenter
   OnCreate = FormCreate
   DesignSize = (
-    491
-    299)
+    489
+    297)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
     Left = 4
     Top = 4
-    Width = 480
-    Height = 289
+    Width = 478
+    Height = 287
     Anchors = [akLeft, akTop, akRight, akBottom]
     Shape = bsFrame
+    ExplicitWidth = 480
+    ExplicitHeight = 289
   end
   object lbl_Gametype: TLabel
     Left = 12
@@ -43,7 +44,7 @@ object frm_Xdkversion: Tfrm_Xdkversion
   object lbl_Xdk: TLabel
     Left = 263
     Top = 40
-    Width = 80
+    Width = 78
     Height = 13
     Anchors = [akLeft, akTop, akRight]
     Caption = 'XDK Information:'
@@ -53,6 +54,7 @@ object frm_Xdkversion: Tfrm_Xdkversion
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    ExplicitWidth = 80
   end
   object cmb_gametype: TComboBox
     Left = 12
@@ -71,9 +73,9 @@ object frm_Xdkversion: Tfrm_Xdkversion
   object mem_XdkVersions: TMemo
     Left = 263
     Top = 59
-    Width = 212
+    Width = 210
     Height = 229
-    Anchors = [akLeft, akTop, akRight]
+    Anchors = [akLeft, akTop, akRight, akBottom]
     Color = clBtnFace
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -83,15 +85,17 @@ object frm_Xdkversion: Tfrm_Xdkversion
     ParentFont = False
     ReadOnly = True
     TabOrder = 1
+    ExplicitWidth = 212
   end
   object lst_Games: TListBox
     Left = 12
     Top = 59
     Width = 245
-    Height = 229
+    Height = 227
     Anchors = [akLeft, akTop, akBottom]
     ItemHeight = 13
     TabOrder = 2
     OnClick = lst_GamesClick
+    ExplicitHeight = 229
   end
 end
