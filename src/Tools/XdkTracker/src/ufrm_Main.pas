@@ -345,7 +345,6 @@ var
   xmlRootNode: IXmlNode;
   InfoNode: IXmlNode;
   GameNode: IXmlNode;
-  lIndex: Integer;
   Publisher: string;
   GameName: string;
 begin
@@ -407,6 +406,7 @@ var
   GameListNode: IXmlNode;
   GameNode: IXmlNode;
   ImportList: TList;
+  lIndex: Integer;
 begin
   GameDataFilePath := ApplicationDir + cXDK_TRACKER_DATA_FILE;
   if FileExists(GameDataFilePath) then
@@ -429,7 +429,11 @@ begin
       GameNode := GameNode.NextSibling;
     end;
 
-    ShowImportList(ImportList, '');
+    for lIndex := 0 to ImportList.Count - 1 do
+      InsertXDKInfo(ImportList[lIndex]);
+
+    GameList.Sort(SortGameList);
+//    ShowImportList(ImportList, '');
 
     FreeAndNil(ImportList);
 

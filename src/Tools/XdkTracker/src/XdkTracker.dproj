@@ -26,6 +26,8 @@
     <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
     <DCC_HppOutput>..\dcu</DCC_HppOutput>
     <DCC_Define>DEBUG</DCC_Define>
+    <DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>
+    <DCC_UNIT_PLATFORM>False</DCC_UNIT_PLATFORM>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
