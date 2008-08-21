@@ -28,6 +28,10 @@
     <DCC_Define>DEBUG</DCC_Define>
     <DCC_SYMBOL_PLATFORM>False</DCC_SYMBOL_PLATFORM>
     <DCC_UNIT_PLATFORM>False</DCC_UNIT_PLATFORM>
+    <DCC_UnitSearchPath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_UnitSearchPath>
+    <DCC_ResourcePath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_ResourcePath>
+    <DCC_ObjPath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_ObjPath>
+    <DCC_IncludePath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_IncludePath>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
@@ -44,8 +48,8 @@
     <DCCReference Include="..\..\..\uConsts.pas" />
     <DCCReference Include="..\..\..\uDxbxUtils.pas" />
     <DCCReference Include="..\..\..\uDxbxXml.pas">
-      <DesignClass>TDataModule</DesignClass>
       <Form>DxbxXml</Form>
+      <DesignClass>TDataModule</DesignClass>
     </DCCReference>
     <DCCReference Include="..\..\..\uLog.pas" />
     <DCCReference Include="..\..\..\uTime.pas" />

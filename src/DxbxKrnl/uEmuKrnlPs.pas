@@ -169,7 +169,9 @@ callComplete:
     on E: Exception do
     begin
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
+{$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString(False));
+{$ENDIF}
 //  __except(EmuException(GetExceptionInformation()))
 //    EmuWarning('Problem with ExceptionFilter!');
     end;

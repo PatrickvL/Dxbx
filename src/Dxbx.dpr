@@ -39,11 +39,6 @@ uses
   uXbeConvert in 'uXbeConvert.pas',
   uConsoleClass in 'uConsoleClass.pas',
   uXBController in 'uXBController.pas',
-  JwaNative in '..\Libraries\jwapi\Win32API\JwaNative.pas',
-  JwaNtStatus in '..\Libraries\jwapi\Win32API\JwaNtStatus.pas',
-  JwaWinBase in '..\Libraries\jwapi\Win32API\JwaWinBase.pas',
-  JwaWinNT in '..\Libraries\jwapi\Win32API\JwaWinNT.pas',
-  JwaWinType in '..\Libraries\jwapi\Win32API\JwaWinType.pas',
   XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas';
 
 {$R *.RES}

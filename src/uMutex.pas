@@ -28,21 +28,21 @@ uses
   uLog;
 
 type
-  Mutex = class(TObject)
+  Mutex = record
   private
     m_MutexLock: Integer; // Mutex lock
     m_OwnerProcess: Integer; // Current owner process (or zero)
     m_OwnerThread: Integer; // Current owner thread
     m_LockCount: Integer; // Lock count within this thread
   public
-    constructor Create; virtual;
+    procedure Create;
     procedure Lock;
     procedure Unlock;
   end;
 
 implementation
 
-constructor Mutex.Create;
+procedure Mutex.Create;
 begin
   InterlockedExchange(m_MutexLock, 0);
   InterlockedExchange(m_OwnerProcess, 0);

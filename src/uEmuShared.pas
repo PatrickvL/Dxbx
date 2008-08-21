@@ -25,8 +25,10 @@ uses
   // Delphi
   Windows,
   SysUtils, // StrCopy
+{$IFDEF DXBX_USE_JCLDEBUG}
   // Jcl
   JclDebug,
+{$ENDIF}
   // Dxbx
   uMutex,
   uLog,
@@ -35,20 +37,24 @@ uses
   uDxbxKrnlUtils;
 
 type
-  EmuShared = class(Mutex)
-  protected
+  PEmuShared = ^EmuShared;
+  EmuShared = record
+    m_Mutex: Mutex;
     m_XbePath: array[0..MAX_PATH - 1] of AnsiChar;
     m_XBController: XBController;
     m_XBVideo: XBVideo;
-  public
+
     // Each process needs to call this to initialize shared memory
-    class function Init: Boolean;
+    class function Init: Boolean; static;
     // Each process needs to call this to cleanup shared memory
-    class procedure Cleanup;
+    class procedure Cleanup; static;
     // Constructor / Deconstructor
-    constructor Create; override;
-    destructor Destroy; override;
+    procedure Create;
+    procedure Destroy;
     procedure DestroyNoFree;
+
+    procedure lock();
+    procedure Unlock();
 
     // Xbox Video Accessors
     procedure GetXBVideo(var video: XBVideo);
@@ -68,7 +74,7 @@ procedure SetXbePath(const Path: PAnsiChar); cdecl;
 var
   hMapObject: THandle;
   // Exported Global Shared Memory Pointer
-  g_EmuShared: EmuShared;
+  g_EmuShared: PEmuShared;
   g_EmuSharedRefCount: Integer; // extern; ??
 
 implementation
@@ -102,7 +108,7 @@ begin
       nil, // default security attributes
       PAGE_READWRITE, // read/write access
       0, // size: high 32 bits
-      EmuShared.InstanceSize, // size: low 32 bits
+      SizeOf(EmuShared), // size: low 32 bits
       'Local\EmuShared' // name of map object
       );
 
@@ -115,7 +121,7 @@ begin
 
   // Memory map this file
   begin
-    g_EmuShared := EmuShared(MapViewOfFile(
+    g_EmuShared := PEmuShared(MapViewOfFile(
       hMapObject, // object to map view of
       FILE_MAP_WRITE, // read/write access
       0, // high offset:  map from
@@ -131,8 +137,8 @@ begin
   if Result then
   begin
     // WATCH OUT: Dirty trick to 'create' a fixed instance in memory :
-    ZeroMemory(g_EmuShared, EmuShared.InstanceSize); // clear memory
-    PPointer(g_EmuShared)^ := EmuShared; // assign type
+    ZeroMemory(g_EmuShared, SizeOf(EmuShared)); // clear memory
+//    PPointer(g_EmuShared)^ := EmuShared; // assign type
     g_EmuShared.Create; // call constructor
   end;
 
@@ -159,9 +165,9 @@ begin
   CloseLogs;
 end;
 
-constructor EmuShared.Create;
+procedure EmuShared.Create;
 begin
-  inherited Create;
+  m_Mutex.Create;
   m_XBController.Load(PChar('Software\Cxbx\XBController'));
   m_XBVideo.Load(PChar('Software\Cxbx\XBVideo'));
 end;
@@ -172,10 +178,19 @@ begin
   m_XBVideo.Save(PChar('Software\Cxbx\XBVideo'));
 end;
 
-destructor EmuShared.Destroy;
+procedure EmuShared.Destroy;
 begin
   DestroyNoFree;
-  inherited Destroy;
+end;
+
+procedure EmuShared.lock();
+begin
+  m_Mutex.lock();
+end;
+
+procedure EmuShared.Unlock();
+begin
+  m_Mutex.Unlock();
 end;
 
 // Xbox Video Accessors

@@ -1,46 +1,68 @@
-Tested versions of delphi
--------------------------
-- Delphi 2007 Win 32
+
+Prerequisites
+-------------
+To compile Dxbx you need the following :
+
+- Any supported version of Delphi (see below)
+
+- The latest version of the sourcecode (which you probably already have, given you're reading this)
+  http://sourceforge.net/projects/dxbx
+  
+- Better yet, use a subversion client (we recommend TortoiseSVN) and check out the Subversion archive
+  https://dxbx.svn.sourceforge.net/svnroot/dxbx
+
+Optional packages are:
+
+- AlphaSkins - for skinning Dxbx (you need a license to use this)
+  http://www.alphaskins.com/
+  
+  To enable AlphaSkins, open "src\Dxbx.inc" and remove the dot ('.') from this line:
+  {.$DEFINE DXBX_USE_ALPHASKINS} // Enable this to use AlphaSkins in Dxbx
+
+
+Already included are (parts of) these third party libraries :
+  
+- Cloothie DirectX 9 Header files - for DirectX support
+  http://clootie.narod.ru/delphi/index.html
+  Or use our mirror :
+  http://shadowtj.net/main/pages/programming/DelphiComponents.html
+
+- JEDI API Library - for wrappers win32 API's
+  http://jedi-apilib.sourceforge.net/
 
 
 Compiling
 ---------
 
-When you want to compile dxbx sources you need to following :
+Before compiling, set the DXBXLIB environment variable to the absolute path of our Libraries folder.
+For example, if you have downloaded the Dxbx sourcecode to "D:\Workspaces\SVN\Dxbx", then DXBXLIB will read : "D:\Workspaces\SVN\Dxbx\Libraries".
 
-- Delphi version 2007 (only minimal changes needed to compile with other versions)
+You can do this with the "My Computer" properties dialog - Go to the "Advanced" tab, click on "Environment Variables" and use the "New Variable" button.
+Or you could start Delphi, go to "Tools", "Options", "Environment Variables" and use the "New..." button.
+In either case, you should specify the variable name ("DXBXLIB") and value ("...something...\Libraries") without quotes.
+Also, in both cases, Delphi must be restarted to 'see' the Environment Variable.
 
-- The latest version of the sourcecode (which you probably already have, given you're reading this)
-  Download them at http://sourceforge.net/projects/dxbx/ , or better, use the Subversion archive:
-  url: https://dxbx.svn.sourceforge.net/svnroot/dxbx
-  
-- Cloothie DirectX 9 Header files - for directx support
-  url: http://clootie.narod.ru/delphi/index.html
+Then, to compile Dxbx, you got two options:
 
-  or
-
-  url: http://shadowtj.net/main/pages/programming/DelphiComponents.html
-
-- JEDI API Library (for win32 API's - included)
-  url: http://jedi-apilib.sourceforge.net/
-
-
-- Alphaskins - for skins (optional)
-  url: http://www.alphaskins.com/
-
-To compile you got two options:
-
-1: open the Dxbx project group in Delphi and do a Build All. This will put new DLL's and EXE's in the dxbx/bin and dxbx/bin/tools folders.
-2: Run the Build.cmd for using want build script. ( you need alphaskins and directx9 headers have placed in the librarie folder ).
+1: Open the Dxbx project group in Delphi and do a Build All. This will put new DLL's and EXE's in the Dxbx\Bin and Dxbx\Bin\Tools folders.
+2: Run the Build.cmd for using want build script.
 
 
 Development
 -----------
-All changes made to the sourcecode of dxbx should be contributed under the GPL license.
+All changes made to the sourcecode of Dxbx should be contributed under the GPL license.
 It's best to add a GPL-header to each file to signify this fact.
-All code should conform to the dxbx coding convention (which is basically the Delphi standard with some extra's).
-To guarantee the correct working of  all new code, write unit-tests using DUnit.
-Never commit a change which breaks the build, test first!
+All code should conform to the Dxbx coding convention (which is basically the Delphi standard with some extra's).
+Never submit a change which breaks the build; Test first!
+To guarantee the correct working of all new code, write unit-tests using DUnit. (TODO)
+When working on translation of Cxbx code to Delphi, follow the "Translation guide" document.
+
+
+Supported Delphi versions
+-------------------------
+At the time of writing, these are the Delphi versions that are supported:
+- Delphi 2007 Win32 (only minimal changes needed to compile with other versions)
+
 
 Setup
 -----
@@ -49,4 +71,4 @@ TODO
 
 Resources
 ---------
-If you want to compile the original sources from cxbx ( http://www.caustik.com/cxbx/download.htm )
+If you want to compile the original sources from cxbx ( http://www.caustik.com/cxbx/download.htm ) ... TODO

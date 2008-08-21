@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-    <DCC_DependencyCheckOutputName>D:\!Patrick_Sofware\XBox\Games\XBox Turok NTSC\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+    <DCC_DependencyCheckOutputName>..\Bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
     <MainSource>DxbxKrnl.dpr</MainSource>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -26,13 +26,13 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Version>7.0</Version>
     <DCC_Define>DEBUG;DXBX_DEBUG</DCC_Define>
-    <DCC_ExeOutput>D:\!Patrick_Sofware\XBox\Games\XBox Turok NTSC</DCC_ExeOutput>
+    <DCC_ExeOutput>..\Bin</DCC_ExeOutput>
     <DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
     <DCC_RangeChecking>True</DCC_RangeChecking>
-    <DCC_UnitSearchPath>..\Libraries\DirectX9</DCC_UnitSearchPath>
-    <DCC_ResourcePath>..\Libraries\DirectX9</DCC_ResourcePath>
-    <DCC_ObjPath>..\Libraries\DirectX9</DCC_ObjPath>
-    <DCC_IncludePath>..\Libraries\DirectX9</DCC_IncludePath>
+    <DCC_UnitSearchPath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_UnitSearchPath>
+    <DCC_ResourcePath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_ResourcePath>
+    <DCC_ObjPath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_ObjPath>
+    <DCC_IncludePath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_IncludePath>
     <DCC_RemoteDebug>True</DCC_RemoteDebug>
     <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
     <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
@@ -47,6 +47,12 @@
       
       
       
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
@@ -57,18 +63,8 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <RcCompile Include="Tools\PatternTrieBuilder\StoredTrie.rc">
-      <Form>Tools\PatternTrieBuilder\StoredTrie.res</Form>
+      <Form>'Tools\PatternTrieBuilder\StoredTrie.res'</Form>
     </RcCompile>
-    <DCCReference Include="..\Libraries\Jcl\common\JclFileUtils.pas" />
-    <DCCReference Include="..\Libraries\Jcl\common\JclSynch.pas" />
-    <DCCReference Include="..\Libraries\Jcl\windows\JclDebug.pas" />
-    <DCCReference Include="..\Libraries\Jcl\windows\JclPeImage.pas" />
-    <DCCReference Include="..\Libraries\Jcl\windows\JclTD32.pas" />
-    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaNative.pas" />
-    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaNtStatus.pas" />
-    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinBase.pas" />
-    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinNT.pas" />
-    <DCCReference Include="..\Libraries\jwapi\Win32API\JwaWinType.pas" />
     <DCCReference Include="..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas" />
     <DCCReference Include="DxbxKrnl\DxLibraryAPIScanning.pas" />
     <DCCReference Include="DxbxKrnl\EmuD3D8\uConvert.pas" />
