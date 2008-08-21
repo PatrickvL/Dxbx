@@ -21,6 +21,7 @@ unit uDxbxDebugUtils;
 
 interface
 
+{$IFDEF DXBX_USE_JCLDEBUG}
 uses
   // Delphi
   SysUtils,
@@ -40,7 +41,11 @@ type
 
 function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): String;
 
+{$ENDIF}
+
 implementation
+
+{$IFDEF DXBX_USE_JCLDEBUG}
 
 function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): String;
 var
@@ -128,5 +133,7 @@ end;
 initialization
 
   TJclDebugInfoList.RegisterDebugInfoSource(TDxbxAPIDebugInfoSource);
-  
+
+{$ENDIF}
+
 end.

@@ -292,7 +292,9 @@ begin
     on E: Exception do
     begin
       DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
+{$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString);
+{$ENDIF}
 //    on(EmuException(GetExceptionInformation())) :
 //      printf('Emu: WARNING!! Problem with ExceptionFilter');
     end;

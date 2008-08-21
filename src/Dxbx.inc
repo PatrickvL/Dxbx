@@ -19,6 +19,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
 
+// Dxbx specific compiler directives :
+
+{.$DEFINE DXBX_USE_ALPHASKINS} // Enable this to use AlphaSkins in Dxbx
+
+{$IFDEF DXBX_DEBUG}
+  {$DEFINE _DEBUG_TRACE} // Cxbx uses this for extended debugging
+{$ENDIF}
+
+{$IFDEF DUNIT}
+  // In Unit-test projects, do as much debugging as possible (see below):
+  {$DEFINE _DEBUG}
+{$ENDIF}
+
 // Apply our default compiler options before jedi.inc goes ahead :
 
 {$ALIGN 4}                // Alignment of fields (align standaard on 4 bytes - TODO: Research if 8-byte boundaries are better?!)
@@ -40,15 +53,6 @@
 {$TYPEINFO OFF}           // Do not generate RTTI
 {$WARNINGS ON}            // Generate compiler warning messages
 {$WRITEABLECONST OFF}     // Writeable typed constants (constants may not be changed)
-
-{$IFDEF DXBX_DEBUG}
-  {$DEFINE _DEBUG_TRACE} // Cxbx uses this for extended debugging
-{$ENDIF}
-
-{$IFDEF DUNIT}
-  // In Unit-test projects, do as much debugging as possible (see below):
-  {$DEFINE _DEBUG}
-{$ENDIF}
 
 // In _DEBUG mode we want as much debugging features as possible :
 
