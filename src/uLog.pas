@@ -27,7 +27,8 @@ uses
   SysUtils,
   Variants,
   // Dxbx
-  uTypes,
+//  uTypes,
+  uDxbxUtils,
   uConsoleClass;
 
 var
@@ -43,6 +44,7 @@ procedure WriteLog(const aText: string);
 function DxbxFormat(aStr: string; Args: array of const): string;
 
 procedure DbgPrintf(aStr: string); overload;
+procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const); overload
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
@@ -145,6 +147,11 @@ begin
   WriteLog(DxbxFormat(aStr, Args));
 end;
 
+procedure DbgPrintf(aStr: string; Arg: Variant);
+begin
+  WriteLog(DxbxFormat(aStr, [Arg]));
+end;
+
 procedure DbgPrintf(aStr: string);
 begin
   WriteLog(aStr);
@@ -226,7 +233,10 @@ procedure WriteLog(const aText: string);
 
   function _Text: string;
   begin
-    Result := '[0x' + IntToHex(GetCurrentThreadID(), 4) + '] ' + aText;
+    // Prefix the text with the CurrentThreadID :
+    Result := '[0x' + IntToHex(GetCurrentThreadID(), 4) + '] '
+    // and fix up any c-style newlines :
+            + StringReplace(aText, '\n', #13#10, [rfReplaceAll]);
   end;
 
 begin

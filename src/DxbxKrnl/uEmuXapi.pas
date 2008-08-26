@@ -25,12 +25,14 @@ uses
   // Delphi
   Windows,
   // Jedi
+  JwaNative,
   JwaWinType,
   // Dxbx
   uTypes,
   uLog, // DbgPrintf
   uEmuFS, // EmuSwapFS
   uXBController,
+  uDxbxUtils,
   uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
 
 type
@@ -41,6 +43,7 @@ type
 procedure XTL_EmuXapiInitProcess(); stdcall;
 procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
 function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID;  RtlHeapParams: PVOID): PVOID; stdcall;
+function XTL_EmuRtlAllocateHeap(hHeap: THandle; dwFlags: DWORD; dwBytes: SIZE_T): PVOID; stdcall;
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 
 implementation
@@ -240,7 +243,6 @@ function XTL_EmuRtlCreateHeap
 var
   RtlHeapDefinition: RTL_HEAP_DEFINITION;
 begin
-  Result := Nil;
   EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
@@ -258,7 +260,7 @@ begin
 
   RtlHeapDefinition.Length := SizeOf(RtlHeapDefinition);
 
-// TODO Dxbx :  Result := NtDll.RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition);
+  Result := PVOID(JwaNative.RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
 
   EmuSwapFS(); // XBox FS
 end;
@@ -266,46 +268,42 @@ end;
 // ******************************************************************
 // * func: EmuRtlAllocateHeap
 // ******************************************************************
-(*PVOID WINAPI XTL.EmuRtlAllocateHeap
+function XTL_EmuRtlAllocateHeap
 (
-  in THandle hHeap,
-  in DWORD dwFlags,
-  in SIZE_T dwBytes
-  )
+  hHeap: THandle;
+  dwFlags: DWORD;
+  dwBytes: SIZE_T
+  ): PVOID; stdcall;
+var
+  offs: BYTE;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-    //* too much debug output
-  DbgPrintf('EmuXapi : EmuRtlAllocateHeap'
-    '('
-    '   hHeap               : $%.08X'
-    '   dwFlags             : $%.08X'
-    '   dwBytes             : $%.08X'
+  //* too much debug output
+  DbgPrintf('EmuXapi : EmuRtlAllocateHeap'#13#10 +
+    '('#13#10 +
+    '   hHeap               : $%.08X'#13#10 +
+    '   dwFlags             : $%.08X'#13#10 +
+    '   dwBytes             : $%.08X'#13#10 +
     ');',
-    [hHeap, dwFlags, dwBytes);
-    //*/
+    [hHeap, dwFlags, dwBytes]);
+  //*/
 
-  BYTE offs;
+  Result := PVOID(JwaNative.RtlAllocateHeap(hHeap, dwFlags, dwBytes + $20));
 
-  PVOID pRet := CxbxRtlAlloc(hHeap, dwFlags, dwBytes + $20);
+  offs := BYTE(RoundUp(uint32(Result), $20) - uint32(Result));
 
-  offs := (BYTE)(RoundUp((uint32)pRet, $20) - (uint32)pRet);
-
-  if (offs = 0) then
-  begin
+  if offs = 0 then
     offs := $20;
-  end;
 
-  pRet := (PVOID)((uint32)pRet + offs);
+  Result := PVOID(uint32(Result) + offs);
 
-  * (BYTE)((uint32)pRet - 1) := offs;
+  PBYTE(uint32(Result) - 1)^ := offs;
 
-  DbgPrintf('pRet : $%.08X', pRet);
+  DbgPrintf('pRet : $%.08X', [Result]);
 
   EmuSwapFS(); // XBox FS
-
-  Result := pRet;
-end;      *)
+end;
 
 // ******************************************************************
 // * func: EmuRtlFreeHeap
@@ -1150,10 +1148,8 @@ begin
 
 //    PVOID dwResult := 0;
 
-// TODO    *XTL.EmuXapiProcessHeap := XTL.g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, @HeapParameters);
+    XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
   end;
-
-  Exit;
 end;
 
 // ******************************************************************

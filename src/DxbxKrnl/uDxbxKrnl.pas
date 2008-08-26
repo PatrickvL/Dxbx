@@ -32,6 +32,7 @@ uses
   uTypes,
   uLog,
   uXbe,
+  uDxbxUtils,
   uDxbxKrnlUtils,
   uDxbxDebugUtils,
   uEmuShared,

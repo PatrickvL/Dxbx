@@ -33,6 +33,7 @@ uses
   uConsts,
   uLog,
   uWindows,
+  uDxbxUtils,
   uXbe,
   uEmuExe,
   uXbeConvert,

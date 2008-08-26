@@ -82,11 +82,9 @@ uses
   uVertexShader in 'DxbxKrnl\EmuD3D8\uVertexShader.pas',
   uXBController in 'uXBController.pas',
   uError in 'uError.pas',
-  uBitUtils in 'uBitUtils.pas',
   DxLibraryAPIScanning in 'DxbxKrnl\DxLibraryAPIScanning.pas',
   uCRC16 in 'uCRC16.pas',
   uConsoleClass in 'uConsoleClass.pas',
-  uXboxLibraryPatches in 'DxbxKrnl\uXboxLibraryPatches.pas',
   uXboxLibraryUtils in 'uXboxLibraryUtils.pas',
   uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
   uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas';

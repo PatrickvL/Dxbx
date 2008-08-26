@@ -26,18 +26,7 @@ uses
   Windows,
   SysUtils;
 
-const
-  NUMBER_OF_THUNKS = 379;
-
 type
-  EMU_STATE = (esNone, esFileOpen, esRunning);
-
-  TDebugInfoType = (ditConsole, ditFile);
-  EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
-  DebugMode = (DM_NONE, DM_CONSOLE, DM_FILE);
-
-  TLogType = (ltKernel, ltGui);
-
   TVarByteArray = array of Byte;
 
   TDWordArray = array[0..10000] of DWord;
@@ -62,46 +51,8 @@ type
   IntPtr = UInt32;
 {$IFEND}
 
-  TEntryProc = procedure();
-  PEntryProc = ^TEntryProc;
-
-  TSetXbePath = procedure(const Path: PChar); cdecl;
-
-  TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
-  PKernelThunkTable = ^TKernelThunkTable;
-
-  TGetKernelThunkTable = function: PKernelThunkTable; cdecl;
-
-function DebugModeToString(const aDebugMode: DebugMode): string;
-function LogTypeToString(const aLogType: TLogType): string;
-function PointerToString(const aPointer: Pointer): string;
+  TCodePointer = type Pointer;
 
 implementation
-
-function PointerToString(const aPointer: Pointer): string;
-begin
-  Result := IntToHex(Integer(aPointer), 8);
-end;
-
-function DebugModeToString(const aDebugMode: DebugMode): string;
-begin
-  case aDebugMode of
-    DM_NONE: Result := 'DM_NONE';
-    DM_CONSOLE: Result := 'DM_CONSOLE';
-    DM_FILE: Result := 'DM_FILE';
-  else
-    Result := '?Unknown?';
-  end;
-end;
-
-function LogTypeToString(const aLogType: TLogType): string;
-begin
-  case aLogType of
-    ltKernel: Result := 'ltKernel';
-    ltGui: Result := 'ltGui';
-  else
-    Result := '?Unknown?';
-  end;
-end;
 
 end.
