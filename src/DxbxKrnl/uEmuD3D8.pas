@@ -46,10 +46,13 @@ uses
   uEmuShared,
   uEmuFS;
 
+function EmuUpdateTickCount(LPVOID: Pointer): DWord; //stdcall;
+function EmuCreateDeviceProxy(LPVOID: Pointer): DWord; //stdcall;
+function EmuRenderWindow(lpVoid: Pointer): DWord; //stdcall;
+
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord); stdcall;
 function XTL_EmuIDirect3DDevice8_GetViewport(pViewport: D3DVIEWPORT8): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: integer; a: FLOAT; b: FLOAT; c: FLOAT; d: FLOAT): HRESULT; stdcall;
-
 
 implementation
 
@@ -78,29 +81,27 @@ var
 
   g_iWireframe: Integer = 0;
 
+  g_bRenderWindowActive: bool = false; // volatile?
 
 
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord);
-(*var
+var
   dwThreadId: DWORD;
   hThread: THandle;
-  hDupHandle: THandle; *)
+  hDupHandle: THandle;
 begin
-
   g_EmuShared.GetXBVideo(g_XBVideo);
-
 
   if g_XBVideo.GetFullscreen() then
     CxbxKrnl_hEmuParent := 0;
-
 
   // cache XbeHeader and size of XbeHeader
   g_XbeHeader := XbeHeader;
   g_XbeHeaderSize := XbeHeaderSize;
 
   // create timing thread
-  (*begin
-    hThread := CreateThread(0, 0, EmuUpdateTickCount, 0, 0, {var}dwThreadId);
+  begin
+    hThread := BeginThread(nil, 0, @EmuUpdateTickCount, nil, 0, {var}dwThreadId);
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
@@ -114,23 +115,23 @@ begin
 
   // create the create device proxy thread
   begin
-    CreateThread(0, 0, EmuCreateDeviceProxy, 0, 0, {var}dwThreadId);
+    BeginThread(nil, 0, @EmuCreateDeviceProxy, nil, 0, {var}dwThreadId);
   end;
 
   // create window message processing thread
   begin
     g_bRenderWindowActive := False;
 
-    CreateThread(0, 0, EmuRenderWindow, 0, 0, {var}dwThreadId);
+    BeginThread(nil, 0, @EmuRenderWindow, nil, 0, {var}dwThreadId);
 
-    while not g_bRenderWindowActive do
+// Dxbx TODO :    while not g_bRenderWindowActive do
       Sleep(10);
 
     Sleep(50);
   end;
 
   // create Direct3D8 and retrieve caps
-  begin
+  (*begin
     using namespace XTL;
 
     // xbox Direct3DCreate8 returns '1' always, so we need our own ptr
@@ -223,7 +224,9 @@ begin
  end;*)
 
 // window message processing thread
-Function EmuRenderWindow( lpVoid : Pointer ) : DWord;
+function EmuRenderWindow(lpVoid: Pointer): DWord;
+var
+  msg: TMsg;
 begin
 (*     AsciiTitle: array[0..50-1] of Char;
 
@@ -320,55 +323,53 @@ begin
     // initialize direct input
     if( not XTL.EmuDInputInit()) then
         CxbxKrnlCleanup('Could not initialize DirectInput!');
-
+*)
     DbgPrintf('EmuD3D8 : Message-Pump thread is running.');
-
+(*
  SetFocus(g_hEmuWindow);
 
     DbgConsole *dbgConsole := new DbgConsole();
+*)
 
-    // message processing loop
+  // message processing loop
+  begin
+//    ZeroMemory(msg, SizeOf(msg));
+
+//        bool lPrintfOn := g_bPrintfOn;
+
+    while msg.message <> WM_QUIT do
     begin
-        TMsg msg;
+      if PeekMessage({var}msg, 0, 0, 0, PM_REMOVE) then
+      begin
+        g_bRenderWindowActive := True;
+        TranslateMessage(msg);
+        DispatchMessage(msg);
+      end
+      else
+      begin
+        Sleep(10);
+(*
 
-        ZeroMemory(@msg, SizeOf(msg));
+        // if we've just switched back to display off, clear buffer & display prompt
+        if not g_bPrintfOn and lPrintfOn then
+          dbgConsole.Reset();
 
-        bool lPrintfOn := g_bPrintfOn;
+        lPrintfOn := g_bPrintfOn;
 
-        while(msg.message <> WM_QUIT)
-        begin
-            if(PeekMessage(@msg, 0, 0U, 0U, PM_REMOVE)) then
-            begin
-                g_bRenderWindowActive := true;
+        dbgConsole.Process();
+*)
+      end;
+    end;
 
-                TranslateMessage(@msg);
-                DispatchMessage(@msg);
-             end;
-            else
-            begin
-                Sleep(10);
+    g_bRenderWindowActive := False;
 
-                // if we've just switched back to display off, clear buffer & display prompt
-                if( not g_bPrintfOn and lPrintfOn) then
-                begin
-                    dbgConsole.Reset();
-                 end;
+//        delete dbgConsole;
 
-                lPrintfOn := g_bPrintfOn;
+    CxbxKrnlCleanup('');
+  end;
 
-                dbgConsole.Process();
-             end;
-         end;
-
-        g_bRenderWindowActive := False;
-
-        delete dbgConsole;
-
-        CxbxKrnlCleanup(0);
-     end;
-
-    Result:= 0;     *)
- end;
+  Result:= 0;
+end;
 
 // simple helper function
 
@@ -550,14 +551,14 @@ begin
 end;
 
 // timing thread procedure
-Function EmuUpdateTickCount(LPVOID : Pointer) : DWord;
+function EmuUpdateTickCount(LPVOID: Pointer): DWord;
 (*var
   curvb : integer; *)
 begin
-    // since callbacks come from here
-    EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+  // since callbacks come from here
+  EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
 
-    DbgPrintf('EmuD3D8 : Timing thread is running.');
+  DbgPrintf('EmuD3D8 : Timing thread is running.');
 
     { TODO : Need to be translated to delphi }
     (*
@@ -627,10 +628,10 @@ begin
      end;
 
     timeEndPeriod(0); *)
- end;
+end;
 
 // thread dedicated to create devices
-Function EmuCreateDeviceProxy(LPVOID : Pointer) : DWord;
+function EmuCreateDeviceProxy(LPVOID: Pointer): DWord;
 begin
     DbgPrintf('EmuD3D8 : CreateDevice proxy thread is running.');
 

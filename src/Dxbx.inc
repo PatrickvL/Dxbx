@@ -32,6 +32,11 @@
   {$DEFINE _DEBUG}
 {$ENDIF}
 
+{$IFDEF DXBX_DLL}
+  // Our DLL's need actual patch addresses
+  {$DEFINE DXBX_PATCH_ADDRESSES_ENABLED}
+{$ENDIF}
+
 // Apply our default compiler options before jedi.inc goes ahead :
 
 {$ALIGN 4}                // Alignment of fields (align standaard on 4 bytes - TODO: Research if 8-byte boundaries are better?!)

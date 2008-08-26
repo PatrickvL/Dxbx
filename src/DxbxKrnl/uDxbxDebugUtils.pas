@@ -111,7 +111,8 @@ begin
 //    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
 //    SourceName: string;             // Module file name
     Info.DebugInfo := Self; // Location object
-//    BinaryFileName: string;         // Name of the binary file containing the symbol
+    if Assigned(DetectedFunction.VersionedXboxLibrary) then
+      BinaryFileName := DetectedFunction.VersionedXboxLibrary.LibName + '.lib'; // Name of the binary file containing the symbol
   end;
 end;
 

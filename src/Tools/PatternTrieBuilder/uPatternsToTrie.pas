@@ -30,12 +30,22 @@ uses
   Math, // Min
   // Dxbx
   uDxbxUtils,
-  uXboxLibraryUtils;
+  uXboxLibraryUtils,
+  uStoredTrieTypes;
 
 type
   TPattern = array of Word;
 
   TPatternTrieLeaf = class; // forward
+
+  PVersionedXboxLibraryFunction = ^RVersionedXboxLibraryFunction;
+  RVersionedXboxLibraryFunction = record
+    VersionedXboxLibrary: PVersionedXboxLibrary;
+    Name: string;
+    CRCLength: Byte;
+    CRCValue: Word;
+    TotalLength: Word;
+  end;
 
   TPatternTrieNode = class(TObject)
   protected
@@ -75,7 +85,6 @@ type
     procedure Sort;
     procedure Dump(const aOutput: TStrings);
     procedure Save(const aFileName: string);
-    procedure Test(const aTrieFileName, aTestFileName: string);
   end;
 
 procedure PatternToTrie_Main;
@@ -555,9 +564,7 @@ var
   StringOffsets: array of TByteOffset;
   StoredSignatureTrieHeader: RStoredSignatureTrieHeader;
   StoredLibrary: RStoredLibrary;
-{$IFDEF _DEBUG_TRACE}
   StoredGlobalFunction: RStoredGlobalFunction;
-{$ENDIF}
 begin
   OutputFile := TFileStream.Create(aFileName, fmCreate);
   UniqueStrings := TStringList.Create;
@@ -602,7 +609,7 @@ begin
     StoredSignatureTrieHeader.LibraryTable.NrOfLibraries := VersionedLibraries.Count;
     StoredSignatureTrieHeader.LibraryTable.LibrariesOffset := OutputFile.Position;
 
-    // Now that the data is written, put the StringOffsets in place :
+    // Now that the string data is written, put the StringOffsets in place :
     OutputFile.Position := StoredSignatureTrieHeader.StringTable.StringOffsets;
     OutputFile.WriteBuffer(StringOffsets[0], Length(StringOffsets) * SizeOf(StringOffsets[0]));
     SetLength(StringOffsets, 0);
@@ -619,7 +626,6 @@ begin
 
     // Write global functions :
     StoredSignatureTrieHeader.GlobalFunctionTable.NrOfFunctions := GlobalFunctions.Count;
-{$IFDEF _DEBUG_TRACE}
     StoredSignatureTrieHeader.GlobalFunctionTable.GlobalFunctionsOffset := OutputFile.Position;
 
     for i := 0 to GlobalFunctions.Count - 1 do
@@ -627,7 +633,6 @@ begin
       StoredGlobalFunction.FunctionNameIndex := UniqueStrings.IndexOf(GlobalFunctions[i]);
       OutputFile.WriteBuffer(StoredGlobalFunction, SizeOf(StoredGlobalFunction));
     end;
-{$ENDIF}
 
     // Write trie :
     StoredSignatureTrieHeader.TrieRootNode := OutputFile.Position;
@@ -647,194 +652,13 @@ begin
   end;
 end;
 
-procedure TPatternTrie.Test(const aTrieFileName, aTestFileName: string);
-var
-  IndentStr: TStringList;
-  InputFile: TFileStream;
-  Output: TStringList;
-  StoredSignatureTrieHeader: RStoredSignatureTrieHeader;
-
-  function _GetString(const aStringIndex: TStringTableIndex): AnsiString;
-  var
-    TmpPos, StrBase, StrEnd, Len: Integer;
-  begin
-    TmpPos := InputFile.Position;
-    if aStringIndex = 0 then
-    begin
-      InputFile.Position := StoredSignatureTrieHeader.StringTable.StringOffsets + TByteOffset(SizeOf(TByteOffset) * aStringIndex);
-      StrBase := StoredSignatureTrieHeader.StringTable.AnsiCharData;
-      InputFile.Read(StrEnd, SizeOf(TByteOffset));
-    end
-    else
-    begin
-      InputFile.Position := StoredSignatureTrieHeader.StringTable.StringOffsets + TByteOffset(SizeOf(TByteOffset) * (aStringIndex - 1));
-      InputFile.Read(StrBase, SizeOf(TByteOffset));
-      InputFile.Read(StrEnd, SizeOf(TByteOffset));
-    end;
-
-    Len := StrEnd - StrBase;
-    SetLength(Result, Len);
-    InputFile.Position := StrBase;
-    InputFile.Read(Result[1], Len);
-
-    InputFile.Position := TmpPos;
-  end;
-
-  function _GetFunctionName(const aGlobalFunctionIndex: TFunctionIndex): string;
-{$IFDEF _DEBUG_TRACE}
-  var
-    TmpPos: Integer;
-    StoredGlobalFunction: RStoredGlobalFunction;
-{$ENDIF}
-  begin
-{$IFDEF _DEBUG_TRACE}
-    TmpPos := InputFile.Position;
-
-    InputFile.Position := StoredSignatureTrieHeader.GlobalFunctionTable.GlobalFunctionsOffset + (aGlobalFunctionIndex * SizeOf(StoredGlobalFunction));
-    InputFile.ReadBuffer(StoredGlobalFunction, SizeOf(StoredGlobalFunction));
-    Result := _GetString(StoredGlobalFunction.FunctionNameIndex);
-
-    InputFile.Position := TmpPos;
-{$ELSE}
-    Result := Format('%.4x', [aGlobalFunctionIndex]);
-{$ENDIF}
-  end;
-
-  function _GetLibraryName(const aLibraryIndex: TLibraryIndex): string;
-  var
-    TmpPos: Integer;
-    StoredLibrary: RStoredLibrary;
-  begin
-    TmpPos := InputFile.Position;
-
-    InputFile.Position := StoredSignatureTrieHeader.LibraryTable.LibrariesOffset + (aLibraryIndex * SizeOf(TByteOffset));
-    InputFile.ReadBuffer(StoredLibrary, SizeOf(StoredLibrary));
-    Result := Format('%8s %4d', [_GetString(StoredLibrary.LibNameIndex), StoredLibrary.LibVersion]);
-
-    InputFile.Position := TmpPos;
-  end;
-
-  procedure _ReadLeaf(const Level, ChildNr: Integer);
-  var
-    StoredLibraryFunction: RStoredLibraryFunction;
-    Line: string;
-  begin
-    InputFile.ReadBuffer(StoredLibraryFunction, SizeOf(RStoredLibraryFunction));
-    Line := IndentStr[Level] + Format('%d. %.2x %.4x %.4x [%s] %s', [
-      ChildNr,
-      StoredLibraryFunction.CRCLength,
-      StoredLibraryFunction.CRCValue,
-      StoredLibraryFunction.FunctionLength,
-      _GetLibraryName(StoredLibraryFunction.LibraryIndex),
-      _GetFunctionName(StoredLibraryFunction.GlobalFunctionIndex)
-      ]);
-    Output.Add(Line);
-  end;
-
-  procedure _ReadNode(const Level: Integer; Depth: Integer);
-  var
-    StoredTrieNode: RStoredTrieNode;
-    NrChildren: Integer;
-    b: Byte;
-    More: Boolean;
-    NrFixed, NrWildcards: Integer;
-    Line: string;
-  begin
-    // Read the TrieNode header, and determine NrChildren :
-    InputFile.Read(StoredTrieNode, SizeOf(RStoredTrieNode) - 1);
-    NrChildren := StoredTrieNode.NrChildrenByte1;
-    if NrChildren >= 128 then
-    begin
-      // Read 1 extra byte if nessecary :
-      InputFile.ReadBuffer(StoredTrieNode.NrChildrenByte2, SizeOf(Byte));
-      // Reconstruct the NrChildren value :
-      NrChildren := (Integer(StoredTrieNode.NrChildrenByte1 and 127) shl 8) or StoredTrieNode.NrChildrenByte2;
-    end;
-
-    // Now, read the pattern :
-    Line := IndentStr[Level];
-    More := True;
-    while More do
-    begin
-      // Read the header byte of the following stretch of fixed bytes :
-      InputFile.Read(b, 1);
-
-      More := (b and 4) > 0;
-      NrFixed := b shr 3;
-      case b and 3 of
-        NODE_5BITFIXED_4WILDCARDS: NrWildcards := 4;
-        NODE_5BITFIXED_8WILDCARDS: NrWildcards := 8;
-        NODE_5BITFIXED_ALLWILDCARDS:
-          if (b and 7) = NODE_ALLFIXED then
-          begin
-            NrFixed := 32;
-            NrWildcards := 0;
-            More := False;
-          end
-          else
-            NrWildcards := PATTERNSIZE - (Depth + NrFixed);
-      else // NODE_5BITFIXED_0WILDCARDS:
-        NrWildcards := 0;
-      end;
-
-      Inc(Depth, NrFixed);
-      Inc(Depth, NrWildcards);
-
-      while NrFixed > 0 do
-      begin
-        InputFile.Read(b, 1);
-        Line := Line + IntToHex(Integer(b), 2);
-        Dec(NrFixed);
-      end;
-
-      while NrWildcards > 0 do
-      begin
-        Line := Line + '..';
-        Dec(NrWildcards);
-      end;
-
-    end;
-
-    Output.Add(Line + ':');
-
-    for NrFixed := 0 to NrChildren - 1 do
-    begin
-      if Depth = PATTERNSIZE then
-        _ReadLeaf(Level + 1, NrFixed)
-      else
-        _ReadNode(Level + 1, Depth);
-    end;
-  end;
-
-begin
-  InputFile := TFileStream.Create(aTrieFileName, fmOpenRead);
-  Output := TStringList.Create;
-  IndentStr := TStringList.Create;
-  try
-    // Prepare the indent strings, so we don't have to call StringOfChar thousands of times :
-    while IndentStr.Count < PATTERNSIZE do
-      IndentStr.Add(StringOfChar(' ', (IndentStr.Count * 2)));
-    IndentStr.Insert(0, '');
-
-    InputFile.ReadBuffer(StoredSignatureTrieHeader, SizeOf(StoredSignatureTrieHeader));
-
-    InputFile.Position := StoredSignatureTrieHeader.TrieRootNode;
-    _ReadNode(0, 0);
-
-  finally
-    FreeAndNil(IndentStr);
-    Output.SaveToFile(aTestFileName);
-    FreeAndNil(Output);
-    FreeAndNil(InputFile);
-  end;
-end;
-
 //
 
 type
   PPatternScanningContext = ^RPatternScanningContext;
   RPatternScanningContext = record
     PatternTrie: TPatternTrie;
+    OnlyPatches: Boolean;
     VersionedXboxLibrary: PVersionedXboxLibrary;
   end;
 
@@ -916,6 +740,18 @@ begin
   // Remember the function name :
   SetString(VersionedXboxLibraryFunction.Name, aStart, aLine - aStart);
 
+  // Now, see if we need to filter
+  if aContext.OnlyPatches then
+  begin
+    // In this mode, skip all functions that aren't patched :
+    if not IsXboxLibraryPatch(VersionedXboxLibraryFunction.Name) then
+    begin
+      // No leaf added, free the function :
+      FreeMem(VersionedXboxLibraryFunction);
+      Exit;
+    end;
+  end;
+
   // TODO : Here, we could scan cross-references and the trailing pattern,
   // but we ignore it for now; We'll visit this again when the first 32
   // pattern bytes + CRC aren't enough to detect important functions...
@@ -929,18 +765,22 @@ begin
     aContext.PatternTrie.VersionedFunctions.Add(VersionedXboxLibraryFunction);
 end;
 
-procedure ParseAndAppendPatternsToTrie(const aPatterns: PChar; const aPatternTrie: TPatternTrie; const aLibrary: PVersionedXboxLibrary);
+procedure ParseAndAppendPatternsToTrie(const aPatterns: PChar;
+  const aPatternTrie: TPatternTrie;
+  const aOnlyPatches: Boolean;
+  const aLibrary: PVersionedXboxLibrary);
 var
   PatternScanningContext: RPatternScanningContext;
 begin
   // Set up the context for the line-parsing routine :
   PatternScanningContext.PatternTrie := aPatternTrie;
+  PatternScanningContext.OnlyPatches := aOnlyPatches;
   PatternScanningContext.VersionedXboxLibrary := aLibrary;
   // Scan all pattern lines :
   ScanPCharLines(aPatterns, @ParseAndAppendPatternLineToTrie_Callback, @PatternScanningContext);
 end;
 
-function GeneratePatternTrie(const aPatternFiles: TStrings): Integer;
+function GeneratePatternTrie(const aPatternFiles: TStrings; const aOnlyPatches: Boolean): Integer;
 
   procedure _ProcessPatternFiles(aPatternTrie: TPatternTrie);
   var
@@ -968,7 +808,7 @@ function GeneratePatternTrie(const aPatternFiles: TStrings): Integer;
         Input.LoadFromFile(PatternFilePath);
 
         // Parse patterns in this file and append them to the trie :
-        ParseAndAppendPatternsToTrie(Input.Memory, aPatternTrie, VersionedXboxLibrary);
+        ParseAndAppendPatternsToTrie(Input.Memory, aPatternTrie, aOnlyPatches, VersionedXboxLibrary);
       end;
     finally
       FreeAndNil(Input);
@@ -1008,8 +848,6 @@ begin
 
     WriteLn('Saving the trie to "' + StoredTrieFileName + '"...');
     PatternTrie.Save(StoredTrieFileName);
-    WriteLn('Testing the trie in "' + StoredTrieTestFileName + '"...');
-    PatternTrie.Test(StoredTrieFileName, StoredTrieTestFileName);
 
     Result := ERROR_SUCCESS;
   finally
@@ -1026,6 +864,7 @@ end;
 
 procedure PatternToTrie_Main;
 var
+  PatternFolder: string;
   PatternFiles: TStringList;
 begin
   WriteLn(ChangeFileExt(ExtractFileName(ParamStr(0)), '') + ' - Converts Xbox pattern files to a trie file.'); // (and an Object Pascal unit).');
@@ -1039,15 +878,16 @@ begin
     Exit;
   end;
 
+  PatternFolder := ParamStr(1);
   PatternFiles := TStringList.Create;
   try
-    if FindFiles({PatternFolder=}ParamStr(1), {aFileMask=}'*.pat', PatternFiles) <= 0 then
+    if FindFiles(PatternFolder, {aFileMask=}'*.pat', PatternFiles) <= 0 then
     begin
       WriteLn('ERROR! No ".pat" pattern files found!');
       Exit;
     end;
 
-    ExitCode := GeneratePatternTrie(PatternFiles);
+    ExitCode := GeneratePatternTrie(PatternFiles, {aOnlyPatches=}False);
     if ExitCode = ERROR_SUCCESS then
       WriteLn('Done.')
     else

@@ -37,8 +37,8 @@ uses
   uHLEDatabase,
   // Dxbx
   uXboxLibraryUtils,
-  DxLibraryAPIScanning,
-  uXboxLibraryPatches;
+  uStoredTrieTypes,
+  DxLibraryAPIScanning;
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
@@ -518,31 +518,31 @@ var
   i: Integer;
   DetectedFunction: PDetectedVersionedXboxLibraryFunction;
   OrgCode: TCodePointer;
-  Patch: TXboxLibraryPatch;
   NewCode: TCodePointer;
+  NrPatches: Integer;
 begin
-  DbgPrintf('HLE : Installing patches for %d detected functions :', [DetectedFunctions.Count]);
+  DbgPrintf('HLE : Installing registered patches :');
 
+  NrPatches := 0;
   for i := 0 to DetectedFunctions.Count - 1 do
   begin
     DetectedFunction := DetectedFunctions[i];
-
-    OrgCode := DetectedFunction.CodeStart;
-
-    Patch := XboxFunctionNameToLibraryPatch(DetectedFunction.FunctionName);
-
-    if Patch <> xlp_Unknown then
+    if DetectedFunction.XboxLibraryPatch <> xlp_Unknown then
     begin
-      NewCode := XboxLibraryPatchToPatch(Patch);
+      OrgCode := DetectedFunction.CodeStart;
+      NewCode := XboxLibraryPatchToPatch(DetectedFunction.XboxLibraryPatch);
       Assert(Assigned(NewCode));
 
-{$IFDEF _DEBUG_TRACE}
-      DbgPrintf('HLE : $%.08X (%s) -> $%.08X (XTL_Emu%s)', [OrgCode, DetectedFunction.FunctionName, NewCode, XboxLibraryPatchToString(Patch)]);
+{$IFDEF DXBX_DEBUG}
+      DbgPrintf('HLE : $%.08X (%s) -> $%.08X (XTL_Emu%s)', [OrgCode, DetectedFunction.FunctionName, NewCode, XboxLibraryPatchToDisplayString(DetectedFunction.XboxLibraryPatch)]);
 {$ENDIF}
 
       EmuInstallWrapper(OrgCode, NewCode);
+      Inc(NrPatches);
     end;
   end;
+
+  DbgPrintf('HLE : Installed %d patches.', [NrPatches]);
 end;
 
 end.

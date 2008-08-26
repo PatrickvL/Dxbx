@@ -27,10 +27,12 @@ uses
   SysUtils, // IntToHex
   // JEDI
   JwaWinType,
-  // Dxbx
+  // OpenXDK
   XboxKrnl, // NT_TIB
+  // Dxbx
   uTypes,
   uLog,
+  uDxbxUtils,
   uXbe,
   uEmuAlloc,
   uEmuLDT;
@@ -167,7 +169,7 @@ begin
           Line := 'EmuFS : 0x' + PointerToString(@pNewTLS[v]) + ': ';
         end;
 
-        bByte := PUInt8(Integer(pNewTLS) + v);
+        bByte := PUInt8(IntPtr(pNewTLS) + v);
 
         Line := Line + IntToHex(Integer(bByte^), 2);
 
@@ -215,13 +217,13 @@ begin
     EThread.Tcb.TlsData := pNewTLS;
     EThread.UniqueThread := GetCurrentThreadId();
 
-    CopyMemory(@NewPcr.NtTib, OrgNtTib, SizeOf(NT_TIB));
+    CopyMemory(@(NewPcr.NtTib), OrgNtTib, SizeOf(NT_TIB));
 
-    NewPcr.NtTib.Self := @NewPcr.NtTib;
+    NewPcr.NtTib.Self := @(NewPcr.NtTib);
 
     NewPcr.PrcbData.CurrentThread := xboxkrnl.PKTHREAD(EThread);
 
-    NewPcr.Prcb := @NewPcr.PrcbData;
+    NewPcr.Prcb := @(NewPcr.PrcbData);
   end;
 
   // prepare TLS

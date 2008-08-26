@@ -21,10 +21,34 @@ interface
 
 uses
   // Delphi
+  Windows,
   SysUtils,
-  Classes;
-  
+  Classes,
+  // Dxbx
+  uTypes;
+
+const
+  NUMBER_OF_THUNKS = 379;
+
 type
+  EMU_STATE = (esNone, esFileOpen, esRunning);
+
+  TDebugInfoType = (ditConsole, ditFile);
+  EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
+  DebugMode = (DM_NONE, DM_CONSOLE, DM_FILE);
+
+  TLogType = (ltKernel, ltGui);
+
+  TEntryProc = procedure();
+  PEntryProc = ^TEntryProc;
+
+  TSetXbePath = procedure(const Path: PChar); cdecl;
+
+  TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
+  PKernelThunkTable = ^TKernelThunkTable;
+
+  TGetKernelThunkTable = function: PKernelThunkTable; cdecl;
+
   TLineCallback = function (aLinePtr: PChar; aLength: Integer; aData: Pointer): Boolean;
 
 procedure ScanPCharLines(const aPChar: PChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);
@@ -37,8 +61,15 @@ function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): I
 function StartsWithText(const aString, aPrefix: string): Boolean;
 
 procedure Swap(var aElement1, aElement2); overload;
+function RoundUp(dwValue, dwMult: DWord): DWord;
 
 function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
+
+function DebugModeToString(const aDebugMode: DebugMode): string;
+
+function LogTypeToString(const aLogType: TLogType): string;
+
+function PointerToString(const aPointer: Pointer): string;
 
 implementation
 
@@ -65,6 +96,14 @@ begin
   Tmp := Pointer(aElement1);
   Pointer(aElement1) := Pointer(aElement2);
   Pointer(aElement2) := Tmp;
+end;
+
+function RoundUp(dwValue, dwMult: DWord): DWord;
+begin
+  if dwMult = 0 then
+    Result := dwValue
+  else
+    Result := dwValue - ((dwValue - 1) mod dwMult) + (dwMult - 1);
 end;
 
 function StartsWithText(const aString, aPrefix: string): Boolean;
@@ -162,6 +201,32 @@ begin
     p1 := p2;
     while p1^ in [#10, #13] do
       Inc(p1);
+  end;
+end;
+
+function PointerToString(const aPointer: Pointer): string;
+begin
+  Result := IntToHex(Integer(aPointer), 8);
+end;
+
+function DebugModeToString(const aDebugMode: DebugMode): string;
+begin
+  case aDebugMode of
+    DM_NONE: Result := 'DM_NONE';
+    DM_CONSOLE: Result := 'DM_CONSOLE';
+    DM_FILE: Result := 'DM_FILE';
+  else
+    Result := '?Unknown?';
+  end;
+end;
+
+function LogTypeToString(const aLogType: TLogType): string;
+begin
+  case aLogType of
+    ltKernel: Result := 'ltKernel';
+    ltGui: Result := 'ltGui';
+  else
+    Result := '?Unknown?';
   end;
 end;
 

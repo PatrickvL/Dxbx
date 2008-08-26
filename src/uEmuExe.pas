@@ -29,7 +29,13 @@ uses
   SysUtils,
   Math, // for IfThen
   // Dxbx
-  uConsts, uTypes, uLog, uProlog, uXbe, uExe;
+  uConsts,
+  uTypes,
+  uLog,
+  uDxbxUtils,
+  uProlog,
+  uXbe,
+  uExe;
 
 type
   TDWordArray = array[0..3] of Byte;

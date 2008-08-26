@@ -243,7 +243,6 @@ type
 
 function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
-function RoundUp(dwValue, dwMult: DWord): DWord;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
 
@@ -311,15 +310,6 @@ begin
   end;
 end;
 
-//------------------------------------------------------------------------------
-
-function RoundUp(dwValue, dwMult: DWord): DWord;
-begin
-  if dwMult = 0 then
-    Result := dwValue
-  else
-    Result := dwValue - ((dwValue - 1) mod dwMult) + (dwMult - 1);
-end; // RoundUp
 
 //------------------------------------------------------------------------------
 

@@ -27,6 +27,7 @@ uses
   SysUtils, // for IntToStr
   // Dxbx
   uTypes,
+  uDxbxUtils,
   uEmuKrnl,
   uEmuKrnlAv,
   uEmuKrnlDbg,
