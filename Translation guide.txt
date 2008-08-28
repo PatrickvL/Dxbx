@@ -1,14 +1,75 @@
+
+
+This document describes a few things that will help you translating Cxbx's
+C code over to Delphi. Don't hesitate to add to this when the need arises!
+
+
+
+
+Calling conventions
+-------------------
 Calling conventions should be translated as follows :
 	
-WINAPI and NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
-__fastcall -> register
-
-When using CToPas, be aware of the following things:
-" mod " -> "%" (inside strings)
-" not " -> "!" (inside strings)
+  WINAPI and NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
+  __fastcall -> register
 
 
+Adding patches
+--------------
+Every time you want to enable a new patch on some function, do the following:
 
+Determine from which Xbox SDK library the function originates, and arrange for
+pattern (.pat) files for this library, from as much SDK's as possible.
+
+(If you don't have any SDK, or don't know how to create a .pat file,
+ contact one of our developers - we might be able to help you out.
+
+ Please note, that We can't give you an SDK or the pattern-generation tools,
+ as these are proprietary software!)
+
+With these .pat files, run PatternTrieBuilder.exe to get an updated version
+of the data structure (StoredTrie.dpt) that Dxbx uses to detect functions.
+(When compiling the Dxbx DLL project, this data is linked into the DLL.)
+So now, when you run your game, you should see your function being detected,
+as mentioned in the log like this : "DxbxHLE : 0x00011000 -> SomeFunction".
+
+Now that Dxbx can detect the function, implement your patch (don't forget to
+declare it with the correct arguments and "stdcall" calling convention).
+
+To register it, open up the uXboxLibraryUtils.pas unit, and make sure that
+the unit containing your patch is present in the "uses" section. Now scroll
+down to the "XboxLibraryPatchToPatch" method. Move the cursor over to the
+inclusion of "XboxLibraryPatchCases.inc" and press Ctrl+Enter to open it up.
+
+Duplicate the last line of this file. In this copy, increment the number at
+the start of the line, and replace the function name with your new patch.
+
+Switch back to uXboxLibraryUtils.pas and scroll down to the line reading
+"New patches go above this line". Duplicate the last line in that section too
+and replace the function with your own patch function. As the last (crucial)
+step, replace the string value with the name of the function - *DO* take
+care to type (or better: copy it over) exactly as it appears in the function-
+detection log, or the patch won't be placed!
+
+If you followed these steps and made no mistakes, Dxbx will keep compiling
+just fine; But now when running your game, you should see a log line
+mentioning that your patch was applied to some address in the game!
+
+
+CToPas
+------
+CToPas is a tool that can help you translating C code to Delphi.
+It does this by executing a number of automated replacements, so that C code
+starts to resemble Delphi code. This is no reliable translation however,
+so to get functionally equivalent code, manual changes are also needed.
+
+When using CToPas, be aware of these syntaxis that might need to be reversed:
+  " mod " -> "%" (inside strings)
+  " not " -> "!" (inside strings)
+
+
+Operators
+---------
 Converting C/C++ operators to Delphi:
 	-= operator
 
@@ -46,10 +107,11 @@ Converting C/C++ operators to Delphi:
 
 
 
+Additional sources
+------------------
+Additional sources that can give you more insight into the Xbox Kernel API's :
 
-Sources that might give you more insight into the Xbox Kernel API's :
-
-Cxbx SVN (martin's private branch is the most up to date)
+Cxbx SVN (dstein and shogun's private branches are the most up to date)
 OpenXDK (only available as a download, no SVN)
 ReactOS SVN
 XBMC - Undocumented.h
