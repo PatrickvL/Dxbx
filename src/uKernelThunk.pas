@@ -209,7 +209,7 @@ var
     {153}@xboxkrnl_KeSynchronizeExecution,
     {154}@xboxkrnl_KeSystemTime,
     {155}@xboxkrnl_KeTestAlertThread,
-    {156}@xboxkrnl_KeTickCount,
+    {156}@xboxkrnl_KeTickCount, // variable
     {157}@xboxkrnl_KeTimeIncrement,
     {158}@xboxkrnl_KeWaitForMultipleObjects,
     {159}@xboxkrnl_KeWaitForSingleObject,

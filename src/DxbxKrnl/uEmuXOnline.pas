@@ -44,10 +44,10 @@ begin
   EmuSwapFS; // Win2k/XP FS
 
   DbgPrintf('EmuXapi : EmuWSAStartup' +
-    '( ' +
-    '   wVersionRequested   : 0x%.08X' +
-    '   lpWSAData           : 0x%.08X' +
-    ');',
+    #13#10'( ' +
+    #13#10'   wVersionRequested   : 0x%.08X' +
+    #13#10'   lpWSAData           : 0x%.08X' +
+    #13#10');',
     [wVersionRequested, @lpWSAData]);
 
   ret := WSAStartup(wVersionRequested, lpWSAData);

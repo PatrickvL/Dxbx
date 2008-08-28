@@ -147,8 +147,6 @@ begin
   try
     SetEvent(Parameter.hStartedEvent);
 
-    DbgPrintf('EmuKrnl : PCSTProxy : DEBUG, this thread hangs somewhere after this line!');
-
     EmuSwapFS(); // Xbox FS
     try
       asm
