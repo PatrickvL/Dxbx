@@ -158,6 +158,15 @@ type
   end;
   X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
 
+  _D3DVBLANKDATA = record
+    VBlank: DWORD;
+    Swap: DWORD;
+    Flags: DWORD;
+  end;
+  D3DVBLANKDATA = _D3DVBLANKDATA;
+  PD3DVBLANKDATA = ^D3DVBLANKDATA;
+
+  D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
 
   X_D3DResource = Class
   public

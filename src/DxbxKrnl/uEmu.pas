@@ -23,7 +23,9 @@ interface
 
 uses
   // Delphi
-  Windows; // THandle
+  Windows, // THandle
+  // Jedi WinAPI
+  JwaWinType;
 
 var
   g_hCurDir: THandle = 0;
@@ -41,6 +43,28 @@ var
 
 procedure EmuWarning(szWarningMessage: string);
 
+const
+  // NOTE: this is an arbitrary latency
+  XINPUT_SETSTATE_LATENCY = 4;
+  XINPUT_SETSTATE_SLOTS = 16;
+
+type
+  // XInputSetState status waiters
+  XInputSetStateStatus = record
+    hDevice: HANDLE;
+    dwLatency: DWORD;
+    pFeedback: PVOID;
+  end;
+
+var
+  g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS-1] of XInputSetStateStatus;
+
+const
+  // 4 controllers
+  XINPUT_HANDLE_SLOTS = 4;
+
+var
+  g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS-1] of HANDLE;
 
 implementation
 

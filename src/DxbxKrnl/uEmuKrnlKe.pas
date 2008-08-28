@@ -125,7 +125,6 @@ function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeTickCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeTimeIncrement(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -594,13 +593,6 @@ function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   Result := Unimplemented('KeTestAlertThread');
-  EmuSwapFS(); // Xbox FS
-end;
-
-function xboxkrnl_KeTickCount(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(); // Win2k/XP FS
-  Result := Unimplemented('KeTickCount');
   EmuSwapFS(); // Xbox FS
 end;
 

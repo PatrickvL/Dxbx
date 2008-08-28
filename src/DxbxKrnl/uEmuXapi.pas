@@ -30,6 +30,7 @@ uses
   // Dxbx
   uTypes,
   uLog, // DbgPrintf
+  uEmu,
   uEmuFS, // EmuSwapFS
   uXBController,
   uDxbxUtils,
@@ -40,23 +41,46 @@ type
 
   ProcedureStdCall = procedure; stdcall;
 
+  _XINPUT_RUMBLE = record
+    wLeftMotorSpeed: WORD;
+    wRightMotorSpeed: WORD;
+  end;
+  XINPUT_RUMBLE = _XINPUT_RUMBLE;
+  PXINPUT_RUMBLE = ^XINPUT_RUMBLE;
+
+  _XINPUT_FEEDBACK_HEADER = record
+    dwStatus: DWORD;
+    hEvent: HANDLE; // OPTIONAL ;
+    Reserved: array[1..58] of BYTE;
+  end;
+  XINPUT_FEEDBACK_HEADER = _XINPUT_FEEDBACK_HEADER;
+  PXINPUT_FEEDBACK_HEADER = ^XINPUT_FEEDBACK_HEADER;
+
+  _XINPUT_FEEDBACK = record
+    Header: XINPUT_FEEDBACK_HEADER;
+//    union
+        Rumble: XINPUT_RUMBLE;
+  end;
+  XINPUT_FEEDBACK = _XINPUT_FEEDBACK;
+  PXINPUT_FEEDBACK = ^XINPUT_FEEDBACK;
+
 procedure XTL_EmuXapiInitProcess(); stdcall;
 procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
 function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID;  RtlHeapParams: PVOID): PVOID; stdcall;
 function XTL_EmuRtlAllocateHeap(hHeap: THandle; dwFlags: DWORD; dwBytes: SIZE_T): PVOID; stdcall;
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 
-implementation
-
-{ TODO : Need to be translated to delphi }
-
-(*var
+var
   // XInputSetState status waiters
   g_pXInputSetStateStatus: array[0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
   // XInputOpen handles
   g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of THandle;
-*)
+
+implementation
+
+{ TODO : Need to be translated to delphi }
+
 
 
 // func: EmuXapiApplyKernelPatches
@@ -280,12 +304,12 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
   //* too much debug output
-  DbgPrintf('EmuXapi : EmuRtlAllocateHeap'#13#10 +
-    '('#13#10 +
-    '   hHeap               : $%.08X'#13#10 +
-    '   dwFlags             : $%.08X'#13#10 +
-    '   dwBytes             : $%.08X'#13#10 +
-    ');',
+  DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
+    #13#10'(' +
+    #13#10'   hHeap               : $%.08X' +
+    #13#10'   dwFlags             : $%.08X' +
+    #13#10'   dwBytes             : $%.08X' +
+    #13#10');',
     [hHeap, dwFlags, dwBytes]);
   //*/
 
