@@ -1,6 +1,6 @@
-    xlp_RtlAllocateHeap: Result := @XTL_EmuRtlAllocateHeap;
-    xlp_RtlCreateHeap: Result := @XTL_EmuRtlCreateHeap;
-    xlp_XapiApplyKernelPatches: Result := @XTL_EmuXapiApplyKernelPatches;
-    xlp_XapiInitProcess: Result := @XTL_EmuXapiInitProcess;
-    xlp_XapiThreadStartup: Result := @XTL_EmuXapiThreadStartup;
+    1: Result := @XTL_EmuRtlAllocateHeap;
+    2: Result := @XTL_EmuRtlCreateHeap;
+    3: Result := @XTL_EmuXapiApplyKernelPatches;
+    4: Result := @XTL_EmuXapiInitProcess;
+    5: Result := @XTL_EmuXapiThreadStartup;
 

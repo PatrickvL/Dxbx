@@ -35,14 +35,17 @@ uses
   ;
 
 type
-  // This enumerate type contains all Xbox library functions that we patch.
-  TXboxLibraryPatch = ( xlp_Unknown
-    , xlp_RtlAllocateHeap
-    , xlp_RtlCreateHeap
-    , xlp_XapiApplyKernelPatches
-    , xlp_XapiInitProcess
-    , xlp_XapiThreadStartup
-    );
+  // This type is used to indicate all Xbox library functions that we patch.
+  TXboxLibraryPatch = type Cardinal;
+
+const
+  // This is an TXboxLibraryPatch indicating the 'unknown patch'-state :
+  xlp_Unknown = TXboxLibraryPatch(0);
+
+var
+  // This is the highest valid TXboxLibraryPatch value;
+  // it gets updated by CheckAllPatches :
+  High_TXboxLibraryPatch: TXboxLibraryPatch = xlp_Unknown;
 
 {$IFDEF DXBX_PATCH_ADDRESSES_ENABLED}
   // This method returns the actual patch function address for each patched method.
@@ -128,7 +131,7 @@ end;
 
 function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibraryPatch;
 begin
-  Result := High(TXboxLibraryPatch);
+  Result := High_TXboxLibraryPatch;
   repeat
     if SameText(XboxLibraryPatchToString(Result), aFunctionName) then
       Exit;
@@ -142,29 +145,48 @@ begin
   Result := XboxFunctionNameToLibraryPatch(aFunctionName) <> xlp_Unknown;
 end;
 
-{$IFDEF DXBX_DEBUG}
-procedure AssertAllPatches;
+procedure CheckAllPatches;
 var
   p: TXboxLibraryPatch;
+  NrEmptySlots: Cardinal;
+const
+  TRESHHOLD = 5; // bork out after 5 empty slots
 begin
-  for p := Succ(xlp_Unknown) to High(p) do
-  begin
+  p := xlp_Unknown;
+  NrEmptySlots := 0;
+
+{$IFDEF DXBX_PATCH_ADDRESSES_ENABLED}
+  if XboxLibraryPatchToPatch(p) <> nil then
+    raise Exception.Create('XboxLibraryPatchToPatch should return nil for ''xlp_Unknown''!');
+{$ENDIF}
+  if XboxLibraryPatchToString(p) <> '' then
+    raise Exception.Create('XboxLibraryPatchToString should return empty string for ''xlp_Unknown''!');
+
+  repeat
+    Inc(p);
+
 {$IFDEF DXBX_PATCH_ADDRESSES_ENABLED}
     if XboxLibraryPatchToPatch(p) = nil then
-      raise Exception.Create('Missing case in XboxLibraryPatchToPatch for : ' + GetEnumName(TypeInfo(TXboxLibraryPatch), Ord(p)));
+      Inc(NrEmptySlots)
+    else
 {$ENDIF}
 
     if XboxLibraryPatchToString(p) = '' then
-      raise Exception.Create('Missing case in XboxLibraryPatchToString for : ' + GetEnumName(TypeInfo(TXboxLibraryPatch), Ord(p)));
-  end;
+      Inc(NrEmptySlots)
+    else
+      // Note this TXboxLibraryPatch offset as the highest of yet :
+      High_TXboxLibraryPatch := p;
+
+  until NrEmptySlots >= TRESHHOLD;
+
+  // Detect if there where any empty slots skipped :
+  if (p - TRESHHOLD) <> High_TXboxLibraryPatch then
+    raise Exception.CreateFmt('XboxLibraryPatchCases.inc has at least %d missing slot(s)!', [High_TXboxLibraryPatch - (p - TRESHHOLD)]);
 end;
-{$ENDIF ~DXBX_DEBUG}
 
 initialization
 
-{$IFDEF DXBX_DEBUG}
-  AssertAllPatches;
-{$ENDIF ~DXBX_DEBUG}
+  CheckAllPatches;
 
 end.
 
