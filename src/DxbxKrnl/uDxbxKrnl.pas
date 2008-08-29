@@ -113,7 +113,8 @@ begin
 {$IFDEF _DEBUG_TRACE}
     DbgPrintf('EmuMain : Debug Trace Enabled.');
 
-    DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit(', [@CxbxKrnlInit]);
+    DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit', [@CxbxKrnlInit]);
+    DbgPrintf( '(' );
     DbgPrintf('  hwndParent       : 0x%.8x', [hwndParent]);
     DbgPrintf('  pTLSData         : 0x%.8x', [pTLSData]);
     DbgPrintf('  pTLS             : 0x%.8x', [pTLS]);

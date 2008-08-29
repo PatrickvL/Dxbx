@@ -58,6 +58,11 @@ function XTL_EmuIDirect3DDevice8_GetViewport(pViewport: D3DVIEWPORT8): HRESULT; 
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: integer; a: FLOAT; b: FLOAT; c: FLOAT; d: FLOAT): HRESULT; stdcall;
 
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; // forward
+function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
+  hFocusWindow: HWND; BehaviorFlags: DWORD;
+  pPresentationParameters: X_D3DPRESENT_PARAMETERS;
+  ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall;
+
 
 implementation
 
@@ -101,6 +106,7 @@ var
   hThread: THandle;
   hDupHandle: THandle;
   DevType: D3DDEVTYPE;
+  PresParam : X_D3DPRESENT_PARAMETERS;
 begin
   g_EmuShared.GetXBVideo(g_XBVideo);
 
@@ -145,35 +151,36 @@ begin
   // create Direct3D8 and retrieve caps
   //  using namespace XTL;
 
-    // xbox Direct3DCreate8 returns '1' always, so we need our own ptr
+  // xbox Direct3DCreate8 returns '1' always, so we need our own ptr
   g_pD3D8 := Direct3DCreate8(D3D_SDK_VERSION);
 
   if g_pD3D8 = nil then
     CxbxKrnlCleanup('Could not initialize Direct3D8!');
-
-(*    DevType := (g_XBVideo.GetDirect3DDevice() = 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
-
+    { TODO : Need to be translated to delphi }
+    (*
+    DevType := (g_XBVideo.GetDirect3DDevice() = 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
     g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, @g_D3DCaps);
+    *)
 
-  SetFocus(g_hEmuWindow);
+    SetFocus(g_hEmuWindow);
 
   // create default device
-    XTL.X_D3DPRESENT_PARAMETERS PresParam;
-
     ZeroMemory(@PresParam, SizeOf(PresParam));
 
     PresParam.BackBufferWidth  := 640;
     PresParam.BackBufferHeight := 480;
-    PresParam.BackBufferFormat := 6; (* X_D3DFMT_A8R8G8B8 * )
+    PresParam.BackBufferFormat := 6; (* X_D3DFMT_A8R8G8B8 *)
     PresParam.BackBufferCount  := 1;
     PresParam.EnableAutoDepthStencil := TRUE;
-    PresParam.AutoDepthStencilFormat := $2A; (* X_D3DFMT_D24S8 * )
+    PresParam.AutoDepthStencilFormat := $2A; (* X_D3DFMT_D24S8 *)
+    { TODO : Need to be translated to delphi }
+    (*
     PresParam.SwapEffect := XTL.D3DSWAPEFFECT_DISCARD;
+    *)
 
     EmuSwapFS();    // XBox FS
-    XTL.EmuIDirect3D8_CreateDevice(0, XTL.D3DDEVTYPE_HAL, 0, $00000040, @PresParam, @g_pD3DDevice8);
+    XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, 0, $00000040, PresParam, g_pD3DDevice8);
     EmuSwapFS();    // Win2k/XP FS
-*)
 end;
 
 
@@ -1042,7 +1049,6 @@ begin
 end;
 
 // func: EmuIDirect3D8_CreateDevice
-
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: X_D3DPRESENT_PARAMETERS;
@@ -1051,17 +1057,15 @@ begin
   Result := 0;
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuD3D8 : EmuIDirect3D8_CreateDevice' +
-    #13#10'(' +
-    #13#10'   Adapter                   : 0x%.08X' +
-    #13#10'   DeviceType                : 0x%.08X' +
-    #13#10'   hFocusWindow              : 0x%.08X' +
-    #13#10'   BehaviorFlags             : 0x%.08X' +
-    #13#10'   pPresentationParameters   : 0x%.08X' +
-    #13#10'   ppReturnedDeviceInterface : 0x%.08X' +
-    #13#10');',
-    [Adapter, @DeviceType, hFocusWindow,
-    BehaviorFlags, @pPresentationParameters, ppReturnedDeviceInterface]);
+  DbgPrintf('EmuD3D8 : EmuIDirect3D8_CreateDevice' );
+  DbgPrintf('(' );
+  DbgPrintf('   Adapter                   : 0x%.08X', [Adapter] );
+  DbgPrintf('   DeviceType                : 0x%.08X', [@DeviceType] );
+  DbgPrintf('   hFocusWindow              : 0x%.08X', [hFocusWindow] );
+  DbgPrintf('   BehaviorFlags             : 0x%.08X', [BehaviorFlags] );
+  DbgPrintf('   pPresentationParameters   : 0x%.08X', [@pPresentationParameters] );
+  DbgPrintf('   ppReturnedDeviceInterface : 0x%.08X', [@ppReturnedDeviceInterface] );
+  DbgPrintf(')');
 
     // Cache parameters
     { TODO : Need to be translated to delphi }
