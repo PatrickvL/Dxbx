@@ -7034,8 +7034,7 @@ begin
     Exit;               *)
 end;
 
-// func: EmuIDirect3DDevice8_SetLight
-
+// func: EmuIDirect3DDevice8_SetLight       
 function XTL_EmuIDirect3DDevice8_SetLight(Index: DWORD; pLight: D3DLIGHT8): HRESULT;
 var
   hRet: HRESULT;
@@ -7056,7 +7055,6 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_SetMaterial
-
 function XTL_EmuIDirect3DDevice8_SetMaterial(pMaterial: D3DMATERIAL8): HRESULT;
 var
   hRet: HRESULT;
@@ -7071,12 +7069,10 @@ begin
 
   hRet := g_pD3DDevice8.SetMaterial(pMaterial);
   EmuSwapFS(); // XBox FS
-
   Result := hRet;
 end;
 
 // func: EmuIDirect3DDevice8_LightEnable
-
 function XTL_EmuIDirect3DDevice8_LightEnable(Index: DWORD; bEnable: LongBool): HRESULT;
 var
   hRet: HRESULT;
@@ -7097,13 +7093,10 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
-
 procedure EmuIDirect3DDevice8_BlockUntilVerticalBlank;
 begin
   EmuSwapFS(); // Win2k/XP FS
-
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BlockUntilVerticalBlank();');
-
   Exit;
 end;
 
@@ -7233,7 +7226,6 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_SetFlickerFilter
-
 procedure XTL_EmuIDirect3DDevice8_SetFlickerFilter(Filter: DWord);
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -7245,12 +7237,10 @@ begin
     [Filter]);
 
   EmuWarning('Not setting flicker filter');
-
   EmuSwapFS(); // XBox FS
 end;
 
 // func: EmuIDirect3DDevice8_SetSoftDisplayFilter
-
 procedure XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter(Enable: Boolean);
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -7422,7 +7412,6 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_GetVertexShader
-
 procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD);
 begin
   EmuSwapFS();
@@ -7444,7 +7433,6 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_GetVertexShaderConstant
-
 procedure XTL_EmuIDirect3DDevice8_GetVertexShaderConstant;
 (*(
     INT   Register,
@@ -7473,7 +7461,6 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_SetVertexShaderInputDirect
-
 function XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect(pVAF: X_VERTEXATTRIBUTEFORMAT;
   StreamCount: UINT; pStreamInputs: X_STREAMINPUT): HRESULT;
 begin
@@ -7494,7 +7481,6 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_GetVertexShaderInput
-
 function XTL_EmuIDirect3DDevice8_GetVertexShaderInput(pHandle: DWORD;
   pStreamCount: UINT; pStreamInputs: X_STREAMINPUT): HRESULT;
 begin
@@ -7516,35 +7502,27 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_SetVertexShaderInput
-
-function XTL_EmuIDirect3DDevice8_SetVertexShaderInput: HRESULT;
-(*(
-    DWORD              Handle,
-    UINT               StreamCount,
-    X_STREAMINPUT     *pStreamInputs
-) *)
+function XTL_EmuIDirect3DDevice8_SetVertexShaderInput(aHandle : DWORD;
+    StreamCount : UINT; pStreamInputs : X_STREAMINPUT): HRESULT;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
     // debug trace
-(*    DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderInput' +
+    DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_SetVertexShaderInput' +
                #13#10'(' +
                #13#10'   Handle              : 0x%.08X' +
                #13#10'   StreamCount         : 0x%.08X' +
                #13#10'   pStreamInputs       : 0x%.08X' +
                #13#10');',
-               [Handle, StreamCount, pStreamInputs]);
-*)
+               [aHandle, StreamCount, @pStreamInputs]);
+
   DbgPrintf('NOT YET IMPLEMENTED!');
-
   EmuSwapFS(); // Xbox FS
-
   Result := 0;
 end;
 
 
 // func: EmuIDirect3DDevice8_RunVertexStateShader
-
 procedure XTL_EmuIDirect3DDevice8_RunVertexStateShader(Address: DWORD; pData: FLOAT);
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -7563,7 +7541,6 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_LoadVertexShaderProgram
-
 procedure XTL_EmuIDirect3DDevice8_LoadVertexShaderProgram(pFunction: DWORD; Address: DWORD);
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -7582,33 +7559,29 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_GetVertexShaderType
-
-procedure XTL_EmuIDirect3DDevice8_GetVertexShaderType;
-(*(
-    DWORD  Handle,
-    DWORD *pType
-) *)
+procedure XTL_EmuIDirect3DDevice8_GetVertexShaderType(aHandle : DWORD;
+    pType : DWORD);
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
     // debug trace
-    DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderType'
-               #13#10'('
-               #13#10'   Handle               : 0x%.08X'
-               #13#10'   pType                : 0x%.08X'
+    DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderType' +
+               #13#10'(' +
+               #13#10'   Handle               : 0x%.08X' +
+               #13#10'   pType                : 0x%.08X' +
                #13#10');',
-               Handle, pType);
+               [aHandle, pType]);
 
-    if(pType and VshHandleIsVertexShader(Handle)) then
+    { TODO : need to be translated to delphi }
+    (*if(pType and VshHandleIsVertexShader(Handle)) then
     begin
         *pType := ((VERTEX_SHADER )(VshHandleGetVertexShader(Handle))->Handle)->cType;
-     end;
+     end; *)
 
-    EmuSwapFS();   // Xbox FS *)
+    EmuSwapFS();   // Xbox FS
 end;
 
 // func: EmuIDirect3DDevice8_GetVertexShaderDeclaration
-
 function XTL_EmuIDirect3DDevice8_GetVertexShaderDeclaration(Handle: DWORD;
   pData: PVOID; pSizeOfData: DWORD): HRESULT;
 var
@@ -7657,7 +7630,7 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-    // debug trace
+  // debug trace
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderFunction' +
     #13#10'(' +
     #13#10'   Handle               : 0x%.08X' +
@@ -7952,9 +7925,6 @@ begin
 
   Result := D3D_OK;
 end;
-
-
-
 
 end.
 

@@ -1144,9 +1144,9 @@ type
     Length: UInt32;
     // TODO!
   end;
-// ******************************************************************
-// * func: EmuXapiInitProcess
-// ******************************************************************
+
+
+// func: EmuXapiInitProcess
 procedure XTL_EmuXapiInitProcess(); stdcall;
 const
   HEAP_GROWABLE = $00000002;
