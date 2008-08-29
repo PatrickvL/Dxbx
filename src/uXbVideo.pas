@@ -30,13 +30,11 @@ type
     private
       m_bFullscreen: Boolean;
     public
-  procedure Load(const szRegistryKey: PChar);
-procedure Save(const szRegistryKey: PChar);
-Function GetDisplayAdapter : DWord;
-
-procedure SetFullscreen(bFullscreen: Boolean);
-function GetFullscreen: Boolean;
-
+      procedure Load(const szRegistryKey: PChar);
+      procedure Save(const szRegistryKey: PChar);
+      Function GetDisplayAdapter : DWord;
+      procedure SetFullscreen(bFullscreen: Boolean);
+      function GetFullscreen: Boolean;
   end;
 
 var
