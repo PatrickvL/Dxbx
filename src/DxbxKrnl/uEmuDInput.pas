@@ -33,6 +33,7 @@ uses
   uXBController;
 
 procedure XTL_EmuDInputCleanup; stdcall;
+function XTL_EmuDInputInit: Longbool;
 
 
 implementation
