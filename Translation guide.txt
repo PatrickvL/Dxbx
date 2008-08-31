@@ -4,7 +4,30 @@ This document describes a few things that will help you translating Cxbx's
 C code over to Delphi. Don't hesitate to add to this when the need arises!
 
 
+General translation guidelines
+------------------------------
+Because Dxbx is primarily focussed on translating Cxbx to the Delphi Language,
+we need to maintain a proper set of rules. One problem in translating Cxbx is,
+that there are various branches to choose from;
+\Cxbx\Trunk . The main source
+\Cxbx\branches\private\caustik - Caustic's private work branch
+\Cxbx\branches\private\dstien, Based on martin rev. 39 - Nisse's work
+\Cxbx\branches\private\martin - Martin's work
+\Cxbx\branches\private\shogun - blueshogun96's work
 
+Most of the translation work has used martin's branch. But now that there
+are more branches to choose from (namely dstien and shogun), we need to mark
+our translations with a header, signifying which branch and revistion where
+used when translating a function. Also, update these headers when another
+revision comes along!
+
+So, add this header line to each function you translate (with applicable details):
+// Branch:martin  Revision:39  Translator:PatrickvL
+
+For kernel functions, also specifiy which source was used to determine the
+signature of that function, like this :
+// Source: OpenXdk
+Sources are: Cxbx, OpenXdk, XBMC, ReactOS, APILogger (See below for details).
 
 Calling conventions
 -------------------
@@ -107,12 +130,25 @@ Converting C/C++ operators to Delphi:
 
 
 
-Additional sources
-------------------
+Xbox Kernel sources
+-------------------
 Additional sources that can give you more insight into the Xbox Kernel API's :
 
-Cxbx SVN (dstein and shogun's private branches are the most up to date)
-OpenXDK (only available as a download, no SVN)
-ReactOS SVN
-XBMC - Undocumented.h
-APILogger - APIReporter source
+APILogger - APIReporter source :
+ http://forums.xbox-scene.com/index.php?showtopic=456303
+
+Cxbx SVN (dstein and shogun's private branches are the most up to date) :
+ http://cxbx.svn.sourceforge.net/viewvc/cxbx/branches/private/dstien/wip/src/
+ http://cxbx.svn.sourceforge.net/viewvc/cxbx/branches/private/shogun/wip/src/
+
+JwaNative - Jedi WinAPI project :
+ http://blog.delphi-jedi.net/jedi-api-headers/
+
+OpenXDK - Open Source, Free Legal Xbox Development Kit :
+ http://sourceforge.net/projects/openxdk/
+
+ReactOS SVN - Open source windows NT clone, see it's kernel implementation :
+ http://svn.reactos.org/svn/reactos/trunk/reactos/ntoskrnl/
+
+XBMC - See the xbox folder, and especially Undocumented.h :
+ http://xbmc.org/trac/browser/trunk/XBMC/xbmc/xbox
