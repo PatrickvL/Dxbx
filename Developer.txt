@@ -50,18 +50,26 @@ Then, to compile Dxbx, you got two options:
 
 Development
 -----------
-All changes made to the sourcecode of Dxbx should be contributed under the GPL license.
+All changes made to the sourcecode of Dxbx should be contributed under the GPL license!
 It's best to add a GPL-header to each file to signify this fact.
-All code should conform to the Dxbx coding convention (which is basically the Delphi standard with some extra's).
+For this, copy the contents of "gpl header.inc" into all new source files.
+
+All code should conform to the Dxbx coding convention!
+This is basically the Delphi standard with some extra's.
+See "CodingConvention.txt" for details.
+
 Never submit a change which breaks the build; Test first!
 To guarantee the correct working of all new code, write unit-tests using DUnit. (TODO)
-When working on translation of Cxbx code to Delphi, follow the "Translation guide" document.
+
+When working on translation of Cxbx code to Delphi, follow the translation guide!
+See "Translation guide.txt" for details.
 
 
 Supported Delphi versions
 -------------------------
 At the time of writing, these are the Delphi versions that are supported:
-- Delphi 2007 Win32 (only minimal changes needed to compile with other versions)
+- Delphi 2007 Win32
+To compile with other versions, we expect to need only minimal changes.
 
 
 Setup
