@@ -1,0 +1,56 @@
+Dxbx compatibility
+------------------
+
+When using our own DLL, not a single game works yet.
+We use Turok Evolution for testing purposes during development.
+
+When using the Cxbx DLL, compatiblity is the same as Cxbx.
+
+Note, that Dxbx has no controller support yet.
+So even with the Cxbx DLL, you won't be able to *do* anything yet!
+
+Cxbx compatibility
+------------------
+
+Blueshogun96 wrote this in http://forums.ngemu.com/cxbx-official-discussion/95026-cxbx-compatibility-list.html :
+
+1. Turok Evolution
+Status: (Playable)
+Notes: Minor glitches in some levels, level 6 does not render. No sound.
+Screen(s): See Cxbx homepage
+
+2. Battle Star Galactica *PAL version only*
+Status: (Ingame)
+Notes: Minor glitches. Crashes on x86 WBINVD instruction.
+Screen(s): 1 2 3 4
+
+3. Panzer Dragoon Orta
+Status: (Menus)
+Notes: Minor glitches. Shows black screen and/or crashes when going ingame.
+Screen(s): 1
+
+4. Halo: Combat Evolved
+Status: (Menus)
+Notes: Major glitches. Incorrect textures. Texture filtering not present. No sound. Only runs in debug mode!
+
+5. Dead or Alive Xtreme Beach Volleyball
+Status: (Intros)
+Notes: Shows dirty disc error.
+Screen(s): 1
+
+6. Unreal Championship
+Status: (Intros)
+Notes: Crashes when trying to play videos. A skip video hack might solve the problem.
+Screen(s): 1
+
+7. Myst III
+Status: (Intros)
+Notes: Shows loading screen, then shows dirty disc error screen. It's a problem related to NtCreateFile causing false errors.
+Screen(s): 1 2
+
+8. Genma Onimusha
+Status: (Intros)
+Notes: Shows some highly distorted garbage on the screen and then crashes.
+Screen(s): 1
+
+I heard somethin about Antz Extreme Racing showing an intro movie, but I have to actually buy that game and try it myself. 
