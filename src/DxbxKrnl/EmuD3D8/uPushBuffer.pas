@@ -49,6 +49,7 @@ implementation
 
 
 procedure XTL_EmuExecutePushBuffer;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 (*(
     X_D3DPushBuffer       *pPushBuffer,
     X_D3DFixup            *pFixup
@@ -143,6 +144,7 @@ begin
 end;
 
 procedure XTL_EmuExecutePushBufferRaw ( pdwPushData : DWORD );
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 (*var
   pdwOrigPushData : DWORD; *)
 begin
@@ -641,6 +643,7 @@ begin
 
 (*#ifdef _DEBUG_TRACK_PB
 procedure DbgDumpMesh(var pIndexData: WORD; dwCount: DWORD);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     if( not XTL.IsValidCurrentShader() or (dwCount = 0)) then
         Exit;
