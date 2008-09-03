@@ -177,6 +177,7 @@ implementation
 // * func: XBController::XBController
 // ******************************************************************
 (*XBController::XBController()
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 {
     m_CurrentState = XBCTRL_STATE_NONE;
 
@@ -209,6 +210,7 @@ implementation
 // * func: XBController::~XBController
 // ******************************************************************
 (*XBController.~XBController()
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     if(m_CurrentState = XBCTRL_STATE_CONFIG) then
         ConfigEnd();
@@ -221,6 +223,7 @@ begin
 // * func: XBController::EnumObjectsCallback
 // ******************************************************************
 function XBController.EnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE): BOOL;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     if(lpddoi^.dwType and DIDFT_AXIS) then
     begin
@@ -273,6 +276,7 @@ begin
 // * func: WrapEnumGameCtrlCallback
 // ******************************************************************
 function CALLBACK WrapEnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE; pvRef: Pointer): BOOL;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     XBController *context := (XBController)pvRef;
 
@@ -284,6 +288,7 @@ begin
 // * func: WrapEnumObjectsCallback
 // ******************************************************************
 function CALLBACK WrapEnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE; pvRef: Pointer): BOOL;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     XBController *context := (XBController)pvRef;
 
@@ -320,6 +325,7 @@ begin
 // * func: XBController::EnumGameCtrlCallback
 // ******************************************************************
 function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     if(m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
         Result:= DIENUM_CONTINUE;
@@ -345,6 +351,7 @@ begin
 // func: XBController::ListenPoll
 
 procedure XBController.ListenPoll(var Controller: XINPUT_STATE);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 (*var
   hRet: HRESULT;
   v: Integer;
@@ -593,6 +600,7 @@ begin
 end;
 
 procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -615,6 +623,7 @@ begin
 end;
 
 procedure XBController.ConfigEnd;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   if m_CurrentState <> XBCTRL_STATE_CONFIG then
   begin
@@ -627,6 +636,7 @@ begin
 end;
 
 function XBController.ConfigPoll(szStatus: PChar): Longbool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 (*var
   v: Integer;
   hRet: HRESULT;
@@ -928,6 +938,7 @@ end;
 
 
 function XBController.DeviceIsUsed(szDeviceName: PChar): Longbool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   v: Integer;
 begin
@@ -944,6 +955,7 @@ begin
 end;
 
 procedure XBController.DInputCleanup;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   v: Integer;
 begin
@@ -967,6 +979,7 @@ begin
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 (*var
   hRet: HResult; *)
 begin
@@ -1066,6 +1079,7 @@ begin
 end;
 
 function XBController.Insert(szDeviceName: PChar): Integer;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   v: Integer;
 begin
@@ -1091,6 +1105,7 @@ begin
 end;
 
 procedure XBController.ListenBegin(ahwnd: THandle);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   v: Integer;
 begin
@@ -1119,6 +1134,7 @@ begin
 end;
 
 procedure XBController.ListenEnd;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   if m_CurrentState <> XBCTRL_STATE_LISTEN then
   begin
@@ -1131,6 +1147,7 @@ begin
 end;
 
 procedure XBController.Load(szRegistryKey: PChar);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   (*dwType, dwSize: DWORD; *)
   dwDisposition: DWORD;
@@ -1181,6 +1198,7 @@ begin
 end;
 
 procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo, dwFlags: Integer);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   v: Integer;
   r: XBCtrlObject;
@@ -1206,6 +1224,7 @@ begin
 end;
 
 procedure XBController.ReorderObjects(szDeviceName: PChar; aPos: Integer);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   Old: Integer;
   v: integer;
@@ -1242,6 +1261,7 @@ begin
 end;
 
 procedure XBController.Save(szRegistryKey: PChar);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   (*dwType, dwSize: DWORD; *)
   dwDisposition : DWORD;

@@ -35,11 +35,13 @@ implementation
 
 
 function VshHandleIsVertexShader(aHandle: DWORD): boolean;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   result := (ahandle and $8000000) <> 0; 
 end;
 
 Function VshHandleGetVertexShader(aHandle : DWORD) : X_D3DVertexShader;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*  Result :=  aHandle and $7FFFFFFF; *)
 { return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }

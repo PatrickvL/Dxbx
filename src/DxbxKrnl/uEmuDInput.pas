@@ -43,6 +43,7 @@ var
 
 // func: XTL::EmuDInputInit
 function XTL_EmuDInputInit: Longbool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   Result := True;
   g_EmuShared.GetXBController(g_XBController);
@@ -55,12 +56,14 @@ end;
 
 // func: XTL::EmuDInputCleanup
 procedure XTL_EmuDInputCleanup;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   g_XBController.ListenEnd();
 end;
 
 // func: XTL::EmuPollController
 procedure XTL_EmuDInputPoll(Controller: XINPUT_STATE);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   g_XBController.ListenPoll(Controller);
   if (Error_GetError <> '' ) then

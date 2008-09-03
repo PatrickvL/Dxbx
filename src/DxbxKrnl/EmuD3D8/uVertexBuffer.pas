@@ -50,6 +50,7 @@ implementation
 
 
 (*procedure CRC32Init;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 var
   bFirstTime: Boolean = True;
   i, j: Integer;
@@ -75,6 +76,7 @@ begin
 end;          *)
 
 (*function CRC32(var data: Byte; len: integer): Word;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     Word        cresult;
     integer                 i;;
@@ -98,6 +100,7 @@ end; *)
 
 
 (*XTL.VertexPatcher.VertexPatcher()
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     this^.m_uiNbrStreams := 0;
     ZeroMemory(this^.m_pStreams, SizeOf(PATCHEDSTREAM) * MAX_NBR_STREAMS);
@@ -113,6 +116,7 @@ begin
  end; *)
 
 procedure XTL_VertexPatcher_DumpCache;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     DbgPrintf('--- Dumping streams cache ---');
     (*RTNode *pNode := g_PatchedStreamsCache.getHead();
@@ -135,6 +139,7 @@ end;
 
 (*procedure XTL.VertexPatcher.CacheStream(var pPatchDesc: VertexPatchDesc;
                                      UINT             uiStream)
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
@@ -233,6 +238,7 @@ begin
  end;        *)
 
 procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer);
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    g_PatchedStreamsCache.Lock();
     CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )g_PatchedStreamsCache.get(pStream);
@@ -257,6 +263,7 @@ begin
 end;
 
 (*function XTL.VertexPatcher.ApplyCachedStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
@@ -381,6 +388,7 @@ begin
  end;                    *)
 
 (*function XTL.VertexPatcher.GetNbrStreams(var pPatchDesc: VertexPatchDesc): UINT;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     if(VshHandleIsVertexShader(g_CurrentVertexShader)) then
     begin
@@ -402,6 +410,7 @@ begin
  end;        *)
 
 (*function XTL.VertexPatcher.PatchStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     if( not m_pDynamicPatch) then
@@ -680,6 +689,7 @@ begin
  end;        *)
 
 (*function XTL.VertexPatcher.PatchPrimitive(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     // only quad and listloop are currently supported
@@ -857,6 +867,7 @@ begin
  end;           *)
 
 (*function XTL.VertexPatcher.Apply(var pPatchDesc: VertexPatchDesc): bool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     bool Patched := false;
     // Get the number of streams
@@ -890,6 +901,7 @@ begin
  end;         *)
 
 function XTL_VertexPatcher_Restore: Longbool;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    if( not this->m_bPatched) then
         result:= false;
@@ -930,6 +942,7 @@ begin
 end;
 
 procedure XTL_EmuFlushIVB;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    if(g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
     begin
@@ -1276,6 +1289,7 @@ begin
 end;
 
 (*procedure XTL_EmuUpdateActiveTexture;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     //
     // DEBUGGING

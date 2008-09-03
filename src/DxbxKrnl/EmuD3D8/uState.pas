@@ -30,6 +30,7 @@ implementation
 // ******************************************************************
 
 procedure XTL_EmuUpdateDeferredStates;
+// Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    using namespace XTL;
 
