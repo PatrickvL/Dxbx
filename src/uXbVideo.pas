@@ -26,7 +26,7 @@ Uses
   Windows;
 
 type
-  T100CharArray = Array [0..100] of Char;
+  T100CharArray = Array [0..99] of AnsiChar;
 
   XBVideo = record
     private
