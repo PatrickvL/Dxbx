@@ -49,6 +49,24 @@ uses
   uEmuFS,
   uEmuXapi;
 
+// information passed to the create device proxy thread
+
+type EmuD3D8CreateDeviceProxyData = record
+    Adapter: UINT;
+    DeviceType: D3DDEVTYPE;
+    hFocusWindow: HWND;
+    BehaviorFlags: DWORD;
+    pPresentationParameters: X_D3DPRESENT_PARAMETERS;
+    ppReturnedDeviceInterface: IDirect3DDevice8;
+    bReady: Bool;
+    hRet: HRESULT;
+    bCreate: bool; // False : release
+  end;
+
+var
+  g_EmuCDPD : EmuD3D8CreateDeviceProxyData;
+
+
 function EmuUpdateTickCount(LPVOID: Pointer): DWord; //stdcall;
 function EmuCreateDeviceProxy(LPVOID: Pointer): DWord; //stdcall;
 function EmuRenderWindow(lpVoid: Pointer): DWord; //stdcall;
@@ -88,6 +106,8 @@ var
   g_bFakePixelShaderLoaded: Boolean = False;
 
   g_pD3D8: IDIRECT3D8; // Direct3D8
+  g_pDD7: IDirectDraw7; // DirectDraw7
+  g_D3DCaps: D3DCAPS8; // Direct3D8 Caps
   g_bRenderWindowActive: bool = False; // volatile?
 
   g_XBVideo: XBVideo;
@@ -95,10 +115,12 @@ var
 
   // wireframe toggle
   g_iWireframe: Integer = 0;
-
+  g_bSupportsYUY2: BOOL = FALSE; // Does device support YUY2 overlays?
   // current vertical blank information
   g_VBData: D3DVBLANKDATA;
   g_VBLastSwap: DWORD = 0;
+  g_dwVertexShaderUsage: DWord = 0;
+
 
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord);
 // Branch:martin  Revision:39  Translator:Shadow_Tj
@@ -107,7 +129,7 @@ var
   hThread: THandle;
   hDupHandle: THandle;
   DevType: D3DDEVTYPE;
-  PresParam : X_D3DPRESENT_PARAMETERS;
+  PresParam: X_D3DPRESENT_PARAMETERS;
 begin
   g_EmuShared.GetXBVideo(g_XBVideo);
 
@@ -163,45 +185,26 @@ begin
     g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, @g_D3DCaps);
     *)
 
-    SetFocus(g_hEmuWindow);
+  SetFocus(g_hEmuWindow);
 
   // create default device
-    ZeroMemory(@PresParam, SizeOf(PresParam));
+  ZeroMemory(@PresParam, SizeOf(PresParam));
 
-    PresParam.BackBufferWidth  := 640;
-    PresParam.BackBufferHeight := 480;
-    PresParam.BackBufferFormat := 6; (* X_D3DFMT_A8R8G8B8 *)
-    PresParam.BackBufferCount  := 1;
-    PresParam.EnableAutoDepthStencil := TRUE;
-    PresParam.AutoDepthStencilFormat := $2A; (* X_D3DFMT_D24S8 *)
+  PresParam.BackBufferWidth := 640;
+  PresParam.BackBufferHeight := 480;
+  PresParam.BackBufferFormat := 6; (* X_D3DFMT_A8R8G8B8 *)
+  PresParam.BackBufferCount := 1;
+  PresParam.EnableAutoDepthStencil := TRUE;
+  PresParam.AutoDepthStencilFormat := $2A; (* X_D3DFMT_D24S8 *)
     { TODO : Need to be translated to delphi }
     (*
     PresParam.SwapEffect := XTL.D3DSWAPEFFECT_DISCARD;
     *)
 
-    EmuSwapFS();    // XBox FS
-    XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, 0, $00000040, PresParam, g_pD3DDevice8);
-    EmuSwapFS();    // Win2k/XP FS
+  EmuSwapFS(); // XBox FS
+  XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, 0, $00000040, PresParam, g_pD3DDevice8);
+  EmuSwapFS(); // Win2k/XP FS
 end;
-
-
-
-
-// information passed to the create device proxy thread
-
-type EmuD3D8CreateDeviceProxyData = record
-    Adapter : UINT;
-    DeviceType : D3DDEVTYPE;
-    hFocusWindow : HWND;
-    BehaviorFlags : DWORD;
-    pPresentationParameters : X_D3DPRESENT_PARAMETERS;
-    ppReturnedDeviceInterface : IDirect3DDevice8;
-    bReady : bool;
-    hRet : HRESULT;
-    bCreate : bool;   // False : release
-end;
-
-g_EmuCDPD = EmuD3D8CreateDeviceProxyData;
 
 // cleanup Direct3D
 
@@ -257,7 +260,7 @@ var
   nBorderHeight: integer;
   x, y, nWidth, nHeight: integer;
   hwndParent: HWND;
-  lPrintfOn : bool;
+  lPrintfOn: bool;
 
 begin
   // register window class
@@ -684,220 +687,250 @@ end;
 
 function EmuCreateDeviceProxy(LPVOID: Pointer): DWord;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
+var
+  D3DDisplayMode: X_D3DDISPLAYMODE;
+  szBackBufferFormat: array[0..16 - 1] of Char;
+  hRet: HRESULT;
+  dwCodes: DWord;
+  lpCodes: DWORD;
+  v: Dword;
+  ddsd2: DDSURFACEDESC2;
+  Streams: Integer;
 begin
   DbgPrintf('EmuD3D8 : CreateDevice proxy thread is running.');
 
-    (*while(true) do begin
-        // if we have been signalled, create the device with cached parameters
-        if(g_EmuCDPD.bReady) then
-        begin
-            DbgPrintf('EmuD3D8 : CreateDevice proxy thread recieved request.');
+  { TODO : dxbx greates deadlock with this while loop }
+  (*while (true) do begin*)
+    // if we have been signalled, create the device with cached parameters
+    if g_EmuCDPD.bReady then
+    begin
+      DbgPrintf('EmuD3D8 : CreateDevice proxy thread recieved request.');
 
-            if(g_EmuCDPD.bCreate) then
-            begin
+      if (g_EmuCDPD.bCreate) then
+      begin
                 // only one device should be created at once
                 // TODO: ensure all surfaces are somehow cleaned up?
-                if(g_pD3DDevice8 <> 0) then
-                begin
-                    DbgPrintf('EmuD3D8 : CreateDevice proxy thread releasing old Device.');
+        if g_pD3DDevice8 <> Nil then
+        begin
+          DbgPrintf('EmuD3D8 : CreateDevice proxy thread releasing old Device.');
 
-                    g_pD3DDevice8.EndScene();
+          g_pD3DDevice8.EndScene();
 
-                    while(g_pD3DDevice8.Release() <> 0);
 
-                    g_pD3DDevice8 := 0;
-                 end;
+          { TODO : dxbx greates deadlock with this while loop }
+          (*while (g_pD3DDevice8._Release() <> 0) do
+            g_pD3DDevice8 := Nil; *)
+        end;
 
-                if(g_EmuCDPD.pPresentationParameters.BufferSurfaces[0] <> 0) then
-                    EmuWarning('BufferSurfaces[0] : 0x%.08X', g_EmuCDPD.pPresentationParameters.BufferSurfaces[0]);
+        if (g_EmuCDPD.pPresentationParameters.BufferSurfaces[0] <> Nil) then
+          EmuWarning(Format('BufferSurfaces[0] : 0x%.08X', [@g_EmuCDPD.pPresentationParameters.BufferSurfaces[0]]));
 
-                if(g_EmuCDPD.pPresentationParameters.DepthStencilSurface <> 0) then
-                    EmuWarning('DepthStencilSurface : 0x%.08X', g_EmuCDPD.pPresentationParameters.DepthStencilSurface);
+        if (g_EmuCDPD.pPresentationParameters.DepthStencilSurface <> Nil) then
+          EmuWarning(Format('DepthStencilSurface : 0x%.08X', [@g_EmuCDPD.pPresentationParameters.DepthStencilSurface]));
 
                 // make adjustments to parameters to make sense with windows Direct3D
-                begin
-                    g_EmuCDPD.DeviceType :=(g_XBVideo.GetDirect3DDevice() = 0) ? XTL.D3DDEVTYPE_HAL : XTL.D3DDEVTYPE_REF;
-                    g_EmuCDPD.Adapter    := g_XBVideo.GetDisplayAdapter();
+        begin
+                    { TODO : Need to be translated to delphi }
+                    (*
+                    g_EmuCDPD.DeviceType :=(g_XBVideo.GetDirect3DDevice() = 0) ? XTL.D3DDEVTYPE_HAL : XTL.D3DDEVTYPE_REF; *)
+          g_EmuCDPD.Adapter := g_XBVideo.GetDisplayAdapter();
 
-                    g_EmuCDPD.pPresentationParameters.Windowed :=  not g_XBVideo.GetFullscreen();
+          g_EmuCDPD.pPresentationParameters.Windowed := not g_XBVideo.GetFullscreen();
 
-                    if(g_XBVideo.GetVSync()) then
-                        g_EmuCDPD.pPresentationParameters.SwapEffect := XTL.D3DSWAPEFFECT_COPY_VSYNC;
+          if (g_XBVideo.GetVSync()) then
+            g_EmuCDPD.pPresentationParameters.SwapEffect := D3DSWAPEFFECT_COPY_VSYNC;
 
-                    g_EmuCDPD.hFocusWindow := g_hEmuWindow;
+          g_EmuCDPD.hFocusWindow := g_hEmuWindow;
 
-                    g_EmuCDPD.pPresentationParameters.BackBufferFormat       := XTL.EmuXB2PC_D3Dg_EmuCDPD.pPresentationParameters.BackBufferFormat);
+                    { TODO : Need to be translated to delphi }
+                    (*g_EmuCDPD.pPresentationParameters.BackBufferFormat       := XTL.EmuXB2PC_D3Dg_EmuCDPD.pPresentationParameters.BackBufferFormat);
                     g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := XTL.EmuXB2PC_D3Dg_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
+                    *)
 
-                    if( not g_XBVideo.GetVSync() and (g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) and g_XBVideo.GetFullscreen()) then
-                        g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE;
-                    else
-                    begin
+          (*if (not g_XBVideo.GetVSync() and (g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) and g_XBVideo.GetFullscreen()) then
+            g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
+          else
+          begin
+                        { TODO : Need to be translated to delphi }
+
                         if(g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE and g_XBVideo.GetFullscreen()) then
-                            g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_ONE;
+                            g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_ONE
                         else
                             g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_DEFAULT;
-                     end;
+
+          end; *)
 
                     // TODO: Support Xbox extensions if possible
-                    if(g_EmuCDPD.pPresentationParameters.MultiSampleType <> 0) then
-                    begin
-                        EmuWarning('MultiSampleType 0x%.08X is not supported!', g_EmuCDPD.pPresentationParameters.MultiSampleType);
+          if (g_EmuCDPD.pPresentationParameters.MultiSampleType <> D3DMULTISAMPLE_NONE) then
+          begin
+            EmuWarning(Format ('MultiSampleType 0x%.08X is not supported!', [@g_EmuCDPD.pPresentationParameters.MultiSampleType]));
 
-                        g_EmuCDPD.pPresentationParameters.MultiSampleType := XTL.D3DMULTISAMPLE_NONE;
+            g_EmuCDPD.pPresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;
 
                         // TODO: Check card for multisampling abilities
             //            if(pPresentationParameters->MultiSampleType == 0x00001121)
             //                pPresentationParameters->MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
             //            else
             //                CxbxKrnlCleanup('Unknown MultiSampleType (0x%.08X)', pPresentationParameters->MultiSampleType);
-                     end;
+          end;
 
-                    g_EmuCDPD.pPresentationParameters.Flags := D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+          g_EmuCDPD.pPresentationParameters.Flags := D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
                     // retrieve resolution from configuration
-                    if(g_EmuCDPD.pPresentationParameters.Windowed) then
-                    begin
-                        sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', @g_EmuCDPD.pPresentationParameters.BackBufferWidth, @g_EmuCDPD.pPresentationParameters.BackBufferHeight);
-
-                        XTL.D3DDISPLAYMODE D3DDisplayMode;
+          if (g_EmuCDPD.pPresentationParameters.Windowed) then
+          begin
+                        { TODO : Need to be translated to delphi }
+                        (*sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', @g_EmuCDPD.pPresentationParameters.BackBufferWidth, @g_EmuCDPD.pPresentationParameters.BackBufferHeight);
 
                         g_pD3D8.GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), @D3DDisplayMode);
 
                         g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DDisplayMode.Format;
-                        g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz := 0;
-                     end;
-                    else
-                    begin
-                         szBackBufferFormat: array[0..16-1] of Char;
-
-                        sscanf(g_XBVideo.GetVideoResolution(), '%d x %d %*dbit %s (%d hz)',
+                        g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz := 0; *)
+          end
+          else
+          begin
+                        { TODO : Need to be translated to delphi }
+                        (*sscanf(g_XBVideo.GetVideoResolution(), '%d x %d %*dbit %s (%d hz)',
                             @g_EmuCDPD.pPresentationParameters.BackBufferWidth,
                             @g_EmuCDPD.pPresentationParameters.BackBufferHeight,
                             szBackBufferFormat,
                             @g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz);
 
                         if(StrComp(szBackBufferFormat, 'x1r5g5b5') = 0) then
-                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL.D3DFMT_X1R5G5B5;
+                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_X1R5G5B5
                         else if(StrComp(szBackBufferFormat, 'r5g6r5') = 0) then
-                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL.D3DFMT_R5G6B5;
+                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_R5G6B5
                         else if(StrComp(szBackBufferFormat, 'x8r8g8b8') = 0) then
-                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL.D3DFMT_X8R8G8B8;
+                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_X8R8G8B8
                         else if(StrComp(szBackBufferFormat, 'a8r8g8b8') = 0) then
-                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL.D3DFMT_A8R8G8B8;
-                     end;
-                 end;
+                            g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_A8R8G8B8;
+                        *)
+          end;
+        end;
 
-                // detect vertex processing capabilities
-                if((g_D3DCaps.DevCaps and D3DDEVCAPS_HWTRANSFORMANDLIGHT) and g_EmuCDPD.DeviceType = XTL.D3DDEVTYPE_HAL) then
-                begin
-                    DbgPrintf('EmuD3D8 : Using hardware vertex processing');
+        // detect vertex processing capabilities
+        { TODO : Need to be translated to delphi }
+        (*if ((g_D3DCaps.DevCaps and D3DDEVCAPS_HWTRANSFORMANDLIGHT) and g_EmuCDPD.DeviceType = D3DDEVTYPE_HAL) then
+        begin
+          DbgPrintf('EmuD3D8 : Using hardware vertex processing');
 
-                    g_EmuCDPD.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
-                    g_dwVertexShaderUsage := 0;
-                 end;
-                else
-                begin
-                    DbgPrintf('EmuD3D8 : Using software vertex processing');
+          g_EmuCDPD.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
+          g_dwVertexShaderUsage := 0;
+        end
+        else
+        begin
+          DbgPrintf('EmuD3D8 : Using software vertex processing');
 
-                    g_EmuCDPD.BehaviorFlags := D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-                    g_dwVertexShaderUsage := D3DUSAGE_SOFTWAREPROCESSING;
-                 end;
+          g_EmuCDPD.BehaviorFlags := D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+          g_dwVertexShaderUsage := D3DUSAGE_SOFTWAREPROCESSING;
+        end;
 
-                // redirect to windows Direct3D
-                g_EmuCDPD.hRet = g_pD3D8.CreateDevice
-                (
-                    g_EmuCDPD.Adapter,
-                    g_EmuCDPD.DeviceType,
-                    g_EmuCDPD.hFocusWindow,
-                    g_EmuCDPD.BehaviorFlags,
-                    (XTL.D3DPRESENT_PARAMETERS)g_EmuCDPD.pPresentationParameters,
-                    g_EmuCDPD.ppReturnedDeviceInterface
-                );
+        // redirect to windows Direct3D
+        g_EmuCDPD.hRet := g_pD3D8.CreateDevice
+          (
+          g_EmuCDPD.Adapter,
+          g_EmuCDPD.DeviceType,
+          g_EmuCDPD.hFocusWindow,
+          g_EmuCDPD.BehaviorFlags,
+          g_EmuCDPD.pPresentationParameters,
+          g_EmuCDPD.ppReturnedDeviceInterface
+          );     *)
 
-                // report error
-                if(FAILED(g_EmuCDPD.hRet)) then
-                begin
-                    if(g_EmuCDPD.hRet = D3DERR_INVALIDCALL) then
-                        CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Invalid Call)');
-                    else if(g_EmuCDPD.hRet = D3DERR_NOTAVAILABLE) then
-                        CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Not Available)');
-                    else if(g_EmuCDPD.hRet = D3DERR_OUTOFVIDEOMEMORY) then
-                        CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Out of Video Memory)');
+        // report error
+        if (FAILED(g_EmuCDPD.hRet)) then
+        begin
+          if (g_EmuCDPD.hRet = D3DERR_INVALIDCALL) then
+            CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Invalid Call)')
+          else if (g_EmuCDPD.hRet = D3DERR_NOTAVAILABLE) then
+            CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Not Available)')
+          else if (g_EmuCDPD.hRet = D3DERR_OUTOFVIDEOMEMORY) then
+            CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Out of Video Memory)');
 
-                    CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Unknown)');
-                 end;
+          CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Unknown)');
+        end;
 
                 // cache device pointer
-                g_pD3DDevice8 := *g_EmuCDPD.ppReturnedDeviceInterface;
+        g_pD3DDevice8 := g_EmuCDPD.ppReturnedDeviceInterface;
 
                 // default NULL guid
-                ZeroMemory(@g_ddguid, SizeOf(GUID));
+                { TODO : Need to be translated to delphi }
+                (*ZeroMemory(@g_ddguid, SizeOf(GUID));
+                *)
 
                 // enumerate device guid for this monitor, for directdraw
-                HRESULT hRet := XTL.DirectDrawEnumerateExA(EmuEnumDisplayDevices, 0, DDENUM_ATTACHEDSECONDARYDEVICES);
+                { TODO : Need to be translated to delphi }
+                (*
+                hRet := DirectDrawEnumerateExA(EmuEnumDisplayDevices, 0, DDENUM_ATTACHEDSECONDARYDEVICES);
+                *)
 
                 // create DirectDraw7
-                begin
+        begin
+                    { TODO : Need to be translated to delphi }
+                    (*
                     if(FAILED(hRet)) then
-                        hRet := XTL.DirectDrawCreateEx(0, @g_pDD7, XTL.IID_IDirectDraw7, 0);
+                        hRet := DirectDrawCreateEx(0, @g_pDD7, XTL.IID_IDirectDraw7, 0)
                     else
-                        hRet := XTL.DirectDrawCreateEx(@g_ddguid, @g_pDD7, XTL.IID_IDirectDraw7, 0);
+                        hRet := DirectDrawCreateEx(@g_ddguid, @g_pDD7, XTL.IID_IDirectDraw7, 0);
+                    *)
 
-                    if(FAILED(hRet)) then
-                        CxbxKrnlCleanup('Could not initialize DirectDraw7');
+          if (FAILED(hRet)) then
+            CxbxKrnlCleanup('Could not initialize DirectDraw7');
 
-                    hRet := g_pDD7.SetCooperativeLevel(0, DDSCL_NORMAL);
+          hRet := g_pDD7.SetCooperativeLevel(0, DDSCL_NORMAL);
 
-                    if(FAILED(hRet)) then
-                        CxbxKrnlCleanup('Could not set cooperative level');
-                 end;
+          if (FAILED(hRet)) then
+            CxbxKrnlCleanup('Could not set cooperative level');
+        end;
 
                 // check for YUY2 overlay support TODO: accept other overlay types
-                begin
-                    DWORD  dwCodes := 0;
-                    DWORD *lpCodes := 0;
-
+        begin
+          dwCodes := 0;
+          lpCodes := 0;
+          (*g_pDD7.GetFourCCCodes(dwCodes, lpCodes);
+                    { TODO : Need to be translated to delphi }
+                    (*
+                    lpCodes := CxbxMalloc(dwCodes*SizeOf(DWORD));
                     g_pDD7.GetFourCCCodes(@dwCodes, lpCodes);
+                    *)
 
-                    lpCodes := (DWORD)CxbxMalloc(dwCodes*SizeOf(DWORD));
+          g_bSupportsYUY2 := False;
+          for v := 0 to dwCodes - 1 do
+          begin
+            (*if (lpCodes[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
+            begin
+              g_bSupportsYUY2 := true;
+              break;
+            end; *)
+          end;
 
-                    g_pDD7.GetFourCCCodes(@dwCodes, lpCodes);
-
-                    g_bSupportsYUY2 := False;
-                    for(DWORD v:=0;v<dwCodes;v++)
-                    begin
-                        if(lpCodes[v] = MAKEFOURCC('Y','U','Y','2')) then
-                        begin
-                            g_bSupportsYUY2 := true;
-                            break;
-                         end;
-                     end;
-
+                     { TODO : Need to be translated to delphi }
+                    (*
                     CxbxFree(lpCodes);
+                    *)
 
-                    if( not g_bSupportsYUY2) then
-                        EmuWarning('YUY2 overlays are not supported in hardware, could be slow!');
-                 end;
+          if (not g_bSupportsYUY2) then
+            EmuWarning('YUY2 overlays are not supported in hardware, could be slow!');
+        end;
 
                 // initialize primary surface
-                if(g_bSupportsYUY2) then
-                begin
-                    XTL.DDSURFACEDESC2 ddsd2;
+        if (g_bSupportsYUY2) then
+        begin
+          ZeroMemory(@ddsd2, SizeOf(ddsd2));
+          ddsd2.dwSize := SizeOf(ddsd2);
+          ddsd2.dwFlags := DDSD_CAPS;
+          ddsd2.ddsCaps.dwCaps := DDSCAPS_PRIMARYSURFACE;
 
-                    ZeroMemory(@ddsd2, SizeOf(ddsd2));
+          (*
+          hRet := g_pDD7.CreateSurface(ddsd2, g_pDDSPrimary, 0);
+          *)
 
-                    ddsd2.dwSize := SizeOf(ddsd2);
-                    ddsd2.dwFlags := DDSD_CAPS;
-                    ddsd2.ddsCaps.dwCaps := DDSCAPS_PRIMARYSURFACE;
-
-                    HRESULT hRet := g_pDD7.CreateSurface(@ddsd2, @g_pDDSPrimary, 0);
-
-                    if(FAILED(hRet)) then
-                        CxbxKrnlCleanup('Could not create primary surface (0x%.08X)', hRet);
-                 end;
+          if (FAILED(hRet)) then
+            CxbxKrnlCleanup(Format('Could not create primary surface (0x%.08X)', [hRet]));
+        end;
 
                 // update render target cache
+                { TODO : Need to be translated to delphi }
+                (*
                 g_pCachedRenderTarget := new XTL.X_D3DSurface();
                 g_pCachedRenderTarget.Common := 0;
                 g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
@@ -909,67 +942,66 @@ begin
                 g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
                 g_pD3DDevice8.GetDepthStencilSurface(@g_pCachedZStencilSurface.EmuSurface8);
 
-
                 g_pD3DDevice8.CreateVertexBuffer
                 (
-                    1, 0, 0, XTL.D3DPOOL_MANAGED,
+                    1, 0, 0, D3DPOOL_MANAGED,
                     @g_pDummyBuffer
                 );
 
-                for(integer Streams := 0; Streams < 8; Streams++)
-                begin
+                for Streams := 0 to 7 do begin
                     g_pD3DDevice8.SetStreamSource(Streams, g_pDummyBuffer, 1);
                  end;
+                 *)
 
                 // begin scene
-                g_pD3DDevice8.BeginScene();
+        g_pD3DDevice8.BeginScene();
 
                 // initially, show a black screen
-                g_pD3DDevice8.Clear(0, 0, D3DCLEAR_TARGET, $FF000000, 0, 0);
-                g_pD3DDevice8.Present(0, 0, 0, 0);
+        g_pD3DDevice8.Clear(0, 0, D3DCLEAR_TARGET, $FF000000, 0, 0);
+        g_pD3DDevice8.Present(0, 0, 0, 0);
 
                 // signal completion
-                g_EmuCDPD.bReady := False;
-             end;
-            else
-            begin
+        g_EmuCDPD.bReady := False;
+      end
+      else
+      begin
                 // release direct3d
-                if(g_pD3DDevice8 <> 0) then
-                begin
-                    DbgPrintf('EmuD3D8 : CreateDevice proxy thread releasing old Device.');
+        if (g_pD3DDevice8 <> Nil) then
+        begin
+          DbgPrintf('EmuD3D8 : CreateDevice proxy thread releasing old Device.');
 
-                    g_pD3DDevice8.EndScene();
+          g_pD3DDevice8.EndScene();
 
-                    g_EmuCDPD.hRet := g_pD3DDevice8.Release();
+          g_EmuCDPD.hRet := g_pD3DDevice8._Release();
 
-                    if(g_EmuCDPD.hRet = 0) then
-                        g_pD3DDevice8 := 0;
-                 end;
+          if (g_EmuCDPD.hRet = 0) then
+            g_pD3DDevice8 := Nil;
+        end;
 
-                if(g_bSupportsYUY2) then
-                begin
+        if (g_bSupportsYUY2) then
+        begin
                     // cleanup directdraw surface
-                    if(g_pDDSPrimary <> 0) then
-                    begin
-                        g_pDDSPrimary.Release();
-                        g_pDDSPrimary := 0;
-                     end;
-                 end;
+          if (g_pDDSPrimary <> Nil) then
+          begin
+            g_pDDSPrimary._Release();
+            g_pDDSPrimary := Nil;
+          end;
+        end;
 
                 // cleanup directdraw
-                if(g_pDD7 <> 0) then
-                begin
-                    g_pDD7.Release();
-                    g_pDD7 := 0;
-                 end;
+        if (g_pDD7 <> Nil) then
+        begin
+          g_pDD7._Release();
+          g_pDD7 := Nil;
+        end;
 
                 // signal completion
-                g_EmuCDPD.bReady := False;
-             end;
-         end;
+        g_EmuCDPD.bReady := False;
+      end;
+    end;
 
-        Sleep(1);
-     end; *)
+    Sleep(1);   
+ (* end; *)
 
   Result := 0;
 end;
@@ -1059,6 +1091,7 @@ begin
 end;
 
 // func: EmuIDirect3D8_CreateDevice
+
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: X_D3DPRESENT_PARAMETERS;
@@ -1068,40 +1101,42 @@ begin
   Result := 0;
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuD3D8 : EmuIDirect3D8_CreateDevice' );
-  DbgPrintf('(' );
-  DbgPrintf('   Adapter                   : 0x%.08X', [Adapter] );
-  DbgPrintf('   DeviceType                : 0x%.08X', [@DeviceType] );
-  DbgPrintf('   hFocusWindow              : 0x%.08X', [hFocusWindow] );
-  DbgPrintf('   BehaviorFlags             : 0x%.08X', [BehaviorFlags] );
-  DbgPrintf('   pPresentationParameters   : 0x%.08X', [@pPresentationParameters] );
-  DbgPrintf('   ppReturnedDeviceInterface : 0x%.08X', [@ppReturnedDeviceInterface] );
+  DbgPrintf('EmuD3D8 : EmuIDirect3D8_CreateDevice');
+  DbgPrintf('(');
+  DbgPrintf('   Adapter                   : 0x%.08X', [Adapter]);
+  DbgPrintf('   DeviceType                : 0x%.08X', [@DeviceType]);
+  DbgPrintf('   hFocusWindow              : 0x%.08X', [hFocusWindow]);
+  DbgPrintf('   BehaviorFlags             : 0x%.08X', [BehaviorFlags]);
+  DbgPrintf('   pPresentationParameters   : 0x%.08X', [@pPresentationParameters]);
+  DbgPrintf('   ppReturnedDeviceInterface : 0x%.08X', [@ppReturnedDeviceInterface]);
   DbgPrintf(')');
 
     // Cache parameters
-    { TODO : Need to be translated to delphi }
-(*    g_EmuCDPD.Adapter := Adapter;
-    g_EmuCDPD.DeviceType := DeviceType;
-    g_EmuCDPD.hFocusWindow := hFocusWindow;
-    g_EmuCDPD.pPresentationParameters := pPresentationParameters;
-    g_EmuCDPD.ppReturnedDeviceInterface := ppReturnedDeviceInterface;
+  g_EmuCDPD.Adapter := Adapter;
+  g_EmuCDPD.DeviceType := DeviceType;
+  g_EmuCDPD.hFocusWindow := hFocusWindow;
+  g_EmuCDPD.pPresentationParameters := pPresentationParameters;
+  g_EmuCDPD.ppReturnedDeviceInterface := ppReturnedDeviceInterface;
 
     // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
-    while(g_EmuCDPD.bReady)
-        Sleep(10);
+  { TODO : dxbx greates deadlock with this while loop }
+  (*while (g_EmuCDPD.bReady) do
+    Sleep(10);
+  *)
 
     // Signal proxy thread, and wait for completion
-    g_EmuCDPD.bReady := true;
-    g_EmuCDPD.bCreate := true;
+  g_EmuCDPD.bReady := true;
+  g_EmuCDPD.bCreate := true;
 
     // Wait until proxy is completed
-    while(g_EmuCDPD.bReady)
-        Sleep(10);               *)
+  { TODO : dxbx greates deadlock with this while loop }
+  (*
+  while (g_EmuCDPD.bReady) do
+    Sleep(10); *)
 
   EmuSwapFS(); // XBox FS
 
-(*    Result:= g_EmuCDPD.hRet;
-*)
+  Result := g_EmuCDPD.hRet;
 end;
 
 // func: EmuIDirect3DResource8_IsBusy
@@ -5315,34 +5350,37 @@ begin
 end;
 
 // func: EmuIDirect3DDevice8_Release
-(*ULONG WINAPI XTL.EmuIDirect3DDevice8_Release()
+
+function XTL_EmuIDirect3DDevice8_Release: ULONG;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
+var
+  RefCount: DWORD;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Release();');
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Release();');
 
-    g_pD3DDevice8.AddRef();
-    DWORD RefCount := g_pD3DDevice8.Release();
-    if (RefCount = 1) then
-    begin
+  g_pD3DDevice8._AddRef();
+  RefCount := g_pD3DDevice8._Release();
+  if (RefCount = 1) then
+  begin
         // Signal proxy thread, and wait for completion
-        g_EmuCDPD.bReady := true;
-        g_EmuCDPD.bCreate := False;
+    g_EmuCDPD.bReady := true;
+    g_EmuCDPD.bCreate := False;
 
-        while(g_EmuCDPD.bReady)
-            Sleep(10);
-        RefCount := g_EmuCDPD.hRet;
-     end;
-    else
-    begin
-        RefCount := g_pD3DDevice8.Release();
-     end;
+    while (g_EmuCDPD.bReady) do
+      Sleep(10);
+    RefCount := g_EmuCDPD.hRet;
+  end
+  else
+  begin
+    RefCount := g_pD3DDevice8._Release();
+  end;
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Result:= RefCount;
- end;            *)
+  Result := RefCount;
+end;
 
 // func: EmuIDirect3DDevice8_CreateVertexBuffer
 
