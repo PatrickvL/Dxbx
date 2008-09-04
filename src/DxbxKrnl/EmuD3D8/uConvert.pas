@@ -38,7 +38,7 @@ uses
 
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   Result := FALSE; // in cxbx is the Result = false placed as last... bit strange.
   case (Format) of
@@ -65,7 +65,7 @@ begin
 end;
 
 function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case (aFormat) of
     $00: // Swizzled   (X_D3DFMT_L8)
@@ -163,7 +163,7 @@ begin
 end;
 
 function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case (aFormat) of
     D3DFMT_YUY2:
@@ -195,7 +195,7 @@ begin
 end;
 
 (*Function XTL_EmuXB2PC_D3DLock(Flags : DWORD) : DWord;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 var
   NewFlags : DWORD;
 begin
