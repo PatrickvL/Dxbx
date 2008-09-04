@@ -36,8 +36,7 @@ uses
   uLog,
   uEmuFS,
   uEmuFile,
-  uEmuXapi,
-  uDxbxKrnl;
+  uEmuXapi;
 
 const
 // The following symbols come from The NASMX Project, nasmx\inc\xbox\kernel.inc

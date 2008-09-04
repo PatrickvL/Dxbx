@@ -450,7 +450,7 @@ var
 
     procedure _FlushStretch(Index: Integer);
     var
-      b: Byte;
+      b: TStretchHeaderByte;
       i: Integer;
     begin
       b := (NrFixed shl 3);

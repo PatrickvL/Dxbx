@@ -26,56 +26,51 @@ Uses
   Windows;
 
 type
-  T100CharArray = Array [0..99] of AnsiChar;
-
   XBVideo = record
-    private
-      m_bFullscreen: Boolean;
-    public
-      procedure Load(const szRegistryKey: PChar);
-      procedure Save(const szRegistryKey: PChar);
-      Function GetDisplayAdapter : DWord;
-      Function GetDirect3DDevice : DWord;
-      Function GetVSync : BOOL;
-      procedure SetFullscreen(bFullscreen: Boolean);
-      Function GetVideoResolution : T100CharArray;
-      function GetFullscreen: Boolean;
+  private
+    m_bFullscreen: Boolean;
+  public
+    procedure Initialize;
+    procedure Finalize;
+
+    procedure Load(const szRegistryKey: PChar);
+    procedure Save(const szRegistryKey: PChar);
+    function GetDisplayAdapter: DWord;
+    function GetDirect3DDevice: DWord;
+    function GetVSync: BOOL;
+    procedure SetFullscreen(bFullscreen: Boolean);
+    function GetVideoResolution: PAnsiChar;
+    function GetFullscreen: Boolean;
   end;
 
 var
-  m_dwDisplayAdapter : DWORD;
-  m_dwDirect3DDevice : DWORD;
-  m_bVSync : BOOL;
-  m_szVideoResolution : T100CharArray;
+  m_dwDisplayAdapter: DWORD;
+  m_dwDirect3DDevice: DWORD;
+  m_bVSync: BOOL;
+  m_szVideoResolution: array [0..99] of AnsiChar;
+  
 implementation
 
-
-
-// func: XBVideo::XBVideo
-(*
-XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
-{
-    strcpy(m_szVideoResolution, 'Automatic (Default)');
-}
-*)
-
-
-// func: XBVideo::~XBVideo
-(*XBVideo::~XBVideo()
-{
-}
-*)
-
-
-
 { XBVideo }
+
+procedure XBVideo.Initialize;
+begin
+  m_bVSync := False;
+  m_bFullscreen := False;
+
+  m_szVideoResolution := 'Automatic (Default)';
+end;
+
+procedure XBVideo.Finalize;
+begin
+end;
 
 function XBVideo.GetDirect3DDevice: DWord;
 begin
   Result := m_dwDirect3DDevice;
 end;
 
-Function XBVideo.GetDisplayAdapter : DWord;
+Function XBVideo.GetDisplayAdapter: DWord;
 begin
   Result := m_dwDisplayAdapter;
 end;
@@ -85,9 +80,9 @@ begin
   Result := m_bFullscreen;
 end;
 
-function XBVideo.GetVideoResolution: T100CharArray;
+function XBVideo.GetVideoResolution: PAnsiChar;
 begin
-  Result := m_szVideoResolution;
+  Result := @(m_szVideoResolution[0]);
 end;
 
 function XBVideo.GetVSync: BOOL;

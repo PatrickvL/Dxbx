@@ -194,7 +194,7 @@ begin
   end;
 end;
 
-(*Function XTL_EmuXB2PC_D3DLock(Flags : DWORD) : DWord;
+(*Function XTL_EmuXB2PC_D3DLock(Flags: DWORD): DWord;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 var
   NewFlags : DWORD;

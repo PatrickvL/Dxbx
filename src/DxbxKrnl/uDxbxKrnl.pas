@@ -38,6 +38,7 @@ uses
   uEmuShared,
   uEmu,
   uEmuFS,
+  uEmuD3D8,
   uHLEIntercept;
 
 type
@@ -55,7 +56,7 @@ procedure CxbxKrnlInit(
   szDebugFilename: PChar;
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
-  Entry: TEntryProc); cdecl;
+  Entry: TEntryProc); stdcall;
 
 procedure CxbxKrnlRegisterThread(const hThread: THandle);
 procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
@@ -66,9 +67,6 @@ procedure CxbxKrnlNoFunc; cdecl;
 procedure CxbxKrnlSuspend();
 
 implementation
-
-Uses
-  uEmuD3D8;
 
 function CxbxKrnlVerifyVersion(const szVersion: string): Boolean;
 begin
@@ -106,7 +104,7 @@ begin
   CxbxKrnl_hEmuParent := IfThen(IsWindow(hwndParent), hwndParent, 0);
 
   // For Unicode Conversions
-// TODO SetLocale(LC_ALL, 'English');
+  // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
 
   // debug trace
   begin

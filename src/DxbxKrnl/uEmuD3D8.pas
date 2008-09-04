@@ -26,15 +26,18 @@ uses
   Windows,
   Messages,
   SysUtils,
+  Classes, // TStringList
+  Math,
   MMSystem, // timeBeginPeriod
   // Directx
+  D3DX8,
   Direct3D,
   Direct3D8,
   DirectDraw,
   // Dxbx
-  uDxbxKrnl,
   uConvert,
   uEmuD3D8Types,
+  uDxbxUtils,
   uDxbxKrnlUtils,
   uEmuDInput,
   uPushBuffer,
@@ -47,7 +50,8 @@ uses
   uXbVideo,
   uEmuShared,
   uEmuFS,
-  uEmuXapi;
+  uEmuXapi,
+  uVertexBuffer;
 
 // information passed to the create device proxy thread
 
@@ -88,9 +92,8 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
 implementation
 
 uses
-  uVertexBuffer,
-  Math,
-  D3DX8;
+  // Dxbx
+  uDxbxKrnl; // Should not be here, but needed for CxbxKrnlRegisterThread
 
 var
   // Static Variable(s)
@@ -176,8 +179,9 @@ begin
 
     BeginThread(nil, 0, @EmuRenderWindow, nil, 0, {var} dwThreadId);
 
-    (*while not g_bRenderWindowActive do
-      Sleep(10); *)
+// TODO Dxbx : Enabled this line as soon as EmuRenderWindow sets g_bRenderWindowActive
+//    while not g_bRenderWindowActive do
+      Sleep(10);
 
     Sleep(50);
   end;
@@ -192,7 +196,7 @@ begin
     CxbxKrnlCleanup('Could not initialize Direct3D8!');
     { TODO : Need to be translated to delphi }
     (*
-    DevType := (g_XBVideo.GetDirect3DDevice() = 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
+    DevType := ifThen(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
     g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, @g_D3DCaps);
     *)
 
@@ -254,16 +258,15 @@ begin
 // window message processing thread
 
 function EmuRenderWindow(lpVoid: Pointer): DWord;
-// Branch:martin  Revision:39  Done:70 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Done:80 Translator:Shadow_Tj
 var
   msg: TMsg;
-  AsciiTitle: array[0..50 - 1] of Char;
+  AsciiTitle: AnsiString;
   hDxbxDLL: HMODULE;
   logBrush: TLogBrush;
   wc: WNDCLASSEX;
-  tAsciiTitle: array[0..40 - 1] of Char;
   CertAddr: IntPtr; //uint32
-  XbeCert: Xbe_Certificate;
+  XbeCert: PXbe_Certificate;
   dwStyle: DWORD;
 
   nTitleHeight: integer;
@@ -302,25 +305,21 @@ begin
 
   // retrieve Xbe title (if possible)
   begin
-    tAsciiTitle := 'Unknown';
+    AsciiTitle := 'Unknown';
 
     CertAddr := g_XbeHeader.dwCertificateAddr - g_XbeHeader.dwBaseAddr;
 
     if CertAddr + $0C + 40 < g_XbeHeaderSize then
     begin
-      { TODO : Need to be translated to delphi }
-      (*
-      XbeCert := g_XbeHeader + CertAddr;
-      setlocale(LC_ALL, 'English');
-      wcstombs(tAsciiTitle, XbeCert.wszTitleName, 40); *)
+      IntPtr(XbeCert) := IntPtr(g_XbeHeader) + CertAddr;
+      // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
+      AsciiTitle := XbeCert.wszTitleName;// No wcstombs needed, Delphi does this automatically 
     end;
 
-    { TODO : Need to be translated to delphi }
-    (*
-    AsciiTitle := Format('Dxbx : Emulating %s', [tAsciiTitle]);*)
+    AsciiTitle := 'Dxbx : Emulating ' + AsciiTitle;
   end;
 
-    // create the window
+  // create the window
   begin
     dwStyle := ifThen((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen, WS_OVERLAPPEDWINDOW,WS_CHILD);
     nTitleHeight := GetSystemMetrics(SM_CYCAPTION);
@@ -335,44 +334,50 @@ begin
     nWidth := nWidth + nBorderWidth * 2;
     nHeight := nHeight + nBorderHeight * 2 + nTitleHeight;
 
-        { TODO : Need to be translated to delphi }
-        (*
-        sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', @nWidth, @nHeight);
-        *)
+    // Note : This is a work-around sscanf (which is not available in Delphi) :
+    with TStringList.Create do
+    try
+      Delimiter := 'x';
+      CommaText := g_XBVideo.GetVideoResolution();
+      if Count = 2 then
+      begin
+        nWidth := StrToInt(Strings[0]);
+        nWidth := StrToInt(Strings[1]);
+      end;
+    finally
+      Free;
+    end;
 
-    if (g_XBVideo.GetFullscreen()) then
+    if g_XBVideo.GetFullscreen() then
     begin
-      { TODO : Need to be translated to delphi }
-      (*
-      x := y = nWidth = nHeight = 0;
-      *)
+      x := 0;
+      y := 0;
+      nWidth := 0;
+      nHeight := 0;
       dwStyle := WS_POPUP;
     end;
 
     hwndParent := GetDesktopWindow();
 
-    if (not g_XBVideo.GetFullscreen()) then
+    if not g_XBVideo.GetFullscreen() then
     begin
       hwndParent := CxbxKrnl_hEmuParent;
     end;
 
-    g_hEmuWindow := CreateWindow
-      (
-      #13#10'CxbxRender', AsciiTitle,
+    g_hEmuWindow := CreateWindow(
+      #13#10'CxbxRender', PAnsiChar(AsciiTitle),
       dwStyle, x, y, nWidth, nHeight,
       hwndParent, 0, GetModuleHandle(nil), nil
       );
   end;
 
-  ShowWindow(g_hEmuWindow, ( ifThen ((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED)));
+  ShowWindow(g_hEmuWindow, ifThen((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED));
   UpdateWindow(g_hEmuWindow);
-  if (not g_XBVideo.GetFullscreen and (CxbxKrnl_hEmuParent <> 0)) then
-  begin
+  if (not g_XBVideo.GetFullscreen) and (CxbxKrnl_hEmuParent <> 0) then
     SetFocus(CxbxKrnl_hEmuParent);
-  end;
 
   // initialize direct input
-  if (not XTL_EmuDInputInit) then
+  if not XTL_EmuDInputInit then
     CxbxKrnlCleanup('Could not initialize DirectInput!');
 
   DbgPrintf('EmuD3D8 : Message-Pump thread is running.');
@@ -384,11 +389,10 @@ begin
   DbgConsole *dbgConsole := new DbgConsole();
   *)
 
-
   // message processing loop
   begin
-    { TODO : need to be translated to delphi }
-    (*ZeroMemory(msg, SizeOf(msg)); *)
+    ZeroMemory(@msg, SizeOf(msg));
+
     lPrintfOn := g_bPrintfOn;
 
     while msg.message <> WM_QUIT do
@@ -430,7 +434,7 @@ end;
 // simple helper function
 
 procedure ToggleFauxFullscreen(hWnd: HWND);
-// Branch:martin  Revision:39  Done:80 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
 var
   lRestore: LongInt;
   lRestoreEx: LongInt;
@@ -442,9 +446,10 @@ begin
   lRestore := 0;
   lRestoreEx := 0;
 
-{ TODO : need to be translated to delphi }
-(*  lRect := (0);
-*)
+  lRect.Left := 0;
+  lRect.Top := 0;
+  lRect.Right := 0;
+  lRect.Bottom := 0;
 
   if (not g_bIsFauxFullscreen) then
   begin
@@ -454,21 +459,18 @@ begin
     end
     else
     begin
-      { TODO : need to be translated to delphi }
-      (*
       lRestore := GetWindowLong(hWnd, GWL_STYLE);
       lRestoreEx := GetWindowLong(hWnd, GWL_EXSTYLE);
-      GetWindowRect(hWnd, @lRect); *)
-
+      GetWindowRect(hWnd, {var}lRect);
     end;
 
-    { TODO : need to be translated to delphi }
-    (*SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);*)
+    SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
     ShowWindow(hWnd, SW_MAXIMIZE);
     SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOMOVE);
   end
-  else begin
-    if (CxbxKrnl_hEmuParent <> 0) then
+  else
+  begin
+    if CxbxKrnl_hEmuParent <> 0 then
     begin
       SetParent(hWnd, CxbxKrnl_hEmuParent);
       SetWindowLong(hWnd, GWL_STYLE, WS_CHILD);
@@ -1057,20 +1059,21 @@ end;
 // ensure a given width/height are powers of 2
 
 procedure EmuAdjustPower2(var dwWidth: UINT; var dwHeight: UINT);
-// Branch:martin  Revision:39  Done:80 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
 var
   NewWidth, NewHeight: uInt;
   v: Integer;
   mask: Integer;
 begin
-  for v := 0 to 31 do begin
+  for v := 0 to 31 do
+  begin
     mask := 1 shl v;
 
-        (*if (dwWidth and mask) then
-            NewWidth := mask;
+    if (dwWidth and mask) > 0 then
+      NewWidth := mask;
 
-        if(dwHeight and mask) then
-            NewHeight := mask; *)
+    if (dwHeight and mask) > 0 then
+      NewHeight := mask;
   end;
 
   if (dwWidth <> NewWidth) then
@@ -1201,8 +1204,12 @@ begin
     CxbxKrnlCleanup('RType > 7');
 
   (*hRet := g_pD3D8.CheckDeviceFormat(
-    g_XBVideo.GetDisplayAdapter(), ifThen (g_XBVideo.GetDirect3DDevice = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF ),
-    EmuXB2PC_D3DAdapterFormat, Usage, RType, EmuXB2PC_D3DCheckFormat)); *)
+    g_XBVideo.GetDisplayAdapter(),
+    ifThen(g_XBVideo.GetDirect3DDevice = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF),
+    EmuXB2PC_D3DAdapterFormat,
+    Usage,
+    RType,
+    EmuXB2PC_D3DCheckFormat); *)
 
   EmuSwapFS(); // XBox FS
   Result := hRet;
@@ -1211,7 +1218,7 @@ end;
 // func: EmuIDirect3DDevice8_GetDisplayFieldStatus
 
 procedure XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus(pFieldStatus: X_D3DFIELD_STATUS);
-// Branch:martin  Revision:39  Done:80 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -1221,13 +1228,10 @@ begin
     #13#10');',
     [@pFieldStatus]);
 
-    { TODO : Need to be translated to delphi }
-    (*pFieldStatus.Field := (g_VBData.VBlank%2 = 0) ? X_D3DFIELD_ODD : X_D3DFIELD_EVEN;
-    pFieldStatus.VBlankCount := g_VBData.VBlank; *)
+  pFieldStatus.Field := X_D3DFIELDTYPE(ifThen(g_VBData.VBlank and 1 = 0, Ord(X_D3DFIELD_ODD), Ord(X_D3DFIELD_EVEN)));
+  pFieldStatus.VBlankCount := g_VBData.VBlank;
 
   EmuSwapFS(); // XBox FS
-
-  Exit;
 end;
 
 // func: EmuIDirect3DDevice8_BeginPush
@@ -1329,7 +1333,7 @@ begin
     #13#10');',
     [Index, pResult, pTimeStamp]);
 
-    // TODO: actually emulate this!?
+    // TODO Cxbx: actually emulate this!?
 
   if (pResult <> 0) then
     pResult := 640 * 480;
@@ -1453,16 +1457,16 @@ begin
 
   ret := g_pD3D8.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter);
 
-  for v := 0 to ret - 1 do begin
+  for v := 0 to ret - 1 do
+  begin
     hRet := g_pD3D8.EnumAdapterModes(g_XBVideo.GetDisplayAdapter, v, Mode);
 
     if (hRet <> D3D_OK) then
-      break;
+      Break;
 
     if (Mode.Width <> 640) or (Mode.Height <> 480) then
       ret := ret - 1;
   end;
-
 
   EmuSwapFS(); // XBox FS
   Result := ret;
@@ -7599,8 +7603,8 @@ end;
 
 // func: EmuIDirect3DDevice8_GetShaderConstantMode
 
-procedure XTL_EmuIDirect3DDevice8_GetShaderConstantMode(pMode: DWORD);
-// Branch:martin  Revision:39 Done:40 Translator:Shadow_Tj
+procedure XTL_EmuIDirect3DDevice8_GetShaderConstantMode(pMode: PDWORD);
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(); // Win2k/XP FS
@@ -7612,18 +7616,14 @@ begin
   EmuSwapFS(); // Xbox FS
 {$ENDIF}
 
-  { TODO : Need to be translated to delphi }
-  (*
-    if(pMode) then
-    begin
-        *pMode := g_VertexShaderConstantMode;
-     end;         *)
+  if Assigned(pMode) then
+    pMode^ := g_VertexShaderConstantMode;
 end;
 
 // func: EmuIDirect3DDevice8_GetVertexShader
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD);
-// Branch:martin  Revision:39 Done:40 Translator:Shadow_Tj
+procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: PDWORD);
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS();
 
@@ -7634,11 +7634,8 @@ begin
     #13#10');',
     [pHandle]);
 
-{ TODO : need to be translated to delphi }
-(*    if(pHandle) then
-    begin
-        (pHandle) := g_CurrentVertexShader;
-     end;              *)
+  if Assigned(pHandle) then
+    pHandle^ := g_CurrentVertexShader;
 
   EmuSwapFS();
 end;

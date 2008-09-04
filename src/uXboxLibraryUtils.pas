@@ -98,7 +98,7 @@ function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
   begin
     case aValue of
       // Here's the second time we include the case-statements,
-      // but this time, the symbols have a different definition :
+      // but this time, the symbols are defined to contain strings :
       {$INCLUDE XboxLibraryPatchCases.inc}
     else
       Result := nil;
