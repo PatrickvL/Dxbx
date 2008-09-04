@@ -22,6 +22,28 @@ unit uEmuXTL;
 
 interface
 
+(*
+namespace XTL
+{
+    #include "EmuXapi.h"
+    #include "EmuD3D8.h"
+    #include "EmuD3D8\Convert.h"
+    #include "EmuD3D8\VertexBuffer.h"
+    #include "EmuD3D8\PushBuffer.h"
+    #include "EmuD3D8\VertexShader.h"
+    #include "EmuD3D8\State.h"
+    #include "EmuDInput.h"
+    #include "EmuDSound.h"
+    #include "EmuXOnline.h"
+    #include "EmuXG.h"
+}
+
+extern g_pD3DDevice8: XTL_LPDIRECT3DDEVICE8;
+extern g_CurrentVertexShader: DWord;
+extern g_bFakePixelShaderLoaded: BOOL;
+extern g_bIsFauxFullscreen: BOOL;
+*)
+
 implementation
 
 end.

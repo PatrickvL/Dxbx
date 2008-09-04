@@ -44,12 +44,12 @@ type
 
   TLibVersion = Word; // The 4-digit version number of an XDK library
 
-  BaseIndexType = Word; // A Word will suffice while we store less than 65536 strings & functions.
-
+  BaseIndexType = Cardinal; // A Word suffices for less than 65536 strings & functions, use Cardinal for larger sets 
+  
   PByteOffset = ^TByteOffset;
   TByteOffset = type Cardinal; /// Use this everywhere a location in the Trie's persistent storage is needed.
 
-  TStringTableIndex = type BaseIndexType; /// Use this everywhere a string is uniquely identified.
+  TStringTableIndex = type Word;// TODO : Find out why using BaseIndexType here leads to a crash! /// Use this everywhere a string is uniquely identified.
 
   {$A1} // Make sure all the following records are byte-aligned for best space-usage :
 
@@ -135,6 +135,8 @@ type
     // but the amount of them is indicated by the Node Type Flags.
   end;
 
+  TStretchHeaderByte = type Byte;
+
   PStoredSignatureTrieHeader = ^RStoredSignatureTrieHeader;
   RStoredSignatureTrieHeader = record
     Header: array[0..5] of AnsiChar; // Chosen so this record becomes a nice 32 bytes large
@@ -160,6 +162,7 @@ type
   public
     StoredSignatureTrieHeader: PStoredSignatureTrieHeader;
     StringOffsetList: PStringOffsetList;
+    StringTableStartPtr: PAnsiChar;
     GlobalFunctionList: PGlobalFunctionList;
     StoredLibrariesList: PStoredLibrariesList;
   public
@@ -187,6 +190,7 @@ begin
     Assert(False, 'Stream class not handled yet!'); // TODO
 
   StringOffsetList := PStringOffsetList(GetByteOffset(StoredSignatureTrieHeader.StringTable.StringOffsets));
+  StringTableStartPtr := PAnsiChar(GetByteOffset(StoredSignatureTrieHeader.StringTable.AnsiCharData));
   GlobalFunctionList := PGlobalFunctionList(GetByteOffset(StoredSignatureTrieHeader.GlobalFunctionTable.GlobalFunctionsOffset));
   StoredLibrariesList := PStoredLibrariesList(GetByteOffset(StoredSignatureTrieHeader.LibraryTable.LibrariesOffset));
 end;
@@ -210,7 +214,7 @@ var
   Len: Integer;
 begin
   if aStringIndex = 0 then
-    StrBase := PAnsiChar(GetByteOffset(StoredSignatureTrieHeader.StringTable.AnsiCharData))
+    StrBase := StringTableStartPtr
   else
     StrBase := GetStringPointerByIndex(aStringIndex - 1);
 

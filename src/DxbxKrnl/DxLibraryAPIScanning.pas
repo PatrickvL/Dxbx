@@ -111,7 +111,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
   var
     NrChildren: Integer;
     StretchPtr: PByte;
-    StretchHeader: Byte;
+    StretchHeader: TStretchHeaderByte;
     More: Boolean;
     NrFixed, NrWildcards, i: Integer;
     NextOffset: TByteOffset;
@@ -159,7 +159,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
         Inc(StretchPtr);
       end;
 
-      // If stretch was hit, update depth and search-addres for the next stretch :
+      // If stretch was hit, update depth and search-address for the next stretch :
       Inc(Depth, NrFixed);
       Inc(Depth, NrWildcards);
       Inc(aAddress, NrWildcards);

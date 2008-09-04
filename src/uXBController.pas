@@ -27,13 +27,18 @@ uses
   , SysUtils
   // 3rd party
   , DirectInput
+  , Direct3D
   , XInput
   // Dxbx
   , uLog
-  , uError;
+  , uError
+  , XboxKrnl // NULL
+//  , uEmuXTL
+  ;
 
 type
-   // Xbox Controller Object IDs
+  // Xbox Controller Object IDs
+  // XBCtrlObject: Source=XBController.h Revision=martin#39 Translator=PatrickvL Done=100
   XBCtrlObject = (
     // Analog Axis
     XBCTRL_OBJECT_LTHUMBPOSX = 0,
@@ -66,11 +71,10 @@ type
 const
   // Total number of components
   XBCTRL_OBJECT_COUNT = (Ord(High(XBCtrlObject)) - Ord(Low(XBCtrlObject)) + 1);
+  // Maximum number of devices allowed
   XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
 
-{///****************************************************************** }
-{///* offsets into analog button array }
-{///****************************************************************** }
+// Offsets into analog button array
 const
   XINPUT_GAMEPAD_A = 0;
   XINPUT_GAMEPAD_B = 1;
@@ -81,9 +85,7 @@ const
   XINPUT_GAMEPAD_LEFT_TRIGGER = 6;
   XINPUT_GAMEPAD_RIGHT_TRIGGER = 7;
 
-{///****************************************************************** }
-{///* masks for digital buttons }
-{///****************************************************************** }
+// Masks for digital buttons
 const
   XINPUT_GAMEPAD_DPAD_UP = $00000001;
   XINPUT_GAMEPAD_DPAD_DOWN = $00000002;
@@ -94,7 +96,26 @@ const
   XINPUT_GAMEPAD_LEFT_THUMB = $00000040;
   XINPUT_GAMEPAD_RIGHT_THUMB = $00000080;
 
+// Device Flags
+const
+  DEVICE_FLAG_JOYSTICK    = (1 shl 0);
+  DEVICE_FLAG_KEYBOARD    = (1 shl 1);
+  DEVICE_FLAG_MOUSE       = (1 shl 2);
+  DEVICE_FLAG_AXIS        = (1 shl 3);
+  DEVICE_FLAG_BUTTON      = (1 shl 4);
+  DEVICE_FLAG_POSITIVE    = (1 shl 5);
+  DEVICE_FLAG_NEGATIVE    = (1 shl 6);
+  DEVICE_FLAG_MOUSE_CLICK = (1 shl 7);
+  DEVICE_FLAG_MOUSE_LX    = (1 shl 8);
+  DEVICE_FLAG_MOUSE_LY    = (1 shl 9);
+  DEVICE_FLAG_MOUSE_LZ    = (1 shl 10);
 
+// Detection Sensitivity
+const
+  DETECT_SENSITIVITY_JOYSTICK = 25000;
+  DETECT_SENSITIVITY_BUTTON = 0;
+  DETECT_SENSITIVITY_MOUSE = 5;
+  DETECT_SENSITIVITY_POV = 50000;
 
 type
   // DirectInput Enumeration Types
@@ -103,6 +124,7 @@ type
     XBCTRL_STATE_CONFIG,
     XBCTRL_STATE_LISTEN);
 
+  // Xbox Controller Object Config
   XBCtrlObjectCfg = record
     dwDevice: Integer; // offset into m_InputDevice
     dwInfo: Integer; // extended information, depending on dwFlags
@@ -130,94 +152,102 @@ type
 
   PXINPUT_STATE = _XINPUT_STATE;
 
-  { TODO : Need to be translated to delphi }
+  XTL_LPDIRECTINPUT8 = Pointer; // TODO Dxbx : How is this type defined?
+  XTL_LPDIRECTINPUTDEVICE8 = Pointer; // TODO Dxbx : How is this type defined?
+
+  // DirectInput Devices
   InputDevice = record
-    (*XTL_LPDIRECTINPUTDEVICE8 m_Device; *)
-    m_Flags: integer;
+    m_Device: XTL_LPDIRECTINPUTDEVICE8;
+    m_Flags: Integer;
   end;
 
   XBController = record
-    private
-      m_CurrentState: XBCtrlState;
-    m_dwInputDeviceCount: Integer;
-    m_dwCurObject: Integer;
-
+  private
     // Device Names
-    m_DeviceName: array[0..XBCTRL_MAX_DEVICES] of array[0..260] of char;
-    m_InputDevice: array[0..XBCTRL_MAX_DEVICES] of InputDevice;
-
+    m_DeviceName: array[0..XBCTRL_MAX_DEVICES-1] of array[0..260] of AnsiChar;
+    // DirectInput Devices
+    m_InputDevice: array [0..XBCTRL_MAX_DEVICES-1] of InputDevice;
+    // Object Configuration
     m_ObjectConfig: array[XBCtrlObject] of XBCtrlObjectCfg;
-
+    // DirectInput
+    m_pDirectInput8: XTL_LPDIRECTINPUT8;
+    // Current State
+    m_CurrentState: XBCtrlState;
+    // Config State Variables
     lPrevMouseX, lPrevMouseY, lPrevMouseZ: LongInt;
     CurConfigObject: XBCtrlObject;
-
-    public
-  procedure Load(szRegistryKey: PChar);
-procedure Save(szRegistryKey: PChar);
-procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
-procedure ConfigEnd;
-procedure ListenPoll(var Controller: XINPUT_STATE);
-
-procedure ListenBegin(ahwnd: THandle);
-procedure ListenEnd;
-procedure DInputInit(ahwnd: THandle);
-procedure DInputCleanup;
-procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: Integer; dwFlags: Integer);
-procedure ReorderObjects(szDeviceName: PChar; aPos: Integer);
-
-function DeviceIsUsed(szDeviceName: PChar): Longbool;
-function Insert(szDeviceName: PChar): Integer;
-function ConfigPoll(szStatus: PChar): Longbool;
+    // Etc State Variables
+    m_dwInputDeviceCount: Integer;
+    m_dwCurObject: Integer;
+  private
+    // Object Mapping
+    procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: Integer; dwFlags: Integer);
+    // Find the look-up value for a DeviceName (creating if needed)
+    function Insert(szDeviceName: PChar): Integer;
+    // Update the object lookup offsets for a device
+    procedure ReorderObjects(szDeviceName: PChar; aPos: Integer);
+  public
+    procedure Initialize;
+    procedure Finalize;
+    // Registry Load/Save
+    procedure Load(szRegistryKey: PChar);
+    procedure Save(szRegistryKey: PChar);
+    // Configuration
+    procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
+    function ConfigPoll(szStatus: PChar): Longbool;
+    procedure ConfigEnd;
+    // Listening
+    procedure ListenPoll(var Controller: XINPUT_STATE);
+    procedure ListenBegin(ahwnd: THandle);
+    procedure ListenEnd;
+    // DirectInput Init / Cleanup
+    procedure DInputInit(ahwnd: THandle);
+    procedure DInputCleanup;
+    // Check if a device is currently in the configuration
+    function DeviceIsUsed(szDeviceName: PChar): Longbool;
   end;
 
 
 implementation
 
-// ******************************************************************
-// * func: XBController::XBController
-// ******************************************************************
-(*XBController::XBController()
-// Branch:martin  Revision:39  Translator:Shadow_Tj
-{
-    m_CurrentState = XBCTRL_STATE_NONE;
-
-    int v=0;
-
-    for(v=0;v<XBCTRL_MAX_DEVICES;v++)
-    {
-        m_DeviceName[v][0] = '\0';
-
-        m_InputDevice[v].m_Device = NULL;
-        m_InputDevice[v].m_Flags  = 0;
-    }
-
-    for(v=0;v<XBCTRL_OBJECT_COUNT;v++)
-    {
-        m_ObjectConfig[v].dwDevice = -1;
-        m_ObjectConfig[v].dwInfo   = -1;
-        m_ObjectConfig[v].dwFlags  = 0;
-    }
-
-    m_pDirectInput8 = NULL;
-
-    m_dwInputDeviceCount = 0;
-}    *)
-
-
-
-{ TODO : Need to be added to XBController }
-// ******************************************************************
-// * func: XBController::~XBController
-// ******************************************************************
-(*XBController.~XBController()
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
+procedure XBController.Initialize; // was XBController::XBController
+var
+  v: Integer;
 begin
-    if(m_CurrentState = XBCTRL_STATE_CONFIG) then
-        ConfigEnd();
-    else if(m_CurrentState = XBCTRL_STATE_LISTEN) then
-        ListenEnd();
- end;
+  m_CurrentState := XBCTRL_STATE_NONE;
 
+  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  begin
+    m_DeviceName[v][0] := #0;
+
+    m_InputDevice[v].m_Device := NULL;
+    m_InputDevice[v].m_Flags  := 0;
+  end;
+
+  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+  begin
+    m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
+    m_ObjectConfig[XBCtrlObject(v)].dwInfo   := -1;
+    m_ObjectConfig[XBCtrlObject(v)].dwFlags  := 0;
+  end;
+
+  m_pDirectInput8 := NULL;
+
+  m_dwInputDeviceCount := 0;
+end;
+
+// Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
+procedure XBController.Finalize; // was XBController::~XBController
+begin
+  if m_CurrentState = XBCTRL_STATE_CONFIG then
+    ConfigEnd()
+  else
+    if m_CurrentState = XBCTRL_STATE_LISTEN then
+      ListenEnd();
+end;
+
+(*
 { TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: XBController::EnumObjectsCallback
@@ -1119,17 +1149,17 @@ begin
 
   DInputInit(ahwnd);
 
-  for v := XBCTRL_MAX_DEVICES downto m_dwInputDeviceCount do
+  for v := XBCTRL_MAX_DEVICES - 1 downto m_dwInputDeviceCount do
     m_DeviceName[v][0] := #0;
 
   for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
   begin
-    { TODO : Need to be translated to delphi }
-    (*if m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount then
+    if m_ObjectConfig[XBCtrlObject(v)].dwDevice >= m_dwInputDeviceCount then
     begin
-      DbgPrintf(Format ('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
-      m_ObjectConfig[v].dwDevice := -1;
-    end;                                                                                      *)
+      { TODO : Need to be translated to delphi }
+      // DbgPrintf(Format ('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);
+      m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
+    end;                                                                                      
   end;
 end;
 
@@ -1224,7 +1254,7 @@ begin
 end;
 
 procedure XBController.ReorderObjects(szDeviceName: PChar; aPos: Integer);
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   Old: Integer;
   v: integer;
@@ -1251,12 +1281,11 @@ begin
   // Update all Old values
   for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
   begin
-    { TODO : Need to be translated to delphi }
-    (*if m_ObjectConfig[v].dwDevice = Old then
-      m_ObjectConfig[v].dwDevice := aPos
+    if m_ObjectConfig[XBCtrlObject(v)].dwDevice = Old then
+      m_ObjectConfig[XBCtrlObject(v)].dwDevice := aPos
     else
-      if m_ObjectConfig[v].dwDevice = aPos then
-        m_ObjectConfig[v].dwDevice := Old; *)
+      if m_ObjectConfig[XBCtrlObject(v)].dwDevice = aPos then
+        m_ObjectConfig[XBCtrlObject(v)].dwDevice := Old;
   end;
 end;
 
