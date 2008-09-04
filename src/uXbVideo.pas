@@ -26,6 +26,8 @@ Uses
   Windows;
 
 type
+  T100CharArray = Array [0..100] of Char;
+
   XBVideo = record
     private
       m_bFullscreen: Boolean;
@@ -33,14 +35,18 @@ type
       procedure Load(const szRegistryKey: PChar);
       procedure Save(const szRegistryKey: PChar);
       Function GetDisplayAdapter : DWord;
+      Function GetDirect3DDevice : DWord;
+      Function GetVSync : BOOL;
       procedure SetFullscreen(bFullscreen: Boolean);
+      Function GetVideoResolution : T100CharArray;
       function GetFullscreen: Boolean;
   end;
 
 var
   m_dwDisplayAdapter : DWORD;
-
-
+  m_dwDirect3DDevice : DWORD;
+  m_bVSync : BOOL;
+  m_szVideoResolution : T100CharArray;
 implementation
 
 
@@ -64,6 +70,11 @@ XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 
 { XBVideo }
 
+function XBVideo.GetDirect3DDevice: DWord;
+begin
+  Result := m_dwDirect3DDevice;
+end;
+
 Function XBVideo.GetDisplayAdapter : DWord;
 begin
   Result := m_dwDisplayAdapter;
@@ -72,6 +83,16 @@ end;
 function XBVideo.GetFullscreen: Boolean;
 begin
   Result := m_bFullscreen;
+end;
+
+function XBVideo.GetVideoResolution: T100CharArray;
+begin
+  Result := m_szVideoResolution;
+end;
+
+function XBVideo.GetVSync: BOOL;
+begin
+  Result := m_bVSync;
 end;
 
 procedure XBVideo.Load(const szRegistryKey: PChar);
