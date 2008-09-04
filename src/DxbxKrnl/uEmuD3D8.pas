@@ -131,7 +131,7 @@ begin
     Result := ATrue
   else
     Result := AFalse;
-end;      
+end;
 
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord);
 // Branch:martin  Revision:39  Done:85 Translator:Shadow_Tj
@@ -322,11 +322,7 @@ begin
 
     // create the window
   begin
-        { TODO : Need to be translated to delphi }
-        (*
-        dwStyle := (g_XBVideo.GetFullscreen() or (CxbxKrnl_hEmuParent = 0))? WS_OVERLAPPEDWINDOW : WS_CHILD;
-        *)
-
+    dwStyle := ifThen((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen, WS_OVERLAPPEDWINDOW,WS_CHILD);
     nTitleHeight := GetSystemMetrics(SM_CYCAPTION);
     nBorderWidth := GetSystemMetrics(SM_CXSIZEFRAME);
     nBorderHeight := GetSystemMetrics(SM_CYSIZEFRAME);
@@ -364,20 +360,18 @@ begin
       (
       #13#10'CxbxRender', AsciiTitle,
       dwStyle, x, y, nWidth, nHeight,
-      hwndParent, 0, GetModuleHandle(0), 0
+      hwndParent, 0, GetModuleHandle(nil), nil
       );
   end;
 
-    { TODO : Need to be translated to delphi }
-    (*
-    ShowWindow(g_hEmuWindow, (g_XBVideo.GetFullscreen() or (CxbxKrnl_hEmuParent := 0) ) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
-    UpdateWindow(g_hEmuWindow); *)
+  ShowWindow(g_hEmuWindow, ( ifThen ((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED)));
+  UpdateWindow(g_hEmuWindow);
   if (not g_XBVideo.GetFullscreen and (CxbxKrnl_hEmuParent <> 0)) then
   begin
     SetFocus(CxbxKrnl_hEmuParent);
   end;
 
-    // initialize direct input
+  // initialize direct input
   if (not XTL_EmuDInputInit) then
     CxbxKrnlCleanup('Could not initialize DirectInput!');
 
@@ -387,14 +381,14 @@ begin
 
   { TODO : Need to be translated to delphi }
   (*
-  DbgConsole * dbgConsole := new DbgConsole();
+  DbgConsole *dbgConsole := new DbgConsole();
   *)
 
 
   // message processing loop
   begin
-//    ZeroMemory(msg, SizeOf(msg));
-
+    { TODO : need to be translated to delphi }
+    (*ZeroMemory(msg, SizeOf(msg)); *)
     lPrintfOn := g_bPrintfOn;
 
     while msg.message <> WM_QUIT do
@@ -633,7 +627,6 @@ begin
   timeBeginPeriod(0);
 
   // current vertical blank count
-  curvb := 0;
   while True do
   begin
     xboxkrnl_KeTickCount := timeGetTime();
@@ -964,8 +957,8 @@ begin
       g_pD3DDevice8.BeginScene();
 
                 // initially, show a black screen
-      g_pD3DDevice8.Clear(0, 0, D3DCLEAR_TARGET, $FF000000, 0, 0);
-      g_pD3DDevice8.Present(0, 0, 0, 0);
+      g_pD3DDevice8.Clear(0, nil, D3DCLEAR_TARGET, $FF000000, 0, 0);
+      g_pD3DDevice8.Present(nil, nil, 0, nil);
 
                 // signal completion
       g_EmuCDPD.bReady := False;
@@ -1244,7 +1237,6 @@ function XTL_EmuIDirect3DDevice8_BeginPush(Count: DWORD): DWORD;
 var
   pRet: DWORD;
 begin
-  pRet := 0;
   EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginPush(%d);', [Count]);
@@ -1660,7 +1652,6 @@ function XTL_EmuIDirect3DDevice8_AddRef(): ULONG;
 var
   ret: ULONG;
 begin
-  ret := 0;
   EmuSwapFS(); // Win2k/XP FS
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_AddRef()');
   ret := g_pD3DDevice8._AddRef();
@@ -3761,13 +3752,12 @@ end;
 function XTL_EmuIDirect3DDevice8_SetVertexDataColor(aRegister: integer; Color: D3DCOLOR): HRESULT;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
-  a : FLOAT;
-  r : FLOAT;
-  g : FLOAT;
-  b : FLOAT;
+  a: FLOAT;
+  r: FLOAT;
+  g: FLOAT;
+  b: FLOAT;
 begin
-    // debug trace
-  Result := 0;
+  // debug trace
 {$IFDEF _DEBUG_TRACE}
 
   EmuSwapFS(); // Win2k/XP FS
@@ -3780,14 +3770,12 @@ begin
   EmuSwapFS(); // XBox FS
 {$ENDIF}
 
-    { TODO : need to be translated to delphi }
+  a := DWtoF((Color and $FF000000) shr 24);
+  r := DWtoF((Color and $00FF0000) shr 16);
+  g := DWtoF((Color and $0000FF00) shr 8);
+  b := DWtoF((Color and $000000FF) shr 0);
 
-    a := DWtoF((Color and $FF000000) shr 24);
-    r := DWtoF((Color and $00FF0000) shr 16);
-    g := DWtoF((Color and $0000FF00) shr 8);
-    b := DWtoF((Color and $000000FF) shr 0);
-
-    Result:= XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister, r, g, b, a);
+  Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister, r, g, b, a);
 end;
 
 // func: EmuIDirect3DDevice8_End
