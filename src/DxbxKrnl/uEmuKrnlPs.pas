@@ -22,17 +22,13 @@ unit uEmuKrnlPs;
 interface
 
 uses
-  // Delphi
   SysUtils,
-  // Jedi
   JwaWinType,
   JwaWinBase,
   JwaWinNT,
   JwaNative,
   JwaNTStatus,
-  // OpenXDK
   XboxKrnl,
-  // Dxbx
   uLog,
   uEmuFS,
   uEmuFile,
@@ -40,6 +36,7 @@ uses
   uEmuKrnl,
   uDxbxKrnl,
   uDxbxKrnlUtils,
+  uEmu,
   uDxbxDebugUtils;
 
 var
@@ -170,8 +167,8 @@ callComplete:
 {$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString(False));
 {$ENDIF}
-//  __except(EmuException(GetExceptionInformation()))
-//    EmuWarning('Problem with ExceptionFilter!');
+    (*__except(EmuException(GetExceptionInformation())); *)
+    EmuWarning('Problem with ExceptionFilter!');
     end;
   end;
 

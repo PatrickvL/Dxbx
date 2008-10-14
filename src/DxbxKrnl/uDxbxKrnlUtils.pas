@@ -53,6 +53,7 @@ implementation
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
 var
   szBuffer1: string;
+  buffer : Array [0..15] of char;
 begin
   // Print out ErrorMessage (if exists)
   if szErrorMessage <> '' then
@@ -68,9 +69,8 @@ begin
   // Cleanup debug output
   CloseLogs(); // FreeConsole();
 
-//        char buffer[16];
-//        if(GetConsoleTitle(buffer, 16) != NULL)
-//            freopen('nul', 'w', stdout);
+       (* if(GetConsoleTitle(buffer, 16) <> '')
+            freopen('nul', 'w', stdout); *)
 
   TerminateProcess(GetCurrentProcess(), 0);
 
