@@ -47,6 +47,30 @@
       
       
       
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
     </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
@@ -57,7 +81,7 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <RcCompile Include="Tools\PatternTrieBuilder\StoredTrie.rc">
-      <Form>'Tools\PatternTrieBuilder\StoredTrie.res'</Form>
+      <Form>Tools\PatternTrieBuilder\StoredTrie.res</Form>
     </RcCompile>
     <DCCReference Include="..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas" />
     <DCCReference Include="DxbxKrnl\DxLibraryAPIScanning.pas" />

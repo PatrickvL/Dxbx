@@ -202,13 +202,13 @@ begin
     WriteLog('Exe: Opening Exe file... Ok');
 
   // ignore dos stub (if it exists)
- { try
+  try
     ExeFile.Read(m_DOSHeader.m_magic, SizeOf(m_DosHeader.m_magic));
   except
     messageDlg('Unexpected read error while reading magic number', mtError, [mbOk], 0);
   end;
 
-{  if ( IntToStr ( INTEGER ( m_DOSHeader.m_magic ) )= 'MZ') then begin
+  if ( IntToStr ( INTEGER ( m_DOSHeader.m_magic ) )= 'MZ') then begin
     try
       ExeFile.Read( m_DOSHeader.m_magic, sizeof(m_DOSHeader)-2 );
       WriteLog('Exe: Reading DOS stub... OK');
@@ -218,7 +218,7 @@ begin
   end
   else begin
     WriteLog('Exe: Reading DOS stub... OK');
-  end;   }
+  end;
 
 
   // read pe header

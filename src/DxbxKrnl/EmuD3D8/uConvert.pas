@@ -25,15 +25,12 @@ interface
 implementation
 
 uses
-  // Windows
   Windows
   , SysUtils
-  // Dxbx
   , uEmuD3D8Types
   , uDxbxKrnlUtils
   , uEmu
   , uLog
-  // Directx
   , Direct3D9;
 
 

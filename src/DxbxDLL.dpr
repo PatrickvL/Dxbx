@@ -43,7 +43,6 @@ uses
   uEmuLDT in 'DxbxKrnl\uEmuLDT.pas',
   uDxbxKrnl in 'DxbxKrnl\uDxbxKrnl.pas',
   uEmuFS in 'DxbxKrnl\uEmuFS.pas',
-  uEmu in 'DxbxKrnl\uEmu.pas',
   uEmuD3D8 in 'DxbxKrnl\uEmuD3D8.pas',
   uEmuAlloc in 'DxbxKrnl\uEmuAlloc.pas',
   uXbe in 'uXbe.pas',
@@ -87,25 +86,27 @@ uses
   uConsoleClass in 'uConsoleClass.pas',
   uXboxLibraryUtils in 'uXboxLibraryUtils.pas',
   uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
-  uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas';
+  uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas',
+  uEmu in 'DxbxKrnl\uEmu.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
 
 exports
+  EmuWarning,
+  CxbxKrnl_KernelThunkTable,
   CxbxKrnlInit,
   CxbxKrnlNoFunc,
   SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z',
-  CxbxKrnl_KernelThunkTable;
+  CxbxKrnl_KernelThunkTable,
+  EmuPanic name '_EmuPanic@0',
+  EmuCleanup
+  ;
 
-(*  Exports EmuVerifyVersion name '_EmuVerifyVersion@4';
-  Exports EmuPanic name '_EmuPanic@0';
-  Exports ;
-  Exports EmuCleanup;
-  Exports EmuCleanThread name '_EmuCleanThread@0';
+  (*Exports EmuCleanThread name '_EmuCleanThread@0';
   { TODO : name need to be set }
   (*Exports Init; // name must be "void EmuShared::Init (void)
-  //  Exports KernelThunkTable;*)
+  *)
 
 procedure DllMain(Reason: Integer);
 begin

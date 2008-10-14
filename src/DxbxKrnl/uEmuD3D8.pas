@@ -7976,8 +7976,7 @@ begin
     #13#10');',
     [Adapter, @DeviceType, @SurfaceFormat, Windowed, @MultiSampleType]);
 
-{ TODO : need to be translated to delphi }
-(*  if (Adapter <> D3DADAPTER_DEFAULT) then
+  if (Adapter <> D3DADAPTER_DEFAULT) then
   begin
     EmuWarning('Adapter is not D3DADAPTER_DEFAULT, correcting!');
     Adapter := D3DADAPTER_DEFAULT;

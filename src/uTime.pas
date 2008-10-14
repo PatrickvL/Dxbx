@@ -35,7 +35,7 @@ const
 function CTimeToDateTime(CTime: TCTime): TDateTime;
 function DateTimeToCTime(DateTime: TDateTime): TCTime;
 function WideStringToString(const ws: WideString; codePage: Word): AnsiString;
-function StringToWideString(const s: AnsiString; codePage: Word): WideString;
+//function StringToWideString(const s: AnsiString; codePage: Word): WideString;  // NOT WORKING IN D2009
 function Bias: Integer;
 
 implementation
@@ -90,6 +90,7 @@ end; { WideStringToString }
   @returns Converted wide string.
 }
 
+(*  // NOT WORKING IN D2009
 function StringToWideString(const s: AnsiString; codePage: Word): WideString;
 var
   l: Integer;
@@ -104,7 +105,7 @@ begin
       MultiByteToWideChar(CodePage, MB_PRECOMPOSED, PChar(@s[1]),
         -1, PWideChar(@Result[1]), l - 1);
   end;
-end; { StringToWideString }
+end; { StringToWideString } *)
 
 
 end.
