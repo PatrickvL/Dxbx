@@ -66,3 +66,4 @@ Shadow_tj (from Holland) - Main Cxbx translation
 Wayo (from Guatemala) - GetProcAddress trick with CxbxKrnlInit, (Unswizzled) Icon extraction
 Yapel (from Spain) - XIso author
 Zomby (from Canada) - Vista compatibility, lots of fixups
+Comax (from Germanny)
