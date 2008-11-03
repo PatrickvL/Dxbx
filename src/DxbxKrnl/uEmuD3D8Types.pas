@@ -41,9 +41,25 @@ const
   X_VST_STATE = 3;
   X_PIXELSHADER_FAKE_HANDLE = $DEADBEEF;
 
+  X_D3DLOCK_NOFLUSH  = $00000010; // Xbox extension
+  X_D3DLOCK_NOOVERWRITE = $00000020;
+  X_D3DLOCK_TILED = $00000040; // Xbox extension
+  X_D3DLOCK_READONLY = $00000080;
+
 type
   X_VERTEXSHADERCONSTANTMODE = DWORD;
   X_D3DFORMAT = Dword;
+
+  _X_VERTEXSHADERINPUT = record
+    IndexOfStream : DWORD;
+    Offset : DWORD;
+    Format : DWORD;
+    TesselationType : BYTE;
+    TesselationSource : BYTE;
+  end;
+
+  X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
+
 
 
 
@@ -55,6 +71,42 @@ type
     UnknownC: array[0..59] of DWORD;
   end;
 
+
+  _STREAM_DYNAMIC_PATCH_ = record
+    NeedPatch : BOOL;       // This is to know whether is data which must be patched
+    ConvertedStride : DWORD;
+    NbrTypes : DWORD;        // Number of the stream data types
+    pTypes : UINT;         // The stream data types (xbox)
+  end;
+  STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH_;
+
+  _VERTEX_DYNAMIC_PATCH_ = record
+    NbrStreams : UINT; // The number of streams the vertex shader uses
+    pStreamPatches : STREAM_DYNAMIC_PATCH;
+  end;
+
+  VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH_;      
+
+  _VERTEX_SHADER = record
+    aHandle : DWORD;
+    // These are the parameters given by the XBE,
+    // we save them to be be able to return them when necassary.
+    Size : UINT;
+    pDeclaration : DWORD;
+    DeclarationSize : DWORD;
+    pFunction : DWORD;
+    FunctionSize : DWORD;
+    aType : DWORD;
+    Status : DWORD;
+    // Needed for dynamic stream patching
+    VertexDynamicPatch : VERTEX_DYNAMIC_PATCH;
+  end;
+  VERTEX_SHADER = _VERTEX_SHADER;
+
+  _X_VERTEXATTRIBUTEFORMAT = record
+    pVertexShaderInput : Array [0..15] of X_VERTEXSHADERINPUT;
+  end;
+  X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
 
   _X_D3DPRESENT_PARAMETERS = record
     BackBufferWidth: UINT;
@@ -194,6 +246,20 @@ type
 
   end;
 
+  X_D3DPushBuffer = Class ( X_D3DResource )
+  public
+    Size : ULONG;
+    AllocationSize : ULONG;
+  end;
+
+  X_D3DFixup = Class ( X_D3DResource )
+  public
+    Run : ULONG;
+    Next : ULONG;
+    Size : ULONG;
+  end;
+
+
   X_D3DBaseTexture = Class(X_D3DPixelContainer)
 
   end;
@@ -218,20 +284,7 @@ type
 
   X_STREAMINPUT = _X_STREAMINPUT;
 
-  _X_VERTEXSHADERINPUT = Record
-    IndexOfStream : DWORD;
-    Offset : DWORD;
-    Format : DWORD;
-    TesselationType : BYTE;
-    TesselationSource : BYTE;
-  End;
 
-  X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
-
-  _X_VERTEXATTRIBUTEFORMAT = record
-    pVertexShaderInput : Array [0..15] of X_VERTEXSHADERINPUT;
-  end;
-  X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
 
 implementation
 

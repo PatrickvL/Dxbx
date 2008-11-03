@@ -191,33 +191,33 @@ begin
   end;
 end;
 
-(*Function XTL_EmuXB2PC_D3DLock(Flags: DWORD): DWord;
+function XTL_EmuXB2PC_D3DLock(Flags: DWORD): DWord;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 var
-  NewFlags : DWORD;
+  NewFlags: DWORD;
 begin
- NewFlags := 0;
+  NewFlags := 0;
 
  // Need to convert the flags, TODO: fix the xbox extensions
- if(Flags and X_D3DLOCK_NOFLUSH) then
- begin
-  NewFlags:= NewFlags xor 0;
+  if (Flags and X_D3DLOCK_NOFLUSH) > 0 then
+  begin
+    NewFlags := NewFlags xor 0;
   end;
- if(Flags and X_D3DLOCK_NOOVERWRITE) then
- begin
-  NewFlags:= NewFlags xor D3DLOCK_NOOVERWRITE;
+  if (Flags and X_D3DLOCK_NOOVERWRITE) > 0 then
+  begin
+    NewFlags := NewFlags xor D3DLOCK_NOOVERWRITE;
   end;
- if(Flags and X_D3DLOCK_TILED) then
- begin
-  NewFlags:= NewFlags xor 0;
+  if (Flags and X_D3DLOCK_TILED) > 0 then
+  begin
+    NewFlags := NewFlags xor 0;
   end;
- if(Flags and X_D3DLOCK_READONLY) then
- begin
-  NewFlags:= NewFlags xor D3DLOCK_READONLY;
+  if (Flags and X_D3DLOCK_READONLY) > 0 then
+  begin
+    NewFlags := NewFlags xor D3DLOCK_READONLY;
   end;
 
-    Result:= NewFlags;
- end;         *)
+  Result := NewFlags;
+end;
 
 // lookup table for converting vertex count to primitive count
 (*UINT XTL.EmuD3DVertexToPrimitive[11][2] =
