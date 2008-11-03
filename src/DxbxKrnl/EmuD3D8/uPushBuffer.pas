@@ -23,51 +23,48 @@ unit uPushBuffer;
 interface
 
 uses
-    Windows;
+  Windows
+  , uEmuD3D8Types;
 
 
 
-procedure XTL_EmuExecutePushBufferRaw ( pdwPushData : DWORD );
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD);
 
 
 var
- g_dwPrimaryPBCount : LongInt = 0;
- g_pPrimaryPB : LongInt = 0;
-
-
- XTL_g_bStepPush : Boolean = False;
- XTL_g_bSkipPush : Boolean = False;
- XTL_g_bBrkPush : Boolean = False;
-
- g_bPBSkipPusher : Boolean = False;
+  g_dwPrimaryPBCount: LongInt = 0;
+  g_pPrimaryPB: LongInt = 0;
+  XTL_g_bStepPush: Boolean = False;
+  XTL_g_bSkipPush: Boolean = False;
+  XTL_g_bBrkPush: Boolean = False;
+  g_bPBSkipPusher: Boolean = False;
 
 
 
 
 implementation
 
+uses
+  uDxbxKrnlUtils
+  , uVertexShader;
 
 
-procedure XTL_EmuExecutePushBuffer;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
-(*(
-    X_D3DPushBuffer       *pPushBuffer,
-    X_D3DFixup            *pFixup
-) *)
+procedure XTL_EmuExecutePushBuffer(pPushBuffer: X_D3DPushBuffer; pFixup: X_D3DFixup);
+// Branch:martin  Revision:50  Translator:Shadow_Tj
 begin
-(*    if(pFixup <> 0) then
-        CxbxKrnlCleanup('PushBuffer has fixups');
+  if (pFixup <> Nil) then
+    CxbxKrnlCleanup('PushBuffer has fixups');
+  (*EmuExecutePushBufferRaw((DWORD)pPushBuffer^.Data); *)
+end;
 
-    EmuExecutePushBufferRaw((DWORD)pPushBuffer^.Data);
-
-    Exit;
- end;
-
-  procedure EmuUnswizzleActiveTexture();
+procedure EmuUnswizzleActiveTexture();
+var
+  pPixelContainer: X_D3DPixelContainer;
+begin
     // for current usages, we're always on stage 0
-    XTL.X_D3DPixelContainer *pPixelContainer := (XTL.X_D3DPixelContainer)XTL.EmuD3DActiveTexture[0];
+(*    pPixelContainer := (XTL.X_D3DPixelContainer)XTL.EmuD3DActiveTexture[0];
 
-    if(pPixelContainer = 0 or  not (pPixelContainer^.Common and X_D3DCOMMON_ISLOCKED)) then
+    if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
         Exit;
 
     DWORD XBFormat := (pPixelContainer^.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
@@ -143,17 +140,17 @@ begin
      end; *)
 end;
 
-procedure XTL_EmuExecutePushBufferRaw ( pdwPushData : DWORD );
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD);
 // Branch:martin  Revision:39  Translator:Shadow_Tj
-(*var
-  pdwOrigPushData : DWORD; *)
+var
+  pdwOrigPushData: DWORD;
 begin
-    if(XTL_g_bSkipPush) then
-        Exit;
+  if (XTL_g_bSkipPush) then
+    Exit;
 
-(*    pdwOrigPushData := pdwPushData;
+  pdwOrigPushData := pdwPushData;
 
-    PVOID pIndexData := 0;
+(*    PVOID pIndexData := 0;
     PVOID pVertexData := 0;
 
     DWORD dwVertexShader := -1;
@@ -639,134 +636,137 @@ begin
         g_pD3DDevice8^.Present(0,0,0,0);
         Sleep(500);
      end;             *)
- end;
+end;
 
-(*#ifdef _DEBUG_TRACK_PB
+
+{$IFDEF _DEBUG_TRACK_PB}
+
 procedure DbgDumpMesh(var pIndexData: WORD; dwCount: DWORD);
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
-    if( not XTL.IsValidCurrentShader() or (dwCount = 0)) then
-        Exit;
+  if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
+    Exit;
 
-    XTL.IDirect3DVertexBuffer8 *pActiveVB := 0;
+(*  XTL.IDirect3DVertexBuffer8 * pActiveVB := 0;
 
-    XTL.D3DVERTEXBUFFER_DESC VBDesc;
+  XTL.D3DVERTEXBUFFER_DESC VBDesc;
 
-    BYTE *pVBData := 0;
-    UINT  uiStride;
+  BYTE * pVBData := 0;
+  UINT uiStride;
 
     // retrieve stream data
-    g_pD3DDevice8^.GetStreamSource(0, @pActiveVB, @uiStride);
+  g_pD3DDevice8^.GetStreamSource(0, @pActiveVB, @uiStride);
 
-     szFileName: array[0..128-1] of Char;
-    StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
-    FILE *dbgVertices := FileOpen(szFileName, 'wt');
+  szFileName: array[0..128 - 1] of Char;
+  StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
+  file * dbgVertices := FileOpen(szFileName, 'wt');
 
     // retrieve stream desc
-    pActiveVB^.GetDesc(@VBDesc);
+  pActiveVB^.GetDesc(@VBDesc);
 
     // unlock just in case
-    pActiveVB^.Unlock();
+  pActiveVB^.Unlock();
 
     // grab ptr
-    pActiveVB^.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
+  pActiveVB^.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
 
     // print out stream data
+  begin
+    uint32 maxIndex := 0;
+
+    WORD * pwChk := (WORD)pIndexData;
+
+    for (uint chk := 0; chk < dwCount; chk + +)
     begin
-        uint32 maxIndex := 0;
+      DWORD x = * pwChk := * pwChk + 1;
 
-        WORD *pwChk := (WORD)pIndexData;
+      if (x > maxIndex) then
+        maxIndex := x;
+    end;
 
-        for(uint chk:=0;chk<dwCount;chk++)
-        begin
-            DWORD x = *pwChk:= *pwChk + 1;
+    if (maxIndex > ((VBDesc.Size / uiStride) - 1)) then
+      maxIndex := (VBDesc.Size / uiStride) - 1;
 
-            if(x > maxIndex) then
-                maxIndex := x;
-         end;
+    fprintf(dbgVertices, 'xof 0303txt 0032');
+    fprintf(dbgVertices, '');
+    fprintf(dbgVertices, '//\n');
+    fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...\n', pActiveVB);
+    fprintf(dbgVertices, '//\n');
+    fprintf(dbgVertices, '//  Format : %d\n', VBDesc.Format);
+    fprintf(dbgVertices, '//  Size   : %d bytes\n', VBDesc.Size);
+    fprintf(dbgVertices, '//  FVF    : 0x%.08X\n', VBDesc.FVF);
+    fprintf(dbgVertices, '//  iCount : %d\n', dwCount / 2);
+    fprintf(dbgVertices, '//\n');
+    fprintf(dbgVertices, '');
+    fprintf(dbgVertices, 'Frame SCENE_ROOT begin ');
+    fprintf(dbgVertices, '');
+    fprintf(dbgVertices, '  FrameTransformMatrix begin ');
+    fprintf(dbgVertices, '    1.000000,0.000000,0.000000,0.000000,');
+    fprintf(dbgVertices, '    0.000000,1.000000,0.000000,0.000000,');
+    fprintf(dbgVertices, '    0.000000,0.000000,1.000000,0.000000,');
+    fprintf(dbgVertices, '    0.000000,0.000000,0.000000,1.000000;;');
+    fprintf(dbgVertices, '   end;');
+    fprintf(dbgVertices, '');
+    fprintf(dbgVertices, '  Frame Turok1 begin ');
+    fprintf(dbgVertices, '');
+    fprintf(dbgVertices, '    FrameTransformMatrix begin ');
+    fprintf(dbgVertices, '      1.000000,0.000000,0.000000,0.000000,');
+    fprintf(dbgVertices, '      0.000000,1.000000,0.000000,0.000000,');
+    fprintf(dbgVertices, '      0.000000,0.000000,1.000000,0.000000,');
+    fprintf(dbgVertices, '      0.000000,0.000000,0.000000,1.000000;;');
+    fprintf(dbgVertices, '     end;');
+    fprintf(dbgVertices, '');
+    fprintf(dbgVertices, '    Mesh begin ');
+    fprintf(dbgVertices, '      %d;', maxIndex + 1);
 
-        if(maxIndex > ((VBDesc.Size/uiStride) - 1)) then
-            maxIndex := (VBDesc.Size / uiStride) - 1;
+    uint max := maxIndex + 1;
+    for (uint v := 0; v < max; v + +)
+    begin
+      fprintf(dbgVertices, '      %f;%f;%f;%s',
+        * (FLOAT)@pVBData[v * uiStride + 0],
+        * (FLOAT)@pVBData[v * uiStride + 4],
+        * (FLOAT)@pVBData[v * uiStride + 8],
+        (v < (max - 1))? ',': ';');
+    end;
 
-        fprintf(dbgVertices, 'xof 0303txt 0032');
-        fprintf(dbgVertices, '');
-        fprintf(dbgVertices, '//\n');
-        fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...\n', pActiveVB);
-        fprintf(dbgVertices, '//\n');
-        fprintf(dbgVertices, '//  Format : %d\n', VBDesc.Format);
-        fprintf(dbgVertices, '//  Size   : %d bytes\n', VBDesc.Size);
-        fprintf(dbgVertices, '//  FVF    : 0x%.08X\n', VBDesc.FVF);
-        fprintf(dbgVertices, '//  iCount : %d\n', dwCount/2);
-        fprintf(dbgVertices, '//\n');
-        fprintf(dbgVertices, '');
-        fprintf(dbgVertices, 'Frame SCENE_ROOT begin ');
-        fprintf(dbgVertices, '');
-        fprintf(dbgVertices, '  FrameTransformMatrix begin ');
-        fprintf(dbgVertices, '    1.000000,0.000000,0.000000,0.000000,');
-        fprintf(dbgVertices, '    0.000000,1.000000,0.000000,0.000000,');
-        fprintf(dbgVertices, '    0.000000,0.000000,1.000000,0.000000,');
-        fprintf(dbgVertices, '    0.000000,0.000000,0.000000,1.000000;;');
-        fprintf(dbgVertices, '   end;');
-        fprintf(dbgVertices, '');
-        fprintf(dbgVertices, '  Frame Turok1 begin ');
-        fprintf(dbgVertices, '');
-        fprintf(dbgVertices, '    FrameTransformMatrix begin ');
-        fprintf(dbgVertices, '      1.000000,0.000000,0.000000,0.000000,');
-        fprintf(dbgVertices, '      0.000000,1.000000,0.000000,0.000000,');
-        fprintf(dbgVertices, '      0.000000,0.000000,1.000000,0.000000,');
-        fprintf(dbgVertices, '      0.000000,0.000000,0.000000,1.000000;;');
-        fprintf(dbgVertices, '     end;');
-        fprintf(dbgVertices, '');
-        fprintf(dbgVertices, '    Mesh begin ');
-        fprintf(dbgVertices, '      %d;', maxIndex+1);
+    fprintf(dbgVertices, '      %d;', dwCount - 2);
 
-        uint max := maxIndex+1;
-        for(uint v:=0;v<max;v++)
-        begin
-            fprintf(dbgVertices, '      %f;%f;%f;%s',
-                *(FLOAT)@pVBData[v*uiStride+0],
-                *(FLOAT)@pVBData[v*uiStride+4],
-                *(FLOAT)@pVBData[v*uiStride+8],
-                (v < (max - 1)) ? ',' : ';');
-         end;
+    WORD * pwVal := (WORD)pIndexData;
 
-        fprintf(dbgVertices, '      %d;', dwCount - 2);
+    max := dwCount;
 
-        WORD *pwVal := (WORD)pIndexData;
+    DWORD a = * pwVal := * pwVal + 1;
+    DWORD b = * pwVal := * pwVal + 1;
+    DWORD c = * pwVal := * pwVal + 1;
 
-        max := dwCount;
+    DWORD la := a, lb = b, lc = c;
 
-        DWORD a = *pwVal:= *pwVal + 1;
-        DWORD b = *pwVal:= *pwVal + 1;
-        DWORD c = *pwVal:= *pwVal + 1;
+    for (uint i := 2; i < max; i + +)
+    begin
+      fprintf(dbgVertices, '      3;%d,%d,%d;%s',
+        a, b, c, (i < (max - 1))? ',': ';');
 
-        DWORD la := a,lb = b,lc = c;
+      a := b;
+      b := c;
+      c = * pwVal := * pwVal + 1;
 
-        for(uint i:=2;i<max;i++)
-        begin
-            fprintf(dbgVertices, '      3;%d,%d,%d;%s',
-                a,b,c, (i < (max - 1)) ? ',' : ';');
+      la := a;
+      lb := b;
+      lc := c;
+    end;
 
-            a := b;
-            b := c;
-            c = *pwVal:= *pwVal + 1;
+    fprintf(dbgVertices, '     end;');
+    fprintf(dbgVertices, '   end;');
+    fprintf(dbgVertices, ' end;');
 
-            la := a;
-            lb := b;
-            lc := c;
-         end;
-
-        fprintf(dbgVertices, '     end;');
-        fprintf(dbgVertices, '   end;');
-        fprintf(dbgVertices, ' end;');
-
-        FileClose(dbgVertices);
-     end;
+    FileClose(dbgVertices);
+  end;
 
     // release ptr
-    pActiveVB^.Unlock();
- end;
-//endif           *)
+  pActiveVB^.Unlock();    *)
+end;
+{$ENDIF}
 
 
 end.
+

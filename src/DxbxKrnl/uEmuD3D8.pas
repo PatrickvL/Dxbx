@@ -81,6 +81,7 @@ function IfThen(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDev
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord); stdcall;
 function XTL_EmuIDirect3DDevice8_GetViewport(pViewport: D3DVIEWPORT8): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: integer; a: FLOAT; b: FLOAT; c: FLOAT; d: FLOAT): HRESULT; stdcall;
+procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD);
 
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; // forward
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
@@ -137,7 +138,7 @@ begin
 end;
 
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord);
-// Branch:martin  Revision:39  Done:85 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Done:99 Translator:Shadow_Tj
 var
   dwThreadId: DWORD;
   hThread: THandle;
@@ -177,7 +178,7 @@ begin
   begin
     g_bRenderWindowActive := False;
 
-    BeginThread(nil, 0, @EmuRenderWindow, nil, 0, {var} dwThreadId);
+    BeginThread(nil, 0, @EmuRenderWindow, nil, 0, dwThreadId);
 
 // TODO Dxbx : Enabled this line as soon as EmuRenderWindow sets g_bRenderWindowActive
 //    while not g_bRenderWindowActive do
@@ -194,28 +195,20 @@ begin
 
   if g_pD3D8 = nil then
     CxbxKrnlCleanup('Could not initialize Direct3D8!');
-    { TODO : Need to be translated to delphi }
-    (*
-    DevType := ifThen(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
-    g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, @g_D3DCaps);
-    *)
 
+  DevType := ifThen(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
+  g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, g_D3DCaps);
   SetFocus(g_hEmuWindow);
 
   // create default device
   ZeroMemory(@PresParam, SizeOf(PresParam));
-
   PresParam.BackBufferWidth := 640;
   PresParam.BackBufferHeight := 480;
   PresParam.BackBufferFormat := 6; (* X_D3DFMT_A8R8G8B8 *)
   PresParam.BackBufferCount := 1;
   PresParam.EnableAutoDepthStencil := TRUE;
   PresParam.AutoDepthStencilFormat := $2A; (* X_D3DFMT_D24S8 *)
-    { TODO : Need to be translated to delphi }
-    (*
-    PresParam.SwapEffect := XTL.D3DSWAPEFFECT_DISCARD;
-    *)
-
+  PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
   EmuSwapFS(); // XBox FS
   XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, 0, $00000040, PresParam, g_pD3DDevice8);
   EmuSwapFS(); // Win2k/XP FS
@@ -230,13 +223,17 @@ begin
   Exit;
 end;
 
+(*
 // enumeration procedure for locating display device GUIDs
-(*function EmuEnumDisplayDevices(var FARlpGUID: GUID; lpDriverDescription: PChar; lpDriverName: PChar; lpContext: Pointer; hm: HMONITOR): BOOL;
+function EmuEnumDisplayDevices(var FARlpGUID: Integer; lpDriverDescription: PChar; lpDriverName: PChar; lpContext: Pointer; hm: HMONITOR): BOOL;
 // Branch:martin  Revision:39  Done:0 Translator:Shadow_Tj
+var
+  dwEnumCount : DWORD;
 begin
-     DWORD dwEnumCount := 0;
+    dwEnumCount := 0;
 
-    if(dwEnumCount++ = g_XBVideo.GetDisplayAdapter()+1) then
+    inc ( dwEnumCount );
+    if(dwEnumCount = g_XBVideo.GetDisplayAdapter()+1) then
     begin
         g_hMonitor := hm;
         dwEnumCount := 0;
@@ -253,7 +250,7 @@ begin
      end;
 
     Result:= TRUE;
- end;*)
+ end;     *)
 
 // window message processing thread
 
@@ -268,16 +265,15 @@ var
   CertAddr: IntPtr; //uint32
   XbeCert: PXbe_Certificate;
   dwStyle: DWORD;
-
   nTitleHeight: integer;
   nBorderWidth: integer;
   nBorderHeight: integer;
   x, y, nWidth, nHeight: integer;
   hwndParent: HWND;
   lPrintfOn: bool;
-
 begin
   // register window class
+  DbgPrintf('Dxbx : EmuRenderWindow.');
   begin
     hDxbxDLL := MainInstance;
 
@@ -1010,7 +1006,7 @@ end;
 
 // check if a resource has been registered yet (if not, register it)
 
-procedure EmuVerifyResourceIsRegistered(var pResource: X_D3DResource);
+procedure EmuVerifyResourceIsRegistered(pResource: X_D3DResource);
 // Branch:martin  Revision:39  Done:5 Translator:Shadow_Tj
 begin
   // 0xEEEEEEEE and 0xFFFFFFFF are somehow set in Halo :(
@@ -7325,19 +7321,14 @@ begin
 
   if (pRenderTarget <> nil) then
   begin
-        { TODO : need to be translated to delphi }
-        (*
         EmuVerifyResourceIsRegistered(pRenderTarget);
-
-        pPCRenderTarget := pRenderTarget.EmuSurface8; *)
+        pPCRenderTarget := pRenderTarget.EmuSurface8;
   end;
 
   if (pNewZStencil <> nil) then
   begin
-        { TODO : need to be translated to delphi }
-        (*
         EmuVerifyResourceIsRegistered(pNewZStencil);
-        pPCNewZStencil  := pNewZStencil.EmuSurface8; *)
+        pPCNewZStencil  := pNewZStencil.EmuSurface8;
   end;
 
   // TODO: Follow that stencil!
@@ -7622,7 +7613,7 @@ end;
 
 // func: EmuIDirect3DDevice8_GetVertexShader
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: PDWORD);
+procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD);
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS();
@@ -7634,40 +7625,37 @@ begin
     #13#10');',
     [pHandle]);
 
-  if Assigned(pHandle) then
-    pHandle^ := g_CurrentVertexShader;
+  if pHandle <> 0 then
+    pHandle := g_CurrentVertexShader;
 
   EmuSwapFS();
 end;
 
 // func: EmuIDirect3DDevice8_GetVertexShaderConstant
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShaderConstant;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
-(*(
-    INT   Register,
-        procedure  *pConstantData,; DWORD ConstantCount
-) *)
+procedure XTL_EmuIDirect3DDevice8_GetVertexShaderConstant( aRegister : Integer;
+  pConstantData : DWord; ConstantCount : DWORD );
+// Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
     // debug trace
-    DbgPrintf( 'EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderConstant'
-               #13#10'('
-               #13#10'   Register            : 0x%.08X'
-               #13#10'   pConstantData       : 0x%.08X'
-               #13#10'   ConstantCount       : 0x%.08X'
-               #13#10');',
-               Register, pConstantData, ConstantCount);
+    DbgPrintf( Format('EmuD3D8 : EmuIDirect3DDevice8_GetVertexShaderConstant' +
+               #13#10'(' +
+               #13#10'   Register            : 0x%.08X' +
+               #13#10'   pConstantData       : 0x%.08X' +
+               #13#10'   ConstantCount       : 0x%.08X' +
+               #13#10');', 
+               [aRegister, pConstantData, ConstantCount]));
 
-    HRESULT hRet = g_pD3DDevice8->GetVertexShaderConstant
+    (*HRESULT hRet = g_pD3DDevice8->GetVertexShaderConstant
     (
         Register + 96,
         pConstantData,
         ConstantCount
-    );
+    ); *)
 
-    EmuSwapFS();   // XBox FS    *)
+    EmuSwapFS();   // XBox FS
 end;
 
 // func: EmuIDirect3DDevice8_SetVertexShaderInputDirect
@@ -7848,7 +7836,7 @@ end;
 
 // func: EmuIDirect3DDevice8_GetVertexShaderFunction
 
-function XTL_EmuIDirect3DDevice8_GetVertexShaderFunction(Handle: DWORD; pData: PVOID; pSizeOfData: DWORD): HRESULT;
+function XTL_EmuIDirect3DDevice8_GetVertexShaderFunction(aHandle: DWORD; pData: PVOID; pSizeOfData: DWORD): HRESULT;
 // Branch:martin  Revision:39 Done:10 Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -7862,12 +7850,11 @@ begin
     #13#10'   pData                : 0x%.08X' +
     #13#10'   pSizeOfData          : 0x%.08X' +
     #13#10');',
-    [Handle, pData, pSizeOfData]);
+    [aHandle, pData, pSizeOfData]);
 
   hRet := D3DERR_INVALIDCALL;
 
-{ TODO : Need to be translated to delphi }
-(*    if(pSizeOfData and VshHandleIsVertexShader(Handle)) then
+  (*  if(pSizeOfData and VshHandleIsVertexShader(Handle)) then
     begin
         VERTEX_SHADER *pVertexShader := (VERTEX_SHADER )(VshHandleGetVertexShader(Handle))->Handle;
         if(pSizeOfData < pVertexShader->FunctionSize or  not pData) then
@@ -7957,10 +7944,10 @@ end;
 function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType(Adapter: UINT;
   DeviceType: D3DDEVTYPE; SurfaceFormat: D3DFORMAT; Windowed: LongBool;
   MultiSampleType: D3DMULTISAMPLE_TYPE): HRESULT;
-// Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
+// Branch:martin  Revision:45 Done:2 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  (*PCSurfaceFormat: D3DFORMAT; *)
+  PCSurfaceFormat: D3DFORMAT;
 begin
   hRet := 0;
 
@@ -7982,7 +7969,7 @@ begin
     Adapter := D3DADAPTER_DEFAULT;
   end;
 
-(*  if (DeviceType = D3DDEVTYPE_FORCE_DWORD) then
+  (*if (DeviceType = D3DDEVTYPE_FORCE_DWORD) then
     EmuWarning('DeviceType := D3DDEVTYPE_FORCE_DWORD');
 
   // Convert SurfaceFormat (Xbox->PC)
