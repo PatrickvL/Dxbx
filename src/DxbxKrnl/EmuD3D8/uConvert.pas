@@ -22,16 +22,23 @@ unit uConvert;
 
 interface
 
+uses
+  uEmuD3D8Types, Direct3D9;
+
+
+function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
+function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
+
+
 implementation
 
 uses
   Windows
   , SysUtils
-  , uEmuD3D8Types
   , uDxbxKrnlUtils
   , uEmu
   , uLog
-  , Direct3D9;
+  ;
 
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
