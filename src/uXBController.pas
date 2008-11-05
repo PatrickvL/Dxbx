@@ -24,6 +24,7 @@ interface
 
 uses
   Windows
+  , Classes
   , SysUtils
   // 3rd party
   , DirectInput
@@ -68,11 +69,24 @@ type
     XBCTRL_OBJECT_LTHUMB,
     XBCTRL_OBJECT_RTHUMB);
 
+
 const
   // Total number of components
   XBCTRL_OBJECT_COUNT = (Ord(High(XBCtrlObject)) - Ord(Low(XBCtrlObject)) + 1);
   // Maximum number of devices allowed
   XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
+
+  m_DeviceNameLookup : Array [0..XBCTRL_OBJECT_COUNT-1]of String = ( 'LThumbPosX', 'LThumbNegX',
+                                           'LThumbPosY', 'LThumbNegY',
+                                           'RThumbPosX', 'RThumbNegX',
+                                           'RThumbPosY', 'RThumbNegY',
+                                           'X', 'Y', 'A', 'B', 'White',
+                                           'Black', 'LTrigger', 'RTrigger',
+                                           'DPadUp', 'DPadDown', 'DPadLeft',
+                                           'DPadRight', 'Back', 'Start',
+                                           'LThumb', 'RThumb' );
+
+
 
 // Offsets into analog button array
 const
@@ -302,62 +316,40 @@ begin
      end;
 
     Result:= DIENUM_CONTINUE;
- end;
+ end;      *)
 
  { TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: WrapEnumGameCtrlCallback
 // ******************************************************************
+
+(*
 function CALLBACK WrapEnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE; pvRef: Pointer): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
     XBController *context := (XBController)pvRef;
 
     Result:= context^.EnumGameCtrlCallback(lpddi);
- end;
+ end; *)
 
 { TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: WrapEnumObjectsCallback
 // ******************************************************************
-function CALLBACK WrapEnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE; pvRef: Pointer): BOOL;
+(*function CALLBACK WrapEnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE; pvRef: Pointer): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
     XBController *context := (XBController)pvRef;
 
     Result:= context^.EnumObjectsCallback(lpddoi);
- end;
-
-{ TODO : Need to be added to XBController }
-// ******************************************************************
-// * Input Device Name Lookup Table
-// ******************************************************************
- Char *XBController.m_DeviceNameLookup[XBCTRL_OBJECT_COUNT] =
-begin
-    // ******************************************************************
-    // * Analog Axis
-    // ******************************************************************
-    'LThumbPosX', 'LThumbNegX', 'LThumbPosY', 'LThumbNegY',
-    'RThumbPosX', 'RThumbNegX', 'RThumbPosY', 'RThumbNegY',
-
-    // ******************************************************************
-    // * Analog Buttons
-    // ******************************************************************
-    'X', 'Y', 'A', 'B', 'White', 'Black', 'LTrigger', 'RTrigger',
-
-    // ******************************************************************
-    // * Digital Buttons
-    // ******************************************************************
-    'DPadUp', 'DPadDown', 'DPadLeft', 'DPadRight',
-    'Back', 'Start', 'LThumb', 'RThumb',
-);
+ end;            *)
 
 
 { TODO : Need to be added to XBController }
 // ******************************************************************
 // * func: XBController::EnumGameCtrlCallback
 // ******************************************************************
-function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
+(*function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
     if(m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
@@ -813,9 +805,7 @@ begin
 
             dwFlags = DEVICE_FLAG_KEYBOARD;
 
-            // ******************************************************************
-            // * Check for Keyboard State Change
-            // ******************************************************************
+            // Check for Keyboard State Change
             for(int r=0;r<256;r++)
             {
                 if(KeyState[r] != 0)
@@ -823,23 +813,16 @@ begin
                     dwHow = r;
                     break;
                 }
-            }
+            }            *)
 
-            // ******************************************************************
-            // * Check for Success
-            // ******************************************************************
-            if(dwHow != -1)
-            {
-                Map(CurConfigObject, "SysKeyboard", dwHow, dwFlags);
-
-                printf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
-
-                sprintf(szStatus, "Success: %s Mapped to Key %d on SysKeyboard", m_DeviceNameLookup[CurConfigObject], dwHow);
-
-                return true;
-            } *)
+            // Check for Success
+            if(dwHow <> -1) then begin
+              Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
+              DbgPrintf('Dxbx: Detected Key %d on SysKeyboard\n', dwHow);
+              DbgPrintf(Format('Success: %s Mapped to Key %d on SysKeyboard',[ m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]));
+            end;
     end
-        // Detect Mouse Input
+    // Detect Mouse Input
     else if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_MOUSE) then begin
         (*
             XTL::DIMOUSESTATE2 MouseState;
@@ -861,9 +844,7 @@ begin
                     break;
                 }
             }
-            // ******************************************************************
-            // * Check for Success
-            // ******************************************************************
+            // Check for Success
             if(dwHow != -1)
             {
                 Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
@@ -1108,7 +1089,7 @@ begin
 end;
 
 procedure XBController.ListenBegin(ahwnd: THandle);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 100
 var
   v: Integer;
 begin
@@ -1129,9 +1110,8 @@ begin
   begin
     if m_ObjectConfig[XBCtrlObject(v)].dwDevice >= m_dwInputDeviceCount then
     begin
-      (*DbgPrintf(Format('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);*)
-        DbgPrintf('Warning: Device Mapped to %s was not found!');
-        m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
+      DbgPrintf(Format('Warning: Device Mapped to %s was not found!', [m_DeviceNameLookup[v]]));
+      m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
     end;
   end;
 end;
@@ -1150,13 +1130,13 @@ begin
 end;
 
 procedure XBController.Load(szRegistryKey: PChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 80
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 90
 var
   dwType, dwSize: DWORD;
   dwDisposition: DWORD;
   ahKey: HKEY;
   v: Integer;
-  szValueName: array[0..64 - 1] of Char;
+  szValueName: String;
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -1171,7 +1151,7 @@ begin
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do begin
       // default is a null string
       m_DeviceName[v][0] := #0;
-      StrFmt(szValueName, 'DeviceName $%.02X', [v]);
+      (*sprintf(szValueName, "DeviceName 0x%.02X", v);*)
       dwType := REG_SZ;
       dwSize := 260;
       (*RegQueryValueEx(ahKey, szValueName, 0, @dwType, m_DeviceName[v], @dwSize);*)
@@ -1183,10 +1163,10 @@ begin
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
-      (*szValueName := Format ( 'Object : %s', m_DeviceNameLookup[v]) );*)
+      szValueName := Format ( 'Object : %s', [m_DeviceNameLookup[v]]);
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
-      RegQueryValueEx(ahKey, szValueName, 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
+      (*RegQueryValueEx(ahKey, szValueName, 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);*)
     end;
 
     RegCloseKey(ahKey);
@@ -1256,7 +1236,7 @@ begin
 end;
 
 procedure XBController.Save(szRegistryKey: PChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done: 80
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done: 90
 var
   dwType, dwSize: DWORD;
   dwDisposition: DWORD;
@@ -1287,8 +1267,7 @@ begin
 
     // Save Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
-      (*StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]);*)
-
+      (*sprintf(szValueName, "Object : \"%s\"", m_DeviceNameLookup[v]);*)
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
 
