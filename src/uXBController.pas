@@ -385,7 +385,7 @@ begin
 
 procedure XBController.ListenPoll(var Controller: XINPUT_STATE);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
-(*var
+var
   hRet: HRESULT;
   v: Integer;
 
@@ -393,25 +393,23 @@ procedure XBController.ListenPoll(var Controller: XINPUT_STATE);
   dwFlags: Integer;
   dwInfo: Integer;
 
-  wValue: SmallInt; *)
+  wValue: SmallInt;
+  pDevice: XTL_LPDIRECTINPUTDEVICE8;
 begin
-  (*if (Controller = Nil) then
+  (*if (Controller = nil) then
     Exit;
 
-    { TODO : Need to be translated to delphi }
-    XTL.LPDIRECTINPUTDEVICE8 pDevice:=0;
-
+  pDevice:=nil;
   hRet := 0;
   dwFlags := 0;
 
-    // Default values necessary for axis
+  // Default values necessary for axis
   Controller.Gamepad.sThumbLX := 0;
   Controller.Gamepad.sThumbLY := 0;
   Controller.Gamepad.sThumbRX := 0;
   Controller.Gamepad.sThumbRY := 0;
 
-    // Poll all devices
-
+  // Poll all devices
   for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
   begin
     dwDevice := m_ObjectConfig[v].dwDevice;
@@ -669,104 +667,100 @@ begin
 end;
 
 function XBController.ConfigPoll(szStatus: PChar): Longbool;
+// Branch:martin  Revision:10  Translator:Shadow_Tj  Done : 20
+var
+  DeviceInstance: DIDEVICEINSTANCE;
+  ObjectInstance: DIDEVICEOBJECTINSTANCE;
+  v: Integer;
+  hRet: HRESULT;
+  dwHow: DWORD;
+  dwFlags: DWORD;
+  JoyState: DIJOYSTATE;
 begin
-(*{
-    if(m_CurrentState != XBCTRL_STATE_CONFIG)
-    {
-        SetError("Invalid State", false);
-        return false;
-    }
+  if (m_CurrentState <> XBCTRL_STATE_CONFIG) then begin
+    Error_SetError('Invalid State', false);
+    Result := false;
+  end;
 
-    XTL::DIDEVICEINSTANCE        DeviceInstance;
-    XTL::DIDEVICEOBJECTINSTANCE  ObjectInstance;
+  DeviceInstance.dwSize := sizeof(DIDEVICEINSTANCE);
+  ObjectInstance.dwSize := sizeof(DIDEVICEOBJECTINSTANCE);
 
-    DeviceInstance.dwSize = sizeof(XTL::DIDEVICEINSTANCE);
-    ObjectInstance.dwSize = sizeof(XTL::DIDEVICEOBJECTINSTANCE);
+    // Monitor for significant device state changes
+  for v := m_dwInputDeviceCount - 1 downto 0 do begin
 
-    // ******************************************************************
-    // * Monitor for significant device state changes
-    // ******************************************************************
-    for(int v=m_dwInputDeviceCount-1;v>=0;v--)
-    {
-        // ******************************************************************
-        // * Poll the current device
-        // ******************************************************************
-        {
-            HRESULT hRet = m_InputDevice[v].m_Device->Poll();
+        // Poll the current device
+        (*hRet = m_InputDevice[v].m_Device.Poll(); *)
+
+    if (FAILED(hRet)) then begin
+            (*hRet = m_InputDevice[v].m_Device->Acquire();
+
+            while(hRet = DIERR_INPUTLOST) do
+                hRet = m_InputDevice[v].m_Device->Acquire(); *)
+    end;
+
+    (*dwHow := -1;
+    dwFlags := m_InputDevice[v].m_Flags;
+    *)
+
+    // Detect Joystick Input
+    if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_JOYSTICK) then begin
+
+            // Get Joystick State
+            (*hRet := m_InputDevice[v].m_Device.GetDeviceState(sizeof(DIJOYSTATE), &JoyState);
 
             if(FAILED(hRet))
-            {
-                hRet = m_InputDevice[v].m_Device->Acquire();
+                continue;
+            *)
 
-                while(hRet == DIERR_INPUTLOST)
-                    hRet = m_InputDevice[v].m_Device->Acquire();
-            }
-        }
+      dwFlags := DEVICE_FLAG_JOYSTICK;
 
-        DWORD dwHow = -1, dwFlags = m_InputDevice[v].m_Flags;
-
-        // ******************************************************************
-        // * Detect Joystick Input
-        // ******************************************************************
-        if(m_InputDevice[v].m_Flags & DEVICE_FLAG_JOYSTICK)
-        {
-            XTL::DIJOYSTATE JoyState;
-
-            // ******************************************************************
-            // * Get Joystick State
-            // ******************************************************************
-            {
-                HRESULT hRet = m_InputDevice[v].m_Device->GetDeviceState(sizeof(XTL::DIJOYSTATE), &JoyState);
-
-                if(FAILED(hRet))
-                    continue;
-            }
-
-            dwFlags = DEVICE_FLAG_JOYSTICK;
-
-            if(abs(JoyState.lX) > DETECT_SENSITIVITY_JOYSTICK)
-            {
+      if (abs(JoyState.lX) > DETECT_SENSITIVITY_JOYSTICK) then begin
+                (*
                 dwHow   = FIELD_OFFSET(XTL::DIJOYSTATE, lX);
                 dwFlags |= (JoyState.lX > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-            }
-            else if(abs(JoyState.lY) > DETECT_SENSITIVITY_JOYSTICK)
+                *)
+      end
+      else if (abs(JoyState.lY) > DETECT_SENSITIVITY_JOYSTICK) then begin
             {
                 dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lY);
                 dwFlags |= (JoyState.lY > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
-            else if(abs(JoyState.lZ) > DETECT_SENSITIVITY_JOYSTICK)
+      end
+      else if (abs(JoyState.lZ) > DETECT_SENSITIVITY_JOYSTICK) then begin
             {
                 dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lZ);
                 dwFlags |= (JoyState.lZ > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
-            else if(abs(JoyState.lRx) > DETECT_SENSITIVITY_JOYSTICK)
+      end
+      else if (abs(JoyState.lRx) > DETECT_SENSITIVITY_JOYSTICK) then begin
             {
                 dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRx);
                 dwFlags |= (JoyState.lRx > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
-            else if(abs(JoyState.lRy) > DETECT_SENSITIVITY_JOYSTICK)
+      end
+      else if (abs(JoyState.lRy) > DETECT_SENSITIVITY_JOYSTICK) then begin
             {
                 dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRy);
                 dwFlags |= (JoyState.lRy > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
-            else if(abs(JoyState.lRz) > DETECT_SENSITIVITY_JOYSTICK)
+      end
+      else if (abs(JoyState.lRz) > DETECT_SENSITIVITY_JOYSTICK) then begin
             {
                 dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRz);
                 dwFlags |= (JoyState.lRz > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
-            else
-            {
-                for(int b=0;b<2;b++)
+      end
+      else begin
+                (*for(int b=0;b<2;b++)
                 {
                     if(abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rglSlider[b]);
                         dwFlags |= (JoyState.rglSlider[b] > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-                    }
-                }
-            }
+                    } *)
+      end;
 
-            /* temporarily disabled
+            (*/* temporarily disabled
             if(dwHow == -1)
             {
                 for(int b=0;b<4;b++)
@@ -777,24 +771,21 @@ begin
                     }
                 }
             }
-            //*/
+            //*/ *)
 
-            if(dwHow == -1)
-            {
-                for(int b=0;b<32;b++)
+      if (dwHow = -1) then begin
+                (*for(int b=0;b<32;b++)
                 {
                     if(JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgbButtons[b]);
                         dwFlags |= DEVICE_FLAG_BUTTON;
                     }
-                }
-            }
+                *)
+      end;
 
-            // ******************************************************************
-            // * Retrieve Object Info
-            // ******************************************************************
-            if(dwHow != -1)
+            // Retrieve Object Info
+      if (dwHow <> -1) then begin
             {
                 char *szDirection = (dwFlags & DEVICE_FLAG_AXIS) ? (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive " : "Negative " : "";
 
@@ -810,13 +801,13 @@ begin
 
                 return true;
             }
-        }
-        // ******************************************************************
-        // * Detect Keyboard Input
-        // ******************************************************************
-        else if(m_InputDevice[v].m_Flags & DEVICE_FLAG_KEYBOARD)
-        {
-            BYTE KeyState[256];
+      end;
+    end
+
+        // Detect Keyboard Input
+
+    else if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_KEYBOARD) then begin
+        (*    BYTE KeyState[256];
 
             m_InputDevice[v].m_Device->GetDeviceState(256, KeyState);
 
@@ -846,13 +837,11 @@ begin
                 sprintf(szStatus, "Success: %s Mapped to Key %d on SysKeyboard", m_DeviceNameLookup[CurConfigObject], dwHow);
 
                 return true;
-            }
-        }
-        // ******************************************************************
-        // * Detect Mouse Input
-        // ******************************************************************
-        else if(m_InputDevice[v].m_Flags & DEVICE_FLAG_MOUSE)
-        {
+            } *)
+    end
+        // Detect Mouse Input
+    else if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_MOUSE) then begin
+        (*
             XTL::DIMOUSESTATE2 MouseState;
 
             m_InputDevice[v].m_Device->GetDeviceState(sizeof(MouseState), &MouseState);
@@ -957,12 +946,11 @@ begin
 
                     return true;
                 }
-            }
-        }
-    }
+            }    *)
+    end;
+  end;
 
-    return false;
-}          *)
+  Result := false;
 end;
 
 
@@ -988,12 +976,9 @@ var
 begin
   for v := m_dwInputDeviceCount downto 0 do
   begin
-    { TODO : Need to be translated to delphi }
-    (*
-    m_InputDevice[v].m_Device^.Unacquire();
-    m_InputDevice[v].m_Device^.Release();
-    m_InputDevice[v].m_Device := 0;
-    *)
+    (*m_InputDevice[v].m_Device.Unacquire();
+    m_InputDevice[v].m_Device.Release();
+    m_InputDevice[v].m_Device := 0;*)
   end;
 
   m_dwInputDeviceCount := 0;
@@ -1015,11 +1000,11 @@ begin
 
   // Create DirectInput Object
   begin
-    ahRet := DirectInput8Create(GetModuleHandle(Nil),
+    ahRet := DirectInput8Create(GetModuleHandle(nil),
       DIRECTINPUT_VERSION,
       IID_IDirectInput8,
       m_pDirectInput8,
-      nil );
+      nil);
 
     if (FAILED(ahRet)) then
     begin
@@ -1029,7 +1014,7 @@ begin
   end;
 
   // Create all the devices available (well...most of them)
-  if Assigned(m_pDirectInput8 ) then
+  if Assigned(m_pDirectInput8) then
   begin
     (*ahRet := m_pDirectInput8.EnumDevices( DI8DEVCLASS_GAMECTRL,
                                           WrapEnumGameCtrlCallback,
@@ -1112,7 +1097,7 @@ begin
   begin
     if (m_DeviceName[v][0] = #0) then
     begin
-      (*m_DeviceName[v] := szDeviceName;*)
+      (*m_DeviceName[v] := szDeviceName; *)
       Result := v;
     end;
   end;
@@ -1144,9 +1129,9 @@ begin
   begin
     if m_ObjectConfig[XBCtrlObject(v)].dwDevice >= m_dwInputDeviceCount then
     begin
-      (*DbgPrintf(Format ('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]); *)
-      DbgPrintf('Warning: Device Mapped to %s was not found!');
-      m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
+      (*DbgPrintf(Format('Warning: Device Mapped to %s was not found!', m_DeviceNameLookup[v]);*)
+        DbgPrintf('Warning: Device Mapped to %s was not found!');
+        m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
     end;
   end;
 end;
@@ -1165,7 +1150,7 @@ begin
 end;
 
 procedure XBController.Load(szRegistryKey: PChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 60
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 80
 var
   dwType, dwSize: DWORD;
   dwDisposition: DWORD;
@@ -1195,14 +1180,13 @@ begin
     // Load Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
       // default object configuration
-      (*m_ObjectConfig[v].dwDevice := -1;
-      m_ObjectConfig[v].dwInfo := -1;
-      m_ObjectConfig[v].dwFlags := 0;
-
-      StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]);
+      m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
+      m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
+      m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
+      (*szValueName := Format ( 'Object : %s', m_DeviceNameLookup[v]) );*)
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
-      RegQueryValueEx(ahKey, szValueName, 0, @dwType, m_ObjectConfig[v], @dwSize); *)
+      RegQueryValueEx(ahKey, szValueName, 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
     end;
 
     RegCloseKey(ahKey);
@@ -1272,7 +1256,7 @@ begin
 end;
 
 procedure XBController.Save(szRegistryKey: PChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done: 30%
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done: 80
 var
   dwType, dwSize: DWORD;
   dwDisposition: DWORD;
@@ -1280,8 +1264,7 @@ var
   v: Integer;
   szValueName: array[0..64 - 1] of Char;
 begin
-  if (m_CurrentState <> XBCTRL_STATE_NONE) then
-  begin
+  if (m_CurrentState <> XBCTRL_STATE_NONE) then begin
     Error_SetError('Invalid State', False);
     Exit;
   end;
@@ -1296,24 +1279,24 @@ begin
       dwType := REG_SZ;
       dwSize := 260;
 
-      (*if (m_DeviceName[v][0] = #0) then
+      if (m_DeviceName[v][0] = #0) then
         RegDeleteValue(ahKey, szValueName)
       else
-        RegSetValueEx(ahKey, szValueName, 0, dwType, m_DeviceName[v], dwSize); *)
+        RegSetValueEx(ahKey, szValueName, 0, dwType, @m_DeviceName[v], dwSize);
     end;
 
     // Save Object Configuration
-    (*for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
-    StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]);
+    for v := 0 to XBCTRL_OBJECT_COUNT - 1 do begin
+      (*StrFmt(szValueName, 'Object : %s', m_DeviceNameLookup[v]);*)
 
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
 
-        if (m_ObjectConfig[v].dwDevice <> -1) then
-          RegSetValueEx(hKey, szValueName, 0, dwType, (PBYTE)@m_ObjectConfig[v], dwSize);
-    end; *)
+        if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
+          RegSetValueEx(ahKey, szValueName, 0, dwType, @m_ObjectConfig[XBCtrlObject(v)], dwSize);
+    end;
 
-    RegCloseKey(ahKey);
+    (*RegCloseKey(ahKey);*)
   end;
 end;
 
