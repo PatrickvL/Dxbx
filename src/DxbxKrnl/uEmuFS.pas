@@ -59,13 +59,12 @@ var
 implementation
 
 // is the current fs register the xbox emulation variety?
-
 function EmuIsXboxFS: Boolean;
 var
   chk: Byte;
 begin
   asm
-    mov ah, fs:16h
+    mov ah, fs:[$16]
     mov chk, ah
   end;
 
@@ -76,7 +75,6 @@ end;
 // structure, and the Emu FS: structure. Before running Windows
 // code, you *must* swap over to Win2k/XP FS. Similarly, before
 // running Xbox code, you *must* swap back over to Emu FS.
-
 procedure EmuSwapFS();
 const
 {$J+}
@@ -88,7 +86,7 @@ begin
   // non-interception code uses it
 
   asm
-    mov ax, fs:14h
+    mov ax, fs:[$14]
     mov fs, ax
   end;
 
@@ -112,7 +110,6 @@ begin
 end; // EmuSwapFS
 
 // initialize fs segment selector emulation
-
 procedure EmuInitFS();
 begin
   EmuInitLDT();
@@ -261,7 +258,6 @@ begin
 end;
 
 // cleanup fs segment selector emulation
-
 procedure EmuCleanupFS();
 var
   wSwapFS: Word;
@@ -270,7 +266,7 @@ begin
   wSwapFS := 0;
 
   asm
-    mov ax, fs:14h  // FS.ArbitraryUserPointer
+    mov ax, fs:[$14]  // FS.ArbitraryUserPointer
     mov wSwapFS, ax;
   end;
 
@@ -280,15 +276,17 @@ begin
   if not EmuIsXboxFS() then
     EmuSwapFS(); // Xbox FS
 
+  //pTLSData := NULL;
+  
   asm
-    mov eax, fs:04h
+    mov eax, fs:[$04]
     mov pTLSData, eax
   end;
 
   EmuSwapFS(); // Win2k/XP FS
 
-  if pTLSData <> nil then
-    FreeMem(pTLSData);
+  if Assigned(pTLSData) then
+    CxbxFree(pTLSData);
 
   EmuDeallocateLDT(wSwapFS);
 end;

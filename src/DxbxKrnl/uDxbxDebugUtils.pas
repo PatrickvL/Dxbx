@@ -29,6 +29,7 @@ uses
 	JclDebug,
   // Dxbx
   uTypes,
+  uLog,
   uXboxLibraryUtils,
   DxLibraryAPIScanning;
 
@@ -81,9 +82,10 @@ begin
     begin
       Result := 'Exception ';
       for I := 0 to List.Count - 1 do
-      if GetLocationInfo(List.Items[I].CallerAdr, Info) then
-      with Info do
-        Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
+        if GetLocationInfo(List.Items[I].CallerAdr, Info) then
+          with Info do
+            Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
+            
       if List.Count > 0 then
         SetLength(Result, Length(Result) - 4);
     end;
@@ -111,8 +113,8 @@ begin
 //    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
 //    SourceName: string;             // Module file name
     Info.DebugInfo := Self; // Location object
-    if Assigned(DetectedFunction.VersionedXboxLibrary) then
-      BinaryFileName := DetectedFunction.VersionedXboxLibrary.LibName + '.lib'; // Name of the binary file containing the symbol
+//    if Assigned(DetectedFunction.VersionedXboxLibrary) then
+//      BinaryFileName := DetectedFunction.VersionedXboxLibrary.LibName + '.lib'; // Name of the binary file containing the symbol
   end;
 end;
 
@@ -131,10 +133,44 @@ begin
 *)
 end;
 
-initialization
+{$ELSE}
 
-  TJclDebugInfoList.RegisterDebugInfoSource(TDxbxAPIDebugInfoSource);
+function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): String;
+begin
+  Result := '';
+end;
 
 {$ENDIF}
+
+var
+  OrigErrorHandler: procedure(ErrorCode: Byte; ErrorAddr: Pointer);
+
+procedure DxbxErrorHandler(ErrorCode: Byte; ErrorAddr: Pointer);// export;
+begin
+  ErrorProc := OrigErrorHandler;
+  try
+    try
+      uLog.DbgPrintf('DxbxErrorHandler(%d,$%.8x) %s', [ErrorCode, ErrorAddr, JclLastExceptStackListToString]);
+    except
+
+    end;
+  finally
+    ErrorProc := DxbxErrorHandler;
+    OrigErrorHandler(ErrorCode, ErrorAddr);
+  end;
+end;
+
+initialization
+
+{$IFDEF DXBX_USE_JCLDEBUG}
+  TJclDebugInfoList.RegisterDebugInfoSource(TDxbxAPIDebugInfoSource);
+{$ENDIF}
+
+  OrigErrorHandler := ErrorProc;
+  ErrorProc := DxbxErrorHandler;
+
+finalization
+
+  ErrorProc := OrigErrorHandler;
 
 end.

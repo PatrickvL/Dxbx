@@ -33,9 +33,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-05-21 22:19:06 +0200 (wo, 21 mei 2008)                             $ }
-{ Revision:      $Rev:: 2372                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2008-08-23 22:07:26 +0200 (za, 23 aug 2008)                            $ }
+{ Revision:      $Rev:: 2441                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1082,8 +1082,8 @@ function PeUnmangleName(const Name: string; var Unmangled: string): TJclPeUmResu
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclPeImage.pas $';
-    Revision: '$Revision: 2372 $';
-    Date: '$Date: 2008-05-21 22:19:06 +0200 (wo, 21 mei 2008) $';
+    Revision: '$Revision: 2441 $';
+    Date: '$Date: 2008-08-23 22:07:26 +0200 (za, 23 aug 2008) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -1191,9 +1191,12 @@ begin
   Result := FunctionName;
   L := Length(Result);
   // (rom) possible bug. 'A'..'Z' missing from set (better use AnsiValidIdentifierLetters).
-  if (L > 1) and (Result[L] in ['A', 'W']) and
-    (Result[L - 1] in ['a'..'z', '_', '0'..'9']) then
-    Delete(Result, L, 1);
+  if (L > 1) then
+    case Result[L] of
+      'A', 'W':
+        if CharIsValidIdentifierLetter(Result[L - 1]) then
+          Delete(Result, L, 1);
+    end;
 end;
 
 function PeSmartFunctionNameSame(const ComparedName, FunctionName: string;
@@ -3292,20 +3295,20 @@ function TJclPeImage.GetFileProperties: TJclPeFileProperties;
 const
   faFile = faReadOnly or faHidden or faSysFile or faArchive;
 var
-  Se: TSearchRec;
-  Res: Integer;
+  FileAttributesEx: WIN32_FILE_ATTRIBUTE_DATA;
+  Size: TULargeInteger;
 begin
   FillChar(Result, SizeOf(Result), #0);
-  Res := FindFirst(FileName, faFile, Se);
-  if Res = 0 then
+  if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @FileAttributesEx) then
   begin
-    Result.Size := Se.Size;
-    Result.CreationTime := FileTimeToLocalDateTime(Se.FindData.ftCreationTime);
-    Result.LastAccessTime := FileTimeToLocalDateTime(Se.FindData.ftLastAccessTime);
-    Result.LastWriteTime := FileTimeToLocalDateTime(Se.FindData.ftLastWriteTime);
-    Result.Attributes := Se.Attr;
+    Size.LowPart := FileAttributesEx.nFileSizeLow;
+    Size.HighPart := FileAttributesEx.nFileSizeHigh;
+    Result.Size := Size.QuadPart;
+    Result.CreationTime := FileTimeToLocalDateTime(FileAttributesEx.ftCreationTime);
+    Result.LastAccessTime := FileTimeToLocalDateTime(FileAttributesEx.ftLastAccessTime);
+    Result.LastWriteTime := FileTimeToLocalDateTime(FileAttributesEx.ftLastWriteTime);
+    Result.Attributes := FileAttributesEx.dwFileAttributes;
   end;
-  FindClose(Se);
 end;
 
 function TJclPeImage.GetHeaderValues(Index: TJclPeHeader): string;
@@ -4933,8 +4936,8 @@ function PeRebaseImage32(const ImageName: TFileName; NewBase: TJclAddr32;
     if Length(ModuleName) > 0 then
       FirstChar := UpCase(ModuleName[1])
     else
-      FirstChar := AnsiNull;
-    if not (FirstChar in AnsiUppercaseLetters) then
+      FirstChar := NativeNull;
+    if not CharIsUpper(FirstChar) then
       FirstChar := 'A';
     Result := $60000000 + (((Ord(FirstChar) - Ord('A')) div 3) * $1000000);
   end;
@@ -4961,8 +4964,8 @@ function PeRebaseImage64(const ImageName: TFileName; NewBase: TJclAddr64;
     if Length(ModuleName) > 0 then
       FirstChar := UpCase(ModuleName[1])
     else
-      FirstChar := AnsiNull;
-    if not (FirstChar in AnsiUppercaseLetters) then
+      FirstChar := NativeNull;
+    if not CharIsUpper(FirstChar) then
       FirstChar := 'A';
     Result := $60000000 + (((Ord(FirstChar) - Ord('A')) div 3) * $1000000);
     Result := Result shl 32;
@@ -6263,7 +6266,7 @@ var
     SymbolLength: Integer;
   begin
     SymbolLength := 0;
-    while NameP^ in AnsiDecDigits do
+    while CharIsDigit(NameP^) do
     begin
       SymbolLength := SymbolLength * 10 + Ord(NameP^) - 48;
       Inc(NameP);
@@ -6305,7 +6308,7 @@ var
       LinkProcFound := True;
       Inc(NameP);
     end;
-    while NameP^ in AnsiValidIdentifierLetters do
+    while CharIsValidIdentifierLetter(NameP^) do
     begin
       NameU^ := NameP^;
       Inc(NameP);

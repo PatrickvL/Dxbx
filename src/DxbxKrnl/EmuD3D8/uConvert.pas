@@ -23,7 +23,10 @@ unit uConvert;
 interface
 
 uses
-  uEmuD3D8Types, Direct3D9;
+  // Dxbx
+  uEmuD3D8Types,
+  // Directx
+  Direct3D9;
 
 
 function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
@@ -33,13 +36,14 @@ function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
 implementation
 
 uses
+  // Delphi
   Windows
   , SysUtils
-  , uDxbxKrnlUtils
-  , uEmu
+  // Dxbx
+  , uTypes
   , uLog
-  ;
-
+  , uDxbxKrnlUtils
+  , uEmu;
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
@@ -192,7 +196,7 @@ begin
 //            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
       Result := $06;
   else begin
-      CxbxKrnlCleanup(Format('EmuPC2XB_D3DFormat: Unknown Format (%d)', [@aFormat]));
+      CxbxKrnlCleanup(Format('EmuPC2XB_D3DFormat: Unknown Format (%d)', [IntPtr(aFormat)]));
       Result := X_D3DFORMAT(aFormat);
     end;
   end;

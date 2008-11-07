@@ -29,6 +29,7 @@ uses
   Contnrs, // TObjectList
   Math, // Min
   // Dxbx
+  uTypes,
   uDxbxUtils,
   uXboxLibraryUtils,
   uStoredTrieTypes;
@@ -418,6 +419,9 @@ var
   var
     StoredLibraryFunction: RStoredLibraryFunction;
   begin
+{$IFDEF DXBX_RECTYPE}
+    StoredLibraryFunction.RecType := rtStoredLibraryFunction;
+{$ENDIF}
     StoredLibraryFunction.GlobalFunctionIndex := GlobalFunctions.IndexOf(aLeaf.VersionedXboxLibraryFunction.Name);
     StoredLibraryFunction.LibraryIndex := VersionedLibraries.IndexOf(aLeaf.VersionedXboxLibraryFunction.VersionedXboxLibrary);
     StoredLibraryFunction.CRCLength := aLeaf.VersionedXboxLibraryFunction.CRCLength;
@@ -440,8 +444,8 @@ var
     begin
       // Remember this position (this is where the next sibling will be written) :
       CurrentPosition := OutputFile.Position;
-      // Go the the 'NextSiblingOffset' member of the previous sibling :
-      OutputFile.Position := aPreviousSiblingPosition;
+      // Go to the position of the 'NextSiblingOffset' field in the previous sibling :
+      OutputFile.Position := aPreviousSiblingPosition + IntPtr(@(PStoredTrieNode(nil).NextSiblingOffset));
       OutputFile.Write(CurrentPosition, SizeOf(TByteOffset));
       // Return to the previous position, and remember that for the next call to this method :
       OutputFile.Position := CurrentPosition;
@@ -453,7 +457,7 @@ var
       b: TStretchHeaderByte;
       i: Integer;
     begin
-      b := (NrFixed shl 3);
+      b := (NrFixed shl NODE_NR_FIXED_SHIFT);
       case NrWildcards of
         0: if NrFixed = PATTERNSIZE then
              b := NODE_ALLFIXED; // 32 can't be measured, but use a special flag for that
@@ -468,24 +472,24 @@ var
 
       // Determine it there's followup :
       if Index < Len then
-        b := b or 4;
+        b := b or NODE_FLAG_MORE;
 
       // Write out the heading-byte of this stretch:
-      OutputFile.Write(b, 1);
+      OutputFile.Write(b, SizeOf(b));
 
       // Write out the fixed bytes for this stretch :
       for i := PrevIndex to Index - 1 do
         if aPatternNode.Pattern[i] <> PatternDontCareValue then
         begin
           b := Byte(aPatternNode.Pattern[i]);
-          OutputFile.Write(b, 1);
+          OutputFile.Write(b, SizeOf(b));
         end;
 
       // Now that we've flushed, initialize the next stretch :
       PrevIndex := Index;
       NrFixed := 0;
       NrWildcards := 0;
-    end;
+    end; // _FlushStretch
 
   begin
     // All other nodes have at least 1 byte of pattern data, but the root has no data.
@@ -493,6 +497,9 @@ var
     // So root is handled here like any other node - without any special cases.
 
     // Write the TrieNode :
+{$IFDEF DXBX_RECTYPE}
+    StoredTrieNode.RecType := rtStoredTrieNode;
+{$ENDIF}
     StoredTrieNode.NextSiblingOffset := 0;
     Len := SizeOf(RStoredTrieNode);
     if aPatternNode.NrChildren < 128 then
@@ -557,7 +564,7 @@ var
         _WriteTrieNodes(aPatternNode.Children[i], Depth);
       end;
     end;
-  end;
+  end; // _WriteTrieNodes
 
 var
   i: Integer;
@@ -618,6 +625,9 @@ begin
     OutputFile.Position := StoredSignatureTrieHeader.LibraryTable.LibrariesOffset;
     for i := 0 to VersionedLibraries.Count - 1 do
     begin
+{$IFDEF DXBX_RECTYPE}
+      StoredLibrary.RecType := rtStoredLibrary;
+{$ENDIF}
       StoredLibrary.LibVersion := PVersionedXboxLibrary(VersionedLibraries[i]).LibVersion;
       StoredLibrary.LibNameIndex := UniqueStrings.IndexOf(PVersionedXboxLibrary(VersionedLibraries[i]).LibName);
 
@@ -630,6 +640,9 @@ begin
 
     for i := 0 to GlobalFunctions.Count - 1 do
     begin
+{$IFDEF DXBX_RECTYPE}
+      StoredGlobalFunction.RecType := rtStoredGlobalFunction;
+{$ENDIF}
       StoredGlobalFunction.FunctionNameIndex := UniqueStrings.IndexOf(GlobalFunctions[i]);
       OutputFile.WriteBuffer(StoredGlobalFunction, SizeOf(StoredGlobalFunction));
     end;
@@ -650,7 +663,7 @@ begin
     FreeAndNil(UniqueStrings);
     FreeAndNil(OutputFile);
   end;
-end;
+end; // Save
 
 //
 
@@ -799,6 +812,9 @@ function GeneratePatternTrie(const aPatternFiles: TStrings; const aOnlyPatches: 
 
         // Create and initialize this new library :
         VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
+{$IFDEF DXBX_RECTYPE}
+        VersionedXboxLibrary.RecType := rtVersionedXboxLibrary;
+{$ENDIF}
         VersionedXboxLibrary.LibVersion := StrToInt(Copy(LibName, 1, 4));
         Delete(LibName, 1, 4);
         VersionedXboxLibrary.LibName := LibName;

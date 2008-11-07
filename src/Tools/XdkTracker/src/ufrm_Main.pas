@@ -315,7 +315,7 @@ begin
     for j := 0 to LibNames.Count - 1 do
       with lst_Import.Columns.Add do
       begin
-        Caption := LibNames[j];;
+        Caption := LibNames[j];
         Width := 75;
       end;
 

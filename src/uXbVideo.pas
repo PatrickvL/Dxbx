@@ -22,7 +22,8 @@ unit uXbVideo;
 
 interface
 
-Uses
+uses
+  // Delphi
   Windows;
 
 type

@@ -81,6 +81,9 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
     VersionedXboxLibrary: PVersionedXboxLibrary;
   begin
     Result := aStoredLibraryFunction;
+{$IFDEF DXBX_RECTYPE}
+    Assert(aStoredLibraryFunction.RecType = rtStoredLibraryFunction, 'StoredLibraryFunction type mismatch!');
+{$ENDIF}
     if aStoredLibraryFunction.CRCLength > 0 then
     begin
       if aStoredLibraryFunction.CRCValue <> CalcCRC16(aAddress, aStoredLibraryFunction.CRCLength) then
@@ -95,6 +98,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
 
     // Get the Stored Library associated with this pattern :
     StoredLibrary := aPatternTrieReader.GetStoredLibrary(aStoredLibraryFunction.LibraryIndex);
+
     // Determine if this matches one of the actual libraries :
     for i := 0 to DetectedFunctions.ActualXboxLibraries.Count - 1 do
     begin
@@ -105,41 +109,48 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
 
     // No matching library, skip this :
     Result := nil;
-  end;
+  end; // _TryMatchingLeaf
 
   function _TryMatchingNode(aStoredTrieNode: PStoredTrieNode; aAddress: PByte; Depth: Integer): PStoredLibraryFunction;
   var
     NrChildren: Integer;
     StretchPtr: PByte;
-    StretchHeader: TStretchHeaderByte;
+    StretchHeaderByte: TStretchHeaderByte;
     More: Boolean;
     NrFixed, NrWildcards, i: Integer;
     NextOffset: TByteOffset;
     StoredLibraryFunction: PStoredLibraryFunction;
   begin
     Result := nil;
+{$IFDEF DXBX_RECTYPE}
+    Assert(aStoredTrieNode.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
+{$ENDIF}
+    // Calculate the position of the data after this TreeNode (StretchPtr) : 
     NrChildren := aStoredTrieNode.NrChildrenByte1;
     IntPtr(StretchPtr) := IntPtr(aStoredTrieNode) + SizeOf(RStoredTrieNode);
     if NrChildren >= 128 then
       // Reconstruct the NrChildren value :
       NrChildren := (Integer(aStoredTrieNode.NrChildrenByte1 and 127) shl 8) or aStoredTrieNode.NrChildrenByte2
     else
-      // If one byte was sufficient, then the stretch starts 1 byte earlier too :
-      Dec(IntPtr(StretchPtr));
+      // If one byte was sufficient, then the next stretch starts 1 byte earlier :
+      Dec(IntPtr(StretchPtr), SizeOf({RStoredTrieNode.NrChildrenByte2:}Byte));
 
+    // Scan all stretches after this node :
     repeat
-      StretchHeader := StretchPtr^;
+      StretchHeaderByte := StretchPtr^;
       Inc(StretchPtr);
 
-      More := (StretchHeader and 4) > 0;
-      NrFixed := StretchHeader shr 3;
-      case StretchHeader and 3 of
+      // Determine if there are more stretches after this one :
+      More := (StretchHeaderByte and NODE_FLAG_MORE) > 0;
+      // Determine how many wildcard bytes need to be skipped :
+      NrFixed := StretchHeaderByte shr NODE_NR_FIXED_SHIFT;
+      case StretchHeaderByte and NODE_TYPE_MASK of
         NODE_5BITFIXED_4WILDCARDS: NrWildcards := 4;
         NODE_5BITFIXED_8WILDCARDS: NrWildcards := 8;
         NODE_5BITFIXED_ALLWILDCARDS:
-          if (StretchHeader and 7) = NODE_ALLFIXED then
+          if (StretchHeaderByte and NODE_TYPE_MASK_EXTENDED) = NODE_ALLFIXED then
           begin
-            NrFixed := 32;
+            NrFixed := PATTERNSIZE;
             NrWildcards := 0;
             More := False;
           end
@@ -163,7 +174,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
       Inc(Depth, NrFixed);
       Inc(Depth, NrWildcards);
       Inc(aAddress, NrWildcards);
-      
+
     until not More;
 
     if Depth = PATTERNSIZE then
@@ -181,7 +192,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
       end;
 
       Exit;
-    end;
+    end; // if Depth
 
     aStoredTrieNode := Pointer(StretchPtr);
     while NrChildren > 0 do
@@ -203,7 +214,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
     end;
 
     Result := nil;
-  end;
+  end; // _TryMatchingNode
 
 var
   Node: PStoredTrieNode;
@@ -278,8 +289,11 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
 
         // Add this library to a list we'll use in the detection-code :
         VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
+{$IFDEF DXBX_RECTYPE}
+        VersionedXboxLibrary.RecType := rtVersionedXboxLibrary;
+{$ENDIF}
         VersionedXboxLibrary.LibVersion := BestFit.LibVersion;
-        VersionedXboxLibrary.LibName := aPatternTrieReader.GetString(BestFit.LibNameIndex);;
+        VersionedXboxLibrary.LibName := aPatternTrieReader.GetString(BestFit.LibNameIndex);
         DetectedFunctions.ActualXboxLibraries.Add(VersionedXboxLibrary);
       end
       else
@@ -288,7 +302,7 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
       // Skip to the next library :
       Inc(CurrentXbeLibraryVersion);
     end;
-  end;
+  end; // _DetectVersionedXboxLibraries
 
   function _FindAndRememberPattern(const aPatternTrieReader: TPatternTrieReader; const aAddress: PByte): PStoredLibraryFunction;
   var
@@ -320,20 +334,30 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
 {$IFDEF DXBX_DEBUG}
     DbgPrintf('DxbxHLE : 0x%.8x -> %s [%s]', [aAddress, Detected.FunctionName, string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))]);
 {$ENDIF}
-  end;
+  end; // _FindAndRememberPattern
 
   procedure _ScanMemoryRangeForLibraryPatterns(const ByteScanLower, ByteScanUpper: PByte;
     const aPatternTrieReader: TPatternTrieReader);
   var
     p: PByte;
   begin
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf('DxbxHLE : Scanning from 0x%.8x to 0x%.8x', [ByteScanLower, ByteScanUpper]);
+{$ENDIF}
     p := ByteScanLower;
     while p <> ByteScanUpper do
     begin
-      _FindAndRememberPattern(aPatternTrieReader, p);
+      try
+        _FindAndRememberPattern(aPatternTrieReader, p);
+      except
+{$IFDEF DXBX_DEBUG}
+        DbgPrintf('DxbxHLE : Exception while scanning on address 0x%.8x', [p]);
+{$ENDIF}
+      end;
+
       Inc(p);
     end;
-  end;
+  end; // _ScanMemoryRangeForLibraryPatterns
 
 var
   ByteScanLower, ByteScanUpper: PByte;
@@ -409,7 +433,7 @@ begin
 *)
 
   DbgPrintf('DxbxHLE : Detected %d APIs', [DetectedFunctions.Count]);
-end;
+end; // DxbxScanForLibraryAPIs
 
 { TDetectedFunctions }
 

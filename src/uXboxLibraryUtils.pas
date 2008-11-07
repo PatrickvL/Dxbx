@@ -92,31 +92,35 @@ const
   XTL_EmuXapiThreadStartup: string = '_XapiThreadStartup@8';
   // NOTE: ^^^ New patches go above this line ^^^
 
+function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
 type
   PString = ^string;
 
-function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
-
+  // Note : Because the included code returns the address of the symbol,
+  // we're forced indicate that for strings too, thus the PString type :
   function _GetPString: PString;
   begin
     case aValue of
       // Here's the second time we include the case-statements,
-      // but this time, the symbols are defined to contain strings :
+      // but this time, the symbols are re-defined to contain strings
+      // (see "DIRTY LITTLE HACK" comments above) :
       {$INCLUDE XboxLibraryPatchCases.inc}
     else
       Result := nil;
     end;
-  end;
+  end; // _GetPString
 
 var
   aStr: PString;
 begin
   aStr := _GetPString;
   if Assigned(aStr) then
+    // If the _GetPString resulted in an assigned string pointer,
+    // read the string itself by following the indirection :
     Result := aStr^
   else
     Result := '';
-end;
+end; // XboxLibraryPatchToString
 
 function Sscanf(const s: string; const fmt: string; const Pointers: array of Pointer): Integer;
 var
@@ -287,6 +291,10 @@ begin
   Result := XboxFunctionNameToLibraryPatch(aFunctionName) <> xlp_Unknown;
 end;
 
+// Checks if the XboxLibraryPatchToPatch() and XboxLibraryPatchToString()
+// functions behave correctly - this cannot be done at compile-time,
+// so we'll settle for a runtime check instead (just as long as we have
+// some sort of test for this, we'll be fine).
 procedure CheckAllPatches;
 var
   p: TXboxLibraryPatch;
@@ -316,7 +324,7 @@ begin
     if XboxLibraryPatchToString(p) = '' then
       Inc(NrEmptySlots)
     else
-      // Note this TXboxLibraryPatch offset as the highest of yet :
+      // Note this TXboxLibraryPatch offset is the highest as of yet :
       High_TXboxLibraryPatch := p;
 
   until NrEmptySlots >= TRESHHOLD;

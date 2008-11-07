@@ -46,19 +46,19 @@ implementation
 
 var
   // Table of free LDT entries
-  FreeLDTEntries: array[00..MAXIMUM_XBOX_THREADS - 1] of DWord;
+  FreeLDTEntries: array[0..MAXIMUM_XBOX_THREADS - 1] of UInt16;
 
   // Critical section lock
   EmuLDTLock: Windows._RTL_CRITICAL_SECTION;
 
 procedure EmuInitLDT;
 var
-  v: Integer;
+  v: UInt32;
 begin
   InitializeCriticalSection({var}EmuLDTLock);
 
   for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
-    FreeLDTEntries[v] := DWord((v * 8) + 7 + 8);
+    FreeLDTEntries[v] := UInt16((v * 8) + 7 + 8);
 end;
 
 function EmuAllocateLDT(dwBaseAddr: uint32; dwLimit: uint32): uint16;

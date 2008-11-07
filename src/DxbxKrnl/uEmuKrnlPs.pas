@@ -22,12 +22,15 @@ unit uEmuKrnlPs;
 interface
 
 uses
+  // Delphi
   SysUtils,
+  // Jedi
   JwaWinType,
   JwaWinBase,
   JwaWinNT,
   JwaNative,
   JwaNTStatus,
+  // Dxbx
   XboxKrnl,
   uLog,
   uEmuFS,
