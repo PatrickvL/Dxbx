@@ -35,7 +35,10 @@
 {$IFDEF DXBX_DLL}
   // Our DLL's need actual patch addresses
   {$DEFINE DXBX_PATCH_ADDRESSES_ENABLED}
+  {$DEFINE DXBX_USE_JCLDEBUG}
 {$ENDIF}
+
+{.$DEFINE DXBX_RECTYPE} // Include RecType info in PatternTrie
 
 // Apply our default compiler options before jedi.inc goes ahead :
 

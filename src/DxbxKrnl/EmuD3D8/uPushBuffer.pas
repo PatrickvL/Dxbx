@@ -23,14 +23,11 @@ unit uPushBuffer;
 interface
 
 uses
+  // Delphi
   Windows
   , uEmuD3D8Types;
 
-
-
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD);
-
-
 var
   g_dwPrimaryPBCount: LongInt = 0;
   g_pPrimaryPB: LongInt = 0;

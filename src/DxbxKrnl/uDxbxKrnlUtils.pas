@@ -53,7 +53,7 @@ implementation
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
 var
   szBuffer1: string;
-  buffer : Array [0..15] of char;
+//  buffer: array [0..15] of char;
 begin
   // Print out ErrorMessage (if exists)
   if szErrorMessage <> '' then

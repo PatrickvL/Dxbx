@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007)                             $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2008-08-16 03:54:04 +0200 (za, 16 aug 2008)                             $ }
+{ Revision:      $Rev:: 2420                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -859,8 +859,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTD32.pas $';
-    Revision: '$Revision: 2175 $';
-    Date: '$Date: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007) $';
+    Revision: '$Revision: 2420 $';
+    Date: '$Date: 2008-08-16 03:54:04 +0200 (za, 16 aug 2008) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -1434,7 +1434,7 @@ begin
     with Modules[I] do
       for J := 0 to SegmentCount - 1 do
       begin
-        if (AAddr >= FSegments[J].Offset) and (AAddr - FSegments[J].Offset <= Segment[J].Size) then
+        if (FSegments[J].Flags = 1) and (AAddr >= FSegments[J].Offset) and (AAddr - FSegments[J].Offset <= Segment[J].Size) then
         begin
           Result := True;
           AMod := Modules[I];

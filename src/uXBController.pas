@@ -23,7 +23,8 @@ interface
 {$INCLUDE Dxbx.inc}
 
 uses
-  Windows
+  // Delphi
+    Windows
   , Classes
   , SysUtils
   // 3rd party

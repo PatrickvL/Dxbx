@@ -21,9 +21,13 @@ unit uVertexBuffer;
 {$INCLUDE ..\..\Dxbx.inc}
 
 interface
+
 uses
+  // Delphi
   Windows
+  // Directx
   , Direct3D
+  // Dxbx
   , uLog
   , D3DX8;
 

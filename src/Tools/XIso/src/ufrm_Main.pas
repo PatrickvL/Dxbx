@@ -26,6 +26,7 @@ unit ufrm_Main;
 interface
 
 uses
+  // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ShlObj, ActiveX, ExtCtrls, ImgList, CDROM, WIN32ASPI,
   Menus, ShellApi, ToolWin, Graphics, Registry,

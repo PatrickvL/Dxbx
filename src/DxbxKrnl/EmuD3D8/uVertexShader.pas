@@ -23,7 +23,9 @@ unit uVertexShader;
 interface
 
 uses
+  // Delphi
   Windows
+  // Dxbx
   , uEmuD3D8Types;
 
 function VshHandleIsVertexShader(aHandle: DWORD): boolean;
@@ -33,7 +35,7 @@ function XTL_IsValidCurrentShader: boolean;
 
 implementation
 
-Uses
+uses
   uEmuFS
   , uEmuD3D8;
 

@@ -37,9 +37,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-02-03 19:05:06 +0100 (zo, 03 feb 2008)                             $ }
-{ Revision:      $Rev:: 2338                                                                     $ }
-{ Author:        $Author:: marcovtje                                                             $ }
+{ Last modified: $Date:: 2008-08-18 18:07:01 +0200 (ma, 18 aug 2008)                            $ }
+{ Revision:      $Rev:: 2433                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -202,8 +202,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclShell.pas $';
-    Revision: '$Revision: 2338 $';
-    Date: '$Date: 2008-02-03 19:05:06 +0100 (zo, 03 feb 2008) $';
+    Revision: '$Revision: 2433 $';
+    Date: '$Date: 2008-08-18 18:07:01 +0200 (ma, 18 aug 2008) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -358,11 +358,11 @@ function EnumFolderFlagsToCardinal(Flags: TEnumFolderFlags): Cardinal;
 begin
   Result := 0;
   if efFolders in Flags then
-    Result := Result or ord(SHCONTF_FOLDERS);
+    Result := Result or SHCONTF_FOLDERS;
   if efNonFolders in Flags then
-    Result := Result or ord(SHCONTF_NONFOLDERS);
+    Result := Result or SHCONTF_NONFOLDERS;
   if efIncludeHidden in Flags then
-    Result := Result or ord(SHCONTF_INCLUDEHIDDEN);
+    Result := Result or SHCONTF_INCLUDEHIDDEN;
 end;
 
 procedure ClearEnumFolderRec(var F: TEnumFolderRec; const Free, Release: Boolean);

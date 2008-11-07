@@ -40,6 +40,7 @@ type
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
   ProcedureStdCall = procedure; stdcall;
+  Function1ArgStdCall = function (const Arg1: DWORD): Integer; stdcall;
 
   _XINPUT_RUMBLE = record
     wLeftMotorSpeed: WORD;
@@ -1202,7 +1203,7 @@ begin
 
   EmuSwapFS();   // XBox FS
 
-  ProcedureStdCall(dwDummy1)();
+  Function1ArgStdCall(dwDummy1)(dwDummy2);
 (*
     type  integer (__stdcall *pfDummyFunc)(DWORD dwDummy);
 

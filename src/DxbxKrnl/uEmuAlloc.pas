@@ -30,6 +30,7 @@ uses
 
 
 function CxbxMalloc(x: Integer): Pointer;
+procedure CxbxFree(x: Pointer);
 
 implementation
 
@@ -102,6 +103,11 @@ procedure CxbxAllocDump(DumpData: bool);
 function CxbxMalloc(x: Integer): Pointer;
 begin
   Result := AllocMem(x);
+end;
+
+procedure CxbxFree(x: Pointer);
+begin
+  FreeMem(x);
 end;
 
 (*

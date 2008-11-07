@@ -35,8 +35,23 @@ const
   PatternDontCareValue = Word($FFFF);
 
 type
+  {$A1} // Make sure all the following records are byte-aligned for best space-usage :
+
+{$IFDEF DXBX_RECTYPE}
+  TRecType = (
+    rtUnknown,
+    rtVersionedXboxLibrary,
+    rtStoredLibrary,
+    rtStoredGlobalFunction,
+    rtStoredLibraryFunction,
+    rtStoredTrieNode);
+{$ENDIF}
+
   PVersionedXboxLibrary = ^RVersionedXboxLibrary;
   RVersionedXboxLibrary = record
+{$IFDEF DXBX_RECTYPE}
+    RecType: TRecType;
+{$ENDIF}
     LibVersion: Integer;
     LibNameIndex: Integer;
     LibName: string;
@@ -44,14 +59,12 @@ type
 
   TLibVersion = Word; // The 4-digit version number of an XDK library
 
-  BaseIndexType = Cardinal; // A Word suffices for less than 65536 strings & functions, use Cardinal for larger sets 
-  
+  BaseIndexType = Cardinal; // A Word suffices for less than 65536 strings & functions, use Cardinal for larger sets
+
   PByteOffset = ^TByteOffset;
   TByteOffset = type Cardinal; /// Use this everywhere a location in the Trie's persistent storage is needed.
 
-  TStringTableIndex = type Word;// TODO : Find out why using BaseIndexType here leads to a crash! /// Use this everywhere a string is uniquely identified.
-
-  {$A1} // Make sure all the following records are byte-aligned for best space-usage :
+  TStringTableIndex = type BaseIndexType; /// Use this everywhere a string is uniquely identified.
 
   RStoredStringTable = record
     NrStrings: BaseIndexType; /// The number of strings in this table (no duplicates, sorted for faster searching)
@@ -66,6 +79,9 @@ type
 
   PStoredLibrary = ^RStoredLibrary;
   RStoredLibrary = record
+{$IFDEF DXBX_RECTYPE}
+    RecType: TRecType;
+{$ENDIF}
     LibVersion: TLibVersion; /// The version number of this library
     LibNameIndex: TStringTableIndex; // The name of this library, in the form of an index into the StringTable.
   end;
@@ -82,6 +98,9 @@ type
   // This record contains the global function information.
   PStoredGlobalFunction = ^RStoredGlobalFunction;
   RStoredGlobalFunction = record
+{$IFDEF DXBX_RECTYPE}
+    RecType: TRecType;
+{$ENDIF}
     FunctionNameIndex: TStringTableIndex; /// This record only has the index to the name of this function.
   end;
 
@@ -104,6 +123,9 @@ type
   // This record contains the per-library function information.
   PStoredLibraryFunction = ^RStoredLibraryFunction;
   RStoredLibraryFunction = record
+{$IFDEF DXBX_RECTYPE}
+    RecType: TRecType;
+{$ENDIF}
     GlobalFunctionIndex: TFunctionIndex; /// The unique index of this function in the RStoredGlobalFunctionTable
     LibraryIndex: TLibraryIndex; /// The unique index of the libray containing this function
     CRCLength: Byte;
@@ -113,6 +135,9 @@ type
 
   PStoredTrieNode = ^RStoredTrieNode;
   RStoredTrieNode = record
+{$IFDEF DXBX_RECTYPE}
+    RecType: TRecType;
+{$ENDIF}
     NextSiblingOffset: TByteOffset;
     NrChildrenByte1: Byte;
     // The next byte is optional, only used when the actual number of
@@ -156,6 +181,12 @@ const
   // The "ALLFIXED" flag is used to indicate a full stretch of 32 fixed values,
   // which couldn't otherwise be specified with the 5 bits reserved for that :
   NODE_ALLFIXED = 7;
+
+  NODE_TYPE_MASK = 3; // bit 0 and 1 (see above for meaning of possible values 0, 1, 2 and 3)
+  NODE_TYPE_MASK_EXTENDED = 7; //
+
+  NODE_FLAG_MORE = (1 shl 2); // bit 2 (indicates another stretch, unless combined with NODE_5BITFIXED_ALLWILDCARDS)
+  NODE_NR_FIXED_SHIFT = 3; // Shift bit 0,1 and 2 away to get to the remaining 5 bits for NrFixed
 
 type
   TPatternTrieReader = class(TObject)
@@ -204,6 +235,9 @@ function TPatternTrieReader.GetStringPointerByIndex(const aStringIndex: TStringT
 var
   Offset: TByteOffset;
 begin
+  if (aStringIndex < 0) or (aStringIndex >= StoredSignatureTrieHeader.StringTable.NrStrings) then
+    raise EListError.CreateFmt('String index out of bounds (%d)', [aStringIndex]);
+
   Offset := StringOffsetList[aStringIndex];
   Result := PAnsiChar(GetByteOffset(Offset));
 end;
@@ -228,11 +262,17 @@ end;
 function TPatternTrieReader.GetStoredLibrary(const aStoredLibraryIndex: TLibraryIndex): PStoredLibrary;
 begin
   Result := @(StoredLibrariesList[aStoredLibraryIndex]);
+{$IFDEF DXBX_RECTYPE}
+  Assert(Result.RecType = rtStoredLibrary, 'StoredLibrary type mismatch!');
+{$ENDIF}
 end;
 
 function TPatternTrieReader.GetGlobalFunction(const aGlobalFunctionIndex: TFunctionIndex): PStoredGlobalFunction;
 begin
   Result := @(GlobalFunctionList[aGlobalFunctionIndex]);
+{$IFDEF DXBX_RECTYPE}
+  Assert(Result.RecType = rtStoredGlobalFunction, 'StoredGlobalFunction type mismatch!');
+{$ENDIF}
 end;
 
 function TPatternTrieReader.GetFunctionName(const aGlobalFunctionIndex: TFunctionIndex): string;
@@ -254,6 +294,9 @@ end;
 function TPatternTrieReader.GetNode(const aNodeOffset: TByteOffset): PStoredTrieNode;
 begin
   IntPtr(Result) := IntPtr(StoredSignatureTrieHeader) + aNodeOffset;
+{$IFDEF DXBX_RECTYPE}
+  Assert(Result.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
+{$ENDIF}
 end;
 
 end.
