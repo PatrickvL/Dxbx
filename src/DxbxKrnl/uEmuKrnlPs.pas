@@ -166,6 +166,7 @@ callComplete:
   except
     on E: Exception do
     begin
+      //EmuException(E);
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString(False));

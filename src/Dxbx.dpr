@@ -62,7 +62,7 @@ begin
   and FileExists(XBEFilePath) then
   begin
     Xbe := nil; // prevent warning
-    if ConvertXbeToExe(XBEFilePath, tmpstr1, tmpstr2, Xbe, Application.Handle) then
+    if ConvertXbeToExe(XBEFilePath, tmpstr1, tmpstr2, Xbe, 0{=No WindowHandle!}) then
       Exit;
     // TODO : Error logging should go here
   end;

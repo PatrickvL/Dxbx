@@ -433,7 +433,7 @@ begin
     end; // case
 
     try
-      Result := ConvertToExe(FileName, False, m_Xbe, self.Handle);
+      Result := ConvertToExe(FileName, False, m_Xbe, Self.Handle);
     finally
     end;
 
