@@ -43,7 +43,7 @@ var
   // xbe header structure
   CxbxKrnl_XbeHeader: PXBE_HEADER;
   // parent window handle
-  CxbxKrnl_hEmuParent: THandle;
+  CxbxKrnl_hEmuParent: HWND;
 
   // thread handles
   g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of THandle;

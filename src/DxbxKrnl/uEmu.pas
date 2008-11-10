@@ -104,8 +104,197 @@ begin
     (*fflush(stdout); *)
 end;
 
-// check how many bytes were allocated for a structure
+(*
+// exception handler
+function EmuException(E: LPEXCEPTION_POINTERS): Integer;
+begin
+	if EmuIsXboxFS() then
+		EmuSwapFS();
 
+	g_bEmuException := True;
+
+	// check for Halo hack
+	begin
+		if E.ExceptionRecord.ExceptionCode = $C0000005 then
+		begin
+			// Halo Access Adjust 1
+			if E.ContextRecord.Eip = $0003394C then
+			begin
+				if E.ContextRecord.Ecx = $803BD800 then
+				begin
+					// Halo BINK skip
+					begin
+						// nop sled over bink calls
+						{*
+						memset((void* )$2CBA4, $90, $2CBAF - $2CBA4);
+						memset((void* )$2CBBD, $90, $2CBD5 - $2CBBD);
+						//*
+						memset((void* )$2CAE0, $90, $2CE1E - $2CAE0);
+					end;
+
+          uint32 fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
+
+          e.ContextRecord.Eax := fix;
+          e.ContextRecord.Ecx := fix;
+
+          *(uint32* )e.ContextRecord.Esp := fix;
+
+          ((XTL::X_D3DResource* )fix).Data := g_HaloHack[1] + (((XTL::X_D3DResource* )fix).Data - $803A6000);
+
+          // go through and fix any other pointers in the ESI allocation chunk
+          begin
+            DWORD dwESI := e.ContextRecord.Esi;
+            DWORD dwSize := EmuCheckAllocationSize((PVOID)dwESI, false);
+
+            // dword aligned
+            dwSize -= 4 - (dwSize mod 4);
+
+            for(DWORD v=0;v<dwSize;v+=4)
+            begin
+              DWORD dwCur := *(DWORD* )(dwESI+v);
+
+              if (dwCur >= $803A6000) and (dwCur < $819A6000) then
+                  *(DWORD* )(dwESI+v) := g_HaloHack[1] + (dwCur - $803A6000);
+            end;
+          end;
+
+          // fix this global pointer
+          begin
+              DWORD dwValue := *(DWORD* )$39CE24;
+
+              *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
+          end;
+
+          DbgPrintf('EmuMain ($%X): Halo Access Adjust 1 was applied!\n', GetCurrentThreadId());
+
+          g_bEmuException := False;
+
+          Result := EXCEPTION_CONTINUE_EXECUTION; Exit;
+        end;
+      end
+      // Halo Access Adjust 2
+      else
+        if E.ContextRecord.Eip = $00058D8C then
+        begin
+          if e.ContextRecord.Eax = $819A5818 then
+          begin
+            uint32 fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
+
+            *(DWORD* )$0039BE58 := e.ContextRecord.Eax := fix;
+
+            // go through and fix any other pointers in the $2DF1C8 allocation chunk
+            begin
+              DWORD dwPtr := *(DWORD* )$2DF1C8;
+              DWORD dwSize := EmuCheckAllocationSize((PVOID)dwPtr, false);
+
+              // dword aligned
+              dwSize -= 4 - dwSize%4;
+
+              for(DWORD v=0;v<dwSize;v+=4 do
+              begin
+                  DWORD dwCur := *(DWORD* )(dwPtr+v);
+
+                  if(dwCur >= $803A6000 && dwCur < $819A6000)
+                      *(DWORD* )(dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
+              end;
+            end;
+
+            DbgPrintf('EmuMain ($%X): Halo Access Adjust 2 was applied!\n', GetCurrentThreadId());
+
+            g_bEmuException := False;
+
+            Result := EXCEPTION_CONTINUE_EXECUTION; Exit;
+          end;
+        end;
+      end;
+    end;
+
+    // print debug information
+    begin
+      if E.ExceptionRecord.ExceptionCode = $80000003 then
+          printf('EmuMain ($%X): Recieved Breakpoint Exception (int 3)\n', GetCurrentThreadId());
+      else
+          printf('EmuMain ($%X): Recieved Exception (Code := $%.08X)\n', GetCurrentThreadId(), e.ExceptionRecord.ExceptionCode);
+
+      printf('\n'
+          ' EIP := $%.08X EFL := $%.08X\n'
+          ' EAX := $%.08X EBX := $%.08X ECX := $%.08X EDX := $%.08X\n'
+          ' ESI := $%.08X EDI := $%.08X ESP := $%.08X EBP := $%.08X\n'
+          '\n',
+          e.ContextRecord.Eip, e.ContextRecord.EFlags,
+          e.ContextRecord.Eax, e.ContextRecord.Ebx, e.ContextRecord.Ecx, e.ContextRecord.Edx,
+          e.ContextRecord.Esi, e.ContextRecord.Edi, e.ContextRecord.Esp, e.ContextRecord.Ebp);
+    end;
+
+    fflush(stdout);
+
+    // notify user
+    begin
+        char buffer[256];
+
+        if e.ExceptionRecord.ExceptionCode = $80000003 then
+        begin
+            sprintf(buffer,
+				'Recieved Breakpoint Exception (int 3) @ EIP := $%.08X\n'
+                '\n'
+                '  Press Abort to terminate emulation.\n'
+                '  Press Retry to debug.\n'
+                '  Press Ignore to continue emulation.',
+                e.ContextRecord.Eip, e.ContextRecord.EFlags);
+
+            e.ContextRecord.Eip += 1;
+
+            int ret := MessageBox(g_hEmuWindow, buffer, 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
+
+            if ret = IDABORT then
+            begin
+                printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
+                fflush(stdout);
+
+                if CxbxKrnl_hEmuParent <> NULL then
+                    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
+                ExitProcess(1);
+            end
+            else
+            if ret = IDIGNORE then
+            begin
+                printf('EmuMain ($%X): Ignored Breakpoint Exception\n', GetCurrentThreadId());
+
+                g_bEmuException := False;
+
+                return EXCEPTION_CONTINUE_EXECUTION;
+            end;
+        end
+        else
+        begin
+			sprintf(buffer,
+                'Recieved Exception Code $%.08X @ EIP := $%.08X\n'
+                '\n'
+                '  Press \'OK\' to terminate emulation.\n'
+                '  Press \'Cancel\' to debug.',
+                e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip, e.ContextRecord.EFlags);
+
+            if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
+            begin
+              printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
+              fflush(stdout);
+
+              if CxbxKrnl_hEmuParent <> NULL then
+                SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
+              ExitProcess(1);
+            end;
+        end;
+	end;
+
+	g_bEmuException := False;
+
+	Result := EXCEPTION_CONTINUE_SEARCH;
+end;
+*)
+
+// check how many bytes were allocated for a structure
 function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): integer;
 var
   MemoryBasicInfo : MEMORY_BASIC_INFORMATION;

@@ -83,7 +83,7 @@ function XTL_EmuIDirect3DDevice8_GetViewport(pViewport: D3DVIEWPORT8): HRESULT; 
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: integer; a: FLOAT; b: FLOAT; c: FLOAT; d: FLOAT): HRESULT; stdcall;
 procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD);
 
-function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; // forward
+function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: X_D3DPRESENT_PARAMETERS;
@@ -263,12 +263,13 @@ begin
 end;                                            *)
 
 // window message processing thread
-
 function EmuRenderWindow(lpVoid: Pointer): DWord;
 // Branch:martin  Revision:39  Done:80 Translator:Shadow_Tj
+const
+  DXBX_RENDER_CLASS = 'DxbxRender';
 var
   msg: TMsg;
-  AsciiTitle: AnsiString;
+  AsciiTitle: string;
   hDxbxDLL: HMODULE;
   logBrush: TLogBrush;
   wc: WNDCLASSEX;
@@ -289,6 +290,7 @@ begin
 
     logBrush.lbStyle := BS_SOLID;
     logBrush.lbColor := RGB(0, 0, 0);
+    logBrush.lbHatch := 0;
 
     g_hBgBrush := CreateBrushIndirect(logBrush);
 
@@ -302,10 +304,10 @@ begin
     wc.hCursor := LoadCursor(0, IDC_ARROW);
     wc.hbrBackground := g_hBgBrush;
     wc.lpszMenuName := '';
-    wc.lpszClassName := 'CxbxRender';
+    wc.lpszClassName := DXBX_RENDER_CLASS;
     wc.hIconSm := 0;
 
-    RegisterClassEx(wc);
+    {Ignore ATOM:}RegisterClassEx(wc);
   end;
 
 
@@ -327,7 +329,7 @@ begin
 
   // create the window
   begin
-    dwStyle := ifThen((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen, WS_OVERLAPPEDWINDOW, WS_CHILD);
+    dwStyle := ifThen((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen(), WS_OVERLAPPEDWINDOW, WS_CHILD);
     nTitleHeight := GetSystemMetrics(SM_CYCAPTION);
     nBorderWidth := GetSystemMetrics(SM_CXSIZEFRAME);
     nBorderHeight := GetSystemMetrics(SM_CYSIZEFRAME);
@@ -337,8 +339,8 @@ begin
     nWidth := 640;
     nHeight := 480;
 
-    nWidth := nWidth + nBorderWidth * 2;
-    nHeight := nHeight + nBorderHeight * 2 + nTitleHeight;
+    Inc(nWidth, nBorderWidth * 2);
+    Inc(nHeight, (nBorderHeight * 2) + nTitleHeight);
 
     // Note : This is a work-around sscanf (which is not available in Delphi) :
     with TStringList.Create do
@@ -363,17 +365,23 @@ begin
       dwStyle := WS_POPUP;
     end;
 
-    hwndParent := GetDesktopWindow();
-
-    if not g_XBVideo.GetFullscreen() then
-    begin
+    if g_XBVideo.GetFullscreen() then
+      hwndParent := GetDesktopWindow()
+    else
       hwndParent := CxbxKrnl_hEmuParent;
-    end;
 
     g_hEmuWindow := CreateWindow(
-      #13#10'CxbxRender', PAnsiChar(AsciiTitle),
-      dwStyle, x, y, nWidth, nHeight,
-      hwndParent, 0, GetModuleHandle(nil), nil
+      DXBX_RENDER_CLASS,
+      PChar(AsciiTitle),
+      dwStyle,
+      x,
+      y,
+      nWidth,
+      nHeight,
+      hwndParent,
+      HMENU(0),
+      GetModuleHandle(nil),
+      nil
       );
   end;
 
@@ -498,7 +506,7 @@ end;
 
 // rendering window message procedure
 
-function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT;
+function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
 var
   bAutoPaused: Boolean;

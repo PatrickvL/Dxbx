@@ -48,7 +48,7 @@ type
 function CxbxKrnlVerifyVersion(const szVersion: string): Boolean; // export;
 
 procedure CxbxKrnlInit(
-  hwndParent: THandle;
+  hwndParent: HWND;
   pTLSData: Pointer;
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
@@ -74,7 +74,7 @@ begin
 end;
 
 procedure CxbxKrnlInit(
-  hwndParent: THandle;
+  hwndParent: HWND;
   pTLSData: Pointer;
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;

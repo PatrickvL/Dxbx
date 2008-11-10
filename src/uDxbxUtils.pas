@@ -49,12 +49,12 @@ type
 
   TGetKernelThunkTable = function: PKernelThunkTable; cdecl;
 
-  TLineCallback = function (aLinePtr: PChar; aLength: Integer; aData: Pointer): Boolean;
+  TLineCallback = function (aLinePtr: PAnsiChar; aLength: Integer; aData: Pointer): Boolean;
 
-procedure ScanPCharLines(const aPChar: PChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);
+procedure ScanPCharLines(const aPChar: PAnsiChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);
 
-function ScanHexByte(var aLine: PChar; var Value: Integer): Boolean;
-function ScanHexWord(var aLine: PChar; var Value: Integer): Boolean;
+function ScanHexByte(var aLine: PAnsiChar; var Value: Integer): Boolean;
+function ScanHexWord(var aLine: PAnsiChar; var Value: Integer): Boolean;
 
 function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): Integer;
 
@@ -139,7 +139,7 @@ begin
   end;
 end;
 
-function _ScanAndAddHexDigit(var Value: Integer; const aHexDigit: Char): Boolean;
+function _ScanAndAddHexDigit(var Value: Integer; const aHexDigit: AnsiChar): Boolean;
 begin
   Result := True;
   case aHexDigit of
@@ -154,7 +154,7 @@ begin
   end;
 end;
 
-function _ScanHexDigits(var aLine: PChar; var Value: Integer; Digits: Integer): Boolean;
+function _ScanHexDigits(var aLine: PAnsiChar; var Value: Integer; Digits: Integer): Boolean;
 begin
   Value := 0;
   while Digits > 0 do
@@ -170,19 +170,19 @@ begin
   Result := True;
 end;
 
-function ScanHexByte(var aLine: PChar; var Value: Integer): Boolean;
+function ScanHexByte(var aLine: PAnsiChar; var Value: Integer): Boolean;
 begin
   Result := _ScanHexDigits(aLine, Value, 2);
 end;
 
-function ScanHexWord(var aLine: PChar; var Value: Integer): Boolean;
+function ScanHexWord(var aLine: PAnsiChar; var Value: Integer): Boolean;
 begin
   Result := _ScanHexDigits(aLine, Value, 4);
 end;
 
-procedure ScanPCharLines(const aPChar: PChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);
+procedure ScanPCharLines(const aPChar: PAnsiChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);
 var
-  p1, p2: PChar;
+  p1, p2: PAnsiChar;
 begin
   // Scan Lines:
   p1 := aPChar;

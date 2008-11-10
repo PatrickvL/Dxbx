@@ -675,7 +675,7 @@ type
     VersionedXboxLibrary: PVersionedXboxLibrary;
   end;
 
-function ParseAndAppendPatternLineToTrie_Callback(aLine: PChar; aLength: Integer; aContext: PPatternScanningContext): Boolean;
+function ParseAndAppendPatternLineToTrie_Callback(aLine: PAnsiChar; aLength: Integer; aContext: PPatternScanningContext): Boolean;
 const
   PATTERN_START_OF_NAME = 85;
   PATTERN_VALID_NAME_CHARACTERS = ['_', 'a'..'z', 'A'..'Z', '0'..'9', '@', ':', '?', '$'];
@@ -683,7 +683,7 @@ var
   VersionedXboxLibraryFunction: PVersionedXboxLibraryFunction;
   VersionedXboxLibraryFunctionPattern: TPattern;
   i, Value: Integer;
-  aStart: PChar;
+  aStart: PAnsiChar;
 begin
   // Stop at a '-' marker :
   Result := (aLine^ <> '-');
@@ -778,7 +778,7 @@ begin
     aContext.PatternTrie.VersionedFunctions.Add(VersionedXboxLibraryFunction);
 end;
 
-procedure ParseAndAppendPatternsToTrie(const aPatterns: PChar;
+procedure ParseAndAppendPatternsToTrie(const aPatterns: PAnsiChar;
   const aPatternTrie: TPatternTrie;
   const aOnlyPatches: Boolean;
   const aLibrary: PVersionedXboxLibrary);
