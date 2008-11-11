@@ -235,7 +235,7 @@ function TPatternTrieReader.GetStringPointerByIndex(const aStringIndex: TStringT
 var
   Offset: TByteOffset;
 begin
-  if (aStringIndex < 0) or (aStringIndex >= StoredSignatureTrieHeader.StringTable.NrStrings) then
+  if {(aStringIndex < 0) or} (aStringIndex >= StoredSignatureTrieHeader.StringTable.NrStrings) then
     raise EListError.CreateFmt('String index out of bounds (%d)', [aStringIndex]);
 
   Offset := StringOffsetList[aStringIndex];

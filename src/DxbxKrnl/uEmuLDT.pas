@@ -44,6 +44,85 @@ procedure EmuDeallocateLDT(wSelector: uint16);
 
 implementation
 
+type
+  {$A1}
+  RLDT_ENTRY_Bits = record
+  public
+    BaseMid: BYTE;
+  private
+    Flags: WORD;
+    function GetBits(const aIndex: Integer): Integer;
+    procedure SetBits(const aIndex: Integer; const aValue: Integer);
+  public
+    BaseHi: BYTE;
+
+    property _Type: Integer index $05 read GetBits write SetBits; // 5 bits at offset 0
+    property Dpl: Integer index $52 read GetBits write SetBits; // 2 bits at offset 5
+    property Pres: Integer index $71 read GetBits write SetBits; // 1 bit at offset 7
+    property LimitHi: Integer index $84 read GetBits write SetBits; // 4 bits at offset 8
+    property Sys: Integer index $C1 read GetBits write SetBits; // 1 bit at offset 12
+    property Reserved_0: Integer index $D1 read GetBits write SetBits; // 1 bit at offset 13
+    property Default_Big: Integer index $E1 read GetBits write SetBits; // 1 bit at offset 14
+    property Granularity: Integer index $F1 read GetBits write SetBits; // 1 bit at offset 15
+  end;
+
+  RLDT_ENTRY_Bytes = record
+    BaseMid: BYTE;
+    Flags1: BYTE; // Declare as bytes to avoid alignment
+    Flags2: BYTE; // Problems.
+    BaseHi: BYTE;
+  end;
+
+  RLDT_ENTRY_HighWord = record
+    case Integer of
+    0: (Bytes: RLDT_ENTRY_Bytes);
+    1: (Bits: RLDT_ENTRY_Bits); // Bit-fields are handled seperatly
+  end;
+
+  DXBX_LDT_ENTRY = record
+    LimitLow: WORD;
+    BaseLow: WORD;
+    HighWord: RLDT_ENTRY_HighWord;
+  end;
+
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+function RLDT_ENTRY_Bits.GetBits(const aIndex: Integer): Integer;
+var
+  Offset: Integer;
+  NrBits: Integer;
+  Mask: Integer;
+begin
+  NrBits := aIndex and $F;
+  Offset := aIndex shr 4;
+
+  Mask := ((1 shl NrBits) - 1);
+
+  Result := Flags;
+  Result := Result shr Offset;
+  Result := Result and Mask;
+end;
+
+procedure RLDT_ENTRY_Bits.SetBits(const aIndex: Integer; const aValue: Integer);
+var
+  Offset: Integer;
+  NrBits: Integer;
+  Mask: Integer;
+  Result: Integer;
+begin
+  NrBits := aIndex and $F;
+  Offset := aIndex shr 4;
+
+  Mask := ((1 shl NrBits) - 1);
+
+  Result := Flags;
+    Result := Result and (not (Mask shl Offset));
+    Result := Result or (aValue shl Offset);
+  Flags := WORD(Result);
+end;
+
+//
+
 var
   // Table of free LDT entries
   FreeLDTEntries: array[0..MAXIMUM_XBOX_THREADS - 1] of UInt16;
@@ -64,6 +143,7 @@ end;
 function EmuAllocateLDT(dwBaseAddr: uint32; dwLimit: uint32): uint16;
 var
   LDTEntry: LDT_ENTRY;
+  _LDTENTRY: DXBX_LDT_ENTRY absolute LDTEntry;
   x: Integer;
 begin
   x := 0;
@@ -91,25 +171,24 @@ begin
 
   // Set up selector information
   begin
-    LDTEntry.BaseLow := WORD(dwBaseAddr and $FFFF);
-    LDTEntry.BaseMid := (dwBaseAddr shr 16) and $FF;
-    LDTEntry.BaseHi := (dwBaseAddr shr 24) and $FF;
-    LDTEntry.Flags1 := 0;
-    LDTEntry.Flags1 := LDTEntry.Flags1 or ($13 and LDTENTRY_FLAGS1_TYPE); // RW data segment
-    LDTEntry.Flags1 := LDTEntry.Flags1 or LDTENTRY_FLAGS1_DPL; // user segment
-    LDTEntry.Flags1 := LDTEntry.Flags1 or LDTENTRY_FLAGS1_PRES; // present
-    LDTEntry.Flags2 := 0;
-    LDTEntry.Flags2 := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_SYS);
-    LDTEntry.Flags2 := LDTEntry.Flags2 or ($0 and LDTENTRY_FLAGS2_RESERVED_0);
-    LDTEntry.Flags2 := LDTEntry.Flags2 or (LDTENTRY_FLAGS2_DEFAULT_BIG); // 386 segment
-    if {LDTEntry.HighWord.Bits.Granularity=} dwLimit >= $00100000 then
-    begin
-      LDTEntry.Flags2 := LDTEntry.Flags2 or LDTENTRY_FLAGS2_GRANULARITY;
-      dwLimit := dwLimit shr 12;
-    end;
+    ZeroMemory(@LDTENTRY, SizeOf(LDTENTRY));
 
-    LDTEntry.LimitLow := WORD(dwLimit and $FFFF);
-    LDTEntry.Flags2 := LDTEntry.Flags2 or ((dwLimit shr 16) and LDTENTRY_FLAGS2_LIMITHI);
+    _LDTEntry.BaseLow                    := WORD(dwBaseAddr and $FFFF);
+    _LDTEntry.HighWord.Bits.BaseMid      := (dwBaseAddr shr 16) and $FF;
+    _LDTEntry.HighWord.Bits.BaseHi       := (dwBaseAddr shr 24) and $FF;
+    _LDTEntry.HighWord.Bits._Type        := $13; // RW data segment
+    _LDTEntry.HighWord.Bits.Dpl          := 3;    // user segment
+    _LDTEntry.HighWord.Bits.Pres         := 1;    // present
+    _LDTEntry.HighWord.Bits.Sys          := 0;
+    _LDTEntry.HighWord.Bits.Reserved_0   := 0;
+    _LDTEntry.HighWord.Bits.Default_Big  := 1;    // 386 segment
+    _LDTEntry.HighWord.Bits.Granularity  := iif(dwLimit >= $00100000, 1, 0);
+
+    if _LDTEntry.HighWord.Bits.Granularity > 0 then
+      dwLimit := dwLimit shr 12;
+
+    _LDTEntry.LimitLow                   := WORD(dwLimit and $FFFF);
+    _LDTEntry.HighWord.Bits.LimitHi      := (dwLimit shr 16) and $F;
   end;
 
   // Allocate selector
