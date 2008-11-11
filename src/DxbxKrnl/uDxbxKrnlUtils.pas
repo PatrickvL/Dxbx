@@ -32,6 +32,8 @@ uses
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
 
+function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
+
 function GetLastErrorString: string;
 function GetErrorString(const aError: DWord): string;
 
@@ -75,6 +77,15 @@ begin
   TerminateProcess(GetCurrentProcess(), 0);
 
   Exit;
+end;
+
+function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
+begin
+  if ATest then begin
+    Result := ATrue;
+  end else begin
+    Result := AFalse;
+  end;
 end;
 
 function GetLastErrorString: string;
