@@ -80,11 +80,11 @@ function {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
   ): NTSTATUS; stdcall; // Source : XBMC
 
-implementation
-
 // Global Variable(s)
 var
   g_pfnThreadNotification: PVOID = nil;
+
+implementation
 
 type
   // PsCreateSystemThread proxy parameters

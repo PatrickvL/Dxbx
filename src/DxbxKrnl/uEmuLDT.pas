@@ -98,9 +98,7 @@ begin
 
   Mask := ((1 shl NrBits) - 1);
 
-  Result := Flags;
-  Result := Result shr Offset;
-  Result := Result and Mask;
+  Result := (Flags shr Offset) and Mask;
 end;
 
 procedure RLDT_ENTRY_Bits.SetBits(const aIndex: Integer; const aValue: Integer);
@@ -108,17 +106,14 @@ var
   Offset: Integer;
   NrBits: Integer;
   Mask: Integer;
-  Result: Integer;
 begin
   NrBits := aIndex and $F;
   Offset := aIndex shr 4;
 
   Mask := ((1 shl NrBits) - 1);
+  Assert(aValue <= Mask);
 
-  Result := Flags;
-    Result := Result and (not (Mask shl Offset));
-    Result := Result or (aValue shl Offset);
-  Flags := WORD(Result);
+  Flags := (Flags and (not (Mask shl Offset))) or (aValue shl Offset);
 end;
 
 //

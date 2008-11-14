@@ -85,12 +85,7 @@ const
   // DIRTY LITTLE HACK : By redefining the emulation function symbols here,
   // we can re-use the case-statement that maps a patch enum element to the
   // accompanying data (only, now those symbols are strings instead) :
-  XTL_EmuRtlAllocateHeap: string = '_RtlAllocateHeap@12';
-  XTL_EmuRtlCreateHeap: string = '_RtlCreateHeap@24';
-  XTL_EmuXapiApplyKernelPatches: string = '_XapiApplyKernelPatches@0';
-  XTL_EmuXapiInitProcess: string = '_XapiInitProcess@0';
-  XTL_EmuXapiThreadStartup: string = '_XapiThreadStartup@8';
-  // NOTE: ^^^ New patches go above this line ^^^
+  {$INCLUDE XboxLibraryPatchNames.inc}
 
 function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
 type
