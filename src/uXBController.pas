@@ -70,14 +70,13 @@ type
     XBCTRL_OBJECT_LTHUMB,
     XBCTRL_OBJECT_RTHUMB);
 
-
 const
   // Total number of components
   XBCTRL_OBJECT_COUNT = (Ord(High(XBCtrlObject)) - Ord(Low(XBCtrlObject)) + 1);
   // Maximum number of devices allowed
   XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
 
-  m_DeviceNameLookup : Array [0..XBCTRL_OBJECT_COUNT-1]of String = ( 'LThumbPosX', 'LThumbNegX',
+  m_DeviceNameLookup : array [0..XBCTRL_OBJECT_COUNT-1] of string = ( 'LThumbPosX', 'LThumbNegX',
                                            'LThumbPosY', 'LThumbNegY',
                                            'RThumbPosX', 'RThumbNegX',
                                            'RThumbPosY', 'RThumbNegY',
@@ -86,8 +85,6 @@ const
                                            'DPadUp', 'DPadDown', 'DPadLeft',
                                            'DPadRight', 'Back', 'Start',
                                            'LThumb', 'RThumb' );
-
-
 
 // Offsets into analog button array
 const
@@ -163,11 +160,11 @@ type
     dwPacketNumber: DWORD;
     Gamepad: _XINPUT_GAMEPAD;
   end;
-
-  PXINPUT_STATE = _XINPUT_STATE;
+  XINPUT_STATE = _XINPUT_STATE;
+  PXINPUT_STATE = ^XINPUT_STATE;
 
   XTL_LPDIRECTINPUT8 = Pointer; // TODO Dxbx : How is this type defined?
-  XTL_LPDIRECTINPUTDEVICE8 = Pointer; // TODO Dxbx : How is this type defined?
+  XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // TODO Dxbx : How is this type defined?
 
   // DirectInput Devices
   InputDevice = record
@@ -176,13 +173,13 @@ type
   end;
 
   XBController = record
-    private
+  private
     // Device Names
-    m_DeviceName: array[0..XBCTRL_MAX_DEVICES - 1] of array[0..260] of AnsiChar;
+    m_DeviceName: array [0..XBCTRL_MAX_DEVICES - 1] of array [0..260] of AnsiChar;
     // DirectInput Devices
-    m_InputDevice: array[0..XBCTRL_MAX_DEVICES - 1] of InputDevice;
+    m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of InputDevice;
     // Object Configuration
-    m_ObjectConfig: array[XBCtrlObject] of XBCtrlObjectCfg;
+    m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
     // DirectInput
     m_pDirectInput8: XTL_LPDIRECTINPUT8;
     // Current State
@@ -195,30 +192,30 @@ type
     m_dwCurObject: Integer;
     private
     // Object Mapping
-procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: Integer; dwFlags: Integer);
+    procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: Integer; dwFlags: Integer);
     // Find the look-up value for a DeviceName (creating if needed)
-function Insert(szDeviceName: PChar): Integer;
+    function Insert(szDeviceName: PChar): Integer;
     // Update the object lookup offsets for a device
-procedure ReorderObjects(szDeviceName: PChar; aPos: Integer);
-public
-  procedure Initialize;
-procedure Finalize;
+    procedure ReorderObjects(szDeviceName: PChar; aPos: Integer);
+  public
+    procedure Initialize;
+    procedure Finalize;
     // Registry Load/Save
-procedure Load(szRegistryKey: PChar);
-procedure Save(szRegistryKey: PChar);
+    procedure Load(szRegistryKey: PChar);
+    procedure Save(szRegistryKey: PChar);
     // Configuration
-procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
-function ConfigPoll(szStatus: PChar): Longbool;
-procedure ConfigEnd;
+    procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
+    function ConfigPoll(szStatus: PChar): Longbool;
+    procedure ConfigEnd;
     // Listening
-procedure ListenPoll(var Controller: XINPUT_STATE);
-procedure ListenBegin(ahwnd: THandle);
-procedure ListenEnd;
+    procedure ListenPoll(Controller: PXINPUT_STATE);
+    procedure ListenBegin(ahwnd: THandle);
+    procedure ListenEnd;
     // DirectInput Init / Cleanup
-procedure DInputInit(ahwnd: THandle);
-procedure DInputCleanup;
+    procedure DInputInit(ahwnd: THandle);
+    procedure DInputCleanup;
     // Check if a device is currently in the configuration
-function DeviceIsUsed(szDeviceName: PChar): Longbool;
+    function DeviceIsUsed(szDeviceName: PChar): Longbool;
   end;
 
 
@@ -273,7 +270,7 @@ end;
 function XBController.EnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
-    if(lpddoi^.dwType and DIDFT_AXIS) then
+    if (lpddoi^.dwType and DIDFT_AXIS) then
     begin
         XTL.DIPROPRANGE diprg;
 
@@ -286,15 +283,15 @@ begin
 
         HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device^.SetProperty(DIPROP_RANGE, @diprg.diph);
 
-        if(FAILED(hRet)) then
+        if (FAILED(hRet)) then
         begin
-            if(hRet = E_NOTIMPL) then
+            if (hRet = E_NOTIMPL) then
                 Result:= DIENUM_CONTINUE;
             else
                 Result:= DIENUM_STOP;
          end;
      end;
-    else if(lpddoi^.dwType and DIDFT_BUTTON) then
+    else if (lpddoi^.dwType and DIDFT_BUTTON) then
     begin
         XTL.DIPROPRANGE diprg;
 
@@ -307,9 +304,9 @@ begin
 
         HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device^.SetProperty(DIPROP_RANGE, @diprg.diph);
 
-        if(FAILED(hRet)) then
+        if (FAILED(hRet)) then
         begin
-            if(hRet = E_NOTIMPL) then
+            if (hRet = E_NOTIMPL) then
                 Result:= DIENUM_CONTINUE;
             else
                 Result:= DIENUM_STOP;
@@ -353,18 +350,18 @@ begin
 (*function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
-    if(m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
+    if (m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
         Result:= DIENUM_CONTINUE;
 
     HRESULT hRet := m_pDirectInput8^.CreateDevice(lpddi^.guidInstance, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
 
-    if( not FAILED(hRet)) then
+    if ( not FAILED(hRet)) then
     begin
         m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
 
         m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIJoystick);
 
-        if(m_CurrentState = XBCTRL_STATE_LISTEN) then
+        if (m_CurrentState = XBCTRL_STATE_LISTEN) then
             ReorderObjects(lpddi^.tszInstanceName, m_dwInputDeviceCount - 1);
      end;
 
@@ -373,11 +370,8 @@ begin
 
 { XBController }
 
-
-// func: XBController::ListenPoll
-
-procedure XBController.ListenPoll(var Controller: XINPUT_STATE);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
+procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done : 15
 var
   hRet: HRESULT;
   v: Integer;
@@ -389,10 +383,10 @@ var
   wValue: SmallInt;
   pDevice: XTL_LPDIRECTINPUTDEVICE8;
 begin
-  (*if (Controller = nil) then
+  if (Controller = nil) then
     Exit;
 
-  pDevice:=nil;
+  pDevice := nil;
   hRet := 0;
   dwFlags := 0;
 
@@ -405,143 +399,144 @@ begin
   // Poll all devices
   for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
   begin
-    dwDevice := m_ObjectConfig[v].dwDevice;
-    dwFlags := m_ObjectConfig[v].dwFlags;
-    dwInfo := m_ObjectConfig[v].dwInfo;
+    dwDevice := m_ObjectConfig[XBCtrlObject(v)].dwDevice;
+    dwFlags := m_ObjectConfig[XBCtrlObject(v)].dwFlags;
+    dwInfo := m_ObjectConfig[XBCtrlObject(v)].dwInfo;
 
     if (dwDevice = -1) then
-      continue;
+      Continue;
 
-        pDevice := m_InputDevice[dwDevice].m_Device;
+    pDevice := m_InputDevice[dwDevice].m_Device;
 
-        hRet := pDevice^.Poll();
+    hRet := pDevice.Poll();
 
-        if(FAILED(hRet)) then
-        begin
-            hRet := pDevice^.Acquire();
+    if FAILED(hRet) then
+    begin
+      hRet := pDevice.Acquire();
 
-            while(hRet = DIERR_INPUTLOST)
-                hRet := pDevice^.Acquire();
-         end;
+      while hRet = DIERR_INPUTLOST do
+        hRet := pDevice.Acquire();
+    end;
 
     wValue := 0;
 
-        // Interpret PC Joystick Input
-        (*if(dwFlags and DEVICE_FLAG_JOYSTICK) then
+    // Interpret PC Joystick Input
+    if (dwFlags and DEVICE_FLAG_JOYSTICK) > 0 then
+    begin
+(*
+      XTL.DIJOYSTATE JoyState := (0);
+
+      if (pDevice.GetDeviceState(SizeOf(JoyState), @JoyState) <> DI_OK) then
+        Continue;
+
+      if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
+      begin
+        LongInt *pdwAxis := (LongInt)((uint32)@JoyState + dwInfo);
+        wValue := SmallInt(pdwAxis);
+
+        if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
         begin
-            XTL.DIJOYSTATE JoyState := (0);
-
-            if(pDevice^.GetDeviceState(SizeOf(JoyState), @JoyState) <> DI_OK) then
-                continue;
-
-            if(dwFlags and DEVICE_FLAG_AXIS) then
-            begin
-                LongInt *pdwAxis := (LongInt)((uint32)@JoyState + dwInfo);
-                wValue := (SmallInt)(pdwAxis);
-
-                if(dwFlags and DEVICE_FLAG_NEGATIVE) then
-                begin
-                    if(wValue < 0) then
-                        wValue := abs(wValue+1);
-                    else
-                        wValue := 0;
-                 end;
-                else if(dwFlags and DEVICE_FLAG_POSITIVE) then
-                begin
-                    if(wValue < 0) then
-                        wValue := 0;
-                 end;
-             end;
-            else if(dwFlags and DEVICE_FLAG_BUTTON) then
-            begin
-                BYTE *pbButton := (BYTE)((uint32)@JoyState + dwInfo);
-
-                if(pbButton and $80) then
-                    wValue := 32767;
-                else
-                    wValue := 0;
-             end;
-         end
-        // Interpret PC KeyBoard Input
-        else if(dwFlags and DEVICE_FLAG_KEYBOARD) then
+          if (wValue < 0) then
+            wValue := abs(wValue+1);
+          else
+            wValue := 0;
+        end
+        else if (dwFlags and DEVICE_FLAG_POSITIVE) > 0 then
         begin
-            BYTE KeyboardState[256] := (0);
+          if (wValue < 0) then
+            wValue := 0;
+        end;
+      end
+      else if (dwFlags and DEVICE_FLAG_BUTTON) > 0 then
+      begin
+        BYTE *pbButton := (BYTE)((uint32)@JoyState + dwInfo);
 
-            if(pDevice^.GetDeviceState(SizeOf(KeyboardState), @KeyboardState) <> DI_OK) then
-                continue;
+        if (pbButton and $80) then
+          wValue := 32767;
+        else
+          wValue := 0;
+      end;
+    end
+    // Interpret PC KeyBoard Input
+    else if (dwFlags and DEVICE_FLAG_KEYBOARD) > 0 then
+    begin
+      BYTE KeyboardState[256] := (0);
 
-            BYTE bKey := KeyboardState[dwInfo];
+      if (pDevice.GetDeviceState(SizeOf(KeyboardState), @KeyboardState) <> DI_OK) then
+        Continue;
 
-            if(bKey and $80) then
-                wValue := 32767;
-            else
-                wValue := 0;
-         end
-        // Interpret PC Mouse Input
-        else if(dwFlags and DEVICE_FLAG_MOUSE) then
+      BYTE bKey := KeyboardState[dwInfo];
+
+      if (bKey and $80) then
+        wValue := 32767;
+      else
+        wValue := 0;
+    end
+    // Interpret PC Mouse Input
+    else if (dwFlags and DEVICE_FLAG_MOUSE) then
+    begin
+      XTL.DIMOUSESTATE2 MouseState := (0);
+
+      if (pDevice.GetDeviceState(SizeOf(MouseState), @MouseState) <> DI_OK) then
+          Continue;
+
+      if (dwFlags and DEVICE_FLAG_MOUSE_CLICK) then
+      begin
+        if (MouseState.rgbButtons[dwInfo] and $80) then
+          wValue := 32767
+        else
+          wValue := 0;
+      end
+      else if (dwFlags and DEVICE_FLAG_AXIS) then
+      begin
+        LongInt lAccumX := 0;
+        LongInt lAccumY := 0;
+        LongInt lAccumZ := 0;
+
+        lAccumX:= lAccumX + MouseState.lX * 300;
+        lAccumY:= lAccumY + MouseState.lY * 300;
+        lAccumZ:= lAccumZ + MouseState.lZ * 300;
+
+        if (lAccumX > 32767) then
+          lAccumX := 32767
+        else if (lAccumX < -32768) then
+          lAccumX := -32768;
+
+        if (lAccumY > 32767) then
+          lAccumY := 32767
+        else if (lAccumY < -32768) then
+          lAccumY := -32768;
+
+        if (lAccumZ > 32767) then
+          lAccumZ := 32767
+        else if (lAccumZ < -32768) then
+          lAccumZ := -32768;
+
+        if (dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lX)) then
+          wValue := (WORD)lAccumX
+        else if (dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lY)) then
+          wValue := (WORD)lAccumY
+        else if (dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lZ)) then
+          wValue := (WORD)lAccumZ;
+
+        if (dwFlags and DEVICE_FLAG_NEGATIVE) then
         begin
-            XTL.DIMOUSESTATE2 MouseState := (0);
+          if (wValue < 0) then
+            wValue := abs(wValue+1);
+          else
+            wValue := 0;
+        end
+        else if (dwFlags and DEVICE_FLAG_POSITIVE) then
+        begin
+          if (wValue < 0) then
+            wValue := 0;
+        end;
+      end;
+    end;
 
-            if(pDevice^.GetDeviceState(SizeOf(MouseState), @MouseState) <> DI_OK) then
-                continue;
-
-            if(dwFlags and DEVICE_FLAG_MOUSE_CLICK) then
-            begin
-                if(MouseState.rgbButtons[dwInfo] and $80) then
-                    wValue := 32767;
-                else
-                    wValue := 0;
-             end;
-            else if(dwFlags and DEVICE_FLAG_AXIS) then
-            begin
-                 LongInt lAccumX := 0;
-                 LongInt lAccumY := 0;
-                 LongInt lAccumZ := 0;
-
-                lAccumX:= lAccumX + MouseState.lX * 300;
-                lAccumY:= lAccumY + MouseState.lY * 300;
-                lAccumZ:= lAccumZ + MouseState.lZ * 300;
-
-                if(lAccumX > 32767) then
-                    lAccumX := 32767;
-                else if(lAccumX < -32768) then
-                    lAccumX := -32768;
-
-                if(lAccumY > 32767) then
-                    lAccumY := 32767;
-                else if(lAccumY < -32768) then
-                    lAccumY := -32768;
-
-                if(lAccumZ > 32767) then
-                    lAccumZ := 32767;
-                else if(lAccumZ < -32768) then
-                    lAccumZ := -32768;
-
-                if(dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lX)) then
-                    wValue := (WORD)lAccumX;
-                else if(dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lY)) then
-                    wValue := (WORD)lAccumY;
-                else if(dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lZ)) then
-                    wValue := (WORD)lAccumZ;
-
-                if(dwFlags and DEVICE_FLAG_NEGATIVE) then
-                begin
-                    if(wValue < 0) then
-                        wValue := abs(wValue+1);
-                    else
-                        wValue := 0;
-                 end;
-                else if(dwFlags and DEVICE_FLAG_POSITIVE) then
-                begin
-                    if(wValue < 0) then
-                        wValue := 0;
-                 end;
-             end;
-         end;
-
-        // ******************************************************************
-        // * Map Xbox Joystick Input
-        // ******************************************************************
+    // ******************************************************************
+    // * Map Xbox Joystick Input
+    // ******************************************************************
     if (v >= XBCTRL_OBJECT_LTHUMBPOSX) and (v <= XBCTRL_OBJECT_RTHUMB) then
     begin
       case (v) of
@@ -619,8 +614,9 @@ begin
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_RIGHT_THUMB;
       end;
+*)
     end;
-  end;    *)
+  end;
 end;
 
 procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
@@ -701,7 +697,7 @@ begin
             // Get Joystick State
             (*hRet := m_InputDevice[v].m_Device.GetDeviceState(sizeof(DIJOYSTATE), &JoyState);
 
-            if(FAILED(hRet))
+            if (FAILED(hRet))
                 continue;
             *)
 
@@ -746,7 +742,7 @@ begin
       else begin
                 (*for(int b=0;b<2;b++)
                 {
-                    if(abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK)
+                    if (abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rglSlider[b]);
                         dwFlags |= (JoyState.rglSlider[b] > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
@@ -754,11 +750,11 @@ begin
       end;
 
             (*/* temporarily disabled
-            if(dwHow == -1)
+            if (dwHow == -1)
             {
                 for(int b=0;b<4;b++)
                 {
-                    if(abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV)
+                    if (abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgdwPOV[b]);
                     }
@@ -769,7 +765,7 @@ begin
       if (dwHow = -1) then begin
                 (*for(int b=0;b<32;b++)
                 {
-                    if(JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON)
+                    if (JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgbButtons[b]);
                         dwFlags |= DEVICE_FLAG_BUTTON;
@@ -809,7 +805,7 @@ begin
             // Check for Keyboard State Change
             for(int r=0;r<256;r++)
             {
-                if(KeyState[r] != 0)
+                if (KeyState[r] != 0)
                 {
                     dwHow = r;
                     break;
@@ -817,7 +813,7 @@ begin
             }            *)
 
             // Check for Success
-            if(dwHow <> -1) then begin
+            if (dwHow <> -1) then begin
               Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
               DbgPrintf('Dxbx: Detected Key %d on SysKeyboard\n', dwHow);
               DbgPrintf(Format('Success: %s Mapped to Key %d on SysKeyboard',[ m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]));
@@ -838,7 +834,7 @@ begin
             for(int r=0;r<4;r++)
             {
                 // 0x80 is the mask for button push
-                if(MouseState.rgbButtons[r] & 0x80)
+                if (MouseState.rgbButtons[r] & 0x80)
                 {
                     dwHow = r;
                     dwFlags |= DEVICE_FLAG_MOUSE_CLICK;
@@ -846,7 +842,7 @@ begin
                 }
             }
             // Check for Success
-            if(dwHow != -1)
+            if (dwHow != -1)
             {
                 Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
 
@@ -864,7 +860,7 @@ begin
                 LONG lAbsDeltaX=0, lAbsDeltaY=0, lAbsDeltaZ=0;
                 LONG lDeltaX=0, lDeltaY=0, lDeltaZ=0;
 
-                if(lPrevMouseX == -1 || lPrevMouseY == -1 || lPrevMouseZ == -1)
+                if (lPrevMouseX == -1 || lPrevMouseY == -1 || lPrevMouseZ == -1)
                     lDeltaX = lDeltaY = lDeltaZ = 0;
                 else
                 {
@@ -879,28 +875,28 @@ begin
 
                 LONG lMax = (lAbsDeltaX > lAbsDeltaY) ? lAbsDeltaX : lAbsDeltaY;
 
-                if(lAbsDeltaZ > lMax)
+                if (lAbsDeltaZ > lMax)
                     lMax = lAbsDeltaZ;
 
                 lPrevMouseX = MouseState.lX;
                 lPrevMouseY = MouseState.lY;
                 lPrevMouseZ = MouseState.lZ;
 
-                if(lMax > DETECT_SENSITIVITY_MOUSE)
+                if (lMax > DETECT_SENSITIVITY_MOUSE)
                 {
                     dwFlags |= DEVICE_FLAG_AXIS;
 
-                    if(lMax == lAbsDeltaX)
+                    if (lMax == lAbsDeltaX)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lX);
                         dwFlags |= (lDeltaX > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
-                    else if(lMax == lAbsDeltaY)
+                    else if (lMax == lAbsDeltaY)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lY);
                         dwFlags |= (lDeltaY > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
-                    else if(lMax == lAbsDeltaZ)
+                    else if (lMax == lAbsDeltaZ)
                     {
                         dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lZ);
                         dwFlags |= (lDeltaZ > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
@@ -910,14 +906,14 @@ begin
                 // ******************************************************************
                 // * Check for Success
                 // ******************************************************************
-                if(dwHow != -1)
+                if (dwHow != -1)
                 {
                     char *szDirection = (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive" : "Negative";
                     char *szObjName = "Unknown";
 
                     ObjectInstance.dwSize = sizeof(ObjectInstance);
 
-                    if(m_InputDevice[v].m_Device->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
+                    if (m_InputDevice[v].m_Device->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
                         szObjName = ObjectInstance.tszName;
 
                     Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
@@ -965,7 +961,7 @@ begin
 
   m_dwInputDeviceCount := 0;
     { TODO : Need to be translated to delphi }
-    (*if(m_pDirectInput8 <> 0) then
+    (*if (m_pDirectInput8 <> 0) then
     begin
         m_pDirectInput8^.Release();
         m_pDirectInput8 := 0;
@@ -1245,7 +1241,8 @@ var
   v: Integer;
   szValueName: array[0..64 - 1] of Char;
 begin
-  if (m_CurrentState <> XBCTRL_STATE_NONE) then begin
+  if (m_CurrentState <> XBCTRL_STATE_NONE) then
+  begin
     Error_SetError('Invalid State', False);
     Exit;
   end;

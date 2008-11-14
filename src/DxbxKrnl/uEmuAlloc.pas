@@ -26,11 +26,19 @@ uses
   Windows,
 //  Messages,
   SysUtils,
-  Classes;
+  Classes,
+  // 3rd party
+  JwaWinType,
+  JwaNative;
 
 
 function CxbxMalloc(x: Integer): Pointer;
 procedure CxbxFree(x: Pointer);
+
+function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
+function CxbxRtlFree(Heap: THandle; Flags: DWORD; pMem: PVOID): BOOL;
+function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
+function CxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
 
 implementation
 
@@ -112,17 +120,31 @@ end;
 
 (*
 const CxbxCalloc(x, y) =                         calloc(x, y);
-const CxbxFree(x) =                              Free(x);
-const CxbxRtlAlloc(Heap, = Flags, Bytes)         NtDll.RtlAllocateHeap(Heap, Flags, Bytes);
-const CxbxRtlFree(Heap, = Flags, pMem)           NtDll.RtlFreeHeap(Heap, Flags, pMem);
-const CxbxRtlRealloc(Heap, = Flags, pMem, Bytes) NtDll.RtlReAllocateHeap(Heap, Flags, pMem, Bytes);
-const CxbxRtlSizeHeap(Heap, = Flags, pMem)       NtDll.RtlSizeHeap(Heap, Flags, pMem);
-//endif
+*)
+function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
+begin
+  Result := JwaNative.RtlAllocateHeap(Heap, Flags, Bytes);
+end;
+
+function CxbxRtlFree(Heap: THandle; Flags: DWORD; pMem: PVOID): BOOL;
+begin
+  Result := JwaNative.RtlFreeHeap(Heap, Flags, pMem);
+end;
+
+function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
+begin
+  Result := JwaNative.RtlReAllocateHeap(Heap, Flags, pMem, Bytes);
+end;
+
+function CxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
+begin
+  Result := JwaNative.RtlSizeHeap(Heap, Flags, pMem);
+end;
 
 //end EMUALLOC_H
 
 
-#ifdef _DEBUG_ALLOC
+(*ifdef _DEBUG_ALLOC
 
 //include 'mutex.h'
 
