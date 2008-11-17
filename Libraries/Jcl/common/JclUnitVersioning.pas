@@ -24,8 +24,12 @@
 { It also works with units in DLLs.                                                                }
 {                                                                                                  }
 {**************************************************************************************************}
-
-// Last modified: $Date: 2006-05-30 00:02:45 +0200 (mar., 30 mai 2006) $
+{                                                                                                  }
+{ Last modified: $Date:: 2008-09-23 00:03:06 +0200 (di, 23 sep 2008)                             $ }
+{ Revision:      $Rev:: 2488                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
+{                                                                                                  }
+{**************************************************************************************************}
 
 unit JclUnitVersioning;
 
@@ -140,6 +144,11 @@ procedure UnregisterUnitVersion(Instance: THandle);
 function GetUnitVersioning: TUnitVersioning;
 
 implementation
+
+{$IFNDEF COMPILER11_UP}
+type
+  DWORD_PTR = DWORD;
+{$ENDIF ~COMPILER11_UP}
 
 // Delphi 5 does not know this function //(usc) D6/7 Per does have StartsWith
 // a fast version of Pos(SubStr, S) = 1
@@ -468,6 +477,13 @@ begin
   Result := TUnitVersioningModule(FModules[Index]);
 end;
 
+{$UNDEF FPCUNIX}   // Temporary, will move to .inc's in time.
+{$IFDEF FPC}
+ {$IFDEF UNIX}
+ {$DEFIN FPCUNIX}
+{$ENDIF}
+{$ENDIF}
+
 procedure TUnitVersioning.ValidateModules;
 var
   I: Integer;
@@ -476,7 +492,11 @@ begin
   for I := FModules.Count - 1 downto 0 do
   begin
     SetLength(Buffer, 1024);
+    {$IFDEF FPCUNIX}
+    if dlsym(Pointer(Modules[I].Instance), '_init') = nil then
+    {$ELSE}
     if GetModuleFileName(Modules[I].Instance, PChar(Buffer), 1024) = 0 then
+    {$ENDIF}
       // This module is no more in memory but has not unregistered itself so
       // unregister it here.
       UnregisterModule(Modules[I]);
@@ -576,7 +596,7 @@ var
   {$ENDIF LINUX}
   Requested, Allocated: PNPARecord;
   Pages: Integer;
-  PageSize: Cardinal;
+  PageSize, PageMask: Cardinal;
   MaximumApplicationAddress: Pointer;
 begin
   RefCount := 0;
@@ -594,9 +614,10 @@ begin
   Pages := 0;
   repeat
     Requested := MaximumApplicationAddress;
-    Requested := Pointer((Cardinal(Requested) div $10000) * $10000);
-    Dec(Cardinal(Requested), Pages * $10000);
-    Requested := Pointer((Cardinal(Requested) div PageSize) * PageSize);
+    Requested := Pointer(DWORD_PTR(Requested) and $FFFF0000);
+    Dec(Cardinal(Requested), Pages shl 16);
+    PageMask := (not PageSize) + 1; // assuming a power of two allocation granularity
+    Requested := Pointer(DWORD_PTR(Requested) and PageMask);
     {$IFDEF MSWINDOWS}
     Allocated := VirtualAlloc(Requested, PageSize, MEM_RESERVE or MEM_COMMIT, PAGE_READWRITE);
     if Assigned(Allocated) and (Requested <> Allocated) then
@@ -684,7 +705,7 @@ begin
   Result := 0;
   if P <> nil then
   begin
-    Requested := PNPARecord(Cardinal(P) - SizeOf(TNPARecord));
+    Requested := PNPARecord(DWORD_PTR(P) - SizeOf(TNPARecord));
     Dec(Requested.RefCount);
     Result := Requested.RefCount;
     if Requested.RefCount = 0 then
@@ -775,10 +796,10 @@ end;
 
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/tags/JCL-1.101-Build2725/jcl/source/common/JclUnitVersioning.pas $';
-    Revision: '$Revision: 1671 $';
-    Date: '$Date: 2006-05-30 00:02:45 +0200 (mar., 30 mai 2006) $';
-    LogPath: 'JCL\common';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitVersioning.pas $';
+    Revision: '$Revision: 2488 $';
+    Date: '$Date: 2008-09-23 00:03:06 +0200 (di, 23 sep 2008) $';
+    LogPath: 'JCL\source\common';
   );
 
 initialization

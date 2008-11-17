@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-08-07 23:54:09 +0200 (do, 07 aug 2008)                             $ }
-{ Revision:      $Rev:: 2412                                                                     $ }
+{ Last modified: $Date:: 2008-10-05 15:00:19 +0200 (zo, 05 okt 2008)                             $ }
+{ Revision:      $Rev:: 2517                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,7 +48,12 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, SysUtils;
+  Classes, SysUtils,
+  JclBase;
+
+// Exceptions
+type
+  EJclWideStringError = EJclError;
 
 const
   // definitions of often used characters:
@@ -75,6 +80,11 @@ const
   BOM_MSB_FIRST = WideChar($FFFE);
 
 type
+  {$IFDEF SUPPORTS_UNICODE}
+  TWStrings = TStrings;
+  TWStringList = TStringList;
+  {$ELSE ~SUPPORTS_UNICODE}
+
   TWideFileOptionsType =
    (
     foAnsiFile,  // loads/writes an ANSI file
@@ -145,8 +155,8 @@ type
     procedure Clear; virtual; abstract;
     procedure Delete(Index: Integer); virtual; abstract;
     procedure EndUpdate;
-    function Equals(Strings: TWStrings): Boolean; overload;
-    function Equals(Strings: TStrings): Boolean; overload;
+    function Equals(Strings: TWStrings): Boolean; {$IFDEF RTL200_UP}reintroduce; {$ENDIF RTL200_UP}overload;
+    function Equals(Strings: TStrings): Boolean; {$IFDEF RTL200_UP}reintroduce; {$ENDIF RTL200_UP}overload;
     procedure Exchange(Index1, Index2: Integer); virtual;
     function GetText: PWideChar; virtual;
     function IndexOf(const S: WideString): Integer; virtual;
@@ -155,12 +165,12 @@ type
     procedure Insert(Index: Integer; const S: WideString); virtual;
     procedure InsertObject(Index: Integer; const S: WideString;
       AObject: TObject); virtual;
-    procedure LoadFromFile(const FileName: AnsiString;
+    procedure LoadFromFile(const FileName: string;
       WideFileOptions: TWideFileOptions = []); virtual;
     procedure LoadFromStream(Stream: TStream;
       WideFileOptions: TWideFileOptions = []); virtual;
     procedure Move(CurIndex, NewIndex: Integer); virtual;
-    procedure SaveToFile(const FileName: AnsiString;
+    procedure SaveToFile(const FileName: string;
       WideFileOptions: TWideFileOptions = []); virtual;
     procedure SaveToStream(Stream: TStream;
       WideFileOptions: TWideFileOptions = []); virtual;
@@ -234,6 +244,7 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChanging: TNotifyEvent read FOnChanging write FOnChanging;
   end;
+  {$ENDIF ~SUPPORTS_UNICODE}
 
   TWideStringList = TWStringList;
   TWideStrings = TWStrings;
@@ -280,12 +291,10 @@ procedure StrSwapByteOrder(Str: PWideChar);
 function WidePos(const SubStr, S: WideString): Integer;
 function WideQuotedStr(const S: WideString; Quote: WideChar): WideString;
 function WideExtractQuotedStr(var Src: PWideChar; Quote: WideChar): WideString;
-{$IFNDEF RTL140_UP}
 function WideCompareText(const S1, S2: WideString): Integer;
 function WideCompareStr(const S1, S2: WideString): Integer;
 function WideUpperCase(const S: WideString): WideString;
 function WideLowerCase(const S: WideString): WideString;
-{$ENDIF ~RTL140_UP}
 function TrimW(const S: WideString): WideString;
 function TrimLeftW(const S: WideString): WideString;
 function TrimRightW(const S: WideString): WideString;
@@ -300,12 +309,23 @@ function WideStartsText(const SubStr, S: WideString): Boolean;
 function WideStartsStr(const SubStr, S: WideString): Boolean;
 {$ENDIF ~FPC}
 
+// MultiSz Routines
+type
+  PMultiSz = PWideChar;
+
+function StringsToMultiSz(var Dest: PMultiSz; const Source: TWideStrings): PMultiSz;
+procedure MultiSzToStrings(const Dest: TWideStrings; const Source: PMultiSz);
+function MultiSzLength(const Source: PMultiSz): Integer;
+procedure AllocateMultiSz(var Dest: PMultiSz; Len: Integer);
+procedure FreeMultiSz(var Dest: PMultiSz);
+function MultiSzDup(const Source: PMultiSz): PMultiSz;
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclWideStrings.pas $';
-    Revision: '$Revision: 2412 $';
-    Date: '$Date: 2008-08-07 23:54:09 +0200 (do, 07 aug 2008) $';
+    Revision: '$Revision: 2517 $';
+    Date: '$Date: 2008-10-05 15:00:19 +0200 (zo, 05 okt 2008) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -321,38 +341,35 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
-  Math;
+  Math,
+  JclResources;
 
-procedure SwapWordByteOrder(P: PChar; Len: Cardinal);
-var
-  B: Char;
+procedure SwapWordByteOrder(P: PWideChar; Len: Cardinal);
 begin
   while Len > 0 do
   begin
-    B := P[0];
-    P[0] := P[1];
-    P[1] := B;
-    Inc(P, 2);
     Dec(Len);
+    P^ := WideChar((Word(P^) shr 8) or (Word(P^) shl 8));
+    Inc(P);
   end;
 end;
 
 //=== WideChar functions =====================================================
 
-function CharToWideChar(Ch: Char): WideChar;
+function CharToWideChar(Ch: AnsiChar): WideChar;
 var
   WS: WideString;
 begin
-  WS := Ch;
+  WS := WideChar(Ch);
   Result := WS[1];
 end;
 
 function WideCharToChar(Ch: WideChar): AnsiChar;
 var
-  S: AnsiString;
+  S: WideString;
 begin
   S := Ch;
-  Result := S[1];
+  Result := AnsiChar(S[1]);
 end;
 
 //=== PWideChar functions ====================================================
@@ -982,9 +999,6 @@ begin
   end;
 end;
 
-// functions missing in Delphi 5 / FPC
-{$IFNDEF RTL140_UP}
-
 function WideCompareText(const S1, S2: WideString): Integer;
 begin
   {$IFDEF MSWINDOWS}
@@ -1041,8 +1055,6 @@ begin
     {$ENDIF ~MSWINDOWS}
 end;
 
-{$ENDIF ~RTL140_UP}
-
 function TrimLeftLengthW(const S: WideString): Integer;
 var
   Len: Integer;
@@ -1081,6 +1093,7 @@ end;
 
 {$ENDIF ~FPC}
 
+{$IFNDEF SUPPORTS_UNICODE}
 //=== { TWStrings } ==========================================================
 
 constructor TWStrings.Create;
@@ -1159,6 +1172,11 @@ begin
     BeginUpdate;
     try
       Clear;
+      {$IFDEF RTL190_UP}
+      FNameValueSeparator := TStrings(Source).NameValueSeparator;
+      FQuoteChar := TStrings(Source).QuoteChar;
+      FDelimiter := TStrings(Source).Delimiter;
+      {$ELSE}
       {$IFDEF RTL150_UP}
       FNameValueSeparator := CharToWideChar(TStrings(Source).NameValueSeparator);
       {$ENDIF RTL150_UP}
@@ -1166,6 +1184,7 @@ begin
       FQuoteChar := CharToWideChar(TStrings(Source).QuoteChar);
       FDelimiter := CharToWideChar(TStrings(Source).Delimiter);
       {$ENDIF RTL140_UP}
+      {$ENDIF RTL190_UP}
       AddStrings(TStrings(Source));
     finally
       EndUpdate;
@@ -1184,6 +1203,11 @@ begin
     TStrings(Dest).BeginUpdate;
     try
       TStrings(Dest).Clear;
+      {$IFDEF RTL190_UP}
+      TStrings(Dest).NameValueSeparator := NameValueSeparator;
+      TStrings(Dest).QuoteChar := QuoteChar;
+      TStrings(Dest).Delimiter := Delimiter;
+      {$ELSE}
       {$IFDEF RTL150_UP}
       TStrings(Dest).NameValueSeparator := WideCharToChar(NameValueSeparator);
       {$ENDIF RTL150_UP}
@@ -1191,6 +1215,7 @@ begin
       TStrings(Dest).QuoteChar := WideCharToChar(QuoteChar);
       TStrings(Dest).Delimiter := WideCharToChar(Delimiter);
       {$ENDIF RTL140_UP}
+      {$ENDIF RTL190_UP}
       for I := 0 to Count - 1 do
         TStrings(Dest).AddObject(GetP(I)^, Objects[I]);
     finally
@@ -1474,7 +1499,7 @@ procedure TWStrings.InsertObject(Index: Integer; const S: WideString; AObject: T
 begin
 end;
 
-procedure TWStrings.LoadFromFile(const FileName: AnsiString;
+procedure TWStrings.LoadFromFile(const FileName: string;
   WideFileOptions: TWideFileOptions = []);
 var
   Stream: TFileStream;
@@ -1497,29 +1522,24 @@ begin
   BeginUpdate;
   try
     Clear;
-    if foAnsiFile in WideFileOptions then
-    begin
-      Stream.Read(WC, SizeOf(WC));
-      Stream.Seek(-SizeOf(WC), soFromCurrent);
-      if (Hi(Word(WC)) <> 0) and (WC <> BOM_LSB_FIRST) and (WC <> BOM_MSB_FIRST) then
-      begin
-        SetLength(AnsiS, Stream.Size - Stream.Position);
-        Stream.Read(AnsiS[1], Length(AnsiS));
-        SetTextStr(AnsiS);
-        Exit;
-      end;
-    end;
-
     Stream.Read(WC, SizeOf(WC));
-    if (WC <> BOM_LSB_FIRST) and (WC <> BOM_MSB_FIRST) then
+    if (foAnsiFile in WideFileOptions) and (Hi(Word(WC)) <> 0) and (WC <> BOM_LSB_FIRST) and (WC <> BOM_MSB_FIRST) then
+    begin
       Stream.Seek(-SizeOf(WC), soFromCurrent);
-    SetLength(WideS, Stream.Size - Stream.Position);
-    Stream.Read(WideS[1], Length(WideS) * SizeOf(WideChar));
-
-    if WC = BOM_MSB_FIRST then
-      SwapWordByteOrder(Pointer(WideS), Length(WideS));
-
-    SetTextStr(WideS);
+      SetLength(AnsiS, (Stream.Size - Stream.Position) div SizeOf(AnsiChar));
+      Stream.Read(AnsiS[1], Length(AnsiS) * SizeOf(AnsiChar));
+      SetTextStr(WideString(AnsiS)); // explicit Unicode conversion
+    end
+    else
+    begin
+      if (WC <> BOM_LSB_FIRST) and (WC <> BOM_MSB_FIRST) then
+        Stream.Seek(-SizeOf(WC), soFromCurrent);
+      SetLength(WideS, (Stream.Size - Stream.Position + 1) div SizeOf(WideChar));
+      Stream.Read(WideS[1], Length(WideS) * SizeOf(WideChar));
+      if WC = BOM_MSB_FIRST then
+        SwapWordByteOrder(PWideChar(WideS), Length(WideS));
+      SetTextStr(WideS);
+    end;
   finally
     EndUpdate;
   end;
@@ -1561,7 +1581,7 @@ begin
   end;
 end;
 
-procedure TWStrings.SaveToFile(const FileName: AnsiString; WideFileOptions: TWideFileOptions = []);
+procedure TWStrings.SaveToFile(const FileName: string; WideFileOptions: TWideFileOptions = []);
 var
   Stream: TFileStream;
 begin
@@ -1581,8 +1601,8 @@ var
 begin
   if foAnsiFile in WideFileOptions then
   begin
-    AnsiS := GetTextStr;
-    Stream.Write(AnsiS[1], Length(AnsiS));
+    AnsiS := AnsiString(GetTextStr); // explicit Unicode conversion
+    Stream.Write(AnsiS[1], Length(AnsiS) * SizeOf(AnsiChar));
   end
   else
   begin
@@ -2039,6 +2059,100 @@ procedure TWStringList.Sort;
 begin
   if not Sorted then
     CustomSort(DefaultSort);
+end;
+
+{$ENDIF ~SUPPORTS_UNICODE}
+
+function StringsToMultiSz(var Dest: PMultiSz; const Source: TWideStrings): PMultiSz;
+var
+  I, TotalLength: Integer;
+  P: PMultiSz;
+begin
+  Assert(Source <> nil);
+  TotalLength := 1;
+  for I := 0 to Source.Count - 1 do
+    if Source[I] = '' then
+      raise EJclWideStringError.CreateRes(@RsInvalidEmptyStringItem)
+    else
+      Inc(TotalLength, StrLenW(PWideChar(Source[I])) + 1);
+  AllocateMultiSz(Dest, TotalLength);
+  P := Dest;
+  for I := 0 to Source.Count - 1 do
+  begin
+    P := StrECopyW(P, PWideChar(Source[I]));
+    Inc(P);
+  end;
+  P^:= #0;
+  Result := Dest;
+end;
+
+procedure MultiSzToStrings(const Dest: TWideStrings; const Source: PMultiSz);
+var
+  P: PMultiSz;
+begin
+  Assert(Dest <> nil);
+  Dest.BeginUpdate;
+  try
+    Dest.Clear;
+    if Source <> nil then
+    begin
+      P := Source;
+      while P^ <> #0 do
+      begin
+        Dest.Add(P);
+        P := StrEndW(P);
+        Inc(P);
+      end;
+    end;
+  finally
+    Dest.EndUpdate;
+  end;
+end;
+
+function MultiSzLength(const Source: PMultiSz): Integer;
+var
+  P: PMultiSz;
+begin
+  Result := 0;
+  if Source <> nil then
+  begin
+    P := Source;
+    repeat
+      Inc(Result, StrLenW(P) + 1);
+      P := StrEndW(P);
+      Inc(P);
+    until P^ = #0;
+    Inc(Result);
+  end;
+end;
+
+procedure AllocateMultiSz(var Dest: PMultiSz; Len: Integer);
+begin
+  if Len > 0 then
+    GetMem(Dest, Len * SizeOf(WideChar))
+  else
+    Dest := nil;
+end;
+
+procedure FreeMultiSz(var Dest: PMultiSz);
+begin
+  if Dest <> nil then
+    FreeMem(Dest);
+  Dest := nil;
+end;
+
+function MultiSzDup(const Source: PMultiSz): PMultiSz;
+var
+  Len: Integer;
+begin
+  if Source <> nil then
+  begin
+    Len := MultiSzLength(Source);
+    AllocateMultiSz(Result, Len);
+    Move(Source^, Result^, Len * SizeOf(WideChar));
+  end
+  else
+    Result := nil;
 end;
 
 {$IFDEF UNITVERSIONING}

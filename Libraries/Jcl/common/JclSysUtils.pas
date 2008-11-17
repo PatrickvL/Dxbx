@@ -40,8 +40,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-08-07 23:54:09 +0200 (do, 07 aug 2008)                             $ }
-{ Revision:      $Rev:: 2412                                                                     $ }
+{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (di, 09 sep 2008)                             $ }
+{ Revision:      $Rev:: 2461                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -108,6 +108,29 @@ function Guard(Obj: TObject; var SafeGuard: IMultiSafeGuard): TObject; overload;
 
 function GuardGetMem(Size: Cardinal; out SafeGuard: ISafeGuard): Pointer;
 function GuardAllocMem(Size: Cardinal; out SafeGuard: ISafeGuard): Pointer;
+
+{$IFDEF SUPPORTS_GENERICS_}
+type
+  ISafeGuard<T: class> = interface
+    function ReleaseItem: T;
+    function GetItem: T;
+    procedure FreeItem;
+    property Item: T read GetItem;
+  end;
+
+  TSafeGuard<T: class> = class(TObject, ISafeGuard<T>)
+  private
+    FItem: T;
+    function ReleaseItem: T;
+    function GetItem: T;
+    procedure FreeItem;
+
+	constructor Create(Instance: T);
+	destructor Destroy; override;
+  public
+    class function New(Instance: T): ISafeGuard<T>; static;
+  end;
+{$ENDIF SUPPORTS_GENERICS_}
 
 { Shared memory between processes functions }
 
@@ -189,6 +212,8 @@ function DynArrayCompareFloat(Item1, Item2: Pointer): Integer;
 
 function DynArrayCompareAnsiString(Item1, Item2: Pointer): Integer;
 function DynArrayCompareAnsiText(Item1, Item2: Pointer): Integer;
+function DynArrayCompareWideString(Item1, Item2: Pointer): Integer;
+function DynArrayCompareWideText(Item1, Item2: Pointer): Integer;
 function DynArrayCompareString(Item1, Item2: Pointer): Integer;
 function DynArrayCompareText(Item1, Item2: Pointer): Integer;
 {$ENDIF ~CLR}
@@ -395,7 +420,7 @@ type
     property PositiveSign: Char read GetPositiveSign write SetPositiveSign;
   end;
 
-function IntToStrZeroPad(Value, Count: Integer): AnsiString;
+function IntToStrZeroPad(Value, Count: Integer): string;
 
 // Child processes
 type
@@ -546,8 +571,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 2412 $';
-    Date: '$Date: 2008-08-07 23:54:09 +0200 (do, 07 aug 2008) $';
+    Revision: '$Revision: 2461 $';
+    Date: '$Date: 2008-09-09 21:32:17 +0200 (di, 09 sep 2008) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -573,7 +598,13 @@ uses
   {$ENDIF MSWINDOWS}
   {$ENDIF CLR}
   Contnrs,
-  JclFileUtils, JclMath, JclResources, JclStrings, JclSysInfo;
+  {$IFDEF HAS_UNIT_ANSISTRINGS}
+  AnsiStrings,
+  {$ENDIF HAS_UNIT_ANSISTRINGS}
+  {$IFDEF COMPILER5}
+  JclWideStrings,
+  {$ENDIF COMPILER5}
+  JclFileUtils, JclMath, JclResources, JclStrings, JclStringConversions, JclSysInfo;
 
 {$IFNDEF CLR}
 
@@ -899,6 +930,40 @@ begin
   Result := AllocMem(Size);
   Guard(Result, SafeGuard);
 end;
+
+{$IFDEF SUPPORTS_GENERICS_}
+//=== { TSafeGuard<T> } ======================================================
+
+constructor TSafeGuard<T>.Create(Instance: T);
+begin
+  inherited Create;
+  FItem := Instance;
+end;
+
+destructor TSafeGuard<T>.Destroy;
+begin
+  FreeItem;
+  inherited Destroy;
+end;
+
+function TSafeGuard<T>.ReleaseItem: T;
+begin
+  Result := FItem;
+  FItem := nil;
+end;
+
+function TSafeGuard<T>.GetItem: T;
+begin
+  Result := FItem;
+end;
+
+procedure TSafeGuard<T>.FreeItem;
+begin
+  if FItem <> nil then
+    FItem.Free;
+  FItem := nil;
+end;
+{$ENDIF SUPPORTS_GENERICS_}
 
 //=== Shared memory functions ================================================
 
@@ -1335,12 +1400,24 @@ end;
 
 function DynArrayCompareCardinal(Item1, Item2: Pointer): Integer;
 begin
-  Result := PInteger(Item1)^ - PInteger(Item2)^;
+  if PCardinal(Item1)^ < PCardinal(Item2)^ then
+    Result := -1
+  else
+  if PCardinal(Item1)^ > PCardinal(Item2)^ then
+    Result := 1
+  else
+    Result := 0;
 end;
 
 function DynArrayCompareInt64(Item1, Item2: Pointer): Integer;
 begin
-  Result := PInt64(Item1)^ - PInt64(Item2)^;
+  if PInt64(Item1)^ < PInt64(Item2)^ then
+    Result := -1
+  else
+  if PInt64(Item1)^ > PInt64(Item2)^ then
+    Result := 1
+  else
+    Result := 0;
 end;
 
 function DynArrayCompareSingle(Item1, Item2: Pointer): Integer;
@@ -1397,14 +1474,24 @@ begin
   Result := AnsiCompareText(PAnsiString(Item1)^, PAnsiString(Item2)^);
 end;
 
+function DynArrayCompareWideString(Item1, Item2: Pointer): Integer;
+begin
+  Result := WideCompareStr(PWideString(Item1)^, PWideString(Item2)^);
+end;
+
+function DynArrayCompareWideText(Item1, Item2: Pointer): Integer;
+begin
+  Result := WideCompareText(PWideString(Item1)^, PWideString(Item2)^);
+end;
+
 function DynArrayCompareString(Item1, Item2: Pointer): Integer;
 begin
-  Result := CompareStr(PAnsiString(Item1)^, PAnsiString(Item2)^);
+  Result := CompareStr(PString(Item1)^, PString(Item2)^);
 end;
 
 function DynArrayCompareText(Item1, Item2: Pointer): Integer;
 begin
-  Result := CompareText(PAnsiString(Item1)^, PAnsiString(Item2)^);
+  Result := CompareText(PString(Item1)^, PString(Item2)^);
 end;
 
 {$ENDIF ~CLR}
@@ -1630,27 +1717,29 @@ end;
 
 {$IFNDEF FPC}
 function GetVirtualMethodCount(AClass: TClass): Integer;
+type
+  PINT_PTR = ^INT_PTR;
 var
-  BeginVMT: Longint;
-  EndVMT: Longint;
-  TablePointer: Longint;
+  BeginVMT: INT_PTR;
+  EndVMT: INT_PTR;
+  TablePointer: INT_PTR;
   I: Integer;
 begin
-  BeginVMT := Longint(AClass);
+  BeginVMT := INT_PTR(AClass);
 
   // Scan the offset entries in the class table for the various fields,
   // namely vmtIntfTable, vmtAutoTable, ..., vmtDynamicTable
   // The last entry is always the vmtClassName, so stop once we got there
   // After the last virtual method there is one of these entries.
 
-  EndVMT := PLongint(Longint(AClass) + vmtClassName)^;
+  EndVMT := PINT_PTR(INT_PTR(AClass) + vmtClassName)^;
   // Set iterator to first item behind VMT table pointer
   I := vmtSelfPtr + SizeOf(Pointer);
   repeat
-    TablePointer := PLongint(Longint(AClass) + I)^;
+    TablePointer := PINT_PTR(INT_PTR(AClass) + I)^;
     if (TablePointer <> 0) and (TablePointer >= BeginVMT) and
        (TablePointer < EndVMT) then
-      EndVMT := Longint(TablePointer);
+      EndVMT := INT_PTR(TablePointer);
     Inc(I, SizeOf(Pointer));
   until I >= vmtClassName;
 
@@ -1866,11 +1955,11 @@ end;
 
 //=== Numeric formatting routines ============================================
 
-function IntToStrZeroPad(Value, Count: Integer): AnsiString;
+function IntToStrZeroPad(Value, Count: Integer): string;
 begin
   Result := IntToStr(Value);
   if Length(Result) < Count then
-    Result := StrFillChar('0', Count - Length(Result)) + Result;
+    Result := StrRepeatChar('0', Count - Length(Result)) + Result;
 end;
 
 //=== { TJclNumericFormat } ==================================================
@@ -2128,7 +2217,7 @@ has not been investigated if ExponentDivision <= 12 is safe. }
         else
           Mantissa[I] := '0'
       else
-      if Mantissa[I] in [AnsiChar(DigitBlockSeparator), AnsiChar(FractionalPartSeparator)] then
+      if (Mantissa[I] = DigitBlockSeparator) or (Mantissa[I] = FractionalPartSeparator) then
         Continue
       else
       begin
@@ -2176,12 +2265,7 @@ begin
   Chars := MaxResultLen;
   if Width > Chars then
     Chars := Width;
-  {$IFDEF CLR}
-  Result := StrFillChar(' ', Chars);
-  {$ELSE}
-  SetLength(Result, Chars);
-  FillChar(Result[1], Chars, ' ');
-  {$ENDIF CLR}
+  Result := StrRepeatChar(' ', Chars);
 
   Remainder := Abs(Value);
   Digits := 0;
@@ -2387,7 +2471,7 @@ function InternalExecute(const CommandLine: string; var Output: string; OutputLi
 const
   BufferSize = 255;
 var
-  Buffer: array [0..BufferSize] of Char;
+  Buffer: array [0..BufferSize] of AnsiChar;
   TempOutput: string;
   PipeBytesRead: Cardinal;
 
@@ -2406,7 +2490,7 @@ var
     CR, LF: Integer;
   begin
     Buffer[PipeBytesRead] := #0;
-    TempOutput := TempOutput + Buffer;
+    TempOutput := TempOutput + string(Buffer);
     if Assigned(OutputLineCallback) then
     repeat
       CR := Pos(NativeCarriageReturn, TempOutput);
@@ -2531,7 +2615,7 @@ begin
   InputMode := Console.Input.Mode;
   Console.Input.Mode := [imProcessed];
   Console.Input.Clear;
-  Result := Console.Input.GetEvent.Event.KeyEvent.AsciiChar;
+  Result := Char(Console.Input.GetEvent.Event.KeyEvent.AsciiChar);
   Console.Input.Mode := InputMode;
 end;
 {$ENDIF MSWINDOWS}
@@ -3026,7 +3110,7 @@ begin
     FLogFileName := CreateDefaultFileName
   else
     FLogFileName := ALogFileName;
-  DWord(FLogFileHandle) := INVALID_HANDLE_VALUE;
+  DWORD_PTR(FLogFileHandle) := INVALID_HANDLE_VALUE;
 end;
 
 function TJclSimpleLog.CreateDefaultFileName: string;
@@ -3053,14 +3137,14 @@ begin
   if LogOpen then
   begin
     FileClose(FLogFileHandle);
-    DWord(FLogFileHandle) := INVALID_HANDLE_VALUE;
+    DWORD_PTR(FLogFileHandle) := INVALID_HANDLE_VALUE;
     FLogWasEmpty := False;
   end;
 end;
 
 function TJclSimpleLog.GetLogOpen: Boolean;
 begin
-  Result := DWord(FLogFileHandle) <> INVALID_HANDLE_VALUE;
+  Result := DWORD_PTR(FLogFileHandle) <> INVALID_HANDLE_VALUE;
 end;
 
 procedure TJclSimpleLog.OpenLog;
@@ -3068,10 +3152,15 @@ begin
   if not LogOpen then
   begin
     FLogFileHandle := FileOpen(FLogFileName, fmOpenWrite or fmShareDenyWrite);
-    if not LogOpen then
-      FLogFileHandle := FileCreate(FLogFileName);
     if LogOpen then
-      FLogWasEmpty := FileSeek(FLogFileHandle, 0, soFromEnd) = 0;
+      FLogWasEmpty := FileSeek(FLogFileHandle, 0, soFromEnd) = 0
+    else
+    begin
+      FLogFileHandle := FileCreate(FLogFileName);
+      FLogWasEmpty := True;
+      if LogOpen then
+        FileWrite(FLogFileHandle, BOM_UTF8[0], Length(BOM_UTF8));
+    end;
   end
   else
     FLogWasEmpty := False;
@@ -3080,6 +3169,7 @@ end;
 procedure TJclSimpleLog.Write(const Text: string; Indent: Integer);
 var
   S: string;
+  UTF8S: TUTF8String;
   SL: TStringList;
   I: Integer;
 begin
@@ -3091,7 +3181,8 @@ begin
       for I := 0 to SL.Count - 1 do
       begin
         S := StringOfChar(' ', Indent) + StrEnsureSuffix(NativeLineBreak, TrimRight(SL[I]));
-        FileWrite(FLogFileHandle, Pointer(S)^, Length(S));
+        UTF8S := StringToUTF8(S);
+        FileWrite(FLogFileHandle, UTF8S[1], Length(UTF8S));
       end;
     finally
       SL.Free;

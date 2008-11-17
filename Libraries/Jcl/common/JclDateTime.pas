@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-01-30 19:32:20 +0100 (wo, 30 jan 2008)                             $ }
-{ Revision:      $Rev:: 2333                                                                     $ }
-{ Author:        $Author:: marcovtje                                                             $ }
+{ Last modified: $Date:: 2008-09-21 13:27:55 +0200 (zo, 21 sep 2008)                             $ }
+{ Revision:      $Rev:: 2477                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -242,8 +242,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclDateTime.pas $';
-    Revision: '$Revision: 2333 $';
-    Date: '$Date: 2008-01-30 19:32:20 +0100 (wo, 30 jan 2008) $';
+    Revision: '$Revision: 2477 $';
+    Date: '$Date: 2008-09-21 13:27:55 +0200 (zo, 21 sep 2008) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -1215,7 +1215,7 @@ const
 
 function DateTimeToUnixTime(DateTime: TDateTime): TJclUnixTime32;
 begin
-  Result := Trunc((DateTime-UnixTimeStart) * SecondsPerDay);
+  Result := Round((DateTime-UnixTimeStart) * SecondsPerDay);
 end;
 
 function UnixTimeToDateTime(const UnixTime: TJclUnixTime32): TDateTime;
