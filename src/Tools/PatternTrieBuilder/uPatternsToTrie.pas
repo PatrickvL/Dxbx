@@ -31,7 +31,6 @@ uses
   // Dxbx
   uTypes,
   uDxbxUtils,
-  uXboxLibraryUtils,
   uStoredTrieTypes;
 
 type
@@ -92,12 +91,17 @@ procedure PatternToTrie_Main;
 
 implementation
 
+function IsXboxLibraryPatch(const aFunctionName: string): Boolean;
+begin
+  Result := True; // TODO : Retrieve this info from DxbxKrnl.DLL
+end;
+
 const
   // TODO : Make these a command-line option :
   DumpFileName = string('TrieDump.txt');
   StoredTrieFileName = string('StoredTrie.dpt'); // Dxbx Pattern Trie
   StoredTrieTestFileName = string(StoredTrieFileName + '.txt');
-  
+
 function PatternTrie_NodeCompare(Node1, Node2: TPatternTrieNode): Integer;
 var
   i, Len: Integer;

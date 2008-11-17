@@ -27,7 +27,13 @@ uses
   Windows
   , uEmuD3D8Types;
 
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD);
+procedure XTL_EmuExecutePushBuffer(pPushBuffer: X_D3DPushBuffer; pFixup: X_D3DFixup); stdcall;
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD); stdcall;
+
+exports
+  XTL_EmuExecutePushBuffer,
+  XTL_EmuExecutePushBufferRaw;
+
 var
   g_dwPrimaryPBCount: LongInt = 0;
   g_pPrimaryPB: LongInt = 0;
@@ -35,9 +41,6 @@ var
   XTL_g_bSkipPush: Boolean = False;
   XTL_g_bBrkPush: Boolean = False;
   g_bPBSkipPusher: Boolean = False;
-
-
-
 
 implementation
 

@@ -40,7 +40,6 @@
     <DCCReference Include="..\..\uDxbxUtils.pas" />
     <DCCReference Include="..\..\uStoredTrieTypes.pas" />
     <DCCReference Include="..\..\uTypes.pas" />
-    <DCCReference Include="..\..\uXboxLibraryUtils.pas" />
     <DCCReference Include="uPatternsToTrie.pas" />
   </ItemGroup>
 </Project>

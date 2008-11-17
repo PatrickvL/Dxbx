@@ -23,7 +23,6 @@ program PatternTrieBuilder;
 
 uses
   SysUtils,
-  uXboxLibraryUtils in '..\..\uXboxLibraryUtils.pas',
   uPatternsToTrie in 'uPatternsToTrie.pas',
   uDxbxUtils in '..\..\uDxbxUtils.pas',
   uStoredTrieTypes in '..\..\uStoredTrieTypes.pas',

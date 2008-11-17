@@ -78,15 +78,28 @@ type
   XINPUT_FEEDBACK = _XINPUT_FEEDBACK;
   PXINPUT_FEEDBACK = ^XINPUT_FEEDBACK;
 
-procedure XTL_EmuXapiInitProcess(); stdcall;
-procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
-procedure XTL_EmuXRegisterThreadNotifyRoutine(pThreadNotification: PXTHREAD_NOTIFICATION; fRegister: BOOL); stdcall;
+procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
+function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
 function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID;  RtlHeapParams: PVOID): PVOID; stdcall;
 function XTL_EmuRtlAllocateHeap(hHeap: THandle; dwFlags: DWORD; dwBytes: SIZE_T): PVOID; stdcall;
 function XTL_EmuRtlFreeHeap(hHeap: THandle; dwFlags: DWORD; lpMem: PVOID): BOOL; stdcall;
 function XTL_EmuRtlReAllocateHeap(hHeap: THandle; dwFlags: DWORD; lpMem: PVOID; dwBytes: SIZE_T): PVOID; stdcall;
 function XTL_EmuRtlSizeHeap(hHeap: THandle; dwFlags: DWORD; lpMem: PVOID): SIZE_T; stdcall;
-procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
+procedure XTL_EmuXapiInitProcess(); stdcall;
+procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
+procedure XTL_EmuXRegisterThreadNotifyRoutine(pThreadNotification: PXTHREAD_NOTIFICATION; fRegister: BOOL); stdcall;
+
+exports
+  XTL_EmuXapiApplyKernelPatches,
+  XTL_EmuXFormatUtilityDrive,
+  XTL_EmuRtlCreateHeap,
+  XTL_EmuRtlAllocateHeap,
+  XTL_EmuRtlFreeHeap,
+  XTL_EmuRtlReAllocateHeap,
+  XTL_EmuRtlSizeHeap,
+  XTL_EmuXapiInitProcess,
+  XTL_EmuXapiThreadStartup,
+  XTL_EmuXRegisterThreadNotifyRoutine;
 
 var
   // XInputSetState status waiters

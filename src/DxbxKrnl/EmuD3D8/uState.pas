@@ -22,8 +22,13 @@ unit uState;
 
 interface
 
-implementation
 
+procedure XTL_EmuUpdateDeferredStates; stdcall;
+
+exports
+  XTL_EmuUpdateDeferredStates;
+
+implementation
 
 // ******************************************************************
 // * func: EmuUpdateDeferredStates

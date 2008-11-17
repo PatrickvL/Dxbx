@@ -22,8 +22,6 @@ unit uEmuXOnline;
 
 interface
 
-implementation
-
 uses
   // Delphi
   Windows,
@@ -34,6 +32,17 @@ uses
   // Dxbx
   uLog,
   uEmuFS;
+
+function XTL_EmuWSAStartup(wVersionRequested: WORD; lpWSAData: WSADATA): Integer; stdcall;
+function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
+function XTL_EmuXNetGetEthernetLinkStatus: DWORD; stdcall;
+
+exports
+  XTL_EmuWSAStartup,
+  XTL_EmuXNetStartup,
+  XTL_EmuXNetGetEthernetLinkStatus;
+
+implementation
 
 // func: EmuWSAStartup
 

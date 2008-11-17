@@ -37,6 +37,11 @@ function XTL_EmuDInputInit: Longbool; stdcall;
 procedure XTL_EmuDInputCleanup; stdcall;
 procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE);
 
+exports
+  XTL_EmuDInputInit,
+  XTL_EmuDInputCleanup,
+  XTL_EmuDInputPoll;
+
 implementation
 
 var
