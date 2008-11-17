@@ -51,9 +51,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-06-02 23:20:46 +0200 (ma, 02 jun 2008)                             $ }
-{ Revision:      $Rev:: 2374                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2008-10-07 21:14:20 +0200 (di, 07 okt 2008)                            $ }
+{ Revision:      $Rev:: 2530                                                                     $ }
+{ Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -125,7 +125,6 @@ const
   DirSeparator = ':';
   {$ENDIF UNIX}
   {$IFDEF MSWINDOWS}
-  DriveLetters     = ['a'..'z', 'A'..'Z'];
   PathDevicePrefix = '\\.\';
   {$IFDEF KEEP_DEPRECATED}
   PathSeparator    = '\';
@@ -155,6 +154,8 @@ const
 
 type
   TCompactPath = ({cpBegin, }cpCenter, cpEnd);
+
+function CharIsDriveLetter(const C: char): Boolean;
 
 function PathAddSeparator(const Path: string): string;
 function PathAddExtension(const Path, Extension: string): string;
@@ -643,7 +644,7 @@ type
 
   TJclFileVersionInfo = class(TObject)
   private
-    FBuffer: string;
+    FBuffer: AnsiString;
     FFixedInfo: PVSFixedFileInfo;
     FFileFlags: TFileFlags;
     FItemList: TStringList;
@@ -846,29 +847,27 @@ type
 
   TJclMappedTextReaderIndex = (tiNoIndex, tiFull);
 
-  {$IFNDEF FPC}
-  PPCharArray = ^TPCharArray;
-  TPCharArray = array [0..0] of PChar;
-  {$ENDIF ~FPC}
+  PPAnsiCharArray = ^TPAnsiCharArray;
+  TPAnsiCharArray = array [0..0] of PAnsiChar;
 
-  TJclMappedTextReader = class(TPersistent)
+  TJclAnsiMappedTextReader = class(TPersistent)
   private
-    FContent: PChar;
-    FEnd: PChar;
-    FIndex: PPCharArray;
+    FContent: PAnsiChar;
+    FEnd: PAnsiChar;
+    FIndex: PPAnsiCharArray;
     FIndexOption: TJclMappedTextReaderIndex;
     FFreeStream: Boolean;
     FLastLineNumber: Integer;
-    FLastPosition: PChar;
+    FLastPosition: PAnsiChar;
     FLineCount: Integer;
     FMemoryStream: TCustomMemoryStream;
-    FPosition: PChar;
+    FPosition: PAnsiChar;
     FSize: Integer;
-    function GetAsString: string;
+    function GetAsString: AnsiString;
     function GetEof: Boolean;
-    function GetChars(Index: Integer): Char;
+    function GetChars(Index: Integer): AnsiChar;
     function GetLineCount: Integer;
-    function GetLines(LineNumber: Integer): string;
+    function GetLines(LineNumber: Integer): AnsiString;
     function GetPosition: Integer;
     function GetPositionFromLine(LineNumber: Integer): Integer;
     procedure SetPosition(const Value: Integer);
@@ -876,23 +875,74 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     procedure CreateIndex;
     procedure Init;
-    function PtrFromLine(LineNumber: Integer): PChar;
-    function StringFromPosition(var StartPos: PChar): string;
+    function PtrFromLine(LineNumber: Integer): PAnsiChar;
+    function StringFromPosition(var StartPos: PAnsiChar): AnsiString;
   public
     constructor Create(MemoryStream: TCustomMemoryStream; FreeStream: Boolean = True;
       const AIndexOption: TJclMappedTextReaderIndex = tiNoIndex); overload;
-    constructor Create(const FileName: string;
+    constructor Create(const FileName: TFileName;
       const AIndexOption: TJclMappedTextReaderIndex = tiNoIndex); overload;
     destructor Destroy; override;
     procedure GoBegin;
-    function Read: Char;
-    function ReadLn: string;
-    property AsString: string read GetAsString;
-    property Chars[Index: Integer]: Char read GetChars;
-    property Content: PChar read FContent;
+    function Read: AnsiChar;
+    function ReadLn: AnsiString;
+    property AsString: AnsiString read GetAsString;
+    property Chars[Index: Integer]: AnsiChar read GetChars;
+    property Content: PAnsiChar read FContent;
     property Eof: Boolean read GetEof;
     property IndexOption: TJclMappedTextReaderIndex read FIndexOption;
-    property Lines[LineNumber: Integer]: string read GetLines;
+    property Lines[LineNumber: Integer]: AnsiString read GetLines;
+    property LineCount: Integer read GetLineCount;
+    property PositionFromLine[LineNumber: Integer]: Integer read GetPositionFromLine;
+    property Position: Integer read GetPosition write SetPosition;
+    property Size: Integer read FSize;
+  end;
+
+  PPWideCharArray = ^TPWideCharArray;
+  TPWideCharArray = array [0..0] of PWideChar;
+
+  TJclWideMappedTextReader = class(TPersistent)
+  private
+    FContent: PWideChar;
+    FEnd: PWideChar;
+    FIndex: PPWideCharArray;
+    FIndexOption: TJclMappedTextReaderIndex;
+    FFreeStream: Boolean;
+    FLastLineNumber: Integer;
+    FLastPosition: PWideChar;
+    FLineCount: Integer;
+    FMemoryStream: TCustomMemoryStream;
+    FPosition: PWideChar;
+    FSize: Integer;
+    function GetAsString: WideString;
+    function GetEof: Boolean;
+    function GetChars(Index: Integer): WideChar;
+    function GetLineCount: Integer;
+    function GetLines(LineNumber: Integer): WideString;
+    function GetPosition: Integer;
+    function GetPositionFromLine(LineNumber: Integer): Integer;
+    procedure SetPosition(const Value: Integer);
+  protected
+    procedure AssignTo(Dest: TPersistent); override;
+    procedure CreateIndex;
+    procedure Init;
+    function PtrFromLine(LineNumber: Integer): PWideChar;
+    function StringFromPosition(var StartPos: PWideChar): WideString;
+  public
+    constructor Create(MemoryStream: TCustomMemoryStream; FreeStream: Boolean = True;
+      const AIndexOption: TJclMappedTextReaderIndex = tiNoIndex); overload;
+    constructor Create(const FileName: TFileName;
+      const AIndexOption: TJclMappedTextReaderIndex = tiNoIndex); overload;
+    destructor Destroy; override;
+    procedure GoBegin;
+    function Read: WideChar;
+    function ReadLn: WideString;
+    property AsString: WideString read GetAsString;
+    property Chars[Index: Integer]: WideChar read GetChars;
+    property Content: PWideChar read FContent;
+    property Eof: Boolean read GetEof;
+    property IndexOption: TJclMappedTextReaderIndex read FIndexOption;
+    property Lines[LineNumber: Integer]: WideString read GetLines;
     property LineCount: Integer read GetLineCount;
     property PositionFromLine[LineNumber: Integer]: Integer read GetPositionFromLine;
     property Position: Integer read GetPosition write SetPosition;
@@ -1011,8 +1061,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 2374 $';
-    Date: '$Date: 2008-06-02 23:20:46 +0200 (ma, 02 jun 2008) $';
+    Revision: '$Revision: 2530 $';
+    Date: '$Date: 2008-10-07 21:14:20 +0200 (di, 07 okt 2008) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -1032,7 +1082,6 @@ uses
   JclSysUtils, JclDateTime, JclResources,
   {$IFDEF CLR}
   Borland.Vcl.ShlObj, Borland.Vcl.ActiveX, Borland.Vcl.ComObj, Borland.Vcl.StrUtils,
-  JclAnsiStrings,
   {$ENDIF CLR}
   JclStrings;
 
@@ -1247,7 +1296,7 @@ begin
   Result := 0;
   if (Size - Position) >= Count then
   begin
-    System.Move(Buffer, Pointer(Longint(Memory) + Longint(Position))^, Count);
+    System.Move(Buffer, Pointer(INT_PTR(Memory) + INT_PTR(Position))^, Count);
     Position := Position + Count;
     Result := Count;
   end;
@@ -1472,7 +1521,7 @@ begin
   Result := 0;
   if (Size - Position) >= Count then
   begin
-    System.Move(Buffer, Pointer(Longint(Memory) + Longint(Position))^, Count);
+    System.Move(Buffer, Pointer(INT_PTR(Memory) + INT_PTR(Position))^, Count);
     Position := Position + Count;
     Result := Count;
   end;
@@ -1480,9 +1529,9 @@ end;
 
 {$ENDIF MSWINDOWS}
 
-//=== { TJclMappedTextReader } ===============================================
+//=== { TJclAnsiMappedTextReader } ===========================================
 
-constructor TJclMappedTextReader.Create(MemoryStream: TCustomMemoryStream; FreeStream: Boolean;
+constructor TJclAnsiMappedTextReader.Create(MemoryStream: TCustomMemoryStream; FreeStream: Boolean;
   const AIndexOption: TJclMappedTextReaderIndex);
 begin
   inherited Create;
@@ -1492,7 +1541,7 @@ begin
   Init;
 end;
 
-constructor TJclMappedTextReader.Create(const FileName: string;
+constructor TJclAnsiMappedTextReader.Create(const FileName: TFileName;
   const AIndexOption: TJclMappedTextReaderIndex);
 begin
   inherited Create;
@@ -1507,7 +1556,7 @@ begin
   Init;
 end;
 
-destructor TJclMappedTextReader.Destroy;
+destructor TJclAnsiMappedTextReader.Destroy;
 begin
   if FFreeStream then
     FMemoryStream.Free;
@@ -1515,7 +1564,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TJclMappedTextReader.AssignTo(Dest: TPersistent);
+procedure TJclAnsiMappedTextReader.AssignTo(Dest: TPersistent);
 begin
   if Dest is TStrings then
   begin
@@ -1523,7 +1572,7 @@ begin
     TStrings(Dest).BeginUpdate;
     try
       while not Eof do
-        TStrings(Dest).Add(ReadLn);
+        TStrings(Dest).Add(string(ReadLn));
     finally
       TStrings(Dest).EndUpdate;
     end;
@@ -1532,9 +1581,9 @@ begin
     inherited AssignTo(Dest);
 end;
 
-procedure TJclMappedTextReader.CreateIndex;
+procedure TJclAnsiMappedTextReader.CreateIndex;
 var
-  P, LastLineStart: PChar;
+  P, LastLineStart: PAnsiChar;
   I: Integer;
 begin
   {$RANGECHECKS OFF}
@@ -1544,25 +1593,26 @@ begin
   while P < FEnd do
   begin
     // CRLF, CR, LF and LFCR are seen as valid sets of chars for EOL marker
-    if P^ in [AnsiLineFeed, AnsiCarriageReturn] then
+    if CharIsReturn(Char(P^)) then
     begin
       if I and $FFFF = 0 then
         ReallocMem(FIndex, (I + $10000) * SizeOf(Pointer));
       FIndex[I] := LastLineStart;
       Inc(I);
 
-      if P^ = AnsiLineFeed then
-      begin
-        Inc(P);
-        if (P < FEnd) and (P^ = AnsiCarriageReturn) then
-          Inc(P);
-      end
-      else
-      if P^ = AnsiCarriageReturn then
-      begin
-        Inc(P);
-        if (P < FEnd) and (P^ = AnsiLineFeed) then
-          Inc(P);
+      case P^ of
+        NativeLineFeed:
+          begin
+            Inc(P);
+            if (P < FEnd) and (P^ = NativeCarriageReturn) then
+             Inc(P);
+          end;
+        NativeCarriageReturn:
+          begin
+            Inc(P);
+            if (P < FEnd) and (P^ = NativeLineFeed) then
+              Inc(P);
+          end;
       end;
       LastLineStart := P;
     end
@@ -1583,26 +1633,26 @@ begin
   {$ENDIF RANGECHECKS_ON}
 end;
 
-function TJclMappedTextReader.GetEof: Boolean;
+function TJclAnsiMappedTextReader.GetEof: Boolean;
 begin
   Result := FPosition >= FEnd;
 end;
 
-function TJclMappedTextReader.GetAsString: string;
+function TJclAnsiMappedTextReader.GetAsString: AnsiString;
 begin
   SetString(Result, Content, Size);
 end;
 
-function TJclMappedTextReader.GetChars(Index: Integer): Char;
+function TJclAnsiMappedTextReader.GetChars(Index: Integer): AnsiChar;
 begin
   if (Index < 0) or (Index >= Size) then
     raise EJclError.CreateRes(@RsFileIndexOutOfRange);
-  Result := Char(PByte(FContent + Index)^);
+  Result := AnsiChar(PByte(FContent + Index)^);
 end;
 
-function TJclMappedTextReader.GetLineCount: Integer;
+function TJclAnsiMappedTextReader.GetLineCount: Integer;
 var
-  P: PChar;
+  P: PAnsiChar;
 begin
   if FLineCount = -1 then
   begin
@@ -1613,25 +1663,25 @@ begin
       while P < FEnd do
       begin
         case P^ of
-          AnsiLineFeed:
+          NativeLineFeed:
             begin
               Inc(FLineCount);
               Inc(P);
-              if (P < FEnd) and (P^ = AnsiCarriageReturn) then
+              if (P < FEnd) and (P^ = NativeCarriageReturn) then
                 Inc(P);
             end;
-          AnsiCarriageReturn:
+          NativeCarriageReturn:
             begin
               Inc(FLineCount);
               Inc(P);
-              if (P < FEnd) and (P^ = AnsiLineFeed) then
+              if (P < FEnd) and (P^ = NativeLineFeed) then
                 Inc(P);
             end;
         else
           Inc(P);
         end;
       end;
-      if (P = FEnd) and (P > FContent) and not ((P-1)^ in [AnsiCarriageReturn, AnsiLineFeed]) then
+      if (P = FEnd) and (P > FContent) and not CharIsReturn(Char((P-1)^)) then
         Inc(FLineCount);
     end;
   end;
@@ -1639,25 +1689,25 @@ begin
   Result := FLineCount;
 end;
 
-function TJclMappedTextReader.GetLines(LineNumber: Integer): string;
+function TJclAnsiMappedTextReader.GetLines(LineNumber: Integer): AnsiString;
 var
-  P: PChar;
+  P: PAnsiChar;
 begin
   P := PtrFromLine(LineNumber);
   Result := StringFromPosition(P);
 end;
 
-function TJclMappedTextReader.GetPosition: Integer;
+function TJclAnsiMappedTextReader.GetPosition: Integer;
 begin
   Result := FPosition - FContent;
 end;
 
-procedure TJclMappedTextReader.GoBegin;
+procedure TJclAnsiMappedTextReader.GoBegin;
 begin
   Position := 0;
 end;
 
-procedure TJclMappedTextReader.Init;
+procedure TJclAnsiMappedTextReader.Init;
 begin
   FContent := FMemoryStream.Memory;
   FSize := FMemoryStream.Size;
@@ -1670,9 +1720,9 @@ begin
     CreateIndex;
 end;
 
-function TJclMappedTextReader.GetPositionFromLine(LineNumber: Integer): Integer;
+function TJclAnsiMappedTextReader.GetPositionFromLine(LineNumber: Integer): Integer;
 var
-  P: PChar;
+  P: PAnsiChar;
 begin
   P := PtrFromLine(LineNumber);
   if P = nil then
@@ -1681,7 +1731,7 @@ begin
     Result := P - FContent;
 end;
 
-function TJclMappedTextReader.PtrFromLine(LineNumber: Integer): PChar;
+function TJclAnsiMappedTextReader.PtrFromLine(LineNumber: Integer): PAnsiChar;
 var
   LineOffset: Integer;
 begin
@@ -1723,18 +1773,18 @@ begin
       while (Result < FEnd) and (LineOffset > 0) do
       begin
         case Result^ of
-          AnsiLineFeed:
+          NativeLineFeed:
             begin
               Dec(LineOffset);
               Inc(Result);
-              if (Result < FEnd) and (Result^ = AnsiCarriageReturn) then
+              if (Result < FEnd) and (Result^ = NativeCarriageReturn) then
                 Inc(Result);
             end;
-          AnsiCarriageReturn:
+          NativeCarriageReturn:
             begin
               Dec(LineOffset);
               Inc(Result);
-              if (Result < FEnd) and (Result^ = AnsiLineFeed) then
+              if (Result < FEnd) and (Result^ = NativeLineFeed) then
                 Inc(Result);
             end;
         else
@@ -1750,22 +1800,22 @@ begin
       begin
         Dec(Result);
         case Result^ of
-          AnsiLineFeed:
+          NativeLineFeed:
             begin
               Inc(LineOffset);
               if LineOffset >= 1 then
                 Inc(Result)
               else
-              if (Result > FContent) and ((Result-1)^ = AnsiCarriageReturn) then
+              if (Result > FContent) and ((Result-1)^ = NativeCarriageReturn) then
                 Dec(Result);
             end;
-          AnsiCarriageReturn:
+          NativeCarriageReturn:
             begin
               Inc(LineOffset);
               if LineOffset >= 1 then
                 Inc(Result)
               else
-              if (Result > FContent) and ((Result-1)^ = AnsiLineFeed) then
+              if (Result > FContent) and ((Result-1)^ = NativeLineFeed) then
                 Dec(Result);
             end;
         end;
@@ -1776,7 +1826,7 @@ begin
   end;
 end;
 
-function TJclMappedTextReader.Read: Char;
+function TJclAnsiMappedTextReader.Read: AnsiChar;
 begin
   if FPosition >= FEnd then
     Result := #0
@@ -1787,41 +1837,392 @@ begin
   end;
 end;
 
-function TJclMappedTextReader.ReadLn: string;
+function TJclAnsiMappedTextReader.ReadLn: AnsiString;
 begin
   Result := StringFromPosition(FPosition);
 end;
 
-procedure TJclMappedTextReader.SetPosition(const Value: Integer);
+procedure TJclAnsiMappedTextReader.SetPosition(const Value: Integer);
 begin
   FPosition := FContent + Value;
 end;
 
-function TJclMappedTextReader.StringFromPosition(var StartPos: PChar): string;
+function TJclAnsiMappedTextReader.StringFromPosition(var StartPos: PAnsiChar): AnsiString;
 var
-  P: PChar;
+  P: PAnsiChar;
 begin
   if (StartPos = nil) or (StartPos >= FEnd) then
     Result := ''
   else
   begin
     P := StartPos;
-    while (P < FEnd) and (not (P^ in [AnsiLineFeed, AnsiCarriageReturn])) do
+    while (P < FEnd) and (not CharIsReturn(Char(P^))) do
       Inc(P);
     SetString(Result, StartPos, P - StartPos);
     if P < FEnd then
     begin
       case P^ of
-        AnsiLineFeed:
+        NativeLineFeed:
           begin
             Inc(P);
-            if (P < FEnd) and (P^ = AnsiCarriageReturn) then
+            if (P < FEnd) and (P^ = NativeCarriageReturn) then
               Inc(P);
           end;
-        AnsiCarriageReturn:
+        NativeCarriageReturn:
           begin
             Inc(P);
-            if (P < FEnd) and (P^ = AnsiLineFeed) then
+            if (P < FEnd) and (P^ = NativeLineFeed) then
+              Inc(P);
+          end;
+      end;
+    end;
+    StartPos := P;
+  end;
+end;
+
+//=== { TJclWideMappedTextReader } ===========================================
+
+constructor TJclWideMappedTextReader.Create(MemoryStream: TCustomMemoryStream; FreeStream: Boolean;
+  const AIndexOption: TJclMappedTextReaderIndex);
+begin
+  inherited Create;
+  FMemoryStream := MemoryStream;
+  FFreeStream := FreeStream;
+  FIndexOption := AIndexOption;
+  Init;
+end;
+
+constructor TJclWideMappedTextReader.Create(const FileName: TFileName;
+  const AIndexOption: TJclMappedTextReaderIndex);
+begin
+  inherited Create;
+  {$IFDEF MSWINDOWS}
+  FMemoryStream := TJclFileMappingStream.Create(FileName);
+  {$ELSE ~ MSWINDOWS}
+  FMemoryStream := TMemoryStream.Create;
+  TMemoryStream(FMemoryStream).LoadFromFile(FileName);
+  {$ENDIF ~ MSWINDOWS}
+  FFreeStream := True;
+  FIndexOption := AIndexOption;
+  Init;
+end;
+
+destructor TJclWideMappedTextReader.Destroy;
+begin
+  if FFreeStream then
+    FMemoryStream.Free;
+  FreeMem(FIndex);
+  inherited Destroy;
+end;
+
+procedure TJclWideMappedTextReader.AssignTo(Dest: TPersistent);
+begin
+  if Dest is TStrings then
+  begin
+    GoBegin;
+    TStrings(Dest).BeginUpdate;
+    try
+      while not Eof do
+        TStrings(Dest).Add(string(ReadLn));
+    finally
+      TStrings(Dest).EndUpdate;
+    end;
+  end
+  else
+    inherited AssignTo(Dest);
+end;
+
+procedure TJclWideMappedTextReader.CreateIndex;
+var
+  P, LastLineStart: PWideChar;
+  I: Integer;
+begin
+  {$RANGECHECKS OFF}
+  P := FContent;
+  I := 0;
+  LastLineStart := P;
+  while P < FEnd do
+  begin
+    // CRLF, CR, LF and LFCR are seen as valid sets of chars for EOL marker
+    if CharIsReturn(Char(P^)) then
+    begin
+      if I and $FFFF = 0 then
+        ReallocMem(FIndex, (I + $10000) * SizeOf(Pointer));
+      FIndex[I] := LastLineStart;
+      Inc(I);
+
+      case P^ of
+        NativeLineFeed:
+          begin
+            Inc(P);
+            if (P < FEnd) and (P^ = NativeCarriageReturn) then
+             Inc(P);
+          end;
+        NativeCarriageReturn:
+          begin
+            Inc(P);
+            if (P < FEnd) and (P^ = NativeLineFeed) then
+              Inc(P);
+          end;
+      end;
+      LastLineStart := P;
+    end
+    else
+      Inc(P);
+  end;
+  if P > LastLineStart then
+  begin
+    ReallocMem(FIndex, (I + 1) * SizeOf(Pointer));
+    FIndex[I] := LastLineStart;
+    Inc(I);
+  end
+  else
+    ReallocMem(FIndex, I * SizeOf(Pointer));
+  FLineCount := I;
+  {$IFDEF RANGECHECKS_ON}
+  {$RANGECHECKS ON}
+  {$ENDIF RANGECHECKS_ON}
+end;
+
+function TJclWideMappedTextReader.GetEof: Boolean;
+begin
+  Result := FPosition >= FEnd;
+end;
+
+function TJclWideMappedTextReader.GetAsString: WideString;
+begin
+  SetString(Result, Content, Size);
+end;
+
+function TJclWideMappedTextReader.GetChars(Index: Integer): WideChar;
+begin
+  if (Index < 0) or (Index >= Size) then
+    raise EJclError.CreateRes(@RsFileIndexOutOfRange);
+  Result := WideChar(PByte(FContent + Index)^);
+end;
+
+function TJclWideMappedTextReader.GetLineCount: Integer;
+var
+  P: PWideChar;
+begin
+  if FLineCount = -1 then
+  begin
+    FLineCount := 0;
+    if FContent < FEnd then
+    begin
+      P := FContent;
+      while P < FEnd do
+      begin
+        case P^ of
+          NativeLineFeed:
+            begin
+              Inc(FLineCount);
+              Inc(P);
+              if (P < FEnd) and (P^ = NativeCarriageReturn) then
+                Inc(P);
+            end;
+          NativeCarriageReturn:
+            begin
+              Inc(FLineCount);
+              Inc(P);
+              if (P < FEnd) and (P^ = NativeLineFeed) then
+                Inc(P);
+            end;
+        else
+          Inc(P);
+        end;
+      end;
+      if (P = FEnd) and (P > FContent) and not CharIsReturn(Char((P-1)^)) then
+        Inc(FLineCount);
+    end;
+  end;
+
+  Result := FLineCount;
+end;
+
+function TJclWideMappedTextReader.GetLines(LineNumber: Integer): WideString;
+var
+  P: PWideChar;
+begin
+  P := PtrFromLine(LineNumber);
+  Result := StringFromPosition(P);
+end;
+
+function TJclWideMappedTextReader.GetPosition: Integer;
+begin
+  Result := FPosition - FContent;
+end;
+
+procedure TJclWideMappedTextReader.GoBegin;
+begin
+  Position := 0;
+end;
+
+procedure TJclWideMappedTextReader.Init;
+begin
+  FContent := FMemoryStream.Memory;
+  FSize := FMemoryStream.Size;
+  FEnd := FContent + FSize;
+  FPosition := FContent;
+  FLineCount := -1;
+  FLastLineNumber := 0;
+  FLastPosition := FContent;
+  if IndexOption = tiFull then
+    CreateIndex;
+end;
+
+function TJclWideMappedTextReader.GetPositionFromLine(LineNumber: Integer): Integer;
+var
+  P: PWideChar;
+begin
+  P := PtrFromLine(LineNumber);
+  if P = nil then
+    Result := -1
+  else
+    Result := P - FContent;
+end;
+
+function TJclWideMappedTextReader.PtrFromLine(LineNumber: Integer): PWideChar;
+var
+  LineOffset: Integer;
+begin
+  Result := nil;
+  {$RANGECHECKS OFF}
+  if (IndexOption <> tiNoIndex) and (LineNumber < FLineCount) and (FIndex[LineNumber] <> nil) then
+    Result := FIndex[LineNumber]
+  {$IFDEF RANGECHECKS_ON}
+  {$RANGECHECKS ON}
+  {$ENDIF RANGECHECKS_ON}
+  else
+  begin
+    LineOffset := LineNumber - FLastLineNumber;
+    if (FLineCount <> -1) and (LineNumber > 0) then
+    begin
+      if -LineOffset > LineNumber then
+      begin
+        FLastLineNumber := 0;
+        FLastPosition := FContent;
+        LineOffset := LineNumber;
+      end
+      else
+      if LineOffset > FLineCount - LineNumber then
+      begin
+        FLastLineNumber := FLineCount;
+        FLastPosition := FEnd;
+        LineOffset := LineNumber - FLineCount;
+      end;
+    end;
+    if LineNumber <= 0 then
+      Result := FContent
+    else
+    if LineOffset = 0 then
+      Result := FLastPosition
+    else
+    if LineOffset > 0 then
+    begin
+      Result := FLastPosition;
+      while (Result < FEnd) and (LineOffset > 0) do
+      begin
+        case Result^ of
+          NativeLineFeed:
+            begin
+              Dec(LineOffset);
+              Inc(Result);
+              if (Result < FEnd) and (Result^ = NativeCarriageReturn) then
+                Inc(Result);
+            end;
+          NativeCarriageReturn:
+            begin
+              Dec(LineOffset);
+              Inc(Result);
+              if (Result < FEnd) and (Result^ = NativeLineFeed) then
+                Inc(Result);
+            end;
+        else
+          Inc(Result);
+        end;
+      end;
+    end
+    else
+    if LineOffset < 0 then
+    begin
+      Result := FLastPosition;
+      while (Result > FContent) and (LineOffset < 1) do
+      begin
+        Dec(Result);
+        case Result^ of
+          NativeLineFeed:
+            begin
+              Inc(LineOffset);
+              if LineOffset >= 1 then
+                Inc(Result)
+              else
+              if (Result > FContent) and ((Result-1)^ = NativeCarriageReturn) then
+                Dec(Result);
+            end;
+          NativeCarriageReturn:
+            begin
+              Inc(LineOffset);
+              if LineOffset >= 1 then
+                Inc(Result)
+              else
+              if (Result > FContent) and ((Result-1)^ = NativeLineFeed) then
+                Dec(Result);
+            end;
+        end;
+      end;
+    end;
+    FLastLineNumber := LineNumber;
+    FLastPosition := Result;
+  end;
+end;
+
+function TJclWideMappedTextReader.Read: WideChar;
+begin
+  if FPosition >= FEnd then
+    Result := #0
+  else
+  begin
+    Result := FPosition^;
+    Inc(FPosition);
+  end;
+end;
+
+function TJclWideMappedTextReader.ReadLn: WideString;
+begin
+  Result := StringFromPosition(FPosition);
+end;
+
+procedure TJclWideMappedTextReader.SetPosition(const Value: Integer);
+begin
+  FPosition := FContent + Value;
+end;
+
+function TJclWideMappedTextReader.StringFromPosition(var StartPos: PWideChar): WideString;
+var
+  P: PWideChar;
+begin
+  if (StartPos = nil) or (StartPos >= FEnd) then
+    Result := ''
+  else
+  begin
+    P := StartPos;
+    while (P < FEnd) and (not CharIsReturn(Char(P^))) do
+      Inc(P);
+    SetString(Result, StartPos, P - StartPos);
+    if P < FEnd then
+    begin
+      case P^ of
+        NativeLineFeed:
+          begin
+            Inc(P);
+            if (P < FEnd) and (P^ = NativeCarriageReturn) then
+              Inc(P);
+          end;
+        NativeCarriageReturn:
+          begin
+            Inc(P);
+            if (P < FEnd) and (P^ = NativeLineFeed) then
               Inc(P);
           end;
       end;
@@ -1832,16 +2233,23 @@ end;
 
 {$ENDIF ~CLR}
 
+function CharIsDriveLetter(const C: Char): Boolean;
+begin
+  case C of
+    'a'..'z',
+    'A'..'Z':
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
 //=== Path manipulation ======================================================
 
 function PathAddSeparator(const Path: string): string;
 begin
   Result := Path;
-  {$IFDEF CLR}
   if (Path = '') or (Path[Length(Path)] <> DirDelimiter) then
-  {$ELSE}
-  if (Path = '') or (AnsiLastChar(Path) <> DirDelimiter) then
-  {$ENDIF}
     Result := Path + DirDelimiter;
 end;
 
@@ -1960,7 +2368,6 @@ begin
 end;
 
 function PathCommonPrefix(const Path1, Path2: string): Integer;
-{$IFDEF CLR}
 var
   Index1, Index2: Integer;
   LastSeparator, LenS1: Integer;
@@ -1997,40 +2404,6 @@ begin
       Result := LastSeparator;
   end;
 end;
-{$ELSE ~CLR}
-var
-  P1, P2: PChar;
-  LastSeparator: Integer;
-begin
-  Result := 0;
-  if (Path1 <> '') and (Path2 <> '') then
-  begin
-    // Initialize P1 to the shortest of the two paths so that the actual comparison loop below can
-    // use the terminating #0 of that string to terminate the loop.
-    if Length(Path1) <= Length(Path2) then
-    begin
-      P1 := @Path1[1];
-      P2 := @Path2[1];
-    end
-    else
-    begin
-      P1 := @Path2[1];
-      P2 := @Path1[1];
-    end;
-    LastSeparator := 0;
-    while (P1^ = P2^) and (P1^ <> #0) do
-    begin
-      Inc(Result);
-      if P1^ in [DirDelimiter, ':'] then
-        LastSeparator := Result;
-      Inc(P1);
-      Inc(P2);
-    end;
-    if (LastSeparator < Result) and (P1^ <> #0) then
-      Result := LastSeparator;
-  end;
-end;
-{$ENDIF ~CLR}
 
 {$IFDEF Win32API}
 function PathCompactPath(const DC: HDC; const Path: string;
@@ -2161,8 +2534,10 @@ end;
 var
   PIDL: PItemIDList;
   Desktop: IShellFolder;
+  {$IFNDEF SUPPORTS_UNICODE}
   AnsiName: string;
   WideName: array [0..MAX_PATH] of WideChar;
+  {$ENDIF ~SUPPORTS_UNICODE}
   Eaten, Attr: ULONG; // both unused but API requires them (incorrect translation)
 begin
   Result := Path;
@@ -2170,7 +2545,17 @@ begin
   begin
     if Succeeded(SHGetDesktopFolder(Desktop)) then
     begin
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, PChar(Path), -1, WideName, MAX_PATH);
+      {$IFDEF SUPPORTS_UNICODE}
+      if Succeeded(Desktop.ParseDisplayName(0, nil, PChar(Path), Eaten, PIDL, Attr)) then
+      try
+        SetLength(Result, MAX_PATH);
+        if SHGetPathFromIDList(PIDL, PChar(Result)) then
+          StrResetLength(Result);
+      finally
+        CoTaskMemFree(PIDL);
+      end;
+      {$ELSE}
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, PAnsiChar(Path), -1, WideName, MAX_PATH);
       if Succeeded(Desktop.ParseDisplayName(0, nil, WideName, Eaten, PIDL, Attr)) then
       try
         SetLength(AnsiName, MAX_PATH);
@@ -2180,6 +2565,7 @@ begin
       finally
         CoTaskMemFree(PIDL);
       end;
+      {$ENDIF SUPPORTS_UNICODE}
     end;
   end;
 end;
@@ -2201,7 +2587,7 @@ function RtdlGetLongPathName(const Path: string): string;
 begin
   Result := Path;
   if not Assigned(_GetLongPathName) then
-    _GetLongPathName := GetModuleSymbol(Kernel32Handle, 'GetLongPathNameA');
+    _GetLongPathName := GetModuleSymbol(Kernel32Handle, {$IFDEF UNICODE}'GetLongPathNameW'{$ELSE}'GetLongPathNameA'{$ENDIF UNICODE});
   if not Assigned(_GetLongPathName) then
     Result := ShellGetLongPathName(Path)
   else
@@ -2298,10 +2684,10 @@ var
   end;
   {$ENDIF ~MSWINDOWS}
 
-  function Equal(const Path1, Path2: AnsiString): Boolean;
+  function Equal(const Path1, Path2: string): Boolean;
   begin
     {$IFDEF MSWINDOWS}  // case insensitive
-    Result := AnsiSameText(Path1, Path2);
+    Result := StrSame(Path1, Path2);
     {$ELSE}             // case sensitive
     Result := Path1 = Path2;
     {$ENDIF}
@@ -2416,7 +2802,7 @@ begin
       I := 0;
       if PathIsDiskDevice(Path) then
         I := Length(PathDevicePrefix);
-      Result := (Length(Path) > I + 2) and (Path[I + 1] in DriveLetters) and
+      Result := (Length(Path) > I + 2) and CharIsDriveLetter(Path[I + 1]) and
         (Path[I + 2] = ':') and (Path[I + 3] = DirDelimiter);
     end
     else
@@ -2511,6 +2897,28 @@ begin
 end;
 {$ENDIF MSWINDOWS}
 
+function CharIsMachineName(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  case C of
+    'a'..'z',
+    'A'..'Z',
+    '-', '_', '.':
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+function CharIsInvalidPathCharacter(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  case C of
+    '<', '>', '?', '/', ',', '*', '+', '=', '[', ']', '|', ':', ';', '"', '''':
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
 function PathIsUNC(const Path: string): Boolean;
 
 {$IFDEF MSWINDOWS}
@@ -2549,13 +2957,13 @@ var
     {$IFDEF CLR}
     while (Index <= LenPath) and (Path[Index] <> DirDelimiter) do
     begin
-      if AnsiChar(Path[Index]) in ['a'..'z', 'A'..'Z', '-', '_', '.'] then
+      if CharIsMachineName(Path[Index]) then
       begin
         NonDigitFound := True;
         Inc(Index);
       end
       else
-      if AnsiChar(Path[Index]) in AnsiDecDigits then
+      if CharIsDigit(Path[Index]) then
         Inc(Index)
       else
       begin
@@ -2566,13 +2974,13 @@ var
     {$ELSE ~CLR}
     while (P^ <> #0) and (P^ <> DirDelimiter) do
     begin
-      if P^ in ['a'..'z', 'A'..'Z', '-', '_', '.'] then
+      if CharIsMachineName(P^) then
       begin
         NonDigitFound := True;
         Inc(P);
       end
       else
-      if P^ in AnsiDecDigits then
+      if CharIsDigit(P^) then
         Inc(P)
       else
       begin
@@ -2585,9 +2993,6 @@ var
   end;
 
   function AbsorbShareName: Boolean;
-  const
-    InvalidCharacters =
-      ['<', '>', '?', '/', ',', '*', '+', '=', '[', ']', '|', ':', ';', '"', ''''];
   begin
     // a valid share name is a string composed of a set the set !InvalidCharacters note that a
     // leading '$' is valid (indicates a hidden share)
@@ -2595,7 +3000,7 @@ var
     {$IFDEF CLR}
     while (Index <= LenPath) and (Path[Index] <> DirDelimiter) do
     begin
-      if AnsiChar(Path[Index]) in InvalidCharacters then
+      if CharIsInvalidPathCharacter(Path[Index]) then
       begin
         Result := False;
         Break;
@@ -2605,7 +3010,7 @@ var
     {$ELSE ~CLR}
     while (P^ <> #0) and (P^ <> DirDelimiter) do
     begin
-      if P^ in InvalidCharacters then
+      if CharIsInvalidPathCharacter(P^) then
       begin
         Result := False;
         Break;
@@ -2663,7 +3068,7 @@ begin
   Result := ExcludeTrailingPathDelimiter(Path);
   {$ELSE ~CLR}
   L := Length(Path);
-  if (L <> 0) and (AnsiLastChar(Path) = DirDelimiter) then
+  if (L <> 0) and (Path[Length(Path)] = DirDelimiter) then
     Result := Copy(Path, 1, L - 1)
   else
     Result := Path;
@@ -2875,7 +3280,7 @@ begin
   ShellFolder.GetDisplayNameOf(PIDL, Flags[ForParsing], StrRet);
   case StrRet.uType of
     STRRET_CSTR:
-      SetString(Result, StrRet.cStr, lstrlen(StrRet.cStr));
+      SetString(Result, StrRet.cStr, lstrlenA(StrRet.cStr));
     STRRET_OFFSET:
       begin
         P := @PIDL.mkid.abID[StrRet.uOffset - SizeOf(PIDL.mkid.cb)];
@@ -3298,11 +3703,10 @@ var
   ErrorMode: Cardinal;
 begin
   Result := False;
-  Assert(Drive in DriveLetters);
-  if Drive in DriveLetters then
+  Assert(CharIsDriveLetter(Drive));
+  if CharIsDriveLetter(Drive) then
   begin
-    if Drive in AnsiLowercaseLetters then
-      Dec(Drive, $20);
+    Drive := CharUpper(Drive);
     { try to access the drive, it doesn't really matter how we access the drive and as such calling
       DiskSize is more or less a random choice. The call to SetErrorMode supresses the system provided
       error dialog if there is no disk in the drive and causes the to DiskSize to fail. }
@@ -3571,7 +3975,8 @@ end;
 function FileGetGroupName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
 {$IFDEF MSWINDOWS}
 var
-  DomainName: string;
+  DomainName: WideString;
+  TmpResult: WideString;
   pSD: PSecurityDescriptor;
   BufSize: DWORD;
 begin
@@ -3583,9 +3988,9 @@ begin
       GetMem(pSD, BufSize);
       GetFileSecurity(PChar(FileName), GROUP_SECURITY_INFORMATION,
         pSD, BufSize, BufSize);
-      LookupAccountBySid(Pointer(Integer(pSD) + Integer(pSD^.Group)), Result, DomainName);
+      LookupAccountBySid(Pointer(INT_PTR(pSD) + INT_PTR(pSD^.Group)), TmpResult, DomainName);
       FreeMem(pSD);
-      Result := Trim(Result);
+      Result := Trim(TmpResult);
     end;
   end;
 end;
@@ -3610,7 +4015,8 @@ end;
 function FileGetOwnerName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
 {$IFDEF MSWINDOWS}
 var
-  DomainName: string;
+  DomainName: WideString;
+  TmpResult: WideString;
   pSD: PSecurityDescriptor;
   BufSize: DWORD;
 begin
@@ -3620,11 +4026,14 @@ begin
     if BufSize > 0 then
     begin
       GetMem(pSD, BufSize);
-      GetFileSecurity(PChar(FileName), OWNER_SECURITY_INFORMATION,
-        pSD, BufSize, BufSize);
-      LookupAccountBySid(Pointer(Integer(pSD) + Integer(pSD^.Owner)), Result, DomainName);
-      FreeMem(pSD);
-      Result := Trim(Result);
+      try
+        GetFileSecurity(PChar(FileName), OWNER_SECURITY_INFORMATION,
+          pSD, BufSize, BufSize);
+        LookupAccountBySid(Pointer(INT_PTR(pSD) + INT_PTR(pSD^.Owner)), TmpResult, DomainName);
+      finally
+        FreeMem(pSD);
+      end;
+      Result := Trim(TmpResult);
     end;
   end;
 end;
@@ -3657,19 +4066,18 @@ end;
 {$ELSE ~CLR}
 {$IFDEF MSWINDOWS}
 var
-  SearchRec: TSearchRec;
+  FileAttributesEx: WIN32_FILE_ATTRIBUTE_DATA;
   OldMode: Cardinal;
   Size: TULargeInteger;
 begin
   Result := -1;
   OldMode := SetErrorMode(SEM_FAILCRITICALERRORS);
   try
-    if FindFirst(FileName, faAnyFile, SearchRec) = 0 then
+    if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @FileAttributesEx) then
     begin
-      Size.LowPart := SearchRec.FindData.nFileSizeLow;
-      Size.HighPart := SearchRec.FindData.nFileSizeHigh;
+      Size.LowPart := FileAttributesEx.nFileSizeLow;
+      Size.HighPart := FileAttributesEx.nFileSizeHigh;
       Result := Size.QuadPart;
-      SysUtils.FindClose(SearchRec);
     end;
   finally
     SetErrorMode(OldMode);
@@ -3875,7 +4283,7 @@ var
   DriveType: Integer;
   DriveStr: string;
 begin
-  if not (Drive in DriveLetters) then
+  if not CharIsDriveLetter(Drive) then
     raise EJclPathError.CreateResFmt(@RsPathInvalidDrive, [Drive]);
   DriveStr := Drive + ':\';
   DriveType := GetDriveType(PChar(DriveStr));
@@ -3897,20 +4305,11 @@ end;
 
 function GetFileAgeCoherence(const FileName: string): Boolean;
 var
-  Handle: THandle;
-  FindData: TWin32FindData;
+  FileAttributesEx: WIN32_FILE_ATTRIBUTE_DATA;
 begin
   Result := False;
-  Handle := FindFirstFile(PChar(FileName), FindData);
-  if Handle <> INVALID_HANDLE_VALUE then
-  begin
-    Windows.FindClose(Handle);
-    {$IFDEF FPC}
-    Result := CompareFileTime(@FindData.ftCreationTime, @FindData.ftLastWriteTime) <= 0;
-    {$ELSE ~FPC}
-    Result := CompareFileTime(FindData.ftCreationTime, FindData.ftLastWriteTime) <= 0;
-    {$ENDIF ~FPC}
-  end;
+  if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @FileAttributesEx) then
+    Result := CompareFileTime(FileAttributesEx.ftCreationTime, FileAttributesEx.ftLastWriteTime) <= 0;
 end;
 
 {$ENDIF Win32API}
@@ -4226,17 +4625,14 @@ end;
 {$ELSE ~CLR}
 {$IFDEF MSWINDOWS}
 var
-  Handle: THandle;
-  FindData: TWin32FindData;
+  FileAttributesEx: WIN32_FILE_ATTRIBUTE_DATA;
   Size: TULargeInteger;
 begin
   Result := 0;
-  Handle := FindFirstFile(PChar(FileName), FindData);
-  if Handle <> INVALID_HANDLE_VALUE then
+  if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @FileAttributesEx) then
   begin
-    Windows.FindClose(Handle);
-    Size.LowPart := FindData.nFileSizeLow;
-    Size.HighPart := FindData.nFileSizeHigh;
+    Size.LowPart := FileAttributesEx.nFileSizeLow;
+    Size.HighPart := FileAttributesEx.nFileSizeHigh;
     Result := Size.QuadPart;
   end
   else
@@ -4730,7 +5126,7 @@ end;
 {$IFDEF Win32API}
 
 const
-  VerKeyNames: array [1..12] of string[17] =
+  VerKeyNames: array [1..12] of string =
    ('Comments',
     'CompanyName',
     'FileDescription',
@@ -4940,7 +5336,8 @@ end;
 
 constructor TJclFileVersionInfo.Attach(VersionInfoData: Pointer; Size: Integer);
 begin
-  SetString(FBuffer, PChar(VersionInfoData), Size);
+  SetLength(FBuffer, Size);
+  CopyMemory(PAnsiChar(FBuffer), VersionInfoData, Size);
   ExtractData;
 end;
 
@@ -4953,7 +5350,7 @@ begin
   if Size = 0 then
     raise EJclFileVersionInfoError.CreateRes(@RsFileUtilsNoVersionInfo);
   SetLength(FBuffer, Size);
-  Win32Check(GetFileVersionInfo(PChar(FileName), Handle, Size, PChar(FBuffer)));
+  Win32Check(GetFileVersionInfo(PChar(FileName), Handle, Size, PAnsiChar(FBuffer)));
   ExtractData;
 end;
 
@@ -4982,21 +5379,21 @@ end;
 
 procedure TJclFileVersionInfo.ExtractData;
 var
-  Data, EndOfData: PChar;
+  Data, EndOfData: PAnsiChar;
   Len, ValueLen, DataType: Word;
   HeaderSize: Integer;
   Key: string;
   Error, IsUnicode: Boolean;
 
-  procedure Padding(var DataPtr: PChar);
+  procedure Padding(var DataPtr: PAnsiChar);
   begin
-    while DWORD(DataPtr) and 3 <> 0 do
+    while INT_PTR(DataPtr) and 3 <> 0 do
       Inc(DataPtr);
   end;
 
   procedure GetHeader;
   var
-    P: PChar;
+    P: PAnsiChar;
     TempKey: PWideChar;
   begin
     P := Data;
@@ -5020,8 +5417,8 @@ var
     else
     begin
       DataType := 1;
-      Key := PAnsiChar(P);
-      Inc(P, lstrlenA(P) + 1);
+      Key := string(PAnsiChar(P));
+      Inc(P, lstrlenA(PAnsiChar(P)) + 1);
     end;
     Padding(P);
     HeaderSize := P - Data;
@@ -5041,7 +5438,7 @@ var
     until I = 0;
     I := 1;
     while I <= Length(Key) do
-      if Key[I] in AnsiHexDigits then
+      if CharIsHexDigit(Key[I]) then
         Inc(I)
       else
         Delete(Key, I, 1);
@@ -5049,7 +5446,7 @@ var
 
   procedure ProcessStringInfo(Size: Integer);
   var
-    EndPtr, EndStringPtr: PChar;
+    EndPtr, EndStringPtr: PAnsiChar;
     LangIndex: Integer;
     LangIdRec: TLangIdRec;
     Value: string;
@@ -5095,7 +5492,7 @@ var
               StrResetLength(Value);
             end
             else
-              Value := PAnsiChar(Data);
+              Value := string(PAnsiChar(Data));
         else
           Error := True;
           Break;
@@ -5128,7 +5525,7 @@ begin
   FItemList := TStringList.Create;
   FItems := TStringList.Create;
   Data := Pointer(FBuffer);
-  Assert(DWORD(Data) mod 4 = 0);
+  Assert(INT_PTR(Data) mod 4 = 0);
   IsUnicode := (PWord(Data + 4)^ in [0, 1]);
   Error := True;
   GetHeader;
@@ -5347,8 +5744,6 @@ begin
 end;
 
 procedure TJclFileMaskComparator.CreateMultiMasks;
-const
-  WildChars = ['*', '?'];
 var
   List: TStringList;
   I, N: Integer;
@@ -5379,9 +5774,9 @@ begin
       FNames[I] := NS;
       FExts[I] := ES;
       N := 0;
-      if StrContainsChars(NS, WildChars, False) then
+      if StrContainsChars(NS, CharIsWildcard, False) then
         N := N or 1;
-      if StrContainsChars(ES, WildChars, False) then
+      if StrContainsChars(ES, CharIsWildcard, False) then
         N := N or 2;
       FWildChars[I] := N;
     end;

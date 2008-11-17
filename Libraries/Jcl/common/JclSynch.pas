@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-01-26 19:03:00 +0100 (za, 26 jan 2008)                             $ }
-{ Revision:      $Rev:: 2320                                                                     $ }
+{ Last modified: $Date:: 2008-09-23 01:14:35 +0200 (di, 23 sep 2008)                            $ }
+{ Revision:      $Rev:: 2491                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -365,9 +365,9 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSynch.pas $';
-    Revision: '$Revision: 2320 $';
-    Date: '$Date: 2008-01-26 19:03:00 +0100 (za, 26 jan 2008) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2491 $';
+    Date: '$Date: 2008-09-23 01:14:35 +0200 (di, 23 sep 2008) $';
+    LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
 
@@ -1422,7 +1422,8 @@ var
 begin
   // Caller must Lock
   L := Length(FThreads);
-  Move(FThreads[Index + 1], FThreads[Index], SizeOf(TMrewThreadInfo) * (L - Index - 1));
+  if Index < (L - 1) then
+    Move(FThreads[Index + 1], FThreads[Index], SizeOf(TMrewThreadInfo) * (L - Index - 1));
   SetLength(FThreads, L - 1);
 end;
 {$ENDIF ~CLR}

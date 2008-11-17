@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007)                             $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (di, 09 sep 2008)                             $ }
+{ Revision:      $Rev:: 2461                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -397,8 +397,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclConsole.pas $';
-    Revision: '$Revision: 2175 $';
-    Date: '$Date: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007) $';
+    Revision: '$Revision: 2461 $';
+    Date: '$Date: 2008-09-09 21:32:17 +0200 (di, 09 sep 2008) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -1184,12 +1184,12 @@ end;
 
 function TJclScreenCharacter.GetCharacter: Char;
 begin
-  Result := FCharInfo.AsciiChar;
+  Result := Char(FCharInfo.AsciiChar);
 end;
 
 procedure TJclScreenCharacter.SetCharacter(const Value: Char);
 begin
-  FCharInfo.AsciiChar := Value;
+  FCharInfo.AsciiChar := AnsiChar(Value);
 end;
 
 function TJclScreenCharacter.GetTextAttribute: Word;

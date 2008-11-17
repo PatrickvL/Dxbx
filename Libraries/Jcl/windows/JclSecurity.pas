@@ -32,9 +32,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-08-23 19:48:22 +0200 (za, 23 aug 2008)                            $ }
-{ Revision:      $Rev:: 2439                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2008-10-25 15:36:26 +0200 (za, 25 okt 2008)                            $ }
+{ Revision:      $Rev:: 2543                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -58,16 +58,13 @@ type
   EJclSecurityError = class(EJclError);
 
 // Access Control
-function CreateNullDacl(var Sa: TSecurityAttributes;
-  const Inheritable: Boolean): PSecurityAttributes;
+function CreateNullDacl(var Sa: TSecurityAttributes; const Inheritable: Boolean): PSecurityAttributes;
 function CreateInheritable(var Sa: TSecurityAttributes): PSecurityAttributes;
 
 // Privileges
 function IsAdministrator: Boolean;
-function EnableProcessPrivilege(const Enable: Boolean;
-  const Privilege: string): Boolean;
-function EnableThreadPrivilege(const Enable: Boolean;
-  const Privilege: string): Boolean;
+function EnableProcessPrivilege(const Enable: Boolean; const Privilege: string): Boolean;
+function EnableThreadPrivilege(const Enable: Boolean; const Privilege: string): Boolean;
 function IsPrivilegeEnabled(const Privilege: string): Boolean;
 
 function GetPrivilegeDisplayName(const PrivilegeName: string): string;
@@ -96,8 +93,8 @@ function IsElevated: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclSecurity.pas $';
-    Revision: '$Revision: 2439 $';
-    Date: '$Date: 2008-08-23 19:48:22 +0200 (za, 23 aug 2008) $';
+    Revision: '$Revision: 2543 $';
+    Date: '$Date: 2008-10-25 15:36:26 +0200 (za, 25 okt 2008) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -116,8 +113,7 @@ uses
 
 //=== Access Control =========================================================
 
-function CreateNullDacl(var Sa: TSecurityAttributes;
-  const Inheritable: Boolean): PSecurityAttributes;
+function CreateNullDacl(var Sa: TSecurityAttributes; const Inheritable: Boolean): PSecurityAttributes;
 begin
   if IsWinNT then
   begin
@@ -162,7 +158,8 @@ var
   TokenInfo: PTokenGroups;
   HaveToken: Boolean;
   I: Integer;
-const SE_GROUP_USE_FOR_DENY_ONLY = $00000010;
+const
+  SE_GROUP_USE_FOR_DENY_ONLY = $00000010;
 begin
   Result := not IsWinNT;
   if Result then // Win9x/ME
@@ -199,9 +196,6 @@ begin
       begin
         {$RANGECHECKS OFF} // Groups is an array [0..0] of TSIDAndAttributes, ignore ERangeError
         Result := EqualSid(psidAdmin, TokenInfo^.Groups[I].Sid);
-        {$IFDEF RANGECHECKS_ON}
-        {$RANGECHECKS ON}
-        {$ENDIF RANGECHECKS_ON}
         if Result then
         begin
           //consider denied ACE with Administrator SID
@@ -209,6 +203,9 @@ begin
               <> SE_GROUP_USE_FOR_DENY_ONLY;
           Break;
         end;
+        {$IFDEF RANGECHECKS_ON}
+        {$RANGECHECKS ON}
+        {$ENDIF RANGECHECKS_ON}
       end;
     end;
   finally
@@ -221,8 +218,7 @@ begin
   end;
 end;
 
-function EnableProcessPrivilege(const Enable: Boolean;
-  const Privilege: string): Boolean;
+function EnableProcessPrivilege(const Enable: Boolean; const Privilege: string): Boolean;
 const
   PrivAttrs: array [Boolean] of DWORD = (0, SE_PRIVILEGE_ENABLED);
 var
@@ -243,8 +239,7 @@ begin
   end;
 end;
 
-function EnableThreadPrivilege(const Enable: Boolean;
-  const Privilege: string): Boolean;
+function EnableThreadPrivilege(const Enable: Boolean; const Privilege: string): Boolean;
 const
   PrivAttrs: array [Boolean] of DWORD = (0, SE_PRIVILEGE_ENABLED);
 var
@@ -391,9 +386,11 @@ begin
   begin
     NameSize := 0;
     DomainSize := 0;
-    Win32Check(LookupAccountSidW(nil, Sid, nil, NameSize, nil, DomainSize, Use));
-    SetLength(Name, NameSize);
-    SetLength(Domain, DomainSize);
+    LookupAccountSidW(nil, Sid, nil, NameSize, nil, DomainSize, Use);
+    if NameSize > 0 then
+      SetLength(Name, NameSize - 1);
+    if DomainSize > 0 then
+      SetLength(Domain, DomainSize - 1);
     Win32Check(LookupAccountSidW(nil, Sid, PWideChar(Name), NameSize, PWideChar(Domain), DomainSize, Use));
   end
   else
@@ -447,7 +444,11 @@ var
   Handle: THandle;
   Token: THandle;
   User: PTokenUser;
+  {$IFDEF SUPPORTS_UNICODE}
+  Name, Domain: WideString;
+  {$ELSE ~SUPPORTS_UNICODE}
   Name, Domain: AnsiString;
+  {$ENDIF ~SUPPORTS_UNICODE}
 begin
   Result := '';
   if not IsWinNT then  // if Win9x, then function return ''

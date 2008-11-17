@@ -49,9 +49,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-06-16 08:49:55 +0200 (ma, 16 jun 2008)                             $ }
-{ Revision:      $Rev:: 2386                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2008-11-03 22:51:29 +0100 (ma, 03 nov 2008)                             $ }
+{ Revision:      $Rev:: 2551                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -85,7 +85,7 @@ uses
   {$ENDIF MSWINDOWS}
   {$ENDIF ~CLR}
   Classes,
-  JclResources;
+  JclBase, JclResources;
 
 // Environment Variables
 {$IFDEF MSWINDOWS}
@@ -205,7 +205,10 @@ function GetVolumeFileSystemFlags(const Volume: string): TFileSystemFlags;
 {$ENDIF MSWINDOWS}
 function GetIPAddress(const HostName: string): string;
 {$IFNDEF CLR}
-procedure GetIpAddresses(Results: TStrings);
+{$IFDEF MSWINDOWS}
+procedure GetIpAddresses(Results: TStrings; const HostName: AnsiString); overload;
+{$ENDIF MSWINDOWS}
+procedure GetIpAddresses(Results: TStrings); overload;
 {$ENDIF ~CLR}
 function GetLocalComputerName: string;
 {$IFNDEF CLR}
@@ -257,6 +260,7 @@ function GetPidFromProcessName(const ProcessName: string): DWORD;
 function GetProcessNameFromWnd(Wnd: THandle): string;
 function GetProcessNameFromPid(PID: DWORD): string;
 function GetMainAppWndFromPid(PID: DWORD): THandle;
+function GetWndFromPid(PID: DWORD; const WindowClassName: string): HWND;
 {.$ENDIF ~FPC}
 
 function GetShellProcessName: string;
@@ -270,6 +274,12 @@ type
    (wvUnknown, wvWin95, wvWin95OSR2, wvWin98, wvWin98SE, wvWinME,
     wvWinNT31, wvWinNT35, wvWinNT351, wvWinNT4, wvWin2000, wvWinXP,
     wvWin2003, wvWinXP64, wvWin2003R2, wvWinVista, wvWinServer2008);
+  TWindowsEdition =
+   (weUnknown, weWinXPHome, weWinXPPro, weWinXPHomeN, weWinXPProN, weWinXPHomeK,
+    weWinXPProK, weWinXPHomeKN, weWinXPProKN, weWinXPStarter, weWinXPMediaCenter,
+    weWinXPTablet, weWinVistaStarter, weWinVistaHomeBasic, weWinVistaHomeBasicN,
+    weWinVistaHomePremium, weWinVistaBusiness, weWinVistaBusinessN,
+    weWinVistaEnterprise, weWinVistaUltimate);
   TNtProductType =
    (ptUnknown, ptWorkStation, ptServer, ptAdvancedServer,
     ptPersonal, ptProfessional, ptDatacenterServer, ptEnterprise, ptWebEdition);
@@ -311,8 +321,11 @@ const
   {$EXTERNALSYM PROCESSOR_ARCHITECTURE_IA64}
 
 function GetWindowsVersion: TWindowsVersion;
+function GetWindowsEdition: TWindowsEdition;
 function NtProductType: TNtProductType;
 function GetWindowsVersionString: string;
+function GetWindowsEditionString: string;
+function GetWindowsProductString: string;
 function NtProductTypeString: string;
 function GetWindowsServicePackVersion: Integer;
 function GetWindowsServicePackVersionString: string;
@@ -463,9 +476,9 @@ type
     Stepping: Byte;
     Features: Cardinal;
     FrequencyInfo: TFreqInfo;
-    VendorIDString: array [0..11] of Char;
-    Manufacturer: array [0..9] of Char;
-    CpuName: array [0..47] of Char;
+    VendorIDString: array [0..11] of AnsiChar;
+    Manufacturer: array [0..9] of AnsiChar;
+    CpuName: array [0..47] of AnsiChar;
     L1DataCacheSize: Cardinal;             // in kByte
     L1DataCacheLineSize: Byte;             // in Byte
     L1DataCacheAssociativity: Byte;
@@ -492,11 +505,11 @@ type
   end;
 
 const
-  VendorIDIntel: array [0..11] of Char = 'GenuineIntel';
-  VendorIDCyrix: array [0..11] of Char = 'CyrixInstead';
-  VendorIDAMD: array [0..11] of Char = 'AuthenticAMD';
-  VendorIDTransmeta: array [0..11] of Char = 'GenuineTMx86';
-  VendorIDVIA: array [0..11] of Char = 'CentaurHauls';
+  VendorIDIntel: array [0..11] of AnsiChar = 'GenuineIntel';
+  VendorIDCyrix: array [0..11] of AnsiChar = 'CyrixInstead';
+  VendorIDAMD: array [0..11] of AnsiChar = 'AuthenticAMD';
+  VendorIDTransmeta: array [0..11] of AnsiChar = 'GenuineTMx86';
+  VendorIDVIA: array [0..11] of AnsiChar = 'CentaurHauls';
 
 // Constants to be used with Feature Flag set of a CPU
 // eg. IF (Features and FPU_FLAG = FPU_FLAG) THEN CPU has Floating-Point unit on
@@ -605,13 +618,13 @@ const
   INTEL_SS     = BIT_27; // Self snoop
   INTEL_HTT    = BIT_28; // Hyper-threading technology
   INTEL_TM     = BIT_29; // Thermal monitor
-  INTEL_BIT_30 = BIT_30; // Reserved, do not count on value
+  INTEL_IA64   = BIT_30; // IA32 emulation mode on Itanium processors (IA64)
   INTEL_PBE    = BIT_31; // Pending Break Enable
 
   { Extended Intel Feature Flags }
   EINTEL_SSE3    = BIT_0;  // Streaming SIMD Extensions 3
   EINTEL_BIT_1   = BIT_1;  // Reserved, do not count on value
-  EINTEL_BIT_2   = BIT_2;  // Reserved, do not count on value
+  EINTEL_DTES64  = BIT_2;  // write a history of the 64-bit branch to and from addresses into memory
   EINTEL_MONITOR = BIT_3;  // Monitor/MWAIT
   EINTEL_DSCPL   = BIT_4;  // CPL Qualified debug Store
   EINTEL_VMX     = BIT_5;  // Virtual Machine Technology
@@ -622,7 +635,7 @@ const
   EINTEL_CNXTID  = BIT_10; // L1 Context ID
   EINTEL_BIT_11  = BIT_11; // Reserved, do not count on value
   EINTEL_BIT_12  = BIT_12; // Reserved, do not count on value
-  EINTEL_CMPXCHG16B = BIT_13; // CMPXCHG16B instruction
+  EINTEL_CX16    = BIT_13; // CMPXCHG16B instruction
   EINTEL_XTPR    = BIT_14; // Send Task Priority messages
   EINTEL_PDCM    = BIT_15; // Perf/Debug Capability MSR
   EINTEL_BIT_16  = BIT_16; // Reserved, do not count on value
@@ -630,13 +643,13 @@ const
   EINTEL_DCA     = BIT_18; // Direct Cache Access
   EINTEL_SSE4_1  = BIT_19; // Streaming SIMD Extensions 4.1
   EINTEL_SSE4_2  = BIT_20; // Streaming SIMD Extensions 4.2
-  EINTEL_BIT_21  = BIT_21; // Reserved, do not count on value
-  EINTEL_BIT_22  = BIT_22; // Reserved, do not count on value
+  EINTEL_X2APIC  = BIT_21; // x2APIC feature
+  EINTEL_MOVBE   = BIT_22; // MOVBE instruction
   EINTEL_POPCNT  = BIT_23; // A value of 1 indicates the processor supports the POPCNT instruction.
   EINTEL_BIT_24  = BIT_24; // Reserved, do not count on value
   EINTEL_BIT_25  = BIT_25; // Reserved, do not count on value
-  EINTEL_BIT_26  = BIT_26; // Reserved, do not count on value
-  EINTEL_BIT_27  = BIT_27; // Reserved, do not count on value
+  EINTEL_XSAVE   = BIT_26; // XSAVE/XRSTOR processor extended states feature, XSETBV/XGETBV instructions and XFEATURE_ENABLED_MASK (XCR0) register
+  EINTEL_OSXSAVE = BIT_27; // OS has enabled features present in EINTEL_XSAVE
   EINTEL_BIT_28  = BIT_28; // Reserved, do not count on value
   EINTEL_BIT_29  = BIT_29; // Reserved, do not count on value
   EINTEL_BIT_30  = BIT_30; // Reserved, do not count on value
@@ -663,7 +676,7 @@ const
   EINTEL64_BIT_17 = BIT_17; // Reserved, do not count on value
   EINTEL64_BIT_18 = BIT_18; // Reserved, do not count on value
   EINTEL64_BIT_19 = BIT_19; // Reserved, do not count on value
-  EINTEL64_EDB    = BIT_20; // Execute Disable Bit
+  EINTEL64_XD     = BIT_20; // Execution Disable Bit
   EINTEL64_BIT_21 = BIT_21; // Reserved, do not count on value
   EINTEL64_BIT_22 = BIT_22; // Reserved, do not count on value
   EINTEL64_BIT_23 = BIT_23; // Reserved, do not count on value
@@ -754,7 +767,7 @@ const
   AMD2_BIT_6      = BIT_6;  // Reserved, do not count on value
   AMD2_BIT_7      = BIT_7;  // Reserved, do not count on value
   AMD2_BIT_8      = BIT_8;  // Reserved, do not count on value
-  AMD2_BIT_9      = BIT_9;  // Reserved, do not count on value
+  AMD2_SSSE3      = BIT_9;  // supplemental SSE3 extensions
   AMD2_BIT_10     = BIT_10; // Reserved, do not count on value
   AMD2_BIT_11     = BIT_11; // Reserved, do not count on value
   AMD2_BIT_12     = BIT_12; // Reserved, do not count on value
@@ -764,7 +777,7 @@ const
   AMD2_BIT_16     = BIT_16; // Reserved, do not count on value
   AMD2_BIT_17     = BIT_17; // Reserved, do not count on value
   AMD2_BIT_18     = BIT_18; // Reserved, do not count on value
-  AMD2_BIT_19     = BIT_19; // Reserved, do not count on value
+  AMD2_SSE41      = BIT_19; // SSE4.1 instruction support
   AMD2_BIT_20     = BIT_20; // Reserved, do not count on value
   AMD2_BIT_21     = BIT_21; // Reserved, do not count on value
   AMD2_BIT_22     = BIT_22; // Reserved, do not count on value
@@ -823,7 +836,7 @@ const
   EAMD2_MISALIGNSSE   = BIT_7;  // Misaligned SSE mode.
   EAMD2_3DNOWPREFETCH = BIT_8;  // PREFETCH and PREFETCHW instruction support.
   EAMD2_OSVW          = BIT_9;  // OS visible workaround.
-  EAMD2_BIT_10        = BIT_10; // Reserved, do not count on value
+  EAMD2_IBS           = BIT_10; // Instruction based sampling
   EAMD2_SSE5          = BIT_11; // Streaming SIMD Extensions 5
   EAMD2_SKINIT        = BIT_12; // SKINIT, STGI, and DEV support.
   EAMD2_WDT           = BIT_13; // Watchdog timer support.
@@ -1153,7 +1166,7 @@ const
   MXCSR_FZ  = BIT_15;                 // Flush to Zero
 
 const
-  IntelCacheDescription: array [0..64] of TCacheInfo = (
+  IntelCacheDescription: array [0..77] of TCacheInfo = (
     (D: $00; Family: cfOther;                                                                           I: RsIntelCacheDescr00),
     (D: $01; Family: cfInstructionTLB;     Size: 4;     WaysOfAssoc: 4;                Entries: 32;      I: RsIntelCacheDescr01),
     (D: $02; Family: cfInstructionTLB;     Size: 4096;  WaysOfAssoc: 4;                Entries: 2;       I: RsIntelCacheDescr02),
@@ -1165,12 +1178,19 @@ const
     (D: $0A; Family: cfL1DataCache;        Size: 8;     WaysOfAssoc: 2;  LineSize: 32;                   I: RsIntelCacheDescr0A),
     (D: $0B; Family: cfInstructionTLB;     Size: 4;     WaysOfAssoc: 4;                Entries: 4;       I: RsIntelCacheDescr0B),
     (D: $0C; Family: cfL1DataCache;        Size: 16;    WaysOfAssoc: 4;  LineSize: 32;                   I: RsIntelCacheDescr0C),
+    (D: $0E; Family: cfL1DataCache;        Size: 24;    WaysOfAssoc: 4;  LineSize: 32;                   I: RsIntelCacheDescr0E),
     (D: $22; Family: cfL3Cache;            Size: 512;   WaysOfAssoc: 4;  LineSize: 64; LinePerSector: 2; I: RsIntelCacheDescr22),
     (D: $23; Family: cfL3Cache;            Size: 1024;  WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; I: RsIntelCacheDescr23),
     (D: $25; Family: cfL3Cache;            Size: 2048;  WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; I: RsIntelCacheDescr25),
     (D: $29; Family: cfL3Cache;            Size: 4096;  WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; I: RsIntelCacheDescr29),
     (D: $2C; Family: cfL1DataCache;        Size: 32;    WaysOfAssoc: 8;  LineSize: 64;                   I: RsIntelCacheDescr2C),
     (D: $30; Family: cfL1InstructionCache; Size: 32;    WaysOfAssoc: 8;  LineSize: 64;                   I: RsIntelCacheDescr30),
+    (D: $39; Family: cfL2Cache;            Size: 128;   WaysOfAssoc: 4;  LineSize: 64;                   I: RsIntelCacheDescr39),
+    (D: $3A; Family: cfL2Cache;            Size: 192;   WaysOfAssoc: 6;  LineSize: 64;                   I: RsIntelCacheDescr3A),
+    (D: $3B; Family: cfL2Cache;            Size: 128;   WaysOfAssoc: 2;  LineSize: 64;                   I: RsIntelCacheDescr3B),
+    (D: $3C; Family: cfL2Cache;            Size: 256;   WaysOfAssoc: 4;  LineSize: 64;                   I: RsIntelCacheDescr3C),
+    (D: $3D; Family: cfL2Cache;            Size: 384;   WaysOfAssoc: 6;  LineSize: 64;                   I: RsIntelCacheDescr3D),
+    (D: $3E; Family: cfL2Cache;            Size: 512;   WaysOfAssoc: 4;  LineSize: 64;                   I: RsIntelCacheDescr3E),
     (D: $40; Family: cfOther;                                                                            I: RsIntelCacheDescr40),
     (D: $41; Family: cfL2Cache;            Size: 128;   WaysOfAssoc: 4;  LineSize: 32;                   I: RsIntelCacheDescr41),
     (D: $42; Family: cfL2Cache;            Size: 256;   WaysOfAssoc: 4;  LineSize: 32;                   I: RsIntelCacheDescr42),
@@ -1185,11 +1205,13 @@ const
     (D: $4B; Family: cfL3Cache;            Size: 8192;  WaysOfAssoc: 16; LineSize: 64;                   I: RsIntelCacheDescr4B),
     (D: $4D; Family: cfL3Cache;            Size: 16384; WaysOfAssoc: 16; LineSize: 64;                   I: RsIntelCacheDescr4D),
     (D: $4E; Family: cfL3Cache;            Size: 6144;  WaysOfAssoc: 24; LineSize: 64;                   I: RsIntelCacheDescr4E),
+    (D: $4F; Family: cfInstructionTLB;     Size: 4;                                    Entries: 32;      I: RsIntelCacheDescr4F),
     (D: $50; Family: cfInstructionTLB;     Size: 4;                                    Entries: 64;      I: RsIntelCacheDescr50),
     (D: $51; Family: cfInstructionTLB;     Size: 4;                                    Entries: 128;     I: RsIntelCacheDescr51),
     (D: $52; Family: cfInstructionTLB;     Size: 4;                                    Entries: 256;     I: RsIntelCacheDescr52),
     (D: $56; Family: cfDataTLB;            Size: 4096;  WaysOfAssoc: 4;                Entries: 16;      I: RsIntelCacheDescr56),
     (D: $57; Family: cfDataTLB;            Size: 4;     WaysOfAssoc: 4;                Entries: 16;      I: RsIntelCacheDescr57),
+    (D: $59; Family: cfDataTLB;            Size: 4;                                    Entries: 16;      I: RsIntelCacheDescr59),
     (D: $5B; Family: cfDataTLB;            Size: 4096;                                 Entries: 64;      I: RsIntelCacheDescr5B),
     (D: $5C; Family: cfDataTLB;            Size: 4096;                                 Entries: 128;     I: RsIntelCacheDescr5C),
     (D: $5D; Family: cfDataTLB;            Size: 4096;                                 Entries: 256;     I: RsIntelCacheDescr5D),
@@ -1200,6 +1222,7 @@ const
     (D: $70; Family: cfTrace;              Size: 12;    WaysOfAssoc: 8;                                  I: RsIntelCacheDescr70),
     (D: $71; Family: cfTrace;              Size: 16;    WaysOfAssoc: 8;                                  I: RsIntelCacheDescr71),
     (D: $72; Family: cfTrace;              Size: 32;    WaysOfAssoc: 8;                                  I: RsIntelCacheDescr72),
+    (D: $73; Family: cfTrace;              Size: 64;    WaysOfAssoc: 8;                                  I: RsIntelCacheDescr73),
     (D: $78; Family: cfL2Cache;            Size: 1024;  WaysOfAssoc: 4;  LineSize: 64;                   I: RsIntelCacheDescr78),
     (D: $79; Family: cfL2Cache;            Size: 128;   WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; I: RsIntelCacheDescr79),
     (D: $7A; Family: cfL2Cache;            Size: 256;   WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; I: RsIntelCacheDescr7A),
@@ -1207,6 +1230,7 @@ const
     (D: $7C; Family: cfL2Cache;            Size: 1024;  WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; I: RsIntelCacheDescr7C),
     (D: $7D; Family: cfL2Cache;            Size: 2048;  WaysOfAssoc: 8;  LineSize: 64;                   I: RsIntelCacheDescr7D),
     (D: $7F; Family: cfL2Cache;            Size: 512;   WaysOfAssoc: 2;  LineSize: 64;                   I: RsIntelCacheDescr7F),
+    (D: $80; Family: cfL2Cache;            Size: 512;   WaysOfAssoc: 8;  LineSize: 64;                   I: RsIntelCacheDescr80),
     (D: $82; Family: cfL2Cache;            Size: 256;   WaysOfAssoc: 8;  LineSize: 32;                   I: RsIntelCacheDescr82),
     (D: $83; Family: cfL2Cache;            Size: 512;   WaysOfAssoc: 8;  LineSize: 32;                   I: RsIntelCacheDescr83),
     (D: $84; Family: cfL2Cache;            Size: 1024;  WaysOfAssoc: 8;  LineSize: 32;                   I: RsIntelCacheDescr84),
@@ -1217,6 +1241,8 @@ const
     (D: $B1; Family: cfInstructionTLB;     Size: 2048;  WaysOfAssoc: 4;                 Entries: 8;      I: RsIntelCacheDescrB1),
     (D: $B3; Family: cfDataTLB;            Size: 4;     WaysOfAssoc: 4;                 Entries: 128;    I: RsIntelCacheDescrB3),
     (D: $B4; Family: cfDataTLB;            Size: 4;     WaysOfAssoc: 4;                 Entries: 256;    I: RsIntelCacheDescrB4),
+    (D: $BA; Family: cfDataTLB;            Size: 4;     WaysOfAssoc: 4;                 Entries: 64;     I: RsIntelCacheDescrBA),
+    (D: $C0; Family: cfDataTLB;            Size: 4;     WaysOfAssoc: 4;                 Entries: 8;      I: RsIntelCacheDescrC0),
     (D: $F0; Family: cfOther;                                                                            I: RsIntelCacheDescrF0),
     (D: $F1; Family: cfOther;                                                                            I: RsIntelCacheDescrF1)
   );
@@ -1233,8 +1259,8 @@ function TestFDIVInstruction: Boolean;
 
 // Memory Information
 {$IFDEF MSWINDOWS}
-function GetMaxAppAddress: Cardinal;
-function GetMinAppAddress: Cardinal;
+function GetMaxAppAddress: DWORD_PTR;
+function GetMinAppAddress: DWORD_PTR;
 {$ENDIF MSWINDOWS}
 function GetMemoryLoad: Byte;
 function GetSwapFileSize: Cardinal;
@@ -1299,8 +1325,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 2386 $';
-    Date: '$Date: 2008-06-16 08:49:55 +0200 (ma, 16 jun 2008) $';
+    Revision: '$Revision: 2551 $';
+    Date: '$Date: 2008-11-03 22:51:29 +0100 (ma, 03 nov 2008) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -1322,7 +1348,7 @@ uses
   {$ENDIF MSWINDOWS}
   Jcl8087, JclIniFiles,
   {$ENDIF ~CLR}
-  JclBase, JclFileUtils, JclStrings;
+  JclFileUtils, JclStrings;
 
 {$IFDEF FPC}
 {$IFDEF MSWINDOWS}
@@ -1620,7 +1646,7 @@ begin
   end
   else
   begin
-    RegWriteAnsiString(HKEY_CURRENT_USER, cEnvironment, VariableName, VariableContent);
+    RegWriteString(HKEY_CURRENT_USER, cEnvironment, VariableName, VariableContent);
     SetEnvironmentVariable(PChar(VariableName), PChar(VariableContent));
   end;
   SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, LPARAM(PChar(cEnvironment)));
@@ -2122,7 +2148,7 @@ var
   WSAData: TWSAData;
   {$ENDIF MSWINDOWS}
   HostEnt: PHostEnt;
-  Host: string;
+  Host: AnsiString;
   SockAddr: TSockAddrIn;
 begin
   Result := '';
@@ -2131,17 +2157,17 @@ begin
   if R = 0 then
     try
   {$ENDIF MSWINDOWS}
-      Host := HostName;
+      Host := AnsiString(HostName);
       if Host = '' then
       begin
         SetLength(Host, MAX_PATH);
-        GetHostName(PChar(Host), MAX_PATH);
+        GetHostName(PAnsiChar(Host), MAX_PATH);
       end;
-      HostEnt := GetHostByName(PChar(Host));
+      HostEnt := GetHostByName(PAnsiChar(Host));
       if HostEnt <> nil then
       begin
         SockAddr.sin_addr.S_addr := Longint(PLongint(HostEnt^.h_addr_list^)^);
-        Result := inet_ntoa(SockAddr.sin_addr);
+        Result := string(AnsiString(inet_ntoa(SockAddr.sin_addr)));
       end;
     {$IFDEF MSWINDOWS}
     finally
@@ -2155,7 +2181,12 @@ end;
 
 {$IFDEF MSWINDOWS}
 {$IFNDEF CLR}
-procedure GetIpAddresses(Results: TStrings);
+procedure GetIpAddresses(Results: TAnsiStrings);
+begin
+  GetIpAddresses(Results, '');
+end;
+
+procedure GetIpAddresses(Results: TAnsiStrings; const HostName: AnsiString);
 type
   TaPInAddr = array[0..10] of PInAddr;
   PaPInAddr = ^TaPInAddr;
@@ -2163,7 +2194,7 @@ var
   R: Integer;
   HostEnt: PHostEnt;
   pptr: PaPInAddr;
-  Host: string;
+  Host: AnsiString;
   i: Integer;
   WSAData: TWSAData;
 begin
@@ -2171,14 +2202,21 @@ begin
   R := WSAStartup(MakeWord(1, 1), WSAData);
   if R = 0 then begin
     try
-      SetLength(Host, MAX_PATH);
-      GetHostName(PChar(Host), MAX_PATH);
-      HostEnt := GetHostByName(PChar(Host));
-      if HostEnt <> nil then begin
+      if HostName = '' then
+      begin
+        SetLength(Host, MAX_PATH);
+        GetHostName(PAnsiChar(Host), MAX_PATH);
+      end
+      else
+        Host := HostName;
+        
+      HostEnt := GetHostByName(PAnsiChar(Host));
+      if HostEnt <> nil then
+      begin
         pPtr := PaPInAddr(HostEnt^.h_addr_list);
         i := 0;
         while pPtr^[I] <> nil do begin
-          Results.Add(inet_ntoa(pptr^[i]^));
+          Results.Add(string(AnsiString(inet_ntoa(pptr^[i]^)))); // OF AnsiString to TStrings
           Inc(i);
         end;
       end;
@@ -2594,7 +2632,7 @@ end;
       end
       else
       begin
-        if GetModuleBaseNameA(Handle, 0, PChar(Result), MAX_PATH) > 0 then
+        if GetModuleBaseName(Handle, 0, PChar(Result), MAX_PATH) > 0 then
           StrResetLength(Result)
         else
           Result := '';
@@ -2839,7 +2877,7 @@ function GetTasksList(const List: TStrings): Boolean;
 begin
   List.BeginUpdate;
   try
-    Result := EnumWindows(@EnumWindowsProc, Integer(List));
+    Result := EnumWindows(@EnumWindowsProc, LPARAM(List));
   finally
     List.EndUpdate;
   end;
@@ -2888,8 +2926,8 @@ var
 begin
   if IsWindowVisible(Wnd) then
   begin
-    ParentWnd := GetWindowLong(Wnd, GWL_HWNDPARENT);
-    ExStyle := GetWindowLong(Wnd, GWL_EXSTYLE);
+    ParentWnd := THandle(GetWindowLongPtr(Wnd, GWLP_HWNDPARENT));
+    ExStyle := GetWindowLongPtr(Wnd, GWL_EXSTYLE);
     Result := ((ParentWnd = 0) or (ParentWnd = GetDesktopWindow)) and
       ((ExStyle and WS_EX_TOOLWINDOW = 0) or (ExStyle and WS_EX_APPWINDOW <> 0));
   end
@@ -3097,8 +3135,51 @@ var
 begin
   SearchRec.PID := PID;
   SearchRec.Wnd := 0;
-  EnumWindows(@EnumWindowsProc, Integer(@SearchRec));
+  EnumWindows(@EnumWindowsProc, LPARAM(@SearchRec));
   Result := SearchRec.Wnd;
+end;
+
+function GetWndFromPid(PID: DWORD; const WindowClassName: string): HWND;
+type
+  PEnumWndStruct = ^TEnumWndStruct;
+  TEnumWndStruct = record
+      PID: DWORD;
+      WndClassName: string;
+      ResultWnd: HWND;
+  end;
+
+  function EnumWinProc(Wnd: HWND; Enum: PEnumWndStruct): BOOL; stdcall;
+  var
+    PID: DWORD;
+    C: PChar;
+    CLen: Integer;
+  begin
+    Result := True;
+    GetWindowThreadProcessId(Wnd, @PID);
+    if (PID = Enum.PID) then
+    begin
+      CLen := Length(Enum.WndClassName)+1;
+      C := StrAlloc(CLen);
+
+      if (GetClassName(Wnd, C, CLen) > 0) then
+      if (C = Enum.WndClassName) then
+      begin
+        Result := False;
+        Enum.ResultWnd := Wnd;
+      end;
+
+      StrDispose(C);
+    end;
+  end;
+
+var
+    EnumWndStruct: TEnumWndStruct;
+begin
+  EnumWndStruct.PID := PID;
+  EnumWndStruct.WndClassName := WindowClassName;
+  EnumWndStruct.ResultWnd := 0;
+  EnumWindows(@EnumWinProc, LPARAM(@EnumWndStruct));
+  Result := EnumWndStruct.ResultWnd;
 end;
 
 function GetShellProcessName: string;
@@ -3223,6 +3304,80 @@ begin
   end;
 end;
 
+function GetWindowsEdition: TWindowsEdition;
+const
+  ProductName = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion';
+var
+  Edition: string;
+begin
+  Result := weUnknown;
+  Edition := RegReadStringDef(HKEY_LOCAL_MACHINE, ProductName, 'ProductName', '');
+  if (pos('Windows XP', Edition) = 1) then
+  begin
+   // Windows XP Editions
+   if (pos('Home Edition N', Edition) > 0) then
+      Result :=  weWinXPHomeN
+   else
+   if (pos('Professional N', Edition) > 0) then
+      Result :=  weWinXPProN
+   else
+   if (pos('Home Edition K', Edition) > 0) then
+      Result :=  weWinXPHomeK
+   else
+   if (pos('Professional K', Edition) > 0) then
+      Result :=  weWinXPProK
+   else
+   if (pos('Home Edition KN', Edition) > 0) then
+      Result :=  weWinXPHomeKN
+   else
+   if (pos('Professional KN', Edition) > 0) then
+      Result :=  weWinXPProKN
+   else
+   if (pos('Home', Edition) > 0) then
+      Result :=  weWinXPHome
+   else
+   if (pos('Professional', Edition) > 0) then
+      Result :=  weWinXPPro
+   else
+   if (pos('Starter', Edition) > 0) then
+      Result :=  weWinXPStarter
+   else
+   if (pos('Media Center', Edition) > 0) then
+      Result :=  weWinXPMediaCenter
+   else
+   if (pos('Tablet', Edition) > 0) then
+      Result :=  weWinXPTablet;
+  end
+  else
+  if (pos('Windows Vista', Edition) = 1) then
+  begin
+   // Windows Vista Editions
+   if (pos('Starter', Edition) > 0) then
+      Result := weWinVistaStarter
+   else
+   if (pos('Home Basic N', Edition) > 0) then
+      Result := weWinVistaHomeBasicN
+   else
+   if (pos('Home Basic', Edition) > 0) then
+      Result := weWinVistaHomeBasic
+   else
+   if (pos('Home Premium', Edition) > 0) then
+      Result := weWinVistaHomePremium
+   else
+   if (pos('Business N', Edition) > 0) then
+      Result := weWinVistaBusinessN
+   else
+   if (pos('Business', Edition) > 0) then
+      Result := weWinVistaBusiness
+   else
+   if (pos('Enterprise', Edition) > 0) then
+      Result := weWinVistaEnterprise
+   else
+   if (pos('Ultimate', Edition) > 0) then
+      Result := weWinVistaUltimate;
+  end;
+end;
+
 function NtProductType: TNtProductType;
 const
   ProductType = 'SYSTEM\CurrentControlSet\Control\ProductOptions';
@@ -3294,7 +3449,7 @@ begin
     end;
   end
   else
-  if IsWinXP or IsWinVista or IsWinServer2008 then // workstation
+  if IsWinXP or IsWinVista then // workstation
   begin
     if GetVersionEx(OSVersionInfo) then
     begin
@@ -3305,6 +3460,20 @@ begin
         else
           Result := ptProfessional;
       end;
+    end;
+  end
+  else
+  if IsWinServer2008 then // server
+  begin
+    if OSVersionInfo.wProductType in [VER_NT_SERVER,VER_NT_DOMAIN_CONTROLLER] then
+    begin
+      if (OSVersionInfo.wSuiteMask and VER_SUITE_DATACENTER) = VER_SUITE_DATACENTER then
+        Result := ptDatacenterServer
+      else
+      if (OSVersionInfo.wSuiteMask and VER_SUITE_ENTERPRISE) = VER_SUITE_ENTERPRISE then
+        Result := ptEnterprise
+      else
+        Result := ptServer;
     end;
   end;
 
@@ -3361,6 +3530,59 @@ begin
   end;
 end;
 
+function GetWindowsEditionString: string;
+begin
+  case GetWindowsEdition of
+    weWinXPHome:
+      Result := RsEditionWinXPHome;
+    weWinXPPro:
+      Result := RsEditionWinXPPro;
+    weWinXPHomeN:
+      Result := RsEditionWinXPHomeN;
+    weWinXPProN:
+      Result := RsEditionWinXPProN;
+    weWinXPHomeK:
+      Result := RsEditionWinXPHomeK;
+    weWinXPProK:
+      Result := RsEditionWinXPProK;
+    weWinXPHomeKN:
+      Result := RsEditionWinXPHomeKN;
+    weWinXPProKN:
+      Result := RsEditionWinXPProKN;
+    weWinXPStarter:
+      Result := RsEditionWinXPStarter;
+    weWinXPMediaCenter:
+      Result := RsEditionWinXPMediaCenter;
+    weWinXPTablet:
+      Result := RsEditionWinXPTablet;
+    weWinVistaStarter:
+      Result := RsEditionWinVistaStarter;
+    weWinVistaHomeBasic:
+      Result := RsEditionWinVistaHomeBasic;
+    weWinVistaHomeBasicN:
+      Result := RsEditionWinVistaHomeBasicN;
+    weWinVistaHomePremium:
+      Result := RsEditionWinVistaHomePremium;
+    weWinVistaBusiness:
+      Result := RsEditionWinVistaBusiness;
+    weWinVistaBusinessN:
+      Result := RsEditionWinVistaBusinessN;
+    weWinVistaEnterprise:
+      Result := RsEditionWinVistaEnterprise;
+    weWinVistaUltimate:
+      Result := RsEditionWinVistaUltimate;
+  else
+    Result := '';
+  end;
+end;
+
+function GetWindowsProductString: string;
+begin
+  Result := GetWindowsVersionString;
+  if (GetWindowsEditionString <> '') then
+    Result := Result + ' ' + GetWindowsEditionString;
+end;
+
 function NtProductTypeString: string;
 begin
   case NtProductType of
@@ -3393,13 +3615,13 @@ var
   VersionInfo: TOSVersionInfoEx;
 begin
   Result := 0;
-  if IsWin2K or IsWinXP or IsWin2003 or IsWinXP64 or IsWin2003R2 or IsWinVista or IsWinServer2008 then
+  if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion >= 5) then
   begin
     FillChar(VersionInfo, SizeOf(VersionInfo), 0);
     VersionInfo.dwOSVersionInfoSize := SizeOf(VersionInfo);
     if GetVersionEx(VersionInfo) then
       Result := VersionInfo.wServicePackMajor;
-    end
+  end
   else
   begin
     SP := RegReadIntegerDef(HKEY_LOCAL_MACHINE, RegWindowsControl, 'CSDVersion', 0);
@@ -3427,9 +3649,9 @@ function gluErrorString(errCode: Cardinal): PChar; stdcall; external 'glu32.dll'
 }
 
 type
-  TglGetStringFunc = function(name: Cardinal): PChar; stdcall;
+  TglGetStringFunc = function(name: Cardinal): PAnsiChar; stdcall;
   TglGetErrorFunc = function: Cardinal; stdcall;
-  TgluErrorStringFunc = function(errCode: Cardinal): PChar; stdcall;
+  TgluErrorStringFunc = function(errCode: Cardinal): PAnsiChar; stdcall;
 
   TwglCreateContextFunc = function(DC: HDC): HGLRC; stdcall;
   TwglDeleteContextFunc = function(p1: HGLRC): BOOL; stdcall;
@@ -3466,10 +3688,10 @@ var
   iFormatIndex: Integer;
   hGLContext: HGLRC;
   hGLDC: HDC;
-  pcTemp: PChar;
+  pcTemp: PAnsiChar;
   glErr: Cardinal;
   bError: Boolean;
-  sOpenGLVersion, sOpenGLVendor: string;
+  sOpenGLVersion, sOpenGLVendor: AnsiString;
   Save8087CW: Word;
 
   procedure FunctionFailedError(Name: string);
@@ -3619,7 +3841,7 @@ end;
 
 function GetNativeSystemInfo(var SystemInfo: TSystemInfo): Boolean;
 type
-  TGetNativeSystemInfo = procedure (var SystemInfo: TSystemInfo) stdcall;
+  TGetNativeSystemInfo = procedure (var SystemInfo: TSystemInfo); stdcall;
 var
   LibraryHandle: HMODULE;
   _GetNativeSystemInfo: TGetNativeSystemInfo;
@@ -3767,9 +3989,9 @@ function GetMacAddresses(const Machine: string; const Addresses: TStrings): Inte
     Enum: TLanaEnum;
     I, L, NameLen: Integer;
     Adapter: AStat;
-    MachineName: string;
+    MachineName: AnsiString;
   begin
-    MachineName := UpperCase(Machine);
+    MachineName := AnsiString(UpperCase(Machine));
     if MachineName = '' then
       MachineName := '*';
     NameLen := Length(MachineName);
@@ -3799,7 +4021,7 @@ function GetMacAddresses(const Machine: string; const Addresses: TStrings): Inte
           NCB.ncb_command := NCBASTAT;
           NCB.ncb_lana_num := Enum.lana[I];
           Move(MachineName[1], NCB.ncb_callname, SizeOf(NCB.ncb_callname));
-          NCB.ncb_buffer := PChar(@Adapter);
+          NCB.ncb_buffer := PUCHAR(@Adapter);
           NCB.ncb_length := SizeOf(Adapter);
           if NetBios(@NCB) = NRC_GOODRET then
             Addresses.Add(AdapterToString(@Adapter.adapt));
@@ -4327,7 +4549,7 @@ function CPUID: TCpuInfo;
             11:
               CPUInfo.CpuName := 'Pentium III';
           else
-            StrPCopy(CPUInfo.CpuName, Format('P6 (Model %d)', [CPUInfo.Model]));
+            StrPCopy(CPUInfo.CpuName, AnsiString(Format('P6 (Model %d)', [CPUInfo.Model])));
           end;
         15:
           case CPUInfo.IntelSpecific.BrandID of
@@ -4341,7 +4563,7 @@ function CPUID: TCpuInfo;
             CPUInfo.CpuName := 'Pentium 4';
           end;
       else
-        StrPCopy(CPUInfo.CpuName, Format('P%d', [CPUInfo.Family]));
+        StrPCopy(CPUInfo.CpuName, AnsiString(Format('P%d', [CPUInfo.Family])));
       end;
     end;
 
@@ -4360,7 +4582,7 @@ function CPUID: TCpuInfo;
     if (CPUInfo.IntelSpecific.ExFeatures and EINTEL_SSE4_2) <> 0 then
       Include(CPUInfo.SSE, sse4B);
     CPUInfo.Is64Bits := CPUInfo.HasExtendedInfo and ((CPUInfo.IntelSpecific.Ex64Features and EINTEL64_EM64T)<>0);
-    CPUInfo.DepCapable := CPUInfo.HasExtendedInfo and ((CPUInfo.IntelSpecific.Ex64Features and EINTEL64_EDB) <> 0);
+    CPUInfo.DepCapable := CPUInfo.HasExtendedInfo and ((CPUInfo.IntelSpecific.Ex64Features and EINTEL64_XD) <> 0);
   end;
 
   procedure ProcessAMD(var CPUInfo: TCpuInfo; HiVal: Cardinal);
@@ -4468,7 +4690,7 @@ function CPUID: TCpuInfo;
             9:
               CPUInfo.CpuName := 'AMD-K6®-III (Model 9)';
             else
-              StrFmt(CPUInfo.CpuName,PChar(RsUnknownAMDModel),[CPUInfo.Model]);
+              StrFmt(CPUInfo.CpuName, PAnsiChar(AnsiString(RsUnknownAMDModel)),[CPUInfo.Model]);
           end;
         6:
           case CPUInfo.Model of
@@ -4489,7 +4711,7 @@ function CPUID: TCpuInfo;
             10:
               CPUInfo.CpuName := 'AMD Athlon™ XP (Model 10)';
             else
-              StrFmt(CPUInfo.CpuName, PChar(RsUnknownAMDModel), [CPUInfo.Model]);
+              StrFmt(CPUInfo.CpuName, PAnsiChar(AnsiString(RsUnknownAMDModel)), [CPUInfo.Model]);
           end;
         8:
 
@@ -4569,7 +4791,7 @@ function CPUID: TCpuInfo;
         6:
           CPUInfo.CpuName := '6x86MX';
       else
-        StrPCopy(CPUInfo.CpuName, Format('%dx86', [CPUInfo.Family]));
+        StrPCopy(CPUInfo.CpuName, AnsiString(Format('%dx86', [CPUInfo.Family])));
       end;
     end;
   end;
@@ -4798,11 +5020,11 @@ end;
 
 procedure RoundToAllocGranularityPtr(var Value: Pointer; Up: Boolean);
 begin
-  if (Cardinal(Value) mod AllocGranularity) <> 0 then
+  if (DWORD_PTR(Value) mod AllocGranularity) <> 0 then
     if Up then
-      Value := Pointer(((Cardinal(Value) div AllocGranularity) + 1) * AllocGranularity)
+      Value := Pointer(((DWORD_PTR(Value) div AllocGranularity) + 1) * AllocGranularity)
     else
-      Value := Pointer((Cardinal(Value) div AllocGranularity) * AllocGranularity);
+      Value := Pointer((DWORD_PTR(Value) div AllocGranularity) * AllocGranularity);
 end;
 
 //=== Advanced Power Management (APM) ========================================
@@ -4941,29 +5163,29 @@ end;
 
 //=== Memory Information =====================================================
 
-function GetMaxAppAddress: Cardinal;
+function GetMaxAppAddress: DWORD_PTR;
 var
   SystemInfo: TSystemInfo;
 begin
   FillChar(SystemInfo, SizeOf(SystemInfo), #0);
   GetSystemInfo(SystemInfo);
-  Result := Integer(SystemInfo.lpMaximumApplicationAddress);
+  Result := DWORD_PTR(SystemInfo.lpMaximumApplicationAddress);
 end;
 
-function GetMinAppAddress: Cardinal;
+function GetMinAppAddress: DWORD_PTR;
 var
   SystemInfo: TSystemInfo;
 begin
   FillChar(SystemInfo, SizeOf(SystemInfo), #0);
   GetSystemInfo(SystemInfo);
-  Result := Integer(SystemInfo.lpMinimumApplicationAddress);
+  Result := DWORD_PTR(SystemInfo.lpMinimumApplicationAddress);
 end;
 {$ENDIF MSWINDOWS}
 
 function GetMemoryLoad: Byte;
 {$IFDEF UNIX}
 var
-  SystemInf: TSysInfo ;
+  SystemInf: TSysInfo;
 begin
   {$IFDEF FPC}
   SysInfo(@SystemInf);

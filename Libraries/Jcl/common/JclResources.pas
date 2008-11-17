@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-08-14 13:45:28 +0200 (do, 14 aug 2008)                            $ }
-{ Revision:      $Rev:: 2416                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2008-10-12 11:37:28 +0200 (zo, 12 okt 2008)                           $ }
+{ Revision:      $Rev:: 2542                                                                     $ }
+{ Author:        $Author:: cycocrew                                                              $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -68,6 +68,7 @@ resourcestring
   RsEGetBytesExFmt     = 'GetBytesEx(): Unsupported value type: %s';
   RsESetBytesExFmt     = 'SetBytesEx(): Unsupported value type: %s';
   {$ENDIF CLR}
+  RsEReplacementChar   = 'Failed to get ANSI replacement character';
 
 //=== JclBorlandTools ========================================================
 resourcestring
@@ -1232,38 +1233,39 @@ resourcestring
   RsMapiInvalidIndex  = 'Index is out ot range';
   RsMapiMailNoClient  = 'No Simple MAPI client installed, cannot send the message';
 
-  RsMapiErrUSER_ABORT               = 'User abort';
-  RsMapiErrFAILURE                  = 'General MAPI failure';
-  RsMapiErrLOGIN_FAILURE            = 'MAPI login failure';
-  RsMapiErrDISK_FULL                = 'Disk full';
-  RsMapiErrINSUFFICIENT_MEMORY      = 'Insufficient memory';
-  RsMapiErrACCESS_DENIED            = 'Access denied';
-  RsMapiErrTOO_MANY_SESSIONS        = 'Too many sessions';
-  RsMapiErrTOO_MANY_FILES           = 'Too many files were specified';
-  RsMapiErrTOO_MANY_RECIPIENTS      = 'Too many recipients were specified';
-  RsMapiErrATTACHMENT_NOT_FOUND     = 'A specified attachment was not found';
-  RsMapiErrATTACHMENT_OPEN_FAILURE  = 'Attachment open failure';
-  RsMapiErrATTACHMENT_WRITE_FAILURE = 'Attachment write failure';
-  RsMapiErrUNKNOWN_RECIPIENT        = 'Unknown recipient';
-  RsMapiErrBAD_RECIPTYPE            = 'Bad recipient type';
-  RsMapiErrNO_MESSAGES              = 'No messages';
-  RsMapiErrINVALID_MESSAGE          = 'Invalid message';
-  RsMapiErrTEXT_TOO_LARGE           = 'Text too large';
-  RsMapiErrINVALID_SESSION          = 'Invalid session';
-  RsMapiErrTYPE_NOT_SUPPORTED       = 'Type not supported';
-  RsMapiErrAMBIGUOUS_RECIPIENT      = 'A recipient was specified ambiguously';
-  RsMapiErrMESSAGE_IN_USE           = 'Message in use';
-  RsMapiErrNETWORK_FAILURE          = 'Network failure';
-  RsMapiErrINVALID_EDITFIELDS       = 'Invalid edit fields';
-  RsMapiErrINVALID_RECIPS           = 'Invalid recipients';
-  RsMapiErrNOT_SUPPORTED            = 'Not supported';
+const
+  RsMapiErrUSER_ABORT               : AnsiString = 'User abort';
+  RsMapiErrFAILURE                  : AnsiString = 'General MAPI failure';
+  RsMapiErrLOGIN_FAILURE            : AnsiString = 'MAPI login failure';
+  RsMapiErrDISK_FULL                : AnsiString = 'Disk full';
+  RsMapiErrINSUFFICIENT_MEMORY      : AnsiString = 'Insufficient memory';
+  RsMapiErrACCESS_DENIED            : AnsiString = 'Access denied';
+  RsMapiErrTOO_MANY_SESSIONS        : AnsiString = 'Too many sessions';
+  RsMapiErrTOO_MANY_FILES           : AnsiString = 'Too many files were specified';
+  RsMapiErrTOO_MANY_RECIPIENTS      : AnsiString = 'Too many recipients were specified';
+  RsMapiErrATTACHMENT_NOT_FOUND     : AnsiString = 'A specified attachment was not found';
+  RsMapiErrATTACHMENT_OPEN_FAILURE  : AnsiString = 'Attachment open failure';
+  RsMapiErrATTACHMENT_WRITE_FAILURE : AnsiString = 'Attachment write failure';
+  RsMapiErrUNKNOWN_RECIPIENT        : AnsiString = 'Unknown recipient';
+  RsMapiErrBAD_RECIPTYPE            : AnsiString = 'Bad recipient type';
+  RsMapiErrNO_MESSAGES              : AnsiString = 'No messages';
+  RsMapiErrINVALID_MESSAGE          : AnsiString = 'Invalid message';
+  RsMapiErrTEXT_TOO_LARGE           : AnsiString = 'Text too large';
+  RsMapiErrINVALID_SESSION          : AnsiString = 'Invalid session';
+  RsMapiErrTYPE_NOT_SUPPORTED       : AnsiString = 'Type not supported';
+  RsMapiErrAMBIGUOUS_RECIPIENT      : AnsiString = 'A recipient was specified ambiguously';
+  RsMapiErrMESSAGE_IN_USE           : AnsiString = 'Message in use';
+  RsMapiErrNETWORK_FAILURE          : AnsiString = 'Network failure';
+  RsMapiErrINVALID_EDITFIELDS       : AnsiString = 'Invalid edit fields';
+  RsMapiErrINVALID_RECIPS           : AnsiString = 'Invalid recipients';
+  RsMapiErrNOT_SUPPORTED            : AnsiString = 'Not supported';
 
-  RsMapiMailORIG    = 'From';
-  RsMapiMailTO      = 'To';
-  RsMapiMailCC      = 'Cc';
-  RsMapiMailBCC     = 'Bcc';
-  RsMapiMailSubject = 'Subject';
-  RsMapiMailBody    = 'Body';
+  RsMapiMailORIG    = AnsiString('From');
+  RsMapiMailTO      = AnsiString('To');
+  RsMapiMailCC      = AnsiString('Cc');
+  RsMapiMailBCC     = AnsiString('Bcc');
+  RsMapiMailSubject = AnsiString('Subject');
+  RsMapiMailBody    = AnsiString('Body');
 
 //=== JclMath ================================================================
 resourcestring
@@ -1407,7 +1409,8 @@ resourcestring
   RsErrMemFuncNotSet = 'PCRE memory management functions not set';
   RsErrStudyFailed   = 'Study failed'; 
   RsErrCalloutError  = 'Unhandled exception in callout';
-  RsErrUnknownError  = 'Unknown error'; 
+  RsErrUnknownError  = 'Unknown error';
+  RsErrNoUTF8Support = 'No UTF8 support in this version of PCRE';
 
 //=== JclPeImage =============================================================
 resourcestring
@@ -1620,6 +1623,7 @@ resourcestring
   RsWrongDataType        = '"%s\%s\%s" is of wrong kind or size';
   RsInconsistentPath     = '"%s" does not match RootKey';
 
+const
   RsHKCRLong = 'HKEY_CLASSES_ROOT';
   RsHKCULong = 'HKEY_CURRENT_USER';
   RsHKLMLong = 'HKEY_LOCAL_MACHINE';
@@ -1806,12 +1810,19 @@ resourcestring
   RsIntelCacheDescr0A = '1st level data cache: 8 KBytes, 2-way set associative, 32 byte line size';
   RsIntelCacheDescr0B = 'Instruction TLB: 4 MByte pages, 4-way set associative, 4 entries';
   RsIntelCacheDescr0C = '1st level data cache: 16 KBytes, 4-way set associative, 32 byte line size';
+  RsIntelCacheDescr0E = '1st level data cache: 24 KBytes, 6-way set associative, 64 byte line size'; 
   RsIntelCacheDescr22 = '3rd level cache: 512 KBytes, 4-way set associative, 64 byte line size, 2 lines per sector';
   RsIntelCacheDescr23 = '3rd level cache: 1 MBytes, 8-way set associative, 64 byte line size, 2 lines per sector';
   RsIntelCacheDescr25 = '3rd level cache: 2 MBytes, 8-way set associative, 64 byte line size, 2 lines per sector';
   RsIntelCacheDescr29 = '3rd level cache: 4 MBytes, 8-way set associative, 64 byte line size, 2 lines per sector';
   RsIntelCacheDescr2C = '1st level data cache: 32 KBytes, 8-way set associative, 64 byte line size';
   RsIntelCacheDescr30 = '1st level instruction cache: 32 KBytes, 8-way set associative, 64 byte line size';
+  RsIntelCacheDescr39 = '2nd-level cache: 128 KBytes, 4-way set associative, sectored cache, 64-byte line size';
+  RsIntelCacheDescr3A = '2nd-level cache: 192 KBytes, 6-way set associative, sectored cache, 64-byte line size';
+  RsIntelCacheDescr3B = '2nd-level cache: 128 KBytes, 2-way set associative, sectored cache, 64-byte line size';
+  RsIntelCacheDescr3C = '2nd-level cache: 256 KBytes, 4-way set associative, sectored cache, 64-byte line size';
+  RsIntelCacheDescr3D = '2nd-level cache: 384 KBytes, 6-way set associative, sectored cache, 64-byte line size';
+  RsIntelCacheDescr3E = '2nd-level cache: 512 KBytes, 4-way set associative, sectored cache, 64-byte line size';
   RsIntelCacheDescr40 = 'No 2nd-level cache or, if processor contains a valid 2nd-level cache, no 3rd-level cache';
   RsIntelCacheDescr41 = '2nd-level cache: 128 KBytes, 4-way set associative, 32 byte line size';
   RsIntelCacheDescr42 = '2nd-level cache: 256 KBytes, 4-way set associative, 32 byte line size';
@@ -1826,11 +1837,13 @@ resourcestring
   RsIntelCacheDescr4B = '3rd-level cache: 8MByte, 16-way set associative, 64 byte line size';
   RsIntelCacheDescr4D = '3rd-level cache: 16MByte, 16-way set associative, 64 byte line size';
   RsIntelCacheDescr4E = '2nd-level cache: 6MByte, 24-way set associative, 64 byte line size';
+  RsIntelCacheDescr4F = 'Instruction TLB: 4 KByte pages, 32 Entries';
   RsIntelCacheDescr50 = 'Instruction TLB: 4 KByte and 2 MByte or 4 MByte pages, 64 Entries';
   RsIntelCacheDescr51 = 'Instruction TLB: 4 KByte and 2 MByte or 4 MByte pages, 128 Entries';
   RsIntelCacheDescr52 = 'Instruction TLB: 4 KByte and 2 MByte or 4 MByte pages, 256 Entries';
   RsIntelCacheDescr56 = 'Data TLB0: 4 MByte pages, 4-way set associative, 16 entries';
   RsIntelCacheDescr57 = 'Data TLB0: 4 KByte pages, 4-way associative, 16 entries';
+  RsIntelCacheDescr59 = 'Data TLB0: 4 KByte pages, fully associative, 16 entries';
   RsIntelCacheDescr5B = 'Data TLB: 4 KByte and 4 MByte pages, 64 Entries';
   RsIntelCacheDescr5C = 'Data TLB: 4 KByte and 4 MByte pages, 128 Entries';
   RsIntelCacheDescr5D = 'Data TLB: 4 KByte and 4 MByte pages, 256 Entries';
@@ -1841,6 +1854,7 @@ resourcestring
   RsIntelCacheDescr70 = 'Trace cache: 12 K-Ops, 8-way set associative';
   RsIntelCacheDescr71 = 'Trace cache: 16 K-Ops, 8-way set associative';
   RsIntelCacheDescr72 = 'Trace cache: 32 K-Ops, 8-way set associative';
+  RsIntelCacheDescr73 = 'Trace cache: 64 K-Ops, 8-way set associative';
   RsIntelCacheDescr78 = '2nd-level cache: 1 MBytes, 4-way set associative, 64 bytes line size';
   RsIntelCacheDescr79 = '2nd-level cache: 128 KBytes, 8-way set associative, 64 bytes line size, 2 lines per sector';
   RsIntelCacheDescr7A = '2nd-level cache: 256 KBytes, 8-way set associative, 64 bytes line size, 2 lines per sector';
@@ -1848,6 +1862,7 @@ resourcestring
   RsIntelCacheDescr7C = '2nd-level cache: 1 MBytes, 8-way set associative, 64 bytes line size, 2 lines per sector';
   RsIntelCacheDescr7D = '2nd-level cache: 2 MBytes, 8-way set associative, 64 byte line size';
   RsIntelCacheDescr7F = '2nd-level cache: 512 KBytes, 2-way set associative, 64 byte line size';
+  RsIntelCacheDescr80 = '2nd-level cache: 512 KBytes, 8-way set associative, 64 byte line size';
   RsIntelCacheDescr82 = '2nd-level cache: 256 KBytes, 8-way associative, 32 byte line size';
   RsIntelCacheDescr83 = '2nd-level cache: 512 KBytes, 8-way associative, 32 byte line size';
   RsIntelCacheDescr84 = '2nd-level cache: 1 MBytes, 8-way associative, 32 byte line size';
@@ -1858,25 +1873,47 @@ resourcestring
   RsIntelCacheDescrB1 = 'Instruction TLB: 2 MByte pages, 4-way, 8 entries or 4 MByte pages, 4-way, 4 entries';
   RsIntelCacheDescrB3 = 'Data TLB: 4 KByte pages, 4-way set associative, 128 entries';
   RsIntelCacheDescrB4 = 'Data TLB1: 4 KByte pages, 4-way set associative, 256 entries';
+  RsIntelCacheDescrBA = 'Data TLB1: 4 KByte pages, 4-way set associative, 64 entries';
+  RsIntelCacheDescrC0 = 'Data TLB: 4 KByte and 4 MByte pages, 4-way set associative, 8 entries';
   RsIntelCacheDescrF0 = '64-Byte Prefetching';
   RsIntelCacheDescrF1 = '128-Byte Prefetching';
 
   RsUnknownAMDModel = 'Unknown AMD (Model %d)';
 
-  RsOSVersionWin95 = 'Windows 95';
-  RsOSVersionWin95OSR2 = 'Windows 95 OSR2';
-  RsOSVersionWin98 = 'Windows 98';
-  RsOSVersionWin98SE = 'Windows 98 SE';
-  RsOSVersionWinME = 'Windows ME';
-  RsOSVersionWinNT3 = 'Windows NT 3.%u';
-  RsOSVersionWinNT4 = 'Windows NT 4.%u';
-  RsOSVersionWin2000 = 'Windows 2000';
-  RsOSVersionWinXP = 'Windows XP';
-  RsOSVersionWin2003 = 'Windows Server 2003';
-  RsOSVersionWin2003R2 = 'Windows Server 2003 "R2"';
-  RsOSVersionWinXP64 = 'Windows XP x64';
-  RsOSVersionWinVista = 'Windows Vista';
+  RsOSVersionWin95         = 'Windows 95';
+  RsOSVersionWin95OSR2     = 'Windows 95 OSR2';
+  RsOSVersionWin98         = 'Windows 98';
+  RsOSVersionWin98SE       = 'Windows 98 SE';
+  RsOSVersionWinME         = 'Windows ME';
+  RsOSVersionWinNT3        = 'Windows NT 3.%u';
+  RsOSVersionWinNT4        = 'Windows NT 4.%u';
+  RsOSVersionWin2000       = 'Windows 2000';
+  RsOSVersionWinXP         = 'Windows XP';
+  RsOSVersionWin2003       = 'Windows Server 2003';
+  RsOSVersionWin2003R2     = 'Windows Server 2003 "R2"';
+  RsOSVersionWinXP64       = 'Windows XP x64';
+  RsOSVersionWinVista      = 'Windows Vista';
   RsOSVersionWinServer2008 = 'Windows Server 2008';
+
+  RsEditionWinXPHome           = 'Home Edition';
+  RsEditionWinXPPro            = 'Professional';
+  RsEditionWinXPHomeN          = 'Home Edition N';
+  RsEditionWinXPProN           = 'Professional N';
+  RsEditionWinXPHomeK          = 'Home Edition K';
+  RsEditionWinXPProK           = 'Professional K';
+  RsEditionWinXPHomeKN         = 'Home Edition KN';
+  RsEditionWinXPProKN          = 'Professional KN';
+  RsEditionWinXPStarter        = 'Starter Edition';
+  RsEditionWinXPMediaCenter    = 'Media Center Edition';
+  RsEditionWinXPTablet         = 'Tablet PC Edition';
+  RsEditionWinVistaStarter     = 'Starter';
+  RsEditionWinVistaHomeBasic   = 'Home Basic';
+  RsEditionWinVistaHomeBasicN  = 'Home Basic N';
+  RsEditionWinVistaHomePremium = 'Home Premium';
+  RsEditionWinVistaBusiness    = 'Business';
+  RsEditionWinVistaBusinessN   = 'Business N';
+  RsEditionWinVistaEnterprise  = 'Enterprise';
+  RsEditionWinVistaUltimate    = 'Ultimate';
 
   RsProductTypeWorkStation      = 'Workstation';
   RsProductTypeServer           = 'Server';
@@ -1887,8 +1924,6 @@ resourcestring
   RsProductTypeEnterprise       = 'Enterprise';
   RsProductTypeWebEdition       = 'Web Edition';
 
-  RsOpenGLInfoError = 'Err';
-
   RsEOpenGLInfo = 'GetOpenGLVersion: %s failed';
 
   {$IFDEF MSWINDOWS}
@@ -1898,6 +1933,9 @@ resourcestring
   {$IFDEF UNIX}
   RsInvalidProcessID = 'Invalid process ID %d';
   {$ENDIF UNIX}
+
+const
+  RsOpenGLInfoError : AnsiString = 'Err';
 
 //=== JclSysUtils ============================================================
 resourcestring
@@ -1941,6 +1979,45 @@ resourcestring
   RsTempConvTypeError = 'An invalid type has been provided for the %s parameter';
   RsConvTempBelowAbsoluteZero = 'Temperature can not be below Absolute Zero!';
 
+//=== JclVersionControl ======================================================
+resourcestring
+  RsVersionCtrlAddCaption = '&Add';                                 // vcaAdd
+  RsVersionCtrlAddSandboxCaption = 'Add ...';                       // vcaAddSandbox
+  RsVersionCtrlBlameCaption = '&Blame';                             // vcaBlame
+  RsVersionCtrlBranchCaption = 'Branc&h';                           // vcaBranch
+  RsVersionCtrlBranchSandboxCaption = 'Branch ...';                 // vcaBranchSandbox
+  RsVersionCtrlCheckOutSandboxCaption = 'C&heck out ...';           // vcaCreateSandbox
+  RsVersionCtrlCommitCaption = 'Co&mmit';                           // vcaCommit
+  RsVersionCtrlCommitSandboxCaption = 'Commit ...';                 // vcaCommitSandbox
+  RsVersionCtrlContextMenuCaption = 'Co&ntext Menu (right-click)';  // vcaContextMenu
+  RsVersionCtrlDiffCaption = '&Diff';                               // vcaDiff
+  RsVersionCtrlExploreCaption = 'E&xplore';                         // vcaExplore
+  RsVersionCtrlExploreSandboxCaption = 'E&xplore ...';              // vcaExploreSandbox
+  RsVersionCtrlGraphCaption = 'Revision Gr&aph';                    // vcaGraph
+  RsVersionCtrlLogCaption = '&Log';                                 // vcaLog
+  RsVersionCtrlLogSandboxCaption = 'Log ...';                       // vcaLogSandbox
+  RsVersionCtrlLockCaption = 'Loc&k';                               // vcaLock
+  RsVersionCtrlLockSandboxCaption = 'Lock ...';                     // vcaLockSandbox
+  RsVersionCtrlMergeCaption = '&Merge';                             // vcaMerge
+  RsVersionCtrlMergeSandboxCaption = 'Merge ...';                   // vcaMergeSandbox
+  RsVersionCtrlPropertiesCaption = 'Pr&operties';                   // vcaProperties
+  RsVersionCtrlPropertiesSandboxCaption = 'Properties ...';         // vcaPropertiesSandbox
+  RsVersionCtrlRenameCaption = '&Rename';                           // vcaRename
+  RsVersionCtrlRenameSandboxCaption = '&Rename Sandbox';            // vcaRenameSandbox
+  RsVersionCtrlRepoBrowserCaption = 'Repositor&y Browser';          // vcaRepoBrowser
+  RsVersionCtrlRevertCaption = '&Revert';                           // vcaRevert
+  RsVersionCtrlRevertSandboxCaption = 'Revert ...';                 // vcaRevertSandbox
+  RsVersionCtrlStatusCaption = 'S&tatus';                           // vcaStatus
+  RsVersionCtrlStatusSandboxCaption = 'Status ...';                 // vcaStatusSandbox
+  RsVersionCtrlTagCaption = 'Ta&g';                                 // vcaTag
+  RsVersionCtrlTagSandboxCaption = 'Tag ...';                       // vcaTagSandBox
+  RsVersionCtrlUpdateCaption = 'U&pdate';                           // vcaUpdate
+  RsVersionCtrlUpdateSandboxCaption = 'Update ...';                 // vcaUpdateSandbox
+  RsVersionCtrlUpdateToCaption = 'Update &to ';                     // vcaUpdateTo
+  RsVersionCtrlUpdateSandboxToCaption = 'Update to ...';            // vcaUpdateSandboxTo
+  RsVersionCtrlUnlockCaption = '&Unlock';                           // vcaUnlock
+  RsVersionCtrlUnlockSandboxCaption = 'Unlock ...';                 // vcaUnlockSandbox
+
 //=== JclWideFormat ==========================================================
 resourcestring
   RsFormatSyntaxError = 'Syntax error at index %u';
@@ -1963,8 +2040,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 2416 $';
-    Date: '$Date: 2008-08-14 13:45:28 +0200 (do, 14 aug 2008) $';
+    Revision: '$Revision: 2542 $';
+    Date: '$Date: 2008-10-12 11:37:28 +0200 (zo, 12 okt 2008) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
