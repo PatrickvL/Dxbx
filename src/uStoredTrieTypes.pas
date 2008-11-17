@@ -26,8 +26,7 @@ uses
   SysUtils,
   Classes, // MaxListSize
   // Dxbx
-  uTypes,
-  uXboxLibraryUtils;
+  uTypes;
 
 const
   PATTERNSIZE = 32; // A pattern is 32 bytes long

@@ -30,8 +30,11 @@ uses
 
 function VshHandleIsVertexShader(aHandle: DWORD): boolean;
 function VshHandleGetVertexShader(aHandle: DWORD): X_D3DVertexShader;
-function XTL_IsValidCurrentShader: boolean;
 
+function XTL_IsValidCurrentShader: Boolean; stdcall;
+
+exports
+  XTL_IsValidCurrentShader;
 
 implementation
 

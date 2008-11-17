@@ -363,6 +363,7 @@ var
   ByteScanLower, ByteScanUpper: PByte;
   ResourceStream: TResourceStream;
   PatternTrieReader: TPatternTrieReader;
+  i: Integer;
 //  i, j, PrevCount: Integer;
 //  CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
 //  CurrentLibName: string;
@@ -372,6 +373,10 @@ begin
   ByteScanUpper := PByte(IntPtr(ByteScanLower) + pXbeHeader.dwSizeofImage);
 
   DetectedFunctions.Clear;
+
+  DbgPrintf('DxbxHLE : AvailablePatches... ');
+  for i := 0 to  + AvailablePatches.Count - 1 do
+    DbgPrintf('%.3d : $%.08x (%s)', [i, Integer(AvailablePatches.Objects[i]), AvailablePatches[i]]);
 
   // Get StoredPatternTrie from resource :
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);

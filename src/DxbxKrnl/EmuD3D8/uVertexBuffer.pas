@@ -32,7 +32,6 @@ uses
   , D3DX8;
 
 type
-
   _D3DIVB = record
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
@@ -45,10 +44,20 @@ type
     TexCoord4: TD3DXVECTOR2; // TexCoord4
   end;
 
-
 var
   g_IVBTblOffs: UInt = 0;
   g_IVBTable: _D3DIVB;
+
+procedure XTL_VertexPatcher_DumpCache; stdcall;
+procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer); stdcall;
+function XTL_VertexPatcher_Restore: Longbool; stdcall;
+procedure XTL_EmuFlushIVB; stdcall;
+
+exports
+  XTL_VertexPatcher_DumpCache,
+  XTL_VertexPatcher_FreeCachedStream,
+  XTL_VertexPatcher_Restore,
+  XTL_EmuFlushIVB;
 
 implementation
 
