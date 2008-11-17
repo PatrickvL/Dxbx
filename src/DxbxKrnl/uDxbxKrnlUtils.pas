@@ -37,6 +37,9 @@ function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integ
 function GetLastErrorString: string;
 function GetErrorString(const aError: DWord): string;
 
+function GetDWordBits(const Bits: DWORD; const aIndex: Integer): Integer;
+procedure SetDWordBits(var Bits: DWORD; const aIndex: Integer; const aValue: Integer);
+
 var
   // ! thread local storage
   CxbxKrnl_TLS: PXBE_TLS;
@@ -87,6 +90,63 @@ begin
     Result := AFalse;
   end;
 end;
+
+// Tooling methods to get and set stretches of bits inside a DWORD,
+// which is used to simulate C-like bit-fields in Delphi.  
+// See http://stackoverflow.com/questions/282019/how-to-simulate-bit-fields-in-delphi-records#282385
+// Registers:               EAX                EDX               EAX
+function GetDWordBits(const Bits: DWORD; const aIndex: Integer): Integer;
+{$IFDEF PURE_PASCAL}
+begin
+  Result := (Bits shr {Offset=}(aIndex shr 8))
+        and {Mask =}((1 shl {NrBits=}Byte(aIndex)) - 1);
+end;
+{$ELSE}
+asm
+  push ebx
+  mov ebx, $00000001 // EBX = 1
+  mov cl, dl         // CL = NrBits
+  shl ebx, cl        // EBX = (1 shl NrBits)
+  mov cl, dh         // CL = Offset
+  dec ebx            // EBX = (1 shl NrBits) - 1 // = Mask
+  shr eax, cl        // EAX = Bits shr Offset
+  and eax, ebx       // EAX = (Bits shr Offset) and Mask
+  pop ebx
+end;
+{$ENDIF}
+
+// Registers:              EAX                EDX                    ECX
+procedure SetDWordBits(var Bits: DWORD; const aIndex: Integer; const aValue: Integer);
+{$IFDEF PURE_PASCAL}
+var
+  Offset: Byte;
+  Mask: Integer;
+begin
+  Mask := ((1 shl {NrBits=}Byte(aIndex)) - 1);
+  Assert(aValue <= Mask);
+
+  Offset := aIndex shr 8;
+  {var}Bits := (Bits and (not (Mask shl Offset))) or DWORD(aValue shl Offset);
+end;
+{$ELSE}
+asm
+  push ebx
+  push ecx
+  mov ebx, $00000001 // EBX = 1
+  mov cl, dl         // CL = NrBits
+  shl ebx, cl        // EBX = (1 shl NrBits)
+  mov cl, dh         // CL = Offset
+  dec ebx            // EBX = (1 shl NrBits) - 1 // = Mask
+  shl ebx, cl        // EBX = Mask shl Offset
+  not ebx            // EBX = not Mask
+  and ebx,[eax]      // EBX = Bits and Mask // = MaskedBits
+  pop edx            // EDX = aValue
+  shl edx, cl        // EDX = aValue shl Offset // = NewBits
+  or  edx, ebx       // EDX = MaskedBits or NewBits
+  mov [eax], edx     // {var}Bits = EDX
+  pop ebx
+end;
+{$ENDIF}
 
 function GetLastErrorString: string;
 begin
