@@ -33,9 +33,9 @@ uses
   uEmu,
   uXBController;
 
-procedure XTL_EmuDInputCleanup; stdcall;
 function XTL_EmuDInputInit: Longbool; stdcall;
-
+procedure XTL_EmuDInputCleanup; stdcall;
+procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE);
 
 implementation
 
@@ -63,7 +63,7 @@ begin
 end;
 
 // func: XTL::EmuPollController
-procedure XTL_EmuDInputPoll(Controller: XINPUT_STATE);
+procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE);
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   g_XBController.ListenPoll(Controller);

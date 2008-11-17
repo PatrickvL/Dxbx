@@ -47,23 +47,21 @@ implementation
 type
   {$A1}
   RLDT_ENTRY_Bits = record
-  public
-    BaseMid: BYTE;
   private
-    Flags: WORD;
+    Flags: DWORD;
     function GetBits(const aIndex: Integer): Integer;
     procedure SetBits(const aIndex: Integer; const aValue: Integer);
   public
-    BaseHi: BYTE;
-
-    property _Type: Integer index $05 read GetBits write SetBits; // 5 bits at offset 0
-    property Dpl: Integer index $52 read GetBits write SetBits; // 2 bits at offset 5
-    property Pres: Integer index $71 read GetBits write SetBits; // 1 bit at offset 7
-    property LimitHi: Integer index $84 read GetBits write SetBits; // 4 bits at offset 8
-    property Sys: Integer index $C1 read GetBits write SetBits; // 1 bit at offset 12
-    property Reserved_0: Integer index $D1 read GetBits write SetBits; // 1 bit at offset 13
-    property Default_Big: Integer index $E1 read GetBits write SetBits; // 1 bit at offset 14
-    property Granularity: Integer index $F1 read GetBits write SetBits; // 1 bit at offset 15
+    property BaseMid: Integer index $0008 read GetBits write SetBits; // 8 bits at offset 0
+    property _Type: Integer index $0805 read GetBits write SetBits; // 5 bits at offset 8
+    property Dpl: Integer index $0D02 read GetBits write SetBits; // 2 bits at offset 13
+    property Pres: Integer index $0F01 read GetBits write SetBits; // 1 bit at offset 15
+    property LimitHi: Integer index $1004 read GetBits write SetBits; // 4 bits at offset 16
+    property Sys: Integer index $1401 read GetBits write SetBits; // 1 bit at offset 20
+    property Reserved_0: Integer index $1501 read GetBits write SetBits; // 1 bit at offset 21
+    property Default_Big: Integer index $1601 read GetBits write SetBits; // 1 bit at offset 22
+    property Granularity: Integer index $1701 read GetBits write SetBits; // 1 bit at offset 23
+    property BaseHi: Integer index $1808 read GetBits write SetBits; // 8 bis at offset 24
   end;
 
   RLDT_ENTRY_Bytes = record
@@ -88,32 +86,13 @@ type
 {$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 function RLDT_ENTRY_Bits.GetBits(const aIndex: Integer): Integer;
-var
-  Offset: Integer;
-  NrBits: Integer;
-  Mask: Integer;
 begin
-  NrBits := aIndex and $F;
-  Offset := aIndex shr 4;
-
-  Mask := ((1 shl NrBits) - 1);
-
-  Result := (Flags shr Offset) and Mask;
+  Result := GetDWordBits(Flags, aIndex);
 end;
 
 procedure RLDT_ENTRY_Bits.SetBits(const aIndex: Integer; const aValue: Integer);
-var
-  Offset: Integer;
-  NrBits: Integer;
-  Mask: Integer;
 begin
-  NrBits := aIndex and $F;
-  Offset := aIndex shr 4;
-
-  Mask := ((1 shl NrBits) - 1);
-  Assert(aValue <= Mask);
-
-  Flags := (Flags and (not (Mask shl Offset))) or (aValue shl Offset);
+  SetDWordBits({var}Flags, aIndex, aValue);
 end;
 
 //

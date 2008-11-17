@@ -374,7 +374,7 @@ procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done : 15
 var
   hRet: HRESULT;
-  v: Integer;
+  v: XBCtrlObject;
 
   dwDevice: Integer;
   dwFlags: Integer;
@@ -397,11 +397,11 @@ begin
   Controller.Gamepad.sThumbRY := 0;
 
   // Poll all devices
-  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+  for v := Low(XBCtrlObject) to High(XBCtrlObject) do
   begin
-    dwDevice := m_ObjectConfig[XBCtrlObject(v)].dwDevice;
-    dwFlags := m_ObjectConfig[XBCtrlObject(v)].dwFlags;
-    dwInfo := m_ObjectConfig[XBCtrlObject(v)].dwInfo;
+    dwDevice := m_ObjectConfig[v].dwDevice;
+    dwFlags := m_ObjectConfig[v].dwFlags;
+    dwInfo := m_ObjectConfig[v].dwInfo;
 
     if (dwDevice = -1) then
       Continue;
@@ -467,7 +467,7 @@ begin
 
       BYTE bKey := KeyboardState[dwInfo];
 
-      if (bKey and $80) then
+      if (bKey and $80) > 0 then
         wValue := 32767;
       else
         wValue := 0;
@@ -480,14 +480,14 @@ begin
       if (pDevice.GetDeviceState(SizeOf(MouseState), @MouseState) <> DI_OK) then
           Continue;
 
-      if (dwFlags and DEVICE_FLAG_MOUSE_CLICK) then
+      if (dwFlags and DEVICE_FLAG_MOUSE_CLICK) > 0 then
       begin
-        if (MouseState.rgbButtons[dwInfo] and $80) then
+        if (MouseState.rgbButtons[dwInfo] and $80) > 0 then
           wValue := 32767
         else
           wValue := 0;
       end
-      else if (dwFlags and DEVICE_FLAG_AXIS) then
+      else if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
       begin
         LongInt lAccumX := 0;
         LongInt lAccumY := 0;
@@ -519,21 +519,22 @@ begin
         else if (dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lZ)) then
           wValue := (WORD)lAccumZ;
 
-        if (dwFlags and DEVICE_FLAG_NEGATIVE) then
+        if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
         begin
           if (wValue < 0) then
             wValue := abs(wValue+1);
           else
             wValue := 0;
         end
-        else if (dwFlags and DEVICE_FLAG_POSITIVE) then
+        else if (dwFlags and DEVICE_FLAG_POSITIVE) > 0 then
         begin
           if (wValue < 0) then
             wValue := 0;
         end;
       end;
+*)
     end;
-
+    
     // ******************************************************************
     // * Map Xbox Joystick Input
     // ******************************************************************
@@ -557,27 +558,26 @@ begin
         XBCTRL_OBJECT_RTHUMBNEGX:
           Controller.Gamepad.sThumbRX := Controller.Gamepad.sThumbRX - wValue;
         XBCTRL_OBJECT_A:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] := (wValue / 128);
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] := (wValue div 128);
         XBCTRL_OBJECT_B:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] := (wValue / 128);
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] := (wValue div 128);
         XBCTRL_OBJECT_X:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] := (wValue / 128);
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] := (wValue div 128);
         XBCTRL_OBJECT_Y:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] := (wValue / 128);
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] := (wValue div 128);
         XBCTRL_OBJECT_WHITE:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] := (wValue / 128);
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] := (wValue div 128);
         XBCTRL_OBJECT_BLACK:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] := (wValue / 128);
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] := (wValue div 128);
         XBCTRL_OBJECT_LTRIGGER:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] := (wValue / 128);
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] := (wValue div 128);
         XBCTRL_OBJECT_RTRIGGER:
-          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] := (wValue / 128);
-        XBCTRL_OBJECT_DPADUP: begin
+          Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] := (wValue div 128);
+        XBCTRL_OBJECT_DPADUP:
             if (wValue > 0) then
               Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_UP
             else
               Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_DPAD_UP;
-          end;
         XBCTRL_OBJECT_DPADDOWN:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_DOWN
@@ -614,7 +614,6 @@ begin
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_RIGHT_THUMB;
       end;
-*)
     end;
   end;
 end;
@@ -666,16 +665,18 @@ var
   dwFlags: DWORD;
   JoyState: DIJOYSTATE;
 begin
-  if (m_CurrentState <> XBCTRL_STATE_CONFIG) then begin
-    Error_SetError('Invalid State', false);
-    Result := false;
+  if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
+  begin
+    Error_SetError('Invalid State', False);
+    Result := False;
   end;
 
   DeviceInstance.dwSize := sizeof(DIDEVICEINSTANCE);
   ObjectInstance.dwSize := sizeof(DIDEVICEOBJECTINSTANCE);
 
-    // Monitor for significant device state changes
-  for v := m_dwInputDeviceCount - 1 downto 0 do begin
+  // Monitor for significant device state changes
+  for v := m_dwInputDeviceCount - 1 downto 0 do
+  begin
 
         // Poll the current device
         (*hRet = m_InputDevice[v].m_Device.Poll(); *)
