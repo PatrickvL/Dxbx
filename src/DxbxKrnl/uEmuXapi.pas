@@ -113,9 +113,26 @@ exports
   XTL_EmuRtlFreeHeap,
   XTL_EmuRtlReAllocateHeap,
   XTL_EmuRtlSizeHeap,
+
+  XTL_EmuQueryPerformanceCounter,
+  XTL_EmuQueryPerformanceFrequency,
+  XTL_EmuXMountUtilityDrive,
+  XTL_EmuXInitDevices,
+  XTL_EmuCloseHandle,
+  XTL_EmuSetThreadPriorityBoost,
+  XTL_EmuSetThreadPriority,
+  XTL_EmuGetThreadPriority,
+  XTL_EmuGetExitCodeThread,
+
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
-  XTL_EmuXRegisterThreadNotifyRoutine;
+  XTL_EmuXapiBootDash,
+
+  XTL_EmuXRegisterThreadNotifyRoutine,
+  XTL_EmuXCalculateSignatureBegin,
+  XTL_EmuXCalculateSignatureBeginEx,
+  XTL_EmuXCalculateSignatureUpdate
+  ;
 
 var
   // XInputSetState status waiters
