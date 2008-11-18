@@ -80,12 +80,12 @@ implementation
 // print out a warning message to the kernel debug log file
 
 procedure EmuWarning(szWarningMessage: string);
-var
+(*var
   szBuffer1: string;
   szBuffer2: string;
-//  va_list : argp;
+  argp : va_list; *)
 begin
-   (*szBuffer1 := Format ( 'EmuWarn ($ mod X): ', [GetCurrentThreadId] );
+    (*szBuffer1 := Format ( 'EmuWarn ($ mod X): ', [GetCurrentThreadId] );
 
     va_start(argp, szWarningMessage);
 
@@ -94,14 +94,14 @@ begin
     va_end(argp);
 
     StrCat(szBuffer1, szBuffer2);
-    *)
+
 
   if (g_bPrintfOn) then
   begin
     DbgPrintf(szWarningMessage);
   end;
 
-    (*fflush(stdout); *)
+    fflush(stdout);*)
 end;
 
 (*

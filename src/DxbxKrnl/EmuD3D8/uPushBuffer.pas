@@ -58,11 +58,11 @@ begin
 end;
 
 procedure EmuUnswizzleActiveTexture();
-var
-  pPixelContainer: X_D3DPixelContainer;
+(*var
+  pPixelContainer: X_D3DPixelContainer; *)
 begin
     // for current usages, we're always on stage 0
-(*    pPixelContainer := (XTL.X_D3DPixelContainer)XTL.EmuD3DActiveTexture[0];
+    (*pPixelContainer := (X_D3DPixelContainer)XTL.EmuD3DActiveTexture[0];
 
     if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
         Exit;
@@ -142,15 +142,15 @@ end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD);
 // Branch:martin  Revision:39  Translator:Shadow_Tj
-var
-  pdwOrigPushData: DWORD;
+(*var
+  pdwOrigPushData: DWORD; *)
 begin
   if (XTL_g_bSkipPush) then
     Exit;
 
-  pdwOrigPushData := pdwPushData;
+(*  pdwOrigPushData := pdwPushData;
 
-(*    PVOID pIndexData := 0;
+    PVOID pIndexData := 0;
     PVOID pVertexData := 0;
 
     DWORD dwVertexShader := -1;

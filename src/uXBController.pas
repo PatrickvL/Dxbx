@@ -371,7 +371,7 @@ begin
 { XBController }
 
 procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done : 15
+// Branch:martin  Revision:39  Translator:PatrickvL  Done : 90
 var
   hRet: HRESULT;
   v: XBCtrlObject;
@@ -382,6 +382,14 @@ var
 
   wValue: SmallInt;
   pDevice: XTL_LPDIRECTINPUTDEVICE8;
+  JoyState : DIJOYSTATE;
+  pdwAxis : LongInt;
+  pbButton : BYTE;
+  MouseState : DIMOUSESTATE2;
+
+  lAccumX : LongInt;
+  lAccumY : LongInt;
+  lAccumZ : LongInt;
 begin
   if (Controller = nil) then
     Exit;
@@ -423,21 +431,21 @@ begin
     // Interpret PC Joystick Input
     if (dwFlags and DEVICE_FLAG_JOYSTICK) > 0 then
     begin
-(*
-      XTL.DIJOYSTATE JoyState := (0);
+
+      (*JoyState := (0);
 
       if (pDevice.GetDeviceState(SizeOf(JoyState), @JoyState) <> DI_OK) then
         Continue;
 
       if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
       begin
-        LongInt *pdwAxis := (LongInt)((uint32)@JoyState + dwInfo);
+        pdwAxis := (@JoyState + dwInfo);
         wValue := SmallInt(pdwAxis);
 
         if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
         begin
           if (wValue < 0) then
-            wValue := abs(wValue+1);
+            wValue := abs(wValue+1)
           else
             wValue := 0;
         end
@@ -449,18 +457,18 @@ begin
       end
       else if (dwFlags and DEVICE_FLAG_BUTTON) > 0 then
       begin
-        BYTE *pbButton := (BYTE)((uint32)@JoyState + dwInfo);
+        pbButton := (@JoyState + dwInfo);
 
-        if (pbButton and $80) then
-          wValue := 32767;
+        if (pbButton and $80) > 0 then
+          wValue := 32767
         else
           wValue := 0;
-      end;
+      end;      *)
     end
     // Interpret PC KeyBoard Input
     else if (dwFlags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
-      BYTE KeyboardState[256] := (0);
+      (*BYTE KeyboardState[256] := (0);
 
       if (pDevice.GetDeviceState(SizeOf(KeyboardState), @KeyboardState) <> DI_OK) then
         Continue;
@@ -470,12 +478,12 @@ begin
       if (bKey and $80) > 0 then
         wValue := 32767;
       else
-        wValue := 0;
+        wValue := 0; *)
     end
     // Interpret PC Mouse Input
-    else if (dwFlags and DEVICE_FLAG_MOUSE) then
+    else if (dwFlags and DEVICE_FLAG_MOUSE) >0 then
     begin
-      XTL.DIMOUSESTATE2 MouseState := (0);
+      (*MouseState := (0);
 
       if (pDevice.GetDeviceState(SizeOf(MouseState), @MouseState) <> DI_OK) then
           Continue;
@@ -489,9 +497,9 @@ begin
       end
       else if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
       begin
-        LongInt lAccumX := 0;
-        LongInt lAccumY := 0;
-        LongInt lAccumZ := 0;
+        lAccumX := 0;
+        lAccumY := 0;
+        lAccumZ := 0;
 
         lAccumX:= lAccumX + MouseState.lX * 300;
         lAccumY:= lAccumY + MouseState.lY * 300;
@@ -522,7 +530,7 @@ begin
         if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
         begin
           if (wValue < 0) then
-            wValue := abs(wValue+1);
+            wValue := abs(wValue+1)
           else
             wValue := 0;
         end
@@ -531,13 +539,10 @@ begin
           if (wValue < 0) then
             wValue := 0;
         end;
-      end;
-*)
+      end;      *)
     end;
     
-    // ******************************************************************
-    // * Map Xbox Joystick Input
-    // ******************************************************************
+    // Map Xbox Joystick Input
     if (v >= XBCTRL_OBJECT_LTHUMBPOSX) and (v <= XBCTRL_OBJECT_RTHUMB) then
     begin
       case (v) of
@@ -678,35 +683,35 @@ begin
   for v := m_dwInputDeviceCount - 1 downto 0 do
   begin
 
-        // Poll the current device
-        (*hRet = m_InputDevice[v].m_Device.Poll(); *)
+    // Poll the current device
+    hRet := m_InputDevice[v].m_Device.Poll();
 
     if (FAILED(hRet)) then begin
-            (*hRet = m_InputDevice[v].m_Device->Acquire();
+            hRet := m_InputDevice[v].m_Device.Acquire();
 
             while(hRet = DIERR_INPUTLOST) do
-                hRet = m_InputDevice[v].m_Device->Acquire(); *)
+                hRet := m_InputDevice[v].m_Device.Acquire();
     end;
 
-    (*dwHow := -1;
+    (*dwHow := -1; *)
     dwFlags := m_InputDevice[v].m_Flags;
-    *)
+
 
     // Detect Joystick Input
     if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_JOYSTICK) then begin
 
             // Get Joystick State
-            (*hRet := m_InputDevice[v].m_Device.GetDeviceState(sizeof(DIJOYSTATE), &JoyState);
+            hRet := m_InputDevice[v].m_Device.GetDeviceState(sizeof(DIJOYSTATE), @JoyState);
 
-            if (FAILED(hRet))
-                continue;
-            *)
+            (*if (FAILED(hRet))
+                continue; *)
+
 
       dwFlags := DEVICE_FLAG_JOYSTICK;
 
       if (abs(JoyState.lX) > DETECT_SENSITIVITY_JOYSTICK) then begin
-                (*
-                dwHow   = FIELD_OFFSET(XTL::DIJOYSTATE, lX);
+
+                (*dwHow   = FIELD_OFFSET(XTL::DIJOYSTATE, lX);
                 dwFlags |= (JoyState.lX > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
                 *)
       end
