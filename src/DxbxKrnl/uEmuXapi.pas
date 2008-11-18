@@ -338,16 +338,15 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
-    #13#10'(' +
-    #13#10'   Flags               : $%.08X' +
-    #13#10'   Base                : $%.08X' +
-    #13#10'   Reserve             : $%.08X' +
-    #13#10'   Commit              : $%.08X' +
-    #13#10'   Lock                : $%.08X' +
-    #13#10'   RtlHeapParams       : $%.08X' +
-    #13#10');',
-    [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
+  DbgPrintf('EmuXapi : EmuRtlCreateHeap' );
+  DbgPrintf('(');
+  DbgPrintf('   Flags               : $%.08X', [Flags]);
+  DbgPrintf('   Base                : $%.08X', [@Base]);
+  DbgPrintf('   Reserve             : $%.08X', [Reserve]);
+  DbgPrintf('   Commit              : $%.08X', [Commit]);
+  DbgPrintf('   Lock                : $%.08X', [@Lock]);
+  DbgPrintf('   RtlHeapParams       : $%.08X', [@RtlHeapParams]);
+  DbgPrintf(');');
 
   ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
 
