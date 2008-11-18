@@ -29,6 +29,7 @@ uses
   JwaWinType,
   // Dxbx
   uTypes,
+  SysUtils,
   uLog, // DbgPrintf
   uEmu,
   uEmuFS, // EmuSwapFS
@@ -338,15 +339,15 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuRtlCreateHeap' );
-  DbgPrintf('(');
-  DbgPrintf('   Flags               : $%.08X', [Flags]);
-  DbgPrintf('   Base                : $%.08X', [@Base]);
-  DbgPrintf('   Reserve             : $%.08X', [Reserve]);
-  DbgPrintf('   Commit              : $%.08X', [Commit]);
-  DbgPrintf('   Lock                : $%.08X', [@Lock]);
-  DbgPrintf('   RtlHeapParams       : $%.08X', [@RtlHeapParams]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
+  #13#10'(' +
+  #13#10'   Flags               : $' + IntToHex(Integer(Addr(Flags)), 8) + '.08X' +
+  #13#10'   Base                : $' + IntToHex(Integer(Addr(Base)), 8) + '.08X' +
+  #13#10'   Reserve             : $' + IntToHex(Integer(Addr(Reserve)), 8) + '.08X' +
+  #13#10'   Commit              : $' + IntToHex(Integer(Addr(Commit)), 8) + '.08X' +
+  #13#10'   Lock                : $' + IntToHex(Integer(Addr(Lock)), 8) + '.08X' +
+  #13#10'   RtlHeapParams       : $' + IntToHex(Integer(Addr(RtlHeapParams)), 8) + '.08X' +
+  #13#10');');
 
   ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
 
@@ -372,12 +373,12 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
   //* too much debug output
-  DbgPrintf ( 'EmuXapi : EmuRtlAllocateHeap' );
-  DbgPrintf ( '(' );
-  DbgPrintf ( '   hHeap               : $%.08X', [hHeap] );
-  DbgPrintf ( '   dwFlags             : $%.08X', [dwFlags] );
-  DbgPrintf ( '   dwBytes             : $%.08X', [dwBytes] );
-  DbgPrintf ( ');' );
+  DbgPrintf ( 'EmuXapi : EmuRtlAllocateHeap' +
+   #13#10'(' +
+   #13#10'   hHeap               : $' + IntToHex(Integer(Addr(hHeap)), 8) + '.08X' +
+   #13#10'   dwFlags             : $' + IntToHex(Integer(Addr(dwFlags)), 8) + '.08X' +
+   #13#10'   dwBytes             : $' + IntToHex(Integer(Addr(dwBytes)), 8) + '.08X' +
+   #13#10');' );
   //*/
 
   Result := PVOID(JwaNative.RtlAllocateHeap(hHeap, dwFlags, dwBytes + $20));
@@ -412,12 +413,12 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
   //* too much debug output
-  DbgPrintf('EmuXapi : EmuRtlFreeHeap');
-  DbgPrintf('(');
-  DbgPrintf('   hHeap               : $%.08X', [hHeap]);
-  DbgPrintf('   dwFlags             : $%.08X', [dwFlags]);
-  DbgPrintf('   lpMem               : $%.08X', [lpMem]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
+  #13#10'(' +
+  #13#10'   hHeap               : $'+ IntToHex(Integer(Addr(hHeap)), 8) + '.08X' +
+  #13#10'   dwFlags             : $' + IntToHex(Integer(Addr(dwFlags)), 8) + '.08X' +
+  #13#10'   lpMem               : $' + IntToHex(Integer(Addr(lpMem)), 8) + '.08X' +
+  #13#10');');
   //*
 
   if Assigned(lpMem) then
@@ -450,13 +451,13 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
   //* too much debug output
-  DbgPrintf('EmuXapi : EmuRtlReAllocateHeap');
-  DbgPrintf('(');
-  DbgPrintf('   hHeap               : $%.08X', [hHeap]);
-  DbgPrintf('   dwFlags             : $%.08X', [dwFlags]);
-  DbgPrintf('   lpMem               : $%.08X', [lpMem]);
-  DbgPrintf('   dwBytes             : $%.08X', [dwBytes]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
+  #13#10'('+
+  #13#10'   hHeap               : $' + IntToHex(Integer(Addr(hHeap)), 8) + '.08X' +
+  #13#10'   dwFlags             : $' + IntToHex(Integer(Addr(dwFlags)), 8) + '.08X' +
+  #13#10'   lpMem               : $' + IntToHex(Integer(Addr(lpMem)), 8) + '.08X' +
+  #13#10'   dwBytes             : $' + IntToHex(Integer(Addr(dwBytes)), 8) + '.08X' +
+  #13#10');');
    //*/
 
   if Assigned(lpMem) then
@@ -489,12 +490,12 @@ begin
   EmuSwapFS(); // Win2k/XP FS
 
   //* too much debug output
-  DbgPrintf('EmuXapi : EmuRtlSizeHeap');
-  DbgPrintf('(');
-  DbgPrintf('   hHeap               : $%.08X', [hHeap]);
-  DbgPrintf('   dwFlags             : $%.08X', [dwFlags]);
-  DbgPrintf('   lpMem               : $%.08X', [lpMem]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
+  #13#10'(' +
+  #13#10'   hHeap               : $' + IntToHex(Integer(Addr(hHeap)), 8) + '.08X' +
+  #13#10'   dwFlags             : $' + IntToHex(Integer(Addr(dwFlags)), 8) + '.08X' +
+  #13#10'   lpMem               : $' + IntToHex(Integer(Addr(lpMem)), 8) + '.08X' +
+  #13#10');');
   //*/
 
   if Assigned(lpMem) then
@@ -521,10 +522,10 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuQueryPerformanceCounter');
-  DbgPrintf('(');
-  DbgPrintf('   lpPerformanceCount  : $%.08X', [lpPerformanceCount]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuQueryPerformanceCounter' +
+  #13#10'(' +
+  #13#10'   lpPerformanceCount  : $' + IntToHex(Integer(Addr(lpPerformanceCount)), 8) + '.08X' +
+  #13#10');');
 
   bRet := QueryPerformanceCounter(lpPerformanceCount);
 
@@ -546,10 +547,10 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency');
-  DbgPrintf('(');
-  DbgPrintf('   lpFrequency         : $%.08X', [lpFrequency]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency' +
+  #13#10'(' +
+  #13#10'   lpFrequency         : $' + IntToHex(Integer(Addr(lpFrequency)), 8) + '.08X' +
+  #13#10');');
 
   bRet := QueryPerformanceFrequency(lpFrequency);
 
@@ -569,9 +570,8 @@ begin
     EmuSwapFS(); // Win2k/XP FS
     DbgPrintf('EmuXapi : EmuXMountUtilityDrive' +
       #13#10'(' +
-      #13#10'   fFormatClean        : $%.08X' +
-      #13#10');',
-      fFormatClean);
+      #13#10'   fFormatClean        : $' + fFormatClean + '.08X' +
+      #13#10');');
     EmuSwapFS(); // XBox FS
   end;
 {$ENDIF}
@@ -589,11 +589,11 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuXInitDevices');
-  DbgPrintf('(');
-  DbgPrintf('   Unknown1            : $%.08X', [Unknown1]);
-  DbgPrintf('   Unknown2            : $%.08X', [Unknown2]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuXInitDevices' +
+  #13#10'(' +
+  #13#10'   Unknown1            : $' + IntToHex(Integer(Addr(Unknown1)), 8) + '.08X' +
+  #13#10'   Unknown2            : $' + IntToHex(Integer(Addr(Unknown2)), 8) + '.08X' +
+  #13#10');');
 
   for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
   begin
@@ -1072,10 +1072,10 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuCloseHandle');
-  DbgPrintf('(');
-  DbgPrintf('   hObject             : $%.08X',[hObject]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuCloseHandle' +
+  #13#10'(' +
+  #13#10'   hObject             : $' + IntToHex(Integer(Addr(hObject)), 8) + '.08X' +
+  #13#10');');
 
   bRet := CloseHandle(hObject);
 
@@ -1094,11 +1094,11 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuSetThreadPriorityBoost');
-  DbgPrintf('(');
-  DbgPrintf('   hThread             : $%.08X', [hThread]);
-  DbgPrintf('   DisablePriorityBoost: $%.08X', [DisablePriorityBoost]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuSetThreadPriorityBoost' +
+  #13#10'(' +
+  #13#10'   hThread             : $' + IntToHex(Integer(Addr(hThread)), 8) + '.08X' +
+  #13#10'   DisablePriorityBoost: $' + IntToHex(Integer(Addr(DisablePriorityBoost)), 8) + '.08X' +
+  #13#10');');
 
   bRet := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
@@ -1120,11 +1120,11 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuSetThreadPriority');
-  DbgPrintf('(');
-  DbgPrintf('   hThread             : $%.08X', [hThread]);
-  DbgPrintf('   nPriority           : $%.08X', [nPriority]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuSetThreadPriority' +
+  #13#10'(' +
+  #13#10'   hThread             : $' + IntToHex(Integer(Addr(hThread)), 8) + '.08X' +
+  #13#10'   nPriority           : $' + IntToHex(Integer(Addr(nPriority)), 8) + '.08X' +
+  #13#10');');
 
   bRet := True; //SetThreadPriority(hThread, nPriority);
 
@@ -1150,10 +1150,10 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuGetThreadPriority');
-  DbgPrintf('(');
-  DbgPrintf('   hThread             : $%.08X', [hThread]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuGetThreadPriority' +
+  #13#10'(' +
+  #13#10'   hThread             : $' + IntToHex(Integer(Addr(hThread)), 8) + '.08X' +
+  #13#10');');
 
   iRet := GetThreadPriority(hThread);
 
@@ -1175,11 +1175,11 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuGetExitCodeThread');
-  DbgPrintf('(');
-  DbgPrintf('   hThread             : $%.08X', [hThread]);
-  DbgPrintf('   lpExitCode          : $%.08X', [lpExitCode]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuGetExitCodeThread' +
+  #13#10'(' +
+  #13#10'   hThread             : $' + IntToHex(Integer(Addr(hThread)), 8) + '.08X' +
+  #13#10'   lpExitCode          : $' + IntToHex(Integer(Addr(lpExitCode)), 8) + '.08X' +
+  #13#10');');
 
   bRet := GetExitCodeThread(hThread, lpExitCode);
 
@@ -1237,11 +1237,11 @@ procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuXapiThreadStartup');
-  DbgPrintf('(');
-  DbgPrintf('   dwDummy1            : 0x%.08X', [dwDummy1]);
-  DbgPrintf('   dwDummy2            : 0x%.08X', [dwDummy2]);
-  DbgPrintf(')');
+  DbgPrintf('EmuXapi : EmuXapiThreadStartup' +
+  #13#10'(' +
+  #13#10'   dwDummy1            : 0x' + IntToHex(Integer(Addr(dwDummy1)), 8) + '.08X' +
+  #13#10'   dwDummy2            : 0x' + IntToHex(Integer(Addr(dwDummy2)), 8) + '.08X' +
+  #13#10')');
 
   EmuSwapFS(); // XBox FS
 
@@ -1298,12 +1298,12 @@ procedure XTL_EmuXapiBootDash(UnknownA: DWORD; UnknownB: DWORD; UnknownC: DWORD)
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  DbgPrintf('EmuXapi : EmuXapiBootDash');
-  DbgPrintf('(');
-  DbgPrintf('   UnknownA            : $%.08X', [UnknownA]);
-  DbgPrintf('   UnknownB            : $%.08X', [UnknownB]);
-  DbgPrintf('   UnknownC            : $%.08X', [UnknownC]);
-  DbgPrintf(');');
+  DbgPrintf('EmuXapi : EmuXapiBootDash' +
+  #13#10'(' +
+  #13#10'   UnknownA            : $' + IntToHex(Integer(Addr(UnknownA)), 8) + '.08X' +
+  #13#10'   UnknownB            : $' + IntToHex(Integer(Addr(UnknownB)), 8) + '.08X' +
+  #13#10'   UnknownC            : $' + IntToHex(Integer(Addr(UnknownC)), 8) + '.08X' +
+  #13#10');');
 
   CxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
 
