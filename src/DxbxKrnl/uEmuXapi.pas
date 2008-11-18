@@ -570,7 +570,7 @@ begin
     EmuSwapFS(); // Win2k/XP FS
     DbgPrintf('EmuXapi : EmuXMountUtilityDrive' +
       #13#10'(' +
-      #13#10'   fFormatClean        : $' + fFormatClean + '.08X' +
+      #13#10'   fFormatClean        : $' + IntToHex(Integer(Addr(fFormatClean)), 8) + '.08X' +
       #13#10');');
     EmuSwapFS(); // XBox FS
   end;
