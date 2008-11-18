@@ -39,14 +39,14 @@ uses
 
 type
   ProcedureStdCall = procedure; stdcall;
-  Function1ArgStdCall = function (const Arg1: DWORD): Integer; stdcall;
+  Function1ArgStdCall = function(const Arg1: DWORD): Integer; stdcall;
 
   RTL_HEAP_PARAMETERS = packed record
     Length: UInt32;
     // TODO!
   end;
 
-  XTHREAD_NOTIFY_PROC = procedure (fCreate: BOOL); stdcall;
+  XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
   _XTHREAD_NOTIFICATION = record
     Reserved: LIST_ENTRY;
@@ -73,21 +73,37 @@ type
   _XINPUT_FEEDBACK = record
     Header: XINPUT_FEEDBACK_HEADER;
 //    union
-        Rumble: XINPUT_RUMBLE;
+    Rumble: XINPUT_RUMBLE;
   end;
   XINPUT_FEEDBACK = _XINPUT_FEEDBACK;
   PXINPUT_FEEDBACK = ^XINPUT_FEEDBACK;
 
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
-function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID;  RtlHeapParams: PVOID): PVOID; stdcall;
+function XTL_EmuRtlCreateHeap(Flags: ULONG; Base: PVOID; Reserve: ULONG; Commit: ULONG; Lock: PVOID; RtlHeapParams: PVOID): PVOID; stdcall;
 function XTL_EmuRtlAllocateHeap(hHeap: THandle; dwFlags: DWORD; dwBytes: SIZE_T): PVOID; stdcall;
 function XTL_EmuRtlFreeHeap(hHeap: THandle; dwFlags: DWORD; lpMem: PVOID): BOOL; stdcall;
 function XTL_EmuRtlReAllocateHeap(hHeap: THandle; dwFlags: DWORD; lpMem: PVOID; dwBytes: SIZE_T): PVOID; stdcall;
 function XTL_EmuRtlSizeHeap(hHeap: THandle; dwFlags: DWORD; lpMem: PVOID): SIZE_T; stdcall;
+
+function XTL_EmuQueryPerformanceCounter(lpPerformanceCount: Int64): BOOL; stdcall;
+function XTL_EmuQueryPerformanceFrequency(lpFrequency: Int64): BOOL; stdcall;
+function XTL_EmuXMountUtilityDrive(fFormatClean: BOOL): BOOL; stdcall;
+procedure XTL_EmuXInitDevices(Unknown1: DWORD; Unknown2: PVOID); stdcall;
+function XTL_EmuCloseHandle(hObject: THandle): BOOL; stdcall;
+function XTL_EmuSetThreadPriorityBoost(hThread: THandle; DisablePriorityBoost: BOOL): BOOL; stdcall;
+function XTL_EmuSetThreadPriority(hThread: THandle; nPriority: integer): BOOL; stdcall;
+function XTL_EmuGetThreadPriority(hThread: THandle): integer; stdcall;
+function XTL_EmuGetExitCodeThread(hThread: THandle; lpExitCode: Cardinal): BOOL; stdcall;
+
 procedure XTL_EmuXapiInitProcess(); stdcall;
 procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
+procedure XTL_EmuXapiBootDash(UnknownA: DWORD; UnknownB: DWORD; UnknownC: DWORD); stdcall;
+
 procedure XTL_EmuXRegisterThreadNotifyRoutine(pThreadNotification: PXTHREAD_NOTIFICATION; fRegister: BOOL); stdcall;
+Function XTL_EmuXCalculateSignatureBegin ( dwFlags : DWORD ) : THandle; stdcall;
+Function XTL_EmuXCalculateSignatureBeginEx (dwFlags : DWORD; dwAltTitleId : DWORD) : THandle; stdcall;
+Function XTL_EmuXCalculateSignatureUpdate ( hCalcSig : THandle; pbData : BYTE; cbData : ULONG ) : DWORD; stdcall;
 
 exports
   XTL_EmuXapiApplyKernelPatches,
@@ -118,6 +134,7 @@ uses
 
 
 // func: EmuXapiApplyKernelPatches
+
 procedure XTL_EmuXapiApplyKernelPatches();
 begin
 {$IFDEF _DEBUG_TRACE}
@@ -289,8 +306,9 @@ type
 // ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
+
 function XTL_EmuRtlCreateHeap
-(
+  (
   Flags: ULONG;
   Base: PVOID; // OPTIONAL
   Reserve: ULONG; // OPTIONAL
@@ -326,6 +344,7 @@ end;
 // ******************************************************************
 // * func: EmuRtlAllocateHeap
 // ******************************************************************
+
 function XTL_EmuRtlAllocateHeap(
   hHeap: THandle;
   dwFlags: DWORD;
@@ -365,6 +384,7 @@ end;
 // ******************************************************************
 // * func: EmuRtlFreeHeap
 // ******************************************************************
+
 function XTL_EmuRtlFreeHeap(
   hHeap: THandle;
   dwFlags: DWORD;
@@ -403,6 +423,7 @@ end;
 // ******************************************************************
 // * func: EmuRtlReAllocateHeap
 // ******************************************************************
+
 function XTL_EmuRtlReAllocateHeap(
   hHeap: THandle;
   dwFlags: DWORD;
@@ -443,6 +464,7 @@ end;
 // ******************************************************************
 // * func: EmuRtlSizeHeap
 // ******************************************************************
+
 function XTL_EmuRtlSizeHeap(
   hHeap: THandle;
   dwFlags: DWORD;
@@ -450,7 +472,7 @@ function XTL_EmuRtlSizeHeap(
   ): SIZE_T; stdcall;
 var
   offs: BYTE;
-  ret: SIZE_T ;
+  ret: SIZE_T;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -481,10 +503,10 @@ end;
 // ******************************************************************
 // * func: EmuQueryPerformanceCounter
 // ******************************************************************
-(*BOOL WINAPI XTL.EmuQueryPerformanceCounter
-(
-  PLARGE_INTEGER lpPerformanceCount
-  )
+
+function XTL_EmuQueryPerformanceCounter(lpPerformanceCount: Int64): BOOL; stdcall;
+var
+  bRet: BOOL;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -492,9 +514,9 @@ begin
     #13#10'(' +
     #13#10'   lpPerformanceCount  : $%.08X' +
     #13#10');',
-    [lpPerformanceCount);
+    [lpPerformanceCount]);
 
-  BOOL bRet := QueryPerformanceCounter(lpPerformanceCount);
+  bRet := QueryPerformanceCounter(lpPerformanceCount);
 
     // debug - 4x speed
     //lpPerformanceCount->QuadPart *= 4;
@@ -502,15 +524,15 @@ begin
   EmuSwapFS(); // XBox FS
 
   Result := bRet;
-end;        *)
+end;
 
 // ******************************************************************
 // * func: EmuQueryPerformanceFrequency
 // ******************************************************************
-(*BOOL WINAPI XTL.EmuQueryPerformanceFrequency
-(
-  PLARGE_INTEGER lpFrequency
-  )
+
+function XTL_EmuQueryPerformanceFrequency(lpFrequency: Int64): BOOL; stdcall;
+var
+  bRet: BOOL;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -518,22 +540,20 @@ begin
     #13#10'(' +
     #13#10'   lpFrequency         : $%.08X' +
     #13#10');',
-    [lpFrequency);
+    [lpFrequency]);
 
-  BOOL bRet := QueryPerformanceFrequency(lpFrequency);
+  bRet := QueryPerformanceFrequency(lpFrequency);
 
   EmuSwapFS(); // XBox FS
 
   Result := bRet;
-end;            *)
+end;
 
 // ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
-(*BOOL WINAPI XTL.EmuXMountUtilityDrive
-(
-  BOOL fFormatClean
-  )
+
+function XTL_EmuXMountUtilityDrive(fFormatClean: BOOL): BOOL; stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
   begin
@@ -542,22 +562,21 @@ begin
       #13#10'(' +
       #13#10'   fFormatClean        : $%.08X' +
       #13#10');',
-      [fFormatClean);
+      fFormatClean);
     EmuSwapFS(); // XBox FS
   end;
 {$ENDIF}
 
   Result := True;
-end;             *)
+end;
 
 // ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
-(*VOID WINAPI XTL.EmuXInitDevices
-(
-  DWORD Unknown1,
-  PVOID Unknown2
-  )
+
+procedure XTL_EmuXInitDevices(Unknown1: DWORD; Unknown2: PVOID); stdcall;
+var
+  v: integer;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -566,34 +585,27 @@ begin
     #13#10'   Unknown1            : $%.08X' +
     #13#10'   Unknown2            : $%.08X' +
     #13#10');',
-    [Unknown1, Unknown2);
+    [Unknown1, Unknown2]);
 
-  integer v;
-
-  for (v := 0; v < XINPUT_SETSTATE_SLOTS; v + +)
+  for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
   begin
     g_pXInputSetStateStatus[v].hDevice := 0;
     g_pXInputSetStateStatus[v].dwLatency := 0;
-    g_pXInputSetStateStatus[v].pFeedback := 0;
+    g_pXInputSetStateStatus[v].pFeedback := Nil;
   end;
 
-  for (v := 0; v < XINPUT_HANDLE_SLOTS; v + +)
+  for v := 0 to XINPUT_HANDLE_SLOTS - 1 do
   begin
     g_hInputHandle[v] := 0;
   end;
 
   EmuSwapFS(); // XBox FS
-
-  Exit;
-end;            *)
+end;
 
 // ******************************************************************
 // * func: EmuXGetDevices
 // ******************************************************************
-(*DWORD WINAPI XTL.EmuXGetDevices
-(
-  PXPP_DEVICE_TYPE DeviceType
-  )
+(*Function XTL_EmuXGetDevices ( DeviceType : PXPP_DEVICE_TYPE ): DWORD
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -659,13 +671,13 @@ end;        *)
 // ******************************************************************
 // * func: EmuXInputOpen
 // ******************************************************************
-(*THandle WINAPI XTL.EmuXInputOpen
+(*Function XTL_EmuXInputOpen
 (
   in PXPP_DEVICE_TYPE DeviceType,
   in DWORD dwPort,
   in DWORD dwSlot,
   in PXINPUT_POLLING_PARAMETERS pPollingParameters OPTIONAL
-  )
+  ) : THandle
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -736,10 +748,9 @@ end;
 // ******************************************************************
 // * func: EmuXInputClose
 // ******************************************************************
-(*VOID WINAPI XTL.EmuXInputClose
-(
-  in THandle hDevice
-  )
+(*procedure XTL_EmuXInputClose ( hDevice : THandle );
+var pph : POLLING_PARAMETERS_HANDLE;
+
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -747,7 +758,7 @@ begin
     #13#10'(' +
     #13#10'   hDevice             : $%.08X' +
     #13#10');',
-    [hDevice);
+    hDevice);
 
   POLLING_PARAMETERS_HANDLE * pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
@@ -1020,12 +1031,11 @@ end;   *)
 // ******************************************************************
 // * func: EmuCreateMutex
 // ******************************************************************
-(*THandle WINAPI XTL.EmuCreateMutex
-(
-    LPSECURITY_ATTRIBUTES   lpMutexAttributes,
-    BOOL                    bInitialOwner,
-    PAnsiChar                  lpName
-)
+(*Function XTL_EmuCreateMutex (
+    lpMutexAttributes : LPSECURITY_ATTRIBUTES;
+    bInitialOwner : BOOL;
+    lpName : PAnsiChar;
+) : THandle
 begin
     EmuSwapFS();   // Win2k/XP FS
 
@@ -1047,138 +1057,136 @@ end;          *)
 // ******************************************************************
 // * func: EmuCloseHandle
 // ******************************************************************
-(*BOOL WINAPI XTL.EmuCloseHandle
-(
-    THandle hObject
-)
+
+function XTL_EmuCloseHandle(hObject: THandle): BOOL; stdcall;
+var
+  bRet: BOOL;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuCloseHandle' +
-           #13#10'(' +
-           #13#10'   hObject             : $%.08X' +
-           #13#10');',
-           [hObject);
+  DbgPrintf('EmuXapi : EmuCloseHandle' +
+    #13#10'(' +
+    #13#10'   hObject             : $%.08X' +
+    #13#10');',
+    hObject);
 
-    BOOL bRet := CloseHandle(hObject);
+  bRet := CloseHandle(hObject);
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Result := bRet;
-end;          *)
+  Result := bRet;
+end;
 
 // ******************************************************************
 // * func: EmuSetThreadPriorityBoost
 // ******************************************************************
-(*BOOL WINAPI XTL.EmuSetThreadPriorityBoost
-(
-    THandle  hThread,
-    BOOL    DisablePriorityBoost
-)
+
+function XTL_EmuSetThreadPriorityBoost(hThread: THandle; DisablePriorityBoost: BOOL): BOOL; stdcall;
+var
+  bRet: BOOL;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuSetThreadPriorityBoost' +
-           #13#10'(' +
-           #13#10'   hThread             : $%.08X' +
-           #13#10'   DisablePriorityBoost: $%.08X' +
-           #13#10');',
-           [hThread, DisablePriorityBoost);
+  DbgPrintf('EmuXapi : EmuSetThreadPriorityBoost' +
+    #13#10'(' +
+    #13#10'   hThread             : $%.08X' +
+    #13#10'   DisablePriorityBoost: $%.08X' +
+    #13#10');',
+    [hThread, DisablePriorityBoost]);
 
-    BOOL bRet := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
+  bRet := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
-    if (bRet = False) then
-        EmuWarning('SetThreadPriorityBoost Failed!');
+  if (bRet = False) then
+    EmuWarning('SetThreadPriorityBoost Failed!');
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Result := bRet;
-end;       *)
+  Result := bRet;
+end;
 
 // ******************************************************************
 // * func: EmuSetThreadPriority
 // ******************************************************************
-(*BOOL WINAPI XTL.EmuSetThreadPriority
-(
-    THandle  hThread,
-    integer     nPriority
-)
+
+function XTL_EmuSetThreadPriority(hThread: THandle; nPriority: integer): BOOL; stdcall;
+var
+  bRet: BOOL;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuSetThreadPriority' +
-           #13#10'(' +
-           #13#10'   hThread             : $%.08X' +
-           #13#10'   nPriority           : $%.08X' +
-           #13#10');',
-           [hThread, nPriority);
+  DbgPrintf('EmuXapi : EmuSetThreadPriority' +
+    #13#10'(' +
+    #13#10'   hThread             : $%.08X' +
+    #13#10'   nPriority           : $%.08X' +
+    #13#10');',
+    [hThread, nPriority]);
 
-    BOOL bRet := True;//SetThreadPriority(hThread, nPriority);
+  bRet := True; //SetThreadPriority(hThread, nPriority);
 
-    if (bRet = False) then
-        EmuWarning('SetThreadPriority Failed!');
+  if (bRet = False) then
+    EmuWarning('SetThreadPriority Failed!');
 
     // HACK!
     //Sleep(10);
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Result := bRet;
-end;        *)
+  Result := bRet;
+end;
 
 
 // ******************************************************************
 // * func: EmuGetThreadPriority
 // ******************************************************************
-(*integer WINAPI XTL.EmuGetThreadPriority
-(
-    THandle  hThread
-)
+
+function XTL_EmuGetThreadPriority(hThread: THandle): integer; stdcall;
+var
+  iRet: integer;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuGetThreadPriority' +
-           #13#10'(' +
-           #13#10'   hThread             : $%.08X' +
-           #13#10');',
-           [hThread);
+  DbgPrintf('EmuXapi : EmuGetThreadPriority' +
+    #13#10'(' +
+    #13#10'   hThread             : $%.08X' +
+    #13#10');',
+    [hThread]);
 
-    integer iRet := GetThreadPriority(hThread);
+  iRet := GetThreadPriority(hThread);
 
-    if (iRet = THREAD_PRIORITY_ERROR_RETURN) then
-        EmuWarning('GetThreadPriority Failed!');
+  if (iRet = THREAD_PRIORITY_ERROR_RETURN) then
+    EmuWarning('GetThreadPriority Failed!');
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Result := iRet;
-end;              *)
+  Result := iRet;
+end;
 
 // ******************************************************************
 // * func: EmuGetExitCodeThread
 // ******************************************************************
-(*BOOL WINAPI XTL.EmuGetExitCodeThread
-(
-    THandle  hThread,
-    LPDWORD lpExitCode
-)
+
+function XTL_EmuGetExitCodeThread(hThread: THandle; lpExitCode: Cardinal): BOOL; stdcall;
+var
+  bRet: BOOL;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
-    DbgPrintf('EmuXapi : EmuGetExitCodeThread' +
-           #13#10'(' +
-           #13#10'   hThread             : $%.08X' +
-           #13#10'   lpExitCode          : $%.08X' +
-           #13#10');',
-           [hThread, lpExitCode);
+  DbgPrintf('EmuXapi : EmuGetExitCodeThread' +
+    #13#10'(' +
+    #13#10'   hThread             : $%.08X' +
+    #13#10'   lpExitCode          : $%.08X' +
+    #13#10');',
+    [hThread, lpExitCode]);
 
-    BOOL bRet := GetExitCodeThread(hThread, lpExitCode);
+  bRet := GetExitCodeThread(hThread, lpExitCode);
 
-    EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
-    Result := bRet;
-end;          *)
+  Result := bRet;
+end;
 
 // func: EmuXapiInitProcess
+
 procedure XTL_EmuXapiInitProcess(); stdcall;
 const
   HEAP_GROWABLE = $00000002;
@@ -1187,7 +1195,7 @@ var
   dwPeHeapReserve: UInt32;
   dwPeHeapCommit: UInt32;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuXapi : EmuXapiInitProcess();');
 
@@ -1197,10 +1205,10 @@ begin
 
     HeapParameters.Length := SizeOf(HeapParameters);
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(); // XBox FS
 
     dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
-    dwPeHeapCommit  := CxbxKrnl_XbeHeader.dwPeHeapCommit;
+    dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
 
 //    PVOID dwResult := 0;
 
@@ -1221,9 +1229,10 @@ end;
 // ******************************************************************
 // * func: EmuXapiThreadStartup
 // ******************************************************************
+
 procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWORD) stdcall;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuXapi : EmuXapiThreadStartup' +
     #13#10'(' +
@@ -1232,7 +1241,7 @@ begin
     #13#10');',
     [dwDummy1, dwDummy2]);
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(); // XBox FS
 
   Function1ArgStdCall(dwDummy1)(dwDummy2);
 (*
@@ -1282,7 +1291,8 @@ begin
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************
-(*VOID WINAPI XTL.EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
+
+procedure XTL_EmuXapiBootDash(UnknownA: DWORD; UnknownB: DWORD; UnknownC: DWORD); stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -1292,18 +1302,19 @@ begin
     #13#10'   UnknownB            : $%.08X' +
     #13#10'   UnknownC            : $%.08X' +
     #13#10');',
-    [UnknownA, UnknownB, UnknownC);
+    [UnknownA, UnknownB, UnknownC]);
 
   CxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
 
   EmuSwapFS(); // XBox FS
 
   Exit;
-end;           *)
+end;
 
 // ******************************************************************
 // * func: EmuXRegisterThreadNotifyRoutine
 // ******************************************************************
+
 procedure XTL_EmuXRegisterThreadNotifyRoutine(
   pThreadNotification: PXTHREAD_NOTIFICATION;
   fRegister: BOOL
@@ -1334,14 +1345,11 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-(* Cxbx : not necessary?
+// Cxbx : not necessary?
 // ******************************************************************
 // * func: EmuXCalculateSignatureBegin
 // ******************************************************************
-THandle WINAPI XTL.EmuXCalculateSignatureBegin
-(
-    DWORD dwFlags
-)
+Function XTL_EmuXCalculateSignatureBegin ( dwFlags : DWORD ) : THandle; stdcall;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
@@ -1349,57 +1357,48 @@ begin
            #13#10'(' +
            #13#10'   dwFlags             : $%.08X' +
            #13#10');',
-            [dwFlags);
+            [dwFlags]);
 
     EmuSwapFS();   // XBox FS
 
     // return a fake handle value for now
-    Result := (PVOID)$AAAAAAAA;
+    Result := $AAAAAAAA;
 end;
 
 // ******************************************************************
 // * func: EmuXCalculateSignatureBeginEx
 // ******************************************************************
-THandle WINAPI XTL.EmuXCalculateSignatureBeginEx
-(
-    DWORD dwFlags,
-    DWORD dwAltTitleId
-)
+Function XTL_EmuXCalculateSignatureBeginEx (dwFlags : DWORD; dwAltTitleId : DWORD) : THandle; stdcall;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf('EmuXapi : XCalculateSignatureBeginEx' +
            #13#10'(' +
-           #13#10'   dwFlags             : $%.08X', +
-           #13#10'   dwAltTitleId        : $%.08X', +
+           #13#10'   dwFlags             : $%.08X' +
+           #13#10'   dwAltTitleId        : $%.08X' +
            #13#10');',
-            [dwFlags, dwAltTitleId);
+            [dwFlags, dwAltTitleId]);
 
     EmuSwapFS();   // XBox FS
 
     // return a fake handle value for now
-    Result := PVOID($AAAAAAAA);
+    Result := $AAAAAAAA;
 end;
 
 // ******************************************************************
 // * func: EmuXCalculateSignatureUpdate
 // ******************************************************************
-DWORD WINAPI XTL.EmuXCalculateSignatureUpdate
-(
-  THandle        hCalcSig,
-   BYTE    *pbData,
-  ULONG         cbData
-)
+Function XTL_EmuXCalculateSignatureUpdate ( hCalcSig : THandle; pbData : BYTE; cbData : ULONG ) : DWORD; stdcall;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf('EmuXapi : XCalculateSignatureUpdate' +
            #13#10'(' +
-           #13#10'   hCalcSig            : $%.08X', +
-           #13#10'   pbData              : $%.08X', +
-           #13#10'   cbData              : $%.08X', +
+           #13#10'   hCalcSig            : $%.08X' +
+           #13#10'   pbData              : $%.08X' +
+           #13#10'   cbData              : $%.08X' +
            #13#10');',
-            [hCalcSig, pbData, cbData);
+            [hCalcSig, pbData, cbData]);
 
     EmuSwapFS();   // XBox FS
 
@@ -1409,11 +1408,7 @@ end;
 // ******************************************************************
 // * func: EmuXCalculateSignatureEnd
 // ******************************************************************
-DWORD WINAPI XTL.EmuXCalculateSignatureEnd
-(
-  THandle                hCalcSig,
-  PXCALCSIG_SIGNATURE   pSignature
-)
+(*Function XTL_EmuXCalculateSignatureEnd ( hCalcSig : THandle; pSignature : PXCALCSIG_SIGNATURE) : DWORD;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
@@ -1427,8 +1422,8 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ERROR_SUCCESS;
-end;
-*)
+end; *)
+
 
 end.
 
