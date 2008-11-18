@@ -146,7 +146,7 @@ begin
 end;
 
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord);
-// Branch:martin  Revision:39  Done:99 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj Done:99
 var
   dwThreadId: DWORD;
   hThread: THandle;
@@ -225,7 +225,7 @@ end;
 // cleanup Direct3D
 
 procedure XTL_EmuD3DCleanup;
-// Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj Done:100
 begin
   XTL_EmuDInputCleanup;
   Exit;
@@ -423,14 +423,14 @@ begin
 
 
         { TODO : Need to be translated to delphi }
-        (*
+
         // if we've just switched back to display off, clear buffer & display prompt
-        if not g_bPrintfOn and lPrintfOn then
-          dbgConsole.Reset();
+        (*if not g_bPrintfOn and lPrintfOn then
+          dbgConsole.Reset(); *)
 
         lPrintfOn := g_bPrintfOn;
 
-        dbgConsole.Process();
+        (*dbgConsole.Process();
         *)
       end;
     end;
@@ -755,7 +755,7 @@ begin
         g_EmuCDPD.hFocusWindow := g_hEmuWindow;
         (*g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL_EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
         g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := XTL_EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
-        *)
+
 
         (*if (not g_XBVideo.GetVSync() and (g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) and g_XBVideo.GetFullscreen()) then
           g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
@@ -857,12 +857,12 @@ begin
       // default NULL guid
       ZeroMemory(@g_ddguid, SizeOf(TGUID));
       // enumerate device guid for this monitor, for directdraw
-      hRet := DirectDrawEnumerateExA(@EnumDisplayDevices, 0, DDENUM_ATTACHEDSECONDARYDEVICES);
+      hRet := DirectDrawEnumerateExA(@EnumDisplayDevices, Nil, DDENUM_ATTACHEDSECONDARYDEVICES);
 
       // create DirectDraw7
       begin
         if (FAILED(hRet)) then
-          hRet := DirectDrawCreateEx(0, g_pDD7, IID_IDirectDraw7, nil)
+          hRet := DirectDrawCreateEx(Nil, g_pDD7, IID_IDirectDraw7, nil)
         else
           hRet := DirectDrawCreateEx(@g_ddguid, g_pDD7, IID_IDirectDraw7, nil);
 
@@ -1809,17 +1809,11 @@ begin
     #13#10');',
     [Width, Height, aFormat, ppBackBuffer]);
 
-    { TODO -oDxbx : Need to be translated to delphi }
-    (**ppBackBuffer := new X_D3DSurface();
-    *)
+    (*ppBackBuffer := X_D3DSurface;
 
-  (*PCFormat := XTL_EmuXB2PC_D3DFormat(aFormat); *)
-
-    { TODO -oDxbx : Need to be translated to delphi }
-    (*
-    HRESULT hRet := g_pD3DDevice8.CreateImageSurface(Width, Height, PCFormat,  and ((ppBackBuffer).EmuSurface8));
-    *)
-
+  PCFormat := XTL_EmuXB2PC_D3DFormat(aFormat);
+    hRet := g_pD3DDevice8.CreateImageSurface(Width, Height, PCFormat, ppBackBuffer.EmuSurface8);
+      *)
   EmuSwapFS(); // Xbox FS
   Result := hRet;
 end;
@@ -3217,29 +3211,26 @@ end;
 
 // func: EmuIDirect3DDevice8_SetTexture
 
-function XTL_EmuIDirect3DDevice8_SetTexture: HRESULT;
+function XTL_EmuIDirect3DDevice8_SetTexture(Stage : DWORD;
+    pTexture : X_D3DResource ): HRESULT;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-(*(
-    DWORD           Stage,
-    X_D3DResource  *pTexture
-) *)
+  pBaseTexture8 : IDirect3DBaseTexture8;
 begin
   hret := 0;
   EmuSwapFS(); // Win2k/XP FS
 
-{ TODO : Need to be translated to delphi }
-(*    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTexture'
-           #13#10'('
-           #13#10'   Stage               : 0x%.08X'
-           #13#10'   pTexture            : 0x%.08X'
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTexture' +
+           #13#10'(' +
+           #13#10'   Stage               : 0x%.08X' +
+           #13#10'   pTexture            : 0x%.08X' +
            #13#10');',
-           Stage, pTexture);
+           [Stage, pTexture]);
 
-    IDirect3DBaseTexture8 *pBaseTexture8 := 0;
+    pBaseTexture8 := Nil;
 
-    EmuD3DActiveTexture[Stage] := pTexture;
+    (*EmuD3DActiveTexture[Stage] := pTexture;
 
     if(pTexture <> 0) then
     begin
@@ -5427,50 +5418,54 @@ end;
 
 // func: EmuIDirect3DDevice8_UpdateOverlay
 
-procedure XTL_EmuIDirect3DDevice8_UpdateOverlay;
+procedure XTL_EmuIDirect3DDevice8_UpdateOverlay( pSurface : X_D3DSurface;
+    SrcRect : TRect;
+    DstRect : TRect;
+    EnableColorKey : BOOL;
+    ColorKey : D3DCOLOR );
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
-(*(
-    X_D3DSurface *pSurface,
-    CONST TRect   *SrcRect,
-    CONST TRect   *DstRect,
-    BOOL          EnableColorKey,
-    D3DCOLOR      ColorKey
-) *)
+var
+  ddsd2 : DDSURFACEDESC2;
+  pDest : Char;
+  pSour : Char;
+  w : integer;
+  h : integer ;
+  SourRect : TRect;
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_UpdateOverlay'
-           #13#10'('
-           #13#10'   pSurface            : 0x%.08X'
-           #13#10'   SrcRect             : 0x%.08X'
-           #13#10'   DstRect             : 0x%.08X'
-           #13#10'   EnableColorKey      : 0x%.08X'
-           #13#10'   ColorKey            : 0x%.08X'
+    DbgPrintf(Format ('EmuD3D8 : EmuIDirect3DDevice8_UpdateOverlay' +
+           #13#10'(' +
+           #13#10'   pSurface            : 0x%.08X' +
+           #13#10'   SrcRect             : 0x%.08X' +
+           #13#10'   DstRect             : 0x%.08X' +
+           #13#10'   EnableColorKey      : 0x%.08X' +
+           #13#10'   ColorKey            : 0x%.08X' +
            #13#10');',
-           pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
+           [pSurface, @SrcRect, @DstRect, EnableColorKey, ColorKey]));
 
     // manually copy data over to overlay
     if(g_bSupportsYUY2) then
     begin
-        DDSURFACEDESC2  ddsd2;
+
 
         ZeroMemory(@ddsd2, SizeOf(ddsd2));
 
         ddsd2.dwSize := SizeOf(ddsd2);
 
-        g_pDDSOverlay7.Lock(0, @ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0);
+        g_pDDSOverlay7.Lock(0, ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0);
 
         // copy data
         begin
-            Char *pDest := (Char)ddsd2.lpSurface;
-            Char *pSour := (Char)pSurface.Lock;
+            (*pDest := ddsd2.lpSurface;
+            pSour := pSurface.Lock;
 
-            integer w := g_dwOverlayW;
-            integer h := g_dwOverlayH;
+            w := g_dwOverlayW;
+            h := g_dwOverlayH;
 
             // TODO: sucker the game into rendering directly to the overlay (speed boost)
-            if( (ddsd2.lPitch = w*2) and ((integer)g_dwOverlayP = w*2) ) then
-                memcpy(pDest, pSour, h*w*2);
+            if( (ddsd2.lPitch = w*2) and (g_dwOverlayP = w*2) ) then
+                memcpy(pDest, pSour, h*w*2)
             else
             begin
                 for(integer y:=0;y<h;y++)
@@ -5480,7 +5475,7 @@ begin
                     pDest:= pDest + ddsd2.lPitch;
                     pSour:= pSour + g_dwOverlayP;
                  end;
-             end;
+             end;    *)
          end;
 
         g_pDDSOverlay7.Unlock(0);
@@ -5489,7 +5484,7 @@ begin
     // update overlay!
     if(g_bSupportsYUY2) then
     begin
-        TRect SourRect := (0, 0, g_dwOverlayW, g_dwOverlayH), DestRect;
+        (*SourRect := (0, 0, g_dwOverlayW, g_dwOverlayH), DestRect;
         MONITORINFO MonitorInfo := (0);
 
         integer nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
@@ -5519,12 +5514,12 @@ begin
         ddofx.dckDestColorkey.dwColorSpaceLowValue := 0;
         ddofx.dckDestColorkey.dwColorSpaceHighValue := 0;
 
-        HRESULT hRet := g_pDDSOverlay7.UpdateOverlay(@SourRect, g_pDDSPrimary, @DestRect, (*DDOVER_KEYDESTOVERRIDE | *)(*DDOVER_SHOW, /*&ddofx*/0);
-     end;
+        HRESULT hRet := g_pDDSOverlay7.UpdateOverlay(@SourRect, g_pDDSPrimary, @DestRect, (*DDOVER_KEYDESTOVERRIDE | *)(*DDOVER_SHOW, /*&ddofx*/0); *)
+     end
     else
     begin
         // TODO: dont assume X8R8G8B8 ?
-        D3DLOCKED_RECT LockedRectDest;
+        (*D3DLOCKED_RECT LockedRectDest;
 
         IDirect3DSurface8 *pBackBuffer:=0;
 
@@ -5607,12 +5602,12 @@ begin
              end;
 
             pBackBuffer.UnlockRect();
-         end;
+         end;          *)
      end;
 
     EmuSwapFS();   // XBox FS
 
-    Exit;     *)
+    Exit;     
 end;
 
 // func: EmuIDirect3DDevice8_GetOverlayUpdateStatus
@@ -7740,6 +7735,7 @@ function XTL_EmuIDirect3DDevice8_GetVertexShaderFunction(aHandle: DWORD; pData: 
 // Branch:martin  Revision:39 Done:10 Translator:Shadow_Tj
 var
   hRet: HRESULT;
+  pVertexShader : VERTEX_SHADER;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -7754,22 +7750,22 @@ begin
 
   hRet := D3DERR_INVALIDCALL;
 
-  (*  if(pSizeOfData and VshHandleIsVertexShader(Handle)) then
+    (*if(pSizeOfData and VshHandleIsVertexShader(aHandle))  then
     begin
         VERTEX_SHADER *pVertexShader := (VERTEX_SHADER )(VshHandleGetVertexShader(Handle))->Handle;
-        if(pSizeOfData < pVertexShader->FunctionSize or  not pData) then
+        if(pSizeOfData < pVertexShader.FunctionSize or  not pData) then
         begin
-            *pSizeOfData := pVertexShader->FunctionSize;
+            pSizeOfData := pVertexShader.FunctionSize;
 
-            hRet :=  not pData ? D3D_OK : D3DERR_MOREDATA;
-         end;
+            hRet := ifThen( not pData, D3D_OK, D3DERR_MOREDATA);
+         end
         else
         begin
             memcpy(pData, pVertexShader->pFunction, pVertexShader->FunctionSize);
             hRet := D3D_OK;
          end;
-     end;
-*)
+     end;*)
+
 
   EmuSwapFS(); // Xbox FS
   Result := hRet;
