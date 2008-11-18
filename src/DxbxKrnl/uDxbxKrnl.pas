@@ -250,8 +250,6 @@ begin
     CxbxKrnlRegisterThread(hDupHandle);
   end;
 
-  DbgPrintf('EmuMain : Initializing Direct3D.');
-
   XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
