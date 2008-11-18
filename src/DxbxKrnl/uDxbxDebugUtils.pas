@@ -34,13 +34,13 @@ uses
   DxLibraryAPIScanning;
 
 type
-	TDxbxAPIDebugInfoSource = class(TJclDebugInfoSource)
+  TDxbxAPIDebugInfoSource = class(TJclDebugInfoSource)
   public
     function InitializeSource: Boolean; override;
     function GetLocationInfo(const aAddr: Pointer; var Info: TJclLocationInfo): Boolean; override;
   end;
 
-function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): String;
+function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): string;
 
 {$ENDIF}
 
@@ -48,11 +48,11 @@ implementation
 
 {$IFDEF DXBX_USE_JCLDEBUG}
 
-function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): String;
+function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): string;
 var
   List: TJclStackInfoList;
   I: Integer;
-  CallerModule: String;
+  CallerModule: string;
   CallerInfo, Info: TJclLocationInfo;
   b: Boolean;
 begin
@@ -135,7 +135,7 @@ end;
 
 {$ELSE}
 
-function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): String;
+function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): string;
 begin
   Result := '';
 end;

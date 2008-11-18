@@ -33,20 +33,9 @@ uses
   uLog,
   uEmuFS;
 
-function XTL_EmuWSAStartup(wVersionRequested: WORD; lpWSAData: WSADATA): Integer; stdcall;
-function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
-function XTL_EmuXNetGetEthernetLinkStatus: DWORD; stdcall;
-
-exports
-  XTL_EmuWSAStartup,
-  XTL_EmuXNetStartup,
-  XTL_EmuXNetGetEthernetLinkStatus;
-
 implementation
 
-// func: EmuWSAStartup
-
-function XTL_EmuWSAStartup(wVersionRequested: WORD; lpWSAData: WSADATA): integer;
+function XTL_EmuWSAStartup(wVersionRequested: Word; lpWSAData: WSADATA): Integer; stdcall;
 var
   ret: Integer;
 begin
@@ -66,15 +55,13 @@ begin
   Result := ret;
 end;
 
-// func: EmuXNetStartup
-
-function XTL_EmuXNetStartup(pDummy: PVOID): Integer;
+function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuXapi : EmuXNetStartup' +
     #13#10'(' +
-    #13#10'   pDummy              : $%.08X' +
+    #13#10'   pDummy              : 0x%.08X' +
     #13#10');',
     [pDummy]);
 
@@ -85,9 +72,7 @@ begin
   Result := 0;
 end;
 
-// func: EmuXNetGetEthernetLinkStatus
-
-function XTL_EmuXNetGetEthernetLinkStatus: DWORD;
+function XTL_EmuXNetGetEthernetLinkStatus: DWord; stdcall;
 begin
   EmuSwapFS(); // Win2k/XP FS
   DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
@@ -195,9 +180,12 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result := ret;
- end;            *)
+end;            *)
 
-
+exports
+  XTL_EmuWSAStartup,
+  XTL_EmuXNetStartup,
+  XTL_EmuXNetGetEthernetLinkStatus;
 
 end.
 

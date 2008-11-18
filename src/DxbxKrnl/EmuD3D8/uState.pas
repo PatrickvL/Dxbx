@@ -22,19 +22,13 @@ unit uState;
 
 interface
 
-
-procedure XTL_EmuUpdateDeferredStates; stdcall;
-
-exports
-  XTL_EmuUpdateDeferredStates;
-
 implementation
 
 // ******************************************************************
 // * func: EmuUpdateDeferredStates
 // ******************************************************************
 
-procedure XTL_EmuUpdateDeferredStates;
+procedure XTL_EmuUpdateDeferredStates; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    using namespace XTL;
@@ -321,5 +315,7 @@ begin
      end;  *)
 end;
 
+exports
+  XTL_EmuUpdateDeferredStates;
 
 end.

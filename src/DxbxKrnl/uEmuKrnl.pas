@@ -163,7 +163,7 @@ type
 function Unimplemented(const aAPI: string): NTSTATUS;
 
 var
-  {156}xboxkrnl_KeTickCount: DWORD;
+  {156}xboxkrnl_KeTickCount: DWord;
   {162}xboxkrnl_KiBugCheckData: array[0..5 - 1] of ULONG_PTR; // Source: ReactOS
   {164}xboxkrnl_LaunchDataPage: PLAUNCH_DATA_PAGE;
 

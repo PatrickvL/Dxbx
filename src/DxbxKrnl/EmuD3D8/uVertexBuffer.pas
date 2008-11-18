@@ -48,19 +48,7 @@ var
   g_IVBTblOffs: UInt = 0;
   g_IVBTable: _D3DIVB;
 
-procedure XTL_VertexPatcher_DumpCache; stdcall;
-procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer); stdcall;
-function XTL_VertexPatcher_Restore: Longbool; stdcall;
-procedure XTL_EmuFlushIVB; stdcall;
-
-exports
-  XTL_VertexPatcher_DumpCache,
-  XTL_VertexPatcher_FreeCachedStream,
-  XTL_VertexPatcher_Restore,
-  XTL_EmuFlushIVB;
-
 implementation
-
 
 (*procedure CRC32Init;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
@@ -128,7 +116,7 @@ XTL.VertexPatcher.~VertexPatcher()
 begin
  end; *)
 
-procedure XTL_VertexPatcher_DumpCache;
+procedure XTL_VertexPatcher_DumpCache; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     DbgPrintf('--- Dumping streams cache ---');
@@ -250,7 +238,7 @@ begin
     g_PatchedStreamsCache.insert(uiKey, pCachedStream);
  end;        *)
 
-procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer);
+procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    g_PatchedStreamsCache.Lock();
@@ -913,7 +901,7 @@ begin
     result:= Patched;
  end;         *)
 
-function XTL_VertexPatcher_Restore: Longbool;
+function XTL_VertexPatcher_Restore: LongBool; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    if( not this->m_bPatched) then
@@ -951,10 +939,10 @@ begin
 
      end;       *)
 
-  result := true;
+  Result := True;
 end;
 
-procedure XTL_EmuFlushIVB;
+procedure XTL_EmuFlushIVB; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    if(g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
@@ -1343,7 +1331,7 @@ begin
                  or X_Format = $1D (* X_D3DFMT_LIN_A4R4G4B4 *)(* || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
                  or X_Format = $28 (* X_D3DFMT_G8B8 *)(*)
 begin
-  bSwizzled := TRUE;
+  bSwizzled := True;
 
                 // Swizzled 16 Bit
   dwWidth := 1 shl ((pPixelContainer - > Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
@@ -1499,6 +1487,11 @@ g_pD3DDevice8 - > SetTexture(Stage, pTexture - > EmuTexture8);
 end;
 end; * )     *)
 
+exports
+  XTL_VertexPatcher_DumpCache,
+  XTL_VertexPatcher_FreeCachedStream,
+  XTL_VertexPatcher_Restore,
+  XTL_EmuFlushIVB;
 
 end.
 

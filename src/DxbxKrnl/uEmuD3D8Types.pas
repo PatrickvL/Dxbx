@@ -23,7 +23,7 @@ unit uEmuD3D8Types;
 interface
 
 uses
-  // Windows
+  // Delphi
   Windows,
   // Directx
   Direct3D8
@@ -47,15 +47,15 @@ const
   X_D3DLOCK_READONLY = $00000080;
 
 type
-  X_VERTEXSHADERCONSTANTMODE = DWORD;
-  X_D3DFORMAT = Dword;
+  X_VERTEXSHADERCONSTANTMODE = DWord;
+  X_D3DFORMAT = DWord;
 
   _X_VERTEXSHADERINPUT = record
-    IndexOfStream : DWORD;
-    Offset : DWORD;
-    Format : DWORD;
-    TesselationType : BYTE;
-    TesselationSource : BYTE;
+    IndexOfStream: DWord;
+    Offset: DWord;
+    Format: DWord;
+    TesselationType: Byte;
+    TesselationSource: Byte;
   end;
 
   X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
@@ -64,47 +64,47 @@ type
 
 
   X_D3DVertexShader = record
-    UnknownA: DWORD;
-    Handle: DWORD;
-    UnknownB: DWORD;
-    Flags: DWORD;
-    UnknownC: array[0..59] of DWORD;
+    UnknownA: DWord;
+    Handle: DWord;
+    UnknownB: DWord;
+    Flags: DWord;
+    UnknownC: array[0..59] of DWord;
   end;
 
 
   _STREAM_DYNAMIC_PATCH_ = record
-    NeedPatch : BOOL;       // This is to know whether is data which must be patched
-    ConvertedStride : DWORD;
-    NbrTypes : DWORD;        // Number of the stream data types
-    pTypes : UINT;         // The stream data types (xbox)
+    NeedPatch: BOOL;       // This is to know whether is data which must be patched
+    ConvertedStride: DWord;
+    NbrTypes: DWord;        // Number of the stream data types
+    pTypes: UINT;         // The stream data types (xbox)
   end;
   STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH_;
 
   _VERTEX_DYNAMIC_PATCH_ = record
-    NbrStreams : UINT; // The number of streams the vertex shader uses
-    pStreamPatches : STREAM_DYNAMIC_PATCH;
+    NbrStreams: UINT; // The number of streams the vertex shader uses
+    pStreamPatches: STREAM_DYNAMIC_PATCH;
   end;
 
   VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH_;      
 
   _VERTEX_SHADER = record
-    aHandle : DWORD;
+    aHandle: DWord;
     // These are the parameters given by the XBE,
     // we save them to be be able to return them when necassary.
-    Size : UINT;
-    pDeclaration : DWORD;
-    DeclarationSize : DWORD;
-    pFunction : DWORD;
-    FunctionSize : DWORD;
-    aType : DWORD;
-    Status : DWORD;
+    Size: UINT;
+    pDeclaration: DWord;
+    DeclarationSize: DWord;
+    pFunction: DWord;
+    FunctionSize: DWord;
+    aType: DWord;
+    Status: DWord;
     // Needed for dynamic stream patching
-    VertexDynamicPatch : VERTEX_DYNAMIC_PATCH;
+    VertexDynamicPatch: VERTEX_DYNAMIC_PATCH;
   end;
   VERTEX_SHADER = _VERTEX_SHADER;
 
   _X_VERTEXATTRIBUTEFORMAT = record
-    pVertexShaderInput : array [0..15] of X_VERTEXSHADERINPUT;
+    pVertexShaderInput: array [0..15] of X_VERTEXSHADERINPUT;
   end;
   X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
   PX_VERTEXATTRIBUTEFORMAT = ^X_VERTEXATTRIBUTEFORMAT;
@@ -120,7 +120,7 @@ type
     Windowed: LongBool;
     EnableAutoDepthStencil: LongBool;
     AutoDepthStencilFormat: X_D3DFORMAT;
-    Flags: DWORD;
+    Flags: DWord;
     FullScreen_RefreshRateInHz: UINT;
     FullScreen_PresentationInterval: UINT;
     BufferSurfaces: array[0..2] of IDirect3DSurface8;
@@ -131,9 +131,9 @@ type
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
   _X_D3DGAMMARAMP = record
-    red: array[0..255] of BYTE;
-    green: array[0..255] of BYTE;
-    blue: array[0..255] of BYTE;
+    Red: array[0..255] of Byte;
+    Green: array[0..255] of Byte;
+    Blue: array[0..255] of Byte;
   end;
 
   X_D3DGAMMARAMP = _X_D3DGAMMARAMP;
@@ -188,7 +188,7 @@ type
   _X_D3DSURFACE_DESC = record
     Format: X_D3DFORMAT;
     aType: X_D3DRESOURCETYPE;
-    Usage: DWORD;
+    Usage: DWord;
     Size: UINT;
     MultiSampleType: D3DMULTISAMPLE_TYPE;
     Width: UINT;
@@ -213,9 +213,9 @@ type
   X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
 
   _D3DVBLANKDATA = record
-    VBlank: DWORD;
-    Swap: DWORD;
-    Flags: DWORD;
+    VBlank: DWord;
+    Swap: DWord;
+    Flags: DWord;
   end;
   D3DVBLANKDATA = _D3DVBLANKDATA;
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
@@ -224,64 +224,64 @@ type
 
   X_D3DResource = Class
   public
-    Common : DWORD;
-    Data : DWORD;
-    Lock : DWORD;
-    EmuResource8 : IDirect3DResource8;
-    EmuBaseTexture8 : IDirect3DBaseTexture8;
-    EmuTexture8 : IDirect3DTexture8;
-    EmuVolumeTexture8 : IDirect3DVolumeTexture8;
-    EmuCubeTexture8 : IDirect3DCubeTexture8;
-    EmuSurface8 : IDirect3DSurface8;
-    EmuVertexBuffer8 : IDirect3DVertexBuffer8;
-    EmuIndexBuffer8 : IDirect3DIndexBuffer8;
+    Common: DWord;
+    Data: DWord;
+    Lock: DWord;
+    EmuResource8: IDirect3DResource8;
+    EmuBaseTexture8: IDirect3DBaseTexture8;
+    EmuTexture8: IDirect3DTexture8;
+    EmuVolumeTexture8: IDirect3DVolumeTexture8;
+    EmuCubeTexture8: IDirect3DCubeTexture8;
+    EmuSurface8: IDirect3DSurface8;
+    EmuVertexBuffer8: IDirect3DVertexBuffer8;
+    EmuIndexBuffer8: IDirect3DIndexBuffer8;
   end;
 
 
-  X_D3DPixelContainer = Class( X_D3DResource )
+  X_D3DPixelContainer = class(X_D3DResource)
   public
     Format: X_D3DFORMAT;
-    Size: DWORD;
+    Size: DWord;
   end;
 
-  X_D3DVertexBuffer = Class ( X_D3DResource )
+  X_D3DVertexBuffer = class(X_D3DResource)
 
   end;
 
-  X_D3DPushBuffer = Class ( X_D3DResource )
+  X_D3DPushBuffer = class(X_D3DResource)
   public
-    Size : ULONG;
-    AllocationSize : ULONG;
+    Size: ULONG;
+    AllocationSize: ULONG;
   end;
 
-  X_D3DFixup = Class ( X_D3DResource )
+  X_D3DFixup = class(X_D3DResource)
   public
-    Run : ULONG;
-    Next : ULONG;
-    Size : ULONG;
+    Run: ULONG;
+    Next: ULONG;
+    Size: ULONG;
   end;
 
 
-  X_D3DBaseTexture = Class(X_D3DPixelContainer)
+  X_D3DBaseTexture = class(X_D3DPixelContainer)
 
   end;
 
-  X_D3DCubeTexture = Class( X_D3DBaseTexture)
+  X_D3DCubeTexture = class(X_D3DBaseTexture)
 
   end;
 
 
-  X_D3DSurface = class (X_D3DPixelContainer)
+  X_D3DSurface = class(X_D3DPixelContainer)
   end;
 
-  X_D3DVolumeTexture = Class( X_D3DBaseTexture )
+  X_D3DVolumeTexture = class(X_D3DBaseTexture)
 
   end;
 
   _X_STREAMINPUT = record
-    VertexBuffer : X_D3DVertexBuffer;
-    Stride : UINT;
-    Offset : UINT;
+    VertexBuffer: X_D3DVertexBuffer;
+    Stride: UINT;
+    Offset: UINT;
   end;
 
   X_STREAMINPUT = _X_STREAMINPUT;

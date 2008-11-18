@@ -28,27 +28,25 @@ uses
   // Dxbx
   , uEmuD3D8Types;
 
-function VshHandleIsVertexShader(aHandle: DWORD): boolean;
+function XTL_IsValidCurrentShader: Boolean; stdcall; // forward
+
+function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
 function VshHandleGetVertexShader(aHandle: DWORD): X_D3DVertexShader;
-
-function XTL_IsValidCurrentShader: Boolean; stdcall;
-
-exports
-  XTL_IsValidCurrentShader;
 
 implementation
 
 uses
+  // Dxbx
   uEmuFS
   , uEmuD3D8;
 
-function XTL_IsValidCurrentShader: boolean;
+function XTL_IsValidCurrentShader: Boolean; stdcall;
 var
   aHandle: DWORD;
-  pVertexShader : VERTEX_SHADER;
-  pD3DVertexShader : X_D3DVertexShader;
+  pVertexShader: VERTEX_SHADER;
+  pD3DVertexShader: X_D3DVertexShader;
 begin
-  Result := TRUE;
+  Result := True;
 
   EmuSwapFS();
   XTL_EmuIDirect3DDevice8_GetVertexShader(aHandle);
@@ -62,10 +60,10 @@ begin
   end;
 end;
 
-function VshHandleIsVertexShader(aHandle: DWORD): boolean;
+function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
-  result := (ahandle and $8000000) <> 0;
+  Result := (aHandle and $8000000) <> 0;
 end;
 
 function VshHandleGetVertexShader(aHandle: DWORD): X_D3DVertexShader;
@@ -75,6 +73,8 @@ begin
 { return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }
 end;
 
+exports
+  XTL_IsValidCurrentShader;
 
 end.
 

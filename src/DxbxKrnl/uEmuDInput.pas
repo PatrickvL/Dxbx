@@ -33,14 +33,8 @@ uses
   uEmu,
   uXBController;
 
-function XTL_EmuDInputInit: Longbool; stdcall;
-procedure XTL_EmuDInputCleanup; stdcall;
-procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE);
-
-exports
-  XTL_EmuDInputInit,
-  XTL_EmuDInputCleanup,
-  XTL_EmuDInputPoll;
+function XTL_EmuDInputInit: LongBool; stdcall; // forward
+procedure XTL_EmuDInputCleanup; stdcall; // forward
 
 implementation
 
@@ -48,7 +42,7 @@ var
   g_XBController: XBController;
 
 // func: XTL::EmuDInputInit
-function XTL_EmuDInputInit: Longbool;
+function XTL_EmuDInputInit: LongBool; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   Result := True;
@@ -61,20 +55,25 @@ begin
 end;
 
 // func: XTL::EmuDInputCleanup
-procedure XTL_EmuDInputCleanup;
+procedure XTL_EmuDInputCleanup; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   g_XBController.ListenEnd();
 end;
 
 // func: XTL::EmuPollController
-procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE);
+procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   g_XBController.ListenPoll(Controller);
   if (Error_GetError <> '' ) then
     ShowMessage( 'Dxbx[* UNHANDLED! *]'); // TODO: Handle this! *)
 end;
+
+exports
+  XTL_EmuDInputInit,
+  XTL_EmuDInputCleanup,
+  XTL_EmuDInputPoll;
 
 end.
 

@@ -62,7 +62,7 @@ procedure CxbxKrnlRegisterThread(const hThread: THandle);
 procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
 procedure EmuXRefFailure;
 procedure CxbxKrnlResume();
-procedure EmuPanic(); // export;
+procedure EmuPanic(); stdcall; // export;
 procedure CxbxKrnlNoFunc; cdecl;
 procedure CxbxKrnlSuspend();
 
@@ -112,7 +112,7 @@ begin
     DbgPrintf('EmuMain : Debug Trace Enabled.');
 
     DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit', [@CxbxKrnlInit]);
-    DbgPrintf( '(' );
+    DbgPrintf('(' );
     DbgPrintf('  hwndParent       : 0x%.8x', [hwndParent]);
     DbgPrintf('  pTLSData         : 0x%.8x', [pTLSData]);
     DbgPrintf('  pTLS             : 0x%.8x', [pTLS]);
@@ -244,7 +244,7 @@ begin
   begin
     hDupHandle := 0;
 
-    if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS) then
+    if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
       DbgPrintf('EmuMain : Couldn''t duplicate handle!');
 
     CxbxKrnlRegisterThread(hDupHandle);
@@ -426,7 +426,7 @@ begin
 end;
 
 
-procedure EmuPanic();
+procedure EmuPanic(); stdcall;
 begin
   if EmuIsXboxFS then
     EmuSwapFS(); // Win2k/XP FS
@@ -448,7 +448,6 @@ begin
 end;
 
 exports
-
   EmuPanic;
 
 end.

@@ -544,7 +544,7 @@ function xboxkrnl_KeSetTimer(
 begin
   EmuSwapFS(); // Win2k/XP FS
   Unimplemented('KeSetTimer');
-  Result := FALSE;
+  Result := False;
   EmuSwapFS(); // Xbox FS
 end;
 
