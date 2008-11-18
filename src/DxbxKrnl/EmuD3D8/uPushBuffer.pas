@@ -25,14 +25,8 @@ interface
 uses
   // Delphi
   Windows
+  // Dxbx
   , uEmuD3D8Types;
-
-procedure XTL_EmuExecutePushBuffer(pPushBuffer: X_D3DPushBuffer; pFixup: X_D3DFixup); stdcall;
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD); stdcall;
-
-exports
-  XTL_EmuExecutePushBuffer,
-  XTL_EmuExecutePushBufferRaw;
 
 var
   g_dwPrimaryPBCount: LongInt = 0;
@@ -42,19 +36,22 @@ var
   XTL_g_bBrkPush: Boolean = False;
   g_bPBSkipPusher: Boolean = False;
 
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall; // forward
+
 implementation
 
 uses
+  // Dxbx
   uDxbxKrnlUtils
   , uVertexShader;
 
 
-procedure XTL_EmuExecutePushBuffer(pPushBuffer: X_D3DPushBuffer; pFixup: X_D3DFixup);
+procedure XTL_EmuExecutePushBuffer(pPushBuffer: X_D3DPushBuffer; pFixup: X_D3DFixup); stdcall;
 // Branch:martin  Revision:50  Translator:Shadow_Tj
 begin
-  if (pFixup <> Nil) then
+  if Assigned(pFixup) then
     CxbxKrnlCleanup('PushBuffer has fixups');
-  (*EmuExecutePushBufferRaw((DWORD)pPushBuffer^.Data); *)
+  (*EmuExecutePushBufferRaw((DWord)pPushBuffer^.Data); *)
 end;
 
 procedure EmuUnswizzleActiveTexture();
@@ -67,8 +64,8 @@ begin
     if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
         Exit;
 
-    DWORD XBFormat := (pPixelContainer^.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
-    DWORD dwBPP := 0;
+    DWord XBFormat := (pPixelContainer^.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+    DWord dwBPP := 0;
 
     if( not XTL.EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
         Exit;
@@ -86,7 +83,7 @@ begin
     begin
         XTL.IDirect3DTexture8 *pTexture := pPixelContainer^.EmuTexture8;
 
-        DWORD dwLevelCount := pTexture^.GetLevelCount();
+        DWord dwLevelCount := pTexture^.GetLevelCount();
 
         for(uint32 v:=0;v<dwLevelCount;v++)
         begin
@@ -113,10 +110,10 @@ begin
                 if(FAILED(hRet)) then
                     continue;
 
-                DWORD dwWidth := SurfaceDesc.Width;
-                DWORD dwHeight := SurfaceDesc.Height;
-                DWORD dwDepth := 1;
-                DWORD dwPitch := LockedRect.Pitch;
+                DWord dwWidth := SurfaceDesc.Width;
+                DWord dwHeight := SurfaceDesc.Height;
+                DWord dwDepth := 1;
+                DWord dwPitch := LockedRect.Pitch;
                 TRect  iRect := (0,0,0,0);
                 TPoint iPoint := (0,0);
 
@@ -140,12 +137,12 @@ begin
      end; *)
 end;
 
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWORD);
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 (*var
-  pdwOrigPushData: DWORD; *)
+  pdwOrigPushData: DWord; *)
 begin
-  if (XTL_g_bSkipPush) then
+  if XTL_g_bSkipPush then
     Exit;
 
 (*  pdwOrigPushData := pdwPushData;
@@ -153,8 +150,8 @@ begin
     PVOID pIndexData := 0;
     PVOID pVertexData := 0;
 
-    DWORD dwVertexShader := -1;
-    DWORD dwStride := -1;
+    DWord dwVertexShader := -1;
+    DWord dwStride := -1;
 
     // cache of last 4 indices
     WORD pIBMem[4] := ($FFFF, $FFFF, $FFFF, $FFFF);
@@ -190,8 +187,8 @@ begin
 
     while(true)
     begin
-        DWORD dwCount := (pdwPushData shr 18);
-        DWORD dwMethod := (pdwPushData and $3FFFF);
+        DWord dwCount := (pdwPushData shr 18);
+        DWord dwMethod := (pdwPushData and $3FFFF);
 
         // Interpret GPU Instruction
         if(dwMethod = $000017FC) then  // NVPB_SetBeginEnd
@@ -264,8 +261,8 @@ begin
             if( not VshHandleIsVertexShader(dwVertexShader)) then
             begin
                 if(dwVertexShader and D3DFVF_XYZRHW) begin  dwStride:= dwStride + SizeOf(FLOAT) then *4;  end;
-                if(dwVertexShader and D3DFVF_DIFFUSE) begin  dwStride:= dwStride + SizeOf(DWORD) then ;  end;
-                if(dwVertexShader and D3DFVF_SPECULAR) begin  dwStride:= dwStride + SizeOf(DWORD) then ;  end;
+                if(dwVertexShader and D3DFVF_DIFFUSE) begin  dwStride:= dwStride + SizeOf(DWord) then ;  end;
+                if(dwVertexShader and D3DFVF_SPECULAR) begin  dwStride:= dwStride + SizeOf(DWord) then ;  end;
 
                 dwStride:= dwStride + ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*SizeOf(FLOAT)*2;
              end;
@@ -274,7 +271,7 @@ begin
             // create cached vertex buffer only once, with maxed out size
             if(pVertexBuffer = 0) then
             begin
-                HRESULT hRet := g_pD3DDevice8^.CreateVertexBuffer(2047*SizeOf(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
+                HRESULT hRet := g_pD3DDevice8^.CreateVertexBuffer(2047*SizeOf(DWord), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
 
                 if(FAILED(hRet)) then
                     CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', dwCount);
@@ -310,7 +307,7 @@ begin
             // render vertices
             if(dwVertexShader <> -1) then
             begin
-                UINT VertexCount := (dwCount*SizeOf(DWORD)) / dwStride;
+                UINT VertexCount := (dwCount*SizeOf(DWord)) / dwStride;
                 UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
 
                 VertexPatchDesc VPDesc;
@@ -641,7 +638,7 @@ end;
 
 {$IFDEF _DEBUG_TRACK_PB}
 
-procedure DbgDumpMesh(var pIndexData: WORD; dwCount: DWORD);
+procedure DbgDumpMesh(var pIndexData: Word; dwCount: DWord);
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
@@ -678,7 +675,7 @@ begin
 
     for (uint chk := 0; chk < dwCount; chk + +)
     begin
-      DWORD x = * pwChk := * pwChk + 1;
+      DWord x = * pwChk := * pwChk + 1;
 
       if (x > maxIndex) then
         maxIndex := x;
@@ -735,11 +732,11 @@ begin
 
     max := dwCount;
 
-    DWORD a = * pwVal := * pwVal + 1;
-    DWORD b = * pwVal := * pwVal + 1;
-    DWORD c = * pwVal := * pwVal + 1;
+    DWord a = * pwVal := * pwVal + 1;
+    DWord b = * pwVal := * pwVal + 1;
+    DWord c = * pwVal := * pwVal + 1;
 
-    DWORD la := a, lb = b, lc = c;
+    DWord la := a, lb = b, lc = c;
 
     for (uint i := 2; i < max; i + +)
     begin
@@ -767,6 +764,9 @@ begin
 end;
 {$ENDIF}
 
+exports
+  XTL_EmuExecutePushBuffer,
+  XTL_EmuExecutePushBufferRaw;
 
 end.
 

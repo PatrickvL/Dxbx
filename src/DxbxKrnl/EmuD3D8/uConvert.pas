@@ -35,52 +35,35 @@ uses
   , uDxbxKrnlUtils
   , uEmu;
 
-
-
-function XTL_EmuXB2PC_D3DLock(Flags: DWORD): DWord; stdcall;
-function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
-function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
-function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL; stdcall;
-
-exports
-  XTL_EmuXB2PC_D3DLock,
-  XTL_EmuXB2PC_D3DFormat,
-  XTL_EmuPC2XB_D3DFormat,
-  XTL_EmuXBFormatIsSwizzled;
-
 implementation
 
-function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWORD): LONGBOOL;
+function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWord): LONGBOOL; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
-  Result := FALSE; // in cxbx is the Result = false placed as last... bit strange.
-  case (Format) of
+  Result := True;
+  case Format of
     $00,
-      $01,
-      $0B: begin
-        pBPP := 1;
-        Result := TRUE;
-      end;
+    $01,
+    $0B:
+      pBPP := 1;
     $02,
-      $03,
-      $04,
-      $05,
-      $1A: begin
-        pBPP := 2;
-        Result := TRUE;
-      end;
+    $03,
+    $04,
+    $05,
+    $1A:
+      pBPP := 2;
     $06,
-      $07: begin
-        pBPP := 4;
-        Result := TRUE;
-      end;
+    $07:
+      pBPP := 4;
+  else
+    Result := False;
   end;
 end;
 
-function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT;
+function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
-  case (aFormat) of
+  case aFormat of
     $00: // Swizzled   (X_D3DFMT_L8)
       Result := D3DFMT_L8;
 
@@ -167,18 +150,16 @@ begin
     $64:
       Result := D3DFMT_VERTEXDATA;
 
-  else begin
-      CxbxKrnlCleanup(DxbxFormat('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]));
-      Result := D3DFORMAT(aFormat);
-    end;
+  else
+    CxbxKrnlCleanup(DxbxFormat('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]));
+    Result := D3DFORMAT(aFormat);
   end;
-
 end;
 
-function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT;
+function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
-  case (aFormat) of
+  case aFormat of
     D3DFMT_YUY2:
       Result := $24;
     D3DFMT_R5G6B5:
@@ -200,37 +181,31 @@ begin
     D3DFMT_A8R8G8B8:
 //            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
       Result := $06;
-  else begin
-      CxbxKrnlCleanup(Format('EmuPC2XB_D3DFormat: Unknown Format (%d)', [IntPtr(aFormat)]));
-      Result := X_D3DFORMAT(aFormat);
-    end;
+  else
+    CxbxKrnlCleanup(Format('EmuPC2XB_D3DFormat: Unknown Format (%d)', [IntPtr(aFormat)]));
+    Result := X_D3DFORMAT(aFormat);
   end;
 end;
 
-function XTL_EmuXB2PC_D3DLock(Flags: DWORD): DWord;
+function XTL_EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 var
-  NewFlags: DWORD;
+  NewFlags: DWord;
 begin
   NewFlags := 0;
 
  // Need to convert the flags, TODO: fix the xbox extensions
   if (Flags and X_D3DLOCK_NOFLUSH) > 0 then
-  begin
     NewFlags := NewFlags xor 0;
-  end;
+
   if (Flags and X_D3DLOCK_NOOVERWRITE) > 0 then
-  begin
     NewFlags := NewFlags xor D3DLOCK_NOOVERWRITE;
-  end;
+
   if (Flags and X_D3DLOCK_TILED) > 0 then
-  begin
     NewFlags := NewFlags xor 0;
-  end;
+
   if (Flags and X_D3DLOCK_READONLY) > 0 then
-  begin
     NewFlags := NewFlags xor D3DLOCK_READONLY;
-  end;
 
   Result := NewFlags;
 end;
@@ -269,7 +244,7 @@ begin
 );*)
 
 // render state conversion table
-(*CONST DWORD XTL.EmuD3DRenderStateSimpleEncoded[174] =
+(*CONST DWord XTL.EmuD3DRenderStateSimpleEncoded[174] =
 begin
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
@@ -364,6 +339,11 @@ begin
 );            *)
 
 
+exports
+  XTL_EmuXB2PC_D3DLock,
+  XTL_EmuXB2PC_D3DFormat,
+  XTL_EmuPC2XB_D3DFormat,
+  XTL_EmuXBFormatIsSwizzled;
 
 end.
 

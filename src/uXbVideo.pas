@@ -45,8 +45,8 @@ type
   end;
 
 var
-  m_dwDisplayAdapter: DWORD;
-  m_dwDirect3DDevice: DWORD;
+  m_dwDisplayAdapter: DWord;
+  m_dwDirect3DDevice: DWord;
   m_bVSync: BOOL;
   m_szVideoResolution: array [0..99] of AnsiChar;
   
@@ -71,7 +71,7 @@ begin
   Result := m_dwDirect3DDevice;
 end;
 
-Function XBVideo.GetDisplayAdapter: DWord;
+function XBVideo.GetDisplayAdapter: DWord;
 begin
   Result := m_dwDisplayAdapter;
 end;

@@ -150,7 +150,7 @@ type
     SectionReferenceCount: LONG; // Section reference count - when >= 1, section is loaded
     HeadReferenceCount: PWORD; // Pointer to head shared page reference count
     TailReferenceCount: PWORD; // Pointer to tail shared page reference count
-    ShaHash: array[0..5 - 1] of DWORD; // SHA hash.  Hash DWORD containing FileSize, then hash section.
+    ShaHash: array[0..5 - 1] of DWord; // SHA hash.  Hash DWORD containing FileSize, then hash section.
   end; // SizeOf() = 38
   XBE_SECTION = _XBE_SECTION;
   PXBE_SECTION = ^XBE_SECTION;

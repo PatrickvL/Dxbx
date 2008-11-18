@@ -33,7 +33,7 @@ const
 var
   CRC_CCITT_TABLE: array [Byte] of Word;
 
-procedure UpdateCRC16(var CRC: WORD; const aByte: Byte); inline;
+procedure UpdateCRC16(var CRC: Word; const aByte: Byte); inline;
 begin
   CRC := (CRC shr 8) xor CRC_CCITT_TABLE[Lo(CRC xor aByte)];
 end;

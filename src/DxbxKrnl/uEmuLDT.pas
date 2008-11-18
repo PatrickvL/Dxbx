@@ -48,7 +48,7 @@ type
   {$A1}
   RLDT_ENTRY_Bits = record
   private
-    Flags: DWORD;
+    Flags: DWord;
     function GetBits(const aIndex: Integer): Integer;
     procedure SetBits(const aIndex: Integer; const aValue: Integer);
   public
@@ -65,10 +65,10 @@ type
   end;
 
   RLDT_ENTRY_Bytes = record
-    BaseMid: BYTE;
-    Flags1: BYTE; // Declare as bytes to avoid alignment
-    Flags2: BYTE; // Problems.
-    BaseHi: BYTE;
+    BaseMid: Byte;
+    Flags1: Byte; // Declare as bytes to avoid alignment
+    Flags2: Byte; // Problems.
+    BaseHi: Byte;
   end;
 
   RLDT_ENTRY_HighWord = record
@@ -78,8 +78,8 @@ type
   end;
 
   DXBX_LDT_ENTRY = record
-    LimitLow: WORD;
-    BaseLow: WORD;
+    LimitLow: Word;
+    BaseLow: Word;
     HighWord: RLDT_ENTRY_HighWord;
   end;
 
@@ -147,7 +147,7 @@ begin
   begin
     ZeroMemory(@LDTENTRY, SizeOf(LDTENTRY));
 
-    _LDTEntry.BaseLow                    := WORD(dwBaseAddr and $FFFF);
+    _LDTEntry.BaseLow                    := Word(dwBaseAddr and $FFFF);
     _LDTEntry.HighWord.Bits.BaseMid      := (dwBaseAddr shr 16) and $FF;
     _LDTEntry.HighWord.Bits.BaseHi       := (dwBaseAddr shr 24) and $FF;
     _LDTEntry.HighWord.Bits._Type        := $13; // RW data segment
@@ -161,7 +161,7 @@ begin
     if _LDTEntry.HighWord.Bits.Granularity > 0 then
       dwLimit := dwLimit shr 12;
 
-    _LDTEntry.LimitLow                   := WORD(dwLimit and $FFFF);
+    _LDTEntry.LimitLow                   := Word(dwLimit and $FFFF);
     _LDTEntry.HighWord.Bits.LimitHi      := (dwLimit shr 16) and $F;
   end;
 

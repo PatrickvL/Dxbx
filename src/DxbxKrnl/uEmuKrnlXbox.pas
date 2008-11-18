@@ -44,7 +44,7 @@ var
   {321}xboxkrnl_XboxEEPROMKey: array[0..16 - 1] of UCHAR; // Source OpenXDK
   {322}xboxkrnl_XboxHardwareInfo: XBOX_HARDWARE_INFO; // Source OpenXDK
   {323}xboxkrnl_XboxHDKey: array[0..16 - 1] of UCHAR; // Source OpenXDK
-  {325}xboxkrnl_XboxSignatureKey: array[0..16 - 1] of BYTE; // Source OpenXDK
+  {325}xboxkrnl_XboxSignatureKey: array[0..16 - 1] of Byte; // Source OpenXDK
 
 function {324} xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {353} xboxkrnl_XboxLANKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE

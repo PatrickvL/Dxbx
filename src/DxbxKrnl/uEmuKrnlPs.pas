@@ -338,7 +338,7 @@ begin
     begin
       hDupHandle := 0;
 
-      if not DuplicateHandle(GetCurrentProcess(), ThreadHandle, GetCurrentProcess(), @hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS) then
+      if not DuplicateHandle(GetCurrentProcess(), ThreadHandle, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
         DbgPrintf('EmuKrnl : PsCreateSystemThreadEx - Couldn''t duplicate handle!');
 
       CxbxKrnlRegisterThread(hDupHandle);

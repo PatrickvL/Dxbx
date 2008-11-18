@@ -76,7 +76,7 @@ const
   // Maximum number of devices allowed
   XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
 
-  m_DeviceNameLookup : array [0..XBCTRL_OBJECT_COUNT-1] of string = ( 'LThumbPosX', 'LThumbNegX',
+  m_DeviceNameLookup: array [0..XBCTRL_OBJECT_COUNT-1] of string = ( 'LThumbPosX', 'LThumbNegX',
                                            'LThumbPosY', 'LThumbNegY',
                                            'RThumbPosX', 'RThumbNegX',
                                            'RThumbPosY', 'RThumbNegY',
@@ -145,8 +145,8 @@ type
 
 
   _XINPUT_GAMEPAD = record
-    wButtons: WORD;
-    bAnalogButtons: array[0..7] of BYTE;
+    wButtons: Word;
+    bAnalogButtons: array[0..7] of Byte;
     sThumbLX: SHORT;
     sThumbLY: SHORT;
     sThumbRX: SHORT;
@@ -157,7 +157,7 @@ type
 
   // XINPUT_STATE
   _XINPUT_STATE = record
-    dwPacketNumber: DWORD;
+    dwPacketNumber: DWord;
     Gamepad: _XINPUT_GAMEPAD;
   end;
   XINPUT_STATE = _XINPUT_STATE;
@@ -382,16 +382,16 @@ var
 
   wValue: SmallInt;
   pDevice: XTL_LPDIRECTINPUTDEVICE8;
-  JoyState : DIJOYSTATE;
-  pdwAxis : LongInt;
-  pbButton : BYTE;
-  MouseState : DIMOUSESTATE2;
+  JoyState: DIJOYSTATE;
+  pdwAxis: LongInt;
+  pbButton: Byte;
+  MouseState: DIMOUSESTATE2;
 
-  lAccumX : LongInt;
-  lAccumY : LongInt;
-  lAccumZ : LongInt;
+  lAccumX: LongInt;
+  lAccumY: LongInt;
+  lAccumZ: LongInt;
 begin
-  if (Controller = nil) then
+  if not Assigned(Controller) then
     Exit;
 
   pDevice := nil;
@@ -666,8 +666,8 @@ var
   ObjectInstance: DIDEVICEOBJECTINSTANCE;
   v: Integer;
   hRet: HRESULT;
-  dwHow: DWORD;
-  dwFlags: DWORD;
+  dwHow: DWord;
+  dwFlags: DWord;
   JoyState: DIJOYSTATE;
 begin
   if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
@@ -819,10 +819,11 @@ begin
             }            *)
 
             // Check for Success
-            if (dwHow <> -1) then begin
+            if (dwHow <> -1) then
+            begin
               Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
               DbgPrintf('Dxbx: Detected Key %d on SysKeyboard\n', dwHow);
-              DbgPrintf(Format('Success: %s Mapped to Key %d on SysKeyboard',[ m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]));
+              DbgPrintf('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
             end;
     end
     // Detect Mouse Input
@@ -948,7 +949,7 @@ begin
     if (m_DeviceName[v][0] <> #0) then
     begin
       if (AnsiCompareStr(m_DeviceName[v], szDeviceName) = 0) then
-        Result := true;
+        Result := True;
     end;
   end;
 end;
@@ -1113,7 +1114,7 @@ begin
   begin
     if m_ObjectConfig[XBCtrlObject(v)].dwDevice >= m_dwInputDeviceCount then
     begin
-      DbgPrintf(Format('Warning: Device Mapped to %s was not found!', [m_DeviceNameLookup[v]]));
+      DbgPrintf('Warning: Device Mapped to %s was not found!', [m_DeviceNameLookup[v]]);
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
     end;
   end;
@@ -1135,11 +1136,11 @@ end;
 procedure XBController.Load(szRegistryKey: PChar);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 90
 var
-  dwType, dwSize: DWORD;
-  dwDisposition: DWORD;
+  dwType, dwSize: DWord;
+  dwDisposition: DWord;
   ahKey: HKEY;
   v: Integer;
-  szValueName: String;
+  szValueName: string;
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -1166,7 +1167,7 @@ begin
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
-      szValueName := Format ( 'Object : %s', [m_DeviceNameLookup[v]]);
+      szValueName := Format('Object : %s', [m_DeviceNameLookup[v]]);
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
       (*RegQueryValueEx(ahKey, szValueName, 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);*)
@@ -1206,7 +1207,7 @@ procedure XBController.ReorderObjects(szDeviceName: PChar; aPos: Integer);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   Old: Integer;
-  v: integer;
+  v: Integer;
 begin
   Old := -1;
 
@@ -1241,8 +1242,8 @@ end;
 procedure XBController.Save(szRegistryKey: PChar);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done: 90
 var
-  dwType, dwSize: DWORD;
-  dwDisposition: DWORD;
+  dwType, dwSize: DWord;
+  dwDisposition: DWord;
   ahKey: HKEY;
   v: Integer;
   szValueName: array[0..64 - 1] of Char;

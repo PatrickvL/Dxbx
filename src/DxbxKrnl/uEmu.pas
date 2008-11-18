@@ -83,7 +83,7 @@ procedure EmuWarning(szWarningMessage: string);
 (*var
   szBuffer1: string;
   szBuffer2: string;
-  argp : va_list; *)
+  argp: va_list; *)
 begin
     (*szBuffer1 := Format ( 'EmuWarn ($ mod X): ', [GetCurrentThreadId] );
 
@@ -295,10 +295,10 @@ end;
 *)
 
 // check how many bytes were allocated for a structure
-function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): integer;
+function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
 var
-  MemoryBasicInfo : MEMORY_BASIC_INFORMATION;
-  dwRet : DWORD;
+  MemoryBasicInfo: MEMORY_BASIC_INFORMATION;
+  dwRet: DWORD;
 begin
   (*
 {$IFDEF _DEBUG_ALLOC}
@@ -325,10 +325,10 @@ end;
 // func: EmuCleanup
 procedure EmuCleanup(const szErrorMessage: string);
 var
-  szBuffer1 : String;
-  buffer : Array [0..15] of Char;
+  szBuffer1: string;
+  buffer: array [0..15] of Char;
 begin
-    // Print out ErrorMessage (if exists)
+  // Print out ErrorMessage (if exists)
   if (szErrorMessage <> '') then begin
     (*char szBuffer1[255];
     char szBuffer2[255];
@@ -348,9 +348,9 @@ begin
 
     printf("%s\n", szBuffer1);    *)
     szBuffer1 := Format('Emu(0 $%X): Recieved Fatal Message - > '  + szErrorMessage, [GetCurrentThreadId] );
-    DbgPrintf ( szBuffer1 );
+    DbgPrintf(szBuffer1);
 
-    MessageDlg( szBuffer1, mtError, [mbOk], 0 );
+    MessageDlg(szBuffer1, mtError, [mbOk], 0);
   end;
 
   DbgPrintf('DxbxKrnl: Terminating Process');
@@ -368,14 +368,14 @@ end;
 
 // exception handle for that tough final exit :)
 
-function ExitException(e: LPEXCEPTION_POINTERS): integer;
+function ExitException(e: LPEXCEPTION_POINTERS): Integer;
 var
-  count : integer;
+  Count: Integer;
 begin
-  if (EmuIsXboxFS()) then
+  if EmuIsXboxFS() then
     EmuSwapFS();
 
-  count := 0;
+  Count := 0;
 
   // debug information
   DbgPrintf('EmuMain($ mod X): * * * * * EXCEPTION * * * * * ', GetCurrentThreadId());
@@ -386,8 +386,8 @@ begin
 
   (*fflush(stdout);*)
 
-  MessageDlg( 'Warning: Could not safely terminate process not ', mtWarning, [mbOk], 0 );
-  Inc ( Count );
+  MessageDlg('Warning: Could not safely terminate process!', mtWarning, [mbOk], 0);
+  Inc(Count);
 
   (*if (count > 1) then
   begin
@@ -400,10 +400,8 @@ begin
 
   ExitProcess(1);
 
-  result := EXCEPTION_CONTINUE_SEARCH; *)
+  Result := EXCEPTION_CONTINUE_SEARCH; *)
 end;
-
-
 
 end.
 
