@@ -534,7 +534,7 @@ begin
       Assert(Assigned(NewCode));
 
 {$IFDEF DXBX_DEBUG}
-      DbgPrintf('HLE : $%.08X (%s) -> $%.08X (%s)', [OrgCode, DetectedFunction.FunctionName, NewCode, XboxLibraryPatchToDisplayString(DetectedFunction.FunctionName)]);
+      DbgPrintf('HLE : $%.08X (%s) -> $%.08X', [OrgCode, DetectedFunction.FunctionName, NewCode]);
 {$ENDIF}
 
       EmuInstallWrapper(OrgCode, NewCode);

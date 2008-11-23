@@ -222,7 +222,6 @@ type
 implementation
 
 // Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
-
 procedure XBController.Initialize; // was XBController::XBController
 // Branch: martin  Revision: 39  Translation:Shadow_tj  Done: 100
 var
@@ -251,7 +250,6 @@ begin
 end;
 
 // Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
-
 procedure XBController.Finalize; // was XBController::~XBController
 // Branch: martin  Revision: 39  Translation:Shadow_tj  Done: 100
 begin
@@ -264,24 +262,21 @@ end;
 
 (*
 { TODO : Need to be added to XBController }
-// ******************************************************************
-// * func: XBController::EnumObjectsCallback
-// ******************************************************************
 function XBController.EnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
-    if (lpddoi^.dwType and DIDFT_AXIS) then
+    if (lpddoi.dwType and DIDFT_AXIS) then
     begin
         XTL.DIPROPRANGE diprg;
 
         diprg.diph.dwSize       := SizeOf(XTL.DIPROPRANGE);
         diprg.diph.dwHeaderSize := SizeOf(XTL.DIPROPHEADER);
         diprg.diph.dwHow        := DIPH_BYID;
-        diprg.diph.dwObj        := lpddoi^.dwType;
+        diprg.diph.dwObj        := lpddoi.dwType;
         diprg.lMin              := 0 - 32768;
         diprg.lMax              := 0 + 32767;
 
-        HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device^.SetProperty(DIPROP_RANGE, @diprg.diph);
+        HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, @diprg.diph);
 
         if (FAILED(hRet)) then
         begin
@@ -291,18 +286,18 @@ begin
                 Result:= DIENUM_STOP;
          end;
      end;
-    else if (lpddoi^.dwType and DIDFT_BUTTON) then
+    else if (lpddoi.dwType and DIDFT_BUTTON) then
     begin
         XTL.DIPROPRANGE diprg;
 
         diprg.diph.dwSize       := SizeOf(XTL.DIPROPRANGE);
         diprg.diph.dwHeaderSize := SizeOf(XTL.DIPROPHEADER);
         diprg.diph.dwHow        := DIPH_BYID;
-        diprg.diph.dwObj        := lpddoi^.dwType;
+        diprg.diph.dwObj        := lpddoi.dwType;
         diprg.lMin              := 0;
         diprg.lMax              := 255;
 
-        HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device^.SetProperty(DIPROP_RANGE, @diprg.diph);
+        HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, @diprg.diph);
 
         if (FAILED(hRet)) then
         begin
@@ -314,55 +309,45 @@ begin
      end;
 
     Result:= DIENUM_CONTINUE;
- end;      *)
+end;      *)
 
- { TODO : Need to be added to XBController }
-// ******************************************************************
-// * func: WrapEnumGameCtrlCallback
-// ******************************************************************
-
+{ TODO : Need to be added to XBController }
 (*
 function CALLBACK WrapEnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE; pvRef: Pointer): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
     XBController *context := (XBController)pvRef;
 
-    Result:= context^.EnumGameCtrlCallback(lpddi);
- end; *)
+    Result:= context.EnumGameCtrlCallback(lpddi);
+end; *)
 
 { TODO : Need to be added to XBController }
-// ******************************************************************
-// * func: WrapEnumObjectsCallback
-// ******************************************************************
 (*function CALLBACK WrapEnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE; pvRef: Pointer): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
     XBController *context := (XBController)pvRef;
 
-    Result:= context^.EnumObjectsCallback(lpddoi);
+    Result:= context.EnumObjectsCallback(lpddoi);
  end;            *)
 
 
 { TODO : Need to be added to XBController }
-// ******************************************************************
-// * func: XBController::EnumGameCtrlCallback
-// ******************************************************************
 (*function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
 begin
-    if (m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi^.tszInstanceName)) then
+    if (m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi.tszInstanceName)) then
         Result:= DIENUM_CONTINUE;
 
-    HRESULT hRet := m_pDirectInput8^.CreateDevice(lpddi^.guidInstance, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
+    HRESULT hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
 
     if ( not FAILED(hRet)) then
     begin
         m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
 
-        m_InputDevice[m_dwInputDeviceCount++].m_Device^.SetDataFormat(@XTL.c_dfDIJoystick);
+        m_InputDevice[m_dwInputDeviceCount++].m_Device.SetDataFormat(@XTL.c_dfDIJoystick);
 
         if (m_CurrentState = XBCTRL_STATE_LISTEN) then
-            ReorderObjects(lpddi^.tszInstanceName, m_dwInputDeviceCount - 1);
+            ReorderObjects(lpddi.tszInstanceName, m_dwInputDeviceCount - 1);
      end;
 
     Result:= DIENUM_CONTINUE;
@@ -784,9 +769,9 @@ begin
             {
                 char *szDirection = (dwFlags & DEVICE_FLAG_AXIS) ? (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive " : "Negative " : "";
 
-                m_InputDevice[v].m_Device->GetDeviceInfo(&DeviceInstance);
+                m_InputDevice[v].m_Device.GetDeviceInfo(&DeviceInstance);
 
-                m_InputDevice[v].m_Device->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
+                m_InputDevice[v].m_Device.GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
 
                 Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
@@ -804,7 +789,7 @@ begin
     else if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_KEYBOARD) then begin
         (*    BYTE KeyState[256];
 
-            m_InputDevice[v].m_Device->GetDeviceState(256, KeyState);
+            m_InputDevice[v].m_Device.GetDeviceState(256, KeyState);
 
             dwFlags = DEVICE_FLAG_KEYBOARD;
 
@@ -831,7 +816,7 @@ begin
         (*
             XTL::DIMOUSESTATE2 MouseState;
 
-            m_InputDevice[v].m_Device->GetDeviceState(sizeof(MouseState), &MouseState);
+            m_InputDevice[v].m_Device.GetDeviceState(sizeof(MouseState), &MouseState);
 
             dwFlags = DEVICE_FLAG_MOUSE;
 
@@ -920,7 +905,7 @@ begin
 
                     ObjectInstance.dwSize = sizeof(ObjectInstance);
 
-                    if (m_InputDevice[v].m_Device->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
+                    if (m_InputDevice[v].m_Device.GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
                         szObjName = ObjectInstance.tszName;
 
                     Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
@@ -970,7 +955,7 @@ begin
     { TODO : Need to be translated to delphi }
     (*if (m_pDirectInput8 <> 0) then
     begin
-        m_pDirectInput8^.Release();
+        m_pDirectInput8.Release();
         m_pDirectInput8 := 0;
      end; *)
 end;
@@ -1051,14 +1036,14 @@ begin
       (*&m_InputDevice[v].m_Device.SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
       m_InputDevice[v].m_Device.Acquire();
 
-      ahRet := m_InputDevice[v].m_Device^.Poll();
+      ahRet := m_InputDevice[v].m_Device.Poll();
 
       if (FAILED(ahRet)) then
       begin
-        ahRet := m_InputDevice[v].m_Device^.Acquire();
+        ahRet := m_InputDevice[v].m_Device.Acquire();
 
         while (ahRet = DIERR_INPUTLOST)
-          ahRet := m_InputDevice[v].m_Device^.Acquire();
+          ahRet := m_InputDevice[v].m_Device.Acquire();
 
         if (ahRet <> DIERR_INPUTLOST) then
           break;

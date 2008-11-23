@@ -29,6 +29,9 @@ uses
   Classes,
   SysUtils,
   Contnrs,
+  // 3rd Party
+  JclWin32, // UNDNAME_COMPLETE
+  JclPeImage, // UndecorateSymbolName
   // Dxbx
   uTypes,
   uXBE,
@@ -308,6 +311,64 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
   var
     FunctionName: string;
     Detected: PDetectedVersionedXboxLibraryFunction;
+    Unmangled: string;
+
+    function DxbxUnmangleSymbolName(const aStr: string): string;
+    var
+      UnmangleFlags: DWord;
+      i: Integer;
+    begin
+      if aStr = '' then
+        Exit;
+
+      Result := aStr;
+
+      // Check if the symbol starts with an underscore ('_') or '@':
+      case Result[1] of
+        '?':
+          begin
+            UnmangleFlags := 0
+                          // UNDNAME_COMPLETE               // Enable full undecoration
+                          or UNDNAME_NO_LEADING_UNDERSCORES // Remove leading underscores from MS extended keywords
+                          or UNDNAME_NO_MS_KEYWORDS         // Disable expansion of MS extended keywords
+                          or UNDNAME_NO_FUNCTION_RETURNS    // Disable expansion of return type for primary declaration
+                          or UNDNAME_NO_ALLOCATION_MODEL    // Disable expansion of the declaration model
+                          or UNDNAME_NO_ALLOCATION_LANGUAGE // Disable expansion of the declaration language specifier
+                          or UNDNAME_NO_MS_THISTYPE         // NYI Disable expansion of MS keywords on the 'this' type for primary declaration
+                          or UNDNAME_NO_CV_THISTYPE         // NYI Disable expansion of CV modifiers on the 'this' type for primary declaration
+                          or UNDNAME_NO_THISTYPE            // Disable all modifiers on the 'this' type
+                          or UNDNAME_NO_ACCESS_SPECIFIERS   // Disable expansion of access specifiers for members
+                          or UNDNAME_NO_THROW_SIGNATURES    // Disable expansion of 'throw-signatures' for functions and pointers to functions
+                          or UNDNAME_NO_MEMBER_TYPE         // Disable expansion of 'static' or 'virtual'ness of members
+                          or UNDNAME_NO_RETURN_UDT_MODEL    // Disable expansion of MS model for UDT returns
+                          or UNDNAME_32_BIT_DECODE          // Undecorate 32-bit decorated names
+                          or UNDNAME_NAME_ONLY              // Crack only the name for primary declaration;
+                          or UNDNAME_NO_ARGUMENTS           // Don't undecorate arguments to function
+                          or UNDNAME_NO_SPECIAL_SYMS        // Don't undecorate special names (v-table, vcall, vector xxx, metatype, etc)
+                          ;
+
+            // Do Microsoft symbol demangling :
+            if not UndecorateSymbolName(aStr, {var}Result, UnmangleFlags) then
+              Result := aStr;
+          end;
+        '_', '@':
+        begin
+          // Remove this leading character :
+          Delete(Result, 1, 1);
+          // Replace all following underscores with a dot ('.') :
+          Unmangled := StringReplace(Unmangled, '_', '.', [rfReplaceAll]);
+        end;
+      end;
+      
+      // Remove everything from '@' onward :
+      i := Pos('@', Result);
+      if i > 1 then
+        Delete(Result, i, MaxInt);
+
+      // Replace '::' with '.' :
+      Result := StringReplace(Result, '::', '.', [rfReplaceAll]);
+    end;
+
   begin
     // Search if this address matches a pattern :
     Result := TestAddressUsingPatternTrie(aPatternTrieReader, aAddress);
@@ -324,15 +385,19 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
       Exit;
     end;
 
+    // Do our own demangling :
+    Unmangled := DxbxUnmangleSymbolName(FunctionName);
+
     // Newly detected functions are registered here (including their range,
     // which will come in handy when debugging) :
-    Detected := DetectedFunctions.New(FunctionName);
+    Detected := DetectedFunctions.New(Unmangled);
     Detected.CodeStart := TCodePointer(aAddress);
     Detected.CodeEnd := TCodePointer(IntPtr(aAddress) + Result.FunctionLength);
     Detected.HitCount := 1;
 
 {$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE : 0x%.8x -> %s [%s]', [aAddress, Detected.FunctionName, string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))]);
+    DbgPrintf('DxbxHLE : 0x%.8x -> ''%s'' (was "%s")', [aAddress, Unmangled, FunctionName]);
+    // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
 {$ENDIF}
   end; // _FindAndRememberPattern
 
@@ -376,7 +441,7 @@ begin
 
   DbgPrintf('DxbxHLE : AvailablePatches... ');
   for i := 0 to  + AvailablePatches.Count - 1 do
-    DbgPrintf('%.3d : $%.08x (%s)', [i, Integer(AvailablePatches.Objects[i]), AvailablePatches[i]]);
+    DbgPrintf('%.3d : $%.08x (%s{Emu}%s)', [i, Integer(AvailablePatches.Objects[i]), PatchPrefix, AvailablePatches[i]]);
 
   // Get StoredPatternTrie from resource :
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);

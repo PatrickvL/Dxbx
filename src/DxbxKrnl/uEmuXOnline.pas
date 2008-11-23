@@ -82,9 +82,6 @@ begin
   Result := 0;
 end;
 
-// ******************************************************************
-// * func: EmuThis::Emusocket
-// ******************************************************************
 (*SOCKET XTL.EmuThis.Emusocket
 (
     integer   af,
@@ -108,11 +105,8 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result:= ret;
- end;             *)
+end;             *)
 
-// ******************************************************************
-// * func: EmuThis::Emubind
-// ******************************************************************
 (*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: integer): integer;
 begin
     EmuSwapFS();   // Win2k/XP FS
@@ -133,11 +127,8 @@ begin
     EmuSwapFS();   // XBox FS
 
     Result:= ret;
- end;              *)
+end;              *)
 
-// ******************************************************************
-// * func: EmuThis::Emulisten
-// ******************************************************************
 (*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: integer): integer;
 begin
     EmuSwapFS();   // Win2k/XP FS
@@ -159,9 +150,6 @@ begin
     Result:= ret;
  end;              *)
 
-// ******************************************************************
-// * func: EmuThis::Emuioctlsocket
-// ******************************************************************
 (*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): integer;
 begin
     EmuSwapFS();   // Win2k/XP FS

@@ -51,7 +51,7 @@ procedure XTL_EmuExecutePushBuffer(pPushBuffer: X_D3DPushBuffer; pFixup: X_D3DFi
 begin
   if Assigned(pFixup) then
     CxbxKrnlCleanup('PushBuffer has fixups');
-  (*EmuExecutePushBufferRaw((DWord)pPushBuffer^.Data); *)
+  (*EmuExecutePushBufferRaw((DWord)pPushBuffer.Data); *)
 end;
 
 procedure EmuUnswizzleActiveTexture();
@@ -64,15 +64,15 @@ begin
     if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
         Exit;
 
-    DWord XBFormat := (pPixelContainer^.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+    DWord XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
     DWord dwBPP := 0;
 
     if( not XTL.EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
         Exit;
 
     // remove lock
-    pPixelContainer^.EmuTexture8^.UnlockRect(0);
-    pPixelContainer^.Common:= pPixelContainer^.Common and ~X_D3DCOMMON_ISLOCKED;
+    pPixelContainer.EmuTexture8.UnlockRect(0);
+    pPixelContainer.Common:= pPixelContainer.Common and ~X_D3DCOMMON_ISLOCKED;
 
     // TODO: potentially CRC to see if this surface was actually modified..
 
@@ -81,15 +81,15 @@ begin
     //
 
     begin
-        XTL.IDirect3DTexture8 *pTexture := pPixelContainer^.EmuTexture8;
+        XTL.IDirect3DTexture8 *pTexture := pPixelContainer.EmuTexture8;
 
-        DWord dwLevelCount := pTexture^.GetLevelCount();
+        DWord dwLevelCount := pTexture.GetLevelCount();
 
         for(uint32 v:=0;v<dwLevelCount;v++)
         begin
             XTL.D3DSURFACE_DESC SurfaceDesc;
 
-            HRESULT hRet := pTexture^.GetLevelDesc(v, @SurfaceDesc);
+            HRESULT hRet := pTexture.GetLevelDesc(v, @SurfaceDesc);
 
             if(FAILED(hRet)) then
                 continue;
@@ -105,7 +105,7 @@ begin
                 //    break;
                 //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
 
-                hRet := pTexture^.LockRect(v, @LockedRect, 0, 0);
+                hRet := pTexture.LockRect(v, @LockedRect, 0, 0);
 
                 if(FAILED(hRet)) then
                     continue;
@@ -127,7 +127,7 @@ begin
 
                 memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
 
-                pTexture^.UnlockRect(0);
+                pTexture.UnlockRect(0);
 
                 free(pTemp);
              end;
@@ -239,7 +239,7 @@ begin
             pdwPushData:= pdwPushData + dwCount;
 
             // retrieve vertex shader
-            g_pD3DDevice8^.GetVertexShader(@dwVertexShader);
+            g_pD3DDevice8.GetVertexShader(@dwVertexShader);
 
             if(dwVertexShader > $FFFF) then
             begin
@@ -271,7 +271,7 @@ begin
             // create cached vertex buffer only once, with maxed out size
             if(pVertexBuffer = 0) then
             begin
-                HRESULT hRet := g_pD3DDevice8^.CreateVertexBuffer(2047*SizeOf(DWord), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
+                HRESULT hRet := g_pD3DDevice8.CreateVertexBuffer(2047*SizeOf(DWord), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
 
                 if(FAILED(hRet)) then
                     CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', dwCount);
@@ -282,14 +282,14 @@ begin
             begin
                 uint08 *pData := 0;
 
-                HRESULT hRet := pVertexBuffer^.Lock(0, dwCount*4, @pData, 0);
+                HRESULT hRet := pVertexBuffer.Lock(0, dwCount*4, @pData, 0);
 
                 if(FAILED(hRet)) then
                     CxbxKrnlCleanup('Unable to lock vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', dwCount);
 
                 memcpy(pData, pVertexData, dwCount*4);
 
-                pVertexBuffer^.Unlock();
+                pVertexBuffer.Unlock();
              end;
             }
 
@@ -324,7 +324,7 @@ begin
 
                 bool bPatched := VertPatch.Apply(@VPDesc);
 
-                g_pD3DDevice8^.DrawPrimitiveUP
+                g_pD3DDevice8.DrawPrimitiveUP
                 (
                     PCPrimitiveType,
                     VPDesc.dwPrimitiveCount,
@@ -376,10 +376,10 @@ begin
                 begin
                     if(pIndexBuffer <> 0) then
                     begin
-                        pIndexBuffer^.Release();
+                        pIndexBuffer.Release();
                      end;
 
-                    hRet := g_pD3DDevice8^.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
+                    hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
                     maxIBSize := dwCount*2 + 2*2;
                  end;
@@ -395,11 +395,11 @@ begin
                 begin
                     WORD *pData:=0;
 
-                    pIndexBuffer^.Lock(0, dwCount*2 + 2*2, (UCHAR)@pData, 0);
+                    pIndexBuffer.Lock(0, dwCount*2 + 2*2, (UCHAR)@pData, 0);
 
                     memcpy(pData, pIBMem, dwCount*2 + 2*2);
 
-                    pIndexBuffer^.Unlock();
+                    pIndexBuffer.Unlock();
                  end;
 
                 // render indexed vertices
@@ -420,7 +420,7 @@ begin
 
                     bool bPatched := VertPatch.Apply(@VPDesc);
 
-                    g_pD3DDevice8^.SetIndices(pIndexBuffer, 0);
+                    g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
                     if( not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -431,7 +431,7 @@ begin
                     begin
                         if(IsValidCurrentShader()) then
                         begin
-                            g_pD3DDevice8^.DrawIndexedPrimitive
+                            g_pD3DDevice8.DrawIndexedPrimitive
                             (
                                 PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
 //                                PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
@@ -445,7 +445,7 @@ begin
 
                     VertPatch.Restore();
 
-                    g_pD3DDevice8^.SetIndices(0, 0);
+                    g_pD3DDevice8.SetIndices(0, 0);
                  end;
              end;
 
@@ -488,16 +488,16 @@ begin
                 UINT  uiStride;
 
                 // retrieve stream data
-                g_pD3DDevice8^.GetStreamSource(0, @pActiveVB, @uiStride);
+                g_pD3DDevice8.GetStreamSource(0, @pActiveVB, @uiStride);
 
                 // retrieve stream desc
-                pActiveVB^.GetDesc(@VBDesc);
+                pActiveVB.GetDesc(@VBDesc);
 
                 // unlock just in case
-                pActiveVB^.Unlock();
+                pActiveVB.Unlock();
 
                 // grab ptr
-                pActiveVB^.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
+                pActiveVB.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
 
                 // print out stream data
                 begin
@@ -511,7 +511,7 @@ begin
                  end;
 
                 // release ptr
-                pActiveVB^.Unlock();
+                pActiveVB.Unlock();
 
                 DbgDumpMesh((WORD)pIndexData, dwCount);
              end;
@@ -528,10 +528,10 @@ begin
                 begin
                     if(pIndexBuffer <> 0) then
                     begin
-                        pIndexBuffer^.Release();
+                        pIndexBuffer.Release();
                      end;
 
-                    hRet := g_pD3DDevice8^.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
+                    hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
                     maxIBSize := dwCount*2;
                  end;
@@ -547,7 +547,7 @@ begin
                 begin
                     WORD *pData:=0;
 
-                    pIndexBuffer^.Lock(0, dwCount*2, (UCHAR)@pData, 0);
+                    pIndexBuffer.Lock(0, dwCount*2, (UCHAR)@pData, 0);
 
                     memcpy(pData, pIndexData, dwCount*2);
 
@@ -562,7 +562,7 @@ begin
                         pIBMem[0] := $FFFF;
                      end;
 
-                    pIndexBuffer^.Unlock();
+                    pIndexBuffer.Unlock();
                  end;
 
                 // render indexed vertices
@@ -583,7 +583,7 @@ begin
 
                     bool bPatched := VertPatch.Apply(@VPDesc);
 
-                    g_pD3DDevice8^.SetIndices(pIndexBuffer, 0);
+                    g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
                     if( not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -592,7 +592,7 @@ begin
 
                     if( not g_bPBSkipPusher and IsValidCurrentShader()) then
                     begin
-                        g_pD3DDevice8^.DrawIndexedPrimitive
+                        g_pD3DDevice8.DrawIndexedPrimitive
                         (
                             PCPrimitiveType, 0, (*dwCount*2*)(*8*1024*1024, 0, PrimitiveCount     *)(*
                         );
@@ -604,7 +604,7 @@ begin
 
                     VertPatch.Restore();
 
-                    g_pD3DDevice8^.SetIndices(0, 0);
+                    g_pD3DDevice8.SetIndices(0, 0);
                  end;
              end;
 
@@ -630,7 +630,7 @@ begin
 
     if(g_bStepPush) then
     begin
-        g_pD3DDevice8^.Present(0,0,0,0);
+        g_pD3DDevice8.Present(0,0,0,0);
         Sleep(500);
      end;             *)
 end;
@@ -652,20 +652,20 @@ begin
   UINT uiStride;
 
     // retrieve stream data
-  g_pD3DDevice8^.GetStreamSource(0, @pActiveVB, @uiStride);
+  g_pD3DDevice8.GetStreamSource(0, @pActiveVB, @uiStride);
 
   szFileName: array[0..128 - 1] of Char;
   StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
   file * dbgVertices := FileOpen(szFileName, 'wt');
 
     // retrieve stream desc
-  pActiveVB^.GetDesc(@VBDesc);
+  pActiveVB.GetDesc(@VBDesc);
 
     // unlock just in case
-  pActiveVB^.Unlock();
+  pActiveVB.Unlock();
 
     // grab ptr
-  pActiveVB^.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
+  pActiveVB.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
 
     // print out stream data
   begin
@@ -760,7 +760,7 @@ begin
   end;
 
     // release ptr
-  pActiveVB^.Unlock();    *)
+  pActiveVB.Unlock();    *)
 end;
 {$ENDIF}
 

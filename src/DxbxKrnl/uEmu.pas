@@ -322,7 +322,6 @@ begin
 end;
 
 
-// func: EmuCleanup
 procedure EmuCleanup(const szErrorMessage: string);
 var
   szBuffer1: string;
@@ -402,6 +401,10 @@ begin
 
   Result := EXCEPTION_CONTINUE_SEARCH; *)
 end;
+
+exports
+  EmuWarning,
+  EmuCleanup;
 
 end.
 

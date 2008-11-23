@@ -455,7 +455,7 @@ var
   m_ExeFilename: string;
 begin
   XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
-  m_Xbe := Nil;
+  m_Xbe := nil;
   if not XbeOpenDialog.Execute then
     Exit;
 
