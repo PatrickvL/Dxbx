@@ -79,11 +79,6 @@ var
 
 implementation
 
-procedure SetXbePath(const Path: PChar);
-begin
-  g_EmuShared.SetXbePath(Path);
-end;
-
 { EmuShared }
 
 class function EmuShared.Init: Boolean;
@@ -240,5 +235,15 @@ begin
   CopyMemory(@(m_XbePath[0]), PChar(Path), Length(Path) + 1);
   Unlock();
 end;
+
+//
+
+procedure SetXbePath(const Path: PChar);
+begin
+  g_EmuShared.SetXbePath(Path);
+end;
+
+exports
+  SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z';
 
 end.

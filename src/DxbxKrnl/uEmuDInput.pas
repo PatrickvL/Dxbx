@@ -41,7 +41,6 @@ implementation
 var
   g_XBController: XBController;
 
-// func: XTL::EmuDInputInit
 function XTL_EmuDInputInit: LongBool; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
@@ -54,14 +53,12 @@ begin
     Result := False;
 end;
 
-// func: XTL::EmuDInputCleanup
 procedure XTL_EmuDInputCleanup; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   g_XBController.ListenEnd();
 end;
 
-// func: XTL::EmuPollController
 procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin

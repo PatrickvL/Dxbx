@@ -598,7 +598,7 @@ type
  end;
 PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
-const FIELD_OFFSET(ctype, = field)    ((LongInt)(LONG_PTR) and (((ctype )0)^.field));
+const FIELD_OFFSET(ctype, = field)    ((LongInt)(LONG_PTR) and (((ctype )0).field));
 
 const PCI_COMMON_HDR_LENGTH = (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific));
 

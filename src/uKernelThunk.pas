@@ -439,4 +439,7 @@ begin
   Result := @KernelThunkTable;
 end;
 
+exports
+  CxbxKrnl_KernelThunkTable;
+
 end.

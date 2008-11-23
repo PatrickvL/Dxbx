@@ -38,7 +38,7 @@ type
   TXboxLibraryPatch = type Cardinal;
 
 const
-  PatchPrefix = 'XTL_Emu';
+  PatchPrefix = 'XTL_';
 
   // This is an TXboxLibraryPatch indicating the 'unknown patch'-state :
   xlp_Unknown = TXboxLibraryPatch(0);
@@ -50,15 +50,28 @@ var
   function XboxLibraryPatchToDisplayString(const aValue: string): string;
 
   // This method determines which patch corresponds with the supplied aFunctionName.
-  function XboxFunctionNameToLibraryPatch(aFunctionName: string): TXboxLibraryPatch;
-
-  // This method returns the function-name for a (to be) patched method (indicated by aValue).
-  function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
+  function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibraryPatch;
 
   // This method returns the actual patch function address for each patched method.
   function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
 
 implementation
+
+function TransformExportFunctionNameIntoXboxSymbolName(const aValue: string): string;
+begin
+  Result := aValue;
+  // Is this exported function a patch (does it start with our prefix) ?
+  if StrLIComp(PChar(Result), PatchPrefix, Length(PatchPrefix)) <> 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Delete(Result, 1, Length(PatchPrefix));
+  // Is this exported function a patch (does it start with our prefix) ?
+  if StrLIComp(PChar(Result), 'Emu', 3) = 0 then
+    Delete(Result, 1, 3);
+end;
 
 function XboxLibraryPatchToDisplayString(const aValue: string): string;
 var
@@ -79,12 +92,10 @@ begin
   Result := PatchPrefix + Result;
 end;
 
-function XboxFunctionNameToLibraryPatch(aFunctionName: string): TXboxLibraryPatch;
+function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibraryPatch;
 var
   Index: Integer;
 begin
-  aFunctionName := XboxLibraryPatchToDisplayString(aFunctionName);
-
   Index := AvailablePatches.IndexOf(aFunctionName);
   // If found, make sure that value 0 keeps the meaning 'xlp_Unknown' :
   if Index >= 0 then
@@ -92,14 +103,6 @@ begin
   else
     Result := xlp_Unknown;
 end;
-
-function XboxLibraryPatchToString(const aValue: TXboxLibraryPatch): string;
-begin
-  if aValue > xlp_Unknown then
-    Result := AvailablePatches.Names[aValue - 1]
-  else
-    Result := '';
-end; // XboxLibraryPatchToString
 
 function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
 begin
@@ -122,9 +125,8 @@ begin
     for i := 0 to ExportList.Count - 1 do
       if not ExportList[i].IsExportedVariable then
       begin
-        ExportFunctionName := ExportList[i].Name;
-        // Is this exported function a patch (does it start with our prefix) ?
-        if StrLIComp(PChar(ExportFunctionName), PatchPrefix, Length(PatchPrefix)) = 0 then
+        ExportFunctionName := TransformExportFunctionNameIntoXboxSymbolName(ExportList[i].Name);
+        if ExportFunctionName <> '' then
           AvailablePatches.AddObject(ExportFunctionName, ExportList[i].MappedAddress);
       end;
   finally

@@ -259,13 +259,13 @@ procedure LoadLogo;
 begin
    (* uint08 i_gray[100*17];
 
-    m_Xbe->ExportLogoBitmap(i_gray);
+    m_Xbe.ExportLogoBitmap(i_gray);
 
-    if(m_Xbe->GetError() != 0)
+    if(m_Xbe.GetError() != 0)
     {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(m_hwnd, m_Xbe.GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
 
-        if(m_Xbe->IsFatal())
+        if(m_Xbe.IsFatal())
             CloseXbe();
 
         return;

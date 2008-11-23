@@ -92,22 +92,6 @@ uses
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
 
-exports
-  EmuWarning,
-  CxbxKrnl_KernelThunkTable,
-  CxbxKrnlInit,
-  CxbxKrnlNoFunc,
-  SetXbePath name '?SetXbePath@EmuShared@@QAEXPBD@Z',
-  CxbxKrnl_KernelThunkTable,
-  EmuPanic name '_EmuPanic@0',
-  EmuCleanup
-  ;
-  
-  (*Exports EmuCleanThread name '_EmuCleanThread@0';
-  { TODO : name need to be set }
-  (*Exports Init; // name must be "void EmuShared::Init (void)
-  *)
-
 procedure DllMain(Reason: Integer);
 begin
   if Reason = DLL_PROCESS_ATTACH then

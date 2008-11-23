@@ -62,9 +62,20 @@ procedure CxbxKrnlRegisterThread(const hThread: THandle);
 procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
 procedure EmuXRefFailure;
 procedure CxbxKrnlResume();
-procedure EmuPanic(); stdcall; // export;
+procedure EmuPanic(); stdcall; //
 procedure CxbxKrnlNoFunc; cdecl;
 procedure CxbxKrnlSuspend();
+
+exports
+  CxbxKrnlInit,
+  CxbxKrnlNoFunc,
+  EmuPanic name '_EmuPanic@0';
+
+  (*Exports EmuCleanThread name '_EmuCleanThread@0';
+  { TODO : name need to be set }
+  (*Exports Init; // name must be "void EmuShared::Init (void)
+  *)
+
 
 implementation
 
@@ -446,9 +457,6 @@ begin
 
   EmuSwapFS(); // XBox FS
 end;
-
-exports
-  EmuPanic;
 
 end.
 

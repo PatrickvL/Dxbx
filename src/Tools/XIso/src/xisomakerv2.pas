@@ -484,8 +484,8 @@ var
   SectorTabla: Int64;
   PosBuf, leido, i, j: Integer;
 begin
-  Fichero := Nil;
-  Buffer := Nil;
+  Fichero := nil;
+  Buffer := nil;
   TamBufRellenar := -1;
   Result := False;
 
