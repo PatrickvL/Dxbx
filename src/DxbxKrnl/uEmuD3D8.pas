@@ -78,6 +78,7 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: X_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall; // forward
+
 function XTL_EmuIDirect3DDevice8_SetVertexData2f(aRegister: Integer;
    a: FLOAT; b: FLOAT): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: Integer;
@@ -1277,7 +1278,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_GetVisibilityTestResult(Index: DWORD;
-  pResult: UINT; pTimeStamp: ULONGLONG): HRESULT;
+  pResult: UINT; pTimeStamp: ULONGLONG): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -1318,7 +1319,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-function XTL_EmuIDirect3DDevice8_LoadVertexShader(Handle: DWord; Address: DWord): HRESULT;
+function XTL_EmuIDirect3DDevice8_LoadVertexShader(Handle: DWord; Address: DWord): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:98 Translator:Shadow_Tj
 var
   pVertexShader: VERTEX_SHADER;
@@ -1584,7 +1585,7 @@ begin
 
 end;
 
-function XTL_EmuIDirect3DDevice8_AddRef(): ULONG;
+function XTL_EmuIDirect3DDevice8_AddRef(): ULONG; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   ret: ULONG;
@@ -1596,7 +1597,7 @@ begin
   Result := ret;
 end;
 
-function XTL_EmuIDirect3DDevice8_BeginStateBlock: HRESULT;
+function XTL_EmuIDirect3DDevice8_BeginStateBlock: HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   ret: ULONG;
@@ -1787,7 +1788,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-function XTL_EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer: Integer): X_D3DSurface;
+function XTL_EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer: Integer): X_D3DSurface; stdcall;
 // Branch:martin  Revision:39 Done:5 Translator:Shadow_Tj
 begin
   Result := nil;
@@ -1957,7 +1958,7 @@ begin
   Result := hRet;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale(pOffset: TD3DXVECTOR4; pScale: TD3DXVECTOR4);
+procedure XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale(pOffset: TD3DXVECTOR4; pScale: TD3DXVECTOR4); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   fScaleX: Single;
@@ -3633,27 +3634,22 @@ begin
   Result := D3D_OK;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_RunPushBuffer;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
-(*(
-    X_D3DPushBuffer       *pPushBuffer,
-    X_D3DFixup            *pFixup
-) *)
+procedure XTL_EmuIDirect3DDevice8_RunPushBuffer( pPushBuffer : X_D3DPushBuffer;
+  pFixup : X_D3DFixup ); stdcall;
+// Branch:martin  Revision:39 Done:90 Translator:Shadow_Tj
 begin
-(*    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_RunPushBuffer'
-           #13#10'('
-           #13#10'   pPushBuffer        : 0x%.08X'
-           #13#10'   pFixup             : 0x%.08X'
+    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_RunPushBuffer' +
+           #13#10'(' +
+           #13#10'   pPushBuffer        : 0x%.08X' +
+           #13#10'   pFixup             : 0x%.08X' +
            #13#10');',
-           pPushBuffer, pFixup);
+           [pPushBuffer, pFixup]);
 
-    XTL.EmuExecutePushBuffer(pPushBuffer, pFixup);
+    (*XTL_EmuExecutePushBuffer(pPushBuffer, pFixup); *)
 
     EmuSwapFS();   // XBox FS
-
-    Exit; *)
 end;
 
 function XTL_EmuIDirect3DDevice8_Clear: HRESULT;
@@ -5534,7 +5530,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetTextureState_BorderColor(Stage: DWord; Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetTextureState_BorderColor(Stage: DWord; Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -5608,7 +5604,7 @@ begin
     Exit; *)
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -5624,7 +5620,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -5748,7 +5744,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -5907,7 +5903,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -5923,7 +5919,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_CullMode(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_CullMode(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -5984,7 +5980,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -6050,7 +6046,7 @@ begin
   Exit;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -6112,7 +6108,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -6128,7 +6124,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -6144,7 +6140,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -6160,7 +6156,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -6176,7 +6172,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable(Value: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable(Value: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -6238,7 +6234,7 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3DDevice8_GetTransform(State: D3DTRANSFORMSTATETYPE; pMatrix: D3DMATRIX): HRESULT;
+function XTL_EmuIDirect3DDevice8_GetTransform(State: D3DTRANSFORMSTATETYPE; pMatrix: D3DMATRIX): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:70 Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -6390,7 +6386,7 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3DDevice8_SetVertexShader(aHandle: DWord): HRESULT;
+function XTL_EmuIDirect3DDevice8_SetVertexShader(aHandle: DWord): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:40 Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -6442,7 +6438,7 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_DrawVertices(PrimitiveType: X_D3DPRIMITIVETYPE;
-  StartVertex: UINT; VertexCount: UINT);
+  StartVertex: UINT; VertexCount: UINT); stdcall;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 var
   PrimitiveCount: UINT;
@@ -6857,7 +6853,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-function XTL_EmuIDirect3DDevice8_SetLight(Index: DWORD; pLight: D3DLIGHT8): HRESULT;
+function XTL_EmuIDirect3DDevice8_SetLight(Index: DWORD; pLight: D3DLIGHT8): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -6877,7 +6873,7 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3DDevice8_SetMaterial(pMaterial: D3DMATERIAL8): HRESULT;
+function XTL_EmuIDirect3DDevice8_SetMaterial(pMaterial: D3DMATERIAL8): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -6895,7 +6891,7 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3DDevice8_LightEnable(Index: DWORD; bEnable: LongBool): HRESULT;
+function XTL_EmuIDirect3DDevice8_LightEnable(Index: DWORD; bEnable: LongBool): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -7039,7 +7035,7 @@ begin
   Result := D3D_OK;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetFlickerFilter(Filter: DWord);
+procedure XTL_EmuIDirect3DDevice8_SetFlickerFilter(Filter: DWord); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -7054,7 +7050,7 @@ begin
   EmuSwapFS(); // XBox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter(Enable: Boolean);
+procedure XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter(Enable: Boolean); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -7106,7 +7102,7 @@ begin
   Result:= pColors;
 end; *)
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShaderSize(Handle: DWORD; pSize: UINT);
+procedure XTL_EmuIDirect3DDevice8_GetVertexShaderSize(Handle: DWORD; pSize: UINT); stdcall;
 // Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
 var
   pD3DVertexShader: X_D3DVertexShader;
@@ -7135,7 +7131,7 @@ begin
   EmuSwapFS(); // Xbox FS
 end;
 
-procedure XTL_EmuIDirect3DDevice8_DeleteVertexShader(Handle: DWord);
+procedure XTL_EmuIDirect3DDevice8_DeleteVertexShader(Handle: DWord); stdcall;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   RealHandle: DWORD;
@@ -7614,7 +7610,7 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3D8_SetPushBufferSize(PushBufferSize: DWORD; KickOffSize: DWORD): HRESULT;
+function XTL_EmuIDirect3D8_SetPushBufferSize(PushBufferSize: DWORD; KickOffSize: DWORD): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -7635,7 +7631,7 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3DDevice8_InsertFence: DWORD;
+function XTL_EmuIDirect3DDevice8_InsertFence: DWORD; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   dwRet: DWord;
@@ -7697,7 +7693,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_SetScissors(Count: DWORD;
-  Exclusive: BOOL; const pRects: D3DRECT): HRESULT;
+  Exclusive: BOOL; const pRects: D3DRECT): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -7719,11 +7715,9 @@ end;
 
 exports
   XTL_EmuD3DInit,
-  XTL_EmuD3DCleanup,
-
+  XTL_EmuD3DCleanup,  
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
-
   XTL_EmuIDirect3DDevice8_GetViewport name PatchPrefix + 'D3DDevice_GetViewport',
   XTL_EmuIDirect3DDevice8_SetVertexData2f name PatchPrefix + 'D3DDevice_SetVertexData2f',
   XTL_EmuIDirect3DDevice8_SetVertexData4f name PatchPrefix + 'D3DDevice_SetVertexData4f',
@@ -7733,6 +7727,67 @@ exports
   XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus name PatchPrefix + 'D3DDevice_GetDisplayFieldStatus',
   XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPush',
   XTL_EmuIDirect3DDevice8_EndPush name PatchPrefix + 'D3DDevice_EndPush',
+  XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice.BeginStateBlock',
+  XTL_EmuIDirect3DDevice8_AddRef name PatchPrefix + 'D3DDevice.AddRef',
+  XTL_EmuIDirect3DDevice8_InsertFence name PatchPrefix + 'D3DDevice_InsertFence',
+  XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes name PatchPrefix + 'D3DDevice_SetRenderState_PSTextureModes',
+  XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale name PatchPrefix + 'D3DDevice_GetViewportOffsetAndScale',
+  XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name PatchPrefix + 'D3DDevice_SetRenderState_EdgeAntiAlias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc name PatchPrefix + 'D3DDevice_SetRenderState_ShadowFunc',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FogColor name PatchPrefix + 'D3DDevice_SetRenderState_FogColor',
+  XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name PatchPrefix + 'D3DDevice_SetRenderState_CullMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace name PatchPrefix + 'D3DDevice_SetRenderState_FrontFace',
+  XTL_EmuIDirect3DDevice8_SetRenderState_NormalizeNormals name PatchPrefix + 'D3DDevice_SetRenderState_NormalizeNormals',
+  XTL_EmuIDirect3DDevice8_SetRenderState_TextureFactor name PatchPrefix + 'D3DDevice_SetRenderState_TextureFactor',
+  XTL_EmuIDirect3DDevice8_SetRenderState_LineWidth name PatchPrefix + 'D3DDevice_SetRenderState_LineWidth',
+  XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name PatchPrefix + 'D3DDevice_SetRenderState_Dxt1NoiseEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ZBias name PatchPrefix + 'D3DDevice_SetRenderState_ZBias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp name PatchPrefix + 'D3DDevice_SetRenderState_LogicOp',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FillMode name PatchPrefix + 'D3DDevice_SetRenderState_FillMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend name PatchPrefix + 'D3DDevice_SetRenderState_VertexBlend',
+  XTL_EmuIDirect3DDevice8_SetTextureState_TexCoordIndex name PatchPrefix + 'D3DDevice_SetTextureState_TexCoordIndex',
+  XTL_EmuIDirect3DDevice8_SetTextureState_BorderColor name PatchPrefix + 'D3DDevice_SetTextureState_BorderColor',
+  XTL_EmuIDirect3DDevice8_SetTextureState_ColorKeyColor name PatchPrefix + 'D3DDevice_SetTextureState_ColorKeyColor',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable name PatchPrefix + 'D3DDevice_SetRenderState_ZEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_StencilEnable name PatchPrefix + 'D3DDevice_SetRenderState_StencilEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable name PatchPrefix + 'D3DDevice_SetRenderState_YuvEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable name PatchPrefix + 'D3DDevice_SetRenderState_OcclusionCullEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed name PatchPrefix + 'D3DDevice_SetRenderState_DoNotCullUncompressed',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleAntiAlias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleMask',
+  XTL_EmuIDirect3DDevice8_SetRenderTarget name PatchPrefix + 'D3DDevice_SetRenderTarget',
+  XTL_EmuIDirect3DDevice8_SetTransform name PatchPrefix + 'D3DDevice_SetTransform',
+  XTL_EmuIDirect3DDevice8_GetTransform name PatchPrefix + 'D3DDevice_GetTransform',
+  XTL_EmuIDirect3DDevice8_SetMaterial name PatchPrefix + 'D3DDevice_SetMaterial',    
+  XTL_EmuIDirect3DDevice8_GetVisibilityTestResult name PatchPrefix + 'D3DDevice_GetVisibilityTestResult',
+  XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + 'D3DDevice_BlockUntilVerticalBlank',
+  XTL_EmuIDirect3DDevice8_SetFlickerFilter name PatchPrefix + 'D3DDevice_SetFlickerFilter',
+  XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter name PatchPrefix + 'D3DDevice_SetSoftDisplayFilter',
+  XTL_EmuIDirect3DDevice8_GetBackBuffer2 name PatchPrefix + 'D3DDevice_GetBackBuffer2',
+  XTL_EmuIDirect3DDevice8_SetViewport name PatchPrefix + 'D3DDevice_SetViewport',
+  XTL_EmuIDirect3DDevice8_SetLight name PatchPrefix + 'D3DDevice_SetLight',
+  XTL_EmuIDirect3DDevice8_LightEnable name PatchPrefix + 'D3DDevice_LightEnable',
+  XTL_EmuIDirect3DDevice8_SetTexture name PatchPrefix + 'D3DDevice_SetTexture',
+  XTL_EmuIDirect3DDevice8_SetScissors name PatchPrefix + 'D3DDevice_SetScissors',
+  XTL_EmuIDirect3DDevice8_CreatePixelShader name PatchPrefix + 'D3DDevice_CreatePixelShader',
+  XTL_EmuIDirect3DDevice8_SetPixelShader name PatchPrefix + 'D3DDevice_SetPixelShader',
+  XTL_EmuIDirect3DDevice8_SetPixelShaderConstant name PatchPrefix + 'D3DDevice_SetPixelShaderConstant',
+  XTL_EmuIDirect3DDevice8_DrawVerticesUP name PatchPrefix + 'D3DDevice_DrawVerticesUP',
+  XTL_EmuIDirect3DDevice8_DrawVertices name PatchPrefix + 'D3DDevice_DrawVertices',
+  XTL_EmuIDirect3DDevice8_DrawIndexedVertices name PatchPrefix + 'D3DDevice_DrawIndexedVertices',
+  XTL_EmuIDirect3DDevice8_CreateVertexShader name PatchPrefix + 'D3DDevice_CreateVertexShader',
+  XTL_EmuIDirect3DDevice8_SetStreamSource name PatchPrefix + 'D3DDevice_SetStreamSource',
+  XTL_EmuIDirect3DDevice8_LoadVertexShader name PatchPrefix + 'D3DDevice_LoadVertexShader',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderSize name PatchPrefix + 'D3DDevice_GetVertexShaderSize',
+  XTL_EmuIDirect3DDevice8_SetShaderConstantMode name PatchPrefix + 'D3DDevice_SetShaderConstantMode',
+  XTL_EmuIDirect3DDevice8_DeleteVertexShader name PatchPrefix + 'D3DDevice_DeleteVertexShader',
+  XTL_EmuIDirect3DDevice8_SetVertexShader name PatchPrefix + 'D3DDevice_SetVertexShader',
+  XTL_EmuIDirect3DDevice8_RunPushBuffer name PatchPrefix + 'D3DDevice_RunPushBuffer',
+  XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
+  XTL_EmuIDirect3DDevice8_UpdateOverlay name PatchPrefix + 'D3DDevice_UpdateOverlay',
+  XTL_EmuIDirect3DDevice8_EnableOverlay name PatchPrefix + 'D3DDevice_EnableOverlay',
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest',
   XTL_EmuIDirect3DDevice8_EndVisibilityTest name PatchPrefix + 'D3DDevice_EndVisibilityTest';
 
