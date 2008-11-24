@@ -78,6 +78,8 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: X_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall; // forward
+function XTL_EmuIDirect3DDevice8_SetVertexData2f(aRegister: Integer;
+   a: FLOAT; b: FLOAT): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: Integer;
    a, b, c, d: FLOAT): HRESULT; stdcall; // forward
 procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD); stdcall; // forward
@@ -7723,6 +7725,7 @@ exports
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
 
   XTL_EmuIDirect3DDevice8_GetViewport name PatchPrefix + 'D3DDevice_GetViewport',
+  XTL_EmuIDirect3DDevice8_SetVertexData2f name PatchPrefix + 'D3DDevice_SetVertexData2f',
   XTL_EmuIDirect3DDevice8_SetVertexData4f name PatchPrefix + 'D3DDevice_SetVertexData4f',
   XTL_EmuIDirect3DDevice8_GetVertexShader name PatchPrefix + 'D3DDevice_GetVertexShader',
   XTL_EmuIDirect3DDevice8_IsBusy name PatchPrefix + 'D3DDevice_IsBusy',
