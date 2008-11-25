@@ -345,7 +345,7 @@ begin
   while (fXBE.Position < fXBE.Size) do
   begin
     fXBE.Seek(fXBE.Position - 16, soBeginning);
-    fXBE.Read(Buffer, sizeof(Buffer));
+    fXBE.Read(Buffer, SizeOf(Buffer));
     for i := 0 to SizeOf(Buffer) - 1 do
     begin
       for j := i to i + 15 do
@@ -355,9 +355,9 @@ begin
           
         if (j = i + 15) then
         begin
-          fXBE.Seek(fXBE.Position - sizeof(Buffer), soBeginning);
+          fXBE.Seek(fXBE.Position - SizeOf(Buffer), soBeginning);
           Buffer[j] := $EB;
-          fXBE.Write(Buffer, sizeof(Buffer));
+          fXBE.Write(Buffer, SizeOf(Buffer));
           fXBE.Free;
           Result := True;
           Exit;
@@ -438,8 +438,8 @@ var
   ext: string;
 begin
   dr := msg.wparam;
-  DragQueryFile(dr, $FFFFFFFF, fn, sizeof(fn));
-  DragQueryFile(dr, 0, fn, sizeof(fn));
+  DragQueryFile(dr, $FFFFFFFF, fn, SizeOf(fn));
+  DragQueryFile(dr, 0, fn, SizeOf(fn));
   DragFinish(dr);
   ext := Lowercase(ExtractFileExt(fn));
   if (ext = '.iso') or (ext = '.xiso') or (ext = '.bin') then
@@ -916,7 +916,7 @@ end;
 procedure Tfrm_Main.Crea1Click(Sender: TObject);
 begin
   if SelectDirectory(SSelectFolder, '', ufrmProgress.Folder) and SaveDialog1.Execute then
-    CrearImagen(ufrmProgress.Folder, SaveDialog1.Filename);
+    CrearImagen(ufrmProgress.Folder, SaveDialog1.FileName);
 end;
 
 procedure Tfrm_Main.ToolButton2Click(Sender: TObject);
@@ -1065,7 +1065,7 @@ begin
   if not SaveDialog3.Execute then
     Exit;
 
-  GenerarFileList(SaveDialog3.Filename);
+  GenerarFileList(SaveDialog3.FileName);
 end;
 
 procedure Tfrm_Main.Opciones1Click(Sender: TObject);
@@ -1088,7 +1088,7 @@ begin
   if not OpenDialog1.Execute then
     Exit;
 
-  AbrirImagen(OpenDialog1.Filename);
+  AbrirImagen(OpenDialog1.FileName);
 end;
 
 procedure Tfrm_Main.ExtensionesShell1Click(Sender: TObject);
@@ -1153,7 +1153,7 @@ begin
   if not OpenDialog1.Execute then
     Exit;
 
-  if not XDFS2ISO9660(OpenDialog1.Filename) then
+  if not XDFS2ISO9660(OpenDialog1.FileName) then
     MessageBox(frm_Main.Handle, PChar(SImagenNoXBOX), PChar(SMessage), MB_ICONINFORMATION or MB_OK)
   else
     MessageBox(frm_Main.Handle, PChar(SISO9660ok), PChar(SMessage), MB_ICONINFORMATION or MB_OK);

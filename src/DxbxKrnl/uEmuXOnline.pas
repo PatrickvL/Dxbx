@@ -84,9 +84,9 @@ end;
 
 (*SOCKET XTL.EmuThis.Emusocket
 (
-    integer   af,
-    integer   ctype,
-    integer   protocol
+    Integer   af,
+    Integer   ctype,
+    Integer   protocol
 )
 begin
     EmuSwapFS();   // Win2k/XP FS
@@ -107,7 +107,7 @@ begin
     Result:= ret;
 end;             *)
 
-(*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: integer): integer;
+(*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: Integer): Integer;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
@@ -122,14 +122,14 @@ begin
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
-    integer ret := bind(s, name, namelen);
+    Integer ret := bind(s, name, namelen);
 
     EmuSwapFS();   // XBox FS
 
     Result:= ret;
 end;              *)
 
-(*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: integer): integer;
+(*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
@@ -143,14 +143,14 @@ begin
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
-    integer ret := listen(s, backlog);
+    Integer ret := listen(s, backlog);
 
     EmuSwapFS();   // XBox FS
 
     Result:= ret;
  end;              *)
 
-(*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): integer;
+(*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): Integer;
 begin
     EmuSwapFS();   // Win2k/XP FS
 
@@ -163,7 +163,7 @@ begin
            ');',
            [this, s, cmd, argp]);
 
-    integer ret := ioctlsocket(s, cmd, argp);
+    Integer ret := ioctlsocket(s, cmd, argp);
 
     EmuSwapFS();   // XBox FS
 
@@ -172,8 +172,8 @@ end;            *)
 
 exports
   XTL_EmuWSAStartup,
-  XTL_EmuXNetStartup,
-  XTL_EmuXNetGetEthernetLinkStatus;
+  XTL_EmuXNetGetEthernetLinkStatus,
+  XTL_EmuXNetStartup;
 
 end.
 

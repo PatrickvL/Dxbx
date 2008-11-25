@@ -161,8 +161,8 @@ type
     procedure actSwitchDLLExecute(Sender: TObject);
   private
     m_Xbe: TXbe;
-    m_XbeFilename: string;
-    m_ExeFilename: string;
+    m_XbeFileName: string;
+    m_ExeFileName: string;
     m_bExeChanged: Boolean;
 
     m_AutoConvertToExe: EnumAutoConvert;
@@ -217,17 +217,18 @@ begin
   if not XbeOpenDialog.Execute then
     Exit;
 
-  if Assigned(m_Xbe) then begin
+  if Assigned(m_Xbe) then
     CloseXbe();
-  end;
 
-  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename) then begin
+  if OpenXbe(XbeOpenDialog.FileName, m_Xbe, m_ExeFileName, m_XbeFileName) then
+  begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-    RecentXbeAdd( XbeOpenDialog.Filename );
+    RecentXbeAdd( XbeOpenDialog.FileName );
     Emulation_State := esFileOpen;
     AddjustMenu;
   end
-  else begin
+  else
+  begin
     MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     Emulation_State := esNone;
     AddjustMenu;
@@ -243,18 +244,18 @@ end;
 procedure Tfrm_Main.actSaveXbeExecute(Sender: TObject);
 begin
   SaveDialog.Filter := DIALOG_FILTER_XBE;
-  if m_XbeFilename <> '' then
+  if m_XbeFileName <> '' then
     SaveXbe()
   else
   begin
     if SaveDialog.Execute then
-      SaveXbe(SaveDialog.Filename);
+      SaveXbe(SaveDialog.FileName);
   end;
 end;
 
 procedure Tfrm_Main.actSaveXbeAsExecute(Sender: TObject);
 begin
-  SaveXbe(SaveDialog.Filename);
+  SaveXbe(SaveDialog.FileName);
 end;
 
 procedure Tfrm_Main.actImportExeExecute(Sender: TObject);
@@ -266,8 +267,8 @@ begin
   if Assigned(m_Xbe) then
     CloseXbe();
 
-  ImportExe(XbeOpenDialog.Filename);
-  RecentExeAdd(XbeOpenDialog.Filename);
+  ImportExe(XbeOpenDialog.FileName);
+  RecentExeAdd(XbeOpenDialog.FileName);
 end;
 
 procedure Tfrm_Main.actExportExeExecute(Sender: TObject);
@@ -275,8 +276,8 @@ begin
   if not ExeSaveDialog.Execute then
     Exit;
 
-  m_ExeFilename := ExeSaveDialog.FileName;
-  if not ConvertToExe(m_ExeFilename, True, m_Xbe, Self.Handle) then
+  m_ExeFileName := ExeSaveDialog.FileName;
+  if not ConvertToExe(m_ExeFileName, True, m_Xbe, Self.Handle) then
   begin
     WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
     Exit;
@@ -284,7 +285,7 @@ begin
   
   WriteLog(m_szAsciiTitle + ' was converted to .exe.');
   m_bExeChanged := False;
-  RecentExeAdd(m_ExeFilename);
+  RecentExeAdd(m_ExeFileName);
 end;
 
 procedure Tfrm_Main.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -367,8 +368,8 @@ procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
 begin
   frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
 
-  if frm_ControllerConfig.ShowModal = mrOk then begin
-  end;
+  if frm_ControllerConfig.ShowModal = mrOk then
+    ;
 
   FreeAndNil({var}frm_ControllerConfig);
 end;
@@ -377,8 +378,8 @@ procedure Tfrm_Main.actConfigVideoExecute(Sender: TObject);
 begin
   frm_VideoConfig := Tfrm_VideoConfig.Create(nil);
 
-  if frm_VideoConfig.ShowModal = mrOk then begin
-  end;
+  if frm_VideoConfig.ShowModal = mrOk then
+    ;
 
   FreeAndNil({var}frm_VideoConfig);
 end;
@@ -398,15 +399,15 @@ begin
     Exit;
 
   try
-    if FileExists(m_ExeFilename) then
+    if FileExists(m_ExeFileName) then
     begin
       WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
-      WinExec(PChar(m_ExeFilename), SW_SHOWNORMAL);
+      WinExec(PChar(m_ExeFileName), SW_SHOWNORMAL);
     end
     else
     begin
-      MessageDlg(m_ExeFilename + ' does not exists.', mtError, [mbOk], 0);
-      WriteLog('WndMain: ' + m_ExeFilename + ' does not exists.');
+      MessageDlg(m_ExeFileName + ' does not exists.', mtError, [mbOk], 0);
+      WriteLog('WndMain: ' + m_ExeFileName + ' does not exists.');
     end;
   except
     MessageDlg('Emmulation failed. Try converting again. If this message repeats, the Xbe is not supported.', mtError, [mbOk], 0);
@@ -422,11 +423,11 @@ var
 begin
   Result := False;
   // Convert Xbe to Exe, if necessary
-  if (m_ExeFilename = '') or m_bExeChanged then
+  if (m_ExeFileName = '') or m_bExeChanged then
   begin
     case x_AutoConvert of
-      CONVERT_TO_WINDOWSTEMP: FileName := GetTempDirectory + ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe'));
-      CONVERT_TO_XBEPATH: FileName := ExtractFileName(ChangeFileExt(m_XbeFilename, '.exe'));
+      CONVERT_TO_WINDOWSTEMP: FileName := GetTempDirectory + ExtractFileName(ChangeFileExt(m_XbeFileName, '.exe'));
+      CONVERT_TO_XBEPATH: FileName := ExtractFileName(ChangeFileExt(m_XbeFileName, '.exe'));
     else
       if ExeSaveDialog.Execute then
         FileName := ExeSaveDialog.FileName;
@@ -437,15 +438,15 @@ begin
     finally
     end;
 
-    if Result then begin
-      m_ExeFilename := FileName;
+    if Result then
+    begin
+      m_ExeFileName := FileName;
       WriteLog(m_szAsciiTitle + ' was converted to .exe.');
       m_bExeChanged := False;
-      RecentExeAdd(m_ExeFilename);
+      RecentExeAdd(m_ExeFileName);
     end
-    else begin
+    else
       WriteLog('Export: Error converting ' + m_szAsciiTitle + ' to .exe');
-    end;
   end;
 end; // Tfrm_Main.StartEmulation
 
@@ -473,7 +474,7 @@ end;
 
 procedure Tfrm_Main.ImportExe(aFileName: string);
 begin
-  m_ExeFilename := '';
+  m_ExeFileName := '';
 
   m_Xbe := TXbe.Create(aFileName, ftExe);
   try
@@ -525,10 +526,10 @@ begin
     end;
 
     m_DxbxDebug := DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', Ord(DM_NONE)));
-    m_DxbxDebugFilename := IniFile.ReadString('Settings', 'DxbxDebugFilename', '');
+    m_DxbxDebugFileName := IniFile.ReadString('Settings', 'DxbxDebugFileName', '');
 
     m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(DM_NONE)));
-    m_KrnlDebugFilename := IniFile.ReadString('Settings', 'KrnlDebugFilename', '');
+    m_KrnlDebugFileName := IniFile.ReadString('Settings', 'KrnlDebugFileName', '');
 
     // Dll settings
     DLLToUse := TUseDLL(IniFile.ReadInteger('Settings', 'DllToUse', 0));
@@ -565,7 +566,7 @@ end; // Tfrm_Main.ReadSettingsIni
 procedure Tfrm_Main.WMDROPFILES(var Msg: TMessage);
 var
   pcFileName: PChar;
-  i, iSize, iFileCount: integer;
+  i, iSize, iFileCount: Integer;
 begin
   pcFileName := ''; // to avoid compiler warning message
   iFileCount := DragQueryFile(Msg.wParam, $FFFFFFFF, pcFileName, 255);
@@ -579,10 +580,10 @@ begin
       if Assigned(m_Xbe) then
         CloseXbe();
 
-      if OpenXbe(pcFileName, m_Xbe, m_ExeFilename, m_XbeFilename) then
+      if OpenXbe(pcFileName, m_Xbe, m_ExeFileName, m_XbeFileName) then
       begin
         StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-        RecentXbeAdd( XbeOpenDialog.Filename );
+        RecentXbeAdd( XbeOpenDialog.FileName );
         Emulation_State := esFileOpen;
         AddjustMenu;
       end
@@ -636,10 +637,10 @@ begin
     end;
 
     IniFile.WriteInteger('Settings', 'DxbxDebug', Ord(m_DxbxDebug));
-    IniFile.WriteString('Settings', 'DxbxDebugFilename', m_DxbxDebugFilename);
+    IniFile.WriteString('Settings', 'DxbxDebugFileName', m_DxbxDebugFileName);
 
     IniFile.WriteInteger('Settings', 'KrnlDebug', Ord(m_KrnlDebug));
-    IniFile.WriteString('Settings', 'KrnlDebugFilename', m_KrnlDebugFilename);
+    IniFile.WriteString('Settings', 'KrnlDebugFileName', m_KrnlDebugFileName);
 
     IniFile.WriteInteger('Settings', 'DllToUse', Ord(DLLToUse));
   finally
@@ -662,19 +663,19 @@ end; // Tfrm_Main.actConsoleXbeInfoExecute
 
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
-  SaveDialog.Filename := m_Xbe.DetermineDumpFileName;
+  SaveDialog.FileName := m_Xbe.DetermineDumpFileName;
   SaveDialog.Filter := DIALOG_FILTER_TEXT;
 
   if SaveDialog.Execute then
   begin
     // ask permisssion to override if file exists
-    if FileExists(SaveDialog.Filename) then
+    if FileExists(SaveDialog.FileName) then
     begin
       if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrNo then
         Exit;
     end;
 
-    m_Xbe.DumpInformation(SaveDialog.Filename);
+    m_Xbe.DumpInformation(SaveDialog.FileName);
     WriteLog(m_szAsciiTitle + '''s .xbe info was successfully dumped.');
     MessageDlg(m_szAsciiTitle + '''s .xbe info was successfully dumped.', mtInformation, [mbOk], 0);
   end;
@@ -713,14 +714,14 @@ begin
   end
   else
   begin
-    SaveDialog.Filename := 'DxbxDebug.txt';
+    SaveDialog.FileName := 'DxbxDebug.txt';
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
       CloseLogs;
       m_DxbxDebug := DM_FILE;
       CreateLogs(ltGui);
-      m_DxbxDebugFilename := SaveDialog.Filename;
+      m_DxbxDebugFileName := SaveDialog.FileName;
       AddjustMenu;
     end;
   end;
@@ -755,12 +756,12 @@ begin
   end
   else
   begin
-    SaveDialog.Filename := 'KernelDebug.txt';
+    SaveDialog.FileName := 'KernelDebug.txt';
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
       m_KrnlDebug := DM_FILE;
-      m_KrnlDebugFilename := SaveDialog.Filename;
+      m_KrnlDebugFileName := SaveDialog.FileName;
       AddjustMenu;
     end;
   end;
@@ -876,10 +877,10 @@ begin
     Exit;
 
   // ask permission to overwrite if file exists
-  if FileExists(LogoSaveDialog.Filename) then
+  if FileExists(LogoSaveDialog.FileName) then
   begin
     if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrYes then
-      DeleteFile(LogoSaveDialog.Filename)
+      DeleteFile(LogoSaveDialog.FileName)
     else
       Exit;
   end;
@@ -890,7 +891,7 @@ begin
     bmp.Width := 100;
     bmp.Height := 17;
     m_Xbe.ExportLogoBitmap(bmp);
-    bmp.SaveToFile(LogoSaveDialog.Filename);
+    bmp.SaveToFile(LogoSaveDialog.FileName);
   finally
     WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
   end;
@@ -1009,7 +1010,7 @@ begin
   if Assigned(m_Xbe) then
     CloseXbe();
 
-  if not OpenXbe(TempItem.Hint, m_Xbe, m_ExeFilename, m_XbeFilename) then
+  if not OpenXbe(TempItem.Hint, m_Xbe, m_ExeFileName, m_XbeFileName) then
   begin
     MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     Exit;

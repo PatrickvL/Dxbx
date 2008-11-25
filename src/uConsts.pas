@@ -53,6 +53,11 @@ const
   PE_FILE_ALIGN = $00000020; // File alignment
   PE_SEGM_ALIGN = $00000020; // Segment alignment
 
+  // Copied from System.pas :
+  EXCEPTION_CONTINUE_SEARCH    = 0;
+  EXCEPTION_EXECUTE_HANDLER    = 1;
+  EXCEPTION_CONTINUE_EXECUTION = -1;
+
   cXDK_TRACKER_DATA_FILE = 'GameData.dat';
   cXDk_TRACKER_XML_VERSION = '1.0';
 

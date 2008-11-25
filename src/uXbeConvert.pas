@@ -32,39 +32,39 @@ uses
   uXbe,
   uEmuExe;
 
-function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: THandle): Boolean;
-function ConvertXbeToExe(aFileName, m_ExeFilename, m_XbeFilename: string; aXbe: TXbe; aHandle: THandle): Boolean;
+function ConvertToExe(x_FileName: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: THandle): Boolean;
+function ConvertXbeToExe(aFileName, m_ExeFileName, m_XbeFileName: string; aXbe: TXbe; aHandle: THandle): Boolean;
 
 implementation
 
 //------------------------------------------------------------------------------
 
-function ConvertToExe(x_filename: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: THandle): Boolean;
+function ConvertToExe(x_FileName: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: THandle): Boolean;
 var
   i_EmuExe: TEmuExe;
 begin
   Result := False;
 
-  if x_filename <> '' then
+  if x_FileName <> '' then
   begin
     // ask permission to overwrite if file exists
     if x_bVerifyIfExists then
     begin
-      if FileExists(x_filename) then
+      if FileExists(x_FileName) then
       begin
         if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
           Exit;
 
-        if not DeleteFile(x_filename) then
+        if not DeleteFile(x_FileName) then
           RaiseLastOSError;
       end;
     end;
 
     // convert file
     try
-      i_EmuExe := TEmuExe.Create(aXbe, m_KrnlDebug, m_KrnlDebugFilename, aHandle);
+      i_EmuExe := TEmuExe.Create(aXbe, m_KrnlDebug, m_KrnlDebugFileName, aHandle);
       try
-        if i_EmuExe.DoExport(x_filename) then
+        if i_EmuExe.DoExport(x_FileName) then
         begin
           Result := True;
         end;
@@ -82,11 +82,11 @@ end;
 
 //------------------------------------------------------------------------------
 
-function ConvertXbeToExe(aFileName, m_ExeFilename, m_XbeFilename: string; aXbe: TXbe; aHandle: THandle): Boolean;
+function ConvertXbeToExe(aFileName, m_ExeFileName, m_XbeFileName: string; aXbe: TXbe; aHandle: THandle): Boolean;
 begin
   Result := False;
   FreeAndNil(aXbe);
-  if OpenXbe(aFileName, {var}aXbe, m_ExeFilename, m_XbeFilename) then
+  if OpenXbe(aFileName, {var}aXbe, m_ExeFileName, m_XbeFileName) then
   begin
     ConvertToExe(ChangeFileExt(aFileName, '.exe'), {VerifyIfExists=}False, aXbe, aHandle);
     Result := True;

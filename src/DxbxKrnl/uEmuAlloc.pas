@@ -313,7 +313,7 @@ begin
 
                 pFree := pCur;
                 pPrev.pNext := pCur.pNext;
-                break;
+                Break;
             end;
             pPrev := pCur;
         end;

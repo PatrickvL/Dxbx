@@ -209,7 +209,7 @@ end;
 procedure EmuShared.GetXBController(var ctrl: XBController);
 begin
   Lock();
-  //memcpy(ctrl, &m_XBController, sizeof(XBController));
+  //memcpy(ctrl, &m_XBController, SizeOf(XBController));
   ctrl := m_XBController;
   Unlock();
 end;

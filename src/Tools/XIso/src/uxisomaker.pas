@@ -244,7 +244,7 @@ begin
   b2 := (ValorInt32 and $0000FF00) shr 8; //Lo(Hi(ValorInt32));
   b3 := (ValorInt32 and $000000FF); //Lo(Lo(ValorInt32));
   Result := (b3 shl 24) or (b2 shl 16) or (b1 shl 8) or b0;
-      {result := ((LongInt(b3) shl 24) and $FF000000) or
+      {Result := ((LongInt(b3) shl 24) and $FF000000) or
                 ((LongInt(b2) shl 16) and $00FF0000) or
                 ((LongInt(b1) shl  8) and $0000FF00) or
                 ((LongInt(b0)       ) and $000000FF);  }
@@ -347,7 +347,7 @@ begin
              begin
                   if Vacio(Folder+SR.Name+'\') = 0 then
                   begin
-                        new(Entrada);
+                        New(Entrada);
                         Entrada.Nombre := SR.Name;
                         Lista.Add(Entrada);
                         Continue;
@@ -447,7 +447,7 @@ begin
           if i = Lista.Count-1 then
           begin
                Elem.NodoDer := 0;
-               break;
+               Break;
           end;
           Cont := (Cont*4+14+Length(Elem.Nombre));
           if (Cont mod 4) <> 0 then
@@ -686,8 +686,8 @@ begin
       while (Fichero.Position < Fichero.Size) do
       begin
         Imagen.Seek(Imagen.Size, soBeginning);
-        FillChar(BufCopia, sizeof(BufCopia), 0);
-        leido := Fichero.Read(BufCopia, sizeof(BufCopia));
+        FillChar(BufCopia, SizeOf(BufCopia), 0);
+        leido := Fichero.Read(BufCopia, SizeOf(BufCopia));
         Imagen.Write(BufCopia, leido);
         if (leido mod 2048) <> 0 then
         begin
@@ -695,9 +695,9 @@ begin
           Imagen.Write(BufCopia, (((leido div 2048) + 1) * 2048) - leido);
         end;
                {     Imagen.Seek(Imagen.Size,soBeginning);
-                    FillChar(BufCopia,sizeof(BufCopia),0);
-                    Fichero.Read(BufCopia,sizeof(BufCopia));
-                    Imagen.Write(BufCopia,sizeof(BufCopia));        }
+                    FillChar(BufCopia,SizeOf(BufCopia),0);
+                    Fichero.Read(BufCopia,SizeOf(BufCopia));
+                    Imagen.Write(BufCopia,SizeOf(BufCopia));        }
       end;
       Fichero.Free;
                // 22 de Junio de 2002
@@ -722,7 +722,7 @@ begin
           // Nuevo: 18-06-2002
     lDirectorio.Sort(Comparar);
 
-    FillChar(Buffer^, sizeof(Buffer^), $FF);
+    FillChar(Buffer^, SizeOf(Buffer^), $FF);
     PosBuf := 0;
     GenerarTabla(lDirectorio, PosBuf, Buffer);
     if (PosBuf mod 2048) <> 0 then
@@ -767,8 +767,8 @@ begin
     Exit;
 
   New(Buffer);
-  FillChar(Buffer^, sizeof(Buffer^), $00);
-  FillChar(VD, sizeof(VD), $00);
+  FillChar(Buffer^, SizeOf(Buffer^), $00);
+  FillChar(VD, SizeOf(VD), $00);
 
      // Rellenamos el PVD y el xPVD
   GetSystemTimeAsFileTime(FechaActual);
@@ -779,11 +779,11 @@ begin
   VD.IDOut := XBOX_MEDIA;
 
      // Escribimos el PVD (ISO 9660)
-  Imagen.Write(Buffer^, sizeof(Buffer^));
+  Imagen.Write(Buffer^, SizeOf(Buffer^));
   MensajesxISO(SEscritoPVD);
      // Escribimos el xPVD (XBOX Estandard)
-  Imagen.Write(Buffer^, sizeof(Buffer^));
-  Imagen.Write(VD, sizeof(VD));
+  Imagen.Write(Buffer^, SizeOf(Buffer^));
+  Imagen.Write(VD, SizeOf(VD));
   MensajesxISO(SEscritoXPVD);
 
      // Iniciamos el escaneo, estructuracion y creacion de la imagen
@@ -808,18 +808,18 @@ begin
   PVD.VSnumBE := 256;
   PVD.TSectLE := 2048;
   PVD.TSectBE := 8;
-  FillChar(PVD.NomVolume, sizeof(PVD.NomVolume), $20);
-  FillChar(PVD.NomPubli, sizeof(PVD.NomPubli), $20);
-  FillChar(PVD.NomCreador, sizeof(PVD.NomCreador), $20);
-  FillChar(PVD.NomApplica, sizeof(PVD.NomApplica), $20);
+  FillChar(PVD.NomVolume, SizeOf(PVD.NomVolume), $20);
+  FillChar(PVD.NomPubli, SizeOf(PVD.NomPubli), $20);
+  FillChar(PVD.NomCreador, SizeOf(PVD.NomCreador), $20);
+  FillChar(PVD.NomApplica, SizeOf(PVD.NomApplica), $20);
      //PVD.NomApplica := 'Creador XISO - Yursoft';
-  FillChar(PVD.FichCopy, sizeof(PVD.FichCopy), $20);
-  FillChar(PVD.FichAbst, sizeof(PVD.FichAbst), $20);
-  FillChar(PVD.FichBibl, sizeof(PVD.FichBibl), $20);
-  FillChar(PVD.FeHoCrea, sizeof(PVD.FeHoCrea) - 1, $30);
-  FillChar(PVD.FeHoModi, sizeof(PVD.FeHoModi) - 1, $30);
-  FillChar(PVD.FeHoExpi, sizeof(PVD.FeHoExpi) - 1, $30);
-  FillChar(PVD.FeHoEfec, sizeof(PVD.FeHoEfec) - 1, $30);
+  FillChar(PVD.FichCopy, SizeOf(PVD.FichCopy), $20);
+  FillChar(PVD.FichAbst, SizeOf(PVD.FichAbst), $20);
+  FillChar(PVD.FichBibl, SizeOf(PVD.FichBibl), $20);
+  FillChar(PVD.FeHoCrea, SizeOf(PVD.FeHoCrea) - 1, $30);
+  FillChar(PVD.FeHoModi, SizeOf(PVD.FeHoModi) - 1, $30);
+  FillChar(PVD.FeHoExpi, SizeOf(PVD.FeHoExpi) - 1, $30);
+  FillChar(PVD.FeHoEfec, SizeOf(PVD.FeHoEfec) - 1, $30);
   PVD.VerEstruc := 1;
 
   Imagen.Seek(32768, soBeginning);
@@ -832,9 +832,9 @@ begin
   Imagen.Write(PVD, 2048);
 
   Imagen.Seek(Imagen.Size, soBeginning);
-  FillChar(Buffer^, sizeof(Buffer^), $00);
+  FillChar(Buffer^, SizeOf(Buffer^), $00);
   for i := 1 to 32 do
-    Imagen.Write(Buffer^, sizeof(Buffer^));
+    Imagen.Write(Buffer^, SizeOf(Buffer^));
 
   Imagen.Free;
 end;
@@ -850,15 +850,17 @@ var
    i: Integer;
    b: array[0..8191] of Byte;
 begin
-     if (Folder = '') or not DirectoryExists(Folder) then exit;
+     if (Folder = '') or not DirectoryExists(Folder) then
+      Exit;
      if Folder[Length(Folder)] <> '\' then Folder := Folder + '\';
 
      // Creamos las variables dinamicas e inicializamos
      Imagen := TFileStream.Create(NombreImagen, fmCreate);
-     if (Imagen = nil) then exit;
-     new(Buffer);
-     FillChar(Buffer^,sizeof(Buffer^),$00);
-     FillChar(VD,sizeof(VD),$00);
+     if (Imagen = nil) then
+      Exit;
+     New(Buffer);
+     FillChar(Buffer^,SizeOf(Buffer^),$00);
+     FillChar(VD,SizeOf(VD),$00);
 
      // Rellenamos el PVD y el xPVD
      GetSystemTimeAsFileTime(FechaActual);
@@ -870,15 +872,15 @@ begin
      VD.IDOut     := XBOX_MEDIA;
 
      // Escribimos el PVD (ISO 9660)
-     Imagen.Write(Buffer^,sizeof(Buffer^));
+     Imagen.Write(Buffer^,SizeOf(Buffer^));
      MensajesxISO( rcEscritoPVD );
      // Escribimos el xPVD (XBOX Estandard)
-     Imagen.Write(Buffer^,sizeof(Buffer^));
+     Imagen.Write(Buffer^,SizeOf(Buffer^));
      MensajesxISO( rcEscritoXPVD );
 
      for i := 1 to 198144 do
         Imagen.Write(b,2048);
-     Imagen.Write(VD,sizeof(VD));
+     Imagen.Write(VD,SizeOf(VD));
      // Iniciamos el escaneo, estructuracion y creacion de la imagen
 
      //SectorInicio := SECTOR_RAIZ+1;
@@ -903,18 +905,18 @@ begin
      PVD.VSnumBE := 256;
      PVD.TSectLE := 2048;
      PVD.TSectBE := 8;
-     FillChar(PVD.NomVolume,sizeof(PVD.NomVolume),$20);
-     FillChar(PVD.NomPubli,sizeof(PVD.NomPubli),$20);
-     FillChar(PVD.NomCreador,sizeof(PVD.NomCreador),$20);
-     FillChar(PVD.NomApplica,sizeof(PVD.NomApplica),$20);
+     FillChar(PVD.NomVolume,SizeOf(PVD.NomVolume),$20);
+     FillChar(PVD.NomPubli,SizeOf(PVD.NomPubli),$20);
+     FillChar(PVD.NomCreador,SizeOf(PVD.NomCreador),$20);
+     FillChar(PVD.NomApplica,SizeOf(PVD.NomApplica),$20);
      //PVD.NomApplica := 'Creador XISO - Yursoft';
-     FillChar(PVD.FichCopy,sizeof(PVD.FichCopy),$20);
-     FillChar(PVD.FichAbst,sizeof(PVD.FichAbst),$20);
-     FillChar(PVD.FichBibl,sizeof(PVD.FichBibl),$20);
-     FillChar(PVD.FeHoCrea,sizeof(PVD.FeHoCrea)-1,$30);
-     FillChar(PVD.FeHoModi,sizeof(PVD.FeHoModi)-1,$30);
-     FillChar(PVD.FeHoExpi,sizeof(PVD.FeHoExpi)-1,$30);
-     FillChar(PVD.FeHoEfec,sizeof(PVD.FeHoEfec)-1,$30);
+     FillChar(PVD.FichCopy,SizeOf(PVD.FichCopy),$20);
+     FillChar(PVD.FichAbst,SizeOf(PVD.FichAbst),$20);
+     FillChar(PVD.FichBibl,SizeOf(PVD.FichBibl),$20);
+     FillChar(PVD.FeHoCrea,SizeOf(PVD.FeHoCrea)-1,$30);
+     FillChar(PVD.FeHoModi,SizeOf(PVD.FeHoModi)-1,$30);
+     FillChar(PVD.FeHoExpi,SizeOf(PVD.FeHoExpi)-1,$30);
+     FillChar(PVD.FeHoEfec,SizeOf(PVD.FeHoEfec)-1,$30);
      PVD.VerEstruc := 1;
 
      Imagen.Seek(32768,soBeginning);
@@ -927,9 +929,9 @@ begin
      Imagen.Write(PVD,2048);
 
      Imagen.Seek(Imagen.Size,soBeginning);
-     FillChar(Buffer^,sizeof(Buffer^),$00);
+     FillChar(Buffer^,SizeOf(Buffer^),$00);
      for i := 1 to 32 do
-        Imagen.Write(Buffer^,sizeof(Buffer^));
+        Imagen.Write(Buffer^,SizeOf(Buffer^));
 
      Imagen.Free;
 end;   }
@@ -974,7 +976,7 @@ var
     ListaDirectorios.Clear;
      // Directorio raiz
     New(Directorio);
-    FillChar(Directorio^, sizeof(Directorio^), 0);
+    FillChar(Directorio^, SizeOf(Directorio^), 0);
     Directorio.LongNombre := 1;
     if Modo = 0 then
     begin
@@ -1000,7 +1002,7 @@ var
       if (Entrada.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
       begin
         New(Directorio);
-        FillChar(Directorio^, sizeof(Directorio^), 0);
+        FillChar(Directorio^, SizeOf(Directorio^), 0);
            {  if (Directorio.LongNombre mod 2) <> 0 then
              begin
                if Entrada^.LongNombre+1 > 32 then
@@ -1142,7 +1144,7 @@ var
         if Entrada^.DirPadre <> EntradaPadre.DirHijo then
           Continue;
           
-        FillChar(EntradaISO^, sizeof(EntradaISO^), 0);
+        FillChar(EntradaISO^, SizeOf(EntradaISO^), 0);
         EntradaISO.TamanoLE := Intel2Motorola(Entrada^.Tamano);
         EntradaISO.TamanoBE := Entrada^.Tamano;
         EntradaISO.PSectorLE := Intel2Motorola(Entrada^.SectorIn);
@@ -1225,7 +1227,7 @@ begin
   PosicionTablaDirectorios := XDFS.Size;
 
      // Rellenamos el PVD
-  FillChar(PVD, sizeof(PVD), 0);
+  FillChar(PVD, SizeOf(PVD), 0);
   PVD.Id1 := 01;
   PVD.CD001 := 'CD001';
   PVD.Id2 := 01;
@@ -1237,19 +1239,19 @@ begin
   PVD.VSnumBE := 256;
   PVD.TSectLE := 2048;
   PVD.TSectBE := 8;
-  FillChar(PVD.NomVolume, sizeof(PVD.NomVolume), $20);
-  FillChar(PVD.NomPubli, sizeof(PVD.NomPubli), $20);
-  FillChar(PVD.NomCreador, sizeof(PVD.NomCreador), $20);
-  FillChar(PVD.NomApplica, sizeof(PVD.NomApplica), $20);
+  FillChar(PVD.NomVolume, SizeOf(PVD.NomVolume), $20);
+  FillChar(PVD.NomPubli, SizeOf(PVD.NomPubli), $20);
+  FillChar(PVD.NomCreador, SizeOf(PVD.NomCreador), $20);
+  FillChar(PVD.NomApplica, SizeOf(PVD.NomApplica), $20);
   PVD.NomApplica := 'xISO - Yursoft';
      //PVD.NomApplica := 'Creador XISO - Yursoft';
-  FillChar(PVD.FichCopy, sizeof(PVD.FichCopy), $20);
-  FillChar(PVD.FichAbst, sizeof(PVD.FichAbst), $20);
-  FillChar(PVD.FichBibl, sizeof(PVD.FichBibl), $20);
-  FillChar(PVD.FeHoCrea, sizeof(PVD.FeHoCrea) - 1, $30);
-  FillChar(PVD.FeHoModi, sizeof(PVD.FeHoModi) - 1, $30);
-  FillChar(PVD.FeHoExpi, sizeof(PVD.FeHoExpi) - 1, $30);
-  FillChar(PVD.FeHoEfec, sizeof(PVD.FeHoEfec) - 1, $30);
+  FillChar(PVD.FichCopy, SizeOf(PVD.FichCopy), $20);
+  FillChar(PVD.FichAbst, SizeOf(PVD.FichAbst), $20);
+  FillChar(PVD.FichBibl, SizeOf(PVD.FichBibl), $20);
+  FillChar(PVD.FeHoCrea, SizeOf(PVD.FeHoCrea) - 1, $30);
+  FillChar(PVD.FeHoModi, SizeOf(PVD.FeHoModi) - 1, $30);
+  FillChar(PVD.FeHoExpi, SizeOf(PVD.FeHoExpi) - 1, $30);
+  FillChar(PVD.FeHoEfec, SizeOf(PVD.FeHoEfec) - 1, $30);
   PVD.VerEstruc := 1;
 
      // Tabla directorios Little Endian
@@ -1271,9 +1273,9 @@ begin
 
      // Rellenamos la imagen con 150 sectores para
   XDFS.Seek(XDFS.Size, soBeginning);
-  FillChar(BufferDirectorios, sizeof(BufferDirectorios), $00);
+  FillChar(BufferDirectorios, SizeOf(BufferDirectorios), $00);
   for i := 1 to 32 do
-    XDFS.Write(BufferDirectorios, sizeof(BufferDirectorios));
+    XDFS.Write(BufferDirectorios, SizeOf(BufferDirectorios));
 
      // Escribimos el PVD final.
   XDFS.Seek(32768, soBeginning);

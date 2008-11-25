@@ -25,6 +25,7 @@ uses
   // Delphi
   Windows,
   SysUtils,
+  Classes, // TBits
   // Jedi
   JwaWinType,
   // Cxbx
@@ -46,25 +47,6 @@ procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 
 implementation
 
-(*
-//include 'CxbxKrnl.h'
-//include 'Emu.h'
-//include 'EmuFS.h'
-//include 'EmuXTL.h'
-//include 'EmuShared.h'
-//include 'HLEDataBase.h'
-
-function EmuLocateFunction(var Oovpa: OOVPA; lower: uint32; upper: uint32): PVOID;
-//include <shlobj.h>
-//include <vector>
-
- std.vector<Pointer > vCacheOut;
-
- bool bCacheInp := False;
- std.vector<Pointer > vCacheInp;
- std.vector<Pointer >.const_iterator vCacheInpIter;
-*)
-
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 (*
 var
@@ -83,12 +65,12 @@ begin
   // initialize openxdk emulation (TODO)
   if pLibraryVersion = nil then
   begin
-    DbgPrintf('HLE: Detected OpenXDK application... cannot patch!');
+    DbgPrintf('DxbxHLE: Detected OpenXDK application... cannot patch!');
     Exit;
   end;
 
   // initialize Microsoft XDK emulation
-  DbgPrintf('HLE: Detected Microsoft XDK application...');
+  DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
 
   DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
 
@@ -136,11 +118,11 @@ begin
         begin
           if (bFoundD3D) then
           begin
-              //DbgPrintf("Redundant\n");
-              continue;
+              //DbgPrintf('Redundant');
+              Continue;
           end;
 
-          bFoundD3D := true;
+          bFoundD3D := True;
         end;
 
         if bXRefFirstPass then
@@ -230,7 +212,7 @@ begin
               if Assigned(pFunc) then
               begin
                 // offset for stencil cull enable render state in the deferred render state buffer
-                integer patchOffset := 0;
+                Integer patchOffset := 0;
 
                 if (BuildVersion = 3925) then
                 begin
@@ -270,7 +252,7 @@ begin
                 XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 2*4;
                 XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 3*4;
 
-                for (integer v:=0;v<44;v++)
+                for (Integer v:=0;v<44;v++)
                   XTL.EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
                 DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL.EmuD3DDeferredRenderState);
@@ -303,9 +285,9 @@ begin
                   else
                     XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
 
-                  for (integer s:=0;s<4;s++)
+                  for (Integer s:=0;s<4;s++)
                   begin
-                    for (integer v:=0;v<32;v++)
+                    for (Integer v:=0;v<32;v++)
                       XTL.EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
                   end;
 
@@ -333,7 +315,7 @@ begin
           or StrComp(szLibraryName, HLEDataBase[d].Library) <> 0) then
             Continue;
 
-          found := true;
+          found := True;
 
           DbgPrintf('Found');
 
@@ -354,7 +336,6 @@ begin
 end;
 
 // install function interception wrapper
-
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
 var
   RelativeJMPAddress: UInt32;
@@ -367,151 +348,6 @@ begin
   CopyMemory(Pointer(IntPtr(FunctionAddr) + 1), @RelativeJMPAddress, 4);
 end;
 
-(*
-// locate the given function, searching within lower and upper bounds
-function EmuLocateFunction(var Oovpa: OOVPA; lower: uint32; upper: uint32): Pointer;
-begin
-    uint32 count := Oovpa.Count;
-
-    // Skip out if this is an unnecessary search
-    if ( not bXRefFirstPass and Oovpa.XRefCount = 0 and Oovpa.XRefSaveIndex = (uint08)-1) then
-        result:= 0;
-
-    // large
-    if (Oovpa.Large = 1) then
-    begin
-        LOOVPA<1> *Loovpa := (LOOVPA<1>)Oovpa;
-
-        upper:= upper - Loovpa.Lovp[count-1].Offset;
-
-        // search all of the image memory
-        for (uint32 cur:=lower;cur<upper;cur++)
-        begin
-            uint32 v;
-
-            // check all cross references
-            for (v:=0;v<Loovpa.XRefCount;v++)
-            begin
-                uint32 Offset := Loovpa.Lovp[v].Offset;
-                uint32 Value  := Loovpa.Lovp[v].Value;
-
-                uint32 RealValue := *(uint32)(cur + Offset);
-
-                if (XRefDataBase[Value] = -1) then
-                    goto skipout_L;   // unsatisfied Xref is not acceptable
-
-                if ((RealValue + cur + Offset+4 <> XRefDataBase[Value]) and (RealValue <> XRefDataBase[Value])) then
-                    break;
-             end;
-
-            // check all pairs, moving on if any do not match
-            for (v:=0;v<count;v++)
-            begin
-                uint32 Offset := Loovpa.Lovp[v].Offset;
-                uint32 Value  := Loovpa.Lovp[v].Value;
-
-                uint08 RealValue := *(uint08)(cur + Offset);
-
-                if (RealValue <> Value) then
-                    break;
-             end;
-
-            // success if we found all pairs
-            if (v = count) then
-            begin
-                if (Loovpa.XRefSaveIndex <> (uint08)-1) then
-                begin
-                    if (XRefDataBase[Loovpa.XRefSaveIndex] = -1) then
-                    begin
-                        UnResolvedXRefs:= UnResolvedXRefs - 1;
-                        XRefDataBase[Loovpa.XRefSaveIndex] := cur;
-
-                        result:= cur;
-                     end;
-                    else
-                    begin
-                        result:= XRefDataBase[Loovpa.XRefSaveIndex];   // already Found, no bother patching again
-                     end;
-                 end;
-
-                result:= cur;
-             end;
-
-            skipout_L:;
-         end;
-     end;
-    // small
-    else
-    begin
-        SOOVPA<1> *Soovpa := (SOOVPA<1>)Oovpa;
-
-        upper:= upper - Soovpa.Sovp[count-1].Offset;
-
-        // search all of the image memory
-        for (uint32 cur:=lower;cur<upper;cur++)
-        begin
-            uint32 v;
-
-            // check all cross references
-            for (v:=0;v<Soovpa.XRefCount;v++)
-            begin
-                uint32 Offset := Soovpa.Sovp[v].Offset;
-                uint32 Value  := Soovpa.Sovp[v].Value;
-
-                uint32 RealValue := *(uint32)(cur + Offset);
-
-                if (XRefDataBase[Value] = -1) then
-                    goto skipout_S;   // Unsatisfied XRef is not acceptable
-
-                if ( (RealValue + cur + Offset + 4 <> XRefDataBase[Value]) and (RealValue <> XRefDataBase[Value])) then
-                    break;
-             end;
-
-            // check OV pairs if all xrefs matched
-            if (v = Soovpa.XRefCount) then
-            begin
-                // check all pairs, moving on if any do not match
-                for (;v<count;v++)
-                begin
-                    uint32 Offset := Soovpa.Sovp[v].Offset;
-                    uint32 Value  := Soovpa.Sovp[v].Value;
-
-                    uint08 RealValue := *(uint08)(cur + Offset);
-
-                    if (RealValue <> Value) then
-                        break;
-                 end;
-             end;
-
-            // success if we found all pairs
-            if (v = count) then
-            begin
-                if (Soovpa.XRefSaveIndex <> (uint08)-1) then
-                begin
-                    if (XRefDataBase[Soovpa.XRefSaveIndex] = -1) then
-                    begin
-                        UnResolvedXRefs:= UnResolvedXRefs - 1;
-                        XRefDataBase[Soovpa.XRefSaveIndex] := cur;
-
-                        result:= cur;
-                     end;
-                    else
-                    begin
-                        result:= XRefDataBase[Soovpa.XRefSaveIndex];   // already Found, no bother patching again
-                     end;
-                 end;
-
-                result:= cur;
-             end;
-
-            skipout_S:;
-         end;
-     end;
-
-    result:= 0;
-end;
-*)
-
 // install function interception wrappers
 procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 var
@@ -520,29 +356,56 @@ var
   OrgCode: TCodePointer;
   NewCode: TCodePointer;
   NrPatches: Integer;
+{$IFDEF DXBX_DEBUG}
+  UsedPatches: TBits;
+{$ENDIF}
 begin
-  DbgPrintf('HLE : Installing registered patches :');
+  DbgPrintf('DxbxHLE : Installing registered patches :');
 
   NrPatches := 0;
-  for i := 0 to DetectedFunctions.Count - 1 do
-  begin
-    DetectedFunction := DetectedFunctions[i];
-    if DetectedFunction.XboxLibraryPatch <> xlp_Unknown then
+{$IFDEF DXBX_DEBUG}
+  UsedPatches := TBits.Create;
+  try
+{$ENDIF}
+    for i := 0 to DetectedFunctions.Count - 1 do
     begin
-      OrgCode := DetectedFunction.CodeStart;
-      NewCode := XboxLibraryPatchToPatch(DetectedFunction.XboxLibraryPatch);
-      Assert(Assigned(NewCode));
+      DetectedFunction := DetectedFunctions[i];
+      if DetectedFunction.XboxLibraryPatch <> xlp_Unknown then
+      begin
+        OrgCode := DetectedFunction.CodeStart;
+        NewCode := XboxLibraryPatchToPatch(DetectedFunction.XboxLibraryPatch);
+        Assert(Assigned(NewCode));
+
+  {$IFDEF DXBX_DEBUG}
+        DbgPrintf('DxbxHLE : Installed patched from $%.08X (%s) to $%.08X', [OrgCode, DetectedFunction.FunctionName, NewCode]);
+        UsedPatches[DetectedFunction.XboxLibraryPatch] := True;
+  {$ENDIF}
+
+        EmuInstallWrapper(OrgCode, NewCode);
+        Inc(NrPatches);
+      end;
+    end;
+
+    DbgPrintf('DxbxHLE : Installed patches : %d.', [NrPatches]);
 
 {$IFDEF DXBX_DEBUG}
-      DbgPrintf('HLE : $%.08X (%s) -> $%.08X', [OrgCode, DetectedFunction.FunctionName, NewCode]);
-{$ENDIF}
-
-      EmuInstallWrapper(OrgCode, NewCode);
-      Inc(NrPatches);
+    DbgPrintf('DxbxHLE : Unused patches : ');
+    NrPatches := 0;
+    for i := 0 to AvailablePatches.Count - 1 do
+    begin
+      if not UsedPatches[{XboxLibraryPatch=}(i + 1)] then
+      begin
+        Inc(NrPatches);
+        DbgPrintf('DxbxHLE : Unused patch %.3d : $%.08x (%s{Emu}%s)', [i, Integer(AvailablePatches.Objects[i]), PatchPrefix, AvailablePatches[i]]);
+      end;
     end;
-  end;
 
-  DbgPrintf('HLE : Installed %d patches.', [NrPatches]);
+    DbgPrintf('DxbxHLE : Unused patches : %d.', [NrPatches]);
+
+  finally
+    FreeAndNil(UsedPatches);
+  end;
+{$ENDIF}
 end;
 
 end.

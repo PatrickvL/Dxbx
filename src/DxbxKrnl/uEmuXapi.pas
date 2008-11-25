@@ -102,9 +102,7 @@ begin
   EmuSwapFS(); // XBox FS
 {$ENDIF}
 
-    // we dont really feel like patching, now do we?
-
-  Exit;
+  // we dont really feel like patching, now do we?
 end;
 
 function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
@@ -194,16 +192,19 @@ begin
 
   if (not FAILED(hRet)) then
   begin
-    do
+    while True do
     begin
       BOOL bRet := FindNextFile(hRet, lpFindFileData);
 
-      if (not bRet) then begin hRet := INVALID_HANDLE_VALUE; break; end;
+      if (not bRet) then
+      begin
+        hRet := INVALID_HANDLE_VALUE;
+        Break;
+      end;
 
       if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
-        break;
+        Break;
     end;
-    while (True);
   end;
 
     //SetCurrentDirectory(szOldDir);
@@ -238,10 +239,11 @@ begin
   begin
     bRet := FindNextFile(hFindFile, lpFindFileData);
 
-    if (not bRet) then begin break; end;
+    if (not bRet) then
+      Break;
 
     if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
-      break;
+      Break;
   end;
   while (True);
 
@@ -663,7 +665,7 @@ begin
     (* no longer necessary
     if (pph <> 0) then
     begin
-        integer v;
+        Integer v;
 
         for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
         begin
@@ -686,8 +688,6 @@ begin
     //*/
 
     EmuSwapFS();   // XBox FS
-
-    Exit;
 end;    *)
 
 (*DWord WINAPI XTL.EmuXInputPoll
@@ -710,21 +710,21 @@ begin
     //
 
     begin
-        integer v;
+        Integer v;
 
         for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
         begin
             THandle hDevice := g_pXInputSetStateStatus[v].hDevice;
 
             if (hDevice = 0) then
-                continue;
+                Continue;
 
             g_pXInputSetStateStatus[v].dwLatency := 0;
 
             XTL.PXINPUT_FEEDBACK pFeedback := (XTL.PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
 
             if (pFeedback = 0) then
-                continue;
+                Continue;
 
             //
             // Only update slot if it has not already been updated
@@ -856,7 +856,7 @@ begin
 
     if (pph <> 0) then
     begin
-        integer v;
+        Integer v;
 
         //
         // Check if this device is already being polled
@@ -898,7 +898,7 @@ begin
 
                     pFeedback.Header.dwStatus := ERROR_IO_PENDING;
 
-                    break;
+                    Break;
                  end;
              end;
 
@@ -1137,8 +1137,6 @@ begin
   CxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
 
   EmuSwapFS(); // XBox FS
-
-  Exit;
 end;
 
 procedure XTL_EmuXRegisterThreadNotifyRoutine(

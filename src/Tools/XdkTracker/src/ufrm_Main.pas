@@ -451,15 +451,15 @@ end; // TfrmMain.ExportGameList1Click
 procedure TfrmXdkTracker.GetXDKInfofromXbe1Click(Sender: TObject);
 var
   m_Xbe: TXbe;
-  m_XbeFilename: string;
-  m_ExeFilename: string;
+  m_XbeFileName: string;
+  m_ExeFileName: string;
 begin
   XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
   m_Xbe := nil;
   if not XbeOpenDialog.Execute then
     Exit;
 
-  if OpenXbe(XbeOpenDialog.Filename, m_Xbe, m_ExeFilename, m_XbeFilename ) then
+  if OpenXbe(XbeOpenDialog.FileName, m_Xbe, m_ExeFileName, m_XbeFileName ) then
   begin
     DxbxXml.CreateXmlXbeDump(ExtractFilePath(Application.ExeName) + 'Dump.dat', m_Xbe);
     ImportXbeDump;

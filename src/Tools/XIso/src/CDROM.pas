@@ -922,7 +922,7 @@ begin
        //   $7F: s := ASC7F00;
           else s := '';  
         end;
-         MessageBox(0,PChar(s),nil,MB_OK);
+         MessageBox(0, PChar(s), nil, MB_OK);
         M(SK, ASC, ASCQ, s);
 end;
 
@@ -1737,7 +1737,7 @@ var
   BufferSize: Longword;  
   LBA0, LBA1, LBA2, LBA3: Byte;
 begin
-  Fillchar(Result, sizeof(Result), 0);
+  FillChar(Result, SizeOf(Result), 0);
   //---Conversion de Parametros---
   LBA3 := ($ff000000 and LBA) shr 24;
   LBA2 := ($00ff0000 and LBA) shr 16;
@@ -2531,7 +2531,7 @@ begin
               (i <= 99) do
         begin
               Result.TrackInfo[i].Sesion := tno;
-              inc(i);
+              Inc(i);
         end;
       end;
 

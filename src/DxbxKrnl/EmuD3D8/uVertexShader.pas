@@ -51,7 +51,8 @@ begin
   EmuSwapFS();
   XTL_EmuIDirect3DDevice8_GetVertexShader(aHandle);
   EmuSwapFS();
-  if (VshHandleIsVertexShader(aHandle)) then begin
+  if (VshHandleIsVertexShader(aHandle)) then
+  begin
     (*pD3DVertexShader := (X_D3DVertexShader * )(Handle & 0 x7FFFFFFF);
     pVertexShader := (VERTEX_SHADER * )pD3DVertexShader - > Handle;
     if (pVertexShader.Status <> 0)begin

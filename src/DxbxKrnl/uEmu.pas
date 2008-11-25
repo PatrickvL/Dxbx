@@ -30,6 +30,7 @@ uses
   , JwaWinBase
   , JwaWinType
   // DXBX
+  , uConsts
   , uLog
   , uEmuFS;
 
@@ -48,7 +49,9 @@ var
   g_bEmuException: Boolean = False;
 
 procedure EmuWarning(szWarningMessage: string);
+function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
 procedure EmuCleanup(const szErrorMessage: string);
+function ExitException(e: LPEXCEPTION_POINTERS): Integer;
 
 const
   // NOTE: this is an arbitrary latency
@@ -104,9 +107,8 @@ begin
     fflush(stdout);*)
 end;
 
-(*
 // exception handler
-function EmuException(E: LPEXCEPTION_POINTERS): Integer;
+function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
 begin
 	if EmuIsXboxFS() then
 		EmuSwapFS();
@@ -117,6 +119,7 @@ begin
 	begin
 		if E.ExceptionRecord.ExceptionCode = $C0000005 then
 		begin
+(*
 			// Halo Access Adjust 1
 			if E.ContextRecord.Eip = $0003394C then
 			begin
@@ -144,7 +147,7 @@ begin
           // go through and fix any other pointers in the ESI allocation chunk
           begin
             DWORD dwESI := e.ContextRecord.Esi;
-            DWORD dwSize := EmuCheckAllocationSize((PVOID)dwESI, false);
+            DWORD dwSize := EmuCheckAllocationSize((PVOID)dwESI, False);
 
             // dword aligned
             dwSize -= 4 - (dwSize mod 4);
@@ -160,16 +163,17 @@ begin
 
           // fix this global pointer
           begin
-              DWORD dwValue := *(DWORD* )$39CE24;
+            DWORD dwValue := *(DWORD* )$39CE24;
 
-              *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
+            *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
           end;
 
           DbgPrintf('EmuMain ($%X): Halo Access Adjust 1 was applied!\n', GetCurrentThreadId());
 
           g_bEmuException := False;
 
-          Result := EXCEPTION_CONTINUE_EXECUTION; Exit;
+          Result := EXCEPTION_CONTINUE_EXECUTION;
+          Exit;
         end;
       end
       // Halo Access Adjust 2
@@ -185,17 +189,17 @@ begin
             // go through and fix any other pointers in the $2DF1C8 allocation chunk
             begin
               DWORD dwPtr := *(DWORD* )$2DF1C8;
-              DWORD dwSize := EmuCheckAllocationSize((PVOID)dwPtr, false);
+              DWORD dwSize := EmuCheckAllocationSize((PVOID)dwPtr, False);
 
               // dword aligned
               dwSize -= 4 - dwSize%4;
 
               for(DWORD v=0;v<dwSize;v+=4 do
               begin
-                  DWORD dwCur := *(DWORD* )(dwPtr+v);
+                DWORD dwCur := *(DWORD* )(dwPtr+v);
 
-                  if(dwCur >= $803A6000 && dwCur < $819A6000)
-                      *(DWORD* )(dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
+                if(dwCur >= $803A6000 && dwCur < $819A6000)
+                  *(DWORD* )(dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
               end;
             end;
 
@@ -203,97 +207,101 @@ begin
 
             g_bEmuException := False;
 
-            Result := EXCEPTION_CONTINUE_EXECUTION; Exit;
+            Result := EXCEPTION_CONTINUE_EXECUTION;
+            Exit;
           end;
         end;
+*)
+    end; // if E.ExceptionRecord.ExceptionCode = $C0000005 then
+  end;
+
+  // print debug information
+  begin
+    if E.ExceptionRecord.ExceptionCode = $80000003 then
+      DbgPrintf('Recieved Breakpoint Exception (int 3)')
+    else
+      DbgPrintf('Recieved Exception (Code := $%.08X)', [e.ExceptionRecord.ExceptionCode]);
+
+    DbgPrintf(
+      #13#10' EIP := $%.08X EFL := $%.08X' +
+      #13#10' EAX := $%.08X EBX := $%.08X ECX := $%.08X EDX := $%.08X' +
+      #13#10' ESI := $%.08X EDI := $%.08X ESP := $%.08X EBP := $%.08X' +
+      #13#10, [
+        e.ContextRecord.Eip, e.ContextRecord.EFlags,
+        e.ContextRecord.Eax, e.ContextRecord.Ebx, e.ContextRecord.Ecx, e.ContextRecord.Edx,
+        e.ContextRecord.Esi, e.ContextRecord.Edi, e.ContextRecord.Esp, e.ContextRecord.Ebp]);
+  end;
+
+//  fflush(stdout);
+
+  // notify user
+  begin
+(*
+    char buffer[256];
+
+    if e.ExceptionRecord.ExceptionCode = $80000003 then
+    begin
+      sprintf(buffer,
+        'Recieved Breakpoint Exception (int 3) @ EIP := $%.08X\n'
+        '\n'
+        '  Press Abort to terminate emulation.\n'
+        '  Press Retry to debug.\n'
+        '  Press Ignore to continue emulation.',
+        e.ContextRecord.Eip, e.ContextRecord.EFlags);
+
+      e.ContextRecord.Eip += 1;
+
+      int ret := MessageBox(g_hEmuWindow, buffer, 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
+
+      if ret = IDABORT then
+      begin
+        printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
+        fflush(stdout);
+
+        if CxbxKrnl_hEmuParent <> NULL then
+          SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
+        ExitProcess(1);
+      end
+      else
+        if ret = IDIGNORE then
+        begin
+          printf('EmuMain ($%X): Ignored Breakpoint Exception\n', GetCurrentThreadId());
+
+          g_bEmuException := False;
+
+          return EXCEPTION_CONTINUE_EXECUTION;
+        end;
+    end
+    else
+    begin
+      sprintf(buffer,
+              'Recieved Exception Code $%.08X @ EIP := $%.08X\n'
+              '\n'
+              '  Press \'OK\' to terminate emulation.\n'
+              '  Press \'Cancel\' to debug.',
+              e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip, e.ContextRecord.EFlags);
+
+      if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
+      begin
+        printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
+        fflush(stdout);
+
+        if CxbxKrnl_hEmuParent <> NULL then
+          SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
+        ExitProcess(1);
       end;
     end;
-
-    // print debug information
-    begin
-      if E.ExceptionRecord.ExceptionCode = $80000003 then
-          printf('EmuMain ($%X): Recieved Breakpoint Exception (int 3)\n', GetCurrentThreadId());
-      else
-          printf('EmuMain ($%X): Recieved Exception (Code := $%.08X)\n', GetCurrentThreadId(), e.ExceptionRecord.ExceptionCode);
-
-      printf('\n'
-          ' EIP := $%.08X EFL := $%.08X\n'
-          ' EAX := $%.08X EBX := $%.08X ECX := $%.08X EDX := $%.08X\n'
-          ' ESI := $%.08X EDI := $%.08X ESP := $%.08X EBP := $%.08X\n'
-          '\n',
-          e.ContextRecord.Eip, e.ContextRecord.EFlags,
-          e.ContextRecord.Eax, e.ContextRecord.Ebx, e.ContextRecord.Ecx, e.ContextRecord.Edx,
-          e.ContextRecord.Esi, e.ContextRecord.Edi, e.ContextRecord.Esp, e.ContextRecord.Ebp);
-    end;
-
-    fflush(stdout);
-
-    // notify user
-    begin
-        char buffer[256];
-
-        if e.ExceptionRecord.ExceptionCode = $80000003 then
-        begin
-            sprintf(buffer,
-				'Recieved Breakpoint Exception (int 3) @ EIP := $%.08X\n'
-                '\n'
-                '  Press Abort to terminate emulation.\n'
-                '  Press Retry to debug.\n'
-                '  Press Ignore to continue emulation.',
-                e.ContextRecord.Eip, e.ContextRecord.EFlags);
-
-            e.ContextRecord.Eip += 1;
-
-            int ret := MessageBox(g_hEmuWindow, buffer, 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
-
-            if ret = IDABORT then
-            begin
-                printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
-                fflush(stdout);
-
-                if CxbxKrnl_hEmuParent <> NULL then
-                    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
-
-                ExitProcess(1);
-            end
-            else
-            if ret = IDIGNORE then
-            begin
-                printf('EmuMain ($%X): Ignored Breakpoint Exception\n', GetCurrentThreadId());
-
-                g_bEmuException := False;
-
-                return EXCEPTION_CONTINUE_EXECUTION;
-            end;
-        end
-        else
-        begin
-			sprintf(buffer,
-                'Recieved Exception Code $%.08X @ EIP := $%.08X\n'
-                '\n'
-                '  Press \'OK\' to terminate emulation.\n'
-                '  Press \'Cancel\' to debug.',
-                e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip, e.ContextRecord.EFlags);
-
-            if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
-            begin
-              printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
-              fflush(stdout);
-
-              if CxbxKrnl_hEmuParent <> NULL then
-                SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
-
-              ExitProcess(1);
-            end;
-        end;
+*)
 	end;
 
 	g_bEmuException := False;
 
 	Result := EXCEPTION_CONTINUE_SEARCH;
 end;
-*)
 
+(*
 // check how many bytes were allocated for a structure
 function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
 var
@@ -308,18 +316,18 @@ begin
     dwRet := VirtualQuery(pBase, MemoryBasicInfo, SizeOf(MemoryBasicInfo));
 
   if (dwRet = 0) then
-    result := 0;
+    Result := 0;
 
   if (MemoryBasicInfo.State <> MEM_COMMIT) then
-    result := 0;
+    Result := 0;
 
     // this is a hack in order to determine when pointers come from a large write-combined database
   if (largeBound and MemoryBasicInfo.RegionSize > 5 * 1024 * 1024) then
-    result := -1;
+    Result := -1;
 
-  result := MemoryBasicInfo.RegionSize - (pBase - MemoryBasicInfo.BaseAddress);
-  *)
+  Result := MemoryBasicInfo.RegionSize - (pBase - MemoryBasicInfo.BaseAddress);
 end;
+*)
 
 
 procedure EmuCleanup(const szErrorMessage: string);
@@ -328,13 +336,14 @@ var
   buffer: array [0..15] of Char;
 begin
   // Print out ErrorMessage (if exists)
-  if (szErrorMessage <> '') then begin
+  if (szErrorMessage <> '') then
+  begin
     (*char szBuffer1[255];
     char szBuffer2[255];
 
     va_list argp;
 
-    sprintf(szBuffer1, "Emu(0 x%X): Recieved Fatal Message - > \n\n", GetCurrentThreadId());
+    sprintf(szBuffer1, 'Emu(0 x%X): Recieved Fatal Message - > '#13#10#13#10, GetCurrentThreadId());
 
     va_start(argp, szErrorMessage);
 
@@ -345,7 +354,7 @@ begin
     strcat(szBuffer1, szBuffer2);
 
 
-    printf("%s\n", szBuffer1);    *)
+    printf('%s'#13#10, szBuffer1);    *)
     szBuffer1 := Format('Emu(0 $%X): Recieved Fatal Message - > '  + szErrorMessage, [GetCurrentThreadId] );
     DbgPrintf(szBuffer1);
 
@@ -359,14 +368,12 @@ begin
   FreeConsole();
 
   (*if (GetConsoleTitle(buffer, 16) <> '' ) then
-    freopen("nul", "w", stdout); *)
+    freopen('nul', 'w', stdout); *)
 
   TerminateProcess(GetCurrentProcess(), 0);
 end;
 
-
 // exception handle for that tough final exit :)
-
 function ExitException(e: LPEXCEPTION_POINTERS): Integer;
 var
   Count: Integer;
@@ -391,7 +398,7 @@ begin
   (*if (count > 1) then
   begin
     MessageDlg( 'Warning: Multiple Problems not ', mtWarning, [mbOk], 0 );
-    result := EXCEPTION_CONTINUE_SEARCH;
+    Result := EXCEPTION_CONTINUE_SEARCH;
   end;
 
   if (CxbxKrnl_hEmuParent <> 0) then
@@ -403,8 +410,8 @@ begin
 end;
 
 exports
-  EmuWarning,
-  EmuCleanup;
+  EmuCleanup,
+  EmuWarning;
 
 end.
 

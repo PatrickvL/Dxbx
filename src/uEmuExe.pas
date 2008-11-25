@@ -45,7 +45,7 @@ type
   protected
     KrnlHandle: THandle;
   public
-    constructor Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFilename: string; hwndParent: THandle);
+    constructor Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFileName: string; hwndParent: THandle);
     destructor Destroy; override;
   end;
 
@@ -106,7 +106,7 @@ end;
 //------------------------------------------------------------------------------
 
 constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
-  m_KrnlDebugFilename: string; hwndParent: THandle);
+  m_KrnlDebugFileName: string; hwndParent: THandle);
 
   procedure _WriteDWordToAddr(const aAddr: Pointer; aDWord: DWord);
   begin
@@ -460,10 +460,10 @@ begin
     Dec(pWriteCursor, SizeOf(m_Xbe.m_Header));
     Inc(pWriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
 
-    // Append x_debug_filename
+    // Append x_debug_FileName
     ZeroMemory(pWriteCursor, 260);
-    if Length(m_KrnlDebugFilename) > 0 then
-      CopyMemory(pWriteCursor, @(m_KrnlDebugFilename[1]), Length(m_KrnlDebugFilename));
+    if Length(m_KrnlDebugFileName) > 0 then
+      CopyMemory(pWriteCursor, @(m_KrnlDebugFileName[1]), Length(m_KrnlDebugFileName));
     Inc(pWriteCursor, 260);
 
     // Append library versions
@@ -505,7 +505,7 @@ begin
     _WriteDWordToSectionPos(i, 16, WriteCursor);
     Inc(WriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
 
-    // Param 5 : szDebugFilename
+    // Param 5 : szDebugFileName
     _WriteDWordToSectionPos(i, 21, WriteCursor);
     Inc(WriteCursor, 260);
 
@@ -622,7 +622,7 @@ begin
         Inc(SizeOf_Code, m_SectionHeader[v].m_SizeOf_Raw);
 
       if (Characteristics and IMAGE_SCN_CNT_INITIALIZED_DATA) <> 0 then
-        Inc(Sizeof_data, m_SectionHeader[v].m_sizeof_raw);
+        Inc(Sizeof_Data, m_SectionHeader[v].m_sizeof_raw);
     end;
 
     // calculate size of image

@@ -90,9 +90,9 @@ type
     dwPeSizeofImage: DWord; // 0x0140 - size of original image
     dwPeChecksum: DWord; // 0x0144 - original checksum
     dwPeTimeDate: DWord; // 0x0148 - original timedate stamp
-    dwDebugPathnameAddr: DWord; // 0x014C - debug pathname address
-    dwDebugFilenameAddr: DWord; // 0x0150 - debug filename address
-    dwDebugUnicodeFilenameAddr: DWord; // 0x0154 - debug unicode filename address
+    dwDebugPathNameAddr: DWord; // 0x014C - debug pathname address
+    dwDebugFileNameAddr: DWord; // 0x0150 - debug FileName address
+    dwDebugUnicodeFileNameAddr: DWord; // 0x0154 - debug unicode FileName address
     dwKernelImageThunkAddr: DWord; // 0x0158 - kernel image thunk address
     dwNonKernelImportDirAddr: DWord; // 0x015C - non kernel import directory address
     dwLibraryVersions: DWord; // 0x0160 - number of library versions
@@ -244,7 +244,7 @@ type
 function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
 function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
 
-function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
 
 procedure XbeLoaded;
 procedure LoadLogo;
@@ -263,7 +263,7 @@ begin
 
     if(m_Xbe.GetError() != 0)
     {
-        MessageBox(m_hwnd, m_Xbe.GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(m_hwnd, m_Xbe.GetError(), 'Cxbx', MB_ICONEXCLAMATION | MB_OK);
 
         if(m_Xbe.IsFatal())
             CloseXbe();
@@ -291,16 +291,16 @@ begin
   WriteLog(DxbxFormat('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end;
 
-function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFilename, aXbeFilename: string): Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
 begin
   Result := False;
   if Assigned(aXbe) or not (FileExists(aFileName)) then
     Exit;
 
-  aExeFilename := '';
-  aXbeFilename := aFileName;
+  aExeFileName := '';
+  aXbeFileName := aFileName;
 
-  {var}aXbe := TXbe.Create(aXbeFilename, ftXbe);
+  {var}aXbe := TXbe.Create(aXbeFileName, ftXbe);
   try
     XbeLoaded();
     Result := True;
@@ -565,7 +565,7 @@ var
   lIndex, lIndex2: Integer;
   TmpStr: string;
   TmpChr: AnsiChar;
-  StrAsciiFilename: string;
+  StrAsciiFileName: string;
   Flag: Byte;
 //  BIndex: Byte;
   QVersion: Word;
@@ -652,7 +652,7 @@ begin
 
   _LogEx(TmpStr);
 
-  lIndex := GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
+  lIndex := GetAddr(m_Header.dwDebugUnicodeFileNameAddr);
   lIndex2 := 0;
   TmpStr := '';
   while lIndex2 < 40 do
@@ -664,9 +664,9 @@ begin
       Break;
   end;
 
-  //TmpStr := WideStringToString(AsciiFilename, 437);
+  //TmpStr := WideStringToString(AsciiFileName, 437);
 
-  StrAsciiFilename := TmpStr;
+  StrAsciiFileName := TmpStr;
   TmpStr := '';
   _LogEx(DxbxFormat('Entry Point                      : 0x%.8x (Retail: 0x%.8x, Debug: 0x%.8x)', [m_Header.dwEntryAddr, m_Header.dwEntryAddr xor XOR_EP_Retail, m_Header.dwEntryAddr xor XOR_EP_DEBUG]));
   _LogEx(DxbxFormat('TLS Address                      : 0x%.8x', [m_Header.dwTLSAddr]));
@@ -681,7 +681,7 @@ begin
   DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwPeTimeDate));
   _LogEx(DxbxFormat('(PE) TimeDate Stamp              : 0x%.8x (%s)', [m_Header.dwPeTimeDate, TmpStr]));
 
-  lIndex := GetAddr(m_Header.dwDebugPathnameAddr);
+  lIndex := GetAddr(m_Header.dwDebugPathNameAddr);
   TmpStr := '';
   TmpChr := Buffer[lIndex];
   Inc(lIndex);
@@ -692,9 +692,9 @@ begin
     Inc(lIndex);
   end;
 
-  _LogEx(DxbxFormat('Debug Pathname Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathnameAddr, TmpStr]));
+  _LogEx(DxbxFormat('Debug PathName Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathnameAddr, TmpStr]));
 
-  lIndex := GetAddr(m_Header.dwDebugFilenameAddr);
+  lIndex := GetAddr(m_Header.dwDebugFileNameAddr);
   TmpStr := '';
   TmpChr := Buffer[lIndex];
   Inc(lIndex);
@@ -705,9 +705,9 @@ begin
     Inc(lIndex);
   end;
 
-  _LogEx(DxbxFormat('Debug Filename Address           : 0x%.8x ("%s")', [m_Header.dwDebugFilenameAddr, TmpStr]));
+  _LogEx(DxbxFormat('Debug FileName Address           : 0x%.8x ("%s")', [m_Header.dwDebugFileNameAddr, TmpStr]));
 
-  _LogEx(DxbxFormat('Debug Unicode filename Address   : 0x%.8x (L"%s")', [m_Header.dwDebugUnicodeFilenameAddr, StrAsciiFilename]));
+  _LogEx(DxbxFormat('Debug Unicode FileName Address   : 0x%.8x (L"%s")', [m_Header.dwDebugUnicodeFileNameAddr, StrAsciiFileName]));
   _LogEx(DxbxFormat('Kernel Image Thunk Address       : 0x%.8x (Retail: 0x%.8x, Debug: 0x%.8x)', [m_Header.dwKernelImageThunkAddr, m_Header.dwKernelImageThunkAddr xor XOR_KT_RETAIL, m_Header.dwKernelImageThunkAddr xor XOR_KT_DEBUG]));
   _LogEx(DxbxFormat('NonKernel Import Dir Address     : 0x%.8x', [m_Header.dwNonKernelImportDirAddr]));
   _LogEx(DxbxFormat('Library Versions                 : 0x%.8x', [m_Header.dwLibraryVersions]));
