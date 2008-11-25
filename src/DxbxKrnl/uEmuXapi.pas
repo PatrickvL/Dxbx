@@ -1241,33 +1241,30 @@ begin
 end;
 
 exports
-  XTL_EmuXapiApplyKernelPatches,
-  XTL_EmuXFormatUtilityDrive,
-  XTL_EmuRtlCreateHeap,
+  XTL_EmuCloseHandle,
+  XTL_EmuGetExitCodeThread,
+  XTL_EmuGetThreadPriority,
+  XTL_EmuQueryPerformanceCounter,
+  XTL_EmuQueryPerformanceFrequency,
   XTL_EmuRtlAllocateHeap,
+  XTL_EmuRtlCreateHeap,
   XTL_EmuRtlFreeHeap,
   XTL_EmuRtlReAllocateHeap,
   XTL_EmuRtlSizeHeap,
-
-  XTL_EmuQueryPerformanceCounter,
-  XTL_EmuQueryPerformanceFrequency,
-  XTL_EmuXMountUtilityDrive,
-  XTL_EmuXInitDevices,
-  XTL_EmuCloseHandle,
-  XTL_EmuSetThreadPriorityBoost,
   XTL_EmuSetThreadPriority,
-  XTL_EmuGetThreadPriority,
-  XTL_EmuGetExitCodeThread,
-
+  XTL_EmuSetThreadPriorityBoost,
+  XTL_EmuXapiApplyKernelPatches,
+  XTL_EmuXapiBootDash,
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
-  XTL_EmuXapiBootDash,
-
-  XTL_EmuXRegisterThreadNotifyRoutine,
   XTL_EmuXCalculateSignatureBegin,
   XTL_EmuXCalculateSignatureBeginEx,
+  XTL_EmuXCalculateSignatureEnd,
   XTL_EmuXCalculateSignatureUpdate,
-  XTL_EmuXCalculateSignatureEnd
+  XTL_EmuXFormatUtilityDrive,
+  XTL_EmuXInitDevices,
+  XTL_EmuXMountUtilityDrive,
+  XTL_EmuXRegisterThreadNotifyRoutine
   ;
 
 end.
