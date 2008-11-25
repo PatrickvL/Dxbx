@@ -62,10 +62,12 @@ begin
     Exit;
   end;
 
-  for i := 0 to 255 do begin
+  for i := 0 to 255 do
+  begin
     crc := i shl 24;
 
-    for j := 0 to 7 do begin
+    for j := 0 to 7 do
+    begin
       if (crc and $80000000) then
         crc := (crc shl 1)^$04C11DB7
       else
@@ -73,14 +75,14 @@ begin
     end;
     crctab[i] := crc;
   end;
-  bFirstTime := false;
+  bFirstTime := False;
 end;          *)
 
-(*function CRC32(var data: Byte; len: integer): Word;
+(*function CRC32(var data: Byte; len: Integer): Word;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
     Word        cresult;
-    integer                 i;;
+    Integer                 i;;
 
     if(len < 4) abort() then ;
 
@@ -96,7 +98,7 @@ begin
         cresult := (cresult shl 8 or *data++) ^ crctab[cresult shr 24];
      end;
 
-    result:= ~cresult;
+    Result:= ~cresult;
 end; *)
 
 
@@ -105,8 +107,8 @@ end; *)
 begin
     this.m_uiNbrStreams := 0;
     ZeroMemory(this.m_pStreams, SizeOf(PATCHEDSTREAM) * MAX_NBR_STREAMS);
-    this.m_bPatched := false;
-    this.m_bAllocatedStreamZeroData := false;
+    this.m_bPatched := False;
+    this.m_bAllocatedStreamZeroData := False;
     this.m_pNewVertexStreamZeroData := 0;
     this.m_pDynamicPatch := 0;
     CRC32Init();
@@ -168,7 +170,7 @@ begin
                 begin
                     printf(' not  not  not Found an old stream, %2.2f', ((FLOAT)((clock() + MAX_STREAM_NOT_USED_TIME) - ((CACHEDSTREAM )pNode.pResource).lLastUsed)) / (FLOAT)CLOCKS_PER_SEC);
                     uiKey := pNode.uiKey;
-                    break;
+                    Break;
                  end;
                 // Find the least used cached stream
                 if((uint32)((CACHEDSTREAM )pNode.pResource).uiCacheHit < uiMinHit) then
@@ -202,7 +204,7 @@ begin
          end;
 
         uiLength := Desc.Size;
-        pCachedStream.bIsUP := false;
+        pCachedStream.bIsUP := False;
         uiKey := (uint32)pOrigVertexBuffer;
      end;
     else
@@ -216,7 +218,7 @@ begin
         pCalculateData := (uint08 )pPatchDesc.pVertexStreamZeroData;
         // TODO: This is sometimes the number of indices, which isn't too good
         uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
-        pCachedStream.bIsUP := true;
+        pCachedStream.bIsUP := True;
         pCachedStream.pStreamUP := pCalculateData;
         uiKey := (uint32)pCalculateData;
      end;
@@ -271,7 +273,7 @@ begin
     XTL.D3DVERTEXBUFFER_DESC  Desc;
     procedure                      *pCalculateData;
     UINT                       uiLength;
-    bool                       bApplied := false;
+    bool                       bApplied := False;
     uint32                     uiKey;
     //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)(*CxbxMalloc(sizeof(CACHEDSTREAM));
 
@@ -284,7 +286,7 @@ begin
          end;
         uiLength := Desc.Size;
         uiKey := (uint32)pOrigVertexBuffer;
-        //pCachedStream.bIsUP = false;
+        //pCachedStream.bIsUP = False;
      end;
     else
     begin
@@ -298,7 +300,7 @@ begin
         // TODO: This is sometimes the number of indices, which isn't too good
         uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
         uiKey := (uint32)pCalculateData;
-        //pCachedStream.bIsUP = true;
+        //pCachedStream.bIsUP = True;
         //pCachedStream.pStreamUP = pCalculateData;
      end;
     g_PatchedStreamsCache.Lock();
@@ -308,7 +310,7 @@ begin
     begin
         pCachedStream.lLastUsed := clock();
         pCachedStream.uiCacheHit:= pCachedStream.uiCacheHit + 1;
-        bool bMismatch := false;
+        bool bMismatch := False;
         if(pCachedStream.uiCount = (pCachedStream.uiCheckFrequency - 1)) then
         begin
             if( not pPatchDesc.pVertexStreamZeroData) then
@@ -341,7 +343,7 @@ begin
                     FreeCachedStream(pCachedStream.Stream.pOriginalStream);
                  end;
                 pCachedStream := 0;
-                bMismatch := true;
+                bMismatch := True;
              end;
             if( not pPatchDesc.pVertexStreamZeroData) then
             begin
@@ -374,8 +376,8 @@ begin
                 // The primitives were patched, draw with the correct number of primimtives from the cache
                 pPatchDesc.dwPrimitiveCount := pCachedStream.dwPrimitiveCount;
              end;
-            bApplied := true;
-            m_bPatched := true;
+            bApplied := True;
+            m_bPatched := True;
          end;
      end;
     g_PatchedStreamsCache.Unlock();
@@ -385,7 +387,7 @@ begin
         pOrigVertexBuffer.Release();
      end;
 
-    result:= bApplied;
+    Result:= bApplied;
  end;                    *)
 
 (*function XTL.VertexPatcher.GetNbrStreams(var pPatchDesc: VertexPatchDesc): UINT;
@@ -396,18 +398,18 @@ begin
         VERTEX_DYNAMIC_PATCH *pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
         if(pDynamicPatch) then
         begin
-            result:= pDynamicPatch.NbrStreams;
+            Result:= pDynamicPatch.NbrStreams;
          end;
         else
         begin
-            result:= 1; // Could be more, but it doesn't matter as we're not going to patch the types
+            Result:= 1; // Could be more, but it doesn't matter as we're not going to patch the types
          end;
      end;
     else if(g_CurrentVertexShader) then
     begin
-        result:= 1;
+        Result:= 1;
      end;
-    result:= 0;
+    Result:= 0;
  end;        *)
 
 (*function XTL.VertexPatcher.PatchStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
@@ -416,18 +418,18 @@ begin
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     if( not m_pDynamicPatch) then
     begin
-        result:= false;
+        Result:= False;
      end;
 
     if( not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
     begin
         // No need to patch FVF types, there are no xbox extensions
-        result:= false;
+        Result:= False;
      end;
 
     if( not m_pDynamicPatch.pStreamPatches[uiStream].NeedPatch) then
     begin
-        result:= false;
+        Result:= False;
      end;
     // Do some groovey patchin'
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
@@ -498,35 +500,35 @@ begin
                            SizeOf(FLOAT));
                     dwPosOrig:= dwPosOrig + SizeOf(FLOAT);
                     dwPosNew := dwPosNew + SizeOf(FLOAT);
-                    break;
+                    Break;
                  $22: // FLOAT2
                     memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
                            @pOrigData[uiVertex * uiStride + dwPosOrig],
                            2 * SizeOf(FLOAT));
                     dwPosOrig:= dwPosOrig + 2 * SizeOf(FLOAT);
                     dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
-                    break;
+                    Break;
                  $32: // FLOAT3
                     memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
                            @pOrigData[uiVertex * uiStride + dwPosOrig],
                            3 * SizeOf(FLOAT));
                     dwPosOrig:= dwPosOrig + 3 * SizeOf(FLOAT);
                     dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
-                    break;
+                    Break;
                  $42: // FLOAT4
                     memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
                            @pOrigData[uiVertex * uiStride + dwPosOrig],
                            4 * SizeOf(FLOAT));
                     dwPosOrig:= dwPosOrig + 4 * SizeOf(FLOAT);
                     dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
-                    break;
+                    Break;
                  $40: // D3DCOLOR
                     memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
                            @pOrigData[uiVertex * uiStride + dwPosOrig],
                            SizeOf(XTL.D3DCOLOR));
                     dwPosOrig:= dwPosOrig + SizeOf(XTL.D3DCOLOR);
                     dwPosNew := dwPosNew + SizeOf(XTL.D3DCOLOR);
-                    break;
+                    Break;
                  $16: //NORMPACKED3
                     begin
                         DWORD dwPacked := ((DWORD )@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
@@ -538,7 +540,7 @@ begin
                         dwPosOrig:= dwPosOrig + SizeOf(DWORD);
                         dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
                      end;
-                    break;
+                    Break;
                  $15: // SHORT1
                     // Make it a SHORT2
                     (((SmallInt )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 0 * SizeOf(SmallInt)])) := *(SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig];
@@ -547,14 +549,14 @@ begin
                     dwPosOrig:= dwPosOrig + 1 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 2 * SizeOf(SmallInt);
 
-                    break;
+                    Break;
                  $25: // SHORT2
                     memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
                            @pOrigData[uiVertex * uiStride+dwPosOrig],
                            2 * SizeOf(SmallInt));
                     dwPosOrig:= dwPosOrig + 2 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 2 * SizeOf(SmallInt);
-                    break;
+                    Break;
                  $35: // SHORT3
                     memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
                            @pOrigData[uiVertex * uiStride + dwPosOrig],
@@ -565,21 +567,21 @@ begin
                     dwPosOrig:= dwPosOrig + 3 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 4 * SizeOf(SmallInt);
 
-                    break;
+                    Break;
                  $45: // SHORT4
                     memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
                            @pOrigData[uiVertex * uiStride + dwPosOrig],
                            4 * SizeOf(SmallInt));
                     dwPosOrig:= dwPosOrig + 4 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 4 * SizeOf(SmallInt);
-                    break;
+                    Break;
                  $14: // PBYTE1
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
 
                     dwPosOrig:= dwPosOrig + 1 * SizeOf(BYTE);
                     dwPosNew := dwPosNew + 1 * SizeOf(FLOAT);
 
-                    break;
+                    Break;
                  $24: // PBYTE2
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
@@ -587,7 +589,7 @@ begin
                     dwPosOrig:= dwPosOrig + 2 * SizeOf(BYTE);
                     dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
 
-                    break;
+                    Break;
                  $34: // PBYTE3
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
@@ -596,7 +598,7 @@ begin
                     dwPosOrig:= dwPosOrig + 3 * SizeOf(BYTE);
                     dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
 
-                    break;
+                    Break;
                  $44: // PBYTE4
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
@@ -606,20 +608,20 @@ begin
                     dwPosOrig:= dwPosOrig + 4 * SizeOf(BYTE);
                     dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
 
-                    break;
+                    Break;
                  $11: // NORMSHORT1
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
 
                     dwPosOrig:= dwPosOrig + 1 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 1 * SizeOf(FLOAT);
-                    break;
+                    Break;
                  $21: // NORMSHORT2
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
 
                     dwPosOrig:= dwPosOrig + 2 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
-                    break;
+                    Break;
                  $31: // NORMSHORT3
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
@@ -627,7 +629,7 @@ begin
 
                     dwPosOrig:= dwPosOrig + 3 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
-                    break;
+                    Break;
                  $41: // NORMSHORT4
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
@@ -636,7 +638,7 @@ begin
 
                     dwPosOrig:= dwPosOrig + 4 * SizeOf(SmallInt);
                     dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
-                    break;
+                    Break;
                  $72: // FLOAT2H
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[1];
@@ -647,11 +649,11 @@ begin
                  $02:
                     printf('D3DVSDT_NONE / xbox ext. nsp /');
                     dwNewDataType := $FF;
-                    break;
+                    Break;
                 *)(*
                 default:
                     CxbxKrnlCleanup('Unhandled stream ctype: $%.02X', pStreamPatch.pTypes[uiType]);
-                    break;
+                    Break;
              end;
          end;
      end;
@@ -678,15 +680,15 @@ begin
         if( not m_bAllocatedStreamZeroData) then
         begin
             // The stream was not previously patched. We'll need this when restoring
-            m_bAllocatedStreamZeroData := true;
+            m_bAllocatedStreamZeroData := True;
             m_pNewVertexStreamZeroData := pNewData;
          end;
      end;
     pStream.uiOrigStride := uiStride;
     pStream.uiNewStride := pStreamPatch.ConvertedStride;
-    m_bPatched := true;
+    m_bPatched := True;
 
-    result:= true;
+    Result := True;
  end;        *)
 
 (*function XTL.VertexPatcher.PatchPrimitive(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
@@ -695,7 +697,7 @@ begin
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     // only quad and listloop are currently supported
     if((pPatchDesc.PrimitiveType <> X_D3DPT_QUADLIST) and (pPatchDesc.PrimitiveType <> X_D3DPT_LINELOOP)) then
-        result:= false;
+        Result:= False;
 
     if(pPatchDesc.pVertexStreamZeroData and uiStream > 0) then
     begin
@@ -793,7 +795,7 @@ begin
         dwNewSizeWR := dwNewSize;
 
         m_pNewVertexStreamZeroData := (uint08)CxbxMalloc(dwNewSizeWR);
-        m_bAllocatedStreamZeroData := true;
+        m_bAllocatedStreamZeroData := True;
 
         pPatchedVertexData := (uint08)m_pNewVertexStreamZeroData;
         pOrigVertexData := (uint08)pPatchDesc.pVertexStreamZeroData;
@@ -837,7 +839,7 @@ begin
 
             if(pPatchDesc.hVertexShader and D3DFVF_XYZRHW) then
             begin
-                for(integer z := 0; z < 6; z++)
+                for(Integer z := 0; z < 6; z++)
                 begin
                     if(((FLOAT)@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] = 0.0f) then
                         ((FLOAT)@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] := 1.0f;
@@ -862,15 +864,15 @@ begin
         g_pD3DDevice8.SetStreamSource(0, pStream.pPatchedStream, pStream.uiOrigStride);
      end;
 
-    m_bPatched := true;
+    m_bPatched := True;
 
-    result:= true;
+    Result:= True;
  end;           *)
 
 (*function XTL.VertexPatcher.Apply(var pPatchDesc: VertexPatchDesc): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
-    bool Patched := false;
+    bool Patched := False;
     // Get the number of streams
     m_uiNbrStreams := GetNbrStreams(pPatchDesc);
     if(VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
@@ -879,12 +881,12 @@ begin
      end;
     for(UINT uiStream := 0; uiStream < m_uiNbrStreams; uiStream++)
     begin
-        bool LocalPatched := false;
+        bool LocalPatched := False;
 
         if(ApplyCachedStream(pPatchDesc, uiStream)) then
         begin
-            m_pStreams[uiStream].bUsedCached := true;
-            continue;
+            m_pStreams[uiStream].bUsedCached := True;
+            Continue;
          end;
 
         LocalPatched:= LocalPatched or PatchPrimitive(pPatchDesc, uiStream);
@@ -893,19 +895,19 @@ begin
         begin
             // Insert the patched stream in the cache
             CacheStream(pPatchDesc, uiStream);
-            m_pStreams[uiStream].bUsedCached := true;
+            m_pStreams[uiStream].bUsedCached := True;
          end;
         Patched:= Patched or LocalPatched;
      end;
 
-    result:= Patched;
+    Result:= Patched;
  end;         *)
 
-function XTL_VertexPatcher_Restore: LongBool; stdcall;
+function XTL_VertexPatcher_Restore: LONGBOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
 (*    if( not this.m_bPatched) then
-        result:= false;
+        Result:= False;
 
     for(UINT uiStream := 0; uiStream < m_uiNbrStreams; uiStream++)
     begin
@@ -934,7 +936,7 @@ begin
          end;
         else
         begin
-            m_pStreams[uiStream].bUsedCached := false;
+            m_pStreams[uiStream].bUsedCached := False;
          end;
 
      end;       *)
@@ -993,7 +995,7 @@ begin
         (*
          IDirect3DTexture8 *pDummyTexture[4] := (0, 0, 0, 0);
 
-        for(integer Stage:=0;Stage<4;Stage++)
+        for(Integer Stage:=0;Stage<4;Stage++)
         begin
             if(pDummyTexture[Stage] = 0) then
             begin
@@ -1182,7 +1184,7 @@ begin
 
         if(pTexture <> 0) then
         begin
-             integer dwDumpTexture := 0;
+             Integer dwDumpTexture := 0;
 
              szBuffer: array[0..255-1] of Char;
 
@@ -1207,7 +1209,7 @@ begin
 
         UINT uiStride := 0;
 
-        for(integer v:=0;v<4;v++)
+        for(Integer v:=0;v<4;v++)
         begin
             DWORD dwPos := g_IVBFVF and D3DFVF_POSITION_MASK;
 
@@ -1286,7 +1288,7 @@ begin
         g_IVBTblOffs := 0;
      end;
 
-    Exit;        *)
+    *)
 end;
 
 (*procedure XTL_EmuUpdateActiveTexture;
@@ -1295,12 +1297,12 @@ begin
     //
     // DEBUGGING
     //
-    for(integer Stage:=0;Stage<4;Stage++)
+    for(Integer Stage:=0;Stage<4;Stage++)
     begin
         X_D3DResource *pTexture := EmuD3DActiveTexture[Stage];
 
         if(pTexture = 0) then
-            continue;
+            Continue;
 
         //*
         X_D3DResource       *pResource := (X_D3DResource)pTexture;
@@ -1488,10 +1490,10 @@ end;
 end; * )     *)
 
 exports
+  XTL_EmuFlushIVB,
   XTL_VertexPatcher_DumpCache,
   XTL_VertexPatcher_FreeCachedStream,
-  XTL_VertexPatcher_Restore,
-  XTL_EmuFlushIVB;
+  XTL_VertexPatcher_Restore;
 
 end.
 

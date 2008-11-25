@@ -32,7 +32,7 @@ uses
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
 
-function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
+function iif(aTest: Boolean; const aTrue: Integer; const aFalse: Integer): Integer; overload;
 
 function GetLastErrorString: string;
 function GetErrorString(const aError: DWord): string;
@@ -78,17 +78,14 @@ begin
             freopen('nul', 'w', stdout); *)
 
   TerminateProcess(GetCurrentProcess(), 0);
-
-  Exit;
 end;
 
-function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
+function iif(aTest: Boolean; const aTrue: Integer; const aFalse: Integer): Integer; overload;
 begin
-  if ATest then begin
-    Result := ATrue;
-  end else begin
-    Result := AFalse;
-  end;
+  if aTest then
+    Result := aTrue
+  else
+    Result := aFalse;
 end;
 
 // Tooling methods to get and set stretches of bits inside a DWORD,

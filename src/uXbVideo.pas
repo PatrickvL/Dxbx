@@ -107,16 +107,16 @@ begin
             dwType = REG_SZ; dwSize = 100;
             RegQueryValueEx(hKey, 'VideoResolution', NULL, &dwType, (PBYTE)m_szVideoResolution, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegQueryValueEx(hKey, 'DisplayAdapter', NULL, &dwType, (PBYTE)&m_dwDisplayAdapter, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegQueryValueEx(hKey, 'Direct3DDevice', NULL, &dwType, (PBYTE)&m_dwDirect3DDevice, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegQueryValueEx(hKey, 'Fullscreen', NULL, &dwType, (PBYTE)&m_bFullscreen, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegQueryValueEx(hKey, 'VSync', NULL, &dwType, (PBYTE)&m_bVSync, &dwSize);
 
             RegCloseKey(hKey);
@@ -142,16 +142,16 @@ begin
             dwType = REG_SZ; dwSize = 100;
             RegSetValueEx(hKey, 'VideoResolution', 0, dwType, (PBYTE)m_szVideoResolution, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegSetValueEx(hKey, 'DisplayAdapter', 0, dwType, (PBYTE)&m_dwDisplayAdapter, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegSetValueEx(hKey, 'Direct3DDevice', 0, dwType, (PBYTE)&m_dwDirect3DDevice, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegSetValueEx(hKey, 'Fullscreen', 0, dwType, (PBYTE)&m_bFullscreen, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
             RegSetValueEx(hKey, 'VSync', 0, dwType, (PBYTE)&m_bVSync, dwSize);
 
             RegCloseKey(hKey);

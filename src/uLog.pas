@@ -33,9 +33,9 @@ uses
 
 var
   m_DxbxDebug: DebugMode = DM_NONE;
-  m_DxbxDebugFilename: string = '';
+  m_DxbxDebugFileName: string = '';
   m_KrnlDebug: DebugMode = DM_CONSOLE;
-  m_KrnlDebugFilename: string = '';
+  m_KrnlDebugFileName: string = '';
 
 procedure CreateLogs(aLogType: TLogType = ltKernel);
 procedure CloseLogs;
@@ -195,9 +195,9 @@ begin
       if not LogFileOpen then
       try
         if aLogType = ltGui then
-          OutputFileName := m_DxbxDebugFilename
+          OutputFileName := m_DxbxDebugFileName
         else
-          OutputFileName := m_KrnlDebugFilename;
+          OutputFileName := m_KrnlDebugFileName;
 
         if OutputFileName = '' then
           OutputFileName := 'DxbxKrnlDebug.txt';

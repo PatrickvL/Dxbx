@@ -111,6 +111,7 @@ var
   StartRoutine: PKSTART_ROUTINE;
   StartSuspended: BOOL;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
+  OldExceptionFilter: LPTOP_LEVEL_EXCEPTION_FILTER;
 begin
   StartContext1 := Parameter.StartContext1;
   StartContext2 := Parameter.StartContext2;
@@ -143,10 +144,13 @@ begin
     EmuSwapFS(); // Win2k/XP FS
   end;
 
+  SetEvent(Parameter.hStartedEvent);
+
+  // Re-route unhandled exceptions to our emulation-execption handler :
+  OldExceptionFilter := SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER(@EmuException));
+
   // use the special calling convention
   try
-    SetEvent(Parameter.hStartedEvent);
-
     EmuSwapFS(); // Xbox FS
     try
       asm
@@ -166,20 +170,24 @@ callComplete:
   except
     on E: Exception do
     begin
-      //EmuException(E);
+// TODO : How do we intercept ntdll.ZwRaiseException here ?
+//      EmuException(E);
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString(False));
 {$ENDIF}
     (*__except(EmuException(GetExceptionInformation())); *)
-    EmuWarning('Problem with ExceptionFilter!');
+      EmuWarning('Problem with ExceptionFilter!');
     end;
-  end;
+  end; // try
+
+  // Restore original exception filter :
+  SetUnhandledExceptionFilter(OldExceptionFilter);
 
   // call thread notification routine(s)
   if Assigned(g_pfnThreadNotification) then
   begin
-    pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
+    pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
     EmuSwapFS(); // Xbox FS
 
@@ -191,7 +199,7 @@ callComplete:
   CxbxKrnlTerminateThread();
 
   Result := 0;
-end;
+end; // PCSTProxy
 //pragma warning(pop)
 
 ////
@@ -202,7 +210,6 @@ end;
 //     StartContext2, FALSE, DebugStack, PspSystemThreadStartup);
 //
 // New to the XBOX.  (It is too different from NT to be considered the same)
-
 function {254} xboxkrnl_PsCreateSystemThread(
 (* XBMC says :
  ThreadHandle: PHANDLE; // OUT
@@ -283,7 +290,6 @@ end;
 // StartRoutine: Called when the thread is created
 //
 // New to the XBOX.
-
 function {255} xboxkrnl_PsCreateSystemThreadEx(
   var ThreadHandle: THANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
@@ -373,7 +379,6 @@ end;
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-
 function {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
   ): NTSTATUS; stdcall; // Source : XBMC

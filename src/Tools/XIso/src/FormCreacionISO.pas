@@ -367,10 +367,10 @@ var
   fn: array[0..254] of Char;
 begin
   dr := msg.wparam;
-  nb := DragQueryFile(dr, $FFFFFFFF, fn, sizeof(fn));
+  nb := DragQueryFile(dr, $FFFFFFFF, fn, SizeOf(fn));
   for j := 0 to nb - 1 do
   begin
-    DragQueryFile(dr, j, fn, sizeof(fn));
+    DragQueryFile(dr, j, fn, SizeOf(fn));
     Manager.AgregarFichero(fn);
     Manager.AgregarCarpeta(fn);
   end;

@@ -98,7 +98,7 @@ begin
             g_pD3DDevice8.SetRenderState(D3DRS_PATCHSEGMENTS, XTL::EmuD3DDeferredRenderState[33]);
 
         (** To check for unhandled RenderStates
-        for(integer v:=0;v<117-82;v++)
+        for(Integer v:=0;v<117-82;v++)
         begin
             if(XTL::EmuD3DDeferredRenderState[v] <> X_D3DRS_UNK) then
             begin
@@ -114,7 +114,7 @@ begin
     // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
     if(EmuD3DDeferredTextureState <> 0) then
     begin
-        for(integer v:=0;v<4;v++)
+        for(Integer v:=0;v<4;v++)
         begin
             ::DWORD *pCur := @EmuD3DDeferredTextureState[v*32];
 
@@ -221,23 +221,23 @@ begin
                 g_pD3DDevice8.SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);
 
             (** To check for unhandled texture stage state changes
-            for(integer r:=0;r<32;r++)
+            for(Integer r:=0;r<32;r++)
             begin
-                  integer unchecked[] =
+                  Integer unchecked[] =
                 begin
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
                 );
 
                 if(pCur[r] <> X_D3DTSS_UNK) then
                 begin
-                    bool pass := true;
+                    bool pass := True;
 
-                    for(integer q:=0;q<SizeOf(unchecked)/SizeOf(integer);q++)
+                    for(Integer q:=0;q<SizeOf(unchecked)/SizeOf(Integer);q++)
                     begin
                         if(r = unchecked[q]) then
                         begin
-                            pass := false;
-                            break;
+                            pass := False;
+                            Break;
                          end;
                      end;
 
@@ -265,7 +265,7 @@ begin
             g_pD3DDevice8.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
             // in that case we have to copy over the stage by hand
-            for(integer v:=0;v<30;v++)
+            for(Integer v:=0;v<30;v++)
             begin
                 if(pCur[v] <> X_D3DTSS_UNK) then
                 begin
@@ -284,7 +284,7 @@ begin
 
         // programmable pipeline
         //*
-        for(integer v:=0;v<4;v++)
+        for(Integer v:=0;v<4;v++)
         begin
             g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
             g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
@@ -293,7 +293,7 @@ begin
 
         // fixed pipeline
         (*
-        for(integer v:=0;v<4;v++)
+        for(Integer v:=0;v<4;v++)
         begin
             g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP,   D3DTOP_MODULATE);
             g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG1, D3DTA_TEXTURE);

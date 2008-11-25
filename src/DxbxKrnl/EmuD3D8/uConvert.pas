@@ -340,9 +340,9 @@ begin
 
 
 exports
-  XTL_EmuXB2PC_D3DLock,
-  XTL_EmuXB2PC_D3DFormat,
   XTL_EmuPC2XB_D3DFormat,
+  XTL_EmuXB2PC_D3DFormat,
+  XTL_EmuXB2PC_D3DLock,
   XTL_EmuXBFormatIsSwizzled;
 
 end.

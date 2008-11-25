@@ -198,7 +198,7 @@ begin
     NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(IntPtr(NewPcr) + dwSize));
   end;
 
-  // update "OrgFS" with NewFS and (bIsXboxFS = false)
+  // update "OrgFS" with NewFS and (bIsXboxFS = False)
   asm
     mov ax, NewFS
     mov bh, 0

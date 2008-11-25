@@ -92,7 +92,7 @@ begin
             HRESULT hRet := pTexture.GetLevelDesc(v, @SurfaceDesc);
 
             if(FAILED(hRet)) then
-                continue;
+                Continue;
 
             //
             // perform unswizzle
@@ -102,13 +102,13 @@ begin
                 XTL.D3DLOCKED_RECT LockedRect;
 
                 //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
-                //    break;
+                //    Break;
                 //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
 
                 hRet := pTexture.LockRect(v, @LockedRect, 0, 0);
 
                 if(FAILED(hRet)) then
-                    continue;
+                    Continue;
 
                 DWord dwWidth := SurfaceDesc.Width;
                 DWord dwHeight := SurfaceDesc.Height;
@@ -176,7 +176,7 @@ begin
         printf('  PushBuffer@$%.08XArgs: array of const', pdwPushData);
         printf('');
 
-        bShowPB := true;
+        bShowPB := True;
      end;
     //endif
 
@@ -185,7 +185,7 @@ begin
 
      uint maxIBSize := 0;
 
-    while(true)
+    while True do
     begin
         DWord dwCount := (pdwPushData shr 18);
         DWord dwMethod := (pdwPushData and $3FFFF);
@@ -210,7 +210,7 @@ begin
                     printf('DONE)');
                  end;
                 //endif
-                break;  // done?
+                Break;  // done?
              end;
             else
             begin

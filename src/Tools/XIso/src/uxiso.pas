@@ -222,7 +222,7 @@ begin
     while not (MemBuf.Position >= (j + 1) * 2048) do
     begin
       New(xFichero);
-      FillChar(xFichero^, sizeof(xFichero^), $00);
+      FillChar(xFichero^, SizeOf(xFichero^), $00);
 
       xFichero.pIzq := $FFFF;
 
@@ -271,7 +271,7 @@ begin
   with Fichero do
   begin
     Seek(IMG_SECTOR * TAM_SECTOR, soBeginning);
-    Read(xIISO.xVD, sizeof(xIISO.xVD));
+    Read(xIISO.xVD, SizeOf(xIISO.xVD));
 
     if (xIISO.xVD.IDIn <> XBOX_MEDIA) or
       (xIISO.xVD.IDOut <> XBOX_MEDIA) then
@@ -332,7 +332,7 @@ begin
         Exit;
       end;
       
-      fguardar.Write(buffer, sizeof(buffer));
+      fguardar.Write(buffer, SizeOf(buffer));
       a := a + $10;
     end;
 
@@ -393,7 +393,7 @@ begin
     while not (MemBuf.Position >= (j + 1) * 2048) do //MemBuf.Size) do
     begin
       New(xFichero);
-      FillChar(xFichero^, sizeof(xFichero^), $00);
+      FillChar(xFichero^, SizeOf(xFichero^), $00);
       xFichero.pIzq := $FFFF;
       MemBuf.Read(xFichero^, 14);
       MemBuf.Read(xFichero.Nombre, xFichero.LongNombre);
@@ -449,9 +449,9 @@ begin
   if Unidad.Read12(HA, SCSI, LUN, CDDVD_VD, CDDVD_VD + 1, @Buffer) then
   begin
     Mem := TMemoryStream.Create;
-    Mem.Write(Buffer, sizeof(Buffer));
+    Mem.Write(Buffer, SizeOf(Buffer));
     Mem.Seek(0, soFromBeginning);
-    Mem.Read(xIISO.xVD, sizeof(xIISO.xVD));
+    Mem.Read(xIISO.xVD, SizeOf(xIISO.xVD));
     Mem.Free;
     if (xIISO.xVD.IDIn <> XBOX_MEDIA) or (xIISO.xVD.IDOut <> XBOX_MEDIA) then
       Alternativo := True;
@@ -467,9 +467,9 @@ begin
       
     Mem := TMemoryStream.Create;
     try
-      Mem.Write(Buffer, sizeof(Buffer));
+      Mem.Write(Buffer, SizeOf(Buffer));
       Mem.Seek(0, soBeginning);
-      Mem.Read(xIISO.xVD, sizeof(xIISO.xVD));
+      Mem.Read(xIISO.xVD, SizeOf(xIISO.xVD));
     finally
       Mem.Free;
     end;

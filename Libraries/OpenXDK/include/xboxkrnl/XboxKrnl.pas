@@ -106,7 +106,7 @@ type         SIZE_T, *PSIZE_T = Cardinal;
 type         ACCESS_MASK, *PACCESS_MASK = Cardinal;
 type         PHYSICAL_ADDRESS = Cardinal;
 type                  INT_PTR = LongInt;
-type   __int64      LONGLONG = integer;
+type   __int64      LONGLONG = Integer;
 type   __int64    ULONGLONG = Word;
 type        WCHAR = Word;
 
@@ -907,7 +907,7 @@ TIME_FIELDS,*PTIME_FIELDS  = record
 // ******************************************************************
 INLINE  function READ_REGISTER_UCHAR(Address: PUCHAR): UCHAR;
 begin
-    result:= *(volatile UCHAR )Address;
+    Result:= *(volatile UCHAR )Address;
  end;
 
 // ******************************************************************
@@ -919,7 +919,7 @@ begin
 // ******************************************************************
 INLINE  USHORT READ_REGISTER_USHORT(PUSHORT Address)
 begin
-    result:= *(volatile USHORT )Address;
+    Result:= *(volatile USHORT )Address;
  end;
 
 // ******************************************************************
@@ -931,7 +931,7 @@ begin
 // ******************************************************************
 INLINE  ULONG READ_REGISTER_ULONG(PULONG Address)
 begin
-    result:= *(volatile ULONG )Address;
+    Result:= *(volatile ULONG )Address;
  end;
 
 // ******************************************************************

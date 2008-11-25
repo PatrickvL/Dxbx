@@ -117,8 +117,8 @@ type
     MultiSampleType: D3DMULTISAMPLE_TYPE;
     SwapEffect: D3DSWAPEFFECT;
     hDeviceWindow: HWND;
-    Windowed: LongBool;
-    EnableAutoDepthStencil: LongBool;
+    Windowed: LONGBOOL;
+    EnableAutoDepthStencil: LONGBOOL;
     AutoDepthStencilFormat: X_D3DFORMAT;
     Flags: DWord;
     FullScreen_RefreshRateInHz: UINT;

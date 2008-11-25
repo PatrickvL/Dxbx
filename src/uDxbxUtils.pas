@@ -208,7 +208,7 @@ end;
 
 function Sscanf(const s: string; const fmt: string; const Pointers: array of Pointer): Integer;
 var
-  i, j, n, m: integer;
+  i, j, n, m: Integer;
   s1: string;
   L: LongInt;
   X: Extended;
@@ -217,13 +217,15 @@ var
   begin
     s1 := '';
     while (s[n] = ' ') and (Length(s) > n) do
-      inc(n);
+      Inc(n);
+
     while (s[n] in ['0'..'9', '+', '-'])
       and (Length(s) >= n) do
-    begin 
-      s1 := s1 + s[n]; 
-      inc(n); 
-    end; 
+    begin
+      s1 := s1 + s[n];
+      Inc(n);
+    end;
+
     Result := Length(s1); 
   end; 
 
@@ -231,13 +233,15 @@ var
   begin 
     s1 := ''; 
     while (s[n] = ' ') and (Length(s) > n) do 
-      inc(n); 
-    while (s[n] in ['0'..'9', '+', '-', '.', 'e', 'E']) 
-      and (Length(s) >= n) do 
-    begin 
-      s1 := s1 + s[n]; 
-      inc(n); 
-    end; 
+      Inc(n);
+
+    while (s[n] in ['0'..'9', '+', '-', '.', 'e', 'E'])
+      and (Length(s) >= n) do
+    begin
+      s1 := s1 + s[n];
+      Inc(n);
+    end;
+    
     Result := Length(s1);
   end; 
 
@@ -245,20 +249,23 @@ var
   begin 
     s1 := ''; 
     while (s[n] = ' ') and (Length(s) > n) do 
-      inc(n); 
-    while (s[n] <> ' ') and (Length(s) >= n) do 
-    begin 
-      s1 := s1 + s[n]; 
-      inc(n); 
-    end; 
+      Inc(n);
+
+    while (s[n] <> ' ') and (Length(s) >= n) do
+    begin
+      s1 := s1 + s[n];
+      Inc(n);
+    end;
+
     Result := Length(s1); 
   end; 
 
   function ScanStr(c: Char): Boolean; 
   begin 
     while (s[n] <> c) and (Length(s) > n) do 
-      inc(n); 
-    inc(n); 
+      Inc(n);
+
+    Inc(n);
 
     if (n <= Length(s)) then 
       Result := True 
@@ -269,28 +276,31 @@ var
   begin 
     Result := -1; 
 
-    while (TRUE) do 
+    while True do 
     begin
       while (fmt[m] = ' ') and (Length(fmt) > m) do 
-        inc(m); 
+        Inc(m);
+
       if (m >= Length(fmt)) then 
-        break; 
+        Break; 
 
       if (fmt[m] = '%') then 
       begin 
-        inc(m); 
-        case fmt[m] of 
-          'd': Result := vtInteger; 
-          'f': Result := vtExtended; 
-          's': Result := vtString; 
-        end; 
-        inc(m); 
-        break; 
-      end; 
+        Inc(m); 
+        case fmt[m] of
+          'd': Result := vtInteger;
+          'f': Result := vtExtended;
+          's': Result := vtString;
+        end;
 
-      if (ScanStr(fmt[m]) = False) then 
-        break; 
-      inc(m); 
+        Inc(m);
+        Break;
+      end;
+
+      if (ScanStr(fmt[m]) = False) then
+        Break;
+
+      Inc(m);
     end; 
   end; 
 
@@ -310,10 +320,10 @@ begin
           begin 
             L := StrToInt(s1); 
             Move(L, Pointers[i]^, SizeOf(LongInt)); 
-            inc(Result); 
+            Inc(Result); 
           end 
           else 
-            break; 
+            Break; 
         end; 
 
       vtExtended: 
@@ -322,10 +332,10 @@ begin
           begin 
             X := StrToFloat(s1); 
             Move(X, Pointers[i]^, SizeOf(Extended)); 
-            inc(Result); 
+            Inc(Result); 
           end 
           else 
-            break; 
+            Break; 
         end; 
 
       vtString: 
@@ -333,12 +343,13 @@ begin
           if GetString > 0 then 
           begin 
             Move(s1, Pointers[i]^, Length(s1) + 1); 
-            inc(Result); 
+            Inc(Result);
           end
-          else break;
+          else
+            Break;
         end;
     else
-      break;
+      Break;
     end;
   end;
 end;

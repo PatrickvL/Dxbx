@@ -59,7 +59,7 @@ type
 
   // Header (PE)
   Header = packed record
-    m_magic: DWord; // magic number [should be "PE\0\0"]
+    m_magic: DWord; // magic number [should be 'PE\0\0']
     m_machine: Word; // machine type
     m_sections: Word; // number of sections
     m_timedate: DWord; // timedate stamp
@@ -134,9 +134,9 @@ type
 
     m_bzSection: array of TVarByteArray;
 
-    constructor Create(x_szFilename: string);
+    constructor Create(x_szFileName: string);
     function GetAddr(x_dwVirtualAddress: DWord): PByte;
-    function doExport(const x_szExeFilename: string): Boolean;
+    function doExport(const x_szExeFileName: string): Boolean;
     procedure ConstructorInit;
   end;
 
@@ -184,7 +184,7 @@ end; // TExe.ConstructorInit
 
 //------------------------------------------------------------------------------
 
-constructor TExe.Create(x_szFilename: string);
+constructor TExe.Create(x_szFileName: string);
 var
   ExeFile: TFileStream;
 begin
@@ -208,39 +208,37 @@ begin
     messageDlg('Unexpected read error while reading magic number', mtError, [mbOk], 0);
   end;
 
-  if ( IntToStr ( INTEGER ( m_DOSHeader.m_magic ) )= 'MZ') then begin
-    try
-      ExeFile.Read( m_DOSHeader.m_magic, sizeof(m_DOSHeader)-2 );
-      WriteLog('Exe: Reading DOS stub... OK');
-    Except
-      WriteLog ( 'Unexpected read error while reading DOS stub' );
-    end;
-  end
-  else begin
+  if StrLComp(@m_DOSHeader.m_magic, 'MZ', 2) = 0 then
+  try
+    ExeFile.Read(m_DOSHeader.m_magic, SizeOf(m_DOSHeader) - 2);
     WriteLog('Exe: Reading DOS stub... OK');
-  end;
+  except
+    WriteLog('Unexpected read error while reading DOS stub');
+  end
+  else
+    WriteLog('Exe: Reading DOS stub... OK');
 
 
   // read pe header
 
     {
-        printf("Exe::Exe: Reading PE header...");
+        printf('Exe::Exe: Reading PE header...');
 
-        if(fread(&m_Header, sizeof(m_Header), 1, ExeFile) != 1)
+        if(fread(&m_Header, SizeOf(m_Header), 1, ExeFile) != 1)
         {
-            SetError("Unexpected read error while reading PE header", true);
+            SetError('Unexpected read error while reading PE header', True);
             goto cleanup;
         }
 
 
 
-(*        if(m_Header.m_magic != *(uint32*)(*"PE\0\0")
+(*        if(m_Header.m_magic != *(uint32*)(*'PE\0\0')
         {
-            SetError("Invalid file (could not locate PE header)", true);
+            SetError('Invalid file (could not locate PE header)', True);
             goto cleanup;
         }
 
-  (*      printf("OK\n");
+  (*      printf('OK');
     }
 
 
@@ -249,21 +247,21 @@ begin
     // * read optional header
     // ******************************************************************
     {
-        printf("Exe::Exe: Reading Optional Header...");
+        printf('Exe::Exe: Reading Optional Header...');
 
-        if(fread(&m_OptionalHeader, sizeof(m_OptionalHeader), 1, ExeFile) != 1)
+        if(fread(&m_OptionalHeader, SizeOf(m_OptionalHeader), 1, ExeFile) != 1)
         {
-            SetError("Unexpected read error while reading PE optional header", true);
+            SetError('Unexpected read error while reading PE optional header', True);
             goto cleanup;
         }
 
         if(m_OptionalHeader.m_magic != 0x010B)
         {
-            SetError("Invalid file (could not locate PE optional header)", true);
+            SetError('Invalid file (could not locate PE optional header)', True);
             goto cleanup;
         }
 
-         printf("OK\n");
+         printf('OK');
     }
 
     // ******************************************************************
@@ -272,21 +270,21 @@ begin
     {
         m_SectionHeader = new SectionHeader[m_Header.m_sections];
 
-        printf("Exe::Exe: Reading Section Headers...\n");
+        printf('Exe::Exe: Reading Section Headers...');
 
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
-            printf("Exe::Exe: Reading Section Header 0x%.4X...", v);
+            printf('Exe::Exe: Reading Section Header 0x%.4X...', v);
 
-            if(fread(&m_SectionHeader[v], sizeof(SectionHeader), 1, ExeFile) != 1)
+            if(fread(&m_SectionHeader[v], SizeOf(SectionHeader), 1, ExeFile) != 1)
             {
                 char buffer[255];
-                sprintf(buffer, "Could not read PE section header %d (%Xh)", v, v);
-                SetError(buffer, true);
+                sprintf(buffer, 'Could not read PE section header %d (%Xh)', v, v);
+                SetError(buffer, True);
                 goto cleanup;
             }
 
-            printf("OK\n", v);
+            printf('OK', v);
         }
     }
 
@@ -294,13 +292,13 @@ begin
     // * read sections
     // ******************************************************************
     {
-        printf("Exe::Exe: Reading Sections...\n");
+        printf('Exe::Exe: Reading Sections...');
 
         m_bzSection = new uint08*[m_Header.m_sections];
 
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
-            printf("Exe::Exe: Reading Section 0x%.4X...", v);
+            printf('Exe::Exe: Reading Section 0x%.4X...', v);
 
             uint32 raw_size = m_SectionHeader[v].m_sizeof_raw;
             uint32 raw_addr = m_SectionHeader[v].m_raw_addr;
@@ -311,8 +309,8 @@ begin
 
             if(raw_size == 0)
             {
-                printf("OK\n");
-                continue;
+                printf('OK');
+                Continue;
             }
 
             // ******************************************************************
@@ -324,24 +322,24 @@ begin
                 if(fread(m_bzSection[v], raw_size, 1, ExeFile) != 1)
                 {
                     char buffer[255];
-                    sprintf(buffer, "Could not read PE section %d (%Xh)", v, v);
-                    SetError(buffer, true);
+                    sprintf(buffer, 'Could not read PE section %d (%Xh)', v, v);
+                    SetError(buffer, True);
                     goto cleanup;
                 }
             }
 
-            printf("OK\n");
+            printf('OK');
         }
     }
 
-    printf("Exe::Exe: Exe was successfully opened.\n", x_szFilename);
+    printf('Exe::Exe: Exe was successfully opened.', x_szFileName);
 
 cleanup:
 
     if(GetError() != 0)
     {
-        printf("FAILED!\n");
-        printf("Exe::Exe: ERROR -> %s\n", GetError());
+        printf('FAILED!');
+        printf('Exe::Exe: ERROR -> %s', GetError());
     }
 
     fclose(ExeFile);
@@ -351,7 +349,7 @@ cleanup:
   end;
 end;
 
-function TExe.doExport(const x_szExeFilename: string): Boolean;
+function TExe.doExport(const x_szExeFileName: string): Boolean;
 var
   ExeFile: TFileStream;
   lIndex: Integer;
@@ -374,7 +372,7 @@ var
 
 begin
   try
-    ExeFile := TFileStream.Create(x_szExeFilename, fmCreate);
+    ExeFile := TFileStream.Create(x_szExeFileName, fmCreate);
   except
     Result := False;
     WriteLog('Export: Could not open .exe file.');

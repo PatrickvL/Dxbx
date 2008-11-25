@@ -53,7 +53,7 @@ procedure CxbxKrnlInit(
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: DebugMode;
-  szDebugFilename: PChar;
+  szDebugFileName: PChar;
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc); stdcall;
@@ -90,7 +90,7 @@ procedure CxbxKrnlInit(
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: DebugMode;
-  szDebugFilename: PChar;
+  szDebugFileName: PChar;
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
@@ -100,6 +100,7 @@ var
   szBuffer, BasePath: string;
   pCertificate: PXBE_CERTIFICATE;
   hDupHandle: THandle;
+  OldExceptionFilter: TFNTopLevelExceptionFilter;
 //  v, r: Integer;
 begin
   // debug console allocation (if configured)
@@ -122,18 +123,29 @@ begin
 {$IFDEF _DEBUG_TRACE}
     DbgPrintf('EmuMain : Debug Trace Enabled.');
 
-    DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit', [@CxbxKrnlInit]);
-    DbgPrintf('(' );
-    DbgPrintf('  hwndParent       : 0x%.8x', [hwndParent]);
-    DbgPrintf('  pTLSData         : 0x%.8x', [pTLSData]);
-    DbgPrintf('  pTLS             : 0x%.8x', [pTLS]);
-    DbgPrintf('  pLibraryVersion  : 0x%.8x ("%s")', [pLibraryVersion, PChar(pLibraryVersion)]);
-    DbgPrintf('  DebugConsole     : 0x%.8x', [Ord(DbgMode)]);
-    DbgPrintf('  DebugFilename    : 0x%.8x ("%s")', [Pointer(szDebugFilename), PChar(szDebugFilename)]);
-    DbgPrintf('  pXBEHeader       : 0x%.8x', [pXbeHeader]);
-    DbgPrintf('  dwXBEHeaderSize  : 0x%.8x', [dwXbeHeaderSize]);
-    DbgPrintf('  Entry            : 0x%.8x', [Addr(Entry)]);
-    DbgPrintf(')');
+    DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit' +
+      #13#10'(' +
+      #13#10'  hwndParent       : 0x%.8x' +
+      #13#10'  pTLSData         : 0x%.8x' +
+      #13#10'  pTLS             : 0x%.8x' +
+      #13#10'  pLibraryVersion  : 0x%.8x ("%s")' +
+      #13#10'  DebugConsole     : 0x%.8x' +
+      #13#10'  DebugFileName    : 0x%.8x ("%s")' +
+      #13#10'  pXBEHeader       : 0x%.8x' +
+      #13#10'  dwXBEHeaderSize  : 0x%.8x' +
+      #13#10'  Entry            : 0x%.8x' +
+      #13#10')', [
+        @CxbxKrnlInit,
+        hwndParent,
+        pTLSData,
+        pTLS,
+        pLibraryVersion, PChar(pLibraryVersion),
+        Ord(DbgMode),
+        Pointer(szDebugFileName), PChar(szDebugFileName),
+        pXbeHeader,
+        dwXbeHeaderSize,
+        Addr(Entry)
+      ]);
 
 {$ELSE}
     DbgPrintf('EmuMain : Debug Trace Disabled.');
@@ -270,6 +282,9 @@ begin
 
   DbgPrintf('EmuMain : Initial thread starting.');
 
+  // Re-route unhandled exceptions to our emulation-execption handler :
+  OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
+
   // Xbe entry point
   try
     EmuSwapFS(); // XBox FS
@@ -288,7 +303,7 @@ begin
             if funcAddr[v] = funcExclude[r] then
             begin
                 bExclude := True;
-                break;
+                Break;
             end;
         end;
 
@@ -311,6 +326,9 @@ begin
 //      printf('Emu: WARNING!! Problem with ExceptionFilter');
     end;
   end;
+
+  // Restore original exception filter :
+  SetUnhandledExceptionFilter(OldExceptionFilter);
 
   DbgPrintf('EmuMain : Initial thread ended.');
 
@@ -394,7 +412,7 @@ begin
         }
     }
 
-    g_bEmuSuspended = false;
+    g_bEmuSuspended = False;
 }            *)
 end;
 
@@ -435,7 +453,7 @@ begin
         SetWindowText(hWnd, szBuffer);
     }
 
-    g_bEmuSuspended = true;
+    g_bEmuSuspended = True;
 }         *)
 end;
 

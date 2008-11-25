@@ -33,7 +33,7 @@ uses
   uEmu,
   uXBController;
 
-function XTL_EmuDInputInit: LongBool; stdcall; // forward
+function XTL_EmuDInputInit: LONGBOOL; stdcall; // forward
 procedure XTL_EmuDInputCleanup; stdcall; // forward
 
 implementation
@@ -41,7 +41,7 @@ implementation
 var
   g_XBController: XBController;
 
-function XTL_EmuDInputInit: LongBool; stdcall;
+function XTL_EmuDInputInit: LONGBOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj
 begin
   Result := True;
@@ -68,8 +68,8 @@ begin
 end;
 
 exports
-  XTL_EmuDInputInit,
   XTL_EmuDInputCleanup,
+  XTL_EmuDInputInit,
   XTL_EmuDInputPoll;
 
 end.

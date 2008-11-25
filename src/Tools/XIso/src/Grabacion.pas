@@ -174,7 +174,7 @@ begin
     MessageBox(Self.Handle, PChar(SInstalarASPI), nil, MB_OK or MB_ICONWARNING);
   end;
 
-  FillChar(Contador, sizeof(Contador), 0);
+  FillChar(Contador, SizeOf(Contador), 0);
 end;
 
 procedure TForm4.Button2Click(Sender: TObject);
@@ -262,7 +262,7 @@ begin
           pQ := @Q;
           if not CDROM1.SendCuesheet(1,0,0,pQ,4) then ShowMessage('No SendCuesheet');    }
 
-    FillChar(Buffer, sizeof(buffer), 0);
+    FillChar(Buffer, SizeOf(buffer), 0);
 
     LBA := 0;
           //LBA := PISTAINFO.SigLBAGrabable + 75*150 + 150;
@@ -304,7 +304,7 @@ begin
   Progressbar1.Position := 0;
   MessageBox(Self.Handle, PCHAR(SGraFinGrabacion), nil, MB_OK or MB_ICONINFORMATION);
   lContador.Caption := '00:00:00';
-  FillChar(Contador, sizeof(Contador), 0);
+  FillChar(Contador, SizeOf(Contador), 0);
   BotonGrabar.Enabled := True;
 end;
 
@@ -319,7 +319,7 @@ begin
   if not OpenDialog1.Execute then
     Exit;
 
-  eImagenISO.Text := OpenDialog1.Filename;
+  eImagenISO.Text := OpenDialog1.FileName;
 end;
 
 procedure TForm4.cGrabadorasChange(Sender: TObject);

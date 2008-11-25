@@ -359,7 +359,7 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
           Unmangled := StringReplace(Unmangled, '_', '.', [rfReplaceAll]);
         end;
       end;
-      
+
       // Remove everything from '@' onward :
       i := Pos('@', Result);
       if i > 1 then
@@ -367,7 +367,7 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
 
       // Replace '::' with '.' :
       Result := StringReplace(Result, '::', '.', [rfReplaceAll]);
-    end;
+    end; // DxbxUnmangleSymbolName
 
   begin
     // Search if this address matches a pattern :
@@ -396,7 +396,7 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
     Detected.HitCount := 1;
 
 {$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE : 0x%.8x -> ''%s'' (was "%s")', [aAddress, Unmangled, FunctionName]);
+    DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' (was "%s")', [aAddress, Unmangled, FunctionName]);
     // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
 {$ENDIF}
   end; // _FindAndRememberPattern
@@ -407,7 +407,7 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
     p: PByte;
   begin
 {$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE : Scanning from 0x%.8x to 0x%.8x', [ByteScanLower, ByteScanUpper]);
+    DbgPrintf('DxbxHLE : Detecting functions from $%.8x to $%.8x', [ByteScanLower, ByteScanUpper]);
 {$ENDIF}
     p := ByteScanLower;
     while p <> ByteScanUpper do
@@ -416,7 +416,7 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
         _FindAndRememberPattern(aPatternTrieReader, p);
       except
 {$IFDEF DXBX_DEBUG}
-        DbgPrintf('DxbxHLE : Exception while scanning on address 0x%.8x', [p]);
+        DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
 {$ENDIF}
       end;
 
@@ -438,10 +438,6 @@ begin
   ByteScanUpper := PByte(IntPtr(ByteScanLower) + pXbeHeader.dwSizeofImage);
 
   DetectedFunctions.Clear;
-
-  DbgPrintf('DxbxHLE : AvailablePatches... ');
-  for i := 0 to  + AvailablePatches.Count - 1 do
-    DbgPrintf('%.3d : $%.08x (%s{Emu}%s)', [i, Integer(AvailablePatches.Objects[i]), PatchPrefix, AvailablePatches[i]]);
 
   // Get StoredPatternTrie from resource :
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
@@ -502,7 +498,7 @@ begin
   end;
 *)
 
-  DbgPrintf('DxbxHLE : Detected %d APIs', [DetectedFunctions.Count]);
+  DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedFunctions.Count]);
 end; // DxbxScanForLibraryAPIs
 
 { TDetectedFunctions }
