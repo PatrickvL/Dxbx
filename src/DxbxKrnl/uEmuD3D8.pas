@@ -282,7 +282,6 @@ var
   lPrintfOn: bool;
 begin
   // register window class
-  DbgPrintf('Dxbx: EmuRenderWindow.');
   begin
     hDxbxDLL := MainInstance;
 
