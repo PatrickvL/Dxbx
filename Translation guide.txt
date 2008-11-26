@@ -52,31 +52,31 @@ pattern (.pat) files for this library, from as much SDK's as possible.
 
 With these .pat files, run PatternTrieBuilder.exe to get an updated version
 of the data structure (StoredTrie.dpt) that Dxbx uses to detect functions.
-(When compiling the Dxbx DLL project, this data is linked into the DLL.)
+(When compiling the DxbxKrnl.DLL project, this data is linked into the DLL.)
 So now, when you run your game, you should see your function being detected,
-as mentioned in the log like this : "DxbxHLE : 0x00011000 -> SomeFunction".
+as mentioned in the log like this : 
+
+  DxbxHLE : Detected at $00011000 : 'SomeFunction'
 
 Now that Dxbx can detect the function, implement your patch (don't forget to
 declare it with the correct arguments and "stdcall" calling convention).
 
-To register it, open up the uXboxLibraryUtils.pas unit, and make sure that
-the unit containing your patch is present in the "uses" section. Now scroll
-down to the "XboxLibraryPatchToPatch" method. Move the cursor over to the
-inclusion of "XboxLibraryPatchCases.inc" and press Ctrl+Enter to open it up.
+To register it, scroll down to the 'exports' section of the unit where you're
+implementing the patch (create one if it's not there yet - look in another
+unit, like uEmuD8D.pas, for an example of how this should look).
+Add a line that reads (replacing both 'SomeFunction's with your patch) :
 
-Duplicate the last line of this file. In this copy, increment the number at
-the start of the line, and replace the function name with your new patch.
+  EmuSomeFunction name PatchPrefix + 'SomeFunction',
+  
+If you followed these steps and made no mistakes, DxbxKrnl.DLL will keep
+compiling just fine; But now when running your game, you should see a log
+line mentioning that your patch was applied to some address in the game!
+This goes fully automatic; To verify, check the log for a line like this :
 
-Switch back to uXboxLibraryUtils.pas and scroll down to the line reading
-"New patches go above this line". Duplicate the last line in that section too
-and replace the function with your own patch function. As the last (crucial)
-step, replace the string value with the name of the function - *DO* take
-care to type (or better: copy it over) exactly as it appears in the function-
-detection log, or the patch won't be placed!
+  DxbxHLE : Installed patched from $00204080 (SomeFuntion) to $100ABCDE
 
-If you followed these steps and made no mistakes, Dxbx will keep compiling
-just fine; But now when running your game, you should see a log line
-mentioning that your patch was applied to some address in the game!
+The addresses will be different, but the name should match your new patch.
+
 
 
 CToPas

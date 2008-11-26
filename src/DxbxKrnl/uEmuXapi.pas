@@ -288,6 +288,8 @@ begin
 
   Result := PVOID(JwaNative.RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
 
+  DbgPrintf('pRet : 0x%.08X', [Result]);
+
   EmuSwapFS(); // XBox FS
 end;
 
@@ -366,7 +368,6 @@ function XTL_EmuRtlReAllocateHeap(
   dwBytes: SIZE_T): PVOID; stdcall;
 var
   offs: Byte;
-  pRet: PVOID;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -388,11 +389,14 @@ begin
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
 
-  pRet := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + $20);
+  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + $20);
+
+  if Assigned(lpMem) then
+    Result := PVOID(uint32(Result) + offs);
+
+  DbgPrintf('pRet : 0x%.08X', [Result]);
 
   EmuSwapFS(); // XBox FS
-
-  Result := pRet;
 end;
 
 function XTL_EmuRtlSizeHeap(
@@ -401,7 +405,6 @@ function XTL_EmuRtlSizeHeap(
   lpMem: PVOID): SIZE_T; stdcall;
 var
   offs: Byte;
-  ret: SIZE_T;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
@@ -422,11 +425,9 @@ begin
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
 
-  ret := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem) - $20;
+  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem) - $20;
 
   EmuSwapFS(); // XBox FS
-
-  Result := ret;
 end;
 
 function XTL_EmuQueryPerformanceCounter(lpPerformanceCount: Int64): BOOL; stdcall;

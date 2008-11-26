@@ -152,19 +152,15 @@ begin
   // use the special calling convention
   try
     EmuSwapFS(); // Xbox FS
-    try
-      asm
-        mov         esi, StartRoutine
-        push        StartContext2
-        push        StartContext1
-        push        offset callComplete
-        lea         ebp, [esp-4]
-//        jmp near    esi
-        jmp         esi
-      end;
-    finally
-callComplete:
-      EmuSwapFS(); // Win2k/XP FS
+
+    asm
+      mov         esi, StartRoutine
+      push        StartContext2
+      push        StartContext1
+      push        offset callComplete
+      lea         ebp, [esp-4]
+//      jmp near    esi
+      jmp         esi
     end;
 
   except
@@ -180,6 +176,9 @@ callComplete:
       EmuWarning('Problem with ExceptionFilter!');
     end;
   end; // try
+
+callComplete:
+   EmuSwapFS(); // Win2k/XP FS
 
   // Restore original exception filter :
   SetUnhandledExceptionFilter(OldExceptionFilter);
