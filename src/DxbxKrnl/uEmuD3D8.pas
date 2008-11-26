@@ -47,6 +47,7 @@ uses
   uLog,
   uTypes,
   uXbe,
+  uEmuAlloc,
   uXbVideo,
   uEmuShared,
   uEmuFS,
@@ -61,7 +62,7 @@ type
     DeviceType: D3DDEVTYPE;
     hFocusWindow: HWND;
     BehaviorFlags: DWORD;
-    pPresentationParameters: X_D3DPRESENT_PARAMETERS;
+    pPresentationParameters: D3DPRESENT_PARAMETERS;//X_D3DPRESENT_PARAMETERS;
     ppReturnedDeviceInterface: IDirect3DDevice8;
     bReady: Bool;
     hRet: HRESULT;
@@ -76,7 +77,7 @@ function IfThen(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDev
 procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord); stdcall; // forward
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
-  pPresentationParameters: X_D3DPRESENT_PARAMETERS;
+  pPresentationParameters: D3DPRESENT_PARAMETERS;//X_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall; // forward
 
 function XTL_EmuIDirect3DDevice8_SetVertexData2f(aRegister: Integer;
@@ -150,7 +151,7 @@ var
   hThread: THandle;
   hDupHandle: THandle;
   DevType: D3DDEVTYPE;
-  PresParam: X_D3DPRESENT_PARAMETERS;
+  PresParam: D3DPRESENT_PARAMETERS;//X_D3DPRESENT_PARAMETERS;
 begin
   g_EmuShared.GetXBVideo(g_XBVideo);
 
@@ -210,10 +211,10 @@ begin
   ZeroMemory(@PresParam, SizeOf(PresParam));
   PresParam.BackBufferWidth := 640;
   PresParam.BackBufferHeight := 480;
-  PresParam.BackBufferFormat := 6; (* X_D3DFMT_A8R8G8B8 *)
+  PresParam.BackBufferFormat := D3DFMT_A8R8G8B8;//6; (* X_D3DFMT_A8R8G8B8 *)
   PresParam.BackBufferCount := 1;
   PresParam.EnableAutoDepthStencil := True;
-  PresParam.AutoDepthStencilFormat := $2A; (* X_D3DFMT_D24S8 *)
+  PresParam.AutoDepthStencilFormat := D3DFMT_D24S8;//$2A; (* X_D3DFMT_D24S8 *)
   PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
   EmuSwapFS(); // XBox FS
   XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, 0, $00000040, PresParam, g_pD3DDevice8);
@@ -704,7 +705,7 @@ var
   szBackBufferFormat: array[0..16 - 1] of Char;
   hRet: HRESULT;
   dwCodes: DWord;
-  lpCodes: DWORD;
+  lpCodes: PDWORD;
   v: Dword;
   ddsd2: DDSURFACEDESC2;
   Streams: Integer;
@@ -712,8 +713,8 @@ begin
   DbgPrintf('EmuD3D8: CreateDevice proxy thread is running.');
 
   { TODO: Dxbx creates deadlock with this while loop }
-  (*while True do
-  begin*)
+  while True do
+  begin
   // if we have been signalled, create the device with cached parameters
   if g_EmuCDPD.bReady then
   begin
@@ -729,16 +730,15 @@ begin
 
         g_pD3DDevice8.EndScene();
 
-          { TODO: dxbx greates deadlock with this while loop }
-          (*while (g_pD3DDevice8._Release() <> 0) do
-            g_pD3DDevice8 := nil; *)
+        while (g_pD3DDevice8._Release() <> 0) do
+          g_pD3DDevice8 := nil;
       end;
 
-      if Assigned(g_EmuCDPD.pPresentationParameters.BufferSurfaces[0]) then
+      (*if Assigned(g_EmuCDPD.pPresentationParameters.BufferSurfaces[0]) then
         EmuWarning(Format('BufferSurfaces[0]: 0x%.08X', [@g_EmuCDPD.pPresentationParameters.BufferSurfaces[0]]));
 
       if Assigned(g_EmuCDPD.pPresentationParameters.DepthStencilSurface) then
-        EmuWarning(Format('DepthStencilSurface: 0x%.08X', [@g_EmuCDPD.pPresentationParameters.DepthStencilSurface]));
+        EmuWarning(Format('DepthStencilSurface: 0x%.08X', [@g_EmuCDPD.pPresentationParameters.DepthStencilSurface]));*)
 
       // make adjustments to parameters to make sense with windows Direct3D
       begin
@@ -750,19 +750,19 @@ begin
           g_EmuCDPD.pPresentationParameters.SwapEffect := D3DSWAPEFFECT_COPY_VSYNC;
 
         g_EmuCDPD.hFocusWindow := g_hEmuWindow;
-        (*g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL_EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
-        g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := XTL_EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
+        (*g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL_EmuPC2XB_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
+        g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := XTL_EmuPC2XB_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
+        *)
 
-
-        (*if (not g_XBVideo.GetVSync() and (g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) and g_XBVideo.GetFullscreen()) then
+        if (not g_XBVideo.GetVSync() and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) >0) and g_XBVideo.GetFullscreen()) then
           g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
         else
         begin
-            if ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE) and g_XBVideo.GetFullscreen) then
+            if ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE) >0) and  (g_XBVideo.GetFullscreen) then
                 g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_ONE
             else
                 g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_DEFAULT;
-        end;                                                                                                      *)
+        end;
 
         // TODO: Support Xbox extensions if possible
         if (g_EmuCDPD.pPresentationParameters.MultiSampleType <> D3DMULTISAMPLE_NONE) then
@@ -825,7 +825,7 @@ begin
       end;
 
       // redirect to windows Direct3D
-      (*g_EmuCDPD.hRet := g_pD3D8.CreateDevice
+      g_EmuCDPD.hRet := g_pD3D8.CreateDevice
         (
         g_EmuCDPD.Adapter,
         g_EmuCDPD.DeviceType,
@@ -833,7 +833,7 @@ begin
         g_EmuCDPD.BehaviorFlags,
         g_EmuCDPD.pPresentationParameters,
         g_EmuCDPD.ppReturnedDeviceInterface
-        ); *)
+        );
 
       // report error
       if (FAILED(g_EmuCDPD.hRet)) then
@@ -875,23 +875,22 @@ begin
       // check for YUY2 overlay support TODO: accept other overlay types
       begin
         dwCodes := 0;
-        lpCodes := 0;
-        { TODO: Need to be translated to delphi }
+        lpCodes := nil;
         (*g_pDD7.GetFourCCCodes(dwCodes, lpCodes);
         lpCodes := CxbxMalloc(dwCodes*SizeOf(DWORD));
-        g_pDD7.GetFourCCCodes(@dwCodes, lpCodes); *)
+        g_pDD7.GetFourCCCodes(@dwCodes, lpCodes);
 
         g_bSupportsYUY2 := False;
         for v := 0 to dwCodes - 1 do
         begin
-          (*if (lpCodes[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
+          if (lpCodes[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
           begin
             g_bSupportsYUY2 := True;
             Break;
-          end; *)
-        end;
+          end;
+        end;                                      *)
 
-        (*CxbxFree(lpCodes); *)
+        CxbxFree(lpCodes);
 
         if (not g_bSupportsYUY2) then
           EmuWarning('YUY2 overlays are not supported in hardware, could be slow!');
@@ -933,7 +932,7 @@ begin
       begin
           g_pD3DDevice8.SetStreamSource(Streams, g_pDummyBuffer, 1);
        end;
-       *)
+
 
       // begin scene
       g_pD3DDevice8.BeginScene();
@@ -942,7 +941,7 @@ begin
       g_pD3DDevice8.Clear(0, nil, D3DCLEAR_TARGET, $FF000000, 0, 0);
       g_pD3DDevice8.Present(nil, nil, 0, nil);
 
-      // signal completion
+      // signal completion          *)
       g_EmuCDPD.bReady := False;
     end
     else
@@ -983,7 +982,7 @@ begin
   end;
 
   Sleep(1);
- (* end; *)
+  end; 
 
   Result := 0;
 end;
@@ -1074,7 +1073,7 @@ end;
 
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
-  pPresentationParameters: X_D3DPRESENT_PARAMETERS;
+  pPresentationParameters: D3DPRESENT_PARAMETERS;//X_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
 begin

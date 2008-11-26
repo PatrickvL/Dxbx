@@ -64,11 +64,11 @@ begin
   if szErrorMessage <> '' then
   begin
     szBuffer1 := {Format} 'CxbxKrnlCleanup : Recieved Fatal Message ->'#13#13 + szErrorMessage;
-    WriteLog(szBuffer1);
+    DbgPrintf(szBuffer1);
     MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONEXCLAMATION);
   end;
 
-  WriteLog('DxbxKrnl: Terminating Process');
+  DbgPrintf('DxbxKrnl: Terminating Process');
 //  FFlush(stdout);
 
   // Cleanup debug output
