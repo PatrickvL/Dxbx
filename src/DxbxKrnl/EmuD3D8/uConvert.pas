@@ -35,6 +35,10 @@ uses
   , uDxbxKrnlUtils
   , uEmu;
 
+function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
+function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
+
+
 implementation
 
 function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWord): LONGBOOL; stdcall;
@@ -60,7 +64,7 @@ begin
   end;
 end;
 
-function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
+function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT ): D3DFORMAT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case aFormat of

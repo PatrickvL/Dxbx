@@ -26,7 +26,9 @@ uses
   // Delphi
   Windows,
   // Directx
-  Direct3D8
+  Direct3D8,
+  // Xbox
+  uXbe
   ;
 
 const
@@ -60,7 +62,14 @@ type
 
   X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
 
-
+  X_D3DTILE = record
+    Flags : DWORD;
+    pMemory : PVOID;
+    Size : DWORD;
+    Pitch : DWORD;
+    ZStartTag : DWORD;
+    ZOffset : DWORD;
+  end;
 
 
   X_D3DVertexShader = record
