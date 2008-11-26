@@ -1111,20 +1111,17 @@ begin
   g_EmuCDPD.ppReturnedDeviceInterface := ppReturnedDeviceInterface;
 
     // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
-  { TODO: dxbx greates deadlock with this while loop }
-  (*while (g_EmuCDPD.bReady) do
+  while (g_EmuCDPD.bReady) do
     Sleep(10);
-  *)
+
 
     // Signal proxy thread, and wait for completion
   g_EmuCDPD.bReady := True;
   g_EmuCDPD.bCreate := True;
 
     // Wait until proxy is completed
-  { TODO: dxbx greates deadlock with this while loop }
-  (*
   while (g_EmuCDPD.bReady) do
-    Sleep(10); *)
+    Sleep(10);
 
   EmuSwapFS(); // XBox FS
 
