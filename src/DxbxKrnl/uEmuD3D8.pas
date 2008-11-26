@@ -809,7 +809,7 @@ begin
       end;
 
       // detect vertex processing capabilities
-      (*if ((g_D3DCaps.DevCaps and D3DDEVCAPS_HWTRANSFORMANDLIGHT) and g_EmuCDPD.DeviceType = D3DDEVTYPE_HAL) then
+      if ((g_D3DCaps.DevCaps and D3DDEVCAPS_HWTRANSFORMANDLIGHT) > 0) and ( g_EmuCDPD.DeviceType = D3DDEVTYPE_HAL)  then
       begin
         DbgPrintf('EmuD3D8: Using hardware vertex processing');
 
@@ -822,7 +822,7 @@ begin
 
         g_EmuCDPD.BehaviorFlags := D3DCREATE_SOFTWARE_VERTEXPROCESSING;
         g_dwVertexShaderUsage := D3DUSAGE_SOFTWAREPROCESSING;
-      end; *)
+      end;
 
       // redirect to windows Direct3D
       (*g_EmuCDPD.hRet := g_pD3D8.CreateDevice
