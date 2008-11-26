@@ -38,11 +38,31 @@ uses
   uEmuLDT;
 
 
-procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
-procedure EmuInitFS;
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
+procedure EmuInitFS;
+function EmuIsXboxFS: LongBool; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
+procedure EmuSwapFS; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
 procedure EmuCleanupFS;
-function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
+
+const
+  // TIB layout, reachable via FS :
+  FS_StructuredExceptionHandlerPointer = $00;
+  FS_StackBasePointer = $04;
+  FS_StackLimit = $08; // Int32
+  FS_SubSystemTib = $0C; // Pointer
+  FS_FiberData = $10; // for TIB : Pointer
+  FS_Version = $10; // for TEB (?) : Pointer
+  FS_ArbitraryUserPointer = $14;
+  FS_ThreadInformationBlockPointer = $18; // IntPtr
+  FS_ProcessEnvironmentBlock = $30; // FS points to TEB/TIB which has a pointer to the PEB
+
+  // Aliases :
+  FS_ExceptionList = FS_StructuredExceptionHandlerPointer; // $00
+  FS_Self = FS_ThreadInformationBlockPointer; // $18
+
+  // Dxbx values inside FS_ArbitraryUserPointer :
+  DxbxFS_SwapFS = FS_ArbitraryUserPointer; // = $14 : UInt16
+  DxbxFS_IsXboxFS = FS_ArbitraryUserPointer + 2; // = $16 : ByteBool
 
 var
   // Xbox is a single process system, and because of this fact, demos
@@ -59,17 +79,23 @@ var
 implementation
 
 // is the current fs register the xbox emulation variety?
-function EmuIsXboxFS: Boolean;
+function EmuIsXboxFS: LongBool;
+asm
+  xor eax, eax
+  mov ah, fs:[DxbxFS_IsXboxFS]
+end;
+(*
 var
   chk: Byte;
 begin
   asm
-    mov ah, fs:[$16]
+    mov ah, fs:[DxbxFS_IsXboxFS]
     mov chk, ah
   end;
 
   Result := (chk = 1);
 end;
+*)
 
 // This function is used to swap between the native Win2k/XP FS:
 // structure, and the Emu FS: structure. Before running Windows
@@ -86,13 +112,13 @@ begin
   // non-interception code uses it
 
   asm
-    mov ax, fs:[$14]
+    mov ax, fs:[DxbxFS_SwapFS]
     mov fs, ax
   end;
 
   // Every "N" interceptions, perform various periodic services
   Inc(dwInterceptionCount);
-  if (dwInterceptionCount - 1) >= EmuAutoSleepRate then
+  if dwInterceptionCount >= EmuAutoSleepRate then
   begin
     // If we're in the Xbox FS, wait until the next swap
     if EmuIsXboxFS then
@@ -183,18 +209,15 @@ begin
     mov OrgFS, ax
 
     // Obtain "OrgNtTib"
-    mov eax, fs:[$18]
+    mov eax, fs:[FS_ThreadInformationBlockPointer]
     mov OrgNtTib, eax
   end;
 
   // allocate LDT entry
   begin
     dwSize := SizeOf(XboxKrnl.KPCR);
-
     NewPcr := xboxkrnl.PKPCR(CxbxMalloc(dwSize));
-
-    ZeroMemory(NewPcr, SizeOf(NewPcr));
-
+    ZeroMemory(NewPcr, dwSize); // was : SizeOf(NewPcr));
     NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(IntPtr(NewPcr) + dwSize));
   end;
 
@@ -203,8 +226,8 @@ begin
     mov ax, NewFS
     mov bh, 0
 
-    mov fs:[$14], ax
-    mov fs:[$16], bh
+    mov fs:[DxbxFS_SwapFS], ax
+    mov fs:[DxbxFS_IsXboxFS], bh
   end;
 
   // generate TIB
@@ -241,14 +264,14 @@ begin
     mov ax, OrgFS
     mov bh, 1
 
-    mov fs:[$14], ax
-    mov fs:[$16], bh
+    mov fs:[DxbxFS_SwapFS], ax
+    mov fs:[DxbxFS_IsXboxFS], bh
   end;
 
   // save "TLSPtr" inside NewFS.StackBase
   asm
     mov eax, pNewTLS
-    mov fs:[$04], eax
+    mov fs:[FS_StackBasePointer], eax
   end;
 
   // swap back into the "OrgFS"
@@ -266,7 +289,7 @@ begin
   wSwapFS := 0;
 
   asm
-    mov ax, fs:[$14]  // FS.ArbitraryUserPointer
+    mov ax, fs:[DxbxFS_SwapFS]  // FS.ArbitraryUserPointer
     mov wSwapFS, ax;
   end;
 
@@ -279,7 +302,7 @@ begin
   //pTLSData := NULL;
   
   asm
-    mov eax, fs:[$04]
+    mov eax, fs:[FS_StackBasePointer]
     mov pTLSData, eax
   end;
 

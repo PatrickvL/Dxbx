@@ -1099,8 +1099,8 @@ begin
     #13#10'   pPresentationParameters  : 0x%.08X' +
     #13#10'   ppReturnedDeviceInterface: 0x%.08X' +
     #13#10')', [
-    Adapter, @DeviceType, hFocusWindow, BehaviorFlags, @pPresentationParameters,
-      @ppReturnedDeviceInterface
+    Adapter, Ord(DeviceType), hFocusWindow, BehaviorFlags, @pPresentationParameters,
+      Pointer(ppReturnedDeviceInterface)
       ]);
 
   // Cache parameters
