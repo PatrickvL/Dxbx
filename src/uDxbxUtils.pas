@@ -53,8 +53,8 @@ type
 
 procedure ScanPCharLines(const aPChar: PAnsiChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);
 
-function ScanHexByte(var aLine: PAnsiChar; var Value: Integer): Boolean;
-function ScanHexWord(var aLine: PAnsiChar; var Value: Integer): Boolean;
+function ScanHexByte(aLine: PAnsiChar; var Value: Integer): Boolean;
+function ScanHexWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 
 function Sscanf(const s: string; const fmt: string; const Pointers: array of Pointer): Integer;
 
@@ -156,7 +156,7 @@ begin
   end;
 end;
 
-function _ScanHexDigits(var aLine: PAnsiChar; var Value: Integer; Digits: Integer): Boolean;
+function _ScanHexDigits(aLine: PAnsiChar; var Value: Integer; Digits: Integer): Boolean;
 begin
   Value := 0;
   while Digits > 0 do
@@ -172,12 +172,12 @@ begin
   Result := True;
 end;
 
-function ScanHexByte(var aLine: PAnsiChar; var Value: Integer): Boolean;
+function ScanHexByte(aLine: PAnsiChar; var Value: Integer): Boolean;
 begin
   Result := _ScanHexDigits(aLine, Value, 2);
 end;
 
-function ScanHexWord(var aLine: PAnsiChar; var Value: Integer): Boolean;
+function ScanHexWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 begin
   Result := _ScanHexDigits(aLine, Value, 4);
 end;
@@ -200,7 +200,7 @@ begin
       Exit;
 
     // Step over to the start of the next line :
-    p1 := p2;
+    p1 := p2 + 1;
     while p1^ in [#10, #13] do
       Inc(p1);
   end;

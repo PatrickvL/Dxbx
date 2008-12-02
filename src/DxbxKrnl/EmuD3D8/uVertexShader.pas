@@ -49,7 +49,7 @@ begin
   Result := True;
 
   EmuSwapFS();
-  XTL_EmuIDirect3DDevice8_GetVertexShader(aHandle);
+  XTL_EmuIDirect3DDevice8_GetVertexShader({var}aHandle);
   EmuSwapFS();
   if (VshHandleIsVertexShader(aHandle)) then
   begin

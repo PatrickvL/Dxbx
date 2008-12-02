@@ -38,13 +38,21 @@ type
 
   TPatternTrieLeaf = class; // forward
 
+  RCrossReference = record
+    Offset: Word;
+    Name: string;
+  end;
+
   PVersionedXboxLibraryFunction = ^RVersionedXboxLibraryFunction;
   RVersionedXboxLibraryFunction = record
     VersionedXboxLibrary: PVersionedXboxLibrary;
+    Values: array of PAnsiChar;
     Name: string;
     CRCLength: Byte;
     CRCValue: Word;
     TotalLength: Word;
+    FunctionOffset: Word; // Almost always 0. Special cases ":0010 _tcpipxsum@12" and ":003F@ __ehhandler*"
+    CrossReferences: array of RCrossReference;
   end;
 
   TPatternTrieNode = class(TObject)
@@ -326,16 +334,27 @@ end;
 { TPatternTrieLeaf }
 
 function TPatternTrieLeaf.NodeAsString: string;
+var
+  i: Integer;
 begin
-  Result := Format('%d. %.2x %.4x %.4x [%8s %4d] %s', [
+  Result := Format('%d. %.2x %.4x %.4x [%8s %4d] :%.4x %s', [
     LeafNr,
     VersionedXboxLibraryFunction.CRCLength,
     VersionedXboxLibraryFunction.CRCValue,
     VersionedXboxLibraryFunction.TotalLength,
     VersionedXboxLibraryFunction.VersionedXboxLibrary.LibName,
     VersionedXboxLibraryFunction.VersionedXboxLibrary.LibVersion,
+    VersionedXboxLibraryFunction.FunctionOffset,
     VersionedXboxLibraryFunction.Name
     ]);
+
+  for i := 0 to Length(VersionedXboxLibraryFunction.CrossReferences) - 1 do
+  begin
+    Result := Result + Format(' ^%.4x %s', [
+      VersionedXboxLibraryFunction.CrossReferences[i].Offset,
+      VersionedXboxLibraryFunction.CrossReferences[i].Name
+      ]);
+  end;
 end;
 
 { TPatternTrie }
@@ -396,7 +415,7 @@ var
     // Also dump the children (if there are any), but then one indent-level further :
     for i := 0 to aPatternNode.NrChildren - 1 do
       _DumpNode(aPatternNode.Children[i], aIndentLevel + 1);
-  end;
+  end; // _DumpNode
 
 begin
   IndentStr := TStringList.Create;
@@ -411,7 +430,7 @@ begin
   finally
     FreeAndNil(IndentStr);
   end;
-end;
+end; // Dump
 
 procedure TPatternTrie.Save(const aFileName: string);
 var
@@ -431,6 +450,15 @@ var
     StoredLibraryFunction.CRCLength := aLeaf.VersionedXboxLibraryFunction.CRCLength;
     StoredLibraryFunction.CRCValue := aLeaf.VersionedXboxLibraryFunction.CRCValue;
     StoredLibraryFunction.FunctionLength := aLeaf.VersionedXboxLibraryFunction.TotalLength;
+    if Length(aLeaf.VersionedXboxLibraryFunction.CrossReferences) > 0 then
+    begin
+      // TODO : Write out all cross-references here !
+      StoredLibraryFunction.CrossReference1Offset := aLeaf.VersionedXboxLibraryFunction.CrossReferences[0].Offset;
+      StoredLibraryFunction.CrossReference1NameIndex := UniqueStrings.IndexOf(aLeaf.VersionedXboxLibraryFunction.CrossReferences[0].Name);
+    end
+    else
+      StoredLibraryFunction.CrossReference1NameIndex := NO_STRING_INDEX;
+
     OutputFile.WriteBuffer(StoredLibraryFunction, SizeOf(RStoredLibraryFunction));
   end;
 
@@ -449,7 +477,7 @@ var
       // Remember this position (this is where the next sibling will be written) :
       CurrentPosition := OutputFile.Position;
       // Go to the position of the 'NextSiblingOffset' field in the previous sibling :
-      OutputFile.Position := aPreviousSiblingPosition + IntPtr(@(PStoredTrieNode(nil).NextSiblingOffset));
+      OutputFile.Position := aPreviousSiblingPosition + UIntPtr(@(PStoredTrieNode(nil).NextSiblingOffset));
       OutputFile.Write(CurrentPosition, SizeOf(TByteOffset));
       // Return to the previous position, and remember that for the next call to this method :
       OutputFile.Position := CurrentPosition;
@@ -571,7 +599,7 @@ var
   end; // _WriteTrieNodes
 
 var
-  i: Integer;
+  i, j: Integer;
   StringOffsets: array of TByteOffset;
   StoredSignatureTrieHeader: RStoredSignatureTrieHeader;
   StoredLibrary: RStoredLibrary;
@@ -594,6 +622,14 @@ begin
     UniqueStrings.Sorted := True;
     UniqueStrings.Duplicates := dupIgnore;
     UniqueStrings.CaseSensitive := False;
+
+    // Add all cross-reference names to the unique string list :
+    for i := 0 to VersionedFunctions.Count - 1 do
+    begin
+      for j := 0 to Length(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences) - 1 do
+        GlobalFunctions.Add(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences[j].Name);
+    end;
+
     // Also, add all library names to the unique string list :
     for i := 0 to VersionedLibraries.Count - 1 do
       UniqueStrings.Add(PVersionedXboxLibrary(VersionedLibraries[i]).LibName);
@@ -671,23 +707,43 @@ end; // Save
 
 //
 
+const
+  // Value Indexes :
+  viPattern = 0;
+  viCRCLength = 1;
+  viCRCValue = 2;
+  viFunctionLength = 3;
+  viFunctionOffset = 4;
+  viFunctionName = 5;
+  viVariablePart = 6;
+
 type
   PPatternScanningContext = ^RPatternScanningContext;
   RPatternScanningContext = record
-    PatternTrie: TPatternTrie;
-    OnlyPatches: Boolean;
     VersionedXboxLibrary: PVersionedXboxLibrary;
+    OnlyPatches: Boolean;
+    FunctionList: TStringList;
+    PatternTrie: TPatternTrie;
   end;
 
 function ParseAndAppendPatternLineToTrie_Callback(aLine: PAnsiChar; aLength: Integer; aContext: PPatternScanningContext): Boolean;
 const
   PATTERN_START_OF_NAME = 85;
-  PATTERN_VALID_NAME_CHARACTERS = ['_', 'a'..'z', 'A'..'Z', '0'..'9', '@', ':', '?', '$'];
 var
   VersionedXboxLibraryFunction: PVersionedXboxLibraryFunction;
-  VersionedXboxLibraryFunctionPattern: TPattern;
-  i, Value: Integer;
-  aStart: PAnsiChar;
+  i: Integer;
+  Prev: PAnsiChar;
+  NrValues: Integer;
+
+  procedure _Add(const aPtr: PAnsiChar);
+  begin
+    aPtr^ := #0;
+    Inc(NrValues);
+    SetLength(VersionedXboxLibraryFunction.Values, NrValues);
+    VersionedXboxLibraryFunction.Values[NrValues - 1] := Prev;
+    Prev := aPtr + 1;
+  end;
+
 begin
   // Stop at a '-' marker :
   Result := (aLine^ <> '-');
@@ -699,88 +755,139 @@ begin
     Exit;
 
   // Prepare the record which will contain this pattern's data :
-  VersionedXboxLibraryFunction := AllocMem(SizeOf(RVersionedXboxLibraryFunction));
+  New(VersionedXboxLibraryFunction);
   VersionedXboxLibraryFunction.VersionedXboxLibrary := aContext.VersionedXboxLibrary;
-  SetLength(VersionedXboxLibraryFunctionPattern, PATTERNSIZE);
 
-  // Now, convert the first 32 bytes into a pattern :
-  for i := 0 to PATTERNSIZE - 1 do
+  Prev := aLine;
+  NrValues := 0;
+  for i := 0 to aLength - 1 do
+    if aLine[i] = ' ' then
+      _Add(@(aLine[i]));
+
+  _Add(@(aLine[aLength]));
+
+  if NrValues >= viVariablePart then
+    aContext.FunctionList.AddObject(VersionedXboxLibraryFunction.Values[viFunctionName], Pointer(VersionedXboxLibraryFunction))
+  else
+    Dispose(VersionedXboxLibraryFunction);
+end; // ParseAndAppendPatternLineToTrie_Callback
+
+function ParseVersionedXboxLibraryFunction(const aVersionedXboxLibraryFunction: PVersionedXboxLibraryFunction; aContext: PPatternScanningContext): Boolean;
+const
+  PATTERN_VALID_NAME_CHARACTERS = ['_', 'a'..'z', 'A'..'Z', '0'..'9', '@', ':', '?', '$'];
+var
+  VersionedXboxLibraryFunctionPattern: TPattern;
+  i, Value: Integer;
+  NrCrossReferences: Integer;
+  CrossReferencedFunctionName: string;
+  aLine: PAnsiChar;
+
+  procedure _SkipChar(const aChar: AnsiChar);
   begin
-    if ScanHexByte({var}aLine, {var}Value) then
-      // Every succesfully scanned hexadecimal byte, is added as-is to the patter-array :
-      VersionedXboxLibraryFunctionPattern[i] := Value
-    else
-    begin
-      // Everything else is probably a "don't care" indicator, so put that in here :
-      VersionedXboxLibraryFunctionPattern[i] := PatternDontCareValue;
-      Inc(aLine, 2);
-    end;
+    Assert(aLine^ = aChar);
+    Inc(aLine);
   end;
 
-  Assert(aLine^ = ' ');
-  Inc(aLine);
-
-  // Scan the CRC length :
-  if ScanHexByte(aLine, Value) then
-    VersionedXboxLibraryFunction.CRCLength := Byte(Value);
-  Assert(aLine^ = ' ');
-  Inc(aLine);
-
-  // Scan the CRC value :
-  if ScanHexWord(aLine, Value) then
-    VersionedXboxLibraryFunction.CRCValue := Word(Value);
-  Assert(aLine^ = ' ');
-  Inc(aLine);
-
-  // Scan the function length :
-  if ScanHexWord(aLine, Value) then
-    VersionedXboxLibraryFunction.TotalLength := Word(Value);
-  Assert(aLine^ = ' ');
-  Inc(aLine);
-
-  // Scan (and skip) the function offset :
-  Assert(aLine^ = ':');
-  Inc(aLine);
-  if ScanHexWord(aLine, Value) then
-    ; // Ignore offset
-  if aLine^ = '@' then
-    Inc(aLine);
-  Assert(aLine^ = ' ');
-  Inc(aLine);
-
-  // Scan the function name :
-  aStart := aLine;
-  repeat
-    Inc(aLine);
-  until not (aLine^ in PATTERN_VALID_NAME_CHARACTERS);
-
+begin
   // Remember the function name :
-  SetString(VersionedXboxLibraryFunction.Name, aStart, aLine - aStart);
+  aVersionedXboxLibraryFunction.Name := aVersionedXboxLibraryFunction.Values[viFunctionName];
 
   // Now, see if we need to filter
   if aContext.OnlyPatches then
   begin
     // In this mode, skip all functions that aren't patched :
-    if not IsXboxLibraryPatch(VersionedXboxLibraryFunction.Name) then
+    if not IsXboxLibraryPatch(aVersionedXboxLibraryFunction.Name) then
     begin
       // No leaf added, free the function :
-      FreeMem(VersionedXboxLibraryFunction);
+      Result := False;
       Exit;
     end;
   end;
 
-  // TODO : Here, we could scan cross-references and the trailing pattern,
-  // but we ignore it for now; We'll visit this again when the first 32
-  // pattern bytes + CRC aren't enough to detect important functions...
+  // Convert the first 32 bytes into a pattern :
+  aLine := aVersionedXboxLibraryFunction.Values[viPattern];
+  SetLength(VersionedXboxLibraryFunctionPattern, PATTERNSIZE);
+  for i := 0 to PATTERNSIZE - 1 do
+  begin
+    if ScanHexByte(aLine, {var}Value) then
+      // Every succesfully scanned hexadecimal byte, is added as-is to the patter-array :
+      VersionedXboxLibraryFunctionPattern[i] := Value
+    else
+      // Everything else is probably a "don't care" indicator, so put that in here :
+      VersionedXboxLibraryFunctionPattern[i] := PatternDontCareValue;
+    Inc(aLine, 2);
+  end;
+
+  // Scan the CRC length :
+  if ScanHexByte(aVersionedXboxLibraryFunction.Values[viCRCLength], {var}Value) then
+    aVersionedXboxLibraryFunction.CRCLength := Byte(Value);
+
+  // Scan the CRC value :
+  if ScanHexWord(aVersionedXboxLibraryFunction.Values[viCRCValue], {var}Value) then
+    aVersionedXboxLibraryFunction.CRCValue := Word(Value);
+
+  // Scan the function length :
+  if ScanHexWord(aVersionedXboxLibraryFunction.Values[viFunctionLength], {var}Value) then
+    aVersionedXboxLibraryFunction.TotalLength := Word(Value);
+
+  // Scan the function offset :
+  aLine := aVersionedXboxLibraryFunction.Values[viFunctionOffset];
+  _SkipChar(':');
+  if ScanHexWord(aLine, {var}Value) then
+    // Note : Is this ever anything else but zero (0) ?
+    aVersionedXboxLibraryFunction.FunctionOffset := Word(Value);
+
+  // TODO : What does this '@' after the FunctionOffset mean?
+  if aLine^ = '@' then
+    _SkipChar('@');
+
+  Result := True;
+
+  // See if there's something after the function name (like a cross-reference) :
+  i := viVariablePart;
+  NrCrossReferences := 0;
+  while (i + 1) < Length(aVersionedXboxLibraryFunction.Values) do
+  begin
+    aLine := aVersionedXboxLibraryFunction.Values[i];
+
+    // Check if there's a cross-reference starting here (begins with an offset) :
+    if aLine^ <> '^' then
+      Break;
+
+    // There's a cross-reference here, scan it :
+    _SkipChar('^');
+    if not ScanHexWord(aLine, {var}Value) then
+      Break;
+
+    // TODO : There's a '@' after the cross-reference offset sometimes,
+    // What does this mean? (See _XapiInitProcess@0 pattern)
+
+    // Get the function name :
+    Inc(i);
+    CrossReferencedFunctionName := aVersionedXboxLibraryFunction.Values[i];
+
+    // Check if this is a known function (not much use to add it otherwise) : 
+    if aContext.FunctionList.IndexOf(CrossReferencedFunctionName) >= 0 then
+    begin
+      // Remember the cross-reference function name :
+      Inc(NrCrossReferences);
+      SetLength(aVersionedXboxLibraryFunction.CrossReferences, NrCrossReferences);
+      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
+      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Offset := Word(Value);
+    end;
+    
+    // Step to the next possible cross-reference :
+    Inc(i);
+  end; // while
 
   // Now that the pattern line is scanned, add it to the trie :
-  if aContext.PatternTrie.AddPattern(VersionedXboxLibraryFunction, VersionedXboxLibraryFunctionPattern, 0) = nil then
+  if aContext.PatternTrie.AddPattern(aVersionedXboxLibraryFunction, VersionedXboxLibraryFunctionPattern, 0) = nil then
     // No leaf added, free the function :
-    FreeMem(VersionedXboxLibraryFunction)
+    Dispose(aVersionedXboxLibraryFunction)
   else
     // The function was added to the trie, remember it :
-    aContext.PatternTrie.VersionedFunctions.Add(VersionedXboxLibraryFunction);
-end;
+    aContext.PatternTrie.VersionedFunctions.Add(aVersionedXboxLibraryFunction);
+end; // ParseVersionedXboxLibraryFunction
 
 procedure ParseAndAppendPatternsToTrie(const aPatterns: PAnsiChar;
   const aPatternTrie: TPatternTrie;
@@ -788,13 +895,35 @@ procedure ParseAndAppendPatternsToTrie(const aPatterns: PAnsiChar;
   const aLibrary: PVersionedXboxLibrary);
 var
   PatternScanningContext: RPatternScanningContext;
+  i: Integer;
+  VersionedXboxLibraryFunction: PVersionedXboxLibraryFunction;
 begin
   // Set up the context for the line-parsing routine :
   PatternScanningContext.PatternTrie := aPatternTrie;
   PatternScanningContext.OnlyPatches := aOnlyPatches;
   PatternScanningContext.VersionedXboxLibrary := aLibrary;
-  // Scan all pattern lines :
-  ScanPCharLines(aPatterns, @ParseAndAppendPatternLineToTrie_Callback, @PatternScanningContext);
+  PatternScanningContext.FunctionList := TStringList.Create;
+  try
+    // Quickly scan all pattern lines and add them to the FunctionList :
+    ScanPCharLines(aPatterns, @ParseAndAppendPatternLineToTrie_Callback, @PatternScanningContext);
+
+    // Handle each function in this list :
+    PatternScanningContext.FunctionList.Sorted := True;
+    for i := PatternScanningContext.FunctionList.Count - 1 downto 0 do
+    begin
+      VersionedXboxLibraryFunction := Pointer(PatternScanningContext.FunctionList.Objects[i]);
+      if ParseVersionedXboxLibraryFunction(VersionedXboxLibraryFunction, @PatternScanningContext) then
+        SetLength(VersionedXboxLibraryFunction.Values, 0)
+      else
+      begin
+        PatternScanningContext.FunctionList.Delete(i);
+        Dispose(VersionedXboxLibraryFunction);
+      end;
+    end;
+
+  finally
+    FreeAndNil(PatternScanningContext.FunctionList);
+  end;
 end;
 
 function GeneratePatternTrie(const aPatternFiles: TStrings; const aOnlyPatches: Boolean): Integer;
@@ -813,6 +942,7 @@ function GeneratePatternTrie(const aPatternFiles: TStrings; const aOnlyPatches: 
         // Get the Pattern FilePath, and figure out for which library and version it is :
         PatternFilePath := aPatternFiles[i];
         LibName := ChangeFileExt(ExtractFileName(PatternFilePath), '');
+        WriteLn('Adding "' + LibName + '"');
 
         // Create and initialize this new library :
         VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
@@ -833,7 +963,7 @@ function GeneratePatternTrie(const aPatternFiles: TStrings; const aOnlyPatches: 
     finally
       FreeAndNil(Input);
     end;
-  end;
+  end; // _ProcessPatternFiles
 
 var
   PatternTrie: TPatternTrie;
@@ -880,7 +1010,7 @@ begin
     FreeAndNil(PatternTrie.VersionedLibraries);
     FreeAndNil(PatternTrie);
   end;
-end;
+end; // GeneratePatternTrie
 
 procedure PatternToTrie_Main;
 var
@@ -916,7 +1046,7 @@ begin
   finally
     FreeAndNil(PatternFiles);
   end;
-end;
+end; // PatternToTrie_Main
 
 end.
 

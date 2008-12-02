@@ -84,7 +84,7 @@ function XTL_EmuIDirect3DDevice8_SetVertexData2f(aRegister: Integer;
   a: FLOAT; b: FLOAT): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD); stdcall; // forward
+procedure XTL_EmuIDirect3DDevice8_GetVertexShader(var aHandle: DWORD); stdcall; // forward
 
 function EmuRenderWindow(lpVoid: Pointer): DWord; // forward
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
@@ -1087,7 +1087,6 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
 begin
-  Result := 0;
   EmuSwapFS(); // Win2k/XP FS
 
   DbgPrintf('EmuD3D8: EmuIDirect3D8_CreateDevice' +
@@ -1099,7 +1098,7 @@ begin
     #13#10'   pPresentationParameters  : 0x%.08X' +
     #13#10'   ppReturnedDeviceInterface: 0x%.08X' +
     #13#10')', [
-    Adapter, Ord(DeviceType), hFocusWindow, BehaviorFlags, @pPresentationParameters,
+      Adapter, Ord(DeviceType), hFocusWindow, BehaviorFlags, @pPresentationParameters,
       Pointer(ppReturnedDeviceInterface)
       ]);
 
@@ -1110,17 +1109,16 @@ begin
   g_EmuCDPD.pPresentationParameters := pPresentationParameters;
   g_EmuCDPD.ppReturnedDeviceInterface := ppReturnedDeviceInterface;
 
-    // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
+  // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
   while (g_EmuCDPD.bReady) do
     Sleep(10);
 
-
-    // Signal proxy thread, and wait for completion
+  // Signal proxy thread, and wait for completion
   g_EmuCDPD.bReady := True;
   g_EmuCDPD.bCreate := True;
 
     // Wait until proxy is completed
-  while (g_EmuCDPD.bReady) do
+  while g_EmuCDPD.bReady do
     Sleep(10);
 
   EmuSwapFS(); // XBox FS
@@ -1285,7 +1283,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_GetVisibilityTestResult(Index: DWORD;
-  pResult: UINT; pTimeStamp: ULONGLONG): HRESULT; stdcall;
+  var pResult: UINT; var pTimeStamp: ULONGLONG): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(); // Win2k/XP FS
@@ -1300,11 +1298,11 @@ begin
 
     // TODO Cxbx: actually emulate this!?
 
-  if (pResult <> 0) then
-    pResult := 640 * 480;
+  if pResult <> 0 then
+    {var}pResult := 640 * 480;
 
-  if (pTimeStamp <> 0) then
-    pTimeStamp := 0;
+  if pTimeStamp <> 0 then
+    {var}pTimeStamp := 0;
 
   EmuSwapFS(); // XBox FS
 
@@ -5287,7 +5285,7 @@ begin
              end;
          end; *)
 
-    g_pDDSOverlay7.Unlock(0);
+    g_pDDSOverlay7.Unlock(nil);
   end;
 
     // update overlay!
@@ -7186,7 +7184,7 @@ begin
     pMode^ := g_VertexShaderConstantMode;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader(pHandle: DWORD); stdcall;
+procedure XTL_EmuIDirect3DDevice8_GetVertexShader(var aHandle: DWORD); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS();
@@ -7196,10 +7194,10 @@ begin
     #13#10'(' +
     #13#10'   pHandle              : 0x%.08X' +
     #13#10');',
-    [pHandle]);
+    [aHandle]);
 
-  if pHandle <> 0 then
-    pHandle := g_CurrentVertexShader;
+  if aHandle <> 0 then
+    {var}aHandle := g_CurrentVertexShader;
 
   EmuSwapFS();
 end;
