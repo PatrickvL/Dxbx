@@ -33,6 +33,8 @@ const
 
   PatternDontCareValue = Word($FFFF);
 
+  NO_STRING_INDEX = Cardinal(-1);
+
 type
   {$A1} // Make sure all the following records are byte-aligned for best space-usage :
 
@@ -130,6 +132,8 @@ type
     CRCLength: Byte;
     CRCValue: Word;
     FunctionLength: Word;
+    CrossReference1Offset: Word;
+    CrossReference1NameIndex: TStringTableIndex;
   end;
 
   PStoredTrieNode = ^RStoredTrieNode;
@@ -227,7 +231,7 @@ end;
 
 function TPatternTrieReader.GetByteOffset(const aOffset: TByteOffset): PByteOffset;
 begin
-  IntPtr(Result) := IntPtr(StoredSignatureTrieHeader) + aOffset;
+  UIntPtr(Result) := UIntPtr(StoredSignatureTrieHeader) + aOffset;
 end;
 
 function TPatternTrieReader.GetStringPointerByIndex(const aStringIndex: TStringTableIndex): PAnsiChar;
@@ -292,7 +296,7 @@ end;
 
 function TPatternTrieReader.GetNode(const aNodeOffset: TByteOffset): PStoredTrieNode;
 begin
-  IntPtr(Result) := IntPtr(StoredSignatureTrieHeader) + aNodeOffset;
+  UIntPtr(Result) := UIntPtr(StoredSignatureTrieHeader) + aNodeOffset;
 {$IFDEF DXBX_RECTYPE}
   Assert(Result.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
 {$ENDIF}

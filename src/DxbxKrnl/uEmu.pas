@@ -316,7 +316,7 @@ end;
 procedure EmuCleanup(const szErrorMessage: string);
 var
   szBuffer1: string;
-  buffer: array [0..15] of Char;
+//  buffer: array [0..15] of Char;
 begin
   // Print out ErrorMessage (if exists)
   if (szErrorMessage <> '') then
@@ -378,7 +378,8 @@ begin
   MessageDlg('Warning: Could not safely terminate process!', mtWarning, [mbOk], 0);
   Inc(Count);
 
-  (*if (count > 1) then
+  if Count > 1 then
+;(*
   begin
     MessageDlg( 'Warning: Multiple Problems not ', mtWarning, [mbOk], 0 );
     Result := EXCEPTION_CONTINUE_SEARCH;
@@ -388,8 +389,8 @@ begin
     SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
   ExitProcess(1);
-
-  Result := EXCEPTION_CONTINUE_SEARCH; *)
+*)
+  Result := EXCEPTION_CONTINUE_SEARCH;
 end;
 
 exports

@@ -45,6 +45,8 @@ type
   RDetectedVersionedXboxLibraryFunction = record
     XboxLibraryPatch: TXboxLibraryPatch;
     FunctionName: string;
+    StoredLibraryFunction: PStoredLibraryFunction;
+//    PotentialLocations: array of RDetectedLocation = record CodeStart, CodeEnd: TCodePointer; end;
     HitCount: Integer;
     CodeStart: TCodePointer;
     CodeEnd: TCodePointer;
@@ -128,7 +130,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
 {$IFDEF DXBX_RECTYPE}
     Assert(aStoredTrieNode.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
 {$ENDIF}
-    // Calculate the position of the data after this TreeNode (StretchPtr) : 
+    // Calculate the position of the data after this TreeNode (StretchPtr) :
     NrChildren := aStoredTrieNode.NrChildrenByte1;
     IntPtr(StretchPtr) := IntPtr(aStoredTrieNode) + SizeOf(RStoredTrieNode);
     if NrChildren >= 128 then
@@ -180,7 +182,8 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
 
     until not More;
 
-    if Depth = PATTERNSIZE then
+    // When we're at the end of the pattern :
+    if Depth >= PATTERNSIZE then
     begin
       // Handle all children leafs here, searching for the best-fit lib-version :
       StoredLibraryFunction := Pointer(StretchPtr);
@@ -230,6 +233,8 @@ end; // TestAddressUsingPatternTrie
 
 
 procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+var
+  ByteScanLower, ByteScanUpper: PByte;
 
   procedure _DetectVersionedXboxLibraries(const aPatternTrieReader: TPatternTrieReader);
   var
@@ -369,6 +374,42 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
       Result := StringReplace(Result, '::', '.', [rfReplaceAll]);
     end; // DxbxUnmangleSymbolName
 
+    function _DetermineJmpAddress(const aStartingAddress: PByte; const aOffset: Word): PByte;
+    begin
+      IntPtr(Result) := IntPtr(aStartingAddress) + IntPtr(aOffset);
+      Result := PByte(IntPtr(Result) + PInteger(Result)^ + 4);
+    end;
+
+    function _HandleCrossReference(const aStartingAddress: PByte;
+      const aCrossReferenceOffset: Word; const aCrossReferenceNameIndex: TStringTableIndex): Boolean;
+    var
+      CrossReferenceAddress: PByte;
+      CrossReferenced: PStoredLibraryFunction;
+    begin
+      // First check : Do we have a cross-reference?
+      Result := (aCrossReferenceNameIndex = NO_STRING_INDEX);
+      if Result then
+        Exit;
+
+      // Use aCrossReferenceOffset to determine
+      // the call-location that should be checked :
+      CrossReferenceAddress := _DetermineJmpAddress(aStartingAddress, aCrossReferenceOffset);
+
+      // First check : does this address reside in the executable segment?
+      if (IntPtr(CrossReferenceAddress) < IntPtr(ByteScanLower)) or (IntPtr(CrossReferenceAddress) > IntPtr(ByteScanUpper)) then
+        Exit;
+
+      // See if we can find a function on this address :
+      CrossReferenced := TestAddressUsingPatternTrie(aPatternTrieReader, CrossReferenceAddress);
+      if CrossReferenced = nil then
+        Exit;
+
+      // Check if this function is indeed the one mentioned, by comparing
+      // the string-indexes of both functions (they should match) :
+      Result := aCrossReferenceNameIndex =
+                aPatternTrieReader.GetGlobalFunction(CrossReferenced.GlobalFunctionIndex).FunctionNameIndex;
+    end;
+
   begin
     // Search if this address matches a pattern :
     Result := TestAddressUsingPatternTrie(aPatternTrieReader, aAddress);
@@ -385,12 +426,17 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
       Exit;
     end;
 
+    // Handle a possible cross-reference check :
+    if not _HandleCrossReference(aAddress, Result.CrossReference1Offset, Result.CrossReference1NameIndex) then
+      Exit;
+
     // Do our own demangling :
     Unmangled := DxbxUnmangleSymbolName(FunctionName);
 
     // Newly detected functions are registered here (including their range,
     // which will come in handy when debugging) :
     Detected := DetectedFunctions.New(Unmangled);
+    Detected.StoredLibraryFunction := Result;
     Detected.CodeStart := TCodePointer(aAddress);
     Detected.CodeEnd := TCodePointer(IntPtr(aAddress) + Result.FunctionLength);
     Detected.HitCount := 1;
@@ -425,7 +471,6 @@ procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; con
   end; // _ScanMemoryRangeForLibraryPatterns
 
 var
-  ByteScanLower, ByteScanUpper: PByte;
   ResourceStream: TResourceStream;
   PatternTrieReader: TPatternTrieReader;
   i: Integer;
@@ -435,7 +480,7 @@ var
 //  CurrentVersionedXboxLibrary: PVersionedXboxLibrary;
 begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
-  ByteScanUpper := PByte(IntPtr(ByteScanLower) + pXbeHeader.dwSizeofImage);
+  ByteScanUpper := PByte(IntPtr(ByteScanLower) + Integer(pXbeHeader.dwSizeofImage));
 
   DetectedFunctions.Clear;
 
@@ -460,44 +505,13 @@ begin
     FreeAndNil(ResourceStream);
   end;
 
-(*
-  // Loop over all libraries :
-  CurrentXbeLibraryVersion := pLibraryVersion;
-  if not Assigned(CurrentXbeLibraryVersion) then
-  begin
-    DbgPrintf('DxbxHLE : No XBE library versions to scan!');
-    Exit;
-  end;
-
-  // Loop over all library versions :
-  PrevCount := 0;
-  for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
-  begin
-    CurrentLibName := Copy(CurrentXbeLibraryVersion.szName, 1, 8);
-    DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
-
-    // Find the patterns the fit this library exactly (version and name) :
-    for j := 0 to Length(AllXboxLibraries) - 1 do
-    begin
-      CurrentVersionedXboxLibraryInfo := @(AllXboxLibraries[j]);
-      // Take LibVersion and LibName into account (don't scan outside active lib+version) :
-      if  (CurrentVersionedXboxLibraryInfo.LibVersion = CurrentXbeLibraryVersion.wBuildVersion)
-      and (StrLIComp(PAnsiChar(CurrentVersionedXboxLibraryInfo.LibName), PAnsiChar(CurrentLibName), 8) = 0) then
-      begin
-        // Once found, scan the memory for functions from this library :
-        _ScanMemoryRangeForLibraryPatterns(ByteScanLower, ByteScanUpper, CurrentVersionedXboxLibraryInfo);
-        Break;
-      end;
-    end;
-
-    DbgPrintf('DxbxHLE : Detected %d APIs from "%s"', [DetectedFunctions.Count - PrevCount, CurrentLibName]);
-    PrevCount := DetectedFunctions.Count;
-
-    // Skip to the next library :
-    Inc(CurrentXbeLibraryVersion);
-  end;
-*)
-
+{$IFDEF DXBX_DEBUG}
+  // Show a list of detected functions with a HitCount > 1 :
+  for i := 0 to DetectedFunctions.Count - 1 do
+    if DetectedFunctions[i].HitCount > 1 then
+      DbgPrintf('DxbxHLE : %.3d hits on ''%s'' ', [DetectedFunctions[i].HitCount, DetectedFunctions[i].FunctionName]);
+    // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
+{$ENDIF}
   DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedFunctions.Count]);
 end; // DxbxScanForLibraryAPIs
 
@@ -572,6 +586,7 @@ function TDetectedFunctions.FindByAddress(const aAddress: TCodePointer): PDetect
 var
   i: Integer;
 begin
+  // TODO : For speed, usse a binary search here (which needs an address-ordered collection)
   for i := 0 to FList.Count - 1 do
   begin
     Result := Items[i];

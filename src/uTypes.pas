@@ -46,9 +46,15 @@ type
   PUInt08 = PUInt8;
 
 {$IF DECLARED(UINT_PTR)}
-  IntPtr = UINT_PTR;
+  UIntPtr = UINT_PTR;
 {$ELSE}
-  IntPtr = UInt32;
+  UIntPtr = UInt32;
+{$IFEND}
+
+{$IF DECLARED(INT_PTR)}
+  IntPtr = INT_PTR;
+{$ELSE}
+  IntPtr = Int32;
 {$IFEND}
 
   TCodePointer = type Pointer;

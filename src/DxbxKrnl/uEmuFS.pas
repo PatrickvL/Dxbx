@@ -192,7 +192,7 @@ begin
           Line := 'EmuFS : 0x' + PointerToString(@pNewTLS[v]) + ': ';
         end;
 
-        bByte := PUInt8(IntPtr(pNewTLS) + v);
+        bByte := PUInt8(UIntPtr(pNewTLS) + v);
 
         Line := Line + IntToHex(Integer(bByte^), 2);
 
@@ -218,7 +218,7 @@ begin
     dwSize := SizeOf(XboxKrnl.KPCR);
     NewPcr := xboxkrnl.PKPCR(CxbxMalloc(dwSize));
     ZeroMemory(NewPcr, dwSize); // was : SizeOf(NewPcr));
-    NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(IntPtr(NewPcr) + dwSize));
+    NewFS := EmuAllocateLDT(UInt32(NewPcr), UInt32(UIntPtr(NewPcr) + dwSize));
   end;
 
   // update "OrgFS" with NewFS and (bIsXboxFS = False)

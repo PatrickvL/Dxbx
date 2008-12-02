@@ -350,7 +350,7 @@ begin
 
   if Assigned(lpMem) then
   begin
-    offs := PByte(uint32(Result) - 1)^;
+    offs := PByte(uint32(lpMem) - 1)^;
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
 
@@ -387,12 +387,22 @@ begin
     offs := PByte(uint32(lpMem) - 1)^;
 
     lpMem := PVOID(uint32(lpMem) - offs);
-  end;
+  end
+  else
+    offs := $0;
 
   Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + $20);
 
   if Assigned(lpMem) then
-    Result := PVOID(uint32(Result) + offs);
+  begin
+    // TODO Dxbx : Is this correct ? (See XTL_EmuRtlAllocateHeap)
+    if offs = 0 then
+      offs := Byte(RoundUp(uint32(Result), $20) - uint32(Result));
+
+    Result := PVOID(uint32(lpMem) + offs);
+    // TODO Dxbx : Is this correct ? (See XTL_EmuRtlAllocateHeap)
+    PByte(uint32(Result) - 1)^ := offs;
+  end;
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
 
@@ -420,7 +430,7 @@ begin
 
   if Assigned(lpMem) then
   begin
-    offs := PByte(uint32(Result) - 1)^;
+    offs := PByte(uint32(lpMem) - 1)^;
 
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
