@@ -201,9 +201,9 @@ begin
   // print debug information
   begin
     if E.ExceptionRecord.ExceptionCode = $80000003 then
-      DbgPrintf('Recieved Breakpoint Exception (int 3)')
+      DbgPrintf('Received Breakpoint Exception (int 3)')
     else
-      DbgPrintf('Recieved Exception (Code := $%.08X)', [e.ExceptionRecord.ExceptionCode]);
+      DbgPrintf('Received Exception (Code := $%.08X)', [e.ExceptionRecord.ExceptionCode]);
 
     DbgPrintf(
       #13#10' EIP := $%.08X EFL := $%.08X' +
@@ -225,7 +225,7 @@ begin
     if e.ExceptionRecord.ExceptionCode = $80000003 then
     begin
       sprintf(buffer,
-        'Recieved Breakpoint Exception (int 3) @ EIP := $%.08X\n'
+        'Received Breakpoint Exception (int 3) @ EIP := $%.08X\n'
         '\n'
         '  Press Abort to terminate emulation.\n'
         '  Press Retry to debug.\n'
@@ -259,7 +259,7 @@ begin
     else
     begin
       sprintf(buffer,
-              'Recieved Exception Code $%.08X @ EIP := $%.08X\n'
+              'Received Exception Code $%.08X @ EIP := $%.08X\n'
               '\n'
               '  Press \'OK\' to terminate emulation.\n'
               '  Press \'Cancel\' to debug.',
@@ -326,7 +326,7 @@ begin
 
     va_list argp;
 
-    sprintf(szBuffer1, 'Emu(0 x%X): Recieved Fatal Message - > '#13#10#13#10, GetCurrentThreadId());
+    sprintf(szBuffer1, 'Emu(0 x%X): Received Fatal Message - > '#13#10#13#10, GetCurrentThreadId());
 
     va_start(argp, szErrorMessage);
 
@@ -338,7 +338,7 @@ begin
 
 
     printf('%s'#13#10, szBuffer1);    *)
-    szBuffer1 := Format('Emu(0 $%X): Recieved Fatal Message - > '  + szErrorMessage, [GetCurrentThreadId] );
+    szBuffer1 := Format('Emu(0 $%X): Received Fatal Message - > '  + szErrorMessage, [GetCurrentThreadId] );
     DbgPrintf(szBuffer1);
 
     MessageDlg(szBuffer1, mtError, [mbOk], 0);
@@ -369,7 +369,7 @@ begin
   // debug information
   DbgPrintf('EmuMain($ mod X): * * * * * EXCEPTION * * * * * ', GetCurrentThreadId());
   (*
-  DbgPrintf(Format('EmuMain($ mod X): Recieved Exception[$ mod .08 X]@$ mod .08 X', GetCurrentThreadId(), [InttoStr (e.ExceptionRecord.ExceptionCode), IntToStr(e.ContextRecord.Eip)]));
+  DbgPrintf(Format('EmuMain($ mod X): Received Exception[$ mod .08 X]@$ mod .08 X', GetCurrentThreadId(), [InttoStr (e.ExceptionRecord.ExceptionCode), IntToStr(e.ContextRecord.Eip)]));
   *)
   DbgPrintf('EmuMain($ mod X): * * * * * EXCEPTION * * * * * ', GetCurrentThreadId());
 

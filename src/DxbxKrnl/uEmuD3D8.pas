@@ -728,7 +728,7 @@ begin
   // if we have been signalled, create the device with cached parameters
     if g_EmuCDPD.bReady then
     begin
-      DbgPrintf('EmuD3D8: CreateDevice proxy thread recieved request.');
+      DbgPrintf('EmuD3D8: CreateDevice proxy thread received request.');
 
       if (g_EmuCDPD.bCreate) then
       begin
