@@ -63,7 +63,7 @@ begin
   // Print out ErrorMessage (if exists)
   if szErrorMessage <> '' then
   begin
-    szBuffer1 := {Format} 'CxbxKrnlCleanup : Recieved Fatal Message ->'#13#13 + szErrorMessage;
+    szBuffer1 := {Format} 'CxbxKrnlCleanup : Received Fatal Message ->'#13#13 + szErrorMessage;
     DbgPrintf(szBuffer1);
     MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONEXCLAMATION);
   end;

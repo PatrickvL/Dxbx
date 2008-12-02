@@ -16,6 +16,7 @@ For now, if you want to play a game with Dxbx you'll have to use the CxbxKrnl in
 Copy CxbxKrnl.dll and msvcrtd.dll to your game folder and select a manual folder for the output.
 Place the generated default.exe into the game folder (the same location where default.xbe resides).
 Then press Start Emulation to start your game.
+
 Note, that Dxbx has not yet implemented the controller code, so apart from starting a game, you won't be able to do much.
 
 Also, when using the CxbxKrnl, compatibility will be the same as Cxbx.
@@ -27,7 +28,8 @@ The down side is, that our detection method won't work with so-called link-time 
 
 Prerequisites
 -------------
-Dxbx only runs on Windows 2000 and Windows XP. Windows Vista is not supported.
+Dxbx only runs on 32-bit Windows 2000, XP and Vista. The 64-bit versions of Windows will not work due to lack of support for segmented addressing.
+
 Running under Linux using Wine is not tested, but it might just work. (Please let us know your results!)
 
 
