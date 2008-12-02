@@ -90,11 +90,11 @@ begin
   case aVarRec.VType of
     vtInteger: Result := Result + IntToStr(aVarRec.VInteger);
 //    vtBoolean: Result := Result + (aVarRec.V);
-    vtChar: Result := Result + aVarRec.VChar;
+    vtChar: Result := Result + Char(aVarRec.VChar);
 //    vtExtended: Result := Result + (aVarRec.V);
-    vtString: Result := Result + aVarRec.VString^;
+    vtString: Result := Result + string(aVarRec.VString^);
     vtPointer: Result := Result + PointerToString(aVarRec.VPointer);
-    vtPChar: Result := Result + aVarRec.VPChar;
+    vtPChar: Result := Result + string(aVarRec.VPChar);
 //    vtObject: Result := Result + (aVarRec.V); //Object';
 //    vtClass: Result := Result + (aVarRec.V); //Class';
 //    vtWideChar: Result := Result + (aVarRec.V); //WideChar';

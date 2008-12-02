@@ -204,7 +204,7 @@ type
 
     function GetByteOffset(const aOffset: TByteOffset): PByteOffset;
     function GetStringPointerByIndex(const aStringIndex: TStringTableIndex): PAnsiChar;
-    function GetString(const aStringIndex: TStringTableIndex): AnsiString;
+    function GetString(const aStringIndex: TStringTableIndex): string;
     function GetStoredLibrary(const aStoredLibraryIndex: TLibraryIndex): PStoredLibrary;
     function GetGlobalFunction(const aGlobalFunctionIndex: TFunctionIndex): PStoredGlobalFunction;
     function GetFunctionName(const aGlobalFunctionIndex: TFunctionIndex): string;
@@ -245,10 +245,11 @@ begin
   Result := PAnsiChar(GetByteOffset(Offset));
 end;
 
-function TPatternTrieReader.GetString(const aStringIndex: TStringTableIndex): AnsiString;
+function TPatternTrieReader.GetString(const aStringIndex: TStringTableIndex): string;
 var
   StrBase, StrEnd: PAnsiChar;
   Len: Integer;
+  Value: AnsiString;
 begin
   if aStringIndex = 0 then
     StrBase := StringTableStartPtr
@@ -258,8 +259,9 @@ begin
   StrEnd := GetStringPointerByIndex(aStringIndex);
 
   Len := StrEnd - StrBase;
-  SetLength(Result, Len);
-  Move(StrBase^, Result[1], Len);
+  SetLength(Value, Len);
+  Move(StrBase^, Value[1], Len);
+  Result := string(Value);
 end;
 
 function TPatternTrieReader.GetStoredLibrary(const aStoredLibraryIndex: TLibraryIndex): PStoredLibrary;

@@ -77,14 +77,14 @@ implementation
 
 function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
 const
-  InvalidNTFSFilePathChars: set of Char = [#0..#31] + ['/', '\', ':', '*', '?', '"', '<', '>', '|', #127];
+  InvalidNTFSFilePathChars: set of AnsiChar = [#0..#31] + ['/', '\', ':', '*', '?', '"', '<', '>', '|', #127];
 var
   i: Integer;
 begin
   Result := '';
   for i := 1 to Length(aFilePath) do
   begin
-    if aFilePath[i] in InvalidNTFSFilePathChars then
+    if AnsiChar(aFilePath[i]) in InvalidNTFSFilePathChars then
       Result := Result + aReplacement
     else
       Result := Result + aFilePath[i];
@@ -219,7 +219,7 @@ var
     while (s[n] = ' ') and (Length(s) > n) do
       Inc(n);
 
-    while (s[n] in ['0'..'9', '+', '-'])
+    while (AnsiChar(s[n]) in ['0'..'9', '+', '-'])
       and (Length(s) >= n) do
     begin
       s1 := s1 + s[n];
@@ -235,7 +235,7 @@ var
     while (s[n] = ' ') and (Length(s) > n) do 
       Inc(n);
 
-    while (s[n] in ['0'..'9', '+', '-', '.', 'e', 'E'])
+    while (AnsiChar(s[n]) in ['0'..'9', '+', '-', '.', 'e', 'E'])
       and (Length(s) >= n) do
     begin
       s1 := s1 + s[n];

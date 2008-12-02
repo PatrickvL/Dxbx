@@ -767,7 +767,7 @@ begin
   _Add(@(aLine[aLength]));
 
   if NrValues >= viVariablePart then
-    aContext.FunctionList.AddObject(VersionedXboxLibraryFunction.Values[viFunctionName], Pointer(VersionedXboxLibraryFunction))
+    aContext.FunctionList.AddObject(string(VersionedXboxLibraryFunction.Values[viFunctionName]), Pointer(VersionedXboxLibraryFunction))
   else
     Dispose(VersionedXboxLibraryFunction);
 end; // ParseAndAppendPatternLineToTrie_Callback
@@ -790,7 +790,7 @@ var
 
 begin
   // Remember the function name :
-  aVersionedXboxLibraryFunction.Name := aVersionedXboxLibraryFunction.Values[viFunctionName];
+  aVersionedXboxLibraryFunction.Name := string(aVersionedXboxLibraryFunction.Values[viFunctionName]);
 
   // Now, see if we need to filter
   if aContext.OnlyPatches then
@@ -864,7 +864,7 @@ begin
 
     // Get the function name :
     Inc(i);
-    CrossReferencedFunctionName := aVersionedXboxLibraryFunction.Values[i];
+    CrossReferencedFunctionName := string(aVersionedXboxLibraryFunction.Values[i]);
 
     // Check if this is a known function (not much use to add it otherwise) : 
     if aContext.FunctionList.IndexOf(CrossReferencedFunctionName) >= 0 then
