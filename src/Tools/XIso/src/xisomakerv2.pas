@@ -554,7 +554,7 @@ begin
   // Introducimos ahora al final las carpetas
   for i := 0 to SubDirectorios.Count - 1 do
   begin
-    PEntradaDir(SubDirectorios[i]);
+    //PEntradaDir(SubDirectorios[i]);
     lDirectorio.Add(SubDirectorios[i]);
   end;
 

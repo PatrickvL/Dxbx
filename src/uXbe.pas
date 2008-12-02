@@ -58,8 +58,7 @@ const
 
 type
   // Note : These types are copied from JwaWinType, so we don't have to include that unit :
-  CHAR = AnsiChar; // Dxbx assumption!
-  PCSZ = ^CHAR;
+  PCSZ = ^AnsiChar; // Dxbx assumption!
   PVOID = Pointer;
   LONG = Longint;
 
@@ -564,7 +563,7 @@ var
   FileEx: TextFile;
   lIndex, lIndex2: Integer;
   TmpStr: string;
-  TmpChr: AnsiChar;
+  TmpChr: Char;
   StrAsciiFileName: string;
   Flag: Byte;
 //  BIndex: Byte;
@@ -683,12 +682,12 @@ begin
 
   lIndex := GetAddr(m_Header.dwDebugPathNameAddr);
   TmpStr := '';
-  TmpChr := Buffer[lIndex];
+  TmpChr := Char(Buffer[lIndex]);
   Inc(lIndex);
   while Ord(TmpChr) <> 0 do
   begin
     TmpStr := TmpStr + TmpChr;
-    TmpChr := Buffer[lIndex];
+    TmpChr := Char(Buffer[lIndex]);
     Inc(lIndex);
   end;
 
@@ -696,12 +695,12 @@ begin
 
   lIndex := GetAddr(m_Header.dwDebugFileNameAddr);
   TmpStr := '';
-  TmpChr := Buffer[lIndex];
+  TmpChr := Char(Buffer[lIndex]);
   Inc(lIndex);
   while Ord(TmpChr) <> 0 do
   begin
     TmpStr := TmpStr + TmpChr;
-    TmpChr := Buffer[lIndex];
+    TmpChr := Char(Buffer[lIndex]);
     Inc(lIndex);
   end;
 
@@ -777,7 +776,7 @@ begin
     for lIndex2 := 0 to 8 do
     begin
       if Ord(m_szSectionName[lIndex][lIndex2]) <> 0 then
-        TmpStr := TmpStr + m_szSectionName[lIndex][lIndex2]
+        TmpStr := TmpStr + Char(m_szSectionName[lIndex][lIndex2])
       else
         Break;
     end;
@@ -840,7 +839,7 @@ begin
       for lIndex2 := 0 to 7 do
       begin
         if m_LibraryVersion[lIndex].szName[lIndex2] <> #0 then
-          TmpStr := TmpStr + m_LibraryVersion[lIndex].szName[lIndex2];
+          TmpStr := TmpStr + Char(m_LibraryVersion[lIndex].szName[lIndex2]);
       end;
 
       _LogEx('Library Name                     : ' + TmpStr);

@@ -66,7 +66,7 @@ begin
 
   for lIndex := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
   begin
-    LibName := Copy(aXbe.m_LibraryVersion[lIndex].szName, 1, 8);
+    LibName := string(Copy(aXbe.m_LibraryVersion[lIndex].szName, 1, 8));
     Version := IntToStr(aXbe.m_LibraryVersion[lIndex].wMajorVersion) + '.' +
       IntToStr(aXbe.m_LibraryVersion[lIndex].wMinorVersion) + '.' +
       IntToStr(aXbe.m_LibraryVersion[lIndex].wBuildVersion);

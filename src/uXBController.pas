@@ -192,11 +192,11 @@ type
     m_dwCurObject: Integer;
     private
     // Object Mapping
-    procedure Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo: Integer; dwFlags: Integer);
+    procedure Map(aobject: XBCtrlObject; szDeviceName: PAnsiChar; dwInfo: Integer; dwFlags: Integer);
     // Find the look-up value for a DeviceName (creating if needed)
-    function Insert(szDeviceName: PChar): Integer;
+    function Insert(szDeviceName: PAnsiChar): Integer;
     // Update the object lookup offsets for a device
-    procedure ReorderObjects(szDeviceName: PChar; aPos: Integer);
+    procedure ReorderObjects(szDeviceName: PAnsiChar; aPos: Integer);
   public
     procedure Initialize;
     procedure Finalize;
@@ -1067,7 +1067,7 @@ begin
   end;
 end;
 
-function XBController.Insert(szDeviceName: PChar): Integer;
+function XBController.Insert(szDeviceName: PAnsiChar): Integer;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 90
 var
   v: Integer;
@@ -1179,7 +1179,7 @@ begin
   end;
 end;
 
-procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PChar; dwInfo, dwFlags: Integer);
+procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PAnsiChar; dwInfo, dwFlags: Integer);
 // Branch:martin  Revision:39  Translator:Shadow_Tj Done : 100
 var
   v: Integer;
@@ -1205,7 +1205,7 @@ begin
   end;
 end;
 
-procedure XBController.ReorderObjects(szDeviceName: PChar; aPos: Integer);
+procedure XBController.ReorderObjects(szDeviceName: PAnsiChar; aPos: Integer);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   Old: Integer;

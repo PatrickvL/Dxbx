@@ -277,7 +277,7 @@ begin
     Exit;
     
   for i := 1 to Length(s) do
-    if s[i] in ['\', '/', ':', '*', '?', '<', '>', '|'] then
+    if AnsiChar(s[i]) in ['\', '/', ':', '*', '?', '<', '>', '|'] then
       Exit;
 
   Manager.AgregarCarpetaNueva(s);
