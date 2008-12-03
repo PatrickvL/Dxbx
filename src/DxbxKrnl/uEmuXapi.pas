@@ -92,6 +92,9 @@ uses
   // Dxbx
   uEmuKrnlPs; // g_pfnThreadNotification
 
+const
+  HEAP_HEADERSIZE = $20;
+
 { TODO : Need to be translated to delphi }
 
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
@@ -283,7 +286,6 @@ begin
     [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
 
   ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
-
   RtlHeapDefinition.Length := SizeOf(RtlHeapDefinition);
 
   Result := PVOID(JwaNative.RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
@@ -302,7 +304,7 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  //* too much debug output
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -310,18 +312,21 @@ begin
     #13#10'   dwBytes             : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, dwBytes]);
-  //*/
+{$ENDIF}
 
-  Result := PVOID(JwaNative.RtlAllocateHeap(hHeap, dwFlags, dwBytes + $20));
+  if dwBytes > 0 then
+    Inc(dwBytes, HEAP_HEADERSIZE);
 
-  offs := Byte(RoundUp(uint32(Result), $20) - uint32(Result));
+  Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
+  if Assigned(Result) then
+  begin
+    offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
+    if offs = 0 then
+      offs := HEAP_HEADERSIZE;
 
-  if offs = 0 then
-    offs := $20;
-
-  Result := PVOID(uint32(Result) + offs);
-
-  PByte(uint32(Result) - 1)^ := offs;
+    Result := PVOID(uint32(Result) + offs);
+    PByte(uint32(Result) - 1)^ := offs;
+  end;
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
 
@@ -334,11 +339,10 @@ function XTL_EmuRtlFreeHeap(
   lpMem: PVOID): BOOL; stdcall;
 var
   offs: Byte;
-  bRet: BOOL;
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  //* too much debug output
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -346,7 +350,7 @@ begin
     #13#10'   lpMem               : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, lpMem]);
-  //*
+{$ENDIF}
 
   if Assigned(lpMem) then
   begin
@@ -354,11 +358,9 @@ begin
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
 
-  bRet := CxbxRtlFree(hHeap, dwFlags, lpMem);
+  Result := CxbxRtlFree(hHeap, dwFlags, lpMem);
 
   EmuSwapFS(); // XBox FS
-
-  Result := bRet;
 end;
 
 function XTL_EmuRtlReAllocateHeap(
@@ -371,7 +373,7 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  //* too much debug output
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
     #13#10'('+
     #13#10'   hHeap               : 0x%.08X' +
@@ -380,27 +382,26 @@ begin
     #13#10'   dwBytes             : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, lpMem, dwBytes]);
-   //*/
+{$ENDIF}
 
   if Assigned(lpMem) then
   begin
     offs := PByte(uint32(lpMem) - 1)^;
-
     lpMem := PVOID(uint32(lpMem) - offs);
-  end
-  else
-    offs := $0;
+  end;
 
-  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + $20);
+  if dwBytes > 0 then
+    Inc(dwBytes, HEAP_HEADERSIZE);
 
-  if Assigned(lpMem) then
+  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
+  if Assigned(Result) then
   begin
     // TODO Dxbx : Is this correct ? (See XTL_EmuRtlAllocateHeap)
+    offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
     if offs = 0 then
-      offs := Byte(RoundUp(uint32(Result), $20) - uint32(Result));
+      offs := HEAP_HEADERSIZE;
 
-    Result := PVOID(uint32(lpMem) + offs);
-    // TODO Dxbx : Is this correct ? (See XTL_EmuRtlAllocateHeap)
+    Result := PVOID(uint32(Result) + offs);
     PByte(uint32(Result) - 1)^ := offs;
   end;
 
@@ -418,7 +419,7 @@ var
 begin
   EmuSwapFS(); // Win2k/XP FS
 
-  //* too much debug output
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -426,16 +427,17 @@ begin
     #13#10'   lpMem               : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, lpMem]);
-  //*/
+{$ENDIF}
 
   if Assigned(lpMem) then
   begin
     offs := PByte(uint32(lpMem) - 1)^;
-
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
 
-  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem) - $20;
+  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
+  if Result > 0 then
+    Dec(Result, HEAP_HEADERSIZE);
 
   EmuSwapFS(); // XBox FS
 end;
@@ -1060,6 +1062,15 @@ begin
   Result := bRet;
 end;
 
+// data
+var
+  XTL_EmuXapiProcessHeap: PPVOID;
+
+// func
+(*
+  XTL_g_pRtlCreateHeap: XTL_pfRtlCreateHeap;
+*)
+
 procedure XTL_EmuXapiInitProcess(); stdcall;
 const
   HEAP_GROWABLE = $00000002;
@@ -1083,17 +1094,11 @@ begin
     dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
     dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
 
-//    PVOID dwResult := 0;
-
-    XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
+    // TODO : Determine XTL_EmuXapiProcessHeap and XTL_g_pRtlCreateHeap
+    // TODO : Call XTL_g_pRtlCreateHeap instead of XTL_EmuRtlCreateHeap here :
+    XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
   end;
 end;
-
-// data
-(*PVOID* XTL.EmuXapiProcessHeap;*)
-
-// func
-(*XTL.pfRtlCreateHeap XTL.g_pRtlCreateHeap;*)
 
 procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWord) stdcall;
 begin

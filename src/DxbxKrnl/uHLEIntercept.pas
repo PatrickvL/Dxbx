@@ -377,7 +377,12 @@ begin
         Assert(Assigned(NewCode));
 
   {$IFDEF DXBX_DEBUG}
-        DbgPrintf('DxbxHLE : Installed patched from $%.08X (%s) to $%.08X', [OrgCode, DetectedFunction.FunctionName, NewCode]);
+        DbgPrintf('DxbxHLE : Installed patched from $%.08X (%s ^%.4x %d) to $%.08X', [
+          OrgCode, DetectedFunction.FunctionName,
+          DetectedFunction.StoredLibraryFunction.CrossReference1Offset,
+          DetectedFunction.StoredLibraryFunction.CrossReference1NameIndex,
+          NewCode
+          ]);
         UsedPatches[DetectedFunction.XboxLibraryPatch] := True;
   {$ENDIF}
 
