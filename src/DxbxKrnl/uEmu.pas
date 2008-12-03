@@ -356,7 +356,7 @@ begin
   TerminateProcess(GetCurrentProcess(), 0);
 end;
 
-// exception handle for that tough final exit :)
+// Exception handler for that tough final exit :)
 function ExitException(e: LPEXCEPTION_POINTERS): Integer;
 var
   Count: Integer;
@@ -367,11 +367,11 @@ begin
   Count := 0;
 
   // debug information
-  DbgPrintf('EmuMain($ mod X): * * * * * EXCEPTION * * * * * ', GetCurrentThreadId());
+  DbgPrintf('EmuMain : * * * * * EXCEPTION * * * * * ');
   (*
-  DbgPrintf(Format('EmuMain($ mod X): Received Exception[$ mod .08 X]@$ mod .08 X', GetCurrentThreadId(), [InttoStr (e.ExceptionRecord.ExceptionCode), IntToStr(e.ContextRecord.Eip)]));
+  DbgPrintf('EmuMain : Received Exception[$%.08x]@$%.08X', [InttoStr(e.ExceptionRecord.ExceptionCode), IntToStr(e.ContextRecord.Eip)]));
   *)
-  DbgPrintf('EmuMain($ mod X): * * * * * EXCEPTION * * * * * ', GetCurrentThreadId());
+  DbgPrintf('EmuMain : * * * * * EXCEPTION * * * * * ');
 
   (*fflush(stdout);*)
 

@@ -25,6 +25,7 @@
 
 {$IFDEF DXBX_DEBUG}
   {$DEFINE _DEBUG_TRACE} // Cxbx uses this for extended debugging
+  {$DEFINE DXBX_EXTENSIVE_LOGGING}
 {$ENDIF}
 
 {$IFDEF DUNIT}
