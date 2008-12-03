@@ -38,7 +38,8 @@ uses
   uLog,
   uStoredTrieTypes,
   uXboxLibraryUtils,
-  uCRC16;
+  uCRC16,
+  uEmuXapi; // XTL_EmuXapiProcessHeap
 
 type
   PDetectedVersionedXboxLibraryFunction = ^RDetectedVersionedXboxLibraryFunction;
@@ -470,14 +471,45 @@ var
     end;
   end; // _ScanMemoryRangeForLibraryPatterns
 
+  procedure _ResolveXapiProcessHeapAddress(const aPatternTrieReader: TPatternTrieReader);
+  var
+    DectededXapiInitProcess: PDetectedVersionedXboxLibraryFunction;
+    StoredLibrary: PStoredLibrary;
+    ProcessHeapOffs: Integer;
+  begin
+    DectededXapiInitProcess := DetectedFunctions.FindByName('XapiInitProcess');
+    if Assigned(DectededXapiInitProcess) then
+    begin
+      StoredLibrary := aPatternTrieReader.GetStoredLibrary(DectededXapiInitProcess.StoredLibraryFunction.LibraryIndex);
+      if Assigned(StoredLibrary) then
+      begin
+        // Source for these offsets is Cxbx code (HLEIntercept.cpp) and our
+        // Xapi library patterns - search in the definition of _XapiInitProcess@0
+        // for the offset to the '_XapiProcessHeap' cross-reference.
+        
+        if (StoredLibrary.LibVersion >= 5849) then
+          ProcessHeapOffs := $51
+        else if (StoredLibrary.LibVersion >= 5558) then
+          ProcessHeapOffs := $51
+        else if (StoredLibrary.LibVersion >= 4928) then
+          ProcessHeapOffs := $44
+        else if (StoredLibrary.LibVersion >= 4361) then
+          ProcessHeapOffs := $3E
+        else // 3911, 4034, 4134
+          ProcessHeapOffs := $3E;
+
+        XTL_EmuXapiProcessHeap := PPointer(IntPtr(DectededXapiInitProcess.CodeStart) + ProcessHeapOffs)^;
+{$IFDEF DXBX_DEBUG}
+        DbgPrintf('DxbxHLE : Resolved XapiProcessHeap at $%.8x', [XTL_EmuXapiProcessHeap]);
+{$ENDIF}
+      end;
+    end;
+  end; // _ResolveXapiProcessHeapAddress
+
 var
   ResourceStream: TResourceStream;
   PatternTrieReader: TPatternTrieReader;
   i: Integer;
-//  i, j, PrevCount: Integer;
-//  CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
-//  CurrentLibName: string;
-//  CurrentVersionedXboxLibrary: PVersionedXboxLibrary;
 begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
   ByteScanUpper := PByte(IntPtr(ByteScanLower) + Integer(pXbeHeader.dwSizeofImage));
@@ -496,6 +528,9 @@ begin
       // Scan Patterns using this trie :
       _ScanMemoryRangeForLibraryPatterns(ByteScanLower, ByteScanUpper, PatternTrieReader);
 
+      // Resolve the address of _XapiProcessHeap :
+      _ResolveXapiProcessHeapAddress(PatternTrieReader);
+
     finally
       FreeAndNil(PatternTrieReader);
     end;
@@ -509,7 +544,7 @@ begin
   // Show a list of detected functions with a HitCount > 1 :
   for i := 0 to DetectedFunctions.Count - 1 do
     if DetectedFunctions[i].HitCount > 1 then
-      DbgPrintf('DxbxHLE : %.3d hits on ''%s'' ', [DetectedFunctions[i].HitCount, DetectedFunctions[i].FunctionName]);
+      DbgPrintf('DxbxHLE : Duplicate %.3d hits on ''%s'' ', [DetectedFunctions[i].HitCount, DetectedFunctions[i].FunctionName]);
     // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
 {$ENDIF}
   DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedFunctions.Count]);

@@ -86,6 +86,13 @@ var
   // XInputOpen handles
   g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of THandle;
 
+  XTL_EmuXapiProcessHeap: PPVOID;
+
+// func
+(*
+  XTL_g_pRtlCreateHeap: XTL_pfRtlCreateHeap;
+*)
+
 implementation
 
 uses
@@ -1062,15 +1069,6 @@ begin
   Result := bRet;
 end;
 
-// data
-var
-  XTL_EmuXapiProcessHeap: PPVOID;
-
-// func
-(*
-  XTL_g_pRtlCreateHeap: XTL_pfRtlCreateHeap;
-*)
-
 procedure XTL_EmuXapiInitProcess(); stdcall;
 const
   HEAP_GROWABLE = $00000002;
@@ -1094,8 +1092,8 @@ begin
     dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
     dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
 
-    // TODO : Determine XTL_EmuXapiProcessHeap and XTL_g_pRtlCreateHeap
-    // TODO : Call XTL_g_pRtlCreateHeap instead of XTL_EmuRtlCreateHeap here :
+    // TODO : Determine if XTL_g_pRtlCreateHeap is indeed the same as XTL_EmuRtlCreateHeap.
+    
     XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
   end;
 end;
