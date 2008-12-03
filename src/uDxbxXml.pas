@@ -64,6 +64,9 @@ begin
 
   XML_WriteString(XmlRootNode, 'Name', m_szAsciiTitle);
 
+  XmlRootNode := XmlRootNode.AddChild('XDKVersions');
+
+
   for lIndex := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
   begin
     LibName := string(Copy(aXbe.m_LibraryVersion[lIndex].szName, 1, 8));
