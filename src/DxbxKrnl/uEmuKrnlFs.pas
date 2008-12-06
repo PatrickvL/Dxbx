@@ -52,25 +52,25 @@ implementation
 function {035} xboxkrnl_FscGetCacheSize(
   ): SIZE_T; stdcall; // Source: Dxbx - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('FscGetCacheSize');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {036} xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('FscInvalidateIdleBlocks');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {037} xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
   ): LONG; stdcall; // Source: Cxbx
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('FscSetCacheSize');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

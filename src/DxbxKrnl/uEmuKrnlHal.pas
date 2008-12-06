@@ -115,18 +115,18 @@ procedure {009} xboxkrnl_HalReadSMCTrayState(
   Count: PDWORD
   ); stdcall; // Source: OpenXdk
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalReadSMCTrayState');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {038} xboxkrnl_HalClearSoftwareInterrupt(
   Request: KIRQL
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalClearSoftwareInterrupt');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {039} xboxkrnl_HalDisableSystemInterrupt(
@@ -134,31 +134,31 @@ function {039} xboxkrnl_HalDisableSystemInterrupt(
   Irql: KIRQL
   ): LONGBOOL; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalDisableSystemInterrupt');
   Result := False;
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {040} xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalDiskCachePartitionCount');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {041} xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalDiskModelNumber');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {042} xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalDiskSerialNumber');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {043} xboxkrnl_HalEnableSystemInterrupt(
@@ -167,10 +167,10 @@ function {043} xboxkrnl_HalEnableSystemInterrupt(
   InterruptMode: KINTERRUPT_MODE
   ): LONGBOOL; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalEnableSystemInterrupt');
   Result := False;
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {044} xboxkrnl_HalGetInterruptVector(
@@ -182,9 +182,9 @@ function {044} xboxkrnl_HalGetInterruptVector(
   Affinity: PKAFFINITY
   ): ULONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalGetInterruptVector');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {045} xboxkrnl_HalReadSMBusValue(
@@ -196,9 +196,9 @@ procedure {045} xboxkrnl_HalReadSMBusValue(
   WritePCISpace: LONGBOOL
   ); stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalReadSMBusValue');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {046} xboxkrnl_HalReadWritePCISpace(
@@ -210,9 +210,9 @@ procedure {046} xboxkrnl_HalReadWritePCISpace(
   WritePCISpace: LONGBOOL
   ); stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalReadWritePCISpace');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {047} xboxkrnl_HalRegisterShutdownNotification(
@@ -220,27 +220,27 @@ function {047} xboxkrnl_HalRegisterShutdownNotification(
   Arg2: UNKNOWN
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalRegisterShutdownNotification');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
   Request: KIRQL
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalRequestSoftwareInterrupt');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {049} xboxkrnl_HalReturnToFirmware(
   Routine: RETURN_FIRMWARE
   ); stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalReturnToFirmware');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {050} xboxkrnl_HalWriteSMBusValue(
@@ -250,23 +250,23 @@ function {050} xboxkrnl_HalWriteSMBusValue(
   Value: ULONG
   ): ULONG; stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalWriteSMBusValue');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalIsResetOrShutdownPending');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {360} xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalInitiateShutdown');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // HalEnableSecureTrayEject:
@@ -278,16 +278,16 @@ end;
 procedure {365} xboxkrnl_HalEnableSecureTrayEject(
   ); stdcall; // Source: XBMC Undocumented.h
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('HalEnableSecureTrayEject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {366} xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('HalWriteSMCScratchRegister');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

@@ -82,7 +82,7 @@ function {258} xboxkrnl_PsTerminateSystemThread(
 
 // Global Variable(s)
 var
-  g_pfnThreadNotification: PVOID = nil;
+  g_pfnThreadNotification: XTHREAD_NOTIFY_PROC = nil;
 
 implementation
 
@@ -137,11 +137,9 @@ begin
 
     DbgPrintf('EmKrnl : Calling pfnNotificationRoutine (0x%.08x)', [Addr(pfnNotificationRoutine)]);
 
-    EmuSwapFS(); // Xbox FS
-
-    pfnNotificationRoutine(True);
-
-    EmuSwapFS(); // Win2k/XP FS
+    EmuSwapFS(fsXbox);
+    pfnNotificationRoutine({Create=}True);
+    EmuSwapFS(fsWindows);
   end;
 
   SetEvent(Parameter.hStartedEvent);
@@ -151,7 +149,7 @@ begin
 
   // use the special calling convention
   try
-    EmuSwapFS(); // Xbox FS
+    EmuSwapFS(fsXbox);
 
     asm
       mov         esi, StartRoutine
@@ -178,7 +176,7 @@ begin
   end; // try
 
 callComplete:
-   EmuSwapFS(); // Win2k/XP FS
+   EmuSwapFS(fsWindows);
 
   // Restore original exception filter :
   SetUnhandledExceptionFilter(OldExceptionFilter);
@@ -188,11 +186,9 @@ callComplete:
   begin
     pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
-    EmuSwapFS(); // Xbox FS
-
-    pfnNotificationRoutine(False);
-
-    EmuSwapFS(); // Win2k/XP FS
+    EmuSwapFS(fsXbox);
+    pfnNotificationRoutine({Create=}False);
+    EmuSwapFS(fsWindows);
   end;
 
   CxbxKrnlTerminateThread();
@@ -234,7 +230,7 @@ var
   CreateSuspended: LONGBOOL;
   DebugStack: LONGBOOL;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   // TODO : How to apply the local arguments like lpThreadAttributes ?
   ThreadHandle := 0;
@@ -272,7 +268,7 @@ begin
     {StartRoutine=}lpStartAddress
     );
 
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // PsCreateSystemThreadEx:
@@ -306,7 +302,7 @@ var
   hDupHandle: THandle;
   iPCSTProxyParam: PCSTProxyParam;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
     #13#10'(' +
@@ -353,25 +349,25 @@ begin
       {out}ThreadId^ := dwThreadId;
   end;
 
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 
   Result := STATUS_SUCCESS;
 end;
 
 function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('PsQueryStatistics');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
   ): NTSTATUS; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('PsSetCreateThreadNotifyRoutine');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // PsTerminateSystemThread:
@@ -382,9 +378,9 @@ function {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
   ): NTSTATUS; stdcall; // Source : XBMC
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('PsTerminateSystemThread');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

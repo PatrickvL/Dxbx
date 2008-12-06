@@ -39,7 +39,7 @@ function XTL_EmuWSAStartup(wVersionRequested: Word; lpWSAData: WSADATA): Integer
 var
   ret: Integer;
 begin
-  EmuSwapFS; // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuWSAStartup' +
     #13#10'( ' +
@@ -50,14 +50,14 @@ begin
 
   ret := WSAStartup(wVersionRequested, lpWSAData);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := ret;
 end;
 
 function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXNetStartup' +
     #13#10'(' +
@@ -65,7 +65,7 @@ begin
     #13#10');',
     [pDummy]);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
     (*// Fake Successfull...hehehe...sucker...hehehehehe *)
     // Remark in cxbx code... wtf ??
@@ -74,9 +74,9 @@ end;
 
 function XTL_EmuXNetGetEthernetLinkStatus: DWord; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   // for now, no ethernet connection is available
   Result := 0;
@@ -89,7 +89,7 @@ end;
     Integer   protocol
 )
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi ($%X): EmuThis.Emusocket'
            '('
@@ -102,14 +102,14 @@ begin
 
     SOCKET ret = socket(af, ctype, protocol);
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result:= ret;
 end;             *)
 
 (*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: Integer): Integer;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi ($%X): EmuThis.Emubind'
            '('
@@ -124,14 +124,14 @@ begin
 
     Integer ret := bind(s, name, namelen);
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result:= ret;
 end;              *)
 
 (*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi ($%X): EmuThis.Emulisten'
            '('
@@ -145,14 +145,14 @@ begin
 
     Integer ret := listen(s, backlog);
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result:= ret;
  end;              *)
 
 (*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): Integer;
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi ($%X): EmuThis.Emuioctlsocket'
            '('
@@ -165,7 +165,7 @@ begin
 
     Integer ret := ioctlsocket(s, cmd, argp);
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result := ret;
 end;            *)

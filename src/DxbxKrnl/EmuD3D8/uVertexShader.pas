@@ -48,9 +48,9 @@ var
 begin
   Result := True;
 
-  EmuSwapFS();
+  EmuSwapFS(fsWindows);
   XTL_EmuIDirect3DDevice8_GetVertexShader({var}aHandle);
-  EmuSwapFS();
+  EmuSwapFS(fsXbox);
   if (VshHandleIsVertexShader(aHandle)) then
   begin
     (*pD3DVertexShader := (X_D3DVertexShader * )(Handle & 0 x7FFFFFFF);

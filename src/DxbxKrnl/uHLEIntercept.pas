@@ -345,7 +345,8 @@ begin
   // Calculate relative address :
   RelativeJMPAddress := (IntPtr(WrapperAddr) - IntPtr(FunctionAddr) - 5);
   // Write that after the JMP :
-  CopyMemory(Pointer(IntPtr(FunctionAddr) + 1), @RelativeJMPAddress, 4);
+  PCardinal(IntPtr(FunctionAddr) + 1)^ := RelativeJMPAddress;
+//  CopyMemory(Pointer(IntPtr(FunctionAddr) + 1), @RelativeJMPAddress, 4);
 end;
 
 // install function interception wrappers
