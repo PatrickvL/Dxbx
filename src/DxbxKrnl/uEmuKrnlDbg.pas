@@ -70,18 +70,18 @@ implementation
 procedure {005} xboxkrnl_DbgBreakPoint(
   ); stdcall; // Source: JwaNative.pas
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('DbgBreakPoint');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {006} xboxkrnl_DbgBreakPointWithStatus(
   Status: ULONG
   ); stdcall; // Source: JwaNative.pas
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('DbgBreakPointWithStatus');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {007} xboxkrnl_DbgLoadImageSymbols(
@@ -90,9 +90,9 @@ function {007} xboxkrnl_DbgLoadImageSymbols(
   ProcessId: ULONG_PTR
   ): NTSTATUS; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('DbgLoadImageSymbols');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {008} xboxkrnl_DbgPrint(
@@ -100,9 +100,9 @@ function {008} xboxkrnl_DbgPrint(
   Args: array of const // TODO : Check if this is a correct translation of '...'
   ): ULONG; stdcall; // Source: ReactOS - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('DbgPrint');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {010} xboxkrnl_DbgPrompt(
@@ -111,9 +111,9 @@ function {010} xboxkrnl_DbgPrompt(
   MaximumResponseLength: ULONG
   ): ULONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('DbgPrompt');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {011} xboxkrnl_DbgUnLoadImageSymbols(
@@ -122,9 +122,9 @@ procedure {011} xboxkrnl_DbgUnLoadImageSymbols(
   ProcessId: ULONG_PTR
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('DbgUnLoadImageSymbols');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

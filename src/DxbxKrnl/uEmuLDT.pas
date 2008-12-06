@@ -61,7 +61,7 @@ type
     property Reserved_0: Integer index $1501 read GetBits write SetBits; // 1 bit at offset 21
     property Default_Big: Integer index $1601 read GetBits write SetBits; // 1 bit at offset 22
     property Granularity: Integer index $1701 read GetBits write SetBits; // 1 bit at offset 23
-    property BaseHi: Integer index $1808 read GetBits write SetBits; // 8 bis at offset 24
+    property BaseHi: Integer index $1808 read GetBits write SetBits; // 8 bits at offset 24
   end;
 
   RLDT_ENTRY_Bytes = record
@@ -148,8 +148,8 @@ begin
     ZeroMemory(@LDTENTRY, SizeOf(LDTENTRY));
 
     _LDTEntry.BaseLow                    := Word(dwBaseAddr and $FFFF);
-    _LDTEntry.HighWord.Bits.BaseMid      := (dwBaseAddr shr 16) and $FF;
-    _LDTEntry.HighWord.Bits.BaseHi       := (dwBaseAddr shr 24) and $FF;
+    _LDTEntry.HighWord.Bytes.BaseMid     := (dwBaseAddr shr 16) and $FF;
+    _LDTEntry.HighWord.Bytes.BaseHi      := (dwBaseAddr shr 24) and $FF;
     _LDTEntry.HighWord.Bits._Type        := $13; // RW data segment
     _LDTEntry.HighWord.Bits.Dpl          := 3;    // user segment
     _LDTEntry.HighWord.Bits.Pres         := 1;    // present
@@ -179,9 +179,9 @@ begin
     end;
   end;
 
-  LeaveCriticalSection(EmuLDTLock);
-
   FreeLDTEntries[x] := 0;
+
+  LeaveCriticalSection(EmuLDTLock);
 
   Result := (x * 8) + 7 + 8;
 end;

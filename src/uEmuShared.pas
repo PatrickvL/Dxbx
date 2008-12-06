@@ -53,7 +53,7 @@ type
     procedure Destroy;
     procedure DestroyNoFree;
 
-    procedure lock();
+    procedure Lock();
     procedure Unlock();
 
     // Xbox Video Accessors
@@ -131,9 +131,7 @@ begin
   // Executed only on first initialization of shared memory
   if Result then
   begin
-    // WATCH OUT: Dirty trick to 'create' a fixed instance in memory :
     ZeroMemory(g_EmuShared, SizeOf(EmuShared)); // clear memory
-//    PPointer(g_EmuShared)^ := EmuShared; // assign type
     g_EmuShared.Create; // call constructor
   end;
 
@@ -178,9 +176,9 @@ begin
   DestroyNoFree;
 end;
 
-procedure EmuShared.lock();
+procedure EmuShared.Lock();
 begin
-  m_Mutex.lock();
+  m_Mutex.Lock();
 end;
 
 procedure EmuShared.Unlock();
@@ -193,7 +191,7 @@ end;
 procedure EmuShared.GetXBVideo(var video: XBVideo);
 begin
   Lock();
-  video := m_XBVideo;
+  {var}video := m_XBVideo;
   Unlock();
 end;
 
@@ -207,10 +205,11 @@ end;
 // Xbox Controller Accessors
 
 procedure EmuShared.GetXBController(var ctrl: XBController);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done : 100
 begin
   Lock();
   //memcpy(ctrl, &m_XBController, SizeOf(XBController));
-  ctrl := m_XBController;
+  {var}ctrl := m_XBController;
   Unlock();
 end;
 
@@ -224,7 +223,7 @@ end;
 procedure EmuShared.GetXbePath(var Path: string);
 begin
   Lock();
-  Path := m_XbePath;
+  {var}Path := m_XbePath;
   Unlock();
 end;
 
@@ -238,7 +237,7 @@ end;
 
 //
 
-procedure SetXbePath(const Path: PChar);
+procedure SetXbePath(const Path: PAnsiChar);
 begin
   g_EmuShared.SetXbePath(Path);
 end;

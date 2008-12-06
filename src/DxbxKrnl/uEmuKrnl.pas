@@ -263,9 +263,9 @@ end;
 
 function {000} xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI000');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {051} xboxkrnl_InterlockedCompareExchange(
@@ -274,27 +274,27 @@ function {051} xboxkrnl_InterlockedCompareExchange(
   Comparand: LONG
   ): LONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := InterlockedCompareExchange(Destination, Exchange, Comparand);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {052} xboxkrnl_InterlockedDecrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := InterlockedDecrement(Addend);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {053} xboxkrnl_InterlockedIncrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := InterlockedIncrement(Addend);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {054} xboxkrnl_InterlockedExchange(
@@ -302,9 +302,9 @@ function {054} xboxkrnl_InterlockedExchange(
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := InterlockedExchange(Destination, Value);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {055} xboxkrnl_InterlockedExchangeAdd(
@@ -312,28 +312,28 @@ function {055} xboxkrnl_InterlockedExchangeAdd(
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := InterlockedExchangeAdd(Addend, Value);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {056} xboxkrnl_InterlockedFlushSList(
   ListHead: PSLIST_HEADER
   ): PSINGLE_LIST_ENTRY; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   // TODO : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
   Result := InterlockedFlushSList(ListHead);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {057} xboxkrnl_InterlockedPopEntrySList(
   ListHead: PSLIST_HEADER
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := InterlockedPopEntrySList(ListHead);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {058} xboxkrnl_InterlockedPushEntrySList(
@@ -341,9 +341,9 @@ function {058} xboxkrnl_InterlockedPushEntrySList(
   ListEntry: PSLIST_ENTRY
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := InterlockedPushEntrySList(ListHead, ListEntry);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // Raises the hardware priority (irql)
@@ -355,10 +355,10 @@ function {160} xboxkrnl_KfRaiseIrql(
   NewIrql: KIRQL
   ): KIRQL; register; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('KfRaiseIrql');
   Result := Low(Result);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // Restores the irq level on the current processor
@@ -368,30 +368,30 @@ procedure {161} xboxkrnl_KfLowerIrql(
   NewIrql: KIRQL
   ); register; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('KfLowerIrql');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('KiUnlockDispatcherDatabase');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {252} xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('PhyGetLinkState');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {253} xboxkrnl_PhyInitialize(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('PhyInitialize');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {329} xboxkrnl_READ_PORT_BUFFER_UCHAR(
@@ -400,9 +400,9 @@ procedure {329} xboxkrnl_READ_PORT_BUFFER_UCHAR(
   Count: ULONG
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('READ_PORT_BUFFER_UCHAR');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {330} xboxkrnl_READ_PORT_BUFFER_USHORT(
@@ -411,9 +411,9 @@ procedure {330} xboxkrnl_READ_PORT_BUFFER_USHORT(
   Count: ULONG
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('READ_PORT_BUFFER_USHORT');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {331} xboxkrnl_READ_PORT_BUFFER_ULONG(
@@ -422,9 +422,9 @@ procedure {331} xboxkrnl_READ_PORT_BUFFER_ULONG(
   Count: ULONG
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('READ_PORT_BUFFER_ULONG');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {332} xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
@@ -433,9 +433,9 @@ procedure {332} xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
   Count: ULONG
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('WRITE_PORT_BUFFER_UCHAR');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {333} xboxkrnl_WRITE_PORT_BUFFER_USHORT(
@@ -444,9 +444,9 @@ procedure {333} xboxkrnl_WRITE_PORT_BUFFER_USHORT(
   Count: ULONG
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('WRITE_PORT_BUFFER_USHORT');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {334} xboxkrnl_WRITE_PORT_BUFFER_ULONG(
@@ -455,65 +455,65 @@ procedure {334} xboxkrnl_WRITE_PORT_BUFFER_ULONG(
   Count: ULONG
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('WRITE_PORT_BUFFER_ULONG');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {357} xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('IdexChannelObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {367} xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI367');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {368} xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI368');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {369} xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI369');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {370} xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI370');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {371} xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI371');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {372} xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI372');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {373} xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI373');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

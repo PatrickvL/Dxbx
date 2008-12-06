@@ -93,8 +93,7 @@ end;
 // exception handler
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
 begin
-	if EmuIsXboxFS() then
-		EmuSwapFS();
+	EmuSwapFS(fsWindows);
 
 	g_bEmuException := True;
 
@@ -361,8 +360,7 @@ function ExitException(e: LPEXCEPTION_POINTERS): Integer;
 var
   Count: Integer;
 begin
-  if EmuIsXboxFS() then
-    EmuSwapFS();
+  EmuSwapFS(fsWindows);
 
   Count := 0;
 

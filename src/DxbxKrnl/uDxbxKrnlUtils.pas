@@ -44,7 +44,7 @@ var
   // ! thread local storage
   CxbxKrnl_TLS: PXBE_TLS;
   // thread local storage data
-  CxbxKrnl_TLSData: Pointer;
+  CxbxKrnl_TLSData: PVOID;
   // xbe header structure
   CxbxKrnl_XbeHeader: PXBE_HEADER;
   // parent window handle

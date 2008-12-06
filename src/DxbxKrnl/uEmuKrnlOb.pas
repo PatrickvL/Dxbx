@@ -58,93 +58,93 @@ implementation
 
 function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObCreateObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObDirectoryObjectType(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObDirectoryObjectType');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObInsertObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObMakeTemporaryObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObMakeTemporaryObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObOpenObjectByName(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObOpenObjectByName');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObOpenObjectByPointer(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObOpenObjectByPointer');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObpObjectHandleTable(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObpObjectHandleTable');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObReferenceObjectByHandle(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByHandle');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByName');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByPointer');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObSymbolicLinkObjectType(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObSymbolicLinkObjectType');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObfDereferenceObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ObfReferenceObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

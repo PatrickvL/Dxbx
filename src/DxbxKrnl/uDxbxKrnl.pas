@@ -86,7 +86,7 @@ end;
 
 procedure CxbxKrnlInit(
   hwndParent: HWND;
-  pTLSData: Pointer;
+  pTLSData: PVOID;
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: DebugMode;
@@ -260,7 +260,7 @@ begin
   begin
     EmuInitFS();
 
-    EmuGenerateFS(pTLS, pTLSData);
+    EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
   end;
 
   // duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
@@ -287,7 +287,7 @@ begin
 
   // Xbe entry point
   try
-    EmuSwapFS(); // XBox FS
+    EmuSwapFS(fsXbox);
 
     // _USE_XGMATH Disabled in mesh :[
     // halo : dword_0_2E2D18
@@ -314,7 +314,7 @@ begin
 
     Entry();
 
-    EmuSwapFS(); // Win2k/XP FS
+    EmuSwapFS(fsWindows);
   except
     on E: Exception do
     begin
@@ -358,8 +358,7 @@ end;
 
 procedure CxbxKrnlTerminateThread();
 begin
-  if EmuIsXboxFS then
-    EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   EmuCleanupFS;
 
@@ -370,7 +369,7 @@ end;
 
 procedure EmuXRefFailure();
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   CxbxKrnlCleanup('XRef-only function body reached. Fatal Error.');
 end;
@@ -460,23 +459,22 @@ end;
 
 procedure EmuPanic(); stdcall;
 begin
-  if EmuIsXboxFS then
-    EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('Emu: EmuPanic');
 
   CxbxKrnlCleanup('Kernel Panic!');
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure CxbxKrnlNoFunc;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuMain : CxbxKrnlNoFunc();');
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

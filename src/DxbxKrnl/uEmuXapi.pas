@@ -107,9 +107,9 @@ const
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches()');
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 {$ENDIF}
 
   // we dont really feel like patching, now do we?
@@ -118,9 +118,9 @@ end;
 function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   DbgPrintf('EmuXapi : EmuXFormatUtilityDrive()');
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 {$ENDIF}
 
     // TODO: yeah... we'll format... riiiiight
@@ -134,7 +134,7 @@ end;
   out LPWIN32_FIND_DATA lpFindFileData
   )
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuFindFirstFileA' +
     #13#10'(' +
@@ -219,7 +219,7 @@ begin
 
     //SetCurrentDirectory(szOldDir);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := hRet;
 end;    *)
@@ -230,7 +230,7 @@ end;    *)
   out LPWIN32_FIND_DATA lpFindFileData
   )
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuFindNextFileA' +
     #13#10'(' +
@@ -259,7 +259,7 @@ begin
 
     //printf('Found : %s\n', lpFindFileData.cFileName);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;     *)
@@ -279,7 +279,7 @@ function XTL_EmuRtlCreateHeap(
 var
   RtlHeapDefinition: RTL_HEAP_DEFINITION;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
     #13#10'(' +
@@ -299,7 +299,7 @@ begin
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuRtlAllocateHeap(
@@ -309,7 +309,7 @@ function XTL_EmuRtlAllocateHeap(
 var
   offs: Byte;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
@@ -337,7 +337,7 @@ begin
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuRtlFreeHeap(
@@ -347,7 +347,7 @@ function XTL_EmuRtlFreeHeap(
 var
   offs: Byte;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
@@ -367,7 +367,7 @@ begin
 
   Result := CxbxRtlFree(hHeap, dwFlags, lpMem);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuRtlReAllocateHeap(
@@ -378,7 +378,7 @@ function XTL_EmuRtlReAllocateHeap(
 var
   offs: Byte;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
@@ -414,7 +414,7 @@ begin
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuRtlSizeHeap(
@@ -424,7 +424,7 @@ function XTL_EmuRtlSizeHeap(
 var
   offs: Byte;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
@@ -446,14 +446,14 @@ begin
   if Result > 0 then
     Dec(Result, HEAP_HEADERSIZE);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuQueryPerformanceCounter(lpPerformanceCount: Int64): BOOL; stdcall;
 var
   bRet: BOOL;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuQueryPerformanceCounter' +
     #13#10'(' +
@@ -466,7 +466,7 @@ begin
     // debug - 4x speed
     //lpPerformanceCount.QuadPart *= 4;
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;
@@ -475,7 +475,7 @@ function XTL_EmuQueryPerformanceFrequency(lpFrequency: Int64): BOOL; stdcall;
 var
   bRet: BOOL;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency' +
     #13#10'(' +
@@ -485,7 +485,7 @@ begin
 
   bRet := QueryPerformanceFrequency(lpFrequency);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;
@@ -494,12 +494,12 @@ function XTL_EmuXMountUtilityDrive(fFormatClean: BOOL): BOOL; stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
   begin
-    EmuSwapFS(); // Win2k/XP FS
+    EmuSwapFS(fsWindows);
     DbgPrintf('EmuXapi : EmuXMountUtilityDrive' +
       #13#10'(' +
       #13#10'   fFormatClean        : 0x%.08X' +
       #13#10');', [Ord(fFormatClean)]);
-    EmuSwapFS(); // XBox FS
+    EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
 
@@ -510,7 +510,7 @@ procedure XTL_EmuXInitDevices(Unknown1: DWord; Unknown2: PVOID); stdcall;
 var
   v: Integer;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXInitDevices' +
     #13#10'(' +
@@ -531,12 +531,12 @@ begin
     g_hInputHandle[v] := 0;
   end;
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 (*Function XTL_EmuXGetDevices ( DeviceType : PXPP_DEVICE_TYPE ): DWord
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXGetDevices' +
     #13#10'(' +
@@ -551,7 +551,7 @@ begin
   else
     EmuWarning('Unknown DeviceType ($%.08X, 0x%.08X, 0x%.08X, 0x%.08X)', DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := ret;
 end;       *)
@@ -563,7 +563,7 @@ end;       *)
   PDWORD pdwRemovals
   )
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXGetDeviceChanges' +
     #13#10'(' +
@@ -589,7 +589,7 @@ else
     * pdwRemovals := 0;
   end;
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;        *)
@@ -602,7 +602,7 @@ end;        *)
   in PXINPUT_POLLING_PARAMETERS pPollingParameters OPTIONAL
   ) : THandle
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXInputOpen' +
     #13#10'(' +
@@ -662,7 +662,7 @@ begin
   pph.dwPort := dwPort;
   end;
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := (THandle)pph;
 end;
@@ -672,7 +672,7 @@ end;
 var pph : POLLING_PARAMETERS_HANDLE;
 
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXInputClose' +
     #13#10'(' +
@@ -707,7 +707,7 @@ begin
      end;
     //*/
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 end;    *)
 
 (*DWord WINAPI XTL.EmuXInputPoll
@@ -715,7 +715,7 @@ end;    *)
     IN THandle hDevice
 )
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi : EmuXInputPoll' +
            #13#10'(' +
@@ -762,7 +762,7 @@ begin
          end;
      end;
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result := ERROR_SUCCESS;
 end;       *)
@@ -773,7 +773,7 @@ end;       *)
     OUT PXINPUT_CAPABILITIES pCapabilities
 )
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi : EmuXInputGetCapabilities' +
            #13#10'(' +
@@ -800,7 +800,7 @@ begin
          end;
      end;
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result := ret;
 end;        *)
@@ -811,7 +811,7 @@ end;        *)
     OUT PXINPUT_STATE  pState
 )
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi : EmuXInputGetState' +
            #13#10'(' +
@@ -850,7 +850,7 @@ begin
          end;
      end;
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result := ret;
 end;            *)
@@ -861,7 +861,7 @@ end;            *)
     IN OUT PXINPUT_FEEDBACK pFeedback
 )
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi : EmuXInputSetState' +
            #13#10'(' +
@@ -929,7 +929,7 @@ begin
          end;
      end;
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result := ret;
 end;   *)
@@ -940,7 +940,7 @@ function XTL_EmuCreateMutex (
     bInitialOwner: BOOL;
     lpName: PAnsiChar): THandle; stdcall;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuCreateMutex' +
          #13#10'(' +
@@ -952,7 +952,7 @@ begin
 
   THandle hRet := CreateMutex((SECURITY_ATTRIBUTES )lpMutexAttributes, bInitialOwner, lpName);
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := hRet;
 end;
@@ -962,7 +962,7 @@ function XTL_EmuCloseHandle(hObject: THandle): BOOL; stdcall;
 var
   bRet: BOOL;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuCloseHandle' +
     #13#10'(' +
@@ -972,7 +972,7 @@ begin
 
   bRet := CloseHandle(hObject);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;
@@ -981,7 +981,7 @@ function XTL_EmuSetThreadPriorityBoost(hThread: THandle; DisablePriorityBoost: B
 var
   bRet: BOOL;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuSetThreadPriorityBoost' +
     #13#10'(' +
@@ -995,7 +995,7 @@ begin
   if not bRet then
     EmuWarning('SetThreadPriorityBoost Failed!');
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;
@@ -1004,7 +1004,7 @@ function XTL_EmuSetThreadPriority(hThread: THandle; nPriority: Integer): BOOL; s
 var
   bRet: BOOL;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuSetThreadPriority' +
     #13#10'(' +
@@ -1021,7 +1021,7 @@ begin
   // HACK!
   //Sleep(10);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;
@@ -1031,7 +1031,7 @@ function XTL_EmuGetThreadPriority(hThread: THandle): Integer; stdcall;
 var
   iRet: Integer;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuGetThreadPriority' +
     #13#10'(' +
@@ -1044,7 +1044,7 @@ begin
   if iRet = THREAD_PRIORITY_ERROR_RETURN then
     EmuWarning('GetThreadPriority Failed!');
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := iRet;
 end;
@@ -1053,7 +1053,7 @@ function XTL_EmuGetExitCodeThread(hThread: THandle; lpExitCode: Cardinal): BOOL;
 var
   bRet: BOOL;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuGetExitCodeThread' +
     #13#10'(' +
@@ -1064,7 +1064,7 @@ begin
 
   bRet := GetExitCodeThread(hThread, lpExitCode);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := bRet;
 end;
@@ -1077,7 +1077,7 @@ var
   dwPeHeapReserve: UInt32;
   dwPeHeapCommit: UInt32;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXapiInitProcess();');
 
@@ -1087,7 +1087,7 @@ begin
 
     HeapParameters.Length := SizeOf(HeapParameters);
 
-    EmuSwapFS(); // XBox FS
+    EmuSwapFS(fsXbox);
 
     dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
     dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
@@ -1100,7 +1100,7 @@ end;
 
 procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWord) stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXapiThreadStartup' +
     #13#10'(' +
@@ -1109,7 +1109,7 @@ begin
     #13#10')',
     [dwDummy1, dwDummy2]);
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 
   Function1ArgStdCall(dwDummy1)(dwDummy2);
 
@@ -1119,7 +1119,7 @@ end;
 (* Too High Level!
 XTL.NTSTATUS CDECL XTL.XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
 begin
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuXapi : XapiSetupPerTitleDriveLetters' +
            #13#10'(' +
@@ -1130,7 +1130,7 @@ begin
 
     NTSTATUS ret := STATUS_SUCCESS;
 
-    EmuSwapFS();   // XBox FS
+    EmuSwapFS(fsXbox);
 
     Result := ret;
  end;
@@ -1138,7 +1138,7 @@ begin
 
 procedure XTL_EmuXapiBootDash(UnknownA: DWord; UnknownB: DWord; UnknownC: DWord); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXapiBootDash' +
     #13#10'(' +
@@ -1150,14 +1150,14 @@ begin
 
   CxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuXRegisterThreadNotifyRoutine(
   pThreadNotification: PXTHREAD_NOTIFICATION;
   fRegister: BOOL); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine' +
     #13#10'(' +
@@ -1171,7 +1171,9 @@ begin
     if Assigned(g_pfnThreadNotification) then
       CxbxKrnlCleanup('Multiple thread notification routines installed (caustik can fix this!)');
 
-    g_pfnThreadNotification := Addr(pThreadNotification.pfnNotifyRoutine); // TODO : Is this correct?
+    // TODO : Is this correct?
+    // BlueShogun2 has code that connects notifications to the ListEntry chain.
+    g_pfnThreadNotification := Addr(pThreadNotification.pfnNotifyRoutine);
   end
   else
   begin
@@ -1179,13 +1181,13 @@ begin
       g_pfnThreadNotification := nil;
   end;
 
-  EmuSwapFS(); // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): THandle; stdcall;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : XCalculateSignatureBegin' +
            #13#10'(' +
@@ -1193,7 +1195,7 @@ begin
            #13#10');',
             [dwFlags]);
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(fsXbox);
 
   // return a fake handle value for now
   Result := $AAAAAAAA;
@@ -1201,7 +1203,7 @@ end;
 
 function XTL_EmuXCalculateSignatureBeginEx(dwFlags: DWord; dwAltTitleId: DWord): THandle; stdcall;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : XCalculateSignatureBeginEx' +
     #13#10'(' +
@@ -1210,7 +1212,7 @@ begin
     #13#10');',
     [dwFlags, dwAltTitleId]);
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(fsXbox);
 
   // return a fake handle value for now
   Result := $AAAAAAAA;
@@ -1218,7 +1220,7 @@ end;
 
 function XTL_EmuXCalculateSignatureUpdate(hCalcSig: THandle; pbData: Byte; cbData: ULONG): DWord; stdcall;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : XCalculateSignatureUpdate' +
            #13#10'(' +
@@ -1228,7 +1230,7 @@ begin
            #13#10');',
             [hCalcSig, pbData, cbData]);
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := ERROR_SUCCESS;
 end;
@@ -1238,7 +1240,7 @@ type
 
 function XTL_EmuXCalculateSignatureEnd(hCalcSig: THandle; pSignature: PXCALCSIG_SIGNATURE): DWord; stdcall;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : XCalculateSignatureEnd' +
            #13#10'(' +
@@ -1247,7 +1249,7 @@ begin
            #13#10');',
             [hCalcSig, pSignature]);
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(fsXbox);
 
   Result := ERROR_SUCCESS;
 end;

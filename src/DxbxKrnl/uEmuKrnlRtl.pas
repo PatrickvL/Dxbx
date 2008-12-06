@@ -149,30 +149,30 @@ function xboxkrnl_RtlAnsiStringToUnicodeString(
   AllocateDestinationString: UCHAR
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlAnsiStringToUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlAppendStringToString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlAppendStringToString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlAppendUnicodeStringToString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlAppendUnicodeStringToString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlAppendUnicodeToString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlAppendUnicodeToString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_RtlAssert(
@@ -182,179 +182,180 @@ procedure xboxkrnl_RtlAssert(
   _Message: PCHAR
   ); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('RtlAssert');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCaptureContext(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCaptureContext');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCaptureStackBackTrace');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCharToInteger(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCharToInteger');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCompareMemory(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCompareMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCompareMemoryUlong(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCompareMemoryUlong');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCompareString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCompareString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCompareUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCompareUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCopyString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCopyString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCopyUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCopyUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlCreateUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlCreateUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlDowncaseUnicodeChar(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlDowncaseUnicodeChar');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlDowncaseUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlDowncaseUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
-  Unimplemented('RtlEnterCriticalSection');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsWindows);
+//  Unimplemented('RtlEnterCriticalSection');
+  JwaNative.RtlEnterCriticalSection(CriticalSection);
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlEnterCriticalSectionAndRegion(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlEnterCriticalSectionAndRegion');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlEqualString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlEqualString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlEqualUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlEqualUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlExtendedIntegerMultiply(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlExtendedIntegerMultiply');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlExtendedLargeIntegerDivide(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlExtendedLargeIntegerDivide');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlExtendedMagicDivide(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlExtendedMagicDivide');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlFillMemory(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlFillMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlFillMemoryUlong(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlFillMemoryUlong');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlFreeAnsiString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlFreeAnsiString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlFreeUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlFreeUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlGetCallersAddress(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlGetCallersAddress');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlInitAnsiString(
@@ -362,116 +363,120 @@ function xboxkrnl_RtlInitAnsiString(
   SourceString: PCSZ
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlInitAnsiString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlInitUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
-  Unimplemented('RtlInitializeCriticalSection');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsWindows);
+
+//  Unimplemented('RtlInitializeCriticalSection');
+  JwaNative.RtlInitializeCriticalSection(CriticalSection);
+
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlIntegerToChar(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlIntegerToChar');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlIntegerToUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlIntegerToUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_RtlLeaveCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
-  Unimplemented('RtlLeaveCriticalSection');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsWindows);
+//  Unimplemented('RtlLeaveCriticalSection');
+  JwaNative.RtlLeaveCriticalSection(CriticalSection);
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlLeaveCriticalSectionAndRegion');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlLowerChar(
   Character: CHAR
   ): CHAR; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('RtlLowerChar');
   Result := Low(Result);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlMapGenericMask(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlMapGenericMask');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlMoveMemory(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlMoveMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlMultiByteToUnicodeN(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlMultiByteToUnicodeN');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlMultiByteToUnicodeSize(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlMultiByteToUnicodeSize');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlNtStatusToDosError(
   Status: NTSTATUS
   ): ULONG; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlNtStatusToDosError');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlRaiseException(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlRaiseException');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlRaiseStatus(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlRaiseStatus');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlTimeFieldsToTime(
@@ -479,10 +484,10 @@ function xboxkrnl_RtlTimeFieldsToTime(
   Time: PLARGE_INTEGER // OUT
   ): LONGBOOL; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('RtlTimeFieldsToTime');
   Result := Low(Result);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_RtlTimeToTimeFields(
@@ -490,26 +495,26 @@ procedure xboxkrnl_RtlTimeToTimeFields(
   TimeFields: PTIME_FIELDS // out
   ); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('RtlTimeToTimeFields');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ): LONGBOOL; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
-  Unimplemented('RtlTryEnterCriticalSection');
-  Result := Low(Result);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsWindows);
+//  Unimplemented('RtlTryEnterCriticalSection');
+  Result := JwaNative.RtlTryEnterCriticalSection(CriticalSection);
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUlongByteSwap(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUlongByteSwap');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUnicodeStringToAnsiString(
@@ -518,128 +523,128 @@ function xboxkrnl_RtlUnicodeStringToAnsiString(
   AllocateDestinationString: LONGBOOL
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUnicodeStringToAnsiString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUnicodeStringToInteger(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUnicodeStringToInteger');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUnicodeToMultiByteN(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUnicodeToMultiByteN');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUnicodeToMultiByteSize(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUnicodeToMultiByteSize');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUnwind(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUnwind');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUpcaseUnicodeChar(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUpcaseUnicodeChar');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUpcaseUnicodeString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUpcaseUnicodeString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUpcaseUnicodeToMultiByteN');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUpperChar(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUpperChar');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUpperString(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUpperString');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUshortByteSwap(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUshortByteSwap');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlWalkFrameChain');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlZeroMemory(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlZeroMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlRip(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlRip');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlSnprintf(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlSnprintf');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlSprintf(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlSprintf');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlVsnprintf(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlVsnprintf');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlVsprintf(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlVsprintf');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

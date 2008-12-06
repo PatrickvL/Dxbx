@@ -231,25 +231,25 @@ function xboxkrnl_NtAllocateVirtualMemory(
   Protect: DWORD
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtAllocateVirtualMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCancelTimer');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtClearEvent(
   EventHandle: HANDLE
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtClearEvent');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // 0x00BB - NtClose
@@ -262,7 +262,7 @@ var
   iEmuHandle: TEmuHandle;
 {$ENDIF}
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : NtClose' +
     #13#10'(' +
@@ -283,14 +283,14 @@ begin
 {$ENDIF}
     Result := NtClose(Handle);
 
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateDirectoryObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateEvent(
@@ -300,9 +300,9 @@ function xboxkrnl_NtCreateEvent(
   InitialState: LONGBOOL
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateEvent');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateFile(
@@ -317,16 +317,16 @@ function xboxkrnl_NtCreateFile(
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateIoCompletion(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateIoCompletion');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateMutant(
@@ -335,37 +335,37 @@ function xboxkrnl_NtCreateMutant(
   InitialOwner: LONGBOOL
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateMutant');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateSemaphore(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateSemaphore');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateTimer(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateTimer');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtDeleteFile(pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDeleteFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtDeviceIoControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pIoControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDeviceIoControlFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtDuplicateObject(
@@ -374,9 +374,9 @@ function xboxkrnl_NtDuplicateObject(
   Options: DWORD
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDuplicateObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtFlushBuffersFile(
@@ -384,9 +384,9 @@ function xboxkrnl_NtFlushBuffersFile(
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtFlushBuffersFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtFreeVirtualMemory(
@@ -395,23 +395,23 @@ function xboxkrnl_NtFreeVirtualMemory(
   FreeType: ULONG
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtFreeVirtualMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtFsControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; FsControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtFsControlFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtOpenDirectoryObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtOpenDirectoryObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtOpenFile(
@@ -423,37 +423,37 @@ function xboxkrnl_NtOpenFile(
   OpenOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtOpenFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtOpenSymbolicLinkObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtProtectVirtualMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtPulseEvent');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueueApcThread(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueueApcThread');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryDirectoryFile(
@@ -469,23 +469,23 @@ function xboxkrnl_NtQueryDirectoryFile(
   RestartScan: LONGBOOL
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryDirectoryFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryDirectoryObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryEvent');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryFullAttributesFile(
@@ -493,9 +493,9 @@ function xboxkrnl_NtQueryFullAttributesFile(
   Attributes: PVOID // OUT
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryFullAttributesFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryInformationFile(
@@ -506,51 +506,51 @@ function xboxkrnl_NtQueryInformationFile(
   FileInfo: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryInformationFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryIoCompletion');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryMutant');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQuerySemaphore');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQuerySymbolicLinkObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryTimer');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryVirtualMemory(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryVirtualMemory');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryVolumeInformationFile(
@@ -561,9 +561,9 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   FileInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryVolumeInformationFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtReadFile(
@@ -577,16 +577,16 @@ function xboxkrnl_NtReadFile(
   ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtReadFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtReadFileScatter');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtReleaseMutant(
@@ -594,23 +594,23 @@ function xboxkrnl_NtReleaseMutant(
   PreviousCount: PLONG // OUT
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtReleaseMutant');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtReleaseSemaphore(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtReleaseSemaphore');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtRemoveIoCompletion');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtResumeThread(
@@ -618,9 +618,9 @@ function xboxkrnl_NtResumeThread(
   PreviousSuspendCount: PULONG // OUT
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtResumeThread');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtSetEvent(
@@ -628,9 +628,9 @@ function xboxkrnl_NtSetEvent(
   PreviousState: PLONG // OUT
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetEvent');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtSetInformationFile(
@@ -641,37 +641,37 @@ function xboxkrnl_NtSetInformationFile(
   FileInformationClass: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetInformationFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetIoCompletion');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetSystemTime');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetTimerEx');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSignalAndWaitForSingleObjectEx');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtSuspendThread(
@@ -679,9 +679,9 @@ function xboxkrnl_NtSuspendThread(
   PreviousSuspendCount: PULONG // OUT OPTIONAL
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSuspendThread');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_NtUserIoApcDispatcher(
@@ -690,16 +690,16 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   Reserved: ULONG
   ); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('NtUserIoApcDispatcher');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForSingleObject');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtWaitForSingleObjectEx(
@@ -709,9 +709,9 @@ function xboxkrnl_NtWaitForSingleObjectEx(
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForSingleObjectEx');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtWaitForMultipleObjectsEx(
@@ -723,9 +723,9 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForMultipleObjectsEx');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtWriteFile(
@@ -739,28 +739,28 @@ function xboxkrnl_NtWriteFile(
   ByteOffset: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWriteFile');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWriteFileGather');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_NtYieldExecution(); stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   // NOTE: this eats up the debug log far too quickly
   //DbgPrintf('EmuKrnl : NtYieldExecution();');
 
   NtYieldExecution();
 
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

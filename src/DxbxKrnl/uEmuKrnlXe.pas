@@ -54,9 +54,9 @@ implementation
 
 function {326} xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('XeImageFileName');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // XeLoadSection:
@@ -69,9 +69,9 @@ function {327} xboxkrnl_XeLoadSection(
   Section: PXBE_SECTION // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('XeLoadSection');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // XeUnloadSection:
@@ -84,16 +84,16 @@ function {328} xboxkrnl_XeUnloadSection(
   Section: PXBE_SECTION // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('XeUnloadSection');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {355} xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall;
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('XePublicKeyData');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

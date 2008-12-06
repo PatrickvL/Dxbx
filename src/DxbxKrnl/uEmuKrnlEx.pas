@@ -133,20 +133,20 @@ function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExAcquireReadWriteLockExclusive');
   // KeWaitForSingleObject
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {013} xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExAcquireReadWriteLockShared');
   // KeWaitForSingleObject
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // Differences from NT: There is no PoolType field, as the XBOX
@@ -156,10 +156,10 @@ function {014} xboxkrnl_ExAllocatePool(
   NumberOfBytes: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExAllocatePool');
   Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E {?}));
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {015} xboxkrnl_ExAllocatePoolWithTag(
@@ -167,30 +167,30 @@ function {015} xboxkrnl_ExAllocatePoolWithTag(
   Tag: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 //  RtlAssert(NumberOfBytes > 0);
   Unimplemented('ExAllocatePoolWithTag');
   Result := nil;
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExFreePool');
   // ExFreeNonPagedPool
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {018} xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInitializeReadWriteLock');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {019} xboxkrnl_ExInterlockedAddLargeInteger(
@@ -199,10 +199,10 @@ function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Lock: PKSPIN_LOCK
   ): LARGE_INTEGER; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeInteger');
   Result.QuadPart := 0;
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
@@ -210,9 +210,9 @@ procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   Increment: ULONG
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeStatistic');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {021} xboxkrnl_ExInterlockedCompareExchange64(
@@ -222,9 +222,9 @@ function {021} xboxkrnl_ExInterlockedCompareExchange64(
   Lock: PKSPIN_LOCK
   ): LONGLONG; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInterlockedCompareExchange64');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {023} xboxkrnl_ExQueryPoolBlockSize(
@@ -232,9 +232,9 @@ function {023} xboxkrnl_ExQueryPoolBlockSize(
   QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExQueryPoolBlockSize');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // ExQueryNonVolatileSetting retrieves EEPROM information -
@@ -250,9 +250,9 @@ function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ResultLength: PSIZE_T // out, OPTIONAL
   ): NTSTATUS; stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExQueryNonVolatileSetting');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {025} xboxkrnl_ExReadWriteRefurbInfo(
@@ -261,37 +261,37 @@ function {025} xboxkrnl_ExReadWriteRefurbInfo(
   Arg3: LONGBOOL
   ): NTSTATUS; stdcall; // Source: XBMC - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExReadWriteRefurbInfo');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {026} xboxkrnl_ExRaiseException(
   ExceptionRecord: PEXCEPTION_RECORD
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExRaiseException');
   // RtlRaiseException(ExceptionRecord);
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure {027} xboxkrnl_ExRaiseStatus(
   Status: NTSTATUS
   ); stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExRaiseStatus');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {028} xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExReleaseReadWriteLock');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {029} xboxkrnl_ExSaveNonVolatileSetting(
@@ -301,9 +301,9 @@ function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueLength: SIZE_T
   ): NTSTATUS; stdcall; // Source: OpenXDK
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Result := Unimplemented('ExSaveNonVolatileSetting');
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {032} xboxkrnl_ExfInterlockedInsertHeadList(
@@ -312,10 +312,10 @@ function {032} xboxkrnl_ExfInterlockedInsertHeadList(
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertHeadList');
   Result := nil;
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {033} xboxkrnl_ExfInterlockedInsertTailList(
@@ -324,10 +324,10 @@ function {033} xboxkrnl_ExfInterlockedInsertTailList(
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertTailList');
   Result := nil;
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
@@ -335,10 +335,10 @@ function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
 begin
-  EmuSwapFS(); // Win2k/XP FS
+  EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedRemoveHeadList');
   Result := nil;
-  EmuSwapFS(); // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 end.

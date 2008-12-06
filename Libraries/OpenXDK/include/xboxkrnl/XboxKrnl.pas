@@ -778,9 +778,9 @@ type
     StackBase: PVOID; // 0x04
     StackLimit: PVOID; // 0x08
     SubSystemTib: PVOID; // 0x0C
-    _union: record case Integer of
+    union_a: record case Integer of
        0: ( FiberData: PVOID ); // 0x10 for TIB
-       1: ( Version: DWORD ); // 0x10 for TEB (?)
+       1: ( Version: ULONG ); // 0x10 for TEB (?)
     end;
     ArbitraryUserPointer: PVOID; // 0x14
     Self: PNT_TIB; // 0x18
