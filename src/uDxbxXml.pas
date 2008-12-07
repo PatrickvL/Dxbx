@@ -54,7 +54,7 @@ implementation
 procedure TDxbxXml.CreateXmlXbeDump(aFileName: string; aXbe: TXbe);
 var
   XmlRootNode: IXmlNode;
-  lIndex: Integer;
+  i: Integer;
   LibName: string;
   Version: string;
 begin
@@ -62,17 +62,19 @@ begin
   XMLDocument.Active := True;
   XmlRootNode := XMLDocument.AddChild('XDKINFO');
 
-  XML_WriteString(XmlRootNode, 'Name', m_szAsciiTitle);
+//  XML_WriteString(XmlRootNode, 'DumpInfo', ''); // ??
+  XML_WriteString(XmlRootNode, 'FileName', aFileName);
+  XML_WriteString(XmlRootNode, 'Title', m_szAsciiTitle);
 
   XmlRootNode := XmlRootNode.AddChild('XDKVersions');
 
 
-  for lIndex := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
+  for i := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
   begin
-    LibName := string(Copy(aXbe.m_LibraryVersion[lIndex].szName, 1, 8));
-    Version := IntToStr(aXbe.m_LibraryVersion[lIndex].wMajorVersion) + '.' +
-      IntToStr(aXbe.m_LibraryVersion[lIndex].wMinorVersion) + '.' +
-      IntToStr(aXbe.m_LibraryVersion[lIndex].wBuildVersion);
+    LibName := string(Copy(aXbe.m_LibraryVersion[i].szName, 1, 8));
+    Version := IntToStr(aXbe.m_LibraryVersion[i].wMajorVersion) + '.' +
+      IntToStr(aXbe.m_LibraryVersion[i].wMinorVersion) + '.' +
+      IntToStr(aXbe.m_LibraryVersion[i].wBuildVersion);
 
     XML_WriteString(XmlRootNode, LibName, Version);
   end;

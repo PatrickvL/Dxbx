@@ -50,8 +50,6 @@ object frm_ImportGames: Tfrm_ImportGames
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 0
-    ExplicitLeft = 339
-    ExplicitTop = 283
   end
   object btn_Ok: TButton
     Left = 257
@@ -62,8 +60,6 @@ object frm_ImportGames: Tfrm_ImportGames
     Caption = '&Ok'
     ModalResult = 1
     TabOrder = 1
-    ExplicitLeft = 259
-    ExplicitTop = 283
   end
   object edt_Publisher: TEdit
     Left = 12
@@ -75,11 +71,12 @@ object frm_ImportGames: Tfrm_ImportGames
     TabOrder = 2
   end
   object lst_Import: TListView
-    Left = 12
-    Top = 75
+    Left = 8
+    Top = 72
     Width = 395
     Height = 193
     Anchors = [akLeft, akTop, akRight, akBottom]
+    Checkboxes = True
     Columns = <
       item
         Caption = 'Game Name'
@@ -158,7 +155,26 @@ object frm_ImportGames: Tfrm_ImportGames
         Width = 75
       end>
     RowSelect = True
+    PopupMenu = PopupMenu1
+    SortType = stBoth
     TabOrder = 3
     ViewStyle = vsReport
+    OnColumnClick = lst_ImportColumnClick
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 32
+    Top = 184
+    object SelectAll1: TMenuItem
+      Caption = 'Select &All'
+      OnClick = SelectAll1Click
+    end
+    object SelectInverse1: TMenuItem
+      Caption = 'Select &Inverse'
+      OnClick = SelectInverse1Click
+    end
+    object SelectNone1: TMenuItem
+      Caption = 'Select &None'
+      OnClick = SelectNone1Click
+    end
   end
 end

@@ -352,7 +352,7 @@ end;
 function TExe.doExport(const x_szExeFileName: string): Boolean;
 var
   ExeFile: TFileStream;
-  lIndex: Integer;
+  i: Integer;
   RawSize, RawAddr: DWord;
 
   function _Write(const aBlock; aSize: Integer; aDescription: string): Boolean;
@@ -398,9 +398,9 @@ begin
       Exit;
 
     // write section headers
-    for lIndex := 0 to m_Header.m_sections - 1 do
+    for i := 0 to m_Header.m_sections - 1 do
     begin
-      Result := _Write(m_Sectionheader[lIndex], SizeOf(m_SectionHeader[lIndex]), 'PE section header 0x' + IntToHex(lIndex, 4));
+      Result := _Write(m_Sectionheader[i], SizeOf(m_SectionHeader[i]), 'PE section header 0x' + IntToHex(i, 4));
       if not Result then
         Exit;
     end;
@@ -408,7 +408,7 @@ begin
     WriteLog('Export: Writing Section Headers...OK');
 
     // write sections
-    for lIndex := 0 to m_Header.m_sections - 1 do
+    for i := 0 to m_Header.m_sections - 1 do
     begin
 
       //Debug info of turok from cxbx
@@ -427,15 +427,15 @@ begin
       //v = 11  RawwSize = 128      RawAddr = 2434080
       //v = 12  RawwSize = 69632    RawAddr = 2434208
       //v = 13  RawwSize = 577      RawAddr = 305
-      RawSize := m_SectionHeader[lIndex].m_sizeof_raw;
-      RawAddr := m_SectionHeader[lIndex].m_raw_addr;
+      RawSize := m_SectionHeader[i].m_sizeof_raw;
+      RawAddr := m_SectionHeader[i].m_raw_addr;
 
       ExeFile.Seek(RawAddr, soFromBeginning);
 
       if RawSize = 0 then
         Result := False
       else
-        _Write(Pointer(m_bzSection[lIndex])^, RawSize, 'PE section 0x' + IntToHex(lIndex, 4));
+        _Write(Pointer(m_bzSection[i])^, RawSize, 'PE section 0x' + IntToHex(i, 4));
     end;
 
     WriteLog('Export: Writing Sections...OK');

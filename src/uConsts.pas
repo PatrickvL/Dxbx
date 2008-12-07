@@ -59,7 +59,7 @@ const
   EXCEPTION_CONTINUE_EXECUTION = -1;
 
   cXDK_TRACKER_DATA_FILE = 'GameData.dat';
-  cXDk_TRACKER_XML_VERSION = '1.0';
+  cXDk_TRACKER_XML_VERSION = '1.1';
 
   // Websites
   cWEBSITE_CXBX = 'http://www.caustik.com/cxbx/';

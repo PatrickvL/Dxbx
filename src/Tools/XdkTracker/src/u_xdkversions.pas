@@ -39,9 +39,9 @@ type
     procedure cmb_gametypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   protected
-    GameList: TObjectList;
+    GameList: TStringList;
   public
-    procedure FillGameList(const aGameList: TObjectList);
+    procedure FillGameList(const aGameList: TStringList);
     procedure ShowXdkInfo;
   end;
 
@@ -53,7 +53,7 @@ implementation
 {$R *.dfm}
 
 var
-  FilteredList: Tlist;
+  FilteredList: TStringList;
 
 //------------------------------------------------------------------------------
 
@@ -65,30 +65,30 @@ end; // Tfrm_Xdkversion.cmb_gametypeChange
 
 //------------------------------------------------------------------------------
 
-procedure Tfrm_Xdkversion.FillGameList(const aGameList: TObjectList);
+procedure Tfrm_Xdkversion.FillGameList(const aGameList: TStringList);
 var
-  lIndex: Integer;
+  i: Integer;
 begin
-  GameList := aGameList;
+  //GameList := aGameList;
   FilteredList.Clear;
-  for lIndex := 0 to GameList.Count - 1 do
+  for i := 0 to aGameList.Count - 1 do
   begin
     if (cmb_gametype.ItemIndex = 0)
-    or TXDKInfo(GameList[lIndex]).MatchesVersion(cmb_gametype.Text) then
-      FilteredList.Add(Gamelist.Items[lIndex]);
+    or TXBEInfo(aGameList.Objects[i]).MatchesVersion(cmb_gametype.Text) then
+      FilteredList.AddObject(aGamelist[i], aGameList.Objects[i]);
   end;
 
   lst_Games.Clear;
   mem_XdkVersions.Clear;
-  for lIndex := 0 to FilteredList.Count - 1 do
-    lst_Games.Items.Add(TXDKInfo(FilteredList.Items[lIndex]).GameName);
+  for i := 0 to FilteredList.Count - 1 do
+    lst_Games.Items.Add(TXBEInfo(FilteredList.Objects[i]).DetermineDisplayTitle());
 end; // Tfrm_Xdkversion.FillGameList
 
 //------------------------------------------------------------------------------
 
 procedure Tfrm_Xdkversion.FormCreate(Sender: TObject);
 begin
-  FilteredList := TList.Create;
+  FilteredList := TStringList.Create;
 end; // Tfrm_Xdkversion.FormCreate
 
 //------------------------------------------------------------------------------
@@ -102,13 +102,13 @@ end; // Tfrm_Xdkversion.lst_GamesClick
 
 procedure Tfrm_Xdkversion.ShowXdkInfo;
 var
-  XDKInfo: TXDKInfo;
+  XDKInfo: TXBEInfo;
   i: Integer;
 begin
   mem_XdkVersions.Clear;
   if lst_Games.ItemIndex <> -1 then
   begin
-    XDKInfo := TXDKInfo(FilteredList.Items[lst_Games.ItemIndex]);
+    XDKInfo := TXBEInfo(FilteredList.Objects[lst_Games.ItemIndex]);
     Assert(Assigned(XDKInfo));
     
     for i := 0 to XDKInfo.LibVersions.Count - 1 do

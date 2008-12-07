@@ -170,16 +170,8 @@ function QuitarComilla(Texto: string): string;
 
 implementation
 
-uses ufrmProgress;
-
-function IsWindowsVista: Boolean;
-var
-  VerInfo: TOSVersioninfo;
-begin
-  VerInfo.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
-  GetVersionEx(VerInfo);
-  Result := VerInfo.dwMajorVersion >= 6;
-end;
+uses
+  ufrmProgress;
 
 {$R *.dfm}
 //{$R WinXP.res}

@@ -44,7 +44,7 @@ object frm_Xdkversion: Tfrm_Xdkversion
   object lbl_Xdk: TLabel
     Left = 263
     Top = 40
-    Width = 78
+    Width = 80
     Height = 13
     Anchors = [akLeft, akTop, akRight]
     Caption = 'XDK Information:'
@@ -54,7 +54,6 @@ object frm_Xdkversion: Tfrm_Xdkversion
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    ExplicitWidth = 80
   end
   object cmb_gametype: TComboBox
     Left = 12
@@ -85,7 +84,6 @@ object frm_Xdkversion: Tfrm_Xdkversion
     ParentFont = False
     ReadOnly = True
     TabOrder = 1
-    ExplicitWidth = 212
   end
   object lst_Games: TListBox
     Left = 12
@@ -96,6 +94,5 @@ object frm_Xdkversion: Tfrm_Xdkversion
     ItemHeight = 13
     TabOrder = 2
     OnClick = lst_GamesClick
-    ExplicitHeight = 229
   end
 end

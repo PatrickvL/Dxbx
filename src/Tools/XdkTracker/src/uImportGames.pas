@@ -33,6 +33,14 @@ type
     edt_Publisher: TEdit;
     lst_Import: TListView;
     lbl_NewGames: TLabel;
+    PopupMenu1: TPopupMenu;
+    SelectAll1: TMenuItem;
+    SelectInverse1: TMenuItem;
+    SelectNone1: TMenuItem;
+    procedure SelectAll1Click(Sender: TObject);
+    procedure SelectInverse1Click(Sender: TObject);
+    procedure SelectNone1Click(Sender: TObject);
+    procedure lst_ImportColumnClick(Sender: TObject; Column: TListColumn);
   end;
 
 var
@@ -41,5 +49,43 @@ var
 implementation
 
 {$R *.dfm}
+
+function ColumnSort(Item1, Item2: TListItem; Data: Integer): Integer; stdcall;
+begin
+  if Data < 1 then
+    Result := lstrcmp(PChar(Item1.Caption), PChar(Item2.Caption))
+  else
+    Result := lstrcmp(PChar(Item1.SubItems[Data - 1]), PChar(Item2.SubItems[Data - 1]));
+end;
+
+procedure Tfrm_ImportGames.lst_ImportColumnClick(Sender: TObject;
+  Column: TListColumn);
+begin
+  lst_Import.CustomSort(@ColumnSort, Column.Index);
+end;
+
+procedure Tfrm_ImportGames.SelectAll1Click(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 0 to lst_Import.Items.Count - 1 do
+    lst_Import.Items[i].Checked := True;
+end;
+
+procedure Tfrm_ImportGames.SelectInverse1Click(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 0 to lst_Import.Items.Count - 1 do
+    lst_Import.Items[i].Checked := not lst_Import.Items[i].Checked;
+end;
+
+procedure Tfrm_ImportGames.SelectNone1Click(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 0 to lst_Import.Items.Count - 1 do
+    lst_Import.Items[i].Checked := False;
+end;
 
 end.
