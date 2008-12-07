@@ -27,11 +27,13 @@ uses
   Classes;
 
 type
-  TXDKInfo = class(TObject)
+  TXBEInfo = class(TObject)
   protected
     MyLibVersions: TStringList;
   public
-    GameName: string;
+    DumpInfo: string; // first line of dump file, mentions dump-tool & version
+    FileName: string;
+    Title: string;
 
     property LibVersions: TStringList read MyLibVersions;
 
@@ -39,27 +41,36 @@ type
     destructor Destroy; override;
 
     function MatchesVersion(const aVersion: string): Boolean;
+
+    function DetermineDisplayTitle: string;
   end;
 
 implementation
 
-{ TXDKInfo }
+{ TXBEInfo }
 
-constructor TXDKInfo.Create;
+constructor TXBEInfo.Create;
 begin
   inherited Create;
 
   MyLibVersions := TStringList.Create;
 end;
 
-destructor TXDKInfo.Destroy;
+destructor TXBEInfo.Destroy;
 begin
   FreeAndNil(MyLibVersions);
 
   inherited Destroy;
 end;
 
-function TXDKInfo.MatchesVersion(const aVersion: string): Boolean;
+function TXBEInfo.DetermineDisplayTitle: string;
+begin
+  Result := Title;
+  if Result = '' then
+    Result := FileName;  
+end;
+
+function TXBEInfo.MatchesVersion(const aVersion: string): Boolean;
 var
   i: Integer;
 begin
