@@ -39,10 +39,11 @@ type
     procedure cmb_gametypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   protected
-    GameList: TStringList;
+    MyFilteredXBEList: TStringList;
+    FXBEList: TStringList;
   public
-    procedure FillGameList(const aGameList: TStringList);
-    procedure ShowXdkInfo;
+    procedure FillXBEList(const aXBEList: TStringList);
+    procedure ShowXBEInfo(const aXBEInfo: TXBEInfo);
   end;
 
 var
@@ -52,72 +53,109 @@ implementation
 
 {$R *.dfm}
 
-var
-  FilteredList: TStringList;
-
-//------------------------------------------------------------------------------
-
-procedure Tfrm_Xdkversion.cmb_gametypeChange(Sender: TObject);
-begin
-  if Assigned(GameList) then
-    FillGameList(GameList);
-end; // Tfrm_Xdkversion.cmb_gametypeChange
-
-//------------------------------------------------------------------------------
-
-procedure Tfrm_Xdkversion.FillGameList(const aGameList: TStringList);
-var
-  i: Integer;
-begin
-  //GameList := aGameList;
-  FilteredList.Clear;
-  for i := 0 to aGameList.Count - 1 do
-  begin
-    if (cmb_gametype.ItemIndex = 0)
-    or TXBEInfo(aGameList.Objects[i]).MatchesVersion(cmb_gametype.Text) then
-      FilteredList.AddObject(aGamelist[i], aGameList.Objects[i]);
-  end;
-
-  lst_Games.Clear;
-  mem_XdkVersions.Clear;
-  for i := 0 to FilteredList.Count - 1 do
-    lst_Games.Items.Add(TXBEInfo(FilteredList.Objects[i]).DetermineDisplayTitle());
-end; // Tfrm_Xdkversion.FillGameList
-
-//------------------------------------------------------------------------------
+{ Tfrm_Xdkversion }
 
 procedure Tfrm_Xdkversion.FormCreate(Sender: TObject);
 begin
-  FilteredList := TStringList.Create;
-end; // Tfrm_Xdkversion.FormCreate
+  MyFilteredXBEList := TStringList.Create;
+end;
 
-//------------------------------------------------------------------------------
+procedure Tfrm_Xdkversion.cmb_gametypeChange(Sender: TObject);
+begin
+  if Assigned(FXBEList) then
+    FillXBEList(FXBEList);
+end;
 
 procedure Tfrm_Xdkversion.lst_GamesClick(Sender: TObject);
-begin
-  ShowXdkInfo();
-end; // Tfrm_Xdkversion.lst_GamesClick
-
-//------------------------------------------------------------------------------
-
-procedure Tfrm_Xdkversion.ShowXdkInfo;
 var
-  XDKInfo: TXBEInfo;
-  i: Integer;
+  XBEInfo: TXBEInfo;
 begin
-  mem_XdkVersions.Clear;
   if lst_Games.ItemIndex <> -1 then
   begin
-    XDKInfo := TXBEInfo(FilteredList.Objects[lst_Games.ItemIndex]);
-    Assert(Assigned(XDKInfo));
-    
-    for i := 0 to XDKInfo.LibVersions.Count - 1 do
-      mem_XdkVersions.Lines.Add(Format('%-8s : %s', [
-        XDKInfo.LibVersions.Names[i],
-        XDKInfo.LibVersions.ValueFromIndex[i]]));
-  end;
-end; // Tfrm_Xdkversion.ShowXdkInfo
+    XBEInfo := TXBEInfo(MyFilteredXBEList.Objects[lst_Games.ItemIndex]);
+    Assert(Assigned(XBEInfo));
 
-//------------------------------------------------------------------------------
+    ShowXBEInfo(XBEInfo);
+  end;
+end;
+
+procedure Tfrm_Xdkversion.FillXBEList(const aXBEList: TStringList);
+var
+  XDKLibVersionsList: TStringList;
+  i, j: Integer;
+  XBEInfo: TXBEInfo;
+begin
+  // Cache a reference to aXBEList, for filtering screen-updates
+  if FXBEList <> aXBEList then
+  begin
+    FXBEList := aXBEList;
+
+    XDKLibVersionsList := TStringList.Create;
+    try
+      // Build up a list of all libraries :
+      XDKLibVersionsList.Duplicates := dupIgnore;
+      XDKLibVersionsList.Sorted := True;
+      for i := 0 to FXBEList.Count - 1 do
+      begin
+        XBEInfo := TXBEInfo(FXBEList.Objects[i]);
+        for j := 0 to XBEInfo.LibVersions.Count - 1 do
+          XDKLibVersionsList.Add(XBEInfo.LibVersions.ValueFromIndex[j]);
+      end;
+
+      // Put this list in the dropdown box :
+      cmb_gametype.Items.BeginUpdate;
+      try
+        cmb_gametype.Items.Clear;
+        cmb_gametype.Items.Add('All XDK Versions');
+        for i := 0 to XDKLibVersionsList.Count - 1 do
+          if XDKLibVersionsList.Strings[i] <> '' then
+            cmb_gametype.Items.Add(XDKLibVersionsList.Strings[i]);
+
+        cmb_gametype.ItemIndex := 0;
+      finally
+        cmb_gametype.Items.EndUpdate;
+      end;
+
+    finally
+      FreeAndNil(XDKLibVersionsList);
+    end;
+  end;
+
+  // Apply the filter :
+  MyFilteredXBEList.Clear;
+  for i := 0 to FXBEList.Count - 1 do
+  begin
+    if (cmb_gametype.ItemIndex = 0)
+    or TXBEInfo(FXBEList.Objects[i]).MatchesVersion(cmb_gametype.Text) then
+      MyFilteredXBEList.AddObject(FXBEList[i], FXBEList.Objects[i]);
+  end;
+
+  // Populate the list with the resulting set of XBEs:
+  mem_XdkVersions.Clear;
+  lst_Games.Items.BeginUpdate;
+  try
+    lst_Games.Clear;
+    for i := 0 to MyFilteredXBEList.Count - 1 do
+      lst_Games.Items.Add(TXBEInfo(MyFilteredXBEList.Objects[i]).Title);
+  finally
+    lst_Games.Items.EndUpdate;
+  end;
+end; // Tfrm_Xdkversion.FillXBEList
+
+procedure Tfrm_Xdkversion.ShowXBEInfo(const aXBEInfo: TXBEInfo);
+var
+  i: Integer;
+begin
+  mem_XdkVersions.Lines.BeginUpdate;
+  try
+    mem_XdkVersions.Clear;
+    for i := 0 to aXBEInfo.LibVersions.Count - 1 do
+      mem_XdkVersions.Lines.Add(Format('%-8s : %s', [
+        aXBEInfo.LibVersions.Names[i],
+        aXBEInfo.LibVersions.ValueFromIndex[i]]));
+  finally
+    mem_XdkVersions.Lines.EndUpdate;
+  end;
+end; // Tfrm_Xdkversion.ShowXBEInfo
 
 end.
