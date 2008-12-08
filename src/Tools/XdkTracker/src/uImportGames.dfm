@@ -2,8 +2,8 @@ object frm_ImportGames: Tfrm_ImportGames
   Left = 392
   Top = 282
   Caption = 'Import Games'
-  ClientHeight = 309
-  ClientWidth = 420
+  ClientHeight = 312
+  ClientWidth = 488
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,154 +12,113 @@ object frm_ImportGames: Tfrm_ImportGames
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   DesignSize = (
-    420
-    309)
+    488
+    312)
   PixelsPerInch = 96
   TextHeight = 13
-  object Bevel1: TBevel
-    Left = 4
-    Top = 4
-    Width = 412
-    Height = 271
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Shape = bsFrame
-    ExplicitWidth = 414
-    ExplicitHeight = 273
-  end
   object lbl_Publisher: TLabel
-    Left = 12
-    Top = 12
+    Left = 284
+    Top = 20
     Width = 46
     Height = 13
     Caption = 'Publisher:'
   end
   object lbl_NewGames: TLabel
-    Left = 12
+    Left = 8
     Top = 56
-    Width = 61
+    Width = 3
     Height = 13
-    Caption = 'New Games:'
+  end
+  object lbl_XDKFilter: TLabel
+    Left = 8
+    Top = 20
+    Width = 50
+    Height = 13
+    Caption = 'XDK &Filter:'
+    FocusControl = cmb_gametype
   end
   object btn_Cancel: TButton
-    Left = 337
-    Top = 281
+    Left = 405
+    Top = 284
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 0
+    ExplicitLeft = 337
+    ExplicitTop = 281
   end
   object btn_Ok: TButton
-    Left = 257
-    Top = 281
+    Left = 325
+    Top = 284
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '&Ok'
     ModalResult = 1
     TabOrder = 1
+    ExplicitLeft = 257
+    ExplicitTop = 281
   end
   object edt_Publisher: TEdit
-    Left = 12
-    Top = 28
-    Width = 233
+    Left = 284
+    Top = 36
+    Width = 195
     Height = 21
+    Anchors = [akLeft, akTop, akRight]
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 2
+    ExplicitWidth = 233
   end
   object lst_Import: TListView
     Left = 8
     Top = 72
-    Width = 395
-    Height = 193
+    Width = 270
+    Height = 196
     Anchors = [akLeft, akTop, akRight, akBottom]
     Checkboxes = True
-    Columns = <
-      item
-        Caption = 'Game Name'
-        Width = 250
-      end
-      item
-        Caption = 'XAPILIB'
-        Width = 75
-      end
-      item
-        Caption = 'XBOXKRNL'
-        Width = 75
-      end
-      item
-        Caption = 'LIBCPMT'
-        Width = 75
-      end
-      item
-        Caption = 'LIBCMT'
-        Width = 75
-      end
-      item
-        Caption = 'LIBC'
-        Width = 75
-      end
-      item
-        Caption = 'D3D8'
-        Width = 75
-      end
-      item
-        Caption = 'D3DX8'
-        Width = 75
-      end
-      item
-        Caption = 'XGRAPHC'
-        Width = 75
-      end
-      item
-        Caption = 'DSOUND'
-        Width = 75
-      end
-      item
-        Caption = 'XVOICE'
-        Width = 75
-      end
-      item
-        Caption = 'XMV'
-        Width = 75
-      end
-      item
-        Caption = 'XONLINES'
-        Width = 75
-      end
-      item
-        Caption = 'UIX'
-        Width = 75
-      end
-      item
-        Caption = 'VOICMAIL'
-        Width = 75
-      end
-      item
-        Caption = 'XVOCREC'
-        Width = 75
-      end
-      item
-        Caption = 'XACTENG'
-        Width = 75
-      end
-      item
-        Caption = 'CalcSig'
-        Width = 75
-      end
-      item
-        Caption = 'DMUSIC'
-        Width = 75
-      end>
+    Columns = <>
     RowSelect = True
     PopupMenu = PopupMenu1
     SortType = stBoth
     TabOrder = 3
     ViewStyle = vsReport
     OnColumnClick = lst_ImportColumnClick
+    OnEdited = lst_ImportEdited
+    OnSelectItem = lst_ImportSelectItem
+  end
+  object mem_XdkVersions: TMemo
+    Left = 284
+    Top = 72
+    Width = 193
+    Height = 196
+    Anchors = [akTop, akRight, akBottom]
+    Color = clBtnFace
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 4
+  end
+  object cmb_gametype: TComboBox
+    Left = 8
+    Top = 36
+    Width = 270
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    TabOrder = 5
+    OnChange = cmb_gametypeChange
+    Items.Strings = (
+      'All XDK Versions')
   end
   object PopupMenu1: TPopupMenu
     Left = 32

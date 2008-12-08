@@ -34,6 +34,8 @@ type
     DumpInfo: string; // first line of dump file, mentions dump-tool & version
     FileName: string;
     Title: string;
+    GameRegion: Integer;
+    IsDuplicate: Boolean; // temporary
 
     property LibVersions: TStringList read MyLibVersions;
 
@@ -41,11 +43,49 @@ type
     destructor Destroy; override;
 
     function MatchesVersion(const aVersion: string): Boolean;
-
-    function DetermineDisplayTitle: string;
   end;
 
+function GameRegionToString(const aGameRegion: Integer): string;
+
 implementation
+
+const
+  XBEIMAGE_GAME_REGION_NTSC = $00000001;
+  XBEIMAGE_GAME_REGION_JAPAN = $00000002;
+  XBEIMAGE_GAME_REGION_RESTOFWORLD = $00000004;
+  XBEIMAGE_GAME_REGION_MANUFACTURING = $80000000;
+
+  XBEIMAGE_GAME_REGION_ALL = XBEIMAGE_GAME_REGION_NTSC + XBEIMAGE_GAME_REGION_JAPAN + XBEIMAGE_GAME_REGION_RESTOFWORLD;
+
+function GameRegionToString(const aGameRegion: Integer): string;
+begin
+  if (aGameRegion and XBEIMAGE_GAME_REGION_ALL) = XBEIMAGE_GAME_REGION_ALL then
+    Result := 'ALL'
+  else
+  begin
+    Result := '';
+    if (aGameRegion and XBEIMAGE_GAME_REGION_JAPAN) > 0 then
+      Result := Result + ' JAP';
+
+    if (aGameRegion and XBEIMAGE_GAME_REGION_NTSC) > 0 then
+      Result := Result + ' NTSC';
+
+    if (aGameRegion and XBEIMAGE_GAME_REGION_RESTOFWORLD) > 0 then
+      Result := Result + ' PAL';
+  end;
+
+  if (aGameRegion and XBEIMAGE_GAME_REGION_MANUFACTURING) > 0 then
+    Result := Result + ' DEBUG';
+
+  Result := StringReplace(Trim(Result), ' ', '+', [rfReplaceAll]);
+  if Result = '' then
+  begin
+    if aGameRegion = 0 then
+      Result := 'UNKNOWN'
+    else
+      Result := 'REGION ' + IntToStr(aGameRegion);
+  end;
+end;
 
 { TXBEInfo }
 
@@ -63,19 +103,12 @@ begin
   inherited Destroy;
 end;
 
-function TXBEInfo.DetermineDisplayTitle: string;
-begin
-  Result := Title;
-  if Result = '' then
-    Result := FileName;  
-end;
-
 function TXBEInfo.MatchesVersion(const aVersion: string): Boolean;
 var
   i: Integer;
 begin
   for i := 0 to LibVersions.Count - 1 do
-    if LibVersions.ValueFromIndex[i] = aVersion then
+    if SameText(LibVersions.ValueFromIndex[i], aVersion) then
     begin
       Result := True;
       Exit;

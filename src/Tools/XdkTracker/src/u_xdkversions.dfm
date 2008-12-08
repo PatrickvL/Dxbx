@@ -71,7 +71,7 @@ object frm_Xdkversion: Tfrm_Xdkversion
   end
   object mem_XdkVersions: TMemo
     Left = 263
-    Top = 59
+    Top = 60
     Width = 210
     Height = 229
     Anchors = [akLeft, akTop, akRight, akBottom]

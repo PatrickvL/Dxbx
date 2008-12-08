@@ -61,12 +61,12 @@ type
   private
     ApplicationDir: string;
     MyXBEList: TStringList;
+    function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
     function FindByFileName(const aFileName: string): Integer;
     function InsertXBEInfo(const aXbeInfo: TXBEInfo): Boolean;
     procedure SaveXBEList(const aFilePath, aPublishedBy: string);
-    function ShowImportList(const XBEImportList: TList; Publisher: string): Integer;
-    function LoadXBEList(aImportFilePath: string = '';
-      aDeleteAfterRead: Boolean = True; aUseImportDialog: Boolean = False): Integer;
+    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
+    function LoadXBEList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
     procedure ImportTxtDumps(const aTxtDumpsFolder: TFileName);
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
   public
@@ -105,12 +105,13 @@ begin
   StatusBar1.SimpleText := cNO_XDKLIST_LOADED;
 
   MyXBEList := TStringList.Create;
-  if LoadXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aDeleteAfterRead=}False, {aUseImportDialog=}False) > 0 then
+  MyXBEList.CaseSensitive := False;
+  if LoadXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE) > 0 then
     StatusBar1.SimpleText := cXDKLIST_LOADED;
 
   Parameter := ParamStr(1);
   if SameText(Parameter, '/XBEDUMP') then
-    LoadXBEList;
+    LoadXBEList();
 
   if SameText(Parameter, '/TxtDumps') then
     ImportTxtDumps(ParamStr(2));
@@ -169,7 +170,7 @@ procedure TfrmXdkTracker.WMCopyData(var Msg: TWMCopyData);
   begin
     s := PChar(CopyDataStruct.lpData);
     if s = 'READXML' then
-      LoadXBEList;
+      LoadXBEList();
   end;
 
 begin
@@ -205,10 +206,7 @@ procedure TfrmXdkTracker.ImportGameList1Click(Sender: TObject);
 begin
   // Import another gamedata (next to the already loaded version)
   if ImportDialog.Execute then
-    LoadXBEList(
-      ImportDialog.FileName,
-      {aDeleteAfterRead=}False,
-      {aUseImportDialog=}True);
+    LoadXBEList(ImportDialog.FileName, {aUseImportDialog=}True);
 end; // TfrmMain.ImportGameList1Click
 
 procedure TfrmXdkTracker.GetXDKInfofromXbe1Click(Sender: TObject);
@@ -231,51 +229,46 @@ begin
     DxbxXml.CreateXmlXbeDump(FilePath, m_Xbe);
     // And finally import that file into the current list :
     LoadXBEList(FilePath);
+    // Delete dump file after reading it :
+    DeleteFile(FilePath);
   end;
 end;
 
 procedure TfrmXdkTracker.Viewxdkversion2Click(Sender: TObject);
-var
-  i, j: Integer;
-  XDKlist: TStringList;
-  XDKInfo: TXBEInfo;
 begin
-  frm_xdkversion := Tfrm_xdkversion.Create(Application);
-  XDKlist := TStringList.Create;
+  frm_ImportGames := Tfrm_ImportGames.Create(Self);
   try
-    XDKlist.Clear;
-    XDKlist.Duplicates := dupIgnore;
-    XDKlist.Sorted := True;
-    with frm_XdkVersion do
+(*
+    // Precalculate the IsDuplicate members (this will be used to feed the checkboxes) :
+    for i := 0 to MyXBEList.Count - 1 do
     begin
-      lst_Games.Clear;
-      for i := 0 to MyXBEList.Count - 1 do
-      begin
-        XDKInfo := TXBEInfo(MyXBEList.Objects[i]);
-        for j := 0 to XDKInfo.LibVersions.Count - 1 do
-          XDKlist.Add(XDKInfo.LibVersions.ValueFromIndex[j]);
-      end;
-
-      cmb_gametype.Items.Clear;
-      cmb_gametype.Items.Add('All XDK Versions');
-      for i := 0 to XDKlist.Count - 1 do
-        if XDKlist.Strings[i] <> '' then
-          cmb_gametype.Items.Add(XDKlist.Strings[i]);
-
-      cmb_gametype.ItemIndex := 0;
+      XBEInfo := TXBEInfo(MyXBEList.Objects[i]);
+      XBEInfo.IsDuplicate := False;
     end;
+*)
+    // Put this list into the view :
+    frm_ImportGames.FillXBEList(MyXBEList);
 
-    frm_XdkVersion.FillGameList(MyXBEList);
+    if frm_ImportGames.ShowModal = mrOk then
+    begin
+    end;
+  finally
+    frm_ImportGames.Release;
+    frm_ImportGames := nil;
+  end;
+(*
+  frm_xdkversion := Tfrm_xdkversion.Create(Self);
+  try
+    frm_XdkVersion.FillXBEList(MyXBEList);
 
     if frm_XdkVersion.ShowModal = mrOk then
     begin
     end;
   finally
-    FreeAndNil(XDKlist);
-    
     frm_XdkVersion.Release;
     frm_XdkVersion := nil;
   end;
+*)
 end; // TfrmMain.Viewxdkversion2Click
 
 function _ReadGameFromNode(const GameNode: IXmlNode): TXBEInfo;
@@ -288,14 +281,16 @@ begin
   begin
     // Old-style 'Name' values are read here :
     Result.FileName := XML_ReadString(GameNode, 'Name');
-    Result.DumpInfo := '';
     Result.Title := Result.FileName;
+    Result.DumpInfo := '';
+    Result.GameRegion := 0;
   end
   else
   begin
-    Result.DumpInfo := XML_ReadString(GameNode, 'DumpInfo');
     Result.FileName := XML_ReadString(GameNode, 'FileName');
     Result.Title := XML_ReadString(GameNode, 'Title');
+    Result.GameRegion := StrToIntDef(XML_ReadString(GameNode, 'GameRegion'), 0);
+    Result.DumpInfo := XML_ReadString(GameNode, 'DumpInfo');
   end;
 
   XDKNode := GameNode.ChildNodes.FindNode('XDKVersions');
@@ -312,10 +307,32 @@ begin
   end;
 end;
 
+function TfrmXdkTracker.FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
+begin
+  // First, check title :
+  Result := MyXBEList.IndexOf(aXBEInfo.Title);
+
+  // For backwards compatibility, try FileName too :
+  if Result < 0 then
+    Result := MyXBEList.IndexOf(aXBEInfo.FileName);
+
+  // If found by title
+  if Result >= 0 then
+  begin
+    // Then check region :
+    if TXBEInfo(MyXBEList.Objects[Result]).GameRegion = aXBEInfo.GameRegion then
+      // It seems this is the same dump, return this :
+      Exit;
+  end;
+
+  // No match, try searching by filename as default :
+  Result := FindByFileName(aXBEInfo.FileName);
+end;
+
 function TfrmXdkTracker.FindByFileName(const aFileName: string): Integer;
 begin
   for Result := 0 to MyXBEList.Count - 1 do
-    if TXBEInfo(MyXBEList.Objects[Result]).FileName = aFileName then
+    if SameText(TXBEInfo(MyXBEList.Objects[Result]).FileName, aFileName) then
       Exit;
 
   Result := -1;
@@ -329,7 +346,7 @@ begin
   if not Assigned(aXBEInfo) then
     Exit;
 
-  i := FindByFileName(aXbeInfo.FileName);
+  i := FindDuplicate(aXbeInfo);
   if i >= 0 then
   begin
     // Replace existing :
@@ -343,70 +360,24 @@ begin
   Result := True;
 end; // TfrmMain.InsertXBEInfo
 
-function TfrmXdkTracker.ShowImportList(const XBEImportList: TList; Publisher: string): Integer;
+function TfrmXdkTracker.ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
 var
   i: Integer;
-  LibNames: TStringList;
-  Line: TListItem;
-  XDKInfo: TXBEInfo;
-  j: Integer;
+  XBEInfo: TXBEInfo;
 begin
   Result := 0;
 
   frm_ImportGames := Tfrm_ImportGames.Create(Self);
-  LibNames := TStringList.Create;
   try
-    // Build up a list of all libraries :
-    LibNames.Sorted := True;
-    LibNames.Duplicates := dupIgnore;
+    // Precalculate the IsDuplicate members (this will be used to feed the checkboxes) :
     for i := 0 to XBEImportList.Count - 1 do
     begin
-      XDKInfo := TXBEInfo(XBEImportList.Items[i]);
-      for j := 0 to XDKInfo.LibVersions.Count - 1 do
-        LibNames.Add(XDKInfo.LibVersions.Names[j]);
+      XBEInfo := TXBEInfo(XBEImportList.Objects[i]);
+      XBEInfo.IsDuplicate := FindDuplicate(XBEInfo) >= 0;
     end;
 
-    frm_ImportGames.edt_Publisher.Text := Publisher;
-
-    frm_ImportGames.lst_Import.Columns.Clear;
-    with frm_ImportGames.lst_Import.Columns.Add do
-    begin
-      Caption := 'Title';
-      Width := 250;
-    end;
-
-    with frm_ImportGames.lst_Import.Columns.Add do
-    begin
-      Caption := 'Dumped with';
-      Width := 250;
-    end;
-
-    with frm_ImportGames.lst_Import.Columns.Add do
-    begin
-      Caption := 'Filename';
-      Width := 250;
-    end;
-
-    for j := 0 to LibNames.Count - 1 do
-      with frm_ImportGames.lst_Import.Columns.Add do
-      begin
-        Caption := LibNames[j];
-        Width := 75;
-      end;
-
-    for i := 0 to XBEImportList.Count - 1 do
-    begin
-      XDKInfo := TXBEInfo(XBEImportList.Items[i]);
-
-      Line := frm_ImportGames.lst_Import.Items.Add;
-      Line.Data := XBEImportList[i];
-      Line.Caption := XDKInfo.Title;
-      Line.Checked := FindByFileName(XDKInfo.FileName) < 0; // uncheck when already present
-      Line.SubItems.Add(XDKInfo.DumpInfo);
-      Line.SubItems.Add(XDKInfo.FileName);
-      for j := 0 to LibNames.Count - 1 do
-        Line.SubItems.Add(XDKInfo.LibVersions.Values[LibNames[j]]);
-    end;
+    // Put this list into the view :
+    frm_ImportGames.FillXBEList(XBEImportList);
 
     if frm_ImportGames.ShowModal = mrOk then
     begin
@@ -418,8 +389,6 @@ begin
       MyXBEList.Sort;
     end;
   finally
-    FreeAndNil(LibNames);
-    
     frm_ImportGames.Release;
     frm_ImportGames := nil;
   end;
@@ -433,13 +402,13 @@ var
   GameNode: IXmlNode;
   XDKnode: IXmlNode;
   i, j: Integer;
-  XDKInfo: TXBEInfo;
+  XBEInfo: TXBEInfo;
 begin
   if not XMLDocument.Active then
     Exit;
 
   XMLDocument.ChildNodes.Clear;
-  XmlRootNode := XMLDocument.AddChild('XDKInfo');
+  XmlRootNode := XMLDocument.AddChild('XBEInfo');
   XmlRootNode.SetAttribute('Version', cXDk_TRACKER_XML_VERSION);
 
   PublishedNode := XmlRootNode.AddChild('PublishedInfo');
@@ -449,24 +418,23 @@ begin
 
   for i := 0 to MyXBEList.Count - 1 do
   begin
-    XDKInfo := TXBEInfo(MyXBEList.Objects[i]);
+    XBEInfo := TXBEInfo(MyXBEList.Objects[i]);
     GameNode := GameListNode.AddChild('Game');
 
-    XML_WriteString(GameNode, 'DumpInfo', XDKInfo.DumpInfo);
-    XML_WriteString(GameNode, 'FileName', XDKInfo.FileName);
-    XML_WriteString(GameNode, 'Title', XDKInfo.Title);
+    XML_WriteString(GameNode, 'FileName', XBEInfo.FileName);
+    XML_WriteString(GameNode, 'Title', XBEInfo.Title);
+    XML_WriteString(GameNode, 'GameRegion', IntToStr(XBEInfo.GameRegion));
+    XML_WriteString(GameNode, 'DumpInfo', XBEInfo.DumpInfo);
     XDKnode := GameNode.AddChild('XDKVersions');
 
-    for j := 0 to XDKInfo.LibVersions.Count - 1 do
-      XML_WriteString(XDKnode, XDKInfo.LibVersions.Names[j], XDKInfo.LibVersions.ValueFromIndex[j]);
+    for j := 0 to XBEInfo.LibVersions.Count - 1 do
+      XML_WriteString(XDKnode, XBEInfo.LibVersions.Names[j], XBEInfo.LibVersions.ValueFromIndex[j]);
   end;
 
   XMLDocument.SaveToFile(aFilePath);
 end; // TfrmMain.SaveXBEList
 
-function TfrmXdkTracker.LoadXBEList(
-  aImportFilePath: string = '';
-  aDeleteAfterRead: Boolean = True;
+function TfrmXdkTracker.LoadXBEList(aImportFilePath: string = '';
   aUseImportDialog: Boolean = False): Integer;
 var
   xmlRootNode: IXmlNode;
@@ -474,7 +442,7 @@ var
   GameNode: IXmlNode;
   Publisher: string;
   FileName: string;
-  XBEImportList: TList;
+  XBEImportList: TStringList;
   i: Integer;
 begin
   Result := 0;
@@ -501,7 +469,7 @@ begin
   if not XmlDocument.Active then
     Exit;
 
-  XBEImportList := TList.Create;
+  XBEImportList := TStringList.Create;
   try
     XmlRootNode := XMLDocument.DocumentElement;
 
@@ -526,7 +494,7 @@ begin
       // or when not yet present :
       if aUseImportDialog
       or (FindByFileName(FileName) < 0) then
-        XBEImportList.Add(_ReadGameFromNode(GameNode));
+        XBEImportList.AddObject('', _ReadGameFromNode(GameNode));
 
       GameNode := GameNode.NextSibling;
     end;
@@ -535,13 +503,10 @@ begin
       Result := ShowImportList(XBEImportList, Publisher)
     else
       for i := 0 to XBEImportList.Count - 1 do
-        if InsertXBEInfo(XBEImportList[i]) then
+        if InsertXBEInfo(TXBEInfo(XBEImportList.Objects[i])) then
           Inc(Result);
 
     MyXBEList.Sort;
-
-    if aDeleteAfterRead then
-      DeleteFile(aImportFilePath);
 
   finally
     FreeAndNil({var}XBEImportList);
@@ -554,12 +519,12 @@ var
   FileNames, FileContents: TStringList;
   i, j, k: Integer;
   FileName, LibName, LibVersion: string;
-  XDKInfo: TXBEInfo;
-  XBEImportList: TList;
+  XBEInfo: TXBEInfo;
+  XBEImportList: TStringList;
 begin
   FileNames := TStringList.Create;
   FileContents := TStringList.Create;
-  XBEImportList := TList.Create;
+  XBEImportList := TStringList.Create;
   try
     FindFiles(aTxtDumpsFolder, '*.txt', FileNames);
 
@@ -569,23 +534,28 @@ begin
 
       FileContents.LoadFromFile(FileNames[i]);
 
-      XDKInfo := TXBEInfo.Create;
-      XDKInfo.FileName := FileName;
+      XBEInfo := TXBEInfo.Create;
+      XBEInfo.FileName := FileName;
 
       // Read DumpInfo :
       j := 0;
       k := Pos('by ', FileContents[j]);
       if k > 0 then
-        XDKInfo.DumpInfo := Copy(FileContents[j], k + Length('by '), MaxInt)
+        XBEInfo.DumpInfo := Copy(FileContents[j], k + Length('by '), MaxInt)
       else
-        XDKInfo.DumpInfo := '';
+        XBEInfo.DumpInfo := '';
 
       Inc(j);
       while j < FileContents.Count do
       begin
         if StartsWithText(FileContents[j], 'Title identified as "') then
         begin
-          XDKInfo.Title := Copy(FileContents[j], Length('Title identified as "') + 1, Length(FileContents[j]) - Length('Title identified as "') - 1);
+          XBEInfo.Title := Copy(FileContents[j], Length('Title identified as "') + 1, Length(FileContents[j]) - Length('Title identified as "') - 1);
+        end
+        else
+        if StartsWithText(FileContents[j], 'Game Region') then
+        begin
+          ScanHexDWord(PAnsiChar(Copy(FileContents[j], Length(FileContents[j]) - 7, 8)), {var}XBEInfo.GameRegion);
         end
         else
         if StartsWithText(FileContents[j], 'Library Name') then
@@ -595,15 +565,15 @@ begin
           Inc(j);
           k := Pos(':', FileContents[j]);
           LibVersion := Trim(Copy(FileContents[j], k + 1, MaxInt));
-          XDKInfo.LibVersions.Values[LibName] := LibVersion;
+          XBEInfo.LibVersions.Values[LibName] := LibVersion;
         end;
 
         Inc(j);
       end;
 
       // Some XBE's have "This XBE contains no Library Versions" inside...
-      XDKInfo.LibVersions.Sort;
-      XBEImportList.Add(XDKInfo);
+      XBEInfo.LibVersions.Sort;
+      XBEImportList.AddObject('', XBEInfo);
     end; // for FileNames
 
     ShowImportList(XBEImportList, '');

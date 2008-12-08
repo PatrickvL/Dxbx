@@ -60,7 +60,7 @@ var
 begin
   XMLDocument.Active := False;
   XMLDocument.Active := True;
-  XmlRootNode := XMLDocument.AddChild('XDKINFO');
+  XmlRootNode := XMLDocument.AddChild('XBEINFO');
 
 //  XML_WriteString(XmlRootNode, 'DumpInfo', ''); // ??
   XML_WriteString(XmlRootNode, 'FileName', aFileName);
