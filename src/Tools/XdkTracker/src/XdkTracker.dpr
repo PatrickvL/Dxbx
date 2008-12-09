@@ -22,7 +22,7 @@ uses
   u_About in 'u_About.pas' {frm_About},
   ufrm_Main in 'ufrm_Main.pas' {frmXdkTracker},
   uPublisher in 'uPublisher.pas' {frm_Publisher},
-  uImportGames in 'uImportGames.pas' {frm_ImportGames},
+  uImportGames in 'uImportGames.pas' {frm_XBEList},
   uData in 'uData.pas',
   uConsts in '..\..\..\uConsts.pas',
   uXbe in '..\..\..\uXbe.pas',
