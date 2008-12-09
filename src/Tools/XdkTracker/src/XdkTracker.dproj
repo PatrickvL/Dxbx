@@ -60,7 +60,7 @@
       <Form>frmXdkTracker</Form>
     </DCCReference>
     <DCCReference Include="uImportGames.pas">
-      <Form>frm_ImportGames</Form>
+      <Form>frm_XBEList</Form>
     </DCCReference>
     <DCCReference Include="uPublisher.pas">
       <Form>frm_Publisher</Form>

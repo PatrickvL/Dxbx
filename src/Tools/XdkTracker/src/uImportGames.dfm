@@ -1,4 +1,4 @@
-object frm_ImportGames: Tfrm_ImportGames
+object frm_XBEList: Tfrm_XBEList
   Left = 392
   Top = 282
   Caption = 'XBE List'
@@ -20,8 +20,8 @@ object frm_ImportGames: Tfrm_ImportGames
   PixelsPerInch = 96
   TextHeight = 13
   object lbl_Publisher: TLabel
-    Left = 284
-    Top = 20
+    Left = 285
+    Top = 12
     Width = 57
     Height = 13
     Caption = 'Publisher:'
@@ -37,16 +37,24 @@ object frm_ImportGames: Tfrm_ImportGames
   object lbl_NewGames: TLabel
     Left = 8
     Top = 56
-    Width = 3
+    Width = 32
     Height = 13
+    Caption = '&Titles'
+    FocusControl = lst_XBEs
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clGreen
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
   end
   object lbl_XDKFilter: TLabel
-    Left = 8
-    Top = 20
+    Left = 9
+    Top = 12
     Width = 62
     Height = 13
     Caption = 'XDK &Filter:'
-    FocusControl = cmb_gametype
+    FocusControl = cmb_XDKVersions
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clGreen
     Font.Height = -11
@@ -60,6 +68,7 @@ object frm_ImportGames: Tfrm_ImportGames
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
+    Cancel = True
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 0
@@ -73,23 +82,23 @@ object frm_ImportGames: Tfrm_ImportGames
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '&Ok'
+    Default = True
     ModalResult = 1
     TabOrder = 1
     ExplicitLeft = 257
     ExplicitTop = 281
   end
   object edt_Publisher: TEdit
-    Left = 284
-    Top = 36
+    Left = 285
+    Top = 28
     Width = 195
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 2
-    ExplicitWidth = 233
   end
-  object lst_Import: TListView
+  object lst_XBEs: TListView
     Left = 8
     Top = 72
     Width = 270
@@ -102,9 +111,9 @@ object frm_ImportGames: Tfrm_ImportGames
     SortType = stBoth
     TabOrder = 3
     ViewStyle = vsReport
-    OnColumnClick = lst_ImportColumnClick
-    OnEdited = lst_ImportEdited
-    OnSelectItem = lst_ImportSelectItem
+    OnColumnClick = lst_XBEsColumnClick
+    OnEdited = lst_XBEsEdited
+    OnSelectItem = lst_XBEsSelectItem
   end
   object mem_XdkVersions: TMemo
     Left = 284
@@ -122,15 +131,15 @@ object frm_ImportGames: Tfrm_ImportGames
     ReadOnly = True
     TabOrder = 4
   end
-  object cmb_gametype: TComboBox
-    Left = 8
-    Top = 36
+  object cmb_XDKVersions: TComboBox
+    Left = 9
+    Top = 28
     Width = 270
     Height = 21
     Style = csDropDownList
     ItemHeight = 13
     TabOrder = 5
-    OnChange = cmb_gametypeChange
+    OnChange = cmb_XDKVersionsChange
     Items.Strings = (
       'All XDK Versions')
   end

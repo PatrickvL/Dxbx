@@ -235,7 +235,7 @@ end;
 
 procedure TfrmXdkTracker.Viewxdkversion2Click(Sender: TObject);
 begin
-  frm_ImportGames := Tfrm_ImportGames.Create(Self);
+  frm_XBEList := Tfrm_XBEList.Create(Self);
   try
 (*
     // Precalculate the IsDuplicate members (this will be used to feed the checkboxes) :
@@ -246,28 +246,15 @@ begin
     end;
 *)
     // Put this list into the view :
-    frm_ImportGames.FillXBEList(MyXBEList);
+    frm_XBEList.FillXBEList(MyXBEList, {ShowAsImport=}False);
 
-    if frm_ImportGames.ShowModal = mrOk then
+    if frm_XBEList.ShowModal = mrOk then
     begin
     end;
   finally
-    frm_ImportGames.Release;
-    frm_ImportGames := nil;
+    frm_XBEList.Release;
+    frm_XBEList := nil;
   end;
-(*
-  frm_xdkversion := Tfrm_xdkversion.Create(Self);
-  try
-    frm_XdkVersion.FillXBEList(MyXBEList);
-
-    if frm_XdkVersion.ShowModal = mrOk then
-    begin
-    end;
-  finally
-    frm_XdkVersion.Release;
-    frm_XdkVersion := nil;
-  end;
-*)
 end; // TfrmMain.Viewxdkversion2Click
 
 function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
@@ -366,7 +353,7 @@ var
 begin
   Result := 0;
 
-  frm_ImportGames := Tfrm_ImportGames.Create(Self);
+  frm_XBEList := Tfrm_XBEList.Create(Self);
   try
     // Precalculate the IsDuplicate members (this will be used to feed the checkboxes) :
     for i := 0 to XBEImportList.Count - 1 do
@@ -376,20 +363,20 @@ begin
     end;
 
     // Put this list into the view :
-    frm_ImportGames.FillXBEList(XBEImportList);
+    frm_XBEList.FillXBEList(XBEImportList, {ShowAsImport=}True);
 
-    if frm_ImportGames.ShowModal = mrOk then
+    if frm_XBEList.ShowModal = mrOk then
     begin
-      for i := 0 to frm_ImportGames.lst_Import.Items.Count - 1 do
-        if  frm_ImportGames.lst_Import.Items[i].Checked
-        and InsertXBEInfo(TXBEInfo(frm_ImportGames.lst_Import.Items[i].Data)) then
+      for i := 0 to frm_XBEList.lst_XBEs.Items.Count - 1 do
+        if  frm_XBEList.lst_XBEs.Items[i].Checked
+        and InsertXBEInfo(TXBEInfo(frm_XBEList.lst_XBEs.Items[i].Data)) then
           Inc(Result);
 
       MyXBEList.Sort;
     end;
   finally
-    frm_ImportGames.Release;
-    frm_ImportGames := nil;
+    frm_XBEList.Release;
+    frm_XBEList := nil;
   end;
 end; // ShowImportList
 

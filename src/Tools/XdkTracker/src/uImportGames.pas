@@ -27,42 +27,43 @@ uses
   uData;
 
 type
-  Tfrm_ImportGames = class(TForm)
+  Tfrm_XBEList = class(TForm)
     btn_Cancel: TButton;
     btn_Ok: TButton;
     lbl_Publisher: TLabel;
     edt_Publisher: TEdit;
-    lst_Import: TListView;
+    lst_XBEs: TListView;
     lbl_NewGames: TLabel;
     PopupMenu1: TPopupMenu;
     SelectAll1: TMenuItem;
     SelectInverse1: TMenuItem;
     SelectNone1: TMenuItem;
     mem_XdkVersions: TMemo;
-    cmb_gametype: TComboBox;
+    cmb_XDKVersions: TComboBox;
     lbl_XDKFilter: TLabel;
     procedure SelectAll1Click(Sender: TObject);
     procedure SelectInverse1Click(Sender: TObject);
     procedure SelectNone1Click(Sender: TObject);
-    procedure lst_ImportColumnClick(Sender: TObject; Column: TListColumn);
-    procedure lst_ImportSelectItem(Sender: TObject; Item: TListItem;
+    procedure lst_XBEsColumnClick(Sender: TObject; Column: TListColumn);
+    procedure lst_XBEsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure FormCreate(Sender: TObject);
-    procedure cmb_gametypeChange(Sender: TObject);
+    procedure cmb_XDKVersionsChange(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure lst_ImportEdited(Sender: TObject; Item: TListItem; var S: string);
+    procedure lst_XBEsEdited(Sender: TObject; Item: TListItem; var S: string);
   protected
+    FShowAsImport: Boolean;
     FXBEList: TStringList;
     MyXDKLibNamesList: TStringList;
     MyXDKLibVersionsList: TStringList;
     MyFilteredXBEList: TStringList;
     procedure ShowXBEInfo(const aXBEInfo: TXBEInfo);
   public
-    procedure FillXBEList(const aXBEList: TStringList);
+    procedure FillXBEList(const aXBEList: TStringList; ShowAsImport: Boolean);
   end;
 
 var
-  frm_ImportGames: Tfrm_ImportGames;
+  frm_XBEList: Tfrm_XBEList;
 
 implementation
 
@@ -76,9 +77,9 @@ begin
     Result := lstrcmp(PChar(Item1.SubItems[Data - 1]), PChar(Item2.SubItems[Data - 1]));
 end;
 
-{ Tfrm_ImportGames }
+{ Tfrm_XBEList }
 
-procedure Tfrm_ImportGames.FormCreate(Sender: TObject);
+procedure Tfrm_XBEList.FormCreate(Sender: TObject);
 begin
   MyFilteredXBEList := TStringList.Create;
 
@@ -91,53 +92,53 @@ begin
   MyXDKLibVersionsList.Sorted := True;
 end;
 
-procedure Tfrm_ImportGames.FormDestroy(Sender: TObject);
+procedure Tfrm_XBEList.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(MyXDKLibNamesList);
   FreeAndNil(MyXDKLibVersionsList);
   FreeAndNil(MyFilteredXBEList);
 end;
 
-procedure Tfrm_ImportGames.cmb_gametypeChange(Sender: TObject);
+procedure Tfrm_XBEList.cmb_XDKVersionsChange(Sender: TObject);
 begin
-  FillXBEList(FXBEList);
+  FillXBEList(FXBEList, FShowAsImport);
 end;
 
-procedure Tfrm_ImportGames.lst_ImportColumnClick(Sender: TObject; Column: TListColumn);
+procedure Tfrm_XBEList.lst_XBEsColumnClick(Sender: TObject; Column: TListColumn);
 begin
-  lst_Import.CustomSort(@ColumnSort, Column.Index);
+  lst_XBEs.CustomSort(@ColumnSort, Column.Index);
 end;
 
-procedure Tfrm_ImportGames.lst_ImportEdited(Sender: TObject; Item: TListItem; var S: string);
+procedure Tfrm_XBEList.lst_XBEsEdited(Sender: TObject; Item: TListItem; var S: string);
 begin
   TXBEInfo(Item.Data).Title := s;
 end;
 
-procedure Tfrm_ImportGames.SelectAll1Click(Sender: TObject);
+procedure Tfrm_XBEList.SelectAll1Click(Sender: TObject);
 var
   i: Integer;
 begin
-  for i := 0 to lst_Import.Items.Count - 1 do
-    lst_Import.Items[i].Checked := True;
+  for i := 0 to lst_XBEs.Items.Count - 1 do
+    lst_XBEs.Items[i].Checked := True;
 end;
 
-procedure Tfrm_ImportGames.SelectInverse1Click(Sender: TObject);
+procedure Tfrm_XBEList.SelectInverse1Click(Sender: TObject);
 var
   i: Integer;
 begin
-  for i := 0 to lst_Import.Items.Count - 1 do
-    lst_Import.Items[i].Checked := not lst_Import.Items[i].Checked;
+  for i := 0 to lst_XBEs.Items.Count - 1 do
+    lst_XBEs.Items[i].Checked := not lst_XBEs.Items[i].Checked;
 end;
 
-procedure Tfrm_ImportGames.SelectNone1Click(Sender: TObject);
+procedure Tfrm_XBEList.SelectNone1Click(Sender: TObject);
 var
   i: Integer;
 begin
-  for i := 0 to lst_Import.Items.Count - 1 do
-    lst_Import.Items[i].Checked := False;
+  for i := 0 to lst_XBEs.Items.Count - 1 do
+    lst_XBEs.Items[i].Checked := False;
 end;
 
-procedure Tfrm_ImportGames.lst_ImportSelectItem(Sender: TObject;
+procedure Tfrm_XBEList.lst_XBEsSelectItem(Sender: TObject;
   Item: TListItem; Selected: Boolean);
 var
   XBEInfo: TXBEInfo;
@@ -153,7 +154,7 @@ end;
 
 //
 
-procedure Tfrm_ImportGames.FillXBEList(const aXBEList: TStringList);
+procedure Tfrm_XBEList.FillXBEList(const aXBEList: TStringList; ShowAsImport: Boolean);
 var
   i, j: Integer;
   XBEInfo: TXBEInfo;
@@ -167,6 +168,23 @@ begin
   if FXBEList <> aXBEList then
   begin
     FXBEList := aXBEList;
+
+    // Handle the difference between import-mode and view-mode :
+    FShowAsImport := ShowAsImport;
+    lst_XBEs.Checkboxes := FShowAsImport;
+    btn_Cancel.Visible := FShowAsImport;
+    if FShowAsImport then
+    begin
+      lst_XBEs.PopupMenu := PopupMenu1;
+      btn_Ok.Left := btn_Cancel.Left - 80;
+      btn_Cancel.Cancel := True;
+    end
+    else
+    begin
+      lst_XBEs.PopupMenu := nil;
+      btn_Ok.Left := btn_Cancel.Left;
+      btn_Ok.Cancel := True;
+    end;
 
     // Build up a list of all libraries and versions :
     MyXDKLibNamesList.Clear;
@@ -182,55 +200,55 @@ begin
     end;
 
     // Put the versions in the dropdown box :
-    cmb_gametype.Items.BeginUpdate;
+    cmb_XDKVersions.Items.BeginUpdate;
     try
-      cmb_gametype.Items.Clear;
-      cmb_gametype.Items.Add('All XDK Versions');
+      cmb_XDKVersions.Items.Clear;
+      cmb_XDKVersions.Items.Add('All XDK Versions');
       for i := 0 to MyXDKLibVersionsList.Count - 1 do
         if MyXDKLibVersionsList.Strings[i] <> '' then
-          cmb_gametype.Items.Add(MyXDKLibVersionsList.Strings[i]);
+          cmb_XDKVersions.Items.Add(MyXDKLibVersionsList.Strings[i]);
 
-      cmb_gametype.ItemIndex := 0;
+      cmb_XDKVersions.ItemIndex := 0;
     finally
-      cmb_gametype.Items.EndUpdate;
+      cmb_XDKVersions.Items.EndUpdate;
     end;
 
     // Put the libraries in the columns of the list box :
-    lst_Import.Columns.BeginUpdate;
+    lst_XBEs.Columns.BeginUpdate;
     try
-      lst_Import.Columns.Clear;
-      with lst_Import.Columns.Add do
+      lst_XBEs.Columns.Clear;
+      with lst_XBEs.Columns.Add do
       begin
         Caption := 'Title';
         Width := 200;
       end;
 
-      with lst_Import.Columns.Add do
+      with lst_XBEs.Columns.Add do
       begin
         Caption := 'Game region';
         Width := 75;
       end;
 
-      with lst_Import.Columns.Add do
+      with lst_XBEs.Columns.Add do
       begin
         Caption := 'Dumped with';
         Width := 175;
       end;
 
-      with lst_Import.Columns.Add do
+      with lst_XBEs.Columns.Add do
       begin
         Caption := 'Filename';
         Width := 150;
       end;
 
       for i := 0 to MyXDKLibNamesList.Count - 1 do
-        with lst_Import.Columns.Add do
+        with lst_XBEs.Columns.Add do
         begin
           Caption := MyXDKLibNamesList[i];
           Width := 75;
         end;
     finally
-      lst_Import.Columns.EndUpdate;
+      lst_XBEs.Columns.EndUpdate;
     end;
   end;
 
@@ -238,29 +256,29 @@ begin
   MyFilteredXBEList.Clear;
   for i := 0 to FXBEList.Count - 1 do
   begin
-    if (cmb_gametype.ItemIndex = 0)
-    or TXBEInfo(FXBEList.Objects[i]).MatchesVersion(cmb_gametype.Text) then
+    if (cmb_XDKVersions.ItemIndex = 0)
+    or TXBEInfo(FXBEList.Objects[i]).MatchesVersion(cmb_XDKVersions.Text) then
       MyFilteredXBEList.AddObject(FXBEList[i], FXBEList.Objects[i]);
   end;
 
   mem_XdkVersions.Clear;
 
   // Remember current selection (by Title) :
-  if Assigned(lst_Import.Selected) then
-    CurrentSelection := lst_Import.Selected.Caption
+  if Assigned(lst_XBEs.Selected) then
+    CurrentSelection := lst_XBEs.Selected.Caption
   else
     CurrentSelection := '';
 
   // Populate the list with the filtered set of XBEs:
-  lst_Import.Items.BeginUpdate;
+  lst_XBEs.Items.BeginUpdate;
   try
-    lst_Import.Clear;
+    lst_XBEs.Clear;
 
     for i := 0 to MyFilteredXBEList.Count - 1 do
     begin
       XBEInfo := TXBEInfo(MyFilteredXBEList.Objects[i]);
 
-      Line := lst_Import.Items.Add;
+      Line := lst_XBEs.Items.Add;
       Line.Data := XBEInfo;
       Line.Caption := XBEInfo.Title;
       Line.Checked := not XBEInfo.IsDuplicate;
@@ -273,16 +291,16 @@ begin
 
   finally
     // Reset previous selection :
-    lst_Import.Selected := lst_Import.FindCaption(0, CurrentSelection, {Partial=}False, {Inclusive=}True, {Wrap=}False);
-    if (lst_Import.Selected = nil) and (lst_Import.Items.Count > 0) then
-      lst_Import.ItemIndex := 0;
+    lst_XBEs.Selected := lst_XBEs.FindCaption(0, CurrentSelection, {Partial=}False, {Inclusive=}True, {Wrap=}False);
+    if (lst_XBEs.Selected = nil) and (lst_XBEs.Items.Count > 0) then
+      lst_XBEs.ItemIndex := 0;
 
 
-    lst_Import.Items.EndUpdate;
+    lst_XBEs.Items.EndUpdate;
   end;
-end; // Tfrm_ImportGames.FillXBEList
+end; // Tfrm_XBEList.FillXBEList
 
-procedure Tfrm_ImportGames.ShowXBEInfo(const aXBEInfo: TXBEInfo);
+procedure Tfrm_XBEList.ShowXBEInfo(const aXBEInfo: TXBEInfo);
 var
   i: Integer;
 begin
@@ -302,6 +320,6 @@ begin
   finally
     mem_XdkVersions.Lines.EndUpdate;
   end;
-end; // Tfrm_ImportGames.ShowXBEInfo
+end; // Tfrm_XBEList.ShowXBEInfo
 
 end.
