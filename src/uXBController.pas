@@ -33,8 +33,10 @@ uses
   , XInput
   // Dxbx
   , uLog
+  , uTypes
   , uError
   , XboxKrnl // NULL
+  , uDxbxUtils
 //  , uEmuXTL
   ;
 
@@ -190,7 +192,7 @@ type
     // Etc State Variables
     m_dwInputDeviceCount: Integer;
     m_dwCurObject: Integer;
-    private
+  private
     // Object Mapping
     procedure Map(aobject: XBCtrlObject; szDeviceName: PAnsiChar; dwInfo: Integer; dwFlags: Integer);
     // Find the look-up value for a DeviceName (creating if needed)
@@ -356,7 +358,7 @@ begin
 { XBController }
 
 procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done : 90
+// Branch:martin  Revision:39  Translator:PatrickvL  Done : 100
 var
   hRet: HRESULT;
   v: XBCtrlObject;
@@ -368,8 +370,10 @@ var
   wValue: SmallInt;
   pDevice: XTL_LPDIRECTINPUTDEVICE8;
   JoyState: DIJOYSTATE;
-  pdwAxis: LongInt;
-  pbButton: Byte;
+  pdwAxis: PLongInt;
+  pbButton: PByte;
+  KeyboardState: array [0..256-1] of BYTE;
+  bKey: BYTE;
   MouseState: DIMOUSESTATE2;
 
   lAccumX: LongInt;
@@ -416,16 +420,13 @@ begin
     // Interpret PC Joystick Input
     if (dwFlags and DEVICE_FLAG_JOYSTICK) > 0 then
     begin
-
-      (*JoyState := (0);
-
       if (pDevice.GetDeviceState(SizeOf(JoyState), @JoyState) <> DI_OK) then
         Continue;
 
       if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
       begin
-        pdwAxis := (@JoyState + dwInfo);
-        wValue := SmallInt(pdwAxis);
+        pdwAxis := PLongInt(IntPtr(@JoyState) + dwInfo);
+        wValue := SmallInt(pdwAxis^);
 
         if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
         begin
@@ -442,36 +443,32 @@ begin
       end
       else if (dwFlags and DEVICE_FLAG_BUTTON) > 0 then
       begin
-        pbButton := (@JoyState + dwInfo);
+        pbButton := PByte(IntPtr(@JoyState) + dwInfo);
 
-        if (pbButton and $80) > 0 then
+        if (pbButton^ and $80) > 0 then
           wValue := 32767
         else
           wValue := 0;
-      end;      *)
+      end;
     end
     // Interpret PC KeyBoard Input
     else if (dwFlags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
-      (*BYTE KeyboardState[256] := (0);
-
       if (pDevice.GetDeviceState(SizeOf(KeyboardState), @KeyboardState) <> DI_OK) then
         Continue;
 
-      BYTE bKey := KeyboardState[dwInfo];
+      bKey := KeyboardState[dwInfo];
 
       if (bKey and $80) > 0 then
-        wValue := 32767;
+        wValue := 32767
       else
-        wValue := 0; *)
+        wValue := 0;
     end
     // Interpret PC Mouse Input
-    else if (dwFlags and DEVICE_FLAG_MOUSE) >0 then
+    else if (dwFlags and DEVICE_FLAG_MOUSE) > 0 then
     begin
-      (*MouseState := (0);
-
       if (pDevice.GetDeviceState(SizeOf(MouseState), @MouseState) <> DI_OK) then
-          Continue;
+        Continue;
 
       if (dwFlags and DEVICE_FLAG_MOUSE_CLICK) > 0 then
       begin
@@ -486,9 +483,9 @@ begin
         lAccumY := 0;
         lAccumZ := 0;
 
-        lAccumX:= lAccumX + MouseState.lX * 300;
-        lAccumY:= lAccumY + MouseState.lY * 300;
-        lAccumZ:= lAccumZ + MouseState.lZ * 300;
+        Inc(lAccumX, MouseState.lX * 300);
+        Inc(lAccumY, MouseState.lY * 300);
+        Inc(lAccumZ, MouseState.lZ * 300);
 
         if (lAccumX > 32767) then
           lAccumX := 32767
@@ -505,17 +502,17 @@ begin
         else if (lAccumZ < -32768) then
           lAccumZ := -32768;
 
-        if (dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lX)) then
-          wValue := (WORD)lAccumX
-        else if (dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lY)) then
-          wValue := (WORD)lAccumY
-        else if (dwInfo = FIELD_OFFSET(XTL.DIMOUSESTATE, lZ)) then
-          wValue := (WORD)lAccumZ;
+        if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lX)) then
+          wValue := WORD(lAccumX)
+        else if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lY)) then
+          wValue := WORD(lAccumY)
+        else if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lZ)) then
+          wValue := WORD(lAccumZ);
 
         if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
         begin
           if (wValue < 0) then
-            wValue := Abs(wValue+1)
+            wValue := Abs(wValue + 1)
           else
             wValue := 0;
         end
@@ -524,7 +521,7 @@ begin
           if (wValue < 0) then
             wValue := 0;
         end;
-      end;      *)
+      end;
     end;
     
     // Map Xbox Joystick Input
@@ -645,7 +642,7 @@ begin
 end;
 
 function XBController.ConfigPoll(szStatus: PChar): LongBool;
-// Branch:martin  Revision:10  Translator:Shadow_Tj  Done : 20
+// Branch:martin  Revision:10  Translator:PatrickvL  Done : 40
 var
   DeviceInstance: DIDEVICEINSTANCE;
   ObjectInstance: DIDEVICEOBJECTINSTANCE;
@@ -654,6 +651,8 @@ var
   dwHow: DWord;
   dwFlags: DWord;
   JoyState: DIJOYSTATE;
+  b: Integer;
+  szDirection: PChar;
 begin
   if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
   begin
@@ -667,137 +666,126 @@ begin
   // Monitor for significant device state changes
   for v := m_dwInputDeviceCount - 1 downto 0 do
   begin
-
     // Poll the current device
-    hRet := m_InputDevice[v].m_Device.Poll();
-
-    if (FAILED(hRet)) then
     begin
-            hRet := m_InputDevice[v].m_Device.Acquire();
-
-            while(hRet = DIERR_INPUTLOST) do
-                hRet := m_InputDevice[v].m_Device.Acquire();
+      hRet := m_InputDevice[v].m_Device.Poll();
+      if (FAILED(hRet)) then
+      begin
+        hRet := m_InputDevice[v].m_Device.Acquire();
+        while (hRet = DIERR_INPUTLOST) do
+          hRet := m_InputDevice[v].m_Device.Acquire();
+      end;
     end;
 
-    (*dwHow := -1; *)
+    dwHow := $FFFFFFFF;//-1;
     dwFlags := m_InputDevice[v].m_Flags;
 
-
     // Detect Joystick Input
-    if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_JOYSTICK) then
+    if (m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) > 0 then
     begin
-
-            // Get Joystick State
-            hRet := m_InputDevice[v].m_Device.GetDeviceState(SizeOf(DIJOYSTATE), @JoyState);
-
-            (*if (FAILED(hRet))
-                Continue; *)
-
+      // Get Joystick State
+      begin
+        hRet := m_InputDevice[v].m_Device.GetDeviceState(SizeOf(DIJOYSTATE), @JoyState);
+        if FAILED(hRet) then
+          Continue;
+      end;
 
       dwFlags := DEVICE_FLAG_JOYSTICK;
-
       if (Abs(JoyState.lX) > DETECT_SENSITIVITY_JOYSTICK) then
       begin
-
-                (*dwHow   = FIELD_OFFSET(XTL::DIJOYSTATE, lX);
-                dwFlags |= (JoyState.lX > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-                *)
+        dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).lX);
+        dwFlags := dwFlags or iif(JoyState.lX > 0, (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE), (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE));
       end
       else if (Abs(JoyState.lY) > DETECT_SENSITIVITY_JOYSTICK) then
       begin
-            {
-                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lY);
-                dwFlags |= (JoyState.lY > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-            }
+        dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).lY);
+        dwFlags := dwFlags or iif(JoyState.lY > 0, (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE), (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE));
       end
       else if (Abs(JoyState.lZ) > DETECT_SENSITIVITY_JOYSTICK) then
       begin
-            {
-                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lZ);
-                dwFlags |= (JoyState.lZ > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-            }
+        dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).lZ);
+        dwFlags := dwFlags or iif(JoyState.lZ > 0, (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE), (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE));
       end
       else if (Abs(JoyState.lRx) > DETECT_SENSITIVITY_JOYSTICK) then
       begin
-            {
-                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRx);
-                dwFlags |= (JoyState.lRx > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-            }
+        dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).lRx);
+        dwFlags := dwFlags or iif(JoyState.lRx > 0, (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE), (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE));
       end
       else if (Abs(JoyState.lRy) > DETECT_SENSITIVITY_JOYSTICK) then
       begin
-            {
-                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRy);
-                dwFlags |= (JoyState.lRy > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-            }
+        dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).lRy);
+        dwFlags := dwFlags or iif(JoyState.lRy > 0, (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE), (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE));
       end
       else if (Abs(JoyState.lRz) > DETECT_SENSITIVITY_JOYSTICK) then
       begin
-            {
-                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRz);
-                dwFlags |= (JoyState.lRz > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-            }
+        dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).lRz);
+        dwFlags := dwFlags or iif(JoyState.lRz > 0, (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE), (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE));
       end
       else
       begin
-                (*for(int b=0;b<2;b++)
-                {
-                    if (Abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK)
-                    {
-                        dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rglSlider[b]);
-                        dwFlags |= (JoyState.rglSlider[b] > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
-                    } *)
+        for b := 0 to 2 - 1 do
+        begin
+          if (Abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK) then
+          begin
+            dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).rglSlider[b]);
+            dwFlags := dwFlags or iif(JoyState.rglSlider[b] > 0, (DEVICE_FLAG_AXIS or DEVICE_FLAG_POSITIVE), (DEVICE_FLAG_AXIS or DEVICE_FLAG_NEGATIVE));
+          end;
+        end;
       end;
 
-            (*/* temporarily disabled
-            if (dwHow == -1)
-            {
-                for(int b=0;b<4;b++)
-                {
-                    if (Abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV)
-                    {
-                        dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgdwPOV[b]);
-                    }
-                }
-            }
-            //*/ *)
+      (*/* temporarily disabled
+      if (dwHow == -1)
+      {
+          for(int b=0;b<4;b++)
+          {
+              if (Abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV)
+              {
+                  dwHow = FIELD_OFFSET(PDIJOYSTATE(nil).rgdwPOV[b]);
+              }
+          }
+      }
+      //*/ *)
 
       if (dwHow = -1) then
       begin
-                (*for(int b=0;b<32;b++)
-                {
-                    if (JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON)
-                    {
-                        dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgbButtons[b]);
-                        dwFlags |= DEVICE_FLAG_BUTTON;
-                    }
-                *)
+        for b := 0 to 32-1 do
+        begin
+          if (JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON) then
+          begin
+            dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).rgbButtons[b]);
+            dwFlags := dwFlags or DEVICE_FLAG_BUTTON;
+          end;
+        end;
       end;
 
-            // Retrieve Object Info
+      // Retrieve Object Info
       if (dwHow <> -1) then
       begin
-            {
-                char *szDirection = (dwFlags & DEVICE_FLAG_AXIS) ? (dwFlags & DEVICE_FLAG_POSITIVE) ? 'Positive ' : 'Negative ' : '';
+        if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
+          if (dwFlags and DEVICE_FLAG_POSITIVE) > 0 then
+            szDirection := 'Positive '
+          else
+            szDirection := 'Negative '
+        else
+          szDirection := '';
 
-                m_InputDevice[v].m_Device.GetDeviceInfo(&DeviceInstance);
+        m_InputDevice[v].m_Device.GetDeviceInfo({var}DeviceInstance);
 
-                m_InputDevice[v].m_Device.GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
+        m_InputDevice[v].m_Device.GetObjectInfo({var}ObjectInstance, dwHow, DIPH_BYOFFSET);
 
-                Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
+        Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-                printf('Cxbx: Detected %s%s on %s', szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+//        printf('Dxbx: Detected %s%s on %s', szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
-                sprintf(szStatus, 'Success: %s Mapped to "%s%s" on "%s"!', m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
+//        sprintf(szStatus, 'Success: %s Mapped to "%s%s" on "%s"!', m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 
-                return True;
-            }
+        Result := True;
+        Exit;
       end;
     end
 
-        // Detect Keyboard Input
-
-    else if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_KEYBOARD) then
+    // Detect Keyboard Input
+    else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
         (*    BYTE KeyState[256];
 
@@ -824,7 +812,7 @@ begin
             end;
     end
     // Detect Mouse Input
-    else if (m_InputDevice[v].m_Flags > 0 and DEVICE_FLAG_MOUSE) then
+    else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_MOUSE) > 0 then
     begin
         (*
             XTL::DIMOUSESTATE2 MouseState;
@@ -893,17 +881,17 @@ begin
 
                     if (lMax == lAbsDeltaX)
                     {
-                        dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lX);
+                        dwHow = FIELD_OFFSET(PDIMOUSESTATE(nil).lX);
                         dwFlags |= (lDeltaX > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
                     else if (lMax == lAbsDeltaY)
                     {
-                        dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lY);
+                        dwHow = FIELD_OFFSET(PDIMOUSESTATE(nil).lY);
                         dwFlags |= (lDeltaY > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
                     else if (lMax == lAbsDeltaZ)
                     {
-                        dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lZ);
+                        dwHow = FIELD_OFFSET(PDIMOUSESTATE(nil).lZ);
                         dwFlags |= (lDeltaZ > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
                 }
@@ -1039,12 +1027,12 @@ begin
     end;
   end;
 
-    // Enumerate Controller objects
+  // Enumerate Controller objects
   (*for m_dwCurObject := 0 to m_dwInputDeviceCount - 1 do
     m_InputDevice[m_dwCurObject].m_Device.EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL); *)
 
 
-    // * Set cooperative level and acquire
+  // * Set cooperative level and acquire
   begin
     for v := 0 to m_dwInputDeviceCount - 1 do
     begin
@@ -1057,7 +1045,7 @@ begin
       begin
         ahRet := m_InputDevice[v].m_Device.Acquire();
 
-        while (ahRet = DIERR_INPUTLOST)
+        while (ahRet = DIERR_INPUTLOST) do
           ahRet := m_InputDevice[v].m_Device.Acquire();
 
         if (ahRet <> DIERR_INPUTLOST) then

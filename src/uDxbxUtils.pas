@@ -58,6 +58,7 @@ function ScanHexWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 function ScanHexDWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 
 function Sscanf(const s: string; const fmt: string; const Pointers: array of Pointer): Integer;
+function iif(aTest: Boolean; const aTrue: Integer; const aFalse: Integer): Integer; overload;
 
 function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): Integer;
 
@@ -358,6 +359,14 @@ begin
       Break;
     end;
   end;
+end;
+
+function iif(aTest: Boolean; const aTrue: Integer; const aFalse: Integer): Integer; overload;
+begin
+  if aTest then
+    Result := aTrue
+  else
+    Result := aFalse;
 end;
 
 function PointerToString(const aPointer: Pointer): string;
