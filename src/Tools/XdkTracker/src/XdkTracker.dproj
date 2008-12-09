@@ -48,8 +48,8 @@
     <DCCReference Include="..\..\..\uConsts.pas" />
     <DCCReference Include="..\..\..\uDxbxUtils.pas" />
     <DCCReference Include="..\..\..\uDxbxXml.pas">
-      <Form>DxbxXml</Form>
       <DesignClass>TDataModule</DesignClass>
+      <Form>DxbxXml</Form>
     </DCCReference>
     <DCCReference Include="..\..\..\uLog.pas" />
     <DCCReference Include="..\..\..\uTime.pas" />
@@ -67,9 +67,6 @@
     </DCCReference>
     <DCCReference Include="u_About.pas">
       <Form>frm_About</Form>
-    </DCCReference>
-    <DCCReference Include="u_xdkversions.pas">
-      <Form>frm_Xdkversion</Form>
     </DCCReference>
   </ItemGroup>
 </Project>

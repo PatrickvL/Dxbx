@@ -10,7 +10,6 @@ uses
   // Dxbx
   uDxbxUtils,
   uData,
-  u_xdkversions,
   u_About,
   uPublisher,
   uImportGames,
@@ -222,7 +221,7 @@ begin
 
   m_Xbe := nil;
   // First, open the XBE :
-  if OpenXbe(XbeOpenDialog.FileName, {var}m_Xbe, {var}m_ExeFileName, {var}m_XbeFileName ) then
+  if OpenXbe(XbeOpenDialog.FileName, {var}m_Xbe, {var}m_ExeFileName, {var}m_XbeFileName) then
   begin
     FilePath := ExtractFilePath(Application.ExeName) + 'Dump.dat';
     // Then dump the info to a temporary file :
@@ -271,29 +270,29 @@ begin
 *)
 end; // TfrmMain.Viewxdkversion2Click
 
-function _ReadGameFromNode(const GameNode: IXmlNode): TXBEInfo;
+function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
 var
-  XDKNode, LibNode: IXmlNode;
+  XDKNode, LibNode: IXMLNode;
 begin
   Result := TXBEInfo.Create;
-  Result.FileName := XML_ReadString(GameNode, 'FileName');
+  Result.FileName := XML_ReadString(XBEInfoNode, 'FileName');
   if Result.FileName = '' then
   begin
     // Old-style 'Name' values are read here :
-    Result.FileName := XML_ReadString(GameNode, 'Name');
+    Result.FileName := XML_ReadString(XBEInfoNode, 'Name');
     Result.Title := Result.FileName;
     Result.DumpInfo := '';
     Result.GameRegion := 0;
   end
   else
   begin
-    Result.FileName := XML_ReadString(GameNode, 'FileName');
-    Result.Title := XML_ReadString(GameNode, 'Title');
-    Result.GameRegion := StrToIntDef(XML_ReadString(GameNode, 'GameRegion'), 0);
-    Result.DumpInfo := XML_ReadString(GameNode, 'DumpInfo');
+    Result.FileName := XML_ReadString(XBEInfoNode, 'FileName');
+    Result.Title := XML_ReadString(XBEInfoNode, 'Title');
+    Result.GameRegion := StrToIntDef(XML_ReadString(XBEInfoNode, 'GameRegion'), 0);
+    Result.DumpInfo := XML_ReadString(XBEInfoNode, 'DumpInfo');
   end;
 
-  XDKNode := GameNode.ChildNodes.FindNode('XDKVersions');
+  XDKNode := XBEInfoNode.ChildNodes.FindNode('XDKVersions');
   if Assigned(XDKNode) then
   begin
     LibNode := XDKNode.ChildNodes.First;
@@ -396,11 +395,11 @@ end; // ShowImportList
 
 procedure TfrmXdkTracker.SaveXBEList(const aFilePath, aPublishedBy: string);
 var
-  XmlRootNode: IXmlNode;
-  PublishedNode: IXmlNode;
-  GameListNode: IXmlNode;
-  GameNode: IXmlNode;
-  XDKnode: IXmlNode;
+  XMLRootNode: IXMLNode;
+  PublishedNode: IXMLNode;
+  GameListNode: IXMLNode;
+  XBEInfoNode: IXMLNode;
+  XDKnode: IXMLNode;
   i, j: Integer;
   XBEInfo: TXBEInfo;
 begin
@@ -408,24 +407,24 @@ begin
     Exit;
 
   XMLDocument.ChildNodes.Clear;
-  XmlRootNode := XMLDocument.AddChild('XBEInfo');
-  XmlRootNode.SetAttribute('Version', cXDk_TRACKER_XML_VERSION);
+  XMLRootNode := XMLDocument.AddChild('XBEInfo');
+  XMLRootNode.SetAttribute('Version', cXDk_TRACKER_XML_VERSION);
 
-  PublishedNode := XmlRootNode.AddChild('PublishedInfo');
+  PublishedNode := XMLRootNode.AddChild('PublishedInfo');
   XML_WriteString(PublishedNode, 'PublishedBy', aPublishedBy);
 
-  GameListNode := XmlRootNode.AddChild('GameList');
+  GameListNode := XMLRootNode.AddChild('GameList');
 
   for i := 0 to MyXBEList.Count - 1 do
   begin
     XBEInfo := TXBEInfo(MyXBEList.Objects[i]);
-    GameNode := GameListNode.AddChild('Game');
+    XBEInfoNode := GameListNode.AddChild('Game');
 
-    XML_WriteString(GameNode, 'FileName', XBEInfo.FileName);
-    XML_WriteString(GameNode, 'Title', XBEInfo.Title);
-    XML_WriteString(GameNode, 'GameRegion', IntToStr(XBEInfo.GameRegion));
-    XML_WriteString(GameNode, 'DumpInfo', XBEInfo.DumpInfo);
-    XDKnode := GameNode.AddChild('XDKVersions');
+    XML_WriteString(XBEInfoNode, 'FileName', XBEInfo.FileName);
+    XML_WriteString(XBEInfoNode, 'Title', XBEInfo.Title);
+    XML_WriteString(XBEInfoNode, 'GameRegion', IntToStr(XBEInfo.GameRegion));
+    XML_WriteString(XBEInfoNode, 'DumpInfo', XBEInfo.DumpInfo);
+    XDKnode := XBEInfoNode.AddChild('XDKVersions');
 
     for j := 0 to XBEInfo.LibVersions.Count - 1 do
       XML_WriteString(XDKnode, XBEInfo.LibVersions.Names[j], XBEInfo.LibVersions.ValueFromIndex[j]);
@@ -437,9 +436,9 @@ end; // TfrmMain.SaveXBEList
 function TfrmXdkTracker.LoadXBEList(aImportFilePath: string = '';
   aUseImportDialog: Boolean = False): Integer;
 var
-  xmlRootNode: IXmlNode;
-  InfoNode: IXmlNode;
-  GameNode: IXmlNode;
+  XMLRootNode: IXMLNode;
+  XMLNode: IXMLNode;
+  XBEInfoNode: IXMLNode;
   Publisher: string;
   FileName: string;
   XBEImportList: TStringList;
@@ -471,32 +470,32 @@ begin
 
   XBEImportList := TStringList.Create;
   try
-    XmlRootNode := XMLDocument.DocumentElement;
+    XMLRootNode := XMLDocument.DocumentElement;
 
-    InfoNode := XmlRootNode.ChildNodes.FindNode('PublishedInfo');
-    if Assigned(InfoNode) then
-      Publisher := XML_ReadString(InfoNode, 'PublishedBy');
+    XMLNode := XMLRootNode.ChildNodes.FindNode('PublishedInfo');
+    if Assigned(XMLNode) then
+      Publisher := XML_ReadString(XMLNode, 'PublishedBy');
 
-    InfoNode := XmlRootNode.ChildNodes.FindNode('GameList');
-    if Assigned(InfoNode) then
-      GameNode := InfoNode.ChildNodes.First
+    XMLNode := XMLRootNode.ChildNodes.FindNode('GameList');
+    if Assigned(XMLNode) then
+      XBEInfoNode := XMLNode.ChildNodes.First
     else
-      GameNode := XmlRootNode;
+      XBEInfoNode := XMLRootNode;
 
-    while Assigned(GameNode) do
+    while Assigned(XBEInfoNode) do
     begin
-      FileName := XML_ReadString(GameNode, 'FileName');
+      FileName := XML_ReadString(XBEInfoNode, 'FileName');
       if FileName = '' then
         // Old-style 'Name' values are read here, interpreted as FileName :
-        FileName := XML_ReadString(GameNode, 'Name');
+        FileName := XML_ReadString(XBEInfoNode, 'Name');
 
       // For now, only add to list when the user can intervene,
       // or when not yet present :
       if aUseImportDialog
       or (FindByFileName(FileName) < 0) then
-        XBEImportList.AddObject('', _ReadGameFromNode(GameNode));
+        XBEImportList.AddObject('', _ReadXBEInfoFromNode(XBEInfoNode));
 
-      GameNode := GameNode.NextSibling;
+      XBEInfoNode := XBEInfoNode.NextSibling;
     end;
 
     if aUseImportDialog then
