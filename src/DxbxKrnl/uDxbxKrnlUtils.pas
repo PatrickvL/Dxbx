@@ -32,8 +32,6 @@ uses
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
 
-function iif(aTest: Boolean; const aTrue: Integer; const aFalse: Integer): Integer; overload;
-
 function GetLastErrorString: string;
 function GetErrorString(const aError: DWord): string;
 
@@ -78,14 +76,6 @@ begin
             freopen('nul', 'w', stdout); *)
 
   TerminateProcess(GetCurrentProcess(), 0);
-end;
-
-function iif(aTest: Boolean; const aTrue: Integer; const aFalse: Integer): Integer; overload;
-begin
-  if aTest then
-    Result := aTrue
-  else
-    Result := aFalse;
 end;
 
 // Tooling methods to get and set stretches of bits inside a DWORD,

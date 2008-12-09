@@ -36,6 +36,7 @@ uses
   // Dxbx
   uLog,
   uConsts,
+  uDxbxUtils,
   uDxbxKrnlUtils;
 
 procedure EmuInitLDT;
