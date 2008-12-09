@@ -1,10 +1,10 @@
 object frm_ImportGames: Tfrm_ImportGames
   Left = 392
   Top = 282
-  Caption = 'Import Games'
+  Caption = 'XBE List'
   ClientHeight = 312
   ClientWidth = 488
-  Color = clBtnFace
+  Color = clBlack
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -22,9 +22,17 @@ object frm_ImportGames: Tfrm_ImportGames
   object lbl_Publisher: TLabel
     Left = 284
     Top = 20
-    Width = 46
+    Width = 57
     Height = 13
     Caption = 'Publisher:'
+    Color = clBlack
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clGreen
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
   end
   object lbl_NewGames: TLabel
     Left = 8
@@ -35,10 +43,16 @@ object frm_ImportGames: Tfrm_ImportGames
   object lbl_XDKFilter: TLabel
     Left = 8
     Top = 20
-    Width = 50
+    Width = 62
     Height = 13
     Caption = 'XDK &Filter:'
     FocusControl = cmb_gametype
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clGreen
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
   end
   object btn_Cancel: TButton
     Left = 405

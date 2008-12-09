@@ -509,7 +509,9 @@ var
 var
   ResourceStream: TResourceStream;
   PatternTrieReader: TPatternTrieReader;
+{$IFDEF DXBX_DEBUG}
   i: Integer;
+{$ENDIF}
 begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
   ByteScanUpper := PByte(IntPtr(ByteScanLower) + Integer(pXbeHeader.dwSizeofImage));

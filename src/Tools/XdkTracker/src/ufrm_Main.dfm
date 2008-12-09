@@ -2,7 +2,7 @@ object frmXdkTracker: TfrmXdkTracker
   Left = 262
   Top = 194
   Caption = 'XDK Tacker'
-  ClientHeight = 477
+  ClientHeight = 496
   ClientWidth = 590
   Color = clBlack
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object frmXdkTracker: TfrmXdkTracker
     Left = 0
     Top = 0
     Width = 590
-    Height = 458
+    Height = 477
     Align = alClient
     Picture.Data = {
       0A544A504547496D616765B53B0000FFD8FFE000104A46494600010201004800
@@ -506,12 +506,13 @@ object frmXdkTracker: TfrmXdkTracker
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 458
+    Top = 477
     Width = 590
     Height = 19
     Panels = <>
     SimplePanel = True
     SimpleText = 'No XDK List loaded....'
+    ExplicitTop = 458
   end
   object MainMenu1: TMainMenu
     Left = 8

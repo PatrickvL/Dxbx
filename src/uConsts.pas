@@ -36,11 +36,11 @@ const
 {$ELSE}
   _DXBX_VERSION = '0.0.0.9';
 {$ENDIF}
-  _XDK_TRACKER_VERSION = '2.0.0.2';
+  _XDK_TRACKER_VERSION = '2.0.1.0';
 
 
   // Dialog Filters
-  DIALOG_FILTER_TEXT = 'Text Documents ( *.txt )|*.txt';
+  DIALOG_FILTER_TEXT = 'Text Documents (*.txt)|*.txt';
   DIALOG_FILTER_EXE = 'Windows Executables (*.exe)|*.exe';
   DIALOG_FILTER_XBE = 'Xbox Executables (*.xbe)|*.xbe';
 

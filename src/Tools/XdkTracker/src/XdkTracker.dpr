@@ -21,7 +21,6 @@ uses
   Forms,
   u_About in 'u_About.pas' {frm_About},
   ufrm_Main in 'ufrm_Main.pas' {frmXdkTracker},
-  u_xdkversions in 'u_xdkversions.pas' {frm_Xdkversion},
   uPublisher in 'uPublisher.pas' {frm_Publisher},
   uImportGames in 'uImportGames.pas' {frm_ImportGames},
   uData in 'uData.pas',
@@ -43,6 +42,7 @@ uses
 begin
   Application.Initialize;
   Application.Title := 'XDK Tracker';
+  DumpToolString := Application.Title + ' (Version ' + _XDK_TRACKER_VERSION + ')';
   Application.CreateForm(TfrmXdkTracker, frmXdkTracker);
   Application.CreateForm(TDxbxXml, DxbxXml);
   Application.Run;

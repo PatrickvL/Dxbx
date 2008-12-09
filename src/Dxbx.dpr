@@ -54,6 +54,7 @@ var
 begin
   Application.Initialize;
   Application.Title := 'Dxbx';
+  DumpToolString := Application.Title + ' (Version ' + _DXBX_VERSION + ')';
   Application.CreateForm(Tfrm_Main, frm_Main);
   XBEFilePath := ParamStr(1);
 

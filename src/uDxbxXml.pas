@@ -62,7 +62,7 @@ begin
   XMLDocument.Active := True;
   XmlRootNode := XMLDocument.AddChild('XBEINFO');
 
-//  XML_WriteString(XmlRootNode, 'DumpInfo', ''); // ??
+  XML_WriteString(XmlRootNode, 'DumpInfo', DumpToolString);
   XML_WriteString(XmlRootNode, 'FileName', aFileName);
   XML_WriteString(XmlRootNode, 'Title', m_szAsciiTitle);
 
