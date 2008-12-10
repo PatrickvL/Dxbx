@@ -39,7 +39,8 @@ uses
   uXbeConvert in 'uXbeConvert.pas',
   uConsoleClass in 'uConsoleClass.pas',
   uXBController in 'uXBController.pas',
-  XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas';
+  XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
+  uEmuShared in 'uEmuShared.pas';
 
 {$R *.RES}
 
@@ -49,12 +50,13 @@ uses
 
 var
   XBEFilePath: string;
-  Xbe : TXbe;
-  tmpstr1, tmpstr2 : string;
+  Xbe: TXbe;
+  tmpstr1, tmpstr2: string;
 begin
   Application.Initialize;
   Application.Title := 'Dxbx';
   DumpToolString := Application.Title + ' (Version ' + _DXBX_VERSION + ')';
+
   Application.CreateForm(Tfrm_Main, frm_Main);
   XBEFilePath := ParamStr(1);
 

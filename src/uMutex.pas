@@ -28,6 +28,7 @@ uses
   uLog;
 
 type
+  // Mutex object (intended to be inherited from)
   Mutex = record
   private
     m_MutexLock: Integer; // Mutex lock
@@ -44,10 +45,10 @@ implementation
 
 procedure Mutex.Create;
 begin
-  InterlockedExchange(m_MutexLock, 0);
-  InterlockedExchange(m_OwnerProcess, 0);
-  InterlockedExchange(m_OwnerThread, 0);
-  InterlockedExchange(m_LockCount, 0);
+  InterlockedExchange({var}m_MutexLock, 0);
+  InterlockedExchange({var}m_OwnerProcess, 0);
+  InterlockedExchange({var}m_OwnerThread, 0);
+  InterlockedExchange({var}m_LockCount, 0);
 end;
 
 procedure Mutex.Lock;
@@ -56,7 +57,7 @@ begin
   while True do
   begin
     // Grab the lock, letting us look at the variables
-    while InterlockedCompareExchange(m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
+    while InterlockedCompareExchange({var}m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
       SwitchToThread;
 
     // Are we the the new owner?
@@ -64,12 +65,12 @@ begin
     begin
 //WriteLog('Mutex.Lock claimed');
       // Take ownership
-      InterlockedExchange(m_OwnerProcess, GetCurrentProcessId());
-      InterlockedExchange(m_OwnerThread, GetCurrentThreadId());
-      InterlockedExchange(m_LockCount, 1);
+      InterlockedExchange({var}m_OwnerProcess, GetCurrentProcessId());
+      InterlockedExchange({var}m_OwnerThread, GetCurrentThreadId());
+      InterlockedExchange({var}m_LockCount, 1);
 
       // Unlock the mutex itself
-      InterlockedExchange(m_MutexLock, 0);
+      InterlockedExchange({var}m_MutexLock, 0);
 
       Exit;
     end;
@@ -78,10 +79,10 @@ begin
     // the mutex lock and wait.  The reading need not be
     // interlocked.
     if (m_OwnerProcess <> Integer(GetCurrentProcessId()))
-      or (m_OwnerThread <> Integer(GetCurrentThreadId())) then
+    or (m_OwnerThread <> Integer(GetCurrentThreadId())) then
     begin
       // Unlock the mutex itself
-      InterlockedExchange(m_MutexLock, 0);
+      InterlockedExchange({var}m_MutexLock, 0);
 
       // Wait and try again
       SwitchToThread;
@@ -92,8 +93,8 @@ begin
 
     // The mutex was already locked, but by us.  Just increment
     // the lock count and unlock the mutex itself.
-    InterlockedIncrement(m_LockCount);
-    InterlockedExchange(m_MutexLock, 0);
+    InterlockedIncrement({var}m_LockCount);
+    InterlockedExchange({var}m_MutexLock, 0);
 
     Exit;
   end;
@@ -104,20 +105,20 @@ procedure Mutex.Unlock;
 begin
 //WriteLog('Mutex.Unlock>');
   // Grab the lock, letting us look at the variables
-  while InterlockedCompareExchange(m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
+  while InterlockedCompareExchange({var}m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
     SwitchToThread;
 
   // Decrement the lock count
-  if InterlockedDecrement(m_LockCount) <= 0 then
+  if InterlockedDecrement({var}m_LockCount) <= 0 then
   begin
     // Mark the mutex as now unused
-    InterlockedExchange(m_OwnerProcess, 0);
-    InterlockedExchange(m_OwnerThread, 0);
-    InterlockedExchange(m_LockCount, 0);
+    InterlockedExchange({var}m_OwnerProcess, 0);
+    InterlockedExchange({var}m_OwnerThread, 0);
+    InterlockedExchange({var}m_LockCount, 0);
   end;
 
   // Unlock the mutex itself
-  InterlockedExchange(m_MutexLock, 0);
+  InterlockedExchange({var}m_MutexLock, 0);
 //WriteLog('Mutex.Unlock<');
 end;
 
