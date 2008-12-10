@@ -23,26 +23,33 @@ interface
 
 uses
   // Delphi
-  Windows,
-  SysUtils, // StrCopy
+  Windows
+  , SysUtils // StrCopy
 {$IFDEF DXBX_USE_JCLDEBUG}
   // Jcl
-  JclDebug,
+  , JclDebug
 {$ENDIF}
   // Dxbx
-  uMutex,
-  uLog,
-  uXbVideo,
-  uXBController,
-  uDxbxKrnlUtils;
+  , uMutex
+  , uLog
+  , uXbVideo
+  , uXBController
+{$IFDEF DXBX_DLL}
+  , uDxbxKrnlUtils // CxbxKrnlCleanup
+{$ENDIF}
+  ;
+
+const
+  CXBX_MAX_PATH = 260;
 
 type
   PEmuShared = ^EmuShared;
   EmuShared = record
     m_Mutex: Mutex;
-    m_XbePath: array[0..MAX_PATH - 1] of AnsiChar;
+    // Shared configuration
     m_XBController: XBController;
     m_XBVideo: XBVideo;
+    m_XbePath: array [0..CXBX_MAX_PATH - 1] of AnsiChar;
 
     // Each process needs to call this to initialize shared memory
     class function Init: Boolean; static;
@@ -78,6 +85,13 @@ var
   g_EmuSharedRefCount: Integer; // extern; ??
 
 implementation
+
+{$IFNDEF DXBX_DLL}
+procedure CxbxKrnlCleanup(const aMessage: string);
+begin
+  raise Exception.Create(aMessage);
+end;
+{$ENDIF}
 
 { EmuShared }
 
@@ -191,14 +205,14 @@ end;
 procedure EmuShared.GetXBVideo(var video: XBVideo);
 begin
   Lock();
-  {var}video := m_XBVideo;
+  {var}video := {shared}m_XBVideo;
   Unlock();
 end;
 
 procedure EmuShared.SetXBVideo(const video: XBVideo);
 begin
   Lock();
-  m_XBVideo := video;
+  {shared}m_XBVideo := video;
   Unlock();
 end;
 
@@ -208,22 +222,21 @@ procedure EmuShared.GetXBController(var ctrl: XBController);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done : 100
 begin
   Lock();
-  //memcpy(ctrl, &m_XBController, SizeOf(XBController));
-  {var}ctrl := m_XBController;
+  {var}ctrl := {shared}m_XBController;
   Unlock();
 end;
 
 procedure EmuShared.SetXBController(const ctrl: XBController);
 begin
   Lock();
-  m_XBController := ctrl;
+  {shared}m_XBController := ctrl;
   Unlock();
 end;
 
 procedure EmuShared.GetXbePath(var Path: string);
 begin
   Lock();
-  {var}Path := m_XbePath;
+  {var}Path := {shared}m_XbePath;
   Unlock();
 end;
 
@@ -231,7 +244,7 @@ procedure EmuShared.SetXbePath(const Path: string);
 begin
   WriteLog('EmuShared.SetXbePath(' + Path + ')');
   Lock();
-  CopyMemory(@(m_XbePath[0]), PChar(Path), Length(Path) + 1);
+  CopyMemory(@({shared}m_XbePath[0]), PChar(Path), Length(Path) + 1);
   Unlock();
 end;
 
@@ -239,7 +252,8 @@ end;
 
 procedure SetXbePath(const Path: PAnsiChar);
 begin
-  g_EmuShared.SetXbePath(Path);
+  if Assigned(g_EmuShared) then
+    g_EmuShared.SetXbePath(Path);
 end;
 
 exports

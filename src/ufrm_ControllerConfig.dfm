@@ -12,6 +12,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13

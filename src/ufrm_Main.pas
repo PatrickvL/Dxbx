@@ -36,6 +36,7 @@ uses
   uDxbxUtils,
   uXbe,
   uEmuExe,
+  uEmuShared,
   uXbeConvert,
   uDxbxXml,
   ufrm_ControllerConfig,
@@ -454,6 +455,8 @@ end; // Tfrm_Main.StartEmulation
 
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 begin
+  EmuShared.Init;
+
   Emulation_State := esNone;
 
   OldLBWindowProc := frm_Main.WindowProc; // store defualt WindowProc
@@ -794,6 +797,8 @@ begin
   frm_Main.WindowProc := OldLBWindowProc;
   WriteSettingsIni;
 
+  EmuShared.Cleanup;
+
   inherited Destroy;
 end; // Tfrm_Main.Create
 
@@ -812,7 +817,7 @@ begin
   actSaveXbeAs.Enabled := False;
 
   mnu_RecentXbefiles.Enabled := mnu_RecentXbefiles.Count > 0;
-  mnu_RecentExefiles.Enabled := mnu_RecentExefiles.count > 0;
+  mnu_RecentExefiles.Enabled := mnu_RecentExefiles.Count > 0;
 
   actClose.Enabled := True;
 
