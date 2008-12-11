@@ -27,9 +27,16 @@ uses
   Windows;
 
 type
+  // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
+  // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
   XBVideo = record
   private
-    m_bFullscreen: Boolean;
+    // Configuration
+    m_szVideoResolution: array [0..100-1] of AnsiChar;
+    m_dwDisplayAdapter: DWORD;
+    m_dwDirect3DDevice: DWORD;
+    m_bFullscreen: BOOL;
+    m_bVSync: BOOL;
   public
     procedure Initialize;
     procedure Finalize;

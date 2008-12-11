@@ -40,7 +40,9 @@ uses
   uConsoleClass in 'uConsoleClass.pas',
   uXBController in 'uXBController.pas',
   XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
-  uEmuShared in 'uEmuShared.pas';
+  uEmuShared in 'uEmuShared.pas',
+  uMutex in 'uMutex.pas',
+  uXbVideo in 'uXbVideo.pas';
 
 {$R *.RES}
 
