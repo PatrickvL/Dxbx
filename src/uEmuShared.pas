@@ -44,6 +44,9 @@ const
 
 type
   PEmuShared = ^EmuShared;
+
+  // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
+  // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
   EmuShared = record
     m_Mutex: Mutex;
     // Shared configuration

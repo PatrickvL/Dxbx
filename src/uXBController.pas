@@ -165,7 +165,7 @@ type
   XINPUT_STATE = _XINPUT_STATE;
   PXINPUT_STATE = ^XINPUT_STATE;
 
-  XTL_LPDIRECTINPUT8 = Pointer; // TODO Dxbx : How is this type defined?
+  XTL_LPDIRECTINPUT8 = IUnknown; // TODO Dxbx : How is this type defined?
   XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // TODO Dxbx : How is this type defined?
 
   // DirectInput Devices
@@ -174,16 +174,18 @@ type
     m_Flags: Integer;
   end;
 
+  // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
+  // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
   XBController = record
   private
     // Device Names
-    m_DeviceName: array [0..XBCTRL_MAX_DEVICES - 1] of array [0..260] of AnsiChar;
-    // DirectInput Devices
-    m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of InputDevice;
+    m_DeviceName: array [0..XBCTRL_MAX_DEVICES - 1] of array [0..260-1] of AnsiChar;
     // Object Configuration
     m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
     // DirectInput
     m_pDirectInput8: XTL_LPDIRECTINPUT8;
+    // DirectInput Devices
+    m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of InputDevice;
     // Current State
     m_CurrentState: XBCtrlState;
     // Config State Variables
@@ -219,7 +221,6 @@ type
     // Check if a device is currently in the configuration
     function DeviceIsUsed(szDeviceName: PChar): LongBool;
   end;
-
 
 implementation
 
@@ -561,10 +562,10 @@ begin
         XBCTRL_OBJECT_RTRIGGER:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] := (wValue div 128);
         XBCTRL_OBJECT_DPADUP:
-            if (wValue > 0) then
-              Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_UP
-            else
-              Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_DPAD_UP;
+          if (wValue > 0) then
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_UP
+          else
+            Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and XINPUT_GAMEPAD_DPAD_UP;
         XBCTRL_OBJECT_DPADDOWN:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_DOWN
@@ -641,8 +642,12 @@ begin
   m_CurrentState := XBCTRL_STATE_NONE;
 end;
 
+type
+  DIKEYSTATE = array [0..256-1] of BYTE; // Dxbx 'invention'
+  LONG = LongInt;
+  
 function XBController.ConfigPoll(szStatus: PChar): LongBool;
-// Branch:martin  Revision:10  Translator:PatrickvL  Done : 40
+// Branch:martin  Revision:10  Translator:PatrickvL  Done : 100
 var
   DeviceInstance: DIDEVICEINSTANCE;
   ObjectInstance: DIDEVICEOBJECTINSTANCE;
@@ -651,8 +656,15 @@ var
   dwHow: DWord;
   dwFlags: DWord;
   JoyState: DIJOYSTATE;
+  KeyState: DIKEYSTATE;
   b: Integer;
   szDirection: PChar;
+  szObjName: PChar;
+  MouseState: DIMOUSESTATE2;
+
+  lAbsDeltaX, lAbsDeltaY, lAbsDeltaZ: LONG;
+  lDeltaX, lDeltaY, lDeltaZ: LONG;
+  lMax: LONG;
 begin
   if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
   begin
@@ -761,13 +773,7 @@ begin
       // Retrieve Object Info
       if (dwHow <> -1) then
       begin
-        if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
-          if (dwFlags and DEVICE_FLAG_POSITIVE) > 0 then
-            szDirection := 'Positive '
-          else
-            szDirection := 'Negative '
-        else
-          szDirection := '';
+        szDirection := PChar(iif((dwFlags and DEVICE_FLAG_AXIS) > 0, iif((dwFlags and DEVICE_FLAG_POSITIVE) > 0, 'Positive ', 'Negative '), ''));
 
         m_InputDevice[v].m_Device.GetDeviceInfo({var}DeviceInstance);
 
@@ -775,9 +781,9 @@ begin
 
         Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-//        printf('Dxbx: Detected %s%s on %s', szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+        DbgPrintf('Dxbx: Detected %s%s on %s', [szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType]);
 
-//        sprintf(szStatus, 'Success: %s Mapped to "%s%s" on "%s"!', m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
+        DbgPrintf('Success: %s Mapped to "%s%s" on "%s"!', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName]);
 
         Result := True;
         Exit;
@@ -787,137 +793,135 @@ begin
     // Detect Keyboard Input
     else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
-        (*    BYTE KeyState[256];
+      m_InputDevice[v].m_Device.GetDeviceState(SizeOf(DIKEYSTATE), @KeyState);
 
-            m_InputDevice[v].m_Device.GetDeviceState(256, KeyState);
+      dwFlags := DEVICE_FLAG_KEYBOARD;
 
-            dwFlags = DEVICE_FLAG_KEYBOARD;
+      // Check for Keyboard State Change
+      for b := 0 to 256 - 1 do
+      begin
+        if (KeyState[b] <> 0) then
+        begin
+          dwHow := b;
+          Break;
+        end;
+      end;
 
-            // Check for Keyboard State Change
-            for(int r=0;r<256;r++)
-            {
-                if (KeyState[r] != 0)
-                {
-                    dwHow = r;
-                    Break;
-                }
-            }            *)
-
-            // Check for Success
-            if (dwHow <> -1) then
-            begin
-              Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
-              DbgPrintf('Dxbx: Detected Key %d on SysKeyboard\n', dwHow);
-              DbgPrintf('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
-            end;
+      // Check for Success
+      if (dwHow <> -1) then
+      begin
+        Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
+        DbgPrintf('Dxbx: Detected Key %d on SysKeyboard', [dwHow]);
+        DbgPrintf('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
+      end;
     end
     // Detect Mouse Input
     else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_MOUSE) > 0 then
     begin
-        (*
-            XTL::DIMOUSESTATE2 MouseState;
+      m_InputDevice[v].m_Device.GetDeviceState(SizeOf(MouseState), @MouseState);
 
-            m_InputDevice[v].m_Device.GetDeviceState(SizeOf(MouseState), &MouseState);
+      dwFlags := DEVICE_FLAG_MOUSE;
 
-            dwFlags = DEVICE_FLAG_MOUSE;
+      // Detect Button State Change
+      for b := 0 to 4 - 1 do
+      begin
+        // 0x80 is the mask for button push
+        if (MouseState.rgbButtons[b] and $80) > 0 then
+        begin
+          dwHow := b;
+          dwFlags := dwFlags or DEVICE_FLAG_MOUSE_CLICK;
+          Break;
+        end;
+      end;
 
-            // ******************************************************************
-            // * Detect Button State Change
-            // ******************************************************************
-            for(int r=0;r<4;r++)
-            {
-                // 0x80 is the mask for button push
-                if (MouseState.rgbButtons[r] & 0x80)
-                {
-                    dwHow = r;
-                    dwFlags |= DEVICE_FLAG_MOUSE_CLICK;
-                    Break;
-                }
-            }
-            // Check for Success
-            if (dwHow != -1)
-            {
-                Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
+      // Check for Success
+      if (dwHow <> -1) then
+      begin
+        Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
 
-                printf('Cxbx: Detected Button %d on SysMouse', dwHow);
+        DbgPrintf('Dxbx: Detected Button %d on SysMouse', [dwHow]);
 
-                sprintf(szStatus, 'Success: %s Mapped to Button %d on SysMouse', m_DeviceNameLookup[CurConfigObject], dwHow);
+        DbgPrintf('Success: %s Mapped to Button %d on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
 
-                return True;
-            }
-            // ******************************************************************
-            // * Check for Mouse Movement
-            // ******************************************************************
-            else
-            {
-                LONG lAbsDeltaX=0, lAbsDeltaY=0, lAbsDeltaZ=0;
-                LONG lDeltaX=0, lDeltaY=0, lDeltaZ=0;
+        Result := True;
+        Exit;
+      end
+      // Check for Mouse Movement
+      else
+      begin
+        lAbsDeltaX := 0; lAbsDeltaY := 0; lAbsDeltaZ := 0;
+        lDeltaX := 0; lDeltaY := 0; lDeltaZ := 0;
 
-                if (lPrevMouseX == -1 || lPrevMouseY == -1 || lPrevMouseZ == -1)
-                    lDeltaX = lDeltaY = lDeltaZ = 0;
-                else
-                {
-                    lDeltaX = MouseState.lX - lPrevMouseX;
-                    lDeltaY = MouseState.lY - lPrevMouseY;
-                    lDeltaZ = MouseState.lZ - lPrevMouseZ;
+        if (lPrevMouseX = -1)
+        or (lPrevMouseY = -1)
+        or (lPrevMouseZ = -1) then
+        begin
+          lDeltaX := 0;
+          lDeltaY := 0;
+          lDeltaZ := 0;
+        end
+        else
+        begin
+          lDeltaX := MouseState.lX - lPrevMouseX;
+          lDeltaY := MouseState.lY - lPrevMouseY;
+          lDeltaZ := MouseState.lZ - lPrevMouseZ;
 
-                    lAbsDeltaX = Abs(lDeltaX);
-                    lAbsDeltaY = Abs(lDeltaY);
-                    lAbsDeltaZ = Abs(lDeltaZ);
-                }
+          lAbsDeltaX := Abs(lDeltaX);
+          lAbsDeltaY := Abs(lDeltaY);
+          lAbsDeltaZ := Abs(lDeltaZ);
+        end;
 
-                LONG lMax = (lAbsDeltaX > lAbsDeltaY) ? lAbsDeltaX : lAbsDeltaY;
+        lMax := iif(lAbsDeltaX > lAbsDeltaY, lAbsDeltaX, lAbsDeltaY);
 
-                if (lAbsDeltaZ > lMax)
-                    lMax = lAbsDeltaZ;
+        if (lAbsDeltaZ > lMax) then
+          lMax := lAbsDeltaZ;
 
-                lPrevMouseX = MouseState.lX;
-                lPrevMouseY = MouseState.lY;
-                lPrevMouseZ = MouseState.lZ;
+        lPrevMouseX := MouseState.lX;
+        lPrevMouseY := MouseState.lY;
+        lPrevMouseZ := MouseState.lZ;
 
-                if (lMax > DETECT_SENSITIVITY_MOUSE)
-                {
-                    dwFlags |= DEVICE_FLAG_AXIS;
+        if (lMax > DETECT_SENSITIVITY_MOUSE) then
+        begin
+          dwFlags := dwFlags or DEVICE_FLAG_AXIS;
 
-                    if (lMax == lAbsDeltaX)
-                    {
-                        dwHow = FIELD_OFFSET(PDIMOUSESTATE(nil).lX);
-                        dwFlags |= (lDeltaX > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
-                    }
-                    else if (lMax == lAbsDeltaY)
-                    {
-                        dwHow = FIELD_OFFSET(PDIMOUSESTATE(nil).lY);
-                        dwFlags |= (lDeltaY > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
-                    }
-                    else if (lMax == lAbsDeltaZ)
-                    {
-                        dwHow = FIELD_OFFSET(PDIMOUSESTATE(nil).lZ);
-                        dwFlags |= (lDeltaZ > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
-                    }
-                }
+          if (lMax = lAbsDeltaX) then
+          begin
+            dwHow := FIELD_OFFSET(PDIMOUSESTATE(nil).lX);
+            dwFlags := dwFlags or iif(lDeltaX > 0, DEVICE_FLAG_POSITIVE, DEVICE_FLAG_NEGATIVE);
+          end
+          else if (lMax = lAbsDeltaY) then
+          begin
+            dwHow := FIELD_OFFSET(PDIMOUSESTATE(nil).lY);
+            dwFlags := dwFlags or iif(lDeltaY > 0, DEVICE_FLAG_POSITIVE, DEVICE_FLAG_NEGATIVE);
+          end
+          else if (lMax = lAbsDeltaZ) then
+          begin
+            dwHow := FIELD_OFFSET(PDIMOUSESTATE(nil).lZ);
+            dwFlags := dwFlags or iif(lDeltaZ > 0, DEVICE_FLAG_POSITIVE, DEVICE_FLAG_NEGATIVE);
+          end;
+        end;
 
-                // ******************************************************************
-                // * Check for Success
-                // ******************************************************************
-                if (dwHow != -1)
-                {
-                    char *szDirection = (dwFlags & DEVICE_FLAG_POSITIVE) ? 'Positive' : 'Negative';
-                    char *szObjName = 'Unknown';
+        // Check for Success
+        if (dwHow <> -1) then
+        begin
+          szDirection := PChar(iif((dwFlags and DEVICE_FLAG_POSITIVE) > 0, 'Positive', 'Negative'));
+          szObjName := 'Unknown';
 
-                    ObjectInstance.dwSize = SizeOf(ObjectInstance);
+          ObjectInstance.dwSize := SizeOf(ObjectInstance);
 
-                    if (m_InputDevice[v].m_Device.GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
-                        szObjName = ObjectInstance.tszName;
+          if (m_InputDevice[v].m_Device.GetObjectInfo({var}ObjectInstance, dwHow, DIPH_BYOFFSET) = DI_OK) then
+            szObjName := ObjectInstance.tszName;
 
-                    Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
+          Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
 
-                    printf('Cxbx: Detected Movement on the %s%s on SysMouse', szDirection, szObjName);
+          DbgPrintf('Dxbx: Detected Movement on the %s%s on SysMouse', [szDirection, szObjName]);
 
-                    sprintf(szStatus, 'Success: %s Mapped to %s%s on SysMouse', m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
+          DbgPrintf('Success: %s Mapped to %s%s on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, szObjName]);
 
-                    return True;
-                }
-            }    *)
+          Result := True;
+          Exit;
+        end;
+      end;    
     end;
   end;
 
@@ -942,24 +946,23 @@ begin
 end;
 
 procedure XBController.DInputCleanup;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 5
+// Branch:martin  Revision:39  Translator:PatrickvL  Done : 100
 var
   v: Integer;
 begin
   for v := m_dwInputDeviceCount downto 0 do
   begin
-    (*m_InputDevice[v].m_Device.Unacquire();
-    m_InputDevice[v].m_Device.Release();
-    m_InputDevice[v].m_Device := 0;*)
+    m_InputDevice[v].m_Device.Unacquire();
+    m_InputDevice[v].m_Device._Release(); //?? Release();
+    m_InputDevice[v].m_Device := nil;
   end;
 
   m_dwInputDeviceCount := 0;
-    { TODO : Need to be translated to delphi }
-    (*if (m_pDirectInput8 <> 0) then
-    begin
-        m_pDirectInput8.Release();
-        m_pDirectInput8 := 0;
-     end; *)
+  if Assigned(m_pDirectInput8) then
+  begin
+    m_pDirectInput8._Release();//?? Release();
+    m_pDirectInput8 := nil;
+  end;
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
@@ -1070,7 +1073,7 @@ begin
   begin
     if (m_DeviceName[v][0] = #0) then
     begin
-      (*m_DeviceName[v] := szDeviceName; *)
+      //m_DeviceName[v] := szDeviceName;
       Result := v;
     end;
   end;
