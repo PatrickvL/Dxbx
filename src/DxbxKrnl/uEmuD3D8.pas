@@ -931,12 +931,12 @@ begin
         // update render target cache
         g_pCachedRenderTarget.Common := 0;
         g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
-// Dxbx TODO        g_pD3DDevice8.GetRenderTarget(g_pCachedRenderTarget.EmuSurface8);
+// Dxbx TODO        g_pD3DDevice8.GetRenderTarget({out}g_pCachedRenderTarget.EmuSurface8);
 
         // update z-stencil surface cache
         g_pCachedZStencilSurface.Common := 0;
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
-// Dxbx TODO        g_pD3DDevice8.GetDepthStencilSurface(g_pCachedZStencilSurface.EmuSurface8);
+// Dxbx TODO        g_pD3DDevice8.GetDepthStencilSurface({out}g_pCachedZStencilSurface.EmuSurface8);
 
         g_pD3DDevice8.CreateVertexBuffer
           (
@@ -1007,7 +1007,7 @@ procedure EmuVerifyResourceIsRegistered(pResource: PX_D3DResource); //inline;
 // Branch:martin  Revision:39  Done:5 Translator:Shadow_Tj
 begin
   // 0xEEEEEEEE and 0xFFFFFFFF are somehow set in Halo :(
-  if (pResource._.Lock <> 0) and (pResource._.Lock <> $EEEEEEEE) and (pResource._.Lock <> $FFFFFFFF) then
+  if (pResource.Lock <> 0) and (pResource.Lock <> $EEEEEEEE) and (pResource.Lock <> $FFFFFFFF) then
     Exit;
 
 { TODO: Need to be translated to delphi }
@@ -1712,7 +1712,7 @@ begin
     [pSourceSurface, pSourceRectsArray, cRects,
     pDestinationSurface, pDestPointsArray]);
 
-// Dxbx TODO  pSourceSurface.EmuSurface8.UnlockRect();
+  pSourceSurface.EmuSurface8.UnlockRect();
 
     (*
      Integer kthx := 0;
@@ -1831,7 +1831,7 @@ begin
             EmuWarning('Could not retrieve primary surface, using backbuffer');
             pCachedPrimarySurface := 0;
             pBackBuffer.EmuSurface8.Release();
-            pBackBuffer.EmuSurface8 := 0;
+            pBackBuffer.EmuSurface8 := nil;
             BackBuffer := 0;
          end;
 
@@ -2065,7 +2065,7 @@ begin
     #13#10');',
     [ppRenderTarget]);
 
-// Dxbx TODO  pSurface8 := g_pCachedRenderTarget.EmuSurface8;
+  pSurface8 := g_pCachedRenderTarget.EmuSurface8;
 
     (*pSurface8.AddRef(); *)
 
@@ -2087,9 +2087,9 @@ begin
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_GetRenderTarget2()');
 
-// Dxbx TODO  pSurface8 := g_pCachedRenderTarget.EmuSurface8;
+  pSurface8 := g_pCachedRenderTarget.EmuSurface8;
 
-// Dxbx TODO  pSurface8.AddRef();
+  pSurface8._AddRef();
 
   DbgPrintf('EmuD3D8: RenderTarget := 0x%.08X', pSurface8);
 
@@ -2111,10 +2111,10 @@ begin
     #13#10');',
     [ppZStencilSurface]);
 
-// Dxbx TODO  pSurface8 := g_pCachedZStencilSurface.EmuSurface8;
+  pSurface8 := g_pCachedZStencilSurface.EmuSurface8;
 
-// Dxbx TODO  if Assigned(pSurface8) then
-// Dxbx TODO    pSurface8.AddRef();
+  if Assigned(pSurface8) then
+    pSurface8._AddRef();
 
   ppZStencilSurface^ := g_pCachedZStencilSurface;
 
@@ -2133,10 +2133,10 @@ begin
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_GetDepthStencilSurface2()');
 
-// Dxbx TODO  pSurface8 := g_pCachedZStencilSurface.EmuSurface8;
+  pSurface8 := g_pCachedZStencilSurface.EmuSurface8;
 
-// Dxbx TODO  if Assigned(pSurface8) then
-// Dxbx TODO    pSurface8.AddRef();
+  if Assigned(pSurface8) then
+    pSurface8._AddRef();
 
   DbgPrintf('EmuD3D8: DepthStencilSurface := 0x%.08X', pSurface8);
 
@@ -4554,7 +4554,7 @@ begin
     #13#10'   pThis              : 0x%.08X' +
     #13#10');',
     [pThis]);
-// Dxbx TODO  pResource8 := pThis.EmuResource8;
+  pResource8 := pThis.EmuResource8;
   EmuSwapFS(fsXbox);
 
   Result := False;
@@ -4868,7 +4868,7 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
 
-// Dxbx TODO  pBaseTexture8 := pThis.EmuBaseTexture8;
+  pBaseTexture8 := pThis.EmuBaseTexture8;
 
   dwRet := pBaseTexture8.GetLevelCount();
   EmuSwapFS(fsXbox);
@@ -5049,7 +5049,7 @@ begin
     [pThis, Level, pLockedVolume, pBox, Flags]);
 
   EmuVerifyResourceIsRegistered(pThis);
-// Dxbx TODO  pVolumeTexture8 := pThis.EmuVolumeTexture8;
+  pVolumeTexture8 := pThis.EmuVolumeTexture8;
   (*hRet := pVolumeTexture8.LockBox(Level, pLockedVolume, pBox, Flags); *)
 
   if (FAILED(hRet)) then
@@ -5082,7 +5082,7 @@ begin
     [pThis, Ord(FaceType), Level, pLockedBox, pRect, Flags]);
 
   EmuVerifyResourceIsRegistered(pThis);
-// Dxbx TODO  pCubeTexture8 := pThis.EmuCubeTexture8;
+  pCubeTexture8 := pThis.EmuCubeTexture8;
   (*hRet := pCubeTexture8.LockRect(FaceType, Level, pLockedBox, pRect, Flags); *)
 
   EmuSwapFS(fsXbox);
@@ -6261,7 +6261,7 @@ begin
     #13#10');',
     [ppVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags]);
 
-// Dxbx TODO  pVertexBuffer8 := ppVertexBuffer.EmuVertexBuffer8;
+  pVertexBuffer8 := ppVertexBuffer.EmuVertexBuffer8;
 
   (*hRet := pVertexBuffer8.Lock(OffsetToLock, SizeToLock, ppbData, Flags); *)
 
@@ -6927,13 +6927,13 @@ begin
   if Assigned(pRenderTarget) then
   begin
     EmuVerifyResourceIsRegistered(pRenderTarget);
-// Dxbx TODO    pPCRenderTarget := pRenderTarget.EmuSurface8;
+    pPCRenderTarget := pRenderTarget.EmuSurface8;
   end;
 
   if Assigned(pNewZStencil) then
   begin
     EmuVerifyResourceIsRegistered(pNewZStencil);
-// Dxbx TODO    pPCNewZStencil := pNewZStencil.EmuSurface8;
+    pPCNewZStencil := pNewZStencil.EmuSurface8;
   end;
 
   // TODO: Follow that stencil!
