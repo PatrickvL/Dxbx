@@ -238,22 +238,36 @@ type
   D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
 
   X_D3DResource = object
+  protected
+    function GetEmuResource8: IDirect3DResource8; inline;
+    function GetEmuBaseTexture8: IDirect3DBaseTexture8; inline;
+    function GetEmuTexture8: IDirect3DTexture8; inline;
+    function GetEmuVolumeTexture8: IDirect3DVolumeTexture8; inline;
+    function GetEmuCubeTexture8: IDirect3DCubeTexture8; inline;
+    function GetEmuSurface8: IDirect3DSurface8; inline;
+    function GetEmuVertexBuffer8: IDirect3DVertexBuffer8; inline;
+    function GetEmuIndexBuffer8: IDirect3DIndexBuffer8; inline;
+    procedure SetEmuResource8(Value: IDirect3DResource8); inline;
+    procedure SetEmuBaseTexture8(Value: IDirect3DBaseTexture8); inline;
+    procedure SetEmuTexture8(Value: IDirect3DTexture8); inline;
+    procedure SetEmuVolumeTexture8(Value: IDirect3DVolumeTexture8); inline;
+    procedure SetEmuCubeTexture8(Value: IDirect3DCubeTexture8); inline;
+    procedure SetEmuSurface8(Value: IDirect3DSurface8); inline;
+    procedure SetEmuVertexBuffer8(Value: IDirect3DVertexBuffer8); inline;
+    procedure SetEmuIndexBuffer8(Value: IDirect3DIndexBuffer8); inline;
   public
     Common: DWord;
     Data: DWord;
-    _: record case Integer of
-      0: (Lock: DWord);
-(* Dxbx TODO : Delphi doesn't compile this :
-      1: (EmuResource8: IDirect3DResource8);
-      2: (EmuBaseTexture8: IDirect3DBaseTexture8);
-      3: (EmuTexture8: IDirect3DTexture8);
-      4: (EmuVolumeTexture8: IDirect3DVolumeTexture8);
-      5: (EmuCubeTexture8: IDirect3DCubeTexture8);
-      6: (EmuSurface8: IDirect3DSurface8);
-      7: (EmuVertexBuffer8: IDirect3DVertexBuffer8);
-      8: (EmuIndexBuffer8: IDirect3DIndexBuffer8);
-*)
-    end;
+    Lock: DWord;
+
+    property EmuResource8: IDirect3DResource8 read GetEmuResource8 write SetEmuResource8;
+    property EmuBaseTexture8: IDirect3DBaseTexture8 read GetEmuBaseTexture8 write SetEmuBaseTexture8;
+    property EmuTexture8: IDirect3DTexture8 read GetEmuTexture8 write SetEmuTexture8;
+    property EmuVolumeTexture8: IDirect3DVolumeTexture8 read GetEmuVolumeTexture8 write SetEmuVolumeTexture8;
+    property EmuCubeTexture8: IDirect3DCubeTexture8 read GetEmuCubeTexture8 write SetEmuCubeTexture8;
+    property EmuSurface8: IDirect3DSurface8 read GetEmuSurface8 write SetEmuSurface8;
+    property EmuVertexBuffer8: IDirect3DVertexBuffer8 read GetEmuVertexBuffer8 write SetEmuVertexBuffer8;
+    property EmuIndexBuffer8: IDirect3DIndexBuffer8 read GetEmuIndexBuffer8 write SetEmuIndexBuffer8;
   end;
   PX_D3DResource = ^X_D3DResource;
   
@@ -331,7 +345,7 @@ type
   end;
 
   _X_STREAMINPUT = record
-    VertexBuffer: X_D3DVertexBuffer;
+    VertexBuffer: PX_D3DVertexBuffer;
     Stride: UINT;
     Offset: UINT;
   end;
@@ -343,6 +357,88 @@ implementation
 function IsSpecialResource(x: DWORD): Boolean;
 begin
  Result := (x and X_D3DRESOURCE_DATA_FLAG_SPECIAL) = X_D3DRESOURCE_DATA_FLAG_SPECIAL;
+end;
+
+{ X_D3DResource }
+
+function X_D3DResource.GetEmuResource8: IDirect3DResource8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+function X_D3DResource.GetEmuBaseTexture8: IDirect3DBaseTexture8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+function X_D3DResource.GetEmuTexture8: IDirect3DTexture8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+function X_D3DResource.GetEmuVolumeTexture8: IDirect3DVolumeTexture8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+function X_D3DResource.GetEmuCubeTexture8: IDirect3DCubeTexture8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+function X_D3DResource.GetEmuSurface8: IDirect3DSurface8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+function X_D3DResource.GetEmuVertexBuffer8: IDirect3DVertexBuffer8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+function X_D3DResource.GetEmuIndexBuffer8: IDirect3DIndexBuffer8;
+begin
+  Pointer(Result) := Pointer(Lock);
+end;
+
+procedure X_D3DResource.SetEmuBaseTexture8(Value: IDirect3DBaseTexture8);
+begin
+  Pointer(Lock) := Pointer(Value);
+end;
+
+procedure X_D3DResource.SetEmuCubeTexture8(Value: IDirect3DCubeTexture8);
+begin
+  Pointer(Lock) := Pointer(Value);
+end;
+
+procedure X_D3DResource.SetEmuIndexBuffer8(Value: IDirect3DIndexBuffer8);
+begin
+  Pointer(Lock) := Pointer(Value);
+end;
+
+procedure X_D3DResource.SetEmuResource8(Value: IDirect3DResource8);
+begin
+  Pointer(Lock) := Pointer(Value);
+end;
+
+procedure X_D3DResource.SetEmuSurface8(Value: IDirect3DSurface8);
+begin
+  Pointer(Lock) := Pointer(Value);
+end;
+
+procedure X_D3DResource.SetEmuTexture8(Value: IDirect3DTexture8);
+begin
+  Pointer(Lock) := Pointer(Value);
+end;
+
+procedure X_D3DResource.SetEmuVertexBuffer8(Value: IDirect3DVertexBuffer8);
+begin
+  Pointer(Lock) := Pointer(Value);
+end;
+
+procedure X_D3DResource.SetEmuVolumeTexture8(Value: IDirect3DVolumeTexture8);
+begin
+  Pointer(Lock) := Pointer(Value);
 end;
 
 end.
