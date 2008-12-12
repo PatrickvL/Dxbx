@@ -32,7 +32,7 @@ type
   TDWordArray = array[0..10000] of DWord;
   PDWordArray = ^TDWordArray;
 
-  PDWord = ^DWord;
+  //PDWord = ^DWord;
 
   UInt32 = Cardinal;
   UInt16 = Word;

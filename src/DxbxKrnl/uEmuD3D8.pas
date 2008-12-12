@@ -723,10 +723,9 @@ var
 begin
   DbgPrintf('EmuD3D8: CreateDevice proxy thread is running.');
 
-  { TODO: Dxbx creates deadlock with this while loop }
   while True do
   begin
-  // if we have been signalled, create the device with cached parameters
+    // if we have been signalled, create the device with cached parameters
     if g_EmuCDPD.bReady then
     begin
       DbgPrintf('EmuD3D8: CreateDevice proxy thread received request.');
@@ -883,23 +882,23 @@ begin
             CxbxKrnlCleanup('Could not set cooperative level');
         end;
 
-      // check for YUY2 overlay support TODO: accept other overlay types
+        // check for YUY2 overlay support TODO: accept other overlay types
         begin
           dwCodes := 0;
           lpCodes := nil;
-        (*g_pDD7.GetFourCCCodes(dwCodes, lpCodes);
-        lpCodes := CxbxMalloc(dwCodes*SizeOf(DWORD));
-        g_pDD7.GetFourCCCodes(@dwCodes, lpCodes);
+          g_pDD7.GetFourCCCodes(dwCodes, lpCodes);
+          lpCodes := CxbxMalloc(dwCodes*SizeOf(DWORD));
+          g_pDD7.GetFourCCCodes(dwCodes, lpCodes);   
 
-        g_bSupportsYUY2 := False;
-        for v := 0 to dwCodes - 1 do
-        begin
-          if (lpCodes[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
+          g_bSupportsYUY2 := False;
+          for v := 0 to dwCodes - 1 do
           begin
-            g_bSupportsYUY2 := True;
-            Break;
+            if (lpCodes^ = MAKEFOURCC('Y', 'U', 'Y', '2')) then
+            begin
+              g_bSupportsYUY2 := True;
+              Break;
+            end;
           end;
-        end;                                      *)
 
           CxbxFree(lpCodes);
 
