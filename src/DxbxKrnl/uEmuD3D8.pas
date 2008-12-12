@@ -138,6 +138,10 @@ var
   // current vertical blank information
   g_VBData: D3DVBLANKDATA;
 
+  g_pVertexBuffer: X_D3DVertexBuffer = nil; // current active vertex buffer
+  g_pDummyBuffer: IDirect3DVertexBuffer8 = nil; // Dummy buffer, used to set unused stream sources with
+
+
   g_pCachedRenderTarget: X_D3DSurface = nil;
   g_pCachedZStencilSurface: X_D3DSurface = nil;
   g_YuvSurface: X_D3DSurface = nil;
@@ -710,7 +714,7 @@ end;
 // thread dedicated to create devices
 
 function EmuCreateDeviceProxy(LPVOID: Pointer): DWord;
-// Branch:martin  Revision:39  Done:55 Translator:Shadow_Tj
+// Branch:martin  Revision:42  Done:55 Translator:Shadow_Tj
 var
   D3DDisplayMode: X_D3DDISPLAYMODE;
   szBackBufferFormat: array[0..16 - 1] of Char;
@@ -887,8 +891,8 @@ begin
           dwCodes := 0;
           lpCodes := nil;
           g_pDD7.GetFourCCCodes(dwCodes, lpCodes);
-          lpCodes := CxbxMalloc(dwCodes*SizeOf(DWORD));
-          g_pDD7.GetFourCCCodes(dwCodes, lpCodes);   
+          lpCodes := CxbxMalloc(dwCodes * SizeOf(DWORD));
+          g_pDD7.GetFourCCCodes(dwCodes, lpCodes);
 
           g_bSupportsYUY2 := False;
           for v := 0 to dwCodes - 1 do
@@ -920,43 +924,40 @@ begin
         end;
 
       // update render target cache
-      { TODO: Need to be translated to delphi }
-(*      g_pCachedRenderTarget := new XTL.X_D3DSurface();
-      g_pCachedRenderTarget.Common := 0;
-      g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
-      g_pD3DDevice8.GetRenderTarget(@g_pCachedRenderTarget.EmuSurface8);
+        g_pCachedRenderTarget.Common := 0;
+      (*g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND; *)
+        g_pD3DDevice8.GetRenderTarget(g_pCachedRenderTarget.EmuSurface8);
 
       // update z-stencil surface cache
-      g_pCachedZStencilSurface := new XTL.X_D3DSurface();
-      g_pCachedZStencilSurface.Common := 0;
-      g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
-      g_pD3DDevice8.GetDepthStencilSurface(@g_pCachedZStencilSurface.EmuSurface8);
+        g_pCachedZStencilSurface.Common := 0;
+      (*g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN; *)
+        g_pD3DDevice8.GetDepthStencilSurface(g_pCachedZStencilSurface.EmuSurface8);
 
-      g_pD3DDevice8.CreateVertexBuffer
-      (
+        g_pD3DDevice8.CreateVertexBuffer
+          (
           1, 0, 0, D3DPOOL_MANAGED,
-          @g_pDummyBuffer
-      );
+          g_pDummyBuffer
+          );
 
-      for Streams := 0 to 7 do
-      begin
+        for Streams := 0 to 7 do
+        begin
           g_pD3DDevice8.SetStreamSource(Streams, g_pDummyBuffer, 1);
-       end;
+        end;
 
 
       // begin scene
-      g_pD3DDevice8.BeginScene();
+        g_pD3DDevice8.BeginScene();
 
       // initially, show a black screen
-      g_pD3DDevice8.Clear(0, nil, D3DCLEAR_TARGET, $FF000000, 0, 0);
-      g_pD3DDevice8.Present(nil, nil, 0, nil);
+        g_pD3DDevice8.Clear(0, nil, D3DCLEAR_TARGET, $FF000000, 0, 0);
+        g_pD3DDevice8.Present(nil, nil, 0, nil);
 
-      // signal completion          *)
+        // signal completion
         g_EmuCDPD.bReady := False;
       end
       else
       begin
-      // release direct3d
+        // release direct3d
         if Assigned(g_pD3DDevice8) then
         begin
           DbgPrintf('EmuD3D8: CreateDevice proxy thread releasing old Device.');
@@ -1098,7 +1099,7 @@ begin
     #13#10'   pPresentationParameters  : 0x%.08X' +
     #13#10'   ppReturnedDeviceInterface: 0x%.08X' +
     #13#10')', [
-      Adapter, Ord(DeviceType), hFocusWindow, BehaviorFlags, @pPresentationParameters,
+    Adapter, Ord(DeviceType), hFocusWindow, BehaviorFlags, @pPresentationParameters,
       Pointer(ppReturnedDeviceInterface)
       ]);
 
