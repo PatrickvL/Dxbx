@@ -46,7 +46,7 @@ uses
   , uVertexShader;
 
 
-procedure XTL_EmuExecutePushBuffer(pPushBuffer: X_D3DPushBuffer; pFixup: X_D3DFixup); stdcall;
+procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
 // Branch:martin  Revision:50  Translator:Shadow_Tj
 begin
   if Assigned(pFixup) then

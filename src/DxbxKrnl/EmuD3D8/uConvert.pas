@@ -27,7 +27,7 @@ uses
   Windows
   , SysUtils
   // Directx
-  , Direct3D9
+  , Direct3D8 // was Direct3D9 ?!
   // Dxbx
   , uEmuD3D8Types
   , uTypes

@@ -62,6 +62,7 @@ type
 
   X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
 
+  PX_D3DTILE = ^X_D3DTILE;
   X_D3DTILE = record
     Flags : DWORD;
     pMemory : PVOID;
@@ -118,20 +119,24 @@ type
   X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
   PX_VERTEXATTRIBUTEFORMAT = ^X_VERTEXATTRIBUTEFORMAT;
 
-  _X_D3DPRESENT_PARAMETERS = record
+  _X_D3DPRESENT_PARAMETERS = packed record
     BackBufferWidth: UINT;
     BackBufferHeight: UINT;
     BackBufferFormat: X_D3DFORMAT;
     BackBufferCount: UINT;
+
     MultiSampleType: D3DMULTISAMPLE_TYPE;
+
     SwapEffect: D3DSWAPEFFECT;
     hDeviceWindow: HWND;
     Windowed: LONGBOOL;
     EnableAutoDepthStencil: LONGBOOL;
     AutoDepthStencilFormat: X_D3DFORMAT;
     Flags: DWord;
+
     FullScreen_RefreshRateInHz: UINT;
     FullScreen_PresentationInterval: UINT;
+
     BufferSurfaces: array[0..2] of IDirect3DSurface8;
     DepthStencilSurface: IDirect3DSurface8;
   end;
@@ -196,7 +201,7 @@ type
 
   _X_D3DSURFACE_DESC = record
     Format: X_D3DFORMAT;
-    aType: X_D3DRESOURCETYPE;
+    _Type: X_D3DRESOURCETYPE;
     Usage: DWord;
     Size: UINT;
     MultiSampleType: D3DMULTISAMPLE_TYPE;
@@ -205,6 +210,7 @@ type
   end;
 
   X_D3DSURFACE_DESC = _X_D3DSURFACE_DESC;
+  PX_D3DSURFACE_DESC = ^X_D3DSURFACE_DESC;
 
   _X_D3DFIELDTYPE =
     (
@@ -231,60 +237,97 @@ type
 
   D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
 
-  X_D3DResource = Class
+  X_D3DResource = object
   public
     Common: DWord;
     Data: DWord;
-    Lock: DWord;
-    EmuResource8: IDirect3DResource8;
-    EmuBaseTexture8: IDirect3DBaseTexture8;
-    EmuTexture8: IDirect3DTexture8;
-    EmuVolumeTexture8: IDirect3DVolumeTexture8;
-    EmuCubeTexture8: IDirect3DCubeTexture8;
-    EmuSurface8: IDirect3DSurface8;
-    EmuVertexBuffer8: IDirect3DVertexBuffer8;
-    EmuIndexBuffer8: IDirect3DIndexBuffer8;
+    _: record case Integer of
+      0: (Lock: DWord);
+(* Dxbx TODO : Delphi doesn't compile this :
+      1: (EmuResource8: IDirect3DResource8);
+      2: (EmuBaseTexture8: IDirect3DBaseTexture8);
+      3: (EmuTexture8: IDirect3DTexture8);
+      4: (EmuVolumeTexture8: IDirect3DVolumeTexture8);
+      5: (EmuCubeTexture8: IDirect3DCubeTexture8);
+      6: (EmuSurface8: IDirect3DSurface8);
+      7: (EmuVertexBuffer8: IDirect3DVertexBuffer8);
+      8: (EmuIndexBuffer8: IDirect3DIndexBuffer8);
+*)
+    end;
   end;
+  PX_D3DResource = ^X_D3DResource;
+  
+const
+  // d3d resource "common" masks
+  X_D3DCOMMON_REFCOUNT_MASK      = $0000FFFF;
+  X_D3DCOMMON_TYPE_MASK          = $00070000;
+  X_D3DCOMMON_TYPE_SHIFT         = 16;
+  X_D3DCOMMON_TYPE_VERTEXBUFFER  = $00000000;
+  X_D3DCOMMON_TYPE_INDEXBUFFER   = $00010000;
+  X_D3DCOMMON_TYPE_PUSHBUFFER    = $00020000;
+  X_D3DCOMMON_TYPE_PALETTE       = $00030000;
+  X_D3DCOMMON_TYPE_TEXTURE       = $00040000;
+  X_D3DCOMMON_TYPE_SURFACE       = $00050000;
+  X_D3DCOMMON_TYPE_FIXUP         = $00060000;
+  X_D3DCOMMON_INTREFCOUNT_MASK   = $00780000;
+  X_D3DCOMMON_INTREFCOUNT_SHIFT  = 19;
+  X_D3DCOMMON_D3DCREATED         = $01000000;
+  X_D3DCOMMON_ISLOCKED           = $02000010; // Surface is currently locked (potential unswizzle candidate)
+  X_D3DCOMMON_UNUSED_MASK        = $FE000000;
+  X_D3DCOMMON_UNUSED_SHIFT       = 25;
+  
+  // special resource data flags (must set _SPECIAL *AND* specific flag(s))
+  X_D3DRESOURCE_DATA_FLAG_SPECIAL = $FFFF0000;
+  X_D3DRESOURCE_DATA_FLAG_SURFACE = $00000001; // Backbuffer surface, etc
+  X_D3DRESOURCE_DATA_FLAG_YUVSURF = $00000002; // YUV memory surface
+  X_D3DRESOURCE_DATA_FLAG_D3DREND = $00000004; // D3D Render Target
+  X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
 
+  function IsSpecialResource(x: DWORD): Boolean;
 
-  X_D3DPixelContainer = class(X_D3DResource)
+type
+  PX_D3DPixelContainer = ^X_D3DPixelContainer;
+  X_D3DPixelContainer = object(X_D3DResource)
   public
     Format: X_D3DFORMAT;
     Size: DWord;
   end;
 
-  X_D3DVertexBuffer = class(X_D3DResource)
-
+  PX_D3DVertexBuffer = ^X_D3DVertexBuffer;
+  X_D3DVertexBuffer = object(X_D3DResource)
+  public
   end;
 
-  X_D3DPushBuffer = class(X_D3DResource)
+  PX_D3DPushBuffer = ^X_D3DPushBuffer;
+  X_D3DPushBuffer = object(X_D3DResource)
   public
     Size: ULONG;
     AllocationSize: ULONG;
   end;
 
-  X_D3DFixup = class(X_D3DResource)
+  PX_D3DFixup = ^X_D3DFixup;
+  X_D3DFixup = object(X_D3DResource)
   public
     Run: ULONG;
     Next: ULONG;
     Size: ULONG;
   end;
 
-
-  X_D3DBaseTexture = class(X_D3DPixelContainer)
-
+  PX_D3DBaseTexture = ^X_D3DBaseTexture;
+  X_D3DBaseTexture = object(X_D3DPixelContainer)
   end;
 
-  X_D3DCubeTexture = class(X_D3DBaseTexture)
-
+  PX_D3DCubeTexture = ^X_D3DCubeTexture;
+  X_D3DCubeTexture = object(X_D3DBaseTexture)
   end;
 
-
-  X_D3DSurface = class(X_D3DPixelContainer)
+  PPX_D3DSurface = ^PX_D3DSurface;
+  PX_D3DSurface = ^X_D3DSurface;
+  X_D3DSurface = object(X_D3DPixelContainer)
   end;
 
-  X_D3DVolumeTexture = class(X_D3DBaseTexture)
-
+  PX_D3DVolumeTexture = ^X_D3DVolumeTexture;
+  X_D3DVolumeTexture = object(X_D3DBaseTexture)
   end;
 
   _X_STREAMINPUT = record
@@ -292,11 +335,15 @@ type
     Stride: UINT;
     Offset: UINT;
   end;
-
-  X_STREAMINPUT = _X_STREAMINPUT;
   PX_STREAMINPUT = ^X_STREAMINPUT;
+  X_STREAMINPUT = _X_STREAMINPUT;
 
 implementation
+
+function IsSpecialResource(x: DWORD): Boolean;
+begin
+ Result := (x and X_D3DRESOURCE_DATA_FLAG_SPECIAL) = X_D3DRESOURCE_DATA_FLAG_SPECIAL;
+end;
 
 end.
 

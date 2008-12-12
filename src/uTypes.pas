@@ -57,8 +57,26 @@ type
   IntPtr = Int32;
 {$IFEND}
 
+  PPByte = ^PByte;
+  INT = Integer;
+  
   TCodePointer = type Pointer;
 
+procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
+procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
+
 implementation
+
+// c function implementations
+
+procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
+begin
+  FillChar(p^,count,b);
+end;
+
+procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
+begin
+  Move(source^,dest^,count);
+end;
 
 end.
