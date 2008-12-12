@@ -99,6 +99,7 @@ begin
 end;
 
 procedure XBVideo.Load(const szRegistryKey: PChar);
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 begin
 (*
 {
@@ -133,6 +134,7 @@ begin
 end;
 
 procedure XBVideo.Save(const szRegistryKey: PChar);
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 begin
 (*{
     // ******************************************************************
