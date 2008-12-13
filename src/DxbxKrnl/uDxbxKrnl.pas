@@ -113,7 +113,7 @@ begin
   CxbxKrnl_TLS := pTLS;
   CxbxKrnl_TLSData := pTLSData;
   CxbxKrnl_XbeHeader := pXbeHeader;
-  CxbxKrnl_hEmuParent := IfThen(IsWindow(hwndParent), hwndParent, 0);
+  CxbxKrnl_hEmuParent := iif(IsWindow(hwndParent), hwndParent, 0);
 
   // For Unicode Conversions
   // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default

@@ -40,25 +40,41 @@ uses
   uEmuFS
   , uEmuD3D8;
 
+// Checks for failed vertex shaders, and shaders that would need patching
 function XTL_IsValidCurrentShader: Boolean; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   aHandle: DWORD;
-  pVertexShader: VERTEX_SHADER;
-  pD3DVertexShader: X_D3DVertexShader;
+  pVertexShader: PVERTEX_SHADER;
+  pD3DVertexShader: PX_D3DVertexShader;
 begin
-  Result := True;
-
   EmuSwapFS(fsWindows);
   XTL_EmuIDirect3DDevice8_GetVertexShader({var}aHandle);
   EmuSwapFS(fsXbox);
   if (VshHandleIsVertexShader(aHandle)) then
   begin
-    (*pD3DVertexShader := (X_D3DVertexShader * )(Handle & 0 x7FFFFFFF);
-    pVertexShader := (VERTEX_SHADER * )pD3DVertexShader - > Handle;
-    if (pVertexShader.Status <> 0)begin
+    pD3DVertexShader := PX_D3DVertexShader(aHandle and $7FFFFFFF);
+    pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
+    if (pVertexShader.Status <> 0) then
+    begin
       Result := FALSE;
-    end; *)
+      Exit;
+    end;
+    (* Cxbx has this disabled :
+    for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
+    begin
+      if (pVertexShader.VertexDynamicPatch.pStreamPatches[i].NeedPatch) then
+      begin
+       // Just for caching purposes
+        pVertexShader.Status := $80000001;
+        Result := FALSE;
+        Exit;
+      end;
+    end;
+    *)
   end;
+
+  Result := True;
 end;
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;

@@ -238,7 +238,7 @@ WAIT_TYPE;
 // * LARGE_INTEGER
 // ******************************************************************
 type
-  _LARGE_INTEGER = record
+  LARGE_INTEGER = record
     case Integer of
       0: (
         LowPart: DWORD;
@@ -246,15 +246,13 @@ type
       1: (
         QuadPart: LONGLONG);
   end;
-
-  LARGE_INTEGER = _LARGE_INTEGER;
   PLARGE_INTEGER = ^LARGE_INTEGER;
 
 // ******************************************************************
 // * ULARGE_INTEGER
 // ******************************************************************
 type
-  _ULARGE_INTEGER = record
+  ULARGE_INTEGER = record
     case Integer of
       0: (
         LowPart: DWORD;
@@ -262,8 +260,6 @@ type
       1: (
         QuadPart: ULONGLONG);
   end;
-
-  ULARGE_INTEGER = _ULARGE_INTEGER;
   PULARGE_INTEGER = ^ULARGE_INTEGER;
 
 (*
@@ -461,7 +457,6 @@ FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION
 // * MM_STATISTICS
 // ******************************************************************
 type
-  PMM_STATISTICS = ^MM_STATISTICS;
   MM_STATISTICS = record
     Length: ULONG;
     TotalPhysicalPages: ULONG;
@@ -473,6 +468,7 @@ type
     StackPagesCommitted: ULONG;
     ImagePagesCommitted: ULONG;
   end;
+  PMM_STATISTICS = ^MM_STATISTICS;
 
 (*
 // ******************************************************************
@@ -623,14 +619,15 @@ const PCI_USB0_OHCI_CONTROLLER =            $01C2;
 // * RETURN_FIRMWARE
 // ******************************************************************
 type
-  LPRETURN_FIRMWARE = ^RETURN_FIRMWARE;
   RETURN_FIRMWARE = {enum}(
     ReturnFirmwareHalt {=$0},
     ReturnFirmwareReboot {=$1},
     ReturnFirmwareQuickReboot {=$2},
     ReturnFirmwareHard {=$3},
     ReturnFirmwareFatal {=$4},
-    ReturnFirmwareAll {=$5});
+    ReturnFirmwareAll {=$5}
+  );
+  LPRETURN_FIRMWARE = ^RETURN_FIRMWARE;
 
 // ******************************************************************
 // * LAUNCH_DATA_HEADER
@@ -687,7 +684,6 @@ TIMER_TYPE;
 // * KTIMER (Timer Object)
 // ******************************************************************
 type
-  PKTIMER = ^KTIMER;
   KTIMER = record
     Header: DISPATCHER_HEADER; // 0x00
     DueTime: ULARGE_INTEGER; // 0x10
@@ -695,6 +691,7 @@ type
     Dpc: _PKDPC; // 0x20
     Period: LongInt; // 0x24
   end;
+  PKTIMER = ^KTIMER;
 (*
 // ******************************************************************
 // * PKSTART_ROUTINE
@@ -731,7 +728,6 @@ type
 // * KDPC (Deferred Procedure Call (DPC) Object)
 // ******************************************************************
 type
-  PKDPC = ^KDPC;
   KDPC = record
     cType: CSHORT; // 0x00
     Number: UCHAR; // 0x02
@@ -742,6 +738,7 @@ type
     SystemArgument1: PVOID;
     SystemArgument2: PVOID;
   end;
+  PKDPC = ^KDPC;
 
 (*
 // ******************************************************************
@@ -774,7 +771,6 @@ RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = record
 // * NT_TIB
 // ******************************************************************
 type
-  PNT_TIB = ^NT_TIB;
   NT_TIB = record
     ExceptionList: PEXCEPTION_REGISTRATION_RECORD; // 0x00
     StackBase: PVOID; // 0x04
@@ -787,6 +783,7 @@ type
     ArbitraryUserPointer: PVOID; // 0x14
     Self: PNT_TIB; // 0x18
   end;
+  PNT_TIB = ^NT_TIB;
 
 // ******************************************************************
 // * KTHREAD
@@ -796,12 +793,12 @@ type
 // *
 // ******************************************************************
 type
-  PKTHREAD = ^KTHREAD;
   KTHREAD = record
     UnknownA: array[0..$28 - 1] of UCHAR;
     TlsData: PVOID; // 0x28
     UnknownB: array[0..$E4 - 1] of UCHAR; // 0x2C
   end;
+  PKTHREAD = ^KTHREAD;
 
 // ******************************************************************
 // * ETHREAD
@@ -811,12 +808,12 @@ type
 // *
 // ******************************************************************
 type
-  PETHREAD = ^ETHREAD;
   ETHREAD = record
     Tcb: KTHREAD;
     UnknownA: array[0..$1C - 1] of UCHAR; // 0x110
     UniqueThread: DWORD; // 0x12C
   end;
+  PETHREAD = ^ETHREAD;
 
  // ******************************************************************
 // * KPCRB
@@ -826,7 +823,6 @@ type
 // *
 // ******************************************************************
 type
-  PKPRCB = ^KPRCB;
   KPRCB = record
     CurrentThread: PKTHREAD; // 0x00, KPCR : 0x28
     NextThread: PKTHREAD; // 0x04, KPCR : 0x2C
@@ -835,6 +831,7 @@ type
     // This is the total size of the structure (presumably)
     Unknown: array[0..$250 - 1] of UCHAR; // 0x0C, KPCR : 0x34
   end;
+  PKPRCB = ^KPRCB;
 
 // ******************************************************************
 // * KPCR
@@ -1060,7 +1057,7 @@ begin
 // DXBX Addition : Object Type Object
 //
 type
-  _OBJECT_TYPE = record
+  OBJECT_TYPE = record
 (*
     ERESOURCE Mutex;
     LIST_ENTRY TypeList;
@@ -1076,21 +1073,20 @@ type
     ERESOURCE ObjectLocks[4];
 *)
   end;
-  POBJECT_TYPE = ^_OBJECT_TYPE;
+  POBJECT_TYPE = ^OBJECT_TYPE;
 
 //
 // DXBX Addition : Xbox Refurb Info - TODO : Complete this!
 //
 type
-  _XBOX_REFURB_INFO = record
+  XBOX_REFURB_INFO = record
     //
     FirstBootTime: FILETIME;
     //
     PowerCycleCount: DWORD;
     //
   end;
-  XBOX_REFURB_INFO = _XBOX_REFURB_INFO;
-  PXBOX_REFURB_INFO = ^_XBOX_REFURB_INFO;
+  PXBOX_REFURB_INFO = ^XBOX_REFURB_INFO;
 
 //
 // DXBX Addition : Xbox Interrupt Mode - Source: ReactOS
@@ -1102,7 +1098,7 @@ type
 // DXBX Addition : Hardware Interface Type - Source: ReactOS
 //
 type
-  _INTERFACE_TYPE = (
+  INTERFACE_TYPE = (
     InterfaceTypeUndefined = -1,
     Internal,
     Isa,
@@ -1121,8 +1117,7 @@ type
     PNPISABus,
     PNPBus,
     MaximumInterfaceType
-    );
-  INTERFACE_TYPE = _INTERFACE_TYPE;
+  );
   PINTERFACE_TYPE = ^INTERFACE_TYPE;
 
 //

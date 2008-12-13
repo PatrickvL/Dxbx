@@ -66,7 +66,7 @@ type
   TLogType = (ltLog, ltFile);
   TFileType = (ftXbe, ftExe);
 
-  _XBE_HEADER = packed record
+  XBE_HEADER = packed record
     dwMagic: array[0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
     pbDigitalSignature: array[0..255] of Byte; // 0x0004 - digital signature
     dwBaseAddr: DWord; // 0x0104 - base address
@@ -101,10 +101,9 @@ type
     dwLogoBitmapAddr: DWord; // 0x0170 - logo bitmap address
     dwSizeofLogoBitmap: DWord; // 0x0174 - logo bitmap size
   end;
-  PXBE_HEADER = ^_XBE_HEADER;
-  XBE_HEADER = _XBE_HEADER;
+  PXBE_HEADER = ^XBE_HEADER;
 
-  _XBE_CERTIFICATE = packed record
+  XBE_CERTIFICATE = packed record
     dwSize: DWord; // 0x0000 - size of certificate
     dwTimeDate: DWord; // 0x0004 - timedate stamp
     dwTitleId: DWord; // 0x0008 - title id
@@ -119,12 +118,11 @@ type
     bzSignatureKey: array[0..15] of AnsiChar; // 0x00C0 - signature key
     bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of AnsiChar; // 0x00D0 - alternate signature keys
   end;
-  PXBE_CERTIFICATE = ^_XBE_CERTIFICATE;
-  XBE_CERTIFICATE = _XBE_CERTIFICATE;
+  PXBE_CERTIFICATE = ^XBE_CERTIFICATE;
 
 
   // Source: Cxbx
-  _XBE_SECTIONHEADER = packed record
+  XBE_SECTIONHEADER = packed record
     dwFlags: array[0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
     dwVirtualSize: DWord; // virtual size
@@ -136,10 +134,9 @@ type
     dwTailSharedRefCountAddr: DWord; // tail shared page reference count address
     bzSectionDigest: array[0..19] of AnsiChar; // section digest
   end;
-  XBE_SECTIONHEADER = _XBE_SECTIONHEADER;
 
   // Section headers - Source: XBMC
-  _XBE_SECTION = record
+  XBE_SECTION = record
     Flags: ULONG;
     VirtualAddress: PVOID; // Virtual address (where this section loads in RAM)
     VirtualSize: ULONG; // Virtual size (size of section in RAM; after FileSize it's 00'd)
@@ -151,12 +148,11 @@ type
     TailReferenceCount: PWORD; // Pointer to tail shared page reference count
     ShaHash: array[0..5 - 1] of DWord; // SHA hash.  Hash DWORD containing FileSize, then hash section.
   end; // SizeOf() = 38
-  XBE_SECTION = _XBE_SECTION;
   PXBE_SECTION = ^XBE_SECTION;
 
   // TODO : Should we use _XBE_SECTIONHEADER or _XBE_SECTION ?
 
-  _XBE_LIBRARYVERSION = packed record
+  XBE_LIBRARYVERSION = packed record
     szName: array[0..7] of AnsiChar; // library name
     wMajorVersion: Word; // major version
     wMinorVersion: Word; // minor version
@@ -170,10 +166,9 @@ type
             }
             //dwFlags;
   end;
-  PXBE_LIBRARYVERSION = ^_XBE_LIBRARYVERSION;
-  XBE_LIBRARYVERSION = _XBE_LIBRARYVERSION;
+  PXBE_LIBRARYVERSION = ^XBE_LIBRARYVERSION;
 
-  _XBE_TLS = packed record
+  XBE_TLS = packed record
     dwDataStartAddr: DWord; // raw start address
     dwDataEndAddr: DWord; // raw end address
     dwTLSIndexAddr: DWord; // tls index  address
@@ -181,8 +176,7 @@ type
     dwSizeofZeroFill: DWord; // size of zero fill
     dwCharacteristics: DWord; // characteristics
   end;
-  PXBE_TLS = ^_XBE_TLS;
-  XBE_TLS = _XBE_TLS;
+  PXBE_TLS = ^XBE_TLS;
 
   _Eight = Byte; // AnsiChar?
     //Bit 0  : bType1
@@ -358,7 +352,7 @@ var
   I: DWord;
   sFileType: string;
 begin
-  sFileType := IfThen(aFileType = ftXbe, 'Xbe', 'Exe');
+  sFileType := iif(aFileType = ftXbe, 'Xbe', 'Exe');
 
   ConstructorInit();
 

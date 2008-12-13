@@ -52,7 +52,7 @@ type
   X_VERTEXSHADERCONSTANTMODE = DWord;
   X_D3DFORMAT = DWord;
 
-  _X_VERTEXSHADERINPUT = record
+  X_VERTEXSHADERINPUT = record
     IndexOfStream: DWord;
     Offset: DWord;
     Format: DWord;
@@ -60,9 +60,6 @@ type
     TesselationSource: Byte;
   end;
 
-  X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
-
-  PX_D3DTILE = ^X_D3DTILE;
   X_D3DTILE = record
     Flags : DWORD;
     pMemory : PVOID;
@@ -71,7 +68,7 @@ type
     ZStartTag : DWORD;
     ZOffset : DWORD;
   end;
-
+  PX_D3DTILE = ^X_D3DTILE;
 
   X_D3DVertexShader = record
     UnknownA: DWord;
@@ -80,24 +77,21 @@ type
     Flags: DWord;
     UnknownC: array[0..59] of DWord;
   end;
+  PX_D3DVertexShader = ^X_D3DVertexShader;
 
-
-  _STREAM_DYNAMIC_PATCH_ = record
+  STREAM_DYNAMIC_PATCH = record
     NeedPatch: BOOL;       // This is to know whether is data which must be patched
     ConvertedStride: DWord;
     NbrTypes: DWord;        // Number of the stream data types
     pTypes: UINT;         // The stream data types (xbox)
   end;
-  STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH_;
 
-  _VERTEX_DYNAMIC_PATCH_ = record
+  VERTEX_DYNAMIC_PATCH = record
     NbrStreams: UINT; // The number of streams the vertex shader uses
     pStreamPatches: STREAM_DYNAMIC_PATCH;
   end;
 
-  VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH_;      
-
-  _VERTEX_SHADER = record
+  VERTEX_SHADER = record
     aHandle: DWord;
     // These are the parameters given by the XBE,
     // we save them to be be able to return them when necassary.
@@ -111,15 +105,14 @@ type
     // Needed for dynamic stream patching
     VertexDynamicPatch: VERTEX_DYNAMIC_PATCH;
   end;
-  VERTEX_SHADER = _VERTEX_SHADER;
+  PVERTEX_SHADER = ^VERTEX_SHADER;
 
-  _X_VERTEXATTRIBUTEFORMAT = record
+  X_VERTEXATTRIBUTEFORMAT = record
     pVertexShaderInput: array [0..15] of X_VERTEXSHADERINPUT;
   end;
-  X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
   PX_VERTEXATTRIBUTEFORMAT = ^X_VERTEXATTRIBUTEFORMAT;
 
-  _X_D3DPRESENT_PARAMETERS = packed record
+  X_D3DPRESENT_PARAMETERS = packed record
     BackBufferWidth: UINT;
     BackBufferHeight: UINT;
     BackBufferFormat: X_D3DFORMAT;
@@ -140,20 +133,15 @@ type
     BufferSurfaces: array[0..2] of IDirect3DSurface8;
     DepthStencilSurface: IDirect3DSurface8;
   end;
-
-  X_D3DPRESENT_PARAMETERS = _X_D3DPRESENT_PARAMETERS;
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
-  _X_D3DGAMMARAMP = record
+  X_D3DGAMMARAMP = record
     Red: array[0..255] of Byte;
     Green: array[0..255] of Byte;
     Blue: array[0..255] of Byte;
   end;
 
-  X_D3DGAMMARAMP = _X_D3DGAMMARAMP;
-
-  _X_D3DPRIMITIVETYPE =
-    (
+  X_D3DPRIMITIVETYPE = (
     X_D3DPT_POINTLIST = 1,
     X_D3DPT_LINELIST = 2,
     X_D3DPT_LINELOOP = 3, // Xbox only
@@ -167,12 +155,9 @@ type
 
     X_D3DPT_MAX = 11,
     X_D3DPT_INVALID = $7FFFFFFF
-    );
-  X_D3DPRIMITIVETYPE = _X_D3DPRIMITIVETYPE;
+  );
 
-
-  _X_D3DRESOURCETYPE =
-    (
+  X_D3DRESOURCETYPE = (
     X_D3DRTYPE_NONE = 0,
     X_D3DRTYPE_SURFACE = 1,
     X_D3DRTYPE_VOLUME = 2,
@@ -186,20 +171,17 @@ type
     X_D3DRTYPE_FIXUP = 10,
 
     X_D3DRTYPE_FORCE_DWORD = $7FFFFFFF
-    );
-  X_D3DRESOURCETYPE = _X_D3DRESOURCETYPE;
+  );
 
-  _X_D3DDISPLAYMODE = record
-    Width: Integer;
-    Height: Integer;
-    RefreshRate: Integer;
-    Flags: DWord;
+  X_D3DDISPLAYMODE = record
+    Width: UINT;
+    Height: UINT;
+    RefreshRate: UINT;
+    Flags: DWORD;
     Format: X_D3DFORMAT;
   end;
 
-  X_D3DDISPLAYMODE = _X_D3DDISPLAYMODE;
-
-  _X_D3DSURFACE_DESC = record
+  X_D3DSURFACE_DESC = record
     Format: X_D3DFORMAT;
     _Type: X_D3DRESOURCETYPE;
     Usage: DWord;
@@ -208,31 +190,25 @@ type
     Width: UINT;
     Height: UINT;
   end;
-
-  X_D3DSURFACE_DESC = _X_D3DSURFACE_DESC;
   PX_D3DSURFACE_DESC = ^X_D3DSURFACE_DESC;
 
-  _X_D3DFIELDTYPE =
-    (
+  X_D3DFIELDTYPE = (
     X_D3DFIELD_ODD = 1,
     X_D3DFIELD_EVEN = 2,
     X_D3DFIELD_PROGRESSIVE = 3,
     X_D3DFIELD_FORCE_DWORD = $7FFFFFFF
-    );
-  X_D3DFIELDTYPE = _X_D3DFIELDTYPE;
+  );
 
-  _X_D3DFIELD_STATUS = record
+  X_D3DFIELD_STATUS = record
     Field: X_D3DFIELDTYPE;
     VBlankCount: UINT;
   end;
-  X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
 
-  _D3DVBLANKDATA = record
+  D3DVBLANKDATA = record
     VBlank: DWord;
     Swap: DWord;
     Flags: DWord;
   end;
-  D3DVBLANKDATA = _D3DVBLANKDATA;
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
 
   D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
@@ -270,7 +246,7 @@ type
     property EmuIndexBuffer8: IDirect3DIndexBuffer8 read GetEmuIndexBuffer8 write SetEmuIndexBuffer8;
   end;
   PX_D3DResource = ^X_D3DResource;
-  
+
 const
   // d3d resource "common" masks
   X_D3DCOMMON_REFCOUNT_MASK      = $0000FFFF;
@@ -289,7 +265,7 @@ const
   X_D3DCOMMON_ISLOCKED           = $02000010; // Surface is currently locked (potential unswizzle candidate)
   X_D3DCOMMON_UNUSED_MASK        = $FE000000;
   X_D3DCOMMON_UNUSED_SHIFT       = 25;
-  
+
   // special resource data flags (must set _SPECIAL *AND* specific flag(s))
   X_D3DRESOURCE_DATA_FLAG_SPECIAL = $FFFF0000;
   X_D3DRESOURCE_DATA_FLAG_SURFACE = $00000001; // Backbuffer surface, etc
@@ -300,57 +276,61 @@ const
   function IsSpecialResource(x: DWORD): Boolean;
 
 type
-  PX_D3DPixelContainer = ^X_D3DPixelContainer;
   X_D3DPixelContainer = object(X_D3DResource)
   public
     Format: X_D3DFORMAT;
     Size: DWord;
   end;
+  PX_D3DPixelContainer = ^X_D3DPixelContainer;
 
-  PX_D3DVertexBuffer = ^X_D3DVertexBuffer;
   X_D3DVertexBuffer = object(X_D3DResource)
   public
   end;
+  PX_D3DVertexBuffer = ^X_D3DVertexBuffer;
 
-  PX_D3DPushBuffer = ^X_D3DPushBuffer;
+  X_D3DIndexBuffer = object(X_D3DResource)
+  public
+  end;
+  PX_D3DIndexBuffer = ^X_D3DIndexBuffer;
+
   X_D3DPushBuffer = object(X_D3DResource)
   public
     Size: ULONG;
     AllocationSize: ULONG;
   end;
+  PX_D3DPushBuffer = ^X_D3DPushBuffer;
 
-  PX_D3DFixup = ^X_D3DFixup;
   X_D3DFixup = object(X_D3DResource)
   public
     Run: ULONG;
     Next: ULONG;
     Size: ULONG;
   end;
+  PX_D3DFixup = ^X_D3DFixup;
 
-  PX_D3DBaseTexture = ^X_D3DBaseTexture;
   X_D3DBaseTexture = object(X_D3DPixelContainer)
   end;
+  PX_D3DBaseTexture = ^X_D3DBaseTexture;
 
-  PX_D3DCubeTexture = ^X_D3DCubeTexture;
   X_D3DCubeTexture = object(X_D3DBaseTexture)
   end;
+  PX_D3DCubeTexture = ^X_D3DCubeTexture;
 
-  PPX_D3DSurface = ^PX_D3DSurface;
-  PX_D3DSurface = ^X_D3DSurface;
   X_D3DSurface = object(X_D3DPixelContainer)
   end;
+  PX_D3DSurface = ^X_D3DSurface;
+  PPX_D3DSurface = ^PX_D3DSurface;
 
-  PX_D3DVolumeTexture = ^X_D3DVolumeTexture;
   X_D3DVolumeTexture = object(X_D3DBaseTexture)
   end;
+  PX_D3DVolumeTexture = ^X_D3DVolumeTexture;
 
-  _X_STREAMINPUT = record
+  X_STREAMINPUT = record
     VertexBuffer: PX_D3DVertexBuffer;
     Stride: UINT;
     Offset: UINT;
   end;
   PX_STREAMINPUT = ^X_STREAMINPUT;
-  X_STREAMINPUT = _X_STREAMINPUT;
 
 implementation
 

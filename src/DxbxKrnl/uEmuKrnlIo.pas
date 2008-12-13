@@ -45,7 +45,7 @@ const
   IRP_MJ_MAXIMUM_FUNCTION = $1B;
 
 type
-  _IRP = record
+  IRP = record
     cType: CSHORT;
     Size: USHORT;
 (*
@@ -103,7 +103,6 @@ type
      end; Tail;
 *)
   end;
-  IRP = _IRP;
   PIRP = ^IRP;
 
   PDRIVER_EXTENSION = UNKNOWN; // TODO : Lookup in ReactOS
@@ -122,10 +121,8 @@ type
 
   PDEVICE_OBJECT = ^DEVICE_OBJECT; // forward;
 
-//
-// I/O Timer Object
-//
-  _IO_TIMER = record // Source: ReactOS
+  // I/O Timer Object
+  IO_TIMER = record // Source: ReactOS
     _Type: USHORT;
     TimerEnabled: USHORT;
     IoTimerList: LIST_ENTRY;
@@ -133,10 +130,9 @@ type
     Context: PVOID;
     DeviceObject: PDEVICE_OBJECT;
   end;
-  IO_TIMER = _IO_TIMER;
   PIO_TIMER = ^IO_TIMER;
 
-  _DRIVER_OBJECT = record // Source: ReactOS
+  DRIVER_OBJECT = record // Source: ReactOS
     _Type: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
@@ -153,10 +149,9 @@ type
     DriverUnload: PDRIVER_UNLOAD;
     MajorFunction: array[0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
   end;
-  DRIVER_OBJECT = _DRIVER_OBJECT;
   PDRIVER_OBJECT = ^DRIVER_OBJECT;
 
-  _DEVICE_OBJECT = record // Source: XBMC
+  DEVICE_OBJECT = record // Source: XBMC
     _Type: CSHORT;
     Size: USHORT;
     ReferenceCount: LONG;
@@ -187,18 +182,16 @@ type
     DeviceObjectExtension: PDEVOBJ_EXTENSION;
     Reserved: PVOID;
   end; // Source: XBMC / ReactOS
-  DEVICE_OBJECT = _DEVICE_OBJECT;
 
-  _FILE_OBJECT = record // Source: XBMC
+  FILE_OBJECT = record // Source: XBMC
     _Type: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
    // ...
   end;
-  FILE_OBJECT = _FILE_OBJECT;
   PFILE_OBJECT = ^FILE_OBJECT;
 
-  _SHARE_ACCESS = record // Source: ReactOS
+  SHARE_ACCESS = record // Source: ReactOS
     OpenCount: ULONG;
     Readers: ULONG;
     Writers: ULONG;
@@ -207,7 +200,6 @@ type
     SharedWrite: ULONG;
     SharedDelete: ULONG;
   end;
-  SHARE_ACCESS = _SHARE_ACCESS;
   PSHARE_ACCESS = ^SHARE_ACCESS;
 
 var
