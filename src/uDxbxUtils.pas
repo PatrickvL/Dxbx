@@ -224,11 +224,11 @@ var
   function GetInt: Integer;
   begin
     s1 := '';
-    while (s[n] = ' ') and (Length(s) > n) do
+    while (n <= Length(s)) and (s[n] = ' ') do
       Inc(n);
 
-    while (AnsiChar(s[n]) in ['0'..'9', '+', '-'])
-      and (Length(s) >= n) do
+    while (n <= Length(s))
+      and (AnsiChar(s[n]) in ['0'..'9', '+', '-']) do
     begin
       s1 := s1 + s[n];
       Inc(n);
@@ -240,7 +240,7 @@ var
   function GetFloat: Integer; 
   begin 
     s1 := ''; 
-    while (s[n] = ' ') and (Length(s) > n) do 
+    while (n <= Length(s)) and (s[n] = ' ') do
       Inc(n);
 
     while (AnsiChar(s[n]) in ['0'..'9', '+', '-', '.', 'e', 'E'])
@@ -249,35 +249,36 @@ var
       s1 := s1 + s[n];
       Inc(n);
     end;
-    
-    Result := Length(s1);
-  end; 
 
-  function GetString: Integer; 
-  begin 
-    s1 := ''; 
-    while (s[n] = ' ') and (Length(s) > n) do 
+    Result := Length(s1);
+  end;
+
+  function GetString: Integer;
+  begin
+    s1 := '';
+    while (n <= Length(s)) and (s[n] = ' ') do
       Inc(n);
 
-    while (s[n] <> ' ') and (Length(s) >= n) do
+    while (n <= Length(s)) and (s[n] <> ' ') do
     begin
       s1 := s1 + s[n];
       Inc(n);
     end;
 
-    Result := Length(s1); 
-  end; 
+    Result := Length(s1);
+  end;
 
-  function ScanStr(c: Char): Boolean; 
-  begin 
-    while (s[n] <> c) and (Length(s) > n) do 
+  function ScanStr(c: Char): Boolean;
+  begin
+    while (n <= Length(s)) and (s[n] <> c) do
       Inc(n);
 
     Inc(n);
 
-    if (n <= Length(s)) then 
-      Result := True 
-    else Result := False; 
+    if (n <= Length(s)) then
+      Result := True
+    else
+      Result := False; 
   end; 
 
   function GetFmt: Integer; 
@@ -286,7 +287,7 @@ var
 
     while True do 
     begin
-      while (fmt[m] = ' ') and (Length(fmt) > m) do 
+      while (m <= Length(fmt)) and (fmt[m] = ' ') do
         Inc(m);
 
       if (m >= Length(fmt)) then 

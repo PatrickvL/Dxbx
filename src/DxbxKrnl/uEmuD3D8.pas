@@ -354,7 +354,8 @@ begin
 
   // create the window
   begin
-    dwStyle := iif((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen(), WS_OVERLAPPEDWINDOW, WS_CHILD);
+    dwStyle := iif(g_XBVideo.GetFullscreen() or (CxbxKrnl_hEmuParent = 0), WS_OVERLAPPEDWINDOW, WS_CHILD);
+
     nTitleHeight := GetSystemMetrics(SM_CYCAPTION);
     nBorderWidth := GetSystemMetrics(SM_CXSIZEFRAME);
     nBorderHeight := GetSystemMetrics(SM_CYSIZEFRAME);
@@ -367,19 +368,7 @@ begin
     Inc(nWidth, nBorderWidth * 2);
     Inc(nHeight, (nBorderHeight * 2) + nTitleHeight);
 
-    // Note: This is a work-around sscanf (which is not available in Delphi) :
-    with TStringList.Create do
-    try
-      Delimiter := 'x';
-      CommaText := g_XBVideo.GetVideoResolution();
-      if Count = 2 then
-      begin
-        nWidth := StrToInt(Strings[0]);
-        nWidth := StrToInt(Strings[1]);
-      end;
-    finally
-      Free;
-    end;
+    sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', [@nWidth, @nHeight]);
 
     if g_XBVideo.GetFullscreen() then
     begin
@@ -810,7 +799,7 @@ begin
           // retrieve resolution from configuration
           if (g_EmuCDPD.pPresentationParameters.Windowed) then
           begin
-            // Dxbx TODO : sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', g_EmuCDPD.pPresentationParameters.BackBufferWidth, @g_EmuCDPD.pPresentationParameters.BackBufferHeight);
+            sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', [@(g_EmuCDPD.pPresentationParameters.BackBufferWidth), @(g_EmuCDPD.pPresentationParameters.BackBufferHeight)]);
 
             g_pD3D8.GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), {out}D3DDisplayMode);
 
@@ -819,11 +808,11 @@ begin
           end
           else
           begin
-            (* Dxbx TODO : sscanf(g_XBVideo.GetVideoResolution(), '%d x %d %*dbit %s (%d hz)',
-              @g_EmuCDPD.pPresentationParameters.BackBufferWidth,
-              @g_EmuCDPD.pPresentationParameters.BackBufferHeight,
-              szBackBufferFormat,
-              @g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz);*)
+            sscanf(g_XBVideo.GetVideoResolution(), '%d x %d %*dbit %s (%d hz)', [
+              @(g_EmuCDPD.pPresentationParameters.BackBufferWidth),
+              @(g_EmuCDPD.pPresentationParameters.BackBufferHeight),
+              @(szBackBufferFormat[0]),
+              @(g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz)]);
 
             if (StrComp(szBackBufferFormat, 'x1r5g5b5') = 0) then
               g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_X1R5G5B5
