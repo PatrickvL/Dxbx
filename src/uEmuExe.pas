@@ -346,7 +346,7 @@ begin
       m_OptionalHeader.m_image_base + $100 +
       m_Xbe.m_Header.dwSizeofHeaders + 260 +
       DWord(Length(m_Xbe.m_LibraryVersion) * Integer(m_Xbe.m_Header.dwLibraryVersions)) +
-      DWord(IfThen(Assigned(m_Xbe.m_TLS), SizeOF(XBE_TLS), 0)) +
+      DWord(iif(Assigned(m_Xbe.m_TLS), SizeOF(XBE_TLS), 0)) +
       (m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr), $1000);
     virt_addr := RoundUp(
       m_SectionHeader[i - 1].m_virtual_addr +

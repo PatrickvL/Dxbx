@@ -49,34 +49,30 @@ type
 
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
-  _XTHREAD_NOTIFICATION = record
+  XTHREAD_NOTIFICATION = record
     Reserved: LIST_ENTRY;
     pfnNotifyRoutine: XTHREAD_NOTIFY_PROC;
   end;
-  XTHREAD_NOTIFICATION = _XTHREAD_NOTIFICATION;
   PXTHREAD_NOTIFICATION = ^XTHREAD_NOTIFICATION;
 
-  _XINPUT_RUMBLE = record
+  XINPUT_RUMBLE = record
     wLeftMotorSpeed: Word;
     wRightMotorSpeed: Word;
   end;
-  XINPUT_RUMBLE = _XINPUT_RUMBLE;
   PXINPUT_RUMBLE = ^XINPUT_RUMBLE;
 
-  _XINPUT_FEEDBACK_HEADER = record
+  XINPUT_FEEDBACK_HEADER = record
     dwStatus: DWord;
     hEvent: HANDLE; // OPTIONAL ;
     Reserved: array[1..58] of Byte;
   end;
-  XINPUT_FEEDBACK_HEADER = _XINPUT_FEEDBACK_HEADER;
   PXINPUT_FEEDBACK_HEADER = ^XINPUT_FEEDBACK_HEADER;
 
-  _XINPUT_FEEDBACK = record
+  XINPUT_FEEDBACK = record
     Header: XINPUT_FEEDBACK_HEADER;
 //    union
     Rumble: XINPUT_RUMBLE;
   end;
-  XINPUT_FEEDBACK = _XINPUT_FEEDBACK;
   PXINPUT_FEEDBACK = ^XINPUT_FEEDBACK;
 
 var

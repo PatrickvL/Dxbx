@@ -136,7 +136,8 @@ type
   XBCtrlState = (
     XBCTRL_STATE_NONE = 0,
     XBCTRL_STATE_CONFIG,
-    XBCTRL_STATE_LISTEN);
+    XBCTRL_STATE_LISTEN
+  );
 
   // Xbox Controller Object Config
   XBCtrlObjectCfg = record
@@ -145,8 +146,7 @@ type
     dwFlags: Integer; // flags explaining the data format
   end;
 
-
-  _XINPUT_GAMEPAD = record
+  XINPUT_GAMEPAD = record
     wButtons: Word;
     bAnalogButtons: array[0..7] of Byte;
     sThumbLX: SHORT;
@@ -154,15 +154,13 @@ type
     sThumbRX: SHORT;
     sThumbRY: SHORT;
   end;
-
-  PXINPUT_GAMEPAD = _XINPUT_GAMEPAD;
+  PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
 
   // XINPUT_STATE
-  _XINPUT_STATE = record
+  XINPUT_STATE = record
     dwPacketNumber: DWord;
-    Gamepad: _XINPUT_GAMEPAD;
+    Gamepad: XINPUT_GAMEPAD;
   end;
-  XINPUT_STATE = _XINPUT_STATE;
   PXINPUT_STATE = ^XINPUT_STATE;
 
   XTL_LPDIRECTINPUT8 = IUnknown; // TODO Dxbx : How is this type defined?
