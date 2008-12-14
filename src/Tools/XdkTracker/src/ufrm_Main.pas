@@ -266,14 +266,12 @@ begin
   if Result.FileName = '' then
   begin
     // Old-style 'Name' values are read here :
-    Result.FileName := XML_ReadString(XBEInfoNode, 'Name');
-    Result.Title := Result.FileName;
+    Result.Title := XML_ReadString(XBEInfoNode, 'Name');
     Result.DumpInfo := '';
     Result.GameRegion := 0;
   end
   else
   begin
-    Result.FileName := XML_ReadString(XBEInfoNode, 'FileName');
     Result.Title := XML_ReadString(XBEInfoNode, 'Title');
     Result.GameRegion := StrToIntDef(XML_ReadString(XBEInfoNode, 'GameRegion'), 0);
     Result.DumpInfo := XML_ReadString(XBEInfoNode, 'DumpInfo');
@@ -312,7 +310,12 @@ begin
   end;
 
   // No match, try searching by filename as default :
-  Result := FindByFileName(aXBEInfo.FileName);
+  if aXBEInfo.FileName <> '' then
+    Result := FindByFileName(aXBEInfo.FileName);
+
+  if Result < 0 then
+    // Still no match, try searching by filename, but use Title as last resort : 
+    Result := FindByFileName(aXBEInfo.Title);
 end;
 
 function TfrmXdkTracker.FindByFileName(const aFileName: string): Integer;

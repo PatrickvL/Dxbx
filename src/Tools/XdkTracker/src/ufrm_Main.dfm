@@ -512,7 +512,6 @@ object frmXdkTracker: TfrmXdkTracker
     Panels = <>
     SimplePanel = True
     SimpleText = 'No XDK List loaded....'
-    ExplicitTop = 458
   end
   object MainMenu1: TMainMenu
     Left = 8
