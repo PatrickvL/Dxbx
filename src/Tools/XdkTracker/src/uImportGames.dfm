@@ -72,8 +72,6 @@ object frm_XBEList: Tfrm_XBEList
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 0
-    ExplicitLeft = 337
-    ExplicitTop = 281
   end
   object btn_Ok: TButton
     Left = 325
@@ -85,8 +83,6 @@ object frm_XBEList: Tfrm_XBEList
     Default = True
     ModalResult = 1
     TabOrder = 1
-    ExplicitLeft = 257
-    ExplicitTop = 281
   end
   object edt_Publisher: TEdit
     Left = 285

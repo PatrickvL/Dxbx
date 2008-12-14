@@ -55,15 +55,14 @@ uses
   uEmuXapi,
   uVertexBuffer;
 
-// information passed to the create device proxy thread
-
 type
+  // information passed to the create device proxy thread
   EmuD3D8CreateDeviceProxyData = record
     Adapter: UINT;
     DeviceType: D3DDEVTYPE;
     hFocusWindow: HWND;
     BehaviorFlags: DWORD;
-    pPresentationParameters: ^_D3DPRESENT_PARAMETERS_;
+    pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
     ppReturnedDeviceInterface: IDirect3DDevice8;
     bReady: Bool;
     case Integer of
@@ -767,8 +766,8 @@ begin
 
           g_EmuCDPD.hFocusWindow := g_hEmuWindow;
 
-          g_EmuCDPD.pPresentationParameters.BackBufferFormat := TD3DFormat(XTL_EmuPC2XB_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat));
-          g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := TD3DFormat(XTL_EmuPC2XB_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat));
+          g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL_EmuPC2XB_D3DFormat(TD3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat));
+          g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := XTL_EmuPC2XB_D3DFormat(TD3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat));
 
           if (not g_XBVideo.GetVSync() and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) > 0) and g_XBVideo.GetFullscreen()) then
             g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
@@ -803,7 +802,7 @@ begin
 
             g_pD3D8.GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), {out}D3DDisplayMode);
 
-            g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DDisplayMode.Format;
+            g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DDisplayMode.Format);
             g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz := 0;
           end
           else
@@ -815,13 +814,13 @@ begin
               @(g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz)]);
 
             if (StrComp(szBackBufferFormat, 'x1r5g5b5') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_X1R5G5B5
+              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_X1R5G5B5)
             else if (StrComp(szBackBufferFormat, 'r5g6r5') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_R5G6B5
+              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_R5G6B5)
             else if (StrComp(szBackBufferFormat, 'x8r8g8b8') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_X8R8G8B8
+              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_X8R8G8B8)
             else if (StrComp(szBackBufferFormat, 'a8r8g8b8') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := D3DFMT_A8R8G8B8;
+              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_A8R8G8B8);
           end;
         end;
 
@@ -848,7 +847,7 @@ begin
           g_EmuCDPD.DeviceType,
           g_EmuCDPD.hFocusWindow,
           g_EmuCDPD.BehaviorFlags,
-          {var}g_EmuCDPD.pPresentationParameters^, // Dxbx crashes on this argument!
+          {var}PD3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters)^, // Dxbx crashes on this argument!
           {out}g_EmuCDPD.ppReturnedDeviceInterface
         );
 

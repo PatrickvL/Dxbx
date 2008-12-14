@@ -160,6 +160,7 @@ var
   XBEInfo: TXBEInfo;
   CurrentSelection: string;
   Line: TListItem;
+  NrNew: Integer;
 begin
   if not Assigned(aXBEList) then
     Exit;
@@ -274,6 +275,7 @@ begin
   try
     lst_XBEs.Clear;
 
+    NrNew := 0;
     for i := 0 to MyFilteredXBEList.Count - 1 do
     begin
       XBEInfo := TXBEInfo(MyFilteredXBEList.Objects[i]);
@@ -287,9 +289,22 @@ begin
       Line.SubItems.Add(XBEInfo.FileName);
       for j := 0 to MyXDKLibNamesList.Count - 1 do
         Line.SubItems.Add(XBEInfo.LibVersions.Values[MyXDKLibNamesList[j]]);
+
+      if Line.Checked then
+        Inc(NrNew);
     end;
 
   finally
+    if FXBEList.Count > MyFilteredXBEList.Count then
+      lbl_NewGames.Caption := Format('Filtered %d Titles', [MyFilteredXBEList.Count])
+    else
+      lbl_NewGames.Caption := Format('All %d Titles', [MyFilteredXBEList.Count]);
+
+    if ShowAsImport then
+      lbl_NewGames.Caption := lbl_NewGames.Caption + Format(' (%d new)', [NrNew]);
+
+    lbl_NewGames.Caption := lbl_NewGames.Caption + ' :';
+
     // Reset previous selection :
     lst_XBEs.Selected := lst_XBEs.FindCaption(0, CurrentSelection, {Partial=}False, {Inclusive=}True, {Wrap=}False);
     if (lst_XBEs.Selected = nil) and (lst_XBEs.Items.Count > 0) then
