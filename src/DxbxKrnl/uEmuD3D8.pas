@@ -56,6 +56,7 @@ uses
   uVertexBuffer;
 
 type
+  PIDirect3DDevice8 = ^IDirect3DDevice8;
   // information passed to the create device proxy thread
   EmuD3D8CreateDeviceProxyData = record
     Adapter: UINT;
@@ -63,7 +64,7 @@ type
     hFocusWindow: HWND;
     BehaviorFlags: DWORD;
     pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
-    ppReturnedDeviceInterface: IDirect3DDevice8;
+    ppReturnedDeviceInterface: PIDirect3DDevice8;
     bReady: Bool;
     case Integer of
       0: (hRet: HRESULT);
@@ -75,11 +76,11 @@ var
 
 function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType; overload;
 
-procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord); stdcall; // forward
+procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: UInt32); stdcall; // forward
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
-  ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall; // forward
+  ppReturnedDeviceInterface: PIDirect3DDevice8): HRESULT; stdcall; // forward
 
 function XTL_EmuIDirect3DDevice8_SetVertexData2f(aRegister: Integer;
   a: FLOAT; b: FLOAT): HRESULT; stdcall;
@@ -173,7 +174,7 @@ begin
     Result := AFalse;
 end;
 
-procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: DWord); stdcall;
+procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: UInt32); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj Done:99
 var
   dwThreadId: DWORD;
@@ -182,7 +183,7 @@ var
   DevType: D3DDEVTYPE;
   PresParam: D3DPRESENT_PARAMETERS; //X_D3DPRESENT_PARAMETERS;
 begin
-  g_EmuShared.GetXBVideo(g_XBVideo);
+  g_EmuShared.GetXBVideo({var}g_XBVideo);
 
   if g_XBVideo.GetFullscreen() then
     CxbxKrnl_hEmuParent := 0;
@@ -224,32 +225,37 @@ begin
   end;
 
   // create Direct3D8 and retrieve caps
-  //  using namespace XTL;
+  begin
+    //  using namespace XTL;
 
-  // xbox Direct3DCreate8 returns '1' always, so we need our own ptr
-  g_pD3D8 := Direct3DCreate8(D3D_SDK_VERSION);
+    // xbox Direct3DCreate8 returns '1' always, so we need our own ptr
+    g_pD3D8 := Direct3DCreate8(D3D_SDK_VERSION);
 
-  if g_pD3D8 = nil then
-    CxbxKrnlCleanup('Could not initialize Direct3D8!');
+    if g_pD3D8 = nil then
+      CxbxKrnlCleanup('Could not initialize Direct3D8!');
 
-  DevType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
-  g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, {out}g_D3DCaps);
+    DevType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
+    g_pD3D8.GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, {out}g_D3DCaps);
+  end;
+
   SetFocus(g_hEmuWindow);
 
   // create default device
-  ZeroMemory(@PresParam, SizeOf(PresParam));
-  PresParam.BackBufferWidth := 640;
-  PresParam.BackBufferHeight := 480;
-  PresParam.BackBufferFormat := D3DFMT_A8R8G8B8; //6; (* X_D3DFMT_A8R8G8B8 *)
-  PresParam.BackBufferCount := 1;
-  PresParam.EnableAutoDepthStencil := True;
-  PresParam.AutoDepthStencilFormat := D3DFMT_D24S8; //$2A; (* X_D3DFMT_D24S8 *)
-  PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
+  begin
+    ZeroMemory(@PresParam, SizeOf(PresParam));
+    PresParam.BackBufferWidth := 640;
+    PresParam.BackBufferHeight := 480;
+    PresParam.BackBufferFormat := D3DFMT_A8R8G8B8; //6; (* X_D3DFMT_A8R8G8B8 *)
+    PresParam.BackBufferCount := 1;
+    PresParam.EnableAutoDepthStencil := True;
+    PresParam.AutoDepthStencilFormat := D3DFMT_D24S8; //$2A; (* X_D3DFMT_D24S8 *)
+    PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
 
-  EmuSwapFS(fsXbox);
-  XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, 0, $00000040, @PresParam, g_pD3DDevice8);
-  EmuSwapFS(fsWindows);
-end;
+    EmuSwapFS(fsXbox);
+    XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, 0, $00000040, @PresParam, @g_pD3DDevice8);
+    EmuSwapFS(fsWindows);
+  end;
+end; // XTL_EmuD3DInit
 
 // cleanup Direct3D
 procedure XTL_EmuD3DCleanup; stdcall;
@@ -848,7 +854,7 @@ begin
           g_EmuCDPD.hFocusWindow,
           g_EmuCDPD.BehaviorFlags,
           {var}PD3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters)^, // Dxbx crashes on this argument!
-          {out}g_EmuCDPD.ppReturnedDeviceInterface
+          {out}g_EmuCDPD.ppReturnedDeviceInterface^
         );
 
         // report error
@@ -865,7 +871,7 @@ begin
         end;
 
         // cache device pointer
-        g_pD3DDevice8 := g_EmuCDPD.ppReturnedDeviceInterface;
+        g_pD3DDevice8 := g_EmuCDPD.ppReturnedDeviceInterface^;
 
         // default NULL guid
         ZeroMemory(@g_ddguid, SizeOf(TGUID));
@@ -1082,7 +1088,7 @@ end;
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
-  ppReturnedDeviceInterface: IDirect3DDevice8): HRESULT; stdcall;
+  ppReturnedDeviceInterface: PIDirect3DDevice8): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);

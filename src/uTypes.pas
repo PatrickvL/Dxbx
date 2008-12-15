@@ -26,6 +26,9 @@ uses
   Windows,
   SysUtils;
 
+const
+  NULL = nil;
+
 type
   TVarByteArray = array of Byte;
 
@@ -59,15 +62,25 @@ type
 
   PPByte = ^PByte;
   INT = Integer;
-  
+
+  LONG = LongInt;
+
+  DIKEYSTATE = array [0..256-1] of BYTE; // Dxbx 'invention'
+
   TCodePointer = type Pointer;
 
+function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 
 implementation
 
 // c function implementations
+
+function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
+begin
+  Result := StrCopy(Dest, Source);
+end;
 
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 begin

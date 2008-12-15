@@ -24,7 +24,9 @@ interface
 
 uses
   // Delphi
-  Windows;
+  Windows,
+  // Dxbx
+  uTypes;
 
 type
   // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
@@ -41,22 +43,31 @@ type
     procedure Initialize;
     procedure Finalize;
 
+    // Registry Load/Save
     procedure Load(const szRegistryKey: PChar);
     procedure Save(const szRegistryKey: PChar);
-    function GetDisplayAdapter: DWord;
+
+    // property Direct3DDevice
+    procedure SetDirect3DDevice(Value: DWord);
     function GetDirect3DDevice: DWord;
-    function GetVSync: BOOL;
-    procedure SetFullscreen(bFullscreen: Boolean);
+
+    // property DisplayAdapter
+    procedure SetDisplayAdapter(Value: DWord);
+    function GetDisplayAdapter: DWord;
+
+    // property VideoResolution
+    procedure SetVideoResolution(Value: PAnsiChar);
     function GetVideoResolution: PAnsiChar;
+
+    // property Fullscreen Toggling
+    procedure SetFullscreen(bFullscreen: Boolean);
     function GetFullscreen: Boolean;
+
+    // property VSync Toggling
+    procedure SetVSync(Value: BOOL);
+    function GetVSync: BOOL;
   end;
 
-var
-  m_dwDisplayAdapter: DWord;
-  m_dwDirect3DDevice: DWord;
-  m_bVSync: BOOL;
-  m_szVideoResolution: array [0..99] of AnsiChar;
-  
 implementation
 
 { XBVideo }
@@ -73,48 +84,16 @@ procedure XBVideo.Finalize;
 begin
 end;
 
-function XBVideo.GetDirect3DDevice: DWord;
-begin
-  Result := m_dwDirect3DDevice;
-end;
-
-function XBVideo.GetDisplayAdapter: DWord;
-begin
-  Result := m_dwDisplayAdapter;
-end;
-
-function XBVideo.GetFullscreen: Boolean;
-begin
-  Result := m_bFullscreen;
-end;
-
-function XBVideo.GetVideoResolution: PAnsiChar;
-begin
-  Result := @(m_szVideoResolution[0]);
-end;
-
-function XBVideo.GetVSync: BOOL;
-begin
-  Result := m_bVSync;
-end;
-
-type
-  Int = LongInt;
-const
-  NULL = nil;
-
 procedure XBVideo.Load(const szRegistryKey: PChar);
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 var
   dwDisposition, dwType, dwSize: DWORD;
   hKey: Windows.HKEY;
-  v: Int;
 begin
   // Load Configuration from Registry
   begin
     if RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     begin
-      v := 0;
       dwType := REG_SZ; dwSize := 100;
       RegQueryValueEx(hKey, 'VideoResolution', NULL, @dwType, PBYTE(@(m_szVideoResolution[0])), @dwSize);
 
@@ -140,14 +119,11 @@ procedure XBVideo.Save(const szRegistryKey: PChar);
 var
   dwDisposition, dwType, dwSize: DWORD;
   hKey: Windows.HKEY;
-  v: Int;
 begin
   // Save Configuration to Registry
   begin
     if RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     begin
-      v := 0;
-
       dwType := REG_SZ; dwSize := 100;
       RegSetValueEx(hKey, 'VideoResolution', 0, dwType, PBYTE(@(m_szVideoResolution[0])), dwSize);
 
@@ -168,9 +144,54 @@ begin
   end;
 end;
 
+procedure XBVideo.SetDirect3DDevice(Value: DWord);
+begin
+  m_dwDirect3DDevice := Value;
+end;
+
+function XBVideo.GetDirect3DDevice: DWord;
+begin
+  Result := m_dwDirect3DDevice;
+end;
+
+procedure XBVideo.SetDisplayAdapter(Value: DWord);
+begin
+  m_dwDisplayAdapter := Value;
+end;
+
+function XBVideo.GetDisplayAdapter: DWord;
+begin
+  Result := m_dwDisplayAdapter;
+end;
+
+procedure XBVideo.SetVideoResolution(Value: PAnsiChar);
+begin
+  strcpy(m_szVideoResolution, Value);
+end;
+
+function XBVideo.GetVideoResolution: PAnsiChar;
+begin
+  Result := @(m_szVideoResolution[0]);
+end;
+
 procedure XBVideo.SetFullscreen(bFullscreen: Boolean);
 begin
   m_bFullscreen := bFullscreen;
+end;
+
+function XBVideo.GetFullscreen: Boolean;
+begin
+  Result := m_bFullscreen;
+end;
+
+procedure XBVideo.SetVSync(Value: BOOL);
+begin
+  m_bVSync := Value;
+end;
+
+function XBVideo.GetVSync: BOOL;
+begin
+  Result := m_bVSync;
 end;
 
 end.
