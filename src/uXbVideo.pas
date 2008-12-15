@@ -98,75 +98,74 @@ begin
   Result := m_bVSync;
 end;
 
+type
+  Int = LongInt;
+const
+  NULL = nil;
+
 procedure XBVideo.Load(const szRegistryKey: PChar);
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+var
+  dwDisposition, dwType, dwSize: DWORD;
+  hKey: Windows.HKEY;
+  v: Int;
 begin
-(*
-{
-    // Load Configuration from Registry
-    {
-        DWORD   dwDisposition, dwType, dwSize;
-        HKEY    hKey;
+  // Load Configuration from Registry
+  begin
+    if RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
+    begin
+      v := 0;
+      dwType := REG_SZ; dwSize := 100;
+      RegQueryValueEx(hKey, 'VideoResolution', NULL, @dwType, PBYTE(@(m_szVideoResolution[0])), @dwSize);
 
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-            int v=0;
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegQueryValueEx(hKey, 'DisplayAdapter', NULL, @dwType, PBYTE(@m_dwDisplayAdapter), @dwSize);
 
-            dwType = REG_SZ; dwSize = 100;
-            RegQueryValueEx(hKey, 'VideoResolution', NULL, &dwType, (PBYTE)m_szVideoResolution, &dwSize);
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegQueryValueEx(hKey, 'Direct3DDevice', NULL, @dwType, PBYTE(@m_dwDirect3DDevice), @dwSize);
 
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegQueryValueEx(hKey, 'DisplayAdapter', NULL, &dwType, (PBYTE)&m_dwDisplayAdapter, &dwSize);
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegQueryValueEx(hKey, 'Fullscreen', NULL, @dwType, PBYTE(@m_bFullscreen), @dwSize);
 
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegQueryValueEx(hKey, 'Direct3DDevice', NULL, &dwType, (PBYTE)&m_dwDirect3DDevice, &dwSize);
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegQueryValueEx(hKey, 'VSync', NULL, @dwType, PBYTE(@m_bVSync), @dwSize);
 
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegQueryValueEx(hKey, 'Fullscreen', NULL, &dwType, (PBYTE)&m_bFullscreen, &dwSize);
-
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegQueryValueEx(hKey, 'VSync', NULL, &dwType, (PBYTE)&m_bVSync, &dwSize);
-
-            RegCloseKey(hKey);
-        }
-    }
-}        *)
+      RegCloseKey(hKey);
+    end;
+  end;
 end;
 
 procedure XBVideo.Save(const szRegistryKey: PChar);
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+var
+  dwDisposition, dwType, dwSize: DWORD;
+  hKey: Windows.HKEY;
+  v: Int;
 begin
-(*{
-    // ******************************************************************
-    // * Save Configuration to Registry
-    // ******************************************************************
-    {
-        DWORD   dwDisposition, dwType, dwSize;
-        HKEY    hKey;
+  // Save Configuration to Registry
+  begin
+    if RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
+    begin
+      v := 0;
 
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-            int v=0;
+      dwType := REG_SZ; dwSize := 100;
+      RegSetValueEx(hKey, 'VideoResolution', 0, dwType, PBYTE(@(m_szVideoResolution[0])), dwSize);
 
-            dwType = REG_SZ; dwSize = 100;
-            RegSetValueEx(hKey, 'VideoResolution', 0, dwType, (PBYTE)m_szVideoResolution, dwSize);
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegSetValueEx(hKey, 'DisplayAdapter', 0, dwType, PBYTE(@m_dwDisplayAdapter), dwSize);
 
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegSetValueEx(hKey, 'DisplayAdapter', 0, dwType, (PBYTE)&m_dwDisplayAdapter, dwSize);
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegSetValueEx(hKey, 'Direct3DDevice', 0, dwType, PBYTE(@m_dwDirect3DDevice), dwSize);
 
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegSetValueEx(hKey, 'Direct3DDevice', 0, dwType, (PBYTE)&m_dwDirect3DDevice, dwSize);
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegSetValueEx(hKey, 'Fullscreen', 0, dwType, PBYTE(@m_bFullscreen), dwSize);
 
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegSetValueEx(hKey, 'Fullscreen', 0, dwType, (PBYTE)&m_bFullscreen, dwSize);
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegSetValueEx(hKey, 'VSync', 0, dwType, PBYTE(@m_bVSync), dwSize);
 
-            dwType = REG_DWORD; dwSize = SizeOf(DWORD);
-            RegSetValueEx(hKey, 'VSync', 0, dwType, (PBYTE)&m_bVSync, dwSize);
-
-            RegCloseKey(hKey);
-        }
-    }
-}  *)
+      RegCloseKey(hKey);
+    end;
+  end;
 end;
 
 procedure XBVideo.SetFullscreen(bFullscreen: Boolean);

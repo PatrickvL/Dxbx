@@ -782,7 +782,7 @@ begin
           // Cxbx TODO: Support Xbox extensions if possible
           if (g_EmuCDPD.pPresentationParameters.MultiSampleType <> D3DMULTISAMPLE_NONE) then
           begin
-            EmuWarning(Format('MultiSampleType 0x%.08X is not supported!', [Ord(g_EmuCDPD.pPresentationParameters.MultiSampleType)]));
+            EmuWarning(DxbxFormat('MultiSampleType 0x%.08X is not supported!', [Ord(g_EmuCDPD.pPresentationParameters.MultiSampleType)]));
 
             g_EmuCDPD.pPresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;
 
@@ -920,7 +920,7 @@ begin
           ddsd2.ddsCaps.dwCaps := DDSCAPS_PRIMARYSURFACE;
           hRet := g_pDD7.CreateSurface(ddsd2, g_pDDSPrimary, nil);
           if (FAILED(hRet)) then
-            CxbxKrnlCleanup(Format('Could not create primary surface (0x%.08X)', [hRet]));
+            CxbxKrnlCleanup(DxbxFormat('Could not create primary surface (0x%.08X)', [hRet]));
         end;
 
         // update render target cache
@@ -1066,13 +1066,13 @@ begin
   if (dwWidth <> NewWidth) then
   begin
     NewWidth := NewWidth shl 1;
-    EmuWarning(Format('Needed to resize width (%d.%d)', [dwWidth, NewWidth]));
+    EmuWarning(DxbxFormat('Needed to resize width (%d.%d)', [dwWidth, NewWidth]));
   end;
 
   if (dwHeight <> NewHeight) then
   begin
     NewHeight := NewHeight shl 1;
-    EmuWarning(Format('Needed to resize height (%d.%d)', [dwHeight, NewHeight]));
+    EmuWarning(DxbxFormat('Needed to resize height (%d.%d)', [dwHeight, NewHeight]));
   end;
 
   dwWidth := NewWidth;
@@ -3558,7 +3558,7 @@ begin
       end; *)
 
   else
-    CxbxKrnlCleanup(Format('Unknown IVB Register: %d', [aRegister]));
+    CxbxKrnlCleanup(DxbxFormat('Unknown IVB Register: %d', [aRegister]));
   end;
 
   EmuSwapFS(fsXbox);
@@ -5472,7 +5472,7 @@ begin
     [Stage, Value]);
 
   if (Value > $00030000) then
-    CxbxKrnlCleanup(Format('EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]));
+    CxbxKrnlCleanup(DxbxFormat('EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]));
 
   g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
 
@@ -6325,7 +6325,7 @@ begin
 
   EmuSwapFS(fsWindows);
 
-  (*DbgPrintf(Format('EmuD3D8: EmuIDirect3DDevice8_SetStreamSource' +
+  (*DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_SetStreamSource' +
     #13#10'(' +
     #13#10'   StreamNumber       : 0x%.08X' +
     #13#10'   pStreamData        : 0x%.08X (0x%.08X)' +
@@ -6933,7 +6933,7 @@ begin
   hRet := g_pD3DDevice8.SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
 
   if FAILED(hRet) then
-    EmuWarning(Format('SetRenderTarget failed! (0x%.08X)', [hRet]));
+    EmuWarning(DxbxFormat('SetRenderTarget failed! (0x%.08X)', [hRet]));
 
   EmuSwapFS(fsXbox);
 
