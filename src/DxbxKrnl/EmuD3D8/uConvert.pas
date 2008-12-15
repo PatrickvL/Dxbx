@@ -186,7 +186,7 @@ begin
 //            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
       Result := $06;
   else
-    CxbxKrnlCleanup(Format('EmuPC2XB_D3DFormat: Unknown Format (%d)', [IntPtr(aFormat)]));
+    CxbxKrnlCleanup(DxbxFormat('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]));
     Result := X_D3DFORMAT(aFormat);
   end;
 end;

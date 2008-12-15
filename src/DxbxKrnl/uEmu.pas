@@ -337,7 +337,7 @@ begin
 
 
     printf('%s'#13#10, szBuffer1);    *)
-    szBuffer1 := Format('Emu(0 $%X): Received Fatal Message - > '  + szErrorMessage, [GetCurrentThreadId] );
+    szBuffer1 := DxbxFormat('Emu(0 $%X): Received Fatal Message - > '  + szErrorMessage, [GetCurrentThreadId] );
     DbgPrintf(szBuffer1);
 
     MessageDlg(szBuffer1, mtError, [mbOk], 0);

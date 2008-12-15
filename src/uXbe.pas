@@ -629,7 +629,7 @@ begin
   _LogEx(DxbxFormat('Section Headers Address          : 0x%.8x', [m_header.dwSectionHeadersAddr]));
 
   // Print init flags
-  TmpStr := Format('Init Flags                       : 0x%.2x%.2x%.2x%.2x ', [m_Header.dwInitFlags[3], m_Header.dwInitFlags[2], m_Header.dwInitFlags[1], m_Header.dwInitFlags[0]]);
+  TmpStr := DxbxFormat('Init Flags                       : 0x%.2x%.2x%.2x%.2x ', [m_Header.dwInitFlags[3], m_Header.dwInitFlags[2], m_Header.dwInitFlags[1], m_Header.dwInitFlags[0]]);
   Flag := Ord(m_Header.dwInitFlags[0]);
 
   if (Flag and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
@@ -779,7 +779,7 @@ begin
     _LogEx(DxbxFormat('Section Name                     : 0x%.8x ("%s")', [m_SectionHeader[lIndex].dwSectionNameAddr, TmpStr]));
 
     TmpStr := '';
-    TmpStr := Format('Flags                            : 0x%.2x%.2x%.2x%.2x', [m_SectionHeader[lIndex].dwFlags[3], m_SectionHeader[lIndex].dwFlags[2], m_SectionHeader[lIndex].dwFlags[1], m_SectionHeader[lIndex].dwFlags[0]]);
+    TmpStr := DxbxFormat('Flags                            : 0x%.2x%.2x%.2x%.2x', [m_SectionHeader[lIndex].dwFlags[3], m_SectionHeader[lIndex].dwFlags[2], m_SectionHeader[lIndex].dwFlags[1], m_SectionHeader[lIndex].dwFlags[0]]);
 
     Flag := Ord(m_SectionHeader[lIndex].dwFlags[0]);
 
@@ -847,7 +847,7 @@ begin
 
       Flag := m_LibraryVersion[lIndex].dwFlags[1] and (not 31);
 
-      TmpStr := Format('Flags                            : QFEVersion : 0x%.4x, ', [QVersion]);
+      TmpStr := DxbxFormat('Flags                            : QFEVersion : 0x%.4x, ', [QVersion]);
 
       if (Flag and XBE_LIBRARYVERSION_FLAG_DebugBuild) > 0 then
         TmpStr := TmpStr + 'Debug, '

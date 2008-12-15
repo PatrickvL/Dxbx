@@ -1158,7 +1158,7 @@ begin
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
-      szValueName := Format('Object : %s', [m_DeviceNameLookup[v]]);
+      szValueName := DxbxFormat('Object : %s', [m_DeviceNameLookup[v]]);
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
       (*RegQueryValueEx(ahKey, szValueName, 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);*)
