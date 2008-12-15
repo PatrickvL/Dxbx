@@ -357,7 +357,7 @@ begin
 { XBController }
 
 procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done : 100
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   hRet: HRESULT;
   v: XBCtrlObject;
@@ -605,7 +605,7 @@ begin
 end;
 
 procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -628,7 +628,7 @@ begin
 end;
 
 procedure XBController.ConfigEnd;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   if m_CurrentState <> XBCTRL_STATE_CONFIG then
   begin
@@ -640,12 +640,8 @@ begin
   m_CurrentState := XBCTRL_STATE_NONE;
 end;
 
-type
-  DIKEYSTATE = array [0..256-1] of BYTE; // Dxbx 'invention'
-  LONG = LongInt;
-  
 function XBController.ConfigPoll(szStatus: PChar): LongBool;
-// Branch:martin  Revision:10  Translator:PatrickvL  Done : 100
+// Branch:martin  Revision:10  Translator:PatrickvL  Done:100
 var
   DeviceInstance: DIDEVICEINSTANCE;
   ObjectInstance: DIDEVICEOBJECTINSTANCE;
@@ -743,7 +739,7 @@ begin
         end;
       end;
 
-      (*/* temporarily disabled
+      (*/* Cxbx : temporarily disabled
       if (dwHow == -1)
       {
           for(int b=0;b<4;b++)
@@ -928,7 +924,7 @@ end;
 
 
 function XBController.DeviceIsUsed(szDeviceName: PChar): LongBool;
-// Branch:martin  Revision:39  Translator:Shadow_Tj Done : 100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
 begin
@@ -944,7 +940,7 @@ begin
 end;
 
 procedure XBController.DInputCleanup;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done : 100
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   v: Integer;
 begin
@@ -964,7 +960,7 @@ begin
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 20
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:20
 var
   ahRet: HResult;
   v: Integer;
@@ -1057,7 +1053,7 @@ begin
 end;
 
 function XBController.Insert(szDeviceName: PAnsiChar): Integer;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
 var
   v: Integer;
 begin
@@ -1082,7 +1078,7 @@ begin
 end;
 
 procedure XBController.ListenBegin(ahwnd: THandle);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
 begin
@@ -1110,7 +1106,7 @@ begin
 end;
 
 procedure XBController.ListenEnd;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done: 100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   if m_CurrentState <> XBCTRL_STATE_LISTEN then
   begin
@@ -1123,13 +1119,13 @@ begin
 end;
 
 procedure XBController.Load(szRegistryKey: PChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   dwType, dwSize: DWord;
   dwDisposition: DWord;
   ahKey: HKEY;
   v: Integer;
-  szValueName: string;
+  szValueName: AnsiString;
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -1145,10 +1141,10 @@ begin
     begin
       // default is a null string
       m_DeviceName[v][0] := #0;
-      (*sprintf(szValueName, 'DeviceName 0x%.02X', v);*)
+      szValueName := DxbxFormat('DeviceName 0x%.02X', [v]); // was sprintf
       dwType := REG_SZ;
       dwSize := 260;
-      (*RegQueryValueEx(ahKey, szValueName, 0, @dwType, m_DeviceName[v], @dwSize);*)
+      RegQueryValueEx(ahKey, PAnsiChar(szValueName), 0, @dwType, PByte(@(m_DeviceName[v])), @dwSize);
     end;
 
     // Load Object Configuration
@@ -1158,10 +1154,10 @@ begin
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
-      szValueName := DxbxFormat('Object : %s', [m_DeviceNameLookup[v]]);
+      szValueName := DxbxFormat('Object : %s', [m_DeviceNameLookup[v]]); // was sprintf
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
-      (*RegQueryValueEx(ahKey, szValueName, 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);*)
+      RegQueryValueEx(ahKey, PAnsiChar(szValueName), 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
     end;
 
     RegCloseKey(ahKey);
@@ -1169,7 +1165,7 @@ begin
 end;
 
 procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PAnsiChar; dwInfo, dwFlags: Integer);
-// Branch:martin  Revision:39  Translator:Shadow_Tj Done : 100
+// Branch:martin  Revision:39  Translator:Shadow_Tj Done:100
 var
   v: Integer;
   r: XBCtrlObject;
@@ -1231,7 +1227,7 @@ begin
 end;
 
 procedure XBController.Save(szRegistryKey: PChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done: 90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
 var
   dwType, dwSize: DWord;
   dwDisposition: DWord;
@@ -1251,7 +1247,7 @@ begin
     // Save Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     begin
-      StrFmt(szValueName, 'DeviceName $%.02X', [v]);
+      StrFmt(szValueName, 'DeviceName $%.02X', [v]); // TODO DXBX : Was this sprintf too? Is LibC-tooling needed?
 
       dwType := REG_SZ;
       dwSize := 260;
@@ -1265,7 +1261,7 @@ begin
     // Save Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
     begin
-      (*sprintf(szValueName, 'Object : "%s"', m_DeviceNameLookup[v]);*)
+      StrFmt(szValueName, 'Object : "%s"', [m_DeviceNameLookup[v]]); // was sprintf
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
 
@@ -1273,7 +1269,7 @@ begin
           RegSetValueEx(ahKey, szValueName, 0, dwType, @m_ObjectConfig[XBCtrlObject(v)], dwSize);
     end;
 
-    (*RegCloseKey(ahKey);*)
+    RegCloseKey(ahKey);
   end;
 end;
 
