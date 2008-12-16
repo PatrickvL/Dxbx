@@ -1161,7 +1161,7 @@ end;
 
 function XTL_EmuIDirect3D8_CheckDeviceFormat(Adapter: UINT; DeviceType: D3DDEVTYPE;
   AdapterFormat: X_D3DFORMAT; Usage: DWORD; RType: X_D3DRESOURCETYPE; CheckFormat: X_D3DFORMAT): HRESULT; stdcall;
-// Branch:martin  Revision:39  Done: 90 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Done:90 Translator:Shadow_Tj
 var
   hRet: HRESULT;
 begin

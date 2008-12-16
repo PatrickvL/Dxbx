@@ -388,6 +388,8 @@ end;
 procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
 var
   FileConverted: Boolean;
+  StartupInfo: TStartupInfo;
+  DummyProcessInformation: TProcessInformation;
 begin
   if not Assigned(m_Xbe) then
   begin
@@ -403,7 +405,7 @@ begin
     if FileExists(m_ExeFileName) then
     begin
       WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
-      WinExec(PChar(m_ExeFileName), SW_SHOWNORMAL);
+      CreateProcess(PChar(m_ExeFileName), nil, nil, nil, False, SW_SHOWNORMAL, nil, nil, StartupInfo, {var}DummyProcessInformation);
     end
     else
     begin
