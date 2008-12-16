@@ -58,7 +58,7 @@ implementation
 //------------------------------------------------------------------------------
 
 function EnumDevices(lpGUID: PGUID; lpDriverDescription,
-  lpDriverName: PAnsiChar; lpContext: Pointer; Monitor: HMonitor): Bool; stdcall;
+  lpDriverName: PChar; lpContext: Pointer; Monitor: HMonitor): Bool; stdcall;
 begin
   TStringList(lpContext).Add(lpDriverDescription);
   Result := True;

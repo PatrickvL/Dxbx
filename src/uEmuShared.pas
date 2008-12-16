@@ -178,14 +178,14 @@ end;
 procedure EmuShared.Create;
 begin
   m_Mutex.Create;
-  m_XBController.Load(PChar('Software\Cxbx\XBController'));
-  m_XBVideo.Load(PChar('Software\Cxbx\XBVideo'));
+  m_XBController.Load(PAnsiChar('Software\Cxbx\XBController'));
+  m_XBVideo.Load(PAnsiChar('Software\Cxbx\XBVideo'));
 end;
 
 procedure EmuShared.DestroyNoFree;
 begin
-  m_XBController.Save(PChar('Software\Cxbx\XBController'));
-  m_XBVideo.Save(PChar('Software\Cxbx\XBVideo'));
+  m_XBController.Save(PAnsiChar('Software\Cxbx\XBController'));
+  m_XBVideo.Save(PAnsiChar('Software\Cxbx\XBVideo'));
 end;
 
 procedure EmuShared.Destroy;
@@ -222,7 +222,7 @@ end;
 // Xbox Controller Accessors
 
 procedure EmuShared.GetXBController(var ctrl: XBController);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done : 100
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
   {var}ctrl := {shared}m_XBController;
@@ -239,7 +239,7 @@ end;
 procedure EmuShared.GetXbePath(var Path: string);
 begin
   Lock();
-  {var}Path := {shared}m_XbePath;
+  {var}Path := string({shared}m_XbePath); // explicit string cast to silence D2009 warning
   Unlock();
 end;
 
@@ -256,7 +256,7 @@ end;
 procedure SetXbePath(const Path: PAnsiChar);
 begin
   if Assigned(g_EmuShared) then
-    g_EmuShared.SetXbePath(Path);
+    g_EmuShared.SetXbePath(string(Path)); // explicit string cast to silence D2009 warning
 end;
 
 exports

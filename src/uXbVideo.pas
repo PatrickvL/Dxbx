@@ -44,8 +44,8 @@ type
     procedure Finalize;
 
     // Registry Load/Save
-    procedure Load(const szRegistryKey: PChar);
-    procedure Save(const szRegistryKey: PChar);
+    procedure Load(const szRegistryKey: PAnsiChar);
+    procedure Save(const szRegistryKey: PAnsiChar);
 
     // property Direct3DDevice
     procedure SetDirect3DDevice(Value: DWord);
@@ -84,7 +84,7 @@ procedure XBVideo.Finalize;
 begin
 end;
 
-procedure XBVideo.Load(const szRegistryKey: PChar);
+procedure XBVideo.Load(const szRegistryKey: PAnsiChar);
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 var
   dwDisposition, dwType, dwSize: DWORD;
@@ -92,7 +92,7 @@ var
 begin
   // Load Configuration from Registry
   begin
-    if RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
+    if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     begin
       dwType := REG_SZ; dwSize := 100;
       RegQueryValueEx(hKey, 'VideoResolution', NULL, @dwType, PBYTE(@(m_szVideoResolution[0])), @dwSize);
@@ -114,7 +114,7 @@ begin
   end;
 end;
 
-procedure XBVideo.Save(const szRegistryKey: PChar);
+procedure XBVideo.Save(const szRegistryKey: PAnsiChar);
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 var
   dwDisposition, dwType, dwSize: DWORD;
@@ -122,7 +122,7 @@ var
 begin
   // Save Configuration to Registry
   begin
-    if RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
+    if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     begin
       dwType := REG_SZ; dwSize := 100;
       RegSetValueEx(hKey, 'VideoResolution', 0, dwType, PBYTE(@(m_szVideoResolution[0])), dwSize);

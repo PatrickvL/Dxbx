@@ -163,8 +163,11 @@ type
   end;
   PXINPUT_STATE = ^XINPUT_STATE;
 
-  XTL_LPDIRECTINPUT8 = IUnknown; // TODO Dxbx : How is this type defined?
+  XTL_LPDIRECTINPUT8 = IDirectInput8; // TODO Dxbx : How is this type defined?
   XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // TODO Dxbx : How is this type defined?
+
+  LPCDIDEVICEOBJECTINSTANCE = TDIDeviceObjectInstanceA;
+  LPCDIDEVICEINSTANCE = TDIDeviceInstanceA;
 
   // DirectInput Devices
   InputDevice = record
@@ -199,15 +202,17 @@ type
     function Insert(szDeviceName: PAnsiChar): Integer;
     // Update the object lookup offsets for a device
     procedure ReorderObjects(szDeviceName: PAnsiChar; aPos: Integer);
+    function EnumObjectsCallback(lpddoi: LPCDIDEVICEOBJECTINSTANCE): BOOL;
+    function EnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA): BOOL;
   public
     procedure Initialize;
     procedure Finalize;
     // Registry Load/Save
-    procedure Load(szRegistryKey: PChar);
-    procedure Save(szRegistryKey: PChar);
+    procedure Load(szRegistryKey: PAnsiChar);
+    procedure Save(szRegistryKey: PAnsiChar);
     // Configuration
     procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
-    function ConfigPoll(szStatus: PChar): LongBool;
+    function ConfigPoll(szStatus: PAnsiChar): LongBool;
     procedure ConfigEnd;
     // Listening
     procedure ListenPoll(Controller: PXINPUT_STATE);
@@ -217,14 +222,15 @@ type
     procedure DInputInit(ahwnd: THandle);
     procedure DInputCleanup;
     // Check if a device is currently in the configuration
-    function DeviceIsUsed(szDeviceName: PChar): LongBool;
+    function DeviceIsUsed(szDeviceName: PAnsiChar): LongBool;
   end;
+  PXBController = ^XBController;
 
 implementation
 
 // Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
 procedure XBController.Initialize; // was XBController::XBController
-// Branch: martin  Revision: 39  Translation:Shadow_tj  Done: 100
+// Branch: martin  Revision: 39  Translation:Shadow_tj  Done:100
 var
   v: Integer;
 begin
@@ -252,7 +258,7 @@ end;
 
 // Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
 procedure XBController.Finalize; // was XBController::~XBController
-// Branch: martin  Revision: 39  Translation:Shadow_tj  Done: 100
+// Branch: martin  Revision: 39  Translation:Shadow_tj  Done:100
 begin
   if m_CurrentState = XBCTRL_STATE_CONFIG then
     ConfigEnd()
@@ -261,100 +267,102 @@ begin
       ListenEnd();
 end;
 
-(*
-{ TODO : Need to be added to XBController }
-function XBController.EnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE): BOOL;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
+function XBController.EnumObjectsCallback(lpddoi: LPCDIDEVICEOBJECTINSTANCE): BOOL;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
+  diprg: DIPROPRANGE;
+  hRet: HRESULT;
 begin
-    if (lpddoi.dwType and DIDFT_AXIS) then
+  if (lpddoi.dwType and DIDFT_AXIS) > 0 then
+  begin
+    diprg.diph.dwSize       := SizeOf(DIPROPRANGE);
+    diprg.diph.dwHeaderSize := SizeOf(DIPROPHEADER);
+    diprg.diph.dwHow        := DIPH_BYID;
+    diprg.diph.dwObj        := lpddoi.dwType;
+    diprg.lMin              := 0 - 32768;
+    diprg.lMax              := 0 + 32767;
+
+    hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, diprg.diph);
+
+    if (FAILED(hRet)) then
     begin
-        XTL.DIPROPRANGE diprg;
+      if (hRet = E_NOTIMPL) then
+        Result := DIENUM_CONTINUE
+      else
+        Result := DIENUM_STOP;
 
-        diprg.diph.dwSize       := SizeOf(XTL.DIPROPRANGE);
-        diprg.diph.dwHeaderSize := SizeOf(XTL.DIPROPHEADER);
-        diprg.diph.dwHow        := DIPH_BYID;
-        diprg.diph.dwObj        := lpddoi.dwType;
-        diprg.lMin              := 0 - 32768;
-        diprg.lMax              := 0 + 32767;
+      Exit;
+    end;
+  end
+  else if (lpddoi.dwType and DIDFT_BUTTON) > 0 then
+  begin
+    diprg.diph.dwSize       := SizeOf(DIPROPRANGE);
+    diprg.diph.dwHeaderSize := SizeOf(DIPROPHEADER);
+    diprg.diph.dwHow        := DIPH_BYID;
+    diprg.diph.dwObj        := lpddoi.dwType;
+    diprg.lMin              := 0;
+    diprg.lMax              := 255;
 
-        HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, @diprg.diph);
+    hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, diprg.diph);
 
-        if (FAILED(hRet)) then
-        begin
-            if (hRet = E_NOTIMPL) then
-                Result:= DIENUM_CONTINUE;
-            else
-                Result:= DIENUM_STOP;
-         end;
-     end;
-    else if (lpddoi.dwType and DIDFT_BUTTON) then
+    if (FAILED(hRet)) then
     begin
-        XTL.DIPROPRANGE diprg;
+      if (hRet = E_NOTIMPL) then
+        Result := DIENUM_CONTINUE
+      else
+        Result := DIENUM_STOP;
 
-        diprg.diph.dwSize       := SizeOf(XTL.DIPROPRANGE);
-        diprg.diph.dwHeaderSize := SizeOf(XTL.DIPROPHEADER);
-        diprg.diph.dwHow        := DIPH_BYID;
-        diprg.diph.dwObj        := lpddoi.dwType;
-        diprg.lMin              := 0;
-        diprg.lMax              := 255;
+      Exit;
+    end;
+  end;
 
-        HRESULT hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, @diprg.diph);
+  Result := DIENUM_CONTINUE;
+end;
 
-        if (FAILED(hRet)) then
-        begin
-            if (hRet = E_NOTIMPL) then
-                Result:= DIENUM_CONTINUE;
-            else
-                Result:= DIENUM_STOP;
-         end;
-     end;
-
-    Result:= DIENUM_CONTINUE;
-end;      *)
-
-{ TODO : Need to be added to XBController }
-(*
-function CALLBACK WrapEnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE; pvRef: Pointer): BOOL;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
+function WrapEnumObjectsCallback(var lpddoi: TDIDeviceObjectInstanceA; pvRef: Pointer): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  context: PXBController;
 begin
-    XBController *context := (XBController)pvRef;
+  context := PXBController(pvRef);
+  Result := context.EnumObjectsCallback(lpddoi);
+end;
 
-    Result:= context.EnumGameCtrlCallback(lpddi);
-end; *)
-
-{ TODO : Need to be added to XBController }
-(*function CALLBACK WrapEnumObjectsCallback(lpddoi: XTL.LPCDIDEVICEOBJECTINSTANCE; pvRef: Pointer): BOOL;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
+function XBController.EnumGameCtrlCallback(var lpddi: LPCDIDEVICEINSTANCE): BOOL;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  hRet: HRESULT;
 begin
-    XBController *context := (XBController)pvRef;
+  if (m_CurrentState = XBCTRL_STATE_LISTEN) and not DeviceIsUsed(lpddi.tszInstanceName) then
+  begin
+    Result := DIENUM_CONTINUE;
+    Exit;
+  end;
 
-    Result:= context.EnumObjectsCallback(lpddoi);
- end;            *)
+  hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, {out}m_InputDevice[m_dwInputDeviceCount].m_Device, nil);
 
+  if (not FAILED(hRet)) then
+  begin
+    m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
 
-{ TODO : Need to be added to XBController }
-(*function XBController.EnumGameCtrlCallback(lpddi: XTL.LPCDIDEVICEINSTANCE): BOOL;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done : 0
+    m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(c_dfDIJoystick);
+    Inc(m_dwInputDeviceCount);
+
+    if (m_CurrentState = XBCTRL_STATE_LISTEN) then
+      ReorderObjects(lpddi.tszInstanceName, m_dwInputDeviceCount - 1);
+  end;
+
+  Result:= DIENUM_CONTINUE;
+end;
+
+function WrapEnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA; pvRef: Pointer): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  context: PXBController;
 begin
-    if (m_CurrentState = XBCTRL_STATE_LISTEN and  not DeviceIsUsed(lpddi.tszInstanceName)) then
-        Result:= DIENUM_CONTINUE;
-
-    HRESULT hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);
-
-    if ( not FAILED(hRet)) then
-    begin
-        m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
-
-        m_InputDevice[m_dwInputDeviceCount++].m_Device.SetDataFormat(@XTL.c_dfDIJoystick);
-
-        if (m_CurrentState = XBCTRL_STATE_LISTEN) then
-            ReorderObjects(lpddi.tszInstanceName, m_dwInputDeviceCount - 1);
-     end;
-
-    Result:= DIENUM_CONTINUE;
- end;       *)
-
-{ XBController }
+  context := PXBController(pvRef);
+  Result := context.EnumGameCtrlCallback(lpddi);
+end;
 
 procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -383,8 +391,8 @@ begin
     Exit;
 
   pDevice := nil;
-  hRet := 0;
-  dwFlags := 0;
+  // Never used : hRet := 0;
+  // Never used : dwFlags := 0;
 
   // Default values necessary for axis
   Controller.Gamepad.sThumbLX := 0;
@@ -640,20 +648,20 @@ begin
   m_CurrentState := XBCTRL_STATE_NONE;
 end;
 
-function XBController.ConfigPoll(szStatus: PChar): LongBool;
+function XBController.ConfigPoll(szStatus: PAnsiChar): LongBool;
 // Branch:martin  Revision:10  Translator:PatrickvL  Done:100
 var
   DeviceInstance: DIDEVICEINSTANCE;
   ObjectInstance: DIDEVICEOBJECTINSTANCE;
   v: Integer;
   hRet: HRESULT;
-  dwHow: DWord;
-  dwFlags: DWord;
+  dwHow: Int32; // was DWord but needed to be signed !
+  dwFlags: Int32; // was DWord but needed to be signed !
   JoyState: DIJOYSTATE;
   KeyState: DIKEYSTATE;
   b: Integer;
-  szDirection: PChar;
-  szObjName: PChar;
+  szDirection: string;
+  szObjName: PAnsiChar;
   MouseState: DIMOUSESTATE2;
 
   lAbsDeltaX, lAbsDeltaY, lAbsDeltaZ: LONG;
@@ -664,6 +672,7 @@ begin
   begin
     Error_SetError('Invalid State', False);
     Result := False;
+    Exit;
   end;
 
   DeviceInstance.dwSize := SizeOf(DIDEVICEINSTANCE);
@@ -683,8 +692,8 @@ begin
       end;
     end;
 
-    dwHow := $FFFFFFFF;//-1;
-    dwFlags := m_InputDevice[v].m_Flags;
+    dwHow := -1;
+    // Never used : dwFlags := m_InputDevice[v].m_Flags;
 
     // Detect Joystick Input
     if (m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) > 0 then
@@ -767,7 +776,7 @@ begin
       // Retrieve Object Info
       if (dwHow <> -1) then
       begin
-        szDirection := PChar(iif((dwFlags and DEVICE_FLAG_AXIS) > 0, iif((dwFlags and DEVICE_FLAG_POSITIVE) > 0, 'Positive ', 'Negative '), ''));
+        szDirection := iif((dwFlags and DEVICE_FLAG_AXIS) > 0, iif((dwFlags and DEVICE_FLAG_POSITIVE) > 0, 'Positive ', 'Negative '), '');
 
         m_InputDevice[v].m_Device.GetDeviceInfo({var}DeviceInstance);
 
@@ -844,7 +853,7 @@ begin
       else
       begin
         lAbsDeltaX := 0; lAbsDeltaY := 0; lAbsDeltaZ := 0;
-        lDeltaX := 0; lDeltaY := 0; lDeltaZ := 0;
+        // Never used : lDeltaX := 0; lDeltaY := 0; lDeltaZ := 0;
 
         if (lPrevMouseX = -1)
         or (lPrevMouseY = -1)
@@ -898,7 +907,7 @@ begin
         // Check for Success
         if (dwHow <> -1) then
         begin
-          szDirection := PChar(iif((dwFlags and DEVICE_FLAG_POSITIVE) > 0, 'Positive', 'Negative'));
+          szDirection := iif((dwFlags and DEVICE_FLAG_POSITIVE) > 0, 'Positive', 'Negative');
           szObjName := 'Unknown';
 
           ObjectInstance.dwSize := SizeOf(ObjectInstance);
@@ -923,7 +932,7 @@ begin
 end;
 
 
-function XBController.DeviceIsUsed(szDeviceName: PChar): LongBool;
+function XBController.DeviceIsUsed(szDeviceName: PAnsiChar): LongBool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
@@ -933,7 +942,7 @@ begin
   begin
     if (m_DeviceName[v][0] <> #0) then
     begin
-      if (AnsiCompareStr(m_DeviceName[v], szDeviceName) = 0) then
+      if (strcomp(m_DeviceName[v], szDeviceName) = 0) then // was AnsiCompareStr
         Result := True;
     end;
   end;
@@ -960,7 +969,7 @@ begin
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:20
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:40
 var
   ahRet: HResult;
   v: Integer;
@@ -1025,8 +1034,13 @@ begin
   end;
 
   // Enumerate Controller objects
-  (*for m_dwCurObject := 0 to m_dwInputDeviceCount - 1 do
-    m_InputDevice[m_dwCurObject].m_Device.EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL); *)
+  // Dxbx : for loop not possible here :
+  m_dwCurObject := 0;
+  while m_dwCurObject < m_dwInputDeviceCount do
+  begin
+    m_InputDevice[m_dwCurObject].m_Device.EnumObjects(WrapEnumObjectsCallback, Addr(Self), DIDFT_ALL);
+    Inc(m_dwCurObject);
+  end;
 
 
   // * Set cooperative level and acquire
@@ -1053,7 +1067,7 @@ begin
 end;
 
 function XBController.Insert(szDeviceName: PAnsiChar): Integer;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
 begin
@@ -1067,7 +1081,7 @@ begin
   begin
     if (m_DeviceName[v][0] = #0) then
     begin
-      //m_DeviceName[v] := szDeviceName;
+      strcpy(m_DeviceName[v], szDeviceName);
       Result := v;
     end;
   end;
@@ -1118,14 +1132,14 @@ begin
   m_CurrentState := XBCTRL_STATE_NONE;
 end;
 
-procedure XBController.Load(szRegistryKey: PChar);
+procedure XBController.Load(szRegistryKey: PAnsiChar);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   dwType, dwSize: DWord;
   dwDisposition: DWord;
   ahKey: HKEY;
   v: Integer;
-  szValueName: AnsiString;
+  szValueName: string;
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -1134,7 +1148,7 @@ begin
   end;
 
   // Load Configuration from Registry
-  if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
+  if (RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
     // Load Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do
@@ -1144,7 +1158,7 @@ begin
       szValueName := DxbxFormat('DeviceName 0x%.02X', [v]); // was sprintf
       dwType := REG_SZ;
       dwSize := 260;
-      RegQueryValueEx(ahKey, PAnsiChar(szValueName), 0, @dwType, PByte(@(m_DeviceName[v])), @dwSize);
+      RegQueryValueEx(ahKey, PChar(szValueName), nil, @dwType, PByte(@(m_DeviceName[v])), @dwSize);
     end;
 
     // Load Object Configuration
@@ -1157,7 +1171,7 @@ begin
       szValueName := DxbxFormat('Object : %s', [m_DeviceNameLookup[v]]); // was sprintf
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
-      RegQueryValueEx(ahKey, PAnsiChar(szValueName), 0, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
+      RegQueryValueEx(ahKey, PChar(szValueName), nil, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
     end;
 
     RegCloseKey(ahKey);
@@ -1226,8 +1240,8 @@ begin
   end;
 end;
 
-procedure XBController.Save(szRegistryKey: PChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
+procedure XBController.Save(szRegistryKey: PAnsiChar);
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:95
 var
   dwType, dwSize: DWord;
   dwDisposition: DWord;
@@ -1242,7 +1256,7 @@ begin
   end;
 
   // Save Configuration to Registry
-  if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
+  if (RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
     // Save Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do
