@@ -37,6 +37,7 @@ var
   g_bPBSkipPusher: Boolean = False;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall; // forward
+procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
 
 implementation
 
