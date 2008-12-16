@@ -35,7 +35,13 @@ type
   TDWordArray = array[0..10000] of DWord;
   PDWordArray = ^TDWordArray;
 
-  //PDWord = ^DWord;
+{$IF NOT DECLARED(PDWord)}
+  PDWord = ^DWord;
+{$IFEND}
+
+{$IF NOT DECLARED(Int32)}
+  Int32 = Integer;
+{$IFEND}
 
   UInt32 = Cardinal;
   UInt16 = Word;

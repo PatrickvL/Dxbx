@@ -924,7 +924,7 @@ begin
           ddsd2.dwSize := SizeOf(ddsd2);
           ddsd2.dwFlags := DDSD_CAPS;
           ddsd2.ddsCaps.dwCaps := DDSCAPS_PRIMARYSURFACE;
-          hRet := g_pDD7.CreateSurface(ddsd2, g_pDDSPrimary, nil);
+          hRet := g_pDD7.CreateSurface(ddsd2, {out}g_pDDSPrimary, nil);
           if (FAILED(hRet)) then
             CxbxKrnlCleanup(DxbxFormat('Could not create primary surface (0x%.08X)', [hRet]));
         end;
@@ -1110,7 +1110,7 @@ begin
   g_EmuCDPD.Adapter := Adapter;
   g_EmuCDPD.DeviceType := DeviceType;
   g_EmuCDPD.hFocusWindow := hFocusWindow;
-  PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters) := pPresentationParameters;
+  g_EmuCDPD.pPresentationParameters := pPresentationParameters;
   g_EmuCDPD.ppReturnedDeviceInterface := ppReturnedDeviceInterface;
 
   // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
@@ -5217,7 +5217,7 @@ begin
         ddsd2.ddpfPixelFormat.dwFlags := DDPF_FOURCC;
         ddsd2.ddpfPixelFormat.dwFourCC := MAKEFOURCC('Y', 'U', 'Y', '2');
 
-        hRet := g_pDD7.CreateSurface(ddsd2, g_pDDSOverlay7, nil);
+        hRet := g_pDD7.CreateSurface(ddsd2, {out}g_pDDSOverlay7, nil);
 
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('Could not create overlay surface');
