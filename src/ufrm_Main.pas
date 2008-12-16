@@ -422,8 +422,8 @@ begin
                    {lpCommandLine=}PChar(m_ExeFileName),
              {lpProcessAttributes=}nil,
               {lpThreadAttributes=}nil,
-                 {bInheritHandles=}False,
-                 {dwCreationFlags=}CREATE_NEW_PROCESS_GROUP or NORMAL_PRIORITY_CLASS,
+                 {bInheritHandles=}True, // DO inherit (without this, we get trouble!)
+                 {dwCreationFlags=}NORMAL_PRIORITY_CLASS, // no CREATE_NEW_PROCESS_GROUP
                    {lpEnvironment=}nil,
               {lpCurrentDirectory=}nil,
                    {lpStartupInfo=}StartupInfo,

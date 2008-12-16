@@ -79,7 +79,7 @@ type
     procedure SetXbePath(const Path: string);
   end;
 
-procedure SetXbePath(const Path: PAnsiChar); cdecl;
+procedure SetXbePath(const Path: PAnsiChar); stdcall;
 
 var
   hMapObject: THandle;
@@ -253,7 +253,7 @@ end;
 
 //
 
-procedure SetXbePath(const Path: PAnsiChar);
+procedure SetXbePath(const Path: PAnsiChar); stdcall;
 begin
   if Assigned(g_EmuShared) then
     g_EmuShared.SetXbePath(string(Path)); // explicit string cast to silence D2009 warning
