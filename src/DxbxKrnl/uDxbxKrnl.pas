@@ -171,7 +171,10 @@ begin
   // Initialize current directory
   g_EmuShared.GetXbePath({var}szBuffer);
   if szBuffer <> '' then
-    SetCurrentDirectory(PChar(szBuffer))
+  begin
+    DbgPrintf('EmuMain : XBEPath := ' + szBuffer);
+    SetCurrentDirectory(PChar(szBuffer));
+  end
   else
   begin
     // When no path is registered in EmuShared, fall back on current directory :

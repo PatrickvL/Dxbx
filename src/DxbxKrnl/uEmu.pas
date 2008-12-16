@@ -43,7 +43,7 @@ var
   g_strUDrive: string = '';
   g_hZDrive: THandle = 0;
   g_strZDrive: string = '';
-  g_hEmuWindow: THandle;
+  g_hEmuWindow: THandle = 0; // rendering window
   g_bPrintfOn: Boolean = True;
   g_bEmuSuspended: Boolean = False;
   g_bEmuException: Boolean = False;

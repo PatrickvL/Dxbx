@@ -344,7 +344,6 @@ begin
   if (not FAILED(hRet)) then
   begin
     m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
-
     m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(c_dfDIJoystick);
     Inc(m_dwInputDeviceCount);
 
@@ -940,10 +939,10 @@ begin
   Result := False;
   for v := 0 to XBCTRL_MAX_DEVICES - 1 do
   begin
-    if (m_DeviceName[v][0] <> #0) then
+    if (strcomp(m_DeviceName[v], szDeviceName) = 0) then // was AnsiCompareStr
     begin
-      if (strcomp(m_DeviceName[v], szDeviceName) = 0) then // was AnsiCompareStr
-        Result := True;
+      Result := True;
+      Exit;
     end;
   end;
 end;
@@ -969,7 +968,7 @@ begin
 end;
 
 procedure XBController.DInputInit(ahwnd: THandle);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:40
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ahRet: HResult;
   v: Integer;
@@ -994,23 +993,23 @@ begin
   // Create all the devices available (well...most of them)
   if Assigned(m_pDirectInput8) then
   begin
-    (*ahRet := m_pDirectInput8.EnumDevices( DI8DEVCLASS_GAMECTRL,
+    ahRet := m_pDirectInput8.EnumDevices( DI8DEVCLASS_GAMECTRL,
                                           WrapEnumGameCtrlCallback,
-                                          this,
-                                          DIEDFL_ATTACHEDONLY ); *)
-
+                                          Addr(Self),
+                                          DIEDFL_ATTACHEDONLY);
+    // Dxbx TODO Add : if FAILED(hret) then what?
+    
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysKeyboard') then
     begin
-      (*ahRet := m_pDirectInput8.CreateDevice( GUID_SysKeyboard,
+      ahRet := m_pDirectInput8.CreateDevice( GUID_SysKeyboard,
                                              m_InputDevice[m_dwInputDeviceCount].m_Device,
-                                             0); *)
+                                             nil);
 
       if (not FAILED(ahRet)) then
       begin
         m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_KEYBOARD;
-
+        m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(c_dfDIKeyboard);
         Inc(m_dwInputDeviceCount);
-        (*m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(XTL_c_dfDIKeyboard); *)
       end;
 
       if (m_CurrentState = XBCTRL_STATE_LISTEN) then
@@ -1019,13 +1018,13 @@ begin
 
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysMouse') then
     begin
-      (*ahRet := m_pDirectInput8.CreateDevice(GUID_SysMouse, @m_InputDevice[m_dwInputDeviceCount].m_Device, 0);*)
+      ahRet := m_pDirectInput8.CreateDevice(GUID_SysMouse, {out}m_InputDevice[m_dwInputDeviceCount].m_Device, nil);
 
       if (not FAILED(ahRet)) then
       begin
         m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_MOUSE;
+        m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(c_dfDIMouse2);
         Inc(m_dwInputDeviceCount);
-        (*m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(@XTL.c_dfDIMouse2);*)
       end;
 
       if (m_CurrentState = XBCTRL_STATE_LISTEN) then
@@ -1043,11 +1042,11 @@ begin
   end;
 
 
-  // * Set cooperative level and acquire
+  // Set cooperative level and acquire
   begin
     for v := 0 to m_dwInputDeviceCount - 1 do
     begin
-      (*&m_InputDevice[v].m_Device.SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
+      m_InputDevice[v].m_Device.SetCooperativeLevel(ahwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
       m_InputDevice[v].m_Device.Acquire();
 
       ahRet := m_InputDevice[v].m_Device.Poll();
@@ -1061,7 +1060,7 @@ begin
 
         if (ahRet <> DIERR_INPUTLOST) then
           Break;
-      end; *)
+      end;
     end;
   end;
 end;
@@ -1075,7 +1074,10 @@ begin
 
   for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
+    begin
       Result := v;
+      Exit;
+    end;
 
   for v := 0 to XBCTRL_MAX_DEVICES - 1 do
   begin
@@ -1083,6 +1085,7 @@ begin
     begin
       strcpy(m_DeviceName[v], szDeviceName);
       Result := v;
+      Exit;
     end;
   end;
 
