@@ -389,7 +389,7 @@ procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
 var
   FileConverted: Boolean;
   StartupInfo: TStartupInfo;
-  DummyProcessInformation: TProcessInformation;
+  ProcessInformation: TProcessInformation;
 begin
   if not Assigned(m_Xbe) then
   begin
@@ -405,7 +405,33 @@ begin
     if FileExists(m_ExeFileName) then
     begin
       WriteLog('WndMain: ' + m_szAsciiTitle + ' emulation started.');
-      CreateProcess(PChar(m_ExeFileName), nil, nil, nil, False, SW_SHOWNORMAL, nil, nil, StartupInfo, {var}DummyProcessInformation);
+{$IFDEF OLD_WINEXEC}
+      WinExec(PChar(m_ExeFileName), SW_SHOW);
+{$ELSE}
+      ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
+      StartupInfo.cb := SizeOf(TStartupInfo);
+// Dxbx TODO : Are these necessary ? :
+//      StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
+//      StartupInfo.wShowWindow := SW_SHOWNORMAL;
+
+      ZeroMemory(@ProcessInformation, SizeOf(TProcessInformation));
+
+      {BOOL:}CreateProcess
+        (
+               {lpApplicationName=}nil,
+                   {lpCommandLine=}PChar(m_ExeFileName),
+             {lpProcessAttributes=}nil,
+              {lpThreadAttributes=}nil,
+                 {bInheritHandles=}False,
+                 {dwCreationFlags=}CREATE_NEW_PROCESS_GROUP or NORMAL_PRIORITY_CLASS,
+                   {lpEnvironment=}nil,
+              {lpCurrentDirectory=}nil,
+                   {lpStartupInfo=}StartupInfo,
+        {var lpProcessInformation=}ProcessInformation
+        );
+      CloseHandle(ProcessInformation.hProcess);
+      CloseHandle(ProcessInformation.hThread);
+{$ENDIF}
     end
     else
     begin
