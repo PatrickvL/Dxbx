@@ -130,7 +130,8 @@ type
     FullScreen_RefreshRateInHz: UINT;
     FullScreen_PresentationInterval: UINT;
     // The Windows DirectX8 variant ends here
-    // TODO : Is this definition identical to Direct3D8._D3DPRESENT_PARAMETERS_ ?
+    // This check guarantees identical layout, compared to Direct3D8._D3DPRESENT_PARAMETERS_:
+    // Assert(Integer(@(PX_D3DPRESENT_PARAMETERS(nil).BufferSurfaces[0])) = SizeOf(_D3DPRESENT_PARAMETERS_));
     BufferSurfaces: array[0..2] of IDirect3DSurface8;
     DepthStencilSurface: IDirect3DSurface8;
   end;

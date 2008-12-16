@@ -981,7 +981,7 @@ begin
     ahRet := DirectInput8Create(GetModuleHandle(nil),
       DIRECTINPUT_VERSION,
       IID_IDirectInput8,
-      m_pDirectInput8,
+      {out}m_pDirectInput8,
       nil);
 
     if (FAILED(ahRet)) then
