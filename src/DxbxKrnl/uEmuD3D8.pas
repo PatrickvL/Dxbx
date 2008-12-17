@@ -181,7 +181,7 @@ var
   hThread: THandle;
   hDupHandle: THandle;
   DevType: D3DDEVTYPE;
-  PresParam: D3DPRESENT_PARAMETERS; //X_D3DPRESENT_PARAMETERS;
+  PresParam: X_D3DPRESENT_PARAMETERS;
 begin
   g_EmuShared.GetXBVideo({var}g_XBVideo);
 
@@ -243,15 +243,20 @@ begin
     ZeroMemory(@PresParam, SizeOf(PresParam));
     PresParam.BackBufferWidth := 640;
     PresParam.BackBufferHeight := 480;
-    PresParam.BackBufferFormat := D3DFMT_A8R8G8B8; //6; (* X_D3DFMT_A8R8G8B8 *)
-    PresParam.BackBufferCount := 1;                   
+    PresParam.BackBufferFormat := X_D3DFMT_A8R8G8B8; //6; (* X_D3DFMT_A8R8G8B8 *)
+    PresParam.BackBufferCount := 1;
     PresParam.EnableAutoDepthStencil := True;
-    PresParam.AutoDepthStencilFormat := D3DFMT_D24S8; //$2A; (* X_D3DFMT_D24S8 *)
+    PresParam.AutoDepthStencilFormat := X_D3DFMT_D24S8; //$2A; (* X_D3DFMT_D24S8 *)
     PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
 
     EmuSwapFS(fsXbox);
-    // Dxbx FIX : CreateDevice needs a valid 3rd argument!
-    XTL_EmuIDirect3D8_CreateDevice(0, D3DDEVTYPE_HAL, g_hEmuWindow{was 0}, $00000040, @PresParam, @g_pD3DDevice8);
+    XTL_EmuIDirect3D8_CreateDevice(
+      0,
+      D3DDEVTYPE_HAL,
+      {ignored hFocusWindow=}0,
+      {ignored BehaviorFlags=}D3DCREATE_HARDWARE_VERTEXPROCESSING, // = $00000040
+      @PresParam,
+      @g_pD3DDevice8);
     EmuSwapFS(fsWindows);
   end;
 end; // XTL_EmuD3DInit
@@ -412,7 +417,7 @@ begin
     SetFocus(CxbxKrnl_hEmuParent);
 
   // initialize direct input
-  if not XTL_EmuDInputInit then
+  if not XTL_EmuDInputInit() then
     CxbxKrnlCleanup('Could not initialize DirectInput!');
 
   DbgPrintf('EmuD3D8: Message-Pump thread is running.');
@@ -726,7 +731,7 @@ end;
 // thread dedicated to create devices
 
 function EmuCreateDeviceProxy(LPVOID: Pointer): DWord;
-// Branch:martin  Revision:42  Done:90 Translator:Shadow_Tj
+// Branch:martin  Revision:42  Done:95 Translator:Shadow_Tj
 type
   PArrayOfDWORD = ^TArrayOfDWORD;
   TArrayOfDWORD = array[0..(MaxInt shr 2) - 1] of DWORD;
@@ -739,6 +744,7 @@ var
   v: Dword;
   ddsd2: DDSURFACEDESC2;
   Streams: Integer;
+  TmpEmuSurface8: IDirect3DSurface8;
 begin
   DbgPrintf('EmuD3D8: CreateDevice proxy thread is running.');
 
@@ -784,10 +790,11 @@ begin
         if (g_XBVideo.GetVSync()) then
           g_EmuCDPD.pPresentationParameters.SwapEffect := D3DSWAPEFFECT_COPY_VSYNC;
 
+        // Note: Instead of the hFocusWindow argument, we use the global g_hEmuWindow here:
         g_EmuCDPD.hFocusWindow := g_hEmuWindow;
 
-        g_EmuCDPD.pPresentationParameters.BackBufferFormat := XTL_EmuPC2XB_D3DFormat(TD3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat));
-        g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat := XTL_EmuPC2XB_D3DFormat(TD3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat));
+        TD3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat) := XTL_EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
+        TD3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat) := XTL_EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
 
         if (not g_XBVideo.GetVSync() and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) > 0) and g_XBVideo.GetFullscreen()) then
           g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
@@ -829,9 +836,9 @@ begin
         begin
           sscanf(g_XBVideo.GetVideoResolution(), '%d x %d %*dbit %s (%d hz)', [
             @(g_EmuCDPD.pPresentationParameters.BackBufferWidth),
-              @(g_EmuCDPD.pPresentationParameters.BackBufferHeight),
-              @(szBackBufferFormat[0]),
-              @(g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz)]);
+            @(g_EmuCDPD.pPresentationParameters.BackBufferHeight),
+            @(szBackBufferFormat[0]),
+            @(g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz)]);
 
           if (StrComp(szBackBufferFormat, 'x1r5g5b5') = 0) then
             g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_X1R5G5B5)
@@ -947,12 +954,32 @@ begin
       // update render target cache
       g_pCachedRenderTarget.Common := 0;
       g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
-// Dxbx TODO        g_pD3DDevice8.GetRenderTarget({out}g_pCachedRenderTarget.EmuSurface8);
+
+      // Dxbx Note : Because g_pCachedRenderTarget.EmuSurface8 must be declared
+      // as a property, we can't pass it directly as a var/out parameter.
+      // So we use a little work-around here :
+      g_pD3DDevice8.GetRenderTarget({out}TmpEmuSurface8);
+      g_pCachedRenderTarget.EmuSurface8 := TmpEmuSurface8;
+      // Keep this reference around, by fooling the automatic
+      // reference-counting Delphi does. (This is necessary
+      // because the union-simulation-properties can't do
+      // reference-counting either) :
+      Pointer(TmpEmuSurface8) := nil;
 
       // update z-stencil surface cache
       g_pCachedZStencilSurface.Common := 0;
       g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
-// Dxbx TODO        g_pD3DDevice8.GetDepthStencilSurface({out}g_pCachedZStencilSurface.EmuSurface8);
+
+      // Dxbx Note : Because g_pCachedZStencilSurface.EmuSurface8 must be declared
+      // as a property, we can't pass it directly as a var/out parameter.
+      // So we use a little work-around here :
+      g_pD3DDevice8.GetDepthStencilSurface({out}TmpEmuSurface8);
+      g_pCachedZStencilSurface.EmuSurface8 := TmpEmuSurface8;
+      // Keep this reference around, by fooling the automatic
+      // reference-counting Delphi does. (This is necessary
+      // because the union-simulation-properties can't do
+      // reference-counting either) :
+      Pointer(TmpEmuSurface8) := nil;
 
       g_pD3DDevice8.CreateVertexBuffer
         (

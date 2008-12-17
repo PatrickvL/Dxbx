@@ -35,6 +35,37 @@ uses
   , uDxbxKrnlUtils
   , uEmu;
 
+const
+  X_D3DFMT_L8 = $00; // Swizzled
+  X_D3DFMT_AL8 = $01; // Swizzled
+  X_D3DFMT_A1R5G5B5 = $02; // Swizzled
+  X_D3DFMT_X1R5G5B5 = $03; // Swizzled
+  X_D3DFMT_A4R4G4B4 = $04; // Swizzled
+  X_D3DFMT_R5G6B5 = $05; // Swizzled
+  X_D3DFMT_A8R8G8B8 = $06; // Swizzled
+  X_D3DFMT_X8R8G8B8 = $07; // Swizzled
+  X_D3DFMT_P8 = $0B; // Swizzled
+  X_D3DFMT_DXT1 = $0C; // Compressed
+  X_D3DFMT_DXT2 = $0E; // Compressed
+  X_D3DFMT_DXT3 = $0F; // Compressed
+  X_D3DFMT_LIN_A1R5G5B5= $10;
+  X_D3DFMT_LIN_R5G6B5 = $11; // Linear
+  X_D3DFMT_LIN_A8R8G8B8 = $12;
+  X_D3DFMT_LIN_R8B8 = $16; // Linear
+  X_D3DFMT_A8L8 = $1A; // Swizzled
+  X_D3DFMT_LIN_A4R4G4B4 = $1D; // Linear
+  X_D3DFMT_LIN_X8R8G8B8 = $1E; // Linear
+  X_D3DFMT_YUY2 = $24;
+//  X_D3DFMT_YUV2 = $24 ??; // Swizzled
+  X_D3DFMT_V8U8 = $28; // Swizzled
+  X_D3DFMT_D24S8 = $2A;
+  X_D3DFMT_F24S8 = $2B; // Swizzled
+  X_D3DFMT_D16 = $2C; // Swizzled
+  X_D3DFMT_LIN_D24S8 = $2E; // Linear
+  X_D3DFMT_LIN_A8B8G8R8 = $3F; // Linear
+  X_D3DFMT_LIN_D16 = $30; // Linear
+  X_D3DFMT_V16U16 = $33; // Swizzled
+
 function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
 function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
 
@@ -68,87 +99,87 @@ function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT ): D3DFORMAT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case aFormat of
-    $00: // Swizzled   (X_D3DFMT_L8)
+    X_D3DFMT_L8: // Swizzled
       Result := D3DFMT_L8;
 
-    $01: // Swizzled   (X_D3DFMT_AL8) // NOTE: Hack: Alpha ignored, basically
+    X_D3DFMT_AL8: // Swizzled    // NOTE: Hack: Alpha ignored, basically
       begin
         EmuWarning('X_D3DFMT_AL8.D3DFMT_L8');
         Result := D3DFMT_L8;
       end;
 
-    $02: // Swizzled   (X_D3DFMT_A1R5G5B5)
+    X_D3DFMT_A1R5G5B5: // Swizzled   
       Result := D3DFMT_A1R5G5B5;
 
-    $03: // Swizzled   (X_D3DFMT_X1R5G5B5)
+    X_D3DFMT_X1R5G5B5: // Swizzled   
       Result := D3DFMT_X1R5G5B5;
 
-    $1A: // Swizzled   (X_D3DFMT_A8L8)
+    X_D3DFMT_A8L8: // Swizzled   
       begin
         EmuWarning('X_D3DFMT_A8L8.D3DFMT_R5G6B5');
         Result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
       end;
 
-    $1D, // Linear     (X_D3DFMT_LIN_A4R4G4B4)
-      $04: // Swizzled   (X_D3DFMT_A4R4G4B4)
+    X_D3DFMT_LIN_A4R4G4B4, // Linear     
+    X_D3DFMT_A4R4G4B4: // Swizzled   
       Result := D3DFMT_A4R4G4B4;
 
-    $11, // Linear     (X_D3DFMT_LIN_R5G6B5)
-      $05: // Swizzled   (X_D3DFMT_R5G6B5)
+    X_D3DFMT_LIN_R5G6B5, // Linear     
+    X_D3DFMT_R5G6B5: // Swizzled   
       Result := D3DFMT_R5G6B5;
 
-    $12, // Linear     (X_D3DFMT_LIN_A8R8G8B8)
-      $06: // Swizzled   (X_D3DFMT_A8R8G8B8)
+    X_D3DFMT_LIN_A8R8G8B8, // Linear     
+    X_D3DFMT_A8R8G8B8: // Swizzled   
       Result := D3DFMT_A8R8G8B8;
 
-    $16: // Linear     (X_D3DFMT_LIN_R8B8)
+    X_D3DFMT_LIN_R8B8: // Linear     
       begin
         EmuWarning('X_D3DFMT_LIN_R8B8.D3DFMT_R5G6B5');
         Result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
       end;
-    $3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
+    X_D3DFMT_LIN_A8B8G8R8: // Linear     
       begin
         EmuWarning('X_D3DFMT_LIN_A8B8G8R8.D3DFMT_A8R8G8B8');
         Result := D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
       end;
 
-    $1E, // Linear     (X_D3DFMT_LIN_X8R8G8B8)
-      $07: // Swizzled   (X_D3DFMT_X8R8G8B8)
+    X_D3DFMT_LIN_X8R8G8B8, // Linear     
+    X_D3DFMT_X8R8G8B8: // Swizzled   
       Result := D3DFMT_X8R8G8B8;
 
-    $0B: // Swizzled   (X_D3DFMT_P8)
+    X_D3DFMT_P8: // Swizzled   
       Result := D3DFMT_P8;
 
-    $0C: // Compressed (X_D3DFMT_DXT1)
+    X_D3DFMT_DXT1: // Compressed 
       Result := D3DFMT_DXT1;
 
-    $0E: // Compressed (X_D3DFMT_DXT2)
+    X_D3DFMT_DXT2: // Compressed 
       Result := D3DFMT_DXT2;
 
-    $0F: // Compressed (X_D3DFMT_DXT3)
+    X_D3DFMT_DXT3: // Compressed 
       Result := D3DFMT_DXT3;
 
     $24: // Swizzled   (X_D3DFMT_YUV2)
       Result := D3DFMT_YUY2;
 
-    $2E, // Linear     (X_D3DFMT_LIN_D24S8)
-      $2A: // Swizzled   (X_D3DFMT_D24S8)
+    X_D3DFMT_LIN_D24S8, // Linear     
+    X_D3DFMT_D24S8: // Swizzled   
       Result := D3DFMT_D24S8;
 
-    $2B: // Swizzled   (X_D3DFMT_F24S8)
+    X_D3DFMT_F24S8: // Swizzled   
       begin
         EmuWarning('X_D3DFMT_F24S8.D3DFMT_D24S8');
         Result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
       end;
 
-    $30, // Linear     (X_D3DFMT_LIN_D16)
-      $2C: // Swizzled   (X_D3DFMT_D16)
+    X_D3DFMT_LIN_D16, // Linear     
+    X_D3DFMT_D16: // Swizzled   
       Result := D3DFMT_D16;
 
-    $28: // Swizzled   (X_D3DFMT_V8U8)
+    X_D3DFMT_V8U8: // Swizzled   
       Result := D3DFMT_V8U8;
 
-    $33: // Swizzled   (X_D3DFMT_V16U16)
+    X_D3DFMT_V16U16: // Swizzled   
       Result := D3DFMT_V16U16;
 
     $64:
@@ -165,26 +196,26 @@ function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
 begin
   case aFormat of
     D3DFMT_YUY2:
-      Result := $24;
+      Result := X_D3DFMT_YUY2;
     D3DFMT_R5G6B5:
       Result := $11; // Linear
 //            return 0x05;      // Swizzled
     D3DFMT_D24S8:
-      Result := $2A;
+      Result := X_D3DFMT_D24S8;
     D3DFMT_DXT3:
-      Result := $0F;
+      Result := X_D3DFMT_DXT3;
     D3DFMT_DXT2:
-      Result := $0E;
+      Result := X_D3DFMT_DXT2;
     D3DFMT_DXT1:
-      Result := $0C;
-    D3DFMT_A1R5G5B5: // Linear (X_D3DFMT_LIN_A1R5G5B5)
-      Result := $10;
+      Result := X_D3DFMT_DXT1;
+    D3DFMT_A1R5G5B5: // Linear ()
+      Result := X_D3DFMT_LIN_A1R5G5B5;
     D3DFMT_X8R8G8B8:
-      Result := $1E; // Linear (X_D3DFMT_LIN_X8R8G8B8)
-//            return 0x07;      // Swizzled
+      Result := X_D3DFMT_LIN_X8R8G8B8; // Linear
+//      Result := X_D3DFMT_X8R8G8B8;      // Swizzled
     D3DFMT_A8R8G8B8:
-//            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
-      Result := $06;
+//      Result := X_D3DFMT_LIN_A8R8G8B8;      // Linear
+      Result := X_D3DFMT_A8R8G8B8;
   else
     CxbxKrnlCleanup(DxbxFormat('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]));
     Result := X_D3DFORMAT(aFormat);
