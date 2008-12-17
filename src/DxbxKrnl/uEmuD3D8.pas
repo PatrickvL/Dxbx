@@ -272,7 +272,7 @@ end;
 // enumeration procedure for locating display device GUIDs
 
 function EmuEnumDisplayDevices(lpGUID: PGUID; lpDriverDescription: LPSTR;
-  lpDriverName: LPSTR; lpContext: LPDWORD; hm: HMONITOR): BOOL;
+  lpDriverName: LPSTR; lpContext: LPDWORD; hm: HMONITOR): BOOL; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 {$WRITEABLECONST ON}
 const
@@ -285,13 +285,9 @@ begin
     g_hMonitor := hm;
     dwEnumCount := 0;
     if Assigned(lpGUID) then
-    begin
-      memcpy(@g_ddguid, lpGUID, SizeOf(TGUID));
-    end
+      memcpy(@g_ddguid, lpGUID, SizeOf(TGUID))
     else
-    begin
       memset(@g_ddguid, 0, SizeOf(TGUID));
-    end;
 
     Result := False;
     Exit;
@@ -904,9 +900,9 @@ begin
       // create DirectDraw7
       begin
         if (FAILED(hRet)) then
-          hRet := DirectDrawCreateEx(nil, g_pDD7, IID_IDirectDraw7, nil)
+          hRet := DirectDrawCreateEx(nil, {out}g_pDD7, IID_IDirectDraw7, nil)
         else
-          hRet := DirectDrawCreateEx(@g_ddguid, g_pDD7, IID_IDirectDraw7, nil);
+          hRet := DirectDrawCreateEx(@g_ddguid, {out}g_pDD7, IID_IDirectDraw7, nil);
 
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('Could not initialize DirectDraw7');
@@ -946,12 +942,13 @@ begin
         ddsd2.dwSize := SizeOf(ddsd2);
         ddsd2.dwFlags := DDSD_CAPS;
         ddsd2.ddsCaps.dwCaps := DDSCAPS_PRIMARYSURFACE;
-          hRet := g_pDD7.CreateSurface(ddsd2, {out}g_pDDSPrimary, nil);
+        hRet := g_pDD7.CreateSurface(ddsd2, {out}g_pDDSPrimary, nil);
         if (FAILED(hRet)) then
           CxbxKrnlCleanup(DxbxFormat('Could not create primary surface (0x%.08X)', [hRet]));
       end;
 
       // update render target cache
+      New({var}g_pCachedRenderTarget);
       g_pCachedRenderTarget.Common := 0;
       g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
 
@@ -959,6 +956,7 @@ begin
       // as a property, we can't pass it directly as a var/out parameter.
       // So we use a little work-around here :
       g_pD3DDevice8.GetRenderTarget({out}TmpEmuSurface8);
+
       g_pCachedRenderTarget.EmuSurface8 := TmpEmuSurface8;
       // Keep this reference around, by fooling the automatic
       // reference-counting Delphi does. (This is necessary
@@ -967,6 +965,7 @@ begin
       Pointer(TmpEmuSurface8) := nil;
 
       // update z-stencil surface cache
+      New({var}g_pCachedZStencilSurface);
       g_pCachedZStencilSurface.Common := 0;
       g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
 
