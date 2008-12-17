@@ -238,6 +238,13 @@ type
     Data: DWord;
     Lock: DWord;
 
+    // Dxnx Note : Delphi doesn't accept interfaces in a union,
+    // so we have to use another approach : the following properties
+    // all store their data in the same location (which overlaps
+    // with Lock, as in the original Cxbx declaration of this type).
+    //
+    // Be aware that there's no reference-counting possible this way!
+    
     property EmuResource8: IDirect3DResource8 read GetEmuResource8 write SetEmuResource8;
     property EmuBaseTexture8: IDirect3DBaseTexture8 read GetEmuBaseTexture8 write SetEmuBaseTexture8;
     property EmuTexture8: IDirect3DTexture8 read GetEmuTexture8 write SetEmuTexture8;
