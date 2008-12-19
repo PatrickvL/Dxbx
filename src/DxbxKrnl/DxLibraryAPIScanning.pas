@@ -473,14 +473,14 @@ var
 
   procedure _ResolveXapiProcessHeapAddress(const aPatternTrieReader: TPatternTrieReader);
   var
-    DectededXapiInitProcess: PDetectedVersionedXboxLibraryFunction;
+    DetectedXapiInitProcess: PDetectedVersionedXboxLibraryFunction;
     StoredLibrary: PStoredLibrary;
     ProcessHeapOffs: Integer;
   begin
-    DectededXapiInitProcess := DetectedFunctions.FindByName('XapiInitProcess');
-    if Assigned(DectededXapiInitProcess) then
+    DetectedXapiInitProcess := DetectedFunctions.FindByName('XapiInitProcess');
+    if Assigned(DetectedXapiInitProcess) then
     begin
-      StoredLibrary := aPatternTrieReader.GetStoredLibrary(DectededXapiInitProcess.StoredLibraryFunction.LibraryIndex);
+      StoredLibrary := aPatternTrieReader.GetStoredLibrary(DetectedXapiInitProcess.StoredLibraryFunction.LibraryIndex);
       if Assigned(StoredLibrary) then
       begin
         // Source for these offsets is Cxbx code (HLEIntercept.cpp) and our
@@ -498,7 +498,7 @@ var
         else // 3911, 4034, 4134
           ProcessHeapOffs := $3E;
 
-        XTL_EmuXapiProcessHeap := PPointer(IntPtr(DectededXapiInitProcess.CodeStart) + ProcessHeapOffs)^;
+        XTL_EmuXapiProcessHeap := PPointer(IntPtr(DetectedXapiInitProcess.CodeStart) + ProcessHeapOffs)^;
 {$IFDEF DXBX_DEBUG}
         DbgPrintf('DxbxHLE : Resolved XapiProcessHeap at $%.8x', [XTL_EmuXapiProcessHeap]);
 {$ENDIF}

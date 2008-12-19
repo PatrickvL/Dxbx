@@ -128,14 +128,14 @@ begin
   // Locate a free LDT entry
   begin
     while x < MAXIMUM_XBOX_THREADS do
-      if FreeLDTEntries[x] = 0 then
-        Inc(x)
+      if FreeLDTEntries[x] <> 0 then
+        Break
       else
-        Break;
+        Inc(x);
 
     if x = MAXIMUM_XBOX_THREADS then
     begin
-      LeaveCriticalSection(EmuLDTLock);
+      LeaveCriticalSection({var}EmuLDTLock);
 
       CxbxKrnlCleanup('Could not locate free LDT entry (too many threads?)');
 
@@ -159,7 +159,7 @@ begin
     _LDTEntry.HighWord.Bits.Default_Big  := 1;    // 386 segment
     _LDTEntry.HighWord.Bits.Granularity  := iif(dwLimit >= $00100000, 1, 0);
 
-    if _LDTEntry.HighWord.Bits.Granularity > 0 then
+    if _LDTEntry.HighWord.Bits.Granularity <> 0 then
       dwLimit := dwLimit shr 12;
 
     _LDTEntry.LimitLow                   := Word(dwLimit and $FFFF);
@@ -171,7 +171,7 @@ begin
     if not NT_SUCCESS(NtSetLdtEntries((x * 8) + 7 + 8, LDTEntry, 0, LDTEntry)) then
     begin
       WriteLog(GetLastErrorString);
-      LeaveCriticalSection(EmuLDTLock);
+      LeaveCriticalSection({var}EmuLDTLock);
 
       CxbxKrnlCleanup('Could not set LDT entries');
 
@@ -182,7 +182,7 @@ begin
 
   FreeLDTEntries[x] := 0;
 
-  LeaveCriticalSection(EmuLDTLock);
+  LeaveCriticalSection({var}EmuLDTLock);
 
   Result := (x * 8) + 7 + 8;
 end;
@@ -191,7 +191,7 @@ procedure EmuDeallocateLDT(wSelector: uint16);
 var
   LDTEntry: LDT_ENTRY;
 begin
-  EnterCriticalSection(EmuLDTLock);
+  EnterCriticalSection({var}EmuLDTLock);
 
   ZeroMemory(@LDTEntry, SizeOf(LDTEntry));
 
@@ -199,7 +199,7 @@ begin
 
   FreeLDTEntries[(wSelector shr 3) - 1] := wSelector;
 
-  LeaveCriticalSection(EmuLDTLock);
+  LeaveCriticalSection({var}EmuLDTLock);
 end;
 
 end.
