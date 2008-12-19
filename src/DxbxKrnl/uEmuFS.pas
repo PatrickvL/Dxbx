@@ -65,7 +65,7 @@ const
 
   // Dxbx values inside FS_ArbitraryUserPointer :
   DxbxFS_SwapFS = FS_ArbitraryUserPointer; // = $14 : UInt16
-  DxbxFS_IsXboxFS = FS_ArbitraryUserPointer + 2; // = $16 : ByteBool
+  DxbxFS_IsXboxFS = FS_ArbitraryUserPointer + SizeOf(UInt16); // = $16 : ByteBool
 
 var
   // Xbox is a single process system, and because of this fact, demos
@@ -105,15 +105,14 @@ end;
 // code, you *must* swap over to Win2k/XP FS. Similarly, before
 // running Xbox code, you *must* swap back over to Emu FS.
 procedure EmuSwapFS;
-const
 {$J+}
-  dwInterceptionCount: Integer = 0;
-{$J-}
-begin
+const
   // Note that this is only the *approximate* interception count,
   // because not all interceptions swap the FS register, and some
   // non-interception code uses it
-
+  dwInterceptionCount: Integer = 0;
+{$J-}
+begin
   asm
     mov ax, fs:[DxbxFS_SwapFS]
     mov fs, ax
@@ -180,8 +179,8 @@ begin
 
     pNewTLS := CxbxMalloc(dwCopySize + dwZeroSize + $100 { + HACK: extra safety padding 0x100});
 
-    ZeroMemory(pNewTLS, dwCopySize + dwZeroSize + $100);
-    CopyMemory(pNewTLS, pTLSData, dwCopySize);
+    memset(pNewTLS, 0, dwCopySize + dwZeroSize + $100);
+    memcpy(pNewTLS, pTLSData, dwCopySize);
   end;
 
   // dump raw TLS data
@@ -228,7 +227,8 @@ begin
   begin
     dwSize := SizeOf(XboxKrnl.KPCR);
     NewPcr := CxbxMalloc(dwSize);
-    ZeroMemory(NewPcr, dwSize); // was : SizeOf(NewPcr));
+//    memset(NewPcr, 0, dwSize);
+    memset(NewPcr, 0, SizeOf(NewPcr^));
     NewFS := EmuAllocateLDT(UInt32(NewPcr), UInt32(UIntPtr(NewPcr) + dwSize));
   end;
 
@@ -248,7 +248,7 @@ begin
     EThread.Tcb.TlsData := pNewTLS;
     EThread.UniqueThread := GetCurrentThreadId();
 
-    CopyMemory(@(NewPcr.NtTib), OrgNtTib, SizeOf(NT_TIB));
+    memcpy(@(NewPcr.NtTib), OrgNtTib, SizeOf(NT_TIB));
 
     NewPcr.NtTib.Self := @(NewPcr.NtTib);
 

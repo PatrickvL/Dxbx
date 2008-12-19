@@ -262,7 +262,11 @@ end;     *)
 //*/
 
 type
-  RTL_HEAP_DEFINITION = record Length: Integer; end; // TODO
+  RTL_HEAP_DEFINITION = record
+    Length: ULONG;
+    Unknown: array [0..11-1] of ULONG;
+  end;
+  PRTL_HEAP_DEFINITION = ^RTL_HEAP_DEFINITION;
 
 function XTL_EmuRtlCreateHeap(
   Flags: ULONG;
@@ -1088,13 +1092,13 @@ begin
     dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
     dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
 
-    // TODO : Determine if XTL_g_pRtlCreateHeap is indeed the same as XTL_EmuRtlCreateHeap.
-    
+    // Dxbx TODO : Determine if XTL_g_pRtlCreateHeap is indeed the same as XTL_EmuRtlCreateHeap.
+
     XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
   end;
 end;
 
-procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWord) stdcall;
+procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWord); stdcall;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1180,7 +1184,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-// Cxbx : not necessary?
+(*// Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): THandle; stdcall;
 begin
   EmuSwapFS(fsWindows);
@@ -1249,6 +1253,7 @@ begin
 
   Result := ERROR_SUCCESS;
 end;
+*)
 
 exports
   XTL_EmuCloseHandle,
@@ -1267,10 +1272,12 @@ exports
   XTL_EmuXapiBootDash,
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
+(*
   XTL_EmuXCalculateSignatureBegin,
   XTL_EmuXCalculateSignatureBeginEx,
   XTL_EmuXCalculateSignatureEnd,
   XTL_EmuXCalculateSignatureUpdate,
+*)
   XTL_EmuXFormatUtilityDrive,
   XTL_EmuXInitDevices,
   XTL_EmuXMountUtilityDrive,
