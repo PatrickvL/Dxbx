@@ -1,40 +1,114 @@
+(*
+    This file is part of Dxbx - a XBox emulator written in Delphi (ported over from cxbx)
+    Copyright (C) 2007 Shadow_tj and other members of the development team.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*)
 unit uError;
 
 interface
 
-procedure Error_SetError(const x_szError: string; x_bFatal: Boolean);
-function Error_GetError: string;
-function Error_IsFatal: Boolean;
+{$INCLUDE Dxbx.inc}
 
+uses
+  // Delphi
+  Windows,
+  SysUtils,
+  // Dxbx
+  uTypes;
 
-var
-  m_bFatal: Boolean;
-  m_szError: string;
+type
+  // inherit from this class for handy error reporting capability
+  Error = object
+  public
+    // return current error (zero if there is none)
+    function GetError(): PChar;
 
+    // is the current error fatal? (class is "dead" on fatal errors)
+    function IsFatal(): bool;
 
-implementation    
+    // clear the current error (returns false if error was fatal)
+    function ClearError(): Bool;
+  protected
+    // protected constructor so this class must be inherited from
+    procedure Initialize; // was Error::Error
 
-// protected so only derived class may set an error
-procedure Error_SetError(const x_szError: string; x_bFatal: Boolean);
+    // protected deconstructor
+    procedure Finalize;
+
+    // protected so only derived class may set an error
+    procedure SetError(const x_szError: PChar; x_bFatal: bool);
+  private
+    // current error information
+    m_bFatal: Boolean;
+    m_szError: PChar;
+  end;
+
+implementation
+
+{ Error }
+
+procedure Error.Initialize;
 begin
+  m_szError := nil;
+  m_bFatal := False;
+end;
+
+procedure Error.Finalize;
+begin
+  StrDispose(m_szError);
+end;
+
+function Error.GetError(): PChar;
+begin
+  Result := m_szError;
+end;
+
+function Error.IsFatal: Bool;
+begin
+  Result := m_bFatal;
+end;
+
+procedure Error.SetError(const x_szError: PChar; x_bFatal: Bool);
+begin
+  if not Assigned(m_szError) then
+    m_szError := StrAlloc(256);//{ m_szError = new char[256]; }
+
+  strncpy(m_szError, x_szError, 255);
+
   if m_szError <> '' then
     m_szError := x_szError;
 
   m_bFatal := x_bFatal;
 end;
 
-// return current error (zero if there is none)
-function Error_GetError: string;
+// clear the current error (returns false if error was fatal)
+function Error.ClearError(): bool;
 begin
-  Result := m_szError;
-end;
+  if m_bFatal then
+  begin
+    Result := False;
+    Exit;
+  end;
 
-// is the current error fatal? (class is "dead" on fatal errors)
-function Error_IsFatal: Boolean;
-begin
-  Result := m_bFatal;
-end;
+  StrDispose(m_szError);
+  m_szError := nil;
 
+  m_bFatal := False;
+
+  Result := True;
+end;
 
 end.
 

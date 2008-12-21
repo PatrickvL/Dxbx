@@ -76,6 +76,7 @@ type
   TCodePointer = type Pointer;
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
+function strncpy(dest, source: PAnsiChar; len: Integer): PAnsiChar; // cdecl
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 
@@ -86,6 +87,11 @@ implementation
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 begin
   Result := StrCopy(Dest, Source);
+end;
+
+function strncpy(dest, source: PAnsiChar; len: Integer): PAnsiChar; // cdecl
+begin
+  Result := StrLCopy(Dest, Source, Len);
 end;
 
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;

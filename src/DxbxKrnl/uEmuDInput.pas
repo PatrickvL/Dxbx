@@ -24,7 +24,8 @@ interface
 
 uses
   // Delphi
-  Dialogs,
+//  Dialogs,
+  Windows,
   // 3rd party
   XInput,
   // Dxbx
@@ -33,7 +34,7 @@ uses
   uEmu,
   uXBController;
 
-function XTL_EmuDInputInit: LONGBOOL; stdcall; // forward
+function XTL_EmuDInputInit: bool; stdcall; // forward
 procedure XTL_EmuDInputCleanup; stdcall; // forward
 
 implementation
@@ -41,30 +42,34 @@ implementation
 var
   g_XBController: XBController;
 
-function XTL_EmuDInputInit: LONGBOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+function XTL_EmuDInputInit: bool; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:98
 begin
-  Result := True;
   g_EmuShared.GetXBController({var}g_XBController);
 
   g_XBController.ListenBegin(g_hEmuWindow);
 
-  if (Error_GetError <> '') then
+  if Assigned(g_XBController.GetError()) then
+  begin
     Result := False;
+    Exit;
+  end;
+
+  Result := True;
 end;
 
 procedure XTL_EmuDInputCleanup; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   g_XBController.ListenEnd();
 end;
 
 procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   g_XBController.ListenPoll(Controller);
-  if (Error_GetError <> '' ) then
-    ShowMessage( 'Dxbx[* UNHANDLED! *]'); // TODO: Handle this! *)
+  if Assigned(g_XBController.GetError()) then
+    MessageBox(0, g_XBController.GetError(), 'Dxbx [*UNHANDLED!*]', MB_OK);  // Cxbx TODO: Handle this!
 end;
 
 exports

@@ -657,7 +657,7 @@ type
 // ******************************************************************
 type
   DISPATCHER_HEADER = record
-    cType: UCHAR; // 0x00
+    _Type: UCHAR; // 0x00
     _Absolute: UCHAR; // 0x01
     Size: UCHAR; // 0x02
     Inserted: UCHAR; // 0x03
@@ -729,7 +729,7 @@ type
 // ******************************************************************
 type
   KDPC = record
-    cType: CSHORT; // 0x00
+    _Type: CSHORT; // 0x00
     Number: UCHAR; // 0x02
     Importance: UCHAR; // 0x03
     DpcListEntry: LIST_ENTRY; // 0x04
@@ -740,20 +740,19 @@ type
   end;
   PKDPC = ^KDPC;
 
-(*
 // ******************************************************************
 // * KOBJECTS
 // ******************************************************************
 type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
-   **** if a constant has a value, do not assign a new value **** )
- _KOBJECTS
-begin
-    DpcObject = $13,
- end;
-KOBJECTS, *PKOBJECTS;
+   **** if a constant has a value, do not assign a new value ****)
+  KOBJECTS = {enum}(
+    DpcObject = $13
+  );
+  PKOBJECTS = ^KOBJECTS;
 
+(*
 // ******************************************************************
 // * RTL_CRITICAL_SECTION
 // ******************************************************************
@@ -850,20 +849,18 @@ type
     PrcbData: KPRCB; // 0x28
   end;
 
-(*
 // ******************************************************************
 // * EEPROM_INDEX
 // ******************************************************************
 type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
-   **** if a constant has a value, do not assign a new value **** )
- _EEPROM_INDEX
-begin
+   **** if a constant has a value, do not assign a new value ****)
+  EEPROM_INDEX = (
     EEPROM_MISC = $11
- end;
-EEPROM_INDEX, *PEEPROM_INDEX;
-*)
+  );
+  PEEPROM_INDEX = ^EEPROM_INDEX;
+
 // ******************************************************************
 // * XBOX_HARDWARE_INFO
 // ******************************************************************

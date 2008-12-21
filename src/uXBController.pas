@@ -45,7 +45,7 @@ type
   // XBCtrlObject: Source=XBController.h Revision=martin#39 Translator=PatrickvL Done=100
   XBCtrlObject = (
     // Analog Axis
-    XBCTRL_OBJECT_LTHUMBPOSX = 0,
+    XBCTRL_OBJECT_LTHUMBPOSX, // = 0
     XBCTRL_OBJECT_LTHUMBNEGX,
     XBCTRL_OBJECT_LTHUMBPOSY,
     XBCTRL_OBJECT_LTHUMBNEGY,
@@ -156,7 +156,6 @@ type
   end;
   PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
 
-  // XINPUT_STATE
   XINPUT_STATE = record
     dwPacketNumber: DWord;
     Gamepad: XINPUT_GAMEPAD;
@@ -177,7 +176,7 @@ type
 
   // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
   // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
-  XBController = record
+  XBController = object(Error)
   private
     // Device Names
     m_DeviceName: array [0..XBCTRL_MAX_DEVICES - 1] of array [0..260-1] of AnsiChar;
@@ -234,6 +233,8 @@ procedure XBController.Initialize; // was XBController::XBController
 var
   v: Integer;
 begin
+  inherited Initialize;
+
   m_CurrentState := XBCTRL_STATE_NONE;
 
   for v := 0 to XBCTRL_MAX_DEVICES - 1 do
@@ -265,6 +266,8 @@ begin
   else
     if m_CurrentState = XBCTRL_STATE_LISTEN then
       ListenEnd();
+
+  inherited Finalize;
 end;
 
 function XBController.EnumObjectsCallback(lpddoi: LPCDIDEVICEOBJECTINSTANCE): BOOL;
@@ -616,7 +619,7 @@ procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
-    Error_SetError('Invalid State', False);
+    Self{:Error}.SetError('Invalid State', False);
     Exit;
   end;
 
@@ -624,7 +627,7 @@ begin
 
   DInputInit(ahwnd);
 
-  if Error_GetError <> '' then
+  if Self{:Error}.GetError <> '' then
     Exit;
 
   lPrevMouseX := -1;
@@ -639,7 +642,7 @@ procedure XBController.ConfigEnd;
 begin
   if m_CurrentState <> XBCTRL_STATE_CONFIG then
   begin
-    Error_SetError('Invalid State', False);
+    Self{:Error}.SetError('Invalid State', False);
     Exit;
   end;
 
@@ -669,7 +672,7 @@ var
 begin
   if (m_CurrentState <> XBCTRL_STATE_CONFIG) then
   begin
-    Error_SetError('Invalid State', False);
+    Self{:Error}.SetError('Invalid State', False);
     Result := False;
     Exit;
   end;
@@ -985,7 +988,7 @@ begin
 
     if (FAILED(ahRet)) then
     begin
-      Error_SetError('Could not initialized DirectInput8', True);
+      Self{:Error}.SetError('Could not initialized DirectInput8', True);
       Exit;
     end;
   end;
@@ -993,12 +996,12 @@ begin
   // Create all the devices available (well...most of them)
   if Assigned(m_pDirectInput8) then
   begin
-    ahRet := m_pDirectInput8.EnumDevices( DI8DEVCLASS_GAMECTRL,
+    {ahRet :=} m_pDirectInput8.EnumDevices( DI8DEVCLASS_GAMECTRL,
                                           WrapEnumGameCtrlCallback,
                                           Addr(Self),
                                           DIEDFL_ATTACHEDONLY);
     // Dxbx TODO Add : if FAILED(hret) then what?
-    
+
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysKeyboard') then
     begin
       ahRet := m_pDirectInput8.CreateDevice( GUID_SysKeyboard,
@@ -1101,7 +1104,7 @@ var
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
-    Error_SetError('Invalid State', False);
+    Self{:Error}.SetError('Invalid State', False);
     Exit;
   end;
 
@@ -1127,7 +1130,7 @@ procedure XBController.ListenEnd;
 begin
   if m_CurrentState <> XBCTRL_STATE_LISTEN then
   begin
-    Error_SetError('Invalid State', False);
+    Self{:Error}.SetError('Invalid State', False);
     Exit;
   end;
 
@@ -1146,7 +1149,7 @@ var
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
-    Error_SetError('Invalid State', False);
+    Self{:Error}.SetError('Invalid State', False);
     Exit;
   end;
 
@@ -1254,7 +1257,7 @@ var
 begin
   if (m_CurrentState <> XBCTRL_STATE_NONE) then
   begin
-    Error_SetError('Invalid State', False);
+    Self{:Error}.SetError('Invalid State', False);
     Exit;
   end;
 

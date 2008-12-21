@@ -34,6 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  uEmu,
   uEmuFS,
   uEmuFile,
   uEmuXapi,
@@ -241,7 +242,6 @@ end;
 // this function, when first called, creates a "shadow" copy
 // of the EEPROM in RAM which is used in subsequent calls to Query,
 // and updated by ExSaveNonVolatileSetting.
-
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
   _Type: PDWORD; // out
@@ -251,8 +251,114 @@ function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ): NTSTATUS; stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExQueryNonVolatileSetting');
+
+  DbgPrintf('EmuKrnl : ExQueryNonVolatileSetting' +
+         #13#10'(' +
+         #13#10'   ValueIndex          : 0x%.08X' +
+         #13#10'   Type                : 0x%.08X' +
+         #13#10'   Value               : 0x%.08X' +
+         #13#10'   ValueLength         : 0x%.08X' +
+         #13#10'   ResultLength        : 0x%.08X' +
+         #13#10');',
+         [ValueIndex, _Type, Value, ValueLength, ResultLength]);
+
+  // handle eeprom read
+  case ValueIndex of
+    // Factory Game Region
+    $104:
+    begin
+      // Cxbx TODO: configurable region or autodetect of some sort
+      if Assigned(_Type) then
+        _Type^ := $04;
+
+      if Assigned(Value) then
+        Value^ := $01;  // North America
+
+      if Assigned(ResultLength) then
+        ResultLength^ := $04;
+    end;
+
+    // Factory AC Region
+    $103:
+    begin
+      // Cxbx TODO: configurable region or autodetect of some sort
+      if Assigned(_Type) then
+        _Type^ := $04;
+
+      if Assigned(Value) then
+        Value^ := $01; // NTSC_M
+
+      if Assigned(ResultLength) then
+        ResultLength^ := $04;
+    end;
+
+    // Language
+    $007:
+    begin
+      // Cxbx TODO: configurable language or autodetect of some sort
+      if Assigned(_Type) then
+        _Type^ := $04;
+
+      if Assigned(Value) then
+        Value^ := $01;  // English
+
+      if Assigned(ResultLength) then
+        ResultLength^ := $04;
+    end;
+
+    // Video Flags
+    $008:
+    begin
+      // Cxbx TODO: configurable video flags or autodetect of some sort
+      if Assigned(_Type) then
+        _Type^ := $04;
+
+      if Assigned(Value) then
+        Value^ := $10;  // Letterbox
+
+      if Assigned(ResultLength) then
+        ResultLength^ := $04;
+    end;
+
+    // Audio Flags
+    $009:
+    begin
+      if Assigned(_Type) then
+        _Type^ := $04;
+
+      if Assigned(Value) then
+        Value^ := 0;
+
+      if Assigned(ResultLength) then
+        ResultLength^ := $04;
+    end;
+
+    Ord(EEPROM_MISC):
+    begin
+      if Assigned(_Type) then
+        _Type^ := $04;
+
+      if Assigned(Value) then
+        Value^ := 0;
+
+      if Assigned(ResultLength) then
+        ResultLength^ := $04;
+    end;
+
+    (* Timezone info
+    $0FF:
+    asm
+      int 3
+    end;
+    //*)
+
+  else
+    EmuWarning(DxbxFormat('ExQueryNonVolatileSetting unknown ValueIndex (%d)', [ValueIndex]));
+  end;
+
   EmuSwapFS(fsXbox);
+
+  Result := STATUS_SUCCESS;
 end;
 
 function {025} xboxkrnl_ExReadWriteRefurbInfo(
