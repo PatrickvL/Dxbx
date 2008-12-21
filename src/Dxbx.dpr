@@ -42,7 +42,8 @@ uses
   XboxKrnl in '..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
   uEmuShared in 'uEmuShared.pas',
   uMutex in 'uMutex.pas',
-  uXbVideo in 'uXbVideo.pas';
+  uXbVideo in 'uXbVideo.pas',
+  uError in 'uError.pas';
 
 {$R *.RES}
 

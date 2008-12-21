@@ -461,7 +461,15 @@ function xboxkrnl_RtlNtStatusToDosError(
   ): ULONG; stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlNtStatusToDosError');
+
+  DbgPrintf('EmuKrnl : RtlNtStatusToDosError' +
+           #13#10'(' +
+           #13#10'   Status              : 0x%.08X' +
+           #13#10');',
+           [Status]);
+
+  Result := ULONG(JwaNative.RtlNtStatusToDosError(Status));
+
   EmuSwapFS(fsXbox);
 end;
 

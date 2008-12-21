@@ -34,6 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  uEmuAlloc,
   uEmuFS,
   uEmuFile,
   uEmuXapi,
@@ -106,11 +107,43 @@ end;
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
+var
+  pRet: PVOID;
+  dwRet: DWORD; 
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('MmAllocateContiguousMemory');
-  Result := NULL;
+
+  DbgPrintf('EmuKrnl : MmAllocateContiguousMemory' +
+         #13#10'(' +
+         #13#10'   NumberOfBytes            : 0x%.08X' +
+         #13#10');',
+         [NumberOfBytes]);
+
+  //
+  // Cxbx NOTE: Kludgey (but necessary) solution:
+  //
+  // Since this memory must be aligned on a page boundary, we must allocate an extra page
+  // so that we can return a valid page aligned pointer
+  //
+
+  pRet := CxbxMalloc(NumberOfBytes + $1000);
+
+  // align to page boundary
+  begin
+    dwRet := DWORD(pRet);
+
+    Inc(dwRet, $1000 - (dwRet mod $1000));
+
+// Dxbx TODO :    g_AlignCache.insert(dwRet, pRet);
+
+    pRet := PVOID(dwRet);
+  end;
+
+  DbgPrintf('EmuKrnl : MmAllocateContiguous returned 0x%.08X', [pRet]);
+
   EmuSwapFS(fsXbox);
+
+  Result :=  pRet;
 end;
 
 function xboxkrnl_MmAllocateContiguousMemoryEx(

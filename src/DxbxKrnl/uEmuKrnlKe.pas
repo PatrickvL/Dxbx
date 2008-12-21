@@ -38,7 +38,8 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl;
+  uDxbxKrnl,
+  uDxbxKrnlUtils;
 
 function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -58,20 +59,20 @@ function xboxkrnl_KeGetCurrentIrql(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeInitializeDpc(
+procedure xboxkrnl_KeInitializeDpc(
   Dpc: PKDPC;
   DeferredRoutine: PKDEFERRED_ROUTINE;
   DeferredContext: PVOID
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_KeInitializeEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeInitializeTimerEx(
+procedure xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
   _Type: TIMER_TYPE
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertHeadQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -233,14 +234,28 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeInitializeDpc(
+procedure xboxkrnl_KeInitializeDpc(
   Dpc: PKDPC;
   DeferredRoutine: PKDEFERRED_ROUTINE;
   DeferredContext: PVOID
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeInitializeDpc');
+
+  DbgPrintf('EmuKrnl : KeInitializeDpc' +
+         #13#10'(' +
+         #13#10'   Dpc                 : 0x%.08X' +
+         #13#10'   DeferredRoutine     : 0x%.08X' +
+         #13#10'   DeferredContext     : 0x%.08X' +
+         #13#10');',
+         [ Dpc, Addr(DeferredRoutine), DeferredContext]);
+
+  // inialize Dpc field values
+  Dpc.Number := 0;
+  Dpc.DeferredRoutine := DeferredRoutine;
+  Dpc._Type := CSHORT(Ord({enum KOBJECTS.}DpcObject));
+  Dpc.DeferredContext := DeferredContext;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -279,13 +294,31 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeInitializeTimerEx(
+procedure xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
   _Type: TIMER_TYPE
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeInitializeTimerEx');
+
+  DbgPrintf('EmuKrnl : KeInitializeTimerEx' +
+         #13#10'(' +
+         #13#10'   Timer               : 0x%.08X' +
+         #13#10'   Type                : 0x%.08X' +
+         #13#10');',
+         [Timer, Ord(_Type)]);
+
+  Timer.Header._Type              := UCHAR(Ord(_Type) + 8);
+  Timer.Header.Inserted           := 0;
+  Timer.Header.Size               := SizeOf(Timer^) div SizeOf(ULONG);
+  Timer.Header.SignalState        := 0;
+  Timer.TimerListEntry.Blink      := NULL;
+  Timer.TimerListEntry.Flink      := NULL;
+  Timer.Header.WaitListHead.Flink := @(Timer.Header.WaitListHead);
+  Timer.Header.WaitListHead.Blink := @(Timer.Header.WaitListHead);
+  Timer.DueTime.QuadPart          := 0;
+  Timer.Period                    := 0;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -543,8 +576,19 @@ function xboxkrnl_KeSetTimer(
   ): LONGBOOL; stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('KeSetTimer');
-  Result := False;
+
+	DbgPrintf('EmuKrnl : KeSetTimer' +
+		   #13#10'(' +
+		   #13#10'   Timer               : 0x%.08X' +
+		   #13#10'   DueTime             : 0x%.16i' + // was %I64X
+		   #13#10'   Dpc                 : 0x%.08X' +
+		   #13#10');',
+		   [Timer, DueTime.QUADPART, Dpc]);
+
+  // Call KeSetTimerEx
+  xboxkrnl_KeSetTimerEx(Timer, DueTime, 0, Dpc);
+
+  Result := True;
   EmuSwapFS(fsXbox);
 end;
 
@@ -556,9 +600,21 @@ function xboxkrnl_KeSetTimerEx(
   ): LONGBOOL; stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('KeSetTimerEx');
-  Result := Low(Result);
+
+  DbgPrintf('EmuKrnl : KeSetTimerEx' +
+           #13#10'(' +
+           #13#10'   Timer               : 0x%.08X' +
+           #13#10'   DueTime             : 0x%.16i' + // was %I64X
+           #13#10'   Period              : 0x%.08X' +
+           #13#10'   Dpc                 : 0x%.08X' +
+           #13#10');',
+           [Timer, DueTime.QUADPART, Period, Dpc]);
+
+  CxbxKrnlCleanup('KeSetTimerEx is not implemented');
+
   EmuSwapFS(fsXbox);
+
+  Result := TRUE;
 end;
 
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall;
