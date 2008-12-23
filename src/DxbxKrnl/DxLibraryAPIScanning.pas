@@ -43,11 +43,11 @@ uses
 
 type
   PDetectedVersionedXboxLibraryFunction = ^RDetectedVersionedXboxLibraryFunction;
-  RDetectedVersionedXboxLibraryFunction = record
+  RDetectedVersionedXboxLibraryFunction = packed record
     XboxLibraryPatch: TXboxLibraryPatch;
     FunctionName: string;
     StoredLibraryFunction: PStoredLibraryFunction;
-//    PotentialLocations: array of RDetectedLocation = record CodeStart, CodeEnd: TCodePointer; end;
+//    PotentialLocations: array of RDetectedLocation = packed record CodeStart, CodeEnd: TCodePointer; end;
     HitCount: Integer;
     CodeStart: TCodePointer;
     CodeEnd: TCodePointer;

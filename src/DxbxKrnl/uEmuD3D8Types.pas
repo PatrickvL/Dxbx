@@ -52,7 +52,7 @@ type
   X_VERTEXSHADERCONSTANTMODE = DWord;
   X_D3DFORMAT = DWord;
 
-  X_VERTEXSHADERINPUT = record
+  X_VERTEXSHADERINPUT = packed record
     IndexOfStream: DWord;
     Offset: DWord;
     Format: DWord;
@@ -60,7 +60,7 @@ type
     TesselationSource: Byte;
   end;
 
-  X_D3DTILE = record
+  X_D3DTILE = packed record
     Flags : DWORD;
     pMemory : PVOID;
     Size : DWORD;
@@ -70,7 +70,7 @@ type
   end;
   PX_D3DTILE = ^X_D3DTILE;
 
-  X_D3DVertexShader = record
+  X_D3DVertexShader = packed record
     UnknownA: DWord;
     Handle: DWord;
     UnknownB: DWord;
@@ -79,19 +79,19 @@ type
   end;
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
-  STREAM_DYNAMIC_PATCH = record
+  STREAM_DYNAMIC_PATCH = packed record
     NeedPatch: BOOL;       // This is to know whether is data which must be patched
     ConvertedStride: DWord;
     NbrTypes: DWord;        // Number of the stream data types
     pTypes: UINT;         // The stream data types (xbox)
   end;
 
-  VERTEX_DYNAMIC_PATCH = record
+  VERTEX_DYNAMIC_PATCH = packed record
     NbrStreams: UINT; // The number of streams the vertex shader uses
     pStreamPatches: STREAM_DYNAMIC_PATCH;
   end;
 
-  VERTEX_SHADER = record
+  VERTEX_SHADER = packed record
     aHandle: DWord;
     // These are the parameters given by the XBE,
     // we save them to be be able to return them when necassary.
@@ -107,7 +107,7 @@ type
   end;
   PVERTEX_SHADER = ^VERTEX_SHADER;
 
-  X_VERTEXATTRIBUTEFORMAT = record
+  X_VERTEXATTRIBUTEFORMAT = packed record
     pVertexShaderInput: array [0..15] of X_VERTEXSHADERINPUT;
   end;
   PX_VERTEXATTRIBUTEFORMAT = ^X_VERTEXATTRIBUTEFORMAT;
@@ -137,7 +137,7 @@ type
   end;
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
-  X_D3DGAMMARAMP = record
+  X_D3DGAMMARAMP = packed record
     Red: array[0..255] of Byte;
     Green: array[0..255] of Byte;
     Blue: array[0..255] of Byte;
@@ -175,7 +175,7 @@ type
     X_D3DRTYPE_FORCE_DWORD = $7FFFFFFF
   );
 
-  X_D3DDISPLAYMODE = record
+  X_D3DDISPLAYMODE = packed record
     Width: UINT;
     Height: UINT;
     RefreshRate: UINT;
@@ -183,7 +183,7 @@ type
     Format: X_D3DFORMAT;
   end;
 
-  X_D3DSURFACE_DESC = record
+  X_D3DSURFACE_DESC = packed record
     Format: X_D3DFORMAT;
     _Type: X_D3DRESOURCETYPE;
     Usage: DWord;
@@ -201,12 +201,12 @@ type
     X_D3DFIELD_FORCE_DWORD = $7FFFFFFF
   );
 
-  X_D3DFIELD_STATUS = record
+  X_D3DFIELD_STATUS = packed record
     Field: X_D3DFIELDTYPE;
     VBlankCount: UINT;
   end;
 
-  D3DVBLANKDATA = record
+  D3DVBLANKDATA = packed record
     VBlank: DWord;
     Swap: DWord;
     Flags: DWord;
@@ -334,7 +334,7 @@ type
   end;
   PX_D3DVolumeTexture = ^X_D3DVolumeTexture;
 
-  X_STREAMINPUT = record
+  X_STREAMINPUT = packed record
     VertexBuffer: PX_D3DVertexBuffer;
     Stride: UINT;
     Offset: UINT;

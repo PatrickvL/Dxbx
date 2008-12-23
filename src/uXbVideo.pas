@@ -31,7 +31,7 @@ uses
 type
   // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
   // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
-  XBVideo = record
+  XBVideo = packed record
   private
     // Configuration
     m_szVideoResolution: array [0..100-1] of AnsiChar;
