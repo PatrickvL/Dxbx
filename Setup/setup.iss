@@ -1,7 +1,7 @@
 [Setup]
 AppName=DXBX
-AppVerName=DXBX 0.0.0.8 Beta
-AppPublisher=Shadow_tj, Pcucho, Wayo & Zomby
+AppVerName=DXBX 0.0.0.9 Beta
+AppPublisher=Shadow_tj, Pcucho, Wayo & Zomby, Patrick
 DefaultDirName={pf}\DXBX
 DefaultGroupName=DXBX
 OutputDir=..
