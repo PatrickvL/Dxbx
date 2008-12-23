@@ -221,7 +221,7 @@ begin
   if Assigned(m_Xbe) then
     CloseXbe();
 
-  if OpenXbe(XbeOpenDialog.FileName, m_Xbe, m_ExeFileName, m_XbeFileName) then
+  if OpenXbe(XbeOpenDialog.FileName, {var}m_Xbe, m_ExeFileName, m_XbeFileName) then
   begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
     RecentXbeAdd( XbeOpenDialog.FileName );
@@ -611,7 +611,7 @@ begin
       if Assigned(m_Xbe) then
         CloseXbe();
 
-      if OpenXbe(pcFileName, m_Xbe, m_ExeFileName, m_XbeFileName) then
+      if OpenXbe(pcFileName, {var}m_Xbe, m_ExeFileName, m_XbeFileName) then
       begin
         StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
         RecentXbeAdd( XbeOpenDialog.FileName );
@@ -1043,7 +1043,7 @@ begin
   if Assigned(m_Xbe) then
     CloseXbe();
 
-  if not OpenXbe(TempItem.Hint, m_Xbe, m_ExeFileName, m_XbeFileName) then
+  if not OpenXbe(TempItem.Hint, {var}m_Xbe, m_ExeFileName, m_XbeFileName) then
   begin
     MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     Exit;

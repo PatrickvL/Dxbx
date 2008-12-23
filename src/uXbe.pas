@@ -414,31 +414,38 @@ begin
   WriteLog('DXBX: Title identified as ' + m_szAsciiTitle);
 
   // read xbe section headers
-  i := m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr;
-  SetLength(m_SectionHeader, m_Header.dwSections);
-  for lIndex := 0 to m_Header.dwSections - 1 do
   begin
-    CopyMemory(@(m_SectionHeader[lIndex]), @(Buffer[i]), SizeOf(m_SectionHeader[lIndex]));
-    Inc(i, SizeOf(m_SectionHeader[lIndex]));
+    DbgPrintf('DXBX: Reading Section Headers...');
+    i := m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr;
+    SetLength(m_SectionHeader, m_Header.dwSections);
+    for lIndex := 0 to m_Header.dwSections - 1 do
+    begin
+      CopyMemory(@(m_SectionHeader[lIndex]), @(Buffer[i]), SizeOf(m_SectionHeader[lIndex]));
+      Inc(i, SizeOf(m_SectionHeader[lIndex]));
 
-    DbgPrintf('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]);
+      DbgPrintf('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]);
+    end;
   end;
 
   // Read xbe section names
-  SetLength(m_szSectionName, m_Header.dwSections, 9);
-  for lIndex := 0 to m_Header.dwSections - 1 do
   begin
-    RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
-    if m_SectionHeader[lIndex].dwSectionNameAddr <> 0 then
+    DbgPrintf('DXBX: Reading Section Names...');
+    SetLength(m_szSectionName, m_Header.dwSections, 9);
+    for lIndex := 0 to m_Header.dwSections - 1 do
     begin
-      for lIndex2 := 0 to 8 do
+      RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
+      if m_SectionHeader[lIndex].dwSectionNameAddr <> 0 then
       begin
-        m_szSectionName[lIndex][lIndex2] := Buffer[RawAddr + lIndex2];
-        if Ord(m_szSectionName[lIndex][lIndex2]) = 0 then
-          Break;
-      end; // for lIndex2
-    end; // if
-  end; // for lIndex
+        for lIndex2 := 0 to 8 do
+        begin
+          m_szSectionName[lIndex][lIndex2] := Buffer[RawAddr + lIndex2];
+          if Ord(m_szSectionName[lIndex][lIndex2]) = 0 then
+            Break;
+        end; // for lIndex2
+      end; // if
+      DbgPrintf('DXBX: Reading Section Name 0x%.04X... OK (%s)', [lIndex, PChar(m_szSectionName[lIndex])]);
+    end; // for lIndex
+  end;
 
   // Read xbe library versions
   if m_Header.dwLibraryVersionsAddr <> 0 then
@@ -475,7 +482,10 @@ begin
     CopyMemory(m_XAPILibraryVersion, @(Buffer[i]), SizeOf(m_LibraryVersion));
 //was:for lIndex := 0 to SizeOf(m_LibraryVersion) - 1 do
 //      m_XAPILibraryVersion[lIndex] := Buffer[lIndex + i];
+  end;
 
+  // read Xbe sections
+  begin
     WriteLog('DXBX: Reading Sections...');
 
     SetLength(m_bzSection, m_Header.dwSections);
@@ -496,14 +506,11 @@ begin
       RawSize := m_SectionHeader[lIndex].dwSizeofRaw;
       RawAddr := m_SectionHeader[lIndex].dwRawAddr;
       SetLength(m_bzSection[lIndex], RawSize);
-      if RawSize = 0 then
-        Break;
+      if RawSize > 0 then
+        for lIndex2 := 0 to RawSize - 1 do
+          m_bzSection[lIndex][lIndex2] := Byte(Buffer[RawAddr + lIndex2]);
 
       WriteLog(DxbxFormat('DXBX: Reading Section 0x%.4x... OK', [lIndex]));
-
-      for lIndex2 := 0 to RawSize - 1 do
-        m_bzSection[lIndex][lIndex2] := Byte(Buffer[RawAddr + lIndex2]);
-
     end;
 
 //    if lIndex2 < RawSize then
@@ -825,7 +832,10 @@ begin
   _LogEx('Dumping XBE Library Versions...');
   _LogEx('');
   if (SizeOf(m_LibraryVersion) = 0) or (m_Header.dwLibraryVersions = 0) then
-    _LogEx('(This XBE contains no Library Versions)')
+  begin
+    _LogEx('(This XBE contains no Library Versions)');
+    _LogEx('');
+  end
   else
   begin
     for lIndex := 0 to m_Header.dwLibraryVersions - 1 do
@@ -869,12 +879,18 @@ begin
 
   _LogEx('Dumping XBE TLS...');
   _LogEx('');
-  _LogEx(DxbxFormat('Data Start Address               : 0x%.8x', [m_TLS.dwDataStartAddr]));
-  _LogEx(DxbxFormat('Data End Address                 : 0x%.8x', [m_TLS.dwDataEndAddr]));
-  _LogEx(DxbxFormat('TLS Index Address                : 0x%.8x', [m_TLS.dwTLSIndexAddr]));
-  _LogEx(DxbxFormat('TLS Callback Address             : 0x%.8x', [m_TLS.dwTLSCallbackAddr]));
-  _LogEx(DxbxFormat('Size of Zero Fill                : 0x%.8x', [m_TLS.dwSizeofZeroFill]));
-  _LogEx(DxbxFormat('Characteristics                  : 0x%.8x', [m_TLS.dwCharacteristics]));
+  // print thread local storage
+  if Assigned(m_TLS) then
+  begin
+    _LogEx(DxbxFormat('Data Start Address               : 0x%.8x', [m_TLS.dwDataStartAddr]));
+    _LogEx(DxbxFormat('Data End Address                 : 0x%.8x', [m_TLS.dwDataEndAddr]));
+    _LogEx(DxbxFormat('TLS Index Address                : 0x%.8x', [m_TLS.dwTLSIndexAddr]));
+    _LogEx(DxbxFormat('TLS Callback Address             : 0x%.8x', [m_TLS.dwTLSCallbackAddr]));
+    _LogEx(DxbxFormat('Size of Zero Fill                : 0x%.8x', [m_TLS.dwSizeofZeroFill]));
+    _LogEx(DxbxFormat('Characteristics                  : 0x%.8x', [m_TLS.dwCharacteristics]));
+  end
+  else
+    _LogEx('(This XBE contains no TLS)');
 
   if DumpToFile then
     CloseFile(FileEx);

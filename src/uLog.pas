@@ -110,6 +110,9 @@ begin
   end;
 end;
 
+var
+  ZeroChar: Char = #0;
+
 function DxbxFormat(aStr: string; Args: array of const): string; // array of TVarRec actually
 var
   i: Integer;
@@ -120,6 +123,9 @@ begin
     for i := Low(Args) to High(Args) do
     begin
       case Args[i].VType of
+        vtPChar:
+          if Args[i].VPChar = nil then
+            Args[i].VPChar := @ZeroChar;
         vtPointer:
           Args[i].VType := vtInteger; // The data doesn't have to be changed, because it's already in-place
       end;

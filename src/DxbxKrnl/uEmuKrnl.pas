@@ -275,7 +275,7 @@ function {051} xboxkrnl_InterlockedCompareExchange(
   ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);
-  Result := InterlockedCompareExchange(Destination, Exchange, Comparand);
+  Result := InterlockedCompareExchange({var}Destination, Exchange, Comparand);
   EmuSwapFS(fsXbox);
 end;
 
@@ -284,7 +284,7 @@ function {052} xboxkrnl_InterlockedDecrement(
   ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);
-  Result := InterlockedDecrement(Addend);
+  Result := InterlockedDecrement({var}Addend);
   EmuSwapFS(fsXbox);
 end;
 
@@ -293,7 +293,7 @@ function {053} xboxkrnl_InterlockedIncrement(
   ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);
-  Result := InterlockedIncrement(Addend);
+  Result := InterlockedIncrement({var}Addend);
   EmuSwapFS(fsXbox);
 end;
 
@@ -303,7 +303,7 @@ function {054} xboxkrnl_InterlockedExchange(
   ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);
-  Result := InterlockedExchange(Destination, Value);
+  Result := InterlockedExchange({var}Destination, Value);
   EmuSwapFS(fsXbox);
 end;
 
@@ -313,7 +313,7 @@ function {055} xboxkrnl_InterlockedExchangeAdd(
   ): LONG; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);
-  Result := InterlockedExchangeAdd(Addend, Value);
+  Result := InterlockedExchangeAdd({var}Addend, Value);
   EmuSwapFS(fsXbox);
 end;
 

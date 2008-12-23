@@ -109,7 +109,7 @@ function xboxkrnl_MmAllocateContiguousMemory(
   ): PVOID; stdcall;
 var
   pRet: PVOID;
-  dwRet: DWORD; 
+  dwRet: DWORD;
 begin
   EmuSwapFS(fsWindows);
 

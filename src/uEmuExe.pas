@@ -45,7 +45,7 @@ type
   protected
     KrnlHandle: THandle;
   public
-    constructor Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFileName: string; hwndParent: THandle);
+    constructor Create(x_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFileName: string; hwndParent: THandle);
     destructor Destroy; override;
   end;
 
@@ -105,7 +105,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
+constructor TEmuExe.Create(x_Xbe: TXbe; m_KrnlDebug: DebugMode;
   m_KrnlDebugFileName: string; hwndParent: THandle);
 
   procedure _WriteDWordToAddr(const aAddr: Pointer; aDWord: DWord);
@@ -116,14 +116,6 @@ constructor TEmuExe.Create(m_Xbe: TXbe; m_KrnlDebug: DebugMode;
   procedure _WriteDWordToSectionPos(SectionIdx, iPos: Integer; aDWord: DWord);
   begin
     _WriteDWordToAddr(@(m_bzSection[SectionIdx][iPos]), aDWord);
-  end;
-
-  procedure _CopySections(Index: Integer);
-  begin
-    // Allocate needed section size + 4 bytes (needed to assure zero-termination of this section) :
-    SetLength(m_bzSection[Index], m_SectionHeader[Index].m_sizeof_raw + 4);
-    // Copy over all contents from the Xbe section :
-    CopyMemory(m_bzSection[Index], m_Xbe.m_bzSection[Index], m_Xbe.m_SectionHeader[Index].dwSizeofRaw);
   end;
 
 var
@@ -138,7 +130,7 @@ var
   VirtSize: LongInt;
   VirtAddr: LongInt;
   Flags: DWord;
-  SectionSize: LongInt;
+  SectionSize: uint32;
   Characteristics: DWord;
 
   raw_size: LongInt;
@@ -175,8 +167,8 @@ begin
   // generate pe header
   m_Header.m_magic := IMAGE_NT_SIGNATURE;
   m_Header.m_machine := IMAGE_FILE_MACHINE_I386; // machine type : i386
-  m_Header.m_sections := m_Xbe.m_Header.dwSections + 2; // xbe sections + .cxbximp + .cxbxplg
-  m_Header.m_timedate := m_Xbe.m_Header.dwTimeDate; // time/date stamp
+  m_Header.m_sections := x_Xbe.m_Header.dwSections + 2; // xbe sections + .cxbximp + .cxbxplg
+  m_Header.m_timedate := x_Xbe.m_Header.dwTimeDate; // time/date stamp
   m_Header.m_symbol_table_addr := 0; // unused
   m_Header.m_symbols := 0; // unused
   m_Header.m_sizeof_optional_header := SizeOf(OptionalHeader); // size of optional header
@@ -195,7 +187,7 @@ begin
   m_OptionalHeader.m_sizeof_headers := m_OptionalHeader.m_sizeof_headers + SizeOf(m_OptionalHeader) + SizeOf(SectionHeader) * m_Header.m_sections;
   m_OptionalHeader.m_sizeof_headers := RoundUp(m_OptionalHeader.m_sizeof_headers, PE_FILE_ALIGN);
 
-  m_OptionalHeader.m_image_base := m_Xbe.m_Header.dwBaseAddr;
+  m_OptionalHeader.m_image_base := x_Xbe.m_Header.dwBaseAddr;
   m_OptionalHeader.m_section_alignment := PE_SEGM_ALIGN;
   m_OptionalHeader.m_file_alignment := PE_FILE_ALIGN;
 
@@ -219,9 +211,9 @@ begin
   m_OptionalHeader.m_dll_characteristics := $0000;
 
   m_OptionalHeader.m_sizeof_stack_reserve := $00100000;
-  m_OptionalHeader.m_sizeof_stack_commit := m_Xbe.m_Header.dwPeStackCommit;
-  m_OptionalHeader.m_sizeof_heap_reserve := m_Xbe.m_Header.dwPeHeapReserve;
-  m_OptionalHeader.m_sizeof_heap_commit := m_Xbe.m_Header.dwPeHeapCommit;
+  m_OptionalHeader.m_sizeof_stack_commit := x_Xbe.m_Header.dwPeStackCommit;
+  m_OptionalHeader.m_sizeof_heap_reserve := x_Xbe.m_Header.dwPeHeapReserve;
+  m_OptionalHeader.m_sizeof_heap_commit := x_Xbe.m_Header.dwPeHeapCommit;
 
   // this member is obsolete, so we'll just set it to zero
   m_OptionalHeader.m_loader_flags := $00000000;
@@ -247,27 +239,27 @@ begin
   dwSectionCursor := RoundUp(m_OptionalHeader.m_sizeof_headers, $1000);
 
   // generate xbe section headers
-  for v := 0 to m_Xbe.m_Header.dwSections - 1 do
+  for v := 0 to x_Xbe.m_Header.dwSections - 1 do
   begin
     // generate xbe section name
     ZeroMemory(@(m_SectionHeader[v].m_name[0]), 8);
     for c := 0 to 7 do
     begin
-      m_SectionHeader[v].m_name[c] := m_Xbe.m_szSectionName[v][c];
+      m_SectionHeader[v].m_name[c] := x_Xbe.m_szSectionName[v][c];
       if m_SectionHeader[v].m_name[c] = #0 then
         Break;
     end;
 
     // generate xbe section virtual size / addr
-    VirtSize := m_Xbe.m_SectionHeader[v].dwVirtualSize;
-    VirtAddr := m_Xbe.m_SectionHeader[v].dwVirtualAddr - m_Xbe.m_Header.dwBaseAddr;
+    VirtSize := x_Xbe.m_SectionHeader[v].dwVirtualSize;
+    VirtAddr := x_Xbe.m_SectionHeader[v].dwVirtualAddr - x_Xbe.m_Header.dwBaseAddr;
 
     m_SectionHeader[v].m_virtual_size := VirtSize;
     m_SectionHeader[v].m_virtual_addr := VirtAddr;
 
     // generate xbe section raw size / addr
     // CXBX TODO: get this working such that m_sizeof_raw can be the actual raw size, not virtual size
-    RawSize := RoundUp(m_Xbe.m_SectionHeader[v].dwVirtualSize, PE_FILE_ALIGN);
+    RawSize := RoundUp(x_Xbe.m_SectionHeader[v].dwVirtualSize, PE_FILE_ALIGN);
     RawAddr := dwSectionCursor;
 
     m_SectionHeader[v].m_sizeof_raw := RawSize;
@@ -284,12 +276,12 @@ begin
 
     // generate Flags for this xbe section
     Flags := IMAGE_SCN_MEM_READ;
-    if (m_Xbe.m_SectionHeader[v].dwFlags[0] and XBE_SECTIONHEADER_FLAG_Executable) > 0 then
+    if (x_Xbe.m_SectionHeader[v].dwFlags[0] and XBE_SECTIONHEADER_FLAG_Executable) > 0 then
       Flags := Flags or IMAGE_SCN_MEM_EXECUTE or IMAGE_SCN_CNT_CODE
     else
       Flags := Flags or IMAGE_SCN_CNT_INITIALIZED_DATA;
 
-    if (m_Xbe.m_SectionHeader[v].dwFlags[0] and XBE_SECTIONHEADER_FLAG_Writable) > 0 then
+    if (x_Xbe.m_SectionHeader[v].dwFlags[0] and XBE_SECTIONHEADER_FLAG_Writable) > 0 then
       Flags := Flags or IMAGE_SCN_MEM_WRITE;
 
     m_SectionHeader[v].m_characteristics := Flags;
@@ -342,12 +334,17 @@ begin
 
   // generate .cxbxplg section virtual size / addr
   begin
+    if Assigned(x_Xbe.m_TLS) then
+      virt_size := SizeOF(XBE_TLS) + (x_Xbe.m_TLS.dwDataEndAddr - x_Xbe.m_TLS.dwDataStartAddr)
+    else
+      virt_size := 0;
+
     virt_size := RoundUp(
       m_OptionalHeader.m_image_base + $100 +
-      m_Xbe.m_Header.dwSizeofHeaders + 260 +
-      DWord(Length(m_Xbe.m_LibraryVersion) * Integer(m_Xbe.m_Header.dwLibraryVersions)) +
-      DWord(iif(Assigned(m_Xbe.m_TLS), SizeOF(XBE_TLS), 0)) +
-      (m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr), $1000);
+      x_Xbe.m_Header.dwSizeofHeaders + 260 +
+      DWord(Length(x_Xbe.m_LibraryVersion) * Integer(x_Xbe.m_Header.dwLibraryVersions)) +
+      virt_size
+      , $1000);
     virt_addr := RoundUp(
       m_SectionHeader[i - 1].m_virtual_addr +
       m_SectionHeader[i - 1].m_virtual_size, PE_SEGM_ALIGN);
@@ -391,9 +388,14 @@ begin
 
 
   // generate xbe sections
-  for v := 0 to m_xbe.m_Header.dwSections - 1 do
+  for v := 0 to x_xbe.m_Header.dwSections - 1 do
   begin
-    _CopySections(v);
+    SectionSize := m_SectionHeader[v].m_sizeof_raw;
+    // Allocate needed section size + 4 bytes (needed to assure zero-termination of this section) :
+    SetLength(m_bzSection[v], SectionSize + 4);
+
+    // Copy over all contents from the Xbe section :
+    memcpy(m_bzSection[v], x_Xbe.m_bzSection[v], x_Xbe.m_SectionHeader[v].dwSizeofRaw);
     WriteLog(Format('EmuExe: Generating Section 0x%.4x... OK', [v]));
   end;
 
@@ -432,7 +434,7 @@ begin
 
   // generate .cxbxplg section
   begin
-    ep := m_Xbe.m_Header.dwEntryAddr;
+    ep := x_Xbe.m_Header.dwEntryAddr;
     i := m_Header.m_sections - 1;
 
     DbgPrintf('EmuExe: Generating Section Header 0x%.4x (.cxbxplg)... OK', [i]);
@@ -452,13 +454,13 @@ begin
     Inc(pWriteCursor, Length(Prolog));
 
     // Append xbe header
-    CopyMemory(pWriteCursor, @(m_Xbe.m_Header), SizeOf(m_Xbe.m_Header));
-    Inc(pWriteCursor, SizeOf(m_Xbe.m_Header));
+    CopyMemory(pWriteCursor, @(x_Xbe.m_Header), SizeOf(x_Xbe.m_Header));
+    Inc(pWriteCursor, SizeOf(x_Xbe.m_Header));
 
     // Append xbe extra header bytes
-    CopyMemory(pWriteCursor, m_Xbe.m_HeaderEx, m_Xbe.m_Header.dwSizeofHeaders - SizeOf(m_Xbe.m_Header));
-    Dec(pWriteCursor, SizeOf(m_Xbe.m_Header));
-    Inc(pWriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
+    CopyMemory(pWriteCursor, x_Xbe.m_HeaderEx, x_Xbe.m_Header.dwSizeofHeaders - SizeOf(x_Xbe.m_Header));
+    Dec(pWriteCursor, SizeOf(x_Xbe.m_Header));
+    Inc(pWriteCursor, x_Xbe.m_Header.dwSizeofHeaders);
 
     // Append x_debug_FileName
     ZeroMemory(pWriteCursor, 260);
@@ -467,21 +469,21 @@ begin
     Inc(pWriteCursor, 260);
 
     // Append library versions
-    for c := 0 to m_xbe.m_Header.dwLibraryVersions - 1 do
+    for c := 1 to x_xbe.m_Header.dwLibraryVersions do
     begin
-      CopyMemory(pWriteCursor, @(m_Xbe.m_LibraryVersion[c]), Sizeof(m_Xbe.m_LibraryVersion[c]));
-      Inc(pWriteCursor, SizeOf(m_xbe.m_LibraryVersion[c]));
+      CopyMemory(pWriteCursor, @(x_Xbe.m_LibraryVersion[c - 1]), Sizeof(x_Xbe.m_LibraryVersion[c - 1]));
+      Inc(pWriteCursor, SizeOf(x_xbe.m_LibraryVersion[c - 1]));
     end;
 
     // Append TLS data
-    if Assigned(m_Xbe.m_TLS) then
+    if Assigned(x_Xbe.m_TLS) then
     begin
-      CopyMemory(pWriteCursor, m_Xbe.m_TLS, SizeOf(m_Xbe.m_TLS^));
-      Inc(pWriteCursor, SizeOf(m_Xbe.m_TLS^));
+      CopyMemory(pWriteCursor, x_Xbe.m_TLS, SizeOf(x_Xbe.m_TLS^));
+      Inc(pWriteCursor, SizeOf(x_Xbe.m_TLS^));
 
-      CopyMemory(pWriteCursor, Pointer(m_Xbe.GetTLSData()), m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+      CopyMemory(pWriteCursor, Pointer(x_Xbe.GetTLSData()), x_Xbe.m_TLS.dwDataEndAddr - x_Xbe.m_TLS.dwDataStartAddr);
 {$IFDEF KEEP_UNNECCESARY_CODE}
-      Inc(pWriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+      Inc(pWriteCursor, x_Xbe.m_TLS.dwDataEndAddr - x_Xbe.m_TLS.dwDataStartAddr);
 {$ENDIF}
     end;
 
@@ -499,11 +501,11 @@ begin
     _WriteDWordToSectionPos(i, 6, ep);
 
     // Param 7 : dwXbeHeaderSize
-    _WriteDWordToSectionPos(i, 11, m_Xbe.m_Header.dwSizeofHeaders);
+    _WriteDWordToSectionPos(i, 11, x_Xbe.m_Header.dwSizeofHeaders);
 
     // Param 6 : pXbeHeader
     _WriteDWordToSectionPos(i, 16, WriteCursor);
-    Inc(WriteCursor, m_Xbe.m_Header.dwSizeofHeaders);
+    Inc(WriteCursor, x_Xbe.m_Header.dwSizeofHeaders);
 
     // Param 5 : szDebugFileName
     _WriteDWordToSectionPos(i, 21, WriteCursor);
@@ -513,29 +515,29 @@ begin
     _WriteDWordToSectionPos(i, 26, DWord(Ord(m_KrnlDebug)));
 
     // Param 3 : pLibraryVersion
-    if Length(m_Xbe.m_LibraryVersion) <> 0 then
+    if Length(x_Xbe.m_LibraryVersion) <> 0 then
     begin
       _WriteDWordToSectionPos(i, 31, WriteCursor);
-      Inc(WriteCursor, SizeOf(m_Xbe.m_LibraryVersion[0]) * m_xbe.m_Header.dwLibraryVersions);
+      Inc(WriteCursor, SizeOf(x_Xbe.m_LibraryVersion[0]) * x_xbe.m_Header.dwLibraryVersions);
     end
     else
       _WriteDWordToSectionPos(i, 31, 0);
 
     // Param 2 : pTLS
-    if Assigned(m_Xbe.m_TLS) then
+    if Assigned(x_Xbe.m_TLS) then
     begin
       _WriteDWordToSectionPos(i, 36, WriteCursor);
-      Inc(WriteCursor, SizeOf(m_Xbe.m_TLS^));
+      Inc(WriteCursor, SizeOf(x_Xbe.m_TLS^));
     end
     else
       _WriteDWordToSectionPos(i, 36, 0);
 
     // Param 1 : pTLSData
-    if Assigned(m_Xbe.m_TLS) then
+    if Assigned(x_Xbe.m_TLS) then
     begin
       _WriteDWordToSectionPos(i, 41, WriteCursor);
 {$IFDEF KEEP_UNNECCESARY_CODE}
-      Inc(WriteCursor, m_Xbe.m_TLS.dwDataEndAddr - m_Xbe.m_TLS.dwDataStartAddr);
+      Inc(WriteCursor, x_Xbe.m_TLS.dwDataEndAddr - x_Xbe.m_TLS.dwDataStartAddr);
 {$ENDIF}
     end
     else
@@ -550,7 +552,7 @@ begin
   // ******************************************************************
   WriteLog('EmuExe: Hijacking Kernel Imports...');
   // generate xbe sections
-  kt := m_Xbe.m_Header.dwKernelImageThunkAddr;
+  kt := x_Xbe.m_Header.dwKernelImageThunkAddr;
 
   // decode kernel thunk address
   if (kt xor XOR_KT_DEBUG) > $01000000 then
@@ -574,7 +576,7 @@ begin
   Assert(Assigned(KernelThunkTable));
 
   imag_base := m_OptionalHeader.m_image_base;
-  for v := 0 to m_Xbe.m_Header.dwSections - 1 do
+  for v := 0 to x_Xbe.m_Header.dwSections - 1 do
   begin
     virt_addr := m_SectionHeader[v].m_virtual_addr;
     virt_size := m_SectionHeader[v].m_virtual_size;
