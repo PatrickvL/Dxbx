@@ -57,6 +57,8 @@ Robert Yates for his Xbox FLIRT files.
 
 The Jedi project members, for providing us with a wonderfull library of high-quality Delphi code!
 
+N1ghtjar and NexXxus for making lots of xbe dumps for filling the XDKTracker.
+
 
 Contributors
 ------------
