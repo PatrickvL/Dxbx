@@ -1,8 +1,8 @@
-DXBX Changelog, this changelog has been implemented from version 0.0.8.
-So the changes from version 0.0.7 and below are not documented.
+DXBX Changelog, this changelog has been implemented from version 0.0.9
+So the changes from version 0.0.8 and below are not documented.
 
 
-Version 0.0.8:
+Version 0.0.9:
 
 - XDKTracker can read xbe files for import xdk information.
 - Support recent opened xbe files.
