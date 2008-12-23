@@ -60,7 +60,7 @@ const
 
 type
   // XInputSetState status waiters
-  XInputSetStateStatus = record
+  XInputSetStateStatus = packed record
     hDevice: HANDLE;
     dwLatency: DWORD;
     pFeedback: PVOID;

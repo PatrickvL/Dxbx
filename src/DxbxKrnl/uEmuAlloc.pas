@@ -175,7 +175,7 @@ CXBX_ALLOC_TYPE;
 
 type
 
-CXBX_MEMORY_BLOCK  = record
+CXBX_MEMORY_BLOCK  = packed record
     procedure                      *pMem;
     Integer                     Size;
     Char                      *pFile;

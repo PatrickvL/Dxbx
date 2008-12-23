@@ -31,7 +31,7 @@ type
   // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
   // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
   // Mutex object (intended to be inherited from)
-  Mutex = record
+  Mutex = packed record
   private
     m_MutexLock: Integer; // Mutex lock
     m_OwnerProcess: Integer; // Current owner process (or zero)

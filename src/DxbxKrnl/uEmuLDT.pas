@@ -47,7 +47,7 @@ implementation
 
 type
   {$A1}
-  RLDT_ENTRY_Bits = record
+  RLDT_ENTRY_Bits = packed record
   private
     Flags: DWord;
     function GetBits(const aIndex: Integer): Integer;
@@ -65,20 +65,20 @@ type
     property BaseHi: Integer index $1808 read GetBits write SetBits; // 8 bits at offset 24
   end;
 
-  RLDT_ENTRY_Bytes = record
+  RLDT_ENTRY_Bytes = packed record
     BaseMid: Byte;
     Flags1: Byte; // Declare as bytes to avoid alignment
     Flags2: Byte; // Problems.
     BaseHi: Byte;
   end;
 
-  RLDT_ENTRY_HighWord = record
+  RLDT_ENTRY_HighWord = packed record
     case Integer of
     0: (Bytes: RLDT_ENTRY_Bytes);
     1: (Bits: RLDT_ENTRY_Bits); // Bit-fields are handled seperatly
   end;
 
-  DXBX_LDT_ENTRY = record
+  DXBX_LDT_ENTRY = packed record
     LimitLow: Word;
     BaseLow: Word;
     HighWord: RLDT_ENTRY_HighWord;
@@ -121,36 +121,54 @@ var
   _LDTENTRY: DXBX_LDT_ENTRY absolute LDTEntry;
   x: Integer;
 begin
-  x := 0;
-
-  EnterCriticalSection(EmuLDTLock);
+  Result := 0;
+  
+  EnterCriticalSection({var}EmuLDTLock);
 
   // Locate a free LDT entry
   begin
-    while x < MAXIMUM_XBOX_THREADS do
-      if FreeLDTEntries[x] <> 0 then
-        Break
-      else
-        Inc(x);
+    x := -1;
+    repeat
+      Inc(x);
+      Result := FreeLDTEntries[x];
+    until (Result <> 0) or (x = (MAXIMUM_XBOX_THREADS - 1));
 
-    if x = MAXIMUM_XBOX_THREADS then
+    if Result = 0 then
     begin
       LeaveCriticalSection({var}EmuLDTLock);
 
       CxbxKrnlCleanup('Could not locate free LDT entry (too many threads?)');
-
-      Result := 0;
       Exit;
     end;
   end;
 
   // Set up selector information
   begin
-    ZeroMemory(@LDTENTRY, SizeOf(LDTENTRY));
+//    ZeroMemory(@LDTENTRY, SizeOf(LDTENTRY));
 
     _LDTEntry.BaseLow                    := Word(dwBaseAddr and $FFFF);
+(*
+    DWORD   BaseMid : 8;
+
+    DWORD   Type : 5;
+    DWORD   Dpl : 2;
+    DWORD   Pres : 1;
+
+    DWORD   LimitHi : 4;
+    DWORD   Sys : 1;
+    DWORD   Reserved_0 : 1;
+    DWORD   Default_Big : 1;
+    DWORD   Granularity : 1;
+
+    DWORD   BaseHi : 8;
+*)
+
     _LDTEntry.HighWord.Bytes.BaseMid     := (dwBaseAddr shr 16) and $FF;
     _LDTEntry.HighWord.Bytes.BaseHi      := (dwBaseAddr shr 24) and $FF;
+    
+    Assert(_LDTEntry.HighWord.Bytes.BaseHi = _LDTEntry.HighWord.Bits.BaseHi);
+    Assert(_LDTEntry.HighWord.Bytes.BaseMid = _LDTEntry.HighWord.Bits.BaseMid);
+
     _LDTEntry.HighWord.Bits._Type        := $13; // RW data segment
     _LDTEntry.HighWord.Bits.Dpl          := 3;    // user segment
     _LDTEntry.HighWord.Bits.Pres         := 1;    // present
@@ -162,13 +180,14 @@ begin
     if _LDTEntry.HighWord.Bits.Granularity <> 0 then
       dwLimit := dwLimit shr 12;
 
-    _LDTEntry.LimitLow                   := Word(dwLimit and $FFFF);
     _LDTEntry.HighWord.Bits.LimitHi      := (dwLimit shr 16) and $F;
+
+    _LDTEntry.LimitLow                   := Word(dwLimit and $FFFF);
   end;
 
   // Allocate selector
   begin
-    if not NT_SUCCESS(NtSetLdtEntries((x * 8) + 7 + 8, LDTEntry, 0, LDTEntry)) then
+    if not NT_SUCCESS(NtSetLdtEntries(Result, LDTEntry, 0, LDTEntry)) then
     begin
       WriteLog(GetLastErrorString);
       LeaveCriticalSection({var}EmuLDTLock);
@@ -183,8 +202,6 @@ begin
   FreeLDTEntries[x] := 0;
 
   LeaveCriticalSection({var}EmuLDTLock);
-
-  Result := (x * 8) + 7 + 8;
 end;
 
 procedure EmuDeallocateLDT(wSelector: uint16);

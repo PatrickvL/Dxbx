@@ -59,7 +59,7 @@ type
   PIDirect3DDevice8 = ^IDirect3DDevice8;
 
   // information passed to the create device proxy thread
-  EmuD3D8CreateDeviceProxyData = record
+  EmuD3D8CreateDeviceProxyData = packed record
     Adapter: UINT;
     DeviceType: D3DDEVTYPE;
     hFocusWindow: HWND;

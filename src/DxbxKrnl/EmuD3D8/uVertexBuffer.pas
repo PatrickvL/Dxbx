@@ -32,7 +32,7 @@ uses
   , D3DX8;
 
 type
-  _D3DIVB = record
+  _D3DIVB = packed record
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
     dwSpecular: DWord; // Specular

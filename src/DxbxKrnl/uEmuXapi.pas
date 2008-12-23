@@ -44,31 +44,31 @@ type
 
   RTL_HEAP_PARAMETERS = packed record
     Length: UInt32;
-    // TODO!
+    Unknown: array [0..$2C-1] of BYTE;
   end;
 
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
-  XTHREAD_NOTIFICATION = record
+  XTHREAD_NOTIFICATION = packed record
     Reserved: LIST_ENTRY;
     pfnNotifyRoutine: XTHREAD_NOTIFY_PROC;
   end;
   PXTHREAD_NOTIFICATION = ^XTHREAD_NOTIFICATION;
 
-  XINPUT_RUMBLE = record
+  XINPUT_RUMBLE = packed record
     wLeftMotorSpeed: Word;
     wRightMotorSpeed: Word;
   end;
   PXINPUT_RUMBLE = ^XINPUT_RUMBLE;
 
-  XINPUT_FEEDBACK_HEADER = record
+  XINPUT_FEEDBACK_HEADER = packed record
     dwStatus: DWord;
     hEvent: HANDLE; // OPTIONAL ;
     Reserved: array[1..58] of Byte;
   end;
   PXINPUT_FEEDBACK_HEADER = ^XINPUT_FEEDBACK_HEADER;
 
-  XINPUT_FEEDBACK = record
+  XINPUT_FEEDBACK = packed record
     Header: XINPUT_FEEDBACK_HEADER;
 //    union
     Rumble: XINPUT_RUMBLE;
@@ -262,7 +262,7 @@ end;     *)
 //*/
 
 type
-  RTL_HEAP_DEFINITION = record
+  RTL_HEAP_DEFINITION = packed record
     Length: ULONG;
     Unknown: array [0..11-1] of ULONG;
   end;
@@ -1076,10 +1076,15 @@ var
   HeapParameters: RTL_HEAP_PARAMETERS;
   dwPeHeapReserve: UInt32;
   dwPeHeapCommit: UInt32;
+  xfs, wfs: string;
 begin
+  xfs := DumpCurrentFS();
   EmuSwapFS(fsWindows);
+  wfs := DumpCurrentFS();
 
+  DbgPrintf(xfs);
   DbgPrintf('EmuXapi : EmuXapiInitProcess();');
+  DbgPrintf(wfs);
 
   // call RtlCreateHeap
   begin

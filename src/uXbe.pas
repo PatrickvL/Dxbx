@@ -136,7 +136,7 @@ type
   end;
 
   // Section headers - Source: XBMC
-  XBE_SECTION = record
+  XBE_SECTION = packed record
     Flags: ULONG;
     VirtualAddress: PVOID; // Virtual address (where this section loads in RAM)
     VirtualSize: ULONG; // Virtual size (size of section in RAM; after FileSize it's 00'd)

@@ -140,13 +140,13 @@ type
   );
 
   // Xbox Controller Object Config
-  XBCtrlObjectCfg = record
+  XBCtrlObjectCfg = packed record
     dwDevice: Integer; // offset into m_InputDevice
     dwInfo: Integer; // extended information, depending on dwFlags
     dwFlags: Integer; // flags explaining the data format
   end;
 
-  XINPUT_GAMEPAD = record
+  XINPUT_GAMEPAD = packed record
     wButtons: Word;
     bAnalogButtons: array[0..7] of Byte;
     sThumbLX: SHORT;
@@ -156,7 +156,7 @@ type
   end;
   PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
 
-  XINPUT_STATE = record
+  XINPUT_STATE = packed record
     dwPacketNumber: DWord;
     Gamepad: XINPUT_GAMEPAD;
   end;
@@ -169,7 +169,7 @@ type
   LPCDIDEVICEINSTANCE = TDIDeviceInstanceA;
 
   // DirectInput Devices
-  InputDevice = record
+  InputDevice = packed record
     m_Device: XTL_LPDIRECTINPUTDEVICE8;
     m_Flags: Integer;
   end;

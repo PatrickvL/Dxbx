@@ -49,7 +49,7 @@ type
 {$ENDIF}
 
   PVersionedXboxLibrary = ^RVersionedXboxLibrary;
-  RVersionedXboxLibrary = record
+  RVersionedXboxLibrary = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
@@ -67,7 +67,7 @@ type
 
   TStringTableIndex = type BaseIndexType; /// Use this everywhere a string is uniquely identified.
 
-  RStoredStringTable = record
+  RStoredStringTable = packed record
     NrStrings: BaseIndexType; /// The number of strings in this table (no duplicates, sorted for faster searching)
     StringOffsets: TByteOffset; /// The start of the string table (each string is one TByteOffset into the AnsiCharData)
     AnsiCharData: TByteOffset; /// The start of the actual string data (AnsiChars, no separators)
@@ -79,7 +79,7 @@ type
   TLibraryIndex = type Byte; /// Use this everywhere a library is uniquely identified.
 
   PStoredLibrary = ^RStoredLibrary;
-  RStoredLibrary = record
+  RStoredLibrary = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
@@ -90,7 +90,7 @@ type
   PStoredLibrariesList = ^TStoredLibrariesList;
   TStoredLibrariesList = array[0..MaxListSize-1] of RStoredLibrary;
 
-  RStoredLibraryTable = record
+  RStoredLibraryTable = packed record
     NrOfLibraries: Word; /// The number of libraries in this table
     LibrariesOffset: TByteOffset; /// The location of the first stored library
   end;
@@ -98,7 +98,7 @@ type
   // A function occurs in two locations - per library and global.
   // This record contains the global function information.
   PStoredGlobalFunction = ^RStoredGlobalFunction;
-  RStoredGlobalFunction = record
+  RStoredGlobalFunction = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
@@ -113,7 +113,7 @@ type
   // so we can refer to them by number, instead of name. This saves quite some space
   // in release-builds, because with this method we won't even need to store the
   // function-names in the file anymore. (All this is yet to-be-done/TODO for now.)
-  RStoredGlobalFunctionTable = record
+  RStoredGlobalFunctionTable = packed record
     NrOfFunctions: BaseIndexType; /// The number of global functions in this table
     GlobalFunctionsOffset: TByteOffset; /// The location of the first stored function
   end;
@@ -123,7 +123,7 @@ type
   // A function occurs in two locations - per library and global.
   // This record contains the per-library function information.
   PStoredLibraryFunction = ^RStoredLibraryFunction;
-  RStoredLibraryFunction = record
+  RStoredLibraryFunction = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
@@ -137,7 +137,7 @@ type
   end;
 
   PStoredTrieNode = ^RStoredTrieNode;
-  RStoredTrieNode = record
+  RStoredTrieNode = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
@@ -166,7 +166,7 @@ type
   TStretchHeaderByte = type Byte;
 
   PStoredSignatureTrieHeader = ^RStoredSignatureTrieHeader;
-  RStoredSignatureTrieHeader = record
+  RStoredSignatureTrieHeader = packed record
     Header: array[0..5] of AnsiChar; // Chosen so this record becomes a nice 32 bytes large
     StringTable: RStoredStringTable;
     LibraryTable: RStoredLibraryTable;

@@ -27,6 +27,7 @@ uses
   SysUtils, // IntToHex
   // JEDI
   JwaWinType,
+  JclWin32,
   // OpenXDK
   XboxKrnl, // NT_TIB
   // Dxbx
@@ -42,10 +43,12 @@ type
 
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 procedure EmuInitFS;
-function EmuIsXboxFS: Boolean; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
+function EmuIsXboxFS: ByteBool; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
 procedure EmuSwapFS(); {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF} overload;
 procedure EmuSwapFS(const aSwapTo: TSwapFS); {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF} overload;
 procedure EmuCleanupFS;
+
+function DumpCurrentFS(): string;
 
 const
   // TIB layout, reachable via FS :
@@ -82,12 +85,11 @@ var
 implementation
 
 // is the current fs register the xbox emulation variety?
-function EmuIsXboxFS: Boolean;//LongBool;
-(*asm
-  xor eax, eax
-  mov ah, fs:[DxbxFS_IsXboxFS]
+function EmuIsXboxFS: ByteBool;
+asm
+  mov ax, fs:[DxbxFS_IsXboxFS]
 end;
-(**)
+(*
 var
   chk: Byte;
 begin
@@ -98,7 +100,7 @@ begin
 
   Result := (chk = 1);
 end;
-(**)
+*)
 
 // This function is used to swap between the native Win2k/XP FS:
 // structure, and the Emu FS: structure. Before running Windows
@@ -117,7 +119,7 @@ begin
     mov ax, fs:[DxbxFS_SwapFS]
     mov fs, ax
   end;
-
+(*
   // Every "N" interceptions, perform various periodic services
   Inc(dwInterceptionCount);
   if dwInterceptionCount >= EmuAutoSleepRate then
@@ -135,6 +137,7 @@ begin
     // Back to Zero!
     dwInterceptionCount := 0;
   end;
+*)
 end; // EmuSwapFS
 
 procedure EmuSwapFS(const aSwapTo: TSwapFS);
@@ -150,13 +153,95 @@ begin
   EmuInitLDT();
 end;
 
+function GetFS(): WORD;
+asm
+  XOR EAX, EAX
+  MOV AX, FS
+end;
+
+function GetFS_TIB(): Pointer;
+asm
+  MOV EAX, FS:[FS_Self]
+end;
+
+function DumpXboxFS(const aFS: PKPCR; const aValidate: Boolean): string;
+begin
+  with aFS.NtTib do
+    Result := DxbxFormat(
+      '$%.02x KPCR.NT_TIB.ExceptionList: PEXCEPTION_REGISTRATION_RECORD = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.StackBase: PVOID = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.StackLimit: PVOID = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.SubSystemTib: PVOID = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.FiberData: PVOID = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.Version: ULONG = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.ArbitraryUserPointer: PVOID = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.Self: PNT_TIB = $%.08x',
+      [FIELD_OFFSET(PKPCR(nil).NtTib.ExceptionList), IntPtr(ExceptionList),
+      FIELD_OFFSET(PKPCR(nil).NtTib.StackBase), IntPtr(StackBase),
+      FIELD_OFFSET(PKPCR(nil).NtTib.StackLimit), IntPtr(StackLimit),
+      FIELD_OFFSET(PKPCR(nil).NtTib.SubSystemTib), IntPtr(SubSystemTib),
+      FIELD_OFFSET(PKPCR(nil).NtTib.union_a.FiberData), IntPtr(union_a.FiberData),
+      FIELD_OFFSET(PKPCR(nil).NtTib.union_a.Version), union_a.Version,
+      FIELD_OFFSET(PKPCR(nil).NtTib.ArbitraryUserPointer), IntPtr(ArbitraryUserPointer),
+      FIELD_OFFSET(PKPCR(nil).NtTib.Self), IntPtr(aFS.NtTib.Self)]);
+
+  with aFS^ do
+    Result := Result + DxbxFormat(#13#10 +
+      '$%.02x KPCR.SelfPcr: PKPCR = $%.08x'#13#10 +
+      '$%.02x KPCR.Prcb: PKPRCB = $%.08x'#13#10 +
+      '$%.02x KPCR.Irql: UCHAR = %3d',
+      [FIELD_OFFSET(PKPCR(nil).SelfPcr), IntPtr(SelfPcr),
+      FIELD_OFFSET(PKPCR(nil).Prcb), IntPtr(Prcb),
+      FIELD_OFFSET(PKPCR(nil).Irql), Irql]);
+
+  with aFS.PrcbData do
+    Result := Result + DxbxFormat(#13#10 +
+      '$%.02x KPCR.PrcbData.CurrentThread: PKTHREAD = $%.08x'#13#10 +
+      '$%.02x KPCR.PrcbData.NextThread: PKTHREAD = $%.08x'#13#10 +
+      '$%.02x KPCR.PrcbData.IdleThread: PKTHREAD = $%.08x',
+      [FIELD_OFFSET(PKPCR(nil).PrcbData.CurrentThread), IntPtr(CurrentThread),
+      FIELD_OFFSET(PKPCR(nil).PrcbData.NextThread), IntPtr(NextThread),
+      FIELD_OFFSET(PKPCR(nil).PrcbData.IdleThread), IntPtr(IdleThread)]);
+end;
+
+function DumpWin32FS(const aFS: JclWin32.PNT_TIB32; const aValidate: Boolean): string;
+begin
+  with aFS^ do
+    Result := DxbxFormat(
+      '$%.02x NT_TIB32.ExceptionList: DWORD = $%.08x'#13#10 +
+      '$%.02x NT_TIB32.StackBase: DWORD = $%.08x'#13#10 +
+      '$%.02x NT_TIB32.StackLimit: DWORD = $%.08x'#13#10 +
+      '$%.02x NT_TIB32.SubSystemTib: DWORD = $%.08x'#13#10 +
+      '$%.02x NT_TIB32.FiberData: DWORD = $%.08x'#13#10 +
+      '$%.02x NT_TIB32.Version: DWORD = $%.08x'#13#10 +
+      '$%.02x NT_TIB32.ArbitraryUserPointer: DWORD = $%.08x'#13#10 +
+      '$%.02x NT_TIB32.Self: DWORD = $%.08x',
+      [FIELD_OFFSET(PNT_TIB32(nil).ExceptionList), ExceptionList,
+      FIELD_OFFSET(PNT_TIB32(nil).StackBase), StackBase,
+      FIELD_OFFSET(PNT_TIB32(nil).StackLimit), StackLimit,
+      FIELD_OFFSET(PNT_TIB32(nil).SubSystemTib), SubSystemTib,
+      FIELD_OFFSET(PNT_TIB32(nil).FiberData), FiberData,
+      FIELD_OFFSET(PNT_TIB32(nil).Version), Version,
+      FIELD_OFFSET(PNT_TIB32(nil).ArbitraryUserPointer), ArbitraryUserPointer,
+      FIELD_OFFSET(PNT_TIB32(nil).Self), aFS.Self]);
+end;
+
+function DumpCurrentFS(): string;
+begin
+  Result := DxbxFormat('FS = $%.04x ($%.08x)', [GetFS(), GetFS_TIB()]);
+  if EmuIsXboxFS then
+    Result := Result + ' (Xbox FS)'#13#10 + DumpXboxFS(GetFS_TIB(), {aValidate=}True)
+  else
+    Result := Result + ' (Win32 FS)'#13#10 + DumpWin32FS(GetFS_TIB(), {aValidate=}True);
+end;
+
 (**)
 // generate fs segment selector
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 var
-  OrgNtTib: PNT_TIB;
   pNewTLS: PXBE_TLS;
   NewFS, OrgFS: UInt16;
+  OrgNtTib: PNT_TIB;
   dwCopySize, dwZeroSize: UInt32;
 {$IFDEF _DEBUG_TRACE}
   stop: UInt32;
@@ -168,11 +253,14 @@ var
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
+  DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
+
   pNewTLS := nil;
   NewFS := UInt16(-1);
   OrgFS := UInt16(-1);
 
   // copy global TLS to the current thread
+  if Assigned(pTLS) then
   begin
     dwCopySize := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr;
     dwZeroSize := pTLS.dwSizeofZeroFill;
@@ -213,22 +301,30 @@ begin
 {$ENDIF}
   end;
 
+  Assert(FS_StackBasePointer = $04);
+  Assert(DxbxFS_SwapFS = $14);
+  Assert(DxbxFS_IsXboxFS = $16);
+  Assert(FS_Self = $18);
+
+  Assert(FIELD_OFFSET(PKPCR(nil).Prcb) = $20);
+  Assert(FIELD_OFFSET(PKPCR(nil).PrcbData) = $28);
+
   asm
     // Obtain "OrgFS"
     mov ax, fs
     mov OrgFS, ax
 
     // Obtain "OrgNtTib"
-    mov eax, fs:[FS_ThreadInformationBlockPointer]
+    mov eax, fs:[FS_Self]
     mov OrgNtTib, eax
   end;
 
   // allocate LDT entry
   begin
     dwSize := SizeOf(XboxKrnl.KPCR);
+
     NewPcr := CxbxMalloc(dwSize);
-//    memset(NewPcr, 0, dwSize);
-    memset(NewPcr, 0, SizeOf(NewPcr^));
+    memset(NewPcr, 0, dwSize);
     NewFS := EmuAllocateLDT(UInt32(NewPcr), UInt32(UIntPtr(NewPcr) + dwSize));
   end;
 
@@ -240,6 +336,8 @@ begin
     mov fs:[DxbxFS_SwapFS], ax
     mov fs:[DxbxFS_IsXboxFS], bh
   end;
+
+  DbgPrintf('update "OrgFS" (%d) with NewFS (%d) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
 
   // generate TIB
   begin
@@ -258,9 +356,10 @@ begin
   end;
 
   // prepare TLS
+  if Assigned(pTLS) then
   begin
     // TLS Index Address := 0
-    pTLS.dwTLSIndexAddr := 0;
+    PUInt32(pTLS.dwTLSIndexAddr)^ := 0;
 
     // dword @ pTLSData := pTLSData
     if Assigned(pNewTLS) then
@@ -269,6 +368,7 @@ begin
 
 	// swap into "NewFS"
 	EmuSwapFS();
+//  DbgPrintf('swap into "NewFS" : '#13#10 + DumpCurrentFS());
 
   // update "NewFS" with OrgFS and (bIsXboxFS = True)
   asm
@@ -279,14 +379,19 @@ begin
     mov fs:[DxbxFS_IsXboxFS], bh
   end;
 
+//  DbgPrintf('update "NewFS" with OrgFS and (bIsXboxFS = True) : '#13#10 + DumpCurrentFS());
+
   // save "TLSPtr" inside NewFS.StackBase
   asm
     mov eax, pNewTLS
     mov fs:[FS_StackBasePointer], eax
   end;
 
+  DbgPrintf('save "TLSPtr" inside NewFS.StackBase : '#13#10 + DumpCurrentFS());
+
   // swap back into the "OrgFS"
 	EmuSwapFS();
+  DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
 
   DbgPrintf('EmuFS : OrgFS=' + IntToStr(OrgFS) + ' NewFS=' + IntToStr(NewFS) + ' pTLS=$' + PointerToString(pTLS));
 end;
@@ -376,7 +481,7 @@ begin
 
   asm
     // Obtain "OrgNtTib"
-    mov eax, fs:[FS_ThreadInformationBlockPointer]
+    mov eax, fs:[FS_Self]
     mov OrgNtTib, eax
   end;
 

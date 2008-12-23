@@ -38,13 +38,13 @@ type
 
   TPatternTrieLeaf = class; // forward
 
-  RCrossReference = record
+  RCrossReference = packed record
     Offset: Word;
     Name: string;
   end;
 
   PVersionedXboxLibraryFunction = ^RVersionedXboxLibraryFunction;
-  RVersionedXboxLibraryFunction = record
+  RVersionedXboxLibraryFunction = packed record
     VersionedXboxLibrary: PVersionedXboxLibrary;
     Values: array of PAnsiChar;
     Name: string;
@@ -719,7 +719,7 @@ const
 
 type
   PPatternScanningContext = ^RPatternScanningContext;
-  RPatternScanningContext = record
+  RPatternScanningContext = packed record
     VersionedXboxLibrary: PVersionedXboxLibrary;
     OnlyPatches: Boolean;
     FunctionList: TStringList;

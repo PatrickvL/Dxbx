@@ -238,7 +238,7 @@ WAIT_TYPE;
 // * LARGE_INTEGER
 // ******************************************************************
 type
-  LARGE_INTEGER = record
+  LARGE_INTEGER = packed record
     case Integer of
       0: (
         LowPart: DWORD;
@@ -252,7 +252,7 @@ type
 // * ULARGE_INTEGER
 // ******************************************************************
 type
-  ULARGE_INTEGER = record
+  ULARGE_INTEGER = packed record
     case Integer of
       0: (
         LowPart: DWORD;
@@ -268,7 +268,7 @@ type
 // ******************************************************************
 type
 
-STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = record
+STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = packed record
     USHORT  Length;
     USHORT  MaximumLength;
     PCHAR   Buffer;
@@ -279,7 +279,7 @@ STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = record
 // ******************************************************************
 type
 
-UNICODE_STRING,*PUNICODE_STRING  = record
+UNICODE_STRING,*PUNICODE_STRING  = packed record
     USHORT  Length;
     USHORT  MaximumLength;
     USHORT *Buffer;
@@ -290,7 +290,7 @@ UNICODE_STRING,*PUNICODE_STRING  = record
 // ******************************************************************
 type
 
-LIST_ENTRY,*PLIST_ENTRY  = record
+LIST_ENTRY,*PLIST_ENTRY  = packed record
     struct _LIST_ENTRY *Flink;
     struct _LIST_ENTRY *Blink;
  end;
@@ -300,7 +300,7 @@ LIST_ENTRY,*PLIST_ENTRY  = record
 // ******************************************************************
 type
 
-FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = record
+FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = packed record
     LARGE_INTEGER   TotalAllocationUnits;
     LARGE_INTEGER   AvailableAllocationUnits;
     ULONG           SectorsPerAllocationUnit;
@@ -406,7 +406,7 @@ const FILE_VALID_SET_FLAGS =                    $00000036;
 // ******************************************************************
 type
 
-OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES  = record
+OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES  = packed record
     THandle  RootDirectory;
     PSTRING ObjectName;
     ULONG   Attributes;
@@ -438,7 +438,7 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // ******************************************************************
 type
 
-FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION
+FILE_DIRECTORY_INFORMATION  = packed record _FILE_DIRECTORY_INFORMATION
  
     ULONG           NextEntryOffset;
     ULONG           FileIndex;
@@ -457,7 +457,7 @@ FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION
 // * MM_STATISTICS
 // ******************************************************************
 type
-  MM_STATISTICS = record
+  MM_STATISTICS = packed record
     Length: ULONG;
     TotalPhysicalPages: ULONG;
     AvailablePages: ULONG;
@@ -476,7 +476,7 @@ type
 // ******************************************************************
 type
 
-  u1  = record
+  u1  = packed record
     union
     begin
         NTSTATUS Status;
@@ -532,7 +532,7 @@ BUS_DATA_TYPE;
 // ******************************************************************
 type
 
-    bits  = record
+    bits  = packed record
     union
     begin
         struct
@@ -556,7 +556,7 @@ const PCI_TYPE2_ADDRESSES =             5;
 // ******************************************************************
 type
 
-    type0  = record
+    type0  = packed record
     USHORT  VendorID;                   // 0x00 (ro)
     USHORT  DeviceID;                   // 0x02 (ro)
     USHORT  Command;                    // 0x04 Device control
@@ -633,7 +633,7 @@ type
 // * LAUNCH_DATA_HEADER
 // ******************************************************************
 type
-  LAUNCH_DATA_HEADER = record
+  LAUNCH_DATA_HEADER = packed record
     dwLaunchDataType: DWORD;
     dwTitleId: DWORD;
     szLaunchPath: array[0..520 - 1] of UCHAR;
@@ -645,7 +645,7 @@ type
 // * LAUNCH_DATA_PAGE
 // ******************************************************************
 type
-  LAUNCH_DATA_PAGE = record
+  LAUNCH_DATA_PAGE = packed record
     Header: LAUNCH_DATA_HEADER;
     Pad: array[0..492 - 1] of UCHAR;
     LaunchData: array[0..3072 - 1] of UCHAR;
@@ -656,7 +656,7 @@ type
 // * DISPATCHER_HEADER
 // ******************************************************************
 type
-  DISPATCHER_HEADER = record
+  DISPATCHER_HEADER = packed record
     _Type: UCHAR; // 0x00
     _Absolute: UCHAR; // 0x01
     Size: UCHAR; // 0x02
@@ -684,7 +684,7 @@ TIMER_TYPE;
 // * KTIMER (Timer Object)
 // ******************************************************************
 type
-  KTIMER = record
+  KTIMER = packed record
     Header: DISPATCHER_HEADER; // 0x00
     DueTime: ULARGE_INTEGER; // 0x10
     TimerListEntry: LIST_ENTRY; // 0x18
@@ -728,7 +728,7 @@ type
 // * KDPC (Deferred Procedure Call (DPC) Object)
 // ******************************************************************
 type
-  KDPC = record
+  KDPC = packed record
     _Type: CSHORT; // 0x00
     Number: UCHAR; // 0x02
     Importance: UCHAR; // 0x03
@@ -758,7 +758,7 @@ type
 // ******************************************************************
 type
 
-RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = record
+RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = packed record
                    Unknown: array[0..4-1] of DWORD;                                     // 0x00
     LongInt                LockCount;                                      // 0x10
     LongInt                RecursionCount;                                 // 0x14
@@ -770,12 +770,12 @@ RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = record
 // * NT_TIB
 // ******************************************************************
 type
-  NT_TIB = record
+  NT_TIB = packed record
     ExceptionList: PEXCEPTION_REGISTRATION_RECORD; // 0x00
     StackBase: PVOID; // 0x04
     StackLimit: PVOID; // 0x08
     SubSystemTib: PVOID; // 0x0C
-    union_a: record case Integer of
+    union_a: packed record case Integer of
        0: ( FiberData: PVOID ); // 0x10 for TIB
        1: ( Version: ULONG ); // 0x10 for TEB (?)
     end;
@@ -792,7 +792,7 @@ type
 // *
 // ******************************************************************
 type
-  KTHREAD = record
+  KTHREAD = packed record
     UnknownA: array[0..$28 - 1] of UCHAR;
     TlsData: PVOID; // 0x28
     UnknownB: array[0..$E4 - 1] of UCHAR; // 0x2C
@@ -807,7 +807,7 @@ type
 // *
 // ******************************************************************
 type
-  ETHREAD = record
+  ETHREAD = packed record
     Tcb: KTHREAD;
     UnknownA: array[0..$1C - 1] of UCHAR; // 0x110
     UniqueThread: DWORD; // 0x12C
@@ -822,7 +822,7 @@ type
 // *
 // ******************************************************************
 type
-  KPRCB = record
+  KPRCB = packed record
     CurrentThread: PKTHREAD; // 0x00, KPCR : 0x28
     NextThread: PKTHREAD; // 0x04, KPCR : 0x2C
     IdleThread: PKTHREAD; // 0x08, KPCR : 0x30
@@ -841,11 +841,12 @@ type
 // ******************************************************************
 type
   PKPCR = ^KPCR;
-  KPCR = record
+  KPCR = packed record
     NtTib: NT_TIB; // 0x00
     SelfPcr: PKPCR; // 0x1C
     Prcb: PKPRCB; // 0x20
     Irql: UCHAR; // 0x24
+    Padding1: array [0..3-1] of UCHAR;
     PrcbData: KPRCB; // 0x28
   end;
 
@@ -865,7 +866,7 @@ type
 // * XBOX_HARDWARE_INFO
 // ******************************************************************
 type
-  XBOX_HARDWARE_INFO = record
+  XBOX_HARDWARE_INFO = packed record
     Flags: ULONG;
     Unknown1: UCHAR;
     Unknown2: UCHAR;
@@ -879,7 +880,7 @@ type
 // ******************************************************************
 type
 
-TIME_FIELDS,*PTIME_FIELDS  = record
+TIME_FIELDS,*PTIME_FIELDS  = packed record
     USHORT  Year;
     USHORT  Month;
     USHORT  Day;
@@ -1054,7 +1055,7 @@ begin
 // DXBX Addition : Object Type Object
 //
 type
-  OBJECT_TYPE = record
+  OBJECT_TYPE = packed record
 (*
     ERESOURCE Mutex;
     LIST_ENTRY TypeList;
@@ -1076,7 +1077,7 @@ type
 // DXBX Addition : Xbox Refurb Info - TODO : Complete this!
 //
 type
-  XBOX_REFURB_INFO = record
+  XBOX_REFURB_INFO = packed record
     //
     FirstBootTime: FILETIME;
     //
