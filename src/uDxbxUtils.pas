@@ -51,6 +51,12 @@ type
 
   TLineCallback = function (aLinePtr: PAnsiChar; aLength: Integer; aData: Pointer): Boolean;
 
+procedure SetFS(const aNewFS: WORD);
+function GetFS(): WORD;
+function GetTIBEntry(const aOffset: DWORD): Pointer;
+function GetTIBEntryWord(const aOffset: DWORD): WORD;
+function GetTIB(): Pointer;
+
 procedure ScanPCharLines(const aPChar: PAnsiChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);
 
 function ScanHexByte(aLine: PAnsiChar; var Value: Integer): Boolean;
@@ -77,6 +83,32 @@ function LogTypeToString(const aLogType: TLogType): string;
 function PointerToString(const aPointer: Pointer): string;
 
 implementation
+
+procedure SetFS(const aNewFS: WORD);
+asm
+  MOV FS, aNewFS
+end;
+
+function GetFS(): WORD;
+asm
+  XOR EAX, EAX
+  MOV AX, FS
+end;
+
+function GetTIBEntry(const aOffset: DWORD): Pointer;
+asm
+  MOV EAX, FS:[aOffset]
+end;
+
+function GetTIBEntryWord(const aOffset: DWORD): WORD;
+asm
+  MOV AX, FS:[aOffset]
+end;
+
+function GetTIB(): Pointer;
+begin
+  Result := GetTIBEntry({FS_Self=}$18);
+end;
 
 function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
 const

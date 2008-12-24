@@ -121,8 +121,6 @@ var
   _LDTENTRY: DXBX_LDT_ENTRY absolute LDTEntry;
   x: Integer;
 begin
-  Result := 0;
-  
   EnterCriticalSection({var}EmuLDTLock);
 
   // Locate a free LDT entry
