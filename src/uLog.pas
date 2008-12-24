@@ -45,7 +45,7 @@ function DxbxFormat(aStr: string; Args: array of const): string;
 
 procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
-procedure DbgPrintf(aStr: string; Args: array of const); overload
+procedure DbgPrintf(aStr: string; Args: array of const); overload;
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
 implementation
@@ -245,6 +245,8 @@ procedure WriteLog(const aText: string);
             + StringReplace(aText, '\n', #13#10, [rfReplaceAll]);
   end;
 
+var
+  CurrentFS: Word;
 begin
   case m_DxbxDebug of
     DM_CONSOLE:
@@ -257,13 +259,18 @@ begin
           LeaveCriticalSection({var}DxbxLogLock);
         end;
       end;
-      
+
     DM_FILE:
       if LogFileOpen then
       begin
         EnterCriticalSection({var}DxbxLogLock);
+        CurrentFS := GetFS;
         try
           WriteLn({var}LogFile, _Text());
+          // BUGFIX : Because the above call goes through kernel32.WriteFile,
+          // which alters the FS register, we have to restore it afterwards :
+          SetFS(CurrentFS);
+          
           Flush({var}LogFile);
         finally
           LeaveCriticalSection({var}DxbxLogLock);

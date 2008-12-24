@@ -57,9 +57,9 @@ const
   FS_StackLimit = $08; // Int32
   FS_SubSystemTib = $0C; // Pointer
   FS_FiberData = $10; // for TIB : Pointer
-  FS_Version = $10; // for TEB (?) : Pointer
+  FS_Version = $10; // for TEB (?) : Int32
   FS_ArbitraryUserPointer = $14;
-  FS_ThreadInformationBlockPointer = $18; // IntPtr
+  FS_ThreadInformationBlockPointer = $18;
   FS_ProcessEnvironmentBlock = $30; // FS points to TEB/TIB which has a pointer to the PEB
 
   // Aliases :
@@ -86,10 +86,10 @@ implementation
 
 // is the current fs register the xbox emulation variety?
 function EmuIsXboxFS: ByteBool;
-asm
-  mov ax, fs:[DxbxFS_IsXboxFS]
+begin
+  Result := ByteBool(GetTIBEntryWord(DxbxFS_IsXboxFS));
 end;
-(*
+(* was :
 var
   chk: Byte;
 begin
@@ -151,17 +151,6 @@ end;
 procedure EmuInitFS();
 begin
   EmuInitLDT();
-end;
-
-function GetFS(): WORD;
-asm
-  XOR EAX, EAX
-  MOV AX, FS
-end;
-
-function GetFS_TIB(): Pointer;
-asm
-  MOV EAX, FS:[FS_Self]
 end;
 
 function DumpXboxFS(const aFS: PKPCR; const aValidate: Boolean): string;
@@ -228,14 +217,13 @@ end;
 
 function DumpCurrentFS(): string;
 begin
-  Result := DxbxFormat('FS = $%.04x ($%.08x)', [GetFS(), GetFS_TIB()]);
+  Result := DxbxFormat('FS = $%.04x ($%.08x)', [GetFS(), GetTIB()]);
   if EmuIsXboxFS then
-    Result := Result + ' (Xbox FS)'#13#10 + DumpXboxFS(GetFS_TIB(), {aValidate=}True)
+    Result := Result + ' (Xbox FS)'#13#10 + DumpXboxFS(GetTIB(), {aValidate=}True)
   else
-    Result := Result + ' (Win32 FS)'#13#10 + DumpWin32FS(GetFS_TIB(), {aValidate=}True);
+    Result := Result + ' (Win32 FS)'#13#10 + DumpWin32FS(GetTIB(), {aValidate=}True);
 end;
 
-(**)
 // generate fs segment selector
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 var
@@ -253,11 +241,9 @@ var
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
+{$IFDEF _DXBX_EXTENDED_DEBUG}
   DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
-
-  pNewTLS := nil;
-  NewFS := UInt16(-1);
-  OrgFS := UInt16(-1);
+{$ENDIF}
 
   // copy global TLS to the current thread
   if Assigned(pTLS) then
@@ -269,7 +255,9 @@ begin
 
     memset(pNewTLS, 0, dwCopySize + dwZeroSize + $100);
     memcpy(pNewTLS, pTLSData, dwCopySize);
-  end;
+  end
+  else
+    pNewTLS := nil;
 
   // dump raw TLS data
   begin
@@ -309,15 +297,8 @@ begin
   Assert(FIELD_OFFSET(PKPCR(nil).Prcb) = $20);
   Assert(FIELD_OFFSET(PKPCR(nil).PrcbData) = $28);
 
-  asm
-    // Obtain "OrgFS"
-    mov ax, fs
-    mov OrgFS, ax
-
-    // Obtain "OrgNtTib"
-    mov eax, fs:[FS_Self]
-    mov OrgNtTib, eax
-  end;
+  OrgFS := GetFS();
+  OrgNtTib := GetTIB();
 
   // allocate LDT entry
   begin
@@ -337,7 +318,9 @@ begin
     mov fs:[DxbxFS_IsXboxFS], bh
   end;
 
-  DbgPrintf('update "OrgFS" (%d) with NewFS (%d) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
+{$IFDEF _DXBX_EXTENDED_DEBUG}
+  DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
+{$ENDIF}
 
   // generate TIB
   begin
@@ -366,173 +349,37 @@ begin
       PPointer(pNewTLS)^ := pNewTLS;
   end;
 
-	// swap into "NewFS"
-	EmuSwapFS();
-//  DbgPrintf('swap into "NewFS" : '#13#10 + DumpCurrentFS());
-
-  // update "NewFS" with OrgFS and (bIsXboxFS = True)
-  asm
-    mov ax, OrgFS
-    mov bh, 1
-
-    mov fs:[DxbxFS_SwapFS], ax
-    mov fs:[DxbxFS_IsXboxFS], bh
-  end;
-
-//  DbgPrintf('update "NewFS" with OrgFS and (bIsXboxFS = True) : '#13#10 + DumpCurrentFS());
-
-  // save "TLSPtr" inside NewFS.StackBase
-  asm
-    mov eax, pNewTLS
-    mov fs:[FS_StackBasePointer], eax
-  end;
-
-  DbgPrintf('save "TLSPtr" inside NewFS.StackBase : '#13#10 + DumpCurrentFS());
-
-  // swap back into the "OrgFS"
-	EmuSwapFS();
-  DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
-
-  DbgPrintf('EmuFS : OrgFS=' + IntToStr(OrgFS) + ' NewFS=' + IntToStr(NewFS) + ' pTLS=$' + PointerToString(pTLS));
-end;
-(*
-CHANGING THE LAYOUT OF THE ABOVE CODE COULD GIVE YOU THIS
-(which lets Dxbx run Turok one tiny step further) :
-* )
-// generate fs segment selector
-procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
-var
-  OrgNtTib: PNT_TIB;
-  pNewTLS: PUInt08;
-  NewFS, OrgFS: UInt16;
-  dwCopySize, dwZeroSize: UInt32;
-{$IFDEF _DEBUG_TRACE}
-  stop: UInt32;
-  v: UInt32;
-  bByte: PUInt8;
-  Line: string;
-{$ENDIF}
-  dwSize: uint32;
-  NewPcr: PKPCR;
-  EThread: PETHREAD;
-begin
-  pNewTLS := nil;
-  NewFS := UInt16(-1);
-  OrgFS := UInt16(-1);
-
-  // copy global TLS to the current thread
+  // NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
+  // inside the Xbox FS state, or the Win32 kernel will merrily
+  // restore the FS register - which is NOT wat we want here!
   begin
-    dwCopySize := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr;
-    dwZeroSize := pTLS.dwSizeofZeroFill;
-
-    pNewTLS := CxbxMalloc(dwCopySize + dwZeroSize + $100 { + HACK: extra safety padding 0x100});
-
-    ZeroMemory(pNewTLS, dwCopySize + dwZeroSize + $100);
-    CopyMemory(pNewTLS, pTLSData, dwCopySize);
-  end;
-
-  // dump raw TLS data
-  begin
-{$IFDEF _DEBUG_TRACE}
-    if pNewTLS = nil then
-      DbgPrintf('EmuFS : TLS Non-Existant (OK)')
-    else
-    begin
-      Line := 'EmuFS : TLS Data Dump...';
-
-      stop := (pTLS.dwDataEndAddr - pTLS.dwDataStartAddr) + pTLS.dwSizeofZeroFill;
-
-      for v := 0 to stop - 1 do
-      begin
-        if (v mod $10) = 0 then
-        begin
-          DbgPrintf(Line);
-          Line := 'EmuFS : 0x' + PointerToString(@pNewTLS[v]) + ': ';
-        end;
-
-        bByte := PUInt8(UIntPtr(pNewTLS) + v);
-
-        Line := Line + IntToHex(Integer(bByte^), 2);
-
-      end;
-
-      DbgPrintf(Line);
-    end;
-{$ENDIF}
-  end;
-
-  // allocate LDT entry
-  begin
-    dwSize := SizeOf(XboxKrnl.KPCR);
-    NewPcr := xboxkrnl.PKPCR(CxbxMalloc(dwSize));
-    ZeroMemory(NewPcr, dwSize); // was : SizeOf(NewPcr));
-    NewFS := EmuAllocateLDT(UInt32(NewPcr), UInt32(UIntPtr(NewPcr) + dwSize));
-  end;
-
-  // prepare TLS
-  begin
-    // TLS Index Address := 0
-    pTLS.dwTLSIndexAddr := 0;
-
-    // dword @ pTLSData := pTLSData
-    if Assigned(pNewTLS) then
-      PPointer(pNewTLS)^ := pNewTLS;
-  end;
-
-  asm
-    // Obtain "OrgNtTib"
-    mov eax, fs:[FS_Self]
-    mov OrgNtTib, eax
-  end;
-
-  // generate TIB
-  begin
-    EThread := CxbxMalloc(SizeOf(xboxkrnl.ETHREAD));
-
-    EThread.Tcb.TlsData := pNewTLS;
-    EThread.UniqueThread := GetCurrentThreadId();
-
-    CopyMemory(@(NewPcr.NtTib), OrgNtTib, SizeOf(NT_TIB));
-
-    NewPcr.NtTib.Self := @(NewPcr.NtTib);
-
-    NewPcr.PrcbData.CurrentThread := xboxkrnl.PKTHREAD(EThread);
-
-    NewPcr.Prcb := @(NewPcr.PrcbData);
-  end;
-
-  asm
-    // Obtain "OrgFS"
-    mov cx, fs
-    mov OrgFS, cx
-
-    // Retreive "NewFS"
-    mov ax, NewFS
-
-    // update "OrgFS" with NewFS and (bIsXboxFS = False)
-    mov bh, 0
-    mov fs:[DxbxFS_SwapFS], ax
-    mov fs:[DxbxFS_IsXboxFS], bh
-
     // swap into "NewFS"
-    mov fs, ax
+    EmuSwapFS();
 
     // update "NewFS" with OrgFS and (bIsXboxFS = True)
-    mov bh, 1
-    mov fs:[DxbxFS_SwapFS], cx
-    mov fs:[DxbxFS_IsXboxFS], bh
+    asm
+      mov ax, OrgFS
+      mov bh, 1
 
-    // save "TLSPtr" inside NewFS.StackBase
-    mov eax, pNewTLS
-    mov fs:[FS_StackBasePointer], eax
+      mov fs:[DxbxFS_SwapFS], ax
+      mov fs:[DxbxFS_IsXboxFS], bh
+    end;
+
+    asm
+      mov eax, pNewTLS
+      mov fs:[FS_StackBasePointer], eax
+    end;
 
     // swap back into the "OrgFS"
-    mov fs, cx
+    EmuSwapFS();
   end;
 
-  DbgPrintf('EmuFS : OrgFS=' + IntToStr(OrgFS) + ' NewFS=' + IntToStr(NewFS) + ' pTLS=$' + PointerToString(pTLS));
+{$IFDEF _DXBX_EXTENDED_DEBUG}
+  DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
+{$ENDIF}
+
+  DbgPrintf('EmuFS : CurrentFS=%.04x  OrgFS=$%.04x  NewFS=$%.04x  pTLS=$%.08x', [GetFS(), OrgFS, NewFS, pTLS]);
 end;
-(**)
 
 // cleanup fs segment selector emulation
 procedure EmuCleanupFS();
@@ -540,24 +387,13 @@ var
   wSwapFS: Word;
   pTLSData: PByte;
 begin
-  wSwapFS := 0;
-
-  asm
-    mov ax, fs:[DxbxFS_SwapFS]
-    mov wSwapFS, ax;
-  end;
-
+  wSwapFS := GetTIBEntryWord(DxbxFS_SwapFS);
   if wSwapFS = 0 then
     Exit;
 
   EmuSwapFS(fsXbox);
 
-  //pTLSData := NULL;
-
-  asm
-    mov eax, fs:[FS_StackBasePointer]
-    mov pTLSData, eax
-  end;
+  pTLSData := GetTIBEntry(FS_StackBasePointer);
 
   EmuSwapFS(fsWindows);
 
