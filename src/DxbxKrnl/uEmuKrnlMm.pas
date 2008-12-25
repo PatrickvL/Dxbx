@@ -34,6 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  uEmu,
   uEmuAlloc,
   uEmuFS,
   uEmuFile,
@@ -71,11 +72,11 @@ function xboxkrnl_MmIsAddressValid(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmMapIoSpace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_MmPersistContiguousMemory(
+procedure xboxkrnl_MmPersistContiguousMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
   Persist: LONGBOOL
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_MmQueryAddressProtect(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmQueryAllocationSize(
   BaseAddress: PVOID
@@ -244,14 +245,25 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmPersistContiguousMemory(
+procedure xboxkrnl_MmPersistContiguousMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
   Persist: LONGBOOL
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmPersistContiguousMemory');
+
+  DbgPrintf('EmuKrnl : MmPersistContiguousMemory' +
+         #13#10'(' +
+         #13#10'   BaseAddress              : 0x%.08X' +
+         #13#10'   NumberOfBytes            : 0x%.08X' +
+         #13#10'   Persist                  : 0x%.08X' +
+         #13#10');',
+         [BaseAddress, NumberOfBytes, Persist]);
+
+  // Cxbx TODO: Actually set this up to be remember across a 'reboot'
+  EmuWarning('MmPersistContiguousMemory is being ignored');
+
   EmuSwapFS(fsXbox);
 end;
 

@@ -126,6 +126,7 @@ begin
         vtPChar:
           if Args[i].VPChar = nil then
             Args[i].VPChar := @ZeroChar;
+        vtBoolean,
         vtPointer:
           Args[i].VType := vtInteger; // The data doesn't have to be changed, because it's already in-place
       end;

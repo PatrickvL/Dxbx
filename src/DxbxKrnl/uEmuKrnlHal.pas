@@ -38,8 +38,9 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl;
-
+  uDxbxKrnl,
+  uDxbxKrnlUtils;
+  
 var
   {356}xboxkrnl_HalBootSMCVideoMode: DWORD; // Source: OpenXDK
 
@@ -239,8 +240,14 @@ procedure {049} xboxkrnl_HalReturnToFirmware(
   ); stdcall; // Source: OpenXDK
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('HalReturnToFirmware');
-  EmuSwapFS(fsXbox);
+
+  DbgPrintf('EmuKrnl : HalReturnToFirmware' +
+           #13#10'(' +
+           #13#10'   Routine             : 0x%.08X' +
+           #13#10');',
+           [Ord(Routine)]);
+
+  CxbxKrnlCleanup(DxbxFormat('Xbe has rebooted : HalReturnToFirmware(%d)', [Ord(Routine)]));
 end;
 
 function {050} xboxkrnl_HalWriteSMBusValue(
