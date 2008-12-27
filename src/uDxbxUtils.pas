@@ -84,6 +84,8 @@ function PointerToString(const aPointer: Pointer): string;
 
 implementation
 
+{$STACKFRAMES OFF}
+
 procedure SetFS(const aNewFS: WORD);
 asm
   MOV FS, aNewFS
@@ -109,6 +111,8 @@ function GetTIB(): Pointer;
 begin
   Result := GetTIBEntry({FS_Self=}$18);
 end;
+
+{$STACKFRAMES ON}
 
 function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
 const

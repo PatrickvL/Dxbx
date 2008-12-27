@@ -247,7 +247,7 @@ begin
            #13#10');',
            [Ord(Routine)]);
 
-  CxbxKrnlCleanup(DxbxFormat('Xbe has rebooted : HalReturnToFirmware(%d)', [Ord(Routine)]));
+  CxbxKrnlCleanup('Xbe has rebooted : HalReturnToFirmware(%d)', [Ord(Routine)]);
 end;
 
 function {050} xboxkrnl_HalWriteSMBusValue(

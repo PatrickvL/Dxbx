@@ -52,7 +52,7 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
   HighestAcceptableAddress: PHYSICAL_ADDRESS;
   Alignment: ULONG; //OPTIONAL
   ProtectionType: ULONG
-  ): NTSTATUS; stdcall;
+  ): PVOID; stdcall;
 function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
   Protect: ULONG
@@ -153,11 +153,59 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
   HighestAcceptableAddress: PHYSICAL_ADDRESS;
   Alignment: ULONG; //OPTIONAL
   ProtectionType: ULONG
-  ): NTSTATUS; stdcall;
+  ): PVOID; stdcall;
+{$J+}
+const
+  Count: Integer = 0;
+{$J-}
+var
+  pRet: PVOID;
+  dwRet: DWORD;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmAllocateContiguousMemoryEx');
+
+  DbgPrintf('EmuKrnl : MmAllocateContiguousMemoryEx' +
+         #13#10'(' +
+         #13#10'   NumberOfBytes            : 0x%.08X' +
+         #13#10'   LowestAcceptableAddress  : 0x%.08X' +
+         #13#10'   HighestAcceptableAddress : 0x%.08X' +
+         #13#10'   Alignment                : 0x%.08X' +
+         #13#10'   ProtectionType           : 0x%.08X' +
+         #13#10');',
+         [NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
+         Alignment, ProtectionType]);
+
+  //
+  // NOTE: Kludgey (but necessary) solution:
+  // 
+  // Since this memory must be aligned on a page boundary, we must allocate an extra page
+  // so that we can return a valid page aligned pointer
+  //
+
+  pRet := CxbxMalloc(NumberOfBytes + $1000);
+
+  // align to page boundary
+  begin
+    dwRet := DWORD(pRet);
+
+    Inc(dwRet, $1000 - (dwRet mod $1000));
+
+// Dxbx TODO :    g_AlignCache.insert(dwRet, pRet);
+
+    pRet := PVOID(dwRet);
+  end;
+
+  if Count < 4 then
+  begin
+    g_HaloHack[Count] := uint32(pRet);
+    Inc(Count);
+  end;
+
+  DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [Result]);
+
   EmuSwapFS(fsXbox);
+
+  Result := pRet;
 end;
 
 function xboxkrnl_MmAllocateSystemMemory(

@@ -30,7 +30,8 @@ uses
   uLog, // for WriteLog
   uXBE; // PXBE_TLS
 
-procedure CxbxKrnlCleanup(const szErrorMessage: string);
+procedure CxbxKrnlCleanup(const szErrorMessage: string); overload;
+procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
 
 function GetLastErrorString: string;
 function GetErrorString(const aError: DWord): string;
@@ -52,6 +53,11 @@ var
   g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of THandle;
 
 implementation
+
+procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
+begin
+  CxbxKrnlCleanup(DxbxFormat(szErrorMessage, Args));
+end;
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
 var

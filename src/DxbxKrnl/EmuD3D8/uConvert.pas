@@ -186,7 +186,7 @@ begin
       Result := D3DFMT_VERTEXDATA;
 
   else
-    CxbxKrnlCleanup(DxbxFormat('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]));
+    CxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]);
     Result := D3DFORMAT(aFormat);
   end;
 end;
@@ -217,7 +217,7 @@ begin
 //      Result := X_D3DFMT_LIN_A8R8G8B8;      // Linear
       Result := X_D3DFMT_A8R8G8B8;
   else
-    CxbxKrnlCleanup(DxbxFormat('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]));
+    CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]);
     Result := X_D3DFORMAT(aFormat);
   end;
 end;

@@ -42,6 +42,8 @@ uses
   uHLEIntercept;
 
 type
+  PHYSICAL_ADDRESS = ULONG;
+
   TEntryProc = procedure();
 //  PEntryProc = ^TEntryProc;
 

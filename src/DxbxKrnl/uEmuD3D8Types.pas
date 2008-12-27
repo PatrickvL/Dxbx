@@ -282,6 +282,9 @@ const
   X_D3DRESOURCE_DATA_FLAG_D3DREND = $00000004; // D3D Render Target
   X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
 
+  // special resource lock flags
+  X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;
+  
   function IsSpecialResource(x: DWORD): Boolean;
 
 type
