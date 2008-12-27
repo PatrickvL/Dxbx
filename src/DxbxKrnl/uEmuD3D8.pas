@@ -469,10 +469,12 @@ end;
 
 procedure ToggleFauxFullscreen(hWnd: HWND);
 // Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
-var
-  lRestore: LongInt;
-  lRestoreEx: LongInt;
-  lRect: TRect;
+{$J+}
+const
+  lRestore: LongInt = 0;
+  lRestoreEx: LongInt = 0;
+  lRect: TRect = ();
+{$J-}
 begin
   if (g_XBVideo.GetFullscreen()) then
     Exit;
@@ -944,7 +946,7 @@ begin
         ddsd2.ddsCaps.dwCaps := DDSCAPS_PRIMARYSURFACE;
         hRet := g_pDD7.CreateSurface(ddsd2, {out}g_pDDSPrimary, nil);
         if (FAILED(hRet)) then
-          CxbxKrnlCleanup(DxbxFormat('Could not create primary surface (0x%.08X)', [hRet]));
+          CxbxKrnlCleanup('Could not create primary surface (0x%.08X)', [hRet]);
       end;
 
       // update render target cache
@@ -1762,7 +1764,7 @@ begin
   kthx := 0;
     (*StrFmt(FileName, 'C:\Aaron\Textures\SourceSurface-%d.bmp', kthx++); *)
 
-  D3DXSaveSurfaceToFile(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, 0, 0);
+  D3DXSaveSurfaceToFile(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, nil, nil);
 
   ahRet := g_pD3DDevice8.CopyRects
     (
@@ -2666,13 +2668,10 @@ begin
     begin
          3: //D3DRTYPE_TEXTURE
             EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-            Break;
          4: //D3DRTYPE_VOLUMETEXTURE
             EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DVolumeTexture)@pTexture);
-            Break;
          5: //D3DRTYPE_CUBETEXTURE
             CxbxKrnlCleanup('Cube textures temporarily not supported!');
-            Break;
         default:
             CxbxKrnlCleanup('D3DResource := %d is not supported!', D3DResource);
      end;
@@ -3183,7 +3182,6 @@ begin
 
                         D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuTexture8, 0);
                      end;
-                    Break;
 
                      D3DRTYPE_CUBETEXTURE:
                     begin
@@ -3196,7 +3194,6 @@ begin
                             D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuTexture8, 0);
                          end;
                      end;
-                    Break;
                  end;
              end;
             //endif
@@ -3602,7 +3599,7 @@ begin
       end; *)
 
   else
-    CxbxKrnlCleanup(DxbxFormat('Unknown IVB Register: %d', [aRegister]));
+    CxbxKrnlCleanup('Unknown IVB Register: %d', [aRegister]);
   end;
 
   EmuSwapFS(fsXbox);
@@ -3813,12 +3810,17 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource; pBase: PVOID): HRESULT;
+function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource; pBase: PVOID): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-(*  pResource: X_D3DResource;
-  dwCommonType: DWORD; *)
+  pResource: PX_D3DResource;
+  dwCommonType: DWORD;
+  pVertexBuffer: PX_D3DVertexBuffer;
+  pPushBuffer: PX_D3DPushBuffer;
+  pFixup: PX_D3DFixup;
+  dwSize: DWORD;
+  pData: PBYTE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3831,60 +3833,63 @@ begin
 
   hRet := S_OK;
 
-(*  pResource := pThis;
+  pResource := pThis;
 
-    { TODO: Need to be translated to delphi }
-    (*dwCommonType := pResource.Common and X_D3DCOMMON_TYPE_MASK;
+  dwCommonType := pResource.Common and X_D3DCOMMON_TYPE_MASK;
 
-    // add the offset of the current texture to the base
-    pBase := (PVOID)((DWORD)pBase+pThis.Data);        *)
+  // add the offset of the current texture to the base
+  pBase := PVOID(DWORD(pBase) + pThis.Data);
 
-    // Determine the resource type, and initialize
-    (*case(dwCommonType) of
-         X_D3DCOMMON_TYPE_VERTEXBUFFER:
+  // Determine the resource type, and initialize
+  case dwCommonType of
+(*
+    X_D3DCOMMON_TYPE_VERTEXBUFFER:
+    begin
+      DbgPrintf('EmuIDirect3DResource8_Register (0x%X): Creating VertexBufferArgs: array of const');
+
+      pVertexBuffer := PX_D3DVertexBuffer(pResource);
+
+      // create vertex buffer
+      begin
+        dwSize := EmuCheckAllocationSize(pBase, True);
+
+        if dwSize = DWORD(-1) then
         begin
-            DbgPrintf('EmuIDirect3DResource8_Register (0x%X): Creating VertexBufferArgs: array of const');
-
-            X_D3DVertexBuffer *pVertexBuffer := (X_D3DVertexBuffer)pResource;
-
-            // create vertex buffer
-            begin
-                DWORD dwSize := EmuCheckAllocationSize(pBase, True);
-
-                if(dwSize = -1) then
-                begin
-                    // TODO: once this is known to be working, remove the warning
-                    EmuWarning('Vertex buffer allocation size unknown');
-                    dwSize := $2000;  // temporarily assign a small buffer, which will be increased later
-                 end;
-
-                hRet = g_pD3DDevice8.CreateVertexBuffer
-                (
-                    dwSize, 0, 0, D3DPOOL_MANAGED,
-                    @pResource.EmuVertexBuffer8
-                );
-
-                #ifdef _DEBUG_TRACK_VB
-                g_VBTrackTotal.insert(pResource.EmuVertexBuffer8);
-                //endif
-
-                BYTE *pData := 0;
-
-                hRet := pResource.EmuVertexBuffer8.Lock(0, 0, @pData, 0);
-
-                if(FAILED(hRet)) then
-                    CxbxKrnlCleanup('VertexBuffer Lock Failed!');
-
-                move ( pBase, pData, dwSize );
-
-                pResource.EmuVertexBuffer8.Unlock();
-
-                pResource.Data := (ULONG)pData;
-             end;
-
-            DbgPrintf('EmuIDirect3DResource8_Register (0x%X): Successfully Created VertexBuffer (0x%.08X)', pResource.EmuVertexBuffer8);
+          // Cxbx TODO: once this is known to be working, remove the warning
+          EmuWarning('Vertex buffer allocation size unknown');
+          dwSize := $2000;  // temporarily assign a small buffer, which will be increased later
          end;
-        Break;
+
+        hRet := g_pD3DDevice8.CreateVertexBuffer(
+            {Length=}dwSize,
+            {Usage=}0,
+            {FVF=}0,
+            {Pool=}D3DPOOL_MANAGED,
+            {out ppVertexBuffer=}pResource.EmuVertexBuffer8);
+        // IDirect3DVertexBuffer8
+
+{$ifdef _DEBUG_TRACK_VB}
+        g_VBTrackTotal.insert(pResource.EmuVertexBuffer8);
+{$endif}
+
+        pData := 0;
+
+        hRet := pResource.EmuVertexBuffer8.Lock(0, 0, @pData, 0);
+
+        if FAILED(hRet) then
+          CxbxKrnlCleanup('VertexBuffer Lock Failed!');
+
+        Move(pBase, pData, dwSize);
+
+        pResource.EmuVertexBuffer8.Unlock();
+
+        pResource.Data := ULONG(pData);
+      end;
+
+      DbgPrintf('EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)', [pResource.EmuVertexBuffer8]);
+    end;
+*)
+(*
 
          X_D3DCOMMON_TYPE_INDEXBUFFER:
         begin
@@ -3932,34 +3937,32 @@ begin
 
             DbgPrintf('EmuIDirect3DResource8_Register (0x%X): Successfully Created IndexBuffer (0x%.08X)', pResource.EmuIndexBuffer8);
          end;
-        Break;
+*)
 
-         X_D3DCOMMON_TYPE_PUSHBUFFER:
-        begin
-            DbgPrintf('EmuIDirect3DResource8_Register :. PushBufferArgs: array of const');
+    X_D3DCOMMON_TYPE_PUSHBUFFER:
+    begin
+      DbgPrintf('EmuIDirect3DResource8_Register : PushBufferArgs...');
 
-            X_D3DPushBuffer *pPushBuffer := (X_D3DPushBuffer)pResource;
+      pPushBuffer := PX_D3DPushBuffer(pResource);
 
-            // create push buffer
-            begin
-                DWORD dwSize := EmuCheckAllocationSize(pBase, True);
+      // create push buffer
+      dwSize := EmuCheckAllocationSize(pBase, True);
 
-                if(dwSize = -1) then
-                begin
-                    // TODO: once this is known to be working, remove the warning
-                    EmuWarning('Push buffer allocation size unknown');
+      if dwSize = DWORD(-1) then
+      begin
+        // Cxbx TODO: once this is known to be working, remove the warning
+        EmuWarning('Push buffer allocation size unknown');
 
-                    pPushBuffer.Lock := X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
+        pPushBuffer.Lock := X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
+      end
+      else
+      begin
+        pResource.Data := ULONG(pBase);
 
-                    Break;
-                 end;
-
-                pResource.Data := (ULONG)pBase;
-             end;
-
-            DbgPrintf('EmuIDirect3DResource8_Register (0x%X): Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)', pResource.Data, pPushBuffer.Size, pPushBuffer.AllocationSize);
-         end;
-        Break;
+        DbgPrintf('EmuIDirect3DResource8_Register : Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pPushBuffer.Size, pPushBuffer.AllocationSize]);
+      end;
+    end;
+(*
 
          X_D3DCOMMON_TYPE_SURFACE:
          X_D3DCOMMON_TYPE_TEXTURE:
@@ -3973,7 +3976,8 @@ begin
 
             X_D3DFORMAT X_Format := (X_D3DFORMAT)((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
             D3DFORMAT   Format   := EmuXB2PC_D3DX_Format);
-   D3DFORMAT	CacheFormat;
+
+            D3DFORMAT	CacheFormat;
             // TODO: check for dimensions
 
             // TODO: HACK: Temporary?
@@ -4000,7 +4004,7 @@ begin
                 dwDepth  := 1;// HACK? 1 << ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  := dwWidth*4;
                 dwBPP := 4;
-             end;
+            end;
             else if(X_Format = $05 (* X_D3DFMT_R5G6B5 *)(*then  || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
                  or X_Format = $1D (* X_D3DFMT_LIN_A4R4G4B4 *)(*|| X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
                  or X_Format = $28 (* X_D3DFMT_G8B8 *)//)
@@ -4014,7 +4018,7 @@ begin
                 dwDepth  := 1;// HACK? 1 << ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  := dwWidth*2;
                 dwBPP := 2;
-             end;
+            end
             else if(X_Format = $00 (* X_D3DFMT_L8 *)(*|| X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */) then
             begin
                 bSwizzled := TRUE;
@@ -4026,7 +4030,7 @@ begin
                 dwDepth  := 1;// HACK? 1 << ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  := dwWidth;
                 dwBPP := 1;
-             end;
+            end
             else if(X_Format = $1E (* X_D3DFMT_LIN_X8R8G8B8 *)(*|| X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */) then
             begin
                 // Linear 32 Bit
@@ -4194,10 +4198,9 @@ begin
 
 
       DbgPrintf('EmuIDirect3DResource8_Register(0x%X): Successfully Created Texture(0x%.08 X, 0x%.08 X)', pResource, pResource.EmuTexture8);
-    end; * )
+  end;
 end;
 
-(*
 uint32 stop := bCubemap ? 6: 1;
 
 for (uint32 r := 0; r < stop; r + +)
@@ -4419,7 +4422,6 @@ end;
                 //endif
 end;
 end;
-Break;
 
 X_D3DCOMMON_TYPE_PALETTE:
 begin
@@ -4446,28 +4448,28 @@ begin
 
             //DbgPrintf('EmuIDirect3DResource8_Register (0x%X): Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)\n', pResource.Data, pResource.Size, pResource.AllocationSize);
 end;
-Break;
+*)
+    X_D3DCOMMON_TYPE_FIXUP:
+    begin
+      pFixup := PX_D3DFixup(pResource);
 
-X_D3DCOMMON_TYPE_FIXUP:
-begin
-  X_D3DFixup * pFixup := (X_D3DFixup)pResource;
+      CxbxKrnlCleanup('IDirect3DReosurce8.Register.X_D3DCOMMON_TYPE_FIXUP is not yet supported' +
+        #13#10'0x%.08 X(pFixup.Common)' +
+        #13#10'0x%.08 X(pFixup.Data)' +
+        #13#10'0x%.08 X(pFixup.Lock)' +
+        #13#10'0x%.08 X(pFixup.Run)' +
+        #13#10'0x%.08 X(pFixup.Next)' +
+        #13#10'0x%.08 X(pFixup.Size)',
+        [pFixup.Common, pFixup.Data, pFixup.Lock, pFixup.Run, pFixup.Next, pFixup.Size]);
+    end;
 
-  CxbxKrnlCleanup('IDirect3DReosurce8.Register.X_D3DCOMMON_TYPE_FIXUP is not yet supported'
-    #13#10'0x%.08 X(pFixup.Common)'
-    #13#10'0x%.08 X(pFixup.Data)'
-    #13#10'0x%.08 X(pFixup.Lock)'
-    #13#10'0x%.08 X(pFixup.Run)'
-    #13#10'0x%.08 X(pFixup.Next)'
-    #13#10'0x%.08 X(pFixup.Size)', pFixup.Common, pFixup.Data, pFixup.Lock, pFixup.Run, pFixup.Next, pFixup.Size);
-end;
+  else // case
+    CxbxKrnlCleanup('IDirect3DResource8.Register.Common cType 0x%.08 X not yet supported', [dwCommonType]);
+  end;
 
-default:
-CxbxKrnlCleanup('IDirect3DResource8.Register.Common cType 0x%.08 X not yet supported', dwCommonType);
-end;            *)
+  EmuSwapFS(fsXbox);
 
-EmuSwapFS(fsXbox);
-
-Result := hRet;
+  Result := hRet;
 end;
 
 { TODO: Need to be translated to delphi }
@@ -5516,7 +5518,7 @@ begin
     [Stage, Value]);
 
   if (Value > $00030000) then
-    CxbxKrnlCleanup(DxbxFormat('EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]));
+    CxbxKrnlCleanup('EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
 
   g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
 
@@ -5609,19 +5611,14 @@ begin
     begin
          22:    // X_D3DTSS_BUMPENVMAT00
             g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
-            Break;
          23:    // X_D3DTSS_BUMPENVMAT01
             g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
-            Break;
          24:    // X_D3DTSS_BUMPENVMAT11
             g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
-            Break;
          25:    // X_D3DTSS_BUMPENVMAT10
             g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
-            Break;
          26:    // X_D3DTSS_BUMPENVLSCALE
             g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
-            Break;
      end;
 
     EmuSwapFS(fsXbox);
@@ -5921,7 +5918,7 @@ begin
   else if (Value = 5) then
     Value := 3
   else
-    CxbxKrnlCleanup(DxbxFormat('Unsupported D3DVERTEXBLENDFLAGS (%d)', [Value]));
+    CxbxKrnlCleanup('Unsupported D3DVERTEXBLENDFLAGS (%d)', [Value]);
 
   g_pD3DDevice8.SetRenderState(D3DRS_VERTEXBLEND, Value);
 
@@ -5965,7 +5962,7 @@ begin
     $901:
       Value := D3DCULL_CCW;
   else
-    CxbxKrnlCleanup(DxbxFormat('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', [Value]));
+    CxbxKrnlCleanup('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', [Value]);
   end;
 
   g_pD3DDevice8.SetRenderState(D3DRS_CULLMODE, Value);

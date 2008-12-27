@@ -29,8 +29,10 @@ uses
   // Jedi WinAPI
   , JwaWinBase
   , JwaWinType
+  , JwaWinNt
   // DXBX
   , uConsts
+  , uTypes
   , uLog
   , uEmuFS;
 
@@ -50,8 +52,13 @@ var
 
 procedure EmuWarning(szWarningMessage: string);
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
+function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
 procedure EmuCleanup(const szErrorMessage: string);
 function ExitException(e: LPEXCEPTION_POINTERS): Integer;
+
+// global exception patching address
+var
+  g_HaloHack: array [0..4-1] of UInt32;
 
 const
   // NOTE: this is an arbitrary latency
@@ -283,33 +290,39 @@ begin
 	Result := EXCEPTION_CONTINUE_SEARCH;
 end;
 
-(*
 // check how many bytes were allocated for a structure
 function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
 var
   MemoryBasicInfo: MEMORY_BASIC_INFORMATION;
   dwRet: DWORD;
 begin
-  (*
 {$IFDEF _DEBUG_ALLOC}
   dwRet := CxbxVirtualQueryDebug(pBase, MemoryBasicInfo, SizeOf(MemoryBasicInfo));
   if (dwRet = -1) then
 {$ENDIF}
-    dwRet := VirtualQuery(pBase, MemoryBasicInfo, SizeOf(MemoryBasicInfo));
+    dwRet := VirtualQuery(pBase, {var}MemoryBasicInfo, SizeOf(MemoryBasicInfo));
 
-  if (dwRet = 0) then
+  if dwRet = 0 then
+  begin
     Result := 0;
+    Exit;
+  end;
 
-  if (MemoryBasicInfo.State <> MEM_COMMIT) then
+  if MemoryBasicInfo.State <> MEM_COMMIT then
+  begin
     Result := 0;
+    Exit;
+  end;
 
-    // this is a hack in order to determine when pointers come from a large write-combined database
-  if (largeBound and MemoryBasicInfo.RegionSize > 5 * 1024 * 1024) then
+  // this is a hack in order to determine when pointers come from a large write-combined database
+  if largeBound and (MemoryBasicInfo.RegionSize > (5 * 1024 * 1024)) then
+  begin
     Result := -1;
+    Exit;
+  end;
 
-  Result := MemoryBasicInfo.RegionSize - (pBase - MemoryBasicInfo.BaseAddress);
+  Result := MemoryBasicInfo.RegionSize - (IntPtr(pBase) - IntPtr(MemoryBasicInfo.BaseAddress));
 end;
-*)
 
 
 procedure EmuCleanup(const szErrorMessage: string);

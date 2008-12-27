@@ -318,6 +318,137 @@ function xboxkrnl_NtCreateFile(
   ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
+(*
+    DbgPrintf('EmuKrnl (0x%X): NtCreateFile' +
+           #13#10'(' +
+           #13#10'   FileHandle          : 0x%.08X' +
+           #13#10'   DesiredAccess       : 0x%.08X' +
+           #13#10'   ObjectAttributes    : 0x%.08X (''%s'')' +
+           #13#10'   IoStatusBlock       : 0x%.08X' +
+           #13#10'   AllocationSize      : 0x%.08X' +
+           #13#10'   FileAttributes      : 0x%.08X' +
+           #13#10'   ShareAccess         : 0x%.08X' +
+           #13#10'   CreateDisposition   : 0x%.08X' +
+           #13#10'   CreateOptions       : 0x%.08X' +
+           #13#10');',
+           [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
+           IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
+
+    char ReplaceChar  := '\0';
+    int  ReplaceIndex := -1;
+
+    char *szBuffer := ObjectAttributes.ObjectName.Buffer;
+
+    if Assigned(szBuffer) then
+    begin
+        //printf('Orig : %s', szBuffer);
+
+        // trim this off
+        if(szBuffer[0] = '''' and szBuffer[1] = '?' and szBuffer[2] = '?' and szBuffer[3] = '''')
+            Inc(szBuffer, 4);
+        end;
+
+        // D:\ should map to current directory
+	    if( (szBuffer[0] = 'D'  or  szBuffer[0] = 'd') and szBuffer[1] = ':' and szBuffer[2] = '''')
+	    begin
+		    Inc(szBuffer, 3);
+
+		    ObjectAttributes.RootDirectory := g_hCurDir;
+
+		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
+		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
+		    DbgPrintf('  New:''$XbePath\\%s''', szBuffer);
+	    end;
+	    else if( (szBuffer[0] = 'T'  or  szBuffer[0] = 't') and szBuffer[1] = ':' and szBuffer[2] = '''')
+	    begin
+		    szBuffer += 3;
+
+		    ObjectAttributes.RootDirectory := g_hTDrive;
+
+		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
+		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
+		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\T\\%s''', szBuffer);
+	    end;
+	    else if( (szBuffer[0] = 'U'  or  szBuffer[0] = 'u') and szBuffer[1] = ':' and szBuffer[2] = '''')
+	    begin
+		    Inc(szBuffer, 3);
+
+		    ObjectAttributes.RootDirectory := g_hUDrive;
+
+		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
+		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
+		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\U\\%s''', szBuffer);
+	    end;
+	    else if( (szBuffer[0] = 'Z'  or  szBuffer[0] = 'z') and szBuffer[1] = ':' and szBuffer[2] = '''')
+	    begin
+		    Inc(szBuffer, 3);
+
+		    ObjectAttributes.RootDirectory := g_hZDrive;
+
+		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
+		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
+		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\Z\\%s''', szBuffer);
+	    end;
+
+        //
+        // TODO: Wildcards are not allowed??
+        //
+
+        begin
+            for(int v=0;szBuffer[v] <> '\0';v++)
+            begin
+                if (szBuffer[v] = '*') then
+                begin
+                    if(v > 0) begin ReplaceIndex := v-1; end;
+                    else begin ReplaceIndex := v; end;
+                end;
+            end;
+        end;
+
+        // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
+        if(ReplaceIndex <> -1)
+        begin
+            ReplaceChar := szBuffer[ReplaceIndex];
+            szBuffer[ReplaceIndex] := #0;
+        end;
+
+        //printf('Aftr : %s', szBuffer);
+    end;
+
+    wchar_t wszObjectName[160];
+
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    // initialize object attributes
+    if Assigned(szBuffer) then
+      mbstowcs(wszObjectName, szBuffer, 160)
+    else
+      wszObjectName[0] := WideChar(#0);
+
+    NtDll::RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
+
+    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+
+    // redirect to NtCreateFile
+    NTSTATUS ret := NtDll::NtCreateFile
+    (
+        FileHandle, DesiredAccess, @NtObjAttr, (NtDll::IO_STATUS_BLOCK* )IoStatusBlock,
+        (NtDll::LARGE_INTEGER* )AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
+    );
+
+    if FAILED(ret) then
+      DbgPrintf('EmuKrnl : NtCreateFile Failed! (0x%.08X)', [ret])
+    else
+      DbgPrintf('EmuKrnl : NtCreateFile := 0x%.08X', [FileHandle^]);
+
+    // restore original buffer
+    if (ReplaceIndex <> -1) then
+      szBuffer[ReplaceIndex] := ReplaceChar;
+
+    // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
+    //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
+*)
   Result := Unimplemented('NtCreateFile');
   EmuSwapFS(fsXbox);
 end;
@@ -423,9 +554,23 @@ function xboxkrnl_NtOpenFile(
   OpenOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 begin
+(*
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtOpenFile');
+    // debug trace
+        DbgPrintf("EmuKrnl (0x%X): NtOpenFile\n"
+               "(\n"
+               "   FileHandle          : 0x%.08X\n"
+               "   DesiredAccess       : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+               "   IoStatusBlock       : 0x%.08X\n"
+               "   ShareAccess         : 0x%.08X\n"
+               "   CreateOptions       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+               IoStatusBlock, ShareAccess, OpenOptions);
   EmuSwapFS(fsXbox);
+*)
+  Result := xboxkrnl_NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
 end;
 
 function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;

@@ -80,10 +80,10 @@ function xboxkrnl_RtlFillMemoryUlong(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlFreeAnsiString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlFreeUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlGetCallersAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlInitAnsiString(
+procedure xboxkrnl_RtlInitAnsiString(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
-  ): NTSTATUS; stdcall;
+); stdcall;
 function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
@@ -358,13 +358,22 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlInitAnsiString(
+procedure xboxkrnl_RtlInitAnsiString(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlInitAnsiString');
+  
+  DbgPrintf('EmuKrnl (0x%X): RtlInitAnsiString' +
+         #13#10'(' +
+         #13#10'   DestinationString   : 0x%.08X' +
+         #13#10'   SourceString        : 0x%.08X (''%s'')' +
+         #13#10');',
+         [DestinationString, SourceString, SourceString]);
+
+  JwaNative.RtlInitAnsiString(PANSI_STRING(DestinationString), PCSZ(SourceString));
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -656,3 +665,4 @@ begin
 end;
 
 end.
+

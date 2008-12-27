@@ -114,11 +114,16 @@ const
   // non-interception code uses it
   dwInterceptionCount: Integer = 0;
 {$J-}
+//var CurrentFS: Word;
 begin
   asm
     mov ax, fs:[DxbxFS_SwapFS]
     mov fs, ax
   end;
+
+/// The block below causes problems;
+/// Maybe we should just disable it and find another
+/// solution for Xbox-never-sleeps?
 (*
   // Every "N" interceptions, perform various periodic services
   Inc(dwInterceptionCount);
@@ -131,8 +136,14 @@ begin
       Exit;
     end;
 
+    // Somehow, SwitchToThread also alters FS, so store it first :
+    CurrentFS := GetFS();
+
     // Yield!
     SwitchToThread;
+
+    // Restore the FS register again :
+    SetFS(CurrentFS);
 
     // Back to Zero!
     dwInterceptionCount := 0;

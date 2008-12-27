@@ -471,7 +471,7 @@ begin
   Result := bRet;
 end;
 
-function XTL_EmuQueryPerformanceFrequency(lpFrequency: Int64): BOOL; stdcall;
+function XTL_EmuQueryPerformanceFrequency(var lpFrequency: Int64): BOOL; stdcall;
 var
   bRet: BOOL;
 begin
@@ -483,7 +483,7 @@ begin
     #13#10');',
     [lpFrequency]);
 
-  bRet := QueryPerformanceFrequency(lpFrequency);
+  bRet := QueryPerformanceFrequency({var}lpFrequency);
 
   EmuSwapFS(fsXbox);
 
@@ -1076,15 +1076,10 @@ var
   HeapParameters: RTL_HEAP_PARAMETERS;
   dwPeHeapReserve: UInt32;
   dwPeHeapCommit: UInt32;
-  xfs, wfs: string;
 begin
-  xfs := DumpCurrentFS();
   EmuSwapFS(fsWindows);
-  wfs := DumpCurrentFS();
 
-  DbgPrintf(xfs);
   DbgPrintf('EmuXapi : EmuXapiInitProcess();');
-  DbgPrintf(wfs);
 
   // call RtlCreateHeap
   begin
