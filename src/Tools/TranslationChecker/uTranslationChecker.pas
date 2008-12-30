@@ -5,24 +5,37 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls,
+  Dialogs, StdCtrls, ComCtrls, IniFiles,
   // 3rd Party
   JclStrings,
-  JclFileUtils;
+  JclFileUtils, Buttons, JvBaseDlg, JvSelectDirectory;
 
 type
   TForm1 = class(TForm)
     btnScanTranslation: TButton;
     memOutput: TMemo;
-    OpenDialog1: TOpenDialog;
     edDxbxSrcPath: TEdit;
     edCxbxSrcPath: TEdit;
     lblDxbxSrcPath: TLabel;
     lblCxbxSrcPath: TLabel;
+    JvSelectDirectory: TJvSelectDirectory;
+    btnDxbxSourcesPath: TSpeedButton;
+    btnCxbxSourcesPath: TSpeedButton;
+    btnSaveToXml: TButton;
+    SaveDialog: TSaveDialog;
+    procedure FormCreate(Sender: TObject);
+    procedure btnCxbxSourcesPathClick(Sender: TObject);
+    procedure btnDxbxSourcesPathClick(Sender: TObject);
+    procedure btnSaveToXmlClick(Sender: TObject);
     procedure btnScanTranslationClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure Log(const aString: string);
     procedure HandleDxbxFile(const aPascalFilePath: string);
+
+    procedure ReadIni;
+    procedure WriteIni;
+
   public
   end;
 
@@ -33,17 +46,70 @@ implementation
 
 {$R *.dfm}
 
+const
+  cIni = 'translationchecker.Ini';
+
 procedure TForm1.Log(const aString: string);
 begin
   memOutput.Lines.Add(aString);
 end;
 
 
+procedure TForm1.ReadIni;
+var IniFile: TIniFile;
+    Stream : TFileStream;
+begin
+  if FileExists(ExtractFilePath(Application.ExeName) + cIni) then
+  begin
+    Inifile := TIniFile.Create(ExtractFilePath(Application.ExeName) + cIni);
+
+    edDxbxSrcPath.Text := IniFile.ReadString('SourcePath', 'Dxbx', '');
+    edCxbxSrcPath.Text := IniFile.ReadString('SourcePath', 'Cxbx', '');
+
+    IniFile.Free;
+  end;
+end;
+
+procedure TForm1.WriteIni;
+var IniFile: TIniFile;
+begin
+  // het opslaan van de inifile
+  inifile := TIniFile.Create(ExtractFilePath(Application.ExeName) + cIni);
+
+  inifile.WriteString('SourcePath', 'Dxbx', edDxbxSrcPath.Text);
+  inifile.WriteString('SourcePath', 'Cxbx', edCxbxSrcPath.Text);
+
+  inifile.free;
+end;
+
 function StrStartsWith(const aString, aStart: string): Boolean;
 begin
   Result := (Length(aString) >= Length(aStart));
   Result := Result
         and (StrCompareRange(aString, aStart, 1, Length(aStart)) = 0);
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  ReadIni;
+end;
+
+procedure TForm1.btnCxbxSourcesPathClick(Sender: TObject);
+begin
+  if JvSelectDirectory.Execute then
+    edCxbxSrcPath.Text := JvSelectDirectory.Directory;
+end;
+
+procedure TForm1.btnDxbxSourcesPathClick(Sender: TObject);
+begin
+  if JvSelectDirectory.Execute then
+    edDxbxSrcPath.Text := JvSelectDirectory.Directory;
+end;
+
+procedure TForm1.btnSaveToXmlClick(Sender: TObject);
+begin
+  if SaveDialog.Execute then 
+    memOutput.Lines.SaveToFile( SaveDialog.FileName );
 end;
 
 procedure TForm1.HandleDxbxFile(const aPascalFilePath: string);
@@ -278,6 +344,11 @@ begin
     FreeAndNil(FileList);
   end;
 
+end;
+
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  WriteIni;
 end;
 
 end.
