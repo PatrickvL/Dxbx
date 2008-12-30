@@ -56,6 +56,7 @@ begin
 end;
 
 procedure EmuUnswizzleActiveTexture();
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 (*var
   pPixelContainer: X_D3DPixelContainer; *)
 begin
@@ -139,7 +140,7 @@ begin
 end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 (*var
   pdwOrigPushData: DWord; *)
 begin
@@ -640,7 +641,7 @@ end;
 {$IFDEF _DEBUG_TRACK_PB}
 
 procedure DbgDumpMesh(var pIndexData: Word; dwCount: DWord);
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
   if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;

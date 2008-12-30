@@ -96,6 +96,7 @@ procedure CxbxKrnlInit(
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
+// Branch:martin  Revision:39  Translator:Patrick  Done:99
 var
   MemXbeHeader: PXBE_HEADER;
   old_protection: DWord;
@@ -103,7 +104,6 @@ var
   pCertificate: PXBE_CERTIFICATE;
   hDupHandle: THandle;
   OldExceptionFilter: TFNTopLevelExceptionFilter;
-//  v, r: Integer;
 begin
   // debug console allocation (if configured)
   SetLogMode(DbgMode);
@@ -343,6 +343,7 @@ begin
 end;
 
 procedure CxbxKrnlRegisterThread(const hThread: THandle);
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   v: Integer;
 begin
@@ -362,6 +363,7 @@ begin
 end;
 
 procedure CxbxKrnlTerminateThread();
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -373,6 +375,7 @@ end;
 // alert for the situation where an Xref function body is hit
 
 procedure EmuXRefFailure();
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -380,6 +383,7 @@ begin
 end;
 
 procedure CxbxKrnlResume();
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
 begin
   if (not g_bEmuSuspended) then
     Exit;
@@ -421,6 +425,7 @@ begin
 end;
 
 procedure CxbxKrnlSuspend();
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
 begin
 
   if (g_bEmuSuspended or g_bEmuException) then
@@ -463,6 +468,7 @@ end;
 
 
 procedure EmuPanic(); stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -474,6 +480,7 @@ begin
 end;
 
 procedure CxbxKrnlNoFunc;
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 

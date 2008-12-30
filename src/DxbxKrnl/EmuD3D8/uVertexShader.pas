@@ -78,13 +78,13 @@ begin
 end;
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   Result := (aHandle and $8000000) <> 0;
 end;
 
 function VshHandleGetVertexShader(aHandle: DWORD): X_D3DVertexShader;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*  Result :=  aHandle and $7FFFFFFF; *)
 { return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }

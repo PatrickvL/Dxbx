@@ -75,8 +75,7 @@ implementation
 procedure XBVideo.Initialize;
 begin
   m_bVSync := False;
-  m_bFullscreen := False;
-
+  m_bFullscreen := False;   
   m_szVideoResolution := 'Automatic (Default)';
 end;
 

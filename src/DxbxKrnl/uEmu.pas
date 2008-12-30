@@ -91,6 +91,7 @@ implementation
 // print out a warning message to the kernel debug log file
 
 procedure EmuWarning(szWarningMessage: string);
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   if (g_bPrintfOn) then
   begin
@@ -99,12 +100,14 @@ begin
 end;
 
 procedure EmuWarning(szWarningMessage: string; const Args: array of const);
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   EmuWarning(DxbxFormat(szWarningMessage, Args));
 end;
 
 // exception handler
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
 begin
 	EmuSwapFS(fsWindows);
 
@@ -298,6 +301,7 @@ end;
 
 // check how many bytes were allocated for a structure
 function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   MemoryBasicInfo: MEMORY_BASIC_INFORMATION;
   dwRet: DWORD;
@@ -332,6 +336,7 @@ end;
 
 
 procedure EmuCleanup(const szErrorMessage: string);
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:20
 var
   szBuffer1: string;
 //  buffer: array [0..15] of Char;
@@ -376,6 +381,7 @@ end;
 
 // Exception handler for that tough final exit :)
 function ExitException(e: LPEXCEPTION_POINTERS): Integer;
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:5
 var
   Count: Integer;
 begin
