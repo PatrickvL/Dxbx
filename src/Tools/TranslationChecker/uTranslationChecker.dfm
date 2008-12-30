@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  Caption = 'Form1'
+  Caption = 'Translation checker'
   ClientHeight = 613
   ClientWidth = 737
   Color = clBtnFace
@@ -11,6 +11,8 @@ object Form1: TForm1
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object lblDxbxSrcPath: TLabel
@@ -29,9 +31,25 @@ object Form1: TForm1
     Caption = '&Cxbx sources path :'
     FocusControl = edCxbxSrcPath
   end
+  object btnDxbxSourcesPath: TSpeedButton
+    Left = 571
+    Top = 11
+    Width = 23
+    Height = 22
+    Caption = '...'
+    OnClick = btnDxbxSourcesPathClick
+  end
+  object btnCxbxSourcesPath: TSpeedButton
+    Left = 571
+    Top = 42
+    Width = 23
+    Height = 22
+    Caption = '...'
+    OnClick = btnCxbxSourcesPathClick
+  end
   object btnScanTranslation: TButton
-    Left = 568
-    Top = 36
+    Left = 600
+    Top = 8
     Width = 129
     Height = 25
     Caption = '&Scan translation'
@@ -55,7 +73,7 @@ object Form1: TForm1
   object edDxbxSrcPath: TEdit
     Left = 120
     Top = 13
-    Width = 249
+    Width = 445
     Height = 21
     TabOrder = 2
     Text = '..\..'
@@ -63,13 +81,26 @@ object Form1: TForm1
   object edCxbxSrcPath: TEdit
     Left = 120
     Top = 40
-    Width = 249
+    Width = 445
     Height = 21
     TabOrder = 3
     Text = '..\..\..\..\Cxbx\trunk\src'
   end
-  object OpenDialog1: TOpenDialog
-    Left = 376
-    Top = 112
+  object btnSaveToXml: TButton
+    Left = 600
+    Top = 39
+    Width = 129
+    Height = 25
+    Caption = 'Save to disk'
+    TabOrder = 4
+    OnClick = btnSaveToXmlClick
+  end
+  object JvSelectDirectory: TJvSelectDirectory
+    Left = 28
+    Top = 88
+  end
+  object SaveDialog: TSaveDialog
+    Left = 60
+    Top = 86
   end
 end
