@@ -76,7 +76,7 @@ object Form1: TForm1
     Width = 445
     Height = 21
     TabOrder = 2
-    Text = '..\..'
+    Text = '..\..\..\..'
   end
   object edCxbxSrcPath: TEdit
     Left = 120
@@ -84,7 +84,7 @@ object Form1: TForm1
     Width = 445
     Height = 21
     TabOrder = 3
-    Text = '..\..\..\..\Cxbx\trunk\src'
+    Text = '..\..\..\..\..\..\Cxbx\trunk\src'
   end
   object btnSaveToXml: TButton
     Left = 600
@@ -94,10 +94,6 @@ object Form1: TForm1
     Caption = 'Save to disk'
     TabOrder = 4
     OnClick = btnSaveToXmlClick
-  end
-  object JvSelectDirectory: TJvSelectDirectory
-    Left = 28
-    Top = 88
   end
   object SaveDialog: TSaveDialog
     Left = 60

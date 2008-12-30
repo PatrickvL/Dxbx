@@ -1,14 +1,34 @@
+(*
+    This file is part of Dxbx - a XBox emulator written in Delphi (ported over from cxbx)
+    Copyright (C) 2007 Shadow_tj and other members of the development team.
+
+    This program is Free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*)
 unit uTranslationChecker;
 
 interface
 
+{$INCLUDE ..\..\Dxbx.inc}
+
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, IniFiles,
+  Dialogs, StdCtrls, ComCtrls, IniFiles, Buttons,
+  FileCtrl,
   // 3rd Party
   JclStrings,
-  JclFileUtils, Buttons, JvBaseDlg, JvSelectDirectory;
+  JclFileUtils;
 
 type
   TForm1 = class(TForm)
@@ -18,7 +38,6 @@ type
     edCxbxSrcPath: TEdit;
     lblDxbxSrcPath: TLabel;
     lblCxbxSrcPath: TLabel;
-    JvSelectDirectory: TJvSelectDirectory;
     btnDxbxSourcesPath: TSpeedButton;
     btnCxbxSourcesPath: TSpeedButton;
     btnSaveToXml: TButton;
@@ -30,13 +49,11 @@ type
     procedure btnScanTranslationClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    procedure Log(const aString: string);
-    procedure HandleDxbxFile(const aPascalFilePath: string);
-
     procedure ReadIni;
     procedure WriteIni;
 
-  public
+    procedure Log(const aString: string);
+    procedure HandleDxbxFile(const aPascalFilePath: string);
   end;
 
 var
@@ -44,72 +61,85 @@ var
 
 implementation
 
-{$R *.dfm}
+function StrStartsWith(const aString, aStart: string): Boolean;
+begin
+  Result := (Length(aString) >= Length(aStart))
+        and (StrCompareRange(aString, aStart, 1, Length(aStart)) = 0);
+end;
 
 const
   cIni = 'translationchecker.Ini';
 
-procedure TForm1.Log(const aString: string);
-begin
-  memOutput.Lines.Add(aString);
-end;
+{ TForm1 }
 
-
-procedure TForm1.ReadIni;
-var IniFile: TIniFile;
-    Stream : TFileStream;
-begin
-  if FileExists(ExtractFilePath(Application.ExeName) + cIni) then
-  begin
-    Inifile := TIniFile.Create(ExtractFilePath(Application.ExeName) + cIni);
-
-    edDxbxSrcPath.Text := IniFile.ReadString('SourcePath', 'Dxbx', '');
-    edCxbxSrcPath.Text := IniFile.ReadString('SourcePath', 'Cxbx', '');
-
-    IniFile.Free;
-  end;
-end;
-
-procedure TForm1.WriteIni;
-var IniFile: TIniFile;
-begin
-  // het opslaan van de inifile
-  inifile := TIniFile.Create(ExtractFilePath(Application.ExeName) + cIni);
-
-  inifile.WriteString('SourcePath', 'Dxbx', edDxbxSrcPath.Text);
-  inifile.WriteString('SourcePath', 'Cxbx', edCxbxSrcPath.Text);
-
-  inifile.free;
-end;
-
-function StrStartsWith(const aString, aStart: string): Boolean;
-begin
-  Result := (Length(aString) >= Length(aStart));
-  Result := Result
-        and (StrCompareRange(aString, aStart, 1, Length(aStart)) = 0);
-end;
+{$R *.dfm}
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   ReadIni;
 end;
 
-procedure TForm1.btnCxbxSourcesPathClick(Sender: TObject);
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  if JvSelectDirectory.Execute then
-    edCxbxSrcPath.Text := JvSelectDirectory.Directory;
+  WriteIni;
+end;
+
+procedure TForm1.ReadIni;
+var
+  IniFile: TIniFile;
+begin
+  if not FileExists(ExtractFilePath(Application.ExeName) + cIni) then
+    Exit;
+
+  IniFile := TIniFile.Create(ExtractFilePath(Application.ExeName) + cIni);
+  try
+    edDxbxSrcPath.Text := IniFile.ReadString('SourcePath', 'Dxbx', '');
+    edCxbxSrcPath.Text := IniFile.ReadString('SourcePath', 'Cxbx', '');
+  finally
+    FreeAndNil(IniFile);
+  end;
+end;
+
+procedure TForm1.WriteIni;
+var
+  IniFile: TIniFile;
+begin
+  IniFile := TIniFile.Create(ExtractFilePath(Application.ExeName) + cIni);
+  try
+    IniFile.WriteString('SourcePath', 'Dxbx', edDxbxSrcPath.Text);
+    IniFile.WriteString('SourcePath', 'Cxbx', edCxbxSrcPath.Text);
+  finally
+    FreeAndNil(IniFile);
+  end;
+end;
+
+procedure TForm1.Log(const aString: string);
+begin
+  memOutput.Lines.Add(aString);
+end;
+
+procedure TForm1.btnCxbxSourcesPathClick(Sender: TObject);
+var
+  Dir: string;
+begin
+  Dir := ExpandFileName(edCxbxSrcPath.Text);
+  if SelectDirectory('Select Cxbx sources path', '', {var}Dir) then
+    edCxbxSrcPath.Text := Dir;
 end;
 
 procedure TForm1.btnDxbxSourcesPathClick(Sender: TObject);
+var
+  Dir: string;
 begin
-  if JvSelectDirectory.Execute then
-    edDxbxSrcPath.Text := JvSelectDirectory.Directory;
+  Dir := ExpandFileName(edDxbxSrcPath.Text);
+  if SelectDirectory('Select Dxbx sources path', '', {var}Dir) then
+    edDxbxSrcPath.Text := Dir;
 end;
 
 procedure TForm1.btnSaveToXmlClick(Sender: TObject);
 begin
   if SaveDialog.Execute then 
-    memOutput.Lines.SaveToFile( SaveDialog.FileName );
+    memOutput.Lines.SaveToFile(SaveDialog.FileName);
 end;
 
 procedure TForm1.HandleDxbxFile(const aPascalFilePath: string);
@@ -128,8 +158,6 @@ var
   DoneStr: string;
   LineNr: Integer;
   SymbolName: string;
-
-  // Scan for the parts in this line :
 
   function _StripStringAfterChars(const aInputStr: string; const EndingChars: string = ' '): string;
   var
@@ -194,8 +222,8 @@ var
       Exit;
     end;
 
-    // Last resort, C functions should contain a dot ('.') :
-    Result := (Pos('.', aLine) > 0);
+    // Last resort, C functions should contain a dot ('.') or an opening parenthesis :
+    Result := (Pos('.', aLine) > 0) or (Pos('(', aLine) > 0);
     if Result then
       {var}aFunctionName := _StripStringAfterChars(aLine, '(:;');
   end;
@@ -238,7 +266,7 @@ begin
             // Skip non-comment lines :
             Continue;
 
-          // Scan and count the comment-parts :
+          // Scan the comment-parts :
           SourceStr := _GetTextAfterPrefix(Line, 'Source:');
           if SourceStr = '' then
             SourceStr := _GetTextAfterPrefix(Line, 'Source=');
@@ -324,7 +352,6 @@ var
 begin
   memOutput.Clear;
 
-
   FileList := TStringList.Create;
   try
     DxbxSrcPath := ExpandFileName(edDxbxSrcPath.Text);
@@ -344,11 +371,6 @@ begin
     FreeAndNil(FileList);
   end;
 
-end;
-
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  WriteIni;
 end;
 
 end.
