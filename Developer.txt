@@ -31,6 +31,12 @@ Already included are (parts of) these third party libraries :
   http://jedi-apilib.sourceforge.net/
 
 
+Libraries needed for TranslationChecke :
+
+- Jedi Jvcl libraries
+  http://jvcl.sourceforge.net/ 
+
+
 Compiling
 ---------
 
