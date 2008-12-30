@@ -54,21 +54,82 @@ var
   ScanState: TPascalScanState;
   Line: string;
   UnitName: string;
-  PosBranch: Integer;
-  PosRevision: Integer;
-  PosTranslator: Integer;
-  PosDone: Integer;
+  BranchStr: string;
+  RevisionStr: string;
+  TranslatorStr: string;
+  DoneStr: string;
   LineNr: Integer;
   FunctionName: string;
 
-  function _IsFunction(const aLine: string; var aFunctionName: string): Boolean;
-  begin
-    Result := (Pos('function', aLine) > 0)
-           or (Pos('procedure', aLine) > 0)
-           or (Pos('.', aLine) > 0);
+  // Scan for the parts in this line :
 
+  function _StripStringAfterChars(const aInputStr: string; const EndingChars: string = ' '): string;
+  var
+    i, j: Integer;
+  begin
+    Result := aInputStr;
+
+    for j := 1 to Length(EndingChars) do
+    begin
+      i := CharPos(Result, EndingChars[j]);
+      if i > 1 then
+        SetLength(Result, i - 1);
+    end
+  end;
+
+  function _GetTextAfterPrefix(const aLine, aPrefix: string; const EndingChars: string = ' '): string;
+  var
+    i: Integer;
+  begin
+    i := StrIPos(aPrefix, aLine);
+    if i <= 0 then
+    begin
+      Result := '';
+      Exit;
+    end;
+
+    // Get the part after the prefix :
+    Result := Copy(aLine, i + Length(aPrefix), MaxInt);
+
+    // Remove everything after the ending chars :
+    Result := _StripStringAfterChars(Result, EndingChars);
+  end;
+
+  function _GetFunctionName(aLine: string; var aFunctionName: string): Boolean;
+  var
+    Text: string;
+  begin
+    // Make sure the line is at least 3 characters long :
+    aLine := Trim(aLine);
+    Result := (Length(aLine) > 2);
+    if not Result then
+      Exit;
+
+    // Remove comment start from the beginning of the line :
+    if  (aLine[1] in ['(', '/'])
+    and (aLine[2] in ['*', '/']) then
+      Delete(aLine, 1, 2);
+
+    // Scan for Delphi function names :
+    Text := _GetTextAfterPrefix(aLine, 'function ', '(:');
+    if Text = '' then
+      Text := _GetTextAfterPrefix(aLine, 'procedure ', '(:;');
+
+    // Scan for C function names :
+    if Text = '' then
+      Text := _GetTextAfterPrefix(aLine, ' WINAPI ', '(:;');
+
+    Result := (Text <> '');
     if Result then
-      {var}aFunctionName := aLine;
+    begin
+      {var}aFunctionName := Text;
+      Exit;
+    end;
+
+    // Last resort, C functions should contain a dot ('.') :
+    Result := (Pos('.', aLine) > 0);
+    if Result then
+      {var}aFunctionName := _StripStringAfterChars(aLine, '(:;');
   end;
 
 begin
@@ -87,7 +148,7 @@ begin
         begin
           if StrStartsWith(Line, 'unit ') then
           begin
-            UnitName := Copy(Line, 5, CharPos(Line, ';', 6) - 5);
+            UnitName := Copy(Line, Length('unit ') + 1, CharPos(Line, ';', 6) - Length('unit ') - 1);
             ScanState := ssFindTranslationComment;
           end;
         end;
@@ -97,20 +158,14 @@ begin
           if not StrStartsWith(Line, '//') then
             Continue;
 
-          // Scan for the parts in this line :
-          PosBranch := StrIPos('Branch:', Line);
-          PosRevision := StrIPos('Revision:', Line);
-          PosTranslator := StrIPos('Translator:', Line);
-          PosDone := StrIPos('Done:', Line);
+          // Scan and count the comment-parts :
+          BranchStr := _GetTextAfterPrefix(Line, 'Branch:');
+          RevisionStr := _GetTextAfterPrefix(Line, 'Revision:');
+          TranslatorStr := _GetTextAfterPrefix(Line, 'Translator:');
+          DoneStr := _GetTextAfterPrefix(Line, 'Done:');
 
-          // Count how many parts we've found :
-          j := 0;
-          if (PosBranch > 0) then Inc(j);
-          if (PosRevision > 0) then Inc(j);
-          if (PosTranslator > 0) then Inc(j);
-          if (PosDone > 0) then Inc(j);
           // No hit when less than 2 parts :
-          if j < 2 then
+          if  (BranchStr = '') and (RevisionStr = '') then
             Continue;
 
           // Scan for the function name, from 6 lines before
@@ -118,15 +173,15 @@ begin
           FunctionName := '*undetermined function*';
           LineNr := i + 1;
           repeat
-            if _IsFunction(Strings[LineNr], {var}FunctionName) then
+            if _GetFunctionName(Strings[LineNr], {var}FunctionName) then
               Break;
 
             Dec(LineNr);
           until (LineNr < i - 6) or (LineNr < 0);
 
           // Show what we've found :
-          Log(Format('[Translation Progress] %s.pas(%d) : %s - %s.',
-            [UnitName, LineNr+1, FunctionName, Line]));
+          Log(Format('<TRANSLATION unit="%s" line="%d" function="%s" frombranch="%s" fromrevision="%s" translator="%s" done="%d"/>',
+            [UnitName, LineNr+1, FunctionName, BranchStr, RevisionStr, TranslatorStr, StrToIntDef(DoneStr, 0)]));
         end;
       end;
     end;
@@ -138,23 +193,28 @@ end;
 
 procedure TForm1.btnScanTranslationClick(Sender: TObject);
 var
-  DxbxSrcPath: string;
-  CxbxSrcPath: string;
   FileList: TStringList;
   i: Integer;
+  DxbxSrcPath: string;
+//  CxbxSrcPath: string;
 begin
+  memOutput.Clear;
 
-  DxbxSrcPath := ExpandFileName(edDxbxSrcPath.Text);
-  CxbxSrcPath := ExpandFileName(edCxbxSrcPath.Text);
-  Log('Dxbx sources path : ' + DxbxSrcPath);
-  Log('Cxbx sources path : ' + CxbxSrcPath);
 
   FileList := TStringList.Create;
   try
+    DxbxSrcPath := ExpandFileName(edDxbxSrcPath.Text);
+    Log(Format('<DXBXTRANSLATION path="%s" timestamp="%s">', [DxbxSrcPath, DateTimeToStr(Now())]));
+
     JclFileUtils.AdvBuildFileList(DxbxSrcPath + '\*.pas', 0, FileList, amAny, [flRecursive, flFullNames]);
 
     for i := 0 to FileList.Count - 1 do
       HandleDxbxFile(FileList[i]);
+
+//  CxbxSrcPath := ExpandFileName(edCxbxSrcPath.Text);
+//  Log('Cxbx sources path : ' + CxbxSrcPath);
+
+    Log('</DXBXTRANSLATION>');
 
   finally
     FreeAndNil(FileList);
