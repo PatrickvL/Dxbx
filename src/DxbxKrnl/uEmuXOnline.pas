@@ -36,6 +36,7 @@ uses
 implementation
 
 function XTL_EmuWSAStartup(wVersionRequested: Word; lpWSAData: WSADATA): Integer; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   ret: Integer;
 begin
@@ -56,6 +57,7 @@ begin
 end;
 
 function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -73,6 +75,7 @@ begin
 end;
 
 function XTL_EmuXNetGetEthernetLinkStatus: DWord; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
 begin
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');

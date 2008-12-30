@@ -116,6 +116,7 @@ const
   HEAP_HEADERSIZE = $20;
 
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
@@ -127,6 +128,7 @@ begin
 end;
 
 function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
@@ -292,6 +294,7 @@ function XTL_EmuRtlCreateHeap(
   Lock: PVOID; // OPTIONAL
   RtlHeapParams: PVOID // OPTIONAL
   ): PVOID; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   RtlHeapDefinition: RTL_HEAP_DEFINITION;
 begin
@@ -322,6 +325,7 @@ function XTL_EmuRtlAllocateHeap(
   hHeap: THandle;
   dwFlags: DWord;
   dwBytes: SIZE_T): PVOID; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
 begin
@@ -391,6 +395,7 @@ function XTL_EmuRtlReAllocateHeap(
   dwFlags: DWord;
   lpMem: PVOID;
   dwBytes: SIZE_T): PVOID; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 var
   offs: Byte;
 begin
@@ -437,6 +442,7 @@ function XTL_EmuRtlSizeHeap(
   hHeap: THandle;
   dwFlags: DWord;
   lpMem: PVOID): SIZE_T; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
 begin
@@ -466,6 +472,7 @@ begin
 end;
 
 function XTL_EmuQueryPerformanceCounter(lpPerformanceCount: Int64): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
 begin
@@ -488,6 +495,7 @@ begin
 end;
 
 function XTL_EmuQueryPerformanceFrequency(var lpFrequency: Int64): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
 begin
@@ -507,6 +515,7 @@ begin
 end;
 
 function XTL_EmuXMountUtilityDrive(fFormatClean: BOOL): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   begin
@@ -523,6 +532,7 @@ begin
 end;
 
 procedure XTL_EmuXInitDevices(Unknown1: DWord; Unknown2: PVOID); stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
 begin
@@ -551,6 +561,7 @@ begin
 end;
 
 function XTL_EmuXGetDevices(DeviceType: PXPP_DEVICE_TYPE): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   ret: DWord;
 begin
@@ -579,6 +590,7 @@ function XTL_EmuXGetDeviceChanges(
   pdwInsertions: PDWORD;
   pdwRemovals: PDWORD
 ): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
   bFirst: BOOL;
@@ -734,11 +746,12 @@ begin
 end;
 *)
 
-(*
+
 function XTL_EmuXInputPoll
 (
   hDevice: THandle
 ): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
 begin
   EmuSwapFS(fsWindows);
 
@@ -746,9 +759,9 @@ begin
        #13#10'(' +
        #13#10'   hDevice             : 0x%.08X' +
        #13#10');',
-       [hDevice);
+       [hDevice]);
 
-  POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
   //
   // Poll input
@@ -785,13 +798,13 @@ begin
         pFeedback.Header.dwStatus := ERROR_SUCCESS;
       end;
     end;
-  end;
+  end;       *)
 
   EmuSwapFS(fsXbox);
 
   Result := ERROR_SUCCESS;
 end;
-*)
+
 
 (*
 function XTL_EmuXInputGetCapabilities
@@ -833,12 +846,15 @@ begin
 end;
 *)
 
-(*
+
 function XTL_EmuXInputGetState
 (
     hDevice: THandle;
     {OUT} pState: PXINPUT_STATE
 ): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
+var
+  ret : DWord;
 begin
   EmuSwapFS(fsWindows);
 
@@ -847,11 +863,11 @@ begin
        #13#10'   hDevice             : 0x%.08X' +
        #13#10'   pState              : 0x%.08X' +
        #13#10');',
-       [hDevice, pState);
+       [hDevice, pState]);
 
-  DWord ret := ERROR_INVALID_HANDLE;
+  ret := ERROR_INVALID_HANDLE;
 
-  POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
   if (pph <> 0) then
   begin
@@ -877,20 +893,21 @@ begin
         ret := ERROR_SUCCESS;
       end;
     end;
-  end;
+  end;    *)
 
   EmuSwapFS(fsXbox);
 
   Result := ret;
 end;
-*)
 
-(*
 function XTL_EmuXInputSetState
 (
     hDevice: THandle;
     pFeedback: PXINPUT_FEEDBACK // IN OUT
 ): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
+var
+  ret : DWord;
 begin
     EmuSwapFS(fsWindows);
 
@@ -899,11 +916,11 @@ begin
            #13#10'   hDevice             : 0x%.08X' +
            #13#10'   pFeedback           : 0x%.08X' +
            #13#10');',
-           [hDevice, pFeedback);
+           [hDevice, pFeedback]);
 
-    DWord ret := ERROR_IO_PENDING;
+    ret := ERROR_IO_PENDING;
 
-    POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+    (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
     if (pph <> 0) then
     begin
@@ -958,18 +975,19 @@ begin
                 CxbxKrnlCleanup('Ran out of XInputSetStateStatus slots!');
              end;
          end;
-     end;
+     end; *)
 
     EmuSwapFS(fsXbox);
 
     Result := ret;
 end;
-*)
+
 
 function XTL_EmuCreateMutex(
   lpMutexAttributes: LPSECURITY_ATTRIBUTES;
   bInitialOwner: BOOL;
   lpName: PAnsiChar): THandle; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: THandle;
 begin
@@ -991,6 +1009,7 @@ begin
 end;
 
 function XTL_EmuCloseHandle(hObject: THandle): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
 begin
@@ -1010,6 +1029,7 @@ begin
 end;
 
 function XTL_EmuSetThreadPriorityBoost(hThread: THandle; DisablePriorityBoost: BOOL): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
 begin
@@ -1033,6 +1053,7 @@ begin
 end;
 
 function XTL_EmuSetThreadPriority(hThread: THandle; nPriority: Integer): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 var
   bRet: BOOL;
 begin
@@ -1060,6 +1081,7 @@ end;
 
 
 function XTL_EmuGetThreadPriority(hThread: THandle): Integer; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   iRet: Integer;
 begin
@@ -1082,6 +1104,7 @@ begin
 end;
 
 function XTL_EmuGetExitCodeThread(hThread: THandle; lpExitCode: Cardinal): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
 begin
@@ -1102,6 +1125,7 @@ begin
 end;
 
 procedure XTL_EmuXapiInitProcess(); stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 const
   HEAP_GROWABLE = $00000002;
 var
@@ -1131,6 +1155,7 @@ begin
 end;
 
 procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWord); stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1169,6 +1194,7 @@ end;
 *)
 
 procedure XTL_EmuXapiBootDash(UnknownA: DWord; UnknownB: DWord; UnknownC: DWord); stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1188,6 +1214,7 @@ end;
 procedure XTL_EmuXRegisterThreadNotifyRoutine(
   pThreadNotification: PXTHREAD_NOTIFICATION;
   fRegister: BOOL); stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 begin
   EmuSwapFS(fsWindows);
 

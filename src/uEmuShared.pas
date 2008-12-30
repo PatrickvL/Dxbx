@@ -194,11 +194,13 @@ begin
 end;
 
 procedure EmuShared.Lock();
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   m_Mutex.Lock();
 end;
 
 procedure EmuShared.Unlock();
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   m_Mutex.Unlock();
 end;
@@ -206,6 +208,7 @@ end;
 // Xbox Video Accessors
 
 procedure EmuShared.GetXBVideo(var video: XBVideo);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
   {var}video := {shared}m_XBVideo;
@@ -213,6 +216,7 @@ begin
 end;
 
 procedure EmuShared.SetXBVideo(const video: XBVideo);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
   {shared}m_XBVideo := video;
@@ -230,6 +234,7 @@ begin
 end;
 
 procedure EmuShared.SetXBController(const ctrl: XBController);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
   {shared}m_XBController := ctrl;
@@ -237,6 +242,7 @@ begin
 end;
 
 procedure EmuShared.GetXbePath(var Path: string);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
   {var}Path := string({shared}m_XbePath); // explicit string cast to silence D2009 warning
@@ -244,6 +250,7 @@ begin
 end;
 
 procedure EmuShared.SetXbePath(const Path: string);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   WriteLog('EmuShared.SetXbePath(' + Path + ')');
   Lock();
@@ -251,9 +258,8 @@ begin
   Unlock();
 end;
 
-//
-
 procedure SetXbePath(const Path: PAnsiChar); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   if Assigned(g_EmuShared) then
     g_EmuShared.SetXbePath(string(Path)); // explicit string cast to silence D2009 warning

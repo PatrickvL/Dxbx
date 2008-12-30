@@ -25,7 +25,7 @@ interface
 implementation
 
 procedure XTL_EmuUpdateDeferredStates; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    using namespace XTL;
 
