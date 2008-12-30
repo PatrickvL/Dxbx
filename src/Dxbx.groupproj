@@ -8,6 +8,7 @@
     <Projects Include="DxbxDLL.dproj" />
     <Projects Include="DxbxKrnl.dproj" />
     <Projects Include="Tools\PatternTrieBuilder\PatternTrieBuilder.dproj" />
+    <Projects Include="Tools\TranslationChecker\TranslationChecker.dproj" />
     <Projects Include="Tools\XdkTracker\src\XdkTracker.dproj" />
     <Projects Include="Tools\XIso\src\XIso.dproj" />
   </ItemGroup>
@@ -71,14 +72,23 @@
   <Target Name="DxbxDLL:Make">
     <MSBuild Projects="DxbxDLL.dproj" Targets="Make" />
   </Target>
+  <Target Name="TranslationChecker">
+    <MSBuild Projects="Tools\TranslationChecker\TranslationChecker.dproj" Targets="" />
+  </Target>
+  <Target Name="TranslationChecker:Clean">
+    <MSBuild Projects="Tools\TranslationChecker\TranslationChecker.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="TranslationChecker:Make">
+    <MSBuild Projects="Tools\TranslationChecker\TranslationChecker.dproj" Targets="Make" />
+  </Target>
   <Target Name="Build">
-    <CallTarget Targets="XIso;XdkTracker;PatternTrieBuilder;Dxbx;DxbxKrnl;DxbxDLL" />
+    <CallTarget Targets="XIso;XdkTracker;PatternTrieBuilder;Dxbx;DxbxKrnl;DxbxDLL;TranslationChecker" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="XIso:Clean;XdkTracker:Clean;PatternTrieBuilder:Clean;Dxbx:Clean;DxbxKrnl:Clean;DxbxDLL:Clean" />
+    <CallTarget Targets="XIso:Clean;XdkTracker:Clean;PatternTrieBuilder:Clean;Dxbx:Clean;DxbxKrnl:Clean;DxbxDLL:Clean;TranslationChecker:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="XIso:Make;XdkTracker:Make;PatternTrieBuilder:Make;Dxbx:Make;DxbxKrnl:Make;DxbxDLL:Make" />
+    <CallTarget Targets="XIso:Make;XdkTracker:Make;PatternTrieBuilder:Make;Dxbx:Make;DxbxKrnl:Make;DxbxDLL:Make;TranslationChecker:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>
