@@ -1,35 +1,37 @@
-{****************************************************************************}
-{                                                                            }
-{ Project JEDI Code Library (JCL)                                            }
-{                                                                            }
-{ The contents of this file are subject to the Mozilla Public License        }
-{ Version 1.1 (the "License"); you may not use this file except in           }
-{ compliance with the License. You may obtain a copy of the License at       }
-{ http://www.mozilla.org/MPL/                                                }
-{                                                                            }
-{ Software distributed under the License is distributed on an "AS IS" basis, }
-{ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License   }
-{ for the specific language governing rights and limitations under the       }
-{ License.                                                                   }
-{                                                                            }
-{ The Original Code is jcl.inc                                               }
-{                                                                            }
-{ The Initial Developer of the Original Code is Marcel van Brakel.           }
-{ Portions created by Marcel van Brakel are Copyright (C) Marcel van Brakel. }
-{                                                                            }
-{ Contributors:                                                              }
-{   Marcel van Brakel                                                        }
-{   Matthias Thoma (mthoma)                                                  }
-{   Petr Vones                                                               }
-{   Robert Marquardt (marquardt)                                             }
-{   Robert Rossmair (rrossmair)                                              }
-{                                                                            }
-{****************************************************************************}
-{                                                                            }
-{ This include file defines various JCL specific defines. The more generic   }
-{ defines are defined in the jedi.inc file which is shared with the JEDI VCL.}
-{                                                                            }
-{****************************************************************************}
+{**************************************************************************************************}
+{                                                                                                  }
+{  The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License");}
+{  you may not use this file except in compliance with the License. You may obtain a copy of the   }
+{  License at http://www.mozilla.org/MPL/                                                          }
+{                                                                                                  }
+{  Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF  }
+{  ANY KIND, either express or implied. See the License for the specific language governing rights }
+{  and limitations under the License.                                                              }
+{                                                                                                  }
+{ The Original Code is jcl.inc                                                                     }
+{                                                                                                  }
+{ The Initial Developer of the Original Code is Marcel van Brakel.                                 }
+{ Portions created by Marcel van Brakel are Copyright (C) Marcel van Brakel.                       }
+{                                                                                                  }
+{ Contributors:                                                                                    }
+{   Marcel van Brakel                                                                              }
+{   Matthias Thoma (mthoma)                                                                        }
+{   Petr Vones                                                                                     }
+{   Robert Marquardt (marquardt)                                                                   }
+{   Robert Rossmair (rrossmair)                                                                    }
+{                                                                                                  }
+{**************************************************************************************************}
+{                                                                                                  }
+{ This include file defines various JCL specific defines. The more generic defines are defined in  }
+{ the jedi.inc file which is shared with the JEDI VCL.                                             }
+{                                                                                                  }
+{**************************************************************************************************}
+{                                                                                                  }
+{ Last modified: $Date:: 2008-09-27 11:45:37 +0200 (za, 27 sep 2008)                             $ }
+{ Revision:      $Rev:: 2497                                                                     $ }
+{ Author:        $Author:: cycocrew                                                              $ }
+{                                                                                                  }
+{**************************************************************************************************}
 
 {$B-} // Boolean shortcut evaluation
 {$H+} // Long strings
@@ -137,6 +139,16 @@ ALERT_jedi_inc_incompatible
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS5}
     {----------------------------}
+    {$IFDEF BDS6}
+      {$I jcld12.inc}
+      {$DEFINE JCL_CONFIGURED}
+    {$ENDIF BDS6}
+    {----------------------------}
+    {$IFDEF FPC}
+      {$I jclfpc.inc}
+      {$DEFINE JCL_CONFIGURED}
+    {$ENDIF FPC}
+    {----------------------------}
   {$ENDIF ~CLR}
 
   // check configuration
@@ -205,7 +217,7 @@ ALERT_jedi_inc_incompatible
 {$IFNDEF BZIP2_STATICLINK}
   {$IFNDEF BZIP2_LINKDLL}
     {$IFNDEF BZIP2_LINKONREQUEST}
-      {$DEFINE BZIP2_LINKONREQUEST}
+      {$DEFINE BZIP2_STATICLINK}
     {$ENDIF ~BZIP2_LINKONREQUEST}
   {$ENDIF ~BZIP2_LINKDLL}
 {$ENDIF ~BZIP2_STATICLINK}
@@ -222,6 +234,94 @@ ALERT_jedi_inc_incompatible
   {$DEFINE BZIP2_EXPORT_CDECL}
 {$ENDIF BZIP2_LINKONREQUEST}
 
+
+// ZLib options
+{$IFDEF ZLIB_STATICLINK}
+  {$UNDEF ZLIB_LINKDLL}
+  {$UNDEF ZLIB_LINKONREQUEST}
+{$ENDIF ZLIB_STATICLINK}
+{$IFDEF ZLIB_LINKDLL}
+  {$UNDEF ZLIB_LINKONREQUEST}
+{$ENDIF ZLIB_LINKDLL}
+
+{$IFNDEF ZLIB_STATICLINK}
+  {$IFNDEF ZLIB_LINKDLL}
+    {$IFNDEF ZLIB_LINKONREQUEST}
+      {$DEFINE ZLIB_STATICLINK}
+    {$ENDIF ~ZLIB_LINKONREQUEST}
+  {$ENDIF ~ZLIB_LINKDLL}
+{$ENDIF ~ZLIB_STATICLINK}
+
+{$IFDEF ZLIB_LINKDLL}
+  {$DEFINE ZLIB_EXPORT_CDECL}
+{$ENDIF ZLIB_LINKDLL}
+{$IFDEF ZLIB_LINKONREQUEST}
+  {$DEFINE ZLIB_EXPORT_CDECL}
+{$ENDIF ZLIB_LINKONREQUEST}
+// calling convention for static link is fastcall
+
+{$IFDEF UNICODE_RAW_DATA}
+  {$UNDEF UNICODE_ZLIB_DATA}
+  {$UNDEF UNICODE_BZIP2_DATA}
+{$ENDIF UNICODE_RAW_DATA}
+
+{$IFDEF UNICODE_ZLIB_DATA}
+  {$UNDEF UNICODE_RAW_DATA}
+  {$UNDEF UNICODE_BZIP2_DATA}
+{$ENDIF UNICODE_ZLIB_DATA}
+
+{$IFNDEF UNICODE_ZLIB_DATA}
+  {$IFNDEF UNICODE_BZIP2_DATA}
+    {$DEFINE UNICODE_RAW_DATA}
+  {$ENDIF ~UNICODE_BZIP2_DATA}
+{$ENDIF ~UNICODE_ZLIB_DATA}
+
+{$IFDEF CONTAINER_ANSISTR}
+  {$UNDEF CONTAINER_WIDESTR}
+  {$UNDEF CONTAINER_UNICODESTR}
+  {$UNDEF CONTAINER_NOSTR}
+{$ENDIF CONTAINER_ANSISTR}
+
+{$IFDEF CONTAINER_WIDESTR}
+  {$UNDEF CONTAINER_UNICODESTR}
+  {$UNDEF CONTAINER_NOSTR}
+{$ENDIF CONTAINER_WIDESTR}
+
+{$IFDEF CONTAINER_UNICODESTR}
+  {$UNDEF CONTAINER_NOSTR}
+{$ENDIF CONTAINER_UNICODESTR}
+
+{$IFNDEF CONTAINER_ANSISTR}
+  {$IFNDEF CONTAINER_WIDESTR}
+    {$IFNDEF CONTAINER_UNICODESTR}
+      {$IFNDEF CONTAINER_NOSTR}
+        {$IFDEF SUPPORTS_UNICODE_STRING}
+          {$DEFINE CONTAINER_UNICODESTR}
+        {$ELSE ~SUPPORTS_UNICODE_STRING}
+          {$DEFINE CONTAINER_ANSISTR}
+        {$ENDIF ~SUPPORTS_UNICODE_STRING}
+      {$ENDIF ~CONTAINER_NOSTR}
+    {$ENDIF ~CONTAINER_UNICODESTR}
+  {$ENDIF ~CONTAINER_WIDESTR}
+{$ENDIF ~CONTAINER_ANSISTR}
+
+// 7zip options
+{$IFDEF 7ZIP_STATICLINK}
+  {$UNDEF 7ZIP_LINKDLL}
+  {$UNDEF 7ZIP_LINKONREQUEST}
+{$ENDIF 7ZIP_STATICLINK}
+
+{$IFDEF 7ZIP_LINKDLL}
+  {$UNDEF 7ZIP_LINKONREQUEST}
+{$ENDIF 7ZIP_LINKDLL}
+
+{$IFNDEF 7ZIP_STATICLINK}
+  {$IFNDEF 7ZIP_LINKDLL}
+    {$IFNDEF 7ZIP_LINKONREQUEST}
+      {$DEFINE 7ZIP_LINKONREQUEST}
+    {$ENDIF ~7ZIP_LINKONREQUEST}
+  {$ENDIF ~7ZIP_LINKDLL}
+{$ENDIF ~7ZIP_STATICLINK}
 
 {$IFDEF SUPPORTS_UNSAFE_WARNINGS}
   {$WARN UNSAFE_TYPE OFF}

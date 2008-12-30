@@ -271,11 +271,11 @@ begin
     CurrentSelection := '';
 
   // Populate the list with the filtered set of XBEs:
+  NrNew := 0;
   lst_XBEs.Items.BeginUpdate;
   try
     lst_XBEs.Clear;
 
-    NrNew := 0;
     for i := 0 to MyFilteredXBEList.Count - 1 do
     begin
       XBEInfo := TXBEInfo(MyFilteredXBEList.Objects[i]);
