@@ -54,12 +54,14 @@ var
   ScanState: TPascalScanState;
   Line: string;
   UnitName: string;
+  HadUnitTag: Boolean;
+  SourceStr: string;
   BranchStr: string;
   RevisionStr: string;
   TranslatorStr: string;
   DoneStr: string;
   LineNr: Integer;
-  FunctionName: string;
+  SymbolName: string;
 
   // Scan for the parts in this line :
 
@@ -89,7 +91,7 @@ var
     end;
 
     // Get the part after the prefix :
-    Result := Copy(aLine, i + Length(aPrefix), MaxInt);
+    Result := Trim(Copy(aLine, i + Length(aPrefix), MaxInt));
 
     // Remove everything after the ending chars :
     Result := _StripStringAfterChars(Result, EndingChars);
@@ -133,6 +135,11 @@ var
   end;
 
 begin
+  // Skip meself ;-) 
+  if ExtractFileName(aPascalFilePath) = 'uTranslationChecker.pas' then
+    Exit;
+
+  HadUnitTag := False;
   memOutput.Lines.BeginUpdate;
   with TStringList.Create do
   try
@@ -141,7 +148,10 @@ begin
     ScanState := ssNeedUnit;
     for i := 0 to Count - 1 do
     begin
-      Line := Strings[i];
+      // Read the line, trim it, and skip all that are less than 3 characters long :
+      Line := Trim(Strings[i]);
+      if Length(Line) < 3 then
+        Continue;
 
       case ScanState of
         ssNeedUnit:
@@ -154,39 +164,87 @@ begin
         end;
         ssFindTranslationComment:
         begin
-          // Only handle comment lines :
-          if not StrStartsWith(Line, '//') then
+          // Remove comment start from the beginning of the line :
+          if  (Line[1] in ['(', '/'])
+          and (Line[2] in ['*', '/']) then
+            System.Delete(Line, 1, 2)
+          else
+            // Skip non-comment lines :
             Continue;
 
           // Scan and count the comment-parts :
-          BranchStr := _GetTextAfterPrefix(Line, 'Branch:');
-          RevisionStr := _GetTextAfterPrefix(Line, 'Revision:');
-          TranslatorStr := _GetTextAfterPrefix(Line, 'Translator:');
-          DoneStr := _GetTextAfterPrefix(Line, 'Done:');
+          SourceStr := _GetTextAfterPrefix(Line, 'Source:');
+          if SourceStr = '' then
+            SourceStr := _GetTextAfterPrefix(Line, 'Source=');
 
-          // No hit when less than 2 parts :
-          if  (BranchStr = '') and (RevisionStr = '') then
+          BranchStr := _GetTextAfterPrefix(Line, 'Branch:');
+          if BranchStr = '' then
+            BranchStr := _GetTextAfterPrefix(Line, 'Branch=');
+
+          RevisionStr := _GetTextAfterPrefix(Line, 'Revision:');
+          if RevisionStr = '' then
+            RevisionStr := _GetTextAfterPrefix(Line, 'Revision=');
+
+          TranslatorStr := _GetTextAfterPrefix(Line, 'Translator:');
+          if TranslatorStr = '' then
+            TranslatorStr := _GetTextAfterPrefix(Line, 'Translator=');
+          if TranslatorStr = '' then
+            TranslatorStr := _GetTextAfterPrefix(Line, 'Translation:');
+          if TranslatorStr = '' then
+            TranslatorStr := _GetTextAfterPrefix(Line, 'Translation=');
+
+          DoneStr := _GetTextAfterPrefix(Line, 'Done:');
+          if DoneStr = '' then
+            DoneStr := _GetTextAfterPrefix(Line, 'Done=');
+
+          // If Revision also contains Branch, split them up :
+          j := Pos('#', RevisionStr);
+          if (j > 0) and (BranchStr = '') then
+          begin
+            BranchStr := Copy(RevisionStr, 1, j - 1);
+            System.Delete(RevisionStr, 1, j);
+          end;
+
+          // No hit when no branch & revision are given :
+          if (BranchStr = '') and (RevisionStr = '') then
             Continue;
 
-          // Scan for the function name, from 6 lines before
-          // until 2 lines after this translation-progress comment :
-          FunctionName := '*undetermined function*';
+          // Note : The following case is a symbol-comment instead of a function-comment :
+          // XBCtrlObject: Source=XBController.h Revision=martin#39 Translator=PatrickvL Done=100
+          // .. but because the function-scanning below also handles the comment-line itself,
+          // it's still picked up as a function; Not fully correct, but acceptable for now.
+
+          // Scan for the symbol name, from 1 line after
+          // until 6 lines before this translation-progress comment :
+          SymbolName := '*undetermined symbol*';
           LineNr := i + 1;
           repeat
-            if _GetFunctionName(Strings[LineNr], {var}FunctionName) then
+            if _GetFunctionName(Strings[LineNr], {var}SymbolName) then
               Break;
 
             Dec(LineNr);
           until (LineNr < i - 6) or (LineNr < 0);
 
+          // Start the UNIT tag when not already done :
+          if not HadUnitTag then
+          begin
+            Log(Format('  <UNIT name="%s">', [UnitName]));
+            HadUnitTag := True;
+          end;
+
           // Show what we've found :
-          Log(Format('<TRANSLATION unit="%s" line="%d" function="%s" frombranch="%s" fromrevision="%s" translator="%s" done="%d"/>',
-            [UnitName, LineNr+1, FunctionName, BranchStr, RevisionStr, TranslatorStr, StrToIntDef(DoneStr, 0)]));
+          Log(Format('    <SYMBOL name="%s" line="%d" frombranch="%s" fromsource="%s" fromrevision="%s" translator="%s" done="%d"/>',
+            [SymbolName, LineNr+1, BranchStr, SourceStr, RevisionStr, TranslatorStr, StrToIntDef(DoneStr, 0)]));
         end;
       end;
     end;
   finally
     Free;
+
+    // Close the UNIT tag when it was opened :
+    if HadUnitTag then
+      Log('  </UNIT>');
+      
     memOutput.Lines.EndUpdate;
   end;
 end;
