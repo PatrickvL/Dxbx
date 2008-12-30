@@ -201,7 +201,7 @@ begin
     Inc(Count);
   end;
 
-  DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [Result]);
+  DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
 
   EmuSwapFS(fsXbox);
 

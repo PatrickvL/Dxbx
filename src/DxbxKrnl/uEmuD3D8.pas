@@ -218,7 +218,7 @@ begin
     BeginThread(nil, 0, @EmuRenderWindow, nil, 0, {var} dwThreadId);
 
     while not g_bRenderWindowActive do
-      SwitchToThread; // Sleep(10);
+      Sleep(10); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
 
     Sleep(50);
   end;
@@ -262,7 +262,6 @@ begin
 end; // XTL_EmuD3DInit
 
 // cleanup Direct3D
-
 procedure XTL_EmuD3DCleanup; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
@@ -270,7 +269,6 @@ begin
 end;
 
 // enumeration procedure for locating display device GUIDs
-
 function EmuEnumDisplayDevices(lpGUID: PGUID; lpDriverDescription: LPSTR;
   lpDriverName: LPSTR; lpContext: LPDWORD; hm: HMONITOR): BOOL; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
@@ -297,7 +295,6 @@ begin
 end;
 
 // window message processing thread
-
 function EmuRenderWindow(lpVoid: Pointer): DWord;
 // Branch:martin  Revision:39  Done:80 Translator:Shadow_Tj
 const
@@ -441,7 +438,7 @@ begin
       end
       else
       begin
-        SwitchToThread; // Sleep(10);
+        Sleep(10); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
 
         // if we've just switched back to display off, clear buffer & display prompt
         if not g_bPrintfOn and lPrintfOn then
@@ -466,7 +463,6 @@ begin
 end;
 
 // simple helper function
-
 procedure ToggleFauxFullscreen(hWnd: HWND);
 // Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
 {$J+}
@@ -527,7 +523,6 @@ begin
 end;
 
 // rendering window message procedure
-
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
 var
@@ -666,7 +661,7 @@ begin
   while True do
   begin
     xboxkrnl_KeTickCount := timeGetTime();
-    SwitchToThread; // Sleep(1);
+    Sleep(1); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
 
     // Poll input
     begin
@@ -727,7 +722,6 @@ end;
 {$IFEND}
 
 // thread dedicated to create devices
-
 function EmuCreateDeviceProxy(LPVOID: Pointer): DWord;
 // Branch:martin  Revision:42  Done:95 Translator:Shadow_Tj
 type
@@ -750,7 +744,7 @@ begin
   begin
     if not g_EmuCDPD.bReady then
     begin
-      SwitchToThread; // Or should we use YieldProcessor ?
+      Sleep(10);  // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
       Continue;
     end;
 
@@ -769,7 +763,8 @@ begin
 
         while (g_pD3DDevice8._Release() <> 0) do
           ;
-        g_pD3DDevice8 := nil;
+        // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
+        Pointer(g_pD3DDevice8) := nil;
       end;
 
       if Assigned(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).BufferSurfaces[0]) then
@@ -982,10 +977,12 @@ begin
       // reference-counting either) :
       Pointer(TmpEmuSurface8) := nil;
 
-      g_pD3DDevice8.CreateVertexBuffer
-        (
-        1, 0, 0, D3DPOOL_MANAGED,
-        g_pDummyBuffer
+      g_pD3DDevice8.CreateVertexBuffer(
+        {Length=}1,
+        {Usage=}0,
+        {FVF=}0,
+        {Pool=}D3DPOOL_MANAGED,
+        {out ppVertexBuffer=}g_pDummyBuffer
         );
 
       for Streams := 0 to 7 do
@@ -1015,7 +1012,8 @@ begin
         g_EmuCDPD.hRet := g_pD3DDevice8._Release();
 
         if (g_EmuCDPD.hRet = 0) then
-          g_pD3DDevice8 := nil;
+          // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
+          Pointer(g_pD3DDevice8) := nil;
       end;
 
       if (g_bSupportsYUY2) then
@@ -1024,7 +1022,8 @@ begin
         if Assigned(g_pDDSPrimary) then
         begin
           g_pDDSPrimary._Release();
-          g_pDDSPrimary := nil;
+          // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
+          Pointer(g_pDDSPrimary) := nil;
         end;
       end;
 
@@ -1032,7 +1031,8 @@ begin
       if Assigned(g_pDD7) then
       begin
         g_pDD7._Release();
-        g_pDD7 := nil;
+        // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
+        Pointer(g_pDD7) := nil;
       end;
 
       // signal completion
@@ -1044,7 +1044,6 @@ begin
 end;
 
 // check if a resource has been registered yet (if not, register it)
-
 procedure EmuVerifyResourceIsRegistered(pResource: PX_D3DResource); //inline;
 // Branch:martin  Revision:39  Done:5 Translator:Shadow_Tj
 begin
@@ -1158,7 +1157,7 @@ begin
 
   // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
   while (g_EmuCDPD.bReady) do
-    SwitchToThread; // Sleep(10);
+    Sleep(10); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
 
   // Signal proxy thread, and wait for completion
   g_EmuCDPD.bReady := True;
@@ -1166,7 +1165,7 @@ begin
 
   // Wait until proxy is completed
   while g_EmuCDPD.bReady do
-    SwitchToThread; // Sleep(10);
+    Sleep(10); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
 
   EmuSwapFS(fsXbox);
 
@@ -1707,8 +1706,8 @@ begin
 
   ret := g_pD3DDevice8.ApplyStateBlock(Token);
 
-
   EmuSwapFS(fsXbox);
+
   Result := ret;
 end;
 
@@ -1727,8 +1726,8 @@ begin
 
   ret := g_pD3DDevice8.EndStateBlock(pToken);
 
-
   EmuSwapFS(fsXbox);
+
   Result := ret;
 end;
 
@@ -5147,13 +5146,16 @@ begin
     g_EmuCDPD.bCreate := False;
 
     while g_EmuCDPD.bReady do
-      SwitchToThread; // Sleep(10);
+      Sleep(10); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
 
     RefCount := g_EmuCDPD.hRet;
   end
   else
   begin
     RefCount := g_pD3DDevice8._Release();
+    // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
+    if RefCount = 0 then
+      Pointer(g_pD3DDevice8) := nil;
   end;
 
   EmuSwapFS(fsXbox);
@@ -5229,14 +5231,16 @@ begin
     if Assigned(g_pDDClipper) then
     begin
       g_pDDClipper._Release();
-      g_pDDClipper := nil;
+      // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
+      Pointer(g_pDDClipper) := nil;
     end;
 
     // cleanup overlay surface
     if Assigned(g_pDDSOverlay7) then
     begin
       g_pDDSOverlay7._Release();
-      g_pDDSOverlay7 := nil;
+      // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
+      Pointer(g_pDDSOverlay7) := nil;
     end;
   end
   else
@@ -6936,7 +6940,7 @@ procedure EmuIDirect3DDevice8_BlockUntilVerticalBlank;
 begin
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_BlockUntilVerticalBlank();');
-  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirect3DDevice8_SetRenderTarget(pRenderTarget: PX_D3DSurface;
@@ -6954,8 +6958,9 @@ begin
            #13#10'   pRenderTarget      : 0x%.08X (0x%.08X)' +
            #13#10'   pNewZStencil       : 0x%.08X (0x%.08X)' +
            #13#10');',
-           pRenderTarget, (pRenderTarget <> 0) ? pRenderTarget.EmuSurface8: 0, pNewZStencil,
-           (pNewZStencil <> 0) ? pNewZStencil.EmuSurface8: 0); *)
+           [pRenderTarget, iif(pRenderTarget <> nil, pRenderTarget.EmuSurface8, nil),
+           pNewZStencil,  iif(pNewZStencil <> nil, pNewZStencil.EmuSurface8, nil)]);
+*)
 
   pPCRenderTarget := nil;
   pPCNewZStencil := nil;
@@ -7044,7 +7049,7 @@ begin
            #13#10'   Stage              : 0x%.08X'
            #13#10'   pPalette           : 0x%.08X'
            #13#10');',
-           Stage, pPalette);
+           [Stage, pPalette]);
 
 //    g_pD3DDevice8.SetPaletteEntries(0, (PALETTEENTRY*)(*pPalette.Data);
 *)

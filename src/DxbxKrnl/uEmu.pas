@@ -50,7 +50,8 @@ var
   g_bEmuSuspended: Boolean = False;
   g_bEmuException: Boolean = False;
 
-procedure EmuWarning(szWarningMessage: string);
+procedure EmuWarning(szWarningMessage: string); overload;
+procedure EmuWarning(szWarningMessage: string; const Args: array of const); overload;
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
 function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
 procedure EmuCleanup(const szErrorMessage: string);
@@ -95,6 +96,11 @@ begin
   begin
     DbgPrintf(szWarningMessage);
   end;
+end;
+
+procedure EmuWarning(szWarningMessage: string; const Args: array of const);
+begin
+  EmuWarning(DxbxFormat(szWarningMessage, Args));
 end;
 
 // exception handler
@@ -405,8 +411,8 @@ begin
 end;
 
 exports
-  EmuCleanup,
-  EmuWarning;
+  EmuCleanup{,
+  EmuWarning};
 
 end.
 
