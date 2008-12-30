@@ -42,6 +42,8 @@ type
   ProcedureStdCall = procedure; stdcall;
   Function1ArgStdCall = function(const Arg1: DWord): Integer; stdcall;
 
+  LPSECURITY_ATTRIBUTES = PVOID;
+
   RTL_HEAP_PARAMETERS = packed record
     Length: UInt32;
     Unknown: array [0..$2C-1] of BYTE;
@@ -54,6 +56,21 @@ type
     pfnNotifyRoutine: XTHREAD_NOTIFY_PROC;
   end;
   PXTHREAD_NOTIFICATION = ^XTHREAD_NOTIFICATION;
+
+const
+  XCALCSIG_SIGNATURE_SIZE = 20;
+  
+type
+  XCALCSIG_SIGNATURE = packed record
+  	Signature: array [0..XCALCSIG_SIGNATURE_SIZE-1] of BYTE;
+  end;
+  PXCALCSIG_SIGNATURE = ^XCALCSIG_SIGNATURE;
+
+  XPP_DEVICE_TYPE = packed record
+    // Note : Cxbx has size 3, but XTL_EmuXGetDevices seems to indicate size 4 :
+    Reserved: array [0..4-1] of ULONG;
+  end;
+  PXPP_DEVICE_TYPE = ^XPP_DEVICE_TYPE;
 
   XINPUT_RUMBLE = packed record
     wLeftMotorSpeed: Word;
@@ -98,8 +115,6 @@ uses
 const
   HEAP_HEADERSIZE = $20;
 
-{ TODO : Need to be translated to delphi }
-
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
@@ -119,16 +134,17 @@ begin
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
-    // TODO: yeah... we'll format... riiiiight
+  // Cxbx TODO: yeah... we'll format... riiiiight
 
   Result := True;
 end;
 
-(*THandle WINAPI XTL.EmuFindFirstFileA
+(*
+function XTL_EmuFindFirstFileA
 (
-  in PAnsiChar lpFileName,
-  out LPWIN32_FIND_DATA lpFindFileData
-  )
+  lpFileName: PAnsiChar;
+  {out}lpFindFileData: LPWIN32_FIND_DATA
+  ): THandle; stdcall;
 begin
   EmuSwapFS(fsWindows);
 
@@ -137,7 +153,7 @@ begin
     #13#10'   lpFileName          : 0x%.08X (%s)' +
     #13#10'   lpFindFileData      : 0x%.08X' +
     #13#10');',
-    [lpFileName, lpFileName, lpFindFileData);
+    [lpFileName, lpFileName, lpFindFileData]);
 
     //
     // TODO: this code is replicated in NtCreateFile. make this a function
@@ -218,13 +234,15 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := hRet;
-end;    *)
+end;
+*)
 
-(*BOOL WINAPI XTL.EmuFindNextFileA
+(*
+function XTL_EmuFindNextFileA
 (
-  in THandle hFindFile,
-  out LPWIN32_FIND_DATA lpFindFileData
-  )
+  in hFindFile: THandle;
+  {out} lpFindFileData: LPWIN32_FIND_DATA 
+  ): BOOL; stdcall;
 begin
   EmuSwapFS(fsWindows);
 
@@ -233,7 +251,7 @@ begin
     #13#10'   hFindFile           : 0x%.08X' +
     #13#10'   lpFindFileData      : 0x%.08X' +
     #13#10');',
-    [hFindFile, lpFindFileData);
+    [hFindFile, lpFindFileData]);
 
     //
     // TODO: replace full directories with their shorthand (D:\, etc)
@@ -241,8 +259,7 @@ begin
 
   BOOL bRet;
 
-  do
-  begin
+  repeat
     bRet := FindNextFile(hFindFile, lpFindFileData);
 
     if (not bRet) then
@@ -250,16 +267,15 @@ begin
 
     if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
       Break;
-  end;
-  while (True);
+  until False;
 
     //printf('Found : %s\n', lpFindFileData.cFileName);
 
   EmuSwapFS(fsXbox);
 
   Result := bRet;
-end;     *)
-//*/
+end;
+*)
 
 type
   RTL_HEAP_DEFINITION = packed record
@@ -534,7 +550,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(*Function XTL_EmuXGetDevices ( DeviceType : PXPP_DEVICE_TYPE ): DWord
+function XTL_EmuXGetDevices(DeviceType: PXPP_DEVICE_TYPE): DWord; stdcall;
+var
+  ret: DWord;
 begin
   EmuSwapFS(fsWindows);
 
@@ -542,26 +560,28 @@ begin
     #13#10'(' +
     #13#10'   DeviceType          : 0x%.08X' +
     #13#10');',
-    [DeviceType);
+    [DeviceType]);
 
-  DWord ret := 0;
+  ret := 0;
 
-  if (DeviceType.Reserved[0] = 0 and DeviceType.Reserved[1] = 0 and DeviceType.Reserved[2] = 0 and DeviceType.Reserved[3] = 0) then
+  if (DeviceType.Reserved[0] = 0) and (DeviceType.Reserved[1] = 0) and (DeviceType.Reserved[2] = 0) and (DeviceType.Reserved[3] = 0) then
     ret := (1 shl 0) // Return 1 Controller
   else
-    EmuWarning('Unknown DeviceType ($%.08X, 0x%.08X, 0x%.08X, 0x%.08X)', DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]);
+    EmuWarning('Unknown DeviceType ($%.08X, 0x%.08X, 0x%.08X, 0x%.08X)', [DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]]);
 
   EmuSwapFS(fsXbox);
 
   Result := ret;
-end;       *)
+end;
 
-(*BOOL WINAPI XTL.EmuXGetDeviceChanges
-(
-  PXPP_DEVICE_TYPE DeviceType,
-  PDWORD pdwInsertions,
-  PDWORD pdwRemovals
-  )
+function XTL_EmuXGetDeviceChanges(
+  DeviceType: PXPP_DEVICE_TYPE;
+  pdwInsertions: PDWORD;
+  pdwRemovals: PDWORD
+): BOOL; stdcall;
+var
+  bRet: BOOL;
+  bFirst: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -571,36 +591,38 @@ begin
     #13#10'   pdwInsertions       : 0x%.08X' +
     #13#10'   pdwRemovals         : 0x%.08X' +
     #13#10');',
-    [DeviceType, pdwInsertions, pdwRemovals);
+    [DeviceType, pdwInsertions, pdwRemovals]);
 
-  BOOL bRet := False;
-  BOOL bFirst := True;
+  bRet := False;
+  bFirst := True;
 
-    // Return 1 Controller Inserted initially, then no changes forever
-  if (bFirst) then
+  // Return 1 Controller Inserted initially, then no changes forever
+  if bFirst then
   begin
-    * pdwInsertions := (1 shl 0);
-    * pdwRemovals := 0;
+    pdwInsertions^ := (1 shl 0);
+    pdwRemovals^ := 0;
     bRet := True;
-  end;
-else
+  end
+  else
   begin
-    * pdwInsertions := 0;
-    * pdwRemovals := 0;
+    pdwInsertions^ := 0;
+    pdwRemovals^ := 0;
   end;
 
   EmuSwapFS(fsXbox);
 
   Result := bRet;
-end;        *)
+end;
 
-(*Function XTL_EmuXInputOpen
-(
-  in PXPP_DEVICE_TYPE DeviceType,
-  in DWord dwPort,
-  in DWord dwSlot,
-  in PXINPUT_POLLING_PARAMETERS pPollingParameters OPTIONAL
-  ) : THandle
+(*
+function XTL_EmuXInputOpen(
+  DeviceType: PXPP_DEVICE_TYPE;
+  dwPort: DWord;
+  dwSlot: DWord:
+  pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
+): THandle; stdcall;
+var
+  pph: PPOLLING_PARAMETERS_HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -611,9 +633,9 @@ begin
     #13#10'   dwSlot              : 0x%.08X' +
     #13#10'   pPollingParameters  : 0x%.08X' +
     #13#10');',
-    [DeviceType, dwPort, dwSlot, pPollingParameters);
+    [DeviceType, dwPort, dwSlot, pPollingParameters]);
 
-  POLLING_PARAMETERS_HANDLE * pph := 0;
+  pph := nil;
 
   if (dwPort >= 0) and (dwPort <= 3) then
   begin
@@ -621,7 +643,7 @@ begin
     begin
       pph := new POLLING_PARAMETERS_HANDLE();
 
-      if (pPollingParameters <> 0) then
+      if (pPollingParameters <> nil) then
       begin
         pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();
 
@@ -630,7 +652,7 @@ begin
     end
     else
     begin
-      pph.pPollingParameters := 0;
+      pph.pPollingParameters := nil;
     end;
 
     g_hInputHandle[dwPort] := pph;
@@ -639,9 +661,9 @@ begin
   begin
     pph := (POLLING_PARAMETERS_HANDLE)g_hInputHandle[dwPort];
 
-    if (pPollingParameters <> 0) then
+    if (pPollingParameters <> nil) then
     begin
-      if (pph.pPollingParameters = 0) then
+      if (pph.pPollingParameters = nil) then
       begin
         pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();
       end;
@@ -650,11 +672,11 @@ begin
     end
     else
     begin
-      if (pph.pPollingParameters <> 0) then
+      if (pph.pPollingParameters <> nil) then
       begin
         delete pph.pPollingParameters;
 
-        pph.pPollingParameters := 0;
+        pph.pPollingParameters := nil;
       end;
     end;
   end;
@@ -664,13 +686,14 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := (THandle)pph;
+  Result := THandle(pph);
 end;
 *)
 
-(*procedure XTL_EmuXInputClose ( hDevice : THandle );
-var pph : POLLING_PARAMETERS_HANDLE;
-
+(*
+procedure XTL_EmuXInputClose(hDevice: THandle); stdcall;
+var
+  pph: POLLING_PARAMETERS_HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -682,184 +705,192 @@ begin
 
   POLLING_PARAMETERS_HANDLE * pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
-    (* no longer necessary
-    if (pph <> 0) then
+  (* no longer necessary
+  if (pph <> 0) then
+  begin
+    Integer v;
+
+    for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
     begin
-        Integer v;
+      if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
+      begin
+        // remove from slot
+        g_pXInputSetStateStatus[v].hDevice := 0;
+        g_pXInputSetStateStatus[v].pFeedback := 0;
+        g_pXInputSetStateStatus[v].dwLatency := 0;
+      end;
+    end;
 
-        for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
-        begin
-            if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
-            begin
-                // remove from slot
-                g_pXInputSetStateStatus[v].hDevice := 0;
-                g_pXInputSetStateStatus[v].pFeedback := 0;
-                g_pXInputSetStateStatus[v].dwLatency := 0;
-             end;
-         end;
+    if (pph.pPollingParameters <> 0) then
+    begin
+      delete pph.pPollingParameters;
+    end;
 
-        if (pph.pPollingParameters <> 0) then
-        begin
-            delete pph.pPollingParameters;
-         end;
+    delete pph;
+   end;
+  //*/
 
-        delete pph;
-     end;
-    //*/
+  EmuSwapFS(fsXbox);
+end;
+*)
 
-    EmuSwapFS(fsXbox);
-end;    *)
-
-(*DWord WINAPI XTL.EmuXInputPoll
+(*
+function XTL_EmuXInputPoll
 (
-    IN THandle hDevice
-)
+  hDevice: THandle
+): DWord; stdcall;
 begin
-    EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi : EmuXInputPoll' +
-           #13#10'(' +
-           #13#10'   hDevice             : 0x%.08X' +
-           #13#10');',
-           [hDevice);
+  DbgPrintf('EmuXapi : EmuXInputPoll' +
+       #13#10'(' +
+       #13#10'   hDevice             : 0x%.08X' +
+       #13#10');',
+       [hDevice);
 
-    POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
-    //
-    // Poll input
-    //
+  //
+  // Poll input
+  //
 
+  begin
+    Integer v;
+
+    for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
     begin
-        Integer v;
+      THandle hDevice := g_pXInputSetStateStatus[v].hDevice;
 
-        for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
+      if (hDevice = 0) then
+          Continue;
+
+      g_pXInputSetStateStatus[v].dwLatency := 0;
+
+      XTL.PXINPUT_FEEDBACK pFeedback := (XTL.PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+
+      if (pFeedback = 0) then
+          Continue;
+
+      //
+      // Only update slot if it has not already been updated
+      //
+
+      if (pFeedback.Header.dwStatus <> ERROR_SUCCESS) then
+      begin
+        if (pFeedback.Header.hEvent <> 0) then
         begin
-            THandle hDevice := g_pXInputSetStateStatus[v].hDevice;
+          SetEvent(pFeedback.Header.hEvent);
+        end;
 
-            if (hDevice = 0) then
-                Continue;
+        pFeedback.Header.dwStatus := ERROR_SUCCESS;
+      end;
+    end;
+  end;
 
-            g_pXInputSetStateStatus[v].dwLatency := 0;
+  EmuSwapFS(fsXbox);
 
-            XTL.PXINPUT_FEEDBACK pFeedback := (XTL.PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+  Result := ERROR_SUCCESS;
+end;
+*)
 
-            if (pFeedback = 0) then
-                Continue;
-
-            //
-            // Only update slot if it has not already been updated
-            //
-
-            if (pFeedback.Header.dwStatus <> ERROR_SUCCESS) then
-            begin
-                if (pFeedback.Header.hEvent <> 0) then
-                begin
-                    SetEvent(pFeedback.Header.hEvent);
-                 end;
-
-                pFeedback.Header.dwStatus := ERROR_SUCCESS;
-             end;
-         end;
-     end;
-
-    EmuSwapFS(fsXbox);
-
-    Result := ERROR_SUCCESS;
-end;       *)
-
-(*DWord WINAPI XTL.EmuXInputGetCapabilities
+(*
+function XTL_EmuXInputGetCapabilities
 (
-    IN  THandle               hDevice,
-    OUT PXINPUT_CAPABILITIES pCapabilities
-)
+    hDevice: THandle;
+    {OUT} pCapabilities: PXINPUT_CAPABILITIES 
+): DWord; stdcall;
 begin
-    EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi : EmuXInputGetCapabilities' +
-           #13#10'(' +
-           #13#10'   hDevice             : 0x%.08X' +
-           #13#10'   pCapabilities       : 0x%.08X' +
-           #13#10');',
-           [hDevice, pCapabilities);
+  DbgPrintf('EmuXapi : EmuXInputGetCapabilities' +
+       #13#10'(' +
+       #13#10'   hDevice             : 0x%.08X' +
+       #13#10'   pCapabilities       : 0x%.08X' +
+       #13#10');',
+       [hDevice, pCapabilities]);
 
-    DWord ret := ERROR_INVALID_HANDLE;
+  DWord ret := ERROR_INVALID_HANDLE;
 
-    POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
-    if (pph <> 0) then
+  if (pph <> 0) then
+  begin
+    DWord dwPort := pph.dwPort;
+
+    if ((dwPort >= 0) and (dwPort <= 3)) then
     begin
-        DWord dwPort := pph.dwPort;
+      pCapabilities.SubType := XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 
-        if ((dwPort >= 0) and (dwPort <= 3)) then
-        begin
-            pCapabilities.SubType := XINPUT_DEVSUBTYPE_GC_GAMEPAD;
+      ZeroMemory(@pCapabilities.In.Gamepad, SizeOf(pCapabilities.In.Gamepad));
 
-            ZeroMemory(@pCapabilities.In.Gamepad, SizeOf(pCapabilities.In.Gamepad));
+      ret := ERROR_SUCCESS;
+    end;
+  end;
 
-            ret := ERROR_SUCCESS;
-         end;
-     end;
+  EmuSwapFS(fsXbox);
 
-    EmuSwapFS(fsXbox);
+  Result := ret;
+end;
+*)
 
-    Result := ret;
-end;        *)
-
-(*DWord WINAPI XTL.EmuXInputGetState
+(*
+function XTL_EmuXInputGetState
 (
-    IN  THandle         hDevice,
-    OUT PXINPUT_STATE  pState
-)
+    hDevice: THandle;
+    {OUT} pState: PXINPUT_STATE
+): DWord; stdcall;
 begin
-    EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi : EmuXInputGetState' +
-           #13#10'(' +
-           #13#10'   hDevice             : 0x%.08X' +
-           #13#10'   pState              : 0x%.08X' +
-           #13#10');',
-           [hDevice, pState);
+  DbgPrintf('EmuXapi : EmuXInputGetState' +
+       #13#10'(' +
+       #13#10'   hDevice             : 0x%.08X' +
+       #13#10'   pState              : 0x%.08X' +
+       #13#10');',
+       [hDevice, pState);
 
-    DWord ret := ERROR_INVALID_HANDLE;
+  DWord ret := ERROR_INVALID_HANDLE;
 
-    POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
-    if (pph <> 0) then
+  if (pph <> 0) then
+  begin
+    if (pph.pPollingParameters <> 0) then
     begin
-        if (pph.pPollingParameters <> 0) then
-        begin
-            if (pph.pPollingParameters.fAutoPoll = False) then
-            begin
-                //
-                // TODO: uh..
-                //
+      if (pph.pPollingParameters.fAutoPoll = False) then
+      begin
+        //
+        // TODO: uh..
+        //
 
-                EmuWarning('EmuXInputGetState : fAutoPoll := False');
-             end;
-         end;
+        EmuWarning('EmuXInputGetState : fAutoPoll := False');
+      end;
+    end;
 
-        DWord dwPort := pph.dwPort;
+    DWord dwPort := pph.dwPort;
 
-        if ((dwPort >= 0) and (dwPort <= 3)) then
-        begin
-            if (dwPort = 0) then
-            begin
-                EmuDInputPoll(pState);
-                ret := ERROR_SUCCESS;
-             end;
-         end;
-     end;
+    if ((dwPort >= 0) and (dwPort <= 3)) then
+    begin
+      if (dwPort = 0) then
+      begin
+        EmuDInputPoll(pState);
+        ret := ERROR_SUCCESS;
+      end;
+    end;
+  end;
 
-    EmuSwapFS(fsXbox);
+  EmuSwapFS(fsXbox);
 
-    Result := ret;
-end;            *)
+  Result := ret;
+end;
+*)
 
-(*DWord WINAPI XTL.EmuXInputSetState
+(*
+function XTL_EmuXInputSetState
 (
-    IN     THandle           hDevice,
-    IN OUT PXINPUT_FEEDBACK pFeedback
-)
+    hDevice: THandle;
+    pFeedback: PXINPUT_FEEDBACK // IN OUT
+): DWord; stdcall;
 begin
     EmuSwapFS(fsWindows);
 
@@ -932,13 +963,15 @@ begin
     EmuSwapFS(fsXbox);
 
     Result := ret;
-end;   *)
+end;
+*)
 
-(*
-function XTL_EmuCreateMutex (
-    lpMutexAttributes: LPSECURITY_ATTRIBUTES;
-    bInitialOwner: BOOL;
-    lpName: PAnsiChar): THandle; stdcall;
+function XTL_EmuCreateMutex(
+  lpMutexAttributes: LPSECURITY_ATTRIBUTES;
+  bInitialOwner: BOOL;
+  lpName: PAnsiChar): THandle; stdcall;
+var
+  hRet: THandle;
 begin
   EmuSwapFS(fsWindows);
 
@@ -948,15 +981,14 @@ begin
          #13#10'   bInitialOwner       : 0x%.08X' +
          #13#10'   lpName              : 0x%.08X (%s)' +
          #13#10');',
-         [lpMutexAttributes, bInitialOwner, lpName, lpName);
+         [lpMutexAttributes, bInitialOwner, lpName, lpName]);
 
-  THandle hRet := CreateMutex((SECURITY_ATTRIBUTES )lpMutexAttributes, bInitialOwner, lpName);
+  hRet := CreateMutex(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
 
   EmuSwapFS(fsXbox);
 
   Result := hRet;
 end;
-*)
 
 function XTL_EmuCloseHandle(hObject: THandle): BOOL; stdcall;
 var
@@ -1119,21 +1151,21 @@ end;
 (* Too High Level!
 XTL.NTSTATUS CDECL XTL.XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
 begin
-    EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi : XapiSetupPerTitleDriveLetters' +
-           #13#10'(' +
-           #13#10'   dwTitleId           : 0x%.08X' +
-           #13#10'   wszTitleName        : 0x%.08X' +
-           #13#10');',
-            [dwTitleId, wszTitleName);
+  DbgPrintf('EmuXapi : XapiSetupPerTitleDriveLetters' +
+         #13#10'(' +
+         #13#10'   dwTitleId           : 0x%.08X' +
+         #13#10'   wszTitleName        : 0x%.08X' +
+         #13#10');',
+          [dwTitleId, wszTitleName);
 
-    NTSTATUS ret := STATUS_SUCCESS;
+  NTSTATUS ret := STATUS_SUCCESS;
 
-    EmuSwapFS(fsXbox);
+  EmuSwapFS(fsXbox);
 
-    Result := ret;
- end;
+  Result := ret;
+end;
 *)
 
 procedure XTL_EmuXapiBootDash(UnknownA: DWord; UnknownB: DWord; UnknownC: DWord); stdcall;
@@ -1172,7 +1204,7 @@ begin
       CxbxKrnlCleanup('Multiple thread notification routines installed (caustik can fix this!)');
 
     // TODO : Is this correct?
-    // BlueShogun2 has code that connects notifications to the ListEntry chain.
+    // BlueShogun96 has code that connects notifications to the ListEntry chain.
     g_pfnThreadNotification := Addr(pThreadNotification.pfnNotifyRoutine);
   end
   else
@@ -1235,9 +1267,6 @@ begin
   Result := ERROR_SUCCESS;
 end;
 
-type
-  PXCALCSIG_SIGNATURE = Pointer; // TODO Dxbx : Do a correct translation on this type.
-
 function XTL_EmuXCalculateSignatureEnd(hCalcSig: THandle; pSignature: PXCALCSIG_SIGNATURE): DWord; stdcall;
 begin
   EmuSwapFS(fsWindows);
@@ -1257,6 +1286,11 @@ end;
 
 exports
   XTL_EmuCloseHandle,
+  XTL_EmuCreateMutex,
+(*
+  XTL_EmuFindFirstFileA
+  XTL_EmuFindNextFileA
+*)
   XTL_EmuGetExitCodeThread,
   XTL_EmuGetThreadPriority,
   XTL_EmuQueryPerformanceCounter,
@@ -1279,6 +1313,8 @@ exports
   XTL_EmuXCalculateSignatureUpdate,
 *)
   XTL_EmuXFormatUtilityDrive,
+  XTL_EmuXGetDevices,
+  XTL_EmuXGetDeviceChanges,
   XTL_EmuXInitDevices,
   XTL_EmuXMountUtilityDrive,
   XTL_EmuXRegisterThreadNotifyRoutine
