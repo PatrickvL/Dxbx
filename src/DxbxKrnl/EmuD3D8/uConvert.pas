@@ -69,6 +69,13 @@ const
 function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
 function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
 
+function EmuXB2PC_D3DFILLMODE( Value : X_D3DFILLMODE ) : D3DFILLMODE; stdcall;
+function EmuXB2PC_D3DSHADEMODE( Value : X_D3DSHADEMODE ) : D3DSHADEMODE; stdcall;
+function EmuXB2PC_D3DBLENDOP( Value : X_D3DBLENDOP ) : D3DBLENDOP; stdcall;
+function EmuXB2PC_D3DBLEND( Value : X_D3DBLEND ) : D3DBLEND; stdcall;
+function EmuXB2PC_D3DCMPFUNC( Value : X_D3DCMPFUNC ) : D3DCMPFUNC; stdcall;
+function EmuXB2PC_D3DTS( State : D3DTRANSFORMSTATETYPE ) : D3DTRANSFORMSTATETYPE; stdcall;
+
 
 implementation
 
@@ -223,7 +230,7 @@ begin
 end;
 
 function XTL_EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   NewFlags: DWord;
 begin
@@ -372,6 +379,84 @@ begin
     X_D3DRSSE_UNK,  $00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 172
 );            *)
+
+
+// convert from xbox to pc fill modes
+function  EmuXB2PC_D3DFILLMODE( Value : X_D3DFILLMODE ) : D3DFILLMODE; stdcall;
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+begin
+{
+    return (D3DFILLMODE)((Value & 0xF) + 1);
+}
+end;
+
+// convert from xbox to pc shade modes
+function  EmuXB2PC_D3DSHADEMODE( Value : X_D3DSHADEMODE ) : D3DSHADEMODE; stdcall;
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+begin
+{
+    return (D3DSHADEMODE)((Value & 0x3) + 1);
+}
+end;
+
+function EmuXB2PC_D3DBLENDOP( Value : X_D3DBLENDOP ) : D3DBLENDOP; stdcall;
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+begin
+    (*switch(Value)
+    {
+        case 0x8006:
+            return D3DBLENDOP_ADD;
+    }
+
+    CxbxKrnlCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
+
+    return (D3DBLENDOP)Value;*)
+end;
+
+// convert from xbox to pc blend types
+function EmuXB2PC_D3DBLEND( Value : X_D3DBLEND ) : D3DBLEND; stdcall;
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+begin
+{
+    if(Value < 2)
+        return (D3DBLEND)(Value + 1);
+    else if(Value < 0x309)
+        return (D3DBLEND)((Value & 0xF) + 3);
+
+    CxbxKrnlCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
+
+    return (D3DBLEND)Value;
+}
+end;
+
+// convert from xbox to pc comparison functions
+function EmuXB2PC_D3DCMPFUNC( Value : X_D3DCMPFUNC ) : D3DCMPFUNC; stdcall;
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+begin
+{
+    return (D3DCMPFUNC)((Value & 0xF) + 1);
+}
+end;
+
+// convert from xbox to pc texture transform state types
+function EmuXB2PC_D3DTS( State : D3DTRANSFORMSTATETYPE ) : D3DTRANSFORMSTATETYPE; stdcall;
+// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+begin
+{
+    if((uint32)State < 2)
+        return (D3DTRANSFORMSTATETYPE)(State + 2);
+    else if((uint32)State < 6)
+        return (D3DTRANSFORMSTATETYPE)(State + 14);
+    else if((uint32)State < 10)
+        return D3DTS_WORLDMATRIX(State-6);
+    else if((uint32)State == 10) // Max
+        return (D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE7 + 1);
+
+    CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
+
+    return State;
+}
+end;
 
 
 exports
