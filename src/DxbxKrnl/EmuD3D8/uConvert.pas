@@ -69,12 +69,12 @@ const
 function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
 function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
 
-function EmuXB2PC_D3DFILLMODE( Value : X_D3DFILLMODE ) : D3DFILLMODE; stdcall;
-function EmuXB2PC_D3DSHADEMODE( Value : X_D3DSHADEMODE ) : D3DSHADEMODE; stdcall;
-function EmuXB2PC_D3DBLENDOP( Value : X_D3DBLENDOP ) : D3DBLENDOP; stdcall;
-function EmuXB2PC_D3DBLEND( Value : X_D3DBLEND ) : D3DBLEND; stdcall;
-function EmuXB2PC_D3DCMPFUNC( Value : X_D3DCMPFUNC ) : D3DCMPFUNC; stdcall;
-function EmuXB2PC_D3DTS( State : D3DTRANSFORMSTATETYPE ) : D3DTRANSFORMSTATETYPE; stdcall;
+function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; stdcall;
+function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; stdcall;
+function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; stdcall;
+function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; stdcall;
+function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; stdcall;
+function EmuXB2PC_D3DTS( State : D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; stdcall;
 
 
 implementation
@@ -382,45 +382,44 @@ begin
 
 
 // convert from xbox to pc fill modes
-function  EmuXB2PC_D3DFILLMODE( Value : X_D3DFILLMODE ) : D3DFILLMODE; stdcall;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+function  EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; stdcall;
+// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
-{
-    return (D3DFILLMODE)((Value & 0xF) + 1);
-}
+  Result := D3DFILLMODE((Value and $F) + 1);
 end;
 
 // convert from xbox to pc shade modes
-function  EmuXB2PC_D3DSHADEMODE( Value : X_D3DSHADEMODE ) : D3DSHADEMODE; stdcall;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+function  EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; stdcall;
+// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
-{
-    return (D3DSHADEMODE)((Value & 0x3) + 1);
-}
+  Result := D3DSHADEMODE((Value and $3) + 1);
 end;
 
-function EmuXB2PC_D3DBLENDOP( Value : X_D3DBLENDOP ) : D3DBLENDOP; stdcall;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; stdcall;
+// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
-    (*switch(Value)
-    {
-        case 0x8006:
-            return D3DBLENDOP_ADD;
-    }
+  case Value of
+    $8006:
+    begin
+      Result := D3DBLENDOP_ADD;
+      Exit;
+    end;
+  end;
 
-    CxbxKrnlCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
+  CxbxKrnlCleanup(DxbxFormat('Unknown D3DBLENDOP (0x%.08X)', [Value]));
 
-    return (D3DBLENDOP)Value;*)
+  Result := D3DBLENDOP(Value);
 end;
 
 // convert from xbox to pc blend types
-function EmuXB2PC_D3DBLEND( Value : X_D3DBLEND ) : D3DBLEND; stdcall;
+function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; stdcall;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 begin
 {
     if(Value < 2)
         return (D3DBLEND)(Value + 1);
-    else if(Value < 0x309)
+    else
+      if(Value < 0x309)
         return (D3DBLEND)((Value & 0xF) + 3);
 
     CxbxKrnlCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
@@ -430,16 +429,14 @@ begin
 end;
 
 // convert from xbox to pc comparison functions
-function EmuXB2PC_D3DCMPFUNC( Value : X_D3DCMPFUNC ) : D3DCMPFUNC; stdcall;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; stdcall;
+// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
-{
-    return (D3DCMPFUNC)((Value & 0xF) + 1);
-}
+  Result := D3DCMPFUNC((Value and $F) + 1);
 end;
 
 // convert from xbox to pc texture transform state types
-function EmuXB2PC_D3DTS( State : D3DTRANSFORMSTATETYPE ) : D3DTRANSFORMSTATETYPE; stdcall;
+function EmuXB2PC_D3DTS( State : D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; stdcall;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 begin
 {

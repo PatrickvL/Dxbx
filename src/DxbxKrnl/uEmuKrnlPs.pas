@@ -297,6 +297,7 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   DebugStack: LONGBOOL;
   StartRoutine: PKSTART_ROUTINE
   ): NTSTATUS; stdcall; // Source: Cxbx / XBMC
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:95
 var
   dwThreadId: DWORD;
   hDupHandle: THandle;
@@ -377,6 +378,7 @@ end;
 function {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
   ): NTSTATUS; stdcall; // Source : XBMC
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('PsTerminateSystemThread');

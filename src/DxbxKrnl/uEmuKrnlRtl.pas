@@ -148,6 +148,7 @@ function xboxkrnl_RtlAnsiStringToUnicodeString(
   SourceString: PSTRING;
   AllocateDestinationString: UCHAR
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlAnsiStringToUnicodeString');
@@ -181,6 +182,7 @@ procedure xboxkrnl_RtlAssert(
   LineNumber: ULONG;
   _Message: PCHAR
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('RtlAssert');
@@ -274,6 +276,7 @@ end;
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:10
 begin
   EmuSwapFS(fsWindows);
 //  Unimplemented('RtlEnterCriticalSection');
@@ -362,9 +365,10 @@ procedure xboxkrnl_RtlInitAnsiString(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  
+
   DbgPrintf('EmuKrnl (0x%X): RtlInitAnsiString' +
          #13#10'(' +
          #13#10'   DestinationString   : 0x%.08X' +
@@ -387,10 +391,10 @@ end;
 procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
 
-//  Unimplemented('RtlInitializeCriticalSection');
   JwaNative.RtlInitializeCriticalSection(CriticalSection);
 
   EmuSwapFS(fsXbox);
@@ -413,10 +417,12 @@ end;
 procedure xboxkrnl_RtlLeaveCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
-//  Unimplemented('RtlLeaveCriticalSection');
+
   JwaNative.RtlLeaveCriticalSection(CriticalSection);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -430,9 +436,10 @@ end;
 function xboxkrnl_RtlLowerChar(
   Character: CHAR
   ): CHAR; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('RtlLowerChar');
+//  Unimplemented('RtlLowerChar');
   Result := Low(Result);
   EmuSwapFS(fsXbox);
 end;
@@ -468,6 +475,7 @@ end;
 function xboxkrnl_RtlNtStatusToDosError(
   Status: NTSTATUS
   ): ULONG; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -500,6 +508,7 @@ function xboxkrnl_RtlTimeFieldsToTime(
   TimeFields: PTIME_FIELDS;
   Time: PLARGE_INTEGER // OUT
   ): LONGBOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('RtlTimeFieldsToTime');
@@ -511,6 +520,7 @@ procedure xboxkrnl_RtlTimeToTimeFields(
   Time: PLARGE_INTEGER;
   TimeFields: PTIME_FIELDS // out
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('RtlTimeToTimeFields');
@@ -520,6 +530,7 @@ end;
 function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ): LONGBOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
 //  Unimplemented('RtlTryEnterCriticalSection');
@@ -539,6 +550,7 @@ function xboxkrnl_RtlUnicodeStringToAnsiString(
   SourceString: PUNICODE_STRING;
   AllocateDestinationString: LONGBOOL
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUnicodeStringToAnsiString');

@@ -108,6 +108,7 @@ end;
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
 var
   pRet: PVOID;
   dwRet: DWORD;
@@ -154,6 +155,7 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
   Alignment: ULONG; //OPTIONAL
   ProtectionType: ULONG
   ): PVOID; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
 {$J+}
 const
   Count: Integer = 0;
@@ -212,6 +214,7 @@ function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
   Protect: ULONG
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmAllocateSystemMemory');
@@ -242,6 +245,7 @@ end;
 function xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmFreeContiguousMemory');
@@ -252,6 +256,7 @@ function xboxkrnl_MmFreeSystemMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmFreeSystemMemory');
@@ -298,6 +303,7 @@ procedure xboxkrnl_MmPersistContiguousMemory(
   NumberOfBytes: ULONG;
   Persist: LONGBOOL
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -325,6 +331,7 @@ end;
 function xboxkrnl_MmQueryAllocationSize(
   BaseAddress: PVOID
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmQueryAllocationSize');
@@ -334,6 +341,7 @@ end;
 function xboxkrnl_MmQueryStatistics(
   MemoryStatistics: PMM_STATISTICS // out
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmQueryStatistics');
@@ -345,6 +353,7 @@ function xboxkrnl_MmSetAddressProtect(
   NumberOfBytes: ULONG;
   NewProtect: ULONG
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmSetAddressProtect');

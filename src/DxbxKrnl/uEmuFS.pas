@@ -86,6 +86,7 @@ implementation
 
 // is the current fs register the xbox emulation variety?
 function EmuIsXboxFS: ByteBool;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := ByteBool(GetTIBEntryWord(DxbxFS_IsXboxFS));
 end;
@@ -107,6 +108,7 @@ end;
 // code, you *must* swap over to Win2k/XP FS. Similarly, before
 // running Xbox code, you *must* swap back over to Emu FS.
 procedure EmuSwapFS;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 {$J+}
 const
   // Note that this is only the *approximate* interception count,
@@ -160,6 +162,7 @@ end;
 
 // initialize fs segment selector emulation
 procedure EmuInitFS();
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuInitLDT();
 end;
@@ -237,6 +240,7 @@ end;
 
 // generate fs segment selector
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pNewTLS: PXBE_TLS;
   NewFS, OrgFS: UInt16;
@@ -394,6 +398,7 @@ end;
 
 // cleanup fs segment selector emulation
 procedure EmuCleanupFS();
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   wSwapFS: Word;
   pTLSData: PByte;

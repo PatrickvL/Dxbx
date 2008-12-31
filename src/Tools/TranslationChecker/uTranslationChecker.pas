@@ -204,7 +204,10 @@ var
     // Remove comment start from the beginning of the line :
     if  (aLine[1] in ['(', '/'])
     and (aLine[2] in ['*', '/']) then
+    begin
       Delete(aLine, 1, 2);
+      aLine := Trim(aLine);
+    end;
 
     // Scan for Delphi function names :
     Text := _GetTextAfterPrefix(aLine, 'function ', '(:');
@@ -215,17 +218,19 @@ var
     if Text = '' then
       Text := _GetTextAfterPrefix(aLine, ' WINAPI ', '(:;');
 
-    Result := (Text <> '');
-    if Result then
+    if Text = '' then
     begin
-      {var}aFunctionName := Text;
-      Exit;
+      // Last resort, C functions should contain a dot ('.') or an opening parenthesis :
+      Result := (Pos('.', aLine) > 0) or (Pos('(', aLine) > 0);
+      if not Result then
+        Exit;
+
+      Text := Trim(_StripStringAfterChars(aLine, '(:;'));
     end;
 
-    // Last resort, C functions should contain a dot ('.') or an opening parenthesis :
-    Result := (Pos('.', aLine) > 0) or (Pos('(', aLine) > 0);
+    Result := Length(Text) >= 3;
     if Result then
-      {var}aFunctionName := _StripStringAfterChars(aLine, '(:;');
+      {var}aFunctionName := Text;
   end;
 
 begin
@@ -317,7 +322,7 @@ begin
               Break;
 
             Dec(LineNr);
-          until (LineNr < i - 6) or (LineNr < 0);
+          until (LineNr < i - 12) or (LineNr < 0);
 
           // Start the UNIT tag when not already done :
           if not HadUnitTag then

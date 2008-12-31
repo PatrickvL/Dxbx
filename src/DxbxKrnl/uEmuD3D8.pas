@@ -775,10 +775,10 @@ begin
       end;
 
       if Assigned(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).BufferSurfaces[0]) then
-        EmuWarning(DxbxFormat('BufferSurfaces[0]: 0x%.08X', [Pointer(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).BufferSurfaces[0])]));
+        EmuWarning('BufferSurfaces[0]: 0x%.08X', [Pointer(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).BufferSurfaces[0])]);
 
       if Assigned(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface) then
-        EmuWarning(DxbxFormat('DepthStencilSurface: 0x%.08X', [Pointer(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface)]));
+        EmuWarning('DepthStencilSurface: 0x%.08X', [Pointer(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface)]);
 
       // make adjustments to parameters to make sense with windows Direct3D
       begin
@@ -809,7 +809,7 @@ begin
         // Cxbx TODO: Support Xbox extensions if possible
         if (g_EmuCDPD.pPresentationParameters.MultiSampleType <> D3DMULTISAMPLE_NONE) then
         begin
-          EmuWarning(DxbxFormat('MultiSampleType 0x%.08X is not supported!', [Ord(g_EmuCDPD.pPresentationParameters.MultiSampleType)]));
+          EmuWarning('MultiSampleType 0x%.08X is not supported!', [Ord(g_EmuCDPD.pPresentationParameters.MultiSampleType)]);
 
           g_EmuCDPD.pPresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;
 
@@ -1121,13 +1121,13 @@ begin
   if (dwWidth <> NewWidth) then
   begin
     NewWidth := NewWidth shl 1;
-    EmuWarning(DxbxFormat('Needed to resize width (%d.%d)', [dwWidth, NewWidth]));
+    EmuWarning('Needed to resize width (%d.%d)', [dwWidth, NewWidth]);
   end;
 
   if (dwHeight <> NewHeight) then
   begin
     NewHeight := NewHeight shl 1;
-    EmuWarning(DxbxFormat('Needed to resize height (%d.%d)', [dwHeight, NewHeight]));
+    EmuWarning('Needed to resize height (%d.%d)', [dwHeight, NewHeight]);
   end;
 
   dwWidth := NewWidth;
@@ -5811,7 +5811,7 @@ begin
   end;
 
   if (State = -1) then
-    EmuWarning(DxbxFormat('RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!', [Method, Value]))
+    EmuWarning('RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!', [Method, Value])
   else
   begin
     case (State) of
@@ -6210,7 +6210,7 @@ begin
     #13#10');',
     [Value]);
 
-  EmuWarning(DxbxFormat('YuvEnable not implemented (0x%.08X)', [Value]));
+  EmuWarning('YuvEnable not implemented (0x%.08X)', [Value]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -6484,7 +6484,7 @@ begin
     (*EmuUpdateDeferredStates(); *)
 
   (*if ((PrimitiveType = X_D3DPT_QUADSTRIP) or (PrimitiveType = X_D3DPT_POLYGON)) then
-    EmuWarning('Unsupported PrimitiveType not  (%d)', PrimitiveType);
+    EmuWarning('Unsupported PrimitiveType! (%d)', [PrimitiveType]);
 
     (*PrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);*)
 
@@ -6715,7 +6715,7 @@ begin
     (*EmuUpdateDeferredStates();
 
     if( (PrimitiveType = X_D3DPT_QUADLIST) or (PrimitiveType = X_D3DPT_QUADSTRIP) or (PrimitiveType = X_D3DPT_POLYGON) ) then
-        EmuWarning('Unsupported PrimitiveType not  (%d)', (DWORD)PrimitiveType);
+        EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
     UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
@@ -6987,7 +6987,7 @@ begin
   hRet := g_pD3DDevice8.SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
 
   if FAILED(hRet) then
-    EmuWarning(DxbxFormat('SetRenderTarget failed! (0x%.08X)', [hRet]));
+    EmuWarning('SetRenderTarget failed! (0x%.08X)', [hRet]);
 
   EmuSwapFS(fsXbox);
 

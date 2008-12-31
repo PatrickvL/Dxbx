@@ -230,6 +230,7 @@ function xboxkrnl_NtAllocateVirtualMemory(
   AllocationType: DWORD;
   Protect: DWORD
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtAllocateVirtualMemory');
@@ -246,6 +247,7 @@ end;
 function xboxkrnl_NtClearEvent(
   EventHandle: HANDLE
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtClearEvent');
@@ -257,6 +259,7 @@ end;
 function xboxkrnl_NtClose(
   Handle: THandle
   ): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 {$IFDEF DXBX_EMUHANDLES}
 var
   iEmuHandle: TEmuHandle;
@@ -299,6 +302,7 @@ function xboxkrnl_NtCreateEvent(
   EventType: EVENT_TYPE;
   InitialState: LONGBOOL
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateEvent');
@@ -316,6 +320,7 @@ function xboxkrnl_NtCreateFile(
   CreateDisposition: ULONG; // dtCreateDisposition;
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
 begin
   EmuSwapFS(fsWindows);
 (*
@@ -465,6 +470,7 @@ function xboxkrnl_NtCreateMutant(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   InitialOwner: LONGBOOL
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateMutant');
@@ -504,6 +510,7 @@ function xboxkrnl_NtDuplicateObject(
   TargetHandle: PHANDLE;
   Options: DWORD
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDuplicateObject');
@@ -514,6 +521,7 @@ function xboxkrnl_NtFlushBuffersFile(
   FileHandle: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtFlushBuffersFile');
@@ -525,6 +533,7 @@ function xboxkrnl_NtFreeVirtualMemory(
   FreeSize: PULONG; // OUT
   FreeType: ULONG
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtFreeVirtualMemory');
@@ -553,6 +562,7 @@ function xboxkrnl_NtOpenFile(
   ShareAccess: ULONG; // dtACCESS_MASK;
   OpenOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
 (*
   EmuSwapFS(fsWindows);
@@ -613,6 +623,7 @@ function xboxkrnl_NtQueryDirectoryFile(
   FileMask: PSTRING;
   RestartScan: LONGBOOL
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryDirectoryFile');
@@ -637,6 +648,7 @@ function xboxkrnl_NtQueryFullAttributesFile(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryFullAttributesFile');
@@ -650,6 +662,7 @@ function xboxkrnl_NtQueryInformationFile(
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryInformationFile');
@@ -705,6 +718,7 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   Length: ULONG;
   FileInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryVolumeInformationFile');
@@ -721,6 +735,7 @@ function xboxkrnl_NtReadFile(
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtReadFile');
@@ -738,6 +753,7 @@ function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
   PreviousCount: PLONG // OUT
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtReleaseMutant');
@@ -762,6 +778,7 @@ function xboxkrnl_NtResumeThread(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtResumeThread');
@@ -772,6 +789,7 @@ function xboxkrnl_NtSetEvent(
   EventHandle: HANDLE;
   PreviousState: PLONG // OUT
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetEvent');
@@ -785,6 +803,7 @@ function xboxkrnl_NtSetInformationFile(
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetInformationFile');
@@ -823,6 +842,7 @@ function xboxkrnl_NtSuspendThread(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT OPTIONAL
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSuspendThread');
@@ -834,6 +854,7 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   IoStatusBlock: PIO_STATUS_BLOCK;
   Reserved: ULONG
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('NtUserIoApcDispatcher');
@@ -853,6 +874,7 @@ function xboxkrnl_NtWaitForSingleObjectEx(
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForSingleObjectEx');
@@ -867,6 +889,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForMultipleObjectsEx');
@@ -883,6 +906,7 @@ function xboxkrnl_NtWriteFile(
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWriteFile');
@@ -897,6 +921,7 @@ begin
 end;
 
 procedure xboxkrnl_NtYieldExecution(); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

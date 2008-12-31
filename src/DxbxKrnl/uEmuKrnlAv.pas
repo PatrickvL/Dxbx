@@ -64,11 +64,15 @@ implementation
 
 function {001} xboxkrnl_AvGetSavedDataAddress(
   ): PVOID; stdcall; // Source: OpenXDK
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('AvGetSavedDataAddress');
-  Result := nil;
+
+  DbgPrintf('EmuKrnl : AvGetSavedDataAddress();');
+
   EmuSwapFS(fsXbox);
+
+  Result := PVOID($F0040000);
 end;
 
 procedure {002} xboxkrnl_AvSendTVEncoderOption(
