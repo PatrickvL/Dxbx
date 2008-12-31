@@ -353,6 +353,7 @@ type
 implementation
 
 function IsSpecialResource(x: DWORD): Boolean;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
  Result := (x and X_D3DRESOURCE_DATA_FLAG_SPECIAL) = X_D3DRESOURCE_DATA_FLAG_SPECIAL;
 end;

@@ -186,6 +186,7 @@ function xboxkrnl_KeDelayExecutionThread(
   Alertable: LONGBOOL;
   Interval: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeDelayExecutionThread');
@@ -239,6 +240,7 @@ procedure xboxkrnl_KeInitializeDpc(
   DeferredRoutine: PKDEFERRED_ROUTINE;
   DeferredContext: PVOID
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
 begin
   EmuSwapFS(fsWindows);
 
@@ -298,6 +300,7 @@ procedure xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
   _Type: TIMER_TYPE
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -407,6 +410,7 @@ begin
 end;
 
 function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeQueryPerformanceCounter');
@@ -414,6 +418,7 @@ begin
 end;
 
 function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeQueryPerformanceFrequency');
@@ -423,6 +428,7 @@ end;
 procedure xboxkrnl_KeQuerySystemTime(
   CurrentTime: PLARGE_INTEGER
   ); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('KeQuerySystemTime');
@@ -574,6 +580,7 @@ function xboxkrnl_KeSetTimer(
   DueTime: LARGE_INTEGER;
   Dpc: PKDPC // OPTIONAL
   ): LONGBOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -598,6 +605,7 @@ function xboxkrnl_KeSetTimerEx(
   Period: LONG; // OPTIONAL
   Dpc: PKDPC // OPTIONAL
   ): LONGBOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
 

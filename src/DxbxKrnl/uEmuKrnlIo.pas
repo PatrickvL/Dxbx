@@ -425,6 +425,7 @@ function {066} xboxkrnl_IoCreateFile(
   CreateOptions: ULONG;
   Options: ULONG
   ): NTSTATUS; stdcall; // Source: Cxbx
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoCreateFile');
@@ -435,6 +436,7 @@ function xboxkrnl_IoCreateSymbolicLink(
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoCreateSymbolicLink');
@@ -451,6 +453,7 @@ end;
 function xboxkrnl_IoDeleteSymbolicLink(
   SymbolicLinkName: PSTRING
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoDeleteSymbolicLink');

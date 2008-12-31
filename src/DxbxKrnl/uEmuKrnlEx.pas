@@ -35,6 +35,7 @@ uses
   // Dxbx
   uLog,
   uEmu,
+  uEmuAlloc,
   uEmuFS,
   uEmuFile,
   uEmuXapi,
@@ -150,29 +151,51 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-// Differences from NT: There is no PoolType field, as the XBOX
-// only has 1 pool, the non-paged pool.
-
 function {014} xboxkrnl_ExAllocatePool(
   NumberOfBytes: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  pRet: PVOID;
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('ExAllocatePool');
-  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E {?}));
+
+  //  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E {?}));
+  DbgPrintf('EmuKrnl : ExAllocatePool' +
+           #13#10'(' +
+           #13#10'   NumberOfBytes       : 0x%.08X' +
+           #13#10');',
+           [NumberOfBytes]);
+
+  pRet := CxbxMalloc(NumberOfBytes);
   EmuSwapFS(fsXbox);
+  Result := pRet;
 end;
 
+// Differences from NT: There is no PoolType field, as the XBOX
+// only has 1 pool, the non-paged pool.
 function {015} xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
   ): PVOID; stdcall; // Source: OpenXDK
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  pRet: PVOID;
 begin
   EmuSwapFS(fsWindows);
-//  RtlAssert(NumberOfBytes > 0);
-  Unimplemented('ExAllocatePoolWithTag');
-  Result := nil;
+  
+  DbgPrintf('EmuKrnl : ExAllocatePoolWithTag' +
+           #13#10'(' +
+           #13#10'   NumberOfBytes       : 0x%.08X' +
+           #13#10'   Tag                 : 0x%.08X' +
+           #13#10');',
+           [NumberOfBytes, Tag]);
+
+  // Cxbx TODO: Actually implement this
+  pRet := CxbxMalloc(NumberOfBytes);
+
   EmuSwapFS(fsXbox);
+  Result := pRet;
 end;
 
 procedure {017} xboxkrnl_ExFreePool(
@@ -249,6 +272,7 @@ function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
   ): NTSTATUS; stdcall; // Source: OpenXDK
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -353,7 +377,7 @@ begin
     //*)
 
   else
-    EmuWarning(DxbxFormat('ExQueryNonVolatileSetting unknown ValueIndex (%d)', [ValueIndex]));
+    EmuWarning('ExQueryNonVolatileSetting unknown ValueIndex (%d)', [ValueIndex]);
   end;
 
   EmuSwapFS(fsXbox);

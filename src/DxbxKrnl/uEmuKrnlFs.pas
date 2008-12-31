@@ -34,6 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  uEmu,
   uEmuFS,
   uEmuFile,
   uEmuXapi,
@@ -67,10 +68,19 @@ end;
 function {037} xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
   ): LONG; stdcall; // Source: Cxbx
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('FscSetCacheSize');
+
+  DbgPrintf('EmuKrnl : FscSetCacheSize' +
+      #13#10'(' +
+      #13#10'   uCachePages         : 0x%.08X' +
+      #13#10');',
+            [uCachePages]);
+
+  EmuWarning('FscSetCacheSize is being ignored');
   EmuSwapFS(fsXbox);
+  Result := 0;
 end;
 
 end.

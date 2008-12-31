@@ -91,14 +91,16 @@ implementation
 
 // is hFile a 'special' emulated handle?
 
-function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): BOOL; inline
+function IsEmuHandle(hFile: {xboxkrnl.}HANDLE): BOOL; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := (uint32(hFile) > $80000000) and (int32(hFile) <> -1);
 end;
 
 // convert from 'special' emulated handle to a pointer
 
-function EmuHandleToPtr(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
+function EmuHandleToPtr(hFile: {xboxkrnl.}HANDLE): TEmuHandle; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := TEmuHandle(uint32(hFile) - $80000000);
 end;
@@ -106,6 +108,7 @@ end;
 // convert from 'special' emulated handle to a pointer
 
 function PtrToEmuHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := HANDLE(uint32(apEmuHandle) + $80000000);
 end;
