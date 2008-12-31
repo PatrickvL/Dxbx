@@ -426,32 +426,32 @@ end;
 
 procedure CxbxKrnlSuspend();
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
+var
+  v : integer;
+  dwExitCode : DWORD;
 begin
 
   if (g_bEmuSuspended or g_bEmuException) then
     Exit;
 
-(*    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
-    {
-        if(g_hThreads[v] != NULL)
-        {
-            DWORD dwExitCode;
+  (*for v:=0 to MAXIMUM_XBOX_THREADS -1 do begin
+    if (g_hThreads[v] != Null) then begin
 
-            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
-            {
-                // suspend thread if it is active
-                SuspendThread(g_hThreads[v]);
-            }
-            else
-            {
-                // remove thread from thread list if it is dead
-                g_hThreads[v] = 0;
-            }
+        (*if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+        {
+            // suspend thread if it is active
+            SuspendThread(g_hThreads[v]);
         }
-    }
+        else
+        {
+            // remove thread from thread list if it is dead
+            g_hThreads[v] = 0;
+        }
+    end;
+  end;    *)
 
     // append 'paused' to rendering window caption text
-    {
+    (*
         char szBuffer[256];
 
         HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
@@ -460,10 +460,9 @@ begin
 
         strcat(szBuffer, ' (paused)');
         SetWindowText(hWnd, szBuffer);
-    }
+    *)
 
-    g_bEmuSuspended = True;
-}         *)
+  g_bEmuSuspended := True;
 end;
 
 
