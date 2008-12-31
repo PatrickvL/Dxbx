@@ -50,12 +50,12 @@ var
 
 implementation
 
-(*procedure CRC32Init;
+procedure CRC32Init;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-var
+(*var
   bFirstTime: Boolean = True;
   i, j: Integer;
-  crc: Word;
+  crc: Word; *)
 begin
 (*  if (not bFirstTime) then
   begin
@@ -75,13 +75,13 @@ begin
     end;
     crctab[i] := crc;
   end;
-  bFirstTime := False;
-end;          *)
+  bFirstTime := False;*)
+end;
 
-(*function CRC32(var data: Byte; len: Integer): Word;
+function CRC32(var data: Byte; len: Integer): Word;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    Word        cresult;
+(*    Word        cresult;
     Integer                 i;;
 
     if(len < 4) abort() then ;
@@ -98,8 +98,8 @@ begin
         cresult := (cresult shl 8 or *data++) ^ crctab[cresult shr 24];
      end;
 
-    Result:= ~cresult;
-end; *)
+    Result:= ~cresult; *)
+end; 
 
 
 (*XTL.VertexPatcher.VertexPatcher()
