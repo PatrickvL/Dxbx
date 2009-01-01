@@ -1379,9 +1379,9 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_LoadVertexShader(Handle: DWord; Address: DWord): HRESULT; stdcall;
-// Branch:martin  Revision:39 Done:20 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:10 Translator:Shadow_Tj
 var
-  pVertexShader: VERTEX_SHADER;
+  pVertexShader: PVERTEX_SHADER;
   i: Integer;
 begin
   EmuSwapFS(fsWindows);
@@ -1396,8 +1396,8 @@ begin
 
   if (Address < 136) and VshHandleIsVertexShader(Handle) then
   begin
-      (*VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(*(VshHandleGetVertexShader(Handle))->Handle;
-      (*for i := Address to pVertexShader.Size - 1 do
+      (*pVertexShader := VERTEX_SHADER(VshHandleGetVertexShader(Handle)).aHandle;
+      for i := Address to pVertexShader.Size - 1 do
       begin
         // TODO: This seems very fishy
         g_VertexShaderSlots[i] := Handle;
