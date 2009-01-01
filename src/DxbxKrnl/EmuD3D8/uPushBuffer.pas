@@ -44,32 +44,37 @@ implementation
 uses
   // Dxbx
   uDxbxKrnlUtils
-  , uVertexShader;
+  , JwaWinType
+  , uVertexShader
+  , uEmuD3D8
+  , uConvert;
 
 
 procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
-// Branch:martin  Revision:50  Translator:Shadow_Tj
+// Branch:martin  Revision:100  Translator:Shadow_Tj
 begin
   if Assigned(pFixup) then
     CxbxKrnlCleanup('PushBuffer has fixups');
-  (*EmuExecutePushBufferRaw((DWord)pPushBuffer.Data); *)
+  Xtl_EmuExecutePushBufferRaw(pPushBuffer.Data); 
 end;
 
 procedure EmuUnswizzleActiveTexture();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
-  pPixelContainer: X_D3DPixelContainer; *)
+var
+  pPixelContainer: X_D3DPixelContainer;
+  XBFormat : DWord;
+  dwBPP : DWord;
 begin
     // for current usages, we're always on stage 0
-    (*pPixelContainer := (X_D3DPixelContainer)XTL.EmuD3DActiveTexture[0];
+    (*pPixelContainer := EmuD3DActiveTexture[0];
 
     if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
         Exit;
 
-    DWord XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
-    DWord dwBPP := 0;
+    XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+    dwBPP := 0;
 
-    if( not XTL.EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
+    if( not XTL_EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
         Exit;
 
     // remove lock
@@ -142,18 +147,23 @@ end;
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 (*var
-  pdwOrigPushData: DWord; *)
+  pdwOrigPushData: DWord;
+  pIndexData : PVOID;
+  pVertexData : PVOID;
+
+  dwVertexShader : DWord;
+  dwStride : DWord; *)
 begin
   if XTL_g_bSkipPush then
     Exit;
 
-(*  pdwOrigPushData := pdwPushData;
+   (* pdwOrigPushData := pdwPushData;
 
-    PVOID pIndexData := 0;
-    PVOID pVertexData := 0;
+    pIndexData := 0;
+    pVertexData := 0;
 
-    DWord dwVertexShader := -1;
-    DWord dwStride := -1;
+    dwVertexShader := -1;
+    dwStride := -1;
 
     // cache of last 4 indices
     WORD pIBMem[4] := ($FFFF, $FFFF, $FFFF, $FFFF);
