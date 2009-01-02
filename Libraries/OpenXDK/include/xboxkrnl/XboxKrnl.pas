@@ -19,6 +19,8 @@ unit XboxKrnl;
 
 interface
 
+{$DEFINE DXBX_USE_JWA_TYPES}
+
 uses
   // Jedi Win32API
   JwaWinType,
@@ -238,6 +240,10 @@ WAIT_TYPE;
 // * LARGE_INTEGER
 // ******************************************************************
 type
+{$IFDEF DXBX_USE_JWA_TYPES}
+  LARGE_INTEGER = JwaWinType.LARGE_INTEGER;
+  PLARGE_INTEGER = JwaWinType.PLARGE_INTEGER;
+{$ELSE}
   LARGE_INTEGER = packed record
     case Integer of
       0: (
@@ -247,11 +253,16 @@ type
         QuadPart: LONGLONG);
   end;
   PLARGE_INTEGER = ^LARGE_INTEGER;
+{$ENDIF}
 
 // ******************************************************************
 // * ULARGE_INTEGER
 // ******************************************************************
 type
+{$IFDEF DXBX_USE_JWA_TYPES}
+  ULARGE_INTEGER = JwaWinType.ULARGE_INTEGER;
+  PULARGE_INTEGER = JwaWinType.PULARGE_INTEGER;
+{$ELSE}
   ULARGE_INTEGER = packed record
     case Integer of
       0: (
@@ -261,6 +272,7 @@ type
         QuadPart: ULONGLONG);
   end;
   PULARGE_INTEGER = ^ULARGE_INTEGER;
+{$ENDIF}
 
 (*
 // ******************************************************************

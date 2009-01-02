@@ -147,6 +147,7 @@ function XTL_EmuFindFirstFileA
   lpFileName: PAnsiChar;
   {out}lpFindFileData: LPWIN32_FIND_DATA
   ): THandle; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -243,8 +244,9 @@ end;
 function XTL_EmuFindNextFileA
 (
   in hFindFile: THandle;
-  {out} lpFindFileData: LPWIN32_FIND_DATA 
+  {out} lpFindFileData: LPWIN32_FIND_DATA
   ): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -364,6 +366,7 @@ function XTL_EmuRtlFreeHeap(
   hHeap: THandle;
   dwFlags: DWord;
   lpMem: PVOID): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   offs: Byte;
 begin
@@ -395,7 +398,7 @@ function XTL_EmuRtlReAllocateHeap(
   dwFlags: DWord;
   lpMem: PVOID;
   dwBytes: SIZE_T): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
 begin
@@ -424,7 +427,7 @@ begin
   Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
   if Assigned(Result) then
   begin
-    // TODO Dxbx : Is this correct ? (See XTL_EmuRtlAllocateHeap)
+    // Dxbx Note : This is a fixup on top of the translation (See XTL_EmuRtlAllocateHeap) :
     offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
     if offs = 0 then
       offs := HEAP_HEADERSIZE;
@@ -633,6 +636,7 @@ function XTL_EmuXInputOpen(
   dwSlot: DWord:
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
 ): THandle; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 var
   pph: PPOLLING_PARAMETERS_HANDLE;
 begin
@@ -704,6 +708,7 @@ end;
 
 (*
 procedure XTL_EmuXInputClose(hDevice: THandle); stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 var
   pph: POLLING_PARAMETERS_HANDLE;
 begin
@@ -747,8 +752,7 @@ end;
 *)
 
 
-function XTL_EmuXInputPoll
-(
+function XTL_EmuXInputPoll(
   hDevice: THandle
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
@@ -807,11 +811,11 @@ end;
 
 
 (*
-function XTL_EmuXInputGetCapabilities
-(
+function XTL_EmuXInputGetCapabilities(
     hDevice: THandle;
-    {OUT} pCapabilities: PXINPUT_CAPABILITIES 
+    {OUT} pCapabilities: PXINPUT_CAPABILITIES
 ): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -847,14 +851,14 @@ end;
 *)
 
 
-function XTL_EmuXInputGetState
-(
+function XTL_EmuXInputGetState(
     hDevice: THandle;
     {OUT} pState: PXINPUT_STATE
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
 var
-  ret : DWord;
+  ret: DWord;
+//  pph: PPOLLING_PARAMETERS_HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -866,10 +870,10 @@ begin
        [hDevice, pState]);
 
   ret := ERROR_INVALID_HANDLE;
+(*
+  pph := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
-  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
-
-  if (pph <> 0) then
+  if (pph <> nil) then
   begin
     if (pph.pPollingParameters <> 0) then
     begin
@@ -900,8 +904,7 @@ begin
   Result := ret;
 end;
 
-function XTL_EmuXInputSetState
-(
+function XTL_EmuXInputSetState(
     hDevice: THandle;
     pFeedback: PXINPUT_FEEDBACK // IN OUT
 ): DWord; stdcall;
@@ -909,77 +912,77 @@ function XTL_EmuXInputSetState
 var
   ret : DWord;
 begin
-    EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi : EmuXInputSetState' +
-           #13#10'(' +
-           #13#10'   hDevice             : 0x%.08X' +
-           #13#10'   pFeedback           : 0x%.08X' +
-           #13#10');',
-           [hDevice, pFeedback]);
+  DbgPrintf('EmuXapi : EmuXInputSetState' +
+         #13#10'(' +
+         #13#10'   hDevice             : 0x%.08X' +
+         #13#10'   pFeedback           : 0x%.08X' +
+         #13#10');',
+         [hDevice, pFeedback]);
 
-    ret := ERROR_IO_PENDING;
+  ret := ERROR_IO_PENDING;
 
-    (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
-    if (pph <> 0) then
+  if (pph <> nil) then
+  begin
+    Integer v;
+
+    //
+    // Check if this device is already being polled
+    //
+
+    bool found := False;
+
+    for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
     begin
-        Integer v;
+      if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
+      begin
+        found := True;
 
-        //
-        // Check if this device is already being polled
-        //
-
-        bool found := False;
-
-        for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
+        if (pFeedback.Header.dwStatus = ERROR_SUCCESS) then
         begin
-            if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
-            begin
-                found := True;
+          ret := ERROR_SUCCESS;
 
-                if (pFeedback.Header.dwStatus = ERROR_SUCCESS) then
-                begin
-                    ret := ERROR_SUCCESS;
+          // remove from slot
+          g_pXInputSetStateStatus[v].hDevice := 0;
+          g_pXInputSetStateStatus[v].pFeedback := 0;
+          g_pXInputSetStateStatus[v].dwLatency := 0;
+        end;
+       end;
+    end;
 
-                    // remove from slot
-                    g_pXInputSetStateStatus[v].hDevice := 0;
-                    g_pXInputSetStateStatus[v].pFeedback := 0;
-                    g_pXInputSetStateStatus[v].dwLatency := 0;
-                 end;
-             end;
-         end;
+    //
+    // If device was not already slotted, queue it
+    //
 
-        //
-        // If device was not already slotted, queue it
-        //
-
-        if (not found) then
+    if (not found) then
+    begin
+      for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
+      begin
+        if (g_pXInputSetStateStatus[v].hDevice = 0) then
         begin
-            for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
-            begin
-                if (g_pXInputSetStateStatus[v].hDevice = 0) then
-                begin
-                    g_pXInputSetStateStatus[v].hDevice := hDevice;
-                    g_pXInputSetStateStatus[v].dwLatency := 0;
-                    g_pXInputSetStateStatus[v].pFeedback := pFeedback;
+          g_pXInputSetStateStatus[v].hDevice := hDevice;
+          g_pXInputSetStateStatus[v].dwLatency := 0;
+          g_pXInputSetStateStatus[v].pFeedback := pFeedback;
 
-                    pFeedback.Header.dwStatus := ERROR_IO_PENDING;
+          pFeedback.Header.dwStatus := ERROR_IO_PENDING;
 
-                    Break;
-                 end;
-             end;
+          Break;
+        end;
+      end;
 
-            if (v = XINPUT_SETSTATE_SLOTS) then
-            begin
-                CxbxKrnlCleanup('Ran out of XInputSetStateStatus slots!');
-             end;
-         end;
-     end; *)
+      if (v = XINPUT_SETSTATE_SLOTS) then
+      begin
+        CxbxKrnlCleanup('Ran out of XInputSetStateStatus slots!');
+      end;
+    end;
+  end; *)
 
-    EmuSwapFS(fsXbox);
+  EmuSwapFS(fsXbox);
 
-    Result := ret;
+  Result := ret;
 end;
 
 
@@ -1230,7 +1233,7 @@ begin
     if Assigned(g_pfnThreadNotification) then
       CxbxKrnlCleanup('Multiple thread notification routines installed (caustik can fix this!)');
 
-    // TODO : Is this correct?
+    // Dxbx TODO : Is this correct?
     // BlueShogun96 has code that connects notifications to the ListEntry chain.
     g_pfnThreadNotification := Addr(pThreadNotification.pfnNotifyRoutine);
   end
@@ -1245,6 +1248,7 @@ end;
 
 (*// Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): THandle; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1261,6 +1265,7 @@ begin
 end;
 
 function XTL_EmuXCalculateSignatureBeginEx(dwFlags: DWord; dwAltTitleId: DWord): THandle; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1278,6 +1283,7 @@ begin
 end;
 
 function XTL_EmuXCalculateSignatureUpdate(hCalcSig: THandle; pbData: Byte; cbData: ULONG): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1295,6 +1301,7 @@ begin
 end;
 
 function XTL_EmuXCalculateSignatureEnd(hCalcSig: THandle; pSignature: PXCALCSIG_SIGNATURE): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
