@@ -276,11 +276,12 @@ end;
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:10
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
-//  Unimplemented('RtlEnterCriticalSection');
+
   JwaNative.RtlEnterCriticalSection(CriticalSection);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -508,11 +509,12 @@ function xboxkrnl_RtlTimeFieldsToTime(
   TimeFields: PTIME_FIELDS;
   Time: PLARGE_INTEGER // OUT
   ): LONGBOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('RtlTimeFieldsToTime');
-  Result := Low(Result);
+
+  Result := JwaNative.RtlTimeFieldsToTime(TimeFields, Time);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -520,10 +522,12 @@ procedure xboxkrnl_RtlTimeToTimeFields(
   Time: PLARGE_INTEGER;
   TimeFields: PTIME_FIELDS // out
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('RtlTimeToTimeFields');
+
+  JwaNative.RtlTimeToTimeFields(Time, TimeFields);
+  
   EmuSwapFS(fsXbox);
 end;
 
@@ -533,8 +537,9 @@ function xboxkrnl_RtlTryEnterCriticalSection(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
-//  Unimplemented('RtlTryEnterCriticalSection');
+
   Result := JwaNative.RtlTryEnterCriticalSection(CriticalSection);
+
   EmuSwapFS(fsXbox);
 end;
 

@@ -433,20 +433,22 @@ end;
 
 // convert from xbox to pc texture transform state types
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; stdcall;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
-(*  if (uint32(State) < 2) then
-    result := (D3DTRANSFORMSTATETYPE)(State + 2)
+  if (uint32(State) < 2) then
+    Result := D3DTRANSFORMSTATETYPE(Ord(State) + 2)
   else if (uint32(State) < 6) then
-    result := D3DTRANSFORMSTATETYPE(State + 14)
+    Result := D3DTRANSFORMSTATETYPE(Ord(State) + 14)
   else if (uint32(State) < 10) then
-    result := D3DTS_WORLDMATRIX(State - 6)
+    Result := D3DTS_WORLDMATRIX(Ord(State) - 6)
   else if (uint32(State) = 10) then // Max
-    result := D3DTRANSFORMSTATETYPE(D3DTS_TEXTURE7 + 1);
+    Result := D3DTRANSFORMSTATETYPE(Ord(D3DTS_TEXTURE7) + 1)
+  else
+  begin
+    CxbxKrnlCleanup('Unknown Transform State cType (%d)', [Ord(State)]);
 
-  CxbxKrnlCleanup('Unknown Transform State cType (%d)', State);
-
-  result := State; *)
+    Result := State;
+  end;
 end;
 
 
