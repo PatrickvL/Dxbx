@@ -36,7 +36,7 @@ type
   TDxbxXml = class(TDataModule)
     XMLDocument: TXMLDocument;
   public
-    procedure CreateXmlXbeDump(aFileName: string; aXbe : TXbe);
+    procedure CreateXmlXbeDump(aFileName: string; aXbe: TXbe);
   end;
 
 var

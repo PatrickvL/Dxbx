@@ -370,7 +370,7 @@ procedure xboxkrnl_RtlInitAnsiString(
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl (0x%X): RtlInitAnsiString' +
+  DbgPrintf('EmuKrnl : RtlInitAnsiString' +
          #13#10'(' +
          #13#10'   DestinationString   : 0x%.08X' +
          #13#10'   SourceString        : 0x%.08X (''%s'')' +

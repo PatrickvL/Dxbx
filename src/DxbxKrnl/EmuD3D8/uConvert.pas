@@ -32,6 +32,7 @@ uses
   , uEmuD3D8Types
   , uTypes
   , uLog
+  , uXboxLibraryUtils
   , uDxbxKrnlUtils
   , uEmu;
 
@@ -66,8 +67,8 @@ const
   X_D3DFMT_LIN_D16 = $30; // Linear
   X_D3DFMT_V16U16 = $33; // Swizzled
 
-function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
-function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
+function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
+function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
 
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; stdcall;
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; stdcall;
@@ -79,7 +80,7 @@ function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; st
 
 implementation
 
-function XTL_EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWord): LONGBOOL; stdcall;
+function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWord): LONGBOOL; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   Result := True;
@@ -102,7 +103,7 @@ begin
   end;
 end;
 
-function XTL_EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
+function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case aFormat of
@@ -198,7 +199,7 @@ begin
   end;
 end;
 
-function XTL_EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
+function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case aFormat of
@@ -229,7 +230,7 @@ begin
   end;
 end;
 
-function XTL_EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
+function EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   NewFlags: DWord;
@@ -254,6 +255,7 @@ end;
 
 // lookup table for converting vertex count to primitive count
 (*UINT XTL.EmuD3DVertexToPrimitive[11][2] =
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     begin 0, 0),
     begin 1, 0),
@@ -266,10 +268,12 @@ begin
     begin 4, 0),
     begin 2, 2),
     begin 0, 0),
-);      *)
+);
+*)
 
 // conversion table for xbox->pc primitive types
 (*XTL.D3DPRIMITIVETYPE XTL.EmuPrimitiveTypeLookup[] =
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
      (XTL::D3DPRIMITIVETYPE)0,    // NULL                 = 0
       XTL::D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
@@ -287,6 +291,7 @@ begin
 
 // render state conversion table
 (*CONST DWord XTL.EmuD3DRenderStateSimpleEncoded[174] =
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
@@ -378,11 +383,11 @@ begin
     $00040358,     X_D3DRSSE_UNK,  // 168 - D3DRS_COLORWRITEENABLE
     X_D3DRSSE_UNK,  $00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 172
-);            *)
+);
+*)
 
 
 // convert from xbox to pc fill modes
-
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
@@ -390,7 +395,6 @@ begin
 end;
 
 // convert from xbox to pc shade modes
-
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
@@ -417,12 +421,14 @@ function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   if (Value < 2) then
-    result := D3DBLEND(Value + 1)
+    Result := D3DBLEND(Value + 1)
   else if (Value < $309) then
-    result := D3DBLEND((Value and $F) + 3);
-
-  CxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
-  result := D3DBLEND(Value);
+    Result := D3DBLEND((Value and $F) + 3)
+  else
+  begin
+    CxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
+    Result := D3DBLEND(Value);
+  end;
 end;
 
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; stdcall;
@@ -451,12 +457,17 @@ begin
   end;
 end;
 
-
 exports
-  XTL_EmuPC2XB_D3DFormat,
-  XTL_EmuXB2PC_D3DFormat,
-  XTL_EmuXB2PC_D3DLock,
-  XTL_EmuXBFormatIsSwizzled;
+  EmuPC2XB_D3DFormat name PatchPrefix + 'EmuPC2XB_D3DFormat',
+  EmuXB2PC_D3DBLEND name PatchPrefix + 'EmuXB2PC_D3DBLEND',
+  EmuXB2PC_D3DBLENDOP name PatchPrefix + 'EmuXB2PC_D3DBLENDOP',
+  EmuXB2PC_D3DCMPFUNC name PatchPrefix + 'EmuXB2PC_D3DCMPFUNC',
+  EmuXB2PC_D3DFILLMODE name PatchPrefix + 'EmuXB2PC_D3DFILLMODE',
+  EmuXB2PC_D3DFormat name PatchPrefix + 'EmuXB2PC_D3DFormat',
+  EmuXB2PC_D3DLock name PatchPrefix + 'EmuXB2PC_D3DLock',
+  EmuXB2PC_D3DSHADEMODE name PatchPrefix + 'EmuXB2PC_D3DSHADEMODE',
+  EmuXB2PC_D3DTS name PatchPrefix + 'EmuXB2PC_D3DTS',
+  EmuXBFormatIsSwizzled name PatchPrefix + 'EmuXBFormatIsSwizzled';
 
 end.
 

@@ -218,7 +218,7 @@ begin
       g_hTDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
       if g_hTDrive = INVALID_HANDLE_VALUE then
-        CxbxKrnlCleanup('Could not map T:\\\n');
+        CxbxKrnlCleanup('Could not map T:\');
 
       DbgPrintf('EmuMain : T Data := ' + g_strTDrive);
     end;
@@ -426,9 +426,11 @@ end;
 
 procedure CxbxKrnlSuspend();
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
+(*
 var
-  v : integer;
-  dwExitCode : DWORD;
+  v: Integer;
+  dwExitCode: DWORD;
+*)
 begin
 
   if (g_bEmuSuspended or g_bEmuException) then
@@ -437,7 +439,7 @@ begin
   (*for v:=0 to MAXIMUM_XBOX_THREADS -1 do begin
     if (g_hThreads[v] != Null) then begin
 
-        (*if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+        (*if(GetExitCodeThread(g_hThreads[v], {var}dwExitCode) and dwExitCode) = STILL_ACTIVE)
         {
             // suspend thread if it is active
             SuspendThread(g_hThreads[v]);

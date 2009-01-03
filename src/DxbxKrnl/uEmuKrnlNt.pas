@@ -324,7 +324,7 @@ function xboxkrnl_NtCreateFile(
 begin
   EmuSwapFS(fsWindows);
 (*
-    DbgPrintf('EmuKrnl (0x%X): NtCreateFile' +
+    DbgPrintf('EmuKrnl : NtCreateFile' +
            #13#10'(' +
            #13#10'   FileHandle          : 0x%.08X' +
            #13#10'   DesiredAccess       : 0x%.08X' +
@@ -360,9 +360,9 @@ begin
 
 		    ObjectAttributes.RootDirectory := g_hCurDir;
 
-		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
-		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
-		    DbgPrintf('  New:''$XbePath\\%s''', szBuffer);
+		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+		    DbgPrintf('  New:''$XbePath\\%s''', [szBuffer]);
 	    end;
 	    else if( (szBuffer[0] = 'T'  or  szBuffer[0] = 't') and szBuffer[1] = ':' and szBuffer[2] = '''')
 	    begin
@@ -370,9 +370,9 @@ begin
 
 		    ObjectAttributes.RootDirectory := g_hTDrive;
 
-		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
-		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
-		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\T\\%s''', szBuffer);
+		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\T\\%s''', [szBuffer]);
 	    end;
 	    else if( (szBuffer[0] = 'U'  or  szBuffer[0] = 'u') and szBuffer[1] = ':' and szBuffer[2] = '''')
 	    begin
@@ -380,9 +380,9 @@ begin
 
 		    ObjectAttributes.RootDirectory := g_hUDrive;
 
-		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
-		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
-		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\U\\%s''', szBuffer);
+		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\U\\%s''', [szBuffer]);
 	    end;
 	    else if( (szBuffer[0] = 'Z'  or  szBuffer[0] = 'z') and szBuffer[1] = ':' and szBuffer[2] = '''')
 	    begin
@@ -390,9 +390,9 @@ begin
 
 		    ObjectAttributes.RootDirectory := g_hZDrive;
 
-		    DbgPrintf('EmuKrnl (0x%X): NtCreateFile Corrected path...', GetCurrentThreadId());
-		    DbgPrintf('  Org:''%s''', ObjectAttributes.ObjectName.Buffer);
-		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\Z\\%s''', szBuffer);
+		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\Z\\%s''', [szBuffer]);
 	    end;
 
         //
@@ -567,16 +567,16 @@ begin
 (*
   EmuSwapFS(fsWindows);
     // debug trace
-        DbgPrintf("EmuKrnl (0x%X): NtOpenFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   DesiredAccess       : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   ShareAccess         : 0x%.08X\n"
-               "   CreateOptions       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+        DbgPrintf('EmuKrnl : NtOpenFile'
+               #13#10'('
+               #13#10'   FileHandle          : 0x%.08X'
+               #13#10'   DesiredAccess       : 0x%.08X'
+               #13#10'   ObjectAttributes    : 0x%.08X (\'%s\')'
+               #13#10'   IoStatusBlock       : 0x%.08X'
+               #13#10'   ShareAccess         : 0x%.08X'
+               #13#10'   CreateOptions       : 0x%.08X'
+               #13#10');',
+               [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
                IoStatusBlock, ShareAccess, OpenOptions);
   EmuSwapFS(fsXbox);
 *)

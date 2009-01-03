@@ -30,6 +30,10 @@ uses
   uLog, // for WriteLog
   uXBE; // PXBE_TLS
 
+{$IF NOT DECLARED(YieldProcessor)}
+procedure YieldProcessor;
+{$IFEND}
+
 procedure CxbxKrnlCleanup(const szErrorMessage: string); overload;
 procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
 
@@ -53,6 +57,11 @@ var
   g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of THandle;
 
 implementation
+
+procedure YieldProcessor;
+asm
+  pause; // rep nop;
+end;
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
 begin

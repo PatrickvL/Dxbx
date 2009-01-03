@@ -556,9 +556,7 @@ begin
   end;
 
   for v := 0 to XINPUT_HANDLE_SLOTS - 1 do
-  begin
     g_hInputHandle[v] := 0;
-  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -718,12 +716,12 @@ begin
     #13#10'(' +
     #13#10'   hDevice             : 0x%.08X' +
     #13#10');',
-    hDevice);
+    [hDevice]);
 
   POLLING_PARAMETERS_HANDLE * pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
   (* no longer necessary
-  if (pph <> 0) then
+  if (pph <> nil) then
   begin
     Integer v;
 
@@ -738,7 +736,7 @@ begin
       end;
     end;
 
-    if (pph.pPollingParameters <> 0) then
+    if (pph.pPollingParameters <> nil) then
     begin
       delete pph.pPollingParameters;
     end;
@@ -809,7 +807,6 @@ begin
   Result := ERROR_SUCCESS;
 end;
 
-
 (*
 function XTL_EmuXInputGetCapabilities(
     hDevice: THandle;
@@ -830,7 +827,7 @@ begin
 
   POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
 
-  if (pph <> 0) then
+  if (pph <> nil) then
   begin
     DWord dwPort := pph.dwPort;
 
@@ -849,7 +846,6 @@ begin
   Result := ret;
 end;
 *)
-
 
 function XTL_EmuXInputGetState(
     hDevice: THandle;
@@ -910,7 +906,7 @@ function XTL_EmuXInputSetState(
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
 var
-  ret : DWord;
+  ret: DWord;
 begin
   EmuSwapFS(fsWindows);
 
@@ -997,12 +993,12 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuCreateMutex' +
-         #13#10'(' +
-         #13#10'   lpMutexAttributes   : 0x%.08X' +
-         #13#10'   bInitialOwner       : 0x%.08X' +
-         #13#10'   lpName              : 0x%.08X (%s)' +
-         #13#10');',
-         [lpMutexAttributes, bInitialOwner, lpName, lpName]);
+      #13#10'(' +
+      #13#10'   lpMutexAttributes   : 0x%.08X' +
+      #13#10'   bInitialOwner       : 0x%.08X' +
+      #13#10'   lpName              : 0x%.08X (%s)' +
+      #13#10');',
+      [lpMutexAttributes, bInitialOwner, lpName, lpName]);
 
   hRet := CreateMutex(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
 
@@ -1176,7 +1172,7 @@ begin
   // TODO: Call thread notify routines ?
 end;
 
-(* Too High Level!
+(* Cxbx : Too High Level!
 XTL.NTSTATUS CDECL XTL.XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
 begin
   EmuSwapFS(fsWindows);
@@ -1253,9 +1249,9 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : XCalculateSignatureBegin' +
-           #13#10'(' +
-           #13#10'   dwFlags             : 0x%.08X' +
-           #13#10');',
+      #13#10'(' +
+      #13#10'   dwFlags             : 0x%.08X' +
+      #13#10');',
             [dwFlags]);
 
   EmuSwapFS(fsXbox);
