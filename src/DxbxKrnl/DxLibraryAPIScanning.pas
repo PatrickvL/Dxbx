@@ -42,41 +42,135 @@ uses
   uEmuXapi; // XTL_EmuXapiProcessHeap
 
 type
-  PDetectedVersionedXboxLibraryFunction = ^RDetectedVersionedXboxLibraryFunction;
-  RDetectedVersionedXboxLibraryFunction = packed record
-    XboxLibraryPatch: TXboxLibraryPatch;
-    FunctionName: string;
+  PPotentialLocation = ^RPotentialLocation;
+  RPotentialLocation = packed record
+    NextByAddress: PPotentialLocation;
+    NextBySymbol: PPotentialLocation;
     StoredLibraryFunction: PStoredLibraryFunction;
-//    PotentialLocations: array of RDetectedLocation = packed record CodeStart, CodeEnd: TCodePointer; end;
+    CodeStart, CodeEnd: TCodePointer;
+  end;
+
+  PDetectedVersionedXboxLibrarySymbol = ^RDetectedVersionedXboxLibrarySymbol;
+  RDetectedVersionedXboxLibrarySymbol = packed record
+    SymbolName: string;
+    XboxLibraryPatch: TXboxLibraryPatch;
+
+    PotentialLocations: PPotentialLocation;
+
+    StoredLibraryFunction: PStoredLibraryFunction;
     HitCount: Integer;
     CodeStart: TCodePointer;
     CodeEnd: TCodePointer;
+
+    function AddPossibleLocation( const aAddress: PByte; FoundFunction: PStoredLibraryFunction): PPotentialLocation;
   end;
 
-  TDetectedFunctions = class(TObject)
+  TDetectedSymbols = class(TObject)
   protected
-    FList: TList;
-    function GetItem(Index: Integer): PDetectedVersionedXboxLibraryFunction;
+    MyList: TList;
+    function GetItem(Index: Integer): PDetectedVersionedXboxLibrarySymbol;
   public
     ActualXboxLibraries: TList;
 
     function Count: Integer;
-    property Items[Index: Integer]: PDetectedVersionedXboxLibraryFunction read GetItem; default;
+    property Items[Index: Integer]: PDetectedVersionedXboxLibrarySymbol read GetItem; default;
     constructor Create;
     destructor Destroy; override;
 
     procedure Clear;
-    function New(const aFunctionName: string): PDetectedVersionedXboxLibraryFunction;
-    function FindByName(const aName: string): PDetectedVersionedXboxLibraryFunction;
-    function FindByAddress(const aAddress: TCodePointer): PDetectedVersionedXboxLibraryFunction;
+    function New(const aSymbolName: string): PDetectedVersionedXboxLibrarySymbol;
+    function FindByName(const aName: string): PDetectedVersionedXboxLibrarySymbol;
+    function FindByAddress(const aAddress: TCodePointer): PDetectedVersionedXboxLibrarySymbol;
   end;
 
 procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 
 var
-  DetectedFunctions: TDetectedFunctions;
+  DetectedSymbols: TDetectedSymbols;
 
 implementation
+
+function DxbxUnmangleFunctionName(const aStr: string): string;
+var
+  UnmangleFlags: DWord;
+  i: Integer;
+begin
+  if aStr = '' then
+    Exit;
+
+  Result := aStr;
+
+  // Check if the symbol starts with an underscore ('_') or '@':
+  case Result[1] of
+    '?':
+      begin
+        UnmangleFlags := 0
+                      // UNDNAME_COMPLETE               // Enable full undecoration
+                      or UNDNAME_NO_LEADING_UNDERSCORES // Remove leading underscores from MS extended keywords
+                      or UNDNAME_NO_MS_KEYWORDS         // Disable expansion of MS extended keywords
+                      or UNDNAME_NO_FUNCTION_RETURNS    // Disable expansion of return type for primary declaration
+                      or UNDNAME_NO_ALLOCATION_MODEL    // Disable expansion of the declaration model
+                      or UNDNAME_NO_ALLOCATION_LANGUAGE // Disable expansion of the declaration language specifier
+                      or UNDNAME_NO_MS_THISTYPE         // NYI Disable expansion of MS keywords on the 'this' type for primary declaration
+                      or UNDNAME_NO_CV_THISTYPE         // NYI Disable expansion of CV modifiers on the 'this' type for primary declaration
+                      or UNDNAME_NO_THISTYPE            // Disable all modifiers on the 'this' type
+                      or UNDNAME_NO_ACCESS_SPECIFIERS   // Disable expansion of access specifiers for members
+                      or UNDNAME_NO_THROW_SIGNATURES    // Disable expansion of 'throw-signatures' for functions and pointers to functions
+                      or UNDNAME_NO_MEMBER_TYPE         // Disable expansion of 'static' or 'virtual'ness of members
+                      or UNDNAME_NO_RETURN_UDT_MODEL    // Disable expansion of MS model for UDT returns
+                      or UNDNAME_32_BIT_DECODE          // Undecorate 32-bit decorated names
+                      or UNDNAME_NAME_ONLY              // Crack only the name for primary declaration;
+                      or UNDNAME_NO_ARGUMENTS           // Don't undecorate arguments to function
+                      or UNDNAME_NO_SPECIAL_SYMS        // Don't undecorate special names (v-table, vcall, vector xxx, metatype, etc)
+                      ;
+
+        // Do Microsoft symbol demangling :
+        if not UndecorateSymbolName(aStr, {var}Result, UnmangleFlags) then
+          Result := aStr;
+      end;
+    '_', '@':
+    begin
+      // Remove this leading character :
+      Delete(Result, 1, 1);
+      // Replace all following underscores with a dot ('.') :
+      Result := StringReplace(Result, '_', '.', [rfReplaceAll]);
+    end;
+  end;
+
+  // Remove everything from '@' onward :
+  i := Pos('@', Result);
+  if i > 1 then
+    Delete(Result, i, MaxInt);
+
+  // Replace '::' with '.' :
+  Result := StringReplace(Result, '::', '.', [rfReplaceAll]);
+end; // DxbxUnmangleFunctionName
+
+function DetermineJmpAddress(const aStartingAddress: PByte; const aOffset: Word): PByte;
+begin
+  IntPtr(Result) := IntPtr(aStartingAddress) + IntPtr(aOffset);
+  Result := PByte(IntPtr(Result) + PInteger(Result)^ + 4);
+end;
+
+function RDetectedVersionedXboxLibrarySymbol.AddPossibleLocation(
+  const aAddress: PByte; FoundFunction: PStoredLibraryFunction): PPotentialLocation;
+begin
+  New(Result);
+  Result.StoredLibraryFunction := FoundFunction;
+  Result.CodeStart := TCodePointer(aAddress);
+  Result.CodeEnd := TCodePointer(IntPtr(aAddress) + FoundFunction.FunctionLength);
+
+  if PotentialLocations = nil then
+  begin
+    StoredLibraryFunction := Result.StoredLibraryFunction;
+    CodeStart := Result.CodeStart;
+    CodeEnd := Result.CodeEnd;
+  end;
+
+  Result.NextBySymbol := PotentialLocations;
+
+  Inc(HitCount);
+end;
 
 function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReader; const aAddress: PByte): PStoredLibraryFunction;
 
@@ -106,11 +200,13 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
     StoredLibrary := aPatternTrieReader.GetStoredLibrary(aStoredLibraryFunction.LibraryIndex);
 
     // Determine if this matches one of the actual libraries :
-    for i := 0 to DetectedFunctions.ActualXboxLibraries.Count - 1 do
+    for i := 0 to DetectedSymbols.ActualXboxLibraries.Count - 1 do
     begin
-      VersionedXboxLibrary := DetectedFunctions.ActualXboxLibraries[i];
-      if SameText(VersionedXboxLibrary.LibName, aPatternTrieReader.GetString(StoredLibrary.LibNameIndex)) then
-        Exit;
+      VersionedXboxLibrary := DetectedSymbols.ActualXboxLibraries[i];
+      if VersionedXboxLibrary.LibVersion = StoredLibrary.LibVersion then
+        if SameText(VersionedXboxLibrary.LibName, aPatternTrieReader.GetString(StoredLibrary.LibNameIndex)) then
+//      if VersionedXboxLibrary.LibNameIndex = StoredLibrary.LibNameIndex then
+          Exit;
     end;
 
     // No matching library, skip this :
@@ -303,7 +399,7 @@ var
 {$ENDIF}
         VersionedXboxLibrary.LibVersion := BestFit.LibVersion;
         VersionedXboxLibrary.LibName := aPatternTrieReader.GetString(BestFit.LibNameIndex);
-        DetectedFunctions.ActualXboxLibraries.Add(VersionedXboxLibrary);
+        DetectedSymbols.ActualXboxLibraries.Add(VersionedXboxLibrary);
       end
       else
         DbgPrintf('... No patterns registered for this library!');
@@ -314,72 +410,6 @@ var
   end; // _DetectVersionedXboxLibraries
 
   function _FindAndRememberPattern(const aPatternTrieReader: TPatternTrieReader; const aAddress: PByte): PStoredLibraryFunction;
-  var
-    FunctionName: string;
-    Detected: PDetectedVersionedXboxLibraryFunction;
-    Unmangled: string;
-
-    function DxbxUnmangleSymbolName(const aStr: string): string;
-    var
-      UnmangleFlags: DWord;
-      i: Integer;
-    begin
-      if aStr = '' then
-        Exit;
-
-      Result := aStr;
-
-      // Check if the symbol starts with an underscore ('_') or '@':
-      case Result[1] of
-        '?':
-          begin
-            UnmangleFlags := 0
-                          // UNDNAME_COMPLETE               // Enable full undecoration
-                          or UNDNAME_NO_LEADING_UNDERSCORES // Remove leading underscores from MS extended keywords
-                          or UNDNAME_NO_MS_KEYWORDS         // Disable expansion of MS extended keywords
-                          or UNDNAME_NO_FUNCTION_RETURNS    // Disable expansion of return type for primary declaration
-                          or UNDNAME_NO_ALLOCATION_MODEL    // Disable expansion of the declaration model
-                          or UNDNAME_NO_ALLOCATION_LANGUAGE // Disable expansion of the declaration language specifier
-                          or UNDNAME_NO_MS_THISTYPE         // NYI Disable expansion of MS keywords on the 'this' type for primary declaration
-                          or UNDNAME_NO_CV_THISTYPE         // NYI Disable expansion of CV modifiers on the 'this' type for primary declaration
-                          or UNDNAME_NO_THISTYPE            // Disable all modifiers on the 'this' type
-                          or UNDNAME_NO_ACCESS_SPECIFIERS   // Disable expansion of access specifiers for members
-                          or UNDNAME_NO_THROW_SIGNATURES    // Disable expansion of 'throw-signatures' for functions and pointers to functions
-                          or UNDNAME_NO_MEMBER_TYPE         // Disable expansion of 'static' or 'virtual'ness of members
-                          or UNDNAME_NO_RETURN_UDT_MODEL    // Disable expansion of MS model for UDT returns
-                          or UNDNAME_32_BIT_DECODE          // Undecorate 32-bit decorated names
-                          or UNDNAME_NAME_ONLY              // Crack only the name for primary declaration;
-                          or UNDNAME_NO_ARGUMENTS           // Don't undecorate arguments to function
-                          or UNDNAME_NO_SPECIAL_SYMS        // Don't undecorate special names (v-table, vcall, vector xxx, metatype, etc)
-                          ;
-
-            // Do Microsoft symbol demangling :
-            if not UndecorateSymbolName(aStr, {var}Result, UnmangleFlags) then
-              Result := aStr;
-          end;
-        '_', '@':
-        begin
-          // Remove this leading character :
-          Delete(Result, 1, 1);
-          // Replace all following underscores with a dot ('.') :
-          Unmangled := StringReplace(Unmangled, '_', '.', [rfReplaceAll]);
-        end;
-      end;
-
-      // Remove everything from '@' onward :
-      i := Pos('@', Result);
-      if i > 1 then
-        Delete(Result, i, MaxInt);
-
-      // Replace '::' with '.' :
-      Result := StringReplace(Result, '::', '.', [rfReplaceAll]);
-    end; // DxbxUnmangleSymbolName
-
-    function _DetermineJmpAddress(const aStartingAddress: PByte; const aOffset: Word): PByte;
-    begin
-      IntPtr(Result) := IntPtr(aStartingAddress) + IntPtr(aOffset);
-      Result := PByte(IntPtr(Result) + PInteger(Result)^ + 4);
-    end;
 
     function _HandleCrossReference(const aStartingAddress: PByte;
       const aCrossReferenceOffset: Word; const aCrossReferenceNameIndex: TStringTableIndex): Boolean;
@@ -394,7 +424,7 @@ var
 
       // Use aCrossReferenceOffset to determine
       // the call-location that should be checked :
-      CrossReferenceAddress := _DetermineJmpAddress(aStartingAddress, aCrossReferenceOffset);
+      CrossReferenceAddress := DetermineJmpAddress(aStartingAddress, aCrossReferenceOffset);
 
       // First check : does this address reside in the executable segment?
       if (IntPtr(CrossReferenceAddress) < IntPtr(ByteScanLower)) or (IntPtr(CrossReferenceAddress) > IntPtr(ByteScanUpper)) then
@@ -409,8 +439,12 @@ var
       // the string-indexes of both functions (they should match) :
       Result := aCrossReferenceNameIndex =
                 aPatternTrieReader.GetGlobalFunction(CrossReferenced.GlobalFunctionIndex).FunctionNameIndex;
-    end;
+    end; // _HandleCrossReference
 
+  var
+    FunctionName: string;
+    Detected: PDetectedVersionedXboxLibrarySymbol;
+    Unmangled: string;
   begin
     // Search if this address matches a pattern :
     Result := TestAddressUsingPatternTrie(aPatternTrieReader, aAddress);
@@ -419,28 +453,28 @@ var
 
     // Now that it's found, see if it was already registered :
     FunctionName := aPatternTrieReader.GetFunctionName(Result.GlobalFunctionIndex);
-    Detected := DetectedFunctions.FindByName(FunctionName);
+    Detected := DetectedSymbols.FindByName(FunctionName);
     if Assigned(Detected) then
     begin
-      // Count the number of times it was found (should stay at 1) :
-      Inc(Detected.HitCount);
+      Detected.AddPossibleLocation(aAddress, Result);
       Exit;
     end;
 
     // Handle a possible cross-reference check :
     if not _HandleCrossReference(aAddress, Result.CrossReference1Offset, Result.CrossReference1NameIndex) then
+    begin
+      Result := nil;
       Exit;
+    end;
 
     // Do our own demangling :
-    Unmangled := DxbxUnmangleSymbolName(FunctionName);
+    Unmangled := DxbxUnmangleFunctionName(FunctionName);
 
     // Newly detected functions are registered here (including their range,
     // which will come in handy when debugging) :
-    Detected := DetectedFunctions.New(Unmangled);
+    Detected := DetectedSymbols.New(Unmangled);
     Detected.StoredLibraryFunction := Result;
-    Detected.CodeStart := TCodePointer(aAddress);
-    Detected.CodeEnd := TCodePointer(IntPtr(aAddress) + Result.FunctionLength);
-    Detected.HitCount := 1;
+    Detected.AddPossibleLocation(aAddress, Result);
 
 {$IFDEF DXBX_DEBUG}
     DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' (was "%s")', [aAddress, Unmangled, FunctionName]);
@@ -473,11 +507,11 @@ var
 
   procedure _ResolveXapiProcessHeapAddress(const aPatternTrieReader: TPatternTrieReader);
   var
-    DetectedXapiInitProcess: PDetectedVersionedXboxLibraryFunction;
+    DetectedXapiInitProcess: PDetectedVersionedXboxLibrarySymbol;
     StoredLibrary: PStoredLibrary;
     ProcessHeapOffs: Integer;
   begin
-    DetectedXapiInitProcess := DetectedFunctions.FindByName('XapiInitProcess');
+    DetectedXapiInitProcess := DetectedSymbols.FindByName('XapiInitProcess');
     if Assigned(DetectedXapiInitProcess) then
     begin
       StoredLibrary := aPatternTrieReader.GetStoredLibrary(DetectedXapiInitProcess.StoredLibraryFunction.LibraryIndex);
@@ -486,7 +520,7 @@ var
         // Source for these offsets is Cxbx code (HLEIntercept.cpp) and our
         // Xapi library patterns - search in the definition of _XapiInitProcess@0
         // for the offset to the '_XapiProcessHeap' cross-reference.
-        
+
         if (StoredLibrary.LibVersion >= 5849) then
           ProcessHeapOffs := $51
         else if (StoredLibrary.LibVersion >= 5558) then
@@ -516,7 +550,7 @@ begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
   ByteScanUpper := PByte(IntPtr(ByteScanLower) + Integer(pXbeHeader.dwSizeofImage));
 
-  DetectedFunctions.Clear;
+  DetectedSymbols.Clear;
 
   // Get StoredPatternTrie from resource :
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
@@ -544,87 +578,87 @@ begin
 
 {$IFDEF DXBX_DEBUG}
   // Show a list of detected functions with a HitCount > 1 :
-  for i := 0 to DetectedFunctions.Count - 1 do
-    if DetectedFunctions[i].HitCount > 1 then
-      DbgPrintf('DxbxHLE : Duplicate %.3d hits on ''%s'' ', [DetectedFunctions[i].HitCount, DetectedFunctions[i].FunctionName]);
+  for i := 0 to DetectedSymbols.Count - 1 do
+    if DetectedSymbols[i].HitCount > 1 then
+      DbgPrintf('DxbxHLE : Duplicate %.3d hits on ''%s'' ', [DetectedSymbols[i].HitCount, DetectedSymbols[i].SymbolName]);
     // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
 {$ENDIF}
-  DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedFunctions.Count]);
+  DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedSymbols.Count]);
 end; // DxbxScanForLibraryAPIs
 
-{ TDetectedFunctions }
+{ TDetectedSymbols }
 
-constructor TDetectedFunctions.Create;
+constructor TDetectedSymbols.Create;
 begin
   inherited Create;
 
-  FList := TList.Create;
+  MyList := TList.Create;
   ActualXboxLibraries := TList.Create;
 end;
 
-destructor TDetectedFunctions.Destroy;
+destructor TDetectedSymbols.Destroy;
 begin
   Clear;
-  FreeAndNil(FList);
+  FreeAndNil(MyList);
   FreeAndNil(ActualXboxLibraries);
 
   inherited Destroy;
 end;
 
-function TDetectedFunctions.Count: Integer;
+function TDetectedSymbols.Count: Integer;
 begin
-  Result := FList.Count;
+  Result := MyList.Count;
 end;
 
-function TDetectedFunctions.GetItem(Index: Integer): PDetectedVersionedXboxLibraryFunction;
+function TDetectedSymbols.GetItem(Index: Integer): PDetectedVersionedXboxLibrarySymbol;
 begin
-  Result := PDetectedVersionedXboxLibraryFunction(FList[Index]);
+  Result := PDetectedVersionedXboxLibrarySymbol(MyList[Index]);
 end;
 
-procedure TDetectedFunctions.Clear;
+procedure TDetectedSymbols.Clear;
 var
   i: Integer;
-  DetectedFunction: PDetectedVersionedXboxLibraryFunction;
+  DetectedSymbol: PDetectedVersionedXboxLibrarySymbol;
 begin
-  for i := 0 to FList.Count - 1 do
+  for i := 0 to MyList.Count - 1 do
   begin
-    DetectedFunction := Items[i];
-    Dispose(DetectedFunction);
+    DetectedSymbol := Items[i];
+    Dispose(DetectedSymbol);
   end;
 
-  FList.Clear;
+  MyList.Clear;
 
   ActualXboxLibraries.Clear;
 end;
 
-function TDetectedFunctions.New(const aFunctionName: string): PDetectedVersionedXboxLibraryFunction;
+function TDetectedSymbols.New(const aSymbolName: string): PDetectedVersionedXboxLibrarySymbol;
 begin
-  Result := AllocMem(SizeOf(RDetectedVersionedXboxLibraryFunction));
-  Result.FunctionName := aFunctionName;
-  Result.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(aFunctionName);
-  FList.Add(Result);
+  Result := AllocMem(SizeOf(RDetectedVersionedXboxLibrarySymbol));
+  Result.SymbolName := aSymbolName;
+  Result.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(aSymbolName);
+  MyList.Add(Result);
 end;
 
-function TDetectedFunctions.FindByName(const aName: string): PDetectedVersionedXboxLibraryFunction;
+function TDetectedSymbols.FindByName(const aName: string): PDetectedVersionedXboxLibrarySymbol;
 var
   i: Integer;
 begin
-  for i := 0 to FList.Count - 1 do
+  for i := 0 to MyList.Count - 1 do
   begin
     Result := Items[i];
-    if SameText(Result.FunctionName, aName) then
+    if SameText(Result.SymbolName, aName) then
       Exit;
   end;
 
   Result := nil;
 end;
 
-function TDetectedFunctions.FindByAddress(const aAddress: TCodePointer): PDetectedVersionedXboxLibraryFunction;
+function TDetectedSymbols.FindByAddress(const aAddress: TCodePointer): PDetectedVersionedXboxLibrarySymbol;
 var
   i: Integer;
 begin
-  // TODO : For speed, usse a binary search here (which needs an address-ordered collection)
-  for i := 0 to FList.Count - 1 do
+  // Dxbx TODO : For speed, usse a binary search here (which needs an address-ordered collection)
+  for i := 0 to MyList.Count - 1 do
   begin
     Result := Items[i];
     if (IntPtr(Result.CodeStart) <= IntPtr(aAddress)) and (IntPtr(aAddress) <= IntPtr(Result.CodeEnd)) then
@@ -636,10 +670,11 @@ end;
 
 initialization
 
-  DetectedFunctions := TDetectedFunctions.Create;
+  DetectedSymbols := TDetectedSymbols.Create;
 
 finalization
 
-  FreeAndNil(DetectedFunctions);
+  FreeAndNil(DetectedSymbols);
 
 end.
+

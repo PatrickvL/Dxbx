@@ -67,12 +67,12 @@ type
   end;
 
   X_D3DTILE = packed record
-    Flags : DWORD;
-    pMemory : PVOID;
-    Size : DWORD;
-    Pitch : DWORD;
-    ZStartTag : DWORD;
-    ZOffset : DWORD;
+    Flags: DWORD;
+    pMemory: PVOID;
+    Size: DWORD;
+    Pitch: DWORD;
+    ZStartTag: DWORD;
+    ZOffset: DWORD;
   end;
   PX_D3DTILE = ^X_D3DTILE;
 
@@ -81,7 +81,7 @@ type
     Handle: DWord;
     UnknownB: DWord;
     Flags: DWord;
-    UnknownC: array[0..59] of DWord;
+    UnknownC: array [0..59] of DWord;
   end;
   PX_D3DVertexShader = ^X_D3DVertexShader;
 

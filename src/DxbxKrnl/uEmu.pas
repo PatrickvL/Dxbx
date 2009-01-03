@@ -166,7 +166,7 @@ begin
             *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
           end;
 
-          DbgPrintf('EmuMain ($%X): Halo Access Adjust 1 was applied!\n', GetCurrentThreadId());
+          DbgPrintf('EmuMain : Halo Access Adjust 1 was applied!');
 
           g_bEmuException := False;
 
@@ -201,7 +201,7 @@ begin
               end;
             end;
 
-            DbgPrintf('EmuMain ($%X): Halo Access Adjust 2 was applied!\n', GetCurrentThreadId());
+            DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');
 
             g_bEmuException := False;
 
@@ -253,7 +253,7 @@ begin
 
       if ret = IDABORT then
       begin
-        printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
+        printf('EmuMain : Aborting Emulation');
         fflush(stdout);
 
         if CxbxKrnl_hEmuParent <> NULL then
@@ -264,7 +264,7 @@ begin
       else
         if ret = IDIGNORE then
         begin
-          printf('EmuMain ($%X): Ignored Breakpoint Exception\n', GetCurrentThreadId());
+          printf('EmuMain : Ignored Breakpoint Exception');
 
           g_bEmuException := False;
 
@@ -282,7 +282,7 @@ begin
 
       if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
       begin
-        printf('EmuMain ($%X): Aborting Emulation\n', GetCurrentThreadId());
+        printf('EmuMain : Aborting Emulation');
         fflush(stdout);
 
         if CxbxKrnl_hEmuParent <> NULL then
@@ -361,7 +361,7 @@ begin
 
 
     printf('%s'#13#10, szBuffer1);    *)
-    szBuffer1 := DxbxFormat('Emu(0 $%X): Received Fatal Message - > '  + szErrorMessage, [GetCurrentThreadId] );
+    szBuffer1 := 'Emu: Received Fatal Message - > '  + szErrorMessage;
     DbgPrintf(szBuffer1);
 
     MessageDlg(szBuffer1, mtError, [mbOk], 0);

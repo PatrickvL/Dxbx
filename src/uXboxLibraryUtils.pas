@@ -57,7 +57,7 @@ var
 
 implementation
 
-function TransformExportFunctionNameIntoXboxSymbolName(const aValue: string): string;
+function TransformExportFunctionNameIntoXboxFunctionName(const aValue: string): string;
 begin
   Result := aValue;
   // Is this exported function a patch (does it start with our prefix) ?
@@ -125,7 +125,7 @@ begin
     for i := 0 to ExportList.Count - 1 do
       if not ExportList[i].IsExportedVariable then
       begin
-        ExportFunctionName := TransformExportFunctionNameIntoXboxSymbolName(ExportList[i].Name);
+        ExportFunctionName := TransformExportFunctionNameIntoXboxFunctionName(ExportList[i].Name);
         if ExportFunctionName <> '' then
           AvailablePatches.AddObject(ExportFunctionName, ExportList[i].MappedAddress);
       end;

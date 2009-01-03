@@ -191,7 +191,7 @@ var
     Result := _StripStringAfterChars(Result, EndingChars);
   end;
 
-  function _GetFunctionName(aLine: string; var aFunctionName: string): Boolean;
+  function _GetSymbolName(aLine: string; var aSymbolName: string): Boolean;
   var
     Text: string;
   begin
@@ -230,7 +230,7 @@ var
 
     Result := Length(Text) >= 3;
     if Result then
-      {var}aFunctionName := Text;
+      {var}aSymbolName := Text;
   end;
 
 begin
@@ -318,7 +318,7 @@ begin
           SymbolName := '*undetermined symbol*';
           LineNr := i + 1;
           repeat
-            if _GetFunctionName(Strings[LineNr], {var}SymbolName) then
+            if _GetSymbolName(Strings[LineNr], {var}SymbolName) then
               Break;
 
             Dec(LineNr);

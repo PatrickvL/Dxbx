@@ -96,25 +96,25 @@ end;
 
 function TDxbxAPIDebugInfoSource.GetLocationInfo(const aAddr: Pointer; var Info: TJclLocationInfo): Boolean;
 var
-  DetectedFunction: PDetectedVersionedXboxLibraryFunction;
+  DetectedSymbol: PDetectedVersionedXboxLibrarySymbol;
 begin
-  DetectedFunction := DetectedFunctions.FindByAddress(TCodePointer(aAddr));
-  Result := Assigned(DetectedFunction);
+  DetectedSymbol := DetectedSymbols.FindByAddress(TCodePointer(aAddr));
+  Result := Assigned(DetectedSymbol);
   if not Result then
     Exit;
 
   with Info do
   begin
-    Address := Pointer(DetectedFunction.CodeStart); // Error address
+    Address := Pointer(DetectedSymbol.CodeStart); // Error address
 //    UnitName: string;               // Name of Delphi unit
-    ProcedureName := DetectedFunction.FunctionName;
+    ProcedureName := DetectedSymbol.SymbolName;
     OffsetFromProcName := Integer(IntPtr(aAddr) - IntPtr(Address)); // Offset from Address to ProcedureName symbol location
 //    LineNumber: Integer;
 //    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
 //    SourceName: string;             // Module file name
     Info.DebugInfo := Self; // Location object
-//    if Assigned(DetectedFunction.VersionedXboxLibrary) then
-//      BinaryFileName := DetectedFunction.VersionedXboxLibrary.LibName + '.lib'; // Name of the binary file containing the symbol
+//    if Assigned(DetectedSymbol.VersionedXboxLibrary) then
+//      BinaryFileName := DetectedSymbol.VersionedXboxLibrary.LibName + '.lib'; // Name of the binary file containing the symbol
   end;
 end;
 

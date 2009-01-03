@@ -453,7 +453,7 @@ begin
    case OS.dwPlatformId of
       VER_PLATFORM_WIN32s: FOperatingSystem := 'Windows 3.1';
       VER_PLATFORM_WIN32_WINDOWS: FOperatingSystem := 'Windows 95/98/ME';
-      VER_PLATFORM_WIN32_NT  : FOperatingSystem := 'Windows NT/2000/XP';
+      VER_PLATFORM_WIN32_NT: FOperatingSystem := 'Windows NT/2000/XP';
    end;
    FOsVersion := Format ('%d.%d', [OS.dwMajorVersion, OS.dwMinorVersion]);
    FOsBuild := Format('%d', [LOWORD(OS.dwBuildNumber)]);

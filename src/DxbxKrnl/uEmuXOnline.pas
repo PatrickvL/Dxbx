@@ -91,10 +91,11 @@ end;
     Integer   ctype,
     Integer   protocol
 )
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi ($%X): EmuThis.Emusocket'
+    DbgPrintf('EmuXapi : EmuThis.Emusocket'
            '('
            '   this                : $%.08X'
            '   af                  : $%.08X'
@@ -111,10 +112,11 @@ begin
 end;             *)
 
 (*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: Integer): Integer;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi ($%X): EmuThis.Emubind'
+    DbgPrintf('EmuXapi : EmuThis.Emubind'
            '('
            '   this                : $%.08X'
            '   s                   : $%.08X'
@@ -133,10 +135,11 @@ begin
 end;              *)
 
 (*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi ($%X): EmuThis.Emulisten'
+    DbgPrintf('EmuXapi : EmuThis.Emulisten'
            '('
            '   this                : $%.08X'
            '   s                   : $%.08X'
@@ -154,10 +157,11 @@ begin
  end;              *)
 
 (*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): Integer;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuXapi ($%X): EmuThis.Emuioctlsocket'
+    DbgPrintf('EmuXapi : EmuThis.Emuioctlsocket'
            '('
            '   this                : $%.08X'
            '   s                   : $%.08X'

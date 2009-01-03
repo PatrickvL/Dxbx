@@ -60,10 +60,12 @@ end;
 
 procedure EmuUnswizzleActiveTexture();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+(*
 var
   pPixelContainer: X_D3DPixelContainer;
-  XBFormat : DWord;
-  dwBPP : DWord;
+  XBFormat: DWord;
+  dwBPP: DWord;
+*)
 begin
     // for current usages, we're always on stage 0
     (*pPixelContainer := EmuD3DActiveTexture[0];
@@ -185,7 +187,7 @@ begin
 
         printf('');
         printf('');
-        printf('  PushBuffer@$%.08XArgs: array of const', pdwPushData);
+        printf('  PushBuffer@$%.08X...', [pdwPushData]);
         printf('');
 
         bShowPB := True;
@@ -308,7 +310,7 @@ begin
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB) then
             begin
-                printf('NVPB_InlineVertexArray(Args: array of const)');
+                printf('NVPB_InlineVertexArray(...)');
                 printf('  dwCount : %d', dwCount);
                 printf('  dwVertexShader : $%08X', dwVertexShader);
              end;
@@ -356,7 +358,7 @@ begin
             begin
                 printf('  NVPB_FixLoop(%d)', dwCount);
                 printf('');
-                printf('  Index Array DataArgs: array of const');
+                printf('  Index Array Data...');
 
                 WORD *pwVal := (WORD)(pdwPushData + 1);
 
@@ -477,9 +479,9 @@ begin
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB) then
             begin
-                printf('  NVPB_InlineIndexArray($%.08X, %d)Args: array of const', pIndexData, dwCount);
+                printf('  NVPB_InlineIndexArray($%.08X, %d)...', pIndexData, dwCount);
                 printf('');
-                printf('  Index Array DataArgs: array of const');
+                printf('  Index Array Data...');
 
                 WORD *pwVal := (WORD)pIndexData;
 
@@ -514,7 +516,7 @@ begin
                 // print out stream data
                 begin
                     printf('');
-                    printf('  Vertex Stream Data ($%.08X)Args: array of const', pActiveVB);
+                    printf('  Vertex Stream Data ($%.08X)...', pActiveVB);
                     printf('');
                     printf('  Format : %d', VBDesc.Format);
                     printf('  Size   : %d bytes', VBDesc.Size);
