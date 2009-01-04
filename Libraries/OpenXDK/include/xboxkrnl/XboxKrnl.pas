@@ -912,7 +912,7 @@ TIME_FIELDS,*PTIME_FIELDS  = packed record
 // ******************************************************************
 INLINE  function READ_REGISTER_UCHAR(Address: PUCHAR): UCHAR;
 begin
-    Result:= *(volatile UCHAR )Address;
+    Result := *(volatile UCHAR )Address;
  end;
 
 // ******************************************************************
@@ -924,7 +924,7 @@ begin
 // ******************************************************************
 INLINE  USHORT READ_REGISTER_USHORT(PUSHORT Address)
 begin
-    Result:= *(volatile USHORT )Address;
+    Result := *(volatile USHORT )Address;
  end;
 
 // ******************************************************************
@@ -936,7 +936,7 @@ begin
 // ******************************************************************
 INLINE  ULONG READ_REGISTER_ULONG(PULONG Address)
 begin
-    Result:= *(volatile ULONG )Address;
+    Result := *(volatile ULONG )Address;
  end;
 
 // ******************************************************************

@@ -34,8 +34,6 @@
 {$ENDIF}
 
 {$IFDEF DXBX_DLL}
-  // Our DLL's need actual patch addresses
-  {$DEFINE DXBX_PATCH_ADDRESSES_ENABLED}
   {$DEFINE DXBX_USE_JCLDEBUG}
 {$ENDIF}
 

@@ -354,7 +354,7 @@ begin
       ReorderObjects(lpddi.tszInstanceName, m_dwInputDeviceCount - 1);
   end;
 
-  Result:= DIENUM_CONTINUE;
+  Result := DIENUM_CONTINUE;
 end;
 
 function WrapEnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA; pvRef: Pointer): BOOL; stdcall;

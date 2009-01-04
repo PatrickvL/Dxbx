@@ -39,7 +39,7 @@ type
   end;
 
   // An NT fake object
-  TEmuNtObject = class(TObject) // TODO
+  TEmuNtObject = class(TObject) // Dxbx TODO
   private
     RefCount: ULONG; // Reference count
   protected
@@ -63,7 +63,7 @@ type
     _File: HANDLE; // The Windows file handle
     // Volume: TEmuNtVolume; // Pointer to the volume from which this came
   public
-    // TODO : We need to override NtDuplicateObject in this case
+    // Cxbx TODO : We need to override NtDuplicateObject in this case
   end;
 
 var

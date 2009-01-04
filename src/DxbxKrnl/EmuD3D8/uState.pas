@@ -48,9 +48,9 @@ begin
         begin
             .DWORD dwConv := 0;
 
-            dwConv:= dwConv or (XTL.EmuD3DDeferredRenderState[6] and $00000010) ? D3DWRAP_U : 0;
-            dwConv:= dwConv or (XTL.EmuD3DDeferredRenderState[6] and $00001000) ? D3DWRAP_V : 0;
-            dwConv:= dwConv or (XTL.EmuD3DDeferredRenderState[6] and $00100000) ? D3DWRAP_W : 0;
+            dwConv := dwConv or (XTL.EmuD3DDeferredRenderState[6] and $00000010) ? D3DWRAP_U : 0;
+            dwConv := dwConv or (XTL.EmuD3DDeferredRenderState[6] and $00001000) ? D3DWRAP_V : 0;
+            dwConv := dwConv or (XTL.EmuD3DDeferredRenderState[6] and $00100000) ? D3DWRAP_W : 0;
 
             g_pD3DDevice8.SetRenderState(D3DRS_WRAP0, dwConv);
          end;
@@ -175,7 +175,7 @@ begin
             if(pCur[8] <> X_D3DTSS_UNK) then
                 g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8]);
 
-            // TODO: Use a lookup table, this is not always a 1:1 map
+            // Cxbx TODO: Use a lookup table, this is not always a 1:1 map
             if(pCur[12] <> X_D3DTSS_UNK) then
             begin
                 if(pCur[12] > 12 and  not (pCur[12] >= 17 and pCur[12] <= 21)) then
@@ -193,7 +193,7 @@ begin
             if(pCur[15] <> X_D3DTSS_UNK) then
                 g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
 
-            // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
+            // Cxbx TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
             if(pCur[16] <> X_D3DTSS_UNK) then
             begin
                 if(pCur[16] > 12) then
@@ -308,7 +308,8 @@ begin
         g_pD3DDevice8.SetRenderState(D3DRS_LIGHTING,TRUE);
         g_pD3DDevice8.SetRenderState(D3DRS_AMBIENT, $FFFFFFFF);
         //*/
-     end;  *)
+     end;
+     *)
 end;
 
 exports
