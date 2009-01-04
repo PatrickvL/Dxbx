@@ -383,13 +383,17 @@ begin
 end;
 
 procedure CxbxKrnlResume();
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:60
+var
+  v: Integer;
+  dwExitCode: DWORD;
 begin
   if (not g_bEmuSuspended) then
     Exit;
 
     // remove 'paused' from rendering window caption text
- (*   {
+(*
+   begin
         char szBuffer[256];
 
         HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
@@ -399,70 +403,68 @@ begin
         szBuffer[strlen(szBuffer)-9] = '\0';
 
         SetWindowText(hWnd, szBuffer);
-    }
+  end;
+*)
 
-    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
-    {
-        if(g_hThreads[v] != NULL)
-        {
-            DWORD dwExitCode;
+  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
+  begin
+    if (g_hThreads[v] <> 0) then
+    begin
+      if GetExitCodeThread(g_hThreads[v], {var}dwExitCode) and (dwExitCode = STILL_ACTIVE) then
+      begin
+        // resume thread if it is active
+        ResumeThread(g_hThreads[v]);
+      end
+      else
+      begin
+        // remove thread from thread list if it is dead
+        g_hThreads[v] := 0;
+      end;
+    end;
+  end;
 
-            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
-            {
-                // resume thread if it is active
-                ResumeThread(g_hThreads[v]);
-            }
-            else
-            {
-                // remove thread from thread list if it is dead
-                g_hThreads[v] = 0;
-            }
-        }
-    }
-
-    g_bEmuSuspended = False;
-}            *)
+  g_bEmuSuspended := False;
 end;
 
 procedure CxbxKrnlSuspend();
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
-(*
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:60
 var
   v: Integer;
   dwExitCode: DWORD;
-*)
 begin
-
   if (g_bEmuSuspended or g_bEmuException) then
     Exit;
 
-  (*for v:=0 to MAXIMUM_XBOX_THREADS -1 do begin
-    if (g_hThreads[v] != Null) then begin
-
-        (*if(GetExitCodeThread(g_hThreads[v], {var}dwExitCode) and dwExitCode) = STILL_ACTIVE)
-        {
-            // suspend thread if it is active
-            SuspendThread(g_hThreads[v]);
-        }
-        else
-        {
-            // remove thread from thread list if it is dead
-            g_hThreads[v] = 0;
-        }
+  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
+  begin
+    if (g_hThreads[v] <> 0) then
+    begin
+      if GetExitCodeThread(g_hThreads[v], {var}dwExitCode) and (dwExitCode = STILL_ACTIVE) then
+      begin
+        // suspend thread if it is active
+        SuspendThread(g_hThreads[v]);
+      end
+      else
+      begin
+        // remove thread from thread list if it is dead
+        g_hThreads[v] := 0;
+      end;
     end;
-  end;    *)
+  end;
 
-    // append 'paused' to rendering window caption text
-    (*
-        char szBuffer[256];
+  // append 'paused' to rendering window caption text
+  (*
+  begin
+    char szBuffer[256];
 
-        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+    HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
 
-        GetWindowText(hWnd, szBuffer, 255 - 10);
+    GetWindowText(hWnd, szBuffer, 255 - 10);
 
-        strcat(szBuffer, ' (paused)');
-        SetWindowText(hWnd, szBuffer);
-    *)
+    strcat(szBuffer, ' (paused)');
+    SetWindowText(hWnd, szBuffer);
+  end;
+  *)
 
   g_bEmuSuspended := True;
 end;

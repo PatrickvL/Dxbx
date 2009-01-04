@@ -237,7 +237,7 @@ var
 begin
   NewFlags := 0;
 
- // Need to convert the flags, TODO: fix the xbox extensions
+ // Need to convert the flags, Cxbx TODO: fix the xbox extensions
   if (Flags and X_D3DLOCK_NOFLUSH) > 0 then
     NewFlags := NewFlags xor 0;
 

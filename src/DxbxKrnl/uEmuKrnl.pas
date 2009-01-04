@@ -322,7 +322,7 @@ function {056} xboxkrnl_InterlockedFlushSList(
   ): PSINGLE_LIST_ENTRY; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);
-  // TODO : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
+  // Cxbx TODO : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
 end;

@@ -150,7 +150,7 @@ type
   end; // SizeOf() = 38
   PXBE_SECTION = ^XBE_SECTION;
 
-  // TODO : Should we use _XBE_SECTIONHEADER or _XBE_SECTION ?
+  // Dxbx TODO : Should we use _XBE_SECTIONHEADER or _XBE_SECTION ?
 
   XBE_LIBRARYVERSION = packed record
     szName: array[0..7] of AnsiChar; // library name

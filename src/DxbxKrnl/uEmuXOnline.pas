@@ -108,7 +108,7 @@ begin
 
     EmuSwapFS(fsXbox);
 
-    Result:= ret;
+    Result := ret;
 end;             *)
 
 (*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: Integer): Integer;
@@ -125,16 +125,17 @@ begin
            ');',
            [this, s, name, namelen);
 
-    // TODO: Host-To-Network order if necessary (probably not?)
+    // Cxbx TODO: Host-To-Network order if necessary (probably not?)
 
     Integer ret := bind(s, name, namelen);
 
     EmuSwapFS(fsXbox);
 
-    Result:= ret;
+    Result := ret;
 end;              *)
 
-(*function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
+(*
+function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
@@ -147,14 +148,15 @@ begin
            ');',
            [this, s, backlog);
 
-    // TODO: Host-To-Network order if necessary (probably not?)
+    // Cxbx TODO: Host-To-Network order if necessary (probably not?)
 
     Integer ret := listen(s, backlog);
 
     EmuSwapFS(fsXbox);
 
-    Result:= ret;
- end;              *)
+    Result := ret;
+end;
+*)
 
 (*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): Integer;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0

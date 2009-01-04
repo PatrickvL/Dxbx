@@ -41,7 +41,7 @@ uses
   uDxbxKrnl;
 
 const
-  // TODO : Translate all other IRP defines from ReactOS
+  // Dxbx TODO : Translate all other IRP defines from ReactOS
   IRP_MJ_MAXIMUM_FUNCTION = $1B;
 
 type
@@ -69,7 +69,7 @@ type
     UserIosb: PIO_STATUS_BLOCK;
     UserEvent: PKEVENT;
 
-    // TODO : Translate all below
+    // Dxbx TODO : Translate all below
     union begin
       struct begin
         PIO_APC_ROUTINE  UserApcRoutine;
@@ -105,19 +105,19 @@ type
   end;
   PIRP = ^IRP;
 
-  PDRIVER_EXTENSION = UNKNOWN; // TODO : Lookup in ReactOS
-  PFAST_IO_DISPATCH = UNKNOWN; // TODO : Lookup in ReactOS
-  PDRIVER_INITIALIZE = UNKNOWN; // TODO : Lookup in ReactOS
-  PDRIVER_STARTIO = UNKNOWN; // TODO : Lookup in ReactOS
-  PDRIVER_UNLOAD = UNKNOWN; // TODO : Lookup in ReactOS
-  PDRIVER_DISPATCH = UNKNOWN; // TODO : Lookup in ReactOS
-  PIO_TIMER_ROUTINE = UNKNOWN; // TODO : Lookup in ReactOS
-  PVPB = UNKNOWN; // TODO : Lookup in ReactOS
-  DEVICE_TYPE = UNKNOWN; // TODO : Lookup in ReactOS
-  KDEVICE_QUEUE = UNKNOWN; // TODO : Lookup in ReactOS
-  KEVENT = UNKNOWN; // TODO : Lookup in ReactOS
+  PDRIVER_EXTENSION = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PFAST_IO_DISPATCH = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PDRIVER_INITIALIZE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PDRIVER_STARTIO = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PDRIVER_UNLOAD = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PDRIVER_DISPATCH = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PIO_TIMER_ROUTINE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PVPB = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  DEVICE_TYPE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  KDEVICE_QUEUE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  KEVENT = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
   PKEVENT = ^KEVENT;
-  PDEVOBJ_EXTENSION = UNKNOWN; // TODO : Lookup in ReactOS
+  PDEVOBJ_EXTENSION = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
 
   PDEVICE_OBJECT = ^DEVICE_OBJECT; // forward;
 
@@ -209,7 +209,7 @@ var
 
 function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
-  ChargeQuota: LONGBOOL // TODO : Should this be a WordBool??
+  ChargeQuota: LONGBOOL // Dxbx TODO : Should this be a WordBool??
   ): PIRP; stdcall; // Source: ReactOS
 function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   MajorFunction: ULONG;
@@ -299,7 +299,7 @@ implementation
 
 function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
-  ChargeQuota: LONGBOOL // TODO : Should this be a WordBool??
+  ChargeQuota: LONGBOOL // Dxbx TODO : Should this be a WordBool??
   ): PIRP; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);

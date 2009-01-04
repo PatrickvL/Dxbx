@@ -98,7 +98,7 @@ begin
         cresult := (cresult shl 8 or *data++) ^ crctab[cresult shr 24];
      end;
 
-    Result:= ~cresult; *)
+    Result := ~cresult; *)
 end;
 
 
@@ -116,19 +116,21 @@ begin
 
 (*XTL.VertexPatcher.~VertexPatcher()
 begin
- end; *)
+end;
+*)
 
 procedure XTL_VertexPatcher_DumpCache; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
   DbgPrintf('--- Dumping streams cache ---');
-    (*RTNode *pNode := g_PatchedStreamsCache.getHead();
+    (*
+    RTNode *pNode := g_PatchedStreamsCache.getHead();
     while(pNode)
     begin
         CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )pNode.pResource;
         if(pCachedStream) then
         begin
-            // TODO: Write nicer dump presentation
+            // Cxbx TODO: Write nicer dump presentation
             printf('Key: $%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: $%.08X',
                    pNode.uiKey, pCachedStream.uiCacheHit, pCachedStream.bIsUP ? 'YES' : 'NO',
                    pCachedStream.Stream.uiOrigStride, pCachedStream.Stream.uiNewStride,
@@ -137,7 +139,8 @@ begin
          end;
 
         pNode := pNode.pNext;
-     end;  *)
+     end;
+     *)
 end;
 
 (*procedure XTL.VertexPatcher.CacheStream(var pPatchDesc: VertexPatchDesc;
@@ -216,7 +219,7 @@ begin
          end;
         uiStride  := pPatchDesc.uiVertexStreamZeroStride;
         pCalculateData := (uint08 )pPatchDesc.pVertexStreamZeroData;
-        // TODO: This is sometimes the number of indices, which isn't too good
+        // Cxbx TODO: This is sometimes the number of indices, which isn't too good
         uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
         pCachedStream.bIsUP := True;
         pCachedStream.pStreamUP := pCalculateData;
@@ -238,7 +241,8 @@ begin
     pCachedStream.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount;
     pCachedStream.lLastUsed := clock();
     g_PatchedStreamsCache.insert(uiKey, pCachedStream);
- end;        *)
+end;
+*)
 
 procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
@@ -297,7 +301,7 @@ begin
          end;
         uiStride  := pPatchDesc.uiVertexStreamZeroStride;
         pCalculateData := (uint08 )pPatchDesc.pVertexStreamZeroData;
-        // TODO: This is sometimes the number of indices, which isn't too good
+        // Cxbx TODO: This is sometimes the number of indices, which isn't too good
         uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
         uiKey := (uint32)pCalculateData;
         //pCachedStream.bIsUP = True;
@@ -333,7 +337,7 @@ begin
              end;
             else
             begin
-                // TODO: Do something about this
+                // Cxbx TODO: Do something about this
                 if(pCachedStream.bIsUP) then
                 begin
                     FreeCachedStream(pCachedStream.pStreamUP);
@@ -387,8 +391,9 @@ begin
         pOrigVertexBuffer.Release();
      end;
 
-    Result:= bApplied;
- end;                    *)
+    Result := bApplied;
+end;
+*)
 
 (*function XTL.VertexPatcher.GetNbrStreams(var pPatchDesc: VertexPatchDesc): UINT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
@@ -398,19 +403,20 @@ begin
         VERTEX_DYNAMIC_PATCH *pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
         if(pDynamicPatch) then
         begin
-            Result:= pDynamicPatch.NbrStreams;
+            Result := pDynamicPatch.NbrStreams;
          end;
         else
         begin
-            Result:= 1; // Could be more, but it doesn't matter as we're not going to patch the types
+            Result := 1; // Could be more, but it doesn't matter as we're not going to patch the types
          end;
      end;
     else if(g_CurrentVertexShader) then
     begin
-        Result:= 1;
+        Result := 1;
      end;
-    Result:= 0;
- end;        *)
+    Result := 0;
+end;
+*)
 
 (*function XTL.VertexPatcher.PatchStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
@@ -418,18 +424,18 @@ begin
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     if( not m_pDynamicPatch) then
     begin
-        Result:= False;
+        Result := False;
      end;
 
     if( not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
     begin
         // No need to patch FVF types, there are no xbox extensions
-        Result:= False;
+        Result := False;
      end;
 
     if( not m_pDynamicPatch.pStreamPatches[uiStream].NeedPatch) then
     begin
-        Result:= False;
+        Result := False;
      end;
     // Do some groovey patchin'
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
@@ -476,7 +482,7 @@ begin
          end;
         uiStride  := pPatchDesc.uiVertexStreamZeroStride;
         pOrigData := (uint08 )pPatchDesc.pVertexStreamZeroData;
-        // TODO: This is sometimes the number of indices, which isn't too good
+        // Cxbx TODO: This is sometimes the number of indices, which isn't too good
         dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
         pNewVertexBuffer := 0;
         pNewData := (uint08)CxbxMalloc(dwNewSize);
@@ -645,7 +651,7 @@ begin
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := 0.0f;
                     ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[2];
 
-                (*TODO
+                (*Cxbx TODO
                  $02:
                     printf('D3DVSDT_NONE / xbox ext. nsp /');
                     dwNewDataType := $FF;
@@ -689,7 +695,8 @@ begin
     m_bPatched := True;
 
     Result := True;
- end;        *)
+end;
+*)
 
 (*function XTL.VertexPatcher.PatchPrimitive(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
@@ -697,7 +704,7 @@ begin
     PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     // only quad and listloop are currently supported
     if((pPatchDesc.PrimitiveType <> X_D3DPT_QUADLIST) and (pPatchDesc.PrimitiveType <> X_D3DPT_LINELOOP)) then
-        Result:= False;
+        Result := False;
 
     if(pPatchDesc.pVertexStreamZeroData and uiStream > 0) then
     begin
@@ -866,8 +873,9 @@ begin
 
     m_bPatched := True;
 
-    Result:= True;
- end;           *)
+    Result := True;
+end;
+*)
 
 (*function XTL.VertexPatcher.Apply(var pPatchDesc: VertexPatchDesc): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
@@ -900,14 +908,15 @@ begin
         Patched:= Patched or LocalPatched;
      end;
 
-    Result:= Patched;
- end;         *)
+    Result := Patched;
+end;
+*)
 
 function XTL_VertexPatcher_Restore: LONGBOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    if( not this.m_bPatched) then
-        Result:= False;
+        Result := False;
 
     for(UINT uiStream := 0; uiStream < m_uiNbrStreams; uiStream++)
     begin
@@ -939,7 +948,8 @@ begin
             m_pStreams[uiStream].bUsedCached := False;
          end;
 
-     end;       *)
+     end;
+     *)
 
   Result := True;
 end;
@@ -1170,7 +1180,7 @@ begin
         VPDesc.dwOffset := 0;
         VPDesc.pVertexStreamZeroData := g_IVBTable;
         VPDesc.uiVertexStreamZeroStride := uiStride;
-        // TODO: Set the current shader and let the patcher handle it..
+        // Cxbx TODO: Set the current shader and let the patcher handle it..
         VPDesc.hVertexShader := g_IVBFVF;
 
         VertexPatcher VertPatch;
@@ -1273,7 +1283,7 @@ begin
         VPDesc.dwOffset := 0;
         VPDesc.pVertexStreamZeroData := g_IVBTable;
         VPDesc.uiVertexStreamZeroStride := uiStride;
-        // TODO: Set the current shader and let the patcher handle it..
+        // Cxbx TODO: Set the current shader and let the patcher handle it..
         VPDesc.hVertexShader := g_IVBFVF;
 
         VertexPatcher VertPatch;
@@ -1415,7 +1425,7 @@ else
     dwMipMapLevels := 6;
 
             // iterate through the number of mipmap levels
-  for (uint level := 0; level < dwMipMapLevels; level + +)
+  for (uint level := 0; level < dwMipMapLevels; level++)
   begin
     D3DLOCKED_RECT LockedRect;
 
@@ -1436,7 +1446,7 @@ else
       begin
         if ((DWORD)pSrc = $80000000) then
         begin
-                            // TODO: Fix or handle this situation..?
+          // Cxbx TODO: Fix or handle this situation..?
         end
         else
         begin
@@ -1465,7 +1475,7 @@ else
         end
         else
         begin
-          for (DWORD v := 0; v < dwMipHeight; v + +)
+          for (DWORD v := 0; v < dwMipHeight; v++)
           begin
             memcpy(pDest, pSrc + dwMipOffs, dwMipWidth * dwBPP);
 

@@ -113,7 +113,7 @@ function xboxkrnl_NtQueueApcThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryDirectoryFile(
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // Todo: define this routine's prototype
+  ApcRoutine: PVOID; // Cxbx Todo: define this routine's prototype
   ApcContext: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK; // out
   FileInformation: PFILE_DIRECTORY_INFORMATION; // out
@@ -149,7 +149,7 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   FileInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReadFile(
-  FileHandle: HANDLE; // TODO: correct paramters
+  FileHandle: HANDLE; // Cxbx TODO: correct paramters
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // OPTIONAL
   ApcContext: PVOID;
@@ -174,7 +174,7 @@ function xboxkrnl_NtSetEvent(
   PreviousState: PLONG // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetInformationFile(
-  FileHandle: HANDLE; // TODO: correct paramters
+  FileHandle: HANDLE; // Cxbx TODO: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length: ULONG;
@@ -209,7 +209,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFile(
-  FileHandle: HANDLE; // TODO: correct paramters
+  FileHandle: HANDLE; // Cxbx TODO: correct paramters
   Event: PVOID;
   ApcRoutine: PVOID;
   ApcContext: PVOID;
@@ -396,7 +396,7 @@ begin
 	    end;
 
         //
-        // TODO: Wildcards are not allowed??
+        // Cxbx TODO: Wildcards are not allowed??
         //
 
         begin
@@ -614,7 +614,7 @@ end;
 function xboxkrnl_NtQueryDirectoryFile(
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // Todo: define this routine's prototype
+  ApcRoutine: PVOID; // Cxbx Todo: define this routine's prototype
   ApcContext: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK; // out
   FileInformation: PFILE_DIRECTORY_INFORMATION; // out
@@ -726,7 +726,7 @@ begin
 end;
 
 function xboxkrnl_NtReadFile(
-  FileHandle: HANDLE; // TODO: correct paramters
+  FileHandle: HANDLE; // Cxbx TODO: correct paramters
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // OPTIONAL
   ApcContext: PVOID;
@@ -797,7 +797,7 @@ begin
 end;
 
 function xboxkrnl_NtSetInformationFile(
-  FileHandle: HANDLE; // TODO: correct paramters
+  FileHandle: HANDLE; // Cxbx TODO: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length: ULONG;
@@ -897,7 +897,7 @@ begin
 end;
 
 function xboxkrnl_NtWriteFile(
-  FileHandle: HANDLE; // TODO: correct paramters
+  FileHandle: HANDLE; // Cxbx TODO: correct paramters
   Event: PVOID;
   ApcRoutine: PVOID;
   ApcContext: PVOID;

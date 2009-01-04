@@ -55,7 +55,8 @@ procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3D
 begin
   if Assigned(pFixup) then
     CxbxKrnlCleanup('PushBuffer has fixups');
-  Xtl_EmuExecutePushBufferRaw(pPushBuffer.Data); 
+    
+  XTL_EmuExecutePushBufferRaw(pPushBuffer.Data); 
 end;
 
 procedure EmuUnswizzleActiveTexture();
@@ -81,9 +82,9 @@ begin
 
     // remove lock
     pPixelContainer.EmuTexture8.UnlockRect(0);
-    pPixelContainer.Common:= pPixelContainer.Common and ~X_D3DCOMMON_ISLOCKED;
+    pPixelContainer.Common := pPixelContainer.Common and ~X_D3DCOMMON_ISLOCKED;
 
-    // TODO: potentially CRC to see if this surface was actually modified..
+    // Cxbx TODO: potentially CRC to see if this surface was actually modified..
 
     //
     // unswizzle texture
@@ -143,7 +144,8 @@ begin
          end;
 
         DbgPrintf('Active texture was unswizzled');
-     end; *)
+     end;
+     *)
 end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
@@ -173,7 +175,7 @@ begin
     D3DPRIMITIVETYPE    PCPrimitiveType := (D3DPRIMITIVETYPE)-1;
     X_D3DPRIMITIVETYPE  XBPrimitiveType := X_D3DPT_INVALID;
 
-    // TODO: This technically should be enabled
+    // Cxbx TODO: This technically should be enabled
     XTL.EmuUpdateDeferredStates();
 
     #ifdef _DEBUG_TRACK_PB
@@ -385,7 +387,7 @@ begin
             begin
                 HRESULT hRet;
 
-                // TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
+                // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
                 if((dwCount*2 + 2*2) > maxIBSize) then
                 begin
                     if(pIndexBuffer <> 0) then
@@ -427,7 +429,7 @@ begin
                     VPDesc.dwOffset := 0;
                     VPDesc.pVertexStreamZeroData := 0;
                     VPDesc.uiVertexStreamZeroStride := 0;
-                    // TODO: Set the current shader and let the patcher handle it..
+                    // Cxbx TODO: Set the current shader and let the patcher handle it..
                     VPDesc.hVertexShader := g_CurrentVertexShader;
 
                     VertexPatcher VertPatch;
@@ -537,7 +539,7 @@ begin
             begin
                 HRESULT hRet;
 
-                // TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
+                // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
                 if(dwCount*2 > maxIBSize) then
                 begin
                     if(pIndexBuffer <> 0) then
@@ -590,7 +592,7 @@ begin
                     VPDesc.dwOffset := 0;
                     VPDesc.pVertexStreamZeroData := 0;
                     VPDesc.uiVertexStreamZeroStride := 0;
-                    // TODO: Set the current shader and let the patcher handle it..
+                    // Cxbx TODO: Set the current shader and let the patcher handle it..
                     VPDesc.hVertexShader := g_CurrentVertexShader;
 
                     VertexPatcher VertPatch;
@@ -639,14 +641,15 @@ begin
         printf('');
         printf('CxbxDbg> ');
         fflush(stdout);
-     end;
+    end;
     //endif
 
     if(g_bStepPush) then
     begin
         g_pD3DDevice8.Present(0,0,0,0);
         Sleep(500);
-     end;             *)
+    end;
+    *)
 end;
 
 
@@ -687,7 +690,7 @@ begin
 
     WORD * pwChk := (WORD)pIndexData;
 
-    for (uint chk := 0; chk < dwCount; chk + +)
+    for (uint chk := 0; chk < dwCount; chk++)
     begin
       DWord x = * pwChk := * pwChk + 1;
 
@@ -731,7 +734,7 @@ begin
     fprintf(dbgVertices, '      %d;', maxIndex + 1);
 
     uint max := maxIndex + 1;
-    for (uint v := 0; v < max; v + +)
+    for (uint v := 0; v < max; v++)
     begin
       fprintf(dbgVertices, '      %f;%f;%f;%s',
         * (FLOAT)@pVBData[v * uiStride + 0],
@@ -752,7 +755,7 @@ begin
 
     DWord la := a, lb = b, lc = c;
 
-    for (uint i := 2; i < max; i + +)
+    for (uint i := 2; i < max; i++)
     begin
       fprintf(dbgVertices, '      3;%d,%d,%d;%s',
         a, b, c, (i < (max - 1))? ',': ';');

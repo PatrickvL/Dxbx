@@ -159,11 +159,11 @@ begin
     [lpFileName, lpFileName, lpFindFileData]);
 
     //
-    // TODO: this code is replicated in NtCreateFile. make this a function
+    // Cxbx TODO: this code is replicated in NtCreateFile. make this a function
     //
 
     //
-    // TODO: replace full directories with their shorthand (D:\, etc)
+    // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
     //
 
   Char * szBuffer := (Char)lpFileName;
@@ -258,7 +258,7 @@ begin
     [hFindFile, lpFindFileData]);
 
     //
-    // TODO: replace full directories with their shorthand (D:\, etc)
+    // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
     //
 
   BOOL bRet;
@@ -725,7 +725,7 @@ begin
   begin
     Integer v;
 
-    for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
+    for(v := 0;v<XINPUT_SETSTATE_SLOTS;v++)
     begin
       if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
       begin
@@ -772,7 +772,7 @@ begin
   begin
     Integer v;
 
-    for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
+    for(v := 0;v<XINPUT_SETSTATE_SLOTS;v++)
     begin
       THandle hDevice := g_pXInputSetStateStatus[v].hDevice;
 
@@ -800,7 +800,8 @@ begin
         pFeedback.Header.dwStatus := ERROR_SUCCESS;
       end;
     end;
-  end;       *)
+  end;
+  *)
 
   EmuSwapFS(fsXbox);
 
@@ -876,7 +877,7 @@ begin
       if (pph.pPollingParameters.fAutoPoll = False) then
       begin
         //
-        // TODO: uh..
+        // Cxbx TODO: uh..
         //
 
         EmuWarning('EmuXInputGetState : fAutoPoll := False');
@@ -893,7 +894,8 @@ begin
         ret := ERROR_SUCCESS;
       end;
     end;
-  end;    *)
+  end;
+  *)
 
   EmuSwapFS(fsXbox);
 
@@ -931,7 +933,7 @@ begin
 
     bool found := False;
 
-    for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
+    for(v := 0;v<XINPUT_SETSTATE_SLOTS;v++)
     begin
       if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
       begin
@@ -955,7 +957,7 @@ begin
 
     if (not found) then
     begin
-      for(v:=0;v<XINPUT_SETSTATE_SLOTS;v++)
+      for(v := 0;v<XINPUT_SETSTATE_SLOTS;v++)
       begin
         if (g_pXInputSetStateStatus[v].hDevice = 0) then
         begin
@@ -974,7 +976,8 @@ begin
         CxbxKrnlCleanup('Ran out of XInputSetStateStatus slots!');
       end;
     end;
-  end; *)
+  end;
+  *)
 
   EmuSwapFS(fsXbox);
 
@@ -1169,7 +1172,7 @@ begin
 
   Function1ArgStdCall(dwDummy1)(dwDummy2);
 
-  // TODO: Call thread notify routines ?
+  // Cxbx TODO: Call thread notify routines ?
 end;
 
 (* Cxbx : Too High Level!

@@ -100,7 +100,7 @@ procedure {049} xboxkrnl_HalReturnToFirmware(
 function {050} xboxkrnl_HalWriteSMBusValue(
   Address: UCHAR;
   Command: UCHAR;
-  WordFlag: BOOLEAN; // TODO : What should we use: LONGBOOL or WORDBOOL?
+  WordFlag: BOOLEAN; // Dxbx TODO : What should we use: LONGBOOL or WORDBOOL?
   Value: ULONG
   ): ULONG; stdcall; // Source: OpenXDK
 function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -253,7 +253,7 @@ end;
 function {050} xboxkrnl_HalWriteSMBusValue(
   Address: UCHAR;
   Command: UCHAR;
-  WordFlag: BOOLEAN; // TODO : What should we use: LONGBOOL or WORDBOOL?
+  WordFlag: BOOLEAN; // Dxbx TODO : What should we use: LONGBOOL or WORDBOOL?
   Value: ULONG
   ): ULONG; stdcall; // Source: OpenXDK
 begin

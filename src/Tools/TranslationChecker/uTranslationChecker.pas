@@ -216,7 +216,7 @@ var
 
     // Scan for C function names :
     if Text = '' then
-      Text := _GetTextAfterPrefix(aLine, ' WINAPI ', '(:;');
+      Text := _GetTextAfterPrefix(aLine, ' WINAPI ', '[(:;');
 
     if Text = '' then
     begin
@@ -225,7 +225,7 @@ var
       if not Result then
         Exit;
 
-      Text := Trim(_StripStringAfterChars(aLine, '(:;'));
+      Text := Trim(_StripStringAfterChars(aLine, '[(:;'));
     end;
 
     Result := Length(Text) >= 3;

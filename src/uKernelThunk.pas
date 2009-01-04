@@ -92,9 +92,9 @@ var
     {037}@xboxkrnl_FscSetCacheSize,
     {038}@xboxkrnl_HalClearSoftwareInterrupt,
     {039}@xboxkrnl_HalDisableSystemInterrupt,
-    {040}@xboxkrnl_HalDiskCachePartitionCount, // TODO : variable ?
-    {041}@xboxkrnl_HalDiskModelNumber, // TODO : variable ?
-    {042}@xboxkrnl_HalDiskSerialNumber, // TODO : variable ?
+    {040}@xboxkrnl_HalDiskCachePartitionCount, // Dxbx TODO : variable ?
+    {041}@xboxkrnl_HalDiskModelNumber, // Dxbx TODO : variable ?
+    {042}@xboxkrnl_HalDiskSerialNumber, // Dxbx TODO : variable ?
     {043}@xboxkrnl_HalEnableSystemInterrupt,
     {044}@xboxkrnl_HalGetInterruptVector,
     {045}@xboxkrnl_HalReadSMBusValue,
@@ -119,7 +119,7 @@ var
     {064}@xboxkrnl_IoCompletionObjectType, // variable
     {065}@xboxkrnl_IoCreateDevice,
     {066}@xboxkrnl_IoCreateFile,
-// TODO : Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Kf, Ps and Xe
+// Dxbx TODO : Review all below, except these finished prefixes : Av, Dbg, Ex, Fs, Hal, Kd, Kf, Ps and Xe
     {067}@xboxkrnl_IoCreateSymbolicLink,
     {068}@xboxkrnl_IoDeleteDevice,
     {069}@xboxkrnl_IoDeleteSymbolicLink,
@@ -408,7 +408,7 @@ var
     {352}@xboxkrnl_RtlRip,
     {353}@xboxkrnl_XboxLANKey,
     {354}@xboxkrnl_XboxAlternateSignatureKeys,
-    {355}@xboxkrnl_XePublicKeyData, // TODO : variable ?
+    {355}@xboxkrnl_XePublicKeyData, // Dxbx TODO : variable ?
     {356}@xboxkrnl_HalBootSMCVideoMode, // variable
     {357}@xboxkrnl_IdexChannelObject,
     {358}@xboxkrnl_HalIsResetOrShutdownPending,

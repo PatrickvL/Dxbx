@@ -232,7 +232,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  // TODO : How to apply the local arguments like lpThreadAttributes ?
+  // Dxbx TODO : How to apply the local arguments like lpThreadAttributes ?
   ThreadHandle := 0;
   ThreadExtraSize := dwStackSize; // ??
   KernelStackSize := dwStackSize; // ??

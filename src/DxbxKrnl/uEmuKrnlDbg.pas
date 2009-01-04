@@ -52,7 +52,7 @@ function {007} xboxkrnl_DbgLoadImageSymbols(
   ): NTSTATUS; stdcall; // Source: ReactOS
 function {008} xboxkrnl_DbgPrint(
   Format: PCCH;
-  Args: array of const // TODO : Check if this is a correct translation of '...'
+  Args: array of const // Dxbx TODO : Check if this is a correct translation of '...'
   ): ULONG; stdcall; // Source: ReactOS - Uncertain
 function {010} xboxkrnl_DbgPrompt(
   Prompt: PCCH;
@@ -97,7 +97,7 @@ end;
 
 function {008} xboxkrnl_DbgPrint(
   Format: PCCH;
-  Args: array of const // TODO : Check if this is a correct translation of '...'
+  Args: array of const // Dxbx TODO : Check if this is a correct translation of '...'
   ): ULONG; stdcall; // Source: ReactOS - Uncertain
 begin
   EmuSwapFS(fsWindows);
