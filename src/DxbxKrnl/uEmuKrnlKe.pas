@@ -587,7 +587,7 @@ begin
 	DbgPrintf('EmuKrnl : KeSetTimer' +
 		   #13#10'(' +
 		   #13#10'   Timer               : 0x%.08X' +
-		   #13#10'   DueTime             : 0x%.16i' + // was %I64X
+		   #13#10'   DueTime             : 0x%.16X' + // was %I64X
 		   #13#10'   Dpc                 : 0x%.08X' +
 		   #13#10');',
 		   [Timer, DueTime.QUADPART, Dpc]);
@@ -612,7 +612,7 @@ begin
   DbgPrintf('EmuKrnl : KeSetTimerEx' +
            #13#10'(' +
            #13#10'   Timer               : 0x%.08X' +
-           #13#10'   DueTime             : 0x%.16i' + // was %I64X
+           #13#10'   DueTime             : 0x%.16X' + // was %I64X
            #13#10'   Period              : 0x%.08X' +
            #13#10'   Dpc                 : 0x%.08X' +
            #13#10');',

@@ -1389,14 +1389,12 @@ begin
 
   if (Address < 136) and VshHandleIsVertexShader(Handle) then
   begin
-    (*
-    pVertexShader := VERTEX_SHADER(VshHandleGetVertexShader(Handle)).aHandle;
+    pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
     for i := Address to pVertexShader.Size - 1 do
     begin
       // Cxbx TODO: This seems very fishy
       g_VertexShaderSlots[i] := Handle;
     end;
-    *)
   end;
 
   EmuSwapFS(fsXbox);
@@ -7416,12 +7414,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShaderType(aHandle: DWORD; pType: DWORD);
-// Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
+procedure XTL_EmuIDirect3DDevice8_GetVertexShaderType(aHandle: DWORD; pType: PDWORD); stdcall;
+// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
   EmuSwapFS(fsWindows);
 
-    // debug trace
+  // debug trace
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_GetVertexShaderType' +
     #13#10'(' +
     #13#10'   Handle              : 0x%.08X' +
@@ -7429,11 +7427,10 @@ begin
     #13#10');',
     [aHandle, pType]);
 
-    if (pType > 0) and VshHandleIsVertexShader(aHandle) then
-    begin
-      { Dxbx TODO: need to be translated to delphi }
-      // pType := VshHandleGetVertexShader(aHandle).Handle.cType;
-    end;
+  if Assigned(pType) and VshHandleIsVertexShader(aHandle) then
+  begin
+    pType^ := PVERTEX_SHADER(VshHandleGetVertexShader(aHandle).Handle)._Type;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -7443,7 +7440,7 @@ function XTL_EmuIDirect3DDevice8_GetVertexShaderDeclaration(Handle: DWORD;
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pVertexShader: VERTEX_SHADER;
+  pVertexShader: PVERTEX_SHADER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7812,6 +7809,7 @@ exports
   XTL_EmuIDirect3DDevice8_GetTransform name PatchPrefix + 'D3DDevice_GetTransform',
   XTL_EmuIDirect3DDevice8_GetVertexShader name PatchPrefix + 'D3DDevice_GetVertexShader',
   XTL_EmuIDirect3DDevice8_GetVertexShaderSize name PatchPrefix + 'D3DDevice_GetVertexShaderSize',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderType name PatchPrefix + 'D3DDevice_GetVertexShaderType',
   XTL_EmuIDirect3DDevice8_GetViewport name PatchPrefix + 'D3DDevice_GetViewport',
   XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale name PatchPrefix + 'D3DDevice_GetViewportOffsetAndScale',
   XTL_EmuIDirect3DDevice8_GetVisibilityTestResult name PatchPrefix + 'D3DDevice_GetVisibilityTestResult',

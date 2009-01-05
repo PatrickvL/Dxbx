@@ -98,15 +98,15 @@ type
   end;
 
   VERTEX_SHADER = packed record
-    aHandle: DWord;
+    Handle: DWord;
     // These are the parameters given by the XBE,
     // we save them to be be able to return them when necassary.
     Size: UINT;
-    pDeclaration: DWord;
+    pDeclaration: PDWord;
     DeclarationSize: DWord;
-    pFunction: DWord;
+    pFunction: PDWord;
     FunctionSize: DWord;
-    aType: DWord;
+    _Type: DWord;
     Status: DWord;
     // Needed for dynamic stream patching
     VertexDynamicPatch: VERTEX_DYNAMIC_PATCH;
