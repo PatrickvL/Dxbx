@@ -31,7 +31,7 @@ uses
 function XTL_IsValidCurrentShader: Boolean; stdcall; // forward
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
-function VshHandleGetVertexShader(aHandle: DWORD): X_D3DVertexShader;
+function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
 
 implementation
 
@@ -83,11 +83,10 @@ begin
   Result := (aHandle and $8000000) <> 0;
 end;
 
-function VshHandleGetVertexShader(aHandle: DWORD): X_D3DVertexShader;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-(*  Result :=  aHandle and $7FFFFFFF; *)
-{ return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }
+  Result :=  PX_D3DVertexShader(aHandle and $7FFFFFFF);
 end;
 
 exports
