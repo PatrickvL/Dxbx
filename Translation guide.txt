@@ -129,6 +129,19 @@ Converting C/C++ operators to Delphi:
 		var1 := var1 * var2;
 
 
+Pointer translation
+-------------------
+
+C/C++ 
+
+     *variabele = value;
+     PDWord *pSampleValue;
+
+Delphi
+
+     variabele^ := value;
+     pSampleValue : PDWord;
+
 
 Xbox Kernel sources
 -------------------
