@@ -16,6 +16,10 @@ Q: Where can I download Dxbx?
 A: We're hosting the development on sourceforge (http://sourceforge.net/projects/dxbx), where you can also download the latest releases.
    Apart from that, Shadow_tj has set up a website for Dxbx (http://www.shadowtj.org/main/pages/projects/Dxbx.html) with some more information that might interest you.
 
+Q: I heard you need official Xbox1 SDK's (Software Development Kits) from Microsoft to be able to work on Dxbx, is this true?
+A: No. Actually, we don't use a single file from these SDK's (or XDK's as they are frequently called).
+   (We do use function-patterns derived from them however, see below.)
+
 Q: Is this legal?
 A: As we're not using any classified information or restricted files, we believe we're not violating any copyright or other law.
    If you feel there's still a risk (or other problem) in the way we do things, please tell us.
@@ -26,7 +30,7 @@ A: No - we're building an Xbox_1_ emulator - got that?
 Q: Can't you start on an Xbox 360 emulator instead?
 A: Yes, we could. But we won't - you could try it yourself though ;-)
 
-Q: Are there more Xbox1 emulators?
+Q: Are there any other Xbox1 emulators?
 A: Yes, there's Xeon - the first emulator to run the Xbox1 game 'Halo' (that's about the only thing it did however, and the project is dead since).
    Other projects that we know of are Xenoborg, XProject and IronBabel.
    And then there's Cxbx : The only working open-source Xbox1 emulator available.
@@ -53,15 +57,14 @@ A: In LLE the actual hardware is (almost) completely simulated in software.
    Given enough processor power this would potentially result in a (very) good level of compatibility with the actual hardware.
    The problem however is, that every component of the actual Xbox1 must be emulated - that's a HUGE undertaking, even when you could start with an existing code-base like VirtualBox (http://www.virtualbox.org/).
    HLE works by running Xbox1 software natively on Windows, by impersonating to the application it's running on an Xbox1.
-   This needs a few tricks, and won't be able to run everything, but it's enough to emulate a few (hopefully more and a few) games.
+   This requires a few tricks, and won't be able to run everything, but it's enough to emulate a few (and hopefully more than a few) games.
    Also, HLE is regarded as being a faster way of emulation than LLE.
 
 Q: How do you impersonate an Xbox1 while running on Windows XP?
 A: This involves a few steps :
    1) Dxbx converts the XBE (the Xbox1 executable format) to a windows EXE
    2) This EXE is statically linked to our Xbox1 kernel-replacement DLL.
-   3) Our kernel DLL bootstraps the game by setting up a kernel thunk table and patching some library code contained in the executable with patches that solve the differences
-between Xbox1 and Windows.
+   3) Our kernel DLL bootstraps the game by setting up a kernel thunk table and patching some library code contained in the executable with patches that solve the differences between Xbox1 and Windows.
    4) Once the environment is set up, we call the original entry-point of the executable, effectively launching the game.
    Now, hopefully we've done enough patching to make this work!
 
@@ -74,25 +77,24 @@ A:  Well, for starters Cxbx is branched into 4 different versions already, and n
    So one of our targets will be translating all the Cxbx branches into one Delphi version.
    Other area's of improvement are : a more complete implementation of the Xbox kernel and more generic API detection.
 
-Q: What do you mean with 'generic API detection'?
-A: Just like Cxbx, we have to do a bit of a trick to get software written for the Xbox1 to run on Windows.
-
 Q: Are you really implementing the whole Xbox1 kernel again?!
 A: Yes and no - Yes, eventually we'll have to implement each and every API available in the Xbox1 kernel.
    But no, an actual implementation in the spirit of Wine or ReactOS is normally not necessary - lots of the API's can be routed on to the Windows XP kernel - that's the whole
 idea of HLE!
    But still, there are 379 unique API indexes in the Xbox1 kernel, so it's still quite a bit of work.
 
-Q: Where are you guys getting your information from?
-A: Lots of information can be gleaned from the Cxbx sources. Google helps a lot too.
-   Also, various people contribute all forms of input to us : XBE dumps, documentation of Xbox internals, pattern files, etc.
-
-Q: I heard you need official Xbox1 SDK's (Software Development Kits) from Microsoft to be able to work on Dxbx, is this true?
-A: No. Actually, we don't use a single file from these SDK's (or XDK's as they are frequently called).
-   We do use patterns derived from them however.
-
-Q: What about those patterns?
+Q: What do you mean with 'generic API detection'?
+A: Just like Cxbx, we have to do a bit of a trick to get software written for the Xbox1 to run on Windows.
+   The main part is patching all functions that cannot run without the actual hardware present (think of the DirectX API's for example).
+   To patch functions, we first have to locate them. Cxbx contains an ingenious hand-crafted data-structure for this, but it requires an insane amount of (debugging) work to achieve good results.
+   So in Dxbx we took another approach, and generate the needed data-structure automatically, using so-called pattern-files.
+   This way, we get much more detailed information on the various functions linked into the game - and rather effortlessly too!
+   Also, because we can detect the presence of named variables too, we don't need any hard-coded logic to find them (like Cxbx has).
+   Last but not least, having a fairly detailed map of the executable gives us the ability to produce stack-traces when something goes wrong (which is quite helpfull when debugging a crash).
+   
+Q: What can you tell me about those pattern-files?
 A: Patterns (or rather: function patterns) are files that can be generated with a tool called IDA Pro (http://www.hex-rays.com/idapro/flirt.htm).
+   Pattern files contain enough information for us to detect tens of thousands of symbols (functions and variables) reliably.
    If you have access to IDA Pro and an XDK version we don't have patterns for yet, than please : send them to us!
    (Again : not the XDK - it's just the patterns we need.)
 
@@ -132,6 +134,10 @@ A: You can use one of these methods, all will produce compareable output:
    XdkTracker - Start it, choose menu option "File | Get XDK Info from Xbe"
    Now you have dumped your XBE, send the resulting file to us and we'll add it to our growing archive.
    
+Q: Where are you guys getting your information from?
+A: Lots of information can be gleaned from the Cxbx sources. Google helps a lot too.
+   Also, various people contribute all forms of input to us : XBE dumps, documentation of Xbox internals, pattern files, etc.
+
 Q: I have another question that's not on this list, what can I do?
 A: First, try searching the Dxbx forum - there's a good chance someone already talked about your topic.
    If that doesn't help, post your question in a new topic, or send a PM or mail to one of the Dxbx developers.
