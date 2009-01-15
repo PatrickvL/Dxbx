@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="progress.xsl"?>
+<DXBXTRANSLATION path="F:\development\delphi\Projects\Dxbx\Dxbx\src" timestamp="2009-01-13 18:19:17">
+  <UNIT name="uEmuShared">
+    <SYMBOL name="EmuShared.Lock" line="196" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuShared.Unlock" line="202" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuShared.GetXBVideo" line="210" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuShared.SetXBVideo" line="218" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuShared.GetXBController" line="228" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuShared.SetXBController" line="236" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuShared.GetXbePath" line="244" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuShared.SetXbePath" line="252" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="SetXbePath" line="263" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uXBController">
+    <SYMBOL name="XBCtrlObject =" line="46" frombranch="martin" fromsource="XBController.h" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.Initialize" line="231" frombranch="martin" fromsource="XBController.cpp" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.Initialize" line="231" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="XBController.Finalize" line="261" frombranch="martin" fromsource="XBController.cpp" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.Finalize" line="261" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="XBController.EnumObjectsCallback" line="273" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="WrapEnumObjectsCallback" line="325" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.EnumGameCtrlCallback" line="334" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="WrapEnumGameCtrlCallback" line="360" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.ListenPoll" line="369" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.ConfigBegin" line="617" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.ConfigEnd" line="640" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.ConfigPoll" line="653" frombranch="martin" fromsource="" fromrevision="10" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.DeviceIsUsed" line="937" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.DInputCleanup" line="953" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.DInputInit" line="973" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBController.Insert" line="1071" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.ListenBegin" line="1100" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.ListenEnd" line="1128" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.Load" line="1141" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.Map" line="1187" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.ReorderObjects" line="1213" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XBController.Save" line="1249" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="95"/>
+  </UNIT>
+  <UNIT name="uXbVideo">
+    <SYMBOL name="XBVideo.Load" line="86" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XBVideo.Save" line="116" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uDxbxKrnl">
+    <SYMBOL name="CxbxKrnlInit" line="89" frombranch="martin" fromsource="" fromrevision="39" translator="Patrick" done="99"/>
+    <SYMBOL name="CxbxKrnlRegisterThread" line="345" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="CxbxKrnlTerminateThread" line="365" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="EmuXRefFailure" line="377" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="CxbxKrnlResume" line="385" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="60"/>
+    <SYMBOL name="CxbxKrnlSuspend" line="429" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="60"/>
+    <SYMBOL name="EmuPanic" line="473" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="CxbxKrnlNoFunc" line="485" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+  </UNIT>
+  <UNIT name="uEmu">
+    <SYMBOL name="EmuWarning" line="93" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="EmuWarning" line="102" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="EmuException" line="109" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="1"/>
+    <SYMBOL name="EmuCheckAllocationSize" line="303" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="100"/>
+    <SYMBOL name="EmuCleanup" line="338" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="20"/>
+    <SYMBOL name="ExitException" line="383" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_tj" done="5"/>
+  </UNIT>
+  <UNIT name="uEmuAlloc">
+    <SYMBOL name="CxbxMalloc" line="116" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="CxbxFree" line="122" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="CxbxRtlAlloc" line="132" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="CxbxRtlFree" line="138" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="CxbxRtlRealloc" line="144" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="CxbxRtlSizeHeap" line="150" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="GetMemStart" line="209" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="GetMemEnd" line="219" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="CheckIntegrity" line="228" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="IsThisMemoryBlock" line="256" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="50"/>
+    <SYMBOL name="InThisMemoryBlock" line="265" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="20"/>
+    <SYMBOL name="CXBX_MEMORY_BLOCK *InsertMemoryBlock" line="275" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CXBX_MEMORY_BLOCK *RemoveMemoryBlock" line="312" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CXBX_MEMORY_BLOCK *FindMemoryBlock" line="351" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CXBX_MEMORY_BLOCK *FindMemoryBlockIn" line="370" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CxbxAllocDump" line="390" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="CxbxMallocDebug" line="422" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CxbxCallocDebug" line="455" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CxbxFreeDebug" line="489" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CxbxRtlAllocDebug" line="534" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CxbxRtlFreeDebug" line="569" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="CxbxRtlReallocDebug" line="614" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="SIZE_T CxbxRtlSizeHeapDebug" line="678" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+    <SYMBOL name="DWORD CxbxVirtualQueryDebug" line="720" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="10"/>
+  </UNIT>
+  <UNIT name="uEmuD3D8">
+    <SYMBOL name="iif" line="168" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuD3DInit" line="177" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuD3DCleanup" line="266" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuEnumDisplayDevices" line="274" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuRenderWindow" line="301" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="80"/>
+    <SYMBOL name="ToggleFauxFullscreen" line="470" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuMsgProc" line="531" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuUpdateTickCount" line="649" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuCreateDeviceProxy" line="724" frombranch="martin" fromsource="" fromrevision="42" translator="Shadow_Tj" done="95"/>
+    <SYMBOL name="EmuVerifyResourceIsRegistered" line="1047" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="EmuAdjustPower2" line="1096" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_CreateDevice" line="1130" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_IsBusy" line="1176" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetCreationParameters" line="1186" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_CheckDeviceFormat" line="1205" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus" line="1242" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_BeginPush" line="1259" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_EndPush" line="1277" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="90"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_BeginVisibilityTest" line="1296" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_EndVisibilityTest" line="1305" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetBackBufferScale" line="1318" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVisibilityTestResult" line="1332" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetDeviceCaps" line="1359" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_LoadVertexShader" line="1374" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="10"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SelectVertexShader" line="1404" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="20"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_GetAdapterModeCount" line="1449" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_GetAdapterDisplayMode" line="1482" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="10"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_EnumAdapterModes" line="1519" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_KickOffAndWaitForIdle" line="1588" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_KickOffAndWaitForIdle2" line="1597" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetGammaRamp" line="1611" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="10"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_AddRef" line="1641" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_BeginStateBlock" line="1653" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_BeginStateBig" line="1666" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CaptureStateBlock" line="1681" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_ApplyStateBlock" line="1699" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_EndStateBlock" line="1719" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CopyRects" line="1739" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="90"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreateImageSurface" line="1787" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetGammaRamp" line="1815" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetBackBuffer2" line="1843" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetBackBuffer" line="1911" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetViewport" line="1935" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetViewport" line="1990" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale" line="2016" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetShaderConstantMode" line="2068" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_Reset" line="2086" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetRenderTarget" line="2101" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="90"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetRenderTarget2" line="2127" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetDepthStencilSurface" line="2147" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2" line="2173" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetTile" line="2194" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTileNoWait" line="2214" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="90"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreateVertexShader" line="2235" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetPixelShaderConstant" line="2387" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexShaderConstant" line="2405" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="90"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1" line="2456" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4" line="2478" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline" line="2502" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="90"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_DeletePixelShader" line="2526" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreatePixelShader" line="2549" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetPixelShader" line="2577" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL.EmuIDirect3DDevice8_CreateTexture2" line="2651" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreateTexture" line="2680" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreateVolumeTexture" line="2817" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreateCubeTexture" line="2922" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreateIndexBuffer" line="2994" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL.EmuIDirect3DDevice8_CreateIndexBuffer2" line="3050" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetIndices" line="3068" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTexture" line="3132" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SwitchTexture" line="3244" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetDisplayMode" line="3309" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_Begin" line="3350" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexData2f" line="3388" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="FtoDW" line="3409" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="DWtoF" line="3415" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexData2s" line="3422" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexData4f" line="3448" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexDataColor" line="3622" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_End" line="3651" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_RunPushBuffer" line="3672" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_Clear" line="3690" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_Present" line="3746" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_Swap" line="3794" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DResource8_Register" line="3825" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="3"/>
+    <SYMBOL name="XTL_EmuIDirect3DResource8_AddRef" line="4492" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3DResource8_Release" line="4520" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="30"/>
+    <SYMBOL name="XTL_EmuIDirect3DResource8_IsBusy" line="4601" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DResource8_GetType" line="4619" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuLock2DSurface" line="4643" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuGet2DSurfaceDesc" line="4675" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuGet2DSurfaceDescD" line="4757" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DSurface8_GetDesc" line="4783" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="3"/>
+    <SYMBOL name="XTL_EmuIDirect3DSurface8_LockRect" line="4851" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="10"/>
+    <SYMBOL name="XTL_EmuIDirect3DBaseTexture8_GetLevelCount" line="4911" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL.EmuIDirect3DTexture8_GetSurfaceLevel2" line="4936" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DTexture8_LockRect" line="4964" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DTexture8_GetSurfaceLevel" line="5025" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DVolumeTexture8_LockBox" line="5091" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DCubeTexture8_LockRect" line="5123" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_Release" line="5153" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreateVertexBuffer" line="5188" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL.EmuIDirect3DDevice8_CreateVertexBuffer2" line="5197" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_EnableOverlay" line="5235" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_UpdateOverlay" line="5304" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="20"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus" line="5493" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank" line="5506" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVerticalBlankCallback" line="5520" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" line="5536" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting" line="5556" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTextureState_BackFillMode" line="5572" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTextureState_BorderColor" line="5588" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTextureState_ColorKeyColor" line="5604" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTextureState_BumpEnv" line="5621" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace" line="5657" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp" line="5673" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_NormalizeNormals" line="5689" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_TextureFactor" line="5704" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_ZBias" line="5720" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias" line="5736" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_FillMode" line="5753" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_FogColor" line="5778" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable" line="5794" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_Simple" line="5810" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="80"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend" line="5940" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes" line="5966" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_CullMode" line="5982" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_LineWidth" line="6010" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_StencilFail" line="6028" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable" line="6043" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_StencilCullEnable" line="6059" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead" line="6075" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_RopZRead" line="6091" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed" line="6107" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable" line="6123" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_StencilEnable" line="6138" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias" line="6153" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask" line="6169" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode" line="6185" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode" line="6201" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc" line="6217" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable" line="6233" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetTransform" line="6249" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetTransform" line="6296" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DVertexBuffer8_Lock" line="6319" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL.EmuIDirect3DVertexBuffer8_Lock2" line="6348" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetStreamSource" line="6399" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="3"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexShader" line="6447" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="40"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_DrawVertices" line="6498" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="1"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_DrawVerticesUP" line="6570" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_DrawIndexedVertices" line="6695" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP" line="6849" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetLight" line="6917" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetMaterial" line="6937" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_LightEnable" line="6955" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuIDirect3DDevice8_BlockUntilVerticalBlank" line="6975" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetRenderTarget" line="6983" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_CreatePalette" line="7028" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL.EmuIDirect3DDevice8_CreatePalette2" line="7042" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetPalette" line="7076" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="40"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetFlickerFilter" line="7102" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter" line="7117" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DPalette8_Lock" line="7132" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL.EmuIDirect3DPalette8_Lock2" line="7146" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVertexShaderSize" line="7169" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="80"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_DeleteVertexShader" line="7198" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SelectVertexShaderDirect" line="7239" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetShaderConstantMode" line="7258" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVertexShader" line="7275" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVertexShaderConstant" line="7293" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect" line="7320" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVertexShaderInput" line="7340" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetVertexShaderInput" line="7361" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_RunVertexStateShader" line="7381" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_LoadVertexShaderProgram" line="7399" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVertexShaderType" line="7417" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVertexShaderDeclaration" line="7438" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_GetVertexShaderFunction" line="7479" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="50"/>
+    <SYMBOL name="XTL.EmuIDirect3D8_AllocContiguousMemory" line="7521" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirect3DTexture8_GetLevelDesc" line="7565" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_CheckDeviceMultiSampleType" line="7582" frombranch="martin" fromsource="" fromrevision="45" translator="Shadow_Tj" done="2"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_GetDeviceCaps" line="7659" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3D8_SetPushBufferSize" line="7680" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_InsertFence" line="7701" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_BlockOnFence" line="7716" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DResource8_BlockUntilNotBusy" line="7731" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DVertexBuffer8_GetDesc" line="7746" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirect3DDevice8_SetScissors" line="7762" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuD3D8Types">
+    <SYMBOL name="IsSpecialResource" line="355" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuDInput">
+    <SYMBOL name="XTL_EmuDInputInit" line="45" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuDInputCleanup" line="61" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuDInputPoll" line="67" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuDSound">
+    <SYMBOL name="HackUpdateSoundBuffers" line="54" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="HackUpdateSoundStreams" line="90" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuDirectSoundCreate" line="191" frombranch="martin" fromsource="" fromrevision="80" translator="Shadow_Tj" done="80"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_AddRef" line="252" frombranch="martin" fromsource="" fromrevision="80" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_Release" line="276" frombranch="martin" fromsource="" fromrevision="80" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuCDirectSound_GetSpeakerConfig" line="303" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_DownloadEffectsImage" line="326" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuDirectSoundDoWork" line="356" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetOrientation" line="369" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetDistanceFactor" line="403" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetRolloffFactor" line="428" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetDopplerFactor" line="453" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetI3DL2Listener" line="478" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetMixBinHeadroom" line="507" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetMixBins" line="535" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetMixBinVolumes" line="561" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetPosition" line="587" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetVelocity" line="619" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_SetAllParameters" line="651" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuCDirectSound_CommitDeferredSettings" line="679" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuDirectSoundCreateBuffer" line="699" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_CreateBuffer" line="817" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_CreateSoundBuffer" line="848" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetBufferData" line="876" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetPlayRegion" line="905" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_Lock" line="934" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetHeadroom" line="996" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetLoopRegion" line="1020" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_Release" line="1049" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetPitch" line="1094" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_GetStatus" line="1118" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetCurrentPosition" line="1151" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_GetCurrentPosition" line="1179" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_Play" line="1217" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_Stop" line="1275" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="'C' HRESULT __stdcall XTL.EmuIDirectSoundBuffer8_StopEx" line="1297" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetVolume" line="1326" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetFrequency" line="1354" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuDirectSoundCreateStream" line="1379" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSound8_CreateStream" line="1480" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCMcpxStream_Dummy_0x10" line="1512" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetVolume" line="1520" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetRolloffFactor" line="1540" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_AddRef" line="1566" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_Release" line="1586" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_GetStatus" line="1627" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_Process" line="1653" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_Discontinuity" line="1695" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_Flush" line="1714" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSound_SynchPlayback" line="1730" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_Pause" line="1743" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundStream_SetHeadroom" line="1765" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetConeAngles" line="1789" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetConeOutsideVolume" line="1817" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetAllParameters" line="1843" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetMaxDistance" line="1869" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetMinDistance" line="1895" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetVelocity" line="1921" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetConeOrientation" line="1951" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetPosition" line="1981" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuCDirectSoundStream_SetFrequency" line="2011" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundStream_SetI3DL2Source" line="2035" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundStream_Unknown1 " line="2061" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="10"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetMaxDistance" line="2081" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetMinDistance" line="2110" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetRolloffFactor" line="2139" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetDistanceFactor" line="2168" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetConeAngles" line="2197" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetConeOrientation" line="2229" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetConeOutsideVolume" line="2262" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetPosition" line="2291" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetVelocity" line="2324" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetDopplerFactor" line="2357" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetI3DL2Source" line="2386" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetFormat" line="2416" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="STDAPI_" line="2445" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetLFO" line="2459" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuXAudioCreateAdpcmFormat" line="2483" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundBuffer8_SetRolloffCurve" line="2516" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuIDirectSoundStream_SetVolume" line="2545" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+  </UNIT>
+  <UNIT name="uEmuFile">
+    <SYMBOL name="IsEmuHandle" line="94" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuHandleToPtr" line="102" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="PtrToEmuHandle" line="110" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuFS">
+    <SYMBOL name="EmuIsXboxFS" line="88" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuSwapFS" line="110" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuInitFS" line="164" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuGenerateFS" line="242" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuCleanupFS" line="400" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlAv">
+    <SYMBOL name="{001} xboxkrnl_AvGetSavedDataAddress" line="65" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlEx">
+    <SYMBOL name="{014} xboxkrnl_ExAllocatePool" line="154" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="{015} xboxkrnl_ExAllocatePoolWithTag" line="177" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="{024} xboxkrnl_ExQueryNonVolatileSetting" line="268" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlFs">
+    <SYMBOL name="{037} xboxkrnl_FscSetCacheSize" line="68" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlIo">
+    <SYMBOL name="{066} xboxkrnl_IoCreateFile" line="416" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_IoCreateSymbolicLink" line="435" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_IoDeleteSymbolicLink" line="453" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlKe">
+    <SYMBOL name="xboxkrnl_KeDelayExecutionThread" line="184" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_KeInitializeDpc" line="238" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="90"/>
+    <SYMBOL name="xboxkrnl_KeInitializeTimerEx" line="299" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_KeQueryPerformanceCounter" line="412" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_KeQueryPerformanceFrequency" line="420" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_KeQuerySystemTime" line="428" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_KeSetTimer" line="578" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="xboxkrnl_KeSetTimerEx" line="602" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlMm">
+    <SYMBOL name="xboxkrnl_MmAllocateContiguousMemory" line="108" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="90"/>
+    <SYMBOL name="xboxkrnl_MmAllocateContiguousMemoryEx" line="151" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="90"/>
+    <SYMBOL name="xboxkrnl_MmAllocateSystemMemory" line="213" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_MmFreeContiguousMemory" line="245" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_MmFreeSystemMemory" line="255" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_MmPersistContiguousMemory" line="301" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="xboxkrnl_MmQueryAllocationSize" line="331" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_MmQueryStatistics" line="341" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_MmSetAddressProtect" line="351" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlNt">
+    <SYMBOL name="xboxkrnl_NtAllocateVirtualMemory" line="226" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtClearEvent" line="247" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtClose" line="259" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="80"/>
+    <SYMBOL name="xboxkrnl_NtCreateEvent" line="299" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtCreateFile" line="312" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="5"/>
+    <SYMBOL name="xboxkrnl_NtCreateMutant" line="468" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtDuplicateObject" line="508" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtFlushBuffersFile" line="520" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtFreeVirtualMemory" line="531" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtOpenFile" line="557" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="xboxkrnl_NtQueryDirectoryFile" line="614" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtQueryFullAttributesFile" line="647" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtQueryInformationFile" line="658" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtQueryVolumeInformationFile" line="714" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtReadFile" line="728" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtReleaseMutant" line="752" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtResumeThread" line="777" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtSetEvent" line="788" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtSetInformationFile" line="799" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtSuspendThread" line="841" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtUserIoApcDispatcher" line="852" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtWaitForSingleObjectEx" line="871" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtWaitForMultipleObjectsEx" line="884" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtWriteFile" line="899" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_NtYieldExecution" line="923" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlPs">
+    <SYMBOL name="{255} xboxkrnl_PsCreateSystemThreadEx" line="288" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="95"/>
+    <SYMBOL name="{258} xboxkrnl_PsTerminateSystemThread" line="378" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+  </UNIT>
+  <UNIT name="uEmuKrnlRtl">
+    <SYMBOL name="xboxkrnl_RtlAnsiStringToUnicodeString" line="146" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_RtlAssert" line="179" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_RtlEnterCriticalSection" line="276" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="80"/>
+    <SYMBOL name="xboxkrnl_RtlInitAnsiString" line="365" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="xboxkrnl_RtlInitializeCriticalSection" line="392" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="80"/>
+    <SYMBOL name="xboxkrnl_RtlLeaveCriticalSection" line="418" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="80"/>
+    <SYMBOL name="xboxkrnl_RtlLowerChar" line="437" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="80"/>
+    <SYMBOL name="xboxkrnl_RtlNtStatusToDosError" line="476" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="xboxkrnl_RtlTimeFieldsToTime" line="508" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="xboxkrnl_RtlTimeToTimeFields" line="521" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="xboxkrnl_RtlTryEnterCriticalSection" line="534" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="80"/>
+    <SYMBOL name="xboxkrnl_RtlUnicodeStringToAnsiString" line="553" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+  </UNIT>
+  <UNIT name="uEmuXapi">
+    <SYMBOL name="XTL_EmuXapiApplyKernelPatches" line="118" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXFormatUtilityDrive" line="130" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuFindFirstFileA" line="145" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL_EmuFindNextFileA" line="244" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL_EmuRtlCreateHeap" line="291" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuRtlAllocateHeap" line="326" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuRtlFreeHeap" line="365" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuRtlReAllocateHeap" line="396" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuRtlSizeHeap" line="444" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuQueryPerformanceCounter" line="477" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuQueryPerformanceFrequency" line="500" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXMountUtilityDrive" line="520" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXInitDevices" line="537" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXGetDevices" line="564" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXGetDeviceChanges" line="589" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXInputOpen" line="631" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL_EmuXInputClose" line="708" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL_EmuXInputPoll" line="753" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="XTL_EmuXInputGetCapabilities" line="812" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL_EmuXInputGetState" line="851" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="XTL_EmuXInputSetState" line="905" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="XTL_EmuCreateMutex" line="988" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuCloseHandle" line="1013" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuSetThreadPriorityBoost" line="1033" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuSetThreadPriority" line="1057" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="99"/>
+    <SYMBOL name="XTL_EmuGetThreadPriority" line="1085" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuGetExitCodeThread" line="1108" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXapiInitProcess" line="1129" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="99"/>
+    <SYMBOL name="XTL_EmuXapiThreadStartup" line="1159" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXapiBootDash" line="1198" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXRegisterThreadNotifyRoutine" line="1216" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="99"/>
+    <SYMBOL name="XTL_EmuXCalculateSignatureBegin" line="1249" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuXCalculateSignatureBeginEx" line="1266" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuXCalculateSignatureUpdate" line="1284" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="XTL_EmuXCalculateSignatureEnd" line="1302" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+  <UNIT name="uEmuXOnline">
+    <SYMBOL name="XTL_EmuWSAStartup" line="38" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXNetStartup" line="59" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="XTL_EmuXNetGetEthernetLinkStatus" line="77" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="5"/>
+    <SYMBOL name="SOCKET XTL.EmuThis.Emusocket" line="88" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL.EmuThis.Emubind" line="114" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL.EmuThis.Emulisten" line="138" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL.EmuThis.Emuioctlsocket" line="161" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+  </UNIT>
+  <UNIT name="uConvert">
+    <SYMBOL name="EmuXBFormatIsSwizzled" line="83" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuXB2PC_D3DFormat" line="106" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuPC2XB_D3DFormat" line="202" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuXB2PC_D3DLock" line="233" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="UINT XTL.EmuD3DVertexToPrimitive[11][2] =" line="257" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="XTL.D3DPRIMITIVETYPE XTL.EmuPrimitiveTypeLookup[] =" line="275" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="CONST DWord XTL.EmuD3DRenderStateSimpleEncoded[174] =" line="293" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="0"/>
+    <SYMBOL name="EmuXB2PC_D3DFILLMODE" line="391" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuXB2PC_D3DSHADEMODE" line="398" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuXB2PC_D3DBLENDOP" line="404" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuXB2PC_D3DBLEND" line="420" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="EmuXB2PC_D3DCMPFUNC" line="434" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="EmuXB2PC_D3DTS" line="441" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+  </UNIT>
+  <UNIT name="uPushBuffer">
+    <SYMBOL name="XTL_EmuExecutePushBuffer" line="53" frombranch="martin" fromsource="" fromrevision="100" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="EmuUnswizzleActiveTexture" line="62" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuExecutePushBufferRaw" line="151" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="DbgDumpMesh" line="658" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+  </UNIT>
+  <UNIT name="uState">
+    <SYMBOL name="XTL_EmuUpdateDeferredStates" line="27" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+  </UNIT>
+  <UNIT name="uVertexBuffer">
+    <SYMBOL name="CRC32Init" line="53" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="CRC32" line="81" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_VertexPatcher_VertexPatcher" line="105" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_VertexPatcher_DumpCache" line="122" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL.VertexPatcher.CacheStream" line="146" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_VertexPatcher_FreeCachedStream" line="247" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL.VertexPatcher.ApplyCachedStream" line="272" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL.VertexPatcher.GetNbrStreams" line="398" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL.VertexPatcher.PatchStream" line="421" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL.VertexPatcher.PatchPrimitive" line="701" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL.VertexPatcher.Apply" line="880" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_VertexPatcher_Restore" line="915" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuFlushIVB" line="957" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+    <SYMBOL name="XTL_EmuUpdateActiveTexture" line="1304" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="0"/>
+  </UNIT>
+  <UNIT name="uVertexShader">
+    <SYMBOL name="XTL_IsValidCurrentShader" line="44" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+    <SYMBOL name="VshHandleIsVertexShader" line="80" frombranch="martin" fromsource="" fromrevision="39" translator="Shadow_Tj" done="100"/>
+    <SYMBOL name="VshHandleGetVertexShader" line="86" frombranch="martin" fromsource="" fromrevision="39" translator="PatrickvL" done="100"/>
+  </UNIT>
+</DXBXTRANSLATION>

@@ -1,0 +1,53 @@
+﻿body {
+	font-family: Tahoma;
+	background-color:#000000;
+	color: #008000;
+	font-size: 10pt;
+}
+A {
+	font-family: Tahoma;
+	color: #008000;
+	text-decoration:none;
+}
+
+a:hover
+{
+	color:#00FF00; 
+	font-size:14px; 
+	font-weight:bold;
+	text-decoration:none;
+	background-color:#000000;
+	padding:15px;
+}
+
+IMG {
+	border: 0;
+}
+#Paragraph_Caption {
+	font-family: Tahoma;
+	background-color:#eff4f7;
+	color: black;
+	font-size: 12pt;
+	font-weight: bold;
+}
+#News_Caption {
+	font-family: Tahoma;
+	background-color:#eff4f7;
+	color: black;
+	font-size: 10pt;
+	font-weight: bold;
+	font-style: oblique;
+}
+#JavaScript_Warning {
+	font-family: Tahoma;
+	background-color:#eff4f7;
+	color: black;
+	font-size: 8pt;
+}
+#Download_Topic {
+	text-decoration: underline;
+	font-family: Tahoma;
+	background-color:#eff4f7;
+	color: black;
+	font-size: 12pt;
+}

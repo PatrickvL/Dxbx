@@ -1,0 +1,87 @@
+﻿<html>
+
+	<HEAD>
+		<link rel="stylesheet" type="text/css" href="dxbx.css"/>
+		<TITLE>Shadow_tj - DXBX</TITLE>
+		<META NAME="description" CONTENT="DXBX - XBOX EMULATION">
+		<META NAME="keywords" CONTENT="xbox, xbox emu, xbox emulation, cxbx, dxbx">
+		<META NAME="robot" CONTENT="index,follow">
+		<META NAME="author" CONTENT="shadowtj@shadowtj.org">
+		<META NAME="revisit-after" CONTENT="20">
+		<style type="text/css">
+.style1 {
+	text-align: center;
+}
+.style2 {
+	text-align: left;
+	color: green;
+}
+</style>
+
+	</HEAD>
+
+	<BODY style="background-color: #000000">
+	
+
+	<p class="style1">
+	<img alt="" src="images/dxbxlogo.jpg" width="398" height="77"></p>
+	
+
+	<p class="style2">News&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Information&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	Status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Downloads&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	Translation guide&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Developers</p>
+	<p class="style2"><br>
+	Introduction<br>
+	------------<br>
+	Dxbx (a Delphi port of Cxbx) is an emulator for running Xbox games on 
+	Windows 2000 and higher.<br>
+	Emulating a Xbox is a daunting task, so there&#39;s no guarantee that any game 
+	will work.<br>
+	Emulation is done by a High-Level abstraction of the Xbox system.<br>
+	This means that any game that accesses the hardware directly will not work.<br>
+	TODO : Start a compatibilty list<br>
+	<br>
+	<br>
+	Emulation Notes<br>
+	---------------<br>
+	For now, if you want to play a game with Dxbx you&#39;ll have to use the 
+	CxbxKrnl in the options menu.<br>
+	Copy CxbxKrnl.dll and msvcrtd.dll to your game folder and select a manual 
+	folder for the output.<br>
+	Place the generated default.exe into the game folder (the same location 
+	where default.xbe resides).<br>
+	Then press Start Emulation to start your game.<br>
+	<br>
+	Note, that Dxbx has not yet implemented the controller code, so apart from 
+	starting a game, you won&#39;t be able to do much.<br>
+	<br>
+	Also, when using the CxbxKrnl, compatibility will be the same as Cxbx.<br>
+	The Dxbx project implements a different function detection method, which has 
+	both positive and negative consequences:<br>
+	The nice thing is, that it will make it easier for us to debug non-working 
+	games (so, in theory we have an easier job in supporting new games).<br>
+	The down side is, that our detection method won&#39;t work with so-called 
+	link-time optimized games - so we won&#39;t support those (yet).<br>
+	<br>
+	<br>
+	<br>
+	Prerequisites<br>
+	-------------<br>
+	Dxbx only runs on 32-bit Windows 2000, XP and Vista. The 64-bit versions of 
+	Windows will not work due to lack of support for segmented addressing.<br>
+	<br>
+	Running under Linux using Wine is not tested, but it might just work. 
+	(Please let us know your results!)<br>
+	<br>
+	<br>
+	System requirements<br>
+	-------------------<br>
+	CPU: A 1Ghz Pentium or better should suffice.<br>
+	Memory: Running with less than 256 MB is not recommended.<br>
+	Video: TODO<br>
+	Controller: TODO<br>
+	</p>
+	
+
+	</BODY>
+</html>
