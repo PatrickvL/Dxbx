@@ -49,6 +49,18 @@ type
     Unknown: array [0..$2C-1] of BYTE;
   end;
 
+  _XINPUT_POLLING_PARAMETERS = packed record
+   	fAutoPoll : BYTE;//       : 1;
+	  fInterruptOut : BYTE;//    : 1;
+	  ReservedMBZ1: BYTE;//    : 6;
+	  bInputInterval : BYTE;
+	  bOutputInterval : BYTE;
+	  ReservedMBZ2 : BYTE;
+  end;
+
+  XINPUT_POLLING_PARAMETERS = _XINPUT_POLLING_PARAMETERS;
+  PXINPUT_POLLING_PARAMETERS = ^XINPUT_POLLING_PARAMETERS;
+
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
   XTHREAD_NOTIFICATION = packed record
@@ -627,11 +639,11 @@ begin
   Result := bRet;
 end;
 
-(*
-function XTL_EmuXInputOpen(
+
+(*function XTL_EmuXInputOpen(
   DeviceType: PXPP_DEVICE_TYPE;
   dwPort: DWord;
-  dwSlot: DWord:
+  dwSlot: DWord;
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
 ): THandle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0

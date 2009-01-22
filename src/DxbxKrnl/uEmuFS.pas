@@ -403,6 +403,10 @@ var
   wSwapFS: Word;
   pTLSData: PByte;
 begin
+  {$IFDEF _DXBX_EXTENDED_DEBUG}
+    DbgPrintf('EmuCleanupFS');
+  {$ENDIF}
+
   wSwapFS := GetTIBEntryWord(DxbxFS_SwapFS);
   if wSwapFS = 0 then
     Exit;

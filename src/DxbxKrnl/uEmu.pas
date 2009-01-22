@@ -34,7 +34,8 @@ uses
   , uConsts
   , uTypes
   , uLog
-  , uEmuFS;
+  , uEmuFS
+  , uDxbxKrnlUtils;
 
 var
   g_hCurDir: THandle = 0;
@@ -107,7 +108,9 @@ end;
 
 // exception handler
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:1
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:10
+var
+  fix : uint32;
 begin
 	EmuSwapFS(fsWindows);
 
@@ -117,7 +120,7 @@ begin
 	begin
 		if E.ExceptionRecord.ExceptionCode = $C0000005 then
 		begin
-(*
+
 			// Halo Access Adjust 1
 			if E.ContextRecord.Eip = $0003394C then
 			begin
@@ -126,19 +129,19 @@ begin
 					// Halo BINK skip
 					begin
 						// nop sled over bink calls
-						{*
+						{
 						memset((void* )$2CBA4, $90, $2CBAF - $2CBA4);
 						memset((void* )$2CBBD, $90, $2CBD5 - $2CBBD);
-						//*
-						memset((void* )$2CAE0, $90, $2CE1E - $2CAE0);
+						}
+						(*memset((void* )$2CAE0, $90, $2CE1E - $2CAE0); *)
 					end;
 
-          uint32 fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
+          fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
           e.ContextRecord.Eax := fix;
           e.ContextRecord.Ecx := fix;
 
-          *(uint32* )e.ContextRecord.Esp := fix;
+          (**(uint32* )e.ContextRecord.Esp := fix;
 
           ((XTL::X_D3DResource* )fix).Data := g_HaloHack[1] + (((XTL::X_D3DResource* )fix).Data - $803A6000);
 
@@ -164,7 +167,7 @@ begin
             DWORD dwValue := *(DWORD* )$39CE24;
 
             *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
-          end;
+          end;      *)
 
           DbgPrintf('EmuMain : Halo Access Adjust 1 was applied!');
 
@@ -180,9 +183,9 @@ begin
         begin
           if e.ContextRecord.Eax = $819A5818 then
           begin
-            uint32 fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
+            fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
-            *(DWORD* )$0039BE58 := e.ContextRecord.Eax := fix;
+            (**(DWORD* )$0039BE58 := e.ContextRecord.Eax := fix;
 
             // go through and fix any other pointers in the $2DF1C8 allocation chunk
             begin
@@ -199,17 +202,14 @@ begin
                 if(dwCur >= $803A6000 && dwCur < $819A6000)
                   *(DWORD* )(dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
               end;
-            end;
+            end;      *)
 
             DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');
-
             g_bEmuException := False;
-
             Result := EXCEPTION_CONTINUE_EXECUTION;
             Exit;
           end;
         end;
-*)
     end; // if E.ExceptionRecord.ExceptionCode = $C0000005 then
   end;
 
@@ -230,7 +230,7 @@ begin
         e.ContextRecord.Esi, e.ContextRecord.Edi, e.ContextRecord.Esp, e.ContextRecord.Ebp]);
   end;
 
-//  fflush(stdout);
+(*  fflush(stdout); *)
 
   // notify user
   begin
@@ -381,7 +381,7 @@ end;
 
 // Exception handler for that tough final exit :)
 function ExitException(e: LPEXCEPTION_POINTERS): Integer;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:5
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:80
 var
   Count: Integer;
 begin
@@ -391,9 +391,10 @@ begin
 
   // debug information
   DbgPrintf('EmuMain : * * * * * EXCEPTION * * * * * ');
-  (*
-  DbgPrintf('EmuMain : Received Exception[$%.08x]@$%.08X', [InttoStr(e.ExceptionRecord.ExceptionCode), IntToStr(e.ContextRecord.Eip)]));
-  *)
+
+  DbgPrintf('EmuMain : Received Exception[$%.08x]@$%.08X', [ InttoStr(e.ExceptionRecord.ExceptionCode),
+                                                             IntToStr(e.ContextRecord.Eip)]);
+
   DbgPrintf('EmuMain : * * * * * EXCEPTION * * * * * ');
 
   (*fflush(stdout);*)
@@ -402,17 +403,16 @@ begin
   Inc(Count);
 
   if Count > 1 then
-;(*
   begin
     MessageDlg( 'Warning: Multiple Problems not ', mtWarning, [mbOk], 0 );
     Result := EXCEPTION_CONTINUE_SEARCH;
   end;
 
-  if (CxbxKrnl_hEmuParent <> 0) then
-    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+  (*if (CxbxKrnl_hEmuParent <> 0) then
+    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0); *)
 
   ExitProcess(1);
-*)
+
   Result := EXCEPTION_CONTINUE_SEARCH;
 end;
 
