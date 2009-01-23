@@ -30,6 +30,11 @@ library DxbxKrnl;
 {$R 'Tools\PatternTrieBuilder\StoredTrie.res' 'Tools\PatternTrieBuilder\StoredTrie.rc'}
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Windows,
   SysUtils,
   uEmuShared in 'uEmuShared.pas',

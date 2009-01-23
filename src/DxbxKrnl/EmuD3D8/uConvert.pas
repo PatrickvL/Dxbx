@@ -76,6 +76,7 @@ function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; stdcall;
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; stdcall;
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; stdcall;
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; stdcall;
+function EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
 
 
 implementation
