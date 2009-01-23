@@ -61,6 +61,13 @@ type
   XINPUT_POLLING_PARAMETERS = _XINPUT_POLLING_PARAMETERS;
   PXINPUT_POLLING_PARAMETERS = ^XINPUT_POLLING_PARAMETERS;
 
+  _POLLING_PARAMETERS_HANDLE = packed record
+    pPollingParameters : PXINPUT_POLLING_PARAMETERS;
+    dwPort : DWORD;
+  end;
+  POLLING_PARAMETERS_HANDLE = _POLLING_PARAMETERS_HANDLE;
+  PPOLLING_PARAMETERS_HANDLE = ^POLLING_PARAMETERS_HANDLE;
+
   XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
   XTHREAD_NOTIFICATION = packed record
@@ -640,13 +647,13 @@ begin
 end;
 
 
-(*function XTL_EmuXInputOpen(
+function XTL_EmuXInputOpen(
   DeviceType: PXPP_DEVICE_TYPE;
   dwPort: DWord;
   dwSlot: DWord;
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
 ): THandle; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:70
 var
   pph: PPOLLING_PARAMETERS_HANDLE;
 begin
@@ -667,60 +674,57 @@ begin
   begin
     if (g_hInputHandle[dwPort] = 0) then
     begin
-      pph := new POLLING_PARAMETERS_HANDLE();
+      (*pph := POLLING_PARAMETERS_HANDLE();*)
 
       if (pPollingParameters <> nil) then
       begin
-        pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();
-
+        (*pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();*)
         memcpy(@pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
-      end;
-    end
-    else
-    begin
-      pph.pPollingParameters := nil;
-    end;
-
-    g_hInputHandle[dwPort] := pph;
-  end
-  else
-  begin
-    pph := (POLLING_PARAMETERS_HANDLE)g_hInputHandle[dwPort];
-
-    if (pPollingParameters <> nil) then
-    begin
-      if (pph.pPollingParameters = nil) then
+      end
+      else
       begin
-        pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();
-      end;
-
-      memcpy(@pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
-    end
-    else
-    begin
-      if (pph.pPollingParameters <> nil) then
-      begin
-        delete pph.pPollingParameters;
-
         pph.pPollingParameters := nil;
       end;
-    end;
-  end;
 
-  pph.dwPort := dwPort;
+      (*g_hInputHandle[dwPort] := pph; *)
+    end
+    else
+    begin
+      (*pph := POLLING_PARAMETERS_HANDLE(g_hInputHandle[dwPort]);*)
+
+      if (pPollingParameters <> nil) then
+      begin
+        if (pph.pPollingParameters = nil) then
+        begin
+          (*pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();*)
+        end;
+
+        memcpy(@pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
+      end
+      else
+      begin
+        if (pph.pPollingParameters <> nil) then
+        begin
+          (*delete pph.pPollingParameters;*)
+
+          pph.pPollingParameters := nil;
+        end;
+      end;
+    end;
+
+    pph.dwPort := dwPort;
   end;
 
   EmuSwapFS(fsXbox);
 
   Result := THandle(pph);
 end;
-*)
 
-(*
+
 procedure XTL_EmuXInputClose(hDevice: THandle); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
 var
-  pph: POLLING_PARAMETERS_HANDLE;
+  pph: PPOLLING_PARAMETERS_HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -730,9 +734,10 @@ begin
     #13#10');',
     [hDevice]);
 
-  POLLING_PARAMETERS_HANDLE * pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  (*pph := POLLING_PARAMETERS_HANDLE(hDevice);*)
 
-  (* no longer necessary
+  {  Markd out by CXBX
+   no longer necessary
   if (pph <> nil) then
   begin
     Integer v;
@@ -755,17 +760,19 @@ begin
 
     delete pph;
    end;
-  //*/
+  }
 
   EmuSwapFS(fsXbox);
 end;
-*)
-
 
 function XTL_EmuXInputPoll(
   hDevice: THandle
 ): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
+var
+  v : Integer;
+  ahDevice : THandle;
+  pFeedback : PXINPUT_FEEDBACK;
 begin
   EmuSwapFS(fsWindows);
 
@@ -775,27 +782,24 @@ begin
        #13#10');',
        [hDevice]);
 
-  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;*)
 
   //
   // Poll input
   //
 
   begin
-    Integer v;
-
-    for(v := 0;v<XINPUT_SETSTATE_SLOTS;v++)
-    begin
-      THandle hDevice := g_pXInputSetStateStatus[v].hDevice;
+    for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do begin
+      ahDevice := g_pXInputSetStateStatus[v].hDevice;
 
       if (hDevice = 0) then
           Continue;
 
       g_pXInputSetStateStatus[v].dwLatency := 0;
 
-      XTL.PXINPUT_FEEDBACK pFeedback := (XTL.PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+      pFeedback := PXINPUT_FEEDBACK(g_pXInputSetStateStatus[v].pFeedback);
 
-      if (pFeedback = 0) then
+      if (pFeedback = Nil) then
           Continue;
 
       //
@@ -813,7 +817,6 @@ begin
       end;
     end;
   end;
-  *)
 
   EmuSwapFS(fsXbox);
 
@@ -995,8 +998,7 @@ begin
 
   Result := ret;
 end;
-
-
+                                              
 function XTL_EmuCreateMutex(
   lpMutexAttributes: LPSECURITY_ATTRIBUTES;
   bInitialOwner: BOOL;
@@ -1067,7 +1069,7 @@ begin
 end;
 
 function XTL_EmuSetThreadPriority(hThread: THandle; nPriority: Integer): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
 begin
@@ -1080,12 +1082,12 @@ begin
     #13#10');',
     [hThread, nPriority]);
 
-  bRet := True; //SetThreadPriority(hThread, nPriority);
+  bRet := True; //SetThreadPriority(hThread, nPriority);  // marked by cxbx
 
   if not bRet then
     EmuWarning('SetThreadPriority Failed!');
 
-  // HACK!
+  // HACK! Commente by cxbx
   //Sleep(10);
 
   EmuSwapFS(fsXbox);
@@ -1257,7 +1259,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(*// Cxbx : not necessary?
+(*//  MARKED BY Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): THandle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
@@ -1275,6 +1277,7 @@ begin
   Result := $AAAAAAAA;
 end;
 
+//  MARKED BY Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureBeginEx(dwFlags: DWord; dwAltTitleId: DWord): THandle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
@@ -1293,6 +1296,7 @@ begin
   Result := $AAAAAAAA;
 end;
 
+//  MARKED BY Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureUpdate(hCalcSig: THandle; pbData: Byte; cbData: ULONG): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
@@ -1311,6 +1315,7 @@ begin
   Result := ERROR_SUCCESS;
 end;
 
+//  MARKED BY Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureEnd(hCalcSig: THandle; pSignature: PXCALCSIG_SIGNATURE): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin

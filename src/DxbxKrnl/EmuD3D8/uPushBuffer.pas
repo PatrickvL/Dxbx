@@ -25,6 +25,7 @@ interface
 uses
   // Delphi
   Windows
+  , Direct3D8
   // Dxbx
   , uEmuD3D8Types;
 
@@ -44,9 +45,10 @@ implementation
 uses
   // Dxbx
   uDxbxKrnlUtils
+  , uEmuXTL
+  , uEmuD3D8
   , JwaWinType
   , uVertexShader
-  , uEmuD3D8
   , uConvert;
 
 
@@ -61,12 +63,12 @@ end;
 
 procedure EmuUnswizzleActiveTexture();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*
+
 var
   pPixelContainer: X_D3DPixelContainer;
   XBFormat: DWord;
   dwBPP: DWord;
-*)
+
 begin
     // for current usages, we're always on stage 0
     (*pPixelContainer := EmuD3DActiveTexture[0];
@@ -156,12 +158,13 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
   pVertexData : PVOID;
 
   dwVertexShader : DWord;
-  dwStride : DWord; *)
+  dwStride : DWord;
+  pIBMem : Array [0..3] of WORD; *)
 begin
-  if XTL_g_bSkipPush then
+(*  if XTL_g_bSkipPush then
     Exit;
 
-   (* pdwOrigPushData := pdwPushData;
+    pdwOrigPushData := pdwPushData;
 
     pIndexData := 0;
     pVertexData := 0;
@@ -170,7 +173,7 @@ begin
     dwStride := -1;
 
     // cache of last 4 indices
-    WORD pIBMem[4] := ($FFFF, $FFFF, $FFFF, $FFFF);
+    pIBMem[4] := [$FFFF, $FFFF, $FFFF, $FFFF];
 
     D3DPRIMITIVETYPE    PCPrimitiveType := (D3DPRIMITIVETYPE)-1;
     X_D3DPRIMITIVETYPE  XBPrimitiveType := X_D3DPT_INVALID;
@@ -656,23 +659,22 @@ end;
 {$IFDEF _DEBUG_TRACK_PB}
 
 procedure DbgDumpMesh(var pIndexData: Word; dwCount: DWord);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:1
+var
+  pActiveVB : IDirect3DVertexBuffer8;
+  VBDesc : D3DVERTEXBUFFER_DESC;
+  pVBData : PBYTE;
+  uiStride : UINT;
+  szFileName: array[0..128 - 1] of Char;
 begin
   if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;
 
-(*  XTL.IDirect3DVertexBuffer8 * pActiveVB := 0;
+  pActiveVB := Nil;
 
-  XTL.D3DVERTEXBUFFER_DESC VBDesc;
-
-  BYTE * pVBData := 0;
-  UINT uiStride;
-
-    // retrieve stream data
-  g_pD3DDevice8.GetStreamSource(0, @pActiveVB, @uiStride);
-
-  szFileName: array[0..128 - 1] of Char;
-  StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
+  // retrieve stream data
+  g_pD3DDevice8.GetStreamSource(0, pActiveVB, uiStride);
+ (* StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
   file * dbgVertices := FileOpen(szFileName, 'wt');
 
     // retrieve stream desc

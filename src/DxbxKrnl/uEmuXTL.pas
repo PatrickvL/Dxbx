@@ -22,6 +22,10 @@ unit uEmuXTL;
 
 interface
 
+uses
+  Windows
+    , Direct3D8;
+
 (*
 namespace XTL
 {
@@ -36,13 +40,13 @@ namespace XTL
     #include "EmuDSound.h"
     #include "EmuXOnline.h"
     #include "EmuXG.h"
-}
+}  *)
 
-extern g_pD3DDevice8: XTL_LPDIRECT3DDEVICE8;
-extern g_CurrentVertexShader: DWord;
-extern g_bFakePixelShaderLoaded: BOOL;
-extern g_bIsFauxFullscreen: BOOL;
-*)
+var
+  g_pD3DDevice8: IDIRECT3DDEVICE8;
+  g_CurrentVertexShader: DWord;
+  g_bFakePixelShaderLoaded: BOOL;
+  g_bIsFauxFullscreen: BOOL;
 
 implementation
 

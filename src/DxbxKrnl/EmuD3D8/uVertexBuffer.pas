@@ -121,10 +121,12 @@ end;
 
 procedure XTL_VertexPatcher_DumpCache; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+(*var
+  pNode : ^RTNode; *)
 begin
   DbgPrintf('--- Dumping streams cache ---');
-    (*
-    RTNode *pNode := g_PatchedStreamsCache.getHead();
+
+(*    pNode := g_PatchedStreamsCache.getHead();
     while(pNode)
     begin
         CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )pNode.pResource;

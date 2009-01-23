@@ -51,15 +51,35 @@ type
   private
     procedure ReadIni;
     procedure WriteIni;
-
     procedure Log(const aString: string);
     procedure HandleDxbxFile(const aPascalFilePath: string);
   end;
+
+
+  Procedure CreateProgressXml ( DxbxSourcePath, CxbxSourcePath, OutputFileName : String );
 
 var
   Form1: TForm1;
 
 implementation
+
+var
+  memOut : TStrings;
+
+Procedure CreateProgressXml ( DxbxSourcePath, CxbxSourcePath, OutputFileName : String );
+begin
+  if Not Assigned ( memOut ) then
+    memOut := TStringList.Create;
+
+  try
+
+  except
+    writeln ( 'Problems with writing progress to Xml' );
+  end;
+
+  if Assigned ( memOut ) then
+    FreeAndNil ( memOut );
+end;
 
 function StrStartsWith(const aString, aStart: string): Boolean;
 begin
@@ -77,11 +97,15 @@ const
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   ReadIni;
+  if Not Assigned ( memOut ) then
+    memOut := TStringList.Create;
 end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   WriteIni;
+  if Assigned ( memOut ) then
+    FreeAndNil ( memOut );
 end;
 
 procedure TForm1.ReadIni;
@@ -353,7 +377,6 @@ var
   FileList: TStringList;
   i: Integer;
   DxbxSrcPath: string;
-//  CxbxSrcPath: string;
 begin
   memOutput.Clear;
 
@@ -367,15 +390,12 @@ begin
     for i := 0 to FileList.Count - 1 do
       HandleDxbxFile(FileList[i]);
 
-//  CxbxSrcPath := ExpandFileName(edCxbxSrcPath.Text);
-//  Log('Cxbx sources path : ' + CxbxSrcPath);
-
     Log('</DXBXTRANSLATION>');
-
   finally
     FreeAndNil(FileList);
   end;
-
 end;
+
+
 
 end.

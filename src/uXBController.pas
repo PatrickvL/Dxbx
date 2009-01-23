@@ -1247,7 +1247,7 @@ begin
 end;
 
 procedure XBController.Save(szRegistryKey: PAnsiChar);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:95
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   dwType, dwSize: DWord;
   dwDisposition: DWord;
@@ -1267,7 +1267,7 @@ begin
     // Save Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     begin
-      StrFmt(szValueName, 'DeviceName $%.02X', [v]); // TODO DXBX : Was this sprintf too? Is LibC-tooling needed?
+      StrFmt(szValueName, 'DeviceName $%.02X', [v]); // was sprintf
 
       dwType := REG_SZ;
       dwSize := 260;

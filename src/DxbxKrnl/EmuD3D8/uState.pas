@@ -22,31 +22,35 @@ unit uState;
 
 interface
 
+uses
+  Windows;
+
 procedure XTL_EmuUpdateDeferredStates; stdcall;
 
 
 implementation
 
-
+uses
+  uEmuD3D8Types;
 
 procedure XTL_EmuUpdateDeferredStates; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
     //using namespace XTL;
-
+    (*
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-(*    if(EmuD3DDeferredRenderState <> 0) then
+    if(EmuD3DDeferredRenderState <> Nil) then
     begin
-        if(XTL.EmuD3DDeferredRenderState[0] <> X_D3DRS_UNK) then
-            g_pD3DDevice8.SetRenderState(D3DRS_FOGENABLE, XTL.EmuD3DDeferredRenderState[0]);
+        if(EmuD3DDeferredRenderState[0] <> X_D3DRS_UNK) then
+            g_pD3DDevice8.SetRenderState(D3DRS_FOGENABLE, EmuD3DDeferredRenderState[0]);
 
-        if(XTL.EmuD3DDeferredRenderState[1] <> X_D3DRS_UNK) then
+        if(EmuD3DDeferredRenderState[1] <> X_D3DRS_UNK) then
             g_pD3DDevice8.SetRenderState(D3DRS_FOGTABLEMODE, XTL.EmuD3DDeferredRenderState[1]);
 
-        if(XTL.EmuD3DDeferredRenderState[2] <> X_D3DRS_UNK) then
+        if(EmuD3DDeferredRenderState[2] <> X_D3DRS_UNK) then
             g_pD3DDevice8.SetRenderState(D3DRS_FOGSTART, XTL.EmuD3DDeferredRenderState[2]);
 
-        if(XTL.EmuD3DDeferredRenderState[3] <> X_D3DRS_UNK) then
+        if(EmuD3DDeferredRenderState[3] <> X_D3DRS_UNK) then
             g_pD3DDevice8.SetRenderState(D3DRS_FOGEND, XTL.EmuD3DDeferredRenderState[3]);
 
         if(XTL.EmuD3DDeferredRenderState[6] <> X_D3DRS_UNK) then
