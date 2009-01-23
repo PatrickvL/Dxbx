@@ -72,7 +72,7 @@ begin
   // initialize Microsoft XDK emulation
   DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
 
-  DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
+  DetectedSymbols.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
 
   EmuInstallWrappers(pXbeHeader);
 

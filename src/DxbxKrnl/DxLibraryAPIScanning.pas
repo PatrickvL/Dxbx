@@ -70,6 +70,11 @@ type
     MySymbolList: TStringList;
     function GetCount: Integer;
     function GetSymbol(Index: Integer): TDetectedVersionedXboxLibrarySymbol;
+  protected
+    ByteScanLower, ByteScanUpper: PByte;
+    PatternTrieReader: TPatternTrieReader;
+    procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+    function TestAddressUsingPatternTrie(const aAddress: PByte): PStoredLibraryFunction;
   public
     BestFitXboxLibraries: TList;
 
@@ -79,13 +84,14 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+
     procedure Clear;
     function New(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
     function FindByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
+    function FindOrCreateByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
     function FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
   end;
-
-procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 
 var
   DetectedSymbols: TDetectedSymbols;
@@ -181,7 +187,7 @@ begin
   Inc(HitCount);
 end;
 
-function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReader; const aAddress: PByte): PStoredLibraryFunction;
+function TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte): PStoredLibraryFunction;
 
   function _TryMatchingLeaf(var aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): PStoredLibraryFunction;
   var
@@ -211,14 +217,14 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
     // TODO : Include data & test-code for : Trailing bytes
 
     // Get the Stored Library associated with this pattern :
-    StoredLibrary := aPatternTrieReader.GetStoredLibrary(Result.LibraryIndex);
+    StoredLibrary := PatternTrieReader.GetStoredLibrary(Result.LibraryIndex);
 
     // Determine if this matches one of the actual libraries :
-    for i := 0 to DetectedSymbols.BestFitXboxLibraries.Count - 1 do
+    for i := 0 to BestFitXboxLibraries.Count - 1 do
     begin
-      VersionedXboxLibrary := DetectedSymbols.BestFitXboxLibraries[i];
+      VersionedXboxLibrary := BestFitXboxLibraries[i];
       if VersionedXboxLibrary.LibVersion = StoredLibrary.LibVersion then
-        if SameText(VersionedXboxLibrary.LibName, aPatternTrieReader.GetString(StoredLibrary.LibNameIndex)) then
+        if SameText(VersionedXboxLibrary.LibName, PatternTrieReader.GetString(StoredLibrary.LibNameIndex)) then
 //      if VersionedXboxLibrary.LibNameIndex = StoredLibrary.LibNameIndex then
           Exit;
     end;
@@ -326,7 +332,7 @@ function TestAddressUsingPatternTrie(const aPatternTrieReader: TPatternTrieReade
         Break;
 
       // Jump to next sibling :
-      aStoredTrieNode := aPatternTrieReader.GetNode(NextOffset);
+      aStoredTrieNode := PatternTrieReader.GetNode(NextOffset);
       Dec(NrChildren);
     end;
 
@@ -337,93 +343,90 @@ var
   Node: PStoredTrieNode;
 begin
   // Search if this address matches a pattern :
-  Node := aPatternTrieReader.GetNode(aPatternTrieReader.StoredSignatureTrieHeader.TrieRootNode);
+  Node := PatternTrieReader.GetNode(PatternTrieReader.StoredSignatureTrieHeader.TrieRootNode);
 
   Result := _TryMatchingNode(Node, aAddress, 0);
 end; // TestAddressUsingPatternTrie
 
-
-procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+procedure TDetectedSymbols.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 var
-  ByteScanLower, ByteScanUpper: PByte;
-
-  procedure _DetectVersionedXboxLibraries(const aPatternTrieReader: TPatternTrieReader);
-  var
-    CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
-    CurrentLibName: string;
-    StoredLibrary, BestFit: PStoredLibrary;
-    BestDist, ThisDist: Integer;
-    StoredLibraryName: string;
-    i, j: Integer;
-    VersionedXboxLibrary: PVersionedXboxLibrary;
+  CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
+  CurrentLibName: string;
+  StoredLibrary, BestFit: PStoredLibrary;
+  BestDist, ThisDist: Integer;
+  StoredLibraryName: string;
+  i, j: Integer;
+  VersionedXboxLibrary: PVersionedXboxLibrary;
+begin
+  // Loop over all libraries :
+  CurrentXbeLibraryVersion := pLibraryVersion;
+  if not Assigned(CurrentXbeLibraryVersion) then
   begin
-    // Loop over all libraries :
-    CurrentXbeLibraryVersion := pLibraryVersion;
-    if not Assigned(CurrentXbeLibraryVersion) then
-    begin
-      DbgPrintf('DxbxHLE : No XBE library versions to scan!');
-      Exit;
-    end;
+    DbgPrintf('DxbxHLE : No XBE library versions to scan!');
+    Exit;
+  end;
 
-    // Loop over all library versions in the executable:
-    for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
-    begin
-      CurrentLibName := Copy(CurrentXbeLibraryVersion.szName, 1, 8);
-      DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
+  // Loop over all library versions in the executable:
+  for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
+  begin
+    CurrentLibName := Copy(CurrentXbeLibraryVersion.szName, 1, 8);
+    DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
 
-      // Find the library version in our pattern trie that best matches this :
-      BestFit := nil;
-      BestDist := Low(BestDist);
-      for j := 0 to aPatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
+    // Find the library version in our pattern trie that best matches this :
+    BestFit := nil;
+    BestDist := Low(BestDist);
+    for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
+    begin
+      StoredLibrary := PatternTrieReader.GetStoredLibrary(j);
+      StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
+
+      // Only consider libraries with exactly the same name :
+      if SameText(StoredLibraryName, CurrentLibName) then
       begin
-        StoredLibrary := aPatternTrieReader.GetStoredLibrary(j);
-        StoredLibraryName := aPatternTrieReader.GetString(StoredLibrary.LibNameIndex);
-
-        // Only consider libraries with exactly the same name :
-        if SameText(StoredLibraryName, CurrentLibName) then
+        // Distance : 0 on exact hit, positive when more recent, negative when older;
+        // More recent is better than older version; The closer to 0, the better.
+        ThisDist := Integer(StoredLibrary.LibVersion) - Integer(CurrentXbeLibraryVersion.wBuildVersion);
+        // Use this library when no other are found yet :
+        if (BestFit = nil)
+        // Or when the this version comes closer to the actual version :
+        or (ThisDist = 0)
+        or ((BestDist < 0) and (ThisDist > 0))
+        or ((BestDist < 0) and (ThisDist < 0) and (ThisDist > BestDist))
+        or ((BestDist > 0) and (ThisDist > 0) and (ThisDist < BestDist)) then
         begin
-          // Distance : 0 on exact hit, positive when more recent, negative when older;
-          // More recent is better than older version; The closer to 0, the better.
-          ThisDist := Integer(StoredLibrary.LibVersion) - Integer(CurrentXbeLibraryVersion.wBuildVersion);
-          // Use this library when no other are found yet :
-          if (BestFit = nil)
-          // Or when the this version comes closer to the actual version :
-          or (ThisDist = 0)
-          or ((BestDist < 0) and (ThisDist > 0))
-          or ((BestDist < 0) and (ThisDist < 0) and (ThisDist > BestDist))
-          or ((BestDist > 0) and (ThisDist > 0) and (ThisDist < BestDist)) then
-          begin
-            BestFit := StoredLibrary;
-            BestDist := ThisDist;
-          end;
+          BestFit := StoredLibrary;
+          BestDist := ThisDist;
         end;
       end;
-
-      if Assigned(BestFit) then
-      begin
-        if BestFit.LibVersion = CurrentXbeLibraryVersion.wBuildVersion then
-          DbgPrintf('... Got patterns for exactly this version!')
-        else
-          DbgPrintf('... Approximating this with patterns from library %d.', [BestFit.LibVersion]);
-
-        // Add this library to a list we'll use in the detection-code :
-        VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
-{$IFDEF DXBX_RECTYPE}
-        VersionedXboxLibrary.RecType := rtVersionedXboxLibrary;
-{$ENDIF}
-        VersionedXboxLibrary.LibVersion := BestFit.LibVersion;
-        VersionedXboxLibrary.LibName := aPatternTrieReader.GetString(BestFit.LibNameIndex);
-        DetectedSymbols.BestFitXboxLibraries.Add(VersionedXboxLibrary);
-      end
-      else
-        DbgPrintf('... No patterns registered for this library!');
-
-      // Skip to the next library :
-      Inc(CurrentXbeLibraryVersion);
     end;
-  end; // _DetectVersionedXboxLibraries
 
-  function _FindAndRememberPattern(const aPatternTrieReader: TPatternTrieReader; const aAddress: PByte): PStoredLibraryFunction;
+    if Assigned(BestFit) then
+    begin
+      if BestFit.LibVersion = CurrentXbeLibraryVersion.wBuildVersion then
+        DbgPrintf('... Got patterns for exactly this version!')
+      else
+        DbgPrintf('... Approximating this with patterns from library %d.', [BestFit.LibVersion]);
+
+      // Add this library to a list we'll use in the detection-code :
+      VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
+{$IFDEF DXBX_RECTYPE}
+      VersionedXboxLibrary.RecType := rtVersionedXboxLibrary;
+{$ENDIF}
+      VersionedXboxLibrary.LibVersion := BestFit.LibVersion;
+      VersionedXboxLibrary.LibName := PatternTrieReader.GetString(BestFit.LibNameIndex);
+      BestFitXboxLibraries.Add(VersionedXboxLibrary);
+    end
+    else
+      DbgPrintf('... No patterns registered for this library!');
+
+    // Skip to the next library :
+    Inc(CurrentXbeLibraryVersion);
+  end;
+end; // DetectVersionedXboxLibraries
+
+procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+
+  function _FindAndRememberPattern(const aAddress: PByte): PStoredLibraryFunction;
 
     function _HandleCrossReference(const aStartingAddress: PByte;
       const aCrossReferenceOffset: Word; const aCrossReferenceNameIndex: TStringTableIndex): Boolean;
@@ -446,14 +449,14 @@ var
         Exit;
 
       // See if we can find a function on this address :
-      CrossReferenced := TestAddressUsingPatternTrie(aPatternTrieReader, CrossReferenceAddress);
+      CrossReferenced := TestAddressUsingPatternTrie(PatternTrieReader, CrossReferenceAddress);
       if CrossReferenced = nil then
         Exit;
 
       // Check if this function is indeed the one mentioned, by comparing
       // the string-indexes of both functions (they should match) :
       Result := aCrossReferenceNameIndex =
-                aPatternTrieReader.GetGlobalFunction(CrossReferenced.GlobalFunctionIndex).FunctionNameIndex;
+                PatternTrieReader.GetGlobalFunction(CrossReferenced.GlobalFunctionIndex).FunctionNameIndex;
 *)
     end; // _HandleCrossReference
 
@@ -463,13 +466,13 @@ var
     Unmangled: string;
   begin
     // Search if this address matches a pattern :
-    Result := TestAddressUsingPatternTrie(aPatternTrieReader, aAddress);
+    Result := TestAddressUsingPatternTrie(aAddress);
     if Result = nil then
       Exit;
 
     // Now that it's found, see if it was already registered :
-    FunctionName := aPatternTrieReader.GetFunctionName(Result.GlobalFunctionIndex);
-    Detected := DetectedSymbols.FindByName(FunctionName);
+    FunctionName := PatternTrieReader.GetFunctionName(Result.GlobalFunctionIndex);
+    Detected := FindByName(FunctionName);
     if Assigned(Detected) then
     begin
       Detected.AddPossibleLocation(aAddress, Result);
@@ -489,7 +492,7 @@ var
 
     // Newly detected functions are registered here (including their range,
     // which will come in handy when debugging) :
-    Detected := DetectedSymbols.New(Unmangled);
+    Detected := New(Unmangled);
     Detected.StoredLibraryFunction := Result;
     Detected.AddPossibleLocation(aAddress, Result);
 
@@ -499,8 +502,7 @@ var
 {$ENDIF}
   end; // _FindAndRememberPattern
 
-  procedure _ScanMemoryRangeForLibraryPatterns(const ByteScanLower, ByteScanUpper: PByte;
-    const aPatternTrieReader: TPatternTrieReader);
+  procedure _ScanMemoryRangeForLibraryPatterns(const ByteScanLower, ByteScanUpper: PByte);
   var
     p: PByte;
   begin
@@ -511,7 +513,7 @@ var
     while p <> ByteScanUpper do
     begin
       try
-        _FindAndRememberPattern(aPatternTrieReader, p);
+        _FindAndRememberPattern(p);
       except
 {$IFDEF DXBX_DEBUG}
         DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
@@ -522,16 +524,16 @@ var
     end;
   end; // _ScanMemoryRangeForLibraryPatterns
 
-  procedure _ResolveXapiProcessHeapAddress(const aPatternTrieReader: TPatternTrieReader);
+  procedure _ResolveXapiProcessHeapAddress();
   var
     DetectedXapiInitProcess: TDetectedVersionedXboxLibrarySymbol;
     StoredLibrary: PStoredLibrary;
     ProcessHeapOffs: Integer;
   begin
-    DetectedXapiInitProcess := DetectedSymbols.FindByName('XapiInitProcess');
+    DetectedXapiInitProcess := FindByName('XapiInitProcess');
     if Assigned(DetectedXapiInitProcess) then
     begin
-      StoredLibrary := aPatternTrieReader.GetStoredLibrary(DetectedXapiInitProcess.StoredLibraryFunction.LibraryIndex);
+      StoredLibrary := PatternTrieReader.GetStoredLibrary(DetectedXapiInitProcess.StoredLibraryFunction.LibraryIndex);
       if Assigned(StoredLibrary) then
       begin
         // Source for these offsets is Cxbx code (HLEIntercept.cpp) and our
@@ -559,7 +561,6 @@ var
 
 var
   ResourceStream: TResourceStream;
-  PatternTrieReader: TPatternTrieReader;
 {$IFDEF DXBX_DEBUG}
   i: Integer;
 {$ENDIF}
@@ -576,7 +577,7 @@ begin
   // we stretch the window to $00272420. This seems about right, as the
   // Access Violations only start a little after that, at address $00274000.
 
-  DetectedSymbols.Clear;
+  Clear;
 
   // Get StoredPatternTrie from resource :
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
@@ -585,13 +586,13 @@ begin
     try
       PatternTrieReader.LoadFromStream(ResourceStream);
 
-      _DetectVersionedXboxLibraries(PatternTrieReader);
+      DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
       // Scan Patterns using this trie :
-      _ScanMemoryRangeForLibraryPatterns(ByteScanLower, ByteScanUpper, PatternTrieReader);
+      _ScanMemoryRangeForLibraryPatterns(ByteScanLower, ByteScanUpper);
 
       // Resolve the address of _XapiProcessHeap :
-      _ResolveXapiProcessHeapAddress(PatternTrieReader);
+      _ResolveXapiProcessHeapAddress();
 
     finally
       FreeAndNil(PatternTrieReader);
@@ -604,9 +605,9 @@ begin
 
 {$IFDEF DXBX_DEBUG}
   // Show a list of detected functions with a HitCount > 1 :
-  for i := 0 to DetectedSymbols.Count - 1 do
-    if DetectedSymbols[i].HitCount > 1 then
-      DbgPrintf('DxbxHLE : Duplicate %.3d hits on ''%s'' ', [DetectedSymbols[i].HitCount, DetectedSymbols[i].SymbolName]);
+  for i := 0 to Count - 1 do
+    if Symbols[i].HitCount > 1 then
+      DbgPrintf('DxbxHLE : Duplicate %.3d hits on ''%s'' ', [Symbols[i].HitCount, Symbols[i].SymbolName]);
     // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
 {$ENDIF}
   DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedSymbols.Count]);
@@ -653,8 +654,11 @@ begin
   if Assigned(MySymbolList) then
   begin
     for i := 0 to Count - 1 do
-      Symbols[i].Free;
-
+    begin
+      DetectedSymbol := Symbols[i];
+      FreeAndNil(DetectedSymbol); // handles nil gracefully too
+    end;
+    
     MySymbolList.Clear;
   end;
 
@@ -687,6 +691,13 @@ begin
     Result := Symbols[i]
   else
     Result := nil;
+end;
+
+function TDetectedSymbols.FindOrCreateByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
+begin
+  Result := FindByName(aSymbolName);
+  if not Assigned(Result) then
+    Result := New(aSymbolName);
 end;
 
 function TDetectedSymbols.FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
