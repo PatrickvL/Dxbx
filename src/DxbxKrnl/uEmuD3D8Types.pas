@@ -32,6 +32,11 @@ uses
   ;
 
 const
+  // deferred render state "unknown" flag
+  X_D3DRS_UNK =  $7fffffff;
+  // deferred texture stage state "unknown" flag
+  X_D3DTSS_UNK = $7fffffff;
+
   X_VSCM_96 = 0;
   X_VSCM_192 = 1;
   X_VSCM_192FIXEDPIPELINE = 2;
@@ -298,9 +303,37 @@ const
   X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
 
   // special resource lock flags
-  X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;
-  
+  X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;       
+
+  // pixel container "format" masks
+  X_D3DFORMAT_RESERVED1_MASK      = $00000003;      // Must be zero
+  X_D3DFORMAT_DMACHANNEL_MASK     = $00000003;
+  X_D3DFORMAT_DMACHANNEL_A        = $00000001;      // DMA channel A - the default for all system memory
+  X_D3DFORMAT_DMACHANNEL_B        = $00000002;      // DMA channel B - unused
+  X_D3DFORMAT_CUBEMAP             = $00000004;      // Set if the texture if a cube map
+  X_D3DFORMAT_BORDERSOURCE_COLOR  = $00000008;
+  X_D3DFORMAT_DIMENSION_MASK      = $000000F0;      // # of dimensions
+  X_D3DFORMAT_DIMENSION_SHIFT     = 4;
+  X_D3DFORMAT_FORMAT_MASK         = $0000FF00;
+  X_D3DFORMAT_FORMAT_SHIFT        = 8;
+  X_D3DFORMAT_MIPMAP_MASK         = $000F0000;
+  X_D3DFORMAT_MIPMAP_SHIFT        = 16;
+  X_D3DFORMAT_USIZE_MASK          = $00F00000;      // Log 2 of the U size of the base texture
+  X_D3DFORMAT_USIZE_SHIFT         = 20;
+  X_D3DFORMAT_VSIZE_MASK          = $0F000000;      // Log 2 of the V size of the base texture
+  X_D3DFORMAT_VSIZE_SHIFT         = 24;
+  X_D3DFORMAT_PSIZE_MASK          = $F0000000;      // Log 2 of the P size of the base texture
+  X_D3DFORMAT_PSIZE_SHIFT         = 28;
+
+  // pixel container "size" masks
+  X_D3DSIZE_WIDTH_MASK            = $00000FFF;   // Width  (Texels - 1)
+  X_D3DSIZE_HEIGHT_MASK           = $00FFF000;   // Height (Texels - 1)
+  X_D3DSIZE_HEIGHT_SHIFT          = 12;
+  X_D3DSIZE_PITCH_MASK            = $FF000000;   // Pitch / 64 - 1
+  X_D3DSIZE_PITCH_SHIFT           = 24;
+
   function IsSpecialResource(x: DWORD): Boolean;
+
 
 type
   X_D3DPixelContainer = object(X_D3DResource)

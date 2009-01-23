@@ -245,10 +245,11 @@ begin
       szBuffer := BasePath + '\EmuDisk\Z';
       CreateDirectory(PAnsiChar(szBuffer), nil);
 
-      //(* is it necessary to make this directory title unique?
+      (* marked out by cxbx
+      //is it necessary to make this directory title unique?
       szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
       CreateDirectory(PAnsiChar(szBuffer), nil);
-      //*)
+      *)
 
       g_strZDrive := szBuffer;
       g_hZDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
@@ -299,7 +300,7 @@ begin
     // halo : 1744F0 (bink)
     //_asm int 3;
 
-    (*
+    { Marked out by cxbx
     for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do
     begin
         bool bExclude = False;
@@ -315,7 +316,7 @@ begin
         if not bExclude then
             *(uint08* )(funcAddr[v]) := 0xCC;
     end
-    //*)
+    }
 
     Entry();
 
@@ -383,28 +384,23 @@ begin
 end;
 
 procedure CxbxKrnlResume();
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:60
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:70
 var
   v: Integer;
   dwExitCode: DWORD;
+  szBuffer : array [0..256-1] of Char;
+  hWnd : THandle;
 begin
   if (not g_bEmuSuspended) then
     Exit;
 
     // remove 'paused' from rendering window caption text
-(*
    begin
-        char szBuffer[256];
-
-        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
-
-        GetWindowText(hWnd, szBuffer, 255);
-
-        szBuffer[strlen(szBuffer)-9] = '\0';
-
-        SetWindowText(hWnd, szBuffer);
+    (*hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+    GetWindowText(hWnd, szBuffer, 255);
+    szBuffer[strlen(szBuffer)-9] := '\0';
+    SetWindowText(hWnd, szBuffer); *)
   end;
-*)
 
   for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
   begin
