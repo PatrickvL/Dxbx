@@ -27,6 +27,8 @@ uses
   SysUtils;
 
 const
+  CLOCKS_PER_SEC = 1000; // Because we're implementing clock() using GetTickCount()
+
   NULL = nil;
 
 type
@@ -79,6 +81,7 @@ function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 function strncpy(dest, source: PAnsiChar; len: Integer): PAnsiChar; // cdecl
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
+function clock(): DWord; // cdecl;
 
 implementation
 
@@ -102,6 +105,11 @@ end;
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 begin
   Move(source^,dest^,count);
+end;
+
+function clock(): DWord;
+begin
+  Result := GetTickCount();
 end;
 
 end.

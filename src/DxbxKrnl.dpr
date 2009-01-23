@@ -87,7 +87,8 @@ uses
   uConsoleClass in 'uConsoleClass.pas',
   uXboxLibraryUtils in 'uXboxLibraryUtils.pas',
   uHLEIntercept in 'DxbxKrnl\uHLEIntercept.pas',
-  uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas';
+  uDxbxDebugUtils in 'DxbxKrnl\uDxbxDebugUtils.pas',
+  uStoredTrieTypes in 'uStoredTrieTypes.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}

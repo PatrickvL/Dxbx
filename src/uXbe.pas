@@ -470,7 +470,8 @@ begin
 
     i := m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr;
     SetLength(m_KernelLibraryVersion, SizeOf(m_LibraryVersion));
-    CopyMemory(m_KernelLibraryVersion, @(Buffer[i]), SizeOf(m_LibraryVersion));
+    CopyMemory({Dest=}m_KernelLibraryVersion, {Source=}@(Buffer[i]), SizeOf(m_LibraryVersion));
+//  WriteLog(DxbxFormat('DXBX: Kernel Library Version 0x%.4x... OK', [PChar(m_KernelLibraryVersion[0])]));
 
     // read xbe xapi library version
     WriteLog('DXBX: Reading Xapi Library Version...');
@@ -480,8 +481,7 @@ begin
     i := m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr;
     SetLength(m_XAPILibraryVersion, SizeOf(m_LibraryVersion));
     CopyMemory(m_XAPILibraryVersion, @(Buffer[i]), SizeOf(m_LibraryVersion));
-//was:for lIndex := 0 to SizeOf(m_LibraryVersion) - 1 do
-//      m_XAPILibraryVersion[lIndex] := Buffer[lIndex + i];
+//  WriteLog(DxbxFormat('DXBX: XAPI Library Version 0x%.4x... OK', [PChar(m_XAPILibraryVersion[0])]));
   end;
 
   // read Xbe sections
