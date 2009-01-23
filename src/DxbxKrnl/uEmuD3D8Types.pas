@@ -181,6 +181,15 @@ type
     X_D3DRTYPE_FORCE_DWORD = $7FFFFFFF
   );
 
+  X_D3DPALETTESIZE = (
+    D3DPALETTE_256              = 0,
+    D3DPALETTE_128              = 1,
+    D3DPALETTE_64               = 2,
+    D3DPALETTE_32               = 3,
+    D3DPALETTE_MAX              = 4,
+    D3DPALETTE_FORCE_DWORD      = $7FFFFFFF
+  );
+
   X_D3DDISPLAYMODE = packed record
     Width: UINT;
     Height: UINT;
@@ -326,9 +335,17 @@ type
   end;
   PX_D3DFixup = ^X_D3DFixup;
 
+  X_D3DPalette = object(X_D3DResource)
+  end;
+  PX_D3DPalette = ^X_D3DPalette;
+
   X_D3DBaseTexture = object(X_D3DPixelContainer)
   end;
   PX_D3DBaseTexture = ^X_D3DBaseTexture;
+
+  X_D3DTexture = object(X_D3DBaseTexture)
+  end;
+  PX_D3DTexture = ^X_D3DTexture; 
 
   X_D3DCubeTexture = object(X_D3DBaseTexture)
   end;

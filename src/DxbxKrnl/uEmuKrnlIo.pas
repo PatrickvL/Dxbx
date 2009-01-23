@@ -301,7 +301,6 @@ function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
   ChargeQuota: LONGBOOL // Dxbx TODO : Should this be a WordBool??
   ): PIRP; stdcall; // Source: ReactOS
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoAllocateIrp');
@@ -317,7 +316,6 @@ function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   StartingOffset: PLARGE_INTEGER; // OPTIONAL
   IoStatusBlock: PIO_STATUS_BLOCK // OPTIONAL
   ): PIRP; stdcall; // Source: ReactOS
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoBuildAsynchronousFsdRequest');
@@ -336,7 +334,6 @@ function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall; // Source: ReactOS
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoBuildDeviceIoControlRequest');
@@ -353,7 +350,6 @@ function {062} xboxkrnl_IoBuildSynchronousFsdRequest(
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall; // Source: ReactOS
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoBuildSynchronousFsdRequest');
@@ -368,7 +364,6 @@ function {063} xboxkrnl_IoCheckShareAccess(
   ShareAccess: PSHARE_ACCESS; // OUT
   Update: BOOLEAN
   ): NTSTATUS; stdcall; // Source: ReactOS
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoCheckShareAccess');
@@ -412,7 +407,6 @@ function {065} xboxkrnl_IoCreateDevice(
   Exclusive: BOOLEAN;
   var DeviceObject: PDEVICE_OBJECT // out
   ): NTSTATUS; stdcall; // Source: ReactOS
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoCreateDevice');
@@ -450,7 +444,6 @@ begin
 end;
 
 function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoDeleteDevice');
@@ -468,7 +461,6 @@ begin
 end;
 
 function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoFreeIrp');
@@ -476,7 +468,6 @@ begin
 end;
 
 function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoInitializeIrp');
@@ -484,7 +475,6 @@ begin
 end;
 
 function xboxkrnl_IoInvalidDeviceRequest(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoInvalidDeviceRequest');
@@ -492,7 +482,6 @@ begin
 end;
 
 function xboxkrnl_IoQueryFileInformation(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoQueryFileInformation');
@@ -500,7 +489,6 @@ begin
 end;
 
 function xboxkrnl_IoQueryVolumeInformation(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoQueryVolumeInformation');
@@ -508,7 +496,6 @@ begin
 end;
 
 function xboxkrnl_IoQueueThreadIrp(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoQueueThreadIrp');
@@ -516,7 +503,6 @@ begin
 end;
 
 function xboxkrnl_IoRemoveShareAccess(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoRemoveShareAccess');
@@ -524,7 +510,6 @@ begin
 end;
 
 function xboxkrnl_IoSetIoCompletion(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoSetIoCompletion');
@@ -532,7 +517,6 @@ begin
 end;
 
 function xboxkrnl_IoSetShareAccess(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoSetShareAccess');
@@ -540,7 +524,6 @@ begin
 end;
 
 function xboxkrnl_IoStartNextPacket(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoStartNextPacket');
@@ -548,7 +531,6 @@ begin
 end;
 
 function xboxkrnl_IoStartNextPacketByKey(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoStartNextPacketByKey');
@@ -556,7 +538,6 @@ begin
 end;
 
 function xboxkrnl_IoStartPacket(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoStartPacket');
@@ -564,7 +545,6 @@ begin
 end;
 
 function xboxkrnl_IoSynchronousDeviceIoControlRequest(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoSynchronousDeviceIoControlRequest');
@@ -572,7 +552,6 @@ begin
 end;
 
 function xboxkrnl_IoSynchronousFsdRequest(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoSynchronousFsdRequest');
@@ -580,7 +559,6 @@ begin
 end;
 
 function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IofCallDriver');
@@ -588,7 +566,6 @@ begin
 end;
 
 function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IofCompleteRequest');
@@ -596,7 +573,6 @@ begin
 end;
 
 function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoDismountVolume');
@@ -604,7 +580,6 @@ begin
 end;
 
 function xboxkrnl_IoDismountVolumeByName(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoDismountVolumeByName');
@@ -612,7 +587,6 @@ begin
 end;
 
 function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoMarkIrpMustComplete');

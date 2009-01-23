@@ -1,6 +1,11 @@
 program TranslationChecker;
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Forms,
   uTranslationChecker in 'uTranslationChecker.pas' {Form1};
 
