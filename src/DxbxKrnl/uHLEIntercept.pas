@@ -353,7 +353,7 @@ end;
 procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 var
   i: Integer;
-  DetectedSymbol: PDetectedVersionedXboxLibrarySymbol;
+  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
   OrgCode: TCodePointer;
   NewCode: TCodePointer;
   NrPatches: Integer;
@@ -367,21 +367,21 @@ begin
 {$IFDEF DXBX_DEBUG}
   UsedPatches := TBits.Create;
   try
+    UsedPatches.Size := AvailablePatches.Count + 1;
 {$ENDIF}
     for i := 0 to DetectedSymbols.Count - 1 do
     begin
       DetectedSymbol := DetectedSymbols[i];
-      if DetectedSymbol.XboxLibraryPatch <> xlp_Unknown then
+      if  Assigned(DetectedSymbol.SymbolLocation)
+      and (DetectedSymbol.XboxLibraryPatch <> xlp_Unknown) then
       begin
-        OrgCode := DetectedSymbol.CodeStart;
+        OrgCode := DetectedSymbol.SymbolLocation;
         NewCode := XboxLibraryPatchToPatch(DetectedSymbol.XboxLibraryPatch);
         Assert(Assigned(NewCode));
 
   {$IFDEF DXBX_DEBUG}
-        DbgPrintf('DxbxHLE : Installed patched from $%.08X (%s ^%.4x %d) to $%.08X', [
+        DbgPrintf('DxbxHLE : Installed patch from $%.08X (%s) to $%.08X', [
           OrgCode, DetectedSymbol.SymbolName,
-          DetectedSymbol.StoredLibraryFunction.CrossReference1Offset,
-          DetectedSymbol.StoredLibraryFunction.CrossReference1NameIndex,
           NewCode
           ]);
         UsedPatches[DetectedSymbol.XboxLibraryPatch] := True;

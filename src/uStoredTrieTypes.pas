@@ -33,8 +33,6 @@ const
 
   PatternDontCareValue = Word($FFFF);
 
-  NO_STRING_INDEX = Cardinal(-1);
-
 type
   {$A1} // Make sure all the following records are byte-aligned for best space-usage :
 
@@ -45,6 +43,7 @@ type
     rtStoredLibrary,
     rtStoredGlobalFunction,
     rtStoredLibraryFunction,
+    rtStoredCrossReference,
     rtStoredTrieNode);
 {$ENDIF}
 
@@ -120,6 +119,16 @@ type
 
   TFunctionIndex = type BaseIndexType; /// Use this everywhere a function is uniquely identified.
 
+  // All functions that reference other symbols, use this cross-reference record.
+  PStoredCrossReference = ^RStoredCrossReference;
+  RStoredCrossReference = packed record
+{$IFDEF DXBX_RECTYPE}
+    RecType: TRecType;
+{$ENDIF}
+    Offset: Word;
+    NameIndex: TStringTableIndex;
+  end;
+
   // A function occurs in two locations - per library and global.
   // This record contains the per-library function information.
   PStoredLibraryFunction = ^RStoredLibraryFunction;
@@ -132,8 +141,9 @@ type
     CRCLength: Byte;
     CRCValue: Word;
     FunctionLength: Word;
-    CrossReference1Offset: Word;
-    CrossReference1NameIndex: TStringTableIndex;
+    NrCrossReferences: Word;
+    // Note : Directly following this record, there are 'NrCrossReferences'
+    // RStoredCrossReference records stored in the trie !
   end;
 
   PStoredTrieNode = ^RStoredTrieNode;

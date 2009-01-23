@@ -96,7 +96,7 @@ end;
 
 function TDxbxAPIDebugInfoSource.GetLocationInfo(const aAddr: Pointer; var Info: TJclLocationInfo): Boolean;
 var
-  DetectedSymbol: PDetectedVersionedXboxLibrarySymbol;
+  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
 begin
   DetectedSymbol := DetectedSymbols.FindByAddress(TCodePointer(aAddr));
   Result := Assigned(DetectedSymbol);
@@ -105,7 +105,7 @@ begin
 
   with Info do
   begin
-    Address := Pointer(DetectedSymbol.CodeStart); // Error address
+    Address := Pointer(DetectedSymbol.SymbolLocation); // Error address
 //    UnitName: string;               // Name of Delphi unit
     ProcedureName := DetectedSymbol.SymbolName;
     OffsetFromProcName := Integer(IntPtr(aAddr) - IntPtr(Address)); // Offset from Address to ProcedureName symbol location
@@ -124,7 +124,7 @@ var
   MapFileName: TFileName;
 *)
 begin
-  Result := True; // TODO
+  Result := True; // Dxbx TODO
 (*
   MapFileName := ChangeFileExt(FileName, JclMapFileExtension);
   Result := FileExists(MapFileName);

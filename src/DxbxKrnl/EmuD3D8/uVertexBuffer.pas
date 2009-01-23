@@ -25,11 +25,14 @@ interface
 uses
   // Delphi
   Windows
+  , SysUtils // Abort
   // Directx
   , Direct3D
+  , D3DX8
   // Dxbx
   , uLog
-  , D3DX8;
+  , uTypes // CLOCKS_PER_SEC, clock()
+  , uEmuD3D8Types;
 
 type
   _D3DIVB = packed record
@@ -43,62 +46,78 @@ type
     TexCoord3: TD3DXVECTOR2; // TexCoord3
     TexCoord4: TD3DXVECTOR2; // TexCoord4
   end;
+  D3DIVB = _D3DIVB;
+  PD3DIVB = ^D3DIVB;
+  
+const
+  VERTEX_BUFFER_CACHE_SIZE = 64;
+  MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO: Trim the not used time
 
 var
+  // inline vertex buffer emulation
+  g_pIVBVertexBuffer: PWORD = nil;
+  g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
   g_IVBTblOffs: UInt = 0;
-  g_IVBTable: _D3DIVB;
+  g_IVBTable: PD3DIVB = nil;
+  g_IVBFVF: DWORD = 0;
 
 implementation
 
-procedure CRC32Init;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
-  bFirstTime: Boolean = True;
-  i, j: Integer;
-  crc: Word; *)
-begin
-(*  if (not bFirstTime) then
-  begin
-    Exit;
-  end;
+var
+  crctab: array [0..256-1] of uint;
 
-  for i := 0 to 255 do
+procedure CRC32Init;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+{$J+}
+const
+  bFirstTime: Boolean = True;
+{$J-}
+var
+  i, j: Integer;
+  crc: uint;
+begin
+  if not bFirstTime then
+    Exit;
+
+  for i := 0 to 256 - 1 do
   begin
     crc := i shl 24;
-
-    for j := 0 to 7 do
+    for j := 0 to 8 - 1 do
     begin
-      if (crc and $80000000) then
-        crc := (crc shl 1)^$04C11DB7
+      if (crc and $80000000) > 0 then
+        crc := (crc shl 1) xor $04C11DB7
       else
         crc := crc shl 1;
     end;
+
     crctab[i] := crc;
   end;
-  bFirstTime := False;*)
+
+  bFirstTime := False;
 end;
 
-function CRC32(var data: Byte; len: Integer): Word;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+function CRC32(data: PByte; len: Integer): uint;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  i: Integer;
 begin
-(*    Word        cresult;
-    Integer                 i;;
+  if len < 4 then
+    Abort;
 
-    if(len < 4) abort() then ;
+  Result :=           (data^ shl 24); Inc(data);
+  Result := Result or (data^ shl 16); Inc(data);
+  Result := Result or (data^ shl  8); Inc(data);
+  Result := Result or  data^        ; Inc(data);
+  Result := not Result;
+  Dec(len, 4);
 
-    cresult := *data++ shl 24;
-    cresult:= cresult or *data++ shl 16;
-    cresult:= cresult or *data++ shl 8;
-    cresult:= cresult or *data:= *data + 1;
-    cresult := ~ cresult;
-    len -:=4;
+  for i := 0 to len - 1 do
+  begin
+    Result := ((Result shl 8) or data^) xor crctab[Result shr 24];
+    Inc(Data);
+  end;
 
-    for(i:=0; i<len; i++)
-    begin
-        cresult := (cresult shl 8 or *data++) ^ crctab[cresult shr 24];
-     end;
-
-    Result := ~cresult; *)
+  Result := not Result;
 end;
 
 

@@ -441,6 +441,8 @@ var
   procedure _WriteLeaf(const aLeaf: TPatternTrieLeaf);
   var
     StoredLibraryFunction: RStoredLibraryFunction;
+    i: Integer;
+    StoredCrossReference: RStoredCrossReference;
   begin
 {$IFDEF DXBX_RECTYPE}
     StoredLibraryFunction.RecType := rtStoredLibraryFunction;
@@ -450,16 +452,20 @@ var
     StoredLibraryFunction.CRCLength := aLeaf.VersionedXboxLibraryFunction.CRCLength;
     StoredLibraryFunction.CRCValue := aLeaf.VersionedXboxLibraryFunction.CRCValue;
     StoredLibraryFunction.FunctionLength := aLeaf.VersionedXboxLibraryFunction.TotalLength;
-    if Length(aLeaf.VersionedXboxLibraryFunction.CrossReferences) > 0 then
-    begin
-      // TODO : Write out all cross-references here !
-      StoredLibraryFunction.CrossReference1Offset := aLeaf.VersionedXboxLibraryFunction.CrossReferences[0].Offset;
-      StoredLibraryFunction.CrossReference1NameIndex := UniqueStrings.IndexOf(aLeaf.VersionedXboxLibraryFunction.CrossReferences[0].Name);
-    end
-    else
-      StoredLibraryFunction.CrossReference1NameIndex := NO_STRING_INDEX;
-
+    StoredLibraryFunction.NrCrossReferences := Length(aLeaf.VersionedXboxLibraryFunction.CrossReferences);
     OutputFile.WriteBuffer(StoredLibraryFunction, SizeOf(RStoredLibraryFunction));
+
+    // Write out all cross-references here :
+    for i := 0 to Length(aLeaf.VersionedXboxLibraryFunction.CrossReferences) - 1 do
+    begin
+{$IFDEF DXBX_RECTYPE}
+      StoredCrossReference.RecType := rtStoredCrossReference;
+{$ENDIF}
+      StoredCrossReference.Offset := aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].Offset;
+      StoredCrossReference.NameIndex := UniqueStrings.IndexOf(aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].Name);
+      OutputFile.WriteBuffer(StoredCrossReference, SizeOf(RStoredCrossReference));
+    end;
+
   end;
 
   procedure _WriteTrieNodes(const aPatternNode: TPatternTrieNode; Depth: Integer);
@@ -627,7 +633,7 @@ begin
     for i := 0 to VersionedFunctions.Count - 1 do
     begin
       for j := 0 to Length(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences) - 1 do
-        GlobalFunctions.Add(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences[j].Name);
+        UniqueStrings.Add(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences[j].Name);
     end;
 
     // Also, add all library names to the unique string list :
@@ -839,7 +845,7 @@ begin
 
   // TODO : What does this '@' after the FunctionOffset mean?
   if aLine^ = '@' then
-    _SkipChar('@');
+    Inc(aLine);
 
   Result := True;
 
@@ -850,12 +856,19 @@ begin
   begin
     aLine := aVersionedXboxLibraryFunction.Values[i];
 
+    // Skip values that start with a ':'
+    if aLine^ = ':' then
+    begin
+      Inc(i, 2);
+      Continue;
+    end;
+
     // Check if there's a cross-reference starting here (begins with an offset) :
     if aLine^ <> '^' then
       Break;
 
     // There's a cross-reference here, scan it :
-    _SkipChar('^');
+    Inc(aLine);
     if not ScanHexWord(aLine, {var}Value) then
       Break;
 
@@ -866,16 +879,13 @@ begin
     Inc(i);
     CrossReferencedFunctionName := string(aVersionedXboxLibraryFunction.Values[i]);
 
-    // Check if this is a known function (not much use to add it otherwise) : 
-    if aContext.FunctionList.IndexOf(CrossReferencedFunctionName) >= 0 then
-    begin
-      // Remember the cross-reference function name :
-      Inc(NrCrossReferences);
-      SetLength(aVersionedXboxLibraryFunction.CrossReferences, NrCrossReferences);
-      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
-      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Offset := Word(Value);
-    end;
-    
+    // Remember the cross-reference function name :
+    // Note : No check on 'functions-only', so other symbols will come through too :
+    Inc(NrCrossReferences);
+    SetLength(aVersionedXboxLibraryFunction.CrossReferences, NrCrossReferences);
+    aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
+    aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Offset := Word(Value);
+
     // Step to the next possible cross-reference :
     Inc(i);
   end; // while
