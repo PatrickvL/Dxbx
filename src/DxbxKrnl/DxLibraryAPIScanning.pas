@@ -41,28 +41,29 @@ uses
   uEmuXapi; // XTL_EmuXapiProcessHeap
 
 type
-  PPotentialLocation = ^RPotentialLocation;
-  RPotentialLocation = packed record
-    NextByAddress: PPotentialLocation;
-    NextBySymbol: PPotentialLocation;
-    StoredLibraryFunction: PStoredLibraryFunction;
-    SymbolLocation: TCodePointer;
-    CodeEnd: TCodePointer;
-  end;
+  TPotentialSymbolLocation = ^RPotentialSymbolLocation;
 
   TDetectedVersionedXboxLibrarySymbol = class(TObject)
   public
     SymbolName: string;
     XboxLibraryPatch: TXboxLibraryPatch;
 
-    PotentialLocations: PPotentialLocation;
+    PotentialLocations: TPotentialSymbolLocation;
 
     StoredLibraryFunction: PStoredLibraryFunction;
     HitCount: Integer;
     SymbolLocation: TCodePointer;
     CodeEnd: TCodePointer;
 
-    function AddPossibleLocation( const aAddress: PByte; FoundFunction: PStoredLibraryFunction): PPotentialLocation;
+    function AddPotentialSymbolLocation(const aAddress: PByte;
+      const FoundFunction: PStoredLibraryFunction): TPotentialSymbolLocation;
+  end;
+
+  RPotentialSymbolLocation = packed record
+    NextByAddress: TPotentialSymbolLocation;
+    NextBySymbol: TPotentialSymbolLocation;
+    StoredLibraryFunction: PStoredLibraryFunction;
+    SymbolLocation, CodeEnd: TCodePointer;
   end;
 
   TDetectedSymbols = class(TObject)
@@ -74,7 +75,9 @@ type
     ByteScanLower, ByteScanUpper: PByte;
     PatternTrieReader: TPatternTrieReader;
     procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
-    function TestAddressUsingPatternTrie(const aAddress: PByte): PStoredLibraryFunction;
+    procedure FindAndRememberPattern(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
+    procedure TestAddressUsingPatternTrie(const aAddress: PByte);
+    procedure ScanMemoryRangeForLibraryPatterns();
   public
     BestFitXboxLibraries: TList;
 
@@ -167,8 +170,8 @@ end;
 
 { TDetectedVersionedXboxLibrarySymbol }
 
-function TDetectedVersionedXboxLibrarySymbol.AddPossibleLocation(
-  const aAddress: PByte; FoundFunction: PStoredLibraryFunction): PPotentialLocation;
+function TDetectedVersionedXboxLibrarySymbol.AddPotentialSymbolLocation(
+  const aAddress: PByte; const FoundFunction: PStoredLibraryFunction): TPotentialSymbolLocation;
 begin
   New(Result);
   Result.StoredLibraryFunction := FoundFunction;
@@ -185,9 +188,184 @@ begin
   Result.NextBySymbol := PotentialLocations;
 
   Inc(HitCount);
+end; // AddPotentialSymbolLocation
+
+{ TDetectedSymbols }
+
+constructor TDetectedSymbols.Create;
+begin
+  inherited Create;
+
+  MySymbolList := TStringList.Create;
+  MySymbolList.Sorted := True;
+  MySymbolList.Duplicates := dupIgnore;
+  MySymbolList.CaseSensitive := False;
+
+  BestFitXboxLibraries := TList.Create;
 end;
 
-function TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte): PStoredLibraryFunction;
+destructor TDetectedSymbols.Destroy;
+begin
+  Clear;
+  FreeAndNil(MySymbolList);
+  FreeAndNil(BestFitXboxLibraries);
+
+  inherited Destroy;
+end;
+
+function TDetectedSymbols.GetCount: Integer;
+begin
+  Result := MySymbolList.Count;
+end;
+
+function TDetectedSymbols.GetSymbol(Index: Integer): TDetectedVersionedXboxLibrarySymbol;
+begin
+  Result := TDetectedVersionedXboxLibrarySymbol(MySymbolList.Objects[Index]);
+end;
+
+procedure TDetectedSymbols.Clear;
+var
+  i: Integer;
+  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
+begin
+  if Assigned(MySymbolList) then
+  begin
+    for i := 0 to Count - 1 do
+    begin
+      DetectedSymbol := Symbols[i];
+      FreeAndNil(DetectedSymbol); // handles nil gracefully too
+    end;
+
+    MySymbolList.Clear;
+  end;
+
+  if Assigned(BestFitXboxLibraries) then
+    BestFitXboxLibraries.Clear;
+end;
+
+function TDetectedSymbols.New(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
+var
+  i: Integer;
+begin
+  i := MySymbolList.Add(aSymbolName);
+  Result := TDetectedVersionedXboxLibrarySymbol(MySymbolList.Objects[i]);
+  if Assigned(Result) then
+    Exit;
+
+  Result := TDetectedVersionedXboxLibrarySymbol.Create;
+  Result.SymbolName := aSymbolName;
+  Result.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(aSymbolName);
+
+  MySymbolList.Objects[i] := Result;
+end;
+
+function TDetectedSymbols.FindByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
+var
+  i: Integer;
+begin
+  i := MySymbolList.IndexOf(aSymbolName);
+  if i >= 0 then
+    Result := Symbols[i]
+  else
+    Result := nil;
+end;
+
+function TDetectedSymbols.FindOrCreateByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
+begin
+  Result := FindByName(aSymbolName);
+  if not Assigned(Result) then
+    Result := New(aSymbolName);
+end;
+
+function TDetectedSymbols.FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
+var
+  i: Integer;
+begin
+  // Dxbx TODO : For speed, usse a binary search here (which needs an address-ordered collection)
+  for i := 0 to Count - 1 do
+  begin
+    Result := Symbols[i];
+    if (IntPtr(Result.SymbolLocation) <= IntPtr(aAddress)) and (IntPtr(aAddress) <= IntPtr(Result.CodeEnd)) then
+      Exit;
+  end;
+
+  Result := nil;
+end;
+
+procedure TDetectedSymbols.FindAndRememberPattern(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
+
+  function _HandleCrossReference(const aStartingAddress: PByte;
+    const aCrossReferenceOffset: Word; const aCrossReferenceNameIndex: TStringTableIndex): Boolean;
+  var
+    CrossReferenceAddress: PByte;
+    CrossReferenced: PStoredLibraryFunction;
+  begin
+(*
+    // First check : Do we have a cross-reference?
+    Result := (aCrossReferenceNameIndex = NO_STRING_INDEX);
+    if Result then
+      Exit;
+
+    // Use aCrossReferenceOffset to determine
+    // the call-location that should be checked :
+    CrossReferenceAddress := DetermineRelativeAddress(aStartingAddress, aCrossReferenceOffset);
+
+    // First check : does this address reside in the executable segment?
+    if (IntPtr(CrossReferenceAddress) < IntPtr(ByteScanLower)) or (IntPtr(CrossReferenceAddress) > IntPtr(ByteScanUpper)) then
+      Exit;
+
+    // See if we can find a function on this address :
+    CrossReferenced := TestAddressUsingPatternTrie(PatternTrieReader, CrossReferenceAddress);
+    if CrossReferenced = nil then
+      Exit;
+
+    // Check if this function is indeed the one mentioned, by comparing
+    // the string-indexes of both functions (they should match) :
+    Result := aCrossReferenceNameIndex =
+              PatternTrieReader.GetGlobalFunction(CrossReferenced.GlobalFunctionIndex).FunctionNameIndex;
+*)
+  end; // _HandleCrossReference
+
+var
+  FunctionName: string;
+  Detected: TDetectedVersionedXboxLibrarySymbol;
+  Unmangled: string;
+begin // FindAndRememberPattern
+  Assert(Assigned(FoundFunction));
+
+  // Now that it's found, see if it was already registered :
+  FunctionName := PatternTrieReader.GetFunctionName(FoundFunction.GlobalFunctionIndex);
+  Detected := FindByName(FunctionName);
+  if Assigned(Detected) then
+  begin
+    Detected.AddPotentialSymbolLocation(aAddress, FoundFunction);
+    Exit;
+  end;
+
+(*
+  // Handle a possible cross-reference check :
+  if not _HandleCrossReference(aAddress, FoundFunction.CrossReference1Offset, FoundFunction.CrossReference1NameIndex) then
+  begin
+    FoundFunction := nil;
+    Exit;
+  end;
+*)
+  // Do our own demangling :
+  Unmangled := DxbxUnmangleSymbolName(FunctionName);
+
+  // Newly detected functions are registered here (including their range,
+  // which will come in handy when debugging) :
+  Detected := New(Unmangled);
+  Detected.StoredLibraryFunction := FoundFunction;
+  Detected.AddPotentialSymbolLocation(aAddress, FoundFunction);
+
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' (was "%s")', [aAddress, Unmangled, FunctionName]);
+  // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
+{$ENDIF}
+end; // FindAndRememberPattern
+
+procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
 
   function _TryMatchingLeaf(var aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): PStoredLibraryFunction;
   var
@@ -197,7 +375,7 @@ function TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte): PS
   begin
     Result := aStoredLibraryFunction;
 {$IFDEF DXBX_RECTYPE}
-    Assert(aStoredLibraryFunction.RecType = rtStoredLibraryFunction, 'StoredLibraryFunction type mismatch!');
+    Assert(Result.RecType = rtStoredLibraryFunction, 'StoredLibraryFunction type mismatch!');
 {$ENDIF}
 
     // Skip to the next stored library function (including a step over all cross-references) :
@@ -219,7 +397,7 @@ function TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte): PS
     // Get the Stored Library associated with this pattern :
     StoredLibrary := PatternTrieReader.GetStoredLibrary(Result.LibraryIndex);
 
-    // Determine if this matches one of the actual libraries :
+    // Determine if this matches the library we'll be using :
     for i := 0 to BestFitXboxLibraries.Count - 1 do
     begin
       VersionedXboxLibrary := BestFitXboxLibraries[i];
@@ -308,8 +486,8 @@ function TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte): PS
       begin
         Result := _TryMatchingLeaf({var}StoredLibraryFunction, aAddress);
         if Assigned(Result) then
-          // TODO : handle all children here
-          Exit;
+          // Note, we're handling all children here :
+          FindAndRememberPattern(aAddress, Result);
 
         Dec(NrChildren);
       end;
@@ -345,8 +523,31 @@ begin
   // Search if this address matches a pattern :
   Node := PatternTrieReader.GetNode(PatternTrieReader.StoredSignatureTrieHeader.TrieRootNode);
 
-  Result := _TryMatchingNode(Node, aAddress, 0);
+  _TryMatchingNode(Node, aAddress, 0);
 end; // TestAddressUsingPatternTrie
+
+procedure TDetectedSymbols.ScanMemoryRangeForLibraryPatterns();
+var
+  p: PByte;
+begin
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf('DxbxHLE : Detecting functions from $%.8x to $%.8x', [ByteScanLower, ByteScanUpper]);
+{$ENDIF}
+  p := ByteScanLower;
+  while p <> ByteScanUpper do
+  begin
+    try
+      // Search if this address matches a pattern :
+      TestAddressUsingPatternTrie(p);
+    except
+{$IFDEF DXBX_DEBUG}
+      DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
+{$ENDIF}
+    end;
+
+    Inc(p);
+  end;
+end; // ScanMemoryRangeForLibraryPatterns
 
 procedure TDetectedSymbols.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 var
@@ -426,104 +627,6 @@ end; // DetectVersionedXboxLibraries
 
 procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 
-  function _FindAndRememberPattern(const aAddress: PByte): PStoredLibraryFunction;
-
-    function _HandleCrossReference(const aStartingAddress: PByte;
-      const aCrossReferenceOffset: Word; const aCrossReferenceNameIndex: TStringTableIndex): Boolean;
-    var
-      CrossReferenceAddress: PByte;
-      CrossReferenced: PStoredLibraryFunction;
-    begin
-(*
-      // First check : Do we have a cross-reference?
-      Result := (aCrossReferenceNameIndex = NO_STRING_INDEX);
-      if Result then
-        Exit;
-
-      // Use aCrossReferenceOffset to determine
-      // the call-location that should be checked :
-      CrossReferenceAddress := DetermineRelativeAddress(aStartingAddress, aCrossReferenceOffset);
-
-      // First check : does this address reside in the executable segment?
-      if (IntPtr(CrossReferenceAddress) < IntPtr(ByteScanLower)) or (IntPtr(CrossReferenceAddress) > IntPtr(ByteScanUpper)) then
-        Exit;
-
-      // See if we can find a function on this address :
-      CrossReferenced := TestAddressUsingPatternTrie(PatternTrieReader, CrossReferenceAddress);
-      if CrossReferenced = nil then
-        Exit;
-
-      // Check if this function is indeed the one mentioned, by comparing
-      // the string-indexes of both functions (they should match) :
-      Result := aCrossReferenceNameIndex =
-                PatternTrieReader.GetGlobalFunction(CrossReferenced.GlobalFunctionIndex).FunctionNameIndex;
-*)
-    end; // _HandleCrossReference
-
-  var
-    FunctionName: string;
-    Detected: TDetectedVersionedXboxLibrarySymbol;
-    Unmangled: string;
-  begin
-    // Search if this address matches a pattern :
-    Result := TestAddressUsingPatternTrie(aAddress);
-    if Result = nil then
-      Exit;
-
-    // Now that it's found, see if it was already registered :
-    FunctionName := PatternTrieReader.GetFunctionName(Result.GlobalFunctionIndex);
-    Detected := FindByName(FunctionName);
-    if Assigned(Detected) then
-    begin
-      Detected.AddPossibleLocation(aAddress, Result);
-      Exit;
-    end;
-
-(*
-    // Handle a possible cross-reference check :
-    if not _HandleCrossReference(aAddress, Result.CrossReference1Offset, Result.CrossReference1NameIndex) then
-    begin
-      Result := nil;
-      Exit;
-    end;
-*)
-    // Do our own demangling :
-    Unmangled := DxbxUnmangleSymbolName(FunctionName);
-
-    // Newly detected functions are registered here (including their range,
-    // which will come in handy when debugging) :
-    Detected := New(Unmangled);
-    Detected.StoredLibraryFunction := Result;
-    Detected.AddPossibleLocation(aAddress, Result);
-
-{$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' (was "%s")', [aAddress, Unmangled, FunctionName]);
-    // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
-{$ENDIF}
-  end; // _FindAndRememberPattern
-
-  procedure _ScanMemoryRangeForLibraryPatterns(const ByteScanLower, ByteScanUpper: PByte);
-  var
-    p: PByte;
-  begin
-{$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE : Detecting functions from $%.8x to $%.8x', [ByteScanLower, ByteScanUpper]);
-{$ENDIF}
-    p := ByteScanLower;
-    while p <> ByteScanUpper do
-    begin
-      try
-        _FindAndRememberPattern(p);
-      except
-{$IFDEF DXBX_DEBUG}
-        DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
-{$ENDIF}
-      end;
-
-      Inc(p);
-    end;
-  end; // _ScanMemoryRangeForLibraryPatterns
-
   procedure _ResolveXapiProcessHeapAddress();
   var
     DetectedXapiInitProcess: TDetectedVersionedXboxLibrarySymbol;
@@ -589,7 +692,7 @@ begin
       DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
       // Scan Patterns using this trie :
-      _ScanMemoryRangeForLibraryPatterns(ByteScanLower, ByteScanUpper);
+      ScanMemoryRangeForLibraryPatterns();
 
       // Resolve the address of _XapiProcessHeap :
       _ResolveXapiProcessHeapAddress();
@@ -612,108 +715,6 @@ begin
 {$ENDIF}
   DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedSymbols.Count]);
 end; // DxbxScanForLibraryAPIs
-
-{ TDetectedSymbols }
-
-constructor TDetectedSymbols.Create;
-begin
-  inherited Create;
-
-  MySymbolList := TStringList.Create;
-  MySymbolList.Sorted := True;
-  MySymbolList.Duplicates := dupIgnore;
-  MySymbolList.CaseSensitive := False;
-
-  BestFitXboxLibraries := TList.Create;
-end;
-
-destructor TDetectedSymbols.Destroy;
-begin
-  Clear;
-  FreeAndNil(MySymbolList);
-  FreeAndNil(BestFitXboxLibraries);
-
-  inherited Destroy;
-end;
-
-function TDetectedSymbols.GetCount: Integer;
-begin
-  Result := MySymbolList.Count;
-end;
-
-function TDetectedSymbols.GetSymbol(Index: Integer): TDetectedVersionedXboxLibrarySymbol;
-begin
-  Result := TDetectedVersionedXboxLibrarySymbol(MySymbolList.Objects[Index]);
-end;
-
-procedure TDetectedSymbols.Clear;
-var
-  i: Integer;
-  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
-begin
-  if Assigned(MySymbolList) then
-  begin
-    for i := 0 to Count - 1 do
-    begin
-      DetectedSymbol := Symbols[i];
-      FreeAndNil(DetectedSymbol); // handles nil gracefully too
-    end;
-    
-    MySymbolList.Clear;
-  end;
-
-  if Assigned(BestFitXboxLibraries) then
-    BestFitXboxLibraries.Clear;
-end;
-
-function TDetectedSymbols.New(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
-var
-  i: Integer;
-begin
-  i := MySymbolList.Add(aSymbolName);
-  Result := TDetectedVersionedXboxLibrarySymbol(MySymbolList.Objects[i]);
-  if Assigned(Result) then
-    Exit;
-
-  Result := TDetectedVersionedXboxLibrarySymbol.Create;
-  Result.SymbolName := aSymbolName;
-  Result.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(aSymbolName);
-
-  MySymbolList.Objects[i] := Result;
-end;
-
-function TDetectedSymbols.FindByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
-var
-  i: Integer;
-begin
-  i := MySymbolList.IndexOf(aSymbolName);
-  if i >= 0 then
-    Result := Symbols[i]
-  else
-    Result := nil;
-end;
-
-function TDetectedSymbols.FindOrCreateByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
-begin
-  Result := FindByName(aSymbolName);
-  if not Assigned(Result) then
-    Result := New(aSymbolName);
-end;
-
-function TDetectedSymbols.FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
-var
-  i: Integer;
-begin
-  // Dxbx TODO : For speed, usse a binary search here (which needs an address-ordered collection)
-  for i := 0 to Count - 1 do
-  begin
-    Result := Symbols[i];
-    if (IntPtr(Result.SymbolLocation) <= IntPtr(aAddress)) and (IntPtr(aAddress) <= IntPtr(Result.CodeEnd)) then
-      Exit;
-  end;
-
-  Result := nil;
-end;
 
 initialization
 
