@@ -41,9 +41,13 @@ uses
   uEmuXapi; // XTL_EmuXapiProcessHeap
 
 type
-  TPotentialSymbolLocation = ^RPotentialSymbolLocation;
+  TPotentialSymbolLocation = class; // forward
 
   TDetectedVersionedXboxLibrarySymbol = class(TObject)
+  protected
+    MyLocations: TList;
+    function GetLocationCount: Integer;
+    function GetLocation(const aIndex: Integer): TPotentialSymbolLocation;
   public
     SymbolName: string;
     XboxLibraryPatch: TXboxLibraryPatch;
@@ -55,20 +59,36 @@ type
     SymbolLocation: TCodePointer;
     CodeEnd: TCodePointer;
 
+    property LocationCount: Integer read GetLocationCount;
+    property Locations[const aIndex: Integer]: TPotentialSymbolLocation read GetLocation;
+
+    constructor Create;
+    destructor Destroy; override;
+
     function AddPotentialSymbolLocation(const aAddress: PByte;
       const FoundFunction: PStoredLibraryFunction): TPotentialSymbolLocation;
+    procedure RemoveLocation(Location: TPotentialSymbolLocation);
   end;
 
-  RPotentialSymbolLocation = packed record
+  TPotentialSymbolLocation = class(TObject)
+  protected
+    FSymbol: TDetectedVersionedXboxLibrarySymbol;
+  public
     NextByAddress: TPotentialSymbolLocation;
     NextBySymbol: TPotentialSymbolLocation;
     StoredLibraryFunction: PStoredLibraryFunction;
     SymbolLocation, CodeEnd: TCodePointer;
+
+    property Symbol: TDetectedVersionedXboxLibrarySymbol read FSymbol;
+
+    constructor Create(const aSymbol: TDetectedVersionedXboxLibrarySymbol);
+    destructor Destroy; override;
   end;
 
   TDetectedSymbols = class(TObject)
   protected
     MySymbolList: TStringList;
+    MyLocations: TList;
     function GetCount: Integer;
     function GetSymbol(Index: Integer): TDetectedVersionedXboxLibrarySymbol;
   protected
@@ -168,12 +188,103 @@ end;
   {$OVERFLOWCHECKS ON}
 {$ENDIF}
 
+{ TListHelper }
+
+type
+  TListHelper = class helper for TList
+    function BinarySearch(const Data: Pointer; var Index: Integer; const Compare: TListSortCompare = nil): Boolean;
+  end;
+
+// Note : This is a copy of TStringList.Find(), which is
+// the only binary search method in the entire Delphi RTL+VCL.
+function TListHelper.BinarySearch(const Data: Pointer; var Index: Integer; const Compare: TListSortCompare = nil): Boolean;
+var
+  L, H, I, C: Integer;
+begin
+  Result := False;
+  L := 0;
+  H := Count - 1;
+  while L <= H do
+  begin
+    I := (L + H) shr 1;
+    if @Compare = nil then
+      C := IntPtr(Self[I]) - IntPtr(Data)
+    else
+      C := Compare(Self[I], Data);
+
+    if C < 0 then
+      L := I + 1
+    else
+    begin
+      if C = 0 then
+      begin
+        Result := True;
+        L := I;
+        Break;
+      end;
+
+      H := I - 1;
+    end;
+  end;
+
+  {var}Index := L;
+end;
+
+{ TPotentialSymbolLocation }
+
+constructor TPotentialSymbolLocation.Create(const aSymbol: TDetectedVersionedXboxLibrarySymbol);
+begin
+  inherited Create;
+
+  FSymbol := aSymbol;
+end;
+
+destructor TPotentialSymbolLocation.Destroy;
+begin
+  if Assigned(Symbol) then
+    Symbol.RemoveLocation(Self);
+
+  inherited Destroy;
+end;
+
 { TDetectedVersionedXboxLibrarySymbol }
+
+constructor TDetectedVersionedXboxLibrarySymbol.Create;
+begin
+  inherited Create;
+
+  MyLocations := TList.Create;
+end;
+
+destructor TDetectedVersionedXboxLibrarySymbol.Destroy;
+var
+  i: Integer;
+begin
+  for i := 0 to LocationCount - 1 do
+  begin
+    Locations[i].FSymbol := nil;
+    Locations[i].Free;
+  end;
+
+  FreeAndNil(MyLocations);
+
+  inherited Destroy;
+end;
+
+function TDetectedVersionedXboxLibrarySymbol.GetLocationCount: Integer;
+begin
+  Result := MyLocations.Count;
+end;
+
+function TDetectedVersionedXboxLibrarySymbol.GetLocation(const aIndex: Integer): TPotentialSymbolLocation;
+begin
+  Result := TPotentialSymbolLocation(MyLocations[aIndex]);
+end;
 
 function TDetectedVersionedXboxLibrarySymbol.AddPotentialSymbolLocation(
   const aAddress: PByte; const FoundFunction: PStoredLibraryFunction): TPotentialSymbolLocation;
 begin
-  New(Result);
+  Result := TPotentialSymbolLocation.Create(Self);
   Result.StoredLibraryFunction := FoundFunction;
   Result.SymbolLocation := TCodePointer(aAddress);
   Result.CodeEnd := TCodePointer(IntPtr(aAddress) + FoundFunction.FunctionLength);
@@ -190,6 +301,21 @@ begin
   Inc(HitCount);
 end; // AddPotentialSymbolLocation
 
+procedure TDetectedVersionedXboxLibrarySymbol.RemoveLocation(Location: TPotentialSymbolLocation);
+var
+  i: Integer;
+begin
+  for i := 0 to LocationCount - 1 do
+  begin
+    if Locations[i] = Location then
+    begin
+      MyLocations.Delete(i);
+      Location.Free;
+      Exit;
+    end;
+  end;
+end;
+
 { TDetectedSymbols }
 
 constructor TDetectedSymbols.Create;
@@ -201,12 +327,15 @@ begin
   MySymbolList.Duplicates := dupIgnore;
   MySymbolList.CaseSensitive := False;
 
+  MyLocations := TList.Create;
+
   BestFitXboxLibraries := TList.Create;
 end;
 
 destructor TDetectedSymbols.Destroy;
 begin
   Clear;
+  FreeAndNil(MyLocations);
   FreeAndNil(MySymbolList);
   FreeAndNil(BestFitXboxLibraries);
 
@@ -238,6 +367,9 @@ begin
 
     MySymbolList.Clear;
   end;
+
+  if Assigned(MyLocations) then
+    MyLocations.Clear;
 
   if Assigned(BestFitXboxLibraries) then
     BestFitXboxLibraries.Clear;
@@ -278,18 +410,25 @@ begin
 end;
 
 function TDetectedSymbols.FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
+
+  function Compare(Item1: TPotentialSymbolLocation; Item2: TCodePointer): Integer;
+  begin
+    Result := IntPtr(Item1.SymbolLocation) - IntPtr(Item2);
+    if Result <= 0 then
+      Exit;
+
+    if IntPtr(Item2) >= IntPtr(Item1.CodeEnd) then
+      Result := MaxInt;
+  end;
+
 var
   i: Integer;
 begin
-  // Dxbx TODO : For speed, usse a binary search here (which needs an address-ordered collection)
-  for i := 0 to Count - 1 do
-  begin
-    Result := Symbols[i];
-    if (IntPtr(Result.SymbolLocation) <= IntPtr(aAddress)) and (IntPtr(aAddress) <= IntPtr(Result.CodeEnd)) then
-      Exit;
-  end;
-
-  Result := nil;
+  // For speed, use a binary search in an address-ordered collection here :
+  if MyLocations.BinarySearch(aAddress, i, @Compare) then
+    Result := TPotentialSymbolLocation(MyLocations[i]).Symbol
+  else
+    Result := nil;
 end;
 
 procedure TDetectedSymbols.FindAndRememberPattern(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
