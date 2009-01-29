@@ -879,12 +879,16 @@ begin
     Inc(i);
     CrossReferencedFunctionName := string(aVersionedXboxLibraryFunction.Values[i]);
 
-    // Remember the cross-reference function name :
-    // Note : No check on 'functions-only', so other symbols will come through too :
-    Inc(NrCrossReferences);
-    SetLength(aVersionedXboxLibraryFunction.CrossReferences, NrCrossReferences);
-    aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
-    aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Offset := Word(Value);
+    // Only add symbols that don't start with '__' (like __SEH_prolog, __tls_used, etc) :
+    if Copy(CrossReferencedFunctionName, 1, 2) <> '__' then
+    begin
+      // Remember the cross-reference function name :
+      // Note : No check on 'functions-only', so other symbols will come through too :
+      Inc(NrCrossReferences);
+      SetLength(aVersionedXboxLibraryFunction.CrossReferences, NrCrossReferences);
+      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
+      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Offset := Word(Value);
+    end;
 
     // Step to the next possible cross-reference :
     Inc(i);
