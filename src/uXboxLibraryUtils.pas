@@ -97,11 +97,37 @@ var
   Index: Integer;
 begin
   Index := AvailablePatches.IndexOf(aFunctionName);
-  // If found, make sure that value 0 keeps the meaning 'xlp_Unknown' :
   if Index >= 0 then
-    Result := Index + 1
-  else
-    Result := xlp_Unknown;
+  begin
+    // If found, make sure that value 0 keeps the meaning 'xlp_Unknown' :
+    Result := Index + 1;
+    Exit;
+  end;
+
+  if aFunctionName <> '' then
+  begin
+    // Step backwards over all trailing digits :
+    Index := Length(aFunctionName);
+    while (Index > 1) and (aFunctionName[Index] in ['0'..'9']) do
+      Dec(Index);
+
+    // When there where digits, and there's a '@' prepending it :
+    if (Index < Length(aFunctionName)) and (aFunctionName[Index] = '@') then
+    begin
+      // Search again, but now without this '@...'-suffix :
+      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 1, Index - 1));
+      Exit;
+    end;
+
+    if aFunctionName[1] = '_' then
+    begin
+      // Also try finding a patch without the '_'-prefix :
+      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 2, MaxInt));
+      Exit;
+    end;
+  end;
+
+  Result := xlp_Unknown;
 end;
 
 function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
