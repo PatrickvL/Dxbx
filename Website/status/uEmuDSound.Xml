@@ -1,0 +1,195 @@
+<chart>
+
+<axis_category shadow='low' size='14' color='88bb77' alpha='100' orientation='horizontal' />
+<axis_ticks value_ticks='false' category_ticks='true' major_thickness='2' minor_thickness='1' minor_count='1' major_color='222222' minor_color='222222' position='centered' />
+<axis_value min='0' max='100' alpha='0' />
+
+<chart_border color='000000' top_thickness='0' bottom_thickness='0' left_thickness='4' right_thickness='0' />
+<chart_data>
+<row>
+<string>HackUpdateSoundBuffers</string>
+<string>HackUpdateSoundStreams</string>
+<string>XTL_EmuDirectSoundCreate</string>
+<string>XTL_EmuIDirectSound8_AddRef</string>
+<string>XTL_EmuIDirectSound8_Release</string>
+<string>XTL_EmuCDirectSound_GetSpeakerConfig</string>
+<string>XTL_EmuIDirectSound8_DownloadEffectsImage</string>
+<string>XTL_EmuDirectSoundDoWork</string>
+<string>XTL_EmuIDirectSound8_SetOrientation</string>
+<string>XTL_EmuIDirectSound8_SetDistanceFactor</string>
+<string>XTL_EmuIDirectSound8_SetRolloffFactor</string>
+<string>XTL_EmuIDirectSound8_SetDopplerFactor</string>
+<string>XTL_EmuIDirectSound8_SetI3DL2Listener</string>
+<string>XTL_EmuIDirectSound8_SetMixBinHeadroom</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetMixBins</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetMixBinVolumes</string>
+<string>XTL_EmuIDirectSound8_SetPosition</string>
+<string>XTL_EmuIDirectSound8_SetVelocity</string>
+<string>XTL_EmuIDirectSound8_SetAllParameters</string>
+<string>XTL_EmuCDirectSound_CommitDeferredSettings</string>
+<string>XTL_EmuDirectSoundCreateBuffer</string>
+<string>XTL_EmuIDirectSound8_CreateBuffer</string>
+<string>XTL_EmuIDirectSound8_CreateSoundBuffer</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetBufferData</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetPlayRegion</string>
+<string>XTL_EmuIDirectSoundBuffer8_Lock</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetHeadroom</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetLoopRegion</string>
+<string>XTL_EmuIDirectSoundBuffer8_Release</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetPitch</string>
+<string>XTL_EmuIDirectSoundBuffer8_GetStatus</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetCurrentPosition</string>
+<string>XTL_EmuIDirectSoundBuffer8_GetCurrentPosition</string>
+<string>XTL_EmuIDirectSoundBuffer8_Play</string>
+<string>XTL_EmuIDirectSoundBuffer8_Stop</string>
+<string>'C' HRESULT __stdcall XTL.EmuIDirectSoundBuffer8_StopEx</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetVolume</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetFrequency</string>
+<string>XTL_EmuDirectSoundCreateStream</string>
+<string>XTL_EmuIDirectSound8_CreateStream</string>
+<string>XTL_EmuCMcpxStream_Dummy_0x10</string>
+<string>XTL_EmuCDirectSoundStream_SetVolume</string>
+<string>XTL_EmuCDirectSoundStream_SetRolloffFactor</string>
+<string>XTL_EmuCDirectSoundStream_AddRef</string>
+<string>XTL_EmuCDirectSoundStream_Release</string>
+<string>XTL_EmuCDirectSoundStream_GetStatus</string>
+<string>XTL_EmuCDirectSoundStream_Process</string>
+<string>XTL_EmuCDirectSoundStream_Discontinuity</string>
+<string>XTL_EmuCDirectSoundStream_Flush</string>
+<string>XTL_EmuCDirectSound_SynchPlayback</string>
+<string>XTL_EmuCDirectSoundStream_Pause</string>
+<string>XTL_EmuIDirectSoundStream_SetHeadroom</string>
+<string>XTL_EmuCDirectSoundStream_SetConeAngles</string>
+<string>XTL_EmuCDirectSoundStream_SetConeOutsideVolume</string>
+<string>XTL_EmuCDirectSoundStream_SetAllParameters</string>
+<string>XTL_EmuCDirectSoundStream_SetMaxDistance</string>
+<string>XTL_EmuCDirectSoundStream_SetMinDistance</string>
+<string>XTL_EmuCDirectSoundStream_SetVelocity</string>
+<string>XTL_EmuCDirectSoundStream_SetConeOrientation</string>
+<string>XTL_EmuCDirectSoundStream_SetPosition</string>
+<string>XTL_EmuCDirectSoundStream_SetFrequency</string>
+<string>XTL_EmuIDirectSoundStream_SetI3DL2Source</string>
+<string>XTL_EmuIDirectSoundStream_Unknown1 </string>
+<string>XTL_EmuIDirectSoundBuffer8_SetMaxDistance</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetMinDistance</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetRolloffFactor</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetDistanceFactor</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetConeAngles</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetConeOrientation</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetConeOutsideVolume</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetPosition</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetVelocity</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetDopplerFactor</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetI3DL2Source</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetFormat</string>
+<string>STDAPI_</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetLFO</string>
+<string>XTL_EmuXAudioCreateAdpcmFormat</string>
+<string>XTL_EmuIDirectSoundBuffer8_SetRolloffCurve</string>
+<string>XTL_EmuIDirectSoundStream_SetVolume</string>
+</row>
+<row>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>80</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>10</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+</row>
+</chart_data>
+<chart_grid_h alpha='5' color='000000' thickness='30' />
+<chart_label shadow='low' color='ffffff' alpha='75' size='12' position='center' suffix='%'  />
+<chart_rect shadow='high' x='600' y='105' width='320' height='1600'positive_color='dba34c' negative_color='ff0000' positive_alpha='65' negative_alpha='25' corner_tl='0' corner_tr='30' corner_br='30' corner_bl='0' />
+<chart_type>bar</chart_type>
+
+<draw>
+	<text shadow='low' color='ff8800' alpha='100' size='20' x='35' y='65' width='500' height='200' h_align='left' v_align='top'>Status report uEmuDSound</text>
+</draw>
+<filter>
+	<bevel id='data' angle='90' blurX='10' blurY='10' distance='5' highlightAlpha='10' shadowAlpha='20' type='full' />
+	<bevel id='small' angle='45' blurX='2' blurY='2' distance='1' highlightAlpha='35' highlightColor='ffffff' shadowColor='000000' shadowAlpha='35' type='inner' />
+	<shadow id='high' distance='5' angle='45' alpha='35' blurX='15' blurY='15' />
+	<shadow id='low' distance='2' angle='45' alpha='50' blurX='5' blurY='5' />
+</filter>
+
+<legend layout='hide' />
+
+<series_color>
+	<color>5a4b6e</color>
+</series_color>
+
+</chart>

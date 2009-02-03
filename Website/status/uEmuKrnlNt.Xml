@@ -1,0 +1,85 @@
+<chart>
+
+<axis_category shadow='low' size='14' color='88bb77' alpha='100' orientation='horizontal' />
+<axis_ticks value_ticks='false' category_ticks='true' major_thickness='2' minor_thickness='1' minor_count='1' major_color='222222' minor_color='222222' position='centered' />
+<axis_value min='0' max='100' alpha='0' />
+
+<chart_border color='000000' top_thickness='0' bottom_thickness='0' left_thickness='4' right_thickness='0' />
+<chart_data>
+<row>
+<string>xboxkrnl_NtAllocateVirtualMemory</string>
+<string>xboxkrnl_NtClearEvent</string>
+<string>xboxkrnl_NtClose</string>
+<string>xboxkrnl_NtCreateEvent</string>
+<string>xboxkrnl_NtCreateFile</string>
+<string>xboxkrnl_NtCreateMutant</string>
+<string>xboxkrnl_NtDuplicateObject</string>
+<string>xboxkrnl_NtFlushBuffersFile</string>
+<string>xboxkrnl_NtFreeVirtualMemory</string>
+<string>xboxkrnl_NtOpenFile</string>
+<string>xboxkrnl_NtQueryDirectoryFile</string>
+<string>xboxkrnl_NtQueryFullAttributesFile</string>
+<string>xboxkrnl_NtQueryInformationFile</string>
+<string>xboxkrnl_NtQueryVolumeInformationFile</string>
+<string>xboxkrnl_NtReadFile</string>
+<string>xboxkrnl_NtReleaseMutant</string>
+<string>xboxkrnl_NtResumeThread</string>
+<string>xboxkrnl_NtSetEvent</string>
+<string>xboxkrnl_NtSetInformationFile</string>
+<string>xboxkrnl_NtSuspendThread</string>
+<string>xboxkrnl_NtUserIoApcDispatcher</string>
+<string>xboxkrnl_NtWaitForSingleObjectEx</string>
+<string>xboxkrnl_NtWaitForMultipleObjectsEx</string>
+<string>xboxkrnl_NtWriteFile</string>
+<string>xboxkrnl_NtYieldExecution</string>
+</row>
+<row>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+<number bevel='data'>0</number>
+<number bevel='data'>5</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+</row>
+</chart_data>
+<chart_grid_h alpha='5' color='000000' thickness='30' />
+<chart_label shadow='low' color='ffffff' alpha='75' size='12' position='center' suffix='%'  />
+<chart_rect shadow='high' x='600' y='105' width='320' height='500'positive_color='dba34c' negative_color='ff0000' positive_alpha='65' negative_alpha='25' corner_tl='0' corner_tr='30' corner_br='30' corner_bl='0' />
+<chart_type>bar</chart_type>
+
+<draw>
+	<text shadow='low' color='ff8800' alpha='100' size='20' x='35' y='65' width='500' height='200' h_align='left' v_align='top'>Status report uEmuKrnlNt</text>
+</draw>
+<filter>
+	<bevel id='data' angle='90' blurX='10' blurY='10' distance='5' highlightAlpha='10' shadowAlpha='20' type='full' />
+	<bevel id='small' angle='45' blurX='2' blurY='2' distance='1' highlightAlpha='35' highlightColor='ffffff' shadowColor='000000' shadowAlpha='35' type='inner' />
+	<shadow id='high' distance='5' angle='45' alpha='35' blurX='15' blurY='15' />
+	<shadow id='low' distance='2' angle='45' alpha='50' blurX='5' blurY='5' />
+</filter>
+
+<legend layout='hide' />
+
+<series_color>
+	<color>5a4b6e</color>
+</series_color>
+
+</chart>

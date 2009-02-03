@@ -1,0 +1,413 @@
+<chart>
+
+<axis_category shadow='low' size='14' color='88bb77' alpha='100' orientation='horizontal' />
+<axis_ticks value_ticks='false' category_ticks='true' major_thickness='2' minor_thickness='1' minor_count='1' major_color='222222' minor_color='222222' position='centered' />
+<axis_value min='0' max='100' alpha='0' />
+
+<chart_border color='000000' top_thickness='0' bottom_thickness='0' left_thickness='4' right_thickness='0' />
+<chart_data>
+<row>
+<string>iif</string>
+<string>XTL_EmuD3DInit</string>
+<string>XTL_EmuD3DCleanup</string>
+<string>EmuEnumDisplayDevices</string>
+<string>EmuRenderWindow</string>
+<string>ToggleFauxFullscreen</string>
+<string>EmuMsgProc</string>
+<string>EmuUpdateTickCount</string>
+<string>EmuCreateDeviceProxy</string>
+<string>EmuVerifyResourceIsRegistered</string>
+<string>EmuAdjustPower2</string>
+<string>XTL_EmuIDirect3D8_CreateDevice</string>
+<string>XTL_EmuIDirect3DDevice8_IsBusy</string>
+<string>XTL_EmuIDirect3DDevice8_GetCreationParameters</string>
+<string>XTL_EmuIDirect3D8_CheckDeviceFormat</string>
+<string>XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus</string>
+<string>XTL_EmuIDirect3DDevice8_BeginPush</string>
+<string>XTL_EmuIDirect3DDevice8_EndPush</string>
+<string>XTL_EmuIDirect3DDevice8_BeginVisibilityTest</string>
+<string>XTL_EmuIDirect3DDevice8_EndVisibilityTest</string>
+<string>XTL_EmuIDirect3DDevice8_SetBackBufferScale</string>
+<string>XTL_EmuIDirect3DDevice8_GetVisibilityTestResult</string>
+<string>XTL_EmuIDirect3DDevice8_GetDeviceCaps</string>
+<string>XTL_EmuIDirect3DDevice8_LoadVertexShader</string>
+<string>XTL_EmuIDirect3DDevice8_SelectVertexShader</string>
+<string>XTL_EmuIDirect3D8_GetAdapterModeCount</string>
+<string>XTL_EmuIDirect3D8_GetAdapterDisplayMode</string>
+<string>XTL_EmuIDirect3D8_EnumAdapterModes</string>
+<string>XTL_EmuIDirect3D8_KickOffAndWaitForIdle</string>
+<string>XTL_EmuIDirect3D8_KickOffAndWaitForIdle2</string>
+<string>XTL_EmuIDirect3DDevice8_SetGammaRamp</string>
+<string>XTL_EmuIDirect3DDevice8_AddRef</string>
+<string>XTL_EmuIDirect3DDevice8_BeginStateBlock</string>
+<string>XTL_EmuIDirect3DDevice8_BeginStateBig</string>
+<string>XTL_EmuIDirect3DDevice8_CaptureStateBlock</string>
+<string>XTL_EmuIDirect3DDevice8_ApplyStateBlock</string>
+<string>XTL_EmuIDirect3DDevice8_EndStateBlock</string>
+<string>XTL_EmuIDirect3DDevice8_CopyRects</string>
+<string>XTL_EmuIDirect3DDevice8_CreateImageSurface</string>
+<string>XTL_EmuIDirect3DDevice8_GetGammaRamp</string>
+<string>XTL_EmuIDirect3DDevice8_GetBackBuffer2</string>
+<string>XTL_EmuIDirect3DDevice8_GetBackBuffer</string>
+<string>XTL_EmuIDirect3DDevice8_SetViewport</string>
+<string>XTL_EmuIDirect3DDevice8_GetViewport</string>
+<string>XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale</string>
+<string>XTL_EmuIDirect3DDevice8_SetShaderConstantMode</string>
+<string>XTL_EmuIDirect3DDevice8_Reset</string>
+<string>XTL_EmuIDirect3DDevice8_GetRenderTarget</string>
+<string>XTL_EmuIDirect3DDevice8_GetRenderTarget2</string>
+<string>XTL_EmuIDirect3DDevice8_GetDepthStencilSurface</string>
+<string>XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2</string>
+<string>XTL_EmuIDirect3DDevice8_GetTile</string>
+<string>XTL_EmuIDirect3DDevice8_SetTileNoWait</string>
+<string>XTL_EmuIDirect3DDevice8_CreateVertexShader</string>
+<string>XTL_EmuIDirect3DDevice8_SetPixelShaderConstant</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexShaderConstant</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline</string>
+<string>XTL_EmuIDirect3DDevice8_DeletePixelShader</string>
+<string>XTL_EmuIDirect3DDevice8_CreatePixelShader</string>
+<string>XTL_EmuIDirect3DDevice8_SetPixelShader</string>
+<string>XTL.EmuIDirect3DDevice8_CreateTexture2</string>
+<string>XTL_EmuIDirect3DDevice8_CreateTexture</string>
+<string>XTL_EmuIDirect3DDevice8_CreateVolumeTexture</string>
+<string>XTL_EmuIDirect3DDevice8_CreateCubeTexture</string>
+<string>XTL_EmuIDirect3DDevice8_CreateIndexBuffer</string>
+<string>XTL.EmuIDirect3DDevice8_CreateIndexBuffer2</string>
+<string>XTL_EmuIDirect3DDevice8_SetIndices</string>
+<string>XTL_EmuIDirect3DDevice8_SetTexture</string>
+<string>XTL_EmuIDirect3DDevice8_SwitchTexture</string>
+<string>XTL_EmuIDirect3DDevice8_GetDisplayMode</string>
+<string>XTL_EmuIDirect3DDevice8_Begin</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexData2f</string>
+<string>FtoDW</string>
+<string>DWtoF</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexData2s</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexData4f</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexDataColor</string>
+<string>XTL_EmuIDirect3DDevice8_End</string>
+<string>XTL_EmuIDirect3DDevice8_RunPushBuffer</string>
+<string>XTL_EmuIDirect3DDevice8_Clear</string>
+<string>XTL_EmuIDirect3DDevice8_Present</string>
+<string>XTL_EmuIDirect3DDevice8_Swap</string>
+<string>XTL_EmuIDirect3DResource8_Register</string>
+<string>XTL_EmuIDirect3DResource8_AddRef</string>
+<string>XTL_EmuIDirect3DResource8_Release</string>
+<string>XTL_EmuIDirect3DResource8_IsBusy</string>
+<string>XTL_EmuIDirect3DResource8_GetType</string>
+<string>XTL_EmuLock2DSurface</string>
+<string>XTL_EmuGet2DSurfaceDesc</string>
+<string>XTL_EmuGet2DSurfaceDescD </string>
+<string>XTL_EmuIDirect3DSurface8_GetDesc</string>
+<string>XTL_EmuIDirect3DSurface8_LockRect</string>
+<string>XTL_EmuIDirect3DBaseTexture8_GetLevelCount</string>
+<string>XTL.EmuIDirect3DTexture8_GetSurfaceLevel2</string>
+<string>XTL_EmuIDirect3DTexture8_LockRect</string>
+<string>XTL_EmuIDirect3DTexture8_GetSurfaceLevel</string>
+<string>XTL_EmuIDirect3DVolumeTexture8_LockBox</string>
+<string>XTL_EmuIDirect3DCubeTexture8_LockRect</string>
+<string>XTL_EmuIDirect3DDevice8_Release</string>
+<string>XTL_EmuIDirect3DDevice8_CreateVertexBuffer</string>
+<string>XTL.EmuIDirect3DDevice8_CreateVertexBuffer2</string>
+<string>XTL_EmuIDirect3DDevice8_EnableOverlay</string>
+<string>XTL_EmuIDirect3DDevice8_UpdateOverlay</string>
+<string>XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus</string>
+<string>XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank</string>
+<string>XTL_EmuIDirect3DDevice8_SetVerticalBlankCallback</string>
+<string>XTL_EmuIDirect3DDevice8_SetTextureState_TexCoordIndex</string>
+<string>XTL_EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting</string>
+<string>XTL_EmuIDirect3DDevice8_SetTextureState_BackFillMode</string>
+<string>XTL_EmuIDirect3DDevice8_SetTextureState_BorderColor</string>
+<string>XTL_EmuIDirect3DDevice8_SetTextureState_ColorKeyColor</string>
+<string>XTL_EmuIDirect3DDevice8_SetTextureState_BumpEnv</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_NormalizeNormals</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_TextureFactor</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_ZBias</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_FillMode</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_FogColor</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_Simple</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_CullMode</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_LineWidth</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_StencilFail</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_StencilCullEnable</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_RopZRead</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_StencilEnable</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable</string>
+<string>XTL_EmuIDirect3DDevice8_SetTransform</string>
+<string>XTL_EmuIDirect3DDevice8_GetTransform</string>
+<string>XTL_EmuIDirect3DVertexBuffer8_Lock</string>
+<string>XTL_EmuIDirect3DVertexBuffer8_Lock2</string>
+<string>XTL_EmuIDirect3DDevice8_GetStreamSource2</string>
+<string>XTL_EmuIDirect3DDevice8_SetStreamSource</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexShader</string>
+<string>XTL_EmuIDirect3DDevice8_DrawVertices</string>
+<string>XTL_EmuIDirect3DDevice8_DrawVerticesUP</string>
+<string>XTL_EmuIDirect3DDevice8_DrawIndexedVertices</string>
+<string>XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP</string>
+<string>XTL_EmuIDirect3DDevice8_SetLight</string>
+<string>XTL_EmuIDirect3DDevice8_SetMaterial</string>
+<string>XTL_EmuIDirect3DDevice8_LightEnable</string>
+<string>EmuIDirect3DDevice8_BlockUntilVerticalBlank</string>
+<string>XTL_EmuIDirect3DDevice8_SetRenderTarget</string>
+<string>XTL_EmuIDirect3DDevice8_CreatePalette</string>
+<string>XTL_EmuIDirect3DDevice8_CreatePalette2</string>
+<string>XTL_EmuIDirect3DDevice8_SetPalette</string>
+<string>XTL_EmuIDirect3DDevice8_SetFlickerFilter</string>
+<string>XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter</string>
+<string>XTL_EmuIDirect3DPalette8_Lock</string>
+<string>XTL.EmuIDirect3DPalette8_Lock2</string>
+<string>XTL_EmuIDirect3DDevice8_GetVertexShaderSize</string>
+<string>XTL_EmuIDirect3DDevice8_DeleteVertexShader</string>
+<string>XTL_EmuIDirect3DDevice8_SelectVertexShaderDirect</string>
+<string>XTL_EmuIDirect3DDevice8_GetShaderConstantMode</string>
+<string>XTL_EmuIDirect3DDevice8_GetVertexShader</string>
+<string>XTL_EmuIDirect3DDevice8_GetVertexShaderConstant</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect</string>
+<string>XTL_EmuIDirect3DDevice8_GetVertexShaderInput</string>
+<string>XTL_EmuIDirect3DDevice8_SetVertexShaderInput</string>
+<string>XTL_EmuIDirect3DDevice8_RunVertexStateShader</string>
+<string>XTL_EmuIDirect3DDevice8_LoadVertexShaderProgram</string>
+<string>XTL_EmuIDirect3DDevice8_GetVertexShaderType</string>
+<string>XTL_EmuIDirect3DDevice8_GetVertexShaderDeclaration</string>
+<string>XTL_EmuIDirect3DDevice8_GetVertexShaderFunction</string>
+<string>XTL_EmuIDirect3D8_AllocContiguousMemory</string>
+<string>XTL_EmuIDirect3DTexture8_GetLevelDesc</string>
+<string>XTL_EmuIDirect3D8_CheckDeviceMultiSampleType</string>
+<string>XTL_EmuIDirect3D8_GetDeviceCaps</string>
+<string>XTL_EmuIDirect3D8_SetPushBufferSize</string>
+<string>XTL_EmuIDirect3DDevice8_InsertFence</string>
+<string>XTL_EmuIDirect3DDevice8_BlockOnFence</string>
+<string>XTL_EmuIDirect3DResource8_BlockUntilNotBusy</string>
+<string>XTL_EmuIDirect3DVertexBuffer8_GetDesc</string>
+<string>XTL_EmuIDirect3DDevice8_SetScissors</string>
+</row>
+<row>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>80</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>95</number>
+<number bevel='data'>60</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>90</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>20</number>
+<number bevel='data'>100</number>
+<number bevel='data'>20</number>
+<number bevel='data'>50</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>10</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>90</number>
+<number bevel='data'>50</number>
+<number bevel='data'>50</number>
+<number bevel='data'>5</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>90</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>90</number>
+<number bevel='data'>2</number>
+<number bevel='data'>100</number>
+<number bevel='data'>90</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>90</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>0</number>
+<number bevel='data'>2</number>
+<number bevel='data'>2</number>
+<number bevel='data'>2</number>
+<number bevel='data'>2</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+<number bevel='data'>2</number>
+<number bevel='data'>5</number>
+<number bevel='data'>50</number>
+<number bevel='data'>5</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>2</number>
+<number bevel='data'>100</number>
+<number bevel='data'>50</number>
+<number bevel='data'>100</number>
+<number bevel='data'>2</number>
+<number bevel='data'>2</number>
+<number bevel='data'>100</number>
+<number bevel='data'>10</number>
+<number bevel='data'>55</number>
+<number bevel='data'>10</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>50</number>
+<number bevel='data'>100</number>
+<number bevel='data'>50</number>
+<number bevel='data'>10</number>
+<number bevel='data'>100</number>
+<number bevel='data'>0</number>
+<number bevel='data'>10</number>
+<number bevel='data'>10</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>0</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+<number bevel='data'>20</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>80</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>90</number>
+<number bevel='data'>3</number>
+<number bevel='data'>40</number>
+<number bevel='data'>2</number>
+<number bevel='data'>0</number>
+<number bevel='data'>2</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>50</number>
+<number bevel='data'>2</number>
+<number bevel='data'>10</number>
+<number bevel='data'>90</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>2</number>
+<number bevel='data'>0</number>
+<number bevel='data'>80</number>
+<number bevel='data'>2</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>50</number>
+<number bevel='data'>50</number>
+<number bevel='data'>0</number>
+<number bevel='data'>100</number>
+<number bevel='data'>2</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+<number bevel='data'>100</number>
+</row>
+</chart_data>
+<chart_grid_h alpha='5' color='000000' thickness='30' />
+<chart_label shadow='low' color='ffffff' alpha='75' size='12' position='center' suffix='%'  />
+<chart_rect shadow='high' x='600' y='105' width='320' height='3780'positive_color='dba34c' negative_color='ff0000' positive_alpha='65' negative_alpha='25' corner_tl='0' corner_tr='30' corner_br='30' corner_bl='0' />
+<chart_type>bar</chart_type>
+
+<draw>
+	<text shadow='low' color='ff8800' alpha='100' size='20' x='35' y='65' width='500' height='200' h_align='left' v_align='top'>Status report uEmuD3D8</text>
+</draw>
+<filter>
+	<bevel id='data' angle='90' blurX='10' blurY='10' distance='5' highlightAlpha='10' shadowAlpha='20' type='full' />
+	<bevel id='small' angle='45' blurX='2' blurY='2' distance='1' highlightAlpha='35' highlightColor='ffffff' shadowColor='000000' shadowAlpha='35' type='inner' />
+	<shadow id='high' distance='5' angle='45' alpha='35' blurX='15' blurY='15' />
+	<shadow id='low' distance='2' angle='45' alpha='50' blurX='5' blurY='5' />
+</filter>
+
+<legend layout='hide' />
+
+<series_color>
+	<color>5a4b6e</color>
+</series_color>
+
+</chart>
