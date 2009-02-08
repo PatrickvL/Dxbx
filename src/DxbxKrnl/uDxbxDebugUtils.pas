@@ -105,7 +105,7 @@ begin
 
   with Info do
   begin
-    Address := Pointer(DetectedSymbol.SymbolLocation); // Error address
+    Address := Pointer(DetectedSymbol.Locations[0].SymbolLocation); // Error address
 //    UnitName: string;               // Name of Delphi unit
     ProcedureName := DetectedSymbol.SymbolName;
     OffsetFromProcName := Integer(IntPtr(aAddr) - IntPtr(Address)); // Offset from Address to ProcedureName symbol location
