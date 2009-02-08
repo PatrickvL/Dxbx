@@ -52,12 +52,9 @@ type
     SymbolName: string;
     XboxLibraryPatch: TXboxLibraryPatch;
 
-    PotentialLocations: TPotentialSymbolLocation;
+    CrossReferences: array of PStoredCrossReference;
 
     StoredLibraryFunction: PStoredLibraryFunction;
-    HitCount: Integer;
-    SymbolLocation: TCodePointer;
-    CodeEnd: TCodePointer;
 
     property LocationCount: Integer read GetLocationCount;
     property Locations[const aIndex: Integer]: TPotentialSymbolLocation read GetLocation;
@@ -68,16 +65,18 @@ type
     function AddPotentialSymbolLocation(const aAddress: PByte;
       const FoundFunction: PStoredLibraryFunction): TPotentialSymbolLocation;
     procedure RemoveLocation(Location: TPotentialSymbolLocation);
+    function FindLocation(const aAddress: TCodePointer): TPotentialSymbolLocation;
   end;
 
   TPotentialSymbolLocation = class(TObject)
   protected
     FSymbol: TDetectedVersionedXboxLibrarySymbol;
   public
-    NextByAddress: TPotentialSymbolLocation;
-    NextBySymbol: TPotentialSymbolLocation;
     StoredLibraryFunction: PStoredLibraryFunction;
     SymbolLocation, CodeEnd: TCodePointer;
+
+    PatternHitCount: Integer;
+    CrossReferencedHitCount: Integer;
 
     property Symbol: TDetectedVersionedXboxLibrarySymbol read FSymbol;
 
@@ -85,21 +84,31 @@ type
     destructor Destroy; override;
   end;
 
+  PAddressRange = ^RAddressRange;
+  RAddressRange = record
+    RangeStart, RangeEnd: PByte;
+  end;
+  
   TDetectedSymbols = class(TObject)
   protected
     MySymbolList: TStringList;
-    MyLocations: TList;
+    MyFunctionLocations: TList;
     function GetCount: Integer;
     function GetSymbol(Index: Integer): TDetectedVersionedXboxLibrarySymbol;
   protected
     ByteScanLower, ByteScanUpper: PByte;
     PatternTrieReader: TPatternTrieReader;
     procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
-    procedure FindAndRememberPattern(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
+    procedure DetectProcessMemoryRanges();
+    function IsAddressInValidProcessMemory(const aAddress: Pointer): Boolean;
+    procedure RegisterPotentialFunctionLocation(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
     procedure TestAddressUsingPatternTrie(const aAddress: PByte);
-    procedure ScanMemoryRangeForLibraryPatterns();
+    procedure ScanMemoryRangeForLibraryFunctions();
+    procedure ValidateFunctionCrossReferences();
+    procedure DetermineFinalFunctionAndSymbolLocations();
   public
-    BestFitXboxLibraries: TList;
+    LibraryIndexesToConsider: TBits;
+    ProcessMemoryRanges: TList; // Containing RAddressRange;
 
     property Count: Integer read GetCount;
     property Symbols[Index: Integer]: TDetectedVersionedXboxLibrarySymbol read GetSymbol; default;
@@ -114,6 +123,7 @@ type
     function FindByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
     function FindOrCreateByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
     function FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
+    procedure DeleteSymbol(const Index: Integer);
   end;
 
 var
@@ -121,11 +131,18 @@ var
 
 implementation
 
+const
+  // These two are based on our most current XDKTracker database :
+  MinXdkVersion = 3911;
+  MaxXdkVersion = 5933;
+  
+  TotalXdkVersionDelta = MaxXdkVersion - MinXdkVersion;
+  
 // Do our own demangling
 function DxbxUnmangleSymbolName(const aStr: string): string;
 var
   UnmangleFlags: DWord;
-  i: Integer;                                    
+  i: Integer;
 begin
   if aStr = '' then
     Exit;
@@ -283,22 +300,55 @@ end;
 
 function TDetectedVersionedXboxLibrarySymbol.AddPotentialSymbolLocation(
   const aAddress: PByte; const FoundFunction: PStoredLibraryFunction): TPotentialSymbolLocation;
+var
+  FoundExisting: Boolean;
+  i: Integer;
 begin
-  Result := TPotentialSymbolLocation.Create(Self);
-  Result.StoredLibraryFunction := FoundFunction;
-  Result.SymbolLocation := TCodePointer(aAddress);
-  Result.CodeEnd := TCodePointer(IntPtr(aAddress) + FoundFunction.FunctionLength);
-
-  if PotentialLocations = nil then
+  // Search for duplicates :
+  Result := nil;
+  FoundExisting := False;
+  for i := 0 to LocationCount - 1 do
   begin
-    StoredLibraryFunction := Result.StoredLibraryFunction;
-    SymbolLocation := Result.SymbolLocation;
-    CodeEnd := Result.CodeEnd;
+    Result := Locations[i];
+    if Result.SymbolLocation = aAddress then
+    begin
+      // Check weither this address points to the same function or not :
+      if (FoundFunction = nil)
+      or (Result.StoredLibraryFunction = FoundFunction) then
+        FoundExisting := True;
+
+      Break;
+    end;
   end;
 
-  Result.NextBySymbol := PotentialLocations;
+  if not FoundExisting then
+  begin
+    // If none found, create and link a new potential location record :
+    Result := TPotentialSymbolLocation.Create(Self);
+    Result.SymbolLocation := TCodePointer(aAddress);
+    // Initially assume it's a global variable of type DWORD :
+    Result.CodeEnd := TCodePointer(IntPtr(aAddress) + SizeOf(DWORD));
+    MyLocations.Add(Result);
+  end;
 
-  Inc(HitCount);
+  if Assigned(FoundFunction) then
+  begin
+    if Assigned(Result.StoredLibraryFunction) then
+//      Assert(Result.StoredLibraryFunction = FoundFunction, 'Collision detected!')
+    else
+    begin
+      Result.StoredLibraryFunction := FoundFunction;
+      Result.CodeEnd := TCodePointer(IntPtr(aAddress) + FoundFunction.FunctionLength);
+    end;
+
+    Inc(Result.PatternHitCount);
+  end
+  else
+    Inc(Result.CrossReferencedHitCount);
+
+  // When this entry was already present, prevent it from being registered twice :
+  if FoundExisting then
+    Result := nil;
 end; // AddPotentialSymbolLocation
 
 procedure TDetectedVersionedXboxLibrarySymbol.RemoveLocation(Location: TPotentialSymbolLocation);
@@ -316,6 +366,22 @@ begin
   end;
 end;
 
+function TDetectedVersionedXboxLibrarySymbol.FindLocation(
+  const aAddress: TCodePointer): TPotentialSymbolLocation;
+var
+  i: Integer;
+begin
+  for i := 0 to LocationCount - 1 do
+  begin
+    Result := Locations[i];
+    if  (IntPtr(Result.SymbolLocation) >= IntPtr(aAddress))
+    and (IntPtr(aAddress) <= IntPtr(Result.CodeEnd)) then
+      Exit;
+  end;
+
+  Result := nil;
+end;
+
 { TDetectedSymbols }
 
 constructor TDetectedSymbols.Create;
@@ -326,18 +392,18 @@ begin
   MySymbolList.Sorted := True;
   MySymbolList.Duplicates := dupIgnore;
   MySymbolList.CaseSensitive := False;
-
-  MyLocations := TList.Create;
-
-  BestFitXboxLibraries := TList.Create;
+  MyFunctionLocations := TList.Create;
+  ProcessMemoryRanges := TList.Create;
+  LibraryIndexesToConsider := TBits.Create;
 end;
 
 destructor TDetectedSymbols.Destroy;
 begin
   Clear;
-  FreeAndNil(MyLocations);
+  FreeAndNil(MyFunctionLocations);
   FreeAndNil(MySymbolList);
-  FreeAndNil(BestFitXboxLibraries);
+  FreeAndNil(ProcessMemoryRanges);
+  FreeAndNil(LibraryIndexesToConsider);
 
   inherited Destroy;
 end;
@@ -368,11 +434,14 @@ begin
     MySymbolList.Clear;
   end;
 
-  if Assigned(MyLocations) then
-    MyLocations.Clear;
+  if Assigned(MyFunctionLocations) then
+    MyFunctionLocations.Clear;
 
-  if Assigned(BestFitXboxLibraries) then
-    BestFitXboxLibraries.Clear;
+  if Assigned(ProcessMemoryRanges) then
+    ProcessMemoryRanges.Clear; // TODO : Free RAddressRange's
+
+  if Assigned(LibraryIndexesToConsider) then
+    LibraryIndexesToConsider.Size := 0;
 end;
 
 function TDetectedSymbols.New(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
@@ -386,7 +455,6 @@ begin
 
   Result := TDetectedVersionedXboxLibrarySymbol.Create;
   Result.SymbolName := aSymbolName;
-  Result.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(aSymbolName);
 
   MySymbolList.Objects[i] := Result;
 end;
@@ -425,132 +493,263 @@ var
   i: Integer;
 begin
   // For speed, use a binary search in an address-ordered collection here :
-  if MyLocations.BinarySearch(aAddress, i, @Compare) then
-    Result := TPotentialSymbolLocation(MyLocations[i]).Symbol
+  if MyFunctionLocations.BinarySearch(aAddress, i, @Compare) then
+    Result := TPotentialSymbolLocation(MyFunctionLocations[i]).Symbol
   else
     Result := nil;
 end;
 
-procedure TDetectedSymbols.FindAndRememberPattern(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
+procedure TDetectedSymbols.DeleteSymbol(const Index: Integer);
+var
+  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
+begin
+  DetectedSymbol := Symbols[Index];
+  FreeAndNil(DetectedSymbol); // handles nil gracefully too
+  MySymbolList.Delete(Index);
+end;
 
-  function _HandleCrossReference(const aStartingAddress: PByte;
+function TDetectedSymbols.IsAddressInValidProcessMemory(const aAddress: Pointer): Boolean;
+
+  function Compare(Item1: PAddressRange; aAddress: UIntPtr): Integer;
+  begin
+    if aAddress < UIntPtr(Item1.RangeStart) then
+      Result := 1
+    else
+      if aAddress < UIntPtr(Item1.RangeEnd) then
+        Result := 0
+      else
+        Result := -1;
+  end;
+
+var
+  i: Integer;
+begin
+  Result := ProcessMemoryRanges.BinarySearch(aAddress, i, @Compare);
+end;
+
+procedure TDetectedSymbols.DetectProcessMemoryRanges();
+var
+  Base: PByte;
+  MemInfo: TMemoryBasicInformation;
+  Allocated: Boolean;
+  AddressRange: PAddressRange;
+begin
+  ProcessMemoryRanges.Clear;
+  Base := nil;
+  FillChar(MemInfo, SizeOf(MemInfo), #0);
+  while VirtualQuery(Base, MemInfo, SizeOf(MemInfo)) = SizeOf(MemInfo) do
+  begin
+    Allocated := (MemInfo.Type_9 and (MEM_IMAGE or MEM_MAPPED or MEM_PRIVATE)) > 0;
+    if Allocated then
+    begin
+      System.New(AddressRange);
+      AddressRange.RangeStart := MemInfo.BaseAddress;
+      AddressRange.RangeEnd := PByte(UIntPtr(MemInfo.BaseAddress) + UIntPtr(MemInfo.RegionSize - 1));
+      ProcessMemoryRanges.Add(AddressRange);
+    end;
+
+    Inc(Base, MemInfo.RegionSize);
+  end; // while
+
+  // Note : The resulting ProcessMemoryRanges list is inherently sorted already.
+  // So, no sorting needed; Binary-searching in this list is good to go now!
+end; // DetectProcessMemoryRanges
+
+procedure TDetectedSymbols.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+var
+  LinkedLibrary: PXBE_LIBRARYVERSION;
+  LinkedLibraryName: string;
+  LinkedLibraryVersion: Integer;
+
+  IndexOfAboveVersion: Integer; AboveVersionNumber: Integer;
+  IndexOfBelowVersion: Integer; BelowVersionNumber: Integer;
+
+  i, j: Integer;
+
+  KnownStoredLibrary: PStoredLibrary;
+  KnownStoredLibraryName: string;
+  KnownStoredLibraryVersion: Integer;
+begin
+  // Loop over all libraries :
+  LinkedLibrary := pLibraryVersion;
+  if not Assigned(LinkedLibrary) then
+  begin
+    DbgPrintf('DxbxHLE : No XBE library versions to scan!');
+    Exit;
+  end;
+
+  // Loop over all library versions in the executable:
+  LibraryIndexesToConsider.Size := 0;
+  LibraryIndexesToConsider.Size := PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries;
+  for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
+  begin
+    // Retreive the name & version of each linked library :
+    LinkedLibraryName := Copy(LinkedLibrary.szName, 1, 8);
+    LinkedLibraryVersion := Integer(LinkedLibrary.wBuildVersion);
+    DbgPrintf('DxbxHLE : Library "%s" is version %d', [LinkedLibraryName, LinkedLibraryVersion]);
+    // Jump to the next library already :
+    Inc(LinkedLibrary);
+
+    // Find the library versions in our pattern trie that best match the linked version :
+    AboveVersionNumber := MaxInt; IndexOfAboveVersion := -1;
+    BelowVersionNumber := 0; IndexOfBelowVersion := -1;
+    for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
+    begin
+      KnownStoredLibrary := PatternTrieReader.GetStoredLibrary(j);
+      KnownStoredLibraryName := PatternTrieReader.GetString(KnownStoredLibrary.LibNameIndex);
+      KnownStoredLibraryVersion := Integer(KnownStoredLibrary.LibVersion);
+
+      // Only consider libraries with exactly the same name :
+      if not SameText(KnownStoredLibraryName, LinkedLibraryName) then
+        Continue;
+
+      // Exact match above
+      if (KnownStoredLibraryVersion = LinkedLibraryVersion)
+      // Better-than-previous match above
+      or (KnownStoredLibraryVersion > LinkedLibraryVersion) and (KnownStoredLibraryVersion < AboveVersionNumber) then
+      begin
+        AboveVersionNumber := KnownStoredLibraryVersion;
+        IndexOfAboveVersion := j;
+      end;
+
+      // Exact match below
+      if (KnownStoredLibraryVersion = LinkedLibraryVersion)
+      // Better-than-previous match below
+      or (KnownStoredLibraryVersion < LinkedLibraryVersion) and (KnownStoredLibraryVersion > BelowVersionNumber) then
+      begin
+        BelowVersionNumber := KnownStoredLibraryVersion;
+        IndexOfBelowVersion := j;
+      end;
+    end; // for
+
+    if (IndexOfAboveVersion < 0) and (IndexOfBelowVersion < 0) then
+    begin
+      DbgPrintf('... No patterns registered for this library!');
+      Continue;
+    end;
+
+    if (AboveVersionNumber - BelowVersionNumber) > TotalXdkVersionDelta then
+    begin
+      // The distinction here is, that patterns for OpenXDK libraries can't
+      // be used to detect retail XDK libraries with :
+      DbgPrintf('... No usable patterns available for this library!');
+      Continue;
+    end;
+
+    if AboveVersionNumber = BelowVersionNumber then
+      DbgPrintf('... Got patterns for exactly this version!')
+    else
+      DbgPrintf('... Approximating this with patterns from XDK %d and %d.', [BelowVersionNumber, AboveVersionNumber]);
+
+    // Add the found libraries (actually, their indexes)
+    // to a set we'll be checking in the detection-code :
+    if IndexOfAboveVersion >= 0 then
+      LibraryIndexesToConsider.Bits[IndexOfAboveVersion] := True;
+      
+    if IndexOfBelowVersion >= 0 then
+      LibraryIndexesToConsider.Bits[IndexOfBelowVersion] := True;
+  end;
+end; // DetectVersionedXboxLibraries
+
+procedure TDetectedSymbols.RegisterPotentialFunctionLocation(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
+var
+  FunctionName: string;
+  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
+  CrossReference: PStoredCrossReference;
+  i: Integer;
+begin
+  Assert(Assigned(FoundFunction));
+
+  FunctionName := PatternTrieReader.GetFunctionName(FoundFunction.GlobalFunctionIndex);
+
+  // Now that it's found, see if it was already registered :
+  DetectedSymbol := FindOrCreateByName(FunctionName);
+  DetectedSymbol.StoredLibraryFunction := FoundFunction;
+  DetectedSymbol.AddPotentialSymbolLocation(aAddress, FoundFunction);
+
+  // TODO : Support having more than 1 incarnation of a function
+  // (which is possible when 2 libraries are considered)
+
+  if Length(DetectedSymbol.CrossReferences) < FoundFunction.NrCrossReferences then
+  begin
+    // Last, register all cross-referenced symbols from this function too :
+    SetLength(DetectedSymbol.CrossReferences, FoundFunction.NrCrossReferences);
+    IntPtr(CrossReference) := IntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
+    for i := 0 to FoundFunction.NrCrossReferences - 1 do
+    begin
+      DetectedSymbol.CrossReferences[i] := CrossReference;
+      Inc(CrossReference);
+    end;
+  end;
+end; // RegisterPotentialFunctionLocation
+
+procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
+
+  function _CheckCrossReference(const aStartingAddress: PByte;
     const aCrossReferenceOffset: Word; const aCrossReferenceNameIndex: TStringTableIndex): Boolean;
   var
     CrossReferenceAddress: PByte;
-    CrossReferenced: PStoredLibraryFunction;
   begin
-(*
-    // First check : Do we have a cross-reference?
-    Result := (aCrossReferenceNameIndex = NO_STRING_INDEX);
-    if Result then
-      Exit;
-
     // Use aCrossReferenceOffset to determine
     // the call-location that should be checked :
     CrossReferenceAddress := DetermineRelativeAddress(aStartingAddress, aCrossReferenceOffset);
 
-    // First check : does this address reside in the executable segment?
-    if (IntPtr(CrossReferenceAddress) < IntPtr(ByteScanLower)) or (IntPtr(CrossReferenceAddress) > IntPtr(ByteScanUpper)) then
-      Exit;
+    // Now check if this address resides in memory owned by this process?
+    Result := IsAddressInValidProcessMemory(CrossReferenceAddress);
+  end; // _CheckCrossReference
 
-    // See if we can find a function on this address :
-    CrossReferenced := TestAddressUsingPatternTrie(PatternTrieReader, CrossReferenceAddress);
-    if CrossReferenced = nil then
-      Exit;
-
-    // Check if this function is indeed the one mentioned, by comparing
-    // the string-indexes of both functions (they should match) :
-    Result := aCrossReferenceNameIndex =
-              PatternTrieReader.GetGlobalFunction(CrossReferenced.GlobalFunctionIndex).FunctionNameIndex;
-*)
-  end; // _HandleCrossReference
-
-var
-  FunctionName: string;
-  Detected: TDetectedVersionedXboxLibrarySymbol;
-  Unmangled: string;
-begin // FindAndRememberPattern
-  Assert(Assigned(FoundFunction));
-
-  // Now that it's found, see if it was already registered :
-  FunctionName := PatternTrieReader.GetFunctionName(FoundFunction.GlobalFunctionIndex);
-  Detected := FindByName(FunctionName);
-  if Assigned(Detected) then
-  begin
-    Detected.AddPotentialSymbolLocation(aAddress, FoundFunction);
-    Exit;
-  end;
-
-(*
-  // Handle a possible cross-reference check :
-  if not _HandleCrossReference(aAddress, FoundFunction.CrossReference1Offset, FoundFunction.CrossReference1NameIndex) then
-  begin
-    FoundFunction := nil;
-    Exit;
-  end;
-*)
-  // Do our own demangling :
-  Unmangled := DxbxUnmangleSymbolName(FunctionName);
-
-  // Newly detected functions are registered here (including their range,
-  // which will come in handy when debugging) :
-  Detected := New(Unmangled);
-  Detected.StoredLibraryFunction := FoundFunction;
-  Detected.AddPotentialSymbolLocation(aAddress, FoundFunction);
-
-{$IFDEF DXBX_DEBUG}
-  DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' (was "%s")', [aAddress, Unmangled, FunctionName]);
-  // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
-{$ENDIF}
-end; // FindAndRememberPattern
-
-procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
-
-  function _TryMatchingLeaf(var aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): PStoredLibraryFunction;
+  function _TryMatchingLeaf(var aStoredLibraryFunction: PStoredLibraryFunction; aAddress: PByte): Boolean;
   var
-    StoredLibrary: PStoredLibrary;
     i: Integer;
-    VersionedXboxLibrary: PVersionedXboxLibrary;
+    FoundFunction: PStoredLibraryFunction;
+    CrossReference: PStoredCrossReference;
   begin
-    Result := aStoredLibraryFunction;
+    Result := False;
+    FoundFunction := aStoredLibraryFunction;
 {$IFDEF DXBX_RECTYPE}
-    Assert(Result.RecType = rtStoredLibraryFunction, 'StoredLibraryFunction type mismatch!');
+    Assert(FoundFunction.RecType = rtStoredLibraryFunction, 'StoredLibraryFunction type mismatch!');
 {$ENDIF}
 
-    // Skip to the next stored library function (including a step over all cross-references) :
-    Inc(aStoredLibraryFunction);
-    Inc(IntPtr({var}aStoredLibraryFunction), Result.NrCrossReferences * SizeOf(RStoredCrossReference));
+    // Start off, by skipping to the next stored library function already :
+    Inc({var}aStoredLibraryFunction);
+    // Including a step over all cross-references :
+    Inc(IntPtr({var}aStoredLibraryFunction), FoundFunction.NrCrossReferences * SizeOf(RStoredCrossReference));
 
-    if Result.CRCLength > 0 then
+    // Determine if the stored library version associated with this pattern
+    // matches the library versions we've decided to consider :
+    if not LibraryIndexesToConsider.Bits[FoundFunction.LibraryIndex] then
+      // No matching library, skip this :
+      Exit;
+
+    // Check if the (optional) CRC over this address matches :
+    if FoundFunction.CRCLength > 0 then
     begin
-      if Result.CRCValue <> CalcCRC16(aAddress, Result.CRCLength) then
-      begin
-        Result := nil;
+      if FoundFunction.CRCValue <> CalcCRC16(aAddress, FoundFunction.CRCLength) then
         Exit;
-      end;
     end;
 
-    // TODO : Include data & test-code for : Cross-referenced APIs
-    // TODO : Include data & test-code for : Trailing bytes
+    // TODO : Include data & test-code for 'trailing bytes' patterns.
 
-    // Get the Stored Library associated with this pattern :
-    StoredLibrary := PatternTrieReader.GetStoredLibrary(Result.LibraryIndex);
+    // Correct aAddress back to starting location :
+    Dec(UIntPtr(aAddress), PATTERNSIZE);
 
-    // Determine if this matches the library we'll be using :
-    for i := 0 to BestFitXboxLibraries.Count - 1 do
+    // Handle possible cross-reference checks :
+    IntPtr(CrossReference) := IntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
+    for i := 0 to FoundFunction.NrCrossReferences - 1 do
     begin
-      VersionedXboxLibrary := BestFitXboxLibraries[i];
-      if VersionedXboxLibrary.LibVersion = StoredLibrary.LibVersion then
-        if SameText(VersionedXboxLibrary.LibName, PatternTrieReader.GetString(StoredLibrary.LibNameIndex)) then
-//      if VersionedXboxLibrary.LibNameIndex = StoredLibrary.LibNameIndex then
-          Exit;
+      if not _CheckCrossReference(aAddress, CrossReference.Offset, CrossReference.NameIndex) then
+        // Cross-reference out-of-bounds, skip this :
+        Exit;
+
+      Inc(CrossReference);
     end;
 
-    // No matching library, skip this :
-    Result := nil;
+    // Potential hit :
+    RegisterPotentialFunctionLocation(aAddress, FoundFunction);
+    Result := True;
   end; // _TryMatchingLeaf
 
-  function _TryMatchingNode(aStoredTrieNode: PStoredTrieNode; aAddress: PByte; Depth: Integer): PStoredLibraryFunction;
+  function _TryMatchingNode(aStoredTrieNode: PStoredTrieNode; aAddress: PByte; Depth: Integer): Boolean;
   var
     NrChildren: Integer;
     StretchPtr: PByte;
@@ -560,7 +759,7 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
     NextOffset: TByteOffset;
     StoredLibraryFunction: PStoredLibraryFunction;
   begin
-    Result := nil;
+    Result := False;
 {$IFDEF DXBX_RECTYPE}
     Assert(aStoredTrieNode.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
 {$ENDIF}
@@ -620,13 +819,17 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
     if Depth >= PATTERNSIZE then
     begin
       // Handle all children leafs here, searching for the best-fit lib-version :
+      // Note, we're handling _all_ children here :
       StoredLibraryFunction := Pointer(StretchPtr);
       while NrChildren > 0 do
       begin
-        Result := _TryMatchingLeaf({var}StoredLibraryFunction, aAddress);
-        if Assigned(Result) then
-          // Note, we're handling all children here :
-          FindAndRememberPattern(aAddress, Result);
+        if _TryMatchingLeaf({var}StoredLibraryFunction, aAddress) then
+        begin
+          // TODO : Instead of calling RegisterPotentialFunctionLocation right away,
+          // we should collect all valid's and register only the longest functions
+          // (per versioned-library).
+          Result := True;
+        end;
 
         Dec(NrChildren);
       end;
@@ -639,7 +842,7 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
     begin
       // Try to match pattern on this node
       Result := _TryMatchingNode(aStoredTrieNode, aAddress, Depth);
-      if Assigned(Result) then
+      if Result then
         Exit;
 
       // Try next child, maybe that helps:
@@ -652,8 +855,6 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
       aStoredTrieNode := PatternTrieReader.GetNode(NextOffset);
       Dec(NrChildren);
     end;
-
-    Result := nil;
   end; // _TryMatchingNode
 
 var
@@ -665,7 +866,7 @@ begin
   _TryMatchingNode(Node, aAddress, 0);
 end; // TestAddressUsingPatternTrie
 
-procedure TDetectedSymbols.ScanMemoryRangeForLibraryPatterns();
+procedure TDetectedSymbols.ScanMemoryRangeForLibraryFunctions();
 var
   p: PByte;
 begin
@@ -686,93 +887,149 @@ begin
 
     Inc(p);
   end;
-end; // ScanMemoryRangeForLibraryPatterns
+end; // ScanMemoryRangeForLibraryFunctions
 
-procedure TDetectedSymbols.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+procedure TDetectedSymbols.ValidateFunctionCrossReferences();
 var
-  CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
-  CurrentLibName: string;
-  StoredLibrary, BestFit: PStoredLibrary;
-  BestDist, ThisDist: Integer;
-  StoredLibraryName: string;
-  i, j: Integer;
-  VersionedXboxLibrary: PVersionedXboxLibrary;
+  i: Integer;
+  Symbol: TDetectedVersionedXboxLibrarySymbol;
+  j: Integer;
+  PotentialSymbolLocation: TPotentialSymbolLocation;
+  k: Integer;
+  CrossReferencedSymbolName: string;
+  CrossReferencedSymbol: TDetectedVersionedXboxLibrarySymbol;//PStoredCrossReference;
+  CrossReferenceAddress: PByte;
+  CrossReferencedSymbolLocation: TPotentialSymbolLocation;
 begin
-  // Loop over all libraries :
-  CurrentXbeLibraryVersion := pLibraryVersion;
-  if not Assigned(CurrentXbeLibraryVersion) then
+  // Loop over all potential-locations of all registered functions :
+  for i := Count - 1 downto 0 do
   begin
-    DbgPrintf('DxbxHLE : No XBE library versions to scan!');
-    Exit;
-  end;
-
-  // Loop over all library versions in the executable:
-  for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
-  begin
-    CurrentLibName := Copy(CurrentXbeLibraryVersion.szName, 1, 8);
-    DbgPrintf('DxbxHLE : Library "%s" is version %d', [CurrentLibName, CurrentXbeLibraryVersion.wBuildVersion]);
-
-    // Find the library version in our pattern trie that best matches this :
-    BestFit := nil;
-    BestDist := Low(BestDist);
-    for j := 0 to PatternTrieReader.StoredSignatureTrieHeader.LibraryTable.NrOfLibraries - 1 do
+    Symbol := Symbols[i];
+    j := Symbol.LocationCount;
+    while j > 0 do
     begin
-      StoredLibrary := PatternTrieReader.GetStoredLibrary(j);
-      StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
+      Dec(j);
+      PotentialSymbolLocation := Symbol.Locations[j];
 
-      // Only consider libraries with exactly the same name :
-      if SameText(StoredLibraryName, CurrentLibName) then
+      // Check for all functions they cross-reference
+      // if the referenced-function could indeed reside at the given address.
+      for k := 0 to Length(Symbol.CrossReferences) - 1 do
       begin
-        // Distance : 0 on exact hit, positive when more recent, negative when older;
-        // More recent is better than older version; The closer to 0, the better.
-        ThisDist := Integer(StoredLibrary.LibVersion) - Integer(CurrentXbeLibraryVersion.wBuildVersion);
-        // Use this library when no other are found yet :
-        if (BestFit = nil)
-        // Or when the this version comes closer to the actual version :
-        or (ThisDist = 0)
-        or ((BestDist < 0) and (ThisDist > 0))
-        or ((BestDist < 0) and (ThisDist < 0) and (ThisDist > BestDist))
-        or ((BestDist > 0) and (ThisDist > 0) and (ThisDist < BestDist)) then
+        CrossReferencedSymbolName := PatternTrieReader.GetString(Symbol.CrossReferences[k].NameIndex);
+        CrossReferencedSymbol := FindByName(CrossReferencedSymbolName);
+        if not Assigned(CrossReferencedSymbol) then
+          Continue; // for
+
+        CrossReferenceAddress := DetermineRelativeAddress(PotentialSymbolLocation.SymbolLocation, Symbol.CrossReferences[k].Offset);
+        CrossReferencedSymbolLocation := CrossReferencedSymbol.FindLocation(CrossReferenceAddress);
+        if Assigned(CrossReferencedSymbolLocation) then
+          // If so, the referenced-function scores a hit on his 'potential location' corresponding to this address.
+          Inc(CrossReferencedSymbolLocation.PatternHitCount)
+        else
         begin
-          BestFit := StoredLibrary;
-          BestDist := ThisDist;
+          // If not, this function itself is probably wrong - de-register this location
+          Symbol.RemoveLocation(PotentialSymbolLocation);
+          Break; // for
         end;
-      end;
+      end; // for cross-references
+
+    end; // while symbol locations
+
+    // When the above leaves no potential locations, the complete symbol has to go too.
+    if Symbol.LocationCount = 0 then
+      DeleteSymbol(i);
+  end; // for symbols
+
+end; // ValidateFunctionCrossReferences
+
+procedure TDetectedSymbols.DetermineFinalFunctionAndSymbolLocations();
+var
+  i: Integer;
+  Symbol: TDetectedVersionedXboxLibrarySymbol;
+  j: Integer;
+  PotentialSymbolLocation: TPotentialSymbolLocation;
+  BestPotentialSymbolLocation: TPotentialSymbolLocation;
+  k: Integer;
+  CrossReferencedSymbolName: string;
+  CrossReferencedSymbol: TDetectedVersionedXboxLibrarySymbol;//PStoredCrossReference;
+  CrossReferenceAddress: PByte;
+{$IFDEF DXBX_DEBUG}
+  Unmangled: string;
+{$ENDIF}
+begin
+  // Loop over all registered functions :
+  for i := 0 to Count - 1 do
+  begin
+    Symbol := Symbols[i];
+    Assert(Symbol.LocationCount > 0);
+
+    // Find the potential location with the highest PatternHitCount:
+    BestPotentialSymbolLocation := Symbol.Locations[0];
+    for j := 1 to Symbol.LocationCount - 1 do
+    begin
+      PotentialSymbolLocation := Symbol.Locations[j];
+      if BestPotentialSymbolLocation.PatternHitCount < PotentialSymbolLocation.PatternHitCount then
+        BestPotentialSymbolLocation := PotentialSymbolLocation;
     end;
 
-    if Assigned(BestFit) then
+    // Register this location as the actual location of this symbol
+    // by removing all other locations :
+    j := Symbol.LocationCount;
+    while j > 0 do
     begin
-      if BestFit.LibVersion = CurrentXbeLibraryVersion.wBuildVersion then
-        DbgPrintf('... Got patterns for exactly this version!')
-      else
-        DbgPrintf('... Approximating this with patterns from library %d.', [BestFit.LibVersion]);
+      Dec(j);
+      PotentialSymbolLocation := Symbol.Locations[j];
+      if PotentialSymbolLocation <> BestPotentialSymbolLocation then
+        Symbol.RemoveLocation(PotentialSymbolLocation);
+    end;
 
-      // Add this library to a list we'll use in the detection-code :
-      VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
-{$IFDEF DXBX_RECTYPE}
-      VersionedXboxLibrary.RecType := rtVersionedXboxLibrary;
+    // Register all cross-referenced symbols :
+    for k := 0 to Length(Symbol.CrossReferences) - 1 do
+    begin
+      CrossReferencedSymbolName := PatternTrieReader.GetString(Symbol.CrossReferences[k].NameIndex);
+      CrossReferencedSymbol := FindOrCreateByName(CrossReferencedSymbolName);
+      if CrossReferencedSymbol.LocationCount > 0 then
+        Continue;
+
+      CrossReferenceAddress := DetermineRelativeAddress(BestPotentialSymbolLocation.SymbolLocation, Symbol.CrossReferences[k].Offset);
+      CrossReferencedSymbol.AddPotentialSymbolLocation(CrossReferenceAddress, nil);
+{$IFDEF DXBX_DEBUG}
+      // Do our own demangling :
+      Unmangled := DxbxUnmangleSymbolName(CrossReferencedSymbol.SymbolName);
+      DbgPrintf('DxbxHLE : Detected cross-referenced symbol at $%.8x : ''%s'' ("%s")', [CrossReferenceAddress, CrossReferencedSymbol.SymbolName, Unmangled]);
 {$ENDIF}
-      VersionedXboxLibrary.LibVersion := BestFit.LibVersion;
-      VersionedXboxLibrary.LibName := PatternTrieReader.GetString(BestFit.LibNameIndex);
-      BestFitXboxLibraries.Add(VersionedXboxLibrary);
-    end
-    else
-      DbgPrintf('... No patterns registered for this library!');
+    end;
 
-    // Skip to the next library :
-    Inc(CurrentXbeLibraryVersion);
-  end;
-end; // DetectVersionedXboxLibraries
+{$IFDEF DXBX_DEBUG}
+    // Do our own demangling :
+    Unmangled := DxbxUnmangleSymbolName(Symbol.SymbolName);
+    DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' ("%s")', [BestPotentialSymbolLocation.SymbolLocation, Symbol.SymbolName, Unmangled]);
+  // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
+{$ENDIF}
+    // TODO : Add to MyFunctionLocations, so functions can be found with FindByAddress (a pure debugging aid)
+
+///  DetectedSymbol.StoredLibraryFunction := FoundFunction;
+  end; // for symbols
+end; // DetermineFinalFunctionAndSymbolLocations
 
 procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 
   procedure _ResolveXapiProcessHeapAddress();
   var
+    DetectedXapiProcessHeap,
     DetectedXapiInitProcess: TDetectedVersionedXboxLibrarySymbol;
     StoredLibrary: PStoredLibrary;
     ProcessHeapOffs: Integer;
   begin
-    DetectedXapiInitProcess := FindByName('XapiInitProcess');
+    DetectedXapiProcessHeap := FindByName('_XapiProcessHeap');
+    if Assigned(DetectedXapiProcessHeap) then
+    begin
+      XTL_EmuXapiProcessHeap := DetectedXapiProcessHeap.Locations[0].SymbolLocation;
+      if Assigned(XTL_EmuXapiProcessHeap) then
+        Exit;
+    end;
+
+    DetectedXapiInitProcess := FindByName('_XapiInitProcess@0');
     if Assigned(DetectedXapiInitProcess) then
     begin
       StoredLibrary := PatternTrieReader.GetStoredLibrary(DetectedXapiInitProcess.StoredLibraryFunction.LibraryIndex);
@@ -793,7 +1050,8 @@ procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LI
         else // 3911, 4034, 4134
           ProcessHeapOffs := $3E;
 
-        XTL_EmuXapiProcessHeap := PPointer(IntPtr(DetectedXapiInitProcess.SymbolLocation) + ProcessHeapOffs)^;
+        XTL_EmuXapiProcessHeap := PPointer(IntPtr(DetectedXapiInitProcess.Locations[0].SymbolLocation) + ProcessHeapOffs)^;
+//        XTL_EmuXapiProcessHeap := Pointer(DetermineRelativeAddress(DetectedXapiInitProcess.Locations[0].SymbolLocation, ProcessHeapOffs));
 {$IFDEF DXBX_DEBUG}
         DbgPrintf('DxbxHLE : Resolved XapiProcessHeap at $%.8x', [XTL_EmuXapiProcessHeap]);
 {$ENDIF}
@@ -803,9 +1061,6 @@ procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LI
 
 var
   ResourceStream: TResourceStream;
-{$IFDEF DXBX_DEBUG}
-  i: Integer;
-{$ENDIF}
 begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
   ByteScanUpper := PByte(IntPtr(ByteScanLower) + Integer(pXbeHeader.dwSizeofImage) + Integer(pXbeHeader.dwPeStackCommit));
@@ -821,6 +1076,8 @@ begin
 
   Clear;
 
+  DetectProcessMemoryRanges();
+
   // Get StoredPatternTrie from resource :
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
   try
@@ -830,8 +1087,11 @@ begin
 
       DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
-      // Scan Patterns using this trie :
-      ScanMemoryRangeForLibraryPatterns();
+      ScanMemoryRangeForLibraryFunctions();
+
+      ValidateFunctionCrossReferences();
+
+      DetermineFinalFunctionAndSymbolLocations();
 
       // Resolve the address of _XapiProcessHeap :
       _ResolveXapiProcessHeapAddress();
@@ -845,13 +1105,6 @@ begin
     FreeAndNil(ResourceStream);
   end;
 
-{$IFDEF DXBX_DEBUG}
-  // Show a list of detected functions with a HitCount > 1 :
-  for i := 0 to Count - 1 do
-    if Symbols[i].HitCount > 1 then
-      DbgPrintf('DxbxHLE : Duplicate %.3d hits on ''%s'' ', [Symbols[i].HitCount, Symbols[i].SymbolName]);
-    // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
-{$ENDIF}
   DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedSymbols.Count]);
 end; // DxbxScanForLibraryAPIs
 

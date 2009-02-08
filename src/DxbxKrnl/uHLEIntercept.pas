@@ -372,24 +372,25 @@ begin
     for i := 0 to DetectedSymbols.Count - 1 do
     begin
       DetectedSymbol := DetectedSymbols[i];
-      if  Assigned(DetectedSymbol.SymbolLocation)
-      and (DetectedSymbol.XboxLibraryPatch <> xlp_Unknown) then
-      begin
-        OrgCode := DetectedSymbol.SymbolLocation;
-        NewCode := XboxLibraryPatchToPatch(DetectedSymbol.XboxLibraryPatch);
-        Assert(Assigned(NewCode));
+      if not Assigned(DetectedSymbol.Locations[0].SymbolLocation) then
+        Continue;
 
-  {$IFDEF DXBX_DEBUG}
-        DbgPrintf('DxbxHLE : Installed patch from $%.08X (%s) to $%.08X', [
-          OrgCode, DetectedSymbol.SymbolName,
-          NewCode
-          ]);
-        UsedPatches[DetectedSymbol.XboxLibraryPatch] := True;
-  {$ENDIF}
+      DetectedSymbol.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(DetectedSymbol.SymbolName);
+      if DetectedSymbol.XboxLibraryPatch = xlp_Unknown then
+        Continue;
 
-        EmuInstallWrapper(OrgCode, NewCode);
-        Inc(NrPatches);
-      end;
+      OrgCode := DetectedSymbol.Locations[0].SymbolLocation;
+      NewCode := XboxLibraryPatchToPatch(DetectedSymbol.XboxLibraryPatch);
+      Assert(Assigned(NewCode));
+
+{$IFDEF DXBX_DEBUG}
+      DbgPrintf('DxbxHLE : Installed patch over $%.08X (to $%.08X, implementing %s)', [
+        OrgCode, NewCode, DetectedSymbol.SymbolName]);
+      UsedPatches[DetectedSymbol.XboxLibraryPatch] := True;
+{$ENDIF}
+
+      EmuInstallWrapper(OrgCode, NewCode);
+      Inc(NrPatches);
     end;
 
     DbgPrintf('DxbxHLE : Installed patches : %d.', [NrPatches]);
