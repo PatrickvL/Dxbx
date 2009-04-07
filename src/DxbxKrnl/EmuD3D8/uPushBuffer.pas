@@ -45,6 +45,8 @@ implementation
 uses
   // Dxbx
   uDxbxKrnlUtils
+  , uLog
+  , uState
   , uEmuXTL
   , uEmuD3D8
   , JwaWinType
@@ -159,94 +161,106 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
 
   dwVertexShader : DWord;
   dwStride : DWord;
-  pIBMem : Array [0..3] of WORD; *)
+  pIBMem : Array [0..3] of WORD;
+  bShowPB : bool;
+
+  PCPrimitiveType : D3DPRIMITIVETYPE;
+  XBPrimitiveType : X_D3DPRIMITIVETYPE;
+
+  pIndexBuffer : IDIRECT3DINDEXBUFFER8;
+  pVertexBuffer : IDIRECT3DVERTEXBUFFER8;
+  maxIBSize : uint;
+
+  dwCount : DWord;
+  dwMethod : DWord;
+
+  bInc : BOOL; *)
+
 begin
-(*  if XTL_g_bSkipPush then
+  (*if XTL_g_bSkipPush then
     Exit;
 
     pdwOrigPushData := pdwPushData;
 
-    pIndexData := 0;
-    pVertexData := 0;
+    pIndexData := Nil;
+    pVertexData := Nil;
 
     dwVertexShader := -1;
     dwStride := -1;
 
     // cache of last 4 indices
-    pIBMem[4] := [$FFFF, $FFFF, $FFFF, $FFFF];
+    pIBMem[3] := [$FFFF, $FFFF, $FFFF, $FFFF];
 
-    D3DPRIMITIVETYPE    PCPrimitiveType := (D3DPRIMITIVETYPE)-1;
-    X_D3DPRIMITIVETYPE  XBPrimitiveType := X_D3DPT_INVALID;
+    PCPrimitiveType := D3DPRIMITIVETYPE(-1);
+    XBPrimitiveType := X_D3DPT_INVALID; 
 
     // Cxbx TODO: This technically should be enabled
-    XTL.EmuUpdateDeferredStates();
+    XTL_EmuUpdateDeferredStates();
 
-    #ifdef _DEBUG_TRACK_PB
-    bool bShowPB := False;
+    {$ifdef _DEBUG_TRACK_PB}
+      bShowPB := False;
+      g_PBTrackTotal.insert(pdwPushData);
 
-    g_PBTrackTotal.insert(pdwPushData);
+      if(g_PBTrackShowOnce.exists(pdwPushData)) then
+      begin
+          g_PBTrackShowOnce.remove(pdwPushData);
 
-    if(g_PBTrackShowOnce.exists(pdwPushData)) then
-    begin
-        g_PBTrackShowOnce.remove(pdwPushData);
+          DbgPrintf('');
+          DbgPrintf('');
+          DbgPrintf('  PushBuffer@$%.08X...', [pdwPushData]);
+          DbgPrintf('');
 
-        printf('');
-        printf('');
-        printf('  PushBuffer@$%.08X...', [pdwPushData]);
-        printf('');
+          bShowPB := True;
+       end;
+    {$endif}
 
-        bShowPB := True;
-     end;
-    //endif
-
-     LPDIRECT3DINDEXBUFFER8  pIndexBuffer:=0;
-     LPDIRECT3DVERTEXBUFFER8 pVertexBuffer:=0;
-
-     uint maxIBSize := 0;
+     pIndexBuffer  := Nil;
+     pVertexBuffer := Nil;
+     maxIBSize     := 0;
 
     while True do
     begin
-        DWord dwCount := (pdwPushData shr 18);
-        DWord dwMethod := (pdwPushData and $3FFFF);
+        dwCount := (pdwPushData shr 18);
+        dwMethod := (pdwPushData and $3FFFF);
 
         // Interpret GPU Instruction
         if(dwMethod = $000017FC) then  // NVPB_SetBeginEnd
         begin
             pdwPushData:= pdwPushData + 1;
 
-            #ifdef _DEBUG_TRACK_PB
+            {$ifdef _DEBUG_TRACK_PB}
             if(bShowPB) then
             begin
-                printf('  NVPB_SetBeginEnd(');
+                DbgPrintf('  NVPB_SetBeginEnd(');
              end;
-            //endif
+            {$endif}
 
             if(pdwPushData = 0) then
             begin
-                #ifdef _DEBUG_TRACK_PB
+                {$ifdef _DEBUG_TRACK_PB}
                 if(bShowPB) then
                 begin
-                    printf('DONE)');
+                    DbgPrintf('DONE)');
                  end;
-                //endif
+                {$endif}
                 Break;  // done?
-             end;
+             end
             else
             begin
-                #ifdef _DEBUG_TRACK_PB
+                {$ifdef _DEBUG_TRACK_PB}
                 if(bShowPB) then
                 begin
-                    printf('PrimitiveType := %d)', *pdwPushData);
+                    DbgPrintf('PrimitiveType := %d)', *pdwPushData);
                  end;
-                //endif
+                {$endif}
 
                 XBPrimitiveType := (X_D3DPRIMITIVETYPE)*pdwPushData;
-                PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
+                PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType); 
              end;
-         end;
+         end
         else if(dwMethod = $1818) then  // NVPB_InlineVertexArray
         begin
-            BOOL bInc := *pdwPushData and $40000000;
+            bInc := *pdwPushData and $40000000;
 
             if(bInc) then
             begin
@@ -264,7 +278,7 @@ begin
             begin
                 CxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!');
                 dwVertexShader := 0;
-             end;
+             end
             else if(dwVertexShader = 0) then
             begin
                 EmuWarning('FVF Vertex Shader is null');

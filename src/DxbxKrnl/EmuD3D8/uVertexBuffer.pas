@@ -145,10 +145,10 @@ procedure XTL_VertexPatcher_DumpCache; stdcall;
 begin
   DbgPrintf('--- Dumping streams cache ---');
 
-(*    pNode := g_PatchedStreamsCache.getHead();
-    while(pNode)
+    (*pNode := g_PatchedStreamsCache.getHead();
+    while Assigned (pNode) do
     begin
-        CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )pNode.pResource;
+        CACHEDSTREAM *pCachedStream := CACHEDSTREAM (pNode.pResource);
         if(pCachedStream) then
         begin
             // Cxbx TODO: Write nicer dump presentation
@@ -160,8 +160,8 @@ begin
          end;
 
         pNode := pNode.pNext;
-     end;
-     *)
+     end; *)
+
 end;
 
 (*procedure XTL.VertexPatcher.CacheStream(var pPatchDesc: VertexPatchDesc;
