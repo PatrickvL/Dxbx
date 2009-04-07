@@ -37,9 +37,32 @@ uses
 type
   PX_CDirectSound = ^X_CDirectSound;
   X_CDirectSound = Pointer; // Dxbx TODO : Determine real type definition
-
-type
   LPDIRECTSOUND8 = ^IDIRECTSOUND8;
+
+// ******************************************************************
+// * X_CDirectSoundBuffer
+// ******************************************************************
+X_CDirectSoundBuffer = packed record
+(*{
+    BYTE    UnknownA[0x20];     // Offset: 0x00
+
+    union                       // Offset: 0x20
+    {
+        PVOID                pMpcxBuffer;
+        IDirectSoundBuffer  *EmuDirectSoundBuffer8;
+    };
+
+    BYTE            UnknownB[0x0C];     // Offset: 0x24
+    EmuBuffer : PVOID;          // Offset: 0x28
+    DSBUFFERDESC   *EmuBufferDesc;      // Offset: 0x2C
+    PVOID           EmuLockPtr1;        // Offset: 0x30
+    DWORD           EmuLockBytes1;      // Offset: 0x34
+    PVOID           EmuLockPtr2;        // Offset: 0x38
+    DWORD           EmuLockBytes2;      // Offset: 0x3C
+    DWORD           EmuPlayFlags;       // Offset: 0x40
+    DWORD           EmuFlags;           // Offset: 0x44
+};*)
+end;
 
 // size of sound buffer cache (used for periodic sound buffer updates)
 const SOUNDBUFFER_CACHE_SIZE = $100;
@@ -49,26 +72,28 @@ const SOUNDSTREAM_CACHE_SIZE = $100;
 var
    g_pDSound8: IDIRECTSOUND8 = nil;
    g_pDSound8RefCount: Int = 0;
+   g_pDSoundBufferCache : Array [0..SOUNDBUFFER_CACHE_SIZE] of X_CDirectSoundBuffer;
+
 
 // periodically update sound buffers
 procedure HackUpdateSoundBuffers();
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
 (*var
-  v: Integer; *)
+  v: Integer;
+  pAudioPtr, pAudioPtr2 : PVOID;
+  dwAudioBytes, dwAudioBytes2 : DWORD;
+  hRet : HRESULT; *)
 begin
-    (*
-    for v :=0 to SOUNDBUFFER_CACHE_SIZE -1 do begin
-        if(g_pDSoundBufferCache[v] = 0 or g_pDSoundBufferCache[v].EmuBuffer = 0) then
-            continue;
 
-        PVOID pAudioPtr, pAudioPtr2;
-        DWORD dwAudioBytes, dwAudioBytes2;
+(*    for v :=0 to SOUNDBUFFER_CACHE_SIZE -1 do begin
+        if(g_pDSoundBufferCache[v] = 0) or (g_pDSoundBufferCache[v].EmuBuffer = 0) then
+            continue;
 
         // unlock existing lock
         if(g_pDSoundBufferCache[v].EmuLockPtr1 <> 0) then
             g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Unlock(g_pDSoundBufferCache[v].EmuLockPtr1, g_pDSoundBufferCache[v].EmuLockBytes1, g_pDSoundBufferCache[v].EmuLockPtr2, g_pDSoundBufferCache[v].EmuLockBytes2);
 
-        HRESULT hRet := g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundBufferCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
+        hRet := g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundBufferCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
         if(SUCCEEDED(hRet)) then
         begin
@@ -88,17 +113,18 @@ end;
 
 // periodically update sound streams
 procedure HackUpdateSoundStreams();
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
+(*var
+  v : Integer;
+  pAudioPtr, pAudioPtr2 : PVOID;
+  dwAudioBytes, dwAudioBytes2 : DWORD;
+  hRet : HRESULT; *)
 begin
-    (*for(integer v := 0;v<SOUNDSTREAM_CACHE_SIZE;v++)
-    begin
+  (* for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do begin
         if(g_pDSoundStreamCache[v] = 0 or g_pDSoundStreamCache[v].EmuBuffer = 0) then
             continue;
 
-        PVOID pAudioPtr, pAudioPtr2;
-        DWORD dwAudioBytes, dwAudioBytes2;
-
-        HRESULT hRet := g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
+        hRet := g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
         if(SUCCEEDED(hRet)) then
         begin
@@ -114,13 +140,13 @@ begin
         g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.SetCurrentPosition(0);
         g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Play(0, 0, 0);
      end;
-
-    Exit; *)
+    *)
  end;
 
 // resize an emulated directsound buffer, if necessary
-(*  procedure EmuResizeIDirectSoundBuffer8(var pThis: XTL.X_CDirectSoundBuffer; dwBytes: DWORD);
-    if(dwBytes = pThis.EmuBufferDesc.dwBufferBytes or dwBytes = 0) then
+procedure EmuResizeIDirectSoundBuffer8(var pThis: X_CDirectSoundBuffer; dwBytes: DWORD);
+begin
+    (*if(dwBytes = pThis.EmuBufferDesc.dwBufferBytes or dwBytes = 0) then
         Exit;
 
     DbgPrintf('EmuResizeIDirectSoundBuffer8 : Resizing not  ($%.08X.$%.08X)', pThis.EmuBufferDesc.dwBufferBytes, dwBytes);
@@ -150,12 +176,12 @@ begin
     pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwPlayCursor);
 
     if(dwStatus and DSBSTATUS_PLAYING) then 
-        pThis.EmuDirectSoundBuffer8.Play(0, 0, pThis.EmuPlayFlags);
+        pThis.EmuDirectSoundBuffer8.Play(0, 0, pThis.EmuPlayFlags);  *)
 end;
-*)
+
 
 // resize an emulated directsound stream, if necessary
-(*  procedure EmuResizeIDirectSoundStream8(var pThis: XTL.X_CDirectSoundStream; dwBytes: DWORD);
+(*procedure EmuResizeIDirectSoundStream8(var pThis: XTL.X_CDirectSoundStream; dwBytes: DWORD);
     if(dwBytes = pThis.EmuBufferDesc.dwBufferBytes) then 
         Exit;
 
@@ -192,14 +218,14 @@ function XTL_EmuDirectSoundCreate(
     pguidDeviceId: Pointer;
     ppDirectSound: LPDIRECTSOUND8;
     pUnknown: IUNKNOWN): HRESULT; stdcall;
-// Branch:martin  Revision:80  Translator:Shadow_Tj  Done:80
+// Branch:martin  Revision:80  Translator:Shadow_Tj  Done:90
 {$J+}
 const
   Initialized: Bool = False;
 {$J-}
 var
   hRet: HRESULT;
-//  v: Integer;
+  v: Integer;
 begin
   EmuSwapFS(fsWindows);
 
@@ -228,9 +254,9 @@ begin
     if FAILED(hRet) then
       CxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed not ');
 
-    (*
+
     // clear sound buffer cache
-    v := 0;
+    (*v := 0;
     for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
       g_pDSoundBufferCache[v] := 0;
 
@@ -323,27 +349,27 @@ begin
 end;
 
 
-(*HRESULT WINAPI XTL_EmuIDirectSound8_DownloadEffectsImage
+Function XTL_EmuIDirectSound8_DownloadEffectsImage
 (
-    LPDIRECTSOUND8          pThis,
-    LPCVOID                 pvImageBuffer,
-    DWORD                   dwImageSize,
-    PVOID                   pImageLoc,      // Cxbx TODO: Use this param
-    PVOID                  *ppImageDesc     // Cxbx TODO: Use this param
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pThis : LPDIRECTSOUND8;
+    pvImageBuffer : LPCVOID;
+    dwImageSize : DWORD;
+    pImageLoc: PVOID;      // Cxbx TODO: Use this param
+    ppImageDesc : PVOID   // Cxbx TODO: Use this param
+) : HResult; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
     EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuDSound : EmuIDirectSound8_DownloadEffectsImage'
-           #13#10'('
-           #13#10'   pThis                     : 0x%.08X'
-           #13#10'   pvImageBuffer             : 0x%.08X'
-           #13#10'   dwImageSize               : 0x%.08X'
-           #13#10'   pImageLoc                 : 0x%.08X'
-           #13#10'   ppImageDesc               : 0x%.08X'
+    DbgPrintf('EmuDSound : EmuIDirectSound8_DownloadEffectsImage' +
+           #13#10'(' +
+           #13#10'   pThis                     : 0x%.08X' +
+           #13#10'   pvImageBuffer             : 0x%.08X' +
+           #13#10'   dwImageSize               : 0x%.08X' +
+           #13#10'   pImageLoc                 : 0x%.08X' +
+           #13#10'   ppImageDesc               : 0x%.08X' +
            #13#10');',
-           [pThis, pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc);
+           [pThis, pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc]);
 
     // Cxbx TODO: Actually implement this
 
@@ -351,7 +377,6 @@ begin
 
     Result := S_OK;
 end;
-*)
 
 procedure XTL_EmuDirectSoundDoWork(); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
