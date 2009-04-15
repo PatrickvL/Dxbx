@@ -2208,7 +2208,7 @@ begin
   Result := D3D_OK;
 end;
 
-function XTL_EmuIDirect3DDevice8_SetTileNoWait(Index: DWORD; pTile: X_D3DTILE): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_SetTileNoWait(Index: DWORD; pTile: PX_D3DTILE): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:90 Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);
@@ -3139,7 +3139,7 @@ begin
     #13#10');',
     [Stage, pTexture]);
 
-  pBaseTexture8 := nil;
+  (*pBaseTexture8 := nil;
 
   EmuD3DActiveTexture[Stage] := pTexture;
 
@@ -3195,10 +3195,10 @@ begin
              end;
             //endif
          end;
-         *)
+
   end;
 
-    (*
+
      IDirect3DTexture8 *pDummyTexture[4] := (0, 0, 0, 0);
 
     if(pDummyTexture[Stage] = 0) then
