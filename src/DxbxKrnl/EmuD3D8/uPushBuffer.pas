@@ -45,10 +45,10 @@ implementation
 uses
   // Dxbx
   uDxbxKrnlUtils
+  , uEmuD3D8
   , uLog
   , uState
   , uEmuXTL
-  , uEmuD3D8
   , JwaWinType
   , uVertexShader
   , uConvert;
@@ -65,15 +65,13 @@ end;
 
 procedure EmuUnswizzleActiveTexture();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-
 var
   pPixelContainer: X_D3DPixelContainer;
   XBFormat: DWord;
   dwBPP: DWord;
-
 begin
     // for current usages, we're always on stage 0
-    (*pPixelContainer := EmuD3DActiveTexture[0];
+(*    pPixelContainer := EmuD3DActiveTexture[0];
 
     if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
         Exit;
@@ -81,7 +79,7 @@ begin
     XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
     dwBPP := 0;
 
-    if( not XTL_EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
+    if( not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
         Exit;
 
     // remove lock
@@ -89,10 +87,7 @@ begin
     pPixelContainer.Common := pPixelContainer.Common and ~X_D3DCOMMON_ISLOCKED;
 
     // Cxbx TODO: potentially CRC to see if this surface was actually modified..
-
-    //
     // unswizzle texture
-    //
 
     begin
         XTL.IDirect3DTexture8 *pTexture := pPixelContainer.EmuTexture8;
@@ -149,7 +144,7 @@ begin
 
         DbgPrintf('Active texture was unswizzled');
      end;
-     *)
+          *)
 end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
