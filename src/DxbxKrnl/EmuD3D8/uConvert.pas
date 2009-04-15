@@ -79,13 +79,24 @@ function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; st
 function EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
 
 Function EmuD3DVertex2PrimitiveCount(PrimitiveType : int; VertexCount : int) : INT;
+Function EmuPrimitiveType(PrimitiveType : X_D3DPRIMITIVETYPE ) : D3DPRIMITIVETYPE;
 
-var EmuD3DVertexToPrimitive : array [0..10] of array [0..2] of UINT;
+var
+  EmuD3DVertexToPrimitive : array [0..10] of array [0..2] of UINT;
+  EmuPrimitiveTypeLookup : array of D3DPRIMITIVETYPE;
+                                 
 
 implementation
 
 
+ // convert xbox->pc primitive type
+Function EmuPrimitiveType(PrimitiveType : X_D3DPRIMITIVETYPE ) : D3DPRIMITIVETYPE;
+begin
+  if(DWORD(PrimitiveType) = $7FFFFFFF) then
+    result := D3DPT_FORCE_DWORD;
 
+  result:= EmuPrimitiveTypeLookup[Ord(PrimitiveType)];
+end;
 
 // convert from vertex count to primitive count (Xbox)
 Function EmuD3DVertex2PrimitiveCount(PrimitiveType : int; VertexCount : int) : INT;
