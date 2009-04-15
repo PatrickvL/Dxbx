@@ -25,6 +25,7 @@ interface
 uses
   // Delphi
   Windows
+  , JwaWinType
   , SysUtils // Abort
   // Directx
   , Direct3D
@@ -48,7 +49,22 @@ type
   end;
   D3DIVB = _D3DIVB;
   PD3DIVB = ^D3DIVB;
-  
+
+
+  _VertexPatchDesc = packed record
+    PrimitiveType : X_D3DPRIMITIVETYPE;
+    dwVertexCount : DWORD;
+    dwPrimitiveCount : DWORD;
+    dwOffset : DWORD;
+    // Data if Draw...UP call
+    pVertexStreamZeroData : PVOID;
+    uiVertexStreamZeroStride : UINT;
+    // The current vertex shader, used to identify the streams
+    hVertexShader : DWORD;
+  end;
+  VertexPatchDesc = _VertexPatchDesc;
+  PVertexPatchDesc = ^VertexPatchDesc;
+
 const
   VERTEX_BUFFER_CACHE_SIZE = 64;
   MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO: Trim the not used time

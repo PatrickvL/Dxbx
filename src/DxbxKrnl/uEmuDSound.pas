@@ -55,7 +55,7 @@ X_CDirectSoundBuffer = packed record
     BYTE            UnknownB[0x0C];     // Offset: 0x24
     EmuBuffer : PVOID;          // Offset: 0x28
     DSBUFFERDESC   *EmuBufferDesc;      // Offset: 0x2C
-    PVOID           EmuLockPtr1;        // Offset: 0x30
+    EmuLockPtr1 : PVOID;                   // Offset: 0x30
     DWORD           EmuLockBytes1;      // Offset: 0x34
     PVOID           EmuLockPtr2;        // Offset: 0x38
     DWORD           EmuLockBytes2;      // Offset: 0x3C

@@ -25,6 +25,7 @@ interface
 uses
   // Delphi
   Windows
+  , SysUtils
   , Direct3D8
   // Dxbx
   , uEmuD3D8Types;
@@ -172,10 +173,10 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
   bInc : BOOL; *)
 
 begin
-  (*if XTL_g_bSkipPush then
+  if XTL_g_bSkipPush then
     Exit;
 
-    pdwOrigPushData := pdwPushData;
+    (*pdwOrigPushData := pdwPushData;
 
     pIndexData := Nil;
     pVertexData := Nil;
@@ -245,11 +246,11 @@ begin
                 {$ifdef _DEBUG_TRACK_PB}
                 if(bShowPB) then
                 begin
-                    DbgPrintf('PrimitiveType := %d)', *pdwPushData);
+                    DbgPrintf(Format('PrimitiveType := %d)', [pdwPushData]));
                  end;
                 {$endif}
 
-                XBPrimitiveType := (X_D3DPRIMITIVETYPE)*pdwPushData;
+                XBPrimitiveType := X_D3DPRIMITIVETYPE(^pdwPushData);
                 PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType); 
              end;
          end
