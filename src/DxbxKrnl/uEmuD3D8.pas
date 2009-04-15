@@ -2405,7 +2405,9 @@ function XTL_EmuIDirect3DDevice8_SetVertexShaderConstant(
 // Branch:martin  Revision:39 Done:90 Translator:Shadow_Tj
 var
   hRet: HRESULT;
+  {$IFDEF _DEBUG_TRACK_VS_CONST}
   i: integer;
+  {$ENDIF}
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -3112,7 +3114,7 @@ begin
     end
     else
     begin
-        g_pIndexBuffer := 0;
+        g_pIndexBuffer := Nil;
 
         hRet := g_pD3DDevice8.SetIndices(Nil, BaseVertexIndex);
      end;
@@ -3876,7 +3878,7 @@ begin
       g_VBTrackTotal.insert(pResource.EmuVertexBuffer8);
 {$ENDIF}
 
-      pData := 0;
+      pData := Nil;
 
       hRet := pResource.EmuVertexBuffer8.Lock(0, 0, pData, 0);
 
@@ -3922,7 +3924,7 @@ begin
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
-        pData := 0;
+        pData := Nil;
 
         hRet := pResource.EmuIndexBuffer8.Lock(0, dwSize, pData, 0);
 
@@ -4666,7 +4668,7 @@ end;
 procedure XTL_EmuGet2DSurfaceDesc(pPixelContainer : pX_D3DPixelContainer;
     dwLevel : DWORD;
     pDesc : pX_D3DSURFACE_DESC);
-// Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:70 Translator:Shadow_Tj
 var
   SurfaceDesc : D3DSURFACE_DESC;
   hRet : HRESULT;
@@ -4709,24 +4711,23 @@ begin
     // rearrange into xbox format (remove D3DPOOL)
     begin
         // Convert Format (PC->Xbox)
-        { TODO -oDXBX : need to be translated to delphi }
-        (*pDesc.Format := EmuPC2XB_D3DSurfaceDesc.Format);
-        pDesc.cType   := (X_D3DRESOURCETYPE)SurfaceDesc.cType;
+        pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+        pDesc._Type   := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
-        if(pDesc.cType > 7) then
-            CxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc.cType > 7');
+        (*if(pDesc._Type > 7) then
+            CxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc._Type > 7'); *)
 
         pDesc.Usage  := SurfaceDesc.Usage;
         pDesc.Size   := SurfaceDesc.Size;
 
         // Cxbx TODO: Convert from Xbox to PC!!
         if(SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE) then
-            pDesc.MultiSampleType := (XTL.D3DMULTISAMPLE_TYPE)$0011;
+            pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE($0011)
         else
-            CxbxKrnlCleanup('EmuGet2DSurfaceDesc Unknown Multisample format not  (%d)', SurfaceDesc.MultiSampleType);
+            CxbxKrnlCleanup(Format('EmuGet2DSurfaceDesc Unknown Multisample format not  (%d)', [DWord(SurfaceDesc.MultiSampleType)]));
 
         pDesc.Width  := SurfaceDesc.Width;
-        pDesc.Height := SurfaceDesc.Height; *)
+        pDesc.Height := SurfaceDesc.Height; 
      end;
 
     EmuSwapFS(fsXbox);
@@ -5151,30 +5152,20 @@ begin
   Result := RefCount;
 end;
 
-function XTL_EmuIDirect3DDevice8_CreateVertexBuffer(Length: UINT;
-  Usage: DWORD; FVF: DWORD; Pool: D3DPOOL;
-  ppVertexBuffer: PX_D3DVertexBuffer): HRESULT;
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
-begin
-  (*ppVertexBuffer := EmuIDirect3DDevice8_CreateVertexBuffer2(Length);
-  Result := D3D_OK; *)
-end;
-
-(*XTL.X_D3DVertexBuffer* WINAPI XTL.EmuIDirect3DDevice8_CreateVertexBuffer2
-// Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
-(
-    UINT Length
-)
+Function EmuIDirect3DDevice8_CreateVertexBuffer2(Length : UINT ) : PX_D3DVertexBuffer; stdcall;
+// Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
+var
+  pD3DVertexBuffer : PX_D3DVertexBuffer;
 begin
     EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateVertexBuffer2'
-           #13#10'('
-           #13#10'   Length             : 0x%.08X'
+    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateVertexBuffer2' +
+           #13#10'(' +
+           #13#10'   Length             : 0x%.08X' +
            #13#10');',
-           Length);
+           [Length]);
 
-    X_D3DVertexBuffer *pD3DVertexBuffer := new X_D3DVertexBuffer();
+    (*X_D3DVertexBuffer *pD3DVertexBuffer := new X_D3DVertexBuffer();
 
     HRESULT hRet = g_pD3DDevice8.CreateVertexBuffer
     (
@@ -5186,17 +5177,25 @@ begin
     );
 
     if(FAILED(hRet)) then
-        EmuWarning('CreateVertexBuffer Failed!');
+        EmuWarning('CreateVertexBuffer Failed!');    *)
 
-    #ifdef _DEBUG_TRACK_VB
+    {$ifdef _DEBUG_TRACK_VB}
     g_VBTrackTotal.insert(pD3DVertexBuffer.EmuVertexBuffer8);
-    //endif
+    {$endif}
 
     EmuSwapFS(fsXbox);
 
     Result := pD3DVertexBuffer;
 end;
-*)
+
+function XTL_EmuIDirect3DDevice8_CreateVertexBuffer(Length: UINT;
+  Usage: DWORD; FVF: DWORD; Pool: D3DPOOL;
+  ppVertexBuffer: PX_D3DVertexBuffer): HRESULT;
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
+begin
+  ppVertexBuffer := EmuIDirect3DDevice8_CreateVertexBuffer2(Length);
+  Result := D3D_OK;
+end;      
 
 procedure XTL_EmuIDirect3DDevice8_EnableOverlay(Enable: Boolean); stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
@@ -6215,7 +6214,6 @@ function XTL_EmuIDirect3DDevice8_SetTransform(State: D3DTRANSFORMSTATETYPE;
 var
   hRet: HRESULT;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_SetTransform' +
@@ -6261,7 +6259,6 @@ function XTL_EmuIDirect3DDevice8_GetTransform(State: D3DTRANSFORMSTATETYPE; pMat
 var
   hRet: HRESULT;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_GetTransform' +
@@ -6327,7 +6324,7 @@ begin
 
     pVertexBuffer8 := ppVertexBuffer.EmuVertexBuffer8;
 
-    pbData := 0;
+    pbData :=Nil;
 
     hRet := pVertexBuffer8.Lock(0, 0, pbData, EmuXB2PC_D3DLock(Flags));	// Fixed flags check, Battlestar Galactica now displays graphics correctly
 
@@ -6411,8 +6408,8 @@ function XTL_EmuIDirect3DDevice8_SetVertexShader(aHandle: DWord): HRESULT; stdca
 var
   hRet: HRESULT;
   RealHandle: DWORD;
-  vOffset: TD3DXVECTOR4;
-  vScale: TD3DXVECTOR4;
+  {vOffset: TD3DXVECTOR4;
+  vScale: TD3DXVECTOR4; } // not neccesery because cxbx commented the use
 begin
   RealHandle := 0;
   EmuSwapFS(fsWindows);
