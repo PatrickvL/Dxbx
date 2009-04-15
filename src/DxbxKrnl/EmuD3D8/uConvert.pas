@@ -78,8 +78,21 @@ function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; stdcall;
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; stdcall;
 function EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
 
+Function EmuD3DVertex2PrimitiveCount(PrimitiveType : int; VertexCount : int) : INT;
+
+var EmuD3DVertexToPrimitive : array [0..10] of array [0..2] of UINT;
 
 implementation
+
+
+
+
+// convert from vertex count to primitive count (Xbox)
+Function EmuD3DVertex2PrimitiveCount(PrimitiveType : int; VertexCount : int) : INT;
+begin
+  Result := Trunc((VertexCount - EmuD3DVertexToPrimitive[PrimitiveType][1]) / EmuD3DVertexToPrimitive[PrimitiveType][0]);
+end;
+
 
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWord): LONGBOOL; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj

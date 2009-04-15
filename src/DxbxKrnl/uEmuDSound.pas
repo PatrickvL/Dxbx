@@ -256,14 +256,14 @@ begin
 
 
     // clear sound buffer cache
-    (*v := 0;
-    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
-      g_pDSoundBufferCache[v] := 0;
+    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do begin
+      (*g_pDSoundBufferCache[v] := 0; *)
+    end;
 
     // clear sound stream cache
-    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
-      g_pDSoundStreamCache[v] := 0;
-    *)
+    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do begin
+      (*g_pDSoundStreamCache[v] := 0; *)
+    end;
 
     Initialized := True;
   end;

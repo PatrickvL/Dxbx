@@ -771,7 +771,6 @@ function XTL_EmuXInputPoll(
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
 var
   v : Integer;
-  ahDevice : THandle;
   pFeedback : PXINPUT_FEEDBACK;
 begin
   EmuSwapFS(fsWindows);
@@ -790,7 +789,7 @@ begin
 
   begin
     for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do begin
-      ahDevice := g_pXInputSetStateStatus[v].hDevice;
+      hDevice := g_pXInputSetStateStatus[v].hDevice;
 
       if (hDevice = 0) then
           Continue;

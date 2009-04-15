@@ -6225,7 +6225,7 @@ begin
     #13#10');',
     [@State, @pMatrix]);
 
-  (* Commented by CXBX
+  { Commented by CXBX
 
   DbgPrintf('pMatrix (%d)', [State]);
   DbgPrintf('begin ');
@@ -6245,7 +6245,7 @@ begin
     Xtl_g_bSkipPush := False;
     DbgPrintf('SkipPush OFF');
   end;
-  *)
+  }
 
   State := EmuXB2PC_D3DTS(State);
 
@@ -6353,9 +6353,7 @@ begin
                [StreamNumber, pStride]);
 
     EmuWarning('Not correctly implemented yet!');
-
-    (*g_pD3DDevice8.GetStreamSource(StreamNumber, (struct XTL.IDirect3DVertexBuffer8 )@pVertexBuffer, pStride); *)
-
+    (*g_pD3DDevice8.GetStreamSource(StreamNumber, IDirect3DVertexBuffer8 (@pVertexBuffer), pStride); *)
     EmuSwapFS(fsXbox);
     Result := pVertexBuffer;
 end;
@@ -6377,8 +6375,8 @@ begin
     #13#10'   Stride             : 0x%.08X' +
     #13#10');',
     [StreamNumber, pStreamData, ifThen(pStreamData <> nil, pStreamData.EmuVertexBuffer8: 0, Stride)]);
-
-    (*if(StreamNumber = 0) then
+    *)
+   (* if(StreamNumber = 0) then
         g_pVertexBuffer := pStreamData;
 
     IDirect3DVertexBuffer8 *pVertexBuffer8 := 0;
@@ -6413,8 +6411,8 @@ function XTL_EmuIDirect3DDevice8_SetVertexShader(aHandle: DWord): HRESULT; stdca
 var
   hRet: HRESULT;
   RealHandle: DWORD;
-  (*vOffset: D3DXVECTOR4;
-  vScale: D3DXVECTOR4; *)
+  vOffset: TD3DXVECTOR4;
+  vScale: TD3DXVECTOR4;
 begin
   RealHandle := 0;
   EmuSwapFS(fsWindows);
@@ -6478,13 +6476,13 @@ begin
 
     XTL_EmuUpdateDeferredStates();
 
-  (*if ((PrimitiveType = X_D3DPT_QUADSTRIP) or (PrimitiveType = X_D3DPT_POLYGON)) then
-    EmuWarning('Unsupported PrimitiveType! (%d)', [PrimitiveType]);
+  if ((PrimitiveType = X_D3DPT_QUADSTRIP) or (PrimitiveType = X_D3DPT_POLYGON)) then
+    EmuWarning(Format('Unsupported PrimitiveType! (%d)', [DWord(PrimitiveType)]));
 
-    PrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+(*    PrimitiveCount := EmuD3DVertex2PrimitiveCount(DWord(PrimitiveType), VertexCount);
 
     // Convert from Xbox to PC enumeration
-  PCPrimitiveType := PrimitiveType;
+    PCPrimitiveType := PrimitiveType;
 
     VertexPatchDesc VPDesc;
 
@@ -6547,11 +6545,10 @@ begin
     [@PrimitiveType, VertexCount, pVertexStreamZeroData,
     VertexStreamZeroStride]);
 
-    Xtl_EmuUpdateDeferredStates();
+    Xtl_EmuUpdateDeferredStates();    
 
-    (*
     if( (PrimitiveType = X_D3DPT_QUADSTRIP) or (PrimitiveType = X_D3DPT_POLYGON) ) then
-        CxbxKrnlCleanup('Unsupported PrimitiveType not  (%d)', (DWORD)PrimitiveType);
+      CxbxKrnlCleanup(Format('Unsupported PrimitiveType not  (%d)', [DWORD(PrimitiveType)]));
 
     (*
     // DEBUG
@@ -6663,6 +6660,13 @@ function XTL_EmuIDirect3DDevice8_DrawIndexedVertices(PrimitiveType: X_D3DPRIMITI
 var
   dwSize: DWORD;
   hRet: HRESULT;
+  pData : ^BYTE;
+  PrimitiveCount : UINT;
+  PCPrimitiveType : D3DPRIMITIVETYPE;
+  (*VPDesc : VertexPatchDesc;
+  VertPatch : VertexPatcher; *)
+  bPatched : bool;
+  bActiveIB : bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -6676,11 +6680,11 @@ begin
 
     // update index buffer, if necessary
 
-    if Assigned (g_pIndexBuffer) and (g_pIndexBuffer.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+(*    if Assigned (g_pIndexBuffer) and (g_pIndexBuffer.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
     begin
         dwSize := VertexCount*2;   // 16-bit indices
 
-        (*hRet := g_pD3DDevice8.CreateIndexBuffer
+        hRet := g_pD3DDevice8.CreateIndexBuffer
         (
             dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
             @g_pIndexBuffer.EmuIndexBuffer8
@@ -6689,18 +6693,17 @@ begin
         if(FAILED(hRet)) then
             CxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
-        (*BYTE *pData := 0;
-
-        hRet := g_pIndexBuffer.EmuIndexBuffer8.Lock(0, dwSize, @pData, 0); *)
+        pData := 0;
+        hRet := g_pIndexBuffer.EmuIndexBuffer8.Lock(0, dwSize, @pData, 0);
 
         if(FAILED(hRet)) then
             CxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
-        (*Move ( g_pIndexBuffer.Data, pData, dwSize ); *)
+        Move ( g_pIndexBuffer.Data, pData, dwSize );
 
         g_pIndexBuffer.EmuIndexBuffer8.Unlock();
 
-        (*g_pIndexBuffer.Data := (ULONG)pData; *)
+        g_pIndexBuffer.Data := ULONG(pData);
 
         hRet := g_pD3DDevice8.SetIndices(g_pIndexBuffer.EmuIndexBuffer8, g_dwBaseVertexIndex);
 
@@ -6708,17 +6711,16 @@ begin
             CxbxKrnlCleanup('SetIndices Failed!');
      end;
 
-    (*EmuUpdateDeferredStates();
+    EmuUpdateDeferredStates();
 
     if( (PrimitiveType = X_D3DPT_QUADLIST) or (PrimitiveType = X_D3DPT_QUADSTRIP) or (PrimitiveType = X_D3DPT_POLYGON) ) then
         EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
-    UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+    PrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
     // Convert from Xbox to PC enumeration
-    D3DPRIMITIVETYPE PCPrimitiveType := EmuPrimitiveType(PrimitiveType);
+    PCPrimitiveType := EmuPrimitiveType(PrimitiveType);
 
-    VertexPatchDesc VPDesc;
 
     VPDesc.dwVertexCount := VertexCount;
     VPDesc.PrimitiveType := PrimitiveType;
@@ -6728,17 +6730,14 @@ begin
     VPDesc.uiVertexStreamZeroStride := 0;
     VPDesc.hVertexShader := g_CurrentVertexShader;
 
-    VertexPatcher VertPatch;
+    bPatched := VertPatch.Apply(@VPDesc);
 
-    bool bPatched := VertPatch.Apply(@VPDesc);
-
-    #ifdef _DEBUG_TRACK_VB
+    {$ifdef _DEBUG_TRACK_VB}
     if( not g_bVBSkipStream) then
     begin
-    //endif
+    {$endif}
 
-    bool bActiveIB := False;
-
+    bActiveIB := False;
     IDirect3DIndexBuffer8 *pIndexBuffer := 0;
 
     // check if there is an active index buffer
@@ -6780,7 +6779,7 @@ begin
 
         uiNumVertices := VertexCount;
         uiStartIndex := 0;
-     end;
+     end
     else
     begin
         uiNumVertices := ((DWORD)pIndexData)/2 + VertexCount;
@@ -6801,9 +6800,9 @@ begin
         pIndexBuffer.Release();
      end;
 
-    #ifdef _DEBUG_TRACK_VB
+    {$ifdef _DEBUG_TRACK_VB}
      end;
-    //endif
+    {$endif}
 
     VertPatch.Restore();
 *)
@@ -7477,11 +7476,11 @@ begin
   Result := hRet;
 end;
 
-(*function XTL_EmuIDirect3D8_AllocContiguousMemory: PVOID;
+(*function XTL_EmuIDirect3D8_AllocContiguousMemory(dwSize : SIZE_T;
+   dwAllocAttributes : DWORD): PVOID;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
 
-   (dwSize : SIZE_T;
-   dwAllocAttributes : DWORD)
+
 begin
     EmuSwapFS(fsWindows);
 
@@ -7540,7 +7539,7 @@ end;
 function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType(Adapter: UINT;
   DeviceType: D3DDEVTYPE; SurfaceFormat: D3DFORMAT; Windowed: LONGBOOL;
   MultiSampleType: D3DMULTISAMPLE_TYPE): HRESULT;
-// Branch:martin  Revision:45 Done:2 Translator:Shadow_Tj
+// Branch:martin  Revision:45 Done:70 Translator:Shadow_Tj
 var
   hRet: HRESULT;
   PCSurfaceFormat: D3DFORMAT;
@@ -7565,13 +7564,13 @@ begin
     Adapter := D3DADAPTER_DEFAULT;
   end;
 
-  (*if (DeviceType = D3DDEVTYPE_FORCE_DWORD) then
+  if (DeviceType = D3DDEVTYPE_FORCE_DWORD) then
     EmuWarning('DeviceType := D3DDEVTYPE_FORCE_DWORD');
 
   // Convert SurfaceFormat (Xbox->PC)
-   PCSurfaceFormat := EmuXB2PC_D3DSurfaceFormat);
+  (*PCSurfaceFormat := EmuXB2PC_D3DFormat(SurfaceFormat); *)
 
-    // Cxbx TODO: HACK: Devices that don't support this should somehow emulate it!
+  // Cxbx TODO: HACK: Devices that don't support this should somehow emulate it!
   if (PCSurfaceFormat = D3DFMT_D16) then
   begin
     EmuWarning('D3DFMT_16 is an unsupported texture format!');
@@ -7592,13 +7591,13 @@ begin
     Windowed := False;
 
    // Cxbx TODO: Convert from Xbox to PC!!
-  if (MultiSampleType = 0 x0011) then
-    MultiSampleType := D3DMULTISAMPLE_NONE;
+  (*if (MultiSampleType = $0011) then
+    MultiSampleType := D3DMULTISAMPLE_NONE
   else
     CxbxKrnlCleanup('EmuIDirect3D8_CheckDeviceMultiSampleType Unknown MultiSampleType not  (%d)', MultiSampleType);
 
  // Now call the real CheckDeviceMultiSampleType with the corrected parameters.
-  HRESULT hRet = g_pD3D8 - > CheckDeviceMultiSampleType
+ (* HRESULT hRet = g_pD3D8 - > CheckDeviceMultiSampleType
     (
     Adapter,
     DeviceType,
