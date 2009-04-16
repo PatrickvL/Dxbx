@@ -95,6 +95,13 @@ function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRES
 function EmuUpdateTickCount(LPVOID: Pointer): DWord; //stdcall;
 function EmuCreateDeviceProxy(LPVOID: Pointer): DWord; //stdcall;
 
+function XTL_EmuIDirect3DDevice8_CreateTexture( Width : UINT; Height : UINT;
+    Levels : UINT; Usage : DWORD; Format : D3DFORMAT; Pool : D3DPOOL; ppTexture : PX_D3DTexture ) : HRESULT;
+function XTL_EmuIDirect3DDevice8_CreateVolumeTexture( Width : UINT; Height : UINT;
+    Depth : UINT; Levels : UINT; Usage : DWORD; Format : D3DFORMAT;
+    Pool : D3DPOOL; ppVolumeTexture : PX_D3DVolumeTexture): HRESULT;
+
+
 implementation
 
 uses
@@ -1805,6 +1812,9 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_GetGammaRamp(pRamp: X_D3DGAMMARAMP);
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
+var
+  pGammaRamp : PD3DGAMMARAMP;
+  v : Integer;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1814,17 +1824,15 @@ begin
     #13#10');',
     [@pRamp]);
 
-    { TODO: Need to be translated to delphi }
-    (*D3DGAMMARAMP *pGammaRamp := (D3DGAMMARAMP )malloc(SizeOf(D3DGAMMARAMP));
+(*    pGammaRamp := D3DGAMMARAMP (Cxbxmalloc(SizeOf(D3DGAMMARAMP)));
 
     g_pD3DDevice8.GetGammaRamp(pGammaRamp);
 
-    for(Integer v:=0;v<256;v++)
-    begin
-        pRamp.red[v] := (BYTE)pGammaRamp.red[v];
-        pRamp.green[v] := (BYTE)pGammaRamp.green[v];
-        pRamp.blue[v] := (BYTE)pGammaRamp.blue[v];
-     end;
+    for v := 0 to 255 do begin
+      pRamp.red[v] := pGammaRamp.red[v];
+      pRamp.green[v] := pGammaRamp.green[v];
+      pRamp.blue[v] := pGammaRamp.blue[v];
+    end;
 
     free(pGammaRamp); *)
 
@@ -1832,7 +1840,10 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer: Integer): PX_D3DSurface; stdcall;
-// Branch:martin  Revision:39 Done:5 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
+var
+  pBackBuffer : PX_D3DSurface;
+  hRet : HRESULT;
 begin
   Result := nil;
   EmuSwapFS(fsWindows);
@@ -1843,7 +1854,7 @@ begin
     #13#10');',
     [BackBuffer]);
 
-    { unsafe, somehow
+    { unsafe, somehow  -- MARKED OUT BY CXBX --
     HRESULT hRet := S_OK;
 
     X_D3DSurface *pBackBuffer := new X_D3DSurface();
@@ -1880,13 +1891,14 @@ begin
         hRet := g_pD3DDevice8.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO,  and (pBackBuffer.EmuSurface8));
     }
 
+
    { TODO: need to be translated to delphi }
-(*     X_D3DSurface *pBackBuffer := new X_D3DSurface();
+    (*X_D3DSurface *pBackBuffer := new X_D3DSurface(); *)
 
     if(BackBuffer = -1) then
         BackBuffer := 0;
 
-    HRESULT hRet := g_pD3DDevice8.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO,  and (pBackBuffer.EmuSurface8));
+    (*hRet := g_pD3DDevice8.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO,  and (pBackBuffer.EmuSurface8)); *)
 
     if(FAILED(hRet)) then
         CxbxKrnlCleanup('Unable to retrieve back buffer');
@@ -1896,7 +1908,7 @@ begin
 
     EmuSwapFS(fsXbox);
 
-    Result := pBackBuffer;          *)
+    Result := pBackBuffer;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_GetBackBuffer(
@@ -2090,7 +2102,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_GetRenderTarget(ppRenderTarget: PPX_D3DSurface): HRESULT;
-// Branch:martin  Revision:39 Done:90 Translator:Shadow_Tj
+// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   pSurface8: IDirect3DSurface8;
 begin
@@ -2104,7 +2116,7 @@ begin
 
   pSurface8 := g_pCachedRenderTarget.EmuSurface8;
 
-    (*pSurface8.AddRef(); *)
+  pSurface8._AddRef(); 
 
   ppRenderTarget^ := g_pCachedRenderTarget;
 
@@ -2214,7 +2226,7 @@ begin
     #13#10');',
     [Index, @pTile]);
 
-    (*if(pTile <> 0) then
+    (*if(pTile <> nil) then
        move ( pTile, @EmuD3DTileCache[Index], SizeOf(X_D3DTILE) ); *)
 
   EmuSwapFS(fsXbox);
@@ -2229,6 +2241,8 @@ function XTL_EmuIDirect3DDevice8_CreateVertexShader(pDeclaration: DWORD;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   hRet: HRESULT;
+  pD3DVertexShader : PX_D3DVertexShader;
+  pVertexShader : PVERTEX_SHADER;
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -2243,8 +2257,8 @@ begin
     [pDeclaration, pFunction, pHandle, Usage]);
 
     // create emulated shader struct
-    (*X_D3DVertexShader *pD3DVertexShader := (X_D3DVertexShader)CxbxMalloc(SizeOf(X_D3DVertexShader));
-    VERTEX_SHADER     *pVertexShader := (VERTEX_SHADER)CxbxMalloc(SizeOf(VERTEX_SHADER));
+    (*pD3DVertexShader := X_D3DVertexShader(CxbxMalloc(SizeOf(X_D3DVertexShader)));
+    pVertexShader := VERTEX_SHADER(CxbxMalloc(SizeOf(VERTEX_SHADER)));
 
     // Cxbx TODO: Intelligently fill out these fields as necessary
     ZeroMemory(pD3DVertexShader, SizeOf(X_D3DVertexShader));
@@ -2253,7 +2267,7 @@ begin
     // HACK: Cxbx TODO: support this situation
     if(pDeclaration = 0) then
     begin
-        *pHandle := 0;
+        @pHandle := 0;
 
         EmuSwapFS(fsWindows);
 
@@ -2636,7 +2650,6 @@ begin
   Result := hRet;
 end;
 
-// Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 Function XTL_EmuIDirect3DDevice8_CreateTexture2
 (
     Width : UINT;
@@ -2647,44 +2660,35 @@ Function XTL_EmuIDirect3DDevice8_CreateTexture2
     Format : D3DFORMAT;
     D3DResource : D3DRESOURCETYPE
 ) : PX_D3DResource; stdcall;
+// Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   pTexture : PX_D3DTexture;
 begin
-    (*case(D3DResource) of
-         3: //D3DRTYPE_TEXTURE
-            XTL_EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-         4: //D3DRTYPE_VOLUMETEXTURE
-            EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DVolumeTexture)@pTexture);
-         5: //D3DRTYPE_CUBETEXTURE
-            CxbxKrnlCleanup('Cube textures temporarily not supported!');
-     else
-       CxbxKrnlCleanup('D3DResource := %d is not supported!', D3DResource);
-     end
-
-
-    Result := pTexture;   *)
+  case(Ord(D3DResource)) of
+     3: //D3DRTYPE_TEXTURE
+        XTL_EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
+     4: //D3DRTYPE_VOLUMETEXTURE
+        XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
+     5: //D3DRTYPE_CUBETEXTURE
+        CxbxKrnlCleanup('Cube textures temporarily not supported!');
+  else
+    CxbxKrnlCleanup('D3DResource := %d is not supported!', [Ord(D3DResource)]);
+  end;
+  Result := pTexture;
 end;
 
-function XTL_EmuIDirect3DDevice8_CreateTexture: HRESULT;
+function XTL_EmuIDirect3DDevice8_CreateTexture( Width : UINT; Height : UINT;
+    Levels : UINT; Usage : DWORD; Format : D3DFORMAT; Pool : D3DPOOL; ppTexture : PX_D3DTexture ) : HRESULT;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
-  (*PCFormat: D3DFORMAT;
-  aFormat: D3DFORMAT; *)
+  PCFormat: D3DFORMAT;
+  aFormat: D3DFORMAT;
   hRet: HRESULT;
-(*(
-    UINT            Width,
-    UINT            Height,
-    UINT            Levels,
-    DWORD           Usage,
-    D3DPOOL         Pool,
-    X_D3DTexture  **ppTexture
-) *)
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
 
-    { TODO -oDxbx: Need to be translated to delphi }
-    (*DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateTexture' +
+    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateTexture' +
            #13#10'(' +
            #13#10'   Width              : 0x%.08X' +
            #13#10'   Height             : 0x%.08X' +
@@ -2694,35 +2698,35 @@ begin
            #13#10'   Pool               : 0x%.08X' +
            #13#10'   ppTexture          : 0x%.08X' +
            #13#10');',
-           Width, Height, Levels, Usage, Format, Pool, ppTexture);
+           [Width, Height, Levels, Usage, Ord(Format), Ord(Pool), ppTexture]);
 
 
-    // Convert Format (Xbox->PC)
-    PCFormat := XTL_EmuXB2PC_D3DFormat(aFormat);
+  // Convert Format (Xbox->PC)
+(*  PCFormat := EmuXB2PC_D3DFormat(aFormat);
 
-    // Cxbx TODO: HACK: Devices that don't support this should somehow emulate it!
-    //* This is OK on my GeForce FX 5600
+  // Cxbx TODO: HACK: Devices that don't support this should somehow emulate it!
+  //* This is OK on my GeForce FX 5600
   if (PCFormat = D3DFMT_D16) then
   begin
-        EmuWarning('D3DFMT_D16 is an unsupported texture format!');
+    EmuWarning('D3DFMT_D16 is an unsupported texture format!');
     PCFormat := D3DFMT_R5G6B5;
   end
     //*
   else if (PCFormat = D3DFMT_P8) then
   begin
-        EmuWarning('D3DFMT_P8 is an unsupported texture format!');
+    EmuWarning('D3DFMT_P8 is an unsupported texture format!');
     PCFormat := D3DFMT_X8R8G8B8;
   end
     //*/
     //* This is OK on my GeForce FX 5600
   else if (PCFormat = D3DFMT_D24S8) then
   begin
-        EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
+    EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
     PCFormat := D3DFMT_X8R8G8B8;
   end //*/
   else if (PCFormat = D3DFMT_YUY2) then
   begin
-        // cache the overlay size
+    // cache the overlay size
     g_dwOverlayW := Width;
     g_dwOverlayH := Height;
     g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
@@ -2802,40 +2806,31 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirect3DDevice8_CreateVolumeTexture: HRESULT;
+function XTL_EmuIDirect3DDevice8_CreateVolumeTexture( Width : UINT; Height : UINT;
+    Depth : UINT; Levels : UINT; Usage : DWORD; Format : D3DFORMAT;
+    Pool : D3DPOOL; ppVolumeTexture : PX_D3DVolumeTexture): HRESULT;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-(*(
-    UINT                 Width,
-    UINT                 Height,
-    UINT                 Depth,
-    UINT                 Levels,
-    DWORD                Usage,
-    D3DFORMAT            Format,
-    D3DPOOL              Pool,
-    X_D3DVolumeTexture **ppVolumeTexture
-) *)
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
 
-{ TODO: Need to be translated to delphi }
-(*    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateVolumeTexture'
-           #13#10'('
-           #13#10'   Width              : 0x%.08X'
-           #13#10'   Height             : 0x%.08X'
-           #13#10'   Depth              : 0x%.08X'
-           #13#10'   Levels             : 0x%.08X'
-           #13#10'   Usage              : 0x%.08X'
-           #13#10'   Format             : 0x%.08X'
-           #13#10'   Pool               : 0x%.08X'
-           #13#10'   ppVolumeTexture    : 0x%.08X'
+    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateVolumeTexture' +
+           #13#10'(' +
+           #13#10'   Width              : 0x%.08X' +
+           #13#10'   Height             : 0x%.08X' +
+           #13#10'   Depth              : 0x%.08X' +
+           #13#10'   Levels             : 0x%.08X' +
+           #13#10'   Usage              : 0x%.08X' +
+           #13#10'   Format             : 0x%.08X' +
+           #13#10'   Pool               : 0x%.08X' +
+           #13#10'   ppVolumeTexture    : 0x%.08X' +
            #13#10');',
-           Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture);
+           [Width, Height, Depth, Levels, Usage, Ord(Format), Ord(Pool), ppVolumeTexture]);
 
     // Convert Format (Xbox->PC)
-    D3DFORMAT PCFormat := EmuXB2PC_D3DFormat);
+(*    D3DFORMAT PCFormat := EmuXB2PC_D3DFormat);
 
     // Cxbx TODO: HACK: Devices that don't support this should somehow emulate it!
     if(PCFormat = D3DFMT_D16) then
