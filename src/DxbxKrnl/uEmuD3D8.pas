@@ -2130,7 +2130,7 @@ begin
   Result := D3D_OK;
 end;
 
-function XTL_EmuIDirect3DDevice8_GetRenderTarget2(): PX_D3DSurface;
+function XTL_EmuIDirect3DDevice8_GetRenderTarget2(): PX_D3DSurface; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   pSurface8: IDirect3DSurface8;
@@ -7734,11 +7734,12 @@ end;
 exports
   XTL_EmuD3DCleanup,
   XTL_EmuD3DInit,
-
+  XTL_EmuIDirect3DDevice8_SetRenderState_Simple name 'EmuIDirect3DDevice8_SetRenderState_Simple',
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
   XTL_EmuIDirect3D8_SetPushBufferSize name PatchPrefix + 'Direct3D_SetPushBufferSize',
-
+  XTL_EmuIDirect3DDevice8_GetRenderTarget2 name 'EmuIDirect3DDevice8_GetRenderTarget2',
+  XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2 name 'EmuIDirect3DDevice8_GetDepthStencilSurface2',
   XTL_EmuIDirect3DDevice8_AddRef name PatchPrefix + '_D3DDevice_AddRef@0',
   XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + '_D3DDevice_BeginPushBuffer@4',
   XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + '_D3DDevice_BeginStateBlock@0',
@@ -7774,12 +7775,12 @@ exports
   XTL_EmuIDirect3DDevice8_SetMaterial name PatchPrefix + '_D3DDevice_SetMaterial',
   XTL_EmuIDirect3DDevice8_SetPixelShader name PatchPrefix + '_D3DDevice_SetPixelShader',
   XTL_EmuIDirect3DDevice8_SetPixelShaderConstant name PatchPrefix + '_D3DDevice_SetPixelShaderConstant',
-  XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name PatchPrefix + '_D3DDevice_SetRenderState_CullMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name 'EmuIDirect3DDevice8_SetRenderState_CullMode',
   XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed name PatchPrefix + '_D3DDevice_SetRenderState_DoNotCullUncompressed',
-  XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name PatchPrefix + '_D3DDevice_SetRenderState_Dxt1NoiseEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name PatchPrefix + '_D3DDevice_SetRenderState_EdgeAntiAlias',
-  XTL_EmuIDirect3DDevice8_SetRenderState_FillMode name PatchPrefix + '_D3DDevice_SetRenderState_FillMode',
-  XTL_EmuIDirect3DDevice8_SetRenderState_FogColor name PatchPrefix + '_D3DDevice_SetRenderState_FogColor',
+  XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name 'EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name 'EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FillMode name 'EmuIDirect3DDevice8_SetRenderState_FillMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FogColor name 'EmuIDirect3DDevice8_SetRenderState_FogColor',
   XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace name PatchPrefix + '_D3DDevice_SetRenderState_FrontFace',
   XTL_EmuIDirect3DDevice8_SetRenderState_LineWidth name PatchPrefix + '_D3DDevice_SetRenderState_LineWidth',
   XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp name PatchPrefix + '_D3DDevice_SetRenderState_LogicOp',
@@ -7795,8 +7796,8 @@ exports
   XTL_EmuIDirect3DDevice8_SetRenderState_TextureFactor name PatchPrefix + '_D3DDevice_SetRenderState_TextureFactor',
   XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend name PatchPrefix + '_D3DDevice_SetRenderState_VertexBlend',
   XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable name PatchPrefix + '_D3DDevice_SetRenderState_YuvEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderState_ZBias name PatchPrefix + '_D3DDevice_SetRenderState_ZBias',
-  XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable name PatchPrefix + '_D3DDevice_SetRenderState_ZEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ZBias name 'EmuIDirect3DDevice8_SetRenderState_ZBias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable name 'EmuIDirect3DDevice8_SetRenderState_ZEnable',
   XTL_EmuIDirect3DDevice8_SetRenderTarget name PatchPrefix + '_D3DDevice_SetRenderTarget',
   XTL_EmuIDirect3DDevice8_SetScissors name PatchPrefix + '_D3DDevice_SetScissors',
   XTL_EmuIDirect3DDevice8_SetShaderConstantMode name PatchPrefix + '_D3DDevice_SetShaderConstantMode',

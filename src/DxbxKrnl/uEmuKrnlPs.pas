@@ -297,7 +297,7 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   DebugStack: LONGBOOL;
   StartRoutine: PKSTART_ROUTINE
   ): NTSTATUS; stdcall; // Source: Cxbx / XBMC
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:95
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   dwThreadId: DWORD;
   hDupHandle: THandle;
@@ -384,5 +384,9 @@ begin
   Result := Unimplemented('PsTerminateSystemThread');
   EmuSwapFS(fsXbox);
 end;
+
+exports
+  xboxkrnl_PsCreateSystemThreadEx name 'PsCreateSystemThreadEx';
+
 
 end.
