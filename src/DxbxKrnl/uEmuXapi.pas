@@ -1344,11 +1344,11 @@ exports
   XTL_EmuGetThreadPriority,
   XTL_EmuQueryPerformanceCounter,
   XTL_EmuQueryPerformanceFrequency,
-  XTL_EmuRtlAllocateHeap,
-  XTL_EmuRtlCreateHeap,
+  XTL_EmuRtlAllocateHeap name 'EmuRtlAllocateHeap',
+  XTL_EmuRtlCreateHeap name 'EmuRtlCreateHeap',
   XTL_EmuRtlFreeHeap,
   XTL_EmuRtlReAllocateHeap,
-  XTL_EmuRtlSizeHeap,
+  XTL_EmuRtlSizeHeap name 'EmuRtlSizeHeap',
   XTL_EmuSetThreadPriority,
   XTL_EmuSetThreadPriorityBoost,
   XTL_EmuXapiApplyKernelPatches,
@@ -1366,7 +1366,7 @@ exports
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXInitDevices,
   XTL_EmuXMountUtilityDrive,
-  XTL_EmuXRegisterThreadNotifyRoutine
+  XTL_EmuXRegisterThreadNotifyRoutine name 'EmuXRegisterThreadNotifyRoutine'
   ;
 
 end.
