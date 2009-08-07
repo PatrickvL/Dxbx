@@ -26,7 +26,11 @@ interface
 
 uses
   // Delphi
-  Windows, SysUtils, Classes, MMSystem;
+  Windows
+  , JwaWinType
+  , SysUtils
+  , Classes
+  , MMSystem;
 
 const
 //------------------------------------------------------------------------------
@@ -334,7 +338,7 @@ type
   TSendASPI32Command = function(PPacket: Pointer): Longword; cdecl;
 
 var
-  Wnaspi32Handle: THandle;
+  Wnaspi32Handle: Handle;
   GetASPI32SupportInfo: TGetASPI32SupportInfo;
   SendASPI32Command: TSendASPI32Command;
 

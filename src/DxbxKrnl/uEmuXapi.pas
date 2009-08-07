@@ -116,7 +116,7 @@ var
   g_pXInputSetStateStatus: array[0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
   // XInputOpen handles
-  g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of THandle;
+  g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of Handle;
 
   XTL_EmuXapiProcessHeap: PPVOID;
 
@@ -165,7 +165,7 @@ function XTL_EmuFindFirstFileA
 (
   lpFileName: PAnsiChar;
   {out}lpFindFileData: LPWIN32_FIND_DATA
-  ): THandle; stdcall;
+  ): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -232,7 +232,7 @@ begin
 
   SetCurrentDirectory(szRoot);
 
-  THandle hRet := FindFirstFile(szBuffer, lpFindFileData);
+  Handle hRet := FindFirstFile(szBuffer, lpFindFileData);
 
   if (not FAILED(hRet)) then
   begin
@@ -262,7 +262,7 @@ end;
 (*
 function XTL_EmuFindNextFileA
 (
-  in hFindFile: THandle;
+  in hFindFile: Handle;
   {out} lpFindFileData: LPWIN32_FIND_DATA
   ): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
@@ -343,7 +343,7 @@ begin
 end;
 
 function XTL_EmuRtlAllocateHeap(
-  hHeap: THandle;
+  hHeap: Handle;
   dwFlags: DWord;
   dwBytes: SIZE_T): PVOID; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -382,7 +382,7 @@ begin
 end;
 
 function XTL_EmuRtlFreeHeap(
-  hHeap: THandle;
+  hHeap: Handle;
   dwFlags: DWord;
   lpMem: PVOID): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -413,7 +413,7 @@ begin
 end;
 
 function XTL_EmuRtlReAllocateHeap(
-  hHeap: THandle;
+  hHeap: Handle;
   dwFlags: DWord;
   lpMem: PVOID;
   dwBytes: SIZE_T): PVOID; stdcall;
@@ -461,7 +461,7 @@ begin
 end;
 
 function XTL_EmuRtlSizeHeap(
-  hHeap: THandle;
+  hHeap: Handle;
   dwFlags: DWord;
   lpMem: PVOID): SIZE_T; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -652,7 +652,7 @@ function XTL_EmuXInputOpen(
   dwPort: DWord;
   dwSlot: DWord;
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
-): THandle; stdcall;
+): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:70
 var
   pph: PPOLLING_PARAMETERS_HANDLE;
@@ -717,11 +717,11 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := THandle(pph);
+  Result := Handle(pph);
 end;
 
 
-procedure XTL_EmuXInputClose(hDevice: THandle); stdcall;
+procedure XTL_EmuXInputClose(hDevice: Handle); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:90
 var
   pph: PPOLLING_PARAMETERS_HANDLE;
@@ -766,7 +766,7 @@ begin
 end;
 
 function XTL_EmuXInputPoll(
-  hDevice: THandle
+  hDevice: Handle
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
 var
@@ -824,7 +824,7 @@ end;
 
 (*
 function XTL_EmuXInputGetCapabilities(
-    hDevice: THandle;
+    hDevice: Handle;
     {OUT} pCapabilities: PXINPUT_CAPABILITIES
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
@@ -863,7 +863,7 @@ end;
 *)
 
 function XTL_EmuXInputGetState(
-    hDevice: THandle;
+    hDevice: Handle;
     {OUT} pState: PXINPUT_STATE
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
@@ -917,7 +917,7 @@ begin
 end;
 
 function XTL_EmuXInputSetState(
-    hDevice: THandle;
+    hDevice: Handle;
     pFeedback: PXINPUT_FEEDBACK // IN OUT
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
@@ -1001,10 +1001,10 @@ end;
 function XTL_EmuCreateMutex(
   lpMutexAttributes: LPSECURITY_ATTRIBUTES;
   bInitialOwner: BOOL;
-  lpName: PAnsiChar): THandle; stdcall;
+  lpName: PAnsiChar): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
-  hRet: THandle;
+  hRet: Handle;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1023,7 +1023,7 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuCloseHandle(hObject: THandle): BOOL; stdcall;
+function XTL_EmuCloseHandle(hObject: Handle): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
@@ -1043,7 +1043,7 @@ begin
   Result := bRet;
 end;
 
-function XTL_EmuSetThreadPriorityBoost(hThread: THandle; DisablePriorityBoost: BOOL): BOOL; stdcall;
+function XTL_EmuSetThreadPriorityBoost(hThread: Handle; DisablePriorityBoost: BOOL): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
@@ -1067,7 +1067,7 @@ begin
   Result := bRet;
 end;
 
-function XTL_EmuSetThreadPriority(hThread: THandle; nPriority: Integer): BOOL; stdcall;
+function XTL_EmuSetThreadPriority(hThread: Handle; nPriority: Integer): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
@@ -1095,7 +1095,7 @@ begin
 end;
 
 
-function XTL_EmuGetThreadPriority(hThread: THandle): Integer; stdcall;
+function XTL_EmuGetThreadPriority(hThread: Handle): Integer; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   iRet: Integer;
@@ -1118,7 +1118,7 @@ begin
   Result := iRet;
 end;
 
-function XTL_EmuGetExitCodeThread(hThread: THandle; lpExitCode: Cardinal): BOOL; stdcall;
+function XTL_EmuGetExitCodeThread(hThread: Handle; lpExitCode: Cardinal): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
@@ -1260,7 +1260,7 @@ begin
 end;
 
 (*//  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): THandle; stdcall;
+function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1278,7 +1278,7 @@ begin
 end;
 
 //  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureBeginEx(dwFlags: DWord; dwAltTitleId: DWord): THandle; stdcall;
+function XTL_EmuXCalculateSignatureBeginEx(dwFlags: DWord; dwAltTitleId: DWord): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1297,7 +1297,7 @@ begin
 end;
 
 //  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureUpdate(hCalcSig: THandle; pbData: Byte; cbData: ULONG): DWord; stdcall;
+function XTL_EmuXCalculateSignatureUpdate(hCalcSig: Handle; pbData: Byte; cbData: ULONG): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1316,7 +1316,7 @@ begin
 end;
 
 //  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureEnd(hCalcSig: THandle; pSignature: PXCALCSIG_SIGNATURE): DWord; stdcall;
+function XTL_EmuXCalculateSignatureEnd(hCalcSig: Handle; pSignature: PXCALCSIG_SIGNATURE): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);

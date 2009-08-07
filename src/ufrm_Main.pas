@@ -23,7 +23,7 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Classes,
+  Windows, Messages, SysUtils, Classes, JwaWinType,
   Dialogs, ActnList, Forms, Menus,
   Controls, ComCtrls, ExtCtrls,
   Graphics, JPeg,
@@ -319,7 +319,7 @@ var
 
   function _SendData(copyDataStruct: TCopyDataStruct): Boolean;
   var
-    receiverHandle: THandle;
+    receiverHandle: Windows.THandle;
     res: Integer;
   begin
     Result := False;

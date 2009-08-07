@@ -25,6 +25,7 @@ interface
 uses
   // Delphi
     Windows
+  , JwaWinType
   , Classes
   , SysUtils
   // 3rd party
@@ -210,15 +211,15 @@ type
     procedure Load(szRegistryKey: PAnsiChar);
     procedure Save(szRegistryKey: PAnsiChar);
     // Configuration
-    procedure ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
+    procedure ConfigBegin(ahwnd: Handle; aObject: XBCtrlObject);
     function ConfigPoll(szStatus: PAnsiChar): LongBool;
     procedure ConfigEnd;
     // Listening
     procedure ListenPoll(Controller: PXINPUT_STATE);
-    procedure ListenBegin(ahwnd: THandle);
+    procedure ListenBegin(ahwnd: Handle);
     procedure ListenEnd;
     // DirectInput Init / Cleanup
-    procedure DInputInit(ahwnd: THandle);
+    procedure DInputInit(ahwnd: Handle);
     procedure DInputCleanup;
     // Check if a device is currently in the configuration
     function DeviceIsUsed(szDeviceName: PAnsiChar): LongBool;
@@ -614,7 +615,7 @@ begin
   end;
 end;
 
-procedure XBController.ConfigBegin(ahwnd: THandle; aObject: XBCtrlObject);
+procedure XBController.ConfigBegin(ahwnd: Handle; aObject: XBCtrlObject);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
@@ -970,7 +971,7 @@ begin
   end;
 end;
 
-procedure XBController.DInputInit(ahwnd: THandle);
+procedure XBController.DInputInit(ahwnd: Handle);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ahRet: HResult;
@@ -1097,7 +1098,7 @@ begin
   ExitProcess(1);
 end;
 
-procedure XBController.ListenBegin(ahwnd: THandle);
+procedure XBController.ListenBegin(ahwnd: Handle);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;

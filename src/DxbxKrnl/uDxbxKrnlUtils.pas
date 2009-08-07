@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows,
+  JwaWinType,
   SysUtils,
   // Dxbx
   uConsts,
@@ -54,7 +55,7 @@ var
   CxbxKrnl_hEmuParent: HWND;
 
   // thread handles
-  g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of THandle;
+  g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of Handle;
 
 implementation
 

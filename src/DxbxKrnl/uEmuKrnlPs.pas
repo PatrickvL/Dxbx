@@ -61,7 +61,7 @@ function {254} xboxkrnl_PsCreateSystemThread(
   lpThreadId: PULONG // thread identifier
   ): NTSTATUS; stdcall; // Source: Cxbx - TODO : Should we use XBMC's version?
 function {255} xboxkrnl_PsCreateSystemThreadEx(
-  var ThreadHandle: THANDLE; // out
+  var ThreadHandle: HANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
@@ -158,7 +158,8 @@ begin
       push        offset callComplete
       lea         ebp, [esp-4]
 //      jmp near    esi
-      jmp         esi
+{ TODO : This jmp near thing is crashing the proxy }
+//      jmp         esi
     end;
 
   except
@@ -175,7 +176,7 @@ begin
     end;
   end; // try
 
-callComplete:
+   callComplete:
    EmuSwapFS(fsWindows);
 
   // Restore original exception filter :
@@ -286,7 +287,7 @@ end;
 //
 // New to the XBOX.
 function {255} xboxkrnl_PsCreateSystemThreadEx(
-  var ThreadHandle: THANDLE; // out
+  var ThreadHandle: HANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
@@ -300,7 +301,7 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   dwThreadId: DWORD;
-  hDupHandle: THandle;
+  hDupHandle: Handle;
   iPCSTProxyParam: PCSTProxyParam;
 begin
   EmuSwapFS(fsWindows);

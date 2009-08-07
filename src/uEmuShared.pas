@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows
+  , JwaWinType
   , SysUtils // StrCopy
 {$IFDEF DXBX_USE_JCLDEBUG}
   // Jcl
@@ -82,7 +83,7 @@ type
 procedure SetXbePath(const Path: PAnsiChar); stdcall;
 
 var
-  hMapObject: THandle;
+  hMapObject: Handle;
   // Exported Global Shared Memory Pointer
   g_EmuShared: PEmuShared;
   g_EmuSharedRefCount: Integer; // extern; ??

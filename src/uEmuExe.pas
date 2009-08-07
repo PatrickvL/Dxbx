@@ -26,6 +26,7 @@ interface
 uses
   // Delphi
   Windows,
+  JwaWinType,
   SysUtils,
   Math, // for IfThen
   // Dxbx
@@ -43,9 +44,9 @@ type
 
   TEmuExe = class(TExe)
   protected
-    KrnlHandle: THandle;
+    KrnlHandle: Handle;
   public
-    constructor Create(x_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFileName: string; hwndParent: THandle);
+    constructor Create(x_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFileName: string; hwndParent: Handle);
     destructor Destroy; override;
   end;
 
@@ -106,7 +107,7 @@ end;
 //------------------------------------------------------------------------------
 
 constructor TEmuExe.Create(x_Xbe: TXbe; m_KrnlDebug: DebugMode;
-  m_KrnlDebugFileName: string; hwndParent: THandle);
+  m_KrnlDebugFileName: string; hwndParent: Handle);
 
   procedure _WriteDWordToAddr(const aAddr: Pointer; aDWord: DWord);
   begin

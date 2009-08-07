@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows,
+  JwaWinType,
   Controls,
   SysUtils, // FileExists
   Dialogs,  // for MessageDlg
@@ -32,12 +33,12 @@ uses
   uXbe,
   uEmuExe;
 
-function ConvertToExe(x_FileName: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: THandle): Boolean;
-function ConvertXbeToExe(aFileName, m_ExeFileName, m_XbeFileName: string; aXbe: TXbe; aHandle: THandle): Boolean;
+function ConvertToExe(x_FileName: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: Handle): Boolean;
+function ConvertXbeToExe(aFileName, m_ExeFileName, m_XbeFileName: string; aXbe: TXbe; aHandle: Handle): Boolean;
 
 implementation
 
-function ConvertToExe(x_FileName: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: THandle): Boolean;
+function ConvertToExe(x_FileName: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: Handle): Boolean;
 var
   i_EmuExe: TEmuExe;
 begin
@@ -82,7 +83,7 @@ begin
   end;
 end;
 
-function ConvertXbeToExe(aFileName, m_ExeFileName, m_XbeFileName: string; aXbe: TXbe; aHandle: THandle): Boolean;
+function ConvertXbeToExe(aFileName, m_ExeFileName, m_XbeFileName: string; aXbe: TXbe; aHandle: Handle): Boolean;
 begin
   Result := False;
   try

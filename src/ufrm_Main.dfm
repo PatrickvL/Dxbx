@@ -7,7 +7,7 @@ object frm_Main: Tfrm_Main
   ClientHeight = 385
   ClientWidth = 509
   Color = 13160660
-  Constraints.MaxHeight = 431
+  Constraints.MaxHeight = 437
   Constraints.MaxWidth = 515
   Constraints.MinHeight = 429
   Constraints.MinWidth = 515

@@ -27,14 +27,14 @@ interface
 
 uses
   // Delphi
-  Windows;
+  Windows, JwaWinType;
 
 type
   TConsoleControl = class(TObject)
   private
-    FhStdIn: THandle;  // Handle to the standard input
-    FhStdOut: THandle;  // Handle to the standard output
-    FhStdErr: THandle;  // Handle to the standard error (Output)
+    FhStdIn: Handle;  // Handle to the standard input
+    FhStdOut: Handle;  // Handle to the standard output
+    FhStdErr: Handle;  // Handle to the standard error (Output)
     FbConsoleAllocated: Boolean;  // Creation Flag
     FBgAttrib: Cardinal; // Currently set BackGround Attribs.
     FFgAttrib: Cardinal; // Currently set ForeGround Attribs.
