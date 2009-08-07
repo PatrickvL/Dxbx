@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows, // DWord
+  JwaWinType,
   Math, // IfThen
   SysUtils, // Format
   ShlObj, // SHGetSpecialFolderPath
@@ -60,7 +61,7 @@ procedure CxbxKrnlInit(
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc); stdcall;
 
-procedure CxbxKrnlRegisterThread(const hThread: THandle);
+procedure CxbxKrnlRegisterThread(const hThread: Handle);
 procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
 procedure EmuXRefFailure;
 procedure CxbxKrnlResume();
@@ -102,7 +103,7 @@ var
   old_protection: DWord;
   szBuffer, BasePath: string;
   pCertificate: PXBE_CERTIFICATE;
-  hDupHandle: THandle;
+  hDupHandle: Handle;
   OldExceptionFilter: TFNTopLevelExceptionFilter;
 begin
   // debug console allocation (if configured)
@@ -343,7 +344,7 @@ begin
   CxbxKrnlTerminateThread();
 end;
 
-procedure CxbxKrnlRegisterThread(const hThread: THandle);
+procedure CxbxKrnlRegisterThread(const hThread: Handle);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   v: Integer;
@@ -389,7 +390,7 @@ var
   v: Integer;
   dwExitCode: DWORD;
   szBuffer : array [0..256-1] of Char;
-  hWnd : THandle;
+  hWnd : Handle;
 begin
   if (not g_bEmuSuspended) then
     Exit;

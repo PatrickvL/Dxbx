@@ -41,7 +41,7 @@ function CxbxMalloc(x: Integer): Pointer;
 procedure CxbxFree(x: Pointer);
 function CxbxCallocDebug(NbrElements: Integer; ElementSize: Integer; pFile: PChar; Line: Integer): Pointer;
 function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
-function CxbxRtlFree(Heap: THandle; Flags: DWORD; pMem: PVOID): BOOL;
+function CxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
 function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
 function CxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
 
@@ -77,22 +77,22 @@ procedure  CxbxFreeDebug(pMem: Pointer;
 // ******************************************************************
 // * CxbxRtlAllocDebug - Debug track RTL alloc
 // ******************************************************************
-function CxbxRtlAllocDebug(Heap: THandle; Flags: DWORD; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
+function CxbxRtlAllocDebug(Heap: Handle; Flags: DWORD; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
 
 // ******************************************************************
 // * CxbxRtlFreeDebug - Debug track RTL Free
 // ******************************************************************
-function  CxbxRtlFreeDebug(Heap: THandle; Flags: DWORD; pMem: PVOID; pFile: PChar; Line: Integer): BOOL;
+function  CxbxRtlFreeDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; pFile: PChar; Line: Integer): BOOL;
 
 // ******************************************************************
 // * CxbxRtlReallocDebug - Debug track RTL realloc
 // ******************************************************************
-function CxbxRtlReallocDebug(Heap: THandle; Flags: DWORD; pMem: PVOID; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
+function CxbxRtlReallocDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
 
 // ******************************************************************
 // * CxbxRtlHeapSizeDebug - Debug track RTL heap size
 // ******************************************************************
-SIZE_T CxbxRtlSizeHeapDebug(THandle Heap,
+SIZE_T CxbxRtlSizeHeapDebug(Handle Heap,
                             DWORD  Flags,
                             PVOID  pMem,
                             Char  *pFile,
@@ -135,7 +135,7 @@ begin
   Result := JwaNative.RtlAllocateHeap(Heap, Flags, Bytes);
 end;
 
-function CxbxRtlFree(Heap: THandle; Flags: DWORD; pMem: PVOID): BOOL;
+function CxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := JwaNative.RtlFreeHeap(Heap, Flags, pMem);
@@ -569,7 +569,7 @@ begin
 // ******************************************************************
 // * CxbxRtlAllocDebug - Debug track RTL alloc
 // ******************************************************************
-function CxbxRtlAllocDebug(Heap: THandle; Flags: DWORD; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
+function CxbxRtlAllocDebug(Heap: Handle; Flags: DWORD; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pRetMem : Pointer;
@@ -605,7 +605,7 @@ begin
 // ******************************************************************
 // * CxbxRtlFreeDebug - Debug track RTL Free
 // ******************************************************************
-function  CxbxRtlFreeDebug(Heap: THandle; Flags: DWORD; pMem: PVOID; pFile: PChar; Line: Integer): BOOL;
+function  CxbxRtlFreeDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; pFile: PChar; Line: Integer): BOOL;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   Ret : BOOL;
@@ -653,7 +653,7 @@ end;
 // ******************************************************************
 // * CxbxRtlReallocDebug - Debug track RTL realloc
 // ******************************************************************
-function CxbxRtlReallocDebug(Heap: THandle; Flags: DWORD; pMem: PVOID; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
+function CxbxRtlReallocDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pRetMem : Pointer;
@@ -718,7 +718,7 @@ begin
 // ******************************************************************
 // * CxbxRtlSizeHeapDebug - Debug track RTL heap size
 // ******************************************************************
-Function CxbxRtlSizeHeapDebug(Heap : THandle; Flags : DWORD; pMem : PVOID;
+Function CxbxRtlSizeHeapDebug(Heap : Handle; Flags : DWORD; pMem : PVOID;
                             pFile : PChar; Line : Integer ) : SIZE_T;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var

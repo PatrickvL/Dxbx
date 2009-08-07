@@ -6,7 +6,7 @@ uses
   // Delphi
   Windows, SysUtils, Classes, Messages, FileCtrl,
   Contnrs, Controls, Forms, Dialogs, ComCtrls, Menus, ExtCtrls, ShellApi,
-  xmldom, XMLIntf, msxmldom, XMLDoc, jpeg,
+  xmldom, XMLIntf, msxmldom, XMLDoc, jpeg, JwaWinType,
   // Dxbx
   uDxbxUtils,
   uData,
@@ -577,7 +577,7 @@ end;
 //
 
 var
-  MutexHandle: THandle;
+  MutexHandle: Handle;
 
 initialization
 

@@ -3,7 +3,14 @@ unit reinit;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms;
+  Windows
+  , JwaWinType
+  , Messages
+  , SysUtils
+  , Classes
+  , Graphics
+  , Controls
+  , Forms;
 
 procedure ReinitializeForms;
 function LoadNewResourceModule(Locale: LCID): Longint;
@@ -76,9 +83,9 @@ begin
     Result := SetResourceHInstance(NewInst)
 end;
 
-function InternalReloadComponentRes(const ResName: string; HInst: THandle; var Instance: TComponent): Boolean;
+function InternalReloadComponentRes(const ResName: string; HInst: Handle; var Instance: TComponent): Boolean;
 var
-  HRsrc: THandle;
+  HRsrc: Handle;
   ResStream: TResourceStream;
   AsInheritedReader: TAsInheritedReader;
 begin                   { avoid possible EResNotFound exception }

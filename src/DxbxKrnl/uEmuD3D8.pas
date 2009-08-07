@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows,
+  JwaWinType,
   Messages,
   SysUtils,
   Classes, // TStringList
@@ -189,8 +190,8 @@ procedure XTL_EmuD3DInit(XbeHeader: pXBE_HEADER; XbeHeaderSize: UInt32); stdcall
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   dwThreadId: DWORD;
-  hThread: THandle;
-  hDupHandle: THandle;
+  hThread: Handle;
+  hDupHandle: Handle;
   DevType: D3DDEVTYPE;
   PresParam: X_D3DPRESENT_PARAMETERS;
 begin
@@ -661,7 +662,7 @@ function EmuUpdateTickCount(LPVOID: Pointer): DWord;
 // Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
 var
   v: Integer;
-  hDevice: THandle;
+  hDevice: Handle;
   dwLatency: DWORD;
   pFeedback: PXINPUT_FEEDBACK;
 begin

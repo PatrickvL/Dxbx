@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-    <DCC_DependencyCheckOutputName>..\bin\Dxbx.exe</DCC_DependencyCheckOutputName>
+    <DCC_DependencyCheckOutputName>C:\Documents and Settings\henkjan.edbit\Desktop\xbox_donuts\Dxbx.exe</DCC_DependencyCheckOutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Version>7.0</Version>
@@ -29,7 +29,7 @@
     <DCC_Optimize>False</DCC_Optimize>
     <DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
     <DCC_RangeChecking>True</DCC_RangeChecking>
-    <DCC_ExeOutput>..\bin</DCC_ExeOutput>
+    <DCC_ExeOutput>C:\Documents and Settings\henkjan.edbit\Desktop\xbox_donuts</DCC_ExeOutput>
     <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
     <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
     <DCC_HppOutput>..\dcu</DCC_HppOutput>
@@ -62,11 +62,12 @@
     <DCCReference Include="uConsoleClass.pas" />
     <DCCReference Include="uConsts.pas" />
     <DCCReference Include="uDxbxXml.pas">
-      <DesignClass>TDataModule</DesignClass>
       <Form>DxbxXml</Form>
+      <DesignClass>TDataModule</DesignClass>
     </DCCReference>
     <DCCReference Include="uEmuExe.pas" />
     <DCCReference Include="uEmuShared.pas" />
+    <DCCReference Include="uError.pas" />
     <DCCReference Include="uExe.pas" />
     <DCCReference Include="ufrm_About.pas">
       <Form>frm_About</Form>

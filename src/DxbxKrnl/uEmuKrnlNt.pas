@@ -52,7 +52,7 @@ function xboxkrnl_NtClearEvent(
   EventHandle: HANDLE
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtClose(
-  Handle: THandle
+  Handle: Handle
   ): NTSTATUS; stdcall; {EXPORTNUM(187)}
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtCreateEvent(
@@ -257,7 +257,7 @@ end;
 // 0x00BB - NtClose
 
 function xboxkrnl_NtClose(
-  Handle: THandle
+  Handle: Handle
   ): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 {$IFDEF DXBX_EMUHANDLES}

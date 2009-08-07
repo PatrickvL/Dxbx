@@ -38,15 +38,15 @@ uses
   , uDxbxKrnlUtils;
 
 var
-  g_hCurDir: THandle = 0;
+  g_hCurDir: Handle = 0;
   g_strCurDrive: string = '';
-  g_hTDrive: THandle = 0;
+  g_hTDrive: Handle = 0;
   g_strTDrive: string = '';
-  g_hUDrive: THandle = 0;
+  g_hUDrive: Handle = 0;
   g_strUDrive: string = '';
-  g_hZDrive: THandle = 0;
+  g_hZDrive: Handle = 0;
   g_strZDrive: string = '';
-  g_hEmuWindow: THandle = 0; // rendering window
+  g_hEmuWindow: Handle = 0; // rendering window
   g_bPrintfOn: Boolean = True;
   g_bEmuSuspended: Boolean = False;
   g_bEmuException: Boolean = False;
