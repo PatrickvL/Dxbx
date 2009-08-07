@@ -321,9 +321,12 @@ function xboxkrnl_NtCreateFile(
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+var
+  ReplaceChar : char;
+  ReplaceIndex : int;
 begin
   EmuSwapFS(fsWindows);
-(*
+
     DbgPrintf('EmuKrnl : NtCreateFile' +
            #13#10'(' +
            #13#10'   FileHandle          : 0x%.08X' +
@@ -339,8 +342,8 @@ begin
            [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 
-    char ReplaceChar  := '\0';
-    int  ReplaceIndex := -1;
+    (*ReplaceChar  := '\0';
+    ReplaceIndex := -1;
 
     char *szBuffer := ObjectAttributes.ObjectName.Buffer;
 
@@ -453,7 +456,7 @@ begin
 
     // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
     //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
-*)
+                 *)
   Result := Unimplemented('NtCreateFile');
   EmuSwapFS(fsXbox);
 end;
@@ -564,22 +567,22 @@ function xboxkrnl_NtOpenFile(
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-(*
+
   EmuSwapFS(fsWindows);
     // debug trace
-        DbgPrintf('EmuKrnl : NtOpenFile'
-               #13#10'('
-               #13#10'   FileHandle          : 0x%.08X'
-               #13#10'   DesiredAccess       : 0x%.08X'
-               #13#10'   ObjectAttributes    : 0x%.08X (\'%s\')'
-               #13#10'   IoStatusBlock       : 0x%.08X'
-               #13#10'   ShareAccess         : 0x%.08X'
-               #13#10'   CreateOptions       : 0x%.08X'
+        DbgPrintf('EmuKrnl : NtOpenFile' +
+               #13#10'(' +
+               #13#10'   FileHandle          : 0x%.08X' +
+               #13#10'   DesiredAccess       : 0x%.08X' +
+               #13#10'   ObjectAttributes    : 0x%.08X (\%s\)' +
+               #13#10'   IoStatusBlock       : 0x%.08X' +
+               #13#10'   ShareAccess         : 0x%.08X' +
+               #13#10'   CreateOptions       : 0x%.08X' +
                #13#10');',
-               [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
-               IoStatusBlock, ShareAccess, OpenOptions);
+               [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
+               IoStatusBlock, ShareAccess, OpenOptions]);
   EmuSwapFS(fsXbox);
-*)
+
   Result := xboxkrnl_NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
 end;
 

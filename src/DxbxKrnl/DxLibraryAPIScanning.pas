@@ -628,13 +628,14 @@ begin
       Continue;
     end;
 
-    if (AboveVersionNumber - BelowVersionNumber) > TotalXdkVersionDelta then
+    // Always try a lower version instead of quit the process
+    (*if (AboveVersionNumber - BelowVersionNumber) > TotalXdkVersionDelta then
     begin
       // The distinction here is, that patterns for OpenXDK libraries can't
       // be used to detect retail XDK libraries with :
       DbgPrintf('... No usable patterns available for this library!');
       Continue;
-    end;
+    end; *)
 
     if AboveVersionNumber = BelowVersionNumber then
       DbgPrintf('... Got patterns for exactly this version!')

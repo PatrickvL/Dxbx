@@ -171,7 +171,7 @@ begin
       DbgPrintf(JclLastExceptStackListToString(False));
 {$ENDIF}
     (*__except(EmuException(GetExceptionInformation())); *)
-      EmuWarning('Problem with ExceptionFilter!');
+    //  EmuWarning('Problem with ExceptionFilter!');
     end;
   end; // try
 

@@ -396,7 +396,7 @@ begin
 
     pCur := pCur.pNext;
   end;
-  Result := 0;
+  Result := NIL;
 end;
 
 // ******************************************************************
@@ -417,7 +417,7 @@ begin
 
     pCur := pCur.pNext;
   end;
-  Result := 0;
+  Result := NIL;
 end;
 
 
@@ -611,44 +611,44 @@ var
   Ret : BOOL;
   pFree : PCXBX_MEMORY_BLOCK;
 begin
-    Ret := False;
-    if Assigned (pMem) then
-    begin
-        Result := True;
-     end;
-    g_MemoryMutex.Lock();
+  Ret := False;
+  if Assigned (pMem) then
+  begin
+    Ret := True;
+  end;
+  g_MemoryMutex.Lock();
 
-    pFree := RemoveMemoryBlock(pMem);
-    if not Assigned(pFree) then
+  pFree := RemoveMemoryBlock(pMem);
+  if not Assigned(pFree) then
+  begin
+    DbgPrintf('CxbxRtlFreeDebug: Free on non-existent block: $%.08X not  ' +
+           'Possibly a multiple Free.' +
+           '    File: %s' +
+           '    Line: %d',
+           [pMem, pFile, Line]);
+  end
+  else
+  begin
+    if not CheckIntegrity(pFree) then
     begin
-        DbgPrintf('CxbxRtlFreeDebug: Free on non-existent block: $%.08X not  ' +
-               'Possibly a multiple Free.' +
-               '    File: %s' +
-               '    Line: %d',
-               [pMem, pFile, Line]);
-    end
-    else
-    begin
-        if not CheckIntegrity(pFree) then
-        begin
-            DbgPrintf('CxbxRtlFreeDebug: Free on damaged block' +
-                   '    Block   : $.%08X' +
-                   '    Allocation' +
-                   '        File: %s' +
-                   '        Line: %d' +
-                   '    Free' +
-                   '        File: %s' +
-                   '        Line: %d',
-                   [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
-         end;
-        Ret := CxbxRtlFree(Heap, Flags, GetMemStart(pFree));
-        FreeMem(pFree.pFile);
-        FreeMem(pFree);
-     end;
+      DbgPrintf('CxbxRtlFreeDebug: Free on damaged block' +
+             '    Block   : $.%08X' +
+             '    Allocation' +
+             '        File: %s' +
+             '        Line: %d' +
+             '    Free' +
+             '        File: %s' +
+             '        Line: %d',
+             [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
+    end;
+    Ret := CxbxRtlFree(Heap, Flags, GetMemStart(pFree));
+    FreeMem(pFree.pFile);
+    FreeMem(pFree);
+  end;
 
-    g_MemoryMutex.Unlock();
-    Result := Ret;
- end;
+  g_MemoryMutex.Unlock();
+  Result := Ret;
+end;
 
 // ******************************************************************
 // * CxbxRtlReallocDebug - Debug track RTL realloc

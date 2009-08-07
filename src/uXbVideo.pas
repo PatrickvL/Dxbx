@@ -24,7 +24,7 @@ interface
 
 uses
   // Delphi
-  Windows,
+  Windows, sysUtils,
   // Dxbx
   uTypes;
 
@@ -90,7 +90,7 @@ var
   hKey: Windows.HKEY;
 begin
   // Load Configuration from Registry
-  begin
+  try
     if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     begin
       dwType := REG_SZ; dwSize := 100;
@@ -110,6 +110,8 @@ begin
 
       RegCloseKey(hKey);
     end;
+  Except
+    raise exception.Create('XBVideo.Load raises a exception');
   end;
 end;
 
@@ -120,7 +122,7 @@ var
   hKey: Windows.HKEY;
 begin
   // Save Configuration to Registry
-  begin
+  try
     if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     begin
       dwType := REG_SZ; dwSize := 100;
@@ -140,6 +142,8 @@ begin
 
       RegCloseKey(hKey);
     end;
+  Except
+    raise exception.Create('XBVideo.Save raises a exception');
   end;
 end;
 
