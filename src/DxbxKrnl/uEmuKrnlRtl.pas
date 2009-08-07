@@ -143,6 +143,9 @@ function xboxkrnl_RtlVsprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
+uses
+  uXboxLibraryUtils;
+
 function xboxkrnl_RtlAnsiStringToUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PSTRING;
@@ -395,6 +398,14 @@ procedure xboxkrnl_RtlInitializeCriticalSection(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
+
+{$IFDEF _DXBX_EXTENDED_DEBUG}
+  DbgPrintf('EmuKrnl : RtlInitializeCriticalSection' +
+           #13#10'(' +
+           #13#10'   CriticalSection              : 0x%.08X' +
+           #13#10');',
+           [CriticalSection]);
+{$ENDIF}
 
   JwaNative.RtlInitializeCriticalSection(CriticalSection);
 
@@ -680,6 +691,7 @@ begin
   Result := Unimplemented('RtlVsprintf');
   EmuSwapFS(fsXbox);
 end;
+
 
 end.
 

@@ -352,7 +352,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF _DXBX_EXTENDED_DEBUG}
   DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -391,7 +391,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF _DXBX_EXTENDED_DEBUG}
   DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -423,7 +423,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF _DXBX_EXTENDED_DEBUG}
   DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
     #13#10'('+
     #13#10'   hHeap               : 0x%.08X' +
@@ -470,7 +470,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF _DXBX_EXTENDED_DEBUG}
   DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -1232,6 +1232,7 @@ procedure XTL_EmuXRegisterThreadNotifyRoutine(
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 begin
   EmuSwapFS(fsWindows);
+  DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine');
 
   DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine' +
     #13#10'(' +
@@ -1362,7 +1363,7 @@ exports
   XTL_EmuXCalculateSignatureUpdate,
 *)
   XTL_EmuXFormatUtilityDrive,
-  XTL_EmuXGetDevices,
+  XTL_EmuXGetDevices name '_EmuXGetDevices',
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXInitDevices,
   XTL_EmuXMountUtilityDrive,
