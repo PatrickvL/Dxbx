@@ -157,7 +157,7 @@ begin
       push        StartContext1
       push        offset callComplete
       lea         ebp, [esp-4]
-//      jmp near    esi
+      jmp         [esi]    
 { TODO : This jmp near thing is crashing the proxy }
 //      jmp         esi
     end;
