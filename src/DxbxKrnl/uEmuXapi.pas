@@ -1012,9 +1012,9 @@ begin
       #13#10'(' +
       #13#10'   lpMutexAttributes   : 0x%.08X' +
       #13#10'   bInitialOwner       : 0x%.08X' +
-      #13#10'   lpName              : 0x%.08X (%s)' +
+      #13#10'   lpName              : 0x%.08X' +
       #13#10');',
-      [lpMutexAttributes, bInitialOwner, lpName, lpName]);
+      [lpMutexAttributes, bInitialOwner, lpName]);
 
   hRet := CreateMutex(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
 
