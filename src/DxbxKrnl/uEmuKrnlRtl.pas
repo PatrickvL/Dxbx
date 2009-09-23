@@ -376,9 +376,9 @@ begin
   DbgPrintf('EmuKrnl : RtlInitAnsiString' +
          #13#10'(' +
          #13#10'   DestinationString   : 0x%.08X' +
-         #13#10'   SourceString        : 0x%.08X (''%s'')' +
+         #13#10'   SourceString        : 0x%.08X' +
          #13#10');',
-         [DestinationString, SourceString, SourceString]);
+         [DestinationString, SourceString]);
 
   JwaNative.RtlInitAnsiString(PANSI_STRING(DestinationString), PCSZ(SourceString));
 

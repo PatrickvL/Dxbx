@@ -131,9 +131,9 @@ begin
       #13#10'  hwndParent       : 0x%.8x' +
       #13#10'  pTLSData         : 0x%.8x' +
       #13#10'  pTLS             : 0x%.8x' +
-      #13#10'  pLibraryVersion  : 0x%.8x ("%s")' +
+      #13#10'  pLibraryVersion  : 0x%.8x' +
       #13#10'  DebugConsole     : 0x%.8x' +
-      #13#10'  DebugFileName    : 0x%.8x ("%s")' +
+      #13#10'  DebugFileName    : 0x%.8x' +
       #13#10'  pXBEHeader       : 0x%.8x' +
       #13#10'  dwXBEHeaderSize  : 0x%.8x' +
       #13#10'  Entry            : 0x%.8x' +
@@ -142,9 +142,9 @@ begin
         hwndParent,
         pTLSData,
         pTLS,
-        pLibraryVersion, PChar(pLibraryVersion),
+        pLibraryVersion,
         Ord(DbgMode),
-        Pointer(szDebugFileName), PChar(szDebugFileName),
+        Pointer(szDebugFileName),
         pXbeHeader,
         dwXbeHeaderSize,
         Addr(Entry)

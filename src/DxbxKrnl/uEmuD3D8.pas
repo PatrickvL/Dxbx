@@ -3223,13 +3223,13 @@ procedure XTL_EmuIDirect3DDevice8_SwitchTexture
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf(DxbxFormat('EmuD3D8: EmuIDirect3DDevice8_SwitchTexture' +
+  DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_SwitchTexture' +
     #13#10'(' +
     #13#10'   Method             : 0x%.08X' +
     #13#10'   Data               : 0x%.08X' +
     #13#10'   Format             : 0x%.08X' +
     #13#10');',
-    [Method, Data, Format]));
+    [Method, Data, Format]);
 
     (*DWORD StageLookup[] := ( $00081b00, $00081b40, $00081b80, $00081bc0 );
     DWORD Stage := -1;
@@ -5773,12 +5773,12 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf(DxbxFormat('EmuD3D8: EmuIDirect3DDevice8_SetRenderState_Simple' +
+  DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_SetRenderState_Simple' +
     #13#10'(' +
     #13#10'   Method             : 0x%.08X' +
     #13#10'   Value              : 0x%.08X' +
     #13#10');',
-    [Method, Value]));
+    [Method, Value]);
 
   State := -1;
 
