@@ -1,0 +1,53 @@
+V2.0.4
+Feature: WANT can now build itself, i.e. rebuild the executables and run the unit tests. See .\scripts\examples\BuildWant.want. This is far from being complete, however: the build is done via a call to Exec("dcc32") - the DCC "task" is not implemented yet.
+Feature: WANT can also create a distribution zip file, but the implementation is incomplete: it doesn't allow for appending into to the zip file.
+Bugfix: Inconsistent treatment of loop keywords do, loop, repeat
+Bugfix: In a for-loop, to- or downto-clause is now properly required and cannot be skipped to create an infinite loop.
+Bugfix: A few issues with System.List methods.
+Bugfix: Issues with variables being declared inside loop and conditional blocks.
+Syntax: Added support for the set-clause in a call-set-with statement (see tutorial for details).
+Syntax: Added support for passing function parameters, assiging function variables, etc. New @-sign operator.
+Syntax: Inline declaration of a for-loop counter variable ("for var")
+Syntax/Libs: Added support for System.List literals, e.g. [1, 2, 3], ["AAA", 2, False], etc.
+Syntax: "new" is no longer a keyword.
+Libs: Added methods to System.List
+Libs: Added support for DUNit (WANT.Build.DUnit)
+Libs: Added support for System.Dictionary object (associative array).
+Libs: Fixed a problem with WANT.Build.Exec where it would fail to execute the specified program.
+Libs: Renamed WANT.FileTasks.Exec to ShellExec. Renamed its ExeName parameter to FileName, to be in better agreement with Windows API.
+Libs: Added WANT.FileTasks.Exec that captures the output of the executed program (unlike ShellExec).
+Libs: Added WANT.Test.DUnit module.
+Libs: Added WANT.Zip procedure (WANT.Unzip is registered with the Runtime, but not implemented yet).
+WIDE: The Syntax menu was added with the ability to change the syntax highlighter at will.
+WIDE: The "select" keyword is recognized by the WIDE editor.
+WIDE: Debug menu was added for the "Dump" items previously in the View menu.
+WIDE: Output from a script is now captured into the output tab, as well as the console.
+WIDE: Fixed the saving and automatic reloading of the actively-open files, including the currently-active selection.
+WIDE: Added a direct link to the issue tracking web site (Help menu)
+WANTScript Tutorial: Updated to cover all new language features (to a varying level of detail - this is an ongoing effort)
+
+
+V2.0.3 2008/08/30
+Support for built-in objects: Lists, including saving to and loading from files.
+Numerous impovements to the IDE, both cosmetic, and substantial.
+Additional text conversion functions accessible from the IDE.
+System.Breakpoint no longer breaks into the Delphi debugger, but stops the execution on a ReadLn instead. This permits examining the values of variables, call logs, etc. in XML "dumps", directly from the WANT IDE. The behavior can be configured in the IDE so that breakpoints are bypassed.
+Procedures in WANT.FileTasks now include all subdirectories by default, and gracefully skip read-only and hidden files, if present.
+NULL is a synonym to nil.
+Fixed the problem with the command-line WANT, where it would fail on termination.
+
+
+V2.0.2 2008/08/16
+GUI IDE with a syntax-highlighting editor (initial release)
+Default project modules.
+Implicit imports of built-in modules.
+switch/select statement
+Command line options -o, -x and -c
+WANT no longer auto-generates the XML dump-files; if desired, they can be requested via the -x compiler switch.
+Passing parameters from the command line.
+loop-while statement, in addition to existing loop-until (repeat-while/repeat-until).
+Fixed the problem with the evaluation of parameters passed by reference, whereby the values assigned to the parameter would not propagate outside the currently active module. 
+Fixed several other problems related to passing parameters and returning function values.
+
+V2.0.1 2008/07/21
+Initial release of the WANTScript Runtime.
