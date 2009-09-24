@@ -33,18 +33,30 @@
     <DCC_DcuOutput>..\dcu</DCC_DcuOutput>
     <DCC_ObjOutput>..\dcu</DCC_ObjOutput>
     <DCC_HppOutput>..\dcu</DCC_HppOutput>
-    <DCC_UnitSearchPath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_UnitSearchPath>
-    <DCC_ResourcePath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_ResourcePath>
-    <DCC_ObjPath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_ObjPath>
-    <DCC_IncludePath>$(DXBXLIB)\DirectX9;$(DXBXLIB)\Jcl;$(DXBXLIB)\Jcl\common;$(DXBXLIB)\Jcl\windows;$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API</DCC_IncludePath>
+    <DCC_UnitSearchPath>..\libraries\DirectX9;..\libraries\Jcl;..\libraries\Jcl\common;..\libraries\Jcl\windows;..\libraries\jwapi\Common;..\libraries\jwapi\Win32API</DCC_UnitSearchPath>
+    <DCC_ResourcePath>..\libraries\DirectX9;..\libraries\Jcl;..\libraries\Jcl\common;..\libraries\Jcl\windows;..\libraries\jwapi\Common;..\libraries\jwapi\Win32API</DCC_ResourcePath>
+    <DCC_ObjPath>..\libraries\DirectX9;..\libraries\Jcl;..\libraries\Jcl\common;..\libraries\Jcl\windows;..\libraries\jwapi\Common;..\libraries\jwapi\Win32API</DCC_ObjPath>
+    <DCC_IncludePath>..\libraries\DirectX9;..\libraries\Jcl;..\libraries\Jcl\common;..\libraries\Jcl\windows;..\libraries\jwapi\Common;..\libraries\jwapi\Win32API</DCC_IncludePath>
     <DCC_SymbolReferenceInfo>2</DCC_SymbolReferenceInfo>
-    <DCC_Define>DEBUG; DXBX_DEBUG</DCC_Define>
+    <DCC_Define>DEBUG</DCC_Define>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
     <Borland.ProjectType>VCLApplication</Borland.ProjectType>
     <BorlandProject>
 <BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">0</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">3</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">1043</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">0.0.0.3</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">Dxbx.dpr</Source></Source><Excluded_Packages>
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       
       
       
