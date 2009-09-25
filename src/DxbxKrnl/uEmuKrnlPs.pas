@@ -120,10 +120,11 @@ begin
 
   DbgPrintf('EmuKrnl : PCSTProxy' +
     #13#10'(' +
-    #13#10'   StartContext1       : 0x' + IntToHex(Integer(StartContext1), 8) +
-    #13#10'   StartContext2       : 0x' + IntToHex(Integer(StartContext2), 8) +
-    #13#10'   StartRoutine        : 0x' + IntToHex(Integer(Addr(StartRoutine)), 8) +
-    #13#10');');
+    #13#10'   StartContext1       : 0x%.08x' +
+    #13#10'   StartContext2       : 0x%.08x' +
+    #13#10'   StartRoutine        : 0x%.08x' +
+    #13#10');',
+    [StartContext1, StartContext2, Addr(StartRoutine)]);
 
   if StartSuspended then
     SuspendThread(GetCurrentThread());
@@ -144,29 +145,31 @@ begin
 
   SetEvent(Parameter.hStartedEvent);
 
+{$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
   // Re-route unhandled exceptions to our emulation-execption handler :
   OldExceptionFilter := SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER(@EmuException));
 
-  // use the special calling convention
   try
+{$ENDIF}
     EmuSwapFS(fsXbox);
 
+    // use the special calling convention
     asm
       mov         esi, StartRoutine
       push        StartContext2
       push        StartContext1
       push        offset callComplete
       lea         ebp, [esp-4]
-      jmp         [esi]    
-{ TODO : This jmp near thing is crashing the proxy }
-//      jmp         esi
+      jmp         esi
+      // Note : This jmp reads like this in Cxbx (which doesn't copmile) :
+      // jmp near esi
     end;
-
+{$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
   except
     on E: Exception do
     begin
-// TODO : How do we intercept ntdll.ZwRaiseException here ?
-//      EmuException(E);
+      // TODO : How do we intercept ntdll.ZwRaiseException here ?
+      //      EmuException(E);
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString(False));
@@ -175,12 +178,15 @@ begin
     //  EmuWarning('Problem with ExceptionFilter!');
     end;
   end; // try
+{$ENDIF}
 
-   callComplete:
+callComplete:
    EmuSwapFS(fsWindows);
 
+{$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
   // Restore original exception filter :
   SetUnhandledExceptionFilter(OldExceptionFilter);
+{$ENDIF}
 
   // call thread notification routine(s)
   if Assigned(g_pfnThreadNotification) then
@@ -245,13 +251,15 @@ begin
 
   DbgPrintf('EmuKrnl : PsCreateSystemThread' +
     #13#10'(' +
-    #13#10'   lpThreadAttributes  : 0x' + IntToHex(lpThreadAttributes^, 8) +
-    #13#10'   dwStackSize         : 0x' + IntToHex(dwStackSize, 8) +
-    #13#10'   lpStartAddress      : 0x' + IntToHex(Integer(Addr(lpStartAddress)), 8) +
-    #13#10'   lpParameter         : 0x' + IntToHex(Integer(lpParameter), 8) +
-    #13#10'   dwCreationFlags     : 0x' + IntToHex(Integer(dwCreationFlags), 8) +
-    #13#10'   ThreadId            : 0x' + IntToHex(Integer(Addr(lpThreadId)), 8) +
-    #13#10');');
+    #13#10'   lpThreadAttributes  : 0x%.08x' +
+    #13#10'   dwStackSize         : 0x%.08x' +
+    #13#10'   lpStartAddress      : 0x%.08x' +
+    #13#10'   lpParameter         : 0x%.08x' +
+    #13#10'   dwCreationFlags     : 0x%.08x' +
+    #13#10'   ThreadId            : 0x%.08x' +
+    #13#10');',
+    [lpThreadAttributes^, dwStackSize, Addr(lpStartAddress), lpParameter,
+    dwCreationFlags, Addr(lpThreadId)]);
 // PsCreateSystemThreadEx(ThreadHandle, NULL, 0x3000, 0, ThreadId, StartContext1,
 //     StartContext2, FALSE, DebugStack, PspSystemThreadStartup);
 
@@ -308,17 +316,19 @@ begin
 
   DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
     #13#10'(' +
-    #13#10'   ThreadHandle        : 0x' + IntToHex(Integer(Addr(ThreadHandle)), 8) +
-    #13#10'   ThreadExtraSize     : 0x' + IntToHex(ThreadExtraSize, 8) +
-    #13#10'   KernelStackSize     : 0x' + IntToHex(KernelStackSize, 8) +
-    #13#10'   TlsDataSize         : 0x' + IntToHex(TlsDataSize, 8) +
-    #13#10'   ThreadId            : 0x' + IntToHex(Integer(Addr(ThreadId)), 8) +
-    #13#10'   StartContext1       : 0x' + IntToHex(Integer(StartContext1), 8) +
-    #13#10'   StartContext2       : 0x' + IntToHex(Integer(StartContext2), 8) +
-    #13#10'   CreateSuspended     : 0x' + IntToHex(Integer(CreateSuspended), 8) +
-    #13#10'   DebugStack          : 0x' + IntToHex(Integer(DebugStack), 8) +
-    #13#10'   StartRoutine        : 0x' + IntToHex(Integer(Addr(StartRoutine)), 8) +
-    #13#10');');
+    #13#10'   ThreadHandle        : 0x%.08x' +
+    #13#10'   ThreadExtraSize     : 0x%.08x' +
+    #13#10'   KernelStackSize     : 0x%.08x' +
+    #13#10'   TlsDataSize         : 0x%.08x' +
+    #13#10'   ThreadId            : 0x%.08x' +
+    #13#10'   StartContext1       : 0x%.08x' +
+    #13#10'   StartContext2       : 0x%.08x' +
+    #13#10'   CreateSuspended     : 0x%.08x' +
+    #13#10'   DebugStack          : 0x%.08x' +
+    #13#10'   StartRoutine        : 0x%.08x' +
+    #13#10');',
+    [Addr(ThreadHandle), ThreadExtraSize, KernelStackSize, TlsDataSize, Addr(ThreadId),
+    StartContext1, StartContext2, CreateSuspended, DebugStack, Addr(StartRoutine)]);
 
   // create thread, using our special proxy technique
   begin
@@ -329,7 +339,7 @@ begin
     iPCSTProxyParam.StartSuspended := CreateSuspended;
     iPCSTProxyParam.hStartedEvent := CreateEvent(nil, False, False, nil);
 
-    ThreadHandle := BeginThread(nil, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
+    {var}ThreadHandle := BeginThread(nil, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 

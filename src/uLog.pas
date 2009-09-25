@@ -261,6 +261,9 @@ var
   ArgumentAsString: string;
 begin
   try
+    if Length(Args) = 0 then
+      MayRenderArguments := False;
+      
     if MayRenderArguments then
     begin
       // Count the number of single '%' characters in the formatting string,
@@ -329,7 +332,8 @@ begin
         while not (aStr[CurrentPercentageOffset - 1] in ['d', 'p', 'x', 'X']) do
           Inc(CurrentPercentageOffset);
 
-        ArgumentAsString := ' (' + ArgumentAsString + ')';
+        // Make sure the argument doesn't interfere with the formatting-string :
+        ArgumentAsString := ' (' + StringReplace(ArgumentAsString, '%', '%%', [rfReplaceAll]) + ')';
         Insert(ArgumentAsString, {var}aStr, CurrentPercentageOffset);
 
         Inc(CurrentPercentageOffset, Length(ArgumentAsString));
