@@ -56,7 +56,7 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
 function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
   Protect: ULONG
-  ): NTSTATUS; stdcall;
+  ): PVOID; stdcall;
 function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmCreateKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmDeleteKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -213,11 +213,21 @@ end;
 function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
   Protect: ULONG
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+  ): PVOID; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmAllocateSystemMemory');
+
+  DbgPrintf('EmuKrnl : MmAllocateSystemMemory' +
+         #13#10'(' +
+         #13#10'   NumberOfBytes            : 0x%.08X' +
+         #13#10'   Protect                  : 0x%.08X' +
+         #13#10');',
+         [NumberOfBytes, Protect]);
+
+  // TODO: should this be aligned?
+  Result := CxbxMalloc(NumberOfBytes);
+
   EmuSwapFS(fsXbox);
 end;
 

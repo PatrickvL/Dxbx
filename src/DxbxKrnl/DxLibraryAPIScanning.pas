@@ -629,13 +629,13 @@ begin
     end;
 
     // Always try a lower version instead of quit the process
-    (*if (AboveVersionNumber - BelowVersionNumber) > TotalXdkVersionDelta then
+    if (AboveVersionNumber - BelowVersionNumber) > TotalXdkVersionDelta then
     begin
       // The distinction here is, that patterns for OpenXDK libraries can't
       // be used to detect retail XDK libraries with :
       DbgPrintf('... No usable patterns available for this library!');
       Continue;
-    end; *)
+    end;
 
     if AboveVersionNumber = BelowVersionNumber then
       DbgPrintf('... Got patterns for exactly this version!')
@@ -882,7 +882,8 @@ begin
       TestAddressUsingPatternTrie(p);
     except
 {$IFDEF DXBX_DEBUG}
-      DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
+      DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p],
+      {MayRenderArguments=}False);
 {$ENDIF}
     end;
 
@@ -997,15 +998,19 @@ begin
 {$IFDEF DXBX_DEBUG}
       // Do our own demangling :
       Unmangled := DxbxUnmangleSymbolName(CrossReferencedSymbol.SymbolName);
-      DbgPrintf('DxbxHLE : Detected cross-referenced symbol at $%.8x : ''%s'' ("%s")', [CrossReferenceAddress, CrossReferencedSymbol.SymbolName, Unmangled]);
+      DbgPrintf('DxbxHLE : Detected cross-referenced symbol at $%.8x : ''%s'' ("%s")',
+        [CrossReferenceAddress, CrossReferencedSymbol.SymbolName, Unmangled],
+        {MayRenderArguments=}False);
 {$ENDIF}
     end;
 
 {$IFDEF DXBX_DEBUG}
     // Do our own demangling :
     Unmangled := DxbxUnmangleSymbolName(Symbol.SymbolName);
-    DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' ("%s")', [BestPotentialSymbolLocation.SymbolLocation, Symbol.SymbolName, Unmangled]);
-  // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch))
+    DbgPrintf('DxbxHLE : Detected at $%.8x : ''%s'' ("%s")',
+      [BestPotentialSymbolLocation.SymbolLocation, Symbol.SymbolName, Unmangled],
+      // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch)
+      {MayRenderArguments=}False);
 {$ENDIF}
     // TODO : Add to MyFunctionLocations, so functions can be found with FindByAddress (a pure debugging aid)
 
@@ -1052,9 +1057,12 @@ procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LI
           ProcessHeapOffs := $3E;
 
         XTL_EmuXapiProcessHeap := PPointer(IntPtr(DetectedXapiInitProcess.Locations[0].SymbolLocation) + ProcessHeapOffs)^;
-//        XTL_EmuXapiProcessHeap := Pointer(DetermineRelativeAddress(DetectedXapiInitProcess.Locations[0].SymbolLocation, ProcessHeapOffs));
+        
 {$IFDEF DXBX_DEBUG}
-        DbgPrintf('DxbxHLE : Resolved XapiProcessHeap at $%.8x', [XTL_EmuXapiProcessHeap]);
+        DbgPrintf('DxbxHLE : Resolved XapiProcessHeap at $%.8x', [XTL_EmuXapiProcessHeap],
+          {MayRenderArguments=}False);
+// Dxbx Output = DxbxHLE : Resolved XapiProcessHeap at $00258654
+// Cxbx Output = HLE: 0x00258654 -> EmuXapiProcessHeap
 {$ENDIF}
       end;
     end;

@@ -150,7 +150,9 @@ begin
   ErrorProc := OrigErrorHandler;
   try
     try
-      uLog.DbgPrintf('DxbxErrorHandler(%d,$%.8x) %s', [ErrorCode, ErrorAddr, JclLastExceptStackListToString]);
+      uLog.DbgPrintf('DxbxErrorHandler(%d,$%.8x) %s',
+        [ErrorCode, ErrorAddr, JclLastExceptStackListToString],
+        {MayRenderArguments=}False);
     except
 
     end;

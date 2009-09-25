@@ -120,10 +120,8 @@ var
 
   XTL_EmuXapiProcessHeap: PPVOID;
 
-// func
-(*
-  XTL_g_pRtlCreateHeap: XTL_pfRtlCreateHeap;
-*)
+  // Note : Cxbx log indicates 'g_pRtlCreateHeap' is indeed
+  // at the same address as 'EmuRtlCreateHeap'.
 
 implementation
 
@@ -335,7 +333,8 @@ begin
   ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
   RtlHeapDefinition.Length := SizeOf(RtlHeapDefinition);
 
-  Result := PVOID(JwaNative.RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
+  Result := PVOID(JwaNative.RtlCreateHeap(
+    Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
 
@@ -493,10 +492,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuQueryPerformanceCounter(lpPerformanceCount: Int64): BOOL; stdcall;
+function XTL_EmuQueryPerformanceCounter(
+  var lpPerformanceCount: Int64): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -504,22 +502,19 @@ begin
     #13#10'(' +
     #13#10'   lpPerformanceCount  : 0x%.08X' +
     #13#10');',
-    [lpPerformanceCount]);
+    [@lpPerformanceCount]);
 
-  bRet := QueryPerformanceCounter(lpPerformanceCount);
+  Result := QueryPerformanceCounter({var}lpPerformanceCount);
 
     // debug - 4x speed
     //lpPerformanceCount.QuadPart *= 4;
 
   EmuSwapFS(fsXbox);
-
-  Result := bRet;
 end;
 
-function XTL_EmuQueryPerformanceFrequency(var lpFrequency: Int64): BOOL; stdcall;
+function XTL_EmuQueryPerformanceFrequency(
+  var lpFrequency: Int64): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -527,13 +522,11 @@ begin
     #13#10'(' +
     #13#10'   lpFrequency         : 0x%.08X' +
     #13#10');',
-    [lpFrequency]);
+    [@lpFrequency]);
 
-  bRet := QueryPerformanceFrequency({var}lpFrequency);
+  Result := QueryPerformanceFrequency({var}lpFrequency);
 
   EmuSwapFS(fsXbox);
-
-  Result := bRet;
 end;
 
 function XTL_EmuXMountUtilityDrive(fFormatClean: BOOL): BOOL; stdcall;
@@ -1163,9 +1156,8 @@ begin
     dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
     dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
 
-    // Dxbx TODO : Determine if XTL_g_pRtlCreateHeap is indeed the same as XTL_EmuRtlCreateHeap.
-
-    XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
+    XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil,
+      dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
   end;
 end;
 
