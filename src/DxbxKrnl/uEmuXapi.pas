@@ -40,7 +40,8 @@ uses
 
 type
   ProcedureStdCall = procedure; stdcall;
-  Function1ArgStdCall = function(const Arg1: DWord): Integer; stdcall;
+
+  StartRoutineFunc = function (const StartContext: PVOID): Int; stdcall;
 
   LPSECURITY_ATTRIBUTES = PVOID;
 
@@ -1161,21 +1162,21 @@ begin
   end;
 end;
 
-procedure XTL_EmuXapiThreadStartup(dwDummy1, dwDummy2: DWord); stdcall;
+procedure XTL_EmuXapiThreadStartup(StartRoutine: StartRoutineFunc; StartContext: PVOID); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXapiThreadStartup' +
     #13#10'(' +
-    #13#10'   dwDummy1            : 0x%.08X' +
-    #13#10'   dwDummy2            : 0x%.08X' +
+    #13#10'   StartRoutine        : 0x%.08X' +
+    #13#10'   StartContext        : 0x%.08X' +
     #13#10')',
-    [dwDummy1, dwDummy2]);
+    [Addr(StartRoutine), StartContext]);
 
   EmuSwapFS(fsXbox);
 
-  Function1ArgStdCall(dwDummy1)(dwDummy2);
+  StartRoutine(StartContext);
 
   // Cxbx TODO: Call thread notify routines ?
 end;

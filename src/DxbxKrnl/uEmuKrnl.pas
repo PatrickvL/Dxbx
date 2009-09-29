@@ -152,8 +152,6 @@ const
   FILE_DOES_NOT_EXIST = $00000005;
 
 type
-  PKSTART_ROUTINE = PTHREAD_START_ROUTINE; // ?correct?
-
   Unknown = INT_PTR; // generic 32 bit argument type
   dtU32 = Unknown;
   dtObjectAttributes = Unknown;

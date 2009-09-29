@@ -153,6 +153,8 @@ begin
 {$ENDIF}
     EmuSwapFS(fsXbox);
 
+//    StartRoutine(StartContext1, StartContext2);
+
     // use the special calling convention
     asm
       mov         esi, StartRoutine
@@ -161,9 +163,10 @@ begin
       push        offset callComplete
       lea         ebp, [esp-4]
       jmp         esi
-      // Note : This jmp reads like this in Cxbx (which doesn't copmile) :
+      // Note : This jmp reads like this in Cxbx (which doesn't compile) :
       // jmp near esi
     end;
+
 {$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
   except
     on E: Exception do
