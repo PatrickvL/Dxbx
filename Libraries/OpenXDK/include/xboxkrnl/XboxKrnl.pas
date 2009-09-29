@@ -704,7 +704,7 @@ type
     Period: LongInt; // 0x24
   end;
   PKTIMER = ^KTIMER;
-(*
+
 // ******************************************************************
 // * PKSTART_ROUTINE
 // ******************************************************************
@@ -716,13 +716,11 @@ type
 // *       opposed to 1.
 // *
 // ******************************************************************
-type  VOID (NTAPI *PKSTART_ROUTINE)
-(
-    IN PVOID StartContext1,
-    IN PVOID StartContext2
-);
-
-*)
+type
+  PKSTART_ROUTINE = procedure(
+    StartContext1: PVOID;
+    StartContext2: PVOID
+    ); stdcall;
 
 // ******************************************************************
 // * PKDEFERRED_ROUTINE
@@ -791,7 +789,11 @@ type
        0: ( FiberData: PVOID ); // 0x10 for TIB
        1: ( Version: ULONG ); // 0x10 for TEB (?)
     end;
-    ArbitraryUserPointer: PVOID; // 0x14
+    union_b: packed record case Integer of
+      0: ( ArbitraryUserPointer: PVOID ); // 0x14
+      1: ( Dxbx_SwapFS: Word; // 0x14;
+           Dxbx_IsXboxFS: WordBool); // 0x16
+    end;
     Self: PNT_TIB; // 0x18
   end;
   PNT_TIB = ^NT_TIB;

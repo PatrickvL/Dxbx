@@ -60,6 +60,8 @@ const
   FS_Version = $10; // for TEB (?) : Int32
   FS_ArbitraryUserPointer = $14;
   FS_ThreadInformationBlockPointer = $18;
+  FS_SelfPcr = $1C; // Pointer to self
+  FS_Prcb = $20; // In NT this is called _Client_ID
   FS_ProcessEnvironmentBlock = $30; // FS points to TEB/TIB which has a pointer to the PEB
 
   // Aliases :
@@ -167,6 +169,11 @@ begin
   EmuInitLDT();
 end;
 
+function GetCurrentKPCR(): PKPCR; // inline;
+begin
+  Result := GetTIBEntry(FS_SelfPcr);
+end;
+
 function DumpXboxFS(const aFS: PKPCR; const aValidate: Boolean): string;
 begin
   with aFS.NtTib do
@@ -177,24 +184,26 @@ begin
       '$%.02x KPCR.NT_TIB.SubSystemTib: PVOID = $%.08x'#13#10 +
       '$%.02x KPCR.NT_TIB.FiberData: PVOID = $%.08x'#13#10 +
       '$%.02x KPCR.NT_TIB.Version: ULONG = $%.08x'#13#10 +
-      '$%.02x KPCR.NT_TIB.ArbitraryUserPointer: PVOID = $%.08x'#13#10 +
+      '$%.02x KPCR.NT_TIB.Dxbx_SwapFS: WORD = $%.04x'#13#10 +
+      '$%.02x KPCR.NT_TIB.Dxbx_IsXboxFS: WORDBOOL = $%.04x'#13#10 +
       '$%.02x KPCR.NT_TIB.Self: PNT_TIB = $%.08x',
-      [FIELD_OFFSET(PKPCR(nil).NtTib.ExceptionList), IntPtr(ExceptionList),
-      FIELD_OFFSET(PKPCR(nil).NtTib.StackBase), IntPtr(StackBase),
-      FIELD_OFFSET(PKPCR(nil).NtTib.StackLimit), IntPtr(StackLimit),
-      FIELD_OFFSET(PKPCR(nil).NtTib.SubSystemTib), IntPtr(SubSystemTib),
-      FIELD_OFFSET(PKPCR(nil).NtTib.union_a.FiberData), IntPtr(union_a.FiberData),
+      [FIELD_OFFSET(PKPCR(nil).NtTib.ExceptionList), ExceptionList,
+      FIELD_OFFSET(PKPCR(nil).NtTib.StackBase), StackBase,
+      FIELD_OFFSET(PKPCR(nil).NtTib.StackLimit), StackLimit,
+      FIELD_OFFSET(PKPCR(nil).NtTib.SubSystemTib), SubSystemTib,
+      FIELD_OFFSET(PKPCR(nil).NtTib.union_a.FiberData), union_a.FiberData,
       FIELD_OFFSET(PKPCR(nil).NtTib.union_a.Version), union_a.Version,
-      FIELD_OFFSET(PKPCR(nil).NtTib.ArbitraryUserPointer), IntPtr(ArbitraryUserPointer),
-      FIELD_OFFSET(PKPCR(nil).NtTib.Self), IntPtr(aFS.NtTib.Self)]);
+      FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_SwapFS), union_b.Dxbx_SwapFS,
+      FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_IsXboxFS), union_b.Dxbx_IsXboxFS,
+      FIELD_OFFSET(PKPCR(nil).NtTib.Self), aFS.NtTib.Self]);
 
   with aFS^ do
     Result := Result + DxbxFormat(#13#10 +
       '$%.02x KPCR.SelfPcr: PKPCR = $%.08x'#13#10 +
       '$%.02x KPCR.Prcb: PKPRCB = $%.08x'#13#10 +
       '$%.02x KPCR.Irql: UCHAR = %3d',
-      [FIELD_OFFSET(PKPCR(nil).SelfPcr), IntPtr(SelfPcr),
-      FIELD_OFFSET(PKPCR(nil).Prcb), IntPtr(Prcb),
+      [FIELD_OFFSET(PKPCR(nil).SelfPcr), SelfPcr,
+      FIELD_OFFSET(PKPCR(nil).Prcb), Prcb,
       FIELD_OFFSET(PKPCR(nil).Irql), Irql]);
 
   with aFS.PrcbData do
@@ -202,9 +211,9 @@ begin
       '$%.02x KPCR.PrcbData.CurrentThread: PKTHREAD = $%.08x'#13#10 +
       '$%.02x KPCR.PrcbData.NextThread: PKTHREAD = $%.08x'#13#10 +
       '$%.02x KPCR.PrcbData.IdleThread: PKTHREAD = $%.08x',
-      [FIELD_OFFSET(PKPCR(nil).PrcbData.CurrentThread), IntPtr(CurrentThread),
-      FIELD_OFFSET(PKPCR(nil).PrcbData.NextThread), IntPtr(NextThread),
-      FIELD_OFFSET(PKPCR(nil).PrcbData.IdleThread), IntPtr(IdleThread)]);
+      [FIELD_OFFSET(PKPCR(nil).PrcbData.CurrentThread), CurrentThread,
+      FIELD_OFFSET(PKPCR(nil).PrcbData.NextThread), NextThread,
+      FIELD_OFFSET(PKPCR(nil).PrcbData.IdleThread), IdleThread]);
 end;
 
 function DumpWin32FS(const aFS: JclWin32.PNT_TIB32; const aValidate: Boolean): string;
@@ -244,7 +253,7 @@ procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 var
   pNewTLS: PXBE_TLS;
   NewFS, OrgFS: UInt16;
-  OrgNtTib: PNT_TIB;
+  OrgNtTib: PNT_TIB;                                 
   dwCopySize, dwZeroSize: UInt32;
 {$IFDEF _DEBUG_TRACE}
   stop: UInt32;
@@ -290,7 +299,7 @@ begin
         if (v mod $10) = 0 then
         begin
           DbgPrintf(Line);
-          Line := 'EmuFS : 0x' + PointerToString(@(PUint8(pNewTLS)[v])) + ': ';
+          Line := 'EmuFS : 0x' + PointerToString(@(PUInt8(pNewTLS)[v])) + ': ';
         end;
 
         bByte := PUInt8(UIntPtr(pNewTLS) + v);
@@ -325,6 +334,9 @@ begin
   end;
 
   // update "OrgFS" with NewFS and (bIsXboxFS = False)
+  OrgNtTib.union_b.Dxbx_SwapFS := NewFS;
+  OrgNtTib.union_b.Dxbx_IsXboxFS := False;
+(* was :
   asm
     mov ax, NewFS
     mov bh, 0
@@ -332,7 +344,7 @@ begin
     mov fs:[DxbxFS_SwapFS], ax
     mov fs:[DxbxFS_IsXboxFS], bh
   end;
-
+*)
 {$IFDEF _DXBX_EXTENDED_DEBUG}
   DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
 {$ENDIF}
@@ -351,6 +363,8 @@ begin
     NewPcr.PrcbData.CurrentThread := xboxkrnl.PKTHREAD(EThread);
 
     NewPcr.Prcb := @(NewPcr.PrcbData);
+
+    NewPcr.SelfPcr := NewPcr; // TODO Dxbx : Is this correct?
   end;
 
   // prepare TLS
@@ -364,6 +378,14 @@ begin
       PPointer(pNewTLS)^ := pNewTLS;
   end;
 
+  // update "NewFS" with OrgFS and (bIsXboxFS = True)
+  NewPcr.NtTib.union_b.Dxbx_SwapFS := OrgFS;
+  NewPcr.NtTib.union_b.Dxbx_IsXboxFS := True;
+
+  // save "TLSPtr" inside NewFS.StackBase
+  NewPcr.NtTib.StackBase := pNewTLS;
+
+(* was :
   // NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
   // inside the Xbox FS state, or the Win32 kernel will merrily
   // restore the FS register - which is NOT wat we want here!
@@ -371,16 +393,15 @@ begin
     // swap into "NewFS"
     EmuSwapFS();
 
-    // update "NewFS" with OrgFS and (bIsXboxFS = True)
     asm
+      // update "NewFS" with OrgFS and (bIsXboxFS = True)
       mov ax, OrgFS
       mov bh, 1
 
       mov fs:[DxbxFS_SwapFS], ax
       mov fs:[DxbxFS_IsXboxFS], bh
-    end;
 
-    asm
+      // save "TLSPtr" inside NewFS.StackBase
       mov eax, pNewTLS
       mov fs:[FS_StackBasePointer], eax
     end;
@@ -388,8 +409,11 @@ begin
     // swap back into the "OrgFS"
     EmuSwapFS();
   end;
+*)
 
 {$IFDEF _DXBX_EXTENDED_DEBUG}
+  DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr, {aValidate=}True));
+
   DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
 {$ENDIF}
 
