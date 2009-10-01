@@ -62,6 +62,8 @@ const
   FS_ThreadInformationBlockPointer = $18;
   FS_SelfPcr = $1C; // Pointer to self
   FS_Prcb = $20; // In NT this is called _Client_ID
+  FS_Irql = $24;
+  FS_PrcbData = $28;
   FS_ProcessEnvironmentBlock = $30; // FS points to TEB/TIB which has a pointer to the PEB
 
   // Aliases :
@@ -109,6 +111,10 @@ end;
 // structure, and the Emu FS: structure. Before running Windows
 // code, you *must* swap over to Win2k/XP FS. Similarly, before
 // running Xbox code, you *must* swap back over to Emu FS.
+//
+// NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
+// inside the Xbox FS state, or the Win32 kernel will merrily
+// restore the FS register - which is NOT wat we want here!
 procedure EmuSwapFS;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 {$J+}
@@ -174,7 +180,7 @@ begin
   Result := GetTIBEntry(FS_SelfPcr);
 end;
 
-function DumpXboxFS(const aFS: PKPCR; const aValidate: Boolean): string;
+function DumpXboxFS(const aFS: PKPCR): string;
 begin
   with aFS.NtTib do
     Result := DxbxFormat(
@@ -216,7 +222,7 @@ begin
       FIELD_OFFSET(PKPCR(nil).PrcbData.IdleThread), IdleThread]);
 end;
 
-function DumpWin32FS(const aFS: JclWin32.PNT_TIB32; const aValidate: Boolean): string;
+function DumpWin32FS(const aFS: JclWin32.PNT_TIB32): string;
 begin
   with aFS^ do
     Result := DxbxFormat(
@@ -242,9 +248,9 @@ function DumpCurrentFS(): string;
 begin
   Result := DxbxFormat('FS = $%.04x ($%.08x)', [GetFS(), GetTIB()]);
   if EmuIsXboxFS then
-    Result := Result + ' (Xbox FS)'#13#10 + DumpXboxFS(GetTIB(), {aValidate=}True)
+    Result := Result + ' (Xbox FS)'#13#10 + DumpXboxFS(GetTIB())
   else
-    Result := Result + ' (Win32 FS)'#13#10 + DumpWin32FS(GetTIB(), {aValidate=}True);
+    Result := Result + ' (Win32 FS)'#13#10 + DumpWin32FS(GetTIB());
 end;
 
 // generate fs segment selector
@@ -253,7 +259,7 @@ procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
 var
   pNewTLS: PXBE_TLS;
   NewFS, OrgFS: UInt16;
-  OrgNtTib: PNT_TIB;                                 
+  OrgNtTib: PNT_TIB;
   dwCopySize, dwZeroSize: UInt32;
 {$IFDEF _DEBUG_TRACE}
   stop: UInt32;
@@ -313,14 +319,6 @@ begin
 {$ENDIF}
   end;
 
-  Assert(FS_StackBasePointer = $04);
-  Assert(DxbxFS_SwapFS = $14);
-  Assert(DxbxFS_IsXboxFS = $16);
-  Assert(FS_Self = $18);
-
-  Assert(FIELD_OFFSET(PKPCR(nil).Prcb) = $20);
-  Assert(FIELD_OFFSET(PKPCR(nil).PrcbData) = $28);
-
   OrgFS := GetFS();
   OrgNtTib := GetTIB();
 
@@ -336,15 +334,7 @@ begin
   // update "OrgFS" with NewFS and (bIsXboxFS = False)
   OrgNtTib.union_b.Dxbx_SwapFS := NewFS;
   OrgNtTib.union_b.Dxbx_IsXboxFS := False;
-(* was :
-  asm
-    mov ax, NewFS
-    mov bh, 0
 
-    mov fs:[DxbxFS_SwapFS], ax
-    mov fs:[DxbxFS_IsXboxFS], bh
-  end;
-*)
 {$IFDEF _DXBX_EXTENDED_DEBUG}
   DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
 {$ENDIF}
@@ -385,34 +375,8 @@ begin
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
 
-(* was :
-  // NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
-  // inside the Xbox FS state, or the Win32 kernel will merrily
-  // restore the FS register - which is NOT wat we want here!
-  begin
-    // swap into "NewFS"
-    EmuSwapFS();
-
-    asm
-      // update "NewFS" with OrgFS and (bIsXboxFS = True)
-      mov ax, OrgFS
-      mov bh, 1
-
-      mov fs:[DxbxFS_SwapFS], ax
-      mov fs:[DxbxFS_IsXboxFS], bh
-
-      // save "TLSPtr" inside NewFS.StackBase
-      mov eax, pNewTLS
-      mov fs:[FS_StackBasePointer], eax
-    end;
-
-    // swap back into the "OrgFS"
-    EmuSwapFS();
-  end;
-*)
-
 {$IFDEF _DXBX_EXTENDED_DEBUG}
-  DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr, {aValidate=}True));
+  DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr));
 
   DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
 {$ENDIF}
@@ -442,5 +406,14 @@ begin
 
   EmuDeallocateLDT(wSwapFS);
 end;
+
+initialization
+
+  Assert(FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_SwapFS) = DxbxFS_SwapFS);
+  Assert(FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_IsXboxFS) = DxbxFS_IsXboxFS);
+  Assert(FIELD_OFFSET(PKPCR(nil).SelfPcr) = FS_SelfPcr);
+  Assert(FIELD_OFFSET(PKPCR(nil).Prcb) = FS_Prcb);
+  Assert(FIELD_OFFSET(PKPCR(nil).Irql) = FS_Irql);
+  Assert(FIELD_OFFSET(PKPCR(nil).PrcbData) = FS_PrcbData);
 
 end.
