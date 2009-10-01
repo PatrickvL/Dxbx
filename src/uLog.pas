@@ -472,7 +472,7 @@ begin
       if LogFileOpen then
       begin
         EnterCriticalSection({var}DxbxLogLock);
-        CurrentFS := GetFS;
+        CurrentFS := GetFS();
         try
           WriteLn({var}LogFile, _Text());
           // BUGFIX : Because the above call goes through kernel32.WriteFile,

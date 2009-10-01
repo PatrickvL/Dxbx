@@ -792,7 +792,8 @@ type
     union_b: packed record case Integer of
       0: ( ArbitraryUserPointer: PVOID ); // 0x14
       1: ( Dxbx_SwapFS: Word; // 0x14;
-           Dxbx_IsXboxFS: WordBool); // 0x16
+           Dxbx_IsXboxFS: ByteBool; // 0x16
+           Dxbx_Reserved: ByteBool); // 0x17
     end;
     Self: PNT_TIB; // 0x18
   end;
