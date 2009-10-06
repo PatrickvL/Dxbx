@@ -21,7 +21,6 @@ unit uDxbxDebugUtils;
 
 interface
 
-{$IFDEF DXBX_USE_JCLDEBUG}
 uses
   // Delphi
   SysUtils,
@@ -33,6 +32,7 @@ uses
   uXboxLibraryUtils,
   DxLibraryAPIScanning;
 
+{$IFDEF DXBX_USE_JCLDEBUG}
 type
   TDxbxAPIDebugInfoSource = class(TJclDebugInfoSource)
   public

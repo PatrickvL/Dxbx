@@ -114,7 +114,7 @@ end;
 //
 // NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
 // inside the Xbox FS state, or the Win32 kernel will merrily
-// restore the FS register - which is NOT wat we want here!
+// restore the FS register - which is NOT what we want here!
 procedure EmuSwapFS;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 {$J+}
@@ -271,7 +271,7 @@ var
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
 {$ENDIF}
 
@@ -335,7 +335,7 @@ begin
   OrgNtTib.union_b.Dxbx_SwapFS := NewFS;
   OrgNtTib.union_b.Dxbx_IsXboxFS := False;
 
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
 {$ENDIF}
 
@@ -375,7 +375,7 @@ begin
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
 
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr));
 
   DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
