@@ -85,9 +85,9 @@ procedure xboxkrnl_RtlInitAnsiString(
   SourceString: PCSZ
 ); stdcall;
 function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-procedure xboxkrnl_RtlInitializeCriticalSection(
+function xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ); stdcall;
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlIntegerToChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlIntegerToUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_RtlLeaveCriticalSection(
@@ -279,9 +279,21 @@ end;
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
+  DbgPrintf('EmuKrnl : RtlEnterCriticalSection' +
+           #13#10'(' +
+           #13#10'   CriticalSection              : 0x%.08X' +
+           #13#10');',
+           [CriticalSection]);
+{$ENDIF}
+
+  // Cxbx : This seems redundant, but xbox software doesn't always do it
+  //if CriticalSection.LockCount = -1 then
+    JwaNative.RtlInitializeCriticalSection(CriticalSection);
 
   JwaNative.RtlEnterCriticalSection(CriticalSection);
 
@@ -392,14 +404,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure xboxkrnl_RtlInitializeCriticalSection(
+function xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ); stdcall;
+  ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuKrnl : RtlInitializeCriticalSection' +
            #13#10'(' +
            #13#10'   CriticalSection              : 0x%.08X' +
@@ -407,7 +419,7 @@ begin
            [CriticalSection]);
 {$ENDIF}
 
-  JwaNative.RtlInitializeCriticalSection(CriticalSection);
+  Result := JwaNative.RtlInitializeCriticalSection(CriticalSection);
 
   EmuSwapFS(fsXbox);
 end;

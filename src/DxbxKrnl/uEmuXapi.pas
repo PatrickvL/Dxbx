@@ -45,10 +45,29 @@ type
 
   LPSECURITY_ATTRIBUTES = PVOID;
 
+  PRTL_HEAP_COMMIT_ROUTINE = function(
+    Base: PVOID;
+    OUT CommitAddress: PPVOID;
+    OUT CommitSize: PSIZE_T
+    ): NTSTATUS; stdcall;
+
   RTL_HEAP_PARAMETERS = packed record
-    Length: UInt32;
-    Unknown: array [0..$2C-1] of BYTE;
+    Length: ULONG ;
+    SegmentReserve: SIZE_T;
+    SegmentCommit: SIZE_T;
+    DeCommitFreeBlockThreshold: SIZE_T;
+    DeCommitTotalFreeThreshold: SIZE_T;
+    MaximumAllocationSize: SIZE_T;
+    VirtualMemoryThreshold: SIZE_T;
+    InitialCommit: SIZE_T;
+    InitialReserve: SIZE_T;
+    CommitRoutine: PRTL_HEAP_COMMIT_ROUTINE;
+    Reserved: array [0..2-1] of SIZE_T;
+// Was:
+//    Length: UInt32;
+//    Unknown: array [0..$2C-1] of BYTE;
   end;
+  PRTL_HEAP_PARAMETERS = ^RTL_HEAP_PARAMETERS;
 
   _XINPUT_POLLING_PARAMETERS = packed record
    	fAutoPoll : BYTE;//       : 1;
@@ -309,14 +328,14 @@ type
 function XTL_EmuRtlCreateHeap(
   Flags: ULONG;
   Base: PVOID; // OPTIONAL
-  Reserve: ULONG; // OPTIONAL
-  Commit: ULONG;
+  Reserve: SIZE_T; // OPTIONAL
+  Commit: SIZE_T;
   Lock: PVOID; // OPTIONAL
-  RtlHeapParams: PVOID // OPTIONAL
+  Parameters: PVOID // OPTIONAL
   ): PVOID; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
-  RtlHeapDefinition: RTL_HEAP_DEFINITION;
+  NativeParameters: RTL_HEAP_PARAMETERS; // Was: RTL_HEAP_DEFINITION;
 begin
   EmuSwapFS(fsWindows);
 
@@ -327,15 +346,18 @@ begin
     #13#10'   Reserve             : 0x%.08X' +
     #13#10'   Commit              : 0x%.08X' +
     #13#10'   Lock                : 0x%.08X' +
-    #13#10'   RtlHeapParams       : 0x%.08X' +
+    #13#10'   Parameters          : 0x%.08X' +
     #13#10');',
-    [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
+    [Flags, Base, Reserve, Commit, Lock, Parameters]);
 
-  ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
-  RtlHeapDefinition.Length := SizeOf(RtlHeapDefinition);
+  ZeroMemory(@NativeParameters, SizeOf(NativeParameters));
+  NativeParameters.Length := SizeOf(NativeParameters);
+
+  // TODO : Find out how RtlHeapParams is defined on Xbox, and map this
+  // as closely as possible to the native RTL_HEAP_PARAMETERS.
 
   Result := PVOID(JwaNative.RtlCreateHeap(
-    Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
+    Flags, Base, Reserve, Commit, Lock, @NativeParameters));
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
 
@@ -352,7 +374,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -391,7 +413,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -423,7 +445,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
     #13#10'('+
     #13#10'   hHeap               : 0x%.08X' +
@@ -470,7 +492,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DXBX_EXTENDED_DEBUG}
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -1149,7 +1171,6 @@ begin
   // call RtlCreateHeap
   begin
     ZeroMemory(@HeapParameters, SizeOf(HeapParameters));
-
     HeapParameters.Length := SizeOf(HeapParameters);
 
     EmuSwapFS(fsXbox);
