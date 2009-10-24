@@ -23,6 +23,8 @@
 
 {.$DEFINE DXBX_USE_ALPHASKINS} // Enable this to use AlphaSkins in Dxbx
 
+{$DEFINE DXBX_EXTENSIVE_CALLSTACK_LOGGING}
+
 {$IFDEF DXBX_DEBUG}
   {$DEFINE _DEBUG_TRACE} // Cxbx uses this for extended debugging
   {$DEFINE DXBX_EXTENSIVE_LOGGING}

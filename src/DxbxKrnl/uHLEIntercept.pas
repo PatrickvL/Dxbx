@@ -17,7 +17,7 @@
 *)
 unit uHLEIntercept;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

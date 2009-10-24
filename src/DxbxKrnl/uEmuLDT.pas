@@ -22,7 +22,7 @@ This unit contains 'Local Descriptor Table'-related emulation methods.
 See http://en.wikipedia.org/wiki/Local_Descriptor_Table for more details.
 *)
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

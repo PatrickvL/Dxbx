@@ -24,8 +24,9 @@ interface
 uses
   // Delphi
   Windows
-  , JwaWinType
   , SysUtils // StrCopy
+  // Jedi Win32API
+  , JwaWinType
 {$IFDEF DXBX_USE_JCLDEBUG}
   // Jcl
   , JclDebug

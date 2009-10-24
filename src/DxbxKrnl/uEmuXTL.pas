@@ -18,7 +18,7 @@
 
 unit uEmuXTL;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

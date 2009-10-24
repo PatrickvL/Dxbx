@@ -27,7 +27,9 @@ interface
 
 uses
   // Delphi
-  Windows, JwaWinType;
+  Windows,
+  // Jedi Win32API
+  JwaWinType;
 
 type
   TConsoleControl = class(TObject)

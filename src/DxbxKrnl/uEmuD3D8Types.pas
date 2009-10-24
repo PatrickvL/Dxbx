@@ -18,7 +18,7 @@
 
 unit uEmuD3D8Types;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 
