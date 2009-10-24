@@ -1,0 +1,44 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{05c008c7-dc24-41b9-a318-6dd33332ad10}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Projects Include="d11\Dxbx.dproj" />
+    <Projects Include="d11\DxbxKrnl.dproj" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Default.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+  <BorlandProject xmlns=""> <Default.Personality> </Default.Personality> </BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Target Name="Dxbx">
+    <MSBuild Projects="d11\Dxbx.dproj" Targets="" />
+  </Target>
+  <Target Name="Dxbx:Clean">
+    <MSBuild Projects="d11\Dxbx.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="Dxbx:Make">
+    <MSBuild Projects="d11\Dxbx.dproj" Targets="Make" />
+  </Target>
+  <Target Name="DxbxKrnl">
+    <MSBuild Projects="d11\DxbxKrnl.dproj" Targets="" />
+  </Target>
+  <Target Name="DxbxKrnl:Clean">
+    <MSBuild Projects="d11\DxbxKrnl.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="DxbxKrnl:Make">
+    <MSBuild Projects="d11\DxbxKrnl.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Build">
+    <CallTarget Targets="Dxbx;DxbxKrnl" />
+  </Target>
+  <Target Name="Clean">
+    <CallTarget Targets="Dxbx:Clean;DxbxKrnl:Clean" />
+  </Target>
+  <Target Name="Make">
+    <CallTarget Targets="Dxbx:Make;DxbxKrnl:Make" />
+  </Target>
+  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+</Project>

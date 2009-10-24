@@ -27,16 +27,16 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-27 11:45:37 +0200 (za, 27 sep 2008)                             $ }
-{ Revision:      $Rev:: 2497                                                                     $ }
-{ Author:        $Author:: cycocrew                                                              $ }
+{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (di, 25 aug 2009)                             $ }
+{ Revision:      $Rev:: 2969                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-{$B-} // Boolean shortcut evaluation
-{$H+} // Long strings
-{$J-} // Read-only typed constants
-{$T-} // Type checked pointers off
+{$BOOLEVAL OFF}       // Boolean shortcut evaluation
+{$LONGSTRINGS ON}     // Long strings
+{$WRITEABLECONST OFF} // Read-only typed constants
+{$TYPEDADDRESS OFF}   // Type checked pointers off
 
 {$I jedi.inc} // Pull in the JCL/J-VCL shared directives
 
@@ -67,20 +67,6 @@ ALERT_jedi_inc_incompatible
     {----------------------------}
   {$ELSE ~CLR}
     {----------------------------}
-    { Kylix                      }
-    {----------------------------}
-    // KYLIX3 is not defined (version numbers comparisons are wrong)
-    // won't fix because of possible bug with floating point comparisons
-    // at compile time
-    {$IFDEF KYLIX}
-      {$IFDEF BCB}
-        {$I jclkc3.inc}
-      {$ELSE ~BCB}
-        {$I jclkd3.inc}
-      {$ENDIF ~BCB}
-      {$DEFINE JCL_CONFIGURED}
-    {$ENDIF KYLIX}
-    {----------------------------}
     { C++Builder                 }
     {----------------------------}
     {$IFDEF BCB5}
@@ -108,7 +94,7 @@ ALERT_jedi_inc_incompatible
     {$IFDEF DELPHI7}
       {$I jcld7.inc}
       {$DEFINE JCL_CONFIGURED}
-    {$ENDIF DELPIH7}  
+    {$ENDIF DELPIH7}
     {----------------------------}
     { BDS                        }
     {----------------------------}
@@ -144,6 +130,11 @@ ALERT_jedi_inc_incompatible
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS6}
     {----------------------------}
+    {$IFDEF BDS7}
+      {$I jcld14.inc}
+      {$DEFINE JCL_CONFIGURED}
+    {$ENDIF BDS7}
+    {----------------------------}
     {$IFDEF FPC}
       {$I jclfpc.inc}
       {$DEFINE JCL_CONFIGURED}
@@ -155,9 +146,9 @@ ALERT_jedi_inc_incompatible
   {$IFNDEF JCL_CONFIGURED}
     {$IFDEF SUPPORTS_COMPILETIME_MESSAGES}
       {$MESSAGE FATAL 'Your Delphi/BCB version is not supported by this JCL version!'}
-    {$ELSE}
+    {$ELSE ~SUPPORTS_COMPILETIME_MESSAGES}
       'Your Delphi/BCB version is not supported by this JCL version!'
-    {$ENDIF SUPPORTS_COMPILETIME_MESSAGES}
+    {$ENDIF ~SUPPORTS_COMPILETIME_MESSAGES}
   {$ENDIF !JCL_CONFIGURED}
 
 {$ENDIF ~JCLINSTALL}
@@ -179,10 +170,26 @@ ALERT_jedi_inc_incompatible
 {$IFNDEF MATH_EXTENDED_PRECISION}
   {$IFNDEF MATH_DOUBLE_PRECISION}
     {$IFNDEF MATH_SINGLE_PRECISION}
-      {$DEFINE MATH_EXTENDED_PRECISION}
+      {$IFDEF FPC}
+        {$IFDEF CPU64}
+          {$DEFINE MATH_DOUBLE_PRECISION}
+        {$ELSE ~CPU64}
+          {$DEFINE MATH_EXTENDED_PRECISION}
+        {$ENDIF ~CPU64}
+      {$ELSE ~FPC}
+        {$DEFINE MATH_EXTENDED_PRECISION}
+      {$ENDIF ~FPC}
     {$ENDIF}
   {$ENDIF}
 {$ENDIF}
+
+{$IFDEF MATH_EXTENDED_PRECISION}
+  {$IFDEF CPU64}
+    {$IFDEF FPC}
+      {$MESSAGE FATAL 'FPC does not support extended floating points on x86_64!'}
+    {$ENDIF FPC}
+  {$ENDIF CPU64}
+{$ENDIF MATH_EXTENDED_PRECISION}
 
 // PCRE options, mutually exclusive
 {$IFDEF PCRE_STATICLINK}
@@ -345,3 +352,13 @@ ALERT_jedi_inc_incompatible
  {$DEFINE PIC}
  {$DEFINE PUREPASCAL}
 {$ENDIF CLR}
+
+// Delphi 2005 has a compiler internal failure when compiling the JCL with UNITVERSIONING enabled
+{$IFDEF DELPHI2005}
+  {$UNDEF UNITVERSIONING}
+{$ENDIF DELPHI2005}
+
+{$IFDEF FPC}
+  {$DEFINE DEBUG_NO_TD32}
+{$ENDIF FPC}
+

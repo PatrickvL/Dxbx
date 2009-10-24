@@ -35,8 +35,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007)                             $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009)                             $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -92,7 +92,10 @@ function ClearBit(const Value: Word; const Bit: TBitRange): Word; overload;
 function ClearBit(const Value: Integer; const Bit: TBitRange): Integer; overload;
 function ClearBit(const Value: Cardinal; const Bit: TBitRange): Cardinal; overload;
 function ClearBit(const Value: Int64; const Bit: TBitRange): Int64; overload;
-procedure ClearBitBuffer(var Value; const Bit: Cardinal);
+procedure ClearBitBuffer(var Value; const Bit: Cardinal); overload;
+{$IFDEF CPU64}
+procedure ClearBitBuffer(var Value; const Bit: Int64); overload;
+{$ENDIF CPU64}
 
 function CountBitsSet(X: Byte): Integer; overload;
 function CountBitsSet(X: Word): Integer; overload;
@@ -101,9 +104,7 @@ function CountBitsSet(X: ShortInt): Integer; overload;
 function CountBitsSet(X: Integer): Integer; overload;
 function CountBitsSet(X: Cardinal): Integer; overload;
 function CountBitsSet(X: Int64): Integer; overload;
-{$IFNDEF CLR}
 function CountBitsSet(P: Pointer; Count: Cardinal): Cardinal; overload;
-{$ENDIF ~CLR}
 
 function CountBitsCleared(X: Byte): Integer; overload;
 function CountBitsCleared(X: Shortint): Integer; overload;
@@ -112,9 +113,7 @@ function CountBitsCleared(X: Word): Integer; overload;
 function CountBitsCleared(X: Integer): Integer; overload;
 function CountBitsCleared(X: Cardinal): Integer; overload;
 function CountBitsCleared(X: Int64): Integer; overload;
-{$IFNDEF CLR}
 function CountBitsCleared(P: Pointer; Count: Cardinal): Cardinal; overload;
-{$ENDIF ~CLR}
 
 function LRot(const Value: Byte; const Count: TBitRange): Byte; overload;
 function LRot(const Value: Word; const Count: TBitRange): Word; overload;
@@ -126,9 +125,7 @@ function ReverseBits(Value: Word): Word; overload;
 function ReverseBits(Value: Integer): Integer; overload;
 function ReverseBits(Value: Cardinal): Cardinal; overload;
 function ReverseBits(Value: Int64): Int64; overload;
-{$IFNDEF CLR}
 function ReverseBits(P: Pointer; Count: Integer): Pointer; overload;
-{$ENDIF ~CLR}
 
 function RRot(const Value: Byte; const Count: TBitRange): Byte; overload;
 function RRot(const Value: Word; const Count: TBitRange): Word; overload;
@@ -145,7 +142,10 @@ function SetBit(const Value: Word; const Bit: TBitRange): Word; overload;
 function SetBit(const Value: Cardinal; const Bit: TBitRange): Cardinal; overload;
 function SetBit(const Value: Integer; const Bit: TBitRange): Integer; overload;
 function SetBit(const Value: Int64; const Bit: TBitRange): Int64; overload;
-procedure SetBitBuffer(var Value; const Bit: Cardinal);
+procedure SetBitBuffer(var Value; const Bit: Cardinal); overload;
+{$IFDEF CPU64}
+procedure SetBitBuffer(var Value; const Bit: Int64); overload;
+{$ENDIF CPU64}
 
 function TestBit(const Value: Byte; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Shortint; const Bit: TBitRange): Boolean; overload;
@@ -154,7 +154,10 @@ function TestBit(const Value: Word; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Cardinal; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Integer; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Int64; const Bit: TBitRange): Boolean; overload;
-function TestBitBuffer(const Value; const Bit: Cardinal): Boolean;
+function TestBitBuffer(const Value; const Bit: Cardinal): Boolean; overload;
+{$IFDEF CPU64}
+function TestBitBuffer(const Value; const Bit: Int64): Boolean; overload;
+{$ENDIF CPU64}
 
 function TestBits(const Value, Mask: Byte): Boolean; overload;
 function TestBits(const Value, Mask: Shortint): Boolean; overload;
@@ -171,7 +174,10 @@ function ToggleBit(const Value: Word; const Bit: TBitRange): Word; overload;
 function ToggleBit(const Value: Cardinal; const Bit: TBitRange): Cardinal; overload;
 function ToggleBit(const Value: Integer; const Bit: TBitRange): Integer; overload;
 function ToggleBit(const Value: Int64; const Bit: TBitRange): Int64; overload;
-procedure ToggleBitBuffer(var Value; const Bit: Cardinal);
+procedure ToggleBitBuffer(var Value; const Bit: Cardinal); overload;
+{$IFDEF CPU64}
+procedure ToggleBitBuffer(var Value; const Bit: Int64); overload;
+{$ENDIF CPU64}
 
 procedure BooleansToBits(var Dest: Byte; const B: TBooleanArray); overload;
 procedure BooleansToBits(var Dest: Word; const B: TBooleanArray); overload;
@@ -195,9 +201,7 @@ function ReverseBytes(Value: Smallint): Smallint; overload;
 function ReverseBytes(Value: Integer): Integer; overload;
 function ReverseBytes(Value: Cardinal): Cardinal; overload;
 function ReverseBytes(Value: Int64): Int64; overload;
-{$IFNDEF CLR}
 function ReverseBytes(P: Pointer; Count: Integer): Pointer; overload;
-{$ENDIF ~CLR}
 
 // Arithmetic
 procedure SwapOrd(var I, J: Byte); overload;
@@ -293,9 +297,11 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclLogic.pas $';
-    Revision: '$Revision: 2175 $';
-    Date: '$Date: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (zo, 09 aug 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -303,9 +309,6 @@ implementation
 
 uses
   JclBase;
-
-type
-  PByte = ^Byte;
 
 // Conversion
 function OrdToBinary(Value: Byte): string;
@@ -397,42 +400,48 @@ end;
 
 // Bit manipulation
 function BitsHighest(X: Cardinal): Integer;
-{$IFDEF CLR}
-begin
-  for Result := 31 downto 0 do
-    if X and (1 shl Result) <> 0 then
-      Exit;
-  Result := -1;
-end;
-{$ELSE}
 asm
+  {$IFDEF CPU32}
+  // --> EAX X
+  // <-- EAX
   MOV     ECX, EAX
   MOV     EAX, -1
   BSR     EAX, ECX
   JNZ     @@End
   MOV     EAX, -1
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> ECX X
+  // <-- RAX
+  MOV     RAX, -1
+  BSR     RAX, ECX
+  JNZ     @@End
+  MOV     RAX, -1
+  {$ENDIF CPU64}
 @@End:
 end;
-{$ENDIF CLR}
 
 function BitsHighest(X: Integer): Integer;
-{$IFDEF CLR}
-begin
-  for Result := 31 downto 0 do
-    if X and (1 shl Result) <> 0 then
-      Exit;
-  Result := -1;
-end;
-{$ELSE}
 asm
+  {$IFDEF CPU32}
+  // --> EAX X
+  // <-- EAX
   MOV     ECX, EAX
   MOV     EAX, -1
   BSR     EAX, ECX
   JNZ     @@End
   MOV     EAX, -1
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> ECX X
+  // <-- RAX
+  MOV     RAX, -1
+  BSR     RAX, ECX
+  JNZ     @@End
+  MOV     RAX, -1
+  {$ENDIF CPU64}
 @@End:
 end;
-{$ENDIF CLR}
 
 function BitsHighest(X: Byte): Integer;
 begin
@@ -455,57 +464,69 @@ begin
 end;
 
 function BitsHighest(X: Int64): Integer;
+{$IFDEF CPU32}
 begin
-  {$IFDEF CLR}
-  for Result := 63 downto 0 do
-    if X and (Int64(1) shl Result) <> 0 then
-      Exit;
-  Result := -1;
-  {$ELSE}
-  if TULargeInteger(X).HighPart = 0 then
-    Result := BitsHighest(TULargeInteger(X).LowPart)
+  if TJclULargeInteger(X).HighPart = 0 then
+    Result := BitsHighest(TJclULargeInteger(X).LowPart)
   else
-    Result := BitsHighest(TULargeInteger(X).HighPart) + 32;
-  {$ENDIF CLR}
+    Result := BitsHighest(TJclULargeInteger(X).HighPart) + 32;
 end;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+asm
+  // --> RCX X
+  // <-- RAX
+  MOV     RAX, -1
+  BSR     RAX, RCX
+  JNZ     @@End
+  MOV     RAX, -1
+@@End:
+end;
+{$ENDIF CPU64}
 
 function BitsLowest(X: Cardinal): Integer;
-{$IFDEF CLR}
-begin
-  for Result := 0 to 31 do
-    if X and (1 shl Result) <> 0 then
-      Exit;
-  Result := -1;
-end;
-{$ELSE}
 asm
+  {$IFDEF CPU32}
+  // --> EAX X
+  // <-- EAX
   MOV     ECX, EAX
   MOV     EAX, -1
   BSF     EAX, ECX
   JNZ     @@End
   MOV     EAX, -1
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> RCX X
+  // <-- EAX
+  MOV     RAX, -1
+  BSF     RAX, ECX
+  JNZ     @@End
+  MOV     RAX, -1
+  {$ENDIF CPU64}
 @@End:
 end;
-{$ENDIF CLR}
 
 function BitsLowest(X: Integer): Integer;
-{$IFDEF CLR}
-begin
-  for Result := 0 to 31 do
-    if X and (1 shl Result) <> 0 then
-      Exit;
-  Result := -1;
-end;
-{$ELSE}
 asm
+  {$IFDEF CPU32}
+  // --> EAX X
+  // <-- EAX
   MOV     ECX, EAX
   MOV     EAX, -1
   BSF     EAX, ECX
   JNZ     @@End
   MOV     EAX, -1
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> RCX X
+  // <-- EAX
+  MOV     RAX, -1
+  BSF     RAX, ECX
+  JNZ     @@End
+  MOV     RAX, -1
+  {$ENDIF CPU64}
 @@End:
 end;
-{$ENDIF CLR}
 
 function BitsLowest(X: Byte): Integer;
 begin
@@ -529,108 +550,119 @@ end;
 
 function BitsLowest(X: Int64): Integer;
 begin
-  {$IFDEF CLR}
-  for Result := 0 to 63 do
-    if X and (Int64(1) shl Result) <> 0 then
-      Exit;
-  Result := -1;
-  {$ELSE}
-  if TULargeInteger(X).LowPart = 0 then
-    Result := BitsLowest(TULargeInteger(X).HighPart) + 32
+  if TJclULargeInteger(X).LowPart = 0 then
+    Result := BitsLowest(TJclULargeInteger(X).HighPart) + 32
   else
-    Result := BitsLowest(TULargeInteger(X).LowPart);
-  {$ENDIF CLR}
+    Result := BitsLowest(TJclULargeInteger(X).LowPart);
 end;
 
 function ClearBit(const Value: Byte; const Bit: TBitRange): Byte;
-{$IFDEF CLR}
-begin
-  Result := Value and not (1 shl (Bit and (BitsPerByte - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
   AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
   BTR    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function ClearBit(const Value: Shortint; const Bit: TBitRange): Shortint;
-{$IFDEF CLR}
-begin
-  Result := Value and not (1 shl (Bit and (BitsPerShortint - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
   AND    EDX, BitsPerShortint - 1   // modulo BitsPerShortint
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
   BTR    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function ClearBit(const Value: Smallint; const Bit: TBitRange): Smallint;
-{$IFDEF CLR}
-begin
-  Result := Value and not (1 shl (Bit and (BitsPerSmallint - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
   AND    EDX, BitsPerSmallint - 1   // modulo BitsPerSmallint
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
   BTR    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function ClearBit(const Value: Word; const Bit: TBitRange): Word;
-{$IFDEF CLR}
-begin
-  Result := Value and not (1 shl (Bit and (BitsPerWord - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
   AND    EDX, BitsPerWord - 1   // modulo BitsPerWord
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
   BTR    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function ClearBit(const Value: Cardinal; const Bit: TBitRange): Cardinal;
-{$IFDEF CLR}
-begin
-  Result := Value and not (1 shl (Bit and (BitsPerCardinal - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
   BTR    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function ClearBit(const Value: Integer; const Bit: TBitRange): Integer;
-{$IFDEF CLR}
-begin
-  Result := Value and not (1 shl (Bit and (BitsPerInteger - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
   BTR    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function ClearBit(const Value: Int64; const Bit: TBitRange): Int64;
+{$IFDEF CPU32}
 begin
   Result := Value and not (Int64(1) shl (Bit and (BitsPerInt64 - 1)));
 end;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+asm
+  // --> RCX Value
+  //     DL  Bit
+  // <-- RAX Result
+  MOV    RAX, RCX
+  BTR    RAX, EDX
+end;
+{$ENDIF CPU64}
 
 procedure ClearBitBuffer(var Value; const Bit: Cardinal);
-{$IFDEF CLR}
-var
-  Bytes: array of Byte;
-  BitOfs: TBitRange;
-  Index: Integer;
-begin
-  Bytes := GetBytesEx(Value);
-  Index := Bit div 8;
-  BitOfs := Bit mod 8;
-  Bytes[Index] := ClearBit(Bytes[Index], BitOfs);
-  SetBytesEx(Value, Bytes);
-end;
-{$ELSE CLR}
 {$IFDEF PUREPASCAL}
 var
   P: PByte;
@@ -641,15 +673,39 @@ begin
   BitOfs := Bit mod 8;
   P^ := ClearBit(P^, BitOfs);
 end;
-{$ELSE PUREPASCAL}
+{$ELSE ~PUREPASCAL}
 asm
+  // 32 --> EAX Value
+  //        EDX Bit
+  // 64 --> RCX Value
+  //        EDX Bit
   BTR    [Value], Bit
 end;
-{$ENDIF PUREPASCAL}
-{$ENDIF CLR}
+{$ENDIF ~PUREPASCAL}
+
+{$IFDEF CPU64}
+procedure ClearBitBuffer(var Value; const Bit: Int64);
+{$IFDEF PUREPASCAL}
+var
+  P: PByte;
+  BitOfs: TBitRange;
+begin
+  P := Addr(Value);
+  Inc(P, Bit div 8);
+  BitOfs := Bit mod 8;
+  P^ := ClearBit(P^, BitOfs);
+end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 64 --> RCX Value
+  //        RDX Bit
+  BTR    [Value], Bit
+end;
+{$ENDIF ~PUREPASCAL}
+{$ENDIF CPU64}
 
 const
-  BitSetPerNibble: array[0..15] of Byte = (0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4);
+  BitSetPerNibble: array[0..15] of Integer = (0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4);
 
 function CountBitsSet(X: Cardinal): Integer;
 var
@@ -709,7 +765,6 @@ begin
   end;
 end;
 
-{$IFNDEF CLR}
 function CountBitsSet(P: Pointer; Count: Cardinal): Cardinal;
 var
   b: Byte;
@@ -718,7 +773,7 @@ begin
   while Count > 0 do
   begin
     b := PByte(P)^;
-    
+
     // lower Nibble
     Inc(Result, BitSetPerNibble[b and $0F]);
     // upper Nibble
@@ -728,15 +783,10 @@ begin
     Inc(PByte(P));
   end;
 end;
-{$ENDIF ~CLR}
 
 function CountBitsSet(X: Int64): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CountBitsSet(X and $00000000FFFFFFFF) + CountBitsSet(X shr 32);
-  {$ELSE}
-  Result := CountBitsSet(TULargeInteger(X).LowPart) + CountBitsSet(TULargeInteger(X).HighPart);
-  {$ENDIF CLR}
+  Result := CountBitsSet(TJclULargeInteger(X).LowPart) + CountBitsSet(TJclULargeInteger(X).HighPart);
 end;
 
 function CountBitsCleared(X: Byte): Integer;
@@ -774,59 +824,67 @@ begin
   Result := BitsPerInt64 - CountBitsSet(Int64(X));
 end;
 
-{$IFNDEF CLR}
 function CountBitsCleared(P: Pointer; Count: Cardinal): Cardinal;
 begin
   Result := Count * BitsPerByte - CountBitsSet(P, Count);
 end;
-{$ENDIF ~CLR}
 
-{$IFDEF CLR}
-function LRot(const Value: Byte; const Count: TBitRange): Byte;
-var
-  I: Integer;
-begin
-  Result := Value;
-  for I := 1 to Count do
-    Result := (Result shl 1) or ((Result and $80) shr 7);
-end;
-
-function LRot(const Value: Word; const Count: TBitRange): Word;
-var
-  I: Integer;
-begin
-  Result := Value;
-  for I := 1 to Count do
-    Result := (Result shl 1) or ((Result and $8000) shr 7);
-end;
-
-function LRot(const Value: Integer; const Count: TBitRange): Integer;
-var
-  I: Integer;
-begin
-  Result := Value;
-  for I := 1 to Count do
-    Result := (Result shl 1) or ((Result and Integer($80000000)) shr 7);
-end;
-{$ELSE}
 function LRot(const Value: Byte; const Count: TBitRange): Byte; assembler;
 asm
-  MOV CL, Count
-  ROL AL, CL
+  {$IFDEF CPU32}
+  // --> AL Value
+  //     DL Count
+  // <-- AL Result
+  MOV    CL, DL
+  ROL    AL, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CL Value
+  //     DL Count
+  // <-- AL Result
+  MOV    AL, CL
+  MOV    CL, DL
+  ROL    AL, CL
+  {$ENDIF CPU64}
 end;
 
 function LRot(const Value: Word; const Count: TBitRange): Word; assembler;
 asm
-   MOV     CL, Count
-   ROL     AX, CL
+  {$IFDEF CPU32}
+  // --> AX Value
+  //     DL Count
+  // <-- AX Result
+  MOV    CL, DL
+  ROL    AX, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CX Value
+  //     DL Count
+  // <-- AX Result
+  MOV    AX, CX
+  MOV    CL, DL
+  ROL    AX, CL
+  {$ENDIF CPU64}
 end;
 
 function LRot(const Value: Integer; const Count: TBitRange): Integer; assembler;
 asm
-  MOV     CL, Count
-  ROL     EAX, CL
+  {$IFDEF CPU32}
+  // --> EAX Value
+  //     DL  Count
+  // <-- EAX Result
+  MOV    CL,  DL
+  ROL    EAX, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> ECX Value
+  //     DL  Count
+  // <-- EAX Result
+  MOV    EAX, ECX
+  MOV    CL,  DL
+  ROL    EAX, CL
+  {$ENDIF CPU64}
 end;
-{$ENDIF CLR}
 
 const
   // Lookup table of bit reversed nibbles, used by simple overloads of ReverseBits
@@ -888,16 +946,10 @@ end;
 
 function ReverseBits(Value: Int64): Int64;
 begin
-  {$IFDEF CLR}
-  Result := (Int64(ReverseBits(Value shr 32)) shl 32) or
-            (ReverseBits(Value and $00000000FFFFFFFF));
-  {$ELSE}
-  TULargeInteger(Result).LowPart := ReverseBits(TULargeInteger(Value).HighPart);
-  TULargeInteger(Result).HighPart := ReverseBits(TULargeInteger(Value).LowPart);
-  {$ENDIF CLR}
+  TJclULargeInteger(Result).LowPart := ReverseBits(TJclULargeInteger(Value).HighPart);
+  TJclULargeInteger(Result).HighPart := ReverseBits(TJclULargeInteger(Value).LowPart);
 end;
 
-{$IFNDEF CLR}
 const
   // Lookup table of reversed bytes, used by pointer overload of ReverseBits
   ReverseTable: array [0..ByteMask] of Byte = (
@@ -942,8 +994,9 @@ begin
   if (P <> nil) and (Count > 0) then
   begin
     P1 := P;
-    P2 := PByte(Integer(P) + Count - 1);
-    while Integer(P1) < Integer(P2) do
+    P2 := P;
+    Inc(P2, Count - 1);
+    while TJclAddr(P1) < TJclAddr(P2) do
     begin
       T := ReverseTable[P1^];
       P1^ := ReverseTable[P2^];
@@ -956,183 +1009,228 @@ begin
   end;
   Result := P;
 end;
-{$ENDIF ~CLR}
 
-{$IFDEF CLR}
-function RRot(const Value: Byte; const Count: TBitRange): Byte;
-var
-  I: Integer;
-begin
-  Result := Value;
-  for I := 1 to Count do
-    Result := (Result shr 1) or ((Result and $01) shl 7);
-end;
-
-function RRot(const Value: Word; const Count: TBitRange): Word;
-var
-  I: Integer;
-begin
-  Result := Value;
-  for I := 1 to Count do
-    Result := (Result shr 1) or ((Result and $0001) shl 7);
-end;
-
-function RRot(const Value: Integer; const Count: TBitRange): Integer;
-var
-  I: Integer;
-begin
-  Result := Value;
-  for I := 1 to Count do
-    Result := (Result shr 1) or ((Result and $00000001) shl 7);
-end;
-
-function Sar(const Value: Shortint; const Count: TBitRange): Shortint;
-begin
-  Result := (Value shr Count) or (Value and $80);
-end;
-
-function Sar(const Value: Smallint; const Count: TBitRange): Smallint;
-begin
-  Result := (Value shr Count) or (Value and $8000);
-end;
-
-function Sar(const Value: Integer; const Count: TBitRange): Integer;
-begin
-  Result := (Value shr Count) or (Value and Integer($80000000));
-end;
-{$ELSE}
 function RRot(const Value: Byte; const Count: TBitRange): Byte; assembler;
 asm
-  MOV     CL, Count
-  MOV     AL, Value
-  ROR     AL, CL
-  MOV     Result, AL
+  {$IFDEF CPU32}
+  // --> AL Value
+  //     DL Count
+  // <-- AL Result
+  MOV    CL, DL
+  ROR    AL, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CL Value
+  //     DL Count
+  // <-- AL Result
+  MOV    AL, CL
+  MOV    CL, DL
+  ROR    AL, CL
+  {$ENDIF CPU64}
 end;
 
 function RRot(const Value: Word; const Count: TBitRange): Word; assembler;
 asm
-  MOV     CL, Count
-  MOV     AX, Value
-  ROR     AX, CL
-  MOV     Result, AX
+  {$IFDEF CPU32}
+  // --> AX Value
+  //     DL Count
+  // <-- AX Result
+  MOV    CL, DL
+  ROR    AX, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CX Value
+  //     DL Count
+  // <-- AX Result
+  MOV    AX, CX
+  MOV    CL, DL
+  ROR    AX, CL
+  {$ENDIF CPU64}
 end;
 
 function RRot(const Value: Integer; const Count: TBitRange): Integer; assembler;
 asm
-  MOV     CL, Count
-  MOV     EAX, Value
-  ROR     EAX, CL
-  MOV     Result, EAX
+  {$IFDEF CPU32}
+  // --> EAX Value
+  //     DL  Count
+  // <-- EAX Result
+  MOV    CL,  DL
+  ROR    EAX, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> ECX Value
+  //     DL  Count
+  // <-- EAX Result
+  MOV    EAX, ECX
+  MOV    CL,  DL
+  ROR    EAX, CL
+  {$ENDIF CPU64}
 end;
 
 function Sar(const Value: Shortint; const Count: TBitRange): Shortint; assembler;
 asm
-  MOV     CL, DL
-  SAR     AL, CL
+  {$IFDEF CPU32}
+  // --> AL Value
+  //     DL Count
+  // <-- AL Result
+  MOV    CL, DL
+  SAR    AL, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CL Value
+  //     DL Count
+  // <-- AL Result
+  MOV    AL, CL
+  MOV    CL, DL
+  SAR    AL, CL
+  {$ENDIF CPU64}
 end;
 
 function Sar(const Value: Smallint; const Count: TBitRange): Smallint; assembler;
 asm
-  MOV     CL, DL
-  SAR     AX, CL
+  {$IFDEF CPU32}
+  // --> AX Value
+  //     DL Count
+  // <-- AX Result
+  MOV    CL, DL
+  SAR    AX, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CX Value
+  //     DL Count
+  // <-- AX Result
+  MOV    AX, CX
+  MOV    CL, DL
+  SAR    AX, CL
+  {$ENDIF CPU64}
 end;
 
 function Sar(const Value: Integer; const Count: TBitRange): Integer; assembler;
 asm
-  MOV     CL, DL
-  SAR     EAX, CL
+  {$IFDEF CPU32}
+  // --> EAX Value
+  //     DL  Count
+  // <-- EAX Result
+  MOV    CL, DL
+  SAR    EAX, CL
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> ECX Value
+  //     DL  Count
+  // <-- EAX Result
+  MOV    EAX, ECX
+  MOV    CL,  DL
+  SAR    EAX, CL
+  {$ENDIF CPU64}
 end;
-{$ENDIF CLR}
 
 function SetBit(const Value: Byte; const Bit: TBitRange): Byte;
-{$IFDEF CLR}
-begin
-  Result := Value or (1 shl (Bit and (BitsPerByte - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
   AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
   BTS    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function SetBit(const Value: Shortint; const Bit: TBitRange): Shortint;
-{$IFDEF CLR}
-begin
-  Result := Value or (1 shl (Bit and (BitsPerShortint - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
   AND    EDX, BitsPerShortInt - 1   // modulo BitsPerShortInt
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
   BTS    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function SetBit(const Value: Smallint; const Bit: TBitRange): Smallint;
-{$IFDEF CLR}
-begin
-  Result := Value or (1 shl (Bit and (BitsPerSmallint - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
   AND    EDX, BitsPerSmallInt - 1   // modulo BitsPerSmallInt
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
   BTS    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function SetBit(const Value: Word; const Bit: TBitRange): Word;
-{$IFDEF CLR}
-begin
-  Result := Value or (1 shl (Bit mod BitsPerWord));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
   AND    EDX, BitsPerWord - 1   // modulo BitsPerWord
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
   BTS    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function SetBit(const Value: Cardinal; const Bit: TBitRange): Cardinal;
-{$IFDEF CLR}
-begin
-  Result := Value or (1 shl (Bit and (BitsPerCardinal - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
   BTS    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function SetBit(const Value: Integer; const Bit: TBitRange): Integer;
-{$IFDEF CLR}
-begin
-  Result := Value or (1 shl (Bit and (BitsPerInteger - 1)));
-end;
-{$ELSE CLR}
 asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
   BTS    EAX, EDX
 end;
-{$ENDIF CLR}
 
 function SetBit(const Value: Int64; const Bit: TBitRange): Int64;
+{$IFDEF CPU32}
 begin
   Result := Value or (Int64(1) shl (Bit and (BitsPerInt64 - 1)));
 end;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+asm
+  // --> RCX Value
+  //     DL  Bit
+  // <-- RAX Result
+  MOV    RAX, RCX
+  BTS    RAX, EDX
+end;
+{$ENDIF CPU64}
 
 procedure SetBitBuffer(var Value; const Bit: Cardinal);
-{$IFDEF CLR}
-var
-  Bytes: array of Byte;
-  BitOfs: TBitRange;
-  Index: Integer;
-begin
-  Bytes := GetBytesEx(Value);
-  Index := Bit div 8;
-  BitOfs := Bit mod 8;
-  Bytes[Index] := SetBit(Bytes[Index], BitOfs);
-  SetBytesEx(Value, Bytes);
-end;
-{$ELSE}
 {$IFDEF PUREPASCAL}
 var
   P: PByte;
@@ -1143,59 +1241,181 @@ begin
   BitOfs := Bit mod 8;
   P^ := SetBit(P^, BitOfs);
 end;
-{$ELSE PUREPASCAL}
+{$ELSE ~PUREPASCAL}
 asm
   BTS    [Value], Bit
 end;
-{$ENDIF PUREPASCAL}
-{$ENDIF CLR}
+{$ENDIF ~PUREPASCAL}
+
+{$IFDEF CPU64}
+procedure SetBitBuffer(var Value; const Bit: Int64);
+{$IFDEF PUREPASCAL}
+var
+  P: PByte;
+  BitOfs: TBitRange;
+begin
+  P := Addr(Value);
+  Inc(P, Bit div 8);
+  BitOfs := Bit mod 8;
+  P^ := SetBit(P^, BitOfs);
+end;
+{$ELSE ~PUREPASCAL}
+asm
+  BTS    [Value], Bit
+end;
+{$ENDIF ~PUREPASCAL}
+{$ENDIF CPU64}
 
 function TestBit(const Value: Byte; const Bit: TBitRange): Boolean;
+{$IFDEF PUREPASCAL}
 begin
   Result := (Value shr (Bit and (BitsPerByte - 1))) and 1 <> 0;
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
+  AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
+  BT     EAX, EDX
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
 
 function TestBit(const Value: Shortint; const Bit: TBitRange): Boolean;
+{$IFDEF PUREPASCAL}
 begin
   Result := (Value shr (Bit and (BitsPerShortint - 1))) and 1 <> 0;
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
+  AND    EDX, BitsPerShortInt - 1   // modulo BitsPerShortInt
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
+  BT     EAX, EDX
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
 
 function TestBit(const Value: Smallint; const Bit: TBitRange): Boolean;
+{$IFDEF PUREPASCAL}
 begin
   Result := (Value shr (Bit and (BitsPerSmallint - 1))) and 1 <> 0;
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
+  AND    EDX, BitsPerSmallInt - 1   // modulo BitsPerSmallInt
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
+  BT     EAX, EDX
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
 
 function TestBit(const Value: Word; const Bit: TBitRange): Boolean;
+{$IFDEF PUREPASCAL}
 begin
   Result := (Value shr (Bit and (BitsPerWord - 1))) and 1 <> 0;
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
+  AND    EDX, BitsPerWord - 1   // modulo BitsPerWord
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
+  BT     EAX, EDX
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
 
 function TestBit(const Value: Cardinal; const Bit: TBitRange): Boolean;
+{$IFDEF PUREPASCAL}
 begin
   Result := (Value shr (Bit and (BitsPerCardinal - 1))) and 1 <> 0;
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
+  BT     EAX, EDX
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
 
 function TestBit(const Value: Integer; const Bit: TBitRange): Boolean;
+{$IFDEF PUREPASCAL}
 begin
   Result := (Value shr (Bit and (BitsPerInteger - 1))) and 1 <> 0;
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
+  BT     EAX, EDX
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
 
 function TestBit(const Value: Int64; const Bit: TBitRange): Boolean;
+{$IFDEF CPU32}
 begin
   Result := (Value shr (Bit and (BitsPerInt64 - 1))) and 1 <> 0;
 end;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+asm
+  // --> RCX Value
+  //     DL  Bit
+  // <-- RAX Result
+  MOV    RAX, RCX
+  BT     RAX, EDX
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
 
 function TestBitBuffer(const Value; const Bit: Cardinal): Boolean;
-{$IFDEF CLR}
-var
-  Bytes: array of Byte;
-  BitOfs: TBitRange;
-begin
-  Bytes := GetBytesEx(Value);
-  BitOfs := Bit mod 8;
-  Result := TestBit(Bytes[Bit div 8], BitOfs);
-end;
-{$ELSE}
 {$IFDEF PUREPASCAL}
 var
   P: PByte;
@@ -1206,13 +1426,32 @@ begin
   BitOfs := Bit mod 8;
   Result := TestBit(P^, BitOfs);
 end;
-{$ELSE PUREPASCAL}
+{$ELSE ~PUREPASCAL}
 asm
   BT     [Value], Bit
   SETC   AL
 end;
-{$ENDIF PUREPASCAL}
-{$ENDIF CLR}
+{$ENDIF ~PUREPASCAL}
+
+{$IFDEF CPU64}
+function TestBitBuffer(const Value; const Bit: Int64): Boolean;
+{$IFDEF PUREPASCAL}
+var
+  P: PByte;
+  BitOfs: TBitRange;
+begin
+  P := Addr(Value);
+  Inc(P, Bit div 8);
+  BitOfs := Bit mod 8;
+  Result := TestBit(P^, BitOfs);
+end;
+{$ELSE ~PUREPASCAL}
+asm
+  BT     [Value], Bit
+  SETC   AL
+end;
+{$ENDIF ~PUREPASCAL}
+{$ENDIF CPU64}
 
 function TestBits(const Value, Mask: Byte): Boolean;
 begin
@@ -1250,54 +1489,148 @@ begin
 end;
 
 function ToggleBit(const Value: Byte; const Bit: TBitRange): Byte;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerByte - 1)));
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
+  AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
+  BTC    EAX, EDX
+end;
+{$ENDIF ~PUREPASCAL}
 
 function ToggleBit(const Value: Shortint; const Bit: TBitRange): Shortint;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerShortint - 1)));
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AL Value
+  //        DL Bit
+  //    <-- AL Result
+  // 64 --> CL Value
+  //        DL Bit
+  //    <-- AL Result
+  AND    EDX, BitsPerShortInt - 1   // modulo BitsPerShortInt
+  {$IFDEF CPU64}
+  MOVZX  RAX, CL
+  {$ENDIF CPU64}
+  BTC    EAX, EDX
+end;
+{$ENDIF ~PUREPASCAL}
 
 function ToggleBit(const Value: Smallint; const Bit: TBitRange): Smallint;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerSmallint - 1)));
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
+  AND    EDX, BitsPerSmallInt - 1   // modulo BitsPerSmallInt
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
+  BTC    EAX, EDX
+end;
+{$ENDIF ~PUREPASCAL}
 
 function ToggleBit(const Value: Word; const Bit: TBitRange): Word;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerWord - 1)));
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> AX Value
+  //        DL Bit
+  //    <-- AX Result
+  // 64 --> CX Value
+  //        DL Bit
+  //    <-- AX Result
+  AND    EDX, BitsPerWord - 1   // modulo BitsPerWord
+  {$IFDEF CPU64}
+  MOVZX  RAX, CX
+  {$ENDIF CPU64}
+  BTC    EAX, EDX
+end;
+{$ENDIF ~PUREPASCAL}
 
 function ToggleBit(const Value: Cardinal; const Bit: TBitRange): Cardinal;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerCardinal - 1)));
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
+  BTC    EAX, EDX
+end;
+{$ENDIF ~PUREPASCAL}
 
 function ToggleBit(const Value: Integer; const Bit: TBitRange): Integer;
+{$IFDEF PUREPASCAL}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerInteger - 1)));
 end;
+{$ELSE ~PUREPASCAL}
+asm
+  // 32 --> EAX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  // 64 --> ECX Value
+  //        DL  Bit
+  //    <-- EAX Result
+  {$IFDEF CPU64}
+  XOR    RAX, RAX
+  MOV    EAX, ECX
+  {$ENDIF CPU64}
+  BTC    EAX, EDX
+end;
+{$ENDIF ~PUREPASCAL}
 
 function ToggleBit(const Value: Int64; const Bit: TBitRange): Int64;
+{$IFDEF CPU32}
 begin
   Result := Value xor (Int64(1) shl (Bit and (BitsPerInt64 - 1)));
 end;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+asm
+  // --> RCX Value
+  //     DL  Bit
+  // <-- RAX Result
+  MOV    RAX, RCX
+  BTC    RAX, EDX
+end;
+{$ENDIF CPU64}
 
 procedure ToggleBitBuffer(var Value; const Bit: Cardinal);
-{$IFDEF CLR}
-var
-  Bytes: array of Byte;
-  BitOfs: TBitRange;
-  Index: Integer;
-begin
-  Bytes := GetBytesEx(Value);
-  Index := Bit div 8;
-  BitOfs := Bit mod 8;
-  Bytes[Index] := ToggleBit(Bytes[Index], BitOfs);
-  SetBytesEx(Value, Bytes);
-end;
-{$ELSE}
 {$IFDEF PUREPASCAL}
 var
   P: PByte;
@@ -1308,12 +1641,30 @@ begin
   BitOfs := Bit mod 8;
   P^ := ToggleBit(P^, BitOfs);
 end;
-{$ELSE PUREPASCAL}
+{$ELSE ~PUREPASCAL}
 asm
   BTC    [Value], Bit
 end;
-{$ENDIF PUREPASCAL}
-{$ENDIF CLR}
+{$ENDIF ~PUREPASCAL}
+
+{$IFDEF CPU64}
+procedure ToggleBitBuffer(var Value; const Bit: Int64);
+{$IFDEF PUREPASCAL}
+var
+  P: PByte;
+  BitOfs: TBitRange;
+begin
+  P := Addr(Value);
+  Inc(P, Bit div 8);
+  BitOfs := Bit mod 8;
+  P^ := ToggleBit(P^, BitOfs);
+end;
+{$ELSE ~PUREPASCAL}
+asm
+  BTC    [Value], Bit
+end;
+{$ENDIF ~PUREPASCAL}
+{$ENDIF CPU64}
 
 procedure BooleansToBits(var Dest: Byte; const B: TBooleanArray);
 var
@@ -1448,79 +1799,110 @@ begin
 end;
 
 function ReverseBytes(Value: Word): Word;
-{$IFDEF CLR}
+{$IFDEF PUREPASCAL}
 begin
-  Result := ((Value and Word($FF00)) shr BitsPerByte) or ((Value and Word($00FF)) shl BitsPerByte);
+  Result := (Value shr 8) or (Value shl 8);
 end;
-{$ELSE CLR}
+{$ELSE ~PUREPASCAL}
 asm
-  XCHG    AL, AH
+  {$IFDEF CPU32}
+  // --> AX Value
+  // <-- AX Value
+  XCHG   AL, AH
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CX Value
+  // <-- AX Value
+  MOV    CL, AH
+  MOV    CH, AL
+  {$ENDIF CPU64}
 end;
-{$ENDIF CLR}
+{$ENDIF ~PUREPASCAL}
 
 function ReverseBytes(Value: Smallint): Smallint;
-{$IFDEF CLR}
-begin
-  Result := ((Value and Smallint($FF00)) shr BitsPerByte) or ((Value and Smallint($00FF)) shl BitsPerByte);
-end;
-{$ELSE CLR}
+{$IFDEF PUREPASCAL}
 asm
   XCHG    AL, AH
 end;
-{$ENDIF CLR}
+{$ELSE ~PUREPASCAL}
+asm
+  {$IFDEF CPU32}
+  // --> AX Value
+  // <-- AX Value
+  XCHG   AL, AH
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> CX Value
+  // <-- AX Value
+  MOV    CL, AH
+  MOV    CH, AL
+  {$ENDIF CPU64}
+end;
+{$ENDIF ~PUREPASCAL}
 
 function ReverseBytes(Value: Integer): Integer;
-{$IFDEF CLR}
-var
-  I: Integer;
+{$IFDEF PUREPASCAL}
 begin
-  Result := Value and ByteMask;
-  Value := Value shr BitsPerByte;
-  for I := 0 to SizeOf(Integer) - 2  do
-  begin
-    Result := (Result shl BitsPerByte) or (Value and ByteMask);
-    Value := Value shr BitsPerByte;
-  end;
+  Result := (Value shr 24) or (Value shl 24) or ((Value and $00FF0000) shr 8) or ((Value and $0000FF00) shl 8);
 end;
-{$ELSE CLR}
+{$ELSE ~PUREPASCAL}
 asm
-  BSWAP   EAX
+  {$IFDEF CPU32}
+  // --> EAX Value
+  // <-- EAX Value
+  BSWAP  EAX
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> ECX Value
+  // <-- EAX Value
+  MOV    EAX, ECX
+  BSWAP  EAX
+  {$ENDIF CPU64}
 end;
-{$ENDIF CLR}
+{$ENDIF ~PUREPASCAL}
 
 function ReverseBytes(Value: Cardinal): Cardinal;
-{$IFDEF CLR}
-var
-  I: Integer;
+{$IFDEF PUREPASCAL}
 begin
-  Result := Value and ByteMask;
-  Value := Value shr BitsPerByte;
-  for I := 0 to SizeOf(Cardinal) - 2 do
-  begin
-    Result := (Result shl BitsPerByte) or (Value and ByteMask);
-    Value := Value shr BitsPerByte;
-  end;
+  Result := (Value shr 24) or (Value shl 24) or ((Value and $00FF0000) shr 8) or ((Value and $0000FF00) shl 8);
 end;
-{$ELSE CLR}
+{$ELSE ~PUREPASCAL}
 asm
-  BSWAP   EAX
+  {$IFDEF CPU32}
+  // --> EAX Value
+  // <-- EAX Value
+  BSWAP  EAX
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  // --> ECX Value
+  // <-- EAX Value
+  MOV    EAX, ECX
+  BSWAP  EAX
+  {$ENDIF CPU64}
 end;
-{$ENDIF CLR}
+{$ENDIF ~PUREPASCAL}
 
 function ReverseBytes(Value: Int64): Int64;
+{$IFDEF CPU32}
 var
-  I: Integer;
+  Lo, Hi: Cardinal;
 begin
-  Result := Value and ByteMask;
-  Value := Value shr BitsPerByte;
-  for I := 0 to SizeOf(Int64) - 2 do
-  begin
-    Result := (Result shl BitsPerByte) or (Value and ByteMask);
-    Value := Value shr BitsPerByte;
-  end;
+  // low and hi DWORD swap
+  Lo := TJclULargeInteger(Value).HighPart;
+  Hi := TJclULargeInteger(Value).LowPart;
+  TJclULargeInteger(Result).HighPart := (Hi shr 24) or (Hi shl 24) or ((Hi and $00FF0000) shr 8) or ((Hi and $0000FF00) shl 8);
+  TJclULargeInteger(Result).LowPart := (Lo shr 24) or (Lo shl 24) or ((Lo and $00FF0000) shr 8) or ((Lo and $0000FF00) shl 8);
 end;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+asm
+  // --> RCX Value
+  // <-- RAX Result
+  MOV    RAX, RCX
+  BSWAP  RAX
+end;
+{$ENDIF CPU64}
 
-{$IFNDEF CLR}
 function ReverseBytes(P: Pointer; Count: Integer): Pointer;
 var
   P1, P2: PByte;
@@ -1529,8 +1911,9 @@ begin
   if (P <> nil) and (Count > 0) then
   begin
     P1 := P;
-    P2 := PByte(Integer(P) + Count - 1);
-    while Integer(P1) < Integer(P2) do
+    P2 := P;
+    Inc(P2, Count - 1);
+    while TJclAddr(P1) < TJclAddr(P2) do
     begin
       T := P1^;
       P1^ := P2^;
@@ -1541,7 +1924,6 @@ begin
   end;
   Result := P;
 end;
-{$ENDIF ~CLR}
 
 // Arithmetic
 procedure SwapOrd(var I, J: Byte);

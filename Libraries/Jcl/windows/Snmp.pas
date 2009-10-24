@@ -1,6 +1,6 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{  Borland Delphi Runtime Library                                                                  }
+{  Delphi Runtime Library                                                                          }
 {  SNMP functions interface unit                                                                   }
 {                                                                                                  }
 {  The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License") }
@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007)                             $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-09-11 23:36:32 +0200 (vr, 11 sep 2009)                             $ }
+{ Revision:      $Rev:: 2992                                                                     $ }
+{ Author:        $Author:: wpostma                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -54,6 +54,10 @@ interface
 {$ENDIF SUPPORTS_WEAKPACKAGEUNIT}
 {$ENDIF ~SNMP_DYNAMIC_LINK}
 
+{$IFDEF UNICODE}
+{$A4}  // MANTIS 4931 - GetMacAddress crash in Delphi 2009. record alignment fix.
+{$ENDIF}
+
 uses
   Windows, SysUtils;
 
@@ -62,7 +66,7 @@ uses
 type
   PAsnOctetString = ^TAsnOctetString;
   TAsnOctetString = record
-    stream: PChar;
+    stream: PAnsiChar;
     length: UINT;
     dynamic_: Boolean;
   end;
@@ -361,15 +365,15 @@ var
   SnmpUtilMemFree: procedure(pMem: Pointer); stdcall;
   SnmpUtilMemAlloc: function(nBytes: UINT): Pointer; stdcall;
   SnmpUtilMemReAlloc: function(pMem: Pointer; nBytes: UINT): Pointer; stdcall;
-  SnmpUtilOidToA: function(Oid: PAsnObjectIdentifier): PChar; stdcall;
-  SnmpUtilIdsToA: function(Ids: PUINT; IdLength: UINT): PChar; stdcall;
+  SnmpUtilOidToA: function(Oid: PAsnObjectIdentifier): PAnsiChar; stdcall;
+  SnmpUtilIdsToA: function(Ids: PUINT; IdLength: UINT): PAnsiChar; stdcall;
   SnmpUtilPrintOid: procedure(Oid: PAsnObjectIdentifier); stdcall;
   SnmpUtilPrintAsnAny: procedure(pAny: PAsnAny); stdcall;
   SnmpSvcGetUptime: function: DWORD; stdcall;
   SnmpSvcSetLogLevel: procedure(nLogLevel: Integer); stdcall;
   SnmpSvcSetLogType: procedure(nLogType: Integer); stdcall;
 
-{$ELSE}
+{$ELSE ~SNMP_DYNAMIC_LINK}
 
 function SnmpUtilOidCpy(pOidDst: PAsnObjectIdentifier; pOidSrc: PAsnObjectIdentifier): SNMPAPI; stdcall;
 function SnmpUtilOidAppend(pOidDst: PAsnObjectIdentifier; pOidSrc: PAsnObjectIdentifier): SNMPAPI; stdcall;
@@ -389,15 +393,15 @@ procedure SnmpUtilVarBindListFree(pVbl: PSnmpVarBindList); stdcall;
 procedure SnmpUtilMemFree(pMem: Pointer); stdcall;
 function SnmpUtilMemAlloc(nBytes: UINT): Pointer; stdcall;
 function SnmpUtilMemReAlloc(pMem: Pointer; nBytes: UINT): Pointer; stdcall;
-function SnmpUtilOidToA(Oid: PAsnObjectIdentifier): PChar; stdcall;
-function SnmpUtilIdsToA(Ids: PUINT; IdLength: UINT): PChar; stdcall;
+function SnmpUtilOidToA(Oid: PAsnObjectIdentifier): PAnsiChar; stdcall;
+function SnmpUtilIdsToA(Ids: PUINT; IdLength: UINT): PAnsiChar; stdcall;
 procedure SnmpUtilPrintOid(Oid: PAsnObjectIdentifier); stdcall;
 procedure SnmpUtilPrintAsnAny(pAny: PAsnAny); stdcall;
 function SnmpSvcGetUptime: DWORD; stdcall;
 procedure SnmpSvcSetLogLevel(nLogLevel: Integer); stdcall;
 procedure SnmpSvcSetLogType(nLogType: Integer); stdcall;
 
-{$ENDIF SNMP_DYNAMIC_LINK}
+{$ENDIF ~SNMP_DYNAMIC_LINK}
 
 {$EXTERNALSYM SnmpUtilOidCpy}
 {$EXTERNALSYM SnmpUtilOidAppend}
@@ -454,12 +458,12 @@ const
 
 {$IFNDEF SNMP_DYNAMIC_LINK}
 
-procedure SnmpUtilDbgPrint(nLogLevel: Integer; szFormat: PChar); stdcall;
+procedure SnmpUtilDbgPrint(nLogLevel: Integer; szFormat: PAnsiChar); stdcall;
 
 {$ELSE SNMP_DYNAMIC_LINK}
 
 var
-  SnmpUtilDbgPrint: procedure (nLogLevel: Integer; szFormat: PChar); stdcall;
+  SnmpUtilDbgPrint: procedure (nLogLevel: Integer; szFormat: PAnsiChar); stdcall;
 
 {$ENDIF ~SNMP_DYNAMIC_LINK}
 
@@ -539,7 +543,7 @@ var
   SNMP_DBG_malloc: function (nBytes: UINT): Pointer; stdcall;
   SNMP_DBG_realloc: function (pMem: Pointer; nBytes: UINT): Pointer; stdcall;
 
-{$ELSE}
+{$ELSE SNMP_DYNAMIC_LINK}
 
 function SNMP_oidcpy(pOidDst: PAsnObjectIdentifier; pOidSrc: PAsnObjectIdentifier): SNMPAPI; stdcall;
 function SNMP_oidappend(pOidDst: PAsnObjectIdentifier; pOidSrc: PAsnObjectIdentifier): SNMPAPI; stdcall;
@@ -834,7 +838,7 @@ begin
   end;
 end;
 
-{$ELSE}
+{$ELSE ~SNMP_DYNAMIC_LINK}
 
 function SnmpUtilOidCpy; external snmpapilib name 'SnmpUtilOidCpy';
 function SnmpUtilOidAppend; external snmpapilib name 'SnmpUtilOidAppend';
@@ -882,7 +886,7 @@ function SNMP_DBG_malloc; external snmpapilib name 'SnmpUtilMemAlloc';
 function SNMP_DBG_realloc; external snmpapilib name 'SnmpUtilMemReAlloc';
 {$ENDIF ~SNMPSTRICT}
 
-{$ENDIF SNMP_DYNAMIC_LINK}
+{$ENDIF ~SNMP_DYNAMIC_LINK}
 
 {$IFDEF SNMP_DYNAMIC_LINK}
 {$IFNDEF SNMP_DYNAMIC_LINK_EXPLICIT}

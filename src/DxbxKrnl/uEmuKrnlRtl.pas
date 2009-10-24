@@ -17,7 +17,7 @@
 *)
 unit uEmuKrnlRtl;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

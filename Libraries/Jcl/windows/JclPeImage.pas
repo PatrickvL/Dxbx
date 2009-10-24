@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-27 14:29:19 +0200 (za, 27 sep 2008)                            $ }
-{ Revision:      $Rev:: 2501                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (za, 12 sep 2009)                             $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,7 +52,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Classes, SysUtils, TypInfo, Contnrs,
   JclBase, JclDateTime, JclFileUtils, JclSysInfo, JclWin32;
-  
+
 type
   // Smart name compare function
   TJclSmartCompOption = (scSimpleCompare, scIgnoreCase);
@@ -68,7 +68,6 @@ type
   EJclPeImageError = class(EJclError);
 
   TJclPeImage = class;
-  TJclPeBorImage = class;
 
   TJclPeImageClass = class of TJclPeImage;
 
@@ -94,15 +93,6 @@ type
     procedure Clear;
     property Images[const FileName: TFileName]: TJclPeImage read GetImages; default;
     property Count: Integer read GetCount;
-  end;
-
-  TJclPeBorImagesCache = class(TJclPeImagesCache)
-  private
-    function GetImages(const FileName: TFileName): TJclPeBorImage;
-  protected
-    function GetPeImageClass: TJclPeImageClass; override;
-  public
-    property Images[const FileName: TFileName]: TJclPeBorImage read GetImages; default;
   end;
 
   // Import section related classes
@@ -379,7 +369,7 @@ type
     function GetResourceType: TJclPeResourceKind;
     function GetResourceTypeStr: string;
   protected
-    function OffsetToRawData(Ofs: DWORD): DWORD;
+    function OffsetToRawData(Ofs: DWORD): TJclAddr;
     function Level1Item: TJclPeResourceItem;
     function SubDirData: PImageResourceDirectory;
   public
@@ -513,7 +503,7 @@ type
     procedure ReadHeader;
   public
     constructor Create(AImage: TJclPeImage);
-    property HasMetadata: Boolean read GetHasMetadata; 
+    property HasMetadata: Boolean read GetHasMetadata;
     property Header: TImageCor20Header read FHeader;
     property VersionString: string read GetVersionString;
     property Image: TJclPeImage read FImage;
@@ -651,7 +641,7 @@ type
     procedure AttachLoadedModule(const Handle: HMODULE);
     function CalculateCheckSum: DWORD;
     function DirectoryEntryToData(Directory: Word): Pointer;
-    function GetSectionHeader(const SectionName: string; var Header: PImageSectionHeader): Boolean;
+    function GetSectionHeader(const SectionName: string; out Header: PImageSectionHeader): Boolean;
     function GetSectionName(Header: PImageSectionHeader): string;
     function IsBrokenFormat: Boolean;
     function IsCLR: Boolean;
@@ -698,13 +688,25 @@ type
     property OptionalHeader64: TImageOptionalHeader64 read GetOptionalHeader64;
     property ReadOnlyAccess: Boolean read FReadOnlyAccess write FReadOnlyAccess;
     property RelocationList: TJclPeRelocList read GetRelocationList;
-    property ResourceVA: DWORD read FResourceVA;
+    property ResourceVA: TJclAddr read FResourceVA;
     property ResourceList: TJclPeRootResourceList read GetResourceList;
     property Status: TJclPeImageStatus read FStatus;
     property Target: TJclPeTarget read FTarget;
     property UnusedHeaderBytes: TImageDataDirectory read GetUnusedHeaderBytes;
     property VersionInfo: TJclFileVersionInfo read GetVersionInfo;
     property VersionInfoAvailable: Boolean read GetVersionInfoAvailable;
+  end;
+
+  {$IFDEF BORLAND}
+  TJclPeBorImage = class;
+
+  TJclPeBorImagesCache = class(TJclPeImagesCache)
+  private
+    function GetImages(const FileName: TFileName): TJclPeBorImage;
+  protected
+    function GetPeImageClass: TJclPeImageClass; override;
+  public
+    property Images[const FileName: TFileName]: TJclPeBorImage read GetImages; default;
   end;
 
   // Borland Delphi PE Image specific information
@@ -731,9 +733,9 @@ type
   public
     constructor Create(ALibHandle: THandle);
     destructor Destroy; override;
-    class function PackageModuleTypeToString(Flags: Integer): string;
-    class function PackageOptionsToString(Flags: Integer): string;
-    class function ProducerToString(Flags: Integer): string;
+    class function PackageModuleTypeToString(Flags: Cardinal): string;
+    class function PackageOptionsToString(Flags: Cardinal): string;
+    class function ProducerToString(Flags: Cardinal): string;
     class function UnitInfoFlagsToString(UnitFlags: Byte): string;
     property Available: Boolean read FAvailable;
     property Contains: TStrings read GetContains;
@@ -805,6 +807,7 @@ type
     property PackageInfo: TJclPePackageInfo read GetPackageInfo;
     property PackageInfoSorted: Boolean read FPackageInfoSorted write FPackageInfoSorted;
   end;
+  {$ENDIF BORLAND}
 
   // Threaded function search
   TJclPeNameSearchOption = (seImports, seDelayImports, seBoundImports, seExports);
@@ -863,10 +866,10 @@ type
 function IsValidPeFile(const FileName: TFileName): Boolean;
 
 {$IFDEF KEEP_DEPRECATED}
-function PeGetNtHeaders(const FileName: TFileName; var NtHeaders: TImageNtHeaders): Boolean;
+function PeGetNtHeaders(const FileName: TFileName; out NtHeaders: TImageNtHeaders): Boolean;
 {$ENDIF KEEP_DEPRECATED}
-function PeGetNtHeaders32(const FileName: TFileName; var NtHeaders: TImageNtHeaders32): Boolean;
-function PeGetNtHeaders64(const FileName: TFileName; var NtHeaders: TImageNtHeaders64): Boolean;
+function PeGetNtHeaders32(const FileName: TFileName; out NtHeaders: TImageNtHeaders32): Boolean;
+function PeGetNtHeaders64(const FileName: TFileName; out NtHeaders: TImageNtHeaders64): Boolean;
 
 { Image modifications }
 
@@ -899,7 +902,7 @@ function PeDoesExportFunction(const FileName: TFileName; const FunctionName: str
   Options: TJclSmartCompOptions = []): Boolean;
 
 function PeIsExportFunctionForwardedEx(const FileName: TFileName; const FunctionName: string;
-  var ForwardedName: string; Options: TJclSmartCompOptions = []): Boolean;
+  out ForwardedName: string; Options: TJclSmartCompOptions = []): Boolean;
 function PeIsExportFunctionForwarded(const FileName: TFileName; const FunctionName: string;
   Options: TJclSmartCompOptions = []): Boolean;
 
@@ -932,10 +935,12 @@ function PeResourceKindNames(const FileName: TFileName; ResourceType: TJclPeReso
 
 { Borland packages specific }
 
+{$IFDEF BORLAND}
 function PeBorFormNames(const FileName: TFileName; const NamesList: TStrings): Boolean;
 
 function PeBorDependedPackages(const FileName: TFileName; PackagesList: TStrings;
   FullPathName, Descriptions: Boolean): Boolean;
+{$ENDIF BORLAND}
 
 // Missing imports checking routines
 function PeFindMissingImports(const FileName: TFileName; MissingImportsList: TStrings): Boolean; overload;
@@ -1036,20 +1041,12 @@ type
   end;
 
 // Image access under a debbuger
-{$IFDEF KEEP_DEPRECATED}
-function PeDbgImgNtHeaders(ProcessHandle: THandle; BaseAddress: Pointer;
-  var NtHeaders: TImageNtHeaders32): Boolean;
-{$ENDIF KEEP_DEPRECATED}
 function PeDbgImgNtHeaders32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
   var NtHeaders: TImageNtHeaders32): Boolean;
 // TODO 64 bit version
 //function PeDbgImgNtHeaders64(ProcessHandle: THandle; BaseAddress: TJclAddr64;
 //  var NtHeaders: TImageNtHeaders64): Boolean;
 
-{$IFDEF KEEP_DEPRECATED}
-function PeDbgImgLibraryName(ProcessHandle: THandle; BaseAddress: Pointer;
-  var Name: string): Boolean;
-{$ENDIF KEEP_DEPRECATED}
 function PeDbgImgLibraryName32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
   var Name: string): Boolean;
 //function PeDbgImgLibraryName64(ProcessHandle: THandle; BaseAddress: TJclAddr64;
@@ -1067,25 +1064,27 @@ type
   TJclBorUmResult = (urOk, urNotMangled, urMicrosoft, urError);
   TJclPeUmResult = (umNotMangled, umBorland, umMicrosoft);
 
-function PeBorUnmangleName(const Name: string; var Unmangled: string;
-  var Description: TJclBorUmDescription; var BasePos: Integer): TJclBorUmResult; overload;
-function PeBorUnmangleName(const Name: string; var Unmangled: string;
-  var Description: TJclBorUmDescription): TJclBorUmResult; overload;
-function PeBorUnmangleName(const Name: string; var Unmangled: string): TJclBorUmResult; overload;
+function PeBorUnmangleName(const Name: string; out Unmangled: string;
+  out Description: TJclBorUmDescription; out BasePos: Integer): TJclBorUmResult; overload;
+function PeBorUnmangleName(const Name: string; out Unmangled: string;
+  out Description: TJclBorUmDescription): TJclBorUmResult; overload;
+function PeBorUnmangleName(const Name: string; out Unmangled: string): TJclBorUmResult; overload;
 function PeBorUnmangleName(const Name: string): string; overload;
 
 function PeIsNameMangled(const Name: string): TJclPeUmResult;
 
-function UndecorateSymbolName(const DecoratedName: string; var UnMangled: string; Flags: DWORD): Boolean;
-function PeUnmangleName(const Name: string; var Unmangled: string): TJclPeUmResult;
+function UndecorateSymbolName(const DecoratedName: string; out UnMangled: string; Flags: DWORD): Boolean;
+function PeUnmangleName(const Name: string; out Unmangled: string): TJclPeUmResult;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclPeImage.pas $';
-    Revision: '$Revision: 2501 $';
-    Date: '$Date: 2008-09-27 14:29:19 +0200 (za, 27 sep 2008) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (za, 12 sep 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -1097,20 +1096,23 @@ uses
 const
   MANIFESTExtension = '.manifest';
 
+  DebugSectionName    = '.debug';
+  ReadOnlySectionName = '.rdata';
+
+  BinaryExtensionLibrary = '.dll';
+
+  {$IFDEF BORLAND}
+  CompilerExtensionDCP   = '.dcp';
+  BinaryExtensionPackage = '.bpl';
+
   PackageInfoResName    = 'PACKAGEINFO';
   DescriptionResName    = 'DESCRIPTION';
   PackageOptionsResName = 'PACKAGEOPTIONS';
   DVclAlResName         = 'DVCLAL';
-
-  DebugSectionName    = '.debug';
-  ReadOnlySectionName = '.rdata';
-
-  BinaryExtensionPackage = '.bpl';
-  BinaryExtensionLibrary = '.dll';
-  CompilerExtensionDCP   = '.dcp';
+  {$ENDIF BORLAND}
 
 // Helper routines
-function AddFlagTextRes(var Text: string; const FlagText: PResStringRec; const Value, Mask: Integer): Boolean;
+function AddFlagTextRes(var Text: string; const FlagText: PResStringRec; const Value, Mask: Cardinal): Boolean;
 begin
   Result := (Value and Mask <> 0);
   if Result then
@@ -1122,9 +1124,20 @@ begin
 end;
 
 function CompareResourceName(T1, T2: PChar): Boolean;
+var
+  Long1, Long2: LongRec;
 begin
-  if (LongRec(T1).Hi = 0) or (LongRec(T2).Hi = 0) then
-    Result := Word(T1) = Word(T2)
+  {$IFDEF CPU64}
+  Long1 := LongRec(Int64Rec(T1).Lo);
+  Long2 := LongRec(Int64Rec(T2).Lo);
+  if (Int64Rec(T1).Hi = 0) and (Int64Rec(T2).Hi = 0) and (Long1.Hi = 0) and (Long2.Hi = 0) then
+  {$ENDIF CPU64}
+  {$IFDEF CPU32}
+  Long1 := LongRec(T1);
+  Long2 := LongRec(T2);
+  if (Long1.Hi = 0) or (Long2.Hi = 0) then
+  {$ENDIF CPU32}
+    Result := Long1.Lo = Long2.Lo
   else
     Result := (StrIComp(T1, T2) = 0);
 end;
@@ -1273,18 +1286,6 @@ end;
 function TJclPeImagesCache.GetPeImageClass: TJclPeImageClass;
 begin
   Result := TJclPeImage;
-end;
-
-//=== { TJclPeBorImagesCache } ===============================================
-
-function TJclPeBorImagesCache.GetImages(const FileName: TFileName): TJclPeBorImage;
-begin
-  Result := TJclPeBorImage(inherited Images[FileName]);
-end;
-
-function TJclPeBorImagesCache.GetPeImageClass: TJclPeImageClass;
-begin
-  Result := TJclPeBorImage;
 end;
 
 //=== { TJclPeImageBaseList } ================================================
@@ -1480,6 +1481,7 @@ procedure TJclPeImportLibItem.CreateList;
     OrdinalName: PImageImportByName;
     Ordinal, Hint: Word;
     Name: PAnsiChar;
+    ImportName: string;
   begin
     Thunk32 := PImageThunkData32(FThunk);
     while Thunk32^.Function_ <> 0 do
@@ -1506,8 +1508,9 @@ procedure TJclPeImportLibItem.CreateList;
       end
       else
         Ordinal := IMAGE_ORDINAL32(Thunk32^.Ordinal);
-
-      Add(TJclPeImportFuncItem.Create(Self, Ordinal, Hint, UTF8ToString(Name)));
+      if not TryUTF8ToString(Name, ImportName) then
+        ImportName := string(Name);
+      Add(TJclPeImportFuncItem.Create(Self, Ordinal, Hint, ImportName));
       Inc(Thunk32);
     end;
   end;
@@ -1518,6 +1521,7 @@ procedure TJclPeImportLibItem.CreateList;
     OrdinalName: PImageImportByName;
     Ordinal, Hint: Word;
     Name: PAnsiChar;
+    ImportName: string;
   begin
     Thunk64 := PImageThunkData64(FThunk);
     while Thunk64^.Function_ <> 0 do
@@ -1544,8 +1548,9 @@ procedure TJclPeImportLibItem.CreateList;
       end
       else
         Ordinal := IMAGE_ORDINAL64(Thunk64^.Ordinal);
-
-      Add(TJclPeImportFuncItem.Create(Self, Ordinal, Hint, UTF8ToString(Name)));
+      if not TryUTF8ToString(Name, ImportName) then
+        ImportName := string(Name);
+      Add(TJclPeImportFuncItem.Create(Self, Ordinal, Hint, ImportName));
       Inc(Thunk64);
     end;
   end;
@@ -1698,13 +1703,16 @@ procedure TJclPeImportList.CreateList;
   procedure CreateDelayImportList32(DelayImportDesc: PImgDelayDescrV1);
   var
     LibItem: TJclPeImportLibItem;
-    LibName: TUTF8String;
+    UTF8Name: TUTF8String;
+    LibName: string;
   begin
     while DelayImportDesc^.szName <> nil do
     begin
-      LibName := PAnsiChar(Image.RvaToVaEx(DWORD(DelayImportDesc^.szName)));
+      UTF8Name := PAnsiChar(Image.RvaToVaEx(DWORD(DelayImportDesc^.szName)));
+      if not TryUTF8ToString(UTF8Name, LibName) then
+        LibName := string(UTF8Name);
       LibItem := TJclPeImportLibItem.Create(Image, DelayImportDesc, ikDelayImport,
-        UTF8ToString(LibName), Image.RvaToVaEx(DWORD(DelayImportDesc^.pINT)));
+        LibName, Image.RvaToVaEx(DWORD(DelayImportDesc^.pINT)));
       Add(LibItem);
       FUniqueNamesList.AddObject(AnsiLowerCase(LibItem.Name), LibItem);
       Inc(DelayImportDesc);
@@ -1714,13 +1722,16 @@ procedure TJclPeImportList.CreateList;
   procedure CreateDelayImportList64(DelayImportDesc: PImgDelayDescrV2);
   var
     LibItem: TJclPeImportLibItem;
-    LibName: TUTF8String;
+    UTF8Name: TUTF8String;
+    LibName: string;
   begin
     while DelayImportDesc^.rvaDLLName <> 0 do
     begin
-      LibName := PAnsiChar(Image.RvaToVa(DelayImportDesc^.rvaDLLName));
+      UTF8Name := PAnsiChar(Image.RvaToVa(DelayImportDesc^.rvaDLLName));
+      if not TryUTF8ToString(UTF8Name, LibName) then
+        LibName := string(UTF8Name);
       LibItem := TJclPeImportLibItem.Create(Image, DelayImportDesc, ikDelayImport,
-        UTF8ToString(LibName), Image.RvaToVa(DelayImportDesc^.rvaINT));
+        LibName, Image.RvaToVa(DelayImportDesc^.rvaINT));
       Add(LibItem);
       FUniqueNamesList.AddObject(AnsiLowerCase(LibItem.Name), LibItem);
       Inc(DelayImportDesc);
@@ -1729,7 +1740,8 @@ procedure TJclPeImportList.CreateList;
 var
   ImportDesc: PImageImportDescriptor;
   LibItem: TJclPeImportLibItem;
-  LibName, ModuleName: TUTF8String;
+  UTF8Name: TUTF8String;
+  LibName, ModuleName: string;
   DelayImportDesc: Pointer;
   BoundImports, BoundImport: PImageBoundImportDescriptor;
   S: string;
@@ -1758,8 +1770,10 @@ begin
           Thunk := RvaToVa(ImportDesc^.Union.Characteristics);
           FLinkerProducer := lrMicrosoft;
         end;
-        LibName := PAnsiChar(RvaToVa(ImportDesc^.Name));
-        LibItem := TJclPeImportLibItem.Create(Image, ImportDesc, ikImport, UTF8ToString(LibName), Thunk);
+        UTF8Name := PAnsiChar(RvaToVa(ImportDesc^.Name));
+        if not TryUTF8ToString(UTF8Name, LibName) then
+          LibName := string(UTF8Name);
+        LibItem := TJclPeImportLibItem.Create(Image, ImportDesc, ikImport, LibName, Thunk);
         Add(LibItem);
         FUniqueNamesList.AddObject(AnsiLowerCase(LibItem.Name), LibItem);
         Inc(ImportDesc);
@@ -1780,8 +1794,10 @@ begin
       BoundImport := BoundImports;
       while BoundImport^.OffsetModuleName <> 0 do
       begin
-        ModuleName := PAnsiChar(TJclAddr(BoundImports) + BoundImport^.OffsetModuleName);
-        S := AnsiLowerCase(UTF8ToString(ModuleName));
+        UTF8Name := PAnsiChar(TJclAddr(BoundImports) + BoundImport^.OffsetModuleName);
+        if not TryUTF8ToString(UTF8Name, ModuleName) then
+          ModuleName := string(UTF8Name);
+        S := AnsiLowerCase(ModuleName);
         I := FUniqueNamesList.IndexOf(S);
         if I >= 0 then
           TJclPeImportLibItem(FUniqueNamesList.Objects[I]).SetImportKind(ikBoundImport);
@@ -2270,7 +2286,8 @@ var
   I: Integer;
   ExportItem: TJclPeExportFuncItem;
   ExportVABegin, ExportVAEnd: DWORD;
-  ForwardedName: string;
+  UTF8Name: TUTF8String;
+  ForwardedName, ExportName: string;
 begin
   with Image do
   begin
@@ -2279,7 +2296,7 @@ begin
     with Directories[IMAGE_DIRECTORY_ENTRY_EXPORT] do
     begin
       ExportVABegin := VirtualAddress;
-      ExportVAEnd := VirtualAddress + Size;
+      ExportVAEnd := VirtualAddress + TJclAddr(Size);
     end;
     FExportDir := DirectoryEntryToData(IMAGE_DIRECTORY_ENTRY_EXPORT);
     if FExportDir <> nil then
@@ -2296,13 +2313,18 @@ begin
         if (Address >= ExportVABegin) and (Address <= ExportVAEnd) then
         begin
           FAnyForwards := True;
-          ForwardedName := UTF8ToString(PAnsiChar(RvaToVa(Address)));
+          UTF8Name := PAnsiChar(RvaToVa(Address));
+          if not TryUTF8ToString(UTF8Name, ForwardedName) then
+            ForwardedName := string(UTF8Name);
         end
         else
           ForwardedName := '';
 
-        ExportItem := TJclPeExportFuncItem.Create(Self, UTF8ToString(PAnsiChar(RvaToVa(Names^))),
-          ForwardedName, Address, I, NameOrdinals^ + FBase, icNotChecked);
+        UTF8Name := PAnsiChar(RvaToVa(Names^));
+        if not TryUTF8ToString(UTF8Name, ExportName) then
+          ExportName := string(UTF8Name);
+        ExportItem := TJclPeExportFuncItem.Create(Self, ExportName,
+          ForwardedName, Address, I, DWORD(NameOrdinals^) + FBase, icNotChecked);
 
         List^[I] := ExportItem;
         Inc(NameOrdinals);
@@ -2401,11 +2423,17 @@ begin
 end;
 
 function TJclPeExportFuncList.GetName: string;
+var
+  UTF8ExportName: TUTF8String;
 begin
   if (FExportDir = nil) or (FExportDir^.Name = 0) then
     Result := ''
   else
-    Result := UTF8ToString(PAnsiChar(Image.RvaToVa(FExportDir^.Name)));
+  begin
+    UTF8ExportName := PAnsiChar(Image.RvaToVa(FExportDir^.Name));
+    if not TryUTF8ToString(UTF8ExportName, Result) then
+      Result := string(UTF8ExportName);
+  end;
 end;
 
 class function TJclPeExportFuncList.ItemName(Item: TJclPeExportFuncItem): string;
@@ -2629,7 +2657,7 @@ begin
     Result := Result.FParentItem;
 end;
 
-function TJclPeResourceItem.OffsetToRawData(Ofs: DWORD): DWORD;
+function TJclPeResourceItem.OffsetToRawData(Ofs: DWORD): TJclAddr;
 begin
   Result := (Ofs and $7FFFFFFF) + Image.ResourceVA;
 end;
@@ -2659,7 +2687,7 @@ begin
   if FDirectory = nil then
     Exit;
   Entry := Pointer(TJclAddr(FDirectory) + SizeOf(TImageResourceDirectory));
-  for I := 1 to FDirectory^.NumberOfNamedEntries + FDirectory^.NumberOfIdEntries do
+  for I := 1 to DWORD(FDirectory^.NumberOfNamedEntries) + DWORD(FDirectory^.NumberOfIdEntries) do
   begin
     DirItem := Image.ResourceItemCreate(Entry, AParentItem);
     Add(DirItem);
@@ -2772,7 +2800,7 @@ begin
         FManifestContent.LoadFromStream(ResStream);
       finally
         ResStream.Free;
-      end;    
+      end;
     end;
   end;
   Result := FManifestContent;
@@ -2818,7 +2846,7 @@ begin
   Temp := PWord(TJclAddr(FChunk) + SizeOf(TImageBaseRelocation) + DWORD(Index) * SizeOf(Word))^;
   Result.Address := Temp and $0FFF;
   Result.RelocType := (Temp and $F000) shr 12;
-  Result.VirtualAddress := Result.Address + VirtualAddress;
+  Result.VirtualAddress := TJclAddr(Result.Address) + VirtualAddress;
 end;
 
 function TJclPeRelocEntry.GetSize: DWORD;
@@ -3138,7 +3166,7 @@ begin
   FreeAndNil(FVersionInfo);
   if not FAttachedImage and StatusOK then
     UnMapAndLoad(FLoadedImage);
-  FillChar(FLoadedImage, SizeOf(FLoadedImage), #0);
+  ResetMemory(FLoadedImage, SizeOf(FLoadedImage));
   FStatus := stNotLoaded;
   FAttachedImage := False;
 end;
@@ -3152,25 +3180,25 @@ class function TJclPeImage.DebugTypeNames(DebugType: DWORD): string;
 begin
   case DebugType of
     IMAGE_DEBUG_TYPE_UNKNOWN:
-      Result := RsPeDEBUG_UNKNOWN;
+      Result := LoadResString(@RsPeDEBUG_UNKNOWN);
     IMAGE_DEBUG_TYPE_COFF:
-      Result := RsPeDEBUG_COFF;
+      Result := LoadResString(@RsPeDEBUG_COFF);
     IMAGE_DEBUG_TYPE_CODEVIEW:
-      Result := RsPeDEBUG_CODEVIEW;
+      Result := LoadResString(@RsPeDEBUG_CODEVIEW);
     IMAGE_DEBUG_TYPE_FPO:
-      Result := RsPeDEBUG_FPO;
+      Result := LoadResString(@RsPeDEBUG_FPO);
     IMAGE_DEBUG_TYPE_MISC:
-      Result := RsPeDEBUG_MISC;
+      Result := LoadResString(@RsPeDEBUG_MISC);
     IMAGE_DEBUG_TYPE_EXCEPTION:
-      Result := RsPeDEBUG_EXCEPTION;
+      Result := LoadResString(@RsPeDEBUG_EXCEPTION);
     IMAGE_DEBUG_TYPE_FIXUP:
-      Result := RsPeDEBUG_FIXUP;
+      Result := LoadResString(@RsPeDEBUG_FIXUP);
     IMAGE_DEBUG_TYPE_OMAP_TO_SRC:
-      Result := RsPeDEBUG_OMAP_TO_SRC;
+      Result := LoadResString(@RsPeDEBUG_OMAP_TO_SRC);
     IMAGE_DEBUG_TYPE_OMAP_FROM_SRC:
-      Result := RsPeDEBUG_OMAP_FROM_SRC;
+      Result := LoadResString(@RsPeDEBUG_OMAP_FROM_SRC);
   else
-    Result := '???';
+    Result := LoadResString(@RsPeDEBUG_UNKNOWN);
   end;
 end;
 
@@ -3178,6 +3206,7 @@ function TJclPeImage.DirectoryEntryToData(Directory: Word): Pointer;
 var
   Size: DWORD;
 begin
+  Size := 0;
   Result := ImageDirectoryEntryToData(FLoadedImage.MappedAddress, FAttachedImage, Directory, Size);
 end;
 
@@ -3185,37 +3214,37 @@ class function TJclPeImage.DirectoryNames(Directory: Word): string;
 begin
   case Directory of
     IMAGE_DIRECTORY_ENTRY_EXPORT:
-      Result := RsPeImg_00;
+      Result := LoadResString(@RsPeImg_00);
     IMAGE_DIRECTORY_ENTRY_IMPORT:
-      Result := RsPeImg_01;
+      Result := LoadResString(@RsPeImg_01);
     IMAGE_DIRECTORY_ENTRY_RESOURCE:
-      Result := RsPeImg_02;
+      Result := LoadResString(@RsPeImg_02);
     IMAGE_DIRECTORY_ENTRY_EXCEPTION:
-      Result := RsPeImg_03;
+      Result := LoadResString(@RsPeImg_03);
     IMAGE_DIRECTORY_ENTRY_SECURITY:
-      Result := RsPeImg_04;
+      Result := LoadResString(@RsPeImg_04);
     IMAGE_DIRECTORY_ENTRY_BASERELOC:
-      Result := RsPeImg_05;
+      Result := LoadResString(@RsPeImg_05);
     IMAGE_DIRECTORY_ENTRY_DEBUG:
-      Result := RsPeImg_06;
+      Result := LoadResString(@RsPeImg_06);
     IMAGE_DIRECTORY_ENTRY_COPYRIGHT:
-      Result := RsPeImg_07;
+      Result := LoadResString(@RsPeImg_07);
     IMAGE_DIRECTORY_ENTRY_GLOBALPTR:
-      Result := RsPeImg_08;
+      Result := LoadResString(@RsPeImg_08);
     IMAGE_DIRECTORY_ENTRY_TLS:
-      Result := RsPeImg_09;
+      Result := LoadResString(@RsPeImg_09);
     IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG:
-      Result := RsPeImg_10;
+      Result := LoadResString(@RsPeImg_10);
     IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT:
-      Result := RsPeImg_11;
+      Result := LoadResString(@RsPeImg_11);
     IMAGE_DIRECTORY_ENTRY_IAT:
-      Result := RsPeImg_12;
+      Result := LoadResString(@RsPeImg_12);
     IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT:
-      Result := RsPeImg_13;
+      Result := LoadResString(@RsPeImg_13);
     IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR:
-      Result := RsPeImg_14;
+      Result := LoadResString(@RsPeImg_14);
   else
-    Result := Format('reserved [%.2d]', [Directory]);
+    Result := Format(LoadResString(@RsPeImg_Reserved), [Directory]);
   end;
 end;
 
@@ -3227,6 +3256,7 @@ begin
   Result := PathAddSeparator(ExtractFilePath(BasePath)) + ModuleName;
   if FileExists(Result) then
     Exit;
+  FilePart := nil;
   if SearchPath(nil, PChar(ModuleName), nil, Length(FullName), FullName, FilePart) = 0 then
     Result := ModuleName
   else
@@ -3242,14 +3272,14 @@ function TJclPeImage.GetCertificateList: TJclPeCertificateList;
 begin
   if FCertificateList = nil then
     FCertificateList := TJclPeCertificateList.Create(Self);
-  Result := FCertificateList;   
+  Result := FCertificateList;
 end;
 
 function TJclPeImage.GetCLRHeader: TJclPeCLRHeader;
 begin
   if FCLRHeader = nil then
     FCLRHeader := TJclPeCLRHeader.Create(Self);
-  Result := FCLRHeader;  
+  Result := FCLRHeader;
 end;
 
 function TJclPeImage.GetDebugList: TJclPeDebugList;
@@ -3260,9 +3290,15 @@ begin
 end;
 
 function TJclPeImage.GetDescription: string;
+var
+  UTF8DescriptionName: TUTF8String;
 begin
   if DirectoryExists[IMAGE_DIRECTORY_ENTRY_COPYRIGHT] then
-    Result := UTF8ToString(PAnsiChar(DirectoryEntryToData(IMAGE_DIRECTORY_ENTRY_COPYRIGHT)))
+  begin
+    UTF8DescriptionName := PAnsiChar(DirectoryEntryToData(IMAGE_DIRECTORY_ENTRY_COPYRIGHT));
+    if not TryUTF8ToString(UTF8DescriptionName, Result) then
+      Result := string(UTF8DescriptionName);
+  end
   else
     Result := '';
 end;
@@ -3301,13 +3337,11 @@ begin
 end;
 
 function TJclPeImage.GetFileProperties: TJclPeFileProperties;
-const
-  faFile = faReadOnly or faHidden or faSysFile or faArchive;
 var
   FileAttributesEx: WIN32_FILE_ATTRIBUTE_DATA;
-  Size: TULargeInteger;
+  Size: TJclULargeInteger;
 begin
-  FillChar(Result, SizeOf(Result), #0);
+  ResetMemory(Result, SizeOf(Result));
   if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @FileAttributesEx) then
   begin
     Size.LowPart := FileAttributesEx.nFileSizeLow;
@@ -3326,62 +3360,62 @@ function TJclPeImage.GetHeaderValues(Index: TJclPeHeader): string;
   begin
     case Value of
       IMAGE_FILE_MACHINE_UNKNOWN:
-        Result := RsPeMACHINE_UNKNOWN;
+        Result := LoadResString(@RsPeMACHINE_UNKNOWN);
       IMAGE_FILE_MACHINE_I386:
-        Result := RsPeMACHINE_I386;
+        Result := LoadResString(@RsPeMACHINE_I386);
       IMAGE_FILE_MACHINE_R3000:
-        Result := RsPeMACHINE_R3000;
+        Result := LoadResString(@RsPeMACHINE_R3000);
       IMAGE_FILE_MACHINE_R4000:
-        Result := RsPeMACHINE_R4000;
+        Result := LoadResString(@RsPeMACHINE_R4000);
       IMAGE_FILE_MACHINE_R10000:
-        Result := RsPeMACHINE_R10000;
+        Result := LoadResString(@RsPeMACHINE_R10000);
       IMAGE_FILE_MACHINE_WCEMIPSV2:
-        Result := RsPeMACHINE_WCEMIPSV2;
+        Result := LoadResString(@RsPeMACHINE_WCEMIPSV2);
       IMAGE_FILE_MACHINE_ALPHA:
-        Result := RsPeMACHINE_ALPHA;
+        Result := LoadResString(@RsPeMACHINE_ALPHA);
       IMAGE_FILE_MACHINE_SH3:
-        Result := RsPeMACHINE_SH3;        // SH3 little-endian
+        Result := LoadResString(@RsPeMACHINE_SH3);        // SH3 little-endian
       IMAGE_FILE_MACHINE_SH3DSP:
-        Result := RsPeMACHINE_SH3DSP;
+        Result := LoadResString(@RsPeMACHINE_SH3DSP);
       IMAGE_FILE_MACHINE_SH3E:
-        Result := RsPeMACHINE_SH3E;       // SH3E little-endian
+        Result := LoadResString(@RsPeMACHINE_SH3E);       // SH3E little-endian
       IMAGE_FILE_MACHINE_SH4:
-        Result := RsPeMACHINE_SH4;        // SH4 little-endian
+        Result := LoadResString(@RsPeMACHINE_SH4);        // SH4 little-endian
       IMAGE_FILE_MACHINE_SH5:
-        Result := RsPeMACHINE_SH5;        // SH5
+        Result := LoadResString(@RsPeMACHINE_SH5);        // SH5
       IMAGE_FILE_MACHINE_ARM:
-        Result := RsPeMACHINE_ARM;        // ARM Little-Endian
+        Result := LoadResString(@RsPeMACHINE_ARM);        // ARM Little-Endian
       IMAGE_FILE_MACHINE_THUMB:
-        Result := RsPeMACHINE_THUMB;
+        Result := LoadResString(@RsPeMACHINE_THUMB);
       IMAGE_FILE_MACHINE_AM33:
-        Result := RsPeMACHINE_AM33;
+        Result := LoadResString(@RsPeMACHINE_AM33);
       IMAGE_FILE_MACHINE_POWERPC:
-        Result := RsPeMACHINE_POWERPC;
+        Result := LoadResString(@RsPeMACHINE_POWERPC);
       IMAGE_FILE_MACHINE_POWERPCFP:
-        Result := RsPeMACHINE_POWERPCFP;
+        Result := LoadResString(@RsPeMACHINE_POWERPCFP);
       IMAGE_FILE_MACHINE_IA64:
-        Result := RsPeMACHINE_IA64;       // Intel 64
+        Result := LoadResString(@RsPeMACHINE_IA64);       // Intel 64
       IMAGE_FILE_MACHINE_MIPS16:
-        Result := RsPeMACHINE_MIPS16;     // MIPS
+        Result := LoadResString(@RsPeMACHINE_MIPS16);     // MIPS
       IMAGE_FILE_MACHINE_ALPHA64:
-        Result := RsPeMACHINE_AMPHA64;    // ALPHA64
+        Result := LoadResString(@RsPeMACHINE_AMPHA64);    // ALPHA64
       //IMAGE_FILE_MACHINE_AXP64
       IMAGE_FILE_MACHINE_MIPSFPU:
-        Result := RsPeMACHINE_MIPSFPU;    // MIPS
+        Result := LoadResString(@RsPeMACHINE_MIPSFPU);    // MIPS
       IMAGE_FILE_MACHINE_MIPSFPU16:
-        Result := RsPeMACHINE_MIPSFPU16;  // MIPS
+        Result := LoadResString(@RsPeMACHINE_MIPSFPU16);  // MIPS
       IMAGE_FILE_MACHINE_TRICORE:
-        Result := RsPeMACHINE_TRICORE;    // Infineon
+        Result := LoadResString(@RsPeMACHINE_TRICORE);    // Infineon
       IMAGE_FILE_MACHINE_CEF:
-        Result := RsPeMACHINE_CEF;
+        Result := LoadResString(@RsPeMACHINE_CEF);
       IMAGE_FILE_MACHINE_EBC:
-        Result := RsPeMACHINE_EBC;        // EFI Byte Code
+        Result := LoadResString(@RsPeMACHINE_EBC);        // EFI Byte Code
       IMAGE_FILE_MACHINE_AMD64:
-        Result := RsPeMACHINE_AMD64;      // AMD64 (K8)
+        Result := LoadResString(@RsPeMACHINE_AMD64);      // AMD64 (K8)
       IMAGE_FILE_MACHINE_M32R:
-        Result := RsPeMACHINE_M32R;       // M32R little-endian
+        Result := LoadResString(@RsPeMACHINE_M32R);       // M32R little-endian
       IMAGE_FILE_MACHINE_CEE:
-        Result := RsPeMACHINE_CEE;       
+        Result := LoadResString(@RsPeMACHINE_CEE);
     else
       Result := Format('[%.8x]', [Value]);
     end;
@@ -3391,19 +3425,19 @@ function TJclPeImage.GetHeaderValues(Index: TJclPeHeader): string;
   begin
     case Value of
       IMAGE_SUBSYSTEM_UNKNOWN:
-        Result := RsPeSUBSYSTEM_UNKNOWN;
+        Result := LoadResString(@RsPeSUBSYSTEM_UNKNOWN);
       IMAGE_SUBSYSTEM_NATIVE:
-        Result := RsPeSUBSYSTEM_NATIVE;
+        Result := LoadResString(@RsPeSUBSYSTEM_NATIVE);
       IMAGE_SUBSYSTEM_WINDOWS_GUI:
-        Result := RsPeSUBSYSTEM_WINDOWS_GUI;
+        Result := LoadResString(@RsPeSUBSYSTEM_WINDOWS_GUI);
       IMAGE_SUBSYSTEM_WINDOWS_CUI:
-        Result := RsPeSUBSYSTEM_WINDOWS_CUI;
+        Result := LoadResString(@RsPeSUBSYSTEM_WINDOWS_CUI);
       IMAGE_SUBSYSTEM_OS2_CUI:
-        Result := RsPeSUBSYSTEM_OS2_CUI;
+        Result := LoadResString(@RsPeSUBSYSTEM_OS2_CUI);
       IMAGE_SUBSYSTEM_POSIX_CUI:
-        Result := RsPeSUBSYSTEM_POSIX_CUI;
+        Result := LoadResString(@RsPeSUBSYSTEM_POSIX_CUI);
       IMAGE_SUBSYSTEM_RESERVED8:
-        Result := RsPeSUBSYSTEM_RESERVED8;
+        Result := LoadResString(@RsPeSUBSYSTEM_RESERVED8);
     else
       Result := Format('[%.8x]', [Value]);
     end;
@@ -3598,7 +3632,7 @@ end;
 function TJclPeImage.GetLoadConfigValues(Index: TJclLoadConfig): string;
   function GetLoadConfigValues32(Index: TJclLoadConfig): string;
   var
-    LoadConfig: PImageLoadConfigDirectory32;
+    LoadConfig: PIMAGE_LOAD_CONFIG_DIRECTORY32;
   begin
     LoadConfig := DirectoryEntryToData(IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG);
     if LoadConfig <> nil then
@@ -3637,12 +3671,12 @@ function TJclPeImage.GetLoadConfigValues(Index: TJclLoadConfig): string;
           JclLoadConfig_EditList:
             Result := IntToHex(EditList, 8);
           JclLoadConfig_Reserved:
-            Result := RsPeReserved;
+            Result := LoadResString(@RsPeReserved);
         end;
   end;
   function GetLoadConfigValues64(Index: TJclLoadConfig): string;
   var
-    LoadConfig: PImageLoadConfigDirectory64;
+    LoadConfig: PIMAGE_LOAD_CONFIG_DIRECTORY64;
   begin
     LoadConfig := DirectoryEntryToData(IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG);
     if LoadConfig <> nil then
@@ -3681,7 +3715,7 @@ function TJclPeImage.GetLoadConfigValues(Index: TJclLoadConfig): string;
           JclLoadConfig_EditList:
             Result := IntToHex(EditList, 16);
           JclLoadConfig_Reserved:
-            Result := RsPeReserved;
+            Result := LoadResString(@RsPeReserved);
         end;
   end;
 begin
@@ -3748,7 +3782,7 @@ begin
 end;
 
 function TJclPeImage.GetSectionHeader(const SectionName: string;
-  var Header: PImageSectionHeader): Boolean;
+  out Header: PImageSectionHeader): Boolean;
 var
   I: Integer;
 begin
@@ -3779,6 +3813,7 @@ end;
 function TJclPeImage.GetUnusedHeaderBytes: TImageDataDirectory;
 begin
   CheckNotAttached;
+  Result.Size := 0;
   Result.VirtualAddress := GetImageUnusedHeaderBytes(FLoadedImage, Result.Size);
   if Result.VirtualAddress = 0 then
     RaiseLastOSError;
@@ -3810,73 +3845,73 @@ class function TJclPeImage.HeaderNames(Index: TJclPeHeader): string;
 begin
   case Index of
     JclPeHeader_Signature:
-      Result := RsPeSignature;
+      Result := LoadResString(@RsPeSignature);
     JclPeHeader_Machine:
-      Result := RsPeMachine;
+      Result := LoadResString(@RsPeMachine);
     JclPeHeader_NumberOfSections:
-      Result := RsPeNumberOfSections;
+      Result := LoadResString(@RsPeNumberOfSections);
     JclPeHeader_TimeDateStamp:
-      Result := RsPeTimeDateStamp;
+      Result := LoadResString(@RsPeTimeDateStamp);
     JclPeHeader_PointerToSymbolTable:
-      Result := RsPePointerToSymbolTable;
+      Result := LoadResString(@RsPePointerToSymbolTable);
     JclPeHeader_NumberOfSymbols:
-      Result := RsPeNumberOfSymbols;
+      Result := LoadResString(@RsPeNumberOfSymbols);
     JclPeHeader_SizeOfOptionalHeader:
-      Result := RsPeSizeOfOptionalHeader;
+      Result := LoadResString(@RsPeSizeOfOptionalHeader);
     JclPeHeader_Characteristics:
-      Result := RsPeCharacteristics;
+      Result := LoadResString(@RsPeCharacteristics);
     JclPeHeader_Magic:
-      Result := RsPeMagic;
+      Result := LoadResString(@RsPeMagic);
     JclPeHeader_LinkerVersion:
-      Result := RsPeLinkerVersion;
+      Result := LoadResString(@RsPeLinkerVersion);
     JclPeHeader_SizeOfCode:
-      Result := RsPeSizeOfCode;
+      Result := LoadResString(@RsPeSizeOfCode);
     JclPeHeader_SizeOfInitializedData:
-      Result := RsPeSizeOfInitializedData;
+      Result := LoadResString(@RsPeSizeOfInitializedData);
     JclPeHeader_SizeOfUninitializedData:
-      Result := RsPeSizeOfUninitializedData;
+      Result := LoadResString(@RsPeSizeOfUninitializedData);
     JclPeHeader_AddressOfEntryPoint:
-      Result := RsPeAddressOfEntryPoint;
+      Result := LoadResString(@RsPeAddressOfEntryPoint);
     JclPeHeader_BaseOfCode:
-      Result := RsPeBaseOfCode;
+      Result := LoadResString(@RsPeBaseOfCode);
     JclPeHeader_BaseOfData:
-      Result := RsPeBaseOfData;
+      Result := LoadResString(@RsPeBaseOfData);
     JclPeHeader_ImageBase:
-      Result := RsPeImageBase;
+      Result := LoadResString(@RsPeImageBase);
     JclPeHeader_SectionAlignment:
-      Result := RsPeSectionAlignment;
+      Result := LoadResString(@RsPeSectionAlignment);
     JclPeHeader_FileAlignment:
-      Result := RsPeFileAlignment;
+      Result := LoadResString(@RsPeFileAlignment);
     JclPeHeader_OperatingSystemVersion:
-      Result := RsPeOperatingSystemVersion;
+      Result := LoadResString(@RsPeOperatingSystemVersion);
     JclPeHeader_ImageVersion:
-      Result := RsPeImageVersion;
+      Result := LoadResString(@RsPeImageVersion);
     JclPeHeader_SubsystemVersion:
-      Result := RsPeSubsystemVersion;
+      Result := LoadResString(@RsPeSubsystemVersion);
     JclPeHeader_Win32VersionValue:
-      Result := RsPeWin32VersionValue;
+      Result := LoadResString(@RsPeWin32VersionValue);
     JclPeHeader_SizeOfImage:
-      Result := RsPeSizeOfImage;
+      Result := LoadResString(@RsPeSizeOfImage);
     JclPeHeader_SizeOfHeaders:
-      Result := RsPeSizeOfHeaders;
+      Result := LoadResString(@RsPeSizeOfHeaders);
     JclPeHeader_CheckSum:
-      Result := RsPeCheckSum;
+      Result := LoadResString(@RsPeCheckSum);
     JclPeHeader_Subsystem:
-      Result := RsPeSubsystem;
+      Result := LoadResString(@RsPeSubsystem);
     JclPeHeader_DllCharacteristics:
-      Result := RsPeDllCharacteristics;
+      Result := LoadResString(@RsPeDllCharacteristics);
     JclPeHeader_SizeOfStackReserve:
-      Result := RsPeSizeOfStackReserve;
+      Result := LoadResString(@RsPeSizeOfStackReserve);
     JclPeHeader_SizeOfStackCommit:
-      Result := RsPeSizeOfStackCommit;
+      Result := LoadResString(@RsPeSizeOfStackCommit);
     JclPeHeader_SizeOfHeapReserve:
-      Result := RsPeSizeOfHeapReserve;
+      Result := LoadResString(@RsPeSizeOfHeapReserve);
     JclPeHeader_SizeOfHeapCommit:
-      Result := RsPeSizeOfHeapCommit;
+      Result := LoadResString(@RsPeSizeOfHeapCommit);
     JclPeHeader_LoaderFlags:
-      Result := RsPeLoaderFlags;
+      Result := LoadResString(@RsPeLoaderFlags);
     JclPeHeader_NumberOfRvaAndSizes:
-      Result := RsPeNumberOfRvaAndSizes;
+      Result := LoadResString(@RsPeNumberOfRvaAndSizes);
   else
     Result := '';
   end;
@@ -3933,7 +3968,7 @@ begin
 end;
 
 function TJclPeImage.IsSystemImage: Boolean;
-begin       
+begin
   Result := StatusOK and FLoadedImage.fSystemImage;
 end;
 
@@ -3941,39 +3976,39 @@ class function TJclPeImage.LoadConfigNames(Index: TJclLoadConfig): string;
 begin
   case Index of
     JclLoadConfig_Characteristics:
-      Result := RsPeCharacteristics;
+      Result := LoadResString(@RsPeCharacteristics);
     JclLoadConfig_TimeDateStamp:
-      Result := RsPeTimeDateStamp;
+      Result := LoadResString(@RsPeTimeDateStamp);
     JclLoadConfig_Version:
-      Result := RsPeVersion;
+      Result := LoadResString(@RsPeVersion);
     JclLoadConfig_GlobalFlagsClear:
-      Result := RsPeGlobalFlagsClear;
+      Result := LoadResString(@RsPeGlobalFlagsClear);
     JclLoadConfig_GlobalFlagsSet:
-      Result := RsPeGlobalFlagsSet;
+      Result := LoadResString(@RsPeGlobalFlagsSet);
     JclLoadConfig_CriticalSectionDefaultTimeout:
-      Result := RsPeCriticalSectionDefaultTimeout;
+      Result := LoadResString(@RsPeCriticalSectionDefaultTimeout);
     JclLoadConfig_DeCommitFreeBlockThreshold:
-      Result := RsPeDeCommitFreeBlockThreshold;
+      Result := LoadResString(@RsPeDeCommitFreeBlockThreshold);
     JclLoadConfig_DeCommitTotalFreeThreshold:
-      Result := RsPeDeCommitTotalFreeThreshold;
+      Result := LoadResString(@RsPeDeCommitTotalFreeThreshold);
     JclLoadConfig_LockPrefixTable:
-      Result := RsPeLockPrefixTable;
+      Result := LoadResString(@RsPeLockPrefixTable);
     JclLoadConfig_MaximumAllocationSize:
-      Result := RsPeMaximumAllocationSize;
+      Result := LoadResString(@RsPeMaximumAllocationSize);
     JclLoadConfig_VirtualMemoryThreshold:
-      Result := RsPeVirtualMemoryThreshold;
+      Result := LoadResString(@RsPeVirtualMemoryThreshold);
     JclLoadConfig_ProcessHeapFlags:
-      Result := RsPeProcessHeapFlags;
+      Result := LoadResString(@RsPeProcessHeapFlags);
     JclLoadConfig_ProcessAffinityMask:
-      Result := RsPeProcessAffinityMask;
+      Result := LoadResString(@RsPeProcessAffinityMask);
     JclLoadConfig_CSDVersion:
-      Result := RsPeCSDVersion;
+      Result := LoadResString(@RsPeCSDVersion);
     JclLoadConfig_Reserved1:
-      Result := RsPeReserved;
+      Result := LoadResString(@RsPeReserved);
     JclLoadConfig_EditList:
-      Result := RsPeEditList;
+      Result := LoadResString(@RsPeEditList);
     JclLoadConfig_Reserved:
-      Result := RsPeReserved;
+      Result := LoadResString(@RsPeReserved);
   else
     Result := '';
   end;
@@ -4003,17 +4038,20 @@ procedure TJclPeImage.ReadImageSections;
 var
   I: Integer;
   Header: PImageSectionHeader;
-  SectionName: AnsiString;
+  UTF8Name: TUTF8String;
+  SectionName: string;
 begin
   if not StatusOK then
     Exit;
   Header := FLoadedImage.Sections;
   for I := 0 to FLoadedImage.NumberOfSections - 1 do
   begin
-    SetLength(SectionName, IMAGE_SIZEOF_SHORT_NAME);
-    Move(Header.Name[0], SectionName[1], IMAGE_SIZEOF_SHORT_NAME * SizeOf(AnsiChar));
-    StrResetLength(SectionName);
-    FImageSections.AddObject(UTF8ToString(SectionName), Pointer(Header));
+    SetLength(UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
+    Move(Header.Name[0], UTF8Name[1], IMAGE_SIZEOF_SHORT_NAME * SizeOf(AnsiChar));
+    StrResetLength(UTF8Name);
+    if not TryUTF8ToString(UTF8Name, SectionName) then
+      SectionName := string(UTF8Name);
+    FImageSections.AddObject(SectionName, Pointer(Header));
     Inc(Header);
   end;
 end;
@@ -4057,7 +4095,7 @@ end;
 function TJclPeImage.RvaToVa(Rva: DWORD): Pointer;
 begin
   if FAttachedImage then
-    Result := Pointer(DWORD(FLoadedImage.MappedAddress) + Rva)
+    Result := Pointer(TJclAddr(FLoadedImage.MappedAddress) + Rva)
   else
     Result := ImageRvaToVa(FLoadedImage.FileHeader, FLoadedImage.MappedAddress, Rva, nil);
 end;
@@ -4202,6 +4240,20 @@ begin
   end;
 end;
 
+{$IFDEF BORLAND}
+
+//=== { TJclPeBorImagesCache } ===============================================
+
+function TJclPeBorImagesCache.GetImages(const FileName: TFileName): TJclPeBorImage;
+begin
+  Result := TJclPeBorImage(inherited Images[FileName]);
+end;
+
+function TJclPeBorImagesCache.GetPeImageClass: TJclPeImageClass;
+begin
+  Result := TJclPeBorImage;
+end;
+
 //=== { TJclPePackageInfo } ==================================================
 
 constructor TJclPePackageInfo.Create(ALibHandle: THandle);
@@ -4257,21 +4309,21 @@ begin
     StrEnsureSuffix(BinaryExtensionPackage, Result);
 end;
 
-class function TJclPePackageInfo.PackageModuleTypeToString(Flags: Integer): string;
+class function TJclPePackageInfo.PackageModuleTypeToString(Flags: Cardinal): string;
 begin
   case Flags and pfModuleTypeMask of
     pfExeModule, pfModuleTypeMask:
-      Result := RsPePkgExecutable;
+      Result := LoadResString(@RsPePkgExecutable);
     pfPackageModule:
-      Result := RsPePkgPackage;
+      Result := LoadResString(@RsPePkgPackage);
     pfLibraryModule:
-      Result := PsPePkgLibrary;
+      Result := LoadResString(@PsPePkgLibrary);
   else
     Result := '';
   end;
 end;
 
-class function TJclPePackageInfo.PackageOptionsToString(Flags: Integer): string;
+class function TJclPePackageInfo.PackageOptionsToString(Flags: Cardinal): string;
 begin
   Result := '';
   AddFlagTextRes(Result, @RsPePkgNeverBuild, Flags, pfNeverBuild);
@@ -4280,17 +4332,17 @@ begin
   AddFlagTextRes(Result, @RsPePkgIgnoreDupUnits, Flags, pfIgnoreDupUnits);
 end;
 
-class function TJclPePackageInfo.ProducerToString(Flags: Integer): string;
+class function TJclPePackageInfo.ProducerToString(Flags: Cardinal): string;
 begin
   case Flags and pfProducerMask of
     pfV3Produced:
-      Result := RsPePkgV3Produced;
+      Result := LoadResString(@RsPePkgV3Produced);
     pfProducerUndefined:
-      Result := RsPePkgProducerUndefined;
+      Result := LoadResString(@RsPePkgProducerUndefined);
     pfBCB4Produced:
-      Result := RsPePkgBCB4Produced;
+      Result := LoadResString(@RsPePkgBCB4Produced);
     pfDelphi4Produced:
-      Result := RsPePkgDelphi4Produced;
+      Result := LoadResString(@RsPePkgDelphi4Produced);
   else
     Result := '';
   end;
@@ -4304,10 +4356,8 @@ begin
         Contains.AddObject(Name, Pointer(AFlags));
       ntRequiresPackage:
         Requires.Add(Name);
-      {$IFDEF COMPILER6_UP}
       ntDcpBpiName:
         SetDcpName(Name);
-      {$ENDIF COMPILER6_UP}
     end;
 end;
 
@@ -4393,7 +4443,7 @@ begin
     Strings.LoadFromStream(TempStream);
   finally
     TempStream.Free;
-  end;    
+  end;
 end;
 
 function TJclPeBorForm.GetDisplayName: string;
@@ -4608,7 +4658,7 @@ begin
     begin
       ImportName := ExtractFileName(FileName);
       CheckName;
-    end;  
+    end;
   end;
   Result := FPackageCompilerVersion;
 end;
@@ -4624,6 +4674,7 @@ begin
   end;
   Result := FPackageInfo;
 end;
+{$ENDIF BORLAND}
 
 //=== { TJclPeNameSearch } ===================================================
 
@@ -4754,7 +4805,11 @@ end;
 
 procedure TJclPeNameSearch.Start;
 begin
+  {$IFDEF RTL210_UP}
+  Suspended := False;
+  {$ELSE ~RTL210_UP}
   Resume;
+  {$ENDIF ~RTL210_UP}
 end;
 
 //=== PE Image miscellaneous functions =======================================
@@ -4766,7 +4821,7 @@ begin
   Result := PeGetNtHeaders32(FileName, NtHeaders);
 end;
 
-function InternalGetNtHeaders32(const FileName: TFileName; var NtHeaders): Boolean;
+function InternalGetNtHeaders32(const FileName: TFileName; out NtHeaders): Boolean;
 var
   FileHandle: THandle;
   Mapping: TJclFileMapping;
@@ -4774,7 +4829,7 @@ var
   HeadersPtr: PImageNtHeaders32;
 begin
   Result := False;
-  FillChar(NtHeaders, SizeOf(NtHeaders), #0);
+  ResetMemory(NtHeaders, SizeOf(TImageNtHeaders32));
   FileHandle := FileOpen(FileName, fmOpenRead or fmShareDenyWrite);
   if FileHandle = INVALID_HANDLE_VALUE then
     Exit;
@@ -4800,18 +4855,18 @@ begin
 end;
 
 {$IFDEF KEEP_DEPRECATED}
-function PeGetNtHeaders(const FileName: TFileName; var NtHeaders: TImageNtHeaders): Boolean;
+function PeGetNtHeaders(const FileName: TFileName; out NtHeaders: TImageNtHeaders): Boolean;
 begin
   Result := InternalGetNtHeaders32(FileName, NtHeaders);
 end;
 {$ENDIF KEEP_DEPRECATED}
 
-function PeGetNtHeaders32(const FileName: TFileName; var NtHeaders: TImageNtHeaders32): Boolean;
+function PeGetNtHeaders32(const FileName: TFileName; out NtHeaders: TImageNtHeaders32): Boolean;
 begin
   Result := InternalGetNtHeaders32(FileName, NtHeaders);
 end;
 
-function PeGetNtHeaders64(const FileName: TFileName; var NtHeaders: TImageNtHeaders64): Boolean;
+function PeGetNtHeaders64(const FileName: TFileName; out NtHeaders: TImageNtHeaders64): Boolean;
 var
   FileHandle: THandle;
   Mapping: TJclFileMapping;
@@ -4819,7 +4874,7 @@ var
   HeadersPtr: PImageNtHeaders64;
 begin
   Result := False;
-  FillChar(NtHeaders, SizeOf(NtHeaders), #0);
+  ResetMemory(NtHeaders, SizeOf(NtHeaders));
   FileHandle := FileOpen(FileName, fmOpenRead or fmShareDenyWrite);
   if FileHandle = INVALID_HANDLE_VALUE then
     Exit;
@@ -4856,6 +4911,8 @@ var
   Cache: TJclPeImagesCache;
   ImageBase32: TJclAddr32;
   ImageBase64: TJclAddr64;
+  UTF8Name: TUTF8String;
+  ExportName: string;
 begin
   Cache := TJclPeImagesCache.Create;
   try
@@ -4888,7 +4945,10 @@ begin
                   else
                     OrdinalName := nil;
                   end;
-                  ExportItem := ExportsImage.ExportList.ItemFromName[UTF8ToString(PAnsiChar(@OrdinalName.Name))];
+                  UTF8Name := PAnsiChar(@OrdinalName.Name);
+                  if not TryUTF8ToString(UTF8Name, ExportName) then
+                    ExportName := string(UTF8Name);
+                  ExportItem := ExportsImage.ExportList.ItemFromName[ExportName];
                   if ExportItem <> nil then
                     OrdinalName.Hint := ExportItem.Hint
                   else
@@ -4913,7 +4973,10 @@ begin
                   else
                     OrdinalName := nil;
                   end;
-                  ExportItem := ExportsImage.ExportList.ItemFromName[UTF8ToString(PAnsiChar(@OrdinalName.Name))];
+                  UTF8Name := PAnsiChar(@OrdinalName.Name);
+                  if not TryUTF8ToString(UTF8Name, ExportName) then
+                    ExportName := string(UTF8Name);
+                  ExportItem := ExportsImage.ExportList.ItemFromName[ExportName];
                   if ExportItem <> nil then
                     OrdinalName.Hint := ExportItem.Hint
                   else
@@ -4957,6 +5020,10 @@ function PeRebaseImage32(const ImageName: TFileName; NewBase: TJclAddr32;
     Result := $60000000 + (((Ord(FirstChar) - Ord('A')) div 3) * $1000000);
   end;
 
+{$IFDEF CPU64}
+var
+  NewIB, OldIB: QWord;
+{$ENDIF CPU64}
 begin
   if NewBase = 0 then
     NewBase := CalculateBaseAddress;
@@ -4964,8 +5031,18 @@ begin
   begin
     NewImageBase := NewBase;
     // OF: possible loss of data
+    {$IFDEF CPU32}
     Win32Check(ReBaseImage(PAnsiChar(AnsiString(ImageName)), nil, True, False, False, MaxNewSize,
       OldImageSize, OldImageBase, NewImageSize, NewImageBase, TimeStamp));
+    {$ENDIF CPU32}
+    {$IFDEF CPU64}
+    NewIB := NewImageBase;
+    OldIB := OldImageBase;
+    Win32Check(ReBaseImage(PAnsiChar(AnsiString(ImageName)), nil, True, False, False, MaxNewSize,
+      OldImageSize, OldIB, NewImageSize, NewIB, TimeStamp));
+    NewImageBase := NewIB;
+    OldImageBase := OldIB;
+    {$ENDIF CPU64}
   end;
 end;
 
@@ -5051,6 +5128,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
     VirtualAlignedSize: DWORD;
     I, X, NeedFill: Integer;
     SectionDataSize: Integer;
+    UTF8Name: TUTF8String;
   begin
     Result := True;
     try
@@ -5073,7 +5151,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
 
       // Increase the number of sections
       Inc(NtHeaders^.FileHeader.NumberOfSections);
-      FillChar(NewSection^, SizeOf(TImageSectionHeader), #0);
+      ResetMemory(NewSection^, SizeOf(TImageSectionHeader));
       // JCLDEBUG Virtual Address
       NewSection^.VirtualAddress := LastSection^.VirtualAddress + LastSection^.Misc.VirtualSize;
       RoundUpToAlignment(NewSection^.VirtualAddress, NtHeaders^.OptionalHeader.SectionAlignment);
@@ -5081,7 +5159,9 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
       NewSection^.PointerToRawData := LastSection^.PointerToRawData + LastSection^.SizeOfRawData;
       RoundUpToAlignment(NewSection^.PointerToRawData, NtHeaders^.OptionalHeader.FileAlignment);
       // JCLDEBUG Section name
-      StrPLCopy(PAnsiChar(@NewSection^.Name), StringToUTF8(SectionName), IMAGE_SIZEOF_SHORT_NAME);
+      if not TryStringToUTF8(SectionName, UTF8Name) then
+        UTF8Name := TUTF8String(SectionName);
+      StrPLCopy(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
       // JCLDEBUG Characteristics flags
       NewSection^.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
 
@@ -5119,6 +5199,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
     VirtualAlignedSize: DWORD;
     I, X, NeedFill: Integer;
     SectionDataSize: Integer;
+    UTF8Name: TUTF8String;
   begin
     Result := True;
     try
@@ -5141,7 +5222,7 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
 
       // Increase the number of sections
       Inc(NtHeaders^.FileHeader.NumberOfSections);
-      FillChar(NewSection^, SizeOf(TImageSectionHeader), #0);
+      ResetMemory(NewSection^, SizeOf(TImageSectionHeader));
       // JCLDEBUG Virtual Address
       NewSection^.VirtualAddress := LastSection^.VirtualAddress + LastSection^.Misc.VirtualSize;
       RoundUpToAlignment(NewSection^.VirtualAddress, NtHeaders^.OptionalHeader.SectionAlignment);
@@ -5149,7 +5230,9 @@ function PeInsertSection(const FileName: TFileName; SectionStream: TStream; Sect
       NewSection^.PointerToRawData := LastSection^.PointerToRawData + LastSection^.SizeOfRawData;
       RoundUpToAlignment(NewSection^.PointerToRawData, NtHeaders^.OptionalHeader.FileAlignment);
       // JCLDEBUG Section name
-      StrPLCopy(PAnsiChar(@NewSection^.Name), StringToUTF8(SectionName), IMAGE_SIZEOF_SHORT_NAME);
+      if not TryStringToUTF8(SectionName, UTF8Name) then
+        UTF8Name := TUTF8String(SectionName);
+      StrPLCopy(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
       // JCLDEBUG Characteristics flags
       NewSection^.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
 
@@ -5261,6 +5344,7 @@ function PeUpdateCheckSum(const FileName: TFileName): Boolean;
 var
   LI: TLoadedImage;
 begin
+  LI.ModuleName := nil;
   // OF: possible loss of data
   Result := MapAndLoad(PAnsiChar(AnsiString(FileName)), nil, LI, True, False);
   if Result then
@@ -5281,7 +5365,7 @@ begin
 end;
 
 function PeIsExportFunctionForwardedEx(const FileName: TFileName; const FunctionName: string;
-  var ForwardedName: string; Options: TJclSmartCompOptions): Boolean;
+  out ForwardedName: string; Options: TJclSmartCompOptions): Boolean;
 var
   ExportItem: TJclPeExportFuncItem;
 begin
@@ -5493,6 +5577,8 @@ begin
   end;
 end;
 
+{$IFDEF BORLAND}
+
 function PeBorFormNames(const FileName: TFileName; const NamesList: TStrings): Boolean;
 var
   I: Integer;
@@ -5534,6 +5620,8 @@ begin
     BorImage.Free;
   end;
 end;
+
+{$ENDIF BORLAND}
 
 // Missing imports checking routines
 
@@ -5697,6 +5785,7 @@ function PeMapImgLibraryName(const BaseAddress: Pointer): string;
     NtHeaders: PImageNtHeaders32;
     DataDir: TImageDataDirectory;
     ExportDir: PImageExportDirectory;
+    UTF8Name: TUTF8String;
   begin
     Result := '';
     NtHeaders := PeMapImgNtHeaders32(BaseAddress);
@@ -5708,13 +5797,16 @@ function PeMapImgLibraryName(const BaseAddress: Pointer): string;
     ExportDir := PImageExportDirectory(TJclAddr(BaseAddress) + DataDir.VirtualAddress);
     if IsBadReadPtr(ExportDir, SizeOf(TImageExportDirectory)) or (ExportDir^.Name = 0) then
       Exit;
-    Result := UTF8ToString(PAnsiChar(TJclAddr(BaseAddress) + ExportDir^.Name));
+    UTF8Name := PAnsiChar(TJclAddr(BaseAddress) + ExportDir^.Name);
+    if not TryUTF8ToString(UTF8Name, Result) then
+      Result := string(UTF8Name);
   end;
   function PeMapImgLibraryName64(const BaseAddress: Pointer): string;
   var
     NtHeaders: PImageNtHeaders64;
     DataDir: TImageDataDirectory;
     ExportDir: PImageExportDirectory;
+    UTF8Name: TUTF8String;
   begin
     Result := '';
     NtHeaders := PeMapImgNtHeaders64(BaseAddress);
@@ -5726,7 +5818,9 @@ function PeMapImgLibraryName(const BaseAddress: Pointer): string;
     ExportDir := PImageExportDirectory(TJclAddr(BaseAddress) + DataDir.VirtualAddress);
     if IsBadReadPtr(ExportDir, SizeOf(TImageExportDirectory)) or (ExportDir^.Name = 0) then
       Exit;
-    Result := UTF8ToString(PAnsiChar(TJclAddr(BaseAddress) + ExportDir^.Name));
+    UTF8Name := PAnsiChar(TJclAddr(BaseAddress) + ExportDir^.Name);
+    if not TryUTF8ToString(UTF8Name, Result) then
+      Result := string(UTF8Name);
   end;
 begin
   case PeMapImgTarget(BaseAddress) of
@@ -5795,11 +5889,14 @@ var
   Header: PImageSectionHeader;
   I: Integer;
   P: PAnsiChar;
+  UTF8Name: TUTF8String;
 begin
   Result := nil;
   if NtHeaders <> nil then
   begin
-    P := PAnsiChar(StringToUTF8(SectionName));
+    if not TryStringToUTF8(SectionName, UTF8Name) then
+      UTF8Name := TUTF8String(SectionName);
+    P := PAnsiChar(UTF8Name);
     Header := PeMapImgSections32(NtHeaders);
     with NtHeaders^ do
       for I := 1 to FileHeader.NumberOfSections do
@@ -5819,11 +5916,14 @@ var
   Header: PImageSectionHeader;
   I: Integer;
   P: PAnsiChar;
+  UTF8Name: TUTF8String;
 begin
   Result := nil;
   if NtHeaders <> nil then
   begin
-    P := PAnsiChar(StringToUTF8(SectionName));
+    if not TryStringToUTF8(SectionName, UTF8Name) then
+      UTF8Name := TUTF8String(SectionName);
+    P := PAnsiChar(UTF8Name);
     Header := PeMapImgSections64(NtHeaders);
     with NtHeaders^ do
       for I := 1 to FileHeader.NumberOfSections do
@@ -5898,6 +5998,7 @@ begin
 end;
 
 function PeMapImgResolvePackageThunk(Address: Pointer): Pointer;
+{$IFDEF BORLAND}
 const
   JmpInstructionCode = $25FF;
 type
@@ -5916,6 +6017,12 @@ begin
   else
     Result := nil;
 end;
+{$ENDIF BORLAND}
+{$IFDEF FPC}
+begin
+  Result := Address;
+end;
+{$ENDIF FPC}
 
 function PeMapFindResource(const Module: HMODULE; const ResourceType: PChar;
   const ResourceName: string): Pointer;
@@ -5931,7 +6038,7 @@ begin
       ResItem := ResourceList.FindResource(ResourceType, PChar(ResourceName));
       if (ResItem <> nil) and ResItem.IsDirectory then
         Result := ResItem.List[0].RawEntryData;
-    end;  
+    end;
   finally
     Free;
   end;
@@ -6011,6 +6118,7 @@ function TJclPeMapImgHookItem.InternalUnhook: Boolean;
 var
   Buf: TMemoryBasicInformation;
 begin
+  Buf.AllocationBase := nil;
   if (VirtualQuery(FBaseAddress, Buf, SizeOf(Buf)) = SizeOf(Buf)) and (Buf.State and MEM_FREE = 0) then
     Result := TJclPeMapImgHooks.ReplaceImport(FBaseAddress, ModuleName, NewAddress, OriginalAddress)
   else
@@ -6073,6 +6181,7 @@ function TJclPeMapImgHooks.HookImport(Base: Pointer; const ModuleName: string;
 var
   ModuleHandle: THandle;
   OriginalItem: TJclPeMapImgHookItem;
+  UTF8Name: TUTF8String;
 begin
   ModuleHandle := GetModuleHandle(PChar(ModuleName));
   Result := (ModuleHandle <> 0);
@@ -6081,7 +6190,9 @@ begin
     SetLastError(ERROR_MOD_NOT_FOUND);
     Exit;
   end;
-  OriginalAddress := GetProcAddress(ModuleHandle, PAnsiChar(StringToUTF8(FunctionName)));
+  if not TryStringToUTF8(FunctionName, UTF8Name) then
+    UTF8Name := TUTF8String(FunctionName);
+  OriginalAddress := GetProcAddress(ModuleHandle, PAnsiChar(UTF8Name));
   Result := (OriginalAddress <> nil);
   if not Result then
   begin
@@ -6126,6 +6237,7 @@ var
   ImportEntry32: PImageThunkData32;
   FoundProc: Boolean;
   WrittenBytes: Cardinal;
+  UTF8Name: TUTF8String;
 begin
   Result := False;
   FromProcDebugThunk32 := PWin9xDebugThunk32(FromProc);
@@ -6137,7 +6249,9 @@ begin
   if ImportDir.VirtualAddress = 0 then
     Exit;
   ImportDesc := PImageImportDescriptor(TJclAddr(Base) + ImportDir.VirtualAddress);
-  RefName := PAnsiChar(StringToUTF8(ModuleName));
+  if not TryStringToUTF8(ModuleName, UTF8Name) then
+    UTF8Name := TUTF8String(ModuleName);
+  RefName := PAnsiChar(UTF8Name);
   while ImportDesc^.Name <> 0 do
   begin
     CurrName := PAnsiChar(Base) + ImportDesc^.Name;
@@ -6202,16 +6316,9 @@ function InternalReadProcMem(ProcessHandle: THandle; Address: DWORD;
 var
   BR: DWORD;
 begin
+  BR := 0;
   Result := ReadProcessMemory(ProcessHandle, Pointer(Address), Buffer, Size, BR);
 end;
-
-{$IFDEF KEEP_DEPRECATED}
-function PeDbgImgNtHeaders(ProcessHandle: THandle; BaseAddress: Pointer;
-  var NtHeaders: TImageNtHeaders32): Boolean;
-begin
-  Result := PeDbgImgNtHeaders32(ProcessHandle, TJclAddr32(BaseAddress), NtHeaders);
-end;
-{$ENDIF KEEP_DEPRECATED}
 
 // TODO: 64 bit version
 function PeDbgImgNtHeaders32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
@@ -6220,8 +6327,8 @@ var
   DosHeader: TImageDosHeader;
 begin
   Result := False;
-  FillChar(NtHeaders, SizeOf(NtHeaders), 0);
-  FillChar(DosHeader, SizeOf(DosHeader), 0);
+  ResetMemory(NtHeaders, SizeOf(NtHeaders));
+  ResetMemory(DosHeader, SizeOf(DosHeader));
   if not InternalReadProcMem(ProcessHandle, TJclAddr32(BaseAddress), @DosHeader, SizeOf(DosHeader)) then
     Exit;
   if DosHeader.e_magic <> IMAGE_DOS_SIGNATURE then
@@ -6229,14 +6336,6 @@ begin
   Result := InternalReadProcMem(ProcessHandle, TJclAddr32(BaseAddress) + TJclAddr32(DosHeader._lfanew),
     @NtHeaders, SizeOf(TImageNtHeaders32));
 end;
-
-{$IFDEF KEEP_DEPRECATED}
-function PeDbgImgLibraryName(ProcessHandle: THandle; BaseAddress: Pointer;
-  var Name: string): Boolean;
-begin
-  Result := PeDbgImgLibraryName32(ProcessHandle, TJclAddr32(BaseAddress), Name);
-end;
-{$ENDIF KEEP_DEPRECATED}
 
 // TODO: 64 bit version
 function PeDbgImgLibraryName32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
@@ -6249,6 +6348,7 @@ var
 begin
   Name := '';
 
+  NtHeaders32.Signature := 0;
   Result := PeDbgImgNtHeaders32(ProcessHandle, BaseAddress, NtHeaders32);
   if not Result then
     Exit;
@@ -6264,7 +6364,8 @@ begin
   if InternalReadProcMem(ProcessHandle, TJclAddr(BaseAddress) + ExportDir.Name, PAnsiChar(UTF8Name), MAX_PATH) then
   begin
     StrResetLength(UTF8Name);
-    Name := UTF8ToString(UTF8Name);
+    if not TryUTF8ToString(UTF8Name, Name) then
+      Name := string(UTF8Name);
   end
   else
     Name := '';
@@ -6272,12 +6373,12 @@ end;
 
 // Borland BPL packages name unmangling
 
-function PeBorUnmangleName(const Name: string; var Unmangled: string;
-  var Description: TJclBorUmDescription; var BasePos: Integer): TJclBorUmResult;
+function PeBorUnmangleName(const Name: string; out Unmangled: string;
+  out Description: TJclBorUmDescription; out BasePos: Integer): TJclBorUmResult;
 var
   NameP, NameU, NameUFirst: PAnsiChar;
   QualifierFound, LinkProcFound: Boolean;
-  UTF8Unmangled: TUTF8String;
+  UTF8Unmangled, UTF8Name: TUTF8String;
 
   procedure MarkQualifier;
   begin
@@ -6398,7 +6499,9 @@ var
   end;
 
 begin
-  NameP := PAnsiChar(StringToUTF8(Name));
+  if not TryStringToUTF8(Name, UTF8Name) then
+    UTF8Name := TUTF8String(Name);
+  NameP := PAnsiChar(UTF8Name);
   Result := urError;
   case NameP^ of
     '@':
@@ -6426,18 +6529,19 @@ begin
   end;
   NameU^ := #0;
   SetLength(UTF8Unmangled, SysUtils.StrLen(PAnsiChar(UTF8Unmangled))); // SysUtils prefix due to compiler bug
-  Unmangled := UTF8ToString(UTF8Unmangled);
+  if not TryUTF8ToString(UTF8Unmangled, Unmangled) then
+    Unmangled := string(UTF8Unmangled);
 end;
 
-function PeBorUnmangleName(const Name: string; var Unmangled: string;
-  var Description: TJclBorUmDescription): TJclBorUmResult;
+function PeBorUnmangleName(const Name: string; out Unmangled: string;
+  out Description: TJclBorUmDescription): TJclBorUmResult;
 var
   BasePos: Integer;
 begin
   Result := PeBorUnmangleName(Name, Unmangled, Description, BasePos);
 end;
 
-function PeBorUnmangleName(const Name: string; var Unmangled: string): TJclBorUmResult;
+function PeBorUnmangleName(const Name: string; out Unmangled: string): TJclBorUmResult;
 var
   Description: TJclBorUmDescription;
   BasePos: Integer;
@@ -6484,7 +6588,7 @@ var
   UndecorateSymbolNameW: TUndecorateSymbolNameW = nil;
   UndecorateSymbolNameWFailed: Boolean = False;
 
-function UndecorateSymbolName(const DecoratedName: string; var UnMangled: string; Flags: DWORD): Boolean;
+function UndecorateSymbolName(const DecoratedName: string; out UnMangled: string; Flags: DWORD): Boolean;
 const
   ModuleName = 'imagehlp.dll';
   BufferSize = 512;
@@ -6535,7 +6639,7 @@ begin
   end;
 end;
 
-function PeUnmangleName(const Name: string; var Unmangled: string): TJclPeUmResult;
+function PeUnmangleName(const Name: string; out Unmangled: string): TJclPeUmResult;
 begin
   Result := umNotMangled;
   case PeBorUnmangleName(Name, Unmangled) of

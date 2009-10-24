@@ -17,7 +17,7 @@
 *)
 unit uEmuXapi;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 
@@ -1017,7 +1017,8 @@ end;
 function XTL_EmuCreateMutex(
   lpMutexAttributes: LPSECURITY_ATTRIBUTES;
   bInitialOwner: BOOL;
-  lpName: PAnsiChar): Handle; stdcall;
+  // TODO : Is this really an Ansi-type? Or should it be wide (LPCWSTR) ?
+  lpName: LPCSTR): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: Handle;
@@ -1032,7 +1033,7 @@ begin
       #13#10');',
       [lpMutexAttributes, bInitialOwner, lpName]);
 
-  hRet := CreateMutex(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
+  hRet := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
 
   EmuSwapFS(fsXbox);
 

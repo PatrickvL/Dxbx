@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007)                             $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (do, 30 jul 2009)                             $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -58,18 +58,15 @@ procedure IniWriteStrings(IniFile: TCustomIniFile; const Section: string; String
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclIniFiles.pas $';
-    Revision: '$Revision: 2175 $';
-    Date: '$Date: 2007-09-17 23:41:02 +0200 (ma, 17 sep 2007) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (do, 30 jul 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
-
-{$IFDEF CLR}
-type
-  TIniFile = TMemIniFile;
-{$ENDIF CLR}
 
 // Initialization Files
 function IniReadBool(const FileName, Section, Line: string): Boolean;
@@ -115,9 +112,6 @@ begin
   Ini := TIniFile.Create(FileName);
   try
     Ini.WriteBool(Section, Line, Value);
-    {$IFDEF CLR}
-    Ini.UpdateFile;
-    {$ENDIF CLR}
   finally
     Ini.Free;
   end;
@@ -130,9 +124,6 @@ begin
   Ini := TIniFile.Create(FileName);
   try
     Ini.WriteInteger(Section, Line, Value);
-    {$IFDEF CLR}
-    Ini.UpdateFile;
-    {$ENDIF CLR}
   finally
     Ini.Free;
   end;
@@ -145,9 +136,6 @@ begin
   Ini := TIniFile.Create(FileName);
   try
     Ini.WriteString(Section, Line, Value);
-    {$IFDEF CLR}
-    Ini.UpdateFile;
-    {$ENDIF CLR}
   finally
     Ini.Free;
   end;

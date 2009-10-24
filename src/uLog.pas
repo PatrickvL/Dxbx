@@ -146,7 +146,7 @@ begin
         and (LMemInfo.Protect and PAGE_GUARD = 0);
 end;
 
-function TryReadLiteralString(const Ptr: PChar; var aOutputStr: string): Boolean;
+function TryReadLiteralString(const Ptr: PAnsiChar; var aOutputStr: string): Boolean;
 const
   // Here the (rather arbitrary) steering parameters :
   MinStrLen = 3;
@@ -154,19 +154,27 @@ const
   PrintableChars = [' '..#127];
 var
   i: Integer;
+  NrAnsiChars: Integer;
+  NrWideZeros: Integer;
 begin
   Result := False;
+
+  NrAnsiChars := 0;
+  NrWideZeros := 0;
 
   // Dected as much string-contents as we can :
   i := 0;
   while i < MaxStrLen do
   try
-    // Break on terminating zero :
     if Ptr[i] = #0 then
     begin
-      // It's no string when it's too short :
-      if i < MinStrLen then
-        Exit;
+      // Zero's on odd position could indicate an UTF-16LE string :
+      if Odd(i) then
+      begin
+        Inc(NrWideZeros);
+        Inc(i);
+        Continue;
+      end;
 
       // The string ends on a #0 :
       Break;
@@ -176,14 +184,22 @@ begin
     if not (Ptr[i] in PrintableChars) then
       Exit;
 
+    Inc(NrAnsiChars);
     Inc(i);
   except
     // Save-guard against illegal memory-accesses :
     Exit;
   end;
 
-  {var}aOutputStr := '"' + Copy(Ptr, 0, i) + '"';
-  Result := True;
+  // It's no string when it's too short :
+  if NrAnsiChars < MinStrLen then
+    Exit;
+
+  if Abs(NrAnsiChars - NrWideZeros) <= 1 then
+    {var}aOutputStr := '"' + Copy(PWideChar(Ptr), 0, NrAnsiChars) + '"'
+  else
+    {var}aOutputStr := '"' + Copy(Ptr, 0, NrAnsiChars) + '"';
+  Result := True
 end;
 
 function TryPointerToString(Ptr: Pointer; var aOutputStr: string): Boolean;
@@ -220,7 +236,7 @@ begin
 {$ENDIF}
 
     // See if it's a literal string :
-    if TryReadLiteralString(PChar(Ptr), {var}aOutputStr) then
+    if TryReadLiteralString(PAnsiChar(Ptr), {var}aOutputStr) then
       Break;
 
     // See if we may still try indirect pointers :

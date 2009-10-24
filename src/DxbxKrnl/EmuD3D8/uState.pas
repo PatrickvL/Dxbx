@@ -18,7 +18,7 @@
 
 unit uState;
 
-{$INCLUDE ..\..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

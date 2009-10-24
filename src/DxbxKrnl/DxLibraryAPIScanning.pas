@@ -19,7 +19,7 @@ unit DxLibraryAPIScanning;
 
 {.$DEFINE _OPTIMIZE_UNIT}
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

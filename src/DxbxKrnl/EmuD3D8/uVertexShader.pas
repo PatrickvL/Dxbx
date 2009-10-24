@@ -18,7 +18,7 @@
 
 unit uVertexShader;
 
-{$INCLUDE ..\..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

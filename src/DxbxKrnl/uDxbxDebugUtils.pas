@@ -17,7 +17,7 @@
 *)
 unit uDxbxDebugUtils;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 
@@ -57,7 +57,7 @@ var
   b: Boolean;
 begin
   List := JclLastExceptStackList;
-  if not GetLocationInfo(Caller(1), CallerInfo) then
+  if not GetLocationInfo(Caller(1), {var}CallerInfo) then
     Result := Format('Exception at address %p', [Caller(1)])
   else
   begin
@@ -67,7 +67,7 @@ begin
       Result := Format('Exception in module %s: ', [CallerModule]);
       b := False;
       for I := 0 to List.Count - 1 do
-        if GetLocationInfo(List.Items[I].CallerAdr, Info) then
+        if GetLocationInfo(List.Items[I].CallerAdr, {var}Info) then
           with Info do
            if CallerModule = Info.SourceName then
            begin
@@ -82,7 +82,7 @@ begin
     begin
       Result := 'Exception ';
       for I := 0 to List.Count - 1 do
-        if GetLocationInfo(List.Items[I].CallerAdr, Info) then
+        if GetLocationInfo(List.Items[I].CallerAdr, {var}Info) then
           with Info do
             Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
             
@@ -98,6 +98,10 @@ function TDxbxAPIDebugInfoSource.GetLocationInfo(const aAddr: Pointer; var Info:
 var
   DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
 begin
+  Result := Assigned(DetectedSymbols);
+  if not Result then
+    Exit;
+
   DetectedSymbol := DetectedSymbols.FindByAddress(TCodePointer(aAddr));
   Result := Assigned(DetectedSymbol);
   if not Result then

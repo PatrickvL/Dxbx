@@ -4887,8 +4887,8 @@ function D3DXGetErrorStringA(hr: HResult): String;
 var
   Buffer: array [0..254] of Char;
 begin
-  D3DXGetErrorString(hr, PAnsiChar(@Buffer), 255);
-  SetLength(Result, StrLen(PAnsiChar(@Buffer)));
+  D3DXGetErrorString(hr, PChar(@Buffer), 255);
+  SetLength(Result, StrLen(PChar(@Buffer)));
   Move(Buffer, Result[1], Length(Result));
 end;
 
@@ -4908,8 +4908,8 @@ function D3DXGetErrorString(hr: HResult): String;
 var
   Buffer: array [0..254] of Char;
 begin
-  D3DXGetErrorString(hr, PAnsiChar(@Buffer), 255);
-  SetLength(Result, StrLen(PAnsiChar(@Buffer)));
+  D3DXGetErrorString(hr, PChar(@Buffer), 255);
+  SetLength(Result, StrLen(PChar(@Buffer)));
   Move(Buffer, Result[1], Length(Result));
 end;
 

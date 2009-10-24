@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-23 01:14:35 +0200 (di, 23 sep 2008)                            $ }
-{ Revision:      $Rev:: 2491                                                                     $ }
+{ Last modified: $Date:: 2009-09-02 13:56:05 +0200 (wo, 02 sep 2009)                             $ }
+{ Revision:      $Rev:: 2984                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -47,39 +47,39 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  System.Threading,
-  {$IFDEF CLR20}
-  System.Security.AccessControl,
-  {$ENDIF CLR20}
-  {$ENDIF CLR}
   {$IFDEF MSWINDOWS}
-  Windows,
+  Windows, JclWin32,
   {$ENDIF MSWINDOWS}
   JclBase;
 
 // Locked Integer manipulation
 //
 // Routines to manipulate simple typed variables in a thread safe manner
-{$IFNDEF CLR11}
-function LockedAdd(var Target: Integer; Value: Integer): Integer;
-{$ENDIF ~CLR11}
+function LockedAdd(var Target: Integer; Value: Integer): Integer; overload;
 function LockedCompareExchange(var Target: Integer; Exch, Comp: Integer): Integer; overload;
-{$IFDEF CLR}
 function LockedCompareExchange(var Target: TObject; Exch, Comp: TObject): TObject; overload;
-{$ELSE}
 function LockedCompareExchange(var Target: Pointer; Exch, Comp: Pointer): Pointer; overload;
-{$ENDIF CLR}
-function LockedDec(var Target: Integer): Integer;
-function LockedExchange(var Target: Integer; Value: Integer): Integer;
-function LockedExchangeAdd(var Target: Integer; Value: Integer): Integer;
-function LockedExchangeDec(var Target: Integer): Integer;
-function LockedExchangeInc(var Target: Integer): Integer;
-function LockedExchangeSub(var Target: Integer; Value: Integer): Integer;
-function LockedInc(var Target: Integer): Integer;
-{$IFNDEF CLR11}
-function LockedSub(var Target: Integer; Value: Integer): Integer;
-{$ENDIF ~CLR11}
+function LockedDec(var Target: Integer): Integer; overload;
+function LockedExchange(var Target: Integer; Value: Integer): Integer; overload;
+function LockedExchangeAdd(var Target: Integer; Value: Integer): Integer; overload;
+function LockedExchangeDec(var Target: Integer): Integer; overload;
+function LockedExchangeInc(var Target: Integer): Integer; overload;
+function LockedExchangeSub(var Target: Integer; Value: Integer): Integer; overload;
+function LockedInc(var Target: Integer): Integer; overload;
+function LockedSub(var Target: Integer; Value: Integer): Integer; overload;
+
+{$IFDEF CPU64}
+function LockedAdd(var Target: Int64; Value: Int64): Int64; overload;
+function LockedCompareExchange(var Target: Int64; Exch, Comp: Int64): Int64; overload;
+function LockedDec(var Target: Int64): Int64; overload;
+function LockedExchange(var Target: Int64; Value: Int64): Int64; overload;
+function LockedExchangeAdd(var Target: Int64; Value: Int64): Int64; overload;
+function LockedExchangeDec(var Target: Int64): Int64; overload;
+function LockedExchangeInc(var Target: Int64): Int64; overload;
+function LockedExchangeSub(var Target: Int64; Value: Int64): Int64; overload;
+function LockedInc(var Target: Int64): Int64; overload;
+function LockedSub(var Target: Int64; Value: Int64): Int64; overload;
+{$ENDIF CPU64}
 
 // TJclDispatcherObject
 //
@@ -87,11 +87,7 @@ function LockedSub(var Target: Integer; Value: Integer): Integer;
 type
   TJclWaitResult = (wrAbandoned, wrError, wrIoCompletion, wrSignaled, wrTimeout);
 
-  {$IFDEF CLR}
-  TJclWaitHandle = System.Threading.WaitHandle;
-  {$ELSE}
   TJclWaitHandle = THandle;
-  {$ENDIF CLR}
 
   TJclDispatcherObject = class(TObject)
   private
@@ -103,10 +99,8 @@ type
     destructor Destroy; override;
     //function MsgWaitFor(const TimeOut: Cardinal): TJclWaitResult; Mask: DWORD): TJclWaitResult;
     //function MsgWaitForEx(const TimeOut: Cardinal): TJclWaitResult; Mask: DWORD): TJclWaitResult;
-    {$IFNDEF CLR11}
     function SignalAndWait(const Obj: TJclDispatcherObject; TimeOut: Cardinal;
       Alertable: Boolean): TJclWaitResult;
-    {$ENDIF CLR11}
     function WaitAlertable(const TimeOut: Cardinal): TJclWaitResult;
     function WaitFor(const TimeOut: Cardinal): TJclWaitResult;
     function WaitForever: TJclWaitResult;
@@ -131,14 +125,11 @@ type
   public
     constructor Create; virtual;
     destructor Destroy; override;
-    {$IFNDEF CLR}
     class procedure CreateAndEnter(var CS: TJclCriticalSection);
-    {$ENDIF ~CLR}
     procedure Enter;
     procedure Leave;
   end;
 
-  {$IFNDEF CLR}
   TJclCriticalSectionEx = class(TJclCriticalSection)
   private
     FSpinCount: Cardinal;
@@ -152,33 +143,27 @@ type
     function TryEnter: Boolean;
     property SpinCount: Cardinal read GetSpinCount write SetSpinCount;
   end;
-  {$ENDIF ~CLR}
 
   TJclEvent = class(TJclDispatcherObject)
   public
-    constructor Create({$IFNDEF CLR}SecAttr: PSecurityAttributes;{$ENDIF} Manual, Signaled: Boolean; const Name: string);
-    {$IFNDEF CLR}
+    constructor Create(SecAttr: PSecurityAttributes; Manual, Signaled: Boolean; const Name: string);
     constructor Open(Access: Cardinal; Inheritable: Boolean; const Name: string);
-    {$ENDIF ~CLR}
     function Pulse: Boolean;
     function ResetEvent: Boolean;
     function SetEvent: Boolean;
   end;
 
-  {$IFNDEF CLR}
   TJclWaitableTimer = class(TJclDispatcherObject)
   private
     FResume: Boolean;
   public
-    constructor Create({$IFNDEF CLR}SecAttr: PSecurityAttributes;{$ENDIF} Manual: Boolean; const Name: string);
+    constructor Create(SecAttr: PSecurityAttributes; Manual: Boolean; const Name: string);
     constructor Open(Access: Cardinal; Inheritable: Boolean; const Name: string);
     function Cancel: Boolean;
     function SetTimer(const DueTime: Int64; Period: Longint; Resume: Boolean): Boolean;
     function SetTimerApc(const DueTime: Int64; Period: Longint; Resume: Boolean; Apc: TFNTimerAPCRoutine; Arg: Pointer): Boolean;
   end;
-  {$ENDIF ~CLR}
 
-  {$IFNDEF CLR}
   TJclSemaphore = class(TJclDispatcherObject)
   public
     constructor Create(SecAttr: PSecurityAttributes; Initial, Maximum: Longint; const Name: string);
@@ -186,19 +171,16 @@ type
     function Release(ReleaseCount: Longint): Boolean;
     function ReleasePrev(ReleaseCount: Longint; var PrevCount: Longint): Boolean;
   end;
-  {$ENDIF ~CLR}
 
-  {$IFNDEF CLR11}
   TJclMutex = class(TJclDispatcherObject)
   public
-    constructor Create(SecAttr: {$IFDEF CLR}MutexSecurity{$ELSE}PSecurityAttributes{$ENDIF}; InitialOwner: Boolean;
+    constructor Create(SecAttr: PSecurityAttributes; InitialOwner: Boolean;
       const Name: string);
-    constructor Open({$IFDEF CLR}Rights: MutexRights;{$ELSE}Access: Cardinal; Inheritable: Boolean;{$ENDIF} const Name: string);
+    constructor Open(Access: Cardinal; Inheritable: Boolean; const Name: string);
+    function Acquire(const TimeOut: Cardinal = INFINITE): Boolean;
     function Release: Boolean;
   end;
-  {$ENDIF ~CLR11}
 
-  {$IFNDEF CLR}
   POptexSharedInfo = ^TOptexSharedInfo;
   TOptexSharedInfo = record
     SpinCount: Integer;      // number of times to try and enter the optex before
@@ -238,15 +220,9 @@ type
     Reader: Boolean;         // true if reader, false if writer
   end;
   TMrewThreadInfoArray = array of TMrewThreadInfo;
-  {$ENDIF ~CLR}
 
   TJclMultiReadExclusiveWrite = class(TObject)
   private
-    {$IFDEF CLR}
-    FHandle: ReaderWriterLock;
-    FLockCookie: LockCookie;
-    FUpgradedWrite: Boolean;
-    {$ELSE ~CLR}
     FLock: TJclCriticalSection;
     FPreferred: TMrewPreferred;
     FSemReaders: TJclSemaphore;
@@ -261,13 +237,8 @@ type
     procedure ReleaseWaiters(WasReading: Boolean);
   protected
     procedure Release;
-    {$ENDIF ~CLR}
   public
-    {$IFDEF CLR}
-    constructor Create;
-    {$ELSE ~CLR}
     constructor Create(Preferred: TMrewPreferred);
-    {$ENDIF ~CLR}
 
     destructor Destroy; override;
     procedure BeginRead;
@@ -276,7 +247,6 @@ type
     procedure EndWrite;
   end;
 
-  {$IFNDEF CLR}
   PMetSectSharedInfo = ^TMetSectSharedInfo;
   TMetSectSharedInfo = record
     Initialized: LongBool;    // Is the metered section initialized?
@@ -309,11 +279,9 @@ type
     destructor Destroy; override;
     function Enter(TimeOut: Longword): TJclWaitResult;
     function Leave(ReleaseCount: Longint): Boolean; overload;
-    function Leave(ReleaseCount: Longint; var PrevCount: Longint): Boolean; overload;
+    function Leave(ReleaseCount: Longint; out PrevCount: Longint): Boolean; overload;
   end;
-  {$ENDIF ~CLR}
 
-{$IFNDEF CLR}
 // Debugging
 //
 // Note that the following function and structure declarations are all offically
@@ -348,7 +316,6 @@ function QueryEvent(Handle: THandle; var Info: TEventInfo): Boolean;
 function QueryMutex(Handle: THandle; var Info: TMutexInfo): Boolean;
 function QuerySemaphore(Handle: THandle; var Info: TSemaphoreCounts): Boolean;
 function QueryTimer(Handle: THandle; var Info: TTimerInfo): Boolean;
-{$ENDIF ~CLR}
 
 type
   // Exceptions
@@ -361,13 +328,18 @@ type
   EJclMutexError = class(EJclWin32Error);
   EJclMeteredSectionError = class(EJclError);
 
+function ValidateMutexName(const aName: string): string;
+
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSynch.pas $';
-    Revision: '$Revision: 2491 $';
-    Date: '$Date: 2008-09-23 01:14:35 +0200 (di, 23 sep 2008) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2984 $';
+    Date: '$Date: 2009-09-02 13:56:05 +0200 (wo, 02 sep 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -375,161 +347,376 @@ implementation
 
 uses
   SysUtils,
-  {$IFDEF CLR}
-  Math,
-  {$ENDIF CLR}
-  JclLogic, {$IFNDEF CLR}JclWin32, JclRegistry,{$ENDIF} JclResources, JclSysInfo;
+  JclLogic, JclRegistry, JclResources,
+  JclSysInfo, JclStrings;
 
 const
   RegSessionManager = {HKLM\} 'SYSTEM\CurrentControlSet\Control\Session Manager';
   RegCritSecTimeout = {RegSessionManager\} 'CriticalSectionTimeout';
 
 // Locked Integer manipulation
-{$IFDEF CLR}
-
-{$IFNDEF CLR11}
-function LockedAdd(var Target: Integer; Value: Integer): Integer;
-begin
-  Result := Interlocked.Add(Target, Value);
-end;
-{$ENDIF ~CLR11}
-
-function LockedCompareExchange(var Target: Integer; Exch, Comp: Integer): Integer;
-begin
-  Result := Interlocked.CompareExchange(Target, Exch, Comp);
-end;
-
-function LockedCompareExchange(var Target: TObject; Exch, Comp: TObject): TObject;
-begin
-  Result := Interlocked.CompareExchange(Target, Exch, Comp);
-end;
-
-function LockedDec(var Target: Integer): Integer;
-begin
-  Result := Interlocked.Decrement(Target);
-end;
-
-function LockedExchange(var Target: Integer; Value: Integer): Integer;
-begin
-  Result := Interlocked.Exchange(Target, Value);
-end;
-
-function LockedExchangeAdd(var Target: Integer; Value: Integer): Integer;
-begin
-  Result := InterlockedExchangeAdd(Target, Value);  // P/Invoke
-end;
-
-function LockedExchangeDec(var Target: Integer): Integer;
-begin
-  Result := LockedExchangeAdd(Target, -1);
-end;
-
-function LockedExchangeInc(var Target: Integer): Integer;
-begin
-  Result := LockedExchangeAdd(Target, 1);
-end;
-
-function LockedExchangeSub(var Target: Integer; Value: Integer): Integer;
-begin
-  Result := LockedExchangeAdd(Target, -Value);
-end;
-
-function LockedInc(var Target: Integer): Integer;
-begin
-  Result := Interlocked.Increment(Target);
-end;
-
-{$IFNDEF CLR11}
-function LockedSub(var Target: Integer; Value: Integer): Integer;
-begin
-  Result := Interlocked.Add(Target, -Value);
-end;
-{$ENDIF ~CLR11}
-
-{$ELSE}
-
 function LockedAdd(var Target: Integer; Value: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Value
+        // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, EDX
         LOCK XADD [ECX], EAX
         ADD     EAX, EDX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     EDX Value
+        // <-- EAX Result
+        MOV     EAX, EDX
+        LOCK XADD [RCX], EAX
+        ADD     EAX, EDX
+        {$ENDIF CPU64}
 end;
 
 function LockedCompareExchange(var Target: Integer; Exch, Comp: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Exch
+        //     ECX Comp
+        // <-- EAX Result
         XCHG    EAX, ECX
+        //     EAX Comp
+        //     EDX Exch
+        //     ECX Target
         LOCK CMPXCHG [ECX], EDX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     EDX Exch
+        //     R8  Comp
+        // <-- EAX Result
+        MOV     RAX, R8
+        //     RCX Target
+        //     EDX Exch
+        //     RAX Comp
+        LOCK CMPXCHG [RCX], EDX
+        {$ENDIF CPU64}
 end;
 
 function LockedCompareExchange(var Target: Pointer; Exch, Comp: Pointer): Pointer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Exch
+        //     ECX Comp
+        // <-- EAX Result
         XCHG    EAX, ECX
+        //     EAX Comp
+        //     EDX Exch
+        //     ECX Target
         LOCK CMPXCHG [ECX], EDX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     RDX Exch
+        //     R8  Comp
+        // <-- RAX Result
+        MOV     RAX, R8
+        //     RCX Target
+        //     RDX Exch
+        //     RAX Comp
+        LOCK CMPXCHG [RCX], RDX
+        {$ENDIF CPU64}
+end;
+
+function LockedCompareExchange(var Target: TObject; Exch, Comp: TObject): TObject;
+asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Exch
+        //     ECX Comp
+        // <-- EAX Result
+        XCHG    EAX, ECX
+        //     EAX Comp
+        //     EDX Exch
+        //     ECX Target
+        LOCK CMPXCHG [ECX], EDX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     RDX Exch
+        //     R8  Comp
+        // <-- RAX Result
+        MOV     RAX, R8
+        // --> RCX Target
+        //     RDX Exch
+        //     RAX Comp
+        LOCK CMPXCHG [RCX], RDX
+        {$ENDIF CPU64}
 end;
 
 function LockedDec(var Target: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, -1
         LOCK XADD [ECX], EAX
         DEC     EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        // <-- EAX Result
+        MOV     EAX, -1
+        LOCK XADD [RCX], EAX
+        DEC     EAX
+        {$ENDIF CPU64}
 end;
 
 function LockedExchange(var Target: Integer; Value: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Value
+        // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, EDX
+        //     ECX Target
+        //     EAX Value
         LOCK XCHG [ECX], EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     EDX Value
+        // <-- EAX Result
+        MOV     EAX, EDX
+        //     RCX Target
+        //     EAX Value
+        LOCK XCHG [RCX], EAX
+        {$ENDIF CPU64}
 end;
 
 function LockedExchangeAdd(var Target: Integer; Value: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Value
+        // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, EDX
+        //     ECX Target
+        //     EAX Value
         LOCK XADD [ECX], EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     EDX Value
+        // <-- EAX Result
+        MOV     EAX, EDX
+        //     RCX Target
+        //     EAX Value
+        LOCK XADD [RCX], EAX
+        {$ENDIF CPU64}
 end;
 
 function LockedExchangeDec(var Target: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, -1
         LOCK XADD [ECX], EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        // <-- EAX Result
+        MOV     EAX, -1
+        LOCK XADD [RCX], EAX
+        {$ENDIF CPU64}
 end;
 
 function LockedExchangeInc(var Target: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, 1
         LOCK XADD [ECX], EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        // <-- EAX Result
+        MOV     EAX, 1
+        LOCK XADD [RCX], EAX
+        {$ENDIF CPU64}
 end;
 
 function LockedExchangeSub(var Target: Integer; Value: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Value
+        // <-- EAX Result
         MOV     ECX, EAX
         NEG     EDX
         MOV     EAX, EDX
+        //     ECX Target
+        //     EAX -Value
         LOCK XADD [ECX], EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     EDX Value
+        // <-- EAX Result
+        NEG     EDX
+        MOV     EAX, EDX
+        //     RCX Target
+        //     EAX -Value
+        LOCK XADD [RCX], EAX
+        {$ENDIF CPU64}
 end;
 
 function LockedInc(var Target: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, 1
         LOCK XADD [ECX], EAX
         INC     EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        // <-- EAX Result
+        MOV     EAX, 1
+        LOCK XADD [RCX], EAX
+        INC     EAX
+        {$ENDIF CPU64}
 end;
 
 function LockedSub(var Target: Integer; Value: Integer): Integer;
 asm
+        {$IFDEF CPU32}
+        // --> EAX Target
+        //     EDX Value
+        // <-- EAX Result
         MOV     ECX, EAX
         NEG     EDX
         MOV     EAX, EDX
         LOCK XADD [ECX], EAX
         ADD     EAX, EDX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // --> RCX Target
+        //     EDX Value
+        // <-- EAX Result
+        NEG     EDX
+        MOV     EAX, EDX
+        LOCK XADD [RCX], EAX
+        ADD     EAX, EDX
+        {$ENDIF CPU64}
 end;
 
-{$ENDIF CLR}
+{$IFDEF CPU64}
+
+// Locked Int64 manipulation
+function LockedAdd(var Target: Int64; Value: Int64): Int64;
+asm
+        // --> RCX Target
+        //     RDX Value
+        // <-- RAX Result
+        MOV     RAX, RDX
+        LOCK XADD [RCX], RAX
+        ADD     RAX, RDX
+end;
+
+function LockedCompareExchange(var Target: Int64; Exch, Comp: Int64): Int64;
+asm
+        // --> RCX Target
+        //     RDX Exch
+        //     R8  Comp
+        // <-- RAX Result
+        MOV     RAX, R8
+        LOCK CMPXCHG [RCX], RDX
+end;
+
+function LockedDec(var Target: Int64): Int64;
+asm
+        // --> RCX Target
+        // <-- RAX Result
+        MOV     RAX, -1
+        LOCK XADD [RCX], RAX
+        DEC     RAX
+end;
+
+function LockedExchange(var Target: Int64; Value: Int64): Int64;
+asm
+        // --> RCX Target
+        //     RDX Value
+        // <-- RAX Result
+        MOV     RAX, RDX
+        LOCK XCHG [RCX], RAX
+end;
+
+function LockedExchangeAdd(var Target: Int64; Value: Int64): Int64;
+asm
+        // --> RCX Target
+        //     RDX Value
+        // <-- RAX Result
+        MOV     RAX, RDX
+        LOCK XADD [RCX], RAX
+end;
+
+function LockedExchangeDec(var Target: Int64): Int64;
+asm
+        // --> RCX Target
+        // <-- RAX Result
+        MOV     RAX, -1
+        LOCK XADD [RCX], RAX
+end;
+
+function LockedExchangeInc(var Target: Int64): Int64;
+asm
+        // --> RCX Target
+        // <-- RAX Result
+        MOV     RAX, 1
+        LOCK XADD [RCX], RAX
+end;
+
+function LockedExchangeSub(var Target: Int64; Value: Int64): Int64;
+asm
+        // --> RCX Target
+        //     RDX Value
+        // <-- RAX Result
+        NEG     RDX
+        MOV     RAX, RDX
+        LOCK XADD [RCX], RAX
+end;
+
+function LockedInc(var Target: Int64): Int64;
+asm
+        // --> RCX Target
+        // <-- RAX Result
+        MOV     RAX, 1
+        LOCK XADD [RCX], RAX
+        INC     RAX
+end;
+
+function LockedSub(var Target: Int64; Value: Int64): Int64;
+asm
+        // --> RCX Target
+        //     RDX Value
+        // <-- RAX Result
+        NEG     RDX
+        MOV     RAX, RDX
+        LOCK XADD [RCX], RAX
+        ADD     RAX, RDX
+end;
+
+{$ENDIF CPU64}
 
 //=== { TJclDispatcherObject } ===============================================
 
@@ -561,58 +748,27 @@ end;
 
 destructor TJclDispatcherObject.Destroy;
 begin
-  {$IFDEF CLR}
-  FHandle.Close;
-  {$ELSE}
   CloseHandle(FHandle);
-  {$ENDIF CLR}
   inherited Destroy;
 end;
 
 { TODO: Use RTDL Version of SignalObjectAndWait }
 
-{$IFNDEF CLR11}
 function TJclDispatcherObject.SignalAndWait(const Obj: TJclDispatcherObject;
   TimeOut: Cardinal; Alertable: Boolean): TJclWaitResult;
 begin
-  {$IFDEF CLR}
-  // Other signal results are handled with exceptions
-  if TJclWaitHandle.SignalAndWait(Obj.Handle, Handle, IfThen(TimeOut = INFINITE,
-                                  System.Threading.Timeout.Infinite, TimeOut), Alertable) then
-    Result := wrSignaled
-  else
-    Result := wrTimeout;
-  {$ELSE}
   // Note: Do not make this method virtual! It's only available on NT 4 up...
   Result := MapSignalResult(Cardinal(Windows.SignalObjectAndWait(Obj.Handle, Handle, TimeOut, Alertable)));
-  {$ENDIF CLR}
 end;
-{$ENDIF ~CLR11}
 
 function TJclDispatcherObject.WaitAlertable(const TimeOut: Cardinal): TJclWaitResult;
 begin
-  {$IFDEF CLR}
-  // Other signal results are handled with exceptions
-  if Handle.WaitOne(IfThen(TimeOut = INFINITE, System.Threading.Timeout.Infinite, Timeout), True) then
-    Result := wrSignaled
-  else
-    Result := wrTimeout;
-  {$ELSE}
   Result := MapSignalResult(Windows.WaitForSingleObjectEx(FHandle, TimeOut, True));
-  {$ENDIF CLR}
 end;
 
 function TJclDispatcherObject.WaitFor(const TimeOut: Cardinal): TJclWaitResult;
 begin
-  {$IFDEF CLR}
-  // Other signal results are handled with exceptions
-  if Handle.WaitOne(IfThen(TimeOut = INFINITE, System.Threading.Timeout.Infinite, Timeout), False) then
-    Result := wrSignaled
-  else
-    Result := wrTimeout;
-  {$ELSE}
   Result := MapSignalResult(Windows.WaitForSingleObject(FHandle, TimeOut));
-  {$ENDIF CLR}
 end;
 
 function TJclDispatcherObject.WaitForever: TJclWaitResult;
@@ -631,19 +787,7 @@ begin
   SetLength(Handles, Count);
   for I := 0 to Count - 1 do
     Handles[I] := Objects[I].Handle;
-  {$IFDEF CLR}
-  if WaitAll then
-  begin
-    if TJclWaitHandle.WaitAll(Handles, IfThen(TimeOut = INFINITE, System.Threading.Timeout.Infinite, TimeOut), False) then
-      Result := WAIT_OBJECT_0
-    else
-      Result := WAIT_TIMEOUT;
-  end
-  else
-    Result := TJclWaitHandle.WaitAny(Handles, IfThen(TimeOut = INFINITE, System.Threading.Timeout.Infinite, TimeOut), False);
-  {$ELSE}
   Result := Windows.WaitForMultipleObjects(Count, @Handles[0], WaitAll, TimeOut);
-  {$ENDIF CLR}
 end;
 
 function WaitAlertableForMultipleObjects(const Objects: array of TJclDispatcherObject;
@@ -656,19 +800,7 @@ begin
   SetLength(Handles, Count);
   for I := 0 to Count - 1 do
     Handles[I] := Objects[I].Handle;
-  {$IFDEF CLR}
-  if WaitAll then
-  begin
-    if TJclWaitHandle.WaitAll(Handles, IfThen(TimeOut = INFINITE, System.Threading.Timeout.Infinite, TimeOut), True) then
-      Result := WAIT_OBJECT_0
-    else
-      Result := WAIT_TIMEOUT;
-  end
-  else
-    Result := TJclWaitHandle.WaitAny(Handles, IfThen(TimeOut = INFINITE, System.Threading.Timeout.Infinite, TimeOut), True);
-  {$ELSE}
   Result := Windows.WaitForMultipleObjectsEx(Count, @Handles[0], WaitAll, TimeOut, True);
-  {$ENDIF CLR}
 end;
 
 //=== { TJclCriticalSection } ================================================
@@ -685,7 +817,6 @@ begin
   inherited Destroy;
 end;
 
-{$IFNDEF CLR}
 class procedure TJclCriticalSection.CreateAndEnter(var CS: TJclCriticalSection);
 var
   NewCritSect: TJclCriticalSection;
@@ -698,7 +829,6 @@ begin
   end;
   CS.Enter;
 end;
-{$ENDIF ~CLR}
 
 procedure TJclCriticalSection.Enter;
 begin
@@ -711,8 +841,6 @@ begin
 end;
 
 //== { TJclCriticalSectionEx } ===============================================
-
-{$IFNDEF CLR}
 
 const
   DefaultCritSectSpinCount = 4000;
@@ -770,29 +898,18 @@ begin
   Result := TryEnterCriticalSection(FCriticalSection);
 end;
 
-{$ENDIF ~CLR}
-
 //== { TJclEvent } ===========================================================
 
-constructor TJclEvent.Create({$IFNDEF CLR} SecAttr: PSecurityAttributes; {$ENDIF ~CLR}
-  Manual, Signaled: Boolean; const Name: string);
+constructor TJclEvent.Create(SecAttr: PSecurityAttributes; Manual, Signaled: Boolean; const Name: string);
 begin
   inherited Create;
   FName := Name;
-  {$IFDEF CLR}
-  if Manual then
-    FHandle := ManualResetEvent.Create(Signaled)
-  else
-    FHandle := AutoResetEvent.Create(Signaled);
-  {$ELSE ~CLR}
   FHandle := Windows.CreateEvent(SecAttr, Manual, Signaled, PChar(FName));
   if FHandle = 0 then
     raise EJclEventError.CreateRes(@RsSynchCreateEvent);
   FExisted := GetLastError = ERROR_ALREADY_EXISTS;
-  {$ENDIF ~CLR}
 end;
 
-{$IFNDEF CLR}
 constructor TJclEvent.Open(Access: Cardinal; Inheritable: Boolean;
   const Name: string);
 begin
@@ -802,47 +919,24 @@ begin
   if FHandle = 0 then
     raise EJclEventError.CreateRes(@RsSynchOpenEvent);
 end;
-{$ENDIF ~CLR}
 
 function TJclEvent.Pulse: Boolean;
 begin
-  {$IFDEF CLR}
-  if FHandle is ManualResetEvent then
-    Result := ManualResetEvent(FHandle).&Set and ManualResetEvent(FHandle).Reset
-  else
-    Result := AutoResetEvent(FHandle).&Set and AutoResetEvent(FHandle).Reset;
-  {$ELSE ~CLR}
   Result := Windows.PulseEvent(FHandle);
-  {$ENDIF ~CLR}
 end;
 
 function TJclEvent.ResetEvent: Boolean;
 begin
-  {$IFDEF CLR}
-  if FHandle is ManualResetEvent then
-    Result := ManualResetEvent(FHandle).Reset
-  else
-    Result := AutoResetEvent(FHandle).Reset;
-  {$ELSE ~CLR}
   Result := Windows.ResetEvent(FHandle);
-  {$ENDIF ~CLR}
 end;
 
 function TJclEvent.SetEvent: Boolean;
 begin
-  {$IFDEF CLR}
-  if FHandle is ManualResetEvent then
-    Result := ManualResetEvent(FHandle).&Set
-  else
-    Result := AutoResetEvent(FHandle).&Set;
-  {$ELSE ~CLR}
   Result := Windows.SetEvent(FHandle);
-  {$ENDIF ~CLR}
 end;
 
 //=== { TJclWaitableTimer } ==================================================
 
-{$IFNDEF CLR}
 { TODO: Use RTLD version of CreateWaitableTimer }
 constructor TJclWaitableTimer.Create(SecAttr: PSecurityAttributes;
   Manual: Boolean; const Name: string);
@@ -881,6 +975,7 @@ var
   DT: Int64;
 begin
   DT := DueTime;
+  FResume := Resume;
   Result := SetWaitableTimer(FHandle, DT, Period, nil, nil, FResume);
 end;
 
@@ -891,16 +986,15 @@ var
   DT: Int64;
 begin
   DT := DueTime;
+  FResume := Resume;
   Result := RtdlSetWaitableTimer(FHandle, DT, Period, Apc, Arg, FResume);
   { TODO : Exception for Win9x, older WinNT? }
   // if not Result and (GetLastError = ERROR_CALL_NOT_IMPLEMENTED) then
   //   RaiseLastOSError;
 end;
-{$ENDIF ~CLR}
 
 //== { TJclSemaphore } =======================================================
 
-{$IFNDEF CLR}
 constructor TJclSemaphore.Create(SecAttr: PSecurityAttributes;
   Initial, Maximum: Integer; const Name: string);
 begin
@@ -932,54 +1026,39 @@ function TJclSemaphore.Release(ReleaseCount: Integer): Boolean;
 begin
   Result := Windows.ReleaseSemaphore(FHandle, ReleaseCount, nil);
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclMutex } ==========================================================
 
-{$IFNDEF CLR11}
-constructor TJclMutex.Create(SecAttr: {$IFDEF CLR}MutexSecurity{$ELSE}PSecurityAttributes{$ENDIF};
-  InitialOwner: Boolean; const Name: string);
+function TJclMutex.Acquire(const TimeOut: Cardinal): Boolean;
+begin
+  Result := WaitFor(TimeOut) = wrSignaled;
+end;
+
+constructor TJclMutex.Create(SecAttr: PSecurityAttributes; InitialOwner: Boolean; const Name: string);
 begin
   inherited Create;
   FName := Name;
-  {$IFDEF CLR}
-  FHandle := System.Threading.Mutex.Create(InitialOwner, Name, FExisted, SecAttr);
-  FExisted := not FExisted;
-  {$ELSE}
   FHandle := JclWin32.CreateMutex(SecAttr, Ord(InitialOwner), PChar(Name));
   if FHandle = 0 then
     raise EJclMutexError.CreateRes(@RsSynchCreateMutex);
   FExisted := GetLastError = ERROR_ALREADY_EXISTS;
-  {$ENDIF CLR}
 end;
 
-constructor TJclMutex.Open({$IFDEF CLR}Rights: MutexRights;{$ELSE}Access: Cardinal; Inheritable: Boolean;{$ENDIF}
-  const Name: string);
+constructor TJclMutex.Open(Access: Cardinal; Inheritable: Boolean; const Name: string);
 begin
   inherited Create;
   FName := Name;
   FExisted := True;
-  {$IFDEF CLR}
-  FHandle := System.Threading.Mutex.OpenExisting(Name, Rights);
-  {$ELSE}
   FHandle := Windows.OpenMutex(Access, Inheritable, PChar(Name));
   if FHandle = 0 then
     raise EJclMutexError.CreateRes(@RsSynchOpenMutex);
-  {$ENDIF CLR}
 end;
 
 function TJclMutex.Release: Boolean;
 begin
-  {$IFDEF CLR}
-  System.Threading.Mutex(Handle).ReleaseMutex;
-  Result := True;
-  {$ELSE}
   Result := Windows.ReleaseMutex(FHandle);
-  {$ENDIF CLR}
 end;
-{$ENDIF ~CLR11}
 
-{$IFNDEF CLR}
 //=== { TJclOptex } ==========================================================
 
 constructor TJclOptex.Create(const Name: string; SpinCount: Integer);
@@ -1117,17 +1196,9 @@ begin
   until ThreadOwnsOptex or (SpinCount <= 0);
   Result := ThreadOwnsOptex;
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclMultiReadExclusiveWrite } ========================================
 
-{$IFDEF CLR}
-constructor TJclMultiReadExclusiveWrite.Create;
-begin
-  inherited Create;
-  FHandle := ReaderWriterLock.Create;
-end;
-{$ELSE ~CLR}
 constructor TJclMultiReadExclusiveWrite.Create(Preferred: TMrewPreferred);
 begin
   inherited Create;
@@ -1140,55 +1211,15 @@ begin
   FWaitingReaders := 0;
   FWaitingWriters := 0;
 end;
-{$ENDIF ~CLR}
 
 destructor TJclMultiReadExclusiveWrite.Destroy;
 begin
-  {$IFDEF CLR}
-  FHandle.Free;
-  {$ELSE ~CLR}
   FreeAndNil(FSemReaders);
   FreeAndNil(FSemWriters);
   FreeAndNil(FLock);
-  {$ENDIF ~CLR}
   inherited Destroy;
 end;
 
-{$IFDEF CLR}
-procedure TJclMultiReadExclusiveWrite.BeginRead;
-begin
-  if not FHandle.IsWriterLockHeld then
-    FHandle.AcquireReaderLock(-1);
-end;
-
-procedure TJclMultiReadExclusiveWrite.BeginWrite;
-begin
-  if FHandle.IsReaderLockHeld then
-  begin
-    FLockCookie := FHandle.UpgradeToWriterLock(-1);
-    FUpgradedWrite := True;
-  end
-  else
-    FHandle.AcquireWriterLock(-1);
-end;
-
-procedure TJclMultiReadExclusiveWrite.EndRead;
-begin
-  if not FHandle.IsWriterLockHeld then
-    FHandle.ReleaseReaderLock;
-end;
-
-procedure TJclMultiReadExclusiveWrite.EndWrite;
-begin
-  if FUpgradedWrite then
-  begin
-    FUpgradedWrite := False;
-    FHandle.DowngradeFromWriterLock(FLockCookie);
-  end
-  else
-    FHandle.ReleaseWriterLock;
-end;
-{$ELSE ~CLR}
 procedure TJclMultiReadExclusiveWrite.AddToThreadList(ThreadId: Longword;
   Reader: Boolean);
 var
@@ -1426,11 +1457,9 @@ begin
     Move(FThreads[Index + 1], FThreads[Index], SizeOf(TMrewThreadInfo) * (L - Index - 1));
   SetLength(FThreads, L - 1);
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclMeteredSection } =================================================
 
-{$IFNDEF CLR}
 const
   MAX_METSECT_NAMELEN = 128;
 
@@ -1577,7 +1606,7 @@ begin
     Result := CreateMetSectFileView(InitialCount, MaxCount, Name, OpenOnly);
 end;
 
-function TJclMeteredSection.Leave(ReleaseCount: Integer; var PrevCount: Integer): Boolean;
+function TJclMeteredSection.Leave(ReleaseCount: Integer; out PrevCount: Integer): Boolean;
 var
   Count: Integer;
 begin
@@ -1683,7 +1712,17 @@ begin
   Result := CallQueryProc(_QueryTimer, 'NtQueryTimer', Handle, @Info, SizeOf(Info));
 end;
 
-{$ENDIF ~CLR}
+function ValidateMutexName(const aName: string): string;
+const cMutexMaxName = 200;
+begin
+  if Length(aName) > cMutexMaxName then
+    Result := Copy (aName, Length(aName)-cMutexMaxName, cMutexMaxName)
+  else
+    Result := aName;
+  Result := StrReplaceChar(Result, '\', '_');
+end;
+
+
 
 {$IFDEF UNITVERSIONING}
 initialization

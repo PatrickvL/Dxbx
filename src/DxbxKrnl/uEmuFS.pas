@@ -17,7 +17,7 @@
 *)
 unit uEmuFS;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 
@@ -25,6 +25,11 @@ uses
   // Delphi
   Windows, // SwitchToThread
   SysUtils, // IntToHex
+{$IFDEF DXBX_EXTENSIVE_CALLSTACK_LOGGING}
+  Classes, // TStringList
+  // Jcl
+  JclDebug,
+{$ENDIF}
   // JEDI
   JwaWinType,
   JclWin32,
@@ -161,11 +166,33 @@ begin
 *)
 end; // EmuSwapFS
 
+{$IFDEF DXBX_EXTENSIVE_CALLSTACK_LOGGING}
+var
+  // CallStack[True] is latest callstack when leaving Xbox FS
+  // CallStack[False] is latest callstack when leaving Windows FS
+  LastCallStackInfo: array [Boolean] of TJclStackInfoList;
+  LastCallStackLst: array [Boolean] of TStringList;
+  LastCallStackStr: array [Boolean] of string;
+{$ENDIF}
+
 procedure EmuSwapFS(const aSwapTo: TSwapFS);
+var
+  InXboxFS: Boolean;
 begin
+  InXboxFS := EmuIsXboxFS;
   if (aSwapTo = fsSwap)
-  or ((aSwapTo = fsWindows) = EmuIsXboxFS) then
+  or ((aSwapTo = fsWindows) = InXboxFS) then
+  begin
+{$IFDEF DXBX_EXTENSIVE_CALLSTACK_LOGGING}
+    if not InXboxFS then
+    begin
+      LastCallStackLst[InXboxFS].Clear;
+      LastCallStackInfo[InXboxFS].AddToStrings(LastCallStackLst[InXboxFS]);
+      LastCallStackStr[InXboxFS] := LastCallStackLst[InXboxFS].Text;
+    end;
+{$ENDIF}
     EmuSwapFS();
+  end;
 end;
 
 // initialize fs segment selector emulation
@@ -415,5 +442,13 @@ initialization
   Assert(FIELD_OFFSET(PKPCR(nil).Prcb) = FS_Prcb);
   Assert(FIELD_OFFSET(PKPCR(nil).Irql) = FS_Irql);
   Assert(FIELD_OFFSET(PKPCR(nil).PrcbData) = FS_PrcbData);
+
+{$IFDEF DXBX_EXTENSIVE_CALLSTACK_LOGGING}
+  LastCallStackInfo[True] := JclCreateStackList(False, 0, nil, True);
+  LastCallStackInfo[False] := JclCreateStackList(False, 0, nil, True);
+
+  LastCallStackLst[True] := TStringList.Create;
+  LastCallStackLst[False] := TStringList.Create;
+{$ENDIF}
 
 end.

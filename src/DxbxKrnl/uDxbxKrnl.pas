@@ -17,7 +17,7 @@
 *)
 unit uDxbxKrnl;
 
-{$INCLUDE ..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 
@@ -197,23 +197,23 @@ begin
   begin
     SetLength(szBuffer, MAX_PATH);
     SHGetSpecialFolderPath(0, @(szBuffer[1]), CSIDL_APPDATA, True);
-    SetLength(szBuffer, StrLen(@(szBuffer[1])));
+    SetLength(szBuffer, StrLen(PChar(@(szBuffer[1]))));
 
     BasePath := szBuffer + '\Dxbx';
-    CreateDirectory(PAnsiChar(BasePath), nil);
+    CreateDirectory(PChar(BasePath), nil);
 
     // create EmuDisk directory
     szBuffer := BasePath + '\EmuDisk';
-    CreateDirectory(PAnsiChar(szBuffer), nil);
+    CreateDirectory(PChar(szBuffer), nil);
 
     // create T:\ directory
     begin
       szBuffer := BasePath + '\EmuDisk\T';
-      CreateDirectory(PAnsiChar(szBuffer), nil);
+      CreateDirectory(PChar(szBuffer), nil);
 
       pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
       szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
-      CreateDirectory(PAnsiChar(szBuffer), nil);
+      CreateDirectory(PChar(szBuffer), nil);
 
       g_strTDrive := szBuffer;
       g_hTDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
@@ -227,10 +227,10 @@ begin
     // create U:\ directory
     begin
       szBuffer := BasePath + '\EmuDisk\U';
-      CreateDirectory(PAnsiChar(szBuffer), nil);
+      CreateDirectory(PChar(szBuffer), nil);
 
       szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
-      CreateDirectory(PAnsiChar(szBuffer), nil);
+      CreateDirectory(PChar(szBuffer), nil);
 
       g_strUDrive := szBuffer;
       g_hUDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
@@ -244,12 +244,12 @@ begin
     // create Z:\ directory
     begin
       szBuffer := BasePath + '\EmuDisk\Z';
-      CreateDirectory(PAnsiChar(szBuffer), nil);
+      CreateDirectory(PChar(szBuffer), nil);
 
       (* marked out by cxbx
       //is it necessary to make this directory title unique?
       szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
-      CreateDirectory(PAnsiChar(szBuffer), nil);
+      CreateDirectory(PChar(szBuffer), nil);
       *)
 
       g_strZDrive := szBuffer;
