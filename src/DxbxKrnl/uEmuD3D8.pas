@@ -1412,8 +1412,8 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SelectVertexShader(Handle: DWord; Address: DWord): HRESULT;
 // Branch:martin  Revision:39 Done:20 Translator:Shadow_Tj
-var
-  pVertexShader: VERTEX_SHADER;
+(*var
+  pVertexShader: VERTEX_SHADER; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -1492,7 +1492,7 @@ function XTL_EmuIDirect3D8_GetAdapterDisplayMode(Adapter: UINT; pMode: X_D3DDISP
 // Branch:martin  Revision:39 Done:20 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pPCMode: D3DDISPLAYMODE;
+(*  pPCMode: D3DDISPLAYMODE; *)
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -1790,7 +1790,7 @@ function XTL_EmuIDirect3DDevice8_CreateImageSurface(
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  PCFormat: D3DFORMAT;
+(*  PCFormat: D3DFORMAT; *)
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -1816,9 +1816,9 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_GetGammaRamp(pRamp: X_D3DGAMMARAMP);
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
-var
+(*var
   pGammaRamp : PD3DGAMMARAMP;
-  v : Integer;
+  v : Integer;                  *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -2245,8 +2245,8 @@ function XTL_EmuIDirect3DDevice8_CreateVertexShader(pDeclaration: DWORD;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pD3DVertexShader : PX_D3DVertexShader;
-  pVertexShader : PVERTEX_SHADER;
+(*  pD3DVertexShader : PX_D3DVertexShader;
+  pVertexShader : PVERTEX_SHADER; *)
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -2584,8 +2584,8 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetPixelShader(Handle: DWORD; hRet: HRESULT): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
-var
-  dwHandle: DWORD;
+(*var
+  dwHandle: DWORD; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -2685,8 +2685,8 @@ function XTL_EmuIDirect3DDevice8_CreateTexture( Width : UINT; Height : UINT;
     Levels : UINT; Usage : DWORD; Format : D3DFORMAT; Pool : D3DPOOL; ppTexture : PX_D3DTexture ) : HRESULT;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
-  PCFormat: D3DFORMAT;
-  aFormat: D3DFORMAT;
+(*  PCFormat: D3DFORMAT;
+  aFormat: D3DFORMAT;    *)
   hRet: HRESULT;
 begin
   hret := 0;
@@ -3027,7 +3027,7 @@ Function XTL_EmuIDirect3DDevice8_CreateIndexBuffer2(Length : UINT ) : PX_D3DInde
 var
   pIndexBuffer : PX_D3DIndexBuffer;
 begin
-    pIndexBuffer := 0;
+    pIndexBuffer := nil;
 
     XTL_EmuIDirect3DDevice8_CreateIndexBuffer
     (
@@ -3282,8 +3282,7 @@ function XTL_EmuIDirect3DDevice8_GetDisplayMode(pMode: X_D3DDISPLAYMODE): HRESUL
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pPCMode: PD3DDISPLAYMODE;
-
+(*  pPCMode: PD3DDISPLAYMODE;*)
 begin
   EmuSwapFS(fsWindows);
 
@@ -3665,7 +3664,7 @@ function XTL_EmuIDirect3DDevice8_Clear(Count : DWORD;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   ret: HRESULT;
-  newFlags : DWORD;
+(*  newFlags : DWORD; *)
 begin
   ret := 0;
   EmuSwapFS(fsWindows);
@@ -3797,11 +3796,11 @@ var
   pIndexBuffer : pX_D3DIndexBuffer;
   pVertexBuffer: PX_D3DVertexBuffer;
   pPushBuffer: PX_D3DPushBuffer;
-  pPixelContainer: PX_D3DPixelContainer;
+(*  pPixelContainer: PX_D3DPixelContainer; *)
   pFixup: PX_D3DFixup;
   dwSize: DWORD;
   pData: PBYTE;
-  X_Format : X_D3DFORMAT;
+(*  X_Format : X_D3DFORMAT;
   Format : D3DFORMAT;
   CacheFormat : D3DFORMAT;
   dwWidth : DWord;
@@ -3813,7 +3812,7 @@ var
   bSwizzled : BOOL;
   bCompressed : BOOL;
   dwCompressedSize : DWord;
-  bCubemap : BOOL;
+  bCubemap : BOOL;          *)
 
   pPalette : PX_D3DPalette;
 begin
@@ -4509,10 +4508,10 @@ function XTL_EmuIDirect3DResource8_Release(
 // Branch:martin  Revision:39 Done:10 Translator:Shadow_Tj
 var
   uRet: ULONG;
-  dwPtr : DWORD;
+(*  dwPtr : DWORD;
   pRefCount : ^DWORD;
   pResource8 : ^IDirect3DResource8;
-  v : integer;
+  v : integer; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -4707,7 +4706,7 @@ begin
         pDesc._Type   := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
         (*if(pDesc._Type > 7) then
-            CxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc._Type > 7'); *)
+            CxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc._Type > 7');*)
 
         pDesc.Usage  := SurfaceDesc.Usage;
         pDesc.Size   := SurfaceDesc.Size;
@@ -4751,8 +4750,8 @@ function XTL_EmuIDirect3DSurface8_GetDesc(pThis: PX_D3DResource;
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pSurface8 : ^IDirect3DSurface8;
-  SurfaceDesc : D3DSURFACE_DESC;
+(*  pSurface8 : ^IDirect3DSurface8;
+  SurfaceDesc : D3DSURFACE_DESC; *)
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -4899,10 +4898,10 @@ end;
 Function XTL_EmuIDirect3DTexture8_GetSurfaceLevel2 (
     pThis : PX_D3DTexture; Level : UINT): PX_D3DResource;
 // Branch:martin  Revision:39 Done:0 Translator:Shadow_Tj
-var
+(*var
   pSurfaceLevel : pX_D3DSurface;
   dwSize : DWORD;
-  pRefCount : PDWORD;
+  pRefCount : PDWORD; *)
 begin
   // In a special situation, we are actually returning a memory ptr with high bit set
   (*if(IsSpecialResource(pThis.Data) and (pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)) then
@@ -4931,8 +4930,8 @@ function XTL_EmuIDirect3DTexture8_LockRect(pThis: PX_D3DTexture;
 // Branch:martin  Revision:39 Done:10 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pTexture8 : ^IDirect3DTexture8;
-  NewFlags : DWORD;
+(*  pTexture8 : ^IDirect3DTexture8;
+  NewFlags : DWORD; *)
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -6449,9 +6448,9 @@ end;
 procedure XTL_EmuIDirect3DDevice8_DrawVertices(PrimitiveType: X_D3DPRIMITIVETYPE;
   StartVertex: UINT; VertexCount: UINT); stdcall;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
-var
+(*var
   PrimitiveCount: UINT;
-  PCPrimitiveType: D3DPRIMITIVETYPE;
+  PCPrimitiveType: D3DPRIMITIVETYPE; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -6653,8 +6652,8 @@ var
   PrimitiveCount : UINT;
   PCPrimitiveType : D3DPRIMITIVETYPE;
   VPDesc : VertexPatchDesc;
-  (*VertPatch : VertexPatcher; *)
-  bPatched : bool;
+  (*VertPatch : VertexPatcher;
+  bPatched : bool;             *)
   bActiveIB : bool;
   pIndexBuffer : IDirect3DIndexBuffer8;
   BaseIndex : UINT;
@@ -7121,9 +7120,9 @@ end; *)
 
 procedure XTL_EmuIDirect3DDevice8_GetVertexShaderSize(Handle: DWORD; pSize: UINT); stdcall;
 // Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
-var
+(*var
   pD3DVertexShader: X_D3DVertexShader;
-  pVertexShader: VERTEX_SHADER;
+  pVertexShader: VERTEX_SHADER; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -7153,8 +7152,8 @@ procedure XTL_EmuIDirect3DDevice8_DeleteVertexShader(Handle: DWord); stdcall;
 var
   RealHandle: DWORD;
   hRet: HRESULT;
-  pD3DVertexShader: X_D3DVertexShader;
-  pVertexShader: VERTEX_SHADER;
+(*  pD3DVertexShader: X_D3DVertexShader;
+  pVertexShader: VERTEX_SHADER; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -7393,7 +7392,7 @@ function XTL_EmuIDirect3DDevice8_GetVertexShaderDeclaration(Handle: DWORD;
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pVertexShader: PVERTEX_SHADER;
+(*  pVertexShader: PVERTEX_SHADER; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -7433,7 +7432,7 @@ function XTL_EmuIDirect3DDevice8_GetVertexShaderFunction(aHandle: DWORD; pData: 
 // Branch:martin  Revision:39 Done:50 Translator:Shadow_Tj
 var
   hRet: HRESULT;
-  pVertexShader: VERTEX_SHADER;
+(*  pVertexShader: VERTEX_SHADER; *)
 begin
   EmuSwapFS(fsWindows);
 

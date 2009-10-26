@@ -66,10 +66,10 @@ end;
 
 procedure EmuUnswizzleActiveTexture();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-var
+(*var
   pPixelContainer: X_D3DPixelContainer;
   XBFormat: DWord;
-  dwBPP: DWord;
+  dwBPP: DWord; *)
 begin
     // for current usages, we're always on stage 0
 (*    pPixelContainer := EmuD3DActiveTexture[0];
