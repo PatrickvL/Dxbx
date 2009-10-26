@@ -470,9 +470,9 @@ begin
   if not Assigned(pMem) then
   begin
     DbgPrintf('CxbxMallocDebug: Allocation failed' +
-           '    Size: %d' +
-           '    File: %s' +
-           '    Line: %d',
+           #13#10'    Size: %d' +
+           #13#10'    File: %s' +
+           #13#10'    Line: %d',
            [Size, pFile, Line]);
   end
   else
@@ -504,10 +504,10 @@ begin
   if not Assigned(pMem) then
   begin
     DbgPrintf('CxbxCallocDebug: Allocation failed' +
-           '    NbrElements: %d' +
-           '    ElementSize: %d' +
-           '    File       : %s' +
-           '    Line       : %d',
+           #13#10'    NbrElements: %d' +
+           #13#10'    ElementSize: %d' +
+           #13#10'    File       : %s' +
+           #13#10'    Line       : %d',
            [NbrElements, ElementSize, pFile, Line]);
   end
   else
@@ -539,9 +539,9 @@ begin
     if not Assigned(pFree) then
     begin
         DbgPrintf('CxbxFreeDebug: Free on non-existent block: $%.08X not  ' +
-               'Possibly a multiple Free.' +
-               '    File: %s' +
-               '    Line: %d',
+               #13#10'Possibly a multiple Free.' +
+               #13#10'    File: %s' +
+               #13#10'    Line: %d',
                [pMem, pFile, Line]);
     end
     else
@@ -549,13 +549,13 @@ begin
         if not CheckIntegrity(pFree) then
         begin
             DbgPrintf('CxbxFreeDebug: Free on damaged block' +
-                   '    Block   : $%.08X' +
-                   '    Allocation' +
-                   '        File: %s' +
-                   '        Line: %d' +
-                   '    Free' +
-                   '        File: %s' +
-                   '        Line: %d',
+                   #13#10'    Block   : $%.08X' +
+                   #13#10'    Allocation' +
+                   #13#10'        File: %s' +
+                   #13#10'        Line: %d' +
+                   #13#10'    Free' +
+                   #13#10'        File: %s' +
+                   #13#10'        Line: %d',
                    [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
         end;
         FreeMem(GetMemStart(pFree));
@@ -584,11 +584,11 @@ begin
   if not Assigned(pMem) then
   begin
       DbgPrintf('CxbxRtlAllocDebug: Allocation failed' +
-             '    Heap  : $%.08X' +
-             '    Flags : $%.08X' +
-             '    Bytes : %d' +
-             '    File  : %s' +
-             '    Line  : %d',
+             #13#10'    Heap  : $%.08X' +
+             #13#10'    Flags : $%.08X' +
+             #13#10'    Bytes : %d' +
+             #13#10'    File  : %s' +
+             #13#10'    Line  : %d',
              [Heap, Flags, Bytes, pFile, Line]);
   end
   else
@@ -621,10 +621,10 @@ begin
   pFree := RemoveMemoryBlock(pMem);
   if not Assigned(pFree) then
   begin
-    DbgPrintf('CxbxRtlFreeDebug: Free on non-existent block: $%.08X not  ' +
-           'Possibly a multiple Free.' +
-           '    File: %s' +
-           '    Line: %d',
+    DbgPrintf('CxbxRtlFreeDebug: Free on non-existent block: $%.08X ! ' +
+           #13#10'Possibly a multiple Free.' +
+           #13#10'    File: %s' +
+           #13#10'    Line: %d',
            [pMem, pFile, Line]);
   end
   else
@@ -632,13 +632,13 @@ begin
     if not CheckIntegrity(pFree) then
     begin
       DbgPrintf('CxbxRtlFreeDebug: Free on damaged block' +
-             '    Block   : $.%08X' +
-             '    Allocation' +
-             '        File: %s' +
-             '        Line: %d' +
-             '    Free' +
-             '        File: %s' +
-             '        Line: %d',
+             #13#10'    Block   : $.%08X' +
+             #13#10'    Allocation' +
+             #13#10'        File: %s' +
+             #13#10'        Line: %d' +
+             #13#10'    Free' +
+             #13#10'        File: %s' +
+             #13#10'        Line: %d',
              [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
     end;
     Ret := CxbxRtlFree(Heap, Flags, GetMemStart(pFree));
@@ -667,9 +667,9 @@ begin
     pRealloc := FindMemoryBlock(pMem);
     if not Assigned(pRealloc) then
     begin
-        DbgPrintf('CxbxRtlRealloc: realloc on non-existent block: $%.08X not  ' +
-               '    File: %s' +
-               '    Line: %d',
+        DbgPrintf('CxbxRtlRealloc: realloc on non-existent block: $%.08X ! ' +
+               #13#10'    File: %s' +
+               #13#10'    Line: %d',
                [pMem, pFile, Line]);
     end
     else
@@ -677,15 +677,15 @@ begin
         if not CheckIntegrity(pRealloc) then
         begin
             DbgPrintf('CxbxRtlReallocDebug: Realloc on damaged block' +
-                   '    Block   : $.%08X' +
-                   '    Allocation' +
-                   '        Size: %d' +
-                   '        File: %s' +
-                   '        Line: %d' +
-                   '    Reallocation' +
-                   '        Size: %d' +
-                   '        File: %s' +
-                   '        Line: %d',
+                   #13#10'    Block   : $.%08X' +
+                   #13#10'    Allocation' +
+                   #13#10'        Size: %d' +
+                   #13#10'        File: %s' +
+                   #13#10'        Line: %d' +
+                   #13#10'    Reallocation' +
+                   #13#10'        Size: %d' +
+                   #13#10'        File: %s' +
+                   #13#10'        Line: %d',
                    [pRealloc.pMem,
                    pRealloc.pFile, pRealloc.Size, pRealloc.Line,
                    Bytes, pFile, Line]);
@@ -696,12 +696,12 @@ begin
         if not Assigned(pNewMem) then
         begin
             DbgPrintf('CxbxRtlReallocDebug: Reallocation failed' +
-                   '    Heap  : $%.08X' +
-                   '    Flags : $%.08X' +
-                   '    pMem  : $%.08X' +
-                   '    Bytes : %d' +
-                   '    File  : %s' +
-                   '    Line  : %d',
+                   #13#10'    Heap  : $%.08X' +
+                   #13#10'    Flags : $%.08X' +
+                   #13#10'    pMem  : $%.08X' +
+                   #13#10'    Bytes : %d' +
+                   #13#10'    File  : %s' +
+                   #13#10'    Line  : %d',
                    [Heap, Flags, pMem, Bytes, pFile, Line]);
         end
         else
@@ -732,9 +732,9 @@ begin
     pBlock := FindMemoryBlock(pMem);
     if not Assigned(pBlock) then
     begin
-        DbgPrintf('CxbxRtlSizeHeap: size heap on non-existent block: $%.08X not  ' +
-               '    File: %s' +
-               '    Line: %d',
+        DbgPrintf('CxbxRtlSizeHeap: size heap on non-existent block: $%.08X ! ' +
+               #13#10'File: %s' +
+               #13#10'    Line: %d',
                [pMem, pFile, Line]);
     end
     else
@@ -744,8 +744,8 @@ begin
         if ActualSize <> pBlock.Size then
         begin
             DbgPrintf('CxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d' +
-                   '    File  : %s' +
-                   '    Line  : %d',
+                   #13#10'    File  : %s' +
+                   #13#10'    Line  : %d',
                    [ActualSize,
                    pBlock.Size,
                    pFile,
