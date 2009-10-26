@@ -77,6 +77,10 @@ type
 
   TCodePointer = type Pointer;
 
+{$IF NOT DECLARED(UnicodeString)}
+  UnicodeString = WideString;
+{$IFEND}
+
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
