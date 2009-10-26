@@ -48,11 +48,22 @@ procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
+{$IFNDEF UNICODE}
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+{$ENDIF}
+
 implementation
 
 {$IFDEF DXBX_DLL}
 uses
   DxLibraryAPIScanning;
+{$ENDIF}
+
+{$IFNDEF UNICODE}
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+begin
+  Result := C in CharSet;
+end;
 {$ENDIF}
 
 var
@@ -146,7 +157,7 @@ begin
         and (LMemInfo.Protect and PAGE_GUARD = 0);
 end;
 
-function TryReadLiteralString(const Ptr: PAnsiChar; var aOutputStr: string): Boolean;
+function TryReadLiteralString(const Ptr: PAnsiChar; var aOutputStr: UnicodeString): Boolean;
 const
   // Here the (rather arbitrary) steering parameters :
   MinStrLen = 3;
@@ -198,11 +209,12 @@ begin
   if Abs(NrAnsiChars - NrWideZeros) <= 1 then
     {var}aOutputStr := '"' + Copy(PWideChar(Ptr), 0, NrAnsiChars) + '"'
   else
-    {var}aOutputStr := '"' + Copy(Ptr, 0, NrAnsiChars) + '"';
+    {var}aOutputStr := '"' + UnicodeString(Copy(Ptr, 0, NrAnsiChars)) + '"';
+
   Result := True
 end;
 
-function TryPointerToString(Ptr: Pointer; var aOutputStr: string): Boolean;
+function TryPointerToString(Ptr: Pointer; var aOutputStr: UnicodeString): Boolean;
 const
   MaxIndirection = 2;
 var
@@ -263,7 +275,7 @@ end;
 
 function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Boolean = True): string; // array of TVarRec actually
 
-  function _TryArgumentToString(const aVarRec: TVarRec; var aOutputStr: string): Boolean;
+  function _TryArgumentToString(const aVarRec: TVarRec; var aOutputStr: UnicodeString): Boolean;
   begin
     // Only handle potential pointer types (but not strings themselves) :
     Result := (aVarRec.VType in [vtInteger, vtPointer{, vtObject}])
@@ -274,7 +286,7 @@ var
   i: Integer;
   NrOfArguments: Integer;
   CurrentPercentageOffset: Integer;
-  ArgumentAsString: string;
+  ArgumentAsString: UnicodeString;
 begin
   try
     if Length(Args) = 0 then
@@ -345,7 +357,7 @@ begin
       if _TryArgumentToString(Args[i], {var}ArgumentAsString) then
       begin
         // Insert the new contents in the format-string, directly after the current argument-position  :
-        while not (aStr[CurrentPercentageOffset - 1] in ['d', 'p', 'x', 'X']) do
+        while not CharInSet(aStr[CurrentPercentageOffset - 1], ['d', 'p', 'x', 'X']) do
           Inc(CurrentPercentageOffset);
 
         // Make sure the argument doesn't interfere with the formatting-string :
