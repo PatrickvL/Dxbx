@@ -443,7 +443,7 @@ begin
             Break;
         end; // for lIndex2
       end; // if
-      DbgPrintf('DXBX: Reading Section Name 0x%.04X... OK (%s)', [lIndex, PChar(m_szSectionName[lIndex])]);
+      DbgPrintf('DXBX: Reading Section Name 0x%.04X... OK (%s)', [lIndex, PAnsiChar(m_szSectionName[lIndex])]);
     end; // for lIndex
   end;
 
