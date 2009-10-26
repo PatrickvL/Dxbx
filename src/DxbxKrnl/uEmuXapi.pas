@@ -739,8 +739,8 @@ end;
 
 procedure XTL_EmuXInputClose(hDevice: Handle); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:90
-var
-  pph: PPOLLING_PARAMETERS_HANDLE;
+(*var
+  pph: PPOLLING_PARAMETERS_HANDLE; *)
 begin
   EmuSwapFS(fsWindows);
 
