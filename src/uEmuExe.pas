@@ -59,7 +59,7 @@ var
 
 function GetDllDescription(const aDllToUse: TUseDll): string;
 function GetDllName(const aDllToUse: TUseDll): string;
-function GetNoFuncImport(const aDllToUse: TUseDll): string;
+function GetNoFuncImport(const aDllToUse: TUseDll): AnsiString;
 
 implementation
 
@@ -97,9 +97,9 @@ begin
   end;
 end;
 
-function GetNoFuncImport(const aDllToUse: TUseDll): string;
+function GetNoFuncImport(const aDllToUse: TUseDll): AnsiString;
 begin
-  Result := 'CxbxKrnlNoFunc'#0#0 + GetDllName(aDllToUse);
+  Result := 'CxbxKrnlNoFunc'#0#0 + AnsiString(GetDllName(aDllToUse));
 end;
 
 { TEmuExe }
@@ -156,7 +156,7 @@ var
   Flag: Byte;
 
   pEmuInit: Pointer;
-  NoFuncImport: string;
+  NoFuncImport: AnsiString;
 begin
   KrnlHandle := SafeLoadLibrary(GetDllName(DllToUse));
   Assert(KrnlHandle >= 32);
@@ -430,7 +430,7 @@ begin
     _WriteDWordToSectionPos(i, $38, $0001);
 
     NoFuncImport := GetNoFuncImport(DllToUse);
-    CopyMemory(@(m_bzSection[i][$3A]), PChar(NoFuncImport), Length(NoFuncImport));
+    CopyMemory(@(m_bzSection[i][$3A]), PAnsiChar(NoFuncImport), Length(NoFuncImport));
   end;
 
   // generate .cxbxplg section
@@ -466,7 +466,7 @@ begin
     // Append x_debug_FileName
     ZeroMemory(pWriteCursor, 260);
     if Length(m_KrnlDebugFileName) > 0 then
-      CopyMemory(pWriteCursor, @(m_KrnlDebugFileName[1]), Length(m_KrnlDebugFileName));
+      CopyMemory(pWriteCursor, @(AnsiString(m_KrnlDebugFileName)[1]), Length(AnsiString(m_KrnlDebugFileName)));
     Inc(pWriteCursor, 260);
 
     // Append library versions

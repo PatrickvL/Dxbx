@@ -158,7 +158,7 @@ begin
         [ErrorCode, ErrorAddr, JclLastExceptStackListToString],
         {MayRenderArguments=}False);
     except
-
+      // ignore
     end;
   finally
     ErrorProc := DxbxErrorHandler;

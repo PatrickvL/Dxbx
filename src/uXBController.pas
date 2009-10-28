@@ -87,7 +87,7 @@ const
                                            'Black', 'LTrigger', 'RTrigger',
                                            'DPadUp', 'DPadDown', 'DPadLeft',
                                            'DPadRight', 'Back', 'Start',
-                                           'LThumb', 'RThumb' );
+                                           'LThumb', 'RThumb');
 
 // Offsets into analog button array
 const
@@ -288,9 +288,9 @@ begin
 
     hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, diprg.diph);
 
-    if (FAILED(hRet)) then
+    if FAILED(hRet) then
     begin
-      if (hRet = E_NOTIMPL) then
+      if hRet = E_NOTIMPL then
         Result := DIENUM_CONTINUE
       else
         Result := DIENUM_STOP;
@@ -997,17 +997,17 @@ begin
   // Create all the devices available (well...most of them)
   if Assigned(m_pDirectInput8) then
   begin
-    {ahRet :=} m_pDirectInput8.EnumDevices( DI8DEVCLASS_GAMECTRL,
-                                          WrapEnumGameCtrlCallback,
-                                          Addr(Self),
-                                          DIEDFL_ATTACHEDONLY);
+    {ahRet :=} m_pDirectInput8.EnumDevices(DI8DEVCLASS_GAMECTRL,
+                                           WrapEnumGameCtrlCallback,
+                                           Addr(Self),
+                                           DIEDFL_ATTACHEDONLY);
     // Dxbx TODO Add : if FAILED(hret) then what?
 
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysKeyboard') then
     begin
-      ahRet := m_pDirectInput8.CreateDevice( GUID_SysKeyboard,
-                                             m_InputDevice[m_dwInputDeviceCount].m_Device,
-                                             nil);
+      ahRet := m_pDirectInput8.CreateDevice(GUID_SysKeyboard,
+                                            m_InputDevice[m_dwInputDeviceCount].m_Device,
+                                            nil);
 
       if (not FAILED(ahRet)) then
       begin

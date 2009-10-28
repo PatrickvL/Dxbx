@@ -66,13 +66,14 @@ end;
 
 // size of sound buffer cache (used for periodic sound buffer updates)
 const SOUNDBUFFER_CACHE_SIZE = $100;
+
 // size of sound stream cache (used for periodic sound stream updates)
 const SOUNDSTREAM_CACHE_SIZE = $100;
 
 var
-   g_pDSound8: IDIRECTSOUND8 = nil;
-   g_pDSound8RefCount: Int = 0;
-   g_pDSoundBufferCache : Array [0..SOUNDBUFFER_CACHE_SIZE] of X_CDirectSoundBuffer;
+  g_pDSound8: IDIRECTSOUND8 = nil;
+  g_pDSound8RefCount: Int = 0;
+//  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE] of X_CDirectSoundBuffer;
 
 
 // periodically update sound buffers
@@ -245,23 +246,25 @@ begin
     hRet := DirectSoundCreate8(nil, ppDirectSound^, nil);
 
     if FAILED(hRet) then
-      CxbxKrnlCleanup('DirectSoundCreate8 Failed not ');
+      CxbxKrnlCleanup('DirectSoundCreate8 Failed!');
 
     g_pDSound8 := ppDirectSound^;
 
     hRet := g_pDSound8.SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
     if FAILED(hRet) then
-      CxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed not ');
+      CxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed!');
 
 
     // clear sound buffer cache
-    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do begin
+    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
+    begin
       (*g_pDSoundBufferCache[v] := 0; *)
     end;
 
     // clear sound stream cache
-    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do begin
+    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
+    begin
       (*g_pDSoundStreamCache[v] := 0; *)
     end;
 
@@ -349,14 +352,13 @@ begin
 end;
 
 
-Function XTL_EmuIDirectSound8_DownloadEffectsImage
-(
-    pThis : LPDIRECTSOUND8;
-    pvImageBuffer : LPCVOID;
-    dwImageSize : DWORD;
+function XTL_EmuIDirectSound8_DownloadEffectsImage(
+    pThis: LPDIRECTSOUND8;
+    pvImageBuffer: LPCVOID;
+    dwImageSize: DWORD;
     pImageLoc: PVOID;      // Cxbx TODO: Use this param
-    ppImageDesc : PVOID   // Cxbx TODO: Use this param
-) : HResult; stdcall;
+    ppImageDesc: PVOID   // Cxbx TODO: Use this param
+): HResult; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
     EmuSwapFS(fsWindows);
@@ -609,13 +611,12 @@ begin
     Result := DS_OK;
  end;
 
-function XTL_EmuIDirectSound8_SetPosition
-(
-    pThis : LPDIRECTSOUND8;
-    x : FLOAT;
-    y : FLOAT;
-    z : FLOAT;
-    dwApply : DWORD
+function XTL_EmuIDirectSound8_SetPosition(
+    pThis: LPDIRECTSOUND8;
+    x: FLOAT;
+    y: FLOAT;
+    z: FLOAT;
+    dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
@@ -641,13 +642,12 @@ begin
     Result := DS_OK;
  end;
 
-function XTL_EmuIDirectSound8_SetVelocity
-(
-    pThis : LPDIRECTSOUND8;
-    x : FLOAT;
-    y : FLOAT;
-    z : FLOAT;
-    dwApply : DWORD
+function XTL_EmuIDirectSound8_SetVelocity(
+    pThis: LPDIRECTSOUND8;
+    x: FLOAT;
+    y: FLOAT;
+    z: FLOAT;
+    dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
@@ -2083,7 +2083,10 @@ begin
 end;
 *)
 
-function XTL_EmuIDirectSoundStream_Unknown1 (pThis : PVOID; dwUnknown1 : DWORD ): HRESULT; stdcall;
+function XTL_EmuIDirectSoundStream_Unknown1(
+  pThis: PVOID;
+  dwUnknown1: DWORD
+  ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
 begin
   EmuSwapFS(fsWindows);

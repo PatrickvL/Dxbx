@@ -205,7 +205,7 @@ begin
   try
     ExeFile.Read(m_DOSHeader.m_magic, SizeOf(m_DosHeader.m_magic));
   except
-    messageDlg('Unexpected read error while reading magic number', mtError, [mbOk], 0);
+    MessageDlg('Unexpected read error while reading magic number', mtError, [mbOk], 0);
   end;
 
   if StrLComp(@m_DOSHeader.m_magic, 'MZ', 2) = 0 then

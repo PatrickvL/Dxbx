@@ -110,7 +110,7 @@ end;
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:10
 var
-  fix : uint32;
+  fix: UInt32;
 begin
 	EmuSwapFS(fsWindows);
 
@@ -404,8 +404,9 @@ begin
 
   if Count > 1 then
   begin
-    MessageDlg( 'Warning: Multiple Problems not ', mtWarning, [mbOk], 0 );
+    MessageDlg('Warning: Multiple Problems!', mtWarning, [mbOk], 0);
     Result := EXCEPTION_CONTINUE_SEARCH;
+    Exit;
   end;
 
   (*if (CxbxKrnl_hEmuParent <> 0) then

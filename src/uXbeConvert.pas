@@ -78,8 +78,8 @@ begin
       if not Result then
         MessageDlg('Error converting to .exe', mtError, [mbOK], 0);
     end;
-  Except
-    raise exception.Create('ConvertToExe raises a exception');
+  except
+    raise Exception.Create('ConvertToExe raised an exception');
   end;
 end;
 
@@ -93,8 +93,8 @@ begin
       ConvertToExe(ChangeFileExt(aFileName, '.exe'), {VerifyIfExists=}False, aXbe, aHandle);
       Result := True;
     end;
-  Except
-    raise exception.Create('ConvertXbeToExe raises a exception');
+  except
+    raise Exception.Create('ConvertXbeToExe raised an exception');
   end;
 end;
 

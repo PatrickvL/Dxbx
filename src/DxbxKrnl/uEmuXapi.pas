@@ -70,20 +70,20 @@ type
   PRTL_HEAP_PARAMETERS = ^RTL_HEAP_PARAMETERS;
 
   _XINPUT_POLLING_PARAMETERS = packed record
-   	fAutoPoll : BYTE;//       : 1;
-	  fInterruptOut : BYTE;//    : 1;
+   	fAutoPoll: BYTE;//       : 1;
+	  fInterruptOut: BYTE;//    : 1;
 	  ReservedMBZ1: BYTE;//    : 6;
-	  bInputInterval : BYTE;
-	  bOutputInterval : BYTE;
-	  ReservedMBZ2 : BYTE;
+	  bInputInterval: BYTE;
+	  bOutputInterval: BYTE;
+	  ReservedMBZ2: BYTE;
   end;
 
   XINPUT_POLLING_PARAMETERS = _XINPUT_POLLING_PARAMETERS;
   PXINPUT_POLLING_PARAMETERS = ^XINPUT_POLLING_PARAMETERS;
 
   _POLLING_PARAMETERS_HANDLE = packed record
-    pPollingParameters : PXINPUT_POLLING_PARAMETERS;
-    dwPort : DWORD;
+    pPollingParameters: PXINPUT_POLLING_PARAMETERS;
+    dwPort: DWORD;
   end;
   POLLING_PARAMETERS_HANDLE = _POLLING_PARAMETERS_HANDLE;
   PPOLLING_PARAMETERS_HANDLE = ^POLLING_PARAMETERS_HANDLE;
@@ -786,8 +786,8 @@ function XTL_EmuXInputPoll(
 ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
 var
-  v : Integer;
-  pFeedback : PXINPUT_FEEDBACK;
+  v: Integer;
+  pFeedback: PXINPUT_FEEDBACK;
 begin
   EmuSwapFS(fsWindows);
 
@@ -804,17 +804,18 @@ begin
   //
 
   begin
-    for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do begin
+    for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
+    begin
       hDevice := g_pXInputSetStateStatus[v].hDevice;
 
-      if (hDevice = 0) then
+      if hDevice = 0 then
           Continue;
 
       g_pXInputSetStateStatus[v].dwLatency := 0;
 
       pFeedback := PXINPUT_FEEDBACK(g_pXInputSetStateStatus[v].pFeedback);
 
-      if (pFeedback = Nil) then
+      if pFeedback = nil then
           Continue;
 
       //
@@ -1018,7 +1019,8 @@ function XTL_EmuCreateMutex(
   lpMutexAttributes: LPSECURITY_ATTRIBUTES;
   bInitialOwner: BOOL;
   // TODO : Is this really an Ansi-type? Or should it be wide (LPCWSTR) ?
-  lpName: LPCSTR): Handle; stdcall;
+  lpName: LPCSTR
+  ): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: Handle;
@@ -1243,7 +1245,8 @@ end;
 
 procedure XTL_EmuXRegisterThreadNotifyRoutine(
   pThreadNotification: PXTHREAD_NOTIFICATION;
-  fRegister: BOOL); stdcall;
+  fRegister: BOOL
+  ); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 begin
   EmuSwapFS(fsWindows);

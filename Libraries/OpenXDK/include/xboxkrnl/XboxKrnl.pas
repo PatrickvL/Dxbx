@@ -1140,7 +1140,8 @@ type
   PCREATE_THREAD_NOTIFY_ROUTINE = procedure(
     ProcessId: HANDLE;
     ThreadId: HANDLE;
-    Create: LONGBOOL); stdcall;
+    Create: LONGBOOL
+    ); stdcall;
 
 implementation
 

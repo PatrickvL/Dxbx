@@ -34,7 +34,7 @@ type
   XBVideo = packed record
   private
     // Configuration
-    m_szVideoResolution: array [0..100-1] of AnsiChar;
+    m_szVideoResolution: array[0..100-1] of AnsiChar;
     m_dwDisplayAdapter: DWORD;
     m_dwDirect3DDevice: DWORD;
     m_bFullscreen: BOOL;
@@ -94,24 +94,24 @@ begin
     if RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS then
     begin
       dwType := REG_SZ; dwSize := 100;
-      RegQueryValueEx(hKey, 'VideoResolution', NULL, @dwType, PBYTE(@(m_szVideoResolution[0])), @dwSize);
+      RegQueryValueExA(hKey, 'VideoResolution', NULL, @dwType, PBYTE(@(m_szVideoResolution[0])), @dwSize);
 
       dwType := REG_DWORD; dwSize := SizeOf(DWORD);
-      RegQueryValueEx(hKey, 'DisplayAdapter', NULL, @dwType, PBYTE(@m_dwDisplayAdapter), @dwSize);
+      RegQueryValueExA(hKey, 'DisplayAdapter', NULL, @dwType, PBYTE(@m_dwDisplayAdapter), @dwSize);
 
       dwType := REG_DWORD; dwSize := SizeOf(DWORD);
-      RegQueryValueEx(hKey, 'Direct3DDevice', NULL, @dwType, PBYTE(@m_dwDirect3DDevice), @dwSize);
+      RegQueryValueExA(hKey, 'Direct3DDevice', NULL, @dwType, PBYTE(@m_dwDirect3DDevice), @dwSize);
 
       dwType := REG_DWORD; dwSize := SizeOf(DWORD);
-      RegQueryValueEx(hKey, 'Fullscreen', NULL, @dwType, PBYTE(@m_bFullscreen), @dwSize);
+      RegQueryValueExA(hKey, 'Fullscreen', NULL, @dwType, PBYTE(@m_bFullscreen), @dwSize);
 
       dwType := REG_DWORD; dwSize := SizeOf(DWORD);
-      RegQueryValueEx(hKey, 'VSync', NULL, @dwType, PBYTE(@m_bVSync), @dwSize);
+      RegQueryValueExA(hKey, 'VSync', NULL, @dwType, PBYTE(@m_bVSync), @dwSize);
 
       RegCloseKey(hKey);
     end;
-  Except
-    raise exception.Create('XBVideo.Load raises a exception');
+  except
+    raise Exception.Create('XBVideo.Load raised an exception');
   end;
 end;
 
@@ -142,8 +142,8 @@ begin
 
       RegCloseKey(hKey);
     end;
-  Except
-    raise exception.Create('XBVideo.Save raises a exception');
+  except
+    raise Exception.Create('XBVideo.Save raised an exception');
   end;
 end;
 

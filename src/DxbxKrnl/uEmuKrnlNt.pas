@@ -321,13 +321,13 @@ function xboxkrnl_NtCreateFile(
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:5
-var
-  ReplaceChar : char;
-  ReplaceIndex : int;
+//var
+//  ReplaceChar: Char;
+//  ReplaceIndex: int;
 begin
   EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuKrnl : NtCreateFile' +
+  DbgPrintf('EmuKrnl : NtCreateFile' +
            #13#10'(' +
            #13#10'   FileHandle          : 0x%.08X' +
            #13#10'   DesiredAccess       : 0x%.08X' +
