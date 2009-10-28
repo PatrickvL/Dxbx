@@ -671,16 +671,16 @@ end;
 procedure DbgDumpMesh(var pIndexData: Word; dwCount: DWord);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:1
 var
-  pActiveVB : IDirect3DVertexBuffer8;
-  VBDesc : D3DVERTEXBUFFER_DESC;
-  pVBData : PBYTE;
-  uiStride : UINT;
+  pActiveVB: IDirect3DVertexBuffer8;
+  VBDesc: D3DVERTEXBUFFER_DESC;
+  pVBData: PBYTE;
+  uiStride: UINT;
   szFileName: array[0..128 - 1] of Char;
 begin
   if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;
 
-  pActiveVB := Nil;
+  pActiveVB := nil;
 
   // retrieve stream data
   g_pD3DDevice8.GetStreamSource(0, pActiveVB, uiStride);

@@ -35,7 +35,10 @@ uses
 
 implementation
 
-function XTL_EmuWSAStartup(wVersionRequested: Word; lpWSAData: WSADATA): Integer; stdcall;
+function XTL_EmuWSAStartup(
+  wVersionRequested: Word;
+  lpWSAData: WSADATA
+  ): Integer; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   ret: Integer;

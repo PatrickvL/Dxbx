@@ -52,15 +52,15 @@ type
 
 
   _VertexPatchDesc = packed record
-    PrimitiveType : X_D3DPRIMITIVETYPE;
-    dwVertexCount : DWORD;
-    dwPrimitiveCount : DWORD;
-    dwOffset : DWORD;
+    PrimitiveType: X_D3DPRIMITIVETYPE;
+    dwVertexCount: DWORD;
+    dwPrimitiveCount: DWORD;
+    dwOffset: DWORD;
     // Data if Draw...UP call
-    pVertexStreamZeroData : PVOID;
-    uiVertexStreamZeroStride : UINT;
+    pVertexStreamZeroData: PVOID;
+    uiVertexStreamZeroStride: UINT;
     // The current vertex shader, used to identify the streams
-    hVertexShader : DWORD;
+    hVertexShader: DWORD;
   end;
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;

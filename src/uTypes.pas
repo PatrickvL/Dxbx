@@ -77,9 +77,11 @@ type
 
   TCodePointer = type Pointer;
 
-{$IF NOT DECLARED(UnicodeString)}
+{$IFNDEF UNICODE}
   UnicodeString = WideString;
-{$IFEND}
+
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+{$ENDIF}
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
@@ -88,6 +90,13 @@ procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 function clock(): DWord; // cdecl;
 
 implementation
+
+{$IFNDEF UNICODE}
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+begin
+  Result := C in CharSet;
+end;
+{$ENDIF}
 
 // c function implementations
 

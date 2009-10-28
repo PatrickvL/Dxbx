@@ -584,7 +584,7 @@ begin
   for i := 0 to pXbeHeader.dwLibraryVersions - 1 do
   begin
     // Retreive the name & version of each linked library :
-    LinkedLibraryName := Copy(LinkedLibrary.szName, 1, 8);
+    LinkedLibraryName := string(Copy(LinkedLibrary.szName, 1, 8)); // silence D2009+ warning
     LinkedLibraryVersion := Integer(LinkedLibrary.wBuildVersion);
     DbgPrintf('DxbxHLE : Library "%s" is version %d', [LinkedLibraryName, LinkedLibraryVersion]);
     // Jump to the next library already :

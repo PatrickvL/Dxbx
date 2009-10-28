@@ -101,7 +101,8 @@ procedure CxbxKrnlInit(
 var
   MemXbeHeader: PXBE_HEADER;
   old_protection: DWord;
-  szBuffer, BasePath: string;
+  szBuffer: string;
+  BasePath: string;
   pCertificate: PXBE_CERTIFICATE;
   hDupHandle: Handle;
   OldExceptionFilter: TFNTopLevelExceptionFilter;
@@ -168,7 +169,7 @@ begin
     MemXbeHeader.dwPeHeapCommit := pXbeHeader.dwPeHeapCommit;
 
     CopyMemory(@MemXbeHeader.dwInitFlags, @pXbeHeader.dwInitFlags, SizeOf(pXbeHeader.dwInitFlags));
-    CopyMemory(Pointer(pXbeHeader.dwCertificateAddr), PChar(pXbeHeader) + pXbeHeader.dwCertificateAddr - $00010000, SizeOf(XBE_CERTIFICATE));
+    CopyMemory(Pointer(pXbeHeader.dwCertificateAddr), PByte(pXbeHeader) + pXbeHeader.dwCertificateAddr - $00010000, SizeOf(XBE_CERTIFICATE));
   end;
 
   // Initialize current directory
@@ -389,14 +390,14 @@ procedure CxbxKrnlResume();
 var
   v: Integer;
   dwExitCode: DWORD;
-  szBuffer : array [0..256-1] of Char;
-  hWnd : Handle;
+  szBuffer: array [0..256-1] of Char;
+  hWnd: Handle;
 begin
   if (not g_bEmuSuspended) then
     Exit;
 
-    // remove 'paused' from rendering window caption text
-   begin
+  // remove 'paused' from rendering window caption text
+  begin
     (*hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
     GetWindowText(hWnd, szBuffer, 255);
     szBuffer[strlen(szBuffer)-9] := '\0';

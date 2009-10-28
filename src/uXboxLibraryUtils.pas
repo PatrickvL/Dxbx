@@ -81,7 +81,7 @@ begin
   Result := aValue;
 
   // Now remove all prefix non-letters :
-  while (Result <> '') and (not (Result[1] in ['a'..'z','A'..'Z'])) do
+  while (Result <> '') and (not CharInSet(Result[1], ['a'..'z','A'..'Z'])) do
     Delete(Result, 1, 1);
 
   // And remove everything from '@' onward :
@@ -108,7 +108,7 @@ begin
   begin
     // Step backwards over all trailing digits :
     Index := Length(aFunctionName);
-    while (Index > 1) and (aFunctionName[Index] in ['0'..'9']) do
+    while (Index > 1) and CharInSet(aFunctionName[Index], ['0'..'9']) do
       Dec(Index);
 
     // When there where digits, and there's a '@' prepending it :

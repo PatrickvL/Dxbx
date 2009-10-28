@@ -78,7 +78,7 @@ type
 
     // Xbe Path Accessors
     procedure GetXbePath(var Path: string);
-    procedure SetXbePath(const Path: string);
+    procedure SetXbePath(const Path: AnsiString);
   end;
 
 procedure SetXbePath(const Path: PAnsiChar); stdcall;
@@ -247,27 +247,16 @@ procedure EmuShared.GetXbePath(var Path: string);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
-  {var}Path := string({shared}m_XbePath); // explicit string cast to silence D2009 warnings
+  {var}Path := string({shared}m_XbePath); // explicit cast to silence Unicode warnings
   Unlock();
 end;
 
-procedure EmuShared.SetXbePath(const Path: string);
+procedure EmuShared.SetXbePath(const Path: AnsiString);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-{$IFDEF UNICODE}
-var
-  AnsiPath: AnsiString;
-{$ENDIF}
 begin
-  WriteLog('EmuShared.SetXbePath(' + Path + ')');
+  WriteLog('EmuShared.SetXbePath(' + string(Path) + ')');
   Lock();
-{$IFDEF UNICODE}
-  // In order to keep compatibility with the Cxbx kernel, we need to
-  // store the XbePath in Ansi encoding (and accept possible data-loss) :
-  AnsiPath := AnsiString(Path);
-  CopyMemory(@({shared}m_XbePath[0]), PAnsiChar(AnsiPath), Length(AnsiPath) + 1);
-{$ELSE}
   CopyMemory(@({shared}m_XbePath[0]), PAnsiChar(Path), Length(Path) + 1);
-{$ENDIF}
   Unlock();
 end;
 
@@ -277,7 +266,7 @@ procedure SetXbePath(const Path: PAnsiChar); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   if Assigned(g_EmuShared) then
-    g_EmuShared.SetXbePath(string(Path)); // explicit string cast to silence D2009 warning
+    g_EmuShared.SetXbePath(AnsiString(Path));
 end;
 
 exports

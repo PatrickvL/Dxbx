@@ -48,22 +48,11 @@ procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
 procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
-{$IFNDEF UNICODE}
-function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
-{$ENDIF}
-
 implementation
 
 {$IFDEF DXBX_DLL}
 uses
   DxLibraryAPIScanning;
-{$ENDIF}
-
-{$IFNDEF UNICODE}
-function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
-begin
-  Result := C in CharSet;
-end;
 {$ENDIF}
 
 var

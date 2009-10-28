@@ -224,7 +224,7 @@ begin
   if OpenXbe(XbeOpenDialog.FileName, {var}m_Xbe, m_ExeFileName, m_XbeFileName) then
   begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-    RecentXbeAdd( XbeOpenDialog.FileName );
+    RecentXbeAdd(XbeOpenDialog.FileName);
     Emulation_State := esFileOpen;
     AddjustMenu;
   end
@@ -614,7 +614,7 @@ begin
       if OpenXbe(pcFileName, {var}m_Xbe, m_ExeFileName, m_XbeFileName) then
       begin
         StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-        RecentXbeAdd( XbeOpenDialog.FileName );
+        RecentXbeAdd(XbeOpenDialog.FileName);
         Emulation_State := esFileOpen;
         AddjustMenu;
       end
@@ -1068,7 +1068,7 @@ begin
     Exit;
   end;
 
-  ShellExecute(application.Handle, 'open', PChar(TempItem.Hint), nil, nil, SW_SHOWDEFAULT);
+  ShellExecute(Application.Handle, 'open', PChar(TempItem.Hint), nil, nil, SW_SHOWDEFAULT);
 end;
 
 //------------------------------------------------------------------------------

@@ -42,7 +42,7 @@ type
   TEntryProc = procedure();
   PEntryProc = ^TEntryProc;
 
-  TSetXbePath = procedure(const Path: PChar); cdecl;
+  TSetXbePath = procedure(const Path: PAnsiChar); cdecl;
 
   TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
   PKernelThunkTable = ^TKernelThunkTable;
@@ -63,7 +63,7 @@ function ScanHexByte(aLine: PAnsiChar; var Value: Integer): Boolean;
 function ScanHexWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 function ScanHexDWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 
-function Sscanf(const s: string; const fmt: string; const Pointers: array of Pointer): Integer;
+function Sscanf(const s: AnsiString; const fmt: AnsiString; const Pointers: array of Pointer): Integer;
 function iif(aTest: Boolean; const aTrue, aFalse: Integer): Integer; overload;
 function iif(aTest: Boolean; const aTrue, aFalse: string): string; overload;
 
@@ -250,10 +250,10 @@ begin
   end;
 end;
 
-function Sscanf(const s: string; const fmt: string; const Pointers: array of Pointer): Integer;
+function Sscanf(const s: AnsiString; const fmt: AnsiString; const Pointers: array of Pointer): Integer;
 var
   i, j, n, m: Integer;
-  s1: string;
+  s1: AnsiString;
   L: LongInt;
   X: Extended;
 
@@ -264,7 +264,7 @@ var
       Inc(n);
 
     while (n <= Length(s))
-      and (AnsiChar(s[n]) in ['0'..'9', '+', '-']) do
+      and (s[n] in ['0'..'9', '+', '-']) do
     begin
       s1 := s1 + s[n];
       Inc(n);
@@ -279,7 +279,7 @@ var
     while (n <= Length(s)) and (s[n] = ' ') do
       Inc(n);
 
-    while (AnsiChar(s[n]) in ['0'..'9', '+', '-', '.', 'e', 'E'])
+    while (s[n] in ['0'..'9', '+', '-', '.', 'e', 'E'])
       and (Length(s) >= n) do
     begin
       s1 := s1 + s[n];
@@ -304,7 +304,7 @@ var
     Result := Length(s1);
   end;
 
-  function ScanStr(c: Char): Boolean;
+  function ScanStr(c: AnsiChar): Boolean;
   begin
     while (n <= Length(s)) and (s[n] <> c) do
       Inc(n);
@@ -326,10 +326,10 @@ var
       while (m <= Length(fmt)) and (fmt[m] = ' ') do
         Inc(m);
 
-      if (m >= Length(fmt)) then 
-        Break; 
+      if m >= Length(fmt) then 
+        Break;
 
-      if (fmt[m] = '%') then 
+      if fmt[m] = '%' then
       begin 
         Inc(m); 
         case fmt[m] of
@@ -363,20 +363,20 @@ begin
         begin 
           if GetInt > 0 then 
           begin 
-            L := StrToInt(s1); 
-            Move(L, Pointers[i]^, SizeOf(LongInt)); 
-            Inc(Result); 
-          end 
-          else 
-            Break; 
-        end; 
+            L := StrToInt(string(s1));
+            Move(L, Pointers[i]^, SizeOf(LongInt));
+            Inc(Result);
+          end
+          else
+            Break;
+        end;
 
-      vtExtended: 
-        begin 
-          if GetFloat > 0 then 
-          begin 
-            X := StrToFloat(s1); 
-            Move(X, Pointers[i]^, SizeOf(Extended)); 
+      vtExtended:
+        begin
+          if GetFloat > 0 then
+          begin
+            X := StrToFloat(string(s1));
+            Move(X, Pointers[i]^, SizeOf(Extended));
             Inc(Result); 
           end 
           else 

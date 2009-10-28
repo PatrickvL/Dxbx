@@ -622,7 +622,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := TRUE;
+  Result := True;
 end;
 
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall;
