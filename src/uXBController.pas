@@ -325,11 +325,8 @@ end;
 
 function WrapEnumObjectsCallback(var lpddoi: TDIDeviceObjectInstanceA; pvRef: Pointer): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-var
-  context: PXBController;
 begin
-  context := PXBController(pvRef);
-  Result := context.EnumObjectsCallback(lpddoi);
+  Result := PXBController(pvRef).EnumObjectsCallback(lpddoi);
 end;
 
 function XBController.EnumGameCtrlCallback(var lpddi: LPCDIDEVICEINSTANCE): BOOL;
@@ -360,11 +357,8 @@ end;
 
 function WrapEnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA; pvRef: Pointer): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-var
-  context: PXBController;
 begin
-  context := PXBController(pvRef);
-  Result := context.EnumGameCtrlCallback(lpddi);
+  Result := PXBController(pvRef).EnumGameCtrlCallback(lpddi);
 end;
 
 procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
@@ -819,8 +813,11 @@ begin
         Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
         DbgPrintf('Dxbx: Detected Key %d on SysKeyboard', [dwHow]);
         DbgPrintf('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
+        Result := True;
+        Exit;
       end;
     end
+
     // Detect Mouse Input
     else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_MOUSE) > 0 then
     begin
@@ -1074,8 +1071,6 @@ function XBController.Insert(szDeviceName: PAnsiChar): Integer;
 var
   v: Integer;
 begin
-  Result := 0;
-
   for v := 0 to XBCTRL_MAX_DEVICES - 1 do
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
     begin
@@ -1096,6 +1091,7 @@ begin
   MessageBox(0, 'Unexpected Circumstance (Too Many Controller Devices)! Please contact caustik!', 'Cxbx', MB_OK or MB_ICONEXCLAMATION);
 
   ExitProcess(1);
+  Result := 0;
 end;
 
 procedure XBController.ListenBegin(ahwnd: Handle);

@@ -416,8 +416,10 @@ begin
 
   while Assigned(pCur) do
   begin
-    if InThisMemoryBlock(pMem, pCur) then
+    if InThisMemoryBlock(pMem, pCur) then begin
       Result := pCur;
+      Exit;
+    end;
 
     pCur := pCur.pNext;
   end;
@@ -618,7 +620,10 @@ var
 begin
   Ret := False;
   if Assigned (pMem) then
+  begin
     Ret := True;
+    Exit;
+  end;
 
   g_MemoryMutex.Lock();
 

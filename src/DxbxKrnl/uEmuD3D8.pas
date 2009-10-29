@@ -555,6 +555,7 @@ begin
         DeleteObject(g_hBgBrush);
         PostQuitMessage(0);
         Result := 0;
+        Exit;
       end;
 
     WM_SYSKEYDOWN:
@@ -6388,7 +6389,6 @@ end;
 function XTL_EmuIDirect3DDevice8_SetVertexShader(aHandle: DWord): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:40 Translator:Shadow_Tj
 var
-  hRet: HRESULT;
   RealHandle: DWORD;
   {vOffset: TD3DXVECTOR4;
   vScale: TD3DXVECTOR4; } // not neccesery because cxbx commented the use
@@ -6401,8 +6401,6 @@ begin
     #13#10'   Handle             : 0x%.08X' +
     #13#10');',
     [aHandle]);
-
-  hRet := D3D_OK;
 
   g_CurrentVertexShader := aHandle;
 
@@ -6429,11 +6427,9 @@ begin
   begin
     RealHandle := aHandle;
   end;
-  hRet := g_pD3DDevice8.SetVertexShader(RealHandle);
+  Result := g_pD3DDevice8.SetVertexShader(RealHandle);
 
   EmuSwapFS(fsXbox);
-
-  Result := hRet;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_DrawVertices(PrimitiveType: X_D3DPRIMITIVETYPE;
