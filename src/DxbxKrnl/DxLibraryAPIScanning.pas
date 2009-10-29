@@ -82,6 +82,8 @@ type
 
     constructor Create(const aSymbol: TDetectedVersionedXboxLibrarySymbol);
     destructor Destroy; override;
+
+    function CompareCodeWithAddress(const aAddress: Pointer): Integer;
   end;
 
   PAddressRange = ^RAddressRange;
@@ -122,7 +124,7 @@ type
     function New(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
     function FindByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
     function FindOrCreateByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
-    function FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
+    function FindByAddress(const aAddress: TCodePointer; const OffsetWithinFunction: PInteger = nil): TDetectedVersionedXboxLibrarySymbol;
     procedure DeleteSymbol(const Index: Integer);
   end;
 
@@ -198,7 +200,7 @@ end; // DxbxUnmangleSymbolName
 {$OVERFLOWCHECKS OFF}
 function DetermineRelativeAddress(const aStartingAddress: PByte; const aOffset: Word): PByte;
 begin
-  IntPtr(Result) := IntPtr(aStartingAddress) + IntPtr(aOffset);
+  UIntPtr(Result) := UIntPtr(aStartingAddress) + aOffset;
   Result := PByte(IntPtr(Result) + PInteger(Result)^ + 4);
 end;
 {$IFDEF OVERFLOWCHECKS_ON}
@@ -264,6 +266,17 @@ begin
   inherited Destroy;
 end;
 
+function TPotentialSymbolLocation.CompareCodeWithAddress(const aAddress: Pointer): Integer;
+begin
+  if UIntPtr(aAddress) < UIntPtr(SymbolLocation) then
+    Result := 1
+  else
+    if UIntPtr(aAddress) < UIntPtr(CodeEnd) then
+      Result := 0
+    else
+      Result := -1;
+end;
+
 { TDetectedVersionedXboxLibrarySymbol }
 
 constructor TDetectedVersionedXboxLibrarySymbol.Create;
@@ -327,7 +340,7 @@ begin
     Result := TPotentialSymbolLocation.Create(Self);
     Result.SymbolLocation := TCodePointer(aAddress);
     // Initially assume it's a global variable of type DWORD :
-    Result.CodeEnd := TCodePointer(IntPtr(aAddress) + SizeOf(DWORD));
+    Result.CodeEnd := TCodePointer(UIntPtr(aAddress) + SizeOf(DWORD));
     MyLocations.Add(Result);
   end;
 
@@ -338,7 +351,7 @@ begin
     else
     begin
       Result.StoredLibraryFunction := FoundFunction;
-      Result.CodeEnd := TCodePointer(IntPtr(aAddress) + FoundFunction.FunctionLength);
+      Result.CodeEnd := TCodePointer(UIntPtr(aAddress) + FoundFunction.FunctionLength);
     end;
 
     Inc(Result.PatternHitCount);
@@ -374,8 +387,7 @@ begin
   for i := 0 to LocationCount - 1 do
   begin
     Result := Locations[i];
-    if  (IntPtr(Result.SymbolLocation) >= IntPtr(aAddress))
-    and (IntPtr(aAddress) <= IntPtr(Result.CodeEnd)) then
+    if Result.CompareCodeWithAddress(aAddress) = 0 then
       Exit;
   end;
 
@@ -477,16 +489,14 @@ begin
     Result := New(aSymbolName);
 end;
 
-function TDetectedSymbols.FindByAddress(const aAddress: TCodePointer): TDetectedVersionedXboxLibrarySymbol;
+function TDetectedSymbols.FindByAddress(
+  const aAddress: TCodePointer;
+  const OffsetWithinFunction: PInteger = nil
+  ): TDetectedVersionedXboxLibrarySymbol;
 
   function Compare(Item1: TPotentialSymbolLocation; Item2: TCodePointer): Integer;
   begin
-    Result := IntPtr(Item1.SymbolLocation) - IntPtr(Item2);
-    if Result <= 0 then
-      Exit;
-
-    if IntPtr(Item2) >= IntPtr(Item1.CodeEnd) then
-      Result := MaxInt;
+    Result := Item1.CompareCodeWithAddress(Item2);
   end;
 
 var
@@ -675,7 +685,7 @@ begin
   begin
     // Last, register all cross-referenced symbols from this function too :
     SetLength(DetectedSymbol.CrossReferences, FoundFunction.NrCrossReferences);
-    IntPtr(CrossReference) := IntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
+    UIntPtr(CrossReference) := UIntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
     for i := 0 to FoundFunction.NrCrossReferences - 1 do
     begin
       DetectedSymbol.CrossReferences[i] := CrossReference;
@@ -714,7 +724,7 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
     // Start off, by skipping to the next stored library function already :
     Inc({var}aStoredLibraryFunction);
     // Including a step over all cross-references :
-    Inc(IntPtr({var}aStoredLibraryFunction), FoundFunction.NrCrossReferences * SizeOf(RStoredCrossReference));
+    Inc(UIntPtr({var}aStoredLibraryFunction), FoundFunction.NrCrossReferences * SizeOf(RStoredCrossReference));
 
     // Determine if the stored library version associated with this pattern
     // matches the library versions we've decided to consider :
@@ -735,7 +745,7 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
     Dec(UIntPtr(aAddress), PATTERNSIZE);
 
     // Handle possible cross-reference checks :
-    IntPtr(CrossReference) := IntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
+    UIntPtr(CrossReference) := UIntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
     for i := 0 to FoundFunction.NrCrossReferences - 1 do
     begin
       if not _CheckCrossReference(aAddress, CrossReference.Offset, CrossReference.NameIndex) then
@@ -766,13 +776,13 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
 {$ENDIF}
     // Calculate the position of the data after this TreeNode (StretchPtr) :
     NrChildren := aStoredTrieNode.NrChildrenByte1;
-    IntPtr(StretchPtr) := IntPtr(aStoredTrieNode) + SizeOf(RStoredTrieNode);
+    UIntPtr(StretchPtr) := UIntPtr(aStoredTrieNode) + SizeOf(RStoredTrieNode);
     if NrChildren >= 128 then
       // Reconstruct the NrChildren value :
       NrChildren := (Integer(aStoredTrieNode.NrChildrenByte1 and 127) shl 8) or aStoredTrieNode.NrChildrenByte2
     else
       // If one byte was sufficient, then the next stretch starts 1 byte earlier :
-      Dec(IntPtr(StretchPtr), SizeOf({RStoredTrieNode.NrChildrenByte2:}Byte));
+      Dec(UIntPtr(StretchPtr), SizeOf({RStoredTrieNode.NrChildrenByte2:}Byte));
 
     // Scan all stretches after this node :
     repeat
@@ -1025,7 +1035,7 @@ procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LI
     DetectedXapiProcessHeap,
     DetectedXapiInitProcess: TDetectedVersionedXboxLibrarySymbol;
     StoredLibrary: PStoredLibrary;
-    ProcessHeapOffs: Integer;
+    ProcessHeapOffs: Word;
   begin
     DetectedXapiProcessHeap := FindByName('_XapiProcessHeap');
     if Assigned(DetectedXapiProcessHeap) then
@@ -1056,7 +1066,7 @@ procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LI
         else // 3911, 4034, 4134
           ProcessHeapOffs := $3E;
 
-        XTL_EmuXapiProcessHeap := PPointer(IntPtr(DetectedXapiInitProcess.Locations[0].SymbolLocation) + ProcessHeapOffs)^;
+        XTL_EmuXapiProcessHeap := PPointer(UIntPtr(DetectedXapiInitProcess.Locations[0].SymbolLocation) + ProcessHeapOffs)^;
         
 {$IFDEF DXBX_DEBUG}
         DbgPrintf('DxbxHLE : Resolved XapiProcessHeap at $%.8x', [XTL_EmuXapiProcessHeap],
@@ -1072,7 +1082,7 @@ var
   ResourceStream: TResourceStream;
 begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
-  ByteScanUpper := PByte(IntPtr(ByteScanLower) + Integer(pXbeHeader.dwSizeofImage) + Integer(pXbeHeader.dwPeStackCommit));
+  ByteScanUpper := PByte(UIntPtr(ByteScanLower) + pXbeHeader.dwSizeOfImage + pXbeHeader.dwPeStackCommit);
   // Dxbx Note : Extending the scan beyond dwSizeofImage (by adding dwPeStackCommit)
   // might cause Access Violations (in which case we should probably determine
   // a more accurate boundary). The increment of the range was done to be able

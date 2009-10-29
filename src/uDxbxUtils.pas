@@ -44,7 +44,7 @@ type
 
   TSetXbePath = procedure(const Path: PAnsiChar); cdecl;
 
-  TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of IntPtr;
+  TKernelThunkTable = packed array[0..NUMBER_OF_THUNKS - 1] of UIntPtr;
   PKernelThunkTable = ^TKernelThunkTable;
 
   TGetKernelThunkTable = function: PKernelThunkTable; cdecl;

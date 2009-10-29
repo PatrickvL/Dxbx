@@ -89,7 +89,7 @@ function XTL_EmuIDirect3DDevice8_SetVertexData2f(aRegister: Integer;
   a: FLOAT; b: FLOAT): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader(var aHandle: DWORD); stdcall; // forward
+function XTL_EmuIDirect3DDevice8_GetVertexShader(const pHandle: PDWORD): HRESULT; stdcall; // forward
 
 function EmuRenderWindow(lpVoid: Pointer): DWord; // forward
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
@@ -306,7 +306,7 @@ begin
   end;
 
   Result := True;
-end;
+end; // EmuEnumDisplayDevices
 
 // window message processing thread
 
@@ -362,6 +362,7 @@ begin
 
     CertAddr := g_XbeHeader.dwCertificateAddr - g_XbeHeader.dwBaseAddr;
 
+    // Dxbx TODO : These $0C and 40 values should become a suiteably named constant :
     if CertAddr + $0C + 40 < g_XbeHeaderSize then
     begin
       IntPtr(XbeCert) := IntPtr(g_XbeHeader) + CertAddr;
@@ -475,7 +476,7 @@ begin
   end;
 
   Result := 0;
-end;
+end; // EmuRenderWindow
 
 // simple helper function
 
@@ -656,7 +657,7 @@ begin
   else
     Result := DefWindowProc(hWnd, msg, wParam, lParam);
   end;
-end;
+end; // EmuMsgProc
 
 function EmuUpdateTickCount(LPVOID: Pointer): DWord;
 // Branch:martin  Revision:39  Done:100 Translator:Shadow_Tj
@@ -1053,7 +1054,7 @@ begin
   end;
 
   Result := 0;
-end;
+end; // EmuCreateDeviceProxy
 
 // check if a resource has been registered yet (if not, register it)
 
@@ -1343,7 +1344,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_GetVisibilityTestResult(Index: DWORD;
-  var pResult: UINT; var pTimeStamp: ULONGLONG): HRESULT; stdcall;
+  const pResult: PUINT; const pTimeStamp: PULONGLONG): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);
@@ -1358,11 +1359,11 @@ begin
 
     // Cxbx TODO : actually emulate this!?
 
-  if pResult <> 0 then
-    {var}pResult := 640 * 480;
+  if Assigned(pResult) then
+    pResult^ := 640 * 480;
 
-  if pTimeStamp <> 0 then
-    {var}pTimeStamp := 0;
+  if Assigned(pTimeStamp) then
+    pTimeStamp^ := 0;
 
   EmuSwapFS(fsXbox);
 
@@ -1459,13 +1460,11 @@ begin
   Result := D3D_OK;
 end;
 
-function XTL_EmuIDirect3D8_GetAdapterModeCount(Adapter: DWord): DWord;
+function XTL_EmuIDirect3D8_GetAdapterModeCount(Adapter: DWORD): DWORD; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
-  ret: UINT;
   Mode: D3DDISPLAYMODE;
-  v: uInt32;
-  hRet: HRESULT;
+  i: UINT32;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1475,30 +1474,24 @@ begin
     #13#10');',
     [Adapter]);
 
-  ret := g_pD3D8.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter);
-
-  for v := 0 to ret - 1 do
+  Result := 0;
+  for i := 0 to g_pD3D8.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter) - 1 do
   begin
-    hRet := g_pD3D8.EnumAdapterModes(g_XBVideo.GetDisplayAdapter, v, Mode);
-
-    if (hRet <> D3D_OK) then
-      Break;
-
-    if (Mode.Width <> 640) or (Mode.Height <> 480) then
-      ret := ret - 1;
+    // Only count valid modes :
+    if  (g_pD3D8.EnumAdapterModes(g_XBVideo.GetDisplayAdapter, i, {out}Mode) = D3D_OK)
+    and (Mode.Width = 640)
+    and (Mode.Height = 480) then
+      Inc(Result);
   end;
 
   EmuSwapFS(fsXbox);
-  Result := ret;
 end;
 
-function XTL_EmuIDirect3D8_GetAdapterDisplayMode(Adapter: UINT; pMode: X_D3DDISPLAYMODE): HRESULT;
+function XTL_EmuIDirect3D8_GetAdapterDisplayMode(Adapter: UINT; pMode: X_D3DDISPLAYMODE): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:20 Translator:Shadow_Tj
-var
-  hRet: HRESULT;
-(*  pPCMode: D3DDISPLAYMODE; *)
+(*var
+*  pPCMode: D3DDISPLAYMODE; *)
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3D8_GetAdapterDisplayMode' +
@@ -1510,7 +1503,8 @@ begin
 
   // NOTE: WARNING: We should cache the 'Emulated' display mode and return
   // This value. We can initialize the cache with the default Xbox mode data.
-  (*hRet := g_pD3D8.GetAdapterDisplayMode( g_XBVideo.GetDisplayAdapter(), pMode);
+  Result := D3D_OK;
+  (*Result := g_pD3D8.GetAdapterDisplayMode( g_XBVideo.GetDisplayAdapter(), pMode);
 
   // make adjustments to the parameters to make sense with windows direct3d
   pPCMode := pMode;
@@ -1525,18 +1519,16 @@ begin
   // Cxbx TODO: Retrieve from current CreateDevice settings?
   pMode.Width := 640;
   pMode.Height := 480;
+
   EmuSwapFS(fsXbox);
-  Result := hRet;
 end;
 
-function XTL_EmuIDirect3D8_EnumAdapterModes(Adapter: UINT; Mode: UINT; pMode: X_D3DDISPLAYMODE): HRESULT;
+function XTL_EmuIDirect3D8_EnumAdapterModes(Adapter: UINT; Mode: UINT; out pMode: X_D3DDISPLAYMODE): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
-  hRet: HRESULT;
-  ModeAdder: Integer;
+  ModeAdder: UInt;
   PCMode: D3DDISPLAYMODE;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3D8_EnumAdapterModes' +
@@ -1547,25 +1539,22 @@ begin
     #13#10');',
     [@Adapter, @Mode, @pMode]);
 
-
   ModeAdder := 0;
-
   if (Mode = 0) then
-    ModeAdder := 0;
+    ModeAdder := 0; // Dxbx TODO : Is this an accurate translation? Doubtfull...
 
   while True do
   begin
-    hRet := g_pD3D8.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, D3DDISPLAYMODE(PCMode));
-
-    if (hRet <> D3D_OK) or (PCMode.Width = 640) and (PCMode.Height = 480) then
+    Result := g_pD3D8.EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, D3DDISPLAYMODE(PCMode));
+    if (Result <> D3D_OK) or (PCMode.Width = 640) and (PCMode.Height = 480) then
       Break;
 
-    ModeAdder:= ModeAdder + 1;
+    Inc(ModeAdder);
   end;
 
 
   // make adjustments to parameters to make sense with windows direct3d
-  if (hRet = D3D_OK) then
+  if (Result = D3D_OK) then
   begin
     //
     // NOTE: WARNING: PC D3DDISPLAYMODE is different than Xbox D3DDISPLAYMODE!
@@ -1582,13 +1571,10 @@ begin
     pMode.Format := EmuPC2XB_D3DFormat(PCMode.Format)
   end
   else
-  begin
-    hRet := D3DERR_INVALIDCALL;
-  end;
+    Result := D3DERR_INVALIDCALL;
 
   EmuSwapFS(fsXbox);
-  Result := hRet;
-end;
+end; // XTL_EmuIDirect3D8_EnumAdapterModes
 
 procedure XTL_EmuIDirect3D8_KickOffAndWaitForIdle;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
@@ -5275,8 +5261,8 @@ var
   ddsd2: DDSURFACEDESC2;
   pDest: Pointer;
   pSour: DWord;
-  w: Integer;
-  h: Integer;
+  w: DWord;
+  h: DWord;
   SourRect: TRect;
   y: Integer;
 begin
@@ -6359,11 +6345,8 @@ function XTL_EmuIDirect3DDevice8_SetStreamSource(StreamNumber: UINT;
   pStreamData: PX_D3DVertexBuffer; Stride: UINT): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
-  hRet: HRESULT;
   pVertexBuffer8: IDirect3DVertexBuffer8;
 begin
-  hret := 0;
-
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_SetStreamSource' +
@@ -6375,33 +6358,31 @@ begin
     [ StreamNumber, @pStreamData,
       (*ifThen(*)@pStreamData(* <> nil, @pStreamData.EmuVertexBuffer8, 0)*), Stride]);
 
-    if (StreamNumber = 0) then
-        g_pVertexBuffer := pStreamData;
+  if (StreamNumber = 0) then
+    g_pVertexBuffer := pStreamData;
 
-    pVertexBuffer8 := nil;
-    if (pStreamData <> nil) then
-    begin
-        EmuVerifyResourceIsRegistered(pStreamData);
+  pVertexBuffer8 := nil;
+  if Assigned(pStreamData) then
+  begin
+    EmuVerifyResourceIsRegistered(pStreamData);
 
-        pVertexBuffer8 := pStreamData.EmuVertexBuffer8;
-        pVertexBuffer8.Unlock();
-     end;
+    pVertexBuffer8 := pStreamData.EmuVertexBuffer8;
+    pVertexBuffer8.Unlock();
+   end;
 
-    {$ifdef _DEBUG_TRACK_VB}
-    if (pStreamData <> 0) then
-    begin
-        g_bVBSkipStream := g_VBTrackDisable.exists(pStreamData.EmuVertexBuffer8);
-     end;
-    {$endif}
+  {$ifdef _DEBUG_TRACK_VB}
+  if Assigned(pStreamData) then
+  begin
+    g_bVBSkipStream := g_VBTrackDisable.exists(pStreamData.EmuVertexBuffer8);
+  end;
+  {$endif}
 
-    hRet := g_pD3DDevice8.SetStreamSource(StreamNumber, pVertexBuffer8, Stride);
+  Result := g_pD3DDevice8.SetStreamSource(StreamNumber, pVertexBuffer8, Stride);
 
-    if (FAILED(hRet)) then
-        CxbxKrnlCleanup('SetStreamSource Failed!');
+  if FAILED(RESULT) then
+    CxbxKrnlCleanup('SetStreamSource Failed!');
 
   EmuSwapFS(fsXbox);
-
-  Result := hRet;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexShader(aHandle: DWord): HRESULT; stdcall;
@@ -7163,11 +7144,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DDevice8_DeleteVertexShader(Handle: DWord); stdcall;
+function XTL_EmuIDirect3DDevice8_DeleteVertexShader(Handle: DWord): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:2 Translator:Shadow_Tj
 var
   RealHandle: DWORD;
-  hRet: HRESULT;
 (*  pD3DVertexShader: X_D3DVertexShader;
   pVertexShader: VERTEX_SHADER; *)
 begin
@@ -7200,7 +7180,8 @@ begin
         CxbxFree(pD3DVertexShader);           *)
   end;
 
-  hRet := g_pD3DDevice8.DeleteVertexShader(RealHandle);
+  Result := g_pD3DDevice8.DeleteVertexShader(RealHandle);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -7223,7 +7204,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetShaderConstantMode(pMode: PDWORD);
+procedure XTL_EmuIDirect3DDevice8_GetShaderConstantMode(pMode: PDWORD); //stdcall?? no export yet
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
 {$IFDEF _DEBUG_TRACE}
@@ -7240,7 +7221,7 @@ begin
     pMode^ := g_VertexShaderConstantMode;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader(var aHandle: DWORD); stdcall;
+function XTL_EmuIDirect3DDevice8_GetVertexShader(const pHandle: PDWORD): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);
@@ -7250,19 +7231,19 @@ begin
     #13#10'(' +
     #13#10'   pHandle              : 0x%.08X' +
     #13#10');',
-    [aHandle]);
+    [pHandle]);
 
-  if aHandle <> 0 then
-    {var}aHandle := g_CurrentVertexShader;
+  if Assigned(pHandle) then
+    pHandle ^:= g_CurrentVertexShader;
 
   EmuSwapFS(fsXbox);
+
+  Result := D3D_OK;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShaderConstant(aRegister: Integer;
-  pConstantData: DWord; ConstantCount: DWORD);
+function XTL_EmuIDirect3DDevice8_GetVertexShaderConstant(aRegister: Integer;
+  pConstantData: DWord; ConstantCount: DWORD): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
-var
-  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7275,7 +7256,7 @@ begin
     #13#10');',
     [aRegister, pConstantData, ConstantCount]);
 
-  hRet := g_pD3DDevice8.GetVertexShaderConstant
+  Result := g_pD3DDevice8.GetVertexShaderConstant
     (
     aRegister + 96,
     pConstantData,
@@ -7301,8 +7282,9 @@ begin
     [@pVAF, StreamCount, @pStreamInputs]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
+
   EmuSwapFS(fsXbox);
-  Result := 0;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_GetVertexShaderInput(pHandle: DWORD;
@@ -7323,7 +7305,8 @@ begin
   DbgPrintf('NOT YET IMPLEMENTED!');
 
   EmuSwapFS(fsXbox);
-  Result := 0;
+
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexShaderInput(aHandle: DWORD;
@@ -7342,8 +7325,9 @@ begin
     [aHandle, StreamCount, @pStreamInputs]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
+
   EmuSwapFS(fsXbox);
-  Result := 0;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_RunVertexStateShader(Address: DWORD; pData: FLOAT);
@@ -7548,13 +7532,13 @@ end;
 
 function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType(Adapter: UINT;
   DeviceType: D3DDEVTYPE; SurfaceFormat: D3DFORMAT; Windowed: LONGBOOL;
-  MultiSampleType: D3DMULTISAMPLE_TYPE): HRESULT;
+  MultiSampleType: D3DMULTISAMPLE_TYPE): HRESULT; stdcall;
 // Branch:martin  Revision:45 Done:70 Translator:Shadow_Tj
 var
   hRet: HRESULT;
   PCSurfaceFormat: D3DFORMAT;
 begin
-  hRet := 0;
+  hRet := D3D_OK;
 
   EmuSwapFS(fsWindows);
 
@@ -7617,16 +7601,13 @@ begin
     );
 *)
 
-
   EmuSwapFS(fsXbox);
 
   Result := hRet;
-end;
+end; // XTL_EmuIDirect3D8_CheckDeviceMultiSampleType
 
 function XTL_EmuIDirect3D8_GetDeviceCaps(Adapter: UINT; DeviceType: D3DDEVTYPE; pCaps: D3DCAPS8): HRESULT;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
-var
-  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7638,16 +7619,13 @@ begin
     #13#10');',
     [Adapter, @DeviceType, @pCaps]);
 
-  hRet := g_pD3D8.GetDeviceCaps(Adapter, DeviceType, pCaps);
-  EmuSwapFS(fsXbox);
+  Result := g_pD3D8.GetDeviceCaps(Adapter, DeviceType, pCaps);
 
-  Result := hRet;
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirect3D8_SetPushBufferSize(PushBufferSize: DWORD; KickOffSize: DWORD): HRESULT; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
-var
-  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7658,11 +7636,9 @@ begin
     #13#10');',
     [PushBufferSize, KickOffSize]);
 
-  hRet := D3D_OK;
-
-  // This is a Xbox extension, meaning there is no pc counterpart.
+  Result := D3D_OK; // This is a Xbox extension, meaning there is no pc counterpart.
+  
   EmuSwapFS(fsXbox);
-  Result := hRet;
 end;
 
 function XTL_EmuIDirect3DDevice8_InsertFence: DWORD; stdcall;
@@ -7750,10 +7726,15 @@ end;
 exports
   XTL_EmuD3DCleanup,
   XTL_EmuD3DInit,
+
   XTL_EmuIDirect3DDevice8_SetRenderState_Simple name 'EmuIDirect3DDevice8_SetRenderState_Simple',
+
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
   XTL_EmuIDirect3D8_SetPushBufferSize name PatchPrefix + 'Direct3D_SetPushBufferSize',
+  XTL_EmuIDirect3D8_GetAdapterModeCount name PatchPrefix + 'Direct3D_GetAdapterModeCount',
+  XTL_EmuIDirect3D8_EnumAdapterModes name PatchPrefix + 'XTL_EmuIDirect3D8_GetAdapterModeCount',
+
   XTL_EmuIDirect3DDevice8_GetRenderTarget2 name 'EmuIDirect3DDevice8_GetRenderTarget2',
   XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2 name 'EmuIDirect3DDevice8_GetDepthStencilSurface2',
   XTL_EmuIDirect3DDevice8_AddRef name PatchPrefix + '_D3DDevice_AddRef@0',
@@ -7776,6 +7757,7 @@ exports
   XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + '_D3DDevice_GetOverlayUpdateStatus',
   XTL_EmuIDirect3DDevice8_GetTransform name PatchPrefix + '_D3DDevice_GetTransform',
   XTL_EmuIDirect3DDevice8_GetVertexShader name PatchPrefix + '_D3DDevice_GetVertexShader',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderConstant name PatchPrefix + '_D3DDevice_GetVertexShaderConstant',
   XTL_EmuIDirect3DDevice8_GetVertexShaderSize name PatchPrefix + '_D3DDevice_GetVertexShaderSize',
   XTL_EmuIDirect3DDevice8_GetVertexShaderType name PatchPrefix + '_D3DDevice_GetVertexShaderType',
   XTL_EmuIDirect3DDevice8_GetViewport name PatchPrefix + '_D3DDevice_GetViewport',

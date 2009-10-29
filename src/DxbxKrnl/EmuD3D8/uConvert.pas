@@ -101,7 +101,7 @@ end;
 // convert from vertex count to primitive count (Xbox)
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT;
 begin
-  Result := Trunc((VertexCount - EmuD3DVertexToPrimitive[PrimitiveType][1]) / EmuD3DVertexToPrimitive[PrimitiveType][0]);
+  Result := Trunc((VertexCount - int(EmuD3DVertexToPrimitive[PrimitiveType][1])) / int(EmuD3DVertexToPrimitive[PrimitiveType][0]));
 end;
 
 

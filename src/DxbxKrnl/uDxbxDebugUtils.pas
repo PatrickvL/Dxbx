@@ -37,7 +37,7 @@ type
   TDxbxAPIDebugInfoSource = class(TJclDebugInfoSource)
   public
     function InitializeSource: Boolean; override;
-    function GetLocationInfo(const aAddr: Pointer; var Info: TJclLocationInfo): Boolean; override;
+    function GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean; override;
   end;
 
 function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): string;
@@ -67,7 +67,7 @@ begin
       Result := Format('Exception in module %s: ', [CallerModule]);
       b := False;
       for I := 0 to List.Count - 1 do
-        if GetLocationInfo(List.Items[I].CallerAdr, {var}Info) then
+        if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
           with Info do
            if CallerModule = Info.SourceName then
            begin
@@ -82,7 +82,7 @@ begin
     begin
       Result := 'Exception ';
       for I := 0 to List.Count - 1 do
-        if GetLocationInfo(List.Items[I].CallerAdr, {var}Info) then
+        if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
           with Info do
             Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
             
@@ -94,7 +94,7 @@ end;
 
 { TDxbxAPIDebugInfoSource }
 
-function TDxbxAPIDebugInfoSource.GetLocationInfo(const aAddr: Pointer; var Info: TJclLocationInfo): Boolean;
+function TDxbxAPIDebugInfoSource.GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean;
 var
   DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
 begin
@@ -102,7 +102,7 @@ begin
   if not Result then
     Exit;
 
-  DetectedSymbol := DetectedSymbols.FindByAddress(TCodePointer(aAddr));
+  DetectedSymbol := DetectedSymbols.FindByAddress(TCodePointer(Addr));
   Result := Assigned(DetectedSymbol);
   if not Result then
     Exit;
@@ -112,7 +112,7 @@ begin
     Address := Pointer(DetectedSymbol.Locations[0].SymbolLocation); // Error address
 //    UnitName: string;               // Name of Delphi unit
     ProcedureName := DetectedSymbol.SymbolName;
-    OffsetFromProcName := Integer(IntPtr(aAddr) - IntPtr(Address)); // Offset from Address to ProcedureName symbol location
+    OffsetFromProcName := Integer(IntPtr(Addr) - IntPtr(Address)); // Offset from Address to ProcedureName symbol location
 //    LineNumber: Integer;
 //    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
 //    SourceName: string;             // Module file name

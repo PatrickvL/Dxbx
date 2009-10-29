@@ -343,9 +343,9 @@ begin
   // Write JMP rel16 opcode (Jump near, displacement relative to next instruction) :
   FunctionAddr^ := $E9;
   // Calculate relative address :
-  RelativeJMPAddress := (IntPtr(WrapperAddr) - IntPtr(FunctionAddr) - 5);
+  RelativeJMPAddress := (UIntPtr(WrapperAddr) - UIntPtr(FunctionAddr) - 5);
   // Write that after the JMP :
-  PCardinal(IntPtr(FunctionAddr) + 1)^ := RelativeJMPAddress;
+  PCardinal(UIntPtr(FunctionAddr) + 1)^ := RelativeJMPAddress;
 //  CopyMemory(Pointer(IntPtr(FunctionAddr) + 1), @RelativeJMPAddress, 4);
 end;
 

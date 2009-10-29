@@ -26,6 +26,10 @@ uses
   Windows,
   SysUtils,
   Variants,
+{$IFDEF DXBX_DLL}
+  // Jedi
+  JclDebug,
+{$ENDIF}
   // Dxbx
   uTypes, // IntPtr
   uDxbxUtils,
@@ -125,7 +129,8 @@ function IsValidAddress(const aPtr: Pointer): Boolean;
 var
   LMemInfo: TMemoryBasicInformation;
 begin
-  Result := IntPtr(aPtr) > (64*1024);
+  // Address should be outside first (invalid) page :
+  Result := UIntPtr(aPtr) > (64*1024);
   if not Result then
     Exit;
 
@@ -209,7 +214,67 @@ const
 var
   IndirectionLevel: Integer;
 {$IFDEF DXBX_DLL}
-  Symbol: TDetectedVersionedXboxLibrarySymbol;
+  LocationInfo: TJclLocationInfo;
+
+  function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
+  var
+    AddStr: string;
+  begin
+(*
+    Address: Pointer;               // Error address
+    UnitName: string;               // Name of Delphi unit
+    ProcedureName: string;          // Procedure name
+    OffsetFromProcName: Integer;    // Offset from Address to ProcedureName symbol location
+    LineNumber: Integer;            // Line number
+    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
+    SourceName: string;             // Module file name
+    DebugInfo: TJclDebugInfoSource; // Location object
+    BinaryFileName: string;         // Name of the binary file containing the symbol
+*)
+    Result := Format('[%p] ', [aLocationInfo.Address]);
+
+    AddStr := aLocationInfo.UnitName + '.';
+    if (Length(AddStr) > 1)
+    and (AddStr <> Copy(aLocationInfo.ProcedureName, 1, Length(AddStr))) then
+      Result := Result + AddStr;
+
+    if aLocationInfo.ProcedureName <> '' then
+      Result := Result + aLocationInfo.ProcedureName
+    else
+      Result := Result + '?proc?';
+
+    if aLocationInfo.OffsetFromProcName > 0 then
+      Result := Result + Format(' + $%x', [aLocationInfo.OffsetFromProcName]);
+
+    if aLocationInfo.LineNumber > 0 then
+    begin
+      if aLocationInfo.OffsetFromLineNumber = 0 then
+        AddStr := ''
+      else
+        if aLocationInfo.OffsetFromLineNumber >= 0 then
+          AddStr := Format(' + $%x', [aLocationInfo.OffsetFromLineNumber])
+        else
+          AddStr := Format(' - $%x', [-aLocationInfo.OffsetFromLineNumber]);
+
+      Result := Result + Format(' (Line %u, "%s")%s', [
+          aLocationInfo.LineNumber,
+          aLocationInfo.SourceName,
+          AddStr]);
+    end;
+  end;
+
+(*
+  if IncludeVAddress or IncludeModuleName then
+  begin
+    if IncludeVAddress then
+    begin
+      OffsetStr :=  Format('(%p) ', [VAddress]);
+      Result := OffsetStr + Result;
+    end;
+    if IncludeModuleName then
+      Insert(Format('{%-12s}', [ModuleName]), Result, 11);
+  end;
+*)
 {$ENDIF}
 begin
   Result := True;
@@ -222,18 +287,13 @@ begin
       Result := False;
       Exit;
     end;
-    
-{$IFDEF DXBX_DLL}
-    // See if it's a symbol :
-    Symbol := DetectedSymbols.FindByAddress(Ptr);
-    if Assigned(Symbol) then
-    begin
-      {var}aOutputStr := Symbol.SymbolName;
-      // TODO : Also mark if this symbol is patched
-      Break;
-    end;
 
-    // TODO : See if it's an element from AvailablePatches
+{$IFDEF DXBX_DLL}
+    if GetLocationInfo(Ptr, {var}LocationInfo) then
+    begin
+      {var}aOutputStr := LocationInfoToString(LocationInfo);
+      Exit;
+    end;
 {$ENDIF}
 
     // See if it's a literal string :

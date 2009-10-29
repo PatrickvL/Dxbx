@@ -1022,8 +1022,6 @@ function XTL_EmuCreateMutex(
   lpName: LPCSTR
   ): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  hRet: Handle;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1035,11 +1033,9 @@ begin
       #13#10');',
       [lpMutexAttributes, bInitialOwner, lpName]);
 
-  hRet := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
+  Result := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
 
   EmuSwapFS(fsXbox);
-
-  Result := hRet;
 end;
 
 function XTL_EmuCloseHandle(hObject: Handle): BOOL; stdcall;
