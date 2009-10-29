@@ -373,9 +373,9 @@ var
   hRet: HRESULT;
   v: XBCtrlObject;
 
-  dwDevice: Integer;
-  dwFlags: Integer;
-  dwInfo: Integer;
+  dwDevice: DWORD;
+  dwFlags: DWORD;
+  dwInfo: DWORD;
 
   wValue: SmallInt;
   pDevice: XTL_LPDIRECTINPUTDEVICE8;
@@ -410,7 +410,7 @@ begin
     dwFlags := m_ObjectConfig[v].dwFlags;
     dwInfo := m_ObjectConfig[v].dwInfo;
 
-    if (dwDevice = -1) then
+    if (Integer(dwDevice) = -1) then
       Continue;
 
     pDevice := m_InputDevice[dwDevice].m_Device;
@@ -435,7 +435,7 @@ begin
 
       if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
       begin
-        pdwAxis := PLongInt(IntPtr(@JoyState) + dwInfo);
+        pdwAxis := PLongInt(UIntPtr(@JoyState) + dwInfo);
         wValue := SmallInt(pdwAxis^);
 
         if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
@@ -453,7 +453,7 @@ begin
       end
       else if (dwFlags and DEVICE_FLAG_BUTTON) > 0 then
       begin
-        pbButton := PByte(IntPtr(@JoyState) + dwInfo);
+        pbButton := PByte(UIntPtr(@JoyState) + dwInfo);
 
         if (pbButton^ and $80) > 0 then
           wValue := 32767
@@ -512,11 +512,11 @@ begin
         else if (lAccumZ < -32768) then
           lAccumZ := -32768;
 
-        if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lX)) then
+        if (Integer(dwInfo) = FIELD_OFFSET(PDIMOUSESTATE(nil).lX)) then
           wValue := WORD(lAccumX)
-        else if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lY)) then
+        else if (Integer(dwInfo) = FIELD_OFFSET(PDIMOUSESTATE(nil).lY)) then
           wValue := WORD(lAccumY)
-        else if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lZ)) then
+        else if (Integer(dwInfo) = FIELD_OFFSET(PDIMOUSESTATE(nil).lZ)) then
           wValue := WORD(lAccumZ);
 
         if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then

@@ -331,7 +331,7 @@ begin
     Exit;
   end;
 
-  Result := MemoryBasicInfo.RegionSize - (IntPtr(pBase) - IntPtr(MemoryBasicInfo.BaseAddress));
+  Result := Integer(MemoryBasicInfo.RegionSize) - (IntPtr(pBase) - IntPtr(MemoryBasicInfo.BaseAddress));
 end;
 
 

@@ -225,7 +225,6 @@ const
   Initialized: Bool = False;
 {$J-}
 var
-  hRet: HRESULT;
   v: Integer;
 begin
   EmuSwapFS(fsWindows);
@@ -239,20 +238,20 @@ begin
             [pguidDeviceId, ppDirectSound, pUnknown]);
 
 
-  hRet := DS_OK;
+  if Initialized then
+    Result := DS_OK
+  else
+  begin
+    Result := DirectSoundCreate8(nil, ppDirectSound^, nil);
 
-  if not Initialized then
-  begin 
-    hRet := DirectSoundCreate8(nil, ppDirectSound^, nil);
-
-    if FAILED(hRet) then
+    if FAILED(Result) then
       CxbxKrnlCleanup('DirectSoundCreate8 Failed!');
 
     g_pDSound8 := ppDirectSound^;
 
-    hRet := g_pDSound8.SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+    Result := g_pDSound8.SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
-    if FAILED(hRet) then
+    if FAILED(Result) then
       CxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed!');
 
 
@@ -274,8 +273,6 @@ begin
   g_pDSound8RefCount := 1;
 
   EmuSwapFS(fsXbox);
-
-  Result := hRet;
 end;
 
 function XTL_EmuIDirectSound8_AddRef(pThis: LPDIRECTSOUND8): ULONG; stdcall;
