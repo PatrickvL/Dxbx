@@ -157,9 +157,17 @@ var
 
   pEmuInit: Pointer;
   NoFuncImport: AnsiString;
+  TmpStr: string;
+
 begin
-  KrnlHandle := SafeLoadLibrary(GetDllName(DllToUse));
-  Assert(KrnlHandle >= 32);
+  TmpStr := GetDllName(DllToUse);
+  KrnlHandle := SafeLoadLibrary(TmpStr);
+  if not IsValidLibraryHandle(KrnlHandle) then
+  begin
+    TmpStr := 'EmuExe: Cannot open DLL ' + TmpStr + '. Reason :'#13#10 + GetLastErrorString();
+    WriteLog(TmpStr);
+    RaiseLastOSError;
+  end;
 
   ConstructorInit();
 
@@ -292,7 +300,7 @@ begin
 
   // generate .cxbximp section header
   i := m_Header.m_sections - 2;
-  Move('.cxbximp', m_SectionHeader[i].m_name, 8);
+  Move(AnsiString('.cxbximp'), m_SectionHeader[i].m_name, 8);
 
   // generate .cxbximp section virtual size / addr
   virt_size := RoundUp($6E, PE_SEGM_ALIGN);
@@ -465,7 +473,7 @@ begin
 
     // Append x_debug_FileName
     ZeroMemory(pWriteCursor, 260);
-    if Length(m_KrnlDebugFileName) > 0 then
+    if m_KrnlDebugFileName <> '' then
       CopyMemory(pWriteCursor, @(AnsiString(m_KrnlDebugFileName)[1]), Length(AnsiString(m_KrnlDebugFileName)));
     Inc(pWriteCursor, 260);
 

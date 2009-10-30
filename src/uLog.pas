@@ -38,7 +38,7 @@ uses
 var
   m_DxbxDebug: DebugMode = DM_NONE;
   m_DxbxDebugFileName: string = '';
-  m_KrnlDebug: DebugMode = DM_CONSOLE;
+  m_KrnlDebug: DebugMode = DM_FILE;
   m_KrnlDebugFileName: string = '';
 
 procedure CreateLogs(aLogType: TLogType = ltKernel);
@@ -457,12 +457,20 @@ begin
 end;
 
 procedure CreateLogs(aLogType: TLogType);
+type
+  PDebugMode = ^DebugMode;
 var
   OutputFileName: string;
+  DM: PDebugMode;
 begin
   WriteLog('CreateLogs(' + LogTypeToString(aLogType) + ')');
 
-  case m_DxbxDebug of
+  if aLogType = ltGui then
+    DM := @m_DxbxDebug
+  else
+    DM := @m_KrnlDebug;
+
+  case DM^ of
     DM_NONE:
       CloseLogs;
 
@@ -479,7 +487,7 @@ begin
         ConsoleControl.SetForegroundColor(False, True, False, False); // = lime
         ConsoleControl.HideCursor;
       except
-        m_DxbxDebug := DM_NONE;
+        DM^ := DM_NONE;
         FreeAndNil({var}ConsoleControl);
         raise Exception.Create('Could not create log console');
       end;
@@ -488,19 +496,24 @@ begin
       if not LogFileOpen then
       try
         if aLogType = ltGui then
-          OutputFileName := m_DxbxDebugFileName
+        begin
+          OutputFileName := m_DxbxDebugFileName;
+          if OutputFileName = '' then
+            OutputFileName := DXBX_CONSOLE_DEBUG_FILENAME;
+        end
         else
+        begin
           OutputFileName := m_KrnlDebugFileName;
-
-        if OutputFileName = '' then
-          OutputFileName := 'DxbxKrnlDebug.txt';
+          if OutputFileName = '' then
+            OutputFileName := DXBX_KERNEL_DEBUG_FILENAME;
+        end;
 
         AssignFile({var}LogFile, OutputFileName);
 
         Rewrite({var}LogFile);
         LogFileOpen := True;
       except
-        m_DxbxDebug := DM_NONE;
+        DM^ := DM_NONE;
         raise Exception.Create('Could not create log file');
       end;
   end; // case m_DxbxDebug
@@ -535,6 +548,8 @@ procedure WriteLog(const aText: string);
 var
   CurrentFS: Word;
 begin
+  OutputDebugString(PChar(aText));
+  
   case m_DxbxDebug of
     DM_CONSOLE:
       if Assigned(ConsoleControl) then

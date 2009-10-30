@@ -539,8 +539,8 @@ begin
   if not FileExists(DxbxIniFilePath) then
   begin
     // Setting defaults
-    m_DxbxDebug := DM_CONSOLE;
-    m_KrnlDebug := DM_CONSOLE;
+    m_DxbxDebug := DM_NONE;
+    m_KrnlDebug := DM_FILE;
 
     m_AutoConvertToExe := CONVERT_TO_MANUAL;
     Exit;
@@ -739,20 +739,23 @@ begin
   if m_DxbxDebug = DM_FILE then
   begin
     actFileDebugGui.Checked := False;
-    m_DxbxDebug := DM_NONE;
     CloseLogs;
     AddjustMenu;
   end
   else
   begin
-    SaveDialog.FileName := 'DxbxDebug.txt';
+    if m_DxbxDebugFileName <> '' then
+      SaveDialog.FileName := m_DxbxDebugFileName
+    else
+      SaveDialog.FileName := DXBX_CONSOLE_DEBUG_FILENAME;
+
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
       CloseLogs;
       m_DxbxDebug := DM_FILE;
-      CreateLogs(ltGui);
       m_DxbxDebugFileName := SaveDialog.FileName;
+      CreateLogs(ltGui);
       AddjustMenu;
     end;
   end;
@@ -765,10 +768,11 @@ begin
   if m_KrnlDebug = DM_CONSOLE then
   begin
     actConsoleDebugKernel.Checked := False;
-    m_KrnlDebug := DM_NONE;
+    CloseLogs;
   end
   else
   begin
+    CloseLogs;
     actFileDebugKernel.Checked := False;
     actConsoleDebugKernel.Checked := True;
     m_KrnlDebug := DM_CONSOLE;
@@ -782,15 +786,20 @@ begin
   if m_KrnlDebug = DM_FILE then
   begin
     actFileDebugKernel.Checked := False;
-    m_KrnlDebug := DM_NONE;
+    CloseLogs;
     AddjustMenu;
   end
   else
   begin
-    SaveDialog.FileName := 'KernelDebug.txt';
+    if m_KrnlDebugFileName <> '' then
+      SaveDialog.FileName := m_KrnlDebugFileName
+    else
+      SaveDialog.FileName := DXBX_KERNEL_DEBUG_FILENAME;
+
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
+      CloseLogs;
       m_KrnlDebug := DM_FILE;
       m_KrnlDebugFileName := SaveDialog.FileName;
       AddjustMenu;
@@ -844,8 +853,8 @@ begin
   actSaveXbe.Enabled := False;
   actSaveXbeAs.Enabled := False;
 
-  mnu_RecentXbefiles.Enabled := mnu_RecentXbefiles.Count > 0;
-  mnu_RecentExefiles.Enabled := mnu_RecentExefiles.Count > 0;
+  mnu_RecentXbefiles.Enabled := (mnu_RecentXbefiles.Count > 0);
+  mnu_RecentExefiles.Enabled := (mnu_RecentExefiles.Count > 0);
 
   actClose.Enabled := True;
 
@@ -855,16 +864,16 @@ begin
   mnu_DumpxbeinfoTo.Enabled := False;
 
   // Init View
-  actConsoleDebugGui.Checked := m_DxbxDebug = DM_CONSOLE;
-  actFileDebugGui.Checked := m_DxbxDebug = DM_FILE;
+  actConsoleDebugGui.Checked := (m_DxbxDebug = DM_CONSOLE);
+  actFileDebugGui.Checked := (m_DxbxDebug = DM_FILE);
 
-  actConsoleDebugKernel.Checked := m_KrnlDebug = DM_CONSOLE;
-  actFileDebugKernel.Checked := m_KrnlDebug = DM_FILE;
+  actConsoleDebugKernel.Checked := (m_KrnlDebug = DM_CONSOLE);
+  actFileDebugKernel.Checked := (m_KrnlDebug = DM_FILE);
 
   // Init Settings
-  actExeGenWindowsTemp.Checked := m_AutoConvertToExe = CONVERT_TO_WINDOWSTEMP;
-  actExeGenDxbxPath.Checked := m_AutoConvertToExe = CONVERT_TO_XBEPATH;
-  actExeGenManual.Checked := m_AutoConvertToExe = CONVERT_TO_MANUAL;
+  actExeGenWindowsTemp.Checked := (m_AutoConvertToExe = CONVERT_TO_WINDOWSTEMP);
+  actExeGenDxbxPath.Checked := (m_AutoConvertToExe = CONVERT_TO_XBEPATH);
+  actExeGenManual.Checked := (m_AutoConvertToExe = CONVERT_TO_MANUAL);
 
   ActStartEmulation.Enabled := False;
 

@@ -29,7 +29,10 @@ uses
 
 const
   NUMBER_OF_THUNKS = 379;
-
+  
+  DXBX_CONSOLE_DEBUG_FILENAME = 'DxbxDebug.txt';
+  DXBX_KERNEL_DEBUG_FILENAME = 'KrnlDebug.txt';
+  
 type
   EMU_STATE = (esNone, esFileOpen, esRunning);
 
@@ -79,6 +82,12 @@ function FixInvalidFilePath(const aFilePath: string; const aReplacement: string 
 function DebugModeToString(const aDebugMode: DebugMode): string;
 
 function LogTypeToString(const aLogType: TLogType): string;
+
+function IsValidHandle(const aHandle: LongWord): Boolean;
+function IsValidLibraryHandle(const aHandle: LongWord): Boolean;
+
+function GetLastErrorString: string;
+function GetErrorString(const aError: DWord): string;
 
 function PointerToString(const aPointer: Pointer): string;
 
@@ -439,6 +448,32 @@ begin
   else
     Result := '?Unknown?';
   end;
+end;
+
+function IsValidHandle(const aHandle: LongWord): Boolean;
+begin
+  Result := (aHandle <> INVALID_HANDLE_VALUE);
+end;
+
+// (Safe)LoadLibrary returns 32 or greater on a succesfull call.
+// See http://support.microsoft.com/kb/142814 for details.
+function IsValidLibraryHandle(const aHandle: LongWord): Boolean;
+begin
+  Result := IsValidHandle(aHandle) and (aHandle >= 32);
+end;
+
+function GetLastErrorString: string;
+begin
+  Result := GetErrorString(GetLastError);
+end;
+
+function GetErrorString(const aError: DWord): string;
+begin
+  Result := SysErrorMessage(aError);
+  if Result = '' then
+    Result := 'No description for error #' + IntToStr(aError)
+  else
+    Result := Result + ' (#' + IntToStr(aError) + ')';
 end;
 
 end.
