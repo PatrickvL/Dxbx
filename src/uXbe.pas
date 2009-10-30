@@ -778,7 +778,7 @@ begin
     for lIndex2 := 0 to 8 do
     begin
       if m_szSectionName[lIndex][lIndex2] <> #0 then
-        TmpStr := TmpStr + m_szSectionName[lIndex][lIndex2]
+        TmpStr := TmpStr + Char(m_szSectionName[lIndex][lIndex2])
       else
         Break;
     end;
@@ -844,7 +844,7 @@ begin
       for lIndex2 := 0 to 7 do
       begin
         if m_LibraryVersion[lIndex].szName[lIndex2] <> #0 then
-          TmpStr := TmpStr + m_LibraryVersion[lIndex].szName[lIndex2];
+          TmpStr := TmpStr + Char(m_LibraryVersion[lIndex].szName[lIndex2]);
       end;
 
       _LogEx('Library Name                     : ' + TmpStr);
