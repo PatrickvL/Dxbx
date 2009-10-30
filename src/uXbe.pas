@@ -204,7 +204,7 @@ type
   TXbe = class(TObject)
   private
     MyFile: TMemoryStream;
-    Buffer: PAnsiChar;
+    Buffer: MathPtr;
     m_KernelLibraryVersion: array of AnsiChar;
     m_XAPILibraryVersion: array of AnsiChar;
     m_Certificate: XBE_CERTIFICATE;
@@ -234,8 +234,8 @@ type
     function GetTLSData: DWord;
   end;
 
-function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
-function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
+function GetDWordVal(aBuffer: MathPtr; i: Integer): DWord;
+function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
 
@@ -307,20 +307,20 @@ end;
 
 //------------------------------------------------------------------------------
 
-function GetDWordVal(aBuffer: PAnsiChar; i: Integer): DWord;
+function GetDWordVal(aBuffer: MathPtr; i: Integer): DWord;
 begin
   Result := (Ord(aBuffer[i + 0]) shl 0)
-    + (Ord(aBuffer[i + 1]) shl 8)
-    + (Ord(aBuffer[i + 2]) shl 16)
-    + (Ord(aBuffer[i + 3]) shl 24);
+          + (Ord(aBuffer[i + 1]) shl 8)
+          + (Ord(aBuffer[i + 2]) shl 16)
+          + (Ord(aBuffer[i + 3]) shl 24);
 end; // GetDwordVal
 
 //------------------------------------------------------------------------------
 
-function GetWordVal(aBuffer: PAnsiChar; i: Integer): Word;
+function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 begin
   Result := (Ord(aBuffer[i + 0]) shl 0)
-    + (Ord(aBuffer[i + 1]) shl 8);
+          + (Ord(aBuffer[i + 1]) shl 8);
 end; // GetWordVal
 
 
@@ -438,8 +438,8 @@ begin
       begin
         for lIndex2 := 0 to 8 do
         begin
-          m_szSectionName[lIndex][lIndex2] := Buffer[RawAddr + lIndex2];
-          if Ord(m_szSectionName[lIndex][lIndex2]) = 0 then
+          m_szSectionName[lIndex][lIndex2] := AnsiChar(Buffer[RawAddr + lIndex2]);
+          if m_szSectionName[lIndex][lIndex2] = #0 then
             Break;
         end; // for lIndex2
       end; // if
@@ -611,7 +611,7 @@ begin
   lIndex2 := 0;
   for lIndex := 0 to 255 do
   begin
-    TmpStr := TmpStr + IntToHex(Ord(m_Header.pbDigitalSignature[lIndex]), 2);
+    TmpStr := TmpStr + IntToHex(m_Header.pbDigitalSignature[lIndex], 2);
 
     if lIndex2 = 15 then
     begin
@@ -637,7 +637,7 @@ begin
 
   // Print init flags
   TmpStr := DxbxFormat('Init Flags                       : 0x%.2x%.2x%.2x%.2x ', [m_Header.dwInitFlags[3], m_Header.dwInitFlags[2], m_Header.dwInitFlags[1], m_Header.dwInitFlags[0]]);
-  Flag := Ord(m_Header.dwInitFlags[0]);
+  Flag := m_Header.dwInitFlags[0];
 
   if (Flag and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
     TmpStr := TmpStr + '[Mount Utility Drive] ';
@@ -658,10 +658,10 @@ begin
   TmpStr := '';
   while lIndex2 < 40 do
   begin
-    TmpStr := TmpStr + WideChar(Ord(Buffer[lIndex]));
+    TmpStr := TmpStr + Char(Buffer[lIndex]);
     Inc(lIndex2);
     lIndex := lIndex + 2;
-    if Ord(Buffer[lIndex]) = 0 then
+    if Char(Buffer[lIndex]) = #0 then
       Break;
   end;
 
@@ -686,7 +686,7 @@ begin
   TmpStr := '';
   TmpChr := Char(Buffer[lIndex]);
   Inc(lIndex);
-  while Ord(TmpChr) <> 0 do
+  while TmpChr <> #0 do
   begin
     TmpStr := TmpStr + TmpChr;
     TmpChr := Char(Buffer[lIndex]);
@@ -699,7 +699,7 @@ begin
   TmpStr := '';
   TmpChr := Char(Buffer[lIndex]);
   Inc(lIndex);
-  while Ord(TmpChr) <> 0 do
+  while TmpChr <> #0 do
   begin
     TmpStr := TmpStr + TmpChr;
     TmpChr := Char(Buffer[lIndex]);
@@ -777,8 +777,8 @@ begin
     TmpStr := '';
     for lIndex2 := 0 to 8 do
     begin
-      if Ord(m_szSectionName[lIndex][lIndex2]) <> 0 then
-        TmpStr := TmpStr + Char(m_szSectionName[lIndex][lIndex2])
+      if m_szSectionName[lIndex][lIndex2] <> #0 then
+        TmpStr := TmpStr + m_szSectionName[lIndex][lIndex2]
       else
         Break;
     end;
@@ -788,7 +788,7 @@ begin
     TmpStr := '';
     TmpStr := DxbxFormat('Flags                            : 0x%.2x%.2x%.2x%.2x', [m_SectionHeader[lIndex].dwFlags[3], m_SectionHeader[lIndex].dwFlags[2], m_SectionHeader[lIndex].dwFlags[1], m_SectionHeader[lIndex].dwFlags[0]]);
 
-    Flag := Ord(m_SectionHeader[lIndex].dwFlags[0]);
+    Flag := m_SectionHeader[lIndex].dwFlags[0];
 
     TmpStr := TmpStr + ' '; // Insert open space
     if (Flag and XBE_SECTIONHEADER_FLAG_Writable) > 0 then
@@ -844,7 +844,7 @@ begin
       for lIndex2 := 0 to 7 do
       begin
         if m_LibraryVersion[lIndex].szName[lIndex2] <> #0 then
-          TmpStr := TmpStr + Char(m_LibraryVersion[lIndex].szName[lIndex2]);
+          TmpStr := TmpStr + m_LibraryVersion[lIndex].szName[lIndex2];
       end;
 
       _LogEx('Library Name                     : ' + TmpStr);
@@ -852,8 +852,8 @@ begin
 
       //Some bit maths the QVersion Flag is only 13 bits long so i convert the 13 bits to a number
 
-      QVersion := Ord(m_LibraryVersion[lIndex].dwFlags[0])
-        + ((Ord(m_LibraryVersion[lIndex].dwFlags[1]) and 31) shl 8);
+      QVersion := m_LibraryVersion[lIndex].dwFlags[0]
+              + ((m_LibraryVersion[lIndex].dwFlags[1] and 31) shl 8);
 
       Flag := m_LibraryVersion[lIndex].dwFlags[1] and (not 31);
 

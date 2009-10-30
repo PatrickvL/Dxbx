@@ -169,7 +169,7 @@ begin
     MemXbeHeader.dwPeHeapCommit := pXbeHeader.dwPeHeapCommit;
 
     CopyMemory(@MemXbeHeader.dwInitFlags, @pXbeHeader.dwInitFlags, SizeOf(pXbeHeader.dwInitFlags));
-    CopyMemory(Pointer(pXbeHeader.dwCertificateAddr), PByte(pXbeHeader) + pXbeHeader.dwCertificateAddr - $00010000, SizeOf(XBE_CERTIFICATE));
+    CopyMemory(Pointer(pXbeHeader.dwCertificateAddr), MathPtr(pXbeHeader) + pXbeHeader.dwCertificateAddr - $00010000, SizeOf(XBE_CERTIFICATE));
   end;
 
   // Initialize current directory
