@@ -208,59 +208,51 @@ begin
   Result := True
 end;
 
-function TryPointerToString(Ptr: Pointer; var aOutputStr: UnicodeString): Boolean;
-const
-  MaxIndirection = 2;
-var
-  IndirectionLevel: Integer;
 {$IFDEF DXBX_DLL}
-  LocationInfo: TJclLocationInfo;
-
-  function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
-  var
-    AddStr: string;
-  begin
+function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
+var
+  AddStr: string;
+begin
 (*
-    Address: Pointer;               // Error address
-    UnitName: string;               // Name of Delphi unit
-    ProcedureName: string;          // Procedure name
-    OffsetFromProcName: Integer;    // Offset from Address to ProcedureName symbol location
-    LineNumber: Integer;            // Line number
-    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
-    SourceName: string;             // Module file name
-    DebugInfo: TJclDebugInfoSource; // Location object
-    BinaryFileName: string;         // Name of the binary file containing the symbol
+  Address: Pointer;               // Error address
+  UnitName: string;               // Name of Delphi unit
+  ProcedureName: string;          // Procedure name
+  OffsetFromProcName: Integer;    // Offset from Address to ProcedureName symbol location
+  LineNumber: Integer;            // Line number
+  OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
+  SourceName: string;             // Module file name
+  DebugInfo: TJclDebugInfoSource; // Location object
+  BinaryFileName: string;         // Name of the binary file containing the symbol
 *)
-    Result := Format('[%p] ', [aLocationInfo.Address]);
+  Result := Format('[%p] ', [aLocationInfo.Address]);
 
-    AddStr := aLocationInfo.UnitName + '.';
-    if (Length(AddStr) > 1)
-    and (AddStr <> Copy(aLocationInfo.ProcedureName, 1, Length(AddStr))) then
-      Result := Result + AddStr;
+  AddStr := aLocationInfo.UnitName + '.';
+  if (Length(AddStr) > 1)
+  and (AddStr <> Copy(aLocationInfo.ProcedureName, 1, Length(AddStr))) then
+    Result := Result + AddStr;
 
-    if aLocationInfo.ProcedureName <> '' then
-      Result := Result + aLocationInfo.ProcedureName
+  if aLocationInfo.ProcedureName <> '' then
+    Result := Result + aLocationInfo.ProcedureName
+  else
+    Result := Result + '?proc?';
+
+  if aLocationInfo.OffsetFromProcName > 0 then
+    Result := Result + Format(' + $%x', [aLocationInfo.OffsetFromProcName]);
+
+  if aLocationInfo.LineNumber > 0 then
+  begin
+    if aLocationInfo.OffsetFromLineNumber = 0 then
+      AddStr := ''
     else
-      Result := Result + '?proc?';
-
-    if aLocationInfo.OffsetFromProcName > 0 then
-      Result := Result + Format(' + $%x', [aLocationInfo.OffsetFromProcName]);
-
-    if aLocationInfo.LineNumber > 0 then
-    begin
-      if aLocationInfo.OffsetFromLineNumber = 0 then
-        AddStr := ''
+      if aLocationInfo.OffsetFromLineNumber >= 0 then
+        AddStr := Format(' + $%x', [aLocationInfo.OffsetFromLineNumber])
       else
-        if aLocationInfo.OffsetFromLineNumber >= 0 then
-          AddStr := Format(' + $%x', [aLocationInfo.OffsetFromLineNumber])
-        else
-          AddStr := Format(' - $%x', [-aLocationInfo.OffsetFromLineNumber]);
+        AddStr := Format(' - $%x', [-aLocationInfo.OffsetFromLineNumber]);
 
-      Result := Result + Format(' (Line %u, "%s")%s', [
-          aLocationInfo.LineNumber,
-          aLocationInfo.SourceName,
-          AddStr]);
-    end;
+    Result := Result + Format(' (Line %u, "%s")%s', [
+        aLocationInfo.LineNumber,
+        aLocationInfo.SourceName,
+        AddStr]);
   end;
 
 (*
@@ -275,6 +267,16 @@ var
       Insert(Format('{%-12s}', [ModuleName]), Result, 11);
   end;
 *)
+end; // LocationInfoToString
+{$ENDIF DXBX_DLL}
+
+function TryPointerToString(Ptr: Pointer; var aOutputStr: UnicodeString): Boolean;
+const
+  MaxIndirection = 2;
+var
+  IndirectionLevel: Integer;
+{$IFDEF DXBX_DLL}
+  LocationInfo: TJclLocationInfo;
 {$ENDIF}
 begin
   Result := True;
@@ -320,7 +322,7 @@ begin
     {var}aOutputStr := '^' + aOutputStr;
     Dec(IndirectionLevel);
   end;
-end;
+end; // TryPointerToString
 
 function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Boolean = True): string; // array of TVarRec actually
 
@@ -431,7 +433,7 @@ begin
         Result := Result + #13#10 + TVarRecToString(Args[i]);
     end;
   end;
-end;
+end; // DxbxFormat
 
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True);
 begin
@@ -504,7 +506,7 @@ begin
   end; // case m_DxbxDebug
 
   WriteLog('Started logging at ' + DateTimeToStr(Now));
-end;
+end; // CreateLogs
 
 procedure CloseLogs;
 begin
@@ -562,7 +564,7 @@ begin
         end;
       end;
   end;
-end;
+end; // WriteLog
 
 initialization
 

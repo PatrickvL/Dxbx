@@ -115,6 +115,10 @@
   {$DEFINE SUPPORTS_METHODINFO}  // Compiler supports the METHODINFO directives (D10+)
 {$ENDIF}
 
+{$IFDEF COMPILER12_UP}
+  {$DEFINE SUPPORTS_POINTERMATH}  // Compiler supports pointer-math (D12+)
+{$ENDIF}
+
 {$UNDEF SUPPORTS_INLINE_ASM} // Alas, as-of-yet Delphi can't do asm inlining...
 
 // Enable and disable a few compiler warnings :

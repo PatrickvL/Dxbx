@@ -68,6 +68,13 @@ type
   IntPtr = Int32;
 {$IFEND}
 
+{$IFDEF SUPPORTS_POINTERMATH}
+  MathPtr = PByte;
+{$ELSE}
+  // For compatibility with older Delphi versions :
+  MathPtr = PAnsiChar;
+{$ENDIF}
+
   PPByte = ^PByte;
   INT = Integer;
 
