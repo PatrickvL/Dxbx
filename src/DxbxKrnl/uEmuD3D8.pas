@@ -2456,7 +2456,7 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1(
   aRegister: INT;
-  const pConstantData: PVOID); register; stdcall;
+  const pConstantData: PVOID); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
     // debug trace
@@ -2478,7 +2478,7 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4(
   aRegister: INT;
-  const pConstantData: PVOID); register; stdcall;
+  const pConstantData: PVOID); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
     // debug trace
@@ -2501,7 +2501,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline(
   aRegister: INT;
   const pConstantData: PVOID;
-  ConstantCount: DWORD); register; stdcall;
+  ConstantCount: DWORD); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
     // debug trace
@@ -3206,12 +3206,11 @@ begin
   Result := hRet;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SwitchTexture
-  (
+procedure XTL_EmuIDirect3DDevice8_SwitchTexture(
   Method: DWORD;
   Data: DWORD;
   Format: DWORD
-  ); register; stdcall;
+  ); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39 Done:5 Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);
@@ -5756,11 +5755,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple
-  (
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
   Method: DWORD;
   Value: DWORD
-  ); register; stdcall;
+  ); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39 Done:80 Translator:Shadow_Tj
 var
   State: Integer;
