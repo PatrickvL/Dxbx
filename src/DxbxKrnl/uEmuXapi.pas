@@ -598,8 +598,6 @@ end;
 
 function XTL_EmuXGetDevices(DeviceType: PXPP_DEVICE_TYPE): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  ret: DWord;
 begin
   EmuSwapFS(fsWindows);
 
@@ -609,16 +607,14 @@ begin
     #13#10');',
     [DeviceType]);
 
-  ret := 0;
+  Result := 0;
 
   if (DeviceType.Reserved[0] = 0) and (DeviceType.Reserved[1] = 0) and (DeviceType.Reserved[2] = 0) and (DeviceType.Reserved[3] = 0) then
-    ret := (1 shl 0) // Return 1 Controller
+    Result := (1 shl 0) // Return 1 Controller
   else
     EmuWarning('Unknown DeviceType ($%.08X, 0x%.08X, 0x%.08X, 0x%.08X)', [DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]]);
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 function XTL_EmuXGetDeviceChanges(
@@ -1040,8 +1036,6 @@ end;
 
 function XTL_EmuCloseHandle(hObject: Handle): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1051,17 +1045,13 @@ begin
     #13#10');',
     [hObject]);
 
-  bRet := CloseHandle(hObject);
+  Result := CloseHandle(hObject);
 
   EmuSwapFS(fsXbox);
-
-  Result := bRet;
 end;
 
 function XTL_EmuSetThreadPriorityBoost(hThread: Handle; DisablePriorityBoost: BOOL): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1072,14 +1062,12 @@ begin
     #13#10');',
     [hThread, DisablePriorityBoost]);
 
-  bRet := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
+  Result := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
-  if not bRet then
+  if not Result then
     EmuWarning('SetThreadPriorityBoost Failed!');
 
   EmuSwapFS(fsXbox);
-
-  Result := bRet;
 end;
 
 function XTL_EmuSetThreadPriority(hThread: Handle; nPriority: Integer): BOOL; stdcall;
@@ -1112,8 +1100,6 @@ end;
 
 function XTL_EmuGetThreadPriority(hThread: Handle): Integer; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  iRet: Integer;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1123,20 +1109,16 @@ begin
     #13#10');',
     [hThread]);
 
-  iRet := GetThreadPriority(hThread);
+  Result := GetThreadPriority(hThread);
 
-  if iRet = THREAD_PRIORITY_ERROR_RETURN then
+  if Result = THREAD_PRIORITY_ERROR_RETURN then
     EmuWarning('GetThreadPriority Failed!');
 
   EmuSwapFS(fsXbox);
-
-  Result := iRet;
 end;
 
 function XTL_EmuGetExitCodeThread(hThread: Handle; lpExitCode: Cardinal): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1147,11 +1129,9 @@ begin
     #13#10');',
     [hThread, lpExitCode]);
 
-  bRet := GetExitCodeThread(hThread, lpExitCode);
+  Result := GetExitCodeThread(hThread, lpExitCode);
 
   EmuSwapFS(fsXbox);
-
-  Result := bRet;
 end;
 
 procedure XTL_EmuXapiInitProcess(); stdcall;

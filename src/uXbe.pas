@@ -911,7 +911,7 @@ begin
   begin
     // offset in image header extra bytes
     if dwoffs < m_Header.dwSizeofHeaders then
-      Result := dwOffs //- SizeOf(m_Header)
+      Result := dwOffs - SizeOf(m_Header)
     else
     begin
       for lIndex := 0 to m_Header.dwSections - 1 do
@@ -919,7 +919,7 @@ begin
         VirtAddr := m_SectionHeader[lIndex].dwVirtualAddr;
         VirtSize := m_SectionHeader[lIndex].dwVirtualSize;
         if (x_dwVirtualAddress >= VirtAddr) and (x_dwVirtualAddress < (VirtAddr + VirtSize)) then
-          Result := m_SectionHeader[lIndex].dwRawAddr + (x_dwVirtualAddress - VirtAddr);
+          Result := m_SectionHeader[lIndex].dwRawAddr + (x_dwVirtualAddress - VirtAddr)
       end;
     end;
   end;
