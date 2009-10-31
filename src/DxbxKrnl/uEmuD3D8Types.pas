@@ -202,6 +202,7 @@ type
     Flags: DWORD;
     Format: X_D3DFORMAT;
   end;
+  PX_D3DDISPLAYMODE = ^X_D3DDISPLAYMODE;
 
   X_D3DSURFACE_DESC = packed record
     Format: X_D3DFORMAT;
