@@ -25,6 +25,7 @@ uses
   // Delphi
   SysUtils
   , Dialogs
+  , Messages
   , Windows // THandle
   // Jedi WinAPI
   , JwaWinBase
@@ -268,7 +269,8 @@ begin
 
           g_bEmuException := False;
 
-          return EXCEPTION_CONTINUE_EXECUTION;
+          Result := EXCEPTION_CONTINUE_EXECUTION;
+          Exit;
         end;
     end
     else
@@ -409,8 +411,8 @@ begin
     Exit;
   end;
 
-  (*if (CxbxKrnl_hEmuParent <> 0) then
-    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0); *)
+  if (CxbxKrnl_hEmuParent <> 0) then
+    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
   ExitProcess(1);
 
