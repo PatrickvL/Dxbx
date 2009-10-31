@@ -77,6 +77,8 @@ var
   g_IVBTable: PD3DIVB = nil;
   g_IVBFVF: DWORD = 0;
 
+procedure XTL_EmuFlushIVB; stdcall;
+
 implementation
 
 var
