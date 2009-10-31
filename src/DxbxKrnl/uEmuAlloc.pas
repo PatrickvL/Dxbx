@@ -272,7 +272,7 @@ end;
 // ******************************************************************
 // * InsertMemoryBlock - Inserts a new memory block in the tracker
 // ******************************************************************
-function InsertMemoryBlock(pMem: PPointer; Size: Integer; pFile: pChar;
+function InsertMemoryBlock(pMem: PPointer; Size: Integer; pFile: PChar;
                            Line: Integer; cType: CXBX_ALLOC_TYPE): PCXBX_MEMORY_BLOCK;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:5
 var
