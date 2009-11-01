@@ -28,18 +28,23 @@ uses
   , SysUtils
   , Direct3D8
   // Dxbx
+  , uTypes
   , uEmuD3D8Types;
 
 var
-  g_dwPrimaryPBCount: LongInt = 0;
-  g_pPrimaryPB: LongInt = 0;
+  // primary push buffer
+  g_dwPrimaryPBCount: UInt32 = 0;
+  g_pPrimaryPB: PDWORD = nil;
+
+  // push buffer debugging
   XTL_g_bStepPush: Boolean = False;
   XTL_g_bSkipPush: Boolean = False;
   XTL_g_bBrkPush: Boolean = False;
+
   g_bPBSkipPusher: Boolean = False;
 
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall; // forward
 procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall; // forward
 
 implementation
 
@@ -60,8 +65,8 @@ procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3D
 begin
   if Assigned(pFixup) then
     CxbxKrnlCleanup('PushBuffer has fixups');
-    
-  XTL_EmuExecutePushBufferRaw(pPushBuffer.Data); 
+
+  XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
 
 procedure EmuUnswizzleActiveTexture();
@@ -148,7 +153,7 @@ begin
           *)
 end;
 
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: DWord); stdcall;
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 (*var
   pdwOrigPushData: DWord;

@@ -38,8 +38,9 @@ uses
 
 
 function CxbxMalloc(x: Integer): Pointer;
+function CxbxCalloc(x, y: Integer): Pointer;
 procedure CxbxFree(x: Pointer);
-function CxbxCallocDebug(NbrElements: Integer; ElementSize: Integer; pFile: PChar; Line: Integer): Pointer;
+//function CxbxCallocDebug(NbrElements: size_t; ElementSize: size_t; pFile: PChar; Line: Int): PVoid;
 function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
 function CxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
 function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
@@ -47,87 +48,37 @@ function CxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
 
 implementation
 
+{$IFDEF _DEBUG_ALLOC}
+
 (*
-#ifdef _DEBUG_ALLOC
-const CxbxMalloc(x) =                            CxbxMallocDebug(x, __FILE__, __LINE__);
-const CxbxCalloc(x, = y)                         CxbxCallocDebug(x, y, __FILE__, __LINE__);
-const CxbxFree(x) =                              CxbxFreeDebug(x, __FILE__, __LINE__);
-const CxbxRtlAlloc(Heap, = Flags, Bytes)         CxbxRtlAllocDebug(Heap, Flags, Bytes, __FILE__, __LINE__);
-const CxbxRtlFree(Heap, = Flags, pMem)           CxbxRtlFreeDebug(Heap, Flags, pMem, __FILE__, __LINE__);
-const CxbxRtlRealloc(Heap, = Flags, pMem, Bytes) CxbxRtlReallocDebug(Heap, Flags, pMem, Bytes, __FILE__, __LINE__);
-const CxbxRtlSizeHeap(Heap, = Flags, pMem)       CxbxRtlSizeHeapDebug(Heap, Flags, pMem, __FILE__, __LINE__);
-
-// ******************************************************************
-// * CxbxMallocDebug - Debug track malloc
-// ******************************************************************
-function CxbxMallocDebug(Size: Integer; pFile: PChar; Line: Integer): Pointer;
-
-// ******************************************************************
-// * CxbxCallocDebug - Debug track calloc
-// ******************************************************************
-function CxbxCallocDebug(NbrElements: Integer; ElementSize: Integer; pFile: PChar; Line: Integer): Pointer;
-
-// ******************************************************************
-// * CxbxFreeDebug - Debug track Free
-// ******************************************************************
-procedure  CxbxFreeDebug(pMem: Pointer;
-                    Char *pFile,
-                    Integer   Line);
-
-// ******************************************************************
-// * CxbxRtlAllocDebug - Debug track RTL alloc
-// ******************************************************************
-function CxbxRtlAllocDebug(Heap: Handle; Flags: DWORD; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
-
-// ******************************************************************
-// * CxbxRtlFreeDebug - Debug track RTL Free
-// ******************************************************************
-function  CxbxRtlFreeDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; pFile: PChar; Line: Integer): BOOL;
-
-// ******************************************************************
-// * CxbxRtlReallocDebug - Debug track RTL realloc
-// ******************************************************************
-function CxbxRtlReallocDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
-
-// ******************************************************************
-// * CxbxRtlHeapSizeDebug - Debug track RTL heap size
-// ******************************************************************
-SIZE_T CxbxRtlSizeHeapDebug(Handle Heap,
-                            DWORD  Flags,
-                            PVOID  pMem,
-                            Char  *pFile,
-                            Integer    Line);
-
-// ******************************************************************
-// * CxbxVirtualQueryDebug - Debug virtual query
-// ******************************************************************
-DWORD CxbxVirtualQueryDebug(LPCVOID                   lpAddress,
-                            PMEMORY_BASIC_INFORMATION lpBuffer,
-                            DWORD                     dwLength);
-
-// ******************************************************************
-// * CxbxAllocDump - Dump the memory allocations
-// ******************************************************************
-procedure CxbxAllocDump(DumpData: bool);
-
-//else // _DEBUG_ALLOC
+const CxbxMalloc(x)                            CxbxMallocDebug(x, __FILE__, __LINE__);
+const CxbxCalloc(x, y)                         CxbxCallocDebug(x, y, __FILE__, __LINE__);
+const CxbxFree(x)                              CxbxFreeDebug(x, __FILE__, __LINE__);
+const CxbxRtlAlloc(Heap, Flags, Bytes)         CxbxRtlAllocDebug(Heap, Flags, Bytes, __FILE__, __LINE__);
+const CxbxRtlFree(Heap, Flags, pMem)           CxbxRtlFreeDebug(Heap, Flags, pMem, __FILE__, __LINE__);
+const CxbxRtlRealloc(Heap, Flags, pMem, Bytes) CxbxRtlReallocDebug(Heap, Flags, pMem, Bytes, __FILE__, __LINE__);
+const CxbxRtlSizeHeap(Heap, Flags, pMem)       CxbxRtlSizeHeapDebug(Heap, Flags, pMem, __FILE__, __LINE__);
 *)
+
+{$ELSE !_DEBUG_ALLOC}
 
 function CxbxMalloc(x: Integer): Pointer;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := AllocMem(x);
+  Result := malloc(x);
+end;
+
+function CxbxCalloc(x, y: Integer): Pointer;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+begin
+  Result := calloc(x, y);
 end;
 
 procedure CxbxFree(x: Pointer);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  FreeMem(x);
+  free(x);
 end;
-
-(*
-const CxbxCalloc(x, y) =                         calloc(x, y);
-*)
 
 function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -153,16 +104,18 @@ begin
   Result := JwaNative.RtlSizeHeap(Heap, Flags, pMem);
 end;
 
+{$ENDIF !_DEBUG_ALLOC}
 //end EMUALLOC_H
 
 
-(*ifdef _DEBUG_ALLOC
+{$IFDEF _DEBUG_ALLOC}
 
 //include 'mutex.h'
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
+(*
 namespace NtDll
 begin
     //include 'EmuNtDll.h'
@@ -174,7 +127,7 @@ begin
 // ******************************************************************
 
 const
-  MEMORY_GUARD: uint32 = $DEADFADE;
+  MEMORY_GUARD: UInt32 = $DEADFADE;
 
 type
   (**** Convert following enum types to constants. ****
@@ -206,20 +159,20 @@ var
 // * GetMemStart - Retrieves the actual start of the allocated memory
 // *               block (first guard)
 // ******************************************************************
-function GetMemStart(pBlock: PCXBX_MEMORY_BLOCK): PVOID;
+function GetMemStart(pBlock: PCXBX_MEMORY_BLOCK): PVOID; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := PVOID(PChar(pBlock.pMem) - SizeOf(MEMORY_GUARD));
+  Result := PVOID(PAnsiChar(pBlock.pMem) - SizeOf(MEMORY_GUARD));
 end;
 
 // ******************************************************************
 // * GetMemEnd - Retrieves the end of the allocated memory block
 // *             (second guard)
 // ******************************************************************
-function GetMemEnd(pBlock: PCXBX_MEMORY_BLOCK): PVOID;
+function GetMemEnd(pBlock: PCXBX_MEMORY_BLOCK): PVOID; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := PVOID(PChar(pBlock.pMem) + pBlock.Size);
+  Result := PVOID(PAnsiChar(pBlock.pMem) + pBlock.Size);
 end;
 
 // ******************************************************************
@@ -232,17 +185,17 @@ var
 begin
   Integrity := True;
 
-  if uint32(GetMemStart(pBlock)) <> MEMORY_GUARD then
+  if PUInt32(GetMemStart(pBlock))^ <> MEMORY_GUARD then
   begin
     DbgPrintf('    Memory block corrupted at start, overwrite: $%.04X',
-              [GetMemStart(pBlock)]);
+              [PUInt32(GetMemStart(pBlock))^]);
     Integrity := False;
   end;
 
-  if uint32(GetMemEnd(pBlock)) <> MEMORY_GUARD then
+  if PUInt32(GetMemEnd(pBlock))^ <> MEMORY_GUARD then
   begin
     DbgPrintf('    Memory block corrupted at end, overwrite: $.04X',
-              [GetMemEnd(pBlock)]);
+              [PUInt32(GetMemEnd(pBlock))^]);
     Integrity := False;
   end;
 
@@ -253,87 +206,63 @@ end;
 // ******************************************************************
 // * IsThisMemoryBlock - Simple block matching function
 // ******************************************************************
-function IsThisMemoryBlock(var pMem: Pointer; var pBlock: PCXBX_MEMORY_BLOCK): bool;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+function IsThisMemoryBlock(pMem: PVoid; pBlock: PCXBX_MEMORY_BLOCK): bool; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  (*Result := (pBlock) and (pMem = pBlock.pMem); *)
+  Result := Assigned(pBlock) and (pMem = pBlock.pMem);
 end;
 
 // ******************************************************************
 // * InThisMemoryBlock - Simple block matching function
 // ******************************************************************
-function InThisMemoryBlock(pMem: PVoid; pBlock: PCXBX_MEMORY_BLOCK): bool;
+function InThisMemoryBlock(pMem: PVoid; pBlock: PCXBX_MEMORY_BLOCK): bool; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:50
 begin
-  (*Result := (pBlock) and (pMem >= pBlock.pMem) and (pMem <= GetMemEnd(pBlock)); *)
+  Result := Assigned(pBlock)
+        and (IntPtr(pMem) >= IntPtr(pBlock.pMem))
+        and (IntPtr(pMem) <= IntPtr(GetMemEnd(pBlock)));
 end;
 
 
 // ******************************************************************
 // * InsertMemoryBlock - Inserts a new memory block in the tracker
 // ******************************************************************
-function InsertMemoryBlock(pMem: PPointer; Size: Integer; pFile: PChar;
-                           Line: Integer; cType: CXBX_ALLOC_TYPE): PCXBX_MEMORY_BLOCK;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+function InsertMemoryBlock(
+  pMem: PVoid;
+  Size: size_t;
+  pFile: PChar;
+  Line: Int;
+  cType: CXBX_ALLOC_TYPE): PCXBX_MEMORY_BLOCK;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pBlock: PCXBX_MEMORY_BLOCK;
-  Length: Integer;
+  Length: size_t;
 begin
-    pBlock := PCXBX_MEMORY_BLOCK(CxbxMalloc(SizeOf(CXBX_MEMORY_BLOCK)));
-(*    pBlock.pMem := uint08(pMem + SizeOf(MEMORY_GUARD));
-    pBlock.Size := Size;
-    Length := strlen(pFile) + 1;
-    pBlock.pFile := Char(Cxbxmalloc(Length));
-    memcpy(pBlock.pFile, pFile, Length);
-    pBlock.pNext := 0;
-    pBlock.Line := Line;
-    pBlock.cType := cTmoveMemoryBlock(Pointer pMem)
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:10
-begin
-    CXBX_MEMORY_BLOCK *pFree := nil;
-    if IsThisMemoryBlock(pMem, g_pFirstBlock) then
-    begin
-        pFree := g_pFirstBlock;
-        g_pFirstBlock := g_pFirstBlock.pNext;
-        if pFree = g_pLastBlock then
-        begin
-            g_pLastBlock := 0;
-        end;
-    end
-    else
-    begin
-        CXBX_MEMORY_BLOCK *pCur;
-        CXBX_MEMORY_BLOCK *pPrev := 0;
-        for(pCur := g_pFirstBlock; pCur; pCur = pCur.pNext)
-        begin
-            if IsThisMemoryBlock(pMem, pCur) then
-            begin
-                if pCur = g_pLastBlock then
-                begin
-                    g_pLastBlock := pPrev;
-                end;
+  pBlock := PCXBX_MEMORY_BLOCK(malloc(SizeOf(CXBX_MEMORY_BLOCK)));
+  pBlock.pMem := PUInt8(IntPtr(pMem) + SizeOf(MEMORY_GUARD));
+  pBlock.Size := Size;
+  Length := strlen(pFile) + 1;
+  pBlock.pFile := PChar(malloc(Length));
+  memcpy(pBlock.pFile, pFile, Length);
+  pBlock.pNext := 0;
+  pBlock.Line := Line;
+  pBlock.cType := cType;
+  PUInt32(GetMemStart(pBlock))^ := MEMORY_GUARD;
+  PUInt32(GetMemEnd(pBlock))^ := MEMORY_GUARD;
 
-                pFree := pCur;
-                pPrev.pNext := pCur.pNext;
-                Break;
-            end;
-  ype;
-    GetMemStart(pBlock) := MEMORY_GUARD;
-    (uint32)(GetMemEnd(pBlock)) := MEMORY_GUARD;
+  if (g_pFirstBlock = NULL) then
+  begin
+    g_pFirstBlock := pBlock;
+    g_pLastBlock := pBlock;
+  end
+  else
+  begin
+    g_pLastBlock.pNext := pBlock;
+    g_pLastBlock := pBlock;
+  end;
 
-    if not Assigned(g_pFirstBlock) then
-    begin
-        g_pFirstBlock := pBlock;
-        g_pLastBlock := pBlock;
-    end
-    else
-    begin
-        g_pLastBlock.pNext := pBlock;
-        g_pLastBlock := pBlock;
-    end;
-
-    Result := pBlock; *)
- end;
+  Result := pBlock;
+end;
 
 // ******************************************************************
 // * RemoveMemoryBlock - Removes a memory block from the tracker
@@ -348,26 +277,24 @@ begin
   pFree := NULL;
   if IsThisMemoryBlock(pMem, g_pFirstBlock) then
   begin
-      pFree := g_pFirstBlock;
-      g_pFirstBlock := g_pFirstBlock.pNext;
-      if pFree = g_pLastBlock then
-        g_pLastBlock := NULL;
+    pFree := g_pFirstBlock;
+    g_pFirstBlock := g_pFirstBlock.pNext;
+    if pFree = g_pLastBlock then
+      g_pLastBlock := NULL;
   end
   else
   begin
     pPrev := NULL;
     pCur := g_pFirstBlock;
-
     while Assigned(pCur) do
     begin
       if IsThisMemoryBlock(pMem, pCur) then
       begin
         if pCur = g_pLastBlock then
-            g_pLastBlock := pPrev;
+          g_pLastBlock := pPrev;
 
         pFree := pCur;
         pPrev.pNext := pCur.pNext;
-
         Break;
       end;
 
@@ -383,13 +310,12 @@ end;
 // ******************************************************************
 // * FindMemoryBlock - Finds a memory block in the tracker
 // ******************************************************************
-function FindMemoryBlock(pMem: Pointer): PCXBX_MEMORY_BLOCK;
+function FindMemoryBlock(pMem: PVoid): PCXBX_MEMORY_BLOCK;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pCur: PCXBX_MEMORY_BLOCK;
 begin
   pCur := g_pFirstBlock;
-
   while Assigned(pCur) do
   begin
     if IsThisMemoryBlock(pMem, pCur) then
@@ -407,16 +333,16 @@ end;
 // ******************************************************************
 // * FindMemoryBlockIn - Finds a memory block in the tracker
 // ******************************************************************
-function FindMemoryBlockIn(pMem: Pointer): PCXBX_MEMORY_BLOCK;
+function FindMemoryBlockIn(const pMem: PVoid): PCXBX_MEMORY_BLOCK;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pCur: PCXBX_MEMORY_BLOCK;
 begin
   pCur := g_pFirstBlock;
-
   while Assigned(pCur) do
   begin
-    if InThisMemoryBlock(pMem, pCur) then begin
+    if InThisMemoryBlock(pMem, pCur) then
+    begin
       Result := pCur;
       Exit;
     end;
@@ -424,7 +350,7 @@ begin
     pCur := pCur.pNext;
   end;
   
-  Result := nil;
+  Result := NULL;
 end;
 
 
@@ -463,17 +389,20 @@ end;
 // ******************************************************************
 // * CxbxMallocDebug - Debug track malloc
 // ******************************************************************
-function CxbxMallocDebug(Size: Integer; pFile: PChar; Line: Integer): Pointer;
+function CxbxMallocDebug(
+  Size: size_t;
+  pFile: PChar;
+  Line: Integer): PVoid;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pRetMem: Pointer;
   pMem: Pointer;
   pBlock: PCXBX_MEMORY_BLOCK;
 begin
-  pRetMem := nil;
+  pRetMem := NULL;
   g_MemoryMutex.Lock();
 
-  pMem := Cxbxmalloc(Size + 2 * SizeOf(MEMORY_GUARD));
+  pMem := malloc(Size + 2 * SizeOf(MEMORY_GUARD));
   if not Assigned(pMem) then
   begin
     DbgPrintf('CxbxMallocDebug: Allocation failed' +
@@ -496,18 +425,21 @@ end;
 // ******************************************************************
 // * CxbxCallocDebug - Debug track calloc
 // ******************************************************************
-function CxbxCallocDebug(NbrElements: Integer; ElementSize: Integer; pFile: PChar; Line: Integer): Pointer;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
+function CxbxCallocDebug(
+  NbrElements: size_t;
+  ElementSize: size_t;
+  pFile: PChar;
+  Line: Int): PVoid;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pRetMem: Pointer;
   pMem: Pointer;
   pBlock: PCXBX_MEMORY_BLOCK;
 begin
-  pRetMem := nil;
+  pRetMem := NULL;
   g_MemoryMutex.Lock();
 
-  { TODO : need to be translated to delphi }
-  (*  pMem := Cxbxcalloc(NbrElements * ElementSize + 2 * SizeOf(MEMORY_GUARD), 1); *)
+  pMem := calloc(NbrElements * ElementSize + 2 * SizeOf(MEMORY_GUARD), 1);
   if not Assigned(pMem) then
   begin
     DbgPrintf('CxbxCallocDebug: Allocation failed' +
@@ -521,7 +453,7 @@ begin
   begin
     pBlock := InsertMemoryBlock(pMem, NbrElements * ElementSize, pFile, Line, CXBX_ALLOC_NORMAL);
     pRetMem := pBlock.pMem;
-   end;
+  end;
 
   g_MemoryMutex.Unlock();
 
@@ -531,7 +463,10 @@ end;
 // ******************************************************************
 // * CxbxFreeDebug - Debug track Free
 // ******************************************************************
-procedure CxbxFreeDebug(pMem: Pointer; pFile: PChar; Line: Integer);
+procedure CxbxFreeDebug(
+  pMem: PVoid;
+  pFile: PChar;
+  Line: Int);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pFree: PCXBX_MEMORY_BLOCK;
@@ -565,9 +500,9 @@ begin
                [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
     end;
 
-    FreeMem(GetMemStart(pFree));
-    FreeMem(pFree.pFile);
-    FreeMem(pFree);
+    free(GetMemStart(pFree));
+    free(pFree.pFile);
+    free(pFree);
   end;
 
   g_MemoryMutex.Unlock();
@@ -576,21 +511,26 @@ end;
 // ******************************************************************
 // * CxbxRtlAllocDebug - Debug track RTL alloc
 // ******************************************************************
-function CxbxRtlAllocDebug(Heap: Handle; Flags: DWORD; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
+function CxbxRtlAllocDebug(
+  Heap: Handle;
+  Flags: DWORD;
+  Bytes: SIZE_T;
+  pFile: PChar;
+  Line: Int): PVoid;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
-  pRetMem: Pointer;
-  pMem: Pointer;
+  pRetMem: PVoid;
+  pMem: PVoid;
   pBlock: PCXBX_MEMORY_BLOCK;
 begin
-  pRetMem := nil;
+  pRetMem := NULL;
   g_MemoryMutex.Lock();
 
   //pMem := NtDll.RtlAllocateHeap(Heap, Flags, Bytes + 2 * SizeOf(MEMORY_GUARD));
   pMem := CxbxRtlAlloc(Heap, Flags, Bytes + 2 * SizeOf(MEMORY_GUARD));
   if not Assigned(pMem) then
   begin
-      DbgPrintf('CxbxRtlAllocDebug: Allocation failed' +
+    DbgPrintf('CxbxRtlAllocDebug: Allocation failed' +
              #13#10'    Heap  : $%.08X' +
              #13#10'    Flags : $%.08X' +
              #13#10'    Bytes : %d' +
@@ -600,28 +540,32 @@ begin
   end
   else
   begin
-      pBlock := InsertMemoryBlock(pMem, Bytes, pFile, Line, CXBX_ALLOC_RTL);
-      pRetMem := pBlock.pMem;
-   end;
+    pBlock := InsertMemoryBlock(pMem, Bytes, pFile, Line, CXBX_ALLOC_RTL);
+    pRetMem := pBlock.pMem;
+  end;
 
   g_MemoryMutex.Unlock();
 
   Result := pRetMem;
- end;
+end;
 
 // ******************************************************************
 // * CxbxRtlFreeDebug - Debug track RTL Free
 // ******************************************************************
-function CxbxRtlFreeDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; pFile: PChar; Line: Integer): BOOL;
+function CxbxRtlFreeDebug(
+  Heap: Handle;
+  Flags: DWORD;
+  pMem: PVOID;
+  pFile: PChar;
+  Line: Int): BOOL;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
-  Ret: BOOL;
   pFree: PCXBX_MEMORY_BLOCK;
 begin
-  Ret := False;
-  if Assigned (pMem) then
+  Result := False;
+  if not Assigned(pMem) then
   begin
-    Ret := True;
+    Result := True;
     Exit;
   end;
 
@@ -651,42 +595,47 @@ begin
              [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
     end;
 
-    Ret := CxbxRtlFree(Heap, Flags, GetMemStart(pFree));
-    FreeMem(pFree.pFile);
-    FreeMem(pFree);
+    Result := CxbxRtlFree(Heap, Flags, GetMemStart(pFree));
+    free(pFree.pFile);
+    free(pFree);
   end;
 
   g_MemoryMutex.Unlock();
-  Result := Ret;
 end;
 
 // ******************************************************************
 // * CxbxRtlReallocDebug - Debug track RTL realloc
 // ******************************************************************
-function CxbxRtlReallocDebug(Heap: Handle; Flags: DWORD; pMem: PVOID; Bytes: SIZE_T; pFile: PChar; Line: Integer): Pointer;
+function CxbxRtlReallocDebug(
+  Heap: Handle;
+  Flags: DWORD;
+  pMem: PVOID;
+  Bytes: SIZE_T;
+  pFile: PChar;
+  Line: Int): PVoid;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
-  pRetMem: Pointer;
+  pRetMem: PVoid;
   pRealloc: PCXBX_MEMORY_BLOCK;
   pNewMem: Pointer;
   pBlock: PCXBX_MEMORY_BLOCK;
 begin
-    pRetMem := nil;
-    g_MemoryMutex.Lock();
+  pRetMem := nil;
+  g_MemoryMutex.Lock();
 
-    pRealloc := FindMemoryBlock(pMem);
-    if not Assigned(pRealloc) then
-    begin
-        DbgPrintf('CxbxRtlRealloc: realloc on non-existent block: $%.08X!' +
+  pRealloc := FindMemoryBlock(pMem);
+  if not Assigned(pRealloc) then
+  begin
+    DbgPrintf('CxbxRtlRealloc: realloc on non-existent block: $%.08X!' +
                #13#10'    File: %s' +
                #13#10'    Line: %d',
                [pMem, pFile, Line]);
-    end
-    else
+  end
+  else
+  begin
+    if not CheckIntegrity(pRealloc) then
     begin
-        if not CheckIntegrity(pRealloc) then
-        begin
-            DbgPrintf('CxbxRtlReallocDebug: Realloc on damaged block' +
+      DbgPrintf('CxbxRtlReallocDebug: Realloc on damaged block' +
                    #13#10'    Block   : $.%08X' +
                    #13#10'    Allocation' +
                    #13#10'        Size: %d' +
@@ -699,106 +648,112 @@ begin
                    [pRealloc.pMem,
                    pRealloc.pFile, pRealloc.Size, pRealloc.Line,
                    Bytes, pFile, Line]);
-         end;
-        pNewMem := CxbxRtlReAlloc(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * SizeOf(MEMORY_GUARD));
-        FreeMem(pRealloc.pFile);
-        FreeMem(pRealloc);
-        if not Assigned(pNewMem) then
-        begin
-            DbgPrintf('CxbxRtlReallocDebug: Reallocation failed' +
-                   #13#10'    Heap  : $%.08X' +
-                   #13#10'    Flags : $%.08X' +
-                   #13#10'    pMem  : $%.08X' +
-                   #13#10'    Bytes : %d' +
-                   #13#10'    File  : %s' +
-                   #13#10'    Line  : %d',
-                   [Heap, Flags, pMem, Bytes, pFile, Line]);
-        end
-        else
-        begin
-            pBlock := InsertMemoryBlock(pNewMem, Bytes, pFile, Line, CXBX_ALLOC_RTL);
-            pRetMem := pBlock.pMem;
-         end;
-     end;
+    end;
 
-    g_MemoryMutex.Unlock();
-    Result := pRetMem;
- end;
+    pNewMem := CxbxRtlReAlloc(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * SizeOf(MEMORY_GUARD));
+    free(pRealloc.pFile);
+    free(pRealloc);
+    if not Assigned(pNewMem) then
+    begin
+      DbgPrintf('CxbxRtlReallocDebug: Reallocation failed' +
+               #13#10'    Heap  : $%.08X' +
+               #13#10'    Flags : $%.08X' +
+               #13#10'    pMem  : $%.08X' +
+               #13#10'    Bytes : %d' +
+               #13#10'    File  : %s' +
+               #13#10'    Line  : %d',
+               [Heap, Flags, pMem, Bytes, pFile, Line]);
+    end
+    else
+    begin
+      pBlock := InsertMemoryBlock(pNewMem, Bytes, pFile, Line, CXBX_ALLOC_RTL);
+      pRetMem := pBlock.pMem;
+    end;
+  end;
+
+  g_MemoryMutex.Unlock();
+  Result := pRetMem;
+end;
 
 // ******************************************************************
 // * CxbxRtlSizeHeapDebug - Debug track RTL heap size
 // ******************************************************************
-function CxbxRtlSizeHeapDebug(Heap: Handle; Flags: DWORD; pMem: PVOID;
-                            pFile: PChar; Line: Integer): SIZE_T;
+function CxbxRtlSizeHeapDebug(
+  Heap: Handle;
+  Flags: DWORD;
+  pMem: PVOID;
+  pFile: PChar;
+  Line: Int): SIZE_T;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   Size: SIZE_T;
   pBlock: PCXBX_MEMORY_BLOCK;
   ActualSize: SIZE_T;
 begin
-    Size := 0;
-    g_MemoryMutex.Lock();
+  Size := 0;
+  g_MemoryMutex.Lock();
 
-    pBlock := FindMemoryBlock(pMem);
-    if not Assigned(pBlock) then
+  pBlock := FindMemoryBlock(pMem);
+  if not Assigned(pBlock) then
+  begin
+    DbgPrintf('CxbxRtlSizeHeap: size heap on non-existent block: $%.08X!' +
+           #13#10'File: %s' +
+           #13#10'    Line: %d',
+           [pMem, pFile, Line]);
+  end
+  else
+  begin
+    ActualSize := CxbxRtlSizeHeap(Heap, Flags, GetMemStart(pBlock))
+                        - 2 * SizeOf(MEMORY_GUARD);
+    if ActualSize <> pBlock.Size then
     begin
-        DbgPrintf('CxbxRtlSizeHeap: size heap on non-existent block: $%.08X!' +
-               #13#10'File: %s' +
-               #13#10'    Line: %d',
-               [pMem, pFile, Line]);
-    end
-    else
-    begin
-        ActualSize := CxbxRtlSizeHeap(Heap, Flags, GetMemStart(pBlock))
-                            - 2 * SizeOf(MEMORY_GUARD);
-        if ActualSize <> pBlock.Size then
-        begin
-            DbgPrintf('CxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d' +
-                   #13#10'    File  : %s' +
-                   #13#10'    Line  : %d',
-                   [ActualSize,
-                   pBlock.Size,
-                   pFile,
-                   Line]);
-        end;
-        Size := ActualSize;
+      DbgPrintf('CxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d' +
+               #13#10'    File  : %s' +
+               #13#10'    Line  : %d',
+               [ActualSize,
+               pBlock.Size,
+               pFile,
+               Line]);
     end;
 
-    g_MemoryMutex.Unlock();
-    Result := Size;
+    Size := ActualSize;
+  end;
+
+  g_MemoryMutex.Unlock();
+  Result := Size;
 end;
 
 // ******************************************************************
 // * CxbxVirtualQueryDebug - Debug virtual query
 // ******************************************************************
-function CxbxVirtualQueryDebug(lpAddress: LPCVOID;
-                            lpBuffer: PMEMORY_BASIC_INFORMATION;
-                            dwLength: DWORD): DWORD;
+function CxbxVirtualQueryDebug(
+  lpAddress: LPCVOID;
+  lpBuffer: PMEMORY_BASIC_INFORMATION;
+  dwLength: DWORD): DWORD;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   Size: DWORD;
   pBlock: PCXBX_MEMORY_BLOCK;
 begin
-    Size := 0;
-    g_MemoryMutex.Lock();
+  Size := 0;
+  g_MemoryMutex.Lock();
 
-    lpBuffer.State := MEM_COMMIT;
+  lpBuffer.State := MEM_COMMIT;
 
-    pBlock := FindMemoryBlockIn(lpAddress);
+  pBlock := FindMemoryBlockIn(lpAddress);
 
-    if Assigned(pBlock) then
-    begin
-        Size := dwLength;
-        lpBuffer.RegionSize := pBlock.Size;
-        lpBuffer.BaseAddress := pBlock.pMem;
-     end;
+  if Assigned(pBlock) then
+  begin
+    Size := dwLength;
+    lpBuffer.RegionSize := pBlock.Size;
+    lpBuffer.BaseAddress := pBlock.pMem;
+  end;
 
 
-    g_MemoryMutex.Unlock();
-    Result := Size;
- end;
+  g_MemoryMutex.Unlock();
+  Result := Size;
+end;
 
-//endif // _DEBUG_ALLOC
-
+{$ENDIF !_DEBUG_ALLOC}
 
 end.
