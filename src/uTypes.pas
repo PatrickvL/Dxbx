@@ -76,13 +76,17 @@ type
 {$ENDIF}
 
   PPByte = ^PByte;
-  INT = Integer;
-
-  LONG = LongInt;
 
   DIKEYSTATE = array [0..256-1] of BYTE; // Dxbx 'invention'
 
   TCodePointer = type Pointer;
+
+  // Note : These types are copied from JwaWinType, so we don't have to include that unit :
+  PCSZ = ^AnsiChar; // Dxbx assumption!
+  PVOID = Pointer;
+  LONG = Longint;
+  INT = Integer;
+  size_t = Longword;
 
 {$IFNDEF UNICODE}
   UnicodeString = WideString;
@@ -95,6 +99,10 @@ function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 function clock(): DWord; // cdecl;
+
+procedure free(p: PVoid); inline;
+function malloc(const number_of_bytes: size_t): PVoid; inline;
+function calloc(num_elements, element_size: size_t): PVoid; inline;
 
 implementation
 
@@ -117,19 +125,37 @@ begin
   Result := StrLCopy(Dest, Source, Len);
 end;
 
+// Source: ZLib.pas
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 begin
-  FillChar(p^,count,b);
+  FillChar(p^, count, b);
 end;
 
+// Source: ZLib.pas
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 begin
-  Move(source^,dest^,count);
+  Move(source^, dest^, count);
 end;
 
 function clock(): DWord;
 begin
   Result := GetTickCount();
+end;
+
+procedure free(p: PVoid); inline;
+begin
+  FreeMem(p);
+end;
+
+function malloc(const number_of_bytes: size_t): PVoid; inline;
+begin
+  Result := AllocMem(number_of_bytes);
+end;
+
+function calloc(num_elements, element_size: size_t): PVoid; inline;
+begin
+  Result := malloc(num_elements * element_size);
+  memset(Result, 0, num_elements * element_size);
 end;
 
 end.

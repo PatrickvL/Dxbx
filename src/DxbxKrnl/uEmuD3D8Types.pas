@@ -28,6 +28,7 @@ uses
   // Directx
   Direct3D8,
   // Xbox
+  uTypes,
   uXbe
   ;
 
@@ -226,6 +227,7 @@ type
     Field: X_D3DFIELDTYPE;
     VBlankCount: UINT;
   end;
+  PX_D3DFIELD_STATUS= ^X_D3DFIELD_STATUS;
 
   D3DVBLANKDATA = packed record
     VBlank: DWord;

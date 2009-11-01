@@ -57,12 +57,6 @@ const
   XBE_LIBRARYVERSION_FLAG_DebugBuild = $80;
 
 type
-  // Note : These types are copied from JwaWinType, so we don't have to include that unit :
-  PCSZ = ^AnsiChar; // Dxbx assumption!
-  PVOID = Pointer;
-  LONG = Longint;
-
-type
   TLogType = (ltLog, ltFile);
   TFileType = (ftXbe, ftExe);
 
