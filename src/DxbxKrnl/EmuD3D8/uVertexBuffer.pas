@@ -78,6 +78,9 @@ var
   g_IVBFVF: DWORD = 0;
 
 procedure XTL_EmuFlushIVB; stdcall;
+function XTL_VertexPatcher_Apply(var pPatchDesc: VertexPatchDesc): bool;
+function XTL_VertexPatcher_Restore: LONGBOOL; stdcall;
+
 
 implementation
 
@@ -916,10 +919,10 @@ begin
 end;
 *)
 
-(*function XTL.VertexPatcher.Apply(var pPatchDesc: VertexPatchDesc): bool;
+function XTL_VertexPatcher_Apply(var pPatchDesc: VertexPatchDesc): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    bool Patched := False;
+(*    bool Patched := False;
     // Get the number of streams
     m_uiNbrStreams := GetNbrStreams(pPatchDesc);
     if(VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
@@ -947,9 +950,8 @@ begin
         Patched:= Patched or LocalPatched;
      end;
 
-    Result := Patched;
+    Result := Patched;  *)
 end;
-*)
 
 function XTL_VertexPatcher_Restore: LONGBOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
