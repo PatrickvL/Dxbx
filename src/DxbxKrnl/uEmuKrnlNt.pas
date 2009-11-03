@@ -324,9 +324,9 @@ function xboxkrnl_NtCreateFile(
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:5
 var
-  ReplaceChar: Char;
+  ReplaceChar: AnsiChar;
   ReplaceIndex: int;
-  szBuffer: Pchar;
+  szBuffer: PAnsiChar;
   v: int;
   ret: NTSTATUS;
 begin
@@ -336,7 +336,7 @@ begin
            #13#10'(' +
            #13#10'   FileHandle          : 0x%.08X' +
            #13#10'   DesiredAccess       : 0x%.08X' +
-           #13#10'   ObjectAttributes    : 0x%.08X (''%s'')' +
+           #13#10'   ObjectAttributes    : 0x%.08X' + // '(''%s'')' +
            #13#10'   IoStatusBlock       : 0x%.08X' +
            #13#10'   AllocationSize      : 0x%.08X' +
            #13#10'   FileAttributes      : 0x%.08X' +
@@ -344,7 +344,7 @@ begin
            #13#10'   CreateDisposition   : 0x%.08X' +
            #13#10'   CreateOptions       : 0x%.08X' +
            #13#10');',
-           [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
+           [FileHandle, DesiredAccess, ObjectAttributes, //ObjectAttributes.ObjectName.Buffer,
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 
   //ReplaceChar  := '\0';

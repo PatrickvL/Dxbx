@@ -516,12 +516,12 @@ end; // EmuRenderWindow
 // simple helper function
 procedure ToggleFauxFullscreen(hWnd: HWND);
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
-{$J+}
+{$WRITEABLECONST ON}
 const
   lRestore: Long = 0;
   lRestoreEx: Long = 0;
   lRect: TRect = ();
-{$J-}
+{$WRITEABLECONST OFF}
 begin
   if (g_XBVideo.GetFullscreen()) then
     Exit;
@@ -569,10 +569,10 @@ end;
 // rendering window message procedure
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
-{$J+}
+{$WRITEABLECONST ON}
 const
   bAutoPaused: Boolean = false;
-{$J-}
+{$WRITEABLECONST OFF}
 begin
   case (msg) of
     WM_DESTROY:
@@ -1576,10 +1576,10 @@ function XTL_EmuIDirect3D8_EnumAdapterModes(
   Mode: UINT;
   pMode: PX_D3DDISPLAYMODE): HRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
-{$J+}
+{$WRITEABLECONST ON}
 const
   ModeAdder: UInt = 0;
-{$J-}
+{$WRITEABLECONST OFF}
 var
   PCMode: D3DDISPLAYMODE;
 begin
@@ -1942,7 +1942,7 @@ begin
 
 
    { TODO: need to be translated to delphi }
-    (*X_D3DSurface *pBackBuffer := new X_D3DSurface(); *)
+    (*static X_D3DSurface *pBackBuffer := new X_D3DSurface(); *)
 
     if (BackBuffer = -1) then
         BackBuffer := 0;
@@ -2059,7 +2059,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale(pOffset: TD3DXVECTOR4; pScale: TD3DXVECTOR4); stdcall;
+procedure XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale(pOffset: PD3DXVECTOR4; pScale: PD3DXVECTOR4); stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 var
   fScaleX: Single;
@@ -2076,7 +2076,7 @@ begin
     #13#10'   pOffset            : 0x%.08X' +
     #13#10'   pScale             : 0x%.08X' +
     #13#10');',
-    [@pOffset, @pScale]);
+    [pOffset, pScale]);
 
   fScaleX := 1.0;
   fScaleY := 1.0;
@@ -2597,7 +2597,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice8_CreatePixelShader(pFunction: DWORD; pHandle: DWORD): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_CreatePixelShader(const pFunction: PDWORD; pHandle: PDWORD): HRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);
@@ -2610,11 +2610,11 @@ begin
     [pFunction, pHandle]);
 
   // redirect to windows d3d
-  Result := g_pD3DDevice8.CreatePixelShader(@pFunction, pHandle);
+  Result := g_pD3DDevice8.CreatePixelShader(pFunction, {out}pHandle^);
 
   if FAILED(Result) then
   begin
-    pHandle := X_PIXELSHADER_FAKE_HANDLE;
+    pHandle^ := X_PIXELSHADER_FAKE_HANDLE;
     EmuWarning('We`re lying about the creation of a pixel shader!');
     Result := D3D_OK;
   end;
@@ -2622,10 +2622,23 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+type
+  LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
+  
 function XTL_EmuIDirect3DDevice8_SetPixelShader(Handle: DWORD; hRet: HRESULT): HRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
-(*var
-  dwHandle: DWORD; *)
+{$WRITEABLECONST ON}
+const
+  dwHandle: DWORD = 0;
+{$WRITEABLECONST OFF}
+const
+  szDiffusePixelShader: AnsiString =
+    'ps.1.0'#13#10 +
+    'tex t0'#13#10 +
+    'mov r0, t0'#13#10;
+var
+  pShader: LPD3DXBUFFER;
+  pErrors: LPD3DXBUFFER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2638,40 +2651,34 @@ begin
   // redirect to windows d3d
   hRet := D3D_OK;
 
-    // Fake Programmable Pipeline
+  // Fake Programmable Pipeline
   if (Handle = X_PIXELSHADER_FAKE_HANDLE) then
   begin
-        // programmable pipeline
-        (*//*   Commented out by cxbx
-        dwHandle := 0;
+    // programmable pipeline
+    //*
 
-        if (dwHandle = 0) then
-        begin
-   // simplest possible pixel shader, simply output the texture input
-              Char szDiffusePixelShader[] =
-    #13#10'ps.1.0' +
-    #13#10'tex t0' +
-    #13#10'mov r0, t0';
+    if (dwHandle = 0) then
+    begin
+      // simplest possible pixel shader, simply output the texture input
+      pShader := nil;
+      pErrors := nil;
 
-            LPD3DXBUFFER pShader := 0;
-            LPD3DXBUFFER pErrors := 0;
+      // assemble the shader
+      D3DXAssembleShader(szDiffusePixelShader, Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
 
-            // assemble the shader
-            D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader) - 1, 0, 0, @pShader, @pErrors);
+      // create the shader device handle
+      hRet := g_pD3DDevice8.CreatePixelShader(pShader.GetBufferPointer(), {out}dwHandle);
 
-            // create the shader device handle
-            hRet := g_pD3DDevice8.CreatePixelShader((DWORD)pShader.GetBufferPointer(), @dwHandle);
+      if (FAILED(hRet)) then
+        EmuWarning('Could not create pixel shader');
+    end;
 
-            if (FAILED(hRet)) then
-                EmuWarning('Could not create pixel shader');
-         end;
+    if (not FAILED(hRet)) then
+      hRet := g_pD3DDevice8.SetPixelShader(dwHandle);
 
-        if ( not FAILED(hRet)) then
-            hRet := g_pD3DDevice8.SetPixelShader(dwHandle);
-
-        if (FAILED(hRet)) then
-            EmuWarning('Could not set pixel shader!');
-        *)//*/
+    if (FAILED(hRet)) then
+      EmuWarning('Could not set pixel shader!');
+    //*/
 
     g_bFakePixelShaderLoaded := True;
   end
@@ -3157,54 +3164,54 @@ begin
   begin
     EmuVerifyResourceIsRegistered(pTexture);
 
-       (* if(IsSpecialResource(pTexture.Data) and (pTexture.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)) then
-        begin
-          //
-          // NOTE: Cxbx TODO: This is almost a hack!
-          //
+    if IsSpecialResource(pTexture.Data) and ((pTexture.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
+    begin
+      //
+      // NOTE: Cxbx TODO: This is almost a hack!
+      //
 
-          EmuSwapFS(fsXbox);
-          XTL_EmuIDirect3DDevice8_EnableOverlay(TRUE);
-          XTL_EmuIDirect3DDevice8_UpdateOverlay(pTexture, 0, 0, False, 0);
-          EmuSwapFS(fsWindows);
-        end
-        else
-        begin
-            pBaseTexture8 := pTexture.EmuBaseTexture8;
+      EmuSwapFS(fsXbox);
+      XTL_EmuIDirect3DDevice8_EnableOverlay(True);
+      XTL_EmuIDirect3DDevice8_UpdateOverlay(PX_D3DSurface(pTexture), nil, nil, False, 0);
+      EmuSwapFS(fsWindows);
+    end
+    else
+    begin
+      pBaseTexture8 := pTexture.EmuBaseTexture8;
 
-            {$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
-            if (pTexture <> 0 and (pTexture.EmuTexture8 <> 0)) then
+      {$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
+      if (pTexture <> nil) and (pTexture.EmuTexture8 <> nil) then
+      begin
+        Integer dwDumpTexture := 0;
+
+        szBuffer: array [0..256-1] of Char;
+
+        case (pTexture.EmuResource8.GetType()) of
+        begin
+          D3DRTYPE_TEXTURE:
+          begin
+            StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE 'SetTextureNorm - %.03d (0x%.08X).bmp', dwDumpTexture++, pTexture.EmuTexture8);
+
+            pTexture.EmuTexture8.UnlockRect(0);
+
+            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuTexture8, nil);
+          end;
+
+          D3DRTYPE_CUBETEXTURE:
+          begin
+            for(Integer face:=0;face<6;face++)
             begin
-                 Integer dwDumpTexture := 0;
+              StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE 'SetTextureCube%d - %.03d (0x%.08X).bmp', face, dwDumpTexture++, pTexture.EmuTexture8);
 
-                 szBuffer: array [0..256-1] of Char;
+              pTexture.EmuCubeTexture8.UnlockRect(D3DCUBEMAP_FACES(face), 0);
 
-                case(pTexture.EmuResource8.GetType()) of
-                begin
-                     D3DRTYPE_TEXTURE:
-                    begin
-                        StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE 'SetTextureNorm - %.03d (0x%.08X).bmp', dwDumpTexture++, pTexture.EmuTexture8);
-
-                        pTexture.EmuTexture8.UnlockRect(0);
-
-                        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuTexture8, 0);
-                     end;
-
-                     D3DRTYPE_CUBETEXTURE:
-                    begin
-                        for(Integer face:=0;face<6;face++)
-                        begin
-                            StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE 'SetTextureCube%d - %.03d (0x%.08X).bmp', face, dwDumpTexture++, pTexture.EmuTexture8);
-
-                            pTexture.EmuCubeTexture8.UnlockRect((D3DCUBEMAP_FACES)face, 0);
-
-                            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuTexture8, 0);
-                         end;
-                     end;
-                 end;
-             end;
-            {$endif}
-         end;   *)
+              D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuTexture8, nil);
+            end;
+          end;
+        end;
+      end;
+      {$endif}
+    end;
 
   end;
 
@@ -3227,15 +3234,15 @@ begin
      end;
     }
 
-        (* -- MARKED OUT BY CXBX
-         Integer dwDumpTexture := 0;
-         szBuffer: array [0..256-1] of Char;
-        StrFmt(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', dwDumpTexture++, pDummyTexture);
-        pDummyTexture.UnlockRect(0);
-        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pDummyTexture, 0);
-        //*/
-        //HRESULT hRet = g_pD3DDevice8.SetTexture(Stage, pDummyTexture[Stage]);  *)
+  (* -- MARKED OUT BY CXBX
+  Integer dwDumpTexture := 0;
+  szBuffer: array [0..256-1] of Char;
+  StrFmt(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', dwDumpTexture++, pDummyTexture);
+  pDummyTexture.UnlockRect(0);
+  D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pDummyTexture, 0);
+  //*/
 
+  //HRESULT hRet = g_pD3DDevice8.SetTexture(Stage, pDummyTexture[Stage]);  *)
   Result := g_pD3DDevice8.SetTexture(Stage, iif((g_iWireframe = 0), pBaseTexture8, nil));
 
   EmuSwapFS(fsXbox);
@@ -3305,7 +3312,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice8_GetDisplayMode(pMode: X_D3DDISPLAYMODE): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_GetDisplayMode(pMode: PX_D3DDISPLAYMODE): HRESULT; stdcall;
 // Branch:martin  Revision:39  Done:50  Translator:Shadow_Tj
 var
   hRet: HRESULT;
@@ -3317,7 +3324,7 @@ begin
     #13#10'(' +
     #13#10'   pMode              : 0x%.08X' +
     #13#10');',
-    [@pMode]);
+    [pMode]);
 
 
     // make adjustments to parameters to make sense with windows d3d
@@ -6407,7 +6414,7 @@ begin
 
   if (VshHandleIsVertexShader(aHandle)) then
   begin
-    (*RealHandle := VshHandleGetVertexShader(Handle)) - > Handle) - > Handle; *)
+    (*RealHandle := VshHandleGetVertexShader(Handle)).Handle).Handle; *)
   end
   else
   begin
@@ -7227,8 +7234,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect(pVAF: X_VERTEXATTRIBUTEFORMAT;
-  StreamCount: UINT; pStreamInputs: X_STREAMINPUT): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect(pVAF: PX_VERTEXATTRIBUTEFORMAT;
+  StreamCount: UINT; pStreamInputs: PX_STREAMINPUT): HRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);
@@ -7240,7 +7247,7 @@ begin
     #13#10'   StreamCount        : 0x%.08X' +
     #13#10'   pStreamInputs      : 0x%.08X' +
     #13#10');',
-    [@pVAF, StreamCount, @pStreamInputs]);
+    [pVAF, StreamCount, pStreamInputs]);
 
   DbgPrintf('NOT YET IMPLEMENTED!');
 

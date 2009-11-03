@@ -220,10 +220,10 @@ function XTL_EmuDirectSoundCreate(
     ppDirectSound: LPDIRECTSOUND8;
     pUnknown: IUNKNOWN): HRESULT; stdcall;
 // Branch:martin  Revision:80  Translator:Shadow_Tj  Done:90
-{$J+}
+{$WRITEABLECONST ON}
 const
   Initialized: Bool = False;
-{$J-}
+{$WRITEABLECONST OFF}
 var
   v: Integer;
 begin

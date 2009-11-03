@@ -379,10 +379,12 @@ var
   KeyboardState: array [0..256-1] of BYTE;
   bKey: BYTE;
   MouseState: DIMOUSESTATE2;
-
-  lAccumX: LongInt;
-  lAccumY: LongInt;
-  lAccumZ: LongInt;
+{$WRITEABLECONST ON}
+const
+  lAccumX: LongInt = 0;
+  lAccumY: LongInt = 0;
+  lAccumZ: LongInt = 0;
+{$WRITEABLECONST OFF}
 begin
   if not Assigned(Controller) then
     Exit;
@@ -483,10 +485,6 @@ begin
       end
       else if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
       begin
-        lAccumX := 0;
-        lAccumY := 0;
-        lAccumZ := 0;
-
         Inc(lAccumX, MouseState.lX * 300);
         Inc(lAccumY, MouseState.lY * 300);
         Inc(lAccumZ, MouseState.lZ * 300);

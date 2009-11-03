@@ -916,6 +916,63 @@ end; // TXbe.GetAddr
 
 //------------------------------------------------------------------------------
 
+(*
+// import logo bitmap from raw monochrome data
+procedure TXbe.ImportLogoBitmap(const uint08 x_Gray[100*17])
+var
+  LogoBuffer: PAnsiChar;
+  LogoSize: uint32;
+begin
+  char  *LogoBuffer = new char[4*1024];
+  LogoSize := 0;
+
+  // encode logo bitmap
+  begin
+    for(uint32 v=1;v<100*17;LogoSize++)
+    begin
+      char color = x_Gray[v] shr 4;
+
+      uint32 len = 1;
+
+      while(++v<100*17-1) and (len < 1024) and (color = (x_Gray[v] shr 4)) do
+        Inc(len);
+
+      LogoRLE *cur = (LogoRLE * )&LogoBuffer[LogoSize];
+
+      if (len <= 7) then
+      begin
+        cur.m_Eight.bType1 := 1;
+        cur.m_Eight.Len    := len;
+        cur.m_Eight.Data   := color;
+      end;
+      else
+      begin
+        cur.m_Sixteen.bType1 := 0;
+        cur.m_Sixteen.bType2 := 1;
+        cur.m_Sixteen.Len    := len;
+        cur.m_Sixteen.Data   := color;
+        Inc(LogoSize);
+      end;
+    end;
+  end;
+
+  // check if there is room to save this, if not then throw an error
+  begin
+    uint08 *RLE = GetLogoBitmap(LogoSize);
+
+    if (RLE = 0) then
+    begin
+      if (GetError() = 0) then
+        SetError('Logo bitmap could not be imported (not enough space in file?)', False);
+
+      Exit;
+    end;
+
+    memcpy(RLE, LogoBuffer, LogoSize);
+  end;
+end;
+*)
+
 procedure TXbe.ExportLogoBitmap(ImgCont: TBitmap);
 var
   x_Gray: array[0..100 * 17] of Byte;

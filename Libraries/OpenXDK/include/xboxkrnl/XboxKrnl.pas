@@ -412,18 +412,20 @@ const FILE_VALID_OPTION_FLAGS =                 $00ffffff;
 const FILE_VALID_PIPE_OPTION_FLAGS =            $00000032;
 const FILE_VALID_MAILSLOT_OPTION_FLAGS =        $00000032;
 const FILE_VALID_SET_FLAGS =                    $00000036;
+*)
 
 // ******************************************************************
 // * OBJECT_ATTRIBUTES
 // ******************************************************************
 type
-
-OBJECT_ATTRIBUTES,*POBJECT_ATTRIBUTES  = packed record
-    THandle  RootDirectory;
-    PSTRING ObjectName;
-    ULONG   Attributes;
+  _OBJECT_ATTRIBUTES = packed record
+    RootDirectory: HANDLE;
+    ObjectName: PANSI_STRING;
+    Attributes: ULONG;
  end;
-
+ OBJECT_ATTRIBUTES = _OBJECT_ATTRIBUTES;
+ POBJECT_ATTRIBUTES = ^OBJECT_ATTRIBUTES;
+(*
 // ******************************************************************
 // * FSINFOCLASS
 // ******************************************************************
