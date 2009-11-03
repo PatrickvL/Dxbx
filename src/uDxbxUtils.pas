@@ -38,9 +38,8 @@ type
 
   TDebugInfoType = (ditConsole, ditFile);
   EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
-  DebugMode = (DM_NONE, DM_CONSOLE, DM_FILE);
 
-  TLogType = (ltKernel, ltGui);
+  TDebugMode = (dmNone, dmConsole, dmFile);
 
   TEntryProc = procedure();
   PEntryProc = ^TEntryProc;
@@ -79,9 +78,7 @@ function RoundUp(dwValue, dwMult: DWord): DWord;
 
 function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
 
-function DebugModeToString(const aDebugMode: DebugMode): string;
-
-function LogTypeToString(const aLogType: TLogType): string;
+function DebugModeToString(const aDebugMode: TDebugMode): string;
 
 function IsValidHandle(const aHandle: LongWord): Boolean;
 function IsValidLibraryHandle(const aHandle: LongWord): Boolean;
@@ -429,22 +426,12 @@ begin
   Result := IntToHex(Integer(aPointer), 8);
 end;
 
-function DebugModeToString(const aDebugMode: DebugMode): string;
+function DebugModeToString(const aDebugMode: TDebugMode): string;
 begin
   case aDebugMode of
-    DM_NONE: Result := 'DM_NONE';
-    DM_CONSOLE: Result := 'DM_CONSOLE';
-    DM_FILE: Result := 'DM_FILE';
-  else
-    Result := '?Unknown?';
-  end;
-end;
-
-function LogTypeToString(const aLogType: TLogType): string;
-begin
-  case aLogType of
-    ltKernel: Result := 'ltKernel';
-    ltGui: Result := 'ltGui';
+    dmNone: Result := 'DM_NONE';
+    dmConsole: Result := 'DM_CONSOLE';
+    dmFile: Result := 'DM_FILE';
   else
     Result := '?Unknown?';
   end;

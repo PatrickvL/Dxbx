@@ -68,6 +68,7 @@ begin
   end;
 
   Delete(Result, 1, Length(PatchPrefix));
+  
   // Is this exported function a patch (does it start with our prefix) ?
   if StrLIComp(PChar(Result), 'Emu', 3) = 0 then
     Delete(Result, 1, 3);
@@ -106,6 +107,13 @@ begin
 
   if aFunctionName <> '' then
   begin
+    if CharInSet(aFunctionName[1], ['?', '@', '_']) then
+    begin
+      // Also try finding a patch without a prefix character :
+      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 2, MaxInt));
+      Exit;
+    end;
+
     // Step backwards over all trailing digits :
     Index := Length(aFunctionName);
     while (Index > 1) and CharInSet(aFunctionName[Index], ['0'..'9']) do
@@ -119,10 +127,11 @@ begin
       Exit;
     end;
 
-    if aFunctionName[1] = '_' then
+    Index := Pos('@', aFunctionName);
+    if (Index > 0) then
     begin
-      // Also try finding a patch without the '_'-prefix :
-      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 2, MaxInt));
+      // Search again, but now without the whole '@...'-suffix :
+      Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 1, Index - 1));
       Exit;
     end;
   end;

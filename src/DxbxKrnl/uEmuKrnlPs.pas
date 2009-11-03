@@ -160,9 +160,12 @@ begin
       mov         esi, StartRoutine
       push        StartContext2
       push        StartContext1
+
       push        offset callComplete
       lea         ebp, [esp-4]
+
       jmp         esi
+
       // Note : This jmp reads like this in Cxbx (which doesn't compile) :
       // jmp near esi
     end;
@@ -401,7 +404,7 @@ end;
 
 //
 
-exports
-  xboxkrnl_PsCreateSystemThreadEx name 'PsCreateSystemThreadEx';
+//exports
+//  xboxkrnl_PsCreateSystemThreadEx name 'PsCreateSystemThreadEx';
 
 end.

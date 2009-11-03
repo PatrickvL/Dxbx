@@ -36,12 +36,10 @@ uses
   uConsoleClass;
 
 var
-  m_DxbxDebug: DebugMode = DM_NONE;
-  m_DxbxDebugFileName: string = '';
-  m_KrnlDebug: DebugMode = DM_FILE;
-  m_KrnlDebugFileName: string = '';
-
-procedure CreateLogs(aLogType: TLogType = ltKernel);
+  DebugMode: TDebugMode = dmNone;
+  DebugFileName: string = '';
+  
+procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
 procedure CloseLogs;
 procedure WriteLog(const aText: string);
 
@@ -50,7 +48,6 @@ function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Bool
 procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
-procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
 
 implementation
 
@@ -450,73 +447,47 @@ begin
   WriteLog(aStr);
 end;
 
-procedure SetLogMode(aLogMode: DebugMode = DM_NONE); export;
+procedure SetLogMode(aLogMode: TDebugMode = dmNone); export;
 begin
-  WriteLog('SetLogMode(' + DebugModeToString(aLogMode) + ')');
-  m_DxbxDebug := aLogMode;
+  DebugMode := aLogMode;
 end;
 
-procedure CreateLogs(aLogType: TLogType);
-type
-  PDebugMode = ^DebugMode;
-var
-  OutputFileName: string;
-  DM: PDebugMode;
+procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
 begin
-  WriteLog('CreateLogs(' + LogTypeToString(aLogType) + ')');
+  WriteLog('Entered CreateLogs');
 
-  if aLogType = ltGui then
-    DM := @m_DxbxDebug
-  else
-    DM := @m_KrnlDebug;
-
-  case DM^ of
-    DM_NONE:
+  case aDebugMode of
+    dmNone:
       CloseLogs;
 
-    DM_CONSOLE:
-      if not Assigned(ConsoleControl) then
+    dmConsole:
       try
-        ConsoleControl := TConsoleControl.Create;
-        if aLogType = ltGui then
-          ConsoleControl.SetWindowTitle('DXBX : Debug Console')
-        else // ltKernel
-          ConsoleControl.SetWindowTitle('DXBX : Kernel Debug Console');
+        if not Assigned(ConsoleControl) then
+          ConsoleControl := TConsoleControl.Create;
 
+        ConsoleControl.SetWindowTitle('DXBX : Debug Console for ' + ParamStr(0)); // Application.Name?
         ConsoleControl.SetBackgroundColor(False, False, False, False); // = black
         ConsoleControl.SetForegroundColor(False, True, False, False); // = lime
         ConsoleControl.HideCursor;
       except
-        DM^ := DM_NONE;
         FreeAndNil({var}ConsoleControl);
         raise Exception.Create('Could not create log console');
       end;
 
-    DM_FILE:
+    dmFile:
       if not LogFileOpen then
       try
-        if aLogType = ltGui then
-        begin
-          OutputFileName := m_DxbxDebugFileName;
-          if OutputFileName = '' then
-            OutputFileName := DXBX_CONSOLE_DEBUG_FILENAME;
-        end
-        else
-        begin
-          OutputFileName := m_KrnlDebugFileName;
-          if OutputFileName = '' then
-            OutputFileName := DXBX_KERNEL_DEBUG_FILENAME;
-        end;
+        if aOutputFileName = '' then
+          aOutputFileName := DXBX_KERNEL_DEBUG_FILENAME;
 
-        AssignFile({var}LogFile, OutputFileName);
+        AssignFile({var}LogFile, aOutputFileName);
 
         Rewrite({var}LogFile);
         LogFileOpen := True;
       except
-        DM^ := DM_NONE;
         raise Exception.Create('Could not create log file');
       end;
-  end; // case m_DxbxDebug
+  end; // case aDebugMode
 
   WriteLog('Started logging at ' + DateTimeToStr(Now));
 end; // CreateLogs
@@ -524,6 +495,7 @@ end; // CreateLogs
 procedure CloseLogs;
 begin
   WriteLog('Stop logging.');
+
   FreeAndNil(ConsoleControl);
 
   if LogFileOpen then
@@ -531,8 +503,6 @@ begin
     CloseFile(LogFile);
     LogFileOpen := False;
   end;
-
-  m_DxbxDebug := DM_NONE;
 end;
 
 procedure WriteLog(const aText: string);
@@ -550,34 +520,30 @@ var
 begin
   OutputDebugString(PChar(aText));
   
-  case m_DxbxDebug of
-    DM_CONSOLE:
-      if Assigned(ConsoleControl) then
-      begin
-        EnterCriticalSection({var}DxbxLogLock);
-        try
-          ConsoleControl.WriteTextLine(_Text());
-        finally
-          LeaveCriticalSection({var}DxbxLogLock);
-        end;
-      end;
+  if Assigned(ConsoleControl) then
+  begin
+    EnterCriticalSection({var}DxbxLogLock);
+    try
+      ConsoleControl.WriteTextLine(_Text());
+    finally
+      LeaveCriticalSection({var}DxbxLogLock);
+    end;
+  end;
 
-    DM_FILE:
-      if LogFileOpen then
-      begin
-        EnterCriticalSection({var}DxbxLogLock);
-        CurrentFS := GetFS();
-        try
-          WriteLn({var}LogFile, _Text());
-          // BUGFIX : Because the above call goes through kernel32.WriteFile,
-          // which alters the FS register, we have to restore it afterwards :
-          SetFS(CurrentFS);
+  if LogFileOpen then
+  begin
+    EnterCriticalSection({var}DxbxLogLock);
+    CurrentFS := GetFS();
+    try
+      WriteLn({var}LogFile, _Text());
+      // BUGFIX : Because the above call goes through kernel32.WriteFile,
+      // which alters the FS register, we have to restore it afterwards :
+      SetFS(CurrentFS);
           
-          Flush({var}LogFile);
-        finally
-          LeaveCriticalSection({var}DxbxLogLock);
-        end;
-      end;
+      Flush({var}LogFile);
+    finally
+      LeaveCriticalSection({var}DxbxLogLock);
+    end;
   end;
 end; // WriteLog
 

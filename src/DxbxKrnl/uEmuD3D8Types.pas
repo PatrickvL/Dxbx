@@ -154,6 +154,7 @@ type
     Green: array[0..255] of Byte;
     Blue: array[0..255] of Byte;
   end;
+  PX_D3DGAMMARAMP = ^X_D3DGAMMARAMP;
 
   X_D3DPRIMITIVETYPE = (
     X_D3DPT_POINTLIST = 1,

@@ -1660,7 +1660,7 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_SetGammaRamp(
   dwFlags: DWORD;
-  const pRamp: {!no pointer!}X_D3DGAMMARAMP); stdcall;
+  const pRamp: PX_D3DGAMMARAMP); stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:PatrickvL
 var
   dwPCFlags: DWORD;
@@ -1858,11 +1858,11 @@ begin
   Result := hRet;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetGammaRamp(pRamp: X_D3DGAMMARAMP); stdcall;
+procedure XTL_EmuIDirect3DDevice8_GetGammaRamp(pRamp: PX_D3DGAMMARAMP); stdcall;
 // Branch:martin  Revision:39  Done:50  Translator:Shadow_Tj
-(*var
+var
   pGammaRamp : PD3DGAMMARAMP;
-  v : Integer;                  *)
+  v : Integer;        
 begin
   EmuSwapFS(fsWindows);
 
@@ -1870,19 +1870,20 @@ begin
     #13#10'(' +
     #13#10'   pRamp              : 0x%.08X' +
     #13#10');',
-    [@pRamp]);
+    [pRamp]);
 
-(*    pGammaRamp := D3DGAMMARAMP (Cxbxmalloc(SizeOf(D3DGAMMARAMP)));
+  pGammaRamp := PD3DGAMMARAMP(malloc(SizeOf(D3DGAMMARAMP)));
 
-    g_pD3DDevice8.GetGammaRamp(pGammaRamp);
+  g_pD3DDevice8.GetGammaRamp({out}pGammaRamp^);
 
-    for v := 0 to 255 do begin
-      pRamp.red[v] := pGammaRamp.red[v];
-      pRamp.green[v] := pGammaRamp.green[v];
-      pRamp.blue[v] := pGammaRamp.blue[v];
-    end;
+  for v := 0 to 255 do
+  begin
+    pRamp.red[v] := pGammaRamp.red[v];
+    pRamp.green[v] := pGammaRamp.green[v];
+    pRamp.blue[v] := pGammaRamp.blue[v];
+  end;
 
-    free(pGammaRamp); *)
+  free(pGammaRamp);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2110,7 +2111,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice8_SetShaderConstantMode(Mode: X_VERTEXSHADERCONSTANTMODE): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_SetShaderConstantMode(
+  Mode: X_VERTEXSHADERCONSTANTMODE
+  ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 begin
   EmuSwapFS(fsWindows);
@@ -4789,14 +4792,14 @@ begin
 
     // rearrange into windows format (remove D3DPool)
     // Convert Format (PC->Xbox)
-    pDesc.Format :=  EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+    pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
     (*pDesc.cType := (X_D3DRESOURCETYPE)SurfaceDesc.cType;
 
     if (pDesc.cType > 7) then
         CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc.cType > 7'); *)
 
-    pDesc.Usage  := SurfaceDesc.Usage;
-    pDesc.Size   := SurfaceDesc.Size;
+    pDesc.Usage := SurfaceDesc.Usage;
+    pDesc.Size := SurfaceDesc.Size;
 
     // Cxbx TODO: Convert from Xbox to PC!!
     if (SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE) then
@@ -6454,7 +6457,7 @@ begin
   VPDesc.uiVertexStreamZeroStride := 0;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
-  bPatched := XTL_VertexPatcher_Apply(VPDesc);
+  bPatched := XTL_VertexPatcher_Apply(@VPDesc);
 
   if XTL_IsValidCurrentShader() then
   begin
@@ -7744,192 +7747,192 @@ exports
   XTL_EmuD3DCleanup,
   XTL_EmuD3DInit,
 
+  XTL_EmuGet2DSurfaceDesc name PatchPrefix + 'Get2DSurfaceDesc', // TODO : Fix wrong prefix!
+  XTL_EmuGet2DSurfaceDescD name PatchPrefix + 'Get2DSurfaceDescD', // TODO : Fix wrong prefix!
+
+  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory',
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
+  XTL_EmuIDirect3D8_CheckDeviceMultiSampleType name PatchPrefix + 'Direct3D_CheckDeviceMultiSampleType',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
-  XTL_EmuIDirect3D8_SetPushBufferSize name PatchPrefix + 'Direct3D_SetPushBufferSize',
-  XTL_EmuIDirect3D8_GetAdapterModeCount name PatchPrefix + 'Direct3D_GetAdapterModeCount',
+  XTL_EmuIDirect3D8_EnumAdapterModes name PatchPrefix + 'Direct3D_EnumAdapterModes',
   XTL_EmuIDirect3D8_GetAdapterDisplayMode name PatchPrefix + 'Direct3D_GetAdapterDisplayMode',
-  XTL_EmuIDirect3D8_EnumAdapterModes name PatchPrefix + 'XTL_EmuIDirect3D8_GetAdapterModeCount',
-  XTL_EmuIDirect3D8_KickOffAndWaitForIdle name PatchPrefix + '_EmuIDirect3D8_KickOffAndWaitForIdle',
-  XTL_EmuIDirect3D8_KickOffAndWaitForIdle2 name PatchPrefix + '_EmuIDirect3D8_KickOffAndWaitForIdle2',
-  XTL_EmuIDirect3D8_CheckDeviceMultiSampleType name PatchPrefix + '_D3DDevice_CheckDeviceMultiSampleType',
-  XTL_EmuIDirect3D8_GetDeviceCaps name PatchPrefix + '_D3DDevice_GetDeviceCaps',
+  XTL_EmuIDirect3D8_GetAdapterModeCount name PatchPrefix + 'Direct3D_GetAdapterModeCount',
+  XTL_EmuIDirect3D8_GetDeviceCaps name PatchPrefix + 'Direct3D_GetDeviceCaps',
+  XTL_EmuIDirect3D8_KickOffAndWaitForIdle name PatchPrefix + 'Direct3D_KickOffAndWaitForIdle', // D3D_ prefix?
+  XTL_EmuIDirect3D8_KickOffAndWaitForIdle2 name PatchPrefix + 'Direct3D_KickOffAndWaitForIdle2',
+  XTL_EmuIDirect3D8_SetPushBufferSize name PatchPrefix + 'Direct3D_SetPushBufferSize',
 
-  XTL_EmuIDirect3DDevice8_SetRenderState_Simple name 'EmuIDirect3DDevice8_SetRenderState_Simple',
-  XTL_EmuIDirect3DDevice8_SetGammaRamp name PatchPrefix + '_EmuIDirect3D8_SetGammaRamp',
-  XTL_EmuIDirect3DDevice8_GetRenderTarget2 name 'EmuIDirect3DDevice8_GetRenderTarget2',
-  XTL_EmuIDirect3DDevice8_GetDepthStencilSurface name 'EmuIDirect3DDevice8_GetDepthStencilSurface',
-  XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2 name 'EmuIDirect3DDevice8_GetDepthStencilSurface2',
-  XTL_EmuIDirect3DDevice8_AddRef name PatchPrefix + '_D3DDevice_AddRef@0',
-  XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + '_D3DDevice_BeginPushBuffer@4',
-  XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + '_D3DDevice_BeginStateBlock@0',
-(*  XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + '_D3DDevice_BeginStateBig', *) // MARKED OUT BY CXBX
-  XTL_EmuIDirect3DDevice8_CaptureStateBlock name PatchPrefix + '_D3DDevice_CaptureStateBlock',
-  XTL_EmuIDirect3DDevice8_ApplyStateBlock name PatchPrefix + '_D3DDevice_ApplyStateBlock',
-  XTL_EmuIDirect3DDevice8_EndStateBlock name PatchPrefix + '_D3DDevice_EndStateBlock',
-  XTL_EmuIDirect3DDevice8_CopyRects name PatchPrefix + '_D3DDevice_CopyRects',
-  XTL_EmuIDirect3DDevice8_CreateImageSurface name PatchPrefix + '_D3DDevice_CreateImageSurface',
-  XTL_EmuIDirect3DDevice8_GetGammaRamp name PatchPrefix + '_D3DDevice_GetGammaRamp',
-  XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + '_D3DDevice_BeginVisibilityTest@0',
-  XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + '_D3DDevice_BlockUntilVerticalBlank@0',
-  XTL_EmuIDirect3DDevice8_CreatePalette name PatchPrefix + '_D3DDevice_CreatePalette',
-  XTL_EmuIDirect3DDevice8_CreatePalette2 name PatchPrefix + '_D3DDevice_CreatePalette2',
-  XTL_EmuIDirect3DDevice8_SetPalette name PatchPrefix + '_D3DDevice_SetPalette',
-  XTL_EmuIDirect3DDevice8_SetVerticalBlankCallback name PatchPrefix + '_D3DDevice_SetVerticalBlankCallback',
-  XTL_EmuIDirect3DDevice8_CreatePixelShader name PatchPrefix + '_D3DDevice_CreatePixelShader@8',
-  XTL_EmuIDirect3DDevice8_CreateVertexShader name PatchPrefix + '_D3DDevice_CreateVertexShader@16',
-  XTL_EmuIDirect3DDevice8_DeleteVertexShader name PatchPrefix + '_D3DDevice_DeleteVertexShader@4',
-  XTL_EmuIDirect3DDevice8_SelectVertexShaderDirect name PatchPrefix + '_D3DDevice_SelectVertexShaderDirect',
-  XTL_EmuIDirect3DDevice8_GetShaderConstantMode name PatchPrefix + '_D3DDevice_GetShaderConstantMode',
-  XTL_EmuIDirect3DDevice8_DrawIndexedVertices name PatchPrefix + '_D3DDevice_DrawIndexedVertices@12',
-  XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP name PatchPrefix + '_D3DDevice_DrawIndexedVerticesUP',
-  XTL_EmuIDirect3DDevice8_DrawVertices name PatchPrefix + '_D3DDevice_DrawVertices@12',
-  XTL_EmuIDirect3DDevice8_DrawVerticesUP name PatchPrefix + '_D3DDevice_DrawVerticesUP@16',
-  XTL_EmuIDirect3DDevice8_EnableOverlay name PatchPrefix + '_D3DDevice_EnableOverlay@4',
-  XTL_EmuIDirect3DDevice8_EndPush name PatchPrefix + '_D3DDevice_EndPushBuffer@0',
-  XTL_EmuIDirect3DDevice8_EndVisibilityTest name PatchPrefix + '_D3DDevice_EndVisibilityTest@4',
-  XTL_EmuIDirect3DDevice8_SetBackBufferScale name PatchPrefix + '_D3DDevice_SetBackBufferScale',
-  XTL_EmuIDirect3DDevice8_GetBackBuffer2 name PatchPrefix + '_D3DDevice_GetBackBuffer2@4',
-  XTL_EmuIDirect3DDevice8_GetBackBuffer name PatchPrefix + '_D3DDevice_GetBackBuffer',
-  XTL_EmuIDirect3DDevice8_GetCreationParameters name PatchPrefix + '_D3DDevice_GetCreationParameters',
-  XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus name PatchPrefix + '_D3DDevice_GetDisplayFieldStatus',
-  XTL_EmuIDirect3DDevice8_Begin name PatchPrefix + '_D3DDevice_Begin',
-  XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + '_D3DDevice_GetOverlayUpdateStatus',
-  XTL_EmuIDirect3DDevice8_GetTransform name PatchPrefix + '_D3DDevice_GetTransform',
-  XTL_EmuIDirect3DDevice8_GetVertexShader name PatchPrefix + '_D3DDevice_GetVertexShader',
-  XTL_EmuIDirect3DDevice8_GetVertexShaderConstant name PatchPrefix + '_D3DDevice_GetVertexShaderConstant',
-  XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect name PatchPrefix + '_D3DDevice_SetVertexShaderInputDirect',
-  XTL_EmuIDirect3DDevice8_GetVertexShaderInput name PatchPrefix + '_D3DDevice_GetVertexShaderInput',
-  XTL_EmuIDirect3DDevice8_SetVertexShaderInput name PatchPrefix + '_D3DDevice_SetVertexShaderInput',
-  XTL_EmuIDirect3DDevice8_RunVertexStateShader name PatchPrefix + '_D3DDevice_RunVertexStateShader',
-  XTL_EmuIDirect3DDevice8_LoadVertexShaderProgram name PatchPrefix + '_D3DDevice_LoadVertexShaderProgram',
-  XTL_EmuIDirect3DDevice8_GetVertexShaderSize name PatchPrefix + '_D3DDevice_GetVertexShaderSize',
-  XTL_EmuIDirect3DDevice8_GetVertexShaderType name PatchPrefix + '_D3DDevice_GetVertexShaderType',
-  XTL_EmuIDirect3DDevice8_GetVertexShaderDeclaration name PatchPrefix + '_D3DDevice_GetVertexShaderDeclaration',
-  XTL_EmuIDirect3DDevice8_GetVertexShaderFunction name PatchPrefix + '_D3DDevice_GetVertexShaderFunction',
-  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + '_D3DDevice_AllocContiguousMemory',
-  XTL_EmuIDirect3DDevice8_GetViewport name PatchPrefix + '_D3DDevice_GetViewport',
-  XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale name PatchPrefix + '_D3DDevice_GetViewportOffsetAndScale',
-  XTL_EmuIDirect3DDevice8_GetVisibilityTestResult name PatchPrefix + '_D3DDevice_GetVisibilityTestResult',
-  XTL_EmuIDirect3DDevice8_GetDeviceCaps name PatchPrefix + '_D3DDevice_GetDeviceCaps',
-  XTL_EmuIDirect3DDevice8_InsertFence name PatchPrefix + '_D3DDevice_InsertFence',
-  XTL_EmuIDirect3DDevice8_IsFencePending name PatchPrefix + '_D3DDevice_IsFencePending',
-  XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + '_D3DDevice_BlockOnFence',
-  XTL_EmuIDirect3DDevice8_IsBusy name PatchPrefix + '_D3DDevice_IsBusy',
-  XTL_EmuIDirect3DDevice8_LightEnable name PatchPrefix + '_D3DDevice_LightEnable',
-  XTL_EmuIDirect3DDevice8_LoadVertexShader name PatchPrefix + '_D3DDevice_LoadVertexShader',
-  XTL_EmuIDirect3DDevice8_SelectVertexShader name PatchPrefix + '_D3DDevice_SelectVertexShader',
-  XTL_EmuIDirect3DDevice8_RunPushBuffer name PatchPrefix + '_D3DDevice_RunPushBuffer',
-  XTL_EmuIDirect3DDevice8_Clear name PatchPrefix + '_D3DDevice_Clear',
-  XTL_EmuIDirect3DDevice8_Present name PatchPrefix + '_D3DDevice_Present',
-  XTL_EmuIDirect3DDevice8_Swap name PatchPrefix + '_D3DDevice_Swap',
-  XTL_EmuIDirect3DDevice8_SetFlickerFilter name PatchPrefix + '_D3DDevice_SetFlickerFilter',
-  XTL_EmuIDirect3DDevice8_SetLight name PatchPrefix + '_D3DDevice_SetLight',
-  XTL_EmuIDirect3DDevice8_SetMaterial name PatchPrefix + '_D3DDevice_SetMaterial',
-  XTL_EmuIDirect3DDevice8_SetPixelShader name PatchPrefix + '_D3DDevice_SetPixelShader',
-  XTL_EmuIDirect3DDevice8_CreateTexture name PatchPrefix + '_D3DDevice_CreateTexture',
-  XTL_EmuIDirect3DDevice8_CreateTexture2 name PatchPrefix + '_D3DDevice_CreateTexture2',
-  XTL_EmuIDirect3DDevice8_CreateVolumeTexture name PatchPrefix + '_D3DDevice_CreateVolumeTexture',
-  XTL_EmuIDirect3DDevice8_CreateCubeTexture name PatchPrefix + '_D3DDevice_CreateCubeTexture',
-  XTL_EmuIDirect3DDevice8_CreateIndexBuffer name PatchPrefix + '_D3DDevice_CreateIndexBuffer',
-  XTL_EmuIDirect3DDevice8_CreateIndexBuffer2 name PatchPrefix + '_D3DDevice_CreateIndexBuffer2',
-  XTL_EmuIDirect3DDevice8_SetIndices name PatchPrefix + '_D3DDevice_SetIndices',
-  XTL_EmuIDirect3DDevice8_SetPixelShaderConstant name PatchPrefix + '_D3DDevice_SetPixelShaderConstant',
-  XTL_EmuIDirect3DDevice8_SetVertexShaderConstant name PatchPrefix + '_D3DDevice_SetVertexShaderConstant',
-  XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1 name PatchPrefix + '_D3DDevice_SetVertexShaderConstant1',
-  XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4 name PatchPrefix + '_D3DDevice_SetVertexShaderConstant4',
-  XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline name PatchPrefix + '_D3DDevice_SetVertexShaderConstantNotInline',
-  XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name 'EmuIDirect3DDevice8_SetRenderState_CullMode',
-  XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed name PatchPrefix + '_D3DDevice_SetRenderState_DoNotCullUncompressed',
-  XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name 'EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name 'EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias',
-  XTL_EmuIDirect3DDevice8_SetRenderState_FillMode name 'EmuIDirect3DDevice8_SetRenderState_FillMode',
-  XTL_EmuIDirect3DDevice8_SetRenderState_FogColor name 'EmuIDirect3DDevice8_SetRenderState_FogColor',
-  XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace name PatchPrefix + '_D3DDevice_SetRenderState_FrontFace',
-  XTL_EmuIDirect3DDevice8_SetRenderState_LineWidth name PatchPrefix + '_D3DDevice_SetRenderState_LineWidth',
-  XTL_EmuIDirect3DDevice8_SetRenderState_StencilFail name PatchPrefix + '_D3DDevice_SetRenderState_StencilFail',
-  XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp name PatchPrefix + '_D3DDevice_SetRenderState_LogicOp',
-  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias name PatchPrefix + '_D3DDevice_SetRenderState_MultiSampleAntiAlias',
-  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask name PatchPrefix + '_D3DDevice_SetRenderState_MultiSampleMask',
-  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode name PatchPrefix + '_D3DDevice_SetRenderState_MultiSampleMode',
-  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode name PatchPrefix + '_D3DDevice_SetRenderState_MultiSampleRenderTargetMode',
-  XTL_EmuIDirect3DDevice8_SetRenderState_NormalizeNormals name PatchPrefix + '_D3DDevice_SetRenderState_NormalizeNormals',
-  XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable name PatchPrefix + '_D3DDevice_SetRenderState_OcclusionCullEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderState_StencilCullEnable name PatchPrefix + '_D3DDevice_SetRenderState_StencilCullEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead name PatchPrefix + '_D3DDevice_SetRenderState_RopZCmpAlwaysRead',
-  XTL_EmuIDirect3DDevice8_SetRenderState_RopZRead name PatchPrefix + '_D3DDevice_SetRenderState_RopZRead',
-  XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes name PatchPrefix + '_D3DDevice_SetRenderState_PSTextureModes',
-  XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc name PatchPrefix + '_D3DDevice_SetRenderState_ShadowFunc',
-  XTL_EmuIDirect3DDevice8_SetRenderState_StencilEnable name PatchPrefix + '_D3DDevice_SetRenderState_StencilEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderState_TextureFactor name PatchPrefix + '_D3DDevice_SetRenderState_TextureFactor',
-  XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend name PatchPrefix + '_D3DDevice_SetRenderState_VertexBlend',
-  XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable name PatchPrefix + '_D3DDevice_SetRenderState_YuvEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderState_ZBias name 'EmuIDirect3DDevice8_SetRenderState_ZBias',
-  XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable name 'EmuIDirect3DDevice8_SetRenderState_ZEnable',
-  XTL_EmuIDirect3DDevice8_SetRenderTarget name PatchPrefix + '_D3DDevice_SetRenderTarget',
-  XTL_EmuIDirect3DDevice8_SetScissors name PatchPrefix + '_D3DDevice_SetScissors',
-  XTL_EmuIDirect3DDevice8_SetShaderConstantMode name PatchPrefix + '_D3DDevice_SetShaderConstantMode',
-  XTL_EmuIDirect3DDevice8_Reset name PatchPrefix + '_D3DDevice_Reset',
-  XTL_EmuIDirect3DDevice8_GetRenderTarget name PatchPrefix + '_D3DDevice_GetRenderTarget',
-  XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter name PatchPrefix + '_D3DDevice_SetSoftDisplayFilter',
-  XTL_EmuIDirect3DDevice8_SetStreamSource name PatchPrefix + '_D3DDevice_SetStreamSource',
-  XTL_EmuIDirect3DDevice8_SetTexture name PatchPrefix + '_D3DDevice_SetTexture',
-  XTL_EmuIDirect3DDevice8_SwitchTexture name PatchPrefix + '_D3DDevice_SwitchTexture',
-  XTL_EmuIDirect3DDevice8_GetDisplayMode name PatchPrefix + '_D3DDevice_GetDisplayMode',
-  XTL_EmuIDirect3DDevice8_SetTextureState_BorderColor name PatchPrefix + '_D3DDevice_SetTextureState_BorderColor',
-  XTL_EmuIDirect3DDevice8_SetTextureState_ColorKeyColor name PatchPrefix + '_D3DDevice_SetTextureState_ColorKeyColor',
-  XTL_EmuIDirect3DDevice8_SetTextureState_BumpEnv name PatchPrefix + '_D3DDevice_SetTextureState_BumpEnv',
-  XTL_EmuIDirect3DDevice8_SetTextureState_TexCoordIndex name PatchPrefix + '_D3DDevice_SetTextureState_TexCoordIndex',
-  XTL_EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting name PatchPrefix + '_D3DDevice_SetTextureState_TwoSidedLighting',
-  XTL_EmuIDirect3DDevice8_SetTextureState_BackFillMode name PatchPrefix + '_D3DDevice_SetTextureState_BackFillMode',
-  XTL_EmuIDirect3DDevice8_SetTransform name PatchPrefix + '_D3DDevice_SetTransform',
-  XTL_EmuIDirect3DDevice8_SetVertexData2f name PatchPrefix + '_D3DDevice_SetVertexData2f',
-  XTL_EmuIDirect3DDevice8_SetVertexData2s name PatchPrefix + '_D3DDevice_SetVertexData2s',
-  XTL_EmuIDirect3DDevice8_SetVertexData4f name PatchPrefix + '_D3DDevice_SetVertexData4f',
-  XTL_EmuIDirect3DDevice8_SetVertexDataColor name PatchPrefix + '_D3DDevice_SetVertexDataColor',
-  XTL_EmuIDirect3DDevice8_End name PatchPrefix + '_D3DDevice_End',
-  XTL_EmuIDirect3DDevice8_SetVertexShader name PatchPrefix + '_D3DDevice_SetVertexShader',
-  XTL_EmuIDirect3DDevice8_SetViewport name PatchPrefix + '_D3DDevice_SetViewport',
-  XTL_EmuIDirect3DDevice8_Release name PatchPrefix + '_D3DDevice_Release',
-  XTL_EmuIDirect3DDevice8_CreateVertexBuffer name PatchPrefix + '_D3DDevice_CreateVertexBuffer',
-  XTL_EmuIDirect3DDevice8_CreateVertexBuffer2 name PatchPrefix + '_D3DDevice_CreateVertexBuffer2',
-  XTL_EmuIDirect3DDevice8_GetStreamSource2 name PatchPrefix + '_D3DDevice_GetStreamSource2',
-  XTL_EmuIDirect3DDevice8_GetTile name PatchPrefix + '_D3DDevice_GetTile',
-  XTL_EmuIDirect3DDevice8_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
-  XTL_EmuIDirect3DDevice8_DeletePixelShader name PatchPrefix + '_D3DDevice_DeletePixelShader@4',
-  XTL_EmuIDirect3DDevice8_UpdateOverlay name PatchPrefix + '_D3DDevice_UpdateOverlay',
+  XTL_EmuIDirect3DBaseTexture8_GetLevelCount name PatchPrefix + 'D3DBaseTexture_GetLevelCount',
 
-  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + '_D3DDevice_GetLevelDesc',
-  XTL_EmuIDirect3DTexture8_GetSurfaceLevel2 name PatchPrefix + '_D3DDevice_GetSurfaceLevel2',
-  XTL_EmuIDirect3DTexture8_LockRect name PatchPrefix + '_D3DDevice_LockRect',
-  XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + '_D3DDevice_GetSurfaceLevel',
-
-  XTL_EmuIDirect3DResource8_BlockUntilNotBusy name PatchPrefix + '_D3DDevice_BlockUntilNotBusy',
-  XTL_EmuIDirect3DResource8_Register name PatchPrefix + '_D3DDevice_Register',
-  XTL_EmuIDirect3DResource8_AddRef name PatchPrefix + '_D3DDevice_AddRef',
-  XTL_EmuIDirect3DResource8_Release name PatchPrefix + '_D3DDevice_Release',
-  XTL_EmuIDirect3DResource8_IsBusy name PatchPrefix + '_D3DDevice_IsBusy',
-  XTL_EmuIDirect3DResource8_GetType name PatchPrefix + '_D3DDevice_GetType',
-
-  XTL_EmuIDirect3DPalette8_Lock name PatchPrefix + '_D3DDevice_Lock',
-  XTL_EmuIDirect3DPalette8_Lock2 name PatchPrefix + '_D3DDevice_Lock2',
-
-  //XTL_EmuLock2DSurface name PatchPrefix + '_D3DDevice_Lock2DSurface',         ??
-  //XTL_EmuGet2DSurfaceDesc name PatchPrefix + '_D3DDevice_Get2DSurfaceDesc',   ??
-  //XTL_EmuGet2DSurfaceDescD name PatchPrefix + '_D3DDevice_Get2DSurfaceDescD', ??
-
-  // XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + '_D3DDevice_Get2DSurfaceDescD', ??
-  // XTL_EmuIDirect3DSurface8_LockRect ??
-
-  // XTL_EmuIDirect3DBaseTexture8_GetLevelCount ??
-  // XTL_EmuIDirect3DVolumeTexture8_LockBox ??
   // XTL_EmuIDirect3DCubeTexture8_LockRect ??
 
-  //  XTL_EmuIDirect3DVertexBuffer8_Lock name PatchPrefix + '_D3DDevice_Lock', ??
-  // XTL_EmuIDirect3DVertexBuffer8_Lock2 ??
-  // XTL_EmuIDirect3DVertexBuffer8_GetDesc ??
+  XTL_EmuIDirect3DDevice8_AddRef name PatchPrefix + 'D3DDevice_AddRef@0',
+  XTL_EmuIDirect3DDevice8_ApplyStateBlock name PatchPrefix + 'D3DDevice_ApplyStateBlock',
+  XTL_EmuIDirect3DDevice8_Begin name PatchPrefix + 'D3DDevice_Begin',
+  XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4',
+(*  XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', *) // MARKED OUT BY CXBX
+  XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
+  XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0',
+  XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + 'D3DDevice_BlockOnFence',
+  XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + 'D3DDevice_BlockUntilVerticalBlank@0',
+  XTL_EmuIDirect3DDevice8_CaptureStateBlock name PatchPrefix + 'D3DDevice_CaptureStateBlock',
+  XTL_EmuIDirect3DDevice8_Clear name PatchPrefix + 'D3DDevice_Clear',
+  XTL_EmuIDirect3DDevice8_CopyRects name PatchPrefix + 'D3DDevice_CopyRects',
+  XTL_EmuIDirect3DDevice8_CreateCubeTexture name PatchPrefix + 'D3DDevice_CreateCubeTexture',
+  XTL_EmuIDirect3DDevice8_CreateImageSurface name PatchPrefix + 'D3DDevice_CreateImageSurface',
+  XTL_EmuIDirect3DDevice8_CreateIndexBuffer name PatchPrefix + 'D3DDevice_CreateIndexBuffer',
+  XTL_EmuIDirect3DDevice8_CreateIndexBuffer2 name PatchPrefix + 'D3DDevice_CreateIndexBuffer2',
+  XTL_EmuIDirect3DDevice8_CreatePalette name PatchPrefix + 'D3DDevice_CreatePalette',
+  XTL_EmuIDirect3DDevice8_CreatePalette2 name PatchPrefix + 'D3DDevice_CreatePalette2',
+  XTL_EmuIDirect3DDevice8_CreatePixelShader name PatchPrefix + 'D3DDevice_CreatePixelShader@8',
+  XTL_EmuIDirect3DDevice8_CreateTexture name PatchPrefix + 'D3DDevice_CreateTexture',
+  XTL_EmuIDirect3DDevice8_CreateTexture2 name PatchPrefix + 'D3DDevice_CreateTexture2',
+  XTL_EmuIDirect3DDevice8_CreateVertexBuffer name PatchPrefix + 'D3DDevice_CreateVertexBuffer',
+  XTL_EmuIDirect3DDevice8_CreateVertexBuffer2 name PatchPrefix + 'D3DDevice_CreateVertexBuffer2',
+  XTL_EmuIDirect3DDevice8_CreateVertexShader name PatchPrefix + 'D3DDevice_CreateVertexShader@16',
+  XTL_EmuIDirect3DDevice8_CreateVolumeTexture name PatchPrefix + 'D3DDevice_CreateVolumeTexture',
+  XTL_EmuIDirect3DDevice8_DeletePixelShader name PatchPrefix + 'D3DDevice_DeletePixelShader@4',
+  XTL_EmuIDirect3DDevice8_DeleteVertexShader name PatchPrefix + 'D3DDevice_DeleteVertexShader@4',
+  XTL_EmuIDirect3DDevice8_DrawIndexedVertices name PatchPrefix + 'D3DDevice_DrawIndexedVertices@12',
+  XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP name PatchPrefix + 'D3DDevice_DrawIndexedVerticesUP',
+  XTL_EmuIDirect3DDevice8_DrawVertices name PatchPrefix + 'D3DDevice_DrawVertices@12',
+  XTL_EmuIDirect3DDevice8_DrawVerticesUP name PatchPrefix + 'D3DDevice_DrawVerticesUP@16',
+  XTL_EmuIDirect3DDevice8_EnableOverlay name PatchPrefix + 'D3DDevice_EnableOverlay@4',
+  XTL_EmuIDirect3DDevice8_End name PatchPrefix + 'D3DDevice_End',
+  XTL_EmuIDirect3DDevice8_EndPush name PatchPrefix + 'D3DDevice_EndPushBuffer@0',
+  XTL_EmuIDirect3DDevice8_EndStateBlock name PatchPrefix + 'D3DDevice_EndStateBlock',
+  XTL_EmuIDirect3DDevice8_EndVisibilityTest name PatchPrefix + 'D3DDevice_EndVisibilityTest@4',
+  XTL_EmuIDirect3DDevice8_GetBackBuffer name PatchPrefix + 'D3DDevice_GetBackBuffer',
+  XTL_EmuIDirect3DDevice8_GetBackBuffer2 name PatchPrefix + 'D3DDevice_GetBackBuffer2@4',
+  XTL_EmuIDirect3DDevice8_GetCreationParameters name PatchPrefix + 'D3DDevice_GetCreationParameters',
+  XTL_EmuIDirect3DDevice8_GetDepthStencilSurface name PatchPrefix + 'D3DDevice_GetDepthStencilSurface',
+  XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2 name PatchPrefix + 'D3DDevice_GetDepthStencilSurface2',
+  XTL_EmuIDirect3DDevice8_GetDeviceCaps name PatchPrefix + 'D3DDevice_GetDeviceCaps',
+  XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus name PatchPrefix + 'D3DDevice_GetDisplayFieldStatus',
+  XTL_EmuIDirect3DDevice8_GetDisplayMode name PatchPrefix + 'D3DDevice_GetDisplayMode',
+  XTL_EmuIDirect3DDevice8_GetGammaRamp name PatchPrefix + 'D3DDevice_GetGammaRamp',
+  XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
+  XTL_EmuIDirect3DDevice8_GetRenderTarget name PatchPrefix + 'D3DDevice_GetRenderTarget',
+  XTL_EmuIDirect3DDevice8_GetRenderTarget2 name PatchPrefix + 'D3DDevice_GetRenderTarget2',
+  XTL_EmuIDirect3DDevice8_GetShaderConstantMode name PatchPrefix + 'D3DDevice_GetShaderConstantMode',
+  XTL_EmuIDirect3DDevice8_GetStreamSource2 name PatchPrefix + 'D3DDevice_GetStreamSource2',
+  XTL_EmuIDirect3DDevice8_GetTile name PatchPrefix + 'D3DDevice_GetTile',
+  XTL_EmuIDirect3DDevice8_GetTransform name PatchPrefix + 'D3DDevice_GetTransform',
+  XTL_EmuIDirect3DDevice8_GetVertexShader name PatchPrefix + 'D3DDevice_GetVertexShader',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderConstant name PatchPrefix + 'D3DDevice_GetVertexShaderConstant',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderDeclaration name PatchPrefix + 'D3DDevice_GetVertexShaderDeclaration',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderFunction name PatchPrefix + 'D3DDevice_GetVertexShaderFunction',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderInput name PatchPrefix + 'D3DDevice_GetVertexShaderInput',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderSize name PatchPrefix + 'D3DDevice_GetVertexShaderSize',
+  XTL_EmuIDirect3DDevice8_GetVertexShaderType name PatchPrefix + 'D3DDevice_GetVertexShaderType',
+  XTL_EmuIDirect3DDevice8_GetViewport name PatchPrefix + 'D3DDevice_GetViewport',
+  XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale name PatchPrefix + 'D3DDevice_GetViewportOffsetAndScale',
+  XTL_EmuIDirect3DDevice8_GetVisibilityTestResult name PatchPrefix + 'D3DDevice_GetVisibilityTestResult',
+  XTL_EmuIDirect3DDevice8_InsertFence name PatchPrefix + 'D3DDevice_InsertFence',
+  XTL_EmuIDirect3DDevice8_IsBusy name PatchPrefix + 'D3DDevice_IsBusy',
+  XTL_EmuIDirect3DDevice8_IsFencePending name PatchPrefix + 'D3DDevice_IsFencePending',
+  XTL_EmuIDirect3DDevice8_LightEnable name PatchPrefix + 'D3DDevice_LightEnable',
+  XTL_EmuIDirect3DDevice8_LoadVertexShader name PatchPrefix + 'D3DDevice_LoadVertexShader',
+  XTL_EmuIDirect3DDevice8_LoadVertexShaderProgram name PatchPrefix + 'D3DDevice_LoadVertexShaderProgram',
+  XTL_EmuIDirect3DDevice8_Present name PatchPrefix + 'D3DDevice_Present',
+  XTL_EmuIDirect3DDevice8_Release name PatchPrefix + 'D3DDevice_Release',
+  XTL_EmuIDirect3DDevice8_Reset name PatchPrefix + 'D3DDevice_Reset',
+  XTL_EmuIDirect3DDevice8_RunPushBuffer name PatchPrefix + 'D3DDevice_RunPushBuffer',
+  XTL_EmuIDirect3DDevice8_RunVertexStateShader name PatchPrefix + 'D3DDevice_RunVertexStateShader',
+  XTL_EmuIDirect3DDevice8_SelectVertexShader name PatchPrefix + 'D3DDevice_SelectVertexShader',
+  XTL_EmuIDirect3DDevice8_SelectVertexShaderDirect name PatchPrefix + 'D3DDevice_SelectVertexShaderDirect',
+  XTL_EmuIDirect3DDevice8_SetBackBufferScale name PatchPrefix + 'D3DDevice_SetBackBufferScale',
+  XTL_EmuIDirect3DDevice8_SetFlickerFilter name PatchPrefix + 'D3DDevice_SetFlickerFilter',
+  XTL_EmuIDirect3DDevice8_SetGammaRamp name PatchPrefix + 'Direct3D8_SetGammaRamp',
+  XTL_EmuIDirect3DDevice8_SetIndices name PatchPrefix + 'D3DDevice_SetIndices',
+  XTL_EmuIDirect3DDevice8_SetLight name PatchPrefix + 'D3DDevice_SetLight',
+  XTL_EmuIDirect3DDevice8_SetMaterial name PatchPrefix + 'D3DDevice_SetMaterial',
+  XTL_EmuIDirect3DDevice8_SetPalette name PatchPrefix + 'D3DDevice_SetPalette',
+  XTL_EmuIDirect3DDevice8_SetPixelShader name PatchPrefix + 'D3DDevice_SetPixelShader',
+  XTL_EmuIDirect3DDevice8_SetPixelShaderConstant name PatchPrefix + 'D3DDevice_SetPixelShaderConstant',
+  XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name PatchPrefix + 'D3DDevice_SetRenderState_CullMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed name PatchPrefix + 'D3DDevice_SetRenderState_DoNotCullUncompressed',
+  XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name PatchPrefix + 'D3DDevice_SetRenderState_Dxt1NoiseEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name PatchPrefix + 'D3DDevice_SetRenderState_EdgeAntiAlias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FillMode name PatchPrefix + 'D3DDevice_SetRenderState_FillMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FogColor name PatchPrefix + 'D3DDevice_SetRenderState_FogColor',
+  XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace name PatchPrefix + 'D3DDevice_SetRenderState_FrontFace',
+  XTL_EmuIDirect3DDevice8_SetRenderState_LineWidth name PatchPrefix + 'D3DDevice_SetRenderState_LineWidth',
+  XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp name PatchPrefix + 'D3DDevice_SetRenderState_LogicOp',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleAntiAlias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleMask',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode name PatchPrefix + 'D3DDevice_SetRenderState_MultiSampleRenderTargetMode',
+  XTL_EmuIDirect3DDevice8_SetRenderState_NormalizeNormals name PatchPrefix + 'D3DDevice_SetRenderState_NormalizeNormals',
+  XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable name PatchPrefix + 'D3DDevice_SetRenderState_OcclusionCullEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes name PatchPrefix + 'D3DDevice_SetRenderState_PSTextureModes',
+  XTL_EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead name PatchPrefix + 'D3DDevice_SetRenderState_RopZCmpAlwaysRead',
+  XTL_EmuIDirect3DDevice8_SetRenderState_RopZRead name PatchPrefix + 'D3DDevice_SetRenderState_RopZRead',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc name PatchPrefix + 'D3DDevice_SetRenderState_ShadowFunc',
+  XTL_EmuIDirect3DDevice8_SetRenderState_Simple name PatchPrefix + 'D3DDevice_SetRenderState_Simple',
+  XTL_EmuIDirect3DDevice8_SetRenderState_StencilCullEnable name PatchPrefix + 'D3DDevice_SetRenderState_StencilCullEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_StencilEnable name PatchPrefix + 'D3DDevice_SetRenderState_StencilEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_StencilFail name PatchPrefix + 'D3DDevice_SetRenderState_StencilFail',
+  XTL_EmuIDirect3DDevice8_SetRenderState_TextureFactor name PatchPrefix + 'D3DDevice_SetRenderState_TextureFactor',
+  XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend name PatchPrefix + 'D3DDevice_SetRenderState_VertexBlend',
+  XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable name PatchPrefix + 'D3DDevice_SetRenderState_YuvEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ZBias name PatchPrefix + 'D3DDevice_SetRenderState_ZBias',
+  XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable name PatchPrefix + 'D3DDevice_SetRenderState_ZEnable',
+  XTL_EmuIDirect3DDevice8_SetRenderTarget name PatchPrefix + 'D3DDevice_SetRenderTarget',
+  XTL_EmuIDirect3DDevice8_SetScissors name PatchPrefix + 'D3DDevice_SetScissors',
+  XTL_EmuIDirect3DDevice8_SetScreenSpaceOffset name PatchPrefix + 'D3DDevice_SetScreenSpaceOffset',
+  XTL_EmuIDirect3DDevice8_SetShaderConstantMode name PatchPrefix + 'D3DDevice_SetShaderConstantMode',
+  XTL_EmuIDirect3DDevice8_SetSoftDisplayFilter name PatchPrefix + 'D3DDevice_SetSoftDisplayFilter',
+  XTL_EmuIDirect3DDevice8_SetStreamSource name PatchPrefix + 'D3DDevice_SetStreamSource',
+  XTL_EmuIDirect3DDevice8_SetTexture name PatchPrefix + 'D3DDevice_SetTexture',
+  XTL_EmuIDirect3DDevice8_SetTextureState_BackFillMode name PatchPrefix + 'D3DDevice_SetTextureState_BackFillMode',
+  XTL_EmuIDirect3DDevice8_SetTextureState_BorderColor name PatchPrefix + 'D3DDevice_SetTextureState_BorderColor',
+  XTL_EmuIDirect3DDevice8_SetTextureState_BumpEnv name PatchPrefix + 'D3DDevice_SetTextureState_BumpEnv',
+  XTL_EmuIDirect3DDevice8_SetTextureState_ColorKeyColor name PatchPrefix + 'D3DDevice_SetTextureState_ColorKeyColor',
+  XTL_EmuIDirect3DDevice8_SetTextureState_TexCoordIndex name PatchPrefix + 'D3DDevice_SetTextureState_TexCoordIndex',
+  XTL_EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting name PatchPrefix + 'D3DDevice_SetTextureState_TwoSidedLighting',
+  XTL_EmuIDirect3DDevice8_SetTileNoWait name PatchPrefix + '?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z',
+  XTL_EmuIDirect3DDevice8_SetTransform name PatchPrefix + 'D3DDevice_SetTransform',
+  XTL_EmuIDirect3DDevice8_SetVertexData2f name PatchPrefix + 'D3DDevice_SetVertexData2f',
+  XTL_EmuIDirect3DDevice8_SetVertexData2s name PatchPrefix + 'D3DDevice_SetVertexData2s',
+  XTL_EmuIDirect3DDevice8_SetVertexData4f name PatchPrefix + 'D3DDevice_SetVertexData4f',
+  XTL_EmuIDirect3DDevice8_SetVertexDataColor name PatchPrefix + 'D3DDevice_SetVertexDataColor',
+  XTL_EmuIDirect3DDevice8_SetVertexShader name PatchPrefix + 'D3DDevice_SetVertexShader',
+  XTL_EmuIDirect3DDevice8_SetVertexShaderConstant name PatchPrefix + 'D3DDevice_SetVertexShaderConstant',
+  XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1 name PatchPrefix + 'D3DDevice_SetVertexShaderConstant1',
+  XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4 name PatchPrefix + 'D3DDevice_SetVertexShaderConstant4',
+  XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline name PatchPrefix + 'D3DDevice_SetVertexShaderConstantNotInline',
+  XTL_EmuIDirect3DDevice8_SetVertexShaderInput name PatchPrefix + 'D3DDevice_SetVertexShaderInput',
+  XTL_EmuIDirect3DDevice8_SetVertexShaderInputDirect name PatchPrefix + 'D3DDevice_SetVertexShaderInputDirect',
+  XTL_EmuIDirect3DDevice8_SetVerticalBlankCallback name PatchPrefix + 'D3DDevice_SetVerticalBlankCallback',
+  XTL_EmuIDirect3DDevice8_SetViewport name PatchPrefix + 'D3DDevice_SetViewport',
+  XTL_EmuIDirect3DDevice8_Swap name PatchPrefix + 'D3DDevice_Swap',
+  XTL_EmuIDirect3DDevice8_SwitchTexture name PatchPrefix + 'D3DDevice_SwitchTexture',
+  XTL_EmuIDirect3DDevice8_UpdateOverlay name PatchPrefix + 'D3DDevice_UpdateOverlay',
 
-  XTL_EmuIDirect3DDevice8_SetScreenSpaceOffset name PatchPrefix + '_D3DDevice_SetScreenSpaceOffset';
+  XTL_EmuIDirect3DPalette8_Lock name PatchPrefix + 'D3DDevice_Lock', // TODO : Fix wrong prefix!
+  XTL_EmuIDirect3DPalette8_Lock2 name PatchPrefix + 'D3DDevice_Lock2', // TODO : Fix wrong prefix!
+
+  XTL_EmuIDirect3DResource8_AddRef name PatchPrefix + 'D3DResource_AddRef',
+  XTL_EmuIDirect3DResource8_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',
+  XTL_EmuIDirect3DResource8_GetType name PatchPrefix + 'D3DResource_GetType',
+  XTL_EmuIDirect3DResource8_IsBusy name PatchPrefix + 'D3DResource_IsBusy',
+  XTL_EmuIDirect3DResource8_Register name PatchPrefix + 'D3DResource_Register',
+  XTL_EmuIDirect3DResource8_Release name PatchPrefix + 'D3DResource_Release',
+
+  XTL_EmuIDirect3DSurface8_GetDesc,
+  XTL_EmuIDirect3DSurface8_LockRect,
+
+  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
+  XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DDevice_GetSurfaceLevel', // TODO : Fix wrong prefix!
+  XTL_EmuIDirect3DTexture8_GetSurfaceLevel2 name PatchPrefix + 'D3DDevice_GetSurfaceLevel2', // TODO : Fix wrong prefix!
+  XTL_EmuIDirect3DTexture8_LockRect name PatchPrefix + 'D3DDevice_LockRect', // TODO : Fix wrong prefix!
+
+  XTL_EmuIDirect3DVertexBuffer8_GetDesc,
+  XTL_EmuIDirect3DVertexBuffer8_Lock,
+  XTL_EmuIDirect3DVertexBuffer8_Lock2,
+  XTL_EmuIDirect3DVolumeTexture8_LockBox,
+
+  XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface'; // TODO : Fix wrong prefix!
 
 end.
-
