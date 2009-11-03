@@ -89,10 +89,10 @@ var
 
 procedure CRC32Init;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-{$J+}
+{$WRITEABLECONST ON}
 const
   bFirstTime: Boolean = True;
-{$J-}
+{$WRITEABLECONST OFF}
 var
   i, j: Integer;
   crc: uint;
@@ -925,10 +925,11 @@ begin
 (*    bool Patched := False;
     // Get the number of streams
     m_uiNbrStreams := GetNbrStreams(pPatchDesc);
-    if(VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
+    if (VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
     begin
-        m_pDynamicPatch :=  and ((VERTEX_SHADER )VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch;
-     end;
+      m_pDynamicPatch := m_pDynamicPatch and ((PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch;
+    end;
+    
     for(UINT uiStream := 0; uiStream < m_uiNbrStreams; uiStream++)
     begin
         bool LocalPatched := False;
@@ -1389,9 +1390,9 @@ begin
       bSwizzled := True;
 
                 // Swizzled 16 Bit
-      dwWidth := 1 shl ((pPixelContainer - > Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-      dwHeight := 1 shl ((pPixelContainer - > Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-      dwMipMapLevels := (pPixelContainer - > Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
+      dwWidth := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
+      dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
+      dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
       dwDepth := 1; // HACK? 1 << ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
       dwPitch := dwWidth * 2;
       dwBPP := 2;
@@ -1419,9 +1420,9 @@ else if (X_Format = $00 (* X_D3DFMT_L8 *) (* or X_Format == 0x0B /* X_D3DFMT_P8 
             else if(X_Format = $11 { D3DFMT_LIN_R5G6B5 })then
   begin
                 // Linear 16 Bit
-    dwWidth := (pPixelContainer - > Size and X_D3DSIZE_WIDTH_MASK) + 1;
-    dwHeight := ((pPixelContainer - > Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
-    dwPitch := (((pPixelContainer - > Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
+    dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
+    dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
+    dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
     dwBPP := 2;
   end
 else if (X_Format = $0C (* D3DFMT_DXT1 *) (* or X_Format == 0x0E /* D3DFMT_DXT2 */ or X_Format == 0x0F /* D3DFMT_DXT3 */) then
@@ -1445,9 +1446,9 @@ else if (X_Format = $0C (* D3DFMT_DXT1 *) (* or X_Format == 0x0E /* D3DFMT_DXT2 
             else if(X_Format = $24 { D3DFMT_YUY2 })then
   begin
                 // Linear 32 Bit
-    dwWidth := (pPixelContainer - > Size and X_D3DSIZE_WIDTH_MASK) + 1;
-    dwHeight := ((pPixelContainer - > Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
-    dwPitch := (((pPixelContainer - > Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
+    dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
+    dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
+    dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
   end
 else
   begin
@@ -1470,14 +1471,14 @@ else
   begin
     D3DLOCKED_RECT LockedRect;
 
-    HRESULT hRet := pResource - > EmuTexture8 - > LockRect(level, @LockedRect, 0, 0);
+    HRESULT hRet := pResource.EmuTexture8.LockRect(level, @LockedRect, 0, 0);
 
     TRect iRect := (0, 0, 0, 0);
     TPoint iPoint := (0, 0);
 
-    BYTE * pSrc := (BYTE)pTexture - > Data;
+    BYTE * pSrc := PBYTE(pTexture.Data);
 
-    if (IsSpecialResource(pResource - > Data) and (pResource - > Data and X_D3DRESOURCE_DATA_FLAG_SURFACE)) then
+    if (IsSpecialResource(pResource.Data) and (pResource.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE)) then
     begin
 
     end
@@ -1485,7 +1486,7 @@ else
     begin
       if (bSwizzled) then
       begin
-        if ((DWORD)pSrc = $80000000) then
+        if (DWORD(pSrc) = $80000000) then
         begin
           // Cxbx TODO: Fix or handle this situation..?
         end
@@ -1500,7 +1501,7 @@ else
       end
       else if (bCompressed) then
       begin
-                        // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
+        // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
 
         memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize shr (level * 2));
 
@@ -1508,7 +1509,7 @@ else
       end
       else
       begin
-        BYTE * pDest := (BYTE)LockedRect.pBits;
+        BYTE * pDest := PBYTE(LockedRect.pBits);
 
         if ((DWORD)LockedRect.Pitch = dwMipPitch and dwMipPitch = dwMipWidth * dwBPP) then
         begin
@@ -1527,7 +1528,7 @@ else
       end;
     end;
 
-    pResource - > EmuTexture8 - > UnlockRect(level);
+    pResource.EmuTexture8.UnlockRect(level);
 
     dwMipOffs := dwMipOffs + dwMipWidth * dwMipHeight * dwBPP;
 
@@ -1537,7 +1538,7 @@ else
   end;
 end;
 
-g_pD3DDevice8 - > SetTexture(Stage, pTexture - > EmuTexture8);*)
+g_pD3DDevice8.SetTexture(Stage, pTexture.EmuTexture8);*)
 
   end;
 end;

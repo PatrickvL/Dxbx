@@ -156,10 +156,10 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
   ProtectionType: ULONG
   ): PVOID; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:90
-{$J+}
+{$WRITEABLECONST ON}
 const
   Count: Integer = 0;
-{$J-}
+{$WRITEABLECONST OFF}
 var
   pRet: PVOID;
   dwRet: DWORD;
@@ -198,10 +198,8 @@ begin
   end;
 
   if Count < 4 then
-  begin
     g_HaloHack[Count] := uint32(pRet);
-    Inc(Count);
-  end;
+  Inc(Count);
 
   DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
 

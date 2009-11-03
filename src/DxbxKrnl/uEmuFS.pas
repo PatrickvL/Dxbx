@@ -122,13 +122,13 @@ end;
 // restore the FS register - which is NOT what we want here!
 procedure EmuSwapFS;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-{$J+}
+{$WRITEABLECONST ON}
 const
   // Note that this is only the *approximate* interception count,
   // because not all interceptions swap the FS register, and some
   // non-interception code uses it
   dwInterceptionCount: Integer = 0;
-{$J-}
+{$WRITEABLECONST OFF}
 //var CurrentFS: Word;
 begin
   asm
