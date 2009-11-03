@@ -78,7 +78,7 @@ var
   g_IVBFVF: DWORD = 0;
 
 procedure XTL_EmuFlushIVB; stdcall;
-function XTL_VertexPatcher_Apply(var pPatchDesc: VertexPatchDesc): bool;
+function XTL_VertexPatcher_Apply(pPatchDesc: PVertexPatchDesc): bool; stdcall;
 function XTL_VertexPatcher_Restore: LONGBOOL; stdcall;
 
 
@@ -142,7 +142,7 @@ begin
 end;
 
 
-procedure XTL_VertexPatcher_VertexPatcher();
+procedure XTL_VertexPatcher_VertexPatcher(); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
     (*this.m_uiNbrStreams := 0;
@@ -919,7 +919,7 @@ begin
 end;
 *)
 
-function XTL_VertexPatcher_Apply(var pPatchDesc: VertexPatchDesc): bool;
+function XTL_VertexPatcher_Apply(pPatchDesc: PVertexPatchDesc): bool; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    bool Patched := False;
@@ -1342,7 +1342,7 @@ begin
     *)
 end;
 
-procedure XTL_EmuUpdateActiveTexture;
+procedure XTL_EmuUpdateActiveTexture; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 var
   Stage: integer;
@@ -1544,9 +1544,13 @@ end;
 
 exports
   XTL_EmuFlushIVB,
+  XTL_EmuUpdateActiveTexture,
+
+  XTL_VertexPatcher_Apply,
   XTL_VertexPatcher_DumpCache,
   XTL_VertexPatcher_FreeCachedStream,
-  XTL_VertexPatcher_Restore;
+  XTL_VertexPatcher_Restore,
+  XTL_VertexPatcher_VertexPatcher;
 
 end.
 

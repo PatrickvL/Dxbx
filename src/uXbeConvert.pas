@@ -29,12 +29,17 @@ uses
   SysUtils, // FileExists
   Dialogs,  // for MessageDlg
   // Dxbx
+  uDxbxUtils,
   uLog,
   uXbe,
   uEmuExe;
 
 function ConvertToExe(x_FileName: string; x_bVerifyIfExists: Boolean; aXbe: TXbe; aHandle: Handle): Boolean;
 function ConvertXbeToExe(aFileName, m_ExeFileName, m_XbeFileName: string; aXbe: TXbe; aHandle: Handle): Boolean;
+
+var
+  KernelDebugMode: TDebugMode = dmFile;
+  KernelDebugFileName: string = '';
 
 implementation
 
@@ -62,7 +67,7 @@ begin
 
       // convert file
       try
-        i_EmuExe := TEmuExe.Create(aXbe, m_KrnlDebug, m_KrnlDebugFileName, aHandle);
+        i_EmuExe := TEmuExe.Create(aXbe, KernelDebugMode, KernelDebugFileName, aHandle);
         try
           if i_EmuExe.DoExport(x_FileName) then
           begin

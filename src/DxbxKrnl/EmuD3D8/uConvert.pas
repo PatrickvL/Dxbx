@@ -482,6 +482,7 @@ begin
   end;
 end;
 
+(* Dxbx : Exporting these is pointless:
 exports
   EmuPC2XB_D3DFormat name PatchPrefix + 'EmuPC2XB_D3DFormat',
   EmuXB2PC_D3DBLEND name PatchPrefix + 'EmuXB2PC_D3DBLEND',
@@ -493,6 +494,7 @@ exports
   EmuXB2PC_D3DSHADEMODE name PatchPrefix + 'EmuXB2PC_D3DSHADEMODE',
   EmuXB2PC_D3DTS name PatchPrefix + 'EmuXB2PC_D3DTS',
   EmuXBFormatIsSwizzled name PatchPrefix + 'EmuXBFormatIsSwizzled';
+*)
 
 end.
 

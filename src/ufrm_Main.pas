@@ -496,7 +496,8 @@ begin
 
   CreateDllMenuOptions;
   ReadSettingsIni;
-  CreateLogs(ltGui);
+
+  CreateLogs(DebugMode, DebugFileName);
 
   AddjustMenu;
 end;
@@ -539,8 +540,8 @@ begin
   if not FileExists(DxbxIniFilePath) then
   begin
     // Setting defaults
-    m_DxbxDebug := DM_NONE;
-    m_KrnlDebug := DM_FILE;
+    DebugMode := dmNone;
+    KernelDebugMode := dmFile;
 
     m_AutoConvertToExe := CONVERT_TO_MANUAL;
     Exit;
@@ -556,11 +557,11 @@ begin
       m_AutoConvertToExe := CONVERT_TO_MANUAL;
     end;
 
-    m_DxbxDebug := DebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', Ord(DM_NONE)));
-    m_DxbxDebugFileName := IniFile.ReadString('Settings', 'DxbxDebugFileName', '');
+    DebugMode := TDebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', Ord(dmNone)));
+    DebugFileName := IniFile.ReadString('Settings', 'DxbxDebugFileName', '');
 
-    m_KrnlDebug := DebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(DM_NONE)));
-    m_KrnlDebugFileName := IniFile.ReadString('Settings', 'KrnlDebugFileName', '');
+    KernelDebugMode := TDebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(dmNone)));
+    KernelDebugFileName := IniFile.ReadString('Settings', 'KrnlDebugFileName', '');
 
     // Dll settings
     DLLToUse := TUseDLL(IniFile.ReadInteger('Settings', 'DllToUse', 0));
@@ -667,11 +668,11 @@ begin
       CONVERT_TO_MANUAL: IniFile.WriteInteger('Settings', 'AutoConvertToExe', 3);
     end;
 
-    IniFile.WriteInteger('Settings', 'DxbxDebug', Ord(m_DxbxDebug));
-    IniFile.WriteString('Settings', 'DxbxDebugFileName', m_DxbxDebugFileName);
+    IniFile.WriteInteger('Settings', 'DxbxDebug', Ord(DebugMode));
+    IniFile.WriteString('Settings', 'DxbxDebugFileName', DebugFileName);
 
-    IniFile.WriteInteger('Settings', 'KrnlDebug', Ord(m_KrnlDebug));
-    IniFile.WriteString('Settings', 'KrnlDebugFileName', m_KrnlDebugFileName);
+    IniFile.WriteInteger('Settings', 'KrnlDebug', Ord(KernelDebugMode));
+    IniFile.WriteString('Settings', 'KrnlDebugFileName', KernelDebugFileName);
 
     IniFile.WriteInteger('Settings', 'DllToUse', Ord(DLLToUse));
   finally
@@ -716,10 +717,10 @@ end; // Tfrm_Main.actFileXbeInfoExecute
 
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
-  if m_DxbxDebug = DM_CONSOLE then
+  if DebugMode = dmConsole then
   begin
     actConsoleDebugGui.Checked := False;
-    m_DxbxDebug := DM_NONE;
+    DebugMode := dmNone;
     CloseLogs;
   end
   else
@@ -727,8 +728,8 @@ begin
     CloseLogs;
     actFileDebugGui.Checked := False;
     actConsoleDebugGui.Checked := True;
-    m_DxbxDebug := DM_CONSOLE;
-    CreateLogs(ltGui);
+    DebugMode := dmConsole;
+    CreateLogs(DebugMode, DebugFileName);
   end;
 end; // Tfrm_Main.actConsoleDebugGuiExecute
 
@@ -736,7 +737,7 @@ end; // Tfrm_Main.actConsoleDebugGuiExecute
 
 procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
-  if m_DxbxDebug = DM_FILE then
+  if DebugMode = dmFile then
   begin
     actFileDebugGui.Checked := False;
     CloseLogs;
@@ -744,8 +745,8 @@ begin
   end
   else
   begin
-    if m_DxbxDebugFileName <> '' then
-      SaveDialog.FileName := m_DxbxDebugFileName
+    if DebugFileName <> '' then
+      SaveDialog.FileName := DebugFileName
     else
       SaveDialog.FileName := DXBX_CONSOLE_DEBUG_FILENAME;
 
@@ -753,9 +754,10 @@ begin
     if SaveDialog.Execute then
     begin
       CloseLogs;
-      m_DxbxDebug := DM_FILE;
-      m_DxbxDebugFileName := SaveDialog.FileName;
-      CreateLogs(ltGui);
+      DebugMode := dmFile;
+      DebugFileName := SaveDialog.FileName;
+
+      CreateLogs(DebugMode, DebugFileName);
       AddjustMenu;
     end;
   end;
@@ -765,7 +767,7 @@ end; // Tfrm_Main.actFileDebugGuiExecute
 
 procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
-  if m_KrnlDebug = DM_CONSOLE then
+  if KernelDebugMode = dmConsole then
   begin
     actConsoleDebugKernel.Checked := False;
     CloseLogs;
@@ -775,7 +777,7 @@ begin
     CloseLogs;
     actFileDebugKernel.Checked := False;
     actConsoleDebugKernel.Checked := True;
-    m_KrnlDebug := DM_CONSOLE;
+    KernelDebugMode := dmConsole;
   end;
 end; // Tfrm_Main.actConsoleDebugKernelExecute
 
@@ -783,7 +785,7 @@ end; // Tfrm_Main.actConsoleDebugKernelExecute
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
-  if m_KrnlDebug = DM_FILE then
+  if KernelDebugMode = dmFile then
   begin
     actFileDebugKernel.Checked := False;
     CloseLogs;
@@ -791,8 +793,8 @@ begin
   end
   else
   begin
-    if m_KrnlDebugFileName <> '' then
-      SaveDialog.FileName := m_KrnlDebugFileName
+    if KernelDebugFileName <> '' then
+      SaveDialog.FileName := KernelDebugFileName
     else
       SaveDialog.FileName := DXBX_KERNEL_DEBUG_FILENAME;
 
@@ -800,8 +802,8 @@ begin
     if SaveDialog.Execute then
     begin
       CloseLogs;
-      m_KrnlDebug := DM_FILE;
-      m_KrnlDebugFileName := SaveDialog.FileName;
+      KernelDebugMode := dmFile;
+      KernelDebugFileName := SaveDialog.FileName;
       AddjustMenu;
     end;
   end;
@@ -864,11 +866,11 @@ begin
   mnu_DumpxbeinfoTo.Enabled := False;
 
   // Init View
-  actConsoleDebugGui.Checked := (m_DxbxDebug = DM_CONSOLE);
-  actFileDebugGui.Checked := (m_DxbxDebug = DM_FILE);
+  actConsoleDebugGui.Checked := (DebugMode = dmConsole);
+  actFileDebugGui.Checked := (DebugMode = dmFile);
 
-  actConsoleDebugKernel.Checked := (m_KrnlDebug = DM_CONSOLE);
-  actFileDebugKernel.Checked := (m_KrnlDebug = DM_FILE);
+  actConsoleDebugKernel.Checked := (KernelDebugMode = dmConsole);
+  actFileDebugKernel.Checked := (KernelDebugMode = dmFile);
 
   // Init Settings
   actExeGenWindowsTemp.Checked := (m_AutoConvertToExe = CONVERT_TO_WINDOWSTEMP);

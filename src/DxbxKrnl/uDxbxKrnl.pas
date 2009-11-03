@@ -55,8 +55,8 @@ procedure CxbxKrnlInit(
   pTLSData: Pointer;
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
-  DbgMode: DebugMode;
-  szDebugFileName: PChar;
+  DbgMode: TDebugMode;
+  szDebugFileName: PAnsiChar;
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc); stdcall;
@@ -92,8 +92,8 @@ procedure CxbxKrnlInit(
   pTLSData: PVOID;
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
-  DbgMode: DebugMode;
-  szDebugFileName: PChar;
+  DbgMode: TDebugMode;
+  szDebugFileName: PAnsiChar;
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
@@ -108,8 +108,7 @@ var
   OldExceptionFilter: TFNTopLevelExceptionFilter;
 begin
   // debug console allocation (if configured)
-  SetLogMode(DbgMode);
-  CreateLogs(ltKernel); // Initialize logging interface
+  CreateLogs(DbgMode, szDebugFileName); // Initialize logging interface
 
   DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
 
@@ -145,7 +144,7 @@ begin
         pTLS,
         pLibraryVersion,
         Ord(DbgMode),
-        Pointer(szDebugFileName),
+        Pointer(szDebugFileName), // Print as pointer, not as string! (will be added automatically)
         pXbeHeader,
         dwXbeHeaderSize,
         Addr(Entry)

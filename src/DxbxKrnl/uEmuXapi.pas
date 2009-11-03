@@ -1341,6 +1341,7 @@ exports
   XTL_EmuQueryPerformanceFrequency,
   XTL_EmuRtlAllocateHeap,
   XTL_EmuRtlCreateHeap,
+//  XTL_EmuRtlDestroyHeap,
   XTL_EmuRtlFreeHeap,
   XTL_EmuRtlReAllocateHeap,
   XTL_EmuRtlSizeHeap,
@@ -1357,11 +1358,16 @@ exports
   XTL_EmuXCalculateSignatureUpdate,
 *)
   XTL_EmuXFormatUtilityDrive,
-  XTL_EmuXGetDevices name '_EmuXGetDevices',
   XTL_EmuXGetDeviceChanges,
+  XTL_EmuXGetDevices,
   XTL_EmuXInitDevices,
+  XTL_EmuXInputClose,
+  XTL_EmuXInputGetState,
+  XTL_EmuXInputOpen,
+  XTL_EmuXInputPoll,
+  XTL_EmuXInputSetState,
   XTL_EmuXMountUtilityDrive,
-  XTL_EmuXRegisterThreadNotifyRoutine name 'EmuXRegisterThreadNotifyRoutine'
+  XTL_EmuXRegisterThreadNotifyRoutine
   ;
 
 end.

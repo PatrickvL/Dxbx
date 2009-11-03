@@ -85,9 +85,9 @@ procedure xboxkrnl_RtlInitAnsiString(
   SourceString: PCSZ
 ); stdcall;
 function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlInitializeCriticalSection(
+procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_RtlIntegerToChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlIntegerToUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_RtlLeaveCriticalSection(
@@ -404,9 +404,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlInitializeCriticalSection(
+procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
@@ -419,7 +419,7 @@ begin
            [CriticalSection]);
 {$ENDIF}
 
-  Result := JwaNative.RtlInitializeCriticalSection(CriticalSection);
+  JwaNative.RtlInitializeCriticalSection(CriticalSection);
 
   EmuSwapFS(fsXbox);
 end;

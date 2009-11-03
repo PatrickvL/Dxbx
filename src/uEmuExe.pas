@@ -46,7 +46,7 @@ type
   protected
     KrnlHandle: Handle;
   public
-    constructor Create(x_Xbe: TXbe; m_KrnlDebug: DebugMode; m_KrnlDebugFileName: string; hwndParent: Handle);
+    constructor Create(x_Xbe: TXbe; aKernelDebugMode: TDebugMode; aKernelDebugFileName: string; hwndParent: Handle);
     destructor Destroy; override;
   end;
 
@@ -106,8 +106,8 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TEmuExe.Create(x_Xbe: TXbe; m_KrnlDebug: DebugMode;
-  m_KrnlDebugFileName: string; hwndParent: Handle);
+constructor TEmuExe.Create(x_Xbe: TXbe; aKernelDebugMode: TDebugMode;
+  aKernelDebugFileName: string; hwndParent: Handle);
 
   procedure _WriteDWordToAddr(const aAddr: Pointer; aDWord: DWord);
   begin
@@ -473,8 +473,8 @@ begin
 
     // Append x_debug_FileName
     ZeroMemory(pWriteCursor, 260);
-    if m_KrnlDebugFileName <> '' then
-      CopyMemory(pWriteCursor, @(AnsiString(m_KrnlDebugFileName)[1]), Length(AnsiString(m_KrnlDebugFileName)));
+    if aKernelDebugFileName <> '' then
+      CopyMemory(pWriteCursor, @(AnsiString(aKernelDebugFileName)[1]), Length(AnsiString(aKernelDebugFileName)));
     Inc(pWriteCursor, 260);
 
     // Append library versions
@@ -521,7 +521,7 @@ begin
     Inc(WriteCursor, 260);
 
     // Param 4 : DbgMode
-    _WriteDWordToSectionPos(i, 26, DWord(Ord(m_KrnlDebug)));
+    _WriteDWordToSectionPos(i, 26, DWord(Ord(aKernelDebugMode)));
 
     // Param 3 : pLibraryVersion
     if Length(x_Xbe.m_LibraryVersion) <> 0 then
