@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   SysUtils,
+  Windows,
   // Jedi
   JwaWinType,
   JwaWinBase,
@@ -34,6 +35,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  uEmu,
   uEmuFS,
   uEmuFile,
   uEmuXapi,
@@ -321,9 +323,12 @@ function xboxkrnl_NtCreateFile(
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:5
-//var
-//  ReplaceChar: Char;
-//  ReplaceIndex: int;
+var
+  ReplaceChar: Char;
+  ReplaceIndex: int;
+  szBuffer: Pchar;
+  v: int;
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -342,94 +347,99 @@ begin
            [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 
-    (*ReplaceChar  := '\0';
-    ReplaceIndex := -1;
+  //ReplaceChar  := '\0';
+  ReplaceIndex := -1;
 
-    char *szBuffer := ObjectAttributes.ObjectName.Buffer;
+  szBuffer := ObjectAttributes.ObjectName.Buffer;
 
-    if Assigned(szBuffer) then
-    begin
-        //printf('Orig : %s', szBuffer);
+  if Assigned(szBuffer) then
+  begin
+    //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
 
-        // trim this off
-        if(szBuffer[0] = '''' and szBuffer[1] = '?' and szBuffer[2] = '?' and szBuffer[3] = '''')
-            Inc(szBuffer, 4);
-        end;
-
-        // D:\ should map to current directory
-	    if( (szBuffer[0] = 'D'  or  szBuffer[0] = 'd') and szBuffer[1] = ':' and szBuffer[2] = '''')
-	    begin
-		    Inc(szBuffer, 3);
-
-		    ObjectAttributes.RootDirectory := g_hCurDir;
-
-		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-		    DbgPrintf('  New:''$XbePath\\%s''', [szBuffer]);
-	    end;
-	    else if( (szBuffer[0] = 'T'  or  szBuffer[0] = 't') and szBuffer[1] = ':' and szBuffer[2] = '''')
-	    begin
-		    szBuffer += 3;
-
-		    ObjectAttributes.RootDirectory := g_hTDrive;
-
-		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\T\\%s''', [szBuffer]);
-	    end;
-	    else if( (szBuffer[0] = 'U'  or  szBuffer[0] = 'u') and szBuffer[1] = ':' and szBuffer[2] = '''')
-	    begin
-		    Inc(szBuffer, 3);
-
-		    ObjectAttributes.RootDirectory := g_hUDrive;
-
-		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\U\\%s''', [szBuffer]);
-	    end;
-	    else if( (szBuffer[0] = 'Z'  or  szBuffer[0] = 'z') and szBuffer[1] = ':' and szBuffer[2] = '''')
-	    begin
-		    Inc(szBuffer, 3);
-
-		    ObjectAttributes.RootDirectory := g_hZDrive;
-
-		    DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-		    DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-		    DbgPrintf('  New:''$CxbxPath\\EmuDisk\\Z\\%s''', [szBuffer]);
-	    end;
-
-        //
-        // Cxbx TODO: Wildcards are not allowed??
-        //
-
-        begin
-            for(int v=0;szBuffer[v] <> '\0';v++)
-            begin
-                if (szBuffer[v] = '*') then
-                begin
-                    if(v > 0) begin ReplaceIndex := v-1; end;
-                    else begin ReplaceIndex := v; end;
-                end;
-            end;
-        end;
-
-        // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
-        if(ReplaceIndex <> -1)
-        begin
-            ReplaceChar := szBuffer[ReplaceIndex];
-            szBuffer[ReplaceIndex] := #0;
-        end;
-
-        //printf('Aftr : %s', szBuffer);
+    // trim this off
+    if(szBuffer[0] = '''') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '''') then
+      Inc(szBuffer, 4);
     end;
 
-    wchar_t wszObjectName[160];
+    // D:\ should map to current directory
+    if( (szBuffer[0] = 'D')  or  (szBuffer[0] = 'd') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    begin
+      Inc(szBuffer, 3);
 
-    NtDll::UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+      ObjectAttributes.RootDirectory := g_hCurDir;
+
+      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:''$XbePath\\%s''', [szBuffer]);
+    end
+    else
+    if( (szBuffer[0] = 'T') or (szBuffer[0] = 't') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    begin
+      Inc(szBuffer, 3);
+
+      ObjectAttributes.RootDirectory := g_hTDrive;
+
+      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:''$CxbxPath\\EmuDisk\\T\\%s''', [szBuffer]);
+    end
+    else if( (szBuffer[0] = 'U') or (szBuffer[0] = 'u') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    begin
+      Inc(szBuffer, 3);
+
+      ObjectAttributes.RootDirectory := g_hUDrive;
+
+      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:''$CxbxPath\\EmuDisk\\U\\%s''', [szBuffer]);
+    end
+    else if( (szBuffer[0] = 'Z')  or  (szBuffer[0] = 'z') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    begin
+      Inc(szBuffer, 3);
+
+      ObjectAttributes.RootDirectory := g_hZDrive;
+
+      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:''$CxbxPath\\EmuDisk\\Z\\%s''', [szBuffer]);
+    end;
+
+    //
+    // Cxbx TODO: Wildcards are not allowed??
+    //
+
+    begin
+      v := 0;
+      while szBuffer[v] <> '\0' do
+      begin
+        if (szBuffer[v] = '*') then
+        begin
+          if (v > 0) then
+            ReplaceIndex := v-1
+          else
+            ReplaceIndex := v;
+        end;
+
+        Inc (v);
+      end;
+    end;
+
+    // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
+    if(ReplaceIndex <> -1) then
+    begin
+      ReplaceChar := szBuffer[ReplaceIndex];
+      szBuffer[ReplaceIndex] := #0;
+    end;
+
+    //printf('Aftr : %s', szBuffer); // MARKED OUT BY CXBX
+
+    (*wchar_t wszObjectName[160];
+
+    UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr; *)
 
     // initialize object attributes
-    if Assigned(szBuffer) then
+    (*if Assigned(szBuffer) then
       mbstowcs(wszObjectName, szBuffer, 160)
     else
       wszObjectName[0] := WideChar(#0);
@@ -439,11 +449,11 @@ begin
     InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
     // redirect to NtCreateFile
-    NTSTATUS ret := NtDll::NtCreateFile
+    ret := JwaNative.NtCreateFile
     (
         FileHandle, DesiredAccess, @NtObjAttr, (NtDll::IO_STATUS_BLOCK* )IoStatusBlock,
         (NtDll::LARGE_INTEGER* )AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
-    );
+    );                                                            *)
 
     if FAILED(ret) then
       DbgPrintf('EmuKrnl : NtCreateFile Failed! (0x%.08X)', [ret])
@@ -456,8 +466,7 @@ begin
 
     // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
     //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
-                 *)
-  Result := Unimplemented('NtCreateFile');
+
   EmuSwapFS(fsXbox);
 end;
 
