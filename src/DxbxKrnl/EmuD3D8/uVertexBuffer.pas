@@ -185,11 +185,10 @@ begin
 
 end;
 
-(*procedure XTL.VertexPatcher.CacheStream(var pPatchDesc: VertexPatchDesc;
-                                     UINT             uiStream)
+procedure XTL_VertexPatcher_CacheStream(var pPatchDesc: PVertexPatchDesc; uiStream: UINT);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    UINT                       uiStride;
+(*    UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
     XTL.D3DVERTEXBUFFER_DESC  Desc;
     procedure                      *pCalculateData;
@@ -282,9 +281,9 @@ begin
     pCachedStream.uiCacheHit := 0;
     pCachedStream.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount;
     pCachedStream.lLastUsed := clock();
-    g_PatchedStreamsCache.insert(uiKey, pCachedStream);
+    g_PatchedStreamsCache.insert(uiKey, pCachedStream); *)
 end;
-*)
+
 
 procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
@@ -311,10 +310,10 @@ begin
     g_PatchedStreamsCache.remove(pStream);  *)
 end;
 
-(*function XTL.VertexPatcher.ApplyCachedStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+function XTL_VertexPatcher_ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    UINT                       uiStride;
+(*    UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
     XTL.D3DVERTEXBUFFER_DESC  Desc;
     procedure                      *pCalculateData;
@@ -433,14 +432,14 @@ begin
         pOrigVertexBuffer.Release();
      end;
 
-    Result := bApplied;
+    Result := bApplied;*)
 end;
-*)
 
-(*function XTL.VertexPatcher.GetNbrStreams(var pPatchDesc: VertexPatchDesc): UINT;
+
+function XTL_VertexPatcher_GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    if(VshHandleIsVertexShader(g_CurrentVertexShader)) then
+(*    if(VshHandleIsVertexShader(g_CurrentVertexShader)) then
     begin
         VERTEX_DYNAMIC_PATCH *pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
         if(pDynamicPatch) then
@@ -456,14 +455,13 @@ begin
     begin
         Result := 1;
      end;
-    Result := 0;
+    Result := 0; *)
 end;
-*)
 
-(*function XTL.VertexPatcher.PatchStream(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+function XTL_VertexPatcher_PatchStream(var pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
+(*    PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     if( not m_pDynamicPatch) then
     begin
         Result := False;
@@ -736,14 +734,14 @@ begin
     pStream.uiNewStride := pStreamPatch.ConvertedStride;
     m_bPatched := True;
 
-    Result := True;
+    Result := True; *)
 end;
-*)
 
-(*function XTL.VertexPatcher.PatchPrimitive(var pPatchDesc: VertexPatchDesc; uiStream: UINT): bool;
+
+function XTL_VertexPatcher_PatchPrimitive(var pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
+ (*   PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
     // only quad and listloop are currently supported
     if((pPatchDesc.PrimitiveType <> X_D3DPT_QUADLIST) and (pPatchDesc.PrimitiveType <> X_D3DPT_LINELOOP)) then
         Result := False;
@@ -915,9 +913,9 @@ begin
 
     m_bPatched := True;
 
-    Result := True;
+    Result := True;   *)
 end;
-*)
+
 
 function XTL_VertexPatcher_Apply(pPatchDesc: PVertexPatchDesc): bool; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
@@ -1551,6 +1549,11 @@ exports
   XTL_VertexPatcher_DumpCache,
   XTL_VertexPatcher_FreeCachedStream,
   XTL_VertexPatcher_Restore,
+  XTL_VertexPatcher_CacheStream,
+  XTL_VertexPatcher_ApplyCachedStream,
+  XTL_VertexPatcher_GetNbrStreams,
+  XTL_VertexPatcher_PatchStream,
+  XTL_VertexPatcher_PatchPrimitive,
   XTL_VertexPatcher_VertexPatcher;
 
 end.
