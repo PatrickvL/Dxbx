@@ -87,7 +87,9 @@ type
   LONG = Longint;
   INT = Integer;
   size_t = Longword;
-
+  wchar_t = WideChar;
+  pwchar_t = PWideChar;
+  
 {$IFNDEF UNICODE}
   UnicodeString = WideString;
 
@@ -99,6 +101,7 @@ function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 function clock(): DWord; // cdecl;
+function mbstowcs(wcstr: pwchar_t; const mbstr: PAnsiChar; max: size_t): size_t;
 
 procedure free(p: PVoid); inline;
 function malloc(const number_of_bytes: size_t): PVoid; inline;
@@ -140,6 +143,11 @@ end;
 function clock(): DWord;
 begin
   Result := GetTickCount();
+end;
+
+function mbstowcs(wcstr: pwchar_t; const mbstr: PAnsiChar; max: size_t): size_t;
+begin
+  Result := MultiByteToWideChar(CP_ACP, 0, mbstr, strlen(mbstr), wcstr, max);
 end;
 
 procedure free(p: PVoid); inline;
