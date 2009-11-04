@@ -397,7 +397,7 @@ begin
 
   // remove 'paused' from rendering window caption text
   begin
-    (*hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+    (*hWnd := iif(CxbxKrnl_hEmuParent != NULL, CxbxKrnl_hEmuParent, g_hEmuWindow);
     GetWindowText(hWnd, szBuffer, 255);
     szBuffer[strlen(szBuffer)-9] := '\0';
     SetWindowText(hWnd, szBuffer); *)
