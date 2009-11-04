@@ -144,7 +144,7 @@ type
     SCSI: Byte;
     LUN: Byte;
     Grabadora: Boolean;
-    Letra: Char;
+    Letra: AnsiChar;
   end;
 
 const
@@ -364,7 +364,7 @@ end;
 procedure LeerFicheros(Directorio: Integer);
 var
   i, Sector, Tamano: Integer;
-  pNombre: PChar;
+  pNombre: PAnsiChar;
   pSector: PInteger;
   Fila: TListItem;
   Attributes: string;
@@ -441,7 +441,7 @@ end;
 procedure Tfrm_Main.AbrirImagen(Imagen: string);
 var
   pDirSector: PInteger;
-  pNombre: PChar;
+  pNombre: PAnsiChar;
   i: Integer;
   Node: TTreeNode;
 begin
@@ -566,7 +566,7 @@ end;
 procedure ExtraerCD(HA, SCSI, LUN: Byte; Directorio: Integer; Folder: string);
 var
   i, Sector, Tamano: Integer;
-  pNombre: PChar;
+  pNombre: PAnsiChar;
 begin
   if xIISO.Lista = nil then
     Exit;
@@ -605,7 +605,7 @@ end;
 procedure ExtraerCDaXBOX(HA, SCSI, LUN: Byte; Directorio: Integer; Folder: string);
 var
   i, Sector, Tamano: Integer;
-  pNombre: PChar;
+  pNombre: PAnsiChar;
 begin
   if xIISO.Lista = nil then
     Exit;
@@ -666,7 +666,7 @@ end;
 procedure GenerarFileListRec(var F: TextFile; Directorio: Integer; Folder: string; SectorDirectorio: Integer);
 var
   i, Sector: Integer;
-  pNombre: PChar;
+  pNombre: PAnsiChar;
   Directorios: TList;
 begin
   Directorios := TList.Create();
@@ -990,7 +990,7 @@ end;
 procedure Tfrm_Main.ToolButton4Click(Sender: TObject);
 var
   pDirSector: PInteger;
-  pNombre: PChar;
+  pNombre: PAnsiChar;
   i: Integer;
   Node: TTreeNode;
   HA, SCSI, LUN: Byte;

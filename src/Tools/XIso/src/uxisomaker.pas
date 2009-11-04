@@ -184,7 +184,7 @@ type
 
     VerEstruc: Byte;
     Cero: Byte;
-    DatosApli: array[0..511] of Char;
+    DatosApli: array[0..511] of Byte;
   end;
 
   PDirectorios = ^TDirectorios;

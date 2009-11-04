@@ -16,7 +16,7 @@ const
 type
 {$A-}
   TCabecera = record
-    XBEH: array[0..3] of char;
+    XBEH: array[0..3] of AnsiChar;
     FirmaDigital: array[0..255] of byte;
     dBaseXBE: DWORD; // $10000 normalmente
     tCabeceras: DWORD;
@@ -53,7 +53,7 @@ type
     tCertificado: DWORD;
     FechaHora: DWORD;
     IDTitulo: DWORD;
-    NombreJuego: array[0..$50 - 1] of Char;
+    NombreJuego: array[0..$50 - 1] of AnsiChar;
     IDsAlternativos: array[0..15] of DWORD;
     MediosPermitidos: DWORD;
     Regiones: DWORD;

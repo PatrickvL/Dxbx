@@ -151,8 +151,8 @@ object frm_Main: Tfrm_Main
       Width = 611
       Height = 21
       AutoSize = True
-      ButtonHeight = 21
-      ButtonWidth = 33
+      ButtonHeight = 0
+      ButtonWidth = 0
       Caption = 'ToolBar1'
       Menu = MainMenu1
       ShowCaptions = True

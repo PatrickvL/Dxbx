@@ -76,7 +76,7 @@ object Form1: TForm1
     Width = 445
     Height = 21
     TabOrder = 2
-    Text = '..\..\..\..'
+    Text = '..\src\DxbxKrnl'
   end
   object edCxbxSrcPath: TEdit
     Left = 120
@@ -84,7 +84,7 @@ object Form1: TForm1
     Width = 445
     Height = 21
     TabOrder = 3
-    Text = '..\..\..\..\..\..\Cxbx\trunk\src'
+    Text = '..\..\cxbx\branches\private\martin'
   end
   object btnSaveToXml: TButton
     Left = 600

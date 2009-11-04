@@ -42,12 +42,12 @@ const
 type
 {$A-}
   TXBOX_FS_VOLUME_DESCRIPTOR = record
-    IDIn: array[0..19] of Char;
+    IDIn: array[0..19] of AnsiChar;
     RootSector: Integer;
     RootSize: Integer;
     FileTime: FILETIME;
     Blank: array[0..1991] of Byte;
-    IDOut: array[0..19] of Char;
+    IDOut: array[0..19] of AnsiChar;
   end;
 
   PXBOX_FS_ENTRY = ^TXBOX_FS_ENTRY;
@@ -58,7 +58,7 @@ type
     EntrySize: Cardinal;
     Attributes: Byte;
     LongFileName: Byte;
-    FileName: array[0..255] of Char;
+    FileName: array[0..255] of AnsiChar;
   end;
 {$A+}
 
@@ -357,7 +357,7 @@ begin
     FillChar(Entry.FileName, SizeOf(Entry.FileName), $FF);
     s := ExtractFileName(ListEntry.FileName);
     for j := 1 to Length(s) do
-      Entry.FileName[j - 1] := s[j];
+      Entry.FileName[j - 1] := AnsiChar(s[j]);
 
     // If the Entry is a Directory, we are going to process it.
     // else copy the file into the ISO.
