@@ -403,6 +403,27 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuRtlDestroyHeap(
+  hHeap: Handle): Handle; stdcall;
+// Branch:None  Revision:39  Translator:PatrickvL  Done:100
+var
+  offs: Byte;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DXBX_EXTENSIVE_LOGGING}
+  DbgPrintf('EmuXapi : EmuRtlDestroyHeap' +
+    #13#10'(' +
+    #13#10'   hHeap               : 0x%.08X' +
+    #13#10');',
+    [hHeap]);
+{$ENDIF}
+
+  Result := JwaNative.RtlDestroyHeap(hHeap);
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuRtlFreeHeap(
   hHeap: Handle;
   dwFlags: DWord;
@@ -1341,7 +1362,7 @@ exports
   XTL_EmuQueryPerformanceFrequency,
   XTL_EmuRtlAllocateHeap,
   XTL_EmuRtlCreateHeap,
-//  XTL_EmuRtlDestroyHeap,
+  XTL_EmuRtlDestroyHeap,
   XTL_EmuRtlFreeHeap,
   XTL_EmuRtlReAllocateHeap,
   XTL_EmuRtlSizeHeap,

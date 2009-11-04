@@ -34,13 +34,16 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmu,
   uEmuFS,
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl;
+  uDxbxUtils,
+  uDxbxKrnl,
+  uDxbxKrnlUtils;
 
 function xboxkrnl_NtAllocateVirtualMemory(
   BaseAddress: PVOID; // OUT * ?
@@ -212,7 +215,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFile(
   FileHandle: HANDLE; // Cxbx TODO: correct paramters
-  Event: PVOID;
+  Event: DWORD; // Dxbx correction (was PVOID)
   ApcRoutine: PVOID;
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
@@ -328,7 +331,9 @@ var
   ReplaceIndex: int;
   szBuffer: PAnsiChar;
   v: int;
-  ret: NTSTATUS;
+  NtUnicodeString: UNICODE_STRING;
+  wszObjectName: array[0..160-1] of wchar_t;
+  NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
 
@@ -347,7 +352,7 @@ begin
            [FileHandle, DesiredAccess, ObjectAttributes, //ObjectAttributes.ObjectName.Buffer,
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 
-  //ReplaceChar  := '\0';
+  ReplaceChar := #0;
   ReplaceIndex := -1;
 
   szBuffer := ObjectAttributes.ObjectName.Buffer;
@@ -357,12 +362,11 @@ begin
     //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
 
     // trim this off
-    if(szBuffer[0] = '''') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '''') then
+    if(szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
       Inc(szBuffer, 4);
-    end;
 
     // D:\ should map to current directory
-    if( (szBuffer[0] = 'D')  or  (szBuffer[0] = 'd') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    if ((szBuffer[0] = 'D') or (szBuffer[0] = 'd') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
     begin
       Inc(szBuffer, 3);
 
@@ -373,7 +377,7 @@ begin
       DbgPrintf('  New:''$XbePath\\%s''', [szBuffer]);
     end
     else
-    if( (szBuffer[0] = 'T') or (szBuffer[0] = 't') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    if( (szBuffer[0] = 'T') or (szBuffer[0] = 't') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
     begin
       Inc(szBuffer, 3);
 
@@ -383,7 +387,7 @@ begin
       DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:''$CxbxPath\\EmuDisk\\T\\%s''', [szBuffer]);
     end
-    else if( (szBuffer[0] = 'U') or (szBuffer[0] = 'u') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    else if( (szBuffer[0] = 'U') or (szBuffer[0] = 'u') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
     begin
       Inc(szBuffer, 3);
 
@@ -393,7 +397,7 @@ begin
       DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:''$CxbxPath\\EmuDisk\\U\\%s''', [szBuffer]);
     end
-    else if( (szBuffer[0] = 'Z')  or  (szBuffer[0] = 'z') and (szBuffer[1] = ':') and (szBuffer[2] = '''')) then
+    else if( (szBuffer[0] = 'Z')  or  (szBuffer[0] = 'z') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
     begin
       Inc(szBuffer, 3);
 
@@ -410,7 +414,7 @@ begin
 
     begin
       v := 0;
-      while szBuffer[v] <> '\0' do
+      while szBuffer[v] <> #0 do
       begin
         if (szBuffer[v] = '*') then
         begin
@@ -420,52 +424,47 @@ begin
             ReplaceIndex := v;
         end;
 
-        Inc (v);
+        Inc(v);
       end;
     end;
 
     // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
-    if(ReplaceIndex <> -1) then
+    if (ReplaceIndex <> -1) then
     begin
       ReplaceChar := szBuffer[ReplaceIndex];
       szBuffer[ReplaceIndex] := #0;
     end;
 
     //printf('Aftr : %s', szBuffer); // MARKED OUT BY CXBX
+  end;
 
-    (*wchar_t wszObjectName[160];
+  // initialize object attributes
+  if Assigned(szBuffer) then
+    mbstowcs(@(wszObjectName[0]), szBuffer, 160)
+  else
+    wszObjectName[0] := #0;
 
-    UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr; *)
+  JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
 
-    // initialize object attributes
-    (*if Assigned(szBuffer) then
-      mbstowcs(wszObjectName, szBuffer, 160)
-    else
-      wszObjectName[0] := WideChar(#0);
+  InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
-    NtDll::RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
+  // redirect to NtCreateFile
+  Result := JwaNative.NtCreateFile(
+      FileHandle, DesiredAccess, @NtObjAttr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+      JwaWinType.PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
+  );
 
-    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+  if FAILED(Result) then
+    DbgPrintf('EmuKrnl : NtCreateFile Failed! (0x%.08X)', [Result])
+  else
+    DbgPrintf('EmuKrnl : NtCreateFile := 0x%.08X', [FileHandle^]);
 
-    // redirect to NtCreateFile
-    ret := JwaNative.NtCreateFile
-    (
-        FileHandle, DesiredAccess, @NtObjAttr, (NtDll::IO_STATUS_BLOCK* )IoStatusBlock,
-        (NtDll::LARGE_INTEGER* )AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
-    );                                                            *)
+  // restore original buffer
+  if (ReplaceIndex <> -1) then
+    szBuffer[ReplaceIndex] := ReplaceChar;
 
-    if FAILED(ret) then
-      DbgPrintf('EmuKrnl : NtCreateFile Failed! (0x%.08X)', [ret])
-    else
-      DbgPrintf('EmuKrnl : NtCreateFile := 0x%.08X', [FileHandle^]);
-
-    // restore original buffer
-    if (ReplaceIndex <> -1) then
-      szBuffer[ReplaceIndex] := ReplaceChar;
-
-    // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
-    //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
+  // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
+  //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
 
   EmuSwapFS(fsXbox);
 end;
@@ -674,10 +673,56 @@ function xboxkrnl_NtQueryInformationFile(
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueryInformationFile');
+
+  DbgPrintf('EmuKrnl : NtQueryInformationFile' +
+     #13#10'(' +
+     #13#10'   FileHandle          : 0x%.08X' +
+     #13#10'   IoStatusBlock       : 0x%.08X' +
+     #13#10'   FileInformation     : 0x%.08X' +
+     #13#10'   Length              : 0x%.08X' +
+     #13#10'   FileInformationClass: 0x%.08X' +
+     #13#10');',
+     [FileHandle, IoStatusBlock, FileInformation,
+      Length, Ord(FileInfo)]);
+
+  if (FileInfo <> FilePositionInformation) and (FileInfo <> FileNetworkOpenInformation) then
+    CxbxKrnlCleanup('Unknown FILE_INFORMATION_CLASS 0x%.08X', [Ord(FileInfo)]);
+
+  Result := JwaNative.NtQueryInformationFile(
+    FileHandle,
+    JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+    JwaNative.PFILE_FS_SIZE_INFORMATION(FileInformation),
+    Length,
+    JwaNative.FILE_INFORMATION_CLASS(FileInfo)
+  );
+
+  //
+  // DEBUGGING!
+  //
+  begin
+    (* Commented out by Cxbx
+    _asm int 3;
+    NtDll::FILE_NETWORK_OPEN_INFORMATION *pInfo = (NtDll::FILE_NETWORK_OPEN_INFORMATION* )FileInformation;
+
+    if (FileInfo = FileNetworkOpenInformation) and (pInfo.AllocationSize.LowPart = 57344) then
+    begin
+      DbgPrintf('pInfo.AllocationSize : %d', pInfo->AllocationSize.LowPart);
+      DbgPrintf('pInfo.EndOfFile      : %d', pInfo->EndOfFile.LowPart);
+
+      pInfo.EndOfFile.LowPart := $1000;
+      pInfo.AllocationSize.LowPart := $1000;
+
+      fflush(stdout);
+    end;
+    *)
+  end;
+
+  if (FAILED(Result)) then
+    EmuWarning('NtQueryInformationFile failed!');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -815,10 +860,23 @@ function xboxkrnl_NtSetInformationFile(
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtSetInformationFile');
+
+  DbgPrintf('EmuKrnl : NtSetInformationFile' +
+         #13#10'(' +
+         #13#10'   FileHandle           : 0x%.08X' +
+         #13#10'   IoStatusBlock        : 0x%.08X' +
+         #13#10'   FileInformation      : 0x%.08X' +
+         #13#10'   Length               : 0x%.08X' +
+         #13#10'   FileInformationClass : 0x%.08X' +
+         #13#10');',
+         [FileHandle, IoStatusBlock, FileInformation,
+         Length, Ord(FileInformationClass)]);
+
+  Result := JwaNative.NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -910,7 +968,7 @@ end;
 
 function xboxkrnl_NtWriteFile(
   FileHandle: HANDLE; // Cxbx TODO: correct paramters
-  Event: PVOID;
+  Event: DWORD; // Dxbx correction (was PVOID)
   ApcRoutine: PVOID;
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
@@ -918,10 +976,33 @@ function xboxkrnl_NtWriteFile(
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtWriteFile');
+
+  DbgPrintf('EmuKrnl : NtWriteFile' +
+       #13#10'(' +
+       #13#10'   FileHandle          : 0x%.08X' +
+       #13#10'   Event               : 0x%.08X' +
+       #13#10'   ApcRoutine          : 0x%.08X' +
+       #13#10'   ApcContext          : 0x%.08X' +
+       #13#10'   IoStatusBlock       : 0x%.08X' +
+       #13#10'   Buffer              : 0x%.08X' +
+       #13#10'   Length              : 0x%.08X' +
+       #13#10'   ByteOffset          : 0x%.08X' + {' (0x%.08X)' +}
+       #13#10');',
+       [FileHandle, Event, ApcRoutine,
+       ApcContext, IoStatusBlock, Buffer, Length, ByteOffset{, iif(ByteOffset = nil, 0, ByteOffset.QuadPart)}]);
+
+  // Halo..
+  //    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
+  //        _asm int 3
+
+  Result := JwaNative.NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
+
+  if (FAILED(Result)) then
+    EmuWarning('NtWriteFile Failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
