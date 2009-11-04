@@ -19,7 +19,7 @@ unit uTranslationChecker;
 
 interface
 
-{$INCLUDE ..\..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 uses
   // Delphi
@@ -173,7 +173,7 @@ var
   i, j: Integer;
   ScanState: TPascalScanState;
   Line: string;
-  UnitName: string;
+  UnitNameStr: string;
   HadUnitTag: Boolean;
   SourceStr: string;
   BranchStr: string;
@@ -281,7 +281,7 @@ begin
         begin
           if StrStartsWith(Line, 'unit ') then
           begin
-            UnitName := Copy(Line, Length('unit ') + 1, CharPos(Line, ';', 6) - Length('unit ') - 1);
+            UnitNameStr := Copy(Line, Length('unit ') + 1, CharPos(Line, ';', 6) - Length('unit ') - 1);
             ScanState := ssFindTranslationComment;
           end;
         end;
@@ -351,7 +351,7 @@ begin
           // Start the UNIT tag when not already done :
           if not HadUnitTag then
           begin
-            Log(Format('  <UNIT name="%s">', [UnitName]));
+            Log(Format('  <UNIT name="%s">', [UnitNameStr]));
             HadUnitTag := True;
           end;
 

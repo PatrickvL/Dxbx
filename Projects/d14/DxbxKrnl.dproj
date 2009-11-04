@@ -23,8 +23,10 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<BRCC_Defines> DXBX_DEBUG;$(BRCC_Defines)</BRCC_Defines>
+			<DCC_Define>DXBX_DLL;$(DCC_Define)</DCC_Define>
 			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DependencyCheckOutputName>..\..\bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<GenDll>true</GenDll>
 			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
@@ -53,6 +55,8 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<RcCompile Include="..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
 				<Form>StoredTrie.res</Form>
 			</RcCompile>
 			<DCCReference Include="..\..\src\uLog.pas"/>
@@ -140,6 +144,8 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">D:\!Patrick_Sofware\XBox\Games\Xbox Turok NTSC\Dxbx D2010.exe</Parameters>
+						<Parameters Name="DebugCWD">D:\!Patrick_Sofware\XBox\Games\Xbox Turok NTSC</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>

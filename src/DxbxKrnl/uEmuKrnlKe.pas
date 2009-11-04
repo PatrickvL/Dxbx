@@ -584,18 +584,17 @@ function xboxkrnl_KeSetTimer(
 begin
   EmuSwapFS(fsWindows);
 
-	DbgPrintf('EmuKrnl : KeSetTimer' +
-		   #13#10'(' +
-		   #13#10'   Timer               : 0x%.08X' +
-		   #13#10'   DueTime             : 0x%.16X' + // was %I64X
-		   #13#10'   Dpc                 : 0x%.08X' +
-		   #13#10');',
-		   [Timer, DueTime.QUADPART, Dpc]);
+  DbgPrintf('EmuKrnl : KeSetTimer' +
+       #13#10'(' +
+       #13#10'   Timer               : 0x%.08X' +
+       #13#10'   DueTime             : 0x%.16X' + // was %I64X
+       #13#10'   Dpc                 : 0x%.08X' +
+       #13#10');',
+       [Timer, DueTime.QUADPART, Dpc]);
 
-  // Call KeSetTimerEx
-  xboxkrnl_KeSetTimerEx(Timer, DueTime, 0, Dpc);
+  // Call the newer function and supply a period of 0 (source: ReactOS)
+  Result := xboxkrnl_KeSetTimerEx(Timer, DueTime, {Period=}0, Dpc);
 
-  Result := True;
   EmuSwapFS(fsXbox);
 end;
 
@@ -619,6 +618,17 @@ begin
            [Timer, DueTime.QUADPART, Period, Dpc]);
 
   CxbxKrnlCleanup('KeSetTimerEx is not implemented');
+
+(* Dxbx TODO : Try to implement this via :
+  Result := JwaNative.NtSetTimer(IN HANDLE TimerHandle,
+           IN PLARGE_INTEGER DueTime,
+           IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
+           IN PVOID TimerContext OPTIONAL,
+           IN BOOLEAN WakeTimer,
+           IN LONG Period OPTIONAL,
+           OUT PBOOLEAN PreviousState OPTIONAL)
+  ..as this calls into KeSetTimerEx and is reachable from user-mode.
+*)
 
   EmuSwapFS(fsXbox);
 

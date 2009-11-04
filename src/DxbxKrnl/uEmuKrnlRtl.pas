@@ -44,52 +44,144 @@ function xboxkrnl_RtlAnsiStringToUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PSTRING;
   AllocateDestinationString: UCHAR
-  ): NTSTATUS; stdcall;
-function xboxkrnl_RtlAppendStringToString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlAppendUnicodeStringToString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlAppendUnicodeToString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  ): NTSTATUS; stdcall; // Source : JwaNative
+function xboxkrnl_RtlAppendStringToString(
+  DestinationString: PSTRING;
+  AppendThisString: PSTRING
+  ): NTSTATUS; stdcall; // Source : JwaNative
+function xboxkrnl_RtlAppendUnicodeStringToString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING
+  ): NTSTATUS; stdcall; // Source:JwaNative
+function xboxkrnl_RtlAppendUnicodeToString(
+  Destination: PUNICODE_STRING;
+  Source: LPCWSTR
+  ): NTSTATUS; stdcall; // Source:JwaNative
 procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  _Message: PCHAR
-  ); stdcall;
-function xboxkrnl_RtlCaptureContext(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  _Message: PANSICHAR
+  ); stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlCaptureContext(
+  ContextRecord: PCONTEXT
+  ); stdcall; // Source:JwaNative
 function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCharToInteger(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCompareMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCompareMemoryUlong(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCompareString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCompareUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCopyString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCopyUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlCreateUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlDowncaseUnicodeChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlDowncaseUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCharToInteger(
+  Str: PCSZ;
+  Base: ULONG;
+  Value: PULONG
+  ): NTSTATUS; stdcall; // Source:JwaNative
+function xboxkrnl_RtlCompareMemory(
+  Source1: PVOID;
+  Source2: PVOID;
+  Length: SIZE_T
+  ): SIZE_T; stdcall; // Source:JwaNative
+function xboxkrnl_RtlCompareMemoryUlong(
+  Source: PVOID;
+  Length: ULONG;
+  Value: ULONG
+  ): ULONG; stdcall; // Source:JwaNative
+function xboxkrnl_RtlCompareString(
+  String1: PSTRING;
+  String2: PSTRING;
+  CaseInsensitive: BOOLEAN
+  ): LONG; stdcall; // Source:JwaNative
+function xboxkrnl_RtlCompareUnicodeString(
+  String1: PUNICODE_STRING;
+  String2: PUNICODE_STRING;
+  CaseInsensitive: BOOLEAN
+  ): LONG; stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlCopyString(
+  DestinationString: PSTRING;
+  SourceString: PSTRING
+  ); stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlCopyUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING
+  ); stdcall; // Source:JwaNative
+function xboxkrnl_RtlCreateUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PWSTR
+  ): BOOLEAN; stdcall; // Source:JwaNative
+function xboxkrnl_RtlDowncaseUnicodeChar(
+  Source: WCHAR
+  ): WCHAR; stdcall; // Source:JwaNative
+function xboxkrnl_RtlDowncaseUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING;
+  AllocateDestinationString: BOOLEAN
+  ): NTSTATUS; stdcall; // Source:JwaNative
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
 function xboxkrnl_RtlEnterCriticalSectionAndRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlEqualString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlEqualUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlExtendedIntegerMultiply(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlExtendedLargeIntegerDivide(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlExtendedMagicDivide(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlFillMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlFillMemoryUlong(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlFreeAnsiString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlFreeUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlGetCallersAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlEqualString(
+  String1: PSTRING;
+  String2: PSTRING;
+  CaseInsensitive: BOOLEAN
+  ): BOOLEAN; stdcall; // Source:JwaNative
+function xboxkrnl_RtlEqualUnicodeString(
+  String1: PUNICODE_STRING;
+  String2: PUNICODE_STRING;
+  CaseInsensitive: BOOLEAN
+  ): BOOLEAN; stdcall; // Source:JwaNative
+function xboxkrnl_RtlExtendedIntegerMultiply(
+  Multiplicand: LARGE_INTEGER;
+  Multiplier: LONG
+  ): LARGE_INTEGER; stdcall; // Source:JwaNative
+function xboxkrnl_RtlExtendedLargeIntegerDivide(
+  Dividend: LARGE_INTEGER;
+  Divisor: ULONG;
+  Remainder: PULONG
+  ): LARGE_INTEGER; stdcall; // Source:JwaNative
+function xboxkrnl_RtlExtendedMagicDivide(
+  Dividend: LARGE_INTEGER;
+  MagicDivisor: LARGE_INTEGER;
+  ShiftCount: CCHAR
+  ): LARGE_INTEGER; stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlFillMemory(
+  Destination: PVOID;
+  Length: SIZE_T;
+  Fill: UCHAR
+  ); stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlFillMemoryUlong(
+  Destination: PVOID;
+  Length: ULONG;
+  Fill: ULONG
+  ); stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlFreeAnsiString(
+  AnsiString: PANSI_STRING
+  ); stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlFreeUnicodeString(
+  UnicodeString: PUNICODE_STRING
+  ); stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlGetCallersAddress(
+  CallersAddress: PPVOID;
+  CallersCaller: PPVOID
+  ); stdcall; // Source:JwaNative
 procedure xboxkrnl_RtlInitAnsiString(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
 ); stdcall;
-function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlInitUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: LPCWSTR
+  ); stdcall; // Source:JwaNative
 procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-function xboxkrnl_RtlIntegerToChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlIntegerToUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlIntegerToChar(
+  Value: ULONG;
+  Base: ULONG;
+  Length: ULONG;
+  Str: PAnsiChar
+  ): NTSTATUS; stdcall; // Source:JwaNative
+function xboxkrnl_RtlIntegerToUnicodeString(
+  Value: ULONG;
+  Base: ULONG;
+  Str: PUNICODE_STRING
+  ): NTSTATUS; stdcall; // Source:JwaNative
 procedure xboxkrnl_RtlLeaveCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
@@ -97,15 +189,26 @@ function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall; // UNKN
 function xboxkrnl_RtlLowerChar(
   Character: CHAR
   ): CHAR; stdcall;
-function xboxkrnl_RtlMapGenericMask(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlMoveMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlMapGenericMask(
+  AccessMask: PACCESS_MASK;
+  GenericMapping: PGENERIC_MAPPING
+  ); stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlMoveMemory(
+  Destination: PVOID;
+  Source: PVOID;
+  Length: SIZE_T
+  ); stdcall; // Source:JwaNative
 function xboxkrnl_RtlMultiByteToUnicodeN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlMultiByteToUnicodeSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlNtStatusToDosError(
   Status: NTSTATUS
   ): ULONG; stdcall;
-function xboxkrnl_RtlRaiseException(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlRaiseStatus(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlRaiseException(
+  ExceptionRecord: PEXCEPTION_RECORD
+  ); stdcall;
+procedure xboxkrnl_RtlRaiseStatus(
+  Status: NTSTATUS
+  ); stdcall; // Source:JwaNative
 function xboxkrnl_RtlTimeFieldsToTime(
   TimeFields: PTIME_FIELDS;
   Time: PLARGE_INTEGER // OUT
@@ -117,24 +220,61 @@ procedure xboxkrnl_RtlTimeToTimeFields(
 function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ): LONGBOOL; stdcall;
-function xboxkrnl_RtlUlongByteSwap(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUlongByteSwap(
+  Source: ULONG
+  ): ULONG; stdcall; // Source : JwaNative
 function xboxkrnl_RtlUnicodeStringToAnsiString(
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
   AllocateDestinationString: LONGBOOL
   ): NTSTATUS; stdcall;
-function xboxkrnl_RtlUnicodeStringToInteger(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUnicodeStringToInteger(
+  Str: PUNICODE_STRING;
+  Base: ULONG;
+  Value: PULONG
+  ): NTSTATUS; stdcall; // Source : JwaNative
 function xboxkrnl_RtlUnicodeToMultiByteN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUnicodeToMultiByteSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUnwind(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUpcaseUnicodeChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUpcaseUnicodeString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUpperChar(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUpperString(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlUshortByteSwap(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUnicodeToMultiByteSize(
+  BytesInMultiByteString: PULONG;
+  UnicodeString: PWSTR;
+  BytesInUnicodeString: ULONG
+  ): NTSTATUS; stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlUnwind(
+  TargetFrame: PVOID;
+  TargetIp: PVOID;
+  ExceptionRecord: PEXCEPTION_RECORD;
+  ReturnValue: PVOID
+  ); stdcall; // Source:JwaNative
+function xboxkrnl_RtlUpcaseUnicodeChar(
+  SourceCharacter: WCHAR
+  ): WCHAR; stdcall; // Source:JwaNative
+function xboxkrnl_RtlUpcaseUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING;
+  AllocateDestinationString: BOOLEAN
+  ): NTSTATUS; stdcall; // Source:JwaNative
+function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
+  MbString: PAnsiChar;
+  MbSize: ULONG;
+  var ResultSize: ULONG;
+  UnicodeString: PWSTR;
+  UnicodeSize: ULONG
+  ): NTSTATUS; stdcall; // Source:JwaNative
+function xboxkrnl_RtlUpperChar(
+  Character: ANSICHAR
+  ): ANSICHAR; stdcall; // Source:JwaNative
+procedure xboxkrnl_RtlUpperString(
+  DestinationString: PSTRING;
+  SourceString: PSTRING
+  ); stdcall; // Source:JwaNative
+function xboxkrnl_RtlUshortByteSwap(
+  Source: USHORT
+  ): USHORT; // No stdcall (was fastcall)! // Source:JwaNative
 function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlZeroMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlZeroMemory(
+  Destination: PVOID;
+  Length: SIZE_T
+  ); stdcall; // Source:JwaNative
 function xboxkrnl_RtlRip(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlSnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlSprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -151,31 +291,43 @@ function xboxkrnl_RtlAnsiStringToUnicodeString(
   SourceString: PSTRING;
   AllocateDestinationString: UCHAR
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlAnsiStringToUnicodeString');
+  Result := JwaNative.RtlAnsiStringToUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlAppendStringToString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlAppendStringToString(
+  DestinationString: PSTRING;
+  AppendThisString: PSTRING
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlAppendStringToString');
+  Result := JwaNative.RtlAppendStringToString(DestinationString, AppendThisString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlAppendUnicodeStringToString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlAppendUnicodeStringToString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlAppendUnicodeStringToString');
+  Result := JwaNative.RtlAppendUnicodeStringToString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlAppendUnicodeToString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlAppendUnicodeToString(
+  Destination: PUNICODE_STRING;
+  Source: LPCWSTR
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlAppendUnicodeToString');
+  Result := JwaNative.RtlAppendUnicodeToString(Destination, Source);
   EmuSwapFS(fsXbox);
 end;
 
@@ -183,19 +335,22 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  _Message: PCHAR
+  _Message: PANSICHAR
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('RtlAssert');
+  JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, _Message);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCaptureContext(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlCaptureContext(
+  ContextRecord: PCONTEXT
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCaptureContext');
+  JwaNative.RtlCaptureContext(ContextRecord);
   EmuSwapFS(fsXbox);
 end;
 
@@ -206,73 +361,118 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCharToInteger(): NTSTATUS; stdcall;
+function xboxkrnl_RtlCharToInteger(
+  Str: PCSZ;
+  Base: ULONG;
+  Value: PULONG
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCharToInteger');
+  Result := JwaNative.RtlCharToInteger(Str, Base, Value);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCompareMemory(): NTSTATUS; stdcall;
+function xboxkrnl_RtlCompareMemory(
+  Source1: PVOID;
+  Source2: PVOID;
+  Length: SIZE_T
+  ): SIZE_T; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCompareMemory');
+  Result := JwaNative.RtlCompareMemory(Source1, Source2, Length);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCompareMemoryUlong(): NTSTATUS; stdcall;
+function xboxkrnl_RtlCompareMemoryUlong(
+  Source: PVOID;
+  Length: ULONG;
+  Value: ULONG
+  ): ULONG; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCompareMemoryUlong');
+  Result := JwaNative.RtlCompareMemoryUlong(Source, Length, Value);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCompareString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlCompareString(
+  String1: PSTRING;
+  String2: PSTRING;
+  CaseInsensitive: BOOLEAN
+  ): LONG; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCompareString');
+  Result := JwaNative.RtlCompareString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCompareUnicodeString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlCompareUnicodeString(
+  String1: PUNICODE_STRING;
+  String2: PUNICODE_STRING;
+  CaseInsensitive: BOOLEAN
+  ): LONG; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCompareUnicodeString');
+  Result := JwaNative.RtlCompareUnicodeString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCopyString(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlCopyString(
+  DestinationString: PSTRING;
+  SourceString: PSTRING
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCopyString');
+  JwaNative.RtlCopyString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCopyUnicodeString(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlCopyUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCopyUnicodeString');
+  JwaNative.RtlCopyUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCreateUnicodeString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlCreateUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PWSTR
+  ): BOOLEAN; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlCreateUnicodeString');
+  Result := JwaNative.RtlCreateUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlDowncaseUnicodeChar(): NTSTATUS; stdcall;
+function xboxkrnl_RtlDowncaseUnicodeChar(
+  Source: WCHAR
+  ): WCHAR; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlDowncaseUnicodeChar');
+  Result := JwaNative.RtlDowncaseUnicodeChar(Source);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlDowncaseUnicodeString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlDowncaseUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING;
+  AllocateDestinationString: BOOLEAN
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlDowncaseUnicodeString');
+  Result := JwaNative.RtlDowncaseUnicodeString(DestinationString, SourceString, AllocateDestinationString);
   EmuSwapFS(fsXbox);
 end;
 
@@ -307,73 +507,117 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlEqualString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlEqualString(
+  String1: PSTRING;
+  String2: PSTRING;
+  CaseInsensitive: BOOLEAN
+  ): BOOLEAN; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlEqualString');
+  Result := JwaNative.RtlEqualString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlEqualUnicodeString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlEqualUnicodeString(
+  String1: PUNICODE_STRING;
+  String2: PUNICODE_STRING;
+  CaseInsensitive: BOOLEAN
+  ): BOOLEAN; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlEqualUnicodeString');
+  Result := JwaNative.RtlEqualUnicodeString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlExtendedIntegerMultiply(): NTSTATUS; stdcall;
+function xboxkrnl_RtlExtendedIntegerMultiply(
+  Multiplicand: LARGE_INTEGER;
+  Multiplier: LONG
+  ): LARGE_INTEGER; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlExtendedIntegerMultiply');
+  Result := JwaNative.RtlExtendedIntegerMultiply(Multiplicand, Multiplier);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlExtendedLargeIntegerDivide(): NTSTATUS; stdcall;
+function xboxkrnl_RtlExtendedLargeIntegerDivide(
+  Dividend: LARGE_INTEGER;
+  Divisor: ULONG;
+  Remainder: PULONG
+  ): LARGE_INTEGER; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlExtendedLargeIntegerDivide');
+  Result := JwaNative.RtlExtendedLargeIntegerDivide(Dividend, Divisor, Remainder);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlExtendedMagicDivide(): NTSTATUS; stdcall;
+function xboxkrnl_RtlExtendedMagicDivide(
+  Dividend: LARGE_INTEGER;
+  MagicDivisor: LARGE_INTEGER;
+  ShiftCount: CCHAR
+  ): LARGE_INTEGER; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlExtendedMagicDivide');
+  Result := JwaNative.RtlExtendedMagicDivide(Dividend, MagicDivisor, JwaWinType.CCHAR(ShiftCount));
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlFillMemory(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlFillMemory(
+  Destination: PVOID;
+  Length: SIZE_T;
+  Fill: UCHAR
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlFillMemory');
+  JwaNative.RtlFillMemory(Destination, Length, Fill);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlFillMemoryUlong(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlFillMemoryUlong(
+  Destination: PVOID;
+  Length: ULONG;
+  Fill: ULONG
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlFillMemoryUlong');
+  JwaNative.RtlFillMemoryUlong(Destination, Length, Fill);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlFreeAnsiString(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlFreeAnsiString(
+  AnsiString: PANSI_STRING
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlFreeAnsiString');
+  JwaNative.RtlFreeAnsiString(AnsiString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlFreeUnicodeString(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlFreeUnicodeString(
+  UnicodeString: PUNICODE_STRING
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlFreeUnicodeString');
+  JwaNative.RtlFreeUnicodeString(UnicodeString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlGetCallersAddress(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlGetCallersAddress(
+  CallersAddress: PPVOID;
+  CallersCaller: PPVOID
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlGetCallersAddress');
+  JwaNative.RtlGetCallersAddress(CallersAddress, CallersCaller);
   EmuSwapFS(fsXbox);
 end;
 
@@ -381,7 +625,7 @@ procedure xboxkrnl_RtlInitAnsiString(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -392,15 +636,19 @@ begin
          #13#10');',
          [DestinationString, SourceString]);
 
-  JwaNative.RtlInitAnsiString(PANSI_STRING(DestinationString), PCSZ(SourceString));
+  JwaNative.RtlInitAnsiString(DestinationString, SourceString);
 
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlInitUnicodeString(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlInitUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: LPCWSTR
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlInitUnicodeString');
+  JwaNative.RtlInitUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
 
@@ -424,17 +672,28 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlIntegerToChar(): NTSTATUS; stdcall;
+function xboxkrnl_RtlIntegerToChar(
+  Value: ULONG;
+  Base: ULONG;
+  Length: ULONG;
+  Str: PAnsiChar
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlIntegerToChar');
+  Result := JwaNative.RtlIntegerToChar(Value, Base, Length, Str);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlIntegerToUnicodeString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlIntegerToUnicodeString(
+  Value: ULONG;
+  Base: ULONG;
+  Str: PUNICODE_STRING
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlIntegerToUnicodeString');
+  Result := JwaNative.RtlIntegerToUnicodeString(Value, Base, Str);
   EmuSwapFS(fsXbox);
 end;
 
@@ -444,13 +703,12 @@ procedure xboxkrnl_RtlLeaveCriticalSection(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
-
   JwaNative.RtlLeaveCriticalSection(CriticalSection);
-
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlLeaveCriticalSectionAndRegion');
@@ -463,22 +721,30 @@ function xboxkrnl_RtlLowerChar(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
-//  Unimplemented('RtlLowerChar');
   Result := Low(Result);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlMapGenericMask(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlMapGenericMask(
+  AccessMask: PACCESS_MASK;
+  GenericMapping: PGENERIC_MAPPING
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlMapGenericMask');
+  JwaNative.RtlMapGenericMask(AccessMask, GenericMapping);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlMoveMemory(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlMoveMemory(
+  Destination: PVOID;
+  Source: PVOID;
+  Length: SIZE_T
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlMoveMemory');
+  JwaNative.RtlMoveMemory(Destination, Source, Length);
   EmuSwapFS(fsXbox);
 end;
 
@@ -509,22 +775,28 @@ begin
            #13#10');',
            [Status]);
 
-  Result := ULONG(JwaNative.RtlNtStatusToDosError(Status));
+  Result := JwaNative.RtlNtStatusToDosError(Status);
 
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlRaiseException(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlRaiseException(
+  ExceptionRecord: PEXCEPTION_RECORD
+  ); stdcall;
+// Source:ReactOS  Translator:PatrickvL  Done:10
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlRaiseException');
+  Unimplemented('RtlRaiseException');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlRaiseStatus(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlRaiseStatus(
+  Status: NTSTATUS
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlRaiseStatus');
+  JwaNative.RtlRaiseStatus(Status);
   EmuSwapFS(fsXbox);
 end;
 
@@ -535,9 +807,7 @@ function xboxkrnl_RtlTimeFieldsToTime(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-
   Result := JwaNative.RtlTimeFieldsToTime(TimeFields, Time);
-
   EmuSwapFS(fsXbox);
 end;
 
@@ -548,9 +818,7 @@ procedure xboxkrnl_RtlTimeToTimeFields(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-
   JwaNative.RtlTimeToTimeFields(Time, TimeFields);
-  
   EmuSwapFS(fsXbox);
 end;
 
@@ -560,16 +828,17 @@ function xboxkrnl_RtlTryEnterCriticalSection(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 begin
   EmuSwapFS(fsWindows);
-
   Result := JwaNative.RtlTryEnterCriticalSection(CriticalSection);
-
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUlongByteSwap(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUlongByteSwap(
+  Source: ULONG
+  ): ULONG; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUlongByteSwap');
+  Result := JwaNative.RtlUlongByteSwap(Source);
   EmuSwapFS(fsXbox);
 end;
 
@@ -578,17 +847,22 @@ function xboxkrnl_RtlUnicodeStringToAnsiString(
   SourceString: PUNICODE_STRING;
   AllocateDestinationString: LONGBOOL
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUnicodeStringToAnsiString');
+  Result := JwaNative.RtlUnicodeStringToAnsiString(DestinationString, SourceString, AllocateDestinationString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUnicodeStringToInteger(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUnicodeStringToInteger(
+  Str: PUNICODE_STRING;
+  Base: ULONG;
+  Value: PULONG
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUnicodeStringToInteger');
+  Result := JwaNative.RtlUnicodeStringToInteger(Str, Base, Value);
   EmuSwapFS(fsXbox);
 end;
 
@@ -599,59 +873,95 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUnicodeToMultiByteSize(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUnicodeToMultiByteSize(
+  BytesInMultiByteString: PULONG;
+  UnicodeString: PWSTR;
+  BytesInUnicodeString: ULONG
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUnicodeToMultiByteSize');
+  Result := JwaNative.RtlUnicodeToMultiByteSize(BytesInMultiByteString, UnicodeString, BytesInUnicodeString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUnwind(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlUnwind(
+  TargetFrame: PVOID;
+  TargetIp: PVOID;
+  ExceptionRecord: PEXCEPTION_RECORD;
+  ReturnValue: PVOID
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUnwind');
+  JwaNative.RtlUnwind(TargetFrame, TargetIp, ExceptionRecord, ReturnValue);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUpcaseUnicodeChar(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUpcaseUnicodeChar(
+  SourceCharacter: WCHAR
+  ): WCHAR; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUpcaseUnicodeChar');
+  Result := JwaNative.RtlUpcaseUnicodeChar(SourceCharacter);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUpcaseUnicodeString(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUpcaseUnicodeString(
+  DestinationString: PUNICODE_STRING;
+  SourceString: PUNICODE_STRING;
+  AllocateDestinationString: BOOLEAN
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUpcaseUnicodeString');
+  Result := JwaNative.RtlUpcaseUnicodeString(DestinationString, SourceString, AllocateDestinationString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
+  MbString: PAnsiChar;
+  MbSize: ULONG;
+  var ResultSize: ULONG;
+  UnicodeString: PWSTR;
+  UnicodeSize: ULONG
+  ): NTSTATUS; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUpcaseUnicodeToMultiByteN');
+  Result := JwaNative.RtlUpcaseUnicodeToMultiByteN(MbString, MbSize, ResultSize, UnicodeString, UnicodeSize);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUpperChar(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUpperChar(
+  Character: ANSICHAR
+  ): ANSICHAR; stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUpperChar');
+  Result := JwaNative.RtlUpperChar(Character);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUpperString(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlUpperString(
+  DestinationString: PSTRING;
+  SourceString: PSTRING
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUpperString');
+  JwaNative.RtlUpperString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUshortByteSwap(): NTSTATUS; stdcall;
+function xboxkrnl_RtlUshortByteSwap(
+  Source: USHORT
+  ): USHORT; // No stdcall (was fastcall)!
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUshortByteSwap');
+  Result := JwaNative.RtlUshortByteSwap(Source);
   EmuSwapFS(fsXbox);
 end;
 
@@ -662,10 +972,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlZeroMemory(): NTSTATUS; stdcall;
+procedure xboxkrnl_RtlZeroMemory(
+  Destination: PVOID;
+  Length: SIZE_T
+  ); stdcall;
+// Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlZeroMemory');
+  JwaNative.RtlZeroMemory(Destination, Length);
   EmuSwapFS(fsXbox);
 end;
 

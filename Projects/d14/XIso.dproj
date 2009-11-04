@@ -1,11 +1,11 @@
 ﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
-			<ProjectGuid>{a72fb3d5-96f2-4364-8799-bcbd7f364926}</ProjectGuid>
+			<ProjectGuid>{1b926cb1-0ee4-4b67-8ce8-38b48a87e9fc}</ProjectGuid>
 			<MainSource>XIso.dpr</MainSource>
 			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
 			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-			<DCC_DependencyCheckOutputName>..\..\..\..\bin\tools\XIso.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\Bin\XIso.exe</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 		</PropertyGroup>
@@ -26,72 +26,25 @@
 			<DCC_DependencyCheckOutputName>XIso.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\..\..\bin\tools\XIso.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_DebugInformation>False</DCC_DebugInformation>
 			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-			<DCC_ExeOutput>..\..\..\..\bin\tools</DCC_ExeOutput>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-			<DCC_DcuOutput>..\dcu</DCC_DcuOutput>
-			<DCC_ObjOutput>..\dcu</DCC_ObjOutput>
-			<DCC_HppOutput>..\dcu</DCC_HppOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\..\..\bin\tools\XIso.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\Bin\XIso.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
-			<DCC_ExeOutput>..\..\..\..\bin\tools</DCC_ExeOutput>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-			<DCC_DcuOutput>..\dcu</DCC_DcuOutput>
-			<DCC_ObjOutput>..\dcu</DCC_ObjOutput>
-			<DCC_HppOutput>..\dcu</DCC_HppOutput>
-			<DCC_UnitSearchPath>$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_ResourcePath>$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
-			<DCC_ObjPath>$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
-			<DCC_IncludePath>$(DXBXLIB)\jwapi\Common;$(DXBXLIB)\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_UnitSearchPath>..\..\Libraries\jwapi\Common;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>..\..\Libraries\jwapi\Common;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>..\..\Libraries\jwapi\Common;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>..\..\Libraries\jwapi\Common;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_ExeOutput>..\..\Bin\</DCC_ExeOutput>
+			<DCC_DcuOutput>..\..\dcu\</DCC_DcuOutput>
+			<DCC_ObjOutput>..\..\dcu\</DCC_ObjOutput>
+			<DCC_HppOutput>..\..\dcu\</DCC_HppOutput>
 		</PropertyGroup>
-		<ItemGroup>
-			<DelphiCompile Include="XIso.dpr">
-				<MainSource>MainSource</MainSource>
-			</DelphiCompile>
-			<DCCReference Include="ufrm_Main.pas">
-				<Form>frm_Main</Form>
-			</DCCReference>
-			<DCCReference Include="uxiso.pas"/>
-			<DCCReference Include="uxisomaker.pas"/>
-			<DCCReference Include="TextConsts.pas"/>
-			<DCCReference Include="ufrm_Language.pas">
-				<Form>frmLanguage</Form>
-			</DCCReference>
-			<DCCReference Include="ufrmProgress.pas">
-				<Form>frmProgress</Form>
-			</DCCReference>
-			<DCCReference Include="GenerateXDFS.pas"/>
-			<DCCReference Include="Grabacion.pas">
-				<Form>Form4</Form>
-			</DCCReference>
-			<DCCReference Include="CreacionISO.pas"/>
-			<DCCReference Include="FormCreacionISO.pas">
-				<Form>Form5</Form>
-			</DCCReference>
-			<DCCReference Include="ProgresoCreacionISO.pas"/>
-			<DCCReference Include="xisomakerv3.pas"/>
-			<DCCReference Include="xisomakerv2.pas"/>
-			<DCCReference Include="Win32ASPI.pas"/>
-			<DCCReference Include="CDROM.pas"/>
-			<BuildConfiguration Include="Base">
-				<Key>Base</Key>
-			</BuildConfiguration>
-			<BuildConfiguration Include="Debug">
-				<Key>Cfg_2</Key>
-				<CfgParent>Base</CfgParent>
-			</BuildConfiguration>
-			<BuildConfiguration Include="Release">
-				<Key>Cfg_1</Key>
-				<CfgParent>Base</CfgParent>
-			</BuildConfiguration>
-		</ItemGroup>
-		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
 			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
@@ -136,4 +89,48 @@
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
+		<ItemGroup>
+			<DelphiCompile Include="XIso.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="..\..\src\Tools\XIso\src\Reinit.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\ufrm_Main.pas">
+				<Form>frm_Main</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XIso\src\uxiso.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\uxisomaker.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\TextConsts.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\ufrm_Language.pas">
+				<Form>frmLanguage</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XIso\src\ufrmProgress.pas">
+				<Form>frmProgress</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XIso\src\GenerateXDFS.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\Grabacion.pas">
+				<Form>Form4</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XIso\src\CreacionISO.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\FormCreacionISO.pas">
+				<Form>Form5</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XIso\src\ProgresoCreacionISO.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\xisomakerv3.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\xisomakerv2.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\Win32ASPI.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\CDROM.pas"/>
+			<DCCReference Include="..\..\src\Tools\XIso\src\xbe.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
 	</Project>

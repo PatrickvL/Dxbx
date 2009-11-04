@@ -70,9 +70,9 @@ type
     BehaviorFlags: DWORD;
     pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
     ppReturnedDeviceInterface: PIDirect3DDevice8;
-    bReady: Bool;
+    bReady: Bool; // volatile
     case Integer of
-      0: (hRet: HRESULT);
+      0: (hRet: HRESULT); // volatile
       1: (bCreate: bool); // False: release
   end;
 
@@ -1210,8 +1210,8 @@ begin
     Sleep(10); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?
 
   // Signal proxy thread, and wait for completion
+  g_EmuCDPD.bCreate := True; // Dxbx : bCreate should be set before bReady!
   g_EmuCDPD.bReady := True;
-  g_EmuCDPD.bCreate := True;
 
   // Wait until proxy is completed
   while g_EmuCDPD.bReady do
@@ -2625,9 +2625,9 @@ const
 {$WRITEABLECONST OFF}
 const
   szDiffusePixelShader: AnsiString =
-    'ps.1.0'#13#10 +
-    'tex t0'#13#10 +
-    'mov r0, t0'#13#10;
+    #13#10'ps.1.0'#13#10 +
+    #13#10'tex t0'#13#10 +
+    #13#10'mov r0, t0'#13#10;
 var
   pShader: LPD3DXBUFFER;
   pErrors: LPD3DXBUFFER;
@@ -5100,8 +5100,8 @@ begin
   if (Result = 1) then
   begin
     // Signal proxy thread, and wait for completion
+    g_EmuCDPD.bCreate := False; // Dxbx : bCreate should be set before bReady!
     g_EmuCDPD.bReady := True;
-    g_EmuCDPD.bCreate := False;
 
     while g_EmuCDPD.bReady do
       Sleep(10); // Dxbx : Should we use SwitchToThread() or YieldProcessor() ?

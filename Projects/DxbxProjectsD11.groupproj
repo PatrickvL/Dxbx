@@ -6,21 +6,32 @@
   <ItemGroup>
     <Projects Include="d11\Dxbx.dproj" />
     <Projects Include="d11\DxbxKrnl.dproj" />
+    <Projects Include="d11\TranslationChecker.dproj" />
+    <Projects Include="d11\XIso.dproj" />
   </ItemGroup>
   <ProjectExtensions>
     <Borland.Personality>Default.Personality</Borland.Personality>
     <Borland.ProjectType />
     <BorlandProject>
-  <BorlandProject xmlns=""> <Default.Personality> </Default.Personality> </BorlandProject></BorlandProject>
+<BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
-  <Target Name="Dxbx">
-    <MSBuild Projects="d11\Dxbx.dproj" Targets="" />
+  <Target Name="XIso">
+    <MSBuild Projects="d11\XIso.dproj" Targets="" />
   </Target>
-  <Target Name="Dxbx:Clean">
-    <MSBuild Projects="d11\Dxbx.dproj" Targets="Clean" />
+  <Target Name="XIso:Clean">
+    <MSBuild Projects="d11\XIso.dproj" Targets="Clean" />
   </Target>
-  <Target Name="Dxbx:Make">
-    <MSBuild Projects="d11\Dxbx.dproj" Targets="Make" />
+  <Target Name="XIso:Make">
+    <MSBuild Projects="d11\XIso.dproj" Targets="Make" />
+  </Target>
+  <Target Name="TranslationChecker">
+    <MSBuild Projects="d11\TranslationChecker.dproj" Targets="" />
+  </Target>
+  <Target Name="TranslationChecker:Clean">
+    <MSBuild Projects="d11\TranslationChecker.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="TranslationChecker:Make">
+    <MSBuild Projects="d11\TranslationChecker.dproj" Targets="Make" />
   </Target>
   <Target Name="DxbxKrnl">
     <MSBuild Projects="d11\DxbxKrnl.dproj" Targets="" />
@@ -31,14 +42,23 @@
   <Target Name="DxbxKrnl:Make">
     <MSBuild Projects="d11\DxbxKrnl.dproj" Targets="Make" />
   </Target>
+  <Target Name="Dxbx">
+    <MSBuild Projects="d11\Dxbx.dproj" Targets="" />
+  </Target>
+  <Target Name="Dxbx:Clean">
+    <MSBuild Projects="d11\Dxbx.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="Dxbx:Make">
+    <MSBuild Projects="d11\Dxbx.dproj" Targets="Make" />
+  </Target>
   <Target Name="Build">
-    <CallTarget Targets="Dxbx;DxbxKrnl" />
+    <CallTarget Targets="XIso;TranslationChecker;DxbxKrnl;Dxbx" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="Dxbx:Clean;DxbxKrnl:Clean" />
+    <CallTarget Targets="XIso:Clean;TranslationChecker:Clean;DxbxKrnl:Clean;Dxbx:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="Dxbx:Make;DxbxKrnl:Make" />
+    <CallTarget Targets="XIso:Make;TranslationChecker:Make;DxbxKrnl:Make;Dxbx:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

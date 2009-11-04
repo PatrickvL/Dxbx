@@ -58,12 +58,12 @@ type
 
 {$A-}
   TxVD = record
-    IDIn: array[0..19] of Char;
+    IDIn: array[0..19] of AnsiChar;
     DirRaiz: Integer;
     TamRaiz: Integer;
     FechaHora: FILETIME;
     SinUso: array[0..1991] of Byte;
-    IDOut: array[0..19] of Char;
+    IDOut: array[0..19] of AnsiChar;
   end;
 
   pxFichero = ^TxFichero;
@@ -74,12 +74,12 @@ type
     Tamano: Integer;
     Atributo: Byte;
     LongNombre: Byte;
-    Nombre: array[0..255] of Char;
+    Nombre: array[0..255] of AnsiChar;
   end;
 
   PEntradaDir = ^TEntradaDir;
   TEntradaDir = record
-    Nombre: string;
+    Nombre: AnsiString;
     FullPath: string;
     Tamano: Integer;
     SectorIn: Integer;
@@ -104,15 +104,15 @@ type
   end;
 
   TFechaHora2 = record
-    Ano: array[0..3] of Char;
-    Mes: array[0..1] of Char;
-    Dia: array[0..1] of Char;
+    Ano: array[0..3] of AnsiChar;
+    Mes: array[0..1] of AnsiChar;
+    Dia: array[0..1] of AnsiChar;
 
-    Hora: array[0..1] of Char;
-    Minuto: array[0..1] of Char;
-    Segundo: array[0..1] of Char;
+    Hora: array[0..1] of AnsiChar;
+    Minuto: array[0..1] of AnsiChar;
+    Segundo: array[0..1] of AnsiChar;
 
-    Cero1: array[0..1] of Char;
+    Cero1: array[0..1] of AnsiChar;
 
     Cero2: Byte;
   end;
@@ -137,15 +137,15 @@ type
   TPVD = record
     Id1: Byte; // 0 = Boot Record, 1 = PVD, 2 = SVD
                                         // 3 = VPD , 255 = Terminador de VD
-    CD001: array[0..4] of Char; // Siempre CD001
+    CD001: array[0..4] of AnsiChar; // Siempre CD001
     Id2: Byte; // Version del VD (Volume Descriptor)
     Nulo2: Byte; // 1 $00. No se usa.
-    IdSistema: array[0..31] of Char; // Identificador del CD (interno)
-    Etiqueta: array[0..31] of Char; // Etiqueta del CD.
+    IdSistema: array[0..31] of AnsiChar; // Identificador del CD (interno)
+    Etiqueta: array[0..31] of AnsiChar; // Etiqueta del CD.
     Nulo3: array[0..7] of Byte; // 8 $00
     SectorTLE: Integer; // Tamaño total de la imagen en sectores. Little Endian
     SectorTBE: Integer; // Tamaño total de la imagen en sectores. Big Endian
-    Nulo4: array[0..31] of Char; // 32 $00
+    Nulo4: array[0..31] of AnsiChar; // 32 $00
 
     VStamLE: Word; // Siempre $1. Tamaño del Volume Set. Little Endian
     VStamBE: Word; // Siempre $1. Tamaño del Volume Set. Big Endian
@@ -165,13 +165,13 @@ type
 
     DirRaiz: TDirectorio_Raiz;
 
-    NomVolume: array[0..127] of Char; // Nombre del CD extendido 128 caracteres
-    NomPubli: array[0..127] of Char; // Nombre del Publicador.
-    NomCreador: array[0..127] of Char; // Nombre del creador del CD 128 caracteres
-    NomApplica: array[0..127] of Char; // Nombre del programa con en el que se hizo
-    FichCopy: array[0..36] of Char; // Copyrigh.txt
-    FichAbst: array[0..36] of Char; // Abstract.txt
-    FichBibl: array[0..36] of Char; // Bibliogr.txt
+    NomVolume: array[0..127] of AnsiChar; // Nombre del CD extendido 128 caracteres
+    NomPubli: array[0..127] of AnsiChar; // Nombre del Publicador.
+    NomCreador: array[0..127] of AnsiChar; // Nombre del creador del CD 128 caracteres
+    NomApplica: array[0..127] of AnsiChar; // Nombre del programa con en el que se hizo
+    FichCopy: array[0..36] of AnsiChar; // Copyrigh.txt
+    FichAbst: array[0..36] of AnsiChar; // Abstract.txt
+    FichBibl: array[0..36] of AnsiChar; // Bibliogr.txt
 
     FeHoCrea: TFechaHora2;
     FeHoModi: TFechaHora2;
@@ -180,7 +180,7 @@ type
 
     VerEstruc: Byte;
     Cero: Byte;
-    DatosApli: array[0..511] of Char;
+    DatosApli: array[0..511] of Byte;
   end;
 
   PDirectorios = ^TDirectorios;
@@ -189,7 +189,7 @@ type
     Nulo: Byte; // Numero de sectores en modo Extendido del directorio
     Sector: Integer; // Sector donde se encuentra el Directorio
     Nivel: Word; // Nivel a que se encuentra el directorio sobre la raiz. Raiz = 1
-    Nombre: array[0..31] of Char; // Nombre del directorio
+    Nombre: array[0..31] of AnsiChar; // Nombre del directorio
     Pad: Byte; // Si la longitud del nombre es Impar se pone 1 sino no existe
   end;
 
@@ -214,7 +214,7 @@ type
     VolumeSBE: array[0..1] of Byte;
     VolumeSLE: array[0..1] of Byte;
     LongNombre: Byte;
-    Nombre: array[0..49] of Char;
+    Nombre: array[0..49] of AnsiChar;
   end;
 {$A+}
 
@@ -868,7 +868,7 @@ end;
 function TAdminXISO.XDFS2ISO9660(Fichero: string): Boolean;
 const
   ByteNulo: Byte = 0;
-  PuntoComa: array[0..1] of Char = ';1';
+//  PuntoComa: array[0..1] of Char = ';1';
 var
   i: Integer;
   XDFS: TFilestream;

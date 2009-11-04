@@ -79,7 +79,7 @@ type
     SCSI: Byte;
     LUN: Byte;
     Grabadora: Boolean;
-    Letra: Char;
+    Letra: AnsiChar;
     VelocidadActual: Integer;
     VelocidadMaxima: Integer;
   end;

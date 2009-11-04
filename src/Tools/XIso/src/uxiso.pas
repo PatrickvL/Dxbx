@@ -50,12 +50,12 @@ type
 
 {$A-}
   TxVD = record
-    IDIn: array[0..19] of Char;
+    IDIn: array[0..19] of AnsiChar;
     DirRaiz: Integer;
     TamRaiz: Integer;
     FechaHora: FILETIME;
     SinUso: array[0..1991] of Byte;
-    IDOut: array[0..19] of Char;
+    IDOut: array[0..19] of AnsiChar;
   end;
 {$A+}
 
@@ -169,7 +169,7 @@ begin
       if (xFichero.pIzq = $FFFF) then
         Break;
 
-      if  (Trim(PCHAR(@xFichero.Nombre)) = Trim(PCHAR(@Entrada.Nombre)))
+      if  (Trim(PAnsiChar(@xFichero.Nombre)) = Trim(PAnsiChar(@Entrada.Nombre)))
       and (xFichero.Tamano = Entrada.Tamano)
       and (xFichero.SectorIn = Entrada.SectorIn)
       and (xFichero.pDer = Entrada.pDer) then

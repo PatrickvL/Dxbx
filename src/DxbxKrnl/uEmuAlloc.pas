@@ -216,7 +216,7 @@ end;
 // * InThisMemoryBlock - Simple block matching function
 // ******************************************************************
 function InThisMemoryBlock(pMem: PVoid; pBlock: PCXBX_MEMORY_BLOCK): bool; inline;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := Assigned(pBlock)
         and (IntPtr(pMem) >= IntPtr(pBlock.pMem))

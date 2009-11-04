@@ -1,3 +1,4 @@
+
 {$IFNDEF JEDIAPILIB_INC}
 {$DEFINE JEDIAPILIB_INC}
 
@@ -35,18 +36,24 @@
 { For more information about the LGPL: http://www.gnu.org/copyleft/lesser.html }
 {                                                                              }
 {******************************************************************************}
-{$A+,Z4}
+{$A+} {record alignment on 4 byte boundaries}
+{$Z4} {enum size is 4 bytes}
 
 // This file is intended for C header conversions.
 // It defines several mutually exclusive IFDEFs which determine
 // the Windows version the API conversion is usable with.
 
-{$I jedi.inc}
+{$I ..\Includes\jedi.inc}
 
 {$IFNDEF JEDI_INC}
 ALERT_jedi_inc_incompatible
 // secure against old versions of jedi.inc.
 {$ENDIF !JEDI_INC}
+
+{******* WARNINGS OFF *********
+Currently the generated warnings from Delphi make no sense.
+So we turn them off.}
+{$WARNINGS OFF}
 
 {WARNING:
 Do not change state of
@@ -61,11 +68,21 @@ Standalone compiling would be useless!
 {.DEFINE DYNAMIC_LINK}
 {$IFDEF DYNAMIC_LINK}
   {$STACKFRAMES ON}
-  {$WARNINGS OFF}
 {$ENDIF DYNAMIC_LINK}
 
+{.$DEFINE ANSICODE}
+
 // Global switch to make UNICODE versions of API functions default
-{.DEFINE UNICODE}
+{.$DEFINE UNICODE}
+
+{$IFDEF ANSICODE}
+  {$IFDEF UNICODE}
+    //Ansicode must be stronger, since Delphi 2009
+    //sets UNICODE by default. However we unset it here
+    //if the user defined ansicode
+    {$UNDEF UNICODE}
+  {$ENDIF UNICODE}
+{$ENDIF ANSICODE}
 
 // Global switch to activate the use of the original basic types of
 // Delphi Windows.pas. Either indirectly in JwaWinType.pas or
@@ -90,6 +107,15 @@ Standalone compiling would be useless!
 //jwaWinBase::InterlockedExchangePointer
 {$DEFINE CPU64BIT}
 
+{$IFDEF DEBUG}
+  {.$WARNINGS OFF}
+{$IFDEF DELPHI7_UP}
+  {$WARN GARBAGE OFF} //removes warning about code behind end.
+{$ENDIF DELPHI7_UP}
+{$ENDIF DEBUG}
+
+
+
 // Global switch for the Windows version the files are compatible with
 // ONLY A SINGLE ONE IS ALLOWED TO BE ACTIVATED BY CHANGING THE DOT TO A DOLLAR SIGN!
 // Default is WINXP
@@ -99,9 +125,9 @@ Standalone compiling would be useless!
 {.DEFINE WIN98ME}
 {.DEFINE WINNT4}
 {.DEFINE WIN2000}
-{$DEFINE WINXP}
+{.$DEFINE WINXP}
 {.DEFINE WIN2003}
-{.DEFINE WINVISTA}
+{$DEFINE WINVISTA}
 {.$DEFINE WIN2008}
 
 {.DEFINE SERVICEPACK_1}
