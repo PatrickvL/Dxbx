@@ -655,7 +655,7 @@ end;
 procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -700,7 +700,7 @@ end;
 procedure xboxkrnl_RtlLeaveCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   JwaNative.RtlLeaveCriticalSection(CriticalSection);
@@ -825,7 +825,7 @@ end;
 function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ): LONGBOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := JwaNative.RtlTryEnterCriticalSection(CriticalSection);
