@@ -807,6 +807,9 @@ begin
           ;
         // Dxbx note : Watch out for compiler-magic, and clear interface as a pointer :
         Pointer(g_pD3DDevice8) := nil;
+
+        // Dxbx note : Cleanup previous reference WITHOUT reference-counting!
+        Pointer(g_pDummyBuffer) := nil;
       end;
 
       if Assigned(PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).BufferSurfaces[0]) then
@@ -2159,7 +2162,7 @@ begin
 
   ppRenderTarget^ := g_pCachedRenderTarget;
 
-  DbgPrintf('EmuD3D8: RenderTarget := 0x%.08X', pSurface8);
+  DbgPrintf('EmuD3D8: RenderTarget := 0x%.08X', [Pointer(pSurface8)]);
 
   EmuSwapFS(fsXbox);
 
@@ -2179,7 +2182,7 @@ begin
 
   pSurface8._AddRef();
 
-  DbgPrintf('EmuD3D8: RenderTarget := 0x%.08X', pSurface8);
+  DbgPrintf('EmuD3D8: RenderTarget := 0x%.08X', [Pointer(pSurface8)]);
 
   EmuSwapFS(fsXbox);
 
@@ -2206,7 +2209,7 @@ begin
 
   ppZStencilSurface^ := g_pCachedZStencilSurface;
 
-  DbgPrintf('EmuD3D8: DepthStencilSurface := 0x%.08X', pSurface8);
+  DbgPrintf('EmuD3D8: DepthStencilSurface := 0x%.08X', [Pointer(pSurface8)]);
   EmuSwapFS(fsXbox);
 
   Result := D3D_OK;
@@ -2226,7 +2229,7 @@ begin
   if Assigned(pSurface8) then
     pSurface8._AddRef();
 
-  DbgPrintf('EmuD3D8: DepthStencilSurface := 0x%.08X', pSurface8);
+  DbgPrintf('EmuD3D8: DepthStencilSurface := 0x%.08X', [Pointer(pSurface8)]);
 
   EmuSwapFS(fsXbox);
 
@@ -7625,7 +7628,7 @@ begin
     #13#10'(' +
     #13#10'   Fence               : 0x%.08X' +
     #13#10');',
-    [GetCurrentThreadId(), Fence]);
+    [Fence]);
 
   // TODO: Implement
 
