@@ -61,7 +61,7 @@ function {254} xboxkrnl_PsCreateSystemThread(
   lpThreadId: PULONG // thread identifier
   ): NTSTATUS; stdcall; // Source: Cxbx - TODO : Should we use XBMC's version?
 function {255} xboxkrnl_PsCreateSystemThreadEx(
-  var ThreadHandle: HANDLE; // out
+  ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
@@ -271,7 +271,7 @@ begin
 
   // Pass-through to Ex-implementation :
   Result := xboxkrnl_PsCreateSystemThreadEx(
-    {dummy}ThreadHandle,
+    {dummy}@ThreadHandle,
     ThreadExtraSize,
     KernelStackSize,
     TlsDataSize,
@@ -301,7 +301,7 @@ end;
 //
 // New to the XBOX.
 function {255} xboxkrnl_PsCreateSystemThreadEx(
-  var ThreadHandle: HANDLE; // out
+  ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
@@ -333,7 +333,7 @@ begin
     #13#10'   DebugStack          : 0x%.08x' +
     #13#10'   StartRoutine        : 0x%.08x' +
     #13#10');',
-    [Addr(ThreadHandle), ThreadExtraSize, KernelStackSize, TlsDataSize, Addr(ThreadId),
+    [ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, Addr(ThreadId),
     StartContext1, StartContext2, CreateSuspended, DebugStack, Addr(StartRoutine)]);
 
   // create thread, using our special proxy technique
@@ -345,19 +345,19 @@ begin
     iPCSTProxyParam.StartSuspended := CreateSuspended;
     iPCSTProxyParam.hStartedEvent := CreateEvent(nil, False, False, nil);
 
-    {var}ThreadHandle := BeginThread(nil, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
+    ThreadHandle^ := BeginThread(nil, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
 {$IFDEF DXBX_DEBUG}
-    DbgPrintf('EmuKrnl : ThreadHandle : 0x%.04x, ThreadId : 0x%.04x', [ThreadHandle, dwThreadId]);
+    DbgPrintf('EmuKrnl : ThreadHandle : 0x%.04x, ThreadId : 0x%.04x', [ThreadHandle^, dwThreadId]);
 {$ENDIF}
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
       hDupHandle := 0;
 
-      if not DuplicateHandle(GetCurrentProcess(), ThreadHandle, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
+      if not DuplicateHandle(GetCurrentProcess(), ThreadHandle^, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
         DbgPrintf('EmuKrnl : PsCreateSystemThreadEx - Couldn''t duplicate handle!');
 
       CxbxKrnlRegisterThread(hDupHandle);

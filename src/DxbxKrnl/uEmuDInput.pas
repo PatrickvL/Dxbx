@@ -45,7 +45,7 @@ var
 function XTL_EmuDInputInit: bool; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  g_EmuShared.GetXBController({var}g_XBController);
+  g_EmuShared.GetXBController(@g_XBController);
 
   g_XBController.ListenBegin(g_hEmuWindow);
 

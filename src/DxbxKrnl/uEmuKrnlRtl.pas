@@ -256,7 +256,7 @@ function xboxkrnl_RtlUpcaseUnicodeString(
 function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
   MbString: PAnsiChar;
   MbSize: ULONG;
-  var ResultSize: ULONG;
+  ResultSize: PULONG;
   UnicodeString: PWSTR;
   UnicodeSize: ULONG
   ): NTSTATUS; stdcall; // Source:JwaNative
@@ -483,7 +483,7 @@ procedure xboxkrnl_RtlEnterCriticalSection(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF DXBX_EXTREME_LOGGING}
   DbgPrintf('EmuKrnl : RtlEnterCriticalSection' +
            #13#10'(' +
            #13#10'   CriticalSection              : 0x%.08X' +
@@ -923,14 +923,14 @@ end;
 function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
   MbString: PAnsiChar;
   MbSize: ULONG;
-  var ResultSize: ULONG;
+  ResultSize: PULONG;
   UnicodeString: PWSTR;
   UnicodeSize: ULONG
   ): NTSTATUS; stdcall;
 // Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := JwaNative.RtlUpcaseUnicodeToMultiByteN(MbString, MbSize, ResultSize, UnicodeString, UnicodeSize);
+  Result := JwaNative.RtlUpcaseUnicodeToMultiByteN(MbString, MbSize, ResultSize^, UnicodeString, UnicodeSize);
   EmuSwapFS(fsXbox);
 end;
 

@@ -28,12 +28,27 @@ uses
   , JwaWinType
   , SysUtils // Abort
   // Directx
-  , Direct3D
   , D3DX8
+  , Direct3D
+  , Direct3D8
+//  , DirectDraw
   // Dxbx
   , uLog
   , uTypes // CLOCKS_PER_SEC, clock()
   , uEmuD3D8Types;
+
+const
+  MAX_NBR_STREAMS = 16;
+
+type
+  _PATCHEDSTREAM = packed record
+    pOriginalStream: IDirect3DVertexBuffer8; // P?
+    pPatchedStream: IDirect3DVertexBuffer8; // P?
+    uiOrigStride: UINT;
+    uiNewStride: UINT;
+    bUsedCached: bool;
+  end;
+  PATCHEDSTREAM = _PATCHEDSTREAM;
 
 type
   _D3DIVB = packed record
@@ -78,9 +93,40 @@ var
   g_IVBFVF: DWORD = 0;
 
 procedure XTL_EmuFlushIVB; stdcall;
-function XTL_VertexPatcher_Apply(pPatchDesc: PVertexPatchDesc): bool; stdcall;
-function XTL_VertexPatcher_Restore: LONGBOOL; stdcall;
 
+type
+  XTL_VertexPatcher = packed record
+  private
+    m_uiNbrStreams: UINT;
+    m_pStreams: array [0..MAX_NBR_STREAMS-1] of PATCHEDSTREAM;
+
+    m_pNewVertexStreamZeroData: PVOID;
+
+    m_bPatched: bool;
+    m_bAllocatedStreamZeroData: bool;
+
+    m_pDynamicPatch: PVERTEX_DYNAMIC_PATCH;
+    // Returns the number of streams of a patch
+    function GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
+    // Dumps the cache to the console
+    procedure DumpCache;
+    // Caches a patched stream
+    procedure CacheStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT);
+    // Frees a cached, patched stream
+    procedure FreeCachedStream(pStream: PVoid);
+    // Tries to apply a previously patched stream from the cache
+    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+    // Patches the types of the stream
+    function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+    // Patches the primitive of the stream
+    function PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+  public
+    procedure Create;
+    procedure Destroy;
+
+    function Apply(pPatchDesc: PVertexPatchDesc): bool;
+    function Restore: LONGBOOL;
+ end;
 
 implementation
 
@@ -142,24 +188,23 @@ begin
 end;
 
 
-procedure XTL_VertexPatcher_VertexPatcher(); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+procedure XTL_VertexPatcher.Create;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-    (*this.m_uiNbrStreams := 0;
-    ZeroMemory(this.m_pStreams, SizeOf(PATCHEDSTREAM) * MAX_NBR_STREAMS);
-    this.m_bPatched := False;
-    this.m_bAllocatedStreamZeroData := False;
-    this.m_pNewVertexStreamZeroData := 0;
-    this.m_pDynamicPatch := 0;
-    CRC32Init(); *)
- end;
+  m_uiNbrStreams := 0;
+  ZeroMemory(@(m_pStreams[0]), SizeOf(PATCHEDSTREAM) * MAX_NBR_STREAMS);
+  m_bPatched := False;
+  m_bAllocatedStreamZeroData := False;
+  m_pNewVertexStreamZeroData := 0;
+  m_pDynamicPatch := 0;
+  CRC32Init();
+end;
 
-(*XTL.VertexPatcher.~VertexPatcher()
+procedure XTL_VertexPatcher.Destroy;
 begin
 end;
-*)
 
-procedure XTL_VertexPatcher_DumpCache; stdcall;
+procedure XTL_VertexPatcher.DumpCache;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 (*var
   pNode : ^RTNode; *)
@@ -185,7 +230,9 @@ begin
 
 end;
 
-procedure XTL_VertexPatcher_CacheStream(var pPatchDesc: PVertexPatchDesc; uiStream: UINT);
+procedure XTL_VertexPatcher.CacheStream(
+  pPatchDesc: PVertexPatchDesc;
+  uiStream: UINT);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    UINT                       uiStride;
@@ -285,7 +332,7 @@ begin
 end;
 
 
-procedure XTL_VertexPatcher_FreeCachedStream(pStream: Pointer); stdcall;
+procedure XTL_VertexPatcher.FreeCachedStream(pStream: PVoid);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    g_PatchedStreamsCache.Lock();
@@ -310,7 +357,7 @@ begin
     g_PatchedStreamsCache.remove(pStream);  *)
 end;
 
-function XTL_VertexPatcher_ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    UINT                       uiStride;
@@ -436,7 +483,7 @@ begin
 end;
 
 
-function XTL_VertexPatcher_GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
+function XTL_VertexPatcher.GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    if(VshHandleIsVertexShader(g_CurrentVertexShader)) then
@@ -458,7 +505,7 @@ begin
     Result := 0; *)
 end;
 
-function XTL_VertexPatcher_PatchStream(var pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+function XTL_VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
@@ -738,7 +785,7 @@ begin
 end;
 
 
-function XTL_VertexPatcher_PatchPrimitive(var pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+function XTL_VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
  (*   PATCHEDSTREAM *pStream := @m_pStreams[uiStream];
@@ -917,7 +964,7 @@ begin
 end;
 
 
-function XTL_VertexPatcher_Apply(pPatchDesc: PVertexPatchDesc): bool; stdcall;
+function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    bool Patched := False;
@@ -952,7 +999,7 @@ begin
     Result := Patched;  *)
 end;
 
-function XTL_VertexPatcher_Restore: LONGBOOL; stdcall;
+function XTL_VertexPatcher.Restore: LONGBOOL;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    if( not this.m_bPatched) then
@@ -1223,7 +1270,7 @@ begin
         // Cxbx TODO: Set the current shader and let the patcher handle it..
         VPDesc.hVertexShader := g_IVBFVF;
 
-        VertexPatcher VertPatch;
+        XTL_VertexPatcher VertPatch;
 
         bool bPatched := VertPatch.Apply(@VPDesc);
 
@@ -1326,7 +1373,7 @@ begin
         // Cxbx TODO: Set the current shader and let the patcher handle it..
         VPDesc.hVertexShader := g_IVBFVF;
 
-        VertexPatcher VertPatch;
+        XTL_VertexPatcher VertPatch;
 
         bool bPatched := VertPatch.Apply(@VPDesc);
 
@@ -1543,18 +1590,7 @@ end;
 
 exports
   XTL_EmuFlushIVB,
-  XTL_EmuUpdateActiveTexture,
-
-  XTL_VertexPatcher_Apply,
-  XTL_VertexPatcher_DumpCache,
-  XTL_VertexPatcher_FreeCachedStream,
-  XTL_VertexPatcher_Restore,
-  XTL_VertexPatcher_CacheStream,
-  XTL_VertexPatcher_ApplyCachedStream,
-  XTL_VertexPatcher_GetNbrStreams,
-  XTL_VertexPatcher_PatchStream,
-  XTL_VertexPatcher_PatchPrimitive,
-  XTL_VertexPatcher_VertexPatcher;
+  XTL_EmuUpdateActiveTexture;
 
 end.
 

@@ -270,6 +270,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// Dxbx TODO : All Interlocked functions are FASTCALL in ReactOS,
+// so we need to hack this just like SetVertexShaderConstant1 for example.
+
 function {051} xboxkrnl_InterlockedCompareExchange(
   var Destination: LONG; // out, volatile
   Exchange: LONG;

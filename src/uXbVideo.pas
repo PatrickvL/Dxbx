@@ -67,6 +67,7 @@ type
     procedure SetVSync(Value: BOOL);
     function GetVSync: BOOL;
   end;
+  PXBVideo = ^XBVideo;
 
 implementation
 

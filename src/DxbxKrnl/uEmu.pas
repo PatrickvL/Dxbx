@@ -113,29 +113,29 @@ function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
 var
   fix: UInt32;
 begin
-	EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
-	g_bEmuException := True;
+  g_bEmuException := True;
 
-	// check for Halo hack
-	begin
-		if E.ExceptionRecord.ExceptionCode = $C0000005 then
-		begin
+  // check for Halo hack
+  begin
+    if E.ExceptionRecord.ExceptionCode = $C0000005 then
+    begin
 
-			// Halo Access Adjust 1
-			if E.ContextRecord.Eip = $0003394C then
-			begin
-				if E.ContextRecord.Ecx = $803BD800 then
-				begin
-					// Halo BINK skip
-					begin
-						// nop sled over bink calls
-						{
-						memset((void* )$2CBA4, $90, $2CBAF - $2CBA4);
-						memset((void* )$2CBBD, $90, $2CBD5 - $2CBBD);
-						}
-						(*memset((void* )$2CAE0, $90, $2CE1E - $2CAE0); *)
-					end;
+      // Halo Access Adjust 1
+      if E.ContextRecord.Eip = $0003394C then
+      begin
+        if E.ContextRecord.Ecx = $803BD800 then
+        begin
+          // Halo BINK skip
+          begin
+            // nop sled over bink calls
+            {
+            memset((void* )$2CBA4, $90, $2CBAF - $2CBA4);
+            memset((void* )$2CBBD, $90, $2CBD5 - $2CBBD);
+            }
+            (*memset((void* )$2CAE0, $90, $2CE1E - $2CAE0); *)
+          end;
 
           fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
@@ -294,11 +294,11 @@ begin
       end;
     end;
 *)
-	end;
+  end;
 
-	g_bEmuException := False;
+  g_bEmuException := False;
 
-	Result := EXCEPTION_CONTINUE_SEARCH;
+  Result := EXCEPTION_CONTINUE_SEARCH;
 end;
 
 // check how many bytes were allocated for a structure

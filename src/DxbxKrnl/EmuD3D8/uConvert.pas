@@ -206,7 +206,10 @@ begin
 end;
 
 
-function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; var pBPP: DWord): LONGBOOL; stdcall;
+function EmuXBFormatIsSwizzled(
+  Format: X_D3DFORMAT;
+  pBPP: PDWord
+  ): LONGBOOL; stdcall;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   Result := True;
@@ -214,16 +217,16 @@ begin
     $00,
       $01,
       $0B:
-      pBPP := 1;
+      pBPP^ := 1;
     $02,
       $03,
       $04,
       $05,
       $1A:
-      pBPP := 2;
+      pBPP^ := 2;
     $06,
       $07:
-      pBPP := 4;
+      pBPP^ := 4;
   else
     Result := False;
   end;
