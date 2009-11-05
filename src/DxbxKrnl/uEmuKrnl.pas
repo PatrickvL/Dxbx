@@ -198,9 +198,13 @@ function {058} xboxkrnl_InterlockedPushEntrySList(
   ListEntry: PSLIST_ENTRY
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
 function {160} xboxkrnl_KfRaiseIrql(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL
   ): KIRQL; register; // Source: ReactOS
 procedure {161} xboxkrnl_KfLowerIrql(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL
   ); register; // Source: ReactOS
 function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -350,7 +354,15 @@ end;
 // NOTES Uses fastcall convention
 
 function {160} xboxkrnl_KfRaiseIrql(
-  NewIrql: KIRQL
+  // Dxbx : This argument makes the 'register' calling convention
+  // functionally equivalent to the 'fastcall' calling convention.
+  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
+  // They differ as follows:
+  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
+  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
   ): KIRQL; register; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);
@@ -363,7 +375,15 @@ end;
 // ARGUMENTS NewIrql = Irql to lower to
 // NOTES Uses fastcall convention
 procedure {161} xboxkrnl_KfLowerIrql(
-  NewIrql: KIRQL
+  // Dxbx : This argument makes the 'register' calling convention
+  // functionally equivalent to the 'fastcall' calling convention.
+  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
+  // They differ as follows:
+  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
+  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
   ); register; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);

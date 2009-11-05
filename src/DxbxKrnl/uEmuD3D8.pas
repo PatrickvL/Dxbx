@@ -2502,8 +2502,16 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1(
-  aRegister: INT;
-  const pConstantData: PVOID); register; // __fastcall in Cxbx
+  // Dxbx : This argument makes the 'register' calling convention
+  // functionally equivalent to the 'fastcall' calling convention.
+  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
+  // They differ as follows:
+  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
+  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}const pConstantData: PVOID; // Dxbx note : This argument should be here, to force it into EDX
+  {1 ECX}aRegister: INT // Dxbx note : The first argument should be here, to force it into ECX
+  ); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 begin
     // debug trace
@@ -2524,8 +2532,16 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4(
-  aRegister: INT;
-  const pConstantData: PVOID); register; // __fastcall in Cxbx
+  // Dxbx : This argument makes the 'register' calling convention
+  // functionally equivalent to the 'fastcall' calling convention.
+  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
+  // They differ as follows:
+  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
+  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}const pConstantData: PVOID; // Dxbx note : This argument should be here, to force it into EDX
+  {1 ECX}aRegister: INT // Dxbx note : The first argument should be here, to force it into ECX
+  ); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 begin
     // debug trace
@@ -2546,9 +2562,17 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline(
-  aRegister: INT;
-  const pConstantData: PVOID;
-  ConstantCount: DWORD); register; // __fastcall in Cxbx
+  // Dxbx : This argument makes the 'register' calling convention
+  // functionally equivalent to the 'fastcall' calling convention.
+  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
+  // They differ as follows:
+  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
+  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}const pConstantData: PVOID; // Dxbx note : This argument should be here, to force it into EDX
+  {1 ECX}aRegister: INT; // Dxbx note : This argument should be here, to force it into ECX
+  {3 stack}ConstantCount: DWORD // Dxbx note : This argument should be here, to force it into the first stack-slot
+  ); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 begin
     // debug trace
@@ -3239,9 +3263,16 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_SwitchTexture(
-  Method: DWORD;
-  Data: DWORD;
-  Format: DWORD
+  // Dxbx : This argument makes the 'register' calling convention
+  // functionally equivalent to the 'fastcall' calling convention.
+  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
+  // They differ as follows:
+  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
+  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}Data: DWORD; // Dxbx note : This argument should be here, to force it into EDX
+  {1 ECX}Method: DWORD; // Dxbx note : This argument should be here, to force it into ECX
+  {3 stack}Format: DWORD // Dxbx note : This argument should be here, to force it into the first stack-slot
   ); register; // __fastcall in Cxbx
 // Branch:martin  Revision:39  Done:5  Translator:Shadow_Tj
 begin
@@ -5679,9 +5710,11 @@ begin
     #13#10');',
     [Value]);
 
-  g_pD3DDevice8.SetRenderState(D3DRS_EDGEANTIALIAS, Value);
+  // Cxbx TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
+  // g_pD3DDevice8.SetRenderState(D3DRS_EDGEANTIALIAS, Value);
+  
+  // Cxbx commented this out : EmuWarning('SetRenderState_EdgeAntiAlias not implemented!');
 
-  EmuWarning('SetRenderState_EdgeAntiAlias not implemented!');
   EmuSwapFS(fsXbox);
 end;
 
@@ -5743,10 +5776,17 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
-  Method: DWORD;
-  Value: DWORD
+  // Dxbx : This argument makes the 'register' calling convention
+  // functionally equivalent to the 'fastcall' calling convention.
+  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
+  // They differ as follows:
+  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
+  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}Value: DWORD;
+  {1 ECX}Method: DWORD // Dxbx note : The first argument should be here, to force it into ECX
   ); register; // __fastcall in Cxbx
-// Branch:martin  Revision:39  Done:80  Translator:Shadow_Tj
+// Branch:martin  Revision:39  Done:100  Translator:Shadow_Tj
 var
   State: Integer;
   v: integer;
@@ -5764,15 +5804,13 @@ begin
   State := -1;
 
   // Cxbx TODO: make this faster and more elegant
-  for v := 0 to 173 do
+  for v := 0 to 174-1 do
   begin
-    (*
     if (EmuD3DRenderStateSimpleEncoded[v] = Method) then
     begin
       State := v;
       Break;
     end;
-    *)
   end;
 
   if (State = -1) then
@@ -5786,77 +5824,77 @@ begin
 
           Value := 0;
 
-                (*if(OrigValue and (1L shl 16)) then
-                    Value:= Value or D3DCOLORWRITEENABLE_RED;
-                if (OrigValue and (1L shl 8)) then
-                    Value:= Value or D3DCOLORWRITEENABLE_GREEN;
-                if (OrigValue and (1L shl 0)) then
-                    Value:= Value or D3DCOLORWRITEENABLE_BLUE;
-                if (OrigValue and (1L shl 24)) then
-                    Value:= Value or D3DCOLORWRITEENABLE_ALPHA; *)
+          if (OrigValue and (1 shl 16)) > 0 then
+            Value:= Value or D3DCOLORWRITEENABLE_RED;
+          if (OrigValue and (1 shl 8)) > 0 then
+              Value:= Value or D3DCOLORWRITEENABLE_GREEN;
+          if (OrigValue and (1 shl 0)) > 0 then
+              Value:= Value or D3DCOLORWRITEENABLE_BLUE;
+          if (OrigValue and (1 shl 24)) > 0 then
+              Value:= Value or D3DCOLORWRITEENABLE_ALPHA;
 
-          DbgPrintf('D3DRS_COLORWRITEENABLE := 0x%.08X', Value);
+          DbgPrintf('D3DRS_COLORWRITEENABLE := 0x%.08X', [Value]);
         end;
 
       9: //D3DRS_SHADEMODE:
         begin
           Value := Value and $03;
-          DbgPrintf('D3DRS_SHADEMODE := 0x%.08X', Value);
+          DbgPrintf('D3DRS_SHADEMODE := 0x%.08X', [Value]);
         end;
 
       171: //D3DRS_BLENDOP:
         begin
           Value := EmuXB2PC_D3DBLENDOP(Value);
-          DbgPrintf('D3DRS_BLENDOP := 0x%.08X', Value);
+          DbgPrintf('D3DRS_BLENDOP := 0x%.08X', [Value]);
         end;
 
       19: //D3DRS_SRCBLEND:
         begin
           Value := EmuXB2PC_D3DBLEND(Value);
-          DbgPrintf('D3DRS_SRCBLEND := 0x%.08X', Value);
+          DbgPrintf('D3DRS_SRCBLEND := 0x%.08X', [Value]);
         end;
 
       20: //D3DRS_DESTBLEND:
         begin
           Value := EmuXB2PC_D3DBLEND(Value);
-          DbgPrintf('D3DRS_DESTBLEND := 0x%.08X', Value);
+          DbgPrintf('D3DRS_DESTBLEND := 0x%.08X', [Value]);
         end;
 
       23: //D3DRS_ZFUNC:
         begin
           Value := EmuXB2PC_D3DCMPFUNC(Value);
-          DbgPrintf('D3DRS_ZFUNC := 0x%.08X', Value);
+          DbgPrintf('D3DRS_ZFUNC := 0x%.08X', [Value]);
         end;
 
       25: //D3DRS_ALPHAFUNC:
         begin
           Value := EmuXB2PC_D3DCMPFUNC(Value);
-          DbgPrintf('D3DRS_ALPHAFUNC := 0x%.08X', Value);
+          DbgPrintf('D3DRS_ALPHAFUNC := 0x%.08X', [Value]);
         end;
 
       15: //D3DRS_ALPHATESTENABLE:
         begin
-          DbgPrintf('D3DRS_ALPHATESTENABLE := 0x%.08X', Value);
+          DbgPrintf('D3DRS_ALPHATESTENABLE := 0x%.08X', [Value]);
         end;
 
       27: //D3DRS_ALPHABLENDENABLE:
         begin
-          DbgPrintf('D3DRS_ALPHABLENDENABLE := 0x%.08X', Value);
+          DbgPrintf('D3DRS_ALPHABLENDENABLE := 0x%.08X', [Value]);
         end;
 
       24: //D3DRS_ALPHAREF:
         begin
-          DbgPrintf('D3DRS_ALPHAREF := %lf', DWtoF(Value));
+          DbgPrintf('D3DRS_ALPHAREF := %f', [DWtoF(Value)]);
         end;
 
       14: //D3DRS_ZWRITEENABLE:
         begin
-          DbgPrintf('D3DRS_ZWRITEENABLE := 0x%.08X', Value);
+          DbgPrintf('D3DRS_ZWRITEENABLE := 0x%.08X', [Value]);
         end;
 
       26: //D3DRS_DITHERENABLE:
         begin
-          DbgPrintf('D3DRS_DITHERENABLE := 0x%.08X', Value);
+          DbgPrintf('D3DRS_DITHERENABLE := 0x%.08X', [Value]);
         end;
     else
       begin
