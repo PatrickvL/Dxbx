@@ -102,6 +102,7 @@ type
     NbrStreams: UINT; // The number of streams the vertex shader uses
     pStreamPatches: STREAM_DYNAMIC_PATCH;
   end;
+  PVERTEX_DYNAMIC_PATCH = ^VERTEX_DYNAMIC_PATCH;
 
   VERTEX_SHADER = packed record
     Handle: DWord;

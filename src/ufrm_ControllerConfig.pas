@@ -90,7 +90,7 @@ begin
 
   // retrieve controller configuration
   if Assigned(g_EmuShared) then
-    g_EmuShared.GetXBController({var}g_XBController);
+    g_EmuShared.GetXBController(@g_XBController);
 
   // set window icon
 //  SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));

@@ -24,8 +24,8 @@ interface
 uses
   // Delphi
   SysUtils,
-	// JCL
-	JclDebug,
+  // JCL
+  JclDebug,
   // Dxbx
   uTypes,
   uLog,

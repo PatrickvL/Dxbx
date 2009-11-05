@@ -70,12 +70,12 @@ type
   PRTL_HEAP_PARAMETERS = ^RTL_HEAP_PARAMETERS;
 
   _XINPUT_POLLING_PARAMETERS = packed record
-   	fAutoPoll: BYTE;//       : 1;
-	  fInterruptOut: BYTE;//    : 1;
-	  ReservedMBZ1: BYTE;//    : 6;
-	  bInputInterval: BYTE;
-	  bOutputInterval: BYTE;
-	  ReservedMBZ2: BYTE;
+     fAutoPoll: BYTE;//       : 1;
+    fInterruptOut: BYTE;//    : 1;
+    ReservedMBZ1: BYTE;//    : 6;
+    bInputInterval: BYTE;
+    bOutputInterval: BYTE;
+    ReservedMBZ2: BYTE;
   end;
 
   XINPUT_POLLING_PARAMETERS = _XINPUT_POLLING_PARAMETERS;
@@ -101,7 +101,7 @@ const
   
 type
   XCALCSIG_SIGNATURE = packed record
-  	Signature: array [0..XCALCSIG_SIGNATURE_SIZE-1] of BYTE;
+    Signature: array [0..XCALCSIG_SIGNATURE_SIZE-1] of BYTE;
   end;
   PXCALCSIG_SIGNATURE = ^XCALCSIG_SIGNATURE;
 
@@ -537,7 +537,8 @@ begin
 end;
 
 function XTL_EmuQueryPerformanceCounter(
-  var lpPerformanceCount: Int64): BOOL; stdcall;
+  lpPerformanceCount: PLARGE_INTEGER
+  ): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -546,9 +547,9 @@ begin
     #13#10'(' +
     #13#10'   lpPerformanceCount  : 0x%.08X' +
     #13#10');',
-    [@lpPerformanceCount]);
+    [lpPerformanceCount]);
 
-  Result := QueryPerformanceCounter({var}lpPerformanceCount);
+  Result := QueryPerformanceCounter({var}Int64(lpPerformanceCount^));
 
     // debug - 4x speed
     //lpPerformanceCount.QuadPart *= 4;
@@ -557,7 +558,8 @@ begin
 end;
 
 function XTL_EmuQueryPerformanceFrequency(
-  var lpFrequency: Int64): BOOL; stdcall;
+  lpFrequency: PLARGE_INTEGER
+  ): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -566,9 +568,9 @@ begin
     #13#10'(' +
     #13#10'   lpFrequency         : 0x%.08X' +
     #13#10');',
-    [@lpFrequency]);
+    [lpFrequency]);
 
-  Result := QueryPerformanceFrequency({var}lpFrequency);
+  Result := QueryPerformanceFrequency({var}Int64(lpFrequency^));
 
   EmuSwapFS(fsXbox);
 end;

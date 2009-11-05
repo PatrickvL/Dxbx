@@ -157,25 +157,25 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 (*var
   pdwOrigPushData: DWord;
-  pIndexData : PVOID;
-  pVertexData : PVOID;
+  pIndexData: PVOID;
+  pVertexData: PVOID;
 
-  dwVertexShader : DWord;
-  dwStride : DWord;
-  pIBMem : Array [0..3] of WORD;
-  bShowPB : bool;
+  dwVertexShader: DWord;
+  dwStride: DWord;
+  pIBMem: array [0..3] of WORD;
+  bShowPB: bool;
 
-  PCPrimitiveType : D3DPRIMITIVETYPE;
-  XBPrimitiveType : X_D3DPRIMITIVETYPE;
+  PCPrimitiveType: D3DPRIMITIVETYPE;
+  XBPrimitiveType: X_D3DPRIMITIVETYPE;
 
-  pIndexBuffer : IDIRECT3DINDEXBUFFER8;
-  pVertexBuffer : IDIRECT3DVERTEXBUFFER8;
-  maxIBSize : uint;
+  pIndexBuffer: IDIRECT3DINDEXBUFFER8;
+  pVertexBuffer: IDIRECT3DVERTEXBUFFER8;
+  maxIBSize: uint;
 
-  dwCount : DWord;
-  dwMethod : DWord;
+  dwCount: DWord;
+  dwMethod: DWord;
 
-  bInc : BOOL; *)
+  bInc: BOOL; *)
 
 begin
   if XTL_g_bSkipPush then
@@ -354,7 +354,7 @@ begin
                 VPDesc.uiVertexStreamZeroStride := dwStride;
                 VPDesc.hVertexShader := dwVertexShader;
 
-                VertexPatcher VertPatch;
+                XTL_VertexPatcher VertPatch;
 
                 bool bPatched := VertPatch.Apply(@VPDesc);
 
@@ -450,7 +450,7 @@ begin
                     // Cxbx TODO: Set the current shader and let the patcher handle it..
                     VPDesc.hVertexShader := g_CurrentVertexShader;
 
-                    VertexPatcher VertPatch;
+                    XTL_VertexPatcher VertPatch;
 
                     bool bPatched := VertPatch.Apply(@VPDesc);
 
@@ -613,7 +613,7 @@ begin
                     // Cxbx TODO: Set the current shader and let the patcher handle it..
                     VPDesc.hVertexShader := g_CurrentVertexShader;
 
-                    VertexPatcher VertPatch;
+                    XTL_VertexPatcher VertPatch;
 
                     bool bPatched := VertPatch.Apply(@VPDesc);
 
@@ -673,7 +673,10 @@ end;
 
 {$IFDEF _DEBUG_TRACK_PB}
 
-procedure DbgDumpMesh(var pIndexData: Word; dwCount: DWord);
+procedure DbgDumpMesh(
+  pIndexData: PWord;
+  dwCount: DWord
+);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:1
 var
   pActiveVB: IDirect3DVertexBuffer8;

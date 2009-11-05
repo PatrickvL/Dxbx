@@ -69,12 +69,12 @@ type
     procedure Unlock();
 
     // Xbox Video Accessors
-    procedure GetXBVideo(var video: XBVideo);
-    procedure SetXBVideo(const video: XBVideo);
+    procedure GetXBVideo(video: PXBVideo);
+    procedure SetXBVideo(const video: PXBVideo);
 
     // Xbox Controller Accessors
-    procedure GetXBController(var ctrl: XBController);
-    procedure SetXBController(const ctrl: XBController);
+    procedure GetXBController(ctrl: PXBController);
+    procedure SetXBController(const ctrl: PXBController);
 
     // Xbe Path Accessors
     procedure GetXbePath(var Path: string);
@@ -209,37 +209,37 @@ end;
 
 // Xbox Video Accessors
 
-procedure EmuShared.GetXBVideo(var video: XBVideo);
+procedure EmuShared.GetXBVideo(video: PXBVideo);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
-  {var}video := {shared}m_XBVideo;
+  video^ := {shared}m_XBVideo;
   Unlock();
 end;
 
-procedure EmuShared.SetXBVideo(const video: XBVideo);
+procedure EmuShared.SetXBVideo(const video: PXBVideo);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
-  {shared}m_XBVideo := video;
+  {shared}m_XBVideo := video^;
   Unlock();
 end;
 
 // Xbox Controller Accessors
 
-procedure EmuShared.GetXBController(var ctrl: XBController);
+procedure EmuShared.GetXBController(ctrl: PXBController);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
-  {var}ctrl := {shared}m_XBController;
+  ctrl^ := {shared}m_XBController;
   Unlock();
 end;
 
-procedure EmuShared.SetXBController(const ctrl: XBController);
+procedure EmuShared.SetXBController(const ctrl: PXBController);
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Lock();
-  {shared}m_XBController := ctrl;
+  {shared}m_XBController := ctrl^;
   Unlock();
 end;
 

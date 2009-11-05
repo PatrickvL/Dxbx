@@ -120,6 +120,7 @@ type
   PDEVOBJ_EXTENSION = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
 
   PDEVICE_OBJECT = ^DEVICE_OBJECT; // forward;
+  PPDEVICE_OBJECT = ^PDEVICE_OBJECT;
 
   // I/O Timer Object
   IO_TIMER = packed record // Source: ReactOS
@@ -253,7 +254,7 @@ function {065} xboxkrnl_IoCreateDevice(
   DeviceType: DEVICE_TYPE;
   DeviceCharacteristics: ULONG;
   Exclusive: BOOLEAN;
-  var DeviceObject: PDEVICE_OBJECT // out
+  DeviceObject: PPDEVICE_OBJECT // out
   ): NTSTATUS; stdcall; // Source: ReactOS
 function {066} xboxkrnl_IoCreateFile(
   FileHandle: PHANDLE; // out
@@ -405,7 +406,7 @@ function {065} xboxkrnl_IoCreateDevice(
   DeviceType: DEVICE_TYPE;
   DeviceCharacteristics: ULONG;
   Exclusive: BOOLEAN;
-  var DeviceObject: PDEVICE_OBJECT // out
+  DeviceObject: PPDEVICE_OBJECT // out
   ): NTSTATUS; stdcall; // Source: ReactOS
 begin
   EmuSwapFS(fsWindows);

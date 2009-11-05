@@ -402,7 +402,7 @@ begin
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF DXBX_EXTREME_LOGGING}
   DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr));
 
   DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());

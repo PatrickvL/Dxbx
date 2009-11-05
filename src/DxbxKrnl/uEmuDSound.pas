@@ -142,10 +142,13 @@ begin
         g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Play(0, 0, 0);
      end;
     *)
- end;
+end;
 
+type
+  PX_CDirectSoundBuffer = ^X_CDirectSoundBuffer; // Dxbx TODO : Move this to the apropriate place
+  
 // resize an emulated directsound buffer, if necessary
-procedure EmuResizeIDirectSoundBuffer8(var pThis: X_CDirectSoundBuffer; dwBytes: DWORD);
+procedure EmuResizeIDirectSoundBuffer8(pThis: PX_CDirectSoundBuffer; dwBytes: DWORD);
 begin
     (*if(dwBytes = pThis.EmuBufferDesc.dwBufferBytes or dwBytes = 0) then
         Exit;
@@ -1444,8 +1447,8 @@ begin
         if(pDSBufferDesc.lpwfxFormat <> 0 and pDSBufferDesc.lpwfxFormat.wFormatTag <> WAVE_FORMAT_PCM) then
         begin
             EmuWarning('Invalid WAVE_FORMAT not ');
-			if(pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
-				EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported not ');
+      if(pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
+        EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported not ');
 
             (ppStream).EmuDirectSoundBuffer8 := 0;
 
@@ -2483,8 +2486,8 @@ end;
 
 (*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetLFO
 (
-	LPDIRECTSOUNDBUFFER  pThis,
-	LPCDSLFODESC         pLFODesc
+  LPDIRECTSOUNDBUFFER  pThis,
+  LPCDSLFODESC         pLFODesc
 )
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
@@ -2497,7 +2500,7 @@ begin
            #13#10');',
            [pThis, pLFODesc);
 
-	// Cxbx TODO: Implement
+  // Cxbx TODO: Implement
 
     EmuSwapFS(fsXbox);
 
@@ -2507,9 +2510,9 @@ end;
 
 (*procedure XTL_EmuXAudioCreateAdpcmFormat
 (
-	WORD                   nChannels,
-	DWORD                  nSamplesPerSec,
-	LPXBOXADPCMWAVEFORMAT  pwfx
+  WORD                   nChannels,
+  DWORD                  nSamplesPerSec,
+  LPXBOXADPCMWAVEFORMAT  pwfx
 ); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
@@ -2523,15 +2526,15 @@ begin
            #13#10');',
            [nChannels, nSamplesPerSec, pwfx);
 
-	// Fill out the pwfx structure with the appropriate data
-	pwfx.wfx.wFormatTag		:= WAVE_FORMAT_XBOX_ADPCM;
-	pwfx.wfx.nChannels			:= nChannels;
-	pwfx.wfx.nSamplesPerSec	:= nSamplesPerSec;
-	pwfx.wfx.nAvgBytesPerSec	:= (nSamplesPerSec*nChannels * 36)/64;
-	pwfx.wfx.nBlockAlign		:= nChannels * 36;
-	pwfx.wfx.wBitsPerSample	:= 4;
-	pwfx.wfx.cbSize			:= 2;
-	pwfx.wSamplesPerBlock		:= 64;
+  // Fill out the pwfx structure with the appropriate data
+  pwfx.wfx.wFormatTag    := WAVE_FORMAT_XBOX_ADPCM;
+  pwfx.wfx.nChannels      := nChannels;
+  pwfx.wfx.nSamplesPerSec  := nSamplesPerSec;
+  pwfx.wfx.nAvgBytesPerSec  := (nSamplesPerSec*nChannels * 36)/64;
+  pwfx.wfx.nBlockAlign    := nChannels * 36;
+  pwfx.wfx.wBitsPerSample  := 4;
+  pwfx.wfx.cbSize      := 2;
+  pwfx.wSamplesPerBlock    := 64;
 
     EmuSwapFS(fsXbox);
 end;
@@ -2540,10 +2543,10 @@ end;
 (*
 HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetRolloffCurve
 (
-	LPDIRECTSOUNDBUFFER  pThis,
-	 FLOAT         *pflPoints,
-	DWORD                dwPointCount,
-	DWORD                dwApply
+  LPDIRECTSOUNDBUFFER  pThis,
+   FLOAT         *pflPoints,
+  DWORD                dwPointCount,
+  DWORD                dwApply
 )
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
@@ -2562,14 +2565,14 @@ begin
 
   EmuSwapFS(fsXbox);
 
-	Result := DS_OK;
+  Result := DS_OK;
 end;
 *)
 
 (*
 function XTL_EmuIDirectSoundStream_SetVolume(
-	pStream: LPDIRECTSOUNDSTREAM;
-	lVolume: LongInt
+  pStream: LPDIRECTSOUNDSTREAM;
+  lVolume: LongInt
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
@@ -2582,11 +2585,11 @@ begin
            #13#10');',
            [pStream, lVolume]);
 
-	// Cxbx TODO: Implement
+  // Cxbx TODO: Implement
 
   EmuSwapFS(fsXbox);
 
-	Result := DS_OK;
+  Result := DS_OK;
 end;
 *)
 
