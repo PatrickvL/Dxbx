@@ -41,31 +41,6 @@ const
   MAX_NBR_STREAMS = 16;
 
 type
-  _PATCHEDSTREAM = packed record
-    pOriginalStream: IDirect3DVertexBuffer8; // P?
-    pPatchedStream: IDirect3DVertexBuffer8; // P?
-    uiOrigStride: UINT;
-    uiNewStride: UINT;
-    bUsedCached: bool;
-  end;
-  PATCHEDSTREAM = _PATCHEDSTREAM;
-
-type
-  _D3DIVB = packed record
-    Position: TD3DXVECTOR3; // Position
-    Rhw: FLOAT; // Rhw
-    dwSpecular: DWord; // Specular
-    dwDiffuse: DWord; // Diffuse
-    Normal: TD3DXVECTOR3; // Normal
-    TexCoord1: TD3DXVECTOR2; // TexCoord1
-    TexCoord2: TD3DXVECTOR2; // TexCoord2
-    TexCoord3: TD3DXVECTOR2; // TexCoord3
-    TexCoord4: TD3DXVECTOR2; // TexCoord4
-  end;
-  D3DIVB = _D3DIVB;
-  PD3DIVB = ^D3DIVB;
-
-
   _VertexPatchDesc = packed record
     PrimitiveType: X_D3DPRIMITIVETYPE;
     dwVertexCount: DWORD;
@@ -80,19 +55,31 @@ type
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
 
-const
-  VERTEX_BUFFER_CACHE_SIZE = 64;
-  MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO: Trim the not used time
+type
+  _PATCHEDSTREAM = packed record
+    pOriginalStream: IDirect3DVertexBuffer8; // P?
+    pPatchedStream: IDirect3DVertexBuffer8; // P?
+    uiOrigStride: UINT;
+    uiNewStride: UINT;
+    bUsedCached: bool;
+  end;
+  PATCHEDSTREAM = _PATCHEDSTREAM;
 
-var
-  // inline vertex buffer emulation
-  g_pIVBVertexBuffer: PWORD = nil;
-  g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
-  g_IVBTblOffs: UInt = 0;
-  g_IVBTable: PD3DIVB = nil;
-  g_IVBFVF: DWORD = 0;
-
-procedure XTL_EmuFlushIVB; stdcall;
+type
+  _CACHEDSTREAM = packed record
+    uiCRC32: uint32;
+    uiCheckFrequency: uint32;
+    uiCacheHit: uint32;
+    bIsUP: bool;
+    Stream: PATCHEDSTREAM;
+    pStreamUP: PVoid;            // Draw..UP (instead of pOriginalStream)
+    uiLength: uint32;            // The length of the stream
+    uiCount: uint32;             // CRC32 check count
+    dwPrimitiveCount: uint32;
+    lLastUsed: long;             // For cache removal purposes
+  end;
+  CACHEDSTREAM = _CACHEDSTREAM;
+  PCACHEDSTREAM = ^CACHEDSTREAM;
 
 type
   XTL_VertexPatcher = packed record
@@ -126,7 +113,39 @@ type
 
     function Apply(pPatchDesc: PVertexPatchDesc): bool;
     function Restore: LONGBOOL;
- end;
+  end;
+
+var
+  // inline vertex buffer emulation
+  g_pIVBVertexBuffer: PWORD = nil;
+  g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
+  g_IVBFVF: DWORD = 0;
+
+type
+  _D3DIVB = packed record
+    Position: TD3DXVECTOR3; // Position
+    Rhw: FLOAT; // Rhw
+    dwSpecular: DWord; // Specular
+    dwDiffuse: DWord; // Diffuse
+    Normal: TD3DXVECTOR3; // Normal
+    TexCoord1: TD3DXVECTOR2; // TexCoord1
+    TexCoord2: TD3DXVECTOR2; // TexCoord2
+    TexCoord3: TD3DXVECTOR2; // TexCoord3
+    TexCoord4: TD3DXVECTOR2; // TexCoord4
+  end;
+  D3DIVB = _D3DIVB;
+  PD3DIVB = ^D3DIVB;
+
+var
+  g_IVBTable: PD3DIVB = nil;
+  g_IVBTblOffs: UInt = 0;
+
+procedure XTL_EmuFlushIVB;
+procedure XTL_EmuUpdateActiveTexture;
+
+const
+  VERTEX_BUFFER_CACHE_SIZE = 64;
+  MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // Cxbx TODO: Trim the not used time
 
 implementation
 
@@ -195,8 +214,8 @@ begin
   ZeroMemory(@(m_pStreams[0]), SizeOf(PATCHEDSTREAM) * MAX_NBR_STREAMS);
   m_bPatched := False;
   m_bAllocatedStreamZeroData := False;
-  m_pNewVertexStreamZeroData := 0;
-  m_pDynamicPatch := 0;
+  m_pNewVertexStreamZeroData := nil;
+  m_pDynamicPatch := nil;
   CRC32Init();
 end;
 
@@ -1036,12 +1055,12 @@ begin
          end;
 
      end;
-     *)
 
   Result := True;
+     *)
 end;
 
-procedure XTL_EmuFlushIVB; stdcall;
+procedure XTL_EmuFlushIVB;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
 (*    if(g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
@@ -1388,7 +1407,7 @@ begin
     *)
 end;
 
-procedure XTL_EmuUpdateActiveTexture; stdcall;
+procedure XTL_EmuUpdateActiveTexture;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 var
   Stage: integer;
@@ -1587,10 +1606,6 @@ g_pD3DDevice8.SetTexture(Stage, pTexture.EmuTexture8);*)
 
   end;
 end;
-
-exports
-  XTL_EmuFlushIVB,
-  XTL_EmuUpdateActiveTexture;
 
 end.
 

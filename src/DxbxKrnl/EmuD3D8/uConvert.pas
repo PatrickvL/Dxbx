@@ -51,50 +51,84 @@ const
   X_D3DFMT_DXT3 = $0F; // Compressed
   X_D3DFMT_LIN_A1R5G5B5 = $10;
   X_D3DFMT_LIN_R5G6B5 = $11; // Linear
-  X_D3DFMT_LIN_A8R8G8B8 = $12;
+  X_D3DFMT_LIN_A8R8G8B8 = $12; // Linear
+  X_D3DFMT_LIN_L8 = $13; // Linear
   X_D3DFMT_LIN_R8B8 = $16; // Linear
+  X_D3DFMT_A8 = $19; // Swizzled
   X_D3DFMT_A8L8 = $1A; // Swizzled
   X_D3DFMT_LIN_A4R4G4B4 = $1D; // Linear
   X_D3DFMT_LIN_X8R8G8B8 = $1E; // Linear
   X_D3DFMT_YUY2 = $24;
 //  X_D3DFMT_YUV2 = $24 ??; // Swizzled
+  X_D3DFMT_L6V5U5 = $27; // Swizzled
   X_D3DFMT_V8U8 = $28; // Swizzled
   X_D3DFMT_D24S8 = $2A;
   X_D3DFMT_F24S8 = $2B; // Swizzled
   X_D3DFMT_D16 = $2C; // Swizzled
   X_D3DFMT_LIN_D24S8 = $2E; // Linear
-  X_D3DFMT_LIN_A8B8G8R8 = $3F; // Linear
   X_D3DFMT_LIN_D16 = $30; // Linear
   X_D3DFMT_V16U16 = $33; // Swizzled
+  X_D3DFMT_LIN_A8B8G8R8 = $3F; // Linear
 
-function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
-function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
+function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
+function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
 
-function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; stdcall;
-function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; stdcall;
-function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; stdcall;
-function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; stdcall;
-function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; stdcall;
-function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; stdcall;
-function EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
+function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
+function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
+function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
+function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; inline;
+function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
+function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
+function EmuXB2PC_D3DLock(Flags: DWord): DWord; inline;
 
-function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT;
-function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
+function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT; inline;
+function EmuD3DPrimitive2VertexCount(PrimitiveType: int; PrimitiveCount: int): int; inline;
+function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
 
-var
-  EmuD3DVertexToPrimitive: array [0..10] of array [0..2] of UINT;
-  EmuPrimitiveTypeLookup: array of D3DPRIMITIVETYPE;
-                                 
-
-// simple render state encoding lookup table
+function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): LONGBOOL;
+function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL;
 const
+  // simple render state encoding lookup table
   X_D3DRSSE_UNK = $7fffffff;
-  
+
+const
+  // table used for vertex->primitive count conversion
+  EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of UINT = (
+    (0, 0),
+    (1, 0),
+    (2, 0),
+    (1, 1),
+    (1, 1),
+    (3, 0),
+    (1, 2),
+    (1, 2),
+    (4, 0),
+    (2, 2),
+    (1, 0)
+  );
+  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+
+const
+  // conversion table for xbox->pc primitive types
+  EmuPrimitiveTypeLookup: array [0..11] of D3DPRIMITIVETYPE = (
+    D3DPRIMITIVETYPE(0),   // NULL                 = 0
+    D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
+    D3DPT_LINELIST,        // D3DPT_LINELIST       = 2,
+    D3DPT_LINESTRIP,       // D3DPT_LINELOOP       = 3,  Xbox
+    D3DPT_LINESTRIP,       // D3DPT_LINESTRIP      = 4,
+    D3DPT_TRIANGLELIST,    // D3DPT_TRIANGLELIST   = 5,
+    D3DPT_TRIANGLESTRIP,   // D3DPT_TRIANGLESTRIP  = 6,
+    D3DPT_TRIANGLEFAN,     // D3DPT_TRIANGLEFAN    = 7,
+    D3DPT_TRIANGLELIST,    // D3DPT_QUADLIST       = 8,  Xbox
+    D3DPT_TRIANGLESTRIP,   // D3DPT_QUADSTRIP      = 9,  Xbox
+    D3DPT_TRIANGLEFAN,     // D3DPT_POLYGON        = 10, Xbox
+    D3DPRIMITIVETYPE(11)   // D3DPT_MAX            = 11,
+  );
+  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+
 // render state conversion table
 const
-  {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord =
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-(
+  {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
     // the correct lookup values;
@@ -185,13 +219,14 @@ const
     $00040358,     X_D3DRSSE_UNK,  // 168 - D3DRS_COLORWRITEENABLE
     X_D3DRSSE_UNK,  $00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK  // 172
-);
+  );
+  // Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
 
 implementation
 
-
 // convert xbox->pc primitive type
-function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE;
+function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   if (DWORD(PrimitiveType) = $7FFFFFFF) then
     Result := D3DPT_FORCE_DWORD
@@ -200,39 +235,69 @@ begin
 end;
 
 // convert from vertex count to primitive count (Xbox)
-function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT;
+function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := Trunc((VertexCount - int(EmuD3DVertexToPrimitive[PrimitiveType][1])) / int(EmuD3DVertexToPrimitive[PrimitiveType][0]));
 end;
 
+// convert from primitive count to vertex count (Xbox)
+function EmuD3DPrimitive2VertexCount(PrimitiveType: int; PrimitiveCount: int): int; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
+begin
+  Result := 0; // Dxbx TODO : (((PrimitiveCount)*EmuD3DVertexToPrimitive[PrimitiveType][0])+EmuD3DVertexToPrimitive[PrimitiveType][1]);
+end;
 
+// is this format swizzled, and if so - how many BPP?
 function EmuXBFormatIsSwizzled(
   Format: X_D3DFORMAT;
   pBPP: PDWord
-  ): LONGBOOL; stdcall;
+  ): LONGBOOL;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   Result := True;
   case Format of
     $00,
-      $01,
-      $0B:
+    $01,
+    $0B,
+    $19: // X_D3DFMT_A8
       pBPP^ := 1;
     $02,
-      $03,
-      $04,
-      $05,
-      $1A:
+    $03,
+    $04,
+    $05,
+    $1A:
       pBPP^ := 2;
     $06,
-      $07:
+    $07:
       pBPP^ := 4;
   else
     Result := False;
   end;
 end;
 
-function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; stdcall;
+// is this format linear?
+function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL;
+begin
+  case (Format) of
+    X_D3DFMT_LIN_A1R5G5B5,
+    X_D3DFMT_LIN_R5G6B5,
+    X_D3DFMT_LIN_A8R8G8B8,
+    X_D3DFMT_LIN_L8, // Added by Dxbx
+    X_D3DFMT_LIN_R8B8,
+    X_D3DFMT_LIN_A4R4G4B4,
+    X_D3DFMT_LIN_X8R8G8B8,
+    X_D3DFMT_LIN_D24S8,
+    X_D3DFMT_LIN_D16,
+    X_D3DFMT_LIN_A8B8G8R8:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+// convert from xbox to pc color formats
+function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case aFormat of
@@ -245,6 +310,7 @@ begin
         Result := D3DFMT_L8;
       end;
 
+    X_D3DFMT_LIN_A1R5G5B5, // Linear    
     X_D3DFMT_A1R5G5B5: // Swizzled
       Result := D3DFMT_A1R5G5B5;
 
@@ -256,6 +322,9 @@ begin
         EmuWarning('X_D3DFMT_A8L8.D3DFMT_R5G6B5');
         Result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
       end;
+
+    X_D3DFMT_A8: // Swizzled
+      Result := D3DFMT_A8;
 
     X_D3DFMT_LIN_A4R4G4B4, // Linear
       X_D3DFMT_A4R4G4B4: // Swizzled
@@ -313,6 +382,9 @@ begin
       X_D3DFMT_D16: // Swizzled
       Result := D3DFMT_D16;
 
+    X_D3DFMT_L6V5U5: // Swizzled
+      Result := D3DFMT_L6V5U5;
+
     X_D3DFMT_V8U8: // Swizzled
       Result := D3DFMT_V8U8;
 
@@ -328,15 +400,16 @@ begin
   end;
 end;
 
-function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; stdcall;
+// convert from pc to xbox color formats
+function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   case aFormat of
     D3DFMT_YUY2:
       Result := X_D3DFMT_YUY2;
     D3DFMT_R5G6B5:
-      Result := $11; // Linear
-//            return 0x05;      // Swizzled
+      Result := X_D3DFMT_LIN_R5G6B5; // Linear
+//      Result := X_D3DFMT_R5G6B5; // Swizzled
     D3DFMT_D24S8:
       Result := X_D3DFMT_D24S8;
     D3DFMT_DXT3:
@@ -345,21 +418,30 @@ begin
       Result := X_D3DFMT_DXT2;
     D3DFMT_DXT1:
       Result := X_D3DFMT_DXT1;
-    D3DFMT_A1R5G5B5: // Linear ()
+    D3DFMT_A1R5G5B5: // Linear
       Result := X_D3DFMT_LIN_A1R5G5B5;
     D3DFMT_X8R8G8B8:
       Result := X_D3DFMT_LIN_X8R8G8B8; // Linear
-//      Result := X_D3DFMT_X8R8G8B8;      // Swizzled
+//      Result := X_D3DFMT_X8R8G8B8; // Swizzled
     D3DFMT_A8R8G8B8:
-//      Result := X_D3DFMT_LIN_A8R8G8B8;      // Linear
+//      Result := X_D3DFMT_LIN_A8R8G8B8; // Linear
       Result := X_D3DFMT_A8R8G8B8;
+
+    D3DFMT_A4R4G4B4:
+      Result := X_D3DFMT_LIN_A4R4G4B4; // Linear
+//      Result := X_D3DFMT_A4R4G4B4; // Swizzled
+    D3DFMT_L8:
+        Result := X_D3DFMT_LIN_L8; // Linear
+//        Result := X_D3DFMT_L8; // Swizzled
+
   else
     CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]);
     Result := X_D3DFORMAT(aFormat);
   end;
 end;
 
-function EmuXB2PC_D3DLock(Flags: DWord): DWord; stdcall;
+// convert from xbox to pc d3d lock flags
+function EmuXB2PC_D3DLock(Flags: DWord): DWord; inline;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 var
   NewFlags: DWord;
@@ -382,6 +464,18 @@ begin
   Result := NewFlags;
 end;
 
+(* Cxbx commented this out :
+// convert from pc to xbox texture transform state types (unnecessary so far)
+if((uint32)State < 4)
+    State = (D3DTRANSFORMSTATETYPE)(State - 2);
+else if((uint32)State < 20)
+    State = (D3DTRANSFORMSTATETYPE)(State - 14);
+else if((uint32)State > 255)
+    State = (D3DTRANSFORMSTATETYPE)(State - 250);
+else
+    CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
+*)
+
 // lookup table for converting vertex count to primitive count
 (*UINT XTL.EmuD3DVertexToPrimitive[11][2] =
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
@@ -400,39 +494,22 @@ begin
 );
 *)
 
-// conversion table for xbox->pc primitive types
-(*XTL.D3DPRIMITIVETYPE XTL.EmuPrimitiveTypeLookup[] =
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-begin
-     (XTL::D3DPRIMITIVETYPE)0,    // NULL                 = 0
-      XTL::D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
-      XTL::D3DPT_LINELIST,        // D3DPT_LINELIST       = 2,
-      XTL::D3DPT_LINESTRIP,       // D3DPT_LINELOOP       = 3,  Xbox
-      XTL::D3DPT_LINESTRIP,       // D3DPT_LINESTRIP      = 4,
-      XTL::D3DPT_TRIANGLELIST,    // D3DPT_TRIANGLELIST   = 5,
-      XTL::D3DPT_TRIANGLESTRIP,   // D3DPT_TRIANGLESTRIP  = 6,
-      XTL::D3DPT_TRIANGLEFAN,     // D3DPT_TRIANGLEFAN    = 7,
-      XTL::D3DPT_TRIANGLELIST,    // D3DPT_QUADLIST       = 8,  Xbox
-      XTL::D3DPT_TRIANGLELIST,    // D3DPT_QUADSTRIP      = 9,  Xbox
-      XTL::D3DPT_TRIANGLELIST,    // D3DPT_POLYGON        = 10, Xbox
-     (XTL::D3DPRIMITIVETYPE)11    // D3DPT_MAX            = 11,
-);*)
-
 // convert from xbox to pc fill modes
-function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; stdcall;
+function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
   Result := D3DFILLMODE((Value and $F) + 1);
 end;
 
 // convert from xbox to pc shade modes
-function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; stdcall;
-// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := D3DSHADEMODE((Value and $3) + 1);
 end;
 
-function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; stdcall;
+// convert from xbox to pc blend ops
+function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
   case Value of
@@ -448,7 +525,8 @@ begin
   Result := D3DBLENDOP(Value);
 end;
 
-function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; stdcall;
+// convert from xbox to pc blend types
+function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; inline;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   if (Value < 2) then
@@ -462,14 +540,15 @@ begin
   end;
 end;
 
-function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; stdcall;
+// convert from xbox to pc comparison functions
+function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
 // Branch:martin  Revision:39 Done:100 Translator:PatrickvL
 begin
   Result := D3DCMPFUNC((Value and $F) + 1);
 end;
 
 // convert from xbox to pc texture transform state types
-function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; stdcall;
+function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
 // Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
 begin
   if (uint32(State) < 2) then
@@ -487,20 +566,6 @@ begin
     Result := State;
   end;
 end;
-
-(* Dxbx : Exporting these is pointless:
-exports
-  EmuPC2XB_D3DFormat name PatchPrefix + 'EmuPC2XB_D3DFormat',
-  EmuXB2PC_D3DBLEND name PatchPrefix + 'EmuXB2PC_D3DBLEND',
-  EmuXB2PC_D3DBLENDOP name PatchPrefix + 'EmuXB2PC_D3DBLENDOP',
-  EmuXB2PC_D3DCMPFUNC name PatchPrefix + 'EmuXB2PC_D3DCMPFUNC',
-  EmuXB2PC_D3DFILLMODE name PatchPrefix + 'EmuXB2PC_D3DFILLMODE',
-  EmuXB2PC_D3DFormat name PatchPrefix + 'EmuXB2PC_D3DFormat',
-  EmuXB2PC_D3DLock name PatchPrefix + 'EmuXB2PC_D3DLock',
-  EmuXB2PC_D3DSHADEMODE name PatchPrefix + 'EmuXB2PC_D3DSHADEMODE',
-  EmuXB2PC_D3DTS name PatchPrefix + 'EmuXB2PC_D3DTS',
-  EmuXBFormatIsSwizzled name PatchPrefix + 'EmuXBFormatIsSwizzled';
-*)
 
 end.
 

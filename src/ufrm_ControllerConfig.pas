@@ -86,7 +86,7 @@ implementation
 procedure Tfrm_ControllerConfig.FormCreate(Sender: TObject);
 begin
   // reset changes flag
-	g_bHasChanges := False;
+  g_bHasChanges := False;
 
   // retrieve controller configuration
   if Assigned(g_EmuShared) then
