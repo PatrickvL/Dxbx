@@ -227,6 +227,48 @@ type
     function GetTLSData: DWord;
   end;
 
+// A list of sections in this Xbe used for section loading
+type
+  SectionList = packed record
+    szSectionName: array [0..9-1] of AnsiChar;
+    dwSectionAddr: uint32;
+    dwSectionSize: uint32;
+  end;
+  PSectionList = ^SectionList;
+
+const
+  // debug/retail XOR keys
+  XOR_EP_DEBUG: uint32 = $94859D4B; // Entry Point (Debug)
+  XOR_EP_RETAIL: uint32 = $A8FC57AB; // Entry Point (Retail)
+  XOR_KT_DEBUG: uint32 = $EFB1F152; // Kernel Thunk (Debug)
+  XOR_KT_RETAIL: uint32 = $5B6D40B6; // Kernel Thunk (Retail)
+
+  // game region flags for Xbe certificate
+  XBEIMAGE_GAME_REGION_NA: uint32 = $00000001;
+  XBEIMAGE_GAME_REGION_JAPAN: uint32 = $00000002;
+  XBEIMAGE_GAME_REGION_RESTOFWORLD: uint32 = $00000004;
+  XBEIMAGE_GAME_REGION_MANUFACTURING: uint32 = $80000000;
+
+  // media type flags for Xbe certificate
+  XBEIMAGE_MEDIA_TYPE_HARD_DISK: uint32 = $00000001;
+  XBEIMAGE_MEDIA_TYPE_DVD_X2: uint32 = $00000002;
+  XBEIMAGE_MEDIA_TYPE_DVD_CD: uint32 = $00000004;
+  XBEIMAGE_MEDIA_TYPE_CD: uint32 = $00000008;
+  XBEIMAGE_MEDIA_TYPE_DVD_5_RO: uint32 = $00000010;
+  XBEIMAGE_MEDIA_TYPE_DVD_9_RO: uint32 = $00000020;
+  XBEIMAGE_MEDIA_TYPE_DVD_5_RW: uint32 = $00000040;
+  XBEIMAGE_MEDIA_TYPE_DVD_9_RW: uint32 = $00000080;
+  XBEIMAGE_MEDIA_TYPE_DONGLE: uint32 = $00000100;
+  XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD: uint32 = $00000200;
+  XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK: uint32 = $40000000;
+  XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE : uint32 = $80000000;
+  XBEIMAGE_MEDIA_TYPE_MEDIA_MASK: uint32 = $00FFFFFF;
+
+var
+  // OpenXDK logo bitmap (used by cxbe by default)
+  OpenXDK: array of uint08;
+  dwSizeOfOpenXDK: uint32;
+
 function GetDWordVal(aBuffer: MathPtr; i: Integer): DWord;
 function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 

@@ -63,6 +63,7 @@ type
   X_D3DSHADEMODE = DWord;
   X_D3DTEXTURESTAGESTATETYPE = DWord;
   X_VERTEXSHADERCONSTANTMODE = DWord;
+  X_D3DCALLBACK = PVOID;
 
   X_VERTEXSHADERINPUT = packed record
     IndexOfStream: DWord;
@@ -90,6 +91,30 @@ type
     UnknownC: array [0..59] of DWord;
   end;
   PX_D3DVertexShader = ^X_D3DVertexShader;
+
+type
+  _X_D3DPIXELSHADERDEF = packed record// <- blueshogun 10/1/07
+    PSAlphaInputs: array [0..8-1] of DWORD;  // Alpha inputs for each stage
+    PSFinalCombinerInputsABCD: DWORD;        // Final combiner inputs
+    PSFinalCombinerInputsEFG: DWORD;         // Final combiner inputs (continued)
+    PSConstant0: array [0..8-1] of DWORD;    // C0 for each stage
+    PSConstant1: array [0..8-1] of DWORD;    // C1 for each stage
+    PSAlphaOutputs: array [0..8-1] of DWORD; // Alpha output for each stage
+    PSRGBInputs: array [0..8-1] of DWORD;    // RGB inputs for each stage
+    PSCompareMode: DWORD;                    // Compare modes for clipplane texture mode
+    PSFinalCombinerConstant0: DWORD;         // C0 in final combiner
+    PSFinalCombinerConstant1: DWORD;         // C1 in final combiner
+    PSRGBOutputs: array [0..8-1] of DWORD;   // Stage 0 RGB outputs
+    PSCombinerCount: DWORD;                  // Active combiner count (Stages 0-7)
+    PSTextureModes: DWORD;                   // Texture addressing modes
+    PSDotMapping: DWORD;                     // Input mapping for dot product modes
+    PSInputTexture: DWORD;                   // Texture source for some texture modes
+    PSC0Mapping: DWORD;                      // Mapping of c0 regs to D3D constants
+    PSC1Mapping: DWORD;                      // Mapping of c1 regs to D3D constants
+    PSFinalCombinerConstants: DWORD;         // Final combiner constant mapping
+  end;
+  X_D3DPIXELSHADERDEF = _X_D3DPIXELSHADERDEF;
+  PX_D3DPIXELSHADERDEF = ^X_D3DPIXELSHADERDEF;
 
   STREAM_DYNAMIC_PATCH = packed record
     NeedPatch: BOOL;       // This is to know whether is data which must be patched
@@ -218,6 +243,11 @@ type
   end;
   PX_D3DSURFACE_DESC = ^X_D3DSURFACE_DESC;
 
+  X_D3DCALLBACKTYPE = ( // blueshogun96 10/1/07
+    X_D3DCALLBACK_READ = 1,
+    X_D3DCALLBACK_WRITE = 2
+  );
+
   X_D3DFIELDTYPE = (
     X_D3DFIELD_ODD = 1,
     X_D3DFIELD_EVEN = 2,
@@ -306,6 +336,7 @@ const
   X_D3DRESOURCE_DATA_FLAG_YUVSURF = $00000002; // YUV memory surface
   X_D3DRESOURCE_DATA_FLAG_D3DREND = $00000004; // D3D Render Target
   X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
+  X_D3DRESOURCE_DATA_FLAG_TEXCLON = $00000010; // HACK: Cloned resource
 
   // special resource lock flags
   X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;       
