@@ -138,7 +138,7 @@ type
     DeclarationSize: DWord;
     pFunction: PDWord;
     FunctionSize: DWord;
-    _Type: DWord;
+    Type_: DWord;
     Status: DWord;
     // Needed for dynamic stream patching
     VertexDynamicPatch: VERTEX_DYNAMIC_PATCH;
@@ -234,7 +234,7 @@ type
 
   X_D3DSURFACE_DESC = packed record
     Format: X_D3DFORMAT;
-    _Type: X_D3DRESOURCETYPE;
+    Type_: X_D3DRESOURCETYPE;
     Usage: DWord;
     Size: UINT;
     MultiSampleType: D3DMULTISAMPLE_TYPE;

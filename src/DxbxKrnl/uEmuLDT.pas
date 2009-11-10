@@ -54,7 +54,7 @@ type
     procedure SetBits(const aIndex: Integer; const aValue: Integer);
   public
     property BaseMid: Integer index $0008 read GetBits write SetBits; // 8 bits at offset 0
-    property _Type: Integer index $0805 read GetBits write SetBits; // 5 bits at offset 8
+    property Type_: Integer index $0805 read GetBits write SetBits; // 5 bits at offset 8
     property Dpl: Integer index $0D02 read GetBits write SetBits; // 2 bits at offset 13
     property Pres: Integer index $0F01 read GetBits write SetBits; // 1 bit at offset 15
     property LimitHi: Integer index $1004 read GetBits write SetBits; // 4 bits at offset 16
@@ -144,7 +144,7 @@ begin
   begin
 //    ZeroMemory(@LDTENTRY, SizeOf(LDTENTRY));
 
-    _LDTEntry.BaseLow                    := Word(dwBaseAddr and $FFFF);
+    _LDTEntry.BaseLow := Word(dwBaseAddr and $FFFF);
 (*
     DWORD   BaseMid : 8;
 
@@ -161,26 +161,26 @@ begin
     DWORD   BaseHi : 8;
 *)
 
-    _LDTEntry.HighWord.Bytes.BaseMid     := (dwBaseAddr shr 16) and $FF;
-    _LDTEntry.HighWord.Bytes.BaseHi      := (dwBaseAddr shr 24) and $FF;
+    _LDTEntry.HighWord.Bytes.BaseMid := (dwBaseAddr shr 16) and $FF;
+    _LDTEntry.HighWord.Bytes.BaseHi := (dwBaseAddr shr 24) and $FF;
     
     Assert(_LDTEntry.HighWord.Bytes.BaseHi = _LDTEntry.HighWord.Bits.BaseHi);
     Assert(_LDTEntry.HighWord.Bytes.BaseMid = _LDTEntry.HighWord.Bits.BaseMid);
 
-    _LDTEntry.HighWord.Bits._Type        := $13; // RW data segment
-    _LDTEntry.HighWord.Bits.Dpl          := 3;    // user segment
-    _LDTEntry.HighWord.Bits.Pres         := 1;    // present
-    _LDTEntry.HighWord.Bits.Sys          := 0;
-    _LDTEntry.HighWord.Bits.Reserved_0   := 0;
-    _LDTEntry.HighWord.Bits.Default_Big  := 1;    // 386 segment
-    _LDTEntry.HighWord.Bits.Granularity  := iif(dwLimit >= $00100000, 1, 0);
+    _LDTEntry.HighWord.Bits.Type_ := $13; // RW data segment
+    _LDTEntry.HighWord.Bits.Dpl := 3;    // user segment
+    _LDTEntry.HighWord.Bits.Pres := 1;    // present
+    _LDTEntry.HighWord.Bits.Sys := 0;
+    _LDTEntry.HighWord.Bits.Reserved_0 := 0;
+    _LDTEntry.HighWord.Bits.Default_Big := 1;    // 386 segment
+    _LDTEntry.HighWord.Bits.Granularity := iif(dwLimit >= $00100000, 1, 0);
 
     if _LDTEntry.HighWord.Bits.Granularity <> 0 then
       dwLimit := dwLimit shr 12;
 
-    _LDTEntry.HighWord.Bits.LimitHi      := (dwLimit shr 16) and $F;
+    _LDTEntry.HighWord.Bits.LimitHi := (dwLimit shr 16) and $F;
 
-    _LDTEntry.LimitLow                   := Word(dwLimit and $FFFF);
+    _LDTEntry.LimitLow := Word(dwLimit and $FFFF);
   end;
 
   // Allocate selector

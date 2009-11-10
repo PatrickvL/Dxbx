@@ -61,7 +61,7 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  _Message: PANSICHAR
+  Message: PANSICHAR
   ); stdcall; // Source:JwaNative
 procedure xboxkrnl_RtlCaptureContext(
   ContextRecord: PCONTEXT
@@ -335,12 +335,12 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  _Message: PANSICHAR
+  Message: PANSICHAR
   ); stdcall;
 // Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, _Message);
+  JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message);
   EmuSwapFS(fsXbox);
 end;
 

@@ -88,7 +88,7 @@ function {023} xboxkrnl_ExQueryPoolBlockSize(
   ): SIZE_T; stdcall; // Source: ReactOS
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
-  _Type: PDWORD; // out
+  Type_: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
@@ -109,7 +109,7 @@ function {028} xboxkrnl_ExReleaseReadWriteLock(
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
 function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueIndex: DWORD;
-  _Type: PDWORD; //   OUT
+  Type_: PDWORD; //   OUT
   Value: PUCHAR;
   ValueLength: SIZE_T
   ): NTSTATUS; stdcall; // Source: OpenXDK
@@ -267,7 +267,7 @@ end;
 // and updated by ExSaveNonVolatileSetting.
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
-  _Type: PDWORD; // out
+  Type_: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
@@ -284,7 +284,7 @@ begin
          #13#10'   ValueLength         : 0x%.08X' +
          #13#10'   ResultLength        : 0x%.08X' +
          #13#10');',
-         [ValueIndex, _Type, Value, ValueLength, ResultLength]);
+         [ValueIndex, Type_, Value, ValueLength, ResultLength]);
 
   // handle eeprom read
   case ValueIndex of
@@ -292,8 +292,8 @@ begin
     $104:
     begin
       // Cxbx TODO: configurable region or autodetect of some sort
-      if Assigned(_Type) then
-        _Type^ := $04;
+      if Assigned(Type_) then
+        Type_^ := $04;
 
       if Assigned(Value) then
         Value^ := $01;  // North America
@@ -306,8 +306,8 @@ begin
     $103:
     begin
       // Cxbx TODO: configurable region or autodetect of some sort
-      if Assigned(_Type) then
-        _Type^ := $04;
+      if Assigned(Type_) then
+        Type_^ := $04;
 
       if Assigned(Value) then
         Value^ := $01; // NTSC_M
@@ -320,8 +320,8 @@ begin
     $007:
     begin
       // Cxbx TODO: configurable language or autodetect of some sort
-      if Assigned(_Type) then
-        _Type^ := $04;
+      if Assigned(Type_) then
+        Type_^ := $04;
 
       if Assigned(Value) then
         Value^ := $01;  // English
@@ -334,8 +334,8 @@ begin
     $008:
     begin
       // Cxbx TODO: configurable video flags or autodetect of some sort
-      if Assigned(_Type) then
-        _Type^ := $04;
+      if Assigned(Type_) then
+        Type_^ := $04;
 
       if Assigned(Value) then
         Value^ := $10;  // Letterbox
@@ -347,8 +347,8 @@ begin
     // Audio Flags
     $009:
     begin
-      if Assigned(_Type) then
-        _Type^ := $04;
+      if Assigned(Type_) then
+        Type_^ := $04;
 
       if Assigned(Value) then
         Value^ := 0;
@@ -359,8 +359,8 @@ begin
 
     Ord(EEPROM_MISC):
     begin
-      if Assigned(_Type) then
-        _Type^ := $04;
+      if Assigned(Type_) then
+        Type_^ := $04;
 
       if Assigned(Value) then
         Value^ := 0;
@@ -426,7 +426,7 @@ end;
 
 function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueIndex: DWORD;
-  _Type: PDWORD; //   OUT
+  Type_: PDWORD; //   OUT
   Value: PUCHAR;
   ValueLength: SIZE_T
   ): NTSTATUS; stdcall; // Source: OpenXDK

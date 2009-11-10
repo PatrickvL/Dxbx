@@ -279,12 +279,12 @@ var
 begin
   if (lpddoi.dwType and DIDFT_AXIS) > 0 then
   begin
-    diprg.diph.dwSize       := SizeOf(DIPROPRANGE);
+    diprg.diph.dwSize := SizeOf(DIPROPRANGE);
     diprg.diph.dwHeaderSize := SizeOf(DIPROPHEADER);
-    diprg.diph.dwHow        := DIPH_BYID;
-    diprg.diph.dwObj        := lpddoi.dwType;
-    diprg.lMin              := 0 - 32768;
-    diprg.lMax              := 0 + 32767;
+    diprg.diph.dwHow := DIPH_BYID;
+    diprg.diph.dwObj := lpddoi.dwType;
+    diprg.lMin := 0 - 32768;
+    diprg.lMax := 0 + 32767;
 
     hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, diprg.diph);
 
@@ -300,12 +300,12 @@ begin
   end
   else if (lpddoi.dwType and DIDFT_BUTTON) > 0 then
   begin
-    diprg.diph.dwSize       := SizeOf(DIPROPRANGE);
+    diprg.diph.dwSize := SizeOf(DIPROPRANGE);
     diprg.diph.dwHeaderSize := SizeOf(DIPROPHEADER);
-    diprg.diph.dwHow        := DIPH_BYID;
-    diprg.diph.dwObj        := lpddoi.dwType;
-    diprg.lMin              := 0;
-    diprg.lMax              := 255;
+    diprg.diph.dwHow := DIPH_BYID;
+    diprg.diph.dwObj := lpddoi.dwType;
+    diprg.lMin := 0;
+    diprg.lMax := 255;
 
     hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, diprg.diph);
 

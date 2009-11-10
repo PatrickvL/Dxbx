@@ -95,6 +95,16 @@ object Form1: TForm1
     TabOrder = 4
     OnClick = btnSaveToXmlClick
   end
+  object CheckBoxIgnoreCompleted: TCheckBox
+    Left = 16
+    Top = 64
+    Width = 369
+    Height = 17
+    Caption = 'Ignore completed translations'
+    Checked = True
+    State = cbChecked
+    TabOrder = 5
+  end
   object SaveDialog: TSaveDialog
     Left = 60
     Top = 86

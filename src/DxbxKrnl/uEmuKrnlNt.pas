@@ -200,7 +200,7 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   ); stdcall;
 function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtWaitForSingleObjectEx(
-  _Handle: HANDLE;
+  Handle_: HANDLE;
   WaitMode: CHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
@@ -939,7 +939,7 @@ begin
 end;
 
 function xboxkrnl_NtWaitForSingleObjectEx(
-  _Handle: HANDLE;
+  Handle_: HANDLE;
   WaitMode: CHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER

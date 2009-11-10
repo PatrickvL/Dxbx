@@ -71,7 +71,7 @@ function xboxkrnl_KeInitializeQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
-  _Type: TIMER_TYPE
+  Type_: TIMER_TYPE
   ); stdcall;
 function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -255,7 +255,7 @@ begin
   // inialize Dpc field values
   Dpc.Number := 0;
   Dpc.DeferredRoutine := DeferredRoutine;
-  Dpc._Type := CSHORT(Ord({enum KOBJECTS.}DpcObject));
+  Dpc.Type_ := CSHORT(Ord({enum KOBJECTS.}DpcObject));
   Dpc.DeferredContext := DeferredContext;
 
   EmuSwapFS(fsXbox);
@@ -298,7 +298,7 @@ end;
 
 procedure xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
-  _Type: TIMER_TYPE
+  Type_: TIMER_TYPE
   ); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
@@ -309,18 +309,18 @@ begin
          #13#10'   Timer               : 0x%.08X' +
          #13#10'   Type                : 0x%.08X' +
          #13#10');',
-         [Timer, Ord(_Type)]);
+         [Timer, Ord(Type_)]);
 
-  Timer.Header._Type              := UCHAR(Ord(_Type) + 8);
-  Timer.Header.Inserted           := 0;
-  Timer.Header.Size               := SizeOf(Timer^) div SizeOf(ULONG);
-  Timer.Header.SignalState        := 0;
-  Timer.TimerListEntry.Blink      := NULL;
-  Timer.TimerListEntry.Flink      := NULL;
+  Timer.Header.Type_ := UCHAR(Ord(Type_) + 8);
+  Timer.Header.Inserted := 0;
+  Timer.Header.Size := SizeOf(Timer^) div SizeOf(ULONG);
+  Timer.Header.SignalState := 0;
+  Timer.TimerListEntry.Blink := NULL;
+  Timer.TimerListEntry.Flink := NULL;
   Timer.Header.WaitListHead.Flink := @(Timer.Header.WaitListHead);
   Timer.Header.WaitListHead.Blink := @(Timer.Header.WaitListHead);
-  Timer.DueTime.QuadPart          := 0;
-  Timer.Period                    := 0;
+  Timer.DueTime.QuadPart := 0;
+  Timer.Period := 0;
 
   EmuSwapFS(fsXbox);
 end;
