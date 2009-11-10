@@ -124,7 +124,7 @@ type
 
   // I/O Timer Object
   IO_TIMER = packed record // Source: ReactOS
-    _Type: USHORT;
+    Type_: USHORT;
     TimerEnabled: USHORT;
     IoTimerList: LIST_ENTRY;
     TimerRoutine: PIO_TIMER_ROUTINE;
@@ -134,7 +134,7 @@ type
   PIO_TIMER = ^IO_TIMER;
 
   DRIVER_OBJECT = packed record // Source: ReactOS
-    _Type: CSHORT;
+    Type_: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
     Flags: ULONG;
@@ -153,7 +153,7 @@ type
   PDRIVER_OBJECT = ^DRIVER_OBJECT;
 
   DEVICE_OBJECT = packed record // Source: XBMC
-    _Type: CSHORT;
+    Type_: CSHORT;
     Size: USHORT;
     ReferenceCount: LONG;
     DriverObject: PDRIVER_OBJECT;
@@ -185,7 +185,7 @@ type
   end; // Source: XBMC / ReactOS
 
   FILE_OBJECT = packed record // Source: XBMC
-    _Type: CSHORT;
+    Type_: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
    // ...

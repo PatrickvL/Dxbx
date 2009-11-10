@@ -86,7 +86,7 @@ end;
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result :=  PX_D3DVertexShader(aHandle and $7FFFFFFF);
+  Result := PX_D3DVertexShader(aHandle and $7FFFFFFF);
 end;
 
 exports

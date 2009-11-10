@@ -2470,7 +2470,7 @@ begin
 end;
 *)
 
-(*STDAPI_(STDAPI_(procedure: ) EmuDirectSoundUseFullHRTF;d
+(*STDAPI_ procedure XTL_EmuDirectSoundUseFullHRTF;
 )
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin

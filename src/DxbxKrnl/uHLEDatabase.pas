@@ -35,7 +35,7 @@ type
 // * HLEDataBase
 // ******************************************************************
   HLEData = packed record // extern
-    _Library: PChar;
+    Library_: PChar;
 
     MajorVersionL: uint16;
     MinorVersion: uint16;

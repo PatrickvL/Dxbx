@@ -390,6 +390,7 @@ begin
   Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
   if Assigned(Result) then
   begin
+
     offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
     if offs = 0 then
       offs := HEAP_HEADERSIZE;
@@ -1037,7 +1038,7 @@ end;
 function XTL_EmuCreateMutex(
   lpMutexAttributes: LPSECURITY_ATTRIBUTES;
   bInitialOwner: BOOL;
-  // TODO : Is this really an Ansi-type? Or should it be wide (LPCWSTR) ?
+  { Dxbx TODO : Is this really an Ansi-type? Or should it be wide (LPCWSTR) ? }
   lpName: LPCSTR
   ): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -1249,7 +1250,6 @@ procedure XTL_EmuXRegisterThreadNotifyRoutine(
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine');
 
   DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine' +
     #13#10'(' +

@@ -671,8 +671,8 @@ type
 // ******************************************************************
 type
   DISPATCHER_HEADER = packed record
-    _Type: UCHAR; // 0x00
-    _Absolute: UCHAR; // 0x01
+    Type_: UCHAR; // 0x00
+    Absolute: UCHAR; // 0x01
     Size: UCHAR; // 0x02
     Inserted: UCHAR; // 0x03
     SignalState: LongInt; // 0x04
@@ -741,7 +741,7 @@ type
 // ******************************************************************
 type
   KDPC = packed record
-    _Type: CSHORT; // 0x00
+    Type_: CSHORT; // 0x00
     Number: UCHAR; // 0x02
     Importance: UCHAR; // 0x03
     DpcListEntry: LIST_ENTRY; // 0x04

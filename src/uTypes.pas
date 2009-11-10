@@ -81,6 +81,9 @@ type
 
   TCodePointer = type Pointer;
 
+  // Dxbx note : Signed is actually "signed int" - see http://home.att.net/~jackklein/c/inttypes.html
+  Signed = Integer;
+
   // Note : These types are copied from JwaWinType, so we don't have to include that unit :
   PCSZ = ^AnsiChar; // Dxbx assumption!
   PVOID = Pointer;

@@ -92,8 +92,9 @@ const
   X_D3DRSSE_UNK = $7fffffff;
 
 const
-  // table used for vertex->primitive count conversion
+  // lookup table for converting vertex count to primitive count
   EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of UINT = (
+  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
     (0, 0),
     (1, 0),
     (2, 0),
@@ -106,11 +107,11 @@ const
     (2, 2),
     (1, 0)
   );
-  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
 
 const
   // conversion table for xbox->pc primitive types
   EmuPrimitiveTypeLookup: array [0..11] of D3DPRIMITIVETYPE = (
+  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
     D3DPRIMITIVETYPE(0),   // NULL                 = 0
     D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
     D3DPT_LINELIST,        // D3DPT_LINELIST       = 2,
@@ -124,11 +125,11 @@ const
     D3DPT_TRIANGLEFAN,     // D3DPT_POLYGON        = 10, Xbox
     D3DPRIMITIVETYPE(11)   // D3DPT_MAX            = 11,
   );
-  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
 
 // render state conversion table
 const
   {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
+  // Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
     // the correct lookup values;
@@ -220,7 +221,6 @@ const
     X_D3DRSSE_UNK,  $00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK  // 172
   );
-  // Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
 
 implementation
 
@@ -474,24 +474,6 @@ else if((uint32)State > 255)
     State = (D3DTRANSFORMSTATETYPE)(State - 250);
 else
     CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
-*)
-
-// lookup table for converting vertex count to primitive count
-(*UINT XTL.EmuD3DVertexToPrimitive[11][2] =
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-begin
-    begin 0, 0),
-    begin 1, 0),
-    begin 2, 0),
-    begin 1, 1),
-    begin 1, 1),
-    begin 3, 0),
-    begin 1, 2),
-    begin 1, 2),
-    begin 4, 0),
-    begin 2, 2),
-    begin 0, 0),
-);
 *)
 
 // convert from xbox to pc fill modes

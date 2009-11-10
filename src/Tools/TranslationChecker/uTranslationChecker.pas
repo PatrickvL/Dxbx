@@ -42,6 +42,7 @@ type
     btnCxbxSourcesPath: TSpeedButton;
     btnSaveToXml: TButton;
     SaveDialog: TSaveDialog;
+    CheckBoxIgnoreCompleted: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnCxbxSourcesPathClick(Sender: TObject);
     procedure btnDxbxSourcesPathClick(Sender: TObject);
@@ -225,9 +226,24 @@ var
     if not Result then
       Exit;
 
+    if aLine[1] = '{' then
+    begin
+      Result := Pos('}', aLine) < Length(aLine);
+      if Result then
+      begin
+        Delete(aLine, 1, Pos('}', aLine));
+        aLine := Trim(aLine);
+        Result := (Length(aLine) > 2);
+      end;
+
+      if not Result then
+        Exit;
+    end;
+    
     // Remove comment start from the beginning of the line :
     if  (aLine[1] in ['(', '/'])
     and (aLine[2] in ['*', '/']) then
+    // Catches '(*', '/*' and '//', but also '(/' - which can be ignored
     begin
       Delete(aLine, 1, 2);
       aLine := Trim(aLine);
@@ -241,11 +257,15 @@ var
     // Scan for C function names :
     if Text = '' then
       Text := _GetTextAfterPrefix(aLine, ' WINAPI ', '[(:;');
+    if Text = '' then
+      Text := _GetTextAfterPrefix(aLine, '_stdcall ', '[(:;');
 
     if Text = '' then
     begin
-      // Last resort, C functions should contain a dot ('.') or an opening parenthesis :
-      Result := (Pos('.', aLine) > 0) or (Pos('(', aLine) > 0);
+      // Last resort, C functions should contain a separator ('.' or '::') or an opening parenthesis :
+      Result := (Pos('.', aLine) > 0)
+             or (Pos('::', aLine) > 0)
+             or (Pos('(', aLine) > 0);
       if not Result then
         Exit;
 
@@ -258,7 +278,7 @@ var
   end;
 
 begin
-  // Skip meself ;-) 
+  // Skip meself ;-)
   if ExtractFileName(aPascalFilePath) = 'uTranslationChecker.pas' then
     Exit;
 
@@ -339,14 +359,24 @@ begin
 
           // Scan for the symbol name, from 1 line after
           // until 6 lines before this translation-progress comment :
-          SymbolName := '*undetermined symbol*';
-          LineNr := i + 1;
-          repeat
-            if _GetSymbolName(Strings[LineNr], {var}SymbolName) then
-              Break;
+          SymbolName := '';
+          LineNr := i - 1;
+          if not _GetSymbolName(Strings[LineNr], {var}SymbolName) then
+          begin
+            LineNr := i + 1;
+            repeat
+              if _GetSymbolName(Strings[LineNr], {var}SymbolName) then
+                Break;
 
-            Dec(LineNr);
-          until (LineNr < i - 12) or (LineNr < 0);
+              Dec(LineNr);
+            until (LineNr < i - 12) or (LineNr < 0);
+          end;
+           
+          if SymbolName = '' then
+          begin
+            SymbolName := '*undetermined symbol*';
+            LineNr := i;
+          end;
 
           // Start the UNIT tag when not already done :
           if not HadUnitTag then
@@ -356,8 +386,9 @@ begin
           end;
 
           // Show what we've found :
-          Log(Format('    <SYMBOL name="%s" line="%d" frombranch="%s" fromsource="%s" fromrevision="%s" translator="%s" done="%d"/>',
-            [SymbolName, LineNr+1, BranchStr, SourceStr, RevisionStr, TranslatorStr, StrToIntDef(DoneStr, 0)]));
+          if (not CheckBoxIgnoreCompleted.Checked) or (StrToIntDef(DoneStr, 0) < 100) then
+            Log(Format('    <SYMBOL name="%s" line="%d" frombranch="%s" fromsource="%s" fromrevision="%s" translator="%s" done="%d"/>',
+              [SymbolName, LineNr+1, BranchStr, SourceStr, RevisionStr, TranslatorStr, StrToIntDef(DoneStr, 0)]));
         end;
       end;
     end;

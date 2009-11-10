@@ -145,7 +145,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result :=  pRet;
+  Result := pRet;
 end;
 
 function xboxkrnl_MmAllocateContiguousMemoryEx(
