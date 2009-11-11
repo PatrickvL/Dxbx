@@ -415,6 +415,7 @@ type
   X_D3DTexture = object(X_D3DBaseTexture)
   end;
   PX_D3DTexture = ^X_D3DTexture; 
+  PPX_D3DTexture = ^PX_D3DTexture; 
 
   X_D3DCubeTexture = object(X_D3DBaseTexture)
   end;
