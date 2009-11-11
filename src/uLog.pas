@@ -380,7 +380,8 @@ begin
         // Change all pointers into integers, so those don't raise
         // an EConvertError. (This is easier than having casts everywhere) :
         vtBoolean,
-        vtPointer:
+        vtPointer,
+        vtInterface:
           Args[i].VType := vtInteger; // The data doesn't have to be changed, because it's already in-place
       end;
 
