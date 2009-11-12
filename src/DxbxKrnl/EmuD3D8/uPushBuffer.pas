@@ -61,7 +61,7 @@ uses
 
 
 procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   if Assigned(pFixup) then
     CxbxKrnlCleanup('PushBuffer has fixups');
@@ -74,83 +74,83 @@ procedure EmuUnswizzleActiveTexture();
 (*var
   pPixelContainer: X_D3DPixelContainer;
   XBFormat: DWord;
-  dwBPP: DWord; *)
+  dwBPP: DWord;       *)
 begin
-    // for current usages, we're always on stage 0
-(*    pPixelContainer := EmuD3DActiveTexture[0];
+  // for current usages, we're always on stage 0
+(*  pPixelContainer := EmuD3DActiveTexture[0];
 
-    if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
-        Exit;
+  if(pPixelContainer = 0 or  not (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
+    Exit;
 
-    XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
-    dwBPP := 0;
+  XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+  dwBPP := 0;
 
-    if( not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
-        Exit;
+  if( not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
+    Exit;
 
-    // remove lock
-    pPixelContainer.EmuTexture8.UnlockRect(0);
-    pPixelContainer.Common := pPixelContainer.Common and ~X_D3DCOMMON_ISLOCKED;
+  // remove lock
+  pPixelContainer.EmuTexture8.UnlockRect(0);
+  pPixelContainer.Common := pPixelContainer.Common and ~X_D3DCOMMON_ISLOCKED;
 
-    // Cxbx TODO: potentially CRC to see if this surface was actually modified..
-    // unswizzle texture
+  // Cxbx TODO: potentially CRC to see if this surface was actually modified..
+  // unswizzle texture
 
+  begin
+    XTL.IDirect3DTexture8 *pTexture := pPixelContainer.EmuTexture8;
+
+    DWord dwLevelCount := pTexture.GetLevelCount();
+
+    for(uint32 v:=0;v<dwLevelCount;v++)
     begin
-        XTL.IDirect3DTexture8 *pTexture := pPixelContainer.EmuTexture8;
+      XTL.D3DSURFACE_DESC SurfaceDesc;
 
-        DWord dwLevelCount := pTexture.GetLevelCount();
+      HRESULT hRet := pTexture.GetLevelDesc(v, @SurfaceDesc);
 
-        for(uint32 v:=0;v<dwLevelCount;v++)
-        begin
-            XTL.D3DSURFACE_DESC SurfaceDesc;
+      if(FAILED(hRet)) then
+          Continue;
 
-            HRESULT hRet := pTexture.GetLevelDesc(v, @SurfaceDesc);
+      //
+      // perform unswizzle
+      //
 
-            if(FAILED(hRet)) then
-                Continue;
+      begin
+        XTL.D3DLOCKED_RECT LockedRect;
 
-            //
-            // perform unswizzle
-            //
+        //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
+        //    Break;
+        //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
 
-            begin
-                XTL.D3DLOCKED_RECT LockedRect;
+        hRet := pTexture.LockRect(v, @LockedRect, 0, 0);
 
-                //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
-                //    Break;
-                //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
+        if(FAILED(hRet)) then
+            Continue;
 
-                hRet := pTexture.LockRect(v, @LockedRect, 0, 0);
+        DWord dwWidth := SurfaceDesc.Width;
+        DWord dwHeight := SurfaceDesc.Height;
+        DWord dwDepth := 1;
+        DWord dwPitch := LockedRect.Pitch;
+        TRect  iRect := (0,0,0,0);
+        TPoint iPoint := (0,0);
 
-                if(FAILED(hRet)) then
-                    Continue;
+        Pointer pTemp := malloc(dwHeight*dwPitch);
 
-                DWord dwWidth := SurfaceDesc.Width;
-                DWord dwHeight := SurfaceDesc.Height;
-                DWord dwDepth := 1;
-                DWord dwPitch := LockedRect.Pitch;
-                TRect  iRect := (0,0,0,0);
-                TPoint iPoint := (0,0);
+        XTL.EmuXGUnswizzleRect
+        (
+            LockedRect.pBits, dwWidth, dwHeight, dwDepth,
+            pTemp, dwPitch, iRect, iPoint, dwBPP
+        );
 
-                Pointer pTemp := malloc(dwHeight*dwPitch);
+        memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
 
-                XTL.EmuXGUnswizzleRect
-                (
-                    LockedRect.pBits, dwWidth, dwHeight, dwDepth,
-                    pTemp, dwPitch, iRect, iPoint, dwBPP
-                );
+        pTexture.UnlockRect(0);
 
-                memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
+        free(pTemp);
+      end;
+    end;
 
-                pTexture.UnlockRect(0);
+    DbgPrintf('Active texture was unswizzled');
+  end;    *)
 
-                free(pTemp);
-             end;
-         end;
-
-        DbgPrintf('Active texture was unswizzled');
-     end;
-          *)
 end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;

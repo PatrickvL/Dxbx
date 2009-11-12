@@ -43,7 +43,6 @@ uses
   uDxbxKrnlUtils,
   uEmuDInput,
   uPushBuffer,
-  uResourceTracker,
   uVertexShader,
   uEmu,
   uEmuKrnl,
@@ -3885,6 +3884,9 @@ var
   bCubemap: BOOL;          *)
 
   pPalette: PX_D3DPalette;
+
+  tmpIDirect3DVertexBuffer8 : IDirect3DVertexBuffer8;
+  tmpIDirect3DIndexBuffer8: IDirect3DIndexBuffer8;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3923,31 +3925,32 @@ begin
         dwSize := $2000; // temporarily assign a small buffer, which will be increased later
       end;
 
-      (*hRet := g_pD3DDevice8.CreateVertexBuffer(
+      hRet := g_pD3DDevice8.CreateVertexBuffer(
           {Length=}dwSize,
           {Usage=}0,
           {FVF=}0,
           {Pool=}D3DPOOL_MANAGED,
-          {out ppVertexBuffer=}pResource.EmuVertexBuffer8);
-      // IDirect3DVertexBuffer8
-        if(FAILED(hRet))
+          {out ppVertexBuffer=}tmpIDirect3DVertexBuffer8);
+      pResource.EmuVertexBuffer8 := tmpIDirect3DVertexBuffer8;
+
+      if(FAILED(hRet)) then
+      begin
+        // TODO: Hack for Crazy Taxi 3?
+        (*char szString[256];
+        sprintf( szString, "CreateVertexBuffer Failed!\n   VB Size = 0x%X", dwSize);
+
+        if( dwSize != 0 )
+          CxbxKrnlCleanup( szString );
+        else
         {
-          // TODO: Hack for Crazy Taxi 3?
-          char szString[256];
-          sprintf( szString, "CreateVertexBuffer Failed!\n   VB Size = 0x%X", dwSize);
+          EmuWarning( szString );
 
-          if( dwSize != 0 )
-            CxbxKrnlCleanup( szString );
-          else
-          {
-            EmuWarning( szString );
+          EmuSwapFS(fsXbox);
 
-            EmuSwapFS(fsXbox);
+          return hRet;
+        } *)
+     end;
 
-            return hRet;
-          }
-        }
-      *)
 
 {$IFDEF _DEBUG_TRACK_VB}
       g_VBTrackTotal.insert(pResource.EmuVertexBuffer8);
@@ -3991,8 +3994,9 @@ begin
           // Halo dwSize = 0x336;
         end;
 
-        (*hRet := g_pD3DDevice8.CreateIndexBuffer( dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
-          pIndexBuffer.EmuIndexBuffer8 ); *)
+        hRet := g_pD3DDevice8.CreateIndexBuffer( dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+          tmpIDirect3DIndexBuffer8 );
+        pIndexBuffer.EmuIndexBuffer8 := tmpIDirect3DIndexBuffer8;
 
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('CreateIndexBuffer Failed!');
@@ -4040,7 +4044,7 @@ begin
     end;
 
 
-   (* X_D3DCOMMON_TYPE_SURFACE,
+    X_D3DCOMMON_TYPE_SURFACE,
     X_D3DCOMMON_TYPE_TEXTURE:
     begin
       if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
@@ -4049,7 +4053,7 @@ begin
         DbgPrintf('EmuIDirect3DResource8_Register :. Texture...');
 
 
-      pPixelContainer := pX_D3DPixelContainer(pResource);
+      (*pPixelContainer := pX_D3DPixelContainer(pResource);
 
       X_Format := (X_D3DFORMAT)((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
       Format := EmuXB2PC_D3DFormat(X_Format);
@@ -4513,8 +4517,8 @@ end;
 end;
               //endif
 end;
-
-    end;  *)
+          *)
+    end;
 
 
     X_D3DCOMMON_TYPE_PALETTE:
@@ -4540,7 +4544,7 @@ end;
         pResource.Data := ULONG(pBase);
       end;
 
-      (*DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pResource.Size, pResource.AllocationSize]); *) 
+      (*DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pResource.Size, pResource.AllocationSize]); *)
     end;
 
 
