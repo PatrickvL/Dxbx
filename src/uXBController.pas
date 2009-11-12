@@ -230,7 +230,7 @@ implementation
 
 // Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
 procedure XBController.Initialize; // was XBController::XBController
-// Branch: martin  Revision: 39  Translation:Shadow_tj  Done:100
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   v: Integer;
 begin
@@ -260,7 +260,7 @@ end;
 
 // Source=XBController.cpp Revision=martin#39 Translator=PatrickvL Done=100
 procedure XBController.Finalize; // was XBController::~XBController
-// Branch: martin  Revision: 39  Translation:Shadow_tj  Done:100
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
   if m_CurrentState = XBCTRL_STATE_CONFIG then
     ConfigEnd()
@@ -1180,7 +1180,7 @@ begin
 end;
 
 procedure XBController.Map(aobject: XBCtrlObject; szDeviceName: PAnsiChar; dwInfo, dwFlags: Integer);
-// Branch:martin  Revision:39  Translator:Shadow_Tj Done:100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
   r: XBCtrlObject;

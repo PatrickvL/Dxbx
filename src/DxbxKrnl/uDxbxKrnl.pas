@@ -281,7 +281,7 @@ begin
   end;
 
   
-  DbgPrintf('EmuMain: Initializing Direct3D.');
+  DbgPrintf('EmuMain : Initializing Direct3D.');
 
   XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
@@ -472,7 +472,7 @@ procedure EmuPanic(); stdcall;
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('Emu: EmuPanic');
+  DbgPrintf('EmuMain : EmuPanic');
 
   CxbxKrnlCleanup('Kernel Panic!');
 

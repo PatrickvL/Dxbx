@@ -83,7 +83,12 @@ function xboxkrnl_NtCreateMutant(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   InitialOwner: LONGBOOL
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtCreateSemaphore(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
+function xboxkrnl_NtCreateSemaphore(
+  SemaphoreHandle: PHANDLE;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  InitialCount: ULONG;
+  MaximumCount: ULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateTimer(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
 function xboxkrnl_NtDeleteFile(pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
 function xboxkrnl_NtDeviceIoControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pIoControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
@@ -114,7 +119,13 @@ function xboxkrnl_NtOpenFile(
 function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
 function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtQueueApcThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueueApcThread(
+  ThreadHandle: HANDLE;
+  ApcRoutine: PIO_APC_ROUTINE;
+  ApcRoutineContext: PVOID;
+  ApcStatusBlock: PIO_STATUS_BLOCK;
+  ApcReserved: ULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryDirectoryFile(
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
@@ -145,7 +156,10 @@ function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtQueryVirtualMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryVirtualMemory(
+  BaseAddress: PVOID;
+  Buffer: PMEMORY_BASIC_INFORMATION
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryVolumeInformationFile(
   FileHandle: HANDLE;
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
@@ -168,7 +182,11 @@ function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
   PreviousCount: PLONG // OUT
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtReleaseSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtReleaseSemaphore(
+  SemaphoreHandle: HANDLE;
+  ReleaseCount: ULONG;
+  PreviousCount: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtResumeThread(
   ThreadHandle: HANDLE;
@@ -325,7 +343,7 @@ function xboxkrnl_NtCreateFile(
   CreateDisposition: ULONG; // dtCreateDisposition;
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ReplaceChar: AnsiChar;
   ReplaceIndex: int;
@@ -341,7 +359,7 @@ begin
            #13#10'(' +
            #13#10'   FileHandle          : 0x%.08X' +
            #13#10'   DesiredAccess       : 0x%.08X' +
-           #13#10'   ObjectAttributes    : 0x%.08X' + // '(''%s'')' +
+           #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
            #13#10'   IoStatusBlock       : 0x%.08X' +
            #13#10'   AllocationSize      : 0x%.08X' +
            #13#10'   FileAttributes      : 0x%.08X' +
@@ -349,7 +367,7 @@ begin
            #13#10'   CreateDisposition   : 0x%.08X' +
            #13#10'   CreateOptions       : 0x%.08X' +
            #13#10');',
-           [FileHandle, DesiredAccess, ObjectAttributes, //ObjectAttributes.ObjectName.Buffer,
+           [FileHandle, DesiredAccess, ObjectAttributes, string(ObjectAttributes.ObjectName.Buffer),
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 
   ReplaceChar := #0;
@@ -361,67 +379,65 @@ begin
   begin
     //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
 
-    // trim this off
-    if(szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
+    // Trim this (\??\) off :
+    if (szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
       Inc(szBuffer, 4);
 
     // D:\ should map to current directory
-    if ((szBuffer[0] = 'D') or (szBuffer[0] = 'd') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
+    if ((szBuffer[0] = 'D') or (szBuffer[0] = 'd')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       Inc(szBuffer, 3);
 
       ObjectAttributes.RootDirectory := g_hCurDir;
 
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-      DbgPrintf('  New:''$XbePath\\%s''', [szBuffer]);
+      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
     end
     else
-    if( (szBuffer[0] = 'T') or (szBuffer[0] = 't') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
+    if ((szBuffer[0] = 'T') or (szBuffer[0] = 't')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       Inc(szBuffer, 3);
 
       ObjectAttributes.RootDirectory := g_hTDrive;
 
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-      DbgPrintf('  New:''$CxbxPath\\EmuDisk\\T\\%s''', [szBuffer]);
+      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:"$CxbxPath\EmuDisk\T\%s"', [szBuffer]);
     end
-    else if( (szBuffer[0] = 'U') or (szBuffer[0] = 'u') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
+    else if ((szBuffer[0] = 'U') or (szBuffer[0] = 'u')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       Inc(szBuffer, 3);
 
       ObjectAttributes.RootDirectory := g_hUDrive;
 
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-      DbgPrintf('  New:''$CxbxPath\\EmuDisk\\U\\%s''', [szBuffer]);
+      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:"$CxbxPath\EmuDisk\U\%s"', [szBuffer]);
     end
-    else if( (szBuffer[0] = 'Z')  or  (szBuffer[0] = 'z') and (szBuffer[1] = ':') and (szBuffer[2] = '\')) then
+    else if ((szBuffer[0] = 'Z') or (szBuffer[0] = 'z')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       Inc(szBuffer, 3);
 
       ObjectAttributes.RootDirectory := g_hZDrive;
 
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:''%s''', [ObjectAttributes.ObjectName.Buffer]);
-      DbgPrintf('  New:''$CxbxPath\\EmuDisk\\Z\\%s''', [szBuffer]);
+      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  New:"$CxbxPath\EmuDisk\Z\%s"', [szBuffer]);
     end;
 
-    //
-    // Cxbx TODO: Wildcards are not allowed??
-    //
-
+    // Ignore wildcards. Xapi FindFirstFile uses the same path buffer for
+    // NtOpenFile and NtQueryDirectoryFile. Wildcards are only parsed by
+    // the latter.
     begin
       v := 0;
       while szBuffer[v] <> #0 do
       begin
+        // FIXME: Fallback to parent directory if wildcard is found.
         if (szBuffer[v] = '*') then
         begin
-          if (v > 0) then
-            ReplaceIndex := v-1
-          else
-            ReplaceIndex := v;
+          ReplaceIndex := v;
+          Break;
         end;
 
         Inc(v);
@@ -454,10 +470,50 @@ begin
       JwaWinType.PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
   );
 
+  // If we're trying to open a regular file as a directory, fallback to
+  // parent directory. This behavior is required by Xapi FindFirstFile.
+  if (Result = STATUS_NOT_A_DIRECTORY) then
+  begin
+    DbgPrintf('EmuKrnl : NtCreateFile fallback to parent directory');
+
+    // Restore original buffer.
+    if (ReplaceIndex <> -1) then
+      szBuffer[ReplaceIndex] := ReplaceChar;
+
+    // Strip filename from path.
+    v := strlen(szBuffer) - 1;
+    while (v >= 0) do
+    begin
+      if (szBuffer[v] = '\') then
+      begin
+        ReplaceIndex := v;
+        Break;
+      end;
+
+      Dec(v);
+    end;
+
+    if (v = -1) then
+      ReplaceIndex := 0;
+
+    // Modify buffer again.
+    ReplaceChar := szBuffer[ReplaceIndex];
+    szBuffer[ReplaceIndex] := #0;
+    DbgPrintf('  New:"$CurRoot\%s"', [szBuffer]);
+
+    mbstowcs(@(wszObjectName[0]), szBuffer, 160);
+    JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
+
+    Result := JwaNative.NtCreateFile(
+        FileHandle, DesiredAccess, @NtObjAttr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+        JwaWinType.PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
+    );
+  end;
+
   if FAILED(Result) then
     DbgPrintf('EmuKrnl : NtCreateFile Failed! (0x%.08X)', [Result])
   else
-    DbgPrintf('EmuKrnl : NtCreateFile := 0x%.08X', [FileHandle^]);
+    DbgPrintf('EmuKrnl : NtCreateFile = 0x%.08X', [FileHandle^]);
 
   // restore original buffer
   if (ReplaceIndex <> -1) then
@@ -469,7 +525,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCreateIoCompletion(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
+function xboxkrnl_NtCreateIoCompletion(
+  FileHandle: dtU32;
+  DesiredAccess: dtACCESS_MASK;
+  pObjectAttributes: dtObjectAttributes;
+  pszUnknownArgs: dtBLOB
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateIoCompletion');
@@ -488,10 +549,41 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCreateSemaphore(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
+function xboxkrnl_NtCreateSemaphore(
+  SemaphoreHandle: PHANDLE;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  InitialCount: ULONG;
+  MaximumCount: ULONG
+  ): NTSTATUS; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtCreateSemaphore');
+
+  DbgPrintf('EmuKrnl : NtCreateSemaphore' +
+     #13#10'(' +
+     #13#10'   SemaphoreHandle     : 0x%.08X' +
+     #13#10'   ObjectAttributes    : 0x%.08X' +
+     #13#10'   InitialCount        : 0x%.08X' +
+     #13#10'   MaximumCount        : 0x%.08X' +
+     #13#10');',
+     [SemaphoreHandle, ObjectAttributes,
+     InitialCount, MaximumCount]);
+
+  // redirect to Win2k/XP
+  Result := JwaNative.NtCreateSemaphore
+  (
+      SemaphoreHandle,
+      SEMAPHORE_ALL_ACCESS,
+      JwaWinType.POBJECT_ATTRIBUTES(ObjectAttributes),
+      InitialCount,
+      MaximumCount
+  );
+
+  if (FAILED(Result)) then
+    EmuWarning('NtCreateSemaphore failed!');
+
+  DbgPrintf('EmuKrnl : NtCreateSemaphore SemaphoreHandle = 0x%.08X', [SemaphoreHandle^]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -615,10 +707,40 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueueApcThread(): NTSTATUS; stdcall;
+function xboxkrnl_NtQueueApcThread(
+  ThreadHandle: HANDLE;
+  ApcRoutine: PIO_APC_ROUTINE;
+  ApcRoutineContext: PVOID;
+  ApcStatusBlock: PIO_STATUS_BLOCK;
+  ApcReserved: ULONG
+  ): NTSTATUS; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueueApcThread');
+
+  DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
+     #13#10'(' +
+     #13#10'   ThreadHandle         : 0x%.08X' +
+     #13#10'   ApcRoutine           : 0x%.08X' +
+     #13#10'   ApcRoutineContext    : 0x%.08X' +
+     #13#10'   ApcStatusBlock       : 0x%.08X' +
+     #13#10'   ApcReserved          : 0x%.08X' +
+     #13#10');',
+     [ThreadHandle, Addr(ApcRoutine), ApcRoutineContext,
+      ApcStatusBlock, ApcReserved]);
+
+  // Cxbx TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
+  //     done, let me know!
+  Result := JwaNative.NtQueueApcThread(
+    ThreadHandle,
+    PKNORMAL_ROUTINE(ApcRoutine),
+    ApcRoutineContext,
+    PIO_STATUS_BLOCK(ApcStatusBlock),
+    Pointer(ApcReserved));
+
+  if (FAILED(Result)) then
+    EmuWarning('NtQueueApcThread failed!');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -688,8 +810,9 @@ begin
      [FileHandle, IoStatusBlock, FileInformation,
       Length, Ord(FileInfo)]);
 
-  if (FileInfo <> FilePositionInformation) and (FileInfo <> FileNetworkOpenInformation) then
-    CxbxKrnlCleanup('Unknown FILE_INFORMATION_CLASS 0x%.08X', [Ord(FileInfo)]);
+// Cxbx commented this out :
+//  if (FileInfo <> FilePositionInformation) and (FileInfo <> FileNetworkOpenInformation) then
+//    CxbxKrnlCleanup('Unknown FILE_INFORMATION_CLASS 0x%.08X', [Ord(FileInfo)]);
 
   Result := JwaNative.NtQueryInformationFile(
     FileHandle,
@@ -761,10 +884,34 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryVirtualMemory(): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryVirtualMemory(
+  BaseAddress: PVOID;
+  Buffer: PMEMORY_BASIC_INFORMATION
+  ): NTSTATUS; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueryVirtualMemory');
+
+  DbgPrintf('EmuKrnl : NtQueryVirtualMemory' +
+     #13#10'(' +
+     #13#10'   BaseAddress         : 0x%.08X' +
+     #13#10'   Buffer              : 0x%.08X' +
+     #13#10');',
+     [BaseAddress, Buffer]);
+
+  Result := JwaNative.NtQueryVirtualMemory
+  (
+      GetCurrentProcess(),
+      BaseAddress,
+      {(NtDll::MEMORY_INFORMATION_CLASS)NtDll::}MemoryBasicInformation,
+      {(NtDll::PMEMORY_BASIC_INFORMATION)}Buffer,
+      SizeOf(MEMORY_BASIC_INFORMATION),
+      0
+  );
+
+  if (FAILED(Result)) then
+    EmuWarning('NtQueryVirtualMemory failed!');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -817,10 +964,28 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtReleaseSemaphore(): NTSTATUS; stdcall;
+function xboxkrnl_NtReleaseSemaphore(
+  SemaphoreHandle: HANDLE;
+  ReleaseCount: ULONG;
+  PreviousCount: PULONG
+  ): NTSTATUS; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtReleaseSemaphore');
+
+  DbgPrintf('EmuKrnl : NtReleaseSemaphore' +
+     #13#10'(' +
+     #13#10'   SemaphoreHandle      : 0x%.08X' +
+     #13#10'   ReleaseCount         : 0x%.08X' +
+     #13#10'   PreviousCount        : 0x%.08X' +
+     #13#10');',
+     [SemaphoreHandle, ReleaseCount, PreviousCount]);
+
+  Result := JwaNative.NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PLONG(PreviousCount));
+
+  if (FAILED(Result)) then
+    EmuWarning('NtReleaseSemaphore failed!');
+
   EmuSwapFS(fsXbox);
 end;
 

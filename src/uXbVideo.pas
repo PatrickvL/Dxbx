@@ -85,7 +85,7 @@ begin
 end;
 
 procedure XBVideo.Load(const szRegistryKey: PAnsiChar);
-// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
 var
   dwDisposition, dwType, dwSize: DWORD;
   hKey: Windows.HKEY;
@@ -117,7 +117,7 @@ begin
 end;
 
 procedure XBVideo.Save(const szRegistryKey: PAnsiChar);
-// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100   
 var
   dwDisposition, dwType, dwSize: DWORD;
   hKey: Windows.HKEY;

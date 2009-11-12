@@ -353,7 +353,7 @@ begin
             Continue;
 
           // Note : The following case is a symbol-comment instead of a function-comment :
-          // XBCtrlObject: Source=XBController.h Revision=martin#39 Translator=PatrickvL Done=100
+          // XBCtrlObject: Source=XBController.h  Revision=martin#39  Translator=PatrickvL  Done=100
           // .. but because the function-scanning below also handles the comment-line itself,
           // it's still picked up as a function; Not fully correct, but acceptable for now.
 
