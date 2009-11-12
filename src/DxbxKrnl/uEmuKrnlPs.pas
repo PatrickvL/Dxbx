@@ -136,7 +136,7 @@ begin
   begin
     pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
-    DbgPrintf('EmKrnl : Calling pfnNotificationRoutine (0x%.08x)', [Addr(pfnNotificationRoutine)]);
+    DbgPrintf('EmuKrnl : Calling pfnNotificationRoutine (0x%.08x)', [Addr(pfnNotificationRoutine)]);
 
     EmuSwapFS(fsXbox);
     pfnNotificationRoutine({Create=}True);

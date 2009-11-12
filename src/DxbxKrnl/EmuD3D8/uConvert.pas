@@ -253,7 +253,7 @@ function EmuXBFormatIsSwizzled(
   Format: X_D3DFORMAT;
   pBPP: PDWord
   ): LONGBOOL;
-// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
 begin
   Result := True;
   case Format of
@@ -298,7 +298,7 @@ end;
 
 // convert from xbox to pc color formats
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
-// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
 begin
   case aFormat of
     X_D3DFMT_L8: // Swizzled
@@ -402,7 +402,7 @@ end;
 
 // convert from pc to xbox color formats
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
-// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
 begin
   case aFormat of
     D3DFMT_YUY2:
@@ -442,7 +442,7 @@ end;
 
 // convert from xbox to pc d3d lock flags
 function EmuXB2PC_D3DLock(Flags: DWord): DWord; inline;
-// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
 var
   NewFlags: DWord;
 begin
@@ -478,7 +478,7 @@ else
 
 // convert from xbox to pc fill modes
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
-// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
 begin
   Result := D3DFILLMODE((Value and $F) + 1);
 end;
@@ -492,7 +492,7 @@ end;
 
 // convert from xbox to pc blend ops
 function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
-// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
 begin
   case Value of
     $8006:
@@ -509,7 +509,7 @@ end;
 
 // convert from xbox to pc blend types
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; inline;
-// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
 begin
   if (Value < 2) then
     Result := D3DBLEND(Value + 1)
@@ -524,14 +524,14 @@ end;
 
 // convert from xbox to pc comparison functions
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
-// Branch:martin  Revision:39 Done:100 Translator:PatrickvL
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
 begin
   Result := D3DCMPFUNC((Value and $F) + 1);
 end;
 
 // convert from xbox to pc texture transform state types
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
-// Branch:martin  Revision:39 Done:100 Translator:Shadow_Tj
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
 begin
   if (uint32(State) < 2) then
     Result := D3DTRANSFORMSTATETYPE(Ord(State) + 2)

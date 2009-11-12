@@ -211,29 +211,27 @@ begin
   if (szBuffer <> 0) then
   begin
     // trim this off
-    if (szBuffer[0] = '' and szBuffer[1] = '?' and szBuffer[2] = '?' and szBuffer[3] = '') then
-    begin
+    if (szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
       szBuffer := szBuffer + 4;
-    end;
 
     // D:\ should map to current directory
-    if ((szBuffer[0] = 'D' or szBuffer[0] = 'd') and szBuffer[1] = ':' and szBuffer[2] = '') then
+    if ((szBuffer[0] = 'D') or (szBuffer[0] = 'd')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       szBuffer := szBuffer + 3;
     end
-    else if ((szBuffer[0] = 'T' or szBuffer[0] = 't') and szBuffer[1] = ':' and szBuffer[2] = '') then
+    else if ((szBuffer[0] = 'T') or (szBuffer[0] = 't')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       szBuffer := szBuffer + 3;
 
       szRoot := g_strTDrive;
     end
-    else if ((szBuffer[0] = 'U' or szBuffer[0] = 'u') and szBuffer[1] = ':' and szBuffer[2] = '') then
+    else if ((szBuffer[0] = 'U') or (szBuffer[0] = 'u')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       szBuffer := szBuffer + 3;
 
       szRoot := g_strUDrive;
     end
-    else if ((szBuffer[0] = 'Z' or szBuffer[0] = 'z') and szBuffer[1] = ':' and szBuffer[2] = '') then
+    else if ((szBuffer[0] = 'Z') or (szBuffer[0] = 'z')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       szBuffer := szBuffer + 3;
 
@@ -374,7 +372,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{.$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -382,7 +380,7 @@ begin
     #13#10'   dwBytes             : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, dwBytes]);
-{$ENDIF}
+{.$ENDIF}
 
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
@@ -412,13 +410,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{.$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlDestroyHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
     #13#10');',
     [hHeap]);
-{$ENDIF}
+{.$ENDIF}
 
   Result := JwaNative.RtlDestroyHeap(hHeap);
 
@@ -435,7 +433,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{.$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -443,7 +441,7 @@ begin
     #13#10'   lpMem               : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, lpMem]);
-{$ENDIF}
+{.$ENDIF}
 
   if Assigned(lpMem) then
   begin
@@ -467,7 +465,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{.$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
     #13#10'('+
     #13#10'   hHeap               : 0x%.08X' +
@@ -476,7 +474,7 @@ begin
     #13#10'   dwBytes             : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, lpMem, dwBytes]);
-{$ENDIF}
+{.$ENDIF}
 
   if Assigned(lpMem) then
   begin
@@ -514,7 +512,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{.$IFDEF DXBX_EXTENSIVE_LOGGING}
   DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
@@ -522,7 +520,7 @@ begin
     #13#10'   lpMem               : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, lpMem]);
-{$ENDIF}
+{.$ENDIF}
 
   if Assigned(lpMem) then
   begin
@@ -647,9 +645,10 @@ function XTL_EmuXGetDeviceChanges(
   pdwRemovals: PDWORD
 ): BOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-var
-  bRet: BOOL;
-  bFirst: BOOL;
+{$WRITEABLECONST ON}
+const
+  bFirst: BOOL = True;
+{$WRITEABLECONST OFF}
 begin
   EmuSwapFS(fsWindows);
 
@@ -661,15 +660,15 @@ begin
     #13#10');',
     [DeviceType, pdwInsertions, pdwRemovals]);
 
-  bRet := False;
-  bFirst := True;
+  Result := False;
 
   // Return 1 Controller Inserted initially, then no changes forever
   if bFirst then
   begin
     pdwInsertions^ := (1 shl 0);
     pdwRemovals^ := 0;
-    bRet := True;
+    Result := True;
+    bFirst := False;
   end
   else
   begin
@@ -678,8 +677,6 @@ begin
   end;
 
   EmuSwapFS(fsXbox);
-
-  Result := bRet;
 end;
 
 
@@ -715,7 +712,7 @@ begin
       if (pPollingParameters <> nil) then
       begin
         (*pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();*)
-        memcpy(@pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
+        memcpy(pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
@@ -735,7 +732,7 @@ begin
           (*pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();*)
         end;
 
-        memcpy(@pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
+        memcpy(pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
@@ -1034,7 +1031,7 @@ begin
 
   Result := ret;
 end;
-                                              
+
 function XTL_EmuCreateMutex(
   lpMutexAttributes: LPSECURITY_ATTRIBUTES;
   bInitialOwner: BOOL;
@@ -1147,11 +1144,11 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuGetExitCodeThread' +
-    #13#10'(' +
-    #13#10'   hThread             : 0x%.08X' +
-    #13#10'   lpExitCode          : 0x%.08X' +
-    #13#10');',
-    [hThread, lpExitCode]);
+      #13#10'(' +
+      #13#10'   hThread             : 0x%.08X' +
+      #13#10'   lpExitCode          : 0x%.08X' +
+      #13#10');',
+      [hThread, lpExitCode]);
 
   Result := GetExitCodeThread(hThread, lpExitCode);
 
@@ -1192,11 +1189,11 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXapiThreadStartup' +
-    #13#10'(' +
-    #13#10'   StartRoutine        : 0x%.08X' +
-    #13#10'   StartContext        : 0x%.08X' +
-    #13#10')',
-    [Addr(StartRoutine), StartContext]);
+      #13#10'(' +
+      #13#10'   StartRoutine        : 0x%.08X' +
+      #13#10'   StartContext        : 0x%.08X' +
+      #13#10')',
+      [Addr(StartRoutine), StartContext]);
 
   EmuSwapFS(fsXbox);
 
@@ -1206,16 +1203,16 @@ begin
 end;
 
 (* Cxbx : Too High Level!
-XTL.NTSTATUS CDECL XTL.XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
+XTL.NTSTATUS CDECL XTL_XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
 begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : XapiSetupPerTitleDriveLetters' +
-         #13#10'(' +
-         #13#10'   dwTitleId           : 0x%.08X' +
-         #13#10'   wszTitleName        : 0x%.08X' +
-         #13#10');',
-          [dwTitleId, wszTitleName);
+      #13#10'(' +
+      #13#10'   dwTitleId           : 0x%.08X' +
+      #13#10'   wszTitleName        : 0x%.08X' +
+      #13#10');',
+      [dwTitleId, wszTitleName);
 
   NTSTATUS ret := STATUS_SUCCESS;
 
@@ -1231,12 +1228,12 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXapiBootDash' +
-    #13#10'(' +
-    #13#10'   UnknownA            : 0x%.08X' +
-    #13#10'   UnknownB            : 0x%.08X' +
-    #13#10'   UnknownC            : 0x%.08X' +
-    #13#10');',
-    [UnknownA, UnknownB, UnknownC]);
+      #13#10'(' +
+      #13#10'   UnknownA            : 0x%.08X' +
+      #13#10'   UnknownB            : 0x%.08X' +
+      #13#10'   UnknownC            : 0x%.08X' +
+      #13#10');',
+      [UnknownA, UnknownB, UnknownC]);
 
   CxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
 
@@ -1252,11 +1249,11 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine' +
-    #13#10'(' +
-    #13#10'   pThreadNotification : 0x%.08X ($%.08X)' +
-    #13#10'   fRegister           : 0x%.08X' +
-    #13#10');',
-    [pThreadNotification, Addr(pThreadNotification.pfnNotifyRoutine), Integer(fRegister)]);
+      #13#10'(' +
+      #13#10'   pThreadNotification : 0x%.08X ($%.08X)' +
+      #13#10'   fRegister           : 0x%.08X' +
+      #13#10');',
+      [pThreadNotification, Addr(pThreadNotification.pfnNotifyRoutine), Integer(fRegister)]);
 
   if fRegister then
   begin
@@ -1276,6 +1273,240 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+type
+  LPFIBER_START_ROUTINE = Pointer; // Dxbx TODO : declare this better!
+   
+function XTL_EmuCreateFiber(
+  dwStackSize: DWORD;
+  lpStartRoutine: LPFIBER_START_ROUTINE;
+  lpParameter: LPVOID          
+): LPVOID; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuCreateFiber' +
+      #13#10'(' +
+      #13#10'   dwStackSize         : 0x%.08X' +
+      #13#10'   lpStartRoutine      : 0x%.08X' +
+      #13#10'   lpParameter         : 0x%.08X' +
+      #13#10');',
+      [dwStackSize, lpStartRoutine, lpParameter]);
+
+  Result := CreateFiber(dwStackSize, lpStartRoutine, lpParameter);
+  if (Result = nil) then
+    EmuWarning('CreateFiber failed!');
+
+  EmuSwapFS(fsXbox);
+end;
+
+procedure XTL_EmuDeleteFiber(
+  lpFiber: LPVOID
+  ); stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuDeleteFiber' +
+      #13#10'(' +
+      #13#10'  lpFiber            : 0x%.08X' +
+      #13#10');',
+      [lpFiber]);
+
+  DeleteFiber(lpFiber);
+
+  EmuSwapFS(fsXbox);
+end;
+
+(*
+LPVOID WINAPI XTL_EmuXLoadSectionA
+(
+  LPCSTR          pSectionName
+)
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuXLoadSectionA' +
+      #13#10'(' +
+      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10');',
+      [pSectionName]);
+
+  // Search this .xbe for the section it wants to load.
+  // If we find it, return the address of it.
+//  LPVOID pRet = NULL;
+
+  // Get the .xbe header
+  /*Xbe::Header* pXbeHeader = (Xbe::Header* ) 0x00010000;
+
+  // Get the number of sections this .xbe has and the
+  // location of the section headers.
+  DWORD dwNumSections = pXbeHeader->dwSections;
+  DWORD dwSectionAddr = pXbeHeader->dwSectionHeadersAddr - pXbeHeader->dwBaseAddr;
+
+  // Get section headers.
+  Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader* ) CxbxMalloc( sizeof( Xbe::SectionHeader ) * dwNumSections );
+
+  DWORD dwOffset = dwSectionAddr;
+
+  for( DWORD i = 0; i < dwNumSections; i++ )
+  begin
+    memcpy( &pSectionHeaders[i], ((DWORD* ) dwOffset), sizeof( Xbe::SectionHeader ) );
+    dwOffset += sizeof( Xbe::SectionHeader );
+  end;
+
+  // Find a match to the section name
+  DWORD dwSection = -1;
+
+  for( DWORD i = 0; i < dwNumSections; i++ )
+  begin
+    char szSectionName[32];
+    dwOffset = pSectionHeaders[i].dwSectionNameAddr - pXbeHeader->dwBaseAddr;
+    sprintf( szSectionName, '%s', ((DWORD* ) dwOffset) );
+
+    // Do we have a match?
+    if( !strcmp( szSectionName, pSectionName ) )
+    begin
+      dwSection = i;
+      break;
+    end;
+  end;
+
+  // If we have a match, get the raw address of this section
+  // and return a pointer to that address.
+  if( dwSection != -1 )
+  begin
+    pRet = (LPVOID) pSectionHeaders[dwSection].dwRawAddr;
+  end;
+
+  // Free up the memory
+  CxbxFree( pSectionHeaders );*/
+
+  LPVOID pRet = NULL;
+  /*int Section = -1;
+
+  DbgPrintf('Sections: %d', [g_NumSections]);
+  DbgPrintf('Section List 0x%.08X', [g_pSectionList]);
+
+  if( g_pSectionList )
+  begin
+    for( int i = 0; i < (int) g_NumSections; i++ )
+    begin
+      if( !strcmp( g_pSectionList[i].szSectionName, pSectionName ) )
+      begin
+        Section = i;
+        break;
+      end;
+    end;
+
+    for( int i = 0; i < g_NumSections; i++ )
+      DbgPrintf('Section #%d: %s', [i, g_pSectionList[i].szSectionName]);
+
+    if( Section != -1 )
+    begin
+      pRet = ((LPVOID) g_pSectionList[Section].dwSectionAddr);
+    end;
+
+    __asm int 3;
+  end;
+  else
+  begin
+    EmuWarning( 'Section List not initialized!' );
+    __asm int 3;
+  end;*/
+
+  EmuSwapFS(fsXbox);
+
+  return pRet;
+end;
+*)
+
+function XTL_EmuXFreeSectionA(
+  pSectionName: LPCSTR
+  ): BOOL; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuXFreeSectionA' +
+      #13#10'(' +
+      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10');',
+      [pSectionName]);
+
+  // TODO: Implement (if necessary)?
+//  CxbxKrnlCleanup( 'XFreeSectionA is not implemented' );
+
+  EmuSwapFS(fsXbox);
+
+  Result := TRUE;
+end;
+
+function XTL_EmuXGetSectionHandleA(
+  pSectionName: LPCSTR
+  ): HANDLE; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuXGetSectionHandleA' +
+      #13#10'(' +
+      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10');',
+      [pSectionName]);
+
+  // TODO: Implement (if necessary)?
+//  CxbxKrnlCleanup( 'XGetSectionHandleA is not implemented' );
+
+  EmuSwapFS(fsXbox);
+
+  Result := 0;
+end;
+
+function XTL_EmuXLoadSectionByHandle(
+  hSection: HANDLE
+  ): LPVOID; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuXLoadSectionByHandle' +
+      #13#10'(' +
+      #13#10'   hSection           : 0x%.80X' +
+      #13#10');',
+      [hSection]);
+
+  // TODO: Implement (if necessary)?
+//  CxbxKrnlCleanup( 'XLoadSectionByHandle is not implemented' );
+
+  EmuSwapFS(fsXbox);
+
+  Result := NULL;
+end;
+
+function XTL_EmuXFreeSectionByHandle(
+  hSection: HANDLE
+  ): BOOL; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuXFreeSectionByHandle' +
+      #13#10'(' +
+      #13#10'   hSection           : 0x%.80X' +
+      #13#10');',
+      [hSection]);
+
+  // Cxbx TODO: Implement (if necessary)?
+//  CxbxKrnlCleanup( 'XLoadSectionByHandle is not implemented' );
+
+  EmuSwapFS(fsXbox);
+
+  Result := False;
+end;
+
+
 (*//  MARKED BY Cxbx : not necessary?
 function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -1286,7 +1517,7 @@ begin
       #13#10'(' +
       #13#10'   dwFlags             : 0x%.08X' +
       #13#10');',
-            [dwFlags]);
+      [dwFlags]);
 
   EmuSwapFS(fsXbox);
 
@@ -1352,12 +1583,19 @@ end;
 *)
 
 exports
+  // XTL_EmuFindFirstFileA,
+  // XTL_EmuFindNextFileA,
+  // XTL_EmuXCalculateSignatureBegin,
+  // XTL_EmuXCalculateSignatureBeginEx,
+  // XTL_EmuXCalculateSignatureEnd,
+  // XTL_EmuXCalculateSignatureUpdate,
+  // XTL_EmuXInputGetCapabilities
+  // XTL_EmuXLoadSectionA
+  // XTL_XapiSetupPerTitleDriveLetters
   XTL_EmuCloseHandle,
+  XTL_EmuCreateFiber,
   XTL_EmuCreateMutex,
-(*
-  XTL_EmuFindFirstFileA
-  XTL_EmuFindNextFileA
-*)
+  XTL_EmuDeleteFiber,
   XTL_EmuGetExitCodeThread,
   XTL_EmuGetThreadPriority,
   XTL_EmuQueryPerformanceCounter,
@@ -1374,21 +1612,19 @@ exports
   XTL_EmuXapiBootDash,
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
-(*
-  XTL_EmuXCalculateSignatureBegin,
-  XTL_EmuXCalculateSignatureBeginEx,
-  XTL_EmuXCalculateSignatureEnd,
-  XTL_EmuXCalculateSignatureUpdate,
-*)
   XTL_EmuXFormatUtilityDrive,
+  XTL_EmuXFreeSectionA,
+  XTL_EmuXFreeSectionByHandle,
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetDevices,
+  XTL_EmuXGetSectionHandleA,
   XTL_EmuXInitDevices,
   XTL_EmuXInputClose,
   XTL_EmuXInputGetState,
   XTL_EmuXInputOpen,
   XTL_EmuXInputPoll,
   XTL_EmuXInputSetState,
+  XTL_EmuXLoadSectionByHandle,
   XTL_EmuXMountUtilityDrive,
   XTL_EmuXRegisterThreadNotifyRoutine
   ;

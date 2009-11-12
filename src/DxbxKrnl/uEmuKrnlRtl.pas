@@ -515,7 +515,17 @@ function xboxkrnl_RtlEqualString(
 // Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuKrnl : RtlEqualString' +
+      #13#10'(' +
+      #13#10'  String1            : 0x%.08X' +
+      #13#10'  String2            : 0x%.08X' +
+      #13#10'  CaseInsensitive    : 0x%.08X' +
+      #13#10');',
+      [String1, String2, CaseInsensitive]);
+
   Result := JwaNative.RtlEqualString(String1, String2, CaseInsensitive);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -630,11 +640,11 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : RtlInitAnsiString' +
-         #13#10'(' +
-         #13#10'   DestinationString   : 0x%.08X' +
-         #13#10'   SourceString        : 0x%.08X' +
-         #13#10');',
-         [DestinationString, SourceString]);
+      #13#10'(' +
+      #13#10'   DestinationString   : 0x%.08X' +
+      #13#10'   SourceString        : 0x%.08X' + // Dxbx TODO : Why doesn't DxbxFormat detect a string here?  
+      #13#10');',
+      [DestinationString, SourceString]);
 
   JwaNative.RtlInitAnsiString(DestinationString, SourceString);
 

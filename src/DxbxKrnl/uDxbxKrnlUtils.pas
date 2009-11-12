@@ -76,7 +76,7 @@ begin
   begin
     szBuffer1 := {Format} 'CxbxKrnlCleanup : Received Fatal Message ->'#13#13 + szErrorMessage;
     DbgPrintf(szBuffer1);
-    MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONEXCLAMATION);
+    MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONSTOP);
   end;
 
   DbgPrintf('DxbxKrnl: Terminating Process');

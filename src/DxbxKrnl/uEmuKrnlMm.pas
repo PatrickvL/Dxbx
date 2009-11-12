@@ -23,6 +23,7 @@ interface
 
 uses
   // Delphi
+  Windows,
   SysUtils,
   // Jedi
   JwaWinType,
@@ -58,8 +59,14 @@ function xboxkrnl_MmAllocateSystemMemory(
   Protect: ULONG
   ): PVOID; stdcall;
 function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_MmCreateKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_MmDeleteKernelStack(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmCreateKernelStack(
+  NumberOfBytes: ULONG;
+  Unknown: ULONG
+  ): PVOID; stdcall;
+procedure xboxkrnl_MmDeleteKernelStack(
+  EndAddress: PVOID;
+  BaseAddress: PVOID
+  ); stdcall;
 function xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
   ): NTSTATUS; stdcall;
@@ -236,17 +243,55 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmCreateKernelStack(): NTSTATUS; stdcall;
+// Differences from NT: Custom stack size.
+function xboxkrnl_MmCreateKernelStack(
+  NumberOfBytes: ULONG;
+  Unknown: ULONG
+  ): PVOID; stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmCreateKernelStack');
+
+  DbgPrintf('EmuKrnl : MmCreateKernelStack' +
+      #13#10'(' +
+      #13#10'   NumberOfBytes            : 0x%.08X' +
+      #13#10'   Unknown                  : 0x%.08X' +
+      #13#10');',
+      [NumberOfBytes, Unknown]);
+
+  if (Unknown <> 0) then
+    EmuWarning('MmCreateKernelStack unknown parameter ignored');
+
+  Result := NULL;
+  if (FAILED(JwaNative.NtAllocateVirtualMemory(GetCurrentProcess(), @Result, 0, @NumberOfBytes, MEM_COMMIT, PAGE_READWRITE))) then
+    EmuWarning('MmCreateKernelStack failed!')
+  else
+    Result := PVOID(ULONG(Result) + NumberOfBytes);
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmDeleteKernelStack(): NTSTATUS; stdcall;
+procedure xboxkrnl_MmDeleteKernelStack(
+  EndAddress: PVOID;
+  BaseAddress: PVOID
+  ); stdcall;
+// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+var
+  RegionSize: ULONG;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmDeleteKernelStack');
+
+  DbgPrintf('EmuKrnl : MmDeleteKernelStack' +
+      #13#10'(' +
+      #13#10'   EndAddress               : 0x%.08X' +
+      #13#10'   BaseAddress              : 0x%.08X' +
+      #13#10');',
+      [EndAddress, BaseAddress]);
+
+  RegionSize := 0;
+  if (FAILED(JwaNative.NtFreeVirtualMemory(GetCurrentProcess(), @BaseAddress, @RegionSize, MEM_RELEASE))) then
+    EmuWarning('MmDeleteKernelStack failed!');
+
   EmuSwapFS(fsXbox);
 end;
 

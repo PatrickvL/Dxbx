@@ -509,11 +509,20 @@ end;
 procedure WriteLog(const aText: string);
 
   function _Text: string;
+  var
+    i: Integer;
   begin
-    // Prefix the text with the CurrentThreadID :
-    Result := '[0x' + IntToHex(GetCurrentThreadID(), 4) + '] '
-    // and fix up any c-style newlines :
-            + StringReplace(aText, '\n', #13#10, [rfReplaceAll]);
+    i := Pos(':', aText);
+    if (i < 15) and (Copy(aText, 1, 3) = 'Emu') then
+      // Prefix the text with the CurrentThreadID :
+      Result := Copy(aText, 1, i - 1)
+              + '(0x' + IntToHex(GetCurrentThreadID(), 1) + ')'
+              + Copy(aText, i, MaxInt)
+    else
+      Result := aText;
+
+    // Fix up any c-style newlines :
+    Result := StringReplace(Result, '\n', #13#10, [rfReplaceAll]);
   end;
 
 var
