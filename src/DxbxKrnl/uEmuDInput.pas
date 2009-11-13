@@ -36,6 +36,7 @@ uses
 
 function XTL_EmuDInputInit: bool; stdcall; // forward
 procedure XTL_EmuDInputCleanup; stdcall; // forward
+procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall; // forward
 
 implementation
 

@@ -593,6 +593,12 @@ begin
   Result := Result + '.txt';
 end;
 
+function BetterTime(x_timeDate: uint32): string;
+begin
+  Result := '';
+  DateTimeToString(Result, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(x_timeDate));
+end;
+
 //------------------------------------------------------------------------------
 
 function TXbe.DumpInformation(FileName: string): Boolean;
@@ -659,9 +665,7 @@ begin
   _LogEx(DxbxFormat('Size of Headers                  : 0x%.8x', [m_Header.dwSizeofHeaders]));
   _LogEx(DxbxFormat('Size of Image                    : 0x%.8x', [m_Header.dwSizeofImage]));
   _LogEx(DxbxFormat('Size of Image Header             : 0x%.8x', [m_Header.dwSizeofImageHeader]));
-  TmpStr := '';
-  DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwTimeDate));
-  _LogEx(DxbxFormat('TimeDate Stamp                   : 0x%.8x', [m_Header.dwTimeDate]) + ' (' + TmpStr + ')');
+  _LogEx(DxbxFormat('TimeDate Stamp                   : 0x%.8x (%s)', [m_Header.dwTimeDate, BetterTime(m_Header.dwTimeDate)]));
   _LogEx(DxbxFormat('Certificate Address              : 0x%.8x', [m_Header.dwCertificateAddr]));
   _LogEx(DxbxFormat('Number of Sections               : 0x%.8x', [m_Header.dwSections]));
   _LogEx(DxbxFormat('Section Headers Address          : 0x%.8x', [m_header.dwSectionHeadersAddr]));
@@ -708,10 +712,7 @@ begin
   _LogEx(DxbxFormat('(PE) Base Address                : 0x%.8x', [m_Header.dwPeBaseAddr]));
   _LogEx(DxbxFormat('(PE) Size of Image               : 0x%.8x', [m_Header.dwPeSizeofImage]));
   _LogEx(DxbxFormat('(PE) Checksum                    : 0x%.8x', [m_Header.dwPeChecksum]));
-
-  TmpStr := '';
-  DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Header.dwPeTimeDate));
-  _LogEx(DxbxFormat('(PE) TimeDate Stamp              : 0x%.8x (%s)', [m_Header.dwPeTimeDate, TmpStr]));
+  _LogEx(DxbxFormat('(PE) TimeDate Stamp              : 0x%.8x (%s)', [m_Header.dwPeTimeDate, BetterTime(m_Header.dwPeTimeDate)]));
 
   lIndex := GetAddr(m_Header.dwDebugPathNameAddr);
   TmpStr := '';
@@ -754,9 +755,7 @@ begin
   _LogEx('');
 
   _LogEx(DxbxFormat('Size of Certificate              : 0x%.8x', [m_Certificate.dwSize]));
-  TmpStr := '';
-  DateTimeToString(TmpStr, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(m_Certificate.dwTimeDate));
-  _LogEx(DxbxFormat('TimeDate Stamp                   : 0x%.8x (%s)', [m_Certificate.dwTimeDate, TmpStr]));
+  _LogEx(DxbxFormat('TimeDate Stamp                   : 0x%.8x (%s)', [m_Certificate.dwTimeDate, BetterTime(m_Certificate.dwTimeDate)]));
   _LogEx(DxbxFormat('Title ID                         : 0x%.8x', [m_Certificate.dwTitleId]));
   _LogEx(DxbxFormat('Title                            : "%s"', [m_szAsciiTitle]));
 

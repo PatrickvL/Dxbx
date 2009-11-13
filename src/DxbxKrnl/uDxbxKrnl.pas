@@ -389,8 +389,8 @@ procedure CxbxKrnlResume();
 var
   v: Integer;
   dwExitCode: DWORD;
-  szBuffer: array [0..256-1] of Char;
-  hWnd: Handle;
+//  szBuffer: array [0..256-1] of Char;
+//  hWnd: Handle;
 begin
   if (not g_bEmuSuspended) then
     Exit;

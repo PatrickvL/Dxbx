@@ -344,7 +344,7 @@ end; // EmuEnumDisplayDevices
 
 // window message processing thread
 function EmuRenderWindow(lpVoid: Pointer): DWord; // no stdcall !
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:95
+// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:95
 const
   IDI_CXBX=101;
   DXBX_RENDER_CLASS = 'DxbxRender';
@@ -766,7 +766,7 @@ end;
 
 // thread dedicated to create devices
 function EmuCreateDeviceProxy(LPVOID: Pointer): DWord; // no stdcall !
-// Branch:martin  Revision:42  Translator:Shadow_Tj  Done:100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 type
   PArrayOfDWORD = ^TArrayOfDWORD;
   TArrayOfDWORD = array[0..(MaxInt shr 2) - 1] of DWORD;
@@ -1986,7 +1986,7 @@ end;
 function XTL_EmuIDirect3DDevice8_SetViewport(
   pViewport: PD3DVIEWPORT8
   ): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:100
 var
   dwWidth: DWORD;
   dwHeight: DWORD;
@@ -2293,7 +2293,7 @@ function XTL_EmuIDirect3DDevice8_CreateVertexShader(pDeclaration: DWORD;
   pFunction: DWORD;
   pHandle: DWORD;
   Usage: DWORD): HRESULT; stdcall;
-// Branch:shogun  Revision:2  Translator:Shadow_Tj  Done:2
+// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:2
 var
   hRet: HRESULT;
 (*  pD3DVertexShader: PX_D3DVertexShader;
@@ -2381,8 +2381,8 @@ begin
 
 
     //* Fallback to dummy shader.
-    if(FAILED(hRet))
-    {
+    if(FAILED(hRet)) then
+    begin
         static const char dummy[] =
             "vs.1.1\n"
             "mov oPos, v0\n";
@@ -2397,11 +2397,11 @@ begin
         hRet = g_pD3DDevice8->CreateVertexShader
         (
             pRecompiledDeclaration,
-            (DWORD* )pRecompiledBuffer->GetBufferPointer(),
-            &Handle,
+            PDWORD(pRecompiledBuffer.GetBufferPointer()),
+            @Handle,
             g_dwVertexShaderUsage
         );
-    }
+    end;
     //*/
 
     // Save the status, to remove things later
@@ -2690,7 +2690,7 @@ type
 function XTL_EmuIDirect3DDevice8_SetPixelShader(
   Handle: DWORD
   ): HRESULT; stdcall;
-// Branch:shogun  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 {$WRITEABLECONST ON}
 const
   dwHandle: DWORD = 0;
@@ -2795,7 +2795,7 @@ function XTL_EmuIDirect3DDevice8_CreateTexture(
   Pool: D3DPOOL;
   ppTexture: PPX_D3DTexture
   ): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:95  
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:95  
 var
   PCFormat: D3DFORMAT;
   PCUsage: DWORD;
@@ -2888,7 +2888,7 @@ begin
       ppTexture^.EmuTexture8.UnlockRect(0);
     end;
 
-      DbgPrintf('EmuD3D8: Created Texture: 0x%.08X (0x%.08X)', [ppTexture^, ppTexture^.EmuTexture8]);
+    DbgPrintf('EmuD3D8: Created Texture: 0x%.08X (0x%.08X)', [ppTexture^, ppTexture^.EmuTexture8]);
   end
   else
   begin
@@ -3383,26 +3383,26 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice8_GetDisplayMode(pMode: PX_D3DDISPLAYMODE): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:50  
+function XTL_EmuIDirect3DDevice8_GetDisplayMode(
+  pMode: PX_D3DDISPLAYMODE
+  ): HRESULT; stdcall;
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
-  hRet: HRESULT;
-(*  pPCMode: PD3DDISPLAYMODE;*)
+  pPCMode: PD3DDISPLAYMODE;
 begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_GetDisplayMode' +
-    #13#10'(' +
-    #13#10'   pMode             : 0x%.08X' +
-    #13#10');',
-    [pMode]);
+      #13#10'(' +
+      #13#10'   pMode             : 0x%.08X' +
+      #13#10');',
+      [pMode]);
 
 
-    // make adjustments to parameters to make sense with windows d3d
+  // make adjustments to parameters to make sense with windows d3d
   begin
-
-    (*pPCMode := D3DDISPLAYMODE(@pMode);
-    hRet := g_pD3DDevice8.GetDisplayMode(pPCMode);
+    pPCMode := PD3DDISPLAYMODE(pMode);
+    Result := g_pD3DDevice8.GetDisplayMode(pPCMode^);
 
     // Convert Format (PC->Xbox)
     pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
@@ -3412,12 +3412,10 @@ begin
 
     // Cxbx TODO : Retrieve from current CreateDevice settings?
     pMode.Width := 640;
-    pMode.Height := 480; *)
+    pMode.Height := 480;
   end;
 
   EmuSwapFS(fsXbox);
-
-  Result := hRet;
 end;
 
 function XTL_EmuIDirect3DDevice8_Begin(PrimitiveType: X_D3DPRIMITIVETYPE): HRESULT; stdcall;
@@ -7627,7 +7625,7 @@ function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType(
   Windowed: BOOL;
   MultiSampleType: D3DMULTISAMPLE_TYPE
 ): HRESULT; stdcall;
-// Branch:martin  Revision:45  Translator:Shadow_Tj  Done:100  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100  
 var
   PCSurfaceFormat: D3DFORMAT;
 begin
@@ -7877,7 +7875,7 @@ end;
 function XTL_EmuIDirect3DDevice8_SetPixelShaderProgram(
   CONST pPSDef: PX_D3DPIXELSHADERDEF
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
   pHandle: Cardinal; // Cxbx has PDWORD;
 begin
@@ -7920,7 +7918,7 @@ function XTL_EmuIDirect3DDevice8_CreateStateBlock(
   Type_: D3DSTATEBLOCKTYPE;
   pToken: PDWORD
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -7948,7 +7946,7 @@ procedure XTL_EmuIDirect3DDevice8_InsertCallback(
   pCallback: X_D3DCALLBACK;
   Context: DWORD
 ); stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -7973,7 +7971,7 @@ function XTL_EmuIDirect3DDevice8_DrawRectPatch(
   CONST pNumSegs: PFLOAT;
   CONST pRectPatchInfo: PD3DRECTPATCH_INFO
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -7997,7 +7995,7 @@ end;
 function XTL_EmuIDirect3DDevice8_GetProjectionViewportMatrix(
   pProjectionViewport: PD3DMATRIX
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
   Out: D3DMATRIX;
   Viewport: D3DVIEWPORT8;
@@ -8036,7 +8034,7 @@ end;
 function XTL_EmuIDirect3DDevice8_BackFillMode(
   Value: DWORD 
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -8065,7 +8063,7 @@ end;
 // * func: EmuD3DDevice_KickOff (D3D::CDevice::KickOff)
 procedure XTL_EmuIDevice3D8_KickOff(
   ); stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -8080,7 +8078,7 @@ end;
 function XTL_EmuIDirect3DDevice8_GetTexture2(
   pTexture: PX_D3DResource
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:10 
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:10 
 begin
   EmuSwapFS(fsWindows);
 
@@ -8135,7 +8133,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_SetStateVB(
   Unknown1: ULONG
 ); stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -8153,7 +8151,7 @@ end;
 // * func: EmuD3DDevice_SetStateUP (D3D::CDevice::SetStateUP)
 procedure XTL_EmuIDirect3DDevice8_SetStateUP(
 ); stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -8168,7 +8166,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_SetStipple(
   pPattern: PDWORD
 ); stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

@@ -248,7 +248,7 @@ function xboxkrnl_MmCreateKernelStack(
   NumberOfBytes: ULONG;
   Unknown: ULONG
   ): PVOID; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -275,7 +275,7 @@ procedure xboxkrnl_MmDeleteKernelStack(
   EndAddress: PVOID;
   BaseAddress: PVOID
   ); stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
   RegionSize: ULONG;
 begin

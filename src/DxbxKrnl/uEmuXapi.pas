@@ -25,15 +25,18 @@ uses
   // Delphi
   Windows,
   // Jedi
-  JwaNative,
   JwaWinType,
+  JwaWinBase,
+  JwaNative,
   // Dxbx
   uTypes,
   SysUtils,
   uLog, // DbgPrintf
+  uXbe,
   uEmu,
   uEmuFS, // EmuSwapFS
   uEmuAlloc,
+  uEmuDInput,
   uXBController,
   uDxbxUtils,
   uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
@@ -70,9 +73,14 @@ type
   PRTL_HEAP_PARAMETERS = ^RTL_HEAP_PARAMETERS;
 
   _XINPUT_POLLING_PARAMETERS = packed record
-     fAutoPoll: BYTE;//       : 1;
-    fInterruptOut: BYTE;//    : 1;
-    ReservedMBZ1: BYTE;//    : 6;
+  private
+    _Flag: Byte;
+    function GetFlag(const aIndex: Integer): Byte;
+  public
+    property fAutoPoll: BYTE index $01 read GetFlag; // 1 bit at offset 0
+    property fInterruptOut: BYTE index $11 read GetFlag; // 1 bit at offset 1
+    property ReservedMBZ1: BYTE index $26 read GetFlag; // 6 bits at offset 2
+  public
     bInputInterval: BYTE;
     bOutputInterval: BYTE;
     ReservedMBZ2: BYTE;
@@ -111,12 +119,47 @@ type
   end;
   PXPP_DEVICE_TYPE = ^XPP_DEVICE_TYPE;
 
+  XINPUT_GAMEPAD = packed record
+    wButtons: WORD;
+    bAnalogButtons: array [0..8-1] of BYTE;
+    sThumbLX: SHORT;
+    sThumbLY: SHORT;
+    sThumbRX: SHORT;
+    sThumbRY: SHORT;
+  end;
+  PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
+
   XINPUT_RUMBLE = packed record
     wLeftMotorSpeed: Word;
     wRightMotorSpeed: Word;
   end;
   PXINPUT_RUMBLE = ^XINPUT_RUMBLE;
 
+  XINPUT_CAPABILITIES = packed record
+    SubType: BYTE;
+    Reserved: WORD;
+
+    In_: record
+      Gamepad: XINPUT_GAMEPAD;
+    end;
+
+    Out_: record
+      Rumble: XINPUT_RUMBLE;
+    end;
+  end;
+  PXINPUT_CAPABILITIES = ^XINPUT_CAPABILITIES;
+
+const
+  // Device SubTypes
+  XINPUT_DEVSUBTYPE_GC_GAMEPAD              = $01;
+  XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          = $02;
+  XINPUT_DEVSUBTYPE_GC_WHEEL                = $10;
+  XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         = $20;
+  XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK = $21;
+  XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         = $30;
+  XINPUT_DEVSUBTYPE_GC_SNOWBOARD            = $40;
+
+type
   XINPUT_FEEDBACK_HEADER = packed record
     dwStatus: DWord;
     hEvent: HANDLE; // OPTIONAL ;
@@ -138,6 +181,11 @@ var
   // XInputOpen handles
   g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of Handle;
 
+  // Xbe section list
+  SectionList: PSectionList;
+  // Number of sections
+  g_NumSections: int;
+
   XTL_EmuXapiProcessHeap: PPVOID;
 
   // Note : Cxbx log indicates 'g_pRtlCreateHeap' is indeed
@@ -148,6 +196,12 @@ implementation
 uses
   // Dxbx
   uEmuKrnlPs; // g_pfnThreadNotification
+
+function _XINPUT_POLLING_PARAMETERS.GetFlag(const aIndex: Integer): Byte;
+begin
+  Result := _Flag shr (aIndex shr 4);
+  Result := Result and (1 shl ((aIndex and $F) - 1) - 1);
+end;
 
 const
   HEAP_HEADERSIZE = $20;
@@ -316,6 +370,23 @@ begin
 end;
 *)
 
+function XTL_EmuGetTimeZoneInformation(
+  lpTimeZoneInformation: LPTIME_ZONE_INFORMATION
+  ): DWORD; stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuXapi : EmuGetTimeZoneInformation' +
+      #13#10'(' +
+      #13#10'   lpTimeZoneInformation : 0x%.08X' +
+      #13#10');',
+      [lpTimeZoneInformation]);
+
+  Result := GetTimeZoneInformation({var}lpTimeZoneInformation^);
+
+  EmuSwapFS(fsXBox);
+end;
+
 type
   RTL_HEAP_DEFINITION = packed record
     Length: ULONG;
@@ -388,7 +459,6 @@ begin
   Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
   if Assigned(Result) then
   begin
-
     offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
     if offs = 0 then
       offs := HEAP_HEADERSIZE;
@@ -405,8 +475,6 @@ end;
 function XTL_EmuRtlDestroyHeap(
   hHeap: Handle): Handle; stdcall;
 // Branch:None  Revision:39  Translator:PatrickvL  Done:100
-var
-  offs: Byte;
 begin
   EmuSwapFS(fsWindows);
 
@@ -480,7 +548,9 @@ begin
   begin
     offs := PByte(uint32(lpMem) - 1)^;
     lpMem := PVOID(uint32(lpMem) - offs);
-  end;
+  end
+  else
+    offs := 0;
 
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
@@ -488,13 +558,20 @@ begin
   Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
   if Assigned(Result) then
   begin
-    // Dxbx Note : This is a fixup on top of the translation (See XTL_EmuRtlAllocateHeap) :
-    offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
-    if offs = 0 then
-      offs := HEAP_HEADERSIZE;
+    // Dxbx note : Realloc from nil is different from non-nil :
+    if Assigned(lpMem) then
+      // Realloc from non-nil, implies we need to keep using the same offset :
+      Result := PVOID(uint32(Result) + offs)
+    else
+    begin
+      // Realloc from nil, implies we need to determine offset just like in a new EmuRtlAllocateHeap :
+      offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
+      if offs = 0 then
+        offs := HEAP_HEADERSIZE;
 
-    Result := PVOID(uint32(Result) + offs);
-    PByte(uint32(Result) - 1)^ := offs;
+      Result := PVOID(uint32(Result) + offs);
+      PByte(uint32(Result) - 1)^ := offs;
+    end;
   end;
 
   DbgPrintf('pRet : 0x%.08X', [Result]);
@@ -548,7 +625,7 @@ begin
     #13#10');',
     [lpPerformanceCount]);
 
-  Result := QueryPerformanceCounter({var}Int64(lpPerformanceCount^));
+  Result := QueryPerformanceCounter({var}lpPerformanceCount^);
 
     // debug - 4x speed
     //lpPerformanceCount.QuadPart *= 4;
@@ -569,7 +646,7 @@ begin
     #13#10');',
     [lpFrequency]);
 
-  Result := QueryPerformanceFrequency({var}Int64(lpFrequency^));
+  Result := QueryPerformanceFrequency({var}lpFrequency^);
 
   EmuSwapFS(fsXbox);
 end;
@@ -644,7 +721,7 @@ function XTL_EmuXGetDeviceChanges(
   pdwInsertions: PDWORD;
   pdwRemovals: PDWORD
 ): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
   bFirst: BOOL = True;
@@ -686,7 +763,7 @@ function XTL_EmuXInputOpen(
   dwSlot: DWord;
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
 ): Handle; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:70
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:75
 var
   pph: PPOLLING_PARAMETERS_HANDLE;
 begin
@@ -703,11 +780,11 @@ begin
 
   pph := nil;
 
-  if (dwPort >= 0) and (dwPort <= 3) then
+  if {not nessecary : (dwPort >= 0) and} (dwPort <= 3) then
   begin
     if (g_hInputHandle[dwPort] = 0) then
     begin
-      (*pph := POLLING_PARAMETERS_HANDLE();*)
+      (*pph := new POLLING_PARAMETERS_HANDLE();*)
 
       if (pPollingParameters <> nil) then
       begin
@@ -856,54 +933,53 @@ begin
   Result := ERROR_SUCCESS;
 end;
 
-(*
 function XTL_EmuXInputGetCapabilities(
-    hDevice: Handle;
-    {OUT} pCapabilities: PXINPUT_CAPABILITIES
-): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+  hDevice: Handle;
+  {OUT} pCapabilities: PXINPUT_CAPABILITIES
+  ): DWord; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  pph: PPOLLING_PARAMETERS_HANDLE;
+  dwPort: DWord;
 begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuXapi : EmuXInputGetCapabilities' +
-       #13#10'(' +
-       #13#10'   hDevice             : 0x%.08X' +
-       #13#10'   pCapabilities       : 0x%.08X' +
-       #13#10');',
-       [hDevice, pCapabilities]);
+      #13#10'(' +
+      #13#10'   hDevice             : 0x%.08X' +
+      #13#10'   pCapabilities       : 0x%.08X' +
+      #13#10');',
+      [hDevice, pCapabilities]);
 
-  DWord ret := ERROR_INVALID_HANDLE;
+  Result := ERROR_INVALID_HANDLE;
 
-  POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  pph := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
   if (pph <> nil) then
   begin
-    DWord dwPort := pph.dwPort;
+    dwPort := pph.dwPort;
 
-    if ((dwPort >= 0) and (dwPort <= 3)) then
+    if ({(dwPort >= 0) and} (dwPort <= 3)) then
     begin
       pCapabilities.SubType := XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 
-      ZeroMemory(@pCapabilities.In.Gamepad, SizeOf(pCapabilities.In.Gamepad));
+      ZeroMemory(@pCapabilities.In_.Gamepad, SizeOf(pCapabilities.In_.Gamepad));
 
-      ret := ERROR_SUCCESS;
+      Result := ERROR_SUCCESS;
     end;
   end;
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
-*)
 
 function XTL_EmuXInputGetState(
     hDevice: Handle;
     {OUT} pState: PXINPUT_STATE
 ): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
-  ret: DWord;
-//  pph: PPOLLING_PARAMETERS_HANDLE;
+  pph: PPOLLING_PARAMETERS_HANDLE;
+  dwPort: DWord;
 begin
   EmuSwapFS(fsWindows);
 
@@ -914,40 +990,37 @@ begin
        #13#10');',
        [hDevice, pState]);
 
-  ret := ERROR_INVALID_HANDLE;
-(*
+  Result := ERROR_INVALID_HANDLE;
+
   pph := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
   if (pph <> nil) then
   begin
-    if (pph.pPollingParameters <> 0) then
+    if (pph.pPollingParameters <> nil) then
     begin
-      if (pph.pPollingParameters.fAutoPoll = False) then
+      if (pph.pPollingParameters.fAutoPoll = Ord(False)) then
       begin
         //
         // Cxbx TODO: uh..
         //
 
-        EmuWarning('EmuXInputGetState : fAutoPoll := False');
+        EmuWarning('EmuXInputGetState : fAutoPoll = False');
       end;
     end;
 
-    DWord dwPort := pph.dwPort;
+    dwPort := pph.dwPort;
 
-    if ((dwPort >= 0) and (dwPort <= 3)) then
+    if ({(dwPort >= 0) and} (dwPort <= 3)) then
     begin
       if (dwPort = 0) then
       begin
-        EmuDInputPoll(pState);
-        ret := ERROR_SUCCESS;
+        XTL_EmuDInputPoll(pState);
+        Result := ERROR_SUCCESS;
       end;
     end;
   end;
-  *)
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 function XTL_EmuXInputSetState(
@@ -1281,7 +1354,7 @@ function XTL_EmuCreateFiber(
   lpStartRoutine: LPFIBER_START_ROUTINE;
   lpParameter: LPVOID          
 ): LPVOID; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1303,7 +1376,7 @@ end;
 procedure XTL_EmuDeleteFiber(
   lpFiber: LPVOID
   ); stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1323,7 +1396,7 @@ LPVOID WINAPI XTL_EmuXLoadSectionA
 (
   LPCSTR          pSectionName
 )
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:40
 begin
   EmuSwapFS(fsWindows);
 
@@ -1425,7 +1498,7 @@ end;
 function XTL_EmuXFreeSectionA(
   pSectionName: LPCSTR
   ): BOOL; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1446,7 +1519,7 @@ end;
 function XTL_EmuXGetSectionHandleA(
   pSectionName: LPCSTR
   ): HANDLE; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1467,7 +1540,7 @@ end;
 function XTL_EmuXLoadSectionByHandle(
   hSection: HANDLE
   ): LPVOID; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1488,7 +1561,7 @@ end;
 function XTL_EmuXFreeSectionByHandle(
   hSection: HANDLE
   ): BOOL; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1598,6 +1671,7 @@ exports
   XTL_EmuDeleteFiber,
   XTL_EmuGetExitCodeThread,
   XTL_EmuGetThreadPriority,
+  XTL_EmuGetTimeZoneInformation,
   XTL_EmuQueryPerformanceCounter,
   XTL_EmuQueryPerformanceFrequency,
   XTL_EmuRtlAllocateHeap,

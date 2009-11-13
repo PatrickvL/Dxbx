@@ -49,7 +49,7 @@ const
   X_D3DFMT_DXT1 = $0C; // Compressed
   X_D3DFMT_DXT2 = $0E; // Compressed
   X_D3DFMT_DXT3 = $0F; // Compressed
-  X_D3DFMT_LIN_A1R5G5B5 = $10;
+  X_D3DFMT_LIN_A1R5G5B5 = $10; // Linear?
   X_D3DFMT_LIN_R5G6B5 = $11; // Linear
   X_D3DFMT_LIN_A8R8G8B8 = $12; // Linear
   X_D3DFMT_LIN_L8 = $13; // Linear
@@ -58,17 +58,19 @@ const
   X_D3DFMT_A8L8 = $1A; // Swizzled
   X_D3DFMT_LIN_A4R4G4B4 = $1D; // Linear
   X_D3DFMT_LIN_X8R8G8B8 = $1E; // Linear
-  X_D3DFMT_YUY2 = $24;
-//  X_D3DFMT_YUV2 = $24 ??; // Swizzled
+  X_D3DFMT_YUY2 = $24; // Swizzled
+  X_D3DFMT_UYVY = $25; // Swizzled
   X_D3DFMT_L6V5U5 = $27; // Swizzled
   X_D3DFMT_V8U8 = $28; // Swizzled
-  X_D3DFMT_D24S8 = $2A;
+  X_D3DFMT_D24S8 = $2A; // Swizzled
   X_D3DFMT_F24S8 = $2B; // Swizzled
   X_D3DFMT_D16 = $2C; // Swizzled
   X_D3DFMT_LIN_D24S8 = $2E; // Linear
   X_D3DFMT_LIN_D16 = $30; // Linear
   X_D3DFMT_V16U16 = $33; // Swizzled
+  X_D3DFMT_A8B8G8R8 = $3A; // Swizzled
   X_D3DFMT_LIN_A8B8G8R8 = $3F; // Linear
+  X_D3DFMT_VERTEXDATA = $64; // ??
 
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
@@ -94,7 +96,7 @@ const
 const
   // lookup table for converting vertex count to primitive count
   EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of UINT = (
-  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+  // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
     (0, 0),
     (1, 0),
     (2, 0),
@@ -111,7 +113,7 @@ const
 const
   // conversion table for xbox->pc primitive types
   EmuPrimitiveTypeLookup: array [0..11] of D3DPRIMITIVETYPE = (
-  // Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+  // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
     D3DPRIMITIVETYPE(0),   // NULL                 = 0
     D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
     D3DPT_LINELIST,        // D3DPT_LINELIST       = 2,
@@ -129,7 +131,7 @@ const
 // render state conversion table
 const
   {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
-  // Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
+  // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
     // the correct lookup values;
@@ -253,24 +255,36 @@ function EmuXBFormatIsSwizzled(
   Format: X_D3DFORMAT;
   pBPP: PDWord
   ): LONGBOOL;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   Result := True;
   case Format of
-    $00,
-    $01,
-    $0B,
-    $19: // X_D3DFMT_A8
+    X_D3DFMT_L8,
+    X_D3DFMT_AL8,
+    X_D3DFMT_P8,
+    X_D3DFMT_A8:
       pBPP^ := 1;
-    $02,
-    $03,
-    $04,
-    $05,
-    $1A:
+
+    X_D3DFMT_A1R5G5B5,
+    X_D3DFMT_X1R5G5B5,
+    X_D3DFMT_A4R4G4B4,
+    X_D3DFMT_R5G6B5,
+    X_D3DFMT_A8L8,
+    X_D3DFMT_L6V5U5, // Added by Dxbx
+    X_D3DFMT_V8U8, // Added by Dxbx
+    X_D3DFMT_D16: // Added by Dxbx
       pBPP^ := 2;
-    $06,
-    $07:
+
+    X_D3DFMT_A8R8G8B8,
+    X_D3DFMT_X8R8G8B8,
+    X_D3DFMT_D24S8, // Added by Dxbx
+    X_D3DFMT_F24S8, // Added by Dxbx
+    X_D3DFMT_V16U16, // Added by Dxbx
+    X_D3DFMT_A8B8G8R8: // Added by Dxbx
       pBPP^ := 4;
+
+  // Dxbx TODO : Where do we put X_D3DFMT_YUY2 and X_D3DFMT_UYVY ?
+
   else
     Result := False;
   end;
@@ -278,6 +292,7 @@ end;
 
 // is this format linear?
 function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL;
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   case (Format) of
     X_D3DFMT_LIN_A1R5G5B5,
@@ -298,19 +313,19 @@ end;
 
 // convert from xbox to pc color formats
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   case aFormat of
     X_D3DFMT_L8: // Swizzled
       Result := D3DFMT_L8;
 
-    X_D3DFMT_AL8: // Swizzled    // NOTE: Hack: Alpha ignored, basically
-      begin
-        EmuWarning('X_D3DFMT_AL8.D3DFMT_L8');
-        Result := D3DFMT_L8;
-      end;
+    X_D3DFMT_AL8: // Swizzled    // Cxbx NOTE: HACK: Alpha ignored, basically
+    begin
+      EmuWarning('X_D3DFMT_AL8 -> D3DFMT_L8');
+      Result := D3DFMT_L8;
+    end;
 
-    X_D3DFMT_LIN_A1R5G5B5, // Linear    
+    X_D3DFMT_LIN_A1R5G5B5, // Linear
     X_D3DFMT_A1R5G5B5: // Swizzled
       Result := D3DFMT_A1R5G5B5;
 
@@ -318,39 +333,46 @@ begin
       Result := D3DFMT_X1R5G5B5;
 
     X_D3DFMT_A8L8: // Swizzled
-      begin
-        EmuWarning('X_D3DFMT_A8L8.D3DFMT_R5G6B5');
-        Result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
-      end;
+    begin
+      EmuWarning('X_D3DFMT_A8L8 -> D3DFMT_R5G6B5');
+      Result := D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
+    end;
 
     X_D3DFMT_A8: // Swizzled
       Result := D3DFMT_A8;
 
     X_D3DFMT_LIN_A4R4G4B4, // Linear
-      X_D3DFMT_A4R4G4B4: // Swizzled
+    X_D3DFMT_A4R4G4B4: // Swizzled
       Result := D3DFMT_A4R4G4B4;
 
     X_D3DFMT_LIN_R5G6B5, // Linear
-      X_D3DFMT_R5G6B5: // Swizzled
+    X_D3DFMT_R5G6B5: // Swizzled
       Result := D3DFMT_R5G6B5;
 
     X_D3DFMT_LIN_A8R8G8B8, // Linear
-      X_D3DFMT_A8R8G8B8: // Swizzled
+    X_D3DFMT_A8R8G8B8: // Swizzled
       Result := D3DFMT_A8R8G8B8;
 
     X_D3DFMT_LIN_R8B8: // Linear
-      begin
-        EmuWarning('X_D3DFMT_LIN_R8B8.D3DFMT_R5G6B5');
-        Result := D3DFMT_R5G6B5; // NOTE: HACK: Totally and utterly wrong :)
-      end;
+    begin
+      EmuWarning('X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5');
+      Result := D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
+    end;
+
+    X_D3DFMT_A8B8G8R8: // Swizzled
+    begin
+      EmuWarning('X_D3DFMT_A8B8G8R8 -> D3DFMT_A8R8G8B8');
+      Result := D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
+    end;
+
     X_D3DFMT_LIN_A8B8G8R8: // Linear
-      begin
-        EmuWarning('X_D3DFMT_LIN_A8B8G8R8.D3DFMT_A8R8G8B8');
-        Result := D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
-      end;
+    begin
+      EmuWarning('X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8');
+      Result := D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
+    end;
 
     X_D3DFMT_LIN_X8R8G8B8, // Linear
-      X_D3DFMT_X8R8G8B8: // Swizzled
+    X_D3DFMT_X8R8G8B8: // Swizzled
       Result := D3DFMT_X8R8G8B8;
 
     X_D3DFMT_P8: // Swizzled
@@ -365,21 +387,24 @@ begin
     X_D3DFMT_DXT3: // Compressed
       Result := D3DFMT_DXT3;
 
-    $24: // Swizzled   (X_D3DFMT_YUV2)
+    X_D3DFMT_YUY2: // Swizzled
       Result := D3DFMT_YUY2;
 
+    X_D3DFMT_UYVY: // Swizzled
+      Result := D3DFMT_UYVY;
+
     X_D3DFMT_LIN_D24S8, // Linear
-      X_D3DFMT_D24S8: // Swizzled
+    X_D3DFMT_D24S8: // Swizzled
       Result := D3DFMT_D24S8;
 
     X_D3DFMT_F24S8: // Swizzled
-      begin
-        EmuWarning('X_D3DFMT_F24S8.D3DFMT_D24S8');
-        Result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
-      end;
+    begin
+      EmuWarning('X_D3DFMT_F24S8 -> D3DFMT_D24S8');
+      Result := D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
+    end;
 
     X_D3DFMT_LIN_D16, // Linear
-      X_D3DFMT_D16: // Swizzled
+    X_D3DFMT_D16: // Swizzled
       Result := D3DFMT_D16;
 
     X_D3DFMT_L6V5U5: // Swizzled
@@ -391,7 +416,7 @@ begin
     X_D3DFMT_V16U16: // Swizzled
       Result := D3DFMT_V16U16;
 
-    $64:
+    X_D3DFMT_VERTEXDATA:
       Result := D3DFMT_VERTEXDATA;
 
   else
@@ -402,24 +427,26 @@ end;
 
 // convert from pc to xbox color formats
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   case aFormat of
     D3DFMT_YUY2:
       Result := X_D3DFMT_YUY2;
+    D3DFMT_UYVY:
+      Result := X_D3DFMT_UYVY;
     D3DFMT_R5G6B5:
       Result := X_D3DFMT_LIN_R5G6B5; // Linear
 //      Result := X_D3DFMT_R5G6B5; // Swizzled
     D3DFMT_D24S8:
-      Result := X_D3DFMT_D24S8;
+      Result := X_D3DFMT_D24S8; // Swizzled
     D3DFMT_DXT3:
-      Result := X_D3DFMT_DXT3;
+      Result := X_D3DFMT_DXT3; // Compressed
     D3DFMT_DXT2:
-      Result := X_D3DFMT_DXT2;
+      Result := X_D3DFMT_DXT2; // Compressed
     D3DFMT_DXT1:
-      Result := X_D3DFMT_DXT1;
-    D3DFMT_A1R5G5B5: // Linear
-      Result := X_D3DFMT_LIN_A1R5G5B5;
+      Result := X_D3DFMT_DXT1; // Compressed
+    D3DFMT_A1R5G5B5:
+      Result := X_D3DFMT_LIN_A1R5G5B5; // Linear
     D3DFMT_X8R8G8B8:
       Result := X_D3DFMT_LIN_X8R8G8B8; // Linear
 //      Result := X_D3DFMT_X8R8G8B8; // Swizzled
@@ -434,6 +461,18 @@ begin
         Result := X_D3DFMT_LIN_L8; // Linear
 //        Result := X_D3DFMT_L8; // Swizzled
 
+// Dxbx additions :
+    D3DFMT_L6V5U5:
+      Result := X_D3DFMT_L6V5U5; // Swizzled
+
+    D3DFMT_V8U8:
+      Result := X_D3DFMT_V8U8; // Swizzled
+
+    D3DFMT_V16U16:
+      Result := X_D3DFMT_V16U16; // Swizzled
+
+    D3DFMT_VERTEXDATA:
+      Result := X_D3DFMT_VERTEXDATA;
   else
     CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]);
     Result := X_D3DFORMAT(aFormat);
@@ -485,7 +524,7 @@ end;
 
 // convert from xbox to pc shade modes
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   Result := D3DSHADEMODE((Value and $3) + 1);
 end;
@@ -531,7 +570,7 @@ end;
 
 // convert from xbox to pc texture transform state types
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100 
+// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:100
 begin
   if (uint32(State) < 2) then
     Result := D3DTRANSFORMSTATETYPE(Ord(State) + 2)
