@@ -93,7 +93,8 @@ type
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
 type
-  _X_D3DPIXELSHADERDEF = packed record// <- blueshogun 10/1/07
+  _X_D3DPIXELSHADERDEF = packed record // <- blueshogun 10/1/07
+  // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
     PSAlphaInputs: array [0..8-1] of DWORD;  // Alpha inputs for each stage
     PSFinalCombinerInputsABCD: DWORD;        // Final combiner inputs
     PSFinalCombinerInputsEFG: DWORD;         // Final combiner inputs (continued)

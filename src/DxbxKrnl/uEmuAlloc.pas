@@ -244,7 +244,7 @@ begin
   Length := strlen(pFile) + 1;
   pBlock.pFile := PChar(malloc(Length));
   memcpy(pBlock.pFile, pFile, Length);
-  pBlock.pNext := 0;
+  pBlock.pNext := nil;
   pBlock.Line := Line;
   pBlock.cType := cType;
   PUInt32(GetMemStart(pBlock))^ := MEMORY_GUARD;

@@ -221,7 +221,7 @@ function XTL_EmuDirectSoundCreate(
     pguidDeviceId: Pointer;
     ppDirectSound: LPDIRECTSOUND8;
     pUnknown: IUNKNOWN): HRESULT; stdcall;
-// Branch:martin  Revision:80  Translator:Shadow_Tj  Done:90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
 {$WRITEABLECONST ON}
 const
   Initialized: Bool = False;
@@ -278,7 +278,7 @@ begin
 end;
 
 function XTL_EmuIDirectSound8_AddRef(pThis: LPDIRECTSOUND8): ULONG; stdcall;
-// Branch:martin  Revision:80  Translator:Shadow_Tj  Done:100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   uRet: ULONG;
 begin
@@ -300,7 +300,7 @@ begin
 
 function XTL_EmuIDirectSound8_Release(
     pThis: LPDIRECTSOUND8): ULONG; stdcall;
-// Branch:martin  Revision:80  Translator:Shadow_Tj  Done:100
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   uRet: ULONG;
 begin

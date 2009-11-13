@@ -64,7 +64,7 @@ implementation
 
 function {001} xboxkrnl_AvGetSavedDataAddress(
   ): PVOID; stdcall; // Source: OpenXDK
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

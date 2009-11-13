@@ -216,50 +216,50 @@ begin
 
                 if (BuildVersion = 3925) then
                 begin
-                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $25) - $19F + 72*4);  // TODO: Clean up (?)
+                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $25) - $19F + 72*4);  // TODO: Clean up (?)
                   patchOffset := 142*4 - 72*4; // TODO: Verify
                 end
                 else if (BuildVersion = 4134) then
                 begin
-                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $248 + 82*4);  // TODO: Verify
+                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $248 + 82*4);  // TODO: Verify
                   patchOffset := 142*4 - 82*4;
                 end
                 else if (BuildVersion = 4361) then
                 begin
-                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $200 + 82*4);
+                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $200 + 82*4);
                   patchOffset := 142*4 - 82*4;
                 end
                 else if (BuildVersion = 4432) then
                 begin
-                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $204 + 83*4);
+                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $204 + 83*4);
                   patchOffset := 143*4 - 83*4;
                 end
                 else if (BuildVersion = 4627) then
                 begin
-                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
                   patchOffset := 162*4 - 92*4;
                 end
                 else if (BuildVersion = 5558 or BuildVersion = 5849) then
                 begin
                   // WARNING: Not thoroughly tested (just seemed very correct right away)
-                  XTL.EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
                   patchOffset := 162*4 - 92*4;
                 end;
 
                 XRefDataBase[XREF_D3DDEVICE]                   := *(DWORD)((DWORD)pFunc + $03);
-                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 0*4;
-                XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 1*4;
-                XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 2*4;
-                XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL.EmuD3DDeferredRenderState + patchOffset + 3*4;
+                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 0*4;
+                XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 1*4;
+                XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 2*4;
+                XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 3*4;
 
                 for (Integer v:=0;v<44;v++)
-                  XTL.EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
+                  XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
-                DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL.EmuD3DDeferredRenderState);
+                DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL_EmuD3DDeferredRenderState);
               end
               else
               begin
-                XTL.EmuD3DDeferredRenderState := 0;
+                XTL_EmuD3DDeferredRenderState := 0;
                 EmuWarning('EmuD3DDeferredRenderState was not found!');
               end;
 
@@ -279,23 +279,23 @@ begin
                 if (pFunc <> 0) then
                 begin
                   if (BuildVersion = 3925) then  // 0x18F180
-                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
+                    XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
                   else if (BuildVersion = 4134) then
-                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
+                    XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
                   else
-                    XTL.EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
+                    XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
 
                   for (Integer s:=0;s<4;s++)
                   begin
                     for (Integer v:=0;v<32;v++)
-                      XTL.EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
+                      XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
                   end;
 
-                  DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState', XTL.EmuD3DDeferredTextureState);
+                  DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState', XTL_EmuD3DDeferredTextureState);
                 end
                 else
                 begin
-                  XTL.EmuD3DDeferredTextureState := 0;
+                  XTL_EmuD3DDeferredTextureState := nil;
                   CxbxKrnlCleanup('EmuD3DDeferredTextureState was not found!');
                 end;
               end;

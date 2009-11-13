@@ -644,7 +644,7 @@ begin
 end;
 
 function XBController.ConfigPoll(szStatus: PAnsiChar): LongBool;
-// Branch:martin  Revision:10  Translator:PatrickvL  Done:100
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   DeviceInstance: DIDEVICEINSTANCE;
   ObjectInstance: DIDEVICEOBJECTINSTANCE;

@@ -157,8 +157,8 @@ function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryVirtualMemory(
-  BaseAddress: PVOID;
-  Buffer: PMEMORY_BASIC_INFORMATION
+  pBaseAddress: PVOID;
+  pBuffer: PMEMORY_BASIC_INFORMATION
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryVolumeInformationFile(
   FileHandle: HANDLE;
@@ -343,7 +343,7 @@ function xboxkrnl_NtCreateFile(
   CreateDisposition: ULONG; // dtCreateDisposition;
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
   ReplaceChar: AnsiChar;
   ReplaceIndex: int;
@@ -356,19 +356,19 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : NtCreateFile' +
-           #13#10'(' +
-           #13#10'   FileHandle          : 0x%.08X' +
-           #13#10'   DesiredAccess       : 0x%.08X' +
-           #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-           #13#10'   IoStatusBlock       : 0x%.08X' +
-           #13#10'   AllocationSize      : 0x%.08X' +
-           #13#10'   FileAttributes      : 0x%.08X' +
-           #13#10'   ShareAccess         : 0x%.08X' +
-           #13#10'   CreateDisposition   : 0x%.08X' +
-           #13#10'   CreateOptions       : 0x%.08X' +
-           #13#10');',
-           [FileHandle, DesiredAccess, ObjectAttributes, string(ObjectAttributes.ObjectName.Buffer),
-           IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
+     #13#10'(' +
+     #13#10'   FileHandle          : 0x%.08X' +
+     #13#10'   DesiredAccess       : 0x%.08X' +
+     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+     #13#10'   IoStatusBlock       : 0x%.08X' +
+     #13#10'   AllocationSize      : 0x%.08X' +
+     #13#10'   FileAttributes      : 0x%.08X' +
+     #13#10'   ShareAccess         : 0x%.08X' +
+     #13#10'   CreateDisposition   : 0x%.08X' +
+     #13#10'   CreateOptions       : 0x%.08X' +
+     #13#10');',
+     [FileHandle, DesiredAccess, ObjectAttributes, string(ObjectAttributes.ObjectName.Buffer),
+     IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 
   ReplaceChar := #0;
   ReplaceIndex := -1;
@@ -555,7 +555,7 @@ function xboxkrnl_NtCreateSemaphore(
   InitialCount: ULONG;
   MaximumCount: ULONG
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -714,7 +714,7 @@ function xboxkrnl_NtQueueApcThread(
   ApcStatusBlock: PIO_STATUS_BLOCK;
   ApcReserved: ULONG
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -795,7 +795,7 @@ function xboxkrnl_NtQueryInformationFile(
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -885,28 +885,28 @@ begin
 end;
 
 function xboxkrnl_NtQueryVirtualMemory(
-  BaseAddress: PVOID;
-  Buffer: PMEMORY_BASIC_INFORMATION
+  pBaseAddress: PVOID;
+  pBuffer: PMEMORY_BASIC_INFORMATION
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : NtQueryVirtualMemory' +
      #13#10'(' +
-     #13#10'   BaseAddress         : 0x%.08X' +
-     #13#10'   Buffer              : 0x%.08X' +
+     #13#10'   pBaseAddress         : 0x%.08X' +
+     #13#10'   pBuffer              : 0x%.08X' +
      #13#10');',
-     [BaseAddress, Buffer]);
+     [pBaseAddress, pBuffer]);
 
   Result := JwaNative.NtQueryVirtualMemory
   (
       GetCurrentProcess(),
-      BaseAddress,
+      pBaseAddress,
       {(NtDll::MEMORY_INFORMATION_CLASS)NtDll::}MemoryBasicInformation,
-      {(NtDll::PMEMORY_BASIC_INFORMATION)}Buffer,
+      {(NtDll::PMEMORY_BASIC_INFORMATION)}pBuffer,
       SizeOf(MEMORY_BASIC_INFORMATION),
-      0
+      nil
   );
 
   if (FAILED(Result)) then
@@ -969,7 +969,7 @@ function xboxkrnl_NtReleaseSemaphore(
   ReleaseCount: ULONG;
   PreviousCount: PULONG
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
