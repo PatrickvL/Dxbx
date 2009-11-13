@@ -277,13 +277,14 @@ begin
 
     X_D3DFMT_A8R8G8B8,
     X_D3DFMT_X8R8G8B8,
+    X_D3DFMT_YUY2, // Added by Dxbx
     X_D3DFMT_D24S8, // Added by Dxbx
     X_D3DFMT_F24S8, // Added by Dxbx
     X_D3DFMT_V16U16, // Added by Dxbx
     X_D3DFMT_A8B8G8R8: // Added by Dxbx
       pBPP^ := 4;
 
-  // Dxbx TODO : Where do we put X_D3DFMT_YUY2 and X_D3DFMT_UYVY ?
+  // Dxbx TODO : Where do we put X_D3DFMT_UYVY ?
 
   else
     Result := False;
