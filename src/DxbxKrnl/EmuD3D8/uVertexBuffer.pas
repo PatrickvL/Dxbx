@@ -1435,7 +1435,7 @@ begin
             BOOL  bCubemap := pPixelContainer.Format and X_D3DFORMAT_CUBEMAP;
 
             // Interpret Width/Height/BPP
-            if(X_Format = $07 (* X_D3DFMT_X8R8G8B8 *)(* or X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */) then
+            if (X_Format = X_D3DFMT_X8R8G8B8) or (X_Format = X_D3DFMT_A8R8G8B8) then
             begin
                 bSwizzled := TRUE;
 
@@ -1447,9 +1447,9 @@ begin
                 dwPitch  := dwWidth*4;
                 dwBPP := 4;
              end
-            else if(X_Format = $05 (* X_D3DFMT_R5G6B5 *)(* then  or X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                 or X_Format = $1D (* X_D3DFMT_LIN_A4R4G4B4 *)(* or X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
-                 or X_Format = $28 (* X_D3DFMT_G8B8 *)(*)
+            else if (X_Format = X_D3DFMT_R5G6B5) or (X_Format = X_D3DFMT_A4R4G4B4)
+                 or (X_Format = X_D3DFMT_LIN_A4R4G4B4) or (X_Format = X_D3DFMT_A1R5G5B5)
+                 or (X_Format = $28 (* X_D3DFMT_G8B8 *)(*)
     begin
       bSwizzled := True;
 
@@ -1461,7 +1461,7 @@ begin
       dwPitch := dwWidth * 2;
       dwBPP := 2;
     end
-else if (X_Format = $00 (* X_D3DFMT_L8 *) (* or X_Format == 0x0B /* X_D3DFMT_P8 */ or X_Format == 0x01 /* X_D3DFMT_AL8 */ or X_Format == 0x1A /* X_D3DFMT_A8L8 */) then
+else if (X_Format = X_D3DFMT_L8) or (X_Format = X_D3DFMT_P8) or (X_Format = X_D3DFMT_AL8) or (X_Format = X_D3DFMT_A8L8) then
             begin
                 bSwizzled := TRUE;
 
@@ -1473,7 +1473,7 @@ else if (X_Format = $00 (* X_D3DFMT_L8 *) (* or X_Format == 0x0B /* X_D3DFMT_P8 
                 dwPitch  := dwWidth;
                 dwBPP := 1;
              end
-            else if(X_Format = $1E (* X_D3DFMT_LIN_X8R8G8B8 *)(* or X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ or X_Format == 0x2E /* D3DFMT_LIN_D24S8 */) then
+            else if (X_Format = X_D3DFMT_LIN_X8R8G8B8) or (X_Format = X_D3DFMT_LIN_A8R8G8B8) or (X_Format = X_D3DFMT_LIN_D24S8) then
             begin
                 // Linear 32 Bit
                 dwWidth  := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1481,7 +1481,7 @@ else if (X_Format = $00 (* X_D3DFMT_L8 *) (* or X_Format == 0x0B /* X_D3DFMT_P8 
                 dwPitch  := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP := 4;
              end
-            else if(X_Format = $11 { D3DFMT_LIN_R5G6B5 })then
+            else if(X_Format = X_D3DFMT_LIN_R5G6B5) then
   begin
                 // Linear 16 Bit
     dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1489,7 +1489,7 @@ else if (X_Format = $00 (* X_D3DFMT_L8 *) (* or X_Format == 0x0B /* X_D3DFMT_P8 
     dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
     dwBPP := 2;
   end
-else if (X_Format = $0C (* D3DFMT_DXT1 *) (* or X_Format == 0x0E /* D3DFMT_DXT2 */ or X_Format == 0x0F /* D3DFMT_DXT3 */) then
+else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT2) or (X_Format = X_D3DFMT_DXT3) then
             begin
                 bCompressed := TRUE;
 
@@ -1502,22 +1502,22 @@ else if (X_Format = $0C (* D3DFMT_DXT1 *) (* or X_Format == 0x0E /* D3DFMT_DXT2 
                 // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
                 dwCompressedSize := dwWidth*dwHeight;
 
-                if(X_Format = $0C) then     // D3DFMT_DXT1 : 64bits per block/per 16 texels
+                if(X_Format = X_D3DFMT_DXT1) then     // 64bits per block/per 16 texels
                     dwCompressedSize:= dwCompressedSize div 2;
 
                 dwBPP := 1;
              end
-            else if(X_Format = $24 { D3DFMT_YUY2 })then
-  begin
-                // Linear 32 Bit
-    dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
-    dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
-    dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
-  end
-else
-  begin
-    CxbxKrnlCleanup('$%.08 X is not a supported format!', X_Format);
-  end;
+            else if (X_Format = X_D3DFMT_YUY2) then
+            begin
+              // Linear 32 Bit
+              dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
+              dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
+              dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
+            end
+            else
+            begin
+              CxbxKrnlCleanup('$%.08 X is not a supported format!', X_Format);
+            end;
 
             // as we iterate through mipmap levels, we'll adjust the source resource offset
   DWORD dwCompressedOffset := 0;
