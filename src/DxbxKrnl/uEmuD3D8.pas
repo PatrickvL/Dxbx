@@ -37,6 +37,7 @@ uses
   Direct3D8,
   DirectDraw,
   // Dxbx
+  uResourceTracker,
   XboxKrnl,
   uConvert,
   uEmuD3D8Types,
@@ -2797,7 +2798,7 @@ function XTL_EmuIDirect3DDevice8_CreateTexture(
   Pool: D3DPOOL;
   ppTexture: PPX_D3DTexture
   ): HRESULT; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:95  
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
   PCFormat: D3DFORMAT;
   PCUsage: DWORD;
@@ -2885,7 +2886,7 @@ begin
       ppTexture^.Data := DWORD(LockedRect.pBits);
       ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
 
-// Dxbx TODO : Translate :      g_DataToTexture.insert(ppTexture^.Data, ppTexture^);
+      g_DataToTexture.insert(ppTexture^.Data, ppTexture^);
 
       ppTexture^.EmuTexture8.UnlockRect(0);
     end;
@@ -4245,6 +4246,8 @@ begin
         // create the happy little texture
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         begin
+
+          tmpIDirect3DSurface8 := pResource.EmuSurface8;
           hRet := g_pD3DDevice8.CreateImageSurface(dwWidth, dwHeight, Format, tmpIDirect3DSurface8);
           pResource.EmuSurface8 := tmpIDirect3DSurface8;
 

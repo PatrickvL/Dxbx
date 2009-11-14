@@ -122,6 +122,7 @@
 			<DCCReference Include="..\..\src\uEmuExe.pas"/>
 			<DCCReference Include="..\..\src\uProlog.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
