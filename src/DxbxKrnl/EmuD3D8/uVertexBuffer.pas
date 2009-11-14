@@ -230,22 +230,22 @@ procedure XTL_VertexPatcher.DumpCache;
 begin
   DbgPrintf('--- Dumping streams cache ---');
 
-    (*pNode := g_PatchedStreamsCache.getHead();
-    while Assigned (pNode) do
-    begin
-        CACHEDSTREAM *pCachedStream := CACHEDSTREAM (pNode.pResource);
-        if(pCachedStream) then
-        begin
-            // Cxbx TODO: Write nicer dump presentation
-            printf('Key: $%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: $%.08X',
-                   pNode.uiKey, pCachedStream.uiCacheHit, pCachedStream.bIsUP ? 'YES' : 'NO',
-                   pCachedStream.Stream.uiOrigStride, pCachedStream.Stream.uiNewStride,
-                   pCachedStream.uiCount, pCachedStream.uiCheckFrequency,
-                   pCachedStream.uiLength, pCachedStream.uiCRC32);
-         end;
+  (*pNode := g_PatchedStreamsCache.getHead();
+  while Assigned (pNode) do
+  begin
+      CACHEDSTREAM *pCachedStream := CACHEDSTREAM (pNode.pResource);
+      if(pCachedStream) then
+      begin
+          // Cxbx TODO: Write nicer dump presentation
+          printf('Key: $%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: $%.08X',
+                 pNode.uiKey, pCachedStream.uiCacheHit, pCachedStream.bIsUP ? 'YES' : 'NO',
+                 pCachedStream.Stream.uiOrigStride, pCachedStream.Stream.uiNewStride,
+                 pCachedStream.uiCount, pCachedStream.uiCheckFrequency,
+                 pCachedStream.uiLength, pCachedStream.uiCRC32);
+       end;
 
-        pNode := pNode.pNext;
-     end; *)
+      pNode := pNode.pNext;
+   end; *)
 
 end;
 

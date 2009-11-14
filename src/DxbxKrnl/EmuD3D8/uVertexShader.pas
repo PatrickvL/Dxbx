@@ -26,9 +26,11 @@ uses
   // Delphi
   Windows
   // Dxbx
-  , uEmuD3D8Types;
+  , uEmuD3D8Types
+  , uEmuAlloc;
 
 function XTL_IsValidCurrentShader: Boolean; stdcall; // forward
+procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
@@ -39,6 +41,20 @@ uses
   // Dxbx
   uEmuFS
   , uEmuD3D8;
+
+procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+(*var
+  i: DWord; *)
+begin
+(*  for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
+  begin
+    CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes);
+  end;
+  CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches);
+  pVertexShader.VertexDynamicPatch.pStreamPatches := nil;
+  pVertexShader.VertexDynamicPatch.NbrStreams := 0; *)
+end;
 
 // Checks for failed vertex shaders, and shaders that would need patching
 function XTL_IsValidCurrentShader: Boolean; stdcall;
@@ -90,7 +106,8 @@ begin
 end;
 
 exports
-  XTL_IsValidCurrentShader;
+  XTL_IsValidCurrentShader,
+  XTL_FreeVertexDynamicPatch;
 
 end.
 
