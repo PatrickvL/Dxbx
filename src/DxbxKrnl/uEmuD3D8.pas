@@ -3892,6 +3892,7 @@ var
   tmpIDirect3DIndexBuffer8: IDirect3DIndexBuffer8;
   tmpIDirect3DCubeTexture8: IDirect3DCubeTexture8;
   tmpIDirect3DTexture8: IDirect3DTexture8;
+  tmpIDirect3DSurface8: IDirect3DSurface8;
   stop: uint32;
   r: uint32;
   dwCompressedOffset : DWORD;
@@ -4244,7 +4245,8 @@ begin
         // create the happy little texture
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         begin
-          hRet := g_pD3DDevice8.CreateImageSurface(dwWidth, dwHeight, Format, IDirect3DSurface8(pResource.Lock{EmuSurface8}));
+          hRet := g_pD3DDevice8.CreateImageSurface(dwWidth, dwHeight, Format, tmpIDirect3DSurface8);
+          pResource.EmuSurface8 := tmpIDirect3DSurface8;
 
           if (FAILED(hRet)) then
             CxbxKrnlCleanup('CreateImageSurface Failed!');
