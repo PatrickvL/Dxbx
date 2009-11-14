@@ -43,8 +43,26 @@ type
   end;
 
   ResourceTracker = object(Mutex)
-
+  public
+    function exists(pResource: Pointer): BOOL; overload;
+    function exists(uiKey: Cardinal): BOOL; overload;
+    function get(pResource: Pointer): PVOID; overload;
+    function get(uiKey: Cardinal): PVOID; overload;
+    procedure insert(uiKey: Cardinal; pResource: Pointer); overload;
+    procedure insert(pResource: Pointer); overload;
+    procedure remove(uiKey: Cardinal); overload;
+    procedure remove(pResource: Pointer); overload;
   end;
+
+var
+  g_VBTrackTotal: ResourceTracker;
+  g_VBTrackDisable: ResourceTracker;
+  g_PBTrackTotal: ResourceTracker;
+  g_PBTrackDisable: ResourceTracker;
+  g_PBTrackShowOnce: ResourceTracker;
+  g_PatchedStreamsCache: ResourceTracker;
+  g_DataToTexture: ResourceTracker;
+  g_AlignCache: ResourceTracker;
 
 implementation
 
@@ -98,86 +116,109 @@ implementation
 }
 
 
-ResourceTracker g_VBTrackTotal;
-ResourceTracker g_VBTrackDisable;
-ResourceTracker g_PBTrackTotal;
-ResourceTracker g_PBTrackDisable;
-ResourceTracker g_PBTrackShowOnce;
-ResourceTracker g_PatchedStreamsCache;
-ResourceTracker g_DataToTexture;
-ResourceTracker g_AlignCache;
 
 ResourceTracker::~ResourceTracker()
 {
     clear();
-}
+} *)
 
-void ResourceTracker::clear()
-{
-    this->Lock();
+
+
+{ ResourceTracker }
+
+function ResourceTracker.exists(pResource: Pointer): BOOL;
+begin
+(*  return exists((uint32)pResource); *)
+end;
+
+function ResourceTracker.exists(uiKey: Cardinal): BOOL;
+begin
+(*    this->Lock();
 
     RTNode *cur = m_head;
 
     while(cur != 0)
     {
-        RTNode *tmp = cur->pNext;
+        if(cur->uiKey == uiKey)
+        {
+            this->Unlock();
+            return true;
+        }
 
-        delete cur;
-
-        cur = tmp;
+        cur = cur->pNext;
     }
-
-    m_head = m_tail = 0;
-
-    this->Unlock();
-}
-
-void ResourceTracker::insert(void *pResource)
-{
-    insert((uint32)pResource, pResource);
-}
-
-void ResourceTracker::insert(uint32 uiKey, void *pResource)
-{
-    this->Lock();
-
-    if(exists(uiKey))
-    {
-        this->Unlock();
-        return;
-    }
-
-    if(m_head == 0)
-    {
-        m_tail = m_head = new RTNode();
-        m_tail->pResource = 0;
-        m_tail->pNext = 0;
-    }
-
-    m_tail->pResource = pResource;
-    m_tail->uiKey = uiKey;
-
-    m_tail->pNext = new RTNode();
-
-    m_tail = m_tail->pNext;
-
-    m_tail->pResource = 0;
-    m_tail->uiKey = 0;
-    m_tail->pNext = 0;
 
     this->Unlock();
 
-    return;
-}
+    return false; *)
+end;
 
-void ResourceTracker::remove(void *pResource)
-{
-    remove((uint32)pResource);
-}
+function ResourceTracker.get(pResource: Pointer): PVOID;
+begin
+(*    return get((uint32)pResource); *)
+end;
 
-void ResourceTracker::remove(uint32 uiKey)
-{
-    this->Lock();
+function ResourceTracker.get(uiKey: Cardinal): PVOID;
+begin
+(*    RTNode *cur = m_head;
+
+    while(cur != 0)
+    {
+        if(cur->uiKey == uiKey)
+        {
+            return cur->pResource;
+        }
+
+        cur = cur->pNext;
+    }
+
+    return 0; *)
+end;
+
+procedure ResourceTracker.insert(pResource: Pointer);
+begin
+(*    insert((uint32)pResource, pResource); *)
+end;
+
+procedure ResourceTracker.insert(uiKey: Cardinal; pResource: Pointer);
+begin
+  self.Lock;
+
+  if exists(uiKey) then
+  begin
+    self.Unlock();
+    Exit;
+  end;
+
+(*  if m_head = 0 then
+  {
+      m_tail = m_head = new RTNode();
+      m_tail->pResource = 0;
+      m_tail->pNext = 0;
+  } *)
+
+  m_tail.pResource := pResource;
+  m_tail.uiKey := uiKey;
+
+  (*m_tail.pNext := new RTNode(); *)
+
+  m_tail := m_tail.pNext;
+
+  m_tail.pResource := 0;
+  m_tail.uiKey := 0;
+  m_tail.pNext := 0;
+
+  this.Unlock();
+end;
+
+procedure ResourceTracker.remove(pResource: Pointer);
+begin
+(*    remove((uint32)pResource); *)
+end;
+
+procedure ResourceTracker.remove(uiKey: Cardinal);
+begin
+(*    this->Lock();
 
     RTNode *pre = 0;
     RTNode *cur = m_head;
@@ -216,77 +257,8 @@ void ResourceTracker::remove(uint32 uiKey)
 
     this->Unlock();
 
-    return;
-}
+    return;    *)
+end;
 
-bool ResourceTracker::exists(void *pResource)
-{
-    return exists((uint32)pResource);
-}
-
-bool ResourceTracker::exists(uint32 uiKey)
-{
-    this->Lock();
-
-    RTNode *cur = m_head;
-
-    while(cur != 0)
-    {
-        if(cur->uiKey == uiKey)
-        {
-            this->Unlock();
-            return true;
-        }
-
-        cur = cur->pNext;
-    }
-
-    this->Unlock();
-
-    return false;
-}
-
-void *ResourceTracker::get(void *pResource)
-{
-    return get((uint32)pResource);
-}
-
-void *ResourceTracker::get(uint32 uiKey)
-{
-    RTNode *cur = m_head;
-
-    while(cur != 0)
-    {
-        if(cur->uiKey == uiKey)
-        {
-            return cur->pResource;
-        }
-
-        cur = cur->pNext;
-    }
-
-    return 0;
-}
-
-uint32 ResourceTracker::get_count(void)
-{
-    uint32 uiCount = 0;
-
-    this->Lock();
-
-    RTNode *cur = m_head;
-
-    while(cur != 0)
-    {
-        uiCount++;
-
-        cur = cur->pNext;
-    }
-
-    this->Unlock();
-
-    return uiCount;
-}
-*)
 end.
 
