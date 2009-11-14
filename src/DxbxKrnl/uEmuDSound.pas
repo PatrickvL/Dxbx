@@ -74,11 +74,11 @@ var
 // periodically update sound buffers
 procedure HackUpdateSoundBuffers();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
-var
+(*var
   v: Integer;
   pAudioPtr, pAudioPtr2 : PVOID;
   dwAudioBytes, dwAudioBytes2 : DWORD;
-  hRet : HRESULT;
+  hRet : HRESULT; *)
 begin
 (*  for v := 0 to SOUNDBUFFER_CACHE_SIZE -1 do begin
     if (g_pDSoundBufferCache[v] = 0) or (g_pDSoundBufferCache[v].EmuBuffer = 0) then
@@ -102,7 +102,7 @@ begin
      end;
 
     // Cxbx TODO: relock old lock ??
-   end;       *)
+   end; *)
 end;
 
 // periodically update sound streams
