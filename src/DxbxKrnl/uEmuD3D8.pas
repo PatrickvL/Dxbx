@@ -3421,7 +3421,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_Begin(PrimitiveType: X_D3DPRIMITIVETYPE): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -3431,26 +3431,24 @@ begin
     #13#10');',
     [Ord(PrimitiveType)]);
 
-{ TODO : Need to be translated to delphi }
-(*
-    g_IVBPrimitiveType := PrimitiveType;
+  g_IVBPrimitiveType := PrimitiveType;
 
-    if (g_IVBTable = 0) then
-    begin
-        g_IVBTable := (struct XTL::_D3DIVB)CxbxMalloc(SizeOf(XTL::_D3DIVB)*1024);
-     end;
+  if Not Assigned(g_IVBTable) then
+  begin
+    g_IVBTable := CxbxMalloc(SizeOf(_D3DIVB)*1024);
+  end;
 
-    g_IVBTblOffs := 0;
-    g_IVBFVF := 0;
+  g_IVBTblOffs := 0;
+  g_IVBFVF := 0;
 
-    // default values
-    ZeroMemory(g_IVBTable, SizeOf(XTL::_D3DIVB)*1024);
+  // default values
+  ZeroMemory(g_IVBTable, SizeOf(_D3DIVB)*1024);
 
-    if (g_pIVBVertexBuffer = 0) then
-    begin
-        g_pIVBVertexBuffer := (DWORD)CxbxMalloc(SizeOf(XTL::_D3DIVB)*1024);
-     end;
-*)
+  if Not Assigned(g_pIVBVertexBuffer) then
+  begin
+    g_pIVBVertexBuffer := CxbxMalloc(SizeOf(_D3DIVB)*1024);
+  end;
+
   EmuSwapFS(fsXbox);
 
   Result := D3D_OK;
@@ -3857,7 +3855,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource; pBase: PVOID): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:13  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:85
 var
   hRet: HRESULT;
   pResource: PX_D3DResource;
@@ -4913,7 +4911,7 @@ end;
 
 function XTL_EmuIDirect3DSurface8_GetDesc(pThis: PX_D3DResource;
   pDesc: PX_D3DSURFACE_DESC): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:70  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   pSurface8: IDirect3DSurface8;
   SurfaceDesc: D3DSURFACE_DESC;
@@ -4949,10 +4947,10 @@ begin
     // rearrange into windows format (remove D3DPool)
     // Convert Format (PC->Xbox)
     pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-    (*pDesc.cType := (X_D3DRESOURCETYPE)SurfaceDesc.cType;
+    pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
-    if (pDesc.cType > 7) then
-        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc.cType > 7'); *)
+    if (Ord(pDesc.Type_) > 7) then
+        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc.cType > 7');
 
     pDesc.Usage := SurfaceDesc.Usage;
     pDesc.Size := SurfaceDesc.Size;
@@ -4974,9 +4972,11 @@ function XTL_EmuIDirect3DSurface8_LockRect(pThis: PX_D3DResource;
   pLockedRect: PD3DLOCKED_RECT;
   pRect: PRect;
   Flags: DWORD): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
+  pSurface8 : IDirect3DSurface8;
+  NewFlags: DWORD;
 begin
   EmuSwapFS(fsWindows);
   hret := 0;
@@ -5002,28 +5002,27 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
 
-  (*
-  if (IsSpecialResource(pThis.Data) and (pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)) then
+  if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)>0)) then
   begin
     pLockedRect.Pitch := g_dwOverlayP;
-    pLockedRect.pBits := pThis.Lock;
+    pLockedRect.pBits := @pThis.Lock;
 
     hRet := D3D_OK;
   end
   else
   begin
-    if (Flags and $40) then
+    if (Flags and $40) >0 then
       EmuWarning('D3DLOCK_TILED ignored!');
 
-    IDirect3DSurface8 *pSurface8 := pThis.EmuSurface8;
+    pSurface8 := pThis.EmuSurface8;
 
-    DWORD NewFlags := 0;
+    NewFlags := 0;
 
-    if (Flags and $80) then
+    if (Flags and $80) >0 then
       NewFlags:= NewFlags or D3DLOCK_READONLY;
 
-    if (Flags and  not ($80 or $40)) then
-      CxbxKrnlCleanup('EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)', Flags);
+    if (Flags and  not ($80 or $40)) >0 then
+      CxbxKrnlCleanup('EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)', [Flags]);
 
     try
       // Remove old lock(s)
@@ -5031,13 +5030,12 @@ begin
     except
       EmuWarning('Invalid Surface!');
     end;
-    
-    hRet := pSurface8.LockRect(pLockedRect, pRect, NewFlags);
+
+    hRet := pSurface8.LockRect(pLockedRect^, pRect, NewFlags);
 
     if (FAILED(hRet)) then
       EmuWarning('LockRect Failed!');
   end;
-  *)
 
   EmuSwapFS(fsXbox);
 
@@ -5098,11 +5096,11 @@ function XTL_EmuIDirect3DTexture8_LockRect(pThis: PX_D3DTexture;
     pLockedRect: PD3DLOCKED_RECT;
     const pRect: PRect;
     Flags: DWORD): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
-(*  pTexture8: ^IDirect3DTexture8;
-  NewFlags: DWORD; *)
+  pTexture8: IDirect3DTexture8;
+  NewFlags: DWORD;
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -5117,36 +5115,35 @@ begin
            #13#10');',
            [pThis, Level, pLockedRect, pRect, Flags]);
 
-    EmuVerifyResourceIsRegistered(pThis);
+  EmuVerifyResourceIsRegistered(pThis);
 
-    // check if we have an unregistered YUV2 resource
-    (*if( (pThis <> Nil) and IsSpecialResource(pThis.Data) and (pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)) then
-    begin
-        pLockedRect.Pitch := g_dwOverlayP;
-        pLockedRect.pBits := PVOID(pThis.Lock);
+  // check if we have an unregistered YUV2 resource
+  if( (pThis <> Nil) and IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)>0)) then
+  begin
+    pLockedRect.Pitch := g_dwOverlayP;
+    pLockedRect.pBits := PVOID(pThis.Lock);
 
-        hRet := D3D_OK;
-     end
-    else
-    begin
-        pTexture8 := pThis.EmuTexture8;
+    hRet := D3D_OK;
+  end
+  else
+  begin
+    pTexture8 := pThis.EmuTexture8;
 
-        NewFlags := 0;
+    NewFlags := 0;
 
-        if (Flags and $80) then
-            NewFlags:= NewFlags or D3DLOCK_READONLY;
+    if (Flags and $80) >0 then
+        NewFlags:= NewFlags or D3DLOCK_READONLY;
 
-        if (Flags and  not ($80 or $40)) then
-            CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags not  (0x%.08X)', Flags);
+    if (Flags and  not ($80 or $40)) >0 then
+        CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags not  (0x%.08X)', [Flags]);
 
+    // Remove old lock(s)
+    pTexture8.UnlockRect(Level);
 
-        // Remove old lock(s)
-        pTexture8.UnlockRect(Level);
+    hRet := pTexture8.LockRect(Level, pLockedRect^, pRect, NewFlags);
 
-        hRet := pTexture8.LockRect(Level, pLockedRect, pRect, NewFlags);
-
-        pThis.Common:= pThis.Common or X_D3DCOMMON_ISLOCKED;
-     end;   *)
+    pThis.Common:= pThis.Common or X_D3DCOMMON_ISLOCKED;
+  end;
 
   EmuSwapFS(fsXbox);
 
@@ -5159,11 +5156,14 @@ function XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis: PX_D3DTexture;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10  
 var
   hRet: HRESULT;
+  dwSize : DWORD;
+  pRefCount : PDWORD;
+  pTexture8 : IDirect3DTexture8;
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel' +
+  DbgPrintf('EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel' +
            #13#10'(' +
            #13#10'   pThis             : 0x%.08X' +
            #13#10'   Level             : 0x%.08X' +
@@ -5171,48 +5171,47 @@ begin
            #13#10');',
            [pThis, Level, ppSurfaceLevel]);
 
-    EmuVerifyResourceIsRegistered(pThis);
+  EmuVerifyResourceIsRegistered(pThis);
 
-    // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
-    (*if(IsSpecialResource(pThis.Data) and (pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)) then
+  // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
+  if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF)>0)) then
+  begin
+    (*dwSize := g_dwOverlayP*g_dwOverlayH;
+
+    pRefCount := DWORD(DWORD(pThis.Lock) + dwSize);
+
+    // initialize ref count
+    (pRefCount):= (pRefCount) + 1;
+
+    ppSurfaceLevel := X_D3DSurface(pThis);          *)
+
+    hRet := D3D_OK;
+  end
+  else
+  begin
+    (*pTexture8 := pThis.EmuTexture8;
+
+    //ppSurfaceLevel := new X_D3DSurface();
+
+    (ppSurfaceLevel).Data := $B00BBABE;
+    (ppSurfaceLevel).Common := 0;
+    (ppSurfaceLevel).Format := 0;
+    (ppSurfaceLevel).Size := 0;
+
+    hRet := pTexture8.GetSurfaceLevel(Level and ((ppSurfaceLevel).EmuSurface8));
+
+    if (FAILED(hRet)) then
     begin
-        DWORD dwSize := g_dwOverlayP*g_dwOverlayH;
-
-        DWORD *pRefCount := (DWORD)((DWORD)pThis.Lock + dwSize);
-
-        // initialize ref count
-        (pRefCount):= (pRefCount) + 1;
-
-        *ppSurfaceLevel := (X_D3DSurface)pThis;
-
-        hRet := D3D_OK;
-     end;
+      EmuWarning('EmuIDirect3DTexture8_GetSurfaceLevel Failed!');
+    end
     else
     begin
-        IDirect3DTexture8 *pTexture8 := pThis.EmuTexture8;
-
-        *ppSurfaceLevel := new X_D3DSurface();
-
-        (ppSurfaceLevel).Data := $B00BBABE;
-        (ppSurfaceLevel).Common := 0;
-        (ppSurfaceLevel).Format := 0;
-        (ppSurfaceLevel).Size := 0;
-
-        hRet := pTexture8.GetSurfaceLevel(Level,  and ((ppSurfaceLevel).EmuSurface8));
-
-        if (FAILED(hRet)) then
-        begin
-            EmuWarning('EmuIDirect3DTexture8_GetSurfaceLevel Failed!');
-         end;
-        else
-        begin
-            DbgPrintf('EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X', (ppSurfaceLevel).EmuSurface8);
-         end;
-     end;
-     *)
+      DbgPrintf('EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X', (ppSurfaceLevel).EmuSurface8);
+    end; *)
+  end;
 
   EmuSwapFS(fsXbox);
-                        
+
   Result := hRet;
 end;
 
@@ -6541,7 +6540,7 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetStreamSource(StreamNumber: UINT;
   pStreamData: PX_D3DVertexBuffer; Stride: UINT): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:95  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
 var
   pVertexBuffer8: IDirect3DVertexBuffer8;
 begin
@@ -7238,11 +7237,11 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_DeleteVertexShader(Handle: DWord): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:2
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   RealHandle: DWORD;
-(*  pD3DVertexShader: X_D3DVertexShader;
-  pVertexShader: VERTEX_SHADER; *)
+  pD3DVertexShader: PX_D3DVertexShader;
+  pVertexShader: PVERTEX_SHADER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7256,21 +7255,21 @@ begin
 
   if (VshHandleIsVertexShader(Handle)) then
   begin
-      (*  pD3DVertexShader := (X_D3DVertexShader )(Handle and $7FFFFFFF);
-        pVertexShader := pD3DVertexShader.Handle;
+    pD3DVertexShader := PX_D3DVertexShader(Handle and $7FFFFFFF);
+    pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
 
-        RealHandle := pVertexShader.Handle;
-        CxbxFree(pVertexShader.pDeclaration);
+    RealHandle := pVertexShader.Handle;
+    CxbxFree(pVertexShader.pDeclaration);
 
-        if (pVertexShader.pFunction) then
-        begin
-            CxbxFree(pVertexShader.pFunction);
-         end;
+    if Assigned(pVertexShader.pFunction) then
+    begin
+      CxbxFree(pVertexShader.pFunction);
+    end;
 
-        FreeVertexDynamicPatch(pVertexShader);
+    XTL_FreeVertexDynamicPatch(pVertexShader);
 
-        CxbxFree(pVertexShader);
-        CxbxFree(pD3DVertexShader);           *)
+    CxbxFree(pVertexShader);
+    CxbxFree(pD3DVertexShader);
   end;
 
   Result := g_pD3DDevice8.DeleteVertexShader(RealHandle);
