@@ -40,6 +40,8 @@ procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of con
 
 function GetDWordBits(const Bits: DWORD; const aIndex: Integer): Integer;
 procedure SetDWordBits(var Bits: DWORD; const aIndex: Integer; const aValue: Integer);
+function GetByteBits(const Bits: Byte; const aIndex: Integer): Byte;
+procedure SetByteBits(var Bits: Byte; const aIndex: Integer; const aValue: Byte);
 
 var
   // ! thread local storage
@@ -63,7 +65,7 @@ end;
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
 begin
-  CxbxKrnlCleanup(DxbxFormat(szErrorMessage, Args));
+  CxbxKrnlCleanup(DxbxFormat(szErrorMessage, Args, {MayRenderArguments=}True));
 end;
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
@@ -92,7 +94,7 @@ begin
 end;
 
 // Tooling methods to get and set stretches of bits inside a DWORD,
-// which is used to simulate C-like bit-fields in Delphi.  
+// which is used to simulate C-like bit-fields in Delphi.
 // See http://stackoverflow.com/questions/282019/how-to-simulate-bit-fields-in-delphi-records#282385
 // Registers:               EAX                EDX               EAX
 function GetDWordBits(const Bits: DWORD; const aIndex: Integer): Integer;
@@ -147,5 +149,23 @@ asm
   pop ebx
 end;
 {$ENDIF}
+
+function GetByteBits(const Bits: Byte; const aIndex: Integer): Byte;
+begin
+  Result := (Bits shr {Offset=}(aIndex shr 8))
+        and {Mask =}((1 shl {NrBits=}Byte(aIndex)) - 1);
+end;
+
+procedure SetByteBits(var Bits: Byte; const aIndex: Integer; const aValue: Byte);
+var
+  Offset: Byte;
+  Mask: Integer;
+begin
+  Mask := ((1 shl {NrBits=}Byte(aIndex)) - 1);
+  Assert(aValue <= Mask);
+
+  Offset := aIndex shr 8;
+  {var}Bits := (Bits and (not (Mask shl Offset))) or DWORD(aValue shl Offset);
+end;
 
 end.

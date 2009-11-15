@@ -379,16 +379,19 @@ type
     Size: DWord;
   end;
   PX_D3DPixelContainer = ^X_D3DPixelContainer;
+  PPX_D3DPixelContainer = ^PX_D3DPixelContainer;
 
   X_D3DVertexBuffer = object(X_D3DResource)
   public
   end;
   PX_D3DVertexBuffer = ^X_D3DVertexBuffer;
+  PPX_D3DVertexBuffer = ^PX_D3DVertexBuffer;
 
   X_D3DIndexBuffer = object(X_D3DResource)
   public
   end;
   PX_D3DIndexBuffer = ^X_D3DIndexBuffer;
+  PPX_D3DIndexBuffer = ^PX_D3DIndexBuffer;
 
   X_D3DPushBuffer = object(X_D3DResource)
   public
@@ -396,6 +399,7 @@ type
     AllocationSize: ULONG;
   end;
   PX_D3DPushBuffer = ^X_D3DPushBuffer;
+  PPX_D3DPushBuffer = ^PX_D3DPushBuffer;
 
   X_D3DFixup = object(X_D3DResource)
   public
@@ -404,14 +408,17 @@ type
     Size: ULONG;
   end;
   PX_D3DFixup = ^X_D3DFixup;
+  PPX_D3DFixup = ^PX_D3DFixup;
 
   X_D3DPalette = object(X_D3DResource)
   end;
   PX_D3DPalette = ^X_D3DPalette;
+  PPX_D3DPalette = ^PX_D3DPalette;
 
   X_D3DBaseTexture = object(X_D3DPixelContainer)
   end;
   PX_D3DBaseTexture = ^X_D3DBaseTexture;
+  PPX_D3DBaseTexture = ^PX_D3DBaseTexture;
 
   X_D3DTexture = object(X_D3DBaseTexture)
   end;
@@ -421,6 +428,7 @@ type
   X_D3DCubeTexture = object(X_D3DBaseTexture)
   end;
   PX_D3DCubeTexture = ^X_D3DCubeTexture;
+  PPX_D3DCubeTexture = ^PX_D3DCubeTexture;
 
   X_D3DSurface = object(X_D3DPixelContainer)
   end;
@@ -430,6 +438,7 @@ type
   X_D3DVolumeTexture = object(X_D3DBaseTexture)
   end;
   PX_D3DVolumeTexture = ^X_D3DVolumeTexture;
+  PPX_D3DVolumeTexture = ^PX_D3DVolumeTexture;
 
   X_STREAMINPUT = packed record
     VertexBuffer: PX_D3DVertexBuffer;
@@ -437,6 +446,7 @@ type
     Offset: UINT;
   end;
   PX_STREAMINPUT = ^X_STREAMINPUT;
+  PPX_STREAMINPUT = ^PX_STREAMINPUT;
 
 implementation
 

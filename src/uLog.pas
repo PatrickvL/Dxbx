@@ -43,7 +43,7 @@ procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
 procedure CloseLogs;
 procedure WriteLog(const aText: string);
 
-function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Boolean = True): string;
+function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Boolean = False): string;
 
 procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
@@ -321,7 +321,7 @@ begin
   end;
 end; // TryPointerToString
 
-function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Boolean = True): string; // array of TVarRec actually
+function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Boolean = False): string; // array of TVarRec actually
 
   function _TryArgumentToString(const aVarRec: TVarRec; var aOutputStr: UnicodeString): Boolean;
   begin

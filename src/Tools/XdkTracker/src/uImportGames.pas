@@ -24,6 +24,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, StdCtrls, ExtCtrls,
   // Dxbx
+  uXbe,
   uData;
 
 type

@@ -236,34 +236,6 @@ type
   end;
   PSectionList = ^SectionList;
 
-const
-  // debug/retail XOR keys
-  XOR_EP_DEBUG: uint32 = $94859D4B; // Entry Point (Debug)
-  XOR_EP_RETAIL: uint32 = $A8FC57AB; // Entry Point (Retail)
-  XOR_KT_DEBUG: uint32 = $EFB1F152; // Kernel Thunk (Debug)
-  XOR_KT_RETAIL: uint32 = $5B6D40B6; // Kernel Thunk (Retail)
-
-  // game region flags for Xbe certificate
-  XBEIMAGE_GAME_REGION_NA: uint32 = $00000001;
-  XBEIMAGE_GAME_REGION_JAPAN: uint32 = $00000002;
-  XBEIMAGE_GAME_REGION_RESTOFWORLD: uint32 = $00000004;
-  XBEIMAGE_GAME_REGION_MANUFACTURING: uint32 = $80000000;
-
-  // media type flags for Xbe certificate
-  XBEIMAGE_MEDIA_TYPE_HARD_DISK: uint32 = $00000001;
-  XBEIMAGE_MEDIA_TYPE_DVD_X2: uint32 = $00000002;
-  XBEIMAGE_MEDIA_TYPE_DVD_CD: uint32 = $00000004;
-  XBEIMAGE_MEDIA_TYPE_CD: uint32 = $00000008;
-  XBEIMAGE_MEDIA_TYPE_DVD_5_RO: uint32 = $00000010;
-  XBEIMAGE_MEDIA_TYPE_DVD_9_RO: uint32 = $00000020;
-  XBEIMAGE_MEDIA_TYPE_DVD_5_RW: uint32 = $00000040;
-  XBEIMAGE_MEDIA_TYPE_DVD_9_RW: uint32 = $00000080;
-  XBEIMAGE_MEDIA_TYPE_DONGLE: uint32 = $00000100;
-  XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD: uint32 = $00000200;
-  XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK: uint32 = $40000000;
-  XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE : uint32 = $80000000;
-  XBEIMAGE_MEDIA_TYPE_MEDIA_MASK: uint32 = $00FFFFFF;
-
 var
   // OpenXDK logo bitmap (used by cxbe by default)
   OpenXDK: array of uint08;
@@ -276,7 +248,7 @@ function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileNa
 
 procedure XbeLoaded;
 procedure LoadLogo;
-
+function GameRegionToString(const aGameRegion: Integer): string;
 
 var
   DumpToolString: string;
@@ -359,6 +331,36 @@ begin
 end; // GetWordVal
 
 
+function GameRegionToString(const aGameRegion: Integer): string;
+begin
+  if (aGameRegion and XBEIMAGE_GAME_REGION_ALL) = XBEIMAGE_GAME_REGION_ALL then
+    Result := 'ALL'
+  else
+  begin
+    Result := '';
+    if (aGameRegion and XBEIMAGE_GAME_REGION_JAPAN) > 0 then
+      Result := Result + ' JAP';
+
+    if (aGameRegion and XBEIMAGE_GAME_REGION_NA) > 0 then
+      Result := Result + ' NTSC';
+
+    if (aGameRegion and XBEIMAGE_GAME_REGION_RESTOFWORLD) > 0 then
+      Result := Result + ' PAL';
+  end;
+
+  if (aGameRegion and XBEIMAGE_GAME_REGION_MANUFACTURING) > 0 then
+    Result := Result + ' DEBUG';
+
+  Result := StringReplace(Trim(Result), ' ', '+', [rfReplaceAll]);
+  if Result = '' then
+  begin
+    if aGameRegion = 0 then
+      Result := 'UNKNOWN'
+    else
+      Result := 'REGION ' + IntToStr(aGameRegion);
+  end;
+end;
+
 { TXbe }
 //------------------------------------------------------------------------------
 
@@ -405,7 +407,7 @@ begin
   WriteLog(DxbxFormat('DXBX: Opening %s file...OK', [sFileType]));
 
   // remember xbe path
-  m_szPath := ExtractFilePath(aFileName);
+  m_szPath := ExcludeTrailingPathDelimiter(ExtractFilePath(aFileName));
   WriteLog(DxbxFormat('DXBX: Storing %s Path...Ok', [sFileType]));
 
   if MyFile.Size < SizeOf(m_Header) then
@@ -582,13 +584,13 @@ end; // TXbe.Create
 function TXbe.DetermineDumpFileName: string;
 begin
   Result := WideCharToString(m_Certificate.wszTitleName);
+  if Result = '' then
+    Result := ExtractFileName(m_szPath);
   Result := FixInvalidFilePath(Result, '_');
 
-  if (m_Certificate.dwGameRegion and 4) > 0 then
-    Result := Result + '-PAL'
-  else
-    if (m_Certificate.dwGameRegion and 1) > 0 then
-      Result := Result + '-NTSC';
+
+  if (m_Certificate.dwGameRegion and 7) > 0 then
+    Result := Result + '-' + GameRegionToString(m_Certificate.dwGameRegion);
 
   Result := Result + '.txt';
 end;
@@ -765,7 +767,7 @@ begin
     _LogEx(DxbxFormat('                                   0x%.8x', [m_Certificate.dwAlternateTitleId[lIndex]]));
 
   _LogEx(DxbxFormat('Allowed Media                    : 0x%.8x', [m_Certificate.dwAllowedMedia]));
-  _LogEx(DxbxFormat('Game Region                      : 0x%.8x', [m_Certificate.dwGameRegion]));
+  _LogEx(DxbxFormat('Game Region                      : 0x%.8x (%s)', [m_Certificate.dwGameRegion, GameRegionToString(m_Certificate.dwGameRegion)]));
   _LogEx(DxbxFormat('Game Ratings                     : 0x%.8x', [m_Certificate.dwGameRatings]));
   _LogEx(DxbxFormat('Disk Number                      : 0x%.8x', [m_Certificate.dwDiskNumber]));
   _LogEx(DxbxFormat('Version                          : 0x%.8x', [m_Certificate.dwVersion]));
