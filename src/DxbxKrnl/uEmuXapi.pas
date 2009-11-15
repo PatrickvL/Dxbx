@@ -24,13 +24,13 @@ interface
 uses
   // Delphi
   Windows,
+  SysUtils,
   // Jedi
   JwaWinType,
   JwaWinBase,
   JwaNative,
   // Dxbx
   uTypes,
-  SysUtils,
   uLog, // DbgPrintf
   uXbe,
   uEmu,
@@ -75,11 +75,11 @@ type
   _XINPUT_POLLING_PARAMETERS = packed record
   private
     _Flag: Byte;
-    function GetFlag(const aIndex: Integer): Byte;
+    function GetBits(const aIndex: Integer): Byte;
   public
-    property fAutoPoll: BYTE index $01 read GetFlag; // 1 bit at offset 0
-    property fInterruptOut: BYTE index $11 read GetFlag; // 1 bit at offset 1
-    property ReservedMBZ1: BYTE index $26 read GetFlag; // 6 bits at offset 2
+    property fAutoPoll: BYTE index $0001 read GetBits; // 1 bit at offset 0
+    property fInterruptOut: BYTE index $0101 read GetBits; // 1 bit at offset 1
+    property ReservedMBZ1: BYTE index $0206 read GetBits; // 6 bits at offset 2
   public
     bInputInterval: BYTE;
     bOutputInterval: BYTE;
@@ -197,10 +197,9 @@ uses
   // Dxbx
   uEmuKrnlPs; // g_pfnThreadNotification
 
-function _XINPUT_POLLING_PARAMETERS.GetFlag(const aIndex: Integer): Byte;
+function _XINPUT_POLLING_PARAMETERS.GetBits(const aIndex: Integer): Byte;
 begin
-  Result := _Flag shr (aIndex shr 4);
-  Result := Result and (1 shl ((aIndex and $F) - 1) - 1);
+  Result := GetByteBits(_Flag, aIndex);
 end;
 
 const
@@ -998,7 +997,7 @@ begin
   begin
     if (pph.pPollingParameters <> nil) then
     begin
-      if (pph.pPollingParameters.fAutoPoll = Ord(False)) then
+      if (pph.pPollingParameters.fAutoPoll = Byte(False)) then
       begin
         //
         // Cxbx TODO: uh..

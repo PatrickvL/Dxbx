@@ -7,6 +7,7 @@
     <Projects Include="d11\Dxbx.dproj" />
     <Projects Include="d11\DxbxKrnl.dproj" />
     <Projects Include="d11\TranslationChecker.dproj" />
+    <Projects Include="d11\XdkTracker.dproj" />
     <Projects Include="d11\XIso.dproj" />
   </ItemGroup>
   <ProjectExtensions>
@@ -15,6 +16,15 @@
     <BorlandProject>
 <BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
+  <Target Name="XdkTracker">
+    <MSBuild Projects="d11\XdkTracker.dproj" Targets="" />
+  </Target>
+  <Target Name="XdkTracker:Clean">
+    <MSBuild Projects="d11\XdkTracker.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="XdkTracker:Make">
+    <MSBuild Projects="d11\XdkTracker.dproj" Targets="Make" />
+  </Target>
   <Target Name="XIso">
     <MSBuild Projects="d11\XIso.dproj" Targets="" />
   </Target>
@@ -52,13 +62,13 @@
     <MSBuild Projects="d11\Dxbx.dproj" Targets="Make" />
   </Target>
   <Target Name="Build">
-    <CallTarget Targets="XIso;TranslationChecker;DxbxKrnl;Dxbx" />
+    <CallTarget Targets="XdkTracker;XIso;TranslationChecker;DxbxKrnl;Dxbx" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="XIso:Clean;TranslationChecker:Clean;DxbxKrnl:Clean;Dxbx:Clean" />
+    <CallTarget Targets="XdkTracker:Clean;XIso:Clean;TranslationChecker:Clean;DxbxKrnl:Clean;Dxbx:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="XIso:Make;TranslationChecker:Make;DxbxKrnl:Make;Dxbx:Make" />
+    <CallTarget Targets="XdkTracker:Make;XIso:Make;TranslationChecker:Make;DxbxKrnl:Make;Dxbx:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

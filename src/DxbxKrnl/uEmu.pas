@@ -104,7 +104,7 @@ end;
 procedure EmuWarning(szWarningMessage: string; const Args: array of const);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
-  EmuWarning(DxbxFormat(szWarningMessage, Args));
+  EmuWarning(DxbxFormat(szWarningMessage, Args, {MayRenderArguments=}True));
 end;
 
 // exception handler

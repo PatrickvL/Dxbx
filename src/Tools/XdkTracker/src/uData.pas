@@ -17,7 +17,7 @@
 *)
 unit uData;
 
-{$INCLUDE ..\..\..\DXBX.inc}
+{$INCLUDE DXBX.inc}
 
 interface
 
@@ -45,47 +45,7 @@ type
     function MatchesVersion(const aVersion: string): Boolean;
   end;
 
-function GameRegionToString(const aGameRegion: Integer): string;
-
 implementation
-
-const
-  XBEIMAGE_GAME_REGION_NTSC = $00000001;
-  XBEIMAGE_GAME_REGION_JAPAN = $00000002;
-  XBEIMAGE_GAME_REGION_RESTOFWORLD = $00000004;
-  XBEIMAGE_GAME_REGION_MANUFACTURING = $80000000;
-
-  XBEIMAGE_GAME_REGION_ALL = XBEIMAGE_GAME_REGION_NTSC + XBEIMAGE_GAME_REGION_JAPAN + XBEIMAGE_GAME_REGION_RESTOFWORLD;
-
-function GameRegionToString(const aGameRegion: Integer): string;
-begin
-  if (aGameRegion and XBEIMAGE_GAME_REGION_ALL) = XBEIMAGE_GAME_REGION_ALL then
-    Result := 'ALL'
-  else
-  begin
-    Result := '';
-    if (aGameRegion and XBEIMAGE_GAME_REGION_JAPAN) > 0 then
-      Result := Result + ' JAP';
-
-    if (aGameRegion and XBEIMAGE_GAME_REGION_NTSC) > 0 then
-      Result := Result + ' NTSC';
-
-    if (aGameRegion and XBEIMAGE_GAME_REGION_RESTOFWORLD) > 0 then
-      Result := Result + ' PAL';
-  end;
-
-  if (aGameRegion and XBEIMAGE_GAME_REGION_MANUFACTURING) > 0 then
-    Result := Result + ' DEBUG';
-
-  Result := StringReplace(Trim(Result), ' ', '+', [rfReplaceAll]);
-  if Result = '' then
-  begin
-    if aGameRegion = 0 then
-      Result := 'UNKNOWN'
-    else
-      Result := 'REGION ' + IntToStr(aGameRegion);
-  end;
-end;
 
 { TXBEInfo }
 

@@ -195,20 +195,20 @@ begin
       m_tail = m_head = new RTNode();
       m_tail->pResource = 0;
       m_tail->pNext = 0;
-  } *)
+  }
 
   m_tail.pResource := pResource;
   m_tail.uiKey := uiKey;
 
-  (*m_tail.pNext := new RTNode(); *)
+  (*m_tail.pNext := new RTNode(); * )
 
   m_tail := m_tail.pNext;
 
   m_tail.pResource := 0;
   m_tail.uiKey := 0;
   m_tail.pNext := 0;
-
-  this.Unlock();
+*)
+  self.Unlock();
 end;
 
 procedure ResourceTracker.remove(pResource: Pointer);

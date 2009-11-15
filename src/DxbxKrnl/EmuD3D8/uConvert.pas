@@ -542,7 +542,7 @@ begin
       end;
   end;
 
-  CxbxKrnlCleanup(DxbxFormat('Unknown D3DBLENDOP (0x%.08X)', [Value]));
+  CxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
 
   Result := D3DBLENDOP(Value);
 end;
