@@ -1894,7 +1894,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer: Integer): PX_D3DSurface; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   pBackBuffer: PX_D3DSurface;
   hRet: HRESULT;
@@ -1944,24 +1944,22 @@ begin
         hRet := g_pD3DDevice8.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO,  and (pBackBuffer.EmuSurface8));
     }
 
+  new({PX_D3DSurface}pBackBuffer);
 
-   { TODO : need to be translated to delphi }
-    (*static X_D3DSurface *pBackBuffer := new X_D3DSurface(); *)
+  if (BackBuffer = -1) then
+      BackBuffer := 0;
 
-    if (BackBuffer = -1) then
-        BackBuffer := 0;
+  hRet := g_pD3DDevice8.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, IDirect3DSurface8(pBackBuffer^.Lock));
 
-    (*hRet := g_pD3DDevice8.GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, pBackBuffer.EmuSurface8);*)
+  if (FAILED(hRet)) then
+      CxbxKrnlCleanup('Unable to retrieve back buffer');
 
-    if (FAILED(hRet)) then
-        CxbxKrnlCleanup('Unable to retrieve back buffer');
+  // update data pointer
+  pBackBuffer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_SURFACE;
 
-    // update data pointer
-    pBackBuffer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_SURFACE;
+  EmuSwapFS(fsXbox);
 
-    EmuSwapFS(fsXbox);
-
-    Result := pBackBuffer;
+  Result := pBackBuffer;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_GetBackBuffer(
@@ -2927,9 +2925,13 @@ end;
 function XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width: UINT; Height: UINT;
     Depth: UINT; Levels: UINT; Usage: DWORD; Format: D3DFORMAT;
     Pool: D3DPOOL; ppVolumeTexture: PX_D3DVolumeTexture): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:2  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:70
 var
   hRet: HRESULT;
+  PCFormat: D3DFORMAT;
+  dwSize: DWORD;
+  dwPtr: DWORD;
+  pRefCount: PDWORD;
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -2947,73 +2949,72 @@ begin
            #13#10');',
            [Width, Height, Depth, Levels, Usage, Ord(Format), Ord(Pool), ppVolumeTexture]);
 
-    // Convert Format (Xbox->PC)
-(*    D3DFORMAT PCFormat := EmuXB2PC_D3DFormat);
+  // Convert Format (Xbox->PC)
+  PCFormat := EmuXB2PC_D3DFormat(Cardinal(Format));
 
-    // Cxbx TODO : HACK: Devices that don't support this should somehow emulate it!
-    if (PCFormat = D3DFMT_D16) then
-    begin
-        EmuWarning('D3DFMT_16 is an unsupported texture format!');
-        PCFormat := D3DFMT_X8R8G8B8;
-     end;
-    else if (PCFormat = D3DFMT_P8) then
-    begin
-        EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-        PCFormat := D3DFMT_X8R8G8B8;
-     end;
-    else if (PCFormat = D3DFMT_D24S8) then
-    begin
-        EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
-        PCFormat := D3DFMT_X8R8G8B8;
-     end;
-    else if (PCFormat = D3DFMT_YUY2) then
-    begin
-        // cache the overlay size
-        g_dwOverlayW := Width;
-        g_dwOverlayH := Height;
-        g_dwOverlayP := RoundUp(g_dwOverlayW, 64)*2;
-     end;
+  // Cxbx TODO : HACK: Devices that don't support this should somehow emulate it!
+  if (PCFormat = D3DFMT_D16) then
+  begin
+    EmuWarning('D3DFMT_16 is an unsupported texture format!');
+    PCFormat := D3DFMT_X8R8G8B8;
+  end
+  else if (PCFormat = D3DFMT_P8) then
+  begin
+    EmuWarning('D3DFMT_P8 is an unsupported texture format!');
+    PCFormat := D3DFMT_X8R8G8B8;
+  end
+  else if (PCFormat = D3DFMT_D24S8) then
+  begin
+    EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
+    PCFormat := D3DFMT_X8R8G8B8;
+  end
+  else if (PCFormat = D3DFMT_YUY2) then
+  begin
+    // cache the overlay size
+    g_dwOverlayW := Width;
+    g_dwOverlayH := Height;
+    g_dwOverlayP := RoundUp(g_dwOverlayW, 64)*2;
+   end;
 
-    if (PCFormat <> D3DFMT_YUY2) then
-    begin
-        EmuAdjustPower2(@Width, @Height);
+  if (PCFormat <> D3DFMT_YUY2) then
+  begin
+    EmuAdjustPower2(@Width, @Height);
 
-        *ppVolumeTexture := new X_D3DVolumeTexture();
+    New({PX_D3DVolumeTexture}ppVolumeTexture);
 
-        hRet = g_pD3DDevice8.CreateVolumeTexture
-        (
-            Width, Height, Depth, Levels,
-            0,  // Cxbx TODO : Xbox Allows a border to be drawn (maybe hack this in software ;[)
-            PCFormat, D3DPOOL_MANAGED,  and ((ppVolumeTexture).EmuVolumeTexture8)
-        );
+(*    hRet := g_pD3DDevice8.CreateVolumeTexture
+    (
+        Width, Height, Depth, Levels,
+        0,  // Cxbx TODO : Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        PCFormat, D3DPOOL_MANAGED, ppVolumeTexture.EmuVolumeTexture8
+    );  *)
 
-        if (FAILED(hRet)) then
-            EmuWarning('CreateVolumeTexture Failed not  (0x%.08X)', hRet);
+    if (FAILED(hRet)) then
+        EmuWarning('CreateVolumeTexture Failed not  (0x%.08X)', [hRet]);
 
-        DbgPrintf('EmuD3D8: Created Volume Texture: 0x%.08X (0x%.08X)', [*ppVolumeTexture, (ppVolumeTexture).EmuVolumeTexture8]);
-     end;
-    else
-    begin
-        DWORD dwSize := g_dwOverlayP*g_dwOverlayH;
-        DWORD dwPtr := (DWORD)CxbxMalloc(dwSize + SizeOf(DWORD));
+    DbgPrintf('EmuD3D8: Created Volume Texture: 0x%.08X (0x%.08X)', [@ppVolumeTexture, (ppVolumeTexture).EmuVolumeTexture8]);
+  end
+  else
+  begin
+    dwSize := g_dwOverlayP*g_dwOverlayH;
+(*    dwPtr := CxbxMalloc(dwSize + SizeOf(DWORD));
 
-        DWORD *pRefCount := (DWORD)(dwPtr + dwSize);
+    pRefCount := DWORD(dwPtr + dwSize);            *)
 
-        // initialize ref count
-        *pRefCount := 1;
+    // initialize ref count
+(*    @pRefCount := 1; *)
 
-        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        (ppVolumeTexture).Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-        (ppVolumeTexture).Lock := dwPtr;
-        (ppVolumeTexture).Format := $24;
+    // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
+    (ppVolumeTexture).Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+    (ppVolumeTexture).Lock := dwPtr;
+    (ppVolumeTexture).Format := $24;
 
-        (ppVolumeTexture).Size  := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK);
-        (ppVolumeTexture).Size:= (ppVolumeTexture).Size or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT);
-        (ppVolumeTexture).Size:= (ppVolumeTexture).Size or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
+    (ppVolumeTexture).Size  := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK);
+    (ppVolumeTexture).Size:= (ppVolumeTexture).Size or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT);
+    (ppVolumeTexture).Size:= (ppVolumeTexture).Size or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
 
-        hRet := D3D_OK;
-     end;
-     *)
+    hRet := D3D_OK;
+  end;
 
   EmuSwapFS(fsXbox);
 
@@ -3023,7 +3024,7 @@ end;
 function XTL_EmuIDirect3DDevice8_CreateCubeTexture(
     EdgeLength: UINT; Levels: UINT; Usage: DWORD; Format: D3DFORMAT;
     Pool: D3DPOOL; ppCubeTexture: PX_D3DCubeTexture): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:2  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:98
 var
   hRet: HRESULT;
   PCFormat: D3DFORMAT;
@@ -3031,59 +3032,56 @@ begin
   hret := 0;
   EmuSwapFS(fsWindows);
 
-    DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateCubeTexture' +
-           #13#10'(' +
-           #13#10'   EdgeLength        : 0x%.08X' +
-           #13#10'   Levels            : 0x%.08X' +
-           #13#10'   Usage             : 0x%.08X' +
-           #13#10'   Format            : 0x%.08X' +
-           #13#10'   Pool              : 0x%.08X' +
-           #13#10'   ppCubeTexture     : 0x%.08X' +
-           #13#10');',
-           [EdgeLength, Levels, Usage, Ord(Format), Ord(Pool), ppCubeTexture]);
+  DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateCubeTexture' +
+         #13#10'(' +
+         #13#10'   EdgeLength        : 0x%.08X' +
+         #13#10'   Levels            : 0x%.08X' +
+         #13#10'   Usage             : 0x%.08X' +
+         #13#10'   Format            : 0x%.08X' +
+         #13#10'   Pool              : 0x%.08X' +
+         #13#10'   ppCubeTexture     : 0x%.08X' +
+         #13#10');',
+         [EdgeLength, Levels, Usage, Ord(Format), Ord(Pool), ppCubeTexture]);
 
-    // Convert Format (Xbox->PC)
-    (*PCFormat := EmuXB2PC_D3DFormat(Format);
+   // Convert Format (Xbox->PC)
+  PCFormat := EmuXB2PC_D3DFormat(Cardinal(Format));
 
-    // Cxbx TODO : HACK: Devices that don't support this should somehow emulate it!
-    if (PCFormat = D3DFMT_D16) then
-    begin
-        EmuWarning('D3DFMT_16 is an unsupported texture format!');
-        PCFormat := D3DFMT_X8R8G8B8;
-    end
-    else if (PCFormat = D3DFMT_P8) then
-    begin
-        EmuWarning('D3DFMT_P8 is an unsupported texture format!');
-        PCFormat := D3DFMT_X8R8G8B8;
-    end
-    else if (PCFormat = D3DFMT_D24S8) then
-    begin
-        EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
-        PCFormat := D3DFMT_X8R8G8B8;
-    end
-    else if (PCFormat = D3DFMT_YUY2) then
-    begin
-        CxbxKrnlCleanup('YUV not supported for cube textures');
-     end;
+  // Cxbx TODO : HACK: Devices that don't support this should somehow emulate it!
+  if (PCFormat = D3DFMT_D16) then
+  begin
+    EmuWarning('D3DFMT_16 is an unsupported texture format!');
+    PCFormat := D3DFMT_X8R8G8B8;
+  end
+  else if (PCFormat = D3DFMT_P8) then
+  begin
+    EmuWarning('D3DFMT_P8 is an unsupported texture format!');
+    PCFormat := D3DFMT_X8R8G8B8;
+  end
+  else if (PCFormat = D3DFMT_D24S8) then
+  begin
+    EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
+    PCFormat := D3DFMT_X8R8G8B8;
+  end
+  else if (PCFormat = D3DFMT_YUY2) then
+  begin
+    CxbxKrnlCleanup('YUV not supported for cube textures');
+  end;
 
-(*    *ppCubeTexture := new X_D3DCubeTexture();
+  New({PPX_D3DCubeTexture}ppCubeTexture);
 
-    HRESULT hRet = g_pD3DDevice8.CreateCubeTexture
-    (
-        EdgeLength, Levels,
-        0,  // Cxbx TODO : Xbox Allows a border to be drawn (maybe hack this in software ;[)
-        PCFormat, D3DPOOL_MANAGED,  and ((ppCubeTexture).EmuCubeTexture8)
-    );
+  (* Result = g_pD3DDevice8.CreateCubeTexture
+  (
+      EdgeLength, Levels,
+      0,  // Cxbx TODO : Xbox Allows a border to be drawn (maybe hack this in software ;[)
+      PCFormat, D3DPOOL_MANAGED,  and ((ppCubeTexture).EmuCubeTexture8)
+  );  *)
 
-    DbgPrintf('EmuD3D8: Created Cube Texture: 0x%.08X (0x%.08X)', [*ppCubeTexture, (ppCubeTexture).EmuCubeTexture8]);
+  DbgPrintf('EmuD3D8: Created Cube Texture: 0x%.08X (0x%.08X)', [@ppCubeTexture, (ppCubeTexture).EmuCubeTexture8]);
 
-    if (FAILED(hRet)) then
-        EmuWarning('CreateCubeTexture Failed!');
-*)
+  if (FAILED(Result)) then
+      EmuWarning('CreateCubeTexture Failed!');
 
   EmuSwapFS(fsXbox);
-
-  Result := hRet;
 end;
 
 function XTL_EmuIDirect3DDevice8_CreateIndexBuffer(
@@ -5311,9 +5309,10 @@ end;
 function XTL_EmuIDirect3DDevice8_CreateVertexBuffer2(
   Length: UINT
   ): PX_D3DVertexBuffer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80
 var
   pD3DVertexBuffer: PX_D3DVertexBuffer;
+  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -5323,19 +5322,19 @@ begin
          #13#10');',
          [Length]);
 
-  (*X_D3DVertexBuffer *pD3DVertexBuffer := new X_D3DVertexBuffer();
+  New({PX_D3DVertexBuffer}pD3DVertexBuffer);
 
-  HRESULT hRet = g_pD3DDevice8.CreateVertexBuffer
+(*  hRet := g_pD3DDevice8.CreateVertexBuffer
   (
       Length,
       0,
       0,
       D3DPOOL_MANAGED,
-      @pD3DVertexBuffer.EmuVertexBuffer8
-  );
+      pD3DVertexBuffer.EmuVertexBuffer8
+  ); *)
 
   if (FAILED(hRet)) then
-      EmuWarning('CreateVertexBuffer Failed!');    *)
+      EmuWarning('CreateVertexBuffer Failed!');
 
   {$ifdef _DEBUG_TRACK_VB}
   g_VBTrackTotal.insert(pD3DVertexBuffer.EmuVertexBuffer8);
@@ -5353,7 +5352,7 @@ function XTL_EmuIDirect3DDevice8_CreateVertexBuffer(Length: UINT;
 begin
   ppVertexBuffer := XTL_EmuIDirect3DDevice8_CreateVertexBuffer2(Length);
   Result := D3D_OK;
-end;      
+end;
 
 procedure XTL_EmuIDirect3DDevice8_EnableOverlay(Enable: Boolean); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -7100,7 +7099,7 @@ end;
 function XTL_EmuIDirect3DDevice8_CreatePalette2(
   Size: X_D3DPALETTESIZE
 ): PX_D3DPalette; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 const
   lk: array [0..5-1] of Integer = (
       256 * SizeOf(D3DCOLOR),    // D3DPALETTE_256
@@ -7122,7 +7121,7 @@ begin
 
   New({var PX_D3DPalette}pPalette);
 
-    pPalette.Common := 0;
+  pPalette.Common := 0;
   pPalette.Lock := $8000BEEF; // emulated reference count for palettes
   pPalette.Data := DWORD(AllocMem(lk[Ord(Size)] * SizeOf(uint08)));
 
