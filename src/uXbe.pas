@@ -586,11 +586,16 @@ begin
   Result := WideCharToString(m_Certificate.wszTitleName);
   if Result = '' then
     Result := ExtractFileName(m_szPath);
-  Result := FixInvalidFilePath(Result, '_');
 
+  Result := FixInvalidFilePath(Result);
 
-  if (m_Certificate.dwGameRegion and 7) > 0 then
+  if (m_Certificate.dwVersion > 0)
+  or (m_Certificate.dwGameRegion > 0) then
+  begin
     Result := Result + '-' + GameRegionToString(m_Certificate.dwGameRegion);
+    if (m_Certificate.dwVersion > 0) and (m_Certificate.dwVersion < 20) then
+      Result := Result + ' V' + IntToStr(m_Certificate.dwVersion);
+  end;
 
   Result := Result + '.txt';
 end;

@@ -184,7 +184,7 @@ procedure TfrmXdkTracker.ImportTxtDumps1Click(Sender: TObject);
 var
   TxtDumpsFolder: string;
 begin
-  TxtDumpsFolder := '..\..\resource\XBEDumps\';
+  TxtDumpsFolder := '..\resource\XBEDumps\';
   if SelectDirectory(TxtDumpsFolder, [], 0) then
     ImportTxtDumps(TxtDumpsFolder);
 end;
@@ -394,7 +394,7 @@ var
   XBEInfo: TXBEInfo;
 begin
   if not XMLDocument.Active then
-    Exit;
+    XMLDocument.Active := True;
 
   XMLDocument.ChildNodes.Clear;
   XMLRootNode := XMLDocument.AddChild('XBEInfo');
