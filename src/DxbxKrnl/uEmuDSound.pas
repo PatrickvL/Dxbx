@@ -719,8 +719,8 @@ end;
 
 (*HRESULT WINAPI XTL_EmuDirectSoundCreateBuffer
 (
-    X_DSBUFFERDESC         *pdsbd,
-    X_CDirectSoundBuffer  **ppBuffer
+    pdsbd: PX_DSBUFFERDESC;p
+    ppBuffer: PPX_CDirectSoundBuffer
 )
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
@@ -796,6 +796,7 @@ begin
 
     // Cxbx TODO: Garbage Collection
     *ppBuffer := new X_CDirectSoundBuffer();
+    New({var PX_CDirectSoundBuffer}ppBuffer^);
 
     (ppBuffer).EmuDirectSoundBuffer8 := 0;
     (ppBuffer).EmuBuffer := 0;

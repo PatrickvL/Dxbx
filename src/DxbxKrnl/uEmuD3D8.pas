@@ -4084,7 +4084,7 @@ begin
         DbgPrintf('EmuIDirect3DResource8_Register :-> Texture...');
 
 
-      pPixelContainer := pX_D3DPixelContainer(pResource);
+      pPixelContainer := PX_D3DPixelContainer(pResource);
 
       X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
       Format := EmuXB2PC_D3DFormat(X_Format);
@@ -4197,7 +4197,7 @@ begin
       end
       else
       begin
-        CxbxKrnlCleanup('0x%.08 X is not a supported format!', [X_Format]);
+        CxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
       end;
 
       if (X_Format = X_D3DFMT_YUY2) then
@@ -4251,10 +4251,8 @@ begin
         // create the happy little texture
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         begin
-
-          tmpIDirect3DSurface8 := pResource.EmuSurface8;
-          hRet := g_pD3DDevice8.CreateImageSurface(dwWidth, dwHeight, Format, tmpIDirect3DSurface8);
-          pResource.EmuSurface8 := tmpIDirect3DSurface8;
+          hRet := g_pD3DDevice8.CreateImageSurface(dwWidth, dwHeight, Format, {out}IDirect3DSurface8(pResource.Lock{EmuSurface8}));
+          pResource.EmuSurface8._AddRef;
 
           if (FAILED(hRet)) then
             CxbxKrnlCleanup('CreateImageSurface Failed!');
@@ -4309,7 +4307,7 @@ begin
             if (FAILED(hRet)) then
               CxbxKrnlCleanup('CreateCubeTexture Failed!');
 
-            DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created CubeTexture(0x%.08 X, 0x%.08 X)', [pResource, Pointer(pResource.EmuCubeTexture8)]);
+            DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created CubeTexture(0x%.08X, 0x%.08X)', [pResource, Pointer(pResource.EmuCubeTexture8)]);
           end
           else
           begin
@@ -4326,7 +4324,7 @@ begin
             if (FAILED(hRet)) then
               CxbxKrnlCleanup('CreateTexture Failed!');
 
-            DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Texture(0x%.08 X, 0x%.08 X)', [pResource, Pointer(pResource.EmuTexture8)]);
+            DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Texture(0x%.08X, 0x%.08X)', [pResource, Pointer(pResource.EmuTexture8)]);
           end;
 
         end;
@@ -4514,7 +4512,7 @@ begin
 
           szBuffer: array[0..255 - 1] of Char;
 
-          StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03 d - RegSurface%.03 d.bmp', X_Format, dwDumpSurface++);
+          StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface++]);
 
           D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pResource.EmuSurface8, 0, 0);
         end
@@ -4529,7 +4527,7 @@ begin
           begin
             IDirect3DSurface8 * pSurface := 0;
 
-            StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03 d - RegCubeTex%.03 d -%d.bmp', X_Format, dwDumpCube++, v);
+            StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegCubeTex%.03d -%d.bmp', [X_Format, dwDumpCube++, v]);
 
             pResource.EmuCubeTexture8.GetCubeMapSurface((D3DCUBEMAP_FACES)v, 0, @pSurface);
 
@@ -4542,7 +4540,7 @@ begin
 
           szBuffer: array[0..255 - 1] of Char;
 
-          StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03 d - RegTexture%.03 d.bmp', X_Format, dwDumpTex++);
+          StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex++]);
 
           D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource.EmuTexture8, 0);
         end;
@@ -4606,7 +4604,7 @@ function XTL_EmuIDirect3DResource8_AddRef(
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:55  
 var
   uRet: ULONG;
-  pResource8: IDirect3DResource8;
+  //pResource8: IDirect3DResource8;
 begin
   EmuSwapFS(fsWindows);
 

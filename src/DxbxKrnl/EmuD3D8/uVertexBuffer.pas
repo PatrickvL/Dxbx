@@ -1516,7 +1516,7 @@ else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT2) or (X_Format = 
             end
             else
             begin
-              CxbxKrnlCleanup('$%.08 X is not a supported format!', X_Format);
+              CxbxKrnlCleanup('$%.08X is not a supported format!', [X_Format]);
             end;
 
             // as we iterate through mipmap levels, we'll adjust the source resource offset

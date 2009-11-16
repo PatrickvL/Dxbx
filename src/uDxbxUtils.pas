@@ -76,7 +76,7 @@ function StartsWithText(const aString, aPrefix: string): Boolean;
 procedure Swap(var aElement1, aElement2); overload;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
-function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
+function FixInvalidFilePath(const aFilePath: string): string;
 
 function DebugModeToString(const aDebugMode: TDebugMode): string;
 
@@ -120,19 +120,33 @@ end;
 
 {$STACKFRAMES ON}
 
-function FixInvalidFilePath(const aFilePath: string; const aReplacement: string = '_'): string;
-const
-  InvalidNTFSFilePathChars: set of AnsiChar = [#0..#31] + ['/', '\', ':', '*', '?', '"', '<', '>', '|', #127];
+function FixInvalidFilePath(const aFilePath: string): string;
 var
   i: Integer;
 begin
-  Result := '';
-  for i := 1 to Length(aFilePath) do
+  Result := aFilePath;
+  for i := 1 to Length(Result) do
   begin
-    if AnsiChar(aFilePath[i]) in InvalidNTFSFilePathChars then
-      Result := Result + aReplacement
-    else
-      Result := Result + aFilePath[i];
+    case AnsiChar(Result[i]) of
+      #0..#31, #127:
+        Result[i] := ' ';
+      '/', '\':
+        Result[i] := '_';
+      ':':
+        Result[i] := ';';
+      '*':
+        Result[i] := '•';
+      '?':
+        Result[i] := '¿';
+      '"':
+        Result[i] := '”';
+      '<':
+        Result[i] := '‹';
+      '>':
+        Result[i] := '›';
+      '|':
+        Result[i] := '¦';
+    end;
   end;
 end;
 
