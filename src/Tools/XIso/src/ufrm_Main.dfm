@@ -151,8 +151,8 @@ object frm_Main: Tfrm_Main
       Width = 611
       Height = 21
       AutoSize = True
-      ButtonHeight = 0
-      ButtonWidth = 0
+      ButtonHeight = 21
+      ButtonWidth = 33
       Caption = 'ToolBar1'
       Menu = MainMenu1
       ShowCaptions = True
@@ -301,7 +301,7 @@ object frm_Main: Tfrm_Main
         Width = 254
         Height = 21
         Style = csDropDownList
-        ItemHeight = 0
+        ItemHeight = 13
         TabOrder = 0
       end
       object ToolButton4: TToolButton

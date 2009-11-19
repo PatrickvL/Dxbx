@@ -262,11 +262,11 @@ begin
 
     m_Xbe.ExportLogoBitmap(i_gray);
 
-    if(m_Xbe.GetError() != 0)
+    if (m_Xbe.GetError() != 0) then
     {
         MessageBox(m_hwnd, m_Xbe.GetError(), 'Cxbx', MB_ICONEXCLAMATION | MB_OK);
 
-        if(m_Xbe.IsFatal())
+        if (m_Xbe.IsFatal()) then
             CloseXbe();
 
         return;
@@ -583,17 +583,26 @@ end; // TXbe.Create
 
 function TXbe.DetermineDumpFileName: string;
 begin
+  // Use Title, or when that's empty, the parent folder name : 
   Result := WideCharToString(m_Certificate.wszTitleName);
   if Result = '' then
     Result := ExtractFileName(m_szPath);
 
+  // Fixup invalid filename characters :
   Result := FixInvalidFilePath(Result);
 
+  // Replace '_' with space :
+  Result := StringReplace(Result, '_', ' ', [rfReplaceAll]);
+
+  // Try to capitalize string better :
+  Result := RecapitalizeString(Result);
+
+  // Include game region (and possibly version) :
   if (m_Certificate.dwVersion > 0)
   or (m_Certificate.dwGameRegion > 0) then
   begin
     Result := Result + '-' + GameRegionToString(m_Certificate.dwGameRegion);
-    if (m_Certificate.dwVersion > 0) and (m_Certificate.dwVersion < 20) then
+    if (m_Certificate.dwVersion > 1) and (m_Certificate.dwVersion < 20) then
       Result := Result + ' V' + IntToStr(m_Certificate.dwVersion);
   end;
 

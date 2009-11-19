@@ -35,7 +35,6 @@ object Form5: TForm5
         Width = 50
       end>
     OnDrawPanel = StatusBar1DrawPanel
-    ExplicitTop = 322
   end
   object Panel1: TPanel
     Left = 0
@@ -44,7 +43,6 @@ object Form5: TForm5
     Height = 290
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 271
     object Splitter1: TSplitter
       Left = 186
       Top = 1
@@ -71,7 +69,6 @@ object Form5: TForm5
       OnDragOver = TreeViewDirectoriosDragOver
       OnEdited = TreeViewDirectoriosEdited
       OnKeyPress = TreeViewDirectoriosKeyPress
-      ExplicitHeight = 269
     end
     object ListviewFicheros: TListView
       Left = 188
@@ -107,7 +104,6 @@ object Form5: TForm5
       OnCustomDrawItem = ListviewFicherosCustomDrawItem
       OnCustomDrawSubItem = ListviewFicherosCustomDrawSubItem
       OnDblClick = ListviewFicherosDblClick
-      ExplicitHeight = 269
     end
   end
   object CoolBar1: TCoolBar

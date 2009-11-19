@@ -1160,7 +1160,7 @@ begin
        ApcContext, IoStatusBlock, Buffer, Length, ByteOffset{, iif(ByteOffset = nil, 0, ByteOffset.QuadPart)}]);
 
   // Halo..
-  //    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
+  //    if (ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800) then
   //        _asm int 3
 
   Result := JwaNative.NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);

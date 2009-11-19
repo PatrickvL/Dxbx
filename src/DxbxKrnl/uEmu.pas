@@ -55,7 +55,7 @@ var
 procedure EmuWarning(szWarningMessage: string); overload;
 procedure EmuWarning(szWarningMessage: string; const Args: array of const); overload;
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
-function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
+function EmuCheckAllocationSize(pBase: PVOID; largeBound: bool): Integer;
 procedure EmuCleanup(const szErrorMessage: string);
 function ExitException(e: LPEXCEPTION_POINTERS): Integer;
 
@@ -200,7 +200,7 @@ begin
               begin
                 DWORD dwCur := *(DWORD* )(dwPtr+v);
 
-                if(dwCur >= $803A6000 && dwCur < $819A6000)
+                if (dwCur >= $803A6000 && dwCur < $819A6000) then
                   *(DWORD* )(dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
               end;
             end;      *)
@@ -302,7 +302,7 @@ begin
 end;
 
 // check how many bytes were allocated for a structure
-function EmuCheckAllocationSize(pBase: Pointer; largeBound: bool): Integer;
+function EmuCheckAllocationSize(pBase: PVOID; largeBound: bool): Integer;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   MemoryBasicInfo: MEMORY_BASIC_INFORMATION;
@@ -375,7 +375,7 @@ begin
   //  Cleanup debug output
   FreeConsole();
 
-  (*if (GetConsoleTitle(buffer, 16) <> '' ) then
+  (*if (GetConsoleTitle(buffer, 16) <> '') then
     freopen('nul', 'w', stdout); *)
 
   TerminateProcess(GetCurrentProcess(), 0);

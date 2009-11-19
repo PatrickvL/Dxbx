@@ -764,7 +764,7 @@ function XTL_EmuXInputOpen(
 ): Handle; stdcall;
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:75
 var
-  pph: PPOLLING_PARAMETERS_HANDLE;
+  pPH: PPOLLING_PARAMETERS_HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -777,63 +777,62 @@ begin
     #13#10');',
     [DeviceType, dwPort, dwSlot, pPollingParameters]);
 
-  pph := nil;
+  pPH := nil;
 
   if {not nessecary : (dwPort >= 0) and} (dwPort <= 3) then
   begin
     if (g_hInputHandle[dwPort] = 0) then
     begin
-      (*pph := new POLLING_PARAMETERS_HANDLE();*)
+      New({var PPOLLING_PARAMETERS_HANDLE}pPH);
 
       if (pPollingParameters <> nil) then
       begin
-        (*pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();*)
-        memcpy(pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
+        New({var XINPUT_POLLING_PARAMETERS} pPH.pPollingParameters);
+        memcpy(pPH.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
-        pph.pPollingParameters := nil;
+        pPH.pPollingParameters := nil;
       end;
 
-      (*g_hInputHandle[dwPort] := pph; *)
+      (*g_hInputHandle[dwPort] := pPH; *)
     end
     else
     begin
-      (*pph := POLLING_PARAMETERS_HANDLE(g_hInputHandle[dwPort]);*)
+      (*pPH := POLLING_PARAMETERS_HANDLE(g_hInputHandle[dwPort]);*)
 
       if (pPollingParameters <> nil) then
       begin
-        if (pph.pPollingParameters = nil) then
+        if (pPH.pPollingParameters = nil) then
         begin
-          (*pph.pPollingParameters := new XINPUT_POLLING_PARAMETERS();*)
+          New({var XINPUT_POLLING_PARAMETERS}pPH.pPollingParameters);
         end;
 
-        memcpy(pph.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
+        memcpy(pPH.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
-        if (pph.pPollingParameters <> nil) then
+        if (pPH.pPollingParameters <> nil) then
         begin
-          (*delete pph.pPollingParameters;*)
-
-          pph.pPollingParameters := nil;
+          Dispose(pPH.pPollingParameters);
+          pPH.pPollingParameters := nil;
         end;
       end;
     end;
 
-    pph.dwPort := dwPort;
+    pPH.dwPort := dwPort;
   end;
 
   EmuSwapFS(fsXbox);
 
-  Result := Handle(pph);
+  Result := Handle(pPH);
 end;
 
 
 procedure XTL_EmuXInputClose(hDevice: Handle); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:90
 (*var
-  pph: PPOLLING_PARAMETERS_HANDLE; *)
+  pPH: PPOLLING_PARAMETERS_HANDLE; *)
 begin
   EmuSwapFS(fsWindows);
 
@@ -843,11 +842,11 @@ begin
     #13#10');',
     [hDevice]);
 
-  (*pph := POLLING_PARAMETERS_HANDLE(hDevice);*)
+  (*pPH := POLLING_PARAMETERS_HANDLE(hDevice);*)
 
   {  Markd out by CXBX
    no longer necessary
-  if (pph <> nil) then
+  if Assigned(pPH) then
   begin
     Integer v;
 
@@ -862,12 +861,10 @@ begin
       end;
     end;
 
-    if (pph.pPollingParameters <> nil) then
-    begin
-      delete pph.pPollingParameters;
-    end;
+    if Assigned(pPH.pPollingParameters) then
+      Dispose(pPH.pPollingParameters);
 
-    delete pph;
+    Dispose(pPH);
    end;
   }
 
@@ -890,7 +887,7 @@ begin
        #13#10');',
        [hDevice]);
 
-  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;*)
+  (*POLLING_PARAMETERS_HANDLE *pPH := (POLLING_PARAMETERS_HANDLE)hDevice;*)
 
   //
   // Poll input
@@ -938,7 +935,7 @@ function XTL_EmuXInputGetCapabilities(
   ): DWord; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
-  pph: PPOLLING_PARAMETERS_HANDLE;
+  pPH: PPOLLING_PARAMETERS_HANDLE;
   dwPort: DWord;
 begin
   EmuSwapFS(fsWindows);
@@ -952,11 +949,11 @@ begin
 
   Result := ERROR_INVALID_HANDLE;
 
-  pph := PPOLLING_PARAMETERS_HANDLE(hDevice);
+  pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
-  if (pph <> nil) then
+  if (pPH <> nil) then
   begin
-    dwPort := pph.dwPort;
+    dwPort := pPH.dwPort;
 
     if ({(dwPort >= 0) and} (dwPort <= 3)) then
     begin
@@ -977,7 +974,7 @@ function XTL_EmuXInputGetState(
 ): DWord; stdcall;
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
-  pph: PPOLLING_PARAMETERS_HANDLE;
+  pPH: PPOLLING_PARAMETERS_HANDLE;
   dwPort: DWord;
 begin
   EmuSwapFS(fsWindows);
@@ -991,13 +988,13 @@ begin
 
   Result := ERROR_INVALID_HANDLE;
 
-  pph := PPOLLING_PARAMETERS_HANDLE(hDevice);
+  pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
-  if (pph <> nil) then
+  if (pPH <> nil) then
   begin
-    if (pph.pPollingParameters <> nil) then
+    if (pPH.pPollingParameters <> nil) then
     begin
-      if (pph.pPollingParameters.fAutoPoll = Byte(False)) then
+      if (pPH.pPollingParameters.fAutoPoll = Byte(False)) then
       begin
         //
         // Cxbx TODO: uh..
@@ -1007,7 +1004,7 @@ begin
       end;
     end;
 
-    dwPort := pph.dwPort;
+    dwPort := pPH.dwPort;
 
     if ({(dwPort >= 0) and} (dwPort <= 3)) then
     begin
@@ -1041,9 +1038,9 @@ begin
 
   ret := ERROR_IO_PENDING;
 
-  (*POLLING_PARAMETERS_HANDLE *pph := (POLLING_PARAMETERS_HANDLE)hDevice;
+  (*POLLING_PARAMETERS_HANDLE *pPH := (POLLING_PARAMETERS_HANDLE)hDevice;
 
-  if (pph <> nil) then
+  if (pPH <> nil) then
   begin
     Integer v;
 
@@ -1438,7 +1435,7 @@ begin
     sprintf( szSectionName, '%s', ((DWORD* ) dwOffset) );
 
     // Do we have a match?
-    if( !strcmp( szSectionName, pSectionName ) )
+    if ( !strcmp( szSectionName, pSectionName ) ) then
     begin
       dwSection = i;
       break;
@@ -1447,7 +1444,7 @@ begin
 
   // If we have a match, get the raw address of this section
   // and return a pointer to that address.
-  if( dwSection != -1 )
+  if ( dwSection != -1 ) then
   begin
     pRet = (LPVOID) pSectionHeaders[dwSection].dwRawAddr;
   end;
@@ -1461,21 +1458,21 @@ begin
   DbgPrintf('Sections: %d', [g_NumSections]);
   DbgPrintf('Section List 0x%.08X', [g_pSectionList]);
 
-  if( g_pSectionList )
+  if ( g_pSectionList ) then
   begin
     for( int i = 0; i < (int) g_NumSections; i++ )
     begin
-      if( !strcmp( g_pSectionList[i].szSectionName, pSectionName ) )
+      if ( !strcmp( g_pSectionList[i].szSectionName, pSectionName ) ) then
       begin
         Section = i;
         break;
       end;
     end;
 
-    for( int i = 0; i < g_NumSections; i++ )
+    for (int i = 0; i < g_NumSections; i++)
       DbgPrintf('Section #%d: %s', [i, g_pSectionList[i].szSectionName]);
 
-    if( Section != -1 )
+    if (Section <> -1) then
     begin
       pRet = ((LPVOID) g_pSectionList[Section].dwSectionAddr);
     end;
@@ -1484,7 +1481,7 @@ begin
   end;
   else
   begin
-    EmuWarning( 'Section List not initialized!' );
+    EmuWarning('Section List not initialized!');
     __asm int 3;
   end;*/
 
@@ -1508,7 +1505,7 @@ begin
       [pSectionName]);
 
   // TODO: Implement (if necessary)?
-//  CxbxKrnlCleanup( 'XFreeSectionA is not implemented' );
+//  CxbxKrnlCleanup('XFreeSectionA is not implemented');
 
   EmuSwapFS(fsXbox);
 
@@ -1529,7 +1526,7 @@ begin
       [pSectionName]);
 
   // TODO: Implement (if necessary)?
-//  CxbxKrnlCleanup( 'XGetSectionHandleA is not implemented' );
+//  CxbxKrnlCleanup('XGetSectionHandleA is not implemented');
 
   EmuSwapFS(fsXbox);
 
@@ -1550,7 +1547,7 @@ begin
       [hSection]);
 
   // TODO: Implement (if necessary)?
-//  CxbxKrnlCleanup( 'XLoadSectionByHandle is not implemented' );
+//  CxbxKrnlCleanup('XLoadSectionByHandle is not implemented');
 
   EmuSwapFS(fsXbox);
 
@@ -1571,7 +1568,7 @@ begin
       [hSection]);
 
   // Cxbx TODO: Implement (if necessary)?
-//  CxbxKrnlCleanup( 'XLoadSectionByHandle is not implemented' );
+//  CxbxKrnlCleanup('XLoadSectionByHandle is not implemented');
 
   EmuSwapFS(fsXbox);
 

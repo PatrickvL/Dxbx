@@ -38,8 +38,8 @@ type
     FhStdOut: Handle;  // Handle to the standard output
     FhStdErr: Handle;  // Handle to the standard error (Output)
     FbConsoleAllocated: Boolean;  // Creation Flag
-    FBgAttrib: Cardinal; // Currently set BackGround Attribs.
-    FFgAttrib: Cardinal; // Currently set ForeGround Attribs.
+    FBgAttrib: uint32; // Currently set BackGround Attribs.
+    FFgAttrib: uint32; // Currently set ForeGround Attribs.
     SBInfo: TConsoleScreenBufferInfo;
   public
     constructor Create;
