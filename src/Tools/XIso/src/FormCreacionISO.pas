@@ -411,7 +411,7 @@ procedure TForm5.FormShow(Sender: TObject);
 begin
   if ProgressBar1 = nil then
   begin
-    ProgressBar1 := TProgressBar.Create(self);
+    ProgressBar1 := TProgressBar.Create(Self);
     ProgressBar1.Parent := StatusBar1;
     ProgressBar1.Position := 0;
     ProgressBar1.Step := 1;

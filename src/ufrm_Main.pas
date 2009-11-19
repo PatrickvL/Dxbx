@@ -352,7 +352,7 @@ procedure Tfrm_Main.CreateDllMenuOptions;
 
   function _CreateDLLToUseMenuItem(const u: TUseDLL): TMenuItem;
   begin
-    Result := TMenuItem.Create(self);
+    Result := TMenuItem.Create(Self);
     Result.Caption := GetDllDescription(u);
     Result.Tag := Ord(u);
     Result.OnClick := actSwitchDLLExecute;

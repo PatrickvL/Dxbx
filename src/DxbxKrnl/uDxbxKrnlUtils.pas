@@ -87,7 +87,7 @@ begin
   // Cleanup debug output
   CloseLogs(); // FreeConsole();
 
-       (* if(GetConsoleTitle(buffer, 16) <> '')
+       (* if (GetConsoleTitle(buffer, 16) <> '') then
             freopen('nul', 'w', stdout); *)
 
   TerminateProcess(GetCurrentProcess(), 0);

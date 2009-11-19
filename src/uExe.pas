@@ -224,7 +224,7 @@ begin
     {
         printf('Exe::Exe: Reading PE header...');
 
-        if(fread(&m_Header, SizeOf(m_Header), 1, ExeFile) != 1)
+        if (fread(&m_Header, SizeOf(m_Header), 1, ExeFile) != 1) then
         {
             SetError('Unexpected read error while reading PE header', True);
             goto cleanup;
@@ -232,7 +232,7 @@ begin
 
 
 
-(*        if(m_Header.m_magic != *(uint32*)(*'PE\0\0')
+(*        if (m_Header.m_magic != *(uint32*)(*'PE\0\0') then
         {
             SetError('Invalid file (could not locate PE header)', True);
             goto cleanup;
@@ -249,13 +249,13 @@ begin
     {
         printf('Exe::Exe: Reading Optional Header...');
 
-        if(fread(&m_OptionalHeader, SizeOf(m_OptionalHeader), 1, ExeFile) != 1)
+        if (fread(&m_OptionalHeader, SizeOf(m_OptionalHeader), 1, ExeFile) != 1) then
         {
             SetError('Unexpected read error while reading PE optional header', True);
             goto cleanup;
         }
 
-        if(m_OptionalHeader.m_magic != 0x010B)
+        if (m_OptionalHeader.m_magic != 0x010B) then
         {
             SetError('Invalid file (could not locate PE optional header)', True);
             goto cleanup;
@@ -276,7 +276,7 @@ begin
         {
             printf('Exe::Exe: Reading Section Header 0x%.4X...', v);
 
-            if(fread(&m_SectionHeader[v], SizeOf(SectionHeader), 1, ExeFile) != 1)
+            if (fread(&m_SectionHeader[v], SizeOf(SectionHeader), 1, ExeFile) != 1) then
             {
                 char buffer[255];
                 sprintf(buffer, 'Could not read PE section header %d (%Xh)', v, v);
@@ -307,7 +307,7 @@ begin
 
             memset(m_bzSection[v], 0, raw_size);
 
-            if(raw_size == 0)
+            if (raw_size == 0) then
             {
                 printf('OK');
                 Continue;
@@ -319,7 +319,7 @@ begin
             {
                 fseek(ExeFile, raw_addr, SEEK_SET);
 
-                if(fread(m_bzSection[v], raw_size, 1, ExeFile) != 1)
+                if (fread(m_bzSection[v], raw_size, 1, ExeFile) != 1) then
                 {
                     char buffer[255];
                     sprintf(buffer, 'Could not read PE section %d (%Xh)', v, v);
@@ -336,7 +336,7 @@ begin
 
 cleanup:
 
-    if(GetError() != 0)
+    if (GetError() != 0) then
     {
         printf('FAILED!');
         printf('Exe::Exe: ERROR -> %s', GetError());

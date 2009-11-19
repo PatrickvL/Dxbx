@@ -78,6 +78,8 @@ function RoundUp(dwValue, dwMult: DWord): DWord;
 
 function FixInvalidFilePath(const aFilePath: string): string;
 
+function RecapitalizeString(const aString: string): string;
+
 function DebugModeToString(const aDebugMode: TDebugMode): string;
 
 function IsValidHandle(const aHandle: LongWord): Boolean;
@@ -148,6 +150,95 @@ begin
         Result[i] := '¦';
     end;
   end;
+end;
+
+function RecapitalizeString(const aString: string): string;
+
+  procedure _ToUpper(aIndex: Integer);
+  begin
+    if Result[aIndex] in ['a'..'z'] then
+      Result[aIndex] := Char(Ord(Result[aIndex]) - $20);
+  end;
+
+  procedure _ToLower(aIndex, aEndIndex: Integer);
+  begin
+    while aIndex <= aEndIndex do
+    begin
+      if Result[aIndex] in ['A'..'Z'] then
+        Result[aIndex] := Char(Ord(Result[aIndex]) + $20);
+
+      Inc(aIndex);
+    end;
+  end;
+
+var
+  i, j: Integer;
+  NrOfChars: Integer;
+  NrOfUppercase: Integer;
+  DoOutput: Boolean;
+begin
+  // Start with input :
+  Result := Trim(aString);
+
+  // Insert spaces everywhere a uppercase follows a lowercase character :
+  i := Length(Result);
+  while i > 1 do
+  begin
+    if ((Result[i] in ['A'..'Z']) and (Result[i - 1] in ['a'..'z']))
+    or ((Result[i] in ['0'..'9']) and (Result[i - 1] in [':'..'z']))
+    or ((Result[i] in [':'..'z']) and (Result[i - 1] in ['0'..'9'])) then
+      Insert(' ', Result, i);
+
+    Dec(i);
+  end;
+
+  // Count all characters (uppercase separately) :
+  j := 1;
+  NrOfChars := 0;
+  NrOfUppercase := 0;
+  for i := 1 to Length(Result) do
+  begin
+    DoOutput := (i = Length(Result));
+    case AnsiChar(Result[i]) of
+      '''':
+        ; // Do nothing - ' can be part of a word
+
+      'a'..'z':
+        Inc(NrOfChars);
+
+      'A'..'Z':
+      begin
+        Inc(NrOfChars);
+        Inc(NrOfUppercase);
+      end;
+    else
+      DoOutput := True;
+    end;
+
+    if DoOutput then
+    begin
+      while Result[j] = ' ' do
+        Inc(j);
+      
+      // Very small words go to all-lowercase:
+      if NrOfChars <= 2 then
+        _ToLower(j, i)
+      else
+        // All-uppercase, up to 3 characters, stays that way :
+        if (NrOfUpperCase = NrOfChars) and (NrOfChars <= 3) then
+          // do nothing
+        else
+        begin
+          // The rest goes to Camel Caps :
+          _ToUpper(j);
+          _ToLower(j + 1, i);
+        end;
+
+      j := i + 1;
+      NrOfChars := 0;
+      NrOfUppercase := 0;
+    end;
+  end; // for
 end;
 
 procedure Swap(var aElement1, aElement2);

@@ -90,13 +90,13 @@ begin
            GetCurrentThreadId(), pSource, Pitch, pRect, pDest, Width, Height,
            pPoint, BytesPerPixel);
 
-    if(pRect == NULL && pPoint == NULL && Pitch == 0)
+    if (pRect == NULL && pPoint == NULL && Pitch == 0) then
     {
         memcpy(pDest, pSource, Width*Height*BytesPerPixel);
     }
     else
     {
-        if(pPoint != NULL && (pPoint->x != 0 || pPoint->y != 0))
+        if (pPoint != NULL && (pPoint->x != 0 || pPoint->y != 0)) then
             CxbxKrnlCleanup("Temporarily unsupported swizzle (very easy fix)");
 
         DWORD dwMaxY = Height;
@@ -105,7 +105,7 @@ begin
         uint08 *pSrc = (uint08*)(*pSource;
         uint08 *pDst = (uint08*)(*pDest;
 
-        if(pRect != 0)
+        if (pRect != 0) then
         {
             pSrc += pRect->top*Pitch;
             pSrc += pRect->left;
@@ -160,7 +160,7 @@ end;
            GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
            Depth, pPoint, BytesPerPixel);
 
-    if(pBox == NULL && pPoint == NULL && RowPitch == 0 && SlicePitch == 0)
+    if (pBox == NULL && pPoint == NULL && RowPitch == 0 && SlicePitch == 0) then
     {
         memcpy(pDest, pSource, Width*Height*Depth*BytesPerPixel);
     }
@@ -207,25 +207,25 @@ begin
 	i := 1;
 	j := 1;*)
 
-//	MARKED OUT CXBX: while( (i >= dwWidth) || (i >= dwHeight) || (i >= dwDepth) )
+//	MARKED OUT CXBX: while ((i >= dwWidth) or (i >= dwHeight) or (i >= dwDepth))
 
 { TODO -oDXBX : needs to be translated }
-(*  while( (i <= dwWidth) or (i <= dwHeight) or (i <= dwDepth) ) do
+(*  while ((i <= dwWidth) or (i <= dwHeight) or (i <= dwDepth)) do
   begin
 
-    if(i < dwWidth) then
+    if (i < dwWidth) then
     begin
 			dwMaskU |= j;
 			j<<=1;
 		end;
 
-    if(i < dwHeight) then
+    if (i < dwHeight) then
     begin
 			dwMaskV |= j;
 			j<<=1;
 		end;
 
-    if(i < dwDepth) then
+    if (i < dwDepth) then
     begin
 			dwMaskW |= j;
       j<<=1;
@@ -255,13 +255,13 @@ begin
 			else            dwOffsetU<<=1;
 		}
 
-        if(i<=dwMaskV)
+        if (i<=dwMaskV) then
         {
 			if(dwMaskV & i) dwSV |= (dwOffsetV & i);
 			else            dwOffsetV<<=1;
 		}
 
-        if(i<=dwMaskW)
+        if (i<=dwMaskW) then
         {
 			if(dwMaskW & i) dwSW |= (dwOffsetW & i);
 			else            dwOffsetW<<=1;

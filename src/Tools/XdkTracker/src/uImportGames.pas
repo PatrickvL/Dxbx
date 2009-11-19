@@ -25,7 +25,8 @@ uses
   Dialogs, Menus, ComCtrls, StdCtrls, ExtCtrls,
   // Dxbx
   uXbe,
-  uData;
+  uData,
+  uDxbxUtils;
 
 type
   Tfrm_XBEList = class(TForm)
@@ -225,6 +226,12 @@ begin
         Width := 200;
       end;
 
+//      with lst_XBEs.Columns.Add do
+//      begin
+//        Caption := 'Suggested title';
+//        Width := 150;
+//      end;
+
       with lst_XBEs.Columns.Add do
       begin
         Caption := 'Game region';
@@ -233,13 +240,13 @@ begin
 
       with lst_XBEs.Columns.Add do
       begin
-        Caption := 'Dumped with';
-        Width := 175;
+        Caption := 'Filename';
+        Width := 125;
       end;
 
       with lst_XBEs.Columns.Add do
       begin
-        Caption := 'Filename';
+        Caption := 'Dumped with';
         Width := 150;
       end;
 
@@ -283,11 +290,12 @@ begin
 
       Line := lst_XBEs.Items.Add;
       Line.Data := XBEInfo;
-      Line.Caption := XBEInfo.Title;
       Line.Checked := not XBEInfo.IsDuplicate;
+      Line.Caption := XBEInfo.Title;
+//      Line.SubItems.Add(RecapitalizeString(XBEInfo.Title));
       Line.SubItems.Add(GameRegionToString(XBEInfo.GameRegion));
-      Line.SubItems.Add(XBEInfo.DumpInfo);
       Line.SubItems.Add(XBEInfo.FileName);
+      Line.SubItems.Add(XBEInfo.DumpInfo);
       for j := 0 to MyXDKLibNamesList.Count - 1 do
         Line.SubItems.Add(XBEInfo.LibVersions.Values[MyXDKLibNamesList[j]]);
 

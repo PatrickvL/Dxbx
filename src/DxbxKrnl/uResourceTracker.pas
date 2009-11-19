@@ -44,14 +44,14 @@ type
 
   ResourceTracker = object(Mutex)
   public
-    function exists(pResource: Pointer): BOOL; overload;
-    function exists(uiKey: Cardinal): BOOL; overload;
-    function get(pResource: Pointer): PVOID; overload;
-    function get(uiKey: Cardinal): PVOID; overload;
-    procedure insert(uiKey: Cardinal; pResource: Pointer); overload;
-    procedure insert(pResource: Pointer); overload;
-    procedure remove(uiKey: Cardinal); overload;
-    procedure remove(pResource: Pointer); overload;
+    function exists(pResource: PVOID): BOOL; overload;
+    function exists(uiKey: uint32): BOOL; overload;
+    function get(pResource: PVOID): PVOID; overload;
+    function get(uiKey: uint32): PVOID; overload;
+    procedure insert(uiKey: uint32; pResource: PVOID); overload;
+    procedure insert(pResource: PVOID); overload;
+    procedure remove(uiKey: uint32); overload;
+    procedure remove(pResource: PVOID); overload;
   end;
 
 var
@@ -79,19 +79,19 @@ implementation
         // clear the tracker
         void clear();
 
-        // insert a ptr using the pResource pointer as key
+        // insert a ptr using the pResource PVOID as key
         void insert(void *pResource);
 
         // insert a ptr using an explicit key
         void insert(uint32 uiKey, void *pResource);
 
-        // remove a ptr using the pResource pointer as key
+        // remove a ptr using the pResource PVOID as key
         void remove(void *pResource);
 
         // remove a ptr using an explicit key
         void remove(uint32 uiKey);
 
-        // check for existance of ptr using the pResource pointer as key
+        // check for existance of ptr using the pResource PVOID as key
         bool exists(void *pResource);
 
         // check for existance of an explicit key
@@ -126,12 +126,12 @@ ResourceTracker::~ResourceTracker()
 
 { ResourceTracker }
 
-function ResourceTracker.exists(pResource: Pointer): BOOL;
+function ResourceTracker.exists(pResource: PVOID): BOOL;
 begin
 (*  return exists((uint32)pResource); *)
 end;
 
-function ResourceTracker.exists(uiKey: Cardinal): BOOL;
+function ResourceTracker.exists(uiKey: uint32): BOOL;
 begin
 (*    this->Lock();
 
@@ -139,7 +139,7 @@ begin
 
     while(cur != 0)
     {
-        if(cur->uiKey == uiKey)
+        if (cur->uiKey == uiKey) then
         {
             this->Unlock();
             return true;
@@ -153,18 +153,18 @@ begin
     return false; *)
 end;
 
-function ResourceTracker.get(pResource: Pointer): PVOID;
+function ResourceTracker.get(pResource: PVOID): PVOID;
 begin
 (*    return get((uint32)pResource); *)
 end;
 
-function ResourceTracker.get(uiKey: Cardinal): PVOID;
+function ResourceTracker.get(uiKey: uint32): PVOID;
 begin
 (*    RTNode *cur = m_head;
 
     while(cur != 0)
     {
-        if(cur->uiKey == uiKey)
+        if (cur->uiKey == uiKey) then
         {
             return cur->pResource;
         }
@@ -175,18 +175,18 @@ begin
     return 0; *)
 end;
 
-procedure ResourceTracker.insert(pResource: Pointer);
+procedure ResourceTracker.insert(pResource: PVOID);
 begin
 (*    insert((uint32)pResource, pResource); *)
 end;
 
-procedure ResourceTracker.insert(uiKey: Cardinal; pResource: Pointer);
+procedure ResourceTracker.insert(uiKey: uint32; pResource: PVOID);
 begin
-  self.Lock;
+  Self.Lock;
 
   if exists(uiKey) then
   begin
-    self.Unlock();
+    Self.Unlock();
     Exit;
   end;
 
@@ -208,26 +208,27 @@ begin
   m_tail.uiKey := 0;
   m_tail.pNext := 0;
 *)
-  self.Unlock();
+  Self.Unlock();
 end;
 
-procedure ResourceTracker.remove(pResource: Pointer);
+procedure ResourceTracker.remove(pResource: PVOID);
 begin
-(*    remove((uint32)pResource); *)
+   remove(uint32(pResource));
 end;
 
-procedure ResourceTracker.remove(uiKey: Cardinal);
+procedure ResourceTracker.remove(uiKey: uint32);
 begin
-(*    this->Lock();
-
+  Self.Lock();
+  
+(*
     RTNode *pre = 0;
     RTNode *cur = m_head;
 
     while(cur != 0)
     {
-        if(cur->uiKey == uiKey)
+        if (cur->uiKey == uiKey) then
         {
-            if(pre != 0)
+            if (pre != 0) then
             {
                 pre->pNext = cur->pNext;
             }
@@ -235,7 +236,7 @@ begin
             {
                 m_head = cur->pNext;
 
-                if(m_head->pNext == 0)
+                if (m_head->pNext == 0) then
                 {
                     delete m_head;
 
@@ -254,10 +255,8 @@ begin
         pre = cur;
         cur = cur->pNext;
     }
-
-    this->Unlock();
-
-    return;    *)
+*)
+  Self.Unlock();
 end;
 
 end.
