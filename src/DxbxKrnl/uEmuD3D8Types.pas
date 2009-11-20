@@ -292,6 +292,7 @@ type
   public
     Common: DWord;
     Data: DWord;
+    // union {
     Lock: DWord;
 
     // Dxnx Note : Delphi doesn't accept interfaces in a union,
@@ -300,7 +301,6 @@ type
     // with Lock, as in the original Cxbx declaration of this type).
     //
     // Be aware that there's no reference-counting possible this way!
-    
     property EmuResource8: IDirect3DResource8 read GetEmuResource8 write SetEmuResource8;
     property EmuBaseTexture8: IDirect3DBaseTexture8 read GetEmuBaseTexture8 write SetEmuBaseTexture8;
     property EmuTexture8: IDirect3DTexture8 read GetEmuTexture8 write SetEmuTexture8;
@@ -309,6 +309,7 @@ type
     property EmuSurface8: IDirect3DSurface8 read GetEmuSurface8 write SetEmuSurface8;
     property EmuVertexBuffer8: IDirect3DVertexBuffer8 read GetEmuVertexBuffer8 write SetEmuVertexBuffer8;
     property EmuIndexBuffer8: IDirect3DIndexBuffer8 read GetEmuIndexBuffer8 write SetEmuIndexBuffer8;
+    // }; // end of union
   end;
   PX_D3DResource = ^X_D3DResource;
 
@@ -460,82 +461,82 @@ end;
 
 function X_D3DResource.GetEmuResource8: IDirect3DResource8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DResource8(Lock);
 end;
 
 function X_D3DResource.GetEmuBaseTexture8: IDirect3DBaseTexture8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DBaseTexture8(Lock);
 end;
 
 function X_D3DResource.GetEmuTexture8: IDirect3DTexture8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DTexture8(Lock);
 end;
 
 function X_D3DResource.GetEmuVolumeTexture8: IDirect3DVolumeTexture8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DVolumeTexture8(Lock);
 end;
 
 function X_D3DResource.GetEmuCubeTexture8: IDirect3DCubeTexture8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DCubeTexture8(Lock);
 end;
 
 function X_D3DResource.GetEmuSurface8: IDirect3DSurface8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DSurface8(Lock);
 end;
 
 function X_D3DResource.GetEmuVertexBuffer8: IDirect3DVertexBuffer8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DVertexBuffer8(Lock);
 end;
 
 function X_D3DResource.GetEmuIndexBuffer8: IDirect3DIndexBuffer8;
 begin
-  Pointer(Result) := Pointer(Lock);
+  Result := IDirect3DIndexBuffer8(Lock);
 end;
 
 procedure X_D3DResource.SetEmuBaseTexture8(Value: IDirect3DBaseTexture8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DBaseTexture8(Lock) := Value;
 end;
 
 procedure X_D3DResource.SetEmuCubeTexture8(Value: IDirect3DCubeTexture8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DCubeTexture8(Lock) := Value;
 end;
 
 procedure X_D3DResource.SetEmuIndexBuffer8(Value: IDirect3DIndexBuffer8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DIndexBuffer8(Lock) := Value;
 end;
 
 procedure X_D3DResource.SetEmuResource8(Value: IDirect3DResource8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DResource8(Lock) := Value;
 end;
 
 procedure X_D3DResource.SetEmuSurface8(Value: IDirect3DSurface8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DSurface8(Lock) := Value;
 end;
 
 procedure X_D3DResource.SetEmuTexture8(Value: IDirect3DTexture8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DTexture8(Lock) := Value;
 end;
 
 procedure X_D3DResource.SetEmuVertexBuffer8(Value: IDirect3DVertexBuffer8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DVertexBuffer8(Lock) := Value;
 end;
 
 procedure X_D3DResource.SetEmuVolumeTexture8(Value: IDirect3DVolumeTexture8);
 begin
-  Pointer(Lock) := Pointer(Value);
+  IDirect3DVolumeTexture8(Lock) := Value;
 end;
 
 end.

@@ -505,15 +505,15 @@ begin
 end;
 
 (* Cxbx commented this out :
-// convert from pc to xbox texture transform state types (unnecessary so far)
-if((uint32)State < 4)
-    State = (D3DTRANSFORMSTATETYPE)(State - 2);
-else if((uint32)State < 20)
-    State = (D3DTRANSFORMSTATETYPE)(State - 14);
-else if((uint32)State > 255)
-    State = (D3DTRANSFORMSTATETYPE)(State - 250);
-else
-    CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
+  // convert from pc to xbox texture transform state types (unnecessary so far)
+  if (uint32(State) < 4) then
+    State := D3DTRANSFORMSTATETYPE(State - 2)
+  else if (uint32(State) < 20) then
+    State := D3DTRANSFORMSTATETYPE(State - 14)
+  else if (uint32(State) > 255) then
+    State := D3DTRANSFORMSTATETYPE(State - 250)
+  else
+    CxbxKrnlCleanup('Unknown Transform State Type (%d)', [State]);
 *)
 
 // convert from xbox to pc fill modes

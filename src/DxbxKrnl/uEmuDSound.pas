@@ -85,17 +85,17 @@ begin
         continue;
 
     // unlock existing lock
-    if(g_pDSoundBufferCache[v].EmuLockPtr1 <> 0) then
+    if (g_pDSoundBufferCache[v].EmuLockPtr1 <> 0) then
         g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Unlock(g_pDSoundBufferCache[v].EmuLockPtr1, g_pDSoundBufferCache[v].EmuLockBytes1, g_pDSoundBufferCache[v].EmuLockPtr2, g_pDSoundBufferCache[v].EmuLockBytes2);
 
     hRet := g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundBufferCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
-    if(SUCCEEDED(hRet)) then
+    if (SUCCEEDED(hRet)) then
     begin
-        if(pAudioPtr <> 0) then
+        if (pAudioPtr <> 0) then
             memcpy(pAudioPtr,  g_pDSoundBufferCache[v].EmuBuffer, dwAudioBytes);
 
-        if(pAudioPtr2 <> 0) then
+        if (pAudioPtr2 <> 0) then
             memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v].EmuBuffer+dwAudioBytes), dwAudioBytes2);
 
         g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
@@ -115,17 +115,17 @@ procedure HackUpdateSoundStreams();
   hRet : HRESULT; *)
 begin
   (* for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do begin
-        if(g_pDSoundStreamCache[v] = 0 or g_pDSoundStreamCache[v].EmuBuffer = 0) then
+        if (g_pDSoundStreamCache[v] = 0 or g_pDSoundStreamCache[v].EmuBuffer = 0) then
             continue;
 
         hRet := g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
-        if(SUCCEEDED(hRet)) then
+        if (SUCCEEDED(hRet)) then
         begin
-            if(pAudioPtr <> 0) then
+            if (pAudioPtr <> 0) then
                 memcpy(pAudioPtr,  g_pDSoundStreamCache[v].EmuBuffer, dwAudioBytes);
 
-            if(pAudioPtr2 <> 0) then
+            if (pAudioPtr2 <> 0) then
                 memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundStreamCache[v].EmuBuffer+dwAudioBytes), dwAudioBytes2);
 
             g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
@@ -149,20 +149,20 @@ var
   hRet: HRESULT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80
 begin
-  if(dwBytes = pThis.EmuBufferDesc.dwBufferBytes) or (dwBytes = 0) then
+  if (dwBytes = pThis.EmuBufferDesc.dwBufferBytes) or (dwBytes = 0) then
       Exit;
 
-  DbgPrintf('EmuResizeIDirectSoundBuffer8 : Resizing not  ($%.08X.$%.08X)', [pThis.EmuBufferDesc.dwBufferBytes, dwBytes]);
+  DbgPrintf('EmuResizeIDirectSoundBuffer8 : Resizing! ($%.08X.$%.08X)', [pThis.EmuBufferDesc.dwBufferBytes, dwBytes]);
 
   hRet := pThis.EmuDirectSoundBuffer8.GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
 
-  if(FAILED(hRet)) then
-      CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation not ');
+  if (FAILED(hRet)) then
+      CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
   hRet := pThis.EmuDirectSoundBuffer8.GetStatus(dwStatus);
 
-  if(FAILED(hRet)) then
-      CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation not ');
+  if (FAILED(hRet)) then
+      CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
   // release old buffer
   while(pThis.EmuDirectSoundBuffer8._Release() > 0) do
@@ -173,32 +173,32 @@ begin
 
   (*hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc, pThis.EmuDirectSoundBuffer8, 0); *)
 
-  if(FAILED(hRet)) then
-      CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed not ');
+  if (FAILED(hRet)) then
+      CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
 
   pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwPlayCursor);
 
-(*  if(dwStatus and DSBSTATUS_PLAYING) then
+(*  if (dwStatus and DSBSTATUS_PLAYING) then
       pThis.EmuDirectSoundBuffer8.Play(0, 0, pThis.EmuPlayFlags); *)
 end;
 
 
 // resize an emulated directsound stream, if necessary
 (*procedure EmuResizeIDirectSoundStream8(var pThis: XTL.X_CDirectSoundStream; dwBytes: DWORD);
-    if(dwBytes = pThis.EmuBufferDesc.dwBufferBytes) then 
+    if (dwBytes = pThis.EmuBufferDesc.dwBufferBytes) then 
         Exit;
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus;
 
     HRESULT hRet := pThis.EmuDirectSoundBuffer8.GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
 
-    if(FAILED(hRet)) then 
-        CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation not ');
+    if (FAILED(hRet)) then 
+        CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
     hRet := pThis.EmuDirectSoundBuffer8.GetStatus(@dwStatus);
 
-    if(FAILED(hRet)) then 
-        CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation not ');
+    if (FAILED(hRet)) then 
+        CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
     // release old buffer
     while(pThis.EmuDirectSoundBuffer8.Release() > 0) begin   end;
@@ -207,8 +207,8 @@ end;
 
     hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc, @pThis.EmuDirectSoundBuffer8, 0);
 
-    if(FAILED(hRet)) then 
-        CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed not ');
+    if (FAILED(hRet)) then 
+        CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
 
     pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwPlayCursor);
 
@@ -237,7 +237,7 @@ begin
       #13#10'   ppDirectSound             : 0x%.08X' +
       #13#10'   pUnknown                  : 0x%.08X' +
       #13#10');',
-            [pguidDeviceId, ppDirectSound, pUnknown]);
+      [pguidDeviceId, ppDirectSound, pUnknown]);
 
 
   if Initialized then
@@ -316,7 +316,7 @@ begin
   inc(g_pDSound8RefCount);
 
   (* temporarily (?) disabled by cxbx
-  if(uRet = 1) then
+  if (uRet = 1) then
       pThis.Release();
   //*)
 
@@ -741,36 +741,36 @@ begin
     begin
         DWORD dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000 or $00080000;
 
-        if(pdsbd.dwFlags and (~dwAcceptableMask)) then
+        if (pdsbd.dwFlags and (~dwAcceptableMask)) then
             EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', pdsbd.dwFlags and (~dwAcceptableMask));
 
         pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
         pDSBufferDesc.dwFlags := (pdsbd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
         pDSBufferDesc.dwBufferBytes := pdsbd.dwBufferBytes;
 
-        if(pDSBufferDesc.dwBufferBytes < DSBSIZE_MIN) then
+        if (pDSBufferDesc.dwBufferBytes < DSBSIZE_MIN) then
             pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
-        else if(pDSBufferDesc.dwBufferBytes > DSBSIZE_MAX) then
+        else if (pDSBufferDesc.dwBufferBytes > DSBSIZE_MAX) then
             pDSBufferDesc.dwBufferBytes := DSBSIZE_MAX;
 
         pDSBufferDesc.dwReserved := 0;
 
-        if(pdsbd.lpwfxFormat <> 0) then
+        if (pdsbd.lpwfxFormat <> 0) then
         begin
             pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX)CxbxMalloc(SizeOf(WAVEFORMATEX)+pdsbd.lpwfxFormat.cbSize);
             memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, SizeOf(WAVEFORMATEX));
 
-            if(pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
+            if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
             begin
                 dwEmuFlags := dwEmuFlags or DSB_FLAG_ADPCM;
 
-                EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported not ');
+                EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported!');
 
                 pDSBufferDesc.lpwfxFormat.wFormatTag := WAVE_FORMAT_PCM;
                 pDSBufferDesc.lpwfxFormat.nBlockAlign := (pDSBufferDesc.lpwfxFormat.nChannels*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8;
 
                 // the above calculation can yield zero for wBitsPerSample < 8, so we'll bound it to 1 byte minimum
-                if(pDSBufferDesc.lpwfxFormat.nBlockAlign = 0) then
+                if (pDSBufferDesc.lpwfxFormat.nBlockAlign = 0) then
                     pDSBufferDesc.lpwfxFormat.nBlockAlign := 1;
 
                 pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec*pDSBufferDesc.lpwfxFormat.nBlockAlign;
@@ -788,7 +788,7 @@ begin
      end;
 
     // sanity check
-    if(pDSBufferDesc.lpwfxFormat.nBlockAlign <> (pDSBufferDesc.lpwfxFormat.nChannels*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8) then
+    if (pDSBufferDesc.lpwfxFormat.nBlockAlign <> (pDSBufferDesc.lpwfxFormat.nChannels*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8) then
     begin
         pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8;
         pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec * pDSBufferDesc.lpwfxFormat.nBlockAlign;
@@ -798,36 +798,36 @@ begin
     *ppBuffer := new X_CDirectSoundBuffer();
     New({var PX_CDirectSoundBuffer}ppBuffer^);
 
-    (ppBuffer).EmuDirectSoundBuffer8 := 0;
-    (ppBuffer).EmuBuffer := 0;
-    (ppBuffer).EmuBufferDesc := pDSBufferDesc;
-    (ppBuffer).EmuLockPtr1 := 0;
-    (ppBuffer).EmuLockBytes1 := 0;
-    (ppBuffer).EmuLockPtr2 := 0;
-    (ppBuffer).EmuLockBytes2 := 0;
-    (ppBuffer).EmuFlags := dwEmuFlags;
+    ppBuffer^.EmuDirectSoundBuffer8 := 0;
+    ppBuffer^.EmuBuffer := 0;
+    ppBuffer^.EmuBufferDesc := pDSBufferDesc;
+    ppBuffer^.EmuLockPtr1 := 0;
+    ppBuffer^.EmuLockBytes1 := 0;
+    ppBuffer^.EmuLockPtr2 := 0;
+    ppBuffer^.EmuLockBytes2 := 0;
+    ppBuffer^.EmuFlags := dwEmuFlags;
 
-    DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := $%.08X, bytes := $%.08X', [*ppBuffer, pDSBufferDesc.dwBufferBytes);
+    DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := $%.08X, bytes := $%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes);
 
     HRESULT hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc,  and ((ppBuffer).EmuDirectSoundBuffer8), 0);
 
-    if(FAILED(hRet)) then
-        EmuWarning('CreateSoundBuffer Failed not ');
+    if (FAILED(hRet)) then
+        EmuWarning('CreateSoundBuffer Failed!');
 
     // cache this sound buffer
     begin
         integer v := 0;
         for(v := 0; v<SOUNDBUFFER_CACHE_SIZE;v++)
         begin
-            if(g_pDSoundBufferCache[v] = 0) then
+            if (g_pDSoundBufferCache[v] = 0) then
             begin
                 g_pDSoundBufferCache[v] := *ppBuffer;
                 break;
              end;
          end;
 
-        if(v = SOUNDBUFFER_CACHE_SIZE) then
-            CxbxKrnlCleanup('SoundBuffer cache out of slots not ');
+        if (v = SOUNDBUFFER_CACHE_SIZE) then
+            CxbxKrnlCleanup('SoundBuffer cache out of slots!');
      end;
 
     EmuSwapFS(fsXbox);
@@ -984,24 +984,24 @@ begin
 
     HRESULT hRet := D3D_OK;
 
-    if(pThis.EmuBuffer <> 0) then
+    if (pThis.EmuBuffer <> 0) then
     begin
         *ppvAudioPtr1 := pThis.EmuBuffer;
         *pdwAudioBytes1 := dwBytes;
      end;
     else
     begin
-        if(dwBytes > pThis.EmuBufferDesc.dwBufferBytes) then
+        if (dwBytes > pThis.EmuBufferDesc.dwBufferBytes) then
             EmuResizeIDirectSoundBuffer8(pThis, dwBytes);
 
-        if(pThis.EmuLockPtr1 <> 0) then
+        if (pThis.EmuLockPtr1 <> 0) then
             pThis.EmuDirectSoundBuffer8.Unlock(pThis.EmuLockPtr1, pThis.EmuLockBytes1, pThis.EmuLockPtr2, pThis.EmuLockBytes2);
 
         // Cxbx TODO: Verify dwFlags is the same as windows
         hRet := pThis.EmuDirectSoundBuffer8.Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
-        if(FAILED(hRet)) then
-            CxbxKrnlCleanup('DirectSoundBuffer Lock Failed not ');
+        if (FAILED(hRet)) then
+            CxbxKrnlCleanup('DirectSoundBuffer Lock Failed!');
 
         pThis.EmuLockPtr1 := *ppvAudioPtr1;
         pThis.EmuLockBytes1 := *pdwAudioBytes1;
@@ -1084,20 +1084,20 @@ begin
 
     ULONG uRet := 0;
 
-    if(pThis <> 0) then
+    if (pThis <> 0) then
     begin
         uRet := pThis.EmuDirectSoundBuffer8.Release();
 
-        if(uRet = 0) then
+        if (uRet = 0) then
         begin
             // remove cache entry
             for(integer v := 0; v < SOUNDBUFFER_CACHE_SIZE;v++)
             begin
-                if(g_pDSoundBufferCache[v] = pThis) then
+                if (g_pDSoundBufferCache[v] = pThis) then
                     g_pDSoundBufferCache[v] := 0;
              end;
 
-            if(pThis.EmuBufferDesc.lpwfxFormat <> 0) then
+            if (pThis.EmuBufferDesc.lpwfxFormat <> 0) then
                 CxbxFree(pThis.EmuBufferDesc.lpwfxFormat);
 
             CxbxFree(pThis.EmuBufferDesc);
@@ -1155,7 +1155,7 @@ begin
 
     HRESULT hRet := DS_OK;
 
-    if(pThis <> 0 and pThis.EmuBuffer = 0) then
+    if (pThis <> 0 and pThis.EmuBuffer = 0) then
     begin
         hRet := pThis.EmuDirectSoundBuffer8.GetStatus(pdwStatus);
      end;
@@ -1189,8 +1189,8 @@ begin
     // NOTE: Cxbx TODO: This call *will* (by MSDN) fail on primary buffers!
     HRESULT hRet := pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwNewPosition);
 
-    if(FAILED(hRet)) then
-        EmuWarning('SetCurrentPosition Failed not ');
+    if (FAILED(hRet)) then
+        EmuWarning('SetCurrentPosition Failed!');
 
     EmuSwapFS(fsXbox);
 
@@ -1222,10 +1222,10 @@ begin
     // NOTE: Cxbx TODO: This call always seems to fail on primary buffers!
     HRESULT hRet := pThis.EmuDirectSoundBuffer8.GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
-    if(FAILED(hRet)) then
-        EmuWarning('GetCurrentPosition Failed not ');
+    if (FAILED(hRet)) then
+        EmuWarning('GetCurrentPosition Failed!');
 
-    if(pdwCurrentPlayCursor <> 0 and pdwCurrentWriteCursor <> 0) then
+    if (pdwCurrentPlayCursor <> 0 and pdwCurrentWriteCursor <> 0) then
     begin
         DbgPrintf('*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d', [*pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
      end;
@@ -1256,13 +1256,13 @@ begin
            #13#10');',
            [pThis, dwReserved1, dwReserved2, dwFlags);
 
-    if(dwFlags and (~DSBPLAY_LOOPING)) then
+    if (dwFlags and (~DSBPLAY_LOOPING)) then
         CxbxKrnlCleanup('Unsupported Playing Flags');
 
     HackUpdateSoundBuffers();
 
     // close any existing locks
-    if(pThis.EmuLockPtr1 <> 0) then
+    if (pThis.EmuLockPtr1 <> 0) then
     begin
         pThis.EmuDirectSoundBuffer8.Unlock
         (
@@ -1277,7 +1277,7 @@ begin
 
     HRESULT hRet;
 
-    if(pThis.EmuFlags and DSB_FLAG_ADPCM) then
+    if (pThis.EmuFlags and DSB_FLAG_ADPCM) then
     begin
         hRet := D3D_OK;
      end;
@@ -1334,10 +1334,10 @@ begin
            #13#10');',
            [pBuffer, rtTimeStamp, dwFlags);
 
-    if(pBuffer.EmuDirectSoundBuffer8 = 0) then
+    if (pBuffer.EmuDirectSoundBuffer8 = 0) then
         EmuWarning('pBuffer.EmuDirectSoundBuffer8 := 0');
 
-    EmuWarning('StopEx not yet implemented not ');
+    EmuWarning('StopEx not yet implemented!');
 
     EmuSwapFS(fsXbox);
 
@@ -1423,7 +1423,7 @@ begin
     begin
         DWORD dwAcceptableMask := 0x00000010; // Cxbx TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
-        if(pdssd.dwFlags and (~dwAcceptableMask)) then
+        if (pdssd.dwFlags and (~dwAcceptableMask)) then
             EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', pdssd.dwFlags and (~dwAcceptableMask));
 
         pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
@@ -1433,7 +1433,7 @@ begin
 
         pDSBufferDesc.dwReserved := 0;
 
-        if(pdssd.lpwfxFormat <> 0) then
+        if (pdssd.lpwfxFormat <> 0) then
         begin
             pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX)CxbxMalloc(SizeOf(WAVEFORMATEX));
             memcpy(pDSBufferDesc.lpwfxFormat, pdssd.lpwfxFormat, SizeOf(WAVEFORMATEX));
@@ -1441,13 +1441,13 @@ begin
 
         pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;
 
-        if(pDSBufferDesc.lpwfxFormat <> 0 and pDSBufferDesc.lpwfxFormat.wFormatTag <> WAVE_FORMAT_PCM) then
+        if (pDSBufferDesc.lpwfxFormat <> 0 and pDSBufferDesc.lpwfxFormat.wFormatTag <> WAVE_FORMAT_PCM) then
         begin
-            EmuWarning('Invalid WAVE_FORMAT not ');
-      if(pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
-        EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported not ');
+            EmuWarning('Invalid WAVE_FORMAT!');
+      if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
+        EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported!');
 
-            (ppStream).EmuDirectSoundBuffer8 := 0;
+            ppStream^.EmuDirectSoundBuffer8 := 0;
 
             EmuSwapFS(fsXbox);
 
@@ -1455,7 +1455,7 @@ begin
          end;
 
         // we only support 2 channels right now
-        if(pDSBufferDesc.lpwfxFormat.nChannels > 2) then
+        if (pDSBufferDesc.lpwfxFormat.nChannels > 2) then
         begin
             pDSBufferDesc.lpwfxFormat.nChannels := 2;
             pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8;
@@ -1463,34 +1463,34 @@ begin
          end;
      end;
 
-    (ppStream).EmuBuffer := 0;
-    (ppStream).EmuBufferDesc := pDSBufferDesc;
-    (ppStream).EmuLockPtr1 := 0;
-    (ppStream).EmuLockBytes1 := 0;
-    (ppStream).EmuLockPtr2 := 0;
-    (ppStream).EmuLockBytes2 := 0;
+    ppStream^.EmuBuffer := 0;
+    ppStream^.EmuBufferDesc := pDSBufferDesc;
+    ppStream^.EmuLockPtr1 := 0;
+    ppStream^.EmuLockBytes1 := 0;
+    ppStream^.EmuLockPtr2 := 0;
+    ppStream^.EmuLockBytes2 := 0;
 
     DbgPrintf('EmuDSound : EmuDirectSoundCreateStream, *ppStream := 0x%.08X', [*ppStream);
 
-    HRESULT hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc,  and (ppStream).EmuDirectSoundBuffer8, 0);
+    HRESULT hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc, @(ppStream^.EmuDirectSoundBuffer8), 0);
 
-    if(FAILED(hRet)) then
-        EmuWarning('CreateSoundBuffer Failed not ');
+    if (FAILED(hRet)) then
+      EmuWarning('CreateSoundBuffer Failed!');
 
     // cache this sound stream
     begin
         integer v:=0;
         for(v := 0;v<SOUNDSTREAM_CACHE_SIZE;v++)
         begin
-            if(g_pDSoundStreamCache[v] = 0) then
+            if (g_pDSoundStreamCache[v] = 0) then
             begin
                 g_pDSoundStreamCache[v] := *ppStream;
                 break;
              end;
          end;
 
-        if(v = SOUNDSTREAM_CACHE_SIZE) then
-            CxbxKrnlCleanup('SoundStream cache out of slots not ');
+        if (v = SOUNDSTREAM_CACHE_SIZE) then
+            CxbxKrnlCleanup('SoundStream cache out of slots!');
      end;
 
     EmuSwapFS(fsXbox);
@@ -1534,7 +1534,7 @@ end;
 VOID WINAPI XTL_EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2)
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored not ');
+    EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
     Exit;
 end;
 *)
@@ -1596,7 +1596,7 @@ begin
            #13#10');',
            [pThis);
 
-    if(pThis <> 0) then
+    if (pThis <> 0) then
         pThis.EmuDirectSoundBuffer8.AddRef();
 
     EmuSwapFS(fsXbox);
@@ -1618,20 +1618,20 @@ begin
 
     ULONG uRet := 0;
 
-    if(pThis <> 0 and (pThis.EmuDirectSoundBuffer8 <> 0)) then
+    if (pThis <> 0 and (pThis.EmuDirectSoundBuffer8 <> 0)) then
     begin
         uRet := pThis.EmuDirectSoundBuffer8.Release();
 
-        if(uRet = 0) then
+        if (uRet = 0) then
         begin
             // remove cache entry
             for(integer v := 0; v<SOUNDSTREAM_CACHE_SIZE;v++)
             begin
-                if(g_pDSoundStreamCache[v] = pThis) then
+                if (g_pDSoundStreamCache[v] = pThis) then
                     g_pDSoundStreamCache[v] := 0;
              end;
 
-            if(pThis.EmuBufferDesc.lpwfxFormat <> 0) then
+            if (pThis.EmuBufferDesc.lpwfxFormat <> 0) then
                 CxbxFree(pThis.EmuBufferDesc.lpwfxFormat);
 
             CxbxFree(pThis.EmuBufferDesc);
@@ -1690,21 +1690,21 @@ begin
            #13#10');',
            [pThis, pInputBuffer, pOutputBuffer);
 
-    if(pThis.EmuDirectSoundBuffer8 <> 0) then
+    if (pThis.EmuDirectSoundBuffer8 <> 0) then
     begin
         // update buffer data cache
         pThis.EmuBuffer := pInputBuffer.pvBuffer;
 
         EmuResizeIDirectSoundStream8(pThis, pInputBuffer.dwMaxSize);
 
-        if(pInputBuffer.pdwStatus <> 0) then
+        if (pInputBuffer.pdwStatus <> 0) then
             *pInputBuffer.pdwStatus := S_OK;
 
         HackUpdateSoundStreams();
      end;
     else
     begin
-        if(pInputBuffer.pdwStatus <> 0) then
+        if (pInputBuffer.pdwStatus <> 0) then
             *pInputBuffer.pdwStatus := S_OK;
      end;
 

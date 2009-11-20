@@ -340,7 +340,7 @@ begin
     Exit;
   end;
 
-  hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, {out}m_InputDevice[m_dwInputDeviceCount].m_Device, nil);
+  hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, {out}IDirectInputDevice8A(m_InputDevice[m_dwInputDeviceCount].m_Device), nil);
 
   if (not FAILED(hRet)) then
   begin
@@ -1000,9 +1000,10 @@ begin
 
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysKeyboard') then
     begin
-      ahRet := m_pDirectInput8.CreateDevice(GUID_SysKeyboard,
-                                            m_InputDevice[m_dwInputDeviceCount].m_Device,
-                                            nil);
+      ahRet := m_pDirectInput8.CreateDevice(
+        {rguid}GUID_SysKeyboard,
+        {out}IDirectInputDevice8A(m_InputDevice[m_dwInputDeviceCount].m_Device),
+        {pUnkOuter=}nil);
 
       if (not FAILED(ahRet)) then
       begin
@@ -1017,7 +1018,10 @@ begin
 
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysMouse') then
     begin
-      ahRet := m_pDirectInput8.CreateDevice(GUID_SysMouse, {out}m_InputDevice[m_dwInputDeviceCount].m_Device, nil);
+      ahRet := m_pDirectInput8.CreateDevice(
+        GUID_SysMouse,
+        {out}IDirectInputDevice8A(m_InputDevice[m_dwInputDeviceCount].m_Device),
+        nil);
 
       if (not FAILED(ahRet)) then
       begin
