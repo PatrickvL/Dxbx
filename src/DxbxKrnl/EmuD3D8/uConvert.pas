@@ -30,47 +30,12 @@ uses
   , Direct3D8 // was Direct3D9 ?!
   // Dxbx
   , uEmuD3D8Types
+  , uConsts
   , uTypes
   , uLog
   , uXboxLibraryUtils
   , uDxbxKrnlUtils
   , uEmu;
-
-const
-  X_D3DFMT_L8 = $00; // Swizzled
-  X_D3DFMT_AL8 = $01; // Swizzled
-  X_D3DFMT_A1R5G5B5 = $02; // Swizzled
-  X_D3DFMT_X1R5G5B5 = $03; // Swizzled
-  X_D3DFMT_A4R4G4B4 = $04; // Swizzled
-  X_D3DFMT_R5G6B5 = $05; // Swizzled
-  X_D3DFMT_A8R8G8B8 = $06; // Swizzled
-  X_D3DFMT_X8R8G8B8 = $07; // Swizzled
-  X_D3DFMT_P8 = $0B; // Swizzled
-  X_D3DFMT_DXT1 = $0C; // Compressed
-  X_D3DFMT_DXT2 = $0E; // Compressed
-  X_D3DFMT_DXT3 = $0F; // Compressed
-  X_D3DFMT_LIN_A1R5G5B5 = $10; // Linear?
-  X_D3DFMT_LIN_R5G6B5 = $11; // Linear
-  X_D3DFMT_LIN_A8R8G8B8 = $12; // Linear
-  X_D3DFMT_LIN_L8 = $13; // Linear
-  X_D3DFMT_LIN_R8B8 = $16; // Linear
-  X_D3DFMT_A8 = $19; // Swizzled
-  X_D3DFMT_A8L8 = $1A; // Swizzled
-  X_D3DFMT_LIN_A4R4G4B4 = $1D; // Linear
-  X_D3DFMT_LIN_X8R8G8B8 = $1E; // Linear
-  X_D3DFMT_YUY2 = $24; // Swizzled
-  X_D3DFMT_UYVY = $25; // Swizzled
-  X_D3DFMT_L6V5U5 = $27; // Swizzled
-  X_D3DFMT_V8U8 = $28; // Swizzled
-  X_D3DFMT_D24S8 = $2A; // Swizzled
-  X_D3DFMT_F24S8 = $2B; // Swizzled
-  X_D3DFMT_D16 = $2C; // Swizzled
-  X_D3DFMT_LIN_D24S8 = $2E; // Linear
-  X_D3DFMT_LIN_D16 = $30; // Linear
-  X_D3DFMT_V16U16 = $33; // Swizzled
-  X_D3DFMT_A8B8G8R8 = $3A; // Swizzled
-  X_D3DFMT_LIN_A8B8G8R8 = $3F; // Linear
-  X_D3DFMT_VERTEXDATA = $64; // ??
 
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
@@ -89,6 +54,7 @@ function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; 
 
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): LONGBOOL;
 function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL;
+
 const
   // simple render state encoding lookup table
   X_D3DRSSE_UNK = $7fffffff;
@@ -382,10 +348,10 @@ begin
     X_D3DFMT_DXT1: // Compressed
       Result := D3DFMT_DXT1;
 
-    X_D3DFMT_DXT2: // Compressed
+    X_D3DFMT_DXT3: // Compressed
       Result := D3DFMT_DXT2;
 
-    X_D3DFMT_DXT3: // Compressed
+    X_D3DFMT_DXT5: // Compressed
       Result := D3DFMT_DXT3;
 
     X_D3DFMT_YUY2: // Swizzled
@@ -441,9 +407,9 @@ begin
     D3DFMT_D24S8:
       Result := X_D3DFMT_D24S8; // Swizzled
     D3DFMT_DXT3:
-      Result := X_D3DFMT_DXT3; // Compressed
+      Result := X_D3DFMT_DXT5; // Compressed
     D3DFMT_DXT2:
-      Result := X_D3DFMT_DXT2; // Compressed
+      Result := X_D3DFMT_DXT3; // Compressed
     D3DFMT_DXT1:
       Result := X_D3DFMT_DXT1; // Compressed
     D3DFMT_A1R5G5B5:

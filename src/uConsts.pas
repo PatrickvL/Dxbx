@@ -38,13 +38,22 @@ const
 {$ENDIF}
   _XDK_TRACKER_VERSION = '2.0.2.0';
 
-
   // Dialog Filters
   DIALOG_FILTER_TEXT = 'Text Documents (*.txt)|*.txt';
   DIALOG_FILTER_EXE = 'Windows Executables (*.exe)|*.exe';
   DIALOG_FILTER_XBE = 'Xbox Executables (*.xbe)|*.xbe';
 
+  // Magic values
+
+  XPR0_MAGIC_VALUE = $30525058; // "XPR0", bHasResourceOffsetsTable = FALSE;
+  XPR1_MAGIC_VALUE = $31525058; // "XPR1", bHasResourceOffsetsTable = TRUE;
+  XPR_MAGIC_VALUE = XPR0_MAGIC_VALUE;
+
+  _MagicNumber = 'XBEH'; // Xbe File Format
+  XBE_MAGIC_VALUE = $48454258; // "XBEH"
+
   // XOR keys
+
   XOR_EP_DEBUG = $94859D4B; // Entry Point (Debug)
   XOR_EP_RETAIL = $A8FC57AB; // Entry Point (Retail)
   XOR_KT_DEBUG = $EFB1F152; // Kernel Thunk (Debug)
@@ -52,6 +61,28 @@ const
 
   XOR_ENTRY_POINT_CHIHIRO = $40B5C16E; // Thanks to martin_sw
   XOR_KERNEL_THUNK_CHIHIRO = $2290059D; // Thanks to martin_sw
+
+  // XBE constants
+
+  XBE_INIT_FLAG_MountUtilityDrive = $00000001;
+  XBE_INIT_FLAG_FormatUtilityDrive = $00000002;
+  XBE_INIT_FLAG_Limit64MB = $00000004;
+  XBE_INIT_FLAG_DontSetupHarddisk = $00000008;
+
+  XBE_SECTIONHEADER_FLAG_Writable = $00000001;
+  XBE_SECTIONHEADER_FLAG_Preload = $00000002;
+  XBE_SECTIONHEADER_FLAG_Executable = $00000004;
+  XBE_SECTIONHEADER_FLAG_InsertedFile = $00000008;
+  XBE_SECTIONHEADER_FLAG_HeadPageRO = $00000010;
+  XBE_SECTIONHEADER_FLAG_TailPageRO = $00000020;
+
+  XBE_SECTIONNAME_MAXLENGTH = 9;
+
+  XBE_LIBRARYVERSION_FLAG_ApprovedNo = $00;
+  XBE_LIBRARYVERSION_FLAG_ApprovedPossibly = $20;
+  XBE_LIBRARYVERSION_FLAG_ApprovedYes = $40;
+  XBE_LIBRARYVERSION_FLAG_ApprovedMask = $60;
+  XBE_LIBRARYVERSION_FLAG_DebugBuild = $80;
 
   // game region flags for Xbe certificate
   XBEIMAGE_GAME_REGION_NA = $00000001;
@@ -79,6 +110,15 @@ const
   PE_FILE_ALIGN = $00000020; // File alignment
   PE_SEGM_ALIGN = $00000020; // Segment alignment
 
+  // XPR constants
+  
+  XPR_IMAGE_HDR_SIZE = 2048; // 2K
+  XPR_IMAGE_WH = 128; // width and height
+  XPR_IMAGE_DATA_SIZE = (XPR_IMAGE_WH * XPR_IMAGE_WH) div 2; // DXT1 is 4 bits per pixel
+
+  XBE_SECTIONNAME_GAMEICON = '$$XTIMAGE';
+  XBE_SECTIONNAME_SAVEICON = '$$XSIMAGE';
+
   // Copied from System.pas :
   EXCEPTION_CONTINUE_SEARCH    = 0;
   EXCEPTION_EXECUTE_HANDLER    = 1;
@@ -93,9 +133,6 @@ const
   cWEBSITE_FORUM = 'http://forums.ngemu.com/dxbx-official-discussion/';
 
   cOpen = 'open';
-
-  // Xbe File Format
-  _MagicNumber = 'XBEH';
 
   CCXBXKRNLINIT = 'CxbxKrnlInit';
   CXBXKRNL_KERNELTHUNKTABLE = 'CxbxKrnl_KernelThunkTable';
