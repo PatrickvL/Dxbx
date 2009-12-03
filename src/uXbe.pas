@@ -32,29 +32,11 @@ uses
   Graphics, // for TBitmap
   // Dxbx
   uConsts,
+  uEmuD3D8Types,
   uTypes,
   uTime,
   uLog,
   uDxbxUtils;
-
-const
-  XBE_INIT_FLAG_MountUtilityDrive = $00000001;
-  XBE_INIT_FLAG_FormatUtilityDrive = $00000002;
-  XBE_INIT_FLAG_Limit64MB = $00000004;
-  XBE_INIT_FLAG_DontSetupHarddisk = $00000008;
-
-  XBE_SECTIONHEADER_FLAG_Writable = $00000001;
-  XBE_SECTIONHEADER_FLAG_Preload = $00000002;
-  XBE_SECTIONHEADER_FLAG_Executable = $00000004;
-  XBE_SECTIONHEADER_FLAG_InsertedFile = $00000008;
-  XBE_SECTIONHEADER_FLAG_HeadPageRO = $00000010;
-  XBE_SECTIONHEADER_FLAG_TailPageRO = $00000020;
-
-  XBE_LIBRARYVERSION_FLAG_ApprovedNo = $00;
-  XBE_LIBRARYVERSION_FLAG_ApprovedPossibly = $20;
-  XBE_LIBRARYVERSION_FLAG_ApprovedYes = $40;
-  XBE_LIBRARYVERSION_FLAG_ApprovedMask = $60;
-  XBE_LIBRARYVERSION_FLAG_DebugBuild = $80;
 
 type
   TFileType = (ftXbe, ftExe);
@@ -112,7 +94,6 @@ type
     bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of AnsiChar; // 0x00D0 - alternate signature keys
   end;
   PXBE_CERTIFICATE = ^XBE_CERTIFICATE;
-
 
   // Source: Cxbx
   XBE_SECTIONHEADER = packed record
@@ -194,6 +175,71 @@ type
   end;
   LogoRLE = _LogoRLE;
 
+  // XPR structures
+
+  // Purpose:
+  //   The XPR file format allows multiple graphics resources to be pre-defined
+  //   and bundled together into one file.  These resources can be copied into
+  //   memory and then immediately used in-place as D3D objects such as textures
+  //   and vertex buffers.  The structure below defines the XPR header and the
+  //   unique identifier for this file type.
+  XPR_HEADER = record
+    dwMagic: DWORD ;
+    dwTotalSize: DWORD;
+    dwHeaderSize: DWORD;
+  end;
+  PXPR_HEADER = ^XPR_HEADER;
+
+  // Layout of SaveImage.xbx saved game image file
+  //
+  // File is XPR0 format. Since the XPR will always contain only a single
+  // 256x256 DXT1 image, we know exactly what the header portion will look like
+  XPR_IMAGEHEADER = record
+    Header: XPR_HEADER;      // Standard XPR struct
+    Texture: X_D3DBaseTexture;  // Standard D3D texture struct
+    EndOfHeader: DWORD; // $FFFFFFFF
+  end;
+
+  XPR_IMAGE = record
+    hdr: XPR_IMAGEHEADER;
+    strPad: array [0..XPR_IMAGE_HDR_SIZE-SizeOf(XPR_IMAGEHEADER)-1] of AnsiChar;
+    pBits: array [0..XPR_IMAGE_DATA_SIZE-1] of Byte; // data bits
+  end;
+  PXPR_IMAGE = ^XPR_IMAGE;
+
+(*
+  _XPR_File_Header_ = record
+    Type_: record
+      case Integer of
+        0: ( dwXPRMagic: DWORD );
+        1: ( wBitmapMagic: WORD );
+    end;
+
+    dwTotalSize: DWORD;
+    dwHeaderSize: DWORD;
+
+    dwTextureCommon: DWORD;
+    dwTextureData: DWORD;
+    dwTextureLock: DWORD;
+    btTextureMisc1: BYTE;
+    btTextureFormat: BYTE;
+    btTextureLevel_Width: BYTE;
+    //BYTE        btTextureLevel  : 4;
+    //BYTE        btTextureWidth  : 4;
+    btTextureHeight_Misc2: BYTE;
+    //BYTE        btTextureHeight : 4;
+    //BYTE        btTextureMisc2  : 4;
+    dwTextureSize: DWORD;
+
+    dwEndOfHeader: DWORD; // 0xFFFFFFFF
+  end;
+  XPR_FILE_HEADER = _XPR_File_Header_;
+  PXPR_FILE_HEADER = ^XPR_FILE_HEADER;
+  PPXPR_FILE_HEADER = ^PXPR_FILE_HEADER;
+*)
+
+  TRawSection = TVarByteArray;
+
   TXbe = class(TObject)
   private
     MyFile: TMemoryStream;
@@ -213,24 +259,26 @@ type
     m_szSectionName: array of array of AnsiChar;
     m_HeaderEx: array of Byte;
     m_TLS: PXBE_TLS;
-    m_bzSection: array of TVarByteArray;
+    m_bzSection: array of TRawSection;
 
     constructor Create(aFileName: string; aFileType: TFileType);
     destructor Destroy; override;
 
+    function GetTLSData: DWord;
+
     function DetermineDumpFileName: string;
     function DumpInformation(FileName: string = ''): Boolean;
+    
     function GetAddr(x_dwVirtualAddress: DWord): Integer;
 
-    procedure ExportLogoBitmap(ImgCont: TBitmap);
-
-    function GetTLSData: DWord;
+    function FindSection(const aSectionName: string; out Size: Integer): TRawSection;
+    function ExportLogoBitmap(aBitmap: TBitmap): Boolean;
+    function ExportIconBitmap(aBitmap: TBitmap): Boolean;
   end;
 
-// A list of sections in this Xbe used for section loading
-type
+  // A list of sections in this Xbe used for section loading
   SectionList = packed record
-    szSectionName: array [0..9-1] of AnsiChar;
+    szSectionName: array [0..XBE_SECTIONNAME_MAXLENGTH-1] of AnsiChar;
     dwSectionAddr: uint32;
     dwSectionSize: uint32;
   end;
@@ -247,7 +295,6 @@ function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
 
 procedure XbeLoaded;
-procedure LoadLogo;
 function GameRegionToString(const aGameRegion: Integer): string;
 
 var
@@ -256,39 +303,8 @@ var
 
 implementation
 
-procedure LoadLogo;
-begin
-   (* uint08 i_gray[100*17];
-
-    m_Xbe.ExportLogoBitmap(i_gray);
-
-    if (m_Xbe.GetError() != 0) then
-    {
-        MessageBox(m_hwnd, m_Xbe.GetError(), 'Cxbx', MB_ICONEXCLAMATION | MB_OK);
-
-        if (m_Xbe.IsFatal()) then
-            CloseXbe();
-
-        return;
-    }
-
-    uint32 v=0;
-    for(uint32 y=0;y<17;y++)
-    {
-        for(uint32 x=0;x<100;x++)
-        {
-            SetPixel(m_LogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
-            v++;
-        }
-    }
-
-    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);  *)
-end;
-
-
 procedure XbeLoaded;
 begin
-  LoadLogo();
   WriteLog(DxbxFormat('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end;
 
@@ -467,7 +483,7 @@ begin
   // Read xbe section names
   begin
     DbgPrintf('DXBX: Reading Section Names...');
-    SetLength(m_szSectionName, m_Header.dwSections, 9);
+    SetLength(m_szSectionName, m_Header.dwSections, XBE_SECTIONNAME_MAXLENGTH);
     for lIndex := 0 to m_Header.dwSections - 1 do
     begin
       RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
@@ -579,7 +595,20 @@ begin
   end;
 end; // TXbe.Create
 
-//------------------------------------------------------------------------------
+destructor TXbe.Destroy;
+begin
+  ConstructorInit();
+
+  inherited Destroy;
+end;
+
+function TXbe.GetTLSData: DWord;
+begin
+  if m_TLS.dwDataStartAddr = 0 then
+    Result := 0
+  else
+    Result := GetAddr(m_TLS.dwDataStartAddr);
+end; // TXbe.GetTLSData
 
 function TXbe.DetermineDumpFileName: string;
 begin
@@ -614,8 +643,6 @@ begin
   Result := '';
   DateTimeToString(Result, 'ddd mmm dd hh:mm:ss yyyy', CTimeToDateTime(x_timeDate));
 end;
-
-//------------------------------------------------------------------------------
 
 function TXbe.DumpInformation(FileName: string): Boolean;
 var
@@ -942,8 +969,6 @@ begin
     CloseFile(FileEx);
 end; // TXbe.DumpInformation
 
-//------------------------------------------------------------------------------
-
 function TXbe.GetAddr(x_dwVirtualAddress: DWord): Integer;
 var
   lIndex, VirtAddr, VirtSize, dwoffs: DWord;
@@ -971,10 +996,25 @@ begin
   end;
 end; // TXbe.GetAddr
 
-//------------------------------------------------------------------------------
+function TXbe.FindSection(const aSectionName: string; out Size: Integer): TRawSection;
+var
+  i: Integer;
+begin
+  for i := 0 to m_Header.dwSections - 1 do
+  begin
+    if SameText(aSectionName, StrLPas(PAnsiChar(m_szSectionName[i]), XBE_SECTIONNAME_MAXLENGTH)) then
+    begin
+      Result := m_bzSection[i];
+      {out}Size := m_SectionHeader[i].dwSizeofRaw;
+      Exit;
+    end;
+  end;
+
+  Result := nil;
+end;
 
 (*
-// import logo bitmap from raw monochrome data
+// import logo bitmap from raw monochrome data (100x17 8bit grayscale)
 procedure TXbe.ImportLogoBitmap(const uint08 x_Gray[100*17])
 var
   LogoBuffer: PAnsiChar;
@@ -1030,76 +1070,123 @@ begin
 end;
 *)
 
-procedure TXbe.ExportLogoBitmap(ImgCont: TBitmap);
+// export raw monochrome data (100x17 8bit grayscale) to logo bitmap
+function TXbe.ExportLogoBitmap(aBitmap: TBitmap): Boolean;
+const
+  XBE_LOGO_WIDTH = 100;
+  XBE_LOGO_HEIGHT = 17;
 var
-  x_Gray: array[0..100 * 17] of Byte;
-  dwLength, o, lIndex, lIndex2, Len, Data: DWord;
+  x_Gray: Byte;
+  dwLength, x, y, lIndex, lIndex2, Len, Data: DWord;
   RLE: DWord;
   pos0, pos1: Byte;
 begin
+  Result := False;
   dwLength := m_Header.dwSizeofLogoBitmap;
   RLE := GetAddr(m_Header.dwLogoBitmapAddr);
   if RLE = 0 then
     Exit;
 
-  Len := 0;
-  Data := 0;
-  o := 0;
-  lIndex := 0;
-  while lIndex < dwLength do
-  begin
-    // Read 2 bytes.
-    Pos0 := Ord(Buffer[RLE + lIndex]);
-    Pos1 := Ord(Buffer[RLE + 1 + lIndex]);
+  try
+    aBitmap.PixelFormat := pf32bit;
+    aBitmap.SetSize(XBE_LOGO_WIDTH, XBE_LOGO_HEIGHT);
 
-    if (Pos0 and 1) > 0 then // Check if the bit 0 is set.
+    Len := 0;
+    Data := 0;
+    x := 0;
+    y := 0;
+    lIndex := 0;
+    while lIndex < dwLength do
     begin
-      Len := Pos0 shr 1 and 7; // Select the bits from 1 to 3
-      Data := Pos0 shr 4 and 15; // Select the bits from 4 to 7
-    end
-    else
-    begin
-      if (Pos0 and 2) > 0 then // Check if the bit 1 is set.
+      // Read 2 bytes.
+      Pos0 := Ord(Buffer[RLE + lIndex]);
+      Pos1 := Ord(Buffer[RLE + 1 + lIndex]);
+
+      if (Pos0 and 1) > 0 then // Check if the bit 0 is set.
       begin
-        Len := (Pos0 shr 2 and 63) + (Pos1 and 15) * 256; // Select the bits from 2 to 7 from the first byte (Pos0) and the bits from 0 to 3 from the second byte (Pos1) and form a number.
-        Data := Pos1 shr 4 and 15; // Select the bits from 4 to 7 from the second byte (Pos1)
-        Inc(lIndex); // The index is incremented because 2 bytes were read.
+        Len := Pos0 shr 1 and 7; // Select the bits from 1 to 3
+        Data := Pos0 shr 4 and 15; // Select the bits from 4 to 7
+      end
+      else
+      begin
+        if (Pos0 and 2) > 0 then // Check if the bit 1 is set.
+        begin
+          Len := (Pos0 shr 2 and 63) + (Pos1 and 15) * 256; // Select the bits from 2 to 7 from the first byte (Pos0) and the bits from 0 to 3 from the second byte (Pos1) and form a number.
+          Data := Pos1 shr 4 and 15; // Select the bits from 4 to 7 from the second byte (Pos1)
+          Inc(lIndex); // The index is incremented because 2 bytes were read.
+        end;
       end;
+
+      for lIndex2 := 0 to Len - 1 do
+      begin
+        x_Gray := Byte(Data shl 4);
+        aBitmap.Canvas.Pixels[x, y] := RGB(x_Gray, x_Gray, x_Gray);
+
+        Inc(x);
+        if x = XBE_LOGO_WIDTH then
+        begin
+          x := 0;
+          Inc(y);
+          if y = XBE_LOGO_HEIGHT then
+          begin
+            lIndex := dwLength;
+            Break;
+          end;
+        end;
+      end;
+
+      Inc(lIndex); // Index increment
     end;
 
-    for lIndex2 := 0 to Len - 1 do
-    begin
-      Inc(o);
-      if o >= 100 * 17 then
-        Exit;
-
-      x_Gray[o] := Byte(Data shl 4);
-      ImgCont.Canvas.Pixels[o mod 100, o div 100] := RGB(x_Gray[o], x_Gray[o], x_Gray[o]);
-    end;
-
-    Inc(lIndex); // Index increment
+    Result := True;
+  except
+    Result := False;
   end;
 end; // TXbe.ExportLogoBitmap
 
-//------------------------------------------------------------------------------
-
-function TXbe.GetTLSData: DWord;
+// Reads the $$XTIMAGE Section, decodes the data and returns the bitmap;
+function TXbe.ExportIconBitmap(aBitmap: TBitmap): Boolean;
+var
+  Section: TRawSection;
+  SectionSize: Integer;
+  XprImage: PXPR_IMAGE;
+  Scanlines: RGB32Scanlines;
 begin
-  if m_TLS.dwDataStartAddr = 0 then
-    Result := 0
-  else
-    Result := GetAddr(m_TLS.dwDataStartAddr);
-end; // TXbe.GetTLSData
+  Result := False;
 
-//------------------------------------------------------------------------------
+  // Find icon section :
+  Section := FindSection(XBE_SECTIONNAME_GAMEICON, {out}SectionSize);
+  if Section = nil then
+  begin
+    Section := FindSection(XBE_SECTIONNAME_SAVEICON, {out}SectionSize);
+    if Section = nil then
+      Exit;
+  end;
 
-destructor TXbe.Destroy;
-begin
-  ConstructorInit();
+  // Check if it's an XPR (Xbox Packed Resources) :
+  XprImage := PXPR_IMAGE(Section);
+  if XprImage.hdr.Header.dwMagic = XPR_MAGIC_VALUE then
+  begin
+    // Prepare easy access to the bitmap data :
+    aBitmap.PixelFormat := pf32bit;
+    aBitmap.SetSize(XPR_IMAGE_WH, XPR_IMAGE_WH);
+    Scanlines.Initialize(aBitmap);
 
-  inherited Destroy;
+    // Read the texture into the bitmap :
+    Result := ReadD3DTextureFormatIntoBitmap(
+      {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
+      {Data=}PByteArray(@(XprImage.pBits[0])),
+      {DataSize=}XPR_IMAGE_DATA_SIZE,
+      @Scanlines);
+      
+    Exit;
+  end;
+
+// TODO : Check for 'DDS' format, and read that too, perhaps using these resources :
+// http://www.imageconverterplus.com/help-center/about-icp/supported-formats/dds/
+// http://archive.netbsd.se/view_attachment.php?id=2463254.32112
+//      if StrLPas(PAnsiChar(@XprImage.hdr.Header.dwMagic), 3) = 'DDS' then
+//        offset := 124;
 end;
-
-//------------------------------------------------------------------------------
 
 end.

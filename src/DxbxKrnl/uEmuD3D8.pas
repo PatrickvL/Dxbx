@@ -49,6 +49,7 @@ uses
   uEmu,
   uEmuKrnl,
   uLog,
+  uConsts,
   uTypes,
   uXbe,
   uEmuAlloc,
@@ -4304,7 +4305,7 @@ begin
         dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
         dwBPP := 2;
       end
-      else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT2) or (X_Format = X_D3DFMT_DXT3) then
+      else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT3) or (X_Format = X_D3DFMT_DXT5) then
       begin
         bCompressed := TRUE;
 

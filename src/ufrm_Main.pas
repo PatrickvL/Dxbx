@@ -133,6 +133,8 @@ type
     N9: TMenuItem;
     UsesDlltype1: TMenuItem;
     StatusBar: TStatusBar;
+    ImageIcon: TImage;
+    ImageLogo: TImage;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -197,6 +199,7 @@ type
     procedure LBWindowProc(var Message: TMessage);
 
     procedure AddjustMenu;
+    procedure UpdateIcon(const aXbe: TXBE);
   public
     FApplicationDir: string;
 
@@ -224,6 +227,7 @@ begin
   if OpenXbe(XbeOpenDialog.FileName, {var}m_Xbe, m_ExeFileName, m_XbeFileName) then
   begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+    UpdateIcon(m_Xbe);
     RecentXbeAdd(XbeOpenDialog.FileName);
     Emulation_State := esFileOpen;
     AddjustMenu;
@@ -301,6 +305,7 @@ procedure Tfrm_Main.CloseXbe;
 begin
   FreeAndNil(m_Xbe);
   Emulation_State := esNone;
+  UpdateIcon(nil);
   AddjustMenu;
 
   WriteLog(Format('DXBX: %s Closed...', [m_szAsciiTitle]));
@@ -615,6 +620,7 @@ begin
       if OpenXbe(pcFileName, {var}m_Xbe, m_ExeFileName, m_XbeFileName) then
       begin
         StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+        UpdateIcon(m_Xbe);
         RecentXbeAdd(XbeOpenDialog.FileName);
         Emulation_State := esFileOpen;
         AddjustMenu;
@@ -1061,6 +1067,7 @@ begin
   end;
 
   StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+  UpdateIcon(m_Xbe);
   Emulation_State := esFileOpen;
   AddjustMenu;
 end;
@@ -1083,6 +1090,19 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+
+procedure Tfrm_Main.UpdateIcon(const aXbe: TXBE);
+begin
+  if Assigned(aXBE) and aXbe.ExportLogoBitmap(ImageLogo.Picture.Bitmap) then
+    ImageLogo.Show
+  else
+    ImageLogo.Hide;
+
+  if Assigned(aXBE) and aXbe.ExportIconBitmap(ImageIcon.Picture.Bitmap) then
+    ImageIcon.Show
+  else
+    ImageIcon.Hide;
+end;
 
 end.
 

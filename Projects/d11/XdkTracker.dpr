@@ -31,7 +31,8 @@ uses
   uLog in '..\..\src\uLog.pas',
   uDxbxXml in '..\..\src\uDxbxXml.pas' {DxbxXml: TDataModule},
   uConsoleClass in '..\..\src\uConsoleClass.pas',
-  uDxbxUtils in '..\..\src\uDxbxUtils.pas';
+  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas';
 
 {$R *.res}
 

@@ -37,6 +37,9 @@ type
   TDWordArray = array[0..10000] of DWord;
   PDWordArray = ^TDWordArray;
 
+  TByteArray = array [0..MaxInt-1] of Byte;
+  PByteArray = ^TByteArray;
+
 {$IF NOT DECLARED(PDWord)}
   PDWord = ^DWord;
 {$IFEND}

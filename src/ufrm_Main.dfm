@@ -1439,6 +1439,22 @@ object frm_Main: Tfrm_Main
     Stretch = True
     ExplicitWidth = 45
   end
+  object ImageIcon: TImage
+    Left = 8
+    Top = 8
+    Width = 128
+    Height = 128
+    Center = True
+    Stretch = True
+  end
+  object ImageLogo: TImage
+    Left = 24
+    Top = 142
+    Width = 100
+    Height = 17
+    Center = True
+    Stretch = True
+  end
   object StatusBar: TStatusBar
     Left = 0
     Top = 366

@@ -28,9 +28,7 @@ uses
   // Directx
   Direct3D8,
   // Xbox
-  uTypes,
-  uXbe
-  ;
+  uTypes;
 
 const
   // deferred render state "unknown" flag
@@ -53,6 +51,106 @@ const
   X_D3DLOCK_NOOVERWRITE = $00000020;
   X_D3DLOCK_TILED = $00000040; // Xbox extension
   X_D3DLOCK_READONLY = $00000080;
+
+  // d3d resource "common" masks
+  X_D3DCOMMON_REFCOUNT_MASK      = $0000FFFF;
+  X_D3DCOMMON_TYPE_MASK          = $00070000;
+  X_D3DCOMMON_TYPE_SHIFT         = 16;
+  X_D3DCOMMON_TYPE_VERTEXBUFFER  = $00000000;
+  X_D3DCOMMON_TYPE_INDEXBUFFER   = $00010000;
+  X_D3DCOMMON_TYPE_PUSHBUFFER    = $00020000;
+  X_D3DCOMMON_TYPE_PALETTE       = $00030000;
+  X_D3DCOMMON_TYPE_TEXTURE       = $00040000;
+  X_D3DCOMMON_TYPE_SURFACE       = $00050000;
+  X_D3DCOMMON_TYPE_FIXUP         = $00060000;
+  X_D3DCOMMON_INTREFCOUNT_MASK   = $00780000;
+  X_D3DCOMMON_INTREFCOUNT_SHIFT  = 19;
+  X_D3DCOMMON_D3DCREATED         = $01000000;
+  X_D3DCOMMON_ISLOCKED           = $02000010; // Surface is currently locked (potential unswizzle candidate)
+  X_D3DCOMMON_UNUSED_MASK        = $FE000000;
+  X_D3DCOMMON_UNUSED_SHIFT       = 25;
+
+  // special resource data flags (must set _SPECIAL *AND* specific flag(s))
+  X_D3DRESOURCE_DATA_FLAG_SPECIAL = $FFFF0000;
+  X_D3DRESOURCE_DATA_FLAG_SURFACE = $00000001; // Backbuffer surface, etc
+  X_D3DRESOURCE_DATA_FLAG_YUVSURF = $00000002; // YUV memory surface
+  X_D3DRESOURCE_DATA_FLAG_D3DREND = $00000004; // D3D Render Target
+  X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
+  X_D3DRESOURCE_DATA_FLAG_TEXCLON = $00000010; // HACK: Cloned resource
+
+  // special resource lock flags
+  X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;
+
+  // pixel container "format" masks
+  X_D3DFORMAT_RESERVED1_MASK      = $00000003;      // Must be zero
+  X_D3DFORMAT_DMACHANNEL_MASK     = $00000003;
+  X_D3DFORMAT_DMACHANNEL_A        = $00000001;      // DMA channel A - the default for all system memory
+  X_D3DFORMAT_DMACHANNEL_B        = $00000002;      // DMA channel B - unused
+  X_D3DFORMAT_CUBEMAP             = $00000004;      // Set if the texture if a cube map
+  X_D3DFORMAT_BORDERSOURCE_COLOR  = $00000008;
+  X_D3DFORMAT_DIMENSION_MASK      = $000000F0;      // # of dimensions
+  X_D3DFORMAT_DIMENSION_SHIFT     = 4;
+  X_D3DFORMAT_FORMAT_MASK         = $0000FF00;
+  X_D3DFORMAT_FORMAT_SHIFT        = 8;
+  X_D3DFORMAT_MIPMAP_MASK         = $000F0000;
+  X_D3DFORMAT_MIPMAP_SHIFT        = 16;
+  X_D3DFORMAT_USIZE_MASK          = $00F00000;      // Log 2 of the U size of the base texture
+  X_D3DFORMAT_USIZE_SHIFT         = 20;
+  X_D3DFORMAT_VSIZE_MASK          = $0F000000;      // Log 2 of the V size of the base texture
+  X_D3DFORMAT_VSIZE_SHIFT         = 24;
+  X_D3DFORMAT_PSIZE_MASK          = $F0000000;      // Log 2 of the P size of the base texture
+  X_D3DFORMAT_PSIZE_SHIFT         = 28;
+
+  // pixel container "size" masks
+  // The layout of the size field, used for non swizzled or compressed textures.
+  //
+  // The Size field of a container will be zero if the texture is swizzled or compressed.
+  // It is guarenteed to be non-zero otherwise because either the height/width will be
+  // greater than one or the pitch adjust will be nonzero because the minimum texture
+  // pitch is 8 bytes.
+  X_D3DSIZE_WIDTH_MASK   = $00000FFF;   // Width of the texture - 1, in texels
+  X_D3DSIZE_HEIGHT_MASK  = $00FFF000;   // Height of the texture - 1, in texels
+  X_D3DSIZE_HEIGHT_SHIFT = 12;
+  X_D3DSIZE_PITCH_MASK   = $FF000000;   // Pitch / 64 - 1
+  X_D3DSIZE_PITCH_SHIFT  = 24;
+
+
+  // Xbox D3DFORMAT types :
+  // See http://wiki.beyondunreal.com/Legacy:Texture_Format
+  X_D3DFMT_L8 = $00; // 0, Swizzled
+  X_D3DFMT_AL8 = $01; // 1, Swizzled
+  X_D3DFMT_A1R5G5B5 = $02; // 2, Swizzled
+  X_D3DFMT_X1R5G5B5 = $03; // 3, Swizzled
+  X_D3DFMT_A4R4G4B4 = $04; // 4, Swizzled
+  X_D3DFMT_R5G6B5 = $05; // 5, Swizzled
+  X_D3DFMT_A8R8G8B8 = $06; // 6, Swizzled
+  X_D3DFMT_X8R8G8B8 = $07; // 7, Swizzled
+  X_D3DFMT_P8 = $0B; // 11, Swizzled, 8-bit Palletized
+  X_D3DFMT_DXT1 = $0C; // 12, Compressed, opaque/one-bit alpha
+  X_D3DFMT_DXT3 = $0E; // 14, Compressed, linear alpha
+  X_D3DFMT_DXT5 = $0F; // 15, Compressed, interpolated alpha
+  X_D3DFMT_LIN_A1R5G5B5 = $10; // 16, Linear?
+  X_D3DFMT_LIN_R5G6B5 = $11; // 17, Linear
+  X_D3DFMT_LIN_A8R8G8B8 = $12; // 18, Linear
+  X_D3DFMT_LIN_L8 = $13; // 19, Linear
+  X_D3DFMT_LIN_R8B8 = $16; // 22, Linear
+  X_D3DFMT_A8 = $19; // 25, Swizzled
+  X_D3DFMT_A8L8 = $1A; // 26, Swizzled
+  X_D3DFMT_LIN_A4R4G4B4 = $1D; // Linear
+  X_D3DFMT_LIN_X8R8G8B8 = $1E; // Linear
+  X_D3DFMT_YUY2 = $24; // Swizzled
+  X_D3DFMT_UYVY = $25; // Swizzled
+  X_D3DFMT_L6V5U5 = $27; // Swizzled
+  X_D3DFMT_V8U8 = $28; // Swizzled
+  X_D3DFMT_D24S8 = $2A; // Swizzled
+  X_D3DFMT_F24S8 = $2B; // Swizzled
+  X_D3DFMT_D16 = $2C; // Swizzled
+  X_D3DFMT_LIN_D24S8 = $2E; // Linear
+  X_D3DFMT_LIN_D16 = $30; // Linear
+  X_D3DFMT_V16U16 = $33; // Swizzled
+  X_D3DFMT_A8B8G8R8 = $3A; // Swizzled
+  X_D3DFMT_LIN_A8B8G8R8 = $3F; // Linear
+  X_D3DFMT_VERTEXDATA = $64; // ??
 
 type
   X_D3DFORMAT = DWord;
@@ -92,7 +190,6 @@ type
   end;
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
-type
   _X_D3DPIXELSHADERDEF = packed record // <- blueshogun 10/1/07
   // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
     PSAlphaInputs: array [0..8-1] of DWORD;  // Alpha inputs for each stage
@@ -313,71 +410,10 @@ type
   end;
   PX_D3DResource = ^X_D3DResource;
 
-const
-  // d3d resource "common" masks
-  X_D3DCOMMON_REFCOUNT_MASK      = $0000FFFF;
-  X_D3DCOMMON_TYPE_MASK          = $00070000;
-  X_D3DCOMMON_TYPE_SHIFT         = 16;
-  X_D3DCOMMON_TYPE_VERTEXBUFFER  = $00000000;
-  X_D3DCOMMON_TYPE_INDEXBUFFER   = $00010000;
-  X_D3DCOMMON_TYPE_PUSHBUFFER    = $00020000;
-  X_D3DCOMMON_TYPE_PALETTE       = $00030000;
-  X_D3DCOMMON_TYPE_TEXTURE       = $00040000;
-  X_D3DCOMMON_TYPE_SURFACE       = $00050000;
-  X_D3DCOMMON_TYPE_FIXUP         = $00060000;
-  X_D3DCOMMON_INTREFCOUNT_MASK   = $00780000;
-  X_D3DCOMMON_INTREFCOUNT_SHIFT  = 19;
-  X_D3DCOMMON_D3DCREATED         = $01000000;
-  X_D3DCOMMON_ISLOCKED           = $02000010; // Surface is currently locked (potential unswizzle candidate)
-  X_D3DCOMMON_UNUSED_MASK        = $FE000000;
-  X_D3DCOMMON_UNUSED_SHIFT       = 25;
-
-  // special resource data flags (must set _SPECIAL *AND* specific flag(s))
-  X_D3DRESOURCE_DATA_FLAG_SPECIAL = $FFFF0000;
-  X_D3DRESOURCE_DATA_FLAG_SURFACE = $00000001; // Backbuffer surface, etc
-  X_D3DRESOURCE_DATA_FLAG_YUVSURF = $00000002; // YUV memory surface
-  X_D3DRESOURCE_DATA_FLAG_D3DREND = $00000004; // D3D Render Target
-  X_D3DRESOURCE_DATA_FLAG_D3DSTEN = $00000008; // D3D Stencil Surface
-  X_D3DRESOURCE_DATA_FLAG_TEXCLON = $00000010; // HACK: Cloned resource
-
-  // special resource lock flags
-  X_D3DRESOURCE_LOCK_FLAG_NOSIZE  = $EFFFFFFF;       
-
-  // pixel container "format" masks
-  X_D3DFORMAT_RESERVED1_MASK      = $00000003;      // Must be zero
-  X_D3DFORMAT_DMACHANNEL_MASK     = $00000003;
-  X_D3DFORMAT_DMACHANNEL_A        = $00000001;      // DMA channel A - the default for all system memory
-  X_D3DFORMAT_DMACHANNEL_B        = $00000002;      // DMA channel B - unused
-  X_D3DFORMAT_CUBEMAP             = $00000004;      // Set if the texture if a cube map
-  X_D3DFORMAT_BORDERSOURCE_COLOR  = $00000008;
-  X_D3DFORMAT_DIMENSION_MASK      = $000000F0;      // # of dimensions
-  X_D3DFORMAT_DIMENSION_SHIFT     = 4;
-  X_D3DFORMAT_FORMAT_MASK         = $0000FF00;
-  X_D3DFORMAT_FORMAT_SHIFT        = 8;
-  X_D3DFORMAT_MIPMAP_MASK         = $000F0000;
-  X_D3DFORMAT_MIPMAP_SHIFT        = 16;
-  X_D3DFORMAT_USIZE_MASK          = $00F00000;      // Log 2 of the U size of the base texture
-  X_D3DFORMAT_USIZE_SHIFT         = 20;
-  X_D3DFORMAT_VSIZE_MASK          = $0F000000;      // Log 2 of the V size of the base texture
-  X_D3DFORMAT_VSIZE_SHIFT         = 24;
-  X_D3DFORMAT_PSIZE_MASK          = $F0000000;      // Log 2 of the P size of the base texture
-  X_D3DFORMAT_PSIZE_SHIFT         = 28;
-
-  // pixel container "size" masks
-  X_D3DSIZE_WIDTH_MASK            = $00000FFF;   // Width  (Texels - 1)
-  X_D3DSIZE_HEIGHT_MASK           = $00FFF000;   // Height (Texels - 1)
-  X_D3DSIZE_HEIGHT_SHIFT          = 12;
-  X_D3DSIZE_PITCH_MASK            = $FF000000;   // Pitch / 64 - 1
-  X_D3DSIZE_PITCH_SHIFT           = 24;
-
-  function IsSpecialResource(x: DWORD): Boolean;
-
-
-type
   X_D3DPixelContainer = object(X_D3DResource)
   public
-    Format: X_D3DFORMAT;
-    Size: DWord;
+    Format: X_D3DFORMAT; // Format information about the texture.
+    Size: DWORD; // Size of a non power-of-2 texture, must be zero otherwise
   end;
   PX_D3DPixelContainer = ^X_D3DPixelContainer;
   PPX_D3DPixelContainer = ^PX_D3DPixelContainer;
@@ -448,6 +484,9 @@ type
   end;
   PX_STREAMINPUT = ^X_STREAMINPUT;
   PPX_STREAMINPUT = ^PX_STREAMINPUT;
+
+
+  function IsSpecialResource(x: DWORD): Boolean;
 
 implementation
 
