@@ -55,6 +55,12 @@ type
 
   TLineCallback = function (aLinePtr: PAnsiChar; aLength: Integer; aData: Pointer): Boolean;
 
+  TPreallocatedMemoryStream = class(TCustomMemoryStream)
+  public
+    constructor Create(const aAddress: Pointer; aSize: Integer);
+    function Write(const Buffer; Count: Longint): Longint; override;
+  end;
+
 procedure SetFS(const aNewFS: WORD);
 function GetFS(): WORD;
 function GetTIBEntry(const aOffset: DWORD): Pointer;
@@ -489,7 +495,7 @@ var
     if (n <= Length(s)) then
       Result := True
     else
-      Result := False; 
+      Result := False;
   end; 
 
   function GetFmt: Integer; 
@@ -659,6 +665,38 @@ begin
     Result := Result + ' (#' + IntToStr(aError) + ')';
 end;
 
+{ TPreallocatedMemoryStream }
+
+constructor TPreallocatedMemoryStream.Create(const aAddress: Pointer; aSize: Integer);
+begin
+  inherited Create;
+
+  SetPointer(aAddress, aSize);
+end;
+
+function TPreallocatedMemoryStream.Write(const Buffer; Count: Integer): Longint;
+var
+  Pos: Longint;
+begin
+  if (Position >= 0) and (Count >= 0) then
+  begin
+    Pos := Position + Count;
+    if Pos > 0 then
+    begin
+      if Pos > Size then
+      begin
+        Pos := Size;
+        Count := Pos - Position;
+      end;
+      System.Move(Buffer, Pointer(Longint(Memory) + Position)^, Count);
+      Position := Pos;
+      Result := Count;
+      Exit;
+    end;
+  end;
+  
+  Result := 0;
+end;
 { RGB32Scanlines }
 
 procedure RGB32Scanlines.Initialize(const aBitmap: TBitmap);
@@ -719,221 +757,44 @@ end;
 
 //
 
-// Unswizzles a texture.
-// Copied from:http://www.koders.com/cpp/fid2E8F6D4B34729B4E9C081DD26D63648187C55EBF.aspx?s=unswizzle#L4
-// Parameters: width, height and depth (4 = 32bit, 1 = 8bit) and arrays.
-procedure UnSwizzle(width, height, depth: Cardinal;
-  const source: PByteArray;
-  const dest: PByteArray);
-var
-  y, y_mask, x_mask, sy, sx, bit, d, x, pSource, i: Cardinal;
-begin
-  for y := 0 to height - 1 do
-  begin
-    sy := 0;
-    if y < width then
-    begin
-      for bit := 0 to 15 do
-        sy := sy or ((y shr bit) and 1) shl (2 * bit);
-
-     sy := sy shl 1;
-    end
-    else
-    begin
-      y_mask := y mod width;
-      for bit := 0 to 15 do
-        sy := sy or ((y_mask shr bit) and 1) shl (2 * bit);
-
-      sy := sy shl 1;
-      sy := sy + (y div width) * width * width;
-    end;
-
-    d := y * width * depth;
-
-    for x := 0 to width - 1 do
-    begin
-      sx := 0;
-      if x < (height * 2) then
-      begin
-        for bit := 0 to 15 do
-          sx := sx or (( x shr bit) and 1 ) shl (2 * bit);
-     end
-     else
-     begin
-       x_mask := x mod (2 * height);
-       for bit := 0 to 15 do
-         sx := sx or ((x_mask shr bit ) and 1) shl (2 * bit);
-
-       sx := sx + (x div (2 * height)) * 2 * height * height;
-     end;
-
-     pSource := (sx + sy) * depth;
-     for i := 0 to depth - 1 do
-       dest[d + i] := source[pSource+i]
-    end;
-  end;
-end;
-
-(* The above (Unswizzle) doesn't seem to work. Here two other implementations I (PatrickvL) found :
-
-// Source : http://forums.xbox-scene.com/lofiversion/index.php/t409716.html
-procedure UnswizBlock(
-  const InData: PByteArray;
-  const InSize: Cardinal;
-  const OutData: PByteArray;
-  var Offs: Cardinal;
-  OffsOut: Cardinal;
-  const BlWidth: Cardinal;
-  const BlHeight: Cardinal;
-  const Stride: Cardinal);
-begin
-  if (Offs > InSize) then
-    Exit;
-
-  if (BlWidth < 2) or (BlHeight < 2) then
-  begin
-    // just copy data here
-    CopyMemory(OutData[OffsOut], InData[Offs], BlWidth * BlHeight);
-//    OffsOut := OffsOut + BlWidth * BlHeight;
-  end
-  else if (BlWidth = 2) and (BlHeight = 2) then
-  begin
-    // unswizzle block
-    OutData[OffsOut] := InData[Offs];
-    OutData[OffsOut + 1] := InData[Offs + 1];
-    OutData[OffsOut + Stride] := InData[Offs + 2];
-    OutData[OffsOut + Stride + 1] := InData[Offs + 3];
-    Inc({var}Offs, 4);
-  end
-  else
-  begin
-    // break into 4 blocks and reprocess
-    UnswizBlock(InData, InSize, OutData, {var}Offs, OffsOut, BlWidth div 2, BlHeight div 2, Stride);
-    UnswizBlock(InData, InSize, OutData, {var}Offs, OffsOut + (BlWidth div 2), BlWidth div 2, BlHeight div 2, Stride);
-    UnswizBlock(InData, InSize, OutData, {var}Offs, OffsOut + (Stride * (BlHeight div 2)), BlWidth div 2, BlHeight div 2, Stride);
-    UnswizBlock(InData, InSize, OutData, {var}Offs, OffsOut + (Stride * (BlHeight div 2)) + (BlWidth div 2), BlWidth div 2, BlHeight div 2, Stride);
-  end;
-end;
-
-function Unswizzle(aWidth, aHeight: Cardinal; bytData: PByteArray; DataSize: Cardinal): PByte;
-var
-  lOffs: Cardinal;
-  i: Cardinal;
-  MipLevels: Cardinal;
-begin
-  Result := AllocMem(DataSize);
-
-  if aHeight > aWidth then
-    MipLevels := Log(aHeight) / Log(2) + 1
-  else
-    MipLevels := Log(aWidth) / Log(2) + 1
-
-  lOffs := 0;
-  for i := 1 To MipLevels do
-  begin
-    UnswizBlock(bytData, DataSize, Result, {var}lOffs, lOffs, aWidth, aHeight, Width);
-    aWidth := aWidth div 2;
-    aHeight := aHeight div 2;
-    if lOffs > DataSize then
-      Exit;
-  end;
-end;
-
-
-// http://www.modnexus.com/forums/viewtopic.php?p=631514&sid=e03fe94600009729bbfb7412997e0981#p631514
-// pokecancer » June 27th, 2007, 5:15 am
-// I figured I would release my deswizzle method for A8R8G8B8 so people can do more research on bitmaps.
-// This applies to not only H3 but most game's resources for Xbox 360 and could probably be easily
-// adjusted to deal with different argb formats by changing some of the math in my code.
-// BTW this is using my own modified BinaryReader class so you will have to change that if you want to use this code.
-// also keep in mind the data is in big endian format and need to 32 bit swapped in order
-// to be in a format the pc can understand.
-public static byte[] Deswizzle(byte[] raw, int width, int height)
-begin
-  MemoryStream ms := new MemoryStream();
-  core.IO.EndianIO.EndianWriter ew := new core.IO.EndianIO.EndianWriter(ms, core.IO.EndianType.LittleEndian);
-  ew.BaseStream.Position := 0;
-
-  int realsize := width * height * 4;
-  int lines := realsize div 16;
-
-  int templine := 0;
-  int rowcount := 0;
-  int offsetby := 0;
-  int i := 0;
-  int sections := width div 32;
-
-  for rowcount := 0 to (2 * lines) - 1 do
-  begin
-    if rowcount = height then
-      Break;
-
-    if (rowcount and 1) = 0 then // 0, 2, 4
-    begin
-      if (rowcount > 0) then
-      begin
-        if (rowcount and 31) = 0) then
-        begin
-          Inc(i);
-          templine := i * ((width * 32) div 4);
-        end;
-
-        if (rowcount and 7) = 0 then
-        begin
-          if offsetby = 0 then
-            offsetby := 8 * 16
-          else
-            offsetby := 0;
-        end;
-      end;
-
-      offsetbx := 0;
-    end
-    else
-    begin
-      if (rowcount > 0) then
-        Inc(templine, 16);
-
-      offsetbx := 16;
-    end;
-
-    for y := 0 to sections - 1 do
-    begin
-      //get 32 pixels
-      for z := 0 to 8 - 1 do
-      begin
-        offset := (templine * 16) + offsetbx + ((y * 256) * 16) + ((z * 2) * 16);
-        if z < 4 then
-          Inc(offset, offsetby)
-        else
-          Dec(offset, offsetby);
-
-        oi1 := BitConverter.ToInt32(raw, offset + 0);
-        oi2 := BitConverter.ToInt32(raw, offset + 4);
-        oi3 := BitConverter.ToInt32(raw, offset + 8);
-        oi4 := BitConverter.ToInt32(raw, offset + 12);
-
-        ew.Write(oi1);
-        ew.Write(oi2);
-        ew.Write(oi3);
-        ew.Write(oi4);
-      end; // for z
-    end; // for y
-  end; // for rowcount
-
-  return ms.ToArray();
-end;
-*)
-
+// Unswizzle a texture. (Only works for 32bit, with power of 2 width and height.)
+// Code is loosly based on XBMC guilib\DirectXGraphics.cpp
+// Delphi translation and speed improvements by PatrickvL
 function ReadSwizzledFormatIntoBitmap(
   const aFormat: Byte;
   const aData: PByteArray;
   const aDataSize: Cardinal;
   const aOutput: PRGB32Scanlines): Boolean;
+
+  // Generic swizzle function, usable for both x and y dimensions.
+  // When passing x, Max should be 2*height, and Shift should be 0
+  // When passing y, Max should be width, and Shift should be 1
+  function _Swizzle(const Value, Max, Shift: Cardinal): Cardinal;
+  begin
+    if Value < Max then
+      Result := Value
+    else
+      Result := Value mod Max;
+
+    // The following is based on http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
+    Result := (Result or (Result shl 8)) and $00FF00FF; // 0000000000000000111111111111111100000000000000001111111111111111
+    Result := (Result or (Result shl 4)) and $0F0F0F0F; // 0000111100001111000011110000111100001111000011110000111100001111
+    Result := (Result or (Result shl 2)) and $33333333; // 0011001100110011001100110011001100110011001100110011001100110011
+    Result := (Result or (Result shl 1)) and $55555555; // 1010101010101010101010101010101010101010101010101010101010101010
+
+    Result := Result shl Shift; // y counts twice
+
+    if Value >= Max then
+      Inc(Result, (Value div Max) * Max * Max shr (1 - Shift)); // x halves this  
+  end;
+
 var
-  Unswizzled: array of Byte;
-  j, x, y: Cardinal;
+  height, width: Cardinal;
+  xswizzle: array of Cardinal;
+  x, y, sy: Cardinal;
+  yscanline: PRGB32Array;
 begin
+  // Sanity checks :  
   Result := (aFormat in [X_D3DFMT_A8R8G8B8])
         and Assigned(aData)
         and (aDataSize > 0)
@@ -943,24 +804,25 @@ begin
   if not Result then
     Exit;
 
-  SetLength(Unswizzled, aDataSize);
-  UnSwizzle(aOutput.Width, aOutput.Height, {Depth=}4, aData, PByteArray(Unswizzled));
+  height := aOutput.Height;
+  width := aOutput.Width;
 
-  j := 0;
-  while j < aDataSize do
+  // Precalculate x-swizzle :
+  SetLength(xswizzle, width);
+  for x := 0 to width - 1 do
+    xswizzle[x] := _Swizzle(x, {Max=}(height * 2), {Shift=}0);
+
+  // Loop over all lines :
+  for y := 0 to height - 1 do
   begin
-    x := (j div 4) mod aOutput.Width;
-    y := (j div 4) div aOutput.Width;
+    // Calculate y-swizzle :
+    sy := _Swizzle(y, {Max=}width, {Shift=}1);
 
-    with aOutput.Pixels[x, y]^ do
-    begin
-      R := Unswizzled[j + 0];
-      G := Unswizzled[j + 1];
-      B := Unswizzled[j + 2];
-    end;
-
-    j := j + 4;
-  end; // while
+    // Copy whole line in one go (using pre-calculated x-swizzle) :
+    yscanline := aOutput.Scanlines[y];
+    for x := 0 to width - 1 do
+      yscanline[x] := PRGB32Array(aData)[xswizzle[x] + sy];
+  end; // for y
 end; // ReadSwizzledFormatIntoBitmap
 
 // Official spec : http://oss.sgi.com/projects/ogl-sample/registry/EXT/texture_compression_s3tc.txt
@@ -972,11 +834,10 @@ function ReadS3TCFormatIntoBitmap(
 var
   color: array[0..3] of Word;
   color32b: array[0..4] of TRGB32;
-
   r, g, b, r1, g1, b1, bitmap: DWord;
-
   j, p, x, y, xo, yo, ci: Cardinal;
 begin
+  // Sanity checks :  
   Result := (aFormat in [X_D3DFMT_DXT1, X_D3DFMT_DXT3, X_D3DFMT_DXT5])
         and Assigned(aData)
         and (aDataSize > 0)
@@ -985,14 +846,11 @@ begin
         and (aOutput.Width > 0);
   if not Result then
     Exit;
-  
+
+  // Loop over all input data :  
   j := 0;
   while j < aDataSize do
   begin
-    // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data for now :
-    if aFormat <> X_D3DFMT_DXT1 then
-      Inc(j, 8);
-
     // Read two 16-bit pixels (let's call them A and B) :
     color[0] := (aData[j + 0] shl 0)
               + (aData[j + 1] shl 8);
@@ -1050,14 +908,18 @@ begin
             + (aData[j + 6] shl 16)
             + (aData[j + 7] shl 24);
 
-    for p := 0 to 15 do
+    for p := 0 to 16 - 1 do
     begin
-      xo := p mod 4;
-      yo := p div 4;
+      xo := p and 3; // = mod 4
+      yo := p shr 2; // = div 4
       ci := (bitmap shr (p * 2)) and 3;
 
       aOutput.Pixels[x+xo, y+yo]^ := color32b[ci];
     end;
+
+    // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data for now :
+    if aFormat <> X_D3DFMT_DXT1 then
+      Inc(j, 8);
 
     Inc(j, 8);
   end; // while
