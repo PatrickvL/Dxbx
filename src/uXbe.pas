@@ -184,7 +184,7 @@ type
   //   and vertex buffers.  The structure below defines the XPR header and the
   //   unique identifier for this file type.
   XPR_HEADER = record
-    dwMagic: DWORD ;
+    dwMagic: DWORD; // 'XPR0' or 'XPR1'
     dwTotalSize: DWORD;
     dwHeaderSize: DWORD;
   end;
@@ -239,7 +239,7 @@ type
 *)
 
   TRawSection = TVarByteArray;
-
+  
   TXbe = class(TObject)
   private
     MyFile: TMemoryStream;
@@ -489,7 +489,7 @@ begin
       RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
       if m_SectionHeader[lIndex].dwSectionNameAddr <> 0 then
       begin
-        for lIndex2 := 0 to 8 do
+        for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH - 1 do
         begin
           m_szSectionName[lIndex][lIndex2] := AnsiChar(Buffer[RawAddr + lIndex2]);
           if m_szSectionName[lIndex][lIndex2] = #0 then
@@ -1150,6 +1150,7 @@ var
   Section: TRawSection;
   SectionSize: Integer;
   XprImage: PXPR_IMAGE;
+  Width, Height: Cardinal;
   Scanlines: RGB32Scanlines;
 begin
   Result := False;
@@ -1167,17 +1168,21 @@ begin
   XprImage := PXPR_IMAGE(Section);
   if XprImage.hdr.Header.dwMagic = XPR_MAGIC_VALUE then
   begin
+    // Determine image dimensions :
+    Width := 1 shl ((XprImage.hdr.Texture.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
+    Height := 1 shl ((XprImage.hdr.Texture.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
+
     // Prepare easy access to the bitmap data :
     aBitmap.PixelFormat := pf32bit;
-    aBitmap.SetSize(XPR_IMAGE_WH, XPR_IMAGE_WH);
+    aBitmap.SetSize(Width, Height);
     Scanlines.Initialize(aBitmap);
 
     // Read the texture into the bitmap :
     Result := ReadD3DTextureFormatIntoBitmap(
       {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
       {Data=}PByteArray(@(XprImage.pBits[0])),
-      {DataSize=}XPR_IMAGE_DATA_SIZE,
-      @Scanlines);
+      {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
+      {Output=}@Scanlines);
       
     Exit;
   end;
