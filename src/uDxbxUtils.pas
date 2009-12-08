@@ -75,7 +75,7 @@ function ScanHexDWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 
 function Sscanf(const s: AnsiString; const fmt: AnsiString; const Pointers: array of Pointer): Integer;
 
-function StrLenLimit(Src: PChar; MaxLen: Cardinal): Cardinal;
+function StrLenLimit(Src: PAnsiChar; MaxLen: Cardinal): Cardinal;
 function StrLPas(const aPChar: PAnsiChar; const aMaxLength: Integer): AnsiString;
 
 function iif(aTest: Boolean; const aTrue, aFalse: Integer): Integer; overload;
@@ -582,7 +582,7 @@ end;
 
 // Stupid Delphi has this hidden in the implementation section of SysUtils;
 // StrLenLimit:  Scan Src for a null terminator up to MaxLen bytes
-function StrLenLimit(Src: PChar; MaxLen: Cardinal): Cardinal;
+function StrLenLimit(Src: PAnsiChar; MaxLen: Cardinal): Cardinal;
 begin
   if Src = nil then
   begin
