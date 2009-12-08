@@ -226,8 +226,6 @@ begin
     Result := AFalse;
 end;
 
-//
-
 function IDirect3D8_CreateDevice(const aDirect3D8: IDirect3D8;
   Adapter: UINT; DeviceType: D3DDEVTYPE; hFocusWindow: HWND;
   BehaviorFlags: DWORD; pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
@@ -382,8 +380,6 @@ begin
   PPointer(ppSurfaceLevel)^ := Pointer(TmpIDirect3DSurface8);
   Pointer(TmpIDirect3DSurface8) := nil;
 end;
-
-//
 
 // Direct3D initialization (called before emulation begins)
 procedure XTL_EmuD3DInit(
@@ -2960,7 +2956,6 @@ var
   dwPtr: DWORD;
   pRefCount: PDWORD;
 begin
-  Result := 0;
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateTexture' +
@@ -3023,8 +3018,10 @@ begin
     Result := IDirect3DDevice8_CreateTexture(g_pD3DDevice8,
       Width, Height, Levels,
       PCUsage, // Cxbx TODO : Xbox Allows a border to be drawn (maybe hack this in software ;[)
-      PCFormat, PCPool, @(ppTexture^.Lock{EmuTexture8})
-      );
+      PCFormat,
+      PCPool,
+      @(ppTexture^.Lock{EmuTexture8})
+    );
 
     if (FAILED(Result)) then
     begin
@@ -3085,7 +3082,6 @@ var
   dwPtr: DWORD;
   pRefCount: PDWORD;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
     DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateVolumeTexture' +
@@ -3179,7 +3175,6 @@ var
   hRet: HRESULT;
   PCFormat: D3DFORMAT;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateCubeTexture' +
@@ -3245,7 +3240,6 @@ var
   hRet: HRESULT;
   pData: PBYTE;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_CreateIndexBuffer' +
@@ -4098,7 +4092,7 @@ begin
         {Usage=}0,
         {FVF=}0,
         {Pool=}D3DPOOL_MANAGED,
-        {ppVertexBuffer}@pResource.Lock);
+        {ppVertexBuffer}@pResource^.Lock);
 
       if (FAILED(hRet)) then
       begin
@@ -4162,7 +4156,7 @@ begin
 
         hRet := IDirect3DDevice8_CreateIndexBuffer(g_pD3DDevice8,
           dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
-          @(pIndexBuffer.Lock{EmuIndexBuffer8}));
+          @(pIndexBuffer^.Lock{EmuIndexBuffer8}));
 
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('CreateIndexBuffer Failed!');
@@ -4386,7 +4380,12 @@ begin
         // create the happy little texture
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         begin
-          hRet := IDirect3DDevice8_CreateImageSurface(g_pD3DDevice8, dwWidth, dwHeight, Format, @(pResource.Lock{EmuSurface8}));
+          hRet := IDirect3DDevice8_CreateImageSurface(g_pD3DDevice8,
+            dwWidth,
+            dwHeight,
+            Format,
+            @(pResource^.Lock{EmuSurface8})
+          );
 
           if (FAILED(hRet)) then
             CxbxKrnlCleanup('CreateImageSurface Failed!');
@@ -4434,7 +4433,7 @@ begin
 
             hRet := IDirect3DDevice8_CreateCubeTexture(g_pD3DDevice8,
               dwWidth, dwMipMapLevels, 0, Format,
-              D3DPOOL_MANAGED, @(pResource.Lock{EmuCubeTexture8}));
+              D3DPOOL_MANAGED, @(pResource^.Lock{EmuCubeTexture8}));
 
             if (FAILED(hRet)) then
               CxbxKrnlCleanup('CreateCubeTexture Failed!');
@@ -4448,7 +4447,7 @@ begin
 
             hRet := IDirect3DDevice8_CreateTexture(g_pD3DDevice8,
               dwWidth, dwHeight, dwMipMapLevels, 0, Format,
-              D3DPOOL_MANAGED, @(pResource.Lock{EmuTexture8})
+              D3DPOOL_MANAGED, @(pResource^.Lock{EmuTexture8})
               );
 
 
@@ -5291,7 +5290,7 @@ end;
 function XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis: PX_D3DTexture;
   Level: UINT;
   ppSurfaceLevel: PPX_D3DSurface): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
   dwSize: DWORD;
@@ -5438,7 +5437,7 @@ end;
 function XTL_EmuIDirect3DDevice8_CreateVertexBuffer2(
   Length: UINT
   ): PX_D3DVertexBuffer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   pD3DVertexBuffer: PX_D3DVertexBuffer;
   hRet: HRESULT;
@@ -8526,8 +8525,8 @@ exports
   XTL_EmuIDirect3DSurface8_LockRect,
 
   XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
-  XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DDevice_GetSurfaceLevel', // TODO : Fix wrong prefix!
-  XTL_EmuIDirect3DTexture8_GetSurfaceLevel2 name PatchPrefix + 'D3DDevice_GetSurfaceLevel2', // TODO : Fix wrong prefix!
+  XTL_EmuIDirect3DTexture8_GetSurfaceLevel, // name PatchPrefix + 'D3DDevice_GetSurfaceLevel', // TODO : Fix wrong prefix!
+  XTL_EmuIDirect3DTexture8_GetSurfaceLevel2, // name PatchPrefix + 'D3DDevice_GetSurfaceLevel2', // TODO : Fix wrong prefix!
   XTL_EmuIDirect3DTexture8_LockRect name PatchPrefix + 'D3DDevice_LockRect', // TODO : Fix wrong prefix!
 
   XTL_EmuIDirect3DVertexBuffer8_GetDesc,
