@@ -133,6 +133,7 @@ function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATU
 implementation
 
 function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeAlertResumeThread');
@@ -140,6 +141,7 @@ begin
 end;
 
 function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeAlertThread');
@@ -147,6 +149,7 @@ begin
 end;
 
 function xboxkrnl_KeBoostPriorityThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeBoostPriorityThread');
@@ -154,6 +157,7 @@ begin
 end;
 
 function xboxkrnl_KeBugCheck(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeBugCheck');
@@ -161,6 +165,7 @@ begin
 end;
 
 function xboxkrnl_KeBugCheckEx(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeBugCheckEx');
@@ -168,6 +173,7 @@ begin
 end;
 
 function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeCancelTimer');
@@ -175,6 +181,7 @@ begin
 end;
 
 function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeConnectInterrupt');
@@ -194,6 +201,7 @@ begin
 end;
 
 function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeDisconnectInterrupt');
@@ -201,6 +209,7 @@ begin
 end;
 
 function xboxkrnl_KeEnterCriticalRegion(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeEnterCriticalRegion');
@@ -208,6 +217,7 @@ begin
 end;
 
 function xboxkrnl_KeGetCurrentIrql(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeGetCurrentIrql');
@@ -215,6 +225,7 @@ begin
 end;
 
 function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeGetCurrentThread');
@@ -222,6 +233,7 @@ begin
 end;
 
 function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInitializeApc');
@@ -229,6 +241,7 @@ begin
 end;
 
 function xboxkrnl_KeInitializeDeviceQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInitializeDeviceQueue');
@@ -262,6 +275,7 @@ begin
 end;
 
 function xboxkrnl_KeInitializeEvent(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInitializeEvent');
@@ -269,6 +283,7 @@ begin
 end;
 
 function xboxkrnl_KeInitializeInterrupt(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInitializeInterrupt');
@@ -276,6 +291,7 @@ begin
 end;
 
 function xboxkrnl_KeInitializeMutant(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInitializeMutant');
@@ -283,6 +299,7 @@ begin
 end;
 
 function xboxkrnl_KeInitializeQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInitializeQueue');
@@ -290,6 +307,7 @@ begin
 end;
 
 function xboxkrnl_KeInitializeSemaphore(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInitializeSemaphore');
@@ -326,6 +344,7 @@ begin
 end;
 
 function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInsertByKeyDeviceQueue');
@@ -333,6 +352,7 @@ begin
 end;
 
 function xboxkrnl_KeInsertDeviceQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInsertDeviceQueue');
@@ -340,6 +360,7 @@ begin
 end;
 
 function xboxkrnl_KeInsertHeadQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInsertHeadQueue');
@@ -347,6 +368,7 @@ begin
 end;
 
 function xboxkrnl_KeInsertQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInsertQueue');
@@ -354,6 +376,7 @@ begin
 end;
 
 function xboxkrnl_KeInsertQueueApc(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInsertQueueApc');
@@ -361,6 +384,7 @@ begin
 end;
 
 function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInsertQueueDpc');
@@ -368,6 +392,7 @@ begin
 end;
 
 function xboxkrnl_KeInterruptTime(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeInterruptTime');
@@ -375,6 +400,7 @@ begin
 end;
 
 function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeIsExecutingDpc');
@@ -382,6 +408,7 @@ begin
 end;
 
 function xboxkrnl_KeLeaveCriticalRegion(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeLeaveCriticalRegion');
@@ -389,6 +416,7 @@ begin
 end;
 
 function xboxkrnl_KePulseEvent(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KePulseEvent');
@@ -396,6 +424,7 @@ begin
 end;
 
 function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeQueryBasePriorityThread');
@@ -403,6 +432,7 @@ begin
 end;
 
 function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeQueryInterruptTime');
@@ -436,6 +466,7 @@ begin
 end;
 
 function xboxkrnl_KeRaiseIrqlToDpcLevel(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRaiseIrqlToDpcLevel');
@@ -443,6 +474,7 @@ begin
 end;
 
 function xboxkrnl_KeRaiseIrqlToSynchLevel(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRaiseIrqlToSynchLevel');
@@ -450,6 +482,7 @@ begin
 end;
 
 function xboxkrnl_KeReleaseMutant(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeReleaseMutant');
@@ -457,6 +490,7 @@ begin
 end;
 
 function xboxkrnl_KeReleaseSemaphore(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeReleaseSemaphore');
@@ -464,6 +498,7 @@ begin
 end;
 
 function xboxkrnl_KeRemoveByKeyDeviceQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRemoveByKeyDeviceQueue');
@@ -471,6 +506,7 @@ begin
 end;
 
 function xboxkrnl_KeRemoveDeviceQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRemoveDeviceQueue');
@@ -478,6 +514,7 @@ begin
 end;
 
 function xboxkrnl_KeRemoveEntryDeviceQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRemoveEntryDeviceQueue');
@@ -485,6 +522,7 @@ begin
 end;
 
 function xboxkrnl_KeRemoveQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRemoveQueue');
@@ -492,6 +530,7 @@ begin
 end;
 
 function xboxkrnl_KeRemoveQueueDpc(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRemoveQueueDpc');
@@ -499,6 +538,7 @@ begin
 end;
 
 function xboxkrnl_KeResetEvent(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeResetEvent');
@@ -506,6 +546,7 @@ begin
 end;
 
 function xboxkrnl_KeRestoreFloatingPointState(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRestoreFloatingPointState');
@@ -513,6 +554,7 @@ begin
 end;
 
 function xboxkrnl_KeResumeThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeResumeThread');
@@ -520,6 +562,7 @@ begin
 end;
 
 function xboxkrnl_KeRundownQueue(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeRundownQueue');
@@ -527,6 +570,7 @@ begin
 end;
 
 function xboxkrnl_KeSaveFloatingPointState(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSaveFloatingPointState');
@@ -534,6 +578,7 @@ begin
 end;
 
 function xboxkrnl_KeSetBasePriorityThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSetBasePriorityThread');
@@ -541,6 +586,7 @@ begin
 end;
 
 function xboxkrnl_KeSetDisableBoostThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSetDisableBoostThread');
@@ -548,6 +594,7 @@ begin
 end;
 
 function xboxkrnl_KeSetEvent(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSetEvent');
@@ -555,6 +602,7 @@ begin
 end;
 
 function xboxkrnl_KeSetEventBoostPriority(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSetEventBoostPriority');
@@ -562,6 +610,7 @@ begin
 end;
 
 function xboxkrnl_KeSetPriorityProcess(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSetPriorityProcess');
@@ -569,6 +618,7 @@ begin
 end;
 
 function xboxkrnl_KeSetPriorityThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSetPriorityThread');
@@ -636,6 +686,7 @@ begin
 end;
 
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeStallExecutionProcessor');
@@ -643,6 +694,7 @@ begin
 end;
 
 function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSuspendThread');
@@ -650,6 +702,7 @@ begin
 end;
 
 function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSynchronizeExecution');
@@ -657,6 +710,7 @@ begin
 end;
 
 function xboxkrnl_KeSystemTime(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeSystemTime');
@@ -664,6 +718,7 @@ begin
 end;
 
 function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeTestAlertThread');
@@ -671,6 +726,7 @@ begin
 end;
 
 function xboxkrnl_KeTimeIncrement(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeTimeIncrement');
@@ -678,6 +734,7 @@ begin
 end;
 
 function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeWaitForMultipleObjects');
@@ -685,6 +742,7 @@ begin
 end;
 
 function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeWaitForSingleObject');

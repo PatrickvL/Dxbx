@@ -253,14 +253,27 @@ function xboxkrnl_NtAllocateVirtualMemory(
   AllocationType: DWORD;
   Protect: DWORD
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtAllocateVirtualMemory');
+
+  DbgPrintf('EmuKrnl (0x%X): NtAllocateVirtualMemory'+
+      #13#10'('+
+      #13#10'   BaseAddress         : 0x%.8x (0x%.8x)'+
+      #13#10'   ZeroBits            : 0x%.8x' +
+      #13#10'   AllocationSize      : 0x%.8x (0x%.8x)'+
+      #13#10'   AllocationType      : 0x%.8x' +
+      #13#10'   Protect             : 0x%.8x' +
+      #13#10');',
+      [BaseAddress, @BaseAddress, ZeroBits, AllocationSize, @AllocationSize, AllocationType, Protect]);
+
+(*  Result := NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect); *)
+
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCancelTimer');
@@ -270,10 +283,21 @@ end;
 function xboxkrnl_NtClearEvent(
   EventHandle: HANDLE
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtClearEvent');
+
+  DbgPrintf('EmuKrnl : NtClearEvent'+
+      #13#10'('+
+      #13#10'   EventHandle         : 0x%.8x' +
+      #13#10');',
+      [EventHandle]);
+
+  (*Result := NtDll::NtClearEvent(EventHandle); *)
+
+  if (FAILED(Result)) then
+    EmuWarning('NtClearEvent Failed!');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -313,6 +337,7 @@ begin
 end;
 
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateDirectoryObject');
@@ -328,6 +353,51 @@ function xboxkrnl_NtCreateEvent(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
+
+    DbgPrintf("EmuKrnl (0x%X): NtCreateEvent\n"
+           "(\n"
+           "   EventHandle         : 0x%.08X\n"
+           "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+           "   EventType           : 0x%.08X\n"
+           "   InitialState        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), EventHandle, ObjectAttributes, szBuffer,
+           EventType, InitialState);
+
+    wchar_t wszObjectName[160];
+
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    // initialize object attributes
+    if(szBuffer != 0)
+    {
+        mbstowcs(wszObjectName, "\\??\\", 4);
+        mbstowcs(wszObjectName+4, szBuffer, 160);
+
+        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+    }
+
+    NtObjAttr.RootDirectory = 0;
+
+    // redirect to NtCreateEvent
+    NTSTATUS ret = NtDll::NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, (NtDll::EVENT_TYPE)EventType, InitialState);
+
+    if(FAILED(ret))
+        EmuWarning("NtCreateEvent Failed!");
+
+    DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
+
+
   Result := Unimplemented('NtCreateEvent');
   EmuSwapFS(fsXbox);
 end;
@@ -531,6 +601,7 @@ function xboxkrnl_NtCreateIoCompletion(
   pObjectAttributes: dtObjectAttributes;
   pszUnknownArgs: dtBLOB
   ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateIoCompletion');
@@ -545,6 +616,47 @@ function xboxkrnl_NtCreateMutant(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
+
+    DbgPrintf("EmuKrnl (0x%X): NtCreateMutant\n"
+           "(\n"
+           "   MutantHandle        : 0x%.08X\n"
+           "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+           "   InitialOwner        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
+
+    wchar_t wszObjectName[160];
+
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    // initialize object attributes
+    if(szBuffer != 0)
+    {
+        mbstowcs(wszObjectName, "\\??\\", 4);
+        mbstowcs(wszObjectName+4, szBuffer, 160);
+
+        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+    }
+
+    NtObjAttr.RootDirectory = 0;
+
+    // redirect to NtCreateMutant
+    NTSTATUS ret = NtDll::NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, InitialOwner);
+
+    if(FAILED(ret))
+        EmuWarning("NtCreateMutant Failed!");
+
+    DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtCreateMutant');
   EmuSwapFS(fsXbox);
 end;
@@ -588,6 +700,7 @@ begin
 end;
 
 function xboxkrnl_NtCreateTimer(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateTimer');
@@ -595,6 +708,7 @@ begin
 end;
 
 function xboxkrnl_NtDeleteFile(pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDeleteFile');
@@ -602,6 +716,7 @@ begin
 end;
 
 function xboxkrnl_NtDeviceIoControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pIoControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDeviceIoControlFile');
@@ -616,6 +731,32 @@ function xboxkrnl_NtDuplicateObject(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtDuplicateObject\n"
+           "(\n"
+           "   SourceHandle        : 0x%.08X\n"
+           "   TargetHandle        : 0x%.08X\n"
+           "   Options             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
+
+    // redirect to Win2k/XP
+    NTSTATUS ret = NtDll::NtDuplicateObject
+    (
+        GetCurrentProcess(),
+        SourceHandle,
+        GetCurrentProcess(),
+        TargetHandle,
+        0, 0, Options
+    );
+
+    if(ret != STATUS_SUCCESS)
+        EmuWarning("Object was not duplicated!");
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtDuplicateObject');
   EmuSwapFS(fsXbox);
 end;
@@ -627,6 +768,20 @@ function xboxkrnl_NtFlushBuffersFile(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtFlushBuffersFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, IoStatusBlock);
+
+    NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)(*IoStatusBlock);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtFlushBuffersFile');
   EmuSwapFS(fsXbox);
 end;
@@ -639,11 +794,27 @@ function xboxkrnl_NtFreeVirtualMemory(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
+           "(\n"
+           "   BaseAddress         : 0x%.08X\n"
+           "   FreeSize            : 0x%.08X\n"
+           "   FreeType            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, FreeSize, FreeType);
+
+    NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtFreeVirtualMemory');
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtFsControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; FsControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtFsControlFile');
@@ -651,6 +822,7 @@ begin
 end;
 
 function xboxkrnl_NtOpenDirectoryObject(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtOpenDirectoryObject');
@@ -687,6 +859,7 @@ begin
 end;
 
 function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtOpenSymbolicLinkObject');
@@ -694,6 +867,7 @@ begin
 end;
 
 function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtProtectVirtualMemory');
@@ -701,6 +875,7 @@ begin
 end;
 
 function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtPulseEvent');
@@ -759,11 +934,85 @@ function xboxkrnl_NtQueryDirectoryFile(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
+           "(\n"
+           "   FileHandle           : 0x%.08X\n"
+           "   Event                : 0x%.08X\n"
+           "   ApcRoutine           : 0x%.08X\n"
+           "   ApcContext           : 0x%.08X\n"
+           "   IoStatusBlock        : 0x%.08X\n"
+           "   FileInformation      : 0x%.08X\n"
+           "   Length               : 0x%.08X\n"
+           "   FileInformationClass : 0x%.08X\n"
+           "   FileMask             : 0x%.08X (%s)\n"
+           "   RestartScan          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+           FileInformation, Length, FileInformationClass, FileMask,
+           (FileMask != 0) ? FileMask->Buffer : "", RestartScan);
+
+    NTSTATUS ret;
+
+    if(FileInformationClass != 1)   // Due to unicode->string conversion
+        CxbxKrnlCleanup("Unsupported FileInformationClass");
+
+    NtDll::UNICODE_STRING NtFileMask;
+
+    wchar_t wszObjectName[160];
+
+    // initialize FileMask
+    {
+        if(FileMask != 0)
+            mbstowcs(wszObjectName, FileMask->Buffer, 160);
+        else
+            mbstowcs(wszObjectName, "", 160);
+
+        NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
+    }
+
+    NtDll::FILE_DIRECTORY_INFORMATION *FileDirInfo = (NtDll::FILE_DIRECTORY_INFORMATION*)(*CxbxMalloc(0x40 + 160*2);
+
+    char    *mbstr = FileInformation->FileName;
+    wchar_t *wcstr = FileDirInfo->FileName;
+
+    do
+    {
+        ZeroMemory(wcstr, 160*2);
+
+        ret = NtDll::NtQueryDirectoryFile
+        (
+            FileHandle, Event, (NtDll::PIO_APC_ROUTINE)ApcRoutine, ApcContext, (NtDll::IO_STATUS_BLOCK*)(*IoStatusBlock, FileDirInfo,
+            0x40+160*2, (NtDll::FILE_INFORMATION_CLASS)FileInformationClass, TRUE, &NtFileMask, RestartScan
+        );
+
+        // convert from PC to Xbox
+        {
+            memcpy(FileInformation, FileDirInfo, 0x40);
+
+            wcstombs(mbstr, wcstr, 160);
+
+            FileInformation->FileNameLength /= 2;
+        }(*
+
+        RestartScan = FALSE;
+    }
+    // Xbox does not return . and ..
+    while(strcmp(mbstr, ".") == 0 || strcmp(mbstr, "..") == 0);
+
+    // TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
+    CxbxFree(FileDirInfo);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtQueryDirectoryFile');
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryDirectoryObject');
@@ -771,6 +1020,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryEvent');
@@ -784,6 +1034,36 @@ function xboxkrnl_NtQueryFullAttributesFile(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
+           "(\n"
+           "   ObjectAttributes    : 0x%.08X (%s)\n"
+           "   Attributes          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
+
+    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
+
+    wchar_t wszObjectName[160];
+
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    // initialize object attributes
+    {
+        mbstowcs(wszObjectName, szBuffer, 160);
+
+        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+    }
+
+    NTSTATUS ret = NtDll::NtQueryFullAttributesFile(&NtObjAttr, Attributes);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtQueryFullAttributesFile');
   EmuSwapFS(fsXbox);
 end;
@@ -850,6 +1130,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryIoCompletion');
@@ -857,6 +1138,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryMutant');
@@ -864,6 +1146,7 @@ begin
 end;
 
 function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQuerySemaphore');
@@ -871,6 +1154,7 @@ begin
 end;
 
 function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQuerySymbolicLinkObject');
@@ -878,6 +1162,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryTimer');
@@ -925,6 +1210,45 @@ function xboxkrnl_NtQueryVolumeInformationFile(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtQueryVolumeInformationFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   FileInformation     : 0x%.08X\n"
+           "   Length              : 0x%.08X\n"
+           "   FileInformationClass: 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
+           Length, FileInformationClass);
+
+    // Safety/Sanity Check
+    if((FileInformationClass != FileFsSizeInformation) && (FileInformationClass != FileDirectoryInformation))
+        CxbxKrnlCleanup("NtQueryVolumeInformationFile: Unsupported FileInformationClass");
+
+    NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
+    (
+        FileHandle,
+        (NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
+        (NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
+        (NtDll::FS_INFORMATION_CLASS)FileInformationClass
+    );
+
+    // NOTE: TODO: Dynamically fill in, or allow configuration?
+    if(FileInformationClass == FileFsSizeInformation)
+    {
+        FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)(*FileInformation;
+
+        SizeInfo->TotalAllocationUnits.QuadPart     = 0x4C468;
+        SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
+        SizeInfo->SectorsPerAllocationUnit          = 32;
+        SizeInfo->BytesPerSector                    = 512;
+    }
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtQueryVolumeInformationFile');
   EmuSwapFS(fsXbox);
 end;
@@ -942,6 +1266,34 @@ function xboxkrnl_NtReadFile(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtReadFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   Event               : 0x%.08X\n"
+           "   ApcRoutine          : 0x%.08X\n"
+           "   ApcContext          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   Buffer              : 0x%.08X\n"
+           "   Length              : 0x%.08X\n"
+           "   ByteOffset          : 0x%.08X (0x%.08X)\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, Event, ApcRoutine,
+           ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
+
+// Halo...
+//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
+//        _asm int 3
+
+    NTSTATUS ret = NtDll::NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)(*ByteOffset, 0);
+
+    if(FAILED(ret))
+        EmuWarning("NtReadFile Failed!");
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtReadFile');
   EmuSwapFS(fsXbox);
 end;
@@ -960,6 +1312,24 @@ function xboxkrnl_NtReleaseMutant(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtReleaseMutant\n"
+           "(\n"
+           "   MutantHandle         : 0x%.08X\n"
+           "   PreviousCount        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), MutantHandle, PreviousCount);
+
+    // redirect to NtCreateMutant
+    NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
+
+    if(FAILED(ret))
+        EmuWarning("NtReleaseMutant Failed!");
+
+    EmuSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;*)
+
   Result := Unimplemented('NtReleaseMutant');
   EmuSwapFS(fsXbox);
 end;
@@ -990,6 +1360,7 @@ begin
 end;
 
 function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtRemoveIoCompletion');
@@ -1003,6 +1374,22 @@ function xboxkrnl_NtResumeThread(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*      DbgPrintf("EmuKrnl (0x%X): NtResumeThread\n"
+           "(\n"
+           "   ThreadHandle         : 0x%.08X\n"
+           "   PreviousSuspendCount : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+
+    NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
+
+    Sleep(10);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtResumeThread');
   EmuSwapFS(fsXbox);
 end;
@@ -1014,6 +1401,23 @@ function xboxkrnl_NtSetEvent(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtSetEvent\n"
+           "(\n"
+           "   EventHandle          : 0x%.08X\n"
+           "   PreviousState        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), EventHandle, PreviousState);
+
+    NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
+
+    if(FAILED(ret))
+        EmuWarning("NtSetEvent Failed!");
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;*)
+
   Result := Unimplemented('NtSetEvent');
   EmuSwapFS(fsXbox);
 end;
@@ -1046,6 +1450,7 @@ begin
 end;
 
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetIoCompletion');
@@ -1053,6 +1458,7 @@ begin
 end;
 
 function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetSystemTime');
@@ -1060,6 +1466,7 @@ begin
 end;
 
 function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetTimerEx');
@@ -1067,6 +1474,7 @@ begin
 end;
 
 function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSignalAndWaitForSingleObjectEx');
@@ -1080,6 +1488,21 @@ function xboxkrnl_NtSuspendThread(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtSuspendThread\n"
+           "(\n"
+           "   ThreadHandle         : 0x%.08X\n"
+           "   PreviousSuspendCount : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+
+    NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+*)
+
   Result := Unimplemented('NtSuspendThread');
   EmuSwapFS(fsXbox);
 end;
@@ -1091,12 +1514,89 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   ); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
+    // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
+           "(\n"
+           "   ApcContext           : 0x%.08X\n"
+           "   IoStatusBlock        : 0x%.08X\n"
+           "   Reserved             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ApcContext, IoStatusBlock, Reserved);
+
+    DbgPrintf("IoStatusBlock->Pointer     : 0x%.08X\n"
+              "IoStatusBlock->Information : 0x%.08X\n", IoStatusBlock->u1.Pointer, IoStatusBlock->Information);
+
+    EmuSwapFS();   // Xbox FS
+
+    uint32 dwEsi, dwEax, dwEcx;
+
+    dwEsi = (uint32)IoStatusBlock;
+
+    if((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
+    {
+        dwEcx = 0;
+        dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
+    }
+    else
+    {
+        dwEcx = (DWORD)IoStatusBlock->Information;
+        dwEax = 0;
+    }
+
+    /*
+    // ~XDK 3911??
+    if(true)
+    {
+        dwEsi = dw2;
+        dwEcx = dw1;
+        dwEax = dw3;
+
+    }
+    else
+    {
+        dwEsi = dw1;
+        dwEcx = dw2;
+        dwEax = dw3;
+    }//*/
+
+    __asm
+    {
+        pushad
+        /*
+        mov esi, IoStatusBlock
+        mov ecx, dwEcx
+        mov eax, dwEax
+        */
+        // TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
+        // Seems to be XDK/version dependand??
+        mov esi, dwEsi
+        mov ecx, dwEcx
+        mov eax, dwEax
+
+        push esi
+        push ecx
+        push eax
+
+        call ApcContext
+
+        popad
+    }
+
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
+
+    return;*)
+
+
   EmuSwapFS(fsWindows);
   Unimplemented('NtUserIoApcDispatcher');
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForSingleObject');
@@ -1112,6 +1612,25 @@ function xboxkrnl_NtWaitForSingleObjectEx(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+  (*    DbgPrintf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
+           "(\n"
+           "   Handle               : 0x%.08X\n"
+           "   WaitMode             : 0x%.08X\n"
+           "   Alertable            : 0x%.08X\n"
+           "   Timeout              : 0x%.08X (%d)\n"
+           ");\n",
+           GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
+
+    NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+
+    DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+*)
+
   Result := Unimplemented('NtWaitForSingleObjectEx');
   EmuSwapFS(fsXbox);
 end;
@@ -1127,6 +1646,26 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*    DbgPrintf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
+           "(\n"
+           "   Count                : 0x%.08X\n"
+           "   Handles              : 0x%.08X\n"
+           "   WaitType             : 0x%.08X\n"
+           "   WaitMode             : 0x%.08X\n"
+           "   Alertable            : 0x%.08X\n"
+           "   Timeout              : 0x%.08X (%d)\n"
+           ");\n",
+           GetCurrentThreadId(), Count, Handles, WaitType, WaitMode, Alertable,
+           Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
+
+    NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+*)
+
   Result := Unimplemented('NtWaitForMultipleObjectsEx');
   EmuSwapFS(fsXbox);
 end;
@@ -1172,6 +1711,7 @@ begin
 end;
 
 function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWriteFileGather');
