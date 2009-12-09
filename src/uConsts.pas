@@ -45,8 +45,8 @@ const
 
   // Magic values
 
-  XPR0_MAGIC_VALUE = $30525058; // "XPR0", bHasResourceOffsetsTable = FALSE;
-  XPR1_MAGIC_VALUE = $31525058; // "XPR1", bHasResourceOffsetsTable = TRUE;
+  XPR0_MAGIC_VALUE = $30525058; // MAKEFOURCC('XPR0'), bHasResourceOffsetsTable = FALSE;
+  XPR1_MAGIC_VALUE = $31525058; // MAKEFOURCC('XPR1'), bHasResourceOffsetsTable = TRUE;
   XPR_MAGIC_VALUE = XPR0_MAGIC_VALUE;
 
   _MagicNumber = 'XBEH'; // Xbe File Format
@@ -84,6 +84,8 @@ const
   XBE_LIBRARYVERSION_FLAG_ApprovedMask = $60;
   XBE_LIBRARYVERSION_FLAG_DebugBuild = $80;
 
+  XBE_LIBRARYNAME_MAXLENGTH = 8;
+
   // game region flags for Xbe certificate
   XBEIMAGE_GAME_REGION_NA = $00000001;
   XBEIMAGE_GAME_REGION_JAPAN = $00000002;
@@ -92,7 +94,8 @@ const
 
   XBEIMAGE_GAME_REGION_ALL = XBEIMAGE_GAME_REGION_NA + XBEIMAGE_GAME_REGION_JAPAN + XBEIMAGE_GAME_REGION_RESTOFWORLD;
 
-  // media type flags for Xbe certificate
+  // XBE media type flags for Xbe certificate
+  
   XBEIMAGE_MEDIA_TYPE_HARD_DISK = $00000001;
   XBEIMAGE_MEDIA_TYPE_DVD_X2 = $00000002;
   XBEIMAGE_MEDIA_TYPE_DVD_CD = $00000004;
@@ -107,8 +110,11 @@ const
   XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE  = $80000000;
   XBEIMAGE_MEDIA_TYPE_MEDIA_MASK = $00FFFFFF;
 
-  PE_FILE_ALIGN = $00000020; // File alignment
-  PE_SEGM_ALIGN = $00000020; // Segment alignment
+  // Alignments
+
+  PE_FILE_ALIGNMENT = $00000020; // Note : Delphi linker uses $200 ! Should we switch?
+  PE_SECTION_ALIGNMENT = $00000020; // Note : Delphi linker uses $1000 ! Should we switch?
+  PE_HEADER_ALIGNMENT = $1000; // - Actually, there's no such thing; JclDebug calls this 'ModuleCodeOffset'
 
   // XPR constants
   
@@ -120,8 +126,8 @@ const
   XBE_SECTIONNAME_SAVEICON = '$$XSIMAGE';
 
   // Copied from System.pas :
-  EXCEPTION_CONTINUE_SEARCH    = 0;
-  EXCEPTION_EXECUTE_HANDLER    = 1;
+  EXCEPTION_CONTINUE_SEARCH = 0;
+  EXCEPTION_EXECUTE_HANDLER = 1;
   EXCEPTION_CONTINUE_EXECUTION = -1;
 
   cXDK_TRACKER_DATA_FILE = 'GameData.dat';

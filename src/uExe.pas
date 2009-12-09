@@ -23,114 +23,25 @@ interface
 
 uses
   // Delphi
-  Dialogs, Windows, Classes, SysUtils,
+  Dialogs, // MessageDlg
+  Windows, // TImageDosHeader, TImageNtHeaders, TImageSectionHeader
+  Classes,
+  SysUtils,
   // Dxbx
   uTypes,
   uLog;
-
 
 type
   DOSStub = array[0..183] of Byte;
   EndFilling1 = array[0..0] of Byte;
   EndFilling2 = array[0..0] of Byte;
 
-  // DOSHeader
-  DOSHeader = packed record
-    m_magic: Word; // DOS .EXE magic number
-    m_cblp: Word; // byte on last page
-    m_cp: Word; // number of pages
-    m_crlc: Word; // number of relocations
-    m_cparhdr: Word; // size of header (in paragraphs)
-    m_minalloc: Word; // minimum extra paragraphs needed
-    m_maxalloc: Word; // maximum extra paragraphs needed
-    m_ss: Word; // initial SS value (relative)
-    m_sp: Word; // initial SP value
-    m_csum: Word; // checksum
-    m_ip: Word; // initial IP value
-    m_cs: Word; // initial CS value (relative)
-    m_lfarlc: Word; // file address of relocation table
-    m_ovno: Word; // overlay number
-    m_res: array[0..3] of Word; // reserved words
-    m_oemid: Word; // OEM identifier
-    m_oeminfo: Word; // OEM information
-    m_res2: array[0..9] of Word; // reserved words
-    m_lfanew: DWord; // file address of new .EXE header
-  end;
-
-  // Header (PE)
-  Header = packed record
-    m_magic: DWord; // magic number [should be 'PE\0\0']
-    m_machine: Word; // machine type
-    m_sections: Word; // number of sections
-    m_timedate: DWord; // timedate stamp
-    m_symbol_table_addr: DWord; // symbol table address
-    m_symbols: Dword; // number of symbols
-    m_sizeof_optional_header: Word; // size of optional header
-    m_characteristics: Word; // characteristics
-  end;
-
-  // (PE)
-  //struct image_data_directory             // image data directory
-  image_data_directory = packed record
-    m_virtual_addr: Dword;
-    m_size: DWord;
-  end;
-
-  OptionalHeader = packed record
-    m_magic: Word; // magic number [should be 0x010B]
-    m_linker_version_major: Byte; // linker version [major]
-    m_linker_version_minor: Byte; // linker version [minor]
-    m_sizeof_code: DWord; // size of code
-    m_sizeof_initialized_data: DWord; // size of initialized data
-    m_sizeof_uninitialized_data: DWord; // size of uninitialized data
-    m_entry: DWord; // address of entry point
-    m_code_base: DWord; // address of code base
-    m_data_base: DWord; // address of data base
-    m_image_base: DWord; // address of image base
-    m_section_alignment: Dword; // section alignment
-    m_file_alignment: DWord; // file alignment
-    m_os_version_major: Word; // operating system version [major]
-    m_os_version_minor: Word; // operating system version [minor]
-    m_image_version_major: Word; // image version [major]
-    m_image_version_minor: Word; // image version [minor]
-    m_subsystem_version_major: Word; // subsystem version [major]
-    m_subsystem_version_minor: Word; // subsystem version [minor]
-    m_win32_version: DWord; // win32 version
-    m_sizeof_image: DWord; // size of image
-    m_sizeof_headers: DWord; // size of headers
-    m_checksum: DWord; // checksum
-    m_subsystem: Word; // subsystem
-    m_dll_characteristics: Word; // dll characteristics
-    m_sizeof_stack_reserve: DWord; // size of stack reserve
-    m_sizeof_stack_commit: DWord; // size of stack commit
-    m_sizeof_heap_reserve: DWord; // size of heap reserve
-    m_sizeof_heap_commit: DWord; // size of heap commit
-    m_loader_flags: DWord; // loader flags
-    m_data_directories: DWord; // data directories
-    m_image_data_directory: array[0..15] of image_data_directory;
-  end;
-
-  // PE Section Header
-  SectionHeader = packed record
-    m_name: array[0..7] of AnsiChar; // name of section
-    m_virtual_size: DWord; // virtual size of segment
-    m_virtual_addr: DWord; // virtual address of segment
-    m_sizeof_raw: DWord; // size of raw data
-    m_raw_addr: DWord; // address of raw data
-    m_relocations_addr: DWord; // address of relocations
-    m_linenumbers_addr: DWord; // address of line numbers
-    m_relocations: Word; // number of relocations
-    m_linenumbers: Word; // number of linenumbers
-    m_characteristics: DWord; // characteristics for this segment
-  end;
-
   TExe = class(TObject)
   public
-    m_DOSHeader: DOSHeader;
-    m_Header: Header;
+    DOSHeader: TImageDosHeader;
+    NtHeaders: TImageNtHeaders;
 
-    m_OptionalHeader: OptionalHeader;
-    m_SectionHeader: array of SectionHeader;
+    m_SectionHeader: array of TImageSectionHeader;
 
     m_bzSection: array of TVarByteArray;
 
@@ -139,7 +50,6 @@ type
     function doExport(const x_szExeFileName: string): Boolean;
     procedure ConstructorInit;
   end;
-
 
 const
   bzDOSStub: DOSStub = ($4D, $5A, $90, $00, $03, $00, $00, $00,
@@ -203,14 +113,14 @@ begin
 
   // ignore dos stub (if it exists)
   try
-    ExeFile.Read(m_DOSHeader.m_magic, SizeOf(m_DosHeader.m_magic));
+    ExeFile.Read(DOSHeader.e_magic, SizeOf(DosHeader.e_magic));
   except
     MessageDlg('Unexpected read error while reading magic number', mtError, [mbOk], 0);
   end;
 
-  if StrLComp(@m_DOSHeader.m_magic, 'MZ', 2) = 0 then
+  if StrLComp(@DOSHeader.e_magic, 'MZ', 2) = 0 then
   try
-    ExeFile.Read(m_DOSHeader.m_magic, SizeOf(m_DOSHeader) - 2);
+    ExeFile.Read(DOSHeader.e_magic, SizeOf(DOSHeader) - SizeOf(DosHeader.e_magic));
     WriteLog('Exe: Reading DOS stub... OK');
   except
     WriteLog('Unexpected read error while reading DOS stub');
@@ -224,7 +134,7 @@ begin
     {
         printf('Exe::Exe: Reading PE header...');
 
-        if (fread(&m_Header, SizeOf(m_Header), 1, ExeFile) != 1) then
+        if (fread(&NtHeaders.FileHeader, SizeOf(NtHeaders.FileHeader), 1, ExeFile) != 1) then
         {
             SetError('Unexpected read error while reading PE header', True);
             goto cleanup;
@@ -232,7 +142,7 @@ begin
 
 
 
-(*        if (m_Header.m_magic != *(uint32*)(*'PE\0\0') then
+(*        if (NtHeaders.FileHeader.m_magic != *(uint32*)(*'PE\0\0') then
         {
             SetError('Invalid file (could not locate PE header)', True);
             goto cleanup;
@@ -268,15 +178,15 @@ begin
     // * read section headers
     // ******************************************************************
     {
-        m_SectionHeader = new SectionHeader[m_Header.m_sections];
+        m_SectionHeader = new TImageSectionHeader[NtHeaders.FileHeader.NumberOfSections];
 
         printf('Exe::Exe: Reading Section Headers...');
 
-        for(uint32 v=0;v<m_Header.m_sections;v++)
+        for(uint32 v=0;v<NtHeaders.FileHeader.NumberOfSections;v++)
         {
             printf('Exe::Exe: Reading Section Header 0x%.4X...', v);
 
-            if (fread(&m_SectionHeader[v], SizeOf(SectionHeader), 1, ExeFile) != 1) then
+            if (fread(&m_SectionHeader[v], SizeOf(TImageSectionHeader), 1, ExeFile) != 1) then
             {
                 char buffer[255];
                 sprintf(buffer, 'Could not read PE section header %d (%Xh)', v, v);
@@ -294,9 +204,9 @@ begin
     {
         printf('Exe::Exe: Reading Sections...');
 
-        m_bzSection = new uint08*[m_Header.m_sections];
+        m_bzSection = new uint08*[NtHeaders.FileHeader.NumberOfSections];
 
-        for(uint32 v=0;v<m_Header.m_sections;v++)
+        for(uint32 v=0;v<NtHeaders.FileHeader.NumberOfSections;v++)
         {
             printf('Exe::Exe: Reading Section 0x%.4X...', v);
 
@@ -387,18 +297,13 @@ begin
     if not Result then
       Exit;
 
-    // write pe header
-    Result := _Write(m_Header, SizeOf(m_Header), 'PE header');
-    if not Result then
-      Exit;
-
-    // write optional header
-    Result := _Write(m_OptionalHeader, SizeOf(m_OptionalHeader), 'PE optional header');
+    // write nt headers
+    Result := _Write(NtHeaders, SizeOf(NtHeaders), 'NT headers');
     if not Result then
       Exit;
 
     // write section headers
-    for i := 0 to m_Header.m_sections - 1 do
+    for i := 0 to NtHeaders.FileHeader.NumberOfSections - 1 do
     begin
       Result := _Write(m_Sectionheader[i], SizeOf(m_SectionHeader[i]), 'PE section header 0x' + IntToHex(i, 4));
       if not Result then
@@ -408,11 +313,11 @@ begin
     WriteLog('Export: Writing Section Headers...OK');
 
     // write sections
-    for i := 0 to m_Header.m_sections - 1 do
+    for i := 0 to NtHeaders.FileHeader.NumberOfSections - 1 do
     begin
 
       //Debug info of turok from cxbx
-      //m_Header.m_sections = 13
+      //NtHeaders.FileHeader.NumberOfSections = 13
       //v = 0   RawwSize = 1578272  RawAddr = 4096
       //v = 1   RawwSize = 76960    RawAddr = 1582368
       //v = 2   RawwSize = 1344     RawAddr = 1659328
@@ -427,8 +332,8 @@ begin
       //v = 11  RawwSize = 128      RawAddr = 2434080
       //v = 12  RawwSize = 69632    RawAddr = 2434208
       //v = 13  RawwSize = 577      RawAddr = 305
-      RawSize := m_SectionHeader[i].m_sizeof_raw;
-      RawAddr := m_SectionHeader[i].m_raw_addr;
+      RawSize := m_SectionHeader[i].SizeOfRawData;
+      RawAddr := m_SectionHeader[i].PointerToRawData;
 
       ExeFile.Seek(RawAddr, soFromBeginning);
 
@@ -461,10 +366,10 @@ var
   virt_addr: DWord;
   virt_size: DWord;
 begin
-  for v := 0 to m_Header.m_sections - 1 do
+  for v := 0 to NtHeaders.FileHeader.NumberOfSections - 1 do
   begin
-    virt_addr := m_SectionHeader[v].m_virtual_addr;
-    virt_size := m_SectionHeader[v].m_virtual_size;
+    virt_addr := m_SectionHeader[v].VirtualAddress;
+    virt_size := m_SectionHeader[v].Misc.VirtualSize;
 
     if (x_dwVirtualAddress >= virt_addr) and (x_dwVirtualAddress < (virt_addr + virt_size)) then
     begin

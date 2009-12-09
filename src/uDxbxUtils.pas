@@ -26,8 +26,15 @@ uses
   Classes,
   Graphics,
   // Dxbx
-  uTypes,
-  uEmuD3D8Types;
+  uTypes;
+
+const // instead of using uEmuD3D8Types :
+  X_D3DFMT_A8R8G8B8 = $06; // 6, Swizzled
+//  X_D3DFMT_X8R8G8B8 = $07; // 7, Swizzled
+//  X_D3DFMT_P8 = $0B; // 11, Swizzled, 8-bit Palletized
+  X_D3DFMT_DXT1 = $0C; // 12, Compressed, opaque/one-bit alpha
+  X_D3DFMT_DXT3 = $0E; // 14, Compressed, linear alpha
+  X_D3DFMT_DXT5 = $0F; // 15, Compressed, interpolated alpha
 
 const
   NUMBER_OF_THUNKS = 379;
@@ -777,15 +784,16 @@ function ReadSwizzledFormatIntoBitmap(
       Result := Value mod Max;
 
     // The following is based on http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
+                                                        // --------------------------------11111111111111111111111111111111
     Result := (Result or (Result shl 8)) and $00FF00FF; // 0000000000000000111111111111111100000000000000001111111111111111
     Result := (Result or (Result shl 4)) and $0F0F0F0F; // 0000111100001111000011110000111100001111000011110000111100001111
     Result := (Result or (Result shl 2)) and $33333333; // 0011001100110011001100110011001100110011001100110011001100110011
-    Result := (Result or (Result shl 1)) and $55555555; // 1010101010101010101010101010101010101010101010101010101010101010
+    Result := (Result or (Result shl 1)) and $55555555; // 0101010101010101010101010101010101010101010101010101010101010101
 
-    Result := Result shl Shift; // y counts twice
+    Result := Result shl Shift; // y counts twice :        1010101010101010101010101010101010101010101010101010101010101010
 
     if Value >= Max then
-      Inc(Result, (Value div Max) * Max * Max shr (1 - Shift)); // x halves this  
+      Inc(Result, (Value div Max) * Max * Max shr (1 - Shift)); // x halves this
   end;
 
 var
@@ -794,7 +802,7 @@ var
   x, y, sy: Cardinal;
   yscanline: PRGB32Array;
 begin
-  // Sanity checks :  
+  // Sanity checks :
   Result := (aFormat in [X_D3DFMT_A8R8G8B8])
         and Assigned(aData)
         and (aDataSize > 0)
@@ -825,7 +833,7 @@ begin
   end; // for y
 end; // ReadSwizzledFormatIntoBitmap
 
-// Official spec : http://oss.sgi.com/projects/ogl-sample/registry/EXT/texture_compression_s3tc.txt
+// Official spec : http://www.opengl.org/registry/specs/EXT/texture_compression_s3tc.txt
 function ReadS3TCFormatIntoBitmap(
   const aFormat: Byte;
   const aData: PByteArray;
@@ -834,8 +842,8 @@ function ReadS3TCFormatIntoBitmap(
 var
   color: array[0..3] of Word;
   color32b: array[0..4] of TRGB32;
-  r, g, b, r1, g1, b1, bitmap: DWord;
-  j, p, x, y, xo, yo, ci: Cardinal;
+  r, g, b, r1, g1, b1, pixelmap: DWord;
+  j, p, x, y: Cardinal;
 begin
   // Sanity checks :  
   Result := (aFormat in [X_D3DFMT_DXT1, X_D3DFMT_DXT3, X_D3DFMT_DXT5])
@@ -847,7 +855,7 @@ begin
   if not Result then
     Exit;
 
-  // Loop over all input data :  
+  // Loop over all input data :
   j := 0;
   while j < aDataSize do
   begin
@@ -903,18 +911,15 @@ begin
     x := (j div 2) mod aOutput.Width;
     y := (j div 2) div aOutput.Width * 4;
 
-    bitmap := (aData[j + 4] shl 0)
-            + (aData[j + 5] shl 8)
-            + (aData[j + 6] shl 16)
-            + (aData[j + 7] shl 24);
+    pixelmap := (aData[j + 4] shl 0)
+              + (aData[j + 5] shl 8)
+              + (aData[j + 6] shl 16)
+              + (aData[j + 7] shl 24);
 
     for p := 0 to 16 - 1 do
     begin
-      xo := p and 3; // = mod 4
-      yo := p shr 2; // = div 4
-      ci := (bitmap shr (p * 2)) and 3;
-
-      aOutput.Pixels[x+xo, y+yo]^ := color32b[ci];
+      aOutput.Pixels[x + {xo=}(p and 3), y + {yo=}(p shr 2)]^ := color32b[pixelmap and 3];
+      pixelmap := pixelmap shr 2;
     end;
 
     // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data for now :

@@ -182,7 +182,7 @@ var
   g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of Handle;
 
   // Xbe section list
-  SectionList: PSectionList;
+  g_SectionList: PXBE_SECTIONLIST;
   // Number of sections
   g_NumSections: int;
 

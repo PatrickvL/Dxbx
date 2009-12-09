@@ -97,7 +97,7 @@ procedure EmuWarning(szWarningMessage: string);
 begin
   if (g_bPrintfOn) then
   begin
-    DbgPrintf(szWarningMessage);
+    DbgPrintf('EmuWarn : ' + szWarningMessage);
   end;
 end;
 

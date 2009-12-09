@@ -242,8 +242,8 @@ begin
   pBlock.pMem := PUInt8(IntPtr(pMem) + SizeOf(MEMORY_GUARD));
   pBlock.Size := Size;
   Length := strlen(pFile) + 1;
-  pBlock.pFile := PChar(malloc(Length));
-  memcpy(pBlock.pFile, pFile, Length);
+  pBlock.pFile := PChar(malloc(Length) * SizeOf(Char));
+  memcpy(pBlock.pFile, pFile, Length * SizeOf(Char));
   pBlock.pNext := nil;
   pBlock.Line := Line;
   pBlock.cType := cType;
