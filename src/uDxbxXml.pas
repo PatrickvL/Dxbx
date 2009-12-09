@@ -30,6 +30,7 @@ uses
   msxmldom,
   XMLDoc,
   // Dxbx
+  uConsts,
   uXbe;
 
 type
@@ -71,7 +72,7 @@ begin
 
   for i := 0 to aXbe.m_Header.dwLibraryVersions - 1 do
   begin
-    LibName := string(Copy(aXbe.m_LibraryVersion[i].szName, 1, 8));
+    LibName := string(Copy(aXbe.m_LibraryVersion[i].szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
     Version := IntToStr(aXbe.m_LibraryVersion[i].wMajorVersion) + '.' +
       IntToStr(aXbe.m_LibraryVersion[i].wMinorVersion) + '.' +
       IntToStr(aXbe.m_LibraryVersion[i].wBuildVersion);

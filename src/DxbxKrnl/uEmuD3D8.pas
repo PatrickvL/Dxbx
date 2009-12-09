@@ -562,6 +562,7 @@ begin
     CertAddr := g_XbeHeader.dwCertificateAddr - g_XbeHeader.dwBaseAddr;
 
     // Dxbx TODO : These $0C and 40 values should become a suiteably named constant :
+    // (They represent the offset and length of the XBE_CERTIFICATE.wszTitleName field)
     if CertAddr + $0C + 40 < g_XbeHeaderSize then
     begin
       IntPtr(XbeCert) := IntPtr(g_XbeHeader) + CertAddr;

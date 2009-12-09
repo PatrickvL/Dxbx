@@ -41,7 +41,7 @@ uses
 type
   TFileType = (ftXbe, ftExe);
 
-  XBE_HEADER = packed record
+  _XBE_HEADER = packed record
     dwMagic: array[0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
     pbDigitalSignature: array[0..255] of Byte; // 0x0004 - digital signature
     dwBaseAddr: DWord; // 0x0104 - base address
@@ -76,9 +76,13 @@ type
     dwLogoBitmapAddr: DWord; // 0x0170 - logo bitmap address
     dwSizeofLogoBitmap: DWord; // 0x0174 - logo bitmap size
   end;
+  XBE_HEADER = _XBE_HEADER;
   PXBE_HEADER = ^XBE_HEADER;
 
-  XBE_CERTIFICATE = packed record
+  TXbeHeader = XBE_HEADER;
+  PXbeHeader = PXBE_HEADER;
+
+  _XBE_CERTIFICATE = packed record
     dwSize: DWord; // 0x0000 - size of certificate
     dwTimeDate: DWord; // 0x0004 - timedate stamp
     dwTitleId: DWord; // 0x0008 - title id
@@ -93,10 +97,26 @@ type
     bzSignatureKey: array[0..15] of AnsiChar; // 0x00C0 - signature key
     bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of AnsiChar; // 0x00D0 - alternate signature keys
   end;
+  XBE_CERTIFICATE = _XBE_CERTIFICATE;
   PXBE_CERTIFICATE = ^XBE_CERTIFICATE;
 
+  TXbeCertificate = XBE_CERTIFICATE;
+  PXbeCertificate = PXBE_CERTIFICATE;
+
+  // A list of sections in this Xbe used for section loading
+  _XBE_SECTIONLIST = packed record
+    szSectionName: array [0..XBE_SECTIONNAME_MAXLENGTH-1] of AnsiChar;
+    dwSectionAddr: uint32;
+    dwSectionSize: uint32;
+  end;
+  XBE_SECTIONLIST = _XBE_SECTIONLIST;
+  PXBE_SECTIONLIST = ^XBE_SECTIONLIST;
+
+  TSectionList = XBE_SECTIONLIST;
+  PSectionList = PXBE_SECTIONLIST;
+
   // Source: Cxbx
-  XBE_SECTIONHEADER = packed record
+  _XBE_SECTIONHEADER = packed record
     dwFlags: array[0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
     dwVirtualSize: DWord; // virtual size
@@ -108,9 +128,9 @@ type
     dwTailSharedRefCountAddr: DWord; // tail shared page reference count address
     bzSectionDigest: array[0..19] of AnsiChar; // section digest
   end;
-
+(*
   // Section headers - Source: XBMC
-  XBE_SECTION = packed record
+  _XBE_SECTIONHEADER = packed record
     Flags: ULONG;
     VirtualAddress: PVOID; // Virtual address (where this section loads in RAM)
     VirtualSize: ULONG; // Virtual size (size of section in RAM; after FileSize it's 00'd)
@@ -122,11 +142,14 @@ type
     TailReferenceCount: PWORD; // Pointer to tail shared page reference count
     ShaHash: array[0..5 - 1] of DWord; // SHA hash.  Hash DWORD containing FileSize, then hash section.
   end; // SizeOf() = 38
-  PXBE_SECTION = ^XBE_SECTION;
+*)
+  XBE_SECTIONHEADER = _XBE_SECTIONHEADER;
+  PXBE_SECTIONHEADER = ^XBE_SECTIONHEADER;
 
-  // Dxbx TODO : Should we use _XBE_SECTIONHEADER or _XBE_SECTION ?
+  TXbeSectionHeader = XBE_SECTIONHEADER;
+  PXbeSectionHeader = PXBE_SECTIONHEADER;
 
-  XBE_LIBRARYVERSION = packed record
+  _XBE_LIBRARYVERSION = packed record
     szName: array[0..7] of AnsiChar; // library name
     wMajorVersion: Word; // major version
     wMinorVersion: Word; // minor version
@@ -140,9 +163,13 @@ type
             }
             //dwFlags;
   end;
+  XBE_LIBRARYVERSION = _XBE_LIBRARYVERSION;
   PXBE_LIBRARYVERSION = ^XBE_LIBRARYVERSION;
 
-  XBE_TLS = packed record
+  TXbeLibraryVersion = XBE_LIBRARYVERSION;
+  PXbeLibraryVersion = PXBE_LIBRARYVERSION;
+
+  _XBE_TLS = packed record
     dwDataStartAddr: DWord; // raw start address
     dwDataEndAddr: DWord; // raw end address
     dwTLSIndexAddr: DWord; // tls index  address
@@ -150,7 +177,11 @@ type
     dwSizeofZeroFill: DWord; // size of zero fill
     dwCharacteristics: DWord; // characteristics
   end;
+  XBE_TLS = _XBE_TLS;
   PXBE_TLS = ^XBE_TLS;
+
+  TXbeTls = XBE_TLS;
+  PXbeTls = PXBE_TLS;
 
   _Eight = Byte; // AnsiChar?
     //Bit 0  : bType1
@@ -183,29 +214,42 @@ type
   //   memory and then immediately used in-place as D3D objects such as textures
   //   and vertex buffers.  The structure below defines the XPR header and the
   //   unique identifier for this file type.
-  XPR_HEADER = record
+  _XPR_HEADER = record
     dwMagic: DWORD; // 'XPR0' or 'XPR1'
     dwTotalSize: DWORD;
     dwHeaderSize: DWORD;
   end;
+  XPR_HEADER = _XPR_HEADER;
   PXPR_HEADER = ^XPR_HEADER;
 
+  TXprHeader = XPR_HEADER;
+  PXprHeader = PXPR_HEADER;
+  
   // Layout of SaveImage.xbx saved game image file
   //
   // File is XPR0 format. Since the XPR will always contain only a single
   // 256x256 DXT1 image, we know exactly what the header portion will look like
-  XPR_IMAGEHEADER = record
+  _XPR_IMAGEHEADER = record
     Header: XPR_HEADER;      // Standard XPR struct
     Texture: X_D3DBaseTexture;  // Standard D3D texture struct
     EndOfHeader: DWORD; // $FFFFFFFF
   end;
+  XPR_IMAGEHEADER = _XPR_IMAGEHEADER;
+  PXPR_IMAGEHEADER = ^XPR_IMAGEHEADER;
 
-  XPR_IMAGE = record
+  TXprImageHeader = XPR_IMAGEHEADER;
+  PXprImageHeader = PXPR_IMAGEHEADER;
+
+  _XPR_IMAGE = record
     hdr: XPR_IMAGEHEADER;
     strPad: array [0..XPR_IMAGE_HDR_SIZE-SizeOf(XPR_IMAGEHEADER)-1] of AnsiChar;
     pBits: array [0..XPR_IMAGE_DATA_SIZE-1] of Byte; // data bits
   end;
+  XPR_IMAGE = _XPR_IMAGE;
   PXPR_IMAGE = ^XPR_IMAGE;
+
+  TXprImage = XPR_IMAGE;
+  PXprImage = PXPR_IMAGE;
 
 (*
   _XPR_File_Header_ = record
@@ -244,8 +288,8 @@ type
   private
     MyFile: TMemoryStream;
     Buffer: MathPtr;
-    m_KernelLibraryVersion: array of AnsiChar;
-    m_XAPILibraryVersion: array of AnsiChar;
+    m_KernelLibraryVersion: XBE_LIBRARYVERSION;
+    m_XAPILibraryVersion: XBE_LIBRARYVERSION;
     m_Certificate: XBE_CERTIFICATE;
     procedure ConstructorInit;
   protected
@@ -256,7 +300,7 @@ type
     m_Header: XBE_HEADER;
     m_SectionHeader: array of XBE_SECTIONHEADER;
     m_LibraryVersion: array of XBE_LIBRARYVERSION;
-    m_szSectionName: array of array of AnsiChar;
+    m_szSectionName: array of array of AnsiChar; // TODO : Use XBE_SECTIONNAME_MAXLENGTH
     m_HeaderEx: array of Byte;
     m_TLS: PXBE_TLS;
     m_bzSection: array of TRawSection;
@@ -275,14 +319,6 @@ type
     function ExportLogoBitmap(aBitmap: TBitmap): Boolean;
     function ExportIconBitmap(aBitmap: TBitmap): Boolean;
   end;
-
-  // A list of sections in this Xbe used for section loading
-  SectionList = packed record
-    szSectionName: array [0..XBE_SECTIONNAME_MAXLENGTH-1] of AnsiChar;
-    dwSectionAddr: uint32;
-    dwSectionSize: uint32;
-  end;
-  PSectionList = ^SectionList;
 
 var
   // OpenXDK logo bitmap (used by cxbe by default)
@@ -389,8 +425,6 @@ begin
   SetLength(m_SectionHeader, 0);
   SetLength(m_szSectionName, 0);
   SetLength(m_LibraryVersion, 0);
-  SetLength(m_KernelLibraryVersion, 0);
-  SetLength(m_XAPILibraryVersion, 0);
   FreeMem({var}m_TLS);
   SetLength(m_bzSection, 0);
 end; // TXbe.ConstructorInit
@@ -445,7 +479,7 @@ begin
 
   WriteLog('DXBX: Reading Image Header...Ok');
 
-  ExSize := RoundUp(m_Header.dwSizeofHeaders, $1000) - SizeOf(m_Header);
+  ExSize := RoundUp(m_Header.dwSizeofHeaders, PE_HEADER_ALIGNMENT) - SizeOf(m_Header);
 
   // Read Xbe Image Header Extra Bytes
   if (m_Header.dwSizeofHeaders > SizeOf(m_Header)) then
@@ -487,7 +521,7 @@ begin
     for lIndex := 0 to m_Header.dwSections - 1 do
     begin
       RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
-      if m_SectionHeader[lIndex].dwSectionNameAddr <> 0 then
+      if RawAddr <> 0 then
       begin
         for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH - 1 do
         begin
@@ -522,9 +556,8 @@ begin
       MessageDlg('Could not locate kernel library version', mtError, [mbOk], 0);
 
     i := m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr;
-    SetLength(m_KernelLibraryVersion, SizeOf(m_LibraryVersion));
-    CopyMemory({Dest=}m_KernelLibraryVersion, {Source=}@(Buffer[i]), SizeOf(m_LibraryVersion));
-//  WriteLog(DxbxFormat('DXBX: Kernel Library Version 0x%.4x... OK', [PChar(m_KernelLibraryVersion[0])]));
+    CopyMemory({Dest=}@m_KernelLibraryVersion, {Source=}@(Buffer[i]), SizeOf(XBE_LIBRARYVERSION));
+    WriteLog(DxbxFormat('DXBX: Kernel Library Version = %d... OK', [m_KernelLibraryVersion.wBuildVersion]));
 
     // read xbe xapi library version
     WriteLog('DXBX: Reading Xapi Library Version...');
@@ -532,9 +565,8 @@ begin
       MessageDlg('Could not locate Xapi Library Version', mtError, [mbOk], 0);
 
     i := m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr;
-    SetLength(m_XAPILibraryVersion, SizeOf(m_LibraryVersion));
-    CopyMemory(m_XAPILibraryVersion, @(Buffer[i]), SizeOf(m_LibraryVersion));
-//  WriteLog(DxbxFormat('DXBX: XAPI Library Version 0x%.4x... OK', [PChar(m_XAPILibraryVersion[0])]));
+    CopyMemory({Dest=}@m_XAPILibraryVersion, @(Buffer[i]), SizeOf(XBE_LIBRARYVERSION));
+    WriteLog(DxbxFormat('DXBX: XAPI Library Version = %d... OK', [m_XAPILibraryVersion.wBuildVersion]));
   end;
 
   // read Xbe sections
@@ -848,7 +880,7 @@ begin
   for lIndex := 0 to m_Header.dwSections - 1 do
   begin
     TmpStr := '';
-    for lIndex2 := 0 to 8 do
+    for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH - 1 do
     begin
       if m_szSectionName[lIndex][lIndex2] <> #0 then
         TmpStr := TmpStr + Char(m_szSectionName[lIndex][lIndex2])
@@ -969,6 +1001,7 @@ begin
     CloseFile(FileEx);
 end; // TXbe.DumpInformation
 
+// TODO : Return real adresses like Cxbx
 function TXbe.GetAddr(x_dwVirtualAddress: DWord): Integer;
 var
   lIndex, VirtAddr, VirtSize, dwoffs: DWord;
@@ -976,15 +1009,16 @@ begin
   dwoffs := x_dwVirtualAddress - m_Header.dwBaseAddr;
   Result := 0;
   // offset in image header
-  if dwoffs < m_Header.dwSizeofHeaders then
+  if dwoffs < SizeOf(m_Header) then
     Result := dwOffs
   else
   begin
     // offset in image header extra bytes
     if dwoffs < m_Header.dwSizeofHeaders then
-      Result := dwOffs - SizeOf(m_Header)
+      Result := dwOffs// - SizeOf(m_Header) // TODO : Return adresses in m_HeaderEx
     else
     begin
+      // offset into some random section
       for lIndex := 0 to m_Header.dwSections - 1 do
       begin
         VirtAddr := m_SectionHeader[lIndex].dwVirtualAddr;

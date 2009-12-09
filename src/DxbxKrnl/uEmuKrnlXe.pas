@@ -43,10 +43,10 @@ uses
 
 function {326} xboxkrnl_XeImageFileName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {327} xboxkrnl_XeLoadSection(
-  Section: PXBE_SECTION // In, out
+  Section: PXBE_SECTIONHEADER // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 function {328} xboxkrnl_XeUnloadSection(
-  Section: PXBE_SECTION // In, out
+  Section: PXBE_SECTIONHEADER // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 function {355} xboxkrnl_XePublicKeyData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
@@ -66,7 +66,7 @@ end;
 // New to the XBOX.
 
 function {327} xboxkrnl_XeLoadSection(
-  Section: PXBE_SECTION // In, out
+  Section: PXBE_SECTIONHEADER // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 begin
   EmuSwapFS(fsWindows);
@@ -81,7 +81,7 @@ end;
 // New to the XBOX.
 
 function {328} xboxkrnl_XeUnloadSection(
-  Section: PXBE_SECTION // In, out
+  Section: PXBE_SECTIONHEADER // In, out
   ): NTSTATUS; stdcall; // Source: XBMC
 begin
   EmuSwapFS(fsWindows);
