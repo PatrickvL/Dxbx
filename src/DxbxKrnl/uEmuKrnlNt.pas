@@ -257,6 +257,7 @@ function xboxkrnl_NtAllocateVirtualMemory(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl (0x%X): NtAllocateVirtualMemory'+
       #13#10'('+
       #13#10'   BaseAddress         : 0x%.8x (0x%.8x)'+
@@ -266,6 +267,7 @@ begin
       #13#10'   Protect             : 0x%.8x' +
       #13#10');',
       [BaseAddress, @BaseAddress, ZeroBits, AllocationSize, @AllocationSize, AllocationType, Protect]);
+{$ENDIF}
 
 (*  Result := NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect); *)
 
@@ -287,11 +289,13 @@ function xboxkrnl_NtClearEvent(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtClearEvent'+
       #13#10'('+
       #13#10'   EventHandle         : 0x%.8x' +
       #13#10');',
       [EventHandle]);
+{$ENDIF}
 
   (*Result := NtDll::NtClearEvent(EventHandle); *)
 
@@ -314,10 +318,12 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtClose' +
     #13#10'(' +
     #13#10'   Handle              : 0x%.8x' +
     #13#10');', [Handle]);
+{$ENDIF}
 
 {$IFDEF DXBX_EMUHANDLES}
   // delete 'special' handles
@@ -356,6 +362,7 @@ begin
 
 (*    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateEvent\n"
            "(\n"
            "   EventHandle         : 0x%.08X\n"
@@ -365,6 +372,7 @@ begin
            ");\n",
            GetCurrentThreadId(), EventHandle, ObjectAttributes, szBuffer,
            EventType, InitialState);
+{$ENDIF}
 
     wchar_t wszObjectName[160];
 
@@ -390,7 +398,9 @@ begin
     if(FAILED(ret))
         EmuWarning("NtCreateEvent Failed!");
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
+{$ENDIF}
 
     EmuSwapFS();   // Xbox FS
 
@@ -425,6 +435,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtCreateFile' +
      #13#10'(' +
      #13#10'   FileHandle          : 0x%.08X' +
@@ -439,6 +450,7 @@ begin
      #13#10');',
      [FileHandle, DesiredAccess, ObjectAttributes, string(ObjectAttributes.ObjectName.Buffer),
      IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
+{$ENDIF}
 
   ReplaceChar := #0;
   ReplaceIndex := -1;
@@ -447,7 +459,9 @@ begin
 
   if Assigned(szBuffer) then
   begin
+{$IFDEF DXBX_DEBUG}
     //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
+{$ENDIF}
 
     // Trim this (\??\) off :
     if (szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
@@ -460,9 +474,11 @@ begin
 
       ObjectAttributes.RootDirectory := g_hCurDir;
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
+{$ENDIF}
     end
     else
     if ((szBuffer[0] = 'T') or (szBuffer[0] = 't')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
@@ -471,9 +487,11 @@ begin
 
       ObjectAttributes.RootDirectory := g_hTDrive;
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\T\%s"', [szBuffer]);
+{$ENDIF}
     end
     else if ((szBuffer[0] = 'U') or (szBuffer[0] = 'u')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
@@ -481,9 +499,11 @@ begin
 
       ObjectAttributes.RootDirectory := g_hUDrive;
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\U\%s"', [szBuffer]);
+{$ENDIF}
     end
     else if ((szBuffer[0] = 'Z') or (szBuffer[0] = 'z')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
@@ -491,9 +511,11 @@ begin
 
       ObjectAttributes.RootDirectory := g_hZDrive;
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\Z\%s"', [szBuffer]);
+{$ENDIF}
     end;
 
     // Ignore wildcards. Xapi FindFirstFile uses the same path buffer for
@@ -544,7 +566,9 @@ begin
   // parent directory. This behavior is required by Xapi FindFirstFile.
   if (Result = STATUS_NOT_A_DIRECTORY) then
   begin
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuKrnl : NtCreateFile fallback to parent directory');
+{$ENDIF}
 
     // Restore original buffer.
     if (ReplaceIndex <> -1) then
@@ -569,7 +593,9 @@ begin
     // Modify buffer again.
     ReplaceChar := szBuffer[ReplaceIndex];
     szBuffer[ReplaceIndex] := #0;
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('  New:"$CurRoot\%s"', [szBuffer]);
+{$ENDIF}
 
     mbstowcs(@(wszObjectName[0]), szBuffer, 160);
     JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
@@ -580,10 +606,12 @@ begin
     );
   end;
 
+{$IFDEF DXBX_DEBUG}
   if FAILED(Result) then
     DbgPrintf('EmuKrnl : NtCreateFile Failed! (0x%.08X)', [Result])
   else
     DbgPrintf('EmuKrnl : NtCreateFile = 0x%.08X', [FileHandle^]);
+{$ENDIF}
 
   // restore original buffer
   if (ReplaceIndex <> -1) then
@@ -619,6 +647,7 @@ begin
 
 (*    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateMutant\n"
            "(\n"
            "   MutantHandle        : 0x%.08X\n"
@@ -626,6 +655,7 @@ begin
            "   InitialOwner        : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
+{$ENDIF}
 
     wchar_t wszObjectName[160];
 
@@ -651,7 +681,9 @@ begin
     if(FAILED(ret))
         EmuWarning("NtCreateMutant Failed!");
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
+{$ENDIF}
 
     EmuSwapFS();   // Xbox FS
 
@@ -671,6 +703,7 @@ function xboxkrnl_NtCreateSemaphore(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtCreateSemaphore' +
      #13#10'(' +
      #13#10'   SemaphoreHandle     : 0x%.08X' +
@@ -680,6 +713,7 @@ begin
      #13#10');',
      [SemaphoreHandle, ObjectAttributes,
      InitialCount, MaximumCount]);
+{$ENDIF}
 
   // redirect to Win2k/XP
   Result := JwaNative.NtCreateSemaphore
@@ -694,7 +728,9 @@ begin
   if (FAILED(Result)) then
     EmuWarning('NtCreateSemaphore failed!');
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtCreateSemaphore SemaphoreHandle = 0x%.08X', [SemaphoreHandle^]);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -732,13 +768,16 @@ function xboxkrnl_NtDuplicateObject(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtDuplicateObject\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtDuplicateObject\n"
            "(\n"
            "   SourceHandle        : 0x%.08X\n"
            "   TargetHandle        : 0x%.08X\n"
            "   Options             : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
+{$ENDIF}
 
     // redirect to Win2k/XP
     NTSTATUS ret = NtDll::NtDuplicateObject
@@ -769,12 +808,15 @@ function xboxkrnl_NtFlushBuffersFile(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtFlushBuffersFile\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtFlushBuffersFile\n"
            "(\n"
            "   FileHandle          : 0x%.08X\n"
            "   IoStatusBlock       : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), FileHandle, IoStatusBlock);
+{$ENDIF}
 
     NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)(*IoStatusBlock);
 
@@ -795,13 +837,16 @@ function xboxkrnl_NtFreeVirtualMemory(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
            "(\n"
            "   BaseAddress         : 0x%.08X\n"
            "   FreeSize            : 0x%.08X\n"
            "   FreeType            : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), BaseAddress, FreeSize, FreeType);
+{$ENDIF}
 
     NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
@@ -842,17 +887,20 @@ begin
 
   EmuSwapFS(fsWindows);
     // debug trace
-        DbgPrintf('EmuKrnl : NtOpenFile' +
-               #13#10'(' +
-               #13#10'   FileHandle          : 0x%.08X' +
-               #13#10'   DesiredAccess       : 0x%.08X' +
-               #13#10'   ObjectAttributes    : 0x%.08X (\%s\)' +
-               #13#10'   IoStatusBlock       : 0x%.08X' +
-               #13#10'   ShareAccess         : 0x%.08X' +
-               #13#10'   CreateOptions       : 0x%.08X' +
-               #13#10');',
-               [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
-               IoStatusBlock, ShareAccess, OpenOptions]);
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf('EmuKrnl : NtOpenFile' +
+    #13#10'(' +
+    #13#10'   FileHandle          : 0x%.08X' +
+    #13#10'   DesiredAccess       : 0x%.08X' +
+    #13#10'   ObjectAttributes    : 0x%.08X (\%s\)' +
+    #13#10'   IoStatusBlock       : 0x%.08X' +
+    #13#10'   ShareAccess         : 0x%.08X' +
+    #13#10'   CreateOptions       : 0x%.08X' +
+    #13#10');',
+    [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
+     IoStatusBlock, ShareAccess, OpenOptions]);
+{$ENDIF}
+
   EmuSwapFS(fsXbox);
 
   Result := xboxkrnl_NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
@@ -893,6 +941,7 @@ function xboxkrnl_NtQueueApcThread(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
      #13#10'(' +
      #13#10'   ThreadHandle         : 0x%.08X' +
@@ -903,6 +952,7 @@ begin
      #13#10');',
      [ThreadHandle, Addr(ApcRoutine), ApcRoutineContext,
       ApcStatusBlock, ApcReserved]);
+{$ENDIF}
 
   // Cxbx TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
   //     done, let me know!
@@ -935,7 +985,9 @@ function xboxkrnl_NtQueryDirectoryFile(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
            "(\n"
            "   FileHandle           : 0x%.08X\n"
            "   Event                : 0x%.08X\n"
@@ -951,6 +1003,7 @@ begin
            GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
            FileInformation, Length, FileInformationClass, FileMask,
            (FileMask != 0) ? FileMask->Buffer : "", RestartScan);
+{$ENDIF}
 
     NTSTATUS ret;
 
@@ -1035,12 +1088,15 @@ function xboxkrnl_NtQueryFullAttributesFile(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
+(*
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
            "(\n"
            "   ObjectAttributes    : 0x%.08X (%s)\n"
            "   Attributes          : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
+{$ENDIF}
 
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
@@ -1079,6 +1135,7 @@ function xboxkrnl_NtQueryInformationFile(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtQueryInformationFile' +
      #13#10'(' +
      #13#10'   FileHandle          : 0x%.08X' +
@@ -1089,6 +1146,7 @@ begin
      #13#10');',
      [FileHandle, IoStatusBlock, FileInformation,
       Length, Ord(FileInfo)]);
+{$ENDIF}
 
 // Cxbx commented this out :
 //  if (FileInfo <> FilePositionInformation) and (FileInfo <> FileNetworkOpenInformation) then
@@ -1112,8 +1170,10 @@ begin
 
     if (FileInfo = FileNetworkOpenInformation) and (pInfo.AllocationSize.LowPart = 57344) then
     begin
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('pInfo.AllocationSize : %d', pInfo->AllocationSize.LowPart);
       DbgPrintf('pInfo.EndOfFile      : %d', pInfo->EndOfFile.LowPart);
+{$ENDIF}
 
       pInfo.EndOfFile.LowPart := $1000;
       pInfo.AllocationSize.LowPart := $1000;
@@ -1177,12 +1237,14 @@ function xboxkrnl_NtQueryVirtualMemory(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtQueryVirtualMemory' +
      #13#10'(' +
      #13#10'   pBaseAddress         : 0x%.08X' +
      #13#10'   pBuffer              : 0x%.08X' +
      #13#10');',
      [pBaseAddress, pBuffer]);
+{$ENDIF}
 
   Result := JwaNative.NtQueryVirtualMemory
   (
@@ -1211,7 +1273,9 @@ function xboxkrnl_NtQueryVolumeInformationFile(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtQueryVolumeInformationFile\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtQueryVolumeInformationFile\n"
            "(\n"
            "   FileHandle          : 0x%.08X\n"
            "   IoStatusBlock       : 0x%.08X\n"
@@ -1221,6 +1285,7 @@ begin
            ");\n",
            GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
+{$ENDIF}
 
     // Safety/Sanity Check
     if((FileInformationClass != FileFsSizeInformation) && (FileInformationClass != FileDirectoryInformation))
@@ -1267,7 +1332,9 @@ function xboxkrnl_NtReadFile(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtReadFile\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtReadFile\n"
            "(\n"
            "   FileHandle          : 0x%.08X\n"
            "   Event               : 0x%.08X\n"
@@ -1280,6 +1347,7 @@ begin
            ");\n",
            GetCurrentThreadId(), FileHandle, Event, ApcRoutine,
            ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
+{$ENDIF}
 
 // Halo...
 //    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
@@ -1313,12 +1381,15 @@ function xboxkrnl_NtReleaseMutant(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtReleaseMutant\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtReleaseMutant\n"
            "(\n"
            "   MutantHandle         : 0x%.08X\n"
            "   PreviousCount        : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), MutantHandle, PreviousCount);
+{$ENDIF}
 
     // redirect to NtCreateMutant
     NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
@@ -1343,6 +1414,7 @@ function xboxkrnl_NtReleaseSemaphore(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtReleaseSemaphore' +
      #13#10'(' +
      #13#10'   SemaphoreHandle      : 0x%.08X' +
@@ -1350,6 +1422,7 @@ begin
      #13#10'   PreviousCount        : 0x%.08X' +
      #13#10');',
      [SemaphoreHandle, ReleaseCount, PreviousCount]);
+{$ENDIF}
 
   Result := JwaNative.NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PLONG(PreviousCount));
 
@@ -1375,12 +1448,15 @@ function xboxkrnl_NtResumeThread(
 begin
   EmuSwapFS(fsWindows);
 
-(*      DbgPrintf("EmuKrnl (0x%X): NtResumeThread\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtResumeThread\n"
            "(\n"
            "   ThreadHandle         : 0x%.08X\n"
            "   PreviousSuspendCount : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+{$ENDIF}
 
     NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
@@ -1402,12 +1478,15 @@ function xboxkrnl_NtSetEvent(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtSetEvent\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtSetEvent\n"
            "(\n"
            "   EventHandle          : 0x%.08X\n"
            "   PreviousState        : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), EventHandle, PreviousState);
+{$ENDIF}
 
     NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
 
@@ -1433,6 +1512,7 @@ function xboxkrnl_NtSetInformationFile(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtSetInformationFile' +
          #13#10'(' +
          #13#10'   FileHandle           : 0x%.08X' +
@@ -1443,6 +1523,7 @@ begin
          #13#10');',
          [FileHandle, IoStatusBlock, FileInformation,
          Length, Ord(FileInformationClass)]);
+{$ENDIF}
 
   Result := JwaNative.NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
 
@@ -1489,12 +1570,15 @@ function xboxkrnl_NtSuspendThread(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtSuspendThread\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtSuspendThread\n"
            "(\n"
            "   ThreadHandle         : 0x%.08X\n"
            "   PreviousSuspendCount : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+{$ENDIF}
 
     NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
@@ -1516,7 +1600,9 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
 begin
     // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
+(*
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
            "(\n"
            "   ApcContext           : 0x%.08X\n"
            "   IoStatusBlock        : 0x%.08X\n"
@@ -1526,6 +1612,7 @@ begin
 
     DbgPrintf("IoStatusBlock->Pointer     : 0x%.08X\n"
               "IoStatusBlock->Information : 0x%.08X\n", IoStatusBlock->u1.Pointer, IoStatusBlock->Information);
+{$ENDIF}
 
     EmuSwapFS();   // Xbox FS
 
@@ -1585,7 +1672,9 @@ begin
 
     EmuSwapFS();   // Win2k/XP FS
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
+{$ENDIF}
 
     return;*)
 
@@ -1613,7 +1702,9 @@ function xboxkrnl_NtWaitForSingleObjectEx(
 begin
   EmuSwapFS(fsWindows);
 
-  (*    DbgPrintf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
+  (*
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
            "(\n"
            "   Handle               : 0x%.08X\n"
            "   WaitMode             : 0x%.08X\n"
@@ -1621,10 +1712,13 @@ begin
            "   Timeout              : 0x%.08X (%d)\n"
            ");\n",
            GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
+{$ENDIF}
 
     NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
+{$ENDIF}
 
     EmuSwapFS();   // Xbox FS
 
@@ -1647,7 +1741,9 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
 begin
   EmuSwapFS(fsWindows);
 
-(*    DbgPrintf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
+(*
+{$IFDEF DXBX_DEBUG}
+    DbgPrintf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
            "(\n"
            "   Count                : 0x%.08X\n"
            "   Handles              : 0x%.08X\n"
@@ -1658,6 +1754,7 @@ begin
            ");\n",
            GetCurrentThreadId(), Count, Handles, WaitType, WaitMode, Alertable,
            Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
+{$ENDIF}
 
     NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
@@ -1684,6 +1781,7 @@ function xboxkrnl_NtWriteFile(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : NtWriteFile' +
        #13#10'(' +
        #13#10'   FileHandle          : 0x%.08X' +
@@ -1697,6 +1795,7 @@ begin
        #13#10');',
        [FileHandle, Event, ApcRoutine,
        ApcContext, IoStatusBlock, Buffer, Length, ByteOffset{, iif(ByteOffset = nil, 0, ByteOffset.QuadPart)}]);
+{$ENDIF}
 
   // Halo..
   //    if (ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800) then
@@ -1724,7 +1823,9 @@ begin
   EmuSwapFS(fsWindows);
 
   // NOTE: this eats up the debug log far too quickly
+{$IFDEF DXBX_DEBUG}
   //DbgPrintf('EmuKrnl : NtYieldExecution();');
+{$ENDIF}
 
   NtYieldExecution();
 

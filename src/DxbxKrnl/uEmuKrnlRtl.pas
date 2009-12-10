@@ -516,6 +516,7 @@ function xboxkrnl_RtlEqualString(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : RtlEqualString' +
       #13#10'(' +
       #13#10'  String1            : 0x%.08X' +
@@ -523,6 +524,7 @@ begin
       #13#10'  CaseInsensitive    : 0x%.08X' +
       #13#10');',
       [String1, String2, CaseInsensitive]);
+{$ENDIF}
 
   Result := JwaNative.RtlEqualString(String1, String2, CaseInsensitive);
 
@@ -639,12 +641,14 @@ procedure xboxkrnl_RtlInitAnsiString(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : RtlInitAnsiString' +
       #13#10'(' +
       #13#10'   DestinationString   : 0x%.08X' +
-      #13#10'   SourceString        : 0x%.08X' + // Dxbx TODO : Why doesn't DxbxFormat detect a string here?  
+      #13#10'   SourceString        : 0x%.08X' + // Dxbx TODO : Why doesn't DxbxFormat detect a string here?
       #13#10');',
       [DestinationString, SourceString]);
+{$ENDIF}
 
   JwaNative.RtlInitAnsiString(DestinationString, SourceString);
 
@@ -779,11 +783,13 @@ function xboxkrnl_RtlNtStatusToDosError(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : RtlNtStatusToDosError' +
            #13#10'(' +
            #13#10'   Status              : 0x%.08X' +
            #13#10');',
            [Status]);
+{$ENDIF}
 
   Result := JwaNative.RtlNtStatusToDosError(Status);
 

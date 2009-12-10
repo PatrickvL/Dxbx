@@ -241,11 +241,13 @@ procedure {049} xboxkrnl_HalReturnToFirmware(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : HalReturnToFirmware' +
            #13#10'(' +
            #13#10'   Routine             : 0x%.08X' +
            #13#10');',
            [Ord(Routine)]);
+{$ENDIF}
 
   CxbxKrnlCleanup('Xbe has rebooted : HalReturnToFirmware(%d)', [Ord(Routine)]);
 end;

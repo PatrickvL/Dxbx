@@ -72,11 +72,13 @@ function {037} xboxkrnl_FscSetCacheSize(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : FscSetCacheSize' +
       #13#10'(' +
       #13#10'   uCachePages         : 0x%.08X' +
       #13#10');',
-            [uCachePages]);
+      [uCachePages]);
+{$ENDIF}
 
   EmuWarning('FscSetCacheSize is being ignored');
   EmuSwapFS(fsXbox);

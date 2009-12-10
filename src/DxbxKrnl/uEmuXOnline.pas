@@ -45,12 +45,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuXapi : EmuWSAStartup' +
     #13#10'(' +
     #13#10'   wVersionRequested   : 0x%.08X' +
     #13#10'   lpWSAData           : 0x%.08X' +
     #13#10');',
     [wVersionRequested, @lpWSAData]);
+{$ENDIF}
 
   ret := WSAStartup(wVersionRequested, lpWSAData);
 
@@ -64,11 +66,13 @@ function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuXapi : EmuXNetStartup' +
     #13#10'(' +
     #13#10'   pDummy              : 0x%.08X' +
     #13#10');',
     [pDummy]);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -81,7 +85,9 @@ function XTL_EmuXNetGetEthernetLinkStatus: DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
 begin
   EmuSwapFS(fsWindows);
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
+{$ENDIF}
   EmuSwapFS(fsXbox);
 
   // for now, no ethernet connection is available
@@ -98,6 +104,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emusocket'
            '('
            '   this                : $%.08X'
@@ -106,6 +113,7 @@ begin
            '   protocol            : $%.08X'
            ');',
            [this, af, ctype, protocol);
+{$ENDIF}
 
     SOCKET ret = socket(af, ctype, protocol);
 
@@ -119,6 +127,7 @@ end;             *)
 begin
     EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emubind'
            '('
            '   this                : $%.08X'
@@ -127,6 +136,7 @@ begin
            '   namelen             : $%.08X'
            ');',
            [this, s, name, namelen);
+{$ENDIF}
 
     // Cxbx TODO: Host-To-Network order if necessary (probably not?)
 
@@ -143,6 +153,7 @@ function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
 begin
     EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emulisten'
            '('
            '   this                : $%.08X'
@@ -150,6 +161,7 @@ begin
            '   listen              : $%.08X'
            ');',
            [this, s, backlog);
+{$ENDIF}
 
     // Cxbx TODO: Host-To-Network order if necessary (probably not?)
 
@@ -166,6 +178,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emuioctlsocket'
            '('
            '   this                : $%.08X'
@@ -174,6 +187,7 @@ begin
            '   argp                : $%.08X'
            ');',
            [this, s, cmd, argp]);
+{$ENDIF}
 
     Integer ret := ioctlsocket(s, cmd, argp);
 

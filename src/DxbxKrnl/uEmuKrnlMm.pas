@@ -122,11 +122,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmAllocateContiguousMemory' +
          #13#10'(' +
          #13#10'   NumberOfBytes            : 0x%.08X' +
          #13#10');',
          [NumberOfBytes]);
+{$ENDIF}
 
   //
   // Cxbx NOTE: Kludgey (but necessary) solution:
@@ -148,7 +150,9 @@ begin
     pRet := PVOID(dwRet);
   end;
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmAllocateContiguous returned 0x%.08X', [pRet]);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -173,6 +177,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmAllocateContiguousMemoryEx' +
          #13#10'(' +
          #13#10'   NumberOfBytes            : 0x%.08X' +
@@ -183,6 +188,7 @@ begin
          #13#10');',
          [NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
          Alignment, ProtectionType]);
+{$ENDIF}
 
   //
   // NOTE: Kludgey (but necessary) solution:
@@ -208,7 +214,9 @@ begin
     g_HaloHack[Count] := uint32(pRet);
   Inc(Count);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -223,12 +231,14 @@ function xboxkrnl_MmAllocateSystemMemory(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmAllocateSystemMemory' +
          #13#10'(' +
          #13#10'   NumberOfBytes            : 0x%.08X' +
          #13#10'   Protect                  : 0x%.08X' +
          #13#10');',
          [NumberOfBytes, Protect]);
+{$ENDIF}
 
   // TODO: should this be aligned?
   Result := CxbxMalloc(NumberOfBytes);
@@ -253,12 +263,14 @@ function xboxkrnl_MmCreateKernelStack(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmCreateKernelStack' +
       #13#10'(' +
       #13#10'   NumberOfBytes            : 0x%.08X' +
       #13#10'   Unknown                  : 0x%.08X' +
       #13#10');',
       [NumberOfBytes, Unknown]);
+{$ENDIF}
 
   if (Unknown <> 0) then
     EmuWarning('MmCreateKernelStack unknown parameter ignored');
@@ -282,12 +294,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmDeleteKernelStack' +
       #13#10'(' +
       #13#10'   EndAddress               : 0x%.08X' +
       #13#10'   BaseAddress              : 0x%.08X' +
       #13#10');',
       [EndAddress, BaseAddress]);
+{$ENDIF}
 
   RegionSize := 0;
   if (FAILED(JwaNative.NtFreeVirtualMemory(GetCurrentProcess(), @BaseAddress, @RegionSize, MEM_RELEASE))) then
@@ -305,11 +319,13 @@ function xboxkrnl_MmFreeContiguousMemory(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmFreeContiguousMemory' +
       #13#10'(' +
       #13#10'   BaseAddress              : 0x%.08X' +
       #13#10');',
       [BaseAddress]);
+{$ENDIF}
 
   (*OrigBaseAddress := BaseAddress;
 
@@ -325,7 +341,9 @@ begin
   end
   else
   begin
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
+{$ENDIF}
   end; *)
 
   EmuSwapFS(fsXbox);
@@ -339,12 +357,14 @@ function xboxkrnl_MmFreeSystemMemory(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmFreeSystemMemory'+
       #13#10'('+
       #13#10'   BaseAddress              : 0x%.08X' +
       #13#10'   NumberOfBytes            : 0x%.08X' +
       #13#10');',
       [BaseAddress, NumberOfBytes]);
+{$ENDIF}
 
   CxbxFree(BaseAddress);
 
@@ -401,6 +421,7 @@ procedure xboxkrnl_MmPersistContiguousMemory(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmPersistContiguousMemory' +
          #13#10'(' +
          #13#10'   BaseAddress              : 0x%.08X' +
@@ -408,6 +429,7 @@ begin
          #13#10'   Persist                  : 0x%.08X' +
          #13#10');',
          [BaseAddress, NumberOfBytes, Persist]);
+{$ENDIF}
 
   // Cxbx TODO: Actually set this up to be remember across a 'reboot'
   EmuWarning('MmPersistContiguousMemory is being ignored');
@@ -430,11 +452,13 @@ function xboxkrnl_MmQueryAllocationSize(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
 	DbgPrintf('EmuKrnl : MmQueryAllocationSize'+
 		  #13#10'('+
 		  #13#10'   BaseAddress              : 0x%.08X' +
 		  #13#10');',
 		  [BaseAddress]);
+{$ENDIF}
 
 	Result := EmuCheckAllocationSize(BaseAddress, false);
   EmuSwapFS(fsXbox);
@@ -447,11 +471,13 @@ function xboxkrnl_MmQueryStatistics(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : MmQueryStatistics'+
       #13#10'(\'+
       #13#10'   MemoryStatistics         : 0x%.08X' +
       #13#10');',
       [MemoryStatistics]);
+{$ENDIF}
 
   (*MEMORYSTATUS MemoryStatus;
 
@@ -481,6 +507,7 @@ function xboxkrnl_MmSetAddressProtect(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl (0x%X): MmSetAddressProtect'+
       #13#10'('+
       #13#10'   BaseAddress              : 0x%.08X' +
@@ -488,13 +515,16 @@ begin
       #13#10'   NewProtect               : 0x%.08X' +
       #13#10');',
       [BaseAddress, NumberOfBytes, NewProtect]);
+{$ENDIF}
 
   // Halo Hack
   (*if(BaseAddress == (PVOID)0x80366000)
   {
       BaseAddress = (PVOID)(g_HaloHack[0] + (0x80366000 - 0x80061000));
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf("EmuKrnl (0x%X): Halo Access Adjust 3 was applied! (0x%.08X)\n", GetCurrentThreadId(), BaseAddress);
+{$ENDIF}
   }
 
   DWORD dwOldProtect;
@@ -502,7 +532,11 @@ begin
   if(!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect & (~PAGE_WRITECOMBINE), &dwOldProtect))
       EmuWarning("VirtualProtect Failed!"); *)
 
-  (*DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));*)
+  (*
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
+{$ENDIF}
+  *)
 
   EmuSwapFS(fsXbox);
 end;

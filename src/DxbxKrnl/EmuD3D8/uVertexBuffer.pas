@@ -228,7 +228,9 @@ procedure XTL_VertexPatcher.DumpCache;
 (*var
   pNode : ^RTNode; *)
 begin
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('--- Dumping streams cache ---');
+{$ENDIF}
 
   (*pNode := g_PatchedStreamsCache.getHead();
   while Assigned (pNode) do
@@ -237,11 +239,13 @@ begin
       if (pCachedStream) then
       begin
           // Cxbx TODO: Write nicer dump presentation
+{$IFDEF DXBX_DEBUG}
           printf('Key: $%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: $%.08X',
                  pNode.uiKey, pCachedStream.uiCacheHit, pCachedStream.bIsUP ? 'YES' : 'NO',
                  pCachedStream.Stream.uiOrigStride, pCachedStream.Stream.uiNewStride,
                  pCachedStream.uiCount, pCachedStream.uiCheckFrequency,
                  pCachedStream.uiLength, pCachedStream.uiCRC32);
+{$ENDIF}
        end;
 
       pNode := pNode.pNext;
@@ -278,7 +282,9 @@ begin
                 // First, check if there is an 'expired' stream in the cache (not recently used)
                 if (((CACHEDSTREAM )pNode.pResource).lLastUsed < (clock() + MAX_STREAM_NOT_USED_TIME)) then
                 begin
+{$IFDEF DXBX_DEBUG}
                     printf('!!!Found an old stream, %2.2f', ((FLOAT)((clock() + MAX_STREAM_NOT_USED_TIME) - ((CACHEDSTREAM )pNode.pResource).lLastUsed)) / (FLOAT)CLOCKS_PER_SEC);
+{$ENDIF}
                     uiKey := pNode.uiKey;
                     Break;
                  end;
@@ -293,7 +299,9 @@ begin
          end;
         if (uiKey <> 0) then
         begin
+{$IFDEF DXBX_DEBUG}
             printf('!!!Removing stream');
+{$ENDIF}
             FreeCachedStream(uiKey);
          end;
      end;
@@ -759,7 +767,9 @@ begin
 
                 (*Cxbx TODO
                  $02:
+{$IFDEF DXBX_DEBUG}
                     printf('D3DVSDT_NONE / xbox ext. nsp /');
+{$ENDIF}
                     dwNewDataType := $FF;
                     Break;
                 *)(*
@@ -1071,7 +1081,9 @@ begin
 
         UINT uiStride := 0;
 
+{$IFDEF DXBX_DEBUG}
         DbgPrintf('g_IVBTblOffs := %d', g_IVBTblOffs);
+{$ENDIF}
 
         // TEMP DEBUGGING
         //*
@@ -1186,7 +1198,9 @@ begin
                     uiStride:= uiStride + (SizeOf(FLOAT)*4);
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB Position := (%f, %f, %f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
+{$ENDIF}
              end;
             else
             begin
@@ -1202,7 +1216,9 @@ begin
                     uiStride:= uiStride + SizeOf(DWORD);
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB Diffuse := $%.08X', g_IVBTable[v].dwDiffuse);
+{$ENDIF}
              end;
 
             if (g_IVBFVF and D3DFVF_SPECULAR) then
@@ -1214,7 +1230,9 @@ begin
                     uiStride:= uiStride + SizeOf(DWORD);
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB Specular := $%.08X', g_IVBTable[v].dwSpecular);
+{$ENDIF}
              end;
 
             DWORD dwTexN := (g_IVBFVF and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
@@ -1229,7 +1247,9 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB TexCoord1 := (%f, %f end;', g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
+{$ENDIF}
              end;
 
             if (dwTexN >= 2) then
@@ -1242,7 +1262,9 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB TexCoord2 := (%f, %f end;', g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
+{$ENDIF}
              end;
 
             if (dwTexN >= 3) then
@@ -1255,7 +1277,9 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB TexCoord3 := (%f, %f end;', g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
+{$ENDIF}
              end;
 
             if (dwTexN >= 4) then
@@ -1268,7 +1292,9 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB TexCoord4 := (%f, %f end;', g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
+{$ENDIF}
              end;
          end;
 
@@ -1340,7 +1366,9 @@ begin
                     uiStride:= uiStride + (SizeOf(FLOAT)*3);
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB Position := (%f, %f, %f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
+{$ENDIF}
              end;
             else
             begin
@@ -1356,7 +1384,9 @@ begin
                     uiStride:= uiStride + SizeOf(DWORD);
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB Diffuse := $%.08X', g_IVBTable[v].dwDiffuse);
+{$ENDIF}
              end;
 
             DWORD dwTexN := (g_IVBFVF and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
@@ -1371,7 +1401,9 @@ begin
                     uiStride:= uiStride + SizeOf(FLOAT)*2;
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('IVB TexCoord1 := (%f, %f end;', g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
+{$ENDIF}
              end;
          end;
 

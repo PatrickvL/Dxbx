@@ -371,7 +371,9 @@ begin
 
     SectionHeaders[v].Characteristics := Flags;
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuExe: Generating Section Header 0x%.4x... OK', [v]);
+{$ENDIF}
   end;
 
   // generate .cxbximp section header
@@ -410,7 +412,10 @@ begin
   //  update import address table directory entry
   NtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IAT].VirtualAddress := SectionHeaders[i].VirtualAddress;
   NtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IAT].Size := $08;
+
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuExe: Generating Section Header 0x%.4x(.cxbximp)... OK', [i]);
+{$ENDIF}
 
   //  generate .cxbxplg section header
   i := NtHeaders.FileHeader.NumberOfSections - 1;
@@ -464,7 +469,9 @@ begin
   // make this section readable and executable
   SectionHeaders[i].Characteristics := IMAGE_SCN_MEM_READ xor IMAGE_SCN_MEM_EXECUTE xor IMAGE_SCN_CNT_CODE;
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuExe: Generating Section Header 0x%.4x(.cxbxplg)... OK', [i]);
+{$ENDIF}
 
   // generate sections
   WriteLog('EmuExe: Generating Sections...');
@@ -522,7 +529,9 @@ begin
     ep := x_Xbe.m_Header.dwEntryAddr;
     i := NtHeaders.FileHeader.NumberOfSections - 1;
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuExe: Generating Section Header 0x%.4x (.cxbxplg)... OK', [i]);
+{$ENDIF}
 
     // decode entry point
     if ((ep xor XOR_EP_RETAIL) > $01000000) then
