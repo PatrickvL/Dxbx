@@ -282,8 +282,6 @@ type
   PPXPR_FILE_HEADER = ^PXPR_FILE_HEADER;
 *)
 
-  TRawSection = TVarByteArray;
-  
   TXbe = class(TObject)
   private
     MyFile: TMemoryStream;

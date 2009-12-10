@@ -32,53 +32,29 @@ uses
   uLog;
 
 type
-  DOSStub = array[0..183] of Byte;
-  EndFilling1 = array[0..0] of Byte;
-  EndFilling2 = array[0..0] of Byte;
-
+  // This class captures all parts of a Windows PE file :
   TExe = class(TObject)
   public
+    // DOS .EXE header :
     DOSHeader: TImageDosHeader;
+    // DOS code block :
+    DOSCode: TVarByteArray;
+    // PE headers (combining Signature, IMAGE_NT_HEADERS and IMAGE_OPTIONAL_HEADER all into one) :
     NtHeaders: TImageNtHeaders;
-
-    m_SectionHeader: array of TImageSectionHeader;
-
-    m_bzSection: array of TVarByteArray;
-
-    constructor Create(x_szFileName: string);
-    function GetAddr(x_dwVirtualAddress: DWord): PByte;
-    function doExport(const x_szExeFileName: string): Boolean;
+    // Array of all section headers :
+    SectionHeaders: array of TImageSectionHeader;
+    // Array of all section contents :
+    SectionContents: array of TRawSection;
+  public
     procedure ConstructorInit;
+    constructor Create(x_szFileName: string);
+
+    function doExport(const x_szExeFileName: string): Boolean;
+    function GetAddr(x_dwVirtualAddress: DWord): PByte;
   end;
 
 const
-  bzDOSStub: DOSStub = ($4D, $5A, $90, $00, $03, $00, $00, $00,
-    $04, $00, $00, $00, $FF, $FF, $00, $00,
-    $B8, $00, $00, $00, $00, $00, $00, $00,
-    $40, $00, $00, $00, $00, $00, $00, $00,
-    $00, $00, $00, $00, $00, $00, $00, $00,
-    $00, $00, $00, $00, $00, $00, $00, $00,
-    $00, $00, $00, $00, $00, $00, $00, $00,
-    $00, $00, $00, $00, $B8, $00, $00, $00,
-    $0E, $1F, $BA, $0E, $00, $B4, $09, $CD,
-    $21, $B8, $01, $4C, $CD, $21, $54, $68,
-    $69, $73, $20, $70, $72, $6F, $67, $72,
-    $61, $6D, $20, $63, $61, $6E, $6E, $6F,
-    $74, $20, $62, $65, $20, $72, $75, $6E,
-    $20, $69, $6E, $20, $44, $4F, $53, $20,
-    $6D, $6F, $64, $65, $2E, $0D, $0D, $0A,
-    $24, $00, $00, $00, $00, $00, $00, $00,
-    $85, $E3, $B8, $DB, $C1, $82, $D6, $88,
-    $C1, $82, $D6, $88, $C1, $82, $D6, $88,
-    $C1, $82, $D7, $88, $C3, $82, $D6, $88,
-    $3E, $A2, $D2, $88, $C2, $82, $D6, $88,
-    $95, $A1, $E7, $88, $C0, $82, $D6, $88,
-    $52, $69, $63, $68, $C1, $82, $D6, $88,
-    $00, $00, $00, $00, $00, $00, $00, $00);
-
-  bzEndFilling1: EndFilling1 = ($CC);
-  bzEndFilling2: EndFilling2 = ($CD);
-
+  DOS_PAGESIZE = 512; // Used for TImageDosHeader.e_cblp and TImageDosHeader.e_cp
 
 implementation
 
@@ -88,8 +64,8 @@ implementation
 
 procedure TExe.ConstructorInit;
 begin
-  m_SectionHeader := nil;
-  m_bzSection := nil;
+  SectionHeaders := nil;
+  SectionContents := nil;
 end; // TExe.ConstructorInit
 
 //------------------------------------------------------------------------------
@@ -118,17 +94,27 @@ begin
     MessageDlg('Unexpected read error while reading magic number', mtError, [mbOk], 0);
   end;
 
-  if StrLComp(@DOSHeader.e_magic, 'MZ', 2) = 0 then
+  if DOSHeader.e_magic = IMAGE_DOS_SIGNATURE then
   try
-    ExeFile.Read(DOSHeader.e_magic, SizeOf(DOSHeader) - SizeOf(DosHeader.e_magic));
-    WriteLog('Exe: Reading DOS stub... OK');
+    ExeFile.Read(DOSHeader.e_cblp, SizeOf(DOSHeader) - SizeOf(DosHeader.e_magic));
+    WriteLog('Exe: Reading DOS header... OK');
   except
-    WriteLog('Unexpected read error while reading DOS stub');
+    WriteLog('Unexpected read error while reading DOS header');
   end
   else
-    WriteLog('Exe: Reading DOS stub... OK');
+    WriteLog('Exe: Reading DOS header... OK');
 
 
+  // Read DOS code block :
+  SetLength(DOSCode, DOSHeader._lfanew - SizeOf(TImageDosHeader));
+  try
+    ExeFile.Read(DOSCode[0], Length(DOSCode));
+    WriteLog('Exe: Reading DOS code... OK');
+  except
+    WriteLog('Unexpected read error while reading DOS code');
+  end;
+
+  
   // read pe header
 
     {
@@ -178,7 +164,7 @@ begin
     // * read section headers
     // ******************************************************************
     {
-        m_SectionHeader = new TImageSectionHeader[NtHeaders.FileHeader.NumberOfSections];
+        SetLength(SectionHeaders, NtHeaders.FileHeader.NumberOfSections);
 
         printf('Exe::Exe: Reading Section Headers...');
 
@@ -186,7 +172,7 @@ begin
         {
             printf('Exe::Exe: Reading Section Header 0x%.4X...', v);
 
-            if (fread(&m_SectionHeader[v], SizeOf(TImageSectionHeader), 1, ExeFile) != 1) then
+            if (fread(&SectionHeaders[v], SizeOf(TImageSectionHeader), 1, ExeFile) != 1) then
             {
                 char buffer[255];
                 sprintf(buffer, 'Could not read PE section header %d (%Xh)', v, v);
@@ -204,18 +190,18 @@ begin
     {
         printf('Exe::Exe: Reading Sections...');
 
-        m_bzSection = new uint08*[NtHeaders.FileHeader.NumberOfSections];
+        SetLength(SectionContents, NtHeaders.FileHeader.NumberOfSections);
 
         for(uint32 v=0;v<NtHeaders.FileHeader.NumberOfSections;v++)
         {
             printf('Exe::Exe: Reading Section 0x%.4X...', v);
 
-            uint32 raw_size = m_SectionHeader[v].m_sizeof_raw;
-            uint32 raw_addr = m_SectionHeader[v].m_raw_addr;
+            uint32 raw_size = SectionHeaders[v].m_sizeof_raw;
+            uint32 raw_addr = SectionHeaders[v].m_raw_addr;
 
-            m_bzSection[v] = new uint08[raw_size];
+            SetLength(SectionContents[v], raw_size);
 
-            memset(m_bzSection[v], 0, raw_size);
+            memset(SectionContents[v], 0, raw_size);
 
             if (raw_size == 0) then
             {
@@ -229,7 +215,7 @@ begin
             {
                 fseek(ExeFile, raw_addr, SEEK_SET);
 
-                if (fread(m_bzSection[v], raw_size, 1, ExeFile) != 1) then
+                if (fread(SectionContents[v], raw_size, 1, ExeFile) != 1) then
                 {
                     char buffer[255];
                     sprintf(buffer, 'Could not read PE section %d (%Xh)', v, v);
@@ -293,7 +279,12 @@ begin
     WriteLog('Export: Opening Exe file...OK');
 
     // write DOS header
-    Result := _Write(bzDosStub, SizeOf(bzDosStub), 'DOS stub');
+    Result := _Write(DOSHeader, SizeOf(DOSHeader), 'DOS header');
+    if not Result then
+      Exit;
+
+    // write DOS code
+    Result := _Write(DOSCode[0], Length(DOSCode), 'DOS code');
     if not Result then
       Exit;
 
@@ -305,7 +296,7 @@ begin
     // write section headers
     for i := 0 to NtHeaders.FileHeader.NumberOfSections - 1 do
     begin
-      Result := _Write(m_Sectionheader[i], SizeOf(m_SectionHeader[i]), 'PE section header 0x' + IntToHex(i, 4));
+      Result := _Write(SectionHeaders[i], SizeOf(SectionHeaders[i]), 'PE section header 0x' + IntToHex(i, 4));
       if not Result then
         Exit;
     end;
@@ -332,27 +323,19 @@ begin
       //v = 11  RawwSize = 128      RawAddr = 2434080
       //v = 12  RawwSize = 69632    RawAddr = 2434208
       //v = 13  RawwSize = 577      RawAddr = 305
-      RawSize := m_SectionHeader[i].SizeOfRawData;
-      RawAddr := m_SectionHeader[i].PointerToRawData;
+      RawSize := SectionHeaders[i].SizeOfRawData;
+      RawAddr := SectionHeaders[i].PointerToRawData;
 
       ExeFile.Seek(RawAddr, soFromBeginning);
 
       if RawSize = 0 then
         Result := False
       else
-        _Write(Pointer(m_bzSection[i])^, RawSize, 'PE section 0x' + IntToHex(i, 4));
+        _Write(Pointer(SectionContents[i])^, RawSize, 'PE section 0x' + IntToHex(i, 4));
     end;
 
     WriteLog('Export: Writing Sections...OK');
 
-(*
-    ExeFile.Position := 2437340;
-    for i := 0 to 963 do
-     ExeFile.Write(bzEndFilling1, Length(bzEndFilling1));
-
-    for i := 0 to 65535 do
-      ExeFile.Write(bzEndFilling2, Length(bzEndFilling2));
-*)
   finally
     FreeAndNil({var}ExeFile);
   end;
@@ -368,12 +351,12 @@ var
 begin
   for v := 0 to NtHeaders.FileHeader.NumberOfSections - 1 do
   begin
-    virt_addr := m_SectionHeader[v].VirtualAddress;
-    virt_size := m_SectionHeader[v].Misc.VirtualSize;
+    virt_addr := SectionHeaders[v].VirtualAddress;
+    virt_size := SectionHeaders[v].Misc.VirtualSize;
 
     if (x_dwVirtualAddress >= virt_addr) and (x_dwVirtualAddress < (virt_addr + virt_size)) then
     begin
-      Result := @(m_bzSection[v][x_dwVirtualAddress - virt_addr]);
+      Result := @(SectionContents[v][x_dwVirtualAddress - virt_addr]);
       Exit;
     end;
   end;
