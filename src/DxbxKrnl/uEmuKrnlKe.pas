@@ -257,6 +257,7 @@ procedure xboxkrnl_KeInitializeDpc(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : KeInitializeDpc' +
          #13#10'(' +
          #13#10'   Dpc                 : 0x%.08X' +
@@ -264,6 +265,7 @@ begin
          #13#10'   DeferredContext     : 0x%.08X' +
          #13#10');',
          [ Dpc, Addr(DeferredRoutine), DeferredContext]);
+{$ENDIF}
 
   // inialize Dpc field values
   Dpc.Number := 0;
@@ -322,12 +324,14 @@ procedure xboxkrnl_KeInitializeTimerEx(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : KeInitializeTimerEx' +
          #13#10'(' +
          #13#10'   Timer               : 0x%.08X' +
          #13#10'   Type                : 0x%.08X' +
          #13#10');',
          [Timer, Ord(Type_)]);
+{$ENDIF}
 
   Timer.Header.Type_ := UCHAR(Ord(Type_) + 8);
   Timer.Header.Inserted := 0;
@@ -634,6 +638,7 @@ function xboxkrnl_KeSetTimer(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : KeSetTimer' +
        #13#10'(' +
        #13#10'   Timer               : 0x%.08X' +
@@ -641,6 +646,7 @@ begin
        #13#10'   Dpc                 : 0x%.08X' +
        #13#10');',
        [Timer, DueTime.QUADPART, Dpc]);
+{$ENDIF}
 
   // Call the newer function and supply a period of 0 (source: ReactOS)
   Result := xboxkrnl_KeSetTimerEx(Timer, DueTime, {Period=}0, Dpc);
@@ -658,6 +664,7 @@ function xboxkrnl_KeSetTimerEx(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : KeSetTimerEx' +
            #13#10'(' +
            #13#10'   Timer               : 0x%.08X' +
@@ -666,6 +673,7 @@ begin
            #13#10'   Dpc                 : 0x%.08X' +
            #13#10');',
            [Timer, DueTime.QUADPART, Period, Dpc]);
+{$ENDIF}
 
   CxbxKrnlCleanup('KeSetTimerEx is not implemented');
 

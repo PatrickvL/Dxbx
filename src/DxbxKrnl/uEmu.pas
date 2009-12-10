@@ -95,10 +95,12 @@ implementation
 procedure EmuWarning(szWarningMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
+{$IFDEF DXBX_DEBUG}
   if (g_bPrintfOn) then
   begin
     DbgPrintf('EmuWarn : ' + szWarningMessage);
   end;
+{$ENDIF}
 end;
 
 procedure EmuWarning(szWarningMessage: string; const Args: array of const);
@@ -170,7 +172,9 @@ begin
             *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
           end;      *)
 
+{$IFDEF DXBX_DEBUG}
           DbgPrintf('EmuMain : Halo Access Adjust 1 was applied!');
+{$ENDIF}
 
           g_bEmuException := False;
 
@@ -205,7 +209,9 @@ begin
               end;
             end;      *)
 
+{$IFDEF DXBX_DEBUG}
             DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');
+{$ENDIF}
             g_bEmuException := False;
             Result := EXCEPTION_CONTINUE_EXECUTION;
             Exit;
@@ -215,6 +221,7 @@ begin
   end;
 
   // print debug information
+{$IFDEF DXBX_DEBUG}
   begin
     if E.ExceptionRecord.ExceptionCode = $80000003 then
       DbgPrintf('Received Breakpoint Exception (int 3)')
@@ -230,6 +237,7 @@ begin
         e.ContextRecord.Eax, e.ContextRecord.Ebx, e.ContextRecord.Ecx, e.ContextRecord.Edx,
         e.ContextRecord.Esi, e.ContextRecord.Edi, e.ContextRecord.Esp, e.ContextRecord.Ebp]);
   end;
+{$ENDIF}
 
 (*  fflush(stdout); *)
 
@@ -240,6 +248,7 @@ begin
 
     if e.ExceptionRecord.ExceptionCode = $80000003 then
     begin
+{$IFDEF DXBX_DEBUG}
       sprintf(buffer,
         'Received Breakpoint Exception (int 3) @ EIP := $%.08X\n'
         '\n'
@@ -247,6 +256,7 @@ begin
         '  Press Retry to debug.\n'
         '  Press Ignore to continue emulation.',
         e.ContextRecord.Eip, e.ContextRecord.EFlags);
+{$ENDIF}
 
       e.ContextRecord.Eip += 1;
 
@@ -254,7 +264,9 @@ begin
 
       if ret = IDABORT then
       begin
+{$IFDEF DXBX_DEBUG}
         printf('EmuMain : Aborting Emulation');
+{$ENDIF}
         fflush(stdout);
 
         if CxbxKrnl_hEmuParent <> NULL then
@@ -265,7 +277,9 @@ begin
       else
         if ret = IDIGNORE then
         begin
+{$IFDEF DXBX_DEBUG}
           printf('EmuMain : Ignored Breakpoint Exception');
+{$ENDIF}
 
           g_bEmuException := False;
 
@@ -275,16 +289,20 @@ begin
     end
     else
     begin
+{$IFDEF DXBX_DEBUG}
       sprintf(buffer,
               'Received Exception Code $%.08X @ EIP := $%.08X\n'
               '\n'
               '  Press \'OK\' to terminate emulation.\n'
               '  Press \'Cancel\' to debug.',
               e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip, e.ContextRecord.EFlags);
+{$ENDIF}
 
       if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
       begin
+{$IFDEF DXBX_DEBUG}
         printf('EmuMain : Aborting Emulation');
+{$ENDIF}
         fflush(stdout);
 
         if CxbxKrnl_hEmuParent <> NULL then
@@ -351,25 +369,34 @@ begin
 
     va_list argp;
 
+{$IFDEF DXBX_DEBUG}
     sprintf(szBuffer1, 'Emu(0 x%X): Received Fatal Message - > '#13#10#13#10, GetCurrentThreadId());
+{$ENDIF}
 
     va_start(argp, szErrorMessage);
 
+{$IFDEF DXBX_DEBUG}
     vsprintf(szBuffer2, szErrorMessage, argp);
-
+{$ENDIF}
     va_end(argp);
 
-    strcat(szBuffer1, szBuffer2);
+    strcat(szBuffer1, szBuffer2); *)
 
 
-    printf('%s'#13#10, szBuffer1);    *)
+{$IFDEF DXBX_DEBUG}
+(*    printf('%s'#13#10, szBuffer1);    *)
+{$ENDIF}
     szBuffer1 := 'Emu: Received Fatal Message - > '  + szErrorMessage;
+{$IFDEF DXBX_DEBUG}
     DbgPrintf(szBuffer1);
+{$ENDIF}
 
     MessageDlg(szBuffer1, mtError, [mbOk], 0);
   end;
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('DxbxKrnl: Terminating Process');
+{$ENDIF}
   (*fflush(stdout); *)
 
   //  Cleanup debug output
@@ -392,12 +419,12 @@ begin
   Count := 0;
 
   // debug information
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuMain : * * * * * EXCEPTION * * * * * ');
-
   DbgPrintf('EmuMain : Received Exception[$%.08x]@$%.08X', [ InttoStr(e.ExceptionRecord.ExceptionCode),
                                                              IntToStr(e.ContextRecord.Eip)]);
-
   DbgPrintf('EmuMain : * * * * * EXCEPTION * * * * * ');
+{$ENDIF}
 
   (*fflush(stdout);*)
 

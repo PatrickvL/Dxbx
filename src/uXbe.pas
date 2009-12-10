@@ -500,7 +500,9 @@ begin
 
   // read xbe section headers
   begin
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('DXBX: Reading Section Headers...');
+{$ENDIF}
     i := m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr;
     SetLength(m_SectionHeader, m_Header.dwSections);
     for lIndex := 0 to m_Header.dwSections - 1 do
@@ -508,13 +510,17 @@ begin
       CopyMemory(@(m_SectionHeader[lIndex]), @(Buffer[i]), SizeOf(m_SectionHeader[lIndex]));
       Inc(i, SizeOf(m_SectionHeader[lIndex]));
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('DXBX: Reading Section Header 0x%.4x... OK', [lIndex]);
+{$ENDIF}
     end;
   end;
 
   // Read xbe section names
   begin
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('DXBX: Reading Section Names...');
+{$ENDIF}
     SetLength(m_szSectionName, m_Header.dwSections, XBE_SECTIONNAME_MAXLENGTH);
     for lIndex := 0 to m_Header.dwSections - 1 do
     begin
@@ -528,8 +534,10 @@ begin
             Break;
         end; // for lIndex2
       end; // if
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('DXBX: Reading Section Name 0x%.04X... OK (%s)', [lIndex, PAnsiChar(m_szSectionName[lIndex])]);
     end; // for lIndex
+{$ENDIF}
   end;
 
   // Read xbe library versions

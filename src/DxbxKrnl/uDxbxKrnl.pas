@@ -110,7 +110,9 @@ begin
   // debug console allocation (if configured)
   CreateLogs(DbgMode, szDebugFileName); // Initialize logging interface
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
+{$ENDIF}
 
   // update caches
   CxbxKrnl_TLS := pTLS;
@@ -151,7 +153,9 @@ begin
       ]);
 
 {$ELSE}
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuMain : Debug Trace Disabled.');
+{$ENDIF}
 {$ENDIF}
   end;
 
@@ -175,7 +179,9 @@ begin
   g_EmuShared.GetXbePath({var}szBuffer);
   if szBuffer <> '' then
   begin
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuMain : XBEPath := ' + szBuffer);
+{$ENDIF}
     SetCurrentDirectory(PChar(szBuffer));
   end
   else
@@ -191,7 +197,9 @@ begin
   if g_hCurDir = INVALID_HANDLE_VALUE then
     CxbxKrnlCleanup('Could not map D:\');
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuMain : CurDir := ' + szBuffer);
+{$ENDIF}
 
   // initialize EmuDisk
   begin
@@ -221,7 +229,9 @@ begin
       if g_hTDrive = INVALID_HANDLE_VALUE then
         CxbxKrnlCleanup('Could not map T:\');
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuMain : T Data := ' + g_strTDrive);
+{$ENDIF}
     end;
 
     // create U:\ directory
@@ -238,7 +248,9 @@ begin
       if g_hUDrive = INVALID_HANDLE_VALUE then
         CxbxKrnlCleanup('Could not map U:\');
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuMain : U Data := ' + g_strUDrive);
+{$ENDIF}
     end;
 
     // create Z:\ directory
@@ -258,7 +270,9 @@ begin
       if g_hUDrive = INVALID_HANDLE_VALUE then
         CxbxKrnlCleanup('Could not map Z:\');
 
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuMain : Z Data := ' + g_strZDrive);
+{$ENDIF}
     end;
 
   end;
@@ -281,13 +295,17 @@ begin
   end;
 
   
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuMain : Initializing Direct3D.');
+{$ENDIF}
 
   XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuMain : Initial thread starting.');
+{$ENDIF}
 
   // Re-route unhandled exceptions to our emulation-execption handler :
   OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
@@ -325,19 +343,23 @@ begin
   except
     on E: Exception do
     begin
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString);
 {$ENDIF}
 //    on(EmuException(GetExceptionInformation())) :
 //      printf('Emu: WARNING!! Problem with ExceptionFilter');
+{$ENDIF}
     end;
   end;
 
   // Restore original exception filter :
   SetUnhandledExceptionFilter(OldExceptionFilter);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuMain : Initial thread ended.');
+{$ENDIF}
 
 //  FFlush(stdout);
 
@@ -472,7 +494,9 @@ procedure EmuPanic(); stdcall;
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuMain : EmuPanic');
+{$ENDIF}
 
   CxbxKrnlCleanup('Kernel Panic!');
 
@@ -482,11 +506,11 @@ end;
 procedure CxbxKrnlNoFunc;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
+{$IFDEF DXBX_DEBUG}
   EmuSwapFS(fsWindows);
-
   DbgPrintf('EmuMain : CxbxKrnlNoFunc();');
-
   EmuSwapFS(fsXbox);
+{$ENDIF}
 end;
 
 end.

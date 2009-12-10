@@ -584,7 +584,9 @@ begin
   LinkedLibrary := pLibraryVersion;
   if not Assigned(LinkedLibrary) then
   begin
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('DxbxHLE : No XBE library versions to scan!');
+{$ENDIF}
     Exit;
   end;
 
@@ -596,7 +598,9 @@ begin
     // Retreive the name & version of each linked library :
     LinkedLibraryName := string(Copy(LinkedLibrary.szName, 1, 8)); // silence D2009+ warning
     LinkedLibraryVersion := Integer(LinkedLibrary.wBuildVersion);
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('DxbxHLE : Library "%s" is version %d', [LinkedLibraryName, LinkedLibraryVersion]);
+{$ENDIF}
     // Jump to the next library already :
     Inc(LinkedLibrary);
 
@@ -634,7 +638,9 @@ begin
 
     if (IndexOfAboveVersion < 0) and (IndexOfBelowVersion < 0) then
     begin
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('... No patterns registered for this library!');
+{$ENDIF}
       Continue;
     end;
 
@@ -643,14 +649,18 @@ begin
     begin
       // The distinction here is, that patterns for OpenXDK libraries can't
       // be used to detect retail XDK libraries with :
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('... No usable patterns available for this library!');
+{$ENDIF}
       Continue;
     end;
 
+{$IFDEF DXBX_DEBUG}
     if AboveVersionNumber = BelowVersionNumber then
       DbgPrintf('... Got patterns for exactly this version!')
     else
       DbgPrintf('... Approximating this with patterns from XDK %d and %d.', [BelowVersionNumber, AboveVersionNumber]);
+{$ENDIF}
 
     // Add the found libraries (actually, their indexes)
     // to a set we'll be checking in the detection-code :
@@ -1124,7 +1134,9 @@ begin
     FreeAndNil(ResourceStream);
   end;
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('DxbxHLE : Detected functions : %d.', [DetectedSymbols.Count]);
+{$ENDIF}
 end; // DxbxScanForLibraryAPIs
 
 initialization

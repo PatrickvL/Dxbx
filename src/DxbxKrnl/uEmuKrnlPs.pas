@@ -118,6 +118,7 @@ begin
   StartRoutine := Parameter.StartRoutine;
   StartSuspended := Parameter.StartSuspended;
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : PCSTProxy' +
     #13#10'(' +
     #13#10'   StartContext1       : 0x%.08x' +
@@ -125,6 +126,7 @@ begin
     #13#10'   StartRoutine        : 0x%.08x' +
     #13#10');',
     [StartContext1, StartContext2, Addr(StartRoutine)]);
+{$ENDIF}
 
   if StartSuspended then
     SuspendThread(GetCurrentThread());
@@ -136,7 +138,9 @@ begin
   begin
     pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('EmuKrnl : Calling pfnNotificationRoutine (0x%.08x)', [Addr(pfnNotificationRoutine)]);
+{$ENDIF}
 
     EmuSwapFS(fsXbox);
     pfnNotificationRoutine({Create=}True);
@@ -255,6 +259,7 @@ begin
   CreateSuspended := (dwCreationFlags and CREATE_SUSPENDED) > 0;
   DebugStack := False; // ??
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : PsCreateSystemThread' +
     #13#10'(' +
     #13#10'   lpThreadAttributes  : 0x%.08x' +
@@ -266,6 +271,8 @@ begin
     #13#10');',
     [lpThreadAttributes^, dwStackSize, Addr(lpStartAddress), lpParameter,
     dwCreationFlags, Addr(lpThreadId)]);
+{$ENDIF}
+
 // PsCreateSystemThreadEx(ThreadHandle, NULL, 0x3000, 0, ThreadId, StartContext1,
 //     StartContext2, FALSE, DebugStack, PspSystemThreadStartup);
 
@@ -320,6 +327,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
     #13#10'(' +
     #13#10'   ThreadHandle        : 0x%.08x' +
@@ -335,6 +343,7 @@ begin
     #13#10');',
     [ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, Addr(ThreadId),
     StartContext1, StartContext2, CreateSuspended, DebugStack, Addr(StartRoutine)]);
+{$ENDIF}
 
   // create thread, using our special proxy technique
   begin

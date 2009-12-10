@@ -148,7 +148,9 @@ begin
       end;
     end;
 
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('Active texture was unswizzled');
+{$ENDIF}
   end;    *)
 
 end;
@@ -206,10 +208,12 @@ begin
       begin
           g_PBTrackShowOnce.remove(pdwPushData);
 
+{$IFDEF DXBX_DEBUG}
           DbgPrintf('');
           DbgPrintf('');
           DbgPrintf('  PushBuffer@$%.08X...', [pdwPushData]);
           DbgPrintf('');
+{$ENDIF}
 
           bShowPB := True;
        end;
@@ -248,7 +252,7 @@ begin
              end
             else
             begin
-                {$ifdef _DEBUG_TRACK_PB}
+                {$IFDEF DXBX_DEBUG}
                 if (bShowPB) then
                 begin
                     DbgPrintf(Format('PrimitiveType := %d)', [pdwPushData]));
@@ -499,9 +503,11 @@ begin
             #ifdef _DEBUG_TRACK_PB
             if (bShowPB) then
             begin
+{$IFDEF DXBX_DEBUG}
                 printf('  NVPB_InlineIndexArray($%.08X, %d)...', pIndexData, dwCount);
                 printf('');
                 printf('  Index Array Data...');
+{$ENDIF}
 
                 WORD *pwVal := (WORD)pIndexData;
 
@@ -512,7 +518,9 @@ begin
                     printf('  %.04X', *pwVal++);
                  end;
 
+{$IFDEF DXBX_DEBUG}
                 printf('');
+{$ENDIF}
 
                 XTL.IDirect3DVertexBuffer8 *pActiveVB := 0;
 
@@ -535,6 +543,7 @@ begin
 
                 // print out stream data
                 begin
+{$IFDEF DXBX_DEBUG}
                     printf('');
                     printf('  Vertex Stream Data ($%.08X)...', pActiveVB);
                     printf('');
@@ -542,6 +551,7 @@ begin
                     printf('  Size   : %d bytes', VBDesc.Size);
                     printf('  FVF    : $%.08X', VBDesc.FVF);
                     printf('');
+{$ENDIF}
                  end;
 
                 // release ptr
@@ -656,8 +666,10 @@ begin
     #ifdef _DEBUG_TRACK_PB
     if (bShowPB) then
     begin
+{$IFDEF DXBX_DEBUG}
         printf('');
         printf('CxbxDbg> ');
+{$ENDIF}
         fflush(stdout);
     end;
     //endif
@@ -721,6 +733,7 @@ begin
     if (maxIndex > ((VBDesc.Size / uiStride) - 1)) then
       maxIndex := (VBDesc.Size / uiStride) - 1;
 
+{$IFDEF DXBX_DEBUG}
     fprintf(dbgVertices, 'xof 0303txt 0032');
     fprintf(dbgVertices, '');
     fprintf(dbgVertices, '//\n');
@@ -752,18 +765,23 @@ begin
     fprintf(dbgVertices, '');
     fprintf(dbgVertices, '    Mesh begin ');
     fprintf(dbgVertices, '      %d;', maxIndex + 1);
+{$ENDIF}
 
     uint max := maxIndex + 1;
     for (uint v := 0; v < max; v++)
     begin
+{$IFDEF DXBX_DEBUG}
       fprintf(dbgVertices, '      %f;%f;%f;%s',
         * (FLOAT)@pVBData[v * uiStride + 0],
         * (FLOAT)@pVBData[v * uiStride + 4],
         * (FLOAT)@pVBData[v * uiStride + 8],
         (v < (max - 1))? ',': ';');
+{$ENDIF}
     end;
 
+{$IFDEF DXBX_DEBUG}
     fprintf(dbgVertices, '      %d;', dwCount - 2);
+{$ENDIF}
 
     WORD * pwVal := (WORD)pIndexData;
 
@@ -777,8 +795,10 @@ begin
 
     for (uint i := 2; i < max; i++)
     begin
+{$IFDEF DXBX_DEBUG}
       fprintf(dbgVertices, '      3;%d,%d,%d;%s',
         a, b, c, (i < (max - 1))? ',': ';');
+{$ENDIF}
 
       a := b;
       b := c;
@@ -789,9 +809,11 @@ begin
       lc := c;
     end;
 
+{$IFDEF DXBX_DEBUG}
     fprintf(dbgVertices, '     end;');
     fprintf(dbgVertices, '   end;');
     fprintf(dbgVertices, ' end;');
+{$ENDIF}
 
     FileClose(dbgVertices);
   end;

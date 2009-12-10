@@ -65,12 +65,16 @@ begin
   // initialize openxdk emulation (TODO)
   if pLibraryVersion = nil then
   begin
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('DxbxHLE: Detected OpenXDK application... cannot patch!');
+{$ENDIF}
     Exit;
   end;
 
   // initialize Microsoft XDK emulation
+{$IFDEF DXBX_DEBUG}
   DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
+{$ENDIF}
 
   DetectedSymbols.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
 
@@ -87,7 +91,9 @@ begin
     while UnResolvedXRefs < LastUnResolvedXRefs do
     begin
       Inc(p);
+{$IFDEF DXBX_DEBUG}
       DbgPrintf('HLE: Starting pass #' + IntToStr(p) + '...');
+{$ENDIF}
 
       LastUnResolvedXRefs := UnResolvedXRefs;
 
@@ -118,7 +124,9 @@ begin
         begin
           if (bFoundD3D) then
           begin
+{$IFDEF DXBX_DEBUG}
               //DbgPrintf('Redundant');
+{$ENDIF}
               Continue;
           end;
 
@@ -186,8 +194,10 @@ begin
                 XTL.g_pRtlCreateHeap := *(XTL.pfRtlCreateHeap)((uint32)pFunc + RtlCreateHeapOffs);
                 XTL.g_pRtlCreateHeap := (XTL.pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL.g_pRtlCreateHeap + RtlCreateHeapOffs + $04);
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('HLE: $%.08X . EmuXapiProcessHeap', XTL.EmuXapiProcessHeap);
                 DbgPrintf('HLE: $%.08X . g_pRtlCreateHeap', XTL.g_pRtlCreateHeap);
+{$ENDIF}
               end;
             end;
           end // not XAPILIB
@@ -255,7 +265,9 @@ begin
                 for (Integer v:=0;v<44;v++)
                   XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
+{$IFDEF DXBX_DEBUG}
                 DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL_EmuD3DDeferredRenderState);
+{$ENDIF}
               end
               else
               begin
@@ -291,7 +303,9 @@ begin
                       XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
                   end;
 
+{$IFDEF DXBX_DEBUG}
                   DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState', XTL_EmuD3DDeferredTextureState);
+{$ENDIF}
                 end
                 else
                 begin
@@ -303,7 +317,9 @@ begin
           end;
         end;
 
+{$IFDEF DXBX_DEBUG}
         DbgPrintf('HLE: * Searching HLE database for %s %d.%d.%d ...', pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
+{$ENDIF}
 
         bool found:=False;
 
@@ -317,20 +333,26 @@ begin
 
           found := True;
 
+{$IFDEF DXBX_DEBUG}
           DbgPrintf('Found');
+{$ENDIF}
 
           EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, pXbeHeader);
         end;
 
         if (not found) then
+{$IFDEF DXBX_DEBUG}
           DbgPrintf('Skipped');
+{$ENDIF}
       end;
 
       bXRefFirstPass := False;
     end;
 
     // display Xref summary
+{$IFDEF DXBX_DEBUG}
     DbgPrintf('HLE: Resolved ' + IntToStr(OrigUnResolvedXRefs - UnResolvedXRefs) + ' cross reference(s)');
+{$ENDIF}
   end;
 *)
 end;
@@ -361,10 +383,10 @@ var
   UsedPatches: TBits;
 {$ENDIF}
 begin
-  DbgPrintf('DxbxHLE : Installing registered patches :');
-
   NrPatches := 0;
+
 {$IFDEF DXBX_DEBUG}
+  DbgPrintf('DxbxHLE : Installing registered patches :');
   UsedPatches := TBits.Create;
   try
     UsedPatches.Size := AvailablePatches.Count + 1;
@@ -393,9 +415,8 @@ begin
       Inc(NrPatches);
     end;
 
-    DbgPrintf('DxbxHLE : Installed patches : %d.', [NrPatches]);
-
 {$IFDEF DXBX_DEBUG}
+    DbgPrintf('DxbxHLE : Installed patches : %d.', [NrPatches]);
     DbgPrintf('DxbxHLE : Unused patches : ');
     NrPatches := 0;
     for i := 0 to AvailablePatches.Count - 1 do
