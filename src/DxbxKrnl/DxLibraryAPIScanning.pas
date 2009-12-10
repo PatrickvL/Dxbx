@@ -198,6 +198,12 @@ begin
 end; // DxbxUnmangleSymbolName
 
 {$OVERFLOWCHECKS OFF}
+function DetermineImmediateAddress(const aStartingAddress: PByte; const aOffset: Word): PByte;
+begin
+  IntPtr(Result) := IntPtr(aStartingAddress) + IntPtr(aOffset);
+  Result := PByte(PInteger(Result)^);
+end;
+
 function DetermineRelativeAddress(const aStartingAddress: PByte; const aOffset: Word): PByte;
 begin
   UIntPtr(Result) := UIntPtr(aStartingAddress) + aOffset;
@@ -717,6 +723,11 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
 
     // Now check if this address resides in memory owned by this process?
     Result := IsAddressInValidProcessMemory(CrossReferenceAddress);
+    if Result then
+      Exit;
+
+    CrossReferenceAddress := DetermineImmediateAddress(aStartingAddress, aCrossReferenceOffset);
+    Result := IsAddressInValidProcessMemory(CrossReferenceAddress);
   end; // _CheckCrossReference
 
   function _TryMatchingLeaf(var aStoredLibraryFunction: PStoredLibraryFunction; aAddress: PByte): Boolean;
@@ -949,9 +960,17 @@ begin
           Inc(CrossReferencedSymbolLocation.PatternHitCount)
         else
         begin
-          // If not, this function itself is probably wrong - de-register this location
-          Symbol.RemoveLocation(PotentialSymbolLocation);
-          Break; // for
+          CrossReferenceAddress := DetermineImmediateAddress(PotentialSymbolLocation.SymbolLocation, Symbol.CrossReferences[k].Offset);
+          CrossReferencedSymbolLocation := CrossReferencedSymbol.FindLocation(CrossReferenceAddress);
+          if Assigned(CrossReferencedSymbolLocation) then
+            // If so, the referenced-function scores a hit on his 'potential location' corresponding to this address.
+            Inc(CrossReferencedSymbolLocation.PatternHitCount)
+          else
+          begin
+            // If not, this function itself is probably wrong - de-register this location
+            Symbol.RemoveLocation(PotentialSymbolLocation);
+            Break; // for
+          end;
         end;
       end; // for cross-references
 
@@ -1014,6 +1033,9 @@ begin
         Continue;
 
       CrossReferenceAddress := DetermineRelativeAddress(BestPotentialSymbolLocation.SymbolLocation, Symbol.CrossReferences[k].Offset);
+      if not IsAddressInValidProcessMemory(CrossReferenceAddress) then
+        CrossReferenceAddress := DetermineImmediateAddress(BestPotentialSymbolLocation.SymbolLocation, Symbol.CrossReferences[k].Offset);
+
       CrossReferencedSymbol.AddPotentialSymbolLocation(CrossReferenceAddress, nil);
 {$IFDEF DXBX_DEBUG}
       // Do our own demangling :
