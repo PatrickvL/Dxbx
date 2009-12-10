@@ -34,6 +34,8 @@ const
 type
   TVarByteArray = array of Byte;
 
+  TRawSection = TVarByteArray;
+  
   TDWordArray = array[0..10000] of DWord;
   PDWordArray = ^TDWordArray;
 
