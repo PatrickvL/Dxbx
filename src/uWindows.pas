@@ -41,7 +41,7 @@ end;
 
 function GetTempDirectory(): string;
 var
-  Buffer: array[0..Max_path] of Char;
+  Buffer: array [0..Max_path] of Char;
 begin
   ZeroMemory(@(Buffer[0]), Max_Path + 1);
   GetTempPath(Max_path, Buffer);

@@ -149,7 +149,7 @@ type
 
   XINPUT_GAMEPAD = packed record
     wButtons: Word;
-    bAnalogButtons: array[0..7] of Byte;
+    bAnalogButtons: array [0..9-1] of Byte;
     sThumbLX: SHORT;
     sThumbLY: SHORT;
     sThumbRX: SHORT;
@@ -1260,7 +1260,7 @@ var
   dwDisposition: DWord;
   ahKey: HKEY;
   v: Integer;
-  szValueName: array[0..64 - 1] of Char;
+  szValueName: array [0..64 - 1] of Char;
 begin
   if (m_CurrentState <> XBCTRL_STATE_NONE) then
   begin

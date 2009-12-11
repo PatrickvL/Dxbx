@@ -24,14 +24,20 @@ interface
 
 uses
   // Delphi
-  Windows;
+  Windows,
+  // Directx
+  Direct3D8,
+  // Dxbx
+  uTypes,
+  uEmuXTL,
+  uDxbxKrnlUtils;
 
 procedure XTL_EmuUpdateDeferredStates; stdcall;
 
 var
   // deferred state lookup tables
-  XTL_EmuD3DDeferredRenderState: PDWORD;
-  XTL_EmuD3DDeferredTextureState: PDWORD;
+  XTL_EmuD3DDeferredRenderState: PDWordArray;
+  XTL_EmuD3DDeferredTextureState: PDWordArray;
 
 
 implementation
@@ -40,15 +46,19 @@ uses
   uEmuD3D8Types;
 
 procedure XTL_EmuUpdateDeferredStates; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:70
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+var
+  dwConv: DWORD;
+  v: int;
+  pCur: PDWordArray;
+  pTexture: IDirect3DBaseTexture8;
+  dwValue: DWORD;
 begin
-  //using namespace XTL;
   // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-(*
   if (XTL_EmuD3DDeferredRenderState <> nil) then
   begin
     if (XTL_EmuD3DDeferredRenderState[0] <> X_D3DRS_UNK) then
-      g_pD3DDevice8.SetRenderState(D3DRS_FOGENABLE, EmuD3DDeferredRenderState[0]);
+      g_pD3DDevice8.SetRenderState(D3DRS_FOGENABLE, XTL_EmuD3DDeferredRenderState[0]);
 
     if (XTL_EmuD3DDeferredRenderState[1] <> X_D3DRS_UNK) then
       g_pD3DDevice8.SetRenderState(D3DRS_FOGTABLEMODE, XTL_EmuD3DDeferredRenderState[1]);
@@ -67,22 +77,22 @@ begin
 
     if (XTL_EmuD3DDeferredRenderState[6] <> X_D3DRS_UNK) then
     begin
-      ::DWORD dwConv := 0;
+      dwConv := 0;
 
-      dwConv |= (XTL_EmuD3DDeferredRenderState[6] and $00000010) ? D3DWRAP_U : 0;
-      dwConv |= (XTL_EmuD3DDeferredRenderState[6] and $00001000) ? D3DWRAP_V : 0;
-      dwConv |= (XTL_EmuD3DDeferredRenderState[6] and $00100000) ? D3DWRAP_W : 0;
+      if (XTL_EmuD3DDeferredRenderState[6] and $00000010) > 0 then dwConv := dwConv or D3DWRAP_U;
+      if (XTL_EmuD3DDeferredRenderState[6] and $00001000) > 0 then dwConv := dwConv or D3DWRAP_V;
+      if (XTL_EmuD3DDeferredRenderState[6] and $00100000) > 0 then dwConv := dwConv or D3DWRAP_W;
 
       g_pD3DDevice8.SetRenderState(D3DRS_WRAP0, dwConv);
     end;
 
     if (XTL_EmuD3DDeferredRenderState[7] <> X_D3DRS_UNK) then
     begin
-      ::DWORD dwConv := 0;
+      dwConv := 0;
 
-      dwConv |= (XTL_EmuD3DDeferredRenderState[7] and $00000010) ? D3DWRAP_U : 0;
-      dwConv |= (XTL_EmuD3DDeferredRenderState[7] and $00001000) ? D3DWRAP_V : 0;
-      dwConv |= (XTL_EmuD3DDeferredRenderState[7] and $00100000) ? D3DWRAP_W : 0;
+      if (XTL_EmuD3DDeferredRenderState[7] and $00000010) > 0 then dwConv := dwConv or D3DWRAP_U;
+      if (XTL_EmuD3DDeferredRenderState[7] and $00001000) > 0 then dwConv := dwConv or D3DWRAP_V;
+      if (XTL_EmuD3DDeferredRenderState[7] and $00100000) > 0 then dwConv := dwConv or D3DWRAP_W;
 
       g_pD3DDevice8.SetRenderState(D3DRS_WRAP1, dwConv);
     end;
@@ -135,7 +145,8 @@ begin
     if (XTL_EmuD3DDeferredRenderState[33] <> X_D3DRS_UNK) then
       g_pD3DDevice8.SetRenderState(D3DRS_PATCHSEGMENTS, XTL_EmuD3DDeferredRenderState[33]);
 
-    /** To check for unhandled RenderStates
+    (* Cxbx has this disabled :
+    // To check for unhandled RenderStates
     for(int v=0;v<117-82;v++)
     begin
       if (XTL_EmuD3DDeferredRenderState[v] <> X_D3DRS_UNK) then
@@ -146,208 +157,203 @@ begin
           EmuWarning('Unhandled RenderState Change @ %d (%d)', [v, v + 82]);
       end;
     end;
-    //**/
+    *)
   end;
-*)
 
-(*
   // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
-  if (EmuD3DDeferredTextureState <> 0) then
+  if (XTL_EmuD3DDeferredTextureState <> nil) then
   begin
-    for(int v=0;v<4;v++)
+    for v := 0 to 4-1 do
     begin
-        ::DWORD *pCur := @(EmuD3DDeferredTextureState[v*32];
+      pCur := @(XTL_EmuD3DDeferredTextureState[v*32]);
 
-        if (pCur[0] <> X_D3DTSS_UNK) then
+      if (pCur[0] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[0] = 5) then
+          CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0]);
+      end;
+
+      if (pCur[1] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[1] = 5) then
+          CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1]);
+      end;
+
+      if (pCur[2] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[2] = 5) then
+          CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2]);
+      end;
+
+      if (pCur[3] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[3] = 4) then
+          CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
+
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3]);
+      end;
+
+      if (pCur[4] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[4] = 4) then
+          CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
+
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MINFILTER, pCur[4]);
+      end;
+
+      if (pCur[5] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[5] = 4) then
+          CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
+
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
+      end;
+
+      if (pCur[6] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MIPMAPLODBIAS, pCur[6]);
+
+      if (pCur[7] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAXMIPLEVEL, pCur[7]);
+
+      if (pCur[8] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8]);
+
+      // Cxbx TODO: Use a lookup table, this is not always a 1:1 map
+      if (pCur[12] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[12] > 12) and (not (pCur[12] >= 17) and (pCur[12] <= 21)) and ((pCur[12] <> 22)) and ((pCur[12] <> 14) and (pCur[12] <> 15)) then
+          CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)', [pCur[12]]);
+
+        // Dirty Hack: 22 = D3DTOP_DOTPRODUCT3
+        if ( pCur[12] = 22 ) then
+          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DOTPRODUCT3)
+        else if ( pCur[12] = 14 ) then
+          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA)
+        else if ( pCur[12] = 15 ) then
+          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDFACTORALPHA)
+        else
+          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
+      end;
+
+      if (pCur[13] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG0, pCur[13]);
+
+      if (pCur[14] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14]);
+
+      if (pCur[15] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
+
+      // Cxbx TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
+      if (pCur[16] <> X_D3DTSS_UNK) then
+      begin
+        if (pCur[16] > 12) and (pCur[16] <> 14) then
+          CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)', [pCur[16]]);
+
+        if ( pCur[16] = 14 ) then
+          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDTEXTUREALPHA);
+        if ( pCur[16] = 15 ) then
+          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDFACTORALPHA)
+        else
+          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
+      end;
+
+      if (pCur[17] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAARG0, pCur[17]);
+
+      if (pCur[18] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAARG1, pCur[18]);
+
+      if (pCur[19] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAARG2, pCur[19]);
+
+      if (pCur[20] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_RESULTARG, pCur[20]);
+
+      if (pCur[21] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
+
+      if (pCur[29] <> X_D3DTSS_UNK) then
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);
+
+
+      (* Cxbx has this disabled :
+      // To check for unhandled texture stage state changes
+      for(int r=0;r<32;r++)
+      begin
+        static const int unchecked[] =
         begin
-            if (pCur[0] = 5) then
-                CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
+        end;;
 
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0]);
-        end;
-
-        if (pCur[1] <> X_D3DTSS_UNK) then
+        if (pCur[r] <> X_D3DTSS_UNK) then
         begin
-            if (pCur[1] = 5) then
-                CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+          bool pass := true;
 
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1]);
-        end;
-
-        if (pCur[2] <> X_D3DTSS_UNK) then
-        begin
-            if (pCur[2] = 5) then
-                CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
-
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2]);
-        end;
-
-        if (pCur[3] <> X_D3DTSS_UNK) then
-        begin
-            if (pCur[3] = 4) then
-                CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
-
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3]);
-        end;
-
-        if (pCur[4] <> X_D3DTSS_UNK) then
-        begin
-            if (pCur[4] = 4) then
-                CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
-
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MINFILTER, pCur[4]);
-        end;
-
-        if (pCur[5] <> X_D3DTSS_UNK) then
-        begin
-            if (pCur[5] = 4) then
-                CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
-
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
-        end;
-
-        if (pCur[6] <> X_D3DTSS_UNK) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MIPMAPLODBIAS, pCur[6]);
-
-        if (pCur[7] <> X_D3DTSS_UNK) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAXMIPLEVEL, pCur[7]);
-
-        if (pCur[8] <> X_D3DTSS_UNK) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8]);
-
-        // TODO: Use a lookup table, this is not always a 1:1 map
-        if (pCur[12] <> X_D3DTSS_UNK) then
-        begin
-          if (pCur[12] > 12) and (not (pCur[12] >= 17) and (pCur[12] <= 21)) and ((pCur[12] <> 22)) and ((pCur[12] <> 14) and (pCur[12] <> 15)) then
-            CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)', [pCur[12]]);
-
-          // Dirty Hack: 22 = D3DTOP_DOTPRODUCT3
-          if ( pCur[12] = 22 ) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DOTPRODUCT3);
-          else if ( pCur[12] = 14 ) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA);
-          else if ( pCur[12] = 15 ) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDFACTORALPHA);
-          else
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
-        end;
-
-        if (pCur[13] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG0, pCur[13]);
-
-        if (pCur[14] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14]);
-
-        if (pCur[15] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
-
-        // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
-        if (pCur[16] <> X_D3DTSS_UNK) then
-        begin
-          if (pCur[16] > 12) and (pCur[16] <> 14) then
-            CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)', [pCur[16]]);
-
-          if ( pCur[16] = 14 ) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDTEXTUREALPHA);
-          if ( pCur[16] = 15 ) then
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDFACTORALPHA);
-          else
-            g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
-        end;
-
-        if (pCur[17] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAARG0, pCur[17]);
-
-        if (pCur[18] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAARG1, pCur[18]);
-
-        if (pCur[19] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAARG2, pCur[19]);
-
-        if (pCur[20] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_RESULTARG, pCur[20]);
-
-        if (pCur[21] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
-
-        if (pCur[29] <> X_D3DTSS_UNK) then
-          g_pD3DDevice8.SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);
-
-        /** To check for unhandled texture stage state changes
-        for(int r=0;r<32;r++)
-        begin
-          static const int unchecked[] =
+          for(int q=0;q<sizeof(unchecked)/sizeof(int);q++)
           begin
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
-          end;;
-
-          if (pCur[r] <> X_D3DTSS_UNK) then
-          begin
-            bool pass := true;
-
-            for(int q=0;q<sizeof(unchecked)/sizeof(int);q++)
+            if (r = unchecked[q]) then
             begin
-              if (r = unchecked[q]) then
-              begin
-                pass := false;
-                break;
-              end;
+              pass := false;
+              break;
             end;
-
-            if (pass) then
-              EmuWarning('Unhandled TextureState Change @ %d.%d', [v, r]);
           end;
+
+          if (pass) then
+            EmuWarning('Unhandled TextureState Change @ %d.%d', [v, r]);
         end;
-        //**/
+      end;
+      *)
     end;
 
     // if point sprites are enabled, copy stage 3 over to 0
-    if (EmuD3DDeferredRenderState[26] = TRUE) then
+    if (XTL_EmuD3DDeferredRenderState[26] > 0) then
     begin
       // pCur := Texture Stage 3 States
-      ::DWORD *pCur := @(EmuD3DDeferredTextureState[2*32];
-
-      IDirect3DBaseTexture8 *pTexture;
+      pCur := @(XTL_EmuD3DDeferredTextureState[2*32]);
 
       // set the point sprites texture
-      g_pD3DDevice8.GetTexture(3, @pTexture);
+      g_pD3DDevice8.GetTexture(3, {out}pTexture);
       g_pD3DDevice8.SetTexture(0, pTexture);
+      // Dxbx TODO : Should we clear the pTexture interface (and how)?
 
       // disable all other stages
       g_pD3DDevice8.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
       g_pD3DDevice8.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
       // in that case we have to copy over the stage by hand
-      for(int v=0;v<30;v++)
+      for v := 0 to 30-1 do
       begin
         if (pCur[v] <> X_D3DTSS_UNK) then
         begin
-          ::DWORD dwValue;
-
-          g_pD3DDevice8.GetTextureStageState(3, (D3DTEXTURESTAGESTATETYPE)v, @dwValue);
-          g_pD3DDevice8.SetTextureStageState(0, (D3DTEXTURESTAGESTATETYPE)v, dwValue);
+          g_pD3DDevice8.GetTextureStageState(3, D3DTEXTURESTAGESTATETYPE(v), {Out}dwValue);
+          g_pD3DDevice8.SetTextureStageState(0, D3DTEXTURESTAGESTATETYPE(v), dwValue);
         end;
       end;
     end;
   end;
-*)
 
-(*
   if (g_bFakePixelShaderLoaded) then
   begin
-    g_pD3DDevice8.SetRenderState(D3DRS_FOGENABLE, FALSE);
+    g_pD3DDevice8.SetRenderState(D3DRS_FOGENABLE, 0);
 
     // programmable pipeline
     //*
-    for(int v=0;v<4;v++)
+    for v := 0 to 4-1 do
     begin
       g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
       g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
     end;
     //*/
 
+    (* Cxbx has this disabled :
     // fixed pipeline
-    /*
     for(int v=0;v<4;v++)
     begin
       g_pD3DDevice8.SetTextureStageState(v, D3DTSS_COLOROP,   D3DTOP_MODULATE);
@@ -362,9 +368,8 @@ begin
     g_pD3DDevice8.SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
     g_pD3DDevice8.SetRenderState(D3DRS_LIGHTING,TRUE);
     g_pD3DDevice8.SetRenderState(D3DRS_AMBIENT, $FFFFFFFF);
-    //*/
+    *)
   end;
-*)
 end;
 
 exports

@@ -24,7 +24,9 @@ interface
 uses
   // Delphi
   Windows,
-  SysUtils;
+  SysUtils,
+  // Jedi
+  JwaWinType;
 
 const
   CLOCKS_PER_SEC = 1000; // Because we're implementing clock() using GetTickCount()
@@ -36,10 +38,10 @@ type
 
   TRawSection = TVarByteArray;
   
-  TDWordArray = array[0..10000] of DWord;
+  TDWordArray = array [0..(MaxInt div SizeOf(DWord)) - 1] of DWord;
   PDWordArray = ^TDWordArray;
 
-  TByteArray = array [0..MaxInt-1] of Byte;
+  TByteArray = array [0..(MaxInt div SizeOf(Byte)) -1] of Byte;
   PByteArray = ^TByteArray;
 
 {$IF NOT DECLARED(PDWord)}
@@ -89,13 +91,14 @@ type
   // Dxbx note : Signed is actually "signed int" - see http://home.att.net/~jackklein/c/inttypes.html
   Signed = Integer;
 
-  // Note : These types are copied from JwaWinType, so we don't have to include that unit :
-  PCSZ = ^AnsiChar; // Dxbx assumption!
-  PVOID = Pointer;
-  LONG = Longint;
-  INT = Integer;
-  size_t = Longword;
-  wchar_t = WideChar;
+  // Note : These types are aliasses to JwaWinType, so we don't have to include that unit :
+  PCSZ = JwaWinType.PCSZ; // = ^AnsiChar; // Dxbx assumption!
+  PVOID = JwaWinType.PVOID; // = Pointer;
+  LONG = JwaWinType.LONG; // = Longint;
+  INT = JwaWinType.INT; // = Integer;
+  size_t = JwaWinType.size_t; // = Longword;
+  wchar_t = JwaWinType.wchar_t; // = WideChar;
+
   pwchar_t = PWideChar;
   
 {$IFNDEF UNICODE}
@@ -103,6 +106,11 @@ type
 
 function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
 {$ENDIF}
+
+function tolower(c: AnsiChar): AnsiChar;
+function toupper(c: AnsiChar): AnsiChar;
+function isdigit(c: AnsiChar): Boolean;
+function isxdigit(c: AnsiChar): Boolean;
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
@@ -125,6 +133,30 @@ end;
 {$ENDIF}
 
 // c function implementations
+
+function tolower(c: AnsiChar): AnsiChar;
+begin
+  Result := c;
+  if (c >= 'A') and (c <= 'Z') then
+    Result := AnsiChar(Ord(c) + Ord('a') - Ord('A'));
+end;
+
+function toupper(c: AnsiChar): AnsiChar;
+begin
+  Result := c;
+  if (c >= 'a') and (c <= 'z') then
+    Result := AnsiChar(Ord(c) + Ord('A') - Ord('a'));
+end;
+
+function isdigit(c: AnsiChar): Boolean;
+begin
+  Result := c in ['0'..'9'];
+end;
+
+function isxdigit(c: AnsiChar): Boolean;
+begin
+  Result := c in ['0'..'9', 'A'..'Z', 'a'..'z'];
+end;
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 begin

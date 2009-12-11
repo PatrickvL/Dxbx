@@ -100,7 +100,7 @@ end;
 
 var
   // Table of free LDT entries
-  FreeLDTEntries: array[0..MAXIMUM_XBOX_THREADS - 1] of UInt16;
+  FreeLDTEntries: array [0..MAXIMUM_XBOX_THREADS - 1] of UInt16;
 
   // Critical section lock
   EmuLDTLock: Windows._RTL_CRITICAL_SECTION;

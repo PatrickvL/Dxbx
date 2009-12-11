@@ -163,7 +163,7 @@ type
   XINPUT_FEEDBACK_HEADER = packed record
     dwStatus: DWord;
     hEvent: HANDLE; // OPTIONAL ;
-    Reserved: array[1..58] of Byte;
+    Reserved: array [1..58] of Byte;
   end;
   PXINPUT_FEEDBACK_HEADER = ^XINPUT_FEEDBACK_HEADER;
 
@@ -176,10 +176,10 @@ type
 
 var
   // XInputSetState status waiters
-  g_pXInputSetStateStatus: array[0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
+  g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
   // XInputOpen handles
-  g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of Handle;
+  g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of Handle;
 
   // Xbe section list
   g_SectionList: PXBE_SECTIONLIST;

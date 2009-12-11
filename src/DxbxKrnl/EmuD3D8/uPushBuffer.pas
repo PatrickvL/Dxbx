@@ -695,7 +695,7 @@ var
   VBDesc: D3DVERTEXBUFFER_DESC;
   pVBData: PBYTE;
   uiStride: UINT;
-  szFileName: array[0..128 - 1] of Char;
+  szFileName: array [0..128 - 1] of Char;
 begin
   if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;

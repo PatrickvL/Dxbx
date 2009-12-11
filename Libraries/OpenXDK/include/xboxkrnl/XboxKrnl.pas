@@ -464,7 +464,7 @@ FILE_DIRECTORY_INFORMATION  = packed record _FILE_DIRECTORY_INFORMATION
     LARGE_INTEGER   AllocationSize;
     ULONG           FileAttributes;
     ULONG           FileNameLength;
-                FileName: array[0..1-1] of CHAR;        // Offset: 0x40
+                FileName: array [0..1-1] of CHAR;        // Offset: 0x40
  end;
 *)
 // *******************************************
@@ -588,13 +588,13 @@ type
     begin
         struct _PCI_HEADER_TYPE_0
         begin
-               BaseAddresses: array[0..PCI_TYPE0_ADDRESSES-1] of ULONG; // 0x10
+               BaseAddresses: array [0..PCI_TYPE0_ADDRESSES-1] of ULONG; // 0x10
             ULONG   CIS;
             USHORT  SubVendorID;
             USHORT  SubSystemID;
             ULONG   ROMBaseAddress;
             UCHAR   CapabilitiesPtr;
-               Reserved1: array[0..3-1] of UCHAR;
+               Reserved1: array [0..3-1] of UCHAR;
             ULONG   Reserved2;
             UCHAR   InterruptLine;      //
             UCHAR   InterruptPin;       // (ro)
@@ -603,7 +603,7 @@ type
          end;e0;
      end;u;
 
-     DeviceSpecific: array[0..192-1] of UCHAR;
+     DeviceSpecific: array [0..192-1] of UCHAR;
 
  end;
 PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
@@ -650,7 +650,7 @@ type
   LAUNCH_DATA_HEADER = packed record
     dwLaunchDataType: DWORD;
     dwTitleId: DWORD;
-    szLaunchPath: array[0..520 - 1] of UCHAR;
+    szLaunchPath: array [0..520 - 1] of UCHAR;
     dwFlags: DWORD;
   end;
   PLAUNCH_DATA_HEADER = ^LAUNCH_DATA_HEADER;
@@ -661,8 +661,8 @@ type
 type
   LAUNCH_DATA_PAGE = packed record
     Header: LAUNCH_DATA_HEADER;
-    Pad: array[0..492 - 1] of UCHAR;
-    LaunchData: array[0..3072 - 1] of UCHAR;
+    Pad: array [0..492 - 1] of UCHAR;
+    LaunchData: array [0..3072 - 1] of UCHAR;
   end;
   PLAUNCH_DATA_PAGE = ^LAUNCH_DATA_PAGE;
 
@@ -771,7 +771,7 @@ type
 type
 
 RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = packed record
-                   Unknown: array[0..4-1] of DWORD;                                     // 0x00
+                   Unknown: array [0..4-1] of DWORD;                                     // 0x00
     LongInt                LockCount;                                      // 0x10
     LongInt                RecursionCount;                                 // 0x14
     ULONG               OwningThread;                                   // 0x18
@@ -810,9 +810,9 @@ type
 // ******************************************************************
 type
   KTHREAD = packed record
-    UnknownA: array[0..$28 - 1] of UCHAR;
+    UnknownA: array [0..$28 - 1] of UCHAR;
     TlsData: PVOID; // 0x28
-    UnknownB: array[0..$E4 - 1] of UCHAR; // 0x2C
+    UnknownB: array [0..$E4 - 1] of UCHAR; // 0x2C
   end;
   PKTHREAD = ^KTHREAD;
 
@@ -826,7 +826,7 @@ type
 type
   ETHREAD = packed record
     Tcb: KTHREAD;
-    UnknownA: array[0..$1C - 1] of UCHAR; // 0x110
+    UnknownA: array [0..$1C - 1] of UCHAR; // 0x110
     UniqueThread: DWORD; // 0x12C
   end;
   PETHREAD = ^ETHREAD;
@@ -845,7 +845,7 @@ type
     IdleThread: PKTHREAD; // 0x08, KPCR : 0x30
 
     // This is the total size of the structure (presumably)
-    Unknown: array[0..$250 - 1] of UCHAR; // 0x0C, KPCR : 0x34
+    Unknown: array [0..$250 - 1] of UCHAR; // 0x0C, KPCR : 0x34
   end;
   PKPRCB = ^KPRCB;
 

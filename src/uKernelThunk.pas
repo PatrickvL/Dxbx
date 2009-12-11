@@ -51,7 +51,7 @@ function CxbxKrnl_KernelThunkTable: PKernelThunkTable; cdecl;
 implementation
 
 var
-  KernelThunkTable: packed array[0..NUMBER_OF_THUNKS - 1] of Pointer = (
+  KernelThunkTable: packed array [0..NUMBER_OF_THUNKS - 1] of Pointer = (
     {000}@xboxkrnl_UnknownAPI000,
     {001}@xboxkrnl_AvGetSavedDataAddress,
     {002}@xboxkrnl_AvSendTVEncoderOption,

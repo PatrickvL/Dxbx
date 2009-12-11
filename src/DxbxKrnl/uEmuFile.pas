@@ -68,7 +68,7 @@ type
 
 var
   // Array of EmuHandles in the system
-  {EmuHandle.}Handles: array[0..EMU_MAX_HANDLES - 1] of TEmuHandle;
+  {EmuHandle.}Handles: array [0..EMU_MAX_HANDLES - 1] of TEmuHandle;
 
   // Pointer to first free handle in array, or NULL if none
   {volatile EmuHandle.}FirstFree: TEmuHandle;

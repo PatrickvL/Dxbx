@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmuFS,
   uEmuFile,
@@ -732,10 +733,14 @@ end;
 function xboxkrnl_RtlLowerChar(
   Character: CHAR
   ): CHAR; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Low(Result);
+
+  DbgPrintf('EmuKrnl : RtlLowerChar(%c)', [Character]);
+
+  Result := tolower(Character);
+  
   EmuSwapFS(fsXbox);
 end;
 
