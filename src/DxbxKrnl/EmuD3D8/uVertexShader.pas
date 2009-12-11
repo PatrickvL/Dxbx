@@ -43,17 +43,16 @@ uses
   , uEmuD3D8;
 
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-(*var
-  i: DWord; *)
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  i: DWord;
 begin
-(*  for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
-  begin
+  for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
     CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes);
-  end;
+
   CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches);
   pVertexShader.VertexDynamicPatch.pStreamPatches := nil;
-  pVertexShader.VertexDynamicPatch.NbrStreams := 0; *)
+  pVertexShader.VertexDynamicPatch.NbrStreams := 0;
 end;
 
 // Checks for failed vertex shaders, and shaders that would need patching

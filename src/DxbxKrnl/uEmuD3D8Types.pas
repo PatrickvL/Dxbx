@@ -214,16 +214,19 @@ type
   X_D3DPIXELSHADERDEF = _X_D3DPIXELSHADERDEF;
   PX_D3DPIXELSHADERDEF = ^X_D3DPIXELSHADERDEF;
 
-  STREAM_DYNAMIC_PATCH = packed record
+  _STREAM_DYNAMIC_PATCH = packed record
     NeedPatch: BOOL;       // This is to know whether is data which must be patched
     ConvertedStride: DWord;
     NbrTypes: DWord;        // Number of the stream data types
-    pTypes: UINT;         // The stream data types (xbox)
+    pTypes: PUINT;         // The stream data types (xbox)
   end;
+  STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH;
+  TSTREAM_DYNAMIC_PATCHArray = array [0..MaxInt div SizeOf(STREAM_DYNAMIC_PATCH) - 1] of STREAM_DYNAMIC_PATCH;
+  PSTREAM_DYNAMIC_PATCH = ^TSTREAM_DYNAMIC_PATCHArray;
 
   VERTEX_DYNAMIC_PATCH = packed record
     NbrStreams: UINT; // The number of streams the vertex shader uses
-    pStreamPatches: STREAM_DYNAMIC_PATCH;
+    pStreamPatches: PSTREAM_DYNAMIC_PATCH;
   end;
   PVERTEX_DYNAMIC_PATCH = ^VERTEX_DYNAMIC_PATCH;
 
@@ -487,6 +490,10 @@ type
 
 
   function IsSpecialResource(x: DWORD): Boolean;
+
+var
+  // cached active texture
+  EmuD3DActiveTexture: array[0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
 
 implementation
 
