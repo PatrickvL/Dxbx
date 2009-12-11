@@ -792,7 +792,7 @@ function XTL_EmuXInputOpen(
   dwSlot: DWord;
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
 ): Handle; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:75
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
   pPH: PPOLLING_PARAMETERS_HANDLE;
 begin
@@ -827,11 +827,11 @@ begin
         pPH.pPollingParameters := nil;
       end;
 
-      (*g_hInputHandle[dwPort] := pPH; *)
+      g_hInputHandle[dwPort] := Handle(pPH);
     end
     else
     begin
-      (*pPH := POLLING_PARAMETERS_HANDLE(g_hInputHandle[dwPort]);*)
+      pPH := PPOLLING_PARAMETERS_HANDLE(g_hInputHandle[dwPort]);
 
       if (pPollingParameters <> nil) then
       begin
