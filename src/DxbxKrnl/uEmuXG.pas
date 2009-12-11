@@ -48,7 +48,7 @@ implementation
 
 function XTL_EmuXGIsSwizzledFormat(Format : D3DFORMAT) : PVOID; stdcall;
 begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   EmuSwapFS();   // Win2k/XP FS
   DbgPrintf('EmuXapi: EmuXGIsSwizzledFormat\n' +
          #13#10+'(' +
@@ -75,7 +75,7 @@ begin
 {
     EmuSwapFS();   // Win2k/XP FS
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
            "(\n"
            "   pSource             : 0x%.08X\n"
@@ -145,7 +145,7 @@ end;
 {
     EmuSwapFS();   // Win2k/XP FS
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
            "(\n"
            "   pSource             : 0x%.08X\n"

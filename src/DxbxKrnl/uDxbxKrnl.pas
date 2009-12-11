@@ -110,7 +110,7 @@ begin
   // debug console allocation (if configured)
   CreateLogs(DbgMode, szDebugFileName); // Initialize logging interface
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);
 {$ENDIF}
 
@@ -123,41 +123,37 @@ begin
   // For Unicode Conversions
   // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
 
-  // debug trace
-  begin
 {$IFDEF _DEBUG_TRACE}
-    DbgPrintf('EmuMain : Debug Trace Enabled.');
+  DbgPrintf('EmuMain : Debug Trace Enabled.');
 
-    DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit' +
-      #13#10'(' +
-      #13#10'  hwndParent       : 0x%.8x' +
-      #13#10'  pTLSData         : 0x%.8x' +
-      #13#10'  pTLS             : 0x%.8x' +
-      #13#10'  pLibraryVersion  : 0x%.8x' +
-      #13#10'  DebugConsole     : 0x%.8x' +
-      #13#10'  DebugFileName    : 0x%.8x' +
-      #13#10'  pXBEHeader       : 0x%.8x' +
-      #13#10'  dwXBEHeaderSize  : 0x%.8x' +
-      #13#10'  Entry            : 0x%.8x' +
-      #13#10')', [
-        @CxbxKrnlInit,
-        hwndParent,
-        pTLSData,
-        pTLS,
-        pLibraryVersion,
-        Ord(DbgMode),
-        Pointer(szDebugFileName), // Print as pointer, not as string! (will be added automatically)
-        pXbeHeader,
-        dwXbeHeaderSize,
-        Addr(Entry)
-      ]);
-
+  DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit' +
+    #13#10'(' +
+    #13#10'  hwndParent       : 0x%.8x' +
+    #13#10'  pTLSData         : 0x%.8x' +
+    #13#10'  pTLS             : 0x%.8x' +
+    #13#10'  pLibraryVersion  : 0x%.8x' +
+    #13#10'  DebugConsole     : 0x%.8x' +
+    #13#10'  DebugFileName    : 0x%.8x' +
+    #13#10'  pXBEHeader       : 0x%.8x' +
+    #13#10'  dwXBEHeaderSize  : 0x%.8x' +
+    #13#10'  Entry            : 0x%.8x' +
+    #13#10')', [
+      @CxbxKrnlInit,
+      hwndParent,
+      pTLSData,
+      pTLS,
+      pLibraryVersion,
+      Ord(DbgMode),
+      Pointer(szDebugFileName), // Print as pointer, not as string! (will be added automatically)
+      pXbeHeader,
+      dwXbeHeaderSize,
+      Addr(Entry)
+    ]);
 {$ELSE}
-{$IFDEF DXBX_DEBUG}
-    DbgPrintf('EmuMain : Debug Trace Disabled.');
+ {$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Debug Trace Disabled.');
+ {$ENDIF}
 {$ENDIF}
-{$ENDIF}
-  end;
 
   // Load the necessary pieces of XBEHeader
   begin
@@ -179,7 +175,7 @@ begin
   g_EmuShared.GetXbePath({var}szBuffer);
   if szBuffer <> '' then
   begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuMain : XBEPath := ' + szBuffer);
 {$ENDIF}
     SetCurrentDirectory(PChar(szBuffer));
@@ -197,7 +193,7 @@ begin
   if g_hCurDir = INVALID_HANDLE_VALUE then
     CxbxKrnlCleanup('Could not map D:\');
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuMain : CurDir := ' + szBuffer);
 {$ENDIF}
 
@@ -229,7 +225,7 @@ begin
       if g_hTDrive = INVALID_HANDLE_VALUE then
         CxbxKrnlCleanup('Could not map T:\');
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuMain : T Data := ' + g_strTDrive);
 {$ENDIF}
     end;
@@ -248,7 +244,7 @@ begin
       if g_hUDrive = INVALID_HANDLE_VALUE then
         CxbxKrnlCleanup('Could not map U:\');
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuMain : U Data := ' + g_strUDrive);
 {$ENDIF}
     end;
@@ -270,7 +266,7 @@ begin
       if g_hUDrive = INVALID_HANDLE_VALUE then
         CxbxKrnlCleanup('Could not map Z:\');
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuMain : Z Data := ' + g_strZDrive);
 {$ENDIF}
     end;
@@ -295,7 +291,7 @@ begin
   end;
 
   
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuMain : Initializing Direct3D.');
 {$ENDIF}
 
@@ -303,7 +299,7 @@ begin
 
   EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuMain : Initial thread starting.');
 {$ENDIF}
 
@@ -343,7 +339,7 @@ begin
   except
     on E: Exception do
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
       DbgPrintf(JclLastExceptStackListToString);
@@ -357,7 +353,7 @@ begin
   // Restore original exception filter :
   SetUnhandledExceptionFilter(OldExceptionFilter);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuMain : Initial thread ended.');
 {$ENDIF}
 
@@ -494,7 +490,7 @@ procedure EmuPanic(); stdcall;
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuMain : EmuPanic');
 {$ENDIF}
 
@@ -506,7 +502,7 @@ end;
 procedure CxbxKrnlNoFunc;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuMain : CxbxKrnlNoFunc();');
   EmuSwapFS(fsXbox);

@@ -152,7 +152,7 @@ begin
   if (dwBytes = pThis.EmuBufferDesc.dwBufferBytes) or (dwBytes = 0) then
       Exit;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuResizeIDirectSoundBuffer8 : Resizing! ($%.08X.$%.08X)', [pThis.EmuBufferDesc.dwBufferBytes, dwBytes]);
 {$ENDIF}
 
@@ -233,7 +233,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreate' +
       #13#10'(' +
       #13#10'   pguidDeviceId             : 0x%.08X' +
@@ -288,7 +288,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound8_AddRef' +
       #13#10'(' +
       #13#10'   pThis                     : 0x%.08X' +
@@ -312,7 +312,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound8_Release' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -341,7 +341,7 @@ function XTL_EmuCDirectSound_GetSpeakerConfig(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuCDirectSound_GetSpeakerConfig' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -369,7 +369,7 @@ function XTL_EmuIDirectSound8_DownloadEffectsImage(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound8_DownloadEffectsImage' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -393,7 +393,7 @@ procedure XTL_EmuDirectSoundDoWork(); stdcall;
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundDoWork();');
 {$ENDIF}
 
@@ -417,7 +417,7 @@ function XTL_EmuIDirectSound8_SetOrientation(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetOrientation' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -449,7 +449,7 @@ function XTL_EmuIDirectSound8_SetDistanceFactor
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetDistanceFactor' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -476,7 +476,7 @@ function XTL_EmuIDirectSound8_SetRolloffFactor
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetRolloffFactor' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -503,7 +503,7 @@ function XTL_EmuIDirectSound8_SetDopplerFactor
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetDopplerFactor' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -528,21 +528,17 @@ function XTL_EmuIDirectSound8_SetI3DL2Listener
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  // debug trace
- {$IFDEF DXBX_DEBUG}
-
-  begin
-      EmuSwapFS(fsWindows);
-      DbgPrintf('EmuDSound : EmuIDirectSound8_SetI3DL2Listener' +
-             #13#10'(' +
-             #13#10'   pThis                     : 0x%.08X' +
-             #13#10'   pDummy                    : 0x%.08X' +
-             #13#10'   dwApply                   : 0x%.08X' +
-             #13#10');',
-             [pThis, pDummy, dwApply]);
-      EmuSwapFS(fsXbox);
-   end;
-  {$ENDIF}
+{$IFDEF _DEBUG_TRACE}
+  EmuSwapFS(fsWindows);
+  DbgPrintf('EmuDSound : EmuIDirectSound8_SetI3DL2Listener' +
+     #13#10'(' +
+     #13#10'   pThis                     : 0x%.08X' +
+     #13#10'   pDummy                    : 0x%.08X' +
+     #13#10'   dwApply                   : 0x%.08X' +
+     #13#10');',
+     [pThis, pDummy, dwApply]);
+  EmuSwapFS(fsXbox);
+{$ENDIF}
 
   // Cxbx TODO: Actually do something
 
@@ -557,20 +553,19 @@ function XTL_EmuIDirectSound8_SetMixBinHeadroom
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  // debug trace
-  {$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   begin
-      EmuSwapFS(fsWindows);
-      DbgPrintf('EmuDSound : EmuIDirectSound8_SetMixBinHeadroom' +
-             #13#10'(' +
-             #13#10'   pThis                     : 0x%.08X' +
-             #13#10'   dwMixBinMask              : 0x%.08X' +
-             #13#10'   dwHeadroom                : 0x%.08X' +
-             #13#10');',
-             [pThis, dwMixBinMask, dwHeadroom]);
-      EmuSwapFS(fsXbox);
-   end;
-  {$ENDIF}
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuDSound : EmuIDirectSound8_SetMixBinHeadroom' +
+        #13#10'(' +
+        #13#10'   pThis                     : 0x%.08X' +
+        #13#10'   dwMixBinMask              : 0x%.08X' +
+        #13#10'   dwHeadroom                : 0x%.08X' +
+        #13#10');',
+              [pThis, dwMixBinMask, dwHeadroom]);
+    EmuSwapFS(fsXbox);
+  end;
+{$ENDIF}
 
   // Cxbx TODO: Actually do something
 
@@ -584,8 +579,7 @@ function XTL_EmuIDirectSoundBuffer8_SetMixBins
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  // debug trace
-{$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   begin
       EmuSwapFS(fsWindows);
       DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMixBins' +
@@ -610,8 +604,7 @@ function XTL_EmuIDirectSoundBuffer8_SetMixBinVolumes
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  // debug trace
-{$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   begin
       EmuSwapFS(fsWindows);
       DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMixBinVolumes' +
@@ -638,8 +631,7 @@ function XTL_EmuIDirectSound8_SetPosition(
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  // debug trace
-{$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   begin
       EmuSwapFS(fsWindows);
       DbgPrintf('EmuDSound : EmuIDirectSound8_SetPosition' +
@@ -669,8 +661,7 @@ function XTL_EmuIDirectSound8_SetVelocity(
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  // debug trace
-{$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   begin
       EmuSwapFS(fsWindows);
       DbgPrintf('EmuDSound : EmuIDirectSound8_SetVelocity' +
@@ -698,8 +689,7 @@ function XTL_EmuIDirectSound8_SetAllParameters(
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  // debug trace
-{$IFDEF DXBX_DEBUG}
+{$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
     DbgPrintf('EmuDSound : EmuIDirectSound8_SetAllParameters' +
@@ -726,7 +716,7 @@ function XTL_EmuCDirectSound_CommitDeferredSettings(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuCDirectSound_CommitDeferredSettings' +
          #13#10'(' +
          #13#10'   pThis                     : $%.08X' +
@@ -750,7 +740,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer'
            #13#10'('
            #13#10'   pdsbd                     : $%.08X'
@@ -833,7 +823,7 @@ begin
     ppBuffer^.EmuLockBytes2 := 0;
     ppBuffer^.EmuFlags := dwEmuFlags;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := $%.08X, bytes := $%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes);
 {$ENDIF}
 
@@ -877,7 +867,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
        EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
        DbgPrintf('EmuDSound : EmuIDirectSound8_CreateBuffer'
                #13#10'('
                #13#10'   pThis                     : $%.08X'
@@ -910,7 +900,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSound8_CreateSoundBuffer'
                #13#10'('
                #13#10'   pdsbd                     : $%.08X'
@@ -937,7 +927,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetBufferData'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -968,7 +958,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetPlayRegion'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1004,7 +994,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_Lock'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1062,7 +1052,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetHeadroom'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1089,7 +1079,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetLoopRegion'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1119,7 +1109,7 @@ begin
     EmuSwapFS(fsWindows);
 
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_Release'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1168,7 +1158,7 @@ begin
     EmuSwapFS(fsWindows);
 
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetPitch'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1194,7 +1184,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_GetStatus'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1229,7 +1219,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetCurrentPosition'
            #13#10'('
            #13#10'   pThis                     : $%.08X'
@@ -1260,7 +1250,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_GetCurrentPosition'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1281,7 +1271,7 @@ begin
 
     if (pdwCurrentPlayCursor <> 0 and pdwCurrentWriteCursor <> 0) then
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d', [*pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
 {$ENDIF}
      end;
@@ -1303,7 +1293,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_Play'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1360,7 +1350,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_Stop'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1386,7 +1376,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_StopEx'
            #13#10'('
            #13#10'   pBuffer                   : 0x%.08X'
@@ -1416,7 +1406,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetVolume'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1446,7 +1436,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetFrequency'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1473,7 +1463,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuDirectSoundCreateStream'
            #13#10'('
            #13#10'   pdssd                     : 0x%.08X'
@@ -1538,7 +1528,7 @@ begin
     ppStream^.EmuLockPtr2 := 0;
     ppStream^.EmuLockBytes2 := 0;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuDirectSoundCreateStream, *ppStream := 0x%.08X', [*ppStream);
 {$ENDIF}
 
@@ -1582,7 +1572,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSound8_CreateStream'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -1616,7 +1606,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetVolume'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1643,7 +1633,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetRolloffFactor'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1666,7 +1656,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_AddRef'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1688,7 +1678,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_Release'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1735,7 +1725,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_GetStatus'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1764,7 +1754,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_Process'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1803,7 +1793,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_Discontinuity'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1824,7 +1814,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
    DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush();',[pThis);
 {$ENDIF}
 
@@ -1841,7 +1831,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSound_SynchPlayback (0x%.08X);', [pUnknown]);
 {$ENDIF}
 
@@ -1860,7 +1850,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_Pause'
            #13#10'('
            #13#10'   pStream                   : 0x%.08X'
@@ -1884,7 +1874,7 @@ end;
 begin 
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundStream_SetHeadroom'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1912,7 +1902,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetConeAngles'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1941,7 +1931,7 @@ end;
 begin 
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetConeOutsideVolume'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1969,7 +1959,7 @@ end;
 begin 
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetAllParameters'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -1997,7 +1987,7 @@ end;
 begin 
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetMaxDistance'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2025,7 +2015,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetMinDistance'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2055,7 +2045,7 @@ end;
 begin 
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetVelocity'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2087,7 +2077,7 @@ end;
 begin 
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetConeOrientation'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2119,7 +2109,7 @@ end;
 begin 
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetPosition'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2148,7 +2138,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuCDirectSoundStream_SetFrequency'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2175,7 +2165,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundStream_SetI3DL2Source'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2202,7 +2192,7 @@ begin
   EmuSwapFS(fsWindows);
 
   (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSoundStream_Unknown1' +
          #13#10'(' +
          #13#10'   pThis                     : 0x%.08X' +
@@ -2232,7 +2222,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMaxDistance'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2263,7 +2253,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMinDistance'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2294,7 +2284,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetRolloffFactor'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2326,7 +2316,7 @@ begin
     begin 
         EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetDistanceFactor'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2358,7 +2348,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeAngles'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2393,7 +2383,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOrientation'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2426,7 +2416,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOutsideVolume'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2459,7 +2449,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetPosition'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2494,7 +2484,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetVelocity'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2527,7 +2517,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOutsideVolume'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2558,7 +2548,7 @@ begin
     #ifdef _DEBUG_TRACE
     begin 
         EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetI3DL2Source'
                #13#10'('
                #13#10'   pThis                     : 0x%.08X'
@@ -2590,7 +2580,7 @@ begin
     // debug trace
     #ifdef _DEBUG_TRACE
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         printf('EmuDSound : EmuIDirectSoundBuffer8_SetFormat'
                #13#10'('
                #13#10'   pBuffer                   : 0x%.08X'
@@ -2615,7 +2605,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuDirectSoundUseFullHRTF()');
 {$ENDIF}
 
@@ -2634,7 +2624,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetLFO'
            #13#10'('
            #13#10'   pThis                     : 0x%.08X'
@@ -2661,7 +2651,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuXAudioCreateAdpcmFormat'
            #13#10'('
            #13#10'   nChannels                 : 0x%.04X'
@@ -2697,7 +2687,7 @@ HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetRolloffCurve
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetRolloffCurve'
        #13#10'('
        #13#10'   pThis                     : 0x%.08X'
@@ -2725,7 +2715,7 @@ function XTL_EmuIDirectSoundStream_SetVolume(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSoundStream_SetVolume' +
            #13#10'(' +
            #13#10'   pStream                   : 0x%.08X' +

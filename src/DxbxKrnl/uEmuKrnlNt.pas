@@ -257,7 +257,7 @@ function xboxkrnl_NtAllocateVirtualMemory(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl (0x%X): NtAllocateVirtualMemory'+
       #13#10'('+
       #13#10'   BaseAddress         : 0x%.8x (0x%.8x)'+
@@ -289,7 +289,7 @@ function xboxkrnl_NtClearEvent(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtClearEvent'+
       #13#10'('+
       #13#10'   EventHandle         : 0x%.8x' +
@@ -318,7 +318,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtClose' +
     #13#10'(' +
     #13#10'   Handle              : 0x%.8x' +
@@ -362,7 +362,7 @@ begin
 
 (*    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateEvent\n"
            "(\n"
            "   EventHandle         : 0x%.08X\n"
@@ -398,7 +398,7 @@ begin
     if(FAILED(ret))
         EmuWarning("NtCreateEvent Failed!");
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
 {$ENDIF}
 
@@ -435,7 +435,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateFile' +
      #13#10'(' +
      #13#10'   FileHandle          : 0x%.08X' +
@@ -459,7 +459,7 @@ begin
 
   if Assigned(szBuffer) then
   begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
 {$ENDIF}
 
@@ -474,7 +474,7 @@ begin
 
       ObjectAttributes.RootDirectory := g_hCurDir;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
@@ -487,7 +487,7 @@ begin
 
       ObjectAttributes.RootDirectory := g_hTDrive;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\T\%s"', [szBuffer]);
@@ -499,7 +499,7 @@ begin
 
       ObjectAttributes.RootDirectory := g_hUDrive;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\U\%s"', [szBuffer]);
@@ -511,7 +511,7 @@ begin
 
       ObjectAttributes.RootDirectory := g_hZDrive;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\Z\%s"', [szBuffer]);
@@ -566,7 +566,7 @@ begin
   // parent directory. This behavior is required by Xapi FindFirstFile.
   if (Result = STATUS_NOT_A_DIRECTORY) then
   begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuKrnl : NtCreateFile fallback to parent directory');
 {$ENDIF}
 
@@ -593,7 +593,7 @@ begin
     // Modify buffer again.
     ReplaceChar := szBuffer[ReplaceIndex];
     szBuffer[ReplaceIndex] := #0;
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('  New:"$CurRoot\%s"', [szBuffer]);
 {$ENDIF}
 
@@ -606,7 +606,7 @@ begin
     );
   end;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   if FAILED(Result) then
     DbgPrintf('EmuKrnl : NtCreateFile Failed! (0x%.08X)', [Result])
   else
@@ -647,7 +647,7 @@ begin
 
 (*    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateMutant\n"
            "(\n"
            "   MutantHandle        : 0x%.08X\n"
@@ -681,7 +681,7 @@ begin
     if(FAILED(ret))
         EmuWarning("NtCreateMutant Failed!");
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
 {$ENDIF}
 
@@ -703,7 +703,7 @@ function xboxkrnl_NtCreateSemaphore(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateSemaphore' +
      #13#10'(' +
      #13#10'   SemaphoreHandle     : 0x%.08X' +
@@ -728,7 +728,7 @@ begin
   if (FAILED(Result)) then
     EmuWarning('NtCreateSemaphore failed!');
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateSemaphore SemaphoreHandle = 0x%.08X', [SemaphoreHandle^]);
 {$ENDIF}
 
@@ -769,7 +769,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtDuplicateObject\n"
            "(\n"
            "   SourceHandle        : 0x%.08X\n"
@@ -809,7 +809,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtFlushBuffersFile\n"
            "(\n"
            "   FileHandle          : 0x%.08X\n"
@@ -838,7 +838,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
            "(\n"
            "   BaseAddress         : 0x%.08X\n"
@@ -884,10 +884,9 @@ function xboxkrnl_NtOpenFile(
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-
   EmuSwapFS(fsWindows);
-    // debug trace
-{$IFDEF DXBX_DEBUG}
+
+{$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuKrnl : NtOpenFile' +
     #13#10'(' +
     #13#10'   FileHandle          : 0x%.08X' +
@@ -941,7 +940,7 @@ function xboxkrnl_NtQueueApcThread(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
      #13#10'(' +
      #13#10'   ThreadHandle         : 0x%.08X' +
@@ -986,7 +985,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
            "(\n"
            "   FileHandle           : 0x%.08X\n"
@@ -1089,7 +1088,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
            "(\n"
            "   ObjectAttributes    : 0x%.08X (%s)\n"
@@ -1135,7 +1134,7 @@ function xboxkrnl_NtQueryInformationFile(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryInformationFile' +
      #13#10'(' +
      #13#10'   FileHandle          : 0x%.08X' +
@@ -1170,7 +1169,7 @@ begin
 
     if (FileInfo = FileNetworkOpenInformation) and (pInfo.AllocationSize.LowPart = 57344) then
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('pInfo.AllocationSize : %d', pInfo->AllocationSize.LowPart);
       DbgPrintf('pInfo.EndOfFile      : %d', pInfo->EndOfFile.LowPart);
 {$ENDIF}
@@ -1237,7 +1236,7 @@ function xboxkrnl_NtQueryVirtualMemory(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryVirtualMemory' +
      #13#10'(' +
      #13#10'   pBaseAddress         : 0x%.08X' +
@@ -1274,7 +1273,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtQueryVolumeInformationFile\n"
            "(\n"
            "   FileHandle          : 0x%.08X\n"
@@ -1333,7 +1332,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtReadFile\n"
            "(\n"
            "   FileHandle          : 0x%.08X\n"
@@ -1382,7 +1381,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtReleaseMutant\n"
            "(\n"
            "   MutantHandle         : 0x%.08X\n"
@@ -1414,7 +1413,7 @@ function xboxkrnl_NtReleaseSemaphore(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtReleaseSemaphore' +
      #13#10'(' +
      #13#10'   SemaphoreHandle      : 0x%.08X' +
@@ -1449,7 +1448,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtResumeThread\n"
            "(\n"
            "   ThreadHandle         : 0x%.08X\n"
@@ -1479,7 +1478,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtSetEvent\n"
            "(\n"
            "   EventHandle          : 0x%.08X\n"
@@ -1512,7 +1511,7 @@ function xboxkrnl_NtSetInformationFile(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtSetInformationFile' +
          #13#10'(' +
          #13#10'   FileHandle           : 0x%.08X' +
@@ -1571,7 +1570,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtSuspendThread\n"
            "(\n"
            "   ThreadHandle         : 0x%.08X\n"
@@ -1601,7 +1600,7 @@ begin
     // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
            "(\n"
            "   ApcContext           : 0x%.08X\n"
@@ -1672,7 +1671,7 @@ begin
 
     EmuSwapFS();   // Win2k/XP FS
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
 {$ENDIF}
 
@@ -1703,7 +1702,7 @@ begin
   EmuSwapFS(fsWindows);
 
   (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
            "(\n"
            "   Handle               : 0x%.08X\n"
@@ -1716,7 +1715,7 @@ begin
 
     NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
 {$ENDIF}
 
@@ -1742,7 +1741,7 @@ begin
   EmuSwapFS(fsWindows);
 
 (*
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
            "(\n"
            "   Count                : 0x%.08X\n"
@@ -1781,7 +1780,7 @@ function xboxkrnl_NtWriteFile(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtWriteFile' +
        #13#10'(' +
        #13#10'   FileHandle          : 0x%.08X' +
@@ -1822,9 +1821,9 @@ procedure xboxkrnl_NtYieldExecution(); stdcall;
 begin
   EmuSwapFS(fsWindows);
 
-  // NOTE: this eats up the debug log far too quickly
-{$IFDEF DXBX_DEBUG}
-  //DbgPrintf('EmuKrnl : NtYieldExecution();');
+{$IFDEF DEBUG}
+  // Cxbx NOTE: this eats up the debug log far too quickly
+  // DbgPrintf('EmuKrnl : NtYieldExecution();');
 {$ENDIF}
 
   NtYieldExecution();

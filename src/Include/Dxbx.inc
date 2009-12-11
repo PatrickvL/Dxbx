@@ -21,18 +21,24 @@
 
 // Dxbx specific compiler directives :
 
-{.$DEFINE DXBX_USE_ALPHASKINS} // Enable this to use AlphaSkins in Dxbx
+// DEBUG = Build setting. Enables DbgPrintf calls, just like in Cxbx
+{$DEFINE _DEBUG_TRACE} // Enable DbgPrintf tracing calls, just like in Cxbx
+{.$DEFINE ONLY_CXBX_LOGGING} // Disables the additional Dxbx logging, for logfile-comparisons
 
-{.$DEFINE DXBX_EXTENSIVE_CALLSTACK_LOGGING}
+{$IFDEF ONLY_CXBX_LOGGING}
+  // Don't set any Dxbx logging define, we do only Cxbx-compatible logging in this mode.
+{$ELSE}
+  // Here, we enable additional Dxbx logging :
 
-{$IFDEF DEBUG}
-  {$DEFINE DXBX_DEBUG}
-{$ENDIF}
+  {$IFDEF DEBUG}
+    {$DEFINE DXBX_DEBUG} // Additional Dxbx DbgPrintf calls
+  {$ENDIF}
 
-{$IFDEF DXBX_DEBUG}
-  {$DEFINE _DEBUG_TRACE} // Cxbx uses this for extended debugging
-  {$DEFINE DXBX_EXTENSIVE_LOGGING}
-  {.$DEFINE DXBX_EXTREME_LOGGING}
+  {$IFDEF _DEBUG_TRACE}
+    {$DEFINE DXBX_DEBUG_TRACE} // Additional Dxbx DbgPrintf traces
+    {.$DEFINE DXBX_EXTREME_LOGGING}
+    {.$DEFINE DXBX_EXTENSIVE_CALLSTACK_LOGGING}
+  {$ENDIF}
 {$ENDIF}
 
 {$IFDEF DUNIT}

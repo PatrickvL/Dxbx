@@ -25,7 +25,7 @@ uses
   // Delphi
   SysUtils,
   Classes,
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   TypInfo,
 {$ENDIF}
   // 3rd party

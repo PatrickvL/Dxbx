@@ -17,7 +17,7 @@
 *)
 unit uPatternsToTrie;
 
-{$INCLUDE ..\..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 interface
 

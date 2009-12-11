@@ -72,7 +72,7 @@ begin
   end;
 
   // initialize Microsoft XDK emulation
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
 {$ENDIF}
 
@@ -91,7 +91,7 @@ begin
     while UnResolvedXRefs < LastUnResolvedXRefs do
     begin
       Inc(p);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('HLE: Starting pass #' + IntToStr(p) + '...');
 {$ENDIF}
 
@@ -124,7 +124,7 @@ begin
         begin
           if (bFoundD3D) then
           begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
               //DbgPrintf('Redundant');
 {$ENDIF}
               Continue;
@@ -194,7 +194,7 @@ begin
                 XTL.g_pRtlCreateHeap := *(XTL.pfRtlCreateHeap)((uint32)pFunc + RtlCreateHeapOffs);
                 XTL.g_pRtlCreateHeap := (XTL.pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL.g_pRtlCreateHeap + RtlCreateHeapOffs + $04);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
                 DbgPrintf('HLE: $%.08X . EmuXapiProcessHeap', XTL.EmuXapiProcessHeap);
                 DbgPrintf('HLE: $%.08X . g_pRtlCreateHeap', XTL.g_pRtlCreateHeap);
 {$ENDIF}
@@ -265,7 +265,7 @@ begin
                 for (Integer v:=0;v<44;v++)
                   XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
                 DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL_EmuD3DDeferredRenderState);
 {$ENDIF}
               end
@@ -303,7 +303,7 @@ begin
                       XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
                   end;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
                   DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState', XTL_EmuD3DDeferredTextureState);
 {$ENDIF}
                 end
@@ -317,7 +317,7 @@ begin
           end;
         end;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('HLE: * Searching HLE database for %s %d.%d.%d ...', pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
 {$ENDIF}
 
@@ -333,7 +333,7 @@ begin
 
           found := True;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
           DbgPrintf('Found');
 {$ENDIF}
 
@@ -341,7 +341,7 @@ begin
         end;
 
         if (not found) then
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
           DbgPrintf('Skipped');
 {$ENDIF}
       end;
@@ -350,7 +350,7 @@ begin
     end;
 
     // display Xref summary
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('HLE: Resolved ' + IntToStr(OrigUnResolvedXRefs - UnResolvedXRefs) + ' cross reference(s)');
 {$ENDIF}
   end;

@@ -45,7 +45,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuWSAStartup' +
     #13#10'(' +
     #13#10'   wVersionRequested   : 0x%.08X' +
@@ -66,7 +66,7 @@ function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXNetStartup' +
     #13#10'(' +
     #13#10'   pDummy              : 0x%.08X' +
@@ -85,7 +85,7 @@ function XTL_EmuXNetGetEthernetLinkStatus: DWord; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
 begin
   EmuSwapFS(fsWindows);
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
 {$ENDIF}
   EmuSwapFS(fsXbox);
@@ -104,7 +104,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emusocket'
            '('
            '   this                : $%.08X'
@@ -127,7 +127,7 @@ end;             *)
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emubind'
            '('
            '   this                : $%.08X'
@@ -153,7 +153,7 @@ function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emulisten'
            '('
            '   this                : $%.08X'
@@ -178,7 +178,7 @@ end;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emuioctlsocket'
            '('
            '   this                : $%.08X'

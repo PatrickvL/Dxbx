@@ -257,7 +257,7 @@ procedure xboxkrnl_KeInitializeDpc(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeInitializeDpc' +
          #13#10'(' +
          #13#10'   Dpc                 : 0x%.08X' +
@@ -324,7 +324,7 @@ procedure xboxkrnl_KeInitializeTimerEx(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeInitializeTimerEx' +
          #13#10'(' +
          #13#10'   Timer               : 0x%.08X' +
@@ -638,7 +638,7 @@ function xboxkrnl_KeSetTimer(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeSetTimer' +
        #13#10'(' +
        #13#10'   Timer               : 0x%.08X' +
@@ -664,7 +664,7 @@ function xboxkrnl_KeSetTimerEx(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeSetTimerEx' +
            #13#10'(' +
            #13#10'   Timer               : 0x%.08X' +

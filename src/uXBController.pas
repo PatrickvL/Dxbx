@@ -779,7 +779,7 @@ begin
 
         Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected %s%s on %s', [szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType]);
         DbgPrintf('Success: %s Mapped to "%s%s" on "%s"!', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName]);
 {$ENDIF}
@@ -811,7 +811,7 @@ begin
       begin
         Map(CurConfigObject, 'SysKeyboard', dwHow, dwFlags);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected Key %d on SysKeyboard', [dwHow]);
         DbgPrintf('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
 {$ENDIF}
@@ -844,7 +844,7 @@ begin
       begin
         Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected Button %d on SysMouse', [dwHow]);
         DbgPrintf('Success: %s Mapped to Button %d on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
 {$ENDIF}
@@ -920,7 +920,7 @@ begin
 
           Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
           DbgPrintf('Dxbx: Detected Movement on the %s%s on SysMouse', [szDirection, szObjName]);
           DbgPrintf('Success: %s Mapped to %s%s on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, szObjName]);
 {$ENDIF}
@@ -1124,7 +1124,7 @@ begin
   begin
     if m_ObjectConfig[XBCtrlObject(v)].dwDevice >= m_dwInputDeviceCount then
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       DbgPrintf('Warning: Device Mapped to %s was not found!', [m_DeviceNameLookup[v]]);
 {$ENDIF}
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;

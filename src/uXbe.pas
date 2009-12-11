@@ -536,8 +536,8 @@ begin
       end; // if
 {$IFDEF DXBX_DEBUG}
       DbgPrintf('DXBX: Reading Section Name 0x%.04X... OK (%s)', [lIndex, PAnsiChar(m_szSectionName[lIndex])]);
-    end; // for lIndex
 {$ENDIF}
+    end; // for lIndex
   end;
 
   // Read xbe library versions
