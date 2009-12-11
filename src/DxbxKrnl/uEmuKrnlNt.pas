@@ -46,7 +46,7 @@ uses
   uDxbxKrnlUtils;
 
 function xboxkrnl_NtAllocateVirtualMemory(
-  BaseAddress: PVOID; // OUT * ?
+  BaseAddress: PPVOID; // OUT * ?
   ZeroBits: ULONG;
   AllocationSize: PULONG; // OUT * ?
   AllocationType: DWORD;
@@ -247,7 +247,7 @@ procedure xboxkrnl_NtYieldExecution(); stdcall;
 implementation
 
 function xboxkrnl_NtAllocateVirtualMemory(
-  BaseAddress: PVOID; // OUT * ?
+  BaseAddress: PPVOID; // OUT * ?
   ZeroBits: ULONG;
   AllocationSize: PULONG; // OUT * ?
   AllocationType: DWORD;
@@ -258,7 +258,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl (0x%X): NtAllocateVirtualMemory'+
+  DbgPrintf('EmuKrnl : NtAllocateVirtualMemory'+
       #13#10'('+
       #13#10'   BaseAddress         : 0x%.8x (0x%.8x)'+
       #13#10'   ZeroBits            : 0x%.8x' +
@@ -266,10 +266,10 @@ begin
       #13#10'   AllocationType      : 0x%.8x' +
       #13#10'   Protect             : 0x%.8x' +
       #13#10');',
-      [BaseAddress, @BaseAddress, ZeroBits, AllocationSize, @AllocationSize, AllocationType, Protect]);
+      [BaseAddress, BaseAddress^, ZeroBits, AllocationSize, AllocationSize^, AllocationType, Protect]);
 {$ENDIF}
 
-(*  Result := NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect); *)
+  Result := JwaNative.NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
 
   EmuSwapFS(fsXbox);
 end;
@@ -285,7 +285,7 @@ end;
 function xboxkrnl_NtClearEvent(
   EventHandle: HANDLE
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -297,7 +297,7 @@ begin
       [EventHandle]);
 {$ENDIF}
 
-  (*Result := NtDll::NtClearEvent(EventHandle); *)
+  Result := JwaNative.NtClearEvent(EventHandle);
 
   if (FAILED(Result)) then
     EmuWarning('NtClearEvent Failed!');
@@ -430,7 +430,7 @@ var
   szBuffer: PAnsiChar;
   v: int;
   NtUnicodeString: UNICODE_STRING;
-  wszObjectName: array[0..160-1] of wchar_t;
+  wszObjectName: array [0..160-1] of wchar_t;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
@@ -550,7 +550,7 @@ begin
   if Assigned(szBuffer) then
     mbstowcs(@(wszObjectName[0]), szBuffer, 160)
   else
-    wszObjectName[0] := #0;
+    wszObjectName[0] := 0;
 
   JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
 

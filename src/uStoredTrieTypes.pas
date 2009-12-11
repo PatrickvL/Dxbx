@@ -73,7 +73,7 @@ type
   end;
 
   PStringOffsetList = ^TStringOffsetList;
-  TStringOffsetList = array[0..MaxListSize-1] of TByteOffset;
+  TStringOffsetList = array [0..MaxListSize-1] of TByteOffset;
 
   TLibraryIndex = type Byte; /// Use this everywhere a library is uniquely identified.
 
@@ -87,7 +87,7 @@ type
   end;
 
   PStoredLibrariesList = ^TStoredLibrariesList;
-  TStoredLibrariesList = array[0..MaxListSize-1] of RStoredLibrary;
+  TStoredLibrariesList = array [0..MaxListSize-1] of RStoredLibrary;
 
   RStoredLibraryTable = packed record
     NrOfLibraries: Word; /// The number of libraries in this table
@@ -105,7 +105,7 @@ type
   end;
 
   PGlobalFunctionList = ^TGlobalFunctionList;
-  TGlobalFunctionList = array[0..MaxListSize-1] of RStoredGlobalFunction;
+  TGlobalFunctionList = array [0..MaxListSize-1] of RStoredGlobalFunction;
 
   // Global functions can be indicated using a number in the range [0..NrOfFunctions-1].
   // These unique global function numbers can be put in a to-be generated code unit,
@@ -177,7 +177,7 @@ type
 
   PStoredSignatureTrieHeader = ^RStoredSignatureTrieHeader;
   RStoredSignatureTrieHeader = packed record
-    Header: array[0..5] of AnsiChar; // Chosen so this record becomes a nice 32 bytes large
+    Header: array [0..5] of AnsiChar; // Chosen so this record becomes a nice 32 bytes large
     StringTable: RStoredStringTable;
     LibraryTable: RStoredLibraryTable;
     GlobalFunctionTable: RStoredGlobalFunctionTable;

@@ -305,7 +305,7 @@ end;
 // Based on Classes.BinToHex
 function TPatternTrieNode.NodeAsString: string;
 const
-  NibbleHexChars: array[0..15] of Char = '0123456789ABCDEF';
+  NibbleHexChars: array [0..15] of Char = '0123456789ABCDEF';
 var
   P: PChar;
   i: Integer;

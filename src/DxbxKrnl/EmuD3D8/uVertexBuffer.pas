@@ -1078,7 +1078,7 @@ procedure XTL_EmuFlushIVB;
 begin
 (*    if (g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
     begin
-        XTL.EmuUpdateDeferredStates();
+        XTL_EmuUpdateDeferredStates();
 
         DWORD *pdwVB := (DWORD)g_IVBTable;
 
@@ -1331,7 +1331,7 @@ begin
         begin
              Integer dwDumpTexture := 0;
 
-             szBuffer: array[0..255-1] of Char;
+             szBuffer: array [0..255-1] of Char;
 
             StrFmt(szBuffer, 'C:\Aaron\Textures\Texture-Active%.03d ($%.08X).bmp', dwDumpTexture++, pTexture);
 
@@ -1348,7 +1348,7 @@ begin
      end;
     else if ((g_IVBPrimitiveType = X_D3DPT_QUADLIST) and (g_IVBTblOffs = 4)) then
     begin
-        XTL.EmuUpdateDeferredStates();
+        XTL_EmuUpdateDeferredStates();
 
         DWORD *pdwVB := (DWORD)g_IVBTable;
 

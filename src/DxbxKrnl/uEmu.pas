@@ -77,14 +77,14 @@ type
   end;
 
 var
-  g_pXInputSetStateStatus: array[0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
+  g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
 const
   // 4 controllers
   XINPUT_HANDLE_SLOTS = 4;
 
 var
-  g_hInputHandle: array[0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
+  g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
 
 implementation
 

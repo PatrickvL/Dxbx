@@ -48,6 +48,7 @@ uses
   uVertexShader,
   uEmu,
   uEmuKrnl,
+  uEmuXTL,
   uLog,
   uConsts,
   uTypes,
@@ -140,12 +141,10 @@ uses
 
 var
   // Global(s)
-  g_pD3DDevice8: IDIRECT3DDEVICE8; // Direct3D8 Device
   g_pDDSPrimary: IDIRECTDRAWSURFACE7; // DirectDraw7 Primary Surface
   g_pDDSOverlay7: IDIRECTDRAWSURFACE7; // DirectDraw7 Overlay Surface
   g_pDDClipper: IDIRECTDRAWCLIPPER; // DirectDraw7 Clipper
   g_CurrentVertexShader: DWord = 0;
-  g_bFakePixelShaderLoaded: Boolean = False;
   g_bIsFauxFullscreen: Boolean = False;
 
   // Static Variable(s)
@@ -157,6 +156,7 @@ var
   g_dwOverlayW: DWORD = 640; // Cached Overlay Width
   g_dwOverlayH: DWORD = 480; // Cached Overlay Height
   g_dwOverlayP: DWORD = 640; // Cached Overlay Pitch
+
   g_XbeHeader: PXBE_HEADER; // XbeHeader
   g_XbeHeaderSize: DWord = 0; // XbeHeaderSize
   g_D3DCaps: D3DCAPS8; // Direct3D8 Caps
@@ -169,7 +169,7 @@ var
   g_iWireframe: Integer = 0;
 
   // resource caching for _Register
-  pCache: array[0..15 - 1] of X_D3DResource; // = {0};
+  pCache: array [0..15 - 1] of X_D3DResource; // = {0};
 
   // current active index buffer
   g_pIndexBuffer: PX_D3DIndexBuffer = NULL; // current active index buffer
@@ -189,7 +189,7 @@ var
   g_YuvSurface: PX_D3DSurface = nil;
   g_fYuvEnabled: BOOL = FALSE;
   g_dwVertexShaderUsage: DWord = 0;
-  g_VertexShaderSlots: array[0..136 - 1] of DWORD;
+  g_VertexShaderSlots: array [0..136 - 1] of DWORD;
 
   // cached palette pointer
   pCurrentPalette: PVOID;
@@ -197,10 +197,10 @@ var
   g_VertexShaderConstantMode: X_VERTEXSHADERCONSTANTMODE = X_VSCM_192;
 
   // cached Direct3D tiles
-  EmuD3DTileCache: array[0..8 - 1] of X_D3DTILE;
+  EmuD3DTileCache: array [0..8 - 1] of X_D3DTILE;
 
   // cached active texture
-  EmuD3DActiveTexture: array[0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
+  EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
 
 function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -938,12 +938,9 @@ end;
 // thread dedicated to create devices
 function EmuCreateDeviceProxy(lpVoid: PVOID): DWord; // no stdcall !
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-type
-  PArrayOfDWORD = ^TArrayOfDWORD;
-  TArrayOfDWORD = array[0..(MaxInt shr 2) - 1] of DWORD;
 var
   D3DDisplayMode: TD3DDisplayMode; // X_D3DDISPLAYMODE; // Dxbx TODO : What type should we use?
-  szBackBufferFormat: array[0..16 - 1] of AnsiChar;
+  szBackBufferFormat: array [0..16 - 1] of AnsiChar;
   hRet: HRESULT;
   dwCodes: DWord;
   lpCodes: PDWORD;
@@ -1145,7 +1142,7 @@ begin
         g_bSupportsYUY2 := False;
         for v := 0 to dwCodes - 1 do
         begin
-          if (PArrayOfDWORD(lpCodes)[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
+          if (PDWordArray(lpCodes)[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
           begin
             g_bSupportsYUY2 := True;
             Break;
@@ -2009,7 +2006,7 @@ function XTL_EmuIDirect3DDevice8_CopyRects(
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100  
 {var
   kthx: Integer;
-  FileName: array[0..255 - 1] of Char;}
+  FileName: array [0..255 - 1] of Char;}
 begin
   EmuSwapFS(fsWindows);
 
@@ -4175,23 +4172,23 @@ var
 
   stop: uint32;
   r: uint32;
-  dwCompressedOffset : DWORD;
-  dwMipOffs : DWORD;
-  dwMipWidth : DWORD;
-  dwMipHeight : DWORD;
-  dwMipPitch : DWORD;
+  dwCompressedOffset: DWORD;
+  dwMipOffs: DWORD;
+  dwMipWidth: DWORD;
+  dwMipHeight: DWORD;
+  dwMipPitch: DWORD;
   level: uint;
   LockedRect: D3DLOCKED_RECT;
-  iRect : TRect;
-  iPoint : TPOINT;
+  iRect: TRect;
+  iPoint: TPOINT;
   pSrc: PByte;
   pDest: PByte;
-  pPixelData : PByte;
-  dwDataSize : DWORD;
-  dwPaletteSize : DWORD;
-  pTextureCache : PByte;
-  pExpandedTexture : PByte;
-  pTexturePalette : PByte;
+  pPixelData: PByte;
+  dwDataSize: DWORD;
+  dwPaletteSize: DWORD;
+  pTextureCache: PByteArray;
+  pExpandedTexture: PByteArray;
+  pTexturePalette: PByteArray;
 
   dummy: Pointer;
 begin
@@ -4754,7 +4751,7 @@ begin
               else if (bCompressed) then
               begin
                 // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
-                dummy := pSrc + dwCompressedOffset;
+                dummy := Pointer(DWORD(pSrc) + dwCompressedOffset);
                 Move(dummy, LockedRect.pBits, dwCompressedSize shr (level * 2));
                 dwCompressedOffset := dwCompressedOffset + (dwCompressedSize shr (level * 2));
               end
@@ -4803,7 +4800,7 @@ begin
         begin
           Integer dwDumpSurface := 0;
 
-          szBuffer: array[0..255 - 1] of Char;
+          szBuffer: array [0..255 - 1] of Char;
 
           StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface++]);
 
@@ -4814,7 +4811,7 @@ begin
         begin
           Integer dwDumpCube := 0;
 
-          szBuffer: array[0..255 - 1] of Char;
+          szBuffer: array [0..255 - 1] of Char;
 
           for (Integer v := 0; v < 6; v++)
           begin
@@ -4831,7 +4828,7 @@ begin
         begin
           Integer dwDumpTex := 0;
 
-          szBuffer: array[0..255 - 1] of Char;
+          szBuffer: array [0..255 - 1] of Char;
 
           StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex++]);
 
@@ -5493,7 +5490,6 @@ var
   pRefCount: PDWORD;
   pTexture8: IDirect3DTexture8;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -5875,7 +5871,7 @@ begin
     hRet := g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
 
     // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-    if (hRet = D3D_OK) and (pBackBuffer.LockRect(LockedRectDest, 0, 0) = D3D_OK) then
+    if (hRet = D3D_OK) and (pBackBuffer.LockRect(LockedRectDest, nil, 0) = D3D_OK) then
     begin
         (*pCurByte := uint08(pSurface.Lock);
         pDest2 := uint08(LockedRectDest.pBits);
@@ -7089,7 +7085,6 @@ procedure XTL_EmuIDirect3DDevice8_DrawVertices(
   VertexCount: UINT); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
-  PCPrimitiveType: D3DPRIMITIVETYPE;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
   bPatched: bool;
@@ -7107,9 +7102,6 @@ begin
 {$ENDIF}
 
   XTL_EmuUpdateDeferredStates();
-
-  // Convert from Xbox to PC enumeration
-  PCPrimitiveType := EmuPrimitiveType(PrimitiveType);
 
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
@@ -7213,8 +7205,6 @@ var
   dwSize: DWORD;
   hRet: HRESULT;
   pData: PBYTE;
-  PrimitiveCount: UINT;
-  PCPrimitiveType: D3DPRIMITIVETYPE;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
   bPatched: bool;
@@ -7369,8 +7359,6 @@ procedure XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP(PrimitiveType: X_D3DPRIM
   VertexStreamZeroStride: UINT);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
-  PrimitiveCount: UINT;
-  PCPrimitiveType: D3DPRIMITIVETYPE;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
   bPatched: bool;
@@ -7390,7 +7378,6 @@ begin
 {$ENDIF}
 
   // update index buffer, if necessary
-
   if Assigned(g_pIndexBuffer) and (g_pIndexBuffer.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
     CxbxKrnlCleanup('g_pIndexBuffer <> 0');
 
@@ -7545,11 +7532,11 @@ end;
 
 function XTL_EmuIDirect3DDevice8_CreatePalette(
   Size: X_D3DPALETTESIZE;
-  ppPalette: PX_D3DPalette
+  ppPalette: PPX_D3DPalette
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  ppPalette := XTL_EmuIDirect3DDevice8_CreatePalette2(Size);
+  ppPalette^ := XTL_EmuIDirect3DDevice8_CreatePalette2(Size);
   Result := D3D_OK;
 end;
 
@@ -8206,7 +8193,7 @@ begin
     (
     Adapter,
     DeviceType,
-    D3DFORMAT(SurfaceFormat),
+    PCSurfaceFormat, // Dxbx Note : Cxbx incorrectly passes SurfaceFormat here!
     Windowed,
     MultiSampleType
     );

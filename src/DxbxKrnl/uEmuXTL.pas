@@ -23,8 +23,10 @@ unit uEmuXTL;
 interface
 
 uses
-  Windows
-    , Direct3D8;
+  // Delphi
+  Windows,
+  //
+  Direct3D8;
 
 (*
 namespace XTL

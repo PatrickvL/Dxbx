@@ -42,8 +42,8 @@ type
   TFileType = (ftXbe, ftExe);
 
   _XBE_HEADER = packed record
-    dwMagic: array[0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
-    pbDigitalSignature: array[0..255] of Byte; // 0x0004 - digital signature
+    dwMagic: array [0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
+    pbDigitalSignature: array [0..255] of Byte; // 0x0004 - digital signature
     dwBaseAddr: DWord; // 0x0104 - base address
     dwSizeofHeaders: DWord; // 0x0108 - size of headers
     dwSizeofImage: DWord; // 0x010C - size of image
@@ -53,7 +53,7 @@ type
     dwSections: DWord; // 0x011C - number of sections
     dwSectionHeadersAddr: DWord; // 0x0120 - section headers address
 
-    dwInitFlags: array[0..3] of Byte; // 0x0124 - initialization flags
+    dwInitFlags: array [0..3] of Byte; // 0x0124 - initialization flags
 
     dwEntryAddr: DWord; // 0x0128 - entry point address
     dwTLSAddr: DWord; // 0x012C - thread local storage directory address
@@ -86,16 +86,16 @@ type
     dwSize: DWord; // 0x0000 - size of certificate
     dwTimeDate: DWord; // 0x0004 - timedate stamp
     dwTitleId: DWord; // 0x0008 - title id
-    wszTitleName: array[0..39] of WideChar; // 0x000C - title name (unicode)
-    dwAlternateTitleId: array[0..15] of Dword; // 0x005C - alternate title ids
+    wszTitleName: array [0..39] of WideChar; // 0x000C - title name (unicode)
+    dwAlternateTitleId: array [0..15] of Dword; // 0x005C - alternate title ids
     dwAllowedMedia: Dword; // 0x009C - allowed media types
     dwGameRegion: DWord; // 0x00A0 - game region
     dwGameRatings: DWord; // 0x00A4 - game ratings
     dwDiskNumber: DWord; // 0x00A8 - disk number
     dwVersion: Dword; // 0x00AC - version
-    bzLanKey: array[0..15] of AnsiChar; // 0x00B0 - lan key
-    bzSignatureKey: array[0..15] of AnsiChar; // 0x00C0 - signature key
-    bzTitleAlternateSignatureKey: array[0..15] of array[0..15] of AnsiChar; // 0x00D0 - alternate signature keys
+    bzLanKey: array [0..15] of AnsiChar; // 0x00B0 - lan key
+    bzSignatureKey: array [0..15] of AnsiChar; // 0x00C0 - signature key
+    bzTitleAlternateSignatureKey: array [0..15] of array [0..15] of AnsiChar; // 0x00D0 - alternate signature keys
   end;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
   PXBE_CERTIFICATE = ^XBE_CERTIFICATE;
@@ -117,7 +117,7 @@ type
 
   // Source: Cxbx
   _XBE_SECTIONHEADER = packed record
-    dwFlags: array[0..3] of Byte;
+    dwFlags: array [0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
     dwVirtualSize: DWord; // virtual size
     dwRawAddr: DWord; // file offset to raw Data
@@ -126,7 +126,7 @@ type
     dwSectionRefCount: DWord; // section reference count
     dwHeadSharedRefCountAddr: DWord; // head shared page reference count address
     dwTailSharedRefCountAddr: DWord; // tail shared page reference count address
-    bzSectionDigest: array[0..19] of AnsiChar; // section digest
+    bzSectionDigest: array [0..19] of AnsiChar; // section digest
   end;
 (*
   // Section headers - Source: XBMC
@@ -140,7 +140,7 @@ type
     SectionReferenceCount: LONG; // Section reference count - when >= 1, section is loaded
     HeadReferenceCount: PWORD; // Pointer to head shared page reference count
     TailReferenceCount: PWORD; // Pointer to tail shared page reference count
-    ShaHash: array[0..5 - 1] of DWord; // SHA hash.  Hash DWORD containing FileSize, then hash section.
+    ShaHash: array [0..5 - 1] of DWord; // SHA hash.  Hash DWORD containing FileSize, then hash section.
   end; // SizeOf() = 38
 *)
   XBE_SECTIONHEADER = _XBE_SECTIONHEADER;
@@ -150,11 +150,11 @@ type
   PXbeSectionHeader = PXBE_SECTIONHEADER;
 
   _XBE_LIBRARYVERSION = packed record
-    szName: array[0..7] of AnsiChar; // library name
+    szName: array [0..7] of AnsiChar; // library name
     wMajorVersion: Word; // major version
     wMinorVersion: Word; // minor version
     wBuildVersion: Word; // build version
-    dwFlags: array[0..1] of Byte;
+    dwFlags: array [0..1] of Byte;
            { struct Flags
             {
                 uint16 QFEVersion       : 13;      // QFE Version
@@ -189,7 +189,7 @@ type
     //Bit 4,5,6,7 : Data
   Eight = _Eight;
 
-  _Sixteen = array[0..1] of Byte; // AnsiChar? Word?
+  _Sixteen = array [0..1] of Byte; // AnsiChar? Word?
     //from Char[0]
     //Bit 0  : bType1
     //Bit 1  : bType2

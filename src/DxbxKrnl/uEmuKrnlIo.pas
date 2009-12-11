@@ -38,7 +38,8 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl;
+  uDxbxKrnl,
+  uDxbxKrnlUtils;
 
 const
   // Dxbx TODO : Translate all other IRP defines from ReactOS
@@ -84,7 +85,7 @@ type
         _ANONYMOUS_UNION union begin
           KDEVICE_QUEUE_ENTRY  DeviceQueueEntry;
           _ANONYMOUS_STRUCT struct begin
-              DriverContext: array[0..4-1] of PVOID;
+              DriverContext: array [0..4-1] of PVOID;
            end; DUMMYSTRUCTNAME;
          end; DUMMYUNIONNAME;
         PETHREAD  Thread;
@@ -148,7 +149,7 @@ type
     DriverInit: PDRIVER_INITIALIZE;
     DriverStartIo: PDRIVER_STARTIO;
     DriverUnload: PDRIVER_UNLOAD;
-    MajorFunction: array[0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
+    MajorFunction: array [0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
   end;
   PDRIVER_OBJECT = ^DRIVER_OBJECT;
 
@@ -426,10 +427,33 @@ function {066} xboxkrnl_IoCreateFile(
   CreateOptions: ULONG;
   Options: ULONG
   ): NTSTATUS; stdcall; // Source: Cxbx
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('IoCreateFile');
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl (0x%X): IoCreateFile' +
+     #13#10'(' +
+     #13#10'   FileHandle          : 0x%.08X' +
+     #13#10'   DesiredAccess       : 0x%.08X' +
+     #13#10'   ObjectAttributes    : 0x%.08X (%s)' +
+     #13#10'   IoStatusBlock       : 0x%.08X' +
+     #13#10'   AllocationSize      : 0x%.08X' +
+     #13#10'   FileAttributes      : 0x%.08X' +
+     #13#10'   ShareAccess         : 0x%.08X' +
+     #13#10'   Disposition         : 0x%.08X' +
+     #13#10'   CreateOptions       : 0x%.08X' +
+     #13#10'   Options             : 0x%.08X' +
+     #13#10');',
+     [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
+      IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options]);
+{$ENDIF}
+
+  Result := STATUS_SUCCESS;
+
+  // Cxbx TODO: Try redirecting to NtCreateFile if this function ever is run into
+  CxbxKrnlCleanup('IoCreateFile not implemented');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -437,10 +461,23 @@ function xboxkrnl_IoCreateSymbolicLink(
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('IoCreateSymbolicLink');
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : IoCreateSymbolicLink' +
+     #13#10'(' +
+     #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
+     #13#10'   DeviceName          : 0x%.08X (%s)' +
+     #13#10');',
+     [SymbolicLinkName, SymbolicLinkName.Buffer,
+     DeviceName, DeviceName.Buffer]);
+{$ENDIF}
+
+  // Cxbx TODO: Actually um...implement this function
+  Result := STATUS_OBJECT_NAME_COLLISION;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -454,10 +491,21 @@ end;
 function xboxkrnl_IoDeleteSymbolicLink(
   SymbolicLinkName: PSTRING
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('IoDeleteSymbolicLink');
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : IoDeleteSymbolicLink' +
+     #13#10'(' +
+     #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
+     #13#10');',
+     [SymbolicLinkName, SymbolicLinkName.Buffer]);
+{$ENDIF}
+
+  // Cxbx TODO: Actually um...implement this function
+  Result := STATUS_OBJECT_NAME_NOT_FOUND;
+
   EmuSwapFS(fsXbox);
 end;
 

@@ -54,7 +54,7 @@ var
   CxbxKrnl_hEmuParent: HWND;
 
   // thread handles
-  g_hThreads: array[0..MAXIMUM_XBOX_THREADS - 1] of Handle;
+  g_hThreads: array [0..MAXIMUM_XBOX_THREADS - 1] of Handle;
 
 implementation
 

@@ -26,8 +26,11 @@ uses
   // Delphi
   Windows,
   // Directx
+  D3DX8,
+  Direct3D,
   Direct3D8,
-  // Xbox
+  DirectDraw,
+  // Dxbx
   uTypes;
 
 const
@@ -271,15 +274,15 @@ type
     // The Windows DirectX8 variant ends here
     // This check guarantees identical layout, compared to Direct3D8._D3DPRESENT_PARAMETERS_:
     // Assert(Integer(@(PX_D3DPRESENT_PARAMETERS(nil).BufferSurfaces[0])) = SizeOf(_D3DPRESENT_PARAMETERS_));
-    BufferSurfaces: array[0..2] of IDirect3DSurface8;
+    BufferSurfaces: array [0..2] of IDirect3DSurface8;
     DepthStencilSurface: IDirect3DSurface8;
   end;
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
   X_D3DGAMMARAMP = packed record
-    Red: array[0..255] of Byte;
-    Green: array[0..255] of Byte;
-    Blue: array[0..255] of Byte;
+    Red: array [0..255] of Byte;
+    Green: array [0..255] of Byte;
+    Blue: array [0..255] of Byte;
   end;
   PX_D3DGAMMARAMP = ^X_D3DGAMMARAMP;
 
@@ -493,7 +496,9 @@ type
 
 var
   // cached active texture
-  EmuD3DActiveTexture: array[0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
+  EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
+
+  g_pD3DDevice8: IDIRECT3DDEVICE8; // Direct3D8 Device
 
 implementation
 

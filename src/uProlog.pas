@@ -32,7 +32,7 @@ var
   // * directly, so this precise structure is necessary.
   // *
   // ******************************************************************
-  Prolog: array[0..255] of Byte = (
+  Prolog: array [0..255] of Byte = (
     $BE, $C3, $C3, $C3, $C3, // mov esi, 0xC3C3C3C3
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3
     $68, $C3, $C3, $C3, $C3, // push 0xC3C3C3C3

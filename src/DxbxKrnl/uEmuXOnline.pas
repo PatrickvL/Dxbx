@@ -37,7 +37,7 @@ implementation
 
 function XTL_EmuWSAStartup(
   wVersionRequested: Word;
-  lpWSAData: WSADATA
+  lpWSAData: PWSADATA
   ): Integer; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
@@ -51,10 +51,10 @@ begin
     #13#10'   wVersionRequested   : 0x%.08X' +
     #13#10'   lpWSAData           : 0x%.08X' +
     #13#10');',
-    [wVersionRequested, @lpWSAData]);
+    [wVersionRequested, lpWSAData]);
 {$ENDIF}
 
-  ret := WSAStartup(wVersionRequested, lpWSAData);
+  ret := WSAStartup(wVersionRequested, {var}lpWSAData^);
 
   EmuSwapFS(fsXbox);
 

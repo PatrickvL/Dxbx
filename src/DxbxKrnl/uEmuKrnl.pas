@@ -162,7 +162,7 @@ function Unimplemented(const aAPI: string): NTSTATUS;
 
 var
   {156}xboxkrnl_KeTickCount: DWord;
-  {162}xboxkrnl_KiBugCheckData: array[0..5 - 1] of ULONG_PTR; // Source: ReactOS
+  {162}xboxkrnl_KiBugCheckData: array [0..5 - 1] of ULONG_PTR; // Source: ReactOS
   {164}xboxkrnl_LaunchDataPage: PLAUNCH_DATA_PAGE;
 
 // The following API names are derived from Pedro's APILogger V2

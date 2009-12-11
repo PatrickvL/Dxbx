@@ -37,9 +37,6 @@ uses
   uExe;
 
 type
-  TDWordArray = array[0..3] of Byte;
-  TWordArray = array[0..1] of Byte;
-
   TEmuExe = class(TExe)
   protected
     KrnlHandle: HMODULE;
@@ -49,7 +46,7 @@ type
   end;
 
 const
-  bzDOSStub: array[0..120-1] of Byte = (
+  bzDOSStub: array [0..120-1] of Byte = (
     // Start of DOS code block :
     $0E,           // push cs
     $1F,           // pop ds
