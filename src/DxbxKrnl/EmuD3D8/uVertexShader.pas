@@ -25,15 +25,40 @@ interface
 uses
   // Delphi
   Windows
+  // DirectX
+  , D3DX8
+  , Direct3D8
+
   // Dxbx
   , uEmuD3D8Types
   , uEmuAlloc;
+
+
+type
+  LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
+
 
 function XTL_IsValidCurrentShader: Boolean; stdcall; // forward
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
+function XTL_EmuRecompileVshDeclaration
+(
+  pDeclaration: PDWORD;
+  ppRecompiledDeclaration: PDWORD;
+  pDeclarationSize: PDWORD;
+  IsFixedFunction: Boolean;
+  pVertexDynamicPatch: VERTEX_DYNAMIC_PATCH
+) : DWORD;
+
+function XTL_EmuRecompileVshFunction
+(
+    pFunction: DWORD;
+    ppRecompiled: LPD3DXBUFFER;
+    pOriginalSize: DWORD;
+    bNoReservedConstants: boolean
+) : HRESULT; stdcall;
 
 implementation
 
@@ -41,6 +66,152 @@ uses
   // Dxbx
   uEmuFS
   , uEmuD3D8;
+
+function XTL_EmuRecompileVshDeclaration
+(
+  pDeclaration: PDWORD;
+  ppRecompiledDeclaration: PDWORD;
+  pDeclarationSize: PDWORD;
+  IsFixedFunction: Boolean;
+  pVertexDynamicPatch: VERTEX_DYNAMIC_PATCH
+) : DWORD;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+begin
+    // First of all some info:
+    // We have to figure out which flags are set and then
+    // we have to patch their params
+
+    // some token values
+    // 0xFFFFFFFF - end of the declaration
+    // 0x00000000 - nop (means that this value is ignored)
+
+    // Calculate size of declaration
+ (*   DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
+    *ppRecompiledDeclaration = (DWORD *)(*CxbxMalloc(DeclarationSize);
+    DWORD *pRecompiled = *ppRecompiledDeclaration;
+    memcpy(pRecompiled, pDeclaration, DeclarationSize);
+    *pDeclarationSize = DeclarationSize;
+
+    // TODO: Put these in one struct
+    VSH_PATCH_DATA       PatchData = { 0 };
+
+    DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
+
+    while (*pRecompiled != DEF_VSH_END)
+    {
+        DWORD Step = VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
+        pRecompiled += Step;
+    }
+    DbgVshPrintf("\tD3DVSD_END()\n};\n");
+
+    VshAddStreamPatch(&PatchData);
+
+    DbgVshPrintf("NbrStreams: %d\n", PatchData.StreamPatchData.NbrStreams);
+
+    // Copy the patches to the vertex shader struct
+    DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
+    pVertexDynamicPatch->NbrStreams = PatchData.StreamPatchData.NbrStreams;
+    pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)(*CxbxMalloc(StreamsSize);
+    memcpy(pVertexDynamicPatch->pStreamPatches,
+           PatchData.StreamPatchData.pStreamPatches,
+           StreamsSize);
+ *)
+
+  result := D3D_OK;
+end;
+
+function XTL_EmuRecompileVshFunction
+(
+    pFunction: DWORD;
+    ppRecompiled: LPD3DXBUFFER;
+    pOriginalSize: DWORD;
+    bNoReservedConstants: boolean
+) : HRESULT; stdcall;
+begin
+(*    VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)(*pFunction;
+    DWORD               *pToken;
+    boolean             EOI = false;
+    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)(*CxbxMalloc(sizeof(VSH_XBOX_SHADER));
+    HRESULT             hRet = 0;
+
+    // TODO: support this situation..
+    if(pFunction == NULL)
+        return E_FAIL;
+
+    *ppRecompiled = NULL;
+    *pOriginalSize = 0;
+    if(!pShader)
+    {
+        EmuWarning("Couldn't allocate memory for vertex shader conversion buffer");
+        hRet = E_OUTOFMEMORY;
+    }
+    memset(pShader, 0, sizeof(VSH_XBOX_SHADER));
+    pShader->ShaderHeader = *pShaderHeader;
+    switch(pShaderHeader->Version)
+    {
+        case VERSION_XVS:
+            break;
+        case VERSION_XVSS:
+            EmuWarning("Might not support vertex state shaders?");
+            hRet = E_FAIL;
+            break;
+        case VERSION_XVSW:
+            EmuWarning("Might not support vertex read/write shaders?");
+            hRet = E_FAIL;
+            break;
+        default:
+            EmuWarning("Unknown vertex shader version 0x%02X\n", pShaderHeader->Version);
+            hRet = E_FAIL;
+            break;
+    }
+
+    if(SUCCEEDED(hRet))
+    {
+
+        for (pToken = (DWORD*)(*((uint08*)(*pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
+        {
+            VSH_SHADER_INSTRUCTION Inst;
+
+            VshParseInstruction(pToken, &Inst);
+            VshConvertToIntermediate(&Inst, pShader);
+            EOI = (boolean)VshGetField(pToken, FLD_FINAL);
+        }
+
+        // The size of the shader is
+        *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
+
+        char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader->IntermediateCount * 50); // Should be plenty
+        DbgVshPrintf("-- Before conversion --\n");
+        VshWriteShader(pShader, pShaderDisassembly, FALSE);
+        DbgVshPrintf("%s", pShaderDisassembly);
+        DbgVshPrintf("-----------------------\n");
+
+        VshConvertShader(pShader, bNoReservedConstants);
+        VshWriteShader(pShader, pShaderDisassembly, TRUE);
+
+        DbgVshPrintf("-- After conversion ---\n");
+        DbgVshPrintf("%s", pShaderDisassembly);
+        DbgVshPrintf("-----------------------\n");
+
+        hRet = D3DXAssembleShader(pShaderDisassembly,
+                                  strlen(pShaderDisassembly),
+                                  D3DXASM_SKIPVALIDATION,
+                                  NULL,
+                                  ppRecompiled,
+                                  NULL);
+
+        if (FAILED(hRet))
+        {
+            EmuWarning("Couldn't assemble recompiled vertex shader\n");
+        }
+
+        CxbxFree(pShaderDisassembly);
+    }
+    CxbxFree(pShader);
+
+    return hRet;
+}                        *)
+end;
 
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -106,6 +277,7 @@ end;
 
 exports
   XTL_IsValidCurrentShader,
+  XTL_EmuRecompileVshFunction,
   XTL_FreeVertexDynamicPatch;
 
 end.

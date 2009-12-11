@@ -177,13 +177,13 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
   dwCount: DWord;
   dwMethod: DWord;
 
-  bInc: BOOL; *)
+  bInc: BOOL;  *)
 
 begin
-  if XTL_g_bSkipPush then
+ (* if XTL_g_bSkipPush then
     Exit;
 
-    (*pdwOrigPushData := pdwPushData;
+    pdwOrigPushData := pdwPushData;
 
     pIndexData := NULL;
     pVertexData := NULL;

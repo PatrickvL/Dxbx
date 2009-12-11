@@ -470,7 +470,7 @@ begin
   Result := NewFlags;
 end;
 
-(* Cxbx commented this out :
+{ Cxbx commented this out :
   // convert from pc to xbox texture transform state types (unnecessary so far)
   if (uint32(State) < 4) then
     State := D3DTRANSFORMSTATETYPE(State - 2)
@@ -480,7 +480,7 @@ end;
     State := D3DTRANSFORMSTATETYPE(State - 250)
   else
     CxbxKrnlCleanup('Unknown Transform State Type (%d)', [State]);
-*)
+}
 
 // convert from xbox to pc fill modes
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;

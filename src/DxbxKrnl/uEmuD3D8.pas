@@ -86,6 +86,7 @@ type
       1: (bCreate: bool); // False: release
   end;
 
+
 var
   g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
 
@@ -1927,7 +1928,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(* MARKED OUT BY CXBX
+{ MARKED OUT BY CXBX
 function XTL_EmuIDirect3DDevice8_BeginStateBig: HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
@@ -1935,15 +1936,15 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
+{$IFDEF DEBUG}{
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginStateBig();');
-{$ENDIF}
+{$ENDIF}{
   ret := g_pD3DDevice8.BeginStateBlock();
 
   CxbxKrnlCleanup('BeginStateBig is not implemented');
   EmuSwapFS(fsXbox);
   Result := ret;
-end; *)
+end; }
 
 function XTL_EmuIDirect3DDevice8_CaptureStateBlock(Token: DWORD): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -2027,9 +2028,9 @@ begin
 
   pSourceSurface.EmuSurface8.UnlockRect();
 
-  {
+  { MARKED OUT BY CXBX
   kthx := 0;
-  (*StrFmt(FileName, 'C:\Aaron\Textures\SourceSurface-%d.bmp', kthx++); *)
+  StrFmt(FileName, 'C:\Aaron\Textures\SourceSurface-%d.bmp', kthx++);
 
   D3DXSaveSurfaceToFile(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, nil, nil);
   }
@@ -2129,20 +2130,20 @@ begin
     [BackBuffer]);
 {$ENDIF}
 
-(* unsafe, somehow  -- MARKED OUT BY CXBX --
+{ unsafe, somehow  -- MARKED OUT BY CXBX --
     HRESULT hRet := S_OK;
 
     X_D3DSurface *pBackBuffer := new X_D3DSurface();
 
     if (BackBuffer = -1) then
     begin
-         {static?}pCachedPrimarySurface: IDirect3DSurface8 := nil;
+         {static?}{pCachedPrimarySurface: IDirect3DSurface8 := nil;
 
         if (pCachedPrimarySurface = 0) then
         begin
             // create a buffer to return
             // Cxbx TODO : Verify the surface is always 640x480
-            g_pD3DDevice8.CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, {out}IDirect3DSurface8(pCachedPrimarySurface));
+            g_pD3DDevice8.CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, {out}{IDirect3DSurface8(pCachedPrimarySurface));
          end;
 
         pBackBuffer.EmuSurface8 := pCachedPrimarySurface;
@@ -2163,8 +2164,8 @@ begin
      end;
 
     if (BackBuffer <> -1) then
-        hRet := IDirect3DDevice8_GetBackBuffer(g_pD3DDevice8, BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Lock{EmuSurface8}));
-*)
+        hRet := IDirect3DDevice8_GetBackBuffer(g_pD3DDevice8, BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Lock{EmuSurface8}{));
+}
 
   New({var PX_D3DSurface}pBackBuffer);
 
@@ -2546,15 +2547,22 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_CreateVertexShader(
-  pDeclaration: DWORD;
-  pFunction: DWORD;
-  pHandle: DWORD;
+  pDeclaration: PDWORD;
+  pFunction: PDWORD;
+  pHandle: PDWORD;
   Usage: DWORD): HRESULT; stdcall;
 // Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:2
 var
   hRet: HRESULT;
-(*  pD3DVertexShader: PX_D3DVertexShader;
-  pVertexShader: PVERTEX_SHADER; *)
+  pD3DVertexShader: PX_D3DVertexShader;
+  pVertexShader: PVERTEX_SHADER;
+
+  pRecompiledBuffer: LPD3DXBUFFER;
+  pRecompiledDeclaration: PDWORD;
+  pRecompiledFunction: PDWORD;
+  VertexShaderSize: DWORD;
+  DeclarationSize: DWORD;
+  aHandle: DWORD;
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -2570,114 +2578,111 @@ begin
     [pDeclaration, pFunction, pHandle, Usage]);
 {$ENDIF}
 
-    // create emulated shader struct
-    (*pD3DVertexShader := X_D3DVertexShader(CxbxMalloc(SizeOf(X_D3DVertexShader)));
-    pVertexShader := VERTEX_SHADER(CxbxMalloc(SizeOf(VERTEX_SHADER)));
+  // create emulated shader struct
+  pD3DVertexShader := CxbxMalloc(SizeOf(X_D3DVertexShader));
+  pVertexShader := CxbxMalloc(SizeOf(VERTEX_SHADER));
 
-    // Cxbx TODO : Intelligently fill out these fields as necessary
-    ZeroMemory(pD3DVertexShader, SizeOf(X_D3DVertexShader));
-    ZeroMemory(pVertexShader, SizeOf(VERTEX_SHADER));
+  // Cxbx TODO : Intelligently fill out these fields as necessary
+  ZeroMemory(pD3DVertexShader, SizeOf(X_D3DVertexShader));
+  ZeroMemory(pVertexShader, SizeOf(VERTEX_SHADER));
 
-    // HACK: Cxbx TODO : support this situation
-    if (pDeclaration = 0) then
-    begin
-        @pHandle := 0;
+  // HACK: Cxbx TODO : support this situation
+  if not Assigned(pDeclaration) then
+  begin
+    pHandle := 0;
 
-        EmuSwapFS(fsWindows);
+    EmuSwapFS(fsWindows);
 
-        Result := S_OK;
-        Exit;
-     end;
+    Result := S_OK;
+    Exit;
+  end;
 
-    LPD3DXBUFFER pRecompiledBuffer := 0;
-    DWORD        *pRecompiledDeclaration;
-    DWORD        *pRecompiledFunction := 0;
-    DWORD        VertexShaderSize;
-    DWORD        DeclarationSize;
-    DWORD        Handle := 0;
+  pRecompiledBuffer := nil;
+  pRecompiledFunction := 0;
+  aHandle := 0;
 
-    HRESULT hRet = XTL.EmuRecompileVshDeclaration((DWORD)pDeclaration,
-                                                   @pRecompiledDeclaration,
-                                                   @DeclarationSize,
-                                                   pFunction = 0,
-                                                   @pVertexShader.VertexDynamicPatch);
+(*  hRet := XTL_EmuRecompileVshDeclaration(pDeclaration,
+                                         pRecompiledDeclaration,
+                                         @DeclarationSize,
+                                         not Assigned(pFunction),
+                                         pVertexShader.VertexDynamicPatch); *)
 
-    if (SUCCEEDED(hRet) and pFunction) then
-    begin
-        hRet = XTL.EmuRecompileVshFunction((DWORD)pFunction,
-                                            @pRecompiledBuffer,
-                                            @VertexShaderSize,
-                                            g_VertexShaderConstantMode := X_VSCM_NONERESERVED);
-        if (SUCCEEDED(hRet)) then
-        begin
-            pRecompiledFunction := (DWORD)pRecompiledBuffer.GetBufferPointer();
-         end;
-        else
-        begin
-            pRecompiledFunction := 0;
-            EmuWarning('Couldn't recompile vertex shader function.': );
-            hRet := D3D_OK; // Try using a fixed function vertex shader instead
-         end;
-     end;
-
-{$IFDEF DEBUG}
-    //DbgPrintf('MaxVertexShaderConst = %d', [g_D3DCaps.MaxVertexShaderConst]);
-{$ENDIF}
-
+  if (SUCCEEDED(hRet) and Assigned(pFunction)) then
+  begin
+(*    hRet := XTL_EmuRecompileVshFunction(DWORD(pFunction),
+                                        pRecompiledBuffer,
+                                        VertexShaderSize,
+                                        g_VertexShaderConstantMode = X_VSCM_NONERESERVED); *)
     if (SUCCEEDED(hRet)) then
     begin
-        hRet = g_pD3DDevice8.CreateVertexShader
-        (
-            pRecompiledDeclaration,
-            pRecompiledFunction,
-            @Handle,
-            g_dwVertexShaderUsage   // Cxbx TODO : HACK: Xbox has extensions!
-        );
-        if (pRecompiledBuffer) then
-        begin
-            pRecompiledBuffer.Release();
-            pRecompiledBuffer := 0;
-         end;
-     end;
-
-
-    //* Fallback to dummy shader.
-    if (FAILED(hRet)) then
+      pRecompiledFunction := pRecompiledBuffer.GetBufferPointer();
+    end
+    else
     begin
-        static const char dummy[] =
-            "vs.1.1\n"
-            "mov oPos, v0\n";
-
-        EmuWarning("Trying fallback:\n%s\n", dummy);
-        hRet = D3DXAssembleShader(dummy,
-                                  strlen(dummy),
-                                  D3DXASM_SKIPVALIDATION,
-                                  NULL,
-                                  &pRecompiledBuffer,
-                                  NULL);
-        hRet = g_pD3DDevice8->CreateVertexShader
-        (
-            pRecompiledDeclaration,
-            PDWORD(pRecompiledBuffer.GetBufferPointer()),
-            @Handle,
-            g_dwVertexShaderUsage
-        );
+      pRecompiledFunction := 0;
+      EmuWarning('Couldn`t recompile vertex shader function.' );
+      hRet := D3D_OK; // Try using a fixed function vertex shader instead
     end;
-    //*/
+  end;
 
-    // Save the status, to remove things later
-    pVertexShader.Status := hRet;
+{$IFDEF DEBUG}
+  DbgPrintf('MaxVertexShaderConst = %d', [g_D3DCaps.MaxVertexShaderConst]);
+{$ENDIF}
 
-    CxbxFree(pRecompiledDeclaration);
+  if (SUCCEEDED(hRet)) then
+  begin
+    hRet := g_pD3DDevice8.CreateVertexShader
+    (
+        pRecompiledDeclaration,
+        pRecompiledFunction,
+        aHandle,
+        g_dwVertexShaderUsage   // Cxbx TODO : HACK: Xbox has extensions!
+    );
+    if Assigned(pRecompiledBuffer) then
+    begin
+      pRecompiledBuffer._Release();
+      pRecompiledBuffer := nil;
+    end;
+  end;
 
-    pVertexShader.pDeclaration := (DWORD)CxbxMalloc(DeclarationSize);
-    move( pDeclaration, pVertexShader.pDeclaration, DeclarationSize );
 
-    pVertexShader.FunctionSize := 0;
-    pVertexShader.pFunction := 0;
-    pVertexShader.cType := X_VST_NORMAL;
-    pVertexShader.Size := (VertexShaderSize - SizeOf(VSH_SHADER_HEADER)) / VSH_INSTRUCTION_SIZE_BYTES;
-    pVertexShader.DeclarationSize := DeclarationSize;
+(*  //* Fallback to dummy shader.
+  if (FAILED(hRet)) then
+  begin
+      static const char dummy[] =
+          "vs.1.1\n"
+          "mov oPos, v0\n";
+
+      EmuWarning("Trying fallback:\n%s\n", dummy);
+      hRet = D3DXAssembleShader(dummy,
+                                strlen(dummy),
+                                D3DXASM_SKIPVALIDATION,
+                                NULL,
+                                &pRecompiledBuffer,
+                                NULL);
+      hRet = g_pD3DDevice8->CreateVertexShader
+      (
+          pRecompiledDeclaration,
+          PDWORD(pRecompiledBuffer.GetBufferPointer()),
+          aHandle,
+          g_dwVertexShaderUsage
+      );
+  end;
+  //*/ *)
+
+  // Save the status, to remove things later
+  pVertexShader.Status := hRet;
+
+  CxbxFree(pRecompiledDeclaration);
+
+  pVertexShader.pDeclaration := CxbxMalloc(DeclarationSize);
+  move(pDeclaration, pVertexShader.pDeclaration, DeclarationSize);
+
+  pVertexShader.FunctionSize := 0;
+  pVertexShader.pFunction := 0;
+  pVertexShader.Type_ := X_VST_NORMAL;
+(*  pVertexShader.Size := (VertexShaderSize - SizeOf(VSH_SHADER_HEADER)) / VSH_INSTRUCTION_SIZE_BYTES;
+  pVertexShader.DeclarationSize := DeclarationSize;
 
     if (SUCCEEDED(hRet)) then
     begin
@@ -2692,7 +2697,7 @@ begin
             pVertexShader.pFunction := 0;
             pVertexShader.FunctionSize := 0;
          end;
-        pVertexShader.Handle := Handle;
+        pVertexShader.Handle := aHandle;
      end;
     else
     begin
@@ -2946,9 +2951,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-type
-  LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
-  
 function XTL_EmuIDirect3DDevice8_SetPixelShader(
   Handle: DWORD
   ): HRESULT; stdcall;
@@ -3574,13 +3576,13 @@ begin
      end;
     }
 
-  (* -- MARKED OUT BY CXBX
+  { -- MARKED OUT BY CXBX
   Integer dwDumpTexture := 0;
   szBuffer: array [0..256-1] of Char;
   StrFmt(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', dwDumpTexture++, pDummyTexture);
   pDummyTexture.UnlockRect(0);
   D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pDummyTexture, 0);
-  //*/       *)
+  }
 
   // hRet = g_pD3DDevice8.SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
   Result := g_pD3DDevice8.SetTexture(Stage, iif((g_iWireframe = 0), pBaseTexture8, nil));
@@ -3600,9 +3602,14 @@ procedure XTL_EmuIDirect3DDevice8_SwitchTexture(
   {1 ECX}Method: DWORD; // Dxbx note: This argument should be here, to force it into ECX
   {3 stack}Format: DWORD // Dxbx note: This argument should be here, to force it into the first stack-slot
   ); register; // __fastcall in Cxbx
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 const
   StageLookup: array [0..4-1] of DWORD = ( $00081b00, $00081b40, $00081b80, $00081bc0 );
+var
+  Stage: DWORD;
+  v: Integer;
+  pTexture: PX_D3DTexture;
+  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3616,49 +3623,41 @@ begin
     [Method, Data, Format]);
 {$ENDIF}
 
-    (*
-    DWORD Stage := -1;
+  Stage := 999; //  was -1, but that violated subrange bound;
 
-    for(Integer v:=0;v<4;v++)
+  for v := 0 to 3 do
+    if (StageLookup[v] = Method) then
+      Stage := v;
+
+  if (Stage = 999) then
+  begin
+    EmuWarning('Unknown Method (0x%.08X)', [Method]);
+  end
+  else
+  begin
+    // WARNING: Cxbx TODO : Correct reference counting has not been completely verified for this code
+
+    pTexture := g_DataToTexture.get(Data);
+
+    EmuWarning('Switching Texture 0x%.08X (0x%.08X) @ Stage %d', [pTexture, pTexture.EmuBaseTexture8, Stage]);
+
+    hRet := g_pD3DDevice8.SetTexture(Stage, pTexture.EmuBaseTexture8);
+
+    { MARKED OUT BY CXBX
+    if (pTexture.EmuBaseTexture8 <> 0) then
     begin
-        if (StageLookup[v] = Method) then
-        begin
-            Stage := v;
-         end;
+         Integer dwDumpTexture := 0;
+
+         szBuffer: array [0..255-1] of Char;
+
+        StrFmt(szBuffer, 'C:\Aaron\Textures\0x%.08X-SwitchTexture%.03d.bmp', pTexture, dwDumpTexture++);
+
+        pTexture.EmuTexture8.UnlockRect(0);
+
+        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuBaseTexture8, 0);
      end;
-
-    if (Stage = -1) then
-    begin
-        EmuWarning('Unknown Method (0x%.08X)', Method);
-     end;
-    else
-    begin
-        //
-        // WARNING: Cxbx TODO : Correct reference counting has not been completely verified for this code
-        //
-
-        X_D3DTexture *pTexture := (X_D3DTexture )g_DataToTexture.get(Data);
-
-        EmuWarning('Switching Texture 0x%.08X (0x%.08X) @ Stage %d', pTexture, pTexture.EmuBaseTexture8, Stage);
-
-        HRESULT hRet := g_pD3DDevice8.SetTexture(Stage, pTexture.EmuBaseTexture8);
-
-        (*
-        if (pTexture.EmuBaseTexture8 <> 0) then
-        begin
-             Integer dwDumpTexture := 0;
-
-             szBuffer: array [0..255-1] of Char;
-
-            StrFmt(szBuffer, 'C:\Aaron\Textures\0x%.08X-SwitchTexture%.03d.bmp', pTexture, dwDumpTexture++);
-
-            pTexture.EmuTexture8.UnlockRect(0);
-
-            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.EmuBaseTexture8, 0);
-         end;
-        //*/
-     end;
-     *)
+    }
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4059,52 +4058,48 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice8_Present: HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:2  
+function XTL_EmuIDirect3DDevice8_Present(
+    CONST pSourceRect: TRect;
+    CONST pDestRect: TRect;
+    pDummy1: PVOID;
+    pDummy2: PVOID
+) : HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:2
 var
   hRet: HRESULT;
-(*(
-    CONST TRect* pSourceRect,
-    CONST TRect* pDestRect,
-    PVOID       pDummy1,
-    PVOID       pDummy2
-) *)
+  pBackBuffer: IDirect3DSurface8;
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
 
-{ TODO : Need to be translated to delphi }
-(*
 {$IFDEF DEBUG}
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Present' +
+(*    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Present' +
            #13#10'(' +
            #13#10'   pSourceRect       : 0x%.08X' +
            #13#10'   pDestRect         : 0x%.08X' +
            #13#10'   pDummy1           : 0x%.08X' +
            #13#10'   pDummy2           : 0x%.08X' +
            #13#10');',
-           [pSourceRect, pDestRect, pDummy1, pDummy2]);
+           [pSourceRect, pDestRect, pDummy1, pDummy2]); *)
 {$ENDIF}
 
-    // release back buffer lock
-    begin
-        IDirect3DSurface8 *pBackBuffer;
+  // release back buffer lock
+  begin
+    g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
+    pBackBuffer.UnlockRect();
+  end;
 
-        g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
+(*  hRet := g_pD3DDevice8.Present(pSourceRect, pDestRect, HWND(pDummy1), (CONST RGNDATA)pDummy2);
 
-        pBackBuffer.UnlockRect();
-     end;
+  // not really accurate because you definately dont always present on every vblank
+  g_VBData.Swap := g_VBData.VBlank;
 
-    HRESULT hRet := g_pD3DDevice8.Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA)pDummy2);
-
-    // not really accurate because you definately dont always present on every vblank
-    g_VBData.Swap := g_VBData.VBlank;
-
-    if (g_VBData.VBlank = g_VBLastSwap + 1) then
-        g_VBData.Flags := 1; // D3DVBLANK_SWAPDONE
-    else
-        g_VBData.Flags := 2; // D3DVBLANK_SWAPMISSED
+  if (g_VBData.VBlank = g_VBLastSwap + 1) then
+      g_VBData.Flags := 1 // D3DVBLANK_SWAPDONE
+  else
+      g_VBData.Flags := 2; // D3DVBLANK_SWAPMISSED
 *)
+
   EmuSwapFS(fsXbox);
 
   Result := hRet;
@@ -4142,7 +4137,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource; pBase: PVOID): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:85
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
 var
   hRet: HRESULT;
   pResource: PX_D3DResource;
@@ -4172,6 +4167,9 @@ var
   w: uint32;
   h: uint32;
   v: uint32;
+  c: uint32;
+  p: Byte;
+  y: DWORD;
 
   pPalette: PX_D3DPalette;
 
@@ -4195,6 +4193,7 @@ var
   pExpandedTexture : PByte;
   pTexturePalette : PByte;
 
+  dummy: Pointer;
 begin
   EmuSwapFS(fsWindows);
 
@@ -4715,26 +4714,24 @@ begin
                     // Copy the currently selected palette's data to the buffer
                     Move(pCurrentPalette, pTexturePalette, dwPaletteSize);
 
-                    { TODO -oDXBX : needs to be translated }
-                    (*
-                    Word w := 0;
-                    Word c := 0;
-                    Byte p := 0;
-                    for (Word y := 0; y < dwDataSize / 4; y++)
+                    w := 0;
+                    c := 0;
+                    p := 0;
+                    for y := 0 to (dwDataSize div 4) - 1 do
                     begin
                       if (c = dwMipWidth) then
                       begin
                         w := w + dwMipWidth * 3;
                         c := 0;
                       end;
-                      p := (Byte)pTextureCache[w];
+                      p := Byte(pTextureCache[w]);
                       pExpandedTexture[y * 4 + 0] := pTexturePalette[p * 4 + 0];
                       pExpandedTexture[y * 4 + 1] := pTexturePalette[p * 4 + 1];
                       pExpandedTexture[y * 4 + 2] := pTexturePalette[p * 4 + 2];
                       pExpandedTexture[y * 4 + 3] := pTexturePalette[p * 4 + 3];
                       w := w + 1;
                       c := c + 1;
-                    end; *)
+                    end;
 
                     // Copy the expanded texture back to the buffer
                     Move(pExpandedTexture, pPixelData, dwDataSize);
@@ -4757,12 +4754,9 @@ begin
               else if (bCompressed) then
               begin
                 // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
-
-
-                { TODO -oDXBX : needs to be translated }
-                (*Move(pSrc + dwCompressedOffset, LockedRect.pBits, dwCompressedSize shr (level * 2));
-                dwCompressedOffset := dwCompressedOffset + (dwCompressedSize shr (level * 2));        *)
-
+                dummy := pSrc + dwCompressedOffset;
+                Move(dummy, LockedRect.pBits, dwCompressedSize shr (level * 2));
+                dwCompressedOffset := dwCompressedOffset + (dwCompressedSize shr (level * 2));
               end
               else
               begin
@@ -4874,7 +4868,7 @@ begin
       end;
 
 {$IFDEF DEBUG}
-      (*DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pResource.Size, pResource.AllocationSize]); *)
+(*      DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pResource.Size, pResource.AllocationSize]); *)
 {$ENDIF}
     end;
 
@@ -5769,7 +5763,7 @@ procedure XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
   DstRect: PRect;
   EnableColorKey: BOOL;
   ColorKey: D3DCOLOR); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:20  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:25
 var
   ddsd2: DDSURFACEDESC2;
   pDest: Pointer;
@@ -5777,7 +5771,18 @@ var
   w: DWord;
   h: DWord;
   SourRect: TRect;
+  DestRect: TRect;
   y: Integer;
+  LockedRectDest: D3DLOCKED_RECT;
+  pBackBuffer: IDirect3DSurface8;
+  hRet: HRESULT;
+
+  pCurByte: Puint08;
+  pDest2: Puint08;
+  dx: uint32;
+  dy: uint32;
+  dwImageSize: uint32;
+  stop: uint32;
 begin
   EmuSwapFS(fsWindows);
 
@@ -5803,7 +5808,7 @@ begin
     if (FAILED(g_pDDSOverlay7.Lock(nil, ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0))) then
       EmuWarning('Unable to lock overlay surface!');
 
-        // copy data
+    // copy data
     begin
       pDest := ddsd2.lpSurface;
       pSour := pSurface.Lock;
@@ -5819,9 +5824,8 @@ begin
         for y := 0 to h - 1 do
         begin
           Move(pSour, pDest, w * 2);
-
-          (*pDest:= pDest + ddsd2.lPitch;
-          pSour:= pSour + g_dwOverlayP; *)
+          pDest:= Pointer(DWORD(pDest) + ddsd2.lPitch);
+          pSour:= DWORD(pSour) + DWORD(g_dwOverlayP);
         end;
       end;
     end;
@@ -5832,7 +5836,7 @@ begin
   // update overlay!
   if (g_bSupportsYUY2) then
   begin
-        (*SourRect := (0, 0, g_dwOverlayW, g_dwOverlayH), DestRect;
+(*        SourRect := TRect(0, 0, g_dwOverlayW, g_dwOverlayH);
         MONITORINFO MonitorInfo := (0);
 
         Integer nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
@@ -5866,92 +5870,87 @@ begin
   end
   else
   begin
-        // Cxbx TODO : dont assume X8R8G8B8 ?
-        (*D3DLOCKED_RECT LockedRectDest;
+    // Cxbx TODO : dont assume X8R8G8B8 ?
+    pBackBuffer := nil;
+    hRet := g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
 
-        IDirect3DSurface8 *pBackBuffer:=0;
+    // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
+    if (hRet = D3D_OK) and (pBackBuffer.LockRect(LockedRectDest, 0, 0) = D3D_OK) then
+    begin
+        (*pCurByte := uint08(pSurface.Lock);
+        pDest2 := uint08(LockedRectDest.pBits);
+        dx := 0;
+        dy := 0;
+        dwImageSize := g_dwOverlayP*g_dwOverlayH;
 
-        HRESULT hRet := g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
-
-        // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-        if (hRet = D3D_OK and pBackBuffer.LockRect(@LockedRectDest, 0, 0) = D3D_OK) then
+        // grayscale
+        if (False) then
         begin
-            uint08 *pCurByte := (uint08)pSurface.Lock;
-
-            uint08 *pDest := (uint08)LockedRectDest.pBits;
-
-            uint32 dx:=0, dy=0;
-
-            uint32 dwImageSize := g_dwOverlayP*g_dwOverlayH;
-
-            // grayscale
-            if (False) then
+            for y := 0 to g_dwOverlayH - 1 do
             begin
-                for(uint32 y:=0;y<g_dwOverlayH;y++)
+                stop := g_dwOverlayW * 4;
+                for(uint32 x:=0;x<stop;x+=4)
                 begin
-                    uint32 stop := g_dwOverlayW*4;
-                    for(uint32 x:=0;x<stop;x+=4)
-                    begin
-                        uint08 Y := *pCurByte;
+                    uint08 Y := *pCurByte;
 
-                        pDest[x+0] := Y;
-                        pDest[x+1] := Y;
-                        pDest[x+2] := Y;
-                        pDest[x+3] := $FF;
+                    pDest2[x+0] := Y;
+                    pDest2[x+1] := Y;
+                    pDest2[x+2] := Y;
+                    pDest2[x+3] := $FF;
 
-                        pCurByte+:=2;
-                     end;
-
-                    pDest:= pDest + LockedRectDest.Pitch;
+                    pCurByte+:=2;
                  end;
+
+                pDest2:= pDest2 + LockedRectDest.Pitch;
              end;
-            // full color conversion (YUY2->XRGB)
-            else
+        end
+        // full color conversion (YUY2->XRGB)
+        else
+        begin
+            (*for(uint32 v:=0;v<dwImageSize;v+=4)
             begin
-                for(uint32 v:=0;v<dwImageSize;v+=4)
+                Single Y[2], U, V;
+
+                Y[0] = *pCurByte:= *pCurByte + 1;
+                U    = *pCurByte:= *pCurByte + 1;
+                Y[1] = *pCurByte:= *pCurByte + 1;
+                V    = *pCurByte:= *pCurByte + 1;
+
+                Integer a:=0;
+                for(Integer x:=0;x<2;x++)
                 begin
-                    Single Y[2], U, V;
+                    Single R := Y[a] + 1.402f*(V-128);
+                    Single G := Y[a] - 0.344f*(U-128) - 0.714f*(V-128);
+                    Single B := Y[a] + 1.772f*(U-128);
 
-                    Y[0] = *pCurByte:= *pCurByte + 1;
-                    U    = *pCurByte:= *pCurByte + 1;
-                    Y[1] = *pCurByte:= *pCurByte + 1;
-                    V    = *pCurByte:= *pCurByte + 1;
+                    R := (R < 0) ? 0: ((R > 255) ? 255: R);
+                    G := (G < 0) ? 0: ((G > 255) ? 255: G);
+                    B := (B < 0) ? 0: ((B > 255) ? 255: B);
 
-                    Integer a:=0;
-                    for(Integer x:=0;x<2;x++)
-                    begin
-                        Single R := Y[a] + 1.402f*(V-128);
-                        Single G := Y[a] - 0.344f*(U-128) - 0.714f*(V-128);
-                        Single B := Y[a] + 1.772f*(U-128);
+                    uint32 i := (dy*LockedRectDest.Pitch+(dx+x)*4);
 
-                        R := (R < 0) ? 0: ((R > 255) ? 255: R);
-                        G := (G < 0) ? 0: ((G > 255) ? 255: G);
-                        B := (B < 0) ? 0: ((B > 255) ? 255: B);
+                    pDest2[i+0] := (uint08)B;
+                    pDest2[i+1] := (uint08)G;
+                    pDest2[i+2] := (uint08)R;
+                    pDest2[i+3] := $FF;
 
-                        uint32 i := (dy*LockedRectDest.Pitch+(dx+x)*4);
-
-                        pDest[i+0] := (uint08)B;
-                        pDest[i+1] := (uint08)G;
-                        pDest[i+2] := (uint08)R;
-                        pDest[i+3] := $FF;
-
-                        a:= a + 1;
-                     end;
-
-                    dx+:=2;
-
-                    if ((dx%g_dwOverlayW) = 0) then
-                    begin
-                        dy:= dy + 1;
-                        dx:=0;
-                     end;
-
+                    a:= a + 1;
                  end;
-             end;
 
-            pBackBuffer.UnlockRect();
+                dx+:=2;
+
+                if ((dx%g_dwOverlayW) = 0) then
+                begin
+                    dy:= dy + 1;
+                    dx:=0;
+                 end;
+
+             end;
          end;
-         *)
+
+        pBackBuffer.UnlockRect();   *)
+     end;
+
   end;
 
   EmuSwapFS(fsXbox);
@@ -6817,7 +6816,7 @@ begin
 {$ENDIF}
 
   EmuWarning('YuvEnable not implemented (0x%.08X)', [Enable]);
-(* Dxbx TODO : translate
+(* Dxbx TODO : translate  -- THIS HACK IS DSTIEN ,,.. martin shogun has disbabled this
     // HACK: Display YUV surface by using an overlay.
     if (Enable != g_fYuvEnabled) then
     {
@@ -7064,7 +7063,7 @@ begin
 
   if (g_VertexShaderConstantMode <> X_VSCM_NONERESERVED) then
   begin
-(* Dxbx TODO : Translate :
+(* MARKED OUT CXBX :
     // Cxbx TODO: Proper solution.
     static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
     static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
@@ -7336,10 +7335,8 @@ begin
     end
     else
     begin
-        { TODO -oDXBX : needs to be translated }
-        (*
-        uiNumVertices := DWORD(pIndexData)/2 + VertexCount;
-        uiStartIndex := DWORD(pIndexData)/2; *)
+(*      uiNumVertices := DWORD(pIndexData)/2 + VertexCount;
+      uiStartIndex := DWORD(pIndexData)/2; *)
     end;
 
     if (XTL_IsValidCurrentShader()) then
@@ -7420,13 +7417,13 @@ begin
   begin
   {$endif}
 
-  if (XTL_IsValidCurrentShader()) then
-  begin
+    if (XTL_IsValidCurrentShader()) then
+    begin
       g_pD3DDevice8.DrawIndexedPrimitiveUP
       (
           EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
       );
-   end;
+    end;
 
   {$ifdef _DEBUG_TRACK_VB}
    end;
@@ -7548,11 +7545,11 @@ end;
 
 function XTL_EmuIDirect3DDevice8_CreatePalette(
   Size: X_D3DPALETTESIZE;
-  {**}ppPalette: PX_D3DPalette
+  ppPalette: PX_D3DPalette
 ): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:2  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  (*@ppPalette := XTL_EmuIDirect3DDevice8_CreatePalette2(Size);*)
+  ppPalette := XTL_EmuIDirect3DDevice8_CreatePalette2(Size);
   Result := D3D_OK;
 end;
 
