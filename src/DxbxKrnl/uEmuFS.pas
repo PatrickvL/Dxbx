@@ -298,10 +298,8 @@ var
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DXBX_DEBUG_TRACE}
   DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
-{$ENDIF}
 {$ENDIF}
 
   // copy global TLS to the current thread
@@ -318,13 +316,11 @@ begin
   else
     pNewTLS := nil;
 
+{$IFDEF _DEBUG_TRACE}
   // dump raw TLS data
   begin
-{$IFDEF _DEBUG_TRACE}
     if pNewTLS = nil then
-{$IFDEF DXBX_DEBUG}
       DbgPrintf('EmuFS : TLS Non-Existant (OK)')
-{$ENDIF}
     else
     begin
       Line := 'EmuFS : TLS Data Dump...';
@@ -335,9 +331,7 @@ begin
       begin
         if (v mod $10) = 0 then
         begin
-{$IFDEF DXBX_DEBUG}
           DbgPrintf(Line);
-{$ENDIF}
           Line := 'EmuFS : 0x' + PointerToString(@(PUInt8(pNewTLS)[v])) + ': ';
         end;
 
@@ -347,12 +341,10 @@ begin
 
       end;
 
-{$IFDEF DXBX_DEBUG}
       DbgPrintf(Line);
-{$ENDIF}
     end;
-{$ENDIF}
   end;
+{$ENDIF}
 
   OrgFS := GetFS();
   OrgNtTib := GetTIB();
@@ -370,7 +362,7 @@ begin
   OrgNtTib.union_b.Dxbx_SwapFS := NewFS;
   OrgNtTib.union_b.Dxbx_IsXboxFS := False;
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF DXBX_EXTREME_LOGGING}
   DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
 {$ENDIF}
 
@@ -410,13 +402,13 @@ begin
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
 
-{$IFDEF DXBX_DEBUG}
 {$IFDEF DXBX_EXTREME_LOGGING}
   DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr));
 
   DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
 {$ENDIF}
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuFS : CurrentFS=%.04x  OrgFS=$%.04x  NewFS=$%.04x  pTLS=$%.08x', [GetFS(), OrgFS, NewFS, pTLS]);
 {$ENDIF}
 end;

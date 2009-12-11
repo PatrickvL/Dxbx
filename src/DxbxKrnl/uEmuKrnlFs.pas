@@ -72,7 +72,7 @@ function {037} xboxkrnl_FscSetCacheSize(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : FscSetCacheSize' +
       #13#10'(' +
       #13#10'   uCachePages         : 0x%.08X' +

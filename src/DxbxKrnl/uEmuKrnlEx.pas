@@ -161,7 +161,7 @@ begin
   EmuSwapFS(fsWindows);
 
   //  Result := xboxkrnl_ExAllocatePoolWithTag(NumberOfBytes, ULONG($656E6F4E {?}));
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : ExAllocatePool' +
            #13#10'(' +
            #13#10'   NumberOfBytes       : 0x%.08X' +
@@ -186,7 +186,7 @@ var
 begin
   EmuSwapFS(fsWindows);
   
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : ExAllocatePoolWithTag' +
            #13#10'(' +
            #13#10'   NumberOfBytes       : 0x%.08X' +
@@ -280,7 +280,7 @@ function {024} xboxkrnl_ExQueryNonVolatileSetting(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : ExQueryNonVolatileSetting' +
          #13#10'(' +
          #13#10'   ValueIndex          : 0x%.08X' +

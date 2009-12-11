@@ -31,10 +31,10 @@ const
   CDXBXDLLNAME = 'Dxbx.dll';
 
   // Application Versions
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   _DXBX_VERSION = '0.0.0.10 Debug';
 {$ELSE}
-  _DXBX_VERSION = '0.0.0.19';
+  _DXBX_VERSION = '0.0.0.10';
 {$ENDIF}
   _XDK_TRACKER_VERSION = '2.0.2.0';
 
@@ -47,6 +47,7 @@ const
 
   XPR0_MAGIC_VALUE = $30525058; // MAKEFOURCC('XPR0'), bHasResourceOffsetsTable = FALSE;
   XPR1_MAGIC_VALUE = $31525058; // MAKEFOURCC('XPR1'), bHasResourceOffsetsTable = TRUE;
+
   XPR_MAGIC_VALUE = XPR0_MAGIC_VALUE;
 
   _MagicNumber = 'XBEH'; // Xbe File Format

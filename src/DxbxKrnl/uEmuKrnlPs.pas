@@ -118,7 +118,7 @@ begin
   StartRoutine := Parameter.StartRoutine;
   StartSuspended := Parameter.StartSuspended;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : PCSTProxy' +
     #13#10'(' +
     #13#10'   StartContext1       : 0x%.08x' +
@@ -138,7 +138,7 @@ begin
   begin
     pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuKrnl : Calling pfnNotificationRoutine (0x%.08x)', [Addr(pfnNotificationRoutine)]);
 {$ENDIF}
 
@@ -259,7 +259,7 @@ begin
   CreateSuspended := (dwCreationFlags and CREATE_SUSPENDED) > 0;
   DebugStack := False; // ??
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : PsCreateSystemThread' +
     #13#10'(' +
     #13#10'   lpThreadAttributes  : 0x%.08x' +
@@ -327,7 +327,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : PsCreateSystemThreadEx' +
     #13#10'(' +
     #13#10'   ThreadHandle        : 0x%.08x' +
@@ -358,7 +358,7 @@ begin
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuKrnl : ThreadHandle : 0x%.04x, ThreadId : 0x%.04x', [ThreadHandle^, dwThreadId]);
 {$ENDIF}
 
@@ -367,7 +367,11 @@ begin
       hDupHandle := 0;
 
       if not DuplicateHandle(GetCurrentProcess(), ThreadHandle^, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
+      begin
+{$IFDEF DEBUG}
         DbgPrintf('EmuKrnl : PsCreateSystemThreadEx - Couldn''t duplicate handle!');
+{$ENDIF}
+      end;
 
       CxbxKrnlRegisterThread(hDupHandle);
     end;

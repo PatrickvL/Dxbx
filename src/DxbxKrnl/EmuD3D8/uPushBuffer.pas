@@ -148,7 +148,7 @@ begin
       end;
     end;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('Active texture was unswizzled');
 {$ENDIF}
   end;    *)
@@ -208,7 +208,7 @@ begin
       begin
           g_PBTrackShowOnce.remove(pdwPushData);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
           DbgPrintf('');
           DbgPrintf('');
           DbgPrintf('  PushBuffer@$%.08X...', [pdwPushData]);
@@ -252,7 +252,7 @@ begin
              end
             else
             begin
-                {$IFDEF DXBX_DEBUG}
+                {$IFDEF DEBUG}
                 if (bShowPB) then
                 begin
                     DbgPrintf(Format('PrimitiveType := %d)', [pdwPushData]));
@@ -503,7 +503,7 @@ begin
             #ifdef _DEBUG_TRACK_PB
             if (bShowPB) then
             begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
                 printf('  NVPB_InlineIndexArray($%.08X, %d)...', pIndexData, dwCount);
                 printf('');
                 printf('  Index Array Data...');
@@ -518,7 +518,7 @@ begin
                     printf('  %.04X', *pwVal++);
                  end;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
                 printf('');
 {$ENDIF}
 
@@ -543,7 +543,7 @@ begin
 
                 // print out stream data
                 begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
                     printf('');
                     printf('  Vertex Stream Data ($%.08X)...', pActiveVB);
                     printf('');
@@ -666,7 +666,7 @@ begin
     #ifdef _DEBUG_TRACK_PB
     if (bShowPB) then
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
         printf('');
         printf('CxbxDbg> ');
 {$ENDIF}
@@ -733,7 +733,7 @@ begin
     if (maxIndex > ((VBDesc.Size / uiStride) - 1)) then
       maxIndex := (VBDesc.Size / uiStride) - 1;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     fprintf(dbgVertices, 'xof 0303txt 0032');
     fprintf(dbgVertices, '');
     fprintf(dbgVertices, '//\n');
@@ -770,7 +770,7 @@ begin
     uint max := maxIndex + 1;
     for (uint v := 0; v < max; v++)
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       fprintf(dbgVertices, '      %f;%f;%f;%s',
         * (FLOAT)@pVBData[v * uiStride + 0],
         * (FLOAT)@pVBData[v * uiStride + 4],
@@ -779,7 +779,7 @@ begin
 {$ENDIF}
     end;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     fprintf(dbgVertices, '      %d;', dwCount - 2);
 {$ENDIF}
 
@@ -795,7 +795,7 @@ begin
 
     for (uint i := 2; i < max; i++)
     begin
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
       fprintf(dbgVertices, '      3;%d,%d,%d;%s',
         a, b, c, (i < (max - 1))? ',': ';');
 {$ENDIF}
@@ -809,7 +809,7 @@ begin
       lc := c;
     end;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     fprintf(dbgVertices, '     end;');
     fprintf(dbgVertices, '   end;');
     fprintf(dbgVertices, ' end;');

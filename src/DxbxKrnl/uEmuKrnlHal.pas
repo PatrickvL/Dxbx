@@ -241,7 +241,7 @@ procedure {049} xboxkrnl_HalReturnToFirmware(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : HalReturnToFirmware' +
            #13#10'(' +
            #13#10'   Routine             : 0x%.08X' +

@@ -516,7 +516,7 @@ function xboxkrnl_RtlEqualString(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlEqualString' +
       #13#10'(' +
       #13#10'  String1            : 0x%.08X' +
@@ -641,7 +641,7 @@ procedure xboxkrnl_RtlInitAnsiString(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlInitAnsiString' +
       #13#10'(' +
       #13#10'   DestinationString   : 0x%.08X' +
@@ -673,7 +673,7 @@ procedure xboxkrnl_RtlInitializeCriticalSection(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
+{$IFDEF DXBX_DEBUG_TRACE}
   DbgPrintf('EmuKrnl : RtlInitializeCriticalSection' +
            #13#10'(' +
            #13#10'   CriticalSection              : 0x%.08X' +
@@ -783,7 +783,7 @@ function xboxkrnl_RtlNtStatusToDosError(
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlNtStatusToDosError' +
            #13#10'(' +
            #13#10'   Status              : 0x%.08X' +

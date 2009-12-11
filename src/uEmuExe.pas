@@ -371,7 +371,7 @@ begin
 
     SectionHeaders[v].Characteristics := Flags;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuExe: Generating Section Header 0x%.4x... OK', [v]);
 {$ENDIF}
   end;
@@ -413,7 +413,7 @@ begin
   NtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IAT].VirtualAddress := SectionHeaders[i].VirtualAddress;
   NtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IAT].Size := $08;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuExe: Generating Section Header 0x%.4x(.cxbximp)... OK', [i]);
 {$ENDIF}
 
@@ -469,7 +469,7 @@ begin
   // make this section readable and executable
   SectionHeaders[i].Characteristics := IMAGE_SCN_MEM_READ xor IMAGE_SCN_MEM_EXECUTE xor IMAGE_SCN_CNT_CODE;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
   DbgPrintf('EmuExe: Generating Section Header 0x%.4x(.cxbxplg)... OK', [i]);
 {$ENDIF}
 
@@ -529,7 +529,7 @@ begin
     ep := x_Xbe.m_Header.dwEntryAddr;
     i := NtHeaders.FileHeader.NumberOfSections - 1;
 
-{$IFDEF DXBX_DEBUG}
+{$IFDEF DEBUG}
     DbgPrintf('EmuExe: Generating Section Header 0x%.4x (.cxbxplg)... OK', [i]);
 {$ENDIF}
 
