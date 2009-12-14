@@ -610,7 +610,6 @@ PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
 *)
 //const FIELD_OFFSET(ctype, = field)    ((LongInt)(LONG_PTR) and (((ctype )0).field));
-function FIELD_OFFSET(var Variable): Integer;
 (*
 const PCI_COMMON_HDR_LENGTH = (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific));
 
@@ -1146,12 +1145,5 @@ type
     ); stdcall;
 
 implementation
-
-// Note: Instead of calling FIELD_OFFSET(Type, Member)
-//       use the construct: FIELD_OFFSET(PType(nil).Member)
-function FIELD_OFFSET(var Variable): Integer;
-begin
-  Result := Integer(@(Pointer(Variable)));
-end;
 
 end.

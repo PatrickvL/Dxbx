@@ -288,14 +288,12 @@ type
     Buffer: MathPtr;
     m_KernelLibraryVersion: XBE_LIBRARYVERSION;
     m_XAPILibraryVersion: XBE_LIBRARYVERSION;
-    m_Certificate: XBE_CERTIFICATE;
     procedure ConstructorInit;
-  protected
-    XbeFile: file of Byte;
-    m_LogoRLE: LogoRLE;
+    function GetFileSize: Int64;
   public
     m_szPath: string;
     m_Header: XBE_HEADER;
+    m_Certificate: XBE_CERTIFICATE;
     m_SectionHeader: array of XBE_SECTIONHEADER;
     m_LibraryVersion: array of XBE_LIBRARYVERSION;
     m_szSectionName: array of array of AnsiChar; // TODO : Use XBE_SECTIONNAME_MAXLENGTH
@@ -303,6 +301,7 @@ type
     m_TLS: PXBE_TLS;
     m_bzSection: array of TRawSection;
 
+    property FileSize: Int64 read GetFileSize;
     constructor Create(aFileName: string; aFileType: TFileType);
     destructor Destroy; override;
 
@@ -312,6 +311,7 @@ type
     function DumpInformation(FileName: string = ''): Boolean;
     
     function GetAddr(x_dwVirtualAddress: DWord): Integer;
+    function GetAddrStr(x_dwVirtualAddress: DWord): string;
 
     function FindSection(const aSectionName: string; out Size: Integer): TRawSection;
     function ExportLogoBitmap(aBitmap: TBitmap): Boolean;
@@ -325,6 +325,8 @@ var
 
 function GetDWordVal(aBuffer: MathPtr; i: Integer): DWord;
 function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
+
+function BetterTime(x_timeDate: uint32): string;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
 
@@ -687,7 +689,6 @@ var
   FileEx: TextFile;
   lIndex, lIndex2: Integer;
   TmpStr: string;
-  TmpChr: Char;
   StrAsciiFileName: string;
   Flag: Byte;
 //  BIndex: Byte;
@@ -794,33 +795,8 @@ begin
   _LogEx(DxbxFormat('(PE) Size of Image               : 0x%.8x', [m_Header.dwPeSizeofImage]));
   _LogEx(DxbxFormat('(PE) Checksum                    : 0x%.8x', [m_Header.dwPeChecksum]));
   _LogEx(DxbxFormat('(PE) TimeDate Stamp              : 0x%.8x (%s)', [m_Header.dwPeTimeDate, BetterTime(m_Header.dwPeTimeDate)]));
-
-  lIndex := GetAddr(m_Header.dwDebugPathNameAddr);
-  TmpStr := '';
-  TmpChr := Char(Buffer[lIndex]);
-  Inc(lIndex);
-  while TmpChr <> #0 do
-  begin
-    TmpStr := TmpStr + TmpChr;
-    TmpChr := Char(Buffer[lIndex]);
-    Inc(lIndex);
-  end;
-
-  _LogEx(DxbxFormat('Debug PathName Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathnameAddr, TmpStr]));
-
-  lIndex := GetAddr(m_Header.dwDebugFileNameAddr);
-  TmpStr := '';
-  TmpChr := Char(Buffer[lIndex]);
-  Inc(lIndex);
-  while TmpChr <> #0 do
-  begin
-    TmpStr := TmpStr + TmpChr;
-    TmpChr := Char(Buffer[lIndex]);
-    Inc(lIndex);
-  end;
-
-  _LogEx(DxbxFormat('Debug FileName Address           : 0x%.8x ("%s")', [m_Header.dwDebugFileNameAddr, TmpStr]));
-
+  _LogEx(DxbxFormat('Debug PathName Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathnameAddr, GetAddrStr(m_Header.dwDebugPathnameAddr)]));
+  _LogEx(DxbxFormat('Debug FileName Address           : 0x%.8x ("%s")', [m_Header.dwDebugFileNameAddr, GetAddrStr(m_Header.dwDebugFileNameAddr)]));
   _LogEx(DxbxFormat('Debug Unicode FileName Address   : 0x%.8x (L"%s")', [m_Header.dwDebugUnicodeFileNameAddr, StrAsciiFileName]));
   _LogEx(DxbxFormat('Kernel Image Thunk Address       : 0x%.8x (Retail: 0x%.8x, Debug: 0x%.8x)', [m_Header.dwKernelImageThunkAddr, m_Header.dwKernelImageThunkAddr xor XOR_KT_RETAIL, m_Header.dwKernelImageThunkAddr xor XOR_KT_DEBUG]));
   _LogEx(DxbxFormat('NonKernel Import Dir Address     : 0x%.8x', [m_Header.dwNonKernelImportDirAddr]));
@@ -1034,7 +1010,35 @@ begin
       end;
     end;
   end;
-end; // TXbe.GetAddr
+end;
+
+function TXbe.GetAddrStr(x_dwVirtualAddress: DWord): string;
+var
+  lIndex: Integer;
+  TmpChr: Char;
+begin
+  lIndex := GetAddr(x_dwVirtualAddress);
+  Result := '';
+  try
+    TmpChr := Char(Buffer[lIndex]);
+    Inc(lIndex);
+    while TmpChr <> #0 do
+    begin
+      Result := Result + TmpChr;
+      TmpChr := Char(Buffer[lIndex]);
+      Inc(lIndex);
+    end;
+  except
+    // ignore - probably out of bounds read
+  end;
+end;
+
+function TXbe.GetFileSize: Int64;
+begin
+  Result := MyFile.Size;
+end;
+
+// TXbe.GetAddr
 
 function TXbe.FindSection(const aSectionName: string; out Size: Integer): TRawSection;
 var
