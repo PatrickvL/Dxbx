@@ -30,12 +30,26 @@ uses
   , Direct3D8
 
   // Dxbx
+  , uTypes
   , uEmuD3D8Types
   , uEmuAlloc;
 
 
 type
   LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
+
+  _VSH_SHADER_HEADER = packed record
+    aType: uint08;
+    Version: uint08;
+    NumInst: uint08;
+    Unknown0: uint08;
+  end;
+
+  VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
+
+const
+  VSH_INSTRUCTION_SIZE = 4;
+  VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * sizeof(DWORD);
 
 
 function XTL_IsValidCurrentShader: Boolean; stdcall; // forward
@@ -60,12 +74,31 @@ function XTL_EmuRecompileVshFunction
     bNoReservedConstants: boolean
 ) : HRESULT; stdcall;
 
+function VshGetDeclarationSize(pDeclaration: PDWord): DWORD;
+
+
+(*#define DEF_VSH_END 0xFFFFFFFF
+(*#define DEF_VSH_NOP 0x00000000 *)
+
+
 implementation
 
 uses
   // Dxbx
   uEmuFS
   , uEmuD3D8;
+
+function VshGetDeclarationSize(pDeclaration: PDWord): DWORD;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+var
+  Pos: DWORD;
+begin
+  Pos := 0;
+(*  while pDeclaration+Pos <> DEF_VSH_END do
+    inc(Pos); *)
+
+  Result := (Pos + 1) * sizeof(DWORD);
+end;
 
 function XTL_EmuRecompileVshDeclaration
 (
@@ -76,46 +109,47 @@ function XTL_EmuRecompileVshDeclaration
   pVertexDynamicPatch: VERTEX_DYNAMIC_PATCH
 ) : DWORD;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+var
+  DeclarationSize: DWORD;
 begin
-    // First of all some info:
-    // We have to figure out which flags are set and then
-    // we have to patch their params
+  // First of all some info:
+  // We have to figure out which flags are set and then
+  // we have to patch their params
 
-    // some token values
-    // 0xFFFFFFFF - end of the declaration
-    // 0x00000000 - nop (means that this value is ignored)
+  // some token values
+  // 0xFFFFFFFF - end of the declaration
+  // 0x00000000 - nop (means that this value is ignored)
 
-    // Calculate size of declaration
- (*   DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
-    *ppRecompiledDeclaration = (DWORD *)(*CxbxMalloc(DeclarationSize);
-    DWORD *pRecompiled = *ppRecompiledDeclaration;
-    memcpy(pRecompiled, pDeclaration, DeclarationSize);
-    *pDeclarationSize = DeclarationSize;
+  // Calculate size of declaration
+  DeclarationSize := VshGetDeclarationSize(pDeclaration);
+  *ppRecompiledDeclaration = (DWORD *)(*CxbxMalloc(DeclarationSize);
+  DWORD *pRecompiled = *ppRecompiledDeclaration;
+  memcpy(pRecompiled, pDeclaration, DeclarationSize);
+  *pDeclarationSize = DeclarationSize;
 
-    // TODO: Put these in one struct
-    VSH_PATCH_DATA       PatchData = { 0 };
+  // TODO: Put these in one struct
+  VSH_PATCH_DATA       PatchData = { 0 };
 
-    DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
+  DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
 
-    while (*pRecompiled != DEF_VSH_END)
-    {
-        DWORD Step = VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
-        pRecompiled += Step;
-    }
-    DbgVshPrintf("\tD3DVSD_END()\n};\n");
+  while (*pRecompiled != DEF_VSH_END)
+  {
+      DWORD Step = VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
+      pRecompiled += Step;
+  }
+  DbgVshPrintf("\tD3DVSD_END()\n};\n");
 
-    VshAddStreamPatch(&PatchData);
+  VshAddStreamPatch(&PatchData);
 
-    DbgVshPrintf("NbrStreams: %d\n", PatchData.StreamPatchData.NbrStreams);
+  DbgVshPrintf("NbrStreams: %d\n", PatchData.StreamPatchData.NbrStreams);
 
-    // Copy the patches to the vertex shader struct
-    DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
-    pVertexDynamicPatch->NbrStreams = PatchData.StreamPatchData.NbrStreams;
-    pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)(*CxbxMalloc(StreamsSize);
-    memcpy(pVertexDynamicPatch->pStreamPatches,
-           PatchData.StreamPatchData.pStreamPatches,
-           StreamsSize);
- *)
+  // Copy the patches to the vertex shader struct
+  DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
+  pVertexDynamicPatch->NbrStreams = PatchData.StreamPatchData.NbrStreams;
+  pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)(*CxbxMalloc(StreamsSize);
+  memcpy(pVertexDynamicPatch->pStreamPatches,
+         PatchData.StreamPatchData.pStreamPatches,
+         StreamsSize);
 
   result := D3D_OK;
 end;
@@ -127,6 +161,7 @@ function XTL_EmuRecompileVshFunction
     pOriginalSize: DWORD;
     bNoReservedConstants: boolean
 ) : HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
 (*    VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)(*pFunction;
     DWORD               *pToken;

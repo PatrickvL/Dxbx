@@ -188,8 +188,8 @@ procedure xboxkrnl_RtlLeaveCriticalSection(
   ); stdcall;
 function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlLowerChar(
-  Character: CHAR
-  ): CHAR; stdcall;
+  Character: ANSICHAR
+  ): ANSICHAR; stdcall;
 procedure xboxkrnl_RtlMapGenericMask(
   AccessMask: PACCESS_MASK;
   GenericMapping: PGENERIC_MAPPING
@@ -731,8 +731,8 @@ begin
 end;
 
 function xboxkrnl_RtlLowerChar(
-  Character: CHAR
-  ): CHAR; stdcall;
+  Character: ANSICHAR
+  ): ANSICHAR; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);

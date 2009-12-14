@@ -37,6 +37,7 @@ uses
   Direct3D8,
   DirectDraw,
   // Dxbx
+  uVertexShader,
   uResourceTracker,
   XboxKrnl,
   uConvert,
@@ -45,7 +46,6 @@ uses
   uDxbxKrnlUtils,
   uEmuDInput,
   uPushBuffer,
-  uVertexShader,
   uEmu,
   uEmuKrnl,
   uEmuXTL,
@@ -2548,7 +2548,7 @@ function XTL_EmuIDirect3DDevice8_CreateVertexShader(
   pFunction: PDWORD;
   pHandle: PDWORD;
   Usage: DWORD): HRESULT; stdcall;
-// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:2
+// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:85
 var
   hRet: HRESULT;
   pD3DVertexShader: PX_D3DVertexShader;
@@ -2560,6 +2560,9 @@ var
   VertexShaderSize: DWORD;
   DeclarationSize: DWORD;
   aHandle: DWORD;
+
+  pFileName: array [0..30-1] of Char;
+  FailedShaderCount: Integer;
 begin
   hret := 0;
   EmuSwapFS(fsWindows);
@@ -2598,18 +2601,18 @@ begin
   pRecompiledFunction := 0;
   aHandle := 0;
 
-(*  hRet := XTL_EmuRecompileVshDeclaration(pDeclaration,
+  hRet := XTL_EmuRecompileVshDeclaration(pDeclaration,
                                          pRecompiledDeclaration,
                                          @DeclarationSize,
                                          not Assigned(pFunction),
-                                         pVertexShader.VertexDynamicPatch); *)
+                                         pVertexShader.VertexDynamicPatch);
 
   if (SUCCEEDED(hRet) and Assigned(pFunction)) then
   begin
-(*    hRet := XTL_EmuRecompileVshFunction(DWORD(pFunction),
+    hRet := XTL_EmuRecompileVshFunction(DWORD(pFunction),
                                         pRecompiledBuffer,
                                         VertexShaderSize,
-                                        g_VertexShaderConstantMode = X_VSCM_NONERESERVED); *)
+                                        g_VertexShaderConstantMode = X_VSCM_NONERESERVED);
     if (SUCCEEDED(hRet)) then
     begin
       pRecompiledFunction := pRecompiledBuffer.GetBufferPointer();
@@ -2678,55 +2681,53 @@ begin
   pVertexShader.FunctionSize := 0;
   pVertexShader.pFunction := 0;
   pVertexShader.Type_ := X_VST_NORMAL;
-(*  pVertexShader.Size := (VertexShaderSize - SizeOf(VSH_SHADER_HEADER)) / VSH_INSTRUCTION_SIZE_BYTES;
+  pVertexShader.Size := (VertexShaderSize - SizeOf(VSH_SHADER_HEADER)) div VSH_INSTRUCTION_SIZE_BYTES;
   pVertexShader.DeclarationSize := DeclarationSize;
 
-    if (SUCCEEDED(hRet)) then
+  if (SUCCEEDED(hRet)) then
+  begin
+    if Assigned(pFunction) then
     begin
-        if (pFunction <> 0) then
-        begin
-            pVertexShader.pFunction := (DWORD)CxbxMalloc(VertexShaderSize);
-            move ( pFunction, pVertexShader.pFunction, VertexShaderSize );
-            pVertexShader.FunctionSize := VertexShaderSize;
-         end;
-        else
-        begin
-            pVertexShader.pFunction := 0;
-            pVertexShader.FunctionSize := 0;
-         end;
-        pVertexShader.Handle := aHandle;
-     end;
+      pVertexShader.pFunction := CxbxMalloc(VertexShaderSize);
+      move ( pFunction, pVertexShader.pFunction, VertexShaderSize );
+      pVertexShader.FunctionSize := VertexShaderSize;
+    end
     else
     begin
-        pVertexShader.Handle := D3DFVF_XYZ or D3DFVF_TEX0;
-     end;
+      pVertexShader.pFunction := 0;
+      pVertexShader.FunctionSize := 0;
+    end;
+    pVertexShader.Handle := aHandle;
+  end
+  else
+  begin
+    pVertexShader.Handle := D3DFVF_XYZ or D3DFVF_TEX0;
+  end;
 
-    pD3DVertexShader.Handle := (DWORD)pVertexShader;
+  pD3DVertexShader.Handle := DWORD(pVertexShader);
 
-    *pHandle := ((DWORD)pD3DVertexShader) or $80000000;
+(*   pHandle := PX_D3DVertexShader(pD3DVertexShader or $80000000);  *)
 
-    if (FAILED(hRet)) then
+  if (FAILED(hRet)) then
+  begin
+{$ifdef _DEBUG_TRACK_VS}
+    if Assigned(pFunction) then
     begin
-#ifdef _DEBUG_TRACK_VS
-        if (pFunction) then
-        begin
-             pFileName: array [0..30-1] of Char;
-             Integer FailedShaderCount := 0;
-            VSH_SHADER_HEADER *pHeader := (VSH_SHADER_HEADER)pFunction;
-            EmuWarning('Couldn't create vertex shader!');
-            StrFmt(pFileName, 'failed%05d.xvu', FailedShaderCount);
-            FILE *f := FileOpen(pFileName, 'wb');
-            if (f) then
-            begin
-                FileWrite(pFunction, SizeOf(VSH_SHADER_HEADER) + pHeader.NumInst * 16, 1, f);
-                FileClose(f);
-             end;
-            FailedShaderCount:= FailedShaderCount + 1;
-         end;
-//endif // _DEBUG_TRACK_VS
-        //hRet = D3D_OK;
-     end;
-     *)
+      FailedShaderCount := 0;
+      VSH_SHADER_HEADER *pHeader := (VSH_SHADER_HEADER)pFunction;
+      EmuWarning('Couldn't create vertex shader!');
+      StrFmt(pFileName, 'failed%05d.xvu', FailedShaderCount);
+      FILE *f := FileOpen(pFileName, 'wb');
+      if (f) then
+      begin
+          FileWrite(pFunction, SizeOf(VSH_SHADER_HEADER) + pHeader.NumInst * 16, 1, f);
+          FileClose(f);
+      end;
+      FailedShaderCount:= FailedShaderCount + 1;
+    end;
+{$endif}
+    hRet := D3D_OK;
+  end;
 
   EmuSwapFS(fsXbox);
 
