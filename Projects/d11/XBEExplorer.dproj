@@ -45,6 +45,9 @@
     <DCCReference Include="..\..\src\uTime.pas" />
     <DCCReference Include="..\..\src\uTypes.pas" />
     <DCCReference Include="..\..\src\uXbe.pas" />
+    <DCCReference Include="..\..\src\XBEExplorer\uHexViewer.pas">
+      <Form>HexViewer</Form>
+    </DCCReference>
     <DCCReference Include="..\..\src\XBEExplorer\uXBEExplorerMain.pas">
       <Form>FormXBEExplorer</Form>
     </DCCReference>

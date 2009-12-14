@@ -33,6 +33,8 @@ const
 
   NULL = nil;
 
+  HexNibble: AnsiString = '0123456789ABCDEF';
+
 type
   TVarByteArray = array of Byte;
 
@@ -124,6 +126,9 @@ function malloc(const number_of_bytes: size_t): PVoid; inline;
 function calloc(num_elements, element_size: size_t): PVoid; inline;
 
 function FIELD_OFFSET(var Variable): Integer;
+function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
+function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
+function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
 
 implementation
 
@@ -213,6 +218,46 @@ end;
 function FIELD_OFFSET(var Variable): Integer;
 begin
   Result := Integer(@(Pointer(Variable)));
+end;
+
+function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
+var
+  i: Integer;
+begin
+  i := 0;
+  while (aPtr[i] > #0) and (i < aLen) do
+    Inc(i);
+
+  SetString(Result, aPtr, i);
+end;
+
+function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
+var
+  i: Integer;
+begin
+  i := 0;
+  while (aPtr[i] > #0) and (i < aLen) do
+    Inc(i);
+
+  SetString(Result, aPtr, i);
+end;
+
+function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
+var
+  i: Integer;
+begin
+  if aPtr = nil then
+  begin
+    Result := '';
+    Exit;
+  end;
+  
+  SetLength(Result, aLen * 2);
+  for i := 0 to aLen - 1 do
+  begin
+    Result[1 + i + i] := HexNibble[1 + (PByteArray(aPtr)[i] shr 4)];
+    Result[2 + i + i] := HexNibble[1 + (PByteArray(aPtr)[i] and 15)];
+  end;
 end;
 
 end.
