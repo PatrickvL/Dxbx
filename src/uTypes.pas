@@ -37,7 +37,7 @@ type
   TVarByteArray = array of Byte;
 
   TRawSection = TVarByteArray;
-  
+
   TDWordArray = array [0..(MaxInt div SizeOf(DWord)) - 1] of DWord;
   PDWordArray = ^TDWordArray;
 
@@ -123,6 +123,8 @@ procedure free(p: PVoid); inline;
 function malloc(const number_of_bytes: size_t): PVoid; inline;
 function calloc(num_elements, element_size: size_t): PVoid; inline;
 
+function FIELD_OFFSET(var Variable): Integer;
+
 implementation
 
 {$IFNDEF UNICODE}
@@ -204,6 +206,13 @@ function calloc(num_elements, element_size: size_t): PVoid; inline;
 begin
   Result := malloc(num_elements * element_size);
   memset(Result, 0, num_elements * element_size);
+end;
+
+// Note: Instead of calling FIELD_OFFSET(Type, Member)
+//       use the construct: FIELD_OFFSET(PType(nil).Member)
+function FIELD_OFFSET(var Variable): Integer;
+begin
+  Result := Integer(@(Pointer(Variable)));
 end;
 
 end.
