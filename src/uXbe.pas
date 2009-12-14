@@ -93,9 +93,9 @@ type
     dwGameRatings: DWord; // 0x00A4 - game ratings
     dwDiskNumber: DWord; // 0x00A8 - disk number
     dwVersion: Dword; // 0x00AC - version
-    bzLanKey: array [0..15] of AnsiChar; // 0x00B0 - lan key
-    bzSignatureKey: array [0..15] of AnsiChar; // 0x00C0 - signature key
-    bzTitleAlternateSignatureKey: array [0..15] of array [0..15] of AnsiChar; // 0x00D0 - alternate signature keys
+    bzLanKey: array [0..15] of Byte; // 0x00B0 - lan key
+    bzSignatureKey: array [0..15] of Byte; // 0x00C0 - signature key
+    bzTitleAlternateSignatureKey: array [0..15] of array [0..15] of Byte; // 0x00D0 - alternate signature keys
   end;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
   PXBE_CERTIFICATE = ^XBE_CERTIFICATE;
@@ -126,7 +126,7 @@ type
     dwSectionRefCount: DWord; // section reference count
     dwHeadSharedRefCountAddr: DWord; // head shared page reference count address
     dwTailSharedRefCountAddr: DWord; // tail shared page reference count address
-    bzSectionDigest: array [0..19] of AnsiChar; // section digest
+    bzSectionDigest: array [0..19] of Byte; // section digest
   end;
 (*
   // Section headers - Source: XBMC
@@ -285,7 +285,7 @@ type
   TXbe = class(TObject)
   private
     MyFile: TMemoryStream;
-    Buffer: MathPtr;
+    FRawData: MathPtr;
     m_KernelLibraryVersion: XBE_LIBRARYVERSION;
     m_XAPILibraryVersion: XBE_LIBRARYVERSION;
     procedure ConstructorInit;
@@ -301,6 +301,7 @@ type
     m_TLS: PXBE_TLS;
     m_bzSection: array of TRawSection;
 
+    property RawData: MathPtr read FRawData;
     property FileSize: Int64 read GetFileSize;
     constructor Create(aFileName: string; aFileType: TFileType);
     destructor Destroy; override;
@@ -311,11 +312,12 @@ type
     function DumpInformation(FileName: string = ''): Boolean;
     
     function GetAddr(x_dwVirtualAddress: DWord): Integer;
-    function GetAddrStr(x_dwVirtualAddress: DWord): string;
+    function GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): string;
 
     function FindSection(const aSectionName: string; out Size: Integer): TRawSection;
     function ExportLogoBitmap(aBitmap: TBitmap): Boolean;
     function ExportIconBitmap(aBitmap: TBitmap): Boolean;
+    function ExportXPRToBitmap(XprImage: PXPR_IMAGE; aBitmap: TBitmap): Boolean;
   end;
 
 var
@@ -419,7 +421,7 @@ end;
 procedure TXbe.ConstructorInit;
 begin
   FreeAndNil(MyFile);
-  Buffer := nil;
+  FRawData := nil;
 
   SetLength(m_HeaderEx, 0);
   SetLength(m_SectionHeader, 0);
@@ -445,7 +447,7 @@ begin
 
   MyFile := TMemoryStream.Create;
   MyFile.LoadFromFile(aFileName);
-  Buffer := MyFile.Memory;
+  FRawData := MyFile.Memory;
 
   // verify xbe file was opened
   if MyFile.Size = 0 then
@@ -467,7 +469,7 @@ begin
   end;
 
   i := 0;
-  CopyMemory(@m_Header, Buffer, SizeOf(m_Header));
+  CopyMemory(@m_Header, RawData, SizeOf(m_Header));
   Inc(i, SizeOf(m_Header));
 
   // check xbe image header
@@ -487,13 +489,13 @@ begin
     WriteLog('DXBX: Reading Image Header Extra Bytes...');
 
     SetLength(m_HeaderEx, ExSize);
-    CopyMemory(m_HeaderEx, @(Buffer[i]), ExSize);
+    CopyMemory(m_HeaderEx, @(RawData[i]), ExSize);
 //    Inc(i, ExSize);
   end;
 
   // read xbe certificate
   i := m_Header.dwCertificateAddr - m_Header.dwBaseAddr;
-  CopyMemory(@m_Certificate, @(Buffer[i]), SizeOf(m_Certificate));
+  CopyMemory(@m_Certificate, @(RawData[i]), SizeOf(m_Certificate));
 
   WriteLog('DXBX: Reading Certificate...OK');
 
@@ -509,7 +511,7 @@ begin
     SetLength(m_SectionHeader, m_Header.dwSections);
     for lIndex := 0 to m_Header.dwSections - 1 do
     begin
-      CopyMemory(@(m_SectionHeader[lIndex]), @(Buffer[i]), SizeOf(m_SectionHeader[lIndex]));
+      CopyMemory(@(m_SectionHeader[lIndex]), @(RawData[i]), SizeOf(m_SectionHeader[lIndex]));
       Inc(i, SizeOf(m_SectionHeader[lIndex]));
 
 {$IFDEF DXBX_DEBUG}
@@ -531,7 +533,7 @@ begin
       begin
         for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH - 1 do
         begin
-          m_szSectionName[lIndex][lIndex2] := AnsiChar(Buffer[RawAddr + lIndex2]);
+          m_szSectionName[lIndex][lIndex2] := AnsiChar(RawData[RawAddr + lIndex2]);
           if m_szSectionName[lIndex][lIndex2] = #0 then
             Break;
         end; // for lIndex2
@@ -552,7 +554,7 @@ begin
     SetLength(m_LibraryVersion, m_Header.dwLibraryVersions);
     for lIndex := 0 to m_Header.dwLibraryVersions - 1 do
     begin
-      CopyMemory(@(m_LibraryVersion[lIndex]), @(Buffer[i]), SizeOf(m_LibraryVersion[lIndex]));
+      CopyMemory(@(m_LibraryVersion[lIndex]), @(RawData[i]), SizeOf(m_LibraryVersion[lIndex]));
       Inc(i, SizeOf(m_LibraryVersion[lIndex]));
 
       WriteLog(DxbxFormat('DXBX: Reading Library Version 0x%.4x... OK', [lIndex]));
@@ -564,7 +566,7 @@ begin
       MessageDlg('Could not locate kernel library version', mtError, [mbOk], 0);
 
     i := m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr;
-    CopyMemory({Dest=}@m_KernelLibraryVersion, {Source=}@(Buffer[i]), SizeOf(XBE_LIBRARYVERSION));
+    CopyMemory({Dest=}@m_KernelLibraryVersion, {Source=}@(RawData[i]), SizeOf(XBE_LIBRARYVERSION));
     WriteLog(DxbxFormat('DXBX: Kernel Library Version = %d... OK', [m_KernelLibraryVersion.wBuildVersion]));
 
     // read xbe xapi library version
@@ -573,7 +575,7 @@ begin
       MessageDlg('Could not locate Xapi Library Version', mtError, [mbOk], 0);
 
     i := m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr;
-    CopyMemory({Dest=}@m_XAPILibraryVersion, @(Buffer[i]), SizeOf(XBE_LIBRARYVERSION));
+    CopyMemory({Dest=}@m_XAPILibraryVersion, @(RawData[i]), SizeOf(XBE_LIBRARYVERSION));
     WriteLog(DxbxFormat('DXBX: XAPI Library Version = %d... OK', [m_XAPILibraryVersion.wBuildVersion]));
   end;
 
@@ -601,7 +603,7 @@ begin
       SetLength(m_bzSection[lIndex], RawSize);
       if RawSize > 0 then
         for lIndex2 := 0 to RawSize - 1 do
-          m_bzSection[lIndex][lIndex2] := Byte(Buffer[RawAddr + lIndex2]);
+          m_bzSection[lIndex][lIndex2] := Byte(RawData[RawAddr + lIndex2]);
 
       WriteLog(DxbxFormat('DXBX: Reading Section 0x%.4x... OK', [lIndex]));
     end;
@@ -618,19 +620,19 @@ begin
       m_TLS := AllocMem(SizeOf(XBE_TLS));
 
       i := GetAddr(m_Header.dwTLSAddr);
-      m_TLS.dwDataStartAddr := GetDwordVal(Buffer, i);
+      m_TLS.dwDataStartAddr := GetDwordVal(RawData, i);
       i := i + 4;
-      m_TLS.dwDataEndAddr := GetDwordVal(Buffer, i);
+      m_TLS.dwDataEndAddr := GetDwordVal(RawData, i);
       i := i + 4;
-      m_TLS.dwTLSIndexAddr := GetDwordVal(Buffer, i);
+      m_TLS.dwTLSIndexAddr := GetDwordVal(RawData, i);
       i := i + 4;
-      m_TLS.dwTLSCallbackAddr := GetDwordVal(Buffer, i);
+      m_TLS.dwTLSCallbackAddr := GetDwordVal(RawData, i);
 
       i := i + 4;
-      m_TLS.dwSizeofZeroFill := GetDwordVal(Buffer, i);
+      m_TLS.dwSizeofZeroFill := GetDwordVal(RawData, i);
 
       i := i + 4;
-      m_TLS.dwCharacteristics := GetDwordVal(Buffer, i);
+      m_TLS.dwCharacteristics := GetDwordVal(RawData, i);
     end;
   end;
 end; // TXbe.Create
@@ -775,10 +777,10 @@ begin
   TmpStr := '';
   while lIndex2 < 40 do
   begin
-    TmpStr := TmpStr + Char(Buffer[lIndex]);
+    TmpStr := TmpStr + Char(RawData[lIndex]);
     Inc(lIndex2);
     lIndex := lIndex + 2;
-    if Char(Buffer[lIndex]) = #0 then
+    if Char(RawData[lIndex]) = #0 then
       Break;
   end;
 
@@ -1012,7 +1014,7 @@ begin
   end;
 end;
 
-function TXbe.GetAddrStr(x_dwVirtualAddress: DWord): string;
+function TXbe.GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): string;
 var
   lIndex: Integer;
   TmpChr: Char;
@@ -1020,12 +1022,12 @@ begin
   lIndex := GetAddr(x_dwVirtualAddress);
   Result := '';
   try
-    TmpChr := Char(Buffer[lIndex]);
+    TmpChr := Char(RawData[lIndex]);
     Inc(lIndex);
-    while TmpChr <> #0 do
+    while (TmpChr <> #0) and (lIndex < aMaxLen) do
     begin
       Result := Result + TmpChr;
-      TmpChr := Char(Buffer[lIndex]);
+      TmpChr := Char(RawData[lIndex]);
       Inc(lIndex);
     end;
   except
@@ -1143,8 +1145,8 @@ begin
     while lIndex < dwLength do
     begin
       // Read 2 bytes.
-      Pos0 := Ord(Buffer[RLE + lIndex]);
-      Pos1 := Ord(Buffer[RLE + 1 + lIndex]);
+      Pos0 := Ord(RawData[RLE + lIndex]);
+      Pos1 := Ord(RawData[RLE + 1 + lIndex]);
 
       if (Pos0 and 1) > 0 then // Check if the bit 0 is set.
       begin
@@ -1193,12 +1195,9 @@ function TXbe.ExportIconBitmap(aBitmap: TBitmap): Boolean;
 var
   Section: TRawSection;
   SectionSize: Integer;
-  XprImage: PXPR_IMAGE;
-  Width, Height: Cardinal;
-  Scanlines: RGB32Scanlines;
 begin
   Result := False;
-
+  
   // Find icon section :
   Section := FindSection(XBE_SECTIONNAME_GAMEICON, {out}SectionSize);
   if Section = nil then
@@ -1208,8 +1207,17 @@ begin
       Exit;
   end;
 
+  Result := ExportXPRToBitmap(PXPR_IMAGE(Section), aBitmap);
+end;
+
+function TXbe.ExportXPRToBitmap(XprImage: PXPR_IMAGE; aBitmap: TBitmap): Boolean;
+var
+  Width, Height: Cardinal;
+  Scanlines: RGB32Scanlines;
+begin
+  Result := False;
+
   // Check if it's an XPR (Xbox Packed Resources) :
-  XprImage := PXPR_IMAGE(Section);
   if XprImage.hdr.Header.dwMagic = XPR_MAGIC_VALUE then
   begin
     // Determine image dimensions :
