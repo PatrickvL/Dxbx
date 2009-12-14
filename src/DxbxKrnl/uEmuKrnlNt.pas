@@ -476,7 +476,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
       DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -489,7 +489,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\T\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -501,7 +501,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\U\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -513,7 +513,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [ObjectAttributes.ObjectName.Buffer]);
+      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\Z\%s"', [szBuffer]);
 {$ENDIF}
     end;
@@ -537,7 +537,7 @@ begin
     end;
 
     // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
-    if (ReplaceIndex <> -1) then
+    if (ReplaceIndex > -1) then
     begin
       ReplaceChar := szBuffer[ReplaceIndex];
       szBuffer[ReplaceIndex] := #0;
@@ -571,7 +571,7 @@ begin
 {$ENDIF}
 
     // Restore original buffer.
-    if (ReplaceIndex <> -1) then
+    if (ReplaceIndex > -1) then
       szBuffer[ReplaceIndex] := ReplaceChar;
 
     // Strip filename from path.
@@ -1809,7 +1809,7 @@ begin
 end;
 
 function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWriteFileGather');
