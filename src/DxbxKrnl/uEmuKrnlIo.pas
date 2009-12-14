@@ -445,7 +445,7 @@ begin
      #13#10'   CreateOptions       : 0x%.08X' +
      #13#10'   Options             : 0x%.08X' +
      #13#10');',
-     [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
+     [FileHandle, DesiredAccess, ObjectAttributes, string(ObjectAttributes.ObjectName.Buffer),
       IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options]);
 {$ENDIF}
 
@@ -471,8 +471,8 @@ begin
      #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
      #13#10'   DeviceName          : 0x%.08X (%s)' +
      #13#10');',
-     [SymbolicLinkName, SymbolicLinkName.Buffer,
-     DeviceName, DeviceName.Buffer]);
+     [SymbolicLinkName, string(SymbolicLinkName.Buffer),
+     DeviceName, string(DeviceName.Buffer)]);
 {$ENDIF}
 
   // Cxbx TODO: Actually um...implement this function
