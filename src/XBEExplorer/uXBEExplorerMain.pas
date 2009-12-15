@@ -59,6 +59,7 @@ type
     procedure GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
     function NewGrid(const aFixedCols: Integer; const aTitles: array of string): TStringGrid;
     procedure SectionClick(Sender: TObject);
+    procedure LibVersionClick(Sender: TObject);
     procedure OpenXBE(const aFilePath: string);
   public
     destructor Destroy; override;
@@ -152,8 +153,7 @@ var
   i: Integer;
   Hdr: PXbeSectionHeader;
 begin
-  if Sender is TStringGrid then
-  else
+  if not (Sender is TStringGrid) then
     Exit;
 
   Grid := TStringGrid(Sender);
@@ -161,19 +161,38 @@ begin
   Hdr := @(MyXBE.m_SectionHeader[i]);
   i := (i * SizeOf(TXbeSectionHeader)) + MyXBE.m_Header.dwSectionHeadersAddr - MyXBE.m_Header.dwBaseAddr;
 
-  Grid.Cells[1, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwFlags));
-  Grid.Cells[2, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualAddr));
-  Grid.Cells[3, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualSize));
-  Grid.Cells[4, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwRawAddr));
-  Grid.Cells[5, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSizeofRaw));
-  Grid.Cells[6, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionNameAddr));
-  Grid.Cells[7, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionRefCount));
-  Grid.Cells[8, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwHeadSharedRefCountAddr));
-  Grid.Cells[9, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwTailSharedRefCountAddr));
-  Grid.Cells[10, 1] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).bzSectionDigest));
+  Grid.Cells[2, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwFlags));
+  Grid.Cells[3, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualAddr));
+  Grid.Cells[4, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualSize));
+  Grid.Cells[5, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwRawAddr));
+  Grid.Cells[6, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSizeofRaw));
+  Grid.Cells[7, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionNameAddr));
+  Grid.Cells[8, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionRefCount));
+  Grid.Cells[9, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwHeadSharedRefCountAddr));
+  Grid.Cells[10, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwTailSharedRefCountAddr));
+  Grid.Cells[11, 2] :=  _Dword(i + FIELD_OFFSET(PXbeSectionHeader(nil).bzSectionDigest));
 
   THexViewer(TStringGrid(Sender).Tag).SetRegion(@MyXBE.RawData[Hdr.dwRawAddr], Hdr.dwSizeofRaw);
-end;
+end; // SectionClick
+
+procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
+var
+  Grid: TStringGrid;
+  i: Integer;
+begin
+  if not (Sender is TStringGrid) then
+    Exit;
+
+  Grid := TStringGrid(Sender);
+  i := Grid.Row - Grid.FixedRows;
+  i := (i * SizeOf(TXbeLibraryVersion)) + MyXBE.m_Header.dwLibraryVersionsAddr - MyXBE.m_Header.dwBaseAddr;
+
+  Grid.Cells[1, 2] :=  _Dword(i + FIELD_OFFSET(PXbeLibraryVersion(nil).szName));
+  Grid.Cells[2, 2] :=  _Dword(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wMajorVersion));
+  Grid.Cells[3, 2] :=  _Dword(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wMinorVersion));
+  Grid.Cells[4, 2] :=  _Dword(i + FIELD_OFFSET(PXbeLibraryVersion(nil).wBuildVersion));
+  Grid.Cells[5, 2] :=  _Dword(i + FIELD_OFFSET(PXbeLibraryVersion(nil).dwFlags));
+end; // LibVersionClick
 
 function TFormXBEExplorer.NewGrid(const aFixedCols: Integer; const aTitles: array of string): TStringGrid;
 var
@@ -243,38 +262,38 @@ var
     Hdr: PXbeHeader;
   begin
     Hdr := @(MyXBE.m_Header);
-    Result := NewGrid(3, ['Member', 'Offset', 'Size', 'Value', 'Meaning']);
-    GridAddRow(Result, ['dwMagic', _offset(PXbeHeader(nil).dwMagic), 'Char[4]', Hdr.dwMagic]);
-    GridAddRow(Result, ['pbDigitalSignature', _offset(PXbeHeader(nil).pbDigitalSignature), 'Byte[256]', PByteToHexString(@Hdr.pbDigitalSignature[0], 16) + '...']);
-    GridAddRow(Result, ['dwBaseAddr', _offset(PXbeHeader(nil).dwBaseAddr), 'Dword', _DWORD(Hdr.dwBaseAddr)]);
-    GridAddRow(Result, ['dwSizeofHeaders', _offset(PXbeHeader(nil).dwSizeofHeaders), 'Dword', _DWORD(Hdr.dwSizeofHeaders)]);
-    GridAddRow(Result, ['dwSizeofImage', _offset(PXbeHeader(nil).dwSizeofImage), 'Dword', _DWORD(Hdr.dwSizeofImage)]);
-    GridAddRow(Result, ['dwSizeofImageHeader', _offset(PXbeHeader(nil).dwSizeofImageHeader), 'Dword', _DWORD(Hdr.dwSizeofImageHeader)]);
-    GridAddRow(Result, ['dwTimeDate', _offset(PXbeHeader(nil).dwTimeDate), 'Dword', _DWORD(Hdr.dwTimeDate), BetterTime(Hdr.dwTimeDate)]);
-    GridAddRow(Result, ['dwCertificateAddr', _offset(PXbeHeader(nil).dwCertificateAddr), 'Dword', _DWORD(Hdr.dwCertificateAddr)]);
-    GridAddRow(Result, ['dwSections', _offset(PXbeHeader(nil).dwSections), 'Dword', _DWORD(Hdr.dwSections)]);
-    GridAddRow(Result, ['dwSectionHeadersAddr', _offset(PXbeHeader(nil).dwSectionHeadersAddr), 'Dword', _DWORD(Hdr.dwSectionHeadersAddr)]);
-    GridAddRow(Result, ['dwInitFlags', _offset(PXbeHeader(nil).dwInitFlags), 'Dword', PByteToHexString(@Hdr.dwInitFlags[0], 4)]);
-    GridAddRow(Result, ['dwEntryAddr', _offset(PXbeHeader(nil).dwEntryAddr), 'Dword', _DWORD(Hdr.dwEntryAddr), Format('Retail: 0x%.8x, Debug: 0x%.8x', [Hdr.dwEntryAddr xor XOR_EP_Retail, Hdr.dwEntryAddr xor XOR_EP_DEBUG])]);
-    GridAddRow(Result, ['dwTLSAddr', _offset(PXbeHeader(nil).dwTLSAddr), 'Dword', _DWORD(Hdr.dwTLSAddr)]);
-    GridAddRow(Result, ['dwPeStackCommit', _offset(PXbeHeader(nil).dwPeStackCommit), 'Dword', _DWORD(Hdr.dwPeStackCommit)]);
-    GridAddRow(Result, ['dwPeHeapReserve', _offset(PXbeHeader(nil).dwPeHeapReserve), 'Dword', _DWORD(Hdr.dwPeHeapReserve)]);
-    GridAddRow(Result, ['dwPeHeapCommit', _offset(PXbeHeader(nil).dwPeHeapCommit), 'Dword', _DWORD(Hdr.dwPeHeapCommit)]);
-    GridAddRow(Result, ['dwPeBaseAddr', _offset(PXbeHeader(nil).dwPeBaseAddr), 'Dword', _DWORD(Hdr.dwPeBaseAddr)]);
-    GridAddRow(Result, ['dwPeSizeofImage', _offset(PXbeHeader(nil).dwPeSizeofImage), 'Dword', _DWORD(Hdr.dwPeSizeofImage)]);
-    GridAddRow(Result, ['dwPeChecksum', _offset(PXbeHeader(nil).dwPeChecksum), 'Dword', _DWORD(Hdr.dwPeChecksum)]);
-    GridAddRow(Result, ['dwPeTimeDate', _offset(PXbeHeader(nil).dwPeTimeDate), 'Dword', _DWORD(Hdr.dwPeTimeDate), BetterTime(Hdr.dwPeTimeDate)]);
-    GridAddRow(Result, ['dwDebugPathNameAddr', _offset(PXbeHeader(nil).dwDebugPathNameAddr), 'Dword', _DWORD(Hdr.dwDebugPathNameAddr), MyXBE.GetAddrStr(Hdr.dwDebugPathNameAddr)]);
-    GridAddRow(Result, ['dwDebugFileNameAddr', _offset(PXbeHeader(nil).dwDebugFileNameAddr), 'Dword', _DWORD(Hdr.dwDebugFileNameAddr), MyXBE.GetAddrStr(Hdr.dwDebugFileNameAddr)]);
-    GridAddRow(Result, ['dwDebugUnicodeFileNameAddr', _offset(PXbeHeader(nil).dwDebugUnicodeFileNameAddr), 'Dword', _DWORD(Hdr.dwDebugUnicodeFileNameAddr)]);
-    GridAddRow(Result, ['dwKernelImageThunkAddr', _offset(PXbeHeader(nil).dwKernelImageThunkAddr), 'Dword', _DWORD(Hdr.dwKernelImageThunkAddr), Format('Retail: 0x%.8x, Debug: 0x%.8x', [Hdr.dwKernelImageThunkAddr xor XOR_KT_RETAIL, Hdr.dwKernelImageThunkAddr xor XOR_KT_DEBUG])]);
-    GridAddRow(Result, ['dwNonKernelImportDirAddr', _offset(PXbeHeader(nil).dwNonKernelImportDirAddr), 'Dword', _DWORD(Hdr.dwNonKernelImportDirAddr)]);
-    GridAddRow(Result, ['dwLibraryVersions', _offset(PXbeHeader(nil).dwLibraryVersions), 'Dword', _DWORD(Hdr.dwLibraryVersions)]);
-    GridAddRow(Result, ['dwLibraryVersionsAddr', _offset(PXbeHeader(nil).dwLibraryVersionsAddr), 'Dword', _DWORD(Hdr.dwLibraryVersionsAddr)]);
-    GridAddRow(Result, ['dwKernelLibraryVersionAddr', _offset(PXbeHeader(nil).dwKernelLibraryVersionAddr), 'Dword', _DWORD(Hdr.dwKernelLibraryVersionAddr)]);
-    GridAddRow(Result, ['dwXAPILibraryVersionAddr', _offset(PXbeHeader(nil).dwXAPILibraryVersionAddr), 'Dword', _DWORD(Hdr.dwXAPILibraryVersionAddr)]);
-    GridAddRow(Result, ['dwLogoBitmapAddr', _offset(PXbeHeader(nil).dwLogoBitmapAddr), 'Dword', _DWORD(Hdr.dwLogoBitmapAddr)]);
-    GridAddRow(Result, ['dwSizeofLogoBitmap', _offset(PXbeHeader(nil).dwSizeofLogoBitmap), 'Dword', _DWORD(Hdr.dwSizeofLogoBitmap)]);
+    Result := NewGrid(3, ['Member', 'Type', 'Offset', 'Value', 'Meaning']);
+    GridAddRow(Result, ['dwMagic', 'Char[4]', _offset(PXbeHeader(nil).dwMagic), Hdr.dwMagic]);
+    GridAddRow(Result, ['pbDigitalSignature', 'Byte[256]', _offset(PXbeHeader(nil).pbDigitalSignature), PByteToHexString(@Hdr.pbDigitalSignature[0], 16) + '...']);
+    GridAddRow(Result, ['dwBaseAddr', 'Dword', _offset(PXbeHeader(nil).dwBaseAddr), _DWORD(Hdr.dwBaseAddr)]);
+    GridAddRow(Result, ['dwSizeofHeaders', 'Dword', _offset(PXbeHeader(nil).dwSizeofHeaders), _DWORD(Hdr.dwSizeofHeaders)]);
+    GridAddRow(Result, ['dwSizeofImage', 'Dword', _offset(PXbeHeader(nil).dwSizeofImage), _DWORD(Hdr.dwSizeofImage)]);
+    GridAddRow(Result, ['dwSizeofImageHeader', 'Dword', _offset(PXbeHeader(nil).dwSizeofImageHeader), _DWORD(Hdr.dwSizeofImageHeader)]);
+    GridAddRow(Result, ['dwTimeDate', 'Dword', _offset(PXbeHeader(nil).dwTimeDate), _DWORD(Hdr.dwTimeDate), BetterTime(Hdr.dwTimeDate)]);
+    GridAddRow(Result, ['dwCertificateAddr', 'Dword', _offset(PXbeHeader(nil).dwCertificateAddr), _DWORD(Hdr.dwCertificateAddr)]);
+    GridAddRow(Result, ['dwSections', 'Dword', _offset(PXbeHeader(nil).dwSections), _DWORD(Hdr.dwSections)]);
+    GridAddRow(Result, ['dwSectionHeadersAddr', 'Dword', _offset(PXbeHeader(nil).dwSectionHeadersAddr), _DWORD(Hdr.dwSectionHeadersAddr)]);
+    GridAddRow(Result, ['dwInitFlags', 'Dword', _offset(PXbeHeader(nil).dwInitFlags), PByteToHexString(@Hdr.dwInitFlags[0], 4)]);
+    GridAddRow(Result, ['dwEntryAddr', 'Dword', _offset(PXbeHeader(nil).dwEntryAddr), _DWORD(Hdr.dwEntryAddr), Format('Retail: 0x%.8x, Debug: 0x%.8x', [Hdr.dwEntryAddr xor XOR_EP_Retail, Hdr.dwEntryAddr xor XOR_EP_DEBUG])]);
+    GridAddRow(Result, ['dwTLSAddr', 'Dword', _offset(PXbeHeader(nil).dwTLSAddr), _DWORD(Hdr.dwTLSAddr)]);
+    GridAddRow(Result, ['dwPeStackCommit', 'Dword', _offset(PXbeHeader(nil).dwPeStackCommit), _DWORD(Hdr.dwPeStackCommit)]);
+    GridAddRow(Result, ['dwPeHeapReserve', 'Dword', _offset(PXbeHeader(nil).dwPeHeapReserve), _DWORD(Hdr.dwPeHeapReserve)]);
+    GridAddRow(Result, ['dwPeHeapCommit', 'Dword', _offset(PXbeHeader(nil).dwPeHeapCommit), _DWORD(Hdr.dwPeHeapCommit)]);
+    GridAddRow(Result, ['dwPeBaseAddr', 'Dword', _offset(PXbeHeader(nil).dwPeBaseAddr), _DWORD(Hdr.dwPeBaseAddr)]);
+    GridAddRow(Result, ['dwPeSizeofImage', 'Dword', _offset(PXbeHeader(nil).dwPeSizeofImage), _DWORD(Hdr.dwPeSizeofImage)]);
+    GridAddRow(Result, ['dwPeChecksum', 'Dword', _offset(PXbeHeader(nil).dwPeChecksum), _DWORD(Hdr.dwPeChecksum)]);
+    GridAddRow(Result, ['dwPeTimeDate', 'Dword', _offset(PXbeHeader(nil).dwPeTimeDate), _DWORD(Hdr.dwPeTimeDate), BetterTime(Hdr.dwPeTimeDate)]);
+    GridAddRow(Result, ['dwDebugPathNameAddr', 'Dword', _offset(PXbeHeader(nil).dwDebugPathNameAddr), _DWORD(Hdr.dwDebugPathNameAddr), MyXBE.GetAddrStr(Hdr.dwDebugPathNameAddr)]);
+    GridAddRow(Result, ['dwDebugFileNameAddr', 'Dword', _offset(PXbeHeader(nil).dwDebugFileNameAddr), _DWORD(Hdr.dwDebugFileNameAddr), MyXBE.GetAddrStr(Hdr.dwDebugFileNameAddr)]);
+    GridAddRow(Result, ['dwDebugUnicodeFileNameAddr', 'Dword', _offset(PXbeHeader(nil).dwDebugUnicodeFileNameAddr), _DWORD(Hdr.dwDebugUnicodeFileNameAddr)]);
+    GridAddRow(Result, ['dwKernelImageThunkAddr', 'Dword', _offset(PXbeHeader(nil).dwKernelImageThunkAddr), _DWORD(Hdr.dwKernelImageThunkAddr), Format('Retail: 0x%.8x, Debug: 0x%.8x', [Hdr.dwKernelImageThunkAddr xor XOR_KT_RETAIL, Hdr.dwKernelImageThunkAddr xor XOR_KT_DEBUG])]);
+    GridAddRow(Result, ['dwNonKernelImportDirAddr', 'Dword', _offset(PXbeHeader(nil).dwNonKernelImportDirAddr), _DWORD(Hdr.dwNonKernelImportDirAddr)]);
+    GridAddRow(Result, ['dwLibraryVersions', 'Dword', _offset(PXbeHeader(nil).dwLibraryVersions), _DWORD(Hdr.dwLibraryVersions)]);
+    GridAddRow(Result, ['dwLibraryVersionsAddr', 'Dword', _offset(PXbeHeader(nil).dwLibraryVersionsAddr), _DWORD(Hdr.dwLibraryVersionsAddr)]);
+    GridAddRow(Result, ['dwKernelLibraryVersionAddr', 'Dword', _offset(PXbeHeader(nil).dwKernelLibraryVersionAddr), _DWORD(Hdr.dwKernelLibraryVersionAddr)]);
+    GridAddRow(Result, ['dwXAPILibraryVersionAddr', 'Dword', _offset(PXbeHeader(nil).dwXAPILibraryVersionAddr), _DWORD(Hdr.dwXAPILibraryVersionAddr)]);
+    GridAddRow(Result, ['dwLogoBitmapAddr', 'Dword', _offset(PXbeHeader(nil).dwLogoBitmapAddr), _DWORD(Hdr.dwLogoBitmapAddr)]);
+    GridAddRow(Result, ['dwSizeofLogoBitmap', 'Dword', _offset(PXbeHeader(nil).dwSizeofLogoBitmap), _DWORD(Hdr.dwSizeofLogoBitmap)]);
   end; // _Initialize_XBEHeader
 
   function _Initialize_Certificate: TStringGrid;
@@ -285,28 +304,28 @@ var
   begin
     o := MyXBE.m_Header.dwCertificateAddr - MyXBE.m_Header.dwBaseAddr;
     Cert := @(MyXBE.m_Certificate);
-    Result := NewGrid(3, ['Member', 'Offset', 'Size', 'Value', 'Meaning']);
-    GridAddRow(Result, ['dwSize', _offset(PXbeCertificate(nil).dwSize, o), 'Dword', _DWORD(Cert.dwSize)]);
-    GridAddRow(Result, ['dwTimeDate', _offset(PXbeCertificate(nil).dwTimeDate, o), 'Dword', _DWORD(Cert.dwTimeDate), BetterTime(Cert.dwTimeDate)]);
-    GridAddRow(Result, ['dwTitleId', _offset(PXbeCertificate(nil).dwTitleId, o), 'Dword', _DWORD(Cert.dwTitleId)]);
-    GridAddRow(Result, ['wszTitleName', _offset(PXbeCertificate(nil).wszTitleName, o), 'WChar[40]', PWideCharToString(@Cert.wszTitleName[0], 40)]);
+    Result := NewGrid(3, ['Member', 'Type', 'Offset', 'Value', 'Meaning']);
+    GridAddRow(Result, ['dwSize', 'Dword', _offset(PXbeCertificate(nil).dwSize, o), _DWORD(Cert.dwSize)]);
+    GridAddRow(Result, ['dwTimeDate', 'Dword', _offset(PXbeCertificate(nil).dwTimeDate, o), _DWORD(Cert.dwTimeDate), BetterTime(Cert.dwTimeDate)]);
+    GridAddRow(Result, ['dwTitleId', 'Dword', _offset(PXbeCertificate(nil).dwTitleId, o), _DWORD(Cert.dwTitleId)]);
+    GridAddRow(Result, ['wszTitleName', 'WChar[40]', _offset(PXbeCertificate(nil).wszTitleName, o), PWideCharToString(@Cert.wszTitleName[0], 40)]);
     for i := Low(Cert.dwAlternateTitleId) to High(Cert.dwAlternateTitleId) do
-      GridAddRow(Result, ['dwAlternateTitleId[' + IntToStr(i) + ']', _offset(PXbeCertificate(nil).dwAlternateTitleId[i], o), 'Dword', _DWORD(Cert.dwAlternateTitleId[i])]);
-    GridAddRow(Result, ['dwAllowedMedia', _offset(PXbeCertificate(nil).dwAllowedMedia, o), 'Dword', _DWORD(Cert.dwAllowedMedia)]);
-    GridAddRow(Result, ['dwGameRegion', _offset(PXbeCertificate(nil).dwGameRegion, o), 'Dword', _DWORD(Cert.dwGameRegion), GameRegionToString(Cert.dwGameRegion)]);
-    GridAddRow(Result, ['dwGameRatings', _offset(PXbeCertificate(nil).dwGameRatings, o), 'Dword', _DWORD(Cert.dwGameRatings)]);
-    GridAddRow(Result, ['dwDiskNumber', _offset(PXbeCertificate(nil).dwDiskNumber, o), 'Dword', _DWORD(Cert.dwDiskNumber)]);
-    GridAddRow(Result, ['dwVersion', _offset(PXbeCertificate(nil).dwVersion, o), 'Dword', _DWORD(Cert.dwVersion)]);
-    GridAddRow(Result, ['bzLanKey', _offset(PXbeCertificate(nil).bzLanKey, o), 'Byte[16]', PByteToHexString(@Cert.bzLanKey[0], 16)]);
-    GridAddRow(Result, ['bzSignatureKey', _offset(PXbeCertificate(nil).bzSignatureKey, o), 'Byte[16]', PByteToHexString(@Cert.bzSignatureKey[0], 16)]);
+      GridAddRow(Result, ['dwAlternateTitleId[' + IntToStr(i) + ']', 'Dword', _offset(PXbeCertificate(nil).dwAlternateTitleId[i], o), _DWORD(Cert.dwAlternateTitleId[i])]);
+    GridAddRow(Result, ['dwAllowedMedia', 'Dword', _offset(PXbeCertificate(nil).dwAllowedMedia, o), _DWORD(Cert.dwAllowedMedia)]);
+    GridAddRow(Result, ['dwGameRegion', 'Dword', _offset(PXbeCertificate(nil).dwGameRegion, o), _DWORD(Cert.dwGameRegion), GameRegionToString(Cert.dwGameRegion)]);
+    GridAddRow(Result, ['dwGameRatings', 'Dword', _offset(PXbeCertificate(nil).dwGameRatings, o), _DWORD(Cert.dwGameRatings)]);
+    GridAddRow(Result, ['dwDiskNumber', 'Dword', _offset(PXbeCertificate(nil).dwDiskNumber, o), _DWORD(Cert.dwDiskNumber)]);
+    GridAddRow(Result, ['dwVersion', 'Dword', _offset(PXbeCertificate(nil).dwVersion, o), _DWORD(Cert.dwVersion)]);
+    GridAddRow(Result, ['bzLanKey', 'Byte[16]', _offset(PXbeCertificate(nil).bzLanKey, o), PByteToHexString(@Cert.bzLanKey[0], 16)]);
+    GridAddRow(Result, ['bzSignatureKey', 'Byte[16]', _offset(PXbeCertificate(nil).bzSignatureKey, o), PByteToHexString(@Cert.bzSignatureKey[0], 16)]);
     for i := Low(Cert.bzTitleAlternateSignatureKey) to High(Cert.bzTitleAlternateSignatureKey) do
-      GridAddRow(Result, ['bzTitleAlternateSignatureKey[' + IntToStr(i) + ']', _offset(PXbeCertificate(nil).bzTitleAlternateSignatureKey[i], o), 'Byte[16]', PByteToHexString(@Cert.bzTitleAlternateSignatureKey[i][0], 16)]);
+      GridAddRow(Result, ['bzTitleAlternateSignatureKey[' + IntToStr(i) + ']', 'Byte[16]', _offset(PXbeCertificate(nil).bzTitleAlternateSignatureKey[i], o), PByteToHexString(@Cert.bzTitleAlternateSignatureKey[i][0], 16)]);
   end; // _Initialize_Certificate
 
   function _Initialize_SectionHeaders: TPanel;
   var
     Grid: TStringGrid;
-    i: Integer;
+    i, o: Integer;
     Hdr: PXbeSectionHeader;
     ItemName: string;
     Splitter: TSplitter;
@@ -314,7 +333,7 @@ var
   begin
     Result := TPanel.Create(Self);
 
-    Grid := NewGrid(0, ['Member:', 'Flags', 'Virtual Address', 'Virtual Size',
+    Grid := NewGrid(2, [' ', 'Member:', 'Flags', 'Virtual Address', 'Virtual Size',
       'Raw Address', 'Raw Size', 'SectionNamAddr', 'dwSectionRefCount',
       'dwHeadSharedRefCountAddr', 'dwTailSharedRefCountAddr', 'bzSectionDigest']);
     Grid.Parent := Result;
@@ -323,15 +342,17 @@ var
     Grid.RowCount := 4;
     Grid.Options := Grid.Options + [goRowSelect];
     Grid.FixedRows := 3;
-    GridAddRow(Grid, ['Offset:']); // Put space in offset-row
-    GridAddRow(Grid, ['Section', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Byte[20]']);
+    GridAddRow(Grid, [' ', 'Type:', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Byte[20]']);
+    GridAddRow(Grid, ['Section', 'Offset', '-Click row-']); // This is the offset-row
 
+    o := MyXBE.m_Header.dwSectionHeadersAddr - MyXBE.m_Header.dwBaseAddr;
     for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
     begin
       Hdr := @(MyXBE.m_SectionHeader[i]);
       ItemName := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr);
       GridAddRow(Grid, [
         ItemName,
+        _DWord(o),
         PByteToHexString(@Hdr.dwFlags[0], 4),
         _DWord(Hdr.dwVirtualAddr),
         _DWord(Hdr.dwVirtualSize),
@@ -344,6 +365,7 @@ var
         PByteToHexString(@Hdr.bzSectionDigest[0], 20)
       ]);
 
+      Inc(o, SizeOf(TXbeSectionHeader));
       if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
         _CreateNode(NodeResources, 'Image ' + ItemName, _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
     end;
@@ -368,13 +390,15 @@ var
     LibVer: PXbeLibraryVersion;
     ItemName: string;
   begin
-    o := MyXBE.m_Header.dwLibraryVersionsAddr - MyXBE.m_Header.dwBaseAddr;
-    Result := NewGrid(0, ['Member:', 'szName', 'wMajorVersion', 'wMinorVersion', 'wBuildVersion', 'dwFlags']);
-    Result.RowCount := 3;
+    Result := NewGrid(1, ['Member:', 'szName', 'wMajorVersion', 'wMinorVersion', 'wBuildVersion', 'dwFlags']);
+    Result.RowCount := 4;
     Result.Options := Result.Options + [goRowSelect];
-    Result.FixedRows := 2;
-    GridAddRow(Result, ['Offset', 'Char[8]', 'Word', 'Word', 'Word', 'Byte[2]']);
+    Result.FixedRows := 3;
+    Result.OnClick := LibVersionClick;
+    GridAddRow(Result, ['Type:', 'Char[8]', 'Word', 'Word', 'Word', 'Byte[2]']);
+    GridAddRow(Result, ['Offset', '-Click row-']); // This is the offset-row
 
+    o := MyXBE.m_Header.dwLibraryVersionsAddr - MyXBE.m_Header.dwBaseAddr;
     for i := 0 to Length(MyXBE.m_LibraryVersion) - 1 do
     begin
       LibVer := @(MyXBE.m_LibraryVersion[i]);
@@ -399,13 +423,13 @@ var
   begin
     o := MyXBE.m_Header.dwTLSAddr - MyXBE.m_Header.dwBaseAddr;
     TLS := @(MyXBE.m_TLS);
-    Result := NewGrid(3, ['Member', 'Offset', 'Size', 'Value', 'Meaning']);
-    GridAddRow(Result, ['dwDataStartAddr', _offset(PXbeTls(nil).dwDataStartAddr, o), 'Dword', _DWORD(TLS.dwDataStartAddr)]);
-    GridAddRow(Result, ['dwDataEndAddr', _offset(PXbeTls(nil).dwDataEndAddr, o), 'Dword', _DWORD(TLS.dwDataEndAddr)]);
-    GridAddRow(Result, ['dwTLSIndexAddr', _offset(PXbeTls(nil).dwTLSIndexAddr, o), 'Dword', _DWORD(TLS.dwTLSIndexAddr)]);
-    GridAddRow(Result, ['dwTLSCallbackAddr', _offset(PXbeTls(nil).dwTLSCallbackAddr, o), 'Dword', _DWORD(TLS.dwTLSCallbackAddr)]);
-    GridAddRow(Result, ['dwSizeofZeroFill', _offset(PXbeTls(nil).dwSizeofZeroFill, o), 'Dword', _DWORD(TLS.dwSizeofZeroFill)]);
-    GridAddRow(Result, ['dwCharacteristics', _offset(PXbeTls(nil).dwCharacteristics, o), 'Dword', _DWORD(TLS.dwCharacteristics)]);
+    Result := NewGrid(3, ['Member', 'Type', 'Offset', 'Value', 'Meaning']);
+    GridAddRow(Result, ['dwDataStartAddr', 'Dword', _offset(PXbeTls(nil).dwDataStartAddr, o), _DWORD(TLS.dwDataStartAddr)]);
+    GridAddRow(Result, ['dwDataEndAddr', 'Dword', _offset(PXbeTls(nil).dwDataEndAddr, o), _DWORD(TLS.dwDataEndAddr)]);
+    GridAddRow(Result, ['dwTLSIndexAddr', 'Dword', _offset(PXbeTls(nil).dwTLSIndexAddr, o), _DWORD(TLS.dwTLSIndexAddr)]);
+    GridAddRow(Result, ['dwTLSCallbackAddr', 'Dword', _offset(PXbeTls(nil).dwTLSCallbackAddr, o), _DWORD(TLS.dwTLSCallbackAddr)]);
+    GridAddRow(Result, ['dwSizeofZeroFill', 'Dword', _offset(PXbeTls(nil).dwSizeofZeroFill, o), _DWORD(TLS.dwSizeofZeroFill)]);
+    GridAddRow(Result, ['dwCharacteristics', 'Dword', _offset(PXbeTls(nil).dwCharacteristics, o), _DWORD(TLS.dwCharacteristics)]);
   end;
 
   function _Initialize_HexViewer: THexViewer;
