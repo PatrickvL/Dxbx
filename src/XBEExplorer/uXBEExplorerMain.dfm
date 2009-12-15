@@ -26,7 +26,6 @@ object FormXBEExplorer: TFormXBEExplorer
     RowSelect = True
     TabOrder = 0
     OnChange = TreeView1Change
-    ExplicitHeight = 465
   end
   object PageControl1: TPageControl
     Left = 225
@@ -35,8 +34,6 @@ object FormXBEExplorer: TFormXBEExplorer
     Height = 609
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 538
-    ExplicitHeight = 465
   end
   object MainMenu1: TMainMenu
     Left = 40
@@ -63,6 +60,7 @@ object FormXBEExplorer: TFormXBEExplorer
       Caption = 'Help'
       object About1: TMenuItem
         Caption = 'About'
+        OnClick = About1Click
       end
     end
   end

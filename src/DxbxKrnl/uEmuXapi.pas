@@ -820,7 +820,7 @@ begin
 
       if (pPollingParameters <> nil) then
       begin
-        New({var XINPUT_POLLING_PARAMETERS} pPH.pPollingParameters);
+        New({var XINPUT_POLLING_PARAMETERS}pPH.pPollingParameters);
         memcpy(pPH.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
       end
       else
