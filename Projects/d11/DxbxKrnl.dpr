@@ -27,7 +27,7 @@ library DxbxKrnl;
   with your DLL. To avoid using BORLNDMM.DLL, pass string information
   using PChar or ShortString parameters. }
 
-{$R '..\..\src\Tools\PatternTrieBuilder\StoredTrie.res' '..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc'}
+{$R '..\..\Resource\StoredTrie.res' '..\..\Resource\StoredTrie.rc'}
 
 uses
   Windows,

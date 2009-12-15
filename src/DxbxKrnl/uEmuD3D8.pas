@@ -3947,7 +3947,7 @@ var
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexDataColor  shr ' +
+  DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_SetVertexDataColor >>' +
     #13#10'(' +
     #13#10'   Register          : 0x%.08X' +
     #13#10'   Color             : 0x%.08X' +
