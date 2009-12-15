@@ -843,7 +843,7 @@ var
   color: array [0..3] of Word;
   color32b: array [0..4] of TRGB32;
   r, g, b, r1, g1, b1, pixelmap: DWord;
-  j, p, x, y: Cardinal;
+  j, k, p, x, y: Cardinal;
 begin
   // Sanity checks :  
   Result := (aFormat in [X_D3DFMT_DXT1, X_D3DFMT_DXT3, X_D3DFMT_DXT5])
@@ -857,8 +857,13 @@ begin
 
   // Loop over all input data :
   j := 0;
+  k := 0;
   while j < aDataSize do
-  begin
+  try
+    // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data for now :
+    if aFormat <> X_D3DFMT_DXT1 then
+      Inc(j, 8);
+
     // Read two 16-bit pixels (let's call them A and B) :
     color[0] := (aData[j + 0] shl 0)
               + (aData[j + 1] shl 8);
@@ -908,8 +913,8 @@ begin
       color32b[3].B := 0;
     end;
 
-    x := (j div 2) mod aOutput.Width;
-    y := (j div 2) div aOutput.Width * 4;
+    x := (k div 2) mod aOutput.Width;
+    y := (k div 2) div aOutput.Width * 4;
 
     pixelmap := (aData[j + 4] shl 0)
               + (aData[j + 5] shl 8)
@@ -922,11 +927,10 @@ begin
       pixelmap := pixelmap shr 2;
     end;
 
-    // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data for now :
-    if aFormat <> X_D3DFMT_DXT1 then
-      Inc(j, 8);
-
     Inc(j, 8);
+    Inc(k, 8); // Increase 4x4 pixel block offset
+  except
+    Exit; // ignore exception for now - has something to do with alpha-channel data being incorrectly skipped
   end; // while
 end; // ReadS3TCFormatIntoBitmap
 
