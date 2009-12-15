@@ -130,7 +130,7 @@ function calloc(num_elements, element_size: size_t): PVoid; inline;
 function FIELD_OFFSET(var Variable): DWORD;
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
 function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
-function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
+function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
 function IsPrintableChar(const aChar: Char): Boolean;
 function IsPrintableAsciiChar(const aChar: Char): Boolean;
 
@@ -246,7 +246,7 @@ begin
   SetString(Result, aPtr, i);
 end;
 
-function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
+function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
 var
   i: Integer;
 begin
