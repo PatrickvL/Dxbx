@@ -36,6 +36,8 @@ const
   HexNibble: AnsiString = '0123456789ABCDEF';
 
 type
+  TStringArray = array of string;
+
   TVarByteArray = array of Byte;
 
   TRawSection = TVarByteArray;
@@ -129,6 +131,8 @@ function FIELD_OFFSET(var Variable): Integer;
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
 function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
 function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
+function IsPrintableChar(const aChar: Char): Boolean;
+function IsPrintableAsciiChar(const aChar: Char): Boolean;
 
 implementation
 
@@ -251,13 +255,23 @@ begin
     Result := '';
     Exit;
   end;
-  
+
   SetLength(Result, aLen * 2);
   for i := 0 to aLen - 1 do
   begin
     Result[1 + i + i] := HexNibble[1 + (PByteArray(aPtr)[i] shr 4)];
     Result[2 + i + i] := HexNibble[1 + (PByteArray(aPtr)[i] and 15)];
   end;
+end;
+
+function IsPrintableChar(const aChar: Char): Boolean;
+begin
+  Result := Ord(aChar) >= Ord(' ');
+end;
+
+function IsPrintableAsciiChar(const aChar: Char): Boolean;
+begin
+  Result := IsPrintableChar(aChar) and (Ord(aChar) < 127);
 end;
 
 end.

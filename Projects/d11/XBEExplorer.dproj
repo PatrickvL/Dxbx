@@ -47,7 +47,9 @@
     <DCCReference Include="..\..\src\uXbe.pas" />
     <DCCReference Include="..\..\src\XBEExplorer\uHexViewer.pas">
       <Form>HexViewer</Form>
+      <DesignClass>TFrame</DesignClass>
     </DCCReference>
+    <DCCReference Include="..\..\src\XBEExplorer\uStringsViewer.pas" />
     <DCCReference Include="..\..\src\XBEExplorer\uXBEExplorerMain.pas">
       <Form>FormXBEExplorer</Form>
     </DCCReference>
