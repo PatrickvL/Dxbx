@@ -128,6 +128,7 @@ function malloc(const number_of_bytes: size_t): PVoid; inline;
 function calloc(num_elements, element_size: size_t): PVoid; inline;
 
 function FIELD_OFFSET(var Variable): DWORD;
+function DWord2Str(const aValue: DWORD): string;
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
 function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
 function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
@@ -222,6 +223,11 @@ end;
 function FIELD_OFFSET(var Variable): DWORD;
 begin
   Result := DWORD(@(Pointer(Variable)));
+end;
+
+function DWord2Str(const aValue: DWORD): string;
+begin
+  Result := IntToHex(aValue, 8);
 end;
 
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
