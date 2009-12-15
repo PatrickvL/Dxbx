@@ -30,11 +30,10 @@ uses
   uConsts,
   uTypes,
   uXbe,
-  uHexViewer;
+  uHexViewer,
+  uStringsViewer;
 
 type
-  TStringArray = array of string;
-
   TFormXBEExplorer = class(TForm)
     MainMenu1: TMainMenu;
     TreeView1: TTreeView;
@@ -69,9 +68,6 @@ var
   FormXBEExplorer: TFormXBEExplorer;
 
 implementation
-
-type
-  TStringsViewer = class(THexViewer);
 
 {$R *.dfm}
 

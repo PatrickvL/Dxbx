@@ -11,7 +11,8 @@ uses
   uTime in '..\..\src\uTime.pas',
   uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uConsoleClass in '..\..\src\uConsoleClass.pas',
-  uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame};
+  uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame},
+  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas';
 
 {$R *.res}
 
