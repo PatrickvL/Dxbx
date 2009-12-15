@@ -142,9 +142,10 @@ begin
     end;
 
     _HandleStringEnd;
-  end
-  else
-    // Default, we have only one string :
+  end;
+
+  // We must have at least one string :
+  if MyStrings.Count = 0 then
     MyStrings.Add('- no strings found -');
 
   RowCount := FixedRows + MyStrings.Count;
@@ -154,9 +155,9 @@ end;
 procedure TStringsViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 var
   aStr: string;
-  Offset: Integer;
 begin
   aStr := '';
+
   // No need to check range upto FixedRowCount, as that's always 1 :
   if aRow < TopRow then
   begin
@@ -171,14 +172,10 @@ begin
   begin
     if aRow <= MyStrings.Count then
       case aCol of
-        0:
-          aStr := IntToStr(aRow);
-        1:
-          aStr := Format('%.08x', [UIntPtr(MyStrings.Objects[aRow - 1])]);
-        2:
-          aStr := Format('Char[%d]', [Length(MyStrings[aRow - 1])]);
-        3:
-          aStr := MyStrings.Strings[aRow - 1];
+        0: aStr := IntToStr(aRow);
+        1: aStr := Format('%.08x', [UIntPtr(MyStrings.Objects[aRow - 1])]);
+        2: aStr := Format('Char[%d]', [Length(MyStrings[aRow - 1])]);
+        3: aStr := MyStrings.Strings[aRow - 1];
       end;
   end;
 

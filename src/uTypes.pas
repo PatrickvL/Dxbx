@@ -127,7 +127,7 @@ procedure free(p: PVoid); inline;
 function malloc(const number_of_bytes: size_t): PVoid; inline;
 function calloc(num_elements, element_size: size_t): PVoid; inline;
 
-function FIELD_OFFSET(var Variable): Integer;
+function FIELD_OFFSET(var Variable): DWORD;
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
 function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
 function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
@@ -219,9 +219,9 @@ end;
 
 // Note: Instead of calling FIELD_OFFSET(Type, Member)
 //       use the construct: FIELD_OFFSET(PType(nil).Member)
-function FIELD_OFFSET(var Variable): Integer;
+function FIELD_OFFSET(var Variable): DWORD;
 begin
-  Result := Integer(@(Pointer(Variable)));
+  Result := DWORD(@(Pointer(Variable)));
 end;
 
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;

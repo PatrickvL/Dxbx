@@ -64,7 +64,7 @@ procedure THexViewer.SetRegion(const aBase: Pointer; const aSize: Integer);
 begin
   FBase := aBase;
   FSize := aSize;
-  RowCount := (aSize + 31) shr 4;
+  RowCount := 1 + ((aSize + 15) shr 4);
   Repaint;
 end;
 

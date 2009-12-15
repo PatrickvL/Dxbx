@@ -146,7 +146,7 @@ end;
 procedure TFormXBEExplorer.SectionClick(Sender: TObject);
 var
   Grid: TStringGrid;
-  i: Integer;
+  i: DWord;
   Hdr: PXbeSectionHeader;
 begin
   if not (Sender is TStringGrid) then
@@ -174,7 +174,7 @@ end; // SectionClick
 procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
 var
   Grid: TStringGrid;
-  i: Integer;
+  i: DWord;
 begin
   if not (Sender is TStringGrid) then
     Exit;
@@ -414,7 +414,6 @@ var
   function _Initialize_TLS: TStringGrid;
   var
     o: DWord;
-    i: Integer;
     TLS: PXbeTls;
   begin
     o := MyXBE.m_Header.dwTLSAddr - MyXBE.m_Header.dwBaseAddr;
