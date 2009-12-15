@@ -62,7 +62,7 @@ type
     MyXBEList: TStringList;
     function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
     function FindByFileName(const aFileName: string): Integer;
-    function InsertXBEInfo(const aXbeInfo: TXBEInfo): Boolean;
+    function InsertXBEInfo(const aXbeInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
     procedure SaveXBEList(const aFilePath, aPublishedBy: string);
     function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
     function LoadXBEList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
@@ -293,29 +293,46 @@ end;
 
 function TfrmXdkTracker.FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
 begin
-  // First, check title :
-  Result := MyXBEList.IndexOf(aXBEInfo.Title);
+  // Initially we don't know if this XBE is already present :
+  Result := -1;
 
-  // For backwards compatibility, try FileName too :
-  if Result < 0 then
+  // Try searching by title :
+  if (Result < 0) and (aXBEInfo.Title <> '') then
+    Result := MyXBEList.IndexOf(aXBEInfo.Title);
+
+  // Try searching by title, but use FileName for backwards compatibility :
+  if (Result < 0) and (aXBEInfo.FileName <> '') then
     Result := MyXBEList.IndexOf(aXBEInfo.FileName);
 
-  // If found by title
-  if Result >= 0 then
-  begin
-    // Then check region :
-    if TXBEInfo(MyXBEList.Objects[Result]).GameRegion = aXBEInfo.GameRegion then
-      // It seems this is the same dump, return this :
-      Exit;
-  end;
-
-  // No match, try searching by filename as default :
-  if aXBEInfo.FileName <> '' then
+  // Try searching by filename :
+  if (Result < 0) and (aXBEInfo.FileName <> '') then
     Result := FindByFileName(aXBEInfo.FileName);
 
-  if Result < 0 then
-    // Still no match, try searching by filename, but use Title as last resort : 
+  // Try searching by filename, but use Title as last resort :
+  if (Result < 0) and (aXBEInfo.Title <> '') then
     Result := FindByFileName(aXBEInfo.Title);
+
+  // TODO : Add other search-methods here
+
+  // Not found at all, no other searches possible :
+  if Result < 0 then
+    Exit;
+
+  // Mark it a no-match when the region mis-matches :
+  if (TXBEInfo(MyXBEList.Objects[Result]).GameRegion <> aXBEInfo.GameRegion) then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  // Mark it a no-match when the library versions mis-match :
+  if (TXBEInfo(MyXBEList.Objects[Result]).LibVersions.Text <> aXBEInfo.LibVersions.Text) then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  // TODO : Add other non-duplicate tests here
 end;
 
 function TfrmXdkTracker.FindByFileName(const aFileName: string): Integer;
@@ -327,7 +344,7 @@ begin
   Result := -1;
 end; // TfrmMain.FindByFileName
 
-function TfrmXdkTracker.InsertXBEInfo(const aXBEInfo: TXBEInfo): Boolean;
+function TfrmXdkTracker.InsertXBEInfo(const aXBEInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
 var
   i: Integer;
 begin
@@ -335,7 +352,12 @@ begin
   if not Assigned(aXBEInfo) then
     Exit;
 
-  i := FindDuplicate(aXbeInfo);
+(*
+  if aPreventDuplicates then
+    i := FindDuplicate(aXbeInfo)
+  else
+    i := -1;
+
   if i >= 0 then
   begin
     // Replace existing :
@@ -344,6 +366,7 @@ begin
     MyXBEList.Strings[i] := aXBEInfo.Title;
   end
   else
+*)
     MyXBEList.AddObject(aXBEInfo.Title, aXBEInfo);
 
   Result := True;
