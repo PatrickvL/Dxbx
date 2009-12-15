@@ -35,6 +35,12 @@ uses
   , uEmuAlloc;
 
 
+const
+  VSH_INSTRUCTION_SIZE = 4;
+  VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * sizeof(DWORD);
+  VSH_MAX_INTERMEDIATE_COUNT = 1024; // The maximum number of intermediate format slots
+
+
 type
   LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
 
@@ -44,13 +50,116 @@ type
     NumInst: uint08;
     Unknown0: uint08;
   end;
-
   VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
+  PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
 
-const
-  VSH_INSTRUCTION_SIZE = 4;
-  VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * sizeof(DWORD);
+  _VSH_TYPE_PATCH_DATA = packed record
+    NbrTypes: DWORD;
+    Types: array [0..255] of UINT;
+  end;
+  VSH_TYPE_PATCH_DATA = _VSH_TYPE_PATCH_DATA;
 
+  _VSH_STREAM_PATCH_DATA = packed record
+    NbrStreams: DWORD;
+    pStreamPatches: array [0..255] of STREAM_DYNAMIC_PATCH;
+  end;
+  VSH_STREAM_PATCH_DATA = _VSH_STREAM_PATCH_DATA;
+
+  _VSH_PATCH_DATA = packed record
+    NeedPatching: boolean;
+    ConvertedStride: DWORD;
+    TypePatchData: VSH_TYPE_PATCH_DATA;
+    StreamPatchData: VSH_STREAM_PATCH_DATA;
+  end;
+  VSH_PATCH_DATA = _VSH_PATCH_DATA;
+  PVSH_PATCH_DATA = ^VSH_PATCH_DATA;
+
+  _VSH_IMD_INSTRUCTION_TYPE = (IMD_MAC,IMD_ILU);
+  VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
+
+  _VSH_IMD_OUTPUT_TYPE = (IMD_OUTPUT_C,
+                          IMD_OUTPUT_R,
+                          IMD_OUTPUT_O,
+                          IMD_OUTPUT_A0X);
+  VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
+
+  _VSH_IMD_OUTPUT = packed record
+    aType: VSH_IMD_OUTPUT_TYPE;
+    Mask: Array [0..3] of boolean;
+    Address: int16;
+  end;
+  VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
+
+  _VSH_ILU = (ILU_NOP = 0,
+              ILU_MOV,
+              ILU_RCP,
+              ILU_RCC,
+              ILU_RSQ,
+              ILU_EXP,
+              ILU_LOG,
+              ILU_LIT);
+  VSH_ILU = _VSH_ILU;
+
+  _VSH_MAC = (MAC_NOP,
+              MAC_MOV,
+              MAC_MUL,
+              AC_ADD,
+              MAC_MAD,
+              MAC_DP3,
+              MAC_DPH,
+              MAC_DP4,
+              MAC_DST,
+              MAC_MIN,
+              MAC_MAX,
+              MAC_SLT,
+              MAC_SGE,
+              MAC_ARL);
+  VSH_MAC = _VSH_MAC;
+
+  _VSH_PARAMETER_TYPE = (PARAM_UNKNOWN = 0,
+                         PARAM_R,
+                         PARAM_V,
+                         PARAM_C);
+  VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
+
+  _VSH_SWIZZLE = (SWIZZLE_X = 0,
+                  SWIZZLE_Y,
+                  SWIZZLE_Z,
+                  SWIZZLE_W);
+  VSH_SWIZZLE = _VSH_SWIZZLE;
+
+  _VSH_PARAMETER = packed record
+      ParameterType: VSH_PARAMETER_TYPE;   // Parameter type, R, V or C
+      Neg: boolean;             // TRUE if negated, FALSE if not
+      Swizzle: Array [0..3] of VSH_SWIZZLE;      // The four swizzles
+      Address: int16;         // Register address
+  end;
+  VSH_PARAMETER = _VSH_PARAMETER;
+
+  _VSH_IMD_PARAMETER = packed record
+    Active: boolean;
+    Parameter: VSH_PARAMETER;
+    IsA0X: boolean;
+  end;
+  VSH_IMD_PARAMETER = _VSH_IMD_PARAMETER;
+
+  _VSH_INTERMEDIATE_FORMAT = packed record
+    IsCombined: boolean;
+    InstructionType: VSH_IMD_INSTRUCTION_TYPE;
+    MAC: VSH_MAC;
+    ILU: VSH_ILU;
+    Output: VSH_IMD_OUTPUT;
+    Parameters: Array[0..2] of VSH_IMD_PARAMETER;
+  end;
+  VSH_INTERMEDIATE_FORMAT = _VSH_INTERMEDIATE_FORMAT;
+
+  _VSH_XBOX_SHADER = packed record
+    ShaderHeader: VSH_SHADER_HEADER;
+    IntermediateCount: uint16;
+    Intermediate: Array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT ;
+  end;
+  VSH_XBOX_SHADER = _VSH_XBOX_SHADER;
+  PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
 
 function XTL_IsValidCurrentShader: Boolean; stdcall; // forward
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
@@ -75,29 +184,83 @@ function XTL_EmuRecompileVshFunction
 ) : HRESULT; stdcall;
 
 function VshGetDeclarationSize(pDeclaration: PDWord): DWORD;
+function VshRecompileToken(pToken: PDWord; IsFixedFunction: boolean; pPatchData: PVSH_PATCH_DATA): DWORD;
 
 
-(*#define DEF_VSH_END 0xFFFFFFFF
-(*#define DEF_VSH_NOP 0x00000000 *)
-
+const
+  DEF_VSH_END = $FFFFFFFF;
+  DEF_VSH_NOP = $00000000;
 
 implementation
 
 uses
   // Dxbx
   uEmuFS
+  , uLog
   , uEmuD3D8;
 
 function VshGetDeclarationSize(pDeclaration: PDWord): DWORD;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   Pos: DWORD;
 begin
   Pos := 0;
-(*  while pDeclaration+Pos <> DEF_VSH_END do
-    inc(Pos); *)
+  while DWord(pDeclaration)+Pos <> DEF_VSH_END do
+    inc(Pos);
 
   Result := (Pos + 1) * sizeof(DWORD);
+end;
+
+function VshGetTokenType(Token: DWORD): DWORD;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+begin
+  Result := (Token and D3DVSD_TOKENTYPEMASK) shr D3DVSD_TOKENTYPESHIFT;
+end;
+
+function VshRecompileToken(pToken: PDWord; IsFixedFunction: boolean; pPatchData: PVSH_PATCH_DATA): DWORD;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+var
+  Step: DWORD;
+begin
+  //using namespace XTL;
+  Step := 1;
+(*  case VshGetTokenType(pToken^) of
+    D3DVSD_TOKEN_NOP: VshConvertToken_NOP(pToken);
+    D3DVSD_TOKEN_STREAM: VshConvertToken_STREAM(pToken, pPatchData);
+    D3DVSD_TOKEN_STREAMDATA: VshConvertToken_STREAMDATA(pToken, IsFixedFunction, pPatchData);
+    D3DVSD_TOKEN_TESSELLATOR: VshConverToken_TESSELATOR(pToken, IsFixedFunction);
+    D3DVSD_TOKEN_CONSTMEM: Step = VshConvertToken_CONSTMEM(pToken);
+  else
+    DbgPrintf('Unknown token type: %d', [VshGetTokenType(pToken)]);
+  end; *)
+
+  Result := Step;
+end;
+
+function VshAddStreamPatch(pPatchData: PVSH_PATCH_DATA): boolean;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:50
+var
+  CurrentStream: int;
+  pStreamPatch: STREAM_DYNAMIC_PATCH;
+begin
+  CurrentStream := pPatchData.StreamPatchData.NbrStreams - 1;
+
+  if(CurrentStream >= 0) then
+  begin
+    DbgPrintf('NeedPatching: %', [pPatchData.NeedPatching]);
+
+    pStreamPatch := pPatchData.StreamPatchData.pStreamPatches[CurrentStream];
+
+    pStreamPatch.ConvertedStride := pPatchData.ConvertedStride;
+    pStreamPatch.NbrTypes := pPatchData.TypePatchData.NbrTypes;
+    pStreamPatch.NeedPatch := pPatchData.NeedPatching;
+    pStreamPatch.pTypes := CxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
+(*    memcpy(pStreamPatch.pTypes, pPatchData.TypePatchData.Types, pPatchData-.TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA)); *)
+
+    Result := TRUE;
+    Exit;
+  end;
+  Result := FALSE;
 end;
 
 function XTL_EmuRecompileVshDeclaration
@@ -111,6 +274,9 @@ function XTL_EmuRecompileVshDeclaration
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 var
   DeclarationSize: DWORD;
+  pRecompiled: PDWord;
+  PatchData: VSH_PATCH_DATA;
+  Step: DWORD;
 begin
   // First of all some info:
   // We have to figure out which flags are set and then
@@ -121,23 +287,25 @@ begin
   // 0x00000000 - nop (means that this value is ignored)
 
   // Calculate size of declaration
-  DeclarationSize := VshGetDeclarationSize(pDeclaration);
-  *ppRecompiledDeclaration = (DWORD *)(*CxbxMalloc(DeclarationSize);
-  DWORD *pRecompiled = *ppRecompiledDeclaration;
+(*  DeclarationSize := VshGetDeclarationSize(pDeclaration);
+  ppRecompiledDeclaration := PDWORD(CxbxMalloc(DeclarationSize));
+  pRecompiled := ppRecompiledDeclaration;
+
   memcpy(pRecompiled, pDeclaration, DeclarationSize);
-  *pDeclarationSize = DeclarationSize;
+  pDeclarationSize := DeclarationSize;
 
   // TODO: Put these in one struct
-  VSH_PATCH_DATA       PatchData = { 0 };
+  PatchData := 0;
 
-  DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
+  DbgPrintf('DWORD dwVSHDecl[] = ' );
 
-  while (*pRecompiled != DEF_VSH_END)
-  {
-      DWORD Step = VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
-      pRecompiled += Step;
-  }
-  DbgVshPrintf("\tD3DVSD_END()\n};\n");
+  while pRecompiled <> DEF_VSH_END do
+  begin
+    Step := VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
+    Inc(Step);
+    pRecompiled := Step;
+  end;
+  DbgPrintf('\tD3DVSD_END()');
 
   VshAddStreamPatch(&PatchData);
 
@@ -149,7 +317,7 @@ begin
   pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)(*CxbxMalloc(StreamsSize);
   memcpy(pVertexDynamicPatch->pStreamPatches,
          PatchData.StreamPatchData.pStreamPatches,
-         StreamsSize);
+         StreamsSize);   *)
 
   result := D3D_OK;
 end;
@@ -162,11 +330,15 @@ function XTL_EmuRecompileVshFunction
     bNoReservedConstants: boolean
 ) : HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+var
+  pShaderHeader: PVSH_SHADER_HEADER;
+  pToken: PDWord;
+  EOI: boolean;
+  pShader: PVSH_XBOX_SHADER;
 begin
-(*    VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)(*pFunction;
-    DWORD               *pToken;
-    boolean             EOI = false;
-    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)(*CxbxMalloc(sizeof(VSH_XBOX_SHADER));
+    pShaderHeader := PVSH_SHADER_HEADER(pFunction);
+    EOI := false;
+ (*   pShader := (VSH_XBOX_SHADER*)(*CxbxMalloc(sizeof(VSH_XBOX_SHADER));
     HRESULT             hRet = 0;
 
     // TODO: support this situation..
