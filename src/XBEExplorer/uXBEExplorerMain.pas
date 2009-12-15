@@ -51,6 +51,7 @@ type
     procedure Exit1Click(Sender: TObject);
     procedure Close1Click(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
+    procedure About1Click(Sender: TObject);
   protected
     MyXBE: TXbe;
     FXBEFileName: string;
@@ -83,6 +84,15 @@ end;
 procedure TFormXBEExplorer.Exit1Click(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TFormXBEExplorer.About1Click(Sender: TObject);
+begin
+  TaskMessageDlg('About ' + Application.Title,
+    'XBE Explorer © 2009, PatrickvL.  Released under GPL3.'#13#13 +
+    'XBE Explorer is part of Dxbx - the Delphi Xbox1 emulator.'#13#13 +
+    'Website : http://sourceforge.net/projects/dxbx/',
+    mtInformation, [mbOK], 0);
 end;
 
 procedure TFormXBEExplorer.Close1Click(Sender: TObject);
@@ -185,17 +195,47 @@ var
   NodeResources,
   Level0, NodeXBEHeader: TTreeNode;
 
+  function _Offset(var aValue; const aBaseAddr: DWord = 0): string;
+  begin
+    Result := _DWord(aBaseAddr + FIELD_OFFSET(aValue));
+  end;
+
+  function _CreateNode(const aParentNode: TTreeNode; const aName: string; aContents: TControl): TTreeNode;
+  var
+    TabSheet: TTabSheet;
+  begin
+    TabSheet := TTabSheet.Create(Self);
+    TabSheet.PageControl := PageControl1;
+    TabSheet.TabVisible := False;
+    if Assigned(aContents) then
+    begin
+      aContents.Parent := TabSheet;
+      aContents.Align := alClient;
+    end
+    else
+      TabSheet.Caption := 'Select subnode for more details';
+
+    Result := TreeView1.Items.AddChildObject(aParentNode, aName, TabSheet);
+  end; // _CreateNode
+
+  function _Initialize_XPRSection(const aXPR_IMAGE: PXPR_IMAGE): TImage;
+  begin
+    Result := TImage.Create(Self);
+    MyXbe.ExportXPRToBitmap(aXPR_IMAGE, Result.Picture.Bitmap);
+  end;
+
+  function _Initialize_Logo: TImage;
+  begin
+    Result := TImage.Create(Self);
+    MyXbe.ExportLogoBitmap(Result.Picture.Bitmap)
+  end;
+
   function _CreateGrid_File: TStringGrid;
   begin
     Result := NewGrid(1, ['Property', 'Value']);
     GridAddRow(Result, ['File Name', aFilePath]);
     GridAddRow(Result, ['File Type', 'XBE File']);
     GridAddRow(Result, ['File Size', IntToStr(MyXBE.FileSize) + ' bytes']);
-  end;
-
-  function _Offset(var aValue; const aBaseAddr: DWord = 0): string;
-  begin
-    Result := _DWord(aBaseAddr + FIELD_OFFSET(aValue));
   end;
 
   function _Initialize_XBEHeader: TStringGrid;
@@ -235,7 +275,7 @@ var
     GridAddRow(Result, ['dwXAPILibraryVersionAddr', _offset(PXbeHeader(nil).dwXAPILibraryVersionAddr), 'Dword', _DWORD(Hdr.dwXAPILibraryVersionAddr)]);
     GridAddRow(Result, ['dwLogoBitmapAddr', _offset(PXbeHeader(nil).dwLogoBitmapAddr), 'Dword', _DWORD(Hdr.dwLogoBitmapAddr)]);
     GridAddRow(Result, ['dwSizeofLogoBitmap', _offset(PXbeHeader(nil).dwSizeofLogoBitmap), 'Dword', _DWORD(Hdr.dwSizeofLogoBitmap)]);
-  end;
+  end; // _Initialize_XBEHeader
 
   function _Initialize_Certificate: TStringGrid;
   var
@@ -261,23 +301,111 @@ var
     GridAddRow(Result, ['bzSignatureKey', _offset(PXbeCertificate(nil).bzSignatureKey, o), 'Byte[16]', PByteToHexString(@Cert.bzSignatureKey[0], 16)]);
     for i := Low(Cert.bzTitleAlternateSignatureKey) to High(Cert.bzTitleAlternateSignatureKey) do
       GridAddRow(Result, ['bzTitleAlternateSignatureKey[' + IntToStr(i) + ']', _offset(PXbeCertificate(nil).bzTitleAlternateSignatureKey[i], o), 'Byte[16]', PByteToHexString(@Cert.bzTitleAlternateSignatureKey[i][0], 16)]);
-  end;
+  end; // _Initialize_Certificate
 
-  function _Initialize_Stub: TPanel;
+  function _Initialize_SectionHeaders: TPanel;
+  var
+    Grid: TStringGrid;
+    i: Integer;
+    Hdr: PXbeSectionHeader;
+    ItemName: string;
+    Splitter: TSplitter;
+    HexViewer: THexViewer;
   begin
     Result := TPanel.Create(Self);
+
+    Grid := NewGrid(0, ['Member:', 'Flags', 'Virtual Address', 'Virtual Size',
+      'Raw Address', 'Raw Size', 'SectionNamAddr', 'dwSectionRefCount',
+      'dwHeadSharedRefCountAddr', 'dwTailSharedRefCountAddr', 'bzSectionDigest']);
+    Grid.Parent := Result;
+    Grid.Align := alTop;
+    Grid.Height := Height div 2;
+    Grid.RowCount := 4;
+    Grid.Options := Grid.Options + [goRowSelect];
+    Grid.FixedRows := 3;
+    GridAddRow(Grid, ['Offset:']); // Put space in offset-row
+    GridAddRow(Grid, ['Section', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Byte[20]']);
+
+    for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
+    begin
+      Hdr := @(MyXBE.m_SectionHeader[i]);
+      ItemName := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr);
+      GridAddRow(Grid, [
+        ItemName,
+        PByteToHexString(@Hdr.dwFlags[0], 4),
+        _DWord(Hdr.dwVirtualAddr),
+        _DWord(Hdr.dwVirtualSize),
+        _DWord(Hdr.dwRawAddr),
+        _DWord(Hdr.dwSizeofRaw),
+        _DWord(Hdr.dwSectionNameAddr),
+        _DWord(Hdr.dwSectionRefCount),
+        _DWord(Hdr.dwHeadSharedRefCountAddr),
+        _DWord(Hdr.dwTailSharedRefCountAddr),
+        PByteToHexString(@Hdr.bzSectionDigest[0], 20)
+      ]);
+
+      if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
+        _CreateNode(NodeResources, 'Image ' + ItemName, _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
+    end;
+
+    Splitter := TSplitter.Create(Self);
+    Splitter.Parent := Result;
+    Splitter.Align := alTop;
+    Splitter.Top := Grid.Height;
+
+    HexViewer := THexViewer.Create(Self);
+    HexViewer.Parent := Result;
+    HexViewer.Align := alClient;
+
+    Grid.Tag := Integer(HexViewer);
+    Grid.OnClick := SectionClick;
+  end; // _Initialize_SectionHeaders
+
+  function _Initialize_LibraryVersions: TStringGrid;
+  var
+    o: DWord;
+    i: Integer;
+    LibVer: PXbeLibraryVersion;
+    ItemName: string;
+  begin
+    o := MyXBE.m_Header.dwLibraryVersionsAddr - MyXBE.m_Header.dwBaseAddr;
+    Result := NewGrid(0, ['Member:', 'szName', 'wMajorVersion', 'wMinorVersion', 'wBuildVersion', 'dwFlags']);
+    Result.RowCount := 3;
+    Result.Options := Result.Options + [goRowSelect];
+    Result.FixedRows := 2;
+    GridAddRow(Result, ['Offset', 'Char[8]', 'Word', 'Word', 'Word', 'Byte[2]']);
+
+    for i := 0 to Length(MyXBE.m_LibraryVersion) - 1 do
+    begin
+      LibVer := @(MyXBE.m_LibraryVersion[i]);
+      ItemName := PCharToString(@LibVer.szName[0], 8);
+      GridAddRow(Result, [
+        _DWORD(o),
+        ItemName,
+        _DWORD(LibVer.wMajorVersion),
+        _DWORD(LibVer.wMinorVersion),
+        IntToStr(LibVer.wBuildVersion),
+        PByteToHexString(@LibVer.dwFlags[0], 2)
+        ]);
+      Inc(o, SizeOf(LibVer^));
+    end;
   end;
 
-  function _Initialize_Logo: TImage;
+  function _Initialize_TLS: TStringGrid;
+  var
+    o: DWord;
+    i: Integer;
+    TLS: PXbeTls;
   begin
-    Result := TImage.Create(Self);
-    MyXbe.ExportLogoBitmap(Result.Picture.Bitmap)
-  end;
-
-  function _Initialize_XPRSection(const aXPR_IMAGE: PXPR_IMAGE): TImage;
-  begin
-    Result := TImage.Create(Self);
-    MyXbe.ExportXPRToBitmap(aXPR_IMAGE, Result.Picture.Bitmap);
+    o := MyXBE.m_Header.dwTLSAddr - MyXBE.m_Header.dwBaseAddr;
+    TLS := @(MyXBE.m_TLS);
+    Result := NewGrid(3, ['Member', 'Offset', 'Size', 'Value', 'Meaning']);
+    GridAddRow(Result, ['dwDataStartAddr', _offset(PXbeTls(nil).dwDataStartAddr, o), 'Dword', _DWORD(TLS.dwDataStartAddr)]);
+    GridAddRow(Result, ['dwDataEndAddr', _offset(PXbeTls(nil).dwDataEndAddr, o), 'Dword', _DWORD(TLS.dwDataEndAddr)]);
+    GridAddRow(Result, ['dwTLSIndexAddr', _offset(PXbeTls(nil).dwTLSIndexAddr, o), 'Dword', _DWORD(TLS.dwTLSIndexAddr)]);
+    GridAddRow(Result, ['dwTLSCallbackAddr', _offset(PXbeTls(nil).dwTLSCallbackAddr, o), 'Dword', _DWORD(TLS.dwTLSCallbackAddr)]);
+    GridAddRow(Result, ['dwSizeofZeroFill', _offset(PXbeTls(nil).dwSizeofZeroFill, o), 'Dword', _DWORD(TLS.dwSizeofZeroFill)]);
+    GridAddRow(Result, ['dwCharacteristics', _offset(PXbeTls(nil).dwCharacteristics, o), 'Dword', _DWORD(TLS.dwCharacteristics)]);
   end;
 
   function _Initialize_HexViewer: THexViewer;
@@ -292,84 +420,7 @@ var
     Result.SetRegion(MyXBE.RawData, MyXBE.FileSize);
   end;
   
-  function _CreateNode(const aParentNode: TTreeNode; const aName: string; aContents: TControl): TTreeNode;
-  var
-    TabSheet: TTabSheet;
-  begin
-    TabSheet := TTabSheet.Create(Self);
-    TabSheet.PageControl := PageControl1;
-    TabSheet.TabVisible := False;
-    if Assigned(aContents) then
-    begin
-      aContents.Parent := TabSheet;
-      aContents.Align := alClient;
-    end
-    else
-      TabSheet.Caption := 'Select subnode for more details';
-    
-    Result := TreeView1.Items.AddChildObject(aParentNode, aName, TabSheet);
-  end;
-
-  function _Initialize_SectionHeaders: TPanel;
-  var
-    Grid: TStringGrid;
-    i: Integer;
-    Hdr: PXbeSectionHeader;
-    Name: string;
-    Splitter: TSplitter;
-    HexViewer: THexViewer;
-  begin
-    Result := TPanel.Create(Self);
-
-    Grid := NewGrid(0, ['Name', 'Flags', 'Virtual Address', 'Virtual Size',
-      'Raw Address', 'Raw Size', 'SectionNamAddr', 'dwSectionRefCount',
-      'dwHeadSharedRefCountAddr', 'dwTailSharedRefCountAddr', 'bzSectionDigest']);
-    Grid.Parent := Result;
-    Grid.Align := alTop;
-    Grid.Height := Height div 2;
-    Grid.RowCount := 4;
-    Grid.Options := Grid.Options + [goRowSelect];
-    Grid.FixedRows := 3;
-    GridAddRow(Grid, [' ']); // Put space in offset-row
-    GridAddRow(Grid, [' ', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Dword', 'Byte[20]']);
-
-    for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
-    begin
-      Hdr := @(MyXBE.m_SectionHeader[i]);
-      Name := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr);
-      GridAddRow(Grid, [
-        Name,
-        PByteToHexString(@Hdr.dwFlags[0], 4),
-        _DWord(Hdr.dwVirtualAddr),
-        _DWord(Hdr.dwVirtualSize),
-        _DWord(Hdr.dwRawAddr),
-        _DWord(Hdr.dwSizeofRaw),
-        _DWord(Hdr.dwSectionNameAddr),
-        _DWord(Hdr.dwSectionRefCount),
-        _DWord(Hdr.dwHeadSharedRefCountAddr),
-        _DWord(Hdr.dwTailSharedRefCountAddr),
-        PByteToHexString(@Hdr.bzSectionDigest[0], 20) // TODO : Whole array?!
-      ]);
-
-      if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
-        _CreateNode(NodeResources, 'Image ' + Name, _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
-      
-    end;
-
-    Splitter := TSplitter.Create(Self);
-    Splitter.Parent := Result;
-    Splitter.Align := alTop;
-    Splitter.Top := Grid.Height;
-
-    HexViewer := THexViewer.Create(Self);
-    HexViewer.Parent := Result;
-    HexViewer.Align := alClient;
-
-    Grid.Tag := Integer(HexViewer);
-    Grid.OnClick := SectionClick;
-  end;
-
-begin
+begin // OpenXBE
   CloseXBE;
   MyXBE := TXbe.Create(aFilePath, ftXbe);
   FXBEFileName := ExtractFileName(aFilePath);
@@ -379,11 +430,12 @@ begin
   Level0 := _CreateNode(nil, 'File : ' + FXBEFileName, _CreateGrid_File);
   NodeXBEHeader := _CreateNode(Level0, 'XBE Header', _Initialize_XBEHeader);
   NodeResources := _CreateNode(Level0, 'Resources', nil);
-  
+
   _CreateNode(NodeXBEHeader, 'Certificate', _Initialize_Certificate);
   _CreateNode(NodeXBEHeader, 'Section Headers', _Initialize_SectionHeaders);
-  _CreateNode(NodeXBEHeader, 'TLS', _Initialize_Stub);
-  _CreateNode(NodeXBEHeader, 'Library Versions', _Initialize_Stub);
+  _CreateNode(NodeXBEHeader, 'Library Versions', _Initialize_LibraryVersions);
+  _CreateNode(NodeXBEHeader, 'TLS', _Initialize_TLS);
+
   _CreateNode(NodeResources, 'Logo Bitmap', _Initialize_Logo);
 
   _CreateNode(Level0, 'Hex Viewer', _Initialize_HexViewer);
@@ -391,7 +443,7 @@ begin
 
   Level0.Expand(True);
   TreeView1.Selected := Level0;
-end;
+end; // OpenXBE
 
 procedure TFormXBEExplorer.TreeView1Change(Sender: TObject; Node: TTreeNode);
 begin
