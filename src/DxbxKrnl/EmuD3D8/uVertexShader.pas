@@ -87,7 +87,7 @@ type
   _VSH_IMD_OUTPUT = packed record
     aType: VSH_IMD_OUTPUT_TYPE;
     Mask: Array [0..3] of boolean;
-    Address: int16;
+    Address: Uint16;
   end;
   VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
 
@@ -133,7 +133,7 @@ type
       ParameterType: VSH_PARAMETER_TYPE;   // Parameter type, R, V or C
       Neg: boolean;             // TRUE if negated, FALSE if not
       Swizzle: Array [0..3] of VSH_SWIZZLE;      // The four swizzles
-      Address: int16;         // Register address
+      Address: Uint16;         // Register address
   end;
   VSH_PARAMETER = _VSH_PARAMETER;
 
