@@ -34,7 +34,7 @@ type
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
 
-    procedure SetRegion(const aBase: Pointer; const aSize: Integer);
+    procedure SetRegion(const aMemory: Pointer; const aSize: Integer);
   end;
 
 implementation
@@ -73,7 +73,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TStringsViewer.SetRegion(const aBase: Pointer; const aSize: Integer);
+procedure TStringsViewer.SetRegion(const aMemory: Pointer; const aSize: Integer);
 const
   // String should at least be this long :
   MIN_STRING_LENGTH = 4;
@@ -96,7 +96,7 @@ var
     Len := i - StartOffset;
     if Len >= MIN_STRING_LENGTH then
     begin
-      SetString(Str, PAnsiChar(aBase)+StartOffset, Len);
+      SetString(Str, PAnsiChar(aMemory)+StartOffset, Len);
 
       // Relatively short strings need some extra pruning :
       if Len <= SHORT_STRING_LENGTH then
@@ -122,7 +122,7 @@ var
 
 begin
   MyStrings.Clear;
-  if Assigned(aBase) and (aSize >= MIN_STRING_LENGTH) then
+  if Assigned(aMemory) and (aSize >= MIN_STRING_LENGTH) then
   begin
     StartOffset := -1;
     i := 0;
@@ -130,7 +130,7 @@ begin
     begin
       // TODO : Here we should add Unicode detection too
       
-      if IsPrintableAsciiChar(PAnsiChar(aBase)[i]) then
+      if IsPrintableAsciiChar(PAnsiChar(aMemory)[i]) then
       begin
         if StartOffset < 0 then
           StartOffset := i;
