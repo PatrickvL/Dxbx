@@ -411,6 +411,36 @@ function {258} xboxkrnl_PsTerminateSystemThread(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*
+
+    DbgPrintf("EmuKrnl (0x%X): PsTerminateSystemThread\n"
+           "(\n"
+           "   ExitStatus          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ExitStatus);
+
+    // call thread notification routine(s)
+    if(g_pfnThreadNotification != 0)
+    {
+        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+
+        EmuSwapFS();   // Xbox FS
+
+        pfnNotificationRoutine(FALSE);
+
+        EmuSwapFS();   // Win2k/XP FS
+    }
+
+//    CxbxKrnlTerminateThread();
+
+    EmuCleanupFS();
+
+    _endthreadex(ExitStatus);
+    //ExitThread(ExitStatus);
+
+    return;*)
+
   Result := Unimplemented('PsTerminateSystemThread');
   EmuSwapFS(fsXbox);
 end;
