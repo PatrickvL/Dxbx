@@ -21,20 +21,23 @@ interface
 
 uses
   // Delphi
-  Windows, Classes, SysUtils, Controls, Graphics, Forms, Grids,
+  Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids,
   // Dxbx
   uTypes;
 
 type
-  THexViewer = class(TDrawGrid)
+  THexViewer = class(TPanel)
   protected
-    FBase: MathPtr;
-    FSize: Integer;
+    MyHeader: TPanel;
+    MyDrawGrid: TDrawGrid;
+    FMemory: MathPtr;
+    FSize: DWord;
+    FBase: DWord;
     procedure DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
   public
     constructor Create(Owner: TComponent); override;
 
-    procedure SetRegion(const aBase: Pointer; const aSize: Integer);
+    procedure SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
   end;
 
 implementation
@@ -43,29 +46,49 @@ constructor THexViewer.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
 
-  BevelEdges := [];
-  BevelInner := bvNone;
   BevelOuter := bvNone;
-  BorderStyle := bsNone;
-  Font.Name := 'Consolas';
-  DefaultRowHeight := 16;
-  DefaultColWidth := 20;
-  ColCount := 18;
-  ColWidths[0] := 64;
-  ColWidths[16] := 28; // extra padding between $F and Ascii data 
-  ColWidths[17] := 96;
-  Options := [goThumbTracking];
-  OnDrawCell := DoDrawCell;
 
-  SetRegion(nil, 0);
+  MyHeader := TPanel.Create(Self);
+  with MyHeader do
+  begin
+    Align := alTop;
+    Parent := Self;
+    Height := 32;
+    BevelOuter := bvNone;
+  end;
+
+  MyDrawGrid := TDrawGrid.Create(Self);
+  with MyDrawGrid do
+  begin
+    Align := alClient;
+    Parent := Self;
+    BevelEdges := [];
+    BevelInner := bvNone;
+    BevelOuter := bvNone;
+    BorderStyle := bsNone;
+    Font.Name := 'Consolas';
+    DefaultRowHeight := 16;
+    DefaultColWidth := 20;
+    ColCount := 18;
+    ColWidths[0] := 64;
+    ColWidths[16] := 28; // extra padding between $F and Ascii data
+    ColWidths[17] := 96;
+    Options := [goThumbTracking];
+    OnDrawCell := DoDrawCell;
+  end;
+  
+  SetRegion(nil, 0, 0, '');
 end;
 
-procedure THexViewer.SetRegion(const aBase: Pointer; const aSize: Integer);
+procedure THexViewer.SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
 begin
-  FBase := aBase;
+  FMemory := aMemory;
   FSize := aSize;
-  RowCount := 1 + ((aSize + 15) shr 4);
-  Repaint;
+  FBase := aBase;
+
+  MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%d bytes)', [aTitle, DWord(FBase), DWord(FBase + FSize), FSize]);
+  MyDrawGrid.RowCount := 1 + ((aSize + 15) shr 4);
+  MyDrawGrid.Repaint;
 end;
 
 procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -79,8 +102,8 @@ procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
     Dec(Offset);
     for i := 1 to Len do
     begin
-      if IsPrintableChar(PAnsiChar(FBase)[Offset + i]) then
-        Result[i] := Char(PAnsiChar(FBase)[Offset + i])
+      if IsPrintableChar(PAnsiChar(FMemory)[Offset + i]) then
+        Result[i] := Char(PAnsiChar(FMemory)[Offset + i])
       else
         Result[i] := '.';
     end;
@@ -88,9 +111,9 @@ procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
 
 var
   aStr: string;
-  Offset: Integer;
+  Offset: DWord;
 begin
-  if aRow = TopRow then
+  if aRow <= MyDrawGrid.TopRow then
   begin
     case aCol of
       0: aStr := ' Offset';
@@ -109,7 +132,7 @@ begin
           if Offset > FSize then
             aStr := ''
           else
-            aStr := PByteToHexString(@FBase[Offset], 1);
+            aStr := PByteToHexString(@FMemory[Offset], 1);
         end;
       17:
         begin
@@ -122,13 +145,13 @@ begin
     end;
   end;
 
-  if (aRow = TopRow) or (aCol = 0) then
-    Canvas.Font.Color := clBackground
+  if (aRow = MyDrawGrid.TopRow) or (aCol = 0) then
+    MyDrawGrid.Canvas.Font.Color := clBackground
   else
-    Canvas.Font.Color := clWindowText;
+    MyDrawGrid.Canvas.Font.Color := clWindowText;
 
-  Canvas.FillRect(Rect);
-  Canvas.TextOut(Rect.Left, Rect.Top, aStr);
+  MyDrawGrid.Canvas.FillRect(Rect);
+  MyDrawGrid.Canvas.TextOut(Rect.Left, Rect.Top, aStr);
 end;
 
 end.

@@ -25,6 +25,7 @@ uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, Grids, ExtCtrls,
+  StdCtrls, // TMemo
   Math, // Min
   ShellAPI, // DragQueryFile
   // Dxbx
@@ -194,7 +195,8 @@ begin
   Grid.Cells[10, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwTailSharedRefCountAddr));
   Grid.Cells[11, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).bzSectionDigest));
 
-  THexViewer(TStringGrid(Sender).Tag).SetRegion(@MyXBE.RawData[Hdr.dwRawAddr], Hdr.dwSizeofRaw);
+  THexViewer(TStringGrid(Sender).Tag).SetRegion(@MyXBE.RawData[Hdr.dwRawAddr],
+    Hdr.dwSizeofRaw, Hdr.dwRawAddr, 'section "' + Grid.Cells[0, Grid.Row] + '"');
 end; // SectionClick
 
 procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
@@ -262,6 +264,12 @@ var
   begin
     Result := TImage.Create(Self);
     MyXbe.ExportXPRToBitmap(aXPR_IMAGE, Result.Picture.Bitmap);
+  end;
+
+  function _Initialize_IniSection(const aIni: WideString): TMemo;
+  begin
+    Result := TMemo.Create(Self);
+    Result.SetTextBuf(PChar(string(aIni)));
   end;
 
   function _Initialize_Logo: TImage;
@@ -387,8 +395,16 @@ var
       ]);
 
       Inc(o, SizeOf(TXbeSectionHeader));
+
+      // Add image tab when this section seems to contain a XPR resource :
       if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
-        _CreateNode(NodeResources, 'Image ' + ItemName, _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
+        _CreateNode(NodeResources, 'Image ' + ItemName,
+          _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
+
+      // Add image tab when this section seems to contain a XPR resource :
+      if PWord(MyXBE.m_bzSection[i])^ = $FEFF then
+        _CreateNode(NodeResources, 'INI ' + ItemName,
+          _Initialize_IniSection(PWideCharToString(@MyXBE.m_bzSection[i][2], (Hdr.dwSizeofRaw div SizeOf(WideChar)) - 1)));
     end;
 
     Splitter := TSplitter.Create(Self);
@@ -455,7 +471,7 @@ var
   function _Initialize_HexViewer: THexViewer;
   begin
     Result := THexViewer.Create(Self);
-    Result.SetRegion(MyXBE.RawData, MyXBE.FileSize);
+    Result.SetRegion(MyXBE.RawData, MyXBE.FileSize, 0, 'whole file');
   end;
 
   function _Initialize_Strings: TStringsViewer;

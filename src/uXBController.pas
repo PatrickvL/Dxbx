@@ -504,11 +504,11 @@ begin
         else if (lAccumZ < -32768) then
           lAccumZ := -32768;
 
-        if (Integer(dwInfo) = FIELD_OFFSET(PDIMOUSESTATE(nil).lX)) then
+        if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lX)) then
           wValue := WORD(lAccumX)
-        else if (Integer(dwInfo) = FIELD_OFFSET(PDIMOUSESTATE(nil).lY)) then
+        else if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lY)) then
           wValue := WORD(lAccumY)
-        else if (Integer(dwInfo) = FIELD_OFFSET(PDIMOUSESTATE(nil).lZ)) then
+        else if (dwInfo = FIELD_OFFSET(PDIMOUSESTATE(nil).lZ)) then
           wValue := WORD(lAccumZ);
 
         if (dwFlags and DEVICE_FLAG_NEGATIVE) > 0 then
