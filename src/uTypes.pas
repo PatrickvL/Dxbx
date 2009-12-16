@@ -134,6 +134,7 @@ function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
 function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
 function IsPrintableChar(const aChar: Char): Boolean;
 function IsPrintableAsciiChar(const aChar: Char): Boolean;
+function ByteLength(const aStr: WideString): Integer;
 
 implementation
 
@@ -244,12 +245,14 @@ end;
 function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
 var
   i: Integer;
+  WStr: WideString;
 begin
   i := 0;
   while (aPtr[i] > #0) and (i < aLen) do
     Inc(i);
 
-  SetString(Result, aPtr, i);
+  SetString(WStr, aPtr, i);
+  Result := WStr;
 end;
 
 function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
@@ -278,6 +281,11 @@ end;
 function IsPrintableAsciiChar(const aChar: Char): Boolean;
 begin
   Result := IsPrintableChar(aChar) and (Ord(aChar) < 127);
+end;
+
+function ByteLength(const aStr: WideString): Integer;
+begin
+  Result := Length(aStr) * SizeOf(WideChar);
 end;
 
 end.

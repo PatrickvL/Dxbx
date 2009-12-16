@@ -312,7 +312,8 @@ type
     function DumpInformation(FileName: string = ''): Boolean;
     
     function GetAddr(x_dwVirtualAddress: DWord): Integer;
-    function GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): string;
+    function GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): AnsiString;
+    function GetAddrWStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): WideString;
 
     function FindSection(const aSectionName: string; out Size: Integer): TRawSection;
     function ExportLogoBitmap(aBitmap: TBitmap): Boolean;
@@ -797,7 +798,7 @@ begin
   _LogEx(DxbxFormat('(PE) Size of Image               : 0x%.8x', [m_Header.dwPeSizeofImage]));
   _LogEx(DxbxFormat('(PE) Checksum                    : 0x%.8x', [m_Header.dwPeChecksum]));
   _LogEx(DxbxFormat('(PE) TimeDate Stamp              : 0x%.8x (%s)', [m_Header.dwPeTimeDate, BetterTime(m_Header.dwPeTimeDate)]));
-  _LogEx(DxbxFormat('Debug PathName Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathnameAddr, GetAddrStr(m_Header.dwDebugPathnameAddr)]));
+  _LogEx(DxbxFormat('Debug PathName Address           : 0x%.8x ("%s")', [m_Header.dwDebugPathNameAddr, GetAddrStr(m_Header.dwDebugPathNameAddr)]));
   _LogEx(DxbxFormat('Debug FileName Address           : 0x%.8x ("%s")', [m_Header.dwDebugFileNameAddr, GetAddrStr(m_Header.dwDebugFileNameAddr)]));
   _LogEx(DxbxFormat('Debug Unicode FileName Address   : 0x%.8x (L"%s")', [m_Header.dwDebugUnicodeFileNameAddr, StrAsciiFileName]));
   _LogEx(DxbxFormat('Kernel Image Thunk Address       : 0x%.8x (Retail: 0x%.8x, Debug: 0x%.8x)', [m_Header.dwKernelImageThunkAddr, m_Header.dwKernelImageThunkAddr xor XOR_KT_RETAIL, m_Header.dwKernelImageThunkAddr xor XOR_KT_DEBUG]));
@@ -1014,22 +1015,27 @@ begin
   end;
 end;
 
-function TXbe.GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): string;
+function TXbe.GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): AnsiString;
 var
   lIndex: Integer;
-  TmpChr: Char;
 begin
   lIndex := GetAddr(x_dwVirtualAddress);
   Result := '';
   try
-    TmpChr := Char(RawData[lIndex]);
-    Inc(lIndex);
-    while (TmpChr <> #0) and (lIndex < aMaxLen) do
-    begin
-      Result := Result + TmpChr;
-      TmpChr := Char(RawData[lIndex]);
-      Inc(lIndex);
-    end;
+    Result := PCharToString(@RawData[lIndex], aMaxLen);
+  except
+    // ignore - probably out of bounds read
+  end;
+end;
+
+function TXbe.GetAddrWStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): WideString;
+var
+  lIndex: Integer;
+begin
+  lIndex := GetAddr(x_dwVirtualAddress);
+  Result := '';
+  try
+    Result := PWideCharToString(@RawData[lIndex], aMaxLen);
   except
     // ignore - probably out of bounds read
   end;

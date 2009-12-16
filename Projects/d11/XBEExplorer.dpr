@@ -21,6 +21,8 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
   Application.Title := FormXBEExplorer.Caption;
+  if ParamCount > 0 then
+    FormXBEExplorer.OpenFile(ParamStr(1));
   Application.Run;
 end.
 

@@ -87,6 +87,8 @@ const
 
   XBE_LIBRARYNAME_MAXLENGTH = 8;
 
+  XBE_DebugUnicodeFileName_MAXLENGTH = 40; // ?? 256;
+  
   // game region flags for Xbe certificate
   XBEIMAGE_GAME_REGION_NA = $00000001;
   XBEIMAGE_GAME_REGION_JAPAN = $00000002;
