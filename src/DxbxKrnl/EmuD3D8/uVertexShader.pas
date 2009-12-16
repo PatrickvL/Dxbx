@@ -30,6 +30,7 @@ uses
   , Direct3D8
 
   // Dxbx
+  , uEmu
   , uTypes
   , uEmuD3D8Types
   , uEmuAlloc;
@@ -238,7 +239,7 @@ begin
 end;
 
 function VshAddStreamPatch(pPatchData: PVSH_PATCH_DATA): boolean;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:50
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:95
 var
   CurrentStream: int;
   pStreamPatch: STREAM_DYNAMIC_PATCH;
@@ -271,12 +272,13 @@ function XTL_EmuRecompileVshDeclaration
   IsFixedFunction: Boolean;
   pVertexDynamicPatch: VERTEX_DYNAMIC_PATCH
 ) : DWORD;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 var
   DeclarationSize: DWORD;
   pRecompiled: PDWord;
   PatchData: VSH_PATCH_DATA;
   Step: DWORD;
+  StreamsSize: DWORD;
 begin
   // First of all some info:
   // We have to figure out which flags are set and then
@@ -287,37 +289,37 @@ begin
   // 0x00000000 - nop (means that this value is ignored)
 
   // Calculate size of declaration
-(*  DeclarationSize := VshGetDeclarationSize(pDeclaration);
+  DeclarationSize := VshGetDeclarationSize(pDeclaration);
   ppRecompiledDeclaration := PDWORD(CxbxMalloc(DeclarationSize));
   pRecompiled := ppRecompiledDeclaration;
 
   memcpy(pRecompiled, pDeclaration, DeclarationSize);
-  pDeclarationSize := DeclarationSize;
+  pDeclarationSize^ := DeclarationSize;
 
   // TODO: Put these in one struct
-  PatchData := 0;
+  (* PatchData := [0]; *)
 
   DbgPrintf('DWORD dwVSHDecl[] = ' );
 
-  while pRecompiled <> DEF_VSH_END do
+  while pRecompiled^ <> DEF_VSH_END do
   begin
-    Step := VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
+    Step := VshRecompileToken(pRecompiled, IsFixedFunction, @PatchData);
     Inc(Step);
-    pRecompiled := Step;
+    DWord(pRecompiled) := Step;
   end;
   DbgPrintf('\tD3DVSD_END()');
 
-  VshAddStreamPatch(&PatchData);
+  VshAddStreamPatch(@PatchData);
 
-  DbgVshPrintf("NbrStreams: %d\n", PatchData.StreamPatchData.NbrStreams);
+  DbgPrintf('NbrStreams: %d', [PatchData.StreamPatchData.NbrStreams]);
 
   // Copy the patches to the vertex shader struct
-  DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
-  pVertexDynamicPatch->NbrStreams = PatchData.StreamPatchData.NbrStreams;
-  pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)(*CxbxMalloc(StreamsSize);
-  memcpy(pVertexDynamicPatch->pStreamPatches,
+  StreamsSize := PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
+  pVertexDynamicPatch.NbrStreams := PatchData.StreamPatchData.NbrStreams;
+  pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCH(CxbxMalloc(StreamsSize));
+  (*memcpy(pVertexDynamicPatch.pStreamPatches,
          PatchData.StreamPatchData.pStreamPatches,
-         StreamsSize);   *)
+         StreamsSize); *)
 
   result := D3D_OK;
 end;
@@ -335,45 +337,50 @@ var
   pToken: PDWord;
   EOI: boolean;
   pShader: PVSH_XBOX_SHADER;
+  hRet: HRESULT;
 begin
     pShaderHeader := PVSH_SHADER_HEADER(pFunction);
     EOI := false;
- (*   pShader := (VSH_XBOX_SHADER*)(*CxbxMalloc(sizeof(VSH_XBOX_SHADER));
-    HRESULT             hRet = 0;
+    pShader := PVSH_XBOX_SHADER(CxbxMalloc(sizeof(VSH_XBOX_SHADER)));
+    hRet := 0;
 
     // TODO: support this situation..
-    if(pFunction == NULL)
-        return E_FAIL;
+    (*if not Assigned(pFunction) then
+    begin
+      Result := E_FAIL;
+      Exit;
+    end; *)
 
-    *ppRecompiled = NULL;
-    *pOriginalSize = 0;
-    if(!pShader)
-    {
-        EmuWarning("Couldn't allocate memory for vertex shader conversion buffer");
-        hRet = E_OUTOFMEMORY;
-    }
+    ppRecompiled := NULL;
+    pOriginalSize := 0;
+    (*if(not pShader) then
+    begin
+      EmuWarning('Couldn`t allocate memory for vertex shader conversion buffer');
+      hRet := E_OUTOFMEMORY;
+    end; *)
     memset(pShader, 0, sizeof(VSH_XBOX_SHADER));
-    pShader->ShaderHeader = *pShaderHeader;
-    switch(pShaderHeader->Version)
-    {
-        case VERSION_XVS:
-            break;
-        case VERSION_XVSS:
-            EmuWarning("Might not support vertex state shaders?");
-            hRet = E_FAIL;
-            break;
-        case VERSION_XVSW:
-            EmuWarning("Might not support vertex read/write shaders?");
-            hRet = E_FAIL;
-            break;
-        default:
-            EmuWarning("Unknown vertex shader version 0x%02X\n", pShaderHeader->Version);
-            hRet = E_FAIL;
-            break;
-    }
-
-    if(SUCCEEDED(hRet))
-    {
+    pShader.ShaderHeader := pShaderHeader^;
+    (*case (pShaderHeader.Version) of
+      VERSION_XVS: ;
+      VERSION_XVSS:
+        begin
+            EmuWarning('Might not support vertex state shaders?');
+            hRet := E_FAIL;
+        end;
+      VERSION_XVSW:
+        begin
+            EmuWarning('Might not support vertex read/write shaders?');
+            hRet := E_FAIL;
+        end;
+      else
+        begin
+            EmuWarning('Unknown vertex shader version 0x%02X', [pShaderHeader.Version]);
+            hRet := E_FAIL;
+        end;
+    end; *)
+         (*
+    if(SUCCEEDED(hRet)) then
+    begin
 
         for (pToken = (DWORD*)(*((uint08*)(*pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
         {
@@ -417,7 +424,7 @@ begin
     CxbxFree(pShader);
 
     return hRet;
-}                        *)
+                        *)
 end;
 
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;

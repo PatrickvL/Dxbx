@@ -82,7 +82,7 @@ begin
 end;
 
 function XTL_EmuXNetGetEthernetLinkStatus: DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}

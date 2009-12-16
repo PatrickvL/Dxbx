@@ -1591,7 +1591,7 @@ else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT3) or (X_Format = 
         end
         else
         begin
-          XTL.EmuXGUnswizzleRect
+          XTL_EmuXGUnswizzleRect
             (
             pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
             LockedRect.Pitch, iRect, iPoint, dwBPP

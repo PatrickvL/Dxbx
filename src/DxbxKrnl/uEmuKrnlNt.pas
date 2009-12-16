@@ -253,7 +253,7 @@ function xboxkrnl_NtAllocateVirtualMemory(
   AllocationType: DWORD;
   Protect: DWORD
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -402,7 +402,6 @@ begin
     DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
 {$ENDIF}
 
-    EmuSwapFS();   // Xbox FS
 
     return ret;*)
 
@@ -685,7 +684,6 @@ begin
     DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
 {$ENDIF}
 
-    EmuSwapFS();   // Xbox FS
 
     return ret;*)
 
@@ -764,39 +762,37 @@ function xboxkrnl_NtDuplicateObject(
   TargetHandle: PHANDLE;
   Options: DWORD
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf("EmuKrnl (0x%X): NtDuplicateObject\n"
-           "(\n"
-           "   SourceHandle        : 0x%.08X\n"
-           "   TargetHandle        : 0x%.08X\n"
-           "   Options             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
+  DbgPrintf('EmuKrnl : NtDuplicateObject'+
+      #13#10'('+
+      #13#10'   SourceHandle        : 0x%.08X'+
+      #13#10'   TargetHandle        : 0x%.08X'+
+      #13#10'   Options             : 0x%.08X'+
+      #13#10');',
+      [SourceHandle, TargetHandle, Options]);
 {$ENDIF}
 
-    // redirect to Win2k/XP
-    NTSTATUS ret = NtDll::NtDuplicateObject
-    (
-        GetCurrentProcess(),
-        SourceHandle,
-        GetCurrentProcess(),
-        TargetHandle,
-        0, 0, Options
-    );
+  // redirect to Win2k/XP
+  ret := NtDuplicateObject
+  (
+      GetCurrentProcess(),
+      SourceHandle,
+      GetCurrentProcess(),
+      TargetHandle,
+      0, 0, Options
+  );
 
-    if(ret != STATUS_SUCCESS)
-        EmuWarning("Object was not duplicated!");
+  if not (ret = STATUS_SUCCESS) then
+      EmuWarning('Object was not duplicated!');
 
-    EmuSwapFS();   // Xbox FS
+  Result := ret;
 
-    return ret;*)
-
-  Result := Unimplemented('NtDuplicateObject');
   EmuSwapFS(fsXbox);
 end;
 
@@ -804,27 +800,23 @@ function xboxkrnl_NtFlushBuffersFile(
   FileHandle: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf("EmuKrnl (0x%X): NtFlushBuffersFile\n"
-           "(\n"
-           "   FileHandle          : 0x%.08X\n"
-           "   IoStatusBlock       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock);
+  DbgPrintf('EmuKrnl : NtFlushBuffersFile'+
+      #13#10'('+
+      #13#10'   FileHandle          : 0x%.08X'+
+      #13#10'   IoStatusBlock       : 0x%.08X'+
+      #13#10');',
+      [FileHandle, IoStatusBlock]);
 {$ENDIF}
 
-    NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)(*IoStatusBlock);
-
-    EmuSwapFS();   // Xbox FS
-
-    return ret;*)
-
-  Result := Unimplemented('NtFlushBuffersFile');
+  (*ret := NtFlushBuffersFile(FileHandle, PIO_STATUS_BLOCK(IoStatusBlock)); *)
+  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -833,28 +825,24 @@ function xboxkrnl_NtFreeVirtualMemory(
   FreeSize: PULONG; // OUT
   FreeType: ULONG
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
-           "(\n"
-           "   BaseAddress         : 0x%.08X\n"
-           "   FreeSize            : 0x%.08X\n"
-           "   FreeType            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, FreeSize, FreeType);
+  DbgPrintf('EmuKrnl : NtFreeVirtualMemory'+
+      #13#10'('+
+      #13#10'   BaseAddress         : 0x%.08X'+
+      #13#10'   FreeSize            : 0x%.08X'+
+      #13#10'   FreeType            : 0x%.08X'+
+      #13#10');',
+      [BaseAddress, FreeSize, FreeType]);
 {$ENDIF}
 
-    NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
-
-    EmuSwapFS();   // Xbox FS
-
-    return ret;*)
-
-  Result := Unimplemented('NtFreeVirtualMemory');
+  ret := NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1055,8 +1043,6 @@ begin
     // TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
     CxbxFree(FileDirInfo);
 
-    EmuSwapFS();   // Xbox FS
-
     return ret;*)
 
   Result := Unimplemented('NtQueryDirectoryFile');
@@ -1083,43 +1069,34 @@ function xboxkrnl_NtQueryFullAttributesFile(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:10
+var
+  szBuffer: PChar;
+  wszObjectName: Array [0..160 - 1] of wchar_t;
+  NtUnicodeString: UNICODE_STRING;
+  NtObjAttr: OBJECT_ATTRIBUTES;
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-  DbgPrintf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
-           "(\n"
-           "   ObjectAttributes    : 0x%.08X (%s)\n"
-           "   Attributes          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
+  DbgPrintf('EmuKrnl : NtQueryFullAttributesFile'+
+           '(\'+
+           '   ObjectAttributes    : 0x%.08X (%s)'+
+           '   Attributes          : 0x%.08X'+
+           ');',
+           [ObjectAttributes, ObjectAttributes.ObjectName.Buffer, Attributes]);
 {$ENDIF}
 
-    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
+(*  szBuffer := ObjectAttributes.ObjectName.Buffer;
 
-    wchar_t wszObjectName[160];
+  // initialize object attributes
+  mbstowcs(wszObjectName, szBuffer, 160);
+  RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+  InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
-    NtDll::UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
-
-    // initialize object attributes
-    {
-        mbstowcs(wszObjectName, szBuffer, 160);
-
-        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
-
-        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
-    }
-
-    NTSTATUS ret = NtDll::NtQueryFullAttributesFile(&NtObjAttr, Attributes);
-
-    EmuSwapFS();   // Xbox FS
-
-    return ret;*)
-
-  Result := Unimplemented('NtQueryFullAttributesFile');
+  ret = NtQueryFullAttributesFile(&NtObjAttr, Attributes); *)
+  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1309,8 +1286,6 @@ begin
         SizeInfo->BytesPerSector                    = 512;
     }
 
-    EmuSwapFS();   // Xbox FS
-
     return ret;*)
 
   Result := Unimplemented('NtQueryVolumeInformationFile');
@@ -1357,8 +1332,6 @@ begin
     if(FAILED(ret))
         EmuWarning("NtReadFile Failed!");
 
-    EmuSwapFS();   // Xbox FS
-
     return ret;*)
 
   Result := Unimplemented('NtReadFile');
@@ -1376,31 +1349,28 @@ function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
   PreviousCount: PLONG // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf("EmuKrnl (0x%X): NtReleaseMutant\n"
-           "(\n"
-           "   MutantHandle         : 0x%.08X\n"
-           "   PreviousCount        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), MutantHandle, PreviousCount);
+  DbgPrintf('EmuKrnl : NtReleaseMutant'+
+      #13#10'(\'+
+      #13#10'   MutantHandle         : 0x%.08X'+
+      #13#10'   PreviousCount        : 0x%.08X'+
+      #13#10');',
+      [MutantHandle, PreviousCount]);
 {$ENDIF}
 
-    // redirect to NtCreateMutant
-    NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
+  // redirect to NtCreateMutant
+(*  ret := NtReleaseMutant(MutantHandle, PreviousCount); *)
 
-    if(FAILED(ret))
-        EmuWarning("NtReleaseMutant Failed!");
+  if(FAILED(ret)) then
+    EmuWarning('NtReleaseMutant Failed!');
 
-    EmuSwapFS();   // Xbox FS
-
-    return STATUS_SUCCESS;*)
-
-  Result := Unimplemented('NtReleaseMutant');
+  Result := STATUS_SUCCESS;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1443,29 +1413,25 @@ function xboxkrnl_NtResumeThread(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf("EmuKrnl (0x%X): NtResumeThread\n"
-           "(\n"
-           "   ThreadHandle         : 0x%.08X\n"
-           "   PreviousSuspendCount : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+  DbgPrintf('EmuKrnl : NtResumeThread'+
+      #13#10'(\'+
+      #13#10'   ThreadHandle         : 0x%.08X'+
+      #13#10'   PreviousSuspendCount : 0x%.08X'+
+      #13#10');',
+      [ThreadHandle, PreviousSuspendCount]);
 {$ENDIF}
 
-    NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
+  ret := NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
-    Sleep(10);
-
-    EmuSwapFS();   // Xbox FS
-
-    return ret;*)
-
-  Result := Unimplemented('NtResumeThread');
+  Sleep(10);
+  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1473,30 +1439,27 @@ function xboxkrnl_NtSetEvent(
   EventHandle: HANDLE;
   PreviousState: PLONG // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf("EmuKrnl (0x%X): NtSetEvent\n"
-           "(\n"
-           "   EventHandle          : 0x%.08X\n"
-           "   PreviousState        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), EventHandle, PreviousState);
+  DbgPrintf('EmuKrnl : NtSetEvent'+
+      #13#10'(\'+
+      #13#10'   EventHandle          : 0x%.08X'+
+      #13#10'   PreviousState        : 0x%.08X'+
+      #13#10');',
+      [EventHandle, PreviousState]);
 {$ENDIF}
 
-    NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
+  (*ret := NtSetEvent(EventHandle, PreviousState);*)
 
-    if(FAILED(ret))
-        EmuWarning("NtSetEvent Failed!");
+  if(FAILED(ret)) then
+      EmuWarning('NtSetEvent Failed!');
 
-    EmuSwapFS();   // Xbox FS
-
-    return ret;*)
-
-  Result := Unimplemented('NtSetEvent');
+  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1565,28 +1528,23 @@ function xboxkrnl_NtSuspendThread(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT OPTIONAL
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf("EmuKrnl (0x%X): NtSuspendThread\n"
-           "(\n"
-           "   ThreadHandle         : 0x%.08X\n"
-           "   PreviousSuspendCount : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+  DbgPrintf('EmuKrnl : NtSuspendThread'+
+      #13#10'('+
+      #13#10'   ThreadHandle         : 0x%.08X'+
+      #13#10'   PreviousSuspendCount : 0x%.08X'+
+      #13#10');',
+      [ThreadHandle, PreviousSuspendCount]);
 {$ENDIF}
 
-    NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
-
-    EmuSwapFS();   // Xbox FS
-
-    return ret;
-*)
-
-  Result := Unimplemented('NtSuspendThread');
+  ret := NtSuspendThread(ThreadHandle, PreviousSuspendCount);
+  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -1701,25 +1659,22 @@ function xboxkrnl_NtWaitForSingleObjectEx(
 begin
   EmuSwapFS(fsWindows);
 
-  (*
 {$IFDEF DEBUG}
-  DbgPrintf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
-           "(\n"
-           "   Handle               : 0x%.08X\n"
-           "   WaitMode             : 0x%.08X\n"
-           "   Alertable            : 0x%.08X\n"
-           "   Timeout              : 0x%.08X (%d)\n"
-           ");\n",
-           GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
+(*  DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
+      #13#10'(\'+
+      #13#10'   Handle               : 0x%.08X'+
+      #13#10'   WaitMode             : 0x%.08X'+
+      #13#10'   Alertable            : 0x%.08X'+
+      #13#10'   Timeout              : 0x%.08X (%d)'+
+      #13#10');',
+      Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart); *)
 {$ENDIF}
 
-    NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+(*    NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
 {$IFDEF DEBUG}
     DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
 {$ENDIF}
-
-    EmuSwapFS();   // Xbox FS
 
     return ret;
 *)
@@ -1756,8 +1711,6 @@ begin
 {$ENDIF}
 
     NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
-
-    EmuSwapFS();   // Xbox FS
 
     return ret;
 *)

@@ -97,7 +97,7 @@ procedure CxbxKrnlInit(
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
-// Branch:martin  Revision:39  Translator:Patrick  Done:99
+// Branch:martin  Revision:39  Translator:Patrick  Done:100
 var
   MemXbeHeader: PXBE_HEADER;
   old_protection: DWord;
@@ -356,8 +356,6 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuMain : Initial thread ended.');
 {$ENDIF}
-
-//  FFlush(stdout);
 
   CxbxKrnlTerminateThread();
 end;
