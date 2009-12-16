@@ -163,7 +163,7 @@ end;
 procedure SetByteBits(var Bits: Byte; const aIndex: Integer; const aValue: Byte);
 var
   Offset: Byte;
-  Mask: Integer;
+  Mask: Byte;
 begin
   Mask := ((1 shl {NrBits=}Byte(aIndex)) - 1);
   Assert(aValue <= Mask);

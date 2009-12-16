@@ -55,23 +55,44 @@ type
     procedure About1Click(Sender: TObject);
   protected
     MyXBE: TXbe;
+    MyRanges: TMemo;
     FXBEFileName: string;
     procedure CloseFile;
     procedure GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
     function NewGrid(const aFixedCols: Integer; const aTitles: array of string): TStringGrid;
     procedure SectionClick(Sender: TObject);
     procedure LibVersionClick(Sender: TObject);
-    function OpenFile(const aFilePath: string): Boolean;
     procedure OnDropFiles(var Msg: TMessage); message WM_DROPFILES;
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
+
+    function OpenFile(const aFilePath: string): Boolean;
   end;
 
 var
   FormXBEExplorer: TFormXBEExplorer;
 
 implementation
+
+type
+  TStringsHelper = class(TStrings)
+    procedure Sort;
+  end;
+
+procedure TStringsHelper.Sort;
+var
+  TmpStrLst: TStringList;
+begin
+  TmpStrLst := TStringList.Create;
+  try
+    TmpStrLst.AddStrings(Self);
+    TmpStrLst.Sort;
+    Self.Assign(TmpStrLst);
+  finally
+    TmpStrLst.Free;
+  end;
+end;
 
 {$R *.dfm}
 
@@ -237,6 +258,11 @@ function TFormXBEExplorer.OpenFile(const aFilePath: string): Boolean;
 var
   NodeResources: TTreeNode;
 
+  procedure _AddRange(Start, Size: Integer; Title: string);
+  begin
+    MyRanges.Lines.Add(Format('%.08x .. %.08x  %-32s  (%9d bytes)', [Start, Start+Size-1, Title, Size]));
+  end;
+
   function _Offset(var aValue; const aBaseAddr: DWord = 0): string;
   begin
     Result := DWord2Str(aBaseAddr + FIELD_OFFSET(aValue));
@@ -314,7 +340,7 @@ var
     GridAddRow(Result, ['dwPeTimeDate', 'Dword', _offset(PXbeHeader(nil).dwPeTimeDate), DWord2Str(Hdr.dwPeTimeDate), BetterTime(Hdr.dwPeTimeDate)]);
     GridAddRow(Result, ['dwDebugPathNameAddr', 'Dword', _offset(PXbeHeader(nil).dwDebugPathNameAddr), DWord2Str(Hdr.dwDebugPathNameAddr), MyXBE.GetAddrStr(Hdr.dwDebugPathNameAddr)]);
     GridAddRow(Result, ['dwDebugFileNameAddr', 'Dword', _offset(PXbeHeader(nil).dwDebugFileNameAddr), DWord2Str(Hdr.dwDebugFileNameAddr), MyXBE.GetAddrStr(Hdr.dwDebugFileNameAddr)]);
-    GridAddRow(Result, ['dwDebugUnicodeFileNameAddr', 'Dword', _offset(PXbeHeader(nil).dwDebugUnicodeFileNameAddr), DWord2Str(Hdr.dwDebugUnicodeFileNameAddr)]);
+    GridAddRow(Result, ['dwDebugUnicodeFileNameAddr', 'Dword', _offset(PXbeHeader(nil).dwDebugUnicodeFileNameAddr), DWord2Str(Hdr.dwDebugUnicodeFileNameAddr), string(MyXBE.GetAddrWStr(Hdr.dwDebugUnicodeFileNameAddr, XBE_DebugUnicodeFileName_MAXLENGTH))]);
     GridAddRow(Result, ['dwKernelImageThunkAddr', 'Dword', _offset(PXbeHeader(nil).dwKernelImageThunkAddr), DWord2Str(Hdr.dwKernelImageThunkAddr), Format('Retail: 0x%.8x, Debug: 0x%.8x', [Hdr.dwKernelImageThunkAddr xor XOR_KT_RETAIL, Hdr.dwKernelImageThunkAddr xor XOR_KT_DEBUG])]);
     GridAddRow(Result, ['dwNonKernelImportDirAddr', 'Dword', _offset(PXbeHeader(nil).dwNonKernelImportDirAddr), DWord2Str(Hdr.dwNonKernelImportDirAddr)]);
     GridAddRow(Result, ['dwLibraryVersions', 'Dword', _offset(PXbeHeader(nil).dwLibraryVersions), DWord2Str(Hdr.dwLibraryVersions)]);
@@ -323,6 +349,17 @@ var
     GridAddRow(Result, ['dwXAPILibraryVersionAddr', 'Dword', _offset(PXbeHeader(nil).dwXAPILibraryVersionAddr), DWord2Str(Hdr.dwXAPILibraryVersionAddr)]);
     GridAddRow(Result, ['dwLogoBitmapAddr', 'Dword', _offset(PXbeHeader(nil).dwLogoBitmapAddr), DWord2Str(Hdr.dwLogoBitmapAddr)]);
     GridAddRow(Result, ['dwSizeofLogoBitmap', 'Dword', _offset(PXbeHeader(nil).dwSizeofLogoBitmap), DWord2Str(Hdr.dwSizeofLogoBitmap)]);
+
+    _AddRange(0, SizeOf(TXbeHeader), 'XBE Header');
+    _AddRange(Hdr.dwCertificateAddr - Hdr.dwBaseAddr, SizeOf(TXbeCertificate), 'Certificate');
+    _AddRange(Hdr.dwTLSAddr - Hdr.dwBaseAddr, SizeOf(TXbeTLS), 'TLS');
+    _AddRange(Hdr.dwPeBaseAddr - Hdr.dwBaseAddr, 0, 'PeBase');
+    _AddRange(Hdr.dwDebugPathNameAddr - Hdr.dwBaseAddr, Length(MyXbe.GetAddrStr(Hdr.dwDebugPathNameAddr))+1, 'DebugPathName');
+    _AddRange(Hdr.dwDebugUnicodeFileNameAddr - Hdr.dwBaseAddr, ByteLength(MyXbe.GetAddrWStr(Hdr.dwDebugUnicodeFileNameAddr))+2, 'DebugUnicodeFileName');
+//    _AddRange(Hdr.dwKernelImageThunkAddr - Hdr.dwBaseAddr, 1, 'KernelImageThunk');
+    if Hdr.dwNonKernelImportDirAddr > 0 then
+      _AddRange(Hdr.dwNonKernelImportDirAddr - Hdr.dwBaseAddr, 1, 'NonKernelImportDir');
+    _AddRange(Hdr.dwLogoBitmapAddr - Hdr.dwBaseAddr, Hdr.dwSizeofLogoBitmap, 'LogoBitmap');
   end; // _Initialize_XBEHeader
 
   function _Initialize_Certificate: TStringGrid;
@@ -378,7 +415,7 @@ var
     for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
     begin
       Hdr := @(MyXBE.m_SectionHeader[i]);
-      ItemName := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr);
+      ItemName := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr, XBE_SECTIONNAME_MAXLENGTH);
       GridAddRow(Grid, [
         ItemName,
         DWord2Str(o),
@@ -394,17 +431,21 @@ var
         PByteToHexString(@Hdr.bzSectionDigest[0], 20)
       ]);
 
-      Inc(o, SizeOf(TXbeSectionHeader));
-
       // Add image tab when this section seems to contain a XPR resource :
       if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
         _CreateNode(NodeResources, 'Image ' + ItemName,
           _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
 
-      // Add image tab when this section seems to contain a XPR resource :
+      // Add INI tab when this section seems to start with a BOM :
       if PWord(MyXBE.m_bzSection[i])^ = $FEFF then
         _CreateNode(NodeResources, 'INI ' + ItemName,
           _Initialize_IniSection(PWideCharToString(@MyXBE.m_bzSection[i][2], (Hdr.dwSizeofRaw div SizeOf(WideChar)) - 1)));
+
+      _AddRange(o, SizeOf(TXbeSectionHeader), 'SectionHeader ' + ItemName);
+      _AddRange(Hdr.dwRawAddr, Hdr.dwSizeofRaw, 'SectionContents ' + ItemName);
+      _AddRange(Hdr.dwSectionNameAddr - MyXBE.m_Header.dwBaseAddr, Length(ItemName)+1, 'SectionName ' + ItemName);
+
+      Inc(o, SizeOf(TXbeSectionHeader));
     end;
 
     Splitter := TSplitter.Create(Self);
@@ -448,6 +489,8 @@ var
         IntToStr(LibVer.wBuildVersion),
         PByteToHexString(@LibVer.dwFlags[0], 2)
         ]);
+
+      _AddRange(o, SizeOf(TXbeLibraryVersion), 'LibraryVersion ' + ItemName);
       Inc(o, SizeOf(LibVer^));
     end;
   end;
@@ -466,6 +509,8 @@ var
     GridAddRow(Result, ['dwTLSCallbackAddr', 'Dword', _offset(PXbeTls(nil).dwTLSCallbackAddr, o), DWord2Str(TLS.dwTLSCallbackAddr)]);
     GridAddRow(Result, ['dwSizeofZeroFill', 'Dword', _offset(PXbeTls(nil).dwSizeofZeroFill, o), DWord2Str(TLS.dwSizeofZeroFill)]);
     GridAddRow(Result, ['dwCharacteristics', 'Dword', _offset(PXbeTls(nil).dwCharacteristics, o), DWord2Str(TLS.dwCharacteristics)]);
+
+//    _AddRange(TLS.dwDataStartAddr, TLS.dwDataEndAddr - TLS.dwDataStartAddr + 1, 'DataStart');
   end;
 
   function _Initialize_HexViewer: THexViewer;
@@ -501,10 +546,15 @@ begin // OpenFile
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
   PageControl1.Visible := True;
 
+  MyRanges := TMemo.Create(Self);
+  MyRanges.Parent := Self; // Temporarily set Parent, to allow adding lines already
+  MyRanges.ScrollBars := ssBoth;
+  MyRanges.Font.Name := 'Consolas';
+  
   Node0 := _CreateNode(nil, 'File : ' + FXBEFileName, _CreateGrid_File);
   NodeXBEHeader := _CreateNode(Node0, 'XBE Header', _Initialize_XBEHeader);
 
-  NodeResources := _CreateNode(Node0, 'Resources', nil);
+  NodeResources := _CreateNode(Node0, 'Resources', MyRanges);
   _CreateNode(NodeResources, 'Logo Bitmap', _Initialize_Logo);
 
   _CreateNode(NodeXBEHeader, 'Certificate', _Initialize_Certificate);
@@ -514,6 +564,9 @@ begin // OpenFile
 
   _CreateNode(Node0, 'Hex Viewer', _Initialize_HexViewer);
   _CreateNode(Node0, 'Strings', _Initialize_Strings);
+
+  TStringsHelper(MyRanges.Lines).Sort;
+  MyRanges.Lines.Insert(0, Format('%-8s .. %-8s  %-32s  (%9s bytes)', ['Start', 'End', 'Range description', 'Size']));
 
   TreeView1.FullExpand;
 

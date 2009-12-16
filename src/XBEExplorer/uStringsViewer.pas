@@ -144,7 +144,7 @@ begin
     _HandleStringEnd;
   end;
 
-  // We must have at least one string :
+  // We must have at least one row, for FixedRows to stay:
   if MyStrings.Count = 0 then
     MyStrings.Add('- no strings found -');
 
@@ -158,8 +158,7 @@ var
 begin
   aStr := '';
 
-  // No need to check range upto FixedRowCount, as that's always 1 :
-  if aRow < TopRow then
+  if aRow = 0 then
   begin
     case aCol of
       0: aStr := 'Nr.';

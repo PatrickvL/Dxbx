@@ -73,6 +73,9 @@ begin
     ColWidths[0] := 64;
     ColWidths[16] := 28; // extra padding between $F and Ascii data
     ColWidths[17] := 96;
+    FixedCols := 1;
+    RowCount := 2; // Needed to be able to set FixedRows 
+    FixedRows := 1;
     Options := [goThumbTracking];
     OnDrawCell := DoDrawCell;
   end;
@@ -81,13 +84,22 @@ begin
 end;
 
 procedure THexViewer.SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
+var
+  NrRows: Integer;
 begin
   FMemory := aMemory;
   FSize := aSize;
   FBase := aBase;
 
   MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%d bytes)', [aTitle, DWord(FBase), DWord(FBase + FSize), FSize]);
-  MyDrawGrid.RowCount := 1 + ((aSize + 15) shr 4);
+
+  NrRows := (aSize + 15) shr 4;
+
+  // We must have at least one row, for FixedRows to stay:
+  if NrRows = 0 then
+    Inc(NrRows);
+
+  MyDrawGrid.RowCount := 1 + NrRows;
   MyDrawGrid.Repaint;
 end;
 
@@ -98,6 +110,12 @@ procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
   var
     i: Integer;
   begin
+    if Len <= 0 then
+    begin
+      Result := '';
+      Exit;
+    end;       
+
     SetLength(Result, Len);
     Dec(Offset);
     for i := 1 to Len do
@@ -112,8 +130,9 @@ procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
 var
   aStr: string;
   Offset: DWord;
+  Len: Integer;
 begin
-  if aRow <= MyDrawGrid.TopRow then
+  if aRow = 0 then
   begin
     case aCol of
       0: aStr := ' Offset';
@@ -129,7 +148,7 @@ begin
       1..16:
         begin
           Offset := ((aRow - 1) * 16) + aCol - 1;
-          if Offset > FSize then
+          if Offset >= FSize then
             aStr := ''
           else
             aStr := PByteToHexString(@FMemory[Offset], 1);
@@ -137,18 +156,14 @@ begin
       17:
         begin
           Offset := ((aRow - 1) * 16);
-          if Offset + 16 > FSize then
-            aStr := _Ascii(Offset, FSize - Offset + 1)
-          else
-            aStr := _Ascii(Offset, 16);
+          Len := 16;
+          if Offset + DWord(Len) >= FSize then
+            Len := FSize - Offset;
+
+          aStr := _Ascii(Offset, Len);
         end;
     end;
   end;
-
-  if (aRow = MyDrawGrid.TopRow) or (aCol = 0) then
-    MyDrawGrid.Canvas.Font.Color := clBackground
-  else
-    MyDrawGrid.Canvas.Font.Color := clWindowText;
 
   MyDrawGrid.Canvas.FillRect(Rect);
   MyDrawGrid.Canvas.TextOut(Rect.Left, Rect.Top, aStr);

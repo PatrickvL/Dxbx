@@ -25,10 +25,11 @@ interface
 uses
   // Delphi
   Windows
+  // Jedi
+  , JwaWinType
   // DirectX
   , D3DX8
   , Direct3D8
-
   // Dxbx
   , uEmu
   , uTypes
