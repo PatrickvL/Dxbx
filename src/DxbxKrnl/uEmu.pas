@@ -239,8 +239,6 @@ begin
   end;
 {$ENDIF}
 
-(*  fflush(stdout); *)
-
   // notify user
   begin
 (*
@@ -358,33 +356,31 @@ end;
 procedure EmuCleanup(const szErrorMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:20
 var
-  szBuffer1: string;
 //  buffer: array [0..15] of Char;
+  szBuffer1 : Array [0..255] of char;
+  szBuffer2 : Array [0..255] of char;
+  argp: va_list;
 begin
   // Print out ErrorMessage (if exists)
-  if (szErrorMessage <> '') then
+(*  if (szErrorMessage <> '') then
   begin
-    (*char szBuffer1[255];
-    char szBuffer2[255];
-
-    va_list argp;
 
 {$IFDEF DEBUG}
-    sprintf(szBuffer1, 'Emu(0 x%X): Received Fatal Message - > '#13#10#13#10, GetCurrentThreadId());
+    DbgPrintf(szBuffer1, 'Emu : Received Fatal Message - > '#13#10#13#10);
 {$ENDIF}
 
     va_start(argp, szErrorMessage);
 
 {$IFDEF DEBUG}
-    vsprintf(szBuffer2, szErrorMessage, argp);
+    DbgPrintf(szBuffer2, [szErrorMessage, argp]);
 {$ENDIF}
     va_end(argp);
 
-    strcat(szBuffer1, szBuffer2); *)
+    strcat(szBuffer1, szBuffer2);
 
 
 {$IFDEF DEBUG}
-(*    printf('%s'#13#10, szBuffer1);    *)
+    DbgPrintf('%s'#13#10, [szBuffer1]);
 {$ENDIF}
     szBuffer1 := 'Emu: Received Fatal Message - > '  + szErrorMessage;
 {$IFDEF DEBUG}
@@ -397,7 +393,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('DxbxKrnl: Terminating Process');
 {$ENDIF}
-  (*fflush(stdout); *)
+   *)
 
   //  Cleanup debug output
   FreeConsole();
@@ -410,7 +406,7 @@ end;
 
 // Exception handler for that tough final exit :)
 function ExitException(e: LPEXCEPTION_POINTERS): Integer;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:80
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   Count: Integer;
 begin
@@ -425,8 +421,6 @@ begin
                                                              IntToStr(e.ContextRecord.Eip)]);
   DbgPrintf('EmuMain : * * * * * EXCEPTION * * * * * ');
 {$ENDIF}
-
-  (*fflush(stdout);*)
 
   MessageDlg('Warning: Could not safely terminate process!', mtWarning, [mbOk], 0);
   Inc(Count);

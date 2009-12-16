@@ -25,9 +25,11 @@ interface
 uses
   // Delphi
   Windows
+  , Classes
   , SysUtils
   , Direct3D8
   // Dxbx
+  , uEmuXG
   , uTypes
   , uEmuD3D8Types;
 
@@ -70,11 +72,26 @@ begin
 end;
 
 procedure EmuUnswizzleActiveTexture();
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   pPixelContainer: PX_D3DPixelContainer;
   XBFormat: DWord;
   dwBPP: DWord;
+  pTexture: IDirect3DTexture8;
+  dwLevelCount: DWord;
+  v: uint32;
+  SurfaceDesc: D3DSURFACE_DESC;
+  hRet: HRESULT;
+  LockedRect: D3DLOCKED_RECT;
+
+  dwWidth: DWord;
+  dwHeight: DWord;
+  dwDepth: DWord;
+  dwPitch: DWord;
+  iRect: TRect;
+  iPoint: TPoint;
+
+  pTemp: Pointer;
 begin
   // for current usages, we're always on stage 0
   pPixelContainer := PX_D3DPixelContainer(EmuD3DActiveTexture[0]);
@@ -94,17 +111,15 @@ begin
 
   // Cxbx TODO: potentially CRC to see if this surface was actually modified..
   // unswizzle texture
-(*
+
   begin
-    XTL.IDirect3DTexture8 *pTexture := pPixelContainer.EmuTexture8;
+    pTexture := pPixelContainer.EmuTexture8;
 
-    DWord dwLevelCount := pTexture.GetLevelCount();
+    dwLevelCount := pTexture.GetLevelCount();
 
-    for(uint32 v:=0;v<dwLevelCount;v++)
+    for v := 0 to dwLevelCount - 1 do
     begin
-      XTL.D3DSURFACE_DESC SurfaceDesc;
-
-      HRESULT hRet := pTexture.GetLevelDesc(v, @SurfaceDesc);
+      hRet := pTexture.GetLevelDesc(v, SurfaceDesc);
 
       if (FAILED(hRet)) then
           Continue;
@@ -114,27 +129,25 @@ begin
       //
 
       begin
-        XTL.D3DLOCKED_RECT LockedRect;
-
         //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
         //    Break;
         //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
 
-        hRet := pTexture.LockRect(v, @LockedRect, 0, 0);
+        hRet := pTexture.LockRect(v, LockedRect, 0, 0);
 
         if (FAILED(hRet)) then
             Continue;
 
-        DWord dwWidth := SurfaceDesc.Width;
-        DWord dwHeight := SurfaceDesc.Height;
-        DWord dwDepth := 1;
-        DWord dwPitch := LockedRect.Pitch;
-        TRect  iRect := (0,0,0,0);
-        TPoint iPoint := (0,0);
+        dwWidth := SurfaceDesc.Width;
+        dwHeight := SurfaceDesc.Height;
+        dwDepth := 1;
+        dwPitch := LockedRect.Pitch;
+        iRect := Classes.Rect(0,0,0,0);
+        iPoint := Classes.Point(0,0);
 
-        Pointer pTemp := malloc(dwHeight*dwPitch);
+        pTemp := malloc(dwHeight*dwPitch);
 
-        XTL.EmuXGUnswizzleRect
+        XTL_EmuXGUnswizzleRect
         (
             LockedRect.pBits, dwWidth, dwHeight, dwDepth,
             pTemp, dwPitch, iRect, iPoint, dwBPP
@@ -152,19 +165,21 @@ begin
     DbgPrintf('Active texture was unswizzled');
 {$ENDIF}
   end;
-*)
+
 end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
+const
+  pIBMem: Array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
+
+var
   pdwOrigPushData: DWord;
   pIndexData: PVOID;
   pVertexData: PVOID;
 
   dwVertexShader: DWord;
   dwStride: DWord;
-  pIBMem: array [0..3] of WORD;
   bShowPB: bool;
 
   PCPrimitiveType: D3DPRIMITIVETYPE;
@@ -177,22 +192,19 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
   dwCount: DWord;
   dwMethod: DWord;
 
-  bInc: BOOL;  *)
+  bInc: BOOL;
 
 begin
- (* if XTL_g_bSkipPush then
+  if XTL_g_bSkipPush then
     Exit;
 
-    pdwOrigPushData := pdwPushData;
+    (*pdwOrigPushData := pdwPushData;
 
-    pIndexData := NULL;
-    pVertexData := NULL;
+    pIndexData := nil;
+    pVertexData := nil;
 
     dwVertexShader := -1;
     dwStride := -1;
-
-    // cache of last 4 indices
-    pIBMem[3] := [$FFFF, $FFFF, $FFFF, $FFFF];
 
     PCPrimitiveType := D3DPRIMITIVETYPE(-1);
     XBPrimitiveType := X_D3DPT_INVALID; 
