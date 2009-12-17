@@ -185,6 +185,9 @@ begin
     // When no path is registered in EmuShared, fall back on current directory :
     SetLength(szBuffer, MAX_PATH);
     SetLength(szBuffer, GetCurrentDirectory(MAX_PATH, @(szBuffer[1])));
+    // Make sure the CurrentDir ends with a trailing backslash :
+    if szBuffer[Length(szBuffer)] <> '\' then
+      szBuffer := szBuffer + '\';
   end;
 
   g_strCurDrive := szBuffer;

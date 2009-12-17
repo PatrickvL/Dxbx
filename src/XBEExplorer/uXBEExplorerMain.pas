@@ -95,6 +95,7 @@ implementation
 
 type
   TStringsHelper = class(TStrings)
+  public
     procedure Sort;
   end;
 
@@ -112,6 +113,32 @@ begin
   end;
 end;
 
+type
+  TWinControlHelper = class(TWinControl)
+  public
+    function FindChildControlClass(aClass: TClass): TControl;
+  end;
+
+function TWinControlHelper.FindChildControlClass(aClass: TClass): TControl;
+var
+  I: Integer;
+begin
+  for I := 0 to ControlCount - 1 do
+  begin
+    Result := Controls[I];
+    if Result.ClassType = aClass then
+      Exit;
+
+    if Result is TWinControl then
+    begin
+      Result := TWinControlHelper(Result).FindChildControlClass(aClass);
+      if Assigned(Result) then
+        Exit;
+    end;
+  end;
+  
+  Result := nil;
+end;
 {$R *.dfm}
 
 constructor TFormXBEExplorer.Create(Owner: TComponent);
@@ -174,8 +201,7 @@ procedure TFormXBEExplorer.actGotoOffsetUpdate(Sender: TObject);
 begin
   TAction(Sender).Enabled := Assigned(PageControl)
     and Assigned(PageControl.ActivePage)
-    and (PageControl.ActivePage.ControlCount > 0)
-    and (PageControl.ActivePage.Controls[0] is THexViewer);
+    and Assigned(TWinControlHelper(PageControl.ActivePage).FindChildControlClass(THexViewer));
 end;
 
 procedure TFormXBEExplorer.actGotoOffsetExecute(Sender: TObject);
@@ -184,7 +210,7 @@ var
   Offset: Integer;
   OffsetStr: AnsiString;
 begin
-  HexViewer := THexViewer(PageControl.ActivePage.Controls[0]);
+  HexViewer := THexViewer(TWinControlHelper(PageControl.ActivePage).FindChildControlClass(THexViewer));
   OffsetStr := DWord2Str(HexViewer.Offset);
   OffsetStr := InputBox('Goto offset', 'Enter hexadecimal offset', OffsetStr);
   if ScanHexDWord(PAnsiChar(OffsetStr), {var}Offset) then
@@ -533,6 +559,7 @@ var
     Splitter.Top := Grid.Height;
 
     HexViewer := THexViewer.Create(Self);
+    HexViewer.PopupMenu := pmHexViewer;
     HexViewer.Parent := Result;
     HexViewer.Align := alClient;
 
