@@ -17,16 +17,16 @@
 *)
 program PatternTrieBuilder;
 
-{$INCLUDE ..\..\Dxbx.inc}
+{$INCLUDE Dxbx.inc}
 
 {$APPTYPE CONSOLE}
 
 uses
   SysUtils,
-  uPatternsToTrie in 'uPatternsToTrie.pas',
-  uDxbxUtils in '..\..\uDxbxUtils.pas',
-  uStoredTrieTypes in '..\..\uStoredTrieTypes.pas',
-  uTypes in '..\..\uTypes.pas';
+  uPatternsToTrie in '..\..\src\Tools\PatternTrieBuilder\uPatternsToTrie.pas',
+  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
+  uStoredTrieTypes in '..\..\src\uStoredTrieTypes.pas',
+  uTypes in '..\..\src\uTypes.pas';
 
 begin
   try
