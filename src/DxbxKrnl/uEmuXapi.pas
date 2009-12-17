@@ -1749,7 +1749,6 @@ exports
   // XTL_EmuXCalculateSignatureBeginEx,
   // XTL_EmuXCalculateSignatureEnd,
   // XTL_EmuXCalculateSignatureUpdate,
-  // XTL_EmuXInputGetCapabilities
   // XTL_EmuXLoadSectionA
   // XTL_XapiSetupPerTitleDriveLetters
   XTL_EmuCloseHandle,
@@ -1781,6 +1780,7 @@ exports
   XTL_EmuXGetSectionHandleA,
   XTL_EmuXInitDevices,
   XTL_EmuXInputClose,
+  XTL_EmuXInputGetCapabilities,
   XTL_EmuXInputGetState,
   XTL_EmuXInputOpen,
   XTL_EmuXInputPoll,

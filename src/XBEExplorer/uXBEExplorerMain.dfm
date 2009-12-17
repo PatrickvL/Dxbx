@@ -16,9 +16,9 @@ object FormXBEExplorer: TFormXBEExplorer
   TextHeight = 13
   object TreeView1: TTreeView
     Left = 0
-    Top = 25
+    Top = 24
     Width = 225
-    Height = 679
+    Height = 680
     Align = alLeft
     HideSelection = False
     Indent = 19
@@ -31,9 +31,9 @@ object FormXBEExplorer: TFormXBEExplorer
   end
   object PageControl: TPageControl
     Left = 225
-    Top = 25
+    Top = 24
     Width = 611
-    Height = 679
+    Height = 680
     Align = alClient
     TabOrder = 1
     ExplicitTop = 0
@@ -43,22 +43,20 @@ object FormXBEExplorer: TFormXBEExplorer
     Left = 0
     Top = 0
     Width = 836
-    Height = 25
+    Height = 24
+    UseSystemFont = False
     ActionManager = ActionManager
     ColorMap.HighlightColor = 14410210
     ColorMap.BtnSelectedColor = clBtnFace
     ColorMap.UnusedColor = 14410210
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clMenuText
+    Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
     PersistentHotKeys = True
     Spacing = 0
-    ExplicitLeft = 352
-    ExplicitTop = 24
-    ExplicitWidth = 150
-    ExplicitHeight = 29
+    ExplicitHeight = 25
   end
   object MainMenu: TMainMenu
     Left = 64
