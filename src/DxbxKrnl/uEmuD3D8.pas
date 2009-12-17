@@ -2080,7 +2080,7 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_GetGammaRamp(pRamp: PX_D3DGAMMARAMP); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:50
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   pGammaRamp: PD3DGAMMARAMP;
   v: Integer;        
@@ -3291,7 +3291,7 @@ end;
 function XTL_EmuIDirect3DDevice8_CreateCubeTexture(
     EdgeLength: UINT; Levels: UINT; Usage: DWORD; Format: D3DFORMAT;
     Pool: D3DPOOL; ppCubeTexture: PPX_D3DCubeTexture): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:98
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
   PCFormat: D3DFORMAT;
@@ -3360,7 +3360,7 @@ function XTL_EmuIDirect3DDevice8_CreateIndexBuffer(
   Pool: D3DPOOL;
   ppIndexBuffer: PPX_D3DIndexBuffer
   ): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:2
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
   pData: PBYTE;
@@ -4012,7 +4012,7 @@ function XTL_EmuIDirect3DDevice8_Clear(Count: DWORD;
     Color: D3DCOLOR;
     Z: Single;
     Stencil: DWORD): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80  
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   newFlags: DWORD;
 begin
@@ -4034,22 +4034,22 @@ begin
 
   // make adjustments to parameters to make sense with windows d3d
   begin
-      // Cxbx TODO : D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
-      newFlags := 0;
+    // Cxbx TODO : D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
+    newFlags := 0;
 
-      if (Flags and $000000f0) > 0 then
-          newFlags:= newFlags or D3DCLEAR_TARGET;
+    if (Flags and $000000f0) > 0 then
+        newFlags:= newFlags or D3DCLEAR_TARGET;
 
-      if (Flags and $00000001) > 0 then
-          newFlags:= newFlags or D3DCLEAR_ZBUFFER;
+    if (Flags and $00000001) > 0 then
+        newFlags:= newFlags or D3DCLEAR_ZBUFFER;
 
-      if (Flags and $00000002) > 0 then
-          newFlags:= newFlags or D3DCLEAR_STENCIL;
+    if (Flags and $00000002) > 0 then
+        newFlags:= newFlags or D3DCLEAR_STENCIL;
 
-      if (Flags and (not ($000000f0 or $00000001 or $00000002))) > 0 then
-          EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not ($000000f0 or $00000001 or $00000002))]);
+    if (Flags and (not ($000000f0 or $00000001 or $00000002))) > 0 then
+        EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not ($000000f0 or $00000001 or $00000002))]);
 
-      Flags := newFlags;
+    Flags := newFlags;
    end;
 
   Result := g_pD3DDevice8.Clear(Count, pRects, Flags, Color, Z, Stencil);
