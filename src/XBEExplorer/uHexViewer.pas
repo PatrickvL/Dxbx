@@ -27,6 +27,9 @@ uses
 
 type
   THexViewer = class(TPanel)
+  private
+    function GetOffset: DWord;
+    procedure SetOffset(const Value: DWord);
   protected
     MyHeader: TPanel;
     MyDrawGrid: TDrawGrid;
@@ -34,7 +37,9 @@ type
     FSize: DWord;
     FBase: DWord;
     procedure DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+  published
   public
+    property Offset: DWord read GetOffset write SetOffset;
     constructor Create(Owner: TComponent); override;
 
     procedure SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
@@ -76,11 +81,34 @@ begin
     FixedCols := 1;
     RowCount := 2; // Needed to be able to set FixedRows 
     FixedRows := 1;
-    Options := [goThumbTracking];
+    Options := [goRangeSelect, goDrawFocusSelected, goThumbTracking];
     OnDrawCell := DoDrawCell;
   end;
   
   SetRegion(nil, 0, 0, '');
+end;
+
+procedure THexViewer.SetOffset(const Value: DWord);
+var
+  GridRect: TGridRect;
+begin
+  GridRect.Top := Integer(Value div 16) + MyDrawGrid.FixedRows;
+  if GridRect.Top < MyDrawGrid.RowCount then
+  begin
+    GridRect.Left := Integer(Value mod 16) + MyDrawGrid.FixedCols;
+    GridRect.Right := GridRect.Left;
+    GridRect.Bottom := GridRect.Top;
+    MyDrawGrid.Selection := GridRect;
+    MyDrawGrid.TopRow := MyDrawGrid.Selection.Top;
+  end;
+end;
+
+function THexViewer.GetOffset: DWord;
+var
+  GridRect: TGridRect;
+begin
+  GridRect := MyDrawGrid.Selection;
+  Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
 end;
 
 procedure THexViewer.SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
