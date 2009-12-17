@@ -28,31 +28,49 @@ uses
   StdCtrls, // TMemo
   Math, // Min
   ShellAPI, // DragQueryFile
+  ExtDlgs, // TSavePictureDialog
   // Dxbx
   uConsts,
   uTypes,
+  uDxbxUtils,
   uXbe,
   uHexViewer,
-  uStringsViewer;
+  uStringsViewer, StdActns, ActnList, XPStyleActnCtrls, ActnMan, ToolWin, ActnCtrls, ActnMenus;
 
 type
   TFormXBEExplorer = class(TForm)
-    MainMenu1: TMainMenu;
+    MainMenu: TMainMenu;
     TreeView1: TTreeView;
-    PageControl1: TPageControl;
+    PageControl: TPageControl;
     File1: TMenuItem;
     Open1: TMenuItem;
     N1: TMenuItem;
     Exit1: TMenuItem;
     Help1: TMenuItem;
     About1: TMenuItem;
-    OpenDialog1: TOpenDialog;
+    OpenDialog: TOpenDialog;
     Close1: TMenuItem;
-    procedure Open1Click(Sender: TObject);
-    procedure Exit1Click(Sender: TObject);
-    procedure Close1Click(Sender: TObject);
+    pmImage: TPopupMenu;
+    SaveAs1: TMenuItem;
+    SavePictureDialog: TSavePictureDialog;
+    pmHexViewer: TPopupMenu;
+    miGotoOffset: TMenuItem;
+    ActionMainMenuBar: TActionMainMenuBar;
+    ActionManager: TActionManager;
+    actExit: TFileExit;
+    actGotoOffset: TAction;
+    actFileOpen: TAction;
+    actClose: TAction;
+    actSaveAs: TAction;
+    procedure actOpenExecute(Sender: TObject);
+    procedure actCloseExecute(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
     procedure About1Click(Sender: TObject);
+    procedure actSaveAsExecute(Sender: TObject);
+    procedure actGotoOffsetExecute(Sender: TObject);
+    procedure actGotoOffsetUpdate(Sender: TObject);
+    procedure actCloseUpdate(Sender: TObject);
+    procedure actSaveAsUpdate(Sender: TObject);
   protected
     MyXBE: TXbe;
     MyRanges: TMemo;
@@ -111,39 +129,81 @@ begin
   inherited Destroy;
 end;
 
-procedure TFormXBEExplorer.Exit1Click(Sender: TObject);
+procedure TFormXBEExplorer.actOpenExecute(Sender: TObject);
 begin
-  Close;
+  if OpenDialog.Execute then
+    OpenFile(OpenDialog.FileName);
+end;
+
+procedure TFormXBEExplorer.actCloseUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled := Assigned(MyXBE);
+end;
+
+procedure TFormXBEExplorer.actCloseExecute(Sender: TObject);
+begin
+  CloseFile;
+end;
+
+procedure TFormXBEExplorer.actSaveAsUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled := Assigned(PageControl)
+    and Assigned(PageControl.ActivePage)
+    and (PageControl.ActivePage.ControlCount > 0)
+    and (PageControl.ActivePage.Controls[0] is TImage);
+end;
+
+procedure TFormXBEExplorer.actSaveAsExecute(Sender: TObject);
+begin
+  if PageControl.ActivePage.Controls[0] is TImage then
+  begin
+    SavePictureDialog.FileName := FixInvalidFilePath(
+      WideCharToString(MyXBE.m_Certificate.wszTitleName) + '_' + PageControl.ActivePage.Caption
+      ) + '.bmp';
+    if SavePictureDialog.Execute then
+    begin
+      TImage(PageControl.ActivePage.Controls[0]).Picture.SaveToFile(SavePictureDialog.FileName);
+      Exit;
+    end;
+  end;
+
+  ShowMessage('Save cancelled');
+end;
+
+procedure TFormXBEExplorer.actGotoOffsetUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled := Assigned(PageControl)
+    and Assigned(PageControl.ActivePage)
+    and (PageControl.ActivePage.ControlCount > 0)
+    and (PageControl.ActivePage.Controls[0] is THexViewer);
+end;
+
+procedure TFormXBEExplorer.actGotoOffsetExecute(Sender: TObject);
+var
+  HexViewer: THexViewer;
+  Offset: Integer;
+  OffsetStr: AnsiString;
+begin
+  HexViewer := THexViewer(PageControl.ActivePage.Controls[0]);
+  OffsetStr := DWord2Str(HexViewer.Offset);
+  OffsetStr := InputBox('Goto offset', 'Enter hexadecimal offset', OffsetStr);
+  if ScanHexDWord(PAnsiChar(OffsetStr), {var}Offset) then
+  begin
+    HexViewer.Offset := Offset;
+    if HexViewer.Offset = DWord(Offset) then
+      Exit;
+  end;
+
+  ShowMessage('Goto failed');
 end;
 
 procedure TFormXBEExplorer.About1Click(Sender: TObject);
 begin
   TaskMessageDlg('About ' + Application.Title,
-    'XBE Explorer © 2009, PatrickvL.  Released under GPL3.'#13#13 +
-    'XBE Explorer is part of Dxbx - the Delphi Xbox1 emulator.'#13#13 +
+    Application.Title + ' © 2009, PatrickvL.  Released under GPL3.'#13#13 +
+    Application.Title + ' is part of Dxbx - the Delphi Xbox1 emulator.'#13#13 +
     'Website : http://sourceforge.net/projects/dxbx/',
     mtInformation, [mbOK], 0);
-end;
-
-procedure TFormXBEExplorer.Close1Click(Sender: TObject);
-begin
-  CloseFile;
-end;
-
-procedure TFormXBEExplorer.CloseFile;
-begin
-  FreeAndNil(MyXBE);
-  TreeView1.Items.Clear;
-  Caption := Application.Title;
-  PageControl1.Visible := False;
-  while PageControl1.PageCount > 0 do
-    PageControl1.Pages[0].Free;
-end;
-
-procedure TFormXBEExplorer.Open1Click(Sender: TObject);
-begin
-  if OpenDialog1.Execute then
-    OpenFile(OpenDialog1.FileName);
 end;
 
 procedure TFormXBEExplorer.OnDropFiles(var Msg: TMessage);
@@ -162,33 +222,13 @@ begin
       Break;
   end;
 
-  // Release memory 
+  // Release memory
   DragFinish(Msg.wParam);
 end;
 
-procedure TFormXBEExplorer.GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
-var
-  i, w: Integer;
-  Row: TStrings;
+procedure TFormXBEExplorer.TreeView1Change(Sender: TObject; Node: TTreeNode);
 begin
-  i := 0;
-  while (i <= aStringGrid.FixedRows) and (aStringGrid.Cells[0, i] <> '') do
-    Inc(i);
-
-  if i > aStringGrid.FixedRows then
-  begin
-    i := aStringGrid.RowCount;
-    aStringGrid.RowCount := aStringGrid.RowCount + 1;
-  end;
-
-  Row := aStringGrid.Rows[i];
-  for i := 0 to Length(aStrings) - 1 do
-  begin
-    Row[i] := aStrings[i];
-    w := {aStringGrid.}Canvas.TextWidth(aStrings[i]) + 5;
-    if aStringGrid.ColWidths[i] < w then
-      aStringGrid.ColWidths[i] := w
-  end;
+  PageControl.ActivePage := TTabSheet(Node.Data);
 end;
 
 procedure TFormXBEExplorer.SectionClick(Sender: TObject);
@@ -239,6 +279,7 @@ begin
   Grid.Cells[5, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeLibraryVersion(nil).dwFlags));
 end; // LibVersionClick
 
+
 function TFormXBEExplorer.NewGrid(const aFixedCols: Integer; const aTitles: array of string): TStringGrid;
 var
   i: Integer;
@@ -252,6 +293,41 @@ begin
   GridAddRow(Result, aTitles);
   for i := 0 to Length(aTitles) - 1 do
     Result.Cells[i, 0] := string(aTitles[i]);
+end;
+
+procedure TFormXBEExplorer.GridAddRow(const aStringGrid: TStringGrid; const aStrings: array of string);
+var
+  i, w: Integer;
+  Row: TStrings;
+begin
+  i := 0;
+  while (i <= aStringGrid.FixedRows) and (aStringGrid.Cells[0, i] <> '') do
+    Inc(i);
+
+  if i > aStringGrid.FixedRows then
+  begin
+    i := aStringGrid.RowCount;
+    aStringGrid.RowCount := aStringGrid.RowCount + 1;
+  end;
+
+  Row := aStringGrid.Rows[i];
+  for i := 0 to Length(aStrings) - 1 do
+  begin
+    Row[i] := aStrings[i];
+    w := {aStringGrid.}Canvas.TextWidth(aStrings[i]) + 5;
+    if aStringGrid.ColWidths[i] < w then
+      aStringGrid.ColWidths[i] := w
+  end;
+end;
+
+procedure TFormXBEExplorer.CloseFile;
+begin
+  FreeAndNil(MyXBE);
+  TreeView1.Items.Clear;
+  Caption := Application.Title;
+  PageControl.Visible := False;
+  while PageControl.PageCount > 0 do
+    PageControl.Pages[0].Free;
 end;
 
 function TFormXBEExplorer.OpenFile(const aFilePath: string): Boolean;
@@ -273,8 +349,9 @@ var
     TabSheet: TTabSheet;
   begin
     TabSheet := TTabSheet.Create(Self);
-    TabSheet.PageControl := PageControl1;
+    TabSheet.PageControl := PageControl;
     TabSheet.TabVisible := False;
+    TabSheet.Caption := aName;
     if Assigned(aContents) then
     begin
       aContents.Parent := TabSheet;
@@ -289,6 +366,7 @@ var
   function _Initialize_XPRSection(const aXPR_IMAGE: PXPR_IMAGE): TImage;
   begin
     Result := TImage.Create(Self);
+    Result.PopupMenu := pmImage;
     MyXbe.ExportXPRToBitmap(aXPR_IMAGE, Result.Picture.Bitmap);
   end;
 
@@ -301,6 +379,7 @@ var
   function _Initialize_Logo: TImage;
   begin
     Result := TImage.Create(Self);
+    Result.PopupMenu := pmImage;
     MyXbe.ExportLogoBitmap(Result.Picture.Bitmap)
   end;
 
@@ -516,6 +595,7 @@ var
   function _Initialize_HexViewer: THexViewer;
   begin
     Result := THexViewer.Create(Self);
+    Result.PopupMenu := pmHexViewer;
     Result.SetRegion(MyXBE.RawData, MyXBE.FileSize, 0, 'whole file');
   end;
 
@@ -544,7 +624,7 @@ begin // OpenFile
   MyXBE := TXbe.Create(aFilePath, ftXbe);
   FXBEFileName := ExtractFileName(aFilePath);
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
-  PageControl1.Visible := True;
+  PageControl.Visible := True;
 
   MyRanges := TMemo.Create(Self);
   MyRanges.Parent := Self; // Temporarily set Parent, to allow adding lines already
@@ -594,11 +674,6 @@ begin // OpenFile
 
   Result := True;
 end; // OpenFile
-
-procedure TFormXBEExplorer.TreeView1Change(Sender: TObject; Node: TTreeNode);
-begin
-  PageControl1.ActivePage := TTabSheet(Node.Data);
-end;
 
 end.
 
