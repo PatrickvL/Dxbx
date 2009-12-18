@@ -94,7 +94,8 @@ uses
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
   uEmuExe in '..\..\src\uEmuExe.pas',
   uProlog in '..\..\src\uProlog.pas',
-  uExe in '..\..\src\uExe.pas';
+  uExe in '..\..\src\uExe.pas',
+  uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
