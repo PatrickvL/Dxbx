@@ -132,8 +132,8 @@ function DWord2Str(const aValue: DWORD): string;
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
 function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
 function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
-function IsPrintableChar(const aChar: Char): Boolean;
-function IsPrintableAsciiChar(const aChar: Char): Boolean;
+function IsPrintableChar(const aChar: AnsiChar): Boolean;
+function IsPrintableAsciiChar(const aChar: AnsiChar): Boolean;
 function ByteLength(const aStr: WideString): Integer;
 
 implementation
@@ -273,12 +273,12 @@ begin
   end;
 end;
 
-function IsPrintableChar(const aChar: Char): Boolean;
+function IsPrintableChar(const aChar: AnsiChar): Boolean;
 begin
   Result := Ord(aChar) >= Ord(' ');
 end;
 
-function IsPrintableAsciiChar(const aChar: Char): Boolean;
+function IsPrintableAsciiChar(const aChar: AnsiChar): Boolean;
 begin
   Result := IsPrintableChar(aChar) and (Ord(aChar) < 127);
 end;
