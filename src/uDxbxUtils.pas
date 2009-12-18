@@ -109,6 +109,11 @@ function GetErrorString(const aError: DWord): string;
 
 function PointerToString(const aPointer: Pointer): string;
 
+{$IF CompilerVersion <= 18.5}
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; inline;
+{$IFEND}
+
+
 type
   // Free interpretation of http://edn.embarcadero.com/article/29173
   TRGB32 = packed record
@@ -233,7 +238,7 @@ function RecapitalizeString(const aString: string): string;
 
   procedure _ToUpper(aIndex: Integer);
   begin
-    if Result[aIndex] in ['a'..'z'] then
+    if CharInSet(Result[aIndex], ['a'..'z']) then
       Result[aIndex] := Char(Ord(Result[aIndex]) - $20);
   end;
 
@@ -241,7 +246,7 @@ function RecapitalizeString(const aString: string): string;
   begin
     while aIndex <= aEndIndex do
     begin
-      if Result[aIndex] in ['A'..'Z'] then
+      if CharInSet(Result[aIndex], ['A'..'Z']) then
         Result[aIndex] := Char(Ord(Result[aIndex]) + $20);
 
       Inc(aIndex);
@@ -261,9 +266,9 @@ begin
   i := Length(Result);
   while i > 1 do
   begin
-    if ((Result[i] in ['A'..'Z']) and (Result[i - 1] in ['a'..'z']))
-    or ((Result[i] in ['0'..'9']) and (Result[i - 1] in [':'..'z']))
-    or ((Result[i] in [':'..'z']) and (Result[i - 1] in ['0'..'9'])) then
+    if ( CharInSet(Result[i], ['A'..'Z']) and CharInSet(Result[i - 1], ['a'..'z']))
+    or ( CharInSet(Result[i], ['0'..'9']) and CharInSet(Result[i - 1], [':'..'z']))
+    or ( CharInSet(Result[i], [':'..'z']) and CharInSet(Result[i - 1], ['0'..'9'])) then
       Insert(' ', Result, i);
 
     Dec(i);
@@ -955,6 +960,13 @@ begin
     Result := False;
   end;
 end;
+
+{$IF CompilerVersion <= 18.5}
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+begin
+  Result := C in CharSet;
+end;
+{$IFEND}
 
 end.
 

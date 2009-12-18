@@ -23,7 +23,7 @@ uses
   // Delphi
   Windows, Classes, SysUtils, Controls, Graphics, Forms, Grids,
   // Dxbx
-  uTypes;
+  uDxbxUtils, uTypes;
 
 type
   TStringsViewer = class(TDrawGrid)
@@ -105,7 +105,7 @@ var
         for Len := Length(Str) downto 1 do
         begin
           // Check if there are forbidden characters in this string :
-          if Str[Len] in SHORT_STRING_FORBIDDEN_CHARS then
+          if CharInSet(Str[Len], SHORT_STRING_FORBIDDEN_CHARS) then
           begin
             Str := '';
             Break;

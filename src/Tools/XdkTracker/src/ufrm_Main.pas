@@ -345,8 +345,8 @@ begin
 end; // TfrmMain.FindByFileName
 
 function TfrmXdkTracker.InsertXBEInfo(const aXBEInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
-var
-  i: Integer;
+(*var
+  i: Integer;*)
 begin
   Result := False;
   if not Assigned(aXBEInfo) then

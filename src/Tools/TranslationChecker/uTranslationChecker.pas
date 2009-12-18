@@ -28,7 +28,10 @@ uses
   FileCtrl,
   // 3rd Party
   JclStrings,
-  JclFileUtils;
+  JclFileUtils,
+  // Dxbx
+  uDxbxUtils
+  ;
 
 type
   TForm1 = class(TForm)
@@ -241,8 +244,8 @@ var
     end;
     
     // Remove comment start from the beginning of the line :
-    if  (aLine[1] in ['(', '/'])
-    and (aLine[2] in ['*', '/']) then
+    if  CharInSet(aLine[1], ['(', '/'])
+    and CharInSet(aLine[2], ['*', '/']) then
     // Catches '(*', '/*' and '//', but also '(/' - which can be ignored
     begin
       Delete(aLine, 1, 2);
@@ -308,8 +311,8 @@ begin
         ssFindTranslationComment:
         begin
           // Remove comment start from the beginning of the line :
-          if  (Line[1] in ['(', '/'])
-          and (Line[2] in ['*', '/']) then
+          if  CharInSet(Line[1], ['(', '/'])
+          and CharInSet(Line[2], ['*', '/']) then
             System.Delete(Line, 1, 2)
           else
             // Skip non-comment lines :
