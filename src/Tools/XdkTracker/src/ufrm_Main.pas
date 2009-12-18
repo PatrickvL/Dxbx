@@ -4,7 +4,8 @@ interface
 
 uses
   // Delphi
-  Windows, SysUtils, Classes, Messages, FileCtrl,
+  Windows, SysUtils, Classes, Messages,
+  {$WARN UNIT_PLATFORM OFF} FileCtrl,{$WARN UNIT_PLATFORM ON}
   Contnrs, Controls, Forms, Dialogs, ComCtrls, Menus, ExtCtrls, ShellApi,
   xmldom, XMLIntf, msxmldom, XMLDoc, jpeg, JwaWinType,
   // Dxbx
