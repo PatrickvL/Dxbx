@@ -96,6 +96,8 @@
 			<DCCReference Include="..\..\src\Tools\TranslationChecker\uTranslationChecker.pas">
 				<Form>Form1</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\src\uTypes.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
