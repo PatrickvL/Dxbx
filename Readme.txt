@@ -59,6 +59,7 @@ The Jedi project members, for providing us with a wonderfull library of high-qua
 
 N1ghtjar and NexXxus for making lots of xbe dumps for filling the XDKTracker.
 
+Kingis85 for donating a lot a xbox games !!
 
 Contributors
 ------------
@@ -68,6 +69,4 @@ PCucho (from Argentina) - XIso translation
 PatrickvL (from Holland) - Coding Style, Relocation, Kernel API's, Function detection
 Shadow_tj (from Holland) - Main Cxbx translation
 Wayo (from Guatemala) - GetProcAddress trick with CxbxKrnlInit, (Unswizzled) Icon extraction
-Yapel (from Spain) - XIso author
 Zomby (from Canada) - Vista compatibility, lots of fixups
-Comax (from Germanny)

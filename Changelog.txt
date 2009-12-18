@@ -1,6 +1,13 @@
 DXBX Changelog, this changelog has been implemented from version 0.0.9
 So the changes from version 0.0.8 and below are not documented.
 
+version 0.0.10:
+- A lot of Cxbx functions have been translated.
+- Loading games, will display the game logo in the mainform.
+- Xbe eplorer has been created for more and better xbe information.
+- Xdk tracker has a full list of alot of games with there xdk numbers.
+  ( remember, when games are working, close xdk range games are probably also working ).
+
 
 Version 0.0.9:
 
