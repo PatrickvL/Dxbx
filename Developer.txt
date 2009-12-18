@@ -11,14 +11,6 @@ To compile Dxbx you need the following :
 - Better yet, use a subversion client (we recommend TortoiseSVN) and check out the Subversion archive
   https://dxbx.svn.sourceforge.net/svnroot/dxbx
 
-Optional packages are:
-
-- AlphaSkins - for skinning Dxbx (you need a license to use this)
-  http://www.alphaskins.com/
-  
-  To enable AlphaSkins, open "src\Dxbx.inc" and remove the dot ('.') from this line:
-  {.$DEFINE DXBX_USE_ALPHASKINS} // Enable this to use AlphaSkins in Dxbx
-
 
 Already included are (parts of) these third party libraries :
   
@@ -75,14 +67,12 @@ Supported Delphi versions
 -------------------------
 At the time of writing, these are the Delphi versions that are supported:
 - Delphi 2007 Win32
+- Delphi 2009
+- Delphi 2010
+
 To compile with other versions, we expect to need only minimal changes.
-
-
-Setup
------
-TODO
 
 
 Resources
 ---------
-If you want to compile the original sources from cxbx ( http://www.caustik.com/cxbx/download.htm ) ... TODO
+If you want to compile the original sources from cxbx ( http://www.caustik.com/cxbx/download.htm ) ... 

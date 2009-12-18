@@ -1039,6 +1039,7 @@ begin
   if ParamCount < 1 then
   begin
     WriteLn('ERROR! Missing argument. Please supply a folder containing the Xbox *.pat files.');
+    WriteLn('PatternTrieBuilder.exe [Folder Path]');
     Exit;
   end;
 

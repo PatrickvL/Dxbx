@@ -374,7 +374,7 @@ begin
            EventType, InitialState);
 {$ENDIF}
 
-    wchar_t wszObjectName[160];
+    wchar_t wszObjectName[160-1];
 
     NtDll::UNICODE_STRING    NtUnicodeString;
     NtDll::OBJECT_ATTRIBUTES NtObjAttr;
@@ -383,7 +383,7 @@ begin
     if(szBuffer != 0)
     {
         mbstowcs(wszObjectName, "\\??\\", 4);
-        mbstowcs(wszObjectName+4, szBuffer, 160);
+        mbstowcs(wszObjectName+4, szBuffer, 160-1);
 
         NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
@@ -427,9 +427,10 @@ var
   ReplaceChar: AnsiChar;
   ReplaceIndex: int;
   szBuffer: PAnsiChar;
+  tmpszBuffer: PAnsiChar;
   v: int;
-  NtUnicodeString: UNICODE_STRING;
-  wszObjectName: array [0..160-1] of wchar_t;
+  NtUnicodeString: string;
+  wszObjectName: array [0..159] of wchar_t;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
@@ -547,12 +548,11 @@ begin
 
   // initialize object attributes
   if Assigned(szBuffer) then
-    mbstowcs(@(wszObjectName[0]), szBuffer, 160)
+    mbstowcs(@(wszObjectName[0]), szBuffer, 160-1)
   else
     wszObjectName[0] := 0;
 
-  JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
-
+  JwaNative.RtlInitUniCodeString(@NtUnicodeString, @(wszObjectName[0]));
   InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
   // redirect to NtCreateFile
@@ -596,7 +596,7 @@ begin
     DbgPrintf('  New:"$CurRoot\%s"', [szBuffer]);
 {$ENDIF}
 
-    mbstowcs(@(wszObjectName[0]), szBuffer, 160);
+    mbstowcs(@(wszObjectName[0]), szBuffer, 160-1);
     JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
 
     Result := JwaNative.NtCreateFile(
@@ -656,7 +656,7 @@ begin
            GetCurrentThreadId(), MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
 {$ENDIF}
 
-    wchar_t wszObjectName[160];
+    wchar_t wszObjectName[160-1];
 
     NtDll::UNICODE_STRING    NtUnicodeString;
     NtDll::OBJECT_ATTRIBUTES NtObjAttr;
@@ -665,7 +665,7 @@ begin
     if(szBuffer != 0)
     {
         mbstowcs(wszObjectName, "\\??\\", 4);
-        mbstowcs(wszObjectName+4, szBuffer, 160);
+        mbstowcs(wszObjectName+4, szBuffer, 160-1);
 
         NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
@@ -999,14 +999,14 @@ begin
 
     NtDll::UNICODE_STRING NtFileMask;
 
-    wchar_t wszObjectName[160];
+    wchar_t wszObjectName[160-1];
 
     // initialize FileMask
     {
         if(FileMask != 0)
-            mbstowcs(wszObjectName, FileMask->Buffer, 160);
+            mbstowcs(wszObjectName, FileMask->Buffer, 160-1);
         else
-            mbstowcs(wszObjectName, "", 160);
+            mbstowcs(wszObjectName, "", 160-1);
 
         NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
     }
@@ -1091,7 +1091,7 @@ begin
 (*  szBuffer := ObjectAttributes.ObjectName.Buffer;
 
   // initialize object attributes
-  mbstowcs(wszObjectName, szBuffer, 160);
+  mbstowcs(wszObjectName, szBuffer, 160-1);
   RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
   InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 

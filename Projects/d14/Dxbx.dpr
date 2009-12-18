@@ -69,6 +69,8 @@ begin
   and FileExists(XBEFilePath) then
   begin
     Xbe := nil; // prevent warning
+    // if Dxbx has xbe file as paramstring, then the DllToUse should be the udDxbxKrnl
+    DllToUse := udDxbxKrnl;
     if ConvertXbeToExe(XBEFilePath, tmpstr1, tmpstr2, Xbe, 0{=No WindowHandle!}) then
       Exit;
     // TODO : Error logging should go here

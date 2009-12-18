@@ -141,3 +141,6 @@ A: Lots of information can be gleaned from the Cxbx sources. Google helps a lot 
 Q: I have another question that's not on this list, what can I do?
 A: First, try searching the Dxbx forum - there's a good chance someone already talked about your topic.
    If that doesn't help, post your question in a new topic, or send a PM or mail to one of the Dxbx developers.
+
+Q: When does the new version of Dxbx will be released?
+A: It will be released when we think its time to release a new version..

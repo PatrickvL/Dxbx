@@ -81,7 +81,7 @@ type
   TUseDll = (udCxbxKrnl, udCxbx, udDxbxKrnl {, udDxbx});
 
 var
-  DllToUse: TUseDLL = udCxbxKrnl;
+  DllToUse: TUseDLL = udDxbxKrnl;
 
 function GetDllDescription(const aDllToUse: TUseDll): string;
 function GetDllName(const aDllToUse: TUseDll): string;
