@@ -44,7 +44,8 @@ uses
   uConsts in '..\..\src\uConsts.pas',
   uDxbxXml in '..\..\src\uDxbxXml.pas',
   XboxKrnl in '..\..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
-  uDxbxUtils in '..\..\src\uDxbxUtils.pas';
+  uDxbxUtils in '..\..\src\uDxbxUtils.pas',
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas';
 
 {$R *.RES}
 
