@@ -68,17 +68,17 @@ const SOUNDSTREAM_CACHE_SIZE = $100;
 var
   g_pDSound8: IDIRECTSOUND8 = nil;
   g_pDSound8RefCount: Int = 0;
-  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE] of X_CDirectSoundBuffer;
-
+  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of X_CDirectSoundBuffer;
+(*  g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;*)
 
 // periodically update sound buffers
 procedure HackUpdateSoundBuffers();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
-(*var
+var
   v: Integer;
   pAudioPtr, pAudioPtr2 : PVOID;
   dwAudioBytes, dwAudioBytes2 : DWORD;
-  hRet : HRESULT; *)
+  hRet : HRESULT;
 begin
 (*  for v := 0 to SOUNDBUFFER_CACHE_SIZE -1 do begin
     if (g_pDSoundBufferCache[v] = 0) or (g_pDSoundBufferCache[v].EmuBuffer = 0) then
@@ -93,7 +93,7 @@ begin
     if (SUCCEEDED(hRet)) then
     begin
         if (pAudioPtr <> 0) then
-            memcpy(pAudioPtr,  g_pDSoundBufferCache[v].EmuBuffer, dwAudioBytes);
+          Move(g_pDSoundBufferCache[v].EmuBuffer, pAudioPtr, dwAudioBytes);
 
         if (pAudioPtr2 <> 0) then
             memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v].EmuBuffer+dwAudioBytes), dwAudioBytes2);
@@ -147,7 +147,7 @@ var
   dwWriteCursor: DWORD;
   dwStatus: DWORD;
   hRet: HRESULT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   if (dwBytes = pThis.EmuBufferDesc.dwBufferBytes) or (dwBytes = 0) then
       Exit;
@@ -173,15 +173,15 @@ begin
 
   pThis.EmuBufferDesc.dwBufferBytes := dwBytes;
 
-  (*hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc, pThis.EmuDirectSoundBuffer8, 0); *)
+  hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc, pThis.EmuDirectSoundBuffer8^, nil);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
 
   pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwPlayCursor);
 
-(*  if (dwStatus and DSBSTATUS_PLAYING) then
-      pThis.EmuDirectSoundBuffer8.Play(0, 0, pThis.EmuPlayFlags); *)
+  if (dwStatus and DSBSTATUS_PLAYING) > 0 then
+      pThis.EmuDirectSoundBuffer8.Play(0, 0, pThis.EmuPlayFlags);
 end;
 
 
@@ -262,16 +262,16 @@ begin
 
 
     // clear sound buffer cache
-    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
+(*    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
     begin
-      (*g_pDSoundBufferCache[v] := 0; *)
+      g_pDSoundBufferCache[v] := 0;
     end;
 
     // clear sound stream cache
     for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
     begin
-      (*g_pDSoundStreamCache[v] := 0; *)
-    end;
+      g_pDSoundStreamCache[v] := 0;
+    end; *)
 
     Initialized := True;
   end;

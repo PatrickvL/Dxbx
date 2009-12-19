@@ -231,13 +231,14 @@ begin
   Result := True;
 end;
 
-(*
-function XTL_EmuFindFirstFileA
-(
-  lpFileName: PAnsiChar;
-  {out}lpFindFileData: LPWIN32_FIND_DATA
-  ): Handle; stdcall;
+
+function XTL_EmuFindFirstFileA(lpFileName: PAnsiChar;{out}lpFindFileData: LPWIN32_FIND_DATA): Handle; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+var
+  szBuffer: PAnsiChar;
+  szRoot: string;
+  hRet: Handle;
+  bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -258,8 +259,8 @@ begin
     // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
     //
 
-  Char * szBuffer := (Char)lpFileName;
-  Char * szRoot := g_strCurDrive;
+(*  szBuffer := lpFileName;
+  szRoot := g_strCurDrive;
 
 {$IFDEF DEBUG}
     //printf('bef : %s\n', lpFileName);
@@ -307,13 +308,13 @@ begin
 
   SetCurrentDirectory(szRoot);
 
-  Handle hRet := FindFirstFile(szBuffer, lpFindFileData);
+  hRet := FindFirstFile(szBuffer, lpFindFileData);
 
   if (not FAILED(hRet)) then
   begin
     while True do
     begin
-      BOOL bRet := FindNextFile(hRet, lpFindFileData);
+      bRet := FindNextFile(hRet, lpFindFileData);
 
       if (not bRet) then
       begin
@@ -327,20 +328,18 @@ begin
   end;
 
     //SetCurrentDirectory(szOldDir);
-
+                 *)
   EmuSwapFS(fsXbox);
 
   Result := hRet;
 end;
-*)
 
-(*
-function XTL_EmuFindNextFileA
-(
-  in hFindFile: Handle;
-  {out} lpFindFileData: LPWIN32_FIND_DATA
-  ): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+
+
+function XTL_EmuFindNextFileA(hFindFile: Handle; {out} lpFindFileData: LPWIN32_FIND_DATA): BOOL; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:10
+var
+  bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
 
@@ -357,9 +356,7 @@ begin
     // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
     //
 
-  BOOL bRet;
-
-  repeat
+(*  repeat
     bRet := FindNextFile(hFindFile, lpFindFileData);
 
     if (not bRet) then
@@ -367,7 +364,7 @@ begin
 
     if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
       Break;
-  until False;
+  until False;   *)
 
 {$IFDEF DEBUG}
     //printf('Found : %s\n', lpFindFileData.cFileName);
@@ -377,7 +374,6 @@ begin
 
   Result := bRet;
 end;
-*)
 
 function XTL_EmuGetTimeZoneInformation(
   lpTimeZoneInformation: LPTIME_ZONE_INFORMATION
@@ -863,9 +859,9 @@ end;
 
 
 procedure XTL_EmuXInputClose(hDevice: Handle); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
-(*var
-  pPH: PPOLLING_PARAMETERS_HANDLE; *)
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  pPH: PPOLLING_PARAMETERS_HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -877,7 +873,7 @@ begin
     [hDevice]);
 {$ENDIF}
 
-  (*pPH := POLLING_PARAMETERS_HANDLE(hDevice);*)
+  pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
   {  Markd out by CXBX
    no longer necessary
@@ -909,10 +905,11 @@ end;
 function XTL_EmuXInputPoll(
   hDevice: Handle
 ): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
   pFeedback: PXINPUT_FEEDBACK;
+  pPH: PPOLLING_PARAMETERS_HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -924,7 +921,7 @@ begin
        [hDevice]);
 {$ENDIF}
 
-  (*POLLING_PARAMETERS_HANDLE *pPH := (POLLING_PARAMETERS_HANDLE)hDevice;*)
+  pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
   //
   // Poll input
@@ -1280,7 +1277,7 @@ begin
 end;
 
 procedure XTL_EmuXapiInitProcess(); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 const
   HEAP_GROWABLE = $00000002;
 var
@@ -1376,7 +1373,7 @@ procedure XTL_EmuXRegisterThreadNotifyRoutine(
   pThreadNotification: PXTHREAD_NOTIFICATION;
   fRegister: BOOL
   ); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:99
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
