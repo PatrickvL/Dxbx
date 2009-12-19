@@ -5833,7 +5833,7 @@ begin
   // update overlay!
   if (g_bSupportsYUY2) then
   begin
-(*        SourRect := TRect(0, 0, g_dwOverlayW, g_dwOverlayH);
+        (*SourRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
         MONITORINFO MonitorInfo := (0);
 
         Integer nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
@@ -7201,7 +7201,7 @@ end;
 
 function XTL_EmuIDirect3DDevice8_DrawIndexedVertices(PrimitiveType: X_D3DPRIMITIVETYPE;
   VertexCount: UINT; pIndexData: PWORD): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:98
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   dwSize: DWORD;
   hRet: HRESULT;
@@ -7326,8 +7326,8 @@ begin
     end
     else
     begin
-(*      uiNumVertices := DWORD(pIndexData)/2 + VertexCount;
-      uiStartIndex := DWORD(pIndexData)/2; *)
+      uiNumVertices := DWORD(pIndexData) div 2 + VertexCount;
+      uiStartIndex := DWORD(pIndexData) div 2;
     end;
 
     if (XTL_IsValidCurrentShader()) then
@@ -8061,7 +8061,7 @@ function XTL_EmuIDirect3D8_AllocContiguousMemory(
   dwSize: SIZE_T;
   dwAllocAttributes: DWORD
 ): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:Patrickvl  Done:90
+// Branch:martin  Revision:39  Translator:Patrickvl  Done:100
 var
   dwRet: DWORD;
 begin
@@ -8091,7 +8091,7 @@ begin
 
     Inc(dwRet, $1000 - dwRet mod $1000);
 
-// Dxbx TODO :    g_AlignCache.insert(dwRet, Result);
+    g_AlignCache.insert(dwRet, Result);
 
     Result := PVOID(dwRet);
   end;
@@ -8619,7 +8619,7 @@ end;
 function XTL_EmuIDirect3DDevice8_GetTexture2(
   pTexture: PX_D3DResource
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:10 
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -8635,19 +8635,19 @@ begin
 
   // Cxbx TODO: I'm sure there is a better way to handle this.
 
-    (*if (!pTexture) then
+  if not Assigned(pTexture) then
   begin
 {$IFDEF DEBUG}
-    printf( 'Creating new texture...' + );
+    DbgPrintf( 'Creating new texture...');
 {$ENDIF}
-    pTexture = new X_D3DResource();
-  end;
+    New({X_D3DResource}pTexture);
+  end
   else
   begin
 {$IFDEF DEBUG}
-    printf( 'pTexture: = 0x%.08X\npTexture.EmuTexture8', pTexture, (pTexture).EmuBaseTexture8 );
+    DbgPrintf( 'pTexture: = 0x%.08X\npTexture.EmuTexture8', [pTexture, (pTexture).EmuBaseTexture8]);
 {$ENDIF}
-  end;*)
+  end;
 
   // Since this function does not specify any texture stages,
   // I guess we can assume it's just the first one.  According
