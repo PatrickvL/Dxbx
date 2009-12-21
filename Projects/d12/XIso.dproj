@@ -120,15 +120,6 @@
 			<DCCReference Include="..\..\src\Tools\XIso\src\Win32ASPI.pas"/>
 			<DCCReference Include="..\..\src\Tools\XIso\src\CDROM.pas"/>
 			<DCCReference Include="..\..\src\Tools\XIso\src\xbe.pas"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\R"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\Re"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\Rei"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\Rein"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\Reini"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\Reinit"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\Reinit.p"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\Reinit.pa"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
