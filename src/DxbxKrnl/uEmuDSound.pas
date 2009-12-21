@@ -80,7 +80,7 @@ var
   dwAudioBytes, dwAudioBytes2 : DWORD;
   hRet : HRESULT;
 begin
-(*  for v := 0 to SOUNDBUFFER_CACHE_SIZE -1 do begin
+ (* for v := 0 to SOUNDBUFFER_CACHE_SIZE -1 do begin
     if (g_pDSoundBufferCache[v] = 0) or (g_pDSoundBufferCache[v].EmuBuffer = 0) then
         continue;
 
@@ -102,7 +102,7 @@ begin
      end;
 
     // Cxbx TODO: relock old lock ??
-   end; *)
+   end;*)
 end;
 
 // periodically update sound streams
@@ -262,13 +262,13 @@ begin
 
 
     // clear sound buffer cache
-(*    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
+    (*for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
     begin
-      g_pDSoundBufferCache[v] := 0;
-    end;
+      g_pDSoundBufferCache[v] := null;
+    end; *)
 
     // clear sound stream cache
-    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
+    (*for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
     begin
       g_pDSoundStreamCache[v] := 0;
     end; *)

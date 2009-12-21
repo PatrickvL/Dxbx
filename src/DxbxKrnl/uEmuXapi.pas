@@ -232,10 +232,10 @@ begin
 end;
 
 
-function XTL_EmuFindFirstFileA(lpFileName: PAnsiChar;{out}lpFindFileData: LPWIN32_FIND_DATA): Handle; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+function XTL_EmuFindFirstFileA(lpFileName: PChar;{out}lpFindFileData: LPWIN32_FIND_DATA): Handle; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
-  szBuffer: PAnsiChar;
+  szBuffer: PChar;
   szRoot: string;
   hRet: Handle;
   bRet: BOOL;
@@ -259,14 +259,14 @@ begin
     // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
     //
 
-(*  szBuffer := lpFileName;
+  szBuffer := lpFileName;
   szRoot := g_strCurDrive;
 
 {$IFDEF DEBUG}
     //printf('bef : %s\n', lpFileName);
 {$ENDIF}
 
-  if (szBuffer <> 0) then
+  if (szBuffer <> nil) then
   begin
     // trim this off
     if (szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
@@ -306,15 +306,15 @@ begin
 
     //GetCurrentDirectory(MAX_PATH, szOldDir);
 
-  SetCurrentDirectory(szRoot);
+  SetCurrentDirectory(PChar(szRoot));
 
-  hRet := FindFirstFile(szBuffer, lpFindFileData);
+  hRet := FindFirstFile(szBuffer, WIN32_FIND_DATAW(lpFindFileData^));
 
   if (not FAILED(hRet)) then
   begin
     while True do
     begin
-      bRet := FindNextFile(hRet, lpFindFileData);
+      bRet := FindNextFile(hRet, WIN32_FIND_DATAW(lpFindFileData^));
 
       if (not bRet) then
       begin
@@ -328,7 +328,7 @@ begin
   end;
 
     //SetCurrentDirectory(szOldDir);
-                 *)
+
   EmuSwapFS(fsXbox);
 
   Result := hRet;
@@ -337,7 +337,7 @@ end;
 
 
 function XTL_EmuFindNextFileA(hFindFile: Handle; {out} lpFindFileData: LPWIN32_FIND_DATA): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:10
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   bRet: BOOL;
 begin
@@ -356,15 +356,15 @@ begin
     // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
     //
 
-(*  repeat
-    bRet := FindNextFile(hFindFile, lpFindFileData);
+  repeat
+    bRet := FindNextFile(hFindFile, WIN32_FIND_DATAW(lpFindFileData^));
 
     if (not bRet) then
       Break;
 
     if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
       Break;
-  until False;   *)
+  until False;
 
 {$IFDEF DEBUG}
     //printf('Found : %s\n', lpFindFileData.cFileName);
@@ -1061,9 +1061,13 @@ function XTL_EmuXInputSetState(
     hDevice: Handle;
     pFeedback: PXINPUT_FEEDBACK // IN OUT
 ): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:5
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   ret: DWord;
+  pPH: PPOLLING_PARAMETERS_HANDLE;
+  v: Integer;
+  found: bool;
+
 begin
   EmuSwapFS(fsWindows);
 
@@ -1078,19 +1082,18 @@ begin
 
   ret := ERROR_IO_PENDING;
 
-  (*POLLING_PARAMETERS_HANDLE *pPH := (POLLING_PARAMETERS_HANDLE)hDevice;
+  pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
   if (pPH <> nil) then
   begin
-    Integer v;
+
 
     //
     // Check if this device is already being polled
     //
+    found := False;
 
-    bool found := False;
-
-    for(v := 0;v<XINPUT_SETSTATE_SLOTS;v++)
+    for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
     begin
       if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
       begin
@@ -1114,7 +1117,7 @@ begin
 
     if (not found) then
     begin
-      for(v := 0;v<XINPUT_SETSTATE_SLOTS;v++)
+      for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
       begin
         if (g_pXInputSetStateStatus[v].hDevice = 0) then
         begin
@@ -1134,7 +1137,6 @@ begin
       end;
     end;
   end;
-  *)
 
   EmuSwapFS(fsXbox);
 
@@ -1453,12 +1455,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(*
-LPVOID WINAPI XTL_EmuXLoadSectionA
-(
-  LPCSTR          pSectionName
-)
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:40
+
+function XTL_EmuXLoadSectionA(pSectionName: LPCSTR): LPVOID;
+// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+var
+  pRet: LPVOID;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1472,10 +1473,11 @@ begin
 
   // Search this .xbe for the section it wants to load.
   // If we find it, return the address of it.
-//  LPVOID pRet = NULL;
+  pRet := NULL;
 
   // Get the .xbe header
-  /*Xbe::Header* pXbeHeader = (Xbe::Header* ) 0x00010000;
+  // MARKED OUT BY CXBX
+  {Xbe::Header* pXbeHeader = (Xbe::Header* ) 0x00010000;
 
   // Get the number of sections this .xbe has and the
   // location of the section headers.
@@ -1518,10 +1520,12 @@ begin
   end;
 
   // Free up the memory
-  CxbxFree( pSectionHeaders );*/
+  CxbxFree( pSectionHeaders );}
 
-  LPVOID pRet = NULL;
-  /*int Section = -1;
+  pRet := NULL;
+
+  // MARKED OUT BY CXBX
+  (*int Section = -1;
 
 {$IFDEF DEBUG}
   DbgPrintf('Sections: %d', [g_NumSections]);
@@ -1555,13 +1559,12 @@ begin
   begin
     EmuWarning('Section List not initialized!');
     __asm int 3;
-  end;*/
+  end;*)
 
   EmuSwapFS(fsXbox);
 
-  return pRet;
+  result := pRet;
 end;
-*)
 
 function XTL_EmuXFreeSectionA(
   pSectionName: LPCSTR
