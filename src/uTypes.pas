@@ -108,7 +108,7 @@ type
 {$IFNDEF UNICODE}
   UnicodeString = WideString;
 
-function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; inline;
 {$ENDIF}
 
 function tolower(c: AnsiChar): AnsiChar;

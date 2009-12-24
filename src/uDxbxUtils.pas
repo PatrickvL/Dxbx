@@ -109,11 +109,6 @@ function GetErrorString(const aError: DWord): string;
 
 function PointerToString(const aPointer: Pointer): string;
 
-{$IF CompilerVersion <= 18.5}
-function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; inline;
-{$IFEND}
-
-
 type
   // Free interpretation of http://edn.embarcadero.com/article/29173
   TRGB32 = packed record
@@ -960,13 +955,6 @@ begin
     Result := False;
   end;
 end;
-
-{$IF CompilerVersion <= 18.5}
-function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
-begin
-  Result := C in CharSet;
-end;
-{$IFEND}
 
 end.
 
