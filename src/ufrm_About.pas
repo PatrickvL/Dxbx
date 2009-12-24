@@ -26,9 +26,9 @@ uses
   Classes,
   Controls,
   StdCtrls,
-  Forms,
+  Forms, jpeg, ExtCtrls, GIFImg, Graphics,
   // Dxbx
-  uConsts, jpeg, ExtCtrls, GIFImg, Graphics;
+  uConsts;
 
 
 type

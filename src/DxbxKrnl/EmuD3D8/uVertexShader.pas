@@ -45,6 +45,7 @@ const
 
 type
   LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
+  PLPD3DXBUFFER = ^LPD3DXBUFFER;
 
   _VSH_SHADER_HEADER = packed record
     aType: uint08;
@@ -87,8 +88,8 @@ type
 
   _VSH_IMD_OUTPUT = packed record
     aType: VSH_IMD_OUTPUT_TYPE;
-    Mask: Array [0..3] of boolean;
-    Address: Uint16;
+    Mask: array [0..3] of boolean;
+    Address: UInt16;
   end;
   VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
 
@@ -133,7 +134,7 @@ type
   _VSH_PARAMETER = packed record
       ParameterType: VSH_PARAMETER_TYPE;   // Parameter type, R, V or C
       Neg: boolean;             // TRUE if negated, FALSE if not
-      Swizzle: Array [0..3] of VSH_SWIZZLE;      // The four swizzles
+      Swizzle: array [0..3] of VSH_SWIZZLE;      // The four swizzles
       Address: Uint16;         // Register address
   end;
   VSH_PARAMETER = _VSH_PARAMETER;
@@ -151,14 +152,14 @@ type
     MAC: VSH_MAC;
     ILU: VSH_ILU;
     Output: VSH_IMD_OUTPUT;
-    Parameters: Array[0..2] of VSH_IMD_PARAMETER;
+    Parameters: array [0..2] of VSH_IMD_PARAMETER;
   end;
   VSH_INTERMEDIATE_FORMAT = _VSH_INTERMEDIATE_FORMAT;
 
   _VSH_XBOX_SHADER = packed record
     ShaderHeader: VSH_SHADER_HEADER;
     IntermediateCount: uint16;
-    Intermediate: Array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT ;
+    Intermediate: array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT ;
   end;
   VSH_XBOX_SHADER = _VSH_XBOX_SHADER;
   PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
@@ -171,17 +172,17 @@ function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
 function XTL_EmuRecompileVshDeclaration
 (
   pDeclaration: PDWORD;
-  ppRecompiledDeclaration: PDWORD;
+  ppRecompiledDeclaration: PPDWORD;
   pDeclarationSize: PDWORD;
   IsFixedFunction: Boolean;
-  pVertexDynamicPatch: VERTEX_DYNAMIC_PATCH
-) : DWORD;
+  pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
+): DWORD;
 
 function XTL_EmuRecompileVshFunction
 (
-    pFunction: DWORD;
-    ppRecompiled: LPD3DXBUFFER;
-    pOriginalSize: DWORD;
+    pFunction: PDWORD;
+    ppRecompiled: PLPD3DXBUFFER;
+    pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
 ) : HRESULT; stdcall;
 
@@ -207,10 +208,10 @@ var
   Pos: DWORD;
 begin
   Pos := 0;
-  while DWord(pDeclaration)+Pos <> DEF_VSH_END do
-    inc(Pos);
+  while PDWord(DWord(pDeclaration) + Pos)^ <> DEF_VSH_END do
+    Inc(Pos);
 
-  Result := (Pos + 1) * sizeof(DWORD);
+  Result := (Pos + 1) * SizeOf(DWORD);
 end;
 
 function VshGetTokenType(Token: DWORD): DWORD;
@@ -226,15 +227,17 @@ var
 begin
   //using namespace XTL;
   Step := 1;
-(*  case VshGetTokenType(pToken^) of
+(*
+  case TD3DVSDTokenType(VshGetTokenType(pToken^)) of
     D3DVSD_TOKEN_NOP: VshConvertToken_NOP(pToken);
     D3DVSD_TOKEN_STREAM: VshConvertToken_STREAM(pToken, pPatchData);
     D3DVSD_TOKEN_STREAMDATA: VshConvertToken_STREAMDATA(pToken, IsFixedFunction, pPatchData);
     D3DVSD_TOKEN_TESSELLATOR: VshConverToken_TESSELATOR(pToken, IsFixedFunction);
-    D3DVSD_TOKEN_CONSTMEM: Step = VshConvertToken_CONSTMEM(pToken);
+    D3DVSD_TOKEN_CONSTMEM: Step := VshConvertToken_CONSTMEM(pToken);
   else
     DbgPrintf('Unknown token type: %d', [VshGetTokenType(pToken)]);
-  end; *)
+  end;
+*)
 
   Result := Step;
 end;
@@ -247,7 +250,7 @@ var
 begin
   CurrentStream := pPatchData.StreamPatchData.NbrStreams - 1;
 
-  if(CurrentStream >= 0) then
+  if (CurrentStream >= 0) then
   begin
     DbgPrintf('NeedPatching: %', [pPatchData.NeedPatching]);
 
@@ -262,16 +265,17 @@ begin
     Result := TRUE;
     Exit;
   end;
+
   Result := FALSE;
 end;
 
 function XTL_EmuRecompileVshDeclaration
 (
   pDeclaration: PDWORD;
-  ppRecompiledDeclaration: PDWORD;
+  ppRecompiledDeclaration: PPDWORD;
   pDeclarationSize: PDWORD;
   IsFixedFunction: Boolean;
-  pVertexDynamicPatch: VERTEX_DYNAMIC_PATCH
+  pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
 ) : DWORD;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 var
@@ -291,24 +295,23 @@ begin
 
   // Calculate size of declaration
   DeclarationSize := VshGetDeclarationSize(pDeclaration);
-  ppRecompiledDeclaration := PDWORD(CxbxMalloc(DeclarationSize));
-  pRecompiled := ppRecompiledDeclaration;
+  ppRecompiledDeclaration^ := PDWORD(CxbxMalloc(DeclarationSize));
+  pRecompiled := ppRecompiledDeclaration^;
 
   memcpy(pRecompiled, pDeclaration, DeclarationSize);
   pDeclarationSize^ := DeclarationSize;
 
-  // TODO: Put these in one struct
+  // Cxbx TODO: Put these in one struct
   (* PatchData := [0]; *)
 
-  DbgPrintf('DWORD dwVSHDecl[] = ' );
+  DbgPrintf('DWORD dwVSHDecl[] = '#13#10'{');
 
   while pRecompiled^ <> DEF_VSH_END do
   begin
     Step := VshRecompileToken(pRecompiled, IsFixedFunction, @PatchData);
-    Inc(Step);
-    DWord(pRecompiled) := Step;
+    Inc(DWord(pRecompiled), Step);
   end;
-  DbgPrintf('\tD3DVSD_END()');
+  DbgPrintf(#9'D3DVSD_END()'#13#10'};');
 
   VshAddStreamPatch(@PatchData);
 
@@ -318,18 +321,18 @@ begin
   StreamsSize := PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
   pVertexDynamicPatch.NbrStreams := PatchData.StreamPatchData.NbrStreams;
   pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCH(CxbxMalloc(StreamsSize));
-  (*memcpy(pVertexDynamicPatch.pStreamPatches,
-         PatchData.StreamPatchData.pStreamPatches,
-         StreamsSize); *)
+  memcpy(pVertexDynamicPatch.pStreamPatches,
+         @(PatchData.StreamPatchData.pStreamPatches[0]),
+         StreamsSize);
 
-  result := D3D_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuRecompileVshFunction
 (
-    pFunction: DWORD;
-    ppRecompiled: LPD3DXBUFFER;
-    pOriginalSize: DWORD;
+    pFunction: PDWORD;
+    ppRecompiled: PLPD3DXBUFFER;
+    pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
 ) : HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
