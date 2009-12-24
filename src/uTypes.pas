@@ -52,6 +52,8 @@ type
   PDWord = ^DWord;
 {$IFEND}
 
+  PPDWORD = ^PDWORD;
+
 {$IF NOT DECLARED(Int32)}
   Int32 = Integer;
 {$IFEND}

@@ -403,9 +403,10 @@ begin
   // cache XbeHeader and size of XbeHeader
   g_XbeHeader := XbeHeader;
   g_XbeHeaderSize := XbeHeaderSize;
-
+  
   // create timing thread
   begin
+    dwThreadId := 0;
     hThread := BeginThread(nil, 0, @EmuUpdateTickCount, nil, 0, {var} dwThreadId);
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
@@ -512,7 +513,7 @@ end; // EmuEnumDisplayDevices
 function EmuRenderWindow(lpVoid: PVOID): DWord; // no stdcall !
 // Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:95
 const
-  IDI_CXBX=101;
+  IDI_CXBX = 101;
   DXBX_RENDER_CLASS = 'DxbxRender';
 var
   msg: TMsg;
@@ -545,7 +546,7 @@ begin
     wc.lpfnWndProc := @EmuMsgProc;
     wc.cbClsExtra := 0;
     wc.cbWndExtra := 0;
-    wc.hInstance := GetModuleHandle(nil);
+    wc.hInstance := GetModuleHandle(nil); // MainInstance; ??
     wc.hIcon := LoadIcon(hDxbxDll, MAKEINTRESOURCE(IDI_CXBX));
     wc.hCursor := LoadCursor(0, IDC_ARROW);
     wc.hbrBackground := g_hBgBrush;
@@ -616,7 +617,7 @@ begin
       nHeight,
       hwndParent,
       HMENU(0),
-      GetModuleHandle(nil),
+      GetModuleHandle(nil), // MainInstance ??
       nil
       );
   end;
@@ -830,7 +831,8 @@ begin
         end;
       end;
 
-    WM_CLOSE: DestroyWindow(hWnd);
+    WM_CLOSE:
+      DestroyWindow(hWnd);
 
     WM_SETFOCUS:
       begin
@@ -2602,16 +2604,16 @@ begin
   aHandle := 0;
 
   hRet := XTL_EmuRecompileVshDeclaration(pDeclaration,
-                                         pRecompiledDeclaration,
+                                         @pRecompiledDeclaration,
                                          @DeclarationSize,
                                          not Assigned(pFunction),
-                                         pVertexShader.VertexDynamicPatch);
+                                         @(pVertexShader.VertexDynamicPatch));
 
   if (SUCCEEDED(hRet) and Assigned(pFunction)) then
   begin
-    hRet := XTL_EmuRecompileVshFunction(DWORD(pFunction),
-                                        pRecompiledBuffer,
-                                        VertexShaderSize,
+    hRet := XTL_EmuRecompileVshFunction(PDWORD(pFunction),
+                                        @pRecompiledBuffer,
+                                        @VertexShaderSize,
                                         g_VertexShaderConstantMode = X_VSCM_NONERESERVED);
     if (SUCCEEDED(hRet)) then
     begin
