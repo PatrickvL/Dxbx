@@ -1009,7 +1009,10 @@ begin
         VirtAddr := m_SectionHeader[lIndex].dwVirtualAddr;
         VirtSize := m_SectionHeader[lIndex].dwVirtualSize;
         if (x_dwVirtualAddress >= VirtAddr) and (x_dwVirtualAddress < (VirtAddr + VirtSize)) then
-          Result := m_SectionHeader[lIndex].dwRawAddr + (x_dwVirtualAddress - VirtAddr)
+        begin
+          Result := m_SectionHeader[lIndex].dwRawAddr + (x_dwVirtualAddress - VirtAddr);
+          Exit;
+        end;
       end;
     end;
   end;

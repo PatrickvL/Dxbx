@@ -25,6 +25,7 @@ uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, ComCtrls, Grids, ExtCtrls,
+  StdActns, ActnList, XPStyleActnCtrls, ActnMan, ToolWin, ActnCtrls, ActnMenus,
   StdCtrls, // TMemo
   Math, // Min
   ShellAPI, // DragQueryFile
@@ -35,7 +36,7 @@ uses
   uDxbxUtils,
   uXbe,
   uHexViewer,
-  uStringsViewer, StdActns, ActnList, XPStyleActnCtrls, ActnMan, ToolWin, ActnCtrls, ActnMenus;
+  uStringsViewer;
 
 type
   TFormXBEExplorer = class(TForm)
@@ -370,6 +371,64 @@ var
     Result := DWord2Str(aBaseAddr + FIELD_OFFSET(aValue));
   end;
 
+  function GetSectionNrByVA(const VA: DWord): Integer;
+  var
+    Hdr: PXbeSectionHeader;
+  begin
+    Result := Length(MyXBE.m_SectionHeader) - 1;
+    while Result >= 0 do
+    begin
+      Hdr := @(MyXBE.m_SectionHeader[Result]);
+      if (Hdr.dwVirtualAddr <= VA) and (Hdr.dwVirtualAddr + Hdr.dwVirtualSize > VA) then
+        Exit;
+
+      Dec(Result);
+    end;
+  end;
+
+  function GetSectionName(const aSectionNr: Integer): string;
+  var
+    Hdr: PXbeSectionHeader;
+  begin
+    if (aSectionNr >= 0) and (aSectionNr < Length(MyXBE.m_SectionHeader)) then
+    begin
+      Hdr := @(MyXBE.m_SectionHeader[aSectionNr]);
+      Result := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr, XBE_SECTIONNAME_MAXLENGTH);
+    end
+    else
+      Result := '';
+  end;
+
+  function VA2RVA(const VA: DWord): DWord;
+  var
+    aSectionNr: Integer;
+    Hdr: PXbeSectionHeader;
+  begin
+    aSectionNr := GetSectionNrByVA(VA);
+    if (aSectionNr >= 0) and (aSectionNr < Length(MyXBE.m_SectionHeader)) then
+    begin
+      Hdr := @(MyXBE.m_SectionHeader[aSectionNr]);
+      Result := Hdr.dwRawAddr + (VA - Hdr.dwVirtualAddr);
+    end
+    else
+      Result := 0;
+  end;
+
+  function GetSectionNameByVA(const VA: DWord): string;
+  var
+    aSectionNr: Integer;
+    Hdr: PXbeSectionHeader;
+  begin
+    aSectionNr := GetSectionNrByVA(VA);
+    if (aSectionNr >= 0) and (aSectionNr < Length(MyXBE.m_SectionHeader)) then
+    begin
+      Hdr := @(MyXBE.m_SectionHeader[aSectionNr]);
+      Result := GetSectionName(aSectionNr) + Format(' + %x', [VA-Hdr.dwVirtualAddr]);
+    end
+    else
+      Result := '';
+  end;
+
   function _CreateNode(const aParentNode: TTreeNode; const aName: string; aContents: TControl): TTreeNode;
   var
     TabSheet: TTabSheet;
@@ -435,7 +494,7 @@ var
     GridAddRow(Result, ['dwSectionHeadersAddr', 'Dword', _offset(PXbeHeader(nil).dwSectionHeadersAddr), DWord2Str(Hdr.dwSectionHeadersAddr)]);
     GridAddRow(Result, ['dwInitFlags', 'Dword', _offset(PXbeHeader(nil).dwInitFlags), PByteToHexString(@Hdr.dwInitFlags[0], 4)]);
     GridAddRow(Result, ['dwEntryAddr', 'Dword', _offset(PXbeHeader(nil).dwEntryAddr), DWord2Str(Hdr.dwEntryAddr), Format('Retail: 0x%.8x, Debug: 0x%.8x', [Hdr.dwEntryAddr xor XOR_EP_Retail, Hdr.dwEntryAddr xor XOR_EP_DEBUG])]);
-    GridAddRow(Result, ['dwTLSAddr', 'Dword', _offset(PXbeHeader(nil).dwTLSAddr), DWord2Str(Hdr.dwTLSAddr)]);
+    GridAddRow(Result, ['dwTLSAddr', 'Dword', _offset(PXbeHeader(nil).dwTLSAddr), DWord2Str(Hdr.dwTLSAddr), GetSectionNameByVA(Hdr.dwTLSAddr)]);
     GridAddRow(Result, ['dwPeStackCommit', 'Dword', _offset(PXbeHeader(nil).dwPeStackCommit), DWord2Str(Hdr.dwPeStackCommit)]);
     GridAddRow(Result, ['dwPeHeapReserve', 'Dword', _offset(PXbeHeader(nil).dwPeHeapReserve), DWord2Str(Hdr.dwPeHeapReserve)]);
     GridAddRow(Result, ['dwPeHeapCommit', 'Dword', _offset(PXbeHeader(nil).dwPeHeapCommit), DWord2Str(Hdr.dwPeHeapCommit)]);
@@ -457,8 +516,8 @@ var
 
     _AddRange(0, SizeOf(TXbeHeader), 'XBE Header');
     _AddRange(Hdr.dwCertificateAddr - Hdr.dwBaseAddr, SizeOf(TXbeCertificate), 'Certificate');
-    _AddRange(Hdr.dwTLSAddr - Hdr.dwBaseAddr, SizeOf(TXbeTLS), 'TLS');
-    _AddRange(Hdr.dwPeBaseAddr - Hdr.dwBaseAddr, 0, 'PeBase');
+    _AddRange(Hdr.dwTLSAddr, SizeOf(TXbeTLS), 'TLS');
+//    _AddRange(Hdr.dwPeBaseAddr - Hdr.dwBaseAddr, 0, 'PeBase');
     _AddRange(Hdr.dwDebugPathNameAddr - Hdr.dwBaseAddr, Length(MyXbe.GetAddrStr(Hdr.dwDebugPathNameAddr))+1, 'DebugPathName');
     _AddRange(Hdr.dwDebugUnicodeFileNameAddr - Hdr.dwBaseAddr, ByteLength(MyXbe.GetAddrWStr(Hdr.dwDebugUnicodeFileNameAddr))+2, 'DebugUnicodeFileName');
 //    _AddRange(Hdr.dwKernelImageThunkAddr - Hdr.dwBaseAddr, 1, 'KernelImageThunk');
@@ -520,7 +579,7 @@ var
     for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
     begin
       Hdr := @(MyXBE.m_SectionHeader[i]);
-      ItemName := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr, XBE_SECTIONNAME_MAXLENGTH);
+      ItemName := GetSectionName(i);
       GridAddRow(Grid, [
         ItemName,
         DWord2Str(o),
@@ -606,13 +665,13 @@ var
     o: DWord;
     TLS: PXbeTls;
   begin
-    o := MyXBE.m_Header.dwTLSAddr - MyXBE.m_Header.dwBaseAddr;
-    TLS := @(MyXBE.m_TLS);
+    o := VA2RVA(MyXBE.m_Header.dwTLSAddr);
+    TLS := MyXBE.m_TLS;
     Result := NewGrid(3, ['Member', 'Type', 'Offset', 'Value', 'Meaning']);
     GridAddRow(Result, ['dwDataStartAddr', 'Dword', _offset(PXbeTls(nil).dwDataStartAddr, o), DWord2Str(TLS.dwDataStartAddr)]);
     GridAddRow(Result, ['dwDataEndAddr', 'Dword', _offset(PXbeTls(nil).dwDataEndAddr, o), DWord2Str(TLS.dwDataEndAddr)]);
-    GridAddRow(Result, ['dwTLSIndexAddr', 'Dword', _offset(PXbeTls(nil).dwTLSIndexAddr, o), DWord2Str(TLS.dwTLSIndexAddr)]);
-    GridAddRow(Result, ['dwTLSCallbackAddr', 'Dword', _offset(PXbeTls(nil).dwTLSCallbackAddr, o), DWord2Str(TLS.dwTLSCallbackAddr)]);
+    GridAddRow(Result, ['dwTLSIndexAddr', 'Dword', _offset(PXbeTls(nil).dwTLSIndexAddr, o), DWord2Str(TLS.dwTLSIndexAddr), GetSectionNameByVA(TLS.dwTLSIndexAddr)]);
+    GridAddRow(Result, ['dwTLSCallbackAddr', 'Dword', _offset(PXbeTls(nil).dwTLSCallbackAddr, o), DWord2Str(TLS.dwTLSCallbackAddr), GetSectionNameByVA(TLS.dwTLSCallbackAddr)]);
     GridAddRow(Result, ['dwSizeofZeroFill', 'Dword', _offset(PXbeTls(nil).dwSizeofZeroFill, o), DWord2Str(TLS.dwSizeofZeroFill)]);
     GridAddRow(Result, ['dwCharacteristics', 'Dword', _offset(PXbeTls(nil).dwCharacteristics, o), DWord2Str(TLS.dwCharacteristics)]);
 

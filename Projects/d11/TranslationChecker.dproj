@@ -22,10 +22,10 @@
     <DCC_DcuOutput>..\..\dcu\</DCC_DcuOutput>
     <DCC_ObjOutput>..\..\dcu\</DCC_ObjOutput>
     <DCC_HppOutput>..\..\dcu\</DCC_HppOutput>
-    <DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows</DCC_UnitSearchPath>
-    <DCC_ResourcePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows</DCC_ResourcePath>
-    <DCC_ObjPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows</DCC_ObjPath>
-    <DCC_IncludePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows</DCC_IncludePath>
+    <DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API</DCC_UnitSearchPath>
+    <DCC_ResourcePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API</DCC_ResourcePath>
+    <DCC_ObjPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API</DCC_ObjPath>
+    <DCC_IncludePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API</DCC_IncludePath>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
@@ -41,5 +41,6 @@
     <DCCReference Include="..\..\src\Tools\TranslationChecker\uTranslationChecker.pas">
       <Form>Form1</Form>
     </DCCReference>
+    <DCCReference Include="..\..\src\uTypes.pas" />
   </ItemGroup>
 </Project>

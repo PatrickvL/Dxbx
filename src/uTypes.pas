@@ -118,6 +118,7 @@ function isxdigit(c: AnsiChar): Boolean;
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
+function wstrlen(const Str: PWideChar): Cardinal; overload;
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
 function clock(): DWord; // cdecl;
@@ -183,6 +184,11 @@ begin
   Result := StrLCopy(Dest, Source, Len);
 end;
 
+function wstrlen(const Str: PWideChar): Cardinal;
+begin
+  Result := Length(WideString(Str)); // TODO : Do a faster #0000 search here!
+end;
+
 // Source: ZLib.pas
 procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
 begin
@@ -207,7 +213,7 @@ end;
 
 function wcstombs(mbstr: PAnsiChar; const wcstr: pwchar_t; max: size_t): size_t;
 begin
-  result := WideCharToMultiByte(CP_ACP, 0, wcstr, strlen(wcstr), mbstr, max, '', nil);
+  Result := WideCharToMultiByte(CP_ACP, 0, wcstr, wstrlen(wcstr), mbstr, max, '', nil);
 end;
 
 procedure free(p: PVoid); inline;

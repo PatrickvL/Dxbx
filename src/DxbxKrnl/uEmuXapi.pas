@@ -308,13 +308,13 @@ begin
 
   SetCurrentDirectory(PChar(szRoot));
 
-  hRet := FindFirstFile(szBuffer, WIN32_FIND_DATAW(lpFindFileData^));
+  hRet := FindFirstFile(szBuffer, WIN32_FIND_DATA(lpFindFileData^));
 
   if (not FAILED(hRet)) then
   begin
     while True do
     begin
-      bRet := FindNextFile(hRet, WIN32_FIND_DATAW(lpFindFileData^));
+      bRet := FindNextFile(hRet, WIN32_FIND_DATA(lpFindFileData^));
 
       if (not bRet) then
       begin
@@ -357,7 +357,7 @@ begin
     //
 
   repeat
-    bRet := FindNextFile(hFindFile, WIN32_FIND_DATAW(lpFindFileData^));
+    bRet := FindNextFile(hFindFile, WIN32_FIND_DATA(lpFindFileData^));
 
     if (not bRet) then
       Break;
