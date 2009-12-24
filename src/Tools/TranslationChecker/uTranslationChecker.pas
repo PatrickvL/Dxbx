@@ -30,8 +30,7 @@ uses
   JclStrings,
   JclFileUtils,
   // Dxbx
-  uDxbxUtils
-  ;
+  uTypes;
 
 type
   TForm1 = class(TForm)
