@@ -1105,7 +1105,7 @@ begin
 
           // remove from slot
           g_pXInputSetStateStatus[v].hDevice := 0;
-          g_pXInputSetStateStatus[v].pFeedback := 0;
+          g_pXInputSetStateStatus[v].pFeedback := nil;
           g_pXInputSetStateStatus[v].dwLatency := 0;
         end;
        end;

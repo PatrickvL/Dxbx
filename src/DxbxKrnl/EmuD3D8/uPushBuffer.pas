@@ -133,7 +133,7 @@ begin
         //    Break;
         //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
 
-        hRet := pTexture.LockRect(v, LockedRect, 0, 0);
+        hRet := pTexture.LockRect(v, LockedRect, nil, 0);
 
         if (FAILED(hRet)) then
             Continue;
@@ -171,7 +171,7 @@ end;
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 const
-  pIBMem: Array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
+  pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
 
 var
   pdwOrigPushData: DWord;

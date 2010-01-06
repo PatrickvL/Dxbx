@@ -441,7 +441,7 @@ var
   tmpszBuffer: PAnsiChar;
   v: int;
   NtUnicodeString: string;
-  wszObjectName: array [0..159] of wchar_t;
+  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
@@ -559,7 +559,7 @@ begin
 
   // initialize object attributes
   if Assigned(szBuffer) then
-    mbstowcs(@(wszObjectName[0]), szBuffer, 160-1)
+    mbstowcs(@(wszObjectName[0]), szBuffer, MAX_PATH-1)
   else
     wszObjectName[0] := 0;
 
@@ -607,7 +607,7 @@ begin
     DbgPrintf('  New:"$CurRoot\%s"', [szBuffer]);
 {$ENDIF}
 
-    mbstowcs(@(wszObjectName[0]), szBuffer, 160-1);
+    mbstowcs(@(wszObjectName[0]), szBuffer, MAX_PATH-1);
     JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
 
     Result := JwaNative.NtCreateFile(
@@ -856,8 +856,6 @@ function xboxkrnl_NtFreeVirtualMemory(
   FreeType: ULONG
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-var
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1118,7 +1116,7 @@ function xboxkrnl_NtQueryFullAttributesFile(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:10
 var
   szBuffer: PChar;
-  wszObjectName: array [0..160 - 1] of wchar_t;
+  wszObjectName: array [0..MAX_PATH - 1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: OBJECT_ATTRIBUTES;
   ret: NTSTATUS;
@@ -1381,7 +1379,7 @@ begin
 //    if Assigned(ByteOffset) and (ByteOffset.QuadPart = $00120800) then
 //        _asm int 3
 
-  Result := JwaNative.NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
+  Result := JwaNative.NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
   if (FAILED(Result)) then
     EmuWarning('NtReadFile Failed! (0x%.08X)', [Result]);

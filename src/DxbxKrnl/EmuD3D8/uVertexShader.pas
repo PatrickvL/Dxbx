@@ -356,7 +356,7 @@ begin
     end; *)
 
     ppRecompiled := NULL;
-    pOriginalSize := 0;
+    pOriginalSize := nil;
     (*if(not pShader) then
     begin
       EmuWarning('Couldn`t allocate memory for vertex shader conversion buffer');

@@ -357,8 +357,8 @@ procedure EmuCleanup(const szErrorMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:20
 var
 //  buffer: array [0..15] of Char;
-  szBuffer1 : Array [0..255] of char;
-  szBuffer2 : Array [0..255] of char;
+  szBuffer1 : array [0..255] of char;
+  szBuffer2 : array [0..255] of char;
   argp: va_list;
 begin
   // Print out ErrorMessage (if exists)
