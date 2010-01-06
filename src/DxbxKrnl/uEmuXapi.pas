@@ -1477,12 +1477,12 @@ begin
 
   // Get the .xbe header
   // MARKED OUT BY CXBX
-  {Xbe::Header* pXbeHeader = (Xbe::Header* ) 0x00010000;
+  {Xbe::Header* pXbeHeader = (Xbe::Header* ) $00010000;
 
   // Get the number of sections this .xbe has and the
   // location of the section headers.
-  DWORD dwNumSections = pXbeHeader->dwSections;
-  DWORD dwSectionAddr = pXbeHeader->dwSectionHeadersAddr - pXbeHeader->dwBaseAddr;
+  DWORD dwNumSections = pXbeHeader.dwSections;
+  DWORD dwSectionAddr = pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
 
   // Get section headers.
   Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader* ) CxbxMalloc( sizeof( Xbe::SectionHeader ) * dwNumSections );
@@ -1491,7 +1491,7 @@ begin
 
   for( DWORD i = 0; i < dwNumSections; i++ )
   begin
-    memcpy( &pSectionHeaders[i], ((DWORD* ) dwOffset), sizeof( Xbe::SectionHeader ) );
+    memcpy( @pSectionHeaders[i], ((DWORD* ) dwOffset), sizeof( Xbe::SectionHeader ) );
     dwOffset += sizeof( Xbe::SectionHeader );
   end;
 
@@ -1501,7 +1501,7 @@ begin
   for( DWORD i = 0; i < dwNumSections; i++ )
   begin
     char szSectionName[32];
-    dwOffset = pSectionHeaders[i].dwSectionNameAddr - pXbeHeader->dwBaseAddr;
+    dwOffset = pSectionHeaders[i].dwSectionNameAddr - pXbeHeader.dwBaseAddr;
     sprintf( szSectionName, '%s', ((DWORD* ) dwOffset) );
 
     // Do we have a match?
@@ -1514,7 +1514,7 @@ begin
 
   // If we have a match, get the raw address of this section
   // and return a pointer to that address.
-  if ( dwSection != -1 ) then
+  if ( dwSection <> -1 ) then
   begin
     pRet = (LPVOID) pSectionHeaders[dwSection].dwRawAddr;
   end;

@@ -22,6 +22,11 @@ unit uConsts;
 interface
 
 const
+  XBOX_MEMORY_SIZE = 128*1024*1024;
+
+  XBE_IMAGE_BASE = $00010000;
+  XBE_HEADER_SIZE = $1000;
+
   DLL_IMAGE_BASE = $10000000;
   MAXIMUM_XBOX_THREADS = 256;
 
@@ -31,16 +36,12 @@ const
   CDXBXDLLNAME = 'Dxbx.dll';
 
   // Application Versions
-{$IFDEF DEBUG}
-  _DXBX_VERSION = '0.0.0.10 Debug';
-{$ELSE}
-  _DXBX_VERSION = '0.0.0.10';
-{$ENDIF}
+  _DXBX_VERSION = '0.0.1.1' {$IFDEF DEBUG} + ' Debug'{$ENDIF};
   _XDK_TRACKER_VERSION = '2.0.2.0';
 
   // Dialog Filters
   DIALOG_FILTER_TEXT = 'Text Documents (*.txt)|*.txt';
-  DIALOG_FILTER_EXE = 'Windows Executables (*.exe)|*.exe';
+  DIALOG_FILTER_EXE = 'Windows Executables (*.exe)|*.exe'; // obsolete
   DIALOG_FILTER_XBE = 'Xbox Executables (*.xbe)|*.xbe';
 
   // Magic values
@@ -55,6 +56,8 @@ const
 
   // XOR keys
 
+  XOR_MAX_VIRTUAL_ADDRESS = $01000000;
+  
   XOR_EP_DEBUG = $94859D4B; // Entry Point (Debug)
   XOR_EP_RETAIL = $A8FC57AB; // Entry Point (Retail)
   XOR_KT_DEBUG = $EFB1F152; // Kernel Thunk (Debug)
@@ -65,11 +68,13 @@ const
 
   // XBE constants
 
+  // Initialization flags
   XBE_INIT_FLAG_MountUtilityDrive = $00000001;
   XBE_INIT_FLAG_FormatUtilityDrive = $00000002;
   XBE_INIT_FLAG_Limit64MB = $00000004;
   XBE_INIT_FLAG_DontSetupHarddisk = $00000008;
 
+  // Section flags
   XBE_SECTIONHEADER_FLAG_Writable = $00000001;
   XBE_SECTIONHEADER_FLAG_Preload = $00000002;
   XBE_SECTIONHEADER_FLAG_Executable = $00000004;
@@ -87,18 +92,19 @@ const
 
   XBE_LIBRARYNAME_MAXLENGTH = 8;
 
+  XBE_TITLENAME_MAXLENGTH = 40;
+
   XBE_DebugUnicodeFileName_MAXLENGTH = 40; // ?? 256;
-  
+
   // game region flags for Xbe certificate
-  XBEIMAGE_GAME_REGION_NA = $00000001;
+  XBEIMAGE_GAME_REGION_US_CANADA = $00000001;
   XBEIMAGE_GAME_REGION_JAPAN = $00000002;
   XBEIMAGE_GAME_REGION_RESTOFWORLD = $00000004;
   XBEIMAGE_GAME_REGION_MANUFACTURING = $80000000;
 
-  XBEIMAGE_GAME_REGION_ALL = XBEIMAGE_GAME_REGION_NA + XBEIMAGE_GAME_REGION_JAPAN + XBEIMAGE_GAME_REGION_RESTOFWORLD;
+  XBEIMAGE_GAME_REGION_ALL = XBEIMAGE_GAME_REGION_US_CANADA + XBEIMAGE_GAME_REGION_JAPAN + XBEIMAGE_GAME_REGION_RESTOFWORLD;
 
   // XBE media type flags for Xbe certificate
-  
   XBEIMAGE_MEDIA_TYPE_HARD_DISK = $00000001;
   XBEIMAGE_MEDIA_TYPE_DVD_X2 = $00000002;
   XBEIMAGE_MEDIA_TYPE_DVD_CD = $00000004;
@@ -144,12 +150,12 @@ const
   cOpen = 'open';
 
   CCXBXKRNLINIT = 'CxbxKrnlInit';
-  CXBXKRNL_KERNELTHUNKTABLE = 'CxbxKrnl_KernelThunkTable';
+  CXBXKRNL_KERNELTHUNKTABLE = 'CxbxKrnl_KernelThunkTable'; // obsolete
   CSETXBEPATHMANGLEDNAME = '?SetXbePath@EmuShared@@QAEXPBD@Z';
 
   // Limits
   _RecentXbeLimit: Integer = 10;
-  _RecentExeLimit: Integer = 10;
+  _RecentExeLimit: Integer = 10; // obsolete
 
 implementation
 

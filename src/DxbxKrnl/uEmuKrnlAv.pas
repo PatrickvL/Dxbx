@@ -56,27 +56,26 @@ function {003} xboxkrnl_AvSetDisplayMode(
   Pitch: ULONG;
   FrameBuffer: ULONG
   ): ULONG; stdcall; // Source: OpenXDK
-procedure {004} xboxkrnl_AvSetSavedDataAddress(
+function {004} xboxkrnl_AvSetSavedDataAddress(
   Address: PVOID
-  ); stdcall; // Source: OpenXDK
+  ): PVOID; stdcall; // Source: OpenXDK
 
 implementation
+
+var
+  xboxkrnl_AvSavedDataAddress: PVOID = PVOID($F0040000); // Dxbx TODO : Take shogun's NULL ?
 
 function {001} xboxkrnl_AvGetSavedDataAddress(
   ): PVOID; stdcall; // Source: OpenXDK
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
 {$IFDEF DEBUG}
+  EmuSwapFS(fsWindows);
   DbgPrintf('EmuKrnl : AvGetSavedDataAddress();');
+  EmuSwapFS(fsXbox);
 {$ENDIF}
 
-  // Cxbx TODO: We might want to return something sometime...
-
-  EmuSwapFS(fsXbox);
-
-  Result := PVOID($F0040000); // Dxbx TODO : Take shogun's NULL ?
+  Result := xboxkrnl_AvSavedDataAddress;
 end;
 
 procedure {002} xboxkrnl_AvSendTVEncoderOption(
@@ -105,13 +104,22 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure {004} xboxkrnl_AvSetSavedDataAddress(
+function {004} xboxkrnl_AvSetSavedDataAddress(
   Address: PVOID
-  ); stdcall; // Source: OpenXDK
+  ): PVOID; stdcall; // Source: OpenXDK
 begin
+{$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
-  Unimplemented('AvSetSavedDataAddress');
+  DbgPrintf('EmuKrnl : AvSetSavedDataAddress(' +
+    #13#10'(' +
+    #13#10'  Address          : 0x%.8x' +
+    #13#10')', [
+    Address
+    ]);
   EmuSwapFS(fsXbox);
+{$ENDIF}
+  Result := Address;
+  xboxkrnl_AvSavedDataAddress := Result;
 end;
 
 end.

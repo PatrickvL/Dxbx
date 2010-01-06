@@ -390,26 +390,26 @@ begin
         {
             VSH_SHADER_INSTRUCTION Inst;
 
-            VshParseInstruction(pToken, &Inst);
-            VshConvertToIntermediate(&Inst, pShader);
+            VshParseInstruction(pToken, @Inst);
+            VshConvertToIntermediate(@Inst, pShader);
             EOI = (boolean)VshGetField(pToken, FLD_FINAL);
         }
 
         // The size of the shader is
         *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
 
-        char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader->IntermediateCount * 50); // Should be plenty
-        DbgVshPrintf("-- Before conversion --\n");
+        char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader.IntermediateCount * 50); // Should be plenty
+        DbgVshPrintf('-- Before conversion --');
         VshWriteShader(pShader, pShaderDisassembly, FALSE);
-        DbgVshPrintf("%s", pShaderDisassembly);
-        DbgVshPrintf("-----------------------\n");
+        DbgVshPrintf('%s', pShaderDisassembly);
+        DbgVshPrintf('-----------------------');
 
         VshConvertShader(pShader, bNoReservedConstants);
         VshWriteShader(pShader, pShaderDisassembly, TRUE);
 
-        DbgVshPrintf("-- After conversion ---\n");
-        DbgVshPrintf("%s", pShaderDisassembly);
-        DbgVshPrintf("-----------------------\n");
+        DbgVshPrintf('-- After conversion ---');
+        DbgVshPrintf('%s', pShaderDisassembly);
+        DbgVshPrintf('-----------------------');
 
         hRet = D3DXAssembleShader(pShaderDisassembly,
                                   strlen(pShaderDisassembly),
@@ -420,7 +420,7 @@ begin
 
         if (FAILED(hRet))
         {
-            EmuWarning("Couldn't assemble recompiled vertex shader\n");
+            EmuWarning('Couldn''t assemble recompiled vertex shader');
         }
 
         CxbxFree(pShaderDisassembly);

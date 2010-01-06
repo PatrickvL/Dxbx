@@ -160,10 +160,19 @@ type
 
 function Unimplemented(const aAPI: string): NTSTATUS;
 
+procedure InitializeObjectAttributes(
+  p: POBJECT_ATTRIBUTES;
+  n: PANSI_STRING;
+  a: ULONG;
+  r: HANDLE;
+  dummy: Pointer
+  );
+
 var
   {156}xboxkrnl_KeTickCount: DWord;
   {162}xboxkrnl_KiBugCheckData: array [0..5 - 1] of ULONG_PTR; // Source: ReactOS
   {164}xboxkrnl_LaunchDataPage: PLAUNCH_DATA_PAGE;
+  {357}xboxkrnl_IdexChannelObject: DWord;
 
 // The following API names are derived from Pedro's APILogger V2
 // See http://forums.xbox-scene.com/index.php?showtopic=456303
@@ -240,7 +249,6 @@ procedure {334} xboxkrnl_WRITE_PORT_BUFFER_ULONG(
   Buffer: PULONG;
   Count: ULONG
   ); stdcall; // Source: ReactOS
-function {357} xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 function {000} xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {367} xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -257,6 +265,22 @@ function Unimplemented(const aAPI: string): NTSTATUS;
 begin
   WriteLog('Unimplemented xboxkrnl EmuAPI : ' + aAPI);
   Result := STATUS_PROCEDURE_NOT_FOUND; // abuse a standard NT error code
+end;
+
+// Initializes an OBJECT_ATTRIBUTES.
+//
+// Differences from NT: SECURITY_DESCRIPTOR support is gone.
+procedure InitializeObjectAttributes(
+  p: POBJECT_ATTRIBUTES;
+  n: PANSI_STRING;
+  a: ULONG;
+  r: HANDLE;
+  dummy: Pointer
+  );
+begin
+  p.RootDirectory := r;
+  p.Attributes := a;
+  p.ObjectName := n;
 end;
 
 /// ##########
@@ -478,13 +502,6 @@ procedure {334} xboxkrnl_WRITE_PORT_BUFFER_ULONG(
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('WRITE_PORT_BUFFER_ULONG');
-  EmuSwapFS(fsXbox);
-end;
-
-function {357} xboxkrnl_IdexChannelObject(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('IdexChannelObject');
   EmuSwapFS(fsXbox);
 end;
 

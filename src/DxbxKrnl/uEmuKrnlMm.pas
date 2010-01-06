@@ -67,18 +67,24 @@ procedure xboxkrnl_MmDeleteKernelStack(
   EndAddress: PVOID;
   BaseAddress: PVOID
   ); stdcall;
-function xboxkrnl_MmFreeContiguousMemory(
+procedure xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_MmFreeSystemMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_MmGetPhysicalAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmGetPhysicalAddress(
+  BaseAddress: PVOID
+  ): PHYSICAL_ADDRESS; stdcall;
 function xboxkrnl_MmIsAddressValid(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_MmMapIoSpace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmMapIoSpace(
+  PhysicalAddress: PHYSICAL_ADDRESS;
+  NumberOfBytes: ULONG;
+  ProtectionType: ULONG
+  ): PVOID; stdcall;
 procedure xboxkrnl_MmPersistContiguousMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
@@ -96,7 +102,10 @@ function xboxkrnl_MmSetAddressProtect(
   NumberOfBytes: ULONG;
   NewProtect: ULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_MmUnmapIoSpace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmUnmapIoSpace(
+  BaseAddress: PVOID;
+  NumberOfBytes: ULONG
+  ): PVOID; stdcall;
 function xboxkrnl_MmDbgAllocateMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmDbgFreeMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmDbgQueryAvailablePages(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -113,6 +122,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// MmAllocateContiguousMemory:
+// Allocates a range of physically contiguous, cache-aligned memory from the
+// non-paged pool (= main pool on XBOX).
+//
+// Differences from NT: HighestAcceptableAddress was deleted, opting instead
+//     to not care about the highest address.
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
@@ -131,6 +146,8 @@ begin
          [NumberOfBytes]);
 {$ENDIF}
 
+  // Result := xboxkrnl_MmAllocateContiguousMemoryEx(NumberOfBytes, $00000000, $FFFFFFFF, 0, PAGE_READWRITE);
+  
   //
   // Cxbx NOTE: Kludgey (but necessary) solution:
   //
@@ -193,7 +210,7 @@ begin
 
   //
   // NOTE: Kludgey (but necessary) solution:
-  // 
+  //
   // Since this memory must be aligned on a page boundary, we must allocate an extra page
   // so that we can return a valid page aligned pointer
   //
@@ -311,9 +328,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmFreeContiguousMemory(
+// MmFreeContiguousMemory:
+// Frees memory allocated with MmAllocateContiguousMemory.
+//
+// Differences from NT: None.
+procedure xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:5
 (*var
   OrigBaseAddress: PVoid; *)
@@ -336,14 +357,14 @@ begin
     g_AlignCache.remove(BaseAddress);
   end;
 
-  if(OrigBaseAddress <> &xLaunchDataPage)
+  if(OrigBaseAddress <> @xLaunchDataPage)
   begin
     CxbxFree(OrigBaseAddress);
   end
   else
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
+    DbgPrintf('Ignored MmFreeContiguousMemory(@xLaunchDataPage)');
 {$ENDIF}
   end; *)
 
@@ -373,7 +394,13 @@ begin
   Result := STATUS_SUCCESS;
 end;
 
-function xboxkrnl_MmGetPhysicalAddress(): NTSTATUS; stdcall;
+// MmGetPhysicalAddress:
+// Translates a virtual address into a physical address.
+//
+// Differences from NT: PhysicalAddress is 32 bit, not 64.
+function xboxkrnl_MmGetPhysicalAddress(
+  BaseAddress: PVOID
+  ): PHYSICAL_ADDRESS; stdcall;
 // Branch:Dxbx
 begin
   EmuSwapFS(fsWindows);
@@ -405,11 +432,25 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmMapIoSpace(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// MmMapIoSpace:
+// Maps a physical address area into the virtual address space.
+// DO NOT USE MEMORY MAPPED WITH THIS AS A BUFFER TO OTHER CALLS.  For
+// example, don't WriteFile or NtWriteFile these buffers.  Copy them first.
+//
+// Differences from NT: PhysicalAddress is 32 bit, not 64.  ProtectionType
+//     specifies the page protections, but it's a Win32 PAGE_ macro instead
+//     of the normal NT enumeration.  PAGE_READWRITE is probably what you
+//     want...
+function xboxkrnl_MmMapIoSpace(
+  PhysicalAddress: PHYSICAL_ADDRESS;
+  NumberOfBytes: ULONG;
+  ProtectionType: ULONG
+  ): PVOID; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmMapIoSpace');
+  Unimplemented('MmMapIoSpace');
+  Result := nil;
   EmuSwapFS(fsXbox);
 end;
 
@@ -474,7 +515,7 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : MmQueryStatistics'+
-      #13#10'(\'+
+      #13#10'('+
       #13#10'   MemoryStatistics         : 0x%.08X' +
       #13#10');',
       [MemoryStatistics]);
@@ -482,13 +523,13 @@ begin
 
   (*MEMORYSTATUS MemoryStatus;
 
-  GlobalMemoryStatus(&MemoryStatus);
+  GlobalMemoryStatus(@MemoryStatus);
 
   ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
 
-  MemoryStatistics->Length = sizeof(MM_STATISTICS);
-  MemoryStatistics->TotalPhysicalPages = MemoryStatus.dwTotalVirtual / 4096;
-  MemoryStatistics->AvailablePages = MemoryStatus.dwAvailVirtual / 4096;
+  MemoryStatistics.Length = sizeof(MM_STATISTICS);
+  MemoryStatistics.TotalPhysicalPages = MemoryStatus.dwTotalVirtual / 4096;
+  MemoryStatistics.AvailablePages = MemoryStatus.dwAvailVirtual / 4096;
 
   // HACK (does this matter?)
   MemoryStatistics.VirtualMemoryBytesReserved := MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys; *)
@@ -519,34 +560,42 @@ begin
 {$ENDIF}
 
   // Halo Hack
-  (*if(BaseAddress == (PVOID)0x80366000)
+  (*if(BaseAddress == (PVOID)$80366000)
   {
-      BaseAddress = (PVOID)(g_HaloHack[0] + (0x80366000 - 0x80061000));
+      BaseAddress = (PVOID)(g_HaloHack[0] + ($80366000 - $80061000));
 
 {$IFDEF DEBUG}
-      DbgPrintf("EmuKrnl (0x%X): Halo Access Adjust 3 was applied! (0x%.08X)\n", GetCurrentThreadId(), BaseAddress);
+      DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
 {$ENDIF}
   }
 
   DWORD dwOldProtect;
 
-  if(!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect & (~PAGE_WRITECOMBINE), &dwOldProtect))
-      EmuWarning("VirtualProtect Failed!"); *)
+  if(!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect and (not PAGE_WRITECOMBINE), @dwOldProtect))
+      EmuWarning('VirtualProtect Failed!'); *)
 
   (*
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
+  DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X', [dwOldProtect, NewProtect and (not PAGE_WRITECOMBINE)]);
 {$ENDIF}
   *)
 
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmUnmapIoSpace(): NTSTATUS; stdcall;
+// MmUnmapIoSpace:
+// Unmaps a virtual address mapping made by MmMapIoSpace.
+//
+// Differences from NT: None.
+function xboxkrnl_MmUnmapIoSpace(
+  BaseAddress: PVOID;
+  NumberOfBytes: ULONG
+  ): PVOID; stdcall;
 // Branch:Dxbx
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmUnmapIoSpace');
+  Unimplemented('MmUnmapIoSpace');
+  Result := nil;
   EmuSwapFS(fsXbox);
 end;
 

@@ -174,8 +174,12 @@ begin
   Result := pRet;
 end;
 
-// Differences from NT: There is no PoolType field, as the XBOX
-// only has 1 pool, the non-paged pool.
+// ExAllocatePoolWithTag:
+// Allocates memory from the memory pool.  The Tag parameter is a 4-letter
+// character constant to which to associate the allocation.
+//
+// Differences from NT: There is no PoolType field, as the XBOX only has 1
+//     pool, the non-paged pool.
 function {015} xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
@@ -202,6 +206,10 @@ begin
   Result := pRet;
 end;
 
+// ExFreePool:
+// Frees memory allocated by ExAllocatePool* functions.
+//
+// Differences from NT: None.
 procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
   ); stdcall; // Source: ReactOS
@@ -265,6 +273,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// ExQueryNonVolatileSettings
+// Queries saved information, such as the region code.
+//
+// New to the XBOX.
+//
 // ExQueryNonVolatileSetting retrieves EEPROM information -
 // this function, when first called, creates a "shadow" copy
 // of the EEPROM in RAM which is used in subsequent calls to Query,
@@ -430,6 +443,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// ExSaveNonVolatileSettings
+// Writes saved information, such as the region code.
+//
+// New to the XBOX.
 function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueIndex: DWORD;
   Type_: PDWORD; //   OUT

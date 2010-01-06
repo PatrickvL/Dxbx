@@ -44,33 +44,11 @@ var
   {321}xboxkrnl_XboxEEPROMKey: array [0..16 - 1] of UCHAR; // Source OpenXDK
   {322}xboxkrnl_XboxHardwareInfo: XBOX_HARDWARE_INFO; // Source OpenXDK
   {323}xboxkrnl_XboxHDKey: array [0..16 - 1] of UCHAR; // Source OpenXDK
+  {324}xboxkrnl_XboxKrnlVersion: DWord;
   {325}xboxkrnl_XboxSignatureKey: array [0..16 - 1] of Byte; // Source OpenXDK
-
-function {324} xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {353} xboxkrnl_XboxLANKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {354} xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+  {353}xboxkrnl_XboxLANKey: DWord;
+  {354}xboxkrnl_XboxAlternateSignatureKeys: DWord;
 
 implementation
-
-function {324} xboxkrnl_XboxKrnlVersion(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('XboxKrnlVersion');
-  EmuSwapFS(fsXbox);
-end;
-
-function {353} xboxkrnl_XboxLANKey(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('XboxLANKey');
-  EmuSwapFS(fsXbox);
-end;
-
-function {354} xboxkrnl_XboxAlternateSignatureKeys(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('XboxAlternateSignatureKeys');
-  EmuSwapFS(fsXbox);
-end;
 
 end.

@@ -46,9 +46,7 @@ uses
   uEmuKrnlXc,
   uEmuKrnlXe;
 
-function CxbxKrnl_KernelThunkTable: PKernelThunkTable; cdecl;
-
-implementation
+function CxbxKrnl_KernelThunkTable: PKernelThunkTable; cdecl; // obsolete
 
 var
   KernelThunkTable: packed array [0..NUMBER_OF_THUNKS - 1] of Pointer = (
@@ -92,9 +90,9 @@ var
     {037}@xboxkrnl_FscSetCacheSize,
     {038}@xboxkrnl_HalClearSoftwareInterrupt,
     {039}@xboxkrnl_HalDisableSystemInterrupt,
-    {040}@xboxkrnl_HalDiskCachePartitionCount, // Dxbx TODO : variable ?
-    {041}@xboxkrnl_HalDiskModelNumber, // Dxbx TODO : variable ?
-    {042}@xboxkrnl_HalDiskSerialNumber, // Dxbx TODO : variable ?
+    {040}@xboxkrnl_HalDiskCachePartitionCount, // variable
+    {041}@xboxkrnl_HalDiskModelNumber, // variable
+    {042}@xboxkrnl_HalDiskSerialNumber, // variable
     {043}@xboxkrnl_HalEnableSystemInterrupt,
     {044}@xboxkrnl_HalGetInterruptVector,
     {045}@xboxkrnl_HalReadSMBusValue,
@@ -173,7 +171,7 @@ var
     {117}@xboxkrnl_KeInsertQueue,
     {118}@xboxkrnl_KeInsertQueueApc,
     {119}@xboxkrnl_KeInsertQueueDpc,
-    {120}@xboxkrnl_KeInterruptTime,
+    {120}@xboxkrnl_KeInterruptTime, // variable
     {121}@xboxkrnl_KeIsExecutingDpc,
     {122}@xboxkrnl_KeLeaveCriticalRegion,
     {123}@xboxkrnl_KePulseEvent,
@@ -207,15 +205,15 @@ var
     {151}@xboxkrnl_KeStallExecutionProcessor,
     {152}@xboxkrnl_KeSuspendThread,
     {153}@xboxkrnl_KeSynchronizeExecution,
-    {154}@xboxkrnl_KeSystemTime,
+    {154}@xboxkrnl_KeSystemTime, // variable
     {155}@xboxkrnl_KeTestAlertThread,
     {156}@xboxkrnl_KeTickCount, // variable
-    {157}@xboxkrnl_KeTimeIncrement,
+    {157}@xboxkrnl_KeTimeIncrement, // variable
     {158}@xboxkrnl_KeWaitForMultipleObjects,
     {159}@xboxkrnl_KeWaitForSingleObject,
     {160}@xboxkrnl_KfRaiseIrql,
     {161}@xboxkrnl_KfLowerIrql,
-    {162}@xboxkrnl_KiBugCheckData,
+    {162}@xboxkrnl_KiBugCheckData, // variable
     {163}@xboxkrnl_KiUnlockDispatcherDatabase,
     {164}@xboxkrnl_LaunchDataPage, // variable
     {165}@xboxkrnl_MmAllocateContiguousMemory,
@@ -293,16 +291,16 @@ var
     {237}@xboxkrnl_NtWriteFileGather,
     {238}@xboxkrnl_NtYieldExecution,
     {239}@xboxkrnl_ObCreateObject,
-    {240}@xboxkrnl_ObDirectoryObjectType,
+    {240}@xboxkrnl_ObDirectoryObjectType, // variable
     {241}@xboxkrnl_ObInsertObject,
     {242}@xboxkrnl_ObMakeTemporaryObject,
     {243}@xboxkrnl_ObOpenObjectByName,
     {244}@xboxkrnl_ObOpenObjectByPointer,
-    {245}@xboxkrnl_ObpObjectHandleTable,
+    {245}@xboxkrnl_ObpObjectHandleTable, // variable
     {246}@xboxkrnl_ObReferenceObjectByHandle,
     {247}@xboxkrnl_ObReferenceObjectByName,
     {248}@xboxkrnl_ObReferenceObjectByPointer,
-    {249}@xboxkrnl_ObSymbolicLinkObjectType,
+    {249}@xboxkrnl_ObSymbolicLinkObjectType, // variable      
     {250}@xboxkrnl_ObfDereferenceObject,
     {251}@xboxkrnl_ObfReferenceObject,
     {252}@xboxkrnl_PhyGetLinkState,
@@ -312,7 +310,7 @@ var
     {256}@xboxkrnl_PsQueryStatistics,
     {257}@xboxkrnl_PsSetCreateThreadNotifyRoutine,
     {258}@xboxkrnl_PsTerminateSystemThread,
-    {259}@xboxkrnl_PsThreadObjectType,
+    {259}@xboxkrnl_PsThreadObjectType, // variable
     {260}@xboxkrnl_RtlAnsiStringToUnicodeString,
     {261}@xboxkrnl_RtlAppendStringToString,
     {262}@xboxkrnl_RtlAppendUnicodeStringToString,
@@ -374,12 +372,12 @@ var
     {318}@xboxkrnl_RtlUshortByteSwap,
     {319}@xboxkrnl_RtlWalkFrameChain,
     {320}@xboxkrnl_RtlZeroMemory,
-    {321}@xboxkrnl_XboxEEPROMKey,
-    {322}@xboxkrnl_XboxHardwareInfo,
-    {323}@xboxkrnl_XboxHDKey,
-    {324}@xboxkrnl_XboxKrnlVersion,
-    {325}@xboxkrnl_XboxSignatureKey,
-    {326}@xboxkrnl_XeImageFileName,
+    {321}@xboxkrnl_XboxEEPROMKey, // variable
+    {322}@xboxkrnl_XboxHardwareInfo, // variable
+    {323}@xboxkrnl_XboxHDKey, // variable
+    {324}@xboxkrnl_XboxKrnlVersion, // variable
+    {325}@xboxkrnl_XboxSignatureKey, // variable
+    {326}@xboxkrnl_XeImageFileName, // variable
     {327}@xboxkrnl_XeLoadSection,
     {328}@xboxkrnl_XeUnloadSection,
     {329}@xboxkrnl_READ_PORT_BUFFER_UCHAR,
@@ -406,11 +404,11 @@ var
     {350}@xboxkrnl_XcCryptService,
     {351}@xboxkrnl_XcUpdateCrypto,
     {352}@xboxkrnl_RtlRip,
-    {353}@xboxkrnl_XboxLANKey,
-    {354}@xboxkrnl_XboxAlternateSignatureKeys,
-    {355}@xboxkrnl_XePublicKeyData, // Dxbx TODO : variable ?
+    {353}@xboxkrnl_XboxLANKey, // variable
+    {354}@xboxkrnl_XboxAlternateSignatureKeys, // variable
+    {355}@xboxkrnl_XePublicKeyData, // variable
     {356}@xboxkrnl_HalBootSMCVideoMode, // variable
-    {357}@xboxkrnl_IdexChannelObject,
+    {357}@xboxkrnl_IdexChannelObject, // variable
     {358}@xboxkrnl_HalIsResetOrShutdownPending,
     {359}@xboxkrnl_IoMarkIrpMustComplete,
     {360}@xboxkrnl_HalInitiateShutdown,
@@ -434,12 +432,14 @@ var
     {378}@xboxkrnl_MmDbgWriteCheck
     );
 
-function CxbxKrnl_KernelThunkTable: PKernelThunkTable;
+implementation
+
+function CxbxKrnl_KernelThunkTable: PKernelThunkTable; // obsolete
 begin
   Result := @KernelThunkTable;
 end;
 
 exports
-  CxbxKrnl_KernelThunkTable;
+  CxbxKrnl_KernelThunkTable; // obsolete
 
 end.

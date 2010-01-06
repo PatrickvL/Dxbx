@@ -129,7 +129,7 @@ begin
       //
 
       begin
-        //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
+        //if(SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8)
         //    Break;
         //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
 

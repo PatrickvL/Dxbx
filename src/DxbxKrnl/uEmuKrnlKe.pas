@@ -41,11 +41,24 @@ uses
   uDxbxKrnl,
   uDxbxKrnlUtils;
 
+var
+  {120}xboxkrnl_KeInterruptTime: DWord;
+  {154}xboxkrnl_KeSystemTime: DWord;
+  {157}xboxkrnl_KeTimeIncrement: DWord = $2710;
+
 function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeBoostPriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeBugCheck(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeBugCheckEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeBugCheck(
+  BugCheckCode: DWORD
+  ): NTSTATUS; stdcall;
+function xboxkrnl_KeBugCheckEx(
+  BugCheckCode: DWORD;
+  BugCheckParameter1: PVOID;
+  BugCheckParameter2: PVOID;
+  BugCheckParameter3: PVOID;
+  BugCheckParameter4: PVOID
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeDelayExecutionThread(
@@ -79,7 +92,6 @@ function xboxkrnl_KeInsertHeadQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueueApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeInterruptTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeLeaveCriticalRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KePulseEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -90,7 +102,7 @@ function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall; // UNKNOWN_S
 procedure xboxkrnl_KeQuerySystemTime(
   CurrentTime: PLARGE_INTEGER
   ); stdcall;
-function xboxkrnl_KeRaiseIrqlToDpcLevel(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
 function xboxkrnl_KeRaiseIrqlToSynchLevel(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeReleaseMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeReleaseSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -124,9 +136,7 @@ function xboxkrnl_KeSetTimerEx(
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeTimeIncrement(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
@@ -156,15 +166,30 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeBugCheck(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// KeBugCheck:
+// Bug checks the kernel.
+// Same as KeBugCheckEx(BugCheckCode, 0, 0, 0, 0);
+//
+// Differences from NT: None, other than the reaction.
+function xboxkrnl_KeBugCheck(
+  BugCheckCode: DWORD
+  ): NTSTATUS; stdcall;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeBugCheck');
-  EmuSwapFS(fsXbox);
+  Result := xboxkrnl_KeBugCheckEx(BugCheckCode, nil, nil, nil, nil);
 end;
 
-function xboxkrnl_KeBugCheckEx(): NTSTATUS; stdcall;
+// KeBugCheckEx:
+// Bug checks the kernel.
+//
+// Differences from NT: None, other than the reaction.
+function xboxkrnl_KeBugCheckEx(
+  BugCheckCode: DWORD;
+  BugCheckParameter1: PVOID;
+  BugCheckParameter2: PVOID;
+  BugCheckParameter3: PVOID;
+  BugCheckParameter4: PVOID
+  ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -248,6 +273,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// KeInitializeDpc:
+// Initializes a DPC structure.
+//
+// Differences from NT: This function sets less fields than the NT version.
 procedure xboxkrnl_KeInitializeDpc(
   Dpc: PKDPC;
   DeferredRoutine: PKDEFERRED_ROUTINE;
@@ -316,6 +345,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// KeInitializeTimerEx:
+// Initializes a timer.
+//
+// Differences from NT: None.
 procedure xboxkrnl_KeInitializeTimerEx(
   Timer: PKTIMER;
   Type_: TIMER_TYPE
@@ -395,14 +428,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeInterruptTime(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeInterruptTime');
-  EmuSwapFS(fsXbox);
-end;
-
 function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
@@ -469,7 +494,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeRaiseIrqlToDpcLevel(): NTSTATUS; stdcall;
+// KeRaiseIrqlToDpcLevel:
+// Raises IRQL to DISPATCH_LEVEL.  Like KeRaiseIrql except returns old level directly.
+//
+// Differences from NT: None.
+function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -636,9 +665,8 @@ function xboxkrnl_KeSetTimer(
   ): LONGBOOL; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
 {$IFDEF DEBUG}
+  EmuSwapFS(fsWindows);
   DbgPrintf('EmuKrnl : KeSetTimer' +
        #13#10'(' +
        #13#10'   Timer               : 0x%.08X' +
@@ -646,12 +674,11 @@ begin
        #13#10'   Dpc                 : 0x%.08X' +
        #13#10');',
        [Timer, DueTime.QUADPART, Dpc]);
+  EmuSwapFS(fsXbox);
 {$ENDIF}
 
   // Call the newer function and supply a period of 0 (source: ReactOS)
   Result := xboxkrnl_KeSetTimerEx(Timer, DueTime, {Period=}0, Dpc);
-
-  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_KeSetTimerEx(
@@ -717,27 +744,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeSystemTime(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeSystemTime');
-  EmuSwapFS(fsXbox);
-end;
-
 function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KeTestAlertThread');
-  EmuSwapFS(fsXbox);
-end;
-
-function xboxkrnl_KeTimeIncrement(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeTimeIncrement');
   EmuSwapFS(fsXbox);
 end;
 

@@ -1428,6 +1428,20 @@ typedef struct
 } TXNetConfigParams,*PTXNetConfigParams;   
 
 
+typedef struct _LAUNCH_DATA_HEADER {
+        DWORD   dwLaunchDataType;
+        DWORD   dwTitleId;
+        CHAR    szLaunchPath[520];
+        DWORD   dwFlags;
+} LAUNCH_DATA_HEADER, *PLAUNCH_DATA_HEADER;
+
+typedef struct _LAUNCH_DATA_PAGE {
+        LAUNCH_DATA_HEADER  Header;
+        UCHAR               Pad[492];
+        UCHAR               LaunchData[3072];
+} LAUNCH_DATA_PAGE, *PLAUNCH_DATA_PAGE;
+
+
 extern "C"
 {
 	// Thanks and credit go to Woodoo
@@ -1444,9 +1458,10 @@ extern "C"
 	extern INT WINAPI XWriteTitleInfoNoReboot(LPVOID,LPVOID,DWORD,DWORD,LPVOID);
 	extern INT WINAPI XWriteTitleInfoAndRebootA(LPVOID,LPVOID,DWORD,DWORD,LPVOID);
 
-	extern DWORD* LaunchDataPage;  
+	/* oddly enough, this is a pointer to a pointer */
+	extern PLAUNCH_DATA_PAGE *LaunchDataPage;
 }
 
- 
+extern "C" XBOXAPI LPVOID XeImageFileName; 
 
 #endif // __XBOX_INTERNAL_H__
