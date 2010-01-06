@@ -417,6 +417,10 @@ const FILE_VALID_SET_FLAGS =                    $00000036;
 // ******************************************************************
 // * OBJECT_ATTRIBUTES
 // ******************************************************************
+// Object Attributes type
+// Differences from NT: There are no Length, SecurityDescriptor, or
+//     SecurityQualityOfService fields.  Also, ObjectName is ANSI, not
+//     Unicode.
 type
   _OBJECT_ATTRIBUTES = packed record
     RootDirectory: HANDLE;
@@ -425,6 +429,17 @@ type
  end;
  OBJECT_ATTRIBUTES = _OBJECT_ATTRIBUTES;
  POBJECT_ATTRIBUTES = ^OBJECT_ATTRIBUTES;
+
+// Flags for OBJECT_ATTRIBUTES::Attributes
+const OBJ_INHERIT             = $00000002;
+const OBJ_PERMANENT           = $00000010;
+const OBJ_EXCLUSIVE           = $00000020;
+const OBJ_CASE_INSENSITIVE    = $00000040;
+const OBJ_OPENIF              = $00000080;
+const OBJ_OPENLINK            = $00000100;
+const OBJ_KERNEL_HANDLE       = $00000200;
+const OBJ_VALID_ATTRIBUTES    = $000003F2;
+
 (*
 // ******************************************************************
 // * FSINFOCLASS
@@ -865,6 +880,20 @@ type
     Padding1: array [0..3-1] of UCHAR;
     PrcbData: KPRCB; // 0x28
   end;
+
+// Structure of the data at FS
+// Source: Undocumented.h
+type
+  _FS_STRUCTURE = record
+    ExceptionFrame: PPVOID;              // 000 Current exception handler information
+    TlsDataTop: PVOID;                   // 004 Pointer to current TLS data top
+    unknown2: array [0..$1C-1] of BYTE;  // 008
+    CurrentIrql: KIRQL;                  // 024 Current IRQL of the OS
+    ThreadObject: PKTHREAD;              // 028 Thread structure of the current thread
+    unknown3: array [0..$100-1] of BYTE; // ??? just padding - real size is unknown
+  end;
+  FS_STRUCTURE = _FS_STRUCTURE;
+  PFS_STRUCTURE = ^FS_STRUCTURE;
 
 // ******************************************************************
 // * EEPROM_INDEX

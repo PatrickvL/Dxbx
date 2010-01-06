@@ -116,7 +116,9 @@ function xboxkrnl_RtlDowncaseUnicodeString(
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-function xboxkrnl_RtlEnterCriticalSectionAndRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlEnterCriticalSectionAndRegion(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlEqualString(
   String1: PSTRING;
   String2: PSTRING;
@@ -186,7 +188,9 @@ function xboxkrnl_RtlIntegerToUnicodeString(
 procedure xboxkrnl_RtlLeaveCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlLeaveCriticalSectionAndRegion(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlLowerChar(
   Character: ANSICHAR
   ): ANSICHAR; stdcall;
@@ -276,7 +280,11 @@ procedure xboxkrnl_RtlZeroMemory(
   Destination: PVOID;
   Length: SIZE_T
   ); stdcall; // Source:JwaNative
-function xboxkrnl_RtlRip(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_RtlRip(
+  Part1: PCSZ;
+  Part2: PCSZ;
+  Part3: PCSZ
+  ); stdcall;
 function xboxkrnl_RtlSnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlSprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlVsnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -501,10 +509,22 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlEnterCriticalSectionAndRegion(): NTSTATUS; stdcall;
+function xboxkrnl_RtlEnterCriticalSectionAndRegion(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlEnterCriticalSectionAndRegion');
+{$IFDEF DXBX_EXTREME_LOGGING}
+  DbgPrintf('EmuKrnl : RtlEnterCriticalSectionAndRegion' +
+           #13#10'(' +
+           #13#10'   CriticalSection              : 0x%.08X' +
+           #13#10');',
+           [CriticalSection]);
+{$ENDIF}
+
+  JwaNative.RtlEnterCriticalSection(CriticalSection);
+  Result := 0; // Dxbx TODO
+  
   EmuSwapFS(fsXbox);
 end;
 
@@ -722,7 +742,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlLeaveCriticalSectionAndRegion(): NTSTATUS; stdcall;
+function xboxkrnl_RtlLeaveCriticalSectionAndRegion(
+  CriticalSection: PRTL_CRITICAL_SECTION
+  ): NTSTATUS; stdcall;
 // Source:JwaNative  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1004,10 +1026,18 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlRip(): NTSTATUS; stdcall;
+// RtlRip:
+// Traps to the debugger with a certain message, then crashes.
+//
+// New to the XBOX.
+procedure xboxkrnl_RtlRip(
+  Part1: PCSZ;
+  Part2: PCSZ;
+  Part3: PCSZ
+  ); stdcall;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlRip');
+  Unimplemented('RtlRip');
   EmuSwapFS(fsXbox);
 end;
 

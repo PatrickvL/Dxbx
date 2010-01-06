@@ -42,6 +42,9 @@ type
 
   TRawSection = TVarByteArray;
 
+  TPWCharArray = array [0..(MaxInt div SizeOf(PWideChar)) - 1] of PWideChar;
+  PPWCharArray = ^TPWCharArray;
+  
   TDWordArray = array [0..(MaxInt div SizeOf(DWord)) - 1] of DWord;
   PDWordArray = ^TDWordArray;
 

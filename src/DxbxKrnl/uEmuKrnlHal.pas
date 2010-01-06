@@ -42,6 +42,9 @@ uses
   uDxbxKrnlUtils;
   
 var
+  {040}xboxkrnl_HalDiskCachePartitionCount: DWORD;
+  {041}xboxkrnl_HalDiskModelNumber: DWORD;
+  {042}xboxkrnl_HalDiskSerialNumber: DWORD;
   {356}xboxkrnl_HalBootSMCVideoMode: DWORD; // Source: OpenXDK
 
 procedure {009} xboxkrnl_HalReadSMCTrayState(
@@ -55,9 +58,6 @@ function {039} xboxkrnl_HalDisableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL
   ): LONGBOOL; stdcall; // Source: ReactOS
-function {040} xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {041} xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {042} xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {043} xboxkrnl_HalEnableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL;
@@ -138,27 +138,6 @@ begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalDisableSystemInterrupt');
   Result := False;
-  EmuSwapFS(fsXbox);
-end;
-
-function {040} xboxkrnl_HalDiskCachePartitionCount(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalDiskCachePartitionCount');
-  EmuSwapFS(fsXbox);
-end;
-
-function {041} xboxkrnl_HalDiskModelNumber(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalDiskModelNumber');
-  EmuSwapFS(fsXbox);
-end;
-
-function {042} xboxkrnl_HalDiskSerialNumber(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalDiskSerialNumber');
   EmuSwapFS(fsXbox);
 end;
 
@@ -283,7 +262,6 @@ end;
 // Note that this function can't really be called directly...
 //
 // New to the XBOX.
-
 procedure {365} xboxkrnl_HalEnableSecureTrayEject(
   ); stdcall; // Source: XBMC Undocumented.h
 begin

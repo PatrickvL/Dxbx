@@ -289,7 +289,16 @@ function xboxkrnl_IoSetShareAccess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoStartNextPacket(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoStartNextPacketByKey(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoStartPacket(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoSynchronousDeviceIoControlRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoSynchronousDeviceIoControlRequest(
+  IoControlCode: ULONG ;
+  DeviceObject: PDEVICE_OBJECT;
+  InputBuffer: PVOID ; // OPTIONAL
+  InputBufferLength: ULONG;
+  OutputBuffer: PVOID; // OPTIONAL
+  OutputBufferLength: ULONG;
+  unknown_use_zero: PDWORD; // OPTIONAL
+  InternalDeviceIoControl: BOOLEAN
+  ): NTSTATUS; stdcall;
 function xboxkrnl_IoSynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -457,6 +466,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// IoCreateSymbolicLink:
+// Creates a symbolic link in the object namespace.
+// NtCreateSymbolicLinkObject is much harder to use than this simple
+// function, so just use this one.
+//
+// Differences from NT: Uses ANSI_STRING instead of UNICODE_STRING.
 function xboxkrnl_IoCreateSymbolicLink(
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
@@ -488,6 +503,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// IoDeleteSymbolicLink:
+// Creates a symbolic link in the object namespace.  Deleting symbolic links
+// through the Nt* functions is a pain, so use this instead.
+//
+// Differences from NT: Uses ANSI_STRING instead of UNICODE_STRING.
 function xboxkrnl_IoDeleteSymbolicLink(
   SymbolicLinkName: PSTRING
   ): NTSTATUS; stdcall;
@@ -593,7 +613,21 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IoSynchronousDeviceIoControlRequest(): NTSTATUS; stdcall;
+// IoSynchronousDeviceIoControlRequest:
+// NICE.  Makes kernel driver stuff sooooo much easier.  This does a
+// blocking IOCTL on the specified device.
+//
+// New to the XBOX.
+function xboxkrnl_IoSynchronousDeviceIoControlRequest(
+  IoControlCode: ULONG ;
+  DeviceObject: PDEVICE_OBJECT;
+  InputBuffer: PVOID ; // OPTIONAL
+  InputBufferLength: ULONG;
+  OutputBuffer: PVOID; // OPTIONAL
+  OutputBufferLength: ULONG;
+  unknown_use_zero: PDWORD; // OPTIONAL
+  InternalDeviceIoControl: BOOLEAN
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoSynchronousDeviceIoControlRequest');

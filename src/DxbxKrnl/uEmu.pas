@@ -204,7 +204,7 @@ begin
               begin
                 DWORD dwCur := *(DWORD* )(dwPtr+v);
 
-                if (dwCur >= $803A6000 && dwCur < $819A6000) then
+                if (dwCur >= $803A6000) and (dwCur < $819A6000) then
                   *(DWORD* )(dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
               end;
             end;      *)

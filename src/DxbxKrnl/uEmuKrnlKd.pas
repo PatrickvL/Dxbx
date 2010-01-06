@@ -41,8 +41,8 @@ uses
   uDxbxKrnl;
 
 var
-  xboxkrnl_KdDebuggerEnabled: LONGBOOL; // Source: ReactOS
-  xboxkrnl_KdDebuggerNotPresent: LONGBOOL; // Source: ReactOS
+  {088}xboxkrnl_KdDebuggerEnabled: ByteBool;
+  {089}xboxkrnl_KdDebuggerNotPresent: LONGBOOL; // Source: ReactOS
 
 implementation
 

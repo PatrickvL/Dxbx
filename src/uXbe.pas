@@ -86,7 +86,7 @@ type
     dwSize: DWord; // 0x0000 - size of certificate
     dwTimeDate: DWord; // 0x0004 - timedate stamp
     dwTitleId: DWord; // 0x0008 - title id
-    wszTitleName: array [0..39] of WideChar; // 0x000C - title name (unicode)
+    wszTitleName: array [0..XBE_TITLENAME_MAXLENGTH-1] of WideChar; // 0x000C - title name (unicode)
     dwAlternateTitleId: array [0..15] of Dword; // 0x005C - alternate title ids
     dwAllowedMedia: Dword; // 0x009C - allowed media types
     dwGameRegion: DWord; // 0x00A0 - game region
@@ -150,7 +150,7 @@ type
   PXbeSectionHeader = PXBE_SECTIONHEADER;
 
   _XBE_LIBRARYVERSION = packed record
-    szName: array [0..7] of AnsiChar; // library name
+    szName: array [0..XBE_LIBRARYNAME_MAXLENGTH-1] of AnsiChar; // library name
     wMajorVersion: Word; // major version
     wMinorVersion: Word; // minor version
     wBuildVersion: Word; // build version
@@ -331,7 +331,7 @@ function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 
 function BetterTime(x_timeDate: uint32): string;
 
-function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
+function OpenXbe(aXbeFileName: string; var aXbe: TXbe): Boolean;
 
 procedure XbeLoaded;
 function GameRegionToString(const aGameRegion: Integer): string;
@@ -347,14 +347,11 @@ begin
   WriteLog(DxbxFormat('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end;
 
-function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
+function OpenXbe(aXbeFileName: string; var aXbe: TXbe): Boolean;
 begin
   Result := False;
-  if Assigned(aXbe) or not (FileExists(aFileName)) then
+  if Assigned(aXbe) or not (FileExists(aXbeFileName)) then
     Exit;
-
-  aExeFileName := '';
-  aXbeFileName := aFileName;
 
   {var}aXbe := TXbe.Create(aXbeFileName, ftXbe);
   try
@@ -396,7 +393,7 @@ begin
     if (aGameRegion and XBEIMAGE_GAME_REGION_JAPAN) > 0 then
       Result := Result + ' JAP';
 
-    if (aGameRegion and XBEIMAGE_GAME_REGION_NA) > 0 then
+    if (aGameRegion and XBEIMAGE_GAME_REGION_US_CANADA) > 0 then
       Result := Result + ' NTSC';
 
     if (aGameRegion and XBEIMAGE_GAME_REGION_RESTOFWORLD) > 0 then
@@ -1089,7 +1086,7 @@ begin
       while(++v<100*17-1) and (len < 1024) and (color = (x_Gray[v] shr 4)) do
         Inc(len);
 
-      LogoRLE *cur = (LogoRLE * )&LogoBuffer[LogoSize];
+      LogoRLE *cur = (LogoRLE * )@LogoBuffer[LogoSize];
 
       if (len <= 7) then
       begin

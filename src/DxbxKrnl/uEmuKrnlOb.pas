@@ -40,17 +40,23 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
+var
+  {240}xboxkrnl_ObDirectoryObjectType: POBJECT_TYPE = NULL;
+  {245}xboxkrnl_ObpObjectHandleTable: array [0..0] of DWord; // Dxbx TODO : Determine array size
+  {249}xboxkrnl_ObSymbolicLinkObjectType: POBJECT_TYPE = NULL;
+
 function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObDirectoryObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObMakeTemporaryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObOpenObjectByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObOpenObjectByPointer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObpObjectHandleTable(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObReferenceObjectByHandle(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObReferenceObjectByHandle(
+  Handle: HANDLE;
+  ObjectType: POBJECT_TYPE; // OPTIONAL?
+  Object_: PPVOID
+  ): NTSTATUS; stdcall;
 function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObSymbolicLinkObjectType(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
@@ -60,13 +66,6 @@ function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObCreateObject');
-  EmuSwapFS(fsXbox);
-end;
-
-function xboxkrnl_ObDirectoryObjectType(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObDirectoryObjectType');
   EmuSwapFS(fsXbox);
 end;
 
@@ -98,14 +97,18 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObpObjectHandleTable(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObpObjectHandleTable');
-  EmuSwapFS(fsXbox);
-end;
-
-function xboxkrnl_ObReferenceObjectByHandle(): NTSTATUS; stdcall;
+// ObReferenceObjectByHandle:
+// Turns a handle into a kernel object pointer.  The ObjectType parameter
+// specifies what type of object it is.  This function also increments the
+// object's reference count.
+//
+// Differences from NT: There are no DesiredAccess, AccessMode, or
+//     HandleInformation parameters.
+function xboxkrnl_ObReferenceObjectByHandle(
+  Handle: HANDLE;
+  ObjectType: POBJECT_TYPE; // OPTIONAL?
+  Object_: PPVOID
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByHandle');
@@ -123,13 +126,6 @@ function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByPointer');
-  EmuSwapFS(fsXbox);
-end;
-
-function xboxkrnl_ObSymbolicLinkObjectType(): NTSTATUS; stdcall;
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObSymbolicLinkObjectType');
   EmuSwapFS(fsXbox);
 end;
 

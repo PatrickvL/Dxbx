@@ -50,14 +50,15 @@ function XTL_EmuXGIsSwizzledFormat(Format : D3DFORMAT) : PVOID; stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS();   // Win2k/XP FS
-  DbgPrintf('EmuXapi: EmuXGIsSwizzledFormat\n' +
+  DbgPrintf('EmuXapi: EmuXGIsSwizzledFormat' +
          #13#10+'(' +
-         #13#10+'   Format              : 0x%.08X\n' +
+         #13#10+'   Format              : 0x%.08X' +
          #13#10+')',
          [Ord(Format)]);
   EmuSwapFS();   // Xbox FS
 {$ENDIF}
-(*  Result := FALSE; *)
+
+  Result := nil;
 end;
 
 (*procedure XTL_EmuXGSwizzleRect
@@ -76,29 +77,29 @@ begin
     EmuSwapFS();   // Win2k/XP FS
 
 {$IFDEF DEBUG}
-    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
-           "(\n"
-           "   pSource             : 0x%.08X\n"
-           "   Pitch               : 0x%.08X\n"
-           "   pRect               : 0x%.08X\n"
-           "   pDest               : 0x%.08X\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pSource, Pitch, pRect, pDest, Width, Height,
-           pPoint, BytesPerPixel);
+    DbgPrintf('EmuXapi : EmuXGSwizzleRect' +
+        #13#10'(' +
+        #13#10'   pSource             : 0x%.08X' +
+        #13#10'   Pitch               : 0x%.08X' +
+        #13#10'   pRect               : 0x%.08X' +
+        #13#10'   pDest               : 0x%.08X' +
+        #13#10'   Width               : 0x%.08X' +
+        #13#10'   Height              : 0x%.08X' +
+        #13#10'   pPoint              : 0x%.08X' +
+        #13#10'   BytesPerPixel       : 0x%.08X' +
+        #13#10');',
+        [pSource, Pitch, pRect, pDest, Width, Height,
+         pPoint, BytesPerPixel]);
 {$ENDIF}
 
-    if (pRect == NULL && pPoint == NULL && Pitch == 0) then
+    if (pRect = NULL) and (pPoint = NULL) and (Pitch = 0) then
     {
         memcpy(pDest, pSource, Width*Height*BytesPerPixel);
     }
     else
     {
-        if (pPoint != NULL && (pPoint->x != 0 || pPoint->y != 0)) then
-            CxbxKrnlCleanup("Temporarily unsupported swizzle (very easy fix)");
+        if (Assigned(pPoint) and (pPoint.x <> 0 or pPoint.y <> 0)) then
+            CxbxKrnlCleanup('Temporarily unsupported swizzle (very easy fix)');
 
         DWORD dwMaxY = Height;
         DWORD dwChunkSize = Width;
@@ -106,13 +107,13 @@ begin
         uint08 *pSrc = (uint08*)(*pSource;
         uint08 *pDst = (uint08*)(*pDest;
 
-        if (pRect != 0) then
+        if Assigned(pRect) then
         {
-            pSrc += pRect->top*Pitch;
-            pSrc += pRect->left;
+            pSrc += pRect.top*Pitch;
+            pSrc += pRect.left;
 
-            dwMaxY = pRect->bottom - pRect->top;
-            dwChunkSize = pRect->right - pRect->left;
+            dwMaxY = pRect.bottom - pRect.top;
+            dwChunkSize = pRect.right - pRect.left;
         }
 
         for(DWORD y=0;y<dwMaxY;y++)
@@ -146,30 +147,30 @@ end;
     EmuSwapFS();   // Win2k/XP FS
 
 {$IFDEF DEBUG}
-    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
-           "(\n"
-           "   pSource             : 0x%.08X\n"
-           "   RowPitch            : 0x%.08X\n"
-           "   SlicePitch          : 0x%.08X\n"
-           "   pBox                : 0x%.08X\n"
-           "   pDest               : 0x%.08X\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   Depth               : 0x%.08X\n"
-           "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
-           Depth, pPoint, BytesPerPixel);
+    DbgPrintf('EmuXapi : EmuXGSwizzleBox' +
+        #13#10'(' +
+        #13#10'   pSource             : 0x%.08X' +
+        #13#10'   RowPitch            : 0x%.08X' +
+        #13#10'   SlicePitch          : 0x%.08X' +
+        #13#10'   pBox                : 0x%.08X' +
+        #13#10'   pDest               : 0x%.08X' +
+        #13#10'   Width               : 0x%.08X' +
+        #13#10'   Height              : 0x%.08X' +
+        #13#10'   Depth               : 0x%.08X' +
+        #13#10'   pPoint              : 0x%.08X' +
+        #13#10'   BytesPerPixel       : 0x%.08X' +
+        #13#10');',
+        [pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
+         Depth, pPoint, BytesPerPixel]);
 {$ENDIF}
 
-    if (pBox == NULL && pPoint == NULL && RowPitch == 0 && SlicePitch == 0) then
+    if (pBox = NULL) and (pPoint = NULL) and (RowPitch = 0) and (SlicePitch = 0) then
     {
         memcpy(pDest, pSource, Width*Height*Depth*BytesPerPixel);
     }
     else
     {
-        CxbxKrnlCleanup("Temporarily unsupported swizzle (easy fix)");
+        CxbxKrnlCleanup('Temporarily unsupported swizzle (easy fix)');
     }
 
     EmuSwapFS();   // Xbox FS
@@ -219,25 +220,25 @@ begin
     if (i < dwWidth) then
     begin
       dwMaskU |= j;
-      j<<=1;
+      j := j shl 1;
     end;
 
     if (i < dwHeight) then
     begin
       dwMaskV |= j;
-      j<<=1;
+      j := j shl 1;
     end;
 
     if (i < dwDepth) then
     begin
       dwMaskW |= j;
-      j<<=1;
+      j := j shl 1;
     end;
 
-    i<<=1;
+    i := i shl 1;
   end;
 
-    DWORD dwSU = 0;
+  DWORD dwSU = 0;
   DWORD dwSV = 0;
   DWORD dwSW = 0;
   DWORD dwMaskMax=0;
@@ -254,19 +255,19 @@ begin
     {
     if(i<=dwMaskU)
         {
-      if(dwMaskU & i) dwSU |= (dwOffsetU & i);
+      if(dwMaskU and i) > 0 then dwSU |= (dwOffsetU and i);
       else            dwOffsetU<<=1;
     }
 
         if (i<=dwMaskV) then
         {
-      if(dwMaskV & i) dwSV |= (dwOffsetV & i);
+      if(dwMaskV and i) > 0 then dwSV |= (dwOffsetV and i);
       else            dwOffsetV<<=1;
     }
 
         if (i<=dwMaskW) then
         {
-      if(dwMaskW & i) dwSW |= (dwOffsetW & i);
+      if(dwMaskW and i) > 0 then dwSW |= (dwOffsetW and i);
       else            dwOffsetW<<=1;
     }
   }
@@ -285,15 +286,15 @@ begin
 
       for (DWORD x=0; x<dwWidth; x++)
       {
-        memcpy(pDstBuff, &((BYTE*)(*pSrcBuff)[(dwU|dwV|dwW)*dwBPP], dwBPP);
+        memcpy(pDstBuff, @((BYTE*)(*pSrcBuff)[(dwU|dwV|dwW)*dwBPP], dwBPP);
         pDstBuff=(PVOID)(((DWORD)pDstBuff)+dwBPP);
 
-        dwU = (dwU - dwMaskU) & dwMaskU;
+        dwU = (dwU - dwMaskU) and dwMaskU;
       }
       pDstBuff=(PVOID)(((DWORD)pDstBuff)+(dwPitch-dwWidth*dwBPP));
-      dwV = (dwV - dwMaskV) & dwMaskV;
+      dwV = (dwV - dwMaskV) and dwMaskV;
     }
-    dwW = (dwW - dwMaskW) & dwMaskW;
+    dwW = (dwW - dwMaskW) and dwMaskW;
   }
 }   *)
 end;
