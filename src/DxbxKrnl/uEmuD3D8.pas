@@ -2591,7 +2591,7 @@ begin
   // HACK: Cxbx TODO : support this situation
   if not Assigned(pDeclaration) then
   begin
-    pHandle := 0;
+    pHandle := nil;
 
     EmuSwapFS(fsWindows);
 
@@ -2600,7 +2600,7 @@ begin
   end;
 
   pRecompiledBuffer := nil;
-  pRecompiledFunction := 0;
+  pRecompiledFunction := nil;
   aHandle := 0;
 
   hRet := XTL_EmuRecompileVshDeclaration(pDeclaration,
@@ -2621,7 +2621,7 @@ begin
     end
     else
     begin
-      pRecompiledFunction := 0;
+      pRecompiledFunction := nil;
       EmuWarning('Couldn`t recompile vertex shader function.' );
       hRet := D3D_OK; // Try using a fixed function vertex shader instead
     end;
@@ -2681,7 +2681,7 @@ begin
   move(pDeclaration, pVertexShader.pDeclaration, DeclarationSize);
 
   pVertexShader.FunctionSize := 0;
-  pVertexShader.pFunction := 0;
+  pVertexShader.pFunction := nil;
   pVertexShader.Type_ := X_VST_NORMAL;
   pVertexShader.Size := (VertexShaderSize - SizeOf(VSH_SHADER_HEADER)) div VSH_INSTRUCTION_SIZE_BYTES;
   pVertexShader.DeclarationSize := DeclarationSize;
@@ -2696,7 +2696,7 @@ begin
     end
     else
     begin
-      pVertexShader.pFunction := 0;
+      pVertexShader.pFunction := nil;
       pVertexShader.FunctionSize := 0;
     end;
     pVertexShader.Handle := aHandle;

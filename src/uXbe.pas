@@ -331,7 +331,7 @@ function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 
 function BetterTime(x_timeDate: uint32): string;
 
-function OpenXbe(aXbeFileName: string; var aXbe: TXbe): Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
 
 procedure XbeLoaded;
 function GameRegionToString(const aGameRegion: Integer): string;
@@ -347,12 +347,14 @@ begin
   WriteLog(DxbxFormat('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end;
 
-function OpenXbe(aXbeFileName: string; var aXbe: TXbe): Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
 begin
   Result := False;
-  if Assigned(aXbe) or not (FileExists(aXbeFileName)) then
+  if Assigned(aXbe) or not (FileExists(aFileName)) then
     Exit;
 
+  aExeFileName := '';
+  aXbeFileName := aFileName;
   {var}aXbe := TXbe.Create(aXbeFileName, ftXbe);
   try
     XbeLoaded();
