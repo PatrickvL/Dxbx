@@ -28,8 +28,6 @@ uses
   uLog;
 
 type
-  // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
-  // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
   // Mutex object (intended to be inherited from)
   Mutex = object
   private

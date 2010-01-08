@@ -38,6 +38,7 @@
     <DelphiCompile Include="XdkTracker.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
+    <DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas" />
     <DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas" />
     <DCCReference Include="..\..\src\Tools\XdkTracker\src\ufrm_Main.pas">
       <Form>frmXdkTracker</Form>

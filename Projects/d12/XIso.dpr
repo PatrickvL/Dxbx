@@ -44,8 +44,7 @@ uses
   xisomakerv3 in '..\..\src\Tools\XIso\src\xisomakerv3.pas',
   xisomakerv2 in '..\..\src\Tools\XIso\src\xisomakerv2.pas',
   Win32ASPI in '..\..\src\Tools\XIso\src\Win32ASPI.pas',
-  CDROM in '..\..\src\Tools\XIso\src\CDROM.pas',
-  xbe in '..\..\src\Tools\XIso\src\xbe.pas';
+  CDROM in '..\..\src\Tools\XIso\src\CDROM.pas';
 
 {$R *.res}
 

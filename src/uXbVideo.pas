@@ -29,8 +29,6 @@ uses
   uTypes;
 
 type
-  // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
-  // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
   XBVideo = packed record
   private
     // Configuration

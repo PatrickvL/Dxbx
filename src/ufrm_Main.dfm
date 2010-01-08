@@ -4,7 +4,7 @@ object frm_Main: Tfrm_Main
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Dxbx'
-  ClientHeight = 385
+  ClientHeight = 393
   ClientWidth = 509
   Color = 13160660
   Constraints.MaxHeight = 437
@@ -27,7 +27,7 @@ object frm_Main: Tfrm_Main
     Left = 0
     Top = 0
     Width = 509
-    Height = 366
+    Height = 374
     Align = alClient
     Picture.Data = {
       0A544A504547496D61676592AF0000FFD8FFE000104A46494600010201004800
@@ -1438,6 +1438,7 @@ object frm_Main: Tfrm_Main
       D9}
     Stretch = True
     ExplicitWidth = 45
+    ExplicitHeight = 366
   end
   object ImageIcon: TImage
     Left = 8
@@ -1457,7 +1458,7 @@ object frm_Main: Tfrm_Main
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 366
+    Top = 374
     Width = 509
     Height = 19
     Panels = <>
@@ -1478,31 +1479,8 @@ object frm_Main: Tfrm_Main
       object N2: TMenuItem
         Caption = '-'
       end
-      object Importexe1: TMenuItem
-        Action = actImportExe
-      end
-      object mnu_ExportExe: TMenuItem
-        Action = actExportExe
-        Enabled = False
-      end
-      object N6: TMenuItem
-        Caption = '-'
-      end
-      object SaveXbe1: TMenuItem
-        Action = actSaveXbe
-      end
-      object SaveXbeas1: TMenuItem
-        Action = actSaveXbeAs
-      end
-      object N7: TMenuItem
-        Caption = '-'
-      end
       object mnu_RecentXbefiles: TMenuItem
         Caption = 'Recent Xbe files'
-        Enabled = False
-      end
-      object mnu_RecentExefiles: TMenuItem
-        Caption = 'Recent Exe files'
         Enabled = False
       end
       object N1: TMenuItem
@@ -1582,27 +1560,6 @@ object frm_Main: Tfrm_Main
       object mnu_Configvideo: TMenuItem
         Action = actConfigVideo
       end
-      object N4: TMenuItem
-        Caption = '-'
-      end
-      object Executablegeneration1: TMenuItem
-        Caption = 'Executable generation'
-        object mnu_AutomaticWindowsyemp: TMenuItem
-          Action = actExeGenWindowsTemp
-        end
-        object mnu_AutomaticDxbxpath: TMenuItem
-          Action = actExeGenDxbxPath
-        end
-        object Manual1: TMenuItem
-          Action = actExeGenManual
-        end
-      end
-      object N9: TMenuItem
-        Caption = '-'
-      end
-      object UsesDlltype1: TMenuItem
-        Caption = 'Select dll to use'
-      end
     end
     object Emulation1: TMenuItem
       Caption = '&Emulation'
@@ -1676,27 +1633,15 @@ object frm_Main: Tfrm_Main
       Caption = 'Close Xbe'
       OnExecute = actCloseXbeExecute
     end
-    object actImportExe: TAction
-      Category = 'File'
-      Caption = 'Import Exe'
-      OnExecute = actImportExeExecute
-    end
-    object actExportExe: TAction
-      Category = 'File'
-      Caption = 'Export Exe'
-      OnExecute = actExportExeExecute
-    end
     object actSaveXbe: TAction
       Category = 'File'
       Caption = 'Save Xbe'
       Enabled = False
-      OnExecute = actSaveXbeExecute
     end
     object actSaveXbeAs: TAction
       Category = 'File'
       Caption = 'Save Xbe As...'
       Enabled = False
-      OnExecute = actSaveXbeAsExecute
     end
     object actConsoleXbeInfo: TAction
       Category = 'Edit'
@@ -1729,21 +1674,6 @@ object frm_Main: Tfrm_Main
       Category = 'View'
       Caption = '&File'
       OnExecute = actFileDebugKernelExecute
-    end
-    object actExeGenWindowsTemp: TAction
-      Category = 'Settings'
-      Caption = 'Automatic (Windows Temp)'
-      OnExecute = actExeGenWindowsTempExecute
-    end
-    object actExeGenDxbxPath: TAction
-      Category = 'Settings'
-      Caption = 'Automatic (Dxbx Path)'
-      OnExecute = actExeGenDxbxPathExecute
-    end
-    object actExeGenManual: TAction
-      Category = 'Settings'
-      Caption = 'Manual'
-      OnExecute = actExeGenManualExecute
     end
     object actImportLogo: TAction
       Category = 'Edit'

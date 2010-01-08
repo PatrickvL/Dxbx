@@ -43,9 +43,9 @@ type
 // * X_CDirectSoundBuffer
 // ******************************************************************
 X_CDirectSoundBuffer = packed record
-(*    BYTE    UnknownA[0..$20-1];     // Offset: 0x00 *)
+(*    BYTE    UnknownA[0x20];     // Offset: 0x00 *)
 
-(*    BYTE            UnknownB[0..$0C-1];     // Offset: 0x24    *)
+(*    BYTE            UnknownB[0x0C];     // Offset: 0x24    *)
     EmuBuffer: PVOID;                   // Offset: 0x28
     EmuBufferDesc: _DSBUFFERDESC;       // Offset: 0x2C
     EmuLockPtr1: PVOID;                 // Offset: 0x30
@@ -757,8 +757,8 @@ begin
     begin
         DWORD dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000 or $00080000;
 
-        if (pdsbd.dwFlags and (not dwAcceptableMask)) then
-            EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', pdsbd.dwFlags and (not dwAcceptableMask));
+        if (pdsbd.dwFlags and (~dwAcceptableMask)) then
+            EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', pdsbd.dwFlags and (~dwAcceptableMask));
 
         pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
         pDSBufferDesc.dwFlags := (pdsbd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
@@ -776,7 +776,7 @@ begin
             pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX)CxbxMalloc(SizeOf(WAVEFORMATEX)+pdsbd.lpwfxFormat.cbSize);
             memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, SizeOf(WAVEFORMATEX));
 
-            if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(* $0069) then
+            if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
             begin
                 dwEmuFlags := dwEmuFlags or DSB_FLAG_ADPCM;
 
@@ -1304,7 +1304,7 @@ begin
            [pThis, dwReserved1, dwReserved2, dwFlags);
 {$ENDIF}
 
-    if (dwFlags and (not DSBPLAY_LOOPING)) then
+    if (dwFlags and (~DSBPLAY_LOOPING)) then
         CxbxKrnlCleanup('Unsupported Playing Flags');
 
     HackUpdateSoundBuffers();
@@ -1418,7 +1418,7 @@ begin
     // Cxbx TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-//    HRESULT hRet = pThis.EmuDirectSoundBuffer8.SetVolume(lVolume);
+//    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume);
 
     EmuSwapFS(fsXbox);
 
@@ -1445,7 +1445,7 @@ begin
            [pThis, dwFrequency);
 {$ENDIF}
 
-//    HRESULT hRet = pThis.EmuDirectSoundBuffer8.SetFrequency(dwFrequency);
+//    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
 
     EmuSwapFS(fsXbox);
 
@@ -1479,13 +1479,13 @@ begin
 
     // convert from Xbox to PC DSound
     begin
-        DWORD dwAcceptableMask := $00000010; // Cxbx TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
+        DWORD dwAcceptableMask := 0x00000010; // Cxbx TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
-        if (pdssd.dwFlags and (not dwAcceptableMask)) then
-            EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', pdssd.dwFlags and (not dwAcceptableMask));
+        if (pdssd.dwFlags and (~dwAcceptableMask)) then
+            EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', pdssd.dwFlags and (~dwAcceptableMask));
 
         pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
-//        pDSBufferDesc.dwFlags = (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
+//        pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
         pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
         pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
 
@@ -1502,7 +1502,7 @@ begin
         if (pDSBufferDesc.lpwfxFormat <> 0 and pDSBufferDesc.lpwfxFormat.wFormatTag <> WAVE_FORMAT_PCM) then
         begin
             EmuWarning('Invalid WAVE_FORMAT!');
-      if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(* $0069) then
+      if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
         EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported!');
 
             ppStream^.EmuDirectSoundBuffer8 := 0;

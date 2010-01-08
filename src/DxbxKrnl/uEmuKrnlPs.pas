@@ -218,7 +218,7 @@ end; // PCSTProxy
 
 // PsCreateSystemThread:
 // Creates a system thread.  Same as:
-// PsCreateSystemThreadEx(ThreadHandle, NULL, $3000, 0, ThreadId, StartContext1,
+// PsCreateSystemThreadEx(ThreadHandle, NULL, 0x3000, 0, ThreadId, StartContext1,
 //     StartContext2, FALSE, DebugStack, PspSystemThreadStartup);
 //
 // New to the XBOX.  (It is too different from NT to be considered the same)
@@ -273,7 +273,7 @@ begin
     dwCreationFlags, Addr(lpThreadId)]);
 {$ENDIF}
 
-// PsCreateSystemThreadEx(ThreadHandle, NULL, $3000, 0, ThreadId, StartContext1,
+// PsCreateSystemThreadEx(ThreadHandle, NULL, 0x3000, 0, ThreadId, StartContext1,
 //     StartContext2, FALSE, DebugStack, PspSystemThreadStartup);
 
   // Pass-through to Ex-implementation :
@@ -414,14 +414,14 @@ begin
 
 (*
 
-    DbgPrintf('EmuKrnl : PsTerminateSystemThread' +
-        #13#10'(' +
-        #13#10'   ExitStatus          : 0x%.08X' +
-        #13#10');',
-        [ExitStatus]);
+    DbgPrintf("EmuKrnl (0x%X): PsTerminateSystemThread\n"
+           "(\n"
+           "   ExitStatus          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ExitStatus);
 
     // call thread notification routine(s)
-    if Assigned(g_pfnThreadNotification) then
+    if(g_pfnThreadNotification != 0)
     {
         XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
 

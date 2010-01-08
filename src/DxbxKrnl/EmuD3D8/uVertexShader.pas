@@ -252,7 +252,7 @@ begin
 
   if (CurrentStream >= 0) then
   begin
-    DbgPrintf('NeedPatching: %', [pPatchData.NeedPatching]);
+    DbgPrintf('NeedPatching: %s', [pPatchData.NeedPatching]);
 
     pStreamPatch := pPatchData.StreamPatchData.pStreamPatches[CurrentStream];
 
@@ -277,7 +277,7 @@ function XTL_EmuRecompileVshDeclaration
   IsFixedFunction: Boolean;
   pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
 ) : DWORD;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   DeclarationSize: DWORD;
   pRecompiled: PDWord;
@@ -302,7 +302,7 @@ begin
   pDeclarationSize^ := DeclarationSize;
 
   // Cxbx TODO: Put these in one struct
-  (* PatchData := [0]; *)
+  ZeroMemory(@PatchData, SizeOf(PatchData));
 
   DbgPrintf('DWORD dwVSHDecl[] = '#13#10'{');
 
