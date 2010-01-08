@@ -18,15 +18,6 @@
     <BorlandProject>
 <BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
-  <Target Name="XIso">
-    <MSBuild Projects="d11\XIso.dproj" Targets="" />
-  </Target>
-  <Target Name="XIso:Clean">
-    <MSBuild Projects="d11\XIso.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="XIso:Make">
-    <MSBuild Projects="d11\XIso.dproj" Targets="Make" />
-  </Target>
   <Target Name="XdkTracker">
     <MSBuild Projects="d11\XdkTracker.dproj" Targets="" />
   </Target>
@@ -36,6 +27,15 @@
   <Target Name="XdkTracker:Make">
     <MSBuild Projects="d11\XdkTracker.dproj" Targets="Make" />
   </Target>
+  <Target Name="XIso">
+    <MSBuild Projects="d11\XIso.dproj" Targets="" />
+  </Target>
+  <Target Name="XIso:Clean">
+    <MSBuild Projects="d11\XIso.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="XIso:Make">
+    <MSBuild Projects="d11\XIso.dproj" Targets="Make" />
+  </Target>
   <Target Name="TranslationChecker">
     <MSBuild Projects="d11\TranslationChecker.dproj" Targets="" />
   </Target>
@@ -44,15 +44,6 @@
   </Target>
   <Target Name="TranslationChecker:Make">
     <MSBuild Projects="d11\TranslationChecker.dproj" Targets="Make" />
-  </Target>
-  <Target Name="PatternTrieBuilder">
-    <MSBuild Projects="d11\PatternTrieBuilder.dproj" Targets="" />
-  </Target>
-  <Target Name="PatternTrieBuilder:Clean">
-    <MSBuild Projects="d11\PatternTrieBuilder.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="PatternTrieBuilder:Make">
-    <MSBuild Projects="d11\PatternTrieBuilder.dproj" Targets="Make" />
   </Target>
   <Target Name="PatternTrieBuilder">
     <MSBuild Projects="d11\PatternTrieBuilder.dproj" Targets="" />
@@ -91,13 +82,13 @@
     <MSBuild Projects="d11\XBEExplorer.dproj" Targets="Make" />
   </Target>
   <Target Name="Build">
-    <CallTarget Targets="XdkTracker;XIso;TranslationChecker;DxbxKrnl;Dxbx;XBEExplorer" />
+    <CallTarget Targets="XdkTracker;XIso;TranslationChecker;PatternTrieBuilder;DxbxKrnl;Dxbx;XBEExplorer" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="XdkTracker:Clean;XIso:Clean;TranslationChecker:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean" />
+    <CallTarget Targets="XdkTracker:Clean;XIso:Clean;TranslationChecker:Clean;PatternTrieBuilder:Clean;DxbxKrnl:Clean;Dxbx:Clean;XBEExplorer:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="XdkTracker:Make;XIso:Make;TranslationChecker:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make" />
+    <CallTarget Targets="XdkTracker:Make;XIso:Make;TranslationChecker:Make;PatternTrieBuilder:Make;DxbxKrnl:Make;Dxbx:Make;XBEExplorer:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

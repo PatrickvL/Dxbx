@@ -19,7 +19,7 @@ library DxbxKrnl;
 
 { Important note about DLL memory management: ShareMem must be the
   first unit in your library's USES clause AND your project's (select
-  Project-View Source) USES clause if your DLL exports any procedures or
+  Project-View Source) USES clause if your DLL exports any procedures or        98
   functions that pass strings as parameters or function results. This
   applies to all strings passed to and from your DLL--even those that
   are nested in records and classes. ShareMem is the interface unit to
@@ -39,7 +39,6 @@ uses
   uTypes in '..\..\src\uTypes.pas',
   uXBController in '..\..\src\uXBController.pas',
   uXbe in '..\..\src\uXbe.pas',
-  uXbeConvert in '..\..\src\uXbeConvert.pas',
   uXboxLibraryUtils in '..\..\src\uXboxLibraryUtils.pas',
   uXbVideo in '..\..\src\uXbVideo.pas',
   uConsoleClass in '..\..\src\uConsoleClass.pas',

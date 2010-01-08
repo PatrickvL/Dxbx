@@ -133,22 +133,22 @@ end;
 
 function ResourceTracker.exists(uiKey: uint32): BOOL;
 begin
-(*    this.Lock();
+(*    this->Lock();
 
     RTNode *cur = m_head;
 
-    while Assigned(cur)
+    while(cur != 0)
     {
-        if (cur.uiKey = uiKey) then
+        if (cur->uiKey == uiKey) then
         {
-            this.Unlock();
+            this->Unlock();
             return true;
         }
 
-        cur = cur.pNext;
+        cur = cur->pNext;
     }
 
-    this.Unlock();
+    this->Unlock();
 
     return false; *)
 end;
@@ -162,14 +162,14 @@ function ResourceTracker.get(uiKey: uint32): PVOID;
 begin
 (*    RTNode *cur = m_head;
 
-    while Assigned(cur)
+    while(cur != 0)
     {
-        if (cur.uiKey = uiKey) then
+        if (cur->uiKey == uiKey) then
         {
-            return cur.pResource;
+            return cur->pResource;
         }
 
-        cur = cur.pNext;
+        cur = cur->pNext;
     }
 
     return 0; *)
@@ -193,8 +193,8 @@ begin
 (*  if m_head = 0 then
   {
       m_tail = m_head = new RTNode();
-      m_tail.pResource = 0;
-      m_tail.pNext = 0;
+      m_tail->pResource = 0;
+      m_tail->pNext = 0;
   }
 
   m_tail.pResource := pResource;
@@ -219,24 +219,24 @@ end;
 procedure ResourceTracker.remove(uiKey: uint32);
 begin
   Self.Lock();
-
+  
 (*
     RTNode *pre = 0;
     RTNode *cur = m_head;
 
-    while Assigned(cur)
+    while(cur != 0)
     {
-        if (cur.uiKey = uiKey) then
+        if (cur->uiKey == uiKey) then
         {
-            if Assigned(pre) then
+            if (pre != 0) then
             {
-                pre.pNext = cur.pNext;
+                pre->pNext = cur->pNext;
             }
             else
             {
-                m_head = cur.pNext;
+                m_head = cur->pNext;
 
-                if (m_head.pNext = nil) then
+                if (m_head->pNext == 0) then
                 {
                     delete m_head;
 
@@ -247,13 +247,13 @@ begin
 
             delete cur;
 
-            this.Unlock();
+            this->Unlock();
 
             return;
         }
 
         pre = cur;
-        cur = cur.pNext;
+        cur = cur->pNext;
     }
 *)
   Self.Unlock();

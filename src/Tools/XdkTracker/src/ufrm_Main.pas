@@ -212,8 +212,6 @@ end; // TfrmMain.ImportGameList1Click
 procedure TfrmXdkTracker.GetXDKInfofromXbe1Click(Sender: TObject);
 var
   m_Xbe: TXbe;
-  m_XbeFileName: string;
-  m_ExeFileName: string;
   FilePath: string;
 begin
   XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
@@ -222,7 +220,7 @@ begin
 
   m_Xbe := nil;
   // First, open the XBE :
-  if OpenXbe(XbeOpenDialog.FileName, {var}m_Xbe, {var}m_ExeFileName, {var}m_XbeFileName) then
+  if OpenXbe(XbeOpenDialog.FileName, {var}m_Xbe) then
   begin
     FilePath := ExtractFilePath(Application.ExeName) + 'Dump.dat';
     // Then dump the info to a temporary file :

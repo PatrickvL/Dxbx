@@ -291,6 +291,7 @@ type
     procedure ConstructorInit;
     function GetFileSize: Int64;
   public
+    XbePath: string;
     m_szPath: string;
     m_Header: XBE_HEADER;
     m_Certificate: XBE_CERTIFICATE;
@@ -331,7 +332,7 @@ function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 
 function BetterTime(x_timeDate: uint32): string;
 
-function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
 
 procedure XbeLoaded;
 function GameRegionToString(const aGameRegion: Integer): string;
@@ -347,15 +348,15 @@ begin
   WriteLog(DxbxFormat('DXBX: %s  loaded.', [m_szAsciiTitle]));
 end;
 
-function OpenXbe(aFileName: string; var aXbe: TXbe; var aExeFileName, aXbeFileName: string): Boolean;
+function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
 begin
   Result := False;
   if Assigned(aXbe) or not (FileExists(aFileName)) then
     Exit;
 
-  aExeFileName := '';
-  aXbeFileName := aFileName;
-  {var}aXbe := TXbe.Create(aXbeFileName, ftXbe);
+{  aExeFileName := '';
+  aXbeFileName := aFileName;}
+  {var}aXbe := TXbe.Create({aXbe}aFileName, ftXbe);
   try
     XbeLoaded();
     Result := True;
@@ -459,6 +460,7 @@ begin
   WriteLog(DxbxFormat('DXBX: Opening %s file...OK', [sFileType]));
 
   // remember xbe path
+  XbePath := aFileName;
   m_szPath := ExcludeTrailingPathDelimiter(ExtractFilePath(aFileName));
   WriteLog(DxbxFormat('DXBX: Storing %s Path...Ok', [sFileType]));
 

@@ -175,8 +175,6 @@ type
     m_Flags: Integer;
   end;
 
-  // IMPORTANT NOTE : Keep the data-layout of this record in-sync with
-  // the Cxbx version (if you want to maintain CxbxKrnl.DLL compatibility) !
   XBController = object(Error)
   private
     // Device Names
