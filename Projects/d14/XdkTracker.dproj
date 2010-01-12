@@ -1,11 +1,11 @@
 ﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
-			<ProjectGuid>{9c1156d7-1d98-4ad9-89ba-033b76263d3f}</ProjectGuid>
-			<MainSource>TranslationChecker.dpr</MainSource>
+			<ProjectGuid>{44c78356-857f-4fdb-bd60-6c0152de4cb2}</ProjectGuid>
+			<MainSource>XdkTracker.dpr</MainSource>
 			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
 			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-			<DCC_DependencyCheckOutputName>..\..\Bin\TranslationChecker.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\Bin\XdkTracker.exe</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 		</PropertyGroup>
@@ -23,7 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>TranslationChecker.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>XdkTracker.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<Version>7.0</Version>
@@ -33,17 +33,17 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\Bin\TranslationChecker.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\Bin\XdkTracker.exe</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
 			<DCC_ExeOutput>..\..\Bin\</DCC_ExeOutput>
 			<DCC_DcuOutput>..\..\dcu\</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu\</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu\</DCC_HppOutput>
-			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
-			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
-			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
 		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
@@ -83,20 +83,41 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Source>
-						<Source Name="MainSource">TranslationChecker.dpr</Source>
+						<Source Name="MainSource">XdkTracker.dpr</Source>
 					</Source>
 				</Delphi.Personality>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
 		<ItemGroup>
-			<DelphiCompile Include="TranslationChecker.dpr">
+			<DelphiCompile Include="XdkTracker.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src\Tools\TranslationChecker\uTranslationChecker.pas">
-				<Form>Form1</Form>
+			<DCCReference Include="..\..\src\Tools\XdkTracker\src\u_About.pas">
+				<Form>frm_About</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XdkTracker\src\ufrm_Main.pas">
+				<Form>frmXdkTracker</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uPublisher.pas">
+				<Form>frm_Publisher</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uImportGames.pas">
+				<Form>frm_XBEList</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas"/>
+			<DCCReference Include="..\..\src\uConsts.pas"/>
+			<DCCReference Include="..\..\src\uXbe.pas"/>
 			<DCCReference Include="..\..\src\uTypes.pas"/>
+			<DCCReference Include="..\..\src\uTime.pas"/>
+			<DCCReference Include="..\..\src\uLog.pas"/>
+			<DCCReference Include="..\..\src\uDxbxXml.pas">
+				<Form>DxbxXml</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
+			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
