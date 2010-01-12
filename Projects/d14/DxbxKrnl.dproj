@@ -5,7 +5,7 @@
 			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
 			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-			<DCC_DependencyCheckOutputName>..\..\bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\..\Bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 		</PropertyGroup>
@@ -23,41 +23,97 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<BRCC_Defines> DXBX_DEBUG;$(BRCC_Defines)</BRCC_Defines>
-			<DCC_Define>DXBX_DLL;$(DCC_Define)</DCC_Define>
-			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_DependencyCheckOutputName>..\..\bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<GenDll>true</GenDll>
-			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
+			<DCC_DependencyCheckOutputName>..\..\bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_DebugInformation>False</DCC_DebugInformation>
 			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<Version>7.0</Version>
-			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\jwapi\Win32API;..\..\Libraries\DirectX9;$(DCC_ResourcePath)</DCC_ResourcePath>
-			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\jwapi\Win32API;..\..\Libraries\DirectX9;$(DCC_ObjPath)</DCC_ObjPath>
-			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\Jcl\include;..\..\Libraries\jwapi\Win32API;..\..\Libraries\DirectX9;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
 			<DCC_DcuOutput>..\..\dcu</DCC_DcuOutput>
 			<DCC_ObjOutput>..\..\dcu</DCC_ObjOutput>
 			<DCC_HppOutput>..\..\dcu</DCC_HppOutput>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DependencyCheckOutputName>..\..\Bin\DxbxKrnl.dll</DCC_DependencyCheckOutputName>
+			<Version>7.0</Version>
+			<DCC_Define>DEBUG;DXBX_DLL;_DEBUG_TRACE;$(DCC_Define)</DCC_Define>
+			<DCC_UnitSearchPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>..\..\src\Include;..\..\Libraries\DirectX9;..\..\Libraries\Jcl\include;..\..\Libraries\Jcl\common;..\..\Libraries\Jcl\windows;..\..\Libraries\jwapi\Includes;..\..\Libraries\jwapi\Win32API;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_DcuOutput>..\..\dcu\d11\</DCC_DcuOutput>
+			<DCC_ObjOutput>..\..\dcu\d11\</DCC_ObjOutput>
+			<DCC_HppOutput>..\..\dcu\d11\</DCC_HppOutput>
+			<DCC_ExeOutput>..\..\Bin\</DCC_ExeOutput>
+		</PropertyGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">..\..\bin\Dxbx.exe</Parameters>
+						<Parameters Name="RunParams">&quot;D:\!Patrick_Sofware\XBox\Games\Xbox Turok NTSC\default.xbe&quot;</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1043</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Source>
+						<Source Name="MainSource">DxbxKrnl.dpr</Source>
+					</Source>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					</Excluded_Packages>
+				</Delphi.Personality>
+				<ModelSupport>False</ModelSupport>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
 		<ItemGroup>
 			<DelphiCompile Include="DxbxKrnl.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<RcCompile Include="..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc">
+			<RcCompile Include="..\..\Resource\StoredTrie.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
-				<Form>StoredTrie.res</Form>
+				<Form>..\..\Resource\StoredTrie.res</Form>
 			</RcCompile>
 			<DCCReference Include="..\..\src\uLog.pas"/>
 			<DCCReference Include="..\..\src\uMutex.pas"/>
@@ -66,7 +122,6 @@
 			<DCCReference Include="..\..\src\uTypes.pas"/>
 			<DCCReference Include="..\..\src\uXBController.pas"/>
 			<DCCReference Include="..\..\src\uXbe.pas"/>
-			<DCCReference Include="..\..\src\uXbeConvert.pas"/>
 			<DCCReference Include="..\..\src\uXboxLibraryUtils.pas"/>
 			<DCCReference Include="..\..\src\uXbVideo.pas"/>
 			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
@@ -123,6 +178,9 @@
 			<DCCReference Include="..\..\src\uProlog.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
+			<RcCompile Include="..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc">
+				<Form>..\..\Resource\StoredTrie.res</Form>
+			</RcCompile>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -136,50 +194,4 @@
 			</BuildConfiguration>
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
-		<ProjectExtensions>
-			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
-			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
-			<BorlandProject>
-				<Delphi.Personality>
-					<Parameters>
-						<Parameters Name="UseLauncher">False</Parameters>
-						<Parameters Name="LoadAllSymbols">True</Parameters>
-						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="HostApplication">D:\!Patrick_Sofware\XBox\Games\Xbox Turok NTSC\Dxbx D2010.exe</Parameters>
-						<Parameters Name="DebugCWD">D:\!Patrick_Sofware\XBox\Games\Xbox Turok NTSC</Parameters>
-					</Parameters>
-					<VersionInfo>
-						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
-						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-						<VersionInfo Name="MajorVer">1</VersionInfo>
-						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">0</VersionInfo>
-						<VersionInfo Name="Debug">False</VersionInfo>
-						<VersionInfo Name="PreRelease">False</VersionInfo>
-						<VersionInfo Name="Special">False</VersionInfo>
-						<VersionInfo Name="Private">False</VersionInfo>
-						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1043</VersionInfo>
-						<VersionInfo Name="CodePage">1252</VersionInfo>
-					</VersionInfo>
-					<VersionInfoKeys>
-						<VersionInfoKeys Name="CompanyName"/>
-						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
-						<VersionInfoKeys Name="InternalName"/>
-						<VersionInfoKeys Name="LegalCopyright"/>
-						<VersionInfoKeys Name="LegalTrademarks"/>
-						<VersionInfoKeys Name="OriginalFilename"/>
-						<VersionInfoKeys Name="ProductName"/>
-						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
-						<VersionInfoKeys Name="Comments"/>
-					</VersionInfoKeys>
-					<Source>
-						<Source Name="MainSource">DxbxKrnl.dpr</Source>
-					</Source>
-				</Delphi.Personality>
-			</BorlandProject>
-			<ProjectFileVersion>12</ProjectFileVersion>
-		</ProjectExtensions>
 	</Project>
