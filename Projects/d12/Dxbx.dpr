@@ -22,7 +22,6 @@ program Dxbx;
 uses
   SysUtils,
   Forms,
-  uEmuExe in '..\..\src\uEmuExe.pas',
   uEmuShared in '..\..\src\uEmuShared.pas',
   uError in '..\..\src\uError.pas',
   uExe in '..\..\src\uExe.pas',
@@ -38,7 +37,6 @@ uses
   uWindows in '..\..\src\uWindows.pas',
   uXBController in '..\..\src\uXBController.pas',
   uXbe in '..\..\src\uXbe.pas',
-  uXbeConvert in '..\..\src\uXbeConvert.pas',
   uXbVideo in '..\..\src\uXbVideo.pas',
   uConsoleClass in '..\..\src\uConsoleClass.pas',
   uConsts in '..\..\src\uConsts.pas',
@@ -49,35 +47,54 @@ uses
 
 {$R *.RES}
 
+// Reserve a block of Virtual Memory with a size equal the total memory
+// available in an Xbox : 128 MB. This block has no predefined contents,
+// and thus takes virtually no space in the EXE. This block makes sure that
+// the whole 128MB range of Virtual Memory (from $00010000 up to $0800000)
+// isn't occupied with anything else, and this fully available to our emulator.
+const
+  XBOX_MEMORY_SIZE = 128*1024*1024;
+var
+  Data: array [0..XBOX_MEMORY_SIZE-1] of Byte;
+
+// Make sure this EXE gets loaded into the Xbox-specific Virtual Address Space :
+{$IMAGEBASE $00010000} // = XBE_IMAGE_BASE
+
+// Make sure we can't be loaded to another location either, by removing
+// the relocation table. These two settings are the only way we know of,
+// to reserver the Virtual Memory Range that the Xbox normally uses...
+{$SetPEFlags 1} // = Windows.IMAGE_FILE_RELOCS_STRIPPED
+
 // Remove relocation table (generates smaller executables) :
 // (See http://hallvards.blogspot.com/2006/09/hack12-create-smaller-exe-files.html)
-{$SetPEFlags 1} // 1 = Windows.IMAGE_FILE_RELOCS_STRIPPED
+{.$SetPEFlags 1} // 1 = Windows.IMAGE_FILE_RELOCS_STRIPPED
+
+// Here, we create a static dependance on our actual emulation DLL,
+// by importing the function that takes over control and start emulation :
+procedure DxbxMain(const aData: Pointer; const aSize: Cardinal); stdcall; external 'DxbxKrnl';
 
 var
   XBEFilePath: string;
-  Xbe: TXbe;
-  tmpstr1, tmpstr2: string;
 begin
-  Application.Initialize;
-  Application.Title := 'Dxbx';
-  DumpToolString := Application.Title + ' (Version ' + _DXBX_VERSION + ')';
-
-  Application.CreateForm(Tfrm_Main, frm_Main);
-  XBEFilePath := ParamStr(1);
+  XBEFilePath := ParamStr(2);
 
   if  (XBEFilePath <> '')
+  and SameText(ParamStr(1), '/load')
   and SameText(ExtractFileExt(XBEFilePath), '.xbe')
-  and FileExists(XBEFilePath) then
+  and FileExists(XBEFilePath)
+  and (StrToIntDef(ParamStr(3), 0) > 0) then
   begin
-    Xbe := nil; // prevent warning
-    // if Dxbx has xbe file as paramstring, then the DllToUse should be the udDxbxKrnl
-    DllToUse := udDxbxKrnl;
-    if ConvertXbeToExe(XBEFilePath, tmpstr1, tmpstr2, Xbe, 0{=No WindowHandle!}) then
-      Exit;
-    // TODO : Error logging should go here
+    // Transfer control to the main emulator-code inside our DLL :
+    DxbxMain(@(Data[0]), SizeOf(Data));
+    // Hopefully no finalization takes place after this :
+    Halt(0);
   end;
 
+  Application.Initialize;
+  Application.Title := 'Dxbx';
+  Application.Tag := IntPtr(@Data[0]); // Just a reference to Data so it won't get optimized away by the compiler
+  DumpToolString := Application.Title + ' (Version ' + _DXBX_VERSION + ')';
+  Application.CreateForm(Tfrm_Main, frm_Main);
   Application.CreateForm(TDxbxXml, DxbxXml);
   Application.Run;
 end.
-
