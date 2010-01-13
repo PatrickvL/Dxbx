@@ -49,7 +49,6 @@
 			<DelphiCompile Include="Dxbx.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\..\src\uEmuExe.pas"/>
 			<DCCReference Include="..\..\src\uEmuShared.pas"/>
 			<DCCReference Include="..\..\src\uError.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
@@ -65,7 +64,6 @@
 			<DCCReference Include="..\..\src\uWindows.pas"/>
 			<DCCReference Include="..\..\src\uXBController.pas"/>
 			<DCCReference Include="..\..\src\uXbe.pas"/>
-			<DCCReference Include="..\..\src\uXbeConvert.pas"/>
 			<DCCReference Include="..\..\src\uXbVideo.pas"/>
 			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
 			<DCCReference Include="..\..\src\uConsts.pas"/>
