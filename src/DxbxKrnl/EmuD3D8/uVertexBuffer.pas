@@ -33,6 +33,8 @@ uses
   , Direct3D8
 //  , DirectDraw
   // Dxbx
+  , uEmuAlloc
+  , uVertexShader
   , uLog
   , uTypes // CLOCKS_PER_SEC, clock()
   , uEmuD3D8Types;
@@ -120,6 +122,7 @@ var
   g_pIVBVertexBuffer: PWORD = nil;
   g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
   g_IVBFVF: DWORD = 0;
+  g_CurrentVertexShader: DWord = 0;
 
 type
   _D3DIVB = packed record
@@ -389,13 +392,17 @@ end;
 
 function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+
+var
+  bApplied: bool;
 begin
 (*    UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
     XTL.D3DVERTEXBUFFER_DESC  Desc;
     procedure                      *pCalculateData;
-    UINT                       uiLength;
-    bool                       bApplied := False;
+    UINT                       uiLength; *)
+    bApplied := False;
+    (*
     uint32                     uiKey;
     //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)(*CxbxMalloc(sizeof(CACHEDSTREAM));
 
@@ -507,32 +514,37 @@ begin
     if ( not pPatchDesc.pVertexStreamZeroData) then
     begin
         pOrigVertexBuffer.Release();
-     end;
+     end;     *)
 
-    Result := bApplied;*)
+    Result := bApplied;
 end;
 
 
 function XTL_VertexPatcher.GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+(*var
+  pDynamicPatch: PVERTEX_DYNAMIC_PATCH; *)
 begin
-(*    if (VshHandleIsVertexShader(g_CurrentVertexShader)) then
+(*  if (VshHandleIsVertexShader(g_CurrentVertexShader)) then
+  begin
+    pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
+    if Assigned (pDynamicPatch) then
     begin
-        VERTEX_DYNAMIC_PATCH *pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
-        if (pDynamicPatch) then
-        begin
-            Result := pDynamicPatch.NbrStreams;
-         end;
-        else
-        begin
-            Result := 1; // Could be more, but it doesn't matter as we're not going to patch the types
-         end;
-     end;
-    else if (g_CurrentVertexShader) then
+      Result := pDynamicPatch.NbrStreams;
+      Exit;
+    end
+    else
     begin
-        Result := 1;
-     end;
-    Result := 0; *)
+      Result := 1; // Could be more, but it doesn't matter as we're not going to patch the types
+      Exit;
+    end;
+  end
+  else if Assigned (g_CurrentVertexShader) then
+  begin
+    Result := 1;
+    Exit;
+  end; *)
+  Result := 0;
 end;
 
 function XTL_VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
@@ -811,9 +823,9 @@ begin
      end;
     pStream.uiOrigStride := uiStride;
     pStream.uiNewStride := pStreamPatch.ConvertedStride;
-    m_bPatched := True;
+    m_bPatched := True; *)
 
-    Result := True; *)
+    Result := True;
 end;
 
 
@@ -990,87 +1002,89 @@ begin
         g_pD3DDevice8.SetStreamSource(0, pStream.pPatchedStream, pStream.uiOrigStride);
      end;
 
-    m_bPatched := True;
+    m_bPatched := True; *)
 
-    Result := True;   *)
+    Result := True;
 end;
 
 
 function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc): bool;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:60
+var
+  Patched: bool;
+  uiStream: UINT;
+  LocalPatched: bool;
 begin
-(*    bool Patched := False;
-    // Get the number of streams
-    m_uiNbrStreams := GetNbrStreams(pPatchDesc);
-    if (VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
+  Patched := False;
+  // Get the number of streams
+  m_uiNbrStreams := GetNbrStreams(pPatchDesc);
+  if (VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
+  begin
+    (*m_pDynamicPatch := m_pDynamicPatch and PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch; *)
+  end;
+
+  for uiStream := 0 to m_uiNbrStreams -1 do
+  begin
+    LocalPatched := False;
+
+    if (ApplyCachedStream(pPatchDesc, uiStream)) then
     begin
-      m_pDynamicPatch := m_pDynamicPatch and ((PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch;
+      m_pStreams[uiStream].bUsedCached := True;
+      Continue;
     end;
-    
-    for(UINT uiStream := 0; uiStream < m_uiNbrStreams; uiStream++)
+
+    LocalPatched:= LocalPatched or PatchPrimitive(pPatchDesc, uiStream);
+    LocalPatched:= LocalPatched or PatchStream(pPatchDesc, uiStream);
+    if LocalPatched and  not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
-        bool LocalPatched := False;
+      // Insert the patched stream in the cache
+      CacheStream(pPatchDesc, uiStream);
+      m_pStreams[uiStream].bUsedCached := True;
+    end;
+    Patched:= Patched or LocalPatched;
+  end;
 
-        if (ApplyCachedStream(pPatchDesc, uiStream)) then
-        begin
-            m_pStreams[uiStream].bUsedCached := True;
-            Continue;
-         end;
-
-        LocalPatched:= LocalPatched or PatchPrimitive(pPatchDesc, uiStream);
-        LocalPatched:= LocalPatched or PatchStream(pPatchDesc, uiStream);
-        if (LocalPatched and  not pPatchDesc.pVertexStreamZeroData) then
-        begin
-            // Insert the patched stream in the cache
-            CacheStream(pPatchDesc, uiStream);
-            m_pStreams[uiStream].bUsedCached := True;
-         end;
-        Patched:= Patched or LocalPatched;
-     end;
-
-    Result := Patched;  *)
+  Result := Patched;
 end;
 
 function XTL_VertexPatcher.Restore: LONGBOOL;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
+  uiStream: UINT;
 begin
-(*    if ( not Self.m_bPatched) then
-        Result := False;
+  if ( not m_bPatched) then
+  begin
+    Result := False;
+    Exit;
+  end;
 
-    for(UINT uiStream := 0; uiStream < m_uiNbrStreams; uiStream++)
+  for uiStream := 0 to m_uiNbrStreams -1 do
+  begin
+    if (m_pStreams[uiStream].pOriginalStream <> nil) and (m_pStreams[uiStream].pPatchedStream <> nil) then
     begin
-        if (m_pStreams[uiStream].pOriginalStream <> 0 and m_pStreams[uiStream].pPatchedStream <> 0) then
-        begin
-            g_pD3DDevice8.SetStreamSource(0, m_pStreams[uiStream].pOriginalStream, m_pStreams[uiStream].uiOrigStride);
-         end;
+      g_pD3DDevice8.SetStreamSource(0, m_pStreams[uiStream].pOriginalStream, m_pStreams[uiStream].uiOrigStride);
+    end;
 
-        if (m_pStreams[uiStream].pOriginalStream <> 0) then
-        begin
-            UINT a := m_pStreams[uiStream].pOriginalStream.Release();
-         end;
+    if (m_pStreams[uiStream].pOriginalStream <> nil) then
+      m_pStreams[uiStream].pOriginalStream._Release();
 
-        if (m_pStreams[uiStream].pPatchedStream <> 0) then
-        begin
-            UINT b := m_pStreams[uiStream].pPatchedStream.Release();
-         end;
+    if (m_pStreams[uiStream].pPatchedStream <> nil) then
+      m_pStreams[uiStream].pPatchedStream._Release();
 
-        if ( not m_pStreams[uiStream].bUsedCached) then
-        begin
-
-            if (Self.m_bAllocatedStreamZeroData) then
-            begin
-                CxbxFree(m_pNewVertexStreamZeroData);
-             end;
-         end;
-        else
-        begin
-            m_pStreams[uiStream].bUsedCached := False;
-         end;
-
-     end;
+    if ( not m_pStreams[uiStream].bUsedCached) then
+    begin
+      if (Self.m_bAllocatedStreamZeroData) then
+      begin
+        CxbxFree(m_pNewVertexStreamZeroData);
+      end;
+    end
+    else
+    begin
+      m_pStreams[uiStream].bUsedCached := False;
+    end;
+  end;
 
   Result := True;
-     *)
 end;
 
 procedure XTL_EmuFlushIVB;
@@ -1444,30 +1458,47 @@ end;
 
 procedure XTL_EmuUpdateActiveTexture;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-var
+(*var
   Stage: integer;
+  pTexture: PX_D3DResource;
+  pResource: PX_D3DResource;
+  pPixelContainer: PX_D3DPixelContainer;
+  X_Format: X_D3DFORMAT;
+  dwWidth: DWORD;
+  dwHeight: DWORD;
+  dwBPP: DWORD;
+  dwDepth: DWORD;
+  dwPitch: DWORD;
+  dwMipMapLevels: DWORD;
+  bSwizzled: BOOL;
+  bCompressed: BOOL;
+  dwCompressedSize: DWORD;
+  bCubemap: BOOL; *)
 begin
     //
     // DEBUGGING
     //
-  for Stage := 0 to 3 do
+(*  for Stage := 0 to 3 do
   begin
-        (*X_D3DResource *pTexture := EmuD3DActiveTexture[Stage];
+        pTexture := EmuD3DActiveTexture[Stage];
 
-        if (pTexture = 0) then
+        if (pTexture = nil) then
             Continue;
 
-        //*
-        X_D3DResource       *pResource := (X_D3DResource)pTexture;
-        X_D3DPixelContainer *pPixelContainer := (X_D3DPixelContainer)pTexture;
+        pResource := pTexture;
+        pPixelContainer := X_D3DPixelContainer(pTexture);
 
-        X_D3DFORMAT X_Format := (X_D3DFORMAT)((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
+        X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
 
         if (X_Format <> $CD and (pTexture.EmuResource8.GetType() = D3DRTYPE_TEXTURE)) then
         begin
-            DWORD dwWidth, dwHeight, dwBPP, dwDepth := 1, dwPitch = 0, dwMipMapLevels = 1;
-            BOOL  bSwizzled := FALSE, bCompressed = FALSE, dwCompressedSize = 0;
-            BOOL  bCubemap := pPixelContainer.Format and X_D3DFORMAT_CUBEMAP;
+            dwDepth := 1;
+            dwPitch := 0;
+            dwMipMapLevels := 1;
+            bSwizzled := FALSE;
+            bCompressed := FALSE;
+            dwCompressedSize := 0;
+            bCubemap := pPixelContainer.Format and X_D3DFORMAT_CUBEMAP;
 
             // Interpret Width/Height/BPP
             if (X_Format = X_D3DFMT_X8R8G8B8) or (X_Format = X_D3DFMT_A8R8G8B8) then
@@ -1481,7 +1512,7 @@ begin
                 dwDepth  := 1;// HACK? 1 << ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  := dwWidth*4;
                 dwBPP := 4;
-             end
+            end
             else if (X_Format = X_D3DFMT_R5G6B5) or (X_Format = X_D3DFMT_A4R4G4B4)
                  or (X_Format = X_D3DFMT_LIN_A4R4G4B4) or (X_Format = X_D3DFMT_A1R5G5B5)
                  or (X_Format = $28 (* X_D3DFMT_G8B8 *)(*)
@@ -1637,9 +1668,9 @@ else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT3) or (X_Format = 
   end;
 end;
 
-g_pD3DDevice8.SetTexture(Stage, pTexture.EmuTexture8);*)
+g_pD3DDevice8.SetTexture(Stage, pTexture.EmuTexture8);
 
-  end;
+  end;               *)
 end;
 
 end.

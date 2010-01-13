@@ -128,7 +128,7 @@ ResourceTracker::~ResourceTracker()
 
 function ResourceTracker.exists(pResource: PVOID): BOOL;
 begin
-(*  return exists((uint32)pResource); *)
+  result := exists(uint32(pResource));
 end;
 
 function ResourceTracker.exists(uiKey: uint32): BOOL;
@@ -148,19 +148,21 @@ begin
         cur = cur->pNext;
     }
 
-    this->Unlock();
+    this->Unlock(); *)
 
-    return false; *)
+  result := false;
 end;
 
 function ResourceTracker.get(pResource: PVOID): PVOID;
 begin
-(*    return get((uint32)pResource); *)
+  Result := Get(uint32(pResource));
 end;
 
 function ResourceTracker.get(uiKey: uint32): PVOID;
+(*var
+  cur: PRTNode;*)
 begin
-(*    RTNode *cur = m_head;
+(*    cur := m_head;
 
     while(cur != 0)
     {
@@ -170,9 +172,9 @@ begin
         }
 
         cur = cur->pNext;
-    }
+    }         *)
 
-    return 0; *)
+  result := nil;
 end;
 
 procedure ResourceTracker.insert(pResource: PVOID);

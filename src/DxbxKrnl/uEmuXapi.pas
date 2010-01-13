@@ -1473,7 +1473,6 @@ begin
 
   // Search this .xbe for the section it wants to load.
   // If we find it, return the address of it.
-  pRet := NULL;
 
   // Get the .xbe header
   // MARKED OUT BY CXBX
