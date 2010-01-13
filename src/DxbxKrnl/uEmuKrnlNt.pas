@@ -98,7 +98,7 @@ function xboxkrnl_NtDuplicateObject(
   Options: DWORD
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtFlushBuffersFile(
-  FileHandle: PVOID;
+  FileHandle: HANDLE;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtFreeVirtualMemory(
@@ -194,7 +194,7 @@ function xboxkrnl_NtResumeThread(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetEvent(
   EventHandle: HANDLE;
-  PreviousState: PLONG // OUT
+  PreviousState: PULONG // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetInformationFile(
   FileHandle: HANDLE; // Cxbx TODO: correct paramters
@@ -823,10 +823,10 @@ begin
 end;
 
 function xboxkrnl_NtFlushBuffersFile(
-  FileHandle: PVOID;
+  FileHandle: HANDLE;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -841,7 +841,7 @@ begin
       [FileHandle, IoStatusBlock]);
 {$ENDIF}
 
-  (*ret := NtFlushBuffersFile(FileHandle, PIO_STATUS_BLOCK(IoStatusBlock)); *)
+  ret := JwaNative.NtFlushBuffersFile(FileHandle, PIO_STATUS_BLOCK(IoStatusBlock));
   Result := ret;
   EmuSwapFS(fsXbox);
 end;
@@ -1115,7 +1115,7 @@ function xboxkrnl_NtQueryFullAttributesFile(
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:10
 var
-  szBuffer: PChar;
+  szBuffer: PAnsiChar;
   wszObjectName: array [0..MAX_PATH - 1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: OBJECT_ATTRIBUTES;
@@ -1132,14 +1132,14 @@ begin
      [ObjectAttributes, ObjectAttributes.ObjectName.Buffer, Attributes]);
 {$ENDIF}
 
-(*  szBuffer := ObjectAttributes.ObjectName.Buffer;
+  szBuffer := ObjectAttributes.ObjectName.Buffer;
 
   // initialize object attributes
-  mbstowcs(wszObjectName, szBuffer, 160-1);
+(*  mbstowcs(wszObjectName, szBuffer, 160-1);
   RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
   InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
-  ret = NtQueryFullAttributesFile(@NtObjAttr, Attributes); *)
+  ret = NtQueryFullAttributesFile(@NtObjAttr, Attributes);*)
   Result := ret;
   EmuSwapFS(fsXbox);
 end;
@@ -1486,9 +1486,9 @@ end;
 
 function xboxkrnl_NtSetEvent(
   EventHandle: HANDLE;
-  PreviousState: PLONG // OUT
+  PreviousState: PULONG // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1503,7 +1503,7 @@ begin
       [EventHandle, PreviousState]);
 {$ENDIF}
 
-  (*ret := NtSetEvent(EventHandle, PreviousState);*)
+  ret := JwaNative.NtSetEvent(EventHandle, PreviousState);
 
   if(FAILED(ret)) then
       EmuWarning('NtSetEvent Failed!');

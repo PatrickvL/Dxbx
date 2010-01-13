@@ -63,7 +63,6 @@
 			<DCCReference Include="..\..\src\uTypes.pas"/>
 			<DCCReference Include="..\..\src\uXBController.pas"/>
 			<DCCReference Include="..\..\src\uXbe.pas"/>
-			<DCCReference Include="..\..\src\uXbeConvert.pas"/>
 			<DCCReference Include="..\..\src\uXboxLibraryUtils.pas"/>
 			<DCCReference Include="..\..\src\uXbVideo.pas"/>
 			<DCCReference Include="..\..\src\uConsoleClass.pas"/>
