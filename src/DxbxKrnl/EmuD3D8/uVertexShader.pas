@@ -42,6 +42,12 @@ const
   VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * sizeof(DWORD);
   VSH_MAX_INTERMEDIATE_COUNT = 1024; // The maximum number of intermediate format slots
 
+  VERSION_VS	=                      $F0; // vs.1.1, not an official value
+  VERSION_XVS	=                      $20; // Xbox vertex shader
+  VERSION_XVSS	=                    $73; // Xbox vertex state shader
+  VERSION_XVSW	=                    $77; // Xbox vertex read/write shader
+  VSH_XBOX_MAX_INSTRUCTION_COUNT	=  136;  // The maximum Xbox shader instruction count
+
 
 type
   LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
@@ -169,6 +175,8 @@ procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
+function VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH;
+
 function XTL_EmuRecompileVshDeclaration
 (
   pDeclaration: PDWORD;
@@ -220,14 +228,160 @@ begin
   Result := (Token and D3DVSD_TOKENTYPEMASK) shr D3DVSD_TOKENTYPESHIFT;
 end;
 
-function VshRecompileToken(pToken: PDWord; IsFixedFunction: boolean; pPatchData: PVSH_PATCH_DATA): DWORD;
+procedure VshConvertToken_NOP(pToken: PDWORD);
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+begin
+  // D3DVSD_NOP
+  if(pToken^ <> DEF_VSH_NOP) then
+  begin
+    EmuWarning('Token NOP found, but extra parameters are given!');
+  end;
+  DbgPrintf('D3DVSD_NOP(),');
+end;
+
+procedure VshConvertToken_STREAM(pToken: PDWORD; pPatchData: PVSH_PATCH_DATA);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+var
+  StreamNumber: DWORD;
+begin
+  // D3DVSD_STREAM_TESS
+(*  if(pToken^ and D3DVSD_STREAMTESSMASK) then
+  begin
+    DbgPrintf('D3DVSD_STREAM_TESS(),');
+  end
+  // D3DVSD_STREAM
+  else
+  begin
+    StreamNumber := VshGetVertexStream(pToken^);
+    DbgPrintf('D3DVSD_STREAM(%s),', [StreamNumber]);
+
+    // new stream
+    // copy current data to structure
+    if(VshAddStreamPatch(pPatchData)) then
+    begin
+      pPatchData.ConvertedStride := 0;
+      pPatchData.TypePatchData.NbrTypes := 0;
+      pPatchData.NeedPatching := False;
+    end;
+
+    Inc(pPatchData.StreamPatchData.NbrStreams);
+  end; *)
+end;
+
+procedure VshConvertToken_STREAMDATA(pToken: PDWORD; IsFixedFunction: boolean; pPatchData: PVSH_PATCH_DATA );
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+begin
+(*    using namespace XTL;
+
+    // D3DVSD_SKIP
+    if(*pToken & 0x10000000)
+    {
+        VshConvertToken_STREAMDATA_SKIP(pToken);
+    }
+    // D3DVSD_SKIPBYTES
+    else if(*pToken & 0x18000000)
+    {
+        VshConvertToken_STREAMDATA_SKIPBYTES(pToken);
+    }
+    // D3DVSD_REG
+    else
+    {
+        VshConvertToken_STREAMDATA_REG(pToken, IsFixedFunction, pPatchData);
+    } *)
+end;
+
+procedure VshConverToken_TESSELATOR(pToken: PDWORD; IsFixedFunction: boolean);
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+begin
+(*    using namespace XTL;
+
+    // TODO: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
+    // D3DVSD_TESSUV
+    if(*pToken & 0x10000000)
+    {
+        XTL::DWORD VertexRegister    = VshGetVertexRegister(*pToken);
+        XTL::DWORD NewVertexRegister = VertexRegister;
+
+        DbgVshPrintf("\tD3DVSD_TESSUV(");
+
+        if(IsFixedFunction)
+        {
+            NewVertexRegister = Xb2PCRegisterType(VertexRegister);
+        }
+        else
+        {
+            DbgVshPrintf("%d", NewVertexRegister);
+        }
+
+        DbgVshPrintf("),\n");
+
+        *pToken = D3DVSD_TESSUV(NewVertexRegister);
+    }
+    // D3DVSD_TESSNORMAL
+    else
+    {
+        XTL::DWORD VertexRegisterIn  = VshGetVertexRegisterIn(*pToken);
+        XTL::DWORD VertexRegisterOut = VshGetVertexRegister(*pToken);
+
+        XTL::DWORD NewVertexRegisterIn  = VertexRegisterIn;
+        XTL::DWORD NewVertexRegisterOut = VertexRegisterOut;
+
+        DbgVshPrintf("\tD3DVSD_TESSNORMAL(");
+
+        if(IsFixedFunction)
+        {
+            NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn);
+        }
+        else
+        {
+            DbgVshPrintf("%d", NewVertexRegisterIn);
+        }
+
+        DbgVshPrintf(", ");
+
+        if(IsFixedFunction)
+        {
+            NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut);
+        }
+        else
+        {
+            DbgVshPrintf("%d", NewVertexRegisterOut);
+        }
+
+        DbgVshPrintf("),\n");
+        *pToken = D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
+    }      *)
+end;
+
+function VshConvertToken_CONSTMEM(pToken: PDWORD): DWORD;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+begin
+(*    // D3DVSD_CONST
+    DbgPrintf('tD3DVSD_CONST(');
+
+    DWORD ConstantAddress = ((*pToken >> D3DVSD_CONSTADDRESSSHIFT) & 0xFF);
+    DWORD Count           = (*pToken & D3DVSD_CONSTCOUNTMASK) >> D3DVSD_CONSTCOUNTSHIFT;
+
+    DbgVshPrintf("%d, %d),\n", ConstantAddress, Count);
+
+    //pToken = D3DVSD_CONST(ConstantAddress, Count);
+
+    for (uint i = 0; i < Count; i++)
+    {
+        DbgVshPrintf("\t0x%08X,\n", pToken);
+    }
+    return Count;*)
+end;
+
+
+function VshRecompileToken(pToken: PDWord; IsFixedFunction: boolean; pPatchData: PVSH_PATCH_DATA): DWORD;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   Step: DWORD;
 begin
   //using namespace XTL;
   Step := 1;
-(*
+
   case TD3DVSDTokenType(VshGetTokenType(pToken^)) of
     D3DVSD_TOKEN_NOP: VshConvertToken_NOP(pToken);
     D3DVSD_TOKEN_STREAM: VshConvertToken_STREAM(pToken, pPatchData);
@@ -235,15 +389,14 @@ begin
     D3DVSD_TOKEN_TESSELLATOR: VshConverToken_TESSELATOR(pToken, IsFixedFunction);
     D3DVSD_TOKEN_CONSTMEM: Step := VshConvertToken_CONSTMEM(pToken);
   else
-    DbgPrintf('Unknown token type: %d', [VshGetTokenType(pToken)]);
+    DbgPrintf('Unknown token type: %d', [VshGetTokenType(pToken^)]);
   end;
-*)
 
   Result := Step;
 end;
 
 function VshAddStreamPatch(pPatchData: PVSH_PATCH_DATA): boolean;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:95
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   CurrentStream: int;
   pStreamPatch: STREAM_DYNAMIC_PATCH;
@@ -260,7 +413,7 @@ begin
     pStreamPatch.NbrTypes := pPatchData.TypePatchData.NbrTypes;
     pStreamPatch.NeedPatch := pPatchData.NeedPatching;
     pStreamPatch.pTypes := CxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
-(*    memcpy(pStreamPatch.pTypes, pPatchData.TypePatchData.Types, pPatchData-.TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA)); *)
+    move(pPatchData.TypePatchData.Types, pStreamPatch.pTypes, pPatchData.TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
 
     Result := TRUE;
     Exit;
@@ -335,7 +488,7 @@ function XTL_EmuRecompileVshFunction
     pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
 ) : HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
 var
   pShaderHeader: PVSH_SHADER_HEADER;
 (*  pToken: PDWord; *)
@@ -343,18 +496,56 @@ var
   pShader: PVSH_XBOX_SHADER;
   hRet: HRESULT;
 begin
-    pShaderHeader := PVSH_SHADER_HEADER(pFunction);
-    EOI := false;
-    pShader := PVSH_XBOX_SHADER(CxbxMalloc(sizeof(VSH_XBOX_SHADER)));
-    hRet := 0;
+  pShaderHeader := PVSH_SHADER_HEADER(pFunction);
+  EOI := false;
+  pShader := PVSH_XBOX_SHADER(CxbxMalloc(sizeof(VSH_XBOX_SHADER)));
+  hRet := 0;
 
+<<<<<<< .mine
+  // TODO: support this situation..
+  if not Assigned(pFunction) then
+  begin
+    Result := E_FAIL;
+    Exit;
+  end;
+=======
     // TODO: support this situation..
     if not Assigned(pFunction) then
     begin
       Result := E_FAIL;
       Exit;
     end;
+>>>>>>> .r541
 
+<<<<<<< .mine
+  ppRecompiled := null;
+  pOriginalSize := nil;
+  if(not Assigned (pShader)) then
+  begin
+    EmuWarning('Couldn`t allocate memory for vertex shader conversion buffer');
+    hRet := E_OUTOFMEMORY;
+  end;
+  memset(pShader, 0, sizeof(VSH_XBOX_SHADER));
+  pShader.ShaderHeader := pShaderHeader^;
+  case (pShaderHeader.Version) of
+    VERSION_XVS: ;
+    VERSION_XVSS:
+      begin
+        EmuWarning('Might not support vertex state shaders?');
+        hRet := E_FAIL;
+      end;
+    VERSION_XVSW:
+      begin
+        EmuWarning('Might not support vertex read/write shaders?');
+        hRet := E_FAIL;
+      end;
+    else
+      begin
+        EmuWarning('Unknown vertex shader version 0x%02X', [pShaderHeader.Version]);
+        hRet := E_FAIL;
+      end;
+  end;
+=======
     ppRecompiled := NULL;
     pOriginalSize := nil;
     if not Assigned (pShader) then
@@ -385,49 +576,88 @@ begin
          (*
     if(SUCCEEDED(hRet)) then
     begin
+>>>>>>> .r541
 
-        for (pToken = (DWORD*)(*((uint08*)(*pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
-        {
-            VSH_SHADER_INSTRUCTION Inst;
+  if(SUCCEEDED(hRet)) then
+  begin
 
+<<<<<<< .mine
+    (*for (pToken = (DWORD*)(*((uint08*)(*pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
+    {
+        VSH_SHADER_INSTRUCTION Inst;
+=======
             VshParseInstruction(pToken, @Inst);
             VshConvertToIntermediate(@Inst, pShader);
             EOI = (boolean)VshGetField(pToken, FLD_FINAL);
         }
+>>>>>>> .r541
 
-        // The size of the shader is
-        *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
+        VshParseInstruction(pToken, &Inst);
+        VshConvertToIntermediate(&Inst, pShader);
+        EOI = (boolean)VshGetField(pToken, FLD_FINAL);
+    }
 
+<<<<<<< .mine
+    // The size of the shader is
+    *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
+=======
         char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader.IntermediateCount * 50); // Should be plenty
         DbgVshPrintf('-- Before conversion --');
         VshWriteShader(pShader, pShaderDisassembly, FALSE);
         DbgVshPrintf('%s', pShaderDisassembly);
         DbgVshPrintf('-----------------------');
+>>>>>>> .r541
 
-        VshConvertShader(pShader, bNoReservedConstants);
-        VshWriteShader(pShader, pShaderDisassembly, TRUE);
+    char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader->IntermediateCount * 50); // Should be plenty
+    DbgVshPrintf("-- Before conversion --\n");
+    VshWriteShader(pShader, pShaderDisassembly, FALSE);
+    DbgVshPrintf("%s", pShaderDisassembly);
+    DbgVshPrintf("-----------------------\n");
 
+<<<<<<< .mine
+    VshConvertShader(pShader, bNoReservedConstants);
+    VshWriteShader(pShader, pShaderDisassembly, TRUE);
+=======
         DbgVshPrintf('-- After conversion ---');
         DbgVshPrintf('%s', pShaderDisassembly);
         DbgVshPrintf('-----------------------');
+>>>>>>> .r541
 
-        hRet = D3DXAssembleShader(pShaderDisassembly,
-                                  strlen(pShaderDisassembly),
-                                  D3DXASM_SKIPVALIDATION,
-                                  NULL,
-                                  ppRecompiled,
-                                  NULL);
+    DbgVshPrintf("-- After conversion ---\n");
+    DbgVshPrintf("%s", pShaderDisassembly);
+    DbgVshPrintf("-----------------------\n");
 
+<<<<<<< .mine
+    hRet = D3DXAssembleShader(pShaderDisassembly,
+                              strlen(pShaderDisassembly),
+                              D3DXASM_SKIPVALIDATION,
+                              NULL,
+                              ppRecompiled,
+                              NULL);
+=======
         if (FAILED(hRet))
         {
             EmuWarning('Couldn''t assemble recompiled vertex shader');
         }
+>>>>>>> .r541
 
-        CxbxFree(pShaderDisassembly);
+    if (FAILED(hRet))
+    {
+        EmuWarning("Couldn't assemble recompiled vertex shader\n");
     }
+<<<<<<< .mine
+=======
     CxbxFree(pShader); *)
+>>>>>>> .r541
 
+<<<<<<< .mine
+    CxbxFree(pShaderDisassembly);*)
+  end;
+  CxbxFree(pShader);
+  result := hRet;
+=======
     Result := hRet;
+>>>>>>> .r541
 end;
 
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
@@ -463,7 +693,7 @@ begin
       Result := FALSE;
       Exit;
     end;
-    (* Cxbx has this disabled :
+    { Cxbx has this disabled :
     for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
     begin
       if (pVertexShader.VertexDynamicPatch.pStreamPatches[i].NeedPatch) then
@@ -474,7 +704,7 @@ begin
         Exit;
       end;
     end;
-    *)
+    }
   end;
 
   Result := True;
@@ -490,6 +720,27 @@ function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := PX_D3DVertexShader(aHandle and $7FFFFFFF);
+end;
+
+function VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  pD3DVertexShader: PX_D3DVertexShader;
+  pVertexShader: PVERTEX_SHADER;
+  i: uint32;
+begin
+  pD3DVertexShader := VshHandleGetVertexShader(Handle);
+  pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
+
+  for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams -1 do
+  begin
+    if (pVertexShader.VertexDynamicPatch.pStreamPatches[i].NeedPatch) then
+    begin
+      Result := @pVertexShader.VertexDynamicPatch;
+      Exit;
+    end;
+  end;
+  result := null;
 end;
 
 exports

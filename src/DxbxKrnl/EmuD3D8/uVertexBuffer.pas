@@ -33,6 +33,7 @@ uses
   , Direct3D8
 //  , DirectDraw
   // Dxbx
+  , uResourceTracker
   , uEmuAlloc
   , uVertexShader
   , uLog
@@ -238,7 +239,7 @@ begin
   DbgPrintf('--- Dumping streams cache ---');
 {$ENDIF}
 
-  (*pNode := g_PatchedStreamsCache.getHead();
+(*  pNode := g_PatchedStreamsCache.getHead();
   while Assigned (pNode) do
   begin
       CACHEDSTREAM *pCachedStream := CACHEDSTREAM (pNode.pResource);
@@ -367,27 +368,32 @@ end;
 
 procedure XTL_VertexPatcher.FreeCachedStream(pStream: PVoid);
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+(*var
+  pCachedStream: PCACHEDSTREAM;*)
 begin
-(*    g_PatchedStreamsCache.Lock();
-    CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )g_PatchedStreamsCache.get(pStream);
-    if (pCachedStream) then
+(*  g_PatchedStreamsCache.Lock();
+  pCachedStream := CACHEDSTREAM(g_PatchedStreamsCache.get(pStream));
+  if Assigned(pCachedStream) then
+  begin
+    if (pCachedStream.bIsUP and pCachedStream.pStreamUP) then
     begin
-        if (pCachedStream.bIsUP and pCachedStream.pStreamUP) then
-        begin
-            CxbxFree(pCachedStream.pStreamUP);
-         end;
-        if (pCachedStream.Stream.pOriginalStream) then
-        begin
-            pCachedStream.Stream.pOriginalStream.Release();
-         end;
-        if (pCachedStream.Stream.pPatchedStream) then
-        begin
-            pCachedStream.Stream.pPatchedStream.Release();
-         end;
-        CxbxFree(pCachedStream);
-     end;
-    g_PatchedStreamsCache.Unlock();
-    g_PatchedStreamsCache.remove(pStream);  *)
+      CxbxFree(pCachedStream.pStreamUP);
+    end;
+
+    if (pCachedStream.Stream.pOriginalStream) then
+    begin
+      pCachedStream.Stream.pOriginalStream.Release();
+    end;
+
+    if (pCachedStream.Stream.pPatchedStream) then
+    begin
+      pCachedStream.Stream.pPatchedStream.Release();
+    end;
+
+    CxbxFree(pCachedStream);
+  end;
+  g_PatchedStreamsCache.Unlock();
+  g_PatchedStreamsCache.remove(pStream);*)
 end;
 
 function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
@@ -521,11 +527,11 @@ end;
 
 
 function XTL_VertexPatcher.GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
-  pDynamicPatch: PVERTEX_DYNAMIC_PATCH; *)
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
+  pDynamicPatch: PVERTEX_DYNAMIC_PATCH;
 begin
-(*  if (VshHandleIsVertexShader(g_CurrentVertexShader)) then
+  if (VshHandleIsVertexShader(g_CurrentVertexShader)) then
   begin
     pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
     if Assigned (pDynamicPatch) then
@@ -539,11 +545,11 @@ begin
       Exit;
     end;
   end
-  else if Assigned (g_CurrentVertexShader) then
+  else if g_CurrentVertexShader > 0 then
   begin
     Result := 1;
     Exit;
-  end; *)
+  end;
   Result := 0;
 end;
 
@@ -1020,7 +1026,7 @@ begin
   m_uiNbrStreams := GetNbrStreams(pPatchDesc);
   if (VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
   begin
-    (*m_pDynamicPatch := m_pDynamicPatch and PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch; *)
+(*    m_pDynamicPatch := m_pDynamicPatch and PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch; *)
   end;
 
   for uiStream := 0 to m_uiNbrStreams -1 do
