@@ -39,7 +39,6 @@ uses
   uTypes in '..\..\src\uTypes.pas',
   uXBController in '..\..\src\uXBController.pas',
   uXbe in '..\..\src\uXbe.pas',
-  uXbeConvert in '..\..\src\uXbeConvert.pas',
   uXboxLibraryUtils in '..\..\src\uXboxLibraryUtils.pas',
   uXbVideo in '..\..\src\uXbVideo.pas',
   uConsoleClass in '..\..\src\uConsoleClass.pas',
