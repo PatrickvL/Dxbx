@@ -68,17 +68,17 @@ const SOUNDSTREAM_CACHE_SIZE = $100;
 var
   g_pDSound8: IDIRECTSOUND8 = nil;
   g_pDSound8RefCount: Int = 0;
-  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of X_CDirectSoundBuffer;
-(*  g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;*)
+(*  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of X_CDirectSoundBuffer;
+  g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;*)
 
 // periodically update sound buffers
 procedure HackUpdateSoundBuffers();
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
-var
+(*var
   v: Integer;
   pAudioPtr, pAudioPtr2 : PVOID;
   dwAudioBytes, dwAudioBytes2 : DWORD;
-  hRet : HRESULT;
+  hRet : HRESULT;*)
 begin
  (* for v := 0 to SOUNDBUFFER_CACHE_SIZE -1 do begin
     if (g_pDSoundBufferCache[v] = 0) or (g_pDSoundBufferCache[v].EmuBuffer = 0) then
@@ -228,8 +228,8 @@ function XTL_EmuDirectSoundCreate(
 const
   Initialized: Bool = False;
 {$WRITEABLECONST OFF}
-var
-  v: Integer;
+(*var
+  v: Integer;*)
 begin
   EmuSwapFS(fsWindows);
 
@@ -264,8 +264,8 @@ begin
     // clear sound buffer cache
     (*for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
     begin
-      g_pDSoundBufferCache[v] := null;
-    end; *)
+      g_pDSoundBufferCache[v] := 0;
+    end;*)
 
     // clear sound stream cache
     (*for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do

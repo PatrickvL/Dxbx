@@ -170,7 +170,7 @@ end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-const
+(*const
   pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
 
 var
@@ -192,7 +192,7 @@ var
   dwCount: DWord;
   dwMethod: DWord;
 
-  bInc: BOOL;
+  bInc: BOOL;*)
 
 begin
   if XTL_g_bSkipPush then

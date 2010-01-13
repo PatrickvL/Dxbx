@@ -39,7 +39,7 @@ var
   DebugMode: TDebugMode = dmNone;
   DebugFileName: string = '';
   
-procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
+procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: AnsiString = '');
 procedure CloseLogs;
 procedure WriteLog(const aText: string);
 
@@ -453,7 +453,7 @@ begin
   DebugMode := aLogMode;
 end;
 
-procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
+procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: Ansistring = '');
 begin
   WriteLog('Entered CreateLogs');
 

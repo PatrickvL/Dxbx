@@ -180,7 +180,7 @@ function xboxkrnl_NtReadFile(
 function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
-  PreviousCount: PLONG // OUT
+  PreviousCount: PULONG // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReleaseSemaphore(
   SemaphoreHandle: HANDLE;
@@ -438,7 +438,6 @@ var
   ReplaceChar: AnsiChar;
   ReplaceIndex: int;
   szBuffer: PAnsiChar;
-  tmpszBuffer: PAnsiChar;
   v: int;
   NtUnicodeString: string;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
@@ -1115,11 +1114,10 @@ function xboxkrnl_NtQueryFullAttributesFile(
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:10
 var
-  szBuffer: PAnsiChar;
+(*  szBuffer: PAnsiChar;
   wszObjectName: array [0..MAX_PATH - 1] of wchar_t;
-  NtUnicodeString: UNICODE_STRING;
+  NtUnicodeString: UNICODE_STRING; *)
   NtObjAttr: OBJECT_ATTRIBUTES;
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1132,15 +1130,14 @@ begin
      [ObjectAttributes, ObjectAttributes.ObjectName.Buffer, Attributes]);
 {$ENDIF}
 
-  szBuffer := ObjectAttributes.ObjectName.Buffer;
+(*  szBuffer := ObjectAttributes.ObjectName.Buffer;
 
   // initialize object attributes
-(*  mbstowcs(wszObjectName, szBuffer, 160-1);
+  mbstowcs(wszObjectName, szBuffer, 160-1);
   RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
   InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
-
-  ret = NtQueryFullAttributesFile(@NtObjAttr, Attributes);*)
-  Result := ret;
+*)
+  Result := NtQueryFullAttributesFile(@NtObjAttr, Attributes);
   EmuSwapFS(fsXbox);
 end;
 
@@ -1396,7 +1393,7 @@ end;
 
 function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
-  PreviousCount: PLONG // OUT
+  PreviousCount: PULONG // OUT
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:50
 var
@@ -1414,7 +1411,7 @@ begin
 {$ENDIF}
 
   // redirect to NtCreateMutant
-(*  ret := NtReleaseMutant(MutantHandle, PreviousCount); *)
+  ret := JwaNative.NtReleaseMutant(MutantHandle, PreviousCount);
 
   if(FAILED(ret)) then
     EmuWarning('NtReleaseMutant Failed!');

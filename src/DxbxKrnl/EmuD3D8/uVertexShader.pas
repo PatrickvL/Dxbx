@@ -338,7 +338,7 @@ function XTL_EmuRecompileVshFunction
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 var
   pShaderHeader: PVSH_SHADER_HEADER;
-  pToken: PDWord;
+(*  pToken: PDWord; *)
   EOI: boolean;
   pShader: PVSH_XBOX_SHADER;
   hRet: HRESULT;
@@ -349,19 +349,19 @@ begin
     hRet := 0;
 
     // TODO: support this situation..
-    (*if not Assigned(pFunction) then
+    if not Assigned(pFunction) then
     begin
       Result := E_FAIL;
       Exit;
-    end; *)
+    end;
 
     ppRecompiled := NULL;
     pOriginalSize := nil;
-    (*if(not pShader) then
+    if not Assigned (pShader) then
     begin
       EmuWarning('Couldn`t allocate memory for vertex shader conversion buffer');
       hRet := E_OUTOFMEMORY;
-    end; *)
+    end;
     memset(pShader, 0, sizeof(VSH_XBOX_SHADER));
     pShader.ShaderHeader := pShaderHeader^;
     (*case (pShaderHeader.Version) of
@@ -425,10 +425,9 @@ begin
 
         CxbxFree(pShaderDisassembly);
     }
-    CxbxFree(pShader);
+    CxbxFree(pShader); *)
 
-    return hRet;
-                        *)
+    Result := hRet;
 end;
 
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;

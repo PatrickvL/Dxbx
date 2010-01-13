@@ -26,6 +26,7 @@ uses
   Windows,
   Messages,
   SysUtils,
+  MultiMon,
   Classes, // TStringList
   Math,
   MMSystem, // timeBeginPeriod
@@ -144,7 +145,6 @@ var
   g_pDDSPrimary: IDIRECTDRAWSURFACE7; // DirectDraw7 Primary Surface
   g_pDDSOverlay7: IDIRECTDRAWSURFACE7; // DirectDraw7 Overlay Surface
   g_pDDClipper: IDIRECTDRAWCLIPPER; // DirectDraw7 Clipper
-  g_CurrentVertexShader: DWord = 0;
   g_bIsFauxFullscreen: Boolean = False;
 
   // Static Variable(s)
@@ -1796,6 +1796,8 @@ begin
     [Adapter, Mode, pMode]);
 {$ENDIF}
 
+  Result := D3D_OK;
+
   if (Mode = 0) then
     ModeAdder := 0;
 
@@ -2563,10 +2565,9 @@ var
   DeclarationSize: DWORD;
   aHandle: DWORD;
 
-  pFileName: array [0..30-1] of Char;
-  FailedShaderCount: Integer;
+(*  pFileName: array [0..30-1] of Char;*)
+(*  FailedShaderCount: Integer;*)
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2708,7 +2709,7 @@ begin
 
   pD3DVertexShader.Handle := DWORD(pVertexShader);
 
-(*   pHandle := PX_D3DVertexShader(pD3DVertexShader or $80000000);  *)
+(*   pHandle := PX_D3DVertexShader(pD3DVertexShader or $80000000);*)
 
   if (FAILED(hRet)) then
   begin
@@ -3295,7 +3296,6 @@ function XTL_EmuIDirect3DDevice8_CreateCubeTexture(
     Pool: D3DPOOL; ppCubeTexture: PPX_D3DCubeTexture): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
-  hRet: HRESULT;
   PCFormat: D3DFORMAT;
 begin
   EmuSwapFS(fsWindows);
@@ -5304,7 +5304,6 @@ var
   NewFlags: DWORD;
 begin
   EmuSwapFS(fsWindows);
-  hret := 0;
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DSurface8_LockRect' +
@@ -5433,7 +5432,6 @@ var
   pTexture8: IDirect3DTexture8;
   NewFlags: DWORD;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -5762,7 +5760,7 @@ procedure XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
   DstRect: PRect;
   EnableColorKey: BOOL;
   ColorKey: D3DCOLOR); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:25
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:40
 var
   ddsd2: DDSURFACEDESC2;
   pDest: Pointer;
@@ -5776,12 +5774,19 @@ var
   pBackBuffer: IDirect3DSurface8;
   hRet: HRESULT;
 
-  pCurByte: Puint08;
+(*  pCurByte: Puint08;
   pDest2: Puint08;
   dx: uint32;
   dy: uint32;
   dwImageSize: uint32;
-  stop: uint32;
+  stop: uint32; *)
+
+  aMonitorInfo: MONITORINFO;
+
+  nTitleHeight: Integer;
+  nBorderWidth: Integer;
+  nBorderHeight: Integer;
+  ddofx: DDOVERLAYFX;
 begin
   EmuSwapFS(fsWindows);
 
@@ -5835,37 +5840,35 @@ begin
   // update overlay!
   if (g_bSupportsYUY2) then
   begin
-        (*SourRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
-        MONITORINFO MonitorInfo := (0);
+    SourRect := Classes.Rect(0, 0, g_dwOverlayW, g_dwOverlayH);
+    (*aMonitorInfo := (0);*)
 
-        Integer nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
-        Integer nBorderWidth  := 0;//GetSystemMetrics(SM_CXSIZEFRAME);
-        Integer nBorderHeight := 0;//GetSystemMetrics(SM_CYSIZEFRAME);
+    nTitleHeight  := 0;//GetSystemMetrics(SM_CYCAPTION);
+    nBorderWidth  := 0;//GetSystemMetrics(SM_CXSIZEFRAME);
+    nBorderHeight := 0;//GetSystemMetrics(SM_CYSIZEFRAME);
 
-        MonitorInfo.cbSize := SizeOf(MONITORINFO);
-        GetMonitorInfo(g_hMonitor, @MonitorInfo);
+    aMonitorInfo.cbSize := SizeOf(MONITORINFO);
+    GetMonitorInfo(g_hMonitor, @aMonitorInfo);
 
-        GetWindowRect(g_hEmuWindow, @DestRect);
+    (*GetWindowRect(g_hEmuWindow, @DestRect);*)
 
-        DestRect.left  :=  + nBorderWidth;
-        DestRect.right := DestRect.right - nBorderWidth;
-        DestRect.top   :=  + nTitleHeight + nBorderHeight;
-        DestRect.bottom:= DestRect.bottom - nBorderHeight;
+    DestRect.left  :=  + nBorderWidth;
+    DestRect.right := DestRect.right - nBorderWidth;
+    DestRect.top   :=  + nTitleHeight + nBorderHeight;
+    DestRect.bottom:= DestRect.bottom - nBorderHeight;
 
-        DestRect.left  :=  - MonitorInfo.rcMonitor.left;
-        DestRect.right := DestRect.right - MonitorInfo.rcMonitor.left;
-        DestRect.top   :=  - MonitorInfo.rcMonitor.top;
-        DestRect.bottom:= DestRect.bottom - MonitorInfo.rcMonitor.top;
+    DestRect.left  :=  - aMonitorInfo.rcMonitor.left;
+    DestRect.right := DestRect.right - aMonitorInfo.rcMonitor.left;
+    DestRect.top   :=  - aMonitorInfo.rcMonitor.top;
+    DestRect.bottom:= DestRect.bottom - aMonitorInfo.rcMonitor.top;
 
-        DDOVERLAYFX ddofx;
+    ZeroMemory(@ddofx, SizeOf(ddofx));
 
-        ZeroMemory(@ddofx, SizeOf(ddofx));
+    ddofx.dwSize := SizeOf(DDOVERLAYFX);
+    ddofx.dckDestColorkey.dwColorSpaceLowValue := 0;
+    ddofx.dckDestColorkey.dwColorSpaceHighValue := 0;
 
-        ddofx.dwSize := SizeOf(DDOVERLAYFX);
-        ddofx.dckDestColorkey.dwColorSpaceLowValue := 0;
-        ddofx.dckDestColorkey.dwColorSpaceHighValue := 0;
-
-        HRESULT hRet := g_pDDSOverlay7.UpdateOverlay(@SourRect, g_pDDSPrimary, @DestRect, (*DDOVER_KEYDESTOVERRIDE | *)(*DDOVER_SHOW, /*&ddofx*/0); *)
+    (*hRet := g_pDDSOverlay7.UpdateOverlay(@SourRect, g_pDDSPrimary, @DestRect, (*DDOVER_KEYDESTOVERRIDE | *)(*DDOVER_SHOW, /*&ddofx*/0); *)
   end
   else
   begin
@@ -5876,80 +5879,79 @@ begin
     // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
     if (hRet = D3D_OK) and (pBackBuffer.LockRect(LockedRectDest, nil, 0) = D3D_OK) then
     begin
-        (*pCurByte := uint08(pSurface.Lock);
-        pDest2 := uint08(LockedRectDest.pBits);
-        dx := 0;
-        dy := 0;
-        dwImageSize := g_dwOverlayP*g_dwOverlayH;
+      (*pCurByte := uint08(pSurface.Lock);
+      pDest2 := uint08(LockedRectDest.pBits);
+      dx := 0;
+      dy := 0;
+      dwImageSize := g_dwOverlayP*g_dwOverlayH;
 
-        // grayscale
-        if (False) then
+      // grayscale
+      if (False) then
+      begin
+        for y := 0 to g_dwOverlayH - 1 do
         begin
-            for y := 0 to g_dwOverlayH - 1 do
-            begin
-                stop := g_dwOverlayW * 4;
-                for(uint32 x:=0;x<stop;x+=4)
-                begin
-                    uint08 Y := *pCurByte;
+          stop := g_dwOverlayW * 4;
+          (*for(uint32 x:=0;x<stop;x+=4)
+          begin
+              uint08 Y := *pCurByte;
 
-                    pDest2[x+0] := Y;
-                    pDest2[x+1] := Y;
-                    pDest2[x+2] := Y;
-                    pDest2[x+3] := $FF;
+              pDest2[x+0] := Y;
+              pDest2[x+1] := Y;
+              pDest2[x+2] := Y;
+              pDest2[x+3] := $FF;
 
-                    pCurByte+:=2;
-                 end;
+              pCurByte+:=2;
+           end;
 
-                pDest2:= pDest2 + LockedRectDest.Pitch;
-             end;
-        end
-        // full color conversion (YUY2->XRGB)
-        else
-        begin
-            (*for(uint32 v:=0;v<dwImageSize;v+=4)
-            begin
-                Single Y[2], U, V;
+          pDest2:= pDest2 + LockedRectDest.Pitch;
+       end;     *)
+      end
+      // full color conversion (YUY2->XRGB)
+      else
+      begin
+          (*for(uint32 v:=0;v<dwImageSize;v+=4)
+          begin
+              Single Y[2], U, V;
 
-                Y[0] = *pCurByte:= *pCurByte + 1;
-                U    = *pCurByte:= *pCurByte + 1;
-                Y[1] = *pCurByte:= *pCurByte + 1;
-                V    = *pCurByte:= *pCurByte + 1;
+              Y[0] = *pCurByte:= *pCurByte + 1;
+              U    = *pCurByte:= *pCurByte + 1;
+              Y[1] = *pCurByte:= *pCurByte + 1;
+              V    = *pCurByte:= *pCurByte + 1;
 
-                Integer a:=0;
-                for(Integer x:=0;x<2;x++)
-                begin
-                    Single R := Y[a] + 1.402f*(V-128);
-                    Single G := Y[a] - 0.344f*(U-128) - 0.714f*(V-128);
-                    Single B := Y[a] + 1.772f*(U-128);
+              Integer a:=0;
+              for(Integer x:=0;x<2;x++)
+              begin
+                  Single R := Y[a] + 1.402f*(V-128);
+                  Single G := Y[a] - 0.344f*(U-128) - 0.714f*(V-128);
+                  Single B := Y[a] + 1.772f*(U-128);
 
-                    R := (R < 0) ? 0: ((R > 255) ? 255: R);
-                    G := (G < 0) ? 0: ((G > 255) ? 255: G);
-                    B := (B < 0) ? 0: ((B > 255) ? 255: B);
+                  R := (R < 0) ? 0: ((R > 255) ? 255: R);
+                  G := (G < 0) ? 0: ((G > 255) ? 255: G);
+                  B := (B < 0) ? 0: ((B > 255) ? 255: B);
 
-                    uint32 i := (dy*LockedRectDest.Pitch+(dx+x)*4);
+                  uint32 i := (dy*LockedRectDest.Pitch+(dx+x)*4);
 
-                    pDest2[i+0] := (uint08)B;
-                    pDest2[i+1] := (uint08)G;
-                    pDest2[i+2] := (uint08)R;
-                    pDest2[i+3] := $FF;
+                  pDest2[i+0] := (uint08)B;
+                  pDest2[i+1] := (uint08)G;
+                  pDest2[i+2] := (uint08)R;
+                  pDest2[i+3] := $FF;
 
-                    a:= a + 1;
-                 end;
+                  a:= a + 1;
+               end;
 
-                dx+:=2;
+              dx+:=2;
 
-                if ((dx%g_dwOverlayW) = 0) then
-                begin
-                    dy:= dy + 1;
-                    dx:=0;
-                 end;
+              if ((dx%g_dwOverlayW) = 0) then
+              begin
+                  dy:= dy + 1;
+                  dx:=0;
+               end;
 
-             end;
-         end;
+           end;
+       end;
 
-        pBackBuffer.UnlockRect();   *)
-     end;
-
+      pBackBuffer.UnlockRect();   *)
+   end;
   end;
 
   EmuSwapFS(fsXbox);
@@ -7299,9 +7301,6 @@ begin
         pIndexBuffer._Release();
        end;
     end;
-
-    uiNumVertices := 0;
-    uiStartIndex := 0;
 
     // Cxbx TODO : caching (if it becomes noticably slow to recreate the buffer each time)
     if not bActiveIB then
