@@ -67,7 +67,7 @@ type
 
   PUInt32 = ^UInt32;
   PUInt16 = ^UInt16;
-  PUInt8 = PAnsiChar; //^UInt8;
+  PUInt8 = PByteArray;//PAnsiChar; //^UInt8;
 
   UInt08 = UInt8;
   PUInt08 = PUInt8;

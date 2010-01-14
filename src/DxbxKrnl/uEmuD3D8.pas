@@ -5764,7 +5764,7 @@ procedure XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
   DstRect: PRect;
   EnableColorKey: BOOL;
   ColorKey: D3DCOLOR); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:80
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   ddsd2: DDSURFACEDESC2;
   pDest: Pointer;
@@ -5907,31 +5907,32 @@ begin
       begin
         for y := 0 to g_dwOverlayH - 1 do
         begin
-          (*stop := g_dwOverlayW * 4;
+          stop := g_dwOverlayW * 4;
           while x < stop do
           begin
-            Y3 := pCurByte^;
+            Y3 := Uint08(pCurByte[0]);
             pDest2[x+0] := Y3;
             pDest2[x+1] := Y3;
             pDest2[x+2] := Y3;
             pDest2[x+3] := $FF;
-            inc(pCurByte,2);
-            inc(x, 4);
-          end;*) // While
+            pCurByte := @(pCurByte[2]); // Inc(pCurByte, 2) doesn't work
+            Inc(x, 4);
+          end; // While
 
-          pDest2:= pDest2 + LockedRectDest.Pitch;
+          pDest2:= @pDest2[LockedRectDest.Pitch];
        end;
       end
       // full color conversion (YUY2->XRGB)
       else
       begin
         v := 0;
-        (*while v < dwImageSize do
+        while v < dwImageSize do
         begin
-          Y2[0] := pCurByte^; Inc(pCurByte);
-          U2 := pCurByte^; Inc(pCurByte);
-          Y[1] := pCurByte^; Inc(pCurByte);
-          V2 := pCurByte^; Inc(pCurByte);
+          Y2[0] := pCurByte[0];
+          U2 := pCurByte[1];
+          Y2[1] := pCurByte[2];
+          V2 := pCurByte[3];
+          pCurByte := @pCurByte[4];
 
           a := 0;
           for x := 0 to 2 - 1 do
@@ -5957,9 +5958,9 @@ begin
 
             i := (dy*LockedRectDest.Pitch+(dx+x)*4);
 
-            pDest2[i+0] := uint08(B);
-            pDest2[i+1] := uint08(G);
-            pDest2[i+2] := uint08(R);
+            pDest2[i+0] := Round(B);
+            pDest2[i+1] := Round(G);
+            pDest2[i+2] := Round(R);
             pDest2[i+3] := $FF;
 
             a:= a + 1;
@@ -5967,14 +5968,14 @@ begin
 
           Inc(Dx, 2);
 
-          if ((dx%g_dwOverlayW) = 0) then
+          if ((dx mod g_dwOverlayW) = 0) then
           begin
             dy:= dy + 1;
             dx:=0;
           end;
 
           Inc (v,4);
-        end; // While *)
+        end; // While
      end;
 
      pBackBuffer.UnlockRect();
