@@ -501,23 +501,13 @@ begin
   pShader := PVSH_XBOX_SHADER(CxbxMalloc(sizeof(VSH_XBOX_SHADER)));
   hRet := 0;
 
-<<<<<<< .mine
   // TODO: support this situation..
   if not Assigned(pFunction) then
   begin
     Result := E_FAIL;
     Exit;
   end;
-=======
-    // TODO: support this situation..
-    if not Assigned(pFunction) then
-    begin
-      Result := E_FAIL;
-      Exit;
-    end;
->>>>>>> .r541
 
-<<<<<<< .mine
   ppRecompiled := null;
   pOriginalSize := nil;
   if(not Assigned (pShader)) then
@@ -545,119 +535,50 @@ begin
         hRet := E_FAIL;
       end;
   end;
-=======
-    ppRecompiled := NULL;
-    pOriginalSize := nil;
-    if not Assigned (pShader) then
-    begin
-      EmuWarning('Couldn`t allocate memory for vertex shader conversion buffer');
-      hRet := E_OUTOFMEMORY;
-    end;
-    memset(pShader, 0, sizeof(VSH_XBOX_SHADER));
-    pShader.ShaderHeader := pShaderHeader^;
-    (*case (pShaderHeader.Version) of
-      VERSION_XVS: ;
-      VERSION_XVSS:
-        begin
-            EmuWarning('Might not support vertex state shaders?');
-            hRet := E_FAIL;
-        end;
-      VERSION_XVSW:
-        begin
-            EmuWarning('Might not support vertex read/write shaders?');
-            hRet := E_FAIL;
-        end;
-      else
-        begin
-            EmuWarning('Unknown vertex shader version 0x%02X', [pShaderHeader.Version]);
-            hRet := E_FAIL;
-        end;
-    end; *)
-         (*
-    if(SUCCEEDED(hRet)) then
-    begin
->>>>>>> .r541
 
   if(SUCCEEDED(hRet)) then
   begin
+       (*for (pToken = (DWORD*)(*((uint08*)(*pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
+       {
+           VSH_SHADER_INSTRUCTION Inst;
 
-<<<<<<< .mine
-    (*for (pToken = (DWORD*)(*((uint08*)(*pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
-    {
-        VSH_SHADER_INSTRUCTION Inst;
-=======
-            VshParseInstruction(pToken, @Inst);
-            VshConvertToIntermediate(@Inst, pShader);
-            EOI = (boolean)VshGetField(pToken, FLD_FINAL);
-        }
->>>>>>> .r541
+           VshParseInstruction(pToken, @Inst);
+           VshConvertToIntermediate(@Inst, pShader);
+           EOI = (boolean)VshGetField(pToken, FLD_FINAL);
+       }
 
-        VshParseInstruction(pToken, &Inst);
-        VshConvertToIntermediate(&Inst, pShader);
-        EOI = (boolean)VshGetField(pToken, FLD_FINAL);
-    }
+       // The size of the shader is
+       *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
 
-<<<<<<< .mine
-    // The size of the shader is
-    *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
-=======
-        char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader.IntermediateCount * 50); // Should be plenty
-        DbgVshPrintf('-- Before conversion --');
-        VshWriteShader(pShader, pShaderDisassembly, FALSE);
-        DbgVshPrintf('%s', pShaderDisassembly);
-        DbgVshPrintf('-----------------------');
->>>>>>> .r541
+       char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader.IntermediateCount * 50); // Should be plenty
+       DbgVshPrintf('-- Before conversion --');
+       VshWriteShader(pShader, pShaderDisassembly, FALSE);
+       DbgVshPrintf('%s', pShaderDisassembly);
+       DbgVshPrintf('-----------------------');
 
-    char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader->IntermediateCount * 50); // Should be plenty
-    DbgVshPrintf("-- Before conversion --\n");
-    VshWriteShader(pShader, pShaderDisassembly, FALSE);
-    DbgVshPrintf("%s", pShaderDisassembly);
-    DbgVshPrintf("-----------------------\n");
+       VshConvertShader(pShader, bNoReservedConstants);
+       VshWriteShader(pShader, pShaderDisassembly, TRUE);
 
-<<<<<<< .mine
-    VshConvertShader(pShader, bNoReservedConstants);
-    VshWriteShader(pShader, pShaderDisassembly, TRUE);
-=======
-        DbgVshPrintf('-- After conversion ---');
-        DbgVshPrintf('%s', pShaderDisassembly);
-        DbgVshPrintf('-----------------------');
->>>>>>> .r541
+       DbgVshPrintf('-- After conversion ---');
+       DbgVshPrintf('%s', pShaderDisassembly);
+       DbgVshPrintf('-----------------------');
 
-    DbgVshPrintf("-- After conversion ---\n");
-    DbgVshPrintf("%s", pShaderDisassembly);
-    DbgVshPrintf("-----------------------\n");
+       hRet = D3DXAssembleShader(pShaderDisassembly,
+                                 strlen(pShaderDisassembly),
+                                 D3DXASM_SKIPVALIDATION,
+                                 NULL,
+                                 ppRecompiled,
+                                 NULL);
 
-<<<<<<< .mine
-    hRet = D3DXAssembleShader(pShaderDisassembly,
-                              strlen(pShaderDisassembly),
-                              D3DXASM_SKIPVALIDATION,
-                              NULL,
-                              ppRecompiled,
-                              NULL);
-=======
-        if (FAILED(hRet))
-        {
-            EmuWarning('Couldn''t assemble recompiled vertex shader');
-        }
->>>>>>> .r541
+       if (FAILED(hRet))
+       {
+           EmuWarning('Couldn''t assemble recompiled vertex shader');
+       }
 
-    if (FAILED(hRet))
-    {
-        EmuWarning("Couldn't assemble recompiled vertex shader\n");
-    }
-<<<<<<< .mine
-=======
-    CxbxFree(pShader); *)
->>>>>>> .r541
-
-<<<<<<< .mine
-    CxbxFree(pShaderDisassembly);*)
+       CxbxFree(pShaderDisassembly);*)
   end;
   CxbxFree(pShader);
-  result := hRet;
-=======
-    Result := hRet;
->>>>>>> .r541
+  Result := hRet;
 end;
 
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
