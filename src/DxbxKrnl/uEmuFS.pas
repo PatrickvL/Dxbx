@@ -337,7 +337,7 @@ begin
 
         bByte := PUInt8(UIntPtr(pNewTLS) + v);
 
-        Line := Line + IntToHex(Integer(bByte^), 2);
+        Line := Line + IntToHex(Integer(bByte[0]), 2);
 
       end;
 
