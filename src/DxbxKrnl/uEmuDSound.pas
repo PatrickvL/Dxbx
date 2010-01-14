@@ -25,39 +25,261 @@ interface
 implementation
 
 uses
-  JwaWinType
+  // Delphi
+  MMSystem
+  // 3rd party
+  , JwaWinType
+  , DirectSound // MMSystem,
+  , DirectMusic
+  // Dxbx
   , uEmu
   , uDxbxKrnlUtils
-  , DirectSound
   , Windows
   , uEmuFS
   , uLog
   ;
 
+const
+  // EmuIDirectSoundBuffer8_Play flags
+  X_DSBPLAY_LOOPING = $00000001;
+  X_DSBPLAY_FROMSTART = $00000002;
+
+  // EmuIDirectSoundBuffer8_Pause flags
+  X_DSBPAUSE_RESUME = $00000000;
+  X_DSBPAUSE_PAUSE = $00000001;
+  X_DSBPAUSE_SYNCHPLAYBACK = $00000002;
+
 type
+  LPWAVEFORMATEX = MMSystem.PWaveFormatEx; // alias
+
+  X_DSBUFFERDESC = record
+    dwSize: DWORD;
+    dwFlags: DWORD;
+    dwBufferBytes: DWORD;
+    lpwfxFormat: LPWAVEFORMATEX;
+    lpMixBins: LPVOID;      // Cxbx TODO: Implement
+    dwInputMixBin: DWORD;
+  end;
+
+  X_DSSTREAMDESC = record
+    dwFlags: DWORD;
+    dwMaxAttachedPackets: DWORD;
+    lpwfxFormat: LPWAVEFORMATEX;
+    lpfnCallback: PVOID;   // Cxbx TODO: Correct Parameter
+    lpvContext: LPVOID;
+    lpMixBins: PVOID;      // Cxbx TODO: Correct Parameter
+  end;
+
+  REFERENCE_TIME = LONGLONG;
+  PPREFERENCE_TIME = ^REFERENCE_TIME;
+  LPREFERENCE_TIME = ^REFERENCE_TIME;
+
+  _XMEDIAPACKET = packed record
+    pvBuffer: LPVOID;
+    dwMaxSize: DWORD;
+    pdwCompletedSize: PDWORD;
+    pdwStatus: PDWORD;
+    case Integer of // union {
+    0: (hCompletionEvent: HANDLE;);
+    1: (
+        pContext: PVOID;
+    // end;
+      prtTimestamp: PREFERENCE_TIME;
+    ); // end of union
+  end;
+  XMEDIAPACKET = _XMEDIAPACKET;
+  PXMEDIAPACKET = ^XMEDIAPACKET;
+  LPXMEDIAPACKET = ^XMEDIAPACKET;
+
+(*
+// ******************************************************************
+// * DSLFODESC
+// ******************************************************************
+typedef struct _DSLFODESC
+{
+    DWORD dwLFO;
+    DWORD dwDelay;
+    DWORD dwDelta;
+    LONG lPitchModulation;
+    LONG lFilterCutOffRange;
+    LONG lAmplitudeModulation;
+end;
+DSLFODESC, *LPCDSLFODESC;
+
+// ******************************************************************
+// * XBOXADPCMWAVEFORMAT
+// ******************************************************************
+typedef struct xbox_adpcmwaveformat_tag
+{
+    WAVEFORMATEX    wfx;                    // WAVEFORMATEX data
+    WORD            wSamplesPerBlock;       // Number of samples per encoded block.  It must be 64.
+end;
+XBOXADPCMWAVEFORMAT, *PXBOXADPCMWAVEFORMAT, *LPXBOXADPCMWAVEFORMAT;
+
+typedef const XBOXADPCMWAVEFORMAT *LPCXBOXADPCMWAVEFORMAT;
+
+// ******************************************************************
+// * X_DSOUTPUTLEVELS
+// ******************************************************************
+struct X_DSOUTPUTLEVELS
+{
+    DWORD dwAnalogLeftTotalPeak;	// analog peak
+    DWORD dwAnalogRightTotalPeak;
+    DWORD dwAnalogLeftTotalRMS;		// analog RMS
+    DWORD dwAnalogRightTotalRMS;
+    DWORD dwDigitalFrontLeftPeak;	// digital peak levels
+    DWORD dwDigitalFrontCenterPeak;
+    DWORD dwDigitalFrontRightPeak;
+    DWORD dwDigitalBackLeftPeak;
+    DWORD dwDigitalBackRightPeak;
+    DWORD dwDigitalLowFrequencyPeak;
+    DWORD dwDigitalFrontLeftRMS;	// digital RMS levels
+    DWORD dwDigitalFrontCenterRMS;
+    DWORD dwDigitalFrontRightRMS;
+    DWORD dwDigitalBackLeftRMS;
+    DWORD dwDigitalBackRightRMS;
+    DWORD dwDigitalLowFrequencyRMS;
+end;
+
+
+typedef struct IDirectSoundStream IDirectSoundStream;
+typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
+*)
+
   PX_CDirectSound = ^X_CDirectSound;
-  X_CDirectSound = Pointer; // Dxbx TODO : Determine real type definition
-  LPDIRECTSOUND8 = ^IDIRECTSOUND8;
+  X_CDirectSound = packed record
+    // Cxbx TODO: Fill this in?
+  end;
 
-// ******************************************************************
-// * X_CDirectSoundBuffer
-// ******************************************************************
-X_CDirectSoundBuffer = packed record
-(*    BYTE    UnknownA[0x20];     // Offset: 0x00 *)
-
-(*    BYTE            UnknownB[0x0C];     // Offset: 0x24    *)
+  X_CDirectSoundBuffer = packed record
+    UnknownA: array [0..$20-1] of Byte; // Offset: 0x00
+    {union}case Integer of
+    0: (
+      pMpcxBuffer: PVOID);          // Offset: 0x20
+    1: (
+      EmuDirectSoundBuffer8: ^IDirectSoundBuffer;
+    // endcase; fall through :
+    UnknownB: array [0..$0C-1] of Byte; // Offset: 0x24
     EmuBuffer: PVOID;                   // Offset: 0x28
-    EmuBufferDesc: _DSBUFFERDESC;       // Offset: 0x2C
+    EmuBufferDesc: PDSBUFFERDESC;       // Offset: 0x2C
     EmuLockPtr1: PVOID;                 // Offset: 0x30
     EmuLockBytes1: DWORD;               // Offset: 0x34
     EmuLockPtr2: PVOID;                 // Offset: 0x38
     EmuLockBytes2: DWORD;               // Offset: 0x3C
     EmuPlayFlags: DWORD;                // Offset: 0x40
-    EmuFlags: DWORD;                    // Offset: 0x44
-    Case Integer of
-      0: (pMpcxBuffer: PVOID);
-      1: (EmuDirectSoundBuffer8: ^IDirectSoundBuffer);
-end;
+    EmuFlags: DWORD                     // Offset: 0x44
+    ); // end of union
+  end;
+
+const
+  DSB_FLAG_ADPCM = $00000001;
+  WAVE_FORMAT_XBOX_ADPCM = $0069;
+
+type
+  X_CMcpxStream = class(TObject)
+  (*
+    public:
+        // construct vtable (or grab ptr to existing)
+        X_CMcpxStream(class X_CDirectSoundStream *pParentStream) : pVtbl(&vtbl), pParentStream(pParentStream) {end;
+
+    private:
+        // vtable (cached by each instance, via constructor)
+        struct _vtbl
+        {
+            DWORD Unknown1;                                                 // 0x00 - ???
+            DWORD Unknown2;                                                 // 0x04 - ???
+            DWORD Unknown3;                                                 // 0x08 - ???
+            DWORD Unknown4;                                                 // 0x0C - ???
+
+            //
+            // TODO: Function needs X_CMcpxStream "this" pointer (ecx!)
+            //
+
+            VOID (WINAPI *Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);   // 0x10
+        end;
+        *pVtbl;
+
+        // global vtbl for this class
+        static _vtbl vtbl;
+
+        // debug mode guard for detecting naughty data accesses
+        #ifdef _DEBUG
+        DWORD DebugGuard[256];
+        #endif
+
+    public:
+
+        class X_CDirectSoundStream *pParentStream;
+  *)
+  end;
+
+  X_CDirectSoundStream = class(TObject)
+  (*
+    public:
+        // construct vtable (or grab ptr to existing)
+        X_CDirectSoundStream() : pVtbl(&vtbl) { pMcpxStream = new X_CMcpxStream(this); end;
+
+    private:
+        // vtable (cached by each instance, via constructor)
+        struct _vtbl
+        {
+            ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
+            ULONG (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
+            DWORD Unknown;                                                  // 0x08
+
+            HRESULT (WINAPI *GetStatus)                                     // 0x0C
+            (
+                X_CDirectSoundStream   *pThis,
+                DWORD                  *pdwStatus
+            );
+
+            HRESULT (WINAPI *Process)                                       // 0x10
+            (
+                X_CDirectSoundStream   *pThis,
+                PXMEDIAPACKET           pInputBuffer,
+                PXMEDIAPACKET           pOutputBuffer
+            );
+
+            HRESULT (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
+
+            HRESULT (WINAPI *Flush)(X_CDirectSoundStream *pThis);           // 0x18
+
+            DWORD Unknown2;                                                 // 0x1C - ???
+            DWORD Unknown3;                                                 // 0x20 - ???
+            DWORD Unknown4;                                                 // 0x24 - ???
+            DWORD Unknown5;                                                 // 0x28 - ???
+            DWORD Unknown6;                                                 // 0x2C - ???
+            DWORD Unknown7;                                                 // 0x30 - ???
+            DWORD Unknown8;                                                 // 0x34 - ???
+            DWORD Unknown9;                                                 // 0x38 - ???
+        end;
+        *pVtbl;
+
+        // global vtbl for this class
+        static _vtbl vtbl;
+
+        DWORD Spacer[8];
+        PVOID pMcpxStream;
+
+        // debug mode guard for detecting naughty data accesses
+        #ifdef _DEBUG
+        DWORD DebugGuard[256];
+        #endif
+
+    public:
+        // cached data
+        XTL::IDirectSoundBuffer *EmuDirectSoundBuffer8;
+        PVOID                    EmuBuffer;
+        DSBUFFERDESC            *EmuBufferDesc;
+        PVOID                    EmuLockPtr1;
+        DWORD                    EmuLockBytes1;
+        PVOID                    EmuLockPtr2;
+        DWORD                    EmuLockBytes2;
+        DWORD                    EmuPlayFlags;
+  *)
+  end;
+
+  LPDIRECTSOUND8 = ^IDIRECTSOUND8;
 
 // size of sound buffer cache (used for periodic sound buffer updates)
 const SOUNDBUFFER_CACHE_SIZE = $100;
@@ -65,11 +287,13 @@ const SOUNDBUFFER_CACHE_SIZE = $100;
 // size of sound stream cache (used for periodic sound stream updates)
 const SOUNDSTREAM_CACHE_SIZE = $100;
 
+// Static Variable(s)
 var
   g_pDSound8: IDIRECTSOUND8 = nil;
   g_pDSound8RefCount: Int = 0;
-(*  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of X_CDirectSoundBuffer;
-  g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;*)
+  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of X_CDirectSoundBuffer;
+  g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;
+  g_bDSoundCreateCalled: Boolean = False;
 
 // periodically update sound buffers
 procedure HackUpdateSoundBuffers();
@@ -173,7 +397,7 @@ begin
 
   pThis.EmuBufferDesc.dwBufferBytes := dwBytes;
 
-  hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc, pThis.EmuDirectSoundBuffer8^, nil);
+  hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc^, pThis.EmuDirectSoundBuffer8^, nil);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
