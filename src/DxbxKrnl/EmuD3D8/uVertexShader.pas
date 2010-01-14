@@ -245,7 +245,7 @@ var
   StreamNumber: DWORD;
 begin
   // D3DVSD_STREAM_TESS
-(*  if(pToken^ and D3DVSD_STREAMTESSMASK) then
+(*  if pToken^ and D3DVSD_STREAMTESSMASK then
   begin
     DbgPrintf('D3DVSD_STREAM_TESS(),');
   end
