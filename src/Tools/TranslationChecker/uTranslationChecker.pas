@@ -24,8 +24,7 @@ interface
 uses
   // Delphi
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, IniFiles, Buttons,
-  FileCtrl,
+  Dialogs, StdCtrls, ComCtrls, IniFiles, Buttons, FileCtrl, Spin,
   // 3rd Party
   JclStrings,
   JclFileUtils,
@@ -44,7 +43,13 @@ type
     btnCxbxSourcesPath: TSpeedButton;
     btnSaveToXml: TButton;
     SaveDialog: TSaveDialog;
-    CheckBoxIgnoreCompleted: TCheckBox;
+    cbFilterDoneLess: TCheckBox;
+    seFilterDone: TSpinEdit;
+    lblFilterDone: TLabel;
+    ebFilterTranslator: TEdit;
+    lblFilterTranslator: TLabel;
+    ebFilterBranch: TEdit;
+    lblFilterBranch: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure btnCxbxSourcesPathClick(Sender: TObject);
     procedure btnDxbxSourcesPathClick(Sender: TObject);
@@ -52,6 +57,9 @@ type
     procedure btnScanTranslationClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    NrOfFoundSymbols: Integer;
+    NrOfLoggedSymbols: Integer;
+
     procedure ReadIni;
     procedure WriteIni;
     procedure Log(const aString: string);
@@ -59,7 +67,7 @@ type
   end;
 
 
-  Procedure CreateProgressXml ( DxbxSourcePath, CxbxSourcePath, OutputFileName : String );
+procedure CreateProgressXml(DxbxSourcePath, CxbxSourcePath, OutputFileName: string);
 
 var
   Form1: TForm1;
@@ -69,19 +77,19 @@ implementation
 var
   memOut : TStrings;
 
-Procedure CreateProgressXml ( DxbxSourcePath, CxbxSourcePath, OutputFileName : String );
+procedure CreateProgressXml(DxbxSourcePath, CxbxSourcePath, OutputFileName: string);
 begin
-  if Not Assigned ( memOut ) then
+  if not Assigned(memOut) then
     memOut := TStringList.Create;
 
   try
 
   except
-    writeln ( 'Problems with writing progress to Xml' );
+    writeln('Problems with writing progress to Xml');
   end;
 
-  if Assigned ( memOut ) then
-    FreeAndNil ( memOut );
+  if Assigned(memOut) then
+    FreeAndNil(memOut);
 end;
 
 function StrStartsWith(const aString, aStart: string): Boolean;
@@ -165,7 +173,7 @@ end;
 
 procedure TForm1.btnSaveToXmlClick(Sender: TObject);
 begin
-  if SaveDialog.Execute then 
+  if SaveDialog.Execute then
     memOutput.Lines.SaveToFile(SaveDialog.FileName);
 end;
 
@@ -387,10 +395,23 @@ begin
             HadUnitTag := True;
           end;
 
+          Inc(NrOfFoundSymbols);
+          // Check Branch filter :
+          if (ebFilterBranch.Text <> '') and (Pos(LowerCase(ebFilterBranch.Text), LowerCase(BranchStr)) <= 0) then
+            Continue;
+
+          // Check Translator filter :
+          if (ebFilterTranslator.Text <> '') and (Pos(LowerCase(ebFilterTranslator.Text), LowerCase(TranslatorStr)) <= 0) then
+            Continue;
+
+          // Check done-percentage filter :
+          if (StrToIntDef(DoneStr, 0) < seFilterDone.Value) xor cbFilterDoneLess.Checked then
+            Continue;
+
           // Show what we've found :
-          if (not CheckBoxIgnoreCompleted.Checked) or (StrToIntDef(DoneStr, 0) < 100) then
-            Log(Format('    <SYMBOL name="%s" line="%d" frombranch="%s" fromsource="%s" fromrevision="%s" translator="%s" done="%d"/>',
-              [SymbolName, LineNr+1, BranchStr, SourceStr, RevisionStr, TranslatorStr, StrToIntDef(DoneStr, 0)]));
+          Log(Format('    <SYMBOL name="%s" line="%d" frombranch="%s" fromsource="%s" fromrevision="%s" translator="%s" done="%d"/>',
+            [SymbolName, LineNr+1, BranchStr, SourceStr, RevisionStr, TranslatorStr, StrToIntDef(DoneStr, 0)]));
+          Inc(NrOfLoggedSymbols);
         end;
       end;
     end;
@@ -400,7 +421,7 @@ begin
     // Close the UNIT tag when it was opened :
     if HadUnitTag then
       Log('  </UNIT>');
-      
+
     memOutput.Lines.EndUpdate;
   end;
 end;
@@ -413,6 +434,8 @@ var
 begin
   memOutput.Clear;
 
+  NrOfFoundSymbols := 0;
+  NrOfLoggedSymbols := 0;
   FileList := TStringList.Create;
   try
     DxbxSrcPath := ExpandFileName(edDxbxSrcPath.Text);
@@ -423,6 +446,7 @@ begin
     for i := 0 to FileList.Count - 1 do
       HandleDxbxFile(FileList[i]);
 
+    Log(Format('  <SUMMARY NrOfFoundSymbols="%d" NrOfLoggedSymbols="%d" />', [NrOfFoundSymbols, NrOfLoggedSymbols]));
     Log('</DXBXTRANSLATION>');
   finally
     FreeAndNil(FileList);

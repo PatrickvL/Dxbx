@@ -47,6 +47,30 @@ object Form1: TForm1
     Caption = '...'
     OnClick = btnCxbxSourcesPathClick
   end
+  object lblFilterDone: TLabel
+    Left = 424
+    Top = 77
+    Width = 90
+    Height = 13
+    Caption = 'Done &percentage :'
+    FocusControl = seFilterDone
+  end
+  object lblFilterTranslator: TLabel
+    Left = 271
+    Top = 77
+    Width = 56
+    Height = 13
+    Caption = '&Translator :'
+    FocusControl = ebFilterTranslator
+  end
+  object lblFilterBranch: TLabel
+    Left = 17
+    Top = 75
+    Width = 67
+    Height = 13
+    Caption = 'Filter &Branch :'
+    FocusControl = ebFilterBranch
+  end
   object btnScanTranslation: TButton
     Left = 600
     Top = 8
@@ -58,9 +82,9 @@ object Form1: TForm1
   end
   object memOutput: TMemo
     Left = 0
-    Top = 80
+    Top = 96
     Width = 737
-    Height = 533
+    Height = 517
     Align = alBottom
     Anchors = [akLeft, akTop, akRight, akBottom]
     Lines.Strings = (
@@ -71,17 +95,17 @@ object Form1: TForm1
     TabOrder = 1
   end
   object edDxbxSrcPath: TEdit
-    Left = 120
+    Left = 139
     Top = 13
-    Width = 445
+    Width = 426
     Height = 21
     TabOrder = 2
     Text = '..\src\DxbxKrnl'
   end
   object edCxbxSrcPath: TEdit
-    Left = 120
+    Left = 139
     Top = 40
-    Width = 445
+    Width = 426
     Height = 21
     TabOrder = 3
     Text = '..\..\cxbx\branches\private\martin'
@@ -95,18 +119,42 @@ object Form1: TForm1
     TabOrder = 4
     OnClick = btnSaveToXmlClick
   end
-  object CheckBoxIgnoreCompleted: TCheckBox
-    Left = 16
-    Top = 64
-    Width = 369
+  object cbFilterDoneLess: TCheckBox
+    Left = 572
+    Top = 73
+    Width = 50
     Height = 17
-    Caption = 'Ignore completed translations'
+    Caption = '&Less?'
     Checked = True
     State = cbChecked
     TabOrder = 5
   end
+  object seFilterDone: TSpinEdit
+    Left = 520
+    Top = 70
+    Width = 46
+    Height = 22
+    MaxValue = 101
+    MinValue = 0
+    TabOrder = 6
+    Value = 101
+  end
+  object ebFilterTranslator: TEdit
+    Left = 333
+    Top = 69
+    Width = 85
+    Height = 21
+    TabOrder = 7
+  end
+  object ebFilterBranch: TEdit
+    Left = 139
+    Top = 67
+    Width = 126
+    Height = 21
+    TabOrder = 8
+  end
   object SaveDialog: TSaveDialog
-    Left = 60
-    Top = 86
+    Left = 508
+    Top = 88
   end
 end
