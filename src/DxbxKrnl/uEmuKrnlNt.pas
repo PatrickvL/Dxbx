@@ -439,7 +439,7 @@ var
   ReplaceIndex: int;
   szBuffer: PAnsiChar;
   v: int;
-  NtUnicodeString: string;
+  NtUnicodeString: UNICODE_STRING;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin

@@ -102,7 +102,7 @@ begin
     Hilo := TGenerateXDFS.Create({CreateSuspended=}True);
     Hilo.FreeOnTerminate := True;
     Hilo.OnTerminate := FinCreacion;
-    Hilo.Resume;
+    Hilo.Suspended := False;
   end
   else
     if FormPadre = Form5 then
