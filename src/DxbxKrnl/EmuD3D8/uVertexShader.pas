@@ -42,11 +42,11 @@ const
   VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * SizeOf(DWORD);
   VSH_MAX_INTERMEDIATE_COUNT = 1024; // The maximum number of intermediate format slots
 
-  VERSION_VS	=                      $F0; // vs.1.1, not an official value
-  VERSION_XVS	=                      $20; // Xbox vertex shader
-  VERSION_XVSS	=                    $73; // Xbox vertex state shader
-  VERSION_XVSW	=                    $77; // Xbox vertex read/write shader
-  VSH_XBOX_MAX_INSTRUCTION_COUNT	=  136;  // The maximum Xbox shader instruction count
+  VERSION_VS =                      $F0; // vs.1.1, not an official value
+  VERSION_XVS =                     $20; // Xbox vertex shader
+  VERSION_XVSS =                    $73; // Xbox vertex state shader
+  VERSION_XVSW =                    $77; // Xbox vertex read/write shader
+  VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
 
 
 type
@@ -86,6 +86,87 @@ type
   _VSH_IMD_INSTRUCTION_TYPE = (IMD_MAC,IMD_ILU);
   VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
 
+  // Local types
+  _VSH_FIELD_NAME = (
+    FLD_ILU = 0,
+    FLD_MAC,
+    FLD_CONST,
+    FLD_V,
+    // Input A
+    FLD_A_NEG,
+    FLD_A_SWZ_X,
+    FLD_A_SWZ_Y,
+    FLD_A_SWZ_Z,
+    FLD_A_SWZ_W,
+    FLD_A_R,
+    FLD_A_MUX,
+    // Input B
+    FLD_B_NEG,
+    FLD_B_SWZ_X,
+    FLD_B_SWZ_Y,
+    FLD_B_SWZ_Z,
+    FLD_B_SWZ_W,
+    FLD_B_R,
+    FLD_B_MUX,
+    // Input C
+    FLD_C_NEG,
+    FLD_C_SWZ_X,
+    FLD_C_SWZ_Y,
+    FLD_C_SWZ_Z,
+    FLD_C_SWZ_W,
+    FLD_C_R_HIGH,
+    FLD_C_R_LOW,
+    FLD_C_MUX,
+    // Output
+    FLD_OUT_MAC_MASK_X,
+    FLD_OUT_MAC_MASK_Y,
+    FLD_OUT_MAC_MASK_Z,
+    FLD_OUT_MAC_MASK_W,
+    FLD_OUT_R,
+    FLD_OUT_ILU_MASK_X,
+    FLD_OUT_ILU_MASK_Y,
+    FLD_OUT_ILU_MASK_Z,
+    FLD_OUT_ILU_MASK_W,
+    FLD_OUT_O_MASK_X,
+    FLD_OUT_O_MASK_Y,
+    FLD_OUT_O_MASK_Z,
+    FLD_OUT_O_MASK_W,
+    FLD_OUT_ORB,
+    FLD_OUT_ADDRESS,
+    FLD_OUT_MUX,
+    // Relative addressing
+    FLD_A0X,
+    // Final instruction
+    FLD_FINAL
+  );
+  VSH_FIELD_NAME = _VSH_FIELD_NAME;
+
+  _VSH_OREG_NAME = (
+    OREG_OPOS,
+    OREG_UNUSED1,
+    OREG_UNUSED2,
+    OREG_OD0,
+    OREG_OD1,
+    OREG_OFOG,
+    OREG_OPTS,
+    OREG_OB0,
+    OREG_OB1,
+    OREG_OT0,
+    OREG_OT1,
+    OREG_OT2,
+    OREG_OT3,
+    OREG_UNUSED3,
+    OREG_UNUSED4,
+    OREG_A0X
+  );
+  VSH_OREG_NAME = _VSH_OREG_NAME;
+
+  _VSH_PARAMETER_TYPE = (PARAM_UNKNOWN = 0,
+                         PARAM_R,
+                         PARAM_V,
+                         PARAM_C);
+  VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
+
   _VSH_IMD_OUTPUT_TYPE = (IMD_OUTPUT_C,
                           IMD_OUTPUT_R,
                           IMD_OUTPUT_O,
@@ -98,6 +179,18 @@ type
     Address: UInt16;
   end;
   VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
+
+  _VSH_OUTPUT_TYPE = (
+    OUTPUT_C = 0,
+    OUTPUT_O
+  );
+  VSH_OUTPUT_TYPE = _VSH_OUTPUT_TYPE;
+
+  _VSH_OUTPUT_MUX = (
+    OMUX_MAC = 0,
+    OMUX_ILU
+  );
+  VSH_OUTPUT_MUX = _VSH_OUTPUT_MUX;
 
   _VSH_ILU = (ILU_NOP = 0,
               ILU_MOV,
@@ -125,11 +218,14 @@ type
               MAC_ARL);
   VSH_MAC = _VSH_MAC;
 
-  _VSH_PARAMETER_TYPE = (PARAM_UNKNOWN = 0,
-                         PARAM_R,
-                         PARAM_V,
-                         PARAM_C);
-  VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
+  _VSH_OPCODE_PARAMS = packed record
+    ILU: VSH_ILU;
+    MAC: VSH_MAC;
+    A: boolean;
+    B: boolean;
+    C: boolean;
+  end;
+  VSH_OPCODE_PARAMS = _VSH_OPCODE_PARAMS;
 
   _VSH_SWIZZLE = (SWIZZLE_X = 0,
                   SWIZZLE_Y,
@@ -138,12 +234,39 @@ type
   VSH_SWIZZLE = _VSH_SWIZZLE;
 
   _VSH_PARAMETER = packed record
-      ParameterType: VSH_PARAMETER_TYPE;   // Parameter type, R, V or C
-      Neg: boolean;             // TRUE if negated, FALSE if not
-      Swizzle: array [0..3] of VSH_SWIZZLE;      // The four swizzles
-      Address: Uint16;         // Register address
+    ParameterType: VSH_PARAMETER_TYPE;   // Parameter type, R, V or C
+    Neg: boolean;             // TRUE if negated, FALSE if not
+    Swizzle: array [0..4-1] of VSH_SWIZZLE;      // The four swizzles
+    Address: int16;         // Register address
   end;
   VSH_PARAMETER = _VSH_PARAMETER;
+
+  _VSH_OUTPUT = packed record
+    // Output register
+    OutputMux: VSH_OUTPUT_MUX;       // MAC or ILU used as output
+    OutputType: VSH_OUTPUT_TYPE;      // C or O
+    OutputMask: array [0..4-1] of boolean;
+    OutputAddress: int16;
+    // MAC output R register
+    MACRMask: array [0..4-1] of boolean;
+    MACRAddress: boolean;
+    // ILU output R register
+    ILURMask: array [0..4-1] of boolean;
+    ILURAddress: boolean;
+  end;
+  VSH_OUTPUT = _VSH_OUTPUT;
+
+  // The raw, parsed shader instruction (can be many combined [paired] instructions)
+  _VSH_SHADER_INSTRUCTION = packed record
+    ILU: VSH_ILU;
+    MAC: VSH_MAC;
+    Output: VSH_OUTPUT;
+    A: VSH_PARAMETER;
+    B: VSH_PARAMETER;
+    C: VSH_PARAMETER;
+    a0x: boolean;
+  end;
+  VSH_SHADER_INSTRUCTION = _VSH_SHADER_INSTRUCTION;
 
   _VSH_IMD_PARAMETER = packed record
     Active: boolean;
@@ -304,7 +427,7 @@ begin
   end;
 
   Result := DWord(PCRegisterType);
-end;
+end; // Xb2PCRegisterType
 
 function VshGetTokenType(Token: DWORD): DWORD;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -784,10 +907,12 @@ function XTL_EmuRecompileVshFunction
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:50
 var
   pShaderHeader: PVSH_SHADER_HEADER;
-(*  pToken: PDWord; *)
+  pToken: PDWord;
   EOI: boolean;
+  Inst: VSH_SHADER_INSTRUCTION;
   pShader: PVSH_XBOX_SHADER;
   hRet: HRESULT;
+  pShaderDisassembly: PAnsiChar;
 begin
   pShaderHeader := PVSH_SHADER_HEADER(pFunction);
   EOI := false;
@@ -803,9 +928,9 @@ begin
 
   ppRecompiled := NULL;
   pOriginalSize := nil;
-  if (not Assigned (pShader)) then
+  if (not Assigned(pShader)) then
   begin
-    EmuWarning('Couldn`t allocate memory for vertex shader conversion buffer');
+    EmuWarning('Couldn''t allocate memory for vertex shader conversion buffer');
     hRet := E_OUTOFMEMORY;
   end;
   memset(pShader, 0, SizeOf(VSH_XBOX_SHADER));
@@ -831,44 +956,46 @@ begin
 
   if (SUCCEEDED(hRet)) then
   begin
-       (*for (pToken = (DWORD*)(*((uint08*)(*pFunction + SizeOf(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
-       {
-           VSH_SHADER_INSTRUCTION Inst;
+    pToken := PDWORD(UIntPtr(pFunction) + SizeOf(VSH_SHADER_HEADER));
+    while not EOI do
+    begin
+(*
+      VshParseInstruction(pToken, @Inst);
+      VshConvertToIntermediate(@Inst, pShader);
+      EOI := boolean(VshGetField(pToken, FLD_FINAL));
+*)
+      Inc(pToken, VSH_INSTRUCTION_SIZE);
+    end;
 
-           VshParseInstruction(pToken, @Inst);
-           VshConvertToIntermediate(@Inst, pShader);
-           EOI = (boolean)VshGetField(pToken, FLD_FINAL);
-       }
+     // The size of the shader is
+     pOriginalSize^ := DWORD(pToken) - DWORD(pFunction);
 
-       // The size of the shader is
-       *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
+     pShaderDisassembly := PAnsiChar(CxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
+     DbgVshPrintf('-- Before conversion --');
+(*     VshWriteShader(pShader, pShaderDisassembly, FALSE);*)
+     DbgVshPrintf('%s', [pShaderDisassembly]);
+     DbgVshPrintf('-----------------------');
 
-       char* pShaderDisassembly = (char*)(*CxbxMalloc(pShader.IntermediateCount * 50); // Should be plenty
-       DbgVshPrintf('-- Before conversion --');
-       VshWriteShader(pShader, pShaderDisassembly, FALSE);
-       DbgVshPrintf('%s', pShaderDisassembly);
-       DbgVshPrintf('-----------------------');
+(*     VshConvertShader(pShader, bNoReservedConstants);
+     VshWriteShader(pShader, pShaderDisassembly, TRUE);*)
 
-       VshConvertShader(pShader, bNoReservedConstants);
-       VshWriteShader(pShader, pShaderDisassembly, TRUE);
+     DbgVshPrintf('-- After conversion ---');
+     DbgVshPrintf('%s', [pShaderDisassembly]);
+     DbgVshPrintf('-----------------------');
 
-       DbgVshPrintf('-- After conversion ---');
-       DbgVshPrintf('%s', pShaderDisassembly);
-       DbgVshPrintf('-----------------------');
+(*
+     hRet := D3DXAssembleShader(pShaderDisassembly,
+                               strlen(pShaderDisassembly),
+                               D3DXASM_SKIPVALIDATION,
+                               NULL,
+                               ppRecompiled,
+                               NULL);
+*)
 
-       hRet = D3DXAssembleShader(pShaderDisassembly,
-                                 strlen(pShaderDisassembly),
-                                 D3DXASM_SKIPVALIDATION,
-                                 NULL,
-                                 ppRecompiled,
-                                 NULL);
+    if (FAILED(hRet)) then
+       EmuWarning('Couldn''t assemble recompiled vertex shader');
 
-       if (FAILED(hRet))
-       {
-           EmuWarning('Couldn''t assemble recompiled vertex shader');
-       }
-
-       CxbxFree(pShaderDisassembly);*)
+    CxbxFree(pShaderDisassembly);
   end;
 
   CxbxFree(pShader);

@@ -108,15 +108,15 @@ const
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   ReadIni;
-  if Not Assigned ( memOut ) then
+  if not Assigned(memOut) then
     memOut := TStringList.Create;
 end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   WriteIni;
-  if Assigned ( memOut ) then
-    FreeAndNil ( memOut );
+  if Assigned(memOut) then
+    FreeAndNil(memOut);
 end;
 
 procedure TForm1.ReadIni;
