@@ -44,6 +44,8 @@ type
 
   ResourceTracker = object(Mutex)
   public
+    m_head: PRTNode;
+    m_tail: PRTNode;
     function exists(pResource: PVOID): BOOL; overload;
     function exists(uiKey: uint32): BOOL; overload;
     function get(pResource: PVOID): PVOID; overload;
@@ -132,24 +134,26 @@ begin
 end;
 
 function ResourceTracker.exists(uiKey: uint32): BOOL;
+var
+  cur: PRTNode;
 begin
-(*    this->Lock();
+  self.Lock();
 
-    RTNode *cur = m_head;
+  cur := m_head;
 
-    while(cur != 0)
-    {
-        if (cur->uiKey == uiKey) then
-        {
-            this->Unlock();
-            return true;
-        }
+  while Assigned(cur)  do
+  begin
+    if (cur.uiKey = uiKey) then
+    begin
+      self.Unlock();
+      Result := true;
+      Exit;
+    end;
 
-        cur = cur->pNext;
-    }
+    cur := cur.pNext;
+  end;
 
-    this->Unlock(); *)
-
+  Self.Unlock();
   result := false;
 end;
 
@@ -159,27 +163,27 @@ begin
 end;
 
 function ResourceTracker.get(uiKey: uint32): PVOID;
-(*var
-  cur: PRTNode;*)
+var
+  cur: PRTNode;
 begin
-(*    cur := m_head;
+  cur := m_head;
 
-    while(cur != 0)
-    {
-        if (cur->uiKey == uiKey) then
-        {
-            return cur->pResource;
-        }
-
-        cur = cur->pNext;
-    }         *)
+  while Assigned(cur) do
+  begin
+    if (cur.uiKey = uiKey) then
+    begin
+      Result := cur.pResource;
+      Exit;
+    end;
+    cur := cur.pNext;
+  end;
 
   result := nil;
 end;
 
 procedure ResourceTracker.insert(pResource: PVOID);
 begin
-(*    insert((uint32)pResource, pResource); *)
+  insert(uint32(pResource), pResource);
 end;
 
 procedure ResourceTracker.insert(uiKey: uint32; pResource: PVOID);
@@ -219,45 +223,46 @@ begin
 end;
 
 procedure ResourceTracker.remove(uiKey: uint32);
+var
+  pre: PRTNode;
+  cur: PRTNode;
 begin
   Self.Lock();
-  
-(*
-    RTNode *pre = 0;
-    RTNode *cur = m_head;
 
-    while(cur != 0)
-    {
-        if (cur->uiKey == uiKey) then
-        {
-            if (pre != 0) then
-            {
-                pre->pNext = cur->pNext;
-            }
-            else
-            {
-                m_head = cur->pNext;
+  pre := 0;
+  cur := m_head;
 
-                if (m_head->pNext == 0) then
-                {
-                    delete m_head;
+(*  while Assigned(cur) do
+  begin
+    if (cur.uiKey = uiKey) then
+    begin
+      if Assigned(pre) then
+      begin
+        pre.pNext := cur.pNext;
+      end
+      else
+      begin
+        m_head := cur.pNext;
 
-                    m_head = 0;
-                    m_tail = 0;
-                }
-            }
+        if not Assigned(m_head.pNext) then
+        begin
+          delete(m_head);
 
-            delete cur;
+          m_head = 0;
+          m_tail = 0;
+        end;
+      end;
 
-            this->Unlock();
+      delete(cur);
 
-            return;
-        }
+      self.Unlock();
 
-        pre = cur;
-        cur = cur->pNext;
-    }
-*)
+      Exit;
+    end;
+
+    pre := cur;
+    cur := cur.pNext;
+  end; *)
   Self.Unlock();
 end;
 
