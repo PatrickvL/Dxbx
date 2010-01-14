@@ -2623,7 +2623,7 @@ begin
     else
     begin
       pRecompiledFunction := nil;
-      EmuWarning('Couldn`t recompile vertex shader function.' );
+      EmuWarning('Couldn''t recompile vertex shader function.' );
       hRet := D3D_OK; // Try using a fixed function vertex shader instead
     end;
   end;
@@ -2945,7 +2945,7 @@ begin
   if FAILED(Result) then
   begin
     pHandle^ := X_PIXELSHADER_FAKE_HANDLE;
-    EmuWarning('We`re lying about the creation of a pixel shader!');
+    EmuWarning('We''re lying about the creation of a pixel shader!');
     Result := D3D_OK;
   end;
 
@@ -7272,7 +7272,7 @@ begin
 
     // update index buffer, if necessary
 
-    if Assigned (g_pIndexBuffer) and (g_pIndexBuffer.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+    if Assigned(g_pIndexBuffer) and (g_pIndexBuffer.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
     begin
       dwSize := VertexCount*2;   // 16-bit indices
 

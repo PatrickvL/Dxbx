@@ -242,7 +242,7 @@ begin
   DbgPrintf('--- Dumping streams cache ---');
 (*
   pNode := g_PatchedStreamsCache.getHead();
-  while Assigned (pNode) do
+  while Assigned(pNode) do
   begin
       CACHEDSTREAM *pCachedStream := CACHEDSTREAM (pNode.pResource);
       if (pCachedStream) then
@@ -535,7 +535,7 @@ begin
   if (VshHandleIsVertexShader(g_CurrentVertexShader)) then
   begin
     pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
-    if Assigned (pDynamicPatch) then
+    if Assigned(pDynamicPatch) then
     begin
       Result := pDynamicPatch.NbrStreams;
       Exit;
