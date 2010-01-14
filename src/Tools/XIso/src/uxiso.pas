@@ -67,7 +67,7 @@ type
     Tamano: Integer;
     Atributo: Byte;
     LongNombre: Byte;
-    Nombre: array[0..255] of Byte;
+    Nombre: array[0..255] of AnsiChar;
     DirPadre: Integer;
     DirHijo: Integer;
   end;
@@ -169,7 +169,7 @@ begin
       if (xFichero.pIzq = $FFFF) then
         Break;
 
-      if  (Trim(PAnsiChar(@xFichero.Nombre)) = Trim(PAnsiChar(@Entrada.Nombre)))
+      if  (Trim(string(PAnsiChar(@xFichero.Nombre))) = Trim(string(PAnsiChar(@Entrada.Nombre))))
       and (xFichero.Tamano = Entrada.Tamano)
       and (xFichero.SectorIn = Entrada.SectorIn)
       and (xFichero.pDer = Entrada.pDer) then

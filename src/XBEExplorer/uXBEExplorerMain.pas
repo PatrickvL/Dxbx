@@ -209,12 +209,12 @@ procedure TFormXBEExplorer.actGotoOffsetExecute(Sender: TObject);
 var
   HexViewer: THexViewer;
   Offset: Integer;
-  OffsetStr: AnsiString;
+  OffsetStr: string;
 begin
   HexViewer := THexViewer(TWinControlHelper(PageControl.ActivePage).FindChildControlClass(THexViewer));
   OffsetStr := DWord2Str(HexViewer.Offset);
   OffsetStr := InputBox('Goto offset', 'Enter hexadecimal offset', OffsetStr);
-  if ScanHexDWord(PAnsiChar(OffsetStr), {var}Offset) then
+  if ScanHexDWord(PChar(OffsetStr), {var}Offset) then
   begin
     HexViewer.Offset := Offset;
     if HexViewer.Offset = DWord(Offset) then
@@ -482,7 +482,7 @@ var
   begin
     Hdr := @(MyXBE.m_Header);
     Result := NewGrid(3, ['Member', 'Type', 'Offset', 'Value', 'Meaning']);
-    GridAddRow(Result, ['dwMagic', 'Char[4]', _offset(PXbeHeader(nil).dwMagic), Hdr.dwMagic]);
+    GridAddRow(Result, ['dwMagic', 'Char[4]', _offset(PXbeHeader(nil).dwMagic), string(Hdr.dwMagic)]);
     GridAddRow(Result, ['pbDigitalSignature', 'Byte[256]', _offset(PXbeHeader(nil).pbDigitalSignature), PByteToHexString(@Hdr.pbDigitalSignature[0], 16) + '...']);
     GridAddRow(Result, ['dwBaseAddr', 'Dword', _offset(PXbeHeader(nil).dwBaseAddr), DWord2Str(Hdr.dwBaseAddr)]);
     GridAddRow(Result, ['dwSizeofHeaders', 'Dword', _offset(PXbeHeader(nil).dwSizeofHeaders), DWord2Str(Hdr.dwSizeofHeaders)]);
@@ -645,7 +645,7 @@ var
     for i := 0 to Length(MyXBE.m_LibraryVersion) - 1 do
     begin
       LibVer := @(MyXBE.m_LibraryVersion[i]);
-      ItemName := PCharToString(@LibVer.szName[0], 8);
+      ItemName := string(PCharToString(PAnsiChar(@LibVer.szName[0]), 8));
       GridAddRow(Result, [
         DWord2Str(o),
         ItemName,

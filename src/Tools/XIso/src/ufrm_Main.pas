@@ -403,11 +403,11 @@ begin
     if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_NORMAL) = XF_NORMAL then Attributes := Attributes + 'N';
 
     Fila := frm_Main.ListView1.Items.Add;
-    Fila.Caption := pNombre;
+    Fila.Caption := string(pNombre);
     New(pSector);
     pSector^ := PxFichero(xIISO.Lista.Items[i])^.DirHijo;
     Fila.Data := pSector;
-    Icono.Handle := GetAssociatedIcon(ExtractFileExt(pNombre), True);
+    Icono.Handle := GetAssociatedIcon(ExtractFileExt(string(pNombre)), True);
     frm_Main.ImageList1.ReplaceIcon(6, Icono);
     if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
       Fila.ImageIndex := 0
@@ -466,7 +466,7 @@ begin
       New(pDirSector);
       pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
       pDirSector^ := PxFichero(xIISO.Lista.Items[i])^.DirHijo;
-      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFichero(xIISO.Lista.Items[i])^.DirPadre], pNombre, pDirSector);
+      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFichero(xIISO.Lista.Items[i])^.DirPadre], string(pNombre), pDirSector);
       Node.ImageIndex := 0;
       Node.SelectedIndex := 1;
     end;
@@ -582,13 +582,13 @@ begin
 
     if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
     begin
-      CreateDir(Folder + pNombre);
-      ExtraerCD(HA, SCSI, LUN, PxFichero(xIISO.Lista.Items[i])^.DirHijo, Folder + pNombre + '\');
+      CreateDir(Folder + string(pNombre));
+      ExtraerCD(HA, SCSI, LUN, PxFichero(xIISO.Lista.Items[i])^.DirHijo, Folder + string(pNombre) + '\');
     end
     else
       case OrigenDatos of
-        OD_IMAGEN: ExtraerFichero(NombreImagen, Folder + pNombre, Sector, Tamano);
-        OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + pNombre, Sector, Tamano);
+        OD_IMAGEN: ExtraerFichero(NombreImagen, Folder + string(pNombre), Sector, Tamano);
+        OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + string(pNombre), Sector, Tamano);
       end;
     if frm_Main <> nil then
     begin
@@ -621,13 +621,13 @@ begin
 
     if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
     begin
-      CreateDir(Folder + pNombre);
-      ExtraerCDaXBOX(HA, SCSI, LUN, PxFichero(xIISO.Lista.Items[i])^.DirHijo, Folder + pNombre + '\');
+      CreateDir(Folder + string(pNombre));
+      ExtraerCDaXBOX(HA, SCSI, LUN, PxFichero(xIISO.Lista.Items[i])^.DirHijo, Folder + string(pNombre) + '\');
     end
     else
       case OrigenDatos of
-        OD_IMAGEN: ExtraerFichero(NombreImagen, Folder + pNombre, Sector, Tamano);
-        OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + pNombre, Sector, Tamano);
+        OD_IMAGEN: ExtraerFichero(NombreImagen, Folder + string(pNombre), Sector, Tamano);
+        OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + string(pNombre), Sector, Tamano);
       end;
     if frm_Main <> nil then
     begin
@@ -687,7 +687,7 @@ begin
     end
     else
     begin
-      WriteLn(F, FormatearSector(Sector) + ',' + Folder + pNombre);
+      WriteLn(F, FormatearSector(Sector) + ',' + Folder + string(pNombre));
     end;
 
     frm_Main.ProgressBar1.StepIt;
@@ -702,7 +702,7 @@ begin
   begin
     pNombre := @PxFichero(Directorios[i])^.Nombre;
     Sector := PxFichero(Directorios[i])^.SectorIn;
-    GenerarFileListRec(F, PxFichero(Directorios[i])^.DirHijo, Folder + pNombre + '\', Sector);
+    GenerarFileListRec(F, PxFichero(Directorios[i])^.DirHijo, Folder + string(pNombre) + '\', Sector);
   end;
 
   Directorios.Free;
@@ -1021,7 +1021,7 @@ begin
       New(pDirSector);
       pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
       pDirSector^ := PxFichero(xIISO.Lista.Items[i])^.DirHijo;
-      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFichero(xIISO.Lista.Items[i])^.DirPadre], pNombre, pDirSector);
+      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFichero(xIISO.Lista.Items[i])^.DirPadre], string(pNombre), pDirSector);
       Node.ImageIndex := 0;
       Node.SelectedIndex := 1;
     end;

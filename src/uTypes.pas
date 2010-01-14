@@ -33,7 +33,7 @@ const
 
   NULL = nil;
 
-  HexNibble: AnsiString = '0123456789ABCDEF';
+  HexNibble: string = '0123456789ABCDEF';
 
 type
   TStringArray = array of string;
@@ -44,7 +44,7 @@ type
 
   TPWCharArray = array [0..(MaxInt div SizeOf(PWideChar)) - 1] of PWideChar;
   PPWCharArray = ^TPWCharArray;
-  
+
   TDWordArray = array [0..(MaxInt div SizeOf(DWord)) - 1] of DWord;
   PDWordArray = ^TDWordArray;
 
@@ -109,7 +109,7 @@ type
   wchar_t = JwaWinType.wchar_t; // = WideChar;
 
   pwchar_t = PWideChar;
-  
+
 {$IFNDEF UNICODE}
   UnicodeString = WideString;
 
@@ -139,7 +139,7 @@ function FIELD_OFFSET(var Variable): DWORD;
 function DWord2Str(const aValue: DWORD): string;
 function PCharToString(const aPtr: PAnsiChar; const aLen: Integer): AnsiString;
 function PWideCharToString(const aPtr: PWideChar; const aLen: Integer): string;
-function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
+function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
 function IsPrintableChar(const aChar: AnsiChar): Boolean;
 function IsPrintableAsciiChar(const aChar: AnsiChar): Boolean;
 function ByteLength(const aStr: WideString): Integer;
@@ -273,7 +273,7 @@ begin
   Result := WStr;
 end;
 
-function PByteToHexString(const aPtr: PByte; const aLen: Integer): AnsiString;
+function PByteToHexString(const aPtr: PByte; const aLen: Integer): string;
 var
   i: Integer;
 begin

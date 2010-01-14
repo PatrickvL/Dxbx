@@ -302,7 +302,7 @@ begin
   for i := 0 to Folder.Cantidad - 1 do
   begin
     New(Entrada);
-    Entrada.Nombre := Folder.Entrada[i].Nombre;
+    Entrada.Nombre := AnsiString(Folder.Entrada[i].Nombre);
     Lista.Add(Entrada);
   end;
 
@@ -348,7 +348,7 @@ end;
 
 function Comparar(Item1, Item2: Pointer): Integer;
 begin
-  Result := CompareText(PEntradaDir(Item1)^.Nombre, PEntradaDir(Item2)^.Nombre);
+  Result := CompareText(string(PEntradaDir(Item1)^.Nombre), string(PEntradaDir(Item2)^.Nombre));
 end;
 
 function CompararSectores(Item1, Item2: Pointer): Integer;
@@ -520,7 +520,7 @@ begin
           //if Assigned(ProgresoxISO) then
           //  ProgresoxISO(Folder+SR.Name);
     New(Entrada);
-    Entrada.Nombre := Folder.Entrada[i].Nombre;
+    Entrada.Nombre := AnsiString(Folder.Entrada[i].Nombre);
     Entrada.FullPath := Folder.Entrada[i].FullPath;
     Entrada.Tamano := Folder.Entrada[i].Tamano;
     Entrada.Sectores := Tamano2Sector(Folder.Entrada[i].Tamano);
@@ -624,7 +624,7 @@ begin
     Fichero.Free;
           // 22 de Junio de 2002
     if Assigned(ProgresoxISO) then
-      ProgresoxISO(SIntroduciendoFichero + Entrada.Nombre);
+      ProgresoxISO(SIntroduciendoFichero + string(Entrada.Nombre));
   end;
 
         // Nuevo: 18-06-2002

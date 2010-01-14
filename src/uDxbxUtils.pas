@@ -78,7 +78,7 @@ procedure ScanPCharLines(const aPChar: PAnsiChar; const aLineCallback: TLineCall
 
 function ScanHexByte(aLine: PAnsiChar; var Value: Integer): Boolean;
 function ScanHexWord(aLine: PAnsiChar; var Value: Integer): Boolean;
-function ScanHexDWord(aLine: PAnsiChar; var Value: Integer): Boolean;
+function ScanHexDWord(aLine: PChar; var Value: Integer): Boolean;
 
 function Sscanf(const s: AnsiString; const fmt: AnsiString; const Pointers: array of Pointer): Integer;
 
@@ -368,7 +368,7 @@ begin
   end;
 end;
 
-function _ScanAndAddHexDigit(var Value: Integer; const aHexDigit: AnsiChar): Boolean;
+function _ScanAndAddHexDigit(var Value: Integer; const aHexDigit: AnsiChar): Boolean; overload;
 begin
   Result := True;
   case aHexDigit of
@@ -383,7 +383,38 @@ begin
   end;
 end;
 
-function _ScanHexDigits(aLine: PAnsiChar; var Value: Integer; Digits: Integer): Boolean;
+function _ScanAndAddHexDigit(var Value: Integer; const aHexDigit: WideChar): Boolean; overload;
+begin
+  Result := True;
+  case aHexDigit of
+    '0'..'9':
+      Value := (Value * 16) + (Ord(aHexDigit) - Ord('0'));
+    'A'..'F':
+      Value := (Value * 16) + (Ord(aHexDigit) - Ord('A') + 10);
+    'a'..'f':
+      Value := (Value * 16) + (Ord(aHexDigit) - Ord('a') + 10);
+  else
+    Result := False;
+  end;
+end;
+
+function _ScanHexDigits(aLine: PAnsiChar; var Value: Integer; Digits: Integer): Boolean; overload;
+begin
+  Value := 0;
+  while Digits > 0 do
+  begin
+    Result := _ScanAndAddHexDigit(Value, aLine^);
+    if not Result then
+      Exit;
+
+    Inc(aLine);
+    Dec(Digits);
+  end;
+
+  Result := True;
+end;
+
+function _ScanHexDigits(aLine: PWideChar; var Value: Integer; Digits: Integer): Boolean; overload;
 begin
   Value := 0;
   while Digits > 0 do
@@ -409,7 +440,7 @@ begin
   Result := _ScanHexDigits(aLine, Value, 4);
 end;
 
-function ScanHexDWord(aLine: PAnsiChar; var Value: Integer): Boolean;
+function ScanHexDWord(aLine: PChar; var Value: Integer): Boolean;
 begin
   Result := _ScanHexDigits(aLine, Value, 8);
 end;

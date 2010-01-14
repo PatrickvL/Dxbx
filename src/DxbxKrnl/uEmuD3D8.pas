@@ -3914,7 +3914,7 @@ begin
           g_IVBFVF := g_IVBFVF or D3DFVF_TEX4;
       end;
 
-    $FFFFFFFF:
+    -1: //$FFFFFFFF:
     begin
       o := g_IVBTblOffs;
       g_IVBTable[o].Position.x := a;

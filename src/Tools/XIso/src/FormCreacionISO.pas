@@ -555,9 +555,9 @@ begin
   end;
   Hilo := TProgresoCreacionISO.Create(True);
   Hilo.OnTerminate := FinCreacion;
-  Form5.Enabled := False;
-  Hilo.Resume;
   Hilo.FreeOnTerminate := True;
+  Hilo.Suspended := False;
+  Form5.Enabled := False;
 end;
 
 end.

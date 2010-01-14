@@ -313,7 +313,7 @@ type
     function DumpInformation(FileName: string = ''): Boolean;
     
     function GetAddr(x_dwVirtualAddress: DWord): Integer;
-    function GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): AnsiString;
+    function GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): string;
     function GetAddrWStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): WideString;
 
     function FindSection(const aSectionName: string; out Size: Integer): TRawSection;
@@ -1019,14 +1019,14 @@ begin
   end;
 end;
 
-function TXbe.GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): AnsiString;
+function TXbe.GetAddrStr(x_dwVirtualAddress: DWord; const aMaxLen: Integer = MaxInt): string;
 var
   lIndex: Integer;
 begin
   lIndex := GetAddr(x_dwVirtualAddress);
   Result := '';
   try
-    Result := PCharToString(@RawData[lIndex], aMaxLen);
+    Result := string(PCharToString(PAnsiChar(@RawData[lIndex]), aMaxLen));
   except
     // ignore - probably out of bounds read
   end;
@@ -1058,7 +1058,7 @@ var
 begin
   for i := 0 to m_Header.dwSections - 1 do
   begin
-    if SameText(aSectionName, StrLPas(PAnsiChar(m_szSectionName[i]), XBE_SECTIONNAME_MAXLENGTH)) then
+    if SameText(aSectionName, string(StrLPas(PAnsiChar(m_szSectionName[i]), XBE_SECTIONNAME_MAXLENGTH))) then
     begin
       Result := m_bzSection[i];
       {out}Size := m_SectionHeader[i].dwSizeofRaw;

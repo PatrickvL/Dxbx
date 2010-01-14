@@ -228,7 +228,7 @@ begin
     X_D3DFMT_L8,
     X_D3DFMT_AL8,
     X_D3DFMT_P8,
-    X_D3DFMT_A8:
+    X_D3DFMT_A8: // Added by Shogun
       pBPP^ := 1;
 
     X_D3DFMT_A1R5G5B5,
