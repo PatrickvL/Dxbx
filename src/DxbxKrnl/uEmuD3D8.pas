@@ -2663,7 +2663,7 @@ begin
                                 NULL,
                                 &pRecompiledBuffer,
                                 NULL);
-      hRet = g_pD3DDevice8->CreateVertexShader
+      hRet = g_pD3DDevice8.CreateVertexShader
       (
           pRecompiledDeclaration,
           PDWORD(pRecompiledBuffer.GetBufferPointer()),
@@ -5180,7 +5180,7 @@ begin
 {$ENDIF}
 
     // Cxbx TODO: Work on Namco Museum hack later...
-    // if ( pPixelContainer->EmuTexture8 == ((IDirect3DTexture8*) 0x078A0044) ) then
+    // if pPixelContainer.EmuTexture8 = (IDirect3DTexture8($078A0044)) then
 
     hRet := pPixelContainer.EmuTexture8.GetLevelDesc(dwLevel, SurfaceDesc);
     { marked out by cxbx
@@ -5325,7 +5325,7 @@ begin
 {$ENDIF}
 
   // Cxbx (shogun) commented this :
-  //if(!pThis->EmuSurface8 || (pThis->EmuSurface8 == (XTL::IDirect3DSurface8*) 0x00000004))
+  //if(!pThis.EmuSurface8 || (pThis.EmuSurface8 == (XTL::IDirect3DSurface8*) 0x00000004))
   //{
   //  EmuWarning("Invalid Surface!" );
   //  EmuSwapFS(fsWindows);

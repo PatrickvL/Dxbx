@@ -48,8 +48,6 @@ type
   TEntryProc = procedure();
 //  PEntryProc = ^TEntryProc;
 
-function CxbxKrnlVerifyVersion(const szVersion: string): Boolean; // export;
-
 procedure CxbxKrnlInit(
   hwndParent: HWND;
   pTLSData: PVOID;
@@ -81,11 +79,6 @@ exports
 
 
 implementation
-
-function CxbxKrnlVerifyVersion(const szVersion: string): Boolean;
-begin
-  Result := (szVersion = _DXBX_VERSION);
-end;
 
 procedure CxbxKrnlInit(
   hwndParent: HWND;
