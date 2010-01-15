@@ -199,8 +199,8 @@ begin
 (*  if m_head = 0 then
   {
       m_tail = m_head = new RTNode();
-      m_tail->pResource = 0;
-      m_tail->pNext = 0;
+      m_tail.pResource = 0;
+      m_tail.pNext = 0;
   }
 
   m_tail.pResource := pResource;

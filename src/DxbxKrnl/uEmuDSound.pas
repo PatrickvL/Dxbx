@@ -1577,7 +1577,7 @@ begin
   // Cxbx TODO: Ensure that 4627 & 4361 are intercepting far enough back
   // (otherwise pThis is manipulated!)
 
-//    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume);
+//    HRESULT hRet = pThis.EmuDirectSoundBuffer8.SetVolume(lVolume);
 
   EmuSwapFS(fsXbox);
 
@@ -1599,7 +1599,7 @@ begin
          [pThis, dwFrequency]);
 {$ENDIF}
 
-//    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
+//    HRESULT hRet = pThis.EmuDirectSoundBuffer8.SetFrequency(dwFrequency);
 
   EmuSwapFS(fsXbox);
 
@@ -1634,11 +1634,11 @@ begin
     begin
         DWORD dwAcceptableMask := 0x00000010; // Cxbx TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
-        if (pdssd.dwFlags and (~dwAcceptableMask)) then
-            EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', pdssd.dwFlags and (~dwAcceptableMask));
+        if (pdssd.dwFlags and (not dwAcceptableMask)) > 0 then
+            EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', [pdssd.dwFlags and (not dwAcceptableMask)]);
 
         pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
-//        pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
+//        pDSBufferDesc.dwFlags = (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
         pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
         pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
 

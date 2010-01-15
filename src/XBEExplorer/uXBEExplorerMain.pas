@@ -227,7 +227,7 @@ end;
 procedure TFormXBEExplorer.About1Click(Sender: TObject);
 begin
   TaskMessageDlg('About ' + Application.Title,
-    Application.Title + ' © 2009, PatrickvL.  Released under GPL3.'#13#13 +
+    Application.Title + ' version ' + _XBE_EXPLORER_VERSION + ' © 2010, PatrickvL.  Released under GPL3.'#13#13 +
     Application.Title + ' is part of Dxbx - the Delphi Xbox1 emulator.'#13#13 +
     'Website : http://sourceforge.net/projects/dxbx/',
     mtInformation, [mbOK], 0);

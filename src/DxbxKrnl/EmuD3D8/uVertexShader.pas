@@ -46,7 +46,7 @@ const
   VERSION_XVS =                     $20; // Xbox vertex shader
   VERSION_XVSS =                    $73; // Xbox vertex state shader
   VERSION_XVSW =                    $77; // Xbox vertex read/write shader
-  VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
+  VSH_XBOX_MAX_INSTRUCTION_COUNT =  136; // The maximum Xbox shader instruction count
 
 
 type
@@ -288,7 +288,7 @@ type
   _VSH_XBOX_SHADER = packed record
     ShaderHeader: VSH_SHADER_HEADER;
     IntermediateCount: uint16;
-    Intermediate: array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT ;
+    Intermediate: array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT;
   end;
   VSH_XBOX_SHADER = _VSH_XBOX_SHADER;
   PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
@@ -615,7 +615,7 @@ var
   SkipCount: DWORD;
 begin
   SkipCount := (pToken^ and D3DVSD_SKIPCOUNTMASK) shr D3DVSD_SKIPCOUNTSHIFT;
-  DbgVshPrintf(#9'D3DVSD_SKIP(%d),\n', [SkipCount]);
+  DbgVshPrintf(#9'D3DVSD_SKIP(%d),', [SkipCount]);
 end;
 
 procedure VshConvertToken_STREAMDATA_SKIPBYTES(pToken: PDWORD);

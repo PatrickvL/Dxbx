@@ -30,18 +30,16 @@ const
   DLL_IMAGE_BASE = $10000000;
   MAXIMUM_XBOX_THREADS = 256;
 
-  CCXBXKRNLDLLNAME = 'CxbxKrnl.dll';
-  CCXBXDLLNAME = 'Cxbx.dll';
   CDXBXKRNLDLLNAME = 'DxbxKrnl.dll';
   CDXBXDLLNAME = 'Dxbx.dll';
 
   // Application Versions
-  _DXBX_VERSION = '0.0.1.1' {$IFDEF DEBUG} + ' Debug'{$ENDIF};
-  _XDK_TRACKER_VERSION = '2.0.2.0';
+  _DXBX_VERSION = '0.1 alpha' {$IFDEF DEBUG} + ' Debug'{$ENDIF};
+  _XDK_TRACKER_VERSION = '2.1';
+  _XBE_EXPLORER_VERSION = '1.0';
 
   // Dialog Filters
   DIALOG_FILTER_TEXT = 'Text Documents (*.txt)|*.txt';
-  DIALOG_FILTER_EXE = 'Windows Executables (*.exe)|*.exe'; // obsolete
   DIALOG_FILTER_XBE = 'Xbox Executables (*.xbe)|*.xbe';
 
   // Magic values
@@ -149,13 +147,10 @@ const
 
   cOpen = 'open';
 
-  CCXBXKRNLINIT = 'CxbxKrnlInit';
-  CXBXKRNL_KERNELTHUNKTABLE = 'CxbxKrnl_KernelThunkTable'; // obsolete
   CSETXBEPATHMANGLEDNAME = '?SetXbePath@EmuShared@@QAEXPBD@Z';
 
   // Limits
   _RecentXbeLimit: Integer = 10;
-  _RecentExeLimit: Integer = 10; // obsolete
 
 implementation
 
