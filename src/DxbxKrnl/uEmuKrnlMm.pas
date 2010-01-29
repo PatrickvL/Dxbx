@@ -37,6 +37,7 @@ uses
   uLog,
   uEmu,
   uEmuAlloc,
+  uResourceTracker,
   uEmuFS,
   uEmuFile,
   uEmuXapi,
@@ -131,7 +132,7 @@ end;
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pRet: PVOID;
   dwRet: DWORD;
@@ -160,11 +161,8 @@ begin
   // align to page boundary
   begin
     dwRet := DWORD(pRet);
-
     Inc(dwRet, $1000 - (dwRet mod $1000));
-
-// Dxbx TODO :    g_AlignCache.insert(dwRet, pRet);
-
+    g_AlignCache.insert(dwRet, pRet);
     pRet := PVOID(dwRet);
   end;
 
@@ -173,7 +171,6 @@ begin
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
-
   Result := pRet;
 end;
 
@@ -184,7 +181,7 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
   Alignment: ULONG; //OPTIONAL
   ProtectionType: ULONG
   ): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 {$WRITEABLECONST ON}
 const
   Count: Integer = 0;
@@ -220,11 +217,8 @@ begin
   // align to page boundary
   begin
     dwRet := DWORD(pRet);
-
     Inc(dwRet, $1000 - (dwRet mod $1000));
-
-// Dxbx TODO :    g_AlignCache.insert(dwRet, pRet);
-
+    g_AlignCache.insert(dwRet, pRet);
     pRet := PVOID(dwRet);
   end;
 
@@ -335,9 +329,9 @@ end;
 procedure xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
-(*var
-  OrigBaseAddress: PVoid; *)
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+var
+  OrigBaseAddress: PVoid;
 begin
   EmuSwapFS(fsWindows);
 
@@ -349,15 +343,15 @@ begin
       [BaseAddress]);
 {$ENDIF}
 
-  (*OrigBaseAddress := BaseAddress;
+  OrigBaseAddress := BaseAddress;
 
   if(g_AlignCache.exists(BaseAddress)) then
   begin
-    OrigBaseAddress = g_AlignCache.get(BaseAddress);
+    OrigBaseAddress := g_AlignCache.get(BaseAddress);
     g_AlignCache.remove(BaseAddress);
   end;
 
-  if(OrigBaseAddress <> @xLaunchDataPage)
+(*  if(OrigBaseAddress <> @xLaunchDataPage) then
   begin
     CxbxFree(OrigBaseAddress);
   end
@@ -509,7 +503,9 @@ end;
 function xboxkrnl_MmQueryStatistics(
   MemoryStatistics: PMM_STATISTICS // out
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  MyMemoryStatus: MEMORYSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -521,18 +517,16 @@ begin
       [MemoryStatistics]);
 {$ENDIF}
 
-  (*MEMORYSTATUS MemoryStatus;
-
-  GlobalMemoryStatus(@MemoryStatus);
+  GlobalMemoryStatus(MyMemoryStatus);
 
   ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
 
-  MemoryStatistics.Length = sizeof(MM_STATISTICS);
-  MemoryStatistics.TotalPhysicalPages = MemoryStatus.dwTotalVirtual / 4096;
-  MemoryStatistics.AvailablePages = MemoryStatus.dwAvailVirtual / 4096;
+  MemoryStatistics.Length := sizeof(MM_STATISTICS);
+  MemoryStatistics.TotalPhysicalPages := MyMemoryStatus.dwTotalVirtual div 4096;
+  MemoryStatistics.AvailablePages := MyMemoryStatus.dwAvailVirtual div 4096;
 
   // HACK (does this matter?)
-  MemoryStatistics.VirtualMemoryBytesReserved := MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys; *)
+  MemoryStatistics.VirtualMemoryBytesReserved := MyMemoryStatus.dwTotalPhys - MyMemoryStatus.dwAvailPhys;
 
   // the rest arent really used from what i've seen
 
@@ -545,7 +539,9 @@ function xboxkrnl_MmSetAddressProtect(
   NumberOfBytes: ULONG;
   NewProtect: ULONG
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  dwOldProtect: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -560,25 +556,21 @@ begin
 {$ENDIF}
 
   // Halo Hack
-  (*if(BaseAddress == (PVOID)$80366000)
-  {
-      BaseAddress = (PVOID)(g_HaloHack[0] + ($80366000 - $80061000));
+  if(BaseAddress = PVOID($80366000)) then
+  begin
+    BaseAddress := PVOID((g_HaloHack[0] + ($80366000 - $80061000)));
 
 {$IFDEF DEBUG}
-      DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
+    DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
 {$ENDIF}
-  }
+  end;
 
-  DWORD dwOldProtect;
+  if(not VirtualProtect(BaseAddress, NumberOfBytes, NewProtect and (not PAGE_WRITECOMBINE), @dwOldProtect)) then
+    EmuWarning('VirtualProtect Failed!');
 
-  if(!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect and (not PAGE_WRITECOMBINE), @dwOldProtect))
-      EmuWarning('VirtualProtect Failed!'); *)
-
-  (*
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X', [dwOldProtect, NewProtect and (not PAGE_WRITECOMBINE)]);
 {$ENDIF}
-  *)
 
   EmuSwapFS(fsXbox);
 end;

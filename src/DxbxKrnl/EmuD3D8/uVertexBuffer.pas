@@ -1261,11 +1261,12 @@ procedure XTL_EmuFlushIVB;
 var
   pdwVB: PDWORD;
   uiStride: UINT;
+  pDummyTexture : Array[0..4 - 1] of IDirect3DTexture8;
 begin
-  (*  if (g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
+(*    if (g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
     begin
         XTL_EmuUpdateDeferredStates();
-        pdwVB := DWORD(g_IVBTable);
+        pdwVB := PDWORD(g_IVBTable);
         uiStride := 0;
 
 {$IFDEF DEBUG}
@@ -1306,9 +1307,12 @@ begin
         g_IVBTable[2].TexCoord4.y := 1.0;
         g_IVBTable[3].TexCoord4.x := 0.0;
         g_IVBTable[3].TexCoord4.y := 1.0;
-        //*/
+        //*/  *)
 
-        IDirect3DTexture8 *pDummyTexture[4] := (0, 0, 0, 0);
+(*        pDummyTexture[0] := nil;
+        pDummyTexture[1] := nil;
+        pDummyTexture[2] := nil;
+        pDummyTexture[3] := nil;
 
         for(Integer Stage:=0;Stage<4;Stage++)
         begin
@@ -1328,14 +1332,15 @@ begin
 
             g_pD3DDevice8.SetTexture(Stage, pDummyTexture[Stage]);
          end;
-        (*//*/
+
+        (*//*/  MARKED OUT BY CXBX
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_BLENDDIFFUSEALPHA);
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_SPECULAR);
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAARG1,   D3DTA_TEXTURE);
 
-        (*
+
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
         g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1);
@@ -1367,9 +1372,9 @@ begin
         g_pD3DDevice8.SetRenderState(D3DRS_LIGHTING, FALSE);
         g_pD3DDevice8.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
         g_pD3DDevice8.SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-        //*/
+        //*/  *)
 
-        for(uint v:=0;v<g_IVBTblOffs;v++)
+(*        for(uint v:=0;v<g_IVBTblOffs;v++)
         begin
             DWORD dwPos := g_IVBFVF and D3DFVF_POSITION_MASK;
 
