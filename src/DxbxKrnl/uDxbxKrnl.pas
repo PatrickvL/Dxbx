@@ -397,22 +397,26 @@ begin
 end;
 
 procedure CxbxKrnlResume();
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:70
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   v: Integer;
   dwExitCode: DWORD;
-//  szBuffer: array [0..256-1] of Char;
-//  hWnd: Handle;
+  szBuffer: array [0..256-1] of Char;
+  MyhWnd: Handle;
 begin
   if (not g_bEmuSuspended) then
     Exit;
 
   // remove 'paused' from rendering window caption text
   begin
-    (*hWnd := iif(CxbxKrnl_hEmuParent != NULL, CxbxKrnl_hEmuParent, g_hEmuWindow);
-    GetWindowText(hWnd, szBuffer, 255);
-    szBuffer[strlen(szBuffer)-9] := '\0';
-    SetWindowText(hWnd, szBuffer); *)
+    if CxbxKrnl_hEmuParent <> 0 then
+      MyhWnd := CxbxKrnl_hEmuParent
+    else
+      MyhWnd := g_hEmuWindow;
+
+    GetWindowText(MyhWnd, szBuffer, 255);
+    szBuffer[strlen(szBuffer)-9] := #0;
+    SetWindowText(MyhWnd, szBuffer);
   end;
 
   for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
@@ -436,10 +440,12 @@ begin
 end;
 
 procedure CxbxKrnlSuspend();
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:60
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   v: Integer;
   dwExitCode: DWORD;
+  szBuffer: array [0..256-1] of Char;
+  MyhWnd: Handle;
 begin
   if (g_bEmuSuspended or g_bEmuException) then
     Exit;
@@ -462,18 +468,18 @@ begin
   end;
 
   // append 'paused' to rendering window caption text
-  (*
+
   begin
-    char szBuffer[256];
+    if CxbxKrnl_hEmuParent <> 0 then
+      MyhWnd := CxbxKrnl_hEmuParent
+    else
+      MyhWnd := g_hEmuWindow;
 
-    HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
-
-    GetWindowText(hWnd, szBuffer, 255 - 10);
+    GetWindowText(MyhWnd, szBuffer, 255 - 10);
 
     strcat(szBuffer, ' (paused)');
-    SetWindowText(hWnd, szBuffer);
+    SetWindowText(MyhWnd, szBuffer);
   end;
-  *)
 
   g_bEmuSuspended := True;
 end;

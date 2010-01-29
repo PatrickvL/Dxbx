@@ -408,40 +408,33 @@ end;
 function {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
   ): NTSTATUS; stdcall; // Source : XBMC
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
 begin
   EmuSwapFS(fsWindows);
 
-(*
+  DbgPrintf('EmuKrnl: PsTerminateSystemThread'+
+         '('+
+         '   ExitStatus          : 0x%.08X'+
+         ')',
+         [ExitStatus]);
 
-    DbgPrintf("EmuKrnl (0x%X): PsTerminateSystemThread\n"
-           "(\n"
-           "   ExitStatus          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ExitStatus);
+  // call thread notification routine(s)
+  if Assigned(g_pfnThreadNotification) then
+  begin
+    pfnNotificationRoutine := XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
+    EmuSwapFS();   // Xbox FS
+    pfnNotificationRoutine(FALSE);
+    EmuSwapFS();   // Win2k/XP FS
+  end;
 
-    // call thread notification routine(s)
-    if(g_pfnThreadNotification != 0)
-    {
-        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+  //CxbxKrnlTerminateThread();
+  EmuCleanupFS();
 
-        EmuSwapFS();   // Xbox FS
+  //_endthreadex(ExitStatus);
+  ExitThread(ExitStatus);
 
-        pfnNotificationRoutine(FALSE);
-
-        EmuSwapFS();   // Win2k/XP FS
-    }
-
-//    CxbxKrnlTerminateThread();
-
-    EmuCleanupFS();
-
-    _endthreadex(ExitStatus);
-    //ExitThread(ExitStatus);
-
-    return;*)
-
-  Result := Unimplemented('PsTerminateSystemThread');
   EmuSwapFS(fsXbox);
 end;
 

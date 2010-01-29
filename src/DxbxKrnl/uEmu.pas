@@ -111,9 +111,11 @@ end;
 
 // exception handler
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:10
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:60
 var
   fix: UInt32;
+  buffer: Array [0..256 -1] of char;
+  ret: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -132,21 +134,18 @@ begin
           // Halo BINK skip
           begin
             // nop sled over bink calls
-            {
-            memset((void* )$2CBA4, $90, $2CBAF - $2CBA4);
-            memset((void* )$2CBBD, $90, $2CBD5 - $2CBBD);
-            }
-            (*memset((void* )$2CAE0, $90, $2CE1E - $2CAE0); *)
+            memset(PVoid($2CBA4), $90, $2CBAF - $2CBA4);
+            memset(PVoid($2CBBD), $90, $2CBD5 - $2CBBD);
+            memset(PVoid($2CAE0), $90, $2CE1E - $2CAE0);
           end;
 
           fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
           e.ContextRecord.Eax := fix;
           e.ContextRecord.Ecx := fix;
+          e.ContextRecord.Esp := fix;
 
-          (**(uint32* )e.ContextRecord.Esp := fix;
-
-          ((XTL::X_D3DResource* )fix).Data := g_HaloHack[1] + (((XTL::X_D3DResource* )fix).Data - $803A6000);
+(*          (PX_D3DResource* )fix).Data := g_HaloHack[1] + (((XTL::X_D3DResource* )fix).Data - $803A6000);
 
           // go through and fix any other pointers in the ESI allocation chunk
           begin
@@ -163,11 +162,11 @@ begin
               if (dwCur >= $803A6000) and (dwCur < $819A6000) then
                   *(DWORD* )(dwESI+v) := g_HaloHack[1] + (dwCur - $803A6000);
             end;
-          end;
+          end;*)
 
           // fix this global pointer
-          begin
-            DWORD dwValue := *(DWORD* )$39CE24;
+         (* begin
+            dwValue := *(DWORD* )$39CE24;
 
             *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
           end;      *)
@@ -241,33 +240,28 @@ begin
 
   // notify user
   begin
-(*
-    char buffer[256];
 
     if e.ExceptionRecord.ExceptionCode = $80000003 then
     begin
 {$IFDEF DEBUG}
-      sprintf(buffer,
-        'Received Breakpoint Exception (int 3) @ EIP := $%.08X\n'
-        '\n'
-        '  Press Abort to terminate emulation.\n'
-        '  Press Retry to debug.\n'
+      DbgPrintf(
+        'Received Breakpoint Exception (int 3) @ EIP := $%.08X'+
+        ''+
+        '  Press Abort to terminate emulation.'+
+        '  Press Retry to debug.'+
         '  Press Ignore to continue emulation.',
-        e.ContextRecord.Eip, e.ContextRecord.EFlags);
+        [e.ContextRecord.EFlags]);
 {$ENDIF}
-
-      e.ContextRecord.Eip += 1;
-
-      int ret := MessageBox(g_hEmuWindow, buffer, 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
-
+      Inc(e.ContextRecord.Eip);
+      ret := MessageBox(g_hEmuWindow, buffer, 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
       if ret = IDABORT then
       begin
 {$IFDEF DEBUG}
-        printf('EmuMain : Aborting Emulation');
+        DbgPrintf('EmuMain : Aborting Emulation');
 {$ENDIF}
-        fflush(stdout);
+        (*fflush(stdout); *)
 
-        if CxbxKrnl_hEmuParent <> NULL then
+        if CxbxKrnl_hEmuParent <> 0 then
           SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
         ExitProcess(1);
@@ -276,7 +270,7 @@ begin
         if ret = IDIGNORE then
         begin
 {$IFDEF DEBUG}
-          printf('EmuMain : Ignored Breakpoint Exception');
+          DbgPrintf('EmuMain : Ignored Breakpoint Exception');
 {$ENDIF}
 
           g_bEmuException := False;
@@ -288,28 +282,27 @@ begin
     else
     begin
 {$IFDEF DEBUG}
-      sprintf(buffer,
-              'Received Exception Code $%.08X @ EIP := $%.08X\n'
-              '\n'
-              '  Press \'OK\' to terminate emulation.\n'
-              '  Press \'Cancel\' to debug.',
-              e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip, e.ContextRecord.EFlags);
+      DbgPrintf(
+              'Received Exception Code $%.08X @ EIP := $%.08X'+
+              ''+
+              '  Press \''OK\'' to terminate emulation.'+
+              '  Press \''Cancel\'' to debug.',
+              [e.ContextRecord.Eip, e.ContextRecord.EFlags]);
 {$ENDIF}
 
       if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
       begin
 {$IFDEF DEBUG}
-        printf('EmuMain : Aborting Emulation');
+        DbgPrintf('EmuMain : Aborting Emulation');
 {$ENDIF}
-        fflush(stdout);
+        (*fflush(stdout);*)
 
-        if CxbxKrnl_hEmuParent <> NULL then
+        if CxbxKrnl_hEmuParent <> 0 then
           SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
         ExitProcess(1);
       end;
     end;
-*)
   end;
 
   g_bEmuException := False;
@@ -355,11 +348,11 @@ end;
 
 procedure EmuCleanup(const szErrorMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:20
-(*var
+var
 //  buffer: array [0..15] of Char;
   szBuffer1 : array [0..255] of char;
   szBuffer2 : array [0..255] of char;
-  argp: va_list; *)
+  argp: va_list;
 begin
   // Print out ErrorMessage (if exists)
 (*  if (szErrorMessage <> '') then
