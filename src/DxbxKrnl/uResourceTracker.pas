@@ -196,24 +196,25 @@ begin
     Exit;
   end;
 
-(*  if m_head = 0 then
-  {
-      m_tail = m_head = new RTNode();
-      m_tail.pResource = 0;
-      m_tail.pNext = 0;
-  }
+  if not Assigned(m_head) then
+  begin
+    New(m_tail);
+    New(m_head);
+    m_tail.pResource := nil;
+    m_tail.pNext := nil;
+  end;
 
   m_tail.pResource := pResource;
   m_tail.uiKey := uiKey;
 
-  (*m_tail.pNext := new RTNode(); * )
+  New(m_tail.pNext);
 
   m_tail := m_tail.pNext;
 
-  m_tail.pResource := 0;
+  m_tail.pResource := nil;
   m_tail.uiKey := 0;
-  m_tail.pNext := 0;
-*)
+  m_tail.pNext := nil;
+
   Self.Unlock();
 end;
 
@@ -229,10 +230,10 @@ var
 begin
   Self.Lock();
 
-  pre := 0;
+  pre := nil;
   cur := m_head;
 
-(*  while Assigned(cur) do
+  while Assigned(cur) do
   begin
     if (cur.uiKey = uiKey) then
     begin
@@ -246,14 +247,14 @@ begin
 
         if not Assigned(m_head.pNext) then
         begin
-          delete(m_head);
+          Dispose(m_head);
 
-          m_head = 0;
-          m_tail = 0;
+          m_head := nil;
+          m_tail := nil;
         end;
       end;
 
-      delete(cur);
+      Dispose(cur);
 
       self.Unlock();
 
@@ -262,7 +263,7 @@ begin
 
     pre := cur;
     cur := cur.pNext;
-  end; *)
+  end;
   Self.Unlock();
 end;
 
