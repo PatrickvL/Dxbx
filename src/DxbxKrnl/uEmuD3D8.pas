@@ -511,7 +511,7 @@ end; // EmuEnumDisplayDevices
 
 // window message processing thread
 function EmuRenderWindow(lpVoid: PVOID): DWord; // no stdcall !
-// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:95
+// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:100
 const
   IDI_CXBX = 101;
   DXBX_RENDER_CLASS = 'DxbxRender';
@@ -4069,7 +4069,6 @@ var
   hRet: HRESULT;
   pBackBuffer: IDirect3DSurface8;
 begin
-  hret := 0;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -4136,7 +4135,7 @@ begin
 end;
 
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource; pBase: PVOID): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:90
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
   pResource: PX_D3DResource;
@@ -4193,6 +4192,7 @@ var
   pTexturePalette: PByteArray;
 
   dummy: Pointer;
+  szString: Array[0..256 -1] of char;
 begin
   EmuSwapFS(fsWindows);
 
@@ -4245,21 +4245,19 @@ begin
       if (FAILED(hRet)) then
       begin
         // TODO: Hack for Crazy Taxi 3?
-        (*char szString[256];
 {$IFDEF DEBUG}
-        sprintf( szString, 'CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
+        DbgPrintf('CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
 {$ENDIF}
 
-        if ( dwSize != 0 ) then
-          CxbxKrnlCleanup( szString );
+        if ( dwSize <> 0 ) then
+          CxbxKrnlCleanup( szString )
         else
-        {
+        begin
           EmuWarning( szString );
-
           EmuSwapFS(fsXbox);
-
-          return hRet;
-        } *)
+          Result := hRet;
+          Exit;
+        end;
      end;
 
 
@@ -4867,7 +4865,7 @@ begin
       end;
 
 {$IFDEF DEBUG}
-(*      DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pResource.Size, pResource.AllocationSize]); *)
+(*      DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pResource.Size, pResource.AllocationSize]);*)
 {$ENDIF}
     end;
 
