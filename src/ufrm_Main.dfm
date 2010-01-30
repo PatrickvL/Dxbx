@@ -1503,6 +1503,13 @@ object frm_Main: Tfrm_Main
           Action = actExportLogo
         end
       end
+      object mnu_Gambitmap: TMenuItem
+        Caption = 'Game image'
+        Enabled = False
+        object mnu_ExportGameBitmap: TMenuItem
+          Action = actExportGameImage
+        end
+      end
       object mnu_Patch: TMenuItem
         Caption = 'Patch'
         Enabled = False
@@ -1698,6 +1705,11 @@ object frm_Main: Tfrm_Main
       Category = 'Edit'
       Caption = 'XDKTracker'
       OnExecute = actXdkTrackerXbeInfoExecute
+    end
+    object actExportGameImage: TAction
+      Category = 'Edit'
+      Caption = 'Export'
+      OnExecute = actExportGameImageExecute
     end
   end
   object XbeOpenDialog: TOpenDialog

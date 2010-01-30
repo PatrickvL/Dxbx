@@ -114,6 +114,9 @@ type
     StatusBar: TStatusBar;
     ImageIcon: TImage;
     ImageLogo: TImage;
+    mnu_Gambitmap: TMenuItem;
+    mnu_ExportGameBitmap: TMenuItem;
+    actExportGameImage: TAction;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -133,6 +136,7 @@ type
     procedure actXIsoExecute(Sender: TObject);
     procedure actXdkTrackerXbeInfoExecute(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure actExportGameImageExecute(Sender: TObject);
   private
     m_Xbe: TXbe;
 
@@ -607,6 +611,7 @@ begin
   mnu_Logbitmap.Enabled := False;
   mnu_Patch.Enabled := False;
   mnu_DumpxbeinfoTo.Enabled := False;
+  mnu_Gambitmap.Enabled := False;
 
   // Init View
   actConsoleDebugGui.Checked := (DebugMode = dmConsole);
@@ -620,6 +625,7 @@ begin
   if Emulation_State = esFileOpen then
   begin
     mnu_Logbitmap.Enabled := True;
+    mnu_Gambitmap.Enabled := True;
     mnu_DumpxbeinfoTo.Enabled := True;
     mnu_CloseXbe.Enabled := True;
     actCloseXbe.Enabled := True;
@@ -627,10 +633,39 @@ begin
   end;
 end;
 
+procedure Tfrm_Main.actExportGameImageExecute(Sender: TObject);
+var
+  bmp: TBitmap;
+begin
+  LogoSaveDialog.FileName := m_szAsciiTitle + '.bmp';
+  if not LogoSaveDialog.Execute then
+    Exit;
+
+  // ask permission to overwrite if file exists
+  if FileExists(LogoSaveDialog.FileName) then
+  begin
+    if MessageDlg('Overwrite existing file?', mtConfirmation, [mbYes, mbNo], -1) = mrYes then
+      DeleteFile(LogoSaveDialog.FileName)
+    else
+      Exit;
+  end;
+
+  // export logo bitmap
+  bmp := TBitmap.Create;
+  try
+    m_Xbe.ExportIconBitmap(bmp);
+    bmp.SaveToFile(LogoSaveDialog.FileName);
+  finally
+    FreeAndNil(bmp);
+    WriteLog(m_szAsciiTitle + '''s game image was successfully exported.');
+  end;
+end;
+
 procedure Tfrm_Main.actExportLogoExecute(Sender: TObject);
 var
   bmp: TBitmap;
 begin
+  LogoSaveDialog.FileName := 'logo.bmp';
   if not LogoSaveDialog.Execute then
     Exit;
 

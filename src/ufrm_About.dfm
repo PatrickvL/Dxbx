@@ -5,7 +5,7 @@ object frm_About: Tfrm_About
   Caption = 'About'
   ClientHeight = 319
   ClientWidth = 383
-  Color = clSkyBlue
+  Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
