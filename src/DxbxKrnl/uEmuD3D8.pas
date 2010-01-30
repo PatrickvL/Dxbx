@@ -2582,8 +2582,8 @@ begin
 {$ENDIF}
 
   // create emulated shader struct
-  pD3DVertexShader := CxbxMalloc(SizeOf(X_D3DVertexShader));
-  pVertexShader := CxbxMalloc(SizeOf(VERTEX_SHADER));
+  pD3DVertexShader := PX_D3DVertexShader(CxbxMalloc(SizeOf(X_D3DVertexShader)));
+  pVertexShader := PVERTEX_SHADER(CxbxMalloc(SizeOf(VERTEX_SHADER)));
 
   // Cxbx TODO : Intelligently fill out these fields as necessary
   ZeroMemory(pD3DVertexShader, SizeOf(X_D3DVertexShader));
@@ -2593,9 +2593,7 @@ begin
   if not Assigned(pDeclaration) then
   begin
     pHandle := nil;
-
-    EmuSwapFS(fsWindows);
-
+    EmuSwapFS(fsXbox);
     Result := S_OK;
     Exit;
   end;
@@ -2604,11 +2602,11 @@ begin
   pRecompiledFunction := nil;
   aHandle := 0;
 
-  hRet := XTL_EmuRecompileVshDeclaration(pDeclaration,
+  hRet := XTL_EmuRecompileVshDeclaration(PDword(pDeclaration),
                                          @pRecompiledDeclaration,
                                          @DeclarationSize,
                                          not Assigned(pFunction),
-                                         @(pVertexShader.VertexDynamicPatch));
+                                         @pVertexShader.VertexDynamicPatch);
 
   if (SUCCEEDED(hRet) and Assigned(pFunction)) then
   begin
@@ -2618,7 +2616,7 @@ begin
                                         g_VertexShaderConstantMode = X_VSCM_NONERESERVED);
     if (SUCCEEDED(hRet)) then
     begin
-      pRecompiledFunction := pRecompiledBuffer.GetBufferPointer();
+      pRecompiledFunction := PDWord(pRecompiledBuffer.GetBufferPointer());
     end
     else
     begin
@@ -2629,7 +2627,7 @@ begin
   end;
 
 {$IFDEF DEBUG}
-  DbgPrintf('MaxVertexShaderConst = %d', [g_D3DCaps.MaxVertexShaderConst]);
+ // DbgPrintf('MaxVertexShaderConst = %d', [g_D3DCaps.MaxVertexShaderConst]);
 {$ENDIF}
 
   if (SUCCEEDED(hRet)) then
@@ -2649,7 +2647,7 @@ begin
   end;
 
 
-(*  //* Fallback to dummy shader.
+{  //* Fallback to dummy shader.   MARKED OUT BY CXBX
   if (FAILED(hRet)) then
   begin
       static const char dummy[] =
@@ -2671,14 +2669,14 @@ begin
           g_dwVertexShaderUsage
       );
   end;
-  //*/ *)
+  //*/ }
 
   // Save the status, to remove things later
   pVertexShader.Status := hRet;
 
   CxbxFree(pRecompiledDeclaration);
 
-  pVertexShader.pDeclaration := CxbxMalloc(DeclarationSize);
+  pVertexShader.pDeclaration := PDWord(CxbxMalloc(DeclarationSize));
   move(pDeclaration, pVertexShader.pDeclaration, DeclarationSize);
 
   pVertexShader.FunctionSize := 0;
@@ -2691,7 +2689,7 @@ begin
   begin
     if Assigned(pFunction) then
     begin
-      pVertexShader.pFunction := CxbxMalloc(VertexShaderSize);
+      pVertexShader.pFunction := PDWord(CxbxMalloc(VertexShaderSize));
       move ( pFunction, pVertexShader.pFunction, VertexShaderSize );
       pVertexShader.FunctionSize := VertexShaderSize;
     end
@@ -2709,7 +2707,7 @@ begin
 
   pD3DVertexShader.Handle := DWORD(pVertexShader);
 
-  UIntPtr(pHandle) := {PX_D3DVertexShader}(UIntPtr(pD3DVertexShader) or $80000000);
+  pHandle^ := {PX_D3DVertexShader}DWord(pD3DVertexShader) or $80000000;
 
   if (FAILED(hRet)) then
   begin
@@ -2729,7 +2727,7 @@ begin
       FailedShaderCount:= FailedShaderCount + 1;
     end;
 {$endif}
-    hRet := D3D_OK;
+    //hRet := D3D_OK;    // marked out cxbx
   end;
 
   EmuSwapFS(fsXbox);

@@ -119,7 +119,6 @@ type
     procedure actCloseXbeExecute(Sender: TObject);
     procedure actConfigControllerExecute(Sender: TObject);
     procedure actConfigVideoExecute(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure actConsoleXbeInfoExecute(Sender: TObject);
     procedure actFileXbeInfoExecute(Sender: TObject);
@@ -133,6 +132,7 @@ type
     procedure actXdkTrackerExecute(Sender: TObject);
     procedure actXIsoExecute(Sender: TObject);
     procedure actXdkTrackerXbeInfoExecute(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     m_Xbe: TXbe;
 
@@ -213,14 +213,6 @@ end; // Tfrm_Main.actOpenXbeExecute
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
 begin
   CloseXbe();
-end;
-
-procedure Tfrm_Main.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  WriteSettingsIni();
-  CloseLogs();
-  if Assigned(m_Xbe) then
-    CloseXbe();
 end;
 
 procedure Tfrm_Main.CloseXbe;
@@ -329,7 +321,13 @@ begin
   end;
 end;
 
-//------------------------------------------------------------------------------
+procedure Tfrm_Main.FormDestroy(Sender: TObject);
+begin
+  WriteSettingsIni();
+  CloseLogs();
+  if Assigned(m_Xbe) then
+    CloseXbe();
+end;
 
 procedure Tfrm_Main.LBWindowProc(var Message: TMessage);
 begin
@@ -339,8 +337,6 @@ begin
   OldLBWindowProc(Message);
   // call default ListBox1 WindowProc method to handle all other messages
 end;
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.ReadSettingsIni;
 var
@@ -383,8 +379,6 @@ begin
     FreeAndNil({var}IniFile);
   end;
 end; // Tfrm_Main.ReadSettingsIni
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.WMDROPFILES(var Msg: TMessage);
 var
@@ -453,8 +447,6 @@ begin
   end;
 end; // Tfrm_Main.WriteSettingsIni
 
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.actConsoleXbeInfoExecute(Sender: TObject);
 begin
   // dump xbe information to debug console
@@ -463,8 +455,6 @@ begin
   else
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.'); // NOT!
 end; // Tfrm_Main.actConsoleXbeInfoExecute
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
@@ -486,8 +476,6 @@ begin
   end;
 end; // Tfrm_Main.actFileXbeInfoExecute
 
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
   if DebugMode = dmConsole then
@@ -505,8 +493,6 @@ begin
     CreateLogs(DebugMode, DebugFileName);
   end;
 end; // Tfrm_Main.actConsoleDebugGuiExecute
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
@@ -536,8 +522,6 @@ begin
   end;
 end; // Tfrm_Main.actFileDebugGuiExecute
 
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
   if KernelDebugMode = dmConsole then
@@ -553,8 +537,6 @@ begin
     KernelDebugMode := dmConsole;
   end;
 end; // Tfrm_Main.actConsoleDebugKernelExecute
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
@@ -582,8 +564,6 @@ begin
   end;
 end; // Tfrm_Main.actFileDebugKernelExecute
 
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.actAboutExecute(Sender: TObject);
 begin
   frm_About := Tfrm_About.Create(Self);
@@ -595,14 +575,10 @@ begin
   FreeAndNil({var}frm_About);
 end; // Tfrm_Main.ActAboutExecute
 
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.actCloseExecute(Sender: TObject);
 begin
   Close;
 end; // Tfrm_Main.actCloseExecute
-
-//------------------------------------------------------------------------------
 
 destructor Tfrm_Main.Destroy;
 begin
@@ -613,8 +589,6 @@ begin
 
   inherited Destroy;
 end; // Tfrm_Main.Create
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.AddjustMenu;
 begin
@@ -653,8 +627,6 @@ begin
   end;
 end;
 
-//------------------------------------------------------------------------------
-
 procedure Tfrm_Main.actExportLogoExecute(Sender: TObject);
 var
   bmp: TBitmap;
@@ -681,8 +653,6 @@ begin
     WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
   end;
 end; // Tfrm_Main.actExportLogoExecute
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.actXdkTrackerExecute(Sender: TObject);
 begin
@@ -764,8 +734,6 @@ begin
   Emulation_State := esFileOpen;
   AddjustMenu;
 end;
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.UpdateIcon(const aXbe: TXBE);
 begin
