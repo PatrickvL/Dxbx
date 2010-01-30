@@ -17,4 +17,9 @@ The following tasks are currently on our near-term TODO list :
   
 - Transform the StringTable in the Signature resource into a SuffixTree
   (which will make strings slower to read, but much more compact in storage).
+
+
+ShowStoppers !!
+- NTCreateFile result is returning false everytime.. so we can not acces files.
+- CreateVertextshader is always use the Nop instead of other items in the case statement. 
   
