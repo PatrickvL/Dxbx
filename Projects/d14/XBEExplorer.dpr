@@ -2,6 +2,7 @@ program XBEExplorer;
 
 uses
   Forms,
+  SysUtils,
   uXBEExplorerMain in '..\..\src\XBEExplorer\uXBEExplorerMain.pas' {FormXBEExplorer},
   uXbe in '..\..\src\uXbe.pas',
   uTypes in '..\..\src\uTypes.pas',
@@ -22,7 +23,9 @@ begin
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
   Application.Title := FormXBEExplorer.Caption;
   if ParamCount > 0 then
-    FormXBEExplorer.OpenFile(ParamStr(1));
+    if FileExists(ParamStr(1))then
+      FormXBEExplorer.OpenFile(ParamStr(1));
+
   Application.Run;
 end.
 
