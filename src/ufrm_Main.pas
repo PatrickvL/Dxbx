@@ -177,6 +177,10 @@ implementation
 
 {$R *.DFM}
 
+const
+  cXDKTrackerPath = 'XdkTracker.exe';
+  cXIsoPath = 'xIso.exe';
+
 procedure LaunchXBE(const aXbe: TXbe; const aHandle: THandle);
 begin
   ShellExecute(0, 'open', PChar(ParamStr(0)), PChar(
@@ -691,27 +695,27 @@ end; // Tfrm_Main.actExportLogoExecute
 
 procedure Tfrm_Main.actXdkTrackerExecute(Sender: TObject);
 begin
-  if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then
-    ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), nil, nil, SW_SHOWNORMAL);
+  if FileExists(FApplicationDir + cXDKTrackerPath) then
+    ShellExecute(0, 'open', PChar(FApplicationDir + cXDKTrackerPath), nil, nil, SW_SHOWNORMAL);
 end;
 
 procedure Tfrm_Main.actXIsoExecute(Sender: TObject);
 begin
-  if FileExists(FApplicationDir + 'Tools\xIso.exe') then
-    ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\xIso.exe'), nil, nil, SW_SHOWNORMAL);
+  if FileExists(FApplicationDir + cXIsoPath) then
+    ShellExecute(0, 'open', PChar(FApplicationDir + cXIsoPath), nil, nil, SW_SHOWNORMAL);
 end;
 
 procedure Tfrm_Main.actXdkTrackerXbeInfoExecute(Sender: TObject);
 var
   DumpFilePath: string;
 begin
-  if FileExists(FApplicationDir + 'Tools\XdkTracker.exe') then
+  if FileExists(FApplicationDir + cXDKTrackerPath) then
   begin
     DumpFilePath := FApplicationDir + 'Tools\Dump.dat';
     DxbxXml.CreateXmlXbeDump(DumpFilePath, m_Xbe);
 
     if not SendCommandToXdkTracker then
-      ShellExecute(0, 'open', PChar(FApplicationDir + 'Tools\XdkTracker.exe'), '/XBEDUMP', nil, SW_SHOWNORMAL);
+      ShellExecute(0, 'open', PChar(FApplicationDir + cXDKTrackerPath), '/XBEDUMP', nil, SW_SHOWNORMAL);
   end;
 end;
 
