@@ -7,7 +7,7 @@ object frm_Main: Tfrm_Main
   ClientHeight = 393
   ClientWidth = 509
   Color = 13160660
-  Constraints.MaxHeight = 437
+  Constraints.MaxHeight = 441
   Constraints.MaxWidth = 515
   Constraints.MinHeight = 429
   Constraints.MinWidth = 515
@@ -19,8 +19,8 @@ object frm_Main: Tfrm_Main
   Menu = MainMenu1
   OldCreateOrder = False
   Position = poScreenCenter
-  OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
