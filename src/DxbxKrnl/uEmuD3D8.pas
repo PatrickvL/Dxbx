@@ -133,6 +133,11 @@ procedure XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
   EnableColorKey: BOOL;
   ColorKey: D3DCOLOR); stdcall;
 
+function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
+  Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool;
+  ppVertexBuffer: PIDirect3DVertexBuffer8): HResult;
+
+
 implementation
 
 uses
