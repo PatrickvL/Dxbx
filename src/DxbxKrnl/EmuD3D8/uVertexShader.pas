@@ -1544,7 +1544,7 @@ begin
       pIntermediate := @pShader.Intermediate[i];
 
       // Find instructions outputting to oPos.
-(*      if( pIntermediate.Output.aType = IMD_OUTPUT_O) and
+     (* if( pIntermediate.Output.aType = IMD_OUTPUT_O) and
           (pIntermediate.Output.Address = OREG_OPOS) then
       begin
         // Redirect output to r11.
