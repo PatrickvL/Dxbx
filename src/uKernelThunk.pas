@@ -46,8 +46,6 @@ uses
   uEmuKrnlXc,
   uEmuKrnlXe;
 
-function CxbxKrnl_KernelThunkTable: PKernelThunkTable; cdecl; // obsolete
-
 var
   KernelThunkTable: packed array [0..NUMBER_OF_THUNKS - 1] of Pointer = (
     {000}@xboxkrnl_UnknownAPI000,
@@ -433,13 +431,5 @@ var
     );
 
 implementation
-
-function CxbxKrnl_KernelThunkTable: PKernelThunkTable; // obsolete
-begin
-  Result := @KernelThunkTable;
-end;
-
-exports
-  CxbxKrnl_KernelThunkTable; // obsolete
 
 end.

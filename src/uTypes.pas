@@ -48,6 +48,9 @@ type
   TDWordArray = array [0..(MaxInt div SizeOf(DWord)) - 1] of DWord;
   PDWordArray = ^TDWordArray;
 
+  TBooleanArray = array [0..(MaxInt div SizeOf(Boolean)) -1] of Boolean;
+  PBooleanArray = ^TBooleanArray;
+
   TByteArray = array [0..(MaxInt div SizeOf(Byte)) -1] of Byte;
   PByteArray = ^TByteArray;
 

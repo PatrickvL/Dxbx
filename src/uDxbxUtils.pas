@@ -327,6 +327,7 @@ begin
   Pointer(aElement2) := Tmp;
 end;
 
+// Round dwValue to the nearest multiple of dwMult
 function RoundUp(dwValue, dwMult: DWord): DWord;
 begin
   if dwMult = 0 then
