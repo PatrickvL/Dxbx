@@ -1382,7 +1382,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXRegisterThreadNotifyRoutine' +
       #13#10'(' +
-      #13#10'   pThreadNotification : 0x%.08X ($%.08X)' +
+      #13#10'   pThreadNotification : 0x%.08X (0x%.08X)' +
       #13#10'   fRegister           : 0x%.08X' +
       #13#10');',
       [pThreadNotification, Addr(pThreadNotification.pfnNotifyRoutine), Integer(fRegister)]);

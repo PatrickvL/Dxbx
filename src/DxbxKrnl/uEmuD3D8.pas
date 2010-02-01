@@ -3761,13 +3761,13 @@ end;
 function FtoDW(f: FLOAT): DWORD;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  Result := Round(f);
+  Result := PDWORD(@f)^;
 end;
 
 function DWtoF(f: DWORD): FLOAT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-  Result := f;
+  Result := PFLOAT(@f)^;
 end;
 
 
