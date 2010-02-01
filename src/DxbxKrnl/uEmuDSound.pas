@@ -1463,7 +1463,7 @@ begin
 end;
 
 function XTL_EmuIDirectSoundBuffer8_Play(pThis: PX_CDirectSoundBuffer; dwReserved1: DWORD; dwReserved2: DWORD; dwFlags: DWORD): HRESULT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:10
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
 begin
@@ -1479,13 +1479,13 @@ begin
          #13#10');',
          [pThis, dwReserved1, dwReserved2, dwFlags]);
 {$ENDIF}
-(*  if (dwFlags and (not DSBPLAY_LOOPING)) then
+  if (dwFlags and (not DSBPLAY_LOOPING)) > 0 then
       CxbxKrnlCleanup('Unsupported Playing Flags');
 
   HackUpdateSoundBuffers();
 
   // close any existing locks
-  if (pThis.EmuLockPtr1 <> 0) then
+  if Assigned(pThis.EmuLockPtr1) then
   begin
     pThis.EmuDirectSoundBuffer8.Unlock
     (
@@ -1498,16 +1498,16 @@ begin
     pThis.EmuLockPtr1 := 0;
   end;
 
-  if (pThis.EmuFlags and DSB_FLAG_ADPCM) then
+  if (pThis.EmuFlags and DSB_FLAG_ADPCM) > 0 then
   begin
-    hRet := D3D_OK;
+    hRet := S_OK;
   end
   else
   begin
     hRet := pThis.EmuDirectSoundBuffer8.Play(0, 0, dwFlags);
   end;
 
-  pThis.EmuPlayFlags := dwFlags; *)
+  pThis.EmuPlayFlags := dwFlags;
 
   EmuSwapFS(fsXbox);
 

@@ -25,6 +25,7 @@ interface
 uses
   // Delphi
   Windows
+  , Classes
   , JwaWinType
   , SysUtils // Abort
   // Directx
@@ -33,6 +34,7 @@ uses
   , Direct3D8
 //  , DirectDraw
   // Dxbx
+  , uEmuXG
   , uState
   , uDxbxKrnlUtils
   , uResourceTracker
@@ -60,7 +62,6 @@ type
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
 
-type
   _PATCHEDSTREAM = packed record
     pOriginalStream: IDirect3DVertexBuffer8; // P?
     pPatchedStream: IDirect3DVertexBuffer8; // P?
@@ -71,7 +72,6 @@ type
   PATCHEDSTREAM = _PATCHEDSTREAM;
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
 
-type
   _CACHEDSTREAM = packed record
     uiCRC32: uint32;
     uiCheckFrequency: uint32;
@@ -387,12 +387,12 @@ begin
       CxbxFree(pCachedStream.pStreamUP);
     end;
 
-    if (pCachedStream.Stream.pOriginalStream) then
+    if Assigned(pCachedStream.Stream.pOriginalStream) then
     begin
       pCachedStream.Stream.pOriginalStream._Release();
     end;
 
-    if (pCachedStream.Stream.pPatchedStream) then
+    if Assigned(pCachedStream.Stream.pPatchedStream) then
     begin
       pCachedStream.Stream.pPatchedStream._Release();
     end;
@@ -400,7 +400,7 @@ begin
     CxbxFree(pCachedStream);
   end;
   g_PatchedStreamsCache.Unlock();
-  g_PatchedStreamsCache.remove(pStream);*)
+  g_PatchedStreamsCache.remove(pStream); *)
 end;
 
 function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
@@ -1071,8 +1071,8 @@ begin
     dwNewSizeWR       := 0;
 
     // vertex data arrays
-    pOrigVertexData := 0;
-    pPatchedVertexData := 0;
+    pOrigVertexData := nil;
+    pPatchedVertexData := nil;
 
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
@@ -1679,8 +1679,8 @@ begin
 end;
 
 procedure XTL_EmuUpdateActiveTexture;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
   Stage: integer;
   pTexture: PX_D3DResource;
   pResource: PX_D3DResource;
@@ -1701,13 +1701,23 @@ procedure XTL_EmuUpdateActiveTexture;
   dwMipOffs: DWORD;
   dwMipWidth: DWORD;
   dwMipHeight: DWORD;
-  dwMipPitch: DWORD;*)
+  dwMipPitch: DWORD;
+  level: uint;
 
+  LockedRect: D3DLOCKED_RECT;
+
+  hRet: HRESULT;
+
+  iRect: TRect;
+  iPoint: TPoint;
+  pSrc: PBYTE;
+  pDest: PBYTE;
+  v: DWORD;
 begin
     //
     // DEBUGGING
     //
-(*  for Stage := 0 to 3 do
+  for Stage := 0 to 3 do
   begin
     pTexture := EmuD3DActiveTexture[Stage];
 
@@ -1715,11 +1725,11 @@ begin
         Continue;
 
     pResource := pTexture;
-    pPixelContainer := X_D3DPixelContainer(pTexture);
+    pPixelContainer := PX_D3DPixelContainer(pTexture);
 
     X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
 
-    if (X_Format <> $CD and (pTexture.EmuResource8.GetType() = D3DRTYPE_TEXTURE)) then
+    if (X_Format <> $CD) and (pTexture.EmuResource8.GetType() = D3DRTYPE_TEXTURE) then
     begin
       dwDepth := 1;
       dwPitch := 0;
@@ -1727,7 +1737,7 @@ begin
       bSwizzled := FALSE;
       bCompressed := FALSE;
       dwCompressedSize := 0;
-      bCubemap := pPixelContainer.Format and X_D3DFORMAT_CUBEMAP;
+      bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
 
       // Interpret Width/Height/BPP
       if (X_Format = X_D3DFMT_X8R8G8B8) or (X_Format = X_D3DFMT_A8R8G8B8) then
@@ -1744,7 +1754,7 @@ begin
       end
       else if (X_Format = X_D3DFMT_R5G6B5) or (X_Format = X_D3DFMT_A4R4G4B4)
            or (X_Format = X_D3DFMT_LIN_A4R4G4B4) or (X_Format = X_D3DFMT_A1R5G5B5)
-           or (X_Format = $28) (* X_D3DFMT_G8B8 *)(* then
+           or (X_Format = $28) (* X_D3DFMT_G8B8 *) then
       begin
         bSwizzled := True;
 
@@ -1826,18 +1836,16 @@ begin
         dwMipMapLevels := 6;
 
     // iterate through the number of mipmap levels
-    for (uint level := 0; level < dwMipMapLevels; level++)
+    for level := 0 to dwMipMapLevels - 1 do
     begin
-      D3DLOCKED_RECT LockedRect;
+      hRet := pResource.EmuTexture8.LockRect(level, LockedRect, nil, 0);
 
-      HRESULT hRet := pResource.EmuTexture8.LockRect(level, @LockedRect, 0, 0);
+      iRect := classes.Rect(0, 0, 0, 0);
+      iPoint := classes.Point(0, 0);
 
-      TRect iRect := (0, 0, 0, 0);
-      TPoint iPoint := (0, 0);
+      pSrc := PBYTE(pTexture.Data);
 
-      BYTE * pSrc := PBYTE(pTexture.Data);
-
-      if (IsSpecialResource(pResource.Data) and (pResource.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE)) then
+      if IsSpecialResource(pResource.Data) and ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE)>0) then
       begin
 
       end
@@ -1862,23 +1870,23 @@ begin
         begin
           // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
 
-          memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize shr (level * 2));
+          memcpy(pSrc + dwCompressedOffset, LockedRect.pBits, dwCompressedSize shr (level * 2));
 
           dwCompressedOffset := dwCompressedOffset + (dwCompressedSize shr (level * 2));
         end
         else
         begin
-          BYTE * pDest := PBYTE(LockedRect.pBits);
+          pDest := PBYTE(LockedRect.pBits);
 
-          if ((DWORD)LockedRect.Pitch = dwMipPitch and dwMipPitch = dwMipWidth * dwBPP) then
+          if (DWORD(LockedRect.Pitch) = dwMipPitch) and (dwMipPitch = dwMipWidth * dwBPP) then
           begin
-            memcpy(pDest, pSrc + dwMipOffs, dwMipWidth * dwMipHeight * dwBPP);
+            memcpy(pSrc + dwMipOffs, pDest, dwMipWidth * dwMipHeight * dwBPP);
           end
           else
           begin
-            for (DWORD v := 0; v < dwMipHeight; v++)
+            for v := 0 to dwMipHeight - 1 do
             begin
-              memcpy(pDest, pSrc + dwMipOffs, dwMipWidth * dwBPP);
+              memcpy(pSrc + dwMipOffs, pDest, dwMipWidth * dwBPP);
 
               pDest := pDest + LockedRect.Pitch;
               pSrc := pSrc + dwMipPitch;
@@ -1899,7 +1907,7 @@ begin
 
   g_pD3DDevice8.SetTexture(Stage, pTexture.EmuTexture8);
 
-  end;               *)
+  end;
 end;
 
 end.
