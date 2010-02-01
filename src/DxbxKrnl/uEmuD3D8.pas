@@ -8269,7 +8269,7 @@ function XTL_EmuIDirect3D8_SetPushBufferSize(
   PushBufferSize: DWORD;
   KickOffSize: DWORD
 ): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:153  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
