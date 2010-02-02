@@ -1173,6 +1173,8 @@ procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LI
 
         XTL_EmuXapiProcessHeap := PPointer(UIntPtr(DetectedXapiInitProcess.Locations[0].SymbolLocation) + ProcessHeapOffs)^;
         
+        RegisterSpecificFunctionLocation('_XapiProcessHeap', PByte(XTL_EmuXapiProcessHeap));
+
 {$IFDEF DXBX_DEBUG}
         DbgPrintf('DxbxHLE : Resolved XapiProcessHeap at $%.8x', [XTL_EmuXapiProcessHeap],
           {MayRenderArguments=}False);
@@ -1202,17 +1204,20 @@ begin
 
   DetectProcessMemoryRanges();
 
-  if not LoadFromCache(CacheFileName(pXbeHeader)) then
-  begin
-    // Get StoredPatternTrie from resource :
-    ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
+  // Get StoredPatternTrie from resource :
+  ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
+  try
+    PatternTrieReader := TPatternTrieReader.Create;
     try
-      PatternTrieReader := TPatternTrieReader.Create;
-      try
-        PatternTrieReader.LoadFromStream(ResourceStream);
+      PatternTrieReader.LoadFromStream(ResourceStream);
 
-        DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
+      DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
+      if LoadFromCache(CacheFileName(pXbeHeader)) then
+        // Resolve the address of _XapiProcessHeap :
+        _ResolveXapiProcessHeapAddress()
+      else
+      begin
         ScanMemoryRangeForLibraryFunctions();
 
         ValidateFunctionCrossReferences();
@@ -1222,16 +1227,16 @@ begin
         // Resolve the address of _XapiProcessHeap :
         _ResolveXapiProcessHeapAddress();
 
-      finally
-        FreeAndNil(PatternTrieReader);
+        SaveToCache(CacheFileName(pXbeHeader));
       end;
 
     finally
-      // Unlock the resource :
-      FreeAndNil(ResourceStream);
+      FreeAndNil(PatternTrieReader);
     end;
 
-    SaveToCache(CacheFileName(pXbeHeader));
+  finally
+    // Unlock the resource :
+    FreeAndNil(ResourceStream);
   end;
 
 {$IFDEF DXBX_DEBUG}

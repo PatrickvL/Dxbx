@@ -88,10 +88,7 @@ var
 
 implementation
 
-
-
 // print out a warning message to the kernel debug log file
-
 procedure EmuWarning(szWarningMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 begin
