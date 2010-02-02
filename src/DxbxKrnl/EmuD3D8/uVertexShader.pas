@@ -55,7 +55,7 @@ type
   PLPD3DXBUFFER = ^LPD3DXBUFFER;
 
   _VSH_SHADER_HEADER = packed record
-    aType: uint08;
+    Type_: uint08;
     Version: uint08;
     NumInst: uint08;
     Unknown0: uint08;
@@ -174,9 +174,12 @@ type
                           IMD_OUTPUT_A0X);
   VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
 
+  Dxbx4Booleans = array [0..4-1] of boolean;
+  PDxbx4Booleans = ^Dxbx4Booleans;
+
   _VSH_IMD_OUTPUT = packed record
-    aType: VSH_IMD_OUTPUT_TYPE;
-    Mask: array [0..3] of boolean;
+    Type_: VSH_IMD_OUTPUT_TYPE;
+    Mask: Dxbx4Booleans;
     Address: UInt16;
   end;
   VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
@@ -217,7 +220,9 @@ type
               MAC_MAX,
               MAC_SLT,
               MAC_SGE,
-              MAC_ARL);
+              MAC_ARL,
+              MAC_UNK1,
+              MAC_UNK2);
   VSH_MAC = _VSH_MAC;
 
   _VSH_OPCODE_PARAMS = packed record
@@ -249,13 +254,13 @@ type
     // Output register
     OutputMux: VSH_OUTPUT_MUX;       // MAC or ILU used as output
     OutputType: VSH_OUTPUT_TYPE;      // C or O
-    OutputMask: array [0..4-1] of boolean;
+    OutputMask: Dxbx4Booleans;
     OutputAddress: int16;
     // MAC output R register
-    MACRMask: array [0..4-1] of boolean;
+    MACRMask: Dxbx4Booleans;
     MACRAddress: boolean;
     // ILU output R register
-    ILURMask: array [0..4-1] of boolean;
+    ILURMask: Dxbx4Booleans;
     ILURAddress: boolean;
   end;
   VSH_OUTPUT = _VSH_OUTPUT;
@@ -280,6 +285,9 @@ type
   end;
   VSH_IMD_PARAMETER = _VSH_IMD_PARAMETER;
   PVSH_IMD_PARAMETER = ^VSH_IMD_PARAMETER;
+
+  TVSH_IMD_PARAMETERArray = array [0..(MaxInt div SizeOf(VSH_IMD_PARAMETER)) - 1] of VSH_IMD_PARAMETER;
+  PVSH_IMD_PARAMETERArray = ^TVSH_IMD_PARAMETERArray;
 
   _VSH_INTERMEDIATE_FORMAT = packed record
     IsCombined: boolean;
@@ -364,6 +372,79 @@ const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING = (
     ( FieldName:FLD_FINAL;            SubToken:3;   StartBit: 0;     BitLength:1 )
   );
 
+const g_OpCodeParams: array [0..19] of VSH_OPCODE_PARAMS = (
+    // ILU OP   MAC OP  ParamA ParamB ParamC
+    ( ILU:ILU_MOV; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
+    ( ILU:ILU_RCP; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
+    ( ILU:ILU_RCC; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
+    ( ILU:ILU_RSQ; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
+    ( ILU:ILU_EXP; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
+    ( ILU:ILU_LOG; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
+    ( ILU:ILU_LIT; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
+    ( ILU:ILU_NOP; MAC:MAC_MOV; a:TRUE;  b:FALSE; c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_MUL; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_ADD; a:TRUE;  b:FALSE; c:TRUE  ),
+    ( ILU:ILU_NOP; MAC:MAC_MAD; a:TRUE;  b:TRUE;  c:TRUE  ),
+    ( ILU:ILU_NOP; MAC:MAC_DP3; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_DPH; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_DP4; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_DST; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_MIN; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_MAX; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_SLT; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_SGE; a:TRUE;  b:TRUE;  c:FALSE ),
+    ( ILU:ILU_NOP; MAC:MAC_ARL; a:TRUE;  b:FALSE; c:FALSE )
+  );
+
+const MAC_OpCode: array [VSH_MAC] of string = (
+    'nop',
+    'mov',
+    'mul',
+    'add',
+    'mad',
+    'dp3',
+    'dph',
+    'dp4',
+    'dst',
+    'min',
+    'max',
+    'slt',
+    'sge',
+    'mov', // really 'arl'
+    '???',
+    '???'
+  );
+
+const ILU_OpCode: array [VSH_ILU] of string = (
+    'nop',
+    'mov',
+    'rcp',
+    'rcc',
+    'rsq',
+    'exp',
+    'log',
+    'lit'
+  );
+
+const OReg_Name: array [VSH_OREG_NAME] of string = (
+    'oPos',
+    '???',
+    '???',
+    'oD0',
+    'oD1',
+    'oFog',
+    'oPts',
+    'oB0',
+    'oB1',
+    'oT0',
+    'oT1',
+    'oT2',
+    'oT3',
+    '???',
+    '???',
+    'a0.x'
+  );
+
 
 function XTL_IsValidCurrentShader: Boolean; stdcall; // forward
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER) stdcall;
@@ -409,14 +490,6 @@ uses
   uEmuFS
   , uLog
   , uEmuD3D8;
-
-function LastChar(const aStr: string): Char;
-begin
-  if aStr <> '' then
-    Result := aStr[Length(aStr)]
-  else
-    Result := #0;
-end;
 
 var
   LineStr: string = '';
@@ -1165,7 +1238,7 @@ begin
   pIntermediate.MAC := pInstruction.MAC;
 
   // Output param
-  pIntermediate.Output.aType := IMD_OUTPUT_R;
+  pIntermediate.Output.Type_ := IMD_OUTPUT_R;
   pIntermediate.Output.Address := Word(pInstruction.Output.MACRAddress);
   memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.MACRMask[0]), sizeof(boolean) * 4);
 
@@ -1217,9 +1290,9 @@ begin
 
   // Output param
   if pInstruction.Output.OutputType = OUTPUT_C then
-    pIntermediate.Output.aType := IMD_OUTPUT_C
+    pIntermediate.Output.Type_ := IMD_OUTPUT_C
   else
-    pIntermediate.Output.aType := IMD_OUTPUT_O;
+    pIntermediate.Output.Type_ := IMD_OUTPUT_O;
   pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
   memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(boolean) * 4);
 
@@ -1256,7 +1329,7 @@ begin
   pIntermediate.MAC := pInstruction.MAC;
 
   // Output param
-  pIntermediate.Output.aType := IMD_OUTPUT_A0X;
+  pIntermediate.Output.Type_ := IMD_OUTPUT_A0X;
   pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
 
   // Other parameters
@@ -1284,7 +1357,7 @@ begin
   pIntermediate.ILU := pInstruction.ILU;
 
   // Output param
-  pIntermediate.Output.aType := IMD_OUTPUT_R;
+  pIntermediate.Output.Type_ := IMD_OUTPUT_R;
   // If this is a combined instruction, only r1 is allowed (R address should not be used)
   if IsCombined then
     pIntermediate.Output.Address := 1
@@ -1299,20 +1372,21 @@ begin
 end;
 
 function VshGetOpCodeParams(ILU: VSH_ILU; MAC: VSH_MAC): PVSH_OPCODE_PARAMS;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:0
-(*var
-  i: int; *)
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+var
+  i: int;
 begin
-  (*for i := 0 to (sizeof(g_OpCodeParams) div sizeof(VSH_OPCODE_PARAMS) - 1 do
+  for i := 0 to High(g_OpCodeParams) - 1 do
   begin
-        if(ILU != ILU_NOP && ILU == g_OpCodeParams[i].ILU ||
-            ((not (MAC = MAC_NOP) and MAC) = g_OpCodeParams[i].MAC) then
-        begin
-           Result :=PVSH_OPCODE_PARAMS(@g_OpCodeParams[i]);
-           exit;
-        end;
+    if ((ILU <> ILU_NOP) and (ILU = g_OpCodeParams[i].ILU))
+    or ((MAC <> MAC_NOP) and (MAC = g_OpCodeParams[i].MAC)) then
+    begin
+      Result := PVSH_OPCODE_PARAMS(@g_OpCodeParams[i]);
+      Exit;
+    end;
   end;
-  Result := nil; *)
+
+  Result := nil;
 end;
 
 procedure VshAddParameter(pParameter: PVSH_PARAMETER; a0x: boolean; pIntermediateParameter: PVSH_IMD_PARAMETER);
@@ -1324,7 +1398,7 @@ begin
 end;
 
 procedure VshAddParameters(pInstruction: PVSH_SHADER_INSTRUCTION; ILU: VSH_ILU; MAC: VSH_MAC; pParameters: PVSH_IMD_PARAMETER);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:5
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
 var
   ParamCount: uint08;
   pParams: PVSH_OPCODE_PARAMS;
@@ -1333,29 +1407,29 @@ begin
   pParams := VshGetOpCodeParams(ILU, MAC);
 
   // param A
-(*  if (pParams.A) then
+  if (pParams.A) then
   begin
-    VshAddParameter(@pInstruction.A, pInstruction.a0x, @pParameters[ParamCount]);
+    VshAddParameter(@pInstruction.A, pInstruction.a0x, @PVSH_IMD_PARAMETERArray(pParameters)[ParamCount]);
     Inc(ParamCount);
   end;
 
   // param B
   if (pParams.B) then
   begin
-    VshAddParameter(@pInstruction.B, pInstruction.a0x, @pParameters[ParamCount]);
+    VshAddParameter(@pInstruction.B, pInstruction.a0x, @PVSH_IMD_PARAMETERArray(pParameters)[ParamCount]);
     Inc(ParamCount);
   end;
 
   // param C
   if (pParams.C) then
   begin
-    VshAddParameter(@pInstruction.C, pInstruction.a0x, @pParameters[ParamCount]);
+    VshAddParameter(@pInstruction.C, pInstruction.a0x, @PVSH_IMD_PARAMETERArray(pParameters)[ParamCount]);
     Inc(ParamCount);
-  end; *)
+  end;
 end;
 
 function VshAddInstructionILU_O(pInstruction: PVSH_SHADER_INSTRUCTION; pShader: PVSH_XBOX_SHADER; IsCombined: boolean): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:80
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
 var
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
 begin
@@ -1374,9 +1448,9 @@ begin
 
   // Output param
   if pInstruction.Output.OutputType = OUTPUT_C then
-    pIntermediate.Output.aType := IMD_OUTPUT_C
+    pIntermediate.Output.Type_ := IMD_OUTPUT_C
   else
-    pIntermediate.Output.aType := IMD_OUTPUT_O;
+    pIntermediate.Output.Type_ := IMD_OUTPUT_O;
 
   pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
   memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(boolean) * 4);
@@ -1446,7 +1520,7 @@ begin
   end;
 
   VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
-end;
+end; // VshConvertToIntermediate
 
 function VshGetFromToken(pShaderToken: PDWord; SubToken: uint08; StartBit: uint08; BitLength: uint08): int;
 // Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
@@ -1464,84 +1538,185 @@ begin
                                    g_FieldMapping[FieldName].BitLength));
 end;
 
+// Print functions
+function VshGetRegisterName(ParameterType: VSH_PARAMETER_TYPE): AnsiChar;
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+begin
+  case (ParameterType) of
+    PARAM_R:
+      Result := 'r';
+    PARAM_V:
+      Result := 'v';
+    PARAM_C:
+      Result := 'c';
+  else
+    Result := '?';
+  end;
+end;
+
+procedure VshWriteOutputMask(const OutputMask: Dxbx4Booleans;
+                             pDisassembly: PAnsiChar;
+                             pDisassemblyPos: Puint32);
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:99
+const
+  _x: array [Boolean] of AnsiString = ('', 'x');
+  _y: array [Boolean] of AnsiString = ('', 'y');
+  _z: array [Boolean] of AnsiString = ('', 'z');
+  _w: array [Boolean] of AnsiString = ('', 'w');
+begin
+  if (OutputMask[0]) and (OutputMask[1]) and (OutputMask[2]) and (OutputMask[3]) then
+  begin
+    // All compoenents are there, no need to print the mask
+    Exit;
+  end;
+
+  Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '.%s%s%s%s', [
+    _x[OutputMask[0]],
+    _y[OutputMask[1]],
+    _z[OutputMask[2]],
+    _w[OutputMask[3]],
+    _x[OutputMask[0]]]));
+end;
+
+procedure VshWriteParameter(pParameter: PVSH_IMD_PARAMETER;
+                            pDisassembly: PAnsichar;
+                            pDisassemblyPos: Puint32);
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:99
+const
+  _neg: array [Boolean] of AnsiString = ('', '-');
+var
+  i: int;
+  j: int;
+  Swizzle: AnsiChar;
+begin
+  Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, ', %s%c', [
+                _neg[pParameter.Parameter.Neg],
+                VshGetRegisterName(pParameter.Parameter.ParameterType)]));
+  if (pParameter.Parameter.ParameterType = PARAM_C) and (pParameter.IsA0X) then
+  begin
+    // Only display the offset if it's not 0.
+    if (pParameter.Parameter.Address) > 0 then
+    begin
+      Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '[a0.x+%d]', [pParameter.Parameter.Address]));
+    end
+    else
+    begin
+      Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '[a0.x]'));
+    end;
+  end
+  else
+  begin
+    Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '%d', [pParameter.Parameter.Address]));
+  end;
+  // Only bother printing the swizzle if it is not .xyzw
+  if not ((pParameter.Parameter.Swizzle[0] = SWIZZLE_X) and
+          (pParameter.Parameter.Swizzle[1] = SWIZZLE_Y) and
+          (pParameter.Parameter.Swizzle[2] = SWIZZLE_Z) and
+          (pParameter.Parameter.Swizzle[3] = SWIZZLE_W)) then
+  begin
+    Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '.'));
+    for i := 0 to 4 - 1 do
+    begin
+      case (pParameter.Parameter.Swizzle[i]) of
+        SWIZZLE_X:
+          Swizzle := 'x';
+        SWIZZLE_Y:
+          Swizzle := 'y';
+        SWIZZLE_Z:
+          Swizzle := 'z';
+        SWIZZLE_W:
+          Swizzle := 'w';
+      else
+        Swizzle := '?';
+      end;
+      Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '%c', [Swizzle]));
+      j := i;
+      while j < 4 do
+      begin
+        if (pParameter.Parameter.Swizzle[i] <> pParameter.Parameter.Swizzle[j]) then
+        begin
+          break;
+        end;
+        Inc(j);
+      end;
+      if (j = 4) then
+      begin
+        break;
+      end;
+    end;
+  end;
+end;
+
 procedure VshWriteShader(pShader: PVSH_XBOX_SHADER; pDisassembly: PAnsiChar; Truncate: boolean);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:0
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
 var
   DisassemblyPos: uint32;
+  i, j: Int;
+  pIntermediate: PVSH_INTERMEDIATE_FORMAT;
+  pParameter: PVSH_IMD_PARAMETER;
 begin
-(*    DisassemblyPos := 0;
-    case pShader.ShaderHeader.Version of
-        VERSION_VS: begin
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.1.1\n");
-          end;
-        VERSION_XVS:
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "xvs.1.1\n");
-        VERSION_XVSS:
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "xvss.1.1\n");
-        VERSION_XVSW:
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "xvsw.1.1\n");
+  DisassemblyPos := 0;
+  case pShader.ShaderHeader.Version of
+    VERSION_VS:
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'vs.1.1'#13#10));
+    VERSION_XVS:
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvs.1.1'#13#10));
+    VERSION_XVSS:
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvss.1.1'#13#10));
+    VERSION_XVSW:
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvsw.1.1'#13#10));
+  end;
+
+  i := 0;
+  while (i < pShader.IntermediateCount) and ((i < 128) or (not Truncate)) do
+  begin
+    pIntermediate := @(pShader.Intermediate[i]);
+
+    if (i = 128) then
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; -- Passing the truncation limit --'#13#10));
+
+    // Writing combining sign if neccessary
+    if (pIntermediate.IsCombined) then
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '+'));
+
+    // Print the op code
+    if (pIntermediate.InstructionType = IMD_MAC) then
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [MAC_OpCode[pIntermediate.MAC]]))
+    else
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [ILU_OpCode[pIntermediate.ILU]]));
+
+    // Print the output parameter
+    if (pIntermediate.Output.Type_ = IMD_OUTPUT_A0X) then
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'a0.x'))
+    else
+    begin
+      case pIntermediate.Output.Type_ of
+        IMD_OUTPUT_C:
+          Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'c%d', [pIntermediate.Output.Address]));
+        IMD_OUTPUT_R:
+          Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'r%d', [pIntermediate.Output.Address]));
+        IMD_OUTPUT_O:
+          Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s', [OReg_Name[VSH_OREG_NAME(pIntermediate.Output.Address)]]));
+      else
+        CxbxKrnlCleanup('Invalid output register in vertex shader!');
+      end;
+
+      VshWriteOutputMask(pIntermediate.Output.Mask, pDisassembly, @DisassemblyPos);
     end;
 
-(*    for (int i = 0; i < pShader->IntermediateCount && (i < 128 || !Truncate); i++)
-    {
-        VSH_INTERMEDIATE_FORMAT *pIntermediate = &pShader->Intermediate[i];
+    // Print the parameters
+    for j := 0 to 3 - 1 do
+    begin
+      pParameter := @(pIntermediate.Parameters[j]);
+      if (pParameter.Active) then
+        VshWriteParameter(pParameter, pDisassembly, @DisassemblyPos);
+    end;
 
-        if (i == 128)
-        {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "; -- Passing the truncation limit --\n");
-        }
-        // Writing combining sign if neccessary
-        if (pIntermediate->IsCombined)
-        {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "+");
-        }
-        // Print the op code
-        if (pIntermediate->InstructionType == IMD_MAC)
-        {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s ", MAC_OpCode[pIntermediate->MAC]);
-        }
-        else
-        {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s ", ILU_OpCode[pIntermediate->ILU]);
-        }
+    Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, #13#10));
+    Inc(i);
+  end;
 
-        // Print the output parameter
-        if (pIntermediate->Output.Type == IMD_OUTPUT_A0X)
-        {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "a0.x");
-        }
-        else
-        {
-            switch(pIntermediate->Output.Type)
-            {
-            case IMD_OUTPUT_C:
-                DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "c%d", pIntermediate->Output.Address);
-                break;
-            case IMD_OUTPUT_R:
-                DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "r%d", pIntermediate->Output.Address);
-                break;
-            case IMD_OUTPUT_O:
-                DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s", OReg_Name[pIntermediate->Output.Address]);
-                break;
-            default:
-                CxbxKrnlCleanup("Invalid output register in vertex shader!");
-                break;
-            }
-            VshWriteOutputMask(pIntermediate->Output.Mask, pDisassembly, &DisassemblyPos);
-        }
-        // Print the parameters
-        for (int i = 0; i < 3; i++)
-        {
-            VSH_IMD_PARAMETER *pParameter = &pIntermediate->Parameters[i];
-            if (pParameter->Active)
-            {
-                VshWriteParameter(pParameter, pDisassembly, &DisassemblyPos);
-            }
-        }
-        DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "\n");
-    }
-    *(pDisassembly + DisassemblyPos) = 0;
-}*)
+  pDisassembly[DisassemblyPos] := #0;
 end;
 
 procedure VshDeleteIntermediate(pShader: PVSH_XBOX_SHADER; Pos: uint16);
@@ -1596,7 +1771,7 @@ begin
                 // Time to start searching for +rcc r#.x, r12.w
                 if (pIntermediate1W.InstructionType = IMD_ILU) and
                     (pIntermediate1W.ILU = ILU_RCC) and
-                    (pIntermediate1W.Output.aType = IMD_OUTPUT_R) and
+                    (pIntermediate1W.Output.Type_ = IMD_OUTPUT_R) and
                     (pIntermediate1W.Output.Address = pIntermediate.Parameters[1].Parameter.Address) then
                 begin
                   DbgVshPrintf('Deleted +rcc r1.x, r12.w'#13#10);
@@ -1641,18 +1816,18 @@ begin
       pIntermediate := @pShader.Intermediate[i];
 
       // Find instructions outputting to oPos.
-      if( pIntermediate.Output.aType = IMD_OUTPUT_O) and
+      if( pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
           (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
       begin
         // Redirect output to r11.
-        pIntermediate.Output.aType    := IMD_OUTPUT_R;
+        pIntermediate.Output.Type_    := IMD_OUTPUT_R;
         pIntermediate.Output.Address  := 11;
 
         // Scale r11 to r10. (mul r10.[mask], r11, c58)
         MulIntermediate.IsCombined        := FALSE;
         MulIntermediate.InstructionType   := IMD_MAC;
         MulIntermediate.MAC               := MAC_MUL;
-        MulIntermediate.Output.aType      := IMD_OUTPUT_R;
+        MulIntermediate.Output.Type_      := IMD_OUTPUT_R;
         MulIntermediate.Output.Address    := 10;
         MulIntermediate.Output.Mask[0]    := pIntermediate.Output.Mask[0];
         MulIntermediate.Output.Mask[1]    := pIntermediate.Output.Mask[1];
@@ -1676,7 +1851,7 @@ begin
         // Add offset with r10 to oPos (add oPos.[mask], r10, c59)
         AddIntermediate := MulIntermediate;
         AddIntermediate.MAC               := MAC_ADD;
-        AddIntermediate.Output.aType      := IMD_OUTPUT_O;
+        AddIntermediate.Output.Type_      := IMD_OUTPUT_O;
         AddIntermediate.Output.Address    := Ord(OREG_OPOS);
         AddIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
         AddIntermediate.Parameters[0].Parameter.Address       := 10;
@@ -1777,13 +1952,13 @@ begin
       pIntermediate.ILU := ILU_RCP;
     end;
 
-    if (pIntermediate.Output.aType = IMD_OUTPUT_R) then
+    if (pIntermediate.Output.Type_ = IMD_OUTPUT_R) then
     begin
       RUsage[pIntermediate.Output.Address] := TRUE;
     end;
 
     // Make constant registers range from 0 to 192 instead of -96 to 96
-    if (pIntermediate.Output.aType = IMD_OUTPUT_C) then
+    if (pIntermediate.Output.Type_ = IMD_OUTPUT_C) then
     begin
       Inc(pIntermediate.Output.Address,96);
     end;
@@ -1807,7 +1982,7 @@ begin
     if (pIntermediate.InstructionType = IMD_MAC) and (pIntermediate.MAC = MAC_DPH) then
     begin
       // Replace dph with dp3 and add
-      if not(pIntermediate.Output.aType = IMD_OUTPUT_R) then
+      if not(pIntermediate.Output.Type_ = IMD_OUTPUT_R) then
       begin
         // TODO: Complete dph support
         EmuWarning('Can`t simulate dph for other than output r registers (yet)');
@@ -1853,11 +2028,11 @@ begin
     for j := 0 to pShader.IntermediateCount - 1 do
     begin
       pIntermediate := @pShader.Intermediate[j];
-      if(pIntermediate.Output.aType = IMD_OUTPUT_O) and
+      if(pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
         (pIntermediate.Output.Address = ord(OREG_OPOS)) then
       begin
         // Found instruction writing to oPos
-        pIntermediate.Output.aType := IMD_OUTPUT_R;
+        pIntermediate.Output.Type_ := IMD_OUTPUT_R;
         pIntermediate.Output.Address := R12Replacement;
       end;
 
@@ -1889,7 +2064,7 @@ begin
     pOPosWriteBack.InstructionType := IMD_ILU;
     pOPosWriteBack.ILU := ILU_MOV;
     pOPosWriteBack.MAC := MAC_NOP;
-    pOPosWriteBack.Output.aType := IMD_OUTPUT_O;
+    pOPosWriteBack.Output.Type_ := IMD_OUTPUT_O;
     pOPosWriteBack.Output.Address := Ord(OREG_OPOS);
     VshSetOutputMask(@pOPosWriteBack.Output, TRUE, TRUE, TRUE, TRUE);
     pOPosWriteBack.Parameters[0].Active := TRUE;

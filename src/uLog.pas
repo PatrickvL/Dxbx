@@ -49,6 +49,9 @@ procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
 
+function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; overload;
+function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; overload;
+
 implementation
 
 {$IFDEF DXBX_DLL}
@@ -446,6 +449,17 @@ end;
 procedure DbgPrintf(aStr: string);
 begin
   WriteLog(aStr);
+end;
+
+function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; // overload;
+begin
+  Result := Length(aString);
+  memcpy(aBuffer, @(aString[1]), Result);
+end;
+
+function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; // overload;
+begin
+  Result := sprintf(aBuffer, DxbxFormat(aString, Args));
 end;
 
 procedure SetLogMode(aLogMode: TDebugMode = dmNone); export;
