@@ -298,7 +298,7 @@ var
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
-{$IFDEF DXBX_DEBUG_TRACE}
+{$IFDEF DXBX_EXTREME_LOGGING}
   DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
 {$ENDIF}
 
@@ -409,7 +409,7 @@ begin
 {$ENDIF}
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuFS : CurrentFS=%.04x  OrgFS=$%.04x  NewFS=$%.04x  pTLS=$%.08x', [GetFS(), OrgFS, NewFS, pTLS]);
+  DbgPrintf('EmuFS : CurrentFS=%.04x  OrgFS=%d  NewFS=%d  pTLS=0x%.08x', [GetFS(), OrgFS, NewFS, pTLS]);
 {$ENDIF}
 end;
 
