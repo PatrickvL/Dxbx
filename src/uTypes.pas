@@ -147,6 +147,8 @@ function IsPrintableChar(const aChar: AnsiChar): Boolean;
 function IsPrintableAsciiChar(const aChar: AnsiChar): Boolean;
 function ByteLength(const aStr: WideString): Integer;
 
+function LastChar(const aStr: string): Char;
+
 implementation
 
 {$IFNDEF UNICODE}
@@ -307,6 +309,14 @@ end;
 function ByteLength(const aStr: WideString): Integer;
 begin
   Result := Length(aStr) * SizeOf(WideChar);
+end;
+
+function LastChar(const aStr: string): Char;
+begin
+  if aStr <> '' then
+    Result := aStr[Length(aStr)]
+  else
+    Result := #0;
 end;
 
 end.
