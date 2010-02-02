@@ -95,7 +95,6 @@ var
   MemXbeHeader: PXBE_HEADER;
   old_protection: DWord;
   szBuffer: string;
-  BasePath: string;
   pCertificate: PXBE_CERTIFICATE;
   hDupHandle: Handle;
   OldExceptionFilter: TFNTopLevelExceptionFilter;
@@ -199,16 +198,16 @@ begin
     SHGetSpecialFolderPath(0, @(szBuffer[1]), CSIDL_APPDATA, True);
     SetLength(szBuffer, StrLen(PChar(@(szBuffer[1]))));
 
-    BasePath := szBuffer + '\Dxbx';
-    CreateDirectory(PChar(BasePath), nil);
+    DxbxBasePath := szBuffer + '\Dxbx';
+    CreateDirectory(PChar(DxbxBasePath), nil);
 
     // create EmuDisk directory
-    szBuffer := BasePath + '\EmuDisk';
+    szBuffer := DxbxBasePath + '\EmuDisk';
     CreateDirectory(PChar(szBuffer), nil);
 
     // create T:\ directory
     begin
-      szBuffer := BasePath + '\EmuDisk\T';
+      szBuffer := DxbxBasePath + '\EmuDisk\T';
       CreateDirectory(PChar(szBuffer), nil);
 
       pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
@@ -228,7 +227,7 @@ begin
 
     // create U:\ directory
     begin
-      szBuffer := BasePath + '\EmuDisk\U';
+      szBuffer := DxbxBasePath + '\EmuDisk\U';
       CreateDirectory(PChar(szBuffer), nil);
 
       szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
@@ -247,7 +246,7 @@ begin
 
     // create Z:\ directory
     begin
-      szBuffer := BasePath + '\EmuDisk\Z';
+      szBuffer := DxbxBasePath + '\EmuDisk\Z';
       CreateDirectory(PChar(szBuffer), nil);
 
       (* marked out by cxbx
