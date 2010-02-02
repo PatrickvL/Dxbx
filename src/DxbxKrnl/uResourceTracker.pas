@@ -130,7 +130,7 @@ ResourceTracker::~ResourceTracker()
 
 function ResourceTracker.exists(pResource: PVOID): BOOL;
 begin
-  result := exists(uint32(pResource));
+  Result := exists(uint32(pResource));
 end;
 
 function ResourceTracker.exists(uiKey: uint32): BOOL;
@@ -154,7 +154,7 @@ begin
   end;
 
   Self.Unlock();
-  result := false;
+  Result := false;
 end;
 
 function ResourceTracker.get(pResource: PVOID): PVOID;
@@ -178,7 +178,7 @@ begin
     cur := cur.pNext;
   end;
 
-  result := nil;
+  Result := nil;
 end;
 
 procedure ResourceTracker.insert(pResource: PVOID);

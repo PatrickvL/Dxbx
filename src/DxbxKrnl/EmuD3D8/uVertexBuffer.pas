@@ -152,8 +152,8 @@ var
   g_IVBTable: PD3DIVB = nil;
   g_IVBTblOffs: UInt = 0;
 
-procedure XTL_EmuFlushIVB;
-procedure XTL_EmuUpdateActiveTexture;
+procedure XTL_EmuFlushIVB; stdcall;
+procedure XTL_EmuUpdateActiveTexture; stdcall;
 
 const
   VERTEX_BUFFER_CACHE_SIZE = 64;
@@ -539,7 +539,7 @@ var
 begin
   if (VshHandleIsVertexShader(g_CurrentVertexShader)) then
   begin
-    pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
+    pDynamicPatch := XTL_VshGetVertexDynamicPatch(g_CurrentVertexShader);
     if Assigned(pDynamicPatch) then
     begin
       Result := pDynamicPatch.NbrStreams;
@@ -854,8 +854,8 @@ function XTL_VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiSt
 // Branch:shogun  Revision:  Translator:PatrickvL  Done:60
 var
   bHasLinearTex: bool;
-  bTexIsLinear: Array[0..4-1] of bool;
-  pLinearPixelContainer: Array[0..4-1] of PX_D3DPixelContainer;
+  bTexIsLinear: array [0..4-1] of bool;
+  pLinearPixelContainer: array [0..4-1] of PX_D3DPixelContainer;
   i: uint08;
   pPixelContainer: PX_D3DPixelContainer;
 
@@ -1303,12 +1303,12 @@ begin
   Result := True;
 end;
 
-procedure XTL_EmuFlushIVB;
+procedure XTL_EmuFlushIVB; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 var
   pdwVB: PDWORD;
   uiStride: UINT;
-  pDummyTexture : Array[0..4 - 1] of IDirect3DTexture8;
+  pDummyTexture : array [0..4 - 1] of IDirect3DTexture8;
 begin
 (*    if (g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
     begin
@@ -1678,7 +1678,7 @@ begin
     *)
 end;
 
-procedure XTL_EmuUpdateActiveTexture;
+procedure XTL_EmuUpdateActiveTexture; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   Stage: integer;
@@ -1909,6 +1909,10 @@ begin
 
   end;
 end;
+
+//exports
+//  XTL_EmuFlushIVB,
+//  XTL_EmuUpdateActiveTexture;
 
 end.
 

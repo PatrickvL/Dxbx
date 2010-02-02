@@ -1562,7 +1562,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  result := pRet;
+  Result := pRet;
 end;
 
 function XTL_EmuXFreeSectionA(

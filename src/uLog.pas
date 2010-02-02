@@ -459,7 +459,7 @@ end;
 
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; // overload;
 begin
-  Result := sprintf(aBuffer, DxbxFormat(aString, Args));
+  Result := sprintf(aBuffer, Format(aString, Args));
 end;
 
 procedure SetLogMode(aLogMode: TDebugMode = dmNone); export;
