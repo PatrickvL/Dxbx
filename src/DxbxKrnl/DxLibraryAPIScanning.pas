@@ -28,6 +28,7 @@ uses
   Windows,
   Classes,
   SysUtils,
+  FileCtrl, // ForceDirectories
   // 3rd Party
   JclWin32, // UNDNAME_COMPLETE
   JclPeImage, // UndecorateSymbolName
@@ -35,6 +36,7 @@ uses
   uTypes,
   uXBE,
   uLog,
+  uDxbxKrnlUtils,
   uStoredTrieTypes,
   uXboxLibraryUtils,
   uCRC16,
@@ -126,6 +128,11 @@ type
     function FindOrCreateByName(const aSymbolName: string): TDetectedVersionedXboxLibrarySymbol;
     function FindByAddress(const aAddress: TCodePointer; const OffsetWithinFunction: PInteger = nil): TDetectedVersionedXboxLibrarySymbol;
     procedure DeleteSymbol(const Index: Integer);
+
+    function RegisterSpecificFunctionLocation(const aFunctionName: string; const aAddress: PByte): TDetectedVersionedXboxLibrarySymbol;
+
+    function LoadFromCache(const aCacheFile: string): Boolean;
+    procedure SaveToCache(const aCacheFile: string);
   end;
 
 var
@@ -678,6 +685,13 @@ begin
   end;
 end; // DetectVersionedXboxLibraries
 
+function TDetectedSymbols.RegisterSpecificFunctionLocation(const aFunctionName: string; const aAddress: PByte): TDetectedVersionedXboxLibrarySymbol;
+begin
+  Result := FindOrCreateByName(aFunctionName);
+//  Result.StoredLibraryFunction := FoundFunction;
+  Result.AddPotentialSymbolLocation(aAddress, nil{FoundFunction});
+end;
+
 procedure TDetectedSymbols.RegisterPotentialFunctionLocation(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
 var
   FunctionName: string;
@@ -1060,6 +1074,65 @@ begin
   end; // for symbols
 end; // DetermineFinalFunctionAndSymbolLocations
 
+function CacheFileName(const pXbeHeader: PXBE_HEADER): string;
+begin
+  Result := DxbxBasePath + '\SymbolCache\' + IntToHex(PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr).dwTitleId, 8) + '.ini';
+end;
+
+function TDetectedSymbols.LoadFromCache(const aCacheFile: string): Boolean;
+var
+  i, j: Integer;
+  FuncStr, AddrStr: string;
+  Addr: Pointer;
+begin
+  Result := False;
+  if not FileExists(aCacheFile) then
+    Exit;
+
+  with TStringList.Create do
+  try
+    LoadFromFile(aCacheFile);
+    for i := 0 to Count - 1 do
+    begin
+      FuncStr := Strings[i];
+      j := Pos(':', FuncStr);
+      AddrStr := Copy(FuncStr, j + 1, MaxInt);
+      System.Delete(FuncStr, j, MaxInt);
+
+      Addr := Pointer(StrToIntDef(AddrStr, 0));
+      if Assigned(Addr) then
+      begin
+        RegisterSpecificFunctionLocation(FuncStr, Addr);
+        Result := True;
+      end;
+    end;
+  finally
+    Free;
+  end;
+end;
+
+procedure TDetectedSymbols.SaveToCache(const aCacheFile: string);
+var
+  i: Integer;
+  Symbol: TDetectedVersionedXboxLibrarySymbol;
+begin
+  if not ForceDirectories(ExtractFilePath(aCacheFile)) then
+    Exit;
+
+  with TStringList.Create do
+  try
+    for i := 0 to Self.Count - 1 do
+    begin
+      Symbol := Symbols[i];
+      Add(Symbol.SymbolName + ':' + IntToStr(Integer(Symbol.Locations[0].SymbolLocation)));
+    end;
+
+    SaveToFile(aCacheFile);
+  finally
+    Free;
+  end;
+end;
+
 procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 
   procedure _ResolveXapiProcessHeapAddress();
@@ -1129,31 +1202,36 @@ begin
 
   DetectProcessMemoryRanges();
 
-  // Get StoredPatternTrie from resource :
-  ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
-  try
-    PatternTrieReader := TPatternTrieReader.Create;
+  if not LoadFromCache(CacheFileName(pXbeHeader)) then
+  begin
+    // Get StoredPatternTrie from resource :
+    ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
     try
-      PatternTrieReader.LoadFromStream(ResourceStream);
+      PatternTrieReader := TPatternTrieReader.Create;
+      try
+        PatternTrieReader.LoadFromStream(ResourceStream);
 
-      DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
+        DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
-      ScanMemoryRangeForLibraryFunctions();
+        ScanMemoryRangeForLibraryFunctions();
 
-      ValidateFunctionCrossReferences();
+        ValidateFunctionCrossReferences();
 
-      DetermineFinalFunctionAndSymbolLocations();
+        DetermineFinalFunctionAndSymbolLocations();
 
-      // Resolve the address of _XapiProcessHeap :
-      _ResolveXapiProcessHeapAddress();
+        // Resolve the address of _XapiProcessHeap :
+        _ResolveXapiProcessHeapAddress();
+
+      finally
+        FreeAndNil(PatternTrieReader);
+      end;
 
     finally
-      FreeAndNil(PatternTrieReader);
+      // Unlock the resource :
+      FreeAndNil(ResourceStream);
     end;
 
-  finally
-    // Unlock the resource :
-    FreeAndNil(ResourceStream);
+    SaveToCache(CacheFileName(pXbeHeader));
   end;
 
 {$IFDEF DXBX_DEBUG}

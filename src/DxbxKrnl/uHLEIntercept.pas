@@ -407,7 +407,7 @@ begin
 
 {$IFDEF DXBX_DEBUG}
       DbgPrintf('DxbxHLE : Installed patch over $%.08X (to $%.08X, implementing %s)', [
-        OrgCode, NewCode, DetectedSymbol.SymbolName]);
+        OrgCode, NewCode, DetectedSymbol.SymbolName], {MayRenderArguments=}False);
       UsedPatches[DetectedSymbol.XboxLibraryPatch] := True;
 {$ENDIF}
 
