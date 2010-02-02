@@ -4195,7 +4195,7 @@ var
   pTexturePalette: PByteArray;
 
   dummy: Pointer;
-  szString: Array[0..256 -1] of char;
+  szString: array [0..256 -1] of char;
 begin
   EmuSwapFS(fsWindows);
 

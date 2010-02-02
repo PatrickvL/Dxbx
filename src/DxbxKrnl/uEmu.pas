@@ -114,7 +114,7 @@ function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:60
 var
   fix: UInt32;
-  buffer: Array [0..256 -1] of char;
+  buffer: array [0..256 -1] of char;
   ret: int;
 begin
   EmuSwapFS(fsWindows);
