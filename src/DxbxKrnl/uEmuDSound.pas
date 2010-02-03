@@ -966,12 +966,13 @@ function XTL_EmuDirectSoundCreateBuffer
     ppBuffer: PPX_CDirectSoundBuffer
 ): HRESULT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
-  dwEmuFlags: DWORD;
+var
+  hRet: HRESULT;
+(*  dwEmuFlags: DWORD;
   pDSBufferDesc: PDSBUFFERDESC;
-  dwAcceptableMask: DWORD;*)
+  dwAcceptableMask: DWORD; *)
 begin
-(*  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer'+
@@ -982,7 +983,7 @@ begin
          [pdsbd, ppBuffer]);
 {$ENDIF}
 
-    dwEmuFlags := 0;
+(*    dwEmuFlags := 0;
 
     pDSBufferDesc := DSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
 
@@ -990,9 +991,9 @@ begin
     begin
         dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000 or $00080000;
 
-        (*if (pdsbd.dwFlags and (not dwAcceptableMask)) then
+        if (pdsbd.dwFlags and (not dwAcceptableMask)) > 0 then
             EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', pdsbd.dwFlags and (~dwAcceptableMask));
-        *)(*
+
         pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
         pDSBufferDesc.dwFlags := (pdsbd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
         pDSBufferDesc.dwBufferBytes := pdsbd.dwBufferBytes;
@@ -1003,13 +1004,13 @@ begin
             pDSBufferDesc.dwBufferBytes := DSBSIZE_MAX;
 
         pDSBufferDesc.dwReserved := 0;
-(*
-        if (pdsbd.lpwfxFormat <> 0) then
+
+        (*if (pdsbd.lpwfxFormat <> 0) then
         begin
             pDSBufferDesc.lpwfxFormat := WAVEFORMATEX)CxbxMalloc(SizeOf(WAVEFORMATEX)+pdsbd.lpwfxFormat.cbSize);
             memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, SizeOf(WAVEFORMATEX));
 
-            if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
+            (*if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
             begin
                 dwEmuFlags := dwEmuFlags or DSB_FLAG_ADPCM;
 
@@ -1029,9 +1030,9 @@ begin
                 pDSBufferDesc.lpwfxFormat.cbSize := 32;
                 const WAVE_FORMAT_ADPCM = 2;
                 pDSBufferDesc.lpwfxFormat.wFormatTag := WAVE_FORMAT_ADPCM;
-                *)
-(*             end;
-         end;
+
+            end;
+        end;
 
         pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;
      end;
@@ -1044,15 +1045,14 @@ begin
      end;
 
     // Cxbx TODO: Garbage Collection
-    *ppBuffer := new X_CDirectSoundBuffer();
     New({var PX_CDirectSoundBuffer}ppBuffer^);
 
-    ppBuffer^.EmuDirectSoundBuffer8 := 0;
-    ppBuffer^.EmuBuffer := 0;
+    ppBuffer^.EmuDirectSoundBuffer8 := nil;
+    ppBuffer^.EmuBuffer := nil;
     ppBuffer^.EmuBufferDesc := pDSBufferDesc;
-    ppBuffer^.EmuLockPtr1 := 0;
+    ppBuffer^.EmuLockPtr1 := nil;
     ppBuffer^.EmuLockBytes1 := 0;
-    ppBuffer^.EmuLockPtr2 := 0;
+    ppBuffer^.EmuLockPtr2 := nil;
     ppBuffer^.EmuLockBytes2 := 0;
     ppBuffer^.EmuFlags := dwEmuFlags;
 
@@ -1060,7 +1060,7 @@ begin
     DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := $%.08X, bytes := $%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes);
 {$ENDIF}
 
-    HRESULT hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc,  and ((ppBuffer).EmuDirectSoundBuffer8), 0);
+(*    hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc,  and ((ppBuffer).EmuDirectSoundBuffer8), 0);
 
     if (FAILED(hRet)) then
         EmuWarning('CreateSoundBuffer Failed!');
@@ -1081,9 +1081,8 @@ begin
             CxbxKrnlCleanup('SoundBuffer cache out of slots!');
      end;*)
 
- (*   EmuSwapFS(fsXbox);  *)
-
-   (* Result := hRet; *)
+  EmuSwapFS(fsXbox);
+  Result := hRet;
 end;
 
 
@@ -1495,7 +1494,7 @@ begin
       pThis.EmuLockBytes2
     );
 
-    pThis.EmuLockPtr1 := 0;
+    pThis.EmuLockPtr1 := nil;
   end;
 
   if (pThis.EmuFlags and DSB_FLAG_ADPCM) > 0 then

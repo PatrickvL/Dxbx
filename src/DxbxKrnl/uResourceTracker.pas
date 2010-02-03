@@ -50,6 +50,7 @@ type
     function exists(uiKey: uint32): BOOL; overload;
     function get(pResource: PVOID): PVOID; overload;
     function get(uiKey: uint32): PVOID; overload;
+    function getHead: PRTNode;
     procedure insert(uiKey: uint32; pResource: PVOID); overload;
     procedure insert(pResource: PVOID); overload;
     procedure remove(uiKey: uint32); overload;
@@ -179,6 +180,11 @@ begin
   end;
 
   Result := nil;
+end;
+
+function ResourceTracker.getHead: PRTNode;
+begin
+  Result := m_head;
 end;
 
 procedure ResourceTracker.insert(pResource: PVOID);
