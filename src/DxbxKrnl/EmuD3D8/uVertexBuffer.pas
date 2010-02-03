@@ -27,6 +27,7 @@ uses
   Windows
   , Classes
   , JwaWinType
+  , StrUtils
   , SysUtils // Abort
   // Directx
   , D3DX8
@@ -240,29 +241,29 @@ begin
 end;
 
 procedure XTL_VertexPatcher.DumpCache;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
-  pNode : ^RTNode;
+  MypCachedStream: PCACHEDSTREAM;
+  pNode : PRTNode;
 begin
   DbgPrintf('--- Dumping streams cache ---');
-(*
+
   pNode := g_PatchedStreamsCache.getHead();
   while Assigned(pNode) do
   begin
-      CACHEDSTREAM *pCachedStream := CACHEDSTREAM (pNode.pResource);
-      if (pCachedStream) then
-      begin
-          // Cxbx TODO: Write nicer dump presentation
-          printf('Key: $%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: $%.08X',
-                 pNode.uiKey, pCachedStream.uiCacheHit, pCachedStream.bIsUP ? 'YES' : 'NO',
-                 pCachedStream.Stream.uiOrigStride, pCachedStream.Stream.uiNewStride,
-                 pCachedStream.uiCount, pCachedStream.uiCheckFrequency,
-                 pCachedStream.uiLength, pCachedStream.uiCRC32);
-       end;
+    MypCachedStream := PCACHEDSTREAM (pNode.pResource);
+    if Assigned(MypCachedStream) then
+    begin
+      // Cxbx TODO: Write nicer dump presentation
+      DbgPrintf('Key: $%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: $%.08X',
+             [pNode.uiKey, MypCachedStream.uiCacheHit, ifThen(MypCachedStream.bIsUP, 'YES', 'NO'),
+             MypCachedStream.Stream.uiOrigStride, MypCachedStream.Stream.uiNewStride,
+             MypCachedStream.uiCount, MypCachedStream.uiCheckFrequency,
+             MypCachedStream.uiLength, MypCachedStream.uiCRC32]);
+    end;
 
-      pNode := pNode.pNext;
-   end;
-*)
+    pNode := pNode.pNext;
+  end;
 end;
 
 procedure XTL_VertexPatcher.CacheStream(
@@ -276,11 +277,11 @@ procedure XTL_VertexPatcher.CacheStream(
   pCalculateData: PVoid;
   uiKey: uint32;
   uiLength: UINT;
-  pCachedStream: PCACHEDSTREAM;*)
+  MypCachedStream: PCACHEDSTREAM; *)
 begin
-(*    pCachedStream := CACHEDSTREAM(CxbxMalloc(SizeOf(CACHEDSTREAM)));
+(*    MypCachedStream := PCACHEDSTREAM(CxbxMalloc(SizeOf(CACHEDSTREAM)));
 
-    ZeroMemory(pCachedStream, SizeOf(CACHEDSTREAM));
+    ZeroMemory(MypCachedStream, SizeOf(CACHEDSTREAM));
 
     // Check if the cache is full, if so, throw away the least used stream
     if (g_PatchedStreamsCache.get_count() > VERTEX_BUFFER_CACHE_SIZE) then
@@ -336,7 +337,7 @@ begin
          end;
 
         uiLength := Desc.Size;
-        pCachedStream.bIsUP := False;
+        MypCachedStream.bIsUP := False;
         uiKey := (uint32)pOrigVertexBuffer;
      end;
     else
@@ -350,8 +351,8 @@ begin
         pCalculateData := (uint08 )pPatchDesc.pVertexStreamZeroData;
         // Cxbx TODO: This is sometimes the number of indices, which isn't too good
         uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
-        pCachedStream.bIsUP := True;
-        pCachedStream.pStreamUP := pCalculateData;
+        MypCachedStream.bIsUP := True;
+        MypCachedStream.pStreamUP := pCalculateData;
         uiKey := (uint32)pCalculateData;
      end;
 
@@ -361,46 +362,46 @@ begin
         pOrigVertexBuffer.Unlock();
      end;
 
-    pCachedStream.uiCRC32 := uiChecksum;
-    pCachedStream.Stream := m_pStreams[uiStream];
-    pCachedStream.uiCheckFrequency := 1; // Start with checking every 1th Draw..
-    pCachedStream.uiCount := 0;
-    pCachedStream.uiLength := uiLength;
-    pCachedStream.uiCacheHit := 0;
-    pCachedStream.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount;
-    pCachedStream.lLastUsed := clock();
-    g_PatchedStreamsCache.insert(uiKey, pCachedStream); *)
+    MypCachedStream.uiCRC32 := uiChecksum;
+    MypCachedStream.Stream := m_pStreams[uiStream];
+    MypCachedStream.uiCheckFrequency := 1; // Start with checking every 1th Draw..
+    MypCachedStream.uiCount := 0;
+    MypCachedStream.uiLength := uiLength;
+    MypCachedStream.uiCacheHit := 0;
+    MypCachedStream.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount;
+    MypCachedStream.lLastUsed := clock();
+    g_PatchedStreamsCache.insert(uiKey, MypCachedStream);       *)
 end;
 
 
 procedure XTL_VertexPatcher.FreeCachedStream(pStream: PVoid);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
-  pCachedStream: PCACHEDSTREAM;*)
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
+  MypCachedStream: PCACHEDSTREAM;
 begin
-(*  g_PatchedStreamsCache.Lock();
-  pCachedStream := CACHEDSTREAM(g_PatchedStreamsCache.get(pStream));
-  if Assigned(pCachedStream) then
+  g_PatchedStreamsCache.Lock();
+  MypCachedStream := PCACHEDSTREAM(g_PatchedStreamsCache.get(pStream));
+  if Assigned(MypCachedStream) then
   begin
-    if (pCachedStream.bIsUP and pCachedStream.pStreamUP) then
+    if MypCachedStream.bIsUP and Assigned(MypCachedStream.pStreamUP) then
     begin
-      CxbxFree(pCachedStream.pStreamUP);
+      CxbxFree(MypCachedStream.pStreamUP);
     end;
 
-    if Assigned(pCachedStream.Stream.pOriginalStream) then
+    if Assigned(MypCachedStream.Stream.pOriginalStream) then
     begin
-      pCachedStream.Stream.pOriginalStream._Release();
+      MypCachedStream.Stream.pOriginalStream._Release();
     end;
 
-    if Assigned(pCachedStream.Stream.pPatchedStream) then
+    if Assigned(MypCachedStream.Stream.pPatchedStream) then
     begin
-      pCachedStream.Stream.pPatchedStream._Release();
+      MypCachedStream.Stream.pPatchedStream._Release();
     end;
 
-    CxbxFree(pCachedStream);
+    CxbxFree(MypCachedStream);
   end;
   g_PatchedStreamsCache.Unlock();
-  g_PatchedStreamsCache.remove(pStream); *)
+  g_PatchedStreamsCache.remove(pStream);
 end;
 
 function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;

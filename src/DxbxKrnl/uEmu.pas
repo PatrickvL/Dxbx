@@ -32,6 +32,7 @@ uses
   , JwaWinType
   , JwaWinNt
   // DXBX
+  , uEmuD3D8Types
   , uConsts
   , uTypes
   , uLog
@@ -108,11 +109,16 @@ end;
 
 // exception handler
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:60
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:80
 var
   fix: UInt32;
   buffer: array [0..256 -1] of char;
   ret: int;
+  dwESI: DWORD;
+  dwSize: DWORD;
+  v: DWORD;
+  dwCur: DWORD;
+  dwValue: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -142,31 +148,34 @@ begin
           e.ContextRecord.Ecx := fix;
           e.ContextRecord.Esp := fix;
 
-(*          (PX_D3DResource* )fix).Data := g_HaloHack[1] + (((XTL::X_D3DResource* )fix).Data - $803A6000);
+          PX_D3DResource(fix).Data := g_HaloHack[1] + (PX_D3DResource(fix).Data - $803A6000);
 
           // go through and fix any other pointers in the ESI allocation chunk
           begin
-            DWORD dwESI := e.ContextRecord.Esi;
-            DWORD dwSize := EmuCheckAllocationSize((PVOID)dwESI, False);
+            dwESI := e.ContextRecord.Esi;
+            dwSize := EmuCheckAllocationSize(PVOID(dwESI), False);
 
             // dword aligned
-            dwSize -= 4 - (dwSize mod 4);
+            Dec(dwSize, 4 - (dwSize mod 4));
 
-            for(DWORD v=0;v<dwSize;v+=4)
+            v := 0;
+            while v < dwSize do
             begin
-              DWORD dwCur := *(DWORD* )(dwESI+v);
+              dwCur := PDWORD(dwESI+v)^;
 
               if (dwCur >= $803A6000) and (dwCur < $819A6000) then
-                  *(DWORD* )(dwESI+v) := g_HaloHack[1] + (dwCur - $803A6000);
+                  PDWORD(dwESI+v)^ := g_HaloHack[1] + (dwCur - $803A6000);
+
+              inc(v,4);
             end;
-          end;*)
+
+          end;
 
           // fix this global pointer
-         (* begin
-            dwValue := *(DWORD* )$39CE24;
-
-            *(DWORD* )$39CE24 := g_HaloHack[1] + (dwValue - $803A6000);
-          end;      *)
+          begin
+            dwValue := PDWORD($39CE24)^;
+            PDWORD($39CE24)^ := g_HaloHack[1] + (dwValue - $803A6000);
+          end;
 
 {$IFDEF DEBUG}
           DbgPrintf('EmuMain : Halo Access Adjust 1 was applied!');
@@ -342,14 +351,13 @@ begin
   Result := Integer(MemoryBasicInfo.RegionSize) - (IntPtr(pBase) - IntPtr(MemoryBasicInfo.BaseAddress));
 end;
 
-
 procedure EmuCleanup(const szErrorMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:20
-var
+(*var
 //  buffer: array [0..15] of Char;
   szBuffer1 : array [0..255] of char;
   szBuffer2 : array [0..255] of char;
-  argp: va_list;
+  argp: va_list;*)
 begin
   // Print out ErrorMessage (if exists)
 (*  if (szErrorMessage <> '') then
@@ -383,15 +391,15 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('DxbxKrnl: Terminating Process');
 {$ENDIF}
-   *)
+
 
   //  Cleanup debug output
   FreeConsole();
 
-  (*if (GetConsoleTitle(buffer, 16) <> '') then
-    freopen('nul', 'w', stdout); *)
+  if (GetConsoleTitle(buffer, 16) <> '') then
+    freopen('nul', 'w', stdout);
 
-  TerminateProcess(GetCurrentProcess(), 0);
+  TerminateProcess(GetCurrentProcess(), 0);*)
 end;
 
 // Exception handler for that tough final exit :)

@@ -737,7 +737,7 @@ end;
 procedure VshWriteOutputMask(const OutputMask: Dxbx4Booleans;
                              pDisassembly: PAnsiChar;
                              pDisassemblyPos: Puint32);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:99
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
 const
   _x: array [Boolean] of AnsiString = ('', 'x');
   _y: array [Boolean] of AnsiString = ('', 'y');
@@ -761,7 +761,7 @@ end;
 procedure VshWriteParameter(pParameter: PVSH_IMD_PARAMETER;
                             pDisassembly: PAnsichar;
                             pDisassemblyPos: Puint32);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:99
+// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
 const
   _neg: array [Boolean] of AnsiString = ('', '-');
 var

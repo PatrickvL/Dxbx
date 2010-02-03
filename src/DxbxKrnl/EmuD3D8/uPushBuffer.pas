@@ -29,6 +29,8 @@ uses
   , SysUtils
   , Direct3D8
   // Dxbx
+  , uVertexBuffer
+  , uEmu
   , uEmuXG
   , uTypes
   , uEmuD3D8Types;
@@ -44,6 +46,10 @@ var
   XTL_g_bBrkPush: Boolean = False;
 
   g_bPBSkipPusher: Boolean = False;
+
+const
+  pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
+
 
 procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall; // forward
@@ -170,10 +176,7 @@ end;
 
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*const
-  pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
-
-var
+(*var
   pdwOrigPushData: DWord;
   pIndexData: PVOID;
   pVertexData: PVOID;
@@ -192,13 +195,14 @@ var
   dwCount: DWord;
   dwMethod: DWord;
 
-  bInc: BOOL;*)
+  bInc: BOOL;
+  VPDesc: VertexPatchDesc; *)
 
 begin
-  if XTL_g_bSkipPush then
+(*  if XTL_g_bSkipPush then
     Exit;
 
-    (*pdwOrigPushData := pdwPushData;
+    pdwOrigPushData := pdwPushData;
 
     pIndexData := nil;
     pVertexData := nil;
@@ -295,12 +299,12 @@ begin
             begin
                 CxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!');
                 dwVertexShader := 0;
-             end
+            end
             else if (dwVertexShader = 0) then
             begin
                 EmuWarning('FVF Vertex Shader is null');
                 dwVertexShader := -1;
-             end;
+            end;
 
             //
             // calculate stride
@@ -317,7 +321,7 @@ begin
                 dwStride:= dwStride + ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*SizeOf(FLOAT)*2;
              end;
 
-            {
+            { MARKED OUT BY CXBX
             // create cached vertex buffer only once, with maxed out size
             if (pVertexBuffer = nil) then
             begin
@@ -343,14 +347,14 @@ begin
              end;
             }
 
-            #ifdef _DEBUG_TRACK_PB
+            {$ifdef _DEBUG_TRACK_PB}
             if (bShowPB) then
             begin
                 printf('NVPB_InlineVertexArray(...)');
                 printf('  dwCount : %d', dwCount);
                 printf('  dwVertexShader : $%08X', dwVertexShader);
-             end;
-            //endif
+            end;
+            {$endif}
 
             EmuUnswizzleActiveTexture();
 
@@ -359,8 +363,6 @@ begin
             begin
                 UINT VertexCount := (dwCount*SizeOf(DWord)) / dwStride;
                 UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
-
-                VertexPatchDesc VPDesc;
 
                 VPDesc.dwVertexCount := VertexCount;
                 VPDesc.PrimitiveType := XBPrimitiveType;
@@ -386,10 +388,10 @@ begin
              end;
 
             pdwPushData:= pdwPushData - 1;
-         end;
+        end
         else if (dwMethod = $1808) then  // NVPB_FixLoop
         begin
-            #ifdef _DEBUG_TRACK_PB
+            {$ifdef _DEBUG_TRACK_PB}
             if (bShowPB) then
             begin
                 printf('  NVPB_FixLoop(%d)', dwCount);
@@ -408,7 +410,7 @@ begin
                 printf('');
                 printf('');
              end;
-            //endif
+            {$endif}
 
             WORD *pwVal := (WORD)(pdwPushData + 1);
             for(uint mi:=0;mi<dwCount;mi++)
@@ -472,10 +474,10 @@ begin
 
                     g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
 
-                    #ifdef _DEBUG_TRACK_PB
+                    {$ifdef _DEBUG_TRACK_PB}
                     if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
                     begin
-                    //endif
+                    {$endif}
 
                     if ( not g_bPBSkipPusher) then
                     begin
@@ -489,9 +491,9 @@ begin
                          end;
                      end;
 
-                    #ifdef _DEBUG_TRACK_PB
-                     end;
-                    //endif
+                     {$ifdef _DEBUG_TRACK_PB}
+                    end;
+                    {$endif}
 
                     VertPatch.Restore();
 
@@ -500,7 +502,7 @@ begin
              end;
 
             pdwPushData:= pdwPushData + dwCount;
-         end;
+        end
         else if (dwMethod = $1800) then  // NVPB_InlineIndexArray
         begin
             BOOL bInc := *pdwPushData and $40000000;
@@ -512,7 +514,7 @@ begin
 
             pIndexData := ++pdwPushData;
 
-            #ifdef _DEBUG_TRACK_PB
+            {$ifdef _DEBUG_TRACK_PB}
             if (bShowPB) then
             begin
 {$IFDEF DEBUG}
@@ -571,7 +573,7 @@ begin
 
                 DbgDumpMesh((WORD)pIndexData, dwCount);
              end;
-            //endif
+            {$endif}
 
             pdwPushData:= pdwPushData + (dwCount/2) - (bInc ? 0 : 2);
 
@@ -590,7 +592,7 @@ begin
                     hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, {out}IDirect3DIndexBuffer8(@pIndexBuffer));
 
                     maxIBSize := dwCount*2;
-                 end;
+                end
                 else
                 begin
                     hRet := D3D_OK;
@@ -612,11 +614,11 @@ begin
                     begin
                         pIBMem[0] := pData[dwCount - 2];
                         pIBMem[1] := pData[dwCount - 1];
-                     end;
+                    end
                     else
                     begin
                         pIBMem[0] := $FFFF;
-                     end;
+                    end;
 
                     pIndexBuffer.Unlock();
                  end;
@@ -641,10 +643,10 @@ begin
 
                     g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
 
-                    #ifdef _DEBUG_TRACK_PB
+                    {$ifdef _DEBUG_TRACK_PB}
                     if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
                     begin
-                    //endif
+                    {$endif}
 
                     if ( not g_bPBSkipPusher and IsValidCurrentShader()) then
                     begin
@@ -654,9 +656,9 @@ begin
                         );
                      end;
 
-                    #ifdef _DEBUG_TRACK_PB
+                    {$ifdef _DEBUG_TRACK_PB}
                      end;
-                    //endif
+                    {$endif}
 
                     VertPatch.Restore();
 
@@ -665,7 +667,7 @@ begin
              end;
 
             pdwPushData:= pdwPushData - 1;
-         end;
+        end
         else
         begin
             EmuWarning('Unknown PushBuffer Operation ($%.04X, %d)', dwMethod, dwCount);
@@ -675,7 +677,7 @@ begin
         pdwPushData:= pdwPushData + 1;
      end;
 
-    #ifdef _DEBUG_TRACK_PB
+    {$ifdef _DEBUG_TRACK_PB}
     if (bShowPB) then
     begin
 {$IFDEF DEBUG}
@@ -684,14 +686,13 @@ begin
 {$ENDIF}
         fflush(stdout);
     end;
-    //endif
+    {$endif}
 
     if (g_bStepPush) then
     begin
         g_pD3DDevice8.Present(0,0,0,0);
         Sleep(500);
-    end;
-    *)
+    end;    *)
 end;
 
 
@@ -702,14 +703,14 @@ procedure DbgDumpMesh(
   dwCount: DWord
 );
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:1
-var
+(*var
   pActiveVB: IDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
   pVBData: PBYTE;
   uiStride: UINT;
-  szFileName: array [0..128 - 1] of Char;
+  szFileName: array [0..128 - 1] of Char;*)
 begin
-  if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
+(*  if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;
 
   pActiveVB := nil;
