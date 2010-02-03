@@ -34,7 +34,6 @@ uses
   uxisomaker,
   xisomakerv3,
   uxiso,
-  xbe,
   TextConsts,
   ufrm_Language,
   Grabacion,
@@ -77,7 +76,6 @@ type
     ToolButton4: TToolButton;
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
-    ToolButton8: TToolButton;
     ToolButton9: TToolButton;
     AcercadeXISO1: TMenuItem;
     ToolButton10: TToolButton;
@@ -116,7 +114,6 @@ type
     procedure ToolButton2Click(Sender: TObject);
     procedure ToolButton1Click(Sender: TObject);
     procedure ToolButton4Click(Sender: TObject);
-    procedure ToolButton8Click(Sender: TObject);
     procedure ToolButton10Click(Sender: TObject);
     procedure Opciones1Click(Sender: TObject);
     procedure AcercadexISO2Click(Sender: TObject);
@@ -1034,16 +1031,6 @@ begin
   StatusBar1.Panels[0].Text := Format('%s: %d', [SFiles, xIISO.NrFiles]);
   StatusBar1.Panels[1].Text := Format('%s: %d', [SFolders, xIISO.NrFolders]);
   StatusBar1.Panels[2].Text := Format('%s: %d KB', [SISOSize, xIISO.ISOSize div 1024]);
-end;
-
-procedure Tfrm_Main.ToolButton8Click(Sender: TObject);
-var
-  sXBE: TXBE;
-  s: PWideChar;
-begin
-  LeerXBE('c:\downloads\default.xbe', sXBE);
-  s := @sXBE.Certificado.NombreJuego;
-  ShowMessage(s);
 end;
 
 procedure Tfrm_Main.ToolButton10Click(Sender: TObject);
