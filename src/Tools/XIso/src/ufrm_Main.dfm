@@ -259,14 +259,6 @@ object frm_Main: Tfrm_Main
         ShowHint = True
         OnClick = ToolButton10Click
       end
-      object ToolButton8: TToolButton
-        Left = 200
-        Top = 0
-        Enabled = False
-        ImageIndex = 11
-        Visible = False
-        OnClick = ToolButton8Click
-      end
     end
     object ToolBar3: TToolBar
       Left = 9
