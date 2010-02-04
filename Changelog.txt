@@ -7,7 +7,7 @@ version 0.1 Alpha:
 - Xbe eplorer has been created for more and better xbe information.
 - Xdk tracker has a full list of alot of games with there xdk numbers.
   ( remember, when games are working, close xdk range games are probably also working ).
-- No need to copy the dll`s to the game folders, the new xbe loader fix the dll copie hell.
+- No need to copy the dll`s to the game folders, the new xbe loader fix the dll copy hell.
 
 
 Version 0.0.9:

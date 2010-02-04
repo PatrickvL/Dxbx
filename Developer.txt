@@ -23,7 +23,7 @@ Already included are (parts of) these third party libraries :
   http://jedi-apilib.sourceforge.net/
 
 
-Libraries needed for TranslationChecke :
+Libraries needed for TranslationChecker :
 
 - Jedi Jvcl libraries
   http://jvcl.sourceforge.net/ 

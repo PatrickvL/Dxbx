@@ -12,14 +12,6 @@ TODO : Start a compatibilty list
 
 Emulation Notes
 ---------------
-For now, if you want to play a game with Dxbx you'll have to use the CxbxKrnl in the options menu.
-Copy CxbxKrnl.dll and msvcrtd.dll to your game folder and select a manual folder for the output.
-Place the generated default.exe into the game folder (the same location where default.xbe resides).
-Then press Start Emulation to start your game.
-
-Note, that Dxbx has not yet implemented the controller code, so apart from starting a game, you won't be able to do much.
-
-Also, when using the CxbxKrnl, compatibility will be the same as Cxbx.
 The Dxbx project implements a different function detection method, which has both positive and negative consequences:
 The nice thing is, that it will make it easier for us to debug non-working games (so, in theory we have an easier job in supporting new games).
 The down side is, that our detection method won't work with so-called link-time optimized games - so we won't support those (yet).
@@ -66,7 +58,7 @@ Contributors
 Contributors to the Dxbx project are (in alphabetical order) :
 
 PCucho (from Argentina) - XIso translation
-PatrickvL (from Holland) - Coding Style, Relocation, Kernel API's, Function detection
+PatrickvL (from Holland) - Coding Style, Relocation, Kernel API's, Function detection, XBE Loading, XBE Explorer
 Shadow_tj (from Holland) - Main Cxbx translation
 Wayo (from Guatemala) - GetProcAddress trick with CxbxKrnlInit, (Unswizzled) Icon extraction
 Zomby (from Canada) - Vista compatibility, lots of fixups

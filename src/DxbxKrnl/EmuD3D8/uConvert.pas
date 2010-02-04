@@ -47,6 +47,7 @@ function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; inline;
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
 function EmuXB2PC_D3DLock(Flags: DWord): DWord; inline;
+function EmuXB2PC_D3DMultiSampleFormat(aType: DWORD): D3DMULTISAMPLE_TYPE;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT; inline;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: int; PrimitiveCount: int): int; inline;
@@ -386,6 +387,9 @@ begin
     X_D3DFMT_VERTEXDATA:
       Result := D3DFMT_VERTEXDATA;
 
+    $FFFFFFFF:
+      Result := D3DFMT_UNKNOWN; // Cxbx TODO: Not sure if this counts as swizzled or not...
+
   else
     CxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format ($%.08X)', [aFormat]);
     Result := D3DFORMAT(aFormat);
@@ -427,6 +431,12 @@ begin
     D3DFMT_L8:
         Result := X_D3DFMT_LIN_L8; // Linear
 //        Result := X_D3DFMT_L8; // Swizzled
+    D3DFMT_D16,
+    D3DFMT_D16_LOCKABLE:
+      Result := X_D3DFMT_D16_LOCKABLE; // Swizzled
+
+    D3DFMT_UNKNOWN:
+      Result := $FFFFFFFF;
 
 // Dxbx additions :
     D3DFMT_L6V5U5:
@@ -482,6 +492,37 @@ end;
     CxbxKrnlCleanup('Unknown Transform State Type (%d)', [State]);
 }
 
+// convert from xbox to pc multisample formats
+function EmuXB2PC_D3DMultiSampleFormat(aType: DWORD): D3DMULTISAMPLE_TYPE;
+begin
+  case aType of
+    $0011:
+      Result := D3DMULTISAMPLE_NONE;
+
+    $1021,
+    $1121,
+    $2021,
+    $2012:
+      Result := D3DMULTISAMPLE_2_SAMPLES;
+
+    $1022,
+    $1222,
+    $2022,
+    $2222:
+      Result := D3DMULTISAMPLE_4_SAMPLES;
+
+    $1233,
+    $2233:
+      Result := D3DMULTISAMPLE_9_SAMPLES;
+  else
+    CxbxKrnlCleanup( 'Unknown Multisample Type (0x%X)!'#13#10 +
+                 'If this value is greater than 0xFFFF contact blueshogun!', [aType] );
+
+    Result := D3DMULTISAMPLE_NONE;
+  end;
+end;
+
+
 // convert from xbox to pc fill modes
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
@@ -498,19 +539,34 @@ end;
 
 // convert from xbox to pc blend ops
 function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100 
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   case Value of
     $8006:
-      begin
-        Result := D3DBLENDOP_ADD;
-        Exit;
-      end;
+      Result := D3DBLENDOP_ADD;
+    $800a:
+      Result := D3DBLENDOP_SUBTRACT;
+    $800b:
+      Result := D3DBLENDOP_REVSUBTRACT;
+    $8007:
+      Result := D3DBLENDOP_MIN;
+    $8008:
+      Result := D3DBLENDOP_MAX;
+    $F006:
+    begin
+      CxbxKrnlCleanup('D3DBLENDOP_ADDSIGNED is not supported!');
+      Result := D3DBLENDOP_ADD;
+    end;
+    $F005:
+    begin
+      CxbxKrnlCleanup('D3DBLENDOP_REVSUBTRACTSIGNED is not supported!');
+      Result := D3DBLENDOP_REVSUBTRACT;
+    end
+  else
+    CxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
+
+    Result := D3DBLENDOP(Value);
   end;
-
-  CxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
-
-  Result := D3DBLENDOP(Value);
 end;
 
 // convert from xbox to pc blend types

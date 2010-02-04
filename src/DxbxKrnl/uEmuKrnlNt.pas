@@ -972,7 +972,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
+  DbgPrintf('EmuKrnl : NtQueueApcThread' +
      #13#10'(' +
      #13#10'   ThreadHandle         : 0x%.08X' +
      #13#10'   ApcRoutine           : 0x%.08X' +

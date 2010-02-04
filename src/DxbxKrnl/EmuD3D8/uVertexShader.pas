@@ -25,6 +25,7 @@ interface
 uses
   // Delphi
   Windows
+  , SysUtils // strlen
   // Jedi
   , JwaWinType
   // DirectX
@@ -457,7 +458,7 @@ function XTL_EmuRecompileVshDeclaration(
 ): DWORD; // forward
 function XTL_EmuRecompileVshFunction(
     pFunction: PDWORD;
-    ppRecompiled: PID3DXBuffer; // PLPD3DXBUFFER; ?
+    ppRecompiled: PLPD3DXBUFFER;
     pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
 ) : HRESULT; // forward
@@ -838,13 +839,13 @@ begin
   DisassemblyPos := 0;
   case pShader.ShaderHeader.Version of
     VERSION_VS:
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'vs.1.1'#13#10));
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'vs.1.1'#10));
     VERSION_XVS:
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvs.1.1'#13#10));
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvs.1.1'#10));
     VERSION_XVSS:
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvss.1.1'#13#10));
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvss.1.1'#10));
     VERSION_XVSW:
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvsw.1.1'#13#10));
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvsw.1.1'#10));
   end;
 
   i := 0;
@@ -853,7 +854,7 @@ begin
     pIntermediate := @(pShader.Intermediate[i]);
 
     if (i = 128) then
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; -- Passing the truncation limit --'#13#10));
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; -- Passing the truncation limit --'#10));
 
     // Writing combining sign if neccessary
     if (pIntermediate.IsCombined) then
@@ -892,7 +893,7 @@ begin
         VshWriteParameter(pParameter, pDisassembly, @DisassemblyPos);
     end;
 
-    Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, #13#10));
+    Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, #10));
     Inc(i);
   end;
 
@@ -1413,7 +1414,7 @@ begin
     // Make constant registers range from 0 to 192 instead of -96 to 96
     if (pIntermediate.Output.Type_ = IMD_OUTPUT_C) then
     begin
-      Inc(pIntermediate.Output.Address,96);
+      Inc(pIntermediate.Output.Address, 96);
     end;
 
     for j := 0 to 3 - 1 do
@@ -1427,7 +1428,7 @@ begin
         // Make constant registers range from 0 to 192 instead of -96 to 96
         if (pIntermediate.Parameters[j].Parameter.ParameterType = PARAM_C) then
         begin
-          Inc(pIntermediate.Parameters[j].Parameter.Address,96);
+          Inc(pIntermediate.Parameters[j].Parameter.Address, 96);
         end;
       end;
     end;
@@ -2077,11 +2078,11 @@ end; // XTL_EmuRecompileVshDeclaration
 function XTL_EmuRecompileVshFunction
 (
     pFunction: PDWORD;
-    ppRecompiled: PID3DXBuffer; // PLPD3DXBUFFER; ?
+    ppRecompiled: PLPD3DXBUFFER;
     pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
 ) : HRESULT;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-pre2  Translator:PatrickvL  Done:100
 var
   pShaderHeader: PVSH_SHADER_HEADER;
   pToken: PDWord;
@@ -2090,6 +2091,7 @@ var
   pShader: PVSH_XBOX_SHADER;
   hRet: HRESULT;
   pShaderDisassembly: PAnsiChar;
+  pErrors: LPD3DXBUFFER;
 begin
   pShaderHeader := PVSH_SHADER_HEADER(pFunction);
   EOI := false;
@@ -2142,32 +2144,42 @@ begin
       Inc(pToken, VSH_INSTRUCTION_SIZE);
     end;
 
-     // The size of the shader is
-     pOriginalSize^ := DWORD(pToken) - DWORD(pFunction);
+    // The size of the shader is
+    pOriginalSize^ := DWORD(pToken) - DWORD(pFunction);
 
-     pShaderDisassembly := PAnsiChar(CxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
-     DbgVshPrintf('-- Before conversion --'#13#10);
-     VshWriteShader(pShader, pShaderDisassembly, FALSE);
-     DbgVshPrintf('%s', [pShaderDisassembly]);
-     DbgVshPrintf('-----------------------'#13#10);
+    pShaderDisassembly := PAnsiChar(CxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
+    DbgVshPrintf('-- Before conversion --'#13#10);
+    VshWriteShader(pShader, pShaderDisassembly, FALSE);
+    DbgVshPrintf('%s', [pShaderDisassembly]);
+    DbgVshPrintf('-----------------------'#13#10);
 
-     VshConvertShader(pShader, bNoReservedConstants);
-     VshWriteShader(pShader, pShaderDisassembly, TRUE);
+    VshConvertShader(pShader, bNoReservedConstants);
+    VshWriteShader(pShader, pShaderDisassembly, TRUE);
 
-     DbgVshPrintf('-- After conversion ---'#13#10);
-     DbgVshPrintf('%s', [pShaderDisassembly]);
-     DbgVshPrintf('-----------------------'#13#10);
+    DbgVshPrintf('-- After conversion ---'#13#10);
+    DbgVshPrintf('%s', [pShaderDisassembly]);
+    DbgVshPrintf('-----------------------'#13#10);
 
 
+    // HACK: Azurik. Prevent Direct3D from trying to assemble this.
+    if lstrcmpiA(pShaderDisassembly, 'vs.1.1') <> 0 then
+    begin
+      EmuWarning('Cannot assemble empty vertex shader!');
+      hRet := D3DXERR_INVALIDDATA;
+    end
+    else
      hRet := D3DXAssembleShader(pShaderDisassembly,
-                               Length(pShaderDisassembly),
-                               D3DXASM_SKIPVALIDATION,
-                               NULL,
-                               ppRecompiled,
-                               NULL);
+                                strlen(pShaderDisassembly),
+                                D3DXASM_SKIPVALIDATION,
+                                {ppConstants=}NULL,
+                                {ppCompiledShader=}PID3DXBuffer(ppRecompiled),
+                                {ppCompilationErrors=}@pErrors);
 
     if (FAILED(hRet)) then
-       EmuWarning('Couldn''t assemble recompiled vertex shader');
+    begin
+      EmuWarning('Couldn''t assemble recompiled vertex shader');
+      EmuWarning(PAnsiChar(pErrors.GetBufferPointer));
+    end;
 
     CxbxFree(pShaderDisassembly);
   end;

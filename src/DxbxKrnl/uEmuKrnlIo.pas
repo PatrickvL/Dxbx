@@ -303,7 +303,9 @@ function xboxkrnl_IoSynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNA
 function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoDismountVolumeByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoDismountVolumeByName(
+  VolumeName: PSTRING
+  ): NTSTATUS; stdcall; // Source: OpenXDK
 function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
@@ -662,7 +664,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IoDismountVolumeByName(): NTSTATUS; stdcall;
+function xboxkrnl_IoDismountVolumeByName(
+  VolumeName: PSTRING
+  ): NTSTATUS; stdcall;
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoDismountVolumeByName');
