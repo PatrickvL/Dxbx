@@ -95,25 +95,21 @@ type
   PXMEDIAPACKET = ^XMEDIAPACKET;
   LPXMEDIAPACKET = ^XMEDIAPACKET;
 
-(*
-// ******************************************************************
-// * DSLFODESC
-// ******************************************************************
-typedef struct _DSLFODESC
-{
-    DWORD dwLFO;
-    DWORD dwDelay;
-    DWORD dwDelta;
-    LONG lPitchModulation;
-    LONG lFilterCutOffRange;
-    LONG lAmplitudeModulation;
-end;
-DSLFODESC, *LPCDSLFODESC;
+  _DSLFODESC = packed record
+    dwLFO: DWORD;
+    dwDelay: DWORD;
+    dwDelta: DWORD;
+    lPitchModulation: LONG;
+    lFilterCutOffRange: LONG;
+    lAmplitudeModulation: LONG;
+  end;
+  DSLFODESC = _DSLFODESC;
+  LPCDSLFODESC = ^DSLFODESC;
 
 // ******************************************************************
 // * XBOXADPCMWAVEFORMAT
 // ******************************************************************
-typedef struct xbox_adpcmwaveformat_tag
+(*typedef struct xbox_adpcmwaveformat_tag
 {
     WAVEFORMATEX    wfx;                    // WAVEFORMATEX data
     WORD            wSamplesPerBlock;       // Number of samples per encoded block.  It must be 64.
@@ -122,30 +118,27 @@ XBOXADPCMWAVEFORMAT, *PXBOXADPCMWAVEFORMAT, *LPXBOXADPCMWAVEFORMAT;
 
 typedef const XBOXADPCMWAVEFORMAT *LPCXBOXADPCMWAVEFORMAT;
 
-// ******************************************************************
-// * X_DSOUTPUTLEVELS
-// ******************************************************************
-struct X_DSOUTPUTLEVELS
-{
-    DWORD dwAnalogLeftTotalPeak;	// analog peak
-    DWORD dwAnalogRightTotalPeak;
-    DWORD dwAnalogLeftTotalRMS;		// analog RMS
-    DWORD dwAnalogRightTotalRMS;
-    DWORD dwDigitalFrontLeftPeak;	// digital peak levels
-    DWORD dwDigitalFrontCenterPeak;
-    DWORD dwDigitalFrontRightPeak;
-    DWORD dwDigitalBackLeftPeak;
-    DWORD dwDigitalBackRightPeak;
-    DWORD dwDigitalLowFrequencyPeak;
-    DWORD dwDigitalFrontLeftRMS;	// digital RMS levels
-    DWORD dwDigitalFrontCenterRMS;
-    DWORD dwDigitalFrontRightRMS;
-    DWORD dwDigitalBackLeftRMS;
-    DWORD dwDigitalBackRightRMS;
-    DWORD dwDigitalLowFrequencyRMS;
-end;
+*)
+  X_DSOUTPUTLEVELS = record
+    dwAnalogLeftTotalPeak: DWORD;// analog peak
+    dwAnalogRightTotalPeak: DWORD;
+    dwAnalogLeftTotalRMS: DWORD;// analog RMS
+    dwAnalogRightTotalRMS: DWORD;
+    dwDigitalFrontLeftPeak: DWORD;// digital peak levels
+    dwDigitalFrontCenterPeak: DWORD;
+    dwDigitalFrontRightPeak: DWORD;
+    dwDigitalBackLeftPeak: DWORD;
+    dwDigitalBackRightPeak: DWORD;
+    dwDigitalLowFrequencyPeak: DWORD;
+    dwDigitalFrontLeftRMS: DWORD;// digital RMS levels
+    dwDigitalFrontCenterRMS: DWORD;
+    dwDigitalFrontRightRMS: DWORD;
+    dwDigitalBackLeftRMS: DWORD;
+    dwDigitalBackRightRMS: DWORD;
+    dwDigitalLowFrequencyRMS: DWORD;
+  end;
 
-
+(*
 typedef struct IDirectSoundStream IDirectSoundStream;
 typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
 *)
@@ -2255,339 +2248,328 @@ begin
   Result := S_OK;
 end;
 
-// s+
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetMaxDistance
+function XTL_EmuIDirectSoundBuffer8_SetMaxDistance
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   flMaxDistance,
-    DWORD                   dwApply
-)
+    pThis: IDIRECTSOUNDBUFFER8;
+    flMaxDistance: FLOAT;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+begin
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMaxDistance'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   flMaxDistance             : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, flMaxDistance, dwApply]);
+{$ENDIF}
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
+
+  // Cxbx TODO: Actually do something
+
+  Result := DS_OK;
+end;
+
+function XTL_EmuIDirectSoundBuffer8_SetMinDistance
+(
+    pThis: IDIRECTSOUNDBUFFER8;
+    flMinDistance: FLOAT;
+    dwApply: DWORD
+): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMaxDistance'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   flMaxDistance             : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, flMaxDistance, dwApply);
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMinDistance'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   flMinDistance             : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, flMinDistance, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetMinDistance
+function XTL_EmuIDirectSoundBuffer8_SetRolloffFactor
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   flMinDistance,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-begin 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
-{$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMinDistance'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   flMinDistance             : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, flMinDistance, dwApply);
-{$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
-
-    // Cxbx TODO: Actually do something
-
-    Result := DS_OK;
-end;
-*)
-
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetRolloffFactor
-(
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   flRolloffFactor,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pThis: IDIRECTSOUNDBUFFER8;
+    flRolloffFactor: FLOAT;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetRolloffFactor'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   flRolloffFactor           : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, flRolloffFactor, dwApply);
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetRolloffFactor'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   flRolloffFactor           : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, flRolloffFactor, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetDistanceFactor
+function XTL_EmuIDirectSoundBuffer8_SetDistanceFactor
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   flDistanceFactor,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pThis: IDIRECTSOUNDBUFFER8;
+    flDistanceFactor: FLOAT;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetDistanceFactor'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   flDistanceFactor          : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, flDistanceFactor, dwApply);
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetDistanceFactor'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   flDistanceFactor          : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, flDistanceFactor, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetConeAngles
+function XTL_EmuIDirectSoundBuffer8_SetConeAngles
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    DWORD                   dwInsideConeAngle,
-    DWORD                   dwOutsideConeAngle,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pThis: IDIRECTSOUNDBUFFER8;
+    dwInsideConeAngle: DWORD;
+    dwOutsideConeAngle: DWORD;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeAngles'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   dwInsideConeAngle         : 0x%.08X'
-               #13#10'   dwOutsideConeAngle        : 0x%.08X'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, dwInsideConeAngle,
-               dwOutsideConeAngle, dwApply);
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeAngles'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   dwInsideConeAngle         : 0x%.08X'+
+             #13#10'   dwOutsideConeAngle        : 0x%.08X'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, dwInsideConeAngle,
+             dwOutsideConeAngle, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetConeOrientation
+function XTL_EmuIDirectSoundBuffer8_SetConeOrientation
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-begin 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
-{$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOrientation'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   x                         : %f'
-               #13#10'   y                         : %f'
-               #13#10'   z                         : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, x, y, z, dwApply);
-{$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
-
-    // Cxbx TODO: Actually do something
-
-    Result := DS_OK;
-end;
-*)
-
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetConeOutsideVolume
-(
-    LPDIRECTSOUNDBUFFER8    pThis,
-    LongInt                    lConeOutsideVolume,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pThis: IDIRECTSOUNDBUFFER8;
+    x: FLOAT;
+    y: FLOAT;
+    z: FLOAT;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOutsideVolume'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   lConeOutsideVolume        : 0x%.08X'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, lConeOutsideVolume, dwApply);
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOrientation'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   x                         : %f'+
+             #13#10'   y                         : %f'+
+             #13#10'   z                         : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, x, y, z, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetPosition
+function XTL_EmuIDirectSoundBuffer8_SetConeOutsideVolume
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-begin 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
-{$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetPosition'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   x                         : %f'
-               #13#10'   y                         : %f'
-               #13#10'   z                         : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, x, y, z, dwApply);
-{$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
-
-    // Cxbx TODO: Actually do something
-
-    Result := DS_OK;
-end;
-*)
-
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetVelocity
-(
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pThis: IDIRECTSOUNDBUFFER8;
+    lConeOutsideVolume: LongInt;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetVelocity'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   x                         : %f'
-               #13#10'   y                         : %f'
-               #13#10'   z                         : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, x, y, z, dwApply);
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOutsideVolume'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   lConeOutsideVolume        : 0x%.08X'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, lConeOutsideVolume, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetDopplerFactor
+function XTL_EmuIDirectSoundBuffer8_SetPosition
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    FLOAT                   flDopplerFactor,
-    DWORD                   dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pThis: IDIRECTSOUNDBUFFER8;
+    x: FLOAT;
+    y: FLOAT;
+    z: FLOAT;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOutsideVolume'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   flDopplerFactor           : %f'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, flDopplerFactor, dwApply);
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetPosition'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   x                         : %f'+
+             #13#10'   y                         : %f'+
+             #13#10'   z                         : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, x, y, z, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetI3DL2Source
+function XTL_EmuIDirectSoundBuffer8_SetVelocity
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
-    LPCDSI3DL2BUFFER        pds3db,
+    pThis: IDIRECTSOUNDBUFFER8;
+    x: FLOAT;
+    y: FLOAT;
+    z: FLOAT;
+    dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+begin
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetVelocity'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   x                         : %f'+
+             #13#10'   y                         : %f'+
+             #13#10'   z                         : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, x, y, z, dwApply]);
+{$ENDIF}
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
+
+  // Cxbx TODO: Actually do something
+
+  Result := DS_OK;
+end;
+
+function XTL_EmuIDirectSoundBuffer8_SetDopplerFactor
+(
+    pThis: IDIRECTSOUNDBUFFER8;
+    flDopplerFactor: FLOAT;
+    dwApply: DWORD
+): HRESULT;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+begin
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+      EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
+      DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetConeOutsideVolume'+
+             #13#10'('+
+             #13#10'   pThis                     : 0x%.08X'+
+             #13#10'   flDopplerFactor           : %f'+
+             #13#10'   dwApply                   : 0x%.08X'+
+             #13#10');',
+             [pThis, flDopplerFactor, dwApply]);
+{$ENDIF}
+      EmuSwapFS(fsXbox);
+   end;
+  {$endif}
+
+  // Cxbx TODO: Actually do something
+
+  Result := DS_OK;
+end;
+
+(*function XTL_EmuIDirectSoundBuffer8_SetI3DL2Source
+(
+    pThis: IDIRECTSOUNDBUFFER8;
+    pds3db: LPCDSI3DL2BUFFER;
     DWORD                   dwApply
-)
+): HRESULT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin 
     // debug trace
@@ -2661,31 +2643,28 @@ begin
 end;
 *)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetLFO
+function XTL_EmuIDirectSoundBuffer8_SetLFO
 (
-  LPDIRECTSOUNDBUFFER  pThis,
-  LPCDSLFODESC         pLFODesc
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+  pThis: IDIRECTSOUNDBUFFER;
+  pLFODesc: LPCDSLFODESC
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetLFO'
-           #13#10'('
-           #13#10'   pThis                     : 0x%.08X'
-           #13#10'   pLFODesc                  : 0x%.08X'
-           #13#10');',
-           [pThis, pLFODesc);
+  DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetLFO'+
+         #13#10'('+
+         #13#10'   pThis                     : 0x%.08X'+
+         #13#10'   pLFODesc                  : 0x%.08X'+
+         #13#10');',
+         [pThis, pLFODesc]);
 {$ENDIF}
 
   // Cxbx TODO: Implement
-
-    EmuSwapFS(fsXbox);
-
-    Result := S_OK;
+  EmuSwapFS(fsXbox);
+  Result := S_OK;
 end;
-*)
 
 (*procedure XTL_EmuXAudioCreateAdpcmFormat
 (
@@ -2721,27 +2700,26 @@ begin
 end;
 *)
 
-(*
-HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetRolloffCurve
+function XTL_EmuIDirectSoundBuffer8_SetRolloffCurve
 (
-  LPDIRECTSOUNDBUFFER  pThis,
-   FLOAT         *pflPoints,
-  DWORD                dwPointCount,
-  DWORD                dwApply
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+  pThis: IDIRECTSOUNDBUFFER;
+  pflPoints: PFLOAT;
+  dwPointCount: DWORD;
+  dwApply: DWORD
+): HRESULT; stdcall;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetRolloffCurve'
-       #13#10'('
-       #13#10'   pThis                     : 0x%.08X'
-       #13#10'   pflPoints                 : 0x%.08X'
-       #13#10'   dwPointCount              : 0x%.08X'
-       #13#10'   dwApply                   : 0x%.08X'
+  DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetRolloffCurve'+
+       #13#10'('+
+       #13#10'   pThis                     : 0x%.08X'+
+       #13#10'   pflPoints                 : 0x%.08X'+
+       #13#10'   dwPointCount              : 0x%.08X'+
+       #13#10'   dwApply                   : 0x%.08X'+
        #13#10');',
-       [pThis, pflPoints, dwPointCount, dwApply);
+       [pThis, pflPoints, dwPointCount, dwApply]);
 {$ENDIF}
 
   // Cxbx TODO: Implement
@@ -2750,7 +2728,6 @@ begin
 
   Result := DS_OK;
 end;
-*)
 
 (*
 function XTL_EmuIDirectSoundStream_SetVolume(
