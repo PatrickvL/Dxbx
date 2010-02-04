@@ -135,6 +135,7 @@ type
   _D3DIVB = packed record
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
+    Blend1: FLOAT; // Blend1
     dwSpecular: DWord; // Specular
     dwDiffuse: DWord; // Diffuse
     Normal: TD3DXVECTOR3; // Normal

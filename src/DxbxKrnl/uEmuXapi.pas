@@ -1621,7 +1621,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXLoadSectionByHandle' +
       #13#10'(' +
-      #13#10'   hSection           : 0x%.80X' +
+      #13#10'   hSection           : 0x%.08X' +
       #13#10');',
       [hSection]);
 {$ENDIF}
@@ -1644,7 +1644,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXFreeSectionByHandle' +
       #13#10'(' +
-      #13#10'   hSection           : 0x%.80X' +
+      #13#10'   hSection           : 0x%.08X' +
       #13#10');',
       [hSection]);
 {$ENDIF}

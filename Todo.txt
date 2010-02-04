@@ -1,8 +1,5 @@
 The following tasks are currently on our near-term TODO list :
 
-- Fix the difference in contents in the .cxbxplg section between Dxbx and Cxbx (this is probably because the .xbe reading is damaged)
-  (Currently this difference is only seen with Fable the Lost Chapters)
-
 - Translate/Implement all Kernel API's that are implemented by Cxbx
 
 - Translate all emu-patches that are implemented by Cxbx
@@ -21,5 +18,5 @@ The following tasks are currently on our near-term TODO list :
 
 ShowStoppers !!
 - NTCreateFile result is returning false everytime.. so we can not acces files.
-- CreateVertextshader is always use the Nop instead of other items in the case statement. 
+- D3DXAssembleShader fails always, no matter what input it gets.
   

@@ -416,7 +416,20 @@ type
   end;
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
 
+  _D3DSWAPDATA = packed record
+    Swap: DWord;
+    SwapVBlank: DWord;
+    MissedVBlanks: DWord;
+    TimeUntilSwapVBlank: DWord;
+    TimeBetweenSwapVBlanks: DWord;
+  end;
+  D3DSWAPDATA = _D3DSWAPDATA;
+  PD3DSWAPDATA = ^D3DSWAPDATA;
+
   D3DVBLANKCALLBACK = procedure (const pData: PD3DVBLANKDATA); cdecl;
+
+  // D3DSWAPCALLBACK
+  D3DSWAPCALLBACK = procedure (const pData: PD3DSWAPDATA); cdecl;
 
   X_D3DResource = object
   protected

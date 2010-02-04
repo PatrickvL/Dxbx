@@ -37,6 +37,7 @@ type
     m_dwDirect3DDevice: DWORD;
     m_bFullscreen: BOOL;
     m_bVSync: BOOL;
+    m_bHardwareYUV: BOOL;
   public
     procedure Initialize;
     procedure Finalize;
@@ -64,6 +65,10 @@ type
     // property VSync Toggling
     procedure SetVSync(Value: BOOL);
     function GetVSync: BOOL;
+
+    // Hardware YUV Toggling
+    procedure SetHardwareYUV(Value: BOOL);
+    function GetHardwareYUV: BOOL;
   end;
   PXBVideo = ^XBVideo;
 
@@ -107,6 +112,9 @@ begin
       dwType := REG_DWORD; dwSize := SizeOf(DWORD);
       RegQueryValueExA(hKey, 'VSync', NULL, @dwType, PBYTE(@m_bVSync), @dwSize);
 
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegQueryValueExA(hKey, 'HardwareYUV', NULL, @dwType, PBYTE(@m_bHardwareYUV), @dwSize);
+
       RegCloseKey(hKey);
     end;
   except
@@ -138,6 +146,9 @@ begin
 
       dwType := REG_DWORD; dwSize := SizeOf(DWORD);
       RegSetValueEx(hKey, 'VSync', 0, dwType, PBYTE(@m_bVSync), dwSize);
+
+      dwType := REG_DWORD; dwSize := SizeOf(DWORD);
+      RegSetValueEx(hKey, 'HardwareYUV', 0, dwType, PBYTE(@m_bHardwareYUV), dwSize);
 
       RegCloseKey(hKey);
     end;
@@ -194,6 +205,16 @@ end;
 function XBVideo.GetVSync: BOOL;
 begin
   Result := m_bVSync;
+end;
+
+procedure XBVideo.SetHardwareYUV(Value: BOOL);
+begin
+  m_bHardwareYUV := Value;
+end;
+
+function XBVideo.GetHardwareYUV: BOOL;
+begin
+  Result := m_bHardwareYUV;
 end;
 
 end.
