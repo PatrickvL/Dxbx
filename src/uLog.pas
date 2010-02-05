@@ -49,6 +49,7 @@ procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
 
+function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; overload;
 
@@ -449,6 +450,24 @@ end;
 procedure DbgPrintf(aStr: string);
 begin
   WriteLog(aStr);
+end;
+
+function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
+begin
+  Result := 0;
+  while True do
+  begin
+    // Stop at #0
+    if (lpString1^ = #0) or (lpString2^ = #0) then
+      Exit;
+
+    Result := Ord(lpString1^) - Ord(lpString2^);
+    if Result <> 0 then
+      Exit;
+
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
 end;
 
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; // overload;

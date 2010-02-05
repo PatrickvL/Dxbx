@@ -43,6 +43,7 @@ uses
   XboxKrnl,
   uConvert,
   uEmuD3D8Types,
+  uEmuD3D8Utils,
   uDxbxUtils,
   uDxbxKrnlUtils,
   uEmuDInput,
@@ -63,39 +64,6 @@ uses
   uVertexBuffer,
   uState;
 
-type
-  PIDirect3DDevice8 = ^IDirect3DDevice8;
-  PIDirect3DSurface8 = ^IDirect3DSurface8;
-  PIDirect3DVertexBuffer8 = ^IDirect3DVertexBuffer8;
-  PIDirect3DIndexBuffer8 = ^IDirect3DIndexBuffer8;
-  PIDirect3DTexture8 = ^IDirect3DTexture8;
-  PIDirect3DCubeTexture8 = ^IDirect3DCubeTexture8;
-  PIDirect3DVolumeTexture8 = ^IDirect3DVolumeTexture8;
-
-  PPD3DCOLOR = ^PD3DCOLOR;
-
-  // information passed to the create device proxy thread
-  EmuD3D8CreateDeviceProxyData = packed record
-    Adapter: UINT;
-    DeviceType: D3DDEVTYPE;
-    hFocusWindow: HWND;
-    BehaviorFlags: DWORD;
-    pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
-    ppReturnedDeviceInterface: PIDirect3DDevice8;
-    bReady: Bool; // volatile
-    case Integer of
-      0: (hRet: HRESULT); // volatile
-      1: (bCreate: bool); // False: release
-  end;
-
-
-var
-  g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
-
-function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType; overload;
-function iif(AValue: Boolean; const ATrue: IDirect3DSurface8; const AFalse: IDirect3DSurface8): IDirect3DSurface8; overload;
-function iif(AValue: Boolean; const ATrue: IDirect3DBaseTexture8; const AFalse: IDirect3DBaseTexture8): IDirect3DBaseTexture8; overload;
-
 procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32); stdcall; // forward
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
@@ -107,11 +75,6 @@ function XTL_EmuIDirect3DDevice8_SetVertexData2f(aRegister: Integer;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(aRegister: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
 function XTL_EmuIDirect3DDevice8_GetVertexShader(const pHandle: PDWORD): HRESULT; stdcall; // forward
-
-function EmuRenderWindow(lpVoid: PVOID): DWord; // no stdcall !
-function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
-function EmuUpdateTickCount(lpVoid: PVOID): DWord; // no stdcall !
-function EmuCreateDeviceProxy(lpVoid: PVOID): DWord; // no stdcall !
 
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource;
   pBase: PVOID): HRESULT; stdcall;
@@ -133,41 +96,39 @@ procedure XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
   EnableColorKey: BOOL;
   ColorKey: D3DCOLOR); stdcall;
 
-function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
-  Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool;
-  ppVertexBuffer: PIDirect3DVertexBuffer8): HResult;
-
-
-implementation
-
-uses
-  // Dxbx
-  uDxbxKrnl
-  , uXboxLibraryUtils; // Should not be here, but needed for CxbxKrnlRegisterThread
-
 var
   // Global(s)
-  g_pDDSPrimary: IDIRECTDRAWSURFACE7; // DirectDraw7 Primary Surface
-  g_pDDSOverlay7: IDIRECTDRAWSURFACE7; // DirectDraw7 Overlay Surface
-  g_pDDClipper: IDIRECTDRAWCLIPPER; // DirectDraw7 Clipper
+  g_pD3DDevice8: IDIRECT3DDEVICE8 = NULL;     // Direct3D8 Device
+  g_pDDSPrimary: IDIRECTDRAWSURFACE7 = NULL;  // DirectDraw7 Primary Surface
+  g_pDDSOverlay7: IDIRECTDRAWSURFACE7 = NULL; // DirectDraw7 Overlay Surface
+  g_pDDClipper: IDIRECTDRAWCLIPPER = NULL;    // DirectDraw7 Clipper
+  g_CurrentVertexShader: DWord = 0;
+  g_bFakePixelShaderLoaded: BOOL = False;
   g_bIsFauxFullscreen: BOOL = False;
   g_bHackUpdateSoftwareOverlay: BOOL = FALSE;
 
-  // Static Variable(s)
-  g_ddguid: TGUID; // DirectDraw driver GUID
-  g_hMonitor: HMONITOR; // Handle to DirectDraw monitor
-  g_pD3D8: IDirect3D8; // Direct3D8
-  g_bSupportsYUY2: BOOL = FALSE; // Does device support YUY2 overlays?
-  g_pDD7: IDirectDraw7; // DirectDraw7
-  g_dwOverlayW: DWORD = 640; // Cached Overlay Width
-  g_dwOverlayH: DWORD = 480; // Cached Overlay Height
-  g_dwOverlayP: DWORD = 640; // Cached Overlay Pitch
+function EmuRenderWindow(lpVoid: PVOID): DWord; // no stdcall !
+function EmuCreateDeviceProxy(lpVoid: PVOID): DWord; // no stdcall !
+function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
+function EmuUpdateTickCount(lpVoid: PVOID): DWord; // no stdcall !
 
-  g_XbeHeader: PXBE_HEADER; // XbeHeader
-  g_XbeHeaderSize: DWord = 0; // XbeHeaderSize
-  g_D3DCaps: D3DCAPS8; // Direct3D8 Caps
-  g_hBgBrush: HBrush = 0; // Background Brush
-  g_bRenderWindowActive: bool = False; // volatile?
+
+var
+  // Static Variable(s)
+  g_ddguid: TGUID;               // DirectDraw driver GUID
+  g_hMonitor: HMONITOR = 0;      // Handle to DirectDraw monitor
+  g_pD3D8: IDirect3D8 = NULL;    // Direct3D8
+  g_bSupportsYUY2: BOOL = FALSE; // Does device support YUY2 overlays?
+  g_pDD7: IDirectDraw7;          // DirectDraw7
+  g_dwOverlayW: DWORD = 640;     // Cached Overlay Width
+  g_dwOverlayH: DWORD = 480;     // Cached Overlay Height
+  g_dwOverlayP: DWORD = 640;     // Cached Overlay Pitch
+
+  g_XbeHeader: PXBE_HEADER = NULL;        // XbeHeader
+  g_XbeHeaderSize: DWord = 0;             // XbeHeaderSize
+  g_D3DCaps: D3DCAPS8;                    // Direct3D8 Caps
+  g_hBgBrush: HBrush = 0;                 // Background Brush
+  g_bRenderWindowActive: bool = False;    // volatile?
   g_XBVideo: XBVideo;
   g_pVBCallback: D3DVBLANKCALLBACK = nil; // Vertical-Blank callback routine
   g_pSwapCallback: D3DSWAPCALLBACK = nil; // Swap/Present callback routine
@@ -218,191 +179,33 @@ var
   // cached active texture
   EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
 
-function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
-begin
-  if AValue then
-    Result := ATrue
-  else
-    Result := AFalse;
-end;
+type
+  // information passed to the create device proxy thread
+  EmuD3D8CreateDeviceProxyData = packed record
+    Adapter: UINT;
+    DeviceType: D3DDEVTYPE;
+    hFocusWindow: HWND;
+    BehaviorFlags: DWORD;
+    pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
+    ppReturnedDeviceInterface: PIDirect3DDevice8;
+    {volatile} bReady: Bool;
+    {union} case Integer of
+      0: ({volatile} hRet: HRESULT);
+      1: ({volatile} bCreate: bool); // False: release
+  end;
 
-function iif(AValue: Boolean; const ATrue: IDirect3DSurface8; const AFalse: IDirect3DSurface8): IDirect3DSurface8;
-begin
-  if AValue then
-    Result := ATrue
-  else
-    Result := AFalse;
-end;
-
-function iif(AValue: Boolean; const ATrue: IDirect3DBaseTexture8; const AFalse: IDirect3DBaseTexture8): IDirect3DBaseTexture8; overload;
-begin
-  if AValue then
-    Result := ATrue
-  else
-    Result := AFalse;
-end;
-
-function IDirect3D8_CreateDevice(const aDirect3D8: IDirect3D8;
-  Adapter: UINT; DeviceType: D3DDEVTYPE; hFocusWindow: HWND;
-  BehaviorFlags: DWORD; pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
-  ppReturnedDeviceInterface: PIDirect3DDevice8): HRESULT;
 var
-  TmpIDirect3DDevice8: IDirect3DDevice8;
-begin
-  Result := aDirect3D8.CreateDevice(
-    Adapter,
-    DeviceType,
-    hFocusWindow,
-    BehaviorFlags,
-    {var}PD3DPRESENT_PARAMETERS(pPresentationParameters)^,
-    {out}TmpIDirect3DDevice8);
+  g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
 
-  PPointer(ppReturnedDeviceInterface)^ := Pointer(TmpIDirect3DDevice8);
-  Pointer(TmpIDirect3DDevice8) := nil;
-end;
+implementation
 
-function IDirect3DDevice8_GetRenderTarget(const aDirect3DDevice8: IDirect3DDevice8;
-  ppRenderTarget: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
-begin
-  Result := aDirect3DDevice8.GetRenderTarget(
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppRenderTarget)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
-end;
-
-function IDirect3DDevice8_GetDepthStencilSurface(const aDirect3DDevice8: IDirect3DDevice8;
-  ppZStencilSurface: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
-begin
-  Result := aDirect3DDevice8.GetDepthStencilSurface(
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppZStencilSurface)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
-end;
-
-function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
-  Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool;
-  ppVertexBuffer: PIDirect3DVertexBuffer8): HResult;
-var
-  TmpIDirect3DVertexBuffer8: IDirect3DVertexBuffer8;
-begin
-  Result := aDirect3DDevice8.CreateVertexBuffer(
-    Length, Usage, FVF, Pool,
-    {out}TmpIDirect3DVertexBuffer8);
-
-  PPointer(ppVertexBuffer)^ := Pointer(TmpIDirect3DVertexBuffer8);
-  Pointer(TmpIDirect3DVertexBuffer8) := nil;
-end;
-
-function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: IDirect3DDevice8;
-  Width, Height: LongWord; Format: TD3DFormat;
-  ppSurface: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
-begin
-  Result := aDirect3DDevice8.CreateImageSurface(
-    Width, Height, Format,
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppSurface)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
-end;
-
-function IDirect3DDevice8_GetBackBuffer(const aDirect3DDevice8: IDirect3DDevice8;
-  BackBuffer: LongWord; _Type: TD3DBackBufferType;
-  ppBackBuffer: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
-begin
-  Result := aDirect3DDevice8.GetBackBuffer(
-    BackBuffer, _Type,
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppBackBuffer)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
-end;
-
-function IDirect3DDevice8_CreateIndexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
-  Length: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
-  ppIndexBuffer: PIDirect3DIndexBuffer8): HResult;
-var
-  TmpIDirect3DIndexBuffer8: IDirect3DIndexBuffer8;
-begin
-  Result := aDirect3DDevice8.CreateIndexBuffer(
-    Length, Usage, Format, Pool,
-    {out}TmpIDirect3DIndexBuffer8);
-
-  PPointer(ppIndexBuffer)^ := Pointer(TmpIDirect3DIndexBuffer8);
-  Pointer(TmpIDirect3DIndexBuffer8) := nil;
-end;
-
-function IDirect3DDevice8_CreateTexture(const aDirect3DDevice8: IDirect3DDevice8;
-  Width, Height, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
-  ppTexture: PIDirect3DTexture8): HResult;
-var
-  TmpIDirect3DTexture8: IDirect3DTexture8;
-begin
-  Result := aDirect3DDevice8.CreateTexture(
-    Width, Height, Levels, Usage, Format, Pool,
-    {out}TmpIDirect3DTexture8);
-
-  PPointer(ppTexture)^ := Pointer(TmpIDirect3DTexture8);
-  Pointer(TmpIDirect3DTexture8) := nil;
-end;
-
-function IDirect3DDevice8_CreateCubeTexture(const aDirect3DDevice8: IDirect3DDevice8;
-  EdgeLength, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
-  ppCubeTexture: PIDirect3DCubeTexture8): HResult;
-var
-  TmpIDirect3DCubeTexture8: IDirect3DCubeTexture8;
-begin
-  Result := aDirect3DDevice8.CreateCubeTexture(
-    EdgeLength, Levels, Usage, Format, Pool,
-    {out}TmpIDirect3DCubeTexture8);
-
-  PPointer(ppCubeTexture)^ := Pointer(TmpIDirect3DCubeTexture8);
-  Pointer(TmpIDirect3DCubeTexture8) := nil;
-end;
-
-function IDirect3DDevice8_CreateVolumeTexture(const aDirect3DDevice8: IDirect3DDevice8;
-  Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
-  ppVolumeTexture: PIDirect3DVolumeTexture8): HResult;
-var
-  TmpIDirect3DVolumeTexture8: IDirect3DVolumeTexture8;
-begin
-  Result := aDirect3DDevice8.CreateVolumeTexture(
-    Width, Height, Depth, Levels, Usage, Format, Pool,
-    {out}TmpIDirect3DVolumeTexture8);
-
-  PPointer(ppVolumeTexture)^ := Pointer(TmpIDirect3DVolumeTexture8);
-  Pointer(TmpIDirect3DVolumeTexture8) := nil;
-end;
-
-function IDirect3DTexture8_GetSurfaceLevel(const aDirect3DTexture8: IDirect3DTexture8;
-  Level: LongWord;
-  ppSurfaceLevel: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
-begin
-  Result := aDirect3DTexture8.GetSurfaceLevel(
-    Level,
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppSurfaceLevel)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
-end;
+uses
+  // Dxbx
+  uDxbxKrnl
+  , uXboxLibraryUtils; // Should not be here, but needed for CxbxKrnlRegisterThread
 
 // Direct3D initialization (called before emulation begins)
-procedure XTL_EmuD3DInit(
-  XbeHeader: PXBE_HEADER;
-  XbeHeaderSize: UInt32
-); stdcall;
+procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   dwThreadId: DWORD;
@@ -492,7 +295,6 @@ begin
 end; // XTL_EmuD3DInit
 
 // cleanup Direct3D
-
 procedure XTL_EmuD3DCleanup; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
@@ -1757,8 +1559,9 @@ function XTL_EmuIDirect3D8_GetAdapterModeCount(
   Adapter: UINT): UINT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
+  ret: UINT;
+  v: UINT32;
   Mode: D3DDISPLAYMODE;
-  i: UINT32;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1770,17 +1573,19 @@ begin
     [Adapter]);
 {$ENDIF}
 
-  Result := 0;
-  for i := 0 to g_pD3D8.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter) - 1 do
+  ret := g_pD3D8.GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+  for v := 0 to ret - 1 do
   begin
-    // Only count valid modes :
-    if  (g_pD3D8.EnumAdapterModes(g_XBVideo.GetDisplayAdapter, i, {out}Mode) = D3D_OK)
-    and (Mode.Width = 640)
-    and (Mode.Height = 480) then
-      Inc(Result);
+    if  (g_pD3D8.EnumAdapterModes(g_XBVideo.GetDisplayAdapter, v, {out}Mode) <> D3D_OK) then
+      Break;
+
+    if (Mode.Width <> 640) or (Mode.Height <> 480) then
+      Dec(ret);
   end;
 
   EmuSwapFS(fsXbox);
+  
+  Result := ret;
 end;
 
 function XTL_EmuIDirect3D8_GetAdapterDisplayMode(
@@ -1803,21 +1608,27 @@ begin
 
   // Cxbx NOTE: WARNING: We should cache the 'Emulated' display mode and return
   // This value. We can initialize the cache with the default Xbox mode data.
-  Result := g_pD3D8.GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), {out}PD3DDISPLAYMODE(pMode)^);
+  Result := g_pD3D8.GetAdapterDisplayMode
+  (
+    g_XBVideo.GetDisplayAdapter(), 
+    {out}PD3DDISPLAYMODE(pMode)^
+  );
 
   // make adjustments to the parameters to make sense with windows direct3d
-  pPCMode := PD3DDISPLAYMODE(pMode);
+  begin
+    pPCMode := PD3DDISPLAYMODE(pMode);
 
-  // Convert Format (PC->Xbox)
-  pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
+    // Convert Format (PC->Xbox)
+    pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
 
-  // Cxbx TODO : Make this configurable in the future?
-  // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-  pMode.Flags := $000000A1;
+    // Cxbx TODO : Make this configurable in the future?
+    // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
+    pMode.Flags := $000000A1;
 
-  // Cxbx TODO : Retrieve from current CreateDevice settings?
-  pMode.Width := 640;
-  pMode.Height := 480;
+    // Cxbx TODO : Retrieve from current CreateDevice settings?
+    pMode.Width := 640;
+    pMode.Height := 480;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2087,13 +1898,13 @@ begin
   }
 
   Result := g_pD3DDevice8.CopyRects
-    (
+  (
     pSourceSurface.EmuSurface8,
     pSourceRectsArray,
     cRects,
     pDestinationSurface.EmuSurface8,
     pDestPointsArray
-    );
+  );
 
   EmuSwapFS(fsXbox);
 end;
@@ -2383,6 +2194,7 @@ begin
   pOffset.z := 0.0;
   pOffset.w := 0.0;
 
+{ Marked out by Cxbx
   pScale.x := Viewport.Width * 0.5 * fScaleX;
   pScale.y := Viewport.Height * -0.5 * fScaleY;
   pScale.z := (Viewport.MaxZ - Viewport.MinZ) * fScaleZ;
@@ -2392,6 +2204,7 @@ begin
   pOffset.y := Viewport.Height * fScaleY * 0.5 + Viewport.Y * fScaleY + fOffsetY;
   pOffset.z := Viewport.MinZ * fScaleZ;
   pOffset.w := 0;
+}
 
   EmuSwapFS(fsXbox);
 end;

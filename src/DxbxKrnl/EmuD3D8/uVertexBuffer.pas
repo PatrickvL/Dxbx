@@ -43,7 +43,8 @@ uses
   , uVertexShader
   , uLog
   , uTypes // CLOCKS_PER_SEC, clock()
-  , uEmuD3D8Types;
+  , uEmuD3D8Types
+  , uEmuD3D8Utils;
 
 const
   MAX_NBR_STREAMS = 16;

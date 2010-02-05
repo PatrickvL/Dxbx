@@ -555,8 +555,6 @@ var
   // cached active texture
   EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
 
-  g_pD3DDevice8: IDIRECT3DDEVICE8; // Direct3D8 Device
-
 implementation
 
 function IsSpecialResource(x: DWORD): Boolean;

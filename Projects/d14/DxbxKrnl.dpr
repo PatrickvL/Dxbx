@@ -27,7 +27,7 @@ library DxbxKrnl;
   with your DLL. To avoid using BORLNDMM.DLL, pass string information
   using PChar or ShortString parameters. }
 
-{$R '..\..\Resource\StoredTrie.res' '..\..\Resource\StoredTrie.rc'}
+{$R 'StoredTrie.res' '..\..\Resource\StoredTrie.rc'}
 
 uses
   Windows,
@@ -94,7 +94,8 @@ uses
   uEmuExe in '..\..\src\uEmuExe.pas',
   uProlog in '..\..\src\uProlog.pas',
   uExe in '..\..\src\uExe.pas',
-  uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas';
+  uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas',
+  uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}

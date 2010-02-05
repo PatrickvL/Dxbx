@@ -44,12 +44,6 @@ namespace XTL
     #include "EmuXG.h"
 }  *)
 
-var
-  g_pD3DDevice8: IDIRECT3DDEVICE8;
-  g_CurrentVertexShader: DWord;
-  g_bFakePixelShaderLoaded: BOOL;
-  g_bIsFauxFullscreen: BOOL;
-
 implementation
 
 end.
