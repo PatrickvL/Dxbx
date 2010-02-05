@@ -957,7 +957,7 @@ function XTL_EmuDirectSoundCreateBuffer
 (
     pdsbd: PX_DSBUFFERDESC;
     ppBuffer: PPX_CDirectSoundBuffer
-): HRESULT;
+): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 var
   hRet: HRESULT;
@@ -2754,5 +2754,10 @@ begin
   Result := DS_OK;
 end;
 *)
+
+exports
+  XTL_EmuDirectSoundCreateBuffer,
+  XTL_EmuDirectSoundDoWork,
+  XTL_EmuDirectSoundCreate;
 
 end.
