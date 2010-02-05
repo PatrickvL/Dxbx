@@ -1848,7 +1848,7 @@ begin
 
       pSrc := PBYTE(pTexture.Data);
 
-      if IsSpecialResource(pResource.Data) and ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE)>0) then
+      if IsSpecialResource(pResource.Data) and ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0) then
       begin
 
       end
