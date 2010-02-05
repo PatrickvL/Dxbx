@@ -6124,7 +6124,7 @@ begin
       // Update overlay if present was not called since the last call to
       // EmuIDirect3DDevice8_UpdateOverlay.
       if g_bHackUpdateSoftwareOverlay then
-        g_pD3DDevice8.Present(0, 0, 0, 0);
+        g_pD3DDevice8.Present(nil, nil, 0, nil);
 
       g_bHackUpdateSoftwareOverlay := TRUE;
     end;
@@ -7111,7 +7111,7 @@ begin
   if (g_fYuvEnabled) then
   begin
     EmuSwapFS(fsXbox);
-    XTL_EmuIDirect3DDevice8_UpdateOverlay(g_YuvSurface, 0, 0, FALSE, 0);
+    XTL_EmuIDirect3DDevice8_UpdateOverlay(g_YuvSurface, nil, nil, FALSE, 0);
     EmuSwapFS(fsWindows);
   end;
 
@@ -9352,8 +9352,8 @@ exports
   XTL_EmuD3DCleanup,
   XTL_EmuD3DInit,
 
-  XTL_EmuGet2DSurfaceDesc name PatchPrefix + 'Get2DSurfaceDesc',
-  XTL_EmuGet2DSurfaceDescD name PatchPrefix + 'Get2DSurfaceDescD', // TODO : Fix wrong prefix!
+  XTL_EmuGet2DSurfaceDesc,
+  XTL_EmuGet2DSurfaceDescD, // TODO : Fix wrong prefix!
 
   XTL_EmuIDevice3D8_KickOff name PatchPrefix + 'D3D_KickOff',
 
