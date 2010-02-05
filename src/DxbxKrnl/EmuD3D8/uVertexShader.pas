@@ -35,14 +35,12 @@ uses
   , uEmu
   , uTypes
   , uEmuD3D8Types
+  , uEmuD3D8Utils
   , uDxbxKrnlUtils
   , uEmuAlloc;
 
 
 type
-  LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
-  PLPD3DXBUFFER = ^LPD3DXBUFFER;
-  
   Dxbx4Booleans = array [0..4-1] of boolean;
   PDxbx4Booleans = ^Dxbx4Booleans;
 
@@ -2317,11 +2315,11 @@ begin
       hRet := D3DXERR_INVALIDDATA;
     end
     else
-     hRet := D3DXAssembleShader(pShaderDisassembly,
+     hRet := Dxbx_D3DXAssembleShader(pShaderDisassembly,
                                 strlen(pShaderDisassembly),
                                 D3DXASM_SKIPVALIDATION,
                                 {ppConstants=}NULL,
-                                {ppCompiledShader=}PID3DXBuffer(ppRecompiled),
+                                {ppCompiledShader=}ppRecompiled,
                                 {ppCompilationErrors=}@pErrors);
 
     if (FAILED(hRet)) then

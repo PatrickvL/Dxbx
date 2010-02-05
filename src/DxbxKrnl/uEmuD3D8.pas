@@ -2518,19 +2518,20 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Trying fallback:'#13#10'%s', [dummy]);
-      hRet := D3DXAssembleShader(dummy,
+      hRet := Dxbx_D3DXAssembleShader(PAnsiChar(dummy),
                                  Length(dummy),
                                  D3DXASM_SKIPVALIDATION,
                                  NULL,
                                  @pRecompiledBuffer,
                                  NULL);
-      hRet := g_pD3DDevice8.CreateVertexShader
-      (
-          pRecompiledDeclaration,
-          PDWORD(pRecompiledBuffer.GetBufferPointer()),
-          aHandle,
-          g_dwVertexShaderUsage
-      );
+      if not (FAILED(hRet)) then
+        hRet := g_pD3DDevice8.CreateVertexShader
+        (
+            pRecompiledDeclaration,
+            PDWORD(pRecompiledBuffer.GetBufferPointer()),
+            aHandle,
+            g_dwVertexShaderUsage
+        );
     end;
     //*/
   end;
@@ -2877,7 +2878,7 @@ begin
       pErrors := nil;
 
       // assemble the shader
-      D3DXAssembleShader(szDiffusePixelShader, Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
+      Dxbx_D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
 
       // create the shader device handle
       Result := g_pD3DDevice8.CreatePixelShader(pShader.GetBufferPointer(), {out}dwHandle);
