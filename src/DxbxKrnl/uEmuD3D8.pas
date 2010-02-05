@@ -9186,9 +9186,9 @@ exports
   XTL_EmuIDirect3DResource8_Release name PatchPrefix + 'D3DResource_Release',
 
   XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
-  XTL_EmuIDirect3DSurface8_LockRect name PatchPrefix + 'D3DSurface_LockRect',
+  XTL_EmuIDirect3DSurface8_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
 
-  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
+  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc',
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DTexture_GetSurfaceLevel',
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel2 name PatchPrefix + 'D3DTexture_GetSurfaceLevel2',
   XTL_EmuIDirect3DTexture8_LockRect name PatchPrefix + 'D3DTexture_LockRect',
