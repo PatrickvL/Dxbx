@@ -113,7 +113,7 @@
 			<RcCompile Include="..\..\Resource\StoredTrie.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
-				<Form>..\..\Resource\StoredTrie.res</Form>
+				<Form>StoredTrie.res</Form>
 			</RcCompile>
 			<DCCReference Include="..\..\src\uLog.pas"/>
 			<DCCReference Include="..\..\src\uMutex.pas"/>
@@ -178,6 +178,7 @@
 			<DCCReference Include="..\..\src\uProlog.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Utils.pas"/>
 			<RcCompile Include="..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc">
 				<Form>..\..\Resource\StoredTrie.res</Form>
 			</RcCompile>

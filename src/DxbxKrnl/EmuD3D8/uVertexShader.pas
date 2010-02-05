@@ -39,57 +39,33 @@ uses
   , uEmuAlloc;
 
 
-const
-  VSH_INSTRUCTION_SIZE = 4;
-  VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * SizeOf(DWORD);
-  VSH_MAX_INTERMEDIATE_COUNT = 1024; // The maximum number of intermediate format slots
-
-  VERSION_VS =                      $F0; // vs.1.1, not an official value
-  VERSION_XVS =                     $20; // Xbox vertex shader
-  VERSION_XVSS =                    $73; // Xbox vertex state shader
-  VERSION_XVSW =                    $77; // Xbox vertex read/write shader
-  VSH_XBOX_MAX_INSTRUCTION_COUNT =  136; // The maximum Xbox shader instruction count
-
-
 type
   LPD3DXBUFFER = ID3DXBuffer; // Dxbx TODO : Move to better location.
   PLPD3DXBUFFER = ^LPD3DXBUFFER;
+  
+  Dxbx4Booleans = array [0..4-1] of boolean;
+  PDxbx4Booleans = ^Dxbx4Booleans;
 
-  _VSH_SHADER_HEADER = packed record
-    Type_: uint08;
-    Version: uint08;
-    NumInst: uint08;
-    Unknown0: uint08;
-  end;
-  VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
-  PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
+const
+  VSH_INSTRUCTION_SIZE = 4;
+  VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * SizeOf(DWORD);
 
-  _VSH_TYPE_PATCH_DATA = packed record
-    NbrTypes: DWORD;
-    Types: array [0..255] of UINT;
-  end;
-  VSH_TYPE_PATCH_DATA = _VSH_TYPE_PATCH_DATA;
+// ****************************************************************************
+// * Vertex shader function recompiler
+// ****************************************************************************
+const
+  // Local macros
+  VERSION_VS =                      $F0;  // vs.1.1, not an official value
+  VERSION_XVS =                     $20;  // Xbox vertex shader
+  VERSION_XVSS =                    $73;  // Xbox vertex state shader
+  VERSION_XVSW =                    $77;  // Xbox vertex read/write shader
+  VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
+  VSH_MAX_INTERMEDIATE_COUNT =      1024; // The maximum number of intermediate format slots
 
-  _VSH_STREAM_PATCH_DATA = packed record
-    NbrStreams: DWORD;
-    pStreamPatches: array [0..255] of STREAM_DYNAMIC_PATCH;
-  end;
-  VSH_STREAM_PATCH_DATA = _VSH_STREAM_PATCH_DATA;
-
-  _VSH_PATCH_DATA = packed record
-    NeedPatching: boolean;
-    ConvertedStride: DWORD;
-    TypePatchData: VSH_TYPE_PATCH_DATA;
-    StreamPatchData: VSH_STREAM_PATCH_DATA;
-  end;
-  VSH_PATCH_DATA = _VSH_PATCH_DATA;
-  PVSH_PATCH_DATA = ^VSH_PATCH_DATA;
-
-  _VSH_IMD_INSTRUCTION_TYPE = (IMD_MAC,IMD_ILU);
-  VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
-
+type // Types from VertexShader.cpp :
   // Local types
-  _VSH_FIELD_NAME = (
+  _VSH_FIELD_NAME = 
+  (
     FLD_ILU = 0,
     FLD_MAC,
     FLD_CONST,
@@ -143,7 +119,8 @@ type
   );
   VSH_FIELD_NAME = _VSH_FIELD_NAME;
 
-  _VSH_OREG_NAME = (
+  _VSH_OREG_NAME = 
+  (
     OREG_OPOS,
     OREG_UNUSED1,
     OREG_UNUSED2,
@@ -163,67 +140,61 @@ type
   );
   VSH_OREG_NAME = _VSH_OREG_NAME;
 
-  _VSH_PARAMETER_TYPE = (PARAM_UNKNOWN = 0,
-                         PARAM_R,
-                         PARAM_V,
-                         PARAM_C);
+  _VSH_PARAMETER_TYPE = 
+  (
+    PARAM_UNKNOWN = 0,
+    PARAM_R,
+    PARAM_V,
+    PARAM_C
+  );
   VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
 
-  _VSH_IMD_OUTPUT_TYPE = (IMD_OUTPUT_C,
-                          IMD_OUTPUT_R,
-                          IMD_OUTPUT_O,
-                          IMD_OUTPUT_A0X);
-  VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
-
-  Dxbx4Booleans = array [0..4-1] of boolean;
-  PDxbx4Booleans = ^Dxbx4Booleans;
-
-  _VSH_IMD_OUTPUT = packed record
-    Type_: VSH_IMD_OUTPUT_TYPE;
-    Mask: Dxbx4Booleans;
-    Address: UInt16;
-  end;
-  VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
-  PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
-
-  _VSH_OUTPUT_TYPE = (
+  _VSH_OUTPUT_TYPE = 
+  (
     OUTPUT_C = 0,
     OUTPUT_O
   );
   VSH_OUTPUT_TYPE = _VSH_OUTPUT_TYPE;
 
-  _VSH_OUTPUT_MUX = (
+  _VSH_OUTPUT_MUX = 
+  (
     OMUX_MAC = 0,
     OMUX_ILU
   );
   VSH_OUTPUT_MUX = _VSH_OUTPUT_MUX;
 
-  _VSH_ILU = (ILU_NOP = 0,
-              ILU_MOV,
-              ILU_RCP,
-              ILU_RCC,
-              ILU_RSQ,
-              ILU_EXP,
-              ILU_LOG,
-              ILU_LIT);
+  _VSH_ILU = 
+  (
+    ILU_NOP = 0,
+    ILU_MOV,
+    ILU_RCP,
+    ILU_RCC,
+    ILU_RSQ,
+    ILU_EXP,
+    ILU_LOG,
+    ILU_LIT
+  );
   VSH_ILU = _VSH_ILU;
 
-  _VSH_MAC = (MAC_NOP,
-              MAC_MOV,
-              MAC_MUL,
-              MAC_ADD,
-              MAC_MAD,
-              MAC_DP3,
-              MAC_DPH,
-              MAC_DP4,
-              MAC_DST,
-              MAC_MIN,
-              MAC_MAX,
-              MAC_SLT,
-              MAC_SGE,
-              MAC_ARL,
-              MAC_UNK1,
-              MAC_UNK2);
+  _VSH_MAC = 
+  (
+    MAC_NOP,
+    MAC_MOV,
+    MAC_MUL,
+    MAC_ADD,
+    MAC_MAD,
+    MAC_DP3,
+    MAC_DPH,
+    MAC_DP4,
+    MAC_DST,
+    MAC_MIN,
+    MAC_MAX,
+    MAC_SLT,
+    MAC_SGE,
+    MAC_ARL,
+    MAC_UNK1,
+    MAC_UNK2
+  );
   VSH_MAC = _VSH_MAC;
 
   _VSH_OPCODE_PARAMS = packed record
@@ -236,17 +207,20 @@ type
   VSH_OPCODE_PARAMS = _VSH_OPCODE_PARAMS;
   PVSH_OPCODE_PARAMS = ^VSH_OPCODE_PARAMS;
 
-  _VSH_SWIZZLE = (SWIZZLE_X = 0,
-                  SWIZZLE_Y,
-                  SWIZZLE_Z,
-                  SWIZZLE_W);
+  _VSH_SWIZZLE = 
+  (
+    SWIZZLE_X = 0,
+    SWIZZLE_Y,
+    SWIZZLE_Z,
+    SWIZZLE_W
+  );
   VSH_SWIZZLE = _VSH_SWIZZLE;
 
   _VSH_PARAMETER = packed record
-    ParameterType: VSH_PARAMETER_TYPE;   // Parameter type, R, V or C
-    Neg: boolean;             // TRUE if negated, FALSE if not
-    Swizzle: array [0..4-1] of VSH_SWIZZLE;      // The four swizzles
-    Address: int16;         // Register address
+    ParameterType: VSH_PARAMETER_TYPE;      // Parameter type, R, V or C
+    Neg: boolean;                           // TRUE if negated, FALSE if not
+    Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
+    Address: int16;                         // Register address
   end;
   VSH_PARAMETER = _VSH_PARAMETER;
   PVSH_PARAMETER = ^VSH_PARAMETER;
@@ -254,7 +228,7 @@ type
   _VSH_OUTPUT = packed record
     // Output register
     OutputMux: VSH_OUTPUT_MUX;       // MAC or ILU used as output
-    OutputType: VSH_OUTPUT_TYPE;      // C or O
+    OutputType: VSH_OUTPUT_TYPE;     // C or O
     OutputMask: Dxbx4Booleans;
     OutputAddress: int16;
     // MAC output R register
@@ -278,6 +252,31 @@ type
   end;
   VSH_SHADER_INSTRUCTION = _VSH_SHADER_INSTRUCTION;
   PVSH_SHADER_INSTRUCTION = ^VSH_SHADER_INSTRUCTION;
+
+  _VSH_IMD_OUTPUT_TYPE = 
+  (
+    IMD_OUTPUT_C,
+    IMD_OUTPUT_R,
+    IMD_OUTPUT_O,
+    IMD_OUTPUT_A0X
+  );
+  VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
+
+  _VSH_IMD_INSTRUCTION_TYPE =
+  (
+    IMD_MAC,
+    IMD_ILU
+  );
+  VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
+
+  _VSH_IMD_OUTPUT = packed record
+    Type_: VSH_IMD_OUTPUT_TYPE;
+    Mask: Dxbx4Booleans;
+    Address: UInt16;
+  end;
+  VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
+  PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
+
 
   _VSH_IMD_PARAMETER = packed record
     Active: boolean;
@@ -310,6 +309,15 @@ type
   end;
   VSH_FIELDMAPPING = _VSH_FIELDMAPPING;
   PVSH_FIELDMAPPING = ^VSH_FIELDMAPPING;
+
+  _VSH_SHADER_HEADER = packed record
+    Type_: uint08;
+    Version: uint08;
+    NumInst: uint08;
+    Unknown0: uint08;
+  end;
+  VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
+  PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
 
   _VSH_XBOX_SHADER = packed record
     ShaderHeader: VSH_SHADER_HEADER;
@@ -466,10 +474,6 @@ procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER); // forward
 function XTL_IsValidCurrentShader(): Boolean; // forward
 function XTL_VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH; // forward
 
-const
-  DEF_VSH_END = $FFFFFFFF;
-  DEF_VSH_NOP = $00000000;
-
 implementation
 
 uses
@@ -482,7 +486,7 @@ var
   LineStr: string = '';
 
 procedure DbgVshPrintf(aStr: string); overload;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
 {$ifdef _DEBUG_TRACK_VS}
   if (g_bPrintfOn) then
@@ -504,7 +508,7 @@ begin
 end;
 
 procedure DbgVshPrintf(aStr: string; Args: array of const); overload;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
 {$ifdef _DEBUG_TRACK_VS}
   if (g_bPrintfOn) then
@@ -515,75 +519,81 @@ end;
 // VertexShader.h
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := (aHandle and $8000000) <> 0;
 end;
 
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := PX_D3DVertexShader(aHandle and $7FFFFFFF);
 end;
 
 // VertexShader.cpp
 
-function IsInUse(const pMask: Pboolean): Boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function IsInUse(const pMask: Pboolean): Boolean; inline;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := PBooleanArray(pMask)[0] or PBooleanArray(pMask)[1] or PBooleanArray(pMask)[2] or PBooleanArray(pMask)[3];
 end;
 
-function HasMACR(pInstruction: PVSH_SHADER_INSTRUCTION): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function HasMACR(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := IsInUse(@(pInstruction.Output.MACRMask[0])) and (pInstruction.MAC <> MAC_NOP);
 end;
 
-function HasMACO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function HasMACO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := IsInUse(@(pInstruction.Output.OutputMask[0])) and
             (pInstruction.Output.OutputMux = OMUX_MAC) and
             (pInstruction.MAC <> MAC_NOP);
 end;
 
-function HasMACARL(pInstruction: PVSH_SHADER_INSTRUCTION): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function HasMACARL(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := { Cxbx : (not IsInUse(@(pInstruction.Output.OutputMask[0]))) and
-            (pInstruction.Output.OutputMux = OMUX_MAC) and */}
+  Result := (* Cxbx : (not IsInUse(@(pInstruction.Output.OutputMask[0]))) and
+            (pInstruction.Output.OutputMux = OMUX_MAC) and*)
             (pInstruction.MAC = MAC_ARL);
 end;
 
-function HasILUR(pInstruction: PVSH_SHADER_INSTRUCTION): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function HasILUR(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := IsInUse(@(pInstruction.Output.ILURMask[0])) and (pInstruction.ILU <> ILU_NOP);
 end;
 
-function HasILUO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function HasILUO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := IsInUse(@(pInstruction.Output.OutputMask[0])) and
             (pInstruction.Output.OutputMux = OMUX_ILU) and
             (pInstruction.ILU <> ILU_NOP);
 end;
 
-function VshGetFromToken(pShaderToken: PDWord; SubToken: uint08; StartBit: uint08; BitLength: uint08): int;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Retrieves a number of bits in the instruction token
+function VshGetFromToken(pShaderToken: Puint32;
+                         SubToken: uint08; 
+                         StartBit: uint08;
+                         BitLength: uint08): int; inline;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := (PDWordArray(pShaderToken)[SubToken] shr StartBit) and not ($FFFFFFFF shl BitLength);
 end;
 
+// Converts the C register address to disassembly format
 function ConvertCRegister(const CReg: int16): int16; inline;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := ((((CReg shr 5) and 7) - 3) * 32) + (CReg and 31);
 end;
 
-function VshGetField(pShaderToken: PDWord; FieldName: VSH_FIELD_NAME): uint08;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function VshGetField(pShaderToken: Puint32; 
+                     FieldName: VSH_FIELD_NAME): uint08;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := uint08(VshGetFromToken(pShaderToken,
                                    g_FieldMapping[FieldName].SubToken,
@@ -591,8 +601,9 @@ begin
                                    g_FieldMapping[FieldName].BitLength));
 end;
 
-function VshGetOpCodeParams(ILU: VSH_ILU; MAC: VSH_MAC): PVSH_OPCODE_PARAMS;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function VshGetOpCodeParams(ILU: VSH_ILU; 
+                            MAC: VSH_MAC): PVSH_OPCODE_PARAMS;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: int;
 begin
@@ -609,8 +620,9 @@ begin
   Result := nil;
 end;
 
-procedure VshParseInstruction(pShaderToken: PDWord; pInstruction: PVSH_SHADER_INSTRUCTION);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshParseInstruction(pShaderToken: Puint32;
+                              pInstruction: PVSH_SHADER_INSTRUCTION);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   // First get the instruction(s).
   pInstruction.ILU := VSH_ILU(VshGetField(pShaderToken, FLD_ILU));
@@ -721,7 +733,7 @@ end;
 
 // Print functions
 function VshGetRegisterName(ParameterType: VSH_PARAMETER_TYPE): AnsiChar;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   case (ParameterType) of
     PARAM_R:
@@ -738,7 +750,7 @@ end;
 procedure VshWriteOutputMask(const OutputMask: Dxbx4Booleans;
                              pDisassembly: PAnsiChar;
                              pDisassemblyPos: Puint32);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 const
   _x: array [Boolean] of AnsiString = ('', 'x');
   _y: array [Boolean] of AnsiString = ('', 'y');
@@ -755,14 +767,13 @@ begin
     _x[OutputMask[0]],
     _y[OutputMask[1]],
     _z[OutputMask[2]],
-    _w[OutputMask[3]],
-    _x[OutputMask[0]]]));
+    _w[OutputMask[3]]]));
 end;
 
 procedure VshWriteParameter(pParameter: PVSH_IMD_PARAMETER;
                             pDisassembly: PAnsichar;
                             pDisassemblyPos: Puint32);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 const
   _neg: array [Boolean] of AnsiString = ('', '-');
 var
@@ -819,7 +830,7 @@ begin
           break;
         end;
         Inc(j);
-      end;
+      end; // while
       if (j = 4) then
       begin
         break;
@@ -828,8 +839,10 @@ begin
   end;
 end; // VshWriteParameter
 
-procedure VshWriteShader(pShader: PVSH_XBOX_SHADER; pDisassembly: PAnsiChar; Truncate: boolean);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshWriteShader(pShader: PVSH_XBOX_SHADER; 
+                         pDisassembly: PAnsiChar; 
+                         Truncate: boolean);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   DisassemblyPos: uint32;
   i, j: Int;
@@ -900,16 +913,21 @@ begin
   pDisassembly[DisassemblyPos] := #0;
 end; // VshWriteShader
 
-procedure VshAddParameter(pParameter: PVSH_PARAMETER; a0x: boolean; pIntermediateParameter: PVSH_IMD_PARAMETER);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshAddParameter(pParameter: PVSH_PARAMETER; 
+                          a0x: boolean; 
+                          pIntermediateParameter: PVSH_IMD_PARAMETER);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   pIntermediateParameter.Parameter := pParameter^;
   pIntermediateParameter.Active := TRUE;
   pIntermediateParameter.IsA0X := a0x;
 end;
 
-procedure VshAddParameters(pInstruction: PVSH_SHADER_INSTRUCTION; ILU: VSH_ILU; MAC: VSH_MAC; pParameters: PVSH_IMD_PARAMETER);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshAddParameters(pInstruction: PVSH_SHADER_INSTRUCTION; 
+                           ILU: VSH_ILU; 
+                           MAC: VSH_MAC;
+                           pParameters: PVSH_IMD_PARAMETER);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ParamCount: uint08;
   pParams: PVSH_OPCODE_PARAMS;
@@ -935,12 +953,12 @@ begin
   if (pParams.C) then
   begin
     VshAddParameter(@pInstruction.C, pInstruction.a0x, @PVSH_IMD_PARAMETERArray(pParameters)[ParamCount]);
-    Inc(ParamCount);
+//    Inc(ParamCount);
   end;
 end; // VshAddParameters
 
 procedure VshVerifyBufferBounds(pShader: PVSH_XBOX_SHADER);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   if (pShader.IntermediateCount = VSH_MAX_INTERMEDIATE_COUNT) then
   begin
@@ -949,7 +967,7 @@ begin
 end;
 
 function VshNewIntermediate(pShader: PVSH_XBOX_SHADER): PVSH_INTERMEDIATE_FORMAT;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   VshVerifyBufferBounds(pShader);
   ZeroMemory(@pShader.Intermediate[pShader.IntermediateCount], sizeof(VSH_INTERMEDIATE_FORMAT));
@@ -957,8 +975,10 @@ begin
   Inc(pShader.IntermediateCount);
 end;
 
-procedure VshInsertIntermediate(pShader: PVSH_XBOX_SHADER; pIntermediate: PVSH_INTERMEDIATE_FORMAT; Pos: uint16);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshInsertIntermediate(pShader: PVSH_XBOX_SHADER; 
+                                pIntermediate: PVSH_INTERMEDIATE_FORMAT; 
+                Pos: uint16);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: Int;
 begin
@@ -972,8 +992,9 @@ begin
   Inc(pShader.IntermediateCount);
 end;
 
-procedure VshDeleteIntermediate(pShader: PVSH_XBOX_SHADER; Pos: uint16);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshDeleteIntermediate(pShader: PVSH_XBOX_SHADER; 
+                                Pos: uint16);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: int;
 begin
@@ -984,8 +1005,10 @@ begin
   Dec(pShader.IntermediateCount);
 end;
 
-function VshAddInstructionMAC_R(pInstruction: PVSH_SHADER_INSTRUCTION; pShader: PVSH_XBOX_SHADER; IsCombined: boolean): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function VshAddInstructionMAC_R(pInstruction: PVSH_SHADER_INSTRUCTION; 
+                                pShader: PVSH_XBOX_SHADER; 
+                IsCombined: boolean): boolean;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
 begin
@@ -1013,8 +1036,10 @@ begin
   Result := TRUE;
 end; // VshAddInstructionMAC_R
 
-function VshAddInstructionMAC_O(pInstruction: PVSH_SHADER_INSTRUCTION; pShader: PVSH_XBOX_SHADER; IsCombined: boolean): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function VshAddInstructionMAC_O(pInstruction: PVSH_SHADER_INSTRUCTION; 
+                                pShader: PVSH_XBOX_SHADER; 
+                                IsCombined: boolean): boolean;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
 begin
@@ -1045,8 +1070,10 @@ begin
   Result := TRUE;
 end; // VshAddInstructionMAC_O
 
-function VshAddInstructionMAC_ARL(pInstruction: PVSH_SHADER_INSTRUCTION; pShader: PVSH_XBOX_SHADER; IsCombined: boolean): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function VshAddInstructionMAC_ARL(pInstruction: PVSH_SHADER_INSTRUCTION; 
+                                  pShader: PVSH_XBOX_SHADER; 
+                                  IsCombined: boolean): boolean;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
 begin
@@ -1073,8 +1100,10 @@ begin
   Result := TRUE;
 end; // VshAddInstructionMAC_ARL
 
-function VshAddInstructionILU_R(pInstruction: PVSH_SHADER_INSTRUCTION; pShader: PVSH_XBOX_SHADER; IsCombined: boolean): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function VshAddInstructionILU_R(pInstruction: PVSH_SHADER_INSTRUCTION; 
+                                pShader: PVSH_XBOX_SHADER; 
+                                IsCombined: boolean): boolean;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
 begin
@@ -1106,8 +1135,10 @@ begin
   Result := TRUE;
 end; // VshAddInstructionILU_R
 
-function VshAddInstructionILU_O(pInstruction: PVSH_SHADER_INSTRUCTION; pShader: PVSH_XBOX_SHADER; IsCombined: boolean): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+function VshAddInstructionILU_O(pInstruction: PVSH_SHADER_INSTRUCTION; 
+                                pShader: PVSH_XBOX_SHADER; 
+                                IsCombined: boolean): boolean;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
 begin
@@ -1138,8 +1169,9 @@ begin
   Result := TRUE;
 end; // VshAddInstructionILU_O
 
-procedure VshConvertToIntermediate(pInstruction: PVSH_SHADER_INSTRUCTION; pShader: PVSH_XBOX_SHADER);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshConvertToIntermediate(pInstruction: PVSH_SHADER_INSTRUCTION; 
+                                   pShader: PVSH_XBOX_SHADER);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   IsCombined: boolean;
 begin
@@ -1197,11 +1229,15 @@ begin
     end;
   end;
 
-  VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
+  {ignore}VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
 end; // VshConvertToIntermediate
 
-procedure VshSetSwizzle(pParameter: PVSH_IMD_PARAMETER; x: VSH_SWIZZLE; y: VSH_SWIZZLE; z: VSH_SWIZZLE; w: VSH_SWIZZLE);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshSetSwizzle(pParameter: PVSH_IMD_PARAMETER; 
+                        x: VSH_SWIZZLE; 
+                        y: VSH_SWIZZLE;
+                        z: VSH_SWIZZLE;
+                        w: VSH_SWIZZLE);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   pParameter.Parameter.Swizzle[0] := x;
   pParameter.Parameter.Swizzle[1] := y;
@@ -1209,8 +1245,12 @@ begin
   pParameter.Parameter.Swizzle[3] := w;
 end;
 
-procedure VshSetOutputMask(pOutput: PVSH_IMD_OUTPUT; MaskX: boolean; MaskY: boolean; MaskZ: boolean; MaskW:boolean);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+procedure VshSetOutputMask(pOutput: PVSH_IMD_OUTPUT; 
+                           MaskX: boolean; 
+                           MaskY: boolean;
+                           MaskZ: boolean;
+                           MaskW: boolean);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   pOutput.Mask[0] := MaskX;
   pOutput.Mask[1] := MaskY;
@@ -1218,8 +1258,14 @@ begin
   pOutput.Mask[3] := MaskW;
 end;
 
+(*
+    mul oPos.xyz, r12, c-38
+    +rcc r1.x, r12.w
+
+    mad oPos.xyz, r12, r1.x, c-37
+*)
 procedure VshRemoveScreenSpaceInstructions(pShader: PVSH_XBOX_SHADER);
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   PosC38: int16;
   deleted: int;
@@ -1252,19 +1298,21 @@ begin
                (pIntermediate.Parameters[1].Parameter.ParameterType = PARAM_R) then
             begin
               DbgVshPrintf('PosC38 = %d i = %d'#13#10, [PosC38, i]);
-              for j := i -1 downto 0 do
+              for j := i - 1 downto 0 do
               begin
                 pIntermediate1W := @pShader.Intermediate[j];
                 // Time to start searching for +rcc r#.x, r12.w
                 if (pIntermediate1W.InstructionType = IMD_ILU) and
                     (pIntermediate1W.ILU = ILU_RCC) and
                     (pIntermediate1W.Output.Type_ = IMD_OUTPUT_R) and
-                    (pIntermediate1W.Output.Address = pIntermediate.Parameters[1].Parameter.Address) then
+                    (pIntermediate1W.Output.Address = 
+                     pIntermediate.Parameters[1].Parameter.Address) then
                 begin
                   DbgVshPrintf('Deleted +rcc r1.x, r12.w'#13#10);
                   VshDeleteIntermediate(pShader, j);
                   Inc(deleted);
                   Dec(i);
+                  //Dec(j);
                   break;
                 end;
               end;
@@ -1279,7 +1327,7 @@ begin
           begin
             VshDeleteIntermediate(pShader, i);
             PosC38 := i;
-            inc(deleted);
+            Inc(deleted);
             Dec(i);
             DbgVshPrintf('Deleted mul oPos.xyz, r12, c-38'#13#10);
           end;
@@ -1298,13 +1346,14 @@ begin
   if (deleted <> 3) then
   begin
     EmuWarning('Applying screen space vertex shader patching hack!');
+  i := 0;
     while i < pShader.IntermediateCount  do
     begin
       pIntermediate := @pShader.Intermediate[i];
 
       // Find instructions outputting to oPos.
-      if( pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-          (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
+      if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
+         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
       begin
         // Redirect output to r11.
         pIntermediate.Output.Type_    := IMD_OUTPUT_R;
@@ -1346,12 +1395,16 @@ begin
         Inc(i);
         VshInsertIntermediate(pShader, @AddIntermediate, i);
       end;
-    end
+
+      Inc(i);
+    end; // while
   end;
 end; // VshRemoveScreenSpaceInstructions
 
-function VshConvertShader(pShader: PVSH_XBOX_SHADER; bNoReservedConstants: boolean): boolean;
-// Branch:shogun  Revision:153  Translator:PatrickvL  Done:100
+// Converts the intermediate format vertex shader to DirectX 8 format
+function VshConvertShader(pShader: PVSH_XBOX_SHADER;
+                          bNoReservedConstants: boolean): boolean;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   RUsage: array [0..13-1] of boolean;
   i: int;
@@ -1361,6 +1414,8 @@ var
   TmpIntermediate: VSH_INTERMEDIATE_FORMAT;
   R12Replacement: int16;
   pOPosWriteBack: PVSH_INTERMEDIATE_FORMAT;
+  outRegister: int;
+  swizzle: int;
 begin
   RUsage[0] := False;
   RUsage[1] := False;
@@ -1436,28 +1491,87 @@ begin
     if (pIntermediate.InstructionType = IMD_MAC) and (pIntermediate.MAC = MAC_DPH) then
     begin
       // Replace dph with dp3 and add
-      if not(pIntermediate.Output.Type_ = IMD_OUTPUT_R) then
+      if (pIntermediate.Output.Type_ <> IMD_OUTPUT_R) then
       begin
         // TODO: Complete dph support
-        EmuWarning('Can`t simulate dph for other than output r registers (yet)');
-        Result := FALSE;
-        Exit;
+        EmuWarning('Can''t simulate dph for other than output r registers (yet)');
+
+        // attempt to find unused register...
+        outRegister := -1;
+        for j := 11 downto 0 do
+        begin
+          if (not RUsage[j]) then
+          begin
+            outRegister := j;
+            break;
+          end;
+        end;
+
+        // return failure if there are no available registers
+        if (outRegister = -1) then
+        begin
+          Result := FALSE;
+          Exit;
+        end;
+        
+        TmpIntermediate := pIntermediate^;
+
+        // modify the instructions
+        // the register value is not needed beyond these instructions so setting the usage flag should not be necessary (??)
+        pIntermediate.MAC := MAC_DP3;
+        pIntermediate.Output.Type_ := IMD_OUTPUT_R;
+        pIntermediate.Output.Address := outRegister;
+        VshSetOutputMask(@pIntermediate.Output, TRUE, TRUE, TRUE, TRUE);
+
+        TmpIntermediate.MAC := MAC_ADD;
+        TmpIntermediate.Parameters[0].IsA0X := FALSE;
+        TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
+        TmpIntermediate.Parameters[0].Parameter.Address := outRegister;
+        TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
+        // VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+        VshSetSwizzle(@TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+        //VshSetOutputMask(@TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
+        VshInsertIntermediate(pShader, @TmpIntermediate, i + 1);
+      end
+      else
+      begin
+        TmpIntermediate := pIntermediate^;
+        pIntermediate.MAC := MAC_DP3;
+        TmpIntermediate.MAC := MAC_ADD;
+        TmpIntermediate.Parameters[0].IsA0X := FALSE;
+        TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
+        TmpIntermediate.Parameters[0].Parameter.Address := TmpIntermediate.Output.Address;
+        TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
+
+        swizzle := Ord(TmpIntermediate.Output.Mask[0]) or (Ord(TmpIntermediate.Output.Mask[1]) shl 1) or (Ord(TmpIntermediate.Output.Mask[2]) shl 2) or (Ord(TmpIntermediate.Output.Mask[3]) shl 3);
+        case (swizzle) of
+          1: begin
+            VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+          end;
+          2: begin
+            VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
+          end;
+          4: begin
+          VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
+          end;
+          8: begin
+          VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+          end;
+        // 15: begin
+        else // default:
+          VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
+          break;
+        end;
+        //VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+        VshSetSwizzle(@TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+        //VshSetOutputMask(@TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
+        VshInsertIntermediate(pShader, @TmpIntermediate, i + 1);
       end;
-      TmpIntermediate := pIntermediate^;
-      pIntermediate.MAC := MAC_DP3;
-      TmpIntermediate.MAC := MAC_ADD;
-      TmpIntermediate.Parameters[0].IsA0X := FALSE;
-      TmpIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
-      TmpIntermediate.Parameters[0].Parameter.Address := TmpIntermediate.Output.Address;
-      TmpIntermediate.Parameters[0].Parameter.Neg := FALSE;
-      VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-      VshSetSwizzle(@TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-      VshSetOutputMask(@TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
-      VshInsertIntermediate(pShader, @TmpIntermediate, i + 1);
-      inc(i);
-    end;
-    inc(i);
-  end;
+      Inc(i);
+    end; // while
+
+    Inc(i);
+  end; // while
 
   R12Replacement := -1;
   if (RUsage[12]) then
@@ -1482,8 +1596,8 @@ begin
     for j := 0 to pShader.IntermediateCount - 1 do
     begin
       pIntermediate := @pShader.Intermediate[j];
-      if(pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-        (pIntermediate.Output.Address = ord(OREG_OPOS)) then
+      if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
+         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
       begin
         // Found instruction writing to oPos
         pIntermediate.Output.Type_ := IMD_OUTPUT_R;
@@ -1495,19 +1609,19 @@ begin
         if (pIntermediate.Parameters[k].Active) then
         begin
           if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_R) and
-              (pIntermediate.Parameters[k].Parameter.Address = 12) then
+             (pIntermediate.Parameters[k].Parameter.Address = 12) then
           begin
             // Found a r12 used as a parameter; replace
             pIntermediate.Parameters[k].Parameter.Address := R12Replacement;
           end
           else if (pIntermediate.Parameters[k].Parameter.ParameterType = PARAM_C) and
-                   (pIntermediate.Parameters[k].Parameter.Address = 58) and
-                   (not pIntermediate.Parameters[k].IsA0X) then
+                  (pIntermediate.Parameters[k].Parameter.Address = 58) and
+                  (not pIntermediate.Parameters[k].IsA0X) then
           begin
-              // Found c-38, replace it with r12.w
-              pIntermediate.Parameters[k].Parameter.ParameterType := PARAM_R;
-              pIntermediate.Parameters[k].Parameter.Address := R12Replacement;
-              VshSetSwizzle(@pIntermediate.Parameters[k], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+            // Found c-38, replace it with r12.w
+            pIntermediate.Parameters[k].Parameter.ParameterType := PARAM_R;
+            pIntermediate.Parameters[k].Parameter.Address := R12Replacement;
+            VshSetSwizzle(@pIntermediate.Parameters[k], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
           end;
         end;
       end;
@@ -1526,24 +1640,54 @@ begin
     pOPosWriteBack.Parameters[0].Parameter.Address := R12Replacement;
     VshSetSwizzle(@pOPosWriteBack.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
   end;
-
   Result := TRUE;
 end;
 
+// ****************************************************************************
+// * Vertex shader declaration recompiler
+// ****************************************************************************
+
+type
+  _VSH_TYPE_PATCH_DATA = packed record
+    NbrTypes: DWORD;
+    Types: array [0..256-1] of UINT;
+  end;
+  VSH_TYPE_PATCH_DATA = _VSH_TYPE_PATCH_DATA;
+
+  _VSH_STREAM_PATCH_DATA = packed record
+    NbrStreams: DWORD;
+    pStreamPatches: array [0..256-1] of STREAM_DYNAMIC_PATCH;
+  end;
+  VSH_STREAM_PATCH_DATA = _VSH_STREAM_PATCH_DATA;
+
+  _VSH_PATCH_DATA = packed record
+    NeedPatching: boolean;
+    ConvertedStride: DWORD;
+    TypePatchData: VSH_TYPE_PATCH_DATA;
+    StreamPatchData: VSH_STREAM_PATCH_DATA;
+  end;
+  VSH_PATCH_DATA = _VSH_PATCH_DATA;
+  PVSH_PATCH_DATA = ^VSH_PATCH_DATA;
+
+// VERTEX SHADER
+const DEF_VSH_END = $FFFFFFFF;
+const DEF_VSH_NOP = $00000000;
+
 function VshGetDeclarationSize(pDeclaration: PDWord): DWORD;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   Pos: DWORD;
 begin
   Pos := 0;
   while PDWord(UIntPtr(pDeclaration) + (Pos * SizeOf(DWORD)))^ <> DEF_VSH_END do
+  begin
     Inc(Pos);
-
+  end;
   Result := (Pos + 1) * SizeOf(DWORD);
 end;
 
 function Xb2PCRegisterType(VertexRegister: DWORD): DWORD;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   PCRegisterType: Integer;
 begin
@@ -1609,31 +1753,31 @@ begin
 end; // Xb2PCRegisterType
 
 function VshGetTokenType(Token: DWORD): DWORD; inline;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := (Token and D3DVSD_TOKENTYPEMASK) shr D3DVSD_TOKENTYPESHIFT;
 end;
 
 function VshGetVertexRegister(Token: DWORD): DWORD; inline;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := (Token and D3DVSD_VERTEXREGMASK) shr D3DVSD_VERTEXREGSHIFT;
 end;
 
 function VshGetVertexRegisterIn(Token: DWORD): DWORD; inline;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := (Token and D3DVSD_VERTEXREGINMASK) shr D3DVSD_VERTEXREGINSHIFT;
 end;
 
 function VshGetVertexStream(Token: DWORD): DWORD; inline;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := (Token and D3DVSD_STREAMNUMBERMASK) shr D3DVSD_STREAMNUMBERSHIFT;
 end;
 
 procedure VshConvertToken_NOP(pToken: PDWORD);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   // D3DVSD_NOP
   if (pToken^ <> DEF_VSH_NOP) then
@@ -1644,28 +1788,31 @@ begin
 end;
 
 function VshConvertToken_CONSTMEM(pToken: PDWORD): DWORD;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ConstantAddress: DWORD;
   Count: DWORD;
   i: int;
 begin
   // D3DVSD_CONST
+  DbgVshPrintf(#9'D3DVSD_CONST(');
   ConstantAddress := ((pToken^ shr D3DVSD_CONSTADDRESSSHIFT) and $FF);
   Count           := (pToken^ and D3DVSD_CONSTCOUNTMASK) shr D3DVSD_CONSTCOUNTSHIFT;
 
-  DbgVshPrintf(#9'D3DVSD_CONST(%d, %d),'#13#10, [ConstantAddress, Count]);
+  DbgVshPrintf('%d, %d),'#13#10, [ConstantAddress, Count]);
 
   //pToken = D3DVSD_CONST(ConstantAddress, Count);
 
   for i := 0 to Count - 1 do
+  begin
     DbgVshPrintf(#9'0x%08X,'#13#10, [pToken]);
-
+  end;
   Result := Count;
 end; // VshConvertToken_CONSTMEM
 
-procedure VshConverToken_TESSELATOR(pToken: PDWORD; IsFixedFunction: boolean);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+procedure VshConverToken_TESSELATOR(pToken: PDWORD; 
+                                    IsFixedFunction: boolean);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   VertexRegister: DWORD;
   NewVertexRegister: DWORD;
@@ -1733,7 +1880,7 @@ begin
 end; // VshConverToken_TESSELATOR
 
 function VshAddStreamPatch(pPatchData: PVSH_PATCH_DATA): boolean;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   CurrentStream: int;
   pStreamPatch: STREAM_DYNAMIC_PATCH;
@@ -1749,7 +1896,7 @@ begin
     pStreamPatch.ConvertedStride := pPatchData.ConvertedStride;
     pStreamPatch.NbrTypes := pPatchData.TypePatchData.NbrTypes;
     pStreamPatch.NeedPatch := pPatchData.NeedPatching;
-    pStreamPatch.pTypes := CxbxMalloc(pPatchData.TypePatchData.NbrTypes * SizeOf(VSH_TYPE_PATCH_DATA));
+    pStreamPatch.pTypes := PUINT(CxbxMalloc(pPatchData.TypePatchData.NbrTypes * SizeOf(VSH_TYPE_PATCH_DATA)));
     memcpy(pStreamPatch.pTypes, @(pPatchData.TypePatchData.Types[0]), pPatchData.TypePatchData.NbrTypes * SizeOf(VSH_TYPE_PATCH_DATA));
 
     Result := TRUE;
@@ -1759,8 +1906,9 @@ begin
   Result := FALSE;
 end; // VshAddStreamPatch
 
-procedure VshConvertToken_STREAM(pToken: PDWORD; pPatchData: PVSH_PATCH_DATA);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+procedure VshConvertToken_STREAM(pToken: PDWORD; 
+                                 pPatchData: PVSH_PATCH_DATA);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   StreamNumber: DWORD;
 begin
@@ -1789,7 +1937,7 @@ begin
 end; // VshConvertToken_STREAM
 
 procedure VshConvertToken_STREAMDATA_SKIP(pToken: PDWORD);
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   SkipCount: DWORD;
 begin
@@ -1798,7 +1946,7 @@ begin
 end;
 
 procedure VshConvertToken_STREAMDATA_SKIPBYTES(pToken: PDWORD);
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   SkipBytesCount: DWORD;
 begin
@@ -1811,11 +1959,10 @@ begin
   pToken^ := D3DVSD_SKIP(SkipBytesCount div SizeOf(DWORD));
 end;
 
-procedure VshConvertToken_STREAMDATA_REG(
-  pToken: PDWORD;
-  IsFixedFunction: Boolean;
-  pPatchData: PVSH_PATCH_DATA);
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+procedure VshConvertToken_STREAMDATA_REG(pToken: PDWORD;
+                                         IsFixedFunction: Boolean;
+                                         pPatchData: PVSH_PATCH_DATA);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   VertexRegister: DWORD;
   NewVertexRegister: DWORD;
@@ -1956,8 +2103,8 @@ begin
       DbgVshPrintf('D3DVSDT_NONE /* xbox ext. nsp */');
       NewDataType := $FF;
     end;
-  else
-    DbgVshPrintf('Unknown data type for D3DVSD_REG: $%02X'#13#10, [DataType]);
+  else // default:
+    DbgVshPrintf('Unknown data type for D3DVSD_REG: 0x%02X'#13#10, [DataType]);
   end;
   pToken^ := D3DVSD_REG(NewVertexRegister, NewDataType);
 
@@ -1969,11 +2116,10 @@ begin
   end;
 end; // VshConvertToken_STREAMDATA_REG
 
-procedure VshConvertToken_STREAMDATA(
-  pToken: PDWORD;
-  IsFixedFunction: boolean;
-  pPatchData: PVSH_PATCH_DATA);
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+procedure VshConvertToken_STREAMDATA(pToken: PDWORD;
+                                     IsFixedFunction: boolean;
+                                     pPatchData: PVSH_PATCH_DATA);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   // D3DVSD_SKIP
   if (pToken^ and $10000000) > 0 then
@@ -1992,8 +2138,10 @@ begin
   end;
 end; // VshConvertToken_STREAMDATA
 
-function VshRecompileToken(pToken: PDWord; IsFixedFunction: boolean; pPatchData: PVSH_PATCH_DATA): DWORD;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function VshRecompileToken(pToken: PDWord; 
+                           IsFixedFunction: boolean; 
+                           pPatchData: PVSH_PATCH_DATA): DWORD;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   Step: DWORD;
 begin
@@ -2024,8 +2172,8 @@ function XTL_EmuRecompileVshDeclaration
   pDeclarationSize: PDWORD;
   IsFixedFunction: Boolean;
   pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
-) : DWORD;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): DWORD;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   DeclarationSize: DWORD;
   pRecompiled: PDWord;
@@ -2081,11 +2229,11 @@ function XTL_EmuRecompileVshFunction
     ppRecompiled: PLPD3DXBUFFER;
     pOriginalSize: PDWORD;
     bNoReservedConstants: boolean
-) : HRESULT;
+): HRESULT;
 // Branch:shogun  Revision:0.8.1-pre2  Translator:PatrickvL  Done:100
 var
   pShaderHeader: PVSH_SHADER_HEADER;
-  pToken: PDWord;
+  pToken: PUInt32;
   EOI: boolean;
   Inst: VSH_SHADER_INSTRUCTION;
   pShader: PVSH_XBOX_SHADER;
@@ -2115,7 +2263,8 @@ begin
   memset(pShader, 0, SizeOf(VSH_XBOX_SHADER));
   pShader.ShaderHeader := pShaderHeader^;
   case (pShaderHeader.Version) of
-    VERSION_XVS: ;
+    VERSION_XVS: 
+      ;
     VERSION_XVSS:
       begin
         EmuWarning('Might not support vertex state shaders?');
@@ -2135,7 +2284,7 @@ begin
 
   if (SUCCEEDED(hRet)) then
   begin
-    pToken := PDWORD(UIntPtr(pFunction) + SizeOf(VSH_SHADER_HEADER));
+    pToken := PUInt32(UIntPtr(pFunction) + SizeOf(VSH_SHADER_HEADER));
     while not EOI do
     begin
       VshParseInstruction(pToken, @Inst);
@@ -2162,7 +2311,7 @@ begin
 
 
     // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-    if lstrcmpiA(pShaderDisassembly, 'vs.1.1') <> 0 then
+    if strcmp(pShaderDisassembly, 'vs.1.1') <> 0 then
     begin
       EmuWarning('Cannot assemble empty vertex shader!');
       hRet := D3DXERR_INVALIDDATA;
@@ -2178,7 +2327,7 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Couldn''t assemble recompiled vertex shader');
-      EmuWarning(PAnsiChar(pErrors.GetBufferPointer));
+      EmuWarning(string(AnsiString(PAnsiChar(pErrors.GetBufferPointer))));
     end;
 
     CxbxFree(pShaderDisassembly);
@@ -2189,21 +2338,22 @@ begin
 end; // XTL_EmuRecompileVshFunction
 
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: DWord;
 begin
   for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
+  begin
     CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes);
-
+  end;
   CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches);
-  pVertexShader.VertexDynamicPatch.pStreamPatches := nil;
+  pVertexShader.VertexDynamicPatch.pStreamPatches := NULL;
   pVertexShader.VertexDynamicPatch.NbrStreams := 0;
 end;
 
 // Checks for failed vertex shaders, and shaders that would need patching
 function XTL_IsValidCurrentShader(): Boolean;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   aHandle: DWORD;
   pVertexShader: PVERTEX_SHADER;
@@ -2221,7 +2371,7 @@ begin
       Result := FALSE;
       Exit;
     end;
-    { Cxbx has this disabled :
+    (* Cxbx has this disabled :
     for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
     begin
       if (pVertexShader.VertexDynamicPatch.pStreamPatches[i].NeedPatch) then
@@ -2232,14 +2382,14 @@ begin
         Exit;
       end;
     end;
-    }
+    *)
   end;
 
   Result := True;
 end; // XTL_IsValidCurrentShader
 
 function XTL_VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pD3DVertexShader: PX_D3DVertexShader;
   pVertexShader: PVERTEX_SHADER;
@@ -2248,7 +2398,7 @@ begin
   pD3DVertexShader := VshHandleGetVertexShader(Handle);
   pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
 
-  for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams -1 do
+  for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
   begin
     if (pVertexShader.VertexDynamicPatch.pStreamPatches[i].NeedPatch) then
     begin
@@ -2256,8 +2406,7 @@ begin
       Exit;
     end;
   end;
-
-  Result := Null;
+  Result := NULL;
 end; // XTL_VshGetVertexDynamicPatch
 
 end.
