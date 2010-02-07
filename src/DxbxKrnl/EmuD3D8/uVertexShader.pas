@@ -1429,7 +1429,7 @@ begin
   RUsage[11] := False;
   RUsage[12] := False;
 
-  // TODO: What about state shaders and such?
+  // Cxbx TODO: What about state shaders and such?
   pShader.ShaderHeader.Version := VERSION_VS;
 
   // Search for the screen space instructions, and remove them
@@ -1438,7 +1438,7 @@ begin
     VshRemoveScreenSpaceInstructions(pShader);
   end;
 
-  // TODO: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
+  // Cxbx TODO: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
   i := 0;
   while i < pShader.IntermediateCount do
   begin
@@ -1491,7 +1491,7 @@ begin
       // Replace dph with dp3 and add
       if (pIntermediate.Output.Type_ <> IMD_OUTPUT_R) then
       begin
-        // TODO: Complete dph support
+        // Cxbx TODO: Complete dph support
         EmuWarning('Can''t simulate dph for other than output r registers (yet)');
 
         // attempt to find unused register...

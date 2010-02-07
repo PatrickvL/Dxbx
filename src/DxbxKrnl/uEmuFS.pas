@@ -381,7 +381,7 @@ begin
 
     NewPcr.Prcb := @(NewPcr.PrcbData);
 
-    NewPcr.SelfPcr := NewPcr; // TODO Dxbx : Is this correct?
+    NewPcr.SelfPcr := NewPcr; // Dxbx TODO : Is this correct?
   end;
 
   // prepare TLS

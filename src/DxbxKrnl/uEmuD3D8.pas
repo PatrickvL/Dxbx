@@ -457,7 +457,7 @@ begin
 
   SetFocus(g_hEmuWindow);
 
-  { TODO : Need to be translated to delphi }
+  { Dxbx TODO : Need to be translated to delphi }
   (*
   DbgConsole *dbgConsole := new DbgConsole();
   *)
@@ -483,7 +483,7 @@ begin
 
         // if we've just switched back to display off, clear buffer & display prompt
         if not g_bPrintfOn and lPrintfOn then
-          { TODO : Need to be translated to delphi }
+          { Dxbx TODO : Need to be translated to delphi }
           ; // dbgConsole.Reset();
 
         lPrintfOn := g_bPrintfOn;
@@ -2816,7 +2816,7 @@ begin
   pFunction := PDWORD(pPSDef);
 
   // Attempt to recompile PixelShader
-// DXBX TODO : Call EmuRecompilePshDef(pPSDef, NULL);
+  // Dxbx TODO : Call XTL_EmuRecompilePshDef(pPSDef, NULL);
 
   // redirect to windows d3d
   Result := g_pD3DDevice8.CreatePixelShader
@@ -3782,7 +3782,7 @@ begin
   hRet := S_OK;
 
   case Cardinal(aRegister) of
-    // TODO: Blend weight.
+    // Cxbx TODO: Blend weight.
 
     0: // D3DVSDE_POSITION
       begin
@@ -4311,7 +4311,7 @@ begin
 
       if (FAILED(hRet)) then
       begin
-        // TODO: Hack for Crazy Taxi 3?
+        // Cxbx TODO: Hack for Crazy Taxi 3?
 {$IFDEF DEBUG}
         DbgPrintf('CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
 {$ENDIF}
@@ -9171,7 +9171,7 @@ begin
 
   Result := S_OK;
 
-  // TODO: If this functionality is ever really needed, an idea for
+  // Cxbx TODO: If this functionality is ever really needed, an idea for
   // implementation would be to save a copy of the backbuffer's contents
   // and free the memory after the next call to D3DDevice::Present().
   // This temporary data could also be made available to the Xbox game
@@ -9198,7 +9198,7 @@ begin
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Unknown1()');
 
-  // TODO: Find out what this actually is.
+  // Cxbx TODO: Find out what this actually is.
   // This function was only found in Run Like Hell (5233) @ 0x11FCD0.
   // So far, this function hasn't been found in any other XDKs.  Since
   // the only major thing going on inside of it is a call to the kernel
@@ -9223,7 +9223,7 @@ begin
       #13#10');',
       [VertexCount, pIndexData]);
 
-  // TODO: Implement
+  // Cxbx TODO: Implement
   EmuWarning('PrimeVertexCache is not supported!');
 
   EmuSwapFS();  // Win2k/XP FS
@@ -9245,7 +9245,7 @@ begin
       #13#10');',
       [dwSampleAlpha]);
 
-  // TODO: Implement?
+  // Cxbx TODO: Implement?
 
   EmuWarning('SampleAlpha not supported!');
 
@@ -9276,7 +9276,7 @@ begin
       #13#10');',
       [State, Value]);
 
-  // TODO: HACK: Technically, this function doesn't need to be emulated.
+  // Cxbx TODO: HACK: Technically, this function doesn't need to be emulated.
   // The location of EmuD3DDeferredRenderState for 3911 isn't correct and at
   // the time of writing, I don't understand how to fix it.  Until then,
   // I'm going to implement this in a reckless manner.  When the offset for
@@ -9401,7 +9401,7 @@ exports
   XTL_EmuIDirect3DDevice8_CreateVertexShader name PatchPrefix + 'D3DDevice_CreateVertexShader@16',
   XTL_EmuIDirect3DDevice8_CreateVolumeTexture name PatchPrefix + 'D3DDevice_CreateVolumeTexture',
   XTL_EmuIDirect3DDevice8_DeletePixelShader name PatchPrefix + 'D3DDevice_DeletePixelShader@4',
-  XTL_EmuIDirect3DDevice8_DeleteStateBlock name PatchPrefix + 'D3DDevice_DeleteStateBlock', // Dxbx : TODO : Check name
+  XTL_EmuIDirect3DDevice8_DeleteStateBlock name PatchPrefix + 'D3DDevice_DeleteStateBlock', // Dxbx TODO : Check name
   XTL_EmuIDirect3DDevice8_DeleteVertexShader name PatchPrefix + 'D3DDevice_DeleteVertexShader@4',
   XTL_EmuIDirect3DDevice8_DrawIndexedVertices name PatchPrefix + 'D3DDevice_DrawIndexedVertices@12',
   XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP name PatchPrefix + 'D3DDevice_DrawIndexedVerticesUP',
@@ -9535,8 +9535,8 @@ exports
   XTL_EmuIDirect3DDevice8_SwitchTexture name PatchPrefix + 'D3DDevice_SwitchTexture',
   XTL_EmuIDirect3DDevice8_UpdateOverlay name PatchPrefix + 'D3DDevice_UpdateOverlay',
 
-  XTL_EmuIDirect3DPalette8_Lock name PatchPrefix + 'D3DDevice_Lock', // TODO : Fix wrong prefix!
-  XTL_EmuIDirect3DPalette8_Lock2 name PatchPrefix + 'D3DDevice_Lock2', // TODO : Fix wrong prefix!
+  XTL_EmuIDirect3DPalette8_Lock name PatchPrefix + 'D3DDevice_Lock', // Dxbx TODO : Fix wrong prefix!
+  XTL_EmuIDirect3DPalette8_Lock2 name PatchPrefix + 'D3DDevice_Lock2', // Dxbx TODO : Fix wrong prefix!
 
   XTL_EmuIDirect3DResource8_AddRef name PatchPrefix + 'D3DResource_AddRef',
   XTL_EmuIDirect3DResource8_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',

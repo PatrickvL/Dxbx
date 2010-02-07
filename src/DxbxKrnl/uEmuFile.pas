@@ -35,7 +35,7 @@ const
 type
   // Wrapper of a handle object
   TEmuHandle = class(TObject)
-    // TODO
+    // Dxbx TODO
   end;
 
   // An NT fake object

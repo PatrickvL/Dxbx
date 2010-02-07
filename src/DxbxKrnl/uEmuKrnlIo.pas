@@ -172,7 +172,7 @@ type
 //    union {
     ListEntry: LIST_ENTRY;
 //      Wcb: WAIT_CONTEXT_BLOCK;
-//    } Queue; // TODO
+//    } Queue; // Dxbx TODO
     AlignmentRequirement: ULONG;
     DeviceQueue: KDEVICE_QUEUE;
     Dpc: KDPC;

@@ -116,7 +116,7 @@ begin
         for c := 0 to 7 do
           szLibraryName[c] := pLibraryVersion[v].szName[c];
 
-        // TODO: HACK: These libraries are packed into one database
+        // Cxbx TODO: HACK: These libraries are packed into one database
         if StrComp(szLibraryName, 'D3DX8') = 0 then
           StrCopy(szLibraryName, 'D3D8');
 

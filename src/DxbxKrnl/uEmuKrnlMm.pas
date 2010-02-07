@@ -252,7 +252,7 @@ begin
          [NumberOfBytes, Protect]);
 {$ENDIF}
 
-  // TODO: should this be aligned?
+  // Cxbx TODO: should this be aligned?
   Result := CxbxMalloc(NumberOfBytes);
 
   EmuSwapFS(fsXbox);

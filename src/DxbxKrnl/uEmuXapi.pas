@@ -432,7 +432,7 @@ begin
   ZeroMemory(@NativeParameters, SizeOf(NativeParameters));
   NativeParameters.Length := SizeOf(NativeParameters);
 
-  // TODO : Find out how RtlHeapParams is defined on Xbox, and map this
+  // Cxbx TODO : Find out how RtlHeapParams is defined on Xbox, and map this
   // as closely as possible to the native RTL_HEAP_PARAMETERS.
 
   Result := PVOID(JwaNative.RtlCreateHeap(
@@ -1580,7 +1580,7 @@ begin
       [pSectionName]);
 {$ENDIF}
 
-  // TODO: Implement (if necessary)?
+  // Cxbx TODO: Implement (if necessary)?
 //  CxbxKrnlCleanup('XFreeSectionA is not implemented');
 
   EmuSwapFS(fsXbox);
@@ -1603,7 +1603,7 @@ begin
       [pSectionName]);
 {$ENDIF}
 
-  // TODO: Implement (if necessary)?
+  // Cxbx TODO: Implement (if necessary)?
 //  CxbxKrnlCleanup('XGetSectionHandleA is not implemented');
 
   EmuSwapFS(fsXbox);
@@ -1626,7 +1626,7 @@ begin
       [hSection]);
 {$ENDIF}
 
-  // TODO: Implement (if necessary)?
+  // Cxbx TODO: Implement (if necessary)?
 //  CxbxKrnlCleanup('XLoadSectionByHandle is not implemented');
 
   EmuSwapFS(fsXbox);

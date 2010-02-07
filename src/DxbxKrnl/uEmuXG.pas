@@ -213,7 +213,7 @@ begin
 
 //  MARKED OUT CXBX: while ((i >= dwWidth) or (i >= dwHeight) or (i >= dwDepth))
 
-{ TODO -oDXBX : needs to be translated }
+{ Dxbx TODO : needs to be translated }
 (*  while ((i <= dwWidth) or (i <= dwHeight) or (i <= dwDepth)) do
   begin
 

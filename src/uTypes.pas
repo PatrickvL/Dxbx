@@ -196,7 +196,7 @@ end;
 
 function wstrlen(const Str: PWideChar): Cardinal;
 begin
-  Result := Length(WideString(Str)); // TODO : Do a faster #0000 search here!
+  Result := Length(WideString(Str)); // Dxbx TODO : Do a faster #0000 search here!
 end;
 
 // Source: ZLib.pas

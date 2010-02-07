@@ -163,8 +163,8 @@ type
   end;
   PXINPUT_STATE = ^XINPUT_STATE;
 
-  XTL_LPDIRECTINPUT8 = IDirectInput8; // TODO Dxbx : How is this type defined?
-  XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // TODO Dxbx : How is this type defined?
+  XTL_LPDIRECTINPUT8 = IDirectInput8; // Dxbx TODO : How is this type defined?
+  XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // Dxbx TODO : How is this type defined?
 
   LPCDIDEVICEOBJECTINSTANCE = TDIDeviceObjectInstanceA;
   LPCDIDEVICEINSTANCE = TDIDeviceInstanceA;

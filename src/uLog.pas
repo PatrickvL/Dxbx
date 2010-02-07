@@ -125,7 +125,7 @@ var
 
 // Checks whether the given address is a valid address
 // Source : getmem.inc
-// TODO : This would be more valuable if it returned a set of relevant flags.
+// Dxbx TODO : This would be more valuable if it returned a set of relevant flags.
 function IsValidAddress(const aPtr: Pointer): Boolean;
 var
   LMemInfo: TMemoryBasicInformation;
