@@ -95,9 +95,9 @@ uses
   uProlog in '..\..\src\uProlog.pas',
   uExe in '..\..\src\uExe.pas',
   uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas',
-  uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas';
+  uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas',
+  uPixelShader in '..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas';
 
-// TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
 
 procedure DllMain(Reason: Integer);

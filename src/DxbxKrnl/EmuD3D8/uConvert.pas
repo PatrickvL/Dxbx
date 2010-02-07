@@ -347,7 +347,7 @@ begin
 
     X_D3DFMT_LIN_D16, // Linear
     X_D3DFMT_D16: // Swizzled
-      Result := D3DFMT_D16;		// Cxbx TODO: D3DDMT_D16 on Xbox is always lockable
+      Result := D3DFMT_D16; // Cxbx TODO: D3DDMT_D16 on Xbox is always lockable
 
     X_D3DFMT_L6V5U5: // Swizzled
       Result := D3DFMT_L6V5U5;

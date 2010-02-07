@@ -1083,7 +1083,7 @@ begin
     // Xbox does not return . and ..
     while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0);
 
-    // TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
+    // Cxbx TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
     CxbxFree(FileDirInfo);
 
     return ret;*)
@@ -1321,7 +1321,7 @@ begin
         (NtDll::FS_INFORMATION_CLASS)FileInformationClass
     );
 
-    // NOTE: TODO: Dynamically fill in, or allow configuration?
+    // NOTE: Cxbx TODO: Dynamically fill in, or allow configuration?
     if(FileInformationClass = FileFsSizeInformation)
     {
         FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)(*FileInformation;
@@ -1659,7 +1659,7 @@ begin
         mov ecx, dwEcx
         mov eax, dwEax
         */
-        // TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
+        // Cxbx TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
         // Seems to be XDK/version dependand??
         mov esi, dwEsi
         mov ecx, dwEcx

@@ -179,6 +179,7 @@
 			<DCCReference Include="..\..\src\uExe.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Utils.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas"/>
 			<RcCompile Include="..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc">
 				<Form>..\..\Resource\StoredTrie.res</Form>
 			</RcCompile>
