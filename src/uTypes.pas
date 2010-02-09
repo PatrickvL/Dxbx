@@ -95,6 +95,7 @@ type
 {$ENDIF}
 
   PPByte = ^PByte;
+  PPUChar = ^PUChar;
 
   DIKEYSTATE = array [0..256-1] of BYTE; // Dxbx 'invention'
 

@@ -29,10 +29,11 @@ uses
   , SysUtils
   , Direct3D8
   // Dxbx
+  , uDxbxUtils // iif
+  , uTypes
   , uVertexBuffer
   , uEmu
   , uEmuXG
-  , uTypes
   , uEmuD3D8Types;
 
 var
@@ -47,7 +48,7 @@ var
 
   g_bPBSkipPusher: Boolean = False;
 
-const
+var
   pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
 
 
@@ -68,8 +69,12 @@ uses
   , uConvert;
 
 
-procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+procedure XTL_EmuExecutePushBuffer
+(
+    pPushBuffer: PX_D3DPushBuffer; 
+    pFixup: PX_D3DFixup
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   if Assigned(pFixup) then
     CxbxKrnlCleanup('PushBuffer has fixups');
@@ -78,7 +83,7 @@ begin
 end;
 
 procedure EmuUnswizzleActiveTexture();
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:95
 var
   pPixelContainer: PX_D3DPixelContainer;
   XBFormat: DWord;
@@ -128,21 +133,22 @@ begin
       hRet := pTexture.GetLevelDesc(v, SurfaceDesc);
 
       if (FAILED(hRet)) then
-          Continue;
+        Continue;
 
       //
       // perform unswizzle
       //
 
       begin
-        //if(SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8)
-        //    Break;
-        //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', SurfaceDesc.Format);
+        // Cxbx has this commented out :
+        //if (SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8) then
+        //  Break;
+        //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
 
         hRet := pTexture.LockRect(v, LockedRect, nil, 0);
 
         if (FAILED(hRet)) then
-            Continue;
+          Continue;
 
         dwWidth := SurfaceDesc.Width;
         dwHeight := SurfaceDesc.Height;
@@ -174,10 +180,13 @@ begin
 
 end;
 
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
-  pdwOrigPushData: DWord;
+procedure XTL_EmuExecutePushBufferRaw
+(
+    pdwPushData: PDWord
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:80
+var
+  pdwOrigPushData: PDWord;
   pIndexData: PVOID;
   pVertexData: PVOID;
 
@@ -196,10 +205,25 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall;
   dwMethod: DWord;
 
   bInc: BOOL;
-  VPDesc: VertexPatchDesc; *)
 
+  hRet: HRESULT;
+  pData: PWORDArray;
+
+  VertexCount: UINT;
+  PrimitiveCount: UINT;
+  VPDesc: VertexPatchDesc;
+
+  VertPatch: XTL_VertexPatcher;
+  bPatched: bool;
+
+  pwVal: PWORD;
+  s: uint;
+  mi: uint;
+  pVBData: PBYTE;
+
+  uiStride: UINT;
 begin
-(*  if XTL_g_bSkipPush then
+  if XTL_g_bSkipPush then
     Exit;
 
   pdwOrigPushData := pdwPushData;
@@ -241,440 +265,430 @@ begin
 
   while True do
   begin
-    dwCount := (pdwPushData shr 18);
-    dwMethod := (pdwPushData and $3FFFF);
+    dwCount := (pdwPushData^ shr 18);
+    dwMethod := (pdwPushData^ and $3FFFF);
 
     // Interpret GPU Instruction
     if (dwMethod = $000017FC) then  // NVPB_SetBeginEnd
     begin
-        pdwPushData:= pdwPushData + 1;
+      Inc(pdwPushData); // Dxbx Todo : Verify correct use of Inc
 
+      {$ifdef _DEBUG_TRACK_PB}
+      if (bShowPB) then
+      begin
+        DbgPrintf('  NVPB_SetBeginEnd(');
+      end;
+      {$endif}
+
+      if (pdwPushData^ = 0) then
+      begin
         {$ifdef _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
-            DbgPrintf('  NVPB_SetBeginEnd(');
-         end;
+          DbgPrintf('DONE)');
+        end;
+        {$endif}
+        Break;  // done?
+      end
+      else
+      begin
+        {$IFDEF DEBUG}
+        if (bShowPB) then
+        begin
+          DbgPrintf('PrimitiveType := %d)', [pdwPushData^]);
+        end;
         {$endif}
 
-        if (pdwPushData = 0) then
-        begin
-            {$ifdef _DEBUG_TRACK_PB}
-            if (bShowPB) then
-            begin
-                DbgPrintf('DONE)');
-             end;
-            {$endif}
-            Break;  // done?
-        end
-        else
-        begin
-            {$IFDEF DEBUG}
-            if (bShowPB) then
-            begin
-                DbgPrintf(Format('PrimitiveType := %d)', [pdwPushData]));
-             end;
-            {$endif}
-
-            XBPrimitiveType := X_D3DPRIMITIVETYPE(^pdwPushData);
-            PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
-         end;
+        XBPrimitiveType := X_D3DPRIMITIVETYPE(pdwPushData^);
+        PCPrimitiveType := EmuPrimitiveType(XBPrimitiveType);
+      end;
     end
     else if (dwMethod = $1818) then  // NVPB_InlineVertexArray
     begin
-        bInc := pdwPushData^ and $40000000;
+      bInc := (pdwPushData^ and $40000000) > 0;
 
-        if (bInc) then
-        begin
-            dwCount := (pdwPushData - ($40000000 or $00001818)) shr 18;
-         end;
+      if (bInc) then
+      begin
+        dwCount := (pdwPushData^ - ($40000000 or $00001818)) shr 18;
+      end;
 
-        pVertexData := ++pdwPushData;
+      Inc(pdwPushData); pVertexData := pdwPushData;
 
-        pdwPushData:= pdwPushData + dwCount;
+      Inc(pdwPushData, dwCount);
 
-        // retrieve vertex shader
-        g_pD3DDevice8.GetVertexShader(@dwVertexShader);
+      // retrieve vertex shader
+      g_pD3DDevice8.GetVertexShader({out}dwVertexShader);
 
-        if (dwVertexShader > $FFFF) then
-        begin
-            CxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!');
-            dwVertexShader := 0;
-        end
-        else if (dwVertexShader = 0) then
-        begin
-            EmuWarning('FVF Vertex Shader is null');
-            dwVertexShader := -1;
-        end;
+      if (dwVertexShader > $FFFF) then
+      begin
+        CxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!');
+        dwVertexShader := 0;
+      end
+      else if (dwVertexShader = 0) then
+      begin
+        EmuWarning('FVF Vertex Shader is null');
+        dwVertexShader := DWORD(-1);
+      end;
 
-        //
-        // calculate stride
-        //
+      //
+      // calculate stride
+      //
 
-        dwStride := 0;
+      dwStride := 0;
 
-        if ( not VshHandleIsVertexShader(dwVertexShader)) then
-        begin
-            if (dwVertexShader and D3DFVF_XYZRHW) begin  dwStride:= dwStride + SizeOf(FLOAT) then *4;  end;
-            if (dwVertexShader and D3DFVF_DIFFUSE) begin  dwStride:= dwStride + SizeOf(DWord) then ;  end;
-            if (dwVertexShader and D3DFVF_SPECULAR) begin  dwStride:= dwStride + SizeOf(DWord) then ;  end;
+      if (not VshHandleIsVertexShader(dwVertexShader)) then
+      begin
+        if (dwVertexShader and D3DFVF_XYZRHW) > 0 then begin Inc(dwStride, SizeOf(FLOAT) * 4); end;
+        if (dwVertexShader and D3DFVF_DIFFUSE) > 0 then begin Inc(dwStride, SizeOf(DWord)); end;
+        if (dwVertexShader and D3DFVF_SPECULAR) > 0 then begin Inc(dwStride, SizeOf(DWord)); end;
 
-            dwStride:= dwStride + ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*SizeOf(FLOAT)*2;
-         end;
+        Inc(dwStride, ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*SizeOf(FLOAT)*2);
+      end;
 
-        { MARKED OUT BY CXBX
-        // create cached vertex buffer only once, with maxed out size
-        if (pVertexBuffer = nil) then
-        begin
-            HRESULT hRet := IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, 2047*SizeOf(DWord), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
+      { MARKED OUT BY CXBX
+      // create cached vertex buffer only once, with maxed out size
+      if (pVertexBuffer = nil) then
+      begin
+        hRet := IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, 2047*SizeOf(DWord), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
 
-            if (FAILED(hRet)) then
-                CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', dwCount);
+        if (FAILED(hRet)) then
+          CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
 
-         end;
+      end;
 
-        // copy vertex data
-        begin
-            uint08 *pData := 0;
+      // copy vertex data
+      begin
+        pData: PUInt8 := nil;
 
-            HRESULT hRet := pVertexBuffer.Lock(0, dwCount*4, @pData, 0);
+        hRet := pVertexBuffer.Lock(0, dwCount*4, @pData, 0);
 
-            if (FAILED(hRet)) then
-                CxbxKrnlCleanup('Unable to lock vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', dwCount);
+        if (FAILED(hRet)) then
+          CxbxKrnlCleanup('Unable to lock vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
 
-            memcpy(pData, pVertexData, dwCount*4);
+        memcpy(pData, pVertexData, dwCount*4);
 
-            pVertexBuffer.Unlock();
-         end;
-        }
+        pVertexBuffer.Unlock();
+      end;
+      }
 
-        {$ifdef _DEBUG_TRACK_PB}
-        if (bShowPB) then
-        begin
-            printf('NVPB_InlineVertexArray(...)');
-            printf('  dwCount : %d', dwCount);
-            printf('  dwVertexShader : $%08X', dwVertexShader);
-        end;
-        {$endif}
+      {$ifdef _DEBUG_TRACK_PB}
+      if (bShowPB) then
+      begin
+        printf('NVPB_InlineVertexArray(...)');
+        printf('  dwCount : %d', dwCount);
+        printf('  dwVertexShader : $%08X', dwVertexShader);
+      end;
+      {$endif}
 
-        EmuUnswizzleActiveTexture();
+      EmuUnswizzleActiveTexture();
 
-        // render vertices
-        if (dwVertexShader <> -1) then
-        begin
-            UINT VertexCount := (dwCount*SizeOf(DWord)) / dwStride;
-            UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
+      // render vertices
+      if (dwVertexShader <> -1) then
+      begin
+        VertexCount := (dwCount*SizeOf(DWord)) div dwStride;
+        PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
 
-            VPDesc.dwVertexCount := VertexCount;
-            VPDesc.PrimitiveType := XBPrimitiveType;
-            VPDesc.dwPrimitiveCount := PrimitiveCount;
-            VPDesc.dwOffset := 0;
-            VPDesc.pVertexStreamZeroData := pVertexData;
-            VPDesc.uiVertexStreamZeroStride := dwStride;
-            VPDesc.hVertexShader := dwVertexShader;
+        VPDesc.dwVertexCount := VertexCount;
+        VPDesc.PrimitiveType := XBPrimitiveType;
+        VPDesc.dwPrimitiveCount := PrimitiveCount;
+        VPDesc.dwOffset := 0;
+        VPDesc.pVertexStreamZeroData := pVertexData;
+        VPDesc.uiVertexStreamZeroStride := dwStride;
+        VPDesc.hVertexShader := dwVertexShader;
 
-            XTL_VertexPatcher VertPatch;
+        bPatched := VertPatch.Apply(@VPDesc);
 
-            bool bPatched := VertPatch.Apply(@VPDesc);
+        g_pD3DDevice8.DrawPrimitiveUP
+        (
+            PCPrimitiveType,
+            VPDesc.dwPrimitiveCount,
+            VPDesc.pVertexStreamZeroData,
+            VPDesc.uiVertexStreamZeroStride
+        );
 
-            g_pD3DDevice8.DrawPrimitiveUP
-            (
-                PCPrimitiveType,
-                VPDesc.dwPrimitiveCount,
-                VPDesc.pVertexStreamZeroData,
-                VPDesc.uiVertexStreamZeroStride
-            );
+        VertPatch.Restore();
+      end;
 
-            VertPatch.Restore();
-         end;
-
-        pdwPushData:= pdwPushData - 1;
+      Dec(pdwPushData);
     end
     else if (dwMethod = $1808) then  // NVPB_FixLoop
     begin
-        {$ifdef _DEBUG_TRACK_PB}
-        if (bShowPB) then
+      {$ifdef _DEBUG_TRACK_PB}
+      if (bShowPB) then
+      begin
+        printf('  NVPB_FixLoop(%d)', dwCount);
+        printf('');
+        printf('  Index Array Data...');
+
+        pwVal := PWORD(pdwPushData + 1);
+
+        for s := 0 to dwCount - 1 do
         begin
-            printf('  NVPB_FixLoop(%d)', dwCount);
-            printf('');
-            printf('  Index Array Data...');
+          if (s mod 8 = 0) then printf('  ');
 
-            WORD *pwVal := (WORD)(pdwPushData + 1);
+          printf('  %.04X', pwVal^); Inc(pwVal);
+        end;
 
-            for(uint s:=0;s<dwCount;s++)
-            begin
-                if (s%8 := 0) printf('  ') then ;
+        printf('');
+        printf('');
+      end;
+      {$endif}
 
-                printf('  %.04X', *pwVal++);
-             end;
+(*
+      pwVal := PWORD(pdwPushData + 1);
+      for mi := 0 to dwCount - 1 do
+      begin
+        pIBMem[mi+2] := pwVal[mi];
+      end;
+*)
 
-            printf('');
-            printf('');
-         end;
-        {$endif}
-
-        WORD *pwVal := (WORD)(pdwPushData + 1);
-        for(uint mi:=0;mi<dwCount;mi++)
+      // perform rendering
+      if (pIBMem[0] <> $FFFF) then
+      begin
+        // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
+        if ((dwCount*2 + 2*2) > maxIBSize) then
         begin
-            pIBMem[mi+2] := pwVal[mi];
-         end;
+          if Assigned(pIndexBuffer) then
+          begin
+            pIndexBuffer._Release();
+          end;
 
-        // perform rendering
-        if (pIBMem[0] <> $FFFF) then
+          hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, {out}pIndexBuffer);
+
+          maxIBSize := dwCount*2 + 2*2;
+        end
+        else
         begin
-            HRESULT hRet;
+          hRet := D3D_OK;
+        end;
 
-            // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
-            if ((dwCount*2 + 2*2) > maxIBSize) then
+        if (FAILED(hRet)) then
+          CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1808, dwCount : %d)', [dwCount]);
+
+        // copy index data
+        begin
+          pData := nil;
+
+          pIndexBuffer.Lock(0, dwCount*2 + 2*2, {out}PByte(pData), 0);
+
+          memcpy(pData, @pIBMem[0], dwCount*2 + 2*2);
+
+          pIndexBuffer.Unlock();
+        end;
+
+        // render indexed vertices
+        begin
+          PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount + 2);
+
+          VPDesc.dwVertexCount := dwCount;
+          VPDesc.PrimitiveType := XBPrimitiveType;
+          VPDesc.dwPrimitiveCount := PrimitiveCount;
+          VPDesc.dwOffset := 0;
+          VPDesc.pVertexStreamZeroData := 0;
+          VPDesc.uiVertexStreamZeroStride := 0;
+          // Cxbx TODO: Set the current shader and let the patcher handle it..
+          VPDesc.hVertexShader := g_CurrentVertexShader;
+
+          bPatched := VertPatch.Apply(@VPDesc);
+
+          g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
+
+          {$ifdef _DEBUG_TRACK_PB}
+          if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
+          begin
+          {$endif}
+
+          if (not g_bPBSkipPusher) then
+          begin
+            if (XTL_IsValidCurrentShader()) then
             begin
-                if (pIndexBuffer <> 0) then
-                begin
-                    pIndexBuffer.Release();
-                 end;
+              g_pD3DDevice8.DrawIndexedPrimitive
+              (
+                  PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
+//                  PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
+              );
+            end;
+          end;
 
-                hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, {out}IDirect3DIndexBuffer8(@pIndexBuffer));
+          {$ifdef _DEBUG_TRACK_PB}
+          end;
+          {$endif}
 
-                maxIBSize := dwCount*2 + 2*2;
-             end;
-            else
-            begin
-                hRet := D3D_OK;
-             end;
+          VertPatch.Restore();
 
-            if (FAILED(hRet)) then
-                CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1808, dwCount : %d)', dwCount);
+          g_pD3DDevice8.SetIndices(nil, 0);
+        end;
+      end;
 
-            // copy index data
-            begin
-                WORD *pData:=0;
-
-                pIndexBuffer.Lock(0, dwCount*2 + 2*2, (UCHAR)@pData, 0);
-
-                memcpy(pData, pIBMem, dwCount*2 + 2*2);
-
-                pIndexBuffer.Unlock();
-             end;
-
-            // render indexed vertices
-            begin
-                UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount + 2);
-                VertexPatchDesc VPDesc;
-
-                VPDesc.dwVertexCount := dwCount;
-                VPDesc.PrimitiveType := XBPrimitiveType;
-                VPDesc.dwPrimitiveCount := PrimitiveCount;
-                VPDesc.dwOffset := 0;
-                VPDesc.pVertexStreamZeroData := 0;
-                VPDesc.uiVertexStreamZeroStride := 0;
-                // Cxbx TODO: Set the current shader and let the patcher handle it..
-                VPDesc.hVertexShader := g_CurrentVertexShader;
-
-                XTL_VertexPatcher VertPatch;
-
-                bool bPatched := VertPatch.Apply(@VPDesc);
-
-                g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
-
-                {$ifdef _DEBUG_TRACK_PB}
-                if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
-                begin
-                {$endif}
-
-                if ( not g_bPBSkipPusher) then
-                begin
-                    if (IsValidCurrentShader()) then
-                    begin
-                        g_pD3DDevice8.DrawIndexedPrimitive
-                        (
-                            PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
-//                                PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
-                        );
-                     end;
-                 end;
-
-                 {$ifdef _DEBUG_TRACK_PB}
-                end;
-                {$endif}
-
-                VertPatch.Restore();
-
-                g_pD3DDevice8.SetIndices(0, 0);
-             end;
-         end;
-
-        pdwPushData:= pdwPushData + dwCount;
+      Inc(pdwPushData, dwCount);
     end
     else if (dwMethod = $1800) then  // NVPB_InlineIndexArray
     begin
-        BOOL bInc := *pdwPushData and $40000000;
+      bInc := (pdwPushData^ and $40000000) > 0;
 
-        if (bInc) then
-        begin
-            dwCount := ((pdwPushData - ($40000000 or $00001818)) shr 18)*2 + 2;
-         end;
+      if (bInc) then
+      begin
+        dwCount := ((pdwPushData^ - ($40000000 or $00001818)) shr 18)*2 + 2;
+      end;
 
-        pIndexData := ++pdwPushData;
+      Inc(pdwPushData); pIndexData := pdwPushData;
 
-        {$ifdef _DEBUG_TRACK_PB}
-        if (bShowPB) then
-        begin
+      {$ifdef _DEBUG_TRACK_PB}
+      if (bShowPB) then
+      begin
 {$IFDEF DEBUG}
-            printf('  NVPB_InlineIndexArray($%.08X, %d)...', pIndexData, dwCount);
-            printf('');
-            printf('  Index Array Data...');
+        printf('  NVPB_InlineIndexArray($%.08X, %d)...', pIndexData, dwCount);
+        printf('');
+        printf('  Index Array Data...');
 {$ENDIF}
 
-            WORD *pwVal := (WORD)pIndexData;
+        pwVal := PWORD(pIndexData);
 
-            for(uint s:=0;s<dwCount;s++)
-            begin
-                if (s%8 := 0) printf('  ') then ;
-
-                printf('  %.04X', *pwVal++);
-             end;
-
-{$IFDEF DEBUG}
-            printf('');
-{$ENDIF}
-
-            XTL.IDirect3DVertexBuffer8 *pActiveVB := 0;
-
-            D3DVERTEXBUFFER_DESC VBDesc;
-
-            BYTE *pVBData := 0;
-            UINT  uiStride;
-
-            // retrieve stream data
-            g_pD3DDevice8.GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), @uiStride);
-
-            // retrieve stream desc
-            pActiveVB.GetDesc(@VBDesc);
-
-            // unlock just in case
-            pActiveVB.Unlock();
-
-            // grab ptr
-            pActiveVB.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
-
-            // print out stream data
-            begin
-{$IFDEF DEBUG}
-                printf('');
-                printf('  Vertex Stream Data ($%.08X)...', pActiveVB);
-                printf('');
-                printf('  Format : %d', VBDesc.Format);
-                printf('  Size   : %d bytes', VBDesc.Size);
-                printf('  FVF    : $%.08X', VBDesc.FVF);
-                printf('');
-{$ENDIF}
-             end;
-
-            // release ptr
-            pActiveVB.Unlock();
-
-            DbgDumpMesh((WORD)pIndexData, dwCount);
-         end;
-        {$endif}
-
-        pdwPushData:= pdwPushData + (dwCount/2) - (bInc ? 0 : 2);
-
-        // perform rendering
+        for(uint s:=0;s<dwCount;s++)
         begin
-            HRESULT hRet;
+          if (s mod 8) = 0 then printf(#13#10'  ');
 
-            // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
-            if (dwCount*2 > maxIBSize) then
-            begin
-                if (pIndexBuffer <> 0) then
-                begin
-                    pIndexBuffer.Release();
-                 end;
+          printf('  %.04X', [pwVal^]); Inc(pwVal);
+        end;
 
-                hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, {out}IDirect3DIndexBuffer8(@pIndexBuffer));
+{$IFDEF DEBUG}
+        printf(#13#10);
+{$ENDIF}
 
-                maxIBSize := dwCount*2;
-            end
-            else
-            begin
-                hRet := D3D_OK;
-             end;
+        XTL.IDirect3DVertexBuffer8 *pActiveVB := 0;
 
-            if (FAILED(hRet)) then
-                CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1800, dwCount : %d)', dwCount);
+        D3DVERTEXBUFFER_DESC VBDesc;
 
-            // copy index data
-            begin
-                WORD *pData:=0;
+        pVBData := nil;
 
-                pIndexBuffer.Lock(0, dwCount*2, (UCHAR)@pData, 0);
+        // retrieve stream data
+        g_pD3DDevice8.GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), @uiStride);
 
-                memcpy(pData, pIndexData, dwCount*2);
+        // retrieve stream desc
+        pActiveVB.GetDesc(@VBDesc);
 
-                // remember last 2 indices
-                if (dwCount >= 2) then
-                begin
-                    pIBMem[0] := pData[dwCount - 2];
-                    pIBMem[1] := pData[dwCount - 1];
-                end
-                else
-                begin
-                    pIBMem[0] := $FFFF;
-                end;
+        // unlock just in case
+        pActiveVB.Unlock();
 
-                pIndexBuffer.Unlock();
-             end;
+        // grab ptr
+        pActiveVB.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
 
-            // render indexed vertices
-            begin
-                UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount);
-                VertexPatchDesc VPDesc;
+        // print out stream data
+        begin
+{$IFDEF DEBUG}
+          printf('');
+          printf('  Vertex Stream Data ($%.08X)...', pActiveVB);
+          printf('');
+          printf('  Format : %d', VBDesc.Format);
+          printf('  Size   : %d bytes', VBDesc.Size);
+          printf('  FVF    : $%.08X', VBDesc.FVF);
+          printf('');
+{$ENDIF}
+        end;
 
-                VPDesc.dwVertexCount := dwCount;
-                VPDesc.PrimitiveType := XBPrimitiveType;
-                VPDesc.dwPrimitiveCount := PrimitiveCount;
-                VPDesc.dwOffset := 0;
-                VPDesc.pVertexStreamZeroData := 0;
-                VPDesc.uiVertexStreamZeroStride := 0;
-                // Cxbx TODO: Set the current shader and let the patcher handle it..
-                VPDesc.hVertexShader := g_CurrentVertexShader;
+        // release ptr
+        pActiveVB.Unlock();
 
-                XTL_VertexPatcher VertPatch;
+        DbgDumpMesh(PWORD(pIndexData), dwCount);
+      end;
+      {$endif}
 
-                bool bPatched := VertPatch.Apply(@VPDesc);
+(*
+      Inc(pdwPushData, (dwCount/2) - iif(bInc, 0, 2));
+*)
+      // perform rendering
+      begin
+        // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
+        if (dwCount*2 > maxIBSize) then
+        begin
+          if Assigned(pIndexBuffer) then
+          begin
+            pIndexBuffer._Release();
+          end;
 
-                g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
+          hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, {out}pIndexBuffer);
 
-                {$ifdef _DEBUG_TRACK_PB}
-                if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
-                begin
-                {$endif}
+          maxIBSize := dwCount*2;
+        end
+        else
+        begin
+          hRet := D3D_OK;
+        end;
 
-                if ( not g_bPBSkipPusher and IsValidCurrentShader()) then
-                begin
-                    g_pD3DDevice8.DrawIndexedPrimitive
-                    (
-                        PCPrimitiveType, 0, (*dwCount*2*)(*8*1024*1024, 0, PrimitiveCount     *)(*
-                    );
-                 end;
+        if (FAILED(hRet)) then
+          CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1800, dwCount : %d)', [dwCount]);
 
-                {$ifdef _DEBUG_TRACK_PB}
-                 end;
-                {$endif}
+        // copy index data
+        begin
+          pData := nil;
 
-                VertPatch.Restore();
+          pIndexBuffer.Lock(0, dwCount*2, {out}PByte(pData), 0);
 
-                g_pD3DDevice8.SetIndices(0, 0);
-             end;
-         end;
+          memcpy(pData, pIndexData, dwCount*2);
 
-        pdwPushData:= pdwPushData - 1;
+          // remember last 2 indices
+          if (dwCount >= 2) then
+          begin
+            pIBMem[0] := pData[dwCount - 2];
+            pIBMem[1] := pData[dwCount - 1];
+          end
+          else
+          begin
+            pIBMem[0] := $FFFF;
+          end;
+
+          pIndexBuffer.Unlock();
+        end;
+
+        // render indexed vertices
+        begin
+          PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount);
+
+          VPDesc.dwVertexCount := dwCount;
+          VPDesc.PrimitiveType := XBPrimitiveType;
+          VPDesc.dwPrimitiveCount := PrimitiveCount;
+          VPDesc.dwOffset := 0;
+          VPDesc.pVertexStreamZeroData := 0;
+          VPDesc.uiVertexStreamZeroStride := 0;
+          // Cxbx TODO: Set the current shader and let the patcher handle it..
+          VPDesc.hVertexShader := g_CurrentVertexShader;
+
+          bPatched := VertPatch.Apply(@VPDesc);
+
+          g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
+
+          {$ifdef _DEBUG_TRACK_PB}
+          if (not g_PBTrackDisable.exists(pdwOrigPushData)) then
+          begin
+          {$endif}
+
+          if (not g_bPBSkipPusher) and XTL_IsValidCurrentShader() then
+          begin
+            g_pD3DDevice8.DrawIndexedPrimitive
+            (
+                PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, PrimitiveCount
+            );
+          end;
+
+          {$ifdef _DEBUG_TRACK_PB}
+          end;
+          {$endif}
+
+          VertPatch.Restore();
+
+          g_pD3DDevice8.SetIndices(nil, 0);
+        end;
+      end;
+
+      Dec(pdwPushData);
     end
     else
     begin
-        EmuWarning('Unknown PushBuffer Operation ($%.04X, %d)', dwMethod, dwCount);
-        Exit;
+      EmuWarning('Unknown PushBuffer Operation ($%.04X, %d)', [dwMethod, dwCount]);
+      Exit;
     end;
 
-    pdwPushData:= pdwPushData + 1;
+    Inc(pdwPushData);
   end;
 
 {$ifdef _DEBUG_TRACK_PB}
@@ -686,29 +700,30 @@ begin
 {$ENDIF}
     fflush(stdout);
   end;
-  {$endif}
+{$endif}
 
-  if (g_bStepPush) then
+  if (XTL_g_bStepPush) then
   begin
-    g_pD3DDevice8.Present(0,0,0,0);
+    g_pD3DDevice8.Present(0, 0, 0, 0);
     Sleep(500);
-  end;   *)
+  end;
 end;
 
 
 {$IFDEF _DEBUG_TRACK_PB}
 
-procedure DbgDumpMesh(
-  pIndexData: PWord;
-  dwCount: DWord
-);
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:1
+procedure DbgDumpMesh(pIndexData: PWord; dwCount: DWord);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:10
 (*var
   pActiveVB: IDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
   pVBData: PBYTE;
   uiStride: UINT;
-  szFileName: array [0..128 - 1] of Char; *)
+  szFileName: array [0..128 - 1] of Char;
+  pwVal: PWORD;
+  maxIndex: uint32;
+  pwChk: PWORD;
+*)
 begin
 (*  if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;
@@ -733,11 +748,11 @@ begin
   begin
     uint32 maxIndex := 0;
 
-    WORD * pwChk := (WORD)pIndexData;
+    pwChk := PWORD(pIndexData);
 
     for (uint chk := 0; chk < dwCount; chk++)
     begin
-      DWord x = * pwChk := * pwChk + 1;
+      DWord x = pwChk^; Inc(pwChk);
 
       if (x > maxIndex) then
         maxIndex := x;
@@ -796,13 +811,13 @@ begin
     fprintf(dbgVertices, '      %d;', dwCount - 2);
 {$ENDIF}
 
-    WORD * pwVal := (WORD)pIndexData;
+    pwVal := PWORD(pIndexData);
 
     max := dwCount;
 
-    DWord a = * pwVal := * pwVal + 1;
-    DWord b = * pwVal := * pwVal + 1;
-    DWord c = * pwVal := * pwVal + 1;
+    DWord a := pwVal^; Inc(pwVal);
+    DWord b := pwVal^; Inc(pwVal);
+    DWord c := pwVal^; Inc(pwVal);
 
     DWord la := a, lb = b, lc = c;
 
@@ -815,7 +830,7 @@ begin
 
       a := b;
       b := c;
-      c = * pwVal := * pwVal + 1;
+      c  := pwVal^; Inc(pwVal);
 
       la := a;
       lb := b;

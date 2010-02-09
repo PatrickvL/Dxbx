@@ -53,8 +53,8 @@ function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
 
-function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT; inline;
-function EmuD3DPrimitive2VertexCount(PrimitiveType: int; PrimitiveCount: int): int; inline;
+function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
+function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
 
 const
@@ -65,17 +65,17 @@ const
   // lookup table for converting vertex count to primitive count
   EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of UINT = (
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    (0, 0),
-    (1, 0),
-    (2, 0),
-    (1, 1),
-    (1, 1),
-    (3, 0),
-    (1, 2),
-    (1, 2),
-    (4, 0),
-    (2, 2),
-    (1, 0)
+    (0, 0), // NULL
+    (1, 0), // X_D3DPT_POINTLIST
+    (2, 0), // X_D3DPT_LINELIST
+    (1, 1), // X_D3DPT_LINELOOP
+    (1, 1), // X_D3DPT_LINESTRIP
+    (3, 0), // X_D3DPT_TRIANGLELIST
+    (1, 2), // X_D3DPT_TRIANGLESTRIP
+    (1, 2), // X_D3DPT_TRIANGLEFAN
+    (4, 0), // X_D3DPT_QUADLIST
+    (2, 2), // X_D3DPT_QUADSTRIP
+    (1, 0)  // X_D3DPT_POLYGON
   );
 
 const
@@ -574,17 +574,17 @@ begin
 end;
 
 // convert from vertex count to primitive count (Xbox)
-function EmuD3DVertex2PrimitiveCount(PrimitiveType: int; VertexCount: int): INT; inline;
+function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := Trunc((VertexCount - int(EmuD3DVertexToPrimitive[PrimitiveType][1])) / int(EmuD3DVertexToPrimitive[PrimitiveType][0]));
+  Result := Trunc((VertexCount - int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1])) / int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]));
 end;
 
 // convert from primitive count to vertex count (Xbox)
-function EmuD3DPrimitive2VertexCount(PrimitiveType: int; PrimitiveCount: int): int; inline;
+function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := (((PrimitiveCount)*EmuD3DVertexToPrimitive[PrimitiveType][0]) + EmuD3DVertexToPrimitive[PrimitiveType][1]);
+  Result := (((PrimitiveCount)*EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]) + EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1]);
 end;
 
 // convert xbox->pc primitive type
