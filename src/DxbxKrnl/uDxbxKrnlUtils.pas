@@ -44,8 +44,6 @@ function GetByteBits(const Bits: Byte; const aIndex: Integer): Byte;
 procedure SetByteBits(var Bits: Byte; const aIndex: Integer; const aValue: Byte);
 
 var
-  DxbxBasePath: string;
-
   // ! thread local storage
   CxbxKrnl_TLS: PXBE_TLS;
   // thread local storage data

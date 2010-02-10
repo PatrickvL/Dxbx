@@ -28,6 +28,8 @@ uses
   Controls, ComCtrls, ExtCtrls,
   Graphics, JPeg,
   ShellAPI, IniFiles,
+  // Jedi
+  JclShell, // SHDeleteFiles
   // Dxbx
   uTypes,
   uConsts,
@@ -103,8 +105,6 @@ type
     ExeSaveDialog: TSaveDialog;
     ools1: TMenuItem;
     XdkTracker1: TMenuItem;
-    Iso1: TMenuItem;
-    N5: TMenuItem;
     xIso1: TMenuItem;
     actXdkTracker: TAction;
     actXIso: TAction;
@@ -117,6 +117,10 @@ type
     mnu_Gambitmap: TMenuItem;
     mnu_ExportGameBitmap: TMenuItem;
     actExportGameImage: TAction;
+    miXbeExplorer: TMenuItem;
+    actXbeExplorer: TAction;
+    actCleanSymbolCache: TAction;
+    miCleanSymbolCache: TMenuItem;
     procedure ActStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -137,6 +141,8 @@ type
     procedure actXdkTrackerXbeInfoExecute(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure actExportGameImageExecute(Sender: TObject);
+    procedure actXbeExplorerExecute(Sender: TObject);
+    procedure actCleanSymbolCacheExecute(Sender: TObject);
   private
     m_Xbe: TXbe;
 
@@ -179,6 +185,7 @@ implementation
 
 const
   cXDKTrackerPath = 'XdkTracker.exe';
+  cXbeExplorerPath = 'XbeExplorer.exe';
   cXIsoPath = 'xIso.exe';
 
 procedure LaunchXBE(const aXbe: TXbe; const aHandle: THandle);
@@ -583,6 +590,11 @@ begin
   FreeAndNil({var}frm_About);
 end; // Tfrm_Main.ActAboutExecute
 
+procedure Tfrm_Main.actCleanSymbolCacheExecute(Sender: TObject);
+begin
+  SHDeleteFiles(Handle, SymbolCacheFolder + '\*' + SymbolCacheFileExt, [doAllowUndo, doFilesOnly]);
+end;
+
 procedure Tfrm_Main.actCloseExecute(Sender: TObject);
 begin
   Close;
@@ -692,6 +704,21 @@ begin
     WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
   end;
 end; // Tfrm_Main.actExportLogoExecute
+
+procedure Tfrm_Main.actXbeExplorerExecute(Sender: TObject);
+var
+  Arg: PChar;
+begin
+  if FileExists(FApplicationDir + cXbeExplorerPath) then
+  begin
+    if Assigned(m_Xbe) then
+      Arg := PChar(AnsiQuotedStr(m_Xbe.XbePath, '"'))
+    else
+      Arg := nil;
+
+    ShellExecute(0, 'open', PChar(FApplicationDir + cXbeExplorerPath), Arg, nil, SW_SHOWNORMAL);
+  end;
+end;
 
 procedure Tfrm_Main.actXdkTrackerExecute(Sender: TObject);
 begin

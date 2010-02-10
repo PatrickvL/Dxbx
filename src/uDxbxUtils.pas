@@ -25,6 +25,7 @@ uses
   SysUtils,
   Classes,
   Graphics,
+  ShlObj, // SHGetSpecialFolderPath
   // Dxbx
   uTypes;
 
@@ -166,6 +167,15 @@ type
 function ReadS3TCFormatIntoBitmap(const aFormat: Byte; const aData: PByteArray; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
 function ReadSwizzledFormatIntoBitmap(const aFormat: Byte; const aData: PByteArray; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
 function ReadD3DTextureFormatIntoBitmap(const aFormat: Byte; const aData: PByteArray; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
+
+function GetDxbxBasePath: string;
+function SymbolCacheFolder: string;
+
+const
+  SymbolCacheFileExt = '.sym';
+
+var
+  DxbxBasePath: string;
 
 implementation
 
@@ -986,6 +996,19 @@ begin
   else
     Result := False;
   end;
+end;
+
+function GetDxbxBasePath: string;
+begin
+  SetLength(Result, MAX_PATH);
+  SHGetSpecialFolderPath(0, @(Result[1]), CSIDL_APPDATA, True);
+  SetLength(Result, StrLen(PChar(@Result[1])));
+  Result := Result + '\Dxbx';
+end;
+
+function SymbolCacheFolder: string;
+begin
+  Result := GetDxbxBasePath + '\SymbolCache\';
 end;
 
 end.
