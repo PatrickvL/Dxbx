@@ -529,7 +529,7 @@ begin
     begin
       CxbxKrnlCleanup('D3DBLENDOP_REVSUBTRACTSIGNED is not supported!');
       Result := D3DBLENDOP_REVSUBTRACT;
-    end
+    end;
   else
     CxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
 

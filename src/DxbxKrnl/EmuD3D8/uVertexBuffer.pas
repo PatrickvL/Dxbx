@@ -253,7 +253,7 @@ begin
   pNode := g_PatchedStreamsCache.getHead();
   while Assigned(pNode) do
   begin
-    MypCachedStream := PCACHEDSTREAM (pNode.pResource);
+    MypCachedStream := PCACHEDSTREAM(pNode.pResource);
     if Assigned(MypCachedStream) then
     begin
       // Cxbx TODO: Write nicer dump presentation
@@ -333,33 +333,33 @@ begin
         begin
             CxbxKrnlCleanup('Could not retrieve original buffer size');
          end;
-        if (FAILED(pOrigVertexBuffer.Lock(0, 0, (uint08)@pCalculateData, 0))) then
+        if (FAILED(pOrigVertexBuffer.Lock(0, 0, PPuint08(@pCalculateData), 0))) then
         begin
             CxbxKrnlCleanup('Couldn't lock the original buffer');
          end;
 
         uiLength := Desc.Size;
         MypCachedStream.bIsUP := False;
-        uiKey := (uint32)pOrigVertexBuffer;
-     end;
+        uiKey := uint32(pOrigVertexBuffer);
+    end
     else
     begin
         // There should only be one stream (stream zero) in this case
         if (uiStream <> 0) then
         begin
             CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
-         end;
+        end;
         uiStride  := pPatchDesc.uiVertexStreamZeroStride;
-        pCalculateData := (uint08 )pPatchDesc.pVertexStreamZeroData;
+        pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
         // Cxbx TODO: This is sometimes the number of indices, which isn't too good
         uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
         MypCachedStream.bIsUP := True;
         MypCachedStream.pStreamUP := pCalculateData;
-        uiKey := (uint32)pCalculateData;
+        uiKey := uint32(pCalculateData);
      end;
 
-    UINT uiChecksum := CRC32((Byte )pCalculateData, uiLength);
-    if ( not pPatchDesc.pVertexStreamZeroData) then
+    UINT uiChecksum := CRC32(PByte(pCalculateData), uiLength);
+    if (not pPatchDesc.pVertexStreamZeroData) then
     begin
         pOrigVertexBuffer.Unlock();
      end;
@@ -421,7 +421,7 @@ begin
     uint32                     uiKey;
     //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)(*CxbxMalloc(sizeof(CACHEDSTREAM));
 
-    if ( not pPatchDesc.pVertexStreamZeroData) then
+    if (not pPatchDesc.pVertexStreamZeroData) then
     begin
         g_pD3DDevice8.GetStreamSource(uiStream, {out}IDirect3DVertexBuffer8(pOrigVertexBuffer), @uiStride);
         if (FAILED(pOrigVertexBuffer.GetDesc(@Desc))) then
@@ -429,78 +429,78 @@ begin
             CxbxKrnlCleanup('Could not retrieve original buffer size');
          end;
         uiLength := Desc.Size;
-        uiKey := (uint32)pOrigVertexBuffer;
+        uiKey := uint32(pOrigVertexBuffer);
         //pCachedStream.bIsUP = False;
-     end;
+    end
     else
     begin
         // There should only be one stream (stream zero) in this case
         if (uiStream <> 0) then
         begin
             CxbxKrnlCleanup('Trying to find a cached Draw..UP with more than stream zero!');
-         end;
-        uiStride  := pPatchDesc.uiVertexStreamZeroStride;
-        pCalculateData := (uint08 )pPatchDesc.pVertexStreamZeroData;
+        end;
+        uiStride := pPatchDesc.uiVertexStreamZeroStride;
+        pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
         // Cxbx TODO: This is sometimes the number of indices, which isn't too good
         uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
-        uiKey := (uint32)pCalculateData;
+        uiKey := uint32(pCalculateData);
         //pCachedStream.bIsUP = True;
         //pCachedStream.pStreamUP = pCalculateData;
-     end;
+    end;
     g_PatchedStreamsCache.Lock();
 
-    CACHEDSTREAM *pCachedStream := (CACHEDSTREAM )g_PatchedStreamsCache.get(uiKey);
+    CACHEDSTREAM *pCachedStream := PCACHEDSTREAM(g_PatchedStreamsCache.get(uiKey));
     if (pCachedStream) then
     begin
         pCachedStream.lLastUsed := clock();
-        pCachedStream.uiCacheHit:= pCachedStream.uiCacheHit + 1;
+        Inc(pCachedStream.uiCacheHit);
         bool bMismatch := False;
         if (pCachedStream.uiCount = (pCachedStream.uiCheckFrequency - 1)) then
         begin
-            if ( not pPatchDesc.pVertexStreamZeroData) then
+            if (not pPatchDesc.pVertexStreamZeroData) then
             begin
-                if (FAILED(pOrigVertexBuffer.Lock(0, 0, (uint08)@pCalculateData, 0))) then
+                if (FAILED(pOrigVertexBuffer.Lock(0, 0, PPuint08(@pCalculateData), 0))) then
                 begin
                     CxbxKrnlCleanup('Couldn't lock the original buffer');
-                 end;
-             end;
+                end;
+            end;
             // Use the cached stream length (which is a must for the UP stream)
-            uint32 Checksum := CRC32((uint08)pCalculateData, pCachedStream.uiLength);
+            uint32 Checksum := CRC32(Puint08(pCalculateData), pCachedStream.uiLength);
             if (Checksum = pCachedStream.uiCRC32) then
             begin
                 // Take a while longer to check
                 if (pCachedStream.uiCheckFrequency < 32*1024) then
                 begin
-                    pCachedStream.uiCheckFrequency:= pCachedStream.uiCheckFrequency * 2;
-                 end;
+                  pCachedStream.uiCheckFrequency:= pCachedStream.uiCheckFrequency * 2;
+                end;
                 pCachedStream.uiCount := 0;
-             end;
+            end
             else
             begin
                 // Cxbx TODO: Do something about this
                 if (pCachedStream.bIsUP) then
                 begin
                     FreeCachedStream(pCachedStream.pStreamUP);
-                 end;
+                end
                 else
                 begin
                     FreeCachedStream(pCachedStream.Stream.pOriginalStream);
-                 end;
+                end;
                 pCachedStream := 0;
                 bMismatch := True;
-             end;
-            if ( not pPatchDesc.pVertexStreamZeroData) then
+            end;
+            if (not pPatchDesc.pVertexStreamZeroData) then
             begin
                 pOrigVertexBuffer.Unlock();
-             end;
-         end;
+            end;
+        end
         else
         begin
             pCachedStream.uiCount:= pCachedStream.uiCount + 1;
-         end;
-        if ( not bMismatch) then
+        end;
+        if (not bMismatch) then
         begin
-            if ( not pCachedStream.bIsUP) then
+            if (not pCachedStream.bIsUP) then
             begin
                 m_pStreams[uiStream].pOriginalStream := pOrigVertexBuffer;
                 m_pStreams[uiStream].uiOrigStride := uiStride;
@@ -509,7 +509,7 @@ begin
                 pCachedStream.Stream.pOriginalStream.AddRef();
                 m_pStreams[uiStream].pPatchedStream := pCachedStream.Stream.pPatchedStream;
                 m_pStreams[uiStream].uiNewStride := pCachedStream.Stream.uiNewStride;
-             end;
+            end
             else
             begin
                 pPatchDesc.pVertexStreamZeroData := pCachedStream.pStreamUP;
@@ -519,19 +519,19 @@ begin
             begin
                 // The primitives were patched, draw with the correct number of primimtives from the cache
                 pPatchDesc.dwPrimitiveCount := pCachedStream.dwPrimitiveCount;
-             end;
+            end;
             bApplied := True;
             m_bPatched := True;
          end;
      end;
     g_PatchedStreamsCache.Unlock();
 
-    if ( not pPatchDesc.pVertexStreamZeroData) then
-    begin
-        pOrigVertexBuffer.Release();
-     end;     *)
+  if (not pPatchDesc.pVertexStreamZeroData) then
+  begin
+    pOrigVertexBuffer.Release();
+  end;     *)
 
-    Result := bApplied;
+  Result := bApplied;
 end;
 
 
@@ -562,7 +562,8 @@ begin
   Result := 0;
 end;
 
-function XTL_VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+function XTL_VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc; 
+    uiStream: UINT): bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:50
 var
   pStream: PPATCHEDSTREAM;
@@ -582,23 +583,30 @@ var
   uiType: UINT;
 
 begin
-    pStream := @m_pStreams[uiStream];
-    if not (Assigned(m_pDynamicPatch)) then
+    // FVF buffers doesn't have Xbox extensions, but texture coordinates may
+    // need normalization if used with linear textures.
+    if (not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
     begin
-      Result := False;
+      if (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) > 0 then
+      begin
+        Result := NormalizeTexCoords(pPatchDesc, uiStream);
+        Exit;
+      end
+      else
+      begin
+        Result := False;
+        Exit;
+      end;
     end;
 
-    if ( not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
+    if not (Assigned(m_pDynamicPatch)) or (not m_pDynamicPatch.pStreamPatches[uiStream].NeedPatch) then
     begin
-      // No need to patch FVF types, there are no xbox extensions
       Result := False;
+      Exit;
     end;
 
-    if ( not m_pDynamicPatch.pStreamPatches[uiStream].NeedPatch) then
-    begin
-      Result := False;
-    end;
     // Do some groovey patchin'
+    
     pStreamPatch := @m_pDynamicPatch.pStreamPatches[uiStream];
 
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
@@ -606,7 +614,7 @@ begin
         g_pD3DDevice8.GetStreamSource(uiStream, {out}IDirect3DVertexBuffer8(pOrigVertexBuffer), uiStride);
         if (FAILED(pOrigVertexBuffer.GetDesc(Desc))) then
         begin
-           CxbxKrnlCleanup('Could not retrieve original buffer size');
+          CxbxKrnlCleanup('Could not retrieve original buffer size');
         end;
         // Set a new (exact) vertex count
         pPatchDesc.dwVertexCount := Desc.Size div uiStride;
@@ -633,7 +641,7 @@ begin
         if (uiStream <> 0) then
         begin
             CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
-         end;
+        end;
         uiStride  := pPatchDesc.uiVertexStreamZeroStride;
         pOrigData := pPatchDesc.pVertexStreamZeroData;
         // Cxbx TODO: This is sometimes the number of indices, which isn't too good
@@ -1372,7 +1380,7 @@ begin
                 begin
                     if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                         CxbxKrnlCleanup('Could not create dummy texture!');
-                 end;
+                end
                 else if (Stage = 1) then
                 begin
                     if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
@@ -1443,11 +1451,11 @@ begin
 {$IFDEF DEBUG}
                 DbgPrintf('IVB Position := (%f, %f, %f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
 {$ENDIF}
-             end;
+            end
             else
             begin
                 CxbxKrnlCleanup('Unsupported Position Mask (FVF := $%.08X)', g_IVBFVF);
-             end;
+            end;
 
             if (g_IVBFVF and D3DFVF_DIFFUSE) then
             begin
@@ -1584,7 +1592,7 @@ begin
         VertPatch.Restore();
 
         g_IVBTblOffs := 0;
-     end;
+    end
     else if ((g_IVBPrimitiveType = X_D3DPT_QUADLIST) and (g_IVBTblOffs = 4)) then
     begin
         XTL_EmuUpdateDeferredStates();
@@ -1611,11 +1619,11 @@ begin
 {$IFDEF DEBUG}
                 DbgPrintf('IVB Position := (%f, %f, %f end;', g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
 {$ENDIF}
-             end;
+            end
             else
             begin
                 CxbxKrnlCleanup('Unsupported Position Mask (FVF := $%.08X)', g_IVBFVF);
-             end;
+            end;
 
             if (g_IVBFVF and D3DFVF_DIFFUSE) then
             begin

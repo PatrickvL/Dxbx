@@ -219,7 +219,7 @@ end;
 
 function mbstowcs(wcstr: pwchar_t; const mbstr: PAnsiChar; max: size_t): size_t;
 begin
-  Result := MultiByteToWideChar(CP_ACP, 0, mbstr, strlen(mbstr), wcstr, max);
+  Result := MultiByteToWideChar(CP_ACP, 0, mbstr, strlen(mbstr)+1, wcstr, max);
 end;
 
 function wcstombs(mbstr: PAnsiChar; const wcstr: pwchar_t; max: size_t): size_t;

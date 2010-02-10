@@ -3475,7 +3475,7 @@ begin
         begin
           D3DRTYPE_TEXTURE:
           begin
-            StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture++, Pointer(pTexture.EmuTexture8)]);
+            StrFmt(szBuffer, 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture++, Pointer(pTexture.EmuTexture8)]);
 
             pTexture.EmuTexture8.UnlockRect(0);
 
@@ -3486,7 +3486,7 @@ begin
           begin
             for(Integer face:=0;face<6;face++)
             begin
-              StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture++, Pointer(pTexture.EmuTexture8)]);
+              StrFmt(szBuffer, 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture++, Pointer(pTexture.EmuTexture8)]);
 
               pTexture.EmuCubeTexture8.UnlockRect(D3DCUBEMAP_FACES(face), 0);
 
@@ -3510,12 +3510,12 @@ begin
         begin
             if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                 CxbxKrnlCleanup('Could not create dummy texture!');
-         end;
+        end
         else if (Stage = 1) then
         begin
             if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                 CxbxKrnlCleanup('Could not create dummy texture!');
-         end;
+        end;
      end;
     }
 
@@ -9239,7 +9239,7 @@ function XTL_EmuIDirect3DDevice8_SetRenderState_SampleAlpha
 begin
   EmuSwapFS();   // Win2k/XP FS
 
-  DbgPrintf('EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_SampleAlpha' +
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_SampleAlpha' +
       #13#10'(' +
       #13#10'   dwSampleAlpha         : 0x%.08X' +
       #13#10');',

@@ -1553,7 +1553,7 @@ begin
     end;
 
     __asm int 3;
-  end;
+  end
   else
   begin
     EmuWarning('Section List not initialized!');
