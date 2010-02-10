@@ -958,14 +958,14 @@ begin
   for v := m_dwInputDeviceCount downto 0 do
   begin
     m_InputDevice[v].m_Device.Unacquire();
-    m_InputDevice[v].m_Device._Release(); //?? Release();
+    m_InputDevice[v].m_Device._Release();
     m_InputDevice[v].m_Device := nil;
   end;
 
   m_dwInputDeviceCount := 0;
   if Assigned(m_pDirectInput8) then
   begin
-    m_pDirectInput8._Release();//?? Release();
+    m_pDirectInput8._Release();
     m_pDirectInput8 := nil;
   end;
 end;

@@ -263,7 +263,7 @@ begin
   szRoot := g_strCurDrive;
 
 {$IFDEF DEBUG}
-    //printf('bef : %s\n', lpFileName);
+    //printf('bef : %s'#13#10, lpFileName);
 {$ENDIF}
 
   if (szBuffer <> nil) then
@@ -298,8 +298,8 @@ begin
   end;
 
 {$IFDEF DEBUG}
-    //printf('af1 : %s\n', szRoot);
-    //printf('af2 : %s\n', szBuffer);
+    //printf('af1 : %s'#13#10, szRoot);
+    //printf('af2 : %s'#13#10, szBuffer);
 {$ENDIF}
 
     //char szOldDir[MAX_PATH];
@@ -367,7 +367,7 @@ begin
   until False;
 
 {$IFDEF DEBUG}
-    //printf('Found : %s\n', lpFindFileData.cFileName);
+    //printf('Found : %s'#13#10, lpFindFileData.cFileName);
 {$ENDIF}
 
   EmuSwapFS(fsXbox);

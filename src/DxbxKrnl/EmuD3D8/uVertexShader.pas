@@ -60,10 +60,11 @@ const
   VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
   VSH_MAX_INTERMEDIATE_COUNT =      1024; // The maximum number of intermediate format slots
 
-type // Types from VertexShader.cpp :
-  // Local types
-  _VSH_FIELD_NAME = 
-  (
+// Types from VertexShader.cpp :
+
+// Local types
+type _VSH_FIELD_NAME = 
+(
     FLD_ILU = 0,
     FLD_MAC,
     FLD_CONST,
@@ -114,11 +115,11 @@ type // Types from VertexShader.cpp :
     FLD_A0X,
     // Final instruction
     FLD_FINAL
-  );
-  VSH_FIELD_NAME = _VSH_FIELD_NAME;
+);
+VSH_FIELD_NAME = _VSH_FIELD_NAME;
 
-  _VSH_OREG_NAME = 
-  (
+type _VSH_OREG_NAME = 
+(
     OREG_OPOS,
     OREG_UNUSED1,
     OREG_UNUSED2,
@@ -135,34 +136,34 @@ type // Types from VertexShader.cpp :
     OREG_UNUSED3,
     OREG_UNUSED4,
     OREG_A0X
-  );
-  VSH_OREG_NAME = _VSH_OREG_NAME;
+);
+VSH_OREG_NAME = _VSH_OREG_NAME;
 
-  _VSH_PARAMETER_TYPE = 
-  (
+type _VSH_PARAMETER_TYPE = 
+(
     PARAM_UNKNOWN = 0,
     PARAM_R,
     PARAM_V,
     PARAM_C
-  );
-  VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
+);
+VSH_PARAMETER_TYPE = _VSH_PARAMETER_TYPE;
 
-  _VSH_OUTPUT_TYPE = 
-  (
+type _VSH_OUTPUT_TYPE = 
+(
     OUTPUT_C = 0,
     OUTPUT_O
-  );
-  VSH_OUTPUT_TYPE = _VSH_OUTPUT_TYPE;
+);
+VSH_OUTPUT_TYPE = _VSH_OUTPUT_TYPE;
 
-  _VSH_OUTPUT_MUX = 
-  (
+type _VSH_OUTPUT_MUX = 
+(
     OMUX_MAC = 0,
     OMUX_ILU
-  );
-  VSH_OUTPUT_MUX = _VSH_OUTPUT_MUX;
+);
+VSH_OUTPUT_MUX = _VSH_OUTPUT_MUX;
 
-  _VSH_ILU = 
-  (
+type _VSH_ILU = 
+(
     ILU_NOP = 0,
     ILU_MOV,
     ILU_RCP,
@@ -171,11 +172,11 @@ type // Types from VertexShader.cpp :
     ILU_EXP,
     ILU_LOG,
     ILU_LIT
-  );
-  VSH_ILU = _VSH_ILU;
+);
+VSH_ILU = _VSH_ILU;
 
-  _VSH_MAC = 
-  (
+type _VSH_MAC = 
+(
     MAC_NOP,
     MAC_MOV,
     MAC_MUL,
@@ -190,12 +191,12 @@ type // Types from VertexShader.cpp :
     MAC_SLT,
     MAC_SGE,
     MAC_ARL,
-    MAC_UNK1,
-    MAC_UNK2
-  );
-  VSH_MAC = _VSH_MAC;
+    MAC_UNK1, // Dxbx addition
+    MAC_UNK2  // Dxbx addition
+);
+VSH_MAC = _VSH_MAC;
 
-  _VSH_OPCODE_PARAMS = packed record
+type _VSH_OPCODE_PARAMS = packed record
     ILU: VSH_ILU;
     MAC: VSH_MAC;
     A: boolean;
@@ -205,16 +206,16 @@ type // Types from VertexShader.cpp :
   VSH_OPCODE_PARAMS = _VSH_OPCODE_PARAMS;
   PVSH_OPCODE_PARAMS = ^VSH_OPCODE_PARAMS;
 
-  _VSH_SWIZZLE = 
-  (
+type _VSH_SWIZZLE = 
+(
     SWIZZLE_X = 0,
     SWIZZLE_Y,
     SWIZZLE_Z,
     SWIZZLE_W
-  );
-  VSH_SWIZZLE = _VSH_SWIZZLE;
+);
+VSH_SWIZZLE = _VSH_SWIZZLE;
 
-  _VSH_PARAMETER = packed record
+type _VSH_PARAMETER = packed record
     ParameterType: VSH_PARAMETER_TYPE;      // Parameter type, R, V or C
     Neg: boolean;                           // TRUE if negated, FALSE if not
     Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
@@ -223,7 +224,7 @@ type // Types from VertexShader.cpp :
   VSH_PARAMETER = _VSH_PARAMETER;
   PVSH_PARAMETER = ^VSH_PARAMETER;
 
-  _VSH_OUTPUT = packed record
+type _VSH_OUTPUT = packed record
     // Output register
     OutputMux: VSH_OUTPUT_MUX;       // MAC or ILU used as output
     OutputType: VSH_OUTPUT_TYPE;     // C or O
@@ -238,8 +239,8 @@ type // Types from VertexShader.cpp :
   end;
   VSH_OUTPUT = _VSH_OUTPUT;
 
-  // The raw, parsed shader instruction (can be many combined [paired] instructions)
-  _VSH_SHADER_INSTRUCTION = packed record
+// The raw, parsed shader instruction (can be many combined [paired] instructions)
+type _VSH_SHADER_INSTRUCTION = packed record
     ILU: VSH_ILU;
     MAC: VSH_MAC;
     Output: VSH_OUTPUT;
@@ -251,23 +252,23 @@ type // Types from VertexShader.cpp :
   VSH_SHADER_INSTRUCTION = _VSH_SHADER_INSTRUCTION;
   PVSH_SHADER_INSTRUCTION = ^VSH_SHADER_INSTRUCTION;
 
-  _VSH_IMD_OUTPUT_TYPE = 
-  (
+type _VSH_IMD_OUTPUT_TYPE = 
+(
     IMD_OUTPUT_C,
     IMD_OUTPUT_R,
     IMD_OUTPUT_O,
     IMD_OUTPUT_A0X
-  );
-  VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
+);
+VSH_IMD_OUTPUT_TYPE = _VSH_IMD_OUTPUT_TYPE;
 
-  _VSH_IMD_INSTRUCTION_TYPE =
-  (
+type _VSH_IMD_INSTRUCTION_TYPE =
+(
     IMD_MAC,
     IMD_ILU
-  );
-  VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
+);
+VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
 
-  _VSH_IMD_OUTPUT = packed record
+type _VSH_IMD_OUTPUT = packed record
     Type_: VSH_IMD_OUTPUT_TYPE;
     Mask: Dxbx4Booleans;
     Address: UInt16;
@@ -276,7 +277,7 @@ type // Types from VertexShader.cpp :
   PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
 
 
-  _VSH_IMD_PARAMETER = packed record
+type _VSH_IMD_PARAMETER = packed record
     Active: boolean;
     Parameter: VSH_PARAMETER;
     IsA0X: boolean;
@@ -287,7 +288,7 @@ type // Types from VertexShader.cpp :
   TVSH_IMD_PARAMETERArray = array [0..(MaxInt div SizeOf(VSH_IMD_PARAMETER)) - 1] of VSH_IMD_PARAMETER;
   PVSH_IMD_PARAMETERArray = ^TVSH_IMD_PARAMETERArray;
 
-  _VSH_INTERMEDIATE_FORMAT = packed record
+type _VSH_INTERMEDIATE_FORMAT = packed record
     IsCombined: boolean;
     InstructionType: VSH_IMD_INSTRUCTION_TYPE;
     MAC: VSH_MAC;
@@ -298,8 +299,8 @@ type // Types from VertexShader.cpp :
   VSH_INTERMEDIATE_FORMAT = _VSH_INTERMEDIATE_FORMAT;
   PVSH_INTERMEDIATE_FORMAT = ^VSH_INTERMEDIATE_FORMAT;
 
-  // Used for xvu spec definition
-  _VSH_FIELDMAPPING = packed record
+// Used for xvu spec definition
+type _VSH_FIELDMAPPING = packed record
     FieldName: VSH_FIELD_NAME;
     SubToken: uint08;
     StartBit: uint08;
@@ -317,7 +318,7 @@ type // Types from VertexShader.cpp :
   VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
   PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
 
-  _VSH_XBOX_SHADER = packed record
+type _VSH_XBOX_SHADER = packed record
     ShaderHeader: VSH_SHADER_HEADER;
     IntermediateCount: uint16;
     Intermediate: array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT;
@@ -326,7 +327,8 @@ type // Types from VertexShader.cpp :
   PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
 
 // Local constants
-const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING = (
+const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING = 
+(
     // Field Name         DWORD BitPos BitSize
     ( FieldName:FLD_ILU;              SubToken:1;   StartBit:25;     BitLength:3 ),
     ( FieldName:FLD_MAC;              SubToken:1;   StartBit:21;     BitLength:4 ),
@@ -377,9 +379,10 @@ const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING = (
     // Other
     ( FieldName:FLD_A0X;              SubToken:3;   StartBit: 1;     BitLength:1 ),
     ( FieldName:FLD_FINAL;            SubToken:3;   StartBit: 0;     BitLength:1 )
-  );
+);
 
-const g_OpCodeParams: array [0..19] of VSH_OPCODE_PARAMS = (
+const g_OpCodeParams: array [0..19] of VSH_OPCODE_PARAMS = 
+(
     // ILU OP   MAC OP  ParamA ParamB ParamC
     ( ILU:ILU_MOV; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
     ( ILU:ILU_RCP; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
@@ -401,9 +404,10 @@ const g_OpCodeParams: array [0..19] of VSH_OPCODE_PARAMS = (
     ( ILU:ILU_NOP; MAC:MAC_SLT; a:TRUE;  b:TRUE;  c:FALSE ),
     ( ILU:ILU_NOP; MAC:MAC_SGE; a:TRUE;  b:TRUE;  c:FALSE ),
     ( ILU:ILU_NOP; MAC:MAC_ARL; a:TRUE;  b:FALSE; c:FALSE )
-  );
+);
 
-const MAC_OpCode: array [VSH_MAC] of string = (
+const MAC_OpCode: array [VSH_MAC] of string = 
+(
     'nop',
     'mov',
     'mul',
@@ -420,9 +424,10 @@ const MAC_OpCode: array [VSH_MAC] of string = (
     'mov', // really 'arl'
     '???',
     '???'
-  );
+);
 
-const ILU_OpCode: array [VSH_ILU] of string = (
+const ILU_OpCode: array [VSH_ILU] of string = 
+(
     'nop',
     'mov',
     'rcp',
@@ -431,9 +436,10 @@ const ILU_OpCode: array [VSH_ILU] of string = (
     'exp',
     'log',
     'lit'
-  );
+);
 
-const OReg_Name: array [VSH_OREG_NAME] of string = (
+const OReg_Name: array [VSH_OREG_NAME] of string = 
+(
     'oPos',
     '???',
     '???',
@@ -450,7 +456,7 @@ const OReg_Name: array [VSH_OREG_NAME] of string = (
     '???',
     '???',
     'a0.x'
-  );
+);
 
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean; // forward
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; // forward
@@ -496,7 +502,7 @@ begin
     if LastChar(LineStr) = #10 then
     begin
       // Remove last newline :
-      Delete(LineStr, Length(LineStr), 2);
+      SetLength(LineStr, Length(LineStr) - 2);
       // Print normally (this will re-append the removed newline) :
       DbgPrintf(LineStr);
       // Start afresh :
@@ -1645,20 +1651,19 @@ end;
 // * Vertex shader declaration recompiler
 // ****************************************************************************
 
-type
-  _VSH_TYPE_PATCH_DATA = packed record
+type _VSH_TYPE_PATCH_DATA = packed record
     NbrTypes: DWORD;
     Types: array [0..256-1] of UINT;
   end;
   VSH_TYPE_PATCH_DATA = _VSH_TYPE_PATCH_DATA;
 
-  _VSH_STREAM_PATCH_DATA = packed record
+type _VSH_STREAM_PATCH_DATA = packed record
     NbrStreams: DWORD;
     pStreamPatches: array [0..256-1] of STREAM_DYNAMIC_PATCH;
   end;
   VSH_STREAM_PATCH_DATA = _VSH_STREAM_PATCH_DATA;
 
-  _VSH_PATCH_DATA = packed record
+type _VSH_PATCH_DATA = packed record
     NeedPatching: boolean;
     ConvertedStride: DWORD;
     TypePatchData: VSH_TYPE_PATCH_DATA;

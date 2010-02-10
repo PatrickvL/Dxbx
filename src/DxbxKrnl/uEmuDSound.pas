@@ -550,7 +550,7 @@ begin
 
   { temporarily (?) disabled by cxbx
   if (uRet = 1) then
-      pThis.Release();
+      pThis._Release();
   //}
 
   EmuSwapFS(fsXbox);

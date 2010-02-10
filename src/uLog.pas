@@ -553,9 +553,6 @@ procedure WriteLog(const aText: string);
               + Copy(aText, i, MaxInt)
     else
       Result := aText;
-
-    // Fix up any c-style newlines :
-    Result := StringReplace(Result, '\n', #13#10, [rfReplaceAll]);
   end;
 
 var

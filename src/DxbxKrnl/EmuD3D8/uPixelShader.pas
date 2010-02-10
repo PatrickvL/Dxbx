@@ -639,24 +639,24 @@ begin
   FILE* out := fopen(szPSDef, 'w');
   if Assigned(out) then
   begin
-    fprintf(out, 'PSAphaInputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n'
-            'PSFinalCombinerInputsABCD    = 0x%.08X\n'
-            'PSFinalCombinerInputsEFG     = 0x%.08X\n'
-            'PSConstant0[8]               = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n'
-            'PSConstant1[8]               = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n'
-            'PSAlphaOutputs[8]            = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n'
-            'PSRGBInputs[8]               = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n'
-            'PSCompareMode                = 0x%.08X\n'
-            'PSFinalCombinerConstant0     = 0x%.08X\n'
-            'PSFinalCombinerConstant1     = 0x%.08X\n'
-            'PSRGBOutputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n'
-            'PSCombinerCount              = 0x%.08X\n'
-            'PSTextureModes               = 0x%.08X\n'
-            'PSDotMapping                 = 0x%.08X\n'
-            'PSInputTexture               = 0x%.08X\n'
-            'PSC0Mapping                  = 0x%.08X\n'
-            'PSC1Mapping                  = 0x%.08X\n'
-            'PSFinalCombinerConstants     = 0x%.08X\n',
+    fprintf(out, 'PSAphaInputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10
+            'PSFinalCombinerInputsABCD    = 0x%.08X'#13#10
+            'PSFinalCombinerInputsEFG     = 0x%.08X'#13#10
+            'PSConstant0[8]               = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10
+            'PSConstant1[8]               = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10
+            'PSAlphaOutputs[8]            = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10
+            'PSRGBInputs[8]               = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10
+            'PSCompareMode                = 0x%.08X'#13#10
+            'PSFinalCombinerConstant0     = 0x%.08X'#13#10
+            'PSFinalCombinerConstant1     = 0x%.08X'#13#10
+            'PSRGBOutputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10
+            'PSCombinerCount              = 0x%.08X'#13#10
+            'PSTextureModes               = 0x%.08X'#13#10
+            'PSDotMapping                 = 0x%.08X'#13#10
+            'PSInputTexture               = 0x%.08X'#13#10
+            'PSC0Mapping                  = 0x%.08X'#13#10
+            'PSC1Mapping                  = 0x%.08X'#13#10
+            'PSFinalCombinerConstants     = 0x%.08X'#13#10,
             pPSDef.PSAlphaInputs[0], pPSDef.PSAlphaInputs[1], pPSDef.PSAlphaInputs[2], pPSDef.PSAlphaInputs[3],
             pPSDef.PSAlphaInputs[4], pPSDef.PSAlphaInputs[5], pPSDef.PSAlphaInputs[6], pPSDef.PSAlphaInputs[7],
             pPSDef.PSFinalCombinerInputsABCD,
@@ -692,7 +692,7 @@ begin
   // Show the contents to the user
   if Assigned(pPSDef) then
   begin
-    DbgPshPrintf('\n-----PixelShader Def Contents-----\n');
+    DbgPshPrintf(#13#10'-----PixelShader Def Contents-----'#13#10);
 
     if Assigned(pPSDef.PSTextureModes) then
     begin
@@ -701,11 +701,11 @@ begin
       DWORD dwPSTexMode2 := (pPSDef.PSTextureModes shr 10) and $1F;
       DWORD dwPSTexMode3 := (pPSDef.PSTextureModes shr 15) and $1F;
 
-      DbgPshPrintf('PSTextureModes .\n');
-      DbgPshPrintf('Stage 0: %s\n', PS_TextureModes[dwPSTexMode0]);
-      DbgPshPrintf('Stage 1: %s\n', PS_TextureModes[dwPSTexMode1]);
-      DbgPshPrintf('Stage 2: %s\n', PS_TextureModes[dwPSTexMode2]);
-      DbgPshPrintf('Stage 3: %s\n', PS_TextureModes[dwPSTexMode3]);
+      DbgPshPrintf('PSTextureModes .'#13#10);
+      DbgPshPrintf('Stage 0: %s'#13#10, PS_TextureModes[dwPSTexMode0]);
+      DbgPshPrintf('Stage 1: %s'#13#10, PS_TextureModes[dwPSTexMode1]);
+      DbgPshPrintf('Stage 2: %s'#13#10, PS_TextureModes[dwPSTexMode2]);
+      DbgPshPrintf('Stage 3: %s'#13#10, PS_TextureModes[dwPSTexMode3]);
     end;
 
     if Assigned(pPSDef.PSDotMapping) then
@@ -714,10 +714,10 @@ begin
       DWORD dwPSDMStage2 := (pPSDef.PSDotMapping shr 4) and $7;
       DWORD dwPSDMStage3 := (pPSDef.PSDotMapping shr 8) and $7;
 
-      DbgPshPrintf('PSDotMapping .\n');
-      DbgPshPrintf('Stage 1: %s\n', PS_DotMapping[dwPSDMStage1]);
-      DbgPshPrintf('Stage 2: %s\n', PS_DotMapping[dwPSDMStage2]);
-      DbgPshPrintf('Stage 3: %s\n', PS_DotMapping[dwPSDMStage3]);
+      DbgPshPrintf('PSDotMapping .'#13#10);
+      DbgPshPrintf('Stage 1: %s'#13#10, PS_DotMapping[dwPSDMStage1]);
+      DbgPshPrintf('Stage 2: %s'#13#10, PS_DotMapping[dwPSDMStage2]);
+      DbgPshPrintf('Stage 3: %s'#13#10, PS_DotMapping[dwPSDMStage3]);
     end;
 
     if Assigned(pPSDef.PSCompareMode) then
@@ -727,11 +727,11 @@ begin
       DWORD dwPSCMStage2 := (pPSDef.PSCompareMode shr 8) and $F;
       DWORD dwPSCMStage3 := (pPSDef.PSCompareMode shr 12) and $F;
 
-      DbgPshPrintf('PSCompareMode .\n');
-      DbgPshPrintf('Stage 0: %s\n', PS_TextureModes[dwPSCMStage0 == 0 ? 0 : 1]);
-      DbgPshPrintf('Stage 1: %s\n', PS_TextureModes[dwPSCMStage1 == 0 ? 2 : 3]);
-      DbgPshPrintf('Stage 2: %s\n', PS_TextureModes[dwPSCMStage2 == 0 ? 4 : 5]);
-      DbgPshPrintf('Stage 3: %s\n', PS_TextureModes[dwPSCMStage3 == 0 ? 6 : 7]);
+      DbgPshPrintf('PSCompareMode .'#13#10);
+      DbgPshPrintf('Stage 0: %s'#13#10, PS_TextureModes[dwPSCMStage0 == 0 ? 0 : 1]);
+      DbgPshPrintf('Stage 1: %s'#13#10, PS_TextureModes[dwPSCMStage1 == 0 ? 2 : 3]);
+      DbgPshPrintf('Stage 2: %s'#13#10, PS_TextureModes[dwPSCMStage2 == 0 ? 4 : 5]);
+      DbgPshPrintf('Stage 3: %s'#13#10, PS_TextureModes[dwPSCMStage3 == 0 ? 6 : 7]);
     end;
 
     if Assigned(pPSDef.PSInputTexture) then
@@ -739,9 +739,9 @@ begin
       DWORD dwPSITStage2 := (pPSDef.PSInputTexture shr 16) and $1;
       DWORD dwPSITStage3 := (pPSDef.PSInputTexture shr 20) and $3;
 
-      DbgPshPrintf('PSInputTexture .\n');
-      DbgPshPrintf('Stage 2: %s\n', PS_TextureModes[dwPSITStage2]);
-      DbgPshPrintf('Stage 3: %s\n', PS_TextureModes[dwPSITStage3]);
+      DbgPshPrintf('PSInputTexture .'#13#10);
+      DbgPshPrintf('Stage 2: %s'#13#10, PS_TextureModes[dwPSITStage2]);
+      DbgPshPrintf('Stage 3: %s'#13#10, PS_TextureModes[dwPSITStage3]);
     end;
 
     if pPSDef.PSCombinerCount > 0 then
@@ -751,11 +751,11 @@ begin
       DWORD dwPSCCC0 := (pPSDef.PSCombinerCount shr 12) and $1;
       DWORD dwPSCCC1 := (pPSDef.PSCombinerCount shr 16) and $1;
 
-      DbgPshPrintf('PSCombinerCount .\n');
-      DbgPshPrintf('Combiners: %d\n', dwPSCCNumCombiners);
-      DbgPshPrintf('Mux:       %s\n', PS_CombinerCountFlags[dwPSCCMux]);
-      DbgPshPrintf('C0:        %s\n', PS_CombinerCountFlags[dwPSCCC0 == 0 ? 2 : 3]);
-      DbgPshPrintf('C1:        %s\n', PS_CombinerCountFlags[dwPSCCC1 == 0 ? 4 : 5]);
+      DbgPshPrintf('PSCombinerCount .'#13#10);
+      DbgPshPrintf('Combiners: %d'#13#10, dwPSCCNumCombiners);
+      DbgPshPrintf('Mux:       %s'#13#10, PS_CombinerCountFlags[dwPSCCMux]);
+      DbgPshPrintf('C0:        %s'#13#10, PS_CombinerCountFlags[dwPSCCC0 == 0 ? 2 : 3]);
+      DbgPshPrintf('C1:        %s'#13#10, PS_CombinerCountFlags[dwPSCCC1 == 0 ? 4 : 5]);
     end;
 
     (*for(int i := 0; i > 7; i++)
@@ -778,7 +778,7 @@ begin
 
   // First things first, set the pixel shader version
   // Cxbx TODO: ps.1.1 might be a better idea...
-  sprintf(szPshString, '%s', 'ps.1.0\n');
+  sprintf(szPshString, '%s', 'ps.1.0'#13#10);
 
   // Handle Texture declarations
   if (pPSDef.PSTextureModes <> 0) then
