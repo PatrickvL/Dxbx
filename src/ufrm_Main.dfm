@@ -1567,6 +1567,9 @@ object frm_Main: Tfrm_Main
       object mnu_Configvideo: TMenuItem
         Action = actConfigVideo
       end
+      object miCleanSymbolCache: TMenuItem
+        Action = actCleanSymbolCache
+      end
     end
     object Emulation1: TMenuItem
       Caption = '&Emulation'
@@ -1576,17 +1579,14 @@ object frm_Main: Tfrm_Main
     end
     object ools1: TMenuItem
       Caption = 'Tools'
+      object miXbeExplorer: TMenuItem
+        Action = actXbeExplorer
+      end
       object XdkTracker1: TMenuItem
         Action = actXdkTracker
       end
-      object N5: TMenuItem
-        Caption = '-'
-      end
-      object Iso1: TMenuItem
-        Caption = 'Iso Extract'
-        object xIso1: TMenuItem
-          Action = actXIso
-        end
+      object xIso1: TMenuItem
+        Action = actXIso
       end
     end
     object Help1: TMenuItem
@@ -1599,6 +1599,11 @@ object frm_Main: Tfrm_Main
   object ActionList: TActionList
     Left = 40
     Top = 12
+    object actXbeExplorer: TAction
+      Category = 'Tools'
+      Caption = 'Xbe Explorer'
+      OnExecute = actXbeExplorerExecute
+    end
     object ActStartEmulation: TAction
       Category = 'Emulation'
       Caption = 'Start'
@@ -1710,6 +1715,11 @@ object frm_Main: Tfrm_Main
       Category = 'Edit'
       Caption = 'Export'
       OnExecute = actExportGameImageExecute
+    end
+    object actCleanSymbolCache: TAction
+      Category = 'Settings'
+      Caption = 'Clean Symbol Cache'
+      OnExecute = actCleanSymbolCacheExecute
     end
   end
   object XbeOpenDialog: TOpenDialog

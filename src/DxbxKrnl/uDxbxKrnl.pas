@@ -27,7 +27,6 @@ uses
   JwaWinType,
   Math, // IfThen
   SysUtils, // Format
-  ShlObj, // SHGetSpecialFolderPath
   // Dxbx
   uConsts,
   uTypes,
@@ -194,11 +193,7 @@ begin
 
   // initialize EmuDisk
   begin
-    SetLength(szBuffer, MAX_PATH);
-    SHGetSpecialFolderPath(0, @(szBuffer[1]), CSIDL_APPDATA, True);
-    SetLength(szBuffer, StrLen(PChar(@(szBuffer[1]))));
-
-    DxbxBasePath := szBuffer + '\Dxbx';
+    DxbxBasePath := GetDxbxBasePath;
     CreateDirectory(PChar(DxbxBasePath), nil);
 
     // create EmuDisk directory

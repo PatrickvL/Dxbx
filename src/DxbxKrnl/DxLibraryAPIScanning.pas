@@ -36,6 +36,7 @@ uses
   uTypes,
   uXBE,
   uLog,
+  uDxbxUtils,
   uDxbxKrnlUtils,
   uStoredTrieTypes,
   uXboxLibraryUtils,
@@ -1076,7 +1077,7 @@ end; // DetermineFinalFunctionAndSymbolLocations
 
 function CacheFileName(const pXbeHeader: PXBE_HEADER): string;
 begin
-  Result := DxbxBasePath + '\SymbolCache\' + IntToHex(PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr).dwTitleId, 8) + '.ini';
+  Result := SymbolCacheFolder + IntToHex(PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr).dwTitleId, 8) + SymbolCacheFileExt;
 end;
 
 function TDetectedSymbols.LoadFromCache(const aCacheFile: string): Boolean;
