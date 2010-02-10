@@ -17,6 +17,6 @@ The following tasks are currently on our near-term TODO list :
 
 
 ShowStoppers !!
-- NTCreateFile result is returning false everytime.. so we can not acces files.
-- D3DXAssembleShader fails always, no matter what input it gets.
+- Incomplete translation of Cxbx, causin exceptions
+- Difference in interface-handling between C and Delphi (reference-counting automatically destroys interfaces that should be kept alive)
   

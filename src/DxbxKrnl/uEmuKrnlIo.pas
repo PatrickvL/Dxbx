@@ -443,7 +443,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl (0x%X): IoCreateFile' +
+  DbgPrintf('EmuKrnl : IoCreateFile' +
      #13#10'(' +
      #13#10'   FileHandle          : 0x%.08X' +
      #13#10'   DesiredAccess       : 0x%.08X' +

@@ -383,7 +383,7 @@ begin
     wchar_t wszObjectName[160-1];
 
     NtDll::UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+    JwaWinType.OBJECT_ATTRIBUTES NtObjAttr;
 
     // initialize object attributes
     if Assigned(szBuffer) then
@@ -563,7 +563,7 @@ begin
     wszObjectName[0] := 0;
 
   JwaNative.RtlInitUniCodeString(@NtUnicodeString, @(wszObjectName[0]));
-  InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+  JwaWinType.InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
   // redirect to NtCreateFile
   Result := JwaNative.NtCreateFile(
@@ -669,7 +669,7 @@ begin
     wchar_t wszObjectName[160-1];
 
     NtDll::UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+    JwaWinType.OBJECT_ATTRIBUTES NtObjAttr;
 
     // initialize object attributes
     if Assigned((szBuffer) then
@@ -1047,7 +1047,7 @@ begin
     // initialize FileMask
     {
         if Assigned(FileMask) then
-            mbstowcs(wszObjectName, FileMask.Buffer, 160-1);
+            mbstowcs(wszObjectName, FileMask.Buffer, 160-1)
         else
             mbstowcs(wszObjectName, '', 160-1);
 
@@ -1117,7 +1117,7 @@ var
 (*  szBuffer: PAnsiChar;
   wszObjectName: array [0..MAX_PATH - 1] of wchar_t;
   NtUnicodeString: UNICODE_STRING; *)
-  NtObjAttr: OBJECT_ATTRIBUTES;
+  NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1357,7 +1357,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl (0x%X): NtReadFile' +
+    DbgPrintf('EmuKrnl : NtReadFile' +
         #13#10'(' +
         #13#10'   FileHandle          : 0x%.08X' +
         #13#10'   Event               : 0x%.08X' +
