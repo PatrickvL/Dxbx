@@ -764,14 +764,14 @@ begin
 {$IFDEF DEBUG}
     fprintf(dbgVertices, 'xof 0303txt 0032');
     fprintf(dbgVertices, '');
-    fprintf(dbgVertices, '//\n');
-    fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...\n', pActiveVB);
-    fprintf(dbgVertices, '//\n');
-    fprintf(dbgVertices, '//  Format : %d\n', VBDesc.Format);
-    fprintf(dbgVertices, '//  Size   : %d bytes\n', VBDesc.Size);
-    fprintf(dbgVertices, '//  FVF    : 0x%.08X\n', VBDesc.FVF);
-    fprintf(dbgVertices, '//  iCount : %d\n', dwCount / 2);
-    fprintf(dbgVertices, '//\n');
+    fprintf(dbgVertices, '//'#13#10);
+    fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...'#13#10, pActiveVB);
+    fprintf(dbgVertices, '//'#13#10);
+    fprintf(dbgVertices, '//  Format : %d'#13#10, VBDesc.Format);
+    fprintf(dbgVertices, '//  Size   : %d bytes'#13#10, VBDesc.Size);
+    fprintf(dbgVertices, '//  FVF    : 0x%.08X'#13#10, VBDesc.FVF);
+    fprintf(dbgVertices, '//  iCount : %d'#13#10, dwCount / 2);
+    fprintf(dbgVertices, '//'#13#10);
     fprintf(dbgVertices, '');
     fprintf(dbgVertices, 'Frame SCENE_ROOT begin ');
     fprintf(dbgVertices, '');

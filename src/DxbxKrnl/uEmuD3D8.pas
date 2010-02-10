@@ -754,7 +754,7 @@ begin
   end; // while
 
   timeEndPeriod(0);
-end;
+end; // EmuUpdateTickCount
 
 // thread dedicated to create devices
 function EmuCreateDeviceProxy(lpVoid: PVOID): DWord; // no stdcall !
@@ -1143,7 +1143,7 @@ begin
         CxbxKrnlCleanup('X_D3DResource cache is maxed out!');
     end;
   end;
-end;
+end; // EmuVerifyResourceIsRegistered
 
 // ensure a given width/height are powers of 2
 procedure EmuAdjustPower2(dwWidth: PUINT; dwHeight: PUINT);
@@ -1181,7 +1181,7 @@ begin
 
   dwWidth^ := NewWidth;
   dwHeight^ := NewHeight;
-end;
+end; // EmuAdjustPower2
 
 function XTL_EmuIDirect3D8_CreateDevice(
   Adapter: UINT;
@@ -1246,7 +1246,7 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := g_EmuCDPD.hRet;
-end;
+end; // XTL_EmuIDirect3D8_CreateDevice
 
 function XTL_EmuIDirect3DDevice8_IsBusy: LONGBOOL; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -1262,7 +1262,7 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := False;
-end;
+end; // XTL_EmuIDirect3DDevice8_IsBusy
 
 procedure XTL_EmuIDirect3DDevice8_GetCreationParameters(pParameters: PD3DDEVICE_CREATION_PARAMETERS); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -1283,7 +1283,7 @@ begin
   pParameters.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
   EmuSwapFS(fsXbox);
-end;
+end; // XTL_EmuIDirect3DDevice8_GetCreationParameters
 
 function XTL_EmuIDirect3D8_CheckDeviceFormat(
   Adapter: UINT;
@@ -1322,7 +1322,7 @@ begin
   );
 
   EmuSwapFS(fsXbox);
-end;
+end; // XTL_EmuIDirect3D8_CheckDeviceFormat
 
 procedure XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus(pFieldStatus: PX_D3DFIELD_STATUS); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -1341,7 +1341,7 @@ begin
   pFieldStatus.VBlankCount := g_VBData.VBlank;
 
   EmuSwapFS(fsXbox);
-end;
+end; // XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus
 
 function XTL_EmuIDirect3DDevice8_BeginPush(
   Count: DWORD
@@ -1359,7 +1359,7 @@ begin
   g_pPrimaryPB := Result;
 
   EmuSwapFS(fsXbox);
-end;
+end; // XTL_EmuIDirect3DDevice8_BeginPush
 
 procedure XTL_EmuIDirect3DDevice8_EndPush(pPush: PDWord); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -1376,7 +1376,7 @@ begin
   g_pPrimaryPB := NULL;
 
   EmuSwapFS(fsXbox);
-end;
+end; // XTL_EmuIDirect3DDevice8_EndPush
 
 function XTL_EmuIDirect3DDevice8_BeginVisibilityTest: HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -2017,7 +2017,7 @@ begin
         begin
             EmuWarning('Could not retrieve primary surface, using backbuffer');
             pCachedPrimarySurface := 0;
-            pBackBuffer.EmuSurface8.Release();
+            pBackBuffer.EmuSurface8._Release();
             pBackBuffer.EmuSurface8 := nil;
             BackBuffer := 0;
          end;
@@ -5052,7 +5052,7 @@ begin
   if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_TEXCLON) > 0)) then
   begin
     EmuWarning('Deleting clone texture (from D3DDevice::GetTexture2)...');
-//    uRet = pThis.EmuBaseTexture8.Release();
+//    uRet = pThis.EmuBaseTexture8._Release();
     Dispose(pThis);
   end
   else  if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
@@ -9071,7 +9071,7 @@ begin
 //  pTexture.Data := (X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_TEXCLON);
 
 //  printf( 'Adding reference...' + );
-//  pTexture.EmuBaseTexture8.AddRef();
+//  pTexture.EmuBaseTexture8._AddRef();
 
 //  EmuSwapFS(fsXbox);
 //  EmuIDirect3DResource8_AddRef(pTexture);
@@ -9533,6 +9533,7 @@ exports
   XTL_EmuIDirect3DDevice8_SetViewport name PatchPrefix + 'D3DDevice_SetViewport',
   XTL_EmuIDirect3DDevice8_Swap name PatchPrefix + 'D3DDevice_Swap',
   XTL_EmuIDirect3DDevice8_SwitchTexture name PatchPrefix + 'D3DDevice_SwitchTexture',
+  XTL_EmuIDirect3DDevice8_Unknown1 name PatchPrefix + 'D3DDevice_Unknown', // Dxbx TODO : Fix wrong prefix!
   XTL_EmuIDirect3DDevice8_UpdateOverlay name PatchPrefix + 'D3DDevice_UpdateOverlay',
 
   XTL_EmuIDirect3DPalette8_Lock name PatchPrefix + 'D3DDevice_Lock', // Dxbx TODO : Fix wrong prefix!

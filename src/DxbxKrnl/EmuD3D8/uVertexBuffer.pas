@@ -327,8 +327,8 @@ begin
     if ( not pPatchDesc.pVertexStreamZeroData) then
     begin
         pOrigVertexBuffer := m_pStreams[uiStream].pOriginalStream;
-        pOrigVertexBuffer.AddRef();
-        m_pStreams[uiStream].pPatchedStream.AddRef();
+        pOrigVertexBuffer._AddRef();
+        m_pStreams[uiStream].pPatchedStream._AddRef();
         if (FAILED(pOrigVertexBuffer.GetDesc(@Desc))) then
         begin
             CxbxKrnlCleanup('Could not retrieve original buffer size');
@@ -505,8 +505,8 @@ begin
                 m_pStreams[uiStream].pOriginalStream := pOrigVertexBuffer;
                 m_pStreams[uiStream].uiOrigStride := uiStride;
                 g_pD3DDevice8.SetStreamSource(uiStream, pCachedStream.Stream.pPatchedStream, pCachedStream.Stream.uiNewStride);
-                pCachedStream.Stream.pPatchedStream.AddRef();
-                pCachedStream.Stream.pOriginalStream.AddRef();
+                pCachedStream.Stream.pPatchedStream._AddRef();
+                pCachedStream.Stream.pOriginalStream._AddRef();
                 m_pStreams[uiStream].pPatchedStream := pCachedStream.Stream.pPatchedStream;
                 m_pStreams[uiStream].uiNewStride := pCachedStream.Stream.uiNewStride;
             end
@@ -528,7 +528,7 @@ begin
 
   if (not pPatchDesc.pVertexStreamZeroData) then
   begin
-    pOrigVertexBuffer.Release();
+    pOrigVertexBuffer._Release();
   end;     *)
 
   Result := bApplied;
@@ -839,7 +839,7 @@ begin
         (*if (pStream.pPatchedStream) then
         begin
             // The stream was already primitive patched, release the previous vertex buffer to avoid memory leaks
-            pStream.pPatchedStream.Release();
+            pStream.pPatchedStream._Release();
          end;*)
         pStream.pPatchedStream := pNewVertexBuffer;
     end
