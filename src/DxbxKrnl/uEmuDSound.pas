@@ -277,7 +277,8 @@ type
         EmuPlayFlags: DWORD;
     end;
 
-  LPDIRECTSOUND8 = ^IDIRECTSOUND8;
+  LPDIRECTSOUND8 = {^}IDIRECTSOUND8;
+  PLPDIRECTSOUND8 = ^LPDIRECTSOUND8;
 
 // size of sound buffer cache (used for periodic sound buffer updates)
 const SOUNDBUFFER_CACHE_SIZE = $100;
@@ -446,7 +447,7 @@ end;
 
 function XTL_EmuDirectSoundCreate(
     pguidDeviceId: Pointer;
-    ppDirectSound: LPDIRECTSOUND8;
+    ppDirectSound: PLPDIRECTSOUND8;
     pUnknown: IUNKNOWN): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
@@ -473,7 +474,8 @@ begin
     Result := DS_OK
   else
   begin
-    Result := DirectSoundCreate8(nil, ppDirectSound^, nil);
+    PPointer(ppDirectSound)^ := nil; // Prevent Delphi _Release on invalid pointer contents
+    Result := DirectSoundCreate8(nil, {out}ppDirectSound^, nil);
 
     if FAILED(Result) then
       CxbxKrnlCleanup('DirectSoundCreate8 Failed!');
