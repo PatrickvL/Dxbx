@@ -42,9 +42,9 @@ type
   PIDirect3DVolumeTexture8 = ^IDirect3DVolumeTexture8;
 
   LPD3DXBUFFER = ID3DXBuffer;
-  PLPD3DXBUFFER = ^LPD3DXBUFFER;
+  PLPD3DXBUFFER = PID3DXBuffer; // = ^LPD3DXBUFFER;
 
-  LPCVOID = Pointer;
+  LPCVOID = Pointer; // Pointer to a constant of any type
   PPD3DCOLOR = ^PD3DCOLOR;
 
 function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType; overload;
@@ -83,16 +83,6 @@ function IDirect3DDevice8_CreateVolumeTexture(const aDirect3DDevice8: IDirect3DD
 function IDirect3DTexture8_GetSurfaceLevel(const aDirect3DTexture8: IDirect3DTexture8;
   Level: LongWord;
   ppSurfaceLevel: PIDirect3DSurface8): HResult;
-
-// Assembles an ascii description of a vertex or pixel shader into binary form.
-function Dxbx_D3DXAssembleShader(
-  pSrcData: LPCVOID;                 // Pointer to source code
-  SrcDataLen: UINT;                  // Size of source code, in bytes
-  Flags: DWORD;                      // D3DXASM_xxx flags
-  ppConstants: PLPD3DXBUFFER;        // Returns an ID3DXBuffer object containing constant declarations.
-  ppCompiledShader: PLPD3DXBUFFER;   // Returns an ID3DXBuffer object containing the object code.
-  ppCompilationErrors: PLPD3DXBUFFER // Returns an ID3DXBuffer object containing ascii error messages
-  ): HRESULT; stdcall; external d3dx8dll name 'D3DXAssembleShader';
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 

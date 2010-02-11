@@ -204,7 +204,7 @@ const
   MAX_ERROR_TEXT_LEN = 160;
   {$EXTERNALSYM MAX_ERROR_TEXT_LEN}
 
-  function AMGetErrorTextA(hr: HResult; pbuffer: PChar; MaxLen: DWORD): DWORD; stdcall;
+  function AMGetErrorTextA(hr: HResult; pbuffer: PAnsiChar; MaxLen: DWORD): DWORD; stdcall;
   {$EXTERNALSYM AMGetErrorTextA}
   function AMGetErrorTextW(hr: HResult; pbuffer: PWideChar; MaxLen: DWORD): DWORD; stdcall;
   {$EXTERNALSYM AMGetErrorTextW}
@@ -30364,7 +30364,7 @@ const
 
   function AMGetErrorTextA; external quartz name 'AMGetErrorTextA';
   function AMGetErrorTextW; external quartz name 'AMGetErrorTextW';
-  function AMGetErrorText; external quartz name 'AMGetErrorTextA';
+  function AMGetErrorText; external quartz name 'AMGetErrorText' + AWSuffix;
 
   function DMORegister         ; external msdmo name 'DMORegister';
   function DMOUnregister       ; external msdmo name 'DMOUnregister';

@@ -1976,7 +1976,7 @@ function D3DXCreateFont(
   Quality: DWORD;
   PitchAndFamily: DWORD;
   pFaceName: PChar;
-  out ppFont: ID3DXFont): HResult; stdcall; external d3dx9coreDLL name 'D3DXCreateFontA';
+  out ppFont: ID3DXFont): HResult; stdcall; external d3dx9coreDLL name 'D3DXCreateFont' + AWSuffix;
 {$EXTERNALSYM D3DXCreateFont}
 
 
@@ -1995,7 +1995,7 @@ function D3DXCreateFontIndirectW(
 function D3DXCreateFontIndirect(
   pDevice: IDirect3DDevice9;
   const pDesc: TD3DXFontDesc;
-  out ppFont: ID3DXFont): HResult; stdcall; external d3dx9coreDLL name 'D3DXCreateFontIndirectA';
+  out ppFont: ID3DXFont): HResult; stdcall; external d3dx9coreDLL name 'D3DXCreateFontIndirect' + AWSuffix;
 {$EXTERNALSYM D3DXCreateFontIndirect}
 
 
@@ -2772,7 +2772,7 @@ function D3DXAssembleShaderFromFile(
   pInclude: ID3DXInclude;
   Flags: DWORD;
   ppShader: PID3DXBuffer;
-  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXAssembleShaderFromFileA';
+  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXAssembleShaderFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXAssembleShaderFromFile}
 
 
@@ -2803,7 +2803,7 @@ function D3DXAssembleShaderFromResource(
   pInclude: ID3DXInclude;
   Flags: DWord;
   ppShader: PID3DXBuffer;
-  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXAssembleShaderFromResourceA';
+  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXAssembleShaderFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXAssembleShaderFromResource}
 
 
@@ -2897,7 +2897,7 @@ function D3DXCompileShaderFromFile(
   Flags: DWORD;
   ppShader: PID3DXBuffer;
   ppErrorMsgs: PID3DXBuffer;
-  ppConstantTable: PID3DXConstantTable): HResult; stdcall; external d3dx9shaderDLL name 'D3DXCompileShaderFromFileA';
+  ppConstantTable: PID3DXConstantTable): HResult; stdcall; external d3dx9shaderDLL name 'D3DXCompileShaderFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCompileShaderFromFile}
 
 
@@ -2937,7 +2937,7 @@ function D3DXCompileShaderFromResource(
   Flags: DWORD;
   ppShader: PID3DXBuffer;
   ppErrorMsgs: PID3DXBuffer;
-  ppConstantTable: PID3DXConstantTable): HResult; stdcall; external d3dx9shaderDLL name 'D3DXCompileShaderFromResourceA';
+  ppConstantTable: PID3DXConstantTable): HResult; stdcall; external d3dx9shaderDLL name 'D3DXCompileShaderFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCompileShaderFromResource}
 
 
@@ -3208,7 +3208,7 @@ function D3DXGatherFragmentsFromFile(
   pInclude: ID3DXInclude;
   Flags: DWORD;
   out ppShader: ID3DXBuffer;
-  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXGatherFragmentsFromFileA';
+  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXGatherFragmentsFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXGatherFragmentsFromFile}
 
 
@@ -3239,7 +3239,7 @@ function D3DXGatherFragmentsFromResource(
   pInclude: ID3DXInclude;
   Flags: DWord;
   out ppShader: ID3DXBuffer;
-  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXGatherFragmentsFromResourceA';
+  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXGatherFragmentsFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXGatherFragmentsFromResource}
 
 
@@ -3332,7 +3332,7 @@ function D3DXPreprocessShaderFromFile(
   pDefines: PD3DXMacro;
   pInclude: ID3DXInclude;
   out ppShaderText: ID3DXBuffer;
-  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXPreprocessShaderFromFileA';
+  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXPreprocessShaderFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXPreprocessShaderFromFile}
 
 
@@ -3360,7 +3360,7 @@ function D3DXPreprocessShaderFromResource(
   pDefines: PD3DXMacro;
   pInclude: ID3DXInclude;
   out ppShaderText: ID3DXBuffer;
-  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXPreprocessShaderFromResourceA';
+  ppErrorMsgs: PID3DXBuffer): HResult; stdcall; external d3dx9shaderDLL name 'D3DXPreprocessShaderFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXPreprocessShaderFromResource}
 
 
@@ -3908,7 +3908,7 @@ function D3DXCreateEffectFromFile(
   Flags: DWORD;
   pPool: ID3DXEffectPool;
   out ppEffect: ID3DXEffect;
-  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromFileA';
+  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectFromFile}
 
 
@@ -3945,7 +3945,7 @@ function D3DXCreateEffectFromResource(
   Flags: DWORD;
   pPool: ID3DXEffectPool;
   out ppEffect: ID3DXEffect;
-  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromResourceA';
+  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectFromResource}
 
 
@@ -3999,7 +3999,7 @@ function D3DXCreateEffectFromFileEx(
   Flags: DWORD;
   pPool: ID3DXEffectPool;
   out ppEffect: ID3DXEffect;
-  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromFileExA';
+  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromFileEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectFromFileEx}
 
 
@@ -4039,7 +4039,7 @@ function D3DXCreateEffectFromResourceEx(
   Flags: DWORD;
   pPool: ID3DXEffectPool;
   out ppEffect: ID3DXEffect;
-  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromResourceExA';
+  ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectFromResourceEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectFromResourceEx}
 
 
@@ -4115,7 +4115,7 @@ function D3DXCreateEffectCompilerFromFile(
   pInclude: ID3DXInclude;
   Flags: DWORD;
   out ppCompiler: ID3DXEffectCompiler;
-  ppParseErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectCompilerFromFileA';
+  ppParseErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectCompilerFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectCompilerFromFile}
 
 
@@ -4146,7 +4146,7 @@ function D3DXCreateEffectCompilerFromResource(
   pInclude: ID3DXInclude;
   Flags: DWORD;
   out ppCompiler: ID3DXEffectCompiler;
-  ppParseErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectCompilerFromResourceA';
+  ppParseErrors: PID3DXBuffer): HResult; stdcall; external d3dx9effectDLL name 'D3DXCreateEffectCompilerFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectCompilerFromResource}
 
 
@@ -5165,7 +5165,7 @@ function D3DXLoadMeshFromX(
   pD3DDevice: IDirect3DDevice9;
   ppAdjacency, ppMaterials, ppEffectInstances: PID3DXBuffer;
   pNumMaterials: PDWORD;
-  out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx9meshDLL name 'D3DXLoadMeshFromXA';
+  out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx9meshDLL name 'D3DXLoadMeshFromX' + AWSuffix;
 {$EXTERNALSYM D3DXLoadMeshFromX}
 
 
@@ -5217,7 +5217,7 @@ function D3DXSaveMeshToX(
   pMaterials: PD3DXMaterial;
   pEffectInstances: PD3DXEffectInstance;
   NumMaterials: DWORD;
-  Format: DWORD): HResult; stdcall; external d3dx9meshDLL name 'D3DXSaveMeshToXA';
+  Format: DWORD): HResult; stdcall; external d3dx9meshDLL name 'D3DXSaveMeshToX' + AWSuffix;
 {$EXTERNALSYM D3DXSaveMeshToX}
 
 
@@ -6710,7 +6710,7 @@ function D3DXLoadPRTBufferFromFileW(
 
 function D3DXLoadPRTBufferFromFile(
   pFilename: PChar;
-  ppBuffer: ID3DXPRTBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXLoadPRTBufferFromFileA';
+  ppBuffer: ID3DXPRTBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXLoadPRTBufferFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXLoadPRTBufferFromFile}
 
 
@@ -6740,7 +6740,7 @@ function D3DXSavePRTBufferToFileW(
 
 function D3DXSavePRTBufferToFile(
   pFilename: PChar;
-  ppBuffer: ID3DXPRTBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXSavePRTBufferToFileA';
+  ppBuffer: ID3DXPRTBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXSavePRTBufferToFile' + AWSuffix;
 {$EXTERNALSYM D3DXSavePRTBufferToFile}
 
 
@@ -6770,7 +6770,7 @@ function D3DXLoadPRTCompBufferFromFileW(
 
 function D3DXLoadPRTCompBufferFromFile(
   pFilename: PChar;
-  ppBuffer: ID3DXPRTCompBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXLoadPRTCompBufferFromFileA';
+  ppBuffer: ID3DXPRTCompBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXLoadPRTCompBufferFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXLoadPRTCompBufferFromFile}
 
 
@@ -6800,7 +6800,7 @@ function D3DXSavePRTCompBufferToFileW(
 
 function D3DXSavePRTCompBufferToFile(
   pFilename: PChar;
-  ppBuffer: ID3DXPRTCompBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXSavePRTCompBufferToFileA';
+  ppBuffer: ID3DXPRTCompBuffer): HResult; stdcall; external d3dx9meshDLL name 'D3DXSavePRTCompBufferToFile' + AWSuffix;
 {$EXTERNALSYM D3DXSavePRTCompBufferToFile}
 
 
@@ -7492,7 +7492,7 @@ function D3DXCreateText(ppDevice: IDirect3DDevice9;
   Extrusion: Single;
   out ppMesh: ID3DXMesh;
   ppAdjacency: PID3DXBuffer;
-  pGlyphMetrics: PGlyphMetricsFloat): HResult; stdcall; external d3dx9shapesDLL name 'D3DXCreateTextA';
+  pGlyphMetrics: PGlyphMetricsFloat): HResult; stdcall; external d3dx9shapesDLL name 'D3DXCreateText' + AWSuffix;
 {$EXTERNALSYM D3DXCreateText}
 
 
@@ -7820,7 +7820,7 @@ function D3DXGetImageInfoFromFileW(
 
 function D3DXGetImageInfoFromFile(
   pSrcFile: PChar;
-  out pSrcInfo: TD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXGetImageInfoFromFileA';
+  out pSrcInfo: TD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXGetImageInfoFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXGetImageInfoFromFile}
 
 
@@ -7839,7 +7839,7 @@ function D3DXGetImageInfoFromResourceW(
 function D3DXGetImageInfoFromResource(
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out pSrcInfo: TD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXGetImageInfoFromResourceA';
+  out pSrcInfo: TD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXGetImageInfoFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXGetImageInfoFromResource}
 
 
@@ -7923,7 +7923,7 @@ function D3DXLoadSurfaceFromFile(
   pSrcRect: PRect;
   Filter: DWord;
   ColorKey: TD3DColor;
-  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadSurfaceFromFileA';
+  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadSurfaceFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXLoadSurfaceFromFile}
 
 
@@ -7961,7 +7961,7 @@ function D3DXLoadSurfaceFromResource(
   pSrcRect: PRect;
   Filter: DWord;
   ColorKey: TD3DColor;
-  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadSurfaceFromResourceA';
+  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadSurfaceFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXLoadSurfaceFromResource}
 
 
@@ -8111,7 +8111,7 @@ function D3DXSaveSurfaceToFile(
   DestFormat: TD3DXImageFileFormat;
   pSrcSurface: IDirect3DSurface9;
   pSrcPalette: PPaletteEntry;
-  pSrcRect: PRect): HResult; stdcall; external d3dx9texDLL name 'D3DXSaveSurfaceToFileA';
+  pSrcRect: PRect): HResult; stdcall; external d3dx9texDLL name 'D3DXSaveSurfaceToFile' + AWSuffix;
 {$EXTERNALSYM D3DXSaveSurfaceToFile}
 
 
@@ -8217,7 +8217,7 @@ function D3DXLoadVolumeFromFile(
   pSrcBox: TD3DBox;
   Filter: DWord;
   ColorKey: TD3DColor;
-  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadVolumeFromFileA';
+  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadVolumeFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXLoadVolumeFromFile}
 
 
@@ -8254,7 +8254,7 @@ function D3DXLoadVolumeFromResource(
   pSrcBox: TD3DBox;
   Filter: DWord;
   ColorKey: TD3DColor;
-  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadVolumeFromResourceA';
+  pSrcInfo: PD3DXImageInfo): HResult; stdcall; external d3dx9texDLL name 'D3DXLoadVolumeFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXLoadVolumeFromResource}
 
 
@@ -8407,7 +8407,7 @@ function D3DXSaveVolumeToFile(
   DestFormat: TD3DXImageFileFormat;
   pSrcVolume: IDirect3DVolume9;
   pSrcPalette: PPaletteEntry;
-  pSrcBox: TD3DBox): HResult; stdcall; external d3dx9texDLL name 'D3DXSaveVolumeToFileA';
+  pSrcBox: TD3DBox): HResult; stdcall; external d3dx9texDLL name 'D3DXSaveVolumeToFile' + AWSuffix;
 {$EXTERNALSYM D3DXSaveVolumeToFile}
 
 
@@ -8637,7 +8637,7 @@ function D3DXCreateTextureFromFileW(
 function D3DXCreateTextureFromFile(
   Device: IDirect3DDevice9;
   pSrcFile: PChar;
-  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromFileA';
+  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromFile}
 
 
@@ -8656,7 +8656,7 @@ function D3DXCreateCubeTextureFromFileW(
 function D3DXCreateCubeTextureFromFile(
   Device: IDirect3DDevice9;
   pSrcFile: PChar;
-  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromFileA';
+  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromFile}
 
 
@@ -8675,7 +8675,7 @@ function D3DXCreateVolumeTextureFromFileW(
 function D3DXCreateVolumeTextureFromFile(
   Device: IDirect3DDevice9;
   pSrcFile: PChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromFileA';
+  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFile}
 
 
@@ -8699,7 +8699,7 @@ function D3DXCreateTextureFromResource(
   Device: IDirect3DDevice9;
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromResourceA';
+  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromResource}
 
 
@@ -8721,7 +8721,7 @@ function D3DXCreateCubeTextureFromResource(
   Device: IDirect3DDevice9;
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromResourceA';
+  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromResource}
 
 
@@ -8743,7 +8743,7 @@ function D3DXCreateVolumeTextureFromResource(
   Device: IDirect3DDevice9;
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromResourceA';
+  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResource}
 
 
@@ -8797,7 +8797,7 @@ function D3DXCreateTextureFromFileEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromFileExA';
+  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromFileEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromFileEx}
 
 
@@ -8846,7 +8846,7 @@ function D3DXCreateCubeTextureFromFileEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromFileExA';
+  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromFileEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileEx}
 
 
@@ -8901,7 +8901,7 @@ function D3DXCreateVolumeTextureFromFileEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromFileExA';
+  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromFileEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileEx}
 
 
@@ -8958,7 +8958,7 @@ function D3DXCreateTextureFromResourceEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromResourceExA';
+  out ppTexture: IDirect3DTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateTextureFromResourceEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromResourceEx}
 
 
@@ -9010,7 +9010,7 @@ function D3DXCreateCubeTextureFromResourceEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromResourceExA';
+  out ppCubeTexture: IDirect3DCubeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateCubeTextureFromResourceEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromResourceEx}
 
 
@@ -9068,7 +9068,7 @@ function D3DXCreateVolumeTextureFromResourceEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromResourceExA';
+  out ppVolumeTexture: IDirect3DVolumeTexture9): HResult; stdcall; external d3dx9texDLL name 'D3DXCreateVolumeTextureFromResourceEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResourceEx}
 
 
@@ -9190,7 +9190,7 @@ function D3DXSaveTextureToFile(
   pDestFile: PChar;
   DestFormat: TD3DXImageFileFormat;
   pSrcTexture: IDirect3DBaseTexture9;
-  pSrcPalette: PPaletteEntry): HResult; stdcall; external d3dx9texDLL name 'D3DXSaveTextureToFileA';
+  pSrcPalette: PPaletteEntry): HResult; stdcall; external d3dx9texDLL name 'D3DXSaveTextureToFile' + AWSuffix;
 {$EXTERNALSYM D3DXSaveTextureToFile}
 
 
@@ -10126,7 +10126,7 @@ function D3DXLoadMeshHierarchyFromX(
   pAlloc: ID3DXAllocateHierarchy;
   pUserDataLoader: ID3DXLoadUserData;
   out ppFrameHierarchy: PD3DXFrame;
-  out ppAnimController: ID3DXAnimationController): HResult; stdcall; external d3dx9animDLL name 'D3DXLoadMeshHierarchyFromXA';
+  out ppAnimController: ID3DXAnimationController): HResult; stdcall; external d3dx9animDLL name 'D3DXLoadMeshHierarchyFromX' + AWSuffix;
 {$EXTERNALSYM D3DXLoadMeshHierarchyFromX}
 
 
@@ -10182,7 +10182,7 @@ function D3DXSaveMeshHierarchyToFile(
   XFormat: TD3DXFFileFormat;
   pFrameRoot: PD3DXFrame;
   pAnimcontroller: ID3DXAnimationController;
-  pUserDataSaver: ID3DXSaveUserData): HResult; stdcall; external d3dx9animDLL name 'D3DXSaveMeshHierarchyToFileA';
+  pUserDataSaver: ID3DXSaveUserData): HResult; stdcall; external d3dx9animDLL name 'D3DXSaveMeshHierarchyToFile' + AWSuffix;
 {$EXTERNALSYM D3DXSaveMeshHierarchyToFile}
 
 

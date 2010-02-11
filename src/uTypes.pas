@@ -104,6 +104,8 @@ type
   // Dxbx note : Signed is actually "signed int" - see http://home.att.net/~jackklein/c/inttypes.html
   Signed = Integer;
 
+  // Basic C types. See http://msdn.microsoft.com/en-us/library/aa383751(VS.85).aspx
+  // and http://spreadsheets.google.com/ccc?key=t6Bxe-qEV-nDK4vYQsVIKBw
   // Note : These types are aliasses to JwaWinType, so we don't have to include that unit :
   PCSZ = JwaWinType.PCSZ; // = ^AnsiChar; // Dxbx assumption!
   PVOID = JwaWinType.PVOID; // = Pointer;

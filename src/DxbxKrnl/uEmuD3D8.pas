@@ -2518,7 +2518,7 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Trying fallback:'#13#10'%s', [dummy]);
-      hRet := Dxbx_D3DXAssembleShader(PAnsiChar(dummy),
+      hRet := D3DXAssembleShader(PAnsiChar(dummy),
                                  Length(dummy),
                                  D3DXASM_SKIPVALIDATION,
                                  NULL,
@@ -2878,7 +2878,7 @@ begin
       pErrors := nil;
 
       // assemble the shader
-      Dxbx_D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
+      D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
 
       // create the shader device handle
       Result := g_pD3DDevice8.CreatePixelShader(pShader.GetBufferPointer(), {out}dwHandle);
@@ -8529,7 +8529,7 @@ begin
     Adapter := D3DADAPTER_DEFAULT;
   end;
 
-  if (DeviceType = D3DDEVTYPE_FORCE_DWORD) then
+  if Ord(DeviceType) > Ord(High(D3DDEVTYPE)) then
     EmuWarning('DeviceType := D3DDEVTYPE_FORCE_DWORD');
 
   // Convert SurfaceFormat (Xbox->PC)

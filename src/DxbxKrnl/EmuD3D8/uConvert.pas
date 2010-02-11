@@ -591,8 +591,8 @@ end;
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  if (DWORD(PrimitiveType) = $7FFFFFFF) then
-    Result := D3DPT_FORCE_DWORD
+  if DWORD(PrimitiveType) > Ord(High(D3DPRIMITIVETYPE))then
+    Result := D3DPRIMITIVETYPE($7FFFFFFF)
   else
     Result := EmuPrimitiveTypeLookup[Ord(PrimitiveType)];
 end;
