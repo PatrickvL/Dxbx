@@ -2148,7 +2148,7 @@ function DirectSoundEnumerateW(lpDSEnumCallback: TDSEnumCallbackW; lpContext: Po
 {$EXTERNALSYM DirectSoundEnumerateW}
 function DirectSoundEnumerateA(lpDSEnumCallback: TDSEnumCallbackA; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundEnumerateA';
 {$EXTERNALSYM DirectSoundEnumerateA}
-function DirectSoundEnumerate(lpDSEnumCallback: TDSEnumCallback; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundEnumerateA';
+function DirectSoundEnumerate(lpDSEnumCallback: TDSEnumCallback; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundEnumerate' + AWSuffix;
 {$EXTERNALSYM DirectSoundEnumerate}
 
 function DirectSoundCaptureCreate(lpGUID: PGUID; out lplpDSC: IDirectSoundCapture; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
@@ -2157,7 +2157,7 @@ function DirectSoundCaptureEnumerateW(lpDSEnumCallback: TDSEnumCallbackW; lpCont
 {$EXTERNALSYM DirectSoundCaptureEnumerateW}
 function DirectSoundCaptureEnumerateA(lpDSEnumCallback: TDSEnumCallbackA; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundCaptureEnumerateA';
 {$EXTERNALSYM DirectSoundCaptureEnumerateA}
-function DirectSoundCaptureEnumerate(lpDSEnumCallback: TDSEnumCallback; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundCaptureEnumerateA';
+function DirectSoundCaptureEnumerate(lpDSEnumCallback: TDSEnumCallback; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundCaptureEnumerate' + AWSuffix;
 {$EXTERNALSYM DirectSoundCaptureEnumerate}
 
 //#if DIRECTSOUND_VERSION >= 0x0800

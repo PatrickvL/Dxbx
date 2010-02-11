@@ -3304,7 +3304,7 @@ function DirectInputCreateA(hinst: THandle; dwVersion: DWORD; out ppDI: IDirectI
 {$EXTERNALSYM DirectInputCreateA}
 function DirectInputCreateW(hinst: THandle; dwVersion: DWORD; out ppDI: IDirectInputW; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreateW';
 {$EXTERNALSYM DirectInputCreateW}
-function DirectInputCreate(hinst: THandle; dwVersion: DWORD; out ppDI: IDirectInput; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreateA';
+function DirectInputCreate(hinst: THandle; dwVersion: DWORD; out ppDI: IDirectInput; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreate' + AWSuffix;
 {$EXTERNALSYM DirectInputCreate}
 
 function DirectInputCreateEx(hinst: THandle; dwVersion: DWORD; const riidltf: TGUID; out ppvOut{: Pointer}; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll;

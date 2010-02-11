@@ -94,7 +94,8 @@ interface
 (*$HPPEMIT '#include "dvp.h"' *)
 
 uses
-  Windows;
+  Windows,
+  DXTypes;
 
   
 (*==========================================================================;
@@ -5721,7 +5722,7 @@ function DirectDrawEnumerateA(lpCallback: TDDEnumCallbackA; lpContext: Pointer):
 function DirectDrawEnumerateW(lpCallback: TDDEnumCallbackW; lpContext: Pointer): HResult; stdcall; external DirectDrawDll;
 {$EXTERNALSYM DirectDrawEnumerateW}
 function DirectDrawEnumerate(lpCallback: TDDEnumCallback; lpContext: Pointer): HResult; stdcall;
-  external DirectDrawDll name 'DirectDrawEnumerateA';
+  external DirectDrawDll name 'DirectDrawEnumerate' + AWSuffix;
 {$EXTERNALSYM DirectDrawEnumerate}
 
 function DirectDrawEnumerateExA(lpCallback: TDDEnumCallbackExA; lpContext: Pointer; dwFlags: DWORD): HResult; stdcall; external DirectDrawDll;
@@ -5729,7 +5730,7 @@ function DirectDrawEnumerateExA(lpCallback: TDDEnumCallbackExA; lpContext: Point
 function DirectDrawEnumerateExW(lpCallback: TDDEnumCallbackExW; lpContext: Pointer; dwFlags: DWORD): HResult; stdcall; external DirectDrawDll;
 {$EXTERNALSYM DirectDrawEnumerateExW}
 function DirectDrawEnumerateEx(lpCallback: TDDEnumCallbackEx; lpContext: Pointer; dwFlags: DWORD): HResult; stdcall;
-  external DirectDrawDll name 'DirectDrawEnumerateExA';
+  external DirectDrawDll name 'DirectDrawEnumerateEx' + AWSuffix;
 {$EXTERNALSYM DirectDrawEnumerateEx}
 
 function DirectDrawCreate(lpGUID: PGUID; out lplpDD: IDirectDraw;

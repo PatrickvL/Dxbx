@@ -50,6 +50,13 @@ interface
 
 uses Windows;
 
+const
+  {$IFDEF SUPPORTS_UNICODE}
+  AWSuffix = 'W';
+  {$ELSE ~SUPPORTS_UNICODE}
+  AWSuffix = 'A';
+  {$ENDIF ~SUPPORTS_UNICODE}
+
 (*==========================================================================;
  *
  *  File:   dxsdkver.h

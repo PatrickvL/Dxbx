@@ -2320,7 +2320,7 @@ begin
       hRet := D3DXERR_INVALIDDATA;
     end
     else
-     hRet := Dxbx_D3DXAssembleShader(pShaderDisassembly,
+     hRet := D3DXAssembleShader(pShaderDisassembly,
                                 strlen(pShaderDisassembly),
                                 D3DXASM_SKIPVALIDATION,
                                 {ppConstants=}NULL,

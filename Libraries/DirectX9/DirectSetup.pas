@@ -51,7 +51,8 @@ interface
 (*$HPPEMIT '#include "dsetup.h"' *)
 
 uses
-  Windows;
+  Windows,
+  DXTypes;
 
 ////////////////////////////////////////////////////////////////////////
 // Global level dynamic loading support
@@ -365,22 +366,22 @@ begin
     begin
       DirectXSetupA := GetProcAddress(DirectSetupLib, 'DirectXSetupA');
       DirectXSetupW := GetProcAddress(DirectSetupLib, 'DirectXSetupW');
-      DirectXSetup := DirectXSetupA;
+      DirectXSetup := GetProcAddress(DirectSetupLib, 'DirectXSetup' + AWSuffix);
 
       DirectXRegisterApplicationA := GetProcAddress(DirectSetupLib, 'DirectXRegisterApplicationA');
       DirectXRegisterApplicationW := GetProcAddress(DirectSetupLib, 'DirectXRegisterApplicationW');
-      DirectXRegisterApplication := DirectXRegisterApplicationA;
+      DirectXRegisterApplication := GetProcAddress(DirectSetupLib, 'DirectXRegisterApplication' + AWSuffix);
 
       DirectXUnRegisterApplication := GetProcAddress(DirectSetupLib, 'DirectXUnRegisterApplication');
 
       DirectXSetupSetCallback := GetProcAddress(DirectSetupLib, 'DirectXSetupSetCallback');
       DirectXSetupGetVersion := GetProcAddress(DirectSetupLib, 'DirectXSetupGetVersion');
-      DirectXSetupShowEULA := GetProcAddress(DirectSetupLib, 'DirectXSetupShowEULA');;
+      DirectXSetupShowEULA := GetProcAddress(DirectSetupLib, 'DirectXSetupShowEULA');
 
 
-      DirectXSetupGetEULAA := GetProcAddress(DirectSetupLib, 'DirectXSetupGetEULAA');;
-      DirectXSetupGetEULAW := GetProcAddress(DirectSetupLib, 'DirectXSetupGetEULAW');;
-      DirectXSetupGetEULA := DirectXSetupGetEULAA;
+      DirectXSetupGetEULAA := GetProcAddress(DirectSetupLib, 'DirectXSetupGetEULAA');
+      DirectXSetupGetEULAW := GetProcAddress(DirectSetupLib, 'DirectXSetupGetEULAW');
+      DirectXSetupGetEULA := GetProcAddress(DirectSetupLib, 'DirectXSetupGetEULA' + AWSuffix);
     end;
 
     // At least basic procedure is found!

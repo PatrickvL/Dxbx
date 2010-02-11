@@ -48,7 +48,8 @@ interface
 {$HPPEMIT '#include "dxerr8.h"'}
 
 uses
-  Windows;
+  Windows,
+  DXTypes;
 
 (*==========================================================================;
  *
@@ -80,7 +81,7 @@ function DXGetErrorString8W(hr: HRESULT): PWideChar; stdcall; external dxerr8dll
 {$EXTERNALSYM DXGetErrorString8W}
 
 function DXGetErrorString8(hr: HRESULT): PChar;  stdcall; external dxerr8dll
-  name 'DXGetErrorString8A';
+  name 'DXGetErrorString8' + AWSuffix;
 {$EXTERNALSYM DXGetErrorString8}
 
 //
@@ -105,7 +106,7 @@ function DXTraceW(strFile: PWideChar; dwLine: DWORD; hr: HRESULT; strMsg: PWideC
 {$EXTERNALSYM DXTraceW}
 
 function DXTrace(strFile: PChar; dwLine: DWORD; hr: HRESULT; strMsg: PChar; bPopMsgBox: BOOL): HRESULT; stdcall; external dxerr8dll
-  name 'DXTraceA';
+  name 'DXTrace' + AWSuffix;
 {$EXTERNALSYM DXTrace}
 
 //
