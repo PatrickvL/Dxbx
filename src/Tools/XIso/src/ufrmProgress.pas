@@ -89,14 +89,14 @@ procedure TfrmProgress.FormShow(Sender: TObject);
 begin
   if FormPadre = frm_Main then
   begin
-    GenerateXDFS.Imagen := SaveDialog1.FileName;
+    GenerateXDFS.Image := SaveDialog1.FileName;
     GenerateXDFS.Folder := Folder;
-    uxisomaker.Parar := False;
+    uxisomaker.Stop := False;
     ProgresoxISO := AdvanceProgres;
     MensajesxISO := LogMessage;
     ProgressBar1.Position := 0;
     ProgressBar1.Min := 0;
-    ProgressBar1.Max := NumeroFicheros(Folder);
+    ProgressBar1.Max := NumberOfFiles(Folder);
 
     Finished := False;
     Hilo := TGenerateXDFS.Create({CreateSuspended=}True);
@@ -115,7 +115,7 @@ procedure TfrmProgress.Button1Click(Sender: TObject);
 begin
   if Button1.Caption = SCancel then
   begin
-    uxisomaker.Parar := True;
+    uxisomaker.Stop := True;
     Button1.Caption := SExit;
   end
   else

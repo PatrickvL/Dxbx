@@ -158,7 +158,6 @@ object Form4: TForm4
       Width = 297
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       TabOrder = 1
       OnChange = cGrabadorasChange
     end
@@ -194,7 +193,6 @@ object Form4: TForm4
       Width = 49
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       ItemIndex = 0
       TabOrder = 5
       Text = 'MAX'
@@ -217,7 +215,6 @@ object Form4: TForm4
       Width = 49
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       ItemIndex = 0
       TabOrder = 6
       Text = 'TAO'

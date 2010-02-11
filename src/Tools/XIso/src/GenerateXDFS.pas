@@ -39,7 +39,7 @@ type
   end;
 
 var
-  Imagen, Folder: string;
+  Image, Folder: string;
 
 implementation
 
@@ -47,7 +47,7 @@ implementation
 
 procedure TGenerateXDFS.Execute;
 begin
-  if not CrearXISO(Imagen, Folder) then
+  if not CrearXISO(Image, Folder) then
     MessageBox(Handle, PChar(SErrorCrearXISO), PChar(SMessage), MB_OK or MB_ICONERROR)
   else
     MessageBox(Handle, PChar(SImagenCreadaOK), PChar(SMessage), MB_OK or MB_ICONINFORMATION);

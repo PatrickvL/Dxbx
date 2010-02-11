@@ -97,7 +97,7 @@ type
     // Crea apartir del parametro Directory la tabla de directorios y ficheros en DirectoryList como padre.
     procedure MakeFileList(Directory: string; DirectoryList: TDirectoryList);
     // Genera la tabla de ficheros de la imagen.
-    function NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: Integer): Integer;
+    function NMakeISO(ISOStream: TFileStream; DirectoryList: TDirectoryList; var NextSectorAvailable: Integer): Integer;
     // Genera el VD y llama a NMakeISO para generar el resto de la imagen.
     procedure MakeISO(ISOName: string);
   public
@@ -268,12 +268,12 @@ end;
 {$WARN SYMBOL_PLATFORM ON}
 
 
-function TXBOX_FILESYSTEM.NMakeISO(ISOStream: TFilestream; DirectoryList: TDirectoryList; var NextSectorAvailable: Integer): Integer;
+function TXBOX_FILESYSTEM.NMakeISO(ISOStream: TFileStream; DirectoryList: TDirectoryList; var NextSectorAvailable: Integer): Integer;
 var
   i, j: Integer;
   PositionDirEntry, SizeEntry, ReadIt: Int64;
   OffsetDirEntry: Int64;
-  F: TFilestream;
+  F: TFileStream;
   ListEntry: PFile;
   Entry: TXBOX_FS_ENTRY;
   s: string;
@@ -366,7 +366,7 @@ begin
     else
     begin
       try
-        F := TFilestream.Create(ListEntry.FileName, fmOpenRead or fmShareDenyNone);
+        F := TFileStream.Create(ListEntry.FileName, fmOpenRead or fmShareDenyNone);
       except
         F := nil;
       end;
@@ -428,14 +428,14 @@ end;
 
 procedure TXBOX_FILESYSTEM.MakeISO(ISOName: string);
 var
-  F: TFilestream;
+  F: TFileStream;
   XBOX_VD: TXBOX_FS_VOLUME_DESCRIPTOR;
   Sector: Integer;
   ActualDate: FILETIME;
 begin
   if not Root.Empty then
   begin
-    F := TFilestream.Create(ISOName, fmCreate);
+    F := TFileStream.Create(ISOName, fmCreate);
     F.Seek(65536, soBeginning);
     SetEndOfFile(F.Handle);
 
