@@ -8,14 +8,14 @@
 {*  DirectX 9.0 Delphi / FreePascal adaptation by Alexey Barkovoy             *}
 {*  E-Mail: directx@clootie.ru                                                *}
 {*                                                                            *}
-{*  Modified: 30-Nov-2004                                                     *}
+{*  Modified: 14-Apr-2007                                                     *}
 {*                                                                            *}
 {*  Compatible with :                                                         *}
 {*    DirectX 7.0 Object Pascal adaptation by                                 *}
 {*      Erik Unger, e-Mail: DelphiDirectX@next-reality.com                    *}
 {*                                                                            *}
 {*  Latest version can be downloaded from:                                    *}
-{*    http://clootie.ru                                                       *}
+{*    http://www.clootie.ru                                                   *}
 {*    http://sourceforge.net/projects/delphi-dx9sdk                           *}
 {*                                                                            *}
 {******************************************************************************}
@@ -1620,10 +1620,20 @@ const
   {$EXTERNALSYM DSSPEAKER_STEREO}
   DSSPEAKER_SURROUND          = $00000005;
   {$EXTERNALSYM DSSPEAKER_SURROUND}
-  DSSPEAKER_5POINT1           = $00000006;
+  DSSPEAKER_5POINT1           = $00000006;  // obsolete 5.1 setting
   {$EXTERNALSYM DSSPEAKER_5POINT1}
-  DSSPEAKER_7POINT1           = $00000007;
+  DSSPEAKER_7POINT1           = $00000007;  // obsolete 7.1 setting
   {$EXTERNALSYM DSSPEAKER_7POINT1}
+  DSSPEAKER_7POINT1_SURROUND  = $00000008;  // correct 7.1 Home Theater setting
+  {$EXTERNALSYM DSSPEAKER_7POINT1_SURROUND}
+  DSSPEAKER_7POINT1_WIDE      = DSSPEAKER_7POINT1;
+  {$EXTERNALSYM DSSPEAKER_7POINT1_WIDE}
+//#if (DIRECTSOUND_VERSION >= 0x1000)
+  DSSPEAKER_5POINT1_SURROUND  = $00000009;  // correct 5.1 setting
+  {$EXTERNALSYM DSSPEAKER_5POINT1_SURROUND}
+  DSSPEAKER_5POINT1_BACK      = DSSPEAKER_5POINT1;
+  {$EXTERNALSYM DSSPEAKER_5POINT1_BACK}
+//#endif
 
   DSSPEAKER_GEOMETRY_MIN      = $00000005;  //   5 degrees
   {$EXTERNALSYM DSSPEAKER_GEOMETRY_MIN}
@@ -1675,6 +1685,12 @@ const
   {$EXTERNALSYM DSBCAPS_MUTE3DATMAXDISTANCE}
   DSBCAPS_LOCDEFER            = $00040000;
   {$EXTERNALSYM DSBCAPS_LOCDEFER}
+//#if (DIRECTSOUND_VERSION >= 0x1000)
+    // Force GetCurrentPosition() to return a buffer's true play position;
+    // unmodified by aids to enhance backward compatibility.
+    DSBCAPS_TRUEPLAYPOSITION    = $00080000;
+    {$EXTERNALSYM DSBCAPS_TRUEPLAYPOSITION}
+//#endif
 
   DSBPLAY_LOOPING             = $00000001;
   {$EXTERNALSYM DSBPLAY_LOOPING}
@@ -1733,6 +1749,9 @@ const
   {$EXTERNALSYM DSBSIZE_MAX}
   DSBSIZE_FX_MIN              = 150;  // NOTE: Milliseconds, not bytes
   {$EXTERNALSYM DSBSIZE_FX_MIN}
+
+  DSBNOTIFICATIONS_MAX        = 100000;
+  {$EXTERNALSYM DSBNOTIFICATIONS_MAX}
 
   DS3DMODE_NORMAL             = $00000000;
   {$EXTERNALSYM DS3DMODE_NORMAL}

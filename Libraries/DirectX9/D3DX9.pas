@@ -8,7 +8,7 @@
 {*                                                                            *}
 {*  Content:    Direct3DX 9.0 headers                                         *}
 {*                                                                            *}
-{*  Direct3DX 9.0 October 2006 Delphi adaptation by Alexey Barkovoy           *}
+{*  Direct3DX 9.0 April 2007 Delphi adaptation by Alexey Barkovoy          *}
 {*  E-Mail: directx@clootie.ru                                                *}
 {*                                                                            *}
 {*  Latest version can be downloaded from:                                    *}
@@ -16,7 +16,7 @@
 {*    http://sourceforge.net/projects/delphi-dx9sdk                           *}
 {*                                                                            *}
 {*----------------------------------------------------------------------------*}
-{*  $Id: D3DX9.par,v 1.32 2006/10/29 22:32:12 clootie Exp $ }
+{*  $Id: D3DX9.par,v 1.36 2007/04/14 21:35:00 clootie Exp $ }
 {******************************************************************************}
 {                                                                              }
 { Obtained through: Joint Endeavour of Delphi Innovators (Project JEDI)        }
@@ -76,8 +76,8 @@ uses
 
 const
   //////////// DLL export definitions ///////////////////////////////////////
-  d3dx9MicrosoftDLL = 'd3dx9_31.dll';
-  d3dx9MicrosoftDebugDLL = 'd3dx9d_31.dll';
+  d3dx9MicrosoftDLL = 'd3dx9_33.dll';
+  d3dx9MicrosoftDebugDLL = 'd3dx9d_33.dll';
   d3dx9BorlandDLL = d3dx9MicrosoftDLL; // Compatibility with previous header releases
   d3dx9dll = d3dx9MicrosoftDLL;
   d3dx9mathDLL   = d3dx9dll;
@@ -1418,6 +1418,41 @@ function D3DXSHDot(Order: LongWord; pA, pB: PSingle): Single; stdcall; external 
 
 //============================================================================
 //
+//  D3DXSHMultiply[O]:
+//  --------------------
+//  Computes the product of two functions represented using SH (f and g), where:
+//  pOut[i] = int(y_i(s) * f(s) * g(s)), where y_i(s) is the ith SH basis
+//  function, f(s) and g(s) are SH functions (sum_i(y_i(s)*c_i)).  The order O
+//  determines the lengths of the arrays, where there should always be O^2
+//  coefficients.  In general the product of two SH functions of order O generates
+//  and SH function of order 2*O - 1, but we truncate the result.  This means
+//  that the product commutes (f*g == g*f) but doesn't associate
+//  (f*(g*h) != (f*g)*h.
+//
+//  Parameters:
+//   pOut
+//      Output SH coefficients - basis function Ylm is stored at l*l + m+l
+//      This is the pointer that is returned.
+//   pF
+//      Input SH coeffs for first function.
+//   pG
+//      Second set of input SH coeffs.
+//
+//============================================================================
+
+function D3DXSHMultiply2(pOut: PSingle; const pF, pG: PSingle): PSingle; stdcall; external d3dx9mathDLL;
+{$EXTERNALSYM D3DXSHMultiply2}
+function D3DXSHMultiply3(pOut: PSingle; const pF, pG: PSingle): PSingle; stdcall; external d3dx9mathDLL;
+{$EXTERNALSYM D3DXSHMultiply3}
+function D3DXSHMultiply4(pOut: PSingle; const pF, pG: PSingle): PSingle; stdcall; external d3dx9mathDLL;
+{$EXTERNALSYM D3DXSHMultiply4}
+function D3DXSHMultiply5(pOut: PSingle; const pF, pG: PSingle): PSingle; stdcall; external d3dx9mathDLL;
+{$EXTERNALSYM D3DXSHMultiply5}
+function D3DXSHMultiply6(pOut: PSingle; const pF, pG: PSingle): PSingle; stdcall; external d3dx9mathDLL;
+{$EXTERNALSYM D3DXSHMultiply6}
+
+//============================================================================
+//
 //  Basic Spherical Harmonic lighting routines
 //
 //============================================================================
@@ -1628,7 +1663,7 @@ function D3DXSHProjectCubeMap(Order: LongWord; pCubeMap: IDirect3DCubeTexture9;
 const
   D3DX_VERSION          = $0902;
   {$EXTERNALSYM D3DX_VERSION}
-  D3DX_SDK_VERSION      = 31;
+  D3DX_SDK_VERSION      = 33;
   {$EXTERNALSYM D3DX_SDK_VERSION}
 
 function D3DXCheckVersion(D3DSdkVersion, D3DXSdkVersion: LongWord): BOOL; stdcall; external d3dx9coreDLL;
@@ -1696,7 +1731,7 @@ type
 //   Specifies device state is not to be saved and restored in Begin/End.
 // D3DXSPRITE_DONOTMODIFY_RENDERSTATE
 //   Specifies device render state is not to be changed in Begin.  The device
-//   is assumed to be in a valid state to draw vertices containing POSITION0, 
+//   is assumed to be in a valid state to draw vertices containing POSITION0,
 //   TEXCOORD0, and COLOR0 data.
 // D3DXSPRITE_OBJECTSPACE
 //   The WORLD, VIEW, and PROJECTION transforms are NOT modified.  The
@@ -1719,6 +1754,9 @@ type
 // D3DXSPRITE_SORT_DEPTH_BACKTOFRONT
 //   Sprites are sorted by depth back-to-front prior to drawing.  This is
 //   recommended when drawing transparent sprites of varying depths.
+// D3DXSPRITE_DO_NOT_ADDREF_TEXTURE
+//   Disables calling AddRef() on every draw, and Release() on Flush() for
+//   better performance.
 //////////////////////////////////////////////////////////////////////////////
 
 const
@@ -1738,6 +1776,8 @@ const
   {$EXTERNALSYM D3DXSPRITE_SORT_DEPTH_FRONTTOBACK}
   D3DXSPRITE_SORT_DEPTH_BACKTOFRONT       = (1 shl 7);
   {$EXTERNALSYM D3DXSPRITE_SORT_DEPTH_BACKTOFRONT}
+  D3DXSPRITE_DO_NOT_ADDREF_TEXTURE        = (1 shl 8);
+  {$EXTERNALSYM D3DXSPRITE_DO_NOT_ADDREF_TEXTURE}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2311,6 +2351,23 @@ const
   {$EXTERNALSYM D3DXSHADER_AVOID_FLOW_CONTROL}
   D3DXSHADER_PREFER_FLOW_CONTROL      = (1 shl 10);
   {$EXTERNALSYM D3DXSHADER_PREFER_FLOW_CONTROL}
+  D3DXSHADER_ENABLE_BACKWARDS_COMPATIBILITY = (1 shl 12);
+  {$EXTERNALSYM D3DXSHADER_ENABLE_BACKWARDS_COMPATIBILITY}
+  D3DXSHADER_IEEE_STRICTNESS          = (1 shl 13);
+  {$EXTERNALSYM D3DXSHADER_IEEE_STRICTNESS}
+  D3DXSHADER_USE_LEGACY_D3DX9_31_DLL  = (1 shl 16);
+  {$EXTERNALSYM D3DXSHADER_USE_LEGACY_D3DX9_31_DLL}
+
+
+  // optimization level flags
+  D3DXSHADER_OPTIMIZATION_LEVEL0            = (1 shl 14);
+  {$EXTERNALSYM D3DXSHADER_OPTIMIZATION_LEVEL0}
+  D3DXSHADER_OPTIMIZATION_LEVEL1            = 0;
+  {$EXTERNALSYM D3DXSHADER_OPTIMIZATION_LEVEL1}
+  D3DXSHADER_OPTIMIZATION_LEVEL2            = ((1 shl 14) or (1 shl 15));
+  {$EXTERNALSYM D3DXSHADER_OPTIMIZATION_LEVEL2}
+  D3DXSHADER_OPTIMIZATION_LEVEL3            = (1 shl 15);
+  {$EXTERNALSYM D3DXSHADER_OPTIMIZATION_LEVEL3}
 
 
 
@@ -2437,7 +2494,8 @@ type
     D3DXPT_PIXELSHADER,
     D3DXPT_VERTEXSHADER,
     D3DXPT_PIXELFRAGMENT,
-    D3DXPT_VERTEXFRAGMENT
+    D3DXPT_VERTEXFRAGMENT,
+    D3DXPT_UNSUPPORTED
   );
   {$EXTERNALSYM _D3DXPARAMETER_TYPE}
   D3DXPARAMETER_TYPE = _D3DXPARAMETER_TYPE;
