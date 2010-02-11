@@ -131,12 +131,12 @@ type
     procedure WMDROPFILES(var msg: TMessage); message WM_DROPFILES;
   public
     ProgressBar1: TProgressBar;
-    procedure AbrirImagen(Imagen: string);
+    procedure OpenImage(Image: string);
   end;
 
   // Estructuras SCSI
   TDevice = record
-    Nombre: string;
+    Name: string;
     HA: Byte;
     SCSI: Byte;
     LUN: Byte;
@@ -152,17 +152,17 @@ const
 var
   frm_Main: Tfrm_Main;
 
-  NombreImagen: string;
-  OrigenDatos: Integer;
-  Unidad: TCDROM;
+  ImageName: string;
+  DataSource: Integer;
+  CDUnit: TCDROM;
   Devices: array[0..255] of TDevice;
   NumberOfDevices: Integer;
-  PararLectura: Boolean;
+  StopReading: Boolean;
 
 function SelectDirectory(const Caption: string; const Root: WideString;
   out Directory: string): Boolean;
-procedure ExtraerCD(HA, SCSI, LUN: Byte; Directorio: Integer; Folder: string);
-procedure CrearImagen(Folder: string; Fichero: string);
+procedure ExtractCD(HA, SCSI, LUN: Byte; Directorio: Integer; Folder: string);
+procedure CreateImage(Folder: string; Fichero: string);
 function QuitarComilla(Texto: string): string;
 
 implementation
@@ -187,7 +187,7 @@ var
   DeviceType: TDeviceType;
   DeviceInfo: TDeviceInfo;
 begin
-  with Unidad do
+  with CDUnit do
   begin
     l := 0;
     for i := 0 to 7 do
@@ -200,7 +200,7 @@ begin
 
           DeviceInfo := Inquiry(i, j, k);
 
-          Devices[l].Nombre := Format('%d:%d:%d %s %s %s', [i, j, k, DeviceInfo.VendorID, DeviceInfo.ProductID, DeviceInfo.Revision]);
+          Devices[l].Name := Format('%d:%d:%d %s %s %s', [i, j, k, DeviceInfo.VendorID, DeviceInfo.ProductID, DeviceInfo.Revision]);
           Devices[l].HA := i;
           Devices[l].SCSI := j;
           Devices[l].LUN := k;
@@ -220,13 +220,13 @@ begin
   begin
     for i := 0 to NumberOfDevices - 1 do
     begin
-      cLectores.Items.Add(Devices[i].Nombre);
+      cLectores.Items.Add(Devices[i].Name);
     end;
     cLectores.ItemIndex := 0;
   end;
 end;
 
-procedure AsignarSCSIID(var HA, SCSI, LUN: Byte);
+procedure AssignSCSIID(var HA, SCSI, LUN: Byte);
 begin
   HA := Devices[frm_Main.cLectores.ItemIndex].HA;
   SCSI := Devices[frm_Main.cLectores.ItemIndex].SCSI;
@@ -360,7 +360,7 @@ end;
 
 procedure LeerFicheros(Directorio: Integer);
 var
-  i, Sector, Tamano: Integer;
+  i, Sector, Size: Integer;
   pNombre: PAnsiChar;
   pSector: PInteger;
   Fila: TListItem;
@@ -383,38 +383,38 @@ begin
   frm_Main.ListView1.Items.BeginUpdate;
   frm_Main.ListView1.Items.Clear;
   Icono := TIcon.Create;
-  for i := 0 to xIISO.Lista.Count - 1 do
+  for i := 0 to xISO.List.Count - 1 do
   begin
     Attributes := '';
-    if PxFichero(xIISO.Lista.Items[i])^.DirPadre <> Directorio then
+    if PxFile(xISO.List.Items[i])^.ParentDir <> Directorio then
       Continue;
 
-    pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
-    Sector := PxFichero(xIISO.Lista.Items[i])^.SectorIn;
-    Tamano := PxFichero(xIISO.Lista.Items[i])^.Tamano;
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_SOLOLECTURA) = XF_SOLOLECTURA then Attributes := Attributes + 'R';
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_OCULTO) = XF_OCULTO then Attributes := Attributes + 'O';
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_SISTEMA) = XF_SISTEMA then Attributes := Attributes + 'S';
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then Attributes := Attributes + 'D';
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_FICHERO) = XF_FICHERO then Attributes := Attributes + 'F';
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_NORMAL) = XF_NORMAL then Attributes := Attributes + 'N';
+    pNombre := @PxFile(xISO.List.Items[i])^.Name;
+    Sector := PxFile(xISO.List.Items[i])^.SectorIn;
+    Size := PxFile(xISO.List.Items[i])^.Size;
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_READONLY) = XF_READONLY then Attributes := Attributes + 'R';
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_HIDDEN) = XF_HIDDEN then Attributes := Attributes + 'O';
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_SYSTEM) = XF_SYSTEM then Attributes := Attributes + 'S';
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_DIRECTORY) = XF_DIRECTORY then Attributes := Attributes + 'D';
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_FILE) = XF_FILE then Attributes := Attributes + 'F';
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_NORMAL) = XF_NORMAL then Attributes := Attributes + 'N';
 
     Fila := frm_Main.ListView1.Items.Add;
     Fila.Caption := string(pNombre);
     New(pSector);
-    pSector^ := PxFichero(xIISO.Lista.Items[i])^.DirHijo;
+    pSector^ := PxFile(xISO.List.Items[i])^.ChildDir;
     Fila.Data := pSector;
     Icono.Handle := GetAssociatedIcon(ExtractFileExt(string(pNombre)), True);
     frm_Main.ImageList1.ReplaceIcon(6, Icono);
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_DIRECTORY) = XF_DIRECTORY then
       Fila.ImageIndex := 0
     else
       Fila.ImageIndex := 6;
     Fila.SubItems.Add(IntToStr(Sector));
-    Fila.SubItems.Add(IntToStr(Tamano));
+    Fila.SubItems.Add(IntToStr(Size));
     Fila.SubItems.Add(Attributes);
 
-    Fila.SubItems.Add(IntToStr(PxFichero(xIISO.Lista.Items[i])^.pDer));
+    Fila.SubItems.Add(IntToStr(PxFile(xISO.List.Items[i])^.pRight));
   end;
   Icono.Free;
   frm_Main.ListView1.Items.EndUpdate;
@@ -432,19 +432,19 @@ begin
   DragFinish(dr);
   ext := Lowercase(ExtractFileExt(fn));
   if (ext = '.iso') or (ext = '.xiso') or (ext = '.bin') then
-    AbrirImagen(fn);
+    OpenImage(fn);
 end;
 
-procedure Tfrm_Main.AbrirImagen(Imagen: string);
+procedure Tfrm_Main.OpenImage(Image: string);
 var
   pDirSector: PInteger;
   pNombre: PAnsiChar;
   i: Integer;
   Node: TTreeNode;
 begin
-  OrigenDatos := OD_IMAGEN;
-  NombreImagen := Imagen;
-  if not AbrirXISO(NombreImagen) then
+  DataSource := OD_IMAGEN;
+  ImageName := Image;
+  if not OpenXISO(ImageName) then
   begin
     MessageBox(frm_Main.Handle, PChar(SImagenNoXBOX), PChar(SMessage), MB_ICONINFORMATION or MB_OK);
     Exit;
@@ -452,18 +452,18 @@ begin
 
   Treeview1.Items.BeginUpdate;
   Treeview1.Items.Clear;
-  Node := Treeview1.Items.Add(nil, ChangeFileExt(ExtractFileName(NombreImagen), ''));
+  Node := Treeview1.Items.Add(nil, ChangeFileExt(ExtractFileName(ImageName), ''));
   Node.ImageIndex := 3; //0;
   Node.SelectedIndex := 3; //1;
 
-  for i := 0 to xIISO.Lista.Count - 1 do
+  for i := 0 to xISO.List.Count - 1 do
   begin
-    if ((PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO) then
+    if ((PxFile(xISO.List.Items[i])^.Attributes and XF_DIRECTORY) = XF_DIRECTORY) then
     begin
       New(pDirSector);
-      pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
-      pDirSector^ := PxFichero(xIISO.Lista.Items[i])^.DirHijo;
-      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFichero(xIISO.Lista.Items[i])^.DirPadre], string(pNombre), pDirSector);
+      pNombre := @PxFile(xISO.List.Items[i])^.Name;
+      pDirSector^ := PxFile(xISO.List.Items[i])^.ChildDir;
+      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFile(xISO.List.Items[i])^.ParentDir], string(pNombre), pDirSector);
       Node.ImageIndex := 0;
       Node.SelectedIndex := 1;
     end;
@@ -473,9 +473,9 @@ begin
   Treeview1.Items[0].Expand(True);
   Treeview1.Items[0].Selected := True;
   LeerFicheros(0);
-  StatusBar1.Panels[0].Text := Format('%s: %d', [SFiles, xIISO.NrFiles]);
-  StatusBar1.Panels[1].Text := Format('%s: %d', [SFolders, xIISO.NrFolders]);
-  StatusBar1.Panels[2].Text := Format('%s: %d KB', [SISOSize, xIISO.ISOSize div 1024]);
+  StatusBar1.Panels[0].Text := Format('%s: %d', [SFiles, xISO.NrFiles]);
+  StatusBar1.Panels[1].Text := Format('%s: %d', [SFolders, xISO.NrFolders]);
+  StatusBar1.Panels[2].Text := Format('%s: %d KB', [SISOSize, xISO.ISOSize div 1024]);
 end;
 
 procedure Tfrm_Main.TreeView1Click(Sender: TObject);
@@ -534,17 +534,17 @@ var
 begin
   DragAcceptFiles(Self.Handle, True);
 
-  Unidad := TCDROM.Create(Self);
-  if (Unidad <> nil) and (Unidad.ASPISupport) then
+  CDUnit := TCDROM.Create(Self);
+  if (CDUnit <> nil) and (CDUnit.ASPISupport) then
   begin
-    Unidad.ErrorEnable := True;
-    Unidad.TimeOut_ExecSCSICommand := 4 * 60 * 1000;
-    Unidad.TimeOut_GetDeviceType := 5000;
-    Unidad.TimeOut_GetHostAdapterInquiry := 5000;
-    Unidad.TimeOut_ServiceAbort := 1000;
-    Unidad.TimeOut_ResetDevice := 1000;
-    Unidad.TimeOut_GetDiskInfo := 1000;
-    Unidad.TimeOut_RescanBus := 1000;
+    CDUnit.ErrorEnable := True;
+    CDUnit.TimeOut_ExecSCSICommand := 4 * 60 * 1000;
+    CDUnit.TimeOut_GetDeviceType := 5000;
+    CDUnit.TimeOut_GetHostAdapterInquiry := 5000;
+    CDUnit.TimeOut_ServiceAbort := 1000;
+    CDUnit.TimeOut_ResetDevice := 1000;
+    CDUnit.TimeOut_GetDiskInfo := 1000;
+    CDUnit.TimeOut_RescanBus := 1000;
 
     EscanearSCSI();
     AssignDevicesToList();
@@ -556,36 +556,36 @@ begin
   begin
     Parameter := Copy(ParamStr(i), 1, 2);
     if Parameter = '-o' then
-      AbrirImagen(ParamStr(i + 1));
+      OpenImage(ParamStr(i + 1));
   end;
 end;
 
-procedure ExtraerCD(HA, SCSI, LUN: Byte; Directorio: Integer; Folder: string);
+procedure ExtractCD(HA, SCSI, LUN: Byte; Directorio: Integer; Folder: string);
 var
-  i, Sector, Tamano: Integer;
+  i, Sector, Size: Integer;
   pNombre: PAnsiChar;
 begin
-  if xIISO.Lista = nil then
+  if xISO.List = nil then
     Exit;
 
-  for i := 0 to xIISO.Lista.Count - 1 do
+  for i := 0 to xISO.List.Count - 1 do
   begin
-    if PxFichero(xIISO.Lista.Items[i])^.DirPadre <> Directorio then
+    if PxFile(xISO.List.Items[i])^.ParentDir <> Directorio then
       Continue;
 
-    pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
-    Sector := PxFichero(xIISO.Lista.Items[i])^.SectorIn;
-    Tamano := PxFichero(xIISO.Lista.Items[i])^.Tamano;
+    pNombre := @PxFile(xISO.List.Items[i])^.Name;
+    Sector := PxFile(xISO.List.Items[i])^.SectorIn;
+    Size := PxFile(xISO.List.Items[i])^.Size;
 
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_DIRECTORY) = XF_DIRECTORY then
     begin
       CreateDir(Folder + string(pNombre));
-      ExtraerCD(HA, SCSI, LUN, PxFichero(xIISO.Lista.Items[i])^.DirHijo, Folder + string(pNombre) + '\');
+      ExtractCD(HA, SCSI, LUN, PxFile(xISO.List.Items[i])^.ChildDir, Folder + string(pNombre) + '\');
     end
     else
-      case OrigenDatos of
-        OD_IMAGEN: ExtraerFichero(NombreImagen, Folder + string(pNombre), Sector, Tamano);
-        OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + string(pNombre), Sector, Tamano);
+      case DataSource of
+        OD_IMAGEN: ExtractFile(ImageName, Folder + string(pNombre), Sector, Size);
+        OD_DVD: ExtractFileXDVD(HA, SCSI, LUN, CDUnit, Folder + string(pNombre), Sector, Size);
       end;
     if frm_Main <> nil then
     begin
@@ -601,30 +601,30 @@ end;
 
 procedure ExtraerCDaXBOX(HA, SCSI, LUN: Byte; Directorio: Integer; Folder: string);
 var
-  i, Sector, Tamano: Integer;
+  i, Sector, Size: Integer;
   pNombre: PAnsiChar;
 begin
-  if xIISO.Lista = nil then
+  if xISO.List = nil then
     Exit;
 
-  for i := 0 to xIISO.Lista.Count - 1 do
+  for i := 0 to xISO.List.Count - 1 do
   begin
-    if PxFichero(xIISO.Lista.Items[i])^.DirPadre <> Directorio then
+    if PxFile(xISO.List.Items[i])^.ParentDir <> Directorio then
       Continue;
 
-    pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
-    Sector := PxFichero(xIISO.Lista.Items[i])^.SectorIn;
-    Tamano := PxFichero(xIISO.Lista.Items[i])^.Tamano;
+    pNombre := @PxFile(xISO.List.Items[i])^.Name;
+    Sector := PxFile(xISO.List.Items[i])^.SectorIn;
+    Size := PxFile(xISO.List.Items[i])^.Size;
 
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_DIRECTORY) = XF_DIRECTORY then
     begin
       CreateDir(Folder + string(pNombre));
-      ExtraerCDaXBOX(HA, SCSI, LUN, PxFichero(xIISO.Lista.Items[i])^.DirHijo, Folder + string(pNombre) + '\');
+      ExtraerCDaXBOX(HA, SCSI, LUN, PxFile(xISO.List.Items[i])^.ChildDir, Folder + string(pNombre) + '\');
     end
     else
-      case OrigenDatos of
-        OD_IMAGEN: ExtraerFichero(NombreImagen, Folder + string(pNombre), Sector, Tamano);
-        OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + string(pNombre), Sector, Tamano);
+      case DataSource of
+        OD_IMAGEN: ExtractFile(ImageName, Folder + string(pNombre), Sector, Size);
+        OD_DVD: ExtractFileXDVD(HA, SCSI, LUN, CDUnit, Folder + string(pNombre), Sector, Size);
       end;
     if frm_Main <> nil then
     begin
@@ -653,11 +653,11 @@ end;
 function CompararDirPadre(Item1, Item2: Pointer): Integer;
 begin
   Result := 0;
-  if (PxFichero(Item1)^.DirPadre < PxFichero(Item2)^.DirPadre) then Result := -1
+  if (PxFile(Item1)^.ParentDir < PxFile(Item2)^.ParentDir) then Result := -1
   else
-    if (PxFichero(Item1)^.DirPadre > PxFichero(Item2)^.DirPadre) then Result := 1
+    if (PxFile(Item1)^.ParentDir > PxFile(Item2)^.ParentDir) then Result := 1
     else
-      if (PxFichero(Item1)^.DirPadre = PxFichero(Item2)^.DirPadre) then Result := 0;
+      if (PxFile(Item1)^.ParentDir = PxFile(Item2)^.ParentDir) then Result := 0;
 end;
 
 procedure GenerarFileListRec(var F: TextFile; Directorio: Integer; Folder: string; SectorDirectorio: Integer);
@@ -669,18 +669,18 @@ begin
   Directorios := TList.Create();
   WriteLn(F, FormatearSector(SectorDirectorio) + ',' + Folder);
 
-  for i := 0 to xIISO.Lista.Count - 1 do
+  for i := 0 to xISO.List.Count - 1 do
   begin
-    if PxFichero(xIISO.Lista.Items[i])^.DirPadre <> Directorio then
+    if PxFile(xISO.List.Items[i])^.ParentDir <> Directorio then
       Continue;
 
-    pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
-    Sector := PxFichero(xIISO.Lista.Items[i])^.SectorIn;
+    pNombre := @PxFile(xISO.List.Items[i])^.Name;
+    Sector := PxFile(xISO.List.Items[i])^.SectorIn;
 
-    if ((PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO)
-      and (PxFichero(xIISO.Lista.Items[i])^.SectorIn <> 0) then
+    if ((PxFile(xISO.List.Items[i])^.Attributes and XF_DIRECTORY) = XF_DIRECTORY)
+      and (PxFile(xISO.List.Items[i])^.SectorIn <> 0) then
     begin
-      Directorios.Add(xIISO.Lista.Items[i]);
+      Directorios.Add(xISO.List.Items[i]);
     end
     else
     begin
@@ -697,9 +697,9 @@ begin
 
   for i := 0 to Directorios.Count - 1 do
   begin
-    pNombre := @PxFichero(Directorios[i])^.Nombre;
-    Sector := PxFichero(Directorios[i])^.SectorIn;
-    GenerarFileListRec(F, PxFichero(Directorios[i])^.DirHijo, Folder + string(pNombre) + '\', Sector);
+    pNombre := @PxFile(Directorios[i])^.Name;
+    Sector := PxFile(Directorios[i])^.SectorIn;
+    GenerarFileListRec(F, PxFile(Directorios[i])^.ChildDir, Folder + string(pNombre) + '\', Sector);
   end;
 
   Directorios.Free;
@@ -712,8 +712,8 @@ begin
   AssignFile(F, FileList);
   ReWrite(F);
   frm_Main.ProgressBar1.Min := 0;
-  frm_Main.ProgressBar1.Max := xIISO.Lista.Count;
-  xIISO.Lista.Sort(CompararDirPadre);
+  frm_Main.ProgressBar1.Max := xISO.List.Count;
+  xISO.List.Sort(CompararDirPadre);
   GenerarFileListRec(F, 0, '\', 0);
   CloseFile(F);
   frm_Main.ProgressBar1.Position := 0;
@@ -741,13 +741,13 @@ begin
     begin
       ExtraerFichero1.Enabled := True;
       ExtraerFicheroyEjecutar1.Enabled := True;
-      if (OrigenDatos = OD_IMAGEN) and (ListView1.SelCount = 1) then
+      if (DataSource = OD_IMAGEN) and (ListView1.SelCount = 1) then
       begin
         Introducirfichero1.Enabled := True;
         ExtraerFicheroyEjecutar1.Enabled := True;
       end
       else
-        if (OrigenDatos = OD_DVD) and (ListView1.SelCount = 1) then
+        if (DataSource = OD_DVD) and (ListView1.SelCount = 1) then
         begin
           Introducirfichero1.Enabled := False;
           ExtraerFicheroyEjecutar1.Enabled := True;
@@ -777,8 +777,8 @@ end;
 
 procedure Tfrm_Main.ExtraerFicheroyEjecutar1Click(Sender: TObject);
 var
-  tamano, Sector, i: Integer;
-  nombre: string;
+  Size, Sector, i: Integer;
+  Name: string;
   Folder: string;
   HA, SCSI, LUN: Byte;
   DirWindows: array[0..MAX_PATH] of Char;
@@ -787,7 +787,7 @@ begin
   if ListView1.Selected = nil then
     Exit;
 
-  AsignarSCSIID(HA, SCSI, LUN);
+  AssignSCSIID(HA, SCSI, LUN);
   if GetWindowsDirectory(DirWindows, MAX_PATH) = 0 then
     Exit;
 
@@ -799,12 +799,12 @@ begin
     if not ListView1.Items[i].Selected then
       Continue;
 
-    nombre := ListView1.Items[i].Caption;
+    Name := ListView1.Items[i].Caption;
     Sector := StrToInt(ListView1.Items[i].SubItems[0]);
-    tamano := StrToInt(ListView1.Items[i].SubItems[1]);
-    case OrigenDatos of
-      OD_IMAGEN: ExtraerFichero(NombreImagen, DirTemp + nombre, Sector, tamano);
-      OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + nombre, Sector, tamano);
+    Size := StrToInt(ListView1.Items[i].SubItems[1]);
+    case DataSource of
+      OD_IMAGEN: ExtractFile(ImageName, DirTemp + Name, Sector, Size);
+      OD_DVD: ExtractFileXDVD(HA, SCSI, LUN, CDUnit, Folder + Name, Sector, Size);
     end;
     ProgressBar1.StepIt;
     Statusbar1.Repaint;
@@ -815,12 +815,12 @@ begin
   end;
   Progressbar1.Position := 0;
 
-  ShellExecute(0, 'open', PChar(DirTemp + nombre), nil, nil, SW_SHOW);
+  ShellExecute(0, 'open', PChar(DirTemp + Name), nil, nil, SW_SHOW);
 end;
 
 procedure Tfrm_Main.Introducirfichero1Click(Sender: TObject);
 var
-  Sector, Size, Ent, Resto, a: Integer;
+  Sector, Size, RoundedBytes, RestBytes, a: Integer;
   ISOImageFile, Fichero: TFileStream;
   Buffer: array[0..2047] of Byte;
 begin
@@ -833,7 +833,7 @@ begin
   Sector := StrToInt(ListView1.Selected.SubItems[0]);
   Size := StrToInt(ListView1.Selected.SubItems[1]);
 
-  ISOImageFile := TFileStream.Create(NombreImagen, fmOpenWrite);
+  ISOImageFile := TFileStream.Create(ImageName, fmOpenWrite);
   Fichero := TFileStream.Create(SaveDialog2.FileName, fmOpenRead);
   if (ISOImageFile = nil) or (Fichero = nil) then
     Exit;
@@ -848,22 +848,22 @@ begin
 
   ISOImageFile.Seek(Sector * 2048, soBeginning);
 
-  Ent := (Fichero.Size div 2048) * 2048;
-  Resto := Fichero.Size mod 2048;
+  RoundedBytes := (Fichero.Size div 2048) * 2048;
+  RestBytes := Fichero.Size mod 2048;
 
   a := 0;
-  if ent <> 0 then
-    while (a < ent) do
+  if RoundedBytes <> 0 then
+    while (a < RoundedBytes) do
     begin
       Fichero.Read(Buffer, 2048);
       ISOImageFile.Write(Buffer, 2048);
       a := a + 2048;
     end;
 
-  if Resto <> 0 then
+  if RestBytes <> 0 then
   begin
-    Fichero.Read(Buffer, Resto);
-    ISOImageFile.Write(Buffer, Resto);
+    Fichero.Read(Buffer, RestBytes);
+    ISOImageFile.Write(Buffer, RestBytes);
   end;
 
   ISOImageFile.Free;
@@ -887,7 +887,7 @@ begin
     MessageBox(frm_Main.Handle, PChar(SParcheadoOK), PChar(SMessage), MB_OK or MB_ICONINFORMATION);
 end;
 
-procedure CrearImagen(Folder: string; Fichero: string);
+procedure CreateImage(Folder: string; Fichero: string);
 begin
   if frmProgress = nil then
     frmProgress := frmProgress.Create(frm_Main);
@@ -905,13 +905,13 @@ end;
 procedure Tfrm_Main.Crea1Click(Sender: TObject);
 begin
   if SelectDirectory(SSelectFolder, '', ufrmProgress.Folder) and SaveDialog1.Execute then
-    CrearImagen(ufrmProgress.Folder, SaveDialog1.FileName);
+    CreateImage(ufrmProgress.Folder, SaveDialog1.FileName);
 end;
 
 procedure Tfrm_Main.ToolButton2Click(Sender: TObject);
 var
-  tamano, Sector, i: Integer;
-  nombre: string;
+  Size, Sector, i: Integer;
+  Name: string;
   Folder: string;
   HA, SCSI, LUN: Byte;
   Dir: PInteger;
@@ -919,7 +919,7 @@ begin
   if ListView1.Selected = nil then
     Exit;
 
-  AsignarSCSIID(HA, SCSI, LUN);
+  AssignSCSIID(HA, SCSI, LUN);
   if not SelectDirectory(PChar(SIntroduceDirEx), '', Folder) then
     Exit;
 
@@ -933,17 +933,17 @@ begin
     if ListView1.Items[i].ImageIndex = 0 then
     begin
       Dir := PInteger(ListView1.Items[i].Data);
-      ExtraerCD(HA, SCSI, LUN, Dir^, Folder);
+      ExtractCD(HA, SCSI, LUN, Dir^, Folder);
       Statusbar1.Repaint;
       Statusbar1.Refresh;
       Continue;
     end;
-    nombre := ListView1.Items[i].Caption;
+    Name := ListView1.Items[i].Caption;
     Sector := StrToInt(ListView1.Items[i].SubItems[0]);
-    tamano := StrToInt(ListView1.Items[i].SubItems[1]);
-    case OrigenDatos of
-      OD_IMAGEN: ExtraerFichero(NombreImagen, Folder + nombre, Sector, tamano);
-      OD_DVD: ExtraerFicheroXDVD(HA, SCSI, LUN, Unidad, Folder + nombre, Sector, tamano);
+    Size := StrToInt(ListView1.Items[i].SubItems[1]);
+    case DataSource of
+      OD_IMAGEN: ExtractFile(ImageName, Folder + Name, Sector, Size);
+      OD_DVD: ExtractFileXDVD(HA, SCSI, LUN, CDUnit, Folder + Name, Sector, Size);
     end;
     ProgressBar1.StepIt;
     Statusbar1.Repaint;
@@ -964,20 +964,20 @@ var
   Folder: string;
   HA, SCSI, LUN: Byte;
 begin
-  if xIISO.Lista = nil then
+  if xISO.List = nil then
     Exit;
 
-  if xIISO.Lista.Count = 0 then
+  if xISO.List.Count = 0 then
     Exit;
 
-  AsignarSCSIID(HA, SCSI, LUN);
+  AssignSCSIID(HA, SCSI, LUN);
   if not SelectDirectory(PChar(SIntroduceDirEx), '', Folder) then
     Exit;
 
   ProgressBar1.Min := 1;
-  ProgressBar1.Max := xIISO.Lista.Count;
-  ExtraerCD(HA, SCSI, LUN, 0, Folder);
-  Unidad.SetCDSpeed(HA, SCSI, LUN, $FF, $FF);
+  ProgressBar1.Max := xISO.List.Count;
+  ExtractCD(HA, SCSI, LUN, 0, Folder);
+  CDUnit.SetCDSpeed(HA, SCSI, LUN, $FF, $FF);
   ProgressBar1.Position := 1;
   Statusbar1.Repaint;
   Statusbar1.Refresh;
@@ -992,14 +992,14 @@ var
   Node: TTreeNode;
   HA, SCSI, LUN: Byte;
 begin
-  if (Unidad = nil) or (not Unidad.ASPISupport) then
+  if (CDUnit = nil) or (not CDUnit.ASPISupport) then
     Exit;
 
         { CODIGO DE LECTURA DIRECTA DESDE DVD}
         { DIRECT DVD READING CODE}
-  OrigenDatos := OD_DVD;
-  AsignarSCSIID(HA, SCSI, LUN);
-  if not LeerXDVD(HA, SCSI, LUN, Unidad) then
+  DataSource := OD_DVD;
+  AssignSCSIID(HA, SCSI, LUN);
+  if not ReadXDVD(HA, SCSI, LUN, CDUnit) then
   begin
     MessageBox(frm_Main.Handle, PChar(SDVDnoXBOX), Pchar(SMessage), MB_ICONINFORMATION or MB_OK);
     Exit;
@@ -1011,14 +1011,14 @@ begin
   Node.ImageIndex := 4; //0
   Node.SelectedIndex := 4; //1
 
-  for i := 0 to xIISO.Lista.Count - 1 do
+  for i := 0 to xISO.List.Count - 1 do
   begin
-    if (PxFichero(xIISO.Lista.Items[i])^.Atributo and XF_DIRECTORIO) = XF_DIRECTORIO then
+    if (PxFile(xISO.List.Items[i])^.Attributes and XF_DIRECTORY) = XF_DIRECTORY then
     begin
       New(pDirSector);
-      pNombre := @PxFichero(xIISO.Lista.Items[i])^.Nombre;
-      pDirSector^ := PxFichero(xIISO.Lista.Items[i])^.DirHijo;
-      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFichero(xIISO.Lista.Items[i])^.DirPadre], string(pNombre), pDirSector);
+      pNombre := @PxFile(xISO.List.Items[i])^.Name;
+      pDirSector^ := PxFile(xISO.List.Items[i])^.ChildDir;
+      Node := Treeview1.Items.AddChildObject(Treeview1.Items[PxFile(xISO.List.Items[i])^.ParentDir], string(pNombre), pDirSector);
       Node.ImageIndex := 0;
       Node.SelectedIndex := 1;
     end;
@@ -1028,17 +1028,17 @@ begin
   Treeview1.Items[0].Expand(True);
   Treeview1.Items[0].Selected := True;
   LeerFicheros(0);
-  StatusBar1.Panels[0].Text := Format('%s: %d', [SFiles, xIISO.NrFiles]);
-  StatusBar1.Panels[1].Text := Format('%s: %d', [SFolders, xIISO.NrFolders]);
-  StatusBar1.Panels[2].Text := Format('%s: %d KB', [SISOSize, xIISO.ISOSize div 1024]);
+  StatusBar1.Panels[0].Text := Format('%s: %d', [SFiles, xISO.NrFiles]);
+  StatusBar1.Panels[1].Text := Format('%s: %d', [SFolders, xISO.NrFolders]);
+  StatusBar1.Panels[2].Text := Format('%s: %d KB', [SISOSize, xISO.ISOSize div 1024]);
 end;
 
 procedure Tfrm_Main.ToolButton10Click(Sender: TObject);
 begin
-  if xIISO.Lista = nil then
+  if xISO.List = nil then
     Exit;
 
-  if xIISO.Lista.Count = 0 then
+  if xISO.List.Count = 0 then
     Exit;
 
   if not SaveDialog3.Execute then
@@ -1067,7 +1067,7 @@ begin
   if not OpenDialog1.Execute then
     Exit;
 
-  AbrirImagen(OpenDialog1.FileName);
+  OpenImage(OpenDialog1.FileName);
 end;
 
 procedure Tfrm_Main.ExtensionesShell1Click(Sender: TObject);
@@ -1113,7 +1113,7 @@ begin
   Reg.WriteString('', SRegExtraerConXISO);
   Reg.OpenKey('\' + S + '\shell\Extraer\command', True);
   if Reg.KeyExists('\' + S + '\Shell\open') then
-    T := 'AbrirXISO'
+    T := 'OpenXISO'
   else
     T := 'open';
   Reg.WriteString('', ParamStr(0) + ' -x "%1" -f "%1"');
@@ -1157,18 +1157,18 @@ begin
   if Treeview1.Selected = nil then
     Exit;
 
-  AsignarSCSIID(HA, SCSI, LUN);
+  AssignSCSIID(HA, SCSI, LUN);
   if not SelectDirectory(PChar(SIntroduceDirEx), '', Folder) then
     Exit;
 
   ProgressBar1.Min := 1;
-  ProgressBar1.Max := xIISO.Lista.Count;
+  ProgressBar1.Max := xISO.List.Count;
   if Treeview1.Selected.AbsoluteIndex = 0 then
-    ExtraerCD(HA, SCSI, LUN, 0, Folder)
+    ExtractCD(HA, SCSI, LUN, 0, Folder)
   else
   begin
     Dir := PInteger(Treeview1.Selected.Data);
-    ExtraerCD(HA, SCSI, LUN, Dir^, Folder);
+    ExtractCD(HA, SCSI, LUN, Dir^, Folder);
   end;
   
   ProgressBar1.Position := 1;

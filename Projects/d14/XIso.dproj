@@ -119,7 +119,6 @@
 			<DCCReference Include="..\..\src\Tools\XIso\src\xisomakerv2.pas"/>
 			<DCCReference Include="..\..\src\Tools\XIso\src\Win32ASPI.pas"/>
 			<DCCReference Include="..\..\src\Tools\XIso\src\CDROM.pas"/>
-			<DCCReference Include="..\..\src\Tools\XIso\src\xbe.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

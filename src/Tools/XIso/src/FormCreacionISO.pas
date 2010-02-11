@@ -97,7 +97,7 @@ type
     procedure MenuItemSaveClick(Sender: TObject);
   private
     Etiqueta: string;
-    procedure ActualizarDirectoriosRec(Padre: TTreeNode; Lista: TListaContenido);
+    procedure ActualizarDirectoriosRec(Parent: TTreeNode; List: TListContents);
     procedure FinCreacion(Sender: TObject);
     procedure WMDROPFILES(var msg: TMessage); message WM_DROPFILES;
   public
@@ -132,37 +132,37 @@ procedure TForm5.ActualizarLista;
 var
   i: Integer;
   Fila: TListItem;
-  Entrada: PEntrada;
+  Entry: PEntry;
   attrs: string;
 begin
-  if Manager.ListaActual = nil then
+  if Manager.CurrentList = nil then
     Exit;
 
   ListviewFicheros.Items.BeginUpdate;
   ListviewFicheros.Clear;
-  for i := 0 to Manager.ListaActual.Cantidad - 1 do
+  for i := 0 to Manager.CurrentList.Count - 1 do
   begin
     attrs := '';
-    Entrada := Manager.ListaActual.Entrada[i];
+    Entry := Manager.CurrentList.Entry[i];
     Fila := ListviewFicheros.Items.Add;
-    Fila.Data := Entrada;
-    Fila.Caption := Entrada.Nombre;
-    Fila.SubItems.Add(IntToStr(Entrada.Tamano));
-    Fila.SubItems.Add(DateTimeToStr(Entrada.FechaHora));
+    Fila.Data := Entry;
+    Fila.Caption := Entry.Name;
+    Fila.SubItems.Add(IntToStr(Entry.Size));
+    Fila.SubItems.Add(DateTimeToStr(Entry.DateTime));
 
-    if Entrada.Attributes and FILE_ATTRIBUTE_ARCHIVE = FILE_ATTRIBUTE_ARCHIVE then
+    if Entry.Attributes and FILE_ATTRIBUTE_ARCHIVE = FILE_ATTRIBUTE_ARCHIVE then
     begin
       attrs := attrs + 'F';
       Fila.ImageIndex := 6;
     end
     else
-      if Entrada.Attributes and FILE_ATTRIBUTE_NORMAL = FILE_ATTRIBUTE_NORMAL then
+      if Entry.Attributes and FILE_ATTRIBUTE_NORMAL = FILE_ATTRIBUTE_NORMAL then
       begin
         attrs := attrs + 'F';
         Fila.ImageIndex := 6;
       end
       else
-        if Entrada.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
+        if Entry.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
         begin
           attrs := attrs + 'D';
           Fila.ImageIndex := 0;
@@ -172,10 +172,10 @@ begin
           attrs := attrs + 'F';
           Fila.ImageIndex := 6;
         end;
-    if Entrada.Attributes and FILE_ATTRIBUTE_HIDDEN = FILE_ATTRIBUTE_HIDDEN then attrs := attrs + 'H';
-    if Entrada.Attributes and FILE_ATTRIBUTE_READONLY = FILE_ATTRIBUTE_READONLY then attrs := attrs + 'R';
-    if Entrada.Attributes and FILE_ATTRIBUTE_SYSTEM = FILE_ATTRIBUTE_SYSTEM then attrs := attrs + 'S';
-    if Entrada.Attributes and FILE_ATTRIBUTE_COMPRESSED = FILE_ATTRIBUTE_COMPRESSED then attrs := attrs + 'C';
+    if Entry.Attributes and FILE_ATTRIBUTE_HIDDEN = FILE_ATTRIBUTE_HIDDEN then attrs := attrs + 'H';
+    if Entry.Attributes and FILE_ATTRIBUTE_READONLY = FILE_ATTRIBUTE_READONLY then attrs := attrs + 'R';
+    if Entry.Attributes and FILE_ATTRIBUTE_SYSTEM = FILE_ATTRIBUTE_SYSTEM then attrs := attrs + 'S';
+    if Entry.Attributes and FILE_ATTRIBUTE_COMPRESSED = FILE_ATTRIBUTE_COMPRESSED then attrs := attrs + 'C';
 
     Fila.SubItems.Add(attrs);
   end;
@@ -183,57 +183,57 @@ begin
   ListviewFicheros.Items.EndUpdate;
 end;
 
-procedure TForm5.ActualizarDirectoriosRec(Padre: TTreeNode; Lista: TListaContenido);
+procedure TForm5.ActualizarDirectoriosRec(Parent: TTreeNode; List: TListContents);
 var
   i: Integer;
-  Entrada: PEntrada;
-  Hijo: TTreeNode;
+  Entry: PEntry;
+  Child: TTreeNode;
 begin
-  for i := 0 to Lista.Cantidad - 1 do
+  for i := 0 to List.Count - 1 do
   begin
-    Entrada := Lista.Entrada[i];
-    if Entrada.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
+    Entry := List.Entry[i];
+    if Entry.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
     begin
-      if Entrada.Contenido = nil then
+      if Entry.Contents = nil then
         Break;
         
-      Hijo := TreeViewDirectorios.Items.AddChildObject(Padre, Entrada.Nombre, Entrada);
-      Hijo.SelectedIndex := 1;
-      ActualizarDirectoriosRec(Hijo, Entrada.Contenido);
+      Child := TreeViewDirectorios.Items.AddChildObject(Parent, Entry.Name, Entry);
+      Child.SelectedIndex := 1;
+      ActualizarDirectoriosRec(Child, Entry.Contents);
     end;
   end;
 end;
 
 procedure TForm5.ActualizarDirectorios;
 var
-  Raiz: TTreeNode;
+  Root: TTreeNode;
   i: Integer;
-  Entrada, Entrada2: PEntrada;
+  Entry, Entrada2: PEntry;
 begin
   if (TreeviewDirectorios.Selected <> nil) and (TreeviewDirectorios.Selected.Data <> nil) then
-    Entrada := PEntrada(TreeviewDirectorios.Selected.Data)
+    Entry := PEntry(TreeviewDirectorios.Selected.Data)
   else
-    Entrada := nil;
+    Entry := nil;
 
   TreeviewDirectorios.Items.BeginUpdate;
   TreeviewDirectorios.Items.Clear;
   if Etiqueta <> SEtiqueta then
-    Raiz := TreeviewDirectorios.Items.Add(nil, Etiqueta)
+    Root := TreeviewDirectorios.Items.Add(nil, Etiqueta)
   else
-    Raiz := TreeviewDirectorios.Items.Add(nil, SEtiqueta);
-  Raiz.ImageIndex := 3;
-  Raiz.SelectedIndex := 3;
-  ActualizarDirectoriosRec(Raiz, Manager.Raiz);
+    Root := TreeviewDirectorios.Items.Add(nil, SEtiqueta);
+  Root.ImageIndex := 3;
+  Root.SelectedIndex := 3;
+  ActualizarDirectoriosRec(Root, Manager.Root);
   TreeviewDirectorios.FullExpand;
 
-  if Entrada <> nil then
+  if Entry <> nil then
     for i := 1 to TreeviewDirectorios.Items.Count - 1 do
     begin
       if TreeviewDirectorios.Items[i] = nil then
         Continue;
 
-      Entrada2 := PEntrada(TreeviewDirectorios.Items[i].Data);
-      if Entrada.Id = Entrada2.Id then
+      Entrada2 := PEntry(TreeviewDirectorios.Items[i].Data);
+      if Entry.Id = Entrada2.Id then
       begin
         TreeviewDirectorios.Items[i].Selected := True;
         Break;
@@ -260,7 +260,7 @@ begin
     if not ListviewFicheros.Items[i].Selected then
       Continue;
 
-    Manager.EliminarFichero(ListviewFicheros.Items[i].Caption);
+    Manager.DeleteFile(ListviewFicheros.Items[i].Caption);
     ListviewFicheros.Items.Delete(i);
   end;
   
@@ -280,31 +280,31 @@ begin
     if AnsiChar(s[i]) in ['\', '/', ':', '*', '?', '<', '>', '|'] then
       Exit;
 
-  Manager.AgregarCarpetaNueva(s);
+  Manager.AddNewFolder(s);
   ActualizarLista();
   ActualizarDirectorios();
 end;
 
 procedure TForm5.ListviewFicherosDblClick(Sender: TObject);
 var
-  Entrada, Entrada2: PEntrada;
+  Entry, Entrada2: PEntry;
   i: Integer;
 begin
   if ListviewFicheros.Selected = nil then
     Exit;
 
-  Entrada := PEntrada(ListviewFicheros.Selected.Data);
-  if Entrada.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
+  Entry := PEntry(ListviewFicheros.Selected.Data);
+  if Entry.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
   begin
-    Manager.Avanzar(Entrada.Id);
+    Manager.Avanzar(Entry.Id);
     ActualizarLista();
     for i := 1 to TreeviewDirectorios.Items.Count - 1 do
     begin
       if TreeviewDirectorios.Items[i] = nil then
         Continue;
         
-      Entrada2 := PEntrada(TreeviewDirectorios.Items[i].Data);
-      if (Entrada.Id = Entrada2.Id) then
+      Entrada2 := PEntry(TreeviewDirectorios.Items[i].Data);
+      if (Entry.Id = Entrada2.Id) then
       begin
         TreeviewDirectorios.Items[i].Selected := True;
         Break;
@@ -343,7 +343,7 @@ begin
     Exit;
 
   for i := 0 to OpenDialog1.Files.Count - 1 do
-    Manager.AgregarFichero(OpenDialog1.Files[i]);
+    Manager.AddFile(OpenDialog1.Files[i]);
 
   ActualizarLista();
   ActualizarDirectorios();
@@ -355,7 +355,7 @@ begin
   if not FolderBrowser1.Execute then
     Exit;
 
-  Manager.AgregarCarpeta(FolderBrowser1.Folder);
+  Manager.AddFolder(FolderBrowser1.Folder);
   ActualizarLista();
   ActualizarDirectorios();}
 end;
@@ -371,8 +371,8 @@ begin
   for j := 0 to nb - 1 do
   begin
     DragQueryFile(dr, j, fn, SizeOf(fn));
-    Manager.AgregarFichero(fn);
-    Manager.AgregarCarpeta(fn);
+    Manager.AddFile(fn);
+    Manager.AddFolder(fn);
   end;
   DragFinish(dr);
   ActualizarLista();
@@ -385,17 +385,17 @@ end;
 
 procedure TForm5.TreeViewDirectoriosClick(Sender: TObject);
 var
-  Entrada: PEntrada;
+  Entry: PEntry;
 begin
   if TreeviewDirectorios.Selected = nil then
     Exit;
 
   if TreeviewDirectorios.Selected.AbsoluteIndex = 0 then
-    Manager.Avanzar(Manager.Raiz)
+    Manager.Avanzar(Manager.Root)
   else
   begin
-    Entrada := PEntrada(TreeviewDirectorios.Selected.Data);
-    Manager.Avanzar(Entrada.Contenido);
+    Entry := PEntry(TreeviewDirectorios.Selected.Data);
+    Manager.Avanzar(Entry.Contents);
   end;
 
   ActualizarLista();
@@ -422,7 +422,7 @@ end;
 
 procedure TForm5.ToolButton1Click(Sender: TObject);
 begin
-  if Manager.Raiz = nil then
+  if Manager.Root = nil then
     Exit;
 
   Manager.Retroceder();
@@ -442,24 +442,24 @@ procedure TForm5.TreeViewDirectoriosDragDrop(Sender, Source: TObject; X,
   Y: Integer);
 var
   Nodo: TTreeNode;
-  Entrada: PEntrada;
+  Entry: PEntry;
   i: Integer;
 begin
   Nodo := TreeviewDirectorios.GetNodeAt(X, Y);
   if Nodo = nil then
     Exit;
 
-  // Comprobamos si han soltado el elemento a mover encima del nodo raiz.
+  // Comprobamos si han soltado el elemento a mover encima del nodo Root.
   if Nodo.Data = nil then
-    Entrada := Manager.Raiz.Entrada[-1]
+    Entry := Manager.Root.Entry[-1]
   else
-    Entrada := PEntrada(Nodo.Data);
+    Entry := PEntry(Nodo.Data);
 
   if Source.ClassNameIs('TListview') then
   begin
     if TListview(Source).SelCount = 1 then
     begin
-      if not Manager.Mover(PEntrada(TListview(Source).Selected.Data), Entrada) then
+      if not Manager.Move(PEntry(TListview(Source).Selected.Data), Entry) then
         Exit;
     end
     else
@@ -469,7 +469,7 @@ begin
         if not TListview(Source).Items[i].Selected then
           Continue;
           
-        if not Manager.Mover(PEntrada(TListview(Source).Items[i].Data), Entrada) then
+        if not Manager.Move(PEntry(TListview(Source).Items[i].Data), Entry) then
           Continue;
 
       end;
@@ -481,7 +481,7 @@ begin
       if TTreeview(Source).Selected.Data = nil then
         Exit;
         
-      if not Manager.Mover(PEntrada(TTreeview(Source).Selected.Data), Entrada) then
+      if not Manager.Move(PEntry(TTreeview(Source).Selected.Data), Entry) then
         Exit;
     end;
 
@@ -499,14 +499,14 @@ end;
 procedure TForm5.TreeViewDirectoriosEdited(Sender: TObject;
   Node: TTreeNode; var S: string);
 var
-  Entrada: PEntrada;
+  Entry: PEntry;
 begin
   if Node.Data = nil then
     Etiqueta := S
   else
   begin
-    Entrada := PEntrada(Node.Data);
-    Entrada.Nombre := S;
+    Entry := PEntry(Node.Data);
+    Entry.Name := S;
   end;
 end;
 
@@ -551,7 +551,7 @@ begin
   if ProgressBar1 <> nil then
   begin
     ProgressBar1.Min := 0;
-    ProgressBar1.Max := Manager.Cantidad;
+    ProgressBar1.Max := Manager.Count;
   end;
   Hilo := TProgresoCreacionISO.Create(True);
   Hilo.OnTerminate := FinCreacion;

@@ -74,7 +74,7 @@ type
 
   // Estructuras SCSI
   TDevice = record
-    Nombre: string;
+    Name: string;
     HA: Byte;
     SCSI: Byte;
     LUN: Byte;
@@ -92,7 +92,7 @@ type
 
 var
   Form4: TForm4;
-  Unidad: TCDROM;
+  CDUnit: TCDROM;
   Devices: array[0..255] of TDevice;
   NumberOfDevices: Integer;
   Contador: TTiempo;
@@ -108,7 +108,7 @@ var
   DeviceInfo: TDeviceInfo;
   InfoExtra: TCDROMInfo;
 begin
-  with Unidad do
+  with CDUnit do
   begin
     l := 0;
     for i := 0 to 7 do
@@ -120,9 +120,9 @@ begin
             Continue;
             
           DeviceInfo := Inquiry(i, j, k);
-          InfoExtra := Unidad.ModeSense(i, j, k);
+          InfoExtra := CDUnit.ModeSense(i, j, k);
 
-          Devices[l].Nombre := Format('%d:%d:%d %s %s %s', [i, j, k, DeviceInfo.VendorID, DeviceInfo.ProductID, DeviceInfo.Revision]);
+          Devices[l].Name := Format('%d:%d:%d %s %s %s', [i, j, k, DeviceInfo.VendorID, DeviceInfo.ProductID, DeviceInfo.Revision]);
           Devices[l].HA := i;
           Devices[l].SCSI := j;
           Devices[l].LUN := k;
@@ -142,13 +142,13 @@ begin
   for i := 0 to NumberOfDevices - 1 do
   begin
     // if Devices[i].Grabadora then
-      Form4.cGrabadoras.Items.Add(Devices[i].Nombre);
+      Form4.cGrabadoras.Items.Add(Devices[i].Name);
   end;
 
   Form4.cGrabadoras.ItemIndex := 0;
 end;
 
-procedure AsignarSCSIID(var HA, SCSI, LUN: Byte);
+procedure AssignSCSIID(var HA, SCSI, LUN: Byte);
 begin
   HA := Devices[Form4.cGrabadoras.ItemIndex].HA;
   SCSI := Devices[Form4.cGrabadoras.ItemIndex].SCSI;
@@ -157,17 +157,17 @@ end;
 
 procedure TForm4.FormCreate(Sender: TObject);
 begin
-  Unidad := TCDROM.Create(Self);
-  if (Unidad <> nil) and (Unidad.ASPISupport) then
+  CDUnit := TCDROM.Create(Self);
+  if (CDUnit <> nil) and (CDUnit.ASPISupport) then
   begin
-    Unidad.ErrorEnable := True;
-    Unidad.TimeOut_ExecSCSICommand := 4 * 60 * 1000;
-    Unidad.TimeOut_GetDeviceType := 5000;
-    Unidad.TimeOut_GetHostAdapterInquiry := 5000;
-    Unidad.TimeOut_ServiceAbort := 1000;
-    Unidad.TimeOut_ResetDevice := 1000;
-    Unidad.TimeOut_GetDiskInfo := 5000;
-    Unidad.TimeOut_RescanBus := 1000;
+    CDUnit.ErrorEnable := True;
+    CDUnit.TimeOut_ExecSCSICommand := 4 * 60 * 1000;
+    CDUnit.TimeOut_GetDeviceType := 5000;
+    CDUnit.TimeOut_GetHostAdapterInquiry := 5000;
+    CDUnit.TimeOut_ServiceAbort := 1000;
+    CDUnit.TimeOut_ResetDevice := 1000;
+    CDUnit.TimeOut_GetDiskInfo := 5000;
+    CDUnit.TimeOut_RescanBus := 1000;
   end
   else
   begin
@@ -197,7 +197,7 @@ begin
   if (eImagenISO.Text = '') or (not FileExists(eImagenISO.Text)) then
     Exit;
     
-  AsignarSCSIID(HA, SCSI, LUN);
+  AssignSCSIID(HA, SCSI, LUN);
   ISOImageFile := TFileStream.Create(eImagenISO.Text, fmOpenRead);
   try
     ISOImageFile.Seek(0, soFromBeginning);
@@ -207,7 +207,7 @@ begin
       Exit;
     end;
 
-    CDINFO := Unidad.ReadDiscInformation(HA, SCSI, LUN);
+    CDINFO := CDUnit.ReadDiscInformation(HA, SCSI, LUN);
     if CDINFO.EstadoDisco <> ed_Vacio then
     begin
       MessageBox(Self.Handle, PChar(SGraNoDisco), nil, MB_OK or MB_ICONWARNING);
@@ -216,7 +216,7 @@ begin
 
     BotonGrabar.Enabled := False;
 
-    PISTAINFO := Unidad.ReadTrackInformation(HA, SCSI, LUN, 1, 1);
+    PISTAINFO := CDUnit.ReadTrackInformation(HA, SCSI, LUN, 1, 1);
 
     if cVelocidad.ItemIndex = 0 then
       Velocidad := $FFFF
@@ -226,7 +226,7 @@ begin
       Velocidad := (Velocidad shr 8) or (Velocidad shl 8);
     end;
 
-    if not Unidad.SetCDSpeed(HA, SCSI, LUN, $FFFF, Velocidad) then
+    if not CDUnit.SetCDSpeed(HA, SCSI, LUN, $FFFF, Velocidad) then
       ShowMessage('no se puso la velocidad');
 
     P.Op1 := 1; // Track at once
@@ -243,7 +243,7 @@ begin
     P.SubHeader[3] := 8;
     FillChar(p.VendorSpecific, 4, 0);
 
-    if not Unidad.ModeSelectEscribir(HA, SCSI, LUN, P) then
+    if not CDUnit.ModeSelectEscribir(HA, SCSI, LUN, P) then
     begin
             //ShowMessage('No se escribio los parametros de escritura.');
       ShowMessage('Couldn´t Write Writing Parameters.');
@@ -266,7 +266,7 @@ begin
 
     LBA := 0;
           //LBA := PISTAINFO.SigLBAGrabable + 75*150 + 150;
-    Unidad.TimeOut_ExecSCSICommand := 120000;
+    CDUnit.TimeOut_ExecSCSICommand := 120000;
 
     Total := LBA + (ISOImageFile.Size div 2048); //LBA + (ISOImageFile.Size div 2048) (Image Size div 2048) ;
     ProgressBar1.Max := Total;
@@ -275,7 +275,7 @@ begin
     begin
       Leido := ISOImageFile.Read(Buffer, 2048 * 16);
       Leido := Leido div 2048;
-      if not Unidad.Write10(HA, SCSI, LUN, LBA, Leido, @Buffer) then
+      if not CDUnit.Write10(HA, SCSI, LUN, LBA, Leido, @Buffer) then
       begin
         ShowMessage('Error grabando sector: ' + Inttostr(LBA));
         Break;
@@ -288,14 +288,14 @@ begin
     FreeAndNil(ISOImageFile);
   end;
 
-  if not Unidad.SynchronizeCache(HA, SCSI, LUN, 0, 0) then
+  if not CDUnit.SynchronizeCache(HA, SCSI, LUN, 0, 0) then
     ShowMessage('Sinchronization Error.');
     //ShowMessage('Error al sincronizar.');
 
-  Unidad.TimeOut_ExecSCSICommand := -1;
-  Unidad.CloseSessionTrack(HA, SCSI, LUN, True, False, 0);
+  CDUnit.TimeOut_ExecSCSICommand := -1;
+  CDUnit.CloseSessionTrack(HA, SCSI, LUN, True, False, 0);
 
-  while not Unidad.TestUnitReady(HA, SCSI, LUN) do
+  while not CDUnit.TestUnitReady(HA, SCSI, LUN) do
   begin
     //Caption := 's';
   end;

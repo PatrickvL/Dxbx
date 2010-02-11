@@ -485,21 +485,21 @@ type
   end;
 
   ReadTOC00 = record
-    Tamano: word;
+    Size: word;
     PistaInicial: Byte;
     PistaFinal: Byte;
     DatosPistas: array[0..99] of TOC00;
   end;
 
   ReadTOC01 = record
-    Tamano: word;
+    Size: word;
     SesionPrimera: Byte;
     SesionUltima: Byte;
     DatosSesion: array[0..99] of TOC01;    
   end;
 
   ReadTOC02 = record
-    Tamano: word;
+    Size: word;
     PistaInicial: Byte;
     PistaFinal: Byte;
     DatosPistas: array[0..99] of TOC02;
@@ -601,8 +601,8 @@ type
     function HayCDMetido(HA_IDx, SCSI_IDx, LUNx: Byte): Boolean;
     function ModeSelectEscribir(HA,SCSI,LUN: Byte; Parametros: TModeSelectEscribir): Boolean;
     function SendCuesheet(HA,SCSI,LUN: Byte; Parametros: pointer; pistas: Integer): Boolean;
-    function Write10(HA,SCSI,LUN: Byte; TopLBA: Integer; Cantidad: word; pBuffer: Pointer): Boolean;
-    function SynchronizeCache(HA,SCSI,LUN: Byte; LBA: Integer; Cantidad: word): Boolean;
+    function Write10(HA,SCSI,LUN: Byte; TopLBA: Integer; Count: word; pBuffer: Pointer): Boolean;
+    function SynchronizeCache(HA,SCSI,LUN: Byte; LBA: Integer; Count: word): Boolean;
     function CloseSessionTrack(HA,SCSI,LUN: Byte; Sesion: Boolean; Pista: Boolean; nSesionPista: word): Boolean;
     function ReadDVDStructure(HA_IDx, SCSI_IDx, LUNx: Byte; Buffer: Pointer; Formato: Integer = 0): Boolean;    
 
@@ -3518,7 +3518,7 @@ begin
   if Assigned(FOnReadCDFinish) then FOnReadCDFinish(Self);
 end;
 
-function TCDROM.Write10(HA,SCSI,LUN: Byte; TopLBA: Integer; Cantidad: word; pBuffer: Pointer): Boolean;
+function TCDROM.Write10(HA,SCSI,LUN: Byte; TopLBA: Integer; Count: word; pBuffer: Pointer): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -3543,7 +3543,7 @@ begin
   SRBPacket.SRB_Target := SCSI;
   SRBPacket.SRB_Lun    := LUN;
   SRBPacket.SRB_Flags  := SRB_DIR_OUT;
-  SRBPacket.SRB_BufLen := (FrameByte * Cantidad);  // Calcula el tamaño del Buffer para extraer.
+  SRBPacket.SRB_BufLen := (FrameByte * Count);  // Calculate the size of the buffer to extract.
   SRBPacket.SRB_BufPointer := pBuffer;   // Puntero al Buffer
   SRBPacket.SRB_CDBLen := 10;                // Longitud del CDB
   SRBPacket.CDBByte[0] := SCSI_Write10; // Comando a realizar
@@ -3553,8 +3553,8 @@ begin
   SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
   SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
   SRBPacket.CDBByte[6] := 0;
-  SRBPacket.CDBByte[7] := hi(Cantidad);
-  SRBPacket.CDBByte[8] := lo(Cantidad);
+  SRBPacket.CDBByte[7] := hi(Count);
+  SRBPacket.CDBByte[8] := lo(Count);
         SRBPacket.CDBByte[9] := 0;
 
   //---Ejecutamos Comando SCSI---
@@ -3587,7 +3587,7 @@ begin
   if Assigned(FOnReadCDFinish) then FOnReadCDFinish(Self);
 end;
 
-function TCDROM.SynchronizeCache(HA,SCSI,LUN: Byte; LBA: Integer; Cantidad: word): Boolean;
+function TCDROM.SynchronizeCache(HA,SCSI,LUN: Byte; LBA: Integer; Count: word): Boolean;
 var
   Error: ECDROMError;
   SRBPacket: TSRB_ExecSCSICmd;
@@ -3621,8 +3621,8 @@ begin
   SRBPacket.CDBByte[4] := LBA1;        // LBA Inicio LH
   SRBPacket.CDBByte[5] := LBA0;        // LBA Inicio LL
   SRBPacket.CDBByte[6] := 0;
-  SRBPacket.CDBByte[7] := Hi(Cantidad);
-  SRBPacket.CDBByte[8] := Lo(Cantidad);
+  SRBPacket.CDBByte[7] := Hi(Count);
+  SRBPacket.CDBByte[8] := Lo(Count);
         SRBPacket.CDBByte[9] := 0;
 
   //---Ejecutamos Comando SCSI---

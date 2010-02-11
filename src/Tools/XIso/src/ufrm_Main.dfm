@@ -293,7 +293,6 @@ object frm_Main: Tfrm_Main
         Width = 254
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 0
       end
       object ToolButton4: TToolButton
