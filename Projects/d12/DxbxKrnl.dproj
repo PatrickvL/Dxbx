@@ -75,7 +75,6 @@
 			<DCCReference Include="..\..\Libraries\Jcl\windows\JclDebug.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuAlloc.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuDInput.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuDSound.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuFile.pas"/>
@@ -119,6 +118,8 @@
 			<DCCReference Include="..\..\src\uProlog.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Utils.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

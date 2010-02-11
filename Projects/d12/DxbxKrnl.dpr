@@ -51,7 +51,6 @@ uses
   JclDebug in '..\..\Libraries\Jcl\windows\JclDebug.pas',
   uEmuAlloc in '..\..\src\DxbxKrnl\uEmuAlloc.pas',
   uEmuD3D8 in '..\..\src\DxbxKrnl\uEmuD3D8.pas',
-  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uEmuDInput in '..\..\src\DxbxKrnl\uEmuDInput.pas',
   uEmuDSound in '..\..\src\DxbxKrnl\uEmuDSound.pas',
   uEmuFile in '..\..\src\DxbxKrnl\uEmuFile.pas',
@@ -94,7 +93,9 @@ uses
   uEmuExe in '..\..\src\uEmuExe.pas',
   uProlog in '..\..\src\uProlog.pas',
   uExe in '..\..\src\uExe.pas',
-  uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas';
+  uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas',
+  uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas',
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}
