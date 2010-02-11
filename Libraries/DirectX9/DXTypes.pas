@@ -13,7 +13,7 @@
 {*    http://sourceforge.net/projects/delphi-dx9sdk                           *}
 {*                                                                            *}
 {*----------------------------------------------------------------------------*}
-{*  $Id: DXTypes.pas,v 1.20 2006/10/21 21:30:10 clootie Exp $  }
+{*  $Id: DXTypes.pas,v 1.23 2007/04/14 20:57:43 clootie Exp $  }
 {******************************************************************************}
 {                                                                              }
 { The contents of this file are used with permission, subject to the Mozilla   }
@@ -59,9 +59,9 @@ uses Windows;
 const
   _DXSDK_PRODUCT_MAJOR  = 9;
   {$EXTERNALSYM _DXSDK_PRODUCT_MAJOR}
-  _DXSDK_PRODUCT_MINOR  = 15;
+  _DXSDK_PRODUCT_MINOR  = 18;
   {$EXTERNALSYM _DXSDK_PRODUCT_MINOR}
-  _DXSDK_BUILD_MAJOR    = 779;
+  _DXSDK_BUILD_MAJOR    = 944;
   {$EXTERNALSYM _DXSDK_BUILD_MAJOR}
   _DXSDK_BUILD_MINOR    = 0000;
   {$EXTERNALSYM _DXSDK_BUILD_MINOR}

@@ -1938,7 +1938,7 @@ type
     ['{C6E13370-30AC-11d0-A18C-00A0C9118956}']
     (*** IAMCameraControl methods ***)
     function GetRange(Property_: TCameraControlProperty;
-        out pMin, pMax, pSteppingDelta, pDefault, pCapsFlags: Longint): HResult; stdcall;
+        out pMin, pMax, pSteppingDelta, pDefault: Longint; out pCapsFlags: TCameraControlFlags): HResult; stdcall;
     function Set_(Property_: TCameraControlProperty; lValue: Longint;
         Flags: TCameraControlFlags): HResult; stdcall;
     function Get(Property_: TCameraControlProperty; out lValue: Longint;
@@ -25643,12 +25643,12 @@ type
   IKsControl = interface(IUnknown)
     ['{28F54685-06FD-11D2-B27A-00A0C9223196}']
     (*** IKsControl methods ***)
-    procedure KsProperty(Property_: PKSPROPERTY; PropertyLength: ULONG; PropertyData: Pointer;
-                DataLength: ULONG; out BytesReturned: ULONG); stdcall;
-    procedure KsMethod(Method: PKSMETHOD; MethodLength: ULONG; MethodData: Pointer;
-                DataLength: ULONG; out BytesReturned: ULONG); stdcall;
-    procedure KsEvent({OPTIONAL}Event: PKSEVENT; EventLength: ULONG; EventData: Pointer;
-                DataLength: ULONG; out BytesReturned: ULONG); stdcall;
+    function KsProperty(Property_: PKSPROPERTY; PropertyLength: ULONG; PropertyData: Pointer;
+                DataLength: ULONG; out BytesReturned: ULONG): HResult; stdcall;
+    function KsMethod(Method: PKSMETHOD; MethodLength: ULONG; MethodData: Pointer;
+                DataLength: ULONG; out BytesReturned: ULONG): HResult; stdcall;
+    function KsEvent({OPTIONAL}Event: PKSEVENT; EventLength: ULONG; EventData: Pointer;
+                DataLength: ULONG; out BytesReturned: ULONG): HResult; stdcall;
   end;
 
 //------------------------------------------------------------------------------

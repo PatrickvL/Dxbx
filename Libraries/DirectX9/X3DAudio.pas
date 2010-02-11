@@ -13,7 +13,7 @@
 {*    http://sourceforge.net/projects/delphi-dx9sdk                           *}
 {*                                                                            *}
 {*----------------------------------------------------------------------------*}
-{*  $Id: X3DAudio.pas,v 1.6 2006/10/21 21:30:10 clootie Exp $ }
+{*  $Id: X3DAudio.pas,v 1.7 2007/04/14 20:57:43 clootie Exp $ }
 {******************************************************************************}
 {                                                                              }
 { Obtained through: Joint Endeavour of Delphi Innovators (Project JEDI)        }
@@ -53,7 +53,16 @@
  | DUTY: Cross-platform stand-alone 3D audio math library                   |
  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
   NOTES:
-    1.  Definition of terms:
+    1.  USE THE DEBUG X3DAUDIO DLL TO ENABLE PARAMETER VALIDATION VIA ASSERTS!
+        Here's how:
+        Copy X3DAudioD1_X.dll to where your application exists.
+        The dll can be found in the DXSDK under Utilities\Bin\x86\ (or x64).
+        Rename X3DAudioD1_X.dll to X3DAudio1_X.dll to use the debug version.
+
+        Only parameters required by DSP settings being calculated as
+        stipulated by the calculation control flags are validated.
+
+    2.  Definition of terms:
             LFE: Low Frequency Effect -- always omnidirectional.
             LPF: Low Pass Filter, divided into two classifications:
                  Direct -- Applied to the direct signal path,
@@ -61,12 +70,12 @@
                  Reverb -- Applied to the reverb signal path,
                            used for occlusion effect only.
 
-    2.  Volume level is expressed as a linear amplitude scaler:
+    3.  Volume level is expressed as a linear amplitude scaler:
         1.0f represents no attenuation applied to the original signal,
         0.5f denotes an attenuation of 6dB, and 0.0f results in silence.
         Amplification (volume > 1.0f) is also allowed, and is not clamped.
 
-    3.  X3DAudio uses a left-handed Cartesian coordinate system with values
+    4.  X3DAudio uses a left-handed Cartesian coordinate system with values
         on the x-axis increasing from left to right, on the y-axis from
         bottom to top, and on the z-axis from near to far.
         Azimuths are measured clockwise from a given reference direction.
@@ -78,7 +87,7 @@
         Metric constants are supplied only as a convenience.
         Distance is calculated using the Euclidean norm formula.
 
-    4.  Only real values are permissible with functions using 32-bit
+    5.  Only real values are permissible with functions using 32-bit
         float parameters -- NAN and infinite values are not accepted.
         All computation occurs in 32-bit precision mode.                    *)
 
@@ -136,6 +145,10 @@ const
   {$EXTERNALSYM SPEAKER_TOP_BACK_CENTER}
   SPEAKER_TOP_BACK_RIGHT        = $00020000;
   {$EXTERNALSYM SPEAKER_TOP_BACK_RIGHT}
+  SPEAKER_RESERVED              = $7FFC0000; // bit mask locations reserved for future use
+  {$EXTERNALSYM SPEAKER_RESERVED}
+  SPEAKER_ALL                   = $80000000; // used to specify that any possible permutation of speaker configurations
+  {$EXTERNALSYM SPEAKER_ALL}
 
   // standard speaker geometry configurations, used with X3DAudioInitialize
   SPEAKER_STEREO  = (SPEAKER_FRONT_LEFT or SPEAKER_FRONT_RIGHT);
@@ -381,7 +394,7 @@ type
   // delay time array, and initializing the channel counts when used.
   PX3DAudioDspSettings = ^TX3DAudioDspSettings;
   X3DAUDIO_DSP_SETTINGS = record
-    pMatrixCoefficients: PSingle;  // [in] matrix coefficient table, receives an array representing the volume level of each source channel present in each destination channel with the source channels being the column index and the destination channels being the row index of the table, must have at least SrcChannelCount*DstChannelCount elements
+    pMatrixCoefficients: PSingle;  // [in]  matrix coefficient table, receives an array representing the volume level used to send from source channel S to destination channel D, stored as pMatrixCoefficients[SrcChannelCount * D + S], must have at least SrcChannelCount*DstChannelCount elements
     pDelayTimes: PSingle;          // [in] delay time array, receives delays for each destination channel in milliseconds, must have at least DstChannelCount elements (stereo final mix only)
     SrcChannelCount: LongWord;     // [in] number of source channels, must equal number of channels on respective emitter
     DstChannelCount: LongWord;     // [in] number of destination channels, must equal number of channels on the final mix
