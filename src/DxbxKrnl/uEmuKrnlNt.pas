@@ -313,9 +313,10 @@ end;
 // Closes a file or other handle.
 //
 // Differences from NT: None.
-function xboxkrnl_NtClose(
-  Handle: Handle
-  ): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
+function xboxkrnl_NtClose
+(
+    Handle: HANDLE
+): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 {$IFDEF DXBX_EMUHANDLES}
 var
@@ -490,8 +491,20 @@ begin
       DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
 {$ENDIF}
     end
-    else
-    if ((szBuffer[0] = 'T') or (szBuffer[0] = 't')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
+		// Going to map Y:\ to current directory as well (dashboard test, 3944)
+    else if ((szBuffer[0] = 'Y') or (szBuffer[0] = 'y')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
+    begin
+      Inc(szBuffer, 3);
+
+      ObjectAttributes.RootDirectory := g_hCurDir;
+
+{$IFDEF DEBUG}
+      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
+      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
+      DbgPrintf('  New:"$XbePath\\%s"', [szBuffer]);
+{$ENDIF}
+    end
+    else if ((szBuffer[0] = 'T') or (szBuffer[0] = 't')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       Inc(szBuffer, 3);
 
