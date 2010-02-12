@@ -55,6 +55,7 @@ function {328} xboxkrnl_XeUnloadSection(
 implementation
 
 function {326} xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XeImageFileName');
@@ -68,7 +69,8 @@ end;
 // New to the XBOX.
 function {327} xboxkrnl_XeLoadSection(
   Section: PXBE_SECTIONHEADER // In, out
-  ): NTSTATUS; stdcall; // Source: XBMC
+  ): NTSTATUS; stdcall;
+// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XeLoadSection');
@@ -82,7 +84,8 @@ end;
 // New to the XBOX.
 function {328} xboxkrnl_XeUnloadSection(
   Section: PXBE_SECTIONHEADER // In, out
-  ): NTSTATUS; stdcall; // Source: XBMC
+  ): NTSTATUS; stdcall;
+// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XeUnloadSection');

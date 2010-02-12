@@ -221,12 +221,16 @@ end;
 
 function mbstowcs(wcstr: pwchar_t; const mbstr: PAnsiChar; max: size_t): size_t;
 begin
-  Result := MultiByteToWideChar(CP_ACP, 0, mbstr, strlen(mbstr)+1, wcstr, max);
+  Result := MultiByteToWideChar(CP_ACP, 0, mbstr, strlen(mbstr), wcstr, max);
+  if Assigned(wcstr) and (Result >= 0) and (Result < max) then
+    wcstr[Result] := #0;
 end;
 
 function wcstombs(mbstr: PAnsiChar; const wcstr: pwchar_t; max: size_t): size_t;
 begin
   Result := WideCharToMultiByte(CP_ACP, 0, wcstr, wstrlen(wcstr), mbstr, max, '', nil);
+  if Assigned(mbstr) and (Result >= 0) and (Result < max) then
+    mbstr[Result] := #0;
 end;
 
 procedure free(p: PVoid); inline;

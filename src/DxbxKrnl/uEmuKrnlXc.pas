@@ -72,6 +72,7 @@ implementation
 procedure xboxkrnl_XcSHAInit(
   pbSHAContext: PUCHAR
   ); stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('XcSHAInit');
@@ -83,6 +84,7 @@ procedure xboxkrnl_XcSHAUpdate(
   pbInput: PUCHAR;
   dwInputLength: ULONG
   ); stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('XcSHAUpdate');
@@ -93,6 +95,7 @@ procedure xboxkrnl_XcSHAFinal(
   pbSHAContext: PUCHAR;
   pbDigest: PUCHAR
   ); stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('XcSHAFinal');
@@ -100,6 +103,7 @@ begin
 end;
 
 function xboxkrnl_XcRC4Key(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcRC4Key');
@@ -107,6 +111,7 @@ begin
 end;
 
 function xboxkrnl_XcRC4Crypt(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcRC4Crypt');
@@ -114,6 +119,7 @@ begin
 end;
 
 function xboxkrnl_XcHMAC(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcHMAC');
@@ -121,6 +127,7 @@ begin
 end;
 
 function xboxkrnl_XcPKEncPublic(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcPKEncPublic');
@@ -128,6 +135,7 @@ begin
 end;
 
 function xboxkrnl_XcPKDecPrivate(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcPKDecPrivate');
@@ -135,6 +143,7 @@ begin
 end;
 
 function xboxkrnl_XcPKGetKeyLen(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcPKGetKeyLen');
@@ -142,6 +151,7 @@ begin
 end;
 
 function xboxkrnl_XcVerifyPKCS1Signature(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcVerifyPKCS1Signature');
@@ -149,6 +159,7 @@ begin
 end;
 
 function xboxkrnl_XcModExp(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcModExp');
@@ -156,6 +167,7 @@ begin
 end;
 
 function xboxkrnl_XcDESKeyParity(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcDESKeyParity');
@@ -163,6 +175,7 @@ begin
 end;
 
 function xboxkrnl_XcKeyTable(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcKeyTable');
@@ -170,6 +183,7 @@ begin
 end;
 
 function xboxkrnl_XcBlockCrypt(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcBlockCrypt');
@@ -177,6 +191,7 @@ begin
 end;
 
 function xboxkrnl_XcBlockCryptCBC(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcBlockCryptCBC');
@@ -184,6 +199,7 @@ begin
 end;
 
 function xboxkrnl_XcCryptService(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcCryptService');
@@ -191,6 +207,7 @@ begin
 end;
 
 function xboxkrnl_XcUpdateCrypto(): NTSTATUS; stdcall;
+// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('XcUpdateCrypto');
