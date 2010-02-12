@@ -484,7 +484,7 @@ begin
           VPDesc.PrimitiveType := XBPrimitiveType;
           VPDesc.dwPrimitiveCount := PrimitiveCount;
           VPDesc.dwOffset := 0;
-          VPDesc.pVertexStreamZeroData := 0;
+          VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
           // Cxbx TODO: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
@@ -648,7 +648,7 @@ begin
           VPDesc.PrimitiveType := XBPrimitiveType;
           VPDesc.dwPrimitiveCount := PrimitiveCount;
           VPDesc.dwOffset := 0;
-          VPDesc.pVertexStreamZeroData := 0;
+          VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
           // Cxbx TODO: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
@@ -704,7 +704,7 @@ begin
 
   if (XTL_g_bStepPush) then
   begin
-    g_pD3DDevice8.Present(0, 0, 0, 0);
+    g_pD3DDevice8.Present(nil, nil, 0, nil);
     Sleep(500);
   end;
 end;

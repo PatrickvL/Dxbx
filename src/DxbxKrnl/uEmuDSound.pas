@@ -53,6 +53,7 @@ const
 
 type
   LPWAVEFORMATEX = MMSystem.PWaveFormatEx; // alias
+  LPCDSI3DL2BUFFER = PVoid;
 
   X_DSBUFFERDESC = record
     dwSize: DWORD;
@@ -106,19 +107,14 @@ type
   DSLFODESC = _DSLFODESC;
   LPCDSLFODESC = ^DSLFODESC;
 
-// ******************************************************************
-// * XBOXADPCMWAVEFORMAT
-// ******************************************************************
-(*typedef struct xbox_adpcmwaveformat_tag
-{
-    WAVEFORMATEX    wfx;                    // WAVEFORMATEX data
-    WORD            wSamplesPerBlock;       // Number of samples per encoded block.  It must be 64.
-end;
-XBOXADPCMWAVEFORMAT, *PXBOXADPCMWAVEFORMAT, *LPXBOXADPCMWAVEFORMAT;
+  xbox_adpcmwaveformat_tag = record
+    wfx: TWAVEFORMATEX;            // WAVEFORMATEX data
+    wSamplesPerBlock: WORD;       // Number of samples per encoded block.  It must be 64.
+  end;
+  XBOXADPCMWAVEFORMAT = xbox_adpcmwaveformat_tag;
+  PXBOXADPCMWAVEFORMAT = ^XBOXADPCMWAVEFORMAT;
+  LPXBOXADPCMWAVEFORMAT = PXBOXADPCMWAVEFORMAT;
 
-typedef const XBOXADPCMWAVEFORMAT *LPCXBOXADPCMWAVEFORMAT;
-
-*)
   X_DSOUTPUTLEVELS = record
     dwAnalogLeftTotalPeak: DWORD;// analog peak
     dwAnalogRightTotalPeak: DWORD;
@@ -276,6 +272,9 @@ type
         EmuLockBytes2: DWORD;
         EmuPlayFlags: DWORD;
     end;
+  PX_CDirectSoundStream = ^X_CDirectSoundStream;
+  PPX_CDirectSoundStream = ^PX_CDirectSoundStream;
+
 
   LPDIRECTSOUND8 = {^}IDIRECTSOUND8;
   PLPDIRECTSOUND8 = ^LPDIRECTSOUND8;
@@ -963,14 +962,15 @@ function XTL_EmuDirectSoundCreateBuffer
     pdsbd: PX_DSBUFFERDESC;
     ppBuffer: PPX_CDirectSoundBuffer
 ): HRESULT; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
   hRet: HRESULT;
   dwEmuFlags: DWORD;
-  pDSBufferDesc: PDSBUFFERDESC;
-  dwAcceptableMask: DWORD; *)
+  pDSBufferDesc: DirectSound.PDSBUFFERDESC;
+  dwAcceptableMask: DWORD;
+  v: integer;
 begin
-(*  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer'+
@@ -981,106 +981,105 @@ begin
          [pdsbd, ppBuffer]);
 {$ENDIF}
 
-    dwEmuFlags := 0;
+  dwEmuFlags := 0;
 
-    pDSBufferDesc := DSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
 
-    // convert from Xbox to PC DSound
-    begin
-        dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000 or $00080000;
+  // convert from Xbox to PC DSound
+  begin
+      dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000 or $00080000;
 
-        if (pdsbd.dwFlags and (not dwAcceptableMask)) > 0 then
-            EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', pdsbd.dwFlags and (~dwAcceptableMask));
+      if (pdsbd.dwFlags and (not dwAcceptableMask)) > 0 then
+          EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', [pdsbd.dwFlags and Not(dwAcceptableMask)]);
 
-        pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
-        pDSBufferDesc.dwFlags := (pdsbd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
-        pDSBufferDesc.dwBufferBytes := pdsbd.dwBufferBytes;
+      pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
+      pDSBufferDesc.dwFlags := (pdsbd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
+      pDSBufferDesc.dwBufferBytes := pdsbd.dwBufferBytes;
 
-        if (pDSBufferDesc.dwBufferBytes < DSBSIZE_MIN) then
-            pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN
-        else if (pDSBufferDesc.dwBufferBytes > DSBSIZE_MAX) then
-            pDSBufferDesc.dwBufferBytes := DSBSIZE_MAX;
+      if (pDSBufferDesc.dwBufferBytes < DSBSIZE_MIN) then
+          pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN
+      else if (pDSBufferDesc.dwBufferBytes > DSBSIZE_MAX) then
+          pDSBufferDesc.dwBufferBytes := DSBSIZE_MAX;
 
-        pDSBufferDesc.dwReserved := 0;
+      pDSBufferDesc.dwReserved := 0;
 
-        (*if (pdsbd.lpwfxFormat <> 0) then
-        begin
-            pDSBufferDesc.lpwfxFormat := WAVEFORMATEX)CxbxMalloc(SizeOf(WAVEFORMATEX)+pdsbd.lpwfxFormat.cbSize);
-            memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, SizeOf(WAVEFORMATEX));
+      if Assigned(pdsbd.lpwfxFormat) then
+      begin
+          pDSBufferDesc.lpwfxFormat := CxbxMalloc(SizeOf(TWAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
+          memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, SizeOf(TWAVEFORMATEX));
 
-            (*if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
-            begin
-                dwEmuFlags := dwEmuFlags or DSB_FLAG_ADPCM;
+          if (pDSBufferDesc.lpwfxFormat.wFormatTag = WAVE_FORMAT_XBOX_ADPCM) then
+          begin
+              dwEmuFlags := dwEmuFlags or DSB_FLAG_ADPCM;
 
-                EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported!');
+              EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported!');
 
-                pDSBufferDesc.lpwfxFormat.wFormatTag := WAVE_FORMAT_PCM;
-                pDSBufferDesc.lpwfxFormat.nBlockAlign := (pDSBufferDesc.lpwfxFormat.nChannels*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8;
+              pDSBufferDesc.lpwfxFormat.wFormatTag := WAVE_FORMAT_PCM;
+              pDSBufferDesc.lpwfxFormat.nBlockAlign := (pDSBufferDesc.lpwfxFormat.nChannels*pDSBufferDesc.lpwfxFormat.wBitsPerSample) div 8;
 
-                // the above calculation can yield zero for wBitsPerSample < 8, so we'll bound it to 1 byte minimum
-                if (pDSBufferDesc.lpwfxFormat.nBlockAlign = 0) then
-                    pDSBufferDesc.lpwfxFormat.nBlockAlign := 1;
+              // the above calculation can yield zero for wBitsPerSample < 8, so we'll bound it to 1 byte minimum
+              if (pDSBufferDesc.lpwfxFormat.nBlockAlign = 0) then
+                  pDSBufferDesc.lpwfxFormat.nBlockAlign := 1;
 
-                pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec*pDSBufferDesc.lpwfxFormat.nBlockAlign;
-                pDSBufferDesc.lpwfxFormat.wBitsPerSample := 8;
+              pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec*pDSBufferDesc.lpwfxFormat.nBlockAlign;
+              pDSBufferDesc.lpwfxFormat.wBitsPerSample := 8;
 
-                (* Cxbx TODO: Get ADPCM working!
-                pDSBufferDesc.lpwfxFormat.cbSize := 32;
-                const WAVE_FORMAT_ADPCM = 2;
-                pDSBufferDesc.lpwfxFormat.wFormatTag := WAVE_FORMAT_ADPCM;
+              { Cxbx TODO: Get ADPCM working!  MARKED OUT CXBX
+              pDSBufferDesc.lpwfxFormat.cbSize := 32;
+              const WAVE_FORMAT_ADPCM = 2;
+              pDSBufferDesc.lpwfxFormat.wFormatTag := WAVE_FORMAT_ADPCM;
+              }
+          end;
+      end;
 
-            end;
-        end;
+      pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;
+   end;
 
-        pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;
-     end;
+  // sanity check
+  if (pDSBufferDesc.lpwfxFormat.nBlockAlign <> (pDSBufferDesc.lpwfxFormat.nChannels*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8) then
+  begin
+      pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample) div 8;
+      pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec * pDSBufferDesc.lpwfxFormat.nBlockAlign;
+   end;
 
-    // sanity check
-    if (pDSBufferDesc.lpwfxFormat.nBlockAlign <> (pDSBufferDesc.lpwfxFormat.nChannels*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8) then
-    begin
-        pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8;
-        pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec * pDSBufferDesc.lpwfxFormat.nBlockAlign;
-     end;
+  // Cxbx TODO: Garbage Collection
+  New({var PX_CDirectSoundBuffer}ppBuffer^);
 
-    // Cxbx TODO: Garbage Collection
-    New({var PX_CDirectSoundBuffer}ppBuffer^);
-
-    ppBuffer^.EmuDirectSoundBuffer8 := nil;
-    ppBuffer^.EmuBuffer := nil;
-    ppBuffer^.EmuBufferDesc := pDSBufferDesc;
-    ppBuffer^.EmuLockPtr1 := nil;
-    ppBuffer^.EmuLockBytes1 := 0;
-    ppBuffer^.EmuLockPtr2 := nil;
-    ppBuffer^.EmuLockBytes2 := 0;
-    ppBuffer^.EmuFlags := dwEmuFlags;
+  ppBuffer^.EmuDirectSoundBuffer8 := nil;
+  ppBuffer^.EmuBuffer := nil;
+  ppBuffer^.EmuBufferDesc := pDSBufferDesc;
+  ppBuffer^.EmuLockPtr1 := nil;
+  ppBuffer^.EmuLockBytes1 := 0;
+  ppBuffer^.EmuLockPtr2 := nil;
+  ppBuffer^.EmuLockBytes2 := 0;
+  ppBuffer^.EmuFlags := dwEmuFlags;
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := $%.08X, bytes := $%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes);
+  DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := $%.08X, bytes := $%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes]);
 {$ENDIF}
 
-(*    hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc,  and ((ppBuffer).EmuDirectSoundBuffer8), 0);
+  hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc^, (ppBuffer^.EmuDirectSoundBuffer8)^, nil);
 
-    if (FAILED(hRet)) then
-        EmuWarning('CreateSoundBuffer Failed!');
+  if (FAILED(hRet)) then
+      EmuWarning('CreateSoundBuffer Failed!');
 
-    // cache this sound buffer
+  // cache this sound buffer
+  begin
+    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1 do
     begin
-        integer v := 0;
-        for(v := 0; v<SOUNDBUFFER_CACHE_SIZE;v++)
-        begin
-            if (g_pDSoundBufferCache[v] = 0) then
-            begin
-                g_pDSoundBufferCache[v] := *ppBuffer;
-                break;
-             end;
-         end;
+      if not Assigned(g_pDSoundBufferCache[v]) then
+      begin
+        g_pDSoundBufferCache[v] := ppBuffer^;
+        break;
+      end;
+    end;
 
-        if (v = SOUNDBUFFER_CACHE_SIZE) then
-            CxbxKrnlCleanup('SoundBuffer cache out of slots!');
-     end;*)(*
+    if (v = SOUNDBUFFER_CACHE_SIZE) then
+        CxbxKrnlCleanup('SoundBuffer cache out of slots!');
+  end;
 
   EmuSwapFS(fsXbox);
-  Result := hRet; *)
+  Result := hRet;
 end;
 
 function XTL_EmuIDirectSound8_CreateBuffer
@@ -1612,152 +1611,151 @@ begin
   Result := S_OK;
 end;
 
-(*HRESULT WINAPI XTL_EmuDirectSoundCreateStream
+function XTL_EmuDirectSoundCreateStream
 (
-    X_DSSTREAMDESC         *pdssd,
-    X_CDirectSoundStream  **ppStream
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+    pdssd: PX_DSSTREAMDESC;
+    ppStream: PPX_CDirectSoundStream
+): HRESULT;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
+  pDSBufferDesc: DirectSound.PDSBUFFERDESC;
+  dwAcceptableMask: DWORD;
+  hRet: HRESULT;
+  v: integer;
 begin
-    EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuDSound : EmuDirectSoundCreateStream'
-           #13#10'('
-           #13#10'   pdssd                     : 0x%.08X'
-           #13#10'   ppStream                  : 0x%.08X'
-           #13#10');',
-           [pdssd, ppStream);
+  DbgPrintf('EmuDSound : EmuDirectSoundCreateStream'+
+         #13#10'('+
+         #13#10'   pdssd                     : 0x%.08X'+
+         #13#10'   ppStream                  : 0x%.08X'+
+         #13#10');',
+         [pdssd, ppStream]);
 {$ENDIF}
 
-    // Cxbx TODO: Garbage Collection
-    *ppStream := new X_CDirectSoundStream();
+  // Cxbx TODO: Garbage Collection
+  new(ppStream);
 
-    DSBUFFERDESC *pDSBufferDesc := (DSBUFFERDESC)CxbxMalloc(SizeOf(DSBUFFERDESC));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
 
-    // convert from Xbox to PC DSound
+  // convert from Xbox to PC DSound
+  begin
+    dwAcceptableMask := $00000010; // Cxbx TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
+
+    if (pdssd.dwFlags and (not dwAcceptableMask)) > 0 then
+        EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', [pdssd.dwFlags and (not dwAcceptableMask)]);
+
+    pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
+// MERKED OUT CXBX        pDSBufferDesc.dwFlags = (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
+    pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
+    pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
+
+    pDSBufferDesc.dwReserved := 0;
+
+    if Assigned(pdssd.lpwfxFormat) then
     begin
-        DWORD dwAcceptableMask := 0x00000010; // Cxbx TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
+        pDSBufferDesc.lpwfxFormat := CxbxMalloc(SizeOf(TWAVEFORMATEX));
+        memcpy(pDSBufferDesc.lpwfxFormat, pdssd.lpwfxFormat, SizeOf(TWAVEFORMATEX));
+    end;
 
-        if (pdssd.dwFlags and (not dwAcceptableMask)) > 0 then
-            EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', [pdssd.dwFlags and (not dwAcceptableMask)]);
+    pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;
 
-        pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
-//        pDSBufferDesc.dwFlags = (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
-        pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
-        pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
-
-        pDSBufferDesc.dwReserved := 0;
-
-        if (pdssd.lpwfxFormat <> 0) then
-        begin
-            pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX)CxbxMalloc(SizeOf(WAVEFORMATEX));
-            memcpy(pDSBufferDesc.lpwfxFormat, pdssd.lpwfxFormat, SizeOf(WAVEFORMATEX));
-         end;
-
-        pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;
-
-        if (pDSBufferDesc.lpwfxFormat <> 0 and pDSBufferDesc.lpwfxFormat.wFormatTag <> WAVE_FORMAT_PCM) then
-        begin
-            EmuWarning('Invalid WAVE_FORMAT!');
-      if (pDSBufferDesc.lpwfxFormat.wFormatTag = (*WAVE_FORMAT_XBOX_ADPCM*)(*0x0069) then
+    if Assigned(pDSBufferDesc.lpwfxFormat) and (pDSBufferDesc.lpwfxFormat.wFormatTag <> WAVE_FORMAT_PCM) then
+    begin
+      EmuWarning('Invalid WAVE_FORMAT!');
+      if (pDSBufferDesc.lpwfxFormat.wFormatTag = WAVE_FORMAT_XBOX_ADPCM) then
         EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported!');
 
-            ppStream^.EmuDirectSoundBuffer8 := 0;
+      ppStream^.EmuDirectSoundBuffer8 := nil;
 
-            EmuSwapFS(fsXbox);
+      EmuSwapFS(fsXbox);
 
-            Result := DS_OK;
-         end;
+      Result := DS_OK;
+    end;
 
-        // we only support 2 channels right now
-        if (pDSBufferDesc.lpwfxFormat.nChannels > 2) then
-        begin
-            pDSBufferDesc.lpwfxFormat.nChannels := 2;
-            pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample)/8;
-            pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec * pDSBufferDesc.lpwfxFormat.nBlockAlign;
-         end;
-     end;
+    // we only support 2 channels right now
+    if (pDSBufferDesc.lpwfxFormat.nChannels > 2) then
+    begin
+      pDSBufferDesc.lpwfxFormat.nChannels := 2;
+      pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample) div 8;
+      pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec * pDSBufferDesc.lpwfxFormat.nBlockAlign;
+    end;
+  end;
 
-    ppStream^.EmuBuffer := 0;
-    ppStream^.EmuBufferDesc := pDSBufferDesc;
-    ppStream^.EmuLockPtr1 := 0;
-    ppStream^.EmuLockBytes1 := 0;
-    ppStream^.EmuLockPtr2 := 0;
-    ppStream^.EmuLockBytes2 := 0;
+  ppStream^.EmuBuffer := nil;
+  ppStream^.EmuBufferDesc := pDSBufferDesc;
+  ppStream^.EmuLockPtr1 := nil;
+  ppStream^.EmuLockBytes1 := 0;
+  ppStream^.EmuLockPtr2 := nil;
+  ppStream^.EmuLockBytes2 := 0;
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuDSound : EmuDirectSoundCreateStream, *ppStream := 0x%.08X', [*ppStream);
+  DbgPrintf('EmuDSound : EmuDirectSoundCreateStream, *ppStream := 0x%.08X', [ppStream^]);
 {$ENDIF}
 
-    HRESULT hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc, @(ppStream^.EmuDirectSoundBuffer8), 0);
+  hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc^, ppStream^.EmuDirectSoundBuffer8, nil);
 
-    if (FAILED(hRet)) then
-      EmuWarning('CreateSoundBuffer Failed!');
+  if (FAILED(hRet)) then
+    EmuWarning('CreateSoundBuffer Failed!');
 
-    // cache this sound stream
+  // cache this sound stream
+  begin
+    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
     begin
-        integer v:=0;
-        for(v := 0;v<SOUNDSTREAM_CACHE_SIZE;v++)
-        begin
-            if (g_pDSoundStreamCache[v] = 0) then
-            begin
-                g_pDSoundStreamCache[v] := *ppStream;
-                break;
-             end;
-         end;
+      if not Assigned(g_pDSoundStreamCache[v]) then
+      begin
+        g_pDSoundStreamCache[v] := @ppStream;
+        break;
+      end;
+    end;
 
-        if (v = SOUNDSTREAM_CACHE_SIZE) then
-            CxbxKrnlCleanup('SoundStream cache out of slots!');
-     end;
+    if (v = SOUNDSTREAM_CACHE_SIZE) then
+        CxbxKrnlCleanup('SoundStream cache out of slots!');
+  end;
 
-    EmuSwapFS(fsXbox);
+  EmuSwapFS(fsXbox);
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(* function XTL_EmuIDirectSound8_CreateStream
+function XTL_EmuIDirectSound8_CreateStream
 (
     pThis: LPDIRECTSOUND8;
     pdssd: PX_DSSTREAMDESC;
     ppStream: PPX_CDirectSoundStream;
     pUnknown: PVOID
 ): HRESULT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin
-        EmuSwapFS(fsWindows);
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+    EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSound8_CreateStream'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   pdssd                     : 0x%.08X'
-               #13#10'   ppStream                  : 0x%.08X'
-               #13#10'   pUnknown                  : 0x%.08X'
-               #13#10');',
-               [pThis, pdssd, ppStream, pUnknown);
+    DbgPrintf('EmuDSound : EmuIDirectSound8_CreateStream'+
+           #13#10'('+
+           #13#10'   pThis                     : 0x%.08X'+
+           #13#10'   pdssd                     : 0x%.08X'+
+           #13#10'   ppStream                  : 0x%.08X'+
+           #13#10'   pUnknown                  : 0x%.08X'+
+           #13#10');',
+           [pThis, pdssd, ppStream, pUnknown]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+    EmuSwapFS(fsXbox);
+  end;
+  {$endif}
 
-    EmuDirectSoundCreateStream(pdssd, ppStream);
+  XTL_EmuDirectSoundCreateStream(pdssd, ppStream);
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*
-VOID WINAPI XTL_EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+procedure XTL_EmuCMcpxStream_Dummy_0x10(dwDummy1: DWORD; dwDummy2: DWORD);
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
-    EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
-    Exit;
+  EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
 end;
-*)
 
 function XTL_EmuCDirectSoundStream_SetVolume(pThis: X_CDirectSoundStream; lVolume: LongInt): ULONG;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -1828,13 +1826,13 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuCDirectSoundStream_Release(pThis: X_CDirectSoundStream): ULONG;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-(*var
+function XTL_EmuCDirectSoundStream_Release(pThis: PX_CDirectSoundStream): ULONG;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+var
   uRet: ULONG;
-  v: Integer; *)
+  v: Integer;
 begin
-(*  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuCDirectSoundStream_Release'+
@@ -1855,7 +1853,7 @@ begin
         // remove cache entry
         for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
         begin
-            if (g_pDSoundStreamCache[v] = pThis) then
+            if (g_pDSoundStreamCache[v] = pThis^) then
                 g_pDSoundStreamCache[v] := nil;
         end;
 
@@ -1870,7 +1868,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := uRet;*)
+  Result := uRet;
 end;
 
 function XTL_EmuCDirectSoundStream_GetStatus
@@ -1906,7 +1904,7 @@ function XTL_EmuCDirectSoundStream_Process
     pInputBuffer: PXMEDIAPACKET;
     pOutputBuffer: PXMEDIAPACKET
 ): HRESULT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -2572,42 +2570,42 @@ begin
   Result := DS_OK;
 end;
 
-(*function XTL_EmuIDirectSoundBuffer8_SetI3DL2Source
+function XTL_EmuIDirectSoundBuffer8_SetI3DL2Source
 (
     pThis: IDIRECTSOUNDBUFFER8;
     pds3db: LPCDSI3DL2BUFFER;
-    DWORD                   dwApply
+    dwApply: DWORD
 ): HRESULT;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-begin 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    begin 
-        EmuSwapFS(fsWindows);
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+begin
+  // debug trace
+  {$ifdef _DEBUG_TRACE}
+  begin
+    EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-        DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetI3DL2Source'
-               #13#10'('
-               #13#10'   pThis                     : 0x%.08X'
-               #13#10'   pds3db                    : 0x%.08X'
-               #13#10'   dwApply                   : 0x%.08X'
-               #13#10');',
-               [pThis, pds3db, dwApply);
+    DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetI3DL2Source'+
+           #13#10'('+
+           #13#10'   pThis                     : 0x%.08X'+
+           #13#10'   pds3db                    : 0x%.08X'+
+           #13#10'   dwApply                   : 0x%.08X'+
+           #13#10');',
+           [pThis, pds3db, dwApply]);
 {$ENDIF}
-        EmuSwapFS(fsXbox);
-     end;
-    //endif
+    EmuSwapFS(fsXbox);
+  end;
+  {$endif}
 
-    // Cxbx TODO: Actually do something
+  // Cxbx TODO: Actually do something
 
-    Result := DS_OK;
+  Result := DS_OK;
 end;
-*)
 
-(*HRESULT WINAPI XTL_EmuIDirectSoundBuffer8_SetFormat
+
+(*function XTL_EmuIDirectSoundBuffer8_SetFormat
 (
-    X_CDirectSoundBuffer *pBuffer,
-    LPCWAVEFORMATEX pwfxFormat
-)
+    pBuffer: PX_CDirectSoundBuffer;
+    pwfxFormat: LPCWAVEFORMATEX;
+): HRESULT;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
 begin
     EmuSwapFS(fsWindows);
@@ -2673,39 +2671,38 @@ begin
   Result := S_OK;
 end;
 
-(*procedure XTL_EmuXAudioCreateAdpcmFormat
+procedure XTL_EmuXAudioCreateAdpcmFormat
 (
-  WORD                   nChannels,
-  DWORD                  nSamplesPerSec,
-  LPXBOXADPCMWAVEFORMAT  pwfx
+  nChannels: WORD;
+  nSamplesPerSec: DWORD;
+  pwfx: LPXBOXADPCMWAVEFORMAT
 ); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
     EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuDSound : EmuXAudioCreateAdpcmFormat'
-           #13#10'('
-           #13#10'   nChannels                 : 0x%.04X'
-           #13#10'   nSamplesPerSec            : 0x%.08X'
-           #13#10'   pwfx                      : 0x%.08X'
+    DbgPrintf('EmuDSound : EmuXAudioCreateAdpcmFormat'+
+           #13#10'('+
+           #13#10'   nChannels                 : 0x%.04X'+
+           #13#10'   nSamplesPerSec            : 0x%.08X'+
+           #13#10'   pwfx                      : 0x%.08X'+
            #13#10');',
-           [nChannels, nSamplesPerSec, pwfx);
+           [nChannels, nSamplesPerSec, pwfx]);
 {$ENDIF}
 
   // Fill out the pwfx structure with the appropriate data
   pwfx.wfx.wFormatTag    := WAVE_FORMAT_XBOX_ADPCM;
   pwfx.wfx.nChannels      := nChannels;
   pwfx.wfx.nSamplesPerSec  := nSamplesPerSec;
-  pwfx.wfx.nAvgBytesPerSec  := (nSamplesPerSec*nChannels * 36)/64;
+  pwfx.wfx.nAvgBytesPerSec  := (nSamplesPerSec*nChannels * 36) div 64;
   pwfx.wfx.nBlockAlign    := nChannels * 36;
   pwfx.wfx.wBitsPerSample  := 4;
   pwfx.wfx.cbSize      := 2;
   pwfx.wSamplesPerBlock    := 64;
 
-    EmuSwapFS(fsXbox);
+  EmuSwapFS(fsXbox);
 end;
-*)
 
 function XTL_EmuIDirectSoundBuffer8_SetRolloffCurve
 (
