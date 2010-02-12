@@ -230,6 +230,7 @@ var
   function _GetSymbolName(aLine: string; var aSymbolName: string): Boolean;
   var
     Text: string;
+    p: Integer;
   begin
     // Make sure the line is at least 3 characters long :
     aLine := Trim(aLine);
@@ -237,12 +238,14 @@ var
     if not Result then
       Exit;
 
+    // Remove {comment} block from the start of the line :
     if aLine[1] = '{' then
     begin
-      Result := Pos('}', aLine) < Length(aLine);
+      p := Pos('}', aLine);
+      Result := p < Length(aLine);
       if Result then
       begin
-        Delete(aLine, 1, Pos('}', aLine));
+        Delete(aLine, 1, p);
         aLine := Trim(aLine);
         Result := (Length(aLine) > 2);
       end;
@@ -250,7 +253,7 @@ var
       if not Result then
         Exit;
     end;
-    
+
     // Remove comment start from the beginning of the line :
     if  CharInSet(aLine[1], ['(', '/'])
     and CharInSet(aLine[2], ['*', '/']) then
@@ -258,6 +261,13 @@ var
     begin
       Delete(aLine, 1, 2);
       aLine := Trim(aLine);
+    end
+    else
+    begin
+      // Remove further end of line comments :
+      p := Pos('//', aLine);
+      if p > 0 then
+        Delete(aLine, p, MaxInt);
     end;
 
     // Scan for Delphi function names :
@@ -284,8 +294,25 @@ var
     end;
 
     Result := Length(Text) >= 3;
-    if Result then
-      {var}aSymbolName := Text;
+    if not Result then
+      Exit;
+
+    // When detecting the start of a translation-comment, skip that :
+    if SameText(Text, 'branch')
+    or SameText(Text, 'source') then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    // Well, we seem to have found a symbol!
+
+    // Lastly, remove the part before (and including) the space (if present) :
+    p := Pos(' ', Text);
+    if p > 0 then
+      Delete(Text, 1, p);
+
+    {var}aSymbolName := Text;
   end;
 
 begin
@@ -323,8 +350,11 @@ begin
           and CharInSet(Line[2], ['*', '/']) then
             System.Delete(Line, 1, 2)
           else
-            // Skip non-comment lines :
-            Continue;
+            if SameText(Line, 'end.') then
+              Break
+            else
+              // Skip non-comment lines :
+              Continue;
 
           // Scan the comment-parts :
           SourceStr := _GetTextAfterPrefix(Line, 'Source:');
@@ -369,7 +399,7 @@ begin
           // it's still picked up as a function; Not fully correct, but acceptable for now.
 
           // Scan for the symbol name, from 1 line after
-          // until 6 lines before this translation-progress comment :
+          // until 10 lines before this translation-progress comment :
           SymbolName := '';
           LineNr := i - 1;
           if not _GetSymbolName(Strings[LineNr], {var}SymbolName) then
