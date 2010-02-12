@@ -28,7 +28,7 @@ type
 
   TAdminXISO = class(TObject)
   private
-    AdminFicheros: TAdminFicheros;
+    FileManager: TFileManager;
     function Intel2Motorola(ValorInt32: Integer): Integer;
     function Intel2MotorolaWORD(Valor: Word): Word;
     function Size2Sector(Size: Int64): Int64;
@@ -42,7 +42,7 @@ type
     MensajesxISO: TxISOMensaje;
     Stop: Boolean;
 
-    constructor Create(AdministradorFicheros: TAdminFicheros);
+    constructor Create(aFileManager: TFileManager);
     function CrearXISO(ImageName: string): Boolean;
     function XDFS2ISO9660(aFile: string): Boolean;
   end;
@@ -84,7 +84,7 @@ type
     Size: Integer;
     SectorIn: Integer;
     Sectores: Integer;
-    Directorio: Boolean;
+    Directory: Boolean;
     RightNode: Word;
     LeftNode: Word;
     Attributes: Integer;
@@ -125,13 +125,13 @@ type
     TamanoLE: Integer;
     TamanoBE: Integer;
     DateTime: TFechaHora;
-    Attributes: Byte; // 0 = aFile, 1 = aFile Oculto, 2 = Directorio, 3 = Directorio Oculto
+    Attributes: Byte; // 0 = aFile, 1 = aFile Oculto, 2 = Directory, 3 = Directory Oculto
     FileUnitSize: Byte; // File Unit Size ???
     IGapSize: Byte; // Interleave Gap Size ???
     VSeqSizeLE: Word; // Volume Sequence Size ??? Little Endian
     VSeqSizeBE: Word; // Volume Sequence Size ??? Big Endian
     NameLength: Byte; // Longitud del Name
-    Name: Byte; // Name del directorio
+    Name: Byte; // Name del Directory
   end;
 
   TPVD = record
@@ -186,10 +186,10 @@ type
   PDirectories = ^TDirectories;
   TDirectories = record
     NameLength: Byte; // Longitud del Name MAX 31 caracteres
-    Nulo: Byte; // Numero de sectores en modo Extendido del directorio
-    Sector: Integer; // Sector donde se encuentra el Directorio
-    Level: Word; // Level a que se encuentra el directorio sobre la raiz. Raiz = 1
-    Name: array[0..31] of AnsiChar; // Name del directorio
+    Nulo: Byte; // Numero de sectores en modo Extendido del Directory
+    Sector: Integer; // Sector donde se encuentra el Directory
+    Level: Word; // Level a que se encuentra el Directory sobre la raiz. Raiz = 1
+    Name: array[0..31] of AnsiChar; // Name del Directory
     Pad: Byte; // Si la longitud del Name es Impar se pone 1 sino no existe
   end;
 
@@ -229,9 +229,9 @@ const
   XF_FILE = $20;
   XF_NORMAL = $80;
 
-constructor TAdminXISO.Create(AdministradorFicheros: TAdminFicheros);
+constructor TAdminXISO.Create(aFileManager: TFileManager);
 begin
-  AdminFicheros := AdministradorFicheros;
+  FileManager := aFileManager;
   inherited Create;
 end;
 
@@ -286,9 +286,9 @@ begin
      end;
 end;    }
 
-// Funcion que devuelve el tamaño de un directorio.
+// Funcion que devuelve el tamaño de un Directory.
 // Siempre es multiplo de 2048 (Tamaño Sector)
-// Si es 0 entonces el directorio es vacio
+// Si es 0 entonces el Directory es vacio
 
 function TAdminXISO.FolderSize(Folder: TListContents): Integer;
 var
@@ -438,7 +438,7 @@ begin
     xEntry.SectorIn := Entry.SectorIn;
     xEntry.Size := Entry.Size;
 
-    if Entry.Directorio then
+    if Entry.Directory then
       Attributes := XF_DIRECTORY
     else
       Attributes := XF_FILE;
@@ -524,21 +524,21 @@ begin
     Entry.FullPath := Folder.Entry[i].FullPath;
     Entry.Size := Folder.Entry[i].Size;
     Entry.Sectores := Size2Sector(Folder.Entry[i].Size);
-    Entry.Directorio := AdminFicheros.EsDirectorio(Folder.Entry[i]);
+    Entry.Directory := FileManager.IsDirectory(Folder.Entry[i]);
     Entry.Attributes := Folder.Entry[i].Attributes;
     Entry.Contents := Folder.Entry[i].Contents;
 
-    if not Entry.Directorio then
+    if not Entry.Directory then
       lDirectorio.Add(Entry);
 
-          // Si es directorio lo metemos en la List de directorios a procesar
-          // sino metemos el aFile en la List de elementos del directorio
-    if Entry.Directorio then
+          // Si es Directory lo metemos en la List de directorios a procesar
+          // sino metemos el aFile en la List de elementos del Directory
+    if Entry.Directory then
     begin
       Entry.Size := FolderSize(Folder.Entry[i].Contents);
       Entry.Sectores := Size2Sector(Entry.Size);
 
-            // Si el directorio esta vacio entonces establecemos a 0 los parametros
+            // Si el Directory esta vacio entonces establecemos a 0 los parametros
             // y no lo añadimos a la List de directorios
       if Entry.Size = 0 then
       begin
@@ -567,7 +567,7 @@ begin
   for i := 0 to lDirectorio.Count - 1 do
   begin
     Entry := PDirectoryEntry(lDirectorio[i]);
-    if Entry.Directorio then
+    if Entry.Directory then
       Continue;
       
     Entry.SectorIn := SigSectorVacio;
@@ -579,8 +579,8 @@ begin
 
   FillChar(Buffer^, TamBufRellenar, $FF);
   GenerarTabla(lDirectorio, PosBuf, Buffer);
-        // Extendemos la Entry del directorio hasta alcanzar el final del sector con $FF
-        // y grabamos la Entry del directorio en la Image.
+        // Extendemos la Entry del Directory hasta alcanzar el final del sector con $FF
+        // y grabamos la Entry del Directory en la Image.
   if (PosBuf mod 2048) <> 0 then
     PosBuf := (PosBuf div 2048) * 2048 + 2048;
   Image.Write(Buffer^, PosBuf);
@@ -592,7 +592,7 @@ begin
       Exit;
       
     Entry := PDirectoryEntry(lDirectorio[i]);
-    if Entry.Directorio then
+    if Entry.Directory then
       Continue;
 
     try
@@ -686,7 +686,7 @@ begin
   GetSystemTimeAsFileTime(CurrentDate);
   VD.IDIn := XBOX_MEDIA;
   VD.RootDir := ROOT_SECTOR;
-  VD.RootSize := FolderSize(AdminFicheros.Root);
+  VD.RootSize := FolderSize(FileManager.Root);
   VD.DateTime := CurrentDate;
   VD.IDOut := XBOX_MEDIA;
 
@@ -702,10 +702,10 @@ begin
 
      // Iniciamos el escaneo, estructuracion y creacion de la Image
   SectorInicio := ROOT_SECTOR + 1;
-  SectorInicio := SectorInicio + (FolderSize(AdminFicheros.Root) div 2048) - 1;
+  SectorInicio := SectorInicio + (FolderSize(FileManager.Root) div 2048) - 1;
   if Assigned(MensajesxISO) then
     MensajesxISO(SInicioCreacion);
-  Result := ScanXISO(Image, AdminFicheros.Root, SectorInicio);
+  Result := ScanXISO(Image, FileManager.Root, SectorInicio);
 
   if Stop then
     if Assigned(MensajesxISO) then
@@ -874,7 +874,7 @@ var
   XDFS: TFileStream;
   Entry, ParentEntry: uxiso.PxFile;
   ListaDirectorios: TList;
-  Directorio: PDirectories;
+  Directory: PDirectories;
   ISOEntry: PTOC;
   PVD: TPVD;
   BufferDirectorios: array[0..65535] of Byte;
@@ -892,36 +892,36 @@ var
     PosBufDirectorios := 0;
     OffsetDirectorios := XDFS.Position;
     ListaDirectorios.Clear;
-     // Directorio raiz
-    New(Directorio);
-    FillChar(Directorio^, SizeOf(Directorio^), 0);
-    Directorio.NameLength := 1;
+     // Directory raiz
+    New(Directory);
+    FillChar(Directory^, SizeOf(Directory^), 0);
+    Directory.NameLength := 1;
     if Modo = 0 then
     begin
-      Directorio^.Sector := SectorDirectorioRaiz;
-      Directorio^.Level := 1;
+      Directory^.Sector := SectorDirectorioRaiz;
+      Directory^.Level := 1;
     end
     else
       if Modo = 1 then
       begin
-        Directorio^.Sector := Intel2Motorola(SectorDirectorioRaiz);
-        Directorio^.Level := Intel2MotorolaWORD(1);
+        Directory^.Sector := Intel2Motorola(SectorDirectorioRaiz);
+        Directory^.Level := Intel2MotorolaWORD(1);
       end;
 
-    ListaDirectorios.Add(Directorio);
+    ListaDirectorios.Add(Directory);
 
      // Si estamos sin espacio en este sector saltamos al siguiente.
-     //Move(Directorio^,BufferDirectorios[PosBufDirectorios],8+Directorio.NameLength+1);
-     //PosBufDirectorios := PosBufDirectorios + 8 + Directorio.NameLength+1;
+     //Move(Directory^,BufferDirectorios[PosBufDirectorios],8+Directory.NameLength+1);
+     //PosBufDirectorios := PosBufDirectorios + 8 + Directory.NameLength+1;
      // Escaneamos en busca de directorios
     for i := 0 to xISO.List.Count - 1 do
     begin
       Entry := uxiso.PxFile(xISO.List[i]);
       if (Entry.Attributes and XF_DIRECTORY) = XF_DIRECTORY then
       begin
-        New(Directorio);
-        FillChar(Directorio^, SizeOf(Directorio^), 0);
-           {  if (Directorio.NameLength mod 2) <> 0 then
+        New(Directory);
+        FillChar(Directory^, SizeOf(Directory^), 0);
+           {  if (Directory.NameLength mod 2) <> 0 then
              begin
                if Entry^.NameLength+1 > 32 then
                  NameLength := 32
@@ -935,26 +935,26 @@ var
           else
             NameLength := Entry^.NameLength;
         end;
-        Directorio^.NameLength := NameLength;
+        Directory^.NameLength := NameLength;
         if Modo = 0 then
         begin
-          Directorio^.Sector := Entry^.SectorIn;
-          Directorio^.Level := Entry^.ParentDir + 1;
+          Directory^.Sector := Entry^.SectorIn;
+          Directory^.Level := Entry^.ParentDir + 1;
         end
         else
           if Modo = 1 then
           begin
-            Directorio^.Sector := Intel2Motorola(Entry^.SectorIn);
-            Directorio^.Level := Intel2MotorolaWORD(Entry^.ParentDir + 1);
+            Directory^.Sector := Intel2Motorola(Entry^.SectorIn);
+            Directory^.Level := Intel2MotorolaWORD(Entry^.ParentDir + 1);
           end;
-        Move(Entry^.Name, Directorio^.Name, NameLength);
-        ListaDirectorios.Add(Directorio);
+        Move(Entry^.Name, Directory^.Name, NameLength);
+        ListaDirectorios.Add(Directory);
 
         {     // Si estamos sin espacio en este sector saltamos al siguiente.
              //if ((PosBufDirectorios mod 2048) < (8+NameLength)) and (PosBufDirectorios > 2048) then
              if (((XDFS.Position div 2048)+1)*2048)-XDFS.Position < (8+NameLength) then
                PosBufDirectorios := ((PosBufDirectorios div 2048)+1)*2048;
-             Move(Directorio^,BufferDirectorios[PosBufDirectorios],8+NameLength);
+             Move(Directory^,BufferDirectorios[PosBufDirectorios],8+NameLength);
              PosBufDirectorios := PosBufDirectorios + 8 + NameLength;
              // Si no estamos en un offset par, dejamos un Byte en blanco.
              if (PosBufDirectorios mod 2) <> 0 then
@@ -968,21 +968,21 @@ var
 
      for i := 0 to ListaDirectorios.Count-1 do
      begin
-             Directorio := ListaDirectorios[i];
-             if Trim(Directorio.Name) = '' then
+             Directory := ListaDirectorios[i];
+             if Trim(Directory.Name) = '' then
                ListaDirectorios.Move(i,0);
      end;  }
 
     for i := 0 to ListaDirectorios.Count - 1 do
     begin
-      Directorio := ListaDirectorios[i];
-      NameLength := Directorio^.NameLength;
+      Directory := ListaDirectorios[i];
+      NameLength := Directory^.NameLength;
 
              // Si estamos sin espacio en este sector saltamos al siguiente.
              //if ((PosBufDirectorios mod 2048) < (8+NameLength)) and (PosBufDirectorios > 2048) then
       if (((XDFS.Position div 2048) + 1) * 2048) - XDFS.Position < (8 + NameLength) then
         PosBufDirectorios := ((PosBufDirectorios div 2048) + 1) * 2048;
-      Move(Directorio^, BufferDirectorios[PosBufDirectorios], 8 + NameLength);
+      Move(Directory^, BufferDirectorios[PosBufDirectorios], 8 + NameLength);
       PosBufDirectorios := PosBufDirectorios + 8 + NameLength;
              // Si no estamos en un offset par, dejamos un Byte en blanco.
       if (PosBufDirectorios mod 2) <> 0 then
@@ -1010,13 +1010,13 @@ var
      OffsetDirectorios := XDFS.Position;
      for i := 0 to ListaDirectorios.Count-1 do
      begin
-        Directorio := PDirectories(ListaDirectorios[i]);
+        Directory := PDirectories(ListaDirectorios[i]);
 
         // Si estamos sin espacio en este sector saltamos al siguiente.
-        if ((PosBufDirectorios mod 2048) < (8+Directorio.NameLength+1)) and (PosBufDirectorios > 2048) then
+        if ((PosBufDirectorios mod 2048) < (8+Directory.NameLength+1)) and (PosBufDirectorios > 2048) then
           PosBufDirectorios := ((PosBufDirectorios div 2048)+1)*2048;
-        Move(Directorio^,BufferDirectorios[PosBufDirectorios],8+Directorio.NameLength);
-        PosBufDirectorios := PosBufDirectorios + 8 + Directorio.NameLength;
+        Move(Directory^,BufferDirectorios[PosBufDirectorios],8+Directory.NameLength);
+        PosBufDirectorios := PosBufDirectorios + 8 + Directory.NameLength;
      end;
      if (PosBufDirectorios mod 2048) <> 0 then
        PosBufDirectorios := ((PosBufDirectorios div 2048)+1)*2048;      }
@@ -1052,7 +1052,7 @@ var
         ParentEntry.ChildDir := 0;
       end;
 
-       //Dejamos espacio para grabar mas tarde las 2 entradas del directorio.
+       //Dejamos espacio para grabar mas tarde las 2 entradas del Directory.
       for t := 1 to 68 do
         XDFS.Write(ZeroByte, 1);
        // We began the search for elements of this level.
