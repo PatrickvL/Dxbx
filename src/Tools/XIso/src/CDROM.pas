@@ -86,7 +86,7 @@ const
   SCSI_PlayAudio          = $a5;  //Play Audio 12
 //OpCodes Opcionales de CD-ROM
   SCSI_StartStopUnit      = $1b;  //Para/Enciende Unidad
-  SCSI_SetCDSpeed         = $bb;  //Establece Velocidad CDRom
+  SCSI_SetCDSpeed         = $bb;  //Establece Speed CDRom
   SCSI_LoadUnloadCD       = $a6;  //Abre o cierra el cambiador (bandeja)
   SCSI_SendEvent          = $5d;  //Envia evento mecanico
 //OpCodes Grabacion de CD-ROM
@@ -363,19 +363,19 @@ type
   end;
 
   TOPC = record
-    Velocidad: word;  // En Kbytes
-    ValoresOPC: array[0..5] of Byte;
+    Speed: word;  // In Kbytes
+    OPCValues: array[0..5] of Byte;
   end;
 
-  TEstadoUltimaSesion = ( us_Vacio,
-                          us_Incompleta,
+  TLastSessionState = (   ls_Empty,
+                          ls_Incomplete,
                           us_ReserDanyada,
-                          us_Completada );
+                          ls_Complete );
 
-  TEstadoDisco = ( ed_Vacio,
-                   ed_Incompleto,
-                   ed_Completo,
-                   ed_Otros );
+  TDiskState = (   ds_Empty,
+                   ds_Incomplete,
+                   ds_Complete,
+                   ds_Other );
 
   TTipoDisco = ( td_CDROM,
                  td_CDI,
@@ -388,9 +388,9 @@ type
                 bg_Completo );
 
   TCDInfo = record
-    Borrable: Boolean; // Indica si se puede borrar
-    EstadoUltimaSesion: TEstadoUltimaSesion;
-    EstadoDisco: TEstadoDisco;
+    Erasable: Boolean; // Indica si se puede borrar
+    LastSessionState: TLastSessionState;
+    DiskState: TDiskState;
     NumeroPrimeraPista: Byte;
     NumeroSesiones: word;
     PrimeraPistaEnUltimaSesion: word;
@@ -583,7 +583,7 @@ type
     function PauseResume(HA_IDx, SCSI_IDx, LUNx: Byte; Resume: Boolean): Boolean;                           //Pause/Resume Command
     function PlayAudio(HA_IDx, SCSI_IDx, LUNx: Byte; TopLBA, EndLBA: Integer): Boolean;                     //Play Audio(LBA) Command
     function SetStartStopUnit(HA_IDx, SCSI_IDx, LUNx: Byte; Eject: Boolean; MotorStop: Boolean): Boolean;   //Set Start/Stop Unit Command
-    function SetCDSpeed(HA_IDx, SCSI_IDx, LUNx: Byte; ReadSpeed, WriteSpeed: Word): Boolean;                //Establece la velocidad
+    function SetCDSpeed(HA_IDx, SCSI_IDx, LUNx: Byte; ReadSpeed, WriteSpeed: Word): Boolean;                //Establece la Speed
     function Read10(HA_IDx, SCSI_IDx, LUNx: Byte; TopLBA, EndLBA: Integer; pCDDABuffer: Pointer): Boolean;  //Lee CD (LBA)
     function Read12(HA_IDx, SCSI_IDx, LUNx: Byte; TopLBA, EndLBA: Integer; pCDDABuffer: Pointer): Boolean;  //Lee CD (LBA)
     function ModeSelect10_Errores(HA_IDx, SCSI_IDx, LUNx, Reintentos, Recuperar: Byte): Boolean;
@@ -2757,19 +2757,19 @@ begin
 
   if xResult then
   begin
-        Result.Borrable := Boolean((Buffer[2] shl 3) shr 7);
+        Result.Erasable := Boolean((Buffer[2] shl 3) shr 7);
         case ((Buffer[2] shl 4) shr 6) of
-          $00: Result.EstadoUltimaSesion := us_Vacio;
-          $01: Result.EstadoUltimaSesion := us_Incompleta;
-          $02: Result.EstadoUltimaSesion := us_ReserDanyada;
-          $03: Result.EstadoUltimaSesion := us_Completada;
+          $00: Result.LastSessionState := ls_Empty;
+          $01: Result.LastSessionState := ls_Incomplete;
+          $02: Result.LastSessionState := us_ReserDanyada;
+          $03: Result.LastSessionState := ls_Complete;
         end;
 
         case ((Buffer[2] shl 6) shr 6) of
-          $00: Result.EstadoDisco := ed_Vacio;
-          $01: Result.EstadoDisco := ed_Incompleto;
-          $02: Result.EstadoDisco := ed_Completo;
-          $03: Result.EstadoDisco := ed_Otros;
+          $00: Result.DiskState := ds_Empty;
+          $01: Result.DiskState := ds_Incomplete;
+          $02: Result.DiskState := ds_Complete;
+          $03: Result.DiskState := ds_Other;
         end;
 
         Result.NumeroPrimeraPista := Buffer[3];
@@ -4123,10 +4123,10 @@ begin
   SRBPacket.SRB_CDBLen := 12;
   SRBPacket.CDBByte[0] := SCSI_SetCDSpeed;
         SRBPacket.CDBByte[1] := 0;                  // 0=CAV, 1= CLV    
-  SRBPacket.CDBByte[2] := Speed0;             // Velocidad Lectura H
-  SRBPacket.CDBByte[3] := Speed1;             // Velocidad Lectura L
-  SRBPacket.CDBByte[4] := Escrit0;            // Velocidad Escritura H
-  SRBPacket.CDBByte[5] := Escrit1;            // Velocidad Escritura L
+  SRBPacket.CDBByte[2] := Speed0;             // Speed Lectura H
+  SRBPacket.CDBByte[3] := Speed1;             // Speed Lectura L
+  SRBPacket.CDBByte[4] := Escrit0;            // Speed Escritura H
+  SRBPacket.CDBByte[5] := Escrit1;            // Speed Escritura L
   //---Ejecutamos Comando SCSI---
   xResult := ExecSCSICommand(pSRBPacket);
 
@@ -4151,7 +4151,7 @@ begin
   begin
     if ErrorEnable then
     begin
-      Error := ECDROMError.Create('Error al establecer la nueva velocidad de lectura.');
+      Error := ECDROMError.Create('Error al establecer la nueva Speed de lectura.');
       Error.ErrorCode := $0003bb00;
      // raise Error;
     end;

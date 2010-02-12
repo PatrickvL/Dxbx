@@ -57,16 +57,16 @@ type
     PreviousLevel: TListContents;
   end;
 
-  TAdminFicheros = class(TObject)
+  TFileManager = class(TObject)
   private
     List: TListContents;
     PreviousList: TListContents;
     LastID: Integer;
     function GenerateID: Integer;
     procedure AddZeroEntry(L: TListContents; aPreviousLevel: PListContents);
-    function AgregarCarpetaRec(Folder: string; aPreviousLevel: PListContents): Boolean;
+    function AddFolderRec(Folder: string; aPreviousLevel: PListContents): Boolean;
     procedure CantidadRec(L: TListContents; var N: Integer);
-    function EsPadre(Parent: PEntry; Child: PEntry): Boolean;
+    function IsParent(Parent: PEntry; Child: PEntry): Boolean;
   public
     CurrentList: TListContents;
 
@@ -79,14 +79,14 @@ type
     function DeleteFile(aFile: string): Boolean;
     function Find(const id: Integer; LContenido: TListContents): TListContents; overload;
     function Find(id: Integer): TListContents; overload;
-    function Move(ElementoOrigen: PEntry; ElementoDestino: PEntry): Boolean;
-    function Avanzar(ID: Integer): Boolean; overload;
-    function Avanzar(NewList: TListContents): Boolean; overload;
-    function Retroceder: Boolean;
+    function Move(SourceEntry: PEntry; DestinationEntry: PEntry): Boolean;
+    function Enter(ID: Integer): Boolean; overload;
+    function Enter(NewList: TListContents): Boolean; overload;
+    function Back: Boolean;
     function Count: Integer;
     function Root: TListContents;
-    function EsDirectorio(Attributes: Integer): Boolean; overload;
-    function EsDirectorio(Entry: PEntry): Boolean; overload;
+    function IsDirectory(Attributes: Integer): Boolean; overload;
+    function IsDirectory(Entry: PEntry): Boolean; overload;
   end;
 
 implementation
@@ -165,7 +165,7 @@ begin
   end;
 end;
 
-constructor TAdminFicheros.Create;
+constructor TFileManager.Create;
 begin
   List := TListContents.Create;
   AddZeroEntry(List, @CurrentList);
@@ -175,14 +175,14 @@ begin
   inherited Create;
 end;
 
-destructor TAdminFicheros.Destroy;
+destructor TFileManager.Destroy;
 begin
   List.Free;
 
   inherited Destroy;
 end;
 
-procedure TAdminFicheros.AddZeroEntry(L: TListContents; aPreviousLevel: PListContents);
+procedure TFileManager.AddZeroEntry(L: TListContents; aPreviousLevel: PListContents);
 var
   NewEntry: PEntry;
 begin
@@ -198,18 +198,18 @@ begin
   L.Append(NewEntry);
 end;
 
-function TAdminFicheros.GenerateID: Integer;
+function TFileManager.GenerateID: Integer;
 begin
   Inc(LastID);
   Result := LastID;
 end;
 
-procedure TAdminFicheros.Restart;
+procedure TFileManager.Restart;
 begin
-  Avanzar(List);
+  Enter(List);
 end;
 
-function TAdminFicheros.AddFile(aFile: string): Boolean;
+function TFileManager.AddFile(aFile: string): Boolean;
 var
   NewEntry: PEntry;
   F: TFileStream;
@@ -237,7 +237,7 @@ end;
 
 {$WARN SYMBOL_PLATFORM OFF}
 
-function TAdminFicheros.AgregarCarpetaRec(Folder: string; aPreviousLevel: PListContents): Boolean;
+function TFileManager.AddFolderRec(Folder: string; aPreviousLevel: PListContents): Boolean;
 var
   SR: TSearchRec;
   NewEntry: PEntry;
@@ -251,7 +251,7 @@ begin
 
   if DirectoryExists(Folder) then
   begin
-          // Si no estamos introduciendo una unidad.
+    // Si no estamos introduciendo una unidad.
     if Folder[Length(Folder)] <> ':' then
     begin
       New(NewEntry);
@@ -278,7 +278,7 @@ begin
       repeat
         if (SR.Name[1] = '.') then
           Continue;
-          
+
         New(NewEntry);
         NewEntry.Id := GenerateID();
         NewEntry.Name := SR.Name;
@@ -289,7 +289,7 @@ begin
         NewEntry.Contents := nil;
         NewEntry.PreviousLevel := aPreviousLevel^;
         if NewEntry.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
-          AgregarCarpetaRec(Folder + '\' + SR.Name, @C)
+          AddFolderRec(Folder + '\' + SR.Name, @C)
         else
           C.Append(NewEntry);
       until (FindNext(SR) <> 0);
@@ -300,16 +300,16 @@ end;
 {$WARN SYMBOL_PLATFORM ON}
 
 
-function TAdminFicheros.AddFolder(Folder: string): Boolean;
+function TFileManager.AddFolder(Folder: string): Boolean;
 begin
   if PreviousList = nil then
-    AgregarCarpetaRec(Folder, @List)
+    AddFolderRec(Folder, @List)
   else
-    AgregarCarpetaRec(Folder, @CurrentList);
+    AddFolderRec(Folder, @CurrentList);
   Result := True;
 end;
 
-function TAdminFicheros.AddNewFolder(Folder: string): Boolean;
+function TFileManager.AddNewFolder(Folder: string): Boolean;
 var
   NewEntry: PEntry;
   C: TListContents;
@@ -329,13 +329,13 @@ begin
   Result := True;
 end;
 
-function TAdminFicheros.DeleteFile(aFile: string): Boolean;
+function TFileManager.DeleteFile(aFile: string): Boolean;
 begin
   CurrentList.Remove(aFile);
   Result := True;
 end;
 
-function TAdminFicheros.Find(const id: Integer; LContenido: TListContents): TListContents;
+function TFileManager.Find(const id: Integer; LContenido: TListContents): TListContents;
 var
   i: Integer;
 begin
@@ -351,42 +351,42 @@ begin
       Exit;
     end;
 
-    if EsDirectorio(LContenido.Entry[i].Attributes) then
+    if IsDirectory(LContenido.Entry[i].Attributes) then
       Result := Find(id, LContenido.Entry[i].Contents);
   end;
 end;
 
-function TAdminFicheros.Find(id: Integer): TListContents;
+function TFileManager.Find(id: Integer): TListContents;
 begin
   Result := Find(id, List);
 end;
 
-function TAdminFicheros.Move(ElementoOrigen: PEntry; ElementoDestino: PEntry): Boolean;
+function TFileManager.Move(SourceEntry: PEntry; DestinationEntry: PEntry): Boolean;
 var
-  Origen, Destino: TListContents;
+  Source, Destination: TListContents;
 begin
   Result := False;
-  if ElementoOrigen = ElementoDestino then
+  if SourceEntry = DestinationEntry then
     Exit;
 
-  if (EsDirectorio(ElementoOrigen)) and EsPadre(ElementoOrigen, ElementoDestino) then
+  if (IsDirectory(SourceEntry)) and IsParent(SourceEntry, DestinationEntry) then
     Exit;
 
-  Origen := Find(ElementoOrigen.Id);
-  Destino := ElementoDestino.Contents;
+  Source := Find(SourceEntry.Id);
+  Destination := DestinationEntry.Contents;
 
-  if (Origen = nil) or (Destino = nil) then
+  if (Source = nil) or (Destination = nil) then
     Exit;
 
-  if not Destino.Append(ElementoOrigen) then
+  if not Destination.Append(SourceEntry) then
     Exit;
 
-  Origen.Remove(ElementoOrigen);
+  Source.Remove(SourceEntry);
 
   Result := True;
 end;
 
-function TAdminFicheros.Avanzar(ID: Integer): Boolean;
+function TFileManager.Enter(ID: Integer): Boolean;
 var
   i: Integer;
   Entry: PEntry;
@@ -408,14 +408,14 @@ begin
   end;
 end;
 
-function TAdminFicheros.Avanzar(NewList: TListContents): Boolean;
+function TFileManager.Enter(NewList: TListContents): Boolean;
 begin
   PreviousList := NewList.Entry[-1].PreviousLevel;
   CurrentList := NewList;
   Result := True;
 end;
 
-function TAdminFicheros.Retroceder: Boolean;
+function TFileManager.Back: Boolean;
 var
   P: TListContents;
 begin
@@ -430,30 +430,30 @@ begin
   Result := True;
 end;
 
-procedure TAdminFicheros.CantidadRec(L: TListContents; var N: Integer);
+procedure TFileManager.CantidadRec(L: TListContents; var N: Integer);
 var
   i: Integer;
 begin
   for i := 0 to L.Count - 1 do
   begin
     N := N + 1;
-    if EsDirectorio(L.Entry[i]) then
-      CantidadRec(L.Entry[i].Contents, N);
+    if IsDirectory(L.Entry[i]) then
+      CantidadRec(L.Entry[i].Contents, {var}N);
   end;
 end;
 
-function TAdminFicheros.Count: Integer;
+function TFileManager.Count: Integer;
 begin
   Result := 0;
-  CantidadRec(Root(), Result);
+  CantidadRec(Root(), {var}Result);
 end;
 
-function TAdminFicheros.Root: TListContents;
+function TFileManager.Root: TListContents;
 begin
   Result := List;
 end;
 
-function TAdminFicheros.EsDirectorio(Attributes: Integer): Boolean;
+function TFileManager.IsDirectory(Attributes: Integer): Boolean;
 begin
   if Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
     Result := True
@@ -461,12 +461,12 @@ begin
     Result := False;
 end;
 
-function TAdminFicheros.EsDirectorio(Entry: PEntry): Boolean;
+function TFileManager.IsDirectory(Entry: PEntry): Boolean;
 begin
-  Result := EsDirectorio(Entry.Attributes);
+  Result := IsDirectory(Entry.Attributes);
 end;
 
-function TAdminFicheros.EsPadre(Parent: PEntry; Child: PEntry): Boolean;
+function TFileManager.IsParent(Parent: PEntry; Child: PEntry): Boolean;
 begin
   Result := False;
   if (Parent = nil) or (Child = nil) then
@@ -477,7 +477,7 @@ begin
   else
   begin
     if Child.PreviousLevel <> nil then
-      Result := EsPadre(Parent, Child.PreviousLevel.Entry[-1]);
+      Result := IsParent(Parent, Child.PreviousLevel.Entry[-1]);
   end;
 end;
 

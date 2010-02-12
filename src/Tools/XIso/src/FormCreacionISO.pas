@@ -102,9 +102,9 @@ type
     procedure WMDROPFILES(var msg: TMessage); message WM_DROPFILES;
   public
     ProgressBar1: TProgressBar;
-    Manager: TAdminFicheros;
-    procedure ActualizarLista;
-    procedure ActualizarDirectorios;
+    Manager: TFileManager;
+    procedure UpdateList;
+    procedure UpdateFolders;
   end;
 
 var
@@ -128,7 +128,7 @@ begin
   Result := Info.hIcon;
 end;
 
-procedure TForm5.ActualizarLista;
+procedure TForm5.UpdateList;
 var
   i: Integer;
   Fila: TListItem;
@@ -204,7 +204,7 @@ begin
   end;
 end;
 
-procedure TForm5.ActualizarDirectorios;
+procedure TForm5.UpdateFolders;
 var
   Root: TTreeNode;
   i: Integer;
@@ -246,7 +246,7 @@ end;
 
 procedure TForm5.FormCreate(Sender: TObject);
 begin
-  Manager := TAdminFicheros.Create;
+  Manager := TFileManager.Create;
   DragAcceptFiles(Self.Handle, True);
   Etiqueta := SEtiqueta;
 end;
@@ -264,8 +264,8 @@ begin
     ListviewFicheros.Items.Delete(i);
   end;
   
-  ActualizarLista();
-  ActualizarDirectorios();
+  UpdateList();
+  UpdateFolders();
 end;
 
 procedure TForm5.Nuevacarpeta1Click(Sender: TObject);
@@ -281,8 +281,8 @@ begin
       Exit;
 
   Manager.AddNewFolder(s);
-  ActualizarLista();
-  ActualizarDirectorios();
+  UpdateList();
+  UpdateFolders();
 end;
 
 procedure TForm5.ListviewFicherosDblClick(Sender: TObject);
@@ -296,8 +296,8 @@ begin
   Entry := PEntry(ListviewFicheros.Selected.Data);
   if Entry.Attributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY then
   begin
-    Manager.Avanzar(Entry.Id);
-    ActualizarLista();
+    Manager.Enter(Entry.Id);
+    UpdateList();
     for i := 1 to TreeviewDirectorios.Items.Count - 1 do
     begin
       if TreeviewDirectorios.Items[i] = nil then
@@ -345,8 +345,8 @@ begin
   for i := 0 to OpenDialog1.Files.Count - 1 do
     Manager.AddFile(OpenDialog1.Files[i]);
 
-  ActualizarLista();
-  ActualizarDirectorios();
+  UpdateList();
+  UpdateFolders();
 end;
 
 procedure TForm5.Aadircarpeta1Click(Sender: TObject);
@@ -356,8 +356,8 @@ begin
     Exit;
 
   Manager.AddFolder(FolderBrowser1.Folder);
-  ActualizarLista();
-  ActualizarDirectorios();}
+  UpdateList();
+  UpdateFolders();}
 end;
 
 procedure TForm5.WMDROPFILES(var msg: TMessage);
@@ -375,7 +375,7 @@ begin
     Manager.AddFolder(fn);
   end;
   DragFinish(dr);
-  ActualizarLista();
+  UpdateList();
 end;
 
 procedure TForm5.MenuItemExitClick(Sender: TObject);
@@ -391,14 +391,14 @@ begin
     Exit;
 
   if TreeviewDirectorios.Selected.AbsoluteIndex = 0 then
-    Manager.Avanzar(Manager.Root)
+    Manager.Enter(Manager.Root)
   else
   begin
     Entry := PEntry(TreeviewDirectorios.Selected.Data);
-    Manager.Avanzar(Entry.Contents);
+    Manager.Enter(Entry.Contents);
   end;
 
-  ActualizarLista();
+  UpdateList();
 end;
 
 procedure TForm5.TreeViewDirectoriosKeyPress(Sender: TObject;
@@ -416,8 +416,8 @@ begin
     ProgressBar1.Position := 0;
     ProgressBar1.Step := 1;
   end;
-  ActualizarLista();
-  ActualizarDirectorios();
+  UpdateList();
+  UpdateFolders();
 end;
 
 procedure TForm5.ToolButton1Click(Sender: TObject);
@@ -425,8 +425,8 @@ begin
   if Manager.Root = nil then
     Exit;
 
-  Manager.Retroceder();
-  ActualizarLista();
+  Manager.Back();
+  UpdateList();
   if (TreeviewDirectorios.Selected <> nil) and (TreeviewDirectorios.Selected.Parent <> nil) then
     TreeviewDirectorios.Selected.Parent.Selected := True;
 end;
@@ -485,8 +485,8 @@ begin
         Exit;
     end;
 
-  ActualizarLista();
-  ActualizarDirectorios();
+  UpdateList();
+  UpdateFolders();
 end;
 
 procedure TForm5.TreeViewDirectoriosDragOver(Sender, Source: TObject; X,
@@ -513,10 +513,10 @@ end;
 procedure TForm5.ToolButton3Click(Sender: TObject);
 begin
   Manager.Free;
-  Manager := TAdminFicheros.Create;
+  Manager := TFileManager.Create;
   Etiqueta := SEtiqueta;
-  ActualizarLista();
-  ActualizarDirectorios();
+  UpdateList();
+  UpdateFolders();
 end;
 
 procedure TForm5.FinCreacion(Sender: TObject);

@@ -72,16 +72,16 @@ type
     procedure AssignDevicesToList();
   end;
 
-  // Estructuras SCSI
+  // SCSI Structures
   TDevice = record
     Name: string;
     HA: Byte;
     SCSI: Byte;
     LUN: Byte;
-    Grabadora: Boolean;
-    Letra: AnsiChar;
-    VelocidadActual: Integer;
-    VelocidadMaxima: Integer;
+    IsWriter: Boolean;
+    Letter: AnsiChar;
+    ActualSpeed: Integer;
+    MaximumSpeed: Integer;
   end;
 
   TTiempo = record
@@ -101,7 +101,7 @@ implementation
 
 {$R *.dfm}
 
-procedure EscanearSCSI();
+procedure ScanSCSI();
 var
   i, j, k, l: Byte;
   DeviceType: TDeviceType;
@@ -126,8 +126,8 @@ begin
           Devices[l].HA := i;
           Devices[l].SCSI := j;
           Devices[l].LUN := k;
-          Devices[l].Letra := #00;
-          Devices[l].Grabadora := InfoExtra.SupportWriteCDR = True;
+          Devices[l].Letter := #00;
+          Devices[l].IsWriter := InfoExtra.SupportWriteCDR = True;
           l := l + 1;
         end;
   end;
@@ -141,7 +141,7 @@ var
 begin
   for i := 0 to NumberOfDevices - 1 do
   begin
-    // if Devices[i].Grabadora then
+    // if Devices[i].IsWriter then
       Form4.cGrabadoras.Items.Add(Devices[i].Name);
   end;
 
@@ -188,7 +188,7 @@ var
   P: TModeSelectEscribir;
   ISOImageFile: TFileStream;
   total, leido: Integer;
-  Velocidad: Word;
+  Speed: Word;
   Buffer: array[0..($1B * 2352) - 1] of Byte;
   LBA: Integer;
   CDINFO: TCDInfo;
@@ -208,7 +208,7 @@ begin
     end;
 
     CDINFO := CDUnit.ReadDiscInformation(HA, SCSI, LUN);
-    if CDINFO.EstadoDisco <> ed_Vacio then
+    if CDINFO.DiskState <> ds_Empty then
     begin
       MessageBox(Self.Handle, PChar(SGraNoDisco), nil, MB_OK or MB_ICONWARNING);
       Exit;
@@ -219,15 +219,15 @@ begin
     PISTAINFO := CDUnit.ReadTrackInformation(HA, SCSI, LUN, 1, 1);
 
     if cVelocidad.ItemIndex = 0 then
-      Velocidad := $FFFF
+      Speed := $FFFF
     else
     begin
-      Velocidad := StrToInt(Copy(cVelocidad.Text, 1, Length(cVelocidad.Text) - 1));
-      Velocidad := (Velocidad shr 8) or (Velocidad shl 8);
+      Speed := StrToInt(Copy(cVelocidad.Text, 1, Length(cVelocidad.Text) - 1));
+      Speed := (Speed shr 8) or (Speed shl 8);
     end;
 
-    if not CDUnit.SetCDSpeed(HA, SCSI, LUN, $FFFF, Velocidad) then
-      ShowMessage('no se puso la velocidad');
+    if not CDUnit.SetCDSpeed(HA, SCSI, LUN, $FFFF, Speed) then
+      ShowMessage('no se puso la Speed');
 
     P.Op1 := 1; // Track at once
     P.Op2 := 4;
@@ -310,7 +310,7 @@ end;
 
 procedure TForm4.FormShow(Sender: TObject);
 begin
-  EscanearSCSI();
+  ScanSCSI();
   AssignDevicesToList();
 end;
 
@@ -324,7 +324,7 @@ end;
 
 procedure TForm4.cGrabadorasChange(Sender: TObject);
 begin
-  BotonGrabar.Enabled := Devices[Form4.cGrabadoras.ItemIndex].Grabadora = True;
+  BotonGrabar.Enabled := Devices[Form4.cGrabadoras.ItemIndex].IsWriter = True;
 end;
 
 procedure TForm4.tContadorGrabacionTimer(Sender: TObject);
