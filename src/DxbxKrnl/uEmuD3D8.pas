@@ -2157,11 +2157,11 @@ end;
 procedure XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale(pOffset: PD3DXVECTOR4; pScale: PD3DXVECTOR4); stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
-  fScaleX: Float;
+{  fScaleX: Float;
   fScaleY: Float;
   fScaleZ: Float;
   fOffsetX: Float;
-  fOffsetY: Float;
+  fOffsetY: Float;}
   Viewport: D3DVIEWPORT8;
 begin
   EmuSwapFS(fsWindows);
@@ -2175,11 +2175,14 @@ begin
     [pOffset, pScale]);
 {$ENDIF}
 
+{
+  Never used because Cxbx marked them out below
   fScaleX := 1.0;
   fScaleY := 1.0;
   fScaleZ := 1.0;
   fOffsetX := 0.5 + 1.0 / 32;
   fOffsetY := 0.5 + 1.0 / 32;
+}
 
   EmuSwapFS(fsXbox);
   XTL_EmuIDirect3DDevice8_GetViewport(@Viewport);
@@ -7288,7 +7291,6 @@ function XTL_EmuIDirect3DDevice8_SetStreamSource
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   pVertexBuffer8: IDirect3DVertexBuffer8;
-  VertexBufferDummy: IDirect3DVertexBuffer8;
 begin
   EmuSwapFS(fsWindows);
 

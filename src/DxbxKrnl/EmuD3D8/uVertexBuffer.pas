@@ -873,13 +873,13 @@ var
   pOrigVertexBuffer: IDirect3DVertexBuffer8;
   pNewVertexBuffer: IDirect3DVertexBuffer8;
   pStream: PPATCHEDSTREAM;
-  pData: Puint08;
+  pData: PByte;
   pUVData: Puint08;
   uiStride: uint;
   uiVertexCount: uint;
 
   Desc: D3DVERTEXBUFFER_DESC;
-  pOrigData: Puint08;
+  pOrigData: PByte;
   uiOffset: uint;
   dwTexN: DWORD;
   uiVertex: uint32;
@@ -911,7 +911,7 @@ begin
     begin
         // In-place patching of inline buffer.
         pNewVertexBuffer := nil;
-        pData := Puint08(pPatchDesc.pVertexStreamZeroData);
+        pData := (*Puint08*)(pPatchDesc.pVertexStreamZeroData);
         uiStride := pPatchDesc.uiVertexStreamZeroStride;
         uiVertexCount := pPatchDesc.dwVertexCount;
     end
@@ -926,15 +926,15 @@ begin
         end;
         uiVertexCount := Desc.Size div uiStride;
 
-        (*if(FAILED(pOrigVertexBuffer.Lock(0, 0, pOrigData, 0))) then
+        if(FAILED(pOrigVertexBuffer.Lock(0, 0, pOrigData, 0))) then
         begin
             CxbxKrnlCleanup('Couldn`t lock original FVF buffer.');
-        end; *)
+        end;
         g_pD3DDevice8.CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, pNewVertexBuffer);
-        (*if(FAILED(pNewVertexBuffer.Lock(0, 0, pData, 0))) then
+        if(FAILED(pNewVertexBuffer.Lock(0, 0, pData, 0))) then
         begin
             CxbxKrnlCleanup('Couldn`t lock new FVF buffer.');
-        end; *)
+        end;
         memcpy(pData, pOrigData, Desc.Size);
         pOrigVertexBuffer.Unlock();
 
@@ -1728,6 +1728,9 @@ begin
     //
     // DEBUGGING
     //
+  dwWidth := 0;
+  dwHeight := 0;
+
   for Stage := 0 to 3 do
   begin
     pTexture := EmuD3DActiveTexture[Stage];
