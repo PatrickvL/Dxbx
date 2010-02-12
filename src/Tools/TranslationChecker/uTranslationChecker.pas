@@ -50,6 +50,7 @@ type
     lblFilterTranslator: TLabel;
     ebFilterBranch: TEdit;
     lblFilterBranch: TLabel;
+    cbFilterNot: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnCxbxSourcesPathClick(Sender: TObject);
     procedure btnDxbxSourcesPathClick(Sender: TObject);
@@ -397,7 +398,7 @@ begin
 
           Inc(NrOfFoundSymbols);
           // Check Branch filter :
-          if (ebFilterBranch.Text <> '') and (Pos(LowerCase(ebFilterBranch.Text), LowerCase(BranchStr)) <= 0) then
+          if  not cbFilterNot.Checked and ((ebFilterBranch.Text <> '') and (Pos(LowerCase(ebFilterBranch.Text), LowerCase(BranchStr)) <= 0)) then
             Continue;
 
           // Check Translator filter :
@@ -406,6 +407,10 @@ begin
 
           // Check done-percentage filter :
           if (StrToIntDef(DoneStr, 0) < seFilterDone.Value) xor cbFilterDoneLess.Checked then
+            Continue;
+
+          // Check Not filter :
+          if cbFilterNot.Checked and Not ((ebFilterBranch.Text <> '') and (Pos(LowerCase(ebFilterBranch.Text), LowerCase(BranchStr)) <= 0)) then
             Continue;
 
           // Show what we've found :

@@ -48,7 +48,7 @@ object Form1: TForm1
     OnClick = btnCxbxSourcesPathClick
   end
   object lblFilterDone: TLabel
-    Left = 424
+    Left = 472
     Top = 77
     Width = 90
     Height = 13
@@ -56,7 +56,7 @@ object Form1: TForm1
     FocusControl = seFilterDone
   end
   object lblFilterTranslator: TLabel
-    Left = 271
+    Left = 319
     Top = 77
     Width = 56
     Height = 13
@@ -120,7 +120,7 @@ object Form1: TForm1
     OnClick = btnSaveToXmlClick
   end
   object cbFilterDoneLess: TCheckBox
-    Left = 572
+    Left = 620
     Top = 73
     Width = 50
     Height = 17
@@ -130,7 +130,7 @@ object Form1: TForm1
     TabOrder = 5
   end
   object seFilterDone: TSpinEdit
-    Left = 520
+    Left = 568
     Top = 70
     Width = 46
     Height = 22
@@ -140,21 +140,29 @@ object Form1: TForm1
     Value = 101
   end
   object ebFilterTranslator: TEdit
-    Left = 333
+    Left = 381
     Top = 69
     Width = 85
     Height = 21
     TabOrder = 7
   end
   object ebFilterBranch: TEdit
-    Left = 139
+    Left = 187
     Top = 67
     Width = 126
     Height = 21
     TabOrder = 8
   end
+  object cbFilterNot: TCheckBox
+    Left = 139
+    Top = 73
+    Width = 38
+    Height = 17
+    Caption = '&Not'
+    TabOrder = 9
+  end
   object SaveDialog: TSaveDialog
     Left = 508
-    Top = 88
+    Top = 136
   end
 end
