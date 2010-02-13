@@ -116,7 +116,7 @@ function xboxkrnl_MmDbgWriteCheck(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 implementation
 
 function xboxkrnl_MmGlobalData(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmGlobalData');
@@ -132,7 +132,7 @@ end;
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pRet: PVOID;
   dwRet: DWORD;
@@ -147,8 +147,6 @@ begin
          [NumberOfBytes]);
 {$ENDIF}
 
-  // Result := xboxkrnl_MmAllocateContiguousMemoryEx(NumberOfBytes, $00000000, $FFFFFFFF, 0, PAGE_READWRITE);
-  
   //
   // Cxbx NOTE: Kludgey (but necessary) solution:
   //
@@ -181,7 +179,7 @@ function xboxkrnl_MmAllocateContiguousMemoryEx(
   Alignment: ULONG; //OPTIONAL
   ProtectionType: ULONG
   ): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 {$WRITEABLECONST ON}
 const
   Count: Integer = 0;
@@ -239,7 +237,7 @@ function xboxkrnl_MmAllocateSystemMemory(
   NumberOfBytes: ULONG;
   Protect: ULONG
   ): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -259,7 +257,7 @@ begin
 end;
 
 function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmClaimGpuInstanceMemory');
@@ -271,7 +269,7 @@ function xboxkrnl_MmCreateKernelStack(
   NumberOfBytes: ULONG;
   Unknown: ULONG
   ): PVOID; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -300,7 +298,7 @@ procedure xboxkrnl_MmDeleteKernelStack(
   EndAddress: PVOID;
   BaseAddress: PVOID
   ); stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   RegionSize: ULONG;
 begin
@@ -329,7 +327,7 @@ end;
 procedure xboxkrnl_MmFreeContiguousMemory(
   BaseAddress: PVOID
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   OrigBaseAddress: PVoid;
 begin
@@ -351,16 +349,16 @@ begin
     g_AlignCache.remove(BaseAddress);
   end;
 
-(*  if(OrigBaseAddress <> @xLaunchDataPage) then
+  if(OrigBaseAddress <> @xLaunchDataPage) then
   begin
     CxbxFree(OrigBaseAddress);
   end
   else
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('Ignored MmFreeContiguousMemory(@xLaunchDataPage)');
+    DbgPrintf('Ignored MmFreeContiguousMemory(%xLaunchDataPage)');
 {$ENDIF}
-  end; *)
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -369,7 +367,7 @@ function xboxkrnl_MmFreeSystemMemory(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -395,7 +393,7 @@ end;
 function xboxkrnl_MmGetPhysicalAddress(
   BaseAddress: PVOID
   ): PHYSICAL_ADDRESS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmGetPhysicalAddress');
@@ -403,7 +401,7 @@ begin
 end;
 
 function xboxkrnl_MmIsAddressValid(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmIsAddressValid');
@@ -411,7 +409,7 @@ begin
 end;
 
 function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmLockUnlockBufferPages');
@@ -419,7 +417,7 @@ begin
 end;
 
 function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmLockUnlockPhysicalPage');
@@ -453,7 +451,7 @@ procedure xboxkrnl_MmPersistContiguousMemory(
   NumberOfBytes: ULONG;
   Persist: LONGBOOL
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -474,7 +472,7 @@ begin
 end;
 
 function xboxkrnl_MmQueryAddressProtect(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmQueryAddressProtect');
@@ -484,7 +482,7 @@ end;
 function xboxkrnl_MmQueryAllocationSize(
   BaseAddress: PVOID
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -503,7 +501,7 @@ end;
 function xboxkrnl_MmQueryStatistics(
   MemoryStatistics: PMM_STATISTICS // out
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   MyMemoryStatus: MEMORYSTATUS;
 begin
@@ -539,7 +537,7 @@ function xboxkrnl_MmSetAddressProtect(
   NumberOfBytes: ULONG;
   NewProtect: ULONG
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwOldProtect: DWORD;
 begin
@@ -583,7 +581,7 @@ function xboxkrnl_MmUnmapIoSpace(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('MmUnmapIoSpace');
@@ -592,7 +590,7 @@ begin
 end;
 
 function xboxkrnl_MmDbgAllocateMemory(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmDbgAllocateMemory');
@@ -600,7 +598,7 @@ begin
 end;
 
 function xboxkrnl_MmDbgFreeMemory(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmDbgFreeMemory');
@@ -608,7 +606,7 @@ begin
 end;
 
 function xboxkrnl_MmDbgQueryAvailablePages(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmDbgQueryAvailablePages');
@@ -616,7 +614,7 @@ begin
 end;
 
 function xboxkrnl_MmDbgReleaseAddress(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmDbgReleaseAddress');
@@ -624,7 +622,7 @@ begin
 end;
 
 function xboxkrnl_MmDbgWriteCheck(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmDbgWriteCheck');

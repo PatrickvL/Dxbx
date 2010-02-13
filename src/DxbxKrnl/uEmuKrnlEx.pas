@@ -134,6 +134,7 @@ implementation
 function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExAcquireReadWriteLockExclusive');
@@ -144,6 +145,7 @@ end;
 function {013} xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExAcquireReadWriteLockShared');
@@ -205,6 +207,7 @@ end;
 procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExFreePool');
@@ -215,6 +218,7 @@ end;
 function {018} xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInitializeReadWriteLock');
@@ -226,6 +230,7 @@ function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Increment: LARGE_INTEGER;
   Lock: PKSPIN_LOCK
   ): LARGE_INTEGER; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeInteger');
@@ -237,6 +242,7 @@ procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   Addend: PLARGE_INTEGER;
   Increment: ULONG
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeStatistic');
@@ -249,6 +255,7 @@ function {021} xboxkrnl_ExInterlockedCompareExchange64(
   Comparand: PLONGLONG;
   Lock: PKSPIN_LOCK
   ): LONGLONG; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInterlockedCompareExchange64');
@@ -259,6 +266,7 @@ function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
   QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExQueryPoolBlockSize');
@@ -396,6 +404,7 @@ function {025} xboxkrnl_ExReadWriteRefurbInfo(
   Arg2Size: DWORD;
   Arg3: LONGBOOL
   ): NTSTATUS; stdcall; // Source: XBMC - Uncertain
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExReadWriteRefurbInfo');
@@ -405,6 +414,7 @@ end;
 procedure {026} xboxkrnl_ExRaiseException(
   ExceptionRecord: PEXCEPTION_RECORD
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExRaiseException');
@@ -415,6 +425,7 @@ end;
 procedure {027} xboxkrnl_ExRaiseStatus(
   Status: NTSTATUS
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExRaiseStatus');
@@ -424,6 +435,7 @@ end;
 function {028} xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExReleaseReadWriteLock');
@@ -436,6 +448,7 @@ function {029} xboxkrnl_ExSaveNonVolatileSetting(
   Value: PUCHAR;
   ValueLength: SIZE_T
   ): NTSTATUS; stdcall; // Source: OpenXDK
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExSaveNonVolatileSetting');
@@ -447,6 +460,7 @@ function {032} xboxkrnl_ExfInterlockedInsertHeadList(
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertHeadList');
@@ -459,6 +473,7 @@ function {033} xboxkrnl_ExfInterlockedInsertTailList(
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertTailList');
@@ -470,6 +485,7 @@ function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedRemoveHeadList');

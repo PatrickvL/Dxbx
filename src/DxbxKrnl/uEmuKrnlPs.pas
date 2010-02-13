@@ -103,6 +103,7 @@ type
 
 // Note : The signature of this function should conform to System.TThreadFunc !
 function PCSTProxy(Parameter: PPCSTProxyParam): Integer;
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 label
   callComplete;
 var
@@ -386,6 +387,7 @@ begin
 end;
 
 function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('PsQueryStatistics');
@@ -394,7 +396,8 @@ end;
 
 function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
-  ): NTSTATUS; stdcall; // Source: ReactOS
+  ): NTSTATUS; stdcall;
+// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('PsSetCreateThreadNotifyRoutine');

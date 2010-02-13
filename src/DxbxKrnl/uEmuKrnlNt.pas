@@ -219,7 +219,7 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
 function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtWaitForSingleObjectEx(
   Handle_: HANDLE;
-  WaitMode: CHAR;
+  WaitMode: AnsiCHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
@@ -279,7 +279,7 @@ begin
 end;
 
 function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCancelTimer');
@@ -350,7 +350,7 @@ begin
 end;
 
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateDirectoryObject');
@@ -651,7 +651,7 @@ function xboxkrnl_NtCreateIoCompletion(
   pObjectAttributes: dtObjectAttributes;
   pszUnknownArgs: dtBLOB
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateIoCompletion');
@@ -757,7 +757,7 @@ begin
 end;
 
 function xboxkrnl_NtCreateTimer(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateTimer');
@@ -765,7 +765,7 @@ begin
 end;
 
 function xboxkrnl_NtDeleteFile(pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDeleteFile');
@@ -788,7 +788,7 @@ function xboxkrnl_NtDeviceIoControlFile(
   pOutputBuffer: dtU32;
   OutputBufferLength: dtU32
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtDeviceIoControlFile');
@@ -898,7 +898,7 @@ function xboxkrnl_NtFsControlFile(
   pOutputBuffer: dtU32;
   OutputBufferLength: dtU32
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtFsControlFile');
@@ -906,7 +906,7 @@ begin
 end;
 
 function xboxkrnl_NtOpenDirectoryObject(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtOpenDirectoryObject');
@@ -950,7 +950,7 @@ begin
 end;
 
 function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtOpenSymbolicLinkObject');
@@ -958,7 +958,7 @@ begin
 end;
 
 function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtProtectVirtualMemory');
@@ -966,7 +966,7 @@ begin
 end;
 
 function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtPulseEvent');
@@ -1106,7 +1106,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryDirectoryObject');
@@ -1114,7 +1114,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryEvent');
@@ -1220,7 +1220,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryIoCompletion');
@@ -1228,7 +1228,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryMutant');
@@ -1236,7 +1236,7 @@ begin
 end;
 
 function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQuerySemaphore');
@@ -1244,7 +1244,7 @@ begin
 end;
 
 function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQuerySymbolicLinkObject');
@@ -1252,7 +1252,7 @@ begin
 end;
 
 function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtQueryTimer');
@@ -1398,6 +1398,7 @@ begin
 end;
 
 function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtReadFileScatter');
@@ -1461,7 +1462,7 @@ begin
 end;
 
 function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtRemoveIoCompletion');
@@ -1552,7 +1553,7 @@ begin
 end;
 
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetIoCompletion');
@@ -1560,7 +1561,7 @@ begin
 end;
 
 function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetSystemTime');
@@ -1568,7 +1569,7 @@ begin
 end;
 
 function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetTimerEx');
@@ -1576,7 +1577,7 @@ begin
 end;
 
 function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSignalAndWaitForSingleObjectEx');
@@ -1702,7 +1703,7 @@ begin
 end;
 
 function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForSingleObject');
@@ -1711,35 +1712,31 @@ end;
 
 function xboxkrnl_NtWaitForSingleObjectEx(
   Handle_: HANDLE;
-  WaitMode: CHAR;
+  WaitMode: AnsiCHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:95
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-(*  DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
-      #13#10'(\'+
+  DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
+      #13#10'('+
       #13#10'   Handle               : 0x%.08X'+
       #13#10'   WaitMode             : 0x%.08X'+
       #13#10'   Alertable            : 0x%.08X'+
-      #13#10'   Timeout              : 0x%.08X (%d)'+
+      #13#10'   Timeout              : 0x%.08X'+ //' (%d)'+
       #13#10');',
-      Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout.QuadPart); *)
+      [Handle_, Ord(WaitMode), Alertable, Timeout{, Timeout = nil ? 0 : Timeout.QuadPart}]);
 {$ENDIF}
 
-(*    NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+  Result := JwaNative.NtWaitForSingleObject(Handle_, Alertable, Timeout);
 
 {$IFDEF DEBUG}
-    DbgPrintf('Finished waiting for 0x%.08X', [Handle]);
+    DbgPrintf('Finished waiting for 0x%.08X', [Handle_]);
 {$ENDIF}
 
-    return ret;
-*)
-
-  Result := Unimplemented('NtWaitForSingleObjectEx');
   EmuSwapFS(fsXbox);
 end;
 
@@ -1826,7 +1823,7 @@ begin
 end;
 
 function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall;
-// Branch:Dxbx
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWriteFileGather');

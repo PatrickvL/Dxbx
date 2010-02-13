@@ -63,6 +63,7 @@ function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 implementation
 
 function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObCreateObject');
@@ -70,6 +71,7 @@ begin
 end;
 
 function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObInsertObject');
@@ -77,6 +79,7 @@ begin
 end;
 
 function xboxkrnl_ObMakeTemporaryObject(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObMakeTemporaryObject');
@@ -84,6 +87,7 @@ begin
 end;
 
 function xboxkrnl_ObOpenObjectByName(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObOpenObjectByName');
@@ -91,6 +95,7 @@ begin
 end;
 
 function xboxkrnl_ObOpenObjectByPointer(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObOpenObjectByPointer');
@@ -109,6 +114,7 @@ function xboxkrnl_ObReferenceObjectByHandle(
   ObjectType: POBJECT_TYPE; // OPTIONAL?
   Object_: PPVOID
   ): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByHandle');
@@ -116,6 +122,7 @@ begin
 end;
 
 function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByName');
@@ -123,6 +130,7 @@ begin
 end;
 
 function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObReferenceObjectByPointer');
@@ -130,6 +138,7 @@ begin
 end;
 
 function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObfDereferenceObject');
@@ -137,6 +146,7 @@ begin
 end;
 
 function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ObfReferenceObject');
