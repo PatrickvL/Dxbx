@@ -115,6 +115,7 @@ procedure {009} xboxkrnl_HalReadSMCTrayState(
   State: PDWORD;
   Count: PDWORD
   ); stdcall; // Source: OpenXdk
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalReadSMCTrayState');
@@ -124,6 +125,7 @@ end;
 procedure {038} xboxkrnl_HalClearSoftwareInterrupt(
   Request: KIRQL
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalClearSoftwareInterrupt');
@@ -134,6 +136,7 @@ function {039} xboxkrnl_HalDisableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL
   ): LONGBOOL; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalDisableSystemInterrupt');
@@ -146,6 +149,7 @@ function {043} xboxkrnl_HalEnableSystemInterrupt(
   Irql: KIRQL;
   InterruptMode: KINTERRUPT_MODE
   ): LONGBOOL; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalEnableSystemInterrupt');
@@ -161,6 +165,7 @@ function {044} xboxkrnl_HalGetInterruptVector(
   Irql: PKIRQL;
   Affinity: PKAFFINITY
   ): ULONG; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('HalGetInterruptVector');
@@ -175,6 +180,7 @@ procedure {045} xboxkrnl_HalReadSMBusValue(
   Length: ULONG;
   WritePCISpace: LONGBOOL
   ); stdcall; // Source: OpenXDK
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalReadSMBusValue');
@@ -189,6 +195,7 @@ procedure {046} xboxkrnl_HalReadWritePCISpace(
   Length: ULONG;
   WritePCISpace: LONGBOOL
   ); stdcall; // Source: OpenXDK
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalReadWritePCISpace');
@@ -199,6 +206,7 @@ function {047} xboxkrnl_HalRegisterShutdownNotification(
   Arg1: UNKNOWN;
   Arg2: UNKNOWN
   ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('HalRegisterShutdownNotification');
@@ -207,7 +215,8 @@ end;
 
 procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
   Request: KIRQL
-  ); stdcall; // Source: ReactOS
+  ); stdcall;
+// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalRequestSoftwareInterrupt');
@@ -236,7 +245,8 @@ function {050} xboxkrnl_HalWriteSMBusValue(
   Command: UCHAR;
   WordFlag: BOOLEAN; // Dxbx TODO : What should we use: LONGBOOL or WORDBOOL?
   Value: ULONG
-  ): ULONG; stdcall; // Source: OpenXDK
+  ): ULONG; stdcall;
+// Source: OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('HalWriteSMBusValue');
@@ -244,6 +254,7 @@ begin
 end;
 
 function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('HalIsResetOrShutdownPending');
@@ -251,6 +262,7 @@ begin
 end;
 
 function {360} xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('HalInitiateShutdown');
@@ -263,7 +275,8 @@ end;
 //
 // New to the XBOX.
 procedure {365} xboxkrnl_HalEnableSecureTrayEject(
-  ); stdcall; // Source: XBMC Undocumented.h
+  ); stdcall;
+// Source: XBMC Undocumented.h  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalEnableSecureTrayEject');
@@ -271,6 +284,7 @@ begin
 end;
 
 function {366} xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('HalWriteSMCScratchRegister');

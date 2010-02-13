@@ -169,9 +169,13 @@ procedure InitializeObjectAttributes(
   );
 
 var
+  // xLaunchDataPage (pointed to by LaunchDataPage)
+  xLaunchDataPage: LAUNCH_DATA_PAGE;
+
+var
   {156}xboxkrnl_KeTickCount: DWord;
   {162}xboxkrnl_KiBugCheckData: array [0..5 - 1] of ULONG_PTR; // Source: ReactOS
-  {164}xboxkrnl_LaunchDataPage: PLAUNCH_DATA_PAGE;
+  {164}xboxkrnl_LaunchDataPage: PLAUNCH_DATA_PAGE = @xLaunchDataPage;
   {357}xboxkrnl_IdexChannelObject: DWord;
 
 // The following API names are derived from Pedro's APILogger V2
@@ -288,6 +292,7 @@ end;
 /// ##########
 
 function {000} xboxkrnl_UnknownAPI000(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI000');
@@ -302,6 +307,7 @@ function {051} xboxkrnl_InterlockedCompareExchange(
   Exchange: LONG;
   Comparand: LONG
   ): LONG; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedCompareExchange({var}Destination, Exchange, Comparand);
@@ -311,6 +317,7 @@ end;
 function {052} xboxkrnl_InterlockedDecrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedDecrement({var}Addend);
@@ -320,6 +327,7 @@ end;
 function {053} xboxkrnl_InterlockedIncrement(
   var Addend: LONG // out, volatile
   ): LONG; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedIncrement({var}Addend);
@@ -330,6 +338,7 @@ function {054} xboxkrnl_InterlockedExchange(
   var Destination: LONG; // out, volatile
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedExchange({var}Destination, Value);
@@ -340,6 +349,7 @@ function {055} xboxkrnl_InterlockedExchangeAdd(
   var Addend: LONG; // out, volatile
   Value: LONG
   ): LONG; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedExchangeAdd({var}Addend, Value);
@@ -349,9 +359,10 @@ end;
 function {056} xboxkrnl_InterlockedFlushSList(
   ListHead: PSLIST_HEADER
   ): PSINGLE_LIST_ENTRY; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // Cxbx TODO : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
+  // Dxbx TODO : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
 end;
@@ -359,6 +370,7 @@ end;
 function {057} xboxkrnl_InterlockedPopEntrySList(
   ListHead: PSLIST_HEADER
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedPopEntrySList(ListHead);
@@ -369,6 +381,7 @@ function {058} xboxkrnl_InterlockedPushEntrySList(
   ListHead: PSLIST_HEADER;
   ListEntry: PSLIST_ENTRY
   ): PSLIST_ENTRY; stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedPushEntrySList(ListHead, ListEntry);
@@ -391,6 +404,7 @@ function {160} xboxkrnl_KfRaiseIrql(
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
   ): KIRQL; register; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('KfRaiseIrql');
@@ -412,6 +426,7 @@ procedure {161} xboxkrnl_KfLowerIrql(
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
   ); register; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('KfLowerIrql');
@@ -419,6 +434,7 @@ begin
 end;
 
 function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('KiUnlockDispatcherDatabase');
@@ -426,6 +442,7 @@ begin
 end;
 
 function {252} xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('PhyGetLinkState');
@@ -433,6 +450,7 @@ begin
 end;
 
 function {253} xboxkrnl_PhyInitialize(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('PhyInitialize');
@@ -444,6 +462,7 @@ procedure {329} xboxkrnl_READ_PORT_BUFFER_UCHAR(
   Buffer: PUCHAR;
   Count: ULONG
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('READ_PORT_BUFFER_UCHAR');
@@ -455,6 +474,7 @@ procedure {330} xboxkrnl_READ_PORT_BUFFER_USHORT(
   Buffer: PUSHORT;
   Count: ULONG
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('READ_PORT_BUFFER_USHORT');
@@ -466,6 +486,7 @@ procedure {331} xboxkrnl_READ_PORT_BUFFER_ULONG(
   Buffer: PULONG;
   Count: ULONG
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('READ_PORT_BUFFER_ULONG');
@@ -477,6 +498,7 @@ procedure {332} xboxkrnl_WRITE_PORT_BUFFER_UCHAR(
   Buffer: PUCHAR;
   Count: ULONG
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('WRITE_PORT_BUFFER_UCHAR');
@@ -488,6 +510,7 @@ procedure {333} xboxkrnl_WRITE_PORT_BUFFER_USHORT(
   Buffer: PUSHORT;
   Count: ULONG
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('WRITE_PORT_BUFFER_USHORT');
@@ -499,6 +522,7 @@ procedure {334} xboxkrnl_WRITE_PORT_BUFFER_ULONG(
   Buffer: PULONG;
   Count: ULONG
   ); stdcall; // Source: ReactOS
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('WRITE_PORT_BUFFER_ULONG');
@@ -506,6 +530,7 @@ begin
 end;
 
 function {367} xboxkrnl_UnknownAPI367(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI367');
@@ -513,6 +538,7 @@ begin
 end;
 
 function {368} xboxkrnl_UnknownAPI368(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI368');
@@ -520,6 +546,7 @@ begin
 end;
 
 function {369} xboxkrnl_UnknownAPI369(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI369');
@@ -527,6 +554,7 @@ begin
 end;
 
 function {370} xboxkrnl_UnknownAPI370(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI370');
@@ -534,6 +562,7 @@ begin
 end;
 
 function {371} xboxkrnl_UnknownAPI371(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI371');
@@ -541,6 +570,7 @@ begin
 end;
 
 function {372} xboxkrnl_UnknownAPI372(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI372');
@@ -548,10 +578,25 @@ begin
 end;
 
 function {373} xboxkrnl_UnknownAPI373(): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('UnknownAPI373');
   EmuSwapFS(fsXbox);
 end;
+
+//
+
+procedure xLaunchDataPage_Init;
+begin
+  xLaunchDataPage.Header.dwLaunchDataType := 2; // 2: dashboard, 0: title
+  xLaunchDataPage.Header.dwTitleId := 0;
+  strcopy(PAnsiChar(@(xLaunchDataPage.Header.szLaunchPath[0])), 'D:\default.xbe'#0);
+  xLaunchDataPage.Header.dwFlags := 0;
+end;
+
+initialization
+
+  xLaunchDataPage_Init;
 
 end.

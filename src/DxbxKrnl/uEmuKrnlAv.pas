@@ -72,7 +72,7 @@ begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuKrnl : AvGetSavedDataAddress();');
-  
+
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -84,7 +84,8 @@ procedure {002} xboxkrnl_AvSendTVEncoderOption(
   Option: ULONG;
   Param: ULONG;
   Result: PULONG // OUT
-  ); stdcall; // Source: OpenXDK
+  ); stdcall;
+// Source: OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('AvSendTVEncoderOption');
@@ -98,7 +99,8 @@ function {003} xboxkrnl_AvSetDisplayMode(
   Format: ULONG;
   Pitch: ULONG;
   FrameBuffer: ULONG
-  ): ULONG; stdcall; // Source: OpenXDK
+  ): ULONG; stdcall;
+// Source: OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('AvSetDisplayMode');
@@ -107,7 +109,8 @@ end;
 
 function {004} xboxkrnl_AvSetSavedDataAddress(
   Address: PVOID
-  ): PVOID; stdcall; // Source: OpenXDK
+  ): PVOID; stdcall;
+// Source: OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);

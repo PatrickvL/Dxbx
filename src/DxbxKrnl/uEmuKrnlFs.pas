@@ -52,6 +52,7 @@ implementation
 
 function {035} xboxkrnl_FscGetCacheSize(
   ): SIZE_T; stdcall; // Source: Dxbx - Uncertain
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('FscGetCacheSize');
@@ -59,6 +60,7 @@ begin
 end;
 
 function {036} xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('FscInvalidateIdleBlocks');
