@@ -41,6 +41,7 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
+  uEmuAlloc,
   uDxbxUtils,
   uDxbxKrnl,
   uDxbxKrnlUtils;
@@ -1025,84 +1026,95 @@ function xboxkrnl_NtQueryDirectoryFile(
   RestartScan: LONGBOOL
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+var
+  ret: NTSTATUS;
+  NtFileMask: UNICODE_STRING;
+  wszObjectName: pwchar_t;
+  FileDirInfo: PFILE_DIRECTORY_INFORMATION;
+  mbstr: array[0..0] of WCHAR;
+  wcstr: Pwchar_t;
 begin
-  EmuSwapFS(fsWindows);
+(*  EmuSwapFS(fsWindows);
 
-(*
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
-        #13#10'(' +
-        #13#10'   FileHandle           : 0x%.08X' +
-        #13#10'   Event                : 0x%.08X' +
-        #13#10'   ApcRoutine           : 0x%.08X' +
-        #13#10'   ApcContext           : 0x%.08X' +
-        #13#10'   IoStatusBlock        : 0x%.08X' +
-        #13#10'   FileInformation      : 0x%.08X' +
-        #13#10'   Length               : 0x%.08X' +
-        #13#10'   FileInformationClass : 0x%.08X' +
-        #13#10'   FileMask             : 0x%.08X (%s)' +
-        #13#10'   RestartScan          : 0x%.08X' +
-        #13#10');',
-        [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
-         FileInformation, Length, FileInformationClass, FileMask,
-         iif(Assigned(FileMask), FileMask.Buffer, ''), RestartScan]);
-{$ENDIF}
+    (*if Assigned(FileMask) then
+      DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
+          #13#10'(' +
+          #13#10'   FileHandle           : 0x%.08X' +
+          #13#10'   Event                : 0x%.08X' +
+          #13#10'   ApcRoutine           : 0x%.08X' +
+          #13#10'   ApcContext           : 0x%.08X' +
+          #13#10'   IoStatusBlock        : 0x%.08X' +
+          #13#10'   FileInformation      : 0x%.08X' +
+          #13#10'   Length               : 0x%.08X' +
+          #13#10'   FileInformationClass : 0x%.08X' +
+          #13#10'   FileMask             : 0x%.08X (%s)' +
+          #13#10'   RestartScan          : 0x%.08X' +
+          #13#10');',
+          [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+           FileInformation, Length, FileInformationClass, FileMask,
+           FileMask.Buffer, RestartScan])
+    else
+      DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
+          #13#10'(' +
+          #13#10'   FileHandle           : 0x%.08X' +
+          #13#10'   Event                : 0x%.08X' +
+          #13#10'   ApcRoutine           : 0x%.08X' +
+          #13#10'   ApcContext           : 0x%.08X' +
+          #13#10'   IoStatusBlock        : 0x%.08X' +
+          #13#10'   FileInformation      : 0x%.08X' +
+          #13#10'   Length               : 0x%.08X' +
+          #13#10'   FileInformationClass : 0x%.08X' +
+          #13#10'   FileMask             : 0x%.08X (%s)' +
+          #13#10'   RestartScan          : 0x%.08X' +
+          #13#10');',
+          [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+           FileInformation, Length, FileInformationClass, FileMask,
+           '', RestartScan]); *)
+(*{$ENDIF}
 
-    NTSTATUS ret;
-
-    if (FileInformationClass <> 1)   // Due to unicode->string conversion
+    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
         CxbxKrnlCleanup('Unsupported FileInformationClass');
 
-    NtDll::UNICODE_STRING NtFileMask;
-
-    wchar_t wszObjectName[160-1];
-
     // initialize FileMask
-    {
-        if Assigned(FileMask) then
-            mbstowcs(wszObjectName, FileMask.Buffer, 160-1)
-        else
-            mbstowcs(wszObjectName, '', 160-1);
+    if Assigned(FileMask) then
+      mbstowcs(wszObjectName, FileMask.Buffer, 160-1)
+    else
+      mbstowcs(wszObjectName, '', 160-1);
 
-        NtDll::RtlInitUnicodeString(@NtFileMask, wszObjectName);
-    }
+    RtlInitUnicodeString(@NtFileMask, wszObjectName);
 
-    NtDll::FILE_DIRECTORY_INFORMATION *FileDirInfo = (NtDll::FILE_DIRECTORY_INFORMATION*)(*CxbxMalloc($40 + 160*2);
+    FileDirInfo := PFILE_DIRECTORY_INFORMATION(CxbxMalloc($40 + 160*2));
 
-    char    *mbstr = FileInformation.FileName;
-    wchar_t *wcstr = FileDirInfo.FileName;
+    mbstr := FileInformation.FileName;
+    wcstr := FileDirInfo.FileName;
 
-    do
-    {
-        ZeroMemory(wcstr, 160*2);
+    while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0) do
+    begin
+      ZeroMemory(wcstr, 160*2);
 
-        ret = NtDll::NtQueryDirectoryFile
-        (
-            FileHandle, Event, (NtDll::PIO_APC_ROUTINE)ApcRoutine, ApcContext, (NtDll::IO_STATUS_BLOCK*)(*IoStatusBlock, FileDirInfo,
-            $40+160*2, (NtDll::FILE_INFORMATION_CLASS)FileInformationClass, TRUE, @NtFileMask, RestartScan
-        );
+      ret := NtQueryDirectoryFile
+          (
+              FileHandle, Event, PIO_APC_ROUTINE(ApcRoutine), ApcContext, PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
+              $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
+          );
 
-        // convert from PC to Xbox
-        {
-            memcpy(FileInformation, FileDirInfo, $40);
+      // convert from PC to Xbox
+      memcpy(FileInformation, FileDirInfo, $40);
+      wcstombs(mbstr, wcstr, 160);
+      FileInformation.FileNameLength := FileInformation.FileNameLength div 2;
 
-            wcstombs(mbstr, wcstr, 160);
+      RestartScan = FALSE;
 
-            FileInformation.FileNameLength /= 2;
-        }(*
-
-        RestartScan = FALSE;
-    }
-    // Xbox does not return . and ..
-    while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0);
+      // Xbox does not return . and ..
+    end;
 
     // Cxbx TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
     CxbxFree(FileDirInfo);
 
-    return ret;*)
+    Result := ret;
 
-  Result := Unimplemented('NtQueryDirectoryFile');
-  EmuSwapFS(fsXbox);
+  EmuSwapFS(fsXbox);  *)
 end;
 
 function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall;
@@ -1125,11 +1137,11 @@ function xboxkrnl_NtQueryFullAttributesFile(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:10
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
-(*  szBuffer: PAnsiChar;
-  wszObjectName: array [0..MAX_PATH - 1] of wchar_t;
-  NtUnicodeString: UNICODE_STRING; *)
+  szBuffer: PAnsiChar;
+  wszObjectName: Pwchar_t;
+  NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
@@ -1143,13 +1155,13 @@ begin
      [ObjectAttributes, ObjectAttributes.ObjectName.Buffer, Attributes]);
 {$ENDIF}
 
-(*  szBuffer := ObjectAttributes.ObjectName.Buffer;
+  szBuffer := ObjectAttributes.ObjectName.Buffer;
 
   // initialize object attributes
   mbstowcs(wszObjectName, szBuffer, 160-1);
   RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
   InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
-*)
+
   Result := NtQueryFullAttributesFile(@NtObjAttr, Attributes);
   EmuSwapFS(fsXbox);
 end;
@@ -1305,49 +1317,51 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   FileInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+var
+  ret: NTSTATUS;
+  SizeInfo: PFILE_FS_SIZE_INFORMATION;
 begin
   EmuSwapFS(fsWindows);
 
-(*
+
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtQueryVolumeInformationFile' +
-        #13#10'(' +
-        #13#10'   FileHandle          : 0x%.08X' +
-        #13#10'   IoStatusBlock       : 0x%.08X' +
-        #13#10'   FileInformation     : 0x%.08X' +
-        #13#10'   Length              : 0x%.08X' +
-        #13#10'   FileInformationClass: 0x%.08X' +
-        #13#10');',
-        [FileHandle, IoStatusBlock, FileInformation,
-         Length, FileInformationClass]);
+  DbgPrintf('EmuKrnl : NtQueryVolumeInformationFile' +
+      #13#10'(' +
+      #13#10'   FileHandle          : 0x%.08X' +
+      #13#10'   IoStatusBlock       : 0x%.08X' +
+      #13#10'   FileInformation     : 0x%.08X' +
+      #13#10'   Length              : 0x%.08X' +
+      #13#10'   FileInformationClass: 0x%.08X' +
+      #13#10');',
+      [FileHandle, IoStatusBlock, FileInformation,
+       Length, Ord(FileInformationClass)]);
 {$ENDIF}
 
-    // Safety/Sanity Check
-    if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileDirectoryInformation) then
-        CxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
+  // Safety/Sanity Check
+(*  if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileDirectoryInformation) then
+      CxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
 
-    NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
-    (
-        FileHandle,
-        (NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
-        (NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
-        (NtDll::FS_INFORMATION_CLASS)FileInformationClass
-    );
+  ret := NtQueryVolumeInformationFile
+  (
+      FileHandle,
+      PIO_STATUS_BLOCK(IoStatusBlock),
+      PFILE_FS_SIZE_INFORMATION(FileInformation), Length,
+      FS_INFORMATION_CLASS(FileInformationClass)
+  );
 
-    // NOTE: Cxbx TODO: Dynamically fill in, or allow configuration?
-    if(FileInformationClass = FileFsSizeInformation)
-    {
-        FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)(*FileInformation;
+  // NOTE: Cxbx TODO: Dynamically fill in, or allow configuration?
+  if(FileInformationClass = FileFsSizeInformation) then
+  begin
+      SizeInfo := PFILE_FS_SIZE_INFORMATION(FileInformation);
 
-        SizeInfo.TotalAllocationUnits.QuadPart     = $4C468;
-        SizeInfo.AvailableAllocationUnits.QuadPart = $2F125;
-        SizeInfo.SectorsPerAllocationUnit          = 32;
-        SizeInfo.BytesPerSector                    = 512;
-    }
+      SizeInfo.TotalAllocationUnits.QuadPart     := $4C468;
+      SizeInfo.AvailableAllocationUnits.QuadPart := $2F125;
+      SizeInfo.SectorsPerAllocationUnit          := 32;
+      SizeInfo.BytesPerSector                    := 512;
+  end;                 *)
 
-    return ret;*)
+  Result := ret;
 
-  Result := Unimplemented('NtQueryVolumeInformationFile');
   EmuSwapFS(fsXbox);
 end;
 
@@ -1409,7 +1423,7 @@ function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
   PreviousCount: PULONG // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1614,10 +1628,15 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   Reserved: ULONG
   ); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+var
+  dwEsi: uint32;
+  dwEax: uint32;
+  dwEcx: uint32;
 begin
-    // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
+  // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
-(*
+  EmuSwapFS(fsWindows);
+
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtUserIoApcDispatcher' +
         #13#10'(' +
@@ -1627,18 +1646,17 @@ begin
         #13#10');',
         [ApcContext, IoStatusBlock, Reserved]);
 
-    DbgPrintf('IoStatusBlock.Pointer     : 0x%.08X' +
+    (*DbgPrintf('IoStatusBlock.Pointer     : 0x%.08X' +
         #13#10'IoStatusBlock.Information : 0x%.08X',
-        [IoStatusBlock.u1.Pointer, IoStatusBlock.Information]);
+        [IoStatusBlock.u1.Pointer, IoStatusBlock.Information]); *)
 {$ENDIF}
 
-    EmuSwapFS();   // Xbox FS
+    EmuSwapFS(fsXbox);   // Xbox FS
 
-    uint32 dwEsi, dwEax, dwEcx;
 
-    dwEsi = (uint32)IoStatusBlock;
+    dwEsi := uint32(IoStatusBlock);
 
-    if((IoStatusBlock.u1.Status and $C0000000) = $C0000000)
+    (*if((IoStatusBlock.u1.Status and $C0000000) = $C0000000)
     {
         dwEcx = 0;
         dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock.u1.Status);
@@ -1688,7 +1706,7 @@ begin
         popad
     }
 
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);   // Win2k/XP FS
 
 {$IFDEF DEBUG}
     DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
@@ -1716,19 +1734,29 @@ function xboxkrnl_NtWaitForSingleObjectEx(
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:95
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
-      #13#10'('+
-      #13#10'   Handle               : 0x%.08X'+
-      #13#10'   WaitMode             : 0x%.08X'+
-      #13#10'   Alertable            : 0x%.08X'+
-      #13#10'   Timeout              : 0x%.08X'+ //' (%d)'+
-      #13#10');',
-      [Handle_, Ord(WaitMode), Alertable, Timeout{, Timeout = nil ? 0 : Timeout.QuadPart}]);
+  if not Assigned(Timeout) then
+    DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
+        #13#10'('+
+        #13#10'   Handle               : 0x%.08X'+
+        #13#10'   WaitMode             : 0x%.08X'+
+        #13#10'   Alertable            : 0x%.08X'+
+        #13#10'   Timeout              : 0x%.08X'+ //' (%d)'+
+        #13#10');',
+        [Handle_, Ord(WaitMode), Alertable, 0])
+  else
+    DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
+        #13#10'('+
+        #13#10'   Handle               : 0x%.08X'+
+        #13#10'   WaitMode             : 0x%.08X'+
+        #13#10'   Alertable            : 0x%.08X'+
+        #13#10'   Timeout              : 0x%.08X'+ //' (%d)'+
+        #13#10');',
+        [Handle_, Ord(WaitMode), Alertable, Timeout.QuadPart]);
 {$ENDIF}
 
   Result := JwaNative.NtWaitForSingleObject(Handle_, Alertable, Timeout);
@@ -1748,12 +1776,15 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+var
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*
+
 {$IFDEF DEBUG}
+(*  if not Assigned(Timeout) then
     DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
         #13#10'(' +
         #13#10'   Count                : 0x%.08X' +
@@ -1764,15 +1795,24 @@ begin
         #13#10'   Timeout              : 0x%.08X (%d)' +
         #13#10');',
         [Count, Handles, WaitType, WaitMode, Alertable,
-         Timeout, Timeout == 0 ? 0 : Timeout.QuadPart]);
+         Timeout, '0'])
+  else
+    DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
+        #13#10'(' +
+        #13#10'   Count                : 0x%.08X' +
+        #13#10'   Handles              : 0x%.08X' +
+        #13#10'   WaitType             : 0x%.08X' +
+        #13#10'   WaitMode             : 0x%.08X' +
+        #13#10'   Alertable            : 0x%.08X' +
+        #13#10'   Timeout              : 0x%.08X (%d)' +
+        #13#10');',
+        [Count, Handles, WaitType, WaitMode, Alertable,
+         Timeout, Timeout.QuadPart]);*)
 {$ENDIF}
 
-    NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+  ret := NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
+  Result := ret;
 
-    return ret;
-*)
-
-  Result := Unimplemented('NtWaitForMultipleObjectsEx');
   EmuSwapFS(fsXbox);
 end;
 
