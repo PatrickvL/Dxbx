@@ -351,7 +351,7 @@ begin
 end;
 
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateDirectoryObject');
@@ -364,28 +364,33 @@ function xboxkrnl_NtCreateEvent(
   EventType: EVENT_TYPE;
   InitialState: LONGBOOL
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  szBuffer: PAnsiChar;
+  wszObjectName: PWideChar;
+  NtUnicodeString: UNICODE_STRING;
+  NtObjAttr: JwaWinType.POBJECT_ATTRIBUTES;
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*    char *szBuffer = iif(Assigned(ObjectAttributes), ObjectAttributes.ObjectName.Buffer, '');
+  if Assigned(ObjectAttributes) then
+    szBuffer := ObjectAttributes.ObjectName.Buffer
+  else
+    szBuffer := '';
+
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtCreateEvent' +
-        #13#10'(' +
-        #13#10'   EventHandle         : 0x%.08X' +
-        #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-        #13#10'   EventType           : 0x%.08X' +
-        #13#10'   InitialState        : 0x%.08X' +
-        #13#10');',
-        [EventHandle, ObjectAttributes, szBuffer,
-         EventType, InitialState]);
+  DbgPrintf('EmuKrnl : NtCreateEvent' +
+      #13#10'(' +
+      #13#10'   EventHandle         : 0x%.08X' +
+      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+      #13#10'   EventType           : 0x%.08X' +
+      #13#10'   InitialState        : 0x%.08X' +
+      #13#10');',
+      [EventHandle, @ObjectAttributes, @szBuffer,
+       @EventType, BoolToStr(InitialState)]);
 {$ENDIF}
-
-    wchar_t wszObjectName[160-1];
-
-    NtDll::UNICODE_STRING    NtUnicodeString;
-    JwaWinType.OBJECT_ATTRIBUTES NtObjAttr;
 
     // initialize object attributes
     if Assigned(szBuffer) then
@@ -393,29 +398,28 @@ begin
         mbstowcs(wszObjectName, '\??\', 4);
         mbstowcs(wszObjectName+4, szBuffer, 160-1);
 
-        NtDll::RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
+        RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
 
         InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
     end;
 
-    NtObjAttr.RootDirectory = 0;
+    NtObjAttr.RootDirectory := 0;
 
     // redirect to NtCreateEvent
-    NTSTATUS ret = NtDll::NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, iif(Assigned(szBuffer), @NtObjAttr, nil), (NtDll::EVENT_TYPE)EventType, InitialState);
+    if Assigned(szBuffer) then
+      ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, NtObjAttr, EVENT_TYPE(EventType), InitialState)
+    else
+      ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, nil, EVENT_TYPE(EventType), InitialState);
 
-    if(FAILED(ret))
-        EmuWarning('NtCreateEvent Failed!');
+    if (FAILED(ret)) then
+      EmuWarning('NtCreateEvent Failed!');
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtCreateEvent EventHandle = 0x%.08X', [*EventHandle]);
+    DbgPrintf('EmuKrnl : NtCreateEvent EventHandle = 0x%.08X', [@EventHandle]);
 {$ENDIF}
 
 
-    return ret;*)
-
-
-
-  Result := Unimplemented('NtCreateEvent');
+  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -664,54 +668,61 @@ function xboxkrnl_NtCreateMutant(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   InitialOwner: LONGBOOL
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+var
+  szBuffer: PAnsichar;
+  wszObjectName: PWideChar;
+  NtUnicodeString: UNICODE_STRING;
+  NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
+  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
-(*    char *szBuffer = iif(Assigned(ObjectAttributes), ObjectAttributes.ObjectName.Buffer, '');
+  if Assigned(ObjectAttributes) then
+    szBuffer := ObjectAttributes.ObjectName.Buffer
+  else
+    szBuffer := '';
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtCreateMutant' +
-       #13#10'(' +
-       #13#10'   MutantHandle        : 0x%.08X' +
-       #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-       #13#10'   InitialOwner        : 0x%.08X' +
-       #13#10');',
-       [MutantHandle, ObjectAttributes, szBuffer, InitialOwner]);
-{$ENDIF}
-
-    wchar_t wszObjectName[160-1];
-
-    NtDll::UNICODE_STRING    NtUnicodeString;
-    JwaWinType.OBJECT_ATTRIBUTES NtObjAttr;
-
-    // initialize object attributes
-    if Assigned((szBuffer) then
-    begin
-        mbstowcs(wszObjectName, '\??\', 4);
-        mbstowcs(wszObjectName+4, szBuffer, 160-1);
-
-        NtDll::RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
-
-        InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
-    end;
-
-    NtObjAttr.RootDirectory = 0;
-
-    // redirect to NtCreateMutant
-    NTSTATUS ret = NtDll::NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, iif(Assigned(szBuffer), @NtObjAttr, nil), InitialOwner);
-
-    if(FAILED(ret))
-        EmuWarning('NtCreateMutant Failed!');
-
-{$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle = 0x%.08X', [*MutantHandle]);
+  DbgPrintf('EmuKrnl : NtCreateMutant' +
+     #13#10'(' +
+     #13#10'   MutantHandle        : 0x%.08X' +
+     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+     #13#10'   InitialOwner        : 0x%.08X' +
+     #13#10');',
+     [MutantHandle, ObjectAttributes, szBuffer, InitialOwner]);
 {$ENDIF}
 
 
-    return ret;*)
+  // initialize object attributes
+  if Assigned(szBuffer) then
+  begin
+    mbstowcs(wszObjectName, '\??\', 4);
+    mbstowcs(wszObjectName+4, szBuffer, 160-1);
 
-  Result := Unimplemented('NtCreateMutant');
+    RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
+
+    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+  end;
+
+  NtObjAttr.RootDirectory := 0;
+
+  // redirect to NtCreateMutant
+  if Assigned(szBuffer) then
+    ret := NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, @NtObjAttr, InitialOwner)
+  else
+    ret := NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, nil, InitialOwner);
+
+  if (FAILED(ret)) then
+      EmuWarning('NtCreateMutant Failed!');
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle = 0x%.08X', [MutantHandle]);
+{$ENDIF}
+
+
+  Result := ret;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1034,10 +1045,10 @@ var
   mbstr: array[0..0] of WCHAR;
   wcstr: Pwchar_t;
 begin
-(*  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    (*if Assigned(FileMask) then
+    if Assigned(FileMask) then
       DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
           #13#10'(' +
           #13#10'   FileHandle           : 0x%.08X' +
@@ -1051,9 +1062,9 @@ begin
           #13#10'   FileMask             : 0x%.08X (%s)' +
           #13#10'   RestartScan          : 0x%.08X' +
           #13#10');',
-          [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
-           FileInformation, Length, FileInformationClass, FileMask,
-           FileMask.Buffer, RestartScan])
+          [@FileHandle, @Event, @ApcRoutine, @ApcContext, @IoStatusBlock,
+           @FileInformation, @Length, @FileInformationClass, @FileMask,
+           @FileMask.Buffer, @RestartScan])
     else
       DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
           #13#10'(' +
@@ -1068,12 +1079,12 @@ begin
           #13#10'   FileMask             : 0x%.08X (%s)' +
           #13#10'   RestartScan          : 0x%.08X' +
           #13#10');',
-          [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
-           FileInformation, Length, FileInformationClass, FileMask,
-           '', RestartScan]); *)
-(*{$ENDIF}
+          [@FileHandle, @Event, @ApcRoutine, @ApcContext, @IoStatusBlock,
+           @FileInformation, @Length, @FileInformationClass, @FileMask,
+           '', @RestartScan]);
+{$ENDIF}
 
-    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
+(*    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
         CxbxKrnlCleanup('Unsupported FileInformationClass');
 
     // initialize FileMask
@@ -1112,9 +1123,9 @@ begin
     // Cxbx TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
     CxbxFree(FileDirInfo);
 
-    Result := ret;
+    Result := ret;      *)
 
-  EmuSwapFS(fsXbox);  *)
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall;
@@ -1358,7 +1369,7 @@ begin
       SizeInfo.AvailableAllocationUnits.QuadPart := $2F125;
       SizeInfo.SectorsPerAllocationUnit          := 32;
       SizeInfo.BytesPerSector                    := 512;
-  end;                 *)
+  end;        *)
 
   Result := ret;
 
@@ -1776,7 +1787,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:50
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1784,7 +1795,7 @@ begin
 
 
 {$IFDEF DEBUG}
-(*  if not Assigned(Timeout) then
+  if not Assigned(Timeout) then
     DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
         #13#10'(' +
         #13#10'   Count                : 0x%.08X' +
@@ -1794,7 +1805,7 @@ begin
         #13#10'   Alertable            : 0x%.08X' +
         #13#10'   Timeout              : 0x%.08X (%d)' +
         #13#10');',
-        [Count, Handles, WaitType, WaitMode, Alertable,
+        [Count, Handles, Ord(WaitType), WaitMode, Alertable,
          Timeout, '0'])
   else
     DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
@@ -1806,8 +1817,8 @@ begin
         #13#10'   Alertable            : 0x%.08X' +
         #13#10'   Timeout              : 0x%.08X (%d)' +
         #13#10');',
-        [Count, Handles, WaitType, WaitMode, Alertable,
-         Timeout, Timeout.QuadPart]);*)
+        [Count, Handles, Ord(WaitType), WaitMode, Alertable,
+         Timeout, Timeout.QuadPart]);
 {$ENDIF}
 
   ret := NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
