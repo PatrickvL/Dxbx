@@ -7311,10 +7311,14 @@ end;
 
 function XTL_EmuIDirect3DVertexBuffer8_Lock2
 (
-  ppVertexBuffer: PPX_D3DVertexBuffer;
+  ppVertexBuffer: PX_D3DVertexBuffer;
   Flags: DWORD
 ): PByte; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  pVertexBuffer8: IDirect3DVertexBuffer8;
+  pbData: PBYTE;
+  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7327,14 +7331,13 @@ begin
          [ppVertexBuffer, Flags]);
 {$ENDIF}
 
-  // Fixed flags check, Battlestar Galactica now displays graphics correctly
-  {ignore HRESULT?}ppVertexBuffer^.EmuVertexBuffer8.Lock(
-    {OffsetToLock=}0,
-    {SizeToLock=}0,
-    {out ppbData=}Result,
-    {Flags=}EmuXB2PC_D3DLock(Flags));
+  pVertexBuffer8 := ppVertexBuffer^.EmuVertexBuffer8;
+  pbData := NULL;
+
+  hRet := pVertexBuffer8.Lock(0, 0, pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
   EmuSwapFS(fsXbox);
+  Result := pbData;
 end;
 
 function XTL_EmuIDirect3DDevice8_GetStreamSource2
