@@ -231,7 +231,7 @@ var
   m_Xbe: TXbe;
   FilePath: string;
 begin
-  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
+//  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
   if not XbeOpenDialog.Execute then
     Exit;
 

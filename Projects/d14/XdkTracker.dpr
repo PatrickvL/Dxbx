@@ -32,7 +32,9 @@ uses
   uDxbxXml in '..\..\src\uDxbxXml.pas' {DxbxXml: TDataModule},
   uConsoleClass in '..\..\src\uConsoleClass.pas',
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas';
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas';
 
 {$R *.res}
 

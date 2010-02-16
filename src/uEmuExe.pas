@@ -316,7 +316,7 @@ begin
     PrepareXBoxMemoryMap;
 
     // Now we can load and run the XBE :
-    MapAndRunXBE(TXbe.Create(XbePath, ftXbe), DCHandle);
+    MapAndRunXBE(TXbe.Create(XbePath), DCHandle);
   end;
   
   // Prevent the process from returning to the overwritten EXE location

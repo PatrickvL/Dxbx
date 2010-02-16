@@ -36,11 +36,10 @@ uses
   uTypes,
   uTime,
   uLog,
+  uFileSystem, // Drives
   uDxbxUtils;
 
 type
-  TFileType = (ftXbe, ftExe);
-
   _XBE_HEADER = packed record
     dwMagic: array [0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
     pbDigitalSignature: array [0..255] of Byte; // 0x0004 - digital signature
@@ -304,7 +303,9 @@ type
 
     property RawData: MathPtr read FRawData;
     property FileSize: Int64 read GetFileSize;
-    constructor Create(aFileName: string; aFileType: TFileType);
+    class function FileExists(aFileName: string): Boolean;
+    
+    constructor Create(aFileName: string);
     destructor Destroy; override;
 
     function GetTLSData: DWord;
@@ -351,12 +352,12 @@ end;
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
 begin
   Result := False;
-  if Assigned(aXbe) or not (FileExists(aFileName)) then
+  if Assigned(aXbe) or not (TXbe.FileExists(aFileName)) then
     Exit;
 
 {  aExeFileName := '';
   aXbeFileName := aFileName;}
-  {var}aXbe := TXbe.Create({aXbe}aFileName, ftXbe);
+  {var}aXbe := TXbe.Create({aXbe}aFileName);
   try
     XbeLoaded();
     Result := True;
@@ -434,7 +435,13 @@ end; // TXbe.ConstructorInit
 
 //------------------------------------------------------------------------------
 
-constructor TXbe.Create(aFileName: string; aFileType: TFileType);
+class function TXbe.FileExists(aFileName: string): Boolean;
+begin
+  Result := Drives.D.Mount(aFileName)
+        and SameText(ExtractFileExt(Drives.D.FileSystem.SelectedFile), '.xbe');;  
+end;
+
+constructor TXbe.Create(aFileName: string);
 var
   ExSize: LongInt;
   lIndex, lIndex2: DWord;
@@ -442,12 +449,15 @@ var
   I: DWord;
   sFileType: string;
 begin
-  sFileType := iif(aFileType = ftXbe, 'Xbe', 'Exe');
+  sFileType := ExtractFileExt(aFileName);
 
   ConstructorInit();
 
   MyFile := TMemoryStream.Create;
-  MyFile.LoadFromFile(aFileName);
+
+  Drives.D.Mount(aFileName);
+  Drives.D.FileSystem.Load(MyFile);
+
   FRawData := MyFile.Memory;
 
   // verify xbe file was opened

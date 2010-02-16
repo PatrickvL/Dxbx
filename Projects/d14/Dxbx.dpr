@@ -43,7 +43,9 @@ uses
   uDxbxXml in '..\..\src\uDxbxXml.pas',
   XboxKrnl in '..\..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas';
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas';
 
 {$R *.RES}
 
@@ -63,11 +65,9 @@ var
 // Make sure we can't be loaded to another location either, by removing
 // the relocation table. These two settings are the only way we know of,
 // to reserver the Virtual Memory Range that the Xbox normally uses...
-{$SetPEFlags 1} // = Windows.IMAGE_FILE_RELOCS_STRIPPED
-
-// Remove relocation table (generates smaller executables) :
+// This also removes the relocation table (and thus generates smaller executables)
 // (See http://hallvards.blogspot.com/2006/09/hack12-create-smaller-exe-files.html)
-{.$SetPEFlags 1} // 1 = Windows.IMAGE_FILE_RELOCS_STRIPPED
+{$SetPEFlags 1} // = Windows.IMAGE_FILE_RELOCS_STRIPPED
 
 // Here, we create a static dependance on our actual emulation DLL,
 // by importing the function that takes over control and start emulation :
@@ -81,7 +81,7 @@ begin
   if  (XBEFilePath <> '')
   and SameText(ParamStr(1), '/load')
   and SameText(ExtractFileExt(XBEFilePath), '.xbe')
-  and FileExists(XBEFilePath)
+  and TXbe.FileExists(XBEFilePath)
   and (StrToIntDef(ParamStr(3), 0) > 0) then
   begin
     // Transfer control to the main emulator-code inside our DLL :

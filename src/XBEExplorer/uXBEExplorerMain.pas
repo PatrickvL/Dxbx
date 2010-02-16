@@ -707,7 +707,7 @@ begin // OpenFile
   end;
 
   CloseFile;
-  MyXBE := TXbe.Create(aFilePath, ftXbe);
+  MyXBE := TXbe.Create(aFilePath);
   FXBEFileName := ExtractFileName(aFilePath);
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
   PageControl.Visible := True;
