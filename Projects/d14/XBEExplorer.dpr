@@ -13,7 +13,9 @@ uses
   uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uConsoleClass in '..\..\src\uConsoleClass.pas',
   uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame},
-  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas';
+  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas';
 
 {$R *.res}
 
@@ -23,7 +25,7 @@ begin
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
   Application.Title := FormXBEExplorer.Caption;
   if ParamCount > 0 then
-    if FileExists(ParamStr(1))then
+    if FileExists(ParamStr(1)) then
       FormXBEExplorer.OpenFile(ParamStr(1));
 
   Application.Run;

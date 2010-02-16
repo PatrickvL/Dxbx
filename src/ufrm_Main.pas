@@ -96,7 +96,6 @@ type
     actFileDebugGui: TAction;
     actConsoleDebugKernel: TAction;
     actFileDebugKernel: TAction;
-    ExeOpenDialog: TOpenDialog;
     Import1: TMenuItem;
     mnu_ExportLogoBitmap: TMenuItem;
     actImportLogo: TAction;
@@ -201,7 +200,7 @@ end;
 
 procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 begin
-  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
+//  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
   if not XbeOpenDialog.Execute then
     Exit;
 
@@ -328,7 +327,7 @@ begin
 
   if  (XBEFilePath <> '')
   and SameText(ExtractFileExt(XBEFilePath), '.xbe')
-  and FileExists(XBEFilePath) then
+  and TXbe.FileExists(XBEFilePath) then
   begin
     if OpenXbe(XBEFilePath, {var}m_Xbe) then
       LaunchXBE(m_Xbe, Self.Handle);
@@ -779,7 +778,7 @@ var
   TempItem: TMenuItem;
 begin
   TempItem := Sender as TMenuItem;
-  if not FileExists(TempItem.Hint) then
+  if not TXbe.FileExists(TempItem.Hint) then
   begin
     MessageDlg('Could not locate file : ' + TempItem.Hint, mtWarning, [mbOk], 0);
     mnu_RecentXbefiles.Remove(TempItem);

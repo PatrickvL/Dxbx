@@ -16,9 +16,9 @@ object FormXBEExplorer: TFormXBEExplorer
   TextHeight = 13
   object TreeView1: TTreeView
     Left = 0
-    Top = 24
+    Top = 23
     Width = 225
-    Height = 680
+    Height = 681
     Align = alLeft
     HideSelection = False
     Indent = 19
@@ -26,24 +26,20 @@ object FormXBEExplorer: TFormXBEExplorer
     RowSelect = True
     TabOrder = 0
     OnChange = TreeView1Change
-    ExplicitTop = 0
-    ExplicitHeight = 666
   end
   object PageControl: TPageControl
     Left = 225
-    Top = 24
+    Top = 23
     Width = 611
-    Height = 680
+    Height = 681
     Align = alClient
     TabOrder = 1
-    ExplicitTop = 0
-    ExplicitHeight = 666
   end
   object ActionMainMenuBar: TActionMainMenuBar
     Left = 0
     Top = 0
     Width = 836
-    Height = 24
+    Height = 23
     UseSystemFont = False
     ActionManager = ActionManager
     ColorMap.HighlightColor = 14410210
@@ -56,7 +52,6 @@ object FormXBEExplorer: TFormXBEExplorer
     Font.Style = []
     PersistentHotKeys = True
     Spacing = 0
-    ExplicitHeight = 25
   end
   object MainMenu: TMainMenu
     Left = 64
@@ -86,8 +81,8 @@ object FormXBEExplorer: TFormXBEExplorer
   end
   object OpenDialog: TOpenDialog
     DefaultExt = '.XBE'
-    Filter = 'XBE files|*.xbe'
-    Options = [ofReadOnly, ofPathMustExist, ofFileMustExist, ofShareAware, ofNoTestFileCreate, ofEnableSizing]
+    Filter = 'XBE files|*.xbe|ISO files|*.iso'
+    Options = [ofReadOnly, ofExtensionDifferent, ofPathMustExist, ofFileMustExist, ofShareAware, ofNoTestFileCreate, ofEnableSizing]
     Left = 104
     Top = 32
   end

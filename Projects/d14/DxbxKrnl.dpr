@@ -96,7 +96,9 @@ uses
   uExe in '..\..\src\uExe.pas',
   uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas',
   uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas',
-  uPixelShader in '..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas';
+  uPixelShader in '..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas';
 
 {$IMAGEBASE $10000000}
 

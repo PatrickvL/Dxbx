@@ -1724,7 +1724,8 @@ object frm_Main: Tfrm_Main
   end
   object XbeOpenDialog: TOpenDialog
     FileName = 'default.xbe'
-    Filter = 'Xbox Executable (*.xbe)|*.xbe'
+    Filter = 'Xbox Executable (*.xbe)|*.xbe|Xbox Iso (*.iso)|*.iso'
+    Options = [ofExtensionDifferent, ofPathMustExist, ofFileMustExist, ofNoTestFileCreate, ofEnableSizing]
     Left = 72
     Top = 12
   end
@@ -1733,12 +1734,6 @@ object frm_Main: Tfrm_Main
     Filter = 'Text Documents ( *.txt )|*.txt'
     Left = 104
     Top = 12
-  end
-  object ExeOpenDialog: TOpenDialog
-    DefaultExt = '*.exe'
-    Filter = 'Windows Executable (*.exe)|*.exe'
-    Left = 72
-    Top = 44
   end
   object LogoSaveDialog: TSaveDialog
     FileName = 'logo.bmp'

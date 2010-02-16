@@ -130,8 +130,9 @@ function isxdigit(c: AnsiChar): Boolean;
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
 function wstrlen(const Str: PWideChar): Cardinal; overload;
-procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
-procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
+function memcmp(const ptr1, ptr2: Pvoid; num: size_t): int;
+function memcpy(destination: Pvoid; const source: Pvoid; num: size_t): Pvoid;// cdecl;
+function memset(const ptr: Pvoid; value: Byte; num: size_t): Pvoid;// cdecl;
 function clock(): DWord; // cdecl;
 
 function mbstowcs(wcstr: pwchar_t; const mbstr: PAnsiChar; max: size_t): size_t;
@@ -202,16 +203,21 @@ begin
   Result := Length(WideString(Str)); // Dxbx TODO : Do a faster #0000 search here!
 end;
 
-// Source: ZLib.pas
-procedure memset(p: Pointer; b: Byte; count: Integer); // cdecl;
+function memcmp(const ptr1, ptr2: Pvoid; num: size_t): int;
 begin
-  FillChar(p^, count, b);
+  Result := int(not CompareMem(ptr1, ptr2, num));
 end;
 
-// Source: ZLib.pas
-procedure memcpy(dest, source: Pointer; count: Integer); // cdecl;
+function memcpy(destination: Pvoid; const source: Pvoid; num: size_t): Pvoid;
 begin
-  Move(source^, dest^, count);
+  Move(source^, destination^, num);
+  Result := destination;
+end;
+
+function memset(const ptr: Pvoid; value: Byte; num: size_t): Pvoid;
+begin
+  FillChar(ptr^, num, value);
+  Result := ptr;
 end;
 
 function clock(): DWord;
@@ -222,14 +228,14 @@ end;
 function mbstowcs(wcstr: pwchar_t; const mbstr: PAnsiChar; max: size_t): size_t;
 begin
   Result := MultiByteToWideChar(CP_ACP, 0, mbstr, strlen(mbstr), wcstr, max);
-  if Assigned(wcstr) and (Result >= 0) and (Result < max) then
+  if Assigned(wcstr) and {(Result >= 0) and} (Result < max) then
     wcstr[Result] := #0;
 end;
 
 function wcstombs(mbstr: PAnsiChar; const wcstr: pwchar_t; max: size_t): size_t;
 begin
   Result := WideCharToMultiByte(CP_ACP, 0, wcstr, wstrlen(wcstr), mbstr, max, '', nil);
-  if Assigned(mbstr) and (Result >= 0) and (Result < max) then
+  if Assigned(mbstr) and {(Result >= 0) and} (Result < max) then
     mbstr[Result] := #0;
 end;
 
