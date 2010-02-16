@@ -427,9 +427,9 @@ begin
   if Assigned(g_pfnThreadNotification) then
   begin
     pfnNotificationRoutine := XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
-    EmuSwapFS();   // Xbox FS
+    EmuSwapFS(fsXbox);   // Xbox FS
     pfnNotificationRoutine(FALSE);
-    EmuSwapFS();   // Win2k/XP FS
+    EmuSwapFS(fsWindows);   // Win2k/XP FS
   end;
 
   //CxbxKrnlTerminateThread();

@@ -1672,6 +1672,7 @@ begin
       EmuSwapFS(fsXbox);
 
       Result := DS_OK;
+      Exit;
     end;
 
     // we only support 2 channels right now

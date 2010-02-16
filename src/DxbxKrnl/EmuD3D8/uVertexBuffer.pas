@@ -620,15 +620,15 @@ begin
         pPatchDesc.dwVertexCount := Desc.Size div uiStride;
         (*dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;*)
 
-        (*if (FAILED(pOrigVertexBuffer.Lock(0, 0, @pOrigData, 0))) then
+        if (FAILED(pOrigVertexBuffer.Lock(0, 0, PByte(pOrigData), 0))) then
         begin
           CxbxKrnlCleanup('Couldn`t lock the original buffer');
-        end;*)
+        end;
         IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, dwNewSize, 0, 0, D3DPOOL_MANAGED, @pNewVertexBuffer);
-        (*if (FAILED(pNewVertexBuffer.Lock(0, 0, @pNewData, 0))) then
+        if (FAILED(pNewVertexBuffer.Lock(0, 0, PByte(pNewData), 0))) then
         begin
           CxbxKrnlCleanup('Couldn`t lock the new buffer');
-        end;*)
+        end;
         if not Assigned(pStream.pOriginalStream) then
         begin
             // The stream was not previously patched, we'll need this when restoring
@@ -1039,7 +1039,7 @@ begin
 end;
 
 function XTL_VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:50
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:55
 var
   pStream: PPATCHEDSTREAM;
   dwOriginalSize: DWORD;
@@ -1066,10 +1066,10 @@ begin
     if ((pPatchDesc.PrimitiveType <> X_D3DPT_QUADLIST) and (pPatchDesc.PrimitiveType <> X_D3DPT_LINELOOP)) then
         Result := False;
 
-    (*if (pPatchDesc.pVertexStreamZeroData and uiStream > 0) then
+    if Assigned(pPatchDesc.pVertexStreamZeroData) and (uiStream > 0) then
     begin
         CxbxKrnlCleanup('Draw..UP call with more than one stream!');
-     end; *)
+    end;
 
     pStream.uiOrigStride := 0;
 
@@ -1206,10 +1206,10 @@ begin
             begin
                 for z := 0 to 6 - 1 do
                 begin
-                    (*if (((FLOAT)@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] = 0.0f) then
-                        ((FLOAT)@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] := 1.0f;
-                    if (((FLOAT)@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[3] = 0.0f) then
-                        ((FLOAT)@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[3] := 1.0f;*)
+                    (*if ((pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] = 0.0) then
+                        (@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] := 1.0;
+                    if ((@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[3] = 0.0) then
+                        (@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[3] := 1.0; *)
                  end;
              end;
          end;
@@ -1316,10 +1316,10 @@ end;
 
 procedure XTL_EmuFlushIVB; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
-var
+(*var
   pdwVB: PDWORD;
   uiStride: UINT;
-  pDummyTexture : array [0..4 - 1] of IDirect3DTexture8;
+  pDummyTexture : array [0..4 - 1] of IDirect3DTexture8; *)
 begin
 (*    if (g_IVBPrimitiveType = X_D3DPT_TRIANGLEFAN) then
     begin
@@ -1730,6 +1730,7 @@ begin
     //
   dwWidth := 0;
   dwHeight := 0;
+  dwBPP := 0;
 
   for Stage := 0 to 3 do
   begin
