@@ -189,39 +189,33 @@ var
   pdwOrigPushData: PDWord;
   pIndexData: PVOID;
   pVertexData: PVOID;
-
   dwVertexShader: DWord;
   dwStride: DWord;
   bShowPB: bool;
-
   PCPrimitiveType: D3DPRIMITIVETYPE;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
-
   pIndexBuffer: IDIRECT3DINDEXBUFFER8;
   pVertexBuffer: IDIRECT3DVERTEXBUFFER8;
   maxIBSize: uint;
-
   dwCount: DWord;
   dwMethod: DWord;
-
   bInc: BOOL;
-
   hRet: HRESULT;
   pData: PWORDArray;
-
   VertexCount: UINT;
   PrimitiveCount: UINT;
   VPDesc: VertexPatchDesc;
-
   VertPatch: XTL_VertexPatcher;
   bPatched: bool;
-
   pwVal: PWORD;
-  s: uint;
   mi: uint;
   pVBData: PBYTE;
-
   uiStride: UINT;
+
+{$ifdef _DEBUG_TRACK_PB}
+  s: uint;
+{$endif}
+
 begin
   if XTL_g_bSkipPush then
     Exit;
@@ -383,7 +377,7 @@ begin
       EmuUnswizzleActiveTexture();
 
       // render vertices
-      if (dwVertexShader <> -1) then
+      if (dwVertexShader <> DWord(-1)) then
       begin
         VertexCount := (dwCount*SizeOf(DWord)) div dwStride;
         PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
@@ -593,9 +587,11 @@ begin
       end;
       {$endif}
 
-(*
-      Inc(pdwPushData, (dwCount/2) - iif(bInc, 0, 2));
-*)
+      (*if bInc then
+        Inc(pdwPushData, (dwCount/2) - 0)
+      else
+        Inc(pdwPushData, (dwCount/2) - 2); *)
+
       // perform rendering
       begin
         // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest

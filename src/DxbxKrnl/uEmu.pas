@@ -119,6 +119,8 @@ var
   v: DWORD;
   dwCur: DWORD;
   dwValue: DWORD;
+  dwPtr: DWORD;
+
 begin
   EmuSwapFS(fsWindows);
 
@@ -195,24 +197,27 @@ begin
           begin
             fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
-            (**(DWORD* )$0039BE58 := e.ContextRecord.Eax := fix;
+            (*PDWord($0039BE58)^ := e.ContextRecord.Eax = fix;
 
             // go through and fix any other pointers in the $2DF1C8 allocation chunk
             begin
-              DWORD dwPtr := *(DWORD* )$2DF1C8;
-              DWORD dwSize := EmuCheckAllocationSize((PVOID)dwPtr, False);
+              dwPtr := $2DF1C8;
+              dwSize := EmuCheckAllocationSize(PVOID(dwPtr), False);
 
               // dword aligned
               dwSize -= 4 - dwSize%4;
 
-              for(DWORD v=0;v<dwSize;v+=4 do
+              v := 0;
+              while v < dwSize do
               begin
-                DWORD dwCur := *(DWORD* )(dwPtr+v);
+                dwCur := (dwPtr+v);
 
-                if (dwCur >= $803A6000 && dwCur < $819A6000) then
-                  *(DWORD* )(dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
+                if (dwCur >= $803A6000) and (dwCur < $819A6000) then
+                  (dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
+
+                Inc(v, 4);
               end;
-            end;      *)
+            end;                     *)
 
 {$IFDEF DEBUG}
             DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');

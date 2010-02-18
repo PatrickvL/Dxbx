@@ -1040,9 +1040,9 @@ function xboxkrnl_NtQueryDirectoryFile(
 var
   ret: NTSTATUS;
   NtFileMask: UNICODE_STRING;
-  wszObjectName: pwchar_t;
+  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   FileDirInfo: PFILE_DIRECTORY_INFORMATION;
-  mbstr: array[0..0] of WCHAR;
+  mbstr: PAnsiChar;
   wcstr: Pwchar_t;
 begin
   EmuSwapFS(fsWindows);
@@ -1085,20 +1085,20 @@ begin
 {$ENDIF}
 
 (*    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
-        CxbxKrnlCleanup('Unsupported FileInformationClass');
+        CxbxKrnlCleanup('Unsupported FileInformationClass'); *)
 
     // initialize FileMask
     if Assigned(FileMask) then
-      mbstowcs(wszObjectName, FileMask.Buffer, 160-1)
+      mbstowcs(@(wszObjectName[0]), FileMask.Buffer, 160-1)
     else
-      mbstowcs(wszObjectName, '', 160-1);
+      mbstowcs(@(wszObjectName[0]), '', 160-1);
 
-    RtlInitUnicodeString(@NtFileMask, wszObjectName);
+    RtlInitUnicodeString(@NtFileMask, @(wszObjectName[0]));
 
     FileDirInfo := PFILE_DIRECTORY_INFORMATION(CxbxMalloc($40 + 160*2));
 
-    mbstr := FileInformation.FileName;
-    wcstr := FileDirInfo.FileName;
+    (*mbstr := FileInformation.FileName;
+    wcstr := FileDirInfo.FileName; *)
 
     while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0) do
     begin
@@ -1115,7 +1115,7 @@ begin
       wcstombs(mbstr, wcstr, 160);
       FileInformation.FileNameLength := FileInformation.FileNameLength div 2;
 
-      RestartScan = FALSE;
+      RestartScan := FALSE;
 
       // Xbox does not return . and ..
     end;
@@ -1123,7 +1123,7 @@ begin
     // Cxbx TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
     CxbxFree(FileDirInfo);
 
-    Result := ret;      *)
+  Result := ret;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1151,7 +1151,7 @@ function xboxkrnl_NtQueryFullAttributesFile(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   szBuffer: PAnsiChar;
-  wszObjectName: Pwchar_t;
+  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
@@ -1169,8 +1169,8 @@ begin
   szBuffer := ObjectAttributes.ObjectName.Buffer;
 
   // initialize object attributes
-  mbstowcs(wszObjectName, szBuffer, 160-1);
-  RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
+  mbstowcs(@(wszObjectName[0]), szBuffer, 160-1);
+  RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
   InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
   Result := NtQueryFullAttributesFile(@NtObjAttr, Attributes);
@@ -1327,7 +1327,7 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   Length: ULONG;
   FileInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 var
   ret: NTSTATUS;
   SizeInfo: PFILE_FS_SIZE_INFORMATION;
@@ -1350,7 +1350,7 @@ begin
 
   // Safety/Sanity Check
 (*  if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileDirectoryInformation) then
-      CxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
+      CxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass'); *)
 
   ret := NtQueryVolumeInformationFile
   (
@@ -1369,7 +1369,7 @@ begin
       SizeInfo.AvailableAllocationUnits.QuadPart := $2F125;
       SizeInfo.SectorsPerAllocationUnit          := 32;
       SizeInfo.BytesPerSector                    := 512;
-  end;        *)
+  end;
 
   Result := ret;
 
@@ -1639,10 +1639,10 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   Reserved: ULONG
   ); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:0
-var
+(*var
   dwEsi: uint32;
   dwEax: uint32;
-  dwEcx: uint32;
+  dwEcx: uint32; *)
 begin
   // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
@@ -1665,9 +1665,9 @@ begin
     EmuSwapFS(fsXbox);   // Xbox FS
 
 
-    dwEsi := uint32(IoStatusBlock);
+    (*dwEsi := uint32(IoStatusBlock);
 
-    (*if((IoStatusBlock.u1.Status and $C0000000) = $C0000000)
+    if((IoStatusBlock.u1.Status and $C0000000) = $C0000000)
     {
         dwEcx = 0;
         dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock.u1.Status);
