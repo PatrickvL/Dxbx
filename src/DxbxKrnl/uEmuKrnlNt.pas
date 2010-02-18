@@ -367,7 +367,7 @@ function xboxkrnl_NtCreateEvent(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   szBuffer: PAnsiChar;
-  wszObjectName: PWideChar;
+  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.POBJECT_ATTRIBUTES;
   ret: NTSTATUS;
@@ -395,10 +395,10 @@ begin
     // initialize object attributes
     if Assigned(szBuffer) then
     begin
-        mbstowcs(wszObjectName, '\??\', 4);
-        mbstowcs(wszObjectName+4, szBuffer, 160-1);
+        mbstowcs(@(wszObjectName[0]), '\??\', 4);
+        mbstowcs(@(wszObjectName[0+4]), szBuffer, 160-1);
 
-        RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
+        RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
 
         InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
     end;
@@ -681,7 +681,7 @@ begin
   if Assigned(ObjectAttributes) then
     szBuffer := ObjectAttributes.ObjectName.Buffer
   else
-    szBuffer := 0;
+    szBuffer := nil;
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateMutant' +
@@ -692,7 +692,6 @@ begin
      #13#10');',
      [MutantHandle, ObjectAttributes, szBuffer, InitialOwner]);
 {$ENDIF}
-
 
   // initialize object attributes
   if Assigned(szBuffer) then
@@ -719,7 +718,6 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle = 0x%.08X', [MutantHandle]);
 {$ENDIF}
-
 
   Result := ret;
 

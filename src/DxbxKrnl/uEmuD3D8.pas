@@ -1796,8 +1796,8 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_AddRef()');
 {$ENDIF}
 
-  Result := ULong(g_pD3DDevice8._AddRef());
   EmuSwapFS(fsXbox);
+  Result := ULong(g_pD3DDevice8._AddRef());
 end;
 
 function XTL_EmuIDirect3DDevice8_BeginStateBlock(): HRESULT; stdcall;
@@ -8690,7 +8690,7 @@ function XTL_EmuIDirect3D8_SetPushBufferSize
   PushBufferSize: DWORD;
   KickOffSize: DWORD
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:153  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
