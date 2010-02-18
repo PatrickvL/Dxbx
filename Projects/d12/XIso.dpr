@@ -53,13 +53,13 @@ uses
 {$SetPEFlags IMAGE_FILE_RELOCS_STRIPPED}
 
 var
-  Parameter, CarpetaParametro, ImagenParametro, S: string;
+  Parameter, FolderParameter, ImageParameter, S: string;
   i, j: Integer;
   MessagesEnabled: Boolean;
-  Idioma: LANGID;
+  Language: LANGID;
 begin
-  Idioma := GetUserDefaultLangID();
-  if Word(Idioma and $000F) = LANG_SPANISH then
+  Language := GetUserDefaultLangID();
+  if Word(Language and $000F) = LANG_SPANISH then
   begin
     // SetLocalOverrides(ParamStr(0),'esp');
     if LoadNewResourceModule(LANG_SPANISH) <> 0 then
@@ -86,8 +86,8 @@ begin
 
     if Parameter = '-e' then
     begin
-      OrigenDatos := OD_IMAGEN;
-      if not AbrirXISO(ParamStr(i + 1)) then
+      DataSource := OD_IMAGEN;
+      if not OpenXISO(ParamStr(i + 1)) then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SImagenNoXBOX), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -95,14 +95,14 @@ begin
         Exit;
       end;
 
-      NombreImagen := ParamStr(i + 1);
+      ImageName := ParamStr(i + 1);
 
-      CarpetaParametro := '';
+      FolderParameter := '';
       for j := 0 to ParamCount - 1 do
         if Copy(ParamStr(j), 1, 2) = '-f' then
-          CarpetaParametro := ParamStr(j + 1);
+          FolderParameter := ParamStr(j + 1);
 
-      if CarpetaParametro = '' then
+      if FolderParameter = '' then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -110,10 +110,10 @@ begin
         Exit;
       end;
 
-      if not DirectoryExists(CarpetaParametro) then
-        ForceDirectories(CarpetaParametro);
+      if not DirectoryExists(FolderParameter) then
+        ForceDirectories(FolderParameter);
 
-      if not DirectoryExists(CarpetaParametro) then
+      if not DirectoryExists(FolderParameter) then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -121,7 +121,7 @@ begin
         Exit;
       end;
 
-      ExtraerCD(0, 0, 0, 0, CarpetaParametro);
+      ExtractCD(0, 0, 0, 0, FolderParameter);
       if MessagesEnabled then
         MessageBox(Application.Handle, PChar(SFinExtraccion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
 
@@ -130,12 +130,12 @@ begin
 
     if Parameter = '-m' then
     begin
-      CarpetaParametro := '';
+      FolderParameter := '';
       for j := 0 to ParamCount - 1 do
         if Copy(ParamStr(j), 1, 2) = '-f' then
-          CarpetaParametro := ParamStr(j + 1);
+          FolderParameter := ParamStr(j + 1);
 
-      if CarpetaParametro = '' then
+      if FolderParameter = '' then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -143,10 +143,10 @@ begin
         Exit;
       end;
 
-      if not DirectoryExists(CarpetaParametro) then
-        ForceDirectories(CarpetaParametro);
+      if not DirectoryExists(FolderParameter) then
+        ForceDirectories(FolderParameter);
 
-      if not DirectoryExists(CarpetaParametro) then
+      if not DirectoryExists(FolderParameter) then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -154,19 +154,19 @@ begin
         Exit;
       end;
 
-      CrearImagen(CarpetaParametro, ParamStr(i + 1));
+      CreateImage(FolderParameter, ParamStr(i + 1));
       // MessageBox(Application.Handle, PChar(rcFinCreacion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
       Exit;
     end;
 
     if Parameter = '-d' then
     begin
-      CarpetaParametro := '';
+      FolderParameter := '';
       for j := 0 to ParamCount - 1 do
         if Copy(ParamStr(j), 1, 2) = '-f' then
-          CarpetaParametro := ParamStr(j + 1);
+          FolderParameter := ParamStr(j + 1);
 
-      if CarpetaParametro = '' then
+      if FolderParameter = '' then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -174,10 +174,10 @@ begin
         Exit;
       end;
 
-      if not DirectoryExists(CarpetaParametro) then
-        ForceDirectories(CarpetaParametro);
+      if not DirectoryExists(FolderParameter) then
+        ForceDirectories(FolderParameter);
 
-      if not DirectoryExists(CarpetaParametro) then
+      if not DirectoryExists(FolderParameter) then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -185,21 +185,21 @@ begin
         Exit;
       end;
 
-      ImagenParametro := ParamStr(i + 1);
-      if ImagenParametro[Length(ImagenParametro)] = '\' then
-        ImagenParametro[Length(ImagenParametro)] := ' ';
+      ImageParameter := ParamStr(i + 1);
+      if ImageParameter[Length(ImageParameter)] = '\' then
+        ImageParameter[Length(ImageParameter)] := ' ';
 
-      ImagenParametro := ExtractFileName(ImagenParametro) + '.xiso';
+      ImageParameter := ExtractFileName(ImageParameter) + '.xiso';
 
-      CrearImagen(CarpetaParametro, ImagenParametro);
+      CreateImage(FolderParameter, ImageParameter);
       // MessageBox(Application.Handle, PChar(rcFinCreacion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
       Exit;
     end;
 
     if Parameter = '-x' then
     begin
-      OrigenDatos := OD_IMAGEN;
-      if not AbrirXISO(ParamStr(i + 1)) then
+      DataSource := OD_IMAGEN;
+      if not OpenXISO(ParamStr(i + 1)) then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SImagenNoXBOX), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -207,14 +207,14 @@ begin
         Exit;
       end;
 
-      NombreImagen := ParamStr(i + 1);
+      ImageName := ParamStr(i + 1);
 
-      CarpetaParametro := '';
+      FolderParameter := '';
       for j := 0 to ParamCount - 1 do
         if Copy(ParamStr(j), 1, 2) = '-f' then
-          CarpetaParametro := ParamStr(j + 1);
+          FolderParameter := ParamStr(j + 1);
 
-      if CarpetaParametro = '' then
+      if FolderParameter = '' then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -223,17 +223,17 @@ begin
       end;
 
 
-      if lowercase(ExtractFileExt(ExtractFileName(NombreImagen))) = '.xiso' then
-        S := Copy(NombreImagen, 1, Length(NombreImagen) - 4)
+      if lowercase(ExtractFileExt(ExtractFileName(ImageName))) = '.xiso' then
+        S := Copy(ImageName, 1, Length(ImageName) - 4)
       else
-        S := NombreImagen;
+        S := ImageName;
 
-      CarpetaParametro := ExtractFilePath(CarpetaParametro) + Trim(ChangeFileExt(ExtractFileName(NombreImagen), ' ')) + '\';
+      FolderParameter := ExtractFilePath(FolderParameter) + Trim(ChangeFileExt(ExtractFileName(ImageName), ' ')) + '\';
 
-      if not DirectoryExists(CarpetaParametro) then
-        CreateDir(CarpetaParametro);
+      if not DirectoryExists(FolderParameter) then
+        CreateDir(FolderParameter);
 
-      if not DirectoryExists(CarpetaParametro) then
+      if not DirectoryExists(FolderParameter) then
       begin
         if MessagesEnabled then
           MessageBox(Application.Handle, PChar(SCarpetaExtError), PChar('xISO'), MB_ICONWARNING or MB_OK);
@@ -241,7 +241,7 @@ begin
         Exit;
       end;
 
-      ExtraerCD(0, 0, 0, 0, CarpetaParametro);
+      ExtractCD(0, 0, 0, 0, FolderParameter);
       if MessagesEnabled then
         MessageBox(Application.Handle, PChar(SFinExtraccion), PChar('xISO'), MB_ICONINFORMATION or MB_OK);
 
