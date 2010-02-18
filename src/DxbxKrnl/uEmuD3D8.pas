@@ -1796,8 +1796,7 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_AddRef()');
 {$ENDIF}
 
-  Result := g_pD3DDevice8._AddRef();
-
+  Result := ULong(g_pD3DDevice8._AddRef());
   EmuSwapFS(fsXbox);
 end;
 
@@ -3622,7 +3621,7 @@ var
   Stage: DWORD;
   v: Integer;
   pTexture: PX_D3DTexture;
-  hRet: HRESULT;
+{  hRet: HRESULT;}
 begin
   EmuSwapFS(fsWindows);
 
@@ -3654,7 +3653,7 @@ begin
 
     EmuWarning('Switching Texture 0x%.08X (0x%.08X) @ Stage %d', [pTexture, pTexture.EmuBaseTexture8, Stage]);
 
-    hRet := g_pD3DDevice8.SetTexture(Stage, pTexture.EmuBaseTexture8);
+    {hRet := }g_pD3DDevice8.SetTexture(Stage, pTexture.EmuBaseTexture8);
 
     { MARKED OUT BY CXBX
     if (pTexture.EmuBaseTexture8 <> 0) then
@@ -5077,7 +5076,7 @@ begin
   begin
     dwPtr := DWORD(pThis.Lock);
     pRefCount := PDWORD(dwPtr + g_dwOverlayP*g_dwOverlayH);
-    inc(pRefCount);
+    inc(pRefCount^);
   end
   else
   begin
