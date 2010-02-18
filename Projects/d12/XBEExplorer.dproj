@@ -109,6 +109,8 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\..\src\XBEExplorer\uStringsViewer.pas"/>
+			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

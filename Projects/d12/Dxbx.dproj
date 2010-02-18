@@ -71,6 +71,8 @@
 			<DCCReference Include="..\..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas"/>
 			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
+			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

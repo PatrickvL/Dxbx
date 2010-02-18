@@ -43,7 +43,9 @@ uses
   uDxbxXml in '..\..\src\uDxbxXml.pas',
   XboxKrnl in '..\..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas';
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas';
 
 {$R *.RES}
 

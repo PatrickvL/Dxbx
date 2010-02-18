@@ -12,7 +12,9 @@ uses
   uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uConsoleClass in '..\..\src\uConsoleClass.pas',
   uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame},
-  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas';
+  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas';
 
 {$R *.res}
 
