@@ -384,7 +384,7 @@ begin
 
     // Dxbx TODO : These $0C and 40 values should become a suiteably named constant :
     // (They represent the offset and length of the XBE_CERTIFICATE.wszTitleName field)
-    if CertAddr + $0C + 40 < g_XbeHeaderSize then
+    if DWord(CertAddr + $0C + 40) < g_XbeHeaderSize then
     begin
       IntPtr(XbeCert) := IntPtr(g_XbeHeader) + CertAddr;
       // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
@@ -4824,7 +4824,7 @@ begin
               begin
                 memset(pDest, 0, dwMipWidth * dwBPP);
 
-                pDest := Pointer(DWORD(pDest) + LockedRect.Pitch);
+                pDest := Pointer(DWORD(pDest) + DWord(LockedRect.Pitch));
                 pSrc := Pointer(DWORD(pSrc) + dwMipPitch);
               end;
             end
@@ -4914,7 +4914,7 @@ begin
               else
               begin
                 pDest := LockedRect.pBits;
-                if (LockedRect.Pitch = dwMipPitch) and (dwMipPitch = dwMipWidth * dwBPP) then
+                if (DWord(LockedRect.Pitch) = dwMipPitch) and (dwMipPitch = dwMipWidth * dwBPP) then
                 begin
                   memcpy(pDest, Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth * dwMipHeight * dwBPP);
                 end
@@ -4924,7 +4924,7 @@ begin
                   begin
                     memcpy(pDest, Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth * dwBPP);
 
-                    pDest := Pointer(DWORD(pDest) + LockedRect.Pitch);
+                    pDest := Pointer(DWORD(pDest) + DWord(LockedRect.Pitch));
                     pSrc := Pointer(DWORD(pSrc) + dwMipPitch);
                   end;
                 end;
@@ -6065,7 +6065,7 @@ begin
         h := g_dwOverlayH;
 
         // Cxbx TODO : sucker the game into rendering directly to the overlay (speed boost)
-        if ((ddsd2.lPitch = w * 2) and (g_dwOverlayP = w * 2)) then
+        if ((DWord(ddsd2.lPitch) = w * 2) and (DWord(g_dwOverlayP) = w * 2)) then
           memcpy(pDest, pSour, h * w * 2)
         else
         begin
@@ -6136,7 +6136,7 @@ begin
           for y := 0 to g_dwOverlayH - 1 do
           begin
             stop := g_dwOverlayW * 4;
-            while x < stop do
+            while Uint32(x) < stop do
             begin
               Y3 := Uint08(pCurByte[0]);
               pDest2[x+0] := Y3;
@@ -6184,7 +6184,7 @@ begin
               if B > 255 then
                 B := 255;
 
-              i := (dy*LockedRectDest.Pitch+(dx+x)*4);
+              i := (dy*UInt32(LockedRectDest.Pitch)+(dx+UInt32(x))*4);
 
               pDest2[i+0] := Round(B);
               pDest2[i+1] := Round(G);

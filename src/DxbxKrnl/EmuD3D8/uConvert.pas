@@ -584,14 +584,14 @@ end;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := (((PrimitiveCount)*EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]) + EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1]);
+  Result := ((UInt((PrimitiveCount))*EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]) + EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1]);
 end;
 
 // convert xbox->pc primitive type
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  if DWORD(PrimitiveType) > Ord(High(D3DPRIMITIVETYPE))then
+  if DWORD(PrimitiveType) > DWord(Ord(High(D3DPRIMITIVETYPE))) then
     Result := D3DPRIMITIVETYPE($7FFFFFFF)
   else
     Result := EmuPrimitiveTypeLookup[Ord(PrimitiveType)];

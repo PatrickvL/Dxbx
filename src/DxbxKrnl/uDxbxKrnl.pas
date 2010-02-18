@@ -99,7 +99,7 @@ var
   OldExceptionFilter: TFNTopLevelExceptionFilter;
 begin
   // debug console allocation (if configured)
-  CreateLogs(DbgMode, szDebugFileName); // Initialize logging interface
+  CreateLogs(DbgMode, string(szDebugFileName)); // Initialize logging interface
 
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuInit : Dxbx Version ' + _DXBX_VERSION);

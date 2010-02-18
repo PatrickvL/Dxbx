@@ -976,7 +976,7 @@ begin
     // Normalize texture coordinates.
     for uiVertex := 0 to uiVertexCount - 1 do
     begin
-        (*pUVData := pData + (uiVertex * uiStride) + uiOffset;*)
+        pUVData := Puint08(pData + (uiVertex * uiStride) + uiOffset);
 
         if (dwTexN >= 1) then
         begin
@@ -985,7 +985,7 @@ begin
                 (*((FLOAT* )pUVData)[0] /= ( pLinearPixelContainer[0].Size & X_D3DSIZE_WIDTH_MASK) + 1;
                 ((FLOAT* )pUVData)[1] /= ((pLinearPixelContainer[0].Size & X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;*)
             end;
-            (*Inc(pUVData, sizeof(FLOAT) * 2);*)
+            Inc(PByte(pUVData), sizeof(FLOAT) * 2);
         end;
 
         if (dwTexN >= 2) then
@@ -995,7 +995,7 @@ begin
                 (*((FLOAT* )pUVData)[0] /= ( pLinearPixelContainer[1].Size & X_D3DSIZE_WIDTH_MASK) + 1;
                 ((FLOAT* )pUVData)[1] /= ((pLinearPixelContainer[1].Size & X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;*)
             end;
-            (*Inc(pUVData, sizeof(FLOAT) * 2);*)
+            Inc(PByte(pUVData), sizeof(FLOAT) * 2);
         end;
 
         if (dwTexN >= 3) then
@@ -1005,7 +1005,7 @@ begin
                 (*((FLOAT* )pUVData)[0] /= ( pLinearPixelContainer[2].Size & X_D3DSIZE_WIDTH_MASK) + 1;
                 ((FLOAT* )pUVData)[1] /= ((pLinearPixelContainer[2].Size & X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;*)
             end;
-            (*Inc(pUVData, sizeof(FLOAT) * 2);*)
+            Inc(PByte(pUVData), sizeof(FLOAT) * 2);
         end;
 
         if((dwTexN >= 4) and bTexIsLinear[3]) then
@@ -1076,10 +1076,6 @@ begin
     // sizes of our part in the vertex buffer
     dwOriginalSize    := 0;
     dwNewSize         := 0;
-
-    // sizes with the rest of the buffer
-    dwOriginalSizeWR  := 0;
-    dwNewSizeWR       := 0;
 
     // vertex data arrays
     pOrigVertexData := nil;
