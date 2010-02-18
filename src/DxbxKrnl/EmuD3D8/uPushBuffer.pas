@@ -428,13 +428,13 @@ begin
       end;
       {$endif}
 
-(*
-      pwVal := PWORD(pdwPushData + 1);
+
+(*      pwVal := PWORD(pdwPushData + 1);
       for mi := 0 to dwCount - 1 do
       begin
         pIBMem[mi+2] := pwVal[mi];
-      end;
-*)
+      end; *)
+
 
       // perform rendering
       if (pIBMem[0] <> $FFFF) then

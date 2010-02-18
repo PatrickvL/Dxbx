@@ -82,7 +82,7 @@ function xboxkrnl_NtCreateIoCompletion(FileHandle: dtU32; DesiredAccess: dtACCES
 function xboxkrnl_NtCreateMutant(
   MutantHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  InitialOwner: LONGBOOL
+  InitialOwner: Boolean
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateSemaphore(
   SemaphoreHandle: PHANDLE;
@@ -664,14 +664,14 @@ begin
 end;
 
 function xboxkrnl_NtCreateMutant(
-  MutantHandle: PHANDLE; // OUT
+  {OUT}MutantHandle: PHANDLE;
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  InitialOwner: LONGBOOL
+  InitialOwner: Boolean
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   szBuffer: PAnsichar;
-  wszObjectName: PWideChar;
+  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
   ret: NTSTATUS;
@@ -681,7 +681,7 @@ begin
   if Assigned(ObjectAttributes) then
     szBuffer := ObjectAttributes.ObjectName.Buffer
   else
-    szBuffer := '';
+    szBuffer := 0;
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateMutant' +
@@ -697,10 +697,10 @@ begin
   // initialize object attributes
   if Assigned(szBuffer) then
   begin
-    mbstowcs(wszObjectName, '\??\', 4);
-    mbstowcs(wszObjectName+4, szBuffer, 160-1);
+    mbstowcs(@(wszObjectName[0]), '\??\', 4);
+    mbstowcs(@(wszObjectName[0+4]), szBuffer, MAX_PATH-1);
 
-    RtlInitUnicodeString(@NtUnicodeString, wszObjectName);
+    RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
 
     InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
   end;
