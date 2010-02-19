@@ -25,9 +25,9 @@ uses
   // Delphi
   Windows,
   // DirectX
-  D3DX8,
-  Direct3D,
-  Direct3D8,
+  Direct3D, // PD3DCOLOR
+  Direct3D8, // IDirect3DDevice8
+  D3DX8, // ID3DXBuffer
   // Dxbx
   uEmuD3D8Types;
 

@@ -1161,7 +1161,7 @@ begin
   end;
 
   // Load Configuration from Registry
-  if (RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, nil, ahKey, @dwDisposition) = ERROR_SUCCESS) then
+  if (RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, nil, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, nil, {var}ahKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
     // Load Device Names
     for v := 0 to XBCTRL_MAX_DEVICES - 1 do

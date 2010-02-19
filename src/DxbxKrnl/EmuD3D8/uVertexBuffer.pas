@@ -31,9 +31,9 @@ uses
   // Jedi Win32API
   , JwaWinType
   // DirectX
-  , D3DX8
   , Direct3D
   , Direct3D8
+  , D3DX8
   // Dxbx
   , uTypes // CLOCKS_PER_SEC, clock()
   , uLog

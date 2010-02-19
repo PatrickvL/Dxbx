@@ -26,8 +26,7 @@ uses
   // Delphi
   Windows,
   // DirectX
-  Direct3D,
-  Direct3D8,
+  Direct3D8, // D3DMULTISAMPLE_TYPE
   // Dxbx
   uTypes;
 
