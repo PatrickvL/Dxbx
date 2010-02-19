@@ -33,10 +33,10 @@ uses
   // Jedi Win32API
   JwaWinType,
   // DirectX
-  D3DX8,
-  Direct3D,
-  Direct3D8,
-  DirectDraw,
+  Direct3D, // PD3DCOLOR
+  Direct3D8, // D3DDEVTYPE
+  DirectDraw, // IDIRECTDRAWSURFACE7
+  D3DX8, // PD3DXVECTOR4
   // OpenXDK
   XboxKrnl,
   // Dxbx
@@ -2193,7 +2193,7 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale
 (
-    pOffset: PD3DXVECTOR4; 
+    pOffset: PD3DXVECTOR4;
     pScale: PD3DXVECTOR4
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100

@@ -29,8 +29,8 @@ uses
   // Jedi Win32API
   , JwaWinType
   // DirectX
-  , D3DX8
   , Direct3D8
+  , D3DX8
   // Dxbx
   , uEmu
   , uTypes

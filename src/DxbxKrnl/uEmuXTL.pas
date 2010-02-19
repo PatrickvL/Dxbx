@@ -22,13 +22,9 @@ unit uEmuXTL;
 
 interface
 
-uses
-  // Delphi
-  Windows,
-  //
-  Direct3D8;
-
 (*
+
+// Cxbx has this :
 namespace XTL
 {
     #include "EmuXapi.h"
@@ -37,12 +33,25 @@ namespace XTL
     #include "EmuD3D8\VertexBuffer.h"
     #include "EmuD3D8\PushBuffer.h"
     #include "EmuD3D8\VertexShader.h"
+    #include "EmuD3D8\PixelShader.h"
     #include "EmuD3D8\State.h"
     #include "EmuDInput.h"
     #include "EmuDSound.h"
+//  #include "EmuXBAudio\XboxAdpcm.h"
+//  #include "EmuXBAudio\XSoundBank.h"
+//  #include "EmuXBAudio\XWaveBank.h"
     #include "EmuXOnline.h"
     #include "EmuXG.h"
-}  *)
+    #include "EmuXactEng.h"
+}
+
+// Dxbx keeps these in other units :
+extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;
+extern DWORD                    g_CurrentVertexShader;
+extern BOOL                     g_bFakePixelShaderLoaded;
+extern BOOL                     g_bIsFauxFullscreen;
+
+*)
 
 implementation
 

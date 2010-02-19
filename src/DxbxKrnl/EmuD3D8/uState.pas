@@ -26,7 +26,7 @@ uses
   // Delphi
   Windows,
   // DirectX
-  Direct3D8,
+  Direct3D8, // IDirect3DBaseTexture8
   // Dxbx
   uTypes,
   uDxbxUtils, // iif
