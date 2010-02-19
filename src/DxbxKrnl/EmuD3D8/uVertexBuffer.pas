@@ -822,7 +822,7 @@ begin
                     Break;
                 *)(*
                 default:
-                    CxbxKrnlCleanup('Unhandled stream ctype: $%.02X', pStreamPatch.pTypes[uiType]);
+                    CxbxKrnlCleanup('Unhandled stream type: 0x%.02X', pStreamPatch.pTypes[uiType]);
                     Break;
              end;
          end;*)
@@ -834,7 +834,7 @@ begin
 
         (*if (FAILED(g_pD3DDevice8.SetStreamSource(uiStream, pNewVertexBuffer, pStreamPatch.ConvertedStride))) then
         begin
-            CxbxKrnlCleanup('Failed to set the ctype patched buffer as the new stream source!');
+            CxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
          end;*)
         (*if (pStream.pPatchedStream) then
         begin

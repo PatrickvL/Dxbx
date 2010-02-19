@@ -99,7 +99,7 @@ type                 SmallInt, CSHORT = SmallInt;
 type                  LongInt = LongInt;
 type         UCHAR = Byte;
 type         BYTE = Byte;
-type         BOOLEAN = Byte;
+type         BOOLEAN = ByteBool; Cxbx : unsigned char = AnsiChar in Delphi
 type        USHORT = Word;
 type        WORD = Word;
 type         ULONG = Cardinal;

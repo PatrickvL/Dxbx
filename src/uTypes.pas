@@ -116,6 +116,11 @@ type
 
   pwchar_t = PWideChar;
 
+//  bool = ?;
+//  BOOL = ?;
+//  BOOLEAN = ?;
+  CHARBOOL = ByteBool; // Cxbx : unsigned char = AnsiChar in Delphi
+
 {$IFNDEF UNICODE}
   UnicodeString = WideString;
 

@@ -88,7 +88,7 @@ function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 implementation
 
 function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType; overload;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   if AValue then
     Result := ATrue
