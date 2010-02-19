@@ -48,7 +48,7 @@ uses
   uEmuD3D8Types;
 
 procedure XTL_EmuUpdateDeferredStates; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwConv: DWORD;
   v: int;
@@ -156,7 +156,7 @@ begin
     begin
       if (XTL_EmuD3DDeferredRenderState[v] <> X_D3DRS_UNK) then
       begin
-        if (v <>  0) and (v <>  1) and (v <>  2) and (v <>  3) and (v <>  4) and (v <>  5) and (v <>  6) and (v <>  7)
+        if  (v <>  0) and (v <>  1) and (v <>  2) and (v <>  3) and (v <>  4) and (v <>  5) and (v <>  6) and (v <>  7)
         and (v <> 10) and (v <> 11) and (v <> 13) and (v <> 19) and (v <> 20) and (v <> 21) and (v <> 23) and (v <> 24)
         and (v <> 25) and (v <> 26) and (v <> 27) and (v <> 28) and (v <> 29) and (v <> 30) and (v <> 31) and (v <> 33) then
           EmuWarning('Unhandled RenderState Change @ %d (%d)', [v, v + 82]);
@@ -190,7 +190,7 @@ begin
         if (pCur[1+Adjust2] = 5) then
           CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1+Adjust2]);
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1+Adjust2]); // Dxbx fix
       end;
 
       if (pCur[2+Adjust2] <> X_D3DTSS_UNK) then
@@ -198,7 +198,7 @@ begin
         if (pCur[2+Adjust2] = 5) then
           CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2+Adjust2]);
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2+Adjust2]); // Dxbx fix
       end;
 
       if (pCur[3+Adjust2] <> X_D3DTSS_UNK) then
@@ -206,7 +206,7 @@ begin
         if (pCur[3+Adjust2] = 4) then
           CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3+Adjust2]);
+        g_pD3DDevice8.SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3+Adjust2]); // Dxbx fix
       end;
 
       if (pCur[4+Adjust2] <> X_D3DTSS_UNK) then
@@ -237,6 +237,7 @@ begin
       // Cxbx TODO: Use a lookup table, this is not always a 1:1 map
       if (pCur[12] <> X_D3DTSS_UNK) then
       begin
+        // Dxbx fix : Use Adjust-ment consistently :
         if (pCur[12-Adjust1] > 12) and (not (pCur[12-Adjust1] >= 17) and (pCur[12] <= 21)) and 
            (pCur[12-Adjust1] <> 22) and (pCur[12-Adjust1] <> 14) and 
            (pCur[12-Adjust1] <> 15) and (pCur[12-Adjust1] <> 13) then

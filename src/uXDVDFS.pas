@@ -372,7 +372,7 @@ function XDVDFS_EnumFiles(
 var
   Entry: PXDVDFS_DIRECTORY_ENTRY;
   SectorNumber, Position: DWORD;
-//i: DWORD;
+  i: Integer; // Needs to be signed, so not a DWORD!
   Ptr: PBYTE;
 begin
   repeat // enum_retry:
@@ -406,12 +406,11 @@ begin
     if SearchRecord.Position = 0 then
     begin
       // ...bufferize the whole dir.
-{$MESSAGE 'Fix the pre-buffering of the root-folder in XDVDFS_EnumFiles'}
-//      for i := 1 to MIN(DISK_BUFFER - 1, SearchRecord.DirectorySize div SECTOR_SIZE) - 1 do
-//      begin
-//        GetSectorBuffered(@Session.Read, i + SearchRecord.StartSector);
-//        ReleaseBufferedSector(@Session.Read, i + SearchRecord.StartSector);
-//      end;
+      for i := 1 to Integer(MIN(DISK_BUFFER - 1, SearchRecord.DirectorySize div SECTOR_SIZE)) - 1 do
+      begin
+        GetSectorBuffered(@Session.Read, DWORD(i) + SearchRecord.StartSector);
+        ReleaseBufferedSector(@Session.Read, DWORD(i) + SearchRecord.StartSector);
+      end;
     end;
 
     Entry := PXDVDFS_DIRECTORY_ENTRY(@Ptr[Position]);
