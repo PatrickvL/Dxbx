@@ -689,7 +689,7 @@ begin
 end;
 
 procedure XTL_EmuXInitDevices(Unknown1: DWord; Unknown2: PVOID); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
 begin
@@ -718,7 +718,7 @@ begin
 end;
 
 function XTL_EmuXGetDevices(DeviceType: PXPP_DEVICE_TYPE): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 

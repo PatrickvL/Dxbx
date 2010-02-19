@@ -79,9 +79,9 @@ function XTL_EmuIDirect3DDevice8_GetVertexShader(const pHandle: PDWORD): HRESULT
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource;
   pBase: PVOID): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_CreateTexture(Width: UINT; Height: UINT;
-    Levels: UINT; Usage: DWORD; Format: D3DFORMAT; Pool: D3DPOOL; ppTexture: PPX_D3DTexture): HRESULT; stdcall;
+    Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT; Pool: D3DPOOL; ppTexture: PPX_D3DTexture): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width: UINT; Height: UINT;
-    Depth: UINT; Levels: UINT; Usage: DWORD; Format: D3DFORMAT;
+    Depth: UINT; Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT;
     Pool: D3DPOOL; ppVolumeTexture: PPX_D3DVolumeTexture): HRESULT; stdcall;
 function XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis: PX_D3DTexture;
     Level: UINT;
@@ -2988,7 +2988,7 @@ function XTL_EmuIDirect3DDevice8_CreateTexture2
     Depth: UINT;
     Levels: UINT;
     Usage: DWORD;
-    Format: D3DFORMAT;
+    Format: X_D3DFORMAT;
     D3DResource: D3DRESOURCETYPE
 ): PX_D3DResource; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -3011,7 +3011,7 @@ function XTL_EmuIDirect3DDevice8_CreateTexture
   Height: UINT;
   Levels: UINT;
   Usage: DWORD;
-  Format: D3DFORMAT;
+  Format: X_D3DFORMAT;
   Pool: D3DPOOL;
   ppTexture: PPX_D3DTexture
 ): HRESULT; stdcall;
@@ -3042,7 +3042,7 @@ begin
 {$ENDIF}
 
   // Convert Format (Xbox->PC)
-  PCFormat := EmuXB2PC_D3DFormat(Cardinal(Format));
+  PCFormat := EmuXB2PC_D3DFormat(Format);
 
   // Cxbx TODO : HACK: Devices that don't support this should somehow emulate it!
   if (PCFormat = D3DFMT_D16) then
@@ -3173,7 +3173,7 @@ function XTL_EmuIDirect3DDevice8_CreateVolumeTexture
     Depth: UINT; 
     Levels: UINT; 
     Usage: DWORD; 
-    Format: D3DFORMAT;
+    Format: X_D3DFORMAT;
     Pool: D3DPOOL; 
     ppVolumeTexture: PPX_D3DVolumeTexture
 ): HRESULT; stdcall;
