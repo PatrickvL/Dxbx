@@ -4204,7 +4204,8 @@ begin
 
   // release back buffer lock
   begin
-    g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
+    pBackBuffer := nil;
+    g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}pBackBuffer);
     pBackBuffer.UnlockRect();
   end;
 
@@ -4264,7 +4265,8 @@ begin
 
   // release back buffer lock
   begin
-    g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
+    pBackBuffer := nil;
+    g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}pBackBuffer);
 
     pBackBuffer.UnlockRect();
   end;
@@ -4973,7 +4975,7 @@ begin
 
           for (Integer v := 0; v < 6; v++)
           begin
-            IDirect3DSurface8 * pSurface := 0;
+            pSurface := 0;
 
             StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegCubeTex%.03d -%d.bmp', [X_Format, dwDumpCube++, v]);
 
@@ -6122,7 +6124,7 @@ begin
     begin
       // Cxbx TODO : dont assume X8R8G8B8 ?
       pBackBuffer := nil;
-      hRet := g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}IDirect3DSurface8(pBackBuffer));
+      hRet := g_pD3DDevice8.GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, {out}pBackBuffer);
 
       // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
       if (hRet = D3D_OK) and (pBackBuffer.LockRect(LockedRectDest, nil, 0) = D3D_OK) then
