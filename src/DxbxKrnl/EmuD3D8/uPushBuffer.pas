@@ -191,7 +191,6 @@ var
   pVertexData: PVOID;
   dwVertexShader: DWord;
   dwStride: DWord;
-  bShowPB: bool;
   PCPrimitiveType: D3DPRIMITIVETYPE;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
   pIndexBuffer: IDIRECT3DINDEXBUFFER8;
@@ -207,12 +206,13 @@ var
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
   bPatched: bool;
-  pwVal: PWORD;
-  mi: uint;
   pVBData: PBYTE;
   uiStride: UINT;
 
 {$ifdef _DEBUG_TRACK_PB}
+  mi: uint;
+  pwVal: PWORD;
+  bShowPB: bool;
   s: uint;
 {$endif}
 
@@ -221,9 +221,6 @@ begin
     Exit;
 
   pdwOrigPushData := pdwPushData;
-
-  pIndexData := nil;
-  pVertexData := nil;
 
   dwVertexShader := 0;
   dwStride := 0;
@@ -286,7 +283,7 @@ begin
       end
       else
       begin
-        {$IFDEF DEBUG}
+        {$IFDEF _DEBUG_TRACK_PB}
         if (bShowPB) then
         begin
           DbgPrintf('PrimitiveType := %d)', [pdwPushData^]);

@@ -570,6 +570,8 @@ begin
   DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X', [dwOldProtect, NewProtect and (not PAGE_WRITECOMBINE)]);
 {$ENDIF}
 
+  Result := STATUS_SUCCESS;
+
   EmuSwapFS(fsXbox);
 end;
 

@@ -438,6 +438,8 @@ begin
   //_endthreadex(ExitStatus);
   ExitThread(ExitStatus);
 
+  Result := STATUS_SUCCESS;
+
   EmuSwapFS(fsXbox);
 end;
 

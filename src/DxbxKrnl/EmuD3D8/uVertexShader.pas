@@ -1310,7 +1310,7 @@ begin
                     (pIntermediate1W.ILU = ILU_RCC) and
                     (pIntermediate1W.Output.Type_ = IMD_OUTPUT_R) and
                     (pIntermediate1W.Output.Address = 
-                     pIntermediate.Parameters[1].Parameter.Address) then
+                     Word(pIntermediate.Parameters[1].Parameter.Address)) then
                 begin
                   DbgVshPrintf('Deleted +rcc r1.x, r12.w'#13#10);
                   VshDeleteIntermediate(pShader, j);
@@ -1357,7 +1357,7 @@ begin
 
       // Find instructions outputting to oPos.
       if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
+         (pIntermediate.Output.Address = Word(Ord(OREG_OPOS))) then
       begin
         // Redirect output to r11.
         pIntermediate.Output.Type_    := IMD_OUTPUT_R;
@@ -1601,7 +1601,7 @@ begin
     begin
       pIntermediate := @pShader.Intermediate[j];
       if (pIntermediate.Output.Type_ = IMD_OUTPUT_O) and
-         (pIntermediate.Output.Address = Ord(OREG_OPOS)) then
+         (pIntermediate.Output.Address = Word(Ord(OREG_OPOS))) then
       begin
         // Found instruction writing to oPos
         pIntermediate.Output.Type_ := IMD_OUTPUT_R;
