@@ -205,7 +205,7 @@ var
   PrimitiveCount: UINT;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-  bPatched: bool;
+//  bPatched: bool;
   pVBData: PBYTE;
   uiStride: UINT;
 
@@ -387,7 +387,7 @@ begin
         VPDesc.uiVertexStreamZeroStride := dwStride;
         VPDesc.hVertexShader := dwVertexShader;
 
-        bPatched := VertPatch.Apply(@VPDesc);
+        {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
         g_pD3DDevice8.DrawPrimitiveUP
         (
@@ -480,7 +480,7 @@ begin
           // Cxbx TODO: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
-          bPatched := VertPatch.Apply(@VPDesc);
+          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
           g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
 
@@ -646,7 +646,7 @@ begin
           // Cxbx TODO: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
-          bPatched := VertPatch.Apply(@VPDesc);
+          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
           g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
 

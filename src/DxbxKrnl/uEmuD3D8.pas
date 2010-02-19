@@ -530,7 +530,7 @@ begin
       GetWindowRect(hWnd, {var}lRect);
     end;
 
-    SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
+    SetWindowLong(hWnd, GWL_STYLE, LongInt(WS_POPUP));
     ShowWindow(hWnd, SW_MAXIMIZE);
     SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE or SWP_NOMOVE);
   end
@@ -2516,7 +2516,7 @@ begin
   // HACK: Cxbx TODO : support this situation
   if not Assigned(pDeclaration) then
   begin
-    pHandle := nil;
+    pHandle^ := 0;
     EmuSwapFS(fsXbox);
     Result := S_OK;
     Exit;
@@ -4456,34 +4456,36 @@ begin
 
           pIndexBuffer.Lock := X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
 
-          Exit;
+          // Cxbx has Break; Delphi can't do that, so we use an else-block
           // Halo dwSize = 0x336;
+        end
+        else
+        begin
+          hRet := IDirect3DDevice8_CreateIndexBuffer(g_pD3DDevice8,
+            dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+            @(pIndexBuffer^.Lock{EmuIndexBuffer8}));
+
+          if (FAILED(hRet)) then
+            CxbxKrnlCleanup('CreateIndexBuffer Failed!');
+
+          pData := nil;
+
+          hRet := pResource.EmuIndexBuffer8.Lock(0, dwSize, pData, 0);
+
+          if (FAILED(hRet)) then
+            CxbxKrnlCleanup('IndexBuffer Lock Failed!');
+
+          memcpy(pData, pBase, dwSize);
+
+          pResource.EmuIndexBuffer8.Unlock();
+
+          pResource.Data := ULONG(pData);
         end;
 
-        hRet := IDirect3DDevice8_CreateIndexBuffer(g_pD3DDevice8,
-          dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
-          @(pIndexBuffer^.Lock{EmuIndexBuffer8}));
-
-        if (FAILED(hRet)) then
-          CxbxKrnlCleanup('CreateIndexBuffer Failed!');
-
-        pData := nil;
-
-        hRet := pResource.EmuIndexBuffer8.Lock(0, dwSize, pData, 0);
-
-        if (FAILED(hRet)) then
-          CxbxKrnlCleanup('IndexBuffer Lock Failed!');
-
-        memcpy(pData, pBase, dwSize);
-
-        pResource.EmuIndexBuffer8.Unlock();
-
-        pResource.Data := ULONG(pData);
-      end;
-
 {$IFDEF DEBUG}
-      DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created IndexBuffer (0x%.08X)', [Pointer(pResource.EmuIndexBuffer8)]);
+        DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created IndexBuffer (0x%.08X)', [Pointer(pResource.EmuIndexBuffer8)]);
 {$ENDIF}
+      end;
     end;
 
 
@@ -5497,6 +5499,8 @@ begin
     [pThis, pLockedRect, pRect, Flags]);
 {$ENDIF}
 
+  hRet := 0; // Dxbx : Prevent 'not initialized' compiler warning
+
 {$IFDEF DXBX_DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DSurface8_LockRect (pThis->Surface = 0x%8.8X)', [Pointer(pThis.EmuSurface8)]);
 {$ENDIF}
@@ -5972,7 +5976,7 @@ begin
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('Could not create overlay clipper');
 
-        hRet := g_pDDClipper.SetHWnd(0, g_hEmuWindow);
+        {Dxbx unused hRet :=} g_pDDClipper.SetHWnd(0, g_hEmuWindow);
       end;
     end;
   end;
@@ -6111,7 +6115,7 @@ begin
       ddofx.dckDestColorkey.dwColorSpaceLowValue := 0;
       ddofx.dckDestColorkey.dwColorSpaceHighValue := 0;
 
-      hret := g_pDDSOverlay7.UpdateOverlay(@SourRect, g_pDDSPrimary, @DestRect, {DDOVER_KEYDESTOVERRIDE |} DDOVER_SHOW, {&ddofx}nil);
+      {Dxbx unused hRet :=} g_pDDSOverlay7.UpdateOverlay(@SourRect, g_pDDSPrimary, @DestRect, {DDOVER_KEYDESTOVERRIDE or} DDOVER_SHOW, {&ddofx}nil);
     end
     else
     begin
@@ -7317,7 +7321,7 @@ function XTL_EmuIDirect3DVertexBuffer8_Lock2
 var
   pVertexBuffer8: IDirect3DVertexBuffer8;
   pbData: PBYTE;
-  hRet: HRESULT;
+//  hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7333,7 +7337,7 @@ begin
   pVertexBuffer8 := ppVertexBuffer^.EmuVertexBuffer8;
   pbData := NULL;
 
-  hRet := pVertexBuffer8.Lock(0, 0, pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
+  {Dxbx unused hRet :=} pVertexBuffer8.Lock(0, 0, pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
   EmuSwapFS(fsXbox);
   Result := pbData;
@@ -7481,7 +7485,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawVertices
 var
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-  bPatched: bool;
+//  bPatched: bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7506,7 +7510,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  bPatched := VertPatch.Apply(@VPDesc);
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
   if XTL_IsValidCurrentShader() then
   begin
@@ -7543,7 +7547,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawVerticesUP
 var
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-  bPatched: bool;
+//  bPatched: bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7568,7 +7572,7 @@ begin
   VPDesc.uiVertexStreamZeroStride := VertexStreamZeroStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
-  bPatched := VertPatch.Apply(@VPDesc);
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
   if (XTL_IsValidCurrentShader()) then
   begin
@@ -7610,7 +7614,7 @@ var
   pData: PBYTE;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-  bPatched: bool;
+//  bPatched: bool;
   pbData: PBYTE;
   bActiveIB: bool;
   pIndexBuffer: IDirect3DIndexBuffer8;
@@ -7676,7 +7680,7 @@ begin
 
     VertPatch.Create; // Dxbx addition;
 
-    bPatched := VertPatch.Apply(@VPDesc);
+    {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
     {$ifdef _DEBUG_TRACK_VB}
     if not g_bVBSkipStream then
@@ -7765,7 +7769,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP
 var
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-  bPatched: bool;
+//  bPatched: bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7802,7 +7806,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  bPatched := VertPatch.Apply(@VPDesc);
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
   {$ifdef _DEBUG_TRACK_VB}
   if ( not g_bVBSkipStream) then
@@ -9134,6 +9138,7 @@ begin
 
   // Cxbx TODO: I'm sure there is a better way to handle this.
 
+  (* // Commented out by CXBX
   if not Assigned(pTexture) then
   begin
 {$IFDEF DEBUG}
@@ -9146,7 +9151,7 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf( 'pTexture: = 0x%.08X'#13#10'pTexture.EmuTexture8', [pTexture, (pTexture).EmuBaseTexture8]);
 {$ENDIF}
-  end;
+  end; *)
 
   // Since this function does not specify any texture stages,
   // I guess we can assume it's just the first one.  According

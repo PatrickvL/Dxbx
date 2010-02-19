@@ -496,7 +496,7 @@ begin
       DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
 {$ENDIF}
     end
-		// Going to map Y:\ to current directory as well (dashboard test, 3944)
+    // Going to map Y:\ to current directory as well (dashboard test, 3944)
     else if ((szBuffer[0] = 'Y') or (szBuffer[0] = 'y')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
     begin
       Inc(szBuffer, 3);
