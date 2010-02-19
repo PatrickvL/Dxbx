@@ -2084,7 +2084,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_GetBackBuffer
 (
   BackBuffer: INT;
-  cType: D3DBACKBUFFER_TYPE;
+  Type_: D3DBACKBUFFER_TYPE;
   ppBackBuffer: PPX_D3DSurface
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2095,10 +2095,10 @@ begin
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetBackBuffer' +
       #13#10'(' +
       #13#10'   BackBuffer        : 0x%.08X' +
-      #13#10'   cType              : 0x%.08X' +
+      #13#10'   Type              : 0x%.08X' +
       #13#10'   ppBackBuffer      : 0x%.08X' +
       #13#10');',
-      [BackBuffer, Ord(cType), ppBackBuffer]);
+      [BackBuffer, Ord(Type_), ppBackBuffer]);
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -5046,7 +5046,7 @@ begin
     end;
 
   else // case
-    CxbxKrnlCleanup('IDirect3DResource8.Register.Common cType 0x%.08X not yet supported', [dwCommonType]);
+    CxbxKrnlCleanup('IDirect3DResource8.Register.Common Type 0x%.08X not yet supported', [dwCommonType]);
   end;
 
   EmuSwapFS(fsXbox);
@@ -5114,7 +5114,7 @@ var
   pResource8: IDirect3DResource8;
   v: integer;
 {$ifdef _DEBUG_TRACE_VB}
-  cType: D3DRESOURCETYPE;
+  Type_: D3DRESOURCETYPE;
 {$endif}
 begin
   EmuSwapFS(fsWindows);
@@ -5190,7 +5190,7 @@ begin
         end;
 
 {$ifdef _DEBUG_TRACE_VB}
-        cType := pResource8.GetType();
+        Type_ := pResource8.GetType();
 {$endif}
 
         uRet := pResource8._Release();
@@ -5202,7 +5202,7 @@ begin
 {$ENDIF}
 
 {$ifdef _DEBUG_TRACE_VB}
-          if (cType = D3DRTYPE_VERTEXBUFFER) then
+          if (Type_ = D3DRTYPE_VERTEXBUFFER) then
           begin
             g_VBTrackTotal.remove(pResource8);
             g_VBTrackDisable.remove(pResource8);
@@ -5458,7 +5458,7 @@ begin
     pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
     if (Ord(pDesc.Type_) > 7) then
-        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc.cType > 7');
+        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc.Type > 7');
 
     pDesc.Usage := SurfaceDesc.Usage;
     pDesc.Size := SurfaceDesc.Size;
@@ -6402,7 +6402,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_SetTextureState_BumpEnv
 (
     Stage: DWORD;
-    cType: X_D3DTEXTURESTAGESTATETYPE;
+    Type_: X_D3DTEXTURESTAGESTATETYPE;
     Value: DWORD); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -6412,13 +6412,13 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTextureState_BumpEnv' +
          #13#10'(' +
          #13#10'   Stage             : 0x%.08X' +
-         #13#10'   cType              : 0x%.08X' +
+         #13#10'   Type              : 0x%.08X' +
          #13#10'   Value             : 0x%.08X' +
          #13#10');',
-         [Stage, cType, Value]);
+         [Stage, Type_, Value]);
 {$ENDIF}
 
-  case(cType) of
+  case (Type_) of
     22:    // X_D3DTSS_BUMPENVMAT00
       g_pD3DDevice8.SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
     23:    // X_D3DTSS_BUMPENVMAT01

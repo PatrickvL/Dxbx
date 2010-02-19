@@ -499,7 +499,7 @@ begin
     Result := D3DTRANSFORMSTATETYPE(Ord(D3DTS_TEXTURE7) + 1)
   else
   begin
-    CxbxKrnlCleanup('Unknown Transform State cType (%d)', [Ord(State)]);
+    CxbxKrnlCleanup('Unknown Transform State Type (%d)', [Ord(State)]);
 
     Result := State;
   end;

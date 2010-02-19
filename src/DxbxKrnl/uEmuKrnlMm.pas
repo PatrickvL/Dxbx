@@ -472,7 +472,7 @@ begin
 end;
 
 function xboxkrnl_MmQueryAddressProtect(): NTSTATUS; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('MmQueryAddressProtect');
