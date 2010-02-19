@@ -119,8 +119,7 @@ var
   v: DWORD;
   dwCur: DWORD;
   dwValue: DWORD;
-  dwPtr: DWORD;
-
+//  dwPtr: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
