@@ -26,19 +26,20 @@ implementation
 
 uses
   // Delphi
-  MMSystem
-  // 3rd party
+  Windows
+  , MMSystem
+  // Jedi Win32API
   , JwaWinType
-  , DirectSound // MMSystem,
+  // DirectX
+  , DirectSound
   , DirectMusic
   // Dxbx
-  , uEmu
   , uTypes
-  , uEmuAlloc
-  , uDxbxKrnlUtils
-  , Windows
-  , uEmuFS
   , uLog
+  , uEmu
+  , uEmuAlloc
+  , uEmuFS
+  , uDxbxKrnlUtils
   ;
 
 const

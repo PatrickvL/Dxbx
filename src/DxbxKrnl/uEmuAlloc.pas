@@ -24,17 +24,16 @@ interface
 uses
   // Delphi
   Windows,
-//  Messages,
   SysUtils,
   Classes,
-  // 3rd party
+  // Jedi Win32API
   JwaWinType,
   JwaNative,
   // Dxbx
   uTypes,
   uDxbxUtils,
-  uMutex,
-  uLog;
+  uLog,
+  uMutex;
 
 
 function CxbxMalloc(x: Integer): Pointer;

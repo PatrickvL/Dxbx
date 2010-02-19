@@ -25,24 +25,24 @@ interface
 uses
   // Delphi
   Windows
-  , Classes
-  , JwaWinType
-  , StrUtils
   , SysUtils // Abort
-  // Directx
+  , StrUtils
+  , Classes
+  // Jedi Win32API
+  , JwaWinType
+  // DirectX
   , D3DX8
   , Direct3D
   , Direct3D8
-//  , DirectDraw
   // Dxbx
+  , uTypes // CLOCKS_PER_SEC, clock()
+  , uLog
   , uEmuXG
   , uState
   , uDxbxKrnlUtils
   , uResourceTracker
   , uEmuAlloc
   , uVertexShader
-  , uLog
-  , uTypes // CLOCKS_PER_SEC, clock()
   , uEmuD3D8Types
   , uEmuD3D8Utils;
 

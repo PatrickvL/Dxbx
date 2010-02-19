@@ -26,7 +26,7 @@ uses
   Windows,
   SysUtils,
   Classes, // TBits
-  // Jedi
+  // Jedi Win32API
   JwaWinType,
   // Cxbx
   uTypes,

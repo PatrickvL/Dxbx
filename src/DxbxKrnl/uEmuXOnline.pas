@@ -25,9 +25,9 @@ interface
 uses
   // Delphi
   Windows,
-  SysUtils,
   Winsock,
-  // Jedi
+  SysUtils,
+  // Jedi Win32API
   JwaWinType,
   // Dxbx
   uLog,

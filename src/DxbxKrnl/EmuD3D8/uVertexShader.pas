@@ -26,7 +26,7 @@ uses
   // Delphi
   Windows
   , SysUtils // strlen
-  // Jedi
+  // Jedi Win32API
   , JwaWinType
   // DirectX
   , D3DX8
@@ -482,8 +482,8 @@ implementation
 
 uses
   // Dxbx
-  uEmuFS
-  , uLog
+    uLog
+  , uEmuFS
   , uEmuD3D8;
 
 var

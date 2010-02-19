@@ -24,7 +24,8 @@ interface
 
 uses
   // Delphi
-  Windows, sysUtils,
+  Windows,
+  SysUtils,
   // Dxbx
   uTypes;
 

@@ -26,21 +26,21 @@ interface
 uses
   // Delphi
   Windows,
-  Classes,
   SysUtils,
+  Classes,
   FileCtrl, // ForceDirectories
   // 3rd Party
   JclWin32, // UNDNAME_COMPLETE
   JclPeImage, // UndecorateSymbolName
   // Dxbx
   uTypes,
-  uXBE,
-  uLog,
   uDxbxUtils,
+  uLog,
+  uXBE,
   uDxbxKrnlUtils,
+  uCRC16,
   uStoredTrieTypes,
   uXboxLibraryUtils,
-  uCRC16,
   uEmuXapi; // XTL_EmuXapiProcessHeap
 
 type

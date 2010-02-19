@@ -23,10 +23,10 @@ interface
 
 uses
   // Delphi
-  Dialogs, // MessageDlg
   Windows, // TImageDosHeader, TImageNtHeaders, TImageSectionHeader
-  Classes,
   SysUtils,
+  Classes,
+  Dialogs, // MessageDlg
   // Dxbx
   uTypes,
   uLog;

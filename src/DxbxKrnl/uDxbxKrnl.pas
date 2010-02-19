@@ -24,15 +24,16 @@ interface
 uses
   // Delphi
   Windows, // DWord
-  JwaWinType,
-  Math, // IfThen
   SysUtils, // Format
+  Math, // IfThen
+  // Jedi Win32API
+  JwaWinType,
   // Dxbx
   uConsts,
   uTypes,
+  uDxbxUtils,
   uLog,
   uXbe,
-  uDxbxUtils,
   uDxbxKrnlUtils,
   uDxbxDebugUtils,
   uEmuShared,
