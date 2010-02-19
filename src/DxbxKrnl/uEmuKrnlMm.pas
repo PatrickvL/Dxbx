@@ -98,11 +98,11 @@ function xboxkrnl_MmQueryAllocationSize(
 function xboxkrnl_MmQueryStatistics(
   MemoryStatistics: PMM_STATISTICS // out
   ): NTSTATUS; stdcall;
-function xboxkrnl_MmSetAddressProtect(
+procedure xboxkrnl_MmSetAddressProtect(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
   NewProtect: ULONG
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_MmUnmapIoSpace(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG
@@ -503,7 +503,7 @@ function xboxkrnl_MmQueryStatistics(
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  MyMemoryStatus: MEMORYSTATUS;
+  MemoryStatus: JwaWinBase.MEMORYSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -515,16 +515,16 @@ begin
       [MemoryStatistics]);
 {$ENDIF}
 
-  GlobalMemoryStatus(MyMemoryStatus);
+  GlobalMemoryStatus({var}MemoryStatus);
 
   ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
 
   MemoryStatistics.Length := sizeof(MM_STATISTICS);
-  MemoryStatistics.TotalPhysicalPages := MyMemoryStatus.dwTotalVirtual div 4096;
-  MemoryStatistics.AvailablePages := MyMemoryStatus.dwAvailVirtual div 4096;
+  MemoryStatistics.TotalPhysicalPages := MemoryStatus.dwTotalVirtual div 4096;
+  MemoryStatistics.AvailablePages := MemoryStatus.dwAvailVirtual div 4096;
 
   // HACK (does this matter?)
-  MemoryStatistics.VirtualMemoryBytesReserved := MyMemoryStatus.dwTotalPhys - MyMemoryStatus.dwAvailPhys;
+  MemoryStatistics.VirtualMemoryBytesReserved := MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys;
 
   // the rest arent really used from what i've seen
 
@@ -532,11 +532,11 @@ begin
   Result := STATUS_SUCCESS;
 end;
 
-function xboxkrnl_MmSetAddressProtect(
+procedure xboxkrnl_MmSetAddressProtect(
   BaseAddress: PVOID;
   NumberOfBytes: ULONG;
   NewProtect: ULONG
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwOldProtect: DWORD;
@@ -569,8 +569,6 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : VirtualProtect was 0x%.08X -> 0x%.08X', [dwOldProtect, NewProtect and (not PAGE_WRITECOMBINE)]);
 {$ENDIF}
-
-  Result := STATUS_SUCCESS;
 
   EmuSwapFS(fsXbox);
 end;

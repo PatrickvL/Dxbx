@@ -76,9 +76,9 @@ function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNA
 function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
   ): NTSTATUS; stdcall; // Source: ReactOS
-function {258} xboxkrnl_PsTerminateSystemThread(
+procedure {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
-  ): NTSTATUS; stdcall; // Source : XBMC
+  ); stdcall; // Source : XBMC
 
 // Global Variable(s)
 var
@@ -408,9 +408,9 @@ end;
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-function {258} xboxkrnl_PsTerminateSystemThread(
+procedure {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
-  ): NTSTATUS; stdcall; // Source : XBMC
+  ); stdcall; // Source : XBMC
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
@@ -437,8 +437,6 @@ begin
 
   //_endthreadex(ExitStatus);
   ExitThread(ExitStatus);
-
-  Result := STATUS_SUCCESS;
 
   EmuSwapFS(fsXbox);
 end;
