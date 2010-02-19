@@ -24,7 +24,7 @@ interface
 {$IFDEF DXBX_EMUHANDLES}
 
 uses
-  // Jedi
+  // Jedi Win32API
   JwaWinType,
   JwaWinNT;
 

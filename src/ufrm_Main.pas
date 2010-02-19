@@ -23,12 +23,14 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Classes, JwaWinType,
+  Windows, Messages, SysUtils, Classes,
   Dialogs, ActnList, Forms, Menus,
   Controls, ComCtrls, ExtCtrls,
   Graphics, JPeg,
   ShellAPI, IniFiles,
-  // Jedi
+  // Jedi Win32API
+  JwaWinType,
+  // Jcl
   JclShell, // SHDeleteFiles
   // Dxbx
   uTypes,

@@ -24,20 +24,20 @@ interface
 uses
   // Delphi
   Windows, // for DWord
-  Classes,
-  Controls,
   SysUtils, // for Format
   StrUtils, // for IfThen
+  Classes,
+  Controls,
   Dialogs, // for MessageDlg
   Graphics, // for TBitmap
   // Dxbx
   uConsts,
-  uEmuD3D8Types,
   uTypes,
   uTime,
+  uDxbxUtils,
   uLog,
-  uFileSystem, // Drives
-  uDxbxUtils;
+  uEmuD3D8Types,
+  uFileSystem; // Drives
 
 type
   _XBE_HEADER = packed record

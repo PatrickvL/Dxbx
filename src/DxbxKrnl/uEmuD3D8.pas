@@ -24,43 +24,44 @@ interface
 uses
   // Delphi
   Windows,
+  MMSystem, // timeBeginPeriod
+  MultiMon,
   Messages,
   SysUtils, // strlen
-  MultiMon,
   Classes, // TStringList
   Math,
-  MMSystem, // timeBeginPeriod
+  // Jedi Win32API
   JwaWinType,
-
-  // Directx
+  // DirectX
   D3DX8,
   Direct3D,
   Direct3D8,
   DirectDraw,
+  // OpenXDK
+  XboxKrnl,
   // Dxbx
+  uConsts,
+  uTypes,
+  uDxbxUtils,
+  uLog,
+  uXbe,
+  uPushBuffer,
+  uEmuDInput,
+  uEmu,
+  uEmuAlloc,
+  uEmuKrnl,
+  uEmuXTL,
   uVertexShader,
   uResourceTracker,
-  XboxKrnl,
   uConvert,
   uEmuD3D8Types,
   uEmuD3D8Utils,
-  uDxbxUtils,
-  uDxbxKrnlUtils,
-  uEmuDInput,
-  uPushBuffer,
-  uEmu,
-  uEmuKrnl,
-  uEmuXTL,
-  uLog,
-  uConsts,
-  uTypes,
-  uXbe,
-  uEmuAlloc,
   uXbVideo,
   uEmuShared,
   uEmuFS,
   uEmuXapi,
   uEmuXG,
+  uDxbxKrnlUtils,
   uVertexBuffer,
   uState;
 
@@ -2659,7 +2660,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_SetPixelShaderConstant
 (
   aRegister: DWORD;
-  pConstantData: PVOID;
+  const pConstantData: PVOID;
   ConstantCount: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -8891,7 +8892,7 @@ begin
   dwHandle := 0;
 
   // Redirect this call to windows Direct3D
-  {Result := g_pD3DDevice8.CreatePixelShader(
+  {hRet := g_pD3DDevice8.CreatePixelShader(
         PDWORD(pPSDef),
         pHandle
     );}
@@ -8906,7 +8907,7 @@ begin
   // Now, redirect this to Xbox Direct3D
   EmuSwapFS(fsXbox);
 
-  {Result := }XTL_EmuIDirect3DDevice8_SetPixelShader(dwHandle);
+  {hRet := }XTL_EmuIDirect3DDevice8_SetPixelShader(dwHandle);
 
   Result := S_OK;
 end;

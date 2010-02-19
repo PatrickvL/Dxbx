@@ -25,11 +25,9 @@ interface
 uses
   // Delphi
   Windows,
-  // Directx
-  D3DX8,
+  // DirectX
   Direct3D,
   Direct3D8,
-  DirectDraw,
   // Dxbx
   uTypes;
 

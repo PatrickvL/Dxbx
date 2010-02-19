@@ -25,12 +25,12 @@ interface
 uses
   // Delphi
   Windows,
-  // Directx
+  // DirectX
   Direct3D8,
   // Dxbx
   uTypes,
-  uEmuXTL,
   uDxbxUtils, // iif
+  uEmuXTL,
   uDxbxKrnlUtils;
 
 procedure XTL_EmuUpdateDeferredStates; stdcall;

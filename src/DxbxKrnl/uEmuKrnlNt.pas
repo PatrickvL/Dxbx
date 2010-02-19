@@ -23,9 +23,9 @@ interface
 
 uses
   // Delphi
-  SysUtils,
   Windows,
-  // Jedi
+  SysUtils,
+  // Jedi Win32API
   JwaWinType,
   JwaWinBase,
   JwaWinNT,
@@ -35,6 +35,7 @@ uses
   XboxKrnl,
   // Dxbx
   uTypes,
+  uDxbxUtils,
   uLog,
   uEmu,
   uEmuFS,
@@ -42,7 +43,6 @@ uses
   uEmuXapi,
   uEmuKrnl,
   uEmuAlloc,
-  uDxbxUtils,
   uDxbxKrnl,
   uDxbxKrnlUtils;
 

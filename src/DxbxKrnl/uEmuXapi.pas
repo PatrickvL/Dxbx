@@ -25,12 +25,13 @@ uses
   // Delphi
   Windows,
   SysUtils,
-  // Jedi
+  // Jedi Win32API
   JwaWinType,
   JwaWinBase,
   JwaNative,
   // Dxbx
   uTypes,
+  uDxbxUtils,
   uLog, // DbgPrintf
   uXbe,
   uEmu,
@@ -38,7 +39,6 @@ uses
   uEmuAlloc,
   uEmuDInput,
   uXBController,
-  uDxbxUtils,
   uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
 
 type

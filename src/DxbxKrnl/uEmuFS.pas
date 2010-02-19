@@ -30,15 +30,15 @@ uses
   // Jcl
   JclDebug,
 {$ENDIF}
-  // JEDI
-  JwaWinType,
   JclWin32,
+  // Jedi Win32API
+  JwaWinType,
   // OpenXDK
   XboxKrnl, // NT_TIB
   // Dxbx
   uTypes,
-  uLog,
   uDxbxUtils,
+  uLog,
   uXbe,
   uEmuAlloc,
   uEmuLDT;

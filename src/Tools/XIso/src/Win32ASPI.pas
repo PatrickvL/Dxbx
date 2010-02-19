@@ -27,10 +27,12 @@ interface
 uses
   // Delphi
   Windows
-  , JwaWinType
   , SysUtils
   , Classes
-  , MMSystem;
+  , MMSystem
+  // Jedi Win32API
+  , JwaWinType
+  ;
 
 const
 //------------------------------------------------------------------------------

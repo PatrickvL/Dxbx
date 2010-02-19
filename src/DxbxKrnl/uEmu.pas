@@ -23,11 +23,11 @@ interface
 
 uses
   // Delphi
-  SysUtils
-  , Dialogs
+  Windows // THandle
   , Messages
-  , Windows // THandle
-  // Jedi WinAPI
+  , SysUtils
+  , Dialogs
+  // Jedi Win32API
   , JwaWinBase
   , JwaWinType
   , JwaWinNt

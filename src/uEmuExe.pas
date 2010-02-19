@@ -26,16 +26,16 @@ interface
 uses
   // Delphi
   Windows,
-  SysUtils, // SafeLoadLibrary
   ShellAPI,
+  SysUtils, // SafeLoadLibrary
   Math, // Min
   // Jedi
   JclWin32,
   // Dxbx
   uConsts,
   uTypes,
-  uLog,
   uDxbxUtils,
+  uLog,
   uXbe,
   uKernelThunk,
   uDxbxKrnl;

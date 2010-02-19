@@ -25,19 +25,21 @@ interface
 uses
   // Delphi
     Windows
-  , JwaWinType
-  , Classes
   , SysUtils
-  // 3rd party
+  , Classes
+  // Jedi Win32API
+  , JwaWinType
+  // DirectX
   , DirectInput
   , Direct3D
   , XInput
+  // OpenXDK
+  , XboxKrnl // NULL
   // Dxbx
-  , uLog
   , uTypes
   , uError
-  , XboxKrnl // NULL
   , uDxbxUtils
+  , uLog
 //  , uEmuXTL
   ;
 

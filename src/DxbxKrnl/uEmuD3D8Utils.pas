@@ -24,11 +24,10 @@ interface
 uses
   // Delphi
   Windows,
-  // Directx
+  // DirectX
   D3DX8,
   Direct3D,
   Direct3D8,
-  DirectDraw,
   // Dxbx
   uEmuD3D8Types;
 

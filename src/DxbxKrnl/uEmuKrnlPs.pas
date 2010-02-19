@@ -24,14 +24,15 @@ interface
 uses
   // Delphi
   SysUtils,
-  // Jedi
+  // Jedi Win32API
   JwaWinType,
   JwaWinBase,
   JwaWinNT,
   JwaNative,
   JwaNTStatus,
-  // Dxbx
+  // OpenXDK
   XboxKrnl,
+  // Dxbx
   uLog,
   uEmuFS,
   uEmuFile,

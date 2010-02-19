@@ -3,14 +3,17 @@ unit reinit;
 interface
 
 uses
+  // Delphi
   Windows
-  , JwaWinType
   , Messages
   , SysUtils
   , Classes
   , Graphics
   , Controls
-  , Forms;
+  , Forms
+  // Jedi Win32API
+  , JwaWinType
+  ;
 
 procedure ReinitializeForms;
 function LoadNewResourceModule(Locale: LCID): Longint;

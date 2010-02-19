@@ -24,7 +24,7 @@ interface
 uses
   // Delphi
   SysUtils,
-  // Jedi
+  // Jedi Win32API
   JwaWinType,
   JwaWinBase,
   JwaWinNT,

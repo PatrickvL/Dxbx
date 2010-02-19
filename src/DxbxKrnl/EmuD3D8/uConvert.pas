@@ -26,7 +26,7 @@ uses
   // Delphi
   Windows
   , SysUtils
-  // Directx
+  // DirectX
   , Direct3D8 // was Direct3D9 ?!
   // Dxbx
   , uEmuD3D8Types

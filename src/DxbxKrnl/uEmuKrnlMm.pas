@@ -25,7 +25,7 @@ uses
   // Delphi
   Windows,
   SysUtils,
-  // Jedi
+  // Jedi Win32API
   JwaWinType,
   JwaWinBase,
   JwaWinNT,

@@ -25,12 +25,13 @@ interface
 uses
   // Delphi
   Windows
-  , Classes
   , SysUtils
+  , Classes
+  // DirectX
   , Direct3D8
   // Dxbx
-  , uDxbxUtils // iif
   , uTypes
+  , uDxbxUtils // iif
   , uVertexBuffer
   , uEmu
   , uEmuXG
@@ -58,13 +59,14 @@ procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall; // forward
 implementation
 
 uses
+  // Jedi Win32API
+  JwaWinType
   // Dxbx
-  uDxbxKrnlUtils
+  , uDxbxKrnlUtils
   , uEmuD3D8
   , uLog
   , uState
   , uEmuXTL
-  , JwaWinType
   , uVertexShader
   , uConvert;
 

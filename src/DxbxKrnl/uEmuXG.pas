@@ -23,9 +23,12 @@ unit uEmuXG;
 interface
 
 uses
-  uTypes,
+  // Jedi Win32API
   JwaWinType,
+  // DirectX
   Direct3D8,
+  // Dxbx
+  uTypes,
   uLog,
   uEmuFS;
 

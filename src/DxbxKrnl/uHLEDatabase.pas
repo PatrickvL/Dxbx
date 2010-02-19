@@ -22,7 +22,7 @@ unit uHLEDatabase;
 interface
 
 uses
-  // Jedi
+  // Jedi Win32API
   JwaWinType;
 
 var

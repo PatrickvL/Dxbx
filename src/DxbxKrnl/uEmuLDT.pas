@@ -29,14 +29,14 @@ interface
 uses
   // Delphi
   Windows,
-  // JEDI
+  // Jedi Win32API
   JwaWinType,
   JwaWinNT,
   JwaNative, // NtSetLdtEntries
   // Dxbx
-  uLog,
   uConsts,
   uDxbxUtils,
+  uLog,
   uDxbxKrnlUtils;
 
 procedure EmuInitLDT;
