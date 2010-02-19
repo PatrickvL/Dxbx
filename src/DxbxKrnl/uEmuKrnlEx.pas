@@ -284,7 +284,7 @@ function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
   ): NTSTATUS; stdcall; // Source: OpenXDK
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
