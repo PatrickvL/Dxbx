@@ -1173,13 +1173,13 @@ begin
   if (dwWidth^ <> NewWidth) then
   begin
     NewWidth := NewWidth shl 1;
-    EmuWarning('Needed to resize width (%d.%d)', [dwWidth^, NewWidth]);
+    EmuWarning('Needed to resize width (%d->%d)', [dwWidth^, NewWidth]);
   end;
 
   if (dwHeight^ <> NewHeight) then
   begin
     NewHeight := NewHeight shl 1;
-    EmuWarning('Needed to resize height (%d.%d)', [dwHeight^, NewHeight]);
+    EmuWarning('Needed to resize height (%d->%d)', [dwHeight^, NewHeight]);
   end;
 
   dwWidth^ := NewWidth;

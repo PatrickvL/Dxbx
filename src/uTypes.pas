@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows,
+  MMSystem, // SEEK_SET
   SysUtils,
   // Jedi Win32API
   JwaWinType;
@@ -121,6 +122,8 @@ type
 //  BOOLEAN = ?;
   CHARBOOL = ByteBool; // Cxbx : unsigned char = AnsiChar in Delphi
 
+  PFILE = ^THandle;
+
 {$IFNDEF UNICODE}
   UnicodeString = WideString;
 
@@ -146,6 +149,12 @@ function wcstombs(mbstr: PAnsiChar; const wcstr: pwchar_t; max: size_t): size_t;
 procedure free(p: PVoid); inline;
 function malloc(const number_of_bytes: size_t): PVoid; inline;
 function calloc(num_elements, element_size: size_t): PVoid; inline;
+
+function fopen(filename: PAnsiChar; mode: PAnsiChar): PFILE;
+function fseek(stream: PFILE; offset: long; mode: int): int;
+function fread(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
+function fwrite(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
+function fclose(stream: PFILE): int;
 
 function FIELD_OFFSET(var Variable): DWORD;
 function DWord2Str(const aValue: DWORD): string;
@@ -258,6 +267,99 @@ function calloc(num_elements, element_size: size_t): PVoid; inline;
 begin
   Result := malloc(num_elements * element_size);
   memset(Result, 0, num_elements * element_size);
+end;
+
+// http://www.dinkumware.com/manuals/?manual=compleat&page=stdio.html#fopen
+function fopen(filename: PAnsiChar; mode: PAnsiChar): PFILE;
+var
+  DesiredAccess: DWORD;
+  ShareMode: DWORD;
+  CreateDisposition: DWORD;
+begin
+(*
+"r" -- to open an existing text file for reading
+"r+" -- to open an existing text file for reading and writing
+"rb" -- to open an existing binary file for reading
+"r+b" or "rb+" -- to open an existing binary file for reading and writing
+
+"w" -- to create a text file or to open and truncate an existing text file, for writing
+"w+" -- to create a text file or to open and truncate an existing text file, for reading and writing
+"wb" -- to create a binary file or to open and truncate an existing binary file, for writing
+"w+b" or "wb+" -- to create a binary file or to open and truncate an existing binary file, for reading and writing
+
+"a" -- to create a text file or to open an existing text file, for writing. The file-position indicator is positioned at the end of the file before each write
+"a+" -- to create a text file or to open an existing text file, for reading and writing. The file-position indicator is positioned at the end of the file before each write
+"ab" -- to create a binary file or to open an existing binary file, for writing. The file-position indicator is positioned at the end of the file (possibly after arbitrary null byte padding) before each write
+"a+b" or "ab+" -- to create a binary file or to open an existing binary file, for reading and writing. The file-position indicator is positioned at the end of the file (possibly after arbitrary null byte padding) before each write
+*)
+  Result := nil;
+
+  // DesiredAccess := GENERIC_READ or GENERIC_WRITE;
+  // ShareMode := 0 / FILE_SHARE_DELETE / FILE_SHARE_READ / FILE_SHARE_WRITE;
+  // CreateDisposition := CREATE_ALWAYS / CREATE_NEW / OPEN_ALWAYS / OPEN_EXISTING / TRUNCATE_EXISTING;
+
+  case mode[0] of
+    'r': begin
+      DesiredAccess := GENERIC_READ;
+      ShareMode := FILE_SHARE_READ;
+      CreateDisposition := OPEN_EXISTING;
+    end;
+    'w': begin
+      DesiredAccess := GENERIC_WRITE;
+      ShareMode := 0;
+      CreateDisposition := OPEN_ALWAYS;
+    end;
+    'a': begin
+      DesiredAccess := GENERIC_WRITE;
+      ShareMode := 0;
+      CreateDisposition := OPEN_EXISTING;
+    end;
+    // 't': ??
+    // 'x': ??
+  else
+    Exit;
+  end;
+
+  if (mode[1] = '+') or ((mode[1] <> #0) and (mode[2] = '+')) then
+    DesiredAccess := GENERIC_READ or GENERIC_WRITE;
+
+  New(Result);
+  Result^ := CreateFileA(filename, DesiredAccess, ShareMode, nil, CreateDisposition, FILE_ATTRIBUTE_NORMAL, 0);
+  if Result^ = INVALID_HANDLE_VALUE then
+  begin
+    Dispose(Result);
+    Exit;
+  end;
+
+  // Append mode means we need to go to the end of the file :
+  case mode[0] of
+    'r': FileSeek(Result^, 0, 0);
+    'a': FileSeek(Result^, 0, 2);
+  else
+    FileSeek(Result^, 0, 0);
+  end;
+end;
+
+function fseek(stream: PFILE; offset: long; mode: int): int;
+begin
+  Result := FileSeek(stream^, offset, mode);
+end;
+
+function fread(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
+begin
+  Result := FileRead(stream^, ptr^, size * nelem);
+end;
+
+function fwrite(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
+begin
+  Result := FileWrite(stream^, ptr, size * nelem);
+end;
+
+function fclose(stream: PFILE): int;
+begin
+  FileClose(stream^);
+  Dispose(stream);
+  Result := 0;
 end;
 
 // Note: Instead of calling FIELD_OFFSET(Type, Member)
