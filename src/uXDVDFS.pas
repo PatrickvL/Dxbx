@@ -128,7 +128,7 @@ function UPPERCASE(a: AnsiChar): AnsiChar;
 function MIN(a,b: DWORD): DWORD;
 
 const DIRECTORY_SEPARATOR = '\';
-const TRANSFER_SIZE = 32;
+const TRANSFER_SIZE = 32; // Read granularity (in sectors) = 64 Kb
 
 function ENDIAN_SAFE32(a: DWORD): DWORD;
 
@@ -654,7 +654,6 @@ var
   CurrentSector, Position, PartialRead, Readed, i: DWORD;
   Buffer: PBYTE;
 begin
-  Buffer := OutBuffer;
   Readed := 0;
 
   // Check structure validity
@@ -667,6 +666,14 @@ begin
   // Limit read size
   if (FileRecord.CurrentPosition + Size) > FileRecord.FileSize then
     Size := FileRecord.FileSize - FileRecord.CurrentPosition;
+
+  if Size = 0 then
+  begin
+    Result := Readed;
+    Exit;
+  end;
+
+  Buffer := OutBuffer;
 
   // Process partial sector read before
   Position := FileRecord.CurrentPosition mod SECTOR_SIZE;

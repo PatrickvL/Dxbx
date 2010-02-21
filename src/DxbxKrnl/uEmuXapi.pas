@@ -23,7 +23,9 @@ interface
 
 uses
   // Delphi
+  Types, // E_FAIL
   Windows,
+  MMSystem, // SEEK_SET
   SysUtils,
   // Jedi Win32API
   JwaWinType,
@@ -41,7 +43,11 @@ uses
   uXBController,
   uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
 
+var
+  XTL_EmuXapiProcessHeap: PPVOID;
+
 type
+  LPTIMECALLBACK = TFNTIMECALLBACK;
   ProcedureStdCall = procedure; stdcall;
 
   StartRoutineFunc = function (const StartContext: PVOID): Int; stdcall;
@@ -54,8 +60,97 @@ type
     OUT CommitSize: PSIZE_T
     ): NTSTATUS; stdcall;
 
-  RTL_HEAP_PARAMETERS = packed record
-    Length: ULONG ;
+type _XINPUT_POLLING_PARAMETERS = packed record
+  private
+    _Flag: Byte;
+    function GetBits(const aIndex: Integer): Byte;
+  public
+    property fAutoPoll: BYTE index $0001 read GetBits; // 1 bit at offset 0
+    property fInterruptOut: BYTE index $0101 read GetBits; // 1 bit at offset 1
+    property ReservedMBZ1: BYTE index $0206 read GetBits; // 6 bits at offset 2
+  public
+    bInputInterval: BYTE;
+    bOutputInterval: BYTE;
+    ReservedMBZ2: BYTE;
+end;
+XINPUT_POLLING_PARAMETERS = _XINPUT_POLLING_PARAMETERS;
+PXINPUT_POLLING_PARAMETERS = ^XINPUT_POLLING_PARAMETERS;
+
+type _POLLING_PARAMETERS_HANDLE = packed record
+    pPollingParameters: PXINPUT_POLLING_PARAMETERS;
+    
+    dwPort: DWORD;
+end;
+POLLING_PARAMETERS_HANDLE = _POLLING_PARAMETERS_HANDLE;
+PPOLLING_PARAMETERS_HANDLE = ^POLLING_PARAMETERS_HANDLE;
+
+type _XPP_DEVICE_TYPE = packed record
+    // Note : Cxbx has size 3, but XTL_EmuXGetDevices seems to indicate size 4 :
+    Reserved: array [0..4-1] of ULONG;
+end;
+XPP_DEVICE_TYPE = _XPP_DEVICE_TYPE;
+PXPP_DEVICE_TYPE = ^XPP_DEVICE_TYPE;
+
+type _XINPUT_GAMEPAD = packed record
+    wButtons: WORD;
+    bAnalogButtons: array [0..8-1] of BYTE;
+    sThumbLX: SHORT;
+    sThumbLY: SHORT;
+    sThumbRX: SHORT;
+    sThumbRY: SHORT;
+end;
+XINPUT_GAMEPAD = _XINPUT_GAMEPAD;
+PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
+
+type _XINPUT_RUMBLE = packed record
+    wLeftMotorSpeed: WORD;
+    wRightMotorSpeed: WORD;
+end;
+XINPUT_RUMBLE = _XINPUT_RUMBLE;
+PXINPUT_RUMBLE = ^XINPUT_RUMBLE;
+
+type _XINPUT_CAPABILITIES = packed record
+    SubType: BYTE;
+    Reserved: WORD;
+
+    In_: record
+      Gamepad: XINPUT_GAMEPAD;
+    end;
+
+    Out_: record
+      Rumble: XINPUT_RUMBLE;
+    end;
+end;
+XINPUT_CAPABILITIES = _XINPUT_CAPABILITIES;
+PXINPUT_CAPABILITIES = ^XINPUT_CAPABILITIES;
+
+// Device SubTypes
+const XINPUT_DEVSUBTYPE_GC_GAMEPAD              = $01;
+const XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          = $02;
+const XINPUT_DEVSUBTYPE_GC_WHEEL                = $10;
+const XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         = $20;
+const XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK = $21;
+const XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         = $30;
+const XINPUT_DEVSUBTYPE_GC_SNOWBOARD            = $40;
+
+type _XINPUT_FEEDBACK_HEADER = packed record
+    dwStatus: DWORD;
+    hEvent: HANDLE; // OPTIONAL ;
+    Reserved: array [0..58-1] of BYTE;
+end;
+XINPUT_FEEDBACK_HEADER = _XINPUT_FEEDBACK_HEADER;
+PXINPUT_FEEDBACK_HEADER = ^XINPUT_FEEDBACK_HEADER;
+
+type _XINPUT_FEEDBACK = packed record
+    Header: XINPUT_FEEDBACK_HEADER;
+    // union
+    Rumble: XINPUT_RUMBLE;
+end;
+XINPUT_FEEDBACK = _XINPUT_FEEDBACK;
+PXINPUT_FEEDBACK = ^XINPUT_FEEDBACK;
+
+type _RTL_HEAP_PARAMETERS = packed record
+    Length: ULONG;
     SegmentReserve: SIZE_T;
     SegmentCommit: SIZE_T;
     DeCommitFreeBlockThreshold: SIZE_T;
@@ -69,127 +164,65 @@ type
 // Was:
 //    Length: UInt32;
 //    Unknown: array [0..$2C-1] of BYTE;
-  end;
-  PRTL_HEAP_PARAMETERS = ^RTL_HEAP_PARAMETERS;
+end;
+RTL_HEAP_PARAMETERS = _RTL_HEAP_PARAMETERS;
+PRTL_HEAP_PARAMETERS = ^RTL_HEAP_PARAMETERS;
 
-  _XINPUT_POLLING_PARAMETERS = packed record
-  private
-    _Flag: Byte;
-    function GetBits(const aIndex: Integer): Byte;
-  public
-    property fAutoPoll: BYTE index $0001 read GetBits; // 1 bit at offset 0
-    property fInterruptOut: BYTE index $0101 read GetBits; // 1 bit at offset 1
-    property ReservedMBZ1: BYTE index $0206 read GetBits; // 6 bits at offset 2
-  public
-    bInputInterval: BYTE;
-    bOutputInterval: BYTE;
-    ReservedMBZ2: BYTE;
-  end;
+type _RTL_HEAP_DEFINITION = packed record
+    Length: ULONG;
+    Unknown: array [0..11-1] of ULONG;
+end;
+RTL_HEAP_DEFINITION = _RTL_HEAP_DEFINITION;
+PRTL_HEAP_DEFINITION = ^RTL_HEAP_DEFINITION;
 
-  XINPUT_POLLING_PARAMETERS = _XINPUT_POLLING_PARAMETERS;
-  PXINPUT_POLLING_PARAMETERS = ^XINPUT_POLLING_PARAMETERS;
+type XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 
-  _POLLING_PARAMETERS_HANDLE = packed record
-    pPollingParameters: PXINPUT_POLLING_PARAMETERS;
-    dwPort: DWORD;
-  end;
-  POLLING_PARAMETERS_HANDLE = _POLLING_PARAMETERS_HANDLE;
-  PPOLLING_PARAMETERS_HANDLE = ^POLLING_PARAMETERS_HANDLE;
-
-  XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
-
-  XTHREAD_NOTIFICATION = packed record
+type _XTHREAD_NOTIFICATION = packed record
     Reserved: LIST_ENTRY;
     pfnNotifyRoutine: XTHREAD_NOTIFY_PROC;
-  end;
-  PXTHREAD_NOTIFICATION = ^XTHREAD_NOTIFICATION;
+end;
+XTHREAD_NOTIFICATION = _XTHREAD_NOTIFICATION;
+PXTHREAD_NOTIFICATION = ^XTHREAD_NOTIFICATION;
 
-const
-  XCALCSIG_SIGNATURE_SIZE = 20;
+const XCALCSIG_SIGNATURE_SIZE = 20;
   
-type
-  XCALCSIG_SIGNATURE = packed record
+type _XCALCSIG_SIGNATURE = packed record
     Signature: array [0..XCALCSIG_SIGNATURE_SIZE-1] of BYTE;
-  end;
-  PXCALCSIG_SIGNATURE = ^XCALCSIG_SIGNATURE;
+end;
+XCALCSIG_SIGNATURE = _XCALCSIG_SIGNATURE;
+PXCALCSIG_SIGNATURE = ^XCALCSIG_SIGNATURE;
 
-  XPP_DEVICE_TYPE = packed record
-    // Note : Cxbx has size 3, but XTL_EmuXGetDevices seems to indicate size 4 :
-    Reserved: array [0..4-1] of ULONG;
-  end;
-  PXPP_DEVICE_TYPE = ^XPP_DEVICE_TYPE;
+const XCALCSIG_FLAG_NON_ROAMABLE = $00000001;
 
-  XINPUT_GAMEPAD = packed record
-    wButtons: WORD;
-    bAnalogButtons: array [0..8-1] of BYTE;
-    sThumbLX: SHORT;
-    sThumbLY: SHORT;
-    sThumbRX: SHORT;
-    sThumbRY: SHORT;
-  end;
-  PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
+const MAX_LAUNCH_DATA_SIZE = 1024 * 3;
 
-  XINPUT_RUMBLE = packed record
-    wLeftMotorSpeed: Word;
-    wRightMotorSpeed: Word;
-  end;
-  PXINPUT_RUMBLE = ^XINPUT_RUMBLE;
+type _LAUNCH_DATA = packed record
+  Data: array [0..MAX_LAUNCH_DATA_SIZE] of BYTE;
+end;
+LAUNCH_DATA = _LAUNCH_DATA;
+PLAUNCH_DATA = ^LAUNCH_DATA;
 
-  XINPUT_CAPABILITIES = packed record
-    SubType: BYTE;
-    Reserved: WORD;
+const LDT_TITLE                 = 0;
+const LDT_FROM_DASHBOARD        = 2;
+const LDT_FROM_DEBUGGER_CMDLINE = 3;
+const LDT_FROM_UPDATE           = 4;
 
-    In_: record
-      Gamepad: XINPUT_GAMEPAD;
-    end;
+// XInputSetState status waiters
+var g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
-    Out_: record
-      Rumble: XINPUT_RUMBLE;
-    end;
-  end;
-  PXINPUT_CAPABILITIES = ^XINPUT_CAPABILITIES;
+// XInputOpen handles
+var g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
 
-const
-  // Device SubTypes
-  XINPUT_DEVSUBTYPE_GC_GAMEPAD              = $01;
-  XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          = $02;
-  XINPUT_DEVSUBTYPE_GC_WHEEL                = $10;
-  XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         = $20;
-  XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK = $21;
-  XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         = $30;
-  XINPUT_DEVSUBTYPE_GC_SNOWBOARD            = $40;
+// Xbe section list
+var g_SectionList: PXBE_SECTIONLIST;
+// Number of sections
+var g_NumSections: int;
 
-type
-  XINPUT_FEEDBACK_HEADER = packed record
-    dwStatus: DWord;
-    hEvent: HANDLE; // OPTIONAL ;
-    Reserved: array [1..58] of Byte;
-  end;
-  PXINPUT_FEEDBACK_HEADER = ^XINPUT_FEEDBACK_HEADER;
+var g_bXLaunchNewImageCalled: bool = false;
+var g_bXInputOpenCalled: bool = false;
 
-  XINPUT_FEEDBACK = packed record
-    Header: XINPUT_FEEDBACK_HEADER;
-//    union
-    Rumble: XINPUT_RUMBLE;
-  end;
-  PXINPUT_FEEDBACK = ^XINPUT_FEEDBACK;
-
-var
-  // XInputSetState status waiters
-  g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
-
-  // XInputOpen handles
-  g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of Handle;
-
-  // Xbe section list
-  g_SectionList: PXBE_SECTIONLIST;
-  // Number of sections
-  g_NumSections: int;
-
-  XTL_EmuXapiProcessHeap: PPVOID;
-
-  // Note : Cxbx log indicates 'g_pRtlCreateHeap' is indeed
-  // at the same address as 'EmuRtlCreateHeap'.
+// Note : Cxbx log indicates 'g_pRtlCreateHeap' is indeed
+// at the same address as 'EmuRtlCreateHeap'.
 
 implementation
 
@@ -205,8 +238,11 @@ end;
 const
   HEAP_HEADERSIZE = $20;
 
+// Saved launch data
+var g_SavedLaunchData: {XTL_}LAUNCH_DATA;
+
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
@@ -218,7 +254,7 @@ begin
 end;
 
 function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
@@ -232,12 +268,12 @@ begin
 end;
 
 
-function XTL_EmuFindFirstFileA(lpFileName: PChar;{out}lpFindFileData: LPWIN32_FIND_DATA): Handle; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function XTL_EmuFindFirstFileA(lpFileName: PChar;{out}lpFindFileData: LPWIN32_FIND_DATA): HANDLE; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   szBuffer: PChar;
   szRoot: string;
-  hRet: Handle;
+  hRet: HANDLE;
   bRet: BOOL;
 begin
   EmuSwapFS(fsWindows);
@@ -336,8 +372,8 @@ end;
 
 
 
-function XTL_EmuFindNextFileA(hFindFile: Handle; {out} lpFindFileData: LPWIN32_FIND_DATA): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function XTL_EmuFindNextFileA(hFindFile: HANDLE; {out} lpFindFileData: LPWIN32_FIND_DATA): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   bRet: BOOL;
 begin
@@ -375,10 +411,11 @@ begin
   Result := bRet;
 end;
 
-function XTL_EmuGetTimeZoneInformation(
+function XTL_EmuGetTimeZoneInformation
+(
   lpTimeZoneInformation: LPTIME_ZONE_INFORMATION
   ): DWORD; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -395,24 +432,18 @@ begin
   EmuSwapFS(fsXBox);
 end;
 
-type
-  RTL_HEAP_DEFINITION = packed record
-    Length: ULONG;
-    Unknown: array [0..11-1] of ULONG;
-  end;
-  PRTL_HEAP_DEFINITION = ^RTL_HEAP_DEFINITION;
-
-function XTL_EmuRtlCreateHeap(
+function XTL_EmuRtlCreateHeap
+(
   Flags: ULONG;
   Base: PVOID; // OPTIONAL
   Reserve: SIZE_T; // OPTIONAL
   Commit: SIZE_T;
   Lock: PVOID; // OPTIONAL
-  Parameters: PVOID // OPTIONAL
+  RtlHeapParams: PVOID // OPTIONAL
   ): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  NativeParameters: RTL_HEAP_PARAMETERS; // Was: RTL_HEAP_DEFINITION;
+  RtlHeapDefinition: RTL_HEAP_DEFINITION;
 begin
   EmuSwapFS(fsWindows);
 
@@ -424,19 +455,19 @@ begin
     #13#10'   Reserve             : 0x%.08X' +
     #13#10'   Commit              : 0x%.08X' +
     #13#10'   Lock                : 0x%.08X' +
-    #13#10'   Parameters          : 0x%.08X' +
+    #13#10'   RtlHeapParams       : 0x%.08X' +
     #13#10');',
-    [Flags, Base, Reserve, Commit, Lock, Parameters]);
+    [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
 {$ENDIF}
 
-  ZeroMemory(@NativeParameters, SizeOf(NativeParameters));
-  NativeParameters.Length := SizeOf(NativeParameters);
+  ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
+  RtlHeapDefinition.Length := SizeOf(RtlHeapDefinition);
 
   // Cxbx TODO : Find out how RtlHeapParams is defined on Xbox, and map this
   // as closely as possible to the native RTL_HEAP_PARAMETERS.
 
   Result := PVOID(JwaNative.RtlCreateHeap(
-    Flags, Base, Reserve, Commit, Lock, @NativeParameters));
+    Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
 
 {$IFDEF DXBX_DEBUG}
   DbgPrintf('pRet : 0x%.08X', [Result]);
@@ -445,11 +476,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuRtlAllocateHeap(
-  hHeap: Handle;
-  dwFlags: DWord;
-  dwBytes: SIZE_T): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuRtlAllocateHeap
+(
+  hHeap: HANDLE;
+  dwFlags: DWORD;
+  dwBytes: SIZE_T
+  ): PVOID; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
 begin
@@ -486,30 +519,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuRtlDestroyHeap(
-  hHeap: Handle): Handle; stdcall;
-// Branch:None  Revision:39  Translator:PatrickvL  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuRtlDestroyHeap' +
-    #13#10'(' +
-    #13#10'   hHeap               : 0x%.08X' +
-    #13#10');',
-    [hHeap]);
-{$ENDIF}
-
-  Result := JwaNative.RtlDestroyHeap(hHeap);
-
-  EmuSwapFS(fsXbox);
-end;
-
-function XTL_EmuRtlFreeHeap(
-  hHeap: Handle;
+function XTL_EmuRtlFreeHeap
+(
+  hHeap: HANDLE;
   dwFlags: DWord;
-  lpMem: PVOID): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  lpMem: PVOID
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   offs: Byte;
 begin
@@ -525,7 +541,7 @@ begin
     [hHeap, dwFlags, lpMem]);
 {$ENDIF}
 
-  if Assigned(lpMem) then
+  if (lpMem <> NULL) then
   begin
     offs := PByte(uint32(lpMem) - 1)^;
     lpMem := PVOID(uint32(lpMem) - offs);
@@ -536,12 +552,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuRtlReAllocateHeap(
-  hHeap: Handle;
+function XTL_EmuRtlReAllocateHeap
+(
+  hHeap: HANDLE;
   dwFlags: DWord;
   lpMem: PVOID;
-  dwBytes: SIZE_T): PVOID; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+  dwBytes: SIZE_T
+): PVOID; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
 begin
@@ -557,14 +575,14 @@ begin
     #13#10');',
     [hHeap, dwFlags, lpMem, dwBytes]);
 {$ENDIF}
+  offs := 0;
 
-  if Assigned(lpMem) then
+  if (lpMem <> NULL) then
   begin
     offs := PByte(uint32(lpMem) - 1)^;
+
     lpMem := PVOID(uint32(lpMem) - offs);
-  end
-  else
-    offs := 0;
+  end;
 
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
@@ -595,11 +613,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuRtlSizeHeap(
-  hHeap: Handle;
+function XTL_EmuRtlSizeHeap
+(
+  hHeap: HANDLE;
   dwFlags: DWord;
   lpMem: PVOID): SIZE_T; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
 begin
@@ -615,7 +634,7 @@ begin
     [hHeap, dwFlags, lpMem]);
 {$ENDIF}
 
-  if Assigned(lpMem) then
+  if (lpMem <> NULL) then
   begin
     offs := PByte(uint32(lpMem) - 1)^;
     lpMem := PVOID(uint32(lpMem) - offs);
@@ -628,10 +647,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuQueryPerformanceCounter(
+function XTL_EmuQueryPerformanceCounter
+(
   lpPerformanceCount: PLARGE_INTEGER
-  ): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -645,16 +665,17 @@ begin
 
   Result := QueryPerformanceCounter({var}lpPerformanceCount^);
 
-    // debug - 4x speed
-    //lpPerformanceCount.QuadPart *= 4;
+  // debug - 4x speed
+  //lpPerformanceCount.QuadPart *= 4;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuQueryPerformanceFrequency(
+function XTL_EmuQueryPerformanceFrequency
+(
   lpFrequency: PLARGE_INTEGER
-  ): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -671,8 +692,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuXMountUtilityDrive(fFormatClean: BOOL): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuXMountUtilityDrive
+(
+    fFormatClean: BOOL
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   begin
@@ -688,10 +712,14 @@ begin
   Result := True;
 end;
 
-procedure XTL_EmuXInitDevices(Unknown1: DWord; Unknown2: PVOID); stdcall;
+procedure XTL_EmuXInitDevices
+(
+    Unknown1: DWord; 
+    Unknown2: PVOID
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  v: Integer;
+  v: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -717,7 +745,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuXGetDevices(DeviceType: PXPP_DEVICE_TYPE): DWord; stdcall;
+function XTL_EmuXGetDevices
+(
+    DeviceType: PXPP_DEVICE_TYPE
+): DWord; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -735,17 +766,18 @@ begin
   if (DeviceType.Reserved[0] = 0) and (DeviceType.Reserved[1] = 0) and (DeviceType.Reserved[2] = 0) and (DeviceType.Reserved[3] = 0) then
     Result := (1 shl 0) // Return 1 Controller
   else
-    EmuWarning('Unknown DeviceType ($%.08X, 0x%.08X, 0x%.08X, 0x%.08X)', [DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]]);
+    EmuWarning('Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X, 0x%.08X)', [DeviceType.Reserved[0], DeviceType.Reserved[1], DeviceType.Reserved[2], DeviceType.Reserved[3]]);
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuXGetDeviceChanges(
+function XTL_EmuXGetDeviceChanges
+(
   DeviceType: PXPP_DEVICE_TYPE;
   pdwInsertions: PDWORD;
   pdwRemovals: PDWORD
 ): BOOL; stdcall;
-// Branch:shogun  Revision:145  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
   bFirst: BOOL = True;
@@ -783,13 +815,14 @@ begin
 end;
 
 
-function XTL_EmuXInputOpen(
+function XTL_EmuXInputOpen
+(
   DeviceType: PXPP_DEVICE_TYPE;
   dwPort: DWord;
   dwSlot: DWord;
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
-): Handle; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+): HANDLE; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPH: PPOLLING_PARAMETERS_HANDLE;
 begin
@@ -814,17 +847,17 @@ begin
     begin
       New({var PPOLLING_PARAMETERS_HANDLE}pPH);
 
-      if (pPollingParameters <> nil) then
+      if (pPollingParameters <> NULL) then
       begin
         New({var XINPUT_POLLING_PARAMETERS}pPH.pPollingParameters);
         memcpy(pPH.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
-        pPH.pPollingParameters := nil;
+        pPH.pPollingParameters := NULL;
       end;
 
-      g_hInputHandle[dwPort] := Handle(pPH);
+      g_hInputHandle[dwPort] := HANDLE(pPH);
     end
     else
     begin
@@ -854,12 +887,15 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := Handle(pPH);
+  Result := HANDLE(pPH);
 end;
 
 
-procedure XTL_EmuXInputClose(hDevice: Handle); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+procedure XTL_EmuXInputClose
+(
+    hDevice: HANDLE
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPH: PPOLLING_PARAMETERS_HANDLE;
 begin
@@ -902,10 +938,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuXInputPoll(
-  hDevice: Handle
+function XTL_EmuXInputPoll
+(
+    hDevice: HANDLE
 ): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
   pFeedback: PXINPUT_FEEDBACK;
@@ -963,11 +1000,12 @@ begin
   Result := ERROR_SUCCESS;
 end;
 
-function XTL_EmuXInputGetCapabilities(
-  hDevice: Handle;
+function XTL_EmuXInputGetCapabilities
+(
+  hDevice: HANDLE;
   {OUT} pCapabilities: PXINPUT_CAPABILITIES
-  ): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): DWord; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPH: PPOLLING_PARAMETERS_HANDLE;
   dwPort: DWord;
@@ -987,7 +1025,7 @@ begin
 
   pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
-  if (pPH <> nil) then
+  if (pPH <> NULL) then
   begin
     dwPort := pPH.dwPort;
 
@@ -1004,11 +1042,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuXInputGetState(
-    hDevice: Handle;
+function XTL_EmuXInputGetState
+(
+    hDevice: HANDLE;
     {OUT} pState: PXINPUT_STATE
 ): DWord; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPH: PPOLLING_PARAMETERS_HANDLE;
   dwPort: DWord;
@@ -1028,9 +1067,9 @@ begin
 
   pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
-  if (pPH <> nil) then
+  if (pPH <> NULL) then
   begin
-    if (pPH.pPollingParameters <> nil) then
+    if (pPH.pPollingParameters <> NULL) then
     begin
       if (pPH.pPollingParameters.fAutoPoll = Byte(False)) then
       begin
@@ -1057,11 +1096,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuXInputSetState(
-    hDevice: Handle;
+function XTL_EmuXInputSetState
+(
+    hDevice: HANDLE;
     pFeedback: PXINPUT_FEEDBACK // IN OUT
 ): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   ret: DWord;
   pPH: PPOLLING_PARAMETERS_HANDLE;
@@ -1084,7 +1124,7 @@ begin
 
   pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
 
-  if (pPH <> nil) then
+  if (pPH <> NULL) then
   begin
 
 
@@ -1105,10 +1145,10 @@ begin
 
           // remove from slot
           g_pXInputSetStateStatus[v].hDevice := 0;
-          g_pXInputSetStateStatus[v].pFeedback := nil;
+          g_pXInputSetStateStatus[v].pFeedback := NULL;
           g_pXInputSetStateStatus[v].dwLatency := 0;
         end;
-       end;
+      end;
     end;
 
     //
@@ -1143,13 +1183,14 @@ begin
   Result := ret;
 end;
 
-function XTL_EmuCreateMutex(
-  lpMutexAttributes: LPSECURITY_ATTRIBUTES;
-  bInitialOwner: BOOL;
-  { Dxbx TODO : Is this really an Ansi-type? Or should it be wide (LPCWSTR) ? }
-  lpName: LPCSTR
-  ): Handle; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuCreateMutex
+(
+    lpMutexAttributes: LPSECURITY_ATTRIBUTES;
+    bInitialOwner: BOOL;
+    { Dxbx TODO : Is this really an Ansi-type? Or should it be wide (LPCWSTR) ? }
+    lpName: LPCSTR
+): HANDLE; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1168,8 +1209,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuCloseHandle(hObject: Handle): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuCloseHandle
+(
+    hObject: HANDLE
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1186,8 +1230,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuSetThreadPriorityBoost(hThread: Handle; DisablePriorityBoost: BOOL): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuSetThreadPriorityBoost
+(
+    hThread: HANDLE;
+    DisablePriorityBoost: BOOL
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1202,14 +1250,18 @@ begin
 
   Result := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
-  if not Result then
+  if Result = FALSE then
     EmuWarning('SetThreadPriorityBoost Failed!');
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuSetThreadPriority(hThread: Handle; nPriority: Integer): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuSetThreadPriority
+(
+    hThread: HANDLE;
+    nPriority: int
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   bRet: BOOL;
 begin
@@ -1224,12 +1276,12 @@ begin
     [hThread, nPriority]);
 {$ENDIF}
 
-  bRet := True; //SetThreadPriority(hThread, nPriority);  // marked by cxbx
+  bRet := TRUE; //SetThreadPriority(hThread, nPriority);  // marked by cxbx
 
-  if not bRet then
+  if bRet = FALSE then
     EmuWarning('SetThreadPriority Failed!');
 
-  // HACK! Commente by cxbx
+  // HACK! Commented by cxbx
   //Sleep(10);
 
   EmuSwapFS(fsXbox);
@@ -1238,8 +1290,11 @@ begin
 end;
 
 
-function XTL_EmuGetThreadPriority(hThread: Handle): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuGetThreadPriority
+(
+    hThread: HANDLE
+): int; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1259,8 +1314,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuGetExitCodeThread(hThread: Handle; lpExitCode: Cardinal): BOOL; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuGetExitCodeThread
+(
+    hThread: HANDLE;
+    lpExitCode: LPDWORD
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1273,13 +1332,13 @@ begin
       [hThread, lpExitCode]);
 {$ENDIF}
 
-  Result := GetExitCodeThread(hThread, lpExitCode);
+  Result := GetExitCodeThread(hThread, {var}Cardinal(lpExitCode));
 
   EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuXapiInitProcess(); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
   HEAP_GROWABLE = $00000002;
 var
@@ -1303,13 +1362,16 @@ begin
     dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
     dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
 
-    XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil,
-      dwPeHeapReserve, dwPeHeapCommit, nil, @HeapParameters);
+    XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, NULL, @HeapParameters);
   end;
 end;
 
-procedure XTL_EmuXapiThreadStartup(StartRoutine: StartRoutineFunc; StartContext: PVOID); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+procedure XTL_EmuXapiThreadStartup
+(
+    StartRoutine: StartRoutineFunc; 
+    StartContext: PVOID
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1352,7 +1414,7 @@ end;
 *)
 
 procedure XTL_EmuXapiBootDash(UnknownA: DWord; UnknownB: DWord; UnknownC: DWord); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1371,11 +1433,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuXRegisterThreadNotifyRoutine(
-  pThreadNotification: PXTHREAD_NOTIFICATION;
-  fRegister: BOOL
-  ); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+procedure XTL_EmuXRegisterThreadNotifyRoutine
+(
+    pThreadNotification: PXTHREAD_NOTIFICATION;
+    fRegister: BOOL
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  i: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1390,17 +1455,36 @@ begin
 
   if fRegister then
   begin
-    if Assigned(g_pfnThreadNotification) then
-      CxbxKrnlCleanup('Multiple thread notification routines installed (caustik can fix this!)');
+    // I honestly don't expect this to happen, but if it does...
+    if (g_iThreadNotificationCount >= 16) then
+      CxbxKrnlCleanup('Too many thread notification routines installed'#13#10 +
+                      'If you''re reading this message than tell blueshogun you saw it!!!');
 
-    // Dxbx TODO : Is this correct?
-    // BlueShogun96 has code that connects notifications to the ListEntry chain.
-    g_pfnThreadNotification := Addr(pThreadNotification.pfnNotifyRoutine);
+    // Find an empty spot in the thread notification array
+    for i := 0 to 16 - 1 do // Dxbx TODO : Constantify 16
+    begin
+      // If we find one, then add it to the array, and break the loop so
+      // that we don't accidently register the same routine twice!
+      if (Addr(g_pfnThreadNotification[i]) = NULL) then
+      begin
+        g_pfnThreadNotification[i] := pThreadNotification.pfnNotifyRoutine;
+        Inc(g_iThreadNotificationCount);
+        break;
+      end;
+    end;
   end
   else
   begin
-    if Assigned(g_pfnThreadNotification) then
-      g_pfnThreadNotification := nil;
+    // Go through each routine and nullify the routine passed in.
+    for i := 0 to 16 - 1 do // Dxbx TODO : Constantify 16
+    begin
+      if (Addr(pThreadNotification.pfnNotifyRoutine) = Addr(g_pfnThreadNotification[i])) then
+      begin
+        g_pfnThreadNotification[i] := NULL;
+        Dec(g_iThreadNotificationCount);
+        break;
+      end;
+    end;
   end;
 
   EmuSwapFS(fsXbox);
@@ -1409,12 +1493,13 @@ end;
 type
   LPFIBER_START_ROUTINE = Pointer; // Dxbx TODO : declare this better!
    
-function XTL_EmuCreateFiber(
+function XTL_EmuCreateFiber
+(
   dwStackSize: DWORD;
   lpStartRoutine: LPFIBER_START_ROUTINE;
   lpParameter: LPVOID          
 ): LPVOID; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1435,10 +1520,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuDeleteFiber(
-  lpFiber: LPVOID
-  ); stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+procedure XTL_EmuDeleteFiber
+(
+    lpFiber: LPVOID
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1456,8 +1542,11 @@ begin
 end;
 
 
-function XTL_EmuXLoadSectionA(pSectionName: LPCSTR): LPVOID;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+function XTL_EmuXLoadSectionA
+(
+    pSectionName: LPCSTR
+): LPVOID; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pRet: LPVOID;
 begin
@@ -1471,7 +1560,7 @@ begin
       [pSectionName]);
 {$ENDIF}
 
-  // Search this .xbe for the section it wants to load.
+  // Cxbx TODO: Search this .xbe for the section it wants to load.
   // If we find it, return the address of it.
 
   // Get the .xbe header
@@ -1565,10 +1654,11 @@ begin
   Result := pRet;
 end;
 
-function XTL_EmuXFreeSectionA(
-  pSectionName: LPCSTR
-  ): BOOL; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+function XTL_EmuXFreeSectionA
+(
+    pSectionName: LPCSTR
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1588,10 +1678,13 @@ begin
   Result := TRUE;
 end;
 
-function XTL_EmuXGetSectionHandleA(
-  pSectionName: LPCSTR
-  ): HANDLE; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+function XTL_EmuXGetSectionHandleA
+(
+    pSectionName: LPCSTR
+): HANDLE; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  pdwRet: PDWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1603,18 +1696,43 @@ begin
       [pSectionName]);
 {$ENDIF}
 
+  pdwRet := NULL;
+  
   // Cxbx TODO: Implement (if necessary)?
 //  CxbxKrnlCleanup('XGetSectionHandleA is not implemented');
 
+  // Cxbx TODO: Save the name and address of each section contained in
+  // this .xbe instead of adding this stuff by hand because the section
+  // address can change from one game region to the next, and some games
+  // will use the same engine and section name, so accuracy is not
+  // guarunteed.
+
+  // Metal Gear Solid II (NTSC)
+  if (0=strcmp( pSectionName, 'Rev24b' ) ) then
+  begin
+    pdwRet := PDWORD($648000);
+  end;
+
+  // Metal Slug 3 (NTSC)
+  if (0=strcmp(pSectionName, 'newpal')) then
+    pdwRet := PDWORD($26C000);
+  if (0=strcmp(pSectionName, 'msg_font')) then
+    pdwRet := PDWORD($270000);
+  if (0=strcmp(pSectionName, 'se_all')) then
+    pdwRet := PDWORD($272000);
+  if (0=strcmp(pSectionName, '.XTLID')) then
+    pdwRet := PDWORD($8C5000);
+
   EmuSwapFS(fsXbox);
 
-  Result := 0;
+  Result := HANDLE(pdwRet);
 end;
 
-function XTL_EmuXLoadSectionByHandle(
-  hSection: HANDLE
-  ): LPVOID; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+function XTL_EmuXLoadSectionByHandle
+(
+    hSection: HANDLE
+): LPVOID; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1626,18 +1744,19 @@ begin
       [hSection]);
 {$ENDIF}
 
-  // Cxbx TODO: Implement (if necessary)?
-//  CxbxKrnlCleanup('XLoadSectionByHandle is not implemented');
+  // The handle should contain the address of this section by the hack
+  // used in EmuXGetSectionHandleA.
 
   EmuSwapFS(fsXbox);
 
-  Result := NULL;
+  Result := LPVOID(hSection);
 end;
 
-function XTL_EmuXFreeSectionByHandle(
-  hSection: HANDLE
-  ): BOOL; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+function XTL_EmuXFreeSectionByHandle
+(
+    hSection: HANDLE
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1654,13 +1773,515 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := False;
+  Result := TRUE;
 end;
 
 
+function XTL_EmuXGetSectionSize
+(
+  hSection: HANDLE
+): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  dwSize: DWORD;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuXGetSectionSize' +
+      #13#10'(' +
+      #13#10'   hSection           : 0x%.08X' +
+      #13#10');',
+      [hSection]);
+{$ENDIF}
+
+  dwSize := 0;
+
+  // Metal Slug 3 (NTSC)
+  if (hSection = HANDLE($26C000)) then  // newpal
+    dwSize := $31DA
+  else if (hSection = HANDLE($270000)) then  // msg_fong
+    dwSize := $115F
+  else if (hSection = HANDLE($272000)) then  // se_all
+    dwSize := $64F37E
+  else if (hSection = HANDLE($8C5000)) then  // .XTLID
+    dwSize := $480;
+
+  EmuSwapFS(fsXbox);
+
+  Result := dwSize;
+end;
+
+
+function XTL_EmuRtlDestroyHeap
+(
+    {IN}HeapHandle: HANDLE
+): PVOID; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuRtlDestroyHeap' +
+      #13#10'(' +
+      #13#10'   HeapHandle         : 0x%.08X' +
+      #13#10');',
+      [HeapHandle]);
+{$ENDIF}
+
+  HANDLE(Result) := JwaNative.RtlDestroyHeap(HeapHandle);
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmuQueueUserAPC
+(
+  pfnAPC: PAPCFUNC;
+  hThread: HANDLE;
+  dwData: DWORD
+): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  dwRet: DWORD;
+  hApcThread: HANDLE;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuQueueUserAPC' +
+      #13#10'(' +
+      #13#10'   pfnAPC           : 0x%.08X' +
+      #13#10'   hThread          : 0x%.08X' +
+      #13#10'   dwData           : 0x%.08X' +
+      #13#10');',
+      [Addr(pfnAPC), hThread, dwData]);
+{$ENDIF}
+
+  // dwRet := 0;
+
+  // If necessary, we can just continue to emulate NtQueueApcThread (0xCE).
+  // I added this because NtQueueApcThread fails in Metal Slug 3.
+
+  hApcThread := 0;
+  if (not DuplicateHandle(GetCurrentProcess(), hThread, GetCurrentProcess(), @hApcThread, THREAD_SET_CONTEXT, FALSE, 0)) then
+    EmuWarning('DuplicateHandle failed!');
+
+  dwRet := QueueUserAPC(pfnAPC, hApcThread, dwData);
+  if (0=dwRet) then
+    EmuWarning('QueueUserAPC failed!');
+
+  EmuSwapFS(fsXbox);
+
+  Result := dwRet;
+end;
+
+
+function XTL_EmuGetOverlappedResult
+(
+  hFile: HANDLE;
+  lpOverlapped: LPOVERLAPPED;
+  lpNumberOfBytesTransferred: LPDWORD;
+  bWait: BOOL
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuGetOverlappedResult' +
+      #13#10'(' +
+      #13#10'   hFile            : 0x%.08X' +
+      #13#10'   lpOverlapped     : 0x%.08X' +
+      #13#10'   lpNumberOfBytesTransformed : 0x%.08X' +
+      #13#10'   bWait            : 0x%.08X' +
+      #13#10');',
+      [hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait]);
+{$ENDIF}
+
+  Result := GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, bWait);
+
+//  if (bWait)
+//    bRet = TRUE; // Sucker...
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmuXLaunchNewImage
+(
+  lpTitlePath: LPCSTR;
+  pLaunchData: PLAUNCH_DATA
+): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  dwRet: DWORD;
+  fp: PFILE;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuXLaunchNewImage' +
+      #13#10'(' +
+      #13#10'   lpTitlePath      : 0x%.08X (%s)' +
+      #13#10'   pLaunchData      : 0x%.08X' +
+      #13#10');',
+      [lpTitlePath, lpTitlePath, pLaunchData]);
+{$ENDIF}
+
+  // If this function succeeds, it doesn't get a chance to return anything.
+  dwRet := ERROR_GEN_FAILURE;
+
+  // If no path is specified, then the xbe is rebooting to dashboard
+  if (nil = lpTitlePath) then
+    CxbxKrnlCleanup('The xbe is rebooting (XLaunchNewImage)');
+
+  // Ignore any other attempts to execute other .xbe files (for now).
+  EmuWarning('Not executing the xbe!');
+
+  // Save the launch data
+  if (pLaunchData <> NULL) then
+  begin
+    CopyMemory(@g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+
+    // Save the launch data parameters to disk for later.
+{$IFDEF DEBUG}
+    DbgPrintf('Saving launch data as CxbxLaunchData.bin...');
+{$ENDIF}
+
+    fp := fopen('CxbxLaunchData.bin', 'wb');
+
+    fseek(fp, 0, SEEK_SET);
+    fwrite(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+    fclose(fp);
+  end;
+
+  g_bXLaunchNewImageCalled := true;
+
+  // Temporary Hack (Unreal): Jump back to the entry point
+//  Puint32(start) := Puint32($21C13B);
+
+  EmuSwapFS(fsXbox);
+
+//  __asm jmp start;
+
+  Result := dwRet;
+end;
+
+
+function XTL_EmuXGetLaunchInfo
+(
+  pdwLaunchDataType: PDWORD;
+  pLaunchData: PLAUNCH_DATA
+): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  dwRet: HRESULT; // Cxbx uses DWORD;
+  fp: PFILE;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuXGetLaunchInfo' +
+      #13#10'(' +
+      #13#10'   pdwLaunchDataType : 0x%.08X' +
+      #13#10'   pLaunchData       : 0x%.08X' +
+      #13#10');',
+      [pdwLaunchDataType, pLaunchData]);
+{$ENDIF}
+
+  dwRet := E_FAIL;
+
+  // Has XLaunchNewImage been called since we've started this round?
+  if (g_bXLaunchNewImageCalled) then
+  begin
+    // I don't think we'll be emulating any other xbox apps
+    // other than games anytime soon...
+    pdwLaunchDataType^ := LDT_TITLE;
+
+    // Copy saved launch data
+    CopyMemory(pLaunchData, @g_SavedLaunchData, sizeof(LAUNCH_DATA));
+
+    dwRet := ERROR_SUCCESS;
+  end;
+
+  fp := NULL;
+
+  // Does CxbxLaunchData.bin exist?
+  if (not g_bXLaunchNewImageCalled) then
+    fp := fopen('CxbxLaunchData.bin', 'rb');
+
+  // If it does exist, load it.
+  if Assigned(fp) then
+  begin
+    // Data from Xbox game
+    pdwLaunchDataType^ := LDT_TITLE;
+
+    // Read in the contents.
+    fseek(fp, 0, SEEK_SET);
+    fread(@g_SavedLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+    memcpy(pLaunchData, @g_SavedLaunchData, sizeof(LAUNCH_DATA));
+//    fread(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+//    memcpy(@g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+    fclose(fp);
+
+    // Delete the file once we're done.
+    DeleteFile('CxbxLaunchData.bin');
+
+    // HACK: Initialize XInput from restart
+    (*if (g_bXInputOpenCalled)
+    begin
+      EmuSwapFS(fsWindows);
+      XTL_EmuXInputOpen( NULL, 0, 0, NULL );
+      EmuSwapFS(fsXbox)
+    end;*)
+
+    dwRet := ERROR_SUCCESS;
+  end;
+
+  EmuSwapFS(fsXbox);
+
+  Result := dwRet;
+end;
+
+
+procedure XTL_EmuXSetProcessQuantumLength
+(
+    dwMilliseconds: DWORD
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuXSetProcessQuantumLength' +
+      #13#10'(' +
+      #13#10'   dwMilliseconds    : 0x%.08X' +
+      #13#10');',
+      [dwMilliseconds]);
+{$ENDIF}
+
+  // TODO: Implement?
+  EmuWarning('XSetProcessQuantumLength is being ignored!');
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmuXGetFileCacheSize(): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuXGetFileCacheSize()');
+{$ENDIF}
+
+  // Return the default cache size for now.
+  // TODO: Save the file cache size if/when set.
+  Result := 64 * 1024;
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmuSignalObjectAndWait
+(
+  hObjectToSignal: HANDLE;
+  hObjectToWaitOn: HANDLE;
+  dwMilliseconds: DWORD;
+  bAlertable: BOOL
+): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuSignalObjectAndWait' +
+      #13#10'(' +
+      #13#10'   hObjectToSignal   : 0x%.08X' +
+      #13#10'   hObjectToWaitOn   : 0x%.08X' +
+      #13#10'   dwMilliseconds    : 0x%.08X' +
+      #13#10'   bAlertable        : 0x%.08X' +
+      #13#10');',
+      [hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable]);
+{$ENDIF}
+
+  Result := SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmuPulseEvent(hEvent: HANDLE): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuPulseEvent' +
+      #13#10'(' +
+      #13#10'   hEvent            : 0x%.08X' +
+      #13#10');',
+      [hEvent]);
+{$ENDIF}
+
+  // TODO: This function might be a bit too high level.  If it is,
+  // feel free to implement NtPulseEvent in EmuKrnl.cpp
+
+  Result := PulseEvent(hEvent);
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmuCreateSemaphore
+(
+  lpSemaphoreAttributes: LPVOID;
+  lInitialCount: LONG;
+  lMaximumCount: LONG;
+  lpName: LPSTR
+): HANDLE; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuCreateSemaphore' +
+      #13#10'(' +
+      #13#10'   lpSemaphoreAttributes : 0x%.08X' +
+      #13#10'   lInitialCount         : 0x%.08X' +
+      #13#10'   lMaximumCount         : 0x%.08X' +
+      #13#10'   lpName                : 0x%.08X (%s)' +
+      #13#10');',
+      [lpSemaphoreAttributes, lInitialCount, lMaximumCount, lpName]);
+{$ENDIF}
+
+  if (lpSemaphoreAttributes <> NULL) then
+    EmuWarning( 'lpSemaphoreAttributes != NULL' );
+
+  Result := CreateSemaphoreA(NULL, lInitialCount, lMaximumCount, lpName);
+  if (0=Result) then
+    EmuWarning( 'CreateSemaphore failed!' );
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmuReleaseSemaphore
+(
+  hSemaphore: HANDLE;
+  lReleaseCount: LONG;
+  lpPreviousCount: LPLONG
+): BOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuReleaseSemaphore' +
+      #13#10'(' +
+      #13#10'   hSemaphore        : 0x%.08X' +
+      #13#10'   lReleaseCount     : 0x%.08X' +
+      #13#10'   lpPreviousCount   : 0x%.08X' +
+      #13#10');',
+      [hSemaphore, lReleaseCount, lpPreviousCount]);
+{$ENDIF}
+
+  Result := ReleaseSemaphore(hSemaphore, lReleaseCount, lpPreviousCount);
+  if (not Result) then
+    EmuWarning('ReleaseSemaphore failed!');
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmutimeSetEvent
+(
+  uDelay: UINT;
+  uResolution: UINT;
+  fptc: LPTIMECALLBACK;
+  dwUser: DWORD;
+  fuEvent: UINT
+): MMRESULT; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmutimeSetEvent' +
+      #13#10'(' +
+      #13#10'   uDelay            : 0x%.08X' +
+      #13#10'   uResolution       : 0x%.08X' +
+      #13#10'   fptc              : 0x%.08X' +
+      #13#10'   dwUser            : 0x%.08X' +
+      #13#10'   fuEvent           : 0x%.08X' +
+      #13#10');',
+      [uDelay, uResolution, Addr(fptc), dwUser, fuEvent]);
+{$ENDIF}
+
+  Result := timeSetEvent(uDelay, uResolution, fptc, DWORD_PTR(dwUser), fuEvent);
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+function XTL_EmutimeKillEvent
+(
+  uTimerID: Windows.UINT
+): MMRESULT; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmutimeKillEvent' +
+      #13#10'(' +
+      #13#10'   uTimerID          : 0x%.08X' +
+      #13#10');',
+      [uTimerID]);
+{$ENDIF}
+
+  Result := timeKillEvent(uTimerID);
+
+  EmuSwapFS(fsXbox);
+end;
+
+
+procedure XTL_EmuRaiseException
+(
+  dwExceptionCode: DWORD;       // exception code
+  dwExceptionFlags: DWORD;      // continuable exception flag
+  nNumberOfArguments: DWORD;    // number of arguments
+  CONST lpArguments: PULONG_PTR // array of arguments
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuRaiseException' +
+      #13#10'(' +
+      #13#10'   dwExceptionCode   : 0x%.08X' +
+      #13#10'   dwExceptionFlags  : 0x%.08X' +
+      #13#10'   nNumberOfArguments: 0x%.08X' +
+      #13#10'   lpArguments       : 0x%.08X' +
+      #13#10');',
+      [dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments]);
+{$ENDIF}
+
+  // TODO: Implement or not?
+//  RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
+
+  EmuSwapFS(fsXbox);
+end;
+
 (*//  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureBegin(dwFlags: DWord): Handle; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function XTL_EmuXCalculateSignatureBegin
+(
+  dwFlags: DWord
+): HANDLE; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1674,13 +2295,17 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  // return a fake handle value for now
+  // return a fake HANDLE value for now
   Result := $AAAAAAAA;
 end;
 
 //  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureBeginEx(dwFlags: DWord; dwAltTitleId: DWord): Handle; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function XTL_EmuXCalculateSignatureBeginEx
+(
+    dwFlags: DWord; 
+    dwAltTitleId: DWord
+): HANDLE; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1695,13 +2320,18 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  // return a fake handle value for now
+  // return a fake HANDLE value for now
   Result := $AAAAAAAA;
 end;
 
 //  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureUpdate(hCalcSig: Handle; pbData: Byte; cbData: ULONG): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function XTL_EmuXCalculateSignatureUpdate
+(
+  hCalcSig: HANDLE;
+  pbData: Byte; 
+  cbData: ULONG
+): DWord; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1721,8 +2351,12 @@ begin
 end;
 
 //  MARKED BY Cxbx : not necessary?
-function XTL_EmuXCalculateSignatureEnd(hCalcSig: Handle; pSignature: PXCALCSIG_SIGNATURE): DWord; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function XTL_EmuXCalculateSignatureEnd
+(
+  hCalcSig: HANDLE;
+  pSignature: PXCALCSIG_SIGNATURE
+): DWord; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1742,31 +2376,35 @@ end;
 *)
 
 exports
-  // XTL_EmuFindFirstFileA,
-  // XTL_EmuFindNextFileA,
-  // XTL_EmuXCalculateSignatureBegin,
-  // XTL_EmuXCalculateSignatureBeginEx,
-  // XTL_EmuXCalculateSignatureEnd,
-  // XTL_EmuXCalculateSignatureUpdate,
-  // XTL_EmuXLoadSectionA
-  // XTL_XapiSetupPerTitleDriveLetters
   XTL_EmuCloseHandle,
   XTL_EmuCreateFiber,
   XTL_EmuCreateMutex,
+  XTL_EmuCreateSemaphore,
   XTL_EmuDeleteFiber,
+  XTL_EmuFindFirstFileA,
+  XTL_EmuFindNextFileA,
   XTL_EmuGetExitCodeThread,
+  XTL_EmuGetOverlappedResult,
   XTL_EmuGetThreadPriority,
   XTL_EmuGetTimeZoneInformation,
+  XTL_EmuPulseEvent,
   XTL_EmuQueryPerformanceCounter,
   XTL_EmuQueryPerformanceFrequency,
+  XTL_EmuQueueUserAPC,
+  XTL_EmuRaiseException,
+  XTL_EmuReleaseSemaphore,
   XTL_EmuRtlAllocateHeap,
   XTL_EmuRtlCreateHeap,
+  XTL_EmuRtlDestroyHeap,
   XTL_EmuRtlDestroyHeap,
   XTL_EmuRtlFreeHeap,
   XTL_EmuRtlReAllocateHeap,
   XTL_EmuRtlSizeHeap,
   XTL_EmuSetThreadPriority,
   XTL_EmuSetThreadPriorityBoost,
+  XTL_EmuSignalObjectAndWait,
+  XTL_EmutimeKillEvent,
+  XTL_EmutimeSetEvent,
   XTL_EmuXapiApplyKernelPatches,
   XTL_EmuXapiBootDash,
   XTL_EmuXapiInitProcess,
@@ -1776,7 +2414,10 @@ exports
   XTL_EmuXFreeSectionByHandle,
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetDevices,
+  XTL_EmuXGetFileCacheSize,
+  XTL_EmuXGetLaunchInfo,
   XTL_EmuXGetSectionHandleA,
+  XTL_EmuXGetSectionSize,
   XTL_EmuXInitDevices,
   XTL_EmuXInputClose,
   XTL_EmuXInputGetCapabilities,
@@ -1784,10 +2425,12 @@ exports
   XTL_EmuXInputOpen,
   XTL_EmuXInputPoll,
   XTL_EmuXInputSetState,
+  XTL_EmuXLaunchNewImage,
+  XTL_EmuXLoadSectionA,
   XTL_EmuXLoadSectionByHandle,
   XTL_EmuXMountUtilityDrive,
-  XTL_EmuXRegisterThreadNotifyRoutine
-  ;
+  XTL_EmuXRegisterThreadNotifyRoutine,
+  XTL_EmuXSetProcessQuantumLength;
 
 end.
 

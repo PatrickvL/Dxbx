@@ -43,6 +43,9 @@ const
   DXBX_CONSOLE_DEBUG_FILENAME = 'DxbxDebug.txt';
   DXBX_KERNEL_DEBUG_FILENAME = 'KrnlDebug.txt';
 
+  // Thread access rights
+  THREAD_SET_CONTEXT = $0010; // See http://msdn.microsoft.com/en-us/library/ms686769(VS.85).aspx
+
 type
   EMU_STATE = (esNone, esFileOpen, esRunning);
 

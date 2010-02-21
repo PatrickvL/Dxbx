@@ -38,6 +38,12 @@ type
     function Select(const aFilePath: string): Boolean;
     function FileExists(const aFilePath: string): Boolean; virtual;
     function Load(const aStream: TMemoryStream): Boolean; virtual;
+
+//    function FileCreate(): THandle; virtual;
+//    function FileSeek(): THandle; virtual;
+//    function FileRead(Handle: THandle): Integer; virtual;
+//    function FileWrite(Handle: THandle): Integer; virtual;
+//    function FileClose(): THandle; virtual;
   end;
 
   PLogicalVolume = ^RLogicalVolume;
@@ -160,7 +166,7 @@ end;
 type
   TXDVDFS = class(TFileSystem)
   protected
-    MyContainer: TFileStream;
+    MyContainer: THandle;
     MySession: PXDVDFS_SESSION;
     MySearchRecord: SEARCH_RECORD;
     MyFileRecord: FILE_RECORD;
@@ -177,21 +183,18 @@ function TXDVDFS_ReadSectorsFunc(
       StartSector: DWord; //  Start sector
       ReadSize: DWORD     //  Number of sectors to read
 ): BOOL;
-var
-  fs: TFileStream;
 begin
-  fs := TFileStream(Data);
-  fs.Position := Int64(StartSector) * SECTOR_SIZE;
-  Result := fs.Read(Buffer^, ReadSize * SECTOR_SIZE) > 0;
+  FileSeek(THandle(Data), Int64(StartSector) * SECTOR_SIZE, 0);
+  Result := FileRead(THandle(Data), Buffer^, ReadSize * SECTOR_SIZE) > 0;
 end;
 
 constructor TXDVDFS.Create(const aContainer, aSelectedFile: string);
 begin
   inherited Create;
-  MyContainer := TFileStream.Create(aContainer, fmOpenRead or fmShareDenyWrite);
+  MyContainer := FileOpen(aContainer, fmOpenRead);
   New(MySession);
   ZeroMemory(MySession, SizeOf(MySession^));
-  if not XDVDFS_Mount(MySession, @TXDVDFS_ReadSectorsFunc, MyContainer) then
+  if not XDVDFS_Mount(MySession, @TXDVDFS_ReadSectorsFunc, Pointer(MyContainer)) then
 ;//    Error('Couldn''t mount image!');
   Select(aSelectedFile);
 end;
@@ -200,7 +203,7 @@ destructor TXDVDFS.Destroy;
 begin
   XDVDFS_UnMount(MySession);
   Dispose(MySession); MySession := nil;
-  FreeAndNil(MyContainer);
+  FileClose(MyContainer);
   inherited Destroy;
 end;
 

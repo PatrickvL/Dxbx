@@ -82,8 +82,8 @@ procedure {258} xboxkrnl_PsTerminateSystemThread(
   ); stdcall; // Source : XBMC
 
 // Global Variable(s)
-var
-  g_pfnThreadNotification: XTHREAD_NOTIFY_PROC = nil;
+var g_pfnThreadNotification: array [0..16-1] of XTHREAD_NOTIFY_PROC; //= { NULL };
+var g_iThreadNotificationCount: int = 0;
 
 implementation
 
@@ -112,6 +112,7 @@ var
   StartContext2: PVOID;
   StartRoutine: PKSTART_ROUTINE;
   StartSuspended: BOOL;
+  i: int;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
   OldExceptionFilter: LPTOP_LEVEL_EXCEPTION_FILTER;
 begin
@@ -136,20 +137,25 @@ begin
   EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
 
   // call thread notification routine(s)
-  if Assigned(g_pfnThreadNotification) then
+  if (g_iThreadNotificationCount <> 0) then
   begin
-    pfnNotificationRoutine := {XTL.} XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
+    for i := 0 to 16 - 1 do
+    begin
+      pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification[i]);
 
-{$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : Calling pfnNotificationRoutine (0x%.08x)', [Addr(pfnNotificationRoutine)]);
-{$ENDIF}
+      // If the routine doesn't exist, don't execute it!
+      if not Assigned(pfnNotificationRoutine) then
+        continue;
 
-    EmuSwapFS(fsXbox);
-    pfnNotificationRoutine({Create=}True);
-    EmuSwapFS(fsWindows);
+      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
+
+      EmuSwapFS(fsXbox);
+
+      pfnNotificationRoutine({Create=}True);
+
+      EmuSwapFS(fsWindows);
+    end;
   end;
-
-  SetEvent(Parameter.hStartedEvent);
 
 {$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
   // Re-route unhandled exceptions to our emulation-execption handler :
@@ -157,6 +163,8 @@ begin
 
   try
 {$ENDIF}
+    SetEvent(Parameter.hStartedEvent);
+
     EmuSwapFS(fsXbox);
 
 //    StartRoutine(StartContext1, StartContext2);
@@ -201,13 +209,24 @@ callComplete:
 {$ENDIF}
 
   // call thread notification routine(s)
-  if Assigned(g_pfnThreadNotification) then
+  if (g_iThreadNotificationCount <> 0) then
   begin
-    pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
+    for i := 0 to 16 - 1 do
+    begin
+      pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification[i]);
 
-    EmuSwapFS(fsXbox);
-    pfnNotificationRoutine({Create=}False);
-    EmuSwapFS(fsWindows);
+      // If the routine doesn't exist, don't execute it!
+      if not Assigned(pfnNotificationRoutine) then
+        continue;
+
+      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
+
+      EmuSwapFS(fsXbox);
+
+      pfnNotificationRoutine({Create=}False);
+ 
+      EmuSwapFS(fsWindows);
+    end;
   end;
 
   CxbxKrnlTerminateThread();
@@ -409,11 +428,10 @@ end;
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-procedure {258} xboxkrnl_PsTerminateSystemThread(
-  ExitStatus: NTSTATUS
-  ); stdcall; // Source : XBMC
+procedure {258} xboxkrnl_PsTerminateSystemThread({IN}ExitStatus: NTSTATUS); stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
+  i: int;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
 begin
   EmuSwapFS(fsWindows);
@@ -425,12 +443,24 @@ begin
          [ExitStatus]);
 
   // call thread notification routine(s)
-  if Assigned(g_pfnThreadNotification) then
+  if (g_iThreadNotificationCount <> 0) then
   begin
-    pfnNotificationRoutine := XTHREAD_NOTIFY_PROC(g_pfnThreadNotification);
-    EmuSwapFS(fsXbox);   // Xbox FS
-    pfnNotificationRoutine(FALSE);
-    EmuSwapFS(fsWindows);   // Win2k/XP FS
+    for i := 0 to 16 - 1 do
+    begin
+      pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification[i]);
+
+      // If the routine doesn't exist, don't execute it!
+      if not Assigned(pfnNotificationRoutine) then
+        continue;
+
+      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
+
+      EmuSwapFS(fsXbox);
+
+      pfnNotificationRoutine({Create=}False);
+
+      EmuSwapFS(fsWindows);
+    end;
   end;
 
   //CxbxKrnlTerminateThread();
@@ -439,7 +469,6 @@ begin
   //_endthreadex(ExitStatus);
   ExitThread(ExitStatus);
 
-  EmuSwapFS(fsXbox);
 end;
 
 //
