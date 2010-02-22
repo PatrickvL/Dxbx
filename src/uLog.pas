@@ -49,6 +49,8 @@ procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
 
+procedure printf(aStr: string);
+
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; overload;
@@ -450,6 +452,26 @@ end;
 procedure DbgPrintf(aStr: string);
 begin
   WriteLog(aStr);
+end;
+
+var
+  LineStr: string = '';
+
+procedure printf(aStr: string);
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  // Collect strings into one line :
+  LineStr := LineStr + aStr;
+  // Check if it's not yet closed off with a newline :
+  if LastChar(LineStr) = #10 then
+  begin
+    // Remove last newline :
+    SetLength(LineStr, Length(LineStr) - 2);
+    // Print normally (this will re-append the removed newline) :
+    DbgPrintf(LineStr);
+    // Start afresh :
+    LineStr := '';
+  end;
 end;
 
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
