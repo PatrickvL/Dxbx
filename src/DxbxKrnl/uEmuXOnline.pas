@@ -35,23 +35,24 @@ uses
 
 implementation
 
-function XTL_EmuWSAStartup(
-  wVersionRequested: Word;
+function XTL_EmuWSAStartup
+(
+  wVersionRequested: WORD;
   lpWSAData: PWSADATA
-  ): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+): int; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  ret: Integer;
+  ret: int;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuWSAStartup' +
-    #13#10'(' +
-    #13#10'   wVersionRequested   : 0x%.08X' +
-    #13#10'   lpWSAData           : 0x%.08X' +
-    #13#10');',
-    [wVersionRequested, lpWSAData]);
+      #13#10'(' +
+      #13#10'   wVersionRequested   : 0x%.08X' +
+      #13#10'   lpWSAData           : 0x%.08X' +
+      #13#10');',
+      [wVersionRequested, lpWSAData]);
 {$ENDIF}
 
   ret := WSAStartup(wVersionRequested, {var}lpWSAData^);
@@ -61,8 +62,11 @@ begin
   Result := ret;
 end;
 
-function XTL_EmuXNetStartup(pDummy: PVOID): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuXNetStartup
+(
+    const pDummy: PVOID
+): INT; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -76,13 +80,13 @@ begin
 
   EmuSwapFS(fsXbox);
 
-    (*// Fake Successfull...hehehe...sucker...hehehehehe *)
-    // Remark in cxbx code... wtf ??
+  // Cxbx : Fake Successfull...hehehe...sucker...hehehehehe
+
   Result := 0;
 end;
 
-function XTL_EmuXNetGetEthernetLinkStatus: DWord; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+function XTL_EmuXNetGetEthernetLinkStatus(): DWORD; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
@@ -90,17 +94,18 @@ begin
 {$ENDIF}
   EmuSwapFS(fsXbox);
 
-  // for now, no ethernet connection is available
+  // Cxbx : for now, no ethernet connection is available
   Result := 0;
 end;
 
-(*SOCKET XTL.EmuThis.Emusocket
+(*
+SOCKET XTL.EmuThis.Emusocket
 (
-    Integer   af,
-    Integer   ctype,
-    Integer   protocol
+    af: int;
+    ctype: int;
+    protocol: int
 )
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+--DXBX:UNUSED_CODE Branch:martin  UNUSED_Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
@@ -120,10 +125,10 @@ begin
     EmuSwapFS(fsXbox);
 
     Result := ret;
-end;             *)
+end;
 
-(*function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: Integer): Integer;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: Integer): Integer;
+--DXBX:UNUSED_CODE Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
@@ -145,11 +150,10 @@ begin
     EmuSwapFS(fsXbox);
 
     Result := ret;
-end;              *)
+end;
 
-(*
 function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+--DXBX:UNUSED_CODE Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
@@ -171,10 +175,9 @@ begin
 
     Result := ret;
 end;
-*)
 
-(*function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): Integer;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long): Integer;
+--DXBX:UNUSED_CODE Branch:martin  Revision:39  Translator:PatrickvL  Done:0
 begin
     EmuSwapFS(fsWindows);
 
@@ -194,9 +197,36 @@ begin
     EmuSwapFS(fsXbox);
 
     Result := ret;
-end;            *)
+end;
+*)
+
+function XOnlineLaunchNewImage
+(
+    lpImagePath: LPCSTR;
+    pLaunchData: LPVOID
+): HRESULT; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('XOnline : EmuXOnlineLaunchNewImage' +
+      #13#10'(' +
+      #13#10'   lpImagePath           : 0x%.08X' +
+      #13#10'   pLaunchData           : 0x%.08X' +
+      #13#10');',
+      [lpImagePath, pLaunchData]);
+{$ENDIF}
+  // Cxbx TODO: Launch another .xbe from Cxbx someday?
+
+  EmuSwapFS(fsXbox);
+
+  Result := E_FAIL;
+end;
+
 
 exports
+  XOnlineLaunchNewImage,
   XTL_EmuWSAStartup,
   XTL_EmuXNetGetEthernetLinkStatus,
   XTL_EmuXNetStartup;

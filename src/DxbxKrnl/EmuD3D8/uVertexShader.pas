@@ -486,29 +486,13 @@ uses
   , uEmuFS
   , uEmuD3D8;
 
-var
-  LineStr: string = '';
-
 procedure DbgVshPrintf(aStr: string); overload;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
 {$ifdef _DEBUG_TRACK_VS}
   if (g_bPrintfOn) then
+    printf(aStr);
 {$endif}
-  begin
-    // Collect strings into one line :
-    LineStr := LineStr + aStr;
-    // Check if it's not yet closed off with a newline :
-    if LastChar(LineStr) = #10 then
-    begin
-      // Remove last newline :
-      SetLength(LineStr, Length(LineStr) - 2);
-      // Print normally (this will re-append the removed newline) :
-      DbgPrintf(LineStr);
-      // Start afresh :
-      LineStr := '';
-    end;
-  end;
 end;
 
 procedure DbgVshPrintf(aStr: string; Args: array of const); overload;
@@ -516,8 +500,8 @@ procedure DbgVshPrintf(aStr: string; Args: array of const); overload;
 begin
 {$ifdef _DEBUG_TRACK_VS}
   if (g_bPrintfOn) then
+    printf(DxbxFormat(aStr, Args));
 {$endif}
-    DbgVshPrintf(DxbxFormat(aStr, Args));
 end;
 
 // VertexShader.h

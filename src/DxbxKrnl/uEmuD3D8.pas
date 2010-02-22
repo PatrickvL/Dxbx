@@ -52,6 +52,7 @@ uses
   uEmuKrnl,
   uEmuXTL,
   uVertexShader,
+  uPixelShader,
   uResourceTracker,
   uConvert,
   uEmuD3D8Types,
@@ -2881,7 +2882,7 @@ begin
   pFunction := PDWORD(pPSDef);
 
   // Attempt to recompile PixelShader
-  // Dxbx TODO : Call XTL_EmuRecompilePshDef(pPSDef, NULL);
+  XTL_EmuRecompilePshDef(pPSDef, NULL);
 
   // redirect to windows d3d
   Result := g_pD3DDevice8.CreatePixelShader

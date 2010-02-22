@@ -154,6 +154,8 @@ function fopen(filename: PAnsiChar; mode: PAnsiChar): PFILE;
 function fseek(stream: PFILE; offset: long; mode: int): int;
 function fread(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
 function fwrite(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
+function fprintf(stream: PFILE; format: PAnsiChar): int; overload;
+function fprintf(stream: PFILE; format: PAnsiChar; Args: array of const): int; overload;
 function fclose(stream: PFILE): int;
 
 function FIELD_OFFSET(var Variable): DWORD;
@@ -353,6 +355,17 @@ end;
 function fwrite(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
 begin
   Result := FileWrite(stream^, ptr, size * nelem);
+end;
+
+function fprintf(stream: PFILE; format: PAnsiChar): int; // overload;
+begin
+  Result := fwrite(format, StrLen(format), 1, stream);
+end;
+
+// http://www.cplusplus.com/reference/clibrary/cstdio/fprintf/
+function fprintf(stream: PFILE; format: PAnsiChar; Args: array of const): int; // overload;
+begin
+  Result := fprintf(stream, PAnsiChar(AnsiString(SysUtils.Format(string(format), Args))));
 end;
 
 function fclose(stream: PFILE): int;
