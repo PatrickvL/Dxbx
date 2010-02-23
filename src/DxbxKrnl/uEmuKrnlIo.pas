@@ -41,12 +41,10 @@ uses
   uDxbxKrnl,
   uDxbxKrnlUtils;
 
-const
-  // Dxbx TODO : Translate all other IRP defines from ReactOS
-  IRP_MJ_MAXIMUM_FUNCTION = $1B;
+// Dxbx TODO : Translate all other IRP defines from ReactOS
+const IRP_MJ_MAXIMUM_FUNCTION = $1B;
 
-type
-  IRP = packed record
+type IRP = packed record
     cType: CSHORT;
     Size: USHORT;
 (*
@@ -123,8 +121,9 @@ type
   PDEVICE_OBJECT = ^DEVICE_OBJECT; // forward;
   PPDEVICE_OBJECT = ^PDEVICE_OBJECT;
 
-  // I/O Timer Object
-  IO_TIMER = packed record // Source: ReactOS
+// I/O Timer Object
+{type} IO_TIMER = packed record
+// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
     Type_: USHORT;
     TimerEnabled: USHORT;
     IoTimerList: LIST_ENTRY;
@@ -134,7 +133,8 @@ type
   end;
   PIO_TIMER = ^IO_TIMER;
 
-  DRIVER_OBJECT = packed record // Source: ReactOS
+{type} DRIVER_OBJECT = packed record
+// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
     Type_: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
@@ -153,7 +153,8 @@ type
   end;
   PDRIVER_OBJECT = ^DRIVER_OBJECT;
 
-  DEVICE_OBJECT = packed record // Source: XBMC
+{type} DEVICE_OBJECT = packed record
+// Source: XBMC / ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
     Type_: CSHORT;
     Size: USHORT;
     ReferenceCount: LONG;
@@ -183,9 +184,10 @@ type
     Spare1: USHORT;
     DeviceObjectExtension: PDEVOBJ_EXTENSION;
     Reserved: PVOID;
-  end; // Source: XBMC / ReactOS
+  end;
 
-  FILE_OBJECT = packed record // Source: XBMC
+type FILE_OBJECT = packed record
+// Source: XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
     Type_: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
@@ -193,7 +195,8 @@ type
   end;
   PFILE_OBJECT = ^FILE_OBJECT;
 
-  SHARE_ACCESS = packed record // Source: ReactOS
+type SHARE_ACCESS = packed record
+// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
     OpenCount: ULONG;
     Readers: ULONG;
     Writers: ULONG;
@@ -204,15 +207,19 @@ type
   end;
   PSHARE_ACCESS = ^SHARE_ACCESS;
 
-var
-  {064}xboxkrnl_IoCompletionObjectType: POBJECT_TYPE = NULL; // Source: Dxbx
-  {070}xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
-  {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
+var {064}xboxkrnl_IoCompletionObjectType: POBJECT_TYPE = NULL;
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
+
+var {070}xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
+
+var {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
-  ChargeQuota: LONGBOOL // Dxbx TODO : Should this be a WordBool??
-  ): PIRP; stdcall; // Source: ReactOS
+  ChargeQuota: LONGBOOL
+  ): PIRP; stdcall;
 function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   MajorFunction: ULONG;
   DeviceObject: PDEVICE_OBJECT;
@@ -220,7 +227,7 @@ function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   Length: ULONG; // OPTIONAL,
   StartingOffset: PLARGE_INTEGER; // OPTIONAL
   IoStatusBlock: PIO_STATUS_BLOCK // OPTIONAL
-  ): PIRP; stdcall; // Source: ReactOS
+  ): PIRP; stdcall;
 function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   IoControlCode: ULONG;
   DeviceObject: PDEVICE_OBJECT;
@@ -231,7 +238,7 @@ function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   InternalDeviceIoControl: BOOLEAN;
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
-  ): PIRP; stdcall; // Source: ReactOS
+  ): PIRP; stdcall;
 function {062} xboxkrnl_IoBuildSynchronousFsdRequest(
   MajorFunction: ULONG;
   DeviceObject: PDEVICE_OBJECT;
@@ -240,14 +247,14 @@ function {062} xboxkrnl_IoBuildSynchronousFsdRequest(
   StartingOffset: PLARGE_INTEGER; // OPTIONAL,
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
-  ): PIRP; stdcall; // Source: ReactOS
+  ): PIRP; stdcall;
 function {063} xboxkrnl_IoCheckShareAccess(
   DesiredAccess: ACCESS_MASK;
   DesiredShareAccess: ULONG;
   FileObject: PFILE_OBJECT; // OUT
   ShareAccess: PSHARE_ACCESS; // OUT
   Update: BOOLEAN
-  ): NTSTATUS; stdcall; // Source: ReactOS
+  ): NTSTATUS; stdcall;
 function {065} xboxkrnl_IoCreateDevice(
   DriverObject: PDRIVER_OBJECT;
   DeviceExtensionSize: ULONG;
@@ -256,7 +263,7 @@ function {065} xboxkrnl_IoCreateDevice(
   DeviceCharacteristics: ULONG;
   Exclusive: BOOLEAN;
   DeviceObject: PPDEVICE_OBJECT // out
-  ): NTSTATUS; stdcall; // Source: ReactOS
+  ): NTSTATUS; stdcall;
 function {066} xboxkrnl_IoCreateFile(
   FileHandle: PHANDLE; // out
   DesiredAccess: ACCESS_MASK;
@@ -268,14 +275,14 @@ function {066} xboxkrnl_IoCreateFile(
   Disposition: ULONG;
   CreateOptions: ULONG;
   Options: ULONG
-  ): NTSTATUS; stdcall; // Source: Cxbx
+  ): NTSTATUS; stdcall;
 function xboxkrnl_IoCreateSymbolicLink(
-  SymbolicLinkName: PSTRING;
+  SymbolicLinkName: PANSI_STRING;
   DeviceName: PSTRING
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDeleteSymbolicLink(
-  SymbolicLinkName: PSTRING
+  SymbolicLinkName: PANSI_STRING
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -305,7 +312,7 @@ function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDismountVolumeByName(
   VolumeName: PSTRING
-  ): NTSTATUS; stdcall; // Source: OpenXDK
+  ): NTSTATUS; stdcall;
 function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
@@ -314,7 +321,7 @@ function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
   ChargeQuota: LONGBOOL // Dxbx TODO : Should this be a WordBool??
   ): PIRP; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoAllocateIrp');
@@ -330,7 +337,7 @@ function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   StartingOffset: PLARGE_INTEGER; // OPTIONAL
   IoStatusBlock: PIO_STATUS_BLOCK // OPTIONAL
   ): PIRP; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoBuildAsynchronousFsdRequest');
@@ -349,7 +356,7 @@ function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoBuildDeviceIoControlRequest');
@@ -366,7 +373,7 @@ function {062} xboxkrnl_IoBuildSynchronousFsdRequest(
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IoBuildSynchronousFsdRequest');
@@ -381,7 +388,7 @@ function {063} xboxkrnl_IoCheckShareAccess(
   ShareAccess: PSHARE_ACCESS; // OUT
   Update: BOOLEAN
   ): NTSTATUS; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoCheckShareAccess');
@@ -425,7 +432,7 @@ function {065} xboxkrnl_IoCreateDevice(
   Exclusive: BOOLEAN;
   DeviceObject: PPDEVICE_OBJECT // out
   ): NTSTATUS; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoCreateDevice');
@@ -443,8 +450,8 @@ function {066} xboxkrnl_IoCreateFile(
   Disposition: ULONG;
   CreateOptions: ULONG;
   Options: ULONG
-  ): NTSTATUS; stdcall; // Source: Cxbx
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  ): NTSTATUS; stdcall;
+// Source:Cxbx  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -481,7 +488,7 @@ end;
 //
 // Differences from NT: Uses ANSI_STRING instead of UNICODE_STRING.
 function xboxkrnl_IoCreateSymbolicLink(
-  SymbolicLinkName: PSTRING;
+  SymbolicLinkName: PANSI_STRING;
   DeviceName: PSTRING
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -518,7 +525,7 @@ end;
 //
 // Differences from NT: Uses ANSI_STRING instead of UNICODE_STRING.
 function xboxkrnl_IoDeleteSymbolicLink(
-  SymbolicLinkName: PSTRING
+  SymbolicLinkName: PANSI_STRING
   ): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
@@ -691,7 +698,7 @@ end;
 function xboxkrnl_IoDismountVolumeByName(
   VolumeName: PSTRING
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('IoDismountVolumeByName');

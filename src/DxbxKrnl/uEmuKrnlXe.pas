@@ -41,27 +41,26 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-var
-  {355}xboxkrnl_XePublicKeyData: DWord;
+var {355}xboxkrnl_XePublicKeyData: DWord;
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-function {326} xboxkrnl_XeImageFileName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+var {326}xboxkrnl_XeImageFileName: PANSI_STRING;
+// Source:Xbox-Linux  Branch:Dxbx  Translator:PatrickvL  Done:100
+//
+// XeImageFileName.Buffer points to path of XBE
+//
+// Format is like this: \Device\Harddisk0\Partition1\bla.xbe
+// Size of XeImageFileName.Buffer is stored in XeImageFileName.Length
+
 function {327} xboxkrnl_XeLoadSection(
   Section: PXBE_SECTIONHEADER // In, out
-  ): NTSTATUS; stdcall; // Source: XBMC
+  ): NTSTATUS; stdcall;
 function {328} xboxkrnl_XeUnloadSection(
   Section: PXBE_SECTIONHEADER // In, out
-  ): NTSTATUS; stdcall; // Source: XBMC
+  ): NTSTATUS; stdcall;
 
 implementation
-
-function {326} xboxkrnl_XeImageFileName(): NTSTATUS; stdcall;
-// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('XeImageFileName');
-  EmuSwapFS(fsXbox);
-end;
-
+  
 // XeLoadSection:
 // Adds one to the reference count of the specified section and loads if the
 // count is now above zero.

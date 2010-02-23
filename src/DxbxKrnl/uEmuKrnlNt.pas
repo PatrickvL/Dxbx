@@ -351,7 +351,7 @@ begin
 end;
 
 function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtCreateDirectoryObject');
@@ -1636,7 +1636,7 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   IoStatusBlock: PIO_STATUS_BLOCK;
   Reserved: ULONG
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
 (*var
   dwEsi: uint32;
   dwEax: uint32;

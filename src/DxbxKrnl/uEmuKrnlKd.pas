@@ -40,9 +40,11 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-var
-  {088}xboxkrnl_KdDebuggerEnabled: ByteBool;
-  {089}xboxkrnl_KdDebuggerNotPresent: LONGBOOL; // Source: ReactOS
+var {088}xboxkrnl_KdDebuggerEnabled: ByteBool;
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
+
+var {089}xboxkrnl_KdDebuggerNotPresent: LONGBOOL;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 implementation
 

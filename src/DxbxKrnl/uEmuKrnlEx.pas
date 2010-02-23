@@ -50,91 +50,91 @@ var
 
 function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+  ): NTSTATUS; stdcall;
 function {013} xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+  ): NTSTATUS; stdcall;
 function {014} xboxkrnl_ExAllocatePool(
   NumberOfBytes: ULONG
-  ): PVOID; stdcall; // Source: OpenXDK
+  ): PVOID; stdcall;
 function {015} xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
-  ): PVOID; stdcall; // Source: OpenXDK
+  ): PVOID; stdcall;
 procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
-  ); stdcall; // Source: ReactOS
+  ); stdcall;
 function {018} xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+  ): NTSTATUS; stdcall;
 function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Addend: PLARGE_INTEGER;
   Increment: LARGE_INTEGER;
   Lock: PKSPIN_LOCK
-  ): LARGE_INTEGER; stdcall; // Source: ReactOS
+  ): LARGE_INTEGER; stdcall;
 procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   Addend: PLARGE_INTEGER;
   Increment: ULONG
-  ); stdcall; // Source: ReactOS
+  ); stdcall;
 function {021} xboxkrnl_ExInterlockedCompareExchange64(
   Destination: PLONGLONG; // OUT
   Exchange: PLONGLONG;
   Comparand: PLONGLONG;
   Lock: PKSPIN_LOCK
-  ): LONGLONG; stdcall; // Source: ReactOS
+  ): LONGLONG; stdcall;
 function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
   QuotaCharged: PBOOLEAN // OUT
-  ): SIZE_T; stdcall; // Source: ReactOS
+  ): SIZE_T; stdcall;
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
   Type_: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
-  ): NTSTATUS; stdcall; // Source: OpenXDK
+  ): NTSTATUS; stdcall;
 function {025} xboxkrnl_ExReadWriteRefurbInfo(
   Arg1: PXBOX_REFURB_INFO;
   Arg2Size: DWORD;
   Arg3: LONGBOOL
-  ): NTSTATUS; stdcall; // Source: XBMC - Uncertain
+  ): NTSTATUS; stdcall;
 procedure {026} xboxkrnl_ExRaiseException(
   ExceptionRecord: PEXCEPTION_RECORD
-  ); stdcall; // Source: ReactOS
+  ); stdcall;
 procedure {027} xboxkrnl_ExRaiseStatus(
   Status: NTSTATUS
-  ); stdcall; // Source: ReactOS
+  ); stdcall;
 function {028} xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
+  ): NTSTATUS; stdcall;
 function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueIndex: DWORD;
   Type_: PDWORD; //   OUT
   Value: PUCHAR;
   ValueLength: SIZE_T
-  ): NTSTATUS; stdcall; // Source: OpenXDK
+  ): NTSTATUS; stdcall;
 function {032} xboxkrnl_ExfInterlockedInsertHeadList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall; // Source: ReactOS
+  ): PLIST_ENTRY; stdcall;
 function {033} xboxkrnl_ExfInterlockedInsertTailList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall; // Source: ReactOS
+  ): PLIST_ENTRY; stdcall;
 function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall; // Source: ReactOS
+  ): PLIST_ENTRY; stdcall;
 
 
 implementation
 
 function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): NTSTATUS; stdcall;
+// Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExAcquireReadWriteLockExclusive');
@@ -144,8 +144,8 @@ end;
 
 function {013} xboxkrnl_ExAcquireReadWriteLockShared(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): NTSTATUS; stdcall;
+// Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExAcquireReadWriteLockShared');
@@ -155,8 +155,8 @@ end;
 
 function {014} xboxkrnl_ExAllocatePool(
   NumberOfBytes: ULONG
-  ): PVOID; stdcall; // Source: OpenXDK
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  ): PVOID; stdcall;
+// Source:OpenXDK  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pRet: PVOID;
 begin
@@ -181,8 +181,8 @@ end;
 function {015} xboxkrnl_ExAllocatePoolWithTag(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
-  ): PVOID; stdcall; // Source: OpenXDK
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  ): PVOID; stdcall;
+// Source:OpenXDK  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   pRet: PVOID;
 begin
@@ -206,8 +206,8 @@ end;
 
 procedure {017} xboxkrnl_ExFreePool(
   Block: PVOID
-  ); stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ); stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExFreePool');
@@ -217,8 +217,8 @@ end;
 
 function {018} xboxkrnl_ExInitializeReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): NTSTATUS; stdcall;
+// Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInitializeReadWriteLock');
@@ -229,8 +229,8 @@ function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Addend: PLARGE_INTEGER;
   Increment: LARGE_INTEGER;
   Lock: PKSPIN_LOCK
-  ): LARGE_INTEGER; stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): LARGE_INTEGER; stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeInteger');
@@ -241,8 +241,8 @@ end;
 procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   Addend: PLARGE_INTEGER;
   Increment: ULONG
-  ); stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ); stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeStatistic');
@@ -254,8 +254,8 @@ function {021} xboxkrnl_ExInterlockedCompareExchange64(
   Exchange: PLONGLONG;
   Comparand: PLONGLONG;
   Lock: PKSPIN_LOCK
-  ): LONGLONG; stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): LONGLONG; stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInterlockedCompareExchange64');
@@ -265,8 +265,8 @@ end;
 function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
   QuotaCharged: PBOOLEAN // OUT
-  ): SIZE_T; stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): SIZE_T; stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExQueryPoolBlockSize');
@@ -283,8 +283,8 @@ function {024} xboxkrnl_ExQueryNonVolatileSetting(
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
-  ): NTSTATUS; stdcall; // Source: OpenXDK
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+  ): NTSTATUS; stdcall;
+// Source:OpenXDK  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -403,8 +403,8 @@ function {025} xboxkrnl_ExReadWriteRefurbInfo(
   Arg1: PXBOX_REFURB_INFO;
   Arg2Size: DWORD;
   Arg3: LONGBOOL
-  ): NTSTATUS; stdcall; // Source: XBMC - Uncertain
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): NTSTATUS; stdcall;
+// Source:XBMC - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExReadWriteRefurbInfo');
@@ -413,8 +413,8 @@ end;
 
 procedure {026} xboxkrnl_ExRaiseException(
   ExceptionRecord: PEXCEPTION_RECORD
-  ); stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ); stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExRaiseException');
@@ -424,8 +424,8 @@ end;
 
 procedure {027} xboxkrnl_ExRaiseStatus(
   Status: NTSTATUS
-  ); stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ); stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExRaiseStatus');
@@ -434,8 +434,8 @@ end;
 
 function {028} xboxkrnl_ExReleaseReadWriteLock(
   Arg1: DWORD
-  ): NTSTATUS; stdcall; // Source: APILogger - Uncertain
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): NTSTATUS; stdcall;
+// Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExReleaseReadWriteLock');
@@ -447,8 +447,8 @@ function {029} xboxkrnl_ExSaveNonVolatileSetting(
   Type_: PDWORD; //   OUT
   Value: PUCHAR;
   ValueLength: SIZE_T
-  ): NTSTATUS; stdcall; // Source: OpenXDK
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): NTSTATUS; stdcall;
+// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExSaveNonVolatileSetting');
@@ -459,8 +459,8 @@ function {032} xboxkrnl_ExfInterlockedInsertHeadList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): PLIST_ENTRY; stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertHeadList');
@@ -472,8 +472,8 @@ function {033} xboxkrnl_ExfInterlockedInsertTailList(
   ListHead: PLIST_ENTRY;
   ListEntry: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): PLIST_ENTRY; stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertTailList');
@@ -484,8 +484,8 @@ end;
 function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall; // Source: ReactOS
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): PLIST_ENTRY; stdcall;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedRemoveHeadList');

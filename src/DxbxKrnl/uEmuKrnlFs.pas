@@ -42,17 +42,17 @@ uses
   uDxbxKrnl;
 
 function {035} xboxkrnl_FscGetCacheSize(
-  ): SIZE_T; stdcall; // Source: Dxbx - Uncertain
+  ): SIZE_T; stdcall;
 function {036} xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {037} xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
-  ): LONG; stdcall; // Source: Cxbx
+  ): LONG; stdcall;
 
 implementation
 
 function {035} xboxkrnl_FscGetCacheSize(
-  ): SIZE_T; stdcall; // Source: Dxbx - Uncertain
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): SIZE_T; stdcall;
+// Source:Dxbx - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('FscGetCacheSize');
@@ -69,8 +69,8 @@ end;
 
 function {037} xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
-  ): LONG; stdcall; // Source: Cxbx
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  ): LONG; stdcall;
+// Source:Cxbx  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
