@@ -45,74 +45,74 @@ function xboxkrnl_RtlAnsiStringToUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PSTRING;
   AllocateDestinationString: UCHAR
-  ): NTSTATUS; stdcall; // Source : JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlAppendStringToString(
   DestinationString: PSTRING;
   AppendThisString: PSTRING
-  ): NTSTATUS; stdcall; // Source : JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlAppendUnicodeStringToString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlAppendUnicodeToString(
   Destination: PUNICODE_STRING;
   Source: LPCWSTR
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
   Message: PANSICHAR
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlCaptureContext(
   ContextRecord: PCONTEXT
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlCharToInteger(
   Str: PCSZ;
   Base: ULONG;
   Value: PULONG
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlCompareMemory(
   Source1: PVOID;
   Source2: PVOID;
   Length: SIZE_T
-  ): SIZE_T; stdcall; // Source:JwaNative
+  ): SIZE_T; stdcall;
 function xboxkrnl_RtlCompareMemoryUlong(
   Source: PVOID;
   Length: ULONG;
   Value: ULONG
-  ): ULONG; stdcall; // Source:JwaNative
+  ): ULONG; stdcall;
 function xboxkrnl_RtlCompareString(
   String1: PSTRING;
   String2: PSTRING;
   CaseInsensitive: BOOLEAN
-  ): LONG; stdcall; // Source:JwaNative
+  ): LONG; stdcall;
 function xboxkrnl_RtlCompareUnicodeString(
   String1: PUNICODE_STRING;
   String2: PUNICODE_STRING;
   CaseInsensitive: BOOLEAN
-  ): LONG; stdcall; // Source:JwaNative
+  ): LONG; stdcall;
 procedure xboxkrnl_RtlCopyString(
   DestinationString: PSTRING;
   SourceString: PSTRING
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlCopyUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 function xboxkrnl_RtlCreateUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PWSTR
-  ): BOOLEAN; stdcall; // Source:JwaNative
+  ): BOOLEAN; stdcall;
 function xboxkrnl_RtlDowncaseUnicodeChar(
   Source: WCHAR
-  ): WCHAR; stdcall; // Source:JwaNative
+  ): WCHAR; stdcall;
 function xboxkrnl_RtlDowncaseUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING;
   AllocateDestinationString: BOOLEAN
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
@@ -123,46 +123,46 @@ function xboxkrnl_RtlEqualString(
   String1: PSTRING;
   String2: PSTRING;
   CaseInsensitive: BOOLEAN
-  ): BOOLEAN; stdcall; // Source:JwaNative
+  ): BOOLEAN; stdcall;
 function xboxkrnl_RtlEqualUnicodeString(
   String1: PUNICODE_STRING;
   String2: PUNICODE_STRING;
   CaseInsensitive: BOOLEAN
-  ): BOOLEAN; stdcall; // Source:JwaNative
+  ): BOOLEAN; stdcall;
 function xboxkrnl_RtlExtendedIntegerMultiply(
   Multiplicand: LARGE_INTEGER;
   Multiplier: LONG
-  ): LARGE_INTEGER; stdcall; // Source:JwaNative
+  ): LARGE_INTEGER; stdcall;
 function xboxkrnl_RtlExtendedLargeIntegerDivide(
   Dividend: LARGE_INTEGER;
   Divisor: ULONG;
   Remainder: PULONG
-  ): LARGE_INTEGER; stdcall; // Source:JwaNative
+  ): LARGE_INTEGER; stdcall;
 function xboxkrnl_RtlExtendedMagicDivide(
   Dividend: LARGE_INTEGER;
   MagicDivisor: LARGE_INTEGER;
   ShiftCount: CCHAR
-  ): LARGE_INTEGER; stdcall; // Source:JwaNative
+  ): LARGE_INTEGER; stdcall;
 procedure xboxkrnl_RtlFillMemory(
   Destination: PVOID;
   Length: SIZE_T;
   Fill: UCHAR
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlFillMemoryUlong(
   Destination: PVOID;
   Length: ULONG;
   Fill: ULONG
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlFreeAnsiString(
   AnsiString: PANSI_STRING
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlFreeUnicodeString(
   UnicodeString: PUNICODE_STRING
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlGetCallersAddress(
   CallersAddress: PPVOID;
   CallersCaller: PPVOID
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlInitAnsiString(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
@@ -170,7 +170,7 @@ procedure xboxkrnl_RtlInitAnsiString(
 procedure xboxkrnl_RtlInitUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: LPCWSTR
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
@@ -179,12 +179,12 @@ function xboxkrnl_RtlIntegerToChar(
   Base: ULONG;
   Length: ULONG;
   Str: PAnsiChar
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlIntegerToUnicodeString(
   Value: ULONG;
   Base: ULONG;
   Str: PUNICODE_STRING
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 procedure xboxkrnl_RtlLeaveCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
@@ -197,12 +197,12 @@ function xboxkrnl_RtlLowerChar(
 procedure xboxkrnl_RtlMapGenericMask(
   AccessMask: PACCESS_MASK;
   GenericMapping: PGENERIC_MAPPING
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlMoveMemory(
   Destination: PVOID;
   Source: PVOID;
   Length: SIZE_T
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 function xboxkrnl_RtlMultiByteToUnicodeN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlMultiByteToUnicodeSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlNtStatusToDosError(
@@ -213,7 +213,7 @@ procedure xboxkrnl_RtlRaiseException(
   ); stdcall;
 procedure xboxkrnl_RtlRaiseStatus(
   Status: NTSTATUS
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 function xboxkrnl_RtlTimeFieldsToTime(
   TimeFields: PTIME_FIELDS;
   Time: PLARGE_INTEGER // OUT
@@ -227,7 +227,7 @@ function xboxkrnl_RtlTryEnterCriticalSection(
   ): LONGBOOL; stdcall;
 function xboxkrnl_RtlUlongByteSwap(
   Source: ULONG
-  ): ULONG; stdcall; // Source : JwaNative
+  ): ULONG; stdcall;
 function xboxkrnl_RtlUnicodeStringToAnsiString(
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
@@ -237,49 +237,49 @@ function xboxkrnl_RtlUnicodeStringToInteger(
   Str: PUNICODE_STRING;
   Base: ULONG;
   Value: PULONG
-  ): NTSTATUS; stdcall; // Source : JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUnicodeToMultiByteN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_RtlUnicodeToMultiByteSize(
   BytesInMultiByteString: PULONG;
   UnicodeString: PWSTR;
   BytesInUnicodeString: ULONG
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 procedure xboxkrnl_RtlUnwind(
   TargetFrame: PVOID;
   TargetIp: PVOID;
   ExceptionRecord: PEXCEPTION_RECORD;
   ReturnValue: PVOID
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 function xboxkrnl_RtlUpcaseUnicodeChar(
   SourceCharacter: WCHAR
-  ): WCHAR; stdcall; // Source:JwaNative
+  ): WCHAR; stdcall;
 function xboxkrnl_RtlUpcaseUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING;
   AllocateDestinationString: BOOLEAN
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
   MbString: PAnsiChar;
   MbSize: ULONG;
   ResultSize: PULONG;
   UnicodeString: PWSTR;
   UnicodeSize: ULONG
-  ): NTSTATUS; stdcall; // Source:JwaNative
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUpperChar(
   Character: ANSICHAR
-  ): ANSICHAR; stdcall; // Source:JwaNative
+  ): ANSICHAR; stdcall;
 procedure xboxkrnl_RtlUpperString(
   DestinationString: PSTRING;
   SourceString: PSTRING
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 function xboxkrnl_RtlUshortByteSwap(
   Source: USHORT
-  ): USHORT; // No stdcall (was fastcall)! // Source:JwaNative
+  ): USHORT; // No stdcall (was fastcall)!
 function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_RtlZeroMemory(
   Destination: PVOID;
   Length: SIZE_T
-  ); stdcall; // Source:JwaNative
+  ); stdcall;
 procedure xboxkrnl_RtlRip(
   Part1: PCSZ;
   Part2: PCSZ;

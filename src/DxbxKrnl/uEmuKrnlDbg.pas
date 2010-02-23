@@ -41,35 +41,35 @@ uses
   uDxbxKrnl;
 
 procedure {005} xboxkrnl_DbgBreakPoint(
-  ); stdcall; // Source: JwaNative.pas
+  ); stdcall;
 procedure {006} xboxkrnl_DbgBreakPointWithStatus(
   Status: ULONG
-  ); stdcall; // Source: JwaNative.pas
+  ); stdcall;
 function {007} xboxkrnl_DbgLoadImageSymbols(
   Name: PANSI_STRING;
   Base: PVOID;
   ProcessId: ULONG_PTR
-  ): NTSTATUS; stdcall; // Source: ReactOS
+  ): NTSTATUS; stdcall;
 function {008} xboxkrnl_DbgPrint(
   Format: PCCH;
-  Args: array of const // Dxbx TODO : Check if this is a correct translation of '...'
-  ): ULONG; stdcall; // Source: ReactOS - Uncertain
+  Args: array of const
+  ): ULONG; stdcall;
 function {010} xboxkrnl_DbgPrompt(
   Prompt: PCCH;
   Response: PCH; // OUT
   MaximumResponseLength: ULONG
-  ): ULONG; stdcall; // Source: ReactOS
+  ): ULONG; stdcall;
 procedure {011} xboxkrnl_DbgUnLoadImageSymbols(
   Name: PANSI_STRING;
   Base: PVOID;
   ProcessId: ULONG_PTR
-  ); stdcall; // Source: ReactOS
+  ); stdcall;
 
 implementation
 
 procedure {005} xboxkrnl_DbgBreakPoint(
   ); stdcall;
-// Source: JwaNative.pas  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:JwaNative.pas  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('DbgBreakPoint');
@@ -79,7 +79,7 @@ end;
 procedure {006} xboxkrnl_DbgBreakPointWithStatus(
   Status: ULONG
   ); stdcall;
-// Source: JwaNative.pas  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:JwaNative.pas  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('DbgBreakPointWithStatus');
@@ -91,7 +91,7 @@ function {007} xboxkrnl_DbgLoadImageSymbols(
   Base: PVOID;
   ProcessId: ULONG_PTR
   ): NTSTATUS; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('DbgLoadImageSymbols');
@@ -114,7 +114,7 @@ function {010} xboxkrnl_DbgPrompt(
   Response: PCH; // OUT
   MaximumResponseLength: ULONG
   ): ULONG; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('DbgPrompt');
@@ -126,7 +126,7 @@ procedure {011} xboxkrnl_DbgUnLoadImageSymbols(
   Base: PVOID;
   ProcessId: ULONG_PTR
   ); stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('DbgUnLoadImageSymbols');

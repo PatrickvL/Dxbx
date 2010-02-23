@@ -43,8 +43,8 @@ uses
   uEmu,
   uDxbxDebugUtils;
 
-var
-  {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE; // Source: OpenXDK - Uncertain
+var {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE;
+// Source: OpenXDK - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 function {254} xboxkrnl_PsCreateSystemThread(
 (* XBMC says :
@@ -57,10 +57,10 @@ function {254} xboxkrnl_PsCreateSystemThread(
   lpThreadAttributes: PULONG; // SD
   dwStackSize: DWORD; // initial stack size
   lpStartAddress: PKSTART_ROUTINE; // thread function
-  lpParameter: PVOID; // thread argument  
+  lpParameter: PVOID; // thread argument
   dwCreationFlags: DWORD; // creation option
   lpThreadId: PULONG // thread identifier
-  ): NTSTATUS; stdcall; // Source: Cxbx - TODO : Should we use XBMC's version?
+  ): NTSTATUS; stdcall;
 function {255} xboxkrnl_PsCreateSystemThreadEx(
   ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
@@ -72,14 +72,14 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   CreateSuspended: LONGBOOL;
   DebugStack: LONGBOOL;
   StartRoutine: PKSTART_ROUTINE
-  ): NTSTATUS; stdcall; // Source: Cxbx / XBMC
+  ): NTSTATUS; stdcall;
 function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
-  ): NTSTATUS; stdcall; // Source: ReactOS
+  ): NTSTATUS; stdcall;
 procedure {258} xboxkrnl_PsTerminateSystemThread(
   ExitStatus: NTSTATUS
-  ); stdcall; // Source : XBMC
+  ); stdcall;
 
 // Global Variable(s)
 var g_pfnThreadNotification: array [0..16-1] of XTHREAD_NOTIFY_PROC; //= { NULL };
@@ -257,7 +257,9 @@ function {254} xboxkrnl_PsCreateSystemThread(
   lpParameter: PVOID; // thread argument
   dwCreationFlags: DWORD; // creation option
   lpThreadId: PULONG // thread identifier
-  ): NTSTATUS; stdcall; // Source: Cxbx - TODO : Should we use XBMC's version?
+  ): NTSTATUS; stdcall;
+// Source:Cxbx  Branch:Dxbx  Translator:PatrickvL  Done:25
+// TODO : Should we use XBMC's version?
 var
   ThreadHandle: HANDLE;
   ThreadExtraSize: ULONG;
@@ -339,8 +341,8 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   CreateSuspended: LONGBOOL;
   DebugStack: LONGBOOL;
   StartRoutine: PKSTART_ROUTINE
-  ): NTSTATUS; stdcall; // Source: Cxbx / XBMC
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  ): NTSTATUS; stdcall;
+// Source:Cxbx/XBMC  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   dwThreadId: DWORD;
   hDupHandle: Handle;
@@ -417,7 +419,7 @@ end;
 function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
   ): NTSTATUS; stdcall;
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('PsSetCreateThreadNotifyRoutine');
@@ -429,7 +431,7 @@ end;
 //
 // Differences from NT: None.
 procedure {258} xboxkrnl_PsTerminateSystemThread({IN}ExitStatus: NTSTATUS); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Source:XBMC  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   i: int;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;

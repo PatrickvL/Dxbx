@@ -41,13 +41,13 @@ uses
   uDxbxKrnl;
 
 function {001} xboxkrnl_AvGetSavedDataAddress(
-  ): PVOID; stdcall; // Source: OpenXDK
+  ): PVOID; stdcall;
 procedure {002} xboxkrnl_AvSendTVEncoderOption(
   RegisterBase: PVOID;
   Option: ULONG;
   Param: ULONG;
   Result: PULONG // OUT
-  ); stdcall; // Source: OpenXDK
+  ); stdcall;
 function {003} xboxkrnl_AvSetDisplayMode(
   RegisterBase: PVOID;
   Step: ULONG;
@@ -55,19 +55,19 @@ function {003} xboxkrnl_AvSetDisplayMode(
   Format: ULONG;
   Pitch: ULONG;
   FrameBuffer: ULONG
-  ): ULONG; stdcall; // Source: OpenXDK
+  ): ULONG; stdcall;
 function {004} xboxkrnl_AvSetSavedDataAddress(
   Address: PVOID
-  ): PVOID; stdcall; // Source: OpenXDK
+  ): PVOID; stdcall;
 
 implementation
 
-var
-  xboxkrnl_AvSavedDataAddress: PVOID = PVOID($F0040000); // Dxbx TODO : Take shogun's NULL ?
+var xboxkrnl_AvSavedDataAddress: PVOID = PVOID($F0040000);
+// Dxbx TODO : Take shogun's NULL ?
 
 function {001} xboxkrnl_AvGetSavedDataAddress()
-  : PVOID; stdcall; // Source: OpenXDK
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+  : PVOID; stdcall;
+// Source:OpenXDK  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
@@ -85,7 +85,7 @@ procedure {002} xboxkrnl_AvSendTVEncoderOption(
   Param: ULONG;
   Result: PULONG // OUT
   ); stdcall;
-// Source: OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('AvSendTVEncoderOption');
@@ -100,7 +100,7 @@ function {003} xboxkrnl_AvSetDisplayMode(
   Pitch: ULONG;
   FrameBuffer: ULONG
   ): ULONG; stdcall;
-// Source: OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('AvSetDisplayMode');
@@ -110,7 +110,7 @@ end;
 function {004} xboxkrnl_AvSetSavedDataAddress(
   Address: PVOID
   ): PVOID; stdcall;
-// Source: OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:50
+// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);

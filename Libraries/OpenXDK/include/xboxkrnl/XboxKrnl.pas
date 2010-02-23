@@ -871,6 +871,7 @@ type
 // *
 // ******************************************************************
 type
+  // Dxbx note : Pointer-type is normally defined AFTER record, but now BEFORE because of recursive declaration :
   PKPCR = ^KPCR;
   KPCR = packed record
     NtTib: NT_TIB; // 0x00
@@ -881,10 +882,10 @@ type
     PrcbData: KPRCB; // 0x28
   end;
 
+
 // Structure of the data at FS
-// Source: Undocumented.h
-type
-  _FS_STRUCTURE = record
+type _FS_STRUCTURE = record
+// Source: Undocumented.h  Branch:Dxbx  Translator:PatrickvL  Done:100
     ExceptionFrame: PPVOID;              // 000 Current exception handler information
     TlsDataTop: PVOID;                   // 004 Pointer to current TLS data top
     unknown2: array [0..$1C-1] of BYTE;  // 008

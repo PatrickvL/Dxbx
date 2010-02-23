@@ -114,7 +114,7 @@ type
   TSectionList = XBE_SECTIONLIST;
   PSectionList = PXBE_SECTIONLIST;
 
-  // Source: Cxbx
+  // Source:Cxbx  Branch:martin?  Translator:PatrickvL  Done:100
   _XBE_SECTIONHEADER = packed record
     dwFlags: array [0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
