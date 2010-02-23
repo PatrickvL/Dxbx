@@ -30,8 +30,8 @@ uses
   // Dxbx
   uTypes;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 // Cxbx TODO: fill out these enumeration tables for convienance
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type X_D3DFORMAT = DWORD;
 type X_D3DBLENDOP = DWORD;
 type X_D3DBLEND = DWORD;
@@ -39,12 +39,11 @@ type X_D3DCMPFUNC = DWORD;
 type X_D3DFILLMODE = DWORD;
 type X_D3DSHADEMODE = DWORD;
 type X_D3DTEXTURESTAGESTATETYPE = DWORD;
-//type X_VERTEXSHADERCONSTANTMODE = DWORD;
 type X_D3DCALLBACK = PVOID;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 // Primitives supported by draw-primitive API
-type _X_D3DPRIMITIVETYPE = 
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+type _X_D3DPRIMITIVETYPE =
 (
     X_D3DPT_POINTLIST = 1,
     X_D3DPT_LINELIST = 2,
@@ -63,7 +62,7 @@ type _X_D3DPRIMITIVETYPE =
 X_D3DPRIMITIVETYPE = _X_D3DPRIMITIVETYPE;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-type _X_D3DRESOURCETYPE = 
+type _X_D3DRESOURCETYPE =
 (
     X_D3DRTYPE_NONE = 0,
     X_D3DRTYPE_SURFACE = 1,
