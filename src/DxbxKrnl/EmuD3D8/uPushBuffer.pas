@@ -186,7 +186,7 @@ procedure XTL_EmuExecutePushBufferRaw
 (
     pdwPushData: PDWord
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:80
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:85
 var
   pdwOrigPushData: PDWord;
   pIndexData: PVOID;
@@ -211,9 +211,10 @@ var
   pVBData: PBYTE;
   uiStride: UINT;
 
-{$ifdef _DEBUG_TRACK_PB}
   mi: uint;
   pwVal: PWORD;
+
+{$ifdef _DEBUG_TRACK_PB}
   bShowPB: bool;
   s: uint;
 {$endif}
@@ -428,7 +429,7 @@ begin
       {$endif}
 
 
-(*      pwVal := PWORD(pdwPushData + 1);
+(*      pwVal := PWORD(pdwPushData) + 1;
       for mi := 0 to dwCount - 1 do
       begin
         pIBMem[mi+2] := pwVal[mi];
@@ -586,10 +587,10 @@ begin
       end;
       {$endif}
 
-      (*if bInc then
-        Inc(pdwPushData, (dwCount/2) - 0)
+      if bInc then
+        Inc(pdwPushData, (dwCount div 2) - 0)
       else
-        Inc(pdwPushData, (dwCount/2) - 2); *)
+        Inc(pdwPushData, (dwCount div 2) - 2);
 
       // perform rendering
       begin
