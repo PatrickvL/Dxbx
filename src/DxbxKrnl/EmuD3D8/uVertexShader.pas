@@ -500,7 +500,7 @@ procedure DbgVshPrintf(aStr: string; Args: array of const); overload;
 begin
 {$ifdef _DEBUG_TRACK_VS}
   if (g_bPrintfOn) then
-    printf(DxbxFormat(aStr, Args));
+    printf(aStr, Args);
 {$endif}
 end;
 

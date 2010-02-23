@@ -286,7 +286,7 @@ procedure InitializeObjectAttributes(
   r: HANDLE;
   dummy: Pointer
   );
-// Source:?  Branch:martin?  Translator:PatrickvL  Done:99
+// Branch:shogun  Unit:EmuNtDll.h  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   p.RootDirectory := r;
   p.Attributes := a;

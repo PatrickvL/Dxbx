@@ -75,6 +75,7 @@ type
 
   UInt08 = UInt8;
   PUInt08 = PUInt8;
+  PPUInt08 = ^PUInt08;
 
 {$IF DECLARED(UINT_PTR)}
   UIntPtr = UINT_PTR;
