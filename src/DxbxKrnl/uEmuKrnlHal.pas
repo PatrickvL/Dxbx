@@ -232,7 +232,7 @@ end;
 procedure {049} xboxkrnl_HalReturnToFirmware(
   Routine: RETURN_FIRMWARE
   ); stdcall;
-// Source:OpenXDK  Branch:?  Translator:PatrickvL  Done:5
+// Source:OpenXDK  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

@@ -274,6 +274,13 @@ var
     Text := _GetTextAfterPrefix(aLine, 'function ', '(:');
     if Text = '' then
       Text := _GetTextAfterPrefix(aLine, 'procedure ', '(:;');
+    if Text = '' then
+      Text := _GetTextAfterPrefix(aLine, 'type ', '=');
+// var and const detection interferes with arguments, so disabled for now :
+//    if Text = '' then
+//      Text := _GetTextAfterPrefix(aLine, 'var ', ':');
+//    if Text = '' then
+//      Text := _GetTextAfterPrefix(aLine, 'const ', ':');
 
     // Scan for C function names :
     if Text = '' then
