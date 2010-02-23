@@ -42,6 +42,7 @@ uses
   , uDxbxKrnlUtils
   , uResourceTracker
   , uEmuAlloc
+  , uConvert
   , uVertexShader
   , uEmuD3D8Types
   , uEmuD3D8Utils;
@@ -862,7 +863,7 @@ begin
 end;
 
 function XTL_VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
-// Branch:shogun  Revision:  Translator:PatrickvL  Done:60
+// Branch:shogun  Revision:  Translator:PatrickvL  Done:70
 var
   bHasLinearTex: bool;
   bTexIsLinear: array [0..4-1] of bool;
@@ -890,15 +891,16 @@ begin
     for i := 0 to 4 - 1 do
     begin
         pPixelContainer := PX_D3DPixelContainer(EmuD3DActiveTexture[i]);
-        (*if(pPixelContainer and EmuXBFormatIsLinear(((X_D3DFORMAT)pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT))
-        {
-            bHasLinearTex = bTexIsLinear[i] = true;
-            pLinearPixelContainer[i] = pPixelContainer;
-        }
+        if (Assigned(pPixelContainer) and EmuXBFormatIsLinear((X_D3DFORMAT(pPixelContainer.Format) and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT)) then
+        begin
+            bHasLinearTex := true;
+            bTexIsLinear[i] := true;
+            pLinearPixelContainer[i] := pPixelContainer;
+        end
         else
-        {
-            bTexIsLinear[i] = false;
-        } *)
+        begin
+            bTexIsLinear[i] := false;
+        end
     end;
 
     if (not bHasLinearTex) then
