@@ -37,17 +37,16 @@ uses
   , uEmuXG
   , uEmuD3D8Types;
 
-var
-  // primary push buffer
-  g_dwPrimaryPBCount: UInt32 = 0;
-  g_pPrimaryPB: PDWORD = nil;
+// primary push buffer
+var g_dwPrimaryPBCount: uint32 = 0;
+var g_pPrimaryPB: PDWORD = nil;
 
-  // push buffer debugging
-  XTL_g_bStepPush: Boolean = False;
-  XTL_g_bSkipPush: Boolean = False;
-  XTL_g_bBrkPush: Boolean = False;
+// push buffer debugging
+var XTL_g_bStepPush: bool = false;
+var XTL_g_bSkipPush: bool = false;
+var XTL_g_bBrkPush: bool = false;
 
-  g_bPBSkipPusher: Boolean = False;
+var g_bPBSkipPusher: bool = false;
 
 var
   pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
@@ -78,7 +77,7 @@ procedure XTL_EmuExecutePushBuffer
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  if Assigned(pFixup) then
+  if (pFixup <> nil) then
     CxbxKrnlCleanup('PushBuffer has fixups');
 
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
@@ -123,7 +122,10 @@ begin
   pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
 
   // Cxbx TODO: potentially CRC to see if this surface was actually modified..
+
+  //
   // unswizzle texture
+  //
 
   begin
     pTexture := pPixelContainer.EmuTexture8;
@@ -135,7 +137,7 @@ begin
       hRet := pTexture.GetLevelDesc(v, SurfaceDesc);
 
       if (FAILED(hRet)) then
-        Continue;
+        continue;
 
       //
       // perform unswizzle
@@ -150,7 +152,7 @@ begin
         hRet := pTexture.LockRect(v, LockedRect, nil, 0);
 
         if (FAILED(hRet)) then
-          Continue;
+          continue;
 
         dwWidth := SurfaceDesc.Width;
         dwHeight := SurfaceDesc.Height;
@@ -186,7 +188,7 @@ procedure XTL_EmuExecutePushBufferRaw
 (
     pdwPushData: PDWord
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:85
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pdwOrigPushData: PDWord;
   pIndexData: PVOID;
@@ -225,8 +227,11 @@ begin
 
   pdwOrigPushData := pdwPushData;
 
-  dwVertexShader := 0;
-  dwStride := 0;
+  pIndexData := nil;
+  pVertexData := nil;
+
+  dwVertexShader := DWORD(-1);
+  dwStride := DWORD(-1);
 
   PCPrimitiveType := D3DPRIMITIVETYPE(-1);
   XBPrimitiveType := X_D3DPT_INVALID;
@@ -245,7 +250,7 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('');
     DbgPrintf('');
-    DbgPrintf('  PushBuffer@$%.08X...', [pdwPushData]);
+    DbgPrintf('  PushBuffer@0x%.08X...', [pdwPushData]);
     DbgPrintf('');
 {$ENDIF}
 
@@ -253,9 +258,9 @@ begin
   end;
 {$endif}
 
-  pIndexBuffer  := nil;
+  pIndexBuffer := nil;
   pVertexBuffer := nil;
-  maxIBSize     := 0;
+  maxIBSize := 0;
 
   while True do
   begin
@@ -370,7 +375,7 @@ begin
       begin
         printf('NVPB_InlineVertexArray(...)');
         printf('  dwCount : %d', dwCount);
-        printf('  dwVertexShader : $%08X', dwVertexShader);
+        printf('  dwVertexShader : 0x%08X', dwVertexShader);
       end;
       {$endif}
 
@@ -429,11 +434,11 @@ begin
       {$endif}
 
 
-(*      pwVal := PWORD(pdwPushData) + 1;
+      pwVal := PWORD(IntPtr(pdwPushData) + SizeOf(pdwPushData^)); // Dxbx TODO : Is this correctly translated?
       for mi := 0 to dwCount - 1 do
       begin
-        pIBMem[mi+2] := pwVal[mi];
-      end; *)
+        pIBMem[mi+2] := pwVal^; Inc(pwVal); // Cxbx has : pwVal[mi];
+      end;
 
 
       // perform rendering
@@ -442,7 +447,7 @@ begin
         // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
         if ((dwCount*2 + 2*2) > maxIBSize) then
         begin
-          if Assigned(pIndexBuffer) then
+          if (pIndexBuffer <> nil) then
           begin
             pIndexBuffer._Release();
           end;
@@ -531,7 +536,7 @@ begin
       if (bShowPB) then
       begin
 {$IFDEF DEBUG}
-        printf('  NVPB_InlineIndexArray($%.08X, %d)...', pIndexData, dwCount);
+        printf('  NVPB_InlineIndexArray($%.08X, %d)...', [pIndexData, dwCount]);
         printf('');
         printf('  Index Array Data...');
 {$ENDIF}
@@ -587,17 +592,14 @@ begin
       end;
       {$endif}
 
-      if bInc then
-        Inc(pdwPushData, (dwCount div 2) - 0)
-      else
-        Inc(pdwPushData, (dwCount div 2) - 2);
+      Inc(pdwPushData, (dwCount div 2) - iif(bInc, 0, 2));
 
       // perform rendering
       begin
         // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
         if (dwCount*2 > maxIBSize) then
         begin
-          if Assigned(pIndexBuffer) then
+          if (pIndexBuffer <> nil) then
           begin
             pIndexBuffer._Release();
           end;

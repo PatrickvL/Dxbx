@@ -49,7 +49,8 @@ procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
 procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
 
-procedure printf(aStr: string);
+procedure printf(aStr: string); overload;
+procedure printf(aStr: string; Args: array of const); overload;
 
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; overload;
@@ -472,6 +473,11 @@ begin
     // Start afresh :
     LineStr := '';
   end;
+end;
+
+procedure printf(aStr: string; Args: array of const);
+begin
+  printf(Format(aStr, Args));
 end;
 
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;

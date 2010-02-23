@@ -30,9 +30,8 @@ uses
   
 // exported globals
 
-const
-  g_bVBSkipStream: bool = false;
-  g_bVBSkipPusher: bool = false;
+const g_bVBSkipStream: bool = false;
+//const g_bPBSkipPusher: bool = false;
 
 type
   PRTNode = ^RTNode;
@@ -42,170 +41,117 @@ type
     pNext: PRTNode;
   end;
 
-  ResourceTracker = object(Mutex)
+type ResourceTracker = object(Mutex)
   public
+//    constructor ResourceTracker();// : m_head(0), m_tail(0) {};
+    destructor _ResourceTracker();
+
+    // clear the tracker
+    procedure clear();
+
+    // insert a ptr using the pResource pointer as key
+    procedure insert(pResource: Pvoid); overload;
+
+    // insert a ptr using an explicit key
+    procedure insert(uiKey: uint32; pResource: Pvoid); overload;
+
+    // remove a ptr using the pResource pointer as key
+    procedure remove(pResource: Pvoid); overload;
+
+    // remove a ptr using an explicit key
+    procedure remove(uiKey: uint32); overload;
+
+    // check for existance of ptr using the pResource pointer as key
+    function exists(pResource: Pvoid): bool; overload;
+
+    // check for existance of an explicit key
+    function exists(uiKey: uint32): bool; overload;
+
+    // retrieves aresource using the resource ointer as key, explicit locking needed
+    function get(pResource: Pvoid): Pvoid; overload;
+
+    // retrieves a resource using an explicit key, explicit locking needed
+    function get(uiKey: uint32): Pvoid; overload;
+
+    // retrieves the number of entries in the tracker
+    function get_count(): uint32;
+
+    // for traversal
+    function getHead(): PRTNode;
+  private
+    // list of "live" vertex buffers for debugging purposes
     m_head: PRTNode;
     m_tail: PRTNode;
-    function exists(pResource: PVOID): BOOL; overload;
-    function exists(uiKey: uint32): BOOL; overload;
-    function get(pResource: PVOID): PVOID; overload;
-    function get(uiKey: uint32): PVOID; overload;
-    function getHead: PRTNode;
-    procedure insert(uiKey: uint32; pResource: PVOID); overload;
-    procedure insert(pResource: PVOID); overload;
-    procedure remove(uiKey: uint32); overload;
-    procedure remove(pResource: PVOID); overload;
   end;
-
-var
-  g_VBTrackTotal: ResourceTracker;
-  g_VBTrackDisable: ResourceTracker;
-  g_PBTrackTotal: ResourceTracker;
-  g_PBTrackDisable: ResourceTracker;
-  g_PBTrackShowOnce: ResourceTracker;
-  g_PatchedStreamsCache: ResourceTracker;
-  g_DataToTexture: ResourceTracker;
-  g_AlignCache: ResourceTracker;
-
-implementation
 
 //
 // all of our resource trackers
 //
-(*
-#include "Common/Win32/Mutex.h"
 
-    public:
-        ResourceTracker() : m_head(0), m_tail(0) {};
-       ~ResourceTracker();
-
-        // clear the tracker
-        void clear();
-
-        // insert a ptr using the pResource PVOID as key
-        void insert(void *pResource);
-
-        // insert a ptr using an explicit key
-        void insert(uint32 uiKey, void *pResource);
-
-        // remove a ptr using the pResource PVOID as key
-        void remove(void *pResource);
-
-        // remove a ptr using an explicit key
-        void remove(uint32 uiKey);
-
-        // check for existance of ptr using the pResource PVOID as key
-        bool exists(void *pResource);
-
-        // check for existance of an explicit key
-        bool exists(uint32 uiKey);
-
-        // retrieves aresource using the resource ointer as key, explicit locking needed
-        void *get(void *pResource);
-
-        // retrieves a resource using an explicit key, explicit locking needed
-        void *get(uint32 uiKey);
-
-        // retrieves the number of entries in the tracker
-        uint32 get_count(void);
-
-        // for traversal
-        struct RTNode *getHead() { return m_head; }
-
-    private:
-        // list of "live" vertex buffers for debugging purposes
-        struct RTNode *m_head;
-        struct RTNode *m_tail;
-}
-
-
-
-ResourceTracker::~ResourceTracker()
-{
-    clear();
-} *)
-
-
+var g_VBTrackTotal: ResourceTracker;
+var g_VBTrackDisable: ResourceTracker;
+var g_PBTrackTotal: ResourceTracker;
+var g_PBTrackDisable: ResourceTracker;
+var g_PBTrackShowOnce: ResourceTracker;
+var g_PatchedStreamsCache: ResourceTracker;
+var g_DataToTexture: ResourceTracker;
+var g_AlignCache: ResourceTracker;
+  
+implementation
 
 { ResourceTracker }
 
-function ResourceTracker.exists(pResource: PVOID): BOOL;
+destructor ResourceTracker._ResourceTracker();
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := exists(uint32(pResource));
+  clear();
 end;
 
-function ResourceTracker.exists(uiKey: uint32): BOOL;
+procedure ResourceTracker.clear();
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   cur: PRTNode;
+  tmp: PRTNode;
 begin
-  self.Lock();
+  Self.Lock();
 
   cur := m_head;
 
-  while Assigned(cur)  do
+  while (cur <> nil) do
   begin
-    if (cur.uiKey = uiKey) then
-    begin
-      self.Unlock();
-      Result := true;
-      Exit;
-    end;
+    tmp := cur.pNext;
 
-    cur := cur.pNext;
+    Dispose(cur);
+
+    cur := tmp;
   end;
+
+  m_head := nil; m_tail := nil;
 
   Self.Unlock();
-  Result := false;
 end;
 
-function ResourceTracker.get(pResource: PVOID): PVOID;
-begin
-  Result := Get(uint32(pResource));
-end;
-
-function ResourceTracker.get(uiKey: uint32): PVOID;
-var
-  cur: PRTNode;
-begin
-  cur := m_head;
-
-  while Assigned(cur) do
-  begin
-    if (cur.uiKey = uiKey) then
-    begin
-      Result := cur.pResource;
-      Exit;
-    end;
-    cur := cur.pNext;
-  end;
-
-  Result := nil;
-end;
-
-function ResourceTracker.getHead: PRTNode;
-begin
-  Result := m_head;
-end;
-
-procedure ResourceTracker.insert(pResource: PVOID);
+procedure ResourceTracker.insert(pResource: Pvoid);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   insert(uint32(pResource), pResource);
 end;
 
-procedure ResourceTracker.insert(uiKey: uint32; pResource: PVOID);
+procedure ResourceTracker.insert(uiKey: uint32; pResource: Pvoid);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Self.Lock;
 
-  if exists(uiKey) then
+  if (exists(uiKey)) then
   begin
     Self.Unlock();
     Exit;
   end;
 
-  if not Assigned(m_head) then
+  if (m_head = nil) then
   begin
-    New(m_tail);
     New(m_head);
+    m_tail := m_head;
     m_tail.pResource := nil;
     m_tail.pNext := nil;
   end;
@@ -224,12 +170,14 @@ begin
   Self.Unlock();
 end;
 
-procedure ResourceTracker.remove(pResource: PVOID);
+procedure ResourceTracker.remove(pResource: Pvoid);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
    remove(uint32(pResource));
 end;
 
 procedure ResourceTracker.remove(uiKey: uint32);
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pre: PRTNode;
   cur: PRTNode;
@@ -239,11 +187,11 @@ begin
   pre := nil;
   cur := m_head;
 
-  while Assigned(cur) do
+  while (cur <> nil) do
   begin
     if (cur.uiKey = uiKey) then
     begin
-      if Assigned(pre) then
+      if (pre <> nil) then
       begin
         pre.pNext := cur.pNext;
       end
@@ -251,7 +199,7 @@ begin
       begin
         m_head := cur.pNext;
 
-        if not Assigned(m_head.pNext) then
+        if (m_head.pNext = nil) then
         begin
           Dispose(m_head);
 
@@ -271,6 +219,94 @@ begin
     cur := cur.pNext;
   end;
   Self.Unlock();
+end;
+
+function ResourceTracker.exists(pResource: Pvoid): bool;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  Result := exists(uint32(pResource));
+end;
+
+function ResourceTracker.exists(uiKey: uint32): bool;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  cur: PRTNode;
+begin
+  self.Lock();
+
+  cur := m_head;
+
+  while (cur <> nil)  do
+  begin
+    if (cur.uiKey = uiKey) then
+    begin
+      self.Unlock();
+      Result := true;
+      Exit;
+    end;
+
+    cur := cur.pNext;
+  end;
+
+  Self.Unlock();
+  Result := false;
+end;
+
+function ResourceTracker.get(pResource: Pvoid): Pvoid;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  Result := get(uint32(pResource));
+end;
+
+function ResourceTracker.get(uiKey: uint32): Pvoid;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  cur: PRTNode;
+begin
+  cur := m_head;
+
+  while (cur <> nil) do
+  begin
+    if (cur.uiKey = uiKey) then
+    begin
+      Result := cur.pResource;
+      Exit;
+    end;
+
+    cur := cur.pNext;
+  end;
+
+  Result := nil;
+end;
+
+function ResourceTracker.get_count(): uint32;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  uiCount: uint32;
+  cur: PRTNode;
+begin
+  uiCount := 0;
+
+  Self.Lock();
+
+  cur := m_head;
+
+  while (cur <> nil) do
+  begin
+    Inc(uiCount);
+
+    cur := cur.pNext;
+  end;
+
+  Self.Unlock();
+
+  Result := uiCount;
+end;
+
+function ResourceTracker.getHead: PRTNode;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+begin
+  Result := m_head;
 end;
 
 end.

@@ -25,25 +25,26 @@ uses
   // Delphi
   Windows,
   // Dxbx
+  uTypes,
   uLog;
 
-type
-  // Mutex object (intended to be inherited from)
-  Mutex = object
-  private
-    m_MutexLock: Integer; // Mutex lock
-    m_OwnerProcess: Integer; // Current owner process (or zero)
-    m_OwnerThread: Integer; // Current owner thread
-    m_LockCount: Integer; // Lock count within this thread
+// Mutex object (intended to be inherited from)
+type Mutex = object
   public
     procedure Create;
     procedure Lock;
     procedure Unlock;
+  private
+    m_MutexLock: LONG;      // Mutex lock
+    m_OwnerProcess: LONG;   // Current owner process (or zero)
+    m_OwnerThread: LONG;    // Current owner thread
+    m_LockCount: LONG;      // Lock count within this thread
   end;
 
 implementation
 
 procedure Mutex.Create;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   InterlockedExchange({var}m_MutexLock, 0);
   InterlockedExchange({var}m_OwnerProcess, 0);
@@ -52,18 +53,17 @@ begin
 end;
 
 procedure Mutex.Lock;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-//WriteLog('Mutex.Lock>');
   while True do
   begin
     // Grab the lock, letting us look at the variables
     while InterlockedCompareExchange({var}m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
-      SwitchToThread;
+      SwitchToThread; // Cxbx has : Sleep(1);
 
     // Are we the the new owner?
     if m_OwnerProcess = 0 then
     begin
-//WriteLog('Mutex.Lock claimed');
       // Take ownership
       InterlockedExchange({var}m_OwnerProcess, GetCurrentProcessId());
       InterlockedExchange({var}m_OwnerThread, GetCurrentThreadId());
@@ -85,11 +85,9 @@ begin
       InterlockedExchange({var}m_MutexLock, 0);
 
       // Wait and try again
-      SwitchToThread;
+      SwitchToThread; // Cxbx has : Sleep(1);
       Continue;
     end;
-
-//WriteLog('Mutex.Lock Already locked - incrementing LockCount');
 
     // The mutex was already locked, but by us.  Just increment
     // the lock count and unlock the mutex itself.
@@ -98,15 +96,14 @@ begin
 
     Exit;
   end;
-//WriteLog('Mutex.Lock<');
 end;
 
 procedure Mutex.Unlock;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-//WriteLog('Mutex.Unlock>');
   // Grab the lock, letting us look at the variables
   while InterlockedCompareExchange({var}m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
-    SwitchToThread;
+    SwitchToThread; // Cxbx has : Sleep(1);
 
   // Decrement the lock count
   if InterlockedDecrement({var}m_LockCount) <= 0 then
@@ -114,12 +111,10 @@ begin
     // Mark the mutex as now unused
     InterlockedExchange({var}m_OwnerProcess, 0);
     InterlockedExchange({var}m_OwnerThread, 0);
-    InterlockedExchange({var}m_LockCount, 0);
   end;
 
   // Unlock the mutex itself
   InterlockedExchange({var}m_MutexLock, 0);
-//WriteLog('Mutex.Unlock<');
 end;
 
 end.
