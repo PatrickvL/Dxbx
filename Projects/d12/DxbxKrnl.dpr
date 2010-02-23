@@ -97,7 +97,8 @@ uses
   uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas',
   uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uFileSystem in '..\..\src\uFileSystem.pas',
-  uXDVDFS in '..\..\src\uXDVDFS.pas';
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uPixelShader in '..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}

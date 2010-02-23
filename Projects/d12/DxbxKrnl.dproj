@@ -122,6 +122,7 @@
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
 			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

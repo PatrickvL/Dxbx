@@ -85,7 +85,7 @@ begin
 end;
 
 procedure EmuUnswizzleActiveTexture();
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:95
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPixelContainer: PX_D3DPixelContainer;
   XBFormat: DWord;
