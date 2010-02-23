@@ -863,7 +863,7 @@ begin
 end;
 
 function XTL_VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
-// Branch:shogun  Revision:  Translator:PatrickvL  Done:70
+// Branch:shogun  Revision:  Translator:PatrickvL  Done:100
 var
   bHasLinearTex: bool;
   bTexIsLinear: array [0..4-1] of bool;
@@ -984,8 +984,8 @@ begin
         begin
             if (bTexIsLinear[0]) then
             begin
-                (*((FLOAT* )pUVData)[0] /= ( pLinearPixelContainer[0].Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                ((FLOAT* )pUVData)[1] /= ((pLinearPixelContainer[0].Size & X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;*)
+                pUVData[0] := pUVData[0] div (pLinearPixelContainer[0].Size and X_D3DSIZE_WIDTH_MASK) + 1;
+                pUVData[1] := pUVData[1] div ((pLinearPixelContainer[0].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
             end;
             Inc(PByte(pUVData), sizeof(FLOAT) * 2);
         end;
@@ -994,8 +994,8 @@ begin
         begin
             if (bTexIsLinear[1]) then
             begin
-                (*((FLOAT* )pUVData)[0] /= ( pLinearPixelContainer[1].Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                ((FLOAT* )pUVData)[1] /= ((pLinearPixelContainer[1].Size & X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;*)
+              pUVData[0] := pUVData[0] div ( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1;
+              pUVData[1] := pUVData[1] div ((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
             end;
             Inc(PByte(pUVData), sizeof(FLOAT) * 2);
         end;
@@ -1004,16 +1004,16 @@ begin
         begin
             if (bTexIsLinear[2]) then
             begin
-                (*((FLOAT* )pUVData)[0] /= ( pLinearPixelContainer[2].Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                ((FLOAT* )pUVData)[1] /= ((pLinearPixelContainer[2].Size & X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;*)
+                pUVData[0] := pUVData[0] div ( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1;
+                pUVData[1] := pUVData[1] div ((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
             end;
             Inc(PByte(pUVData), sizeof(FLOAT) * 2);
         end;
 
         if((dwTexN >= 4) and bTexIsLinear[3]) then
         begin
-            (*((FLOAT* )pUVData)[0] /= ( pLinearPixelContainer[3].Size & X_D3DSIZE_WIDTH_MASK) + 1;
-            ((FLOAT* )pUVData)[1] /= ((pLinearPixelContainer[3].Size & X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;*)
+            pUVData[0] := pUVData[0] div ( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1;
+            pUVData[1] := pUVData[1] div ((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
         end;
     end;
 
@@ -1234,7 +1234,7 @@ end;
 
 
 function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc): bool;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:60
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   Patched: bool;
   uiStream: UINT;
@@ -1245,7 +1245,7 @@ begin
   m_uiNbrStreams := GetNbrStreams(pPatchDesc);
   if (VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
   begin
-(*    m_pDynamicPatch := m_pDynamicPatch and PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch;*)
+    m_pDynamicPatch := @(PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch);
   end;
 
   for uiStream := 0 to m_uiNbrStreams -1 do
