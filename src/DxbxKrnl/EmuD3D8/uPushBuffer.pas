@@ -209,10 +209,6 @@ var
   PrimitiveCount: UINT;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-//  bPatched: bool;
-  pVBData: PBYTE;
-  uiStride: UINT;
-
   mi: uint;
   pwVal: PWORD;
 
