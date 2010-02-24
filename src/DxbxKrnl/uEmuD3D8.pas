@@ -182,9 +182,8 @@ var
   // cached active texture
   EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
 
-type
-  // information passed to the create device proxy thread
-  EmuD3D8CreateDeviceProxyData = packed record
+// information passed to the create device proxy thread
+type EmuD3D8CreateDeviceProxyData = packed record
     Adapter: UINT;
     DeviceType: D3DDEVTYPE;
     hFocusWindow: HWND;
@@ -197,8 +196,7 @@ type
       1: ({volatile} bCreate: bool); // False: release
   end;
 
-var
-  g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
+var g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
 
 implementation
 

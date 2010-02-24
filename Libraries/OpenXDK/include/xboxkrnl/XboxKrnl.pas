@@ -884,7 +884,7 @@ type
 
 
 // Structure of the data at FS
-type _FS_STRUCTURE = record
+type _FS_STRUCTURE = packed record
 // Source: Undocumented.h  Branch:Dxbx  Translator:PatrickvL  Done:100
     ExceptionFrame: PPVOID;              // 000 Current exception handler information
     TlsDataTop: PVOID;                   // 004 Pointer to current TLS data top

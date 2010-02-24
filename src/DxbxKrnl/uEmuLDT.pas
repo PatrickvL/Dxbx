@@ -45,9 +45,8 @@ procedure EmuDeallocateLDT(wSelector: uint16);
 
 implementation
 
-type
-  {$A1}
-  RLDT_ENTRY_Bits = packed record
+{$A1}
+type RLDT_ENTRY_Bits = packed record
   private
     Flags: DWord;
     function GetBits(const aIndex: Integer): Integer;
@@ -65,20 +64,20 @@ type
     property BaseHi: Integer index $1808 read GetBits write SetBits; // 8 bits at offset 24
   end;
 
-  RLDT_ENTRY_Bytes = packed record
+type RLDT_ENTRY_Bytes = packed record
     BaseMid: Byte;
     Flags1: Byte; // Declare as bytes to avoid alignment
     Flags2: Byte; // Problems.
     BaseHi: Byte;
   end;
 
-  RLDT_ENTRY_HighWord = packed record
+type RLDT_ENTRY_HighWord = packed record
     case Integer of
     0: (Bytes: RLDT_ENTRY_Bytes);
     1: (Bits: RLDT_ENTRY_Bits); // Bit-fields are handled seperatly
   end;
 
-  DXBX_LDT_ENTRY = packed record
+type DXBX_LDT_ENTRY = packed record
     LimitLow: Word;
     BaseLow: Word;
     HighWord: RLDT_ENTRY_HighWord;

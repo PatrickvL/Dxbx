@@ -44,10 +44,7 @@ uses
 const
   CXBX_MAX_PATH = 260;
 
-type
-  PEmuShared = ^EmuShared;
-
-  EmuShared = packed record
+type EmuShared = packed record
     m_Mutex: Mutex;
     // Shared configuration
     m_XBController: XBController;
@@ -78,14 +75,14 @@ type
     procedure GetXbePath(var Path: string);
     procedure SetXbePath(const Path: AnsiString);
   end;
+  PEmuShared = ^EmuShared;
 
 procedure SetXbePath(const Path: PAnsiChar); stdcall;
 
-var
-  hMapObject: Handle;
-  // Exported Global Shared Memory Pointer
-  g_EmuShared: PEmuShared;
-  g_EmuSharedRefCount: Integer; // extern; ??
+var hMapObject: Handle;
+// Exported Global Shared Memory Pointer
+var g_EmuShared: PEmuShared;
+var g_EmuSharedRefCount: Integer; // extern; ??
 
 implementation
 

@@ -40,9 +40,7 @@ uses
   uKernelThunk,
   uDxbxKrnl;
 
-type
-  PImageTlsDirectory = ^TImageTlsDirectory;
-  _IMAGE_TLS_DIRECTORY = record
+type _IMAGE_TLS_DIRECTORY = packed record
     StartAddressOfRawData: DWord;
     EndAddressOfRawData: DWord;
     AddressOfIndex: DWord;
@@ -52,6 +50,7 @@ type
   end;
   TImageTlsDirectory = _IMAGE_TLS_DIRECTORY;
   IMAGE_TLS_DIRECTORY = _IMAGE_TLS_DIRECTORY;
+  PImageTlsDirectory = ^TImageTlsDirectory;
 
 procedure PrepareXBoxMemoryMap;
 

@@ -39,53 +39,69 @@ uses
   , uEmuFS
   , uDxbxKrnlUtils;
 
-var
-  g_hCurDir: Handle = 0;
-  g_strCurDrive: string = '';
-  g_hTDrive: Handle = 0;
-  g_strTDrive: string = '';
-  g_hUDrive: Handle = 0;
-  g_strUDrive: string = '';
-  g_hZDrive: Handle = 0;
-  g_strZDrive: string = '';
-  g_hEmuWindow: Handle = 0; // rendering window
-  g_bPrintfOn: Boolean = True;
-  g_bEmuSuspended: Boolean = False;
-  g_bEmuException: Boolean = False;
+// exception handler
+function EmuException(e: LPEXCEPTION_POINTERS): int; stdcall;
 
-procedure EmuWarning(szWarningMessage: string); overload;
-procedure EmuWarning(szWarningMessage: string; const Args: array of const); overload;
-function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
-function EmuCheckAllocationSize(pBase: PVOID; largeBound: bool): Integer;
-procedure EmuCleanup(const szErrorMessage: string);
-function ExitException(e: LPEXCEPTION_POINTERS): Integer;
+// check the allocation size of a given virtual address
+function EmuCheckAllocationSize(pBase: PVOID; largeBound: bool): int;
+
+// print call stack trace
+{$ifdef _DEBUG}
+procedure EmuPrintStackTrace(ContextRecord: PCONTEXT);
+{$endif}
+
+// global flags specifying current emulation state
+var g_bEmuException: bool = False;
+var g_bEmuSuspended: bool = False;
 
 // global exception patching address
-var
-  g_HaloHack: array [0..4-1] of UInt32;
+var g_HaloHack: array [0..4-1] of uint32;
 
-const
-  // NOTE: this is an arbitrary latency
-  XINPUT_SETSTATE_LATENCY = 4;
-  XINPUT_SETSTATE_SLOTS = 16;
+// Dead to Rights hack
+var g_DeadToRightsHack: array [0..2-1] of uint32;
 
-type
-  // XInputSetState status waiters
-  XInputSetStateStatus = packed record
+// global exception patching address
+var funcExclude: array [0..2048-1] of uint32;
+
+// partition emulation directory handles
+var g_hCurDir: Handle = 0;
+var g_strCurDrive: string = '';
+var g_hTDrive: Handle = 0;
+var g_strTDrive: string = '';
+var g_hUDrive: Handle = 0;
+var g_strUDrive: string = '';
+var g_hZDrive: Handle = 0;
+var g_strZDrive: string = '';
+var g_hEmuWindow: Handle = 0; // rendering window
+
+// thread notification routine
+var g_pfnThreadNotification: array [0..16-1] of PVOID;
+var g_iThreadNotificationCount: int;
+
+// NOTE: this is an arbitrary latency
+const XINPUT_SETSTATE_LATENCY = 4;
+const XINPUT_SETSTATE_SLOTS = 16;
+
+// XInputSetState status waiters
+type XInputSetStateStatus = packed record
     hDevice: HANDLE;
     dwLatency: DWORD;
     pFeedback: PVOID;
   end;
 
-var
-  g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
+var g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
-const
-  // 4 controllers
-  XINPUT_HANDLE_SLOTS = 4;
+// 4 controllers
+const XINPUT_HANDLE_SLOTS = 4;
 
-var
-  g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
+var g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
+
+  g_bPrintfOn: Boolean = True;
+
+procedure EmuWarning(szWarningMessage: string); overload;
+procedure EmuWarning(szWarningMessage: string; const Args: array of const); overload;
+procedure EmuCleanup(const szErrorMessage: string);
+function ExitException(e: LPEXCEPTION_POINTERS): Integer;
 
 implementation
 
@@ -325,6 +341,7 @@ function EmuCheckAllocationSize(pBase: PVOID; largeBound: bool): Integer;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   MemoryBasicInfo: MEMORY_BASIC_INFORMATION;
+
   dwRet: DWORD;
 begin
 {$IFDEF _DEBUG_ALLOC}
@@ -407,14 +424,14 @@ begin
 end;
 
 // Exception handler for that tough final exit :)
-function ExitException(e: LPEXCEPTION_POINTERS): Integer;
+function ExitException(e: LPEXCEPTION_POINTERS): int;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
-  Count: Integer;
+  count: int;
 begin
   EmuSwapFS(fsWindows);
 
-  Count := 0;
+  count := 0;
 
   // debug information
 {$IFDEF DEBUG}

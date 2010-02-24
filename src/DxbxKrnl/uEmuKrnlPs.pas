@@ -87,16 +87,15 @@ var g_iThreadNotificationCount: int = 0;
 
 implementation
 
-type
-  // PsCreateSystemThread proxy parameters
-  PPCSTProxyParam = ^PCSTProxyParam;
-  PCSTProxyParam = packed record
+// PsCreateSystemThread proxy parameters
+type PCSTProxyParam = packed record
     StartContext1: PVOID;
     StartContext2: PVOID;
     StartRoutine: PKSTART_ROUTINE;
     StartSuspended: BOOL;
     hStartedEvent: HANDLE;
   end;
+  PPCSTProxyParam = ^PCSTProxyParam;
 
 // PsCreateSystemThread(Ex) proxy procedure
 //pragma warning(push)
