@@ -294,10 +294,10 @@ begin
       if Assigned(pNode.pResource) then
       begin
         // First, check if there is an 'expired' stream in the cache (not recently used)
-        if (PCACHEDSTREAM(pNode.pResource).lLastUsed < (clock() + MAX_STREAM_NOT_USED_TIME)) then
+        if (DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed) < (clock() + MAX_STREAM_NOT_USED_TIME)) then
         begin
 {$IFDEF DEBUG}
-          printf('!!!Found an old stream, %2.2f', [{FLOAT}((clock() + MAX_STREAM_NOT_USED_TIME) - (PCACHEDSTREAM(pNode.pResource).lLastUsed)) / {FLOAT}(CLOCKS_PER_SEC)]);
+          printf('!!!Found an old stream, %2.2f', [{FLOAT}((clock() + MAX_STREAM_NOT_USED_TIME) - DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed)) / {FLOAT}(CLOCKS_PER_SEC)]);
 {$ENDIF}
           uiKey := pNode.uiKey;
           Break;
