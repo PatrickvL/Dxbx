@@ -56,7 +56,7 @@ type
   LPWAVEFORMATEX = MMSystem.PWaveFormatEx; // alias
   LPCDSI3DL2BUFFER = PVoid;
 
-  X_DSBUFFERDESC = record
+type X_DSBUFFERDESC = packed record
     dwSize: DWORD;
     dwFlags: DWORD;
     dwBufferBytes: DWORD;
@@ -66,7 +66,7 @@ type
   end;
   PX_DSBUFFERDESC = ^X_DSBUFFERDESC;
 
-  X_DSSTREAMDESC = record
+type X_DSSTREAMDESC = packed record
     dwFlags: DWORD;
     dwMaxAttachedPackets: DWORD;
     lpwfxFormat: LPWAVEFORMATEX;
@@ -80,7 +80,7 @@ type
   PPREFERENCE_TIME = ^REFERENCE_TIME;
   LPREFERENCE_TIME = ^REFERENCE_TIME;
 
-  _XMEDIAPACKET = packed record
+type _XMEDIAPACKET = packed record
     pvBuffer: LPVOID;
     dwMaxSize: DWORD;
     pdwCompletedSize: PDWORD;
@@ -97,7 +97,7 @@ type
   PXMEDIAPACKET = ^XMEDIAPACKET;
   LPXMEDIAPACKET = ^XMEDIAPACKET;
 
-  _DSLFODESC = packed record
+type _DSLFODESC = packed record
     dwLFO: DWORD;
     dwDelay: DWORD;
     dwDelta: DWORD;
@@ -108,7 +108,7 @@ type
   DSLFODESC = _DSLFODESC;
   LPCDSLFODESC = ^DSLFODESC;
 
-  xbox_adpcmwaveformat_tag = record
+type xbox_adpcmwaveformat_tag = packed record
     wfx: TWAVEFORMATEX;            // WAVEFORMATEX data
     wSamplesPerBlock: WORD;       // Number of samples per encoded block.  It must be 64.
   end;
@@ -116,7 +116,7 @@ type
   PXBOXADPCMWAVEFORMAT = ^XBOXADPCMWAVEFORMAT;
   LPXBOXADPCMWAVEFORMAT = PXBOXADPCMWAVEFORMAT;
 
-  X_DSOUTPUTLEVELS = record
+type X_DSOUTPUTLEVELS = packed record
     dwAnalogLeftTotalPeak: DWORD;// analog peak
     dwAnalogRightTotalPeak: DWORD;
     dwAnalogLeftTotalRMS: DWORD;// analog RMS
@@ -140,12 +140,12 @@ typedef struct IDirectSoundStream IDirectSoundStream;
 typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
 *)
 
-  PX_CDirectSound = ^X_CDirectSound;
-  X_CDirectSound = packed record
+type X_CDirectSound = packed record
     // Cxbx TODO: Fill this in?
   end;
+  PX_CDirectSound = ^X_CDirectSound;
 
-  X_CDirectSoundBuffer = packed record
+type X_CDirectSoundBuffer = packed record
     UnknownA: array [0..$20-1] of Byte; // Offset: 0x00
     {union}case Integer of
     0: (
@@ -167,12 +167,10 @@ typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
   PX_CDirectSoundBuffer = ^X_CDirectSoundBuffer;
   PPX_CDirectSoundBuffer = ^PX_CDirectSoundBuffer;
 
-const
-  DSB_FLAG_ADPCM = $00000001;
-  WAVE_FORMAT_XBOX_ADPCM = $0069;
+const DSB_FLAG_ADPCM = $00000001;
+const WAVE_FORMAT_XBOX_ADPCM = $0069;
 
-type
-  X_CMcpxStream = class(TObject)
+type X_CMcpxStream = class(TObject)
   (*
     public:
         // construct vtable (or grab ptr to existing)
@@ -209,7 +207,7 @@ type
   *)
   end;
 
-  X_CDirectSoundStream = class(TObject)
+type X_CDirectSoundStream = class(TObject)
   (*
     public:
         // construct vtable (or grab ptr to existing)
@@ -287,12 +285,11 @@ const SOUNDBUFFER_CACHE_SIZE = $100;
 const SOUNDSTREAM_CACHE_SIZE = $100;
 
 // Static Variable(s)
-var
-  g_pDSound8: IDIRECTSOUND8 = nil;
-  g_pDSound8RefCount: Int = 0;
-  g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;
-  g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;
-  g_bDSoundCreateCalled: Boolean = False;
+var g_pDSound8: IDIRECTSOUND8 = nil;
+var g_pDSound8RefCount: Int = 0;
+var g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;
+var g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;
+var g_bDSoundCreateCalled: Boolean = False;
 
 // periodically update sound buffers
 procedure HackUpdateSoundBuffers();

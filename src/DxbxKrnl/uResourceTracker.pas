@@ -35,7 +35,7 @@ const g_bVBSkipStream: bool = false;
 
 type
   PRTNode = ^RTNode;
-  RTNode = record
+  RTNode = packed record
     uiKey: uint32;
     pResource: Pvoid;
     pNext: PRTNode;

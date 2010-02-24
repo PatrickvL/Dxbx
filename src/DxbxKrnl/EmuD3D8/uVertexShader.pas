@@ -40,27 +40,25 @@ uses
   , uEmuAlloc;
 
 
-type
-  Dxbx4Booleans = array [0..4-1] of boolean;
+type Dxbx4Booleans = array [0..4-1] of boolean;
   PDxbx4Booleans = ^Dxbx4Booleans;
 
-const
-  VSH_INSTRUCTION_SIZE = 4;
-  VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * SizeOf(DWORD);
+const VSH_INSTRUCTION_SIZE = 4;
+const VSH_INSTRUCTION_SIZE_BYTES = VSH_INSTRUCTION_SIZE * SizeOf(DWORD);
+
+// Types from VertexShader.cpp :
 
 // ****************************************************************************
 // * Vertex shader function recompiler
 // ****************************************************************************
-const
-  // Local macros
-  VERSION_VS =                      $F0;  // vs.1.1, not an official value
-  VERSION_XVS =                     $20;  // Xbox vertex shader
-  VERSION_XVSS =                    $73;  // Xbox vertex state shader
-  VERSION_XVSW =                    $77;  // Xbox vertex read/write shader
-  VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
-  VSH_MAX_INTERMEDIATE_COUNT =      1024; // The maximum number of intermediate format slots
 
-// Types from VertexShader.cpp :
+// Local macros
+const VERSION_VS =                      $F0;  // vs.1.1, not an official value
+const VERSION_XVS =                     $20;  // Xbox vertex shader
+const VERSION_XVSS =                    $73;  // Xbox vertex state shader
+const VERSION_XVSW =                    $77;  // Xbox vertex read/write shader
+const VSH_XBOX_MAX_INSTRUCTION_COUNT =  136;  // The maximum Xbox shader instruction count
+const VSH_MAX_INTERMEDIATE_COUNT =      1024; // The maximum number of intermediate format slots
 
 // Local types
 type _VSH_FIELD_NAME = 
@@ -294,7 +292,7 @@ type _VSH_INTERMEDIATE_FORMAT = packed record
     MAC: VSH_MAC;
     ILU: VSH_ILU;
     Output: VSH_IMD_OUTPUT;
-    Parameters: array [0..2] of VSH_IMD_PARAMETER;
+    Parameters: array [0..3-1] of VSH_IMD_PARAMETER;
   end;
   VSH_INTERMEDIATE_FORMAT = _VSH_INTERMEDIATE_FORMAT;
   PVSH_INTERMEDIATE_FORMAT = ^VSH_INTERMEDIATE_FORMAT;
@@ -309,7 +307,7 @@ type _VSH_FIELDMAPPING = packed record
   VSH_FIELDMAPPING = _VSH_FIELDMAPPING;
   PVSH_FIELDMAPPING = ^VSH_FIELDMAPPING;
 
-  _VSH_SHADER_HEADER = packed record
+type _VSH_SHADER_HEADER = packed record
     Type_: uint08;
     Version: uint08;
     NumInst: uint08;
@@ -797,6 +795,7 @@ begin
     Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '.'));
     for i := 0 to 4 - 1 do
     begin
+      Swizzle := '?';
       case (pParameter.Parameter.Swizzle[i]) of
         SWIZZLE_X:
           Swizzle := 'x';
@@ -806,8 +805,6 @@ begin
           Swizzle := 'z';
         SWIZZLE_W:
           Swizzle := 'w';
-      else
-        Swizzle := '?';
       end;
       Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, '%s', [Swizzle]));
       j := i;
@@ -965,7 +962,7 @@ end;
 
 procedure VshInsertIntermediate(pShader: PVSH_XBOX_SHADER; 
                                 pIntermediate: PVSH_INTERMEDIATE_FORMAT; 
-                Pos: uint16);
+                                Pos: uint16);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: Int;
@@ -974,7 +971,7 @@ begin
 
   for i := pShader.IntermediateCount downto pos do
   begin
-      pShader.Intermediate[i + 1] := pShader.Intermediate[i];
+    pShader.Intermediate[i + 1] := pShader.Intermediate[i];
   end;
   pShader.Intermediate[Pos] := pIntermediate^;
   Inc(pShader.IntermediateCount);
@@ -995,7 +992,7 @@ end;
 
 function VshAddInstructionMAC_R(pInstruction: PVSH_SHADER_INSTRUCTION; 
                                 pShader: PVSH_XBOX_SHADER; 
-                IsCombined: boolean): boolean;
+                                IsCombined: boolean): boolean;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
@@ -1334,7 +1331,7 @@ begin
   if (deleted <> 3) then
   begin
     EmuWarning('Applying screen space vertex shader patching hack!');
-  i := 0;
+    i := 0;
     while i < pShader.IntermediateCount  do
     begin
       pIntermediate := @pShader.Intermediate[i];
@@ -1478,6 +1475,8 @@ begin
 
     if (pIntermediate.InstructionType = IMD_MAC) and (pIntermediate.MAC = MAC_DPH) then
     begin
+			// 2010/01/12 - revel8n - attempt to alleviate conversion issues relate to the dph instruction
+
       // Replace dph with dp3 and add
       if (pIntermediate.Output.Type_ <> IMD_OUTPUT_R) then
       begin
@@ -1540,10 +1539,10 @@ begin
             VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
           end;
           4: begin
-          VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
+            VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
           end;
           8: begin
-          VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+            VshSetSwizzle(@TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
           end;
         // 15: begin
         else // default:
@@ -2339,7 +2338,7 @@ begin
 end;
 
 // Checks for failed vertex shaders, and shaders that would need patching
-function XTL_IsValidCurrentShader(): Boolean;
+function XTL_IsValidCurrentShader(): boolean;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   aHandle: DWORD;

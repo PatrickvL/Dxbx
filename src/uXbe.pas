@@ -213,7 +213,7 @@ type
   //   memory and then immediately used in-place as D3D objects such as textures
   //   and vertex buffers.  The structure below defines the XPR header and the
   //   unique identifier for this file type.
-  _XPR_HEADER = record
+  _XPR_HEADER = packed record
     dwMagic: DWORD; // 'XPR0' or 'XPR1'
     dwTotalSize: DWORD;
     dwHeaderSize: DWORD;
@@ -228,7 +228,7 @@ type
   //
   // File is XPR0 format. Since the XPR will always contain only a single
   // 256x256 DXT1 image, we know exactly what the header portion will look like
-  _XPR_IMAGEHEADER = record
+  _XPR_IMAGEHEADER = packed record
     Header: XPR_HEADER;      // Standard XPR struct
     Texture: X_D3DBaseTexture;  // Standard D3D texture struct
     EndOfHeader: DWORD; // $FFFFFFFF
@@ -239,7 +239,7 @@ type
   TXprImageHeader = XPR_IMAGEHEADER;
   PXprImageHeader = PXPR_IMAGEHEADER;
 
-  _XPR_IMAGE = record
+  _XPR_IMAGE = packed record
     hdr: XPR_IMAGEHEADER;
     strPad: array [0..XPR_IMAGE_HDR_SIZE-SizeOf(XPR_IMAGEHEADER)-1] of AnsiChar;
     pBits: array [0..XPR_IMAGE_DATA_SIZE-1] of Byte; // data bits
@@ -251,7 +251,7 @@ type
   PXprImage = PXPR_IMAGE;
 
 (*
-  _XPR_File_Header_ = record
+  _XPR_File_Header_ = packed record
     Type_: record
       case Integer of
         0: ( dwXPRMagic: DWORD );
