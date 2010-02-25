@@ -374,27 +374,27 @@ begin
 end;
 
 procedure EmuCleanup(const szErrorMessage: string);
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:20
-(*var
-//  buffer: array [0..15] of Char;
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:70
+var
+  buffer: array [0..15] of Char;
   szBuffer1 : array [0..255] of char;
   szBuffer2 : array [0..255] of char;
-  argp: va_list;*)
+  argp: va_list;
 begin
   // Print out ErrorMessage (if exists)
-(*  if (szErrorMessage <> '') then
+  if (szErrorMessage <> '') then
   begin
 
 {$IFDEF DEBUG}
     DbgPrintf(szBuffer1, 'Emu : Received Fatal Message - > '#13#10#13#10);
 {$ENDIF}
 
-    va_start(argp, szErrorMessage);
+(*    va_start(argp, szErrorMessage); *)
 
 {$IFDEF DEBUG}
     DbgPrintf(szBuffer2, [szErrorMessage, argp]);
 {$ENDIF}
-    va_end(argp);
+(*    va_end(argp);*)
 
     strcat(szBuffer1, szBuffer2);
 
@@ -402,7 +402,7 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('%s'#13#10, [szBuffer1]);
 {$ENDIF}
-    szBuffer1 := 'Emu: Received Fatal Message - > '  + szErrorMessage;
+    szBuffer1 := 'Emu: Received Fatal Message - > ';(*  + szErrorMessage;*)
 {$IFDEF DEBUG}
     DbgPrintf(szBuffer1);
 {$ENDIF}
@@ -418,10 +418,10 @@ begin
   //  Cleanup debug output
   FreeConsole();
 
-  if (GetConsoleTitle(buffer, 16) <> '') then
-    freopen('nul', 'w', stdout);
+  (*if (GetConsoleTitle(buffer, 16) <> '') then
+    freopen('nul', 'w', stdout); *)
 
-  TerminateProcess(GetCurrentProcess(), 0);*)
+  TerminateProcess(GetCurrentProcess(), 0);
 end;
 
 // Exception handler for that tough final exit :)

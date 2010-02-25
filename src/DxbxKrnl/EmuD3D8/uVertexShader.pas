@@ -2201,7 +2201,7 @@ begin
   // Copy the patches to the vertex shader struct
   StreamsSize := PatchData.StreamPatchData.NbrStreams * SizeOf(STREAM_DYNAMIC_PATCH);
   pVertexDynamicPatch.NbrStreams := PatchData.StreamPatchData.NbrStreams;
-  pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCH(CxbxMalloc(StreamsSize));
+  pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCHArray(CxbxMalloc(StreamsSize));
   memcpy(pVertexDynamicPatch.pStreamPatches,
          @(PatchData.StreamPatchData.pStreamPatches[0]),
          StreamsSize);

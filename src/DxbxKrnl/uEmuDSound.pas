@@ -2631,9 +2631,8 @@ begin
 end;
 *)
 
-(*STDAPI_ procedure XTL_EmuDirectSoundUseFullHRTF;
-)
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:0
+procedure XTL_EmuDirectSoundUseFullHRTF;
+// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
     EmuSwapFS(fsWindows);
 
@@ -2645,7 +2644,6 @@ begin
 
     EmuSwapFS(fsXbox);
 end;
-*)
 
 function XTL_EmuIDirectSoundBuffer8_SetLFO
 (
