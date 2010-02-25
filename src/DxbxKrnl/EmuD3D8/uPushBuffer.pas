@@ -701,7 +701,7 @@ end;
 
 procedure DbgDumpMesh(pIndexData: PWord; dwCount: DWord);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:10
-(*var
+var
   pActiveVB: IDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
   pVBData: PBYTE;
@@ -710,17 +710,18 @@ procedure DbgDumpMesh(pIndexData: PWord; dwCount: DWord);
   pwVal: PWORD;
   maxIndex: uint32;
   pwChk: PWORD;
-*)
+  dbgVertices: PFile;
+
 begin
-(*  if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
+  if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;
 
   pActiveVB := nil;
 
   // retrieve stream data
   g_pD3DDevice8.GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), uiStride);
- (* StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
-  file * dbgVertices := FileOpen(szFileName, 'wt');
+  StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
+  dbgVertices := FileOpen(szFileName, 'wt');
 
     // retrieve stream desc
   pActiveVB.GetDesc(@VBDesc);
@@ -834,7 +835,7 @@ begin
   end;
 
     // release ptr
-  pActiveVB.Unlock();    *)
+  pActiveVB.Unlock();
 end;
 {$ENDIF}
 

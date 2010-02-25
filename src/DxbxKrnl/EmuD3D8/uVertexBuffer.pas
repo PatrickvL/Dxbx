@@ -275,7 +275,7 @@ var
   Desc: D3DVERTEXBUFFER_DESC;
   pCalculateData: Pointer;
   uiLength: UINT;
-  uiStride: UINT;
+{  uiStride: UINT;} // DXBX, uiStride never used
   uiChecksum: UINT;
 begin
   pCachedStream_ := PCACHEDSTREAM(CxbxMalloc(SizeOf(CACHEDSTREAM)));
@@ -346,7 +346,7 @@ begin
     begin
       CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
     end;
-    uiStride := pPatchDesc.uiVertexStreamZeroStride;
+    {uiStride := pPatchDesc.uiVertexStreamZeroStride;} // DXBX, uiStride never used
     pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
     // Cxbx TODO: This is sometimes the number of indices, which isn't too good
     uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
@@ -403,14 +403,14 @@ end;
 function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc; 
                                              uiStream: UINT): bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:10
-(*var
+var
   bApplied: bool;
-  uiStride: UINT;
+(*  uiStride: UINT;
   pOrigVertexBuffer: IDirect3DVertexBuffer8;
   Desc: D3DVERTEXBUFFER_DESC; *)
 begin
 (*    procedure                      *pCalculateData;
-    UINT                       uiLength;
+    UINT                       uiLength;  *)
     bApplied := False;
     (*
     uint32                     uiKey;
@@ -525,8 +525,8 @@ begin
   begin
     pOrigVertexBuffer._Release();
   end;     *)
-(*
-  Result := bApplied; *)
+
+  Result := bApplied;
 end;
 
 
