@@ -26,6 +26,8 @@ uses
   Classes,
   Graphics,
   ShlObj, // SHGetSpecialFolderPath
+  // Jedi
+  JwaWinType,
   // Dxbx
   uTypes;
 
@@ -113,6 +115,9 @@ function GetErrorString(const aError: DWord): string;
 
 function PointerToString(const aPointer: Pointer): string;
 
+function PSTRING_Buffer(const aValue: PANSI_STRING): string;
+function QuadPart(const aValue: PLARGE_INTEGER): Int64;
+
 type
   // Free interpretation of http://edn.embarcadero.com/article/29173
   TRGB32 = packed record
@@ -167,9 +172,9 @@ type
   PRGB16Scanlines = ^RGB16Scanlines;
 
 
-function ReadS3TCFormatIntoBitmap(const aFormat: Byte; const aData: PByteArray; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
-function ReadSwizzledFormatIntoBitmap(const aFormat: Byte; const aData: PByteArray; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
-function ReadD3DTextureFormatIntoBitmap(const aFormat: Byte; const aData: PByteArray; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
+function ReadS3TCFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
+function ReadSwizzledFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
+function ReadD3DTextureFormatIntoBitmap(const aFormat: Byte; const aData: PBytes; const aDataSize: Cardinal; const aOutput: PRGB32Scanlines): Boolean;
 
 function GetDxbxBasePath: string;
 function SymbolCacheFolder: string;
@@ -680,6 +685,22 @@ begin
   Result := IntToHex(Integer(aPointer), 8);
 end;
 
+function PSTRING_Buffer(const aValue: PANSI_STRING): string;
+begin
+  if Assigned(aValue) then
+    Result := string(AnsiString(aValue.Buffer))
+  else
+    Result := '';
+end;
+
+function QuadPart(const aValue: PLARGE_INTEGER): Int64;
+begin
+  if Assigned(aValue) then
+    Result := aValue.QuadPart
+  else
+    Result := 0;
+end;
+
 function DebugModeToString(const aDebugMode: TDebugMode): string;
 begin
   case aDebugMode of
@@ -814,7 +835,7 @@ end;
 // Delphi translation and speed improvements by PatrickvL
 function ReadSwizzledFormatIntoBitmap(
   const aFormat: Byte;
-  const aData: PByteArray;
+  const aData: PBytes;
   const aDataSize: Cardinal;
   const aOutput: PRGB32Scanlines): Boolean;
 
@@ -881,7 +902,7 @@ end; // ReadSwizzledFormatIntoBitmap
 // Official spec : http://www.opengl.org/registry/specs/EXT/texture_compression_s3tc.txt
 function ReadS3TCFormatIntoBitmap(
   const aFormat: Byte;
-  const aData: PByteArray;
+  const aData: PBytes;
   const aDataSize: Cardinal;
   const aOutput: PRGB32Scanlines): Boolean;
 var
@@ -890,7 +911,7 @@ var
   r, g, b, r1, g1, b1, pixelmap: DWord;
   j, k, p, x, y: Cardinal;
 begin
-  // Sanity checks :  
+  // Sanity checks :
   Result := (aFormat in [X_D3DFMT_DXT1, X_D3DFMT_DXT3, X_D3DFMT_DXT5])
         and Assigned(aData)
         and (aDataSize > 0)
@@ -981,7 +1002,7 @@ end; // ReadS3TCFormatIntoBitmap
 
 function ReadD3DTextureFormatIntoBitmap(
   const aFormat: Byte;
-  const aData: PByteArray;
+  const aData: PBytes;
   const aDataSize: Cardinal;
   const aOutput: PRGB32Scanlines): Boolean;
 begin

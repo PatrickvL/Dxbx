@@ -50,8 +50,9 @@ var {041}xboxkrnl_HalDiskModelNumber: DWORD;
 var {042}xboxkrnl_HalDiskSerialNumber: DWORD;
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-var {356}xboxkrnl_HalBootSMCVideoMode: DWORD;
-// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Cxbx TODO: Verify this!
+var {356}xboxkrnl_HalBootSMCVideoMode: DWORD = 1;
+// Source:Cxbx  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 
 procedure {009} xboxkrnl_HalReadSMCTrayState(
   State: PDWORD;
@@ -117,14 +118,33 @@ function {366} xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall; // UNKN
 
 implementation
 
-procedure {009} xboxkrnl_HalReadSMCTrayState(
+procedure {009} xboxkrnl_HalReadSMCTrayState
+(
   State: PDWORD;
   Count: PDWORD
-  ); stdcall;
-// Source:OpenXdk  Branch:Dxbx  Translator:PatrickvL  Done:0
+); stdcall;
+// Source:Cxbx  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+const TRAY_CLOSED_MEDIA_PRESENT = 96;
+const TRAY_CLOSED_NO_MEDIA = 64;
+const TRAY_OPEN = 16;
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('HalReadSMCTrayState');
+	
+{$IFDEF DEBUG}
+	DbgPrintf('EmuKrnl : HalReadSMCTrayState' +
+      #13#10'(' +
+      #13#10'   State              : 0x%.08X' +
+      #13#10'   Count              : 0x%.08X' +
+      #13#10');',
+      [State, Count]);
+{$ENDIF}
+
+	// Cxbx TODO: Make this configurable?
+	// Cxbx TODO: What is the count parameter for??
+
+	State^ := TRAY_CLOSED_NO_MEDIA;
+//	Count^ := 1;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -229,19 +249,20 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure {049} xboxkrnl_HalReturnToFirmware(
+procedure {049} xboxkrnl_HalReturnToFirmware
+(
   Routine: RETURN_FIRMWARE
-  ); stdcall;
+); stdcall;
 // Source:OpenXDK  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : HalReturnToFirmware' +
-           #13#10'(' +
-           #13#10'   Routine             : 0x%.08X' +
-           #13#10');',
-           [Ord(Routine)]);
+      #13#10'(' +
+      #13#10'   Routine             : 0x%.08X' +
+      #13#10');',
+      [Ord(Routine)]);
 {$ENDIF}
 
   CxbxKrnlCleanup('Xbe has rebooted : HalReturnToFirmware(%d)', [Ord(Routine)]);

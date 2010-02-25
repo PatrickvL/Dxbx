@@ -118,29 +118,29 @@ function EmuUpdateTickCount(lpVoid: PVOID): DWord; // no stdcall !
 
 var
   // Static Variable(s)
-  g_ddguid: TGUID;               // DirectDraw driver GUID
+  g_ddguid: GUID;                // DirectDraw driver GUID
   g_hMonitor: HMONITOR = 0;      // Handle to DirectDraw monitor
   g_pD3D8: IDirect3D8 = NULL;    // Direct3D8
   g_bSupportsYUY2: BOOL = FALSE; // Does device support YUY2 overlays?
-  g_pDD7: IDirectDraw7;          // DirectDraw7
+  g_pDD7: IDirectDraw7 = NULL;   // DirectDraw7
   g_dwOverlayW: DWORD = 640;     // Cached Overlay Width
   g_dwOverlayH: DWORD = 480;     // Cached Overlay Height
   g_dwOverlayP: DWORD = 640;     // Cached Overlay Pitch
 
-  g_XbeHeader: PXBE_HEADER = NULL;        // XbeHeader
-  g_XbeHeaderSize: DWord = 0;             // XbeHeaderSize
-  g_D3DCaps: D3DCAPS8;                    // Direct3D8 Caps
-  g_hBgBrush: HBrush = 0;                 // Background Brush
-  g_bRenderWindowActive: bool = False;    // volatile?
+  g_XbeHeader: PXBE_HEADER = NULL;         // XbeHeader
+  g_XbeHeaderSize: uint32 = 0;             // XbeHeaderSize
+  g_D3DCaps: D3DCAPS8;                     // Direct3D8 Caps
+  g_hBgBrush: HBRUSH = 0;                  // Background Brush
+  g_bRenderWindowActive: bool = false;     // volatile?
   g_XBVideo: XBVideo;
-  g_pVBCallback: D3DVBLANKCALLBACK = nil; // Vertical-Blank callback routine
-  g_pSwapCallback: D3DSWAPCALLBACK = nil; // Swap/Present callback routine
+  g_pVBCallback: D3DVBLANKCALLBACK = NULL; // Vertical-Blank callback routine
+  g_pSwapCallback: D3DSWAPCALLBACK = NULL; // Swap/Present callback routine
 
   // wireframe toggle
-  g_iWireframe: Integer = 0;
+  g_iWireframe: int = 0;
 
   // build version
-  g_BuildVersion: uint32;
+  // g_BuildVersion: uint32;
 
   // resource caching for _Register
   pCache: array [0..15 - 1] of X_D3DResource; // = {0};
@@ -166,7 +166,7 @@ var
   g_pCachedZStencilSurface: PX_D3DSurface = nil;
   g_YuvSurface: PX_D3DSurface = nil;
   g_fYuvEnabled: BOOL = FALSE;
-  g_dwVertexShaderUsage: DWord = 0;
+  g_dwVertexShaderUsage: DWORD = 0;
   g_VertexShaderSlots: array [0..136 - 1] of DWORD;
 
   // cached palette pointer
@@ -316,9 +316,9 @@ begin
     g_hMonitor := hm;
     dwEnumCount := 0;
     if Assigned(lpGUID) then
-      memcpy(@g_ddguid, lpGUID, SizeOf(TGUID))
+      memcpy(@g_ddguid, lpGUID, SizeOf(GUID))
     else
-      memset(@g_ddguid, 0, SizeOf(TGUID));
+      memset(@g_ddguid, 0, SizeOf(GUID));
 
     Result := False;
     Exit;
@@ -944,7 +944,7 @@ begin
       g_pD3DDevice8 := g_EmuCDPD.ppReturnedDeviceInterface^;
 
       // default NULL guid
-      ZeroMemory(@g_ddguid, SizeOf(TGUID));
+      ZeroMemory(@g_ddguid, SizeOf(GUID));
 
       // enumerate device guid for this monitor, for directdraw
       hRet := DirectDrawEnumerateExA(@EmuEnumDisplayDevices, {lpContext=}nil, DDENUM_ATTACHEDSECONDARYDEVICES);
@@ -974,7 +974,7 @@ begin
         g_bSupportsYUY2 := False;
         for v := 0 to dwCodes - 1 do
         begin
-          if (PDWordArray(lpCodes)[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
+          if (PDWORDs(lpCodes)[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
           begin
             g_bSupportsYUY2 := True;
             Break;
@@ -4346,9 +4346,9 @@ var
   pPixelData: PByte;
   dwDataSize: DWORD;
   dwPaletteSize: DWORD;
-  pTextureCache: PByteArray;
-  pExpandedTexture: PByteArray;
-  pTexturePalette: PByteArray;
+  pTextureCache: PBytes;
+  pExpandedTexture: PBytes;
+  pTexturePalette: PBytes;
 
   dummy: Pointer;
   szString: array [0..256 -1] of char;

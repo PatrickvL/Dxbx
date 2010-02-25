@@ -38,6 +38,7 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
+  uDxbxUtils,
   uDxbxKrnl,
   uDxbxKrnlUtils;
 
@@ -277,12 +278,12 @@ function {066} xboxkrnl_IoCreateFile(
   Options: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoCreateSymbolicLink(
-  SymbolicLinkName: PANSI_STRING;
+  SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDeleteSymbolicLink(
-  SymbolicLinkName: PANSI_STRING
+  SymbolicLinkName: PSTRING
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -439,7 +440,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function {066} xboxkrnl_IoCreateFile(
+function {066} xboxkrnl_IoCreateFile
+(
   FileHandle: PHANDLE; // out
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -450,8 +452,8 @@ function {066} xboxkrnl_IoCreateFile(
   Disposition: ULONG;
   CreateOptions: ULONG;
   Options: ULONG
-  ): NTSTATUS; stdcall;
-// Source:Cxbx  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Source:Cxbx  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -469,7 +471,7 @@ begin
      #13#10'   CreateOptions       : 0x%.08X' +
      #13#10'   Options             : 0x%.08X' +
      #13#10');',
-     [FileHandle, DesiredAccess, ObjectAttributes, string(ObjectAttributes.ObjectName.Buffer),
+     [FileHandle, DesiredAccess, ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName),
       IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options]);
 {$ENDIF}
 
@@ -487,10 +489,11 @@ end;
 // function, so just use this one.
 //
 // Differences from NT: Uses ANSI_STRING instead of UNICODE_STRING.
-function xboxkrnl_IoCreateSymbolicLink(
-  SymbolicLinkName: PANSI_STRING;
+function xboxkrnl_IoCreateSymbolicLink
+(
+  SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -501,8 +504,8 @@ begin
      #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
      #13#10'   DeviceName          : 0x%.08X (%s)' +
      #13#10');',
-     [SymbolicLinkName, string(SymbolicLinkName.Buffer),
-     DeviceName, string(DeviceName.Buffer)]);
+     [SymbolicLinkName, PSTRING_Buffer(SymbolicLinkName),
+     DeviceName, PSTRING_Buffer(DeviceName)]);
 {$ENDIF}
 
   // Cxbx TODO: Actually um...implement this function
@@ -524,19 +527,20 @@ end;
 // through the Nt* functions is a pain, so use this instead.
 //
 // Differences from NT: Uses ANSI_STRING instead of UNICODE_STRING.
-function xboxkrnl_IoDeleteSymbolicLink(
-  SymbolicLinkName: PANSI_STRING
-  ): NTSTATUS; stdcall;
+function xboxkrnl_IoDeleteSymbolicLink
+(
+  SymbolicLinkName: PSTRING
+): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : IoDeleteSymbolicLink' +
-     #13#10'(' +
-     #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
-     #13#10');',
-     [SymbolicLinkName, SymbolicLinkName.Buffer]);
+      #13#10'(' +
+      #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
+      #13#10');',
+      [SymbolicLinkName, PSTRING_Buffer(SymbolicLinkName)]);
 {$ENDIF}
 
   // Cxbx TODO: Actually um...implement this function
@@ -695,13 +699,24 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IoDismountVolumeByName(
+function xboxkrnl_IoDismountVolumeByName
+(
   VolumeName: PSTRING
-  ): NTSTATUS; stdcall;
-// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
+): NTSTATUS; stdcall;
+// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('IoDismountVolumeByName');
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : IoDismountVolumeByName' +
+      #13#10'(' +
+      #13#10'   VolumeName        : 0x%.08X (%s)' +
+      #13#10');',
+      [VolumeName, PSTRING_Buffer(VolumeName)]);
+{$ENDIF}
+
+  // Cxbx TODO: Anything?
+  Result := STATUS_SUCCESS;
+
   EmuSwapFS(fsXbox);
 end;
 

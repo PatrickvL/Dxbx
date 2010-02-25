@@ -171,7 +171,7 @@ var
   XbeSectionHeader: PXbeSectionHeader;
   i: Integer;
   kt, t: DWord;
-  kt_tbl: PDWordArray;
+  kt_tbl: PDWORDs;
   EntryPoint: DWord;
   XbeTLS: PXbeTLS;
 

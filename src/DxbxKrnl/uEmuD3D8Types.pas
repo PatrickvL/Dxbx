@@ -186,12 +186,12 @@ type _STREAM_DYNAMIC_PATCH = packed record
   PSTREAM_DYNAMIC_PATCH = ^STREAM_DYNAMIC_PATCH;
 
   TSTREAM_DYNAMIC_PATCHArray = array [0..MaxInt div SizeOf(STREAM_DYNAMIC_PATCH) - 1] of STREAM_DYNAMIC_PATCH;
-  PSTREAM_DYNAMIC_PATCHArray = ^TSTREAM_DYNAMIC_PATCHArray;
+  PSTREAM_DYNAMIC_PATCHs = ^TSTREAM_DYNAMIC_PATCHArray;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _VERTEX_DYNAMIC_PATCH = packed record
     NbrStreams: UINT; // The number of streams the vertex shader uses
-    pStreamPatches: PSTREAM_DYNAMIC_PATCHArray;
+    pStreamPatches: PSTREAM_DYNAMIC_PATCHs;
   end; VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH;
   PVERTEX_DYNAMIC_PATCH = ^VERTEX_DYNAMIC_PATCH;
 

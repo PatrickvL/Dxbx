@@ -39,6 +39,7 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
+  uDxbxUtils,
   uDxbxKrnl;
 
 function xboxkrnl_RtlAnsiStringToUnicodeString(
@@ -542,11 +543,13 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlEqualString' +
       #13#10'(' +
-      #13#10'  String1            : 0x%.08X' +
-      #13#10'  String2            : 0x%.08X' +
+      #13#10'  String1            : 0x%.08X (%s)' +
+      #13#10'  String2            : 0x%.08X (%s)' +
       #13#10'  CaseInsensitive    : 0x%.08X' +
       #13#10');',
-      [String1, String2, CaseInsensitive]);
+      [String1, PSTRING_Buffer(String1),
+       String2, PSTRING_Buffer(String2),
+       CaseInsensitive]);
 {$ENDIF}
 
   Result := JwaNative.RtlEqualString(String1, String2, CaseInsensitive);
@@ -667,10 +670,11 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlInitAnsiString' +
       #13#10'(' +
-      #13#10'   DestinationString   : 0x%.08X' +
-      #13#10'   SourceString        : 0x%.08X' + // Dxbx TODO : Why doesn't DxbxFormat detect a string here?
+      #13#10'   DestinationString   : 0x%.08X (%s)' +
+      #13#10'   SourceString        : 0x%.08X' +
       #13#10');',
-      [DestinationString, SourceString]);
+      [DestinationString, PSTRING_Buffer(DestinationString),
+       SourceString]);
 {$ENDIF}
 
   JwaNative.RtlInitAnsiString(DestinationString, SourceString);

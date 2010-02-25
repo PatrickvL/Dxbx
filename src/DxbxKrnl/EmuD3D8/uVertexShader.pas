@@ -284,7 +284,7 @@ type _VSH_IMD_PARAMETER = packed record
   PVSH_IMD_PARAMETER = ^VSH_IMD_PARAMETER;
 
   TVSH_IMD_PARAMETERArray = array [0..(MaxInt div SizeOf(VSH_IMD_PARAMETER)) - 1] of VSH_IMD_PARAMETER;
-  PVSH_IMD_PARAMETERArray = ^TVSH_IMD_PARAMETERArray;
+  PVSH_IMD_PARAMETERs = ^TVSH_IMD_PARAMETERArray;
 
 type _VSH_INTERMEDIATE_FORMAT = packed record
     IsCombined: boolean;
@@ -521,7 +521,7 @@ end;
 function IsInUse(const pMask: Pboolean): Boolean; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := PBooleanArray(pMask)[0] or PBooleanArray(pMask)[1] or PBooleanArray(pMask)[2] or PBooleanArray(pMask)[3];
+  Result := PBooleans(pMask)[0] or PBooleans(pMask)[1] or PBooleans(pMask)[2] or PBooleans(pMask)[3];
 end;
 
 function HasMACR(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
@@ -567,7 +567,7 @@ function VshGetFromToken(pShaderToken: Puint32;
                          BitLength: uint08): int; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := (PDWordArray(pShaderToken)[SubToken] shr StartBit) and not ($FFFFFFFF shl BitLength);
+  Result := (PDWORDs(pShaderToken)[SubToken] shr StartBit) and not ($FFFFFFFF shl BitLength);
 end;
 
 // Converts the C register address to disassembly format
@@ -909,9 +909,9 @@ begin
 end;
 
 procedure VshAddParameters(pInstruction: PVSH_SHADER_INSTRUCTION; 
-                           ILU: VSH_ILU; 
+                           ILU: VSH_ILU;
                            MAC: VSH_MAC;
-                           pParameters: PVSH_IMD_PARAMETER);
+                           pParameters: PVSH_IMD_PARAMETERs);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ParamCount: uint08;
@@ -923,21 +923,21 @@ begin
   // param A
   if (pParams.A) then
   begin
-    VshAddParameter(@pInstruction.A, pInstruction.a0x, @PVSH_IMD_PARAMETERArray(pParameters)[ParamCount]);
+    VshAddParameter(@pInstruction.A, pInstruction.a0x, @pParameters[ParamCount]);
     Inc(ParamCount);
   end;
 
   // param B
   if (pParams.B) then
   begin
-    VshAddParameter(@pInstruction.B, pInstruction.a0x, @PVSH_IMD_PARAMETERArray(pParameters)[ParamCount]);
+    VshAddParameter(@pInstruction.B, pInstruction.a0x, @pParameters[ParamCount]);
     Inc(ParamCount);
   end;
 
   // param C
   if (pParams.C) then
   begin
-    VshAddParameter(@pInstruction.C, pInstruction.a0x, @PVSH_IMD_PARAMETERArray(pParameters)[ParamCount]);
+    VshAddParameter(@pInstruction.C, pInstruction.a0x, @pParameters[ParamCount]);
 //    Inc(ParamCount);
   end;
 end; // VshAddParameters
@@ -1016,7 +1016,7 @@ begin
   memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.MACRMask[0]), sizeof(boolean) * 4);
 
   // Other parameters
-  VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, PVSH_IMD_PARAMETER(@pIntermediate.Parameters[0]));
+  VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, @pIntermediate.Parameters[0]);
 
   Result := TRUE;
 end; // VshAddInstructionMAC_R
@@ -1050,7 +1050,7 @@ begin
   memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(boolean) * 4);
 
   // Other parameters
-  VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, PVSH_IMD_PARAMETER(@pIntermediate.Parameters[0]));
+  VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, @pIntermediate.Parameters[0]);
 
   Result := TRUE;
 end; // VshAddInstructionMAC_O
@@ -1080,7 +1080,7 @@ begin
   pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
 
   // Other parameters
-  VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, PVSH_IMD_PARAMETER(@pIntermediate.Parameters[0]));
+  VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, @pIntermediate.Parameters[0]);
 
   Result := TRUE;
 end; // VshAddInstructionMAC_ARL
@@ -1115,7 +1115,7 @@ begin
   memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.ILURMask[0]), sizeof(boolean) * 4);
 
   // Other parameters
-  VshAddParameters(pInstruction, pInstruction.ILU, MAC_NOP, PVSH_IMD_PARAMETER(@pIntermediate.Parameters[0]));
+  VshAddParameters(pInstruction, pInstruction.ILU, MAC_NOP, @pIntermediate.Parameters[0]);
 
   Result := TRUE;
 end; // VshAddInstructionILU_R
@@ -1150,7 +1150,7 @@ begin
   memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(boolean) * 4);
 
   // Other parameters
-  VshAddParameters(pInstruction, pInstruction.ILU, MAC_NOP, PVSH_IMD_PARAMETER(@pIntermediate.Parameters[0]));
+  VshAddParameters(pInstruction, pInstruction.ILU, MAC_NOP, @pIntermediate.Parameters[0]);
   Result := TRUE;
 end; // VshAddInstructionILU_O
 
@@ -2201,7 +2201,7 @@ begin
   // Copy the patches to the vertex shader struct
   StreamsSize := PatchData.StreamPatchData.NbrStreams * SizeOf(STREAM_DYNAMIC_PATCH);
   pVertexDynamicPatch.NbrStreams := PatchData.StreamPatchData.NbrStreams;
-  pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCHArray(CxbxMalloc(StreamsSize));
+  pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCHs(CxbxMalloc(StreamsSize));
   memcpy(pVertexDynamicPatch.pStreamPatches,
          @(PatchData.StreamPatchData.pStreamPatches[0]),
          StreamsSize);
