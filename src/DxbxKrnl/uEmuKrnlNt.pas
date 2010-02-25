@@ -1041,7 +1041,7 @@ var
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   FileDirInfo: PFILE_DIRECTORY_INFORMATION;
   mbstr: PAnsiChar;
-  wcstr: Pwchar_t;
+  wcstr: pwchar_t;
 begin
   EmuSwapFS(fsWindows);
 

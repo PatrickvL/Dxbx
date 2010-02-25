@@ -376,10 +376,10 @@ end;
 procedure EmuCleanup(const szErrorMessage: string);
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:70
 var
-  buffer: array [0..15] of Char;
+  (*buffer: array [0..15] of Char;*)
   szBuffer1 : array [0..255] of char;
   szBuffer2 : array [0..255] of char;
-  argp: va_list;
+  (*argp: va_list;*)
 begin
   // Print out ErrorMessage (if exists)
   if (szErrorMessage <> '') then
@@ -389,12 +389,12 @@ begin
     DbgPrintf(szBuffer1, 'Emu : Received Fatal Message - > '#13#10#13#10);
 {$ENDIF}
 
-(*    va_start(argp, szErrorMessage); *)
+(*    va_start(argp, szErrorMessage);
 
 {$IFDEF DEBUG}
     DbgPrintf(szBuffer2, [szErrorMessage, argp]);
 {$ENDIF}
-(*    va_end(argp);*)
+    va_end(argp);*)
 
     strcat(szBuffer1, szBuffer2);
 
