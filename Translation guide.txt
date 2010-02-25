@@ -7,34 +7,296 @@ C code over to Delphi. Don't hesitate to add to this when the need arises!
 General translation guidelines
 ------------------------------
 Because Dxbx is primarily focussed on translating Cxbx to the Delphi Language,
-we need to maintain a proper set of rules. One problem in translating Cxbx is,
-that there are various branches to choose from;
+we need to maintain a proper set of rules. Below you'll find a few suggestions
+for most aspects we've encountered while translating C code over to Delphi.
+
+
+Cxbx branches
+-------------
+One problem in translating Cxbx is, the various branches to choose from;
 \Cxbx\Trunk . The main source
 \Cxbx\branches\private\caustik - Caustic's private work branch
 \Cxbx\branches\private\dstien, Based on martin rev. 39 - Nisse's work
 \Cxbx\branches\private\martin - Martin's work
 \Cxbx\branches\private\shogun - blueshogun96's work
 
-Most of the translation work has used martin's branch. But now that there
-are more branches to choose from (namely dstien and shogun), we need to mark
-our translations with a header, signifying which branch and revistion where
+All those branches have a most recent revision number, one older than
+the other. Also, we have recieved zips from blueshogun96 and Defiance
+containing sources of Cxbx not yet available from their SVN.
+
+
+Used revision
+-------------
+Initially we based our translation on martin's branch, revision 39.
+Later on, we switched over to blueshogun96's "0.8.2-Pre2" sources.
+As long as there's no newer source of Cxbx, that's the version we
+will update our translation to.
+
+Updates in Cxbx sources can be easily spotted when using a file-comparison
+utility (like Beyond Compare) running over two versions of the Cxbx sources.
+Any updates found in this way should be translated over to Dxbx (if there
+are no obvious regressions in the updated sources).
+
+
+Translation comment line
+------------------------
+Because of the various Cxbx revisions to choose from, we needed to mark
+our translations with a comment, signifying which branch and revistion where
 used when translating a function. Also, update these headers when another
 revision comes along!
 
-So, add this header line to each function you translate (with applicable details):
-// Branch:martin  Revision:39  Translator:PatrickvL
+So, add this comment to each symbol you translate (with applicable details):
+// Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
 
 For kernel functions, also specifiy which source was used to determine the
 signature of that function, like this :
 // Source: OpenXdk
 Sources are: Cxbx, OpenXdk, XBMC, ReactOS, APILogger (See below for details).
 
+
+Translation checker
+-------------------
+Because of the huge amount of symbols (920+ at the moment of writing), we've
+build a tool that scans our Dxbx sources for our translation comment lines.
+This tool has some filtering capabilities and outputs the resulting text
+as XML in a memo, ready to be copied to whatever destination you want.
+
+A few hints for using TranslationChecker.exe :
+
+- Scanning the C sources is not yet implemented, ignore this for now.
+- The scanner is NOT a full Delphi parser! We scan just enough to make it work.
+- Therefor, the symbol-detection is not perfect, but still flexible.
+- Translation-comment lines can be placed above or below the symbol.
+- We detect (almost) all type and function declarations perfectly.
+- We cannot detect independent 'var' and 'const' declarations (but do put a
+  translation-comment line below them!)
+- Code not originating from Cxbx should mention a 'source' for clarification.
+- Code not originating from Dxbx must mention 'Branch=Dxbx' to allow
+  filtering out code that's not available in Cxbx.
+- Please update the 'Done' field with an aappropriate percentage. Don't put
+  a percentage above 100 there!
+- To get a list of symbols that need translation-work, filter on :
+  NOT branch Dxbx, and LESS THAN 100% Done
+
+
+Comparing files
+---------------
+A proven approach to translating C to Delphi, has been the use of a file-
+comparison utility (like Beyond Compare). When using such a tool to compare
+our translation, it's obvious that there's a syntactic difference between
+the two languages. But if the Delphi translation stays close to the layout
+of the original C code, many symbols and constructs compare remarkably good!
+This helps much in spotting area's where translation is different. It could
+be because the C source has changes, the translation is still incomplete,
+Delphi needs other constructs, or any other reason.
+
+
+Layout of translated files
+---------------------------
+As a rule of thumb, always start with a translation of the .h header file,
+followed by the translation of the .cpp file. Keep the ordering of functions
+as close as possible to the original code and try to mimic usage of indenting
+and whitespace usage. This is especially important for function arguments and
+type declarations. But other code (like statement blocks) benefits as well.
+
+
+Symbol translation
+------------------
+Please try to maintain the exact spelling of symbols as much as possible.
+One such case is case-sensitivity; C has this, while Delphi has not.
+Even so, it helps to use the same casing, because the intention in C might
+have significance. For example, 'bool' is something else as 'BOOL', 'int'
+could be different from 'INT', etc. Normally this doesn't really matter,
+but it's still good practise to keep the casing the same, especially when
+comparing files.
+
+
+Standard symbols
+----------------
+For any types that C uses, but Delphi does not know, declare an alias in
+uTypes.pas. When Delphi's case-INsensitivity prevents a second declaration,
+either just declare the most commonly used symbol (in the appropriate casing),
+or create a second version with a prefix that makes it stand out better.
+(Don't forget to apply that prefix everywhere where needed!)
+
+The same follows for utility functions. There's quite a lot already stubbed
+in uTypes.pas - look for calloc, sprintf and other functions. Good sources
+for inspiration are the various open-source libc implementations.
+
+
+Specific syntax differences
+---------------------------
+Switch-cases in C are (mostly) terminated with a 'break' statement, or else
+the code would 'fall through' to the next case.
+Delphi's case-statement does not support this fall-through behaviour,
+so either ignore all breaks, or change the 'switch' into a repeated if.
+
+C has an inline if statement : (expression) ? true-value : false-value
+For Delphi, use ont of the 'iif' or 'IfThen' overloads.
+
+C has multiple-assing : a = b = 0;
+Delphi must assign each variable individually : a := 0; b := 0;
+(Try to keep this on one line, to stay as close to the original as possible.)
+
+C declares structs, which are then declared a type. Delphi does not have this
+construct, so declare a (always packed!) record with the name of the struct
+and then declare an alias to that type, so both symbols are translated.
+
+C can declare pointer-to-type anywhere. In Delphi that's also possible, but
+we prefer declaring the pointer-type only once in advance :
+
+// Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
+type _SomeType = packed record member: type; end;
+SomeType = _SomeType; PSomeType = ^SomeType;
+
+
+Interface types
+---------------
+There's a significant difference in interface-handling between C and Delphi.
+C treats an interface as a structured type (although I've never seen an
+interface appear on the stack). C code that uses interfaces, uses pointers.
+Also, C compilers have no compiler magic for interfaces (that we know of).
+Delphi on the other hand, has a few special things surrounding interfaces;
+First off, Delphi treats an interface as a referenced type. Also, Delphi
+does automatic reference-counting on interface references.
+These two differences make translating interface-using code from C to Delphi
+a difficult subject.
+Normally, we would try to port this over cleanly, but with interfaces this
+just doesn't work, because of the difference in indirection and reference-
+counting. The solution follows :
+
+
+DirectX interfaces
+------------------
+The main use of interfaces in Cxbx, is centered around DirectX API's.
+To interface with DirectX, we have used another open-sources library,
+called "Clootie's DirectX SDK" (http://www.clootie.ru/delphi/).
+The problem with this library is the use of var-arguments of Interface type,
+where the original C headers used pointer-to-pointer-to-interface arguments.
+Therefor, we are in the process of changing these wrapper functions to
+use pointer-to-interfaces instead (as that maps better to the original code).
+Next, we will be bypassing Delphi's reference-counting of interfaces,
+by declaring a set of interface-pointer types that look a lot like the
+original C sources, but in reality don't point to an interface. This way,
+Delphi doesn't interfere with this code, so that we can translate all
+code over without any special changes to interface-using code, except for
+code that makes a call - in that case we need to cast to a real interface
+type.
+Examples for this will follow as soon as we've worked out a way to do this
+as cleanly as possible, without confusion anyone (much).
+
+
+Pointer translation
+-------------------
+C/C++ 
+     *variabele = value;
+     PDWord *pSampleValue;
+
+Delphi
+     variabele^ := value;
+     pSampleValue : PDWord;
+
+
 Calling conventions
 -------------------
-Calling conventions should be translated as follows :
+In Cxbx, the most frequently used calling convention is 'WINAPI'.
+This can be translated over to Delphi by using 'stdcall' (see
+http://www.nynaeve.net/?p=42 for details).
+
+The other calling convention that appears in Cxbx code is '__fastcall'
+with is a bit problematic, because Delphi does not support this calling
+convention! Luckily, we found a work-around by (ab)using the 'register'
+calling convention. The following can work because we're only compiling
+patches to fastcall functions - we don't need to serve them to outsiders;
+
+Based on info from http://www.codeguru.com/forum/showthread.php?t=466266  :
+
+The 'register' calling convention passes arguments left to right, first
+three are in EAX, EDX, ECX, the remaining arguments are pushed on stack
+right to left, callee cleans.
+
+The 'fastcall' calling convention passes arguments left to right, first
+two are in ECX and EDX, the remaining arguments are pushed on stack
+left to right, callee cleans.
+
+The main difference between these two calling conventions, is the use
+of the EAX register and the order of the two register arguments.
+
+So, we can declare a function as follows, to serve as a way to
+receive fastcall calls and still treat the arguments right :
+
+procedure FastCallPatch_2Arguments(
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD; // Ignore this
+  {2 EDX}Argument2: DWORD; // The 2nd argument here, forces it into EDX
+  {1 ECX}Argument1: DWORD  // The 1st argument here, forces it into ECX
+  ); register; // __fastcall in Cxbx
+begin
+  // Implement it.
+end;
+
+Note, that when a function has only 1 argument, you should ignore the argument
+taking up the EDX register (Argument2 in previous example), which becomes :
+
+procedure FastCallPatch_1Argument(
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD; // Ignore this
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD; // Ignore this
+  {1 ECX}Argument1: DWORD  // The 1st argument here, forces it into ECX
+  ); register; // __fastcall in Cxbx
+begin
+  // Implement it.
+end;
+
+On the other hand, if a function has more then 2 arguments, use this :
+
+procedure FastCallPatch_4Arguments(
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD; // Ignore this
+  {2 EDX}Argument2: DWORD; // The 2nd argument here, forces it into EDX
+  {1 ECX}Argument1: DWORD; // The 1st argument here, forces it into ECX
+  Argument4: DWORD  // The 3rd and following arguments must be put here
+  Argument3: DWORD; // in reverse order, to accord for the difference.
+  ); register; // __fastcall in Cxbx
+begin
+  // Implement it.
+end;
+
+
+Operators
+---------
+Converting C/C++ operators to Delphi:
+
+	-= operator
+
+		var1 -= var2;
+		{ this equates to: }
+		var1 := var1 - var2;
+		{ or }
+		Dec(var1, var2);
+
+	+= operator
+
+		var1 += var2;
+		{ this equates to: }
+		var1 := var1 + var2;
+		{ or }
+		Inc(var1, var2);
+
+	&= operator
+
+		var1 &= var2;
+		{ this equates to: }
+		var1 := var1 AND var2;
+
+	|= operator
+		
+		var1 |= var2;
+		{ this equates to: }
+		var1 := var1 OR var2;
+
+	*= operator 
 	
-  WINAPI and NTAPI -> stdcall (see http://www.nynaeve.net/?p=42)
-  __fastcall -> register
+		var1 *= var2;
+		{ this equates to: }
+		var1 := var1 * var2;
 
 
 Adding patches
@@ -76,71 +338,6 @@ This goes fully automatic; To verify, check the log for a line like this :
   DxbxHLE : Installed patched from $00204080 (SomeFuntion) to $100ABCDE
 
 The addresses will be different, but the name should match your new patch.
-
-
-
-CToPas
-------
-CToPas is a tool that can help you translating C code to Delphi.
-It does this by executing a number of automated replacements, so that C code
-starts to resemble Delphi code. This is no reliable translation however,
-so to get functionally equivalent code, manual changes are also needed.
-
-When using CToPas, be aware of these syntaxis that might need to be reversed:
-  " mod " -> "%" (inside strings)
-  " not " -> "!" (inside strings)
-
-
-Operators
----------
-Converting C/C++ operators to Delphi:
-	-= operator
-
-		var1 -= var2;
-		{ this equates to: }
-		var1 := var1 - var2;
-
-
-	+= operator
-
-		var1 += var2;
-		{ this equates to: }
-		var1 := var1 + var2;
-	
-
-	&= operator
-
-		var1 &= var2;
-		{ this equates to: }
-		var1 := var1 AND var2;
-
-
-	|= operator
-		
-		var1 |= var2;
-		{ this equates to: }
-		var1 := var1 OR var2;
-
-
-	*= operator 
-	
-		var1 *= var2;
-		{ this equates to: }
-		var1 := var1 * var2;
-
-
-Pointer translation
--------------------
-
-C/C++ 
-
-     *variabele = value;
-     PDWord *pSampleValue;
-
-Delphi
-
-     variabele^ := value;
-     pSampleValue : PDWord;
 
 
 Xbox Kernel sources
