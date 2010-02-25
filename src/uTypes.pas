@@ -90,6 +90,18 @@ type
 {$IFEND}
 
 {$IFDEF SUPPORTS_POINTERMATH}
+  {$IFDEF USE_WINDOWS_TYPES}
+    PUINT = Windows.PUINT;
+  {$ELSE}
+    PUINT = ^UINT;
+  {$ENDIF}
+  PUINTs = PUINT; // Dxbx addition, to give older Delphis an indexable type
+{$ELSE}
+  ArrayOfUINT = array [0..MaxInt div SizeOf(UINT)-1] of UINT;
+  PUINTs = ^ArrayOfUINT; // Dxbx addition, to give older Delphis an indexable type
+{$ENDIF}
+
+{$IFDEF SUPPORTS_POINTERMATH}
   MathPtr = PByte;
 {$ELSE}
   // For compatibility with older Delphi versions :

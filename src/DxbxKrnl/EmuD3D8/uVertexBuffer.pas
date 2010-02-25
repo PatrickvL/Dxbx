@@ -573,9 +573,9 @@ var
   dwNewSize: DWORD;
 
   uiVertex: uint32;
-(*  dwPosOrig: DWORD;
+  dwPosOrig: DWORD;
   dwPosNew: DWORD;
-  uiType: UINT; *)
+  uiType: UINT;
 
 begin
     pStream := nil;
