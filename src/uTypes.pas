@@ -18,6 +18,7 @@
 unit uTypes;
 
 {$INCLUDE Dxbx.inc}
+{$POINTERMATH ON}
 
 interface
 

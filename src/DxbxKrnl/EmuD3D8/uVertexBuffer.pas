@@ -813,12 +813,12 @@ begin
                     printf('D3DVSDT_NONE / xbox ext. nsp /');
 {$ENDIF}
                     dwNewDataType := $FF;*)
-(*                    end;
+                    end;
                 default:
                     CxbxKrnlCleanup('Unhandled stream type: 0x%.02X', pStreamPatch.pTypes[uiType]);
                     end;
              end;
-         end;            *)
+         end;
     end;
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
