@@ -578,6 +578,8 @@ var
   uiType: UINT;
 
 begin
+    pStream := nil;
+
     // FVF buffers doesn't have Xbox extensions, but texture coordinates may
     // need normalization if used with linear textures.
     if (not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
@@ -881,6 +883,7 @@ var
 begin
     // Check for active linear textures.
     bHasLinearTex := false;
+    pStream := nil; // DXBX - pstream might not have been initialized
 
     for i := 0 to 4 - 1 do
     begin
@@ -1839,7 +1842,7 @@ begin
       // iterate through the number of mipmap levels
       for level := 0 to dwMipMapLevels - 1 do
       begin
-        hRet := pResource.EmuTexture8.LockRect(level, LockedRect, NULL, 0);
+        {hRet := }pResource.EmuTexture8.LockRect(level, LockedRect, NULL, 0);
 
         iRect := classes.Rect(0, 0, 0, 0);
         iPoint := classes.Point(0, 0);
