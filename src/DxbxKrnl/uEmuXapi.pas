@@ -896,8 +896,8 @@ procedure XTL_EmuXInputClose
     hDevice: HANDLE
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  pPH: PPOLLING_PARAMETERS_HANDLE;
+{var
+  pPH: PPOLLING_PARAMETERS_HANDLE;} // DXBX - pph never used
 begin
   EmuSwapFS(fsWindows);
 
@@ -909,7 +909,7 @@ begin
     [hDevice]);
 {$ENDIF}
 
-  pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
+  {pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);} // DXBX - pph never used
 
   {  Markd out by CXBX
    no longer necessary
@@ -946,7 +946,7 @@ function XTL_EmuXInputPoll
 var
   v: Integer;
   pFeedback: PXINPUT_FEEDBACK;
-  pPH: PPOLLING_PARAMETERS_HANDLE;
+  {pPH: PPOLLING_PARAMETERS_HANDLE;} // DXBX - pph never used
 begin
   EmuSwapFS(fsWindows);
 
@@ -958,7 +958,7 @@ begin
        [hDevice]);
 {$ENDIF}
 
-  pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);
+  {pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);} // DXBX - pph never used
 
   //
   // Poll input

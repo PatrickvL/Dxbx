@@ -125,7 +125,7 @@ end;
 
 // exception handler
 function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:80
+// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   fix: UInt32;
   buffer: array [0..256 -1] of char;
@@ -135,7 +135,7 @@ var
   v: DWORD;
   dwCur: DWORD;
   dwValue: DWORD;
-//  dwPtr: DWORD;
+  dwPtr: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -212,7 +212,8 @@ begin
           begin
             fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
-            (*PDWord($0039BE58)^ := e.ContextRecord.Eax = fix;
+            PDWord($0039BE58)^ := fix;
+            e.ContextRecord.Eax := fix;
 
             // go through and fix any other pointers in the $2DF1C8 allocation chunk
             begin
@@ -220,7 +221,7 @@ begin
               dwSize := EmuCheckAllocationSize(PVOID(dwPtr), False);
 
               // dword aligned
-              dwSize -= 4 - dwSize%4;
+              dwSize := dwSize - (4 - dwSize mod 4);
 
               v := 0;
               while v < dwSize do
@@ -228,11 +229,11 @@ begin
                 dwCur := (dwPtr+v);
 
                 if (dwCur >= $803A6000) and (dwCur < $819A6000) then
-                  (dwPtr+v) := g_HaloHack[1] + (dwCur - $803A6000);
+                  PDWORD(dwPtr+v)^ := g_HaloHack[1] + (dwCur - $803A6000);
 
                 Inc(v, 4);
               end;
-            end;                     *)
+            end;
 
 {$IFDEF DEBUG}
             DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');
@@ -285,7 +286,7 @@ begin
 {$IFDEF DEBUG}
         DbgPrintf('EmuMain : Aborting Emulation');
 {$ENDIF}
-        (*fflush(stdout); *)
+        {fflush(stdout);}
 
         if CxbxKrnl_hEmuParent <> 0 then
           SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
@@ -321,7 +322,7 @@ begin
 {$IFDEF DEBUG}
         DbgPrintf('EmuMain : Aborting Emulation');
 {$ENDIF}
-        (*fflush(stdout);*)
+        {fflush(stdout);}
 
         if CxbxKrnl_hEmuParent <> 0 then
           SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);

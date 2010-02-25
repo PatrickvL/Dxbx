@@ -1085,6 +1085,8 @@ begin
 (*    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
         CxbxKrnlCleanup('Unsupported FileInformationClass'); *)
 
+    Ret := STATUS_SUCCESS; // DXBX - Ret might not have been initialized
+
     // initialize FileMask
     if Assigned(FileMask) then
       mbstowcs(@(wszObjectName[0]), FileMask.Buffer, 160-1)

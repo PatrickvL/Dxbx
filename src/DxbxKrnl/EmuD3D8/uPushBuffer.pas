@@ -190,7 +190,6 @@ procedure XTL_EmuExecutePushBufferRaw
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pdwOrigPushData: PDWord;
   pIndexData: PVOID;
   pVertexData: PVOID;
   dwVertexShader: DWord;
@@ -221,13 +220,7 @@ begin
   if XTL_g_bSkipPush then
     Exit;
 
-  pdwOrigPushData := pdwPushData;
-
-  pIndexData := nil;
-  pVertexData := nil;
-
   dwVertexShader := DWORD(-1);
-  dwStride := DWORD(-1);
 
   PCPrimitiveType := D3DPRIMITIVETYPE(-1);
   XBPrimitiveType := X_D3DPT_INVALID;
@@ -588,7 +581,7 @@ begin
       end;
       {$endif}
 
-      Inc(pdwPushData, (dwCount div 2) - iif(bInc, 0, 2));
+      Inc(Cardinal(pdwPushData), (dwCount div 2) - Cardinal(iif(bInc, 0, 2)));
 
       // perform rendering
       begin
