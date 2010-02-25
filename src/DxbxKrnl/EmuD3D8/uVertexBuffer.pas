@@ -144,9 +144,9 @@ type _D3DIVB = packed record
   end;
   D3DIVB = _D3DIVB;
 
-//  PD3DIVB = ^D3DIVB;
+  PD3DIVB = ^D3DIVB;
   TD3DIVBArray = array [0..(MaxInt div SizeOf(D3DIVB)) - 1] of D3DIVB;
-  PD3DIVB = ^TD3DIVBArray;
+  PD3DIVBs = ^TD3DIVBArray;
 
 procedure XTL_EmuFlushIVB; stdcall;
 procedure XTL_EmuUpdateActiveTexture; stdcall;
@@ -156,7 +156,7 @@ const MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // Cxbx TODO: Trim the no
 
 // inline vertex buffer emulation
 var g_IVBTblOffs: UINT = 0;
-var g_IVBTable: PD3DIVB = nil;
+var g_IVBTable: PD3DIVBs = nil;
 
 implementation
 
@@ -812,13 +812,13 @@ begin
 {$IFDEF DEBUG}
                     printf('D3DVSDT_NONE / xbox ext. nsp /');
 {$ENDIF}
-                    dwNewDataType := $FF;*)
+                    dwNewDataType := $FF;
                     end;
                 default:
                     CxbxKrnlCleanup('Unhandled stream type: 0x%.02X', pStreamPatch.pTypes[uiType]);
                     end;
              end;
-         end;
+         end; *)
     end;
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin

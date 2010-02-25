@@ -35,11 +35,12 @@ uses
 
 procedure XTL_EmuUpdateDeferredStates; stdcall;
 
-var
-  // deferred state lookup tables
-  XTL_EmuD3DDeferredRenderState: PDWordArray;
-  XTL_EmuD3DDeferredTextureState: PDWordArray;
+// deferred state lookup tables
+var XTL_EmuD3DDeferredRenderState: PDWORDs;
+var XTL_EmuD3DDeferredTextureState: PDWORDs;
 
+var g_BuildVersion: uint32;
+var g_OrigBuildVersion: uint32;
 
 implementation
 
@@ -52,7 +53,7 @@ procedure XTL_EmuUpdateDeferredStates; stdcall;
 var
   dwConv: DWORD;
   v: int;
-  pCur: PDWordArray;
+  pCur: PDWORDs;
   pTexture: IDirect3DBaseTexture8;
   dwValue: DWORD;
   bHack3925: bool;

@@ -67,10 +67,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function {037} xboxkrnl_FscSetCacheSize(
-  uCachePages: ULONG
-  ): LONG; stdcall;
-// Source:Cxbx  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function {037} xboxkrnl_FscSetCacheSize(uCachePages: ULONG): LONG; stdcall;
+// Source:Cxbx  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -84,6 +82,7 @@ begin
 
   EmuWarning('FscSetCacheSize is being ignored');
   EmuSwapFS(fsXbox);
+  
   Result := 0;
 end;
 

@@ -39,6 +39,7 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
+  uDxbxUtils,
   uDxbxKrnl,
   uDxbxKrnlUtils;
 
@@ -50,9 +51,9 @@ var
 function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeBoostPriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeBugCheck(
-  BugCheckCode: DWORD
-  ): NTSTATUS; stdcall;
+procedure xboxkrnl_KeBugCheck(
+  BugCheckMode: ULONG
+  ); stdcall;
 function xboxkrnl_KeBugCheckEx(
   BugCheckCode: DWORD;
   BugCheckParameter1: PVOID;
@@ -172,12 +173,25 @@ end;
 // Same as KeBugCheckEx(BugCheckCode, 0, 0, 0, 0);
 //
 // Differences from NT: None, other than the reaction.
-function xboxkrnl_KeBugCheck(
-  BugCheckCode: DWORD
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+procedure xboxkrnl_KeBugCheck
+(
+  BugCheckMode: ULONG
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := xboxkrnl_KeBugCheckEx(BugCheckCode, nil, nil, nil, nil);
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : KeBugCheck' +
+      #13#10'(' +
+      #13#10'   BugCheckMode      : 0x%.08X' +
+      #13#10');',
+      [BugCheckMode]);
+{$ENDIF}
+
+  // Cxbx TODO: Investigate XapiFiberStartup maybe?
+
+  EmuSwapFS(fsXbox);
 end;
 
 // KeBugCheckEx:
@@ -214,33 +228,28 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeDelayExecutionThread(
+function xboxkrnl_KeDelayExecutionThread
+(
   WaitMode: KPROCESSOR_MODE;
   Alertable: CHARBOOL;
   Interval: PLARGE_INTEGER
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
   EmuSwapFS();   // Win2k/XP FS
 
-  if not Assigned(Interval) then
-    DbgPrintf('EmuKrnl : KeDelayExecutionThread'+
-          #13#10'('+
-          #13#10'   WaitMode            : 0x%.08X'+
-          #13#10'   Alertable           : 0x%.08X'+
-          #13#10'   Interval            : 0x%.08X (%I64d)'+
-          #13#10');',
-          [WaitMode, Alertable, Interval, '0'])
-  else
-    DbgPrintf('EmuKrnl : KeDelayExecutionThread'+
-          #13#10'('+
-          #13#10'   WaitMode            : 0x%.08X'+
-          #13#10'   Alertable           : 0x%.08X'+
-          #13#10'   Interval            : 0x%.08X (%I64d)'+
-          #13#10');',
-          [WaitMode, Alertable, Interval, Interval.QuadPart]);
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : KeDelayExecutionThread'+
+      #13#10'('+
+      #13#10'   WaitMode            : 0x%.08X'+
+      #13#10'   Alertable           : 0x%.08X'+
+      #13#10'   Interval            : 0x%.08X (%I64d)'+
+      #13#10');',
+      [WaitMode, Alertable, Interval, QuadPart(Interval)]);
+{$ENDIF}
+
 
   ret := NtDelayExecution(Alertable, PLARGE_INTEGER(Interval));
   EmuSwapFS();   // Xbox FS
@@ -299,23 +308,24 @@ end;
 // Initializes a DPC structure.
 //
 // Differences from NT: This function sets less fields than the NT version.
-procedure xboxkrnl_KeInitializeDpc(
+procedure xboxkrnl_KeInitializeDpc
+(
   Dpc: PKDPC;
   DeferredRoutine: PKDEFERRED_ROUTINE;
   DeferredContext: PVOID
-  ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeInitializeDpc' +
-         #13#10'(' +
-         #13#10'   Dpc                 : 0x%.08X' +
-         #13#10'   DeferredRoutine     : 0x%.08X' +
-         #13#10'   DeferredContext     : 0x%.08X' +
-         #13#10');',
-         [ Dpc, Addr(DeferredRoutine), DeferredContext]);
+      #13#10'(' +
+      #13#10'   Dpc                 : 0x%.08X' +
+      #13#10'   DeferredRoutine     : 0x%.08X' +
+      #13#10'   DeferredContext     : 0x%.08X' +
+      #13#10');',
+      [Dpc, Addr(DeferredRoutine), DeferredContext]);
 {$ENDIF}
 
   // inialize Dpc field values
@@ -371,26 +381,27 @@ end;
 // Initializes a timer.
 //
 // Differences from NT: None.
-procedure xboxkrnl_KeInitializeTimerEx(
+procedure xboxkrnl_KeInitializeTimerEx
+(
   Timer: PKTIMER;
   Type_: TIMER_TYPE
-  ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeInitializeTimerEx' +
-         #13#10'(' +
-         #13#10'   Timer               : 0x%.08X' +
-         #13#10'   Type                : 0x%.08X' +
-         #13#10');',
-         [Timer, Ord(Type_)]);
+      #13#10'(' +
+      #13#10'   Timer               : 0x%.08X' +
+      #13#10'   Type                : 0x%.08X' +
+      #13#10');',
+      [Timer, Ord(Type_)]);
 {$ENDIF}
 
   Timer.Header.Type_ := UCHAR(Ord(Type_) + 8);
   Timer.Header.Inserted := 0;
-  Timer.Header.Size := SizeOf(Timer^) div SizeOf(ULONG);
+  Timer.Header.Size := sizeof(Timer^) div sizeof(ULONG);
   Timer.Header.SignalState := 0;
   Timer.TimerListEntry.Blink := NULL;
   Timer.TimerListEntry.Flink := NULL;
@@ -497,8 +508,11 @@ var
 begin
   EmuSwapFS();   // Win2k/XP FS
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
-  QueryPerformanceCounter(Counter);
+{$ENDIF}
+
+  QueryPerformanceCounter({var}Counter);
 
   EmuSwapFS();   // Xbox FS
 
@@ -512,35 +526,40 @@ var
 begin
   EmuSwapFS();   // Win2k/XP FS
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency()');
+{$ENDIF}
 
   // Xbox Performance Counter Frequency := 337F98h
-  QueryPerformanceFrequency(Frequency);
+  QueryPerformanceFrequency({var}Frequency);
 
   EmuSwapFS();   // Xbox FS
   Result := Frequency.QuadPart;
 end;
 
-procedure xboxkrnl_KeQuerySystemTime(
+procedure xboxkrnl_KeQuerySystemTime
+(
   CurrentTime: PLARGE_INTEGER
-  ); stdcall;
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   SystemTime: _SYSTEMTIME;
 begin
   EmuSwapFS();   // Win2k/XP FS
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeQuerySystemTime'+
-         #13#10'('+
-         #13#10'   CurrentTime         : 0x%.08X'+
-         #13#10');',
-         [CurrentTime]);
+      #13#10'('+
+      #13#10'   CurrentTime         : 0x%.08X'+
+      #13#10');',
+      [CurrentTime]);
+{$ENDIF}
 
   // TODO: optimize for WinXP if speed ever becomes important here
 
-  GetSystemTime(SystemTime);
+  GetSystemTime({var}SystemTime);
 
-  SystemTimeToFileTime(SystemTime, PFILETIME(CurrentTime)^);
+  SystemTimeToFileTime({var}SystemTime, {var}PFILETIME(CurrentTime)^);
 
   EmuSwapFS();   // Xbox FS
 end;
@@ -715,22 +734,23 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeSetTimer(
+function xboxkrnl_KeSetTimer
+(
   Timer: PKTIMER;
   DueTime: LARGE_INTEGER;
   Dpc: PKDPC // OPTIONAL
-  ): LONGBOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): LONGBOOL; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuKrnl : KeSetTimer' +
-       #13#10'(' +
-       #13#10'   Timer               : 0x%.08X' +
-       #13#10'   DueTime             : 0x%.16X' + // was %I64X
-       #13#10'   Dpc                 : 0x%.08X' +
-       #13#10');',
-       [Timer, DueTime.QUADPART, Dpc]);
+      #13#10'(' +
+      #13#10'   Timer               : 0x%.08X' +
+      #13#10'   DueTime             : 0x%.16X' + // was %I64X
+      #13#10'   Dpc                 : 0x%.08X' +
+      #13#10');',
+      [Timer, QuadPart(@DueTime), Dpc]);
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -738,32 +758,33 @@ begin
   Result := xboxkrnl_KeSetTimerEx(Timer, DueTime, {Period=}0, Dpc);
 end;
 
-function xboxkrnl_KeSetTimerEx(
+function xboxkrnl_KeSetTimerEx
+(
   Timer: PKTIMER;
   DueTime: LARGE_INTEGER;
   Period: LONG; // OPTIONAL
   Dpc: PKDPC // OPTIONAL
-  ): LONGBOOL; stdcall;
+): LONGBOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeSetTimerEx' +
-           #13#10'(' +
-           #13#10'   Timer               : 0x%.08X' +
-           #13#10'   DueTime             : 0x%.16X' + // was %I64X
-           #13#10'   Period              : 0x%.08X' +
-           #13#10'   Dpc                 : 0x%.08X' +
-           #13#10');',
-           [Timer, DueTime.QUADPART, Period, Dpc]);
+      #13#10'(' +
+      #13#10'   Timer               : 0x%.08X' +
+      #13#10'   DueTime             : 0x%.16X' + // was %I64X
+      #13#10'   Period              : 0x%.08X' +
+      #13#10'   Dpc                 : 0x%.08X' +
+      #13#10');',
+      [Timer, QuadPart(@DueTime), Period, Dpc]);
 {$ENDIF}
 
   CxbxKrnlCleanup('KeSetTimerEx is not implemented');
 
   EmuSwapFS(fsXbox);
 
-  Result := True;
+  Result := TRUE;
 end;
 
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall;
@@ -813,5 +834,19 @@ begin
   Result := Unimplemented('KeWaitForSingleObject');
   EmuSwapFS(fsXbox);
 end;
+
+//
+
+procedure xLaunchDataPage_Init;
+begin
+  xLaunchDataPage.Header.dwLaunchDataType := 2; // 2: dashboard, 0: title
+  xLaunchDataPage.Header.dwTitleId := 0;
+  strcopy(PAnsiChar(@(xLaunchDataPage.Header.szLaunchPath[0])), 'D:\default.xbe'#0);
+  xLaunchDataPage.Header.dwFlags := 0;
+end;
+
+initialization
+
+  xLaunchDataPage_Init;
 
 end.

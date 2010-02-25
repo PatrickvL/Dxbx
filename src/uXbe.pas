@@ -1252,7 +1252,7 @@ begin
     // Read the texture into the bitmap :
     Result := ReadD3DTextureFormatIntoBitmap(
       {Format=}(XprImage.hdr.Texture.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT,
-      {Data=}PByteArray(@(XprImage.pBits[0])),
+      {Data=}PBytes(@(XprImage.pBits[0])),
       {DataSize=}XprImage.hdr.Header.dwTotalSize - XprImage.hdr.Header.dwHeaderSize,
       {Output=}@Scanlines);
       

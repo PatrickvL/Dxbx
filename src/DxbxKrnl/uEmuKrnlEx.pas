@@ -153,10 +153,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function {014} xboxkrnl_ExAllocatePool(
+function {014} xboxkrnl_ExAllocatePool
+(
   NumberOfBytes: ULONG
-  ): PVOID; stdcall;
-// Source:OpenXDK  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): PVOID; stdcall;
+// Source:Cxbx  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
 var
   pRet: PVOID;
 begin
@@ -178,11 +179,12 @@ end;
 
 // Differences from NT: There is no PoolType field, as the XBOX
 // only has 1 pool, the non-paged pool.
-function {015} xboxkrnl_ExAllocatePoolWithTag(
+function {015} xboxkrnl_ExAllocatePoolWithTag
+(
   NumberOfBytes: SIZE_T;
   Tag: ULONG
-  ): PVOID; stdcall;
-// Source:OpenXDK  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): PVOID; stdcall;
+// Source:Cxbx  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
 var
   pRet: PVOID;
 begin
@@ -277,13 +279,14 @@ end;
 // this function, when first called, creates a "shadow" copy
 // of the EEPROM in RAM which is used in subsequent calls to Query,
 // and updated by ExSaveNonVolatileSetting.
-function {024} xboxkrnl_ExQueryNonVolatileSetting(
+function {024} xboxkrnl_ExQueryNonVolatileSetting
+(
   ValueIndex: DWORD;
   Type_: PDWORD; // out
   Value: PUCHAR; // out
   ValueLength: SIZE_T;
   ResultLength: PSIZE_T // out, OPTIONAL
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Source:OpenXDK  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -306,13 +309,13 @@ begin
     $104:
     begin
       // Cxbx TODO: configurable region or autodetect of some sort
-      if Assigned(Type_) then
+      if (Type_ <> nil) then
         Type_^ := $04;
 
-      if Assigned(Value) then
+      if (Value <> nil) then
         Value^ := $01;  // North America
 
-      if Assigned(ResultLength) then
+      if (ResultLength <> nil) then
         ResultLength^ := $04;
     end;
 
@@ -320,13 +323,13 @@ begin
     $103:
     begin
       // Cxbx TODO: configurable region or autodetect of some sort
-      if Assigned(Type_) then
+      if (Type_ <> nil) then
         Type_^ := $04;
 
-      if Assigned(Value) then
+      if (Value <> nil) then
         Value^ := $01; // NTSC_M
 
-      if Assigned(ResultLength) then
+      if (ResultLength <> nil) then
         ResultLength^ := $04;
     end;
 
@@ -334,13 +337,13 @@ begin
     $007:
     begin
       // Cxbx TODO: configurable language or autodetect of some sort
-      if Assigned(Type_) then
+      if (Type_ <> nil) then
         Type_^ := $04;
 
-      if Assigned(Value) then
+      if (Value <> nil) then
         Value^ := $01;  // English
 
-      if Assigned(ResultLength) then
+      if (ResultLength <> nil) then
         ResultLength^ := $04;
     end;
 
@@ -348,38 +351,38 @@ begin
     $008:
     begin
       // Cxbx TODO: configurable video flags or autodetect of some sort
-      if Assigned(Type_) then
+      if (Type_ <> nil) then
         Type_^ := $04;
 
-      if Assigned(Value) then
+      if (Value <> nil) then
         Value^ := $10;  // Letterbox
 
-      if Assigned(ResultLength) then
+      if (ResultLength <> nil) then
         ResultLength^ := $04;
     end;
 
     // Audio Flags
     $009:
     begin
-      if Assigned(Type_) then
+      if (Type_ <> nil) then
         Type_^ := $04;
 
-      if Assigned(Value) then
+      if (Value <> nil) then
         Value^ := 0;
 
-      if Assigned(ResultLength) then
+      if (ResultLength <> nil) then
         ResultLength^ := $04;
     end;
 
     Ord(EEPROM_MISC):
     begin
-      if Assigned(Type_) then
+      if (Type_ <> nil) then
         Type_^ := $04;
 
-      if Assigned(Value) then
+      if (Value <> nil) then
         Value^ := 0;
 
-      if Assigned(ResultLength) then
+      if (ResultLength <> nil) then
         ResultLength^ := $04;
     end;
 

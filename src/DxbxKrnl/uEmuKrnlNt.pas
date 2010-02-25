@@ -374,7 +374,8 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if Assigned(ObjectAttributes) then
+  if  Assigned(ObjectAttributes)
+  and Assigned(ObjectAttributes.ObjectName) then
     szBuffer := ObjectAttributes.ObjectName.Buffer
   else
     szBuffer := '';
@@ -464,7 +465,7 @@ begin
      #13#10'   CreateDisposition   : 0x%.08X' +
      #13#10'   CreateOptions       : 0x%.08X' +
      #13#10');',
-     [FileHandle, DesiredAccess, ObjectAttributes, string(ObjectAttributes.ObjectName.Buffer),
+     [FileHandle, DesiredAccess, ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName),
      IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 {$ENDIF}
 
@@ -492,7 +493,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
+      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
       DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -505,7 +506,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
+      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
       DbgPrintf('  New:"$XbePath\\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -517,7 +518,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
+      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\T\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -529,7 +530,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
+      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\U\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -541,7 +542,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [string(ObjectAttributes.ObjectName.Buffer)]);
+      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\Z\%s"', [szBuffer]);
 {$ENDIF}
     end;
@@ -950,7 +951,7 @@ begin
     #13#10'   ShareAccess         : 0x%.08X' +
     #13#10'   CreateOptions       : 0x%.08X' +
     #13#10');',
-    [FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes.ObjectName.Buffer,
+    [FileHandle, DesiredAccess, ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName),
      IoStatusBlock, ShareAccess, OpenOptions]);
   EmuSwapFS(fsXbox);
 {$ENDIF}
@@ -1046,82 +1047,64 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    if Assigned(FileMask) then
-      DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
-          #13#10'(' +
-          #13#10'   FileHandle           : 0x%.08X' +
-          #13#10'   Event                : 0x%.08X' +
-          #13#10'   ApcRoutine           : 0x%.08X' +
-          #13#10'   ApcContext           : 0x%.08X' +
-          #13#10'   IoStatusBlock        : 0x%.08X' +
-          #13#10'   FileInformation      : 0x%.08X' +
-          #13#10'   Length               : 0x%.08X' +
-          #13#10'   FileInformationClass : 0x%.08X' +
-          #13#10'   FileMask             : 0x%.08X (%s)' +
-          #13#10'   RestartScan          : 0x%.08X' +
-          #13#10');',
-          [@FileHandle, @Event, @ApcRoutine, @ApcContext, @IoStatusBlock,
-           @FileInformation, @Length, @FileInformationClass, @FileMask,
-           @FileMask.Buffer, @RestartScan])
-    else
-      DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
-          #13#10'(' +
-          #13#10'   FileHandle           : 0x%.08X' +
-          #13#10'   Event                : 0x%.08X' +
-          #13#10'   ApcRoutine           : 0x%.08X' +
-          #13#10'   ApcContext           : 0x%.08X' +
-          #13#10'   IoStatusBlock        : 0x%.08X' +
-          #13#10'   FileInformation      : 0x%.08X' +
-          #13#10'   Length               : 0x%.08X' +
-          #13#10'   FileInformationClass : 0x%.08X' +
-          #13#10'   FileMask             : 0x%.08X (%s)' +
-          #13#10'   RestartScan          : 0x%.08X' +
-          #13#10');',
-          [@FileHandle, @Event, @ApcRoutine, @ApcContext, @IoStatusBlock,
-           @FileInformation, @Length, @FileInformationClass, @FileMask,
-           '', @RestartScan]);
+  DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
+      #13#10'(' +
+      #13#10'   FileHandle           : 0x%.08X' +
+      #13#10'   Event                : 0x%.08X' +
+      #13#10'   ApcRoutine           : 0x%.08X' +
+      #13#10'   ApcContext           : 0x%.08X' +
+      #13#10'   IoStatusBlock        : 0x%.08X' +
+      #13#10'   FileInformation      : 0x%.08X' +
+      #13#10'   Length               : 0x%.08X' +
+      #13#10'   FileInformationClass : 0x%.08X' +
+      #13#10'   FileMask             : 0x%.08X (%s)' +
+      #13#10'   RestartScan          : 0x%.08X' +
+      #13#10');',
+      [@FileHandle, @Event, @ApcRoutine, @ApcContext, @IoStatusBlock,
+       @FileInformation, @Length, @FileInformationClass, @FileMask,
+       PSTRING_Buffer(FileMask), @RestartScan]);
 {$ENDIF}
 
-    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
-        CxbxKrnlCleanup('Unsupported FileInformationClass');
+  if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
+      CxbxKrnlCleanup('Unsupported FileInformationClass');
 
-    Ret := STATUS_SUCCESS; // DXBX - Ret might not have been initialized
+  Ret := STATUS_SUCCESS; // DXBX - Ret might not have been initialized
 
-    // initialize FileMask
-    if Assigned(FileMask) then
-      mbstowcs(@(wszObjectName[0]), FileMask.Buffer, 160-1)
-    else
-      mbstowcs(@(wszObjectName[0]), '', 160-1);
+  // initialize FileMask
+  if Assigned(FileMask) then
+    mbstowcs(@(wszObjectName[0]), FileMask.Buffer, 160-1)
+  else
+    mbstowcs(@(wszObjectName[0]), '', 160-1);
 
-    RtlInitUnicodeString(@NtFileMask, @(wszObjectName[0]));
+  RtlInitUnicodeString(@NtFileMask, @(wszObjectName[0]));
 
-    FileDirInfo := PFILE_DIRECTORY_INFORMATION(CxbxMalloc($40 + 160*2));
+  FileDirInfo := PFILE_DIRECTORY_INFORMATION(CxbxMalloc($40 + 160*2));
 
-    (*mbstr := FileInformation.FileName;
-    wcstr := FileDirInfo.FileName; *)
+  mbstr := @FileInformation.FileName[0]; // Dxbx TODO : Is this Ansi or Wide ?
+  wcstr := FileDirInfo.FileName;
 
-    while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0) do
-    begin
-      ZeroMemory(wcstr, 160*2);
+  while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0) do
+  begin
+    ZeroMemory(wcstr, 160*2);
 
-      ret := NtQueryDirectoryFile
-          (
-              FileHandle, Event, PIO_APC_ROUTINE(ApcRoutine), ApcContext, PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
-              $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
-          );
+    ret := NtQueryDirectoryFile
+        (
+            FileHandle, Event, PIO_APC_ROUTINE(ApcRoutine), ApcContext, PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
+            $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
+        );
 
-      // convert from PC to Xbox
-      memcpy(FileInformation, FileDirInfo, $40);
-      wcstombs(mbstr, wcstr, 160);
-      FileInformation.FileNameLength := FileInformation.FileNameLength div 2;
+    // convert from PC to Xbox
+    memcpy(FileInformation, FileDirInfo, $40);
+    wcstombs(mbstr, wcstr, 160);
+    FileInformation.FileNameLength := FileInformation.FileNameLength div 2;
 
-      RestartScan := FALSE;
+    RestartScan := FALSE;
 
-      // Xbox does not return . and ..
-    end;
+    // Xbox does not return . and ..
+  end;
 
-    // Cxbx TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
-    CxbxFree(FileDirInfo);
+  // Cxbx TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
+  CxbxFree(FileDirInfo);
 
   Result := ret;
 
@@ -1144,7 +1127,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryFullAttributesFile(
+function xboxkrnl_NtQueryFullAttributesFile
+(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
   ): NTSTATUS; stdcall;
@@ -1163,17 +1147,22 @@ begin
      #13#10'   ObjectAttributes    : 0x%.08X (%s)'+
      #13#10'   Attributes          : 0x%.08X'+
      #13#10');',
-     [ObjectAttributes, ObjectAttributes.ObjectName.Buffer, Attributes]);
+     [ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName), Attributes]);
 {$ENDIF}
 
   szBuffer := ObjectAttributes.ObjectName.Buffer;
 
   // initialize object attributes
-  mbstowcs(@(wszObjectName[0]), szBuffer, 160-1);
-  RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
-  InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+  begin
+    mbstowcs(@(wszObjectName[0]), szBuffer, 160-1);
+
+    RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
+
+    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+  end;
 
   Result := NtQueryFullAttributesFile(@NtObjAttr, Attributes);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1320,7 +1309,8 @@ end;
 // Microsoft even under NT.
 //
 // Differences from NT: None known.
-function xboxkrnl_NtQueryVolumeInformationFile(
+function xboxkrnl_NtQueryVolumeInformationFile
+(
   FileHandle: HANDLE;
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   FileInformation: PFILE_FS_SIZE_INFORMATION; // OUT
@@ -1349,8 +1339,8 @@ begin
 {$ENDIF}
 
   // Safety/Sanity Check
-(*  if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileDirectoryInformation) then
-      CxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass'); *)
+  if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileFsVolumeInformation{FileDirectoryInformation}) then
+      CxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
 
   ret := NtQueryVolumeInformationFile
   (
@@ -1361,14 +1351,14 @@ begin
   );
 
   // NOTE: Cxbx TODO: Dynamically fill in, or allow configuration?
-  if(FileInformationClass = FileFsSizeInformation) then
+  if (FileInformationClass = FileFsSizeInformation) then
   begin
-      SizeInfo := PFILE_FS_SIZE_INFORMATION(FileInformation);
+    SizeInfo := PFILE_FS_SIZE_INFORMATION(FileInformation);
 
-      SizeInfo.TotalAllocationUnits.QuadPart     := $4C468;
-      SizeInfo.AvailableAllocationUnits.QuadPart := $2F125;
-      SizeInfo.SectorsPerAllocationUnit          := 32;
-      SizeInfo.BytesPerSector                    := 512;
+    SizeInfo.TotalAllocationUnits.QuadPart     := $4C468;
+    SizeInfo.AvailableAllocationUnits.QuadPart := $2F125;
+    SizeInfo.SectorsPerAllocationUnit          := 32;
+    SizeInfo.BytesPerSector                    := 512;
   end;
 
   Result := ret;

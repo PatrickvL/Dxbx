@@ -38,23 +38,22 @@ const
   HexNibble: string = '0123456789ABCDEF';
 
 type
+  GUID = TGUID;
+
   TStringArray = array of string;
 
   TVarByteArray = array of Byte;
 
   TRawSection = TVarByteArray;
 
-  TPWCharArray = array [0..(MaxInt div SizeOf(PWideChar)) - 1] of PWideChar;
-  PPWCharArray = ^TPWCharArray;
-
   TDWordArray = array [0..(MaxInt div SizeOf(DWord)) - 1] of DWord;
-  PDWordArray = ^TDWordArray;
+  PDWORDs = ^TDWordArray;
 
   TBooleanArray = array [0..(MaxInt div SizeOf(Boolean)) -1] of Boolean;
-  PBooleanArray = ^TBooleanArray;
+  PBooleans = ^TBooleanArray;
 
   TByteArray = array [0..(MaxInt div SizeOf(Byte)) -1] of Byte;
-  PByteArray = ^TByteArray;
+  PBytes = ^TByteArray;
 
 {$IF NOT DECLARED(PDWord)}
   PDWord = ^DWord;
@@ -72,7 +71,7 @@ type
 
   PUInt32 = ^UInt32;
   PUInt16 = ^UInt16;
-  PUInt8 = PByteArray;//PAnsiChar; //^UInt8;
+  PUInt8 = PBytes;//PAnsiChar; //^UInt8;
 
   UInt08 = UInt8;
   PUInt08 = PUInt8;
@@ -98,8 +97,8 @@ type
   {$ENDIF}
   PUINTs = PUINT; // Dxbx addition, to give older Delphis an indexable type
 {$ELSE}
-  ArrayOfUINT = array [0..MaxInt div SizeOf(UINT)-1] of UINT;
-  PUINTs = ^ArrayOfUINT; // Dxbx addition, to give older Delphis an indexable type
+  TUINTArray = array [0..MaxInt div SizeOf(UINT)-1] of UINT;
+  PUINTs = ^TUINTArray; // Dxbx addition, to give older Delphis an indexable type
 {$ENDIF}
 
 {$IFDEF SUPPORTS_POINTERMATH}
@@ -438,8 +437,8 @@ begin
   SetLength(Result, aLen * 2);
   for i := 0 to aLen - 1 do
   begin
-    Result[1 + i + i] := HexNibble[1 + (PByteArray(aPtr)[i] shr 4)];
-    Result[2 + i + i] := HexNibble[1 + (PByteArray(aPtr)[i] and 15)];
+    Result[1 + i + i] := HexNibble[1 + (PBytes(aPtr)[i] shr 4)];
+    Result[2 + i + i] := HexNibble[1 + (PBytes(aPtr)[i] and 15)];
   end;
 end;
 

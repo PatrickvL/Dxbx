@@ -168,10 +168,10 @@ procedure InitializeObjectAttributes(
   dummy: Pointer
   );
 
-var xLaunchDataPage: LAUNCH_DATA_PAGE; // pointed to by LaunchDataPage
+var xLaunchDataPage: LAUNCH_DATA_PAGE; // (pointed to by LaunchDataPage)
 
-var {156}xboxkrnl_KeTickCount: DWord;
-// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
+var {156}xboxkrnl_KeTickCount: DWORD = 0;
+// Source:Cxbx  Branch:Shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 
 var {162}xboxkrnl_KiBugCheckData: array [0..5 - 1] of ULONG_PTR;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
@@ -590,19 +590,5 @@ begin
   Result := Unimplemented('UnknownAPI373');
   EmuSwapFS(fsXbox);
 end;
-
-//
-
-procedure xLaunchDataPage_Init;
-begin
-  xLaunchDataPage.Header.dwLaunchDataType := 2; // 2: dashboard, 0: title
-  xLaunchDataPage.Header.dwTitleId := 0;
-  strcopy(PAnsiChar(@(xLaunchDataPage.Header.szLaunchPath[0])), 'D:\default.xbe'#0);
-  xLaunchDataPage.Header.dwFlags := 0;
-end;
-
-initialization
-
-  xLaunchDataPage_Init;
 
 end.
