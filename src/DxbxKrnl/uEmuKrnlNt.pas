@@ -1034,7 +1034,7 @@ function xboxkrnl_NtQueryDirectoryFile(
   FileMask: PSTRING;
   RestartScan: CHARBOOL
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:0
+// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
 var
   ret: NTSTATUS;
   NtFileMask: UNICODE_STRING;
@@ -1082,8 +1082,8 @@ begin
            '', @RestartScan]);
 {$ENDIF}
 
-(*    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
-        CxbxKrnlCleanup('Unsupported FileInformationClass'); *)
+    if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
+        CxbxKrnlCleanup('Unsupported FileInformationClass');
 
     Ret := STATUS_SUCCESS; // DXBX - Ret might not have been initialized
 
