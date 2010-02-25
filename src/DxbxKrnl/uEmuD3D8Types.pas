@@ -181,7 +181,7 @@ type _STREAM_DYNAMIC_PATCH = packed record
     NeedPatch: BOOL;       // This is to know whether is data which must be patched
     ConvertedStride: DWORD;
     NbrTypes: DWORD;        // Number of the stream data types
-    pTypes: PUINT;         // The stream data types (xbox)
+    pTypes: PUINTs;         // The stream data types (xbox)
   end; STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH;
   PSTREAM_DYNAMIC_PATCH = ^STREAM_DYNAMIC_PATCH;
 
