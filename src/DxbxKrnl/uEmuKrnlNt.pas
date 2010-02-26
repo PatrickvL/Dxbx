@@ -251,14 +251,15 @@ implementation
 // Allocates virtual memory.
 //
 // Differences from NT: There is no ProcessHandle parameter.
-function xboxkrnl_NtAllocateVirtualMemory(
+function xboxkrnl_NtAllocateVirtualMemory
+(
   BaseAddress: PPVOID; // OUT * ?
   ZeroBits: ULONG;
   AllocationSize: PULONG; // OUT * ?
   AllocationType: DWORD;
   Protect: DWORD
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -287,10 +288,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtClearEvent(
+function xboxkrnl_NtClearEvent
+(
   EventHandle: HANDLE
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -318,7 +320,7 @@ function xboxkrnl_NtClose
 (
     Handle: HANDLE
 ): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 {$IFDEF DXBX_EMUHANDLES}
 var
   iEmuHandle: TEmuHandle;
@@ -358,13 +360,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCreateEvent(
+function xboxkrnl_NtCreateEvent
+(
   EventHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
   EventType: EVENT_TYPE;
   InitialState: LONGBOOL
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   szBuffer: PAnsiChar;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
@@ -393,30 +396,30 @@ begin
        @EventType, BoolToStr(InitialState)]);
 {$ENDIF}
 
-    // initialize object attributes
-    if Assigned(szBuffer) then
-    begin
-        mbstowcs(@(wszObjectName[0]), '\??\', 4);
-        mbstowcs(@(wszObjectName[0+4]), szBuffer, 160-1);
+  // initialize object attributes
+  if (szBuffer <> nil) then
+  begin
+    mbstowcs(@(wszObjectName[0]), '\??\', 4);
+    mbstowcs(@(wszObjectName[0+4]), szBuffer, 160-1);
 
-        RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
+    RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
 
-        InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
-    end;
+    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+  end;
 
-    NtObjAttr.RootDirectory := 0;
+  NtObjAttr.RootDirectory := 0;
 
-    // redirect to NtCreateEvent
-    if Assigned(szBuffer) then
-      ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, NtObjAttr, EVENT_TYPE(EventType), InitialState)
-    else
-      ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, nil, EVENT_TYPE(EventType), InitialState);
+  // redirect to NtCreateEvent
+  if Assigned(szBuffer) then
+    ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, NtObjAttr, EVENT_TYPE(EventType), InitialState)
+  else
+    ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, nil, EVENT_TYPE(EventType), InitialState);
 
-    if (FAILED(ret)) then
-      EmuWarning('NtCreateEvent Failed!');
+  if (FAILED(ret)) then
+    EmuWarning('NtCreateEvent Failed!');
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtCreateEvent EventHandle = 0x%.08X', [@EventHandle]);
+  DbgPrintf('EmuKrnl : NtCreateEvent EventHandle = 0x%.08X', [EventHandle^]);
 {$ENDIF}
 
 
@@ -429,7 +432,8 @@ end;
 //
 // Differences from NT: The EaBuffer and EaLength options are gone.
 //     OBJECT_ATTRIBUTES uses ANSI_STRING, so only ANSI filenames work.
-function xboxkrnl_NtCreateFile(
+function xboxkrnl_NtCreateFile
+(
   FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -439,13 +443,14 @@ function xboxkrnl_NtCreateFile(
   ShareAccess: ULONG; // dtACCESS_MASK;
   CreateDisposition: ULONG; // dtCreateDisposition;
   CreateOptions: ULONG // dtCreateOptions
-  ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ReplaceChar: AnsiChar;
   ReplaceIndex: int;
   szBuffer: PAnsiChar;
   v: int;
+  CurIndex: int;
   NtUnicodeString: UNICODE_STRING;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
@@ -474,7 +479,7 @@ begin
 
   szBuffer := ObjectAttributes.ObjectName.Buffer;
 
-  if Assigned(szBuffer) then
+  if (szBuffer <> NULL) then
   begin
 {$IFDEF DEBUG}
     //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
@@ -558,7 +563,7 @@ begin
         if (szBuffer[v] = '*') then
         begin
           ReplaceIndex := v;
-          Break;
+          break;
         end;
 
         Inc(v);
@@ -576,12 +581,13 @@ begin
   end;
 
   // initialize object attributes
-  if Assigned(szBuffer) then
+  if (szBuffer <> NULL) then
     mbstowcs(@(wszObjectName[0]), szBuffer, MAX_PATH-1)
   else
     wszObjectName[0] := 0;
 
   JwaNative.RtlInitUniCodeString(@NtUnicodeString, @(wszObjectName[0]));
+
   JwaWinType.InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
   // redirect to NtCreateFile
@@ -603,19 +609,19 @@ begin
       szBuffer[ReplaceIndex] := ReplaceChar;
 
     // Strip filename from path.
-    v := strlen(szBuffer) - 1;
-    while (v >= 0) do
+    CurIndex := strlen(szBuffer) - 1;
+    while (CurIndex >= 0) do
     begin
-      if (szBuffer[v] = '\') then
+      if (szBuffer[CurIndex] = '\') then
       begin
-        ReplaceIndex := v;
+        ReplaceIndex := CurIndex;
         Break;
       end;
 
-      Dec(v);
+      Dec(CurIndex);
     end;
 
-    if (v = -1) then
+    if (CurIndex = -1) then
       ReplaceIndex := 0;
 
     // Modify buffer again.
@@ -664,7 +670,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCreateMutant(
+function xboxkrnl_NtCreateMutant
+(
   {OUT}MutantHandle: PHANDLE;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   InitialOwner: Boolean
@@ -695,7 +702,7 @@ begin
 {$ENDIF}
 
   // initialize object attributes
-  if Assigned(szBuffer) then
+  if (szBuffer <> nil) then
   begin
     mbstowcs(@(wszObjectName[0]), '\??\', 4);
     mbstowcs(@(wszObjectName[0+4]), szBuffer, MAX_PATH-1);
@@ -725,13 +732,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCreateSemaphore(
+function xboxkrnl_NtCreateSemaphore
+(
   SemaphoreHandle: PHANDLE;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   InitialCount: ULONG;
   MaximumCount: ULONG
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -806,12 +814,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtDuplicateObject(
+function xboxkrnl_NtDuplicateObject
+(
   SourceHandle: HANDLE;
   TargetHandle: PHANDLE;
   Options: DWORD
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -845,11 +854,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtFlushBuffersFile(
-  FileHandle: HANDLE;
+function xboxkrnl_NtFlushBuffersFile
+(
+  FileHandle: HANDLE; // Was PVOID
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -865,15 +875,18 @@ begin
 {$ENDIF}
 
   ret := JwaNative.NtFlushBuffersFile(FileHandle, PIO_STATUS_BLOCK(IoStatusBlock));
-  Result := ret;
+
   EmuSwapFS(fsXbox);
+
+  Result := ret;
 end;
 
 // NtFreeVirtualMemory:
 // Frees virtual memory.
 //
 // Differences from NT: There is no ProcessHandle parameter.
-function xboxkrnl_NtFreeVirtualMemory(
+function xboxkrnl_NtFreeVirtualMemory
+(
   BaseAddress: PPVOID; // OUT
   FreeSize: PULONG; // OUT
   FreeType: ULONG
@@ -930,14 +943,15 @@ end;
 //     IoStatusBlock, NULL, 0, ShareAccess, OPEN_EXISTING, OpenOptions);
 //
 // Differences from NT: See NtCreateFile.
-function xboxkrnl_NtOpenFile(
+function xboxkrnl_NtOpenFile
+(
   FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   ShareAccess: ULONG; // dtACCESS_MASK;
   OpenOptions: ULONG // dtCreateOptions
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
@@ -984,28 +998,29 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueueApcThread(
+function xboxkrnl_NtQueueApcThread
+(
   ThreadHandle: HANDLE;
   ApcRoutine: PIO_APC_ROUTINE;
   ApcRoutineContext: PVOID;
   ApcStatusBlock: PIO_STATUS_BLOCK;
   ApcReserved: ULONG
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueueApcThread' +
-     #13#10'(' +
-     #13#10'   ThreadHandle         : 0x%.08X' +
-     #13#10'   ApcRoutine           : 0x%.08X' +
-     #13#10'   ApcRoutineContext    : 0x%.08X' +
-     #13#10'   ApcStatusBlock       : 0x%.08X' +
-     #13#10'   ApcReserved          : 0x%.08X' +
-     #13#10');',
-     [ThreadHandle, Addr(ApcRoutine), ApcRoutineContext,
-      ApcStatusBlock, ApcReserved]);
+      #13#10'(' +
+      #13#10'   ThreadHandle         : 0x%.08X' +
+      #13#10'   ApcRoutine           : 0x%.08X' +
+      #13#10'   ApcRoutineContext    : 0x%.08X' +
+      #13#10'   ApcStatusBlock       : 0x%.08X' +
+      #13#10'   ApcReserved          : 0x%.08X' +
+      #13#10');',
+      [ThreadHandle, Addr(ApcRoutine), ApcRoutineContext,
+       ApcStatusBlock, ApcReserved]);
 {$ENDIF}
 
   // Cxbx TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
@@ -1023,7 +1038,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryDirectoryFile(
+function xboxkrnl_NtQueryDirectoryFile
+(
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // Cxbx Todo: define this routine's prototype
@@ -1035,7 +1051,7 @@ function xboxkrnl_NtQueryDirectoryFile(
   FileMask: PSTRING;
   RestartScan: CHARBOOL
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:90
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
   NtFileMask: UNICODE_STRING;
@@ -1071,12 +1087,14 @@ begin
   Ret := STATUS_SUCCESS; // DXBX - Ret might not have been initialized
 
   // initialize FileMask
-  if Assigned(FileMask) then
-    mbstowcs(@(wszObjectName[0]), FileMask.Buffer, 160-1)
-  else
-    mbstowcs(@(wszObjectName[0]), '', 160-1);
+  begin
+    if (FileMask <> nil) then
+      mbstowcs(@(wszObjectName[0]), FileMask.Buffer, 160-1)
+    else
+      mbstowcs(@(wszObjectName[0]), '', 160-1);
 
-  RtlInitUnicodeString(@NtFileMask, @(wszObjectName[0]));
+    RtlInitUnicodeString(@NtFileMask, @(wszObjectName[0]));
+  end;
 
   FileDirInfo := PFILE_DIRECTORY_INFORMATION(CxbxMalloc($40 + 160*2));
 
@@ -1094,9 +1112,13 @@ begin
         );
 
     // convert from PC to Xbox
-    memcpy(FileInformation, FileDirInfo, $40);
-    wcstombs(mbstr, wcstr, 160);
-    FileInformation.FileNameLength := FileInformation.FileNameLength div 2;
+    begin
+      memcpy(FileInformation, FileDirInfo, $40);
+
+      wcstombs(mbstr, wcstr, 160);
+
+      FileInformation.FileNameLength := FileInformation.FileNameLength div 2;
+    end;
 
     RestartScan := FALSE;
 
@@ -1132,7 +1154,7 @@ function xboxkrnl_NtQueryFullAttributesFile
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   szBuffer: PAnsiChar;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
@@ -1166,14 +1188,15 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryInformationFile(
+function xboxkrnl_NtQueryInformationFile
+(
   FileHandle: HANDLE;
   IoStatusBlock: PIO_STATUS_BLOCK; //   OUT
   FileInformation: PVOID; //   OUT
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1271,29 +1294,30 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryVirtualMemory(
-  pBaseAddress: PVOID;
-  pBuffer: PMEMORY_BASIC_INFORMATION
-  ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+function xboxkrnl_NtQueryVirtualMemory
+(
+  BaseAddress: PVOID;
+  Buffer: PMEMORY_BASIC_INFORMATION
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryVirtualMemory' +
      #13#10'(' +
-     #13#10'   pBaseAddress         : 0x%.08X' +
-     #13#10'   pBuffer              : 0x%.08X' +
+     #13#10'   BaseAddress         : 0x%.08X' +
+     #13#10'   Buffer              : 0x%.08X' +
      #13#10');',
-     [pBaseAddress, pBuffer]);
+     [BaseAddress, Buffer]);
 {$ENDIF}
 
   Result := JwaNative.NtQueryVirtualMemory
   (
       GetCurrentProcess(),
-      pBaseAddress,
+      BaseAddress,
       {(NtDll::MEMORY_INFORMATION_CLASS)NtDll::}MemoryBasicInformation,
-      {(NtDll::PMEMORY_BASIC_INFORMATION)}pBuffer,
+      {(NtDll::PMEMORY_BASIC_INFORMATION)}Buffer,
       SizeOf(MEMORY_BASIC_INFORMATION),
       nil
   );
@@ -1316,14 +1340,13 @@ function xboxkrnl_NtQueryVolumeInformationFile
   FileInformation: PFILE_FS_SIZE_INFORMATION; // OUT
   Length: ULONG;
   FileInformationClass: FS_INFORMATION_CLASS
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:80
 var
   ret: NTSTATUS;
   SizeInfo: PFILE_FS_SIZE_INFORMATION;
 begin
   EmuSwapFS(fsWindows);
-
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryVolumeInformationFile' +
@@ -1370,7 +1393,8 @@ end;
 // Reads a file.
 //
 // Differences from NT: There is no Key parameter.
-function xboxkrnl_NtReadFile(
+function xboxkrnl_NtReadFile
+(
   FileHandle: HANDLE; // Cxbx TODO: correct paramters
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // OPTIONAL
@@ -1379,8 +1403,8 @@ function xboxkrnl_NtReadFile(
   Buffer: PVOID; // OUT
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER // OPTIONAL
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1394,10 +1418,10 @@ begin
         #13#10'   IoStatusBlock       : 0x%.08X' +
         #13#10'   Buffer              : 0x%.08X' +
         #13#10'   Length              : 0x%.08X' +
-        #13#10'   ByteOffset          : 0x%.08X' + // ' (0x%.08X)' +
+        #13#10'   ByteOffset          : 0x%.08X (0x%.08X)' +
         #13#10');',
         [FileHandle, Event, ApcRoutine,
-         ApcContext, IoStatusBlock, Buffer, Length, ByteOffset{, ByteOffset = 0 ? 0 : ByteOffset.QuadPart}]);
+         ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
 {$ENDIF}
 
 // Halo...
@@ -1420,11 +1444,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtReleaseMutant(
+function xboxkrnl_NtReleaseMutant
+(
   MutantHandle: HANDLE;
   PreviousCount: PULONG // OUT
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1445,16 +1470,18 @@ begin
   if(FAILED(ret)) then
     EmuWarning('NtReleaseMutant Failed!');
 
-  Result := STATUS_SUCCESS;
   EmuSwapFS(fsXbox);
+
+  Result := STATUS_SUCCESS;
 end;
 
-function xboxkrnl_NtReleaseSemaphore(
+function xboxkrnl_NtReleaseSemaphore
+(
   SemaphoreHandle: HANDLE;
   ReleaseCount: ULONG;
   PreviousCount: PULONG
-  ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1484,11 +1511,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtResumeThread(
+function xboxkrnl_NtResumeThread
+(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1506,15 +1534,18 @@ begin
   ret := NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
   Sleep(10);
-  Result := ret;
+
   EmuSwapFS(fsXbox);
+
+  Result := ret;
 end;
 
-function xboxkrnl_NtSetEvent(
+function xboxkrnl_NtSetEvent
+(
   EventHandle: HANDLE;
-  PreviousState: PULONG // OUT
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  PreviousState: PLONG // OUT
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1531,21 +1562,23 @@ begin
 
   ret := JwaNative.NtSetEvent(EventHandle, PreviousState);
 
-  if(FAILED(ret)) then
-      EmuWarning('NtSetEvent Failed!');
+  if (FAILED(ret)) then
+    EmuWarning('NtSetEvent Failed!');
+
+  EmuSwapFS(fsXbox);
 
   Result := ret;
-  EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtSetInformationFile(
+function xboxkrnl_NtSetInformationFile
+(
   FileHandle: HANDLE; // Cxbx TODO: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length: ULONG;
-  FileInformationClass: FILE_INFORMATION_CLASS
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+  FileInformationClass: ULONG // FILE_INFORMATION_CLASS
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1599,10 +1632,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtSuspendThread(
+function xboxkrnl_NtSuspendThread
+(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT OPTIONAL
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
@@ -1619,16 +1653,19 @@ begin
 {$ENDIF}
 
   ret := NtSuspendThread(ThreadHandle, PreviousSuspendCount);
-  Result := ret;
+
   EmuSwapFS(fsXbox);
+
+  Result := ret;
 end;
 
-procedure xboxkrnl_NtUserIoApcDispatcher(
+procedure xboxkrnl_NtUserIoApcDispatcher
+(
   ApcContext: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK;
   Reserved: ULONG
-  ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:5
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:5
 (*var
   dwEsi: uint32;
   dwEax: uint32;
@@ -1729,55 +1766,47 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtWaitForSingleObjectEx(
+function xboxkrnl_NtWaitForSingleObjectEx
+(
   Handle_: HANDLE;
   WaitMode: AnsiCHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  if not Assigned(Timeout) then
-    DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
-        #13#10'('+
-        #13#10'   Handle               : 0x%.08X'+
-        #13#10'   WaitMode             : 0x%.08X'+
-        #13#10'   Alertable            : 0x%.08X'+
-        #13#10'   Timeout              : 0x%.08X'+ //' (%d)'+
-        #13#10');',
-        [Handle_, Ord(WaitMode), Alertable, 0])
-  else
-    DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
-        #13#10'('+
-        #13#10'   Handle               : 0x%.08X'+
-        #13#10'   WaitMode             : 0x%.08X'+
-        #13#10'   Alertable            : 0x%.08X'+
-        #13#10'   Timeout              : 0x%.08X'+ //' (%d)'+
-        #13#10');',
-        [Handle_, Ord(WaitMode), Alertable, Timeout.QuadPart]);
+  DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
+      #13#10'('+
+      #13#10'   Handle               : 0x%.08X'+
+      #13#10'   WaitMode             : 0x%.08X'+
+      #13#10'   Alertable            : 0x%.08X'+
+      #13#10'   Timeout              : 0x%.08X (%d)'+
+      #13#10');',
+      [Handle_, Ord(WaitMode), Alertable, QuadPart(Timeout)]);
 {$ENDIF}
 
   Result := JwaNative.NtWaitForSingleObject(Handle_, Alertable, Timeout);
 
 {$IFDEF DEBUG}
-    DbgPrintf('Finished waiting for 0x%.08X', [Handle_]);
+  DbgPrintf('Finished waiting for 0x%.08X', [Handle_]);
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtWaitForMultipleObjectsEx(
+function xboxkrnl_NtWaitForMultipleObjectsEx
+(
   Count: ULONG;
   Handles: PHANDLE;
   WaitType: WAIT_TYPE;
-  WaitMode: CHAR;
+  WaitMode: AnsiCHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1785,43 +1814,32 @@ begin
 
 
 {$IFDEF DEBUG}
-  if not Assigned(Timeout) then
-    DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
-        #13#10'(' +
-        #13#10'   Count                : 0x%.08X' +
-        #13#10'   Handles              : 0x%.08X' +
-        #13#10'   WaitType             : 0x%.08X' +
-        #13#10'   WaitMode             : 0x%.08X' +
-        #13#10'   Alertable            : 0x%.08X' +
-        #13#10'   Timeout              : 0x%.08X (%d)' +
-        #13#10');',
-        [Count, Handles, Ord(WaitType), WaitMode, Alertable,
-         Timeout, '0'])
-  else
-    DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
-        #13#10'(' +
-        #13#10'   Count                : 0x%.08X' +
-        #13#10'   Handles              : 0x%.08X' +
-        #13#10'   WaitType             : 0x%.08X' +
-        #13#10'   WaitMode             : 0x%.08X' +
-        #13#10'   Alertable            : 0x%.08X' +
-        #13#10'   Timeout              : 0x%.08X (%d)' +
-        #13#10');',
-        [Count, Handles, Ord(WaitType), WaitMode, Alertable,
-         Timeout, Timeout.QuadPart]);
+  DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
+      #13#10'(' +
+      #13#10'   Count                : 0x%.08X' +
+      #13#10'   Handles              : 0x%.08X' +
+      #13#10'   WaitType             : 0x%.08X' +
+      #13#10'   WaitMode             : 0x%.08X' +
+      #13#10'   Alertable            : 0x%.08X' +
+      #13#10'   Timeout              : 0x%.08X (%d)' +
+      #13#10');',
+      [Count, Handles, Ord(WaitType), WaitMode, Alertable,
+       Timeout, QuadPart(Timeout)]);
 {$ENDIF}
 
   ret := NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
-  Result := ret;
 
   EmuSwapFS(fsXbox);
+
+  Result := ret;
 end;
 
 // NtWriteFile:
 // Writes a file.
 //
 // Differences from NT: There is no Key parameter.
-function xboxkrnl_NtWriteFile(
+function xboxkrnl_NtWriteFile
+(
   FileHandle: HANDLE; // Cxbx TODO: correct paramters
   Event: DWORD; // Dxbx correction (was PVOID)
   ApcRoutine: PVOID;
@@ -1830,8 +1848,8 @@ function xboxkrnl_NtWriteFile(
   Buffer: PVOID;
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER
-  ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): NTSTATUS; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1845,10 +1863,10 @@ begin
        #13#10'   IoStatusBlock       : 0x%.08X' +
        #13#10'   Buffer              : 0x%.08X' +
        #13#10'   Length              : 0x%.08X' +
-       #13#10'   ByteOffset          : 0x%.08X' + {' (0x%.08X)' +}
+       #13#10'   ByteOffset          : 0x%.08X (0x%.08X)' +}
        #13#10');',
        [FileHandle, Event, ApcRoutine,
-       ApcContext, IoStatusBlock, Buffer, Length, ByteOffset{, iif(ByteOffset = nil, 0, ByteOffset.QuadPart)}]);
+       ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)}]);
 {$ENDIF}
 
   // Halo..
