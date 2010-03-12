@@ -130,24 +130,37 @@ type
 {*)
 
 type
+  PIDirectXFile = ^IDirectXFile;
   IDirectXFile = interface;
   {$EXTERNALSYM IDirectXFile}
   {$HPPEMIT 'typedef System::DelphiInterface<IDirectXFile> _di_IDirectXFile;'}
+
+  PIDirectXFileEnumObject = ^IDirectXFileEnumObject;
   IDirectXFileEnumObject = interface;
   {$EXTERNALSYM IDirectXFileEnumObject}
   {$HPPEMIT 'typedef System::DelphiInterface<IDirectXFileEnumObject> _di_IDirectXFileEnumObject;'}
+
+  PIDirectXFileSaveObject = ^IDirectXFileSaveObject;
   IDirectXFileSaveObject = interface;
   {$EXTERNALSYM IDirectXFileSaveObject}
   {$HPPEMIT 'typedef System::DelphiInterface<IDirectXFileSaveObject> _di_IDirectXFileSaveObject;'}
+
+  PIDirectXFileObject = ^IDirectXFileObject;
   IDirectXFileObject = interface;
   {$EXTERNALSYM IDirectXFileObject}
   {$HPPEMIT 'typedef System::DelphiInterface<IDirectXFileObject> _di_IDirectXFileObject;'}
+
+  PIDirectXFileData = ^IDirectXFileData;
   IDirectXFileData = interface;
   {$EXTERNALSYM IDirectXFileData}
   {$HPPEMIT 'typedef System::DelphiInterface<IDirectXFileData> _di_IDirectXFileData;'}
+
+  PIDirectXFileDataReference = ^IDirectXFileDataReference;
   IDirectXFileDataReference = interface;
   {$EXTERNALSYM IDirectXFileDataReference}
   {$HPPEMIT 'typedef System::DelphiInterface<IDirectXFileDataReference> _di_IDirectXFileDataReference;'}
+
+  PIDirectXFileBinary = ^IDirectXFileBinary;
   IDirectXFileBinary = interface;
   {$EXTERNALSYM IDirectXFileBinary}
   {$HPPEMIT 'typedef System::DelphiInterface<IDirectXFileBinary> _di_IDirectXFileBinary;'}
@@ -160,19 +173,19 @@ type
     ['{3d82ab40-62da-11cf-ab39-0020af71e433}']
     function CreateEnumObject (pvSource: Pointer;
         dwLoadOptions: TDXFileLoadOptions;
-        var ppEnumObj: IDirectXFileEnumObject): HResult; stdcall;
+        {var} ppEnumObj: PIDirectXFileEnumObject): HResult; stdcall;
     function CreateSaveObject (szFileName: PChar; dwFileFormat: TDXFileFormat;
-        var ppSaveObj: IDirectXFileSaveObject): HResult; stdcall;
+        {var} ppSaveObj: PIDirectXFileSaveObject): HResult; stdcall;
     function RegisterTemplates (pvData: Pointer; cbSize: DWORD): HResult; stdcall;
   end;
 
   IDirectXFileEnumObject = interface (IUnknown)
     ['{3d82ab41-62da-11cf-ab39-0020af71e433}']
-    function GetNextDataObject (var ppDataObj: IDirectXFileData) : HResult; stdcall;
+    function GetNextDataObject ({var} ppDataObj: PIDirectXFileData) : HResult; stdcall;
     function GetDataObjectById
-        (const rguid: TGUID; var ppDataObj: IDirectXFileData) : HResult; stdcall;
+        (const rguid: TGUID; {var} ppDataObj: PIDirectXFileData) : HResult; stdcall;
     function GetDataObjectByName
-        (szName: PChar; var ppDataObj: IDirectXFileData) : HResult; stdcall;
+        (szName: PChar; {var} ppDataObj: PIDirectXFileData) : HResult; stdcall;
   end;
 
   IDirectXFileSaveObject = interface (IUnknown)
@@ -181,7 +194,7 @@ type
         (cTemplates: DWORD; var ppguidTemplates: PGUID) : HResult; stdcall;
     function CreateDataObject (const rguidTemplate: TGUID; szName: PChar;
         pguid: PGUID; cbSize: DWORD; pvData: Pointer;
-        var ppDataObj: IDirectXFileData) : HResult; stdcall;
+        {var} ppDataObj: PIDirectXFileData) : HResult; stdcall;
     function SaveData (pDataObj: IDirectXFileData) : HResult; stdcall;
   end;
 
@@ -196,7 +209,7 @@ type
     function GetData
         (szMember: PChar; var pcbSize: DWORD; var ppvData: Pointer) : HResult; stdcall;
     function GetType (var ppguid: PGUID) : HResult; stdcall;
-    function GetNextObject (var ppChildObj: IDirectXFileObject) : HResult; stdcall;
+    function GetNextObject ({var} ppChildObj: PIDirectXFileObject) : HResult; stdcall;
     function AddDataObject (pDataObj: IDirectXFileData) : HResult; stdcall;
     function AddDataReference (szRef: PChar; pguidRef: PGUID) : HResult; stdcall;
     function AddBinaryObject (szName: PChar; pguid: PGUID; szMimeType: PChar;
@@ -205,7 +218,7 @@ type
 
   IDirectXFileDataReference = interface (IDirectXFileObject)
     ['{3d82ab45-62da-11cf-ab39-0020af71e433}']
-    function Resolve (var ppDataObj: IDirectXFileData) : HResult; stdcall;
+    function Resolve ({var} ppDataObj: PIDirectXFileData) : HResult; stdcall;
   end;
 
   IDirectXFileBinary = interface (IDirectXFileObject)
@@ -331,7 +344,7 @@ const
 {* API for creating IDirectXFile interface.
 {*)
 
-function DirectXFileCreate(out lplpDirectXFile: IDirectXFile): HResult; stdcall;
+function DirectXFileCreate({out} lplpDirectXFile: PIDirectXFile): HResult; stdcall;
 {$EXTERNALSYM DirectXFileCreate}
 
 

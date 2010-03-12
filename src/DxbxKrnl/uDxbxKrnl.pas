@@ -77,6 +77,8 @@ exports
   (*Exports Init; // name must be "void EmuShared::Init (void)
   *)
 
+var
+  Xbe: TXbe;
 
 implementation
 
@@ -165,6 +167,9 @@ begin
 
   // Initialize current directory
   g_EmuShared.GetXbePath({var}szBuffer);
+  if (szBuffer = '') and Assigned(Xbe) then
+    szBuffer := ExtractFilePath(Xbe.XbePath);
+
   if szBuffer <> '' then
   begin
 {$IFDEF DEBUG}

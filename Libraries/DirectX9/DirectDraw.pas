@@ -200,32 +200,57 @@ type
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectDrawClipper);'}
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectDrawColorControl);'}
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectDrawGammaControl);'}
-  
+
+  PIDirectDraw = ^IDirectDraw;
   IDirectDraw = interface;
   {$EXTERNALSYM IDirectDraw}
+
+  PIDirectDraw2 = ^IDirectDraw2;
   IDirectDraw2 = interface;
   {$EXTERNALSYM IDirectDraw2}
+
+  PIDirectDraw4 = ^IDirectDraw4;
   IDirectDraw4 = interface;
   {$EXTERNALSYM IDirectDraw4}
+
+  PIDirectDraw7 = ^IDirectDraw7;
   IDirectDraw7 = interface;
   {$EXTERNALSYM IDirectDraw7}
+
+  PIDirectDrawSurface = ^IDirectDrawSurface;
   IDirectDrawSurface = interface;
   {$EXTERNALSYM IDirectDrawSurface}
+
+
+  PIDirectDrawSurface2 = ^IDirectDrawSurface2;
   IDirectDrawSurface2 = interface;
   {$EXTERNALSYM IDirectDrawSurface2}
+
+  PIDirectDrawSurface3 = ^IDirectDrawSurface3;
   IDirectDrawSurface3 = interface;
   {$EXTERNALSYM IDirectDrawSurface3}
+
+  PIDirectDrawSurface4 = ^IDirectDrawSurface4;
   IDirectDrawSurface4 = interface;
   {$EXTERNALSYM IDirectDrawSurface4}
+
+  PIDirectDrawSurface7 = ^IDirectDrawSurface7;
   IDirectDrawSurface7 = interface;
   {$EXTERNALSYM IDirectDrawSurface7}
 
+  PIDirectDrawPalette = ^IDirectDrawPalette;
   IDirectDrawPalette = interface;
   {$EXTERNALSYM IDirectDrawPalette}
+
+  PIDirectDrawClipper = ^IDirectDrawClipper;
   IDirectDrawClipper = interface;
   {$EXTERNALSYM IDirectDrawClipper}
+
+  PIDirectDrawColorControl = ^IDirectDrawColorControl;
   IDirectDrawColorControl = interface;
   {$EXTERNALSYM IDirectDrawColorControl}
+
+  PIDirectDrawGammaControl = ^IDirectDrawGammaControl;
   IDirectDrawGammaControl = interface;
   {$EXTERNALSYM IDirectDrawGammaControl}
 
@@ -1215,7 +1240,7 @@ type
         out lplpDDPalette: IDirectDrawPalette;
         pUnkOuter: IUnknown): HResult; stdcall;
     function CreateSurface(const lpDDSurfaceDesc: TDDSurfaceDesc2;
-        out lplpDDSurface: IDirectDrawSurface7;
+        {out} lplpDDSurface: PIDirectDrawSurface7;
         pUnkOuter: IUnknown): HResult; stdcall;
     function DuplicateSurface(lpDDSurface: IDirectDrawSurface7;
         out lplpDupDDSurface: IDirectDrawSurface7): HResult; stdcall;

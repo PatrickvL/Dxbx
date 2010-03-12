@@ -371,7 +371,7 @@ type
     (*** IDirectPlay8Address methods ***)
     function BuildFromURLW(pwszSourceURL: PWideChar): HResult; stdcall;
     function BuildFromURLA(pszSourceURL: PAnsiChar): HResult; stdcall;
-    function Duplicate(out ppdpaNewAddress: IDirectPlay8Address): HResult; stdcall;
+    function Duplicate({out} ppdpaNewAddress: PIDirectPlay8Address): HResult; stdcall;
     function SetEqual(pdpaAddress: IDirectPlay8Address): HResult; stdcall;
     function IsEqual(pdpaAddress: IDirectPlay8Address): HResult; stdcall;
     function Clear: HResult; stdcall;
@@ -1603,7 +1603,7 @@ type
     function SetClientInfo(const pdpnPlayerInfo: TDPNPlayerInfo; pvAsyncContext: Pointer;
       phAsyncHandle: PDPNHandle; dwFlags: DWORD): HResult; stdcall;
     function GetServerInfo(pdpnPlayerInfo: PDPNPlayerInfo; var pdwSize: DWORD; dwFlags: DWORD): HResult; stdcall;
-    function GetServerAddress(out pAddress: IDirectPlay8Address; dwFlags: DWORD): HResult; stdcall;
+    function GetServerAddress({out} pAddress: PIDirectPlay8Address; dwFlags: DWORD): HResult; stdcall;
     function Close(dwFlags: DWORD): HResult; stdcall;
     function ReturnBuffer(hBufferHandle: TDPNHandle; dwFlags: DWORD): HResult; stdcall;
     function GetCaps(pdpCaps: PDPNCaps; dwFlags: DWORD): HResult; stdcall; //Translator: pdpCaps can be either PDPNCaps or PDPNCapsEx
@@ -1631,8 +1631,8 @@ type
     function GetApplicationDesc(pAppDescBuffer: PDPNApplicationDesc; var pcbDataSize: DWORD; dwFlags: DWORD): HResult; stdcall;
     function SetServerInfo(pdpnPlayerInfo: PDPNPlayerInfo; pvAsyncContext: Pointer; phAsyncHandle: PDPNHandle; dwFlags: DWORD): HResult; stdcall;
     function GetClientInfo(dpnid: TDPNID; pdpnPlayerInfo: PDPNPlayerInfo; pdwSize: PDWORD; dwFlags: DWORD): HResult; stdcall;
-    function GetClientAddress(dpnid: TDPNID; out pAddress: IDirectPlay8Address; dwFlags: DWORD): HResult; stdcall;
-    function GetLocalHostAddresses(out prgpAddress: IDirectPlay8Address; var pcAddress: DWORD; dwFlags: DWORD): HResult; stdcall;
+    function GetClientAddress(dpnid: TDPNID; {out} pAddress: PIDirectPlay8Address; dwFlags: DWORD): HResult; stdcall;
+    function GetLocalHostAddresses({out} prgpAddress: PIDirectPlay8Address; var pcAddress: DWORD; dwFlags: DWORD): HResult; stdcall;
     function SetApplicationDesc(const pad: TDPNApplicationDesc; dwFlags: DWORD): HResult; stdcall;
     function Host(const pdnAppDesc: TDPNApplicationDesc; prgpDeviceInfo: PIDirectPlay8Address;
       cDeviceInfo: DWORD; pdnSecurity: PDPNSecurityDesc; pdnCredentials: PDPNSecurityCredentials;
@@ -1706,7 +1706,7 @@ type
     function SetPeerInfo(const pdpnPlayerInfo: TDPNPlayerInfo; pvAsyncContext: Pointer;
       phAsyncHandle: PDPNHandle; dwFlags: DWORD): HResult; stdcall;
     function GetPeerInfo(dpnid: TDPNID; var pdpnPlayerInfo: TDPNPlayerInfo; pdwSize: PDWORD; dwFlags: DWORD): HResult; stdcall; //todo: Changed
-    function GetPeerAddress(dpnid: TDPNID; out pAddress: IDirectPlay8Address; dwFlags: DWORD): HResult; stdcall;
+    function GetPeerAddress(dpnid: TDPNID; {out} pAddress: PIDirectPlay8Address; dwFlags: DWORD): HResult; stdcall;
     function GetLocalHostAddresses(prgpAddress: PIDirectPlay8Address; var pcAddress: DWORD; dwFlags: DWORD): HResult; stdcall;
     function Close(dwFlags: DWORD): HResult; stdcall;
     function EnumHosts(const pApplicationDesc: TDPNApplicationDesc;
@@ -3091,7 +3091,7 @@ type
     function SetTransmitTargets(pdvIDTargets: PDVID; dwNumTargets, dwFlags: DWORD): HResult; stdcall;
     function GetTransmitTargets(pdvIDTargets: PDVID; var dwNumTargets: DWORD; dwFlags: DWORD): HResult; stdcall;
     function Create3DSoundBuffer(dvID: TDVID; lpdsSourceBuffer: IDirectSoundBuffer;
-      dwPriority, dwFlags: DWORD; out lpUserBuffer: IDirectSound3DBuffer): HResult; stdcall;
+      dwPriority, dwFlags: DWORD; {out} lpUserBuffer: PIDirectSound3DBuffer): HResult; stdcall;
     function Delete3DSoundBuffer(dvID: TDVID; lpUserBuffer: IDirectSound3DBuffer): HResult; stdcall;
     function SetNotifyMask(pdwMessageMask: PDWORD; dwMessageMaskElements: DWORD): HResult; stdcall;
     function GetSoundDeviceConfig(pSoundDeviceConfig: PDVSoundDeviceConfig; var pdwSize: DWORD): HResult; stdcall;

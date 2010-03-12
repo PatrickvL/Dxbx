@@ -207,6 +207,7 @@ begin
   ReinitExeImageHeader;
 
   // Copy all sections to their requested Virtual Address :
+  Xbe := aXbe;
   XbeHeader := PXbeHeader(@aXbe.m_Header);
   XbeSectionHeader := PXbeSectionHeader(@(aXbe.m_SectionHeader[0]));
   for i := 0 to XbeHeader.dwSections - 1 do

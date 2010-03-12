@@ -573,6 +573,7 @@ type
 
 
 type
+  PIDirectInputEffect = ^IDirectInputEffect;
   {$EXTERNALSYM IDirectInputEffect}
   IDirectInputEffect = interface(IUnknown)
     [SID_IDirectInputEffect]
@@ -1738,6 +1739,7 @@ type
 
 
 type
+  PIDirectInputDeviceA = ^IDirectInputDeviceA;
   {$EXTERNALSYM IDirectInputDeviceA}
   IDirectInputDeviceA = interface(IUnknown)
     [SID_IDirectInputDeviceA]
@@ -1759,6 +1761,7 @@ type
     function Initialize(hinst: THandle; dwVersion: DWORD; const rguid: TGUID): HResult; stdcall;
   end;
 
+  PIDirectInputDeviceW = ^IDirectInputDeviceW;
   {$EXTERNALSYM IDirectInputDeviceW}
   IDirectInputDeviceW = interface(IUnknown)
     [SID_IDirectInputDeviceW]
@@ -1877,7 +1880,7 @@ type
   IDirectInputDevice2A = interface(IDirectInputDeviceA)
     [SID_IDirectInputDevice2A]
     (*** IDirectInputDevice2A methods ***)
-    function CreateEffect(const rguid: TGUID; lpeff: PDIEffect; out ppdeff: IDirectInputEffect; punkOuter: IUnknown): HResult; stdcall;
+    function CreateEffect(const rguid: TGUID; lpeff: PDIEffect; {out} ppdeff: PIDirectInputEffect; punkOuter: IUnknown): HResult; stdcall;
     function EnumEffects(lpCallback: TDIEnumEffectsCallbackA; pvRef: Pointer; dwEffType: DWORD): HResult; stdcall;
     function GetEffectInfo(var pdei: TDIEffectInfoA; const rguid: TGUID): HResult; stdcall;
     function GetForceFeedbackState(out pdwOut: DWORD): HResult; stdcall;
@@ -1892,7 +1895,7 @@ type
   IDirectInputDevice2W = interface(IDirectInputDeviceW)
     [SID_IDirectInputDevice2W]
     (*** IDirectInputDevice2W methods ***)
-    function CreateEffect(const rguid: TGUID; lpeff: PDIEffect; out ppdeff: IDirectInputEffect; punkOuter: IUnknown): HResult; stdcall;
+    function CreateEffect(const rguid: TGUID; lpeff: PDIEffect; {out} ppdeff: PIDirectInputEffect; punkOuter: IUnknown): HResult; stdcall;
     function EnumEffects(lpCallback: TDIEnumEffectsCallbackW; pvRef: Pointer; dwEffType: DWORD): HResult; stdcall;
     function GetEffectInfo(var pdei: TDIEffectInfoW; const rguid: TGUID): HResult; stdcall;
     function GetForceFeedbackState(out pdwOut: DWORD): HResult; stdcall;
@@ -1947,6 +1950,7 @@ type
 
  (* #if(DIRECTINPUT_VERSION >= 0x0800) *)
 type
+  PIDirectInputDevice8A = ^IDirectInputDevice8A;
   {$EXTERNALSYM IDirectInputDevice8A}
   IDirectInputDevice8A = interface(IDirectInputDevice7A)
     [SID_IDirectInputDevice8A]
@@ -1956,6 +1960,7 @@ type
     function GetImageInfo(var lpdiDevImageInfoHeader: TDIDeviceImageInfoHeaderA): HResult; stdcall;
   end;
 
+  PIDirectInputDevice8W = ^IDirectInputDevice8W;
   {$EXTERNALSYM IDirectInputDevice8W}
   IDirectInputDevice8W = interface(IDirectInputDevice7W)
     [SID_IDirectInputDevice8W]
@@ -3179,28 +3184,31 @@ const
  (* DIRECTINPUT_VERSION >= 0x0800 *)
 
 type
+  PIDirectInputA = ^IDirectInputA;
   {$EXTERNALSYM IDirectInputA}
   IDirectInputA = interface(IUnknown)
     [SID_IDirectInputA]
     (*** IDirectInputA methods ***)
-    function CreateDevice(const rguid: TGUID; out lplpDirectInputDevice: IDirectInputDeviceA; pUnkOuter: IUnknown): HResult; stdcall;
+    function CreateDevice(const rguid: TGUID; {out} lplpDirectInputDevice: PIDirectInputDeviceA; pUnkOuter: IUnknown): HResult; stdcall;
     function EnumDevices(dwDevType: DWORD; lpCallback: TDIEnumDevicesCallbackA; pvRef: Pointer; dwFlags: DWORD): HResult; stdcall;
     function GetDeviceStatus(const rguidInstance: TGUID): HResult; stdcall;
     function RunControlPanel(hwndOwner: HWND; dwFlags: DWORD): HResult; stdcall;
     function Initialize(hinst: THandle; dwVersion: DWORD): HResult; stdcall;
   end;
 
+  PIDirectInputW = ^IDirectInputW;
   {$EXTERNALSYM IDirectInputW}
   IDirectInputW = interface(IUnknown)
     [SID_IDirectInputW]
     (*** IDirectInputW methods ***)
-    function CreateDevice(const rguid: TGUID; out lplpDirectInputDevice: IDirectInputDeviceW; pUnkOuter: IUnknown): HResult; stdcall;
+    function CreateDevice(const rguid: TGUID; {out} lplpDirectInputDevice: PIDirectInputDeviceW; pUnkOuter: IUnknown): HResult; stdcall;
     function EnumDevices(dwDevType: DWORD; lpCallback: TDIEnumDevicesCallbackW; pvRef: Pointer; dwFlags: DWORD): HResult; stdcall;
     function GetDeviceStatus(const rguidInstance: TGUID): HResult; stdcall;
     function RunControlPanel(hwndOwner: HWND; dwFlags: DWORD): HResult; stdcall;
     function Initialize(hinst: THandle; dwVersion: DWORD): HResult; stdcall;
   end;
 
+  PIDirectInput = ^IDirectInput;
   {$EXTERNALSYM IDirectInput}
   IDirectInput = IDirectInputA;
 type
@@ -3255,7 +3263,7 @@ type
   IDirectInput8A = interface(IUnknown)
     [SID_IDirectInput8A]
     (*** IDirectInput8A methods ***)
-    function CreateDevice(const rguid: TGUID; out lplpDirectInputDevice: IDirectInputDevice8A; pUnkOuter: IUnknown): HResult; stdcall;
+    function CreateDevice(const rguid: TGUID; {out} lplpDirectInputDevice: PIDirectInputDevice8A; pUnkOuter: IUnknown): HResult; stdcall;
     function EnumDevices(dwDevType: DWORD; lpCallback: TDIEnumDevicesCallbackA; pvRef: Pointer; dwFlags: DWORD): HResult; stdcall;
     function GetDeviceStatus(const rguidInstance: TGUID): HResult; stdcall;
     function RunControlPanel(hwndOwner: HWND; dwFlags: DWORD): HResult; stdcall;
@@ -3269,7 +3277,7 @@ type
   IDirectInput8W = interface(IUnknown)
     [SID_IDirectInput8W]
     (*** IDirectInput8W methods ***)
-    function CreateDevice(const rguid: TGUID; out lplpDirectInputDevice: IDirectInputDevice8W; pUnkOuter: IUnknown): HResult; stdcall;
+    function CreateDevice(const rguid: TGUID; {out} lplpDirectInputDevice: PIDirectInputDevice8W; pUnkOuter: IUnknown): HResult; stdcall;
     function EnumDevices(dwDevType: DWORD; lpCallback: TDIEnumDevicesCallbackW; pvRef: Pointer; dwFlags: DWORD): HResult; stdcall;
     function GetDeviceStatus(const rguidInstance: TGUID): HResult; stdcall;
     function RunControlPanel(hwndOwner: HWND; dwFlags: DWORD): HResult; stdcall;
@@ -3300,11 +3308,11 @@ function DirectInput8Create(hinst: THandle; dwVersion: DWORD; const riidltf: TGU
 {$EXTERNALSYM DirectInput8Create}
 
 //{$ELSE}
-function DirectInputCreateA(hinst: THandle; dwVersion: DWORD; out ppDI: IDirectInputA; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreateA';
+function DirectInputCreateA(hinst: THandle; dwVersion: DWORD; {out} ppDI: PIDirectInputA; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreateA';
 {$EXTERNALSYM DirectInputCreateA}
-function DirectInputCreateW(hinst: THandle; dwVersion: DWORD; out ppDI: IDirectInputW; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreateW';
+function DirectInputCreateW(hinst: THandle; dwVersion: DWORD; {out} ppDI: PIDirectInputW; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreateW';
 {$EXTERNALSYM DirectInputCreateW}
-function DirectInputCreate(hinst: THandle; dwVersion: DWORD; out ppDI: IDirectInput; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreate' + AWSuffix;
+function DirectInputCreate(hinst: THandle; dwVersion: DWORD; {out} ppDI: PIDirectInput; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll name 'DirectInputCreate' + AWSuffix;
 {$EXTERNALSYM DirectInputCreate}
 
 function DirectInputCreateEx(hinst: THandle; dwVersion: DWORD; const riidltf: TGUID; out ppvOut{: Pointer}; punkOuter: IUnknown): HResult; stdcall; external DirectInputDll;

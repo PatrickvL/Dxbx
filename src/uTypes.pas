@@ -132,6 +132,7 @@ type
 
 //  bool = ?;
 //  BOOL = ?;
+//  LONGBOOL = ?
 //  BOOLEAN = ?;
   CHARBOOL = ByteBool; // Cxbx : unsigned char = AnsiChar in Delphi
 

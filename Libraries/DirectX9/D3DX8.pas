@@ -919,6 +919,7 @@ function D3DXFresnelTerm(CosTheta, RefractionIndex: Single): Single; stdcall; ex
 //===========================================================================
 
 type
+  PID3DXMatrixStack = ^ID3DXMatrixStack;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXMatrixStack);'}
   {$EXTERNALSYM ID3DXMatrixStack}
   ID3DXMatrixStack = interface(IUnknown)
@@ -998,7 +999,7 @@ type
   IID_ID3DXMatrixStack = ID3DXMatrixStack;
   {$EXTERNALSYM IID_ID3DXMatrixStack}
 
-function D3DXCreateMatrixStack(Flags: DWord; out Stack: ID3DXMatrixStack): HResult; stdcall; external d3dx8dll;
+function D3DXCreateMatrixStack(Flags: DWord; {out} Stack: PID3DXMatrixStack): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateMatrixStack}
 
 
@@ -1066,12 +1067,13 @@ type
 //
 ///////////////////////////////////////////////////////////////////////////
 
+  PID3DXFont = ^ID3DXFont;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXFont);'}
   {$EXTERNALSYM ID3DXFont}
   ID3DXFont = interface(IUnknown)
     ['{89FAD6A5-024D-49af-8FE7-F51123B85E25}']
     // ID3DXFont
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
     function GetLogFont(out pLogFont: TLogFont): HResult; stdcall;
 
     function _Begin: HResult; stdcall;
@@ -1085,11 +1087,11 @@ type
 
 
 function D3DXCreateFont(pDevice: IDirect3DDevice8; hFont: HFONT;
-  out ppFont: ID3DXFont): HResult; stdcall; external d3dx8dll;
+  {out} ppFont: PID3DXFont): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateFont}
 
 function D3DXCreateFontIndirect(pDevice: IDirect3DDevice8;
-  const pLogFont: TLogFont; out ppFont: ID3DXFont): HResult; stdcall; external d3dx8dll;
+  const pLogFont: TLogFont; {out} ppFont: PID3DXFont): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateFontIndirect}
 
 
@@ -1116,13 +1118,13 @@ function D3DXCreateFontIndirect(pDevice: IDirect3DDevice8;
 //    memory resources.  After Reset(), the call OnResetDevice().
 ///////////////////////////////////////////////////////////////////////////
 type
-
+  PID3DXSprite = ^ID3DXSprite;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXSprite);'}
   {$EXTERNALSYM ID3DXSprite}
   ID3DXSprite = interface(IUnknown)
     ['{13D69D15-F9B0-4e0f-B39E-C91EB33F6CE7}']
     // ID3DXSprite
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
 
     function _Begin: HResult; stdcall;
 
@@ -1141,7 +1143,7 @@ type
 
 
 function D3DXCreateSprite(ppDevice: IDirect3DDevice8;
-  out ppSprite: ID3DXSprite): HResult; stdcall; external d3dx8dll;
+  {out} ppSprite: PID3DXSprite): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateSprite}
 
 
@@ -1164,7 +1166,6 @@ function D3DXCreateSprite(ppDevice: IDirect3DDevice8;
 //    memory resources.  After Reset(), the call OnResetDevice().
 ///////////////////////////////////////////////////////////////////////////
 type
-
   PD3DXRTSDesc = ^TD3DXRTSDesc;
   _D3DXRTS_DESC = packed record
     Width: LongWord;
@@ -1178,13 +1179,13 @@ type
   {$EXTERNALSYM D3DXRTS_DESC}
   TD3DXRTSDesc = _D3DXRTS_DESC;
 
-
+  PID3DXRenderToSurface = ^ID3DXRenderToSurface;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXRenderToSurface);'}
   {$EXTERNALSYM ID3DXRenderToSurface}
   ID3DXRenderToSurface = interface(IUnknown)
     ['{82DF5B90-E34E-496e-AC1C-62117A6A5913}']
     // ID3DXRenderToSurface
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
     function GetDesc(out pDesc: TD3DXRTSDesc): HResult; stdcall;
 
     function BeginScene(pSurface: IDirect3DSurface8; pViewport: PD3DViewport8): HResult; stdcall;
@@ -1201,7 +1202,7 @@ function D3DXCreateRenderToSurface(ppDevice: IDirect3DDevice8;
   Format: TD3DFormat;
   DepthStencil: BOOL;
   DepthStencilFormat: TD3DFormat;
-  out ppRenderToSurface: ID3DXRenderToSurface): HResult; stdcall; external d3dx8dll;
+  {out} ppRenderToSurface: PID3DXRenderToSurface): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateRenderToSurface}
 
 
@@ -1247,13 +1248,13 @@ type
   {$EXTERNALSYM D3DXRTE_DESC}
   TD3DXRTEDesc = _D3DXRTE_DESC;
 
-
+  PID3DXRenderToEnvMap = ^ID3DXRenderToEnvMap;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXRenderToEnvMap);'}
   {$EXTERNALSYM ID3DXRenderToEnvMap}
   ID3DXRenderToEnvMap = interface(IUnknown)
     ['{4E42C623-9451-44b7-8C86-ABCCDE5D52C8}']
     // ID3DXRenderToEnvMap
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
     function GetDesc(out pDesc: TD3DXRTEDesc): HResult; stdcall;
 
     function BeginCube(pCubeTex: IDirect3DCubeTexture8): HResult; stdcall;
@@ -1277,7 +1278,7 @@ function D3DXCreateRenderToEnvMap(ppDevice: IDirect3DDevice8;
   Format: TD3DFormat;
   DepthStencil: BOOL;
   DepthStencilFormat: TD3DFormat;
-  out ppRenderToEnvMap: ID3DXRenderToEnvMap): HResult; stdcall; external d3dx8dll;
+  {out} ppRenderToEnvMap: PID3DXRenderToEnvMap): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateRenderToEnvMap}
 
 
@@ -1511,20 +1512,20 @@ type
 // ID3DXEffect ///////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-
+  PID3DXEffect = ^ID3DXEffect;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXEffect);'}
   {$EXTERNALSYM ID3DXEffect}
   ID3DXEffect = interface(IUnknown)
     ['{648B1CEB-8D4E-4d66-B6FA-E44969E82E89}']
     // ID3DXEffect
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
     function GetDesc(out pDesc: TD3DXEffectDesc): HResult; stdcall;
     function GetParameterDesc(pParameter: PAnsiChar; out pDesc: TD3DXParameterDesc): HResult; stdcall;
     function GetTechniqueDesc(pTechnique: PAnsiChar; out pDesc: TD3DXTechniqueDesc): HResult; stdcall;
     function GetPassDesc(pTechnique, pPass: PAnsiChar; out pDesc: TD3DXPassDesc): HResult; stdcall;
     function FindNextValidTechnique(pTechnique: PAnsiChar; out pDesc: TD3DXTechniqueDesc): HResult; stdcall;
-    function CloneEffect(pDevice: IDirect3DDevice8; out ppEffect: ID3DXEffect): HResult; stdcall;
-    function GetCompiledEffect(out ppCompiledEffect: ID3DXBuffer): HResult; stdcall;
+    function CloneEffect(pDevice: IDirect3DDevice8; {out} ppEffect: PID3DXEffect): HResult; stdcall;
+    function GetCompiledEffect({out} ppCompiledEffect: PID3DXBuffer): HResult; stdcall;
 
     function SetTechnique(pTechnique: PAnsiChar): HResult; stdcall;
     function GetTechnique(out ppTechnique: PAnsiChar): HResult; stdcall;
@@ -1538,7 +1539,7 @@ type
     function SetMatrix(pParameter: PAnsiChar; const pMatrix: TD3DXMatrix): HResult; stdcall;
     function GetMatrix(pParameter: PAnsiChar; out pMatrix: TD3DXMatrix): HResult; stdcall;
     function SetTexture(pParameter: PAnsiChar; pTexture: IDirect3DBaseTexture8): HResult; stdcall;
-    function GetTexture(pParameter: PAnsiChar; out ppTexture: IDirect3DBaseTexture8): HResult; stdcall;
+    function GetTexture(pParameter: PAnsiChar; {out} ppTexture: PIDirect3DBaseTexture8): HResult; stdcall;
     function SetVertexShader(pParameter: PAnsiChar; Handle: DWord): HResult; stdcall;
     function GetVertexShader(pParameter: PAnsiChar; out Handle: DWord): HResult; stdcall;
     function SetPixelShader(pParameter: PAnsiChar; Handle: DWord): HResult; stdcall;
@@ -1593,21 +1594,21 @@ type
 function D3DXCreateEffectFromFileA(
   pDevice: IDirect3DDevice8;
   pSrcFile: PAnsiChar;
-  out ppEffect: ID3DXEffect;
+  {out} ppEffect: PID3DXEffect;
   ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx8dll name 'D3DXCreateEffectFromFileA';
 {$EXTERNALSYM D3DXCreateEffectFromFileA}
 
 function D3DXCreateEffectFromFileW(
   pDevice: IDirect3DDevice8;
   pSrcFile: PWideChar;
-  out ppEffect: ID3DXEffect;
+  {out} ppEffect: PID3DXEffect;
   ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx8dll name 'D3DXCreateEffectFromFileW';
 {$EXTERNALSYM D3DXCreateEffectFromFileW}
 
 function D3DXCreateEffectFromFile(
   pDevice: IDirect3DDevice8;
   pSrcFile: PChar;
-  out ppEffect: ID3DXEffect;
+  {out} ppEffect: PID3DXEffect;
   ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx8dll name 'D3DXCreateEffectFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectFromFile}
 
@@ -1615,7 +1616,7 @@ function D3DXCreateEffectFromResourceA(
   pDevice: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PAnsiChar;
-  out ppEffect: ID3DXEffect;
+  {out} ppEffect: PID3DXEffect;
   ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx8dll name 'D3DXCreateEffectFromResourceA';
 {$EXTERNALSYM D3DXCreateEffectFromResourceA}
 
@@ -1623,7 +1624,7 @@ function D3DXCreateEffectFromResourceW(
   pDevice: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PWideChar;
-  out ppEffect: ID3DXEffect;
+  {out} ppEffect: PID3DXEffect;
   ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx8dll name 'D3DXCreateEffectFromResourceW';
 {$EXTERNALSYM D3DXCreateEffectFromResourceW}
 
@@ -1631,7 +1632,7 @@ function D3DXCreateEffectFromResource(
   pDevice: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out ppEffect: ID3DXEffect;
+  {out} ppEffect: PID3DXEffect;
   ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx8dll name 'D3DXCreateEffectFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateEffectFromResource}
 
@@ -1640,7 +1641,7 @@ function D3DXCreateEffect(
   pDevice: IDirect3DDevice8;
   const pSrcData;
   SrcDataSize: LongWord;
-  out ppEffect: ID3DXEffect;
+  {out} ppEffect: PID3DXEffect;
   ppCompilationErrors: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateEffect}
 
@@ -1798,8 +1799,10 @@ type
   {$EXTERNALSYM D3DXWELDEPSILONS}
   TD3DXWeldEpsilons = _D3DXWELDEPSILONS;
 
+  PID3DXMesh = ^ID3DXMesh;
   ID3DXMesh = interface;
 
+  PID3DXBaseMesh = ^ID3DXBaseMesh;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXBaseMesh);'}
   {$EXTERNALSYM ID3DXBaseMesh}
   ID3DXBaseMesh = interface(IUnknown)
@@ -1811,13 +1814,13 @@ type
     function GetFVF: DWord; stdcall;
     function GetDeclaration(out Declaration: TFVFDeclaration): HResult; stdcall;
     function GetOptions: DWord; stdcall;
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
     function CloneMeshFVF(Options, FVF: DWord; ppDevice: IDirect3DDevice8;
-      out ppCloneMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppCloneMesh: PID3DXMesh): HResult; stdcall;
     function CloneMesh(Options: DWord; pDeclaration: PDWord;
-      ppDevice: IDirect3DDevice8; out ppCloneMesh: ID3DXMesh): HResult; stdcall;
-    function GetVertexBuffer(out ppVB: IDirect3DVertexBuffer8): HResult; stdcall;
-    function GetIndexBuffer(out ppIB: IDirect3DIndexBuffer8): HResult; stdcall;
+      ppDevice: IDirect3DDevice8; {out} ppCloneMesh: PID3DXMesh): HResult; stdcall;
+    function GetVertexBuffer({out} ppVB: PIDirect3DVertexBuffer8): HResult; stdcall;
+    function GetIndexBuffer({out} ppIB: PIDirect3DIndexBuffer8): HResult; stdcall;
     function LockVertexBuffer(Flags: DWord; out ppData: PByte): HResult; stdcall;
     function UnlockVertexBuffer: HResult; stdcall;
     function LockIndexBuffer(Flags: DWord; out ppData: PByte): HResult; stdcall;
@@ -1830,7 +1833,7 @@ type
     function GenerateAdjacency(Epsilon: Single; pAdjacency: PDWord): HResult; stdcall;
   end;
 
-  {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXMesh);'}
+   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXMesh);'}
   {$EXTERNALSYM ID3DXMesh}
   ID3DXMesh = interface(ID3DXBaseMesh)
     ['{CCAE5C3B-4DD1-4d0f-997E-4684CA64557F}']
@@ -1839,20 +1842,21 @@ type
     function UnlockAttributeBuffer: HResult; stdcall;
     function Optimize(Flags: DWord; pAdjacencyIn, pAdjacencyOut: PDWord;
       pFaceRemap: PDWord; ppVertexRemap: PID3DXBuffer;
-      out ppOptMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppOptMesh: PID3DXMesh): HResult; stdcall;
     function OptimizeInplace(Flags: DWord; pAdjacencyIn, pAdjacencyOut: PDWord;
       pFaceRemap: PDWord; ppVertexRemap: PID3DXBuffer): HResult; stdcall;
   end;
 
+  PID3DXPMesh = ^ID3DXPMesh;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXPMesh);'}
   {$EXTERNALSYM ID3DXPMesh}
   ID3DXPMesh = interface(ID3DXBaseMesh)
     ['{19FBE386-C282-4659-97BD-CB869B084A6C}']
     // ID3DXPMesh
     function ClonePMeshFVF(Options, FVF: DWord; ppDevice: IDirect3DDevice8;
-      out ppCloneMesh: ID3DXPMesh): HResult; stdcall;
+      {out} ppCloneMesh: PID3DXPMesh): HResult; stdcall;
     function ClonePMesh(Options: DWord; pDeclaration: PDWord;
-      ppDevice: IDirect3DDevice8; out ppCloneMesh: ID3DXPMesh): HResult; stdcall;
+      ppDevice: IDirect3DDevice8; {out} ppCloneMesh: PID3DXPMesh): HResult; stdcall;
     function SetNumFaces(Faces: DWord): HResult; stdcall;
     function SetNumVertices(Vertices: DWord): HResult; stdcall;
     function GetMaxFaces: DWord; stdcall;
@@ -1864,7 +1868,7 @@ type
 
     function Optimize(Flags: DWord; pAdjacencyOut: PDWord;
       pFaceRemap: PDWord; ppVertexRemap: PID3DXBuffer;
-      out ppOptMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppOptMesh: PID3DXMesh): HResult; stdcall;
 
     function OptimizeBaseLOD(Flags: DWord; pFaceRemap: PDWord): HResult; stdcall;
     function TrimByFaces(NewFacesMin, NewFacesMax: DWord; rgiFaceRemap, rgiVertRemap: PDWord): HResult; stdcall;
@@ -1873,6 +1877,7 @@ type
     function GetAdjacency(pAdjacency: PDWord): HResult; stdcall;
   end;
 
+  PID3DXSPMesh = ^ID3DXSPMesh;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXSPMesh);'}
   {$EXTERNALSYM ID3DXSPMesh}
   ID3DXSPMesh = interface(IUnknown)
@@ -1884,19 +1889,19 @@ type
     function GetDeclaration(out Declaration: TFVFDeclaration): HResult; stdcall;
     function GetOptions: DWord; stdcall;
 
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
     function CloneMeshFVF(Options, FVF: DWord; ppDevice: IDirect3DDevice8;
       pAdjacencyOut, pVertexRemapOut: PDWord;
-      out ppCloneMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppCloneMesh: PID3DXMesh): HResult; stdcall;
     function CloneMesh(Options: DWord; pDeclaration: PDWord;
       ppDevice: IDirect3DDevice8; pAdjacencyOut, pVertexRemapOut: PDWord;
-      out ppCloneMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppCloneMesh: PID3DXMesh): HResult; stdcall;
 
     function ClonePMeshFVF(Options, FVF: DWord; ppDevice: IDirect3DDevice8;
-      pVertexRemapOut: PDWord; out ppCloneMesh: ID3DXPMesh): HResult; stdcall;
+      pVertexRemapOut: PDWord; {out} ppCloneMesh: PID3DXPMesh): HResult; stdcall;
     function ClonePMesh(Options: DWord; pDeclaration: PDWord;
       ppDevice: IDirect3DDevice8; pVertexRemapOut: PDWord;
-      out ppCloneMesh: ID3DXPMesh): HResult; stdcall;
+      {out} ppCloneMesh: PID3DXPMesh): HResult; stdcall;
 
     function ReduceFaces(Faces: DWord): HResult; stdcall;
     function ReduceVertices(Vertices: DWord): HResult; stdcall;
@@ -1954,6 +1959,7 @@ type
   {$EXTERNALSYM D3DXBONECOMBINATION}
   TD3DXBoneCombination = _D3DXBONECOMBINATION;
 
+  PID3DXSkinMesh = ^ID3DXSkinMesh;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(ID3DXSkinMesh);'}
   {$EXTERNALSYM ID3DXSkinMesh}
   ID3DXSkinMesh = interface(IUnknown)
@@ -1964,9 +1970,9 @@ type
     function GetFVF: DWord; stdcall;
     function GetDeclaration(out Declaration: TFVFDeclaration): HResult; stdcall;
     function GetOptions: DWord; stdcall;
-    function GetDevice(out ppDevice: IDirect3DDevice8): HResult; stdcall;
-    function GetVertexBuffer(out ppVB: IDirect3DVertexBuffer8): HResult; stdcall;
-    function GetIndexBuffer(out ppIB: IDirect3DIndexBuffer8): HResult; stdcall;
+    function GetDevice({out} ppDevice: PIDirect3DDevice8): HResult; stdcall;
+    function GetVertexBuffer({out} ppVB: PIDirect3DVertexBuffer8): HResult; stdcall;
+    function GetIndexBuffer({out} ppIB: PIDirect3DIndexBuffer8): HResult; stdcall;
     function LockVertexBuffer(Flags: DWord; out ppData: PByte): HResult; stdcall;
     function UnlockVertexBuffer: HResult; stdcall;
     function LockIndexBuffer(Flags: DWord; out ppData: PByte): HResult; stdcall;
@@ -1975,7 +1981,7 @@ type
     function UnlockAttributeBuffer: HResult; stdcall;
     // ID3DXSkinMesh
     function GetNumBones: DWord; stdcall;
-    function GetOriginalMesh(out ppMesh: ID3DXMesh): HResult; stdcall;
+    function GetOriginalMesh({out} ppMesh: PID3DXMesh): HResult; stdcall;
     function SetBoneInfluence(bone, numInfluences: DWord; vertices: PDWord;
       weights: PSingle): HResult; stdcall;
     function GetNumBoneInfluences(bone: DWord): DWord; stdcall;
@@ -1986,20 +1992,20 @@ type
 
     function ConvertToBlendedMesh(Options: DWord;
       pAdjacencyIn, pAdjacencyOut: PDWord;
-      out pNumBoneCombinations: DWord; out ppBoneCombinationTable: ID3DXBuffer;
+      out pNumBoneCombinations: DWord; {out} ppBoneCombinationTable: PID3DXBuffer;
       pFaceRemap: PDWord; ppVertexRemap: PID3DXBuffer;
-      out ppMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppMesh: PID3DXMesh): HResult; stdcall;
 
     function ConvertToIndexedBlendedMesh(Options: DWord;
       pAdjacencyIn: PDWord; paletteSize: DWord; pAdjacencyOut: PDWord;
-      out pNumBoneCombinations: DWord; out ppBoneCombinationTable: ID3DXBuffer;
+      out pNumBoneCombinations: DWord; {out} ppBoneCombinationTable: PID3DXBuffer;
       pFaceRemap: PDWord; ppVertexRemap: PID3DXBuffer;
-      out ppMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppMesh: PID3DXMesh): HResult; stdcall;
 
     function GenerateSkinnedMesh(Options: DWord; minWeight: Single;
       pAdjacencyIn, pAdjacencyOut: PDWord;
       pFaceRemap: PDWord; ppVertexRemap: PID3DXBuffer;
-      out ppMesh: ID3DXMesh): HResult; stdcall;
+      {out} ppMesh: PID3DXMesh): HResult; stdcall;
     function UpdateSkinnedMesh(
       const pBoneTransforms: TD3DXmatrix; pBoneInvTransforms: PD3DXmatrix;
       ppMesh: ID3DXMesh): HResult; stdcall;
@@ -2019,21 +2025,21 @@ type
 
 
 function D3DXCreateMesh(NumFaces, NumVertices: DWord; Options: DWord;
-  pDeclaration: PDWord; pD3D: IDirect3DDevice8; out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  pDeclaration: PDWord; pD3D: IDirect3DDevice8; {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateMesh}
 
 function D3DXCreateMeshFVF(NumFaces, NumVertices: DWord; Options: DWord;
-  FVF: DWord; pD3D: IDirect3DDevice8; out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  FVF: DWord; pD3D: IDirect3DDevice8; {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateMeshFVF}
 
 function D3DXCreateSPMesh(pMesh: ID3DXMesh; pAdjacency: PDWord;
   pVertexAttributeWeights: PD3DXAttributeWeights; pVertexWeights: PSingle;
-  out ppSMesh: ID3DXSPMesh): HResult; stdcall; external d3dx8dll;
+  {out} ppSMesh: PID3DXSPMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateSPMesh}
 
 // clean a mesh up for simplification, try to make manifold
 function D3DXCleanMesh(pMeshIn: ID3DXMesh; pAdjacencyIn: PDWord;
-  out ppMeshOut: ID3DXMesh; pAdjacencyOut: PDWord;
+  {out} ppMeshOut: PID3DXMesh; pAdjacencyOut: PDWord;
   ppErrorsAndWarnings: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCleanMesh}
 
@@ -2043,12 +2049,12 @@ function D3DXValidMesh(pMeshIn: ID3DXMesh; pAdjacency: PDWord;
 
 function D3DXGeneratePMesh(pMesh: ID3DXMesh; pAdjacency: PDWord;
   pVertexAttributeWeights: PD3DXAttributeWeights; pVertexWeights: PSingle;
-  MinValue: DWord; Options: TD3DMeshSimp; out ppPMesh: ID3DXPMesh): HResult; stdcall; external d3dx8dll;
+  MinValue: DWord; Options: TD3DMeshSimp; {out} ppPMesh: PID3DXPMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXGeneratePMesh}
 
 function D3DXSimplifyMesh(pMesh: ID3DXMesh; pAdjacency: PDWord;
   pVertexAttributeWeights: PD3DXAttributeWeights; pVertexWeights: PSingle;
-  MinValue: DWord; Options: TD3DMeshSimp; out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  MinValue: DWord; Options: TD3DMeshSimp; {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXSimplifyMesh}
 
 function D3DXComputeBoundingSphere(const pPointsFVF; NumVertices: DWord;
@@ -2062,24 +2068,24 @@ function D3DXComputeBoundingBox(const pPointsFVF; NumVertices: DWord;
 function D3DXComputeNormals(pMesh: ID3DXBaseMesh; pAdjacency: PDWord): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXComputeNormals}
 
-function D3DXCreateBuffer(NumBytes: DWord; out ppBuffer: ID3DXBuffer): HResult; stdcall; external d3dx8dll;
+function D3DXCreateBuffer(NumBytes: DWord; {out} ppBuffer: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateBuffer}
 
 function D3DXLoadMeshFromX(pFilename: PAnsiChar; Options: DWord;
   pD3D: IDirect3DDevice8; ppAdjacency, ppMaterials: PID3DXBuffer;
-  pNumMaterials: PDWord; out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  pNumMaterials: PDWord; {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXLoadMeshFromX}
 
 function D3DXLoadMeshFromXInMemory(Memory: PByte; SizeOfMemory: DWord;
   Options: DWord; pD3D: IDirect3DDevice8;
   ppAdjacency, ppMaterials: PID3DXBuffer;
-  pNumMaterials: PDWord; out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  pNumMaterials: PDWord; {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXLoadMeshFromXInMemory}
 
 function D3DXLoadMeshFromXResource(Module: HModule; Name: PAnsiChar; _Type: PAnsiChar;
   Options: DWord; pD3D: IDirect3DDevice8;
   ppAdjacency, ppMaterials: PID3DXBuffer;
-  pNumMaterials: PDWord; out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  pNumMaterials: PDWord; {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXLoadMeshFromXResource}
 
 function D3DXSaveMeshToX(pFilename: PAnsiChar; ppMesh: ID3DXMesh;
@@ -2089,40 +2095,40 @@ function D3DXSaveMeshToX(pFilename: PAnsiChar; ppMesh: ID3DXMesh;
 
 function D3DXCreatePMeshFromStream(pStream: IStream; Options: DWord;
   pD3D: IDirect3DDevice8; ppMaterials: PID3DXBuffer;
-  pNumMaterials: PDWord; out ppPMesh: ID3DXPMesh): HResult; stdcall; external d3dx8dll;
+  pNumMaterials: PDWord; {out} ppPMesh: PID3DXPMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreatePMeshFromStream}
 
 function D3DXCreateSkinMesh(NumFaces, NumVertices, NumBones, Options: DWord;
   pDeclaration: PDWord; pD3D: IDirect3DDevice8;
-  out ppSkinMesh: ID3DXSkinMesh): HResult; stdcall; external d3dx8dll;
+  {out} ppSkinMesh: PID3DXSkinMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateSkinMesh}
 
 function D3DXCreateSkinMeshFVF(NumFaces, NumVertices, NumBones, Options: DWord;
   FVF: DWord; pD3D: IDirect3DDevice8;
-  out ppSkinMesh: ID3DXSkinMesh): HResult; stdcall; external d3dx8dll;
+  {out} ppSkinMesh: PID3DXSkinMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateSkinMeshFVF}
 
 function D3DXCreateSkinMeshFromMesh(pMesh: ID3DXMesh; numBones: DWord;
-  out ppSkinMesh: ID3DXSkinMesh): HResult; stdcall; external d3dx8dll;
+  {out} ppSkinMesh: PID3DXSkinMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateSkinMeshFromMesh}
 
 function D3DXLoadMeshFromXof(pXofObjMesh: IDirectXFileData;
   Options: DWord; pD3D: IDirect3DDevice8;
   ppAdjacency, ppMaterials: PID3DXBuffer;
-  pNumMaterials: PDWord; out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  pNumMaterials: PDWord; {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXLoadMeshFromXof}
 
 function D3DXLoadSkinMeshFromXof(pXofObjMesh: IDirectXFileData;
   Options: DWord; pD3D: IDirect3DDevice8;
   ppAdjacency, ppMaterials: PID3DXBuffer;
   pmMatOut: PDWord; ppBoneNames, ppBoneTransforms: PID3DXBuffer;
-  out ppMesh: ID3DXMesh): HResult; stdcall; external d3dx8dll;
+  {out} ppMesh: PID3DXMesh): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXLoadSkinMeshFromXof}
 
 function D3DXTessellateNPatches(pMeshIn: ID3DXMesh;
   pAdjacencyIn: PDWord; NumSegs: Single;
   QuadraticInterpNormals: BOOL; // if false use linear intrep for normals, if true use quadratic
-  out ppMeshOut: ID3DXMesh; ppAdjacencyOut: PDWord): HResult; stdcall; external d3dx8dll;
+  {out} ppMeshOut: PID3DXMesh; ppAdjacencyOut: PDWord): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXTessellateNPatches}
 
 function D3DXGetFVFVertexSize(FVF: DWord): LongWord; stdcall; external d3dx8dll;
@@ -2179,7 +2185,7 @@ function D3DXIntersectSubset(pMesh: ID3DXBaseMesh; AttribId: DWord;
 
 function D3DXSplitMesh(pMeshIn: ID3DXMesh; pAdjacencyIn: PDWord;
   MaxSize, Options: DWord;
-  out pMeshesOut: DWord; out ppMeshArrayOut: ID3DXBuffer;
+  out pMeshesOut: DWord; {out} ppMeshArrayOut: PID3DXBuffer;
   ppAdjacencyArrayOut, ppFaceRemapArrayOut, ppVertRemapArrayOut: PID3DXBuffer
  ): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXSplitMesh}
@@ -2235,13 +2241,13 @@ function D3DXComputeTangent(InMesh: ID3DXMesh; TexStage: DWord;
 
 function D3DXConvertMeshSubsetToSingleStrip(MeshIn: ID3DXBaseMesh;
   AttribId: DWord; IBOptions: DWord;
-  out ppIndexBuffer: IDirect3DIndexBuffer8; pNumIndices: PDWord
+  {out} ppIndexBuffer: PIDirect3DIndexBuffer8; pNumIndices: PDWord
  ): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXConvertMeshSubsetToSingleStrip}
 
 function D3DXConvertMeshSubsetToStrips(MeshIn: ID3DXBaseMesh;
   AttribId: DWord; IBOptions: DWord;
-  out ppIndexBuffer: IDirect3DIndexBuffer8; pNumIndices: PDWord;
+  {out} ppIndexBuffer: PIDirect3DIndexBuffer8; pNumIndices: PDWord;
   ppStripLengths: PID3DXBuffer; pNumStrips: PDWord): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXConvertMeshSubsetToStrips}
 
@@ -2283,7 +2289,7 @@ function D3DXConvertMeshSubsetToStrips(MeshIn: ID3DXBaseMesh;
 function D3DXCreatePolygon(ppDevice: IDirect3DDevice8;
   Length: Single;
   Sides: LongWord;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreatePolygon}
 
@@ -2307,7 +2313,7 @@ function D3DXCreateBox(ppDevice: IDirect3DDevice8;
   Width,
   Height,
   Depth: Single;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateBox}
 
@@ -2335,7 +2341,7 @@ function D3DXCreateCylinder(ppDevice: IDirect3DDevice8;
   Length: Single;
   Slices,
   Stacks: LongWord;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateCylinder}
 
@@ -2359,7 +2365,7 @@ function D3DXCreateSphere(ppDevice: IDirect3DDevice8;
   Radius: Single;
   Slices,
   Stacks: LongWord;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateSphere}
 
@@ -2385,7 +2391,7 @@ function D3DXCreateTorus(ppDevice: IDirect3DDevice8;
   OuterRadius: Single;
   Sides,
   Rings: LongWord;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateTorus}
 
@@ -2402,7 +2408,7 @@ function D3DXCreateTorus(ppDevice: IDirect3DDevice8;
 //  ppAdjacency Returns a buffer containing adjacency info.  Can be NULL.
 //-------------------------------------------------------------------------
 function D3DXCreateTeapot(ppDevice: IDirect3DDevice8;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateTeapot}
 
@@ -2429,7 +2435,7 @@ function D3DXCreateTextA(ppDevice: IDirect3DDevice8;
   pText: PAnsiChar;
   Deviation: Single;
   Extrusion: Single;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer;
   pGlyphMetrics: PGlyphMetricsFloat): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextA';
 {$EXTERNALSYM D3DXCreateTextA}
@@ -2439,7 +2445,7 @@ function D3DXCreateTextW(ppDevice: IDirect3DDevice8;
   pText: PWideChar;
   Deviation: Single;
   Extrusion: Single;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer;
   pGlyphMetrics: PGlyphMetricsFloat): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextW';
 {$EXTERNALSYM D3DXCreateTextW}
@@ -2449,7 +2455,7 @@ function D3DXCreateText(ppDevice: IDirect3DDevice8;
   pText: PChar;
   Deviation: Single;
   Extrusion: Single;
-  out ppMesh: ID3DXMesh;
+  {out} ppMesh: PID3DXMesh;
   ppAdjacency: PID3DXBuffer;
   pGlyphMetrics: PGlyphMetricsFloat): HResult; stdcall; external d3dx8dll name 'D3DXCreateText' + AWSuffix;
 {$EXTERNALSYM D3DXCreateText}
@@ -3398,7 +3404,7 @@ function D3DXCreateTexture(
   Usage: DWord;
   Format: TD3DFormat;
   Pool: TD3DPool;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateTexture}
 
 function D3DXCreateCubeTexture(
@@ -3408,7 +3414,7 @@ function D3DXCreateCubeTexture(
   Usage: DWord;
   Format: TD3DFormat;
   Pool: TD3DPool;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateCubeTexture}
 
 function D3DXCreateVolumeTexture(
@@ -3420,7 +3426,7 @@ function D3DXCreateVolumeTexture(
   Usage: DWord;
   Format: TD3DFormat;
   Pool: TD3DPool;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateVolumeTexture}
 
 
@@ -3484,57 +3490,57 @@ function D3DXCreateVolumeTexture(
 function D3DXCreateTextureFromFileA(
   Device: IDirect3DDevice8;
   pSrcFile: PAnsiChar;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileA';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileA';
 {$EXTERNALSYM D3DXCreateTextureFromFileA}
 
 function D3DXCreateTextureFromFileW(
   Device: IDirect3DDevice8;
   pSrcFile: PWideChar;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileW';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileW';
 {$EXTERNALSYM D3DXCreateTextureFromFileW}
 
 function D3DXCreateTextureFromFile(
   Device: IDirect3DDevice8;
   pSrcFile: PChar;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFile' + AWSuffix;
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromFile}
 
 
 function D3DXCreateCubeTextureFromFileA(
   Device: IDirect3DDevice8;
   pSrcFile: PAnsiChar;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileA';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileA';
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileA}
 
 function D3DXCreateCubeTextureFromFileW(
   Device: IDirect3DDevice8;
   pSrcFile: PWideChar;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileW';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileW';
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileW}
 
 function D3DXCreateCubeTextureFromFile(
   Device: IDirect3DDevice8;
   pSrcFile: PChar;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFile' + AWSuffix;
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromFile}
 
 
 function D3DXCreateVolumeTextureFromFileA(
   Device: IDirect3DDevice8;
   pSrcFile: PAnsiChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileA';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileA';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileA}
 
 function D3DXCreateVolumeTextureFromFileW(
   Device: IDirect3DDevice8;
   pSrcFile: PWideChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileW';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileW';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileW}
 
 function D3DXCreateVolumeTextureFromFile(
   Device: IDirect3DDevice8;
   pSrcFile: PChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFile' + AWSuffix;
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFile' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFile}
 
 
@@ -3544,21 +3550,21 @@ function D3DXCreateTextureFromResourceA(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PAnsiChar;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceA';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceA';
 {$EXTERNALSYM D3DXCreateTextureFromResourceA}
 
 function D3DXCreateTextureFromResourceW(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PWideChar;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceW';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceW';
 {$EXTERNALSYM D3DXCreateTextureFromResourceW}
 
 function D3DXCreateTextureFromResource(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResource' + AWSuffix;
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromResource}
 
 
@@ -3566,21 +3572,21 @@ function D3DXCreateCubeTextureFromResourceA(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PAnsiChar;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceA';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceA';
 {$EXTERNALSYM D3DXCreateCubeTextureFromResourceA}
 
 function D3DXCreateCubeTextureFromResourceW(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PWideChar;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceW';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceW';
 {$EXTERNALSYM D3DXCreateCubeTextureFromResourceW}
 
 function D3DXCreateCubeTextureFromResource(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResource' + AWSuffix;
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromResource}
 
 
@@ -3588,21 +3594,21 @@ function D3DXCreateVolumeTextureFromResourceA(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PAnsiChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceA';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceA';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResourceA}
 
 function D3DXCreateVolumeTextureFromResourceW(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PWideChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceW';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceW';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResourceW}
 
 function D3DXCreateVolumeTextureFromResource(
   Device: IDirect3DDevice8;
   hSrcModule: HModule;
   pSrcResource: PChar;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResource' + AWSuffix;
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResource' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResource}
 
 
@@ -3622,7 +3628,7 @@ function D3DXCreateTextureFromFileExA(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileExA';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileExA';
 {$EXTERNALSYM D3DXCreateTextureFromFileExA}
 
 function D3DXCreateTextureFromFileExW(
@@ -3639,7 +3645,7 @@ function D3DXCreateTextureFromFileExW(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileExW';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileExW';
 {$EXTERNALSYM D3DXCreateTextureFromFileExW}
 
 function D3DXCreateTextureFromFileEx(
@@ -3656,7 +3662,7 @@ function D3DXCreateTextureFromFileEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileEx' + AWSuffix;
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromFileEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromFileEx}
 
 
@@ -3673,7 +3679,7 @@ function D3DXCreateCubeTextureFromFileExA(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileExA';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileExA';
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileExA}
 
 function D3DXCreateCubeTextureFromFileExW(
@@ -3689,7 +3695,7 @@ function D3DXCreateCubeTextureFromFileExW(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileExW';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileExW';
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileExW}
 
 function D3DXCreateCubeTextureFromFileEx(
@@ -3705,7 +3711,7 @@ function D3DXCreateCubeTextureFromFileEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileEx' + AWSuffix;
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromFileEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileEx}
 
 
@@ -3724,7 +3730,7 @@ function D3DXCreateVolumeTextureFromFileExA(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileExA';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileExA';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileExA}
 
 function D3DXCreateVolumeTextureFromFileExW(
@@ -3742,7 +3748,7 @@ function D3DXCreateVolumeTextureFromFileExW(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileExW';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileExW';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileExW}
 
 function D3DXCreateVolumeTextureFromFileEx(
@@ -3760,7 +3766,7 @@ function D3DXCreateVolumeTextureFromFileEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileEx' + AWSuffix;
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromFileEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileEx}
 
 
@@ -3781,7 +3787,7 @@ function D3DXCreateTextureFromResourceExA(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceExA';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceExA';
 {$EXTERNALSYM D3DXCreateTextureFromResourceExA}
 
 function D3DXCreateTextureFromResourceExW(
@@ -3799,7 +3805,7 @@ function D3DXCreateTextureFromResourceExW(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceExW';
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceExW';
 {$EXTERNALSYM D3DXCreateTextureFromResourceExW}
 
 function D3DXCreateTextureFromResourceEx(
@@ -3817,7 +3823,7 @@ function D3DXCreateTextureFromResourceEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceEx' + AWSuffix;
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateTextureFromResourceEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateTextureFromResourceEx}
 
 
@@ -3835,7 +3841,7 @@ function D3DXCreateCubeTextureFromResourceExA(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceExA';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceExA';
 {$EXTERNALSYM D3DXCreateCubeTextureFromResourceExA}
 
 function D3DXCreateCubeTextureFromResourceExW(
@@ -3852,7 +3858,7 @@ function D3DXCreateCubeTextureFromResourceExW(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceExW';
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceExW';
 {$EXTERNALSYM D3DXCreateCubeTextureFromResourceExW}
 
 function D3DXCreateCubeTextureFromResourceEx(
@@ -3869,7 +3875,7 @@ function D3DXCreateCubeTextureFromResourceEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceEx' + AWSuffix;
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateCubeTextureFromResourceEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateCubeTextureFromResourceEx}
 
 
@@ -3889,7 +3895,7 @@ function D3DXCreateVolumeTextureFromResourceExA(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceExA';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceExA';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResourceExA}
 
 function D3DXCreateVolumeTextureFromResourceExW(
@@ -3908,7 +3914,7 @@ function D3DXCreateVolumeTextureFromResourceExW(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceExW';
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceExW';
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResourceExW}
 
 function D3DXCreateVolumeTextureFromResourceEx(
@@ -3927,7 +3933,7 @@ function D3DXCreateVolumeTextureFromResourceEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceEx' + AWSuffix;
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll name 'D3DXCreateVolumeTextureFromResourceEx' + AWSuffix;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromResourceEx}
 
 
@@ -3937,21 +3943,21 @@ function D3DXCreateTextureFromFileInMemory(
   Device: IDirect3DDevice8;
   const pSrcData;
   SrcDataSize: LongWord;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateTextureFromFileInMemory}
 
 function D3DXCreateCubeTextureFromFileInMemory(
   Device: IDirect3DDevice8;
   const pSrcData;
   SrcDataSize: LongWord;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileInMemory}
 
 function D3DXCreateVolumeTextureFromFileInMemory(
   Device: IDirect3DDevice8;
   const pSrcData;
   SrcDataSize: LongWord;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileInMemory}
 
 
@@ -3972,7 +3978,7 @@ function D3DXCreateTextureFromFileInMemoryEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppTexture: IDirect3DTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppTexture: PIDirect3DTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateTextureFromFileInMemoryEx}
 
 function D3DXCreateCubeTextureFromFileInMemoryEx(
@@ -3989,7 +3995,7 @@ function D3DXCreateCubeTextureFromFileInMemoryEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppCubeTexture: IDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppCubeTexture: PIDirect3DCubeTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateCubeTextureFromFileInMemoryEx}
 
 function D3DXCreateVolumeTextureFromFileInMemoryEx(
@@ -4008,7 +4014,7 @@ function D3DXCreateVolumeTextureFromFileInMemoryEx(
   ColorKey: TD3DColor;
   pSrcInfo: PD3DXImageInfo;
   pPalette: PPaletteEntry;
-  out ppVolumeTexture: IDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll;
+  {out} ppVolumeTexture: PIDirect3DVolumeTexture8): HResult; stdcall; external d3dx8dll;
 {$EXTERNALSYM D3DXCreateVolumeTextureFromFileInMemoryEx}
 
 

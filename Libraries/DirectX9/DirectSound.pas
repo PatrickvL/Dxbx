@@ -421,21 +421,22 @@ type
   IID_IReferenceClock = IReferenceClock;
   {$EXTERNALSYM IID_IReferenceClock}
 
-
+  PIDirectSoundBuffer = ^IDirectSoundBuffer;
   IDirectSoundBuffer = interface;
 
   //
   // IDirectSound
   //
 
+  PIDirectSound = ^IDirectSound;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectSound);'}
   {$EXTERNALSYM IDirectSound}
   IDirectSound = interface(IUnknown)
     ['{279AFA83-4981-11CE-A521-0020AF0BE560}']
     // IDirectSound methods
-    function CreateSoundBuffer(const pcDSBufferDesc: TDSBufferDesc; out ppDSBuffer: IDirectSoundBuffer; pUnkOuter: IUnknown): HResult; stdcall;
+    function CreateSoundBuffer(const pcDSBufferDesc: TDSBufferDesc; {out} ppDSBuffer: PIDirectSoundBuffer; pUnkOuter: IUnknown): HResult; stdcall;
     function GetCaps(out pDSCaps: TDSCaps): HResult; stdcall;
-    function DuplicateSoundBuffer(pDSBufferOriginal: IDirectSoundBuffer; out ppDSBufferDuplicate: IDirectSoundBuffer): HResult; stdcall;
+    function DuplicateSoundBuffer(pDSBufferOriginal: IDirectSoundBuffer; {out} ppDSBufferDuplicate: PIDirectSoundBuffer): HResult; stdcall;
     function SetCooperativeLevel(hwnd: HWND; dwLevel: DWORD): HResult; stdcall;
     function Compact: HResult; stdcall;
     function GetSpeakerConfig(out pdwSpeakerConfig: DWORD): HResult; stdcall;
@@ -453,6 +454,7 @@ type
   // IDirectSound8
   //
 
+  PIDirectSound8 = ^IDirectSound8;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectSound8);'}
   {$EXTERNALSYM IDirectSound8}
   IDirectSound8 = interface(IDirectSound)
@@ -507,6 +509,7 @@ type
   // IDirectSoundBuffer8
   //
 
+  PIDirectSoundBuffer8 = ^IDirectSoundBuffer8;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectSoundBuffer8);'}
   {$EXTERNALSYM IDirectSoundBuffer8}
   IDirectSoundBuffer8 = interface(IDirectSoundBuffer)
@@ -591,19 +594,20 @@ type
   IID_IDirectSound3DBuffer = IDirectSound3DBuffer;
   {$EXTERNALSYM IID_IDirectSound3DBuffer}
 
-
+  PIDirectSoundCaptureBuffer = ^IDirectSoundCaptureBuffer;
   IDirectSoundCaptureBuffer = interface;
 
   //
   // IDirectSoundCapture
   //
 
+  PIDirectSoundCapture = ^IDirectSoundCapture;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectSoundCapture);'}
   {$EXTERNALSYM IDirectSoundCapture}
   IDirectSoundCapture = interface(IUnknown)
     ['{b0210781-89cd-11d0-af08-00a0c925cd16}']
     // IDirectSoundCapture methods
-    function CreateCaptureBuffer(const pcDSCBufferDesc: TDSCBufferDesc; out ppDSCBuffer: IDirectSoundCaptureBuffer; pUnkOuter: IUnknown): HResult; stdcall;
+    function CreateCaptureBuffer(const pcDSCBufferDesc: TDSCBufferDesc; {out} ppDSCBuffer: PIDirectSoundCaptureBuffer; pUnkOuter: IUnknown): HResult; stdcall;
     function GetCaps(var pDSCCaps: TDSCcaps): HResult; stdcall;
     function Initialize(pcGuidDevice: PGUID): HResult; stdcall;
   end;
@@ -642,6 +646,7 @@ type
   // IDirectSoundCaptureBuffer8
   //
 
+  PIDirectSoundCaptureBuffer8 = ^IDirectSoundCaptureBuffer8;
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirectSoundCaptureBuffer8);'}
   {$EXTERNALSYM IDirectSoundCaptureBuffer8}
   IDirectSoundCaptureBuffer8 = interface(IDirectSoundCaptureBuffer)
@@ -1373,8 +1378,8 @@ type
     function Initialize(pCaptureGuid, pRenderGuid: PGUID;
       const lpDscBufferDesc: TDSCBufferDesc; const lpDsBufferDesc: TDSBufferDesc;
       hWnd: HWND; dwLevel: DWORD;
-      out lplpDirectSoundCaptureBuffer8: IDirectSoundCaptureBuffer8;
-      out lplpDirectSoundBuffer8: IDirectSoundBuffer8): HResult; stdcall;
+      {out} lplpDirectSoundCaptureBuffer8: PIDirectSoundCaptureBuffer8;
+      {out} lplpDirectSoundBuffer8: PIDirectSoundBuffer8): HResult; stdcall;
   end;
 
   IID_IDirectSoundFullDuplex = IDirectSoundFullDuplex;
@@ -1392,6 +1397,7 @@ type
 // only DirectSound 7.0 interfaces with changed functionality in version 8.0.
 // The other level 8 interfaces as equivalent to their level 7 counterparts:
 type
+  PIDirectSoundCapture8 = PIDirectSoundCapture;
   IDirectSoundCapture8            = IDirectSoundCapture;
   {$EXTERNALSYM IDirectSoundCapture8}
   IDirectSound3DListener8         = IDirectSound3DListener;
@@ -1422,6 +1428,7 @@ type
   {$EXTERNALSYM IDirectSoundCaptureFXAec8}
   IDirectSoundCaptureFXNoiseSuppress8 = IDirectSoundCaptureFXNoiseSuppress;
   {$EXTERNALSYM IDirectSoundCaptureFXNoiseSuppress8}
+  PIDirectSoundFullDuplex8 = ^IDirectSoundFullDuplex8;
   IDirectSoundFullDuplex8         = IDirectSoundFullDuplex;
   {$EXTERNALSYM IDirectSoundFullDuplex8}
 
@@ -2142,7 +2149,7 @@ function DirectSoundLoaded: Boolean;
 function UnLoadDirectSound: Boolean;
 function LoadDirectSound: Boolean;
 
-function DirectSoundCreate(lpGuid: PGUID; out ppDS: IDirectSound; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
+function DirectSoundCreate(lpGuid: PGUID; {out} ppDS: PIDirectSound; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
 {$EXTERNALSYM DirectSoundCreate}
 function DirectSoundEnumerateW(lpDSEnumCallback: TDSEnumCallbackW; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundEnumerateW';
 {$EXTERNALSYM DirectSoundEnumerateW}
@@ -2151,7 +2158,7 @@ function DirectSoundEnumerateA(lpDSEnumCallback: TDSEnumCallbackA; lpContext: Po
 function DirectSoundEnumerate(lpDSEnumCallback: TDSEnumCallback; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundEnumerate' + AWSuffix;
 {$EXTERNALSYM DirectSoundEnumerate}
 
-function DirectSoundCaptureCreate(lpGUID: PGUID; out lplpDSC: IDirectSoundCapture; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
+function DirectSoundCaptureCreate(lpGUID: PGUID; {out} lplpDSC: PIDirectSoundCapture; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
 {$EXTERNALSYM DirectSoundCaptureCreate}
 function DirectSoundCaptureEnumerateW(lpDSEnumCallback: TDSEnumCallbackW; lpContext: Pointer): HResult; stdcall; external DirectSoundDLL name 'DirectSoundCaptureEnumerateW';
 {$EXTERNALSYM DirectSoundCaptureEnumerateW}
@@ -2161,20 +2168,20 @@ function DirectSoundCaptureEnumerate(lpDSEnumCallback: TDSEnumCallback; lpContex
 {$EXTERNALSYM DirectSoundCaptureEnumerate}
 
 //#if DIRECTSOUND_VERSION >= 0x0800
-function DirectSoundCreate8(pcGuidDevice: PGUID; out ppDS8: IDirectSound8; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
+function DirectSoundCreate8(pcGuidDevice: PGUID; {out} ppDS8: PIDirectSound8; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
 {$EXTERNALSYM DirectSoundCreate8}
-function DirectSoundCaptureCreate8(pcGuidDevice: PGUID; out ppDSC8: IDirectSoundCapture8; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
+function DirectSoundCaptureCreate8(pcGuidDevice: PGUID; {out} ppDSC8: PIDirectSoundCapture8; pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
 {$EXTERNALSYM DirectSoundCaptureCreate8}
 function DirectSoundFullDuplexCreate(pcGuidCaptureDevice, pcGuidRenderDevice: PGUID;
   const pcDSCBufferDesc: TDSCBufferDesc; const pcDSBufferDesc: TDSBufferDesc;
-  hWnd: hWnd; dwLevel: DWORD; out ppDSFD: IDirectSoundFullDuplex8;
-  out ppDSCBuffer8: IDirectSoundCaptureBuffer8; out ppDSBuffer8: IDirectSoundBuffer8;
+  hWnd: hWnd; dwLevel: DWORD; {out} ppDSFD: PIDirectSoundFullDuplex8;
+  {out} ppDSCBuffer8: PIDirectSoundCaptureBuffer8; {out} ppDSBuffer8: PIDirectSoundBuffer8;
   pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL;
 {$EXTERNALSYM DirectSoundFullDuplexCreate}
 function DirectSoundFullDuplexCreate8(pcGuidCaptureDevice, pcGuidRenderDevice: PGUID;
   const pcDSCBufferDesc: TDSCBufferDesc; const pcDSBufferDesc: TDSBufferDesc;
-  hWnd: hWnd; dwLevel: DWORD; out ppDSFD: IDirectSoundFullDuplex8;
-  out ppDSCBuffer8: IDirectSoundCaptureBuffer8; out ppDSBuffer8: IDirectSoundBuffer8;
+  hWnd: hWnd; dwLevel: DWORD; {out} ppDSFD: PIDirectSoundFullDuplex8;
+  {out} ppDSCBuffer8: PIDirectSoundCaptureBuffer8; {out} ppDSBuffer8: PIDirectSoundBuffer8;
   pUnkOuter: IUnknown): HResult; stdcall; external DirectSoundDLL name 'DirectSoundFullDuplexCreate';
 {$EXTERNALSYM DirectSoundFullDuplexCreate8}
 
