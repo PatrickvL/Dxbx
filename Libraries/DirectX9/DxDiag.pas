@@ -132,7 +132,7 @@ type
     ['{9C6B4CB0-23F8-49CC-A3ED-45A55000A6D2}']
     (*** IDxDiagProvider methods ***)
     function Initialize(const Params: TDxDiagInitParams): HResult; stdcall;
-    function GetRootContainer(out ppInstance: IDxDiagContainer): HResult; stdcall;
+    function GetRootContainer({out} ppInstance: PIDxDiagContainer): HResult; stdcall;
   end;
 
 
@@ -146,7 +146,7 @@ type
     (*** IDxDiagContainer methods ***)
     function GetNumberOfChildContainers(out dwCount: DWORD): HResult; stdcall;
     function EnumChildContainerNames(dwIndex: DWORD; pwszContainer: PWideChar; cchContainer: DWORD): HResult; stdcall;
-    function GetChildContainer(pwszContainer: PWideChar; out ppInstance: IDxDiagContainer): HResult; stdcall;
+    function GetChildContainer(pwszContainer: PWideChar; {out} ppInstance: PIDxDiagContainer): HResult; stdcall;
     function GetNumberOfProps(out pdwCount: DWORD): HResult; stdcall;
     function EnumPropNames(dwIndex: DWORD; pwszPropName: PWideChar; cchPropName: DWORD): HResult; stdcall;
     function GetProp(pwszPropName: PWideChar; out varProp: OleVariant): HResult; stdcall;

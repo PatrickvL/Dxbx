@@ -3376,36 +3376,73 @@ const
  // DIRECT3D_VERSION_7
 
 type
+  PIDirect3D = ^IDirect3D;
   IDirect3D = interface;
   {$EXTERNALSYM IDirect3D}
+
+  PIDirect3D2 = ^IDirect3D2;
   IDirect3D2 = interface;
    // DIRECT3D_VERSION_5
+
+  PIDirect3D3 = ^IDirect3D3;
   IDirect3D3 = interface;
    // DIRECT3D_VERSION_5
+
+  PIDirect3D7 = ^IDirect3D7;
   IDirect3D7 = interface;
    // DIRECT3D_VERSION_5
+
+  PIDirect3DDevice = ^IDirect3DDevice;
   IDirect3DDevice = interface;
+
+  PIDirect3DDevice2 = ^IDirect3DDevice2;
   IDirect3DDevice2 = interface;
    // DIRECT3D_VERSION_5
+
+  PIDirect3DDevice3 = ^IDirect3DDevice3;
   IDirect3DDevice3 = interface;
+
+  PIDirect3DDevice7 = ^IDirect3DDevice7;
    // DIRECT3D_VERSION_6
   IDirect3DDevice7 = interface;
+
+  PIDirect3DExecuteBuffer = ^IDirect3DExecuteBuffer;
    // DIRECT3D_VERSION_7
   IDirect3DExecuteBuffer = interface;
+
+  PIDirect3DLight = ^IDirect3DLight;
   IDirect3DLight = interface;
+
+  PIDirect3DMaterial = ^IDirect3DMaterial;
   IDirect3DMaterial = interface;
+
+  PIDirect3DMaterial2 = ^IDirect3DMaterial2;
   IDirect3DMaterial2 = interface;
+
+  PIDirect3DMaterial3 = ^IDirect3DMaterial3;
    // DIRECT3D_VERSION_5
   IDirect3DMaterial3 = interface;
+
+  PIDirect3DTexture2 = ^IDirect3DTexture2;
    // DIRECT3D_VERSION_6
   IDirect3DTexture = interface;
   IDirect3DTexture2 = interface;
    // DIRECT3D_VERSION_5
+
+  PIDirect3DViewport = ^IDirect3DViewport;
   IDirect3DViewport = interface;
+
+  PIDirect3DViewport2 = ^IDirect3DViewport2;
   IDirect3DViewport2 = interface;
    // DIRECT3D_VERSION_5
+
+  PIDirect3DViewport3 = ^IDirect3DViewport3;
   IDirect3DViewport3 = interface;
+
+  PIDirect3DVertexBuffer = ^IDirect3DVertexBuffer;
   IDirect3DVertexBuffer = interface;
+
+  PIDirect3DVertexBuffer7 = ^IDirect3DVertexBuffer7;
    // DIRECT3D_VERSION_6
   IDirect3DVertexBuffer7 = interface;
    // DIRECT3D_VERSION_7
@@ -3498,16 +3535,16 @@ type
     (*** IDirect3D2 methods ***)
     function EnumDevices(lpEnumDevicesCallback: TD3DEnumDevicesCallback;
         lpUserArg: Pointer): HResult; stdcall;
-    function CreateLight(var lplpDirect3Dlight: IDirect3DLight;
+    function CreateLight({var} lplpDirect3Dlight: PIDirect3DLight;
         pUnkOuter: IUnknown): HResult; stdcall;
-    function CreateMaterial(var lplpDirect3DMaterial2: IDirect3DMaterial2;
+    function CreateMaterial({var} lplpDirect3DMaterial2: PIDirect3DMaterial2;
         pUnkOuter: IUnknown): HResult; stdcall;
-    function CreateViewport(var lplpD3DViewport2: IDirect3DViewport2;
+    function CreateViewport({var} lplpD3DViewport2: PIDirect3DViewport2;
         pUnkOuter: IUnknown): HResult; stdcall;
     function FindDevice(var lpD3DFDS: TD3DFindDeviceSearch;
         var lpD3DFDR: TD3DFindDeviceResult): HResult; stdcall;
     function CreateDevice(const rclsid: TRefClsID; lpDDS: IDirectDrawSurface;
-        out lplpD3DDevice2: IDirect3DDevice2): HResult; stdcall;
+        {out} lplpD3DDevice2: PIDirect3DDevice2): HResult; stdcall;
   end;
  // DIRECT3D_VERSION_5
 
@@ -3518,18 +3555,18 @@ type
     (*** IDirect3D3 methods ***)
     function EnumDevices(lpEnumDevicesCallback: TD3DEnumDevicesCallback;
         lpUserArg: pointer): HResult; stdcall;
-    function CreateLight(var lplpDirect3Dlight: IDirect3DLight;
+    function CreateLight({var} lplpDirect3Dlight: PIDirect3DLight;
         pUnkOuter: IUnknown): HResult; stdcall;
-    function CreateMaterial(var lplpDirect3DMaterial3: IDirect3DMaterial3;
+    function CreateMaterial({var} lplpDirect3DMaterial3: PIDirect3DMaterial3;
         pUnkOuter: IUnknown): HResult; stdcall;
-    function CreateViewport(var lplpD3DViewport3: IDirect3DViewport3;
+    function CreateViewport({var} lplpD3DViewport3: PIDirect3DViewport3;
         pUnkOuter: IUnknown): HResult; stdcall;
     function FindDevice(var lpD3DFDS: TD3DFindDeviceSearch;
         var lpD3DFDR: TD3DFindDeviceResult): HResult; stdcall;
     function CreateDevice(const rclsid: TRefClsID; lpDDS: IDirectDrawSurface4;
-        out lplpD3DDevice: IDirect3DDevice3; pUnkOuter: IUnknown): HResult; stdcall;
+        {out} lplpD3DDevice: PIDirect3DDevice3; pUnkOuter: IUnknown): HResult; stdcall;
     function CreateVertexBuffer(var lpVBDesc: TD3DVertexBufferDesc;
-        var lpD3DVertexBuffer: IDirect3DVertexBuffer;
+        {var} lpD3DVertexBuffer: PIDirect3DVertexBuffer;
         dwFlags: DWORD; pUnkOuter: IUnknown): HResult; stdcall;
     function EnumZBufferFormats(const riidDevice: TRefClsID; lpEnumCallback:
         TD3DEnumPixelFormatsCallback; lpContext: Pointer): HResult; stdcall;
@@ -3545,9 +3582,9 @@ type
     function EnumDevices(lpEnumDevicesCallback: TD3DEnumDevicesCallback7;
         lpUserArg: pointer): HResult; stdcall;
     function CreateDevice(const rclsid: TGUID; lpDDS: IDirectDrawSurface7;
-        out lplpD3DDevice: IDirect3DDevice7): HResult; stdcall;
+        {out} lplpD3DDevice: PIDirect3DDevice7): HResult; stdcall;
     function CreateVertexBuffer(const lpVBDesc: TD3DVertexBufferDesc;
-        out lplpD3DVertexBuffer: IDirect3DVertexBuffer7;
+        {out} lplpD3DVertexBuffer: PIDirect3DVertexBuffer7;
         dwFlags: DWORD): HResult; stdcall;
     function EnumZBufferFormats(const riidDevice: TGUID; lpEnumCallback:
         TD3DEnumPixelFormatsCallback; lpContext: pointer): HResult; stdcall;
@@ -3571,7 +3608,7 @@ type
     function SwapTextureHandles(lpD3DTex1: IDirect3DTexture;
         lpD3DTex2: IDirect3DTexture): HResult; stdcall;
     function CreateExecuteBuffer(var lpDesc: TD3DExecuteBufferDesc ;
-        var lplpDirect3DExecuteBuffer: IDirect3DExecuteBuffer;
+        {var} lplpDirect3DExecuteBuffer: PIDirect3DExecuteBuffer;
         pUnkOuter: IUnknown): HResult; stdcall;
     function GetStats(var lpD3DStats: TD3DStats): HResult; stdcall;
     function Execute(lpDirect3DExecuteBuffer: IDirect3DExecuteBuffer;
@@ -3579,7 +3616,7 @@ type
     function AddViewport(lpDirect3DViewport: IDirect3DViewport): HResult; stdcall;
     function DeleteViewport(lpDirect3DViewport: IDirect3DViewport): HResult; stdcall;
     function NextViewport(lpDirect3DViewport: IDirect3DViewport;
-        var lplpDirect3DViewport: IDirect3DViewport; dwFlags: DWORD): HResult; stdcall;
+        {var} lplpDirect3DViewport: PIDirect3DViewport; dwFlags: DWORD): HResult; stdcall;
     function Pick(lpDirect3DExecuteBuffer: IDirect3DExecuteBuffer;
         lpDirect3DViewport: IDirect3DViewport; dwFlags: DWORD;
         var lpRect: TD3DRect): HResult; stdcall;
@@ -3596,7 +3633,7 @@ type
     function DeleteMatrix(d3dMatHandle: TD3DMatrixHandle): HResult; stdcall;
     function BeginScene: HResult; stdcall;
     function EndScene: HResult; stdcall;
-    function GetDirect3D(var lpD3D: IDirect3D): HResult; stdcall;
+    function GetDirect3D({var} lpD3D: PIDirect3D): HResult; stdcall;
   end;
 
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirect3DDevice2);'}
@@ -3612,24 +3649,24 @@ type
     function AddViewport(lpDirect3DViewport2: IDirect3DViewport2): HResult; stdcall;
     function DeleteViewport(lpDirect3DViewport: IDirect3DViewport2): HResult; stdcall;
     function NextViewport(lpDirect3DViewport: IDirect3DViewport2;
-        var lplpDirect3DViewport: IDirect3DViewport2; dwFlags: DWORD):
+        {var} lplpDirect3DViewport: PIDirect3DViewport2; dwFlags: DWORD):
         HResult; stdcall;
     function EnumTextureFormats(
         lpd3dEnumTextureProc: TD3DEnumTextureFormatsCallback; lpArg: Pointer):
         HResult; stdcall;
     function BeginScene: HResult; stdcall;
     function EndScene: HResult; stdcall;
-    function GetDirect3D(var lpD3D: IDirect3D2): HResult; stdcall;
+    function GetDirect3D({var} lpD3D: PIDirect3D2): HResult; stdcall;
 
     (*** DrawPrimitive API ***)
     function SetCurrentViewport(lpd3dViewport2: IDirect3DViewport2)
         : HResult; stdcall;
-    function GetCurrentViewport(var lplpd3dViewport2: IDirect3DViewport2)
+    function GetCurrentViewport({var} lplpd3dViewport2: PIDirect3DViewport2)
         : HResult; stdcall;
 
     function SetRenderTarget(lpNewRenderTarget: IDirectDrawSurface)
         : HResult; stdcall;
-    function GetRenderTarget(var lplpNewRenderTarget: IDirectDrawSurface)
+    function GetRenderTarget({var} lplpNewRenderTarget: PIDirectDrawSurface)
         : HResult; stdcall;
 
     function Begin_(d3dpt: TD3DPrimitiveType; d3dvt: TD3DVertexType;
@@ -3678,20 +3715,20 @@ type
     function AddViewport(lpDirect3DViewport: IDirect3DViewport3): HResult; stdcall;
     function DeleteViewport(lpDirect3DViewport: IDirect3DViewport3): HResult; stdcall;
     function NextViewport(lpDirect3DViewport: IDirect3DViewport3;
-        var lplpAnotherViewport: IDirect3DViewport3; dwFlags: DWORD): HResult; stdcall;
+        {var} lplpAnotherViewport: PIDirect3DViewport3; dwFlags: DWORD): HResult; stdcall;
     function EnumTextureFormats(
         lpd3dEnumPixelProc: TD3DEnumPixelFormatsCallback; lpArg: Pointer):
         HResult; stdcall;
     function BeginScene: HResult; stdcall;
     function EndScene: HResult; stdcall;
-    function GetDirect3D(var lpD3D: IDirect3D3): HResult; stdcall;
+    function GetDirect3D({var} lpD3D: PIDirect3D3): HResult; stdcall;
     function SetCurrentViewport(lpd3dViewport: IDirect3DViewport3)
         : HResult; stdcall;
-    function GetCurrentViewport(var lplpd3dViewport: IDirect3DViewport3)
+    function GetCurrentViewport({var} lplpd3dViewport: PIDirect3DViewport3)
         : HResult; stdcall;
     function SetRenderTarget(lpNewRenderTarget: IDirectDrawSurface4)
         : HResult; stdcall;
-    function GetRenderTarget(var lplpNewRenderTarget: IDirectDrawSurface4)
+    function GetRenderTarget({var} lplpNewRenderTarget: PIDirectDrawSurface4)
         : HResult; stdcall;
     function Begin_(d3dpt: TD3DPrimitiveType; dwVertexTypeDesc: DWORD;
         dwFlags: DWORD): HResult; stdcall;
@@ -3740,7 +3777,7 @@ type
     function ComputeSphereVisibility(var lpCenters: TD3DVector;
         var lpRadii: TD3DValue; dwNumSpheres, dwFlags: DWORD;
         var lpdwReturnValues: DWORD): HResult; stdcall;
-    function GetTexture(dwStage: DWORD; var lplpTexture: IDirect3DTexture2)
+    function GetTexture(dwStage: DWORD; {var} lplpTexture: PIDirect3DTexture2)
         : HResult; stdcall;
     function SetTexture(dwStage: DWORD; lplpTexture: IDirect3DTexture2)
         : HResult; stdcall;
@@ -3761,7 +3798,7 @@ type
     function EnumTextureFormats(lpd3dEnumPixelProc: TD3DEnumPixelFormatsCallback; lpArg: Pointer): HResult; stdcall;
     function BeginScene: HResult; stdcall;
     function EndScene: HResult; stdcall;
-    function GetDirect3D(out lpD3D: IDirect3D7): HResult; stdcall;
+    function GetDirect3D({out} lpD3D: PIDirect3D7): HResult; stdcall;
     function SetRenderTarget(lpNewRenderTarget: IDirectDrawSurface7; dwFlags: DWORD): HResult; stdcall;
     function GetRenderTarget(out lplpRenderTarget: IDirectDrawSurface7): HResult; stdcall;
     function Clear(dwCount: DWORD; lpRects: PD3DRect; dwFlags, dwColor: DWORD; dvZ: TD3DValue; dwStencil: DWORD): HResult; stdcall;
@@ -3807,7 +3844,7 @@ type
     function ComputeSphereVisibility(const lpCenters: TD3DVector;
         var lpRadii: TD3DValue; dwNumSpheres, dwFlags: DWORD;
         var lpdwReturnValues: DWORD): HResult; stdcall;
-    function GetTexture(dwStage: DWORD; out lplpTexture: IDirectDrawSurface7): HResult; stdcall;
+    function GetTexture(dwStage: DWORD; {out} lplpTexture: PIDirectDrawSurface7): HResult; stdcall;
     function SetTexture(dwStage: DWORD; lpTexture: IDirectDrawSurface7): HResult; stdcall;
     function GetTextureStageState(dwStage: DWORD;
         dwState: TD3DTextureStageStateType; out lpdwValue: DWORD): HResult; stdcall;
@@ -3957,14 +3994,14 @@ type
     function GetBackground(out hMat: TD3DMaterialHandle): HResult; stdcall;
     function SetBackgroundDepth(lpDDSurface: IDirectDrawSurface):
         HResult; stdcall;
-    function GetBackgroundDepth(out lplpDDSurface: IDirectDrawSurface;
+    function GetBackgroundDepth({out} lplpDDSurface: PIDirectDrawSurface;
         out lpValid: BOOL): HResult; stdcall;
     function Clear(dwCount: DWORD; const lpRects: TD3DRect; dwFlags: DWORD):
         HResult; stdcall;
     function AddLight(lpDirect3DLight: IDirect3DLight): HResult; stdcall;
     function DeleteLight(lpDirect3DLight: IDirect3DLight): HResult; stdcall;
      function NextLight(lpDirect3DLight: IDirect3DLight;
-        out lplpDirect3DLight: IDirect3DLight; dwFlags: DWORD): HResult; stdcall;
+        {out} lplpDirect3DLight: PIDirect3DLight; dwFlags: DWORD): HResult; stdcall;
   end;
 
   {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IDirect3DViewport2);'}
@@ -3984,14 +4021,14 @@ type
     function GetBackground(out hMat: TD3DMaterialHandle): HResult; stdcall;
     function SetBackgroundDepth(lpDDSurface: IDirectDrawSurface):
         HResult; stdcall;
-    function GetBackgroundDepth(out lplpDDSurface: IDirectDrawSurface;
+    function GetBackgroundDepth({out} lplpDDSurface: PIDirectDrawSurface;
         out lpValid: BOOL): HResult; stdcall;
     function Clear(dwCount: DWORD; const lpRects: TD3DRect; dwFlags: DWORD):
         HResult; stdcall;
     function AddLight(lpDirect3DLight: IDirect3DLight): HResult; stdcall;
     function DeleteLight(lpDirect3DLight: IDirect3DLight): HResult; stdcall;
     function NextLight(lpDirect3DLight: IDirect3DLight;
-        out lplpDirect3DLight: IDirect3DLight; dwFlags: DWORD): HResult; stdcall;
+        {out} lplpDirect3DLight: PIDirect3DLight; dwFlags: DWORD): HResult; stdcall;
     (*** IDirect3DViewport2 methods ***)
     function GetViewport2(out lpData: TD3DViewport2): HResult; stdcall;
     function SetViewport2(const lpData: TD3DViewport2): HResult; stdcall;
@@ -4015,19 +4052,19 @@ type
     function GetBackground(var hMat: TD3DMaterialHandle): HResult; stdcall;
     function SetBackgroundDepth(
         lpDDSurface: IDirectDrawSurface): HResult; stdcall;
-    function GetBackgroundDepth(out lplpDDSurface: IDirectDrawSurface;
+    function GetBackgroundDepth({out} lplpDDSurface: PIDirectDrawSurface;
         out lpValid: BOOL): HResult; stdcall;
     function Clear(dwCount: DWORD; const lpRects: TD3DRect; dwFlags: DWORD):
         HResult; stdcall;
     function AddLight(lpDirect3DLight: IDirect3DLight): HResult; stdcall;
     function DeleteLight(lpDirect3DLight: IDirect3DLight): HResult; stdcall;
     function NextLight(lpDirect3DLight: IDirect3DLight;
-        out lplpDirect3DLight: IDirect3DLight; dwFlags: DWORD): HResult; stdcall;
+        {out} lplpDirect3DLight: PIDirect3DLight; dwFlags: DWORD): HResult; stdcall;
     function GetViewport2(out lpData: TD3DViewport2): HResult; stdcall;
     function SetViewport2(const lpData: TD3DViewport2): HResult; stdcall;
     function SetBackgroundDepth2(
         lpDDSurface: IDirectDrawSurface4): HResult; stdcall;
-    function GetBackgroundDepth2(out lplpDDSurface: IDirectDrawSurface4;
+    function GetBackgroundDepth2({out} lplpDDSurface: PIDirectDrawSurface4;
         out lpValid: BOOL): HResult; stdcall;
     function Clear2(dwCount: DWORD; const lpRects: TD3DRect; dwFlags: DWORD;
         dwColor: DWORD; dvZ: TD3DValue; dwStencil: DWORD): HResult; stdcall;

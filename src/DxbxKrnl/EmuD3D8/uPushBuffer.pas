@@ -89,7 +89,7 @@ var
   pPixelContainer: PX_D3DPixelContainer;
   XBFormat: DWord;
   dwBPP: DWord;
-  pTexture: IDirect3DTexture8;
+  pTexture: XTL_PIDirect3DTexture8;
   dwLevelCount: DWord;
   v: uint32;
   SurfaceDesc: D3DSURFACE_DESC;
@@ -118,7 +118,7 @@ begin
     Exit;
 
   // remove lock
-  pPixelContainer.EmuTexture8.UnlockRect(0);
+  IDirect3DTexture8(pPixelContainer.EmuTexture8).UnlockRect(0);
   pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
 
   // Cxbx TODO: potentially CRC to see if this surface was actually modified..
@@ -130,11 +130,11 @@ begin
   begin
     pTexture := pPixelContainer.EmuTexture8;
 
-    dwLevelCount := pTexture.GetLevelCount();
+    dwLevelCount := IDirect3DTexture8(pTexture).GetLevelCount();
 
     for v := 0 to dwLevelCount - 1 do
     begin
-      hRet := pTexture.GetLevelDesc(v, SurfaceDesc);
+      hRet := IDirect3DTexture8(pTexture).GetLevelDesc(v, SurfaceDesc);
 
       if (FAILED(hRet)) then
         continue;
@@ -149,7 +149,7 @@ begin
         //  Break;
         //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
 
-        hRet := pTexture.LockRect(v, LockedRect, nil, 0);
+        hRet := IDirect3DTexture8(pTexture).LockRect(v, LockedRect, nil, 0);
 
         if (FAILED(hRet)) then
           continue;
@@ -171,7 +171,7 @@ begin
 
         memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
 
-        pTexture.UnlockRect(0);
+        IDirect3DTexture8(pTexture).UnlockRect(0);
 
         free(pTemp);
       end;
@@ -196,8 +196,8 @@ var
   dwStride: DWord;
   PCPrimitiveType: D3DPRIMITIVETYPE;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
-  pIndexBuffer: IDIRECT3DINDEXBUFFER8;
-  pVertexBuffer: IDIRECT3DVERTEXBUFFER8;
+  pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8;
+  pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8;
   maxIBSize: uint;
   dwCount: DWord;
   dwMethod: DWord;
@@ -305,7 +305,7 @@ begin
       Inc(pdwPushData, dwCount);
 
       // retrieve vertex shader
-      g_pD3DDevice8.GetVertexShader({out}dwVertexShader);
+      IDirect3DDevice8(g_pD3DDevice8).GetVertexShader({out}dwVertexShader);
 
       if (dwVertexShader > $FFFF) then
       begin
@@ -386,7 +386,7 @@ begin
 
         {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
-        g_pD3DDevice8.DrawPrimitiveUP
+        IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP
         (
             PCPrimitiveType,
             VPDesc.dwPrimitiveCount,
@@ -438,10 +438,10 @@ begin
         begin
           if (pIndexBuffer <> nil) then
           begin
-            pIndexBuffer._Release();
+            IDirect3DIndexBuffer8(pIndexBuffer)._Release();
           end;
 
-          hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, {out}pIndexBuffer);
+          hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
           maxIBSize := dwCount*2 + 2*2;
         end
@@ -457,11 +457,11 @@ begin
         begin
           pData := nil;
 
-          pIndexBuffer.Lock(0, dwCount*2 + 2*2, {out}PByte(pData), 0);
+          IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, dwCount*2 + 2*2, {out}PByte(pData), 0);
 
           memcpy(pData, @pIBMem[0], dwCount*2 + 2*2);
 
-          pIndexBuffer.Unlock();
+          IDirect3DIndexBuffer8(pIndexBuffer).Unlock();
         end;
 
         // render indexed vertices
@@ -479,7 +479,7 @@ begin
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
-          g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
+          IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
 
           {$ifdef _DEBUG_TRACK_PB}
           if ( not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -490,7 +490,7 @@ begin
           begin
             if (XTL_IsValidCurrentShader()) then
             begin
-              g_pD3DDevice8.DrawIndexedPrimitive
+              IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
               (
                   PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
 //                  PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
@@ -504,7 +504,7 @@ begin
 
           VertPatch.Restore();
 
-          g_pD3DDevice8.SetIndices(nil, 0);
+          IDirect3DDevice8(g_pD3DDevice8).SetIndices(nil, 0);
         end;
       end;
 
@@ -550,7 +550,7 @@ begin
         pVBData := nil;
 
         // retrieve stream data
-        g_pD3DDevice8.GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), @uiStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), @uiStride);
 
         // retrieve stream desc
         pActiveVB.GetDesc(@VBDesc);
@@ -590,10 +590,10 @@ begin
         begin
           if (pIndexBuffer <> nil) then
           begin
-            pIndexBuffer._Release();
+            IDirect3DIndexBuffer8(pIndexBuffer)._Release();
           end;
 
-          hRet := g_pD3DDevice8.CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, {out}pIndexBuffer);
+          hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
           maxIBSize := dwCount*2;
         end
@@ -609,7 +609,7 @@ begin
         begin
           pData := nil;
 
-          pIndexBuffer.Lock(0, dwCount*2, {out}PByte(pData), 0);
+          IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, dwCount*2, {out}PByte(pData), 0);
 
           memcpy(pData, pIndexData, dwCount*2);
 
@@ -624,7 +624,7 @@ begin
             pIBMem[0] := $FFFF;
           end;
 
-          pIndexBuffer.Unlock();
+          IDirect3DIndexBuffer8(pIndexBuffer).Unlock();
         end;
 
         // render indexed vertices
@@ -642,7 +642,7 @@ begin
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
-          g_pD3DDevice8.SetIndices(pIndexBuffer, 0);
+          IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
 
           {$ifdef _DEBUG_TRACK_PB}
           if (not g_PBTrackDisable.exists(pdwOrigPushData)) then
@@ -651,7 +651,7 @@ begin
 
           if (not g_bPBSkipPusher) and XTL_IsValidCurrentShader() then
           begin
-            g_pD3DDevice8.DrawIndexedPrimitive
+            IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
             (
                 PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, PrimitiveCount
             );
@@ -663,7 +663,7 @@ begin
 
           VertPatch.Restore();
 
-          g_pD3DDevice8.SetIndices(nil, 0);
+          IDirect3DDevice8(g_pD3DDevice8).SetIndices(nil, 0);
         end;
       end;
 
@@ -691,7 +691,7 @@ begin
 
   if (XTL_g_bStepPush) then
   begin
-    g_pD3DDevice8.Present(nil, nil, 0, nil);
+    IDirect3DDevice8(g_pD3DDevice8).Present(nil, nil, 0, nil);
     Sleep(500);
   end;
 end;
@@ -702,7 +702,7 @@ end;
 procedure DbgDumpMesh(pIndexData: PWord; dwCount: DWord);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:10
 var
-  pActiveVB: IDirect3DVertexBuffer8;
+  pActiveVB: XTL_PIDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
   pVBData: PBYTE;
   uiStride: UINT;
@@ -719,7 +719,7 @@ begin
   pActiveVB := nil;
 
   // retrieve stream data
-  g_pD3DDevice8.GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), uiStride);
+  IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), uiStride);
   StrFmt(szFileName, 'C:\CxbxMesh-$%.08X.x', pIndexData);
   dbgVertices := FileOpen(szFileName, 'wt');
 

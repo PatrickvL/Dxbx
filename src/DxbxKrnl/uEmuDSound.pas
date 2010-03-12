@@ -40,6 +40,7 @@ uses
   , uEmuAlloc
   , uEmuFS
   , uDxbxKrnlUtils
+  , uEmuD3D8Types
   ;
 
 const
@@ -151,7 +152,7 @@ type X_CDirectSoundBuffer = packed record
     0: (
       pMpcxBuffer: PVOID);          // Offset: 0x20
     1: (
-      EmuDirectSoundBuffer8: ^IDirectSoundBuffer;
+      EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer;
     // endcase; fall through :
     UnknownB: array [0..$0C-1] of Byte; // Offset: 0x24
     EmuBuffer: PVOID;                   // Offset: 0x28
@@ -262,7 +263,7 @@ type X_CDirectSoundStream = class(TObject)
 
     public
         // cached data
-        EmuDirectSoundBuffer8: IDirectSoundBuffer;
+        EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer;
         EmuBuffer: PVOID;
         EmuBufferDesc: PDSBUFFERDESC;
         EmuLockPtr1: PVOID;
@@ -275,9 +276,6 @@ type X_CDirectSoundStream = class(TObject)
   PPX_CDirectSoundStream = ^PX_CDirectSoundStream;
 
 
-  LPDIRECTSOUND8 = {^}IDIRECTSOUND8;
-  PLPDIRECTSOUND8 = ^LPDIRECTSOUND8;
-
 // size of sound buffer cache (used for periodic sound buffer updates)
 const SOUNDBUFFER_CACHE_SIZE = $100;
 
@@ -285,11 +283,11 @@ const SOUNDBUFFER_CACHE_SIZE = $100;
 const SOUNDSTREAM_CACHE_SIZE = $100;
 
 // Static Variable(s)
-var g_pDSound8: IDIRECTSOUND8 = nil;
-var g_pDSound8RefCount: Int = 0;
+var g_pDSound8: XTL_LPDIRECTSOUND8 = NULL;
+var g_pDSound8RefCount: int = 0;
 var g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;
 var g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of X_CDirectSoundStream;
-var g_bDSoundCreateCalled: Boolean = False;
+var g_bDSoundCreateCalled: Boolean = false;
 
 // periodically update sound buffers
 procedure HackUpdateSoundBuffers();
@@ -306,19 +304,19 @@ begin
 
     // unlock existing lock
     if (g_pDSoundBufferCache[v].EmuLockPtr1 <> nil) then
-        g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Unlock(g_pDSoundBufferCache[v].EmuLockPtr1, g_pDSoundBufferCache[v].EmuLockBytes1, g_pDSoundBufferCache[v].EmuLockPtr2, g_pDSoundBufferCache[v].EmuLockBytes2);
+        IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).Unlock(g_pDSoundBufferCache[v].EmuLockPtr1, g_pDSoundBufferCache[v].EmuLockBytes1, g_pDSoundBufferCache[v].EmuLockPtr2, g_pDSoundBufferCache[v].EmuLockBytes2);
 
-    hRet := g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundBufferCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
+    hRet := IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).Lock(0, g_pDSoundBufferCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
     if (SUCCEEDED(hRet)) then
     begin
         if (pAudioPtr <> nil) then
-          memcpy(g_pDSoundBufferCache[v].EmuBuffer, pAudioPtr, dwAudioBytes);
+          memcpy(pAudioPtr, g_pDSoundBufferCache[v].EmuBuffer, dwAudioBytes);
 
         if (pAudioPtr2 <> nil) then
-            memcpy(PVoid(DWord(g_pDSoundBufferCache[v].EmuBuffer)+dwAudioBytes), pAudioPtr2, dwAudioBytes2);
+            memcpy(pAudioPtr2, PVoid(DWord(g_pDSoundBufferCache[v].EmuBuffer)+dwAudioBytes), dwAudioBytes2);
 
-        g_pDSoundBufferCache[v].EmuDirectSoundBuffer8.Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+        IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
      end;
 
     // Cxbx TODO: relock old lock ??
@@ -338,7 +336,7 @@ begin
     if (g_pDSoundStreamCache[v] = nil) or (g_pDSoundStreamCache[v].EmuBuffer = nil) then
         continue;
 
-    hRet := g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
+    hRet := IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
 
     if (SUCCEEDED(hRet)) then
     begin
@@ -346,13 +344,13 @@ begin
         memcpy(pAudioPtr,  g_pDSoundStreamCache[v].EmuBuffer, dwAudioBytes);
 
       if (pAudioPtr2 <> nil) then
-        memcpy(PVOID((DWORD(g_pDSoundStreamCache[v].EmuBuffer)+dwAudioBytes)), pAudioPtr2, dwAudioBytes2);
+        memcpy(pAudioPtr2, PVOID((DWORD(g_pDSoundStreamCache[v].EmuBuffer)+dwAudioBytes)), dwAudioBytes2);
 
-      g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+      IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
     end;
 
-    g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.SetCurrentPosition(0);
-    g_pDSoundStreamCache[v].EmuDirectSoundBuffer8.Play(0, 0, 0);
+    IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).SetCurrentPosition(0);
+    IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Play(0, 0, 0);
   end;
 end;
 
@@ -372,32 +370,32 @@ begin
   DbgPrintf('EmuResizeIDirectSoundBuffer8 : Resizing! ($%.08X.$%.08X)', [pThis.EmuBufferDesc.dwBufferBytes, dwBytes]);
 {$ENDIF}
 
-  hRet := pThis.EmuDirectSoundBuffer8.GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
+  hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
-  hRet := pThis.EmuDirectSoundBuffer8.GetStatus(dwStatus);
+  hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus(dwStatus);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
   // release old buffer
-  while(pThis.EmuDirectSoundBuffer8._Release() > 0) do
+  while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do
   begin
   end;
 
   pThis.EmuBufferDesc.dwBufferBytes := dwBytes;
 
-  hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc^, pThis.EmuDirectSoundBuffer8^, nil);
+  hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pThis.EmuBufferDesc^, pThis.EmuDirectSoundBuffer8, nil);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
 
-  pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwPlayCursor);
+  IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
   if (dwStatus and DSBSTATUS_PLAYING) > 0 then
-      pThis.EmuDirectSoundBuffer8.Play(0, 0, pThis.EmuPlayFlags);
+      IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Play(0, 0, pThis.EmuPlayFlags);
 end;
 
 
@@ -413,46 +411,47 @@ begin
   if (dwBytes = pThis.EmuBufferDesc.dwBufferBytes) then
     Exit;
 
-  hRet := pThis.EmuDirectSoundBuffer8.GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
+  hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
-  hRet := pThis.EmuDirectSoundBuffer8.GetStatus(dwStatus);
+  hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus(dwStatus);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
   // release old buffer
-  while(pThis.EmuDirectSoundBuffer8._Release() > 0) do
+  while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do
   begin
   end;
 
   pThis.EmuBufferDesc.dwBufferBytes := dwBytes;
 
-  hRet := g_pDSound8.CreateSoundBuffer(pThis.EmuBufferDesc^, pThis.EmuDirectSoundBuffer8, nil);
+  hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pThis.EmuBufferDesc^, @pThis.EmuDirectSoundBuffer8, nil);
 
   if (FAILED(hRet)) then
       CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
 
-  pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwPlayCursor);
+  IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
   if (dwStatus and DSBSTATUS_PLAYING) > 0 then
-      pThis.EmuDirectSoundBuffer8.Play(0, 0, pThis.EmuPlayFlags);
+      IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Play(0, 0, pThis.EmuPlayFlags);
 end;
 
 
 function XTL_EmuDirectSoundCreate(
-    pguidDeviceId: Pointer;
-    ppDirectSound: PLPDIRECTSOUND8;
-    pUnknown: IUNKNOWN): HRESULT; stdcall;
+    pguidDeviceId: LPVOID;
+    ppDirectSound: XTL_PLPDIRECTSOUND8;
+    pUnknown: IUNKNOWN
+): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
-  Initialized: Bool = False;
+  initialized: bool = false;
 {$WRITEABLECONST OFF}
 var
-  v: Integer;
+  v: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -467,22 +466,21 @@ begin
 {$ENDIF}
 
 
-  if Initialized then
-    Result := DS_OK
-  else
+  Result := DS_OK;
+  
+  if not initialized or (not Assigned(g_pDSound8)) then
   begin
-    PPointer(ppDirectSound)^ := nil; // Prevent Delphi _Release on invalid pointer contents
-    Result := DirectSoundCreate8(nil, {out}ppDirectSound^, nil);
+    Result := DirectSoundCreate8(NULL, PIDirectSound8(ppDirectSound), NULL);
 
     if FAILED(Result) then
       CxbxKrnlCleanup('DirectSoundCreate8 Failed!');
 
     g_pDSound8 := ppDirectSound^;
 
-    Result := g_pDSound8.SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+    Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
     if FAILED(Result) then
-      CxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed!');
+      CxbxKrnlCleanup('IDirectSound8(g_pDSound8).SetCooperativeLevel Failed!');
 
 
     // clear sound buffer cache
@@ -497,15 +495,22 @@ begin
       g_pDSoundStreamCache[v] := nil;
     end;
 
-    Initialized := True;
+    initialized := true;
   end;
+
+	// This way we can be sure that this function returns a valid
+	// DirectSound8 pointer even if we initialized it elsewhere!
+	if (ppDirectSound^ = nil) and Assigned(g_pDSound8) then
+		ppDirectSound^ := g_pDSound8;
 
   g_pDSound8RefCount := 1;
 
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirectSound8_AddRef(pThis: LPDIRECTSOUND8): ULONG; stdcall;
+function XTL_EmuIDirectSound8_AddRef(
+  pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   uRet: ULONG;
@@ -529,7 +534,8 @@ begin
  end;
 
 function XTL_EmuIDirectSound8_Release(
-    pThis: LPDIRECTSOUND8): ULONG; stdcall;
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   uRet: ULONG;
@@ -583,7 +589,7 @@ end;
 
 
 function XTL_EmuIDirectSound8_DownloadEffectsImage(
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pvImageBuffer: LPCVOID;
     dwImageSize: DWORD;
     pImageLoc: PVOID;      // Cxbx TODO: Use this param
@@ -628,7 +634,7 @@ begin
 end;
 
 function XTL_EmuIDirectSound8_SetOrientation(
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     xFront: FLOAT;
     yFront: FLOAT;
     zFront: FLOAT;
@@ -665,7 +671,7 @@ begin
 
 function XTL_EmuIDirectSound8_SetDistanceFactor
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     fDistanceFactor: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -692,7 +698,7 @@ begin
 
 function XTL_EmuIDirectSound8_SetRolloffFactor
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     fRolloffFactor: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -719,7 +725,7 @@ end;
 
 function XTL_EmuIDirectSound8_SetDopplerFactor
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     fDopplerFactor: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -746,7 +752,7 @@ end;
 
 function XTL_EmuIDirectSound8_SetI3DL2Listener
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pDummy: PVOID; // Cxbx TODO: fill this out
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -771,7 +777,7 @@ end;
 
 function XTL_EmuIDirectSound8_SetMixBinHeadroom
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     dwMixBinMask: DWORD;
     dwHeadroom: DWORD
 ): HRESULT; stdcall;
@@ -798,7 +804,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetMixBins
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pMixBins: PVOID
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -823,7 +829,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetMixBinVolumes
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pMixBins: PVOID
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -847,7 +853,7 @@ begin
 end;
 
 function XTL_EmuIDirectSound8_SetPosition(
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     x: FLOAT;
     y: FLOAT;
     z: FLOAT;
@@ -877,7 +883,7 @@ begin
 end;
 
 function XTL_EmuIDirectSound8_SetVelocity(
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     x: FLOAT;
     y: FLOAT;
     z: FLOAT;
@@ -907,7 +913,7 @@ begin
 end;
 
 function XTL_EmuIDirectSound8_SetAllParameters(
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pTodo: Pointer;  // Dxbx TODO: LPCDS3DLISTENER
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -1056,7 +1062,7 @@ begin
   DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := $%.08X, bytes := $%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes]);
 {$ENDIF}
 
-  hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc^, (ppBuffer^.EmuDirectSoundBuffer8)^, nil);
+  hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pDSBufferDesc^, @(ppBuffer^.EmuDirectSoundBuffer8), nil);
 
   if (FAILED(hRet)) then
       EmuWarning('CreateSoundBuffer Failed!');
@@ -1082,7 +1088,7 @@ end;
 
 function XTL_EmuIDirectSound8_CreateBuffer
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pdssd: PX_DSBUFFERDESC;
     ppBuffer: PPX_CDirectSoundBuffer;
     pUnknown: PVOID
@@ -1112,7 +1118,7 @@ end;
 
 function XTL_EmuIDirectSound8_CreateSoundBuffer
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pdsbd: PX_DSBUFFERDESC;
     ppBuffer: PPX_CDirectSoundBuffer;
     pUnkOuter: PUNKNOWN
@@ -1228,10 +1234,10 @@ begin
         EmuResizeIDirectSoundBuffer8(pThis, dwBytes);
 
     if Assigned(pThis.EmuLockPtr1) then
-        pThis.EmuDirectSoundBuffer8.Unlock(pThis.EmuLockPtr1, pThis.EmuLockBytes1, pThis.EmuLockPtr2, pThis.EmuLockBytes2);
+        IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Unlock(pThis.EmuLockPtr1, pThis.EmuLockBytes1, pThis.EmuLockPtr2, pThis.EmuLockBytes2);
 
     // Cxbx TODO: Verify dwFlags is the same as windows
-    hRet := pThis.EmuDirectSoundBuffer8.Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
+    hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
     if (FAILED(hRet)) then
         CxbxKrnlCleanup('DirectSoundBuffer Lock Failed!');
@@ -1322,7 +1328,7 @@ begin
 
   if Assigned(pThis) then
   begin
-    uRet := pThis.EmuDirectSoundBuffer8._Release();
+    uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
 
     if (uRet = 0) then
     begin
@@ -1386,7 +1392,7 @@ begin
 
   if Assigned(pThis) and not Assigned(pThis.EmuBuffer) then
   begin
-    hRet := pThis.EmuDirectSoundBuffer8.GetStatus(pdwStatus^);
+    hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus(pdwStatus^);
   end
   else
   begin
@@ -1415,7 +1421,7 @@ begin
 {$ENDIF}
 
   // NOTE: Cxbx TODO: This call *will* (by MSDN) fail on primary buffers!
-  hRet := pThis.EmuDirectSoundBuffer8.SetCurrentPosition(dwNewPosition);
+  hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetCurrentPosition(dwNewPosition);
 
   if (FAILED(hRet)) then
       EmuWarning('SetCurrentPosition Failed!');
@@ -1446,7 +1452,7 @@ begin
   HackUpdateSoundStreams();
 
   // NOTE: Cxbx TODO: This call always seems to fail on primary buffers!
-  hRet := pThis.EmuDirectSoundBuffer8.GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
+  hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
   if (FAILED(hRet)) then
     EmuWarning('GetCurrentPosition Failed!');
@@ -1488,7 +1494,7 @@ begin
   // close any existing locks
   if Assigned(pThis.EmuLockPtr1) then
   begin
-    pThis.EmuDirectSoundBuffer8.Unlock
+    IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Unlock
     (
       pThis.EmuLockPtr1,
       pThis.EmuLockBytes1,
@@ -1505,7 +1511,7 @@ begin
   end
   else
   begin
-    hRet := pThis.EmuDirectSoundBuffer8.Play(0, 0, dwFlags);
+    hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Play(0, 0, dwFlags);
   end;
 
   pThis.EmuPlayFlags := dwFlags;
@@ -1530,7 +1536,7 @@ begin
          [pThis]);
 {$ENDIF}
 
-  hRet := pThis.EmuDirectSoundBuffer8.Stop();
+  hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Stop();
 
   EmuSwapFS(fsXbox);
 
@@ -1579,7 +1585,7 @@ begin
   // Cxbx TODO: Ensure that 4627 & 4361 are intercepting far enough back
   // (otherwise pThis is manipulated!)
 
-//    HRESULT hRet = pThis.EmuDirectSoundBuffer8.SetVolume(lVolume);
+//    HRESULT hRet = IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetVolume(lVolume);
 
   EmuSwapFS(fsXbox);
 
@@ -1601,7 +1607,7 @@ begin
          [pThis, dwFrequency]);
 {$ENDIF}
 
-//    HRESULT hRet = pThis.EmuDirectSoundBuffer8.SetFrequency(dwFrequency);
+//    HRESULT hRet = IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetFrequency(dwFrequency);
 
   EmuSwapFS(fsXbox);
 
@@ -1693,7 +1699,7 @@ begin
   DbgPrintf('EmuDSound : EmuDirectSoundCreateStream, *ppStream := 0x%.08X', [ppStream^]);
 {$ENDIF}
 
-  hRet := g_pDSound8.CreateSoundBuffer(pDSBufferDesc^, ppStream^.EmuDirectSoundBuffer8, nil);
+  hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pDSBufferDesc^, @(ppStream^.EmuDirectSoundBuffer8), nil);
 
   if (FAILED(hRet)) then
     EmuWarning('CreateSoundBuffer Failed!');
@@ -1720,7 +1726,7 @@ end;
 
 function XTL_EmuIDirectSound8_CreateStream
 (
-    pThis: LPDIRECTSOUND8;
+    pThis: XTL_LPDIRECTSOUND8;
     pdssd: PX_DSSTREAMDESC;
     ppStream: PPX_CDirectSoundStream;
     pUnknown: PVOID
@@ -1818,7 +1824,7 @@ begin
 {$ENDIF}
 
   if Assigned(pThis) then
-    pThis.EmuDirectSoundBuffer8._AddRef();
+    IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._AddRef();
 
   EmuSwapFS(fsXbox);
 
@@ -1845,7 +1851,7 @@ begin
 
   if Assigned(pThis) and Assigned(pThis.EmuDirectSoundBuffer8) then
   begin
-    uRet := pThis.EmuDirectSoundBuffer8._Release();
+    uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
 
     if (uRet = 0) then
     begin
@@ -2089,7 +2095,12 @@ begin
   Result := S_OK;
 end;
 
-function XTL_EmuCDirectSoundStream_SetMaxDistance(pThis: PVOID; fMaxDistance: D3DVALUE; dwApply: DWORD): HRESULT;
+function XTL_EmuCDirectSoundStream_SetMaxDistance
+(
+  pThis: PVOID; 
+  fMaxDistance: D3DVALUE; 
+  dwApply: DWORD
+): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -2255,7 +2266,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetMaxDistance
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_LPDIRECTSOUNDBUFFER8;
     flMaxDistance: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -2285,7 +2296,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetMinDistance
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     flMinDistance: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -2315,7 +2326,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetRolloffFactor
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     flRolloffFactor: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -2345,7 +2356,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetDistanceFactor
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     flDistanceFactor: FLOAT;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -2376,7 +2387,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetConeAngles
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     dwInsideConeAngle: DWORD;
     dwOutsideConeAngle: DWORD;
     dwApply: DWORD
@@ -2409,7 +2420,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetConeOrientation
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     x: FLOAT;
     y: FLOAT;
     z: FLOAT;
@@ -2443,7 +2454,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetConeOutsideVolume
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     lConeOutsideVolume: LongInt;
     dwApply: DWORD
 ): HRESULT; stdcall;
@@ -2473,7 +2484,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetPosition
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     x: FLOAT;
     y: FLOAT;
     z: FLOAT;
@@ -2507,7 +2518,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetVelocity
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     x: FLOAT;
     y: FLOAT;
     z: FLOAT;
@@ -2541,7 +2552,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetDopplerFactor
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     flDopplerFactor: FLOAT;
     dwApply: DWORD
 ): HRESULT;
@@ -2571,7 +2582,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetI3DL2Source
 (
-    pThis: IDIRECTSOUNDBUFFER8;
+    pThis: XTL_PIDIRECTSOUNDBUFFER8;
     pds3db: LPCDSI3DL2BUFFER;
     dwApply: DWORD
 ): HRESULT;
@@ -2647,7 +2658,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetLFO
 (
-  pThis: IDIRECTSOUNDBUFFER;
+  pThis: XTL_PIDIRECTSOUNDBUFFER;
   pLFODesc: LPCDSLFODESC
 ): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
@@ -2703,7 +2714,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetRolloffCurve
 (
-  pThis: IDIRECTSOUNDBUFFER;
+  pThis: XTL_PIDIRECTSOUNDBUFFER;
   pflPoints: PFLOAT;
   dwPointCount: DWORD;
   dwApply: DWORD
@@ -2757,8 +2768,87 @@ end;
 *)
 
 exports
-  XTL_EmuDirectSoundCreateBuffer,
-  XTL_EmuDirectSoundDoWork,
-  XTL_EmuDirectSoundCreate;
+  XTL_EmuCDirectSound_CommitDeferredSettings,
+  XTL_EmuCDirectSound_GetSpeakerConfig,
+  XTL_EmuCDirectSound_SynchPlayback,
 
+  XTL_EmuCDirectSoundStream_AddRef,
+  XTL_EmuCDirectSoundStream_Discontinuity,
+  XTL_EmuCDirectSoundStream_Flush,
+  XTL_EmuCDirectSoundStream_GetStatus,
+  XTL_EmuCDirectSoundStream_Pause,
+  XTL_EmuCDirectSoundStream_Process,
+  XTL_EmuCDirectSoundStream_Release,
+  XTL_EmuCDirectSoundStream_SetAllParameters,
+  XTL_EmuCDirectSoundStream_SetConeAngles,
+  XTL_EmuCDirectSoundStream_SetConeOrientation,
+  XTL_EmuCDirectSoundStream_SetConeOutsideVolume,
+  XTL_EmuCDirectSoundStream_SetFrequency,
+  XTL_EmuCDirectSoundStream_SetMaxDistance,
+  XTL_EmuCDirectSoundStream_SetMinDistance,
+  XTL_EmuCDirectSoundStream_SetPosition,
+  XTL_EmuCDirectSoundStream_SetRolloffFactor,
+  XTL_EmuCDirectSoundStream_SetVelocity,
+  XTL_EmuCDirectSoundStream_SetVolume,
+
+  XTL_EmuCMcpxStream_Dummy_0x10,
+
+  XTL_EmuDirectSoundCreate,
+  XTL_EmuDirectSoundCreateBuffer,
+  XTL_EmuDirectSoundCreateStream,
+  XTL_EmuDirectSoundDoWork,
+  XTL_EmuDirectSoundUseFullHRTF,
+
+  XTL_EmuIDirectSound8_AddRef,
+  XTL_EmuIDirectSound8_CreateBuffer,
+  XTL_EmuIDirectSound8_CreateSoundBuffer,
+  XTL_EmuIDirectSound8_CreateStream,
+  XTL_EmuIDirectSound8_DownloadEffectsImage,
+  XTL_EmuIDirectSound8_Release,
+  XTL_EmuIDirectSound8_SetAllParameters,
+  XTL_EmuIDirectSound8_SetDistanceFactor,
+  XTL_EmuIDirectSound8_SetDopplerFactor,
+  XTL_EmuIDirectSound8_SetI3DL2Listener,
+  XTL_EmuIDirectSound8_SetMixBinHeadroom,
+  XTL_EmuIDirectSound8_SetOrientation,
+  XTL_EmuIDirectSound8_SetPosition,
+  XTL_EmuIDirectSound8_SetRolloffFactor,
+  XTL_EmuIDirectSound8_SetVelocity,
+
+  XTL_EmuIDirectSoundBuffer8_GetCurrentPosition,
+  XTL_EmuIDirectSoundBuffer8_GetStatus,
+  XTL_EmuIDirectSoundBuffer8_Lock,
+  XTL_EmuIDirectSoundBuffer8_Play,
+  XTL_EmuIDirectSoundBuffer8_Release,
+  XTL_EmuIDirectSoundBuffer8_SetBufferData,
+  XTL_EmuIDirectSoundBuffer8_SetConeAngles,
+  XTL_EmuIDirectSoundBuffer8_SetConeOrientation,
+  XTL_EmuIDirectSoundBuffer8_SetConeOutsideVolume,
+  XTL_EmuIDirectSoundBuffer8_SetCurrentPosition,
+  XTL_EmuIDirectSoundBuffer8_SetDistanceFactor,
+  XTL_EmuIDirectSoundBuffer8_SetDopplerFactor,
+  XTL_EmuIDirectSoundBuffer8_SetFrequency,
+  XTL_EmuIDirectSoundBuffer8_SetHeadroom,
+  XTL_EmuIDirectSoundBuffer8_SetI3DL2Source,
+  XTL_EmuIDirectSoundBuffer8_SetLFO,
+  XTL_EmuIDirectSoundBuffer8_SetLoopRegion,
+  XTL_EmuIDirectSoundBuffer8_SetMaxDistance,
+  XTL_EmuIDirectSoundBuffer8_SetMinDistance,
+  XTL_EmuIDirectSoundBuffer8_SetMixBins,
+  XTL_EmuIDirectSoundBuffer8_SetMixBinVolumes,
+  XTL_EmuIDirectSoundBuffer8_SetPitch,
+  XTL_EmuIDirectSoundBuffer8_SetPlayRegion,
+  XTL_EmuIDirectSoundBuffer8_SetPosition,
+  XTL_EmuIDirectSoundBuffer8_SetRolloffCurve,
+  XTL_EmuIDirectSoundBuffer8_SetRolloffFactor,
+  XTL_EmuIDirectSoundBuffer8_SetVelocity,
+  XTL_EmuIDirectSoundBuffer8_SetVolume,
+  XTL_EmuIDirectSoundBuffer8_Stop,
+  XTL_EmuIDirectSoundBuffer8_StopEx,
+
+  XTL_EmuIDirectSoundStream_SetHeadroom,
+  XTL_EmuIDirectSoundStream_SetI3DL2Source,
+  XTL_EmuIDirectSoundStream_Unknown1,
+
+  XTL_EmuXAudioCreateAdpcmFormat;
 end.

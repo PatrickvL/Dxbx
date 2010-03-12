@@ -65,7 +65,7 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 						<Parameters Name="HostApplication">..\..\bin\Dxbx.exe</Parameters>
-						<Parameters Name="RunParams">&quot;D:\!Patrick_Sofware\XBox\Games\Xbox Turok NTSC\default.xbe&quot;</Parameters>
+						<Parameters Name="RunParams">&quot;D:\Workspaces\SVN\dxbx_2\Bin\boxplorer096beta\default.xbe&quot;</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>

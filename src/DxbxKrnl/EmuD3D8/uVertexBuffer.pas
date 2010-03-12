@@ -65,8 +65,8 @@ type _VertexPatchDesc = packed record
   PVertexPatchDesc = ^VertexPatchDesc;
 
 type _PATCHEDSTREAM = packed record
-    pOriginalStream: IDirect3DVertexBuffer8; // P?
-    pPatchedStream: IDirect3DVertexBuffer8; // P?
+    pOriginalStream: XTL_PIDirect3DVertexBuffer8;
+    pPatchedStream: XTL_PIDirect3DVertexBuffer8;
     uiOrigStride: UINT;
     uiNewStride: UINT;
     bUsedCached: bool;
@@ -271,7 +271,7 @@ var
   uiKey: uint32;
   uiMinHit: uint32;
   pNode: PRTNode;
-  pOrigVertexBuffer: IDirect3DVertexBuffer8;
+  pOrigVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   Desc: D3DVERTEXBUFFER_DESC;
   pCalculateData: Pointer;
   uiLength: UINT;
@@ -324,13 +324,13 @@ begin
   if not Assigned(pPatchDesc.pVertexStreamZeroData) then
   begin
     pOrigVertexBuffer := m_pStreams[uiStream].pOriginalStream;
-    pOrigVertexBuffer._AddRef();
-    m_pStreams[uiStream].pPatchedStream._AddRef();
-    if (FAILED(pOrigVertexBuffer.GetDesc({out}Desc))) then
+    IDirect3DVertexBuffer8(pOrigVertexBuffer)._AddRef();
+    IDirect3DVertexBuffer8(m_pStreams[uiStream].pPatchedStream)._AddRef();
+    if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
       CxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
-    if (FAILED(pOrigVertexBuffer.Lock(0, 0, {out}PByte(pCalculateData), 0))) then
+    if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pCalculateData), 0))) then
     begin
       CxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
@@ -358,7 +358,7 @@ begin
   uiChecksum := CRC32(PByte(pCalculateData), uiLength);
   if (pPatchDesc.pVertexStreamZeroData = nil) then
   begin
-    pOrigVertexBuffer.Unlock();
+    IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
   end;
 
   pCachedStream_.uiCRC32 := uiChecksum;
@@ -388,11 +388,11 @@ begin
     end;
     if Assigned(pCachedStream_.Stream.pOriginalStream) then
     begin
-      pCachedStream_.Stream.pOriginalStream._Release();
+      IDirect3DVertexBuffer8(pCachedStream_.Stream.pOriginalStream)._Release();
     end;
     if Assigned(pCachedStream_.Stream.pPatchedStream) then
     begin
-      pCachedStream_.Stream.pPatchedStream._Release();
+      IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream)._Release();
     end;
     CxbxFree(pCachedStream_);
   end;
@@ -406,7 +406,7 @@ function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
 var
   bApplied: bool;
 (*  uiStride: UINT;
-  pOrigVertexBuffer: IDirect3DVertexBuffer8;
+  pOrigVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   Desc: D3DVERTEXBUFFER_DESC; *)
 begin
 (*    procedure                      *pCalculateData;
@@ -418,8 +418,8 @@ begin
 
     if (not pPatchDesc.pVertexStreamZeroData) then
     begin
-        g_pD3DDevice8.GetStreamSource(uiStream, {out}IDirect3DVertexBuffer8(pOrigVertexBuffer), @uiStride);
-        if (FAILED(pOrigVertexBuffer.GetDesc(@Desc))) then
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, {out}IDirect3DVertexBuffer8(pOrigVertexBuffer), @uiStride);
+        if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(@Desc))) then
         begin
             CxbxKrnlCleanup('Could not retrieve original buffer size');
          end;
@@ -454,7 +454,7 @@ begin
         begin
             if (not pPatchDesc.pVertexStreamZeroData) then
             begin
-                if (FAILED(pOrigVertexBuffer.Lock(0, 0, PPuint08(@pCalculateData), 0))) then
+                if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, PPuint08(@pCalculateData), 0))) then
                 begin
                     CxbxKrnlCleanup('Couldn't lock the original buffer');
                 end;
@@ -479,14 +479,14 @@ begin
                 end
                 else
                 begin
-                    FreeCachedStream(pCachedStream.Stream.pOriginalStream);
+                    FreeCachedStream(IDirect3DVertexBuffer8(pCachedStream.Stream.pOriginalStream));
                 end;
                 pCachedStream := 0;
                 bMismatch := True;
             end;
             if (not pPatchDesc.pVertexStreamZeroData) then
             begin
-                pOrigVertexBuffer.Unlock();
+                IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
             end;
         end
         else
@@ -499,9 +499,9 @@ begin
             begin
                 m_pStreams[uiStream].pOriginalStream := pOrigVertexBuffer;
                 m_pStreams[uiStream].uiOrigStride := uiStride;
-                g_pD3DDevice8.SetStreamSource(uiStream, pCachedStream.Stream.pPatchedStream, pCachedStream.Stream.uiNewStride);
-                pCachedStream.Stream.pPatchedStream._AddRef();
-                pCachedStream.Stream.pOriginalStream._AddRef();
+                IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pCachedStream.Stream.pPatchedStream), pCachedStream.Stream.uiNewStride);
+                IDirect3DVertexBuffer8(pCachedStream.Stream.pPatchedStream)._AddRef();
+                IDirect3DVertexBuffer8(pCachedStream.Stream.pOriginalStream)._AddRef();
                 m_pStreams[uiStream].pPatchedStream := pCachedStream.Stream.pPatchedStream;
                 m_pStreams[uiStream].uiNewStride := pCachedStream.Stream.uiNewStride;
             end
@@ -523,7 +523,7 @@ begin
 
   if (not pPatchDesc.pVertexStreamZeroData) then
   begin
-    pOrigVertexBuffer._Release();
+    IDirect3DVertexBuffer8(pOrigVertexBuffer)._Release();
   end;     *)
 
   Result := bApplied;
@@ -563,8 +563,8 @@ function XTL_VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc;
 var
   pStream: PPATCHEDSTREAM;
 
-  pOrigVertexBuffer: IDirect3DVertexBuffer8;
-  pNewVertexBuffer: IDirect3DVertexBuffer8;
+  pOrigVertexBuffer: XTL_PIDirect3DVertexBuffer8;
+  pNewVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pOrigData: Puint08;
   pNewData: Puint08;
   uiStride: UINT;
@@ -608,8 +608,8 @@ begin
 
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
-        g_pD3DDevice8.GetStreamSource(uiStream, {out}IDirect3DVertexBuffer8(pOrigVertexBuffer), uiStride);
-        if (FAILED(pOrigVertexBuffer.GetDesc(Desc))) then
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, uiStride);
+        if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(Desc))) then
         begin
           CxbxKrnlCleanup('Could not retrieve original buffer size');
         end;
@@ -617,12 +617,12 @@ begin
         pPatchDesc.dwVertexCount := Desc.Size div uiStride;
         dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
 
-        if (FAILED(pOrigVertexBuffer.Lock(0, 0, PByte(pOrigData), 0))) then
+        if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, PByte(pOrigData), 0))) then
         begin
           CxbxKrnlCleanup('Couldn`t lock the original buffer');
         end;
         IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, dwNewSize, 0, 0, D3DPOOL_MANAGED, @pNewVertexBuffer);
-        if (FAILED(pNewVertexBuffer.Lock(0, 0, PByte(pNewData), 0))) then
+        if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, PByte(pNewData), 0))) then
         begin
           CxbxKrnlCleanup('Couldn`t lock the new buffer');
         end;
@@ -822,17 +822,17 @@ begin
     end;
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
-        pNewVertexBuffer.Unlock();
-        pOrigVertexBuffer.Unlock();
+        IDirect3DVertexBuffer8(pNewVertexBuffer).Unlock();
+        IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
 
-        if (FAILED(g_pD3DDevice8.SetStreamSource(uiStream, pNewVertexBuffer, pStreamPatch.ConvertedStride))) then
+        if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), pStreamPatch.ConvertedStride))) then
         begin
             CxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
         end;
         if Assigned(pStream.pPatchedStream) then
         begin
             // The stream was already primitive patched, release the previous vertex buffer to avoid memory leaks
-            pStream.pPatchedStream._Release();
+            IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release();
         end;
         pStream.pPatchedStream := pNewVertexBuffer;
     end
@@ -863,8 +863,8 @@ var
   i: uint08;
   pPixelContainer: PX_D3DPixelContainer;
 
-  pOrigVertexBuffer: IDirect3DVertexBuffer8;
-  pNewVertexBuffer: IDirect3DVertexBuffer8;
+  pOrigVertexBuffer: XTL_PIDirect3DVertexBuffer8;
+  pNewVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   pStream: PPATCHEDSTREAM;
   pData: PByte;
   pUVData: Puint08;
@@ -912,28 +912,28 @@ begin
     else
     begin
         // Copy stream for patching and caching.
-        g_pD3DDevice8.GetStreamSource(uiStream, pOrigVertexBuffer, uiStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, uiStride);
 
-        if(FAILED(pOrigVertexBuffer.GetDesc(Desc))) then
+        if(FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(Desc))) then
         begin
             CxbxKrnlCleanup('Could not retrieve original FVF buffer size.');
         end;
         uiVertexCount := Desc.Size div uiStride;
 
-        if(FAILED(pOrigVertexBuffer.Lock(0, 0, pOrigData, 0))) then
+        if(FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, pOrigData, 0))) then
         begin
             CxbxKrnlCleanup('Couldn''t lock original FVF buffer.');
         end;
-        g_pD3DDevice8.CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, pNewVertexBuffer);
-        if(FAILED(pNewVertexBuffer.Lock(0, 0, pData, 0))) then
+        IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, @pNewVertexBuffer);
+        if(FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, pData, 0))) then
         begin
             CxbxKrnlCleanup('Couldn''t lock new FVF buffer.');
         end;
         memcpy(pData, pOrigData, Desc.Size);
-        pOrigVertexBuffer.Unlock();
+        IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
 
         pStream := @m_pStreams[uiStream];
-        if not assigned(pStream.pOriginalStream) then
+        if not Assigned(pStream.pOriginalStream) then
         begin
             pStream.pOriginalStream := pOrigVertexBuffer;
         end;
@@ -1011,15 +1011,15 @@ begin
 
     if Assigned(pNewVertexBuffer) then
     begin
-        pNewVertexBuffer.Unlock();
+        IDirect3DVertexBuffer8(pNewVertexBuffer).Unlock();
 
-        if (FAILED(g_pD3DDevice8.SetStreamSource(uiStream, pNewVertexBuffer, uiStride))) then
+        if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), uiStride))) then
         begin
             CxbxKrnlCleanup('Failed to set the texcoord patched FVF buffer as the new stream source.');
         end;
         if Assigned(pStream.pPatchedStream) then
         begin
-            pStream.pPatchedStream._Release();
+          IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release();
         end;
 
         pStream.pPatchedStream := pNewVertexBuffer;
@@ -1077,7 +1077,7 @@ begin
 
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
-        g_pD3DDevice8.GetStreamSource(0, {out}IDirect3DVertexBuffer8(pStream.pOriginalStream), pStream.uiOrigStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @(pStream.pOriginalStream), pStream.uiOrigStride);
         pStream.uiNewStride := pStream.uiOrigStride; // The stride is still the same
 
         if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
@@ -1100,7 +1100,7 @@ begin
 
         // Retrieve the original buffer size
         begin
-            if (FAILED(pStream.pOriginalStream.GetDesc(Desc))) then
+            if (FAILED(IDirect3DVertexBuffer8(pStream.pOriginalStream).GetDesc(Desc))) then
             begin
                 CxbxKrnlCleanup('Could not retrieve buffer size');
              end;
@@ -1117,12 +1117,12 @@ begin
 
         if Assigned(pStream.pOriginalStream) then
         begin
-            pStream.pOriginalStream.Lock(0, 0, pOrigVertexData, 0);
+            IDirect3DVertexBuffer8(pStream.pOriginalStream).Lock(0, 0, pOrigVertexData, 0);
          end;
 
         if Assigned(pStream.pPatchedStream) then
         begin
-            pStream.pPatchedStream.Lock(0, 0, pPatchedVertexData, 0);
+            IDirect3DVertexBuffer8(pStream.pPatchedStream).Lock(0, 0, pPatchedVertexData, 0);
         end;
     end
     else
@@ -1213,10 +1213,10 @@ begin
 
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
-        pStream.pOriginalStream.Unlock();
-        pStream.pPatchedStream.Unlock();
+        IDirect3DVertexBuffer8(pStream.pOriginalStream).Unlock();
+        IDirect3DVertexBuffer8(pStream.pPatchedStream).Unlock();
 
-        g_pD3DDevice8.SetStreamSource(0, pStream.pPatchedStream, pStream.uiOrigStride);
+        IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiOrigStride);
      end;
 
     m_bPatched := True;
@@ -1278,14 +1278,14 @@ begin
   begin
     if (m_pStreams[uiStream].pOriginalStream <> NULL) and (m_pStreams[uiStream].pPatchedStream <> NULL) then
     begin
-      g_pD3DDevice8.SetStreamSource(0, m_pStreams[uiStream].pOriginalStream, m_pStreams[uiStream].uiOrigStride);
+      IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(m_pStreams[uiStream].pOriginalStream), m_pStreams[uiStream].uiOrigStride);
     end;
 
     if (m_pStreams[uiStream].pOriginalStream <> NULL) then
-      m_pStreams[uiStream].pOriginalStream._Release();
+      IDirect3DVertexBuffer8(m_pStreams[uiStream].pOriginalStream)._Release();
 
     if (m_pStreams[uiStream].pPatchedStream <> NULL) then
-      m_pStreams[uiStream].pPatchedStream._Release();
+      IDirect3DVertexBuffer8(m_pStreams[uiStream].pPatchedStream)._Release();
 
     if (not m_pStreams[uiStream].bUsedCached) then
     begin
@@ -1367,58 +1367,58 @@ begin
             begin
                 if (Stage = 0) then
                 begin
-                    if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
+                    if (D3DXCreateTextureFromFile(IDirect3DDevice8(g_pD3DDevice8), 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                         CxbxKrnlCleanup('Could not create dummy texture!');
                 end
                 else if (Stage = 1) then
                 begin
-                    if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
+                    if (D3DXCreateTextureFromFile(IDirect3DDevice8(g_pD3DDevice8), 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                         CxbxKrnlCleanup('Could not create dummy texture!');
                  end;
              end;
 
-            g_pD3DDevice8.SetTexture(Stage, pDummyTexture[Stage]);
+            IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]);
          end;
 
         (*//*/  MARKED OUT BY CXBX
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_BLENDDIFFUSEALPHA);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_SPECULAR);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAARG1,   D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_BLENDDIFFUSEALPHA);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_SPECULAR);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_ALPHAARG1,   D3DTA_TEXTURE);
 
 
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
 
-        g_pD3DDevice8.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-        g_pD3DDevice8.SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
-        g_pD3DDevice8.SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
-        g_pD3DDevice8.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
 
-        g_pD3DDevice8.SetTextureStageState(2, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-        g_pD3DDevice8.SetTextureStageState(2, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(2, D3DTSS_COLOROP,   D3DTOP_DISABLE);
-        g_pD3DDevice8.SetTextureStageState(2, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(2, D3DTSS_COLORARG2, D3DTA_CURRENT);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(2, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(2, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(2, D3DTSS_COLOROP,   D3DTOP_DISABLE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(2, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(2, D3DTSS_COLORARG2, D3DTA_CURRENT);
 
-        g_pD3DDevice8.SetTextureStageState(3, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-        g_pD3DDevice8.SetTextureStageState(3, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(3, D3DTSS_COLOROP,   D3DTOP_DISABLE);
-        g_pD3DDevice8.SetTextureStageState(3, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8.SetTextureStageState(3, D3DTSS_COLORARG2, D3DTA_CURRENT);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(3, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(3, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(3, D3DTSS_COLOROP,   D3DTOP_DISABLE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(3, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(3, D3DTSS_COLORARG2, D3DTA_CURRENT);
 
-        g_pD3DDevice8.SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-        g_pD3DDevice8.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
-        g_pD3DDevice8.SetRenderState(D3DRS_AMBIENT, RGB(255,255,255));
-        g_pD3DDevice8.SetRenderState(D3DRS_LIGHTING, FALSE);
-        g_pD3DDevice8.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-        g_pD3DDevice8.SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
+        IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+        IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
+        IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_AMBIENT, RGB(255,255,255));
+        IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_LIGHTING, FALSE);
+        IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+        IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
         //*/  *)
 
 (*        for(uint v:=0;v<g_IVBTblOffs;v++)
@@ -1537,8 +1537,8 @@ begin
              end;
          end;
 
-        g_pD3DDevice8.SetVertexShader(g_IVBFVF);
-        g_pD3DDevice8.SetPixelShader(0);
+        IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(g_IVBFVF);
+        IDirect3DDevice8(g_pD3DDevice8).SetPixelShader(0);
 
         // patch buffer
         UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(g_IVBPrimitiveType, g_IVBTblOffs);
@@ -1561,7 +1561,7 @@ begin
         (*
         IDirect3DBaseTexture8 *pTexture := 0;
 
-        g_pD3DDevice8.GetTexture(0, @pTexture);
+        IDirect3DDevice8(g_pD3DDevice8).GetTexture(0, @pTexture);
 
         if (pTexture <> 0) then
         begin
@@ -1576,7 +1576,7 @@ begin
         //*/
         EmuUpdateActiveTexture();
 
-        g_pD3DDevice8.DrawPrimitiveUP(D3DPT_TRIANGLEFAN, VPDesc.dwPrimitiveCount, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride);
+        IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP(D3DPT_TRIANGLEFAN, VPDesc.dwPrimitiveCount, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride);
 
         VertPatch.Restore();
 
@@ -1646,8 +1646,8 @@ begin
              end;
          end;
 
-        g_pD3DDevice8.SetVertexShader(g_IVBFVF);
-        g_pD3DDevice8.SetPixelShader(0);
+        IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(g_IVBFVF);
+        IDirect3DDevice8(g_pD3DDevice8).SetPixelShader(0);
 
         // patch buffer
         UINT PrimitiveCount := EmuD3DVertex2PrimitiveCount(g_IVBPrimitiveType, 4);
@@ -1667,7 +1667,7 @@ begin
 
         bool bPatched := VertPatch.Apply(@VPDesc);
 
-        g_pD3DDevice8.DrawPrimitiveUP(D3DPT_TRIANGLELIST, VPDesc.dwPrimitiveCount, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride);
+        IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP(D3DPT_TRIANGLELIST, VPDesc.dwPrimitiveCount, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride);
 
         VertPatch.Restore();
 
@@ -1733,7 +1733,7 @@ begin
 
     X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
 
-    if (X_Format <> $CD) and (pTexture.EmuResource8.GetType() = D3DRTYPE_TEXTURE) then
+    if (X_Format <> $CD) and (IDirect3DResource8(pTexture.EmuResource8).GetType() = D3DRTYPE_TEXTURE) then
     begin
       dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
       bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
@@ -1838,7 +1838,7 @@ begin
       // iterate through the number of mipmap levels
       for level := 0 to dwMipMapLevels - 1 do
       begin
-        {hRet := }pResource.EmuTexture8.LockRect(level, LockedRect, NULL, 0);
+        {hRet := }IDirect3DTexture8(pResource.EmuTexture8).LockRect(level, LockedRect, NULL, 0);
 
         iRect := classes.Rect(0, 0, 0, 0);
         iPoint := classes.Point(0, 0);
@@ -1895,7 +1895,7 @@ begin
           end;
         end;
 
-        pResource.EmuTexture8.UnlockRect(level);
+        IDirect3DTexture8(pResource.EmuTexture8).UnlockRect(level);
 
         Inc(dwMipOffs, dwMipWidth * dwMipHeight * dwBPP);
 
@@ -1905,7 +1905,7 @@ begin
       end;
     end;
 
-    g_pD3DDevice8.SetTexture(Stage, pTexture.EmuTexture8);
+    IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.EmuTexture8));
 
   end;
 end;

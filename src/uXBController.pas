@@ -340,7 +340,7 @@ begin
     Exit;
   end;
 
-  hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, {out}IDirectInputDevice8A(m_InputDevice[m_dwInputDeviceCount].m_Device), nil);
+  hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, @(m_InputDevice[m_dwInputDeviceCount].m_Device), nil);
 
   if (not FAILED(hRet)) then
   begin
@@ -1008,7 +1008,7 @@ begin
     begin
       ahRet := m_pDirectInput8.CreateDevice(
         {rguid}GUID_SysKeyboard,
-        {out}IDirectInputDevice8A(m_InputDevice[m_dwInputDeviceCount].m_Device),
+        @(m_InputDevice[m_dwInputDeviceCount].m_Device),
         {pUnkOuter=}nil);
 
       if (not FAILED(ahRet)) then
@@ -1026,7 +1026,7 @@ begin
     begin
       ahRet := m_pDirectInput8.CreateDevice(
         GUID_SysMouse,
-        {out}IDirectInputDevice8A(m_InputDevice[m_dwInputDeviceCount].m_Device),
+        @(m_InputDevice[m_dwInputDeviceCount].m_Device),
         nil);
 
       if (not FAILED(ahRet)) then

@@ -158,8 +158,8 @@ function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryVirtualMemory(
-  pBaseAddress: PVOID;
-  pBuffer: PMEMORY_BASIC_INFORMATION
+  BaseAddress: PVOID;
+  Buffer: PMEMORY_BASIC_INFORMATION
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryVolumeInformationFile(
   FileHandle: HANDLE;
@@ -195,14 +195,14 @@ function xboxkrnl_NtResumeThread(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetEvent(
   EventHandle: HANDLE;
-  PreviousState: PULONG // OUT
+  PreviousState: PLONG // OUT // Dxbx Note : Shouldn't this be PULONg instead?
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetInformationFile(
   FileHandle: HANDLE; // Cxbx TODO: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length: ULONG;
-  FileInformationClass: FILE_INFORMATION_CLASS
+  FileInformationClass: ULONG // Dxbx Note : This could be declared as FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -228,7 +228,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Count: ULONG;
   Handles: PHANDLE;
   WaitType: WAIT_TYPE;
-  WaitMode: CHAR;
+  WaitMode: AnsiCHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
@@ -1076,9 +1076,9 @@ begin
       #13#10'   FileMask             : 0x%.08X (%s)' +
       #13#10'   RestartScan          : 0x%.08X' +
       #13#10');',
-      [@FileHandle, @Event, @ApcRoutine, @ApcContext, @IoStatusBlock,
-       @FileInformation, @Length, @FileInformationClass, @FileMask,
-       PSTRING_Buffer(FileMask), @RestartScan]);
+      [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+       FileInformation, Length, Ord(FileInformationClass), FileMask,
+       PSTRING_Buffer(FileMask), RestartScan]);
 {$ENDIF}
 
   if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
@@ -1560,7 +1560,7 @@ begin
       [EventHandle, PreviousState]);
 {$ENDIF}
 
-  ret := JwaNative.NtSetEvent(EventHandle, PreviousState);
+  ret := JwaNative.NtSetEvent(EventHandle, PULONG(PreviousState));
 
   if (FAILED(ret)) then
     EmuWarning('NtSetEvent Failed!');
@@ -1595,7 +1595,7 @@ begin
          Length, Ord(FileInformationClass)]);
 {$ENDIF}
 
-  Result := JwaNative.NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
+  Result := JwaNative.NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FILE_INFORMATION_CLASS(FileInformationClass));
 
   EmuSwapFS(fsXbox);
 end;
@@ -1863,10 +1863,10 @@ begin
        #13#10'   IoStatusBlock       : 0x%.08X' +
        #13#10'   Buffer              : 0x%.08X' +
        #13#10'   Length              : 0x%.08X' +
-       #13#10'   ByteOffset          : 0x%.08X (0x%.08X)' +}
+       #13#10'   ByteOffset          : 0x%.08X (0x%.08X)' +
        #13#10');',
        [FileHandle, Event, ApcRoutine,
-       ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)}]);
+       ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
 {$ENDIF}
 
   // Halo..

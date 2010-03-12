@@ -30,6 +30,44 @@ uses
   // Dxbx
   uTypes;
 
+type
+  XTL_PIDirect3D8 = type Pointer;
+
+  XTL_PIDirect3DDevice8 = type Pointer;
+  XTL_PPIDirect3DDevice8 = ^XTL_PIDirect3DDevice8;
+
+  XTL_PIDirectDraw7 = type Pointer;
+  XTL_PIDirectDrawSurface7 = type Pointer;
+
+  XTL_PIDirect3DResource8 = type Pointer;
+  XTL_PIDirect3DBaseTexture8 = type Pointer;
+  XTL_PIDirect3DTexture8 = type Pointer;
+  XTL_PIDirect3DVolumeTexture8 = type Pointer;
+  XTL_PIDirect3DCubeTexture8 = type Pointer;
+  XTL_PIDirect3DSurface8 = type Pointer;
+  XTL_PIDirect3DVertexBuffer8 = type Pointer;
+  XTL_PIDirect3DIndexBuffer8 = type Pointer;
+
+  XTL_PIDirectDrawClipper = type Pointer;
+
+  XTL_PIDirectSound8 = type Pointer;
+  XTL_PIDirectSoundBuffer = type Pointer;
+  XTL_PIDirectSoundBuffer8 = type Pointer;
+
+  XTL_LPDIRECT3D8 = XTL_PIDirect3D8;
+  XTL_LPDIRECTDRAW7 = XTL_PIDirectDraw7;
+  XTL_LPDIRECT3DDEVICE8 = XTL_PIDirect3DDevice8;
+  XTL_LPDIRECTDRAWSURFACE7 = XTL_PIDirectDrawSurface7;
+  XTL_LPDIRECTDRAWCLIPPER = XTL_PIDirectDrawClipper;
+  XTL_LPDIRECT3DVERTEXBUFFER8 = XTL_PIDirect3DVertexBuffer8;
+  XTL_LPDIRECT3DINDEXBUFFER8 = XTL_PIDirect3DIndexBuffer8;
+
+  XTL_LPDIRECTSOUND8 = XTL_PIDirectSound8;
+  XTL_PLPDIRECTSOUND8 = ^XTL_LPDIRECTSOUND8;
+
+  XTL_LPDIRECTSOUNDBUFFER8 = XTL_PIDirectSoundBuffer8;
+
+
 // Cxbx TODO: fill out these enumeration tables for convienance
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type X_D3DFORMAT = DWORD;
@@ -125,8 +163,8 @@ type X_D3DPRESENT_PARAMETERS = packed record
     // The Windows DirectX8 variant ends here
     // This check guarantees identical layout, compared to Direct3D8._D3DPRESENT_PARAMETERS_:
     // Assert(Integer(@(PX_D3DPRESENT_PARAMETERS(nil).BufferSurfaces[0])) = SizeOf(_D3DPRESENT_PARAMETERS_));
-    BufferSurfaces: array [0..3-1] of IDirect3DSurface8;
-    DepthStencilSurface: IDirect3DSurface8;
+    BufferSurfaces: array [0..3-1] of XTL_PIDirect3DSurface8;
+    DepthStencilSurface: XTL_PIDirect3DSurface8;
   end;
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
@@ -215,42 +253,39 @@ type _VERTEX_SHADER = packed record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type X_D3DResource = object
   protected
-    function GetEmuResource8: IDirect3DResource8; inline;
-    function GetEmuBaseTexture8: IDirect3DBaseTexture8; inline;
-    function GetEmuTexture8: IDirect3DTexture8; inline;
-    function GetEmuVolumeTexture8: IDirect3DVolumeTexture8; inline;
-    function GetEmuCubeTexture8: IDirect3DCubeTexture8; inline;
-    function GetEmuSurface8: IDirect3DSurface8; inline;
-    function GetEmuVertexBuffer8: IDirect3DVertexBuffer8; inline;
-    function GetEmuIndexBuffer8: IDirect3DIndexBuffer8; inline;
-    procedure SetEmuResource8(Value: IDirect3DResource8); inline;
-    procedure SetEmuBaseTexture8(Value: IDirect3DBaseTexture8); inline;
-    procedure SetEmuTexture8(Value: IDirect3DTexture8); inline;
-    procedure SetEmuVolumeTexture8(Value: IDirect3DVolumeTexture8); inline;
-    procedure SetEmuCubeTexture8(Value: IDirect3DCubeTexture8); inline;
-    procedure SetEmuSurface8(Value: IDirect3DSurface8); inline;
-    procedure SetEmuVertexBuffer8(Value: IDirect3DVertexBuffer8); inline;
-    procedure SetEmuIndexBuffer8(Value: IDirect3DIndexBuffer8); inline;
+    function GetEmuResource8: XTL_PIDirect3DResource8; inline;
+    function GetEmuBaseTexture8: XTL_PIDirect3DBaseTexture8; inline;
+    function GetEmuTexture8: XTL_PIDirect3DTexture8; inline;
+    function GetEmuVolumeTexture8: XTL_PIDirect3DVolumeTexture8; inline;
+    function GetEmuCubeTexture8: XTL_PIDirect3DCubeTexture8; inline;
+    function GetEmuSurface8: XTL_PIDirect3DSurface8; inline;
+    function GetEmuVertexBuffer8: XTL_PIDirect3DVertexBuffer8; inline;
+    function GetEmuIndexBuffer8: XTL_PIDirect3DIndexBuffer8; inline;
+    procedure SetEmuResource8(Value: XTL_PIDirect3DResource8); inline;
+    procedure SetEmuBaseTexture8(Value: XTL_PIDirect3DBaseTexture8); inline;
+    procedure SetEmuTexture8(Value: XTL_PIDirect3DTexture8); inline;
+    procedure SetEmuVolumeTexture8(Value: XTL_PIDirect3DVolumeTexture8); inline;
+    procedure SetEmuCubeTexture8(Value: XTL_PIDirect3DCubeTexture8); inline;
+    procedure SetEmuSurface8(Value: XTL_PIDirect3DSurface8); inline;
+    procedure SetEmuVertexBuffer8(Value: XTL_PIDirect3DVertexBuffer8); inline;
+    procedure SetEmuIndexBuffer8(Value: XTL_PIDirect3DIndexBuffer8); inline;
   public
     Common: DWORD;
     Data: DWORD;
     // union {
     Lock: DWORD;
 
-    // Dxnx Note : Delphi doesn't accept interfaces in a union,
-    // so we have to use another approach : the following properties
+    // Dxnx Note : the following properties
     // all store their data in the same location (which overlaps
     // with Lock, as in the original Cxbx declaration of this type).
-    //
-    // Be aware that there's no reference-counting possible this way!
-    property EmuResource8: IDirect3DResource8 read GetEmuResource8 write SetEmuResource8;
-    property EmuBaseTexture8: IDirect3DBaseTexture8 read GetEmuBaseTexture8 write SetEmuBaseTexture8;
-    property EmuTexture8: IDirect3DTexture8 read GetEmuTexture8 write SetEmuTexture8;
-    property EmuVolumeTexture8: IDirect3DVolumeTexture8 read GetEmuVolumeTexture8 write SetEmuVolumeTexture8;
-    property EmuCubeTexture8: IDirect3DCubeTexture8 read GetEmuCubeTexture8 write SetEmuCubeTexture8;
-    property EmuSurface8: IDirect3DSurface8 read GetEmuSurface8 write SetEmuSurface8;
-    property EmuVertexBuffer8: IDirect3DVertexBuffer8 read GetEmuVertexBuffer8 write SetEmuVertexBuffer8;
-    property EmuIndexBuffer8: IDirect3DIndexBuffer8 read GetEmuIndexBuffer8 write SetEmuIndexBuffer8;
+    property EmuResource8: XTL_PIDirect3DResource8 read GetEmuResource8 write SetEmuResource8;
+    property EmuBaseTexture8: XTL_PIDirect3DBaseTexture8 read GetEmuBaseTexture8 write SetEmuBaseTexture8;
+    property EmuTexture8: XTL_PIDirect3DTexture8 read GetEmuTexture8 write SetEmuTexture8;
+    property EmuVolumeTexture8: XTL_PIDirect3DVolumeTexture8 read GetEmuVolumeTexture8 write SetEmuVolumeTexture8;
+    property EmuCubeTexture8: XTL_PIDirect3DCubeTexture8 read GetEmuCubeTexture8 write SetEmuCubeTexture8;
+    property EmuSurface8: XTL_PIDirect3DSurface8 read GetEmuSurface8 write SetEmuSurface8;
+    property EmuVertexBuffer8: XTL_PIDirect3DVertexBuffer8 read GetEmuVertexBuffer8 write SetEmuVertexBuffer8;
+    property EmuIndexBuffer8: XTL_PIDirect3DIndexBuffer8 read GetEmuIndexBuffer8 write SetEmuIndexBuffer8;
     // }; // end of union
   end;
   PX_D3DResource = ^X_D3DResource;
@@ -599,84 +634,84 @@ end;
 
 { X_D3DResource }
 
-function X_D3DResource.GetEmuResource8: IDirect3DResource8;
+function X_D3DResource.GetEmuResource8: XTL_PIDirect3DResource8;
 begin
-  Result := IDirect3DResource8(Lock);
+  Result := XTL_PIDirect3DResource8(Lock);
 end;
 
-function X_D3DResource.GetEmuBaseTexture8: IDirect3DBaseTexture8;
+function X_D3DResource.GetEmuBaseTexture8: XTL_PIDirect3DBaseTexture8;
 begin
-  Result := IDirect3DBaseTexture8(Lock);
+  Result := XTL_PIDirect3DBaseTexture8(Lock);
 end;
 
-function X_D3DResource.GetEmuTexture8: IDirect3DTexture8;
+function X_D3DResource.GetEmuTexture8: XTL_PIDirect3DTexture8;
 begin
-  Result := IDirect3DTexture8(Lock);
+  Result := XTL_PIDirect3DTexture8(Lock);
 end;
 
-function X_D3DResource.GetEmuVolumeTexture8: IDirect3DVolumeTexture8;
+function X_D3DResource.GetEmuVolumeTexture8: XTL_PIDirect3DVolumeTexture8;
 begin
-  Result := IDirect3DVolumeTexture8(Lock);
+  Result := XTL_PIDirect3DVolumeTexture8(Lock);
 end;
 
-function X_D3DResource.GetEmuCubeTexture8: IDirect3DCubeTexture8;
+function X_D3DResource.GetEmuCubeTexture8: XTL_PIDirect3DCubeTexture8;
 begin
-  Result := IDirect3DCubeTexture8(Lock);
+  Result := XTL_PIDirect3DCubeTexture8(Lock);
 end;
 
-function X_D3DResource.GetEmuSurface8: IDirect3DSurface8;
+function X_D3DResource.GetEmuSurface8: XTL_PIDirect3DSurface8;
 begin
-  Result := IDirect3DSurface8(Lock);
+  Result := XTL_PIDirect3DSurface8(Lock);
 end;
 
-function X_D3DResource.GetEmuVertexBuffer8: IDirect3DVertexBuffer8;
+function X_D3DResource.GetEmuVertexBuffer8: XTL_PIDirect3DVertexBuffer8;
 begin
-  Result := IDirect3DVertexBuffer8(Lock);
+  Result := XTL_PIDirect3DVertexBuffer8(Lock);
 end;
 
-function X_D3DResource.GetEmuIndexBuffer8: IDirect3DIndexBuffer8;
+function X_D3DResource.GetEmuIndexBuffer8: XTL_PIDirect3DIndexBuffer8;
 begin
-  Result := IDirect3DIndexBuffer8(Lock);
+  Result := XTL_PIDirect3DIndexBuffer8(Lock);
 end;
 
-procedure X_D3DResource.SetEmuBaseTexture8(Value: IDirect3DBaseTexture8);
+procedure X_D3DResource.SetEmuBaseTexture8(Value: XTL_PIDirect3DBaseTexture8);
 begin
-  IDirect3DBaseTexture8(Lock) := Value;
+  XTL_PIDirect3DBaseTexture8(Lock) := Value;
 end;
 
-procedure X_D3DResource.SetEmuCubeTexture8(Value: IDirect3DCubeTexture8);
+procedure X_D3DResource.SetEmuCubeTexture8(Value: XTL_PIDirect3DCubeTexture8);
 begin
-  IDirect3DCubeTexture8(Lock) := Value;
+  XTL_PIDirect3DCubeTexture8(Lock) := Value;
 end;
 
-procedure X_D3DResource.SetEmuIndexBuffer8(Value: IDirect3DIndexBuffer8);
+procedure X_D3DResource.SetEmuIndexBuffer8(Value: XTL_PIDirect3DIndexBuffer8);
 begin
-  IDirect3DIndexBuffer8(Lock) := Value;
+  XTL_PIDirect3DIndexBuffer8(Lock) := Value;
 end;
 
-procedure X_D3DResource.SetEmuResource8(Value: IDirect3DResource8);
+procedure X_D3DResource.SetEmuResource8(Value: XTL_PIDirect3DResource8);
 begin
-  IDirect3DResource8(Lock) := Value;
+  XTL_PIDirect3DResource8(Lock) := Value;
 end;
 
-procedure X_D3DResource.SetEmuSurface8(Value: IDirect3DSurface8);
+procedure X_D3DResource.SetEmuSurface8(Value: XTL_PIDirect3DSurface8);
 begin
-  IDirect3DSurface8(Lock) := Value;
+  XTL_PIDirect3DSurface8(Lock) := Value;
 end;
 
-procedure X_D3DResource.SetEmuTexture8(Value: IDirect3DTexture8);
+procedure X_D3DResource.SetEmuTexture8(Value: XTL_PIDirect3DTexture8);
 begin
-  IDirect3DTexture8(Lock) := Value;
+  XTL_PIDirect3DTexture8(Lock) := Value;
 end;
 
-procedure X_D3DResource.SetEmuVertexBuffer8(Value: IDirect3DVertexBuffer8);
+procedure X_D3DResource.SetEmuVertexBuffer8(Value: XTL_PIDirect3DVertexBuffer8);
 begin
-  IDirect3DVertexBuffer8(Lock) := Value;
+  XTL_PIDirect3DVertexBuffer8(Lock) := Value;
 end;
 
-procedure X_D3DResource.SetEmuVolumeTexture8(Value: IDirect3DVolumeTexture8);
+procedure X_D3DResource.SetEmuVolumeTexture8(Value: XTL_PIDirect3DVolumeTexture8);
 begin
-  IDirect3DVolumeTexture8(Lock) := Value;
+  XTL_PIDirect3DVolumeTexture8(Lock) := Value;
 end;
 
 end.

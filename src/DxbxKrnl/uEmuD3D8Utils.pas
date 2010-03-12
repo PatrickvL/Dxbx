@@ -32,14 +32,6 @@ uses
   uEmuD3D8Types;
 
 type
-  PIDirect3DDevice8 = ^IDirect3DDevice8;
-  PIDirect3DSurface8 = ^IDirect3DSurface8;
-  PIDirect3DVertexBuffer8 = ^IDirect3DVertexBuffer8;
-  PIDirect3DIndexBuffer8 = ^IDirect3DIndexBuffer8;
-  PIDirect3DTexture8 = ^IDirect3DTexture8;
-  PIDirect3DCubeTexture8 = ^IDirect3DCubeTexture8;
-  PIDirect3DVolumeTexture8 = ^IDirect3DVolumeTexture8;
-
   LPD3DXBUFFER = ID3DXBuffer;
   PLPD3DXBUFFER = PID3DXBuffer; // = ^LPD3DXBUFFER;
 
@@ -47,39 +39,39 @@ type
   PPD3DCOLOR = ^PD3DCOLOR;
 
 function iif(AValue: Boolean; const ATrue: TD3DDevType; const AFalse: TD3DDevType): TD3DDevType; overload;
-function iif(AValue: Boolean; const ATrue: IDirect3DSurface8; const AFalse: IDirect3DSurface8): IDirect3DSurface8; overload;
-function iif(AValue: Boolean; const ATrue: IDirect3DBaseTexture8; const AFalse: IDirect3DBaseTexture8): IDirect3DBaseTexture8; overload;
+function iif(AValue: Boolean; const ATrue: XTL_PIDirect3DSurface8; const AFalse: XTL_PIDirect3DSurface8): XTL_PIDirect3DSurface8; overload;
+function iif(AValue: Boolean; const ATrue: XTL_PIDirect3DBaseTexture8; const AFalse: XTL_PIDirect3DBaseTexture8): XTL_PIDirect3DBaseTexture8; overload;
 
-function IDirect3D8_CreateDevice(const aDirect3D8: IDirect3D8;
+function IDirect3D8_CreateDevice(const aDirect3D8: XTL_LPDirect3D8;
   Adapter: UINT; DeviceType: D3DDEVTYPE; hFocusWindow: HWND;
   BehaviorFlags: DWORD; pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: PIDirect3DDevice8): HRESULT;
-function IDirect3DDevice8_GetRenderTarget(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_GetRenderTarget(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   ppRenderTarget: PIDirect3DSurface8): HResult;
-function IDirect3DDevice8_GetDepthStencilSurface(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_GetDepthStencilSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   ppZStencilSurface: PIDirect3DSurface8): HResult;
-function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool;
   ppVertexBuffer: PIDirect3DVertexBuffer8): HResult;
-function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height: LongWord; Format: TD3DFormat;
   ppSurface: PIDirect3DSurface8): HResult;
-function IDirect3DDevice8_GetBackBuffer(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_GetBackBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   BackBuffer: LongWord; _Type: TD3DBackBufferType;
   ppBackBuffer: PIDirect3DSurface8): HResult;
-function IDirect3DDevice8_CreateIndexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateIndexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Length: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppIndexBuffer: PIDirect3DIndexBuffer8): HResult;
-function IDirect3DDevice8_CreateTexture(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateTexture(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppTexture: PIDirect3DTexture8): HResult;
-function IDirect3DDevice8_CreateCubeTexture(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateCubeTexture(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   EdgeLength, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppCubeTexture: PIDirect3DCubeTexture8): HResult;
-function IDirect3DDevice8_CreateVolumeTexture(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateVolumeTexture(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppVolumeTexture: PIDirect3DVolumeTexture8): HResult;
-function IDirect3DTexture8_GetSurfaceLevel(const aDirect3DTexture8: IDirect3DTexture8;
+function IDirect3DTexture8_GetSurfaceLevel(const aDirect3DTexture8: XTL_PIDirect3DTexture8;
   Level: LongWord;
   ppSurfaceLevel: PIDirect3DSurface8): HResult;
 
@@ -96,7 +88,7 @@ begin
     Result := AFalse;
 end;
 
-function iif(AValue: Boolean; const ATrue: IDirect3DSurface8; const AFalse: IDirect3DSurface8): IDirect3DSurface8; overload;
+function iif(AValue: Boolean; const ATrue: XTL_PIDirect3DSurface8; const AFalse: XTL_PIDirect3DSurface8): XTL_PIDirect3DSurface8; overload;
 begin
   if AValue then
     Result := ATrue
@@ -104,7 +96,7 @@ begin
     Result := AFalse;
 end;
 
-function iif(AValue: Boolean; const ATrue: IDirect3DBaseTexture8; const AFalse: IDirect3DBaseTexture8): IDirect3DBaseTexture8; overload;
+function iif(AValue: Boolean; const ATrue: XTL_PIDirect3DBaseTexture8; const AFalse: XTL_PIDirect3DBaseTexture8): XTL_PIDirect3DBaseTexture8; overload;
 begin
   if AValue then
     Result := ATrue
@@ -112,159 +104,102 @@ begin
     Result := AFalse;
 end;
 
-function IDirect3D8_CreateDevice(const aDirect3D8: IDirect3D8;
+function IDirect3D8_CreateDevice(const aDirect3D8: XTL_LPDirect3D8;
   Adapter: UINT; DeviceType: D3DDEVTYPE; hFocusWindow: HWND;
   BehaviorFlags: DWORD; pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: PIDirect3DDevice8): HRESULT;
-var
-  TmpIDirect3DDevice8: IDirect3DDevice8;
 begin
-  Result := aDirect3D8.CreateDevice(
+  Result := IDirect3D8(aDirect3D8).CreateDevice(
     Adapter,
     DeviceType,
     hFocusWindow,
     BehaviorFlags,
     {var}PD3DPRESENT_PARAMETERS(pPresentationParameters)^,
-    {out}TmpIDirect3DDevice8);
-
-  PPointer(ppReturnedDeviceInterface)^ := Pointer(TmpIDirect3DDevice8);
-  Pointer(TmpIDirect3DDevice8) := nil;
+    ppReturnedDeviceInterface);
 end;
 
-function IDirect3DDevice8_GetRenderTarget(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_GetRenderTarget(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   ppRenderTarget: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
 begin
-  Result := aDirect3DDevice8.GetRenderTarget(
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppRenderTarget)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
+  Result := IDirect3DDevice8(aDirect3DDevice8).GetRenderTarget(ppRenderTarget);
 end;
 
-function IDirect3DDevice8_GetDepthStencilSurface(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_GetDepthStencilSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   ppZStencilSurface: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
 begin
-  Result := aDirect3DDevice8.GetDepthStencilSurface(
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppZStencilSurface)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
+  Result := IDirect3DDevice8(aDirect3DDevice8).GetDepthStencilSurface(ppZStencilSurface);
 end;
 
-function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool;
   ppVertexBuffer: PIDirect3DVertexBuffer8): HResult;
-var
-  TmpIDirect3DVertexBuffer8: IDirect3DVertexBuffer8;
 begin
-  Result := aDirect3DDevice8.CreateVertexBuffer(
+  Result := IDirect3DDevice8(aDirect3DDevice8).CreateVertexBuffer(
     Length, Usage, FVF, Pool,
-    {out}TmpIDirect3DVertexBuffer8);
-
-  PPointer(ppVertexBuffer)^ := Pointer(TmpIDirect3DVertexBuffer8);
-  Pointer(TmpIDirect3DVertexBuffer8) := nil;
+    ppVertexBuffer);
 end;
 
-function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height: LongWord; Format: TD3DFormat;
   ppSurface: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
 begin
-  Result := aDirect3DDevice8.CreateImageSurface(
+  Result := IDirect3DDevice8(aDirect3DDevice8).CreateImageSurface(
     Width, Height, Format,
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppSurface)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
+    ppSurface);
 end;
 
-function IDirect3DDevice8_GetBackBuffer(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_GetBackBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   BackBuffer: LongWord; _Type: TD3DBackBufferType;
   ppBackBuffer: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
 begin
-  Result := aDirect3DDevice8.GetBackBuffer(
+  Result := IDirect3DDevice8(aDirect3DDevice8).GetBackBuffer(
     BackBuffer, _Type,
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppBackBuffer)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
+    ppBackBuffer);
 end;
 
-function IDirect3DDevice8_CreateIndexBuffer(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateIndexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Length: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppIndexBuffer: PIDirect3DIndexBuffer8): HResult;
-var
-  TmpIDirect3DIndexBuffer8: IDirect3DIndexBuffer8;
 begin
-  Result := aDirect3DDevice8.CreateIndexBuffer(
+  Result := IDirect3DDevice8(aDirect3DDevice8).CreateIndexBuffer(
     Length, Usage, Format, Pool,
-    {out}TmpIDirect3DIndexBuffer8);
-
-  PPointer(ppIndexBuffer)^ := Pointer(TmpIDirect3DIndexBuffer8);
-  Pointer(TmpIDirect3DIndexBuffer8) := nil;
+    ppIndexBuffer);
 end;
 
-function IDirect3DDevice8_CreateTexture(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateTexture(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppTexture: PIDirect3DTexture8): HResult;
-var
-  TmpIDirect3DTexture8: IDirect3DTexture8;
 begin
-  Result := aDirect3DDevice8.CreateTexture(
+  Result := IDirect3DDevice8(aDirect3DDevice8).CreateTexture(
     Width, Height, Levels, Usage, Format, Pool,
-    {out}TmpIDirect3DTexture8);
-
-  PPointer(ppTexture)^ := Pointer(TmpIDirect3DTexture8);
-  Pointer(TmpIDirect3DTexture8) := nil;
+    ppTexture);
 end;
 
-function IDirect3DDevice8_CreateCubeTexture(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateCubeTexture(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   EdgeLength, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppCubeTexture: PIDirect3DCubeTexture8): HResult;
-var
-  TmpIDirect3DCubeTexture8: IDirect3DCubeTexture8;
 begin
-  Result := aDirect3DDevice8.CreateCubeTexture(
+  Result := IDirect3DDevice8(aDirect3DDevice8).CreateCubeTexture(
     EdgeLength, Levels, Usage, Format, Pool,
-    {out}TmpIDirect3DCubeTexture8);
-
-  PPointer(ppCubeTexture)^ := Pointer(TmpIDirect3DCubeTexture8);
-  Pointer(TmpIDirect3DCubeTexture8) := nil;
+    ppCubeTexture);
 end;
 
-function IDirect3DDevice8_CreateVolumeTexture(const aDirect3DDevice8: IDirect3DDevice8;
+function IDirect3DDevice8_CreateVolumeTexture(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height, Depth, Levels: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppVolumeTexture: PIDirect3DVolumeTexture8): HResult;
-var
-  TmpIDirect3DVolumeTexture8: IDirect3DVolumeTexture8;
 begin
-  Result := aDirect3DDevice8.CreateVolumeTexture(
+  Result := IDirect3DDevice8(aDirect3DDevice8).CreateVolumeTexture(
     Width, Height, Depth, Levels, Usage, Format, Pool,
-    {out}TmpIDirect3DVolumeTexture8);
-
-  PPointer(ppVolumeTexture)^ := Pointer(TmpIDirect3DVolumeTexture8);
-  Pointer(TmpIDirect3DVolumeTexture8) := nil;
+    ppVolumeTexture);
 end;
 
-function IDirect3DTexture8_GetSurfaceLevel(const aDirect3DTexture8: IDirect3DTexture8;
+function IDirect3DTexture8_GetSurfaceLevel(const aDirect3DTexture8: XTL_PIDirect3DTexture8;
   Level: LongWord;
   ppSurfaceLevel: PIDirect3DSurface8): HResult;
-var
-  TmpIDirect3DSurface8: IDirect3DSurface8;
 begin
-  Result := aDirect3DTexture8.GetSurfaceLevel(
+  Result := IDirect3DTexture8(aDirect3DTexture8).GetSurfaceLevel(
     Level,
-    {out}TmpIDirect3DSurface8);
-
-  PPointer(ppSurfaceLevel)^ := Pointer(TmpIDirect3DSurface8);
-  Pointer(TmpIDirect3DSurface8) := nil;
+    ppSurfaceLevel);
 end;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
