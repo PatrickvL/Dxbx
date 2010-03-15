@@ -39,6 +39,7 @@ uses
   , uEmu
   , uEmuAlloc
   , uEmuFS
+  , uXboxLibraryUtils
   , uDxbxKrnlUtils
   , uEmuD3D8Types
   ;
@@ -170,6 +171,7 @@ type X_CDirectSoundBuffer = packed record
 
 const DSB_FLAG_ADPCM = $00000001;
 const WAVE_FORMAT_XBOX_ADPCM = $0069;
+const DSB_FLAG_RECIEVEDATA = $00001000;
 
 type X_CMcpxStream = class(TObject)
   (*
@@ -498,10 +500,10 @@ begin
     initialized := true;
   end;
 
-	// This way we can be sure that this function returns a valid
-	// DirectSound8 pointer even if we initialized it elsewhere!
-	if (ppDirectSound^ = nil) and Assigned(g_pDSound8) then
-		ppDirectSound^ := g_pDSound8;
+  // This way we can be sure that this function returns a valid
+  // DirectSound8 pointer even if we initialized it elsewhere!
+  if (ppDirectSound^ = nil) and Assigned(g_pDSound8) then
+    ppDirectSound^ := g_pDSound8;
 
   g_pDSound8RefCount := 1;
 
@@ -1326,25 +1328,28 @@ begin
 
   uRet := 0;
 
-  if Assigned(pThis) then
+  if (pThis <> nil) then
   begin
-    uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
-
-    if (uRet = 0) then
+    if (pThis.EmuFlags and DSB_FLAG_RECIEVEDATA) = 0 then
     begin
-      // remove cache entry
-      for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1 do
+      uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
+
+      if (uRet = 0) then
       begin
+        // remove cache entry
+        for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1 do
+        begin
           if (g_pDSoundBufferCache[v] = pThis) then
               g_pDSoundBufferCache[v] := nil;
-       end;
+        end;
 
-      if (pThis.EmuBufferDesc.lpwfxFormat <> nil) then
+        if (pThis.EmuBufferDesc.lpwfxFormat <> NULL) then
           CxbxFree(pThis.EmuBufferDesc.lpwfxFormat);
 
-      CxbxFree(pThis.EmuBufferDesc);
+        CxbxFree(pThis.EmuBufferDesc);
 
-      dispose(pThis);
+        dispose(pThis);
+      end;
     end;
   end;
 
@@ -2799,21 +2804,21 @@ exports
   XTL_EmuDirectSoundDoWork,
   XTL_EmuDirectSoundUseFullHRTF,
 
-  XTL_EmuIDirectSound8_AddRef,
-  XTL_EmuIDirectSound8_CreateBuffer,
-  XTL_EmuIDirectSound8_CreateSoundBuffer,
-  XTL_EmuIDirectSound8_CreateStream,
-  XTL_EmuIDirectSound8_DownloadEffectsImage,
-  XTL_EmuIDirectSound8_Release,
-  XTL_EmuIDirectSound8_SetAllParameters,
-  XTL_EmuIDirectSound8_SetDistanceFactor,
-  XTL_EmuIDirectSound8_SetDopplerFactor,
-  XTL_EmuIDirectSound8_SetI3DL2Listener,
-  XTL_EmuIDirectSound8_SetMixBinHeadroom,
-  XTL_EmuIDirectSound8_SetOrientation,
-  XTL_EmuIDirectSound8_SetPosition,
-  XTL_EmuIDirectSound8_SetRolloffFactor,
-  XTL_EmuIDirectSound8_SetVelocity,
+  XTL_EmuIDirectSound8_AddRef name PatchPrefix + 'IDirectSound_AddRef',
+  XTL_EmuIDirectSound8_CreateBuffer name PatchPrefix + 'IDirectSound_CreateBuffer',
+  XTL_EmuIDirectSound8_CreateSoundBuffer name PatchPrefix + 'IDirectSound_CreateSoundBuffer',
+  XTL_EmuIDirectSound8_CreateStream name PatchPrefix + 'IDirectSound_CreateStream',
+  XTL_EmuIDirectSound8_DownloadEffectsImage name PatchPrefix + 'IDirectSound_DownloadEffectsImage',
+  XTL_EmuIDirectSound8_Release name PatchPrefix + 'IDirectSound_Release',
+  XTL_EmuIDirectSound8_SetAllParameters name PatchPrefix + 'IDirectSound_SetAllParameters',
+  XTL_EmuIDirectSound8_SetDistanceFactor name PatchPrefix + 'IDirectSound_SetDistanceFactor',
+  XTL_EmuIDirectSound8_SetDopplerFactor name PatchPrefix + 'IDirectSound_SetDopplerFactor',
+  XTL_EmuIDirectSound8_SetI3DL2Listener name PatchPrefix + 'IDirectSound_SetI3DL2Listener',
+  XTL_EmuIDirectSound8_SetMixBinHeadroom name PatchPrefix + 'IDirectSound_SetMixBinHeadroom',
+  XTL_EmuIDirectSound8_SetOrientation name PatchPrefix + 'IDirectSound_SetOrientation',
+  XTL_EmuIDirectSound8_SetPosition name PatchPrefix + 'IDirectSound_SetPosition',
+  XTL_EmuIDirectSound8_SetRolloffFactor name PatchPrefix + 'IDirectSound_SetRolloffFactor',
+  XTL_EmuIDirectSound8_SetVelocity name PatchPrefix + 'IDirectSound_SetVelocity',
 
   XTL_EmuIDirectSoundBuffer8_GetCurrentPosition,
   XTL_EmuIDirectSoundBuffer8_GetStatus,

@@ -1096,11 +1096,11 @@ begin
     for i := 0 to Count - 1 do
     begin
       FuncStr := Strings[i];
-      j := Pos(':', FuncStr);
-      AddrStr := Copy(FuncStr, j + 1, MaxInt);
+      j := Pos(':$', FuncStr);
+      AddrStr := Copy(FuncStr, j + 2, MaxInt);
       System.Delete(FuncStr, j, MaxInt);
 
-      Addr := Pointer(StrToIntDef(AddrStr, 0));
+      Addr := Pointer(HexToIntDef(AddrStr, 0));
       if Assigned(Addr) then
       begin
         RegisterSpecificFunctionLocation(FuncStr, Addr);
@@ -1125,7 +1125,7 @@ begin
     for i := 0 to Self.Count - 1 do
     begin
       Symbol := Symbols[i];
-      Add(Symbol.SymbolName + ':' + IntToStr(Integer(Symbol.Locations[0].SymbolLocation)));
+      Add(Symbol.SymbolName + ':$' + IntToHex(Integer(Symbol.Locations[0].SymbolLocation), 8));
     end;
 
     SaveToFile(aCacheFile);

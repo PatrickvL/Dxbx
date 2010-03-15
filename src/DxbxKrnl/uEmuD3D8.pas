@@ -76,7 +76,7 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
 //  a: FLOAT; b: FLOAT): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
-function XTL_EmuIDirect3DDevice8_GetVertexShader(const pHandle: PDWORD): HRESULT; stdcall; // forward
+function XTL_EmuIDirect3DDevice8_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
 
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource;
   pBase: PVOID): HRESULT; stdcall;
@@ -1412,7 +1412,7 @@ begin
   Result := D3D_OK;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetBackBufferScale(x, y: Float); stdcall;
+procedure XTL_EmuIDirect3DDevice8_SetBackBufferScale(x, y: FLOAT); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1420,8 +1420,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetBackBufferScale' +
     #13#10'(' +
-    #13#10'   x                       :  0x%f' +
-    #13#10'   y                       :  0x%f' +
+    #13#10'   x                       :  %f' +
+    #13#10'   y                       :  %f' +
     #13#10');',
     [x, y]);
 {$ENDIF}
@@ -1434,8 +1434,8 @@ end;
 function XTL_EmuIDirect3DDevice8_GetVisibilityTestResult
 (
   Index: DWORD;
-  const pResult: PUINT;
-  const pTimeStamp: PULONGLONG
+  {CONST} pResult: PUINT;
+  {CONST} pTimeStamp: PULONGLONG
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -1750,7 +1750,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_SetGammaRamp
 (
   dwFlags: DWORD;
-  CONST pRamp: PX_D3DGAMMARAMP
+  {CONST} pRamp: PX_D3DGAMMARAMP
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -2416,7 +2416,7 @@ end;
 function XTL_EmuIDirect3DDevice8_GetTile
 (
   Index: DWORD;
-  const pTile: PX_D3DTILE
+  {CONST} pTile: PX_D3DTILE
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -2442,7 +2442,7 @@ end;
 function XTL_EmuIDirect3DDevice8_SetTileNoWait
 (
   Index: DWORD;
-  const pTile: PX_D3DTILE
+  {CONST} pTile: PX_D3DTILE
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -2659,7 +2659,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_SetPixelShaderConstant
 (
   Register_: DWORD;
-  const pConstantData: PVOID;
+  {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2682,7 +2682,7 @@ end;
 function XTL_EmuIDirect3DDevice8_SetVertexShaderConstant
 (
   Register_: INT;
-  const pConstantData: PVOID;
+  {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -4188,8 +4188,8 @@ end;
 
 function XTL_EmuIDirect3DDevice8_Present
 (
-    CONST pSourceRect: PRECT;
-    CONST pDestRect: PRECT;
+    {CONST} pSourceRect: PRECT;
+    {CONST} pDestRect: PRECT;
     pDummy1: PVOID;
     pDummy2: PVOID
 ): HRESULT; stdcall;
@@ -5850,6 +5850,7 @@ begin
   else
   begin
     Result := IDirect3DDevice8(g_pD3DDevice8)._Release();
+    // Dxbx addition - TODO : is this better ?
     if Result = 0 then
       g_pD3DDevice8 := nil;
   end;
@@ -7215,7 +7216,7 @@ end;
 function XTL_EmuIDirect3DDevice8_SetTransform
 (
   State: D3DTRANSFORMSTATETYPE;
-  const pMatrix: PD3DMATRIX
+  {CONST} pMatrix: PD3DMATRIX
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7859,7 +7860,7 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetMaterial
 (
-  const pMaterial: PD3DMATERIAL8
+  {CONST} pMaterial: PD3DMATERIAL8
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -8235,7 +8236,7 @@ end;
 
 function XTL_EmuIDirect3DDevice8_GetVertexShader
 (
-  const pHandle: PDWORD
+  {CONST} pHandle: PDWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -8369,7 +8370,7 @@ end;
 procedure XTL_EmuIDirect3DDevice8_RunVertexStateShader
 (
   Address: DWORD;
-  const pData: PFLOAT
+  {CONST} pData: PFLOAT
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -8391,7 +8392,7 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_LoadVertexShaderProgram
 (
-  const pFunction: PDWORD;
+  {CONST} pFunction: PDWORD;
   Address: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -8823,7 +8824,7 @@ function XTL_EmuIDirect3DDevice8_SetScissors
 (
   Count: DWORD;
   Exclusive: BOOL;
-  const pRects: PD3DRECT
+  {CONST} pRects: PD3DRECT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -8874,7 +8875,7 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetPixelShaderProgram
 (
-  CONST pPSDef: PX_D3DPIXELSHADERDEF
+  {CONST} pPSDef: PX_D3DPIXELSHADERDEF
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -8975,8 +8976,8 @@ end;
 function XTL_EmuIDirect3DDevice8_DrawRectPatch
 (
   Handle: UINT;
-  CONST pNumSegs: PFLOAT;
-  CONST pRectPatchInfo: PD3DRECTPATCH_INFO
+  {CONST} pNumSegs: PFLOAT;
+  {CONST} pRectPatchInfo: PD3DRECTPATCH_INFO
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
