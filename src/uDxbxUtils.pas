@@ -85,6 +85,7 @@ procedure ScanPCharLines(const aPChar: PAnsiChar; const aLineCallback: TLineCall
 function ScanHexByte(aLine: PAnsiChar; var Value: Integer): Boolean;
 function ScanHexWord(aLine: PAnsiChar; var Value: Integer): Boolean;
 function ScanHexDWord(aLine: PChar; var Value: Integer): Boolean;
+function HexToIntDef(const aLine: string; const aDefault: Integer): Integer;
 
 function Sscanf(const s: AnsiString; const fmt: AnsiString; const Pointers: array of Pointer): Integer;
 
@@ -462,6 +463,12 @@ end;
 function ScanHexDWord(aLine: PChar; var Value: Integer): Boolean;
 begin
   Result := _ScanHexDigits(aLine, Value, 8);
+end;
+
+function HexToIntDef(const aLine: string; const aDefault: Integer): Integer;
+begin
+  if not ScanHexDWord(PChar(aLine), Result) then
+    Result := aDefault;
 end;
 
 procedure ScanPCharLines(const aPChar: PAnsiChar; const aLineCallback: TLineCallback; const aCallbackData: Pointer);

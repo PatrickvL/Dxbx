@@ -264,12 +264,12 @@ begin
 
   // Cxbx TODO: yeah... we'll format... riiiiight
 
-  Result := True;
+  Result := TRUE;
 end;
 
-
+(*
 function XTL_EmuFindFirstFileA(lpFileName: PChar;{out}lpFindFileData: LPWIN32_FIND_DATA): HANDLE; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:?  Revision:?  Translator:PatrickvL  Done:100
 var
   szBuffer: PChar;
   szRoot: string;
@@ -281,10 +281,10 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuFindFirstFileA' +
     #13#10'(' +
-    #13#10'   lpFileName          : 0x%.08X (%s)' +
+    #13#10'   lpFileName          : 0x%.08X' +
     #13#10'   lpFindFileData      : 0x%.08X' +
     #13#10');',
-    [lpFileName, lpFileName, lpFindFileData]);
+    [lpFileName, lpFindFileData]);
 {$ENDIF}
 
     //
@@ -371,9 +371,8 @@ begin
 end;
 
 
-
 function XTL_EmuFindNextFileA(hFindFile: HANDLE; {out} lpFindFileData: LPWIN32_FIND_DATA): BOOL; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:?  Revision:?  Translator:PatrickvL  Done:100
 var
   bRet: BOOL;
 begin
@@ -410,11 +409,12 @@ begin
 
   Result := bRet;
 end;
+*)
 
 function XTL_EmuGetTimeZoneInformation
 (
   lpTimeZoneInformation: LPTIME_ZONE_INFORMATION
-  ): DWORD; stdcall;
+): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -432,6 +432,7 @@ begin
   EmuSwapFS(fsXBox);
 end;
 
+
 function XTL_EmuRtlCreateHeap
 (
   Flags: ULONG;
@@ -440,7 +441,7 @@ function XTL_EmuRtlCreateHeap
   Commit: SIZE_T;
   Lock: PVOID; // OPTIONAL
   RtlHeapParams: PVOID // OPTIONAL
-  ): PVOID; stdcall;
+): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   RtlHeapDefinition: RTL_HEAP_DEFINITION;
@@ -460,8 +461,9 @@ begin
     [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
 {$ENDIF}
 
-  ZeroMemory(@RtlHeapDefinition, SizeOf(RtlHeapDefinition));
-  RtlHeapDefinition.Length := SizeOf(RtlHeapDefinition);
+  ZeroMemory(@RtlHeapDefinition, sizeof(RtlHeapDefinition));
+
+  RtlHeapDefinition.Length := sizeof(RtlHeapDefinition);
 
   // Cxbx TODO : Find out how RtlHeapParams is defined on Xbox, and map this
   // as closely as possible to the native RTL_HEAP_PARAMETERS.
@@ -481,7 +483,7 @@ function XTL_EmuRtlAllocateHeap
   hHeap: HANDLE;
   dwFlags: DWORD;
   dwBytes: SIZE_T
-  ): PVOID; stdcall;
+): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
@@ -522,7 +524,7 @@ end;
 function XTL_EmuRtlFreeHeap
 (
   hHeap: HANDLE;
-  dwFlags: DWord;
+  dwFlags: DWORD;
   lpMem: PVOID
 ): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -555,7 +557,7 @@ end;
 function XTL_EmuRtlReAllocateHeap
 (
   hHeap: HANDLE;
-  dwFlags: DWord;
+  dwFlags: DWORD;
   lpMem: PVOID;
   dwBytes: SIZE_T
 ): PVOID; stdcall;
@@ -616,8 +618,9 @@ end;
 function XTL_EmuRtlSizeHeap
 (
   hHeap: HANDLE;
-  dwFlags: DWord;
-  lpMem: PVOID): SIZE_T; stdcall;
+  dwFlags: DWORD;
+  lpMem: PVOID
+): SIZE_T; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   offs: Byte;
@@ -709,12 +712,12 @@ begin
   end;
 {$ENDIF}
 
-  Result := True;
+  Result := TRUE;
 end;
 
 procedure XTL_EmuXInitDevices
 (
-    Unknown1: DWord; 
+    Unknown1: DWORD; 
     Unknown2: PVOID
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -740,7 +743,9 @@ begin
   end;
 
   for v := 0 to XINPUT_HANDLE_SLOTS - 1 do
+  begin
     g_hInputHandle[v] := 0;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -748,7 +753,7 @@ end;
 function XTL_EmuXGetDevices
 (
     DeviceType: PXPP_DEVICE_TYPE
-): DWord; stdcall;
+): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -780,7 +785,7 @@ function XTL_EmuXGetDeviceChanges
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
-  bFirst: BOOL = True;
+  bFirst: BOOL = TRUE;
 {$WRITEABLECONST OFF}
 begin
   EmuSwapFS(fsWindows);
@@ -795,15 +800,15 @@ begin
     [DeviceType, pdwInsertions, pdwRemovals]);
 {$ENDIF}
 
-  Result := False;
+  Result := FALSE;
 
   // Return 1 Controller Inserted initially, then no changes forever
   if bFirst then
   begin
     pdwInsertions^ := (1 shl 0);
     pdwRemovals^ := 0;
-    Result := True;
-    bFirst := False;
+    Result := TRUE;
+    bFirst := FALSE;
   end
   else
   begin
@@ -818,8 +823,8 @@ end;
 function XTL_EmuXInputOpen
 (
   DeviceType: PXPP_DEVICE_TYPE;
-  dwPort: DWord;
-  dwSlot: DWord;
+  dwPort: DWORD;
+  dwSlot: DWORD;
   pPollingParameters: PXINPUT_POLLING_PARAMETERS // OPTIONAL
 ): HANDLE; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -850,7 +855,7 @@ begin
       if (pPollingParameters <> NULL) then
       begin
         New({var XINPUT_POLLING_PARAMETERS}pPH.pPollingParameters);
-        memcpy(pPH.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
+        memcpy(pPH.pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
@@ -870,7 +875,7 @@ begin
           New({var XINPUT_POLLING_PARAMETERS}pPH.pPollingParameters);
         end;
 
-        memcpy(pPH.pPollingParameters, pPollingParameters, SizeOf(XINPUT_POLLING_PARAMETERS));
+        memcpy(pPH.pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
@@ -941,10 +946,10 @@ end;
 function XTL_EmuXInputPoll
 (
     hDevice: HANDLE
-): DWord; stdcall;
+): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  v: Integer;
+  v: int;
   pFeedback: PXINPUT_FEEDBACK;
   {pPH: PPOLLING_PARAMETERS_HANDLE;} // DXBX - pph never used
 begin
@@ -970,14 +975,14 @@ begin
       hDevice := g_pXInputSetStateStatus[v].hDevice;
 
       if hDevice = 0 then
-          Continue;
+          continue;
 
       g_pXInputSetStateStatus[v].dwLatency := 0;
 
       pFeedback := PXINPUT_FEEDBACK(g_pXInputSetStateStatus[v].pFeedback);
 
       if pFeedback = nil then
-          Continue;
+          continue;
 
       //
       // Only update slot if it has not already been updated
@@ -1004,11 +1009,11 @@ function XTL_EmuXInputGetCapabilities
 (
   hDevice: HANDLE;
   {OUT} pCapabilities: PXINPUT_CAPABILITIES
-): DWord; stdcall;
+): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPH: PPOLLING_PARAMETERS_HANDLE;
-  dwPort: DWord;
+  dwPort: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1033,7 +1038,7 @@ begin
     begin
       pCapabilities.SubType := XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 
-      ZeroMemory(@pCapabilities.In_.Gamepad, SizeOf(pCapabilities.In_.Gamepad));
+      ZeroMemory(@pCapabilities.In_.Gamepad, sizeof(pCapabilities.In_.Gamepad));
 
       Result := ERROR_SUCCESS;
     end;
@@ -1046,11 +1051,11 @@ function XTL_EmuXInputGetState
 (
     hDevice: HANDLE;
     {OUT} pState: PXINPUT_STATE
-): DWord; stdcall;
+): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPH: PPOLLING_PARAMETERS_HANDLE;
-  dwPort: DWord;
+  dwPort: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1071,13 +1076,13 @@ begin
   begin
     if (pPH.pPollingParameters <> NULL) then
     begin
-      if (pPH.pPollingParameters.fAutoPoll = Byte(False)) then
+      if (pPH.pPollingParameters.fAutoPoll = Byte(FALSE)) then
       begin
         //
         // Cxbx TODO: uh..
         //
 
-        EmuWarning('EmuXInputGetState : fAutoPoll = False');
+        EmuWarning('EmuXInputGetState : fAutoPoll == FALSE');
       end;
     end;
 
@@ -1100,12 +1105,12 @@ function XTL_EmuXInputSetState
 (
     hDevice: HANDLE;
     pFeedback: PXINPUT_FEEDBACK // IN OUT
-): DWord; stdcall;
+): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  ret: DWord;
+  ret: DWORD;
   pPH: PPOLLING_PARAMETERS_HANDLE;
-  v: Integer;
+  v: int;
   found: bool;
 
 begin
@@ -1131,13 +1136,13 @@ begin
     //
     // Check if this device is already being polled
     //
-    found := False;
+    found := false;
 
     for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
     begin
       if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
       begin
-        found := True;
+        found := true;
 
         if (pFeedback.Header.dwStatus = ERROR_SUCCESS) then
         begin
@@ -1354,8 +1359,8 @@ begin
 
   // call RtlCreateHeap
   begin
-    ZeroMemory(@HeapParameters, SizeOf(HeapParameters));
-    HeapParameters.Length := SizeOf(HeapParameters);
+    ZeroMemory(@HeapParameters, sizeof(HeapParameters));
+    HeapParameters.Length := sizeof(HeapParameters);
 
     EmuSwapFS(fsXbox);
 
@@ -1413,7 +1418,7 @@ begin
 end;
 *)
 
-procedure XTL_EmuXapiBootDash(UnknownA: DWord; UnknownB: DWord; UnknownC: DWord); stdcall;
+procedure XTL_EmuXapiBootDash(UnknownA: DWORD; UnknownB: DWORD; UnknownC: DWORD); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1901,8 +1906,8 @@ begin
 
   Result := GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, bWait);
 
-//  if (bWait)
-//    bRet = TRUE; // Sucker...
+//  if (bWait) then
+//    bRet := TRUE; // Sucker...
 
   EmuSwapFS(fsXbox);
 end;
@@ -2157,7 +2162,7 @@ begin
       [lpSemaphoreAttributes, lInitialCount, lMaximumCount, lpName]);
 {$ENDIF}
 
-  if (lpSemaphoreAttributes <> NULL) then
+  if Assigned(lpSemaphoreAttributes) then
     EmuWarning( 'lpSemaphoreAttributes != NULL' );
 
   Result := CreateSemaphoreA(NULL, lInitialCount, lMaximumCount, lpName);
@@ -2253,7 +2258,7 @@ procedure XTL_EmuRaiseException
   dwExceptionCode: DWORD;       // exception code
   dwExceptionFlags: DWORD;      // continuable exception flag
   nNumberOfArguments: DWORD;    // number of arguments
-  CONST lpArguments: PULONG_PTR // array of arguments
+  lpArguments: PULONG_PTR       // array of arguments
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -2381,8 +2386,8 @@ exports
   XTL_EmuCreateMutex,
   XTL_EmuCreateSemaphore,
   XTL_EmuDeleteFiber,
-  XTL_EmuFindFirstFileA,
-  XTL_EmuFindNextFileA,
+//  XTL_EmuFindFirstFileA,
+//  XTL_EmuFindNextFileA,
   XTL_EmuGetExitCodeThread,
   XTL_EmuGetOverlappedResult,
   XTL_EmuGetThreadPriority,
