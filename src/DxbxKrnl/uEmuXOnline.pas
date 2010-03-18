@@ -112,10 +112,10 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emusocket'
            '('
-           '   this                : $%.08X'
-           '   af                  : $%.08X'
-           '   ctype                : $%.08X'
-           '   protocol            : $%.08X'
+           '   this                : 0x%.08X'
+           '   af                  : 0x%.08X'
+           '   ctype                : 0x%.08X'
+           '   protocol            : 0x%.08X'
            ');',
            [this, af, ctype, protocol);
 {$ENDIF}
@@ -135,10 +135,10 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emubind'
            '('
-           '   this                : $%.08X'
-           '   s                   : $%.08X'
-           '   name                : $%.08X'
-           '   namelen             : $%.08X'
+           '   this                : 0x%.08X'
+           '   s                   : 0x%.08X'
+           '   name                : 0x%.08X'
+           '   namelen             : 0x%.08X'
            ');',
            [this, s, name, namelen);
 {$ENDIF}
@@ -160,9 +160,9 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emulisten'
            '('
-           '   this                : $%.08X'
-           '   s                   : $%.08X'
-           '   listen              : $%.08X'
+           '   this                : 0x%.08X'
+           '   s                   : 0x%.08X'
+           '   listen              : 0x%.08X'
            ');',
            [this, s, backlog);
 {$ENDIF}
@@ -184,10 +184,10 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuXapi : EmuThis.Emuioctlsocket'
            '('
-           '   this                : $%.08X'
-           '   s                   : $%.08X'
-           '   cmd                 : $%.08X'
-           '   argp                : $%.08X'
+           '   this                : 0x%.08X'
+           '   s                   : 0x%.08X'
+           '   cmd                 : 0x%.08X'
+           '   argp                : 0x%.08X'
            ');',
            [this, s, cmd, argp]);
 {$ENDIF}

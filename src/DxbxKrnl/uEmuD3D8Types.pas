@@ -31,28 +31,38 @@ uses
   uTypes;
 
 type
-  XTL_PIDirect3D8 = type Pointer;
+  // C++ nearly always works with pointer-to-interface, while Delphi's interfaces are already reference-types.
+  // To simulate C++ behaviour, define an empty structure here, so we can declare a normal pointer to that as
+  // a base for all the following interface-type declarations :
+  CInterface = record end;
+  // C++ does no reference-counting on interfaces, so translations to Delphi shouldn't do that either;
+  // We realise this by using fake interface-types, all based on 'PInterface' which is just a plain pointer :
+  PInterface = ^CInterface;
 
-  XTL_PIDirect3DDevice8 = type Pointer;
+  LPUNKNOWN = type PInterface;
+
+  XTL_PIDirect3D8 = type PInterface;
+
+  XTL_PIDirect3DDevice8 = type PInterface;
   XTL_PPIDirect3DDevice8 = ^XTL_PIDirect3DDevice8;
 
-  XTL_PIDirectDraw7 = type Pointer;
-  XTL_PIDirectDrawSurface7 = type Pointer;
+  XTL_PIDirectDraw7 = type PInterface;
+  XTL_PIDirectDrawSurface7 = type PInterface;
 
-  XTL_PIDirect3DResource8 = type Pointer;
-  XTL_PIDirect3DBaseTexture8 = type Pointer;
-  XTL_PIDirect3DTexture8 = type Pointer;
-  XTL_PIDirect3DVolumeTexture8 = type Pointer;
-  XTL_PIDirect3DCubeTexture8 = type Pointer;
-  XTL_PIDirect3DSurface8 = type Pointer;
-  XTL_PIDirect3DVertexBuffer8 = type Pointer;
-  XTL_PIDirect3DIndexBuffer8 = type Pointer;
+  XTL_PIDirect3DResource8 = type PInterface;
+  XTL_PIDirect3DBaseTexture8 = type PInterface;
+  XTL_PIDirect3DTexture8 = type PInterface;
+  XTL_PIDirect3DVolumeTexture8 = type PInterface;
+  XTL_PIDirect3DCubeTexture8 = type PInterface;
+  XTL_PIDirect3DSurface8 = type PInterface;
+  XTL_PIDirect3DVertexBuffer8 = type PInterface;
+  XTL_PIDirect3DIndexBuffer8 = type PInterface;
 
-  XTL_PIDirectDrawClipper = type Pointer;
+  XTL_PIDirectDrawClipper = type PInterface;
 
-  XTL_PIDirectSound8 = type Pointer;
-  XTL_PIDirectSoundBuffer = type Pointer;
-  XTL_PIDirectSoundBuffer8 = type Pointer;
+  XTL_PIDirectSound8 = type PInterface;
+  XTL_PIDirectSoundBuffer = type PInterface;
+  XTL_PIDirectSoundBuffer8 = type PInterface;
 
   XTL_LPDIRECT3D8 = XTL_PIDirect3D8;
   XTL_LPDIRECTDRAW7 = XTL_PIDirectDraw7;
