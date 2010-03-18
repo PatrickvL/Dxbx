@@ -4414,10 +4414,10 @@ begin
         sprintf(szString, 'CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
 
         if ( dwSize <> 0 ) then
-          CxbxKrnlCleanup( szString )
+          CxbxKrnlCleanup( String(szString) )
         else
         begin
-          EmuWarning( szString );
+          EmuWarning( String(szString) );
           EmuSwapFS(fsXbox);
           Result := hRet;
           Exit;

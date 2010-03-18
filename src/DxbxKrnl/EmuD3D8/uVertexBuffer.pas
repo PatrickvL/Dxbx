@@ -576,282 +576,279 @@ var
   dwPosOrig: DWORD;
   dwPosNew: DWORD;
   uiType: UINT;
-
+  dwPacked: DWORD;
 begin
-    pStream := nil;
+  pStream := nil;
 
-    // FVF buffers doesn't have Xbox extensions, but texture coordinates may
-    // need normalization if used with linear textures.
-    if (not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
+  // FVF buffers doesn't have Xbox extensions, but texture coordinates may
+  // need normalization if used with linear textures.
+  if (not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
+  begin
+    if (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) > 0 then
     begin
-      if (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) > 0 then
-      begin
-        Result := NormalizeTexCoords(pPatchDesc, uiStream);
-        Exit;
-      end
-      else
-      begin
-        Result := False;
-        Exit;
-      end;
-    end;
-
-    if not (Assigned(m_pDynamicPatch)) or (not m_pDynamicPatch.pStreamPatches[uiStream].NeedPatch) then
+      Result := NormalizeTexCoords(pPatchDesc, uiStream);
+      Exit;
+    end
+    else
     begin
       Result := False;
       Exit;
     end;
+  end;
 
-    // Do some groovey patchin'
-    
-    pStreamPatch := @m_pDynamicPatch.pStreamPatches[uiStream];
+  if not (Assigned(m_pDynamicPatch)) or (not m_pDynamicPatch.pStreamPatches[uiStream].NeedPatch) then
+  begin
+    Result := False;
+    Exit;
+  end;
 
-    if not Assigned(pPatchDesc.pVertexStreamZeroData) then
+  // Do some groovey patchin'
+
+  pStreamPatch := @m_pDynamicPatch.pStreamPatches[uiStream];
+
+  if not Assigned(pPatchDesc.pVertexStreamZeroData) then
+  begin
+    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, uiStride);
+    if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(Desc))) then
     begin
-        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, uiStride);
-        if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(Desc))) then
-        begin
-          CxbxKrnlCleanup('Could not retrieve original buffer size');
-        end;
-        // Set a new (exact) vertex count
-        pPatchDesc.dwVertexCount := Desc.Size div uiStride;
-        dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
-
-        if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, PByte(pOrigData), 0))) then
-        begin
-          CxbxKrnlCleanup('Couldn`t lock the original buffer');
-        end;
-        IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, dwNewSize, 0, 0, D3DPOOL_MANAGED, @pNewVertexBuffer);
-        if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, PByte(pNewData), 0))) then
-        begin
-          CxbxKrnlCleanup('Couldn`t lock the new buffer');
-        end;
-        if not Assigned(pStream.pOriginalStream) then
-        begin
-            // The stream was not previously patched, we'll need this when restoring
-            pStream.pOriginalStream := pOrigVertexBuffer;
-        end;
-    end
-    else
-    begin
-        // There should only be one stream (stream zero) in this case
-        if (uiStream <> 0) then
-        begin
-            CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
-        end;
-        uiStride  := pPatchDesc.uiVertexStreamZeroStride;
-        pOrigData := pPatchDesc.pVertexStreamZeroData;
-        // Cxbx TODO: This is sometimes the number of indices, which isn't too good
-        dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
-        pNewVertexBuffer := nil;
-        pNewData := CxbxMalloc(dwNewSize);
-        if not Assigned(pNewData) then
-        begin
-           CxbxKrnlCleanup('Couldn`t allocate the new stream zero buffer');
-        end;
+      CxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
+    // Set a new (exact) vertex count
+    pPatchDesc.dwVertexCount := Desc.Size div uiStride;
+    dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
 
-    for uiVertex := 0 to pPatchDesc.dwVertexCount - 1 do
+    if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, PByte(pOrigData), 0))) then
     begin
-        (*dwPosOrig := 0;
-        dwPosNew := 0;
-        for uiType := 0 to pStreamPatch.NbrTypes - 1 do
-        begin
-            case(pStreamPatch.pTypes[uiType]) of
-                 $12: begin // FLOAT1
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride + dwPosOrig],
-                           SizeOf(FLOAT));
-                    dwPosOrig:= dwPosOrig + SizeOf(FLOAT);
-                    dwPosNew := dwPosNew + SizeOf(FLOAT);
-                    end;
-                 $22: begin // FLOAT2
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride + dwPosOrig],
-                           2 * SizeOf(FLOAT));
-                    dwPosOrig:= dwPosOrig + 2 * SizeOf(FLOAT);
-                    dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
-                    end;
-                 $32: begin // FLOAT3
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride + dwPosOrig],
-                           3 * SizeOf(FLOAT));
-                    dwPosOrig:= dwPosOrig + 3 * SizeOf(FLOAT);
-                    dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
-                    end;
-                 $42: begin // FLOAT4
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride + dwPosOrig],
-                           4 * SizeOf(FLOAT));
-                    dwPosOrig:= dwPosOrig + 4 * SizeOf(FLOAT);
-                    dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
-                    end;
-                 $40: begin // D3DCOLOR
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride + dwPosOrig],
-                           SizeOf(XTL.D3DCOLOR));
-                    dwPosOrig:= dwPosOrig + SizeOf(XTL.D3DCOLOR);
-                    dwPosNew := dwPosNew + SizeOf(XTL.D3DCOLOR);
-                    end;
-                 $16: begin //NORMPACKED3
-                        DWORD dwPacked := ((DWORD )@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
+      CxbxKrnlCleanup('Couldn`t lock the original buffer');
+    end;
+    IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, dwNewSize, 0, 0, D3DPOOL_MANAGED, @pNewVertexBuffer);
+    if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, PByte(pNewData), 0))) then
+    begin
+      CxbxKrnlCleanup('Couldn`t lock the new buffer');
+    end;
+    if not Assigned(pStream.pOriginalStream) then
+    begin
+      // The stream was not previously patched, we'll need this when restoring
+      pStream.pOriginalStream := pOrigVertexBuffer;
+    end;
+  end
+  else
+  begin
+    // There should only be one stream (stream zero) in this case
+    if (uiStream <> 0) then
+    begin
+      CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
+    end;
+    uiStride  := pPatchDesc.uiVertexStreamZeroStride;
+    pOrigData := pPatchDesc.pVertexStreamZeroData;
+    // Cxbx TODO: This is sometimes the number of indices, which isn't too good
+    dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
+    pNewVertexBuffer := nil;
+    pNewData := CxbxMalloc(dwNewSize);
+    if not Assigned(pNewData) then
+    begin
+      CxbxKrnlCleanup('Couldn`t allocate the new stream zero buffer');
+    end;
+  end;
 
-                        ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)(dwPacked and $7ff)) / 1023.0f;
-                        ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((dwPacked shr 11) and $7ff)) / 1023.0f;
-                        ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((dwPacked shr 22) and $3ff)) / 511.0f;
+  for uiVertex := 0 to pPatchDesc.dwVertexCount - 1 do
+  begin
+    dwPosOrig := 0;
+    dwPosNew := 0;
+    for uiType := 0 to pStreamPatch.NbrTypes - 1 do
+    begin
+      case(pStreamPatch.pTypes[uiType]) of
+           $12: begin // FLOAT1
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride + dwPosOrig],
+                     SizeOf(FLOAT));
+              dwPosOrig:= dwPosOrig + SizeOf(FLOAT);
+              dwPosNew := dwPosNew + SizeOf(FLOAT);
+              end;
+           $22: begin // FLOAT2
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride + dwPosOrig],
+                     2 * SizeOf(FLOAT));
+              dwPosOrig:= dwPosOrig + 2 * SizeOf(FLOAT);
+              dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
+              end;
+           $32: begin // FLOAT3
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride + dwPosOrig],
+                     3 * SizeOf(FLOAT));
+              dwPosOrig:= dwPosOrig + 3 * SizeOf(FLOAT);
+              dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
+              end;
+           $42: begin // FLOAT4
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride + dwPosOrig],
+                     4 * SizeOf(FLOAT));
+              dwPosOrig:= dwPosOrig + 4 * SizeOf(FLOAT);
+              dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
+              end;
+           $40: begin // D3DCOLOR
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride + dwPosOrig],
+                     SizeOf(D3DCOLOR));
+              dwPosOrig:= dwPosOrig + SizeOf(D3DCOLOR);
+              dwPosNew := dwPosNew + SizeOf(D3DCOLOR);
+              end;
+           $16: begin //NORMPACKED3
+                  (*DWORD dwPacked := ((DWORD )@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
 
-                        dwPosOrig:= dwPosOrig + SizeOf(DWORD);
-                        dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
-                   end;
-                 $15: begin// SHORT1
-                    // Make it a SHORT2
-                    (((SmallInt )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 0 * SizeOf(SmallInt)])) := *(SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig];
-                    (((SmallInt )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 1 * SizeOf(SmallInt)])) := $00;
+                  ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)(dwPacked and $7ff)) / 1023.0f;
+                  ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((dwPacked shr 11) and $7ff)) / 1023.0f;
+                  ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((dwPacked shr 22) and $3ff)) / 511.0f; *)
 
-                    dwPosOrig:= dwPosOrig + 1 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 2 * SizeOf(SmallInt);
-
-                    end;
-                 $25: begin // SHORT2
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride+dwPosOrig],
-                           2 * SizeOf(SmallInt));
-                    dwPosOrig:= dwPosOrig + 2 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 2 * SizeOf(SmallInt);
-                    end;
-                 $35: begin // SHORT3
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride + dwPosOrig],
-                           3 * SizeOf(SmallInt));
-                    // Make it a SHORT4 and set the last short to 1
-                    (((SmallInt )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 3 * SizeOf(SmallInt)])) := $01;
-
-                    dwPosOrig:= dwPosOrig + 3 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 4 * SizeOf(SmallInt);
-
-                    end;
-                 $45: begin // SHORT4
-                    memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
-                           @pOrigData[uiVertex * uiStride + dwPosOrig],
-                           4 * SizeOf(SmallInt));
-                    dwPosOrig:= dwPosOrig + 4 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 4 * SizeOf(SmallInt);
-                    end;
-                 $14: begin // PBYTE1
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-
-                    dwPosOrig:= dwPosOrig + 1 * SizeOf(BYTE);
-                    dwPosNew := dwPosNew + 1 * SizeOf(FLOAT);
-
-                    end;
-                 $24: begin // PBYTE2
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-
-                    dwPosOrig:= dwPosOrig + 2 * SizeOf(BYTE);
-                    dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
-
-                    end;
-                 $34: begin // PBYTE3
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
-
-                    dwPosOrig:= dwPosOrig + 3 * SizeOf(BYTE);
-                    dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
-
-                    end;
-                 $44: begin // PBYTE4
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 255.0f;
-
-                    dwPosOrig:= dwPosOrig + 4 * SizeOf(BYTE);
-                    dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
-
-                    end;
-                 $11: begin // NORMSHORT1
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-
-                    dwPosOrig:= dwPosOrig + 1 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 1 * SizeOf(FLOAT);
-                    end;
-                 $21: begin // NORMSHORT2
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-
-                    dwPosOrig:= dwPosOrig + 2 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
-                    end;
-                 $31: begin // NORMSHORT3
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
-
-                    dwPosOrig:= dwPosOrig + 3 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
-                    end;
-                 $41: begin// NORMSHORT4
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 32767.0f;
-
-                    dwPosOrig:= dwPosOrig + 4 * SizeOf(SmallInt);
-                    dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
-                    end;
-                 $72: begin// FLOAT2H
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[1];
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := 0.0f;
-                    ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[2];
-
-                (*Cxbx TODO
-                 $02:
-{$IFDEF DEBUG}
-                    printf('D3DVSDT_NONE / xbox ext. nsp /');
-{$ENDIF}
-                    dwNewDataType := $FF;
-                    end;
-                default:
-                    CxbxKrnlCleanup('Unhandled stream type: 0x%.02X', pStreamPatch.pTypes[uiType]);
-                    end;
+                  dwPosOrig:= dwPosOrig + SizeOf(DWORD);
+                  dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
              end;
-         end; *)
-    end;
-    if not Assigned(pPatchDesc.pVertexStreamZeroData) then
-    begin
-        IDirect3DVertexBuffer8(pNewVertexBuffer).Unlock();
-        IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
+           $15: begin// SHORT1
+              (*// Make it a SHORT2
+              (((SmallInt )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 0 * SizeOf(SmallInt)])) := *(SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig];
+              (((SmallInt )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 1 * SizeOf(SmallInt)])) := $00; *)
 
-        if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), pStreamPatch.ConvertedStride))) then
-        begin
-            CxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
-        end;
-        if Assigned(pStream.pPatchedStream) then
-        begin
-            // The stream was already primitive patched, release the previous vertex buffer to avoid memory leaks
-            IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release();
-        end;
-        pStream.pPatchedStream := pNewVertexBuffer;
-    end
-    else
-    begin
-        pPatchDesc.pVertexStreamZeroData := pNewData;
-        pPatchDesc.uiVertexStreamZeroStride := pStreamPatch.ConvertedStride;
-        if ( not m_bAllocatedStreamZeroData) then
-        begin
-            // The stream was not previously patched. We'll need this when restoring
-            m_bAllocatedStreamZeroData := True;
-            m_pNewVertexStreamZeroData := pNewData;
-        end;
-    end;
-    pStream.uiOrigStride := uiStride;
-    pStream.uiNewStride := pStreamPatch.ConvertedStride;
-    m_bPatched := True;
+              dwPosOrig:= dwPosOrig + 1 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 2 * SizeOf(SmallInt);
+              end;
+           $25: begin // SHORT2
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride+dwPosOrig],
+                     2 * SizeOf(SmallInt));
+              dwPosOrig:= dwPosOrig + 2 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 2 * SizeOf(SmallInt);
+              end;
+           $35: begin // SHORT3
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride + dwPosOrig],
+                     3 * SizeOf(SmallInt));
+              // Make it a SHORT4 and set the last short to 1
+              (*(((SmallInt )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 3 * SizeOf(SmallInt)])) := $01; *)
 
-    Result := True;
+              dwPosOrig:= dwPosOrig + 3 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 4 * SizeOf(SmallInt);
+              end;
+           $45: begin // SHORT4
+              memcpy(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew],
+                     @pOrigData[uiVertex * uiStride + dwPosOrig],
+                     4 * SizeOf(SmallInt));
+              dwPosOrig:= dwPosOrig + 4 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 4 * SizeOf(SmallInt);
+              end;
+           $14: begin // PBYTE1
+             (* ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f; *)
+
+              dwPosOrig:= dwPosOrig + 1 * SizeOf(BYTE);
+              dwPosNew := dwPosNew + 1 * SizeOf(FLOAT);
+              end;
+           $24: begin // PBYTE2
+             (* ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
+
+              dwPosOrig:= dwPosOrig + 2 * SizeOf(BYTE);
+              dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
+               *)
+              end;
+           $34: begin // PBYTE3
+            (*  ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f; *)
+
+              dwPosOrig:= dwPosOrig + 3 * SizeOf(BYTE);
+              dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
+              end;
+           $44: begin // PBYTE4
+             (* ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ((FLOAT)((BYTE)@pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 255.0f;   *)
+
+              dwPosOrig:= dwPosOrig + 4 * SizeOf(BYTE);
+              dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
+              end;
+           $11: begin // NORMSHORT1
+             (* ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f; *)
+
+              dwPosOrig:= dwPosOrig + 1 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 1 * SizeOf(FLOAT);
+              end;
+           $21: begin // NORMSHORT2
+            (*  ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f; *)
+
+              dwPosOrig:= dwPosOrig + 2 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 2 * SizeOf(FLOAT);
+              end;
+           $31: begin // NORMSHORT3
+            (*  ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f; *)
+
+              dwPosOrig:= dwPosOrig + 3 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 3 * SizeOf(FLOAT);
+              end;
+           $41: begin// NORMSHORT4
+             (* ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ((FLOAT)((SmallInt)@pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 32767.0f; *)
+
+              dwPosOrig:= dwPosOrig + 4 * SizeOf(SmallInt);
+              dwPosNew := dwPosNew + 4 * SizeOf(FLOAT);
+              end;
+           $72: begin// FLOAT2H
+              (*((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[1];
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := 0.0f;
+              ((FLOAT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := ((FLOAT)@pOrigData[uiVertex * uiStride + dwPosOrig])[2]; *)
+
+          (*Cxbx TODO
+           $02:
+{$IFDEF DEBUG}
+              printf('D3DVSDT_NONE / xbox ext. nsp /');
+{$ENDIF}
+              dwNewDataType := $FF; *)
+              end;
+          else
+          begin
+            CxbxKrnlCleanup('Unhandled stream type: 0x%.02X', [pStreamPatch.pTypes[uiType]]);
+          end;
+       end;
+    end;
+  end;
+
+  if not Assigned(pPatchDesc.pVertexStreamZeroData) then
+  begin
+    IDirect3DVertexBuffer8(pNewVertexBuffer).Unlock();
+    IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
+
+    if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), pStreamPatch.ConvertedStride))) then
+    begin
+      CxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
+    end;
+    if Assigned(pStream.pPatchedStream) then
+    begin
+      // The stream was already primitive patched, release the previous vertex buffer to avoid memory leaks
+      IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release();
+    end;
+    pStream.pPatchedStream := pNewVertexBuffer;
+  end
+  else
+  begin
+    pPatchDesc.pVertexStreamZeroData := pNewData;
+    pPatchDesc.uiVertexStreamZeroStride := pStreamPatch.ConvertedStride;
+    if ( not m_bAllocatedStreamZeroData) then
+    begin
+      // The stream was not previously patched. We'll need this when restoring
+      m_bAllocatedStreamZeroData := True;
+      m_pNewVertexStreamZeroData := pNewData;
+    end;
+  end;
+  pStream.uiOrigStride := uiStride;
+  pStream.uiNewStride := pStreamPatch.ConvertedStride;
+  m_bPatched := True;
+
+  Result := True;
 end;
 
 function XTL_VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
