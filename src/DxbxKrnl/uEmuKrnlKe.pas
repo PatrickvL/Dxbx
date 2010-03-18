@@ -238,7 +238,7 @@ function xboxkrnl_KeDelayExecutionThread
 var
   ret: NTSTATUS;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeDelayExecutionThread'+
@@ -252,7 +252,7 @@ begin
 
 
   ret := NtDelayExecution(Alertable, PLARGE_INTEGER(Interval));
-  EmuSwapFS();   // Xbox FS
+  EmuSwapFS(fsXbox);
   Result := ret;
 end;
 
@@ -506,7 +506,7 @@ function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall;
 var
   Counter: LARGE_INTEGER;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
@@ -514,7 +514,7 @@ begin
 
   QueryPerformanceCounter({var}Counter);
 
-  EmuSwapFS();   // Xbox FS
+  EmuSwapFS(fsXbox);
 
   Result := Counter.QuadPart;
 end;
@@ -524,7 +524,7 @@ function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall;
 var
   Frequency: LARGE_INTEGER;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency()');
@@ -533,7 +533,7 @@ begin
   // Xbox Performance Counter Frequency := 337F98h
   QueryPerformanceFrequency({var}Frequency);
 
-  EmuSwapFS();   // Xbox FS
+  EmuSwapFS(fsXbox);
   Result := Frequency.QuadPart;
 end;
 
@@ -545,7 +545,7 @@ procedure xboxkrnl_KeQuerySystemTime
 var
   SystemTime: _SYSTEMTIME;
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : KeQuerySystemTime'+
@@ -561,7 +561,7 @@ begin
 
   SystemTimeToFileTime({var}SystemTime, {var}PFILETIME(CurrentTime)^);
 
-  EmuSwapFS();   // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 // KeRaiseIrqlToDpcLevel:
@@ -571,13 +571,13 @@ end;
 function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel()');
 
   // I really tried to avoid adding this...
 
-  EmuSwapFS();
+  EmuSwapFS(fsXbox);
 
   Result := 0;
 end;

@@ -20,6 +20,8 @@ unit uPushBuffer;
 
 {$INCLUDE Dxbx.inc}
 
+{.$define _DEBUG_TRACK_PB}
+
 interface
 
 uses
@@ -34,6 +36,7 @@ uses
   // Dxbx
   , uTypes
   , uDxbxUtils // iif
+  , uResourceTracker
   , uVertexBuffer
   , uEmu
   , uEmuXG
@@ -56,6 +59,9 @@ var
 
 procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
 procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall; // forward
+{$IFDEF _DEBUG_TRACK_PB}
+procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD);
+{$ENDIF}
 
 implementation
 
@@ -215,6 +221,10 @@ var
   pdwOrigPushData: PDWORD;
   bShowPB: bool;
   s: uint;
+  pActiveVB: XTL_PIDirect3DVertexBuffer8;
+  VBDesc: D3DVERTEXBUFFER_DESC;
+  pVBData: PBYTE;
+  uiStride: UINT;
 {$endif}
 
 begin
@@ -238,7 +248,8 @@ begin
   XTL_EmuUpdateDeferredStates();
 
 {$ifdef _DEBUG_TRACK_PB}
-  bShowPB := False;
+  bShowPB := false;
+
   g_PBTrackTotal.insert(pdwPushData);
 
   if (g_PBTrackShowOnce.exists(pdwPushData)) then
@@ -372,8 +383,8 @@ begin
       if (bShowPB) then
       begin
         printf('NVPB_InlineVertexArray(...)');
-        printf('  dwCount : %d', dwCount);
-        printf('  dwVertexShader : 0x%08X', dwVertexShader);
+        printf('  dwCount : %d', [dwCount]);
+        printf('  dwVertexShader : 0x%08X', [dwVertexShader]);
       end;
       {$endif}
 
@@ -413,7 +424,7 @@ begin
       {$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
-        printf('  NVPB_FixLoop(%d)', dwCount);
+        printf('  NVPB_FixLoop(%d)', [dwCount]);
         printf('');
         printf('  Index Array Data...');
 
@@ -423,7 +434,7 @@ begin
         begin
           if (s mod 8 = 0) then printf('  ');
 
-          printf('  %.04X', pwVal^); Inc(pwVal);
+          printf('  %.04X', [pwVal^]); Inc(pwVal);
         end;
 
         printf('');
@@ -541,7 +552,7 @@ begin
 
         pwVal := PWORD(pIndexData);
 
-        for uint s :=0 to dwCount - 1 do
+        for s := 0 to dwCount - 1 do
         begin
           if (s mod 8) = 0 then printf(#13#10'  ');
 
@@ -552,39 +563,37 @@ begin
         printf(#13#10);
 {$ENDIF}
 
-        XTL.IDirect3DVertexBuffer8 *pActiveVB := 0;
-
-        D3DVERTEXBUFFER_DESC VBDesc;
+        pActiveVB := nil;
 
         pVBData := nil;
 
         // retrieve stream data
-        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), @uiStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @pActiveVB, {out}uiStride);
 
         // retrieve stream desc
-        pActiveVB.GetDesc(@VBDesc);
+        IDirect3DVertexBuffer8(pActiveVB).GetDesc({out}VBDesc);
 
         // unlock just in case
-        pActiveVB.Unlock();
+        IDirect3DVertexBuffer8(pActiveVB).Unlock();
 
         // grab ptr
-        pActiveVB.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
+        IDirect3DVertexBuffer8(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
 
         // print out stream data
         begin
 {$IFDEF DEBUG}
           printf('');
-          printf('  Vertex Stream Data (0x%.08X)...', pActiveVB);
+          printf('  Vertex Stream Data (0x%.08X)...', [pActiveVB]);
           printf('');
-          printf('  Format : %d', VBDesc.Format);
-          printf('  Size   : %d bytes', VBDesc.Size);
-          printf('  FVF    : 0x%.08X', VBDesc.FVF);
+          printf('  Format : %d', [Ord(VBDesc.Format)]);
+          printf('  Size   : %d bytes', [VBDesc.Size]);
+          printf('  FVF    : 0x%.08X', [VBDesc.FVF]);
           printf('');
 {$ENDIF}
         end;
 
         // release ptr
-        pActiveVB.Unlock();
+        IDirect3DVertexBuffer8(pActiveVB).Unlock();
 
         DbgDumpMesh(PWORD(pIndexData), dwCount);
       end;
@@ -694,7 +703,7 @@ begin
     printf('');
     printf('CxbxDbg> ');
 {$ENDIF}
-    fflush(stdout);
+    //fflush(stdout);
   end;
 {$endif}
 
@@ -709,7 +718,7 @@ end;
 {$IFDEF _DEBUG_TRACK_PB}
 
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD);
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:10
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:99
 var
   pActiveVB: XTL_PIDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
@@ -719,29 +728,37 @@ var
   pwVal: PWORD;
   maxIndex: uint32;
   pwChk: PWORD;
-  dbgVertices: PFile;
-
+  chk: uint;
+  x: DWORD;
+  dbgVertices: PFILE;
+  max: uint;
+  v: uint;
+  a: DWORD;
+  b: DWORD;
+  c: DWORD;
+  la, lb, lc: DWORD;
+  i: uint;
 begin
   if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
     Exit;
 
   pActiveVB := NULL;
 
-  pVBData = nil;
+  pVBData := nil;
   
   // retrieve stream data
-  IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, {out}IDirect3DVertexBuffer8(pActiveVB), uiStride);
+  IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @pActiveVB, {out}uiStride);
   sprintf(@szFileName[0], 'C:\CxbxMesh-0x%.08X.x', [pIndexData]);
   dbgVertices := fopen(szFileName, 'wt');
 
     // retrieve stream desc
-  pActiveVB.GetDesc(@VBDesc);
+  IDirect3DVertexBuffer8(pActiveVB).GetDesc({out}VBDesc);
 
     // unlock just in case
-  pActiveVB.Unlock();
+  IDirect3DVertexBuffer8(pActiveVB).Unlock();
 
     // grab ptr
-  pActiveVB.Lock(0, 0, @pVBData, D3DLOCK_READONLY);
+  IDirect3DVertexBuffer8(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
 
     // print out stream data
   begin
@@ -751,25 +768,25 @@ begin
 
     for chk := 0 to dwCount - 1 do
     begin
-      x = pwChk^; Inc(pwChk);
+      x := pwChk^; Inc(pwChk);
 
       if (x > maxIndex) then
         maxIndex := x;
     end;
 
-    if (maxIndex > ((VBDesc.Size / uiStride) - 1)) then
-      maxIndex := (VBDesc.Size / uiStride) - 1;
+    if (maxIndex > ((VBDesc.Size div uiStride) - 1)) then
+      maxIndex := (VBDesc.Size div uiStride) - 1;
 
 {$IFDEF DEBUG}
     fprintf(dbgVertices, 'xof 0303txt 0032');
     fprintf(dbgVertices, '');
     fprintf(dbgVertices, '//'#13#10);
-    fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...'#13#10, pActiveVB);
+    fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...'#13#10, [pActiveVB]);
     fprintf(dbgVertices, '//'#13#10);
-    fprintf(dbgVertices, '//  Format : %d'#13#10, VBDesc.Format);
-    fprintf(dbgVertices, '//  Size   : %d bytes'#13#10, VBDesc.Size);
-    fprintf(dbgVertices, '//  FVF    : 0x%.08X'#13#10, VBDesc.FVF);
-    fprintf(dbgVertices, '//  iCount : %d'#13#10, dwCount / 2);
+    fprintf(dbgVertices, '//  Format : %d'#13#10, [Ord(VBDesc.Format)]);
+    fprintf(dbgVertices, '//  Size   : %d bytes'#13#10, [VBDesc.Size]);
+    fprintf(dbgVertices, '//  FVF    : 0x%.08X'#13#10, [VBDesc.FVF]);
+    fprintf(dbgVertices, '//  iCount : %d'#13#10, [dwCount div 2]);
     fprintf(dbgVertices, '//'#13#10);
     fprintf(dbgVertices, '');
     fprintf(dbgVertices, 'Frame SCENE_ROOT {');
@@ -791,45 +808,45 @@ begin
     fprintf(dbgVertices, '    }');
     fprintf(dbgVertices, '');
     fprintf(dbgVertices, '    Mesh {');
-    fprintf(dbgVertices, '      %d;', maxIndex + 1);
+    fprintf(dbgVertices, '      %d;', [maxIndex + 1]);
 {$ENDIF}
 
-    uint max := maxIndex + 1;
-    for uint v := 0 to max -1 do
+    max := maxIndex + 1;
+    for v := 0 to max -1 do
     begin
 {$IFDEF DEBUG}
-      fprintf(dbgVertices, '      %f;%f;%f;%s',
-        * (FLOAT)@pVBData[v * uiStride + 0],
-        * (FLOAT)@pVBData[v * uiStride + 4],
-        * (FLOAT)@pVBData[v * uiStride + 8],
-        (v < (max - 1))? ',': ';');
+      fprintf(dbgVertices, '      %f;%f;%f;%s', [
+        PFLOAT(@pVBData[v * uiStride + 0]),
+        PFLOAT(@pVBData[v * uiStride + 4]),
+        PFLOAT(@pVBData[v * uiStride + 8]),
+        iif(v < (max - 1), ',', ';')]);
 {$ENDIF}
     end;
 
 {$IFDEF DEBUG}
-    fprintf(dbgVertices, '      %d;', dwCount - 2);
+    fprintf(dbgVertices, '      %d;', [dwCount - 2]);
 {$ENDIF}
 
     pwVal := PWORD(pIndexData);
 
     max := dwCount;
 
-    DWord a := pwVal^; Inc(pwVal);
-    DWord b := pwVal^; Inc(pwVal);
-    DWord c := pwVal^; Inc(pwVal);
+    a := pwVal^; Inc(pwVal);
+    b := pwVal^; Inc(pwVal);
+    c := pwVal^; Inc(pwVal);
 
-    DWord la := a, lb = b, lc = c;
+    la := a; lb := b; lc := c;
 
-    for (uint i := 2; i < max; i++)
+    for i := 2 to max - 1 do
     begin
 {$IFDEF DEBUG}
       fprintf(dbgVertices, '      3;%d,%d,%d;%s',
-        a, b, c, (i < (max - 1))? ',': ';');
+        [a, b, c, iif(i < (max - 1), ',', ';')]);
 {$ENDIF}
 
       a := b;
       b := c;
-      c  := pwVal^; Inc(pwVal);
+      c := pwVal^; Inc(pwVal);
 
       la := a;
       lb := b;
@@ -842,11 +859,11 @@ begin
     fprintf(dbgVertices, '}');
 {$ENDIF}
 
-    flose(dbgVertices);
+    fclose(dbgVertices);
   end;
 
-    // release ptr
-  pActiveVB.Unlock();
+  // release ptr
+  IDirect3DVertexBuffer8(pActiveVB).Unlock();
 end;
 {$ENDIF}
 

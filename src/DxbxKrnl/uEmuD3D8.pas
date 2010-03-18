@@ -733,8 +733,8 @@ begin
     begin
       Inc(g_VBData.VBlank);
 
-			// Cxbx TODO: Fixme.  This may not be right...
-			g_SwapData.SwapVBlank := 1;
+      // Cxbx TODO: Fixme.  This may not be right...
+      g_SwapData.SwapVBlank := 1;
 
       if (Addr(g_pVBCallback) <> NULL) then
       begin
@@ -916,15 +916,14 @@ begin
       end;
 
       // redirect to windows Direct3D
-      g_EmuCDPD.hRet := IDirect3D8_CreateDevice
-      (g_pD3D8,
+      g_EmuCDPD.hRet := IDirect3D8(g_pD3D8).CreateDevice(
         g_EmuCDPD.Adapter,
         g_EmuCDPD.DeviceType,
         g_EmuCDPD.hFocusWindow,
         g_EmuCDPD.BehaviorFlags,
-        g_EmuCDPD.pPresentationParameters,
+        {var}PD3DPresentParameters(g_EmuCDPD.pPresentationParameters)^,
         PIDirect3DDevice8(g_EmuCDPD.ppReturnedDeviceInterface)
-      );
+        );
 
       // report error
       if (FAILED(g_EmuCDPD.hRet)) then
@@ -1007,7 +1006,7 @@ begin
         ddsd2.dwFlags := DDSD_CAPS;
         ddsd2.ddsCaps.dwCaps := DDSCAPS_PRIMARYSURFACE;
 
-        hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, {out}PIDirectDrawSurface7(g_pDDSPrimary), nil);
+        hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSPrimary, nil);
 
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('Could not create primary surface (0x%.08X)', [hRet]);
@@ -1078,7 +1077,7 @@ begin
         // cleanup directdraw surface
         if (g_pDDSPrimary <> nil) then
         begin
-          PIDirectDrawSurface7(g_pDDSPrimary)._Release();
+          IDirectDrawSurface7(g_pDDSPrimary)._Release();
           g_pDDSPrimary := nil;
         end;
       end;
@@ -2054,7 +2053,7 @@ begin
          end;
 
         // Debug: Save this image temporarily
-        //D3DXSaveSurfaceToFile('C:\\Aaron\\Textures\\FrontBuffer.bmp', D3DXIFF_BMP, pBackBuffer.EmuSurface8, NULL, NULL);
+        //D3DXSaveSurfaceToFile('C:\Aaron\Textures\FrontBuffer.bmp', D3DXIFF_BMP, pBackBuffer.EmuSurface8, NULL, NULL);
      end;
 
     if (BackBuffer <> -1) then
@@ -4237,9 +4236,9 @@ begin
 
     if Assigned(g_pSwapCallback{ is func <> NULL}) then
     begin
-      EmuSwapFS();  // Xbox FS
+      EmuSwapFS(fsXbox);
       g_pSwapCallback(@g_SwapData);
-      EmuSwapFS();  // Win2k/XP FS
+      EmuSwapFS(fsWindows);
     end;
   end;
 
@@ -4288,9 +4287,9 @@ begin
 
     if Assigned(g_pSwapCallback { is func <> NULL}) then
     begin
-      EmuSwapFS();  // Xbox FS
+      EmuSwapFS(fsXbox);
       g_pSwapCallback(@g_SwapData);
-      EmuSwapFS();  // Win2k/XP FS
+      EmuSwapFS(fsWindows);
     end;
   end;
   
@@ -5639,7 +5638,7 @@ begin
            #13#10');',
            [pThis, Level, pLockedRect, pRect, Flags]);
 
-	DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)', [pThis.EmuTexture8]);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)', [pThis.EmuTexture8]);
 {$ENDIF}
 
   EmuVerifyResourceIsRegistered(pThis);
@@ -5659,10 +5658,10 @@ begin
     NewFlags := 0;
 
     if (Flags and $80) > 0 then
-        NewFlags:= NewFlags or D3DLOCK_READONLY;
+      NewFlags:= NewFlags or D3DLOCK_READONLY;
 
     if (Flags and not ($80 or $40)) > 0 then
-        CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags]);
+      CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags]);
 
     if (Level = 6) or (Level = 7) or (Level = 8) or (Level = 9) then
     begin
@@ -5738,7 +5737,7 @@ begin
     ppSurfaceLevel^.Format := 0;
     ppSurfaceLevel^.Size := 0;
 
-    hRet := IDirect3DTexture8_GetSurfaceLevel(pTexture8, Level, @(ppSurfaceLevel^.Lock{EmuSurface8}));
+    hRet := IDirect3DTexture8(pTexture8).GetSurfaceLevel(Level, @(ppSurfaceLevel^.Lock{EmuSurface8}));
 
     if (FAILED(hRet)) then
     begin
@@ -9245,7 +9244,7 @@ procedure XTL_EmuIDirect3DDevice8_SetSwapCallback
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetSwapCallback' +
       #13#10'(' +
@@ -9257,13 +9256,13 @@ begin
 
   g_pSwapCallback := pCallback;
 
-  EmuSwapFS();   // XBox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirect3DDevice8_PersistDisplay(): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();  // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PersistDisplay()');
 
@@ -9286,13 +9285,13 @@ begin
     Result := E_FAIL;
   end;
 
-  EmuSwapFS();  // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuIDirect3DDevice8_Unknown1(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();  // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Unknown1()');
 
@@ -9302,7 +9301,7 @@ begin
   // the only major thing going on inside of it is a call to the kernel
   // function AvSendTVEncoderOption, we can probably ignore it.
 
-  EmuSwapFS();  // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirect3DDevice8_PrimeVertexCache
@@ -9312,7 +9311,7 @@ function XTL_EmuIDirect3DDevice8_PrimeVertexCache
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PrimeVertexCache' +
       #13#10'(' +
@@ -9324,7 +9323,7 @@ begin
   // Cxbx TODO: Implement
   EmuWarning('PrimeVertexCache is not supported!');
 
-  EmuSwapFS();  // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   Result := S_OK;
 end;
@@ -9335,7 +9334,7 @@ function XTL_EmuIDirect3DDevice8_SetRenderState_SampleAlpha
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_SampleAlpha' +
       #13#10'(' +
@@ -9347,7 +9346,7 @@ begin
 
   EmuWarning('SampleAlpha not supported!');
 
-  EmuSwapFS();  // Xbox FS
+  EmuSwapFS(fsXbox);
 
   Result := S_OK;
 end;
@@ -9365,7 +9364,7 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Deferred(
   ); register; // __fastcall in Cxbx
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();   // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_Deferred' +
       #13#10'(' +
@@ -9424,7 +9423,7 @@ begin
     D3DRS_PATCHSEGMENTS             = 115,  // DWORD number of segments per edge when drawing patches
   *)
 
-  EmuSwapFS();  // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirect3DDevice8_DeleteStateBlock
@@ -9433,7 +9432,7 @@ function XTL_EmuIDirect3DDevice8_DeleteStateBlock
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS();  // Win2k/XP FS
+  EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_DeleteStateBlock' +
       #13#10'(' +
@@ -9443,7 +9442,7 @@ begin
 
   Result := IDirect3DDevice8(g_pD3DDevice8).DeleteStateBlock(Token);
 
-  EmuSwapFS();  // Xbox FS
+  EmuSwapFS(fsXbox);
 end;
 
 exports

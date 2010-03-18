@@ -418,7 +418,7 @@ begin
 
     if (not pPatchDesc.pVertexStreamZeroData) then
     begin
-        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, {out}IDirect3DVertexBuffer8(pOrigVertexBuffer), @uiStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, {out}uiStride);
         if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(@Desc))) then
         begin
             CxbxKrnlCleanup('Could not retrieve original buffer size');
@@ -608,7 +608,7 @@ begin
 
   if not Assigned(pPatchDesc.pVertexStreamZeroData) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, uiStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, uiStride);
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(Desc))) then
     begin
       CxbxKrnlCleanup('Could not retrieve original buffer size');
@@ -909,7 +909,7 @@ begin
     else
     begin
         // Copy stream for patching and caching.
-        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, uiStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, @pOrigVertexBuffer, {out}uiStride);
 
         if(FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc(Desc))) then
         begin
@@ -1074,7 +1074,7 @@ begin
 
     if not Assigned(pPatchDesc.pVertexStreamZeroData) then
     begin
-        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @(pStream.pOriginalStream), pStream.uiOrigStride);
+        IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @(pStream.pOriginalStream), {out}pStream.uiOrigStride);
         pStream.uiNewStride := pStream.uiOrigStride; // The stride is still the same
 
         if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
