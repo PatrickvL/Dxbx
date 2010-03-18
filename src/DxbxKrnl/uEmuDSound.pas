@@ -553,7 +553,7 @@ begin
 {$ENDIF}
 
   uRet := g_pDSound8RefCount;
-  inc(g_pDSound8RefCount);
+  dec(g_pDSound8RefCount);
 
   { temporarily (?) disabled by cxbx
   if (uRet = 1) then
@@ -1198,9 +1198,16 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_Lock(pThis: PX_CDirectSoundBuffer; dwOffset: DWORD; dwBytes: DWORD;
-    ppvAudioPtr1: System.PPointer; pdwAudioBytes1: LPDWORD; ppvAudioPtr2: System.PPointer; pdwAudioBytes2: LPDWORD;
-    dwFlags:DWORD): HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_Lock(
+  pThis: PX_CDirectSoundBuffer;
+  dwOffset: DWORD;
+  dwBytes: DWORD;
+  ppvAudioPtr1: system.pPointer;
+  pdwAudioBytes1: LPDWORD;
+  ppvAudioPtr2: system.pPointer;
+  pdwAudioBytes2: LPDWORD;
+  dwFlags:DWORD
+): HRESULT; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
