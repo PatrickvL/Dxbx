@@ -381,7 +381,7 @@ begin
   and Assigned(ObjectAttributes.ObjectName) then
     szBuffer := ObjectAttributes.ObjectName.Buffer
   else
-    szBuffer := '';
+    szBuffer := nil;
 
 
 {$IFDEF DEBUG}
@@ -392,8 +392,8 @@ begin
       #13#10'   EventType           : 0x%.08X' +
       #13#10'   InitialState        : 0x%.08X' +
       #13#10');',
-      [EventHandle, @ObjectAttributes, @szBuffer,
-       @EventType, BoolToStr(InitialState)]);
+      [EventHandle, ObjectAttributes, szBuffer,
+       Ord(EventType), Ord(InitialState)]);
 {$ENDIF}
 
   // initialize object attributes
