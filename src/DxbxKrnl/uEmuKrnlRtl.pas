@@ -63,7 +63,7 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  Message: PANSICHAR
+  Message_: PANSICHAR
   ); stdcall;
 procedure xboxkrnl_RtlCaptureContext(
   ContextRecord: PCONTEXT
@@ -301,9 +301,18 @@ function xboxkrnl_RtlAnsiStringToUnicodeString(
   SourceString: PSTRING;
   AllocateDestinationString: UCHAR
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuKrnl : RtlAnsiStringToUnicodeString'+
+         '('+
+         '   DestinationString         : 0x%.08X'+
+         '   SourceString              : 0x%.08X'+
+         '   AllocateDestinationString : 0x%.08X'+
+         ');',
+         [DestinationString, SourceString, AllocateDestinationString]);
+
   Result := JwaNative.RtlAnsiStringToUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
   EmuSwapFS(fsXbox);
 end;
@@ -345,12 +354,22 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  Message: PANSICHAR
+  Message_: PANSICHAR
   ); stdcall;
-// Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:shogun  Branch:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message);
+
+  DbgPrintf('EmuKrnl : RtlAssert'+
+         '('+
+         '   FailedAssertion           : 0x%.08X'+
+         '   FileName                  : 0x%.08X'+
+         '   LineNumber                : 0x%.08X'+
+         '   Message                   : 0x%.08X (\"%s\")'+
+         ');',
+         [FailedAssertion, FileName, Message_, Message_]);
+
+  JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message_);
   EmuSwapFS(fsXbox);
 end;
 
