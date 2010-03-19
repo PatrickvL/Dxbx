@@ -720,11 +720,12 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DXBX_DEBUG_TRACE}
+{ MARKED OUT CXBX
   DbgPrintf('EmuKrnl : RtlInitializeCriticalSection' +
            #13#10'(' +
            #13#10'   CriticalSection              : 0x%.08X' +
            #13#10');',
-           [CriticalSection]);
+           [CriticalSection]);   }
 {$ENDIF}
 
   JwaNative.RtlInitializeCriticalSection(CriticalSection);
@@ -920,6 +921,15 @@ function xboxkrnl_RtlUnicodeStringToAnsiString(
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuKrnl : RtlUnicodeStringToAnsiString'+
+         #13#10'('+
+         #13#10'   DestinationString         : 0x%.08X'+
+         #13#10'   SourceString              : 0x%.08X'+
+         #13#10'   AllocateDestinationString : 0x%.08X'+
+         #13#10');',
+         [DestinationString, SourceString, AllocateDestinationString]);
+
   Result := JwaNative.RtlUnicodeStringToAnsiString(DestinationString, SourceString, AllocateDestinationString);
   EmuSwapFS(fsXbox);
 end;
