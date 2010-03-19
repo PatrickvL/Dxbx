@@ -267,153 +267,9 @@ begin
   Result := TRUE;
 end;
 
-(*
-function XTL_EmuFindFirstFileA(lpFileName: PChar;{out}lpFindFileData: LPWIN32_FIND_DATA): HANDLE; stdcall;
-// Branch:?  Revision:?  Translator:PatrickvL  Done:100
-var
-  szBuffer: PChar;
-  szRoot: string;
-  hRet: HANDLE;
-  bRet: BOOL;
-begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuFindFirstFileA' +
-    #13#10'(' +
-    #13#10'   lpFileName          : 0x%.08X' +
-    #13#10'   lpFindFileData      : 0x%.08X' +
-    #13#10');',
-    [lpFileName, lpFindFileData]);
-{$ENDIF}
-
-    //
-    // Cxbx TODO: this code is replicated in NtCreateFile. make this a function
-    //
-
-    //
-    // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
-    //
-
-  szBuffer := lpFileName;
-  szRoot := g_strCurDrive;
-
-{$IFDEF DEBUG}
-    //printf('bef : %s'#13#10, lpFileName);
-{$ENDIF}
-
-  if (szBuffer <> nil) then
-  begin
-    // trim this off
-    if (szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
-      szBuffer := szBuffer + 4;
-
-    // D:\ should map to current directory
-    if ((szBuffer[0] = 'D') or (szBuffer[0] = 'd')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      szBuffer := szBuffer + 3;
-    end
-    else if ((szBuffer[0] = 'T') or (szBuffer[0] = 't')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      szBuffer := szBuffer + 3;
-
-      szRoot := g_strTDrive;
-    end
-    else if ((szBuffer[0] = 'U') or (szBuffer[0] = 'u')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      szBuffer := szBuffer + 3;
-
-      szRoot := g_strUDrive;
-    end
-    else if ((szBuffer[0] = 'Z') or (szBuffer[0] = 'z')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      szBuffer := szBuffer + 3;
-
-      szRoot := g_strZDrive;
-    end;
-  end;
-
-{$IFDEF DEBUG}
-    //printf('af1 : %s'#13#10, szRoot);
-    //printf('af2 : %s'#13#10, szBuffer);
-{$ENDIF}
-
-    //char szOldDir[MAX_PATH];
-
-    //GetCurrentDirectory(MAX_PATH, szOldDir);
-
-  SetCurrentDirectory(PChar(szRoot));
-
-  hRet := FindFirstFile(szBuffer, WIN32_FIND_DATA(lpFindFileData^));
-
-  if (not FAILED(hRet)) then
-  begin
-    while True do
-    begin
-      bRet := FindNextFile(hRet, WIN32_FIND_DATA(lpFindFileData^));
-
-      if (not bRet) then
-      begin
-        hRet := INVALID_HANDLE_VALUE;
-        Break;
-      end;
-
-      if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
-        Break;
-    end;
-  end;
-
-    //SetCurrentDirectory(szOldDir);
-
-  EmuSwapFS(fsXbox);
-
-  Result := hRet;
-end;
-
-
-function XTL_EmuFindNextFileA(hFindFile: HANDLE; {out} lpFindFileData: LPWIN32_FIND_DATA): BOOL; stdcall;
-// Branch:?  Revision:?  Translator:PatrickvL  Done:100
-var
-  bRet: BOOL;
-begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuFindNextFileA' +
-    #13#10'(' +
-    #13#10'   hFindFile           : 0x%.08X' +
-    #13#10'   lpFindFileData      : 0x%.08X' +
-    #13#10');',
-    [hFindFile, lpFindFileData]);
-{$ENDIF}
-
-    //
-    // Cxbx TODO: replace full directories with their shorthand (D:\, etc)
-    //
-
-  repeat
-    bRet := FindNextFile(hFindFile, WIN32_FIND_DATA(lpFindFileData^));
-
-    if (not bRet) then
-      Break;
-
-    if ((StrComp(lpFindFileData.cFileName, '.') <> 0) and (StrComp(lpFindFileData.cFileName, '..') <> 0)) then
-      Break;
-  until False;
-
-{$IFDEF DEBUG}
-    //printf('Found : %s'#13#10, lpFindFileData.cFileName);
-{$ENDIF}
-
-  EmuSwapFS(fsXbox);
-
-  Result := bRet;
-end;
-*)
-
 function XTL_EmuGetTimeZoneInformation
 (
-  lpTimeZoneInformation: LPTIME_ZONE_INFORMATION
+  {Out}lpTimeZoneInformation: LPTIME_ZONE_INFORMATION
 ): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -437,8 +293,8 @@ function XTL_EmuRtlCreateHeap
 (
   Flags: ULONG;
   Base: PVOID; // OPTIONAL
-  Reserve: SIZE_T; // OPTIONAL
-  Commit: SIZE_T;
+  Reserve: ULONG; // OPTIONAL
+  Commit: ULONG;
   Lock: PVOID; // OPTIONAL
   RtlHeapParams: PVOID // OPTIONAL
 ): PVOID; stdcall;
@@ -465,15 +321,8 @@ begin
 
   RtlHeapDefinition.Length := sizeof(RtlHeapDefinition);
 
-  // Cxbx TODO : Find out how RtlHeapParams is defined on Xbox, and map this
-  // as closely as possible to the native RTL_HEAP_PARAMETERS.
-
   Result := PVOID(JwaNative.RtlCreateHeap(
     Flags, Base, Reserve, Commit, Lock, @RtlHeapDefinition));
-
-{$IFDEF DXBX_DEBUG}
-  DbgPrintf('pRet : 0x%.08X', [Result]);
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -503,7 +352,7 @@ begin
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
+  Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes + HEAP_HEADERSIZE);
   if Assigned(Result) then
   begin
     offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
@@ -589,7 +438,7 @@ begin
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
+  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + HEAP_HEADERSIZE);
   if Assigned(Result) then
   begin
     // Dxbx note : Realloc from nil is different from non-nil :
@@ -643,9 +492,7 @@ begin
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
 
-  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
-  if Result > 0 then
-    Dec(Result, HEAP_HEADERSIZE);
+  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem) - HEAP_HEADERSIZE;
 
   EmuSwapFS(fsXbox);
 end;
@@ -844,7 +691,7 @@ begin
     [DeviceType, dwPort, dwSlot, pPollingParameters]);
 {$ENDIF}
 
-  pPH := nil;
+  pPH := 0;
 
   if {not nessecary : (dwPort >= 0) and} (dwPort <= 3) then
   begin
@@ -855,7 +702,7 @@ begin
       if (pPollingParameters <> NULL) then
       begin
         New({var XINPUT_POLLING_PARAMETERS}pPH.pPollingParameters);
-        memcpy(pPH.pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+        memcpy(pPollingParameters, pPH.pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
@@ -875,7 +722,7 @@ begin
           New({var XINPUT_POLLING_PARAMETERS}pPH.pPollingParameters);
         end;
 
-        memcpy(pPH.pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+        memcpy(pPollingParameters, pPH.pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
       end
       else
       begin
@@ -890,6 +737,7 @@ begin
     pPH.dwPort := dwPort;
   end;
 
+  g_bXInputOpenCalled := true;
   EmuSwapFS(fsXbox);
 
   Result := HANDLE(pPH);
@@ -1873,7 +1721,7 @@ begin
     EmuWarning('DuplicateHandle failed!');
 
   dwRet := QueueUserAPC(pfnAPC, hApcThread, dwData);
-  if (0=dwRet) then
+  if (dwRet<>0) then
     EmuWarning('QueueUserAPC failed!');
 
   EmuSwapFS(fsXbox);
@@ -2386,8 +2234,6 @@ exports
   XTL_EmuCreateMutex,
   XTL_EmuCreateSemaphore,
   XTL_EmuDeleteFiber,
-//  XTL_EmuFindFirstFileA,
-//  XTL_EmuFindNextFileA,
   XTL_EmuGetExitCodeThread,
   XTL_EmuGetOverlappedResult,
   XTL_EmuGetThreadPriority,
