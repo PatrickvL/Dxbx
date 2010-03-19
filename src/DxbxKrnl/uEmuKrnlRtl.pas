@@ -306,11 +306,11 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : RtlAnsiStringToUnicodeString'+
-         '('+
-         '   DestinationString         : 0x%.08X'+
-         '   SourceString              : 0x%.08X'+
-         '   AllocateDestinationString : 0x%.08X'+
-         ');',
+         #13#10'('+
+         #13#10'   DestinationString         : 0x%.08X'+
+         #13#10'   SourceString              : 0x%.08X'+
+         #13#10'   AllocateDestinationString : 0x%.08X'+
+         #13#10');',
          [DestinationString, SourceString, AllocateDestinationString]);
 
   Result := JwaNative.RtlAnsiStringToUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
@@ -361,12 +361,12 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : RtlAssert'+
-         '('+
-         '   FailedAssertion           : 0x%.08X'+
-         '   FileName                  : 0x%.08X'+
-         '   LineNumber                : 0x%.08X'+
-         '   Message                   : 0x%.08X (\"%s\")'+
-         ');',
+         #13#10'('+
+         #13#10'   FailedAssertion           : 0x%.08X'+
+         #13#10'   FileName                  : 0x%.08X'+
+         #13#10'   LineNumber                : 0x%.08X'+
+         #13#10'   Message                   : 0x%.08X (\"%s\")'+
+         #13#10');',
          [FailedAssertion, FileName, Message_, Message_]);
 
   JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message_);
