@@ -236,7 +236,7 @@ begin
 end;
 
 const
-  HEAP_HEADERSIZE = $20;
+  HEAP_HEADERSIZE = $20; // Dxbx note : Presumably, Xbox allocator uses $20 as alignment
 
 // Saved launch data
 var g_SavedLaunchData: {XTL_}LAUNCH_DATA;
@@ -333,9 +333,9 @@ function XTL_EmuRtlAllocateHeap
   dwFlags: DWORD;
   dwBytes: SIZE_T
 ): PVOID; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  offs: Byte;
+  AllocatedAddress: PVOID;
 begin
   EmuSwapFS(fsWindows);
 
@@ -352,16 +352,14 @@ begin
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
-  if Assigned(Result) then
+  AllocatedAddress := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
+  if Assigned(AllocatedAddress) then
   begin
-    offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
-    if offs = 0 then
-      offs := HEAP_HEADERSIZE;
-
-    Result := PVOID(uint32(Result) + offs);
-    PByte(uint32(Result) - 1)^ := offs;
-  end;
+    Result := PVOID(RoundUp(uint32(AllocatedAddress) + 1, HEAP_HEADERSIZE));
+    (PPointer(Result)-1)^ := AllocatedAddress;
+  end
+  else
+    Result := nil;
 
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('pRet : 0x%.08X', [Result]);
@@ -376,9 +374,7 @@ function XTL_EmuRtlFreeHeap
   dwFlags: DWORD;
   lpMem: PVOID
 ): BOOL; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  offs: Byte;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -392,11 +388,8 @@ begin
     [hHeap, dwFlags, lpMem]);
 {$ENDIF}
 
-  if (lpMem <> NULL) then
-  begin
-    offs := PByte(uint32(lpMem) - 1)^;
-    lpMem := PVOID(uint32(lpMem) - offs);
-  end;
+  if Assigned(lpMem) then
+    lpMem := (PPointer(lpMem)-1)^;
 
   Result := CxbxRtlFree(hHeap, dwFlags, lpMem);
 
@@ -410,9 +403,9 @@ function XTL_EmuRtlReAllocateHeap
   lpMem: PVOID;
   dwBytes: SIZE_T
 ): PVOID; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  offs: Byte;
+  AllocatedAddress: PVOID;
 begin
   EmuSwapFS(fsWindows);
 
@@ -426,35 +419,29 @@ begin
     #13#10');',
     [hHeap, dwFlags, lpMem, dwBytes]);
 {$ENDIF}
-  offs := 0;
 
-  if (lpMem <> NULL) then
-  begin
-    offs := PByte(uint32(lpMem) - 1)^;
-
-    lpMem := PVOID(uint32(lpMem) - offs);
-  end;
+  // Dxbx note : Realloc cannot be implemented via CxbxRtlRealloc because of possible alignment-mismatches.
+  // We solve this by doing a new Alloc, copying over the original lpMem contents and freeing it :
 
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
-  if Assigned(Result) then
+  AllocatedAddress := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
+  if Assigned(AllocatedAddress) then
   begin
-    // Dxbx note : Realloc from nil is different from non-nil :
-    if Assigned(lpMem) then
-      // Realloc from non-nil, implies we need to keep using the same offset :
-      Result := PVOID(uint32(Result) + offs)
-    else
-    begin
-      // Realloc from nil, implies we need to determine offset just like in a new EmuRtlAllocateHeap :
-      offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
-      if offs = 0 then
-        offs := HEAP_HEADERSIZE;
+    Result := PVOID(RoundUp(uint32(AllocatedAddress) + 1, HEAP_HEADERSIZE));
+    (PPointer(Result)-1)^ := AllocatedAddress;
+  end
+  else
+    Result := nil;
 
-      Result := PVOID(uint32(Result) + offs);
-      PByte(uint32(Result) - 1)^ := offs;
-    end;
+  if Assigned(lpMem) then
+  begin
+    AllocatedAddress := (PPointer(lpMem)-1)^;
+    if Assigned(Result) then
+      memcpy({destination=}Result, {source=}lpMem, {size=}CxbxRtlSizeHeap(hHeap, dwFlags, AllocatedAddress) - HEAP_HEADERSIZE);
+
+    CxbxRtlFree(hHeap, dwFlags, AllocatedAddress);
   end;
 
 {$IFDEF DXBX_DEBUG_TRACE}
@@ -470,9 +457,7 @@ function XTL_EmuRtlSizeHeap
   dwFlags: DWORD;
   lpMem: PVOID
 ): SIZE_T; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  offs: Byte;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -486,11 +471,8 @@ begin
     [hHeap, dwFlags, lpMem]);
 {$ENDIF}
 
-  if (lpMem <> NULL) then
-  begin
-    offs := PByte(uint32(lpMem) - 1)^;
-    lpMem := PVOID(uint32(lpMem) - offs);
-  end;
+  if Assigned(lpMem) then
+    lpMem := (PPointer(lpMem)-1)^;
 
   Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
 
