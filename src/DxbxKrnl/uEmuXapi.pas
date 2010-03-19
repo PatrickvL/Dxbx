@@ -352,7 +352,7 @@ begin
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes + HEAP_HEADERSIZE);
+  Result := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
   if Assigned(Result) then
   begin
     offs := Byte(RoundUp(uint32(Result), HEAP_HEADERSIZE) - uint32(Result));
@@ -438,7 +438,7 @@ begin
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + HEAP_HEADERSIZE);
+  Result := CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
   if Assigned(Result) then
   begin
     // Dxbx note : Realloc from nil is different from non-nil :
@@ -492,7 +492,7 @@ begin
     lpMem := PVOID(uint32(lpMem) - offs);
   end;
 
-  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem) - HEAP_HEADERSIZE;
+  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
 
   EmuSwapFS(fsXbox);
 end;
@@ -691,7 +691,7 @@ begin
     [DeviceType, dwPort, dwSlot, pPollingParameters]);
 {$ENDIF}
 
-  pPH := 0;
+  pPH := nil;
 
   if {not nessecary : (dwPort >= 0) and} (dwPort <= 3) then
   begin
@@ -1721,7 +1721,7 @@ begin
     EmuWarning('DuplicateHandle failed!');
 
   dwRet := QueueUserAPC(pfnAPC, hApcThread, dwData);
-  if (dwRet<>0) then
+  if (0=dwRet) then
     EmuWarning('QueueUserAPC failed!');
 
   EmuSwapFS(fsXbox);
