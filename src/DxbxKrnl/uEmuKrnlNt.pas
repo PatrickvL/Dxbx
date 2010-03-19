@@ -1823,7 +1823,7 @@ begin
       #13#10'   Alertable            : 0x%.08X' +
       #13#10'   Timeout              : 0x%.08X (%d)' +
       #13#10');',
-      [Count, Handles, Ord(WaitType), WaitMode, Alertable,
+      [Count, Handles, Ord(WaitType), Ord(WaitMode), Ord(Alertable),
        Timeout, QuadPart(Timeout)]);
 {$ENDIF}
 
