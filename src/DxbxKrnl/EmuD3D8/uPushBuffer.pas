@@ -202,8 +202,8 @@ var
   dwStride: DWord;
   PCPrimitiveType: D3DPRIMITIVETYPE;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
-  pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8;
-  pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8;
+  pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
+  pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
   maxIBSize: uint;
   dwCount: DWord;
   dwMethod: DWord;
@@ -270,6 +270,8 @@ begin
   pIndexBuffer := nil;
   pVertexBuffer := nil;
   maxIBSize := 0; // Dxbx TODO : Make this static
+
+  VertPatch.Create; // Dxbx addition
 
   while(true) do
   begin
@@ -461,7 +463,7 @@ begin
             IDirect3DIndexBuffer8(pIndexBuffer)._Release();
           end;
 
-          hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
+          hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer8(@pIndexBuffer));
 
           maxIBSize := dwCount*2 + 2*2;
         end
@@ -611,7 +613,7 @@ begin
             IDirect3DIndexBuffer8(pIndexBuffer)._Release();
           end;
 
-          hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
+          hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer8(@pIndexBuffer));
 
           maxIBSize := dwCount*2;
         end
@@ -695,6 +697,8 @@ begin
 
     Inc(pdwPushData);
   end;
+
+  VertPatch.Destroy; // Dxbx addition
 
 {$ifdef _DEBUG_TRACK_PB}
   if (bShowPB) then

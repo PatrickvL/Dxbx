@@ -69,8 +69,8 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   ThreadId: PULONG; // out, optional
   StartContext1: PVOID;
   StartContext2: PVOID;
-  CreateSuspended: LONGBOOL;
-  DebugStack: LONGBOOL;
+  CreateSuspended: BOOLEAN;
+  DebugStack: BOOLEAN;
   StartRoutine: PKSTART_ROUTINE
   ): NTSTATUS; stdcall;
 function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -130,7 +130,7 @@ begin
     [StartContext1, StartContext2, Addr(StartRoutine)]);
 {$ENDIF}
 
-  if StartSuspended then
+  if(StartSuspended = TRUE) then
     SuspendThread(GetCurrentThread());
 
   EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
@@ -150,7 +150,7 @@ begin
 
       EmuSwapFS(fsXbox);
 
-      pfnNotificationRoutine({Create=}True);
+      pfnNotificationRoutine({Create=}TRUE);
 
       EmuSwapFS(fsWindows);
     end;
@@ -222,7 +222,7 @@ callComplete:
 
       EmuSwapFS(fsXbox);
 
-      pfnNotificationRoutine({Create=}False);
+      pfnNotificationRoutine({Create=}FALSE);
  
       EmuSwapFS(fsWindows);
     end;
@@ -329,7 +329,8 @@ end;
 // StartRoutine: Called when the thread is created
 //
 // New to the XBOX.
-function {255} xboxkrnl_PsCreateSystemThreadEx(
+function {255} xboxkrnl_PsCreateSystemThreadEx
+(
   ThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
@@ -337,10 +338,10 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   ThreadId: PULONG; // out, optional
   StartContext1: PVOID;
   StartContext2: PVOID;
-  CreateSuspended: LONGBOOL;
-  DebugStack: LONGBOOL;
+  CreateSuspended: BOOLEAN;
+  DebugStack: BOOLEAN;
   StartRoutine: PKSTART_ROUTINE
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Source:Cxbx/XBMC  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   dwThreadId: DWORD;
@@ -363,7 +364,7 @@ begin
     #13#10'   DebugStack          : 0x%.08x' +
     #13#10'   StartRoutine        : 0x%.08x' +
     #13#10');',
-    [ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, Addr(ThreadId),
+    [ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
     StartContext1, StartContext2, CreateSuspended, DebugStack, Addr(StartRoutine)]);
 {$ENDIF}
 
@@ -374,9 +375,9 @@ begin
     iPCSTProxyParam.StartContext2 := StartContext2;
     iPCSTProxyParam.StartRoutine := StartRoutine;
     iPCSTProxyParam.StartSuspended := CreateSuspended;
-    iPCSTProxyParam.hStartedEvent := CreateEvent(nil, False, False, nil);
+    iPCSTProxyParam.hStartedEvent := CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    ThreadHandle^ := BeginThread(nil, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
+    ThreadHandle^ := BeginThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
@@ -398,7 +399,7 @@ begin
       CxbxKrnlRegisterThread(hDupHandle);
     end;
 
-    if Assigned(ThreadId) then
+    if(ThreadId <> NULL) then
       {out}ThreadId^ := dwThreadId;
   end;
 
@@ -458,7 +459,7 @@ begin
 
       EmuSwapFS(fsXbox);
 
-      pfnNotificationRoutine({Create=}False);
+      pfnNotificationRoutine({Create=}FALSE);
 
       EmuSwapFS(fsWindows);
     end;

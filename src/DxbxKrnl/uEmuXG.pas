@@ -70,11 +70,11 @@ function XTL_EmuXGIsSwizzledFormat
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuXapi: EmuXGIsSwizzledFormat' +
-     #13#10+'(' +
-     #13#10+'   Format              : 0x%.08X' +
-     #13#10+')',
-     [Ord(Format)]);
+  DbgPrintf('EmuXapi : EmuXGIsSwizzledFormat' +
+      #13#10'(' +
+      #13#10'   Format              : 0x%.08X' +
+      #13#10')',
+      [Ord(Format)]);
   EmuSwapFS(fsXbox);
 {$ENDIF}
 

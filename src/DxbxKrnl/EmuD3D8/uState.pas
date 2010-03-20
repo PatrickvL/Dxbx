@@ -337,7 +337,7 @@ begin
       pCur := @(XTL_EmuD3DDeferredTextureState[2*32]);
 
       // set the point sprites texture
-      IDirect3DDevice8(g_pD3DDevice8).GetTexture(3, @pTexture);
+      IDirect3DDevice8(g_pD3DDevice8).GetTexture(3, PIDirect3DBaseTexture8(@pTexture));
       IDirect3DDevice8(g_pD3DDevice8).SetTexture(0, IDirect3DBaseTexture8(pTexture));
       // Dxbx TODO : Should we clear the pTexture interface (and how)?
 

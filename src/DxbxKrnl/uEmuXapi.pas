@@ -341,12 +341,12 @@ begin
 
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
-    #13#10'(' +
-    #13#10'   hHeap               : 0x%.08X' +
-    #13#10'   dwFlags             : 0x%.08X' +
-    #13#10'   dwBytes             : 0x%.08X' +
-    #13#10');',
-    [hHeap, dwFlags, dwBytes]);
+      #13#10'(' +
+      #13#10'   hHeap               : 0x%.08X' +
+      #13#10'   dwFlags             : 0x%.08X' +
+      #13#10'   dwBytes             : 0x%.08X' +
+      #13#10');',
+      [hHeap, dwFlags, dwBytes]);
 {$ENDIF}
 
   if dwBytes > 0 then
@@ -411,13 +411,13 @@ begin
 
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
-    #13#10'('+
-    #13#10'   hHeap               : 0x%.08X' +
-    #13#10'   dwFlags             : 0x%.08X' +
-    #13#10'   lpMem               : 0x%.08X' +
-    #13#10'   dwBytes             : 0x%.08X' +
-    #13#10');',
-    [hHeap, dwFlags, lpMem, dwBytes]);
+      #13#10'('+
+      #13#10'   hHeap               : 0x%.08X' +
+      #13#10'   dwFlags             : 0x%.08X' +
+      #13#10'   lpMem               : 0x%.08X' +
+      #13#10'   dwBytes             : 0x%.08X' +
+      #13#10');',
+      [hHeap, dwFlags, lpMem, dwBytes]);
 {$ENDIF}
 
   // Dxbx note : Realloc cannot be implemented via CxbxRtlRealloc because of possible alignment-mismatches.
@@ -463,12 +463,12 @@ begin
 
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
-    #13#10'(' +
-    #13#10'   hHeap               : 0x%.08X' +
-    #13#10'   dwFlags             : 0x%.08X' +
-    #13#10'   lpMem               : 0x%.08X' +
-    #13#10');',
-    [hHeap, dwFlags, lpMem]);
+      #13#10'(' +
+      #13#10'   hHeap               : 0x%.08X' +
+      #13#10'   dwFlags             : 0x%.08X' +
+      #13#10'   lpMem               : 0x%.08X' +
+      #13#10');',
+      [hHeap, dwFlags, lpMem]);
 {$ENDIF}
 
   if Assigned(lpMem) then
@@ -489,10 +489,10 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuQueryPerformanceCounter' +
-    #13#10'(' +
-    #13#10'   lpPerformanceCount  : 0x%.08X' +
-    #13#10');',
-    [lpPerformanceCount]);
+      #13#10'(' +
+      #13#10'   lpPerformanceCount  : 0x%.08X' +
+      #13#10');',
+      [lpPerformanceCount]);
 {$ENDIF}
 
   Result := QueryPerformanceCounter({var}lpPerformanceCount^);
@@ -513,10 +513,10 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency' +
-    #13#10'(' +
-    #13#10'   lpFrequency         : 0x%.08X' +
-    #13#10');',
-    [lpFrequency]);
+      #13#10'(' +
+      #13#10'   lpFrequency         : 0x%.08X' +
+      #13#10');',
+      [lpFrequency]);
 {$ENDIF}
 
   Result := QueryPerformanceFrequency({var}lpFrequency^);
@@ -534,9 +534,9 @@ begin
   begin
     EmuSwapFS(fsWindows);
     DbgPrintf('EmuXapi : EmuXMountUtilityDrive' +
-      #13#10'(' +
-      #13#10'   fFormatClean        : 0x%.08X' +
-      #13#10');', [Ord(fFormatClean)]);
+        #13#10'(' +
+        #13#10'   fFormatClean        : 0x%.08X' +
+        #13#10');', [Ord(fFormatClean)]);
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -664,13 +664,13 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXInputOpen' +
-    #13#10'(' +
-    #13#10'   DeviceType          : 0x%.08X' +
-    #13#10'   dwPort              : 0x%.08X' +
-    #13#10'   dwSlot              : 0x%.08X' +
-    #13#10'   pPollingParameters  : 0x%.08X' +
-    #13#10');',
-    [DeviceType, dwPort, dwSlot, pPollingParameters]);
+      #13#10'(' +
+      #13#10'   DeviceType          : 0x%.08X' +
+      #13#10'   dwPort              : 0x%.08X' +
+      #13#10'   dwSlot              : 0x%.08X' +
+      #13#10'   pPollingParameters  : 0x%.08X' +
+      #13#10');',
+      [DeviceType, dwPort, dwSlot, pPollingParameters]);
 {$ENDIF}
 
   pPH := nil;
@@ -787,10 +787,10 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXInputPoll' +
-       #13#10'(' +
-       #13#10'   hDevice             : 0x%.08X' +
-       #13#10');',
-       [hDevice]);
+      #13#10'(' +
+      #13#10'   hDevice             : 0x%.08X' +
+      #13#10');',
+      [hDevice]);
 {$ENDIF}
 
   {pPH := PPOLLING_PARAMETERS_HANDLE(hDevice);} // DXBX - pph never used
@@ -812,7 +812,7 @@ begin
       pFeedback := PXINPUT_FEEDBACK(g_pXInputSetStateStatus[v].pFeedback);
 
       if pFeedback = nil then
-          continue;
+        continue;
 
       //
       // Only update slot if it has not already been updated
@@ -1076,11 +1076,11 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuSetThreadPriorityBoost' +
-    #13#10'(' +
-    #13#10'   hThread             : 0x%.08X' +
-    #13#10'   DisablePriorityBoost: 0x%.08X' +
-    #13#10');',
-    [hThread, DisablePriorityBoost]);
+      #13#10'(' +
+      #13#10'   hThread             : 0x%.08X' +
+      #13#10'   DisablePriorityBoost: 0x%.08X' +
+      #13#10');',
+      [hThread, DisablePriorityBoost]);
 {$ENDIF}
 
   Result := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
@@ -1104,11 +1104,11 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuSetThreadPriority' +
-    #13#10'(' +
-    #13#10'   hThread             : 0x%.08X' +
-    #13#10'   nPriority           : 0x%.08X' +
-    #13#10');',
-    [hThread, nPriority]);
+      #13#10'(' +
+      #13#10'   hThread             : 0x%.08X' +
+      #13#10'   nPriority           : 0x%.08X' +
+      #13#10');',
+      [hThread, nPriority]);
 {$ENDIF}
 
   bRet := TRUE; //SetThreadPriority(hThread, nPriority);  // marked by cxbx

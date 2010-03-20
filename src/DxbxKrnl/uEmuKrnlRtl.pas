@@ -225,14 +225,14 @@ procedure xboxkrnl_RtlTimeToTimeFields(
   ); stdcall;
 function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): LONGBOOL; stdcall;
+  ): BOOLEAN; stdcall;
 function xboxkrnl_RtlUlongByteSwap(
   Source: ULONG
   ): ULONG; stdcall;
 function xboxkrnl_RtlUnicodeStringToAnsiString(
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: LONGBOOL
+  AllocateDestinationString: BOOLEAN
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUnicodeStringToInteger(
   Str: PUNICODE_STRING;
@@ -300,18 +300,20 @@ function xboxkrnl_RtlAnsiStringToUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PSTRING;
   AllocateDestinationString: UCHAR
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlAnsiStringToUnicodeString'+
-         #13#10'('+
-         #13#10'   DestinationString         : 0x%.08X'+
-         #13#10'   SourceString              : 0x%.08X'+
-         #13#10'   AllocateDestinationString : 0x%.08X'+
-         #13#10');',
-         [DestinationString, SourceString, AllocateDestinationString]);
+      #13#10'('+
+      #13#10'   DestinationString         : 0x%.08X'+
+      #13#10'   SourceString              : 0x%.08X'+
+      #13#10'   AllocateDestinationString : 0x%.08X'+
+      #13#10');',
+      [DestinationString, SourceString, AllocateDestinationString]);
+{$ENDIF}
 
   Result := JwaNative.RtlAnsiStringToUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
   EmuSwapFS(fsXbox);
@@ -360,16 +362,19 @@ procedure xboxkrnl_RtlAssert(
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : RtlAssert'+
-         #13#10'('+
-         #13#10'   FailedAssertion           : 0x%.08X'+
-         #13#10'   FileName                  : 0x%.08X'+
-         #13#10'   LineNumber                : 0x%.08X'+
-         #13#10'   Message                   : 0x%.08X (\"%s\")'+
-         #13#10');',
-         [FailedAssertion, FileName, Message_, Message_]);
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : RtlAssert' +
+      #13#10'(' +
+      #13#10'   FailedAssertion           : 0x%.08X' +
+      #13#10'   FileName                  : 0x%.08X' +
+      #13#10'   LineNumber                : 0x%.08X' +
+      #13#10'   Message                   : 0x%.08X' + // Dxbx note : DbgPrintf show strings automatically
+      #13#10');',
+      [FailedAssertion, FileName, Message_]);
+{$ENDIF}
 
   JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message_);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -509,7 +514,7 @@ end;
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -522,7 +527,7 @@ begin
 {$ENDIF}
 
   // Cxbx : This seems redundant, but xbox software doesn't always do it
-  //if CriticalSection.LockCount = -1 then
+  if(CriticalSection.LockCount = -1) then
     JwaNative.RtlInitializeCriticalSection(CriticalSection);
 
   JwaNative.RtlEnterCriticalSection(CriticalSection);
@@ -555,7 +560,7 @@ function xboxkrnl_RtlEqualString(
   String2: PSTRING;
   CaseInsensitive: BOOLEAN
   ): BOOLEAN; stdcall;
-// Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -566,9 +571,7 @@ begin
       #13#10'  String2            : 0x%.08X (%s)' +
       #13#10'  CaseInsensitive    : 0x%.08X' +
       #13#10');',
-      [String1, PSTRING_Buffer(String1),
-       String2, PSTRING_Buffer(String2),
-       CaseInsensitive]);
+      [String1, PSTRING_Buffer(String1), String2, PSTRING_Buffer(String2), CaseInsensitive]);
 {$ENDIF}
 
   Result := JwaNative.RtlEqualString(String1, String2, CaseInsensitive);
@@ -682,7 +685,7 @@ procedure xboxkrnl_RtlInitAnsiString(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -715,7 +718,7 @@ end;
 procedure xboxkrnl_RtlInitializeCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -778,14 +781,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlLowerChar(
-  Character: ANSICHAR
-  ): ANSICHAR; stdcall;
+function xboxkrnl_RtlLowerChar(Character: ANSICHAR): ANSICHAR; stdcall;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlLowerChar(%c)', [Character]);
+{$ENDIF}
 
   Result := tolower(Character);
 
@@ -875,31 +878,65 @@ function xboxkrnl_RtlTimeFieldsToTime(
   TimeFields: PTIME_FIELDS;
   Time: PLARGE_INTEGER // OUT
   ): LONGBOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  
+{$IFDEF DEBUG}
+    DbgPrintf('EmuKrnl : RtlTimeFieldsToTime' +
+        #13#10'(' +
+        #13#10'   TimeFields          : 0x%.08X' +
+        #13#10'   Time                : 0x%.08X' +
+        #13#10');',
+        [TimeFields, Time]);
+{$ENDIF}
+
   Result := JwaNative.RtlTimeFieldsToTime(TimeFields, Time);
+  
   EmuSwapFS(fsXbox);
 end;
 
-procedure xboxkrnl_RtlTimeToTimeFields(
+procedure xboxkrnl_RtlTimeToTimeFields
+(
   Time: PLARGE_INTEGER;
   TimeFields: PTIME_FIELDS // out
-  ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+    DbgPrintf('EmuKrnl : RtlTimeToTimeFields' +
+        #13#10'(' +
+        #13#10'   Time                : 0x%.08X' +
+        #13#10'   TimeFields          : 0x%.08X' +
+        #13#10');',
+        [Time, TimeFields]);
+{$ENDIF}
+
   JwaNative.RtlTimeToTimeFields(Time, TimeFields);
+  
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlTryEnterCriticalSection(
+function xboxkrnl_RtlTryEnterCriticalSection
+(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): LONGBOOL; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): BOOLEAN; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+    DbgPrintf('EmuKrnl : RtlTryEnterCriticalSection' +
+        #13#10'(' +
+        #13#10'   CriticalSection     : 0x%.08X' +
+        #13#10');',
+        [CriticalSection]);
+{$ENDIF}
+
   Result := JwaNative.RtlTryEnterCriticalSection(CriticalSection);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -916,21 +953,24 @@ end;
 function xboxkrnl_RtlUnicodeStringToAnsiString(
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: LONGBOOL
+  AllocateDestinationString: BOOLEAN
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlUnicodeStringToAnsiString'+
-         #13#10'('+
-         #13#10'   DestinationString         : 0x%.08X'+
-         #13#10'   SourceString              : 0x%.08X'+
-         #13#10'   AllocateDestinationString : 0x%.08X'+
-         #13#10');',
-         [DestinationString, SourceString, AllocateDestinationString]);
+      #13#10'('+
+      #13#10'   DestinationString         : 0x%.08X'+
+      #13#10'   SourceString              : 0x%.08X'+
+      #13#10'   AllocateDestinationString : 0x%.08X'+
+      #13#10');',
+      [DestinationString, SourceString, AllocateDestinationString]);
+{$ENDIF}
 
   Result := JwaNative.RtlUnicodeStringToAnsiString(DestinationString, SourceString, AllocateDestinationString);
+
   EmuSwapFS(fsXbox);
 end;
 
