@@ -55,6 +55,12 @@ type
   TByteArray = array [0..(MaxInt div SizeOf(Byte)) -1] of Byte;
   PBytes = ^TByteArray;
 
+  TSHORTArray = array [0..(MaxInt div SizeOf(SHORT)) - 1] of SHORT;
+  PSHORTs = ^TSHORTArray;
+
+  TFLOATArray = array [0..(MaxInt div SizeOf(FLOAT)) - 1] of FLOAT;
+  PFLOATs = ^TFLOATArray;
+
 {$IF NOT DECLARED(PDWord)}
   PDWord = ^DWord;
 {$IFEND}
@@ -183,6 +189,9 @@ function IsPrintableAsciiChar(const aChar: AnsiChar): Boolean;
 function ByteLength(const aStr: WideString): Integer;
 
 function LastChar(const aStr: string): Char;
+
+function ToFLOAT(const aValue: DWORD): FLOAT; overload;
+function ToFLOAT(const aValue: SHORT): FLOAT; overload;
 
 implementation
 
@@ -465,6 +474,16 @@ begin
     Result := aStr[Length(aStr)]
   else
     Result := #0;
+end;
+
+function ToFLOAT(const aValue: DWORD): FLOAT;
+begin
+  Result := 0.0 + aValue;
+end;
+
+function ToFLOAT(const aValue: SHORT): FLOAT;
+begin
+  Result := 0.0 + aValue;
 end;
 
 end.

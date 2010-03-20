@@ -7575,6 +7575,8 @@ begin
   VPDesc.uiVertexStreamZeroStride := VertexStreamZeroStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
+  VertPatch.Create; // Dxbx addition
+
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
 
   if (XTL_IsValidCurrentShader()) then

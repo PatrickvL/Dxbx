@@ -323,7 +323,7 @@ type X_CDirectSoundStream = class(TObject)
         EmuLockBytes2: DWORD;
         EmuPlayFlags: DWORD;
     end;
-  PX_CDirectSoundStream = ^X_CDirectSoundStream;
+  PX_CDirectSoundStream = {^}X_CDirectSoundStream; // Dxbx note : Delphi's classes are already pointer-types
   PPX_CDirectSoundStream = ^PX_CDirectSoundStream;
 
 
@@ -448,7 +448,7 @@ begin
 
   pThis.EmuBufferDesc.dwBufferBytes := dwBytes;
 
-  hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pThis.EmuBufferDesc^, PIDirectSoundBuffer(@pThis.EmuDirectSoundBuffer8), NULL);
+  hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pThis.EmuBufferDesc^, PIDirectSoundBuffer(@(pThis.EmuDirectSoundBuffer8)), NULL);
 
   if (FAILED(hRet)) then
     CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
@@ -1846,7 +1846,7 @@ begin
 {$ENDIF}
 
   // Cxbx TODO: Garbage Collection
-  new(ppStream);
+  ppStream^ := X_CDirectSoundStream.Create;
 
   pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
 
@@ -1857,8 +1857,8 @@ begin
     if (pdssd.dwFlags and (not dwAcceptableMask)) > 0 then
         EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', [pdssd.dwFlags and (not dwAcceptableMask)]);
 
-    pDSBufferDesc.dwSize := SizeOf(DSBUFFERDESC);
-// MERKED OUT CXBX        pDSBufferDesc.dwFlags = (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
+    pDSBufferDesc.dwSize := sizeof(DSBUFFERDESC);
+// MARKED OUT CXBX        pDSBufferDesc.dwFlags = (pdssd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
     pDSBufferDesc.dwFlags := DSBCAPS_CTRLVOLUME;
     pDSBufferDesc.dwBufferBytes := DSBSIZE_MIN;
 
@@ -1866,8 +1866,8 @@ begin
 
     if (pdssd.lpwfxFormat <> NULL) then
     begin
-        pDSBufferDesc.lpwfxFormat := CxbxMalloc(SizeOf(WAVEFORMATEX));
-        memcpy(pDSBufferDesc.lpwfxFormat, pdssd.lpwfxFormat, SizeOf(WAVEFORMATEX));
+      pDSBufferDesc.lpwfxFormat := PWAVEFORMATEX(CxbxMalloc(sizeof(WAVEFORMATEX)));
+      memcpy(pDSBufferDesc.lpwfxFormat, pdssd.lpwfxFormat, sizeof(WAVEFORMATEX));
     end;
 
     pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;
@@ -1905,14 +1905,14 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreateStream, *ppStream := 0x%.08X', [ppStream^]);
 {$ENDIF}
-  if (not Assigned(g_pDSound8)) then
+  if (nil=g_pDSound8) then
   begin
     if (not g_bDSoundCreateCalled) then
     begin
       EmuWarning('Initializing DirectSound pointer since it DirectSoundCreate was not called!');
 
       // Create the DirectSound buffer before continuing...
-      if (FAILED(DirectSoundCreate8(NULL, @g_pDSound8, NULL))) then
+      if (FAILED(DirectSoundCreate8(NULL, PIDirectSound8(@g_pDSound8), NULL))) then
         CxbxKrnlCleanup('Unable to initialize DirectSound!');
 
       hRet := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
@@ -3665,7 +3665,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := 0; // Dxbx TODO : Shouldn't we (and Cxbx) return dwRet here?
+  Result := dwRet; // Dxbx TODO : Should we (and Cxbx) really return dwRet here?
 end;
 
 exports
