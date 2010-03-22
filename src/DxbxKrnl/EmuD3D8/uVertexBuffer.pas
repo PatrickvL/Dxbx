@@ -1027,7 +1027,7 @@ end;
 
 function XTL_VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc; 
                                           uiStream: UINT): bool;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:80
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pStream: PPATCHEDSTREAM;
   dwOriginalSize: DWORD;
@@ -1073,7 +1073,7 @@ begin
 
   pPatchDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(pPatchDesc.PrimitiveType, pPatchDesc.dwVertexCount);
 
-    // Skip primitives that don't need further patching.
+  // Skip primitives that don't need further patching.
   case (pPatchDesc.PrimitiveType) of
     X_D3DPT_QUADLIST: begin
       EmuWarning('VertexPatcher::PatchPrimitive: Processing D3DPT_QUADLIST');
@@ -1326,7 +1326,6 @@ begin
 
   Result := true;
 end;
-{$MESSAGE 'PatrickvL reviewed up till here'}
 
 procedure XTL_EmuFlushIVB();
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -1367,9 +1366,9 @@ begin
 
     if(dwPos = D3DFVF_XYZ) then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.y;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.z;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1381,10 +1380,10 @@ begin
     end
     else if(dwPos = D3DFVF_XYZRHW) then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.y;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.z;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Rhw;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Rhw;        Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1395,10 +1394,10 @@ begin
     end
     else if(dwPos = D3DFVF_XYZB1) then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.y;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Position.z;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Blend1;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Blend1;     Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1413,12 +1412,12 @@ begin
       CxbxKrnlCleanup('Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)', [g_IVBFVF, dwPos]);
     end;
 
-//      if(dwPos = D3DFVF_NORMAL) then // <- This didn't look right but if it is, change it back...
+// Cxbx     if(dwPos = D3DFVF_NORMAL) then // <- This didn't look right but if it is, change it back...
     if(dwCurFVF and D3DFVF_NORMAL) > 0 then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Normal.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Normal.y;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].Normal.z;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.z; Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1431,7 +1430,7 @@ begin
 
     if(dwCurFVF and D3DFVF_DIFFUSE) > 0 then
     begin
-//      *(DWORD*)pdwVB++ := g_IVBTable[v].dwDiffuse;
+      PDWORDs(pdwVB)[0] := g_IVBTable[v].dwDiffuse; Inc(PDWORDs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1443,7 +1442,7 @@ begin
 
     if(dwCurFVF and D3DFVF_SPECULAR) > 0 then
     begin
-//      *(DWORD*)pdwVB++ := g_IVBTable[v].dwSpecular;
+      PDWORDs(pdwVB)[0] := g_IVBTable[v].dwSpecular; Inc(PDWORDs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1457,8 +1456,8 @@ begin
 
     if(dwTexN >= 1) then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord1.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord1.y;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.y; Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1470,8 +1469,8 @@ begin
 
     if(dwTexN >= 2) then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord2.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord2.y;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.y; Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1483,8 +1482,8 @@ begin
 
     if(dwTexN >= 3) then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord3.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord3.y;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.y; Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1496,8 +1495,8 @@ begin
 
     if(dwTexN >= 4) then
     begin
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord4.x;
-//      *(FLOAT*)pdwVB++ := g_IVBTable[v].TexCoord4.y;
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.x; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.y; Inc(PFLOATs(pdwVB));
 
       if(v = 0) then
       begin
@@ -1515,6 +1514,7 @@ begin
   VPDesc.uiVertexStreamZeroStride := uiStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
+{$MESSAGE 'PatrickvL reviewed up till here'}
   VertPatch.Create; // Dxbx addition
 
   bPatched := VertPatch.Apply(@VPDesc);
