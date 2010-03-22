@@ -300,6 +300,7 @@ var
       Text := Trim(_StripStringAfterChars(aLine, '[(:;'));
     end;
 
+    Text := Trim(Text);
     Result := Length(Text) >= 3;
     if not Result then
       Exit;

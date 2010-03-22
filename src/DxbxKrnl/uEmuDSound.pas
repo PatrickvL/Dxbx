@@ -323,8 +323,8 @@ type X_CDirectSoundStream = class(TObject)
         EmuLockBytes2: DWORD;
         EmuPlayFlags: DWORD;
     end;
-  PX_CDirectSoundStream = {^}X_CDirectSoundStream; // Dxbx note : Delphi's classes are already pointer-types
-  PPX_CDirectSoundStream = ^PX_CDirectSoundStream;
+  PX_CDirectSoundStream = ^X_CDirectSoundStream; // Dxbx note : Delphi's classes are already pointer-types
+  PPX_CDirectSoundStream = {^}PX_CDirectSoundStream;
 
 
 // size of sound buffer cache (used for periodic sound buffer updates)
