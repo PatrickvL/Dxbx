@@ -219,11 +219,11 @@ function {160} xboxkrnl_KfRaiseIrql(
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL
   ): KIRQL; register;
-procedure {161} xboxkrnl_KfLowerIrql(
+function {161} xboxkrnl_KfLowerIrql(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL
-  ); register;
+  ): KIRQL; register;
 function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {252} xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {253} xboxkrnl_PhyInitialize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -410,18 +410,26 @@ function {160} xboxkrnl_KfRaiseIrql(
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
   ): KIRQL; register;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:shogun  Revision:0.8.1-Pre2  Branch:Dxbx  Translator:shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('KfRaiseIrql');
-  Result := Low(Result);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : KfRaiseIrql'+
+      #13#10'('+
+      #13#10'   NewIrql            : 0x%.08X'+
+      #13#10');',
+      [NewIrql]);
+{$ENDIF}
+
   EmuSwapFS(fsXbox);
+  Result := 0;
 end;
 
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
 // NOTES Uses fastcall convention
-procedure {161} xboxkrnl_KfLowerIrql(
+function {161} xboxkrnl_KfLowerIrql(
   // Dxbx : This argument makes the 'register' calling convention
   // functionally equivalent to the 'fastcall' calling convention.
   // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
@@ -431,12 +439,21 @@ procedure {161} xboxkrnl_KfLowerIrql(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
-  ); register;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+  ): KIRQL; register;
+// Source:shogun  Revision:0.8.1-Pre2  Branch:Dxbx  Translator:shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('KfLowerIrql');
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : KfLowerIrql'+
+      #13#10'('+
+      #13#10'   NewIrql            : 0x%.08X'+
+      #13#10');',
+      [NewIrql]);
+{$ENDIF}
+
   EmuSwapFS(fsXbox);
+  Result := 0;
 end;
 
 function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;

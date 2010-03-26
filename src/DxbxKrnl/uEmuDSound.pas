@@ -3665,7 +3665,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := dwRet; // Dxbx TODO : Should we (and Cxbx) really return dwRet here?
+  Result := 0; // Dxbx TODO : Should we (and Cxbx) really return dwRet here?
 end;
 
 exports
