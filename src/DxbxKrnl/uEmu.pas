@@ -43,7 +43,7 @@ uses
 function EmuException(e: LPEXCEPTION_POINTERS): int; stdcall;
 
 // check the allocation size of a given virtual address
-function EmuCheckAllocationSize(pBase: PVOID; largeBound: bool): int;
+function EmuCheckAllocationSize(pBase: PVOID; largeBound: _bool): int;
 
 // print call stack trace
 {$ifdef _DEBUG}
@@ -51,8 +51,8 @@ procedure EmuPrintStackTrace(ContextRecord: PCONTEXT);
 {$endif}
 
 // global flags specifying current emulation state
-var g_bEmuException: bool = False;
-var g_bEmuSuspended: bool = False;
+var g_bEmuException: _bool = False;
+var g_bEmuSuspended: _bool = False;
 
 // global exception patching address
 var g_HaloHack: array [0..4-1] of uint32;
@@ -338,7 +338,7 @@ begin
 end;
 
 // check how many bytes were allocated for a structure
-function EmuCheckAllocationSize(pBase: PVOID; largeBound: bool): Integer;
+function EmuCheckAllocationSize(pBase: PVOID; largeBound: _bool): Integer;
 // Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
 var
   MemoryBasicInfo: MEMORY_BASIC_INFORMATION;

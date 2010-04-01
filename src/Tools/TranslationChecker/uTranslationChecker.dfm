@@ -93,7 +93,6 @@ object Form1: TForm1
         'ion" button.')
     ScrollBars = ssBoth
     TabOrder = 1
-    ExplicitLeft = -8
   end
   object edDxbxSrcPath: TEdit
     Left = 139

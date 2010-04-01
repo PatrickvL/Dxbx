@@ -29,12 +29,13 @@ uses
   // 3rd party
   XInput,
   // Dxbx
+  uTypes,
   uError,
   uEmuShared,
   uEmu,
   uXBController;
 
-function XTL_EmuDInputInit: bool; stdcall; // forward
+function XTL_EmuDInputInit: _bool; stdcall; // forward
 procedure XTL_EmuDInputCleanup; stdcall; // forward
 procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall; // forward
 
@@ -43,7 +44,7 @@ implementation
 var
   g_XBController: XBController;
 
-function XTL_EmuDInputInit: bool; stdcall;
+function XTL_EmuDInputInit: _bool; stdcall;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 begin
   g_EmuShared.GetXBController(@g_XBController);

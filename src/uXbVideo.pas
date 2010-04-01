@@ -29,6 +29,8 @@ uses
   // Dxbx
   uTypes;
 
+type BOOL = LongBool; // In this unit, use LongBool instead of BOOL :
+
 type
   XBVideo = packed record
   private
@@ -60,8 +62,8 @@ type
     function GetVideoResolution: PAnsiChar;
 
     // property Fullscreen Toggling
-    procedure SetFullscreen(bFullscreen: Boolean);
-    function GetFullscreen: Boolean;
+    procedure SetFullscreen(bFullscreen: BOOL);
+    function GetFullscreen: BOOL;
 
     // property VSync Toggling
     procedure SetVSync(Value: BOOL);
@@ -79,8 +81,9 @@ implementation
 
 procedure XBVideo.Initialize;
 begin
-  m_bVSync := False;
-  m_bFullscreen := False;   
+  m_bVSync := false;
+  m_bFullscreen := false;
+  m_bHardwareYUV := false;
   m_szVideoResolution := 'Automatic (Default)';
 end;
 
@@ -188,12 +191,12 @@ begin
   Result := @(m_szVideoResolution[0]);
 end;
 
-procedure XBVideo.SetFullscreen(bFullscreen: Boolean);
+procedure XBVideo.SetFullscreen(bFullscreen: BOOL);
 begin
   m_bFullscreen := bFullscreen;
 end;
 
-function XBVideo.GetFullscreen: Boolean;
+function XBVideo.GetFullscreen: BOOL;
 begin
   Result := m_bFullscreen;
 end;

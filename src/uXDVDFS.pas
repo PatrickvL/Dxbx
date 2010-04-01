@@ -29,7 +29,9 @@ unit uXDVDFS;
 interface
 
 uses
+  // Delphi
   Windows,
+  // Dxbx
   uTypes;
 
 //-- Defines ------------------------------------------------------------------
@@ -45,7 +47,7 @@ type
       Buffer: PVOID;      //  Buffer to fill
       StartSector: DWord; //  Start sector
       ReadSize: DWORD     //  Number of sectors to read
-      ): BOOL;
+      ): LongBool;
 
 type CDIO_READ = packed record
   SectorList: array [0..DISK_BUFFER-1] of DWORD;    // Ring buffer for buffered disk i/o
@@ -160,9 +162,9 @@ end; PXDVDFS_SESSION = ^XDVDFS_SESSION;
 function XDVDFS_Mount(
    Session: PXDVDFS_SESSION;
    ReadFunc: TReadFunc;
-   Data: PVOID): BOOL;
+   Data: PVOID): LongBool;
 function XDVDFS_UnMount(
-   Session: PXDVDFS_SESSION): BOOL;
+   Session: PXDVDFS_SESSION): LongBool;
 function XDVDFS_GetRootDir(
    Session: PXDVDFS_SESSION;
    SearchRecord: PSEARCH_RECORD): DWORD;
@@ -303,7 +305,7 @@ end;
 function XDVDFS_Mount(
    Session: PXDVDFS_SESSION;
    ReadFunc: TReadFunc;
-   Data: PVOID): BOOL;
+   Data: PVOID): LongBool;
 begin
   XDVDFS_UnMount(Session);
 
@@ -332,7 +334,7 @@ end;
 
 // XDVDFS deinit a session object
 function XDVDFS_UnMount(
-   Session: PXDVDFS_SESSION): BOOL;
+   Session: PXDVDFS_SESSION): LongBool;
 begin
   // Reset ring buffer
   memset(@(Session.Read.SectorList[0]), 0, SizeOf(DWORD) * DISK_BUFFER);

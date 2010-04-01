@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmuFS,
   uEmuFile,
@@ -92,7 +93,7 @@ type PCSTProxyParam = packed record
     StartContext1: PVOID;
     StartContext2: PVOID;
     StartRoutine: PKSTART_ROUTINE;
-    StartSuspended: BOOL;
+    StartSuspended: BOOL_;
     hStartedEvent: HANDLE;
   end;
   PPCSTProxyParam = ^PCSTProxyParam;
@@ -110,7 +111,7 @@ var
   StartContext1: PVOID;
   StartContext2: PVOID;
   StartRoutine: PKSTART_ROUTINE;
-  StartSuspended: BOOL;
+  StartSuspended: BOOL_;
   i: int;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
   OldExceptionFilter: LPTOP_LEVEL_EXCEPTION_FILTER;
@@ -150,7 +151,7 @@ begin
 
       EmuSwapFS(fsXbox);
 
-      pfnNotificationRoutine({Create=}TRUE);
+      pfnNotificationRoutine({Create=}BOOL_TRUE);
 
       EmuSwapFS(fsWindows);
     end;
@@ -222,7 +223,7 @@ callComplete:
 
       EmuSwapFS(fsXbox);
 
-      pfnNotificationRoutine({Create=}FALSE);
+      pfnNotificationRoutine({Create=}BOOL_FALSE);
  
       EmuSwapFS(fsWindows);
     end;
@@ -459,7 +460,7 @@ begin
 
       EmuSwapFS(fsXbox);
 
-      pfnNotificationRoutine({Create=}FALSE);
+      pfnNotificationRoutine({Create=}BOOL_FALSE);
 
       EmuSwapFS(fsWindows);
     end;

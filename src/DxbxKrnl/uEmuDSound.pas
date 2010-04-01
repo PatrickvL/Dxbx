@@ -509,7 +509,7 @@ function XTL_EmuDirectSoundCreate(
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
-  initialized: bool = false;
+  initialized: _bool = false;
 {$WRITEABLECONST OFF}
 var
   v: int;
@@ -1080,7 +1080,7 @@ var
   dwEmuFlags: DWORD;
   pDSBufferDesc: DirectSound.PDSBUFFERDESC;
   pDSBufferDescSpecial: DirectSound.PDSBUFFERDESC;
-  bIsSpecial: bool;
+  bIsSpecial: _bool;
   dwAcceptableMask: DWORD;
   v: integer;
 begin

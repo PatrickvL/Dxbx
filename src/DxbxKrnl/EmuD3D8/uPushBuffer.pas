@@ -47,11 +47,11 @@ var g_dwPrimaryPBCount: uint32 = 0;
 var g_pPrimaryPB: PDWORD = nil;
 
 // push buffer debugging
-var XTL_g_bStepPush: bool = false;
-var XTL_g_bSkipPush: bool = false;
-var XTL_g_bBrkPush: bool = false;
+var XTL_g_bStepPush: _bool = false;
+var XTL_g_bSkipPush: _bool = false;
+var XTL_g_bBrkPush: _bool = false;
 
-var g_bPBSkipPusher: bool = false;
+var g_bPBSkipPusher: _bool = false;
 
 var
   pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
@@ -207,7 +207,7 @@ var
   maxIBSize: uint;
   dwCount: DWord;
   dwMethod: DWord;
-  bInc: BOOL;
+  bInc: BOOL_;
   hRet: HRESULT;
   pData: PWORDArray;
   VertexCount: UINT;
@@ -219,7 +219,7 @@ var
 
 {$ifdef _DEBUG_TRACK_PB}
   pdwOrigPushData: PDWORD;
-  bShowPB: bool;
+  bShowPB: _bool;
   s: uint;
   pActiveVB: XTL_PIDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;

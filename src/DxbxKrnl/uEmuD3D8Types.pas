@@ -163,8 +163,8 @@ type X_D3DPRESENT_PARAMETERS = packed record
 
     SwapEffect: D3DSWAPEFFECT;
     hDeviceWindow: HWND;
-    Windowed: BOOL;
-    EnableAutoDepthStencil: BOOL;
+    Windowed: BOOL_;
+    EnableAutoDepthStencil: BOOL_;
     AutoDepthStencilFormat: X_D3DFORMAT;
     Flags: DWORD;
 
@@ -226,7 +226,7 @@ type _X_D3DPIXELSHADERDEF = packed record // <- blueshogun 10/1/07
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _STREAM_DYNAMIC_PATCH = packed record
-    NeedPatch: BOOL;       // This is to know whether is data which must be patched
+    NeedPatch: BOOL_;       // This is to know whether is data which must be patched
     ConvertedStride: DWORD;
     NbrTypes: DWORD;        // Number of the stream data types
     pTypes: PUINTs;         // The stream data types (xbox)

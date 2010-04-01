@@ -56,7 +56,7 @@ var
   pCur: PDWORDs;
   pTexture: XTL_PIDirect3DBaseTexture8;
   dwValue: DWORD;
-  bHack3925: bool;
+  bHack3925: _bool;
   Adjust1: int;
   Adjust2: int;
 begin
@@ -312,7 +312,7 @@ begin
 
         if (pCur[r] <> X_D3DTSS_UNK) then
         begin
-          bool pass := true;
+          _bool pass := true;
 
           for(int q=0;q<sizeof(unchecked)/sizeof(int);q++)
           begin
