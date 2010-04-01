@@ -1896,7 +1896,7 @@ begin
       [dwMilliseconds]);
 {$ENDIF}
 
-  // TODO: Implement?
+  // TODO -oCXBX: Implement?
   EmuWarning('XSetProcessQuantumLength is being ignored!');
 
   EmuSwapFS(fsXbox);
@@ -1913,7 +1913,7 @@ begin
 {$ENDIF}
 
   // Return the default cache size for now.
-  // TODO: Save the file cache size if/when set.
+  // TODO -oCXBX: Save the file cache size if/when set.
   Result := 64 * 1024;
 
   EmuSwapFS(fsXbox);
@@ -1961,7 +1961,7 @@ begin
       [hEvent]);
 {$ENDIF}
 
-  // TODO: This function might be a bit too high level.  If it is,
+  // TODO -oCXBX: This function might be a bit too high level.  If it is,
   // feel free to implement NtPulseEvent in EmuKrnl.cpp
 
   Result := BOOL(PulseEvent(hEvent));
@@ -2105,7 +2105,7 @@ begin
       [dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments]);
 {$ENDIF}
 
-  // TODO: Implement or not?
+  // TODO -oCXBX: Implement or not?
 //  RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
 
   EmuSwapFS(fsXbox);

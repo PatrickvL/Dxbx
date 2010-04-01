@@ -259,7 +259,7 @@ function {254} xboxkrnl_PsCreateSystemThread(
   lpThreadId: PULONG // thread identifier
   ): NTSTATUS; stdcall;
 // Source:Cxbx  Branch:Dxbx  Translator:PatrickvL  Done:25
-// TODO : Should we use XBMC's version?
+// TODO -oDXBX: Should we use XBMC's version?
 var
   ThreadHandle: HANDLE;
   ThreadExtraSize: ULONG;
