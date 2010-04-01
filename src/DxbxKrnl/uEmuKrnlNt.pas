@@ -130,7 +130,7 @@ function xboxkrnl_NtQueueApcThread(
 function xboxkrnl_NtQueryDirectoryFile(
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // Cxbx Todo: define this routine's prototype
+  ApcRoutine: PVOID; // TODO -oCXBX: define this routine's prototype
   ApcContext: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK; // out
   FileInformation: PFILE_DIRECTORY_INFORMATION; // out
@@ -169,7 +169,7 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   FileInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReadFile(
-  FileHandle: HANDLE; // Cxbx TODO: correct paramters
+  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // OPTIONAL
   ApcContext: PVOID;
@@ -198,7 +198,7 @@ function xboxkrnl_NtSetEvent(
   PreviousState: PLONG // OUT // Dxbx Note : Shouldn't this be PULONg instead?
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetInformationFile(
-  FileHandle: HANDLE; // Cxbx TODO: correct paramters
+  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length: ULONG;
@@ -233,7 +233,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFile(
-  FileHandle: HANDLE; // Cxbx TODO: correct paramters
+  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: DWORD; // Dxbx correction (was PVOID)
   ApcRoutine: PVOID;
   ApcContext: PVOID;
@@ -1023,7 +1023,7 @@ begin
        ApcStatusBlock, ApcReserved]);
 {$ENDIF}
 
-  // Cxbx TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
+  // TODO -oCXBX: Not too sure how this one works.  If there's any special *magic* that needs to be
   //     done, let me know!
   Result := JwaNative.NtQueueApcThread(
     ThreadHandle,
@@ -1042,7 +1042,7 @@ function xboxkrnl_NtQueryDirectoryFile
 (
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // Cxbx Todo: define this routine's prototype
+  ApcRoutine: PVOID; // TODO -oCXBX: define this routine's prototype
   ApcContext: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK; // out
   FileInformation: PFILE_DIRECTORY_INFORMATION; // out
@@ -1098,7 +1098,7 @@ begin
 
   FileDirInfo := PFILE_DIRECTORY_INFORMATION(CxbxMalloc($40 + 160*2));
 
-  mbstr := @FileInformation.FileName[0]; // Dxbx TODO : Is this Ansi or Wide ?
+  mbstr := @FileInformation.FileName[0]; // TODO -oDXBX: Is this Ansi or Wide ?
   wcstr := FileDirInfo.FileName;
 
   while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0) do
@@ -1125,7 +1125,7 @@ begin
     // Xbox does not return . and ..
   end;
 
-  // Cxbx TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
+  // TODO -oCXBX: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
   CxbxFree(FileDirInfo);
 
   Result := ret;
@@ -1373,7 +1373,7 @@ begin
       FS_INFORMATION_CLASS(FileInformationClass)
   );
 
-  // NOTE: Cxbx TODO: Dynamically fill in, or allow configuration?
+  // NOTE: TODO -oCXBX: Dynamically fill in, or allow configuration?
   if (FileInformationClass = FileFsSizeInformation) then
   begin
     SizeInfo := PFILE_FS_SIZE_INFORMATION(FileInformation);
@@ -1395,7 +1395,7 @@ end;
 // Differences from NT: There is no Key parameter.
 function xboxkrnl_NtReadFile
 (
-  FileHandle: HANDLE; // Cxbx TODO: correct paramters
+  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PVOID; // OPTIONAL
   ApcContext: PVOID;
@@ -1572,7 +1572,7 @@ end;
 
 function xboxkrnl_NtSetInformationFile
 (
-  FileHandle: HANDLE; // Cxbx TODO: correct paramters
+  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   IoStatusBlock: PVOID; // OUT
   FileInformation: PVOID;
   Length: ULONG;
@@ -1729,7 +1729,7 @@ begin
         mov ecx, dwEcx
         mov eax, dwEax
         */
-        // Cxbx TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
+        // TODO -oCXBX: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
         // Seems to be XDK/version dependand??
         mov esi, dwEsi
         mov ecx, dwEcx
@@ -1840,7 +1840,7 @@ end;
 // Differences from NT: There is no Key parameter.
 function xboxkrnl_NtWriteFile
 (
-  FileHandle: HANDLE; // Cxbx TODO: correct paramters
+  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: DWORD; // Dxbx correction (was PVOID)
   ApcRoutine: PVOID;
   ApcContext: PVOID;

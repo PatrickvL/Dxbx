@@ -100,7 +100,7 @@ end;
 
 function {008} xboxkrnl_DbgPrint(
   Format: PCCH;
-  Args: array of const // Dxbx TODO : Check if this is a correct translation of '...'
+  Args: array of const // TODO -oDXBX: Check if this is a correct translation of '...'
   ): ULONG; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin

@@ -63,7 +63,7 @@ function {004} xboxkrnl_AvSetSavedDataAddress(
 implementation
 
 var xboxkrnl_AvSavedDataAddress: PVOID = PVOID($F0040000);
-// Dxbx TODO : Take shogun's NULL ?
+// TODO -oDXBX: Take shogun's NULL ?
 
 function {001} xboxkrnl_AvGetSavedDataAddress()
   : PVOID; stdcall;

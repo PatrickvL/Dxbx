@@ -143,7 +143,7 @@ begin
            [this, s, name, namelen);
 {$ENDIF}
 
-    // Cxbx TODO: Host-To-Network order if necessary (probably not?)
+    // TODO -oCXBX:: Host-To-Network order if necessary (probably not?)
 
     Integer ret := bind(s, name, namelen);
 
@@ -167,7 +167,7 @@ begin
            [this, s, backlog);
 {$ENDIF}
 
-    // Cxbx TODO: Host-To-Network order if necessary (probably not?)
+    // TODO -oCXBX: Host-To-Network order if necessary (probably not?)
 
     Integer ret := listen(s, backlog);
 
@@ -217,7 +217,7 @@ begin
       #13#10');',
       [lpImagePath, pLaunchData]);
 {$ENDIF}
-  // Cxbx TODO: Launch another .xbe from Cxbx someday?
+  // TODO -oCXBX: Launch another .xbe from Cxbx someday?
 
   EmuSwapFS(fsXbox);
 

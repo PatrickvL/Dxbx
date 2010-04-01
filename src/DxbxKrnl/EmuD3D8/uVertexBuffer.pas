@@ -152,7 +152,7 @@ procedure XTL_EmuFlushIVB; stdcall;
 procedure XTL_EmuUpdateActiveTexture; stdcall;
 
 const VERTEX_BUFFER_CACHE_SIZE = 64;
-const MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // Cxbx TODO: Trim the not used time
+const MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO -oCXBX: Trim the not used time
 
 // inline vertex buffer emulation
 var g_IVBTblOffs: UINT = 0;
@@ -250,7 +250,7 @@ begin
     pCachedStream_ := PCACHEDSTREAM(pNode.pResource);
     if Assigned(pCachedStream_) then
     begin
-      // Cxbx TODO: Write nicer dump presentation
+      // TODO -oCXBX: Write nicer dump presentation
       DbgPrintf('Key: 0x%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: 0x%.08X',
              [pNode.uiKey, pCachedStream_.uiCacheHit, ifThen(pCachedStream_.bIsUP, 'YES', 'NO'),
              pCachedStream_.Stream.uiOrigStride, pCachedStream_.Stream.uiNewStride,
@@ -348,7 +348,7 @@ begin
     end;
     // uiStride := pPatchDesc.uiVertexStreamZeroStride; // DXBX, uiStride never used
     pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
-    // Cxbx TODO: This is sometimes the number of indices, which isn't too good
+    // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
     uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
     pCachedStream_.bIsUP := true;
     pCachedStream_.pStreamUP := pCalculateData;
@@ -439,7 +439,7 @@ begin
     end;
     uiStride := pPatchDesc.uiVertexStreamZeroStride;
     pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
-    // Cxbx TODO: This is sometimes the number of indices, which isn't too good
+    // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
     uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
     uiKey := uint32(pCalculateData);
     //pCachedStream_.bIsUP := true;
@@ -475,7 +475,7 @@ begin
       end
       else
       begin
-        // Cxbx TODO: Do something about this
+        // TODO -oCXBX: Do something about this
         if (pCachedStream_.bIsUP) then
         begin
           FreeCachedStream(pCachedStream_.pStreamUP);
@@ -643,7 +643,7 @@ begin
     end;
     uiStride  := pPatchDesc.uiVertexStreamZeroStride;
     pOrigData := pPatchDesc.pVertexStreamZeroData;
-    // Cxbx TODO: This is sometimes the number of indices, which isn't too good
+    // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
     dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
     pNewVertexBuffer := NULL;
     pNewData := CxbxMalloc(dwNewSize);
@@ -803,7 +803,7 @@ begin
               PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := 0.0;
               PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := PFLOATs(@pOrigData[uiVertex * uiStride + dwPosOrig])[2];
 
-          (*Cxbx TODO
+          (*TODO -oCXBX:
            $02:
               printf('D3DVSDT_NONE / xbox ext. nsp /');
               dwNewDataType := $FF; *)
@@ -1719,7 +1719,7 @@ begin
           begin
             if (DWORD(pSrc) = $80000000) then
             begin
-              // Cxbx TODO: Fix or handle this situation..?
+              // TODO -oCXBX: Fix or handle this situation..?
             end
             else
             begin

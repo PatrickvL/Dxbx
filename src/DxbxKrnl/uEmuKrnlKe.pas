@@ -189,7 +189,7 @@ begin
       [BugCheckMode]);
 {$ENDIF}
 
-  // Cxbx TODO: Investigate XapiFiberStartup maybe?
+  // TODO -oCXBX: Investigate XapiFiberStartup maybe?
 
   EmuSwapFS(fsXbox);
 end;

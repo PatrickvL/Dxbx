@@ -65,7 +65,7 @@ type X_DSBUFFERDESC = packed record
     dwFlags: DWORD;
     dwBufferBytes: DWORD;
     lpwfxFormat: LPWAVEFORMATEX;
-    lpMixBins: LPVOID;      // Cxbx TODO: Implement
+    lpMixBins: LPVOID;      // TODO -oCXBX: Implement
     dwInputMixBin: DWORD;
   end;
   PX_DSBUFFERDESC = ^X_DSBUFFERDESC;
@@ -75,9 +75,9 @@ type X_DSSTREAMDESC = packed record
     dwFlags: DWORD;
     dwMaxAttachedPackets: DWORD;
     lpwfxFormat: LPWAVEFORMATEX;
-    lpfnCallback: PVOID;   // Cxbx TODO: Correct Parameter
+    lpfnCallback: PVOID;   // TODO -oCXBX: Correct Parameter
     lpvContext: LPVOID;
-    lpMixBins: PVOID;      // Cxbx TODO: Correct Parameter
+    lpMixBins: PVOID;      // TODO -oCXBX: Correct Parameter
   end;
   PX_DSSTREAMDESC = ^X_DSSTREAMDESC;
 
@@ -191,7 +191,7 @@ type LPDIRECTSOUNDSTREAM = XTL_PIDirectSoundStream;
 
 type X_CDirectSound = packed record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    // Cxbx TODO: Fill this in?
+    // TODO -oCXBX: Fill this in?
   end;
   PX_CDirectSound = ^X_CDirectSound;
 
@@ -238,7 +238,7 @@ type X_CMcpxStream = class(TObject)
             DWORD Unknown4;                                                 // 0x0C - ???
 
             //
-            // Cxbx TODO: Function needs X_CMcpxStream "this" pointer (ecx!)
+            // TODO -oCXBX: Function needs X_CMcpxStream "this" pointer (ecx!)
             //
 
             VOID (WINAPI *Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);   // 0x10
@@ -379,7 +379,7 @@ begin
       IDirectSoundBuffer(g_pDSoundBufferCache[v].EmuDirectSoundBuffer8).Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
      end;
 
-    // Cxbx TODO: relock old lock ??
+    // TODO -oCXBX: relock old lock ??
    end;
 end;
 
@@ -696,8 +696,8 @@ function XTL_EmuIDirectSound8_DownloadEffectsImage(
     pThis: XTL_LPDIRECTSOUND8;
     pvImageBuffer: LPCVOID;
     dwImageSize: DWORD;
-    pImageLoc: PVOID;      // Cxbx TODO: Use this param
-    ppImageDesc: PVOID   // Cxbx TODO: Use this param
+    pImageLoc: PVOID;      // TODO -oCXBX: Use this param
+    ppImageDesc: PVOID   // TODO -oCXBX: Use this param
 ): HResult; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -715,7 +715,7 @@ begin
       [pThis, pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
 
   EmuSwapFS(fsXbox);
 
@@ -766,7 +766,7 @@ begin
       [pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
 
   EmuSwapFS(fsXbox);
 
@@ -793,7 +793,7 @@ begin
       [pThis, fDistanceFactor, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
 
   EmuSwapFS(fsXbox);
 
@@ -820,7 +820,7 @@ begin
       [pThis, fRolloffFactor, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
 
   EmuSwapFS(fsWindows);
 
@@ -847,7 +847,7 @@ begin
       [pThis, fDopplerFactor, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
 
   EmuSwapFS(fsXbox);
 
@@ -857,7 +857,7 @@ end;
 function XTL_EmuIDirectSound8_SetI3DL2Listener
 (
     pThis: XTL_LPDIRECTSOUND8;
-    pDummy: PVOID; // Cxbx TODO: fill this out
+    pDummy: PVOID; // TODO -oCXBX: fill this out
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -876,7 +876,7 @@ begin
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -905,7 +905,7 @@ begin
   end;
 {$ENDIF}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -930,7 +930,7 @@ begin
   end;
 {$ENDIF}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -955,7 +955,7 @@ begin
   end;
 {$ENDIF}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -985,7 +985,7 @@ begin
   end;
   {$ENDIF}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -1015,7 +1015,7 @@ begin
   end;
 {$ENDIF}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -1042,7 +1042,7 @@ begin
   end;
 {$ENDIF}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -1062,7 +1062,7 @@ begin
       [pThis]);
 {$ENDIF}
 
-  // Cxbx TODO: Translate params, then make the PC DirectSound call
+  // TODO -oCXBX: Translate params, then make the PC DirectSound call
 
   EmuSwapFS(fsXbox);
 
@@ -1139,7 +1139,7 @@ begin
         pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec*pDSBufferDesc.lpwfxFormat.nBlockAlign;
         pDSBufferDesc.lpwfxFormat.wBitsPerSample := 8;
 
-        { Cxbx TODO: Get ADPCM working!  MARKED OUT CXBX
+        { TODO -oCXBX: Get ADPCM working!  MARKED OUT CXBX
         pDSBufferDesc.lpwfxFormat.cbSize := 32;
         const WAVE_FORMAT_ADPCM = 2;
         pDSBufferDesc.lpwfxFormat.wFormatTag := WAVE_FORMAT_ADPCM;
@@ -1206,7 +1206,7 @@ begin
     end;
   end;
 
-  // Cxbx TODO: Garbage Collection
+  // TODO -oCXBX: Garbage Collection
   New({var PX_CDirectSoundBuffer}ppBuffer^);
 
   ppBuffer^.EmuDirectSoundBuffer8 := nil;
@@ -1361,9 +1361,9 @@ begin
          [pThis, dwPlayStart, dwPlayLength]);
 {$ENDIF}
 
-  // Cxbx TODO: Translate params, then make the PC DirectSound call
+  // TODO -oCXBX: Translate params, then make the PC DirectSound call
 
-  // Cxbx TODO: Ensure that 4627 & 4361 are intercepting far enough back
+  // TODO -oCXBX: Ensure that 4627 & 4361 are intercepting far enough back
   // (otherwise pThis is manipulated!)
 
   EmuSwapFS(fsXbox);
@@ -1419,7 +1419,7 @@ begin
     if (pThis.EmuLockPtr1 <> nil) then
       IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Unlock(pThis.EmuLockPtr1, pThis.EmuLockBytes1, pThis.EmuLockPtr2, pThis.EmuLockBytes2);
 
-    // Cxbx TODO: Verify dwFlags is the same as windows
+    // TODO -oCXBX: Verify dwFlags is the same as windows
     hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
     if (FAILED(hRet)) then
@@ -1458,7 +1458,7 @@ begin
          [pThis, dwHeadroom]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
 
   EmuSwapFS(fsXbox);
 
@@ -1480,7 +1480,7 @@ begin
          [pThis, dwLoopStart, dwLoopLength]);
 {$ENDIF}
 
-  // Cxbx TODO: Ensure that 4627 & 4361 are intercepting far enough back
+  // TODO -oCXBX: Ensure that 4627 & 4361 are intercepting far enough back
   // (otherwise pThis is manipulated!)
 
   //EmuResizeIDirectSoundBuffer8(pThis, dwLoopLength);
@@ -1557,7 +1557,7 @@ begin
          [pThis, lPitch]);
 {$ENDIF}
 
-  // Cxbx TODO: Translate params, then make the PC DirectSound call
+  // TODO -oCXBX: Translate params, then make the PC DirectSound call
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -1610,7 +1610,7 @@ begin
          [pThis, dwNewPosition]);
 {$ENDIF}
 
-  // NOTE: Cxbx TODO: This call *will* (by MSDN) fail on primary buffers!
+  // NOTE: TODO -oCXBX: This call *will* (by MSDN) fail on primary buffers!
   hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetCurrentPosition(dwNewPosition);
 
   if (FAILED(hRet)) then
@@ -1641,7 +1641,7 @@ begin
   HackUpdateSoundBuffers();
   HackUpdateSoundStreams();
 
-  // NOTE: Cxbx TODO: This call always seems to fail on primary buffers!
+  // NOTE: TODO -oCXBX: This call always seems to fail on primary buffers!
   hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
   if (FAILED(hRet)) then
@@ -1790,7 +1790,7 @@ begin
          [pThis, lVolume]);
 {$ENDIF}
 
-  // Cxbx TODO: Ensure that 4627 & 4361 are intercepting far enough back
+  // TODO -oCXBX: Ensure that 4627 & 4361 are intercepting far enough back
   // (otherwise pThis is manipulated!)
 //    HRESULT hRet = IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetVolume(lVolume);
 
@@ -1845,14 +1845,14 @@ begin
          [pdssd, ppStream]);
 {$ENDIF}
 
-  // Cxbx TODO: Garbage Collection
+  // TODO -oCXBX: Garbage Collection
   ppStream^ := X_CDirectSoundStream.Create;
 
   pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
 
   // convert from Xbox to PC DSound
   begin
-    dwAcceptableMask := $00000010; // Cxbx TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
+    dwAcceptableMask := $00000010; // TODO -oCXBX: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
     if (pdssd.dwFlags and (not dwAcceptableMask)) > 0 then
         EmuWarning('Use of unsupported pdssd.dwFlags mask(s) (0x%.08X)', [pdssd.dwFlags and (not dwAcceptableMask)]);
@@ -2012,7 +2012,7 @@ begin
       [pThis, lVolume]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually SetVolume
+  // TODO -oCXBX: Actually SetVolume
 
   EmuSwapFS(fsXbox);
 
@@ -2039,7 +2039,7 @@ begin
       [pThis, fRolloffFactor, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually SetRolloffFactor
+  // TODO -oCXBX: Actually SetRolloffFactor
 
   EmuSwapFS(fsXbox);
 
@@ -2230,7 +2230,7 @@ begin
       [pThis]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually Process
+  // TODO -oCXBX: Actually Process
 
   EmuSwapFS(fsXbox);
 
@@ -2247,7 +2247,7 @@ begin
   DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush();',[pThis]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually Flush
+  // TODO -oCXBX: Actually Flush
 
   EmuSwapFS(fsXbox);
 
@@ -2308,7 +2308,7 @@ begin
       [pThis, dwHeadroom]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2335,7 +2335,7 @@ begin
       [pThis, dwInsideConeAngle, dwOutsideConeAngle, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2360,7 +2360,7 @@ begin
       [pThis, lConeOutsideVolume, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2385,7 +2385,7 @@ begin
       [pThis, pUnknown, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2410,7 +2410,7 @@ begin
       [pThis, fMaxDistance, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2435,7 +2435,7 @@ begin
       [pThis, fMinDistance, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2464,7 +2464,7 @@ begin
       [pThis, x, y, z, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2493,7 +2493,7 @@ begin
       [pThis, x, y, z, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2522,7 +2522,7 @@ begin
       [pThis, x, y, z, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2545,7 +2545,7 @@ begin
       [pThis, dwFrequency]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2570,7 +2570,7 @@ begin
       [pThis, pds3db, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2618,7 +2618,7 @@ begin
       [pThis, dwUnknown1]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -2648,7 +2648,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2678,7 +2678,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2708,7 +2708,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2739,7 +2739,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2772,7 +2772,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2806,7 +2806,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2836,7 +2836,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2870,7 +2870,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2904,7 +2904,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2934,7 +2934,7 @@ begin
    end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -2964,7 +2964,7 @@ begin
   end;
   {$endif}
 
-  // Cxbx TODO: Actually do something
+  // TODO -oCXBX: Actually do something
 
   Result := DS_OK;
 end;
@@ -3033,7 +3033,7 @@ begin
   DbgPrintf('EmuDSound : EmuDirectSoundUseFullHRTF()');
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
 
   EmuSwapFS(fsXbox);
 end;
@@ -3056,7 +3056,7 @@ begin
       [pThis, pLFODesc]);
 {$ENDIF}
 
-  // Cxbx TODO: Implement
+  // TODO -oCXBX: Implement
   EmuSwapFS(fsXbox);
   Result := S_OK;
 end;
@@ -3116,7 +3116,7 @@ begin
       [pThis, pflPoints, dwPointCount, dwApply]);
 {$ENDIF}
 
-  // Cxbx TODO: Implement
+  // TODO -oCXBX: Implement
 
   EmuSwapFS(fsXbox);
 
@@ -3141,7 +3141,7 @@ begin
       [pStream, lVolume]);
 {$ENDIF}
 
-  // Cxbx TODO: Implement
+  // TODO -oCXBX: Implement
 
   EmuSwapFS(fsXbox);
 

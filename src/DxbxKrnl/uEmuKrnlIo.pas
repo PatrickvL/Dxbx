@@ -42,7 +42,7 @@ uses
   uDxbxKrnl,
   uDxbxKrnlUtils;
 
-// Dxbx TODO : Translate all other IRP defines from ReactOS
+// TODO -oDXBX: Translate all other IRP defines from ReactOS
 const IRP_MJ_MAXIMUM_FUNCTION = $1B;
 
 type IRP = packed record
@@ -69,7 +69,7 @@ type IRP = packed record
     UserIosb: PIO_STATUS_BLOCK;
     UserEvent: PKEVENT;
 
-    // Dxbx TODO : Translate all below
+    // TODO -oDXBX: Translate all below
     union begin
       struct begin
         PIO_APC_ROUTINE  UserApcRoutine;
@@ -105,19 +105,19 @@ type IRP = packed record
   end;
   PIRP = ^IRP;
 
-  PDRIVER_EXTENSION = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  PFAST_IO_DISPATCH = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  PDRIVER_INITIALIZE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  PDRIVER_STARTIO = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  PDRIVER_UNLOAD = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  PDRIVER_DISPATCH = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  PIO_TIMER_ROUTINE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  PVPB = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  DEVICE_TYPE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  KDEVICE_QUEUE = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
-  KEVENT = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PDRIVER_EXTENSION = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PFAST_IO_DISPATCH = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_INITIALIZE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_STARTIO = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_UNLOAD = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_DISPATCH = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PIO_TIMER_ROUTINE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PVPB = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  DEVICE_TYPE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  KDEVICE_QUEUE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  KEVENT = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
   PKEVENT = ^KEVENT;
-  PDEVOBJ_EXTENSION = UNKNOWN; // Dxbx TODO : Lookup in ReactOS
+  PDEVOBJ_EXTENSION = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
 
   PDEVICE_OBJECT = ^DEVICE_OBJECT; // forward;
   PPDEVICE_OBJECT = ^PDEVICE_OBJECT;
@@ -320,7 +320,7 @@ implementation
 
 function {059} xboxkrnl_IoAllocateIrp(
   StackSize: CCHAR;
-  ChargeQuota: LONGBOOL // Dxbx TODO : Should this be a WordBool??
+  ChargeQuota: LONGBOOL // TODO -oDXBX: Should this be a WordBool??
   ): PIRP; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -477,7 +477,7 @@ begin
 
   Result := STATUS_SUCCESS;
 
-  // Cxbx TODO: Try redirecting to NtCreateFile if this function ever is run into
+  // TODO -oCXBX: Try redirecting to NtCreateFile if this function ever is run into
   CxbxKrnlCleanup('IoCreateFile not implemented');
 
   EmuSwapFS(fsXbox);
@@ -508,7 +508,7 @@ begin
      DeviceName, PSTRING_Buffer(DeviceName)]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually um...implement this function
+  // TODO -oCXBX: Actually um...implement this function
   Result := STATUS_OBJECT_NAME_COLLISION;
 
   EmuSwapFS(fsXbox);
@@ -543,7 +543,7 @@ begin
       [SymbolicLinkName, PSTRING_Buffer(SymbolicLinkName)]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually um...implement this function
+  // TODO -oCXBX: Actually um...implement this function
   Result := STATUS_OBJECT_NAME_NOT_FOUND;
 
   EmuSwapFS(fsXbox);
@@ -714,7 +714,7 @@ begin
       [VolumeName, PSTRING_Buffer(VolumeName)]);
 {$ENDIF}
 
-  // Cxbx TODO: Anything?
+  // TODO -oCXBX: Anything?
   Result := STATUS_SUCCESS;
 
   EmuSwapFS(fsXbox);

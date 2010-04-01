@@ -464,7 +464,7 @@ begin
     MyFunctionLocations.Clear;
 
   if Assigned(ProcessMemoryRanges) then
-    ProcessMemoryRanges.Clear; // Dxbx TODO : Free RAddressRange's
+    ProcessMemoryRanges.Clear; // TODO -oDXBX: Free RAddressRange's
 
   if Assigned(LibraryIndexesToConsider) then
     LibraryIndexesToConsider.Size := 0;
@@ -709,7 +709,7 @@ begin
   DetectedSymbol.StoredLibraryFunction := FoundFunction;
   DetectedSymbol.AddPotentialSymbolLocation(aAddress, FoundFunction);
 
-  // Dxbx TODO : Support having more than 1 incarnation of a function
+  // TODO -oDXBX: Support having more than 1 incarnation of a function
   // (which is possible when 2 libraries are considered)
 
   if Length(DetectedSymbol.CrossReferences) < FoundFunction.NrCrossReferences then
@@ -775,7 +775,7 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
         Exit;
     end;
 
-    // Dxbx TODO : Include data & test-code for 'trailing bytes' patterns.
+    // TODO -oDXBX: Include data & test-code for 'trailing bytes' patterns.
 
     // Correct aAddress back to starting location :
     Dec(UIntPtr(aAddress), PATTERNSIZE);
@@ -872,7 +872,7 @@ procedure TDetectedSymbols.TestAddressUsingPatternTrie(const aAddress: PByte);
       begin
         if _TryMatchingLeaf({var}StoredLibraryFunction, aAddress) then
         begin
-          // Dxbx TODO : Instead of calling RegisterPotentialFunctionLocation right away,
+          // TODO -oDXBX: Instead of calling RegisterPotentialFunctionLocation right away,
           // we should collect all valid's and register only the longest functions
           // (per versioned-library).
           Result := True;
@@ -1069,7 +1069,7 @@ begin
       // string(XboxLibraryPatchToString(Detected.XboxLibraryPatch)
       {MayRenderArguments=}False);
 {$ENDIF}
-    // Dxbx TODO : Add to MyFunctionLocations, so functions can be found with FindByAddress (a pure debugging aid)
+    // TODO -oDXBX: Add to MyFunctionLocations, so functions can be found with FindByAddress (a pure debugging aid)
 
 ///  DetectedSymbol.StoredLibraryFunction := FoundFunction;
   end; // for symbols

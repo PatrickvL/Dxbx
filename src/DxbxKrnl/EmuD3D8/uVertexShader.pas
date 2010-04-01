@@ -1416,7 +1416,7 @@ begin
   RUsage[11] := False;
   RUsage[12] := False;
 
-  // Cxbx TODO: What about state shaders and such?
+  // TODO -oCXBX: What about state shaders and such?
   pShader.ShaderHeader.Version := VERSION_VS;
 
   // Search for the screen space instructions, and remove them
@@ -1425,7 +1425,7 @@ begin
     VshRemoveScreenSpaceInstructions(pShader);
   end;
 
-  // Cxbx TODO: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
+  // TODO -oCXBX: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
   i := 0;
   while i < pShader.IntermediateCount do
   begin
@@ -1475,12 +1475,12 @@ begin
 
     if (pIntermediate.InstructionType = IMD_MAC) and (pIntermediate.MAC = MAC_DPH) then
     begin
-			// 2010/01/12 - revel8n - attempt to alleviate conversion issues relate to the dph instruction
+      // 2010/01/12 - revel8n - attempt to alleviate conversion issues relate to the dph instruction
 
       // Replace dph with dp3 and add
       if (pIntermediate.Output.Type_ <> IMD_OUTPUT_R) then
       begin
-        // Cxbx TODO: Complete dph support
+        // TODO -oCXBX: Complete dph support
         EmuWarning('Can''t simulate dph for other than output r registers (yet)');
 
         // attempt to find unused register...
@@ -1807,7 +1807,7 @@ var
   NewVertexRegisterIn: DWORD;
   NewVertexRegisterOut: DWORD;
 begin
-  // Cxbx TODO: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
+  // TODO -oCXBX: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
   // D3DVSD_TESSUV
   if (pToken^ and $10000000) > 0 then
   begin
@@ -2182,7 +2182,7 @@ begin
   memcpy(pRecompiled, pDeclaration, DeclarationSize);
   pDeclarationSize^ := DeclarationSize;
 
-  // Cxbx TODO: Put these in one struct
+  // TODO -oCXBX: Put these in one struct
   ZeroMemory(@PatchData, SizeOf(PatchData));
 
   DbgVshPrintf('DWORD dwVSHDecl[] = '#13#10'{'#13#10);
@@ -2232,7 +2232,7 @@ begin
   pShader := PVSH_XBOX_SHADER(CxbxMalloc(SizeOf(VSH_XBOX_SHADER)));
   hRet := 0;
 
-  // Cxbx TODO: support this situation..
+  // TODO -oCXBX: support this situation..
   if not Assigned(pFunction) then
   begin
     Result := E_FAIL;

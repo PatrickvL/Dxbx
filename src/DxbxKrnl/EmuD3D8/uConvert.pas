@@ -225,7 +225,7 @@ begin
     X_D3DFMT_A8B8G8R8: // Added by Dxbx
       pBPP^ := 4;
 
-  // Dxbx TODO : Where do we put X_D3DFMT_UYVY ?
+  // TODO -oDXBX: Where do we put X_D3DFMT_UYVY ?
 
   else
     Result := FALSE;
@@ -347,7 +347,7 @@ begin
 
     X_D3DFMT_LIN_D16, // Linear
     X_D3DFMT_D16: // Swizzled
-      Result := D3DFMT_D16; // Cxbx TODO: D3DDMT_D16 on Xbox is always lockable
+      Result := D3DFMT_D16; // TODO -oCXBX: D3DDMT_D16 on Xbox is always lockable
 
     X_D3DFMT_L6V5U5: // Swizzled
       Result := D3DFMT_L6V5U5;
@@ -362,7 +362,7 @@ begin
       Result := D3DFMT_VERTEXDATA;
 
     $FFFFFFFF:
-      Result := D3DFMT_UNKNOWN; // Cxbx TODO: Not sure if this counts as swizzled or not...
+      Result := D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 
   else
     CxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)', [aFormat]);
@@ -438,7 +438,8 @@ var
 begin
   NewFlags := 0;
 
- // Need to convert the flags, Cxbx TODO: fix the xbox extensions
+ // Need to convert the flags,
+ //TODO -oCXBX: fix the xbox extensions
   if (Flags and X_D3DLOCK_NOFLUSH) > 0 then
     NewFlags := NewFlags xor 0;
 

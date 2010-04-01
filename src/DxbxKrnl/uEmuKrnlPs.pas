@@ -188,7 +188,7 @@ begin
   except
     on E: Exception do
     begin
-      // TODO : How do we intercept ntdll.ZwRaiseException here ?
+      // TODO -oDXBX: How do we intercept ntdll.ZwRaiseException here ?
       //      EmuException(E);
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
@@ -272,7 +272,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  // Dxbx TODO : How to apply the local arguments like lpThreadAttributes ?
+  // TODO -oDXBX: How to apply the local arguments like lpThreadAttributes ?
   ThreadHandle := 0;
   ThreadExtraSize := dwStackSize; // ??
   KernelStackSize := dwStackSize; // ??

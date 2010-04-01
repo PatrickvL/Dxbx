@@ -71,7 +71,7 @@ procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall;
 begin
   g_XBController.ListenPoll(Controller);
   if Assigned(g_XBController.GetError()) then
-    MessageBox(0, g_XBController.GetError(), 'Dxbx [*UNHANDLED!*]', MB_OK);  // Cxbx TODO: Handle this!
+    MessageBox(0, g_XBController.GetError(), 'Dxbx [*UNHANDLED!*]', MB_OK);  // TODO -oCXBX: Handle this!
 end;
 
 exports
