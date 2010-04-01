@@ -1008,7 +1008,7 @@ begin
                                            TDIEnumDevicesCallbackA(@WrapEnumGameCtrlCallback),
                                            Addr(Self),
                                            DIEDFL_ATTACHEDONLY);
-    // Dxbx TODO Add : if FAILED(hret) then what?
+    // TODO -oDxbx: Add : if FAILED(hret) then what?
 
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysKeyboard') then
     begin

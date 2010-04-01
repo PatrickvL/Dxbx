@@ -57,7 +57,7 @@ type
   WAVEFORMATEX = TWAVEFORMATEX;
   LPWAVEFORMATEX = MMSystem.PWaveFormatEx; // alias
   LPCWAVEFORMATEX = MMSystem.PWaveFormatEx;
-  LPCDSI3DL2BUFFER = PVoid;
+  LPCDSI3DL2BUFFER = Pvoid;
 
 type X_DSBUFFERDESC = packed record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -1022,7 +1022,7 @@ end;
 
 function XTL_EmuIDirectSound8_SetAllParameters(
     pThis: XTL_LPDIRECTSOUND8;
-    pTodo: Pointer;  // Dxbx TODO: LPCDS3DLISTENER
+    pTodo: Pointer;  // TODO -oDxbx : LPCDS3DLISTENER
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100

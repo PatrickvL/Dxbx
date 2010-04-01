@@ -577,7 +577,7 @@ begin
   Result := ((((CReg shr 5) and 7) - 3) * 32) + (CReg and 31);
 end;
 
-function VshGetField(pShaderToken: Puint32; 
+function VshGetField(pShaderToken: Puint32;
                      FieldName: VSH_FIELD_NAME): uint08;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -603,7 +603,7 @@ begin
     end;
   end;
 
-  Result := nil;
+  Result := NULL;
 end;
 
 procedure VshParseInstruction(pShaderToken: Puint32;
@@ -734,7 +734,7 @@ begin
 end;
 
 procedure VshWriteOutputMask(const OutputMask: Dxbx4Booleans;
-                             pDisassembly: PAnsiChar;
+                             pDisassembly: P_char;
                              pDisassemblyPos: Puint32);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 const
@@ -757,7 +757,7 @@ begin
 end;
 
 procedure VshWriteParameter(pParameter: PVSH_IMD_PARAMETER;
-                            pDisassembly: PAnsichar;
+                            pDisassembly: P_char;
                             pDisassemblyPos: Puint32);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 const
@@ -765,7 +765,7 @@ const
 var
   i: int;
   j: int;
-  Swizzle: AnsiChar;
+  Swizzle: _char;
 begin
   Inc(pDisassemblyPos^, sprintf(pDisassembly + pDisassemblyPos^, ', %s%s', [
                 _neg[pParameter.Parameter.Neg],
@@ -825,12 +825,12 @@ begin
 end; // VshWriteParameter
 
 procedure VshWriteShader(pShader: PVSH_XBOX_SHADER; 
-                         pDisassembly: PAnsiChar; 
+                         pDisassembly: P_char; 
                          Truncate: boolean);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   DisassemblyPos: uint32;
-  i, j: Int;
+  i, j: int;
   pIntermediate: PVSH_INTERMEDIATE_FORMAT;
   pParameter: PVSH_IMD_PARAMETER;
 begin
@@ -846,30 +846,37 @@ begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvsw.1.1'#10));
   end;
 
-  i := 0;
-  while (i < pShader.IntermediateCount) and ((i < 128) or (not Truncate)) do
+  i := 0; while (i < pShader.IntermediateCount) and ((i < 128) or (not Truncate)) do
   begin
     pIntermediate := @(pShader.Intermediate[i]);
 
-    if (i = 128) then
+    if(i = 128) then
+    begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '; -- Passing the truncation limit --'#10));
-
+    end;
     // Writing combining sign if neccessary
-    if (pIntermediate.IsCombined) then
+    if(pIntermediate.IsCombined) then
+    begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '+'));
-
+    end;
     // Print the op code
-    if (pIntermediate.InstructionType = IMD_MAC) then
+    if(pIntermediate.InstructionType = IMD_MAC) then
+    begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [MAC_OpCode[pIntermediate.MAC]]))
-    else
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [ILU_OpCode[pIntermediate.ILU]]));
-
-    // Print the output parameter
-    if (pIntermediate.Output.Type_ = IMD_OUTPUT_A0X) then
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'a0.x'))
+    end
     else
     begin
-      case pIntermediate.Output.Type_ of
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [ILU_OpCode[pIntermediate.ILU]]));
+    end;
+
+    // Print the output parameter
+    if(pIntermediate.Output.Type_ = IMD_OUTPUT_A0X) then
+    begin
+      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'a0.x'))
+    end
+    else
+    begin
+      case(pIntermediate.Output.Type_) of
         IMD_OUTPUT_C:
           Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'c%d', [pIntermediate.Output.Address]));
         IMD_OUTPUT_R:
@@ -879,7 +886,6 @@ begin
       else
         CxbxKrnlCleanup('Invalid output register in vertex shader!');
       end;
-
       VshWriteOutputMask(pIntermediate.Output.Mask, pDisassembly, @DisassemblyPos);
     end;
 
@@ -887,14 +893,14 @@ begin
     for j := 0 to 3 - 1 do
     begin
       pParameter := @(pIntermediate.Parameters[j]);
-      if (pParameter.Active) then
+      if(pParameter.Active) then
+      begin
         VshWriteParameter(pParameter, pDisassembly, @DisassemblyPos);
+      end;
     end;
-
     Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, #10));
     Inc(i);
   end;
-
   pDisassembly[DisassemblyPos] := #0;
 end; // VshWriteShader
 
@@ -965,7 +971,7 @@ procedure VshInsertIntermediate(pShader: PVSH_XBOX_SHADER;
                                 Pos: uint16);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  i: Int;
+  i: int;
 begin
   VshVerifyBufferBounds(pShader);
 
@@ -1234,7 +1240,7 @@ procedure VshSetOutputMask(pOutput: PVSH_IMD_OUTPUT;
                            MaskX: boolean; 
                            MaskY: boolean;
                            MaskZ: boolean;
-                           MaskW: boolean);
+                           MaskW: boolean); inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   pOutput.Mask[0] := MaskX;
@@ -1264,10 +1270,10 @@ var
 begin
   PosC38 := -1;
   deleted := 0;
-  i := 0;
-  while i < pShader.IntermediateCount do
+  i := 0; while i < pShader.IntermediateCount do
   begin
     pIntermediate := @pShader.Intermediate[i];
+
     for k := 0 to 3 - 1 do
     begin
       if (pIntermediate.Parameters[k].Active) then
@@ -1283,7 +1289,7 @@ begin
                (pIntermediate.Parameters[1].Parameter.ParameterType = PARAM_R) then
             begin
               DbgVshPrintf('PosC38 = %d i = %d'#13#10, [PosC38, i]);
-              for j := i - 1 downto 0 do
+              for j := (i-1) downto 0 do
               begin
                 pIntermediate1W := @pShader.Intermediate[j];
                 // Time to start searching for +rcc r#.x, r12.w
@@ -1331,8 +1337,7 @@ begin
   if (deleted <> 3) then
   begin
     EmuWarning('Applying screen space vertex shader patching hack!');
-    i := 0;
-    while i < pShader.IntermediateCount  do
+    i := 0; while i < pShader.IntermediateCount  do
     begin
       pIntermediate := @pShader.Intermediate[i];
 
@@ -1426,8 +1431,7 @@ begin
   end;
 
   // TODO -oCXBX: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
-  i := 0;
-  while i < pShader.IntermediateCount do
+  i := 0; while i < pShader.IntermediateCount do
   begin
     pIntermediate := @pShader.Intermediate[i];
     // Combining not supported in vs.1.1
@@ -1669,18 +1673,18 @@ begin
   begin
     Inc(Pos);
   end;
-  Result := (Pos + 1) * SizeOf(DWORD);
+  Result := (Pos + 1) * sizeof(DWORD);
 end;
 
 function Xb2PCRegisterType(VertexRegister: DWORD): DWORD;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  PCRegisterType: Integer;
+  PCRegisterType: DWORD;
 begin
   case Integer(VertexRegister) of
   -1: begin
       DbgVshPrintf('D3DVSDE_VERTEX /* xbox ext. */');
-      PCRegisterType := -1;
+      PCRegisterType := DWORD(-1);
     end;
   0: begin
       DbgVshPrintf('D3DVSDE_POSITION');
@@ -1704,15 +1708,15 @@ begin
     end;
   5: begin
       DbgVshPrintf('D3DVSDE_FOG /* xbox ext. */');
-      PCRegisterType := -1;
+      PCRegisterType := DWORD(-1);
     end;
   7: begin
       DbgVshPrintf('D3DVSDE_BACKDIFFUSE /* xbox ext. */');
-      PCRegisterType := -1;
+      PCRegisterType := DWORD(-1);
     end;
   8: begin
       DbgVshPrintf('D3DVSDE_BACKSPECULAR /* xbox ext. */');
-      PCRegisterType := -1;
+      PCRegisterType := DWORD(-1);
     end;
   9: begin
       DbgVshPrintf('D3DVSDE_TEXCOORD0');
@@ -1732,10 +1736,10 @@ begin
     end;
   else
     DbgVshPrintf('%d /* unknown register */', [VertexRegister]);
-    PCRegisterType := -1;
+    PCRegisterType := DWORD(-1);
   end;
 
-  Result := DWord(PCRegisterType);
+  Result := PCRegisterType;
 end; // Xb2PCRegisterType
 
 function VshGetTokenType(Token: DWORD): DWORD; inline;
@@ -1915,7 +1919,7 @@ begin
     begin
       pPatchData.ConvertedStride := 0;
       pPatchData.TypePatchData.NbrTypes := 0;
-      pPatchData.NeedPatching := False;
+      pPatchData.NeedPatching := FALSE;
     end;
 
     Inc(pPatchData.StreamPatchData.NbrStreams);
@@ -1946,7 +1950,7 @@ begin
 end;
 
 procedure VshConvertToken_STREAMDATA_REG(pToken: PDWORD;
-                                         IsFixedFunction: Boolean;
+                                         IsFixedFunction: boolean;
                                          pPatchData: PVSH_PATCH_DATA);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -1978,111 +1982,111 @@ begin
   pPatchData.TypePatchData.Types[pPatchData.TypePatchData.NbrTypes] := DataType;
   Inc(pPatchData.TypePatchData.NbrTypes);
 
-  case (DataType) of
+  case(DataType) of
     $12: begin
       DbgVshPrintf('D3DVSDT_FLOAT1');
       NewDataType := D3DVSDT_FLOAT1;
-      Inc(pPatchData.ConvertedStride, SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, sizeof(FLOAT));
     end;
     $22: begin
       DbgVshPrintf('D3DVSDT_FLOAT2');
       NewDataType := D3DVSDT_FLOAT2;
-      Inc(pPatchData.ConvertedStride, 2*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 2*sizeof(FLOAT));
     end;
     $32: begin
       DbgVshPrintf('D3DVSDT_FLOAT3');
       NewDataType := D3DVSDT_FLOAT3;
-      Inc(pPatchData.ConvertedStride, 3*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
     end;
     $42: begin
       DbgVshPrintf('D3DVSDT_FLOAT4');
       NewDataType := D3DVSDT_FLOAT4;
-      Inc(pPatchData.ConvertedStride, 4*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 4*sizeof(FLOAT));
     end;
     $40: begin
       DbgVshPrintf('D3DVSDT_D3DCOLOR');
       NewDataType := D3DVSDT_D3DCOLOR;
-      Inc(pPatchData.ConvertedStride, SizeOf(D3DCOLOR));
+      Inc(pPatchData.ConvertedStride, sizeof(D3DCOLOR));
     end;
     $25: begin
       DbgVshPrintf('D3DVSDT_SHORT2');
       NewDataType := D3DVSDT_SHORT2;
-      Inc(pPatchData.ConvertedStride, 2*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
     end;
     $45: begin
       DbgVshPrintf('D3DVSDT_SHORT4');
       NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
     end;
     $11: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT1 /* xbox ext. */');
       NewDataType := D3DVSDT_SHORT2; // hmm, emulation?
-      Inc(pPatchData.ConvertedStride, 2*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
     end;
     $21: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT2 /* xbox ext. */');
       NewDataType := D3DVSDT_SHORT2;
-      Inc(pPatchData.ConvertedStride, 2*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
     end;
     $31: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT3 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
     end;
     $41: begin
       DbgVshPrintf('D3DVSDT_NORMSHORT4 /* xbox ext. */');
       NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
     end;
     $16: begin
       DbgVshPrintf('D3DVSDT_NORMPACKED3 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_FLOAT3;//$FF; //32bit
-      Inc(pPatchData.ConvertedStride, 3*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
     end;
     $15: begin
       DbgVshPrintf('D3DVSDT_SHORT1 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_SHORT2;
-      Inc(pPatchData.ConvertedStride, 2*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 2*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
     end;
     $35: begin
       DbgVshPrintf('D3DVSDT_SHORT3 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_SHORT4;
-      Inc(pPatchData.ConvertedStride, 4*SizeOf(SHORT));
+      Inc(pPatchData.ConvertedStride, 4*sizeof(SHORT));
       pPatchData.NeedPatching := TRUE;
     end;
     $14: begin
       DbgVshPrintf('D3DVSDT_PBYTE1 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_FLOAT1;
-      Inc(pPatchData.ConvertedStride, 1*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 1*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
     end;
     $24: begin
       DbgVshPrintf('D3DVSDT_PBYTE2 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_FLOAT2;
-      Inc(pPatchData.ConvertedStride, 2*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 2*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
     end;
     $34: begin
       DbgVshPrintf('D3DVSDT_PBYTE3 /* xbox ext. nsp */');
       NewDataType := D3DVSDT_FLOAT3;
-      Inc(pPatchData.ConvertedStride, 3*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
     end;
     $44: begin
       DbgVshPrintf('D3DVSDT_PBYTE4 /* xbox ext. */');
       NewDataType := D3DVSDT_FLOAT4;
-      Inc(pPatchData.ConvertedStride, 4*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 4*sizeof(FLOAT));
     end;
     $72: begin
       DbgVshPrintf('D3DVSDT_FLOAT2H /* xbox ext. */');
       NewDataType := D3DVSDT_FLOAT3;
-      Inc(pPatchData.ConvertedStride, 3*SizeOf(FLOAT));
+      Inc(pPatchData.ConvertedStride, 3*sizeof(FLOAT));
       pPatchData.NeedPatching := TRUE;
     end;
     $02: begin
@@ -2156,13 +2160,13 @@ function XTL_EmuRecompileVshDeclaration
   pDeclaration: PDWORD;
   ppRecompiledDeclaration: PPDWORD;
   pDeclarationSize: PDWORD;
-  IsFixedFunction: Boolean;
+  IsFixedFunction: boolean;
   pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
 ): DWORD;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   DeclarationSize: DWORD;
-  pRecompiled: PDWord;
+  pRecompiled: PDWORD;
   PatchData: VSH_PATCH_DATA;
   Step: DWORD;
   StreamsSize: DWORD;
@@ -2199,7 +2203,7 @@ begin
   DbgVshPrintf('NbrStreams: %d'#13#10, [PatchData.StreamPatchData.NbrStreams]);
 
   // Copy the patches to the vertex shader struct
-  StreamsSize := PatchData.StreamPatchData.NbrStreams * SizeOf(STREAM_DYNAMIC_PATCH);
+  StreamsSize := PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
   pVertexDynamicPatch.NbrStreams := PatchData.StreamPatchData.NbrStreams;
   pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCHs(CxbxMalloc(StreamsSize));
   memcpy(pVertexDynamicPatch.pStreamPatches,
@@ -2219,21 +2223,21 @@ function XTL_EmuRecompileVshFunction
 // Branch:shogun  Revision:0.8.1-pre2  Translator:PatrickvL  Done:100
 var
   pShaderHeader: PVSH_SHADER_HEADER;
-  pToken: PUInt32;
+  pToken: PDWORD;
   EOI: boolean;
   Inst: VSH_SHADER_INSTRUCTION;
   pShader: PVSH_XBOX_SHADER;
   hRet: HRESULT;
-  pShaderDisassembly: PAnsiChar;
+  pShaderDisassembly: P_char;
   pErrors: LPD3DXBUFFER;
 begin
   pShaderHeader := PVSH_SHADER_HEADER(pFunction);
   EOI := false;
-  pShader := PVSH_XBOX_SHADER(CxbxMalloc(SizeOf(VSH_XBOX_SHADER)));
+  pShader := PVSH_XBOX_SHADER(CxbxMalloc(sizeof(VSH_XBOX_SHADER)));
   hRet := 0;
 
   // TODO -oCXBX: support this situation..
-  if not Assigned(pFunction) then
+  if(pFunction = NULL) then
   begin
     Result := E_FAIL;
     Exit;
@@ -2241,14 +2245,14 @@ begin
 
   ppRecompiled^ := NULL;
   pOriginalSize^ := 0;
-  if (not Assigned(pShader)) then
+  if(nil=pShader) then
   begin
     EmuWarning('Couldn''t allocate memory for vertex shader conversion buffer');
     hRet := E_OUTOFMEMORY;
   end;
   memset(pShader, 0, SizeOf(VSH_XBOX_SHADER));
   pShader.ShaderHeader := pShaderHeader^;
-  case (pShaderHeader.Version) of
+  case(pShaderHeader.Version) of
     VERSION_XVS: 
       ;
     VERSION_XVSS:
@@ -2270,19 +2274,19 @@ begin
 
   if (SUCCEEDED(hRet)) then
   begin
-    pToken := PUInt32(UIntPtr(pFunction) + SizeOf(VSH_SHADER_HEADER));
+    pToken := PDWORD(UIntPtr(pFunction) + sizeof(VSH_SHADER_HEADER));
     while not EOI do
     begin
-      VshParseInstruction(pToken, @Inst);
+      VshParseInstruction(Puint32(pToken), @Inst);
       VshConvertToIntermediate(@Inst, pShader);
-      EOI := boolean(VshGetField(pToken, FLD_FINAL));
+      EOI := boolean(VshGetField(Puint32(pToken), FLD_FINAL));
       Inc(pToken, VSH_INSTRUCTION_SIZE);
     end;
 
     // The size of the shader is
     pOriginalSize^ := DWORD(pToken) - DWORD(pFunction);
 
-    pShaderDisassembly := PAnsiChar(CxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
+    pShaderDisassembly := P_char(CxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
     DbgVshPrintf('-- Before conversion --'#13#10);
     VshWriteShader(pShader, pShaderDisassembly, FALSE);
     DbgVshPrintf('%s', [pShaderDisassembly]);
@@ -2308,12 +2312,12 @@ begin
                                 D3DXASM_SKIPVALIDATION,
                                 {ppConstants=}NULL,
                                 {ppCompiledShader=}ppRecompiled,
-                                {ppCompilationErrors=}@pErrors);
+                                {ppCompilationErrors=}@pErrors); // Dxbx addition
 
     if (FAILED(hRet)) then
     begin
       EmuWarning('Couldn''t assemble recompiled vertex shader');
-      EmuWarning(string(AnsiString(PAnsiChar(pErrors.GetBufferPointer))));
+      EmuWarning(string(AnsiString(PAnsiChar(pErrors.GetBufferPointer)))); // Dxbx addition
     end;
 
     CxbxFree(pShaderDisassembly);
@@ -2326,7 +2330,7 @@ end; // XTL_EmuRecompileVshFunction
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  i: DWord;
+  i: DWORD;
 begin
   for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
   begin
@@ -2371,7 +2375,7 @@ begin
     *)
   end;
 
-  Result := True;
+  Result := TRUE;
 end; // XTL_IsValidCurrentShader
 
 function XTL_VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH;
@@ -2395,5 +2399,5 @@ begin
   Result := NULL;
 end; // XTL_VshGetVertexDynamicPatch
 
+{.$MESSAGE 'PatrickvL reviewed up to here'}
 end.
-

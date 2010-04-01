@@ -373,7 +373,7 @@ begin
 end;
 
 
-procedure XTL_VertexPatcher.FreeCachedStream(pStream: PVoid);
+procedure XTL_VertexPatcher.FreeCachedStream(pStream: Pvoid);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pCachedStream_: PCACHEDSTREAM;
@@ -1774,6 +1774,6 @@ begin
   end;
 end;
 
-{.$MESSAGE 'PatrickvL reviewed up till here'}
+{.$MESSAGE 'PatrickvL reviewed up to here'}
 end.
 

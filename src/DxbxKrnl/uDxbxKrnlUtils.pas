@@ -29,6 +29,7 @@ uses
   JwaWinType,
   // Dxbx
   uConsts,
+  uTypes,
   uLog, // for WriteLog
   uXBE; // PXBE_TLS
 
@@ -87,7 +88,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('DxbxKrnl: Terminating Process');
 {$ENDIF}
-//  FFlush(stdout);
+  fflush(stdout);
 
   // Cleanup debug output
   CloseLogs(); // FreeConsole();

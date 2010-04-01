@@ -329,7 +329,7 @@ procedure xboxkrnl_MmFreeContiguousMemory(
   ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  OrigBaseAddress: PVoid;
+  OrigBaseAddress: PVOID;
 begin
   EmuSwapFS(fsWindows);
 
@@ -356,7 +356,7 @@ begin
   else
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('Ignored MmFreeContiguousMemory(%xLaunchDataPage)');
+    DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
 {$ENDIF}
   end;
 

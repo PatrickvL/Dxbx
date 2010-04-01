@@ -366,7 +366,7 @@ end;
 function XTL_EmuXGWriteSurfaceOrTextureToXPR
 (
   pResource: LPVOID;
-  const cPath: PAnsiChar;
+  const cPath: P_char;
   bWriteSurfaceAsTexture: BOOL
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100

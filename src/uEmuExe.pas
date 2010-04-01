@@ -156,7 +156,7 @@ end;
 
 procedure ReinitXbeImageHeader;
 begin
-  // Dxbx TODO
+  // TODO -oDxbx
 (*
   ExeDosHeader.e_magic := $....; // 'XB'; (...'EH') Overwrites XbeHeader.dwMagic
   ExeDosHeader._lfanew := NewDosHeader._lfanew; // Overwrites XbeHeader.pbDigitalSignature

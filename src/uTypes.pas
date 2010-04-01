@@ -139,6 +139,9 @@ type
 
   PFILE = ^THandle;
 
+  _char = AnsiChar; // Use this to translate Cxbx's "char" (because newer Delphi's Char = WideChar)
+  P_char = PAnsiChar; // Use this to translate Cxbx's "char *" (because newer Delphi's PChar = PWideChar)
+
   _bool = Boolean; // Use this to translate Cxbx's "bool" (because Delphi is not case sensitive)
 
 //  LONGBOOL = ?
@@ -188,6 +191,7 @@ function fwrite(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
 function fprintf(stream: PFILE; format: PAnsiChar): int; overload;
 function fprintf(stream: PFILE; format: PAnsiChar; Args: array of const): int; overload;
 function fclose(stream: PFILE): int;
+procedure fflush(stream: PFILE);
 
 function FIELD_OFFSET(var Variable): DWORD;
 function DWord2Str(const aValue: DWORD): string;
@@ -202,6 +206,9 @@ function LastChar(const aStr: string): Char;
 
 function ToFLOAT(const aValue: DWORD): FLOAT; overload;
 function ToFLOAT(const aValue: SHORT): FLOAT; overload;
+
+var
+  stdout: PFILE = nil;
 
 implementation
 
@@ -250,7 +257,7 @@ end;
 
 function wstrlen(const Str: PWideChar): Cardinal;
 begin
-  Result := Length(WideString(Str)); // Dxbx TODO : Do a faster #0000 search here!
+  Result := Length(WideString(Str)); // TODO -oDxbx: Do a faster #0000 search here!
 end;
 
 function memcmp(const ptr1, ptr2: Pvoid; num: size_t): int;
@@ -407,6 +414,11 @@ begin
   FileClose(stream^);
   Dispose(stream);
   Result := 0;
+end;
+
+procedure fflush(stream: PFILE);
+begin
+  // TODO -oDxbx : How doe we implement this?
 end;
 
 // Note: Instead of calling FIELD_OFFSET(Type, Member)
