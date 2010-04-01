@@ -30,8 +30,8 @@ uses
   
 // exported globals
 
-const g_bVBSkipStream: bool = false;
-//const g_bPBSkipPusher: bool = false;
+const g_bVBSkipStream: _bool = false;
+//const g_bPBSkipPusher: _bool = false;
 
 type
   PRTNode = ^RTNode;
@@ -62,10 +62,10 @@ type ResourceTracker = object(Mutex)
     procedure remove(uiKey: uint32); overload;
 
     // check for existance of ptr using the pResource pointer as key
-    function exists(pResource: Pvoid): bool; overload;
+    function exists(pResource: Pvoid): _bool; overload;
 
     // check for existance of an explicit key
-    function exists(uiKey: uint32): bool; overload;
+    function exists(uiKey: uint32): _bool; overload;
 
     // retrieves aresource using the resource ointer as key, explicit locking needed
     function get(pResource: Pvoid): Pvoid; overload;
@@ -221,13 +221,13 @@ begin
   Self.Unlock();
 end;
 
-function ResourceTracker.exists(pResource: Pvoid): bool;
+function ResourceTracker.exists(pResource: Pvoid): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := exists(uint32(pResource));
 end;
 
-function ResourceTracker.exists(uiKey: uint32): bool;
+function ResourceTracker.exists(uiKey: uint32): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   cur: PRTNode;

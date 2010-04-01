@@ -69,7 +69,7 @@ type _PATCHEDSTREAM = packed record
     pPatchedStream: XTL_PIDirect3DVertexBuffer8;
     uiOrigStride: UINT;
     uiNewStride: UINT;
-    bUsedCached: bool;
+    bUsedCached: _bool;
   end;
   PATCHEDSTREAM = _PATCHEDSTREAM;
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
@@ -78,7 +78,7 @@ type _CACHEDSTREAM = packed record
     uiCRC32: uint32;
     uiCheckFrequency: uint32;
     uiCacheHit: uint32;
-    bIsUP: bool;
+    bIsUP: _bool;
     Stream: PATCHEDSTREAM;
     pStreamUP: Pvoid;            // Draw..UP (instead of pOriginalStream)
     uiLength: uint32;            // The length of the stream
@@ -94,8 +94,8 @@ type XTL_VertexPatcher = object
     procedure Create;
     procedure Destroy;
 
-    function Apply(pPatchDesc: PVertexPatchDesc): bool;
-    function Restore(): bool;
+    function Apply(pPatchDesc: PVertexPatchDesc): _bool;
+    function Restore(): _bool;
     // Dumps the cache to the console
     procedure DumpCache();
   private
@@ -104,8 +104,8 @@ type XTL_VertexPatcher = object
 
     m_pNewVertexStreamZeroData: PVOID;
 
-    m_bPatched: bool;
-    m_bAllocatedStreamZeroData: bool;
+    m_bPatched: _bool;
+    m_bAllocatedStreamZeroData: _bool;
 
     m_pDynamicPatch: PVERTEX_DYNAMIC_PATCH;
     // Returns the number of streams of a patch
@@ -115,13 +115,13 @@ type XTL_VertexPatcher = object
     // Frees a cached, patched stream
     procedure FreeCachedStream(pStream: Pvoid);
     // Tries to apply a previously patched stream from the cache
-    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Patches the types of the stream
-    function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+    function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Normalize texture coordinates in FVF stream if needed
-    function NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+    function NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Patches the primitive of the stream
-    function PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+    function PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
   end;
 
 // inline vertex buffer emulation
@@ -401,7 +401,7 @@ begin
 end;
 
 function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
-                                             uiStream: UINT): bool;
+                                             uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   uiStride: UINT;
@@ -410,9 +410,9 @@ var
   pCalculateData: Pvoid;
   uiLength: UINT;
   uiKey: uint32;
-  bApplied: bool;
+  bApplied: _bool;
   pCachedStream_: PCACHEDSTREAM;
-  bMismatch: bool;
+  bMismatch: _bool;
   Checksum: uint32;
 begin
   pCalculateData := NULL;
@@ -561,7 +561,7 @@ begin
 end;
 
 function XTL_VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc;
-                                       uiStream: UINT): bool;
+                                       uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pStream: PPATCHEDSTREAM;
@@ -849,11 +849,11 @@ begin
   Result := true;
 end;
 
-function XTL_VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): bool;
+function XTL_VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
 // Branch:shogun  Revision:  Translator:PatrickvL  Done:100
 var
-  bHasLinearTex: bool;
-  bTexIsLinear: array [0..4-1] of bool;
+  bHasLinearTex: _bool;
+  bTexIsLinear: array [0..4-1] of _bool;
   pLinearPixelContainer: array [0..4-1] of PX_D3DPixelContainer;
   i: uint08;
   pPixelContainer: PX_D3DPixelContainer;
@@ -1026,7 +1026,7 @@ begin
 end;
 
 function XTL_VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc; 
-                                          uiStream: UINT): bool;
+                                          uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pStream: PPATCHEDSTREAM;
@@ -1244,12 +1244,12 @@ begin
   Result := true;
 end;
 
-function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc): bool;
+function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  Patched: bool;
+  Patched: _bool;
   uiStream: UINT;
-  LocalPatched: bool;
+  LocalPatched: _bool;
 begin
   Patched := false;
   // Get the number of streams
@@ -1282,7 +1282,7 @@ begin
   Result := Patched;
 end;
 
-function XTL_VertexPatcher.Restore(): bool;
+function XTL_VertexPatcher.Restore(): _bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   uiStream: UINT;
@@ -1332,14 +1332,14 @@ procedure XTL_EmuFlushIVB();
 var
   pdwVB: PDWORD;
   uiStride: UINT;
-  bFVF: bool;
+  bFVF: _bool;
   dwCurFVF: DWORD;
   v: uint;
   dwPos: DWORD;
   dwTexN: DWORD;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-  bPatched: bool;
+  bPatched: _bool;
 begin
   XTL_EmuUpdateDeferredStates();
 
@@ -1514,7 +1514,6 @@ begin
   VPDesc.uiVertexStreamZeroStride := uiStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
-{$MESSAGE 'PatrickvL reviewed up till here'}
   VertPatch.Create; // Dxbx addition
 
   bPatched := VertPatch.Apply(@VPDesc);
@@ -1556,10 +1555,10 @@ var
   dwDepth: DWORD;
   dwPitch: DWORD;
   dwMipMapLevels: DWORD;
-  bSwizzled: BOOL;
-  bCompressed: BOOL;
+  bSwizzled: BOOL_;
+  bCompressed: BOOL_;
   dwCompressedSize: DWORD;
-  bCubemap: BOOL;
+  bCubemap: BOOL_;
 
   dwCompressedOffset: DWORD;
   dwMipOffs: DWORD;
@@ -1618,11 +1617,11 @@ begin
       end
       else if (X_Format = X_D3DFMT_R5G6B5) or (X_Format = X_D3DFMT_A4R4G4B4)
            or (X_Format = X_D3DFMT_LIN_A4R4G4B4) or (X_Format = X_D3DFMT_A1R5G5B5)
-           or (X_Format = $28) (* X_D3DFMT_G8B8 *) then
+           or (X_Format = X_D3DFMT_G8B8) or (X_Format = X_D3DFMT_LIN_A1R5G5B5) then
       begin
         bSwizzled := TRUE;
 
-                  // Swizzled 16 Bit
+        // Swizzled 16 Bit
         dwWidth := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
         dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
         dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
@@ -1642,7 +1641,8 @@ begin
         dwPitch  := dwWidth;
         dwBPP := 1;
       end
-      else if (X_Format = X_D3DFMT_LIN_X8R8G8B8) or (X_Format = X_D3DFMT_LIN_A8R8G8B8) or (X_Format = X_D3DFMT_LIN_D24S8) then
+      else if (X_Format = X_D3DFMT_LIN_X8R8G8B8) or (X_Format = X_D3DFMT_LIN_A8R8G8B8{=$12})
+           or (X_Format = X_D3DFMT_LIN_D24S8) or (X_Format = X_D3DFMT_LIN_A8B8G8R8) then
       begin
         // Linear 32 Bit
         dwWidth  := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1774,5 +1774,6 @@ begin
   end;
 end;
 
+{.$MESSAGE 'PatrickvL reviewed up till here'}
 end.
 

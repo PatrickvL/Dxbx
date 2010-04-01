@@ -23,12 +23,14 @@ interface
 
 uses
   // Jedi Win32API
-  JwaWinType;
+  JwaWinType,
+  // Dxbx
+  uTypes;
 
 var
 //  HLEDataBaseSize: uint32; // extern
   UnResolvedXRefs: uint32; // extern
-  bXRefFirstPass: bool; // extern
+  bXRefFirstPass: _bool; // extern
 
 type
 // ******************************************************************

@@ -37,8 +37,8 @@ uses
   , uDxbxKrnlUtils
   , uEmu;
 
-function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): LONGBOOL;
-function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL;
+function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): BOOL_;
+function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL_;
 
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
@@ -57,9 +57,9 @@ function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCo
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
 
-const
-  // simple render state encoding lookup table
-  X_D3DRSSE_UNK = $7fffffff;
+
+// simple render state encoding lookup table
+const X_D3DRSSE_UNK = $7fffffff;
 
 const
   // lookup table for converting vertex count to primitive count
@@ -97,8 +97,8 @@ const
   );
 
 // render state conversion table
-const
-  {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
+
+CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
@@ -195,10 +195,10 @@ const
 implementation
 
 // is this format swizzled, and if so - how many BPP?
-function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): LONGBOOL;
+function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): BOOL_;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := True;
+  Result := TRUE;
   case Format of
     X_D3DFMT_L8,
     X_D3DFMT_AL8,
@@ -228,12 +228,12 @@ begin
   // Dxbx TODO : Where do we put X_D3DFMT_UYVY ?
 
   else
-    Result := False;
+    Result := FALSE;
   end;
 end;
 
 // is this format linear?
-function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL;
+function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL_;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   case (Format) of
@@ -247,9 +247,9 @@ begin
     X_D3DFMT_LIN_D24S8,
     X_D3DFMT_LIN_D16,
     X_D3DFMT_LIN_A8B8G8R8:
-      Result := True;
+      Result := TRUE;
   else
-    Result := False;
+    Result := FALSE;
   end;
 end;
 
@@ -509,7 +509,7 @@ end;
 function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  case Value of
+  case(Value) of
     $8006:
       Result := D3DBLENDOP_ADD;
     $800a:
@@ -531,6 +531,7 @@ begin
       Result := D3DBLENDOP_REVSUBTRACT;
     end;
   else
+
     CxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
 
     Result := D3DBLENDOP(Value);
@@ -577,7 +578,7 @@ end;
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := Trunc((VertexCount - int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1])) / int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]));
+  Result := (VertexCount - int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1]) div int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]));
 end;
 
 // convert from primitive count to vertex count (Xbox)

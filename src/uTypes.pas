@@ -137,13 +137,23 @@ type
 
   pwchar_t = PWideChar;
 
-//  bool = ?;
-//  BOOL = ?;
+  PFILE = ^THandle;
+
+  _bool = Boolean; // Use this to translate Cxbx's "bool" (because Delphi is not case sensitive)
+
 //  LONGBOOL = ?
 //  BOOLEAN = ?;
   CHARBOOL = ByteBool; // Cxbx : unsigned char = AnsiChar in Delphi
 
-  PFILE = ^THandle;
+  BOOL_ = LongBool; // Use this when Dxbx is better of with boolean-BOOL (as opposed to int-BOOL below)
+
+  BOOL = int;
+  // See http://blog.delphi-jedi.net/2008/09/25/bool-boolean-and-integer/
+  // and http://discuss.joelonsoftware.com/default.asp?joel.3.355854.11
+
+const
+  BOOL_TRUE = BOOL(1);
+  BOOL_FALSE = BOOL(0);
 
 {$IFNDEF UNICODE}
   UnicodeString = WideString;

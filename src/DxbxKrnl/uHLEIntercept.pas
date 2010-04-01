@@ -97,7 +97,7 @@ begin
 
       LastUnResolvedXRefs := UnResolvedXRefs;
 
-      bool bFoundD3D := False;
+      _bool bFoundD3D := False;
       for (uint32 v:=0;v<dwLibraryVersions;v++)
       begin
         uint16 MajorVersion := pLibraryVersion[v].wMajorVersion;
@@ -321,7 +321,7 @@ begin
         DbgPrintf('HLE: * Searching HLE database for %s %d.%d.%d ...', pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
 {$ENDIF}
 
-        bool found:=False;
+        _bool found:=False;
 
         for (uint32 d:=0;d<dwHLEEntries;d++)
         begin

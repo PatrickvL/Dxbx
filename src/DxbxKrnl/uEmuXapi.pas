@@ -218,8 +218,8 @@ var g_SectionList: PXBE_SECTIONLIST;
 // Number of sections
 var g_NumSections: int;
 
-var g_bXLaunchNewImageCalled: bool = false;
-var g_bXInputOpenCalled: bool = false;
+var g_bXLaunchNewImageCalled: _bool = false;
+var g_bXInputOpenCalled: _bool = false;
 
 // Note : Cxbx log indicates 'g_pRtlCreateHeap' is indeed
 // at the same address as 'EmuRtlCreateHeap'.
@@ -264,7 +264,7 @@ begin
 
   // Cxbx TODO: yeah... we'll format... riiiiight
 
-  Result := TRUE;
+  Result := BOOL_TRUE;
 end;
 
 function XTL_EmuGetTimeZoneInformation
@@ -495,7 +495,7 @@ begin
       [lpPerformanceCount]);
 {$ENDIF}
 
-  Result := QueryPerformanceCounter({var}lpPerformanceCount^);
+  Result := BOOL(QueryPerformanceCounter({var}lpPerformanceCount^));
 
   // debug - 4x speed
   //lpPerformanceCount.QuadPart *= 4;
@@ -519,7 +519,7 @@ begin
       [lpFrequency]);
 {$ENDIF}
 
-  Result := QueryPerformanceFrequency({var}lpFrequency^);
+  Result := BOOL(QueryPerformanceFrequency({var}lpFrequency^));
 
   EmuSwapFS(fsXbox);
 end;
@@ -541,7 +541,7 @@ begin
   end;
 {$ENDIF}
 
-  Result := TRUE;
+  Result := BOOL_TRUE;
 end;
 
 procedure XTL_EmuXInitDevices
@@ -614,7 +614,7 @@ function XTL_EmuXGetDeviceChanges
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
-  bFirst: BOOL = TRUE;
+  bFirst: BOOL_ = TRUE;
 {$WRITEABLECONST OFF}
 begin
   EmuSwapFS(fsWindows);
@@ -629,14 +629,14 @@ begin
     [DeviceType, pdwInsertions, pdwRemovals]);
 {$ENDIF}
 
-  Result := FALSE;
+  Result := BOOL_FALSE;
 
   // Return 1 Controller Inserted initially, then no changes forever
   if bFirst then
   begin
     pdwInsertions^ := (1 shl 0);
     pdwRemovals^ := 0;
-    Result := TRUE;
+    Result := BOOL_TRUE;
     bFirst := FALSE;
   end
   else
@@ -941,7 +941,7 @@ var
   ret: DWORD;
   pPH: PPOLLING_PARAMETERS_HANDLE;
   v: int;
-  found: bool;
+  found: _bool;
 
 begin
   EmuSwapFS(fsWindows);
@@ -1039,7 +1039,7 @@ begin
       [lpMutexAttributes, bInitialOwner, lpName]);
 {$ENDIF}
 
-  Result := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner, lpName);
+  Result := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner <> BOOL_FALSE, lpName);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1060,7 +1060,7 @@ begin
     [hObject]);
 {$ENDIF}
 
-  Result := CloseHandle(hObject);
+  Result := BOOL(CloseHandle(hObject));
 
   EmuSwapFS(fsXbox);
 end;
@@ -1083,9 +1083,9 @@ begin
       [hThread, DisablePriorityBoost]);
 {$ENDIF}
 
-  Result := SetThreadPriorityBoost(hThread, DisablePriorityBoost);
+  Result := BOOL(SetThreadPriorityBoost(hThread, DisablePriorityBoost <> BOOL_FALSE));
 
-  if Result = FALSE then
+  if Result = BOOL_FALSE then
     EmuWarning('SetThreadPriorityBoost Failed!');
 
   EmuSwapFS(fsXbox);
@@ -1111,9 +1111,9 @@ begin
       [hThread, nPriority]);
 {$ENDIF}
 
-  bRet := TRUE; //SetThreadPriority(hThread, nPriority);  // marked by cxbx
+  bRet := BOOL_TRUE; //SetThreadPriority(hThread, nPriority);  // marked by cxbx
 
-  if bRet = FALSE then
+  if bRet = BOOL_FALSE then
     EmuWarning('SetThreadPriority Failed!');
 
   // HACK! Commented by cxbx
@@ -1167,7 +1167,7 @@ begin
       [hThread, lpExitCode]);
 {$ENDIF}
 
-  Result := GetExitCodeThread(hThread, {var}Cardinal(lpExitCode));
+  Result := BOOL(GetExitCodeThread(hThread, {var}Cardinal(lpExitCode)));
 
   EmuSwapFS(fsXbox);
 end;
@@ -1288,7 +1288,7 @@ begin
       [pThreadNotification, Addr(pThreadNotification.pfnNotifyRoutine), Integer(fRegister)]);
 {$ENDIF}
 
-  if fRegister then
+  if fRegister <> BOOL_FALSE then
   begin
     // I honestly don't expect this to happen, but if it does...
     if (g_iThreadNotificationCount >= 16) then
@@ -1510,7 +1510,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := TRUE;
+  Result := BOOL_TRUE;
 end;
 
 function XTL_EmuXGetSectionHandleA
@@ -1608,7 +1608,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := TRUE;
+  Result := BOOL_TRUE;
 end;
 
 
@@ -1734,7 +1734,7 @@ begin
       [hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait]);
 {$ENDIF}
 
-  Result := GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, bWait);
+  Result := BOOL(GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, bWait <> BOOL_FALSE));
 
 //  if (bWait) then
 //    bRet := TRUE; // Sucker...
@@ -1942,7 +1942,7 @@ begin
       [hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable]);
 {$ENDIF}
 
-  Result := SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
+  Result := BOOL(SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable <> BOOL_FALSE));
 
   EmuSwapFS(fsXbox);
 end;
@@ -1964,7 +1964,7 @@ begin
   // TODO: This function might be a bit too high level.  If it is,
   // feel free to implement NtPulseEvent in EmuKrnl.cpp
 
-  Result := PulseEvent(hEvent);
+  Result := BOOL(PulseEvent(hEvent));
 
   EmuSwapFS(fsXbox);
 end;
@@ -2023,8 +2023,8 @@ begin
       [hSemaphore, lReleaseCount, lpPreviousCount]);
 {$ENDIF}
 
-  Result := ReleaseSemaphore(hSemaphore, lReleaseCount, lpPreviousCount);
-  if (not Result) then
+  Result := BOOL(ReleaseSemaphore(hSemaphore, lReleaseCount, lpPreviousCount));
+  if (BOOL_FALSE = Result) then
     EmuWarning('ReleaseSemaphore failed!');
 
   EmuSwapFS(fsXbox);

@@ -88,7 +88,7 @@ end;
 function CxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := JwaNative.RtlFreeHeap(Heap, Flags, pMem);
+  Result := BOOL(JwaNative.RtlFreeHeap(Heap, Flags, pMem));
 end;
 
 function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
@@ -175,10 +175,10 @@ end;
 // ******************************************************************
 // * CheckIntegrity - Prints if the memory block is overwritten
 // ******************************************************************
-function CheckIntegrity(pBlock: PCXBX_MEMORY_BLOCK): bool;
+function CheckIntegrity(pBlock: PCXBX_MEMORY_BLOCK): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  Integrity: bool;
+  Integrity: _bool;
 begin
   Integrity := True;
 
@@ -208,7 +208,7 @@ end;
 // * IsThisMemoryBlock - Simple block matching function
 // ******************************************************************
 function IsThisMemoryBlock(pMem: PVoid; 
-                           pBlock: PCXBX_MEMORY_BLOCK): bool; inline;
+                           pBlock: PCXBX_MEMORY_BLOCK): _bool; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := Assigned(pBlock) and (pMem = pBlock.pMem);
@@ -218,7 +218,7 @@ end;
 // * InThisMemoryBlock - Simple block matching function
 // ******************************************************************
 function InThisMemoryBlock(const pMem: PVoid; 
-                           pBlock: PCXBX_MEMORY_BLOCK): bool; inline;
+                           pBlock: PCXBX_MEMORY_BLOCK): _bool; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := Assigned(pBlock)
@@ -357,7 +357,7 @@ end;
 // ******************************************************************
 // * CxbxAllocDump - Dump the memory allocations
 // ******************************************************************
-procedure CxbxAllocDump(DumpData: bool);
+procedure CxbxAllocDump(DumpData: _bool);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pCur: PCXBX_MEMORY_BLOCK;

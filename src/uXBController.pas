@@ -44,9 +44,43 @@ uses
   ;
 
 type
-  // Xbox Controller Object IDs
-  // XBCtrlObject: Source=XBController.h Revision=martin#39 Translator=PatrickvL Done=100
-  XBCtrlObject = (
+  XTL_LPDIRECTINPUT8 = IDirectInput8; // Dxbx TODO : How is this type defined?
+  XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // Dxbx TODO : How is this type defined?
+
+  LPCDIDEVICEOBJECTINSTANCE = TDIDeviceObjectInstanceA;
+  LPCDIDEVICEINSTANCE = TDIDeviceInstanceA;
+
+
+// Moved from uEmuXapi.pas, to prevent circular references :
+type XINPUT_GAMEPAD = packed record
+    wButtons: Word;
+    bAnalogButtons: array [0..9-1] of Byte;
+    sThumbLX: SHORT;
+    sThumbLY: SHORT;
+    sThumbRX: SHORT;
+    sThumbRY: SHORT;
+  end;
+  PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
+
+type XINPUT_STATE = packed record
+    dwPacketNumber: DWord;
+    Gamepad: XINPUT_GAMEPAD;
+  end;
+  PXINPUT_STATE = ^XINPUT_STATE;
+
+
+type // Declared before usage
+  // DirectInput Enumeration Types
+  XBCtrlState = (
+    XBCTRL_STATE_NONE = 0,
+    XBCTRL_STATE_CONFIG,
+    XBCTRL_STATE_LISTEN
+  );
+
+
+// Xbox Controller Object IDs
+// XBCtrlObject: Source=XBController.h Revision=martin#39 Translator=PatrickvL Done=100
+type XBCtrlObject = (
     // Analog Axis
     XBCTRL_OBJECT_LTHUMBPOSX, // = 0
     XBCTRL_OBJECT_LTHUMBNEGX,
@@ -78,18 +112,72 @@ type
 const
   // Total number of components
   XBCTRL_OBJECT_COUNT = (Ord(High(XBCtrlObject)) - Ord(Low(XBCtrlObject)) + 1);
-  // Maximum number of devices allowed
-  XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
 
-  m_DeviceNameLookup: array [0..XBCTRL_OBJECT_COUNT-1] of string = ( 'LThumbPosX', 'LThumbNegX',
-                                           'LThumbPosY', 'LThumbNegY',
-                                           'RThumbPosX', 'RThumbNegX',
-                                           'RThumbPosY', 'RThumbNegY',
-                                           'X', 'Y', 'A', 'B', 'White',
-                                           'Black', 'LTrigger', 'RTrigger',
-                                           'DPadUp', 'DPadDown', 'DPadLeft',
-                                           'DPadRight', 'Back', 'Start',
-                                           'LThumb', 'RThumb');
+// Maximum number of devices allowed
+const XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
+
+
+// Xbox Controller Object Config
+type XBCtrlObjectCfg = packed record
+  dwDevice: int; // offset into m_InputDevice
+  dwInfo: int; // extended information, depending on dwFlags
+  dwFlags: int; // flags explaining the data format
+end;
+
+// * class: XBController
+type XBController = object(Error)
+  public
+    procedure Initialize;
+    procedure Finalize;
+    // Registry Load/Save
+    procedure Load(szRegistryKey: PAnsiChar);
+    procedure Save(szRegistryKey: PAnsiChar);
+    // Configuration
+    procedure ConfigBegin(ahwnd: Handle; aObject: XBCtrlObject);
+    function ConfigPoll(szStatus: PAnsiChar): _bool; // true if polling detected a change
+    procedure ConfigEnd;
+    // Listening
+    procedure ListenBegin(ahwnd: Handle);
+    procedure ListenPoll(Controller: PXINPUT_STATE);
+    procedure ListenEnd();
+    // DirectInput Init / Cleanup
+    procedure DInputInit(ahwnd: Handle);
+    procedure DInputCleanup;
+    // Check if a device is currently in the configuration
+    function DeviceIsUsed(szDeviceName: PAnsiChar): _bool;
+  private
+    // Object Mapping
+    procedure Map(aobject: XBCtrlObject; szDeviceName: PAnsiChar; dwInfo: int; dwFlags: int);
+    // Find the look-up value for a DeviceName (creating if needed)
+    function Insert(szDeviceName: PAnsiChar): int;
+    // Update the object lookup offsets for a device
+    procedure ReorderObjects(szDeviceName: PAnsiChar; aPos: int);
+    // Controller and Objects Enumeration
+    function EnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA): BOOL;
+    function EnumObjectsCallback(lpddoi: LPCDIDEVICEOBJECTINSTANCE): BOOL;
+  private
+    // Device Names
+    m_DeviceName: array [0..XBCTRL_MAX_DEVICES - 1] of array [0..260-1] of AnsiChar;
+    // Object Configuration
+    m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
+    // DirectInput
+    m_pDirectInput8: XTL_LPDIRECTINPUT8;
+    // DirectInput Devices
+    m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of packed record
+      m_Device: XTL_LPDIRECTINPUTDEVICE8;
+      m_Flags: int;
+    end;
+
+    // Current State
+    m_CurrentState: XBCtrlState;
+    // Config State Variables
+    lPrevMouseX, lPrevMouseY, lPrevMouseZ: LongInt;
+    CurConfigObject: XBCtrlObject;
+    // Etc State Variables
+    m_dwInputDeviceCount: Integer;
+    m_dwCurObject: Integer;
+  end;
+  PXBController = ^XBController;
 
 // Offsets into analog button array
 const
@@ -134,97 +222,15 @@ const
   DETECT_SENSITIVITY_MOUSE = 5;
   DETECT_SENSITIVITY_POV = 50000;
 
-type
-  // DirectInput Enumeration Types
-  XBCtrlState = (
-    XBCTRL_STATE_NONE = 0,
-    XBCTRL_STATE_CONFIG,
-    XBCTRL_STATE_LISTEN
-  );
-
-  // Xbox Controller Object Config
-  XBCtrlObjectCfg = packed record
-    dwDevice: Integer; // offset into m_InputDevice
-    dwInfo: Integer; // extended information, depending on dwFlags
-    dwFlags: Integer; // flags explaining the data format
-  end;
-
-  XINPUT_GAMEPAD = packed record
-    wButtons: Word;
-    bAnalogButtons: array [0..9-1] of Byte;
-    sThumbLX: SHORT;
-    sThumbLY: SHORT;
-    sThumbRX: SHORT;
-    sThumbRY: SHORT;
-  end;
-  PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
-
-  XINPUT_STATE = packed record
-    dwPacketNumber: DWord;
-    Gamepad: XINPUT_GAMEPAD;
-  end;
-  PXINPUT_STATE = ^XINPUT_STATE;
-
-  XTL_LPDIRECTINPUT8 = IDirectInput8; // Dxbx TODO : How is this type defined?
-  XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // Dxbx TODO : How is this type defined?
-
-  LPCDIDEVICEOBJECTINSTANCE = TDIDeviceObjectInstanceA;
-  LPCDIDEVICEINSTANCE = TDIDeviceInstanceA;
-
-  // DirectInput Devices
-  InputDevice = packed record
-    m_Device: XTL_LPDIRECTINPUTDEVICE8;
-    m_Flags: Integer;
-  end;
-
-  XBController = object(Error)
-  private
-    // Device Names
-    m_DeviceName: array [0..XBCTRL_MAX_DEVICES - 1] of array [0..260-1] of AnsiChar;
-    // Object Configuration
-    m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
-    // DirectInput
-    m_pDirectInput8: XTL_LPDIRECTINPUT8;
-    // DirectInput Devices
-    m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of InputDevice;
-    // Current State
-    m_CurrentState: XBCtrlState;
-    // Config State Variables
-    lPrevMouseX, lPrevMouseY, lPrevMouseZ: LongInt;
-    CurConfigObject: XBCtrlObject;
-    // Etc State Variables
-    m_dwInputDeviceCount: Integer;
-    m_dwCurObject: Integer;
-  private
-    // Object Mapping
-    procedure Map(aobject: XBCtrlObject; szDeviceName: PAnsiChar; dwInfo: Integer; dwFlags: Integer);
-    // Find the look-up value for a DeviceName (creating if needed)
-    function Insert(szDeviceName: PAnsiChar): Integer;
-    // Update the object lookup offsets for a device
-    procedure ReorderObjects(szDeviceName: PAnsiChar; aPos: Integer);
-    function EnumObjectsCallback(lpddoi: LPCDIDEVICEOBJECTINSTANCE): BOOL;
-    function EnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA): BOOL;
-  public
-    procedure Initialize;
-    procedure Finalize;
-    // Registry Load/Save
-    procedure Load(szRegistryKey: PAnsiChar);
-    procedure Save(szRegistryKey: PAnsiChar);
-    // Configuration
-    procedure ConfigBegin(ahwnd: Handle; aObject: XBCtrlObject);
-    function ConfigPoll(szStatus: PAnsiChar): LongBool;
-    procedure ConfigEnd;
-    // Listening
-    procedure ListenPoll(Controller: PXINPUT_STATE);
-    procedure ListenBegin(ahwnd: Handle);
-    procedure ListenEnd;
-    // DirectInput Init / Cleanup
-    procedure DInputInit(ahwnd: Handle);
-    procedure DInputCleanup;
-    // Check if a device is currently in the configuration
-    function DeviceIsUsed(szDeviceName: PAnsiChar): LongBool;
-  end;
-  PXBController = ^XBController;
+const m_DeviceNameLookup: array [0..XBCTRL_OBJECT_COUNT-1] of string = ( 'LThumbPosX', 'LThumbNegX',
+                                           'LThumbPosY', 'LThumbNegY',
+                                           'RThumbPosX', 'RThumbNegX',
+                                           'RThumbPosY', 'RThumbNegY',
+                                           'X', 'Y', 'A', 'B', 'White',
+                                           'Black', 'LTrigger', 'RTrigger',
+                                           'DPadUp', 'DPadDown', 'DPadLeft',
+                                           'DPadRight', 'Back', 'Start',
+                                           'LThumb', 'RThumb');
 
 implementation
 
@@ -291,9 +297,9 @@ begin
     if FAILED(hRet) then
     begin
       if hRet = E_NOTIMPL then
-        Result := DIENUM_CONTINUE
+        Result := BOOL(DIENUM_CONTINUE)
       else
-        Result := DIENUM_STOP;
+        Result := BOOL(DIENUM_STOP);
 
       Exit;
     end;
@@ -312,15 +318,15 @@ begin
     if (FAILED(hRet)) then
     begin
       if (hRet = E_NOTIMPL) then
-        Result := DIENUM_CONTINUE
+        Result := BOOL(DIENUM_CONTINUE)
       else
-        Result := DIENUM_STOP;
+        Result := BOOL(DIENUM_STOP);
 
       Exit;
     end;
   end;
 
-  Result := DIENUM_CONTINUE;
+  Result := BOOL(DIENUM_CONTINUE);
 end;
 
 function WrapEnumObjectsCallback(var lpddoi: TDIDeviceObjectInstanceA; pvRef: Pointer): BOOL; stdcall;
@@ -336,7 +342,7 @@ var
 begin
   if (m_CurrentState = XBCTRL_STATE_LISTEN) and not DeviceIsUsed(lpddi.tszInstanceName) then
   begin
-    Result := DIENUM_CONTINUE;
+    Result := BOOL(DIENUM_CONTINUE);
     Exit;
   end;
 
@@ -352,7 +358,7 @@ begin
       ReorderObjects(lpddi.tszInstanceName, m_dwInputDeviceCount - 1);
   end;
 
-  Result := DIENUM_CONTINUE;
+  Result := BOOL(DIENUM_CONTINUE);
 end;
 
 function WrapEnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA; pvRef: Pointer): BOOL; stdcall;
@@ -643,7 +649,7 @@ begin
   m_CurrentState := XBCTRL_STATE_NONE;
 end;
 
-function XBController.ConfigPoll(szStatus: PAnsiChar): LongBool;
+function XBController.ConfigPoll(szStatus: PAnsiChar): _bool;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
   DeviceInstance: DIDEVICEINSTANCE;
@@ -936,7 +942,7 @@ begin
 end;
 
 
-function XBController.DeviceIsUsed(szDeviceName: PAnsiChar): LongBool;
+function XBController.DeviceIsUsed(szDeviceName: PAnsiChar): _bool;
 // Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
 var
   v: Integer;
@@ -999,7 +1005,7 @@ begin
   if Assigned(m_pDirectInput8) then
   begin
     {ahRet :=} m_pDirectInput8.EnumDevices(DI8DEVCLASS_GAMECTRL,
-                                           WrapEnumGameCtrlCallback,
+                                           TDIEnumDevicesCallbackA(@WrapEnumGameCtrlCallback),
                                            Addr(Self),
                                            DIEDFL_ATTACHEDONLY);
     // Dxbx TODO Add : if FAILED(hret) then what?
@@ -1046,7 +1052,7 @@ begin
   m_dwCurObject := 0;
   while m_dwCurObject < m_dwInputDeviceCount do
   begin
-    m_InputDevice[m_dwCurObject].m_Device.EnumObjects(WrapEnumObjectsCallback, Addr(Self), DIDFT_ALL);
+    m_InputDevice[m_dwCurObject].m_Device.EnumObjects(TDIEnumDeviceObjectsCallbackA(@WrapEnumObjectsCallback), Addr(Self), DIDFT_ALL);
     Inc(m_dwCurObject);
   end;
 

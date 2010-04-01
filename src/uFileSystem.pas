@@ -182,7 +182,7 @@ function TXDVDFS_ReadSectorsFunc(
       Buffer: PVOID;      //  Buffer to fill
       StartSector: DWord; //  Start sector
       ReadSize: DWORD     //  Number of sectors to read
-): BOOL;
+): LongBool;
 begin
   FileSeek(THandle(Data), Int64(StartSector) * SECTOR_SIZE, 0);
   Result := FileRead(THandle(Data), Buffer^, ReadSize * SECTOR_SIZE) > 0;

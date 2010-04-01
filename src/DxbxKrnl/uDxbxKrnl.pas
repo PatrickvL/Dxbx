@@ -314,7 +314,7 @@ begin
     { Marked out by cxbx
     for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do
     begin
-        bool bExclude = False;
+        _bool bExclude = False;
         for r := 0 to (SizeOf(funcExclude / SizeOf(UInt32)) - 1 do
         begin
             if funcAddr[v] = funcExclude[r] then

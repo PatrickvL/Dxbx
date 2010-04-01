@@ -36,10 +36,10 @@ type
     function GetError(): PChar;
 
     // is the current error fatal? (class is "dead" on fatal errors)
-    function IsFatal(): bool;
+    function IsFatal(): _bool;
 
     // clear the current error (returns false if error was fatal)
-    function ClearError(): Bool;
+    function ClearError(): _bool;
   protected
     // protected constructor so this class must be inherited from
     procedure Initialize; // was Error::Error
@@ -48,10 +48,10 @@ type
     procedure Finalize;
 
     // protected so only derived class may set an error
-    procedure SetError(const x_szError: PChar; x_bFatal: bool);
+    procedure SetError(const x_szError: PChar; x_bFatal: _bool);
   private
     // current error information
-    m_bFatal: Boolean;
+    m_bFatal: _bool;
     m_szError: PChar;
   end;
 
@@ -75,12 +75,12 @@ begin
   Result := m_szError;
 end;
 
-function Error.IsFatal: Bool;
+function Error.IsFatal: _bool;
 begin
   Result := m_bFatal;
 end;
 
-procedure Error.SetError(const x_szError: PChar; x_bFatal: Bool);
+procedure Error.SetError(const x_szError: PChar; x_bFatal: _bool);
 begin
   if not Assigned(m_szError) then
     m_szError := StrAlloc(256);//{ m_szError = new char[256]; }
@@ -94,7 +94,7 @@ begin
 end;
 
 // clear the current error (returns false if error was fatal)
-function Error.ClearError(): bool;
+function Error.ClearError(): _bool;
 begin
   if m_bFatal then
   begin

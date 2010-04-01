@@ -41,7 +41,6 @@ uses
   XboxKrnl,
   // Dxbx
   uConsts,
-  uTypes,
   uDxbxUtils,
   uLog,
   uXbe,
@@ -58,6 +57,7 @@ uses
   uEmuD3D8Types,
   uEmuD3D8Utils,
   uXbVideo,
+  uTypes, // Use after uXBVideo, to declare BOOL correctly!
   uEmuShared,
   uEmuFS,
   uEmuXapi,
@@ -106,9 +106,9 @@ var
   g_pDDSOverlay7: XTL_LPDIRECTDRAWSURFACE7 = NULL; // DirectDraw7 Overlay Surface
   g_pDDClipper: XTL_LPDIRECTDRAWCLIPPER = NULL;    // DirectDraw7 Clipper
   g_CurrentVertexShader: DWORD = 0;
-  g_bFakePixelShaderLoaded: BOOL = FALSE;
-  g_bIsFauxFullscreen: BOOL = FALSE;
-  g_bHackUpdateSoftwareOverlay: BOOL = FALSE;
+  g_bFakePixelShaderLoaded: BOOL_ = FALSE;
+  g_bIsFauxFullscreen: BOOL_ = FALSE;
+  g_bHackUpdateSoftwareOverlay: BOOL_ = FALSE;
 
 function EmuRenderWindow(lpVoid: LPVOID): DWORD; // no stdcall !
 function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; // no stdcall !
@@ -121,7 +121,7 @@ var
   g_ddguid: GUID;                // DirectDraw driver GUID
   g_hMonitor: HMONITOR = 0;      // Handle to DirectDraw monitor
   g_pD3D8: XTL_LPDIRECT3D8 = NULL;    // Direct3D8
-  g_bSupportsYUY2: BOOL = FALSE; // Does device support YUY2 overlays?
+  g_bSupportsYUY2: BOOL_ = FALSE; // Does device support YUY2 overlays?
   g_pDD7: XTL_LPDIRECTDRAW7 = NULL;   // DirectDraw7
   g_dwOverlayW: DWORD = 640;     // Cached Overlay Width
   g_dwOverlayH: DWORD = 480;     // Cached Overlay Height
@@ -131,7 +131,7 @@ var
   g_XbeHeaderSize: uint32 = 0;             // XbeHeaderSize
   g_D3DCaps: D3DCAPS8;                     // Direct3D8 Caps
   g_hBgBrush: HBRUSH = 0;                  // Background Brush
-  g_bRenderWindowActive: bool = false;     // volatile?
+  g_bRenderWindowActive: _bool = false;     // volatile?
   g_XBVideo: XBVideo;
   g_pVBCallback: D3DVBLANKCALLBACK = NULL; // Vertical-Blank callback routine
   g_pSwapCallback: D3DSWAPCALLBACK = NULL; // Swap/Present callback routine
@@ -165,7 +165,7 @@ var
   g_pCachedRenderTarget: PX_D3DSurface = NULL;
   g_pCachedZStencilSurface: PX_D3DSurface = NULL;
   g_YuvSurface: PX_D3DSurface = NULL;
-  g_fYuvEnabled: BOOL = FALSE;
+  g_fYuvEnabled: BOOL_ = FALSE;
   g_dwVertexShaderUsage: DWORD = 0;
   g_VertexShaderSlots: array [0..136 - 1] of DWORD;
 
@@ -191,10 +191,10 @@ type EmuD3D8CreateDeviceProxyData = packed record
     BehaviorFlags: DWORD;
     pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
     ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8;
-    {volatile} bReady: bool;
+    {volatile} bReady: _bool;
     {union} case Integer of
       0: ({volatile} hRet: HRESULT);
-      1: ({volatile} bCreate: bool); // False: release
+      1: ({volatile} bCreate: _bool); // False: release
   end;
 
 var g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
@@ -322,11 +322,11 @@ begin
     else
       memset(@g_ddguid, 0, sizeof(GUID));
 
-    Result := FALSE;
+    Result := BOOL_FALSE;
     Exit;
   end;
 
-  Result := TRUE;
+  Result := BOOL_TRUE;
 end; // EmuEnumDisplayDevices
 
 // window message processing thread
@@ -349,7 +349,7 @@ var
   nBorderHeight: Integer;
   x, y, nWidth, nHeight: Integer;
   hwndParent: HWND;
-  lPrintfOn: bool;
+  lPrintfOn: _bool;
 begin
   // register window class
   begin
@@ -553,7 +553,7 @@ function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRES
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
-  bAutoPaused: bool = false;
+  bAutoPaused: _bool = false;
 {$WRITEABLECONST OFF}
 begin
   case (msg) of
@@ -1261,7 +1261,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := FALSE;
+  Result := BOOL_FALSE;
 end; // XTL_EmuIDirect3DDevice8_IsBusy
 
 procedure XTL_EmuIDirect3DDevice8_GetCreationParameters(pParameters: PD3DDEVICE_CREATION_PARAMETERS); stdcall;
@@ -3526,8 +3526,8 @@ begin
       //
 
       EmuSwapFS(fsXbox);
-      XTL_EmuIDirect3DDevice8_EnableOverlay(TRUE);
-      XTL_EmuIDirect3DDevice8_UpdateOverlay(PX_D3DSurface(pTexture), nil, nil, FALSE, 0);
+      XTL_EmuIDirect3DDevice8_EnableOverlay(BOOL_TRUE);
+      XTL_EmuIDirect3DDevice8_UpdateOverlay(PX_D3DSurface(pTexture), nil, nil, BOOL_FALSE, 0);
       EmuSwapFS(fsWindows);
     end
     else
@@ -4326,10 +4326,10 @@ var
   dwDepth: DWORD;
   dwPitch: DWORD;
   dwMipMapLevels: DWORD;
-  bSwizzled: BOOL;
-  bCompressed: BOOL;
+  bSwizzled: BOOL_;
+  bCompressed: BOOL_;
   dwCompressedSize: DWORD;
-  bCubemap: BOOL;
+  bCubemap: BOOL_;
   w: uint32;
   h: uint32;
   v: uint32;
@@ -5162,7 +5162,7 @@ begin
     end;
 
     EmuSwapFS(fsXbox);
-    XTL_EmuIDirect3DDevice8_EnableOverlay(FALSE);
+    XTL_EmuIDirect3DDevice8_EnableOverlay(BOOL_FALSE);
     EmuSwapFS(fsWindows);
   end
   else
@@ -5931,7 +5931,7 @@ begin
     [Enable]);
 {$ENDIF}
 
-  if (Enable = FALSE) and (g_pDDSOverlay7 <> NULL) then
+  if (Enable = BOOL_FALSE) and (g_pDDSOverlay7 <> NULL) then
   begin
     IDirectDrawSurface7(g_pDDSOverlay7).UpdateOverlay(NULL, IDirectDrawSurface7(g_pDDSPrimary), NULL, DDOVER_HIDE, nil);
 
@@ -5951,7 +5951,7 @@ begin
   end
   else
   begin
-    if (Enable = TRUE) and (g_pDDSOverlay7 = nil) then
+    if (Enable <> BOOL_FALSE) and (g_pDDSOverlay7 = nil) then
     begin
         // initialize overlay surface
       if (g_bSupportsYUY2) then
@@ -7192,20 +7192,20 @@ begin
 {$ENDIF}
 
   // HACK: Display YUV surface by using an overlay.
-  if (Enable <> g_fYuvEnabled) then
+  if (Enable <> BOOL_FALSE) <> g_fYuvEnabled then
   begin
-    g_fYuvEnabled := Enable;
+    g_fYuvEnabled := (Enable <> BOOL_FALSE);
 
     EmuWarning('EmuIDirect3DDevice8_SetRenderState_YuvEnable using overlay!');
     EmuSwapFS(fsXbox);
-    XTL_EmuIDirect3DDevice8_EnableOverlay(g_fYuvEnabled);
+    XTL_EmuIDirect3DDevice8_EnableOverlay(BOOL(g_fYuvEnabled));
     EmuSwapFS(fsWindows);
   end;
 
   if (g_fYuvEnabled) then
   begin
     EmuSwapFS(fsXbox);
-    XTL_EmuIDirect3DDevice8_UpdateOverlay(g_YuvSurface, nil, nil, FALSE, 0);
+    XTL_EmuIDirect3DDevice8_UpdateOverlay(g_YuvSurface, nil, nil, BOOL_FALSE, 0);
     EmuSwapFS(fsWindows);
   end;
 
@@ -7488,7 +7488,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawVertices
 var
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-//  bPatched: bool;
+//  bPatched: _bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7550,7 +7550,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawVerticesUP
 var
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-//  bPatched: bool;
+//  bPatched: _bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7619,9 +7619,9 @@ var
   pData: PBYTE;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-//  bPatched: bool;
+//  bPatched: _bool;
   pbData: PBYTE;
-  bActiveIB: bool;
+  bActiveIB: _bool;
   pIndexBuffer: XTL_PIDirect3DIndexBuffer8;
   BaseIndex: UINT;
 
@@ -7774,7 +7774,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP
 var
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-//  bPatched: bool;
+//  bPatched: _bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7897,7 +7897,7 @@ begin
     [Index, bEnable]);
 {$ENDIF}
 
-  Result := IDirect3DDevice8(g_pD3DDevice8).LightEnable(Index, bEnable);
+  Result := IDirect3DDevice8(g_pD3DDevice8).LightEnable(Index, bEnable <> BOOL_FALSE);
   EmuSwapFS(fsXbox);
 end;
 
@@ -8068,7 +8068,7 @@ begin
     #13#10'(' +
     #13#10'   Enable            : 0%10s' +
     #13#10');',
-    [BoolToStr(Enable)]);
+    [BoolToStr(Enable <> BOOL_FALSE)]);
 {$ENDIF}
 
   EmuWarning('Not setting soft display filter');
@@ -8650,8 +8650,8 @@ begin
     PCSurfaceFormat := D3DFMT_X8R8G8B8;
   end;
 
-  if (Windowed <> FALSE) then
-    Windowed := FALSE;
+  if (Windowed <> BOOL_FALSE) then
+    Windowed := BOOL_FALSE;
 
   // Cxbx TODO : Convert from Xbox to PC!!
   PCMultiSampleType := EmuXB2PC_D3DMultiSampleFormat(DWORD(MultiSampleType));
@@ -8662,7 +8662,7 @@ begin
     Adapter,
     DeviceType,
     PCSurfaceFormat,
-    Windowed,
+    Windowed <> BOOL_FALSE,
     PCMultiSampleType
     );
 
@@ -8753,7 +8753,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := FALSE;
+  Result := BOOL_FALSE;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_BlockOnFence
