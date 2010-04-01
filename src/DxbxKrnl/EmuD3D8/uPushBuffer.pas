@@ -127,7 +127,7 @@ begin
   IDirect3DTexture8(pPixelContainer.EmuTexture8).UnlockRect(0);
   pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
 
-  // Cxbx TODO: potentially CRC to see if this surface was actually modified..
+  // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
 
   //
   // unswizzle texture
@@ -244,7 +244,7 @@ begin
   PCPrimitiveType := D3DPRIMITIVETYPE(-1);
   XBPrimitiveType := X_D3DPT_INVALID;
 
-  // Cxbx TODO: This technically should be enabled
+  // TODO -oCXBX: This technically should be enabled
   XTL_EmuUpdateDeferredStates();
 
 {$ifdef _DEBUG_TRACK_PB}
@@ -269,7 +269,7 @@ begin
 
   pIndexBuffer := nil;
   pVertexBuffer := nil;
-  maxIBSize := 0; // Dxbx TODO : Make this static
+  maxIBSize := 0; // TODO -oDXBX: Make this static
 
   VertPatch.Create; // Dxbx addition
 
@@ -445,7 +445,7 @@ begin
       {$endif}
 
 
-      pwVal := PWORD(IntPtr(pdwPushData) + SizeOf(pdwPushData^)); // Dxbx TODO : Is this correctly translated?
+      pwVal := PWORD(IntPtr(pdwPushData) + SizeOf(pdwPushData^)); // TODO -oDXBX: Is this correctly translated?
       for mi := 0 to dwCount - 1 do
       begin
         pIBMem[mi+2] := pwVal^; Inc(pwVal); // Cxbx has : pwVal[mi];
@@ -455,7 +455,7 @@ begin
       // perform rendering
       if (pIBMem[0] <> $FFFF) then
       begin
-        // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
+        // TODO -oCXBX: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
         if ((dwCount*2 + 2*2) > maxIBSize) then
         begin
           if (pIndexBuffer <> nil) then
@@ -496,7 +496,7 @@ begin
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
-          // Cxbx TODO: Set the current shader and let the patcher handle it..
+          // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
@@ -605,7 +605,7 @@ begin
 
       // perform rendering
       begin
-        // Cxbx TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
+        // TODO -oCXBX: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
         if (dwCount*2 > maxIBSize) then
         begin
           if (pIndexBuffer <> nil) then
@@ -657,7 +657,7 @@ begin
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
-          // Cxbx TODO: Set the current shader and let the patcher handle it..
+          // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);

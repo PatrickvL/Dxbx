@@ -806,7 +806,7 @@ begin
 {$endif}
 
   // First things first, set the pixel shader version
-  // Cxbx TODO: ps.1.1 might be a better idea...
+  // TODO -oCXBX: ps.1.1 might be a better idea...
   sprintf(@szPshString[0], '%s', ['ps.1.0'#13#10]);
 
   // Handle Texture declarations

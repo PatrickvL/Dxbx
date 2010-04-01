@@ -235,7 +235,7 @@ begin
       if (pCur[8+Adjust2] <> X_D3DTSS_UNK) then
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8+Adjust2]);
 
-      // Cxbx TODO: Use a lookup table, this is not always a 1:1 map
+      // TODO -oCXBX: Use a lookup table, this is not always a 1:1 map
       if (pCur[12] <> X_D3DTSS_UNK) then
       begin
         // Dxbx fix : Use Adjust-ment consistently :
@@ -266,7 +266,7 @@ begin
       if (pCur[15-Adjust1] <> X_D3DTSS_UNK) then
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15-Adjust1]);
 
-      // Cxbx TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
+      // TODO -oCXBX: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
       if (pCur[16-Adjust1] <> X_D3DTSS_UNK) then
       begin
         if (pCur[16-Adjust1] > 12) and (pCur[16-Adjust1] <> 14) and (pCur[16-Adjust1] <> 13) then
@@ -339,7 +339,7 @@ begin
       // set the point sprites texture
       IDirect3DDevice8(g_pD3DDevice8).GetTexture(3, PIDirect3DBaseTexture8(@pTexture));
       IDirect3DDevice8(g_pD3DDevice8).SetTexture(0, IDirect3DBaseTexture8(pTexture));
-      // Dxbx TODO : Should we clear the pTexture interface (and how)?
+      // TODO -oDXBX: Should we clear the pTexture interface (and how)?
 
       // disable all other stages
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);

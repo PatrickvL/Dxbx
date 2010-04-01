@@ -128,7 +128,7 @@ var
   MapFileName: TFileName;
 *)
 begin
-  Result := True; // Dxbx TODO
+  Result := True; // TODO -oDXBX:
 (*
   MapFileName := ChangeFileExt(FileName, JclMapFileExtension);
   Result := FileExists(MapFileName);

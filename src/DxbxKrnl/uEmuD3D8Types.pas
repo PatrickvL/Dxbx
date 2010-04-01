@@ -78,7 +78,7 @@ type
   XTL_LPDIRECTSOUNDBUFFER8 = XTL_PIDirectSoundBuffer8;
 
 
-// Cxbx TODO: fill out these enumeration tables for convienance
+// TODO -oCXBX: fill out these enumeration tables for convienance
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type X_D3DFORMAT = DWORD;
 type X_D3DBLENDOP = DWORD;

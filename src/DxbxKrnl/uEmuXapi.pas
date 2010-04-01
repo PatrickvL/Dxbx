@@ -262,7 +262,7 @@ begin
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
-  // Cxbx TODO: yeah... we'll format... riiiiight
+  // TODO -oCXBX: yeah... we'll format... riiiiight
 
   Result := BOOL_TRUE;
 end;
@@ -909,7 +909,7 @@ begin
       if (pPH.pPollingParameters.fAutoPoll = Byte(FALSE)) then
       begin
         //
-        // Cxbx TODO: uh..
+        // TODO -oCXBX: uh..
         //
 
         EmuWarning('EmuXInputGetState : fAutoPoll == FALSE');
@@ -1022,7 +1022,7 @@ function XTL_EmuCreateMutex
 (
     lpMutexAttributes: LPSECURITY_ATTRIBUTES;
     bInitialOwner: BOOL;
-    { Dxbx TODO : Is this really an Ansi-type? Or should it be wide (LPCWSTR) ? }
+    { TODO -oDXBX: Is this really an Ansi-type? Or should it be wide (LPCWSTR) ? }
     lpName: LPCSTR
 ): HANDLE; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1223,7 +1223,7 @@ begin
 
   StartRoutine(StartContext);
 
-  // Cxbx TODO: Call thread notify routines ?
+  // TODO -oCXBX: Call thread notify routines ?
 end;
 
 (* Cxbx : Too High Level!
@@ -1395,7 +1395,7 @@ begin
       [pSectionName]);
 {$ENDIF}
 
-  // Cxbx TODO: Search this .xbe for the section it wants to load.
+  // TODO -oCXBX: Search this .xbe for the section it wants to load.
   // If we find it, return the address of it.
 
   // Get the .xbe header
@@ -1505,7 +1505,7 @@ begin
       [pSectionName]);
 {$ENDIF}
 
-  // Cxbx TODO: Implement (if necessary)?
+  // TODO -oCXBX: Implement (if necessary)?
 //  CxbxKrnlCleanup('XFreeSectionA is not implemented');
 
   EmuSwapFS(fsXbox);
@@ -1533,10 +1533,10 @@ begin
 
   pdwRet := NULL;
   
-  // Cxbx TODO: Implement (if necessary)?
+  // TODO -oCXBX: Implement (if necessary)?
 //  CxbxKrnlCleanup('XGetSectionHandleA is not implemented');
 
-  // Cxbx TODO: Save the name and address of each section contained in
+  // TODO -oCXBX: Save the name and address of each section contained in
   // this .xbe instead of adding this stuff by hand because the section
   // address can change from one game region to the next, and some games
   // will use the same engine and section name, so accuracy is not
@@ -1603,7 +1603,7 @@ begin
       [hSection]);
 {$ENDIF}
 
-  // Cxbx TODO: Implement (if necessary)?
+  // TODO -oCXBX: Implement (if necessary)?
 //  CxbxKrnlCleanup('XLoadSectionByHandle is not implemented');
 
   EmuSwapFS(fsXbox);

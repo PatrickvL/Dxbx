@@ -419,7 +419,7 @@ begin
 
     // If Entry.StartSector = $FFFFFFFF or Position > 2040, we reached the last
     // entry of the sector
-    // Dxbx TODO : Constantify once we know where this 2040 comes from:
+    // TODO -oDXBX: Constantify once we know where this 2040 comes from:
     if (Position > 2040) or (Entry.StartSector = $FFFFFFFF) then
     begin
       // Let's get the next one

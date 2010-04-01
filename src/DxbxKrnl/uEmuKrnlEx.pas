@@ -199,7 +199,7 @@ begin
            [NumberOfBytes, Tag]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually implement this
+  // TODO -oCXBX: Actually implement this
   pRet := CxbxMalloc(NumberOfBytes);
 
   EmuSwapFS(fsXbox);
@@ -308,7 +308,7 @@ begin
     // Factory Game Region
     $104:
     begin
-      // Cxbx TODO: configurable region or autodetect of some sort
+      // TODO -oCXBX: configurable region or autodetect of some sort
       if (Type_ <> nil) then
         Type_^ := $04;
 
@@ -322,7 +322,7 @@ begin
     // Factory AC Region
     $103:
     begin
-      // Cxbx TODO: configurable region or autodetect of some sort
+      // TODO -oCXBX: configurable region or autodetect of some sort
       if (Type_ <> nil) then
         Type_^ := $04;
 
@@ -336,7 +336,7 @@ begin
     // Language
     $007:
     begin
-      // Cxbx TODO: configurable language or autodetect of some sort
+      // TODO -oCXBX: configurable language or autodetect of some sort
       if (Type_ <> nil) then
         Type_^ := $04;
 
@@ -350,7 +350,7 @@ begin
     // Video Flags
     $008:
     begin
-      // Cxbx TODO: configurable video flags or autodetect of some sort
+      // TODO -oCXBX: configurable video flags or autodetect of some sort
       if (Type_ <> nil) then
         Type_^ := $04;
 

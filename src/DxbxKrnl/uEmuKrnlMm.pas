@@ -250,7 +250,7 @@ begin
          [NumberOfBytes, Protect]);
 {$ENDIF}
 
-  // Cxbx TODO: should this be aligned?
+  // TODO -oCXBX: should this be aligned?
   Result := CxbxMalloc(NumberOfBytes);
 
   EmuSwapFS(fsXbox);
@@ -465,7 +465,7 @@ begin
          [BaseAddress, NumberOfBytes, Persist]);
 {$ENDIF}
 
-  // Cxbx TODO: Actually set this up to be remember across a 'reboot'
+  // TODO -oCXBX: Actually set this up to be remember across a 'reboot'
   EmuWarning('MmPersistContiguousMemory is being ignored');
 
   EmuSwapFS(fsXbox);

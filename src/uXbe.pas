@@ -296,7 +296,7 @@ type
     m_Certificate: XBE_CERTIFICATE;
     m_SectionHeader: array of XBE_SECTIONHEADER;
     m_LibraryVersion: array of XBE_LIBRARYVERSION;
-    m_szSectionName: array of array of AnsiChar; // Dxbx TODO : Use XBE_SECTIONNAME_MAXLENGTH
+    m_szSectionName: array of array of AnsiChar; // TODO -oDXBX: Use XBE_SECTIONNAME_MAXLENGTH
     m_HeaderEx: array of Byte;
     m_TLS: PXBE_TLS;
     m_bzSection: array of TRawSection;
@@ -997,7 +997,7 @@ begin
     CloseFile(FileEx);
 end; // TXbe.DumpInformation
 
-// Dxbx TODO : Return real adresses like Cxbx
+// TODO -oDXBX: Return real adresses like Cxbx
 function TXbe.GetAddr(x_dwVirtualAddress: DWord): Integer;
 var
   lIndex, VirtAddr, VirtSize, dwoffs: DWord;
@@ -1011,7 +1011,7 @@ begin
   begin
     // offset in image header extra bytes
     if dwoffs < m_Header.dwSizeofHeaders then
-      Result := dwOffs// - SizeOf(m_Header) // Dxbx TODO : Return adresses in m_HeaderEx
+      Result := dwOffs// - SizeOf(m_Header) // TODO -oDXBX: Return adresses in m_HeaderEx
     else
     begin
       // offset into some random section
@@ -1259,7 +1259,7 @@ begin
     Exit;
   end;
 
-// Dxbx TODO : Check for 'DDS' format, and read that too, perhaps using these resources :
+// TODO -oDXBX: Check for 'DDS' format, and read that too, perhaps using these resources :
 // http://www.imageconverterplus.com/help-center/about-icp/supported-formats/dds/
 // http://archive.netbsd.se/view_attachment.php?id=2463254.32112
 //      if StrLPas(PAnsiChar(@XprImage.hdr.Header.dwMagic), 3) = 'DDS' then

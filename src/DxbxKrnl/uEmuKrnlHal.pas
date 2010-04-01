@@ -50,7 +50,7 @@ var {041}xboxkrnl_HalDiskModelNumber: DWORD;
 var {042}xboxkrnl_HalDiskSerialNumber: DWORD;
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-// Cxbx TODO: Verify this!
+// TODO -oCXBX: Verify this!
 var {356}xboxkrnl_HalBootSMCVideoMode: DWORD = 1;
 // Source:Cxbx  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 
@@ -139,8 +139,8 @@ begin
       [State, Count]);
 {$ENDIF}
 
-	// Cxbx TODO: Make this configurable?
-	// Cxbx TODO: What is the count parameter for??
+	// TODO -oCXBX: Make this configurable?
+	// TODO -oCXBX: What is the count parameter for??
 
 	State^ := TRAY_CLOSED_NO_MEDIA;
 //	Count^ := 1;
@@ -271,7 +271,7 @@ end;
 function {050} xboxkrnl_HalWriteSMBusValue(
   Address: UCHAR;
   Command: UCHAR;
-  WordFlag: BOOLEAN; // Dxbx TODO : What should we use: LONGBOOL or WORDBOOL?
+  WordFlag: BOOLEAN; // TODO -oDXBX: What should we use: LONGBOOL or WORDBOOL?
   Value: ULONG
   ): ULONG; stdcall;
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0

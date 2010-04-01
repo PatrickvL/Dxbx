@@ -35,11 +35,11 @@ const
 type
   // Wrapper of a handle object
   TEmuHandle = class(TObject)
-    // Dxbx TODO
+    // TODO -oDXBX:
   end;
 
   // An NT fake object
-  TEmuNtObject = class(TObject) // Dxbx TODO
+  TEmuNtObject = class(TObject) // TODO -oDXBX:
   private
     RefCount: ULONG; // Reference count
   protected
@@ -63,7 +63,7 @@ type
     File_: HANDLE; // The Windows file handle
     // Volume: TEmuNtVolume; // Pointer to the volume from which this came
   public
-    // Cxbx TODO : We need to override NtDuplicateObject in this case
+    // TODO -oCXBX: We need to override NtDuplicateObject in this case
   end;
 
 var
