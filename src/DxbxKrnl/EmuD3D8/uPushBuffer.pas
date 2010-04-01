@@ -707,7 +707,7 @@ begin
     printf('');
     printf('CxbxDbg> ');
 {$ENDIF}
-    //fflush(stdout);
+    fflush(stdout);
   end;
 {$endif}
 

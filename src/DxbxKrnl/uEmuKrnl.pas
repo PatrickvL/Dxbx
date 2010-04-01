@@ -368,7 +368,7 @@ function {056} xboxkrnl_InterlockedFlushSList(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // Dxbx TODO : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
+  // TODO -oDxbx : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
 end;

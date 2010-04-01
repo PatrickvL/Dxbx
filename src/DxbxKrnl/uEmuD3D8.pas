@@ -7918,7 +7918,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderTarget' +
            #13#10'(' +
-           #13#10'   pRenderTarget     : 0x%.08X' + // Dxbx TODO (0x%.08X)' +
+           #13#10'   pRenderTarget     : 0x%.08X' + // TODO -oDxbx : Restore? (0x%.08X)' +
            #13#10'   pNewZStencil      : 0x%.08X (0x%.08X)' +
            #13#10');',
            [pRenderTarget, {iif(pRenderTarget <> nil, pRenderTarget.EmuSurface8, nil),}

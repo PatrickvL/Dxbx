@@ -1296,7 +1296,7 @@ begin
                       'If you''re reading this message than tell blueshogun you saw it!!!');
 
     // Find an empty spot in the thread notification array
-    for i := 0 to 16 - 1 do // Dxbx TODO : Constantify 16
+    for i := 0 to 16 - 1 do // TODO -oDxbx: Constantify 16
     begin
       // If we find one, then add it to the array, and break the loop so
       // that we don't accidently register the same routine twice!
@@ -1311,7 +1311,7 @@ begin
   else
   begin
     // Go through each routine and nullify the routine passed in.
-    for i := 0 to 16 - 1 do // Dxbx TODO : Constantify 16
+    for i := 0 to 16 - 1 do // TODO -oDxbx: Constantify 16
     begin
       if (Addr(pThreadNotification.pfnNotifyRoutine) = Addr(g_pfnThreadNotification[i])) then
       begin
@@ -1326,7 +1326,7 @@ begin
 end;
 
 type
-  LPFIBER_START_ROUTINE = Pointer; // Dxbx TODO : declare this better!
+  LPFIBER_START_ROUTINE = Pointer; // TODO -oDxbx: declare this better!
    
 function XTL_EmuCreateFiber
 (

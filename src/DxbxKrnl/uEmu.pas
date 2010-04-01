@@ -124,8 +124,8 @@ begin
 end;
 
 // exception handler
-function EmuException(E: LPEXCEPTION_POINTERS): Integer; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
+function EmuException(E: LPEXCEPTION_POINTERS): int; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_tj  Done:30
 var
   fix: UInt32;
   buffer: array [0..256 -1] of char;
@@ -139,13 +139,12 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  g_bEmuException := True;
+  g_bEmuException := true;
 
   // check for Halo hack
   begin
     if E.ExceptionRecord.ExceptionCode = $C0000005 then
     begin
-
       // Halo Access Adjust 1
       if E.ContextRecord.Eip = $0003394C then
       begin
@@ -154,16 +153,17 @@ begin
           // Halo BINK skip
           begin
             // nop sled over bink calls
-            memset(PVoid($2CBA4), $90, $2CBAF - $2CBA4);
-            memset(PVoid($2CBBD), $90, $2CBD5 - $2CBBD);
-            memset(PVoid($2CAE0), $90, $2CE1E - $2CAE0);
+            (* Cxbx marked this out :
+            memset(Pvoid($2CBA4), $90, $2CBAF - $2CBA4);
+            memset(Pvoid($2CBBD), $90, $2CBD5 - $2CBBD);
+            *)
+            memset(Pvoid($2CAE0), $90, $2CE1E - $2CAE0);
           end;
 
           fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
-          e.ContextRecord.Eax := fix;
-          e.ContextRecord.Ecx := fix;
-          e.ContextRecord.Esp := fix;
+          e.ContextRecord.Eax := fix; e.ContextRecord.Ecx := fix;
+          Puint32(e.ContextRecord.Esp)^ := fix;
 
           PX_D3DResource(fix).Data := g_HaloHack[1] + (PX_D3DResource(fix).Data - $803A6000);
 
@@ -183,14 +183,14 @@ begin
               if (dwCur >= $803A6000) and (dwCur < $819A6000) then
                   PDWORD(dwESI+v)^ := g_HaloHack[1] + (dwCur - $803A6000);
 
-              inc(v,4);
+              Inc(v, 4);
             end;
-
           end;
 
           // fix this global pointer
           begin
             dwValue := PDWORD($39CE24)^;
+
             PDWORD($39CE24)^ := g_HaloHack[1] + (dwValue - $803A6000);
           end;
 
@@ -198,7 +198,7 @@ begin
           DbgPrintf('EmuMain : Halo Access Adjust 1 was applied!');
 {$ENDIF}
 
-          g_bEmuException := False;
+          g_bEmuException := false;
 
           Result := EXCEPTION_CONTINUE_EXECUTION;
           Exit;
@@ -212,13 +212,12 @@ begin
           begin
             fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);
 
-            PDWord($0039BE58)^ := fix;
-            e.ContextRecord.Eax := fix;
+            PDWORD($0039BE58)^ := fix; e.ContextRecord.Eax := fix;
 
             // go through and fix any other pointers in the $2DF1C8 allocation chunk
             begin
-              dwPtr := $2DF1C8;
-              dwSize := EmuCheckAllocationSize(PVOID(dwPtr), False);
+              dwPtr := PDWORD($2DF1C8)^;
+              dwSize := EmuCheckAllocationSize(PVOID(dwPtr), false);
 
               // dword aligned
               dwSize := dwSize - (4 - dwSize mod 4);
@@ -238,7 +237,8 @@ begin
 {$IFDEF DEBUG}
             DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');
 {$ENDIF}
-            g_bEmuException := False;
+            g_bEmuException := false;
+
             Result := EXCEPTION_CONTINUE_EXECUTION;
             Exit;
           end;
@@ -265,6 +265,8 @@ begin
   end;
 {$ENDIF}
 
+  fflush(stdout);
+
   // notify user
   begin
 
@@ -286,7 +288,7 @@ begin
 {$IFDEF DEBUG}
         DbgPrintf('EmuMain : Aborting Emulation');
 {$ENDIF}
-        {fflush(stdout);}
+        fflush(stdout);
 
         if CxbxKrnl_hEmuParent <> 0 then
           SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
@@ -322,7 +324,7 @@ begin
 {$IFDEF DEBUG}
         DbgPrintf('EmuMain : Aborting Emulation');
 {$ENDIF}
-        {fflush(stdout);}
+        fflush(stdout);
 
         if CxbxKrnl_hEmuParent <> 0 then
           SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
