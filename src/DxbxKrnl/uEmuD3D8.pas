@@ -9452,7 +9452,7 @@ exports
   XTL_EmuD3DInit,
 
   XTL_EmuGet2DSurfaceDesc,
-  XTL_EmuGet2DSurfaceDescD, // TODO : Fix wrong prefix!
+  XTL_EmuGet2DSurfaceDescD, // TODO -oDXBX: Fix wrong prefix!
 
   XTL_EmuIDevice3D8_KickOff name PatchPrefix + 'D3D_KickOff',
 

@@ -381,7 +381,7 @@ begin
       #13#10');',
       [pResource, cPath, bWriteSurfaceAsTexture]);
 
-  // TODO: If necessary, either reverse the .xbx and .xpr file formats
+  // TODO -oCXBX: If necessary, either reverse the .xbx and .xpr file formats
   // and write the surface/texture to a file, or output a generic .xbx
   // file and be done with it.
 

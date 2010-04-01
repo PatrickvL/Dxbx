@@ -555,7 +555,7 @@ begin
       [CurrentTime]);
 {$ENDIF}
 
-  // TODO: optimize for WinXP if speed ever becomes important here
+  // TODO -oCXBX: optimize for WinXP if speed ever becomes important here
 
   GetSystemTime({var}SystemTime);
 

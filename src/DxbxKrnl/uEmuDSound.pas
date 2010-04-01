@@ -1158,7 +1158,7 @@ begin
       // with flags DSBCAPS_MIXIN, DSBCAPS_FXIN, and DSBCAPS_FXIN2 will have no
       // WAVEFORMATEX structure by default.
 
-      // TODO: A better response to this scenario if possible.
+      // TODO -oCXBX: A better response to this scenario if possible.
 
       pDSBufferDescSpecial := DirectSound.PDSBUFFERDESC(CxbxMalloc(sizeof(DSBUFFERDESC)));
       pDSBufferDescSpecial.lpwfxFormat := PWAVEFORMATEX(CxbxMalloc(sizeof(WAVEFORMATEX)));
@@ -2131,7 +2131,7 @@ begin
       [pThis, pInfo]);
 {$ENDIF}
 
-  // TODO: A (real) implementation?
+  // TODO -oCXBX: A (real) implementation?
   EmuWarning('EmuCDirectSoundStream_GetInfo is not yet supported!');
 
   if Assigned(pInfo) then
@@ -2593,7 +2593,7 @@ begin
       [pThis, pMixBins]);
 {$ENDIF}
 
-  // TODO: Actually implement this.
+  // TODO -oCXBX: Actually implement this.
 
   EmuSwapFS(fsXbox);
 
@@ -3325,7 +3325,7 @@ begin
       [pThis, pOutputLevels, bResetPeakValues]);
 {$ENDIF}
 
-  // TODO: Anything?  Either way, I've never seen a game to date use this...
+  // TODO -oCXBX: Anything?  Either way, I've never seen a game to date use this...
 
   EmuSwapFS(fsXbox);
 
@@ -3353,7 +3353,7 @@ begin
       [pThis, pEnvelopeDesc]);
 {$ENDIF}
 
-  // TODO: Implement this...
+  // TODO -oCXBX: Implement this...
 
   EmuSwapFS(fsXbox);
 
@@ -3372,7 +3372,7 @@ begin
   DbgPrintf('EmuDSound : EmuIDirectSoundStream_Flush()');
 {$ENDIF}
 
-  // TODO: Actually implement
+  // TODO -oCXBX: Actually implement
 
   EmuSwapFS(fsXbox);
 
@@ -3402,7 +3402,7 @@ begin
       [pThis, rtTimeStamp, dwFlags]);
 {$ENDIF}
 
-  // TODO: Actually implement
+  // TODO -oCXBX: Actually implement
 
   EmuSwapFS(fsXbox);
 
@@ -3490,7 +3490,7 @@ begin
        [pThis, pFilterDesc]);
 {$ENDIF}
 
-  // TODO: Implement
+  // TODO -oCXBX: Implement
 
   EmuWarning('IDirectSoundBuffer8_SetFilter not yet supported!');
 
@@ -3520,7 +3520,7 @@ begin
        [pThis, pFilterDesc]);
 {$ENDIF}
 
-  // TODO: Implement
+  // TODO -oCXBX: Implement
 
   EmuWarning('CDirectSoundStream_SetFilter not yet supported!');
 
@@ -3600,8 +3600,8 @@ begin
     // WARNING: This may not be accurate under Windows Vista...
     pDSCaps.dwFree2DBuffers := DSCapsPC.dwFreeHwMixingAllBuffers;
     pDSCaps.dwFree3DBuffers := DSCapsPC.dwFreeHw3DAllBuffers;
-    pDSCaps.dwFreeBufferSGEs := 256;              // TODO: Verify max on a real Xbox
-    pDSCaps.dwMemoryAllocated := DSCapsPC.dwFreeHwMemBytes;  // TODO: Bytes or MegaBytes?
+    pDSCaps.dwFreeBufferSGEs := 256;              // TODO -oCXBX: Verify max on a real Xbox
+    pDSCaps.dwMemoryAllocated := DSCapsPC.dwFreeHwMemBytes;  // TODO -oCXBX: Bytes or MegaBytes?
   end;
 
   EmuSwapFS(fsXbox);
@@ -3658,14 +3658,14 @@ begin
   // can actually do.  BTW, this function accesses the NVIDIA SoundStorm APU
   // register directly (0xFE80200C).
 
-  // TODO: Handle reset at certain event?
-  // TODO: Wait until a DirectSoundBuffer/Stream is being played?
+  // TODO -oCXBX: Handle reset at certain event?
+  // TODO -oCXBX: Wait until a DirectSoundBuffer/Stream is being played?
   dwStart := GetTickCount();
   dwRet := GetTickCount() - dwStart;
 
   EmuSwapFS(fsXbox);
 
-  Result := 0; // Dxbx TODO : Should we (and Cxbx) really return dwRet here?
+  Result := 0; // TODO -oDXBX: Should we (and Cxbx) really return dwRet here?
 end;
 
 exports
