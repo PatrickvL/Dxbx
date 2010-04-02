@@ -2211,7 +2211,7 @@ end;
 *)
 
 exports
-  XTL_EmuCloseHandle,
+//  XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
   XTL_EmuCreateFiber,
   XTL_EmuCreateMutex,
   XTL_EmuCreateSemaphore,
@@ -2223,6 +2223,7 @@ exports
   XTL_EmuPulseEvent,
   XTL_EmuQueryPerformanceCounter,
   XTL_EmuQueryPerformanceFrequency,
+  XTL_EmuXInputGetState,
   XTL_EmuQueueUserAPC,
   XTL_EmuRaiseException,
   XTL_EmuReleaseSemaphore,
@@ -2254,7 +2255,6 @@ exports
   XTL_EmuXInitDevices,
   XTL_EmuXInputClose,
   XTL_EmuXInputGetCapabilities,
-  XTL_EmuXInputGetState,
   XTL_EmuXInputOpen,
   XTL_EmuXInputPoll,
   XTL_EmuXInputSetState,
