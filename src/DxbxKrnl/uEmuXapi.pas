@@ -339,7 +339,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
+{$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
       #13#10'(' +
       #13#10'   hHeap               : 0x%.08X' +

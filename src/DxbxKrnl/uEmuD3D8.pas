@@ -3035,13 +3035,13 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_CreateTexture' +
      #13#10'(' +
-     #13#10'   Width             : 0x%.08X' +
-     #13#10'   Height            : 0x%.08X' +
-     #13#10'   Levels            : 0x%.08X' +
-     #13#10'   Usage             : 0x%.08X' +
-     #13#10'   Format            : 0x%.08X' +
-     #13#10'   Pool              : 0x%.08X' +
-     #13#10'   ppTexture         : 0x%.08X' +
+     #13#10'   Width               : 0x%.08X' +
+     #13#10'   Height              : 0x%.08X' +
+     #13#10'   Levels              : 0x%.08X' +
+     #13#10'   Usage               : 0x%.08X' +
+     #13#10'   Format              : 0x%.08X' +
+     #13#10'   Pool                : 0x%.08X' +
+     #13#10'   ppTexture           : 0x%.08X' +
      #13#10');',
      [Width, Height, Levels, Usage, Ord(Format), Ord(Pool), ppTexture]);
 {$ENDIF}
@@ -5495,10 +5495,10 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DSurface8_LockRect' +
     #13#10'(' +
-    #13#10'   pThis             : 0x%.08X' +
-    #13#10'   pLockedRect       : 0x%.08X' +
-    #13#10'   pRect             : 0x%.08X' +
-    #13#10'   Flags             : 0x%.08X' +
+    #13#10'   pThis               : 0x%.08X' +
+    #13#10'   pLockedRect         : 0x%.08X' +
+    #13#10'   pRect               : 0x%.08X' +
+    #13#10'   Flags               : 0x%.08X' +
     #13#10');',
     [pThis, pLockedRect, pRect, Flags]);
 {$ENDIF}
