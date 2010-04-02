@@ -2478,7 +2478,7 @@ var
   pD3DVertexShader: PX_D3DVertexShader;
   pVertexShader: PVERTEX_SHADER;
 
-  pRecompiledBuffer: LPD3DXBUFFER;
+  pRecompiledBuffer: XTL_LPD3DXBUFFER;
   pRecompiledDeclaration: PDWORD;
   pRecompiledFunction: PDWORD;
   VertexShaderSize: DWORD;
@@ -2542,7 +2542,7 @@ begin
                                         g_VertexShaderConstantMode = X_VSCM_NONERESERVED);
     if (SUCCEEDED(hRet)) then
     begin
-      pRecompiledFunction := PDWORD(pRecompiledBuffer.GetBufferPointer());
+      pRecompiledFunction := PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer());
     end
     else
     begin
@@ -2567,7 +2567,7 @@ begin
     );
     if Assigned(pRecompiledBuffer) then
     begin
-      pRecompiledBuffer._Release();
+      ID3DXBuffer(pRecompiledBuffer)._Release();
       pRecompiledBuffer := NULL;
     end;
 
@@ -2585,7 +2585,7 @@ begin
         hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexShader
         (
             pRecompiledDeclaration,
-            PDWORD(pRecompiledBuffer.GetBufferPointer()),
+            PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer()),
             {out}Handle,
             g_dwVertexShaderUsage
         );
@@ -2915,8 +2915,8 @@ const
     #13#10'tex t0'#13#10 +
     #13#10'mov r0, t0'#13#10;
 var
-  pShader: LPD3DXBUFFER;
-  pErrors: LPD3DXBUFFER;
+  pShader: XTL_LPD3DXBUFFER;
+  pErrors: XTL_LPD3DXBUFFER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2947,12 +2947,12 @@ begin
       D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
 
       // create the shader device handle
-      Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(pShader.GetBufferPointer(), {out}dwHandle);
+      Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
 
       if (FAILED(Result)) then
       begin
         EmuWarning('Could not create pixel shader');
-        EmuWarning(string(AnsiString(PAnsiChar(pErrors.GetBufferPointer))));
+        EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer))));
       end;
     end;
 

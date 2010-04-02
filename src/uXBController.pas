@@ -40,13 +40,11 @@ uses
   , uError
   , uDxbxUtils
   , uLog
+  , uEmuD3D8Types
 //  , uEmuXTL
   ;
 
 type
-  XTL_LPDIRECTINPUT8 = IDirectInput8; // TODO -oDXBX: How is this type defined?
-  XTL_LPDIRECTINPUTDEVICE8 = IDirectInputDevice8; // TODO -oDXBX: How is this type defined?
-
   LPCDIDEVICEOBJECTINSTANCE = TDIDeviceObjectInstanceA;
   LPCDIDEVICEINSTANCE = TDIDeviceInstanceA;
 
@@ -292,7 +290,7 @@ begin
     diprg.lMin := 0 - 32768;
     diprg.lMax := 0 + 32767;
 
-    hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, diprg.diph);
+    hRet := IDirectInputDevice8(m_InputDevice[m_dwCurObject].m_Device).SetProperty(DIPROP_RANGE, diprg.diph);
 
     if FAILED(hRet) then
     begin
@@ -313,7 +311,7 @@ begin
     diprg.lMin := 0;
     diprg.lMax := 255;
 
-    hRet := m_InputDevice[m_dwCurObject].m_Device.SetProperty(DIPROP_RANGE, diprg.diph);
+    hRet := IDirectInputDevice8(m_InputDevice[m_dwCurObject].m_Device).SetProperty(DIPROP_RANGE, diprg.diph);
 
     if (FAILED(hRet)) then
     begin
@@ -346,12 +344,12 @@ begin
     Exit;
   end;
 
-  hRet := m_pDirectInput8.CreateDevice(lpddi.guidInstance, @(m_InputDevice[m_dwInputDeviceCount].m_Device), nil);
+  hRet := IDirectInput8(m_pDirectInput8).CreateDevice(lpddi.guidInstance, @(m_InputDevice[m_dwInputDeviceCount].m_Device), nil);
 
   if (not FAILED(hRet)) then
   begin
     m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_JOYSTICK;
-    m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(c_dfDIJoystick);
+    IDirectInputDevice8(m_InputDevice[m_dwInputDeviceCount].m_Device).SetDataFormat(c_dfDIJoystick);
     Inc(m_dwInputDeviceCount);
 
     if (m_CurrentState = XBCTRL_STATE_LISTEN) then
@@ -417,14 +415,14 @@ begin
 
     pDevice := m_InputDevice[dwDevice].m_Device;
 
-    hRet := pDevice.Poll();
+    hRet := IDirectInputDevice8(pDevice).Poll();
 
     if FAILED(hRet) then
     begin
-      hRet := pDevice.Acquire();
+      hRet := IDirectInputDevice8(pDevice).Acquire();
 
       while hRet = DIERR_INPUTLOST do
-        hRet := pDevice.Acquire();
+        hRet := IDirectInputDevice8(pDevice).Acquire();
     end;
 
     wValue := 0;
@@ -432,7 +430,7 @@ begin
     // Interpret PC Joystick Input
     if (dwFlags and DEVICE_FLAG_JOYSTICK) > 0 then
     begin
-      if (pDevice.GetDeviceState(SizeOf(JoyState), @JoyState) <> DI_OK) then
+      if (IDirectInputDevice8(pDevice).GetDeviceState(SizeOf(JoyState), @JoyState) <> DI_OK) then
         Continue;
 
       if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
@@ -466,7 +464,7 @@ begin
     // Interpret PC KeyBoard Input
     else if (dwFlags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
-      if (pDevice.GetDeviceState(SizeOf(KeyboardState), @KeyboardState) <> DI_OK) then
+      if (IDirectInputDevice8(pDevice).GetDeviceState(SizeOf(KeyboardState), @KeyboardState) <> DI_OK) then
         Continue;
 
       bKey := KeyboardState[dwInfo];
@@ -479,7 +477,7 @@ begin
     // Interpret PC Mouse Input
     else if (dwFlags and DEVICE_FLAG_MOUSE) > 0 then
     begin
-      if (pDevice.GetDeviceState(SizeOf(MouseState), @MouseState) <> DI_OK) then
+      if (IDirectInputDevice8(pDevice).GetDeviceState(SizeOf(MouseState), @MouseState) <> DI_OK) then
         Continue;
 
       if (dwFlags and DEVICE_FLAG_MOUSE_CLICK) > 0 then
@@ -684,12 +682,12 @@ begin
   begin
     // Poll the current device
     begin
-      hRet := m_InputDevice[v].m_Device.Poll();
+      hRet := IDirectInputDevice8(m_InputDevice[v].m_Device).Poll();
       if (FAILED(hRet)) then
       begin
-        hRet := m_InputDevice[v].m_Device.Acquire();
+        hRet := IDirectInputDevice8(m_InputDevice[v].m_Device).Acquire();
         while (hRet = DIERR_INPUTLOST) do
-          hRet := m_InputDevice[v].m_Device.Acquire();
+          hRet := IDirectInputDevice8(m_InputDevice[v].m_Device).Acquire();
       end;
     end;
 
@@ -701,7 +699,7 @@ begin
     begin
       // Get Joystick State
       begin
-        hRet := m_InputDevice[v].m_Device.GetDeviceState(SizeOf(DIJOYSTATE), @JoyState);
+        hRet := IDirectInputDevice8(m_InputDevice[v].m_Device).GetDeviceState(SizeOf(DIJOYSTATE), @JoyState);
         if FAILED(hRet) then
           Continue;
       end;
@@ -779,9 +777,9 @@ begin
       begin
         szDirection := iif((dwFlags and DEVICE_FLAG_AXIS) > 0, iif((dwFlags and DEVICE_FLAG_POSITIVE) > 0, 'Positive ', 'Negative '), '');
 
-        m_InputDevice[v].m_Device.GetDeviceInfo({var}DeviceInstance);
+        IDirectInputDevice8(m_InputDevice[v].m_Device).GetDeviceInfo({var}DeviceInstance);
 
-        m_InputDevice[v].m_Device.GetObjectInfo({var}ObjectInstance, dwHow, DIPH_BYOFFSET);
+        IDirectInputDevice8(m_InputDevice[v].m_Device).GetObjectInfo({var}ObjectInstance, dwHow, DIPH_BYOFFSET);
 
         Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
@@ -798,7 +796,7 @@ begin
     // Detect Keyboard Input
     else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
-      m_InputDevice[v].m_Device.GetDeviceState(SizeOf(DIKEYSTATE), @KeyState);
+      IDirectInputDevice8(m_InputDevice[v].m_Device).GetDeviceState(SizeOf(DIKEYSTATE), @KeyState);
 
       dwFlags := DEVICE_FLAG_KEYBOARD;
 
@@ -829,7 +827,7 @@ begin
     // Detect Mouse Input
     else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_MOUSE) > 0 then
     begin
-      m_InputDevice[v].m_Device.GetDeviceState(SizeOf(MouseState), @MouseState);
+      IDirectInputDevice8(m_InputDevice[v].m_Device).GetDeviceState(SizeOf(MouseState), @MouseState);
 
       dwFlags := DEVICE_FLAG_MOUSE;
 
@@ -921,7 +919,7 @@ begin
 
           ObjectInstance.dwSize := SizeOf(ObjectInstance);
 
-          if (m_InputDevice[v].m_Device.GetObjectInfo({var}ObjectInstance, dwHow, DIPH_BYOFFSET) = DI_OK) then
+          if (IDirectInputDevice8(m_InputDevice[v].m_Device).GetObjectInfo({var}ObjectInstance, dwHow, DIPH_BYOFFSET) = DI_OK) then
             szObjName := ObjectInstance.tszName;
 
           Map(CurConfigObject, 'SysMouse', dwHow, dwFlags);
@@ -965,15 +963,15 @@ var
 begin
   for v := m_dwInputDeviceCount downto 0 do
   begin
-    m_InputDevice[v].m_Device.Unacquire();
-    m_InputDevice[v].m_Device._Release();
+    IDirectInputDevice8(m_InputDevice[v].m_Device).Unacquire();
+    IDirectInputDevice8(m_InputDevice[v].m_Device)._Release();
     m_InputDevice[v].m_Device := nil;
   end;
 
   m_dwInputDeviceCount := 0;
   if Assigned(m_pDirectInput8) then
   begin
-    m_pDirectInput8._Release();
+    IDirectInput8(m_pDirectInput8)._Release();
     m_pDirectInput8 := nil;
   end;
 end;
@@ -1004,7 +1002,7 @@ begin
   // Create all the devices available (well...most of them)
   if Assigned(m_pDirectInput8) then
   begin
-    {ahRet :=} m_pDirectInput8.EnumDevices(DI8DEVCLASS_GAMECTRL,
+    {ahRet :=} IDirectInput8(m_pDirectInput8).EnumDevices(DI8DEVCLASS_GAMECTRL,
                                            TDIEnumDevicesCallbackA(@WrapEnumGameCtrlCallback),
                                            Addr(Self),
                                            DIEDFL_ATTACHEDONLY);
@@ -1012,7 +1010,7 @@ begin
 
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysKeyboard') then
     begin
-      ahRet := m_pDirectInput8.CreateDevice(
+      ahRet := IDirectInput8(m_pDirectInput8).CreateDevice(
         {rguid}GUID_SysKeyboard,
         @(m_InputDevice[m_dwInputDeviceCount].m_Device),
         {pUnkOuter=}nil);
@@ -1020,7 +1018,7 @@ begin
       if (not FAILED(ahRet)) then
       begin
         m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_KEYBOARD;
-        m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(c_dfDIKeyboard);
+        IDirectInputDevice8(m_InputDevice[m_dwInputDeviceCount].m_Device).SetDataFormat(c_dfDIKeyboard);
         Inc(m_dwInputDeviceCount);
       end;
 
@@ -1030,7 +1028,7 @@ begin
 
     if (m_CurrentState = XBCTRL_STATE_CONFIG) or DeviceIsUsed('SysMouse') then
     begin
-      ahRet := m_pDirectInput8.CreateDevice(
+      ahRet := IDirectInput8(m_pDirectInput8).CreateDevice(
         GUID_SysMouse,
         @(m_InputDevice[m_dwInputDeviceCount].m_Device),
         nil);
@@ -1038,7 +1036,7 @@ begin
       if (not FAILED(ahRet)) then
       begin
         m_InputDevice[m_dwInputDeviceCount].m_Flags := DEVICE_FLAG_MOUSE;
-        m_InputDevice[m_dwInputDeviceCount].m_Device.SetDataFormat(c_dfDIMouse2);
+        IDirectInputDevice8(m_InputDevice[m_dwInputDeviceCount].m_Device).SetDataFormat(c_dfDIMouse2);
         Inc(m_dwInputDeviceCount);
       end;
 
@@ -1052,7 +1050,7 @@ begin
   m_dwCurObject := 0;
   while m_dwCurObject < m_dwInputDeviceCount do
   begin
-    m_InputDevice[m_dwCurObject].m_Device.EnumObjects(TDIEnumDeviceObjectsCallbackA(@WrapEnumObjectsCallback), Addr(Self), DIDFT_ALL);
+    IDirectInputDevice8(m_InputDevice[m_dwCurObject].m_Device).EnumObjects(TDIEnumDeviceObjectsCallbackA(@WrapEnumObjectsCallback), Addr(Self), DIDFT_ALL);
     Inc(m_dwCurObject);
   end;
 
@@ -1061,17 +1059,17 @@ begin
   begin
     for v := 0 to m_dwInputDeviceCount - 1 do
     begin
-      m_InputDevice[v].m_Device.SetCooperativeLevel(ahwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
-      m_InputDevice[v].m_Device.Acquire();
+      IDirectInputDevice8(m_InputDevice[v].m_Device).SetCooperativeLevel(ahwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
+      IDirectInputDevice8(m_InputDevice[v].m_Device).Acquire();
 
-      ahRet := m_InputDevice[v].m_Device.Poll();
+      ahRet := IDirectInputDevice8(m_InputDevice[v].m_Device).Poll();
 
       if (FAILED(ahRet)) then
       begin
-        ahRet := m_InputDevice[v].m_Device.Acquire();
+        ahRet := IDirectInputDevice8(m_InputDevice[v].m_Device).Acquire();
 
         while (ahRet = DIERR_INPUTLOST) do
-          ahRet := m_InputDevice[v].m_Device.Acquire();
+          ahRet := IDirectInputDevice8(m_InputDevice[v].m_Device).Acquire();
 
         if (ahRet <> DIERR_INPUTLOST) then
           Break;
