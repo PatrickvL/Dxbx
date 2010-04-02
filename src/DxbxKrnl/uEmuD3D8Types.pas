@@ -36,18 +36,19 @@ type
   // a base for all the following interface-type declarations :
   CInterface = record end;
   // C++ does no reference-counting on interfaces, so translations to Delphi shouldn't do that either;
-  // We realise this by using fake interface-types, all based on 'PInterface' which is just a plain pointer :
+  // We realize this by using fake interface-types, all based on 'PInterface' which is just a plain pointer :
   PInterface = ^CInterface;
 
   LPUNKNOWN = type PInterface;
 
+  // Direct3D interface types :
+
   XTL_PIDirect3D8 = type PInterface;
+
+  XTL_PID3DXBuffer = type PInterface; // TODO -oDxbx: Review all GetBufferPointer calls (and prevent memory-leaks!)
 
   XTL_PIDirect3DDevice8 = type PInterface;
   XTL_PPIDirect3DDevice8 = ^XTL_PIDirect3DDevice8;
-
-  XTL_PIDirectDraw7 = type PInterface;
-  XTL_PIDirectDrawSurface7 = type PInterface;
 
   XTL_PIDirect3DResource8 = type PInterface;
   XTL_PIDirect3DBaseTexture8 = type PInterface;
@@ -58,11 +59,27 @@ type
   XTL_PIDirect3DVertexBuffer8 = type PInterface;
   XTL_PIDirect3DIndexBuffer8 = type PInterface;
 
+  // DirectDraw interface types :
+
+  XTL_PIDirectDraw7 = type PInterface;
+
+  XTL_PIDirectDrawSurface7 = type PInterface;
   XTL_PIDirectDrawClipper = type PInterface;
+
+  // DirectSound interface types :
 
   XTL_PIDirectSound8 = type PInterface;
   XTL_PIDirectSoundBuffer = type PInterface;
   XTL_PIDirectSoundBuffer8 = type PInterface;
+
+  // DirectInput interface types :
+
+  XTL_PIDirectInput8 = type PInterface;
+  XTL_PIDirectInputDevice8 = type PInterface;
+
+  // Long-Pointer aliases :
+
+  XTL_LPD3DXBUFFER = XTL_PID3DXBuffer;
 
   XTL_LPDIRECT3D8 = XTL_PIDirect3D8;
   XTL_LPDIRECTDRAW7 = XTL_PIDirectDraw7;
@@ -76,6 +93,9 @@ type
   XTL_PLPDIRECTSOUND8 = ^XTL_LPDIRECTSOUND8;
 
   XTL_LPDIRECTSOUNDBUFFER8 = XTL_PIDirectSoundBuffer8;
+
+  XTL_LPDIRECTINPUT8 = XTL_PIDirectInput8;
+  XTL_LPDIRECTINPUTDEVICE8 = XTL_PIDirectInputDevice8;
 
 
 // TODO -oCXBX: fill out these enumeration tables for convienance
