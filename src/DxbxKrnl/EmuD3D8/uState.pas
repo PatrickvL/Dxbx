@@ -48,7 +48,7 @@ uses
   uEmuD3D8, // g_BuildVersion
   uEmuD3D8Types;
 
-procedure XTL_EmuUpdateDeferredStates; stdcall;
+procedure XTL_EmuUpdateDeferredStates(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwConv: DWORD;
@@ -236,10 +236,10 @@ begin
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8+Adjust2]);
 
       // TODO -oCXBX: Use a lookup table, this is not always a 1:1 map
-      if (pCur[12] <> X_D3DTSS_UNK) then
+      if (pCur[12-Adjust1] <> X_D3DTSS_UNK) then
       begin
         // Dxbx fix : Use Adjust-ment consistently :
-        if (pCur[12-Adjust1] > 12) and (not (pCur[12-Adjust1] >= 17) and (pCur[12] <= 21)) and 
+        if (pCur[12-Adjust1] > 12) and (not (pCur[12-Adjust1] >= 17) and (pCur[12-Adjust1] <= 21)) and 
            (pCur[12-Adjust1] <> 22) and (pCur[12-Adjust1] <> 14) and 
            (pCur[12-Adjust1] <> 15) and (pCur[12-Adjust1] <> 13) then
           CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)', [pCur[12-Adjust1]]);
@@ -331,7 +331,7 @@ begin
     end;
 
     // if point sprites are enabled, copy stage 3 over to 0
-    if (XTL_EmuD3DDeferredRenderState[26] > 0) then
+    if (XTL_EmuD3DDeferredRenderState[26] = BOOL_TRUE) then
     begin
       // pCur := Texture Stage 3 States
       pCur := @(XTL_EmuD3DDeferredTextureState[2*32]);
@@ -359,11 +359,11 @@ begin
 
   if (g_bFakePixelShaderLoaded) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_FOGENABLE, Ord(False));
+    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
 
     // programmable pipeline
     //*
-    for v := 0 to 4-1 do
+    for v:=0 to 4-1 do
     begin
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
@@ -372,7 +372,7 @@ begin
 
     // fixed pipeline
     (* Cxbx has this disabled :
-    for(int v=0;v<4;v++)
+    for v:=0 to 4-1 do
     begin
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP,   D3DTOP_MODULATE);
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -383,8 +383,8 @@ begin
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
     end;
 
-    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
-    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_LIGHTING,TRUE);
+    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_NORMALIZENORMALS, BOOL_TRUE);
+    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_LIGHTING,BOOL_TRUE);
     IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_AMBIENT, $FFFFFFFF);
     *)
   end;
@@ -393,4 +393,5 @@ end;
 exports
   XTL_EmuUpdateDeferredStates;
 
+{.$MESSAGE 'PatrickvL reviewed up to here'}
 end.

@@ -2033,7 +2033,7 @@ begin
     begin
          {static?}{pCachedPrimarySurface: XTL_PIDirect3DSurface8 := nil;
 
-        if (pCachedPrimarySurface = 0) then
+        if (pCachedPrimarySurface = nil) then
         begin
             // create a buffer to return
             // TODO -oCXBX: Verify the surface is always 640x480
@@ -2047,7 +2047,7 @@ begin
         if (FAILED(hRet)) then
         begin
             EmuWarning('Could not retrieve primary surface, using backbuffer');
-            pCachedPrimarySurface := 0;
+            pCachedPrimarySurface := nil;
             pBackBuffer.EmuSurface8._Release();
             pBackBuffer.EmuSurface8 := nil;
             BackBuffer := 0;
@@ -7878,6 +7878,7 @@ begin
 {$ENDIF}
 
   Result := IDirect3DDevice8(g_pD3DDevice8).SetMaterial(pMaterial^);
+
   EmuSwapFS(fsXbox);
 end;
 

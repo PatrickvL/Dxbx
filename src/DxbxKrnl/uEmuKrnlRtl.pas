@@ -550,7 +550,7 @@ begin
 {$ENDIF}
 
   JwaNative.RtlEnterCriticalSection(CriticalSection);
-  Result := 0; // TODO - oDxbx :
+  Result := 0; // TODO -oDxbx : What should we return here?
   
   EmuSwapFS(fsXbox);
 end;
