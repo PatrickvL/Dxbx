@@ -755,12 +755,12 @@ begin
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetOrientation' +
       #13#10'(' +
       #13#10'   pThis                     : 0x%.08X' +
-      #13#10'   xFront                    :  % f' +
-      #13#10'   yFront                    :  % f' +
-      #13#10'   zFront                    :  % f' +
-      #13#10'   xTop                      :  % f' +
-      #13#10'   yTop                      :  % f' +
-      #13#10'   zTop                      :  % f' +
+      #13#10'   xFront                    :  %f' +
+      #13#10'   yFront                    :  %f' +
+      #13#10'   zFront                    :  %f' +
+      #13#10'   xTop                      :  %f' +
+      #13#10'   yTop                      :  %f' +
+      #13#10'   zTop                      :  %f' +
       #13#10'   dwApply                   : 0x%.08X' +
       #13#10');',
       [pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply]);
@@ -771,7 +771,7 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := S_OK;
- end;
+end;
 
 function XTL_EmuIDirectSound8_SetDistanceFactor
 (
@@ -787,7 +787,7 @@ begin
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetDistanceFactor' +
       #13#10'(' +
       #13#10'   pThis                     : 0x%.08X' +
-      #13#10'   fDistanceFactor           :  % f' +
+      #13#10'   fDistanceFactor           :  %f' +
       #13#10'   dwApply                   : 0x%.08X' +
       #13#10');',
       [pThis, fDistanceFactor, dwApply]);
@@ -798,7 +798,7 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := S_OK;
- end;
+end;
 
 function XTL_EmuIDirectSound8_SetRolloffFactor
 (
@@ -814,7 +814,7 @@ begin
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetRolloffFactor' +
       #13#10'(' +
       #13#10'   pThis                     : 0x%.08X' +
-      #13#10'   fRolloffFactor            :  % f' +
+      #13#10'   fRolloffFactor            :  %f' +
       #13#10'   dwApply                   : 0x%.08X' +
       #13#10');',
       [pThis, fRolloffFactor, dwApply]);
@@ -841,7 +841,7 @@ begin
   DbgPrintf('EmuDSound : EmuIDirectSound8_SetDopplerFactor' +
       #13#10'(' +
       #13#10'   pThis                     : 0x%.08X' +
-      #13#10'   fDopplerFactor            :  % f' +
+      #13#10'   fDopplerFactor            :  %f' +
       #13#10'   dwApply                   : 0x%.08X' +
       #13#10');',
       [pThis, fDopplerFactor, dwApply]);
@@ -975,9 +975,9 @@ begin
     DbgPrintf('EmuDSound : EmuIDirectSound8_SetPosition' +
         #13#10'(' +
         #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   x                         :  % f' +
-        #13#10'   y                         :  % f' +
-        #13#10'   z                         :  % f' +
+        #13#10'   x                         :  %f' +
+        #13#10'   y                         :  %f' +
+        #13#10'   z                         :  %f' +
         #13#10'   dwApply                   : 0x%.08X' +
         #13#10');',
         [pThis, x, y, z, dwApply]);
@@ -1005,9 +1005,9 @@ begin
     DbgPrintf('EmuDSound : EmuIDirectSound8_SetVelocity' +
         #13#10'(' +
         #13#10'   pThis                     : 0x%.08X' +
-        #13#10'   x                         :  % f' +
-        #13#10'   y                         :  % f' +
-        #13#10'   z                         :  % f' +
+        #13#10'   x                         :  %f' +
+        #13#10'   y                         :  %f' +
+        #13#10'   z                         :  %f' +
         #13#10'   dwApply                   : 0x%.08X' +
         #13#10');',
         [pThis, x, y, z, dwApply]);
@@ -3722,11 +3722,13 @@ exports
   XTL_EmuIDirectSound8_GetOutputLevels name PatchPrefix + 'IDirectSound_GetOutputLevels',
   XTL_EmuIDirectSound8_Release name PatchPrefix + 'IDirectSound_Release',
   XTL_EmuIDirectSound8_SetAllParameters name PatchPrefix + 'IDirectSound_SetAllParameters',
-  XTL_EmuIDirectSound8_SetDistanceFactor name PatchPrefix + 'IDirectSound_SetDistanceFactor',
   XTL_EmuIDirectSound8_SetDopplerFactor name PatchPrefix + 'IDirectSound_SetDopplerFactor',
   XTL_EmuIDirectSound8_SetI3DL2Listener name PatchPrefix + 'IDirectSound_SetI3DL2Listener',
   XTL_EmuIDirectSound8_SetMixBinHeadroom name PatchPrefix + 'IDirectSound_SetMixBinHeadroom',
+
   XTL_EmuIDirectSound8_SetOrientation name PatchPrefix + 'IDirectSound_SetOrientation',
+  XTL_EmuIDirectSound8_SetDistanceFactor name PatchPrefix + 'IDirectSound_SetDistanceFactor',
+
   XTL_EmuIDirectSound8_SetPosition name PatchPrefix + 'IDirectSound_SetPosition',
   XTL_EmuIDirectSound8_SetRolloffFactor name PatchPrefix + 'IDirectSound_SetRolloffFactor',
   XTL_EmuIDirectSound8_SetVelocity name PatchPrefix + 'IDirectSound_SetVelocity',
