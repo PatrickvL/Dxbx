@@ -45,7 +45,14 @@ type
     procedure SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
   end;
 
+function BytesToString(const aSize: Integer): string;
+
 implementation
+
+function BytesToString(const aSize: Integer): string;
+begin
+  Result := FormatFloat(',0', aSize) + ' bytes';
+end;
 
 constructor THexViewer.Create(Owner: TComponent);
 begin
@@ -119,7 +126,7 @@ begin
   FSize := aSize;
   FBase := aBase;
 
-  MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%d bytes)', [aTitle, DWord(FBase), DWord(FBase + FSize), FSize]);
+  MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%s)', [aTitle, DWord(FBase), DWord(FBase + FSize), BytesToString(FSize)]);
 
   NrRows := (aSize + 15) shr 4;
 
