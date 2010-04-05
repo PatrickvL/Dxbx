@@ -151,6 +151,9 @@ type _D3DIVB = packed record
 procedure XTL_EmuFlushIVB; stdcall;
 procedure XTL_EmuUpdateActiveTexture; stdcall;
 
+procedure CRC32Init;
+function CRC32(data: PByte; len: int): uint;
+
 const VERTEX_BUFFER_CACHE_SIZE = 64;
 const MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO -oCXBX: Trim the not used time
 

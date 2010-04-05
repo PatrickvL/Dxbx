@@ -141,13 +141,16 @@ var
 
 implementation
 
+uses
+  uVertexBuffer;
+
 const
   // These two are based on our most current XDKTracker database :
   MinXdkVersion = 3911;
   MaxXdkVersion = 5933;
-  
+
   TotalXdkVersionDelta = MaxXdkVersion - MinXdkVersion;
-  
+
 // Do our own demangling
 function DxbxUnmangleSymbolName(const aStr: string): string;
 var
@@ -1076,8 +1079,12 @@ begin
 end; // DetermineFinalFunctionAndSymbolLocations
 
 function CacheFileName(const pXbeHeader: PXBE_HEADER): string;
+var
+  Key: Integer;
 begin
-  Result := SymbolCacheFolder + IntToHex(PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr).dwTitleId, 8) + SymbolCacheFileExt;
+  CRC32Init();
+  DWord(Key) := CRC32(PByte(pXbeHeader), {Len=}pXbeHeader.dwSizeofHeaders);
+  Result := SymbolCacheFolder + IntToHex(Key, 8) + SymbolCacheFileExt;
 end;
 
 function TDetectedSymbols.LoadFromCache(const aCacheFile: string): Boolean;
