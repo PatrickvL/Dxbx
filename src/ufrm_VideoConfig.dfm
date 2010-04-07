@@ -107,10 +107,11 @@ object frm_VideoConfig: Tfrm_VideoConfig
     Caption = 'Accept'
     ModalResult = 1
     TabOrder = 1
+    OnClick = btn_AcceptClick
   end
   object btn_Cancel: TButton
     Left = 242
-    Top = 145
+    Top = 147
     Width = 75
     Height = 25
     Caption = 'Cancel'

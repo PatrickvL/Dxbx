@@ -173,7 +173,7 @@ end;
 procedure ResourceTracker.remove(pResource: Pvoid);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-   remove(uint32(pResource));
+  remove(uint32(pResource));
 end;
 
 procedure ResourceTracker.remove(uiKey: uint32);

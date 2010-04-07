@@ -301,7 +301,7 @@ begin
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);
 
 
-      (* Cxbx has this disabled :
+      { Cxbx has this disabled :
       // To check for unhandled texture stage state changes
       for(int r=0;r<32;r++)
       begin
@@ -327,7 +327,7 @@ begin
             EmuWarning('Unhandled TextureState Change @ %d.%d', [v, r]);
         end;
       end;
-      *)
+      }
     end;
 
     // if point sprites are enabled, copy stage 3 over to 0

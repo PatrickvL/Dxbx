@@ -60,15 +60,11 @@ implementation
 
 { TExe }
 
-//------------------------------------------------------------------------------
-
 procedure TExe.ConstructorInit;
 begin
   SectionHeaders := nil;
   SectionContents := nil;
 end; // TExe.ConstructorInit
-
-//------------------------------------------------------------------------------
 
 constructor TExe.Create(x_szFileName: string);
 var
@@ -341,8 +337,6 @@ begin
   end;
 end; // TExe.doExport
 
-//------------------------------------------------------------------------------
-
 function TExe.GetAddr(x_dwVirtualAddress: DWord): PByte;
 var
   v: Integer;
@@ -363,7 +357,5 @@ begin
 
   Result := nil;
 end;
-
-//------------------------------------------------------------------------------
 
 end.
