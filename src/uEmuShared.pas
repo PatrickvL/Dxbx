@@ -32,6 +32,7 @@ uses
   , JclDebug
 {$ENDIF}
   // Dxbx
+  , uTypes
   , uMutex
   , uLog
   , uXbVideo
@@ -49,7 +50,7 @@ type EmuShared = packed record
     // Shared configuration
     m_XBController: XBController;
     m_XBVideo: XBVideo;
-    m_XbePath: array [0..CXBX_MAX_PATH - 1] of AnsiChar;
+    m_XbePath: array [0..CXBX_MAX_PATH - 1] of _char;
 
     // Each process needs to call this to initialize shared memory
     class function Init: Boolean; static;

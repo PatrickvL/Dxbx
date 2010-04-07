@@ -36,7 +36,7 @@ type
   XBVideo = packed record
   private
     // Configuration
-    m_szVideoResolution: array [0..100-1] of AnsiChar;
+    m_szVideoResolution: array [0..100-1] of _char;
     m_dwDisplayAdapter: DWORD;
     m_dwDirect3DDevice: DWORD;
     m_bFullscreen: BOOL;

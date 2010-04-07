@@ -453,7 +453,7 @@ end;
 // From PixelShader.cpp -----------------------------------------------------------
 
 // PS Texture Modes
-const PS_TextureModesStr: array [0..$1f] of PAnsiChar =
+const PS_TextureModesStr: array [0..$1f] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_TEXTUREMODES_NONE',                 // 0x00
@@ -491,7 +491,7 @@ const PS_TextureModesStr: array [0..$1f] of PAnsiChar =
 );
 
 // PS DotMapping
-const PS_DotMappingStr: array [0..7] of PAnsiChar =
+const PS_DotMappingStr: array [0..7] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_DOTMAPPING_ZERO_TO_ONE',      // 0x00
@@ -506,7 +506,7 @@ const PS_DotMappingStr: array [0..7] of PAnsiChar =
 
 (*
 // PS CompareMode
-const PS_CompareModeStr: array [PS_COMPAREMODE] of PAnsiChar =
+const PS_CompareModeStr: array [PS_COMPAREMODE] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_COMPAREMODE_S_LT', // 0x00L
@@ -524,7 +524,7 @@ const PS_CompareModeStr: array [PS_COMPAREMODE] of PAnsiChar =
 *)
 
 // PS CombinerCountFlags
-const PS_CombinerCountFlagsStr: array [0..6-1] of PAnsiChar =
+const PS_CombinerCountFlagsStr: array [0..6-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_COMBINERCOUNT_MUX_LSB',    // 0x0000L, // mux on r0.a lsb
@@ -539,7 +539,7 @@ const PS_CombinerCountFlagsStr: array [0..6-1] of PAnsiChar =
 
 (*
 // PS InputMapping
-const PS_InputMappingStr: array [PS_INPUTMAPPING] of PAnsiChar =
+const PS_InputMappingStr: array [PS_INPUTMAPPING] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_INPUTMAPPING_UNSIGNED_IDENTITY',  // 0x00L, // max(0,x)         OK for final combiner
@@ -553,7 +553,7 @@ const PS_InputMappingStr: array [PS_INPUTMAPPING] of PAnsiChar =
 );
 
 // PS Register
-const PS_RegisterStr: array [PS_REGISTER] of PAnsiChar =
+const PS_RegisterStr: array [PS_REGISTER] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_REGISTER_ZERO',     // 0x00L, // r
@@ -579,7 +579,7 @@ const PS_RegisterStr: array [PS_REGISTER] of PAnsiChar =
 );
 
 // PS Channel
-const PS_ChannelStr: array [PS_CHANNEL] of PAnsiChar =
+const PS_ChannelStr: array [PS_CHANNEL] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_CHANNEL_RGB',   // 0x00, // used as RGB source
@@ -588,7 +588,7 @@ const PS_ChannelStr: array [PS_CHANNEL] of PAnsiChar =
 );
 
 // PS FinalCombinerSetting
-const PS_FinalCombinerSettingStr: array [PS_FINALCOMBINERSETTING] of PAnsiChar =
+const PS_FinalCombinerSettingStr: array [PS_FINALCOMBINERSETTING] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_FINALCOMBINERSETTING_CLAMP_SUM'  ,    // 0x80, // V1+R0 sum clamped to [0,1]
@@ -599,7 +599,7 @@ const PS_FinalCombinerSettingStr: array [PS_FINALCOMBINERSETTING] of PAnsiChar =
 );
 
 // PS CombineOutput
-const PS_CombineOutputStr: array [PS_COMBINEROUTPUT] of PAnsiChar =
+const PS_CombineOutputStr: array [PS_COMBINEROUTPUT] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_COMBINEROUTPUT_IDENTITY',          // 0x00L, // y := x
@@ -625,7 +625,7 @@ const PS_CombineOutputStr: array [PS_COMBINEROUTPUT] of PAnsiChar =
 *)
 
 // PS GlobalFlags
-const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of PAnsiChar =
+const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_GLOBALFLAGS_NO_TEXMODE_ADJUST',     // 0x0000L, // don't adjust texture modes
