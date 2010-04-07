@@ -1178,6 +1178,7 @@ begin
       pDSBufferDescSpecial.dwFlags := DSBCAPS_CTRLPAN or DSBCAPS_CTRLVOLUME or DSBCAPS_CTRLFREQUENCY;
       pDSBufferDescSpecial.dwBufferBytes := 3 * pDSBufferDescSpecial.lpwfxFormat.nAvgBytesPerSec;
 
+      // MARKED OUT CXBX
 //    pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)/*+pdsbd.lpwfxFormat.cbSize*/);
 
 ////  pDSBufferDesc.lpwfxFormat.cbSize := sizeof( WAVEFORMATEX );
@@ -1189,8 +1190,8 @@ begin
 //    pDSBufferDesc.lpwfxFormat.wBitsPerSample := 16;
 
       // Give this buffer 3 seconds of data if needed
-      (*if(pdsbd.dwBufferBytes = 0)
-        pDSBufferDesc.dwBufferBytes := 3 * pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec;*)
+      {if(pdsbd.dwBufferBytes = 0)
+        pDSBufferDesc.dwBufferBytes := 3 * pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec;}
     end;
 
     pDSBufferDesc.guid3DAlgorithm := DS3DALG_DEFAULT;

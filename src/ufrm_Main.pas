@@ -287,7 +287,8 @@ begin
   frm_VideoConfig := Tfrm_VideoConfig.Create(nil);
 
   if frm_VideoConfig.ShowModal = mrOk then
-    ;
+  begin
+  end;
 
   FreeAndNil({var}frm_VideoConfig);
 end;

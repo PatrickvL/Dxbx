@@ -224,8 +224,6 @@ begin
   Result := Integer(@i);
 end;
 
-//
-
 function GetSectorBuffered(
         This: PCDIO_READ;
         SectorNumber: DWORD): PBYTE;
@@ -299,8 +297,6 @@ begin
     end;
   end;
 end;
-
-//
 
 function XDVDFS_Mount(
    Session: PXDVDFS_SESSION;
