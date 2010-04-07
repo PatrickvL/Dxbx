@@ -218,7 +218,7 @@ var
 begin
   g_EmuShared.GetXBVideo(@g_XBVideo);
 
-  if g_XBVideo.GetFullscreen() then
+  if Boolean(g_XBVideo.GetFullscreen()) then
     CxbxKrnl_hEmuParent := 0;
 
   // cache XbeHeader and size of XbeHeader
@@ -397,7 +397,7 @@ begin
 
   // create the window
   begin
-    dwStyle := iif(g_XBVideo.GetFullscreen() or (CxbxKrnl_hEmuParent = 0), WS_OVERLAPPEDWINDOW, WS_CHILD);
+    dwStyle := iif(Boolean(g_XBVideo.GetFullscreen()) or (CxbxKrnl_hEmuParent = 0), WS_OVERLAPPEDWINDOW, WS_CHILD);
 
     nTitleHeight := GetSystemMetrics(SM_CYCAPTION);
     nBorderWidth := GetSystemMetrics(SM_CXSIZEFRAME);
@@ -410,14 +410,14 @@ begin
 
     sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', [@nWidth, @nHeight]);
 
-    if g_XBVideo.GetFullscreen() then
+    if Boolean(g_XBVideo.GetFullscreen()) then
     begin
       x := 0; y := 0; nWidth := 0; nHeight := 0;
       dwStyle := WS_POPUP;
     end;
 
     hwndParent := GetDesktopWindow();
-    if not g_XBVideo.GetFullscreen() then
+    if not Boolean(g_XBVideo.GetFullscreen()) then
     begin
       hwndParent := CxbxKrnl_hEmuParent;
     end;
@@ -433,10 +433,10 @@ begin
       );
   end;
 
-  ShowWindow(g_hEmuWindow, iif((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED));
+  ShowWindow(g_hEmuWindow, iif((CxbxKrnl_hEmuParent = 0) or Boolean(g_XBVideo.GetFullscreen), SW_SHOWDEFAULT, SW_SHOWMAXIMIZED));
   UpdateWindow(g_hEmuWindow);
 
-  if (not g_XBVideo.GetFullscreen) and (CxbxKrnl_hEmuParent <> 0) then
+  if (not Boolean(g_XBVideo.GetFullscreen)) and (CxbxKrnl_hEmuParent <> 0) then
     SetFocus(CxbxKrnl_hEmuParent);
 
   // initialize direct input
@@ -505,7 +505,7 @@ const
   lRect: TRect = ();
 {$WRITEABLECONST OFF}
 begin
-  if (g_XBVideo.GetFullscreen()) then
+  if (Boolean(g_XBVideo.GetFullscreen())) then
     Exit;
 
   if (not g_bIsFauxFullscreen) then
@@ -582,7 +582,7 @@ begin
         // disable fullscreen if we are set to faux mode, and faux fullscreen is active
         if (wParam = VK_ESCAPE) then
         begin
-          if (g_XBVideo.GetFullscreen()) then
+          if (Boolean(g_XBVideo.GetFullscreen())) then
           begin
             SendMessage(hWnd, WM_CLOSE, 0, 0);
           end
@@ -630,7 +630,7 @@ begin
 
           SIZE_MINIMIZED:
             begin
-              if (g_XBVideo.GetFullscreen()) then
+              if Boolean((g_XBVideo.GetFullscreen())) then
                 CxbxKrnlCleanup('');
 
               if (not g_bEmuSuspended) then
@@ -655,7 +655,7 @@ begin
 
     WM_SETCURSOR:
       begin
-        if (g_XBVideo.GetFullscreen() or g_bIsFauxFullscreen) then
+        if (Boolean(g_XBVideo.GetFullscreen()) or g_bIsFauxFullscreen) then
         begin
           SetCursor(0);
           Result := D3D_OK;
@@ -818,9 +818,9 @@ begin
         g_EmuCDPD.DeviceType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
         g_EmuCDPD.Adapter := g_XBVideo.GetDisplayAdapter();
 
-        g_EmuCDPD.pPresentationParameters.Windowed := not g_XBVideo.GetFullscreen();
+        g_EmuCDPD.pPresentationParameters.Windowed := not Boolean(g_XBVideo.GetFullscreen());
 
-        if (g_XBVideo.GetVSync()) then
+        if (Boolean(g_XBVideo.GetVSync())) then
           g_EmuCDPD.pPresentationParameters.SwapEffect := D3DSWAPEFFECT_COPY_VSYNC;
 
         // Note: Instead of the hFocusWindow argument, we use the global g_hEmuWindow here:
@@ -829,11 +829,11 @@ begin
         TD3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat) := EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
         TD3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat) := EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
 
-        if (not g_XBVideo.GetVSync() and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) > 0) and g_XBVideo.GetFullscreen()) then
+        if (not Boolean(g_XBVideo.GetVSync()) and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) > 0) and Boolean(g_XBVideo.GetFullscreen())) then
           g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
         else
         begin
-          if ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE) > 0) and g_XBVideo.GetFullscreen() then
+          if ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE) > 0) and Boolean(g_XBVideo.GetFullscreen()) then
             g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_ONE
           else
             g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_DEFAULT;
@@ -988,10 +988,10 @@ begin
           EmuWarning('YUY2 overlays are not supported in hardware, could be slow!');
 
         // Does the user want to use Hardware accelerated YUV surfaces?
-        if g_bSupportsYUY2 and g_XBVideo.GetHardwareYUV() then
+        if g_bSupportsYUY2 and Boolean(g_XBVideo.GetHardwareYUV()) then
           DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Enabled...');
 
-        if not g_XBVideo.GetHardwareYUV() then
+        if not Boolean(g_XBVideo.GetHardwareYUV()) then
         begin
           g_bSupportsYUY2 := false;
           DbgPrintf('EmuD3D8 : Hardware accelerated YUV surfaces Disabled...');
