@@ -38,9 +38,9 @@ type
     m_szVideoResolution: array [0..100-1] of AnsiChar;
     m_dwDisplayAdapter: DWORD;
     m_dwDirect3DDevice: DWORD;
-    m_bFullscreen: BOOL;
-    m_bVSync: BOOL;
-    m_bHardwareYUV: BOOL;
+    m_bFullscreen: Integer;//BOOL; was bool, checked with rergistry should be integer
+    m_bVSync: Integer; //BOOL; was bool, checked with rergistry should be integer
+    m_bHardwareYUV: Integer; //BOOL; was bool, checked with rergistry should be integer
   public
     procedure Initialize;
     procedure Finalize;
@@ -62,16 +62,16 @@ type
     function GetVideoResolution: PAnsiChar;
 
     // property Fullscreen Toggling
-    procedure SetFullscreen(bFullscreen: BOOL);
-    function GetFullscreen: BOOL;
+    procedure SetFullscreen(bFullscreen: integer);
+    function GetFullscreen: integer;
 
     // property VSync Toggling
-    procedure SetVSync(Value: BOOL);
-    function GetVSync: BOOL;
+    procedure SetVSync(Value: Integer);
+    function GetVSync: Integer;
 
     // Hardware YUV Toggling
-    procedure SetHardwareYUV(Value: BOOL);
-    function GetHardwareYUV: BOOL;
+    procedure SetHardwareYUV(Value: Integer);
+    function GetHardwareYUV: Integer;
   end;
   PXBVideo = ^XBVideo;
 
@@ -81,9 +81,9 @@ implementation
 
 procedure XBVideo.Initialize;
 begin
-  m_bVSync := false;
-  m_bFullscreen := false;
-  m_bHardwareYUV := false;
+  m_bVSync := 0;
+  m_bFullscreen := 0;
+  m_bHardwareYUV := 0;
   m_szVideoResolution := 'Automatic (Default)';
 end;
 
@@ -191,32 +191,32 @@ begin
   Result := @(m_szVideoResolution[0]);
 end;
 
-procedure XBVideo.SetFullscreen(bFullscreen: BOOL);
+procedure XBVideo.SetFullscreen(bFullscreen: integer);
 begin
   m_bFullscreen := bFullscreen;
 end;
 
-function XBVideo.GetFullscreen: BOOL;
+function XBVideo.GetFullscreen: integer;
 begin
   Result := m_bFullscreen;
 end;
 
-procedure XBVideo.SetVSync(Value: BOOL);
+procedure XBVideo.SetVSync(Value: Integer);
 begin
   m_bVSync := Value;
 end;
 
-function XBVideo.GetVSync: BOOL;
+function XBVideo.GetVSync: Integer;
 begin
   Result := m_bVSync;
 end;
 
-procedure XBVideo.SetHardwareYUV(Value: BOOL);
+procedure XBVideo.SetHardwareYUV(Value: Integer);
 begin
   m_bHardwareYUV := Value;
 end;
 
-function XBVideo.GetHardwareYUV: BOOL;
+function XBVideo.GetHardwareYUV: Integer;
 begin
   Result := m_bHardwareYUV;
 end;

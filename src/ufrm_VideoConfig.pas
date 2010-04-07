@@ -88,9 +88,9 @@ begin
   edt_DisplayAdapter.ItemIndex := FXBVideo.GetDisplayAdapter;
   edt_Direct3dDevice.ItemIndex := FXBVideo.GetDirect3DDevice;
 
-  chk_FullScreen.Checked := FXBVideo.GetFullscreen;
-  chk_VSync.Checked := FXBVideo.GetVSync;
-  chk_HardwareYUV.Checked := FXBVideo.GetHardwareYUV;
+  chk_FullScreen.Checked :=  Boolean(FXBVideo.GetFullscreen);
+  chk_VSync.Checked := Boolean(FXBVideo.GetVSync);
+  chk_HardwareYUV.Checked := Boolean(FXBVideo.GetHardwareYUV);
 
 
   DirectDrawEnumerateEx(EnumDevices, edt_DisplayAdapter.Items, 0);
@@ -113,9 +113,9 @@ begin
   FXBVideo.SetDisplayAdapter(edt_DisplayAdapter.ItemIndex);
   FXBVideo.SetDirect3DDevice(edt_Direct3dDevice.ItemIndex);
 
-  FXBVideo.SetFullscreen(chk_FullScreen.Checked);
-  FXBVideo.SetVSync(chk_VSync.Checked);
-  FXBVideo.SetHardwareYUV(chk_HardwareYUV.Checked);
+  FXBVideo.SetFullscreen(Integer(chk_FullScreen.Checked));
+  FXBVideo.SetVSync(Integer(chk_VSync.Checked));
+  FXBVideo.SetHardwareYUV(Integer(chk_HardwareYUV.Checked));
 
   g_EmuShared.SetXBVideo(@FXBVideo);
 end;

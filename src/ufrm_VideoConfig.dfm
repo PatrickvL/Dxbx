@@ -61,7 +61,7 @@ object frm_VideoConfig: Tfrm_VideoConfig
       Top = 20
       Width = 213
       Height = 21
-      ItemHeight = 13
+      ItemHeight = 0
       TabOrder = 0
       OnKeyPress = ComboReadOnly
     end
@@ -84,7 +84,7 @@ object frm_VideoConfig: Tfrm_VideoConfig
       Top = 76
       Width = 213
       Height = 21
-      ItemHeight = 13
+      ItemHeight = 0
       TabOrder = 2
       OnKeyPress = ComboReadOnly
     end
