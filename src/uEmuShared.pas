@@ -175,14 +175,14 @@ end;
 procedure EmuShared.Create;
 begin
   m_Mutex.Create;
-  m_XBController.Load(PAnsiChar('Software\Cxbx\XBController'));
-  m_XBVideo.Load(PAnsiChar('Software\Cxbx\XBVideo'));
+  m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
+  m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
 end;
 
 procedure EmuShared.DestroyNoFree;
 begin
-  m_XBController.Save(PAnsiChar('Software\Cxbx\XBController'));
-  m_XBVideo.Save(PAnsiChar('Software\Cxbx\XBVideo'));
+  m_XBController.Save(PAnsiChar('Software\Dxbx\XBController'));
+  m_XBVideo.Save(PAnsiChar('Software\Dxbx\XBVideo'));
 end;
 
 procedure EmuShared.Destroy;
