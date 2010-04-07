@@ -45,6 +45,7 @@ type
     lbl_OtherOptions: TLabel;
     chk_FullScreen: TCheckBox;
     chk_VSync: TCheckBox;
+    chk_HardwareYUV: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure ComboReadOnly(Sender: TObject; var Key: Char);
     procedure btn_AcceptClick(Sender: TObject);
@@ -84,8 +85,13 @@ begin
   // Load configuration from registry
   g_EmuShared.GetXBVideo(@FXBVideo);
 
+  edt_DisplayAdapter.ItemIndex := FXBVideo.GetDisplayAdapter;
+  edt_Direct3dDevice.ItemIndex := FXBVideo.GetDirect3DDevice;
+
   chk_FullScreen.Checked := FXBVideo.GetFullscreen;
   chk_VSync.Checked := FXBVideo.GetVSync;
+  chk_HardwareYUV.Checked := FXBVideo.GetHardwareYUV;
+
 
   DirectDrawEnumerateEx(EnumDevices, edt_DisplayAdapter.Items, 0);
   edt_DisplayAdapter.ItemIndex := 0;
@@ -96,6 +102,7 @@ begin
   finally
     tempDirectDraw := nil;
   end;
+  edt_VideoResolution.Items.Add('Automatic (Default)');
   FDirectDraw.EnumDisplayModes(0, nil, edt_VideoResolution.Items, EnumModeusCallBack);
 
   edt_VideoResolution.ItemIndex := edt_VideoResolution.Items.Count - 1;
@@ -103,8 +110,12 @@ end; // Tfrm_VideoConfig
 
 procedure Tfrm_VideoConfig.btn_AcceptClick(Sender: TObject);
 begin
+  FXBVideo.SetDisplayAdapter(edt_DisplayAdapter.ItemIndex);
+  FXBVideo.SetDirect3DDevice(edt_Direct3dDevice.ItemIndex);
+
   FXBVideo.SetFullscreen(chk_FullScreen.Checked);
   FXBVideo.SetVSync(chk_VSync.Checked);
+  FXBVideo.SetHardwareYUV(chk_HardwareYUV.Checked);
 
   g_EmuShared.SetXBVideo(@FXBVideo);
 end;
