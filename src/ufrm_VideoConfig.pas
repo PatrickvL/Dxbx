@@ -61,17 +61,17 @@ implementation
 
 {$R *.DFM}
 
-function EnumDevices(lpGUID: PGUID; lpDriverDescription,
-  lpDriverName: PChar; lpContext: Pointer; Monitor: HMonitor): Bool; stdcall;
+function EnumDevices(lpGUID: PGUID; lpDriverDescription: PAnsiChar;
+  lpDriverName: PAnsiChar; lpContext: Pointer; Monitor: HMonitor): Windows.BOOL; stdcall;
 begin
-  TStringList(lpContext).Add(lpDriverDescription);
+  TStrings(lpContext).Add(string(AnsiString(lpDriverDescription)));
   Result := True;
 end; // EnumDevices
 
 function EnumModeusCallBack(const lpDDSurfaceDesc: TDDSurfaceDesc2;
   lpContext: Pointer): HResult; stdcall;
 begin
-  TStringList(lpContext).Add(IntToStr(lpDDSurfaceDesc.dwWidth) + ' X ' +
+  TStrings(lpContext).Add(IntToStr(lpDDSurfaceDesc.dwWidth) + ' X ' +
     IntToStr(lpDDSurfaceDesc.dwHeight) + ', ' +
     IntToStr(lpDDSurfaceDesc.ddpfPixelFormat.dwRGBBitCount) +
     ' bits/pixel');
@@ -81,21 +81,10 @@ end; // EnumModeusCallBack
 procedure Tfrm_VideoConfig.FormCreate(Sender: TObject);
 var
   tempDirectDraw: IDirectDraw;
+  VideoResolutionIndex: Integer;
 begin
-  // Load configuration from registry
-  g_EmuShared.GetXBVideo(@FXBVideo);
-
-  edt_DisplayAdapter.ItemIndex := FXBVideo.GetDisplayAdapter;
-  edt_Direct3dDevice.ItemIndex := FXBVideo.GetDirect3DDevice;
-
-  chk_FullScreen.Checked :=  Boolean(FXBVideo.GetFullscreen);
-  chk_VSync.Checked := Boolean(FXBVideo.GetVSync);
-  chk_HardwareYUV.Checked := Boolean(FXBVideo.GetHardwareYUV);
-
-
-  DirectDrawEnumerateEx(EnumDevices, edt_DisplayAdapter.Items, 0);
-  edt_DisplayAdapter.ItemIndex := 0;
-
+  // Populate dropdowns :
+  DirectDrawEnumerateExA(EnumDevices, edt_DisplayAdapter.Items, 0);
   DirectDrawCreate(nil, tempDirectDraw, FDirectDraw);
   try
     tempDirectDraw.QueryInterface(IID_IDIRECTDRAW7, FDirectDraw);
@@ -105,18 +94,35 @@ begin
   edt_VideoResolution.Items.Add('Automatic (Default)');
   FDirectDraw.EnumDisplayModes(0, nil, edt_VideoResolution.Items, EnumModeusCallBack);
 
-  edt_VideoResolution.ItemIndex := edt_VideoResolution.Items.Count - 1;
+  // Read the XBVideo settings from shared memory :
+  g_EmuShared.GetXBVideo(@FXBVideo);
+
+  VideoResolutionIndex := edt_VideoResolution.Items.IndexOf(FXBVideo.GetVideoResolution);
+  if VideoResolutionIndex < 0 then
+    VideoResolutionIndex := 0; // Select default if registry value cannot be used
+
+  // Put values into the controls :
+  edt_DisplayAdapter.ItemIndex := FXBVideo.GetDisplayAdapter;
+  edt_Direct3dDevice.ItemIndex := FXBVideo.GetDirect3DDevice;
+  edt_VideoResolution.ItemIndex := VideoResolutionIndex;
+
+  chk_FullScreen.Checked :=  FXBVideo.GetFullscreen;
+  chk_VSync.Checked := FXBVideo.GetVSync;
+  chk_HardwareYUV.Checked := FXBVideo.GetHardwareYUV;
 end; // Tfrm_VideoConfig
 
 procedure Tfrm_VideoConfig.btn_AcceptClick(Sender: TObject);
 begin
+  // Read the controls back into the XBVideo structure :
   FXBVideo.SetDisplayAdapter(edt_DisplayAdapter.ItemIndex);
   FXBVideo.SetDirect3DDevice(edt_Direct3dDevice.ItemIndex);
+  FXBVideo.SetVideoResolution(PAnsiChar(AnsiString(edt_VideoResolution.Text)));
 
-  FXBVideo.SetFullscreen(Integer(chk_FullScreen.Checked));
-  FXBVideo.SetVSync(Integer(chk_VSync.Checked));
-  FXBVideo.SetHardwareYUV(Integer(chk_HardwareYUV.Checked));
+  FXBVideo.SetFullscreen(chk_FullScreen.Checked);
+  FXBVideo.SetVSync(chk_VSync.Checked);
+  FXBVideo.SetHardwareYUV(chk_HardwareYUV.Checked);
 
+  // Publish the XBVideo settings via shared memory :
   g_EmuShared.SetXBVideo(@FXBVideo);
 end;
 

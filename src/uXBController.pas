@@ -1156,7 +1156,7 @@ var
   dwDisposition: DWord;
   ahKey: HKEY;
   v: Integer;
-  szValueName: string;
+  szValueName: AnsiString;
 begin
   if m_CurrentState <> XBCTRL_STATE_NONE then
   begin
@@ -1172,10 +1172,10 @@ begin
     begin
       // default is a null string
       m_DeviceName[v][0] := #0;
-      szValueName := DxbxFormat('DeviceName 0x%.02X', [v]); // was sprintf
+      szValueName := AnsiString(DxbxFormat('DeviceName 0x%.02X', [v])); // Dxbx note : String is easier than sprintf
       dwType := REG_SZ;
       dwSize := 260;
-      RegQueryValueEx(ahKey, PChar(szValueName), nil, @dwType, PByte(@(m_DeviceName[v])), @dwSize);
+      RegQueryValueExA(ahKey, PAnsiChar(szValueName), nil, @dwType, PByte(@(m_DeviceName[v])), @dwSize);
     end;
 
     // Load Object Configuration
@@ -1185,10 +1185,10 @@ begin
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
-      szValueName := DxbxFormat('Object : %s', [m_DeviceNameLookup[v]]); // was sprintf
+      szValueName := AnsiString(DxbxFormat('Object : %s', [m_DeviceNameLookup[v]])); // Dxbx note : String is easier than sprintf
       dwType := REG_BINARY;
       dwSize := SizeOf(XBCtrlObjectCfg);
-      RegQueryValueEx(ahKey, PChar(szValueName), nil, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
+      RegQueryValueExA(ahKey, PAnsiChar(szValueName), nil, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
     end;
 
     RegCloseKey(ahKey);
