@@ -277,7 +277,8 @@ begin
   frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
 
   if frm_ControllerConfig.ShowModal = mrOk then
-    ;
+  begin
+  end;
 
   FreeAndNil({var}frm_ControllerConfig);
 end;
