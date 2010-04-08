@@ -161,10 +161,10 @@ type XBController = object(Error)
     // Object Configuration
     m_ObjectConfig: array [XBCtrlObject] of XBCtrlObjectCfg;
     // DirectInput
-    m_pDirectInput8: XTL_LPDIRECTINPUT8;
+    m_pDirectInput8: IDIRECTINPUT8;
     // DirectInput Devices
     m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of packed record
-      m_Device: XTL_LPDIRECTINPUTDEVICE8;
+      m_Device: IDIRECTINPUTDEVICE8;
       m_Flags: int;
     end;
 
@@ -747,7 +747,7 @@ var
   dwInfo: DWORD;
 
   wValue: SmallInt;
-  pDevice: XTL_LPDIRECTINPUTDEVICE8;
+  pDevice: IDIRECTINPUTDEVICE8;
   JoyState: DIJOYSTATE;
   pdwAxis: PLONG;
   pbButton: PByte;

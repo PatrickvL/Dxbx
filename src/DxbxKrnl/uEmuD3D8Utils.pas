@@ -32,6 +32,7 @@ uses
   uEmuD3D8Types;
 
 type
+  LPD3DXBUFFER = ID3DXBuffer;
   PLPD3DXBUFFER = PID3DXBuffer; // = ^LPD3DXBUFFER;
 
   LPCVOID = Pointer; // Pointer to a constant of any type

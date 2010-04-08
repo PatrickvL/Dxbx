@@ -3091,7 +3091,7 @@ type
     function SetTransmitTargets(pdvIDTargets: PDVID; dwNumTargets, dwFlags: DWORD): HResult; stdcall;
     function GetTransmitTargets(pdvIDTargets: PDVID; var dwNumTargets: DWORD; dwFlags: DWORD): HResult; stdcall;
     function Create3DSoundBuffer(dvID: TDVID; lpdsSourceBuffer: IDirectSoundBuffer;
-      dwPriority, dwFlags: DWORD; {out} lpUserBuffer: PIDirectSound3DBuffer): HResult; stdcall;
+      dwPriority, dwFlags: DWORD; {out} lpUserBuffer: IDirectSound3DBuffer): HResult; stdcall;
     function Delete3DSoundBuffer(dvID: TDVID; lpUserBuffer: IDirectSound3DBuffer): HResult; stdcall;
     function SetNotifyMask(pdwMessageMask: PDWORD; dwMessageMaskElements: DWORD): HResult; stdcall;
     function GetSoundDeviceConfig(pSoundDeviceConfig: PDVSoundDeviceConfig; var pdwSize: DWORD): HResult; stdcall;

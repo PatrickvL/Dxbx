@@ -94,8 +94,8 @@ type
 
   XTL_LPDIRECTSOUNDBUFFER8 = XTL_PIDirectSoundBuffer8;
 
-  XTL_LPDIRECTINPUT8 = XTL_PIDirectInput8;
-  XTL_LPDIRECTINPUTDEVICE8 = XTL_PIDirectInputDevice8;
+//  XTL_LPDIRECTINPUT8 = XTL_PIDirectInput8;
+//  XTL_LPDIRECTINPUTDEVICE8 = XTL_PIDirectInputDevice8;
 
 
 // TODO -oCXBX: fill out these enumeration tables for convienance
