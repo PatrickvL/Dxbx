@@ -1002,7 +1002,7 @@ begin
 
           pFeedback.Header.dwStatus := ERROR_IO_PENDING;
 
-          Break;
+          break;
         end;
       end;
 

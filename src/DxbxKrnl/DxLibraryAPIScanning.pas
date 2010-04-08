@@ -1194,6 +1194,7 @@ procedure TDetectedSymbols.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LI
   end; // _ResolveXapiProcessHeapAddress
 
 var
+  CacheFileNameStr: string;
   ResourceStream: TResourceStream;
 begin
   ByteScanLower := PByte(pXbeHeader.dwBaseAddr);
@@ -1221,7 +1222,11 @@ begin
 
       DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
-      if LoadFromCache(CacheFileName(pXbeHeader)) then
+      // Note : Somehow, the output of CacheFileName() changes because of the
+      // following code, that's why we put the initial filename in a variable :
+      CacheFileNameStr := CacheFileName(pXbeHeader);
+
+      if LoadFromCache(CacheFileNameStr) then
         // Resolve the address of _XapiProcessHeap :
         _ResolveXapiProcessHeapAddress()
       else
@@ -1235,7 +1240,7 @@ begin
         // Resolve the address of _XapiProcessHeap :
         _ResolveXapiProcessHeapAddress();
 
-        SaveToCache(CacheFileName(pXbeHeader));
+        SaveToCache(CacheFileNameStr);
       end;
 
     finally

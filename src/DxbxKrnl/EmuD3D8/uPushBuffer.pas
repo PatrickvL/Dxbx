@@ -124,7 +124,7 @@ begin
     Exit;
 
   // remove lock
-  IDirect3DTexture8(pPixelContainer.EmuTexture8).UnlockRect(0);
+  IDirect3DTexture8(pPixelContainer.Emu.Texture8).UnlockRect(0);
   pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
 
   // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
@@ -134,7 +134,7 @@ begin
   //
 
   begin
-    pTexture := pPixelContainer.EmuTexture8;
+    pTexture := pPixelContainer.Emu.Texture8;
 
     dwLevelCount := IDirect3DTexture8(pTexture).GetLevelCount();
 
@@ -152,7 +152,7 @@ begin
       begin
         // Cxbx has this commented out :
         //if (SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8) then
-        //  Break;
+        //  break;
         //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
 
         hRet := IDirect3DTexture8(pTexture).LockRect(v, {out}LockedRect, NULL, 0);
@@ -298,7 +298,7 @@ begin
           DbgPrintf('DONE)');
         end;
         {$endif}
-        Break;  // done?
+        break;  // done?
       end
       else
       begin

@@ -182,11 +182,11 @@ begin
       begin
         Inc(NrWideZeros);
         Inc(i);
-        Continue;
+        continue;
       end;
 
       // The string ends on a #0 :
-      Break;
+      break;
     end;
 
     // It's no string when it contains non-printable characters :
@@ -304,7 +304,7 @@ begin
 
     // See if it's a literal string :
     if TryReadLiteralString(PAnsiChar(Ptr), {var}aOutputStr) then
-      Break;
+      break;
 
     // See if we may still try indirect pointers :
     Inc(IndirectionLevel);
@@ -393,7 +393,7 @@ begin
       end;
 
       if not MayRenderArguments then
-        Continue;
+        continue;
 
       // Step to the next percentage-character :
       while CurrentPercentageOffset < Length(aStr) do
@@ -405,7 +405,7 @@ begin
           if (aStr[CurrentPercentageOffset] = '%') then
             Inc(CurrentPercentageOffset)
           else
-            Break;
+            break;
         end;
       end;
 

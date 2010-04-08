@@ -127,7 +127,7 @@ begin
 {$IFDEF DEBUG}
               //DbgPrintf('Redundant');
 {$ENDIF}
-              Continue;
+              continue;
           end;
 
           bFoundD3D := True;
@@ -329,7 +329,7 @@ begin
           or MinorVersion <> HLEDataBase[d].MinorVersion
           or MajorVersion <> HLEDataBase[d].MajorVersion
           or StrComp(szLibraryName, HLEDataBase[d].Library) <> 0) then
-            Continue;
+            continue;
 
           found := True;
 
@@ -395,19 +395,19 @@ begin
     begin
       DetectedSymbol := DetectedSymbols[i];
       if not Assigned(DetectedSymbol.Locations[0].SymbolLocation) then
-        Continue;
+        continue;
 
       DetectedSymbol.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(DetectedSymbol.SymbolName);
       if DetectedSymbol.XboxLibraryPatch = xlp_Unknown then
-        Continue;
+        continue;
 
       OrgCode := DetectedSymbol.Locations[0].SymbolLocation;
       NewCode := XboxLibraryPatchToPatch(DetectedSymbol.XboxLibraryPatch);
       Assert(Assigned(NewCode));
 
 {$IFDEF DXBX_DEBUG}
-      DbgPrintf('DxbxHLE : Installed patch over $%.08X (to $%.08X, implementing %s)', [
-        OrgCode, NewCode, DetectedSymbol.SymbolName], {MayRenderArguments=}False);
+      DbgPrintf('DxbxHLE : Installed patch over $%.08X (to %s)', [
+        OrgCode, DetectedSymbol.SymbolName], {MayRenderArguments=}False);
       UsedPatches[DetectedSymbol.XboxLibraryPatch] := True;
 {$ENDIF}
 

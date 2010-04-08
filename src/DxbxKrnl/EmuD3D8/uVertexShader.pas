@@ -2235,6 +2235,7 @@ begin
   EOI := false;
   pShader := PVSH_XBOX_SHADER(CxbxMalloc(sizeof(VSH_XBOX_SHADER)));
   hRet := 0;
+  pErrors := nil;
 
   // TODO -oCXBX: support this situation..
   if(pFunction = NULL) then

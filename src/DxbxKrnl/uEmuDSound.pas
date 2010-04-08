@@ -92,7 +92,7 @@ type _XMEDIAPACKET = packed record
     pdwCompletedSize: PDWORD;
     pdwStatus: PDWORD;
     case Integer of // union {
-    0: (hCompletionEvent: HANDLE;);
+    0: (hCompletionEvent: HANDLE);
     1: (
         pContext: PVOID;
     // end;

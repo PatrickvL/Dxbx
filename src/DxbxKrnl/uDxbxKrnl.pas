@@ -320,7 +320,7 @@ begin
             if funcAddr[v] = funcExclude[r] then
             begin
                 bExclude := True;
-                Break;
+                break;
             end;
         end;
 

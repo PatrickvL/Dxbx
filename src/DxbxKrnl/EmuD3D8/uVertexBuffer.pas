@@ -656,10 +656,12 @@ begin
     end;
   end;
 
+  if pPatchDesc.dwVertexCount > 0 then // Dxbx addition, to prevent underflow
   for uiVertex := 0 to pPatchDesc.dwVertexCount - 1 do
   begin
     dwPosOrig := 0;
     dwPosNew := 0;
+    if pStreamPatch.NbrTypes > 0 then // Dxbx addition, to prevent underflow
     for uiType := 0 to pStreamPatch.NbrTypes - 1 do
     begin
       case(pStreamPatch.pTypes[uiType]) of
@@ -965,6 +967,7 @@ begin
   dwTexN := (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
 
   // Normalize texture coordinates.
+  if uiVertexCount > 0 then // Dxbx addition, to prevent underflow
   for uiVertex := 0 to uiVertexCount - 1 do
   begin
     pUVData := Puint08(pData + (uiVertex * uiStride) + uiOffset);
@@ -1261,10 +1264,8 @@ begin
   begin
     m_pDynamicPatch := @(PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch);
   end;
-
-  // DXBX - WORKING WHIT WHILE LOOP FOR LOOP CRASHES  m_uiNbrStreams - 1 results in FFFFFF
-  uiStream := 0;
-  while uiStream < m_uiNbrStreams do
+  if m_uiNbrStreams > 0 then // Dxbx addition, to prevent underflow
+  for uiStream := 0 to m_uiNbrStreams - 1 do
   begin
     LocalPatched := false;
 
@@ -1283,7 +1284,6 @@ begin
       m_pStreams[uiStream].bUsedCached := true;
     end;
     Patched := Patched or LocalPatched;
-    Inc(uiStream);
   end;
 
   Result := Patched;
@@ -1300,6 +1300,7 @@ begin
     Exit;
   end;
 
+  if m_uiNbrStreams > 0 then // Dxbx addition, to prevent underflow
   for uiStream := 0 to m_uiNbrStreams - 1 do
   begin
     if (m_pStreams[uiStream].pOriginalStream <> NULL) and (m_pStreams[uiStream].pPatchedStream <> NULL) then
@@ -1603,7 +1604,7 @@ begin
 
     X_Format := X_D3DFORMAT(((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT));
 
-    if (X_Format <> $CD) and (IDirect3DResource8(pTexture.EmuResource8).GetType() = D3DRTYPE_TEXTURE) then
+    if (X_Format <> $CD) and (IDirect3DResource8(pTexture.Emu.Resource8).GetType() = D3DRTYPE_TEXTURE) then
     begin
       dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
       bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
@@ -1709,7 +1710,7 @@ begin
       // iterate through the number of mipmap levels
       for level := 0 to dwMipMapLevels - 1 do
       begin
-        {hRet := }IDirect3DTexture8(pResource.EmuTexture8).LockRect(level, {out}LockedRect, NULL, 0);
+        {hRet := }IDirect3DTexture8(pResource.Emu.Texture8).LockRect(level, {out}LockedRect, NULL, 0);
 
         iRect := classes.Rect(0, 0, 0, 0);
         iPoint := classes.Point(0, 0);
@@ -1766,7 +1767,7 @@ begin
           end;
         end;
 
-        IDirect3DTexture8(pResource.EmuTexture8).UnlockRect(level);
+        IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(level);
 
         Inc(dwMipOffs, dwMipWidth * dwMipHeight * dwBPP);
 
@@ -1776,7 +1777,7 @@ begin
       end;
     end;
 
-    IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.EmuTexture8));
+    IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.Emu.Texture8));
 
   end;
 end;
