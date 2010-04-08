@@ -7037,7 +7037,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_ZEnable' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -7329,8 +7329,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DVertexBuffer8_Lock2' +
          #13#10'(' +
-         #13#10'   ppVertexBuffer    : 0x%.08X' +
-         #13#10'   Flags             : 0x%.08X' +
+         #13#10'   ppVertexBuffer      : 0x%.08X' +
+         #13#10'   Flags               : 0x%.08X' +
          #13#10');',
          [ppVertexBuffer, Flags]);
 {$ENDIF}
@@ -7390,17 +7390,17 @@ begin
   if Assigned(pStreamData) then
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetStreamSource' +
       #13#10'(' +
-      #13#10'   StreamNumber      : 0x%.08X' +
-      #13#10'   pStreamData       : 0x%.08X (0x%.08X)' +
-      #13#10'   Stride            : 0x%.08X' +
+      #13#10'   StreamNumber        : 0x%.08X' +
+      #13#10'   pStreamData         : 0x%.08X (0x%.08X)' +
+      #13#10'   Stride              : 0x%.08X' +
       #13#10');',
       [StreamNumber, pStreamData, pStreamData.EmuVertexBuffer8, Stride])
   else
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetStreamSource' +
       #13#10'(' +
-      #13#10'   StreamNumber      : 0x%.08X' +
-      #13#10'   pStreamData       : 0x%.08X (0x%.08X)' +
-      #13#10'   Stride            : 0x%.08X' +
+      #13#10'   StreamNumber        : 0x%.08X' +
+      #13#10'   pStreamData         : 0x%.08X (0x%.08X)' +
+      #13#10'   Stride              : 0x%.08X' +
       #13#10');',
       [StreamNumber, pStreamData, 0, Stride]);
 {$ENDIF}
@@ -7447,7 +7447,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexShader' +
     #13#10'(' +
-    #13#10'   Handle            : 0x%.08X' +
+    #13#10'   Handle              : 0x%.08X' +
     #13#10');',
     [aHandle]);
 {$ENDIF}
@@ -7493,9 +7493,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_DrawVertices' +
     #13#10'(' +
-    #13#10'   PrimitiveType     : 0x%.08X' +
-    #13#10'   StartVertex       : 0x%.08X' +
-    #13#10'   VertexCount       : 0x%.08X' +
+    #13#10'   PrimitiveType       : 0x%.08X' +
+    #13#10'   StartVertex         : 0x%.08X' +
+    #13#10'   VertexCount         : 0x%.08X' +
     #13#10');',
     [Ord(PrimitiveType), StartVertex, VertexCount]);
 {$ENDIF}
@@ -9476,7 +9476,7 @@ exports
   XTL_EmuIDirect3DDevice8_Begin name PatchPrefix + 'D3DDevice_Begin',
   XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4',
   // XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', // MARKED OUT BY CXBX
-  //XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
+  XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
   XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + 'D3DDevice_BlockOnFence',
   XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + 'D3DDevice_BlockUntilVerticalBlank@0',
