@@ -572,7 +572,7 @@ var
         Inc(m);
 
       if m >= Length(fmt) then 
-        Break;
+        break;
 
       if fmt[m] = '%' then
       begin 
@@ -584,11 +584,11 @@ var
         end;
 
         Inc(m);
-        Break;
+        break;
       end;
 
       if (ScanStr(fmt[m]) = False) then
-        Break;
+        break;
 
       Inc(m);
     end; 
@@ -613,7 +613,7 @@ begin
             Inc(Result);
           end
           else
-            Break;
+            break;
         end;
 
       vtExtended:
@@ -625,7 +625,7 @@ begin
             Inc(Result); 
           end 
           else 
-            Break; 
+            break;
         end; 
 
       vtString: 
@@ -636,10 +636,10 @@ begin
             Inc(Result);
           end
           else
-            Break;
+            break;
         end;
     else
-      Break;
+      break;
     end;
   end;
 end;

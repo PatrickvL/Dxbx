@@ -25,11 +25,11 @@ uses
   // Delphi
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls,
+  // DirectX
+  DirectDraw,
   // DXBX
   uEmuShared,
-  uXbVideo,
-  // DirectX
-  DirectDraw;
+  uXbVideo;
 
 type
   Tfrm_VideoConfig = class(TForm)

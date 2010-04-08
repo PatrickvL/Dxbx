@@ -615,7 +615,7 @@ begin
       if (szBuffer[CurIndex] = '\') then
       begin
         ReplaceIndex := CurIndex;
-        Break;
+        break;
       end;
 
       Dec(CurIndex);

@@ -564,7 +564,7 @@ begin
         if (KeyState[r] <> 0) then
         begin
           dwHow := r;
-          Break;
+          break;
         end;
       end;
 
@@ -1209,7 +1209,7 @@ begin
     if (StrComp(m_DeviceName[v], szDeviceName) = 0) then
     begin
       old := v;
-      Break;
+      break;
     end;
   end;
 

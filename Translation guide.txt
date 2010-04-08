@@ -124,6 +124,65 @@ in uTypes.pas - look for calloc, sprintf and other functions. Good sources
 for inspiration are the various open-source libc implementations.
 
 
+Boolean types
+-------------
+Delphi and C++ differ in their definition of the various boolean-types.
+Delphi has Boolean, LongBool, WordBool and ByteBool.
+C++ has boolean, bool and BOOL (C is case-sensitive)
+
+The trouble with these types, is in the ordinal value of the 'true' value.
+Here a table indicating the differences:
+
+Language | Type     | SizeOf  | False     | True      | Note
+---------+----------+---------+-----------+-----------+----------
+Delphi   | Boolean  | 1 byte  | False = 0 | True =  1 |
+Delphi   | ByteBool | 1 byte  | False = 0 | True = -1 | Equals $FF !
+Delphi   | WordBool | 2 bytes | False = 0 | True = -1 | Equals $FFFF !
+Delphi   | LongBool | 4 bytes | False = 0 | True = -1 | Equals $FFFFFFFF !
+C++  (*) | boolean  | 4 bytes | false = 0 | true =  1 |
+C++  (*) | bool     | 1 bytes | false = 0 | true =  1 |
+C++  (*) | BOOL     | 4 bytes | FALSE = 0 | TRUE =  1 | Is an int-based type!
+
+*) C++ is case-sensitive, both types and value symbols: true/True/TRUE al differ!
+
+To fix these differences, we use these type-mappings :
+
+C++ bool  > Delphi _bool
+C++ BOOL  > Delphi BOOL
+
+These Delphi types are declared in uTypes.pas as follows:
+
+type _bool = Boolean; // Use this to translate Cxbx's "bool" to Delphi
+// Dxbx note : The underscore prevents a case-insensitive collision with BOOL!
+
+type BOOL = int; // int-based BOOL type, just like in Cxbx
+const BOOL_TRUE = BOOL(1);
+const BOOL_FALSE = BOOL(0);
+
+These declarations imply that all occurrences of the BOOL type are not
+compatible to the standard Delphi True and False values - that's why we had
+to use the BOOL_TRUE and BOOL_FALSE constants instead.
+
+This is important in code that returns BOOL-type values to game-code, but
+in all other cases this is cumbersome and not really nessecary, so for those
+cases we can use this type :
+
+type BOOL_ = LongBool; // Use this to be compatible with Delpi's True/False
+ 
+As it turns out, there as only a few places where we need to convert one
+into the other, mainly in getter/setter methods.
+
+Do note that Delphi does some compile-magic to Boolean, so casting between
+Boolean and BOOL is not advised! Instead, use conversion-code like this :
+
+  if aBoolean then Result := BOOL_TRUE else Result := BOOL_FALSE;
+
+
+Bit-fields
+----------
+TODO (See stack-overflow article)
+
+
 Specific syntax differences
 ---------------------------
 Switch-cases in C are (mostly) terminated with a 'break' statement, or else
@@ -169,34 +228,32 @@ counting. The solution follows :
 DirectX interfaces
 ------------------
 The main use of interfaces in Cxbx, is centered around DirectX API's.
-To interface with DirectX, we have used another open-sources library,
+To interface with DirectX, we have used another open-source library,
 called "Clootie's DirectX SDK" (http://www.clootie.ru/delphi/).
 The problem with this library is the use of var-arguments of Interface type,
 where the original C headers used pointer-to-pointer-to-interface arguments.
-Therefor, we are in the process of changing these wrapper functions to
-use pointer-to-interfaces instead (as that maps better to the original code).
-Next, we will be bypassing Delphi's reference-counting of interfaces,
-by declaring a set of interface-pointer types that look a lot like the
-original C sources, but in reality don't point to an interface. This way,
-Delphi doesn't interfere with this code, so that we can translate all
-code over without any special changes to interface-using code, except for
-code that makes a call - in that case we need to cast to a real interface
-type.
-Examples for this will follow as soon as we've worked out a way to do this
-as cleanly as possible, without confusion anyone (much).
+Therefor, we have changed these wrapper functions to use pointer-to-interface
+instead (as that maps better to the original code).
+Next, we bypassed Delphi's reference-counting of interfaces, by declaring
+a set of interface-pointer types that look a lot like the original C sources,
+but internally don't point to an interface. This way, Delphi doesn't interfere
+with this code, so that we can translate all code over without any special
+changes to interface-using code, except for code that calls interface methods.
+In that case, we cast the variable to a real interface type, so we can still
+do the call, without introducing reference-counting overhead.
 
 
 Pointer translation
 -------------------
 C/C++ 
-     *variabele = value;
-     PDWord *pSampleValue;
+     DWord *pSampleValue;
+	 *variabele = value;
 
 Delphi
-     variabele^ := value;
-     pSampleValue : PDWord;
+     pSampleValue: PDWord;
+	 variabele^ := value;
 
-
+	 
 Calling conventions
 -------------------
 In Cxbx, the most frequently used calling convention is 'WINAPI'.
@@ -338,6 +395,12 @@ This goes fully automatic; To verify, check the log for a line like this :
   DxbxHLE : Installed patched from $00204080 (SomeFuntion) to $100ABCDE
 
 The addresses will be different, but the name should match your new patch.
+
+
+Patching for specicic XDK versions
+----------------------------------
+TODO : We still need to implement this!
+We'll probably use a naming convention in our exports: '[4627-]EmuSomething'
 
 
 Xbox Kernel sources

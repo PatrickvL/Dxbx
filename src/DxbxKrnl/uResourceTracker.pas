@@ -140,7 +140,7 @@ end;
 procedure ResourceTracker.insert(uiKey: uint32; pResource: Pvoid);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Self.Lock;
+  Self.Lock();
 
   if (exists(uiKey)) then
   begin

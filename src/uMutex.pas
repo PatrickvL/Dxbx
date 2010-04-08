@@ -86,7 +86,7 @@ begin
 
       // Wait and try again
       SwitchToThread; // Cxbx has : Sleep(1);
-      Continue;
+      continue;
     end;
 
     // The mutex was already locked, but by us.  Just increment

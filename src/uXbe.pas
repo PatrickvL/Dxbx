@@ -547,7 +547,7 @@ begin
         begin
           m_szSectionName[lIndex][lIndex2] := AnsiChar(RawData[RawAddr + lIndex2]);
           if m_szSectionName[lIndex][lIndex2] = #0 then
-            Break;
+            break;
         end; // for lIndex2
       end; // if
 {$IFDEF DXBX_DEBUG}
@@ -793,7 +793,7 @@ begin
     Inc(lIndex2);
     lIndex := lIndex + 2;
     if Char(RawData[lIndex]) = #0 then
-      Break;
+      break;
   end;
 
   //TmpStr := WideStringToString(AsciiFileName, 437);
@@ -881,7 +881,7 @@ begin
       if m_szSectionName[lIndex][lIndex2] <> #0 then
         TmpStr := TmpStr + Char(m_szSectionName[lIndex][lIndex2])
       else
-        Break;
+        break;
     end;
 
     _LogEx(DxbxFormat('Section Name                     : 0x%.8x ("%s")', [m_SectionHeader[lIndex].dwSectionNameAddr, TmpStr]));
@@ -1196,7 +1196,7 @@ begin
           if y = XBE_LOGO_HEIGHT then
           begin
             lIndex := dwLength;
-            Break;
+            break;
           end;
         end;
       end;
