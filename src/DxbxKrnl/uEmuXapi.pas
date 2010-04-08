@@ -2246,7 +2246,7 @@ exports
   XTL_EmuXFormatUtilityDrive,
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,
-  XTL_EmuXGetDeviceChanges,
+//  XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetDevices,
   XTL_EmuXGetFileCacheSize,
   XTL_EmuXGetLaunchInfo,

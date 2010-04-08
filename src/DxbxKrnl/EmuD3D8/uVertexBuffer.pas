@@ -1261,7 +1261,10 @@ begin
   begin
     m_pDynamicPatch := @(PVERTEX_SHADER(VshHandleGetVertexShader(pPatchDesc.hVertexShader).Handle).VertexDynamicPatch);
   end;
-  for uiStream := 0 to m_uiNbrStreams - 1 do
+
+  // DXBX - WORKING WHIT WHILE LOOP FOR LOOP CRASHES  m_uiNbrStreams - 1 results in FFFFFF
+  uiStream := 0;
+  while uiStream < m_uiNbrStreams do
   begin
     LocalPatched := false;
 
@@ -1280,6 +1283,7 @@ begin
       m_pStreams[uiStream].bUsedCached := true;
     end;
     Patched := Patched or LocalPatched;
+    Inc(uiStream);
   end;
 
   Result := Patched;

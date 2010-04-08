@@ -2029,7 +2029,7 @@ begin
     begin
          {static?}{pCachedPrimarySurface: XTL_PIDirect3DSurface8 := nil;
 
-        if (pCachedPrimarySurface = nil) then
+        if (pCachedPrimarySurface = 0) then
         begin
             // create a buffer to return
             // TODO -oCXBX: Verify the surface is always 640x480
@@ -2043,7 +2043,7 @@ begin
         if (FAILED(hRet)) then
         begin
             EmuWarning('Could not retrieve primary surface, using backbuffer');
-            pCachedPrimarySurface := nil;
+            pCachedPrimarySurface := 0;
             pBackBuffer.EmuSurface8._Release();
             pBackBuffer.EmuSurface8 := nil;
             BackBuffer := 0;
@@ -2474,7 +2474,7 @@ var
   pD3DVertexShader: PX_D3DVertexShader;
   pVertexShader: PVERTEX_SHADER;
 
-  pRecompiledBuffer: XTL_LPD3DXBUFFER;
+  pRecompiledBuffer: LPD3DXBUFFER;
   pRecompiledDeclaration: PDWORD;
   pRecompiledFunction: PDWORD;
   VertexShaderSize: DWORD;
@@ -2538,7 +2538,7 @@ begin
                                         g_VertexShaderConstantMode = X_VSCM_NONERESERVED);
     if (SUCCEEDED(hRet)) then
     begin
-      pRecompiledFunction := PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer());
+      pRecompiledFunction := PDWORD(pRecompiledBuffer.GetBufferPointer());
     end
     else
     begin
@@ -2563,7 +2563,7 @@ begin
     );
     if Assigned(pRecompiledBuffer) then
     begin
-      ID3DXBuffer(pRecompiledBuffer)._Release();
+      pRecompiledBuffer._Release();
       pRecompiledBuffer := NULL;
     end;
 
@@ -2581,7 +2581,7 @@ begin
         hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexShader
         (
             pRecompiledDeclaration,
-            PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer()),
+            PDWORD(pRecompiledBuffer.GetBufferPointer()),
             {out}Handle,
             g_dwVertexShaderUsage
         );
@@ -2911,8 +2911,8 @@ const
     #13#10'tex t0'#13#10 +
     #13#10'mov r0, t0'#13#10;
 var
-  pShader: XTL_LPD3DXBUFFER;
-  pErrors: XTL_LPD3DXBUFFER;
+  pShader: LPD3DXBUFFER;
+  pErrors: LPD3DXBUFFER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2943,12 +2943,12 @@ begin
       D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
 
       // create the shader device handle
-      Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
+      Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(pShader.GetBufferPointer(), {out}dwHandle);
 
       if (FAILED(Result)) then
       begin
         EmuWarning('Could not create pixel shader');
-        EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer))));
+        EmuWarning(string(AnsiString(PAnsiChar(pErrors.GetBufferPointer))));
       end;
     end;
 
@@ -7874,7 +7874,6 @@ begin
 {$ENDIF}
 
   Result := IDirect3DDevice8(g_pD3DDevice8).SetMaterial(pMaterial^);
-
   EmuSwapFS(fsXbox);
 end;
 
@@ -9477,7 +9476,7 @@ exports
   XTL_EmuIDirect3DDevice8_Begin name PatchPrefix + 'D3DDevice_Begin',
   XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4',
   // XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', // MARKED OUT BY CXBX
-  XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
+  //XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
   XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + 'D3DDevice_BlockOnFence',
   XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + 'D3DDevice_BlockUntilVerticalBlank@0',

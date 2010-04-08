@@ -2229,7 +2229,7 @@ var
   pShader: PVSH_XBOX_SHADER;
   hRet: HRESULT;
   pShaderDisassembly: P_char;
-  pErrors: XTL_LPD3DXBUFFER;
+  pErrors: LPD3DXBUFFER;
 begin
   pShaderHeader := PVSH_SHADER_HEADER(pFunction);
   EOI := false;
@@ -2317,7 +2317,7 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Couldn''t assemble recompiled vertex shader');
-      EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
+      EmuWarning(string(AnsiString(PAnsiChar(pErrors.GetBufferPointer)))); // Dxbx addition
     end;
 
     CxbxFree(pShaderDisassembly);
