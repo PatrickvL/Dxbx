@@ -2024,7 +2024,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetBackBuffer2' +
     #13#10'(' +
-    #13#10'   BackBuffer        : 0x%.08X' +
+    #13#10'   BackBuffer          : 0x%.08X' +
     #13#10');',
     [BackBuffer]);
 {$ENDIF}
@@ -5710,9 +5710,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_GetSurfaceLevel' +
       #13#10'(' +
-      #13#10'   pThis             : 0x%.08X' +
-      #13#10'   Level             : 0x%.08X' +
-      #13#10'   ppSurfaceLevel    : 0x%.08X' +
+      #13#10'   pThis               : 0x%.08X' +
+      #13#10'   Level               : 0x%.08X' +
+      #13#10'   ppSurfaceLevel      : 0x%.08X' +
       #13#10');',
       [pThis, Level, ppSurfaceLevel]);
 {$ENDIF}
@@ -5892,7 +5892,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_CreateVertexBuffer2' +
          #13#10'(' +
-         #13#10'   Length            : 0x%.08X' +
+         #13#10'   Length              : 0x%.08X' +
          #13#10');',
          [Length]);
 {$ENDIF}
@@ -9486,7 +9486,7 @@ exports
   XTL_EmuIDirect3DDevice8_Begin name PatchPrefix + 'D3DDevice_Begin',
   XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4',
   // XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', // MARKED OUT BY CXBX
-  XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
+  //XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
   XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + 'D3DDevice_BlockOnFence',
   XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + 'D3DDevice_BlockUntilVerticalBlank@0',
