@@ -80,6 +80,7 @@ type
   // Long-Pointer aliases :
 
   XTL_LPD3DXBUFFER = XTL_PID3DXBuffer;
+  XTL_PLPD3DXBUFFER = ^XTL_LPD3DXBUFFER;
 
   XTL_LPDIRECT3D8 = XTL_PIDirect3D8;
   XTL_LPDIRECTDRAW7 = XTL_PIDirectDraw7;
@@ -94,8 +95,8 @@ type
 
   XTL_LPDIRECTSOUNDBUFFER8 = XTL_PIDirectSoundBuffer8;
 
-//  XTL_LPDIRECTINPUT8 = XTL_PIDirectInput8;
-//  XTL_LPDIRECTINPUTDEVICE8 = XTL_PIDirectInputDevice8;
+  XTL_LPDIRECTINPUT8 = XTL_PIDirectInput8;
+  XTL_LPDIRECTINPUTDEVICE8 = XTL_PIDirectInputDevice8;
 
 
 // TODO -oCXBX: fill out these enumeration tables for convienance
