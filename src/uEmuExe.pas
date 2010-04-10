@@ -175,7 +175,7 @@ var
   EntryPoint: DWord;
   XbeTLS: PXbeTLS;
 
-  procedure _CopyBlock(const aRawOffset, aRawSize, aVirtualAddr, aProtection: DWord);
+  procedure _ReadXbeBlock(const aRawOffset, aRawSize, aVirtualAddr, aProtection: DWord);
   var
     old_protection: DWord;
   begin
@@ -190,6 +190,7 @@ var
 begin
   WriteLog('EmuExe: Loading Sections...');
 
+  // Make sure we can write to the original range of Xbox memory (128 MB, starting at $10000) :
   if not VirtualProtect(Pointer(XBE_IMAGE_BASE), XBOX_MEMORY_SIZE, PAGE_READWRITE, {var}Protection) then
     RaiseLastOSError;
 
@@ -197,19 +198,19 @@ begin
   ZeroMemory(Pointer(XBE_IMAGE_BASE), XBOX_MEMORY_SIZE);
 
   // Copy the complete XBEHeader over to the ImageBase :
-  _CopyBlock(
+  _ReadXbeBlock(
     {RawOffset=}0,
-    {RawSize=}XBE_HEADER_SIZE,
+    {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use Xbe.dwSizeofHeader
     {VirtualAddr=}XBE_IMAGE_BASE,
     {NewProtect}PAGE_READWRITE);
 
   // Restore just enough of the EXE header to make Windows API's like BeginThread work again :
   ReinitExeImageHeader;
 
-  // Copy all sections to their requested Virtual Address :
+  // Load all sections to their requested Virtual Address :
   Xbe := aXbe;
-  XbeHeader := PXbeHeader(@aXbe.m_Header);
-  XbeSectionHeader := PXbeSectionHeader(@(aXbe.m_SectionHeader[0]));
+  XbeHeader := PXbeHeader(XBE_IMAGE_BASE);
+  XbeSectionHeader := PXbeSectionHeader(XbeHeader.dwSectionHeadersAddr);
   for i := 0 to XbeHeader.dwSections - 1 do
   begin
     // Determine protection, based on actual section flags :
@@ -219,7 +220,7 @@ begin
     if (XbeSectionHeader.dwFlags[0] and XBE_SECTIONHEADER_FLAG_Executable) > 0 then
       Protection := PAGE_EXECUTE_READWRITE;
 
-    _CopyBlock(
+    _ReadXbeBlock(
       {RawOffset=}XbeSectionHeader.dwRawAddr,
       {RawSize=}XbeSectionHeader.dwSizeofRaw,
       {VirtualAddr=}XbeSectionHeader.dwVirtualAddr,

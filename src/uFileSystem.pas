@@ -267,7 +267,7 @@ begin
 
   // Select default.xbe (or any other xbe if not present) :
   if not MyFileSystem.Select('default.xbe') then
-    MyFileSystem.Select('*.xbe'); //TODO -oCXBX: Support wildcards in Select method
+    MyFileSystem.Select('*.xbe'); //TODO -oDXBX: Support wildcards in Select method
 end;
 
 procedure RLogicalVolume.Unmount;

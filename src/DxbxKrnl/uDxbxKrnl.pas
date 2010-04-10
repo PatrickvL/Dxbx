@@ -94,8 +94,8 @@ procedure CxbxKrnlInit(
   Entry: TEntryProc);
 // Branch:martin  Revision:39  Translator:Patrick  Done:100
 var
-  MemXbeHeader: PXBE_HEADER;
-  old_protection: DWord;
+//  MemXbeHeader: PXBE_HEADER;
+//  old_protection: DWord;
   szBuffer: string;
   pCertificate: PXBE_CERTIFICATE;
   hDupHandle: Handle;
@@ -149,6 +149,7 @@ begin
  {$ENDIF}
 {$ENDIF}
 
+(* Dxbx note : We don't need to do this anymore, since we load XBE's at $10000 already:
   // Load the necessary pieces of XBEHeader
   begin
     MemXbeHeader := PXBE_HEADER($00010000);
@@ -164,7 +165,7 @@ begin
     CopyMemory(@MemXbeHeader.dwInitFlags, @pXbeHeader.dwInitFlags, SizeOf(pXbeHeader.dwInitFlags));
     CopyMemory(Pointer(pXbeHeader.dwCertificateAddr), MathPtr(pXbeHeader) + pXbeHeader.dwCertificateAddr - $00010000, SizeOf(XBE_CERTIFICATE));
   end;
-
+*)
   // Initialize current directory
   g_EmuShared.GetXbePath({var}szBuffer);
   if (szBuffer = '') and Assigned(Xbe) then

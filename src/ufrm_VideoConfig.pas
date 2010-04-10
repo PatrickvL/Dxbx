@@ -97,7 +97,7 @@ begin
   // Read the XBVideo settings from shared memory :
   g_EmuShared.GetXBVideo(@FXBVideo);
 
-  VideoResolutionIndex := edt_VideoResolution.Items.IndexOf(FXBVideo.GetVideoResolution);
+  VideoResolutionIndex := edt_VideoResolution.Items.IndexOf(string(AnsiString(FXBVideo.GetVideoResolution)));
   if VideoResolutionIndex < 0 then
     VideoResolutionIndex := 0; // Select default if registry value cannot be used
 
