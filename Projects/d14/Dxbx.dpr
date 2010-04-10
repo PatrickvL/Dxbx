@@ -78,9 +78,10 @@ var
 begin
   XBEFilePath := ParamStr(2);
 
+  // Check if Dxbx is invoked with the intention to map&run an XBE (if not, we'll show the GUI) :
   if  (XBEFilePath <> '')
   and SameText(ParamStr(1), '/load')
-  and SameText(ExtractFileExt(XBEFilePath), '.xbe')
+  and SameText(ExtractFileExt(XBEFilePath), '.xbe') // TODO : Add ISO support here
   and TXbe.FileExists(XBEFilePath)
   and (StrToIntDef(ParamStr(3), 0) > 0) then
   begin

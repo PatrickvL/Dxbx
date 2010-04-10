@@ -20,7 +20,7 @@ unit uXDVDFS;
 (*
   This unit is translated from "XDVDFS Tools" by [SNK] / Supremacy.
 
-  There also exists an extende version of this by CloneXB,
+  There seems to exist an extended version of this code (by CloneXB),
   but I (PatrickvL) haven't found any sources for that.
 
   After translation, some thread-safety modifications where made.

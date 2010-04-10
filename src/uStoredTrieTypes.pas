@@ -164,7 +164,7 @@ type
     // The bits of this header byte are defined as, "nnnnnctt", where:
     //
     // nnnnn : 5 bits indicating the number [0..31] of fixed bytes that follow
-    // c : 1 continue bit - if set more stretches follow after this one
+    // c : 1 continue bit - if set, more stretches follow after this one
     // tt : 2 bits, indicating the Node Type Flags (see below)
     //
     // The specified number of fixed bytes follow directly after this.

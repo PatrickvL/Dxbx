@@ -40,14 +40,14 @@ type
 
   RCrossReference = packed record
     Offset: Word;
-    Name: string;
+    Name: AnsiString;
   end;
 
   PVersionedXboxLibraryFunction = ^RVersionedXboxLibraryFunction;
   RVersionedXboxLibraryFunction = packed record
     VersionedXboxLibrary: PVersionedXboxLibrary;
     Values: array of PAnsiChar;
-    Name: string;
+    Name: string; // should be AnsiString, but then we'd need TAnsiStringList which Delphi doesn't have.
     CRCLength: Byte;
     CRCValue: Word;
     TotalLength: Word;
@@ -462,7 +462,7 @@ var
       StoredCrossReference.RecType := rtStoredCrossReference;
 {$ENDIF}
       StoredCrossReference.Offset := aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].Offset;
-      StoredCrossReference.NameIndex := UniqueStrings.IndexOf(aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].Name);
+      StoredCrossReference.NameIndex := UniqueStrings.IndexOf(string(aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].Name));
       OutputFile.WriteBuffer(StoredCrossReference, SizeOf(RStoredCrossReference));
     end;
 
@@ -633,7 +633,7 @@ begin
     for i := 0 to VersionedFunctions.Count - 1 do
     begin
       for j := 0 to Length(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences) - 1 do
-        UniqueStrings.Add(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences[j].Name);
+        UniqueStrings.Add(string(PVersionedXboxLibraryFunction(VersionedFunctions[i]).CrossReferences[j].Name));
     end;
 
     // Also, add all library names to the unique string list :
@@ -654,7 +654,8 @@ begin
     SetLength(StringOffsets, UniqueStrings.Count);
     for i := 0 to UniqueStrings.Count - 1 do
     begin
-      OutputFile.WriteBuffer(UniqueStrings[i][1], Length(UniqueStrings[i]));
+      // Make sure we write the strings in Ansi format (Unicode Delphi's would garble the output) :
+      OutputFile.WriteBuffer(AnsiString(UniqueStrings[i])[1], Length(UniqueStrings[i]));
       StringOffsets[i] := OutputFile.Position;
     end;
 
@@ -773,7 +774,7 @@ begin
   _Add(@(aLine[aLength]));
 
   if NrValues >= viVariablePart then
-    aContext.FunctionList.AddObject(string(VersionedXboxLibraryFunction.Values[viFunctionName]), Pointer(VersionedXboxLibraryFunction))
+    aContext.FunctionList.AddObject(string(AnsiString(VersionedXboxLibraryFunction.Values[viFunctionName])), Pointer(VersionedXboxLibraryFunction))
   else
     Dispose(VersionedXboxLibraryFunction);
 end; // ParseAndAppendPatternLineToTrie_Callback
@@ -785,7 +786,7 @@ var
   VersionedXboxLibraryFunctionPattern: TPattern;
   i, Value: Integer;
   NrCrossReferences: Integer;
-  CrossReferencedFunctionName: string;
+  CrossReferencedFunctionName: AnsiString;
   aLine: PAnsiChar;
 
   procedure _SkipChar(const aChar: AnsiChar);
@@ -796,7 +797,7 @@ var
 
 begin
   // Remember the function name :
-  aVersionedXboxLibraryFunction.Name := string(aVersionedXboxLibraryFunction.Values[viFunctionName]);
+  aVersionedXboxLibraryFunction.Name := string(AnsiString(aVersionedXboxLibraryFunction.Values[viFunctionName]));
 
   // Now, see if we need to filter
   if aContext.OnlyPatches then
@@ -877,7 +878,7 @@ begin
 
     // Get the function name :
     Inc(i);
-    CrossReferencedFunctionName := string(aVersionedXboxLibraryFunction.Values[i]);
+    CrossReferencedFunctionName := AnsiString(aVersionedXboxLibraryFunction.Values[i]);
 
     // Only add symbols that don't start with '__' (like __SEH_prolog, __tls_used, etc) :
     if Copy(CrossReferencedFunctionName, 1, 2) <> '__' then
@@ -1000,18 +1001,18 @@ begin
 
     if DumpFileName <> '' then
     begin
-      WriteLn('Dumping the trie to "' + DumpFileName + '"...');
+      WriteLn('Dumping the trie to "' + ExpandFileName(DumpFileName) + '"...');
       Output := TStringList.Create;
       try
         PatternTrie.Dump(Output);
-        Output.SaveToFile(DumpFileName);
+        Output.SaveToFile(ExpandFileName(DumpFileName));
       finally
         FreeAndNil(Output);
       end;
     end;
 
-    WriteLn('Saving the trie to "' + StoredTrieFileName + '"...');
-    PatternTrie.Save(StoredTrieFileName);
+    WriteLn('Saving the trie to "' + ExpandFileName(StoredTrieFileName) + '"...');
+    PatternTrie.Save(ExpandFileName(StoredTrieFileName));
 
     Result := ERROR_SUCCESS;
   finally
@@ -1054,7 +1055,10 @@ begin
 
     ExitCode := GeneratePatternTrie(PatternFiles, {aOnlyPatches=}False);
     if ExitCode = ERROR_SUCCESS then
-      WriteLn('Done.')
+    begin
+      WriteLn('Done. Press enter to quit.');
+      ReadLn;
+    end
     else
       WriteLn('ERROR! No trie file generated!');
 
