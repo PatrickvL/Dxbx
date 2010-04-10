@@ -507,7 +507,7 @@ end;
 function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := (aHandle and $8000000) <> 0;
+  Result := (aHandle and $80000000) <> 0;
 end;
 
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
