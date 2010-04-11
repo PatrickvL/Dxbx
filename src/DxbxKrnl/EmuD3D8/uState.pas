@@ -331,7 +331,7 @@ begin
     end;
 
     // if point sprites are enabled, copy stage 3 over to 0
-    if (XTL_EmuD3DDeferredRenderState[26] = BOOL_TRUE) then
+    if (XTL_EmuD3DDeferredRenderState[26] = DWord(BOOL_TRUE)) then // Dxbx note : DWord cast to prevent warning
     begin
       // pCur := Texture Stage 3 States
       pCur := @(XTL_EmuD3DDeferredTextureState[2*32]);
