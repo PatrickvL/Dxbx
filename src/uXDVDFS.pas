@@ -279,7 +279,7 @@ begin
 
   // We land here if all entries were locked, and that's BAD !
   Result := NULL;
-end;
+end; // GetSectorBuffered
 
 procedure ReleaseBufferedSector(
         This: PCDIO_READ;
@@ -296,7 +296,7 @@ begin
       Exit;
     end;
   end;
-end;
+end; // ReleaseBufferedSector
 
 function XDVDFS_Mount(
    Session: PXDVDFS_SESSION;
@@ -326,7 +326,7 @@ begin
     Result := False
   else
     Result := True;
-end;
+end; // XDVDFS_Mount
 
 // XDVDFS deinit a session object
 function XDVDFS_UnMount(
@@ -341,7 +341,7 @@ begin
   Inc(Session.Magic);
 
   Result := True;
-end;
+end; // XDVDFS_UnMount
 
 // Initialize a search record with root dir
 // Note: Can return XDVDFS_NO_MORE_FILES if the image is empty
@@ -361,7 +361,7 @@ begin
   SearchRecord.Position := 0;
 
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_GetRootDir
 
 // Enumerate files
 function XDVDFS_EnumFiles(
@@ -370,7 +370,7 @@ function XDVDFS_EnumFiles(
 var
   Entry: PXDVDFS_DIRECTORY_ENTRY;
   SectorNumber, Position: DWORD;
-  i: Integer; // Needs to be signed, so not a DWORD!
+  i: Integer; // Dxbx Note : i Needs to be signed, so not a DWORD!
   Ptr: PBYTE;
 begin
   repeat // enum_retry:
@@ -415,8 +415,8 @@ begin
 
     // If Entry.StartSector = $FFFFFFFF or Position > 2040, we reached the last
     // entry of the sector
-    // TODO -oDXBX: Constantify once we know where this 2040 comes from:
-    if (Position > 2040) or (Entry.StartSector = $FFFFFFFF) then
+    if (Position > DWORD(SECTOR_SIZE - OFFSET(PXDVDFS_DIRECTORY_ENTRY(nil).StartSector) - SizeOf(Entry.StartSector)))
+    or (Entry.StartSector = $FFFFFFFF) then
     begin
       // Let's get the next one
       ReleaseBufferedSector(@Session.Read, SectorNumber + SearchRecord.StartSector);
@@ -451,7 +451,7 @@ begin
   ReleaseBufferedSector(@Session.Read, SectorNumber + SearchRecord.StartSector);
 
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_EnumFiles
 
 // Find a file given its path
 function XDVDFS_GetFileInfo(
@@ -500,6 +500,10 @@ begin
       if ReturnCode <> XDVDFS_NO_ERROR then
         Break;
 
+      // Dxbx addition : Stop at first file if no further path is given :
+      if Filename[0] = #0 then
+        Break;
+
       // Calculate length of the filename
       Length := 0;
       while (SearchRecord.Filename[Length] <> #0)
@@ -507,12 +511,15 @@ begin
         Inc(Length);
 
       // Match the filename against the one given
-      for i := 0 to Length - 1 do
+      i := 0;
+      while i < Length do
       begin
         if (Filename[i] = #0)
         or (Filename[i] = DIRECTORY_SEPARATOR)
         or (UPPERCASE(Filename[i]) <>  UPPERCASE(SearchRecord.Filename[i])) then
           Break;
+
+        Inc(i);
       end;
 
       // If it matched, exit
@@ -541,7 +548,7 @@ begin
   // If we land here, everything matched and the SEARCH_RECORD structure is
   // filled.
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_GetFileInfo
 
 // Initialize a search record given a path
 function XDVDFS_OpenFolder(
@@ -574,7 +581,7 @@ begin
   SearchRecord.Position := 0;
 
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_OpenFolder
 
 // Open a file
 function XDVDFS_OpenFile(
@@ -610,7 +617,7 @@ begin
   FileRecord.CurrentPosition := 0;
 
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_OpenFile
 
 // Open a file pointed by a search rec
 function XDVDFS_OpenFileEx(
@@ -640,7 +647,7 @@ begin
   FileRecord.CurrentPosition := 0;
 
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_OpenFileEx
 
 // Read a file
 function XDVDFS_FileRead(
@@ -778,7 +785,7 @@ begin
   Inc(FileRecord.CurrentPosition, PartialRead);
 
   Result := Readed;
-end;
+end; // XDVDFS_FileRead
 
 // Close file
 function XDVDFS_FileClose(
@@ -796,7 +803,7 @@ begin
   Dec(FileRecord.Magic);
 
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_FileClose
 
 // File seek
 function XDVDFS_FileSeek(
@@ -835,7 +842,7 @@ begin
   end;
 
   Result := XDVDFS_NO_ERROR;
-end;
+end; // XDVDFS_FileSeek
 
 end.
 

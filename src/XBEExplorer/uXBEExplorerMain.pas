@@ -36,7 +36,8 @@ uses
   uDxbxUtils,
   uXbe,
   uHexViewer,
-  uStringsViewer;
+  uStringsViewer,
+  uExploreFileSystem;
 
 type
   TFormXBEExplorer = class(TForm)
@@ -63,6 +64,8 @@ type
     actFileOpen: TAction;
     actClose: TAction;
     actSaveAs: TAction;
+    Extra1: TMenuItem;
+    ExploreFileSystem1: TMenuItem;
     procedure actOpenExecute(Sender: TObject);
     procedure actCloseExecute(Sender: TObject);
     procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
@@ -72,6 +75,7 @@ type
     procedure actGotoOffsetUpdate(Sender: TObject);
     procedure actCloseUpdate(Sender: TObject);
     procedure actSaveAsUpdate(Sender: TObject);
+    procedure ExploreFileSystem1Click(Sender: TObject);
   protected
     MyXBE: TXbe;
     MyRanges: TMemo;
@@ -156,6 +160,11 @@ begin
   CloseFile;
 
   inherited Destroy;
+end;
+
+procedure TFormXBEExplorer.ExploreFileSystem1Click(Sender: TObject);
+begin
+  TfrmExploreFileSystem.Create(Self).ShowModal;
 end;
 
 procedure TFormXBEExplorer.actOpenExecute(Sender: TObject);

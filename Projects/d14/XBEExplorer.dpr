@@ -15,7 +15,8 @@ uses
   uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame},
   uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas',
   uXDVDFS in '..\..\src\uXDVDFS.pas',
-  uFileSystem in '..\..\src\uFileSystem.pas';
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uExploreFileSystem in '..\..\src\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem};
 
 {$R *.res}
 

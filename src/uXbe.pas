@@ -281,6 +281,13 @@ type
   PPXPR_FILE_HEADER = ^PXPR_FILE_HEADER;
 *)
 
+  // TODO -oDxbx : Remove most dependancies on this TXbe type, at least in
+  // MapAndRun but maybe also in OpenXbe and it's callers.
+  // Instead, start accessesing Xbe's (and other resources) via Drives.D.FileSystem,
+  // which would create a better layer of seperation. Do note, that some kernel
+  // I/O functions (like asynchronuous file access) don't map too well to this
+  // setup... but even if this happens, we could still use the FileSystem abstraction
+  // but bypass it for the special cases (which means we can only do this on MappedFolders)
   TXbe = class(TObject)
   private
     MyFile: TMemoryStream;
@@ -291,7 +298,6 @@ type
     function GetFileSize: Int64;
   public
     XbePath: string;
-    m_szPath: string;
     m_Header: XBE_HEADER;
     m_Certificate: XBE_CERTIFICATE;
     m_SectionHeader: array of XBE_SECTIONHEADER;
@@ -305,7 +311,7 @@ type
     property FileSize: Int64 read GetFileSize;
     class function FileExists(aFileName: string): Boolean;
     
-    constructor Create(aFileName: string);
+    constructor Create(const aFileName: string);
     destructor Destroy; override;
 
     function GetTLSData: DWord;
@@ -438,16 +444,20 @@ end; // TXbe.ConstructorInit
 class function TXbe.FileExists(aFileName: string): Boolean;
 begin
   Result := Drives.D.Mount(aFileName)
-        and SameText(ExtractFileExt(Drives.D.FileSystem.SelectedFile), '.xbe');;  
+//        and SameText(ExtractFileExt(Drives.D.FileSystem.SelectedFile), '.xbe');;
 end;
 
-constructor TXbe.Create(aFileName: string);
+constructor TXbe.Create(const aFileName: string);
 var
+  sFileType: string;
+  Folder: string;
+  FileName: string;
+  FileHandle: TFileHandle;
+
   ExSize: LongInt;
   lIndex, lIndex2: DWord;
   RawSize, RawAddr: DWord;
   I: DWord;
-  sFileType: string;
 begin
   sFileType := ExtractFileExt(aFileName);
 
@@ -455,8 +465,40 @@ begin
 
   MyFile := TMemoryStream.Create;
 
-  Drives.D.Mount(aFileName);
-  Drives.D.FileSystem.Load(MyFile);
+  // Split given filename in folder & filename :
+  Folder := ExpandFileName(aFileName);
+  FileName := '';
+
+  // Walk path until we can mount the volume :
+  while Folder <> '' do
+  begin
+    if Drives.D.Mount(Folder) then
+      Break;
+
+    if FileName <> '' then
+      FileName := '\' + FileName;
+
+    FileName := ExtractFileName(Folder) + FileName;
+    Folder := ExtractFilePath(Folder);
+  end;
+
+  if not Drives.D.IsMounted then
+  begin
+    MessageDlg(DxbxFormat('Could not open path : %s', [aFileName]), mtError, [mbOk], 0);
+    Exit;
+  end;
+
+  if FileName = '' then
+    FileName := 'default.xbe';
+
+  FileHandle := Drives.D.FileSystem.Open(FileName);
+  try
+    MyFile.Size := Drives.D.FileSystem.Seek(FileHandle, 0, soFromEnd);
+    Drives.D.FileSystem.Seek(FileHandle, 0, soFromBeginning);
+    Drives.D.FileSystem.Read(FileHandle, MyFile.Memory^, MyFile.Size);
+  finally
+    Drives.D.FileSystem.Close(FileHandle);
+  end;
 
   FRawData := MyFile.Memory;
 
@@ -471,7 +513,6 @@ begin
 
   // remember xbe path
   XbePath := aFileName;
-  m_szPath := ExcludeTrailingPathDelimiter(ExtractFilePath(aFileName));
   WriteLog(DxbxFormat('DXBX: Storing %s Path...Ok', [sFileType]));
 
   if MyFile.Size < SizeOf(m_Header) then
@@ -669,7 +710,7 @@ begin
   // Use Title, or when that's empty, the parent folder name : 
   Result := WideCharToString(m_Certificate.wszTitleName);
   if Result = '' then
-    Result := ExtractFileName(m_szPath);
+    Result := 'xbe';
 
   // Fixup invalid filename characters :
   Result := FixInvalidFilePath(Result);

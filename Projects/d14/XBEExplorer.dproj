@@ -54,7 +54,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="RunParams">&quot;D:\!Patrick_Sofware\XBox\Games\Xbox Turok NTSC\default.xbe&quot;</Parameters>
+						<Parameters Name="RunParams">&quot;D:\!Patrick_Sofware\XBox\Games\Xbox Azurik Rise of Perathia - ProjectX\azurik.iso&quot;</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -112,6 +112,9 @@
 			<DCCReference Include="..\..\src\XBEExplorer\uStringsViewer.pas"/>
 			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uExploreFileSystem.pas">
+				<Form>frmExploreFileSystem</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
