@@ -1665,7 +1665,7 @@ function XTL_EmuIDirect3D8_EnumAdapterModes
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 {$WRITEABLECONST ON}
 const
-  ModeAdder: int = 0;
+  ModeAdder: uint = 0; // Dxbx note : Changed Cxbx's int to uint to prevent warning
 {$WRITEABLECONST OFF}
 var
   PCMode: D3DDISPLAYMODE;

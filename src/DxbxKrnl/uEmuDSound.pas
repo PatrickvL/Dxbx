@@ -323,8 +323,8 @@ type X_CDirectSoundStream = class(TObject)
         EmuLockBytes2: DWORD;
         EmuPlayFlags: DWORD;
     end;
-  PX_CDirectSoundStream = ^X_CDirectSoundStream; // Dxbx note : Delphi's classes are already pointer-types
-  PPX_CDirectSoundStream = {^}PX_CDirectSoundStream;
+  PX_CDirectSoundStream = X_CDirectSoundStream; // Dxbx note : Delphi's classes are already pointer-types
+  PPX_CDirectSoundStream = ^PX_CDirectSoundStream;
 
 
 // size of sound buffer cache (used for periodic sound buffer updates)
@@ -338,7 +338,7 @@ var g_pDSound8: XTL_LPDIRECTSOUND8 = NULL;
 var g_pDSound8RefCount: int = 0;
 var g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;
 var g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of PX_CDirectSoundStream;
-var g_bDSoundCreateCalled: Boolean = false;
+var g_bDSoundCreateCalled: Boolean = false; // Dxbx note : Boolean is simpler than Cxbx's int.
 
 function iif(const aValue: Boolean; const aTrue, aFalse: DirectSound.PDSBUFFERDESC): DirectSound.PDSBUFFERDESC; overload;
 begin
@@ -442,9 +442,7 @@ begin
     CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
   // release old buffer
-  while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do
-  begin
-  end;
+  while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do begin end;
 
   pThis.EmuBufferDesc.dwBufferBytes := dwBytes;
 
@@ -458,7 +456,6 @@ begin
   if (dwStatus and DSBSTATUS_PLAYING) > 0 then
     IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Play(0, 0, pThis.EmuPlayFlags);
 end;
-
 
 // resize an emulated directsound stream, if necessary
 procedure EmuResizeIDirectSoundStream8(pThis: PX_CDirectSoundStream; dwBytes: DWORD);
@@ -483,9 +480,7 @@ begin
     CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
   // release old buffer
-  while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do
-  begin
-  end;
+  while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do begin end;
 
   pThis.EmuBufferDesc.dwBufferBytes := dwBytes;
 
@@ -501,7 +496,8 @@ begin
 end;
 
 
-function XTL_EmuDirectSoundCreate(
+function XTL_EmuDirectSoundCreate
+(
     pguidDeviceId: LPVOID;
     ppDirectSound: XTL_PLPDIRECTSOUND8;
     pUnknown: LPUNKNOWN
@@ -565,7 +561,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirectSound8_AddRef(
+function XTL_EmuIDirectSound8_AddRef
+(
   pThis: XTL_LPDIRECTSOUND8
 ): ULONG; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -582,15 +579,15 @@ begin
       [pThis]);
 {$ENDIF}
 
-  uRet := g_pDSound8RefCount;
-  Inc(g_pDSound8RefCount);
+  uRet := g_pDSound8RefCount; Inc(g_pDSound8RefCount);
 
   EmuSwapFS(fsXbox);
 
   Result := uRet;
 end;
 
-function XTL_EmuIDirectSound8_Release(
+function XTL_EmuIDirectSound8_Release
+(
     pThis: XTL_LPDIRECTSOUND8
 ): ULONG; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -607,12 +604,11 @@ begin
       [pThis]);
 {$ENDIF}
 
-  uRet := g_pDSound8RefCount;
-  dec(g_pDSound8RefCount);
+  uRet := g_pDSound8RefCount; Dec(g_pDSound8RefCount);
 
   { temporarily (?) disabled by cxbx
   if (uRet = 1) then
-      pThis._Release();
+    pThis._Release();
   //}
 
   EmuSwapFS(fsXbox);
@@ -620,7 +616,8 @@ begin
   Result := uRet;
 end;
 
-function XTL_EmuCDirectSound_GetSpeakerConfig(
+function XTL_EmuCDirectSound_GetSpeakerConfig
+(
     pThis: PX_CDirectSound;
     pdwSpeakerConfig: PDWORD
 ): HRESULT; stdcall;
@@ -692,7 +689,8 @@ begin
   Result := S_OK;
 end;
 
-function XTL_EmuIDirectSound8_DownloadEffectsImage(
+function XTL_EmuIDirectSound8_DownloadEffectsImage
+(
     pThis: XTL_LPDIRECTSOUND8;
     pvImageBuffer: LPCVOID;
     dwImageSize: DWORD;
@@ -737,7 +735,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirectSound8_SetOrientation(
+function XTL_EmuIDirectSound8_SetOrientation
+(
     pThis: XTL_LPDIRECTSOUND8;
     xFront: FLOAT;
     yFront: FLOAT;
@@ -863,17 +862,19 @@ function XTL_EmuIDirectSound8_SetI3DL2Listener
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
+  begin
+    EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuIDirectSound8_SetI3DL2Listener' +
-     #13#10'(' +
-     #13#10'   pThis                     : 0x%.08X' +
-     #13#10'   pDummy                    : 0x%.08X' +
-     #13#10'   dwApply                   : 0x%.08X' +
-     #13#10');',
-     [pThis, pDummy, dwApply]);
+    DbgPrintf('EmuDSound : EmuIDirectSound8_SetI3DL2Listener' +
+       #13#10'(' +
+       #13#10'   pThis                     : 0x%.08X' +
+       #13#10'   pDummy                    : 0x%.08X' +
+       #13#10'   dwApply                   : 0x%.08X' +
+       #13#10');',
+       [pThis, pDummy, dwApply]);
 {$ENDIF}
-  EmuSwapFS(fsXbox);
+    EmuSwapFS(fsXbox);
+  end;
 {$ENDIF}
 
   // TODO -oCXBX: Actually do something
@@ -920,12 +921,14 @@ begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMixBins' +
         #13#10'(' +
         #13#10'   pThis                     : 0x%.08X' +
         #13#10'   pMixBins                  : 0x%.08X' +
         #13#10');',
         [pThis, pMixBins]);
+{$ENDIF}
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -945,12 +948,14 @@ begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSoundBuffer8_SetMixBinVolumes' +
         #13#10'(' +
         #13#10'   pThis                     : 0x%.08X' +
         #13#10'   pMixBins                  : 0x%.08X' +
         #13#10');',
         [pThis, pMixBins]);
+{$ENDIF}
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -972,6 +977,7 @@ begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSound8_SetPosition' +
         #13#10'(' +
         #13#10'   pThis                     : 0x%.08X' +
@@ -981,6 +987,7 @@ begin
         #13#10'   dwApply                   : 0x%.08X' +
         #13#10');',
         [pThis, x, y, z, dwApply]);
+{$ENDIF}
     EmuSwapFS(fsXbox);
   end;
   {$ENDIF}
@@ -1002,6 +1009,7 @@ begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSound8_SetVelocity' +
         #13#10'(' +
         #13#10'   pThis                     : 0x%.08X' +
@@ -1011,6 +1019,7 @@ begin
         #13#10'   dwApply                   : 0x%.08X' +
         #13#10');',
         [pThis, x, y, z, dwApply]);
+{$ENDIF}
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -1030,6 +1039,7 @@ begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
+{$IFDEF DEBUG}
     DbgPrintf('EmuDSound : EmuIDirectSound8_SetAllParameters' +
         #13#10'(' +
         #13#10'   pThis                     : 0x%.08X' +
@@ -1037,7 +1047,7 @@ begin
         #13#10'   dwApply                   : 0x%.08X' +
         #13#10');',
         [pThis, pTodo, dwApply]);
-
+{$ENDIF}
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -1082,9 +1092,10 @@ var
   pDSBufferDescSpecial: DirectSound.PDSBUFFERDESC;
   bIsSpecial: _bool;
   dwAcceptableMask: DWORD;
-  v: integer;
+  v: int;
 begin
   EmuSwapFS(fsWindows);
+  pDSBufferDescSpecial := nil; // Dxbx not : Prevent W1036 Variable might not have been initialized
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer' +
@@ -1097,7 +1108,7 @@ begin
 
   dwEmuFlags := 0;
 
-  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(sizeof(DSBUFFERDESC)));
   bIsSpecial := false;
 
   // convert from Xbox to PC DSound
@@ -1105,9 +1116,9 @@ begin
     dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000 or $00080000;
 
     if (pdsbd.dwFlags and (not dwAcceptableMask)) > 0 then
-      EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', [pdsbd.dwFlags and Not(dwAcceptableMask)]);
+      EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', [pdsbd.dwFlags and not(dwAcceptableMask)]);
 
-    pDSBufferDesc.dwSize := SizeOf(DirectSound.DSBUFFERDESC);
+    pDSBufferDesc.dwSize := sizeof(DirectSound.DSBUFFERDESC);
     pDSBufferDesc.dwFlags := (pdsbd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
     pDSBufferDesc.dwBufferBytes := pdsbd.dwBufferBytes;
 
@@ -1120,8 +1131,8 @@ begin
 
     if (pdsbd.lpwfxFormat <> NULL) then
     begin
-      pDSBufferDesc.lpwfxFormat := CxbxMalloc(SizeOf(WAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
-      memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, SizeOf(WAVEFORMATEX));
+      pDSBufferDesc.lpwfxFormat := CxbxMalloc(sizeof(WAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
+      memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, sizeof(WAVEFORMATEX));
 
       if (pDSBufferDesc.lpwfxFormat.wFormatTag = WAVE_FORMAT_XBOX_ADPCM) then
       begin
@@ -1208,7 +1219,7 @@ begin
   end;
 
   // TODO -oCXBX: Garbage Collection
-  New({var PX_CDirectSoundBuffer}ppBuffer^);
+  new({var PX_CDirectSoundBuffer}ppBuffer^);
 
   ppBuffer^.EmuDirectSoundBuffer8 := nil;
   ppBuffer^.EmuBuffer := nil;
@@ -1445,7 +1456,11 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_SetHeadroom( pThis: PX_CDirectSoundBuffer; dwHeadroom: DWORD ):HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_SetHeadroom
+( 
+    pThis: PX_CDirectSoundBuffer; 
+    dwHeadroom: DWORD
+):HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1466,7 +1481,12 @@ begin
   Result := S_OK;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_SetLoopRegion(pThis: PX_CDirectSoundBuffer; dwLoopStart: DWORD; dwLoopLength: DWORD) : HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_SetLoopRegion
+(
+    pThis: PX_CDirectSoundBuffer;
+    dwLoopStart: DWORD;
+     dwLoopLength: DWORD
+) : HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1491,7 +1511,10 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_Release(pThis: PX_CDirectSoundBuffer): ULONG; stdcall;
+function XTL_EmuIDirectSoundBuffer8_Release
+(
+    pThis: PX_CDirectSoundBuffer
+): ULONG; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   uRet: ULONG;
@@ -1563,7 +1586,11 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_GetStatus(pThis: PX_CDirectSoundBuffer; pdwStatus: LPDWORD) : HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_GetStatus
+(
+    pThis: PX_CDirectSoundBuffer;
+    pdwStatus: LPDWORD
+) : HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
@@ -1595,7 +1622,11 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_SetCurrentPosition(pThis: PX_CDirectSoundBuffer; dwNewPosition: DWORD): HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_SetCurrentPosition
+(
+    pThis: PX_CDirectSoundBuffer;
+    dwNewPosition: DWORD
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
@@ -1622,7 +1653,12 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_GetCurrentPosition(pThis: PX_CDirectSoundBuffer; pdwCurrentPlayCursor: PDWORD; pdwCurrentWriteCursor: PDWORD): HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_GetCurrentPosition
+(
+    pThis: PX_CDirectSoundBuffer;
+    pdwCurrentPlayCursor: PDWORD;
+    pdwCurrentWriteCursor: PDWORD
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
@@ -1660,7 +1696,13 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_Play(pThis: PX_CDirectSoundBuffer; dwReserved1: DWORD; dwReserved2: DWORD; dwFlags: DWORD): HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_Play
+(
+    pThis: PX_CDirectSoundBuffer;
+    dwReserved1: DWORD;
+    dwReserved2: DWORD;
+    dwFlags: DWORD
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
@@ -1707,7 +1749,7 @@ begin
 
   if (pThis.EmuFlags and DSB_FLAG_ADPCM) > 0 then
   begin
-    hRet := S_OK;
+    hRet := DS_OK; // Dxbx note : Cxbx uses D3D_OK here.
   end
   else
   begin
@@ -1721,7 +1763,10 @@ begin
   Result := hRet;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_Stop(pThis: PX_CDirectSoundBuffer): HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_Stop
+(
+    pThis: PX_CDirectSoundBuffer
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
@@ -1801,7 +1846,11 @@ begin
   Result := S_OK;
 end;
 
-function XTL_EmuIDirectSoundBuffer8_SetFrequency(pThis: PX_CDirectSoundBuffer; dwFrequency: DWORD): HRESULT; stdcall;
+function XTL_EmuIDirectSoundBuffer8_SetFrequency
+(
+    pThis: PX_CDirectSoundBuffer;
+    dwFrequency: DWORD
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1947,7 +1996,7 @@ begin
     begin
       if (g_pDSoundStreamCache[v] = nil) then
       begin
-        g_pDSoundStreamCache[v] := @ppStream;
+        g_pDSoundStreamCache[v] := ppStream^;
         break;
       end;
     end;
@@ -2105,7 +2154,7 @@ begin
 
       CxbxFree(pThis.EmuBufferDesc);
 
-      Dispose(pThis);
+      pThis.Free;
     end;
   end;
 
@@ -2116,8 +2165,8 @@ end;
 
 function XTL_EmuCDirectSoundStream_GetInfo
 (
-  pThis: PX_CDirectSoundStream;
-  pInfo: LPXMEDIAINFO
+    pThis: PX_CDirectSoundStream;
+    pInfo: LPXMEDIAINFO
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -2245,7 +2294,8 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush();',[pThis]);
+  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush();',
+            [pThis]);
 {$ENDIF}
 
   // TODO -oCXBX: Actually Flush
@@ -3161,7 +3211,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuIDirectSound_EnableHeadphones' +
       #13#10'(' +
-      #13#10'  pThis          : 0x%.08X' +
+      #13#10'   pThis           : 0x%.08X' +
       #13#10'   fEnabled        : 0x%.08X' +
       #13#10');',
       [pThis, fEnabled]);
@@ -3232,7 +3282,7 @@ begin
 {$ENDIF}
 
   // This function wasn't part of the XDK until 4721.
-  result := S_OK;
+  Result := S_OK;
 
   // Unstable!
   (*if (pThis <> NULL) then
@@ -3254,6 +3304,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+//MARKED OUT CXBX
 //// ******************************************************************
 //// * func: EmuIDirectSoundBuffer_Pause
 //// ******************************************************************
@@ -3668,6 +3719,8 @@ begin
 
   Result := 0; // TODO -oDXBX: Should we (and Cxbx) really return dwRet here?
 end;
+
+{.$MESSAGE 'PatrickvL reviewed up to here'}
 
 exports
   XTL_EmuIDirectSoundBuffer8_PlayEx,
