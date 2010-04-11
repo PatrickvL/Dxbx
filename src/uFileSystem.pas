@@ -27,36 +27,84 @@ uses
   uTypes;
 
 type
+  TFileHandle = class(TObject)
+  end;
+
+  TDirHandle = class(TFileHandle)
+  end;
+
+  TSearchInfo = class(TObject)
+  protected
+    function GetAttributes: Integer; virtual; abstract;
+    function GetFilename: string; virtual; abstract;
+    function GetFileSize: Int64; virtual; abstract;
+  public
+    property Filename: string read GetFilename;
+    property Attributes: Integer read GetAttributes;
+    property FileSize: Int64 read GetFileSize;
+  end;
+
+  // TFileSystem is the base-class for all file systems,
+  // introducing most of the shared functionality needed
+  // to access folders and files in the file system.
+  // Because most code in this is abstract, we instantiate
+  // a concrete TFileSystem sub-class when actually mounting
+  // a volume (see RLogicalVolume.Mount).
   TFileSystem = class(TObject)
   protected
+    FMountPoint: string;
+    MyRoot: TDirHandle;
+  public
+    function TypeStr: string; virtual; abstract;
+    property MountPoint: string read FMountPoint;
+    property Root: TDirHandle read MyRoot;
+  // TODO : Officially, everything below should be implemented thread-safe via a session!
+  protected
     FLastErrorString: string;
-    FSelectedFile: string;
+    FCurrentDir: TDirHandle;
     function Error(const aMessage: string): Boolean;
   public
     property LastErrorString: string read FLastErrorString;
-    property SelectedFile: string read FSelectedFile;
-    function Select(const aFilePath: string): Boolean;
+    property CurrentDir: TDirHandle read FCurrentDir;
+    function ChangeDir(const aPath: string): Boolean; virtual;
     function FileExists(const aFilePath: string): Boolean; virtual;
-    function Load(const aStream: TMemoryStream): Boolean; virtual;
 
-//    function FileCreate(): THandle; virtual;
-//    function FileSeek(): THandle; virtual;
-//    function FileRead(Handle: THandle): Integer; virtual;
-//    function FileWrite(Handle: THandle): Integer; virtual;
-//    function FileClose(): THandle; virtual;
+    // TODO : It's probably wise to keep a doubly linked list of all open files
+    // so we can quickly remove entries, and cleanup once the filesystem
+    // is closed while still having open handles!
+
+    function Open(const aFilePath: string): TFileHandle; virtual; abstract;
+    function Seek(const aFileHandle: TFileHandle; const Offset: Int64; const Origin: Integer): Int64; virtual; abstract;
+    function Read(const aFileHandle: TFileHandle; var Buffer; const Size: Int64): Int64; virtual; abstract;
+    function Close(const aFileHandle: TFileHandle): Boolean; virtual; abstract;
+
+    function FindFirst(const aFilePath: string = '\*'): TSearchInfo; virtual; abstract;
+    function FindNext(SearchInfo: TSearchInfo): Boolean; virtual; abstract;
+    procedure FindClose(SearchInfo: TSearchInfo); virtual; abstract;
+
+    // TODO : Add functions get and set current directory, get (and set?) folder and file attributes.
   end;
 
+  // Logical volume acts as a layer of seperation between the drive letter
+  // and the type of filesystem currently active behind this letter.
+  // The only real functionality in this type, is instantiating the correct
+  // TFileSystem sub-class when mounting a volume (currently based on extension).
   PLogicalVolume = ^RLogicalVolume;
   RLogicalVolume = record
   private
+    FLetter: Char;
     MyFileSystem: TFileSystem;
   public
+    property Letter: Char read FLetter;
     property FileSystem: TFileSystem read MyFileSystem;
     function IsMounted: Boolean;
     function Mount(aDevice: string): Boolean;
     procedure Unmount;
   end;
 
+  // Drives is the top-level in our emulated filesystem,
+  // offering an shared entry-point for all Xbox1 volumes
+  // and some minimal functionality.
   RDrives = record
   private
     MyC: PLogicalVolume;
@@ -72,7 +120,6 @@ type
     procedure Free;
 
     function GetVolume(const aLetter: Char): PLogicalVolume;
-    function Select(const aPath: string): Boolean;
 
     // Xbox1 can have these partitions :
     property C: PLogicalVolume read MyC;    // C: for system files
@@ -107,74 +154,216 @@ begin
 end;
 
 function TFileSystem.FileExists(const aFilePath: string): Boolean;
+var
+  FileHandle: TFileHandle;
 begin
-  Result := False;
-end;
-
-function TFileSystem.Select(const aFilePath: string): Boolean;
-begin
-  Result := (aFilePath <> '') and FileExists(aFilePath);
+  FileHandle := Open(aFilePath);
+  Result := Assigned(FileHandle);
   if Result then
-    FSelectedFile := aFilePath
-  else
-    FSelectedFile := '';
+    Close(FileHandle);
 end;
 
-function TFileSystem.Load(const aStream: TMemoryStream): Boolean;
+function TFileSystem.ChangeDir(const aPath: string): Boolean;
+var
+  PathPtr: PChar;
 begin
-  Result := False;
+  Result := True;
+  if aPath = '' then
+    Exit; // No dir given means: stay here
+
+  PathPtr := PChar(aPath);
+  case PathPtr^ of
+    '.':
+      // start at CurrentDir
+      if (aPath = '.') or (aPath = '.\') then
+        ;
+    '\':
+      if PathPtr[1] = '\' then
+        // TODO : Handle UNC paths
+      else
+        // Start at Root
+      ;
+    'a'..'z',
+    'A'..'Z':
+      // Path starts with a letter, check if it's a volume indicator :
+      if (PathPtr[1] = ':') then
+      begin
+        Result := Drives.GetVolume(PathPtr^).IsMounted;
+        if Result then
+          Result := Drives.GetVolume(PathPtr^).FileSystem.ChangeDir(string(PathPtr+2));
+
+        Exit;
+      end;
+  end;
+  // TODO : Finish this implementation
 end;
 
-{ TFolderFS }
+/// Mapped-folder support : --------------------------------------------------
 
 type
-  TFolderFS = class(TFileSystem)
-  public
-    RootFolder: string;
-    constructor Create(const aRootFolder, aSelectedFile: string);
-    destructor Destroy; override;
-
-    function FileExists(const aFilePath: string): Boolean; override;
-    function Load(const aStream: TMemoryStream): Boolean; override;
+  TMappedFileHandle = class(TFileHandle)
+    Handle: THandle;
   end;
 
-constructor TFolderFS.Create(const aRootFolder, aSelectedFile: string);
+  TMappedSearchInfo = class(TSearchInfo)
+  protected
+    SearchRec: TSearchRec;
+    function GetAttributes: Integer; override;
+    function GetFilename: string; override;
+    function GetFileSize: Int64; override;
+  end;
+
+  TMappedFolderFileSystem = class(TFileSystem)
+  public
+    constructor Create(const aRootFolder: string);
+    destructor Destroy; override;
+
+    function TypeStr: string; override;
+
+    function Open(const aFilePath: string): TFileHandle; override;
+    function Seek(const aFileHandle: TFileHandle; const Offset: Int64; const Origin: Integer): Int64; override;
+    function Read(const aFileHandle: TFileHandle; var Buffer; const Size: Int64): Int64; override;
+    function Close(const aFileHandle: TFileHandle): Boolean; override;
+
+    function FindFirst(const aFilePath: string = '\*'): TSearchInfo; override;
+    function FindNext(SearchInfo: TSearchInfo): Boolean; override;
+    procedure FindClose(SearchInfo: TSearchInfo); override;
+  end;
+
+{ TMappedFolderFileSystem }
+
+constructor TMappedFolderFileSystem.Create(const aRootFolder: string);
 begin
   inherited Create;
-  RootFolder := aRootFolder;
-  Select(aSelectedFile);
+  FMountPoint := aRootFolder;
 end;
 
-destructor TFolderFS.Destroy;
+destructor TMappedFolderFileSystem.Destroy;
 begin
   inherited Destroy;
 end;
 
-function TFolderFS.FileExists(const aFilePath: string): Boolean; // override
+function TMappedFolderFileSystem.TypeStr: string;
 begin
-  Result := SysUtils.FileExists(RootFolder + '\' + aFilePath);
+  Result := 'Virtual folder';
 end;
 
-function TFolderFS.Load(const aStream: TMemoryStream): Boolean;
+function TMappedFolderFileSystem.Open(const aFilePath: string): TFileHandle;
+var
+  f: THandle;
 begin
-  aStream.LoadFromFile(RootFolder + '\' + SelectedFile);
-  Result := aStream.Size > 0;
+  Result := nil;
+  f := FileOpen(MountPoint + '\' + aFilePath, fmOpenRead);
+  if f = THandle(-1) then
+  begin
+    // Handle GetLastError
+    Exit;
+  end;
+
+  Result := TMappedFileHandle.Create;
+  TMappedFileHandle(Result).Handle := f;
 end;
 
-{ TXDVDFS }
+function TMappedFolderFileSystem.Seek(const aFileHandle: TFileHandle; const Offset: Int64; const Origin: Integer): Int64;
+begin
+  Result := FileSeek(TMappedFileHandle(aFileHandle).Handle, Offset, Origin);
+end;
+
+function TMappedFolderFileSystem.Read(const aFileHandle: TFileHandle; var Buffer; const Size: Int64): Int64;
+begin
+  Result := FileRead(TMappedFileHandle(aFileHandle).Handle, Buffer, Size);
+end;
+
+function TMappedFolderFileSystem.Close(const aFileHandle: TFileHandle): Boolean;
+begin
+  Result := Assigned(aFileHandle);
+  if Result then
+  begin
+    FileClose(TMappedFileHandle(aFileHandle).Handle);
+    aFileHandle.Free;
+  end;
+end;
+
+function TMappedFolderFileSystem.FindFirst(const aFilePath: string = '\*'): TSearchInfo;
+begin
+  Result := TMappedSearchInfo.Create;
+  if SysUtils.FindFirst(MountPoint + '\' + aFilePath, faAnyFile, TMappedSearchInfo(Result).SearchRec) <> 0 then
+    FreeAndNil(Result);
+
+  // Skip '.' and '..' directory entries :
+  if (TMappedSearchInfo(Result).SearchRec.Name = '.')
+  or (TMappedSearchInfo(Result).SearchRec.Name = '..') then
+    if not FindNext(Result) then
+      FreeAndNil(Result);
+end;
+
+function TMappedFolderFileSystem.FindNext(SearchInfo: TSearchInfo): Boolean;
+begin
+  Result := SysUtils.FindNext(TMappedSearchInfo(SearchInfo).SearchRec) = 0;
+  if not Result then
+    Exit;
+
+  // Skip '.' and '..' directory entries :
+  if (TMappedSearchInfo(SearchInfo).SearchRec.Name = '.')
+  or (TMappedSearchInfo(SearchInfo).SearchRec.Name = '..') then
+    Result := FindNext(SearchInfo)
+end;
+
+procedure TMappedFolderFileSystem.FindClose(SearchInfo: TSearchInfo);
+begin
+  SearchInfo.Free;
+end;
+
+{ TMappedSearchInfo }
+
+function TMappedSearchInfo.GetAttributes: Integer;
+begin
+  Result := SearchRec.Attr;
+end;
+
+function TMappedSearchInfo.GetFilename: string;
+begin
+  Result := SearchRec.Name;
+end;
+
+function TMappedSearchInfo.GetFileSize: Int64;
+begin
+  Result := SearchRec.Size;
+end;
+
+/// XDVDFS support : ---------------------------------------------------------
 
 type
-  TXDVDFS = class(TFileSystem)
+  TXDVDFSFileHandle = class(TFileHandle)
+    MyFileRecord: FILE_RECORD;
+  end;
+
+  TXDVDFSSearchInfo = class(TSearchInfo)
+  protected
+    MySearchRecord: SEARCH_RECORD;
+    Mask: string;
+    function GetAttributes: Integer; override;
+    function GetFilename: string; override;
+    function GetFileSize: Int64; override;
+  end;
+
+  TXDVDFileSystem = class(TFileSystem)
   protected
     MyContainer: THandle;
     MySession: PXDVDFS_SESSION;
-    MySearchRecord: SEARCH_RECORD;
-    MyFileRecord: FILE_RECORD;
   public
-    constructor Create(const aContainer, aSelectedFile: string);
+    constructor Create(const aContainer: string);
     destructor Destroy; override;
-    function FileExists(const aFilePath: string): Boolean; override;
-    function Load(const aStream: TMemoryStream): Boolean; override;
+    function TypeStr: string; override;
+
+    function Open(const aFilePath: string): TFileHandle; override;
+    function Seek(const aFileHandle: TFileHandle; const Offset: Int64; const Origin: Integer): Int64; override;
+    function Read(const aFileHandle: TFileHandle; var Buffer; const Size: Int64): Int64; override;
+    function Close(const aFileHandle: TFileHandle): Boolean; override;
+
+    function FindFirst(const aFilePath: string = '\*'): TSearchInfo; override;
+    function FindNext(SearchInfo: TSearchInfo): Boolean; override;
+    procedure FindClose(SearchInfo: TSearchInfo); override;
   end;
 
 function TXDVDFS_ReadSectorsFunc(
@@ -188,18 +377,18 @@ begin
   Result := FileRead(THandle(Data), Buffer^, ReadSize * SECTOR_SIZE) > 0;
 end;
 
-constructor TXDVDFS.Create(const aContainer, aSelectedFile: string);
+constructor TXDVDFileSystem.Create(const aContainer: string);
 begin
   inherited Create;
-  MyContainer := FileOpen(aContainer, fmOpenRead);
+  FMountPoint := aContainer;
+  MyContainer := FileOpen(aContainer, fmOpenRead or fmShareDenyWrite);
   New(MySession);
   ZeroMemory(MySession, SizeOf(MySession^));
   if not XDVDFS_Mount(MySession, @TXDVDFS_ReadSectorsFunc, Pointer(MyContainer)) then
-;//    Error('Couldn''t mount image!');
-  Select(aSelectedFile);
+    Error('Couldn''t mount image!');
 end;
 
-destructor TXDVDFS.Destroy;
+destructor TXDVDFileSystem.Destroy;
 begin
   XDVDFS_UnMount(MySession);
   Dispose(MySession); MySession := nil;
@@ -207,21 +396,118 @@ begin
   inherited Destroy;
 end;
 
-function TXDVDFS.FileExists(const aFilePath: string): Boolean;
+function TXDVDFileSystem.TypeStr: string;
 begin
-  Result := XDVDFS_GetFileInfo(MySession, PAnsiChar(AnsiString(aFilePath)), @MySearchRecord) = XDVDFS_NO_ERROR;
+  Result := 'XDVDFS';
 end;
 
-function TXDVDFS.Load(const aStream: TMemoryStream): Boolean;
+function TXDVDFileSystem.Open(const aFilePath: string): TFileHandle;
+var
+  Session: PXDVDFS_SESSION;
+  FileRecord: PFILE_RECORD;
 begin
-  Result := XDVDFS_OpenFileEx(MySession, @MySearchRecord, @MyFileRecord) = XDVDFS_NO_ERROR;
-  if not Result then
+  Result := TXDVDFSFileHandle.Create;
+
+  Session := MySession;
+  FileRecord := @(TXDVDFSFileHandle(Result).MyFileRecord);
+
+  if XDVDFS_OpenFile(Session, PAnsiChar(AnsiString(aFilePath)), FileRecord) = XDVDFS_NO_ERROR then
     Exit;
 
-  aStream.Size := MyFileRecord.FileSize;
-  Result := XDVDFS_FileRead(MySession, @MyFileRecord, aStream.Memory, aStream.Size) = MyFileRecord.FileSize;
-  if not Result then
-    aStream.Size := 0;
+  FreeAndNil(Result);
+end;
+
+function TXDVDFileSystem.Seek(const aFileHandle: TFileHandle; const Offset: Int64; const Origin: Integer): Int64;
+var
+  Session: PXDVDFS_SESSION;
+  FileRecord: PFILE_RECORD;
+begin
+  Assert(aFileHandle is TXDVDFSFileHandle);
+
+  Session := MySession;
+  FileRecord := @(TXDVDFSFileHandle(aFileHandle).MyFileRecord);
+
+  if XDVDFS_FileSeek(Session, FileRecord, {Delta=}Offset, {SeekMode=}Origin) = XDVDFS_NO_ERROR then
+    Result := FileRecord.CurrentPosition
+  else
+    Result := -1; // TODO : Handle error
+end;
+
+function TXDVDFileSystem.Read(const aFileHandle: TFileHandle; var Buffer; const Size: Int64): Int64;
+var
+  Session: PXDVDFS_SESSION;
+  FileRecord: PFILE_RECORD;
+begin
+  Assert(aFileHandle is TXDVDFSFileHandle);
+
+  Session := MySession;
+  FileRecord := @(TXDVDFSFileHandle(aFileHandle).MyFileRecord);
+
+  Result := XDVDFS_FileRead(Session, FileRecord, PVoid(@Buffer), Size);
+end;
+
+function TXDVDFileSystem.Close(const aFileHandle: TFileHandle): Boolean;
+var
+  Session: PXDVDFS_SESSION;
+  FileRecord: PFILE_RECORD;
+begin
+  Assert(aFileHandle is TXDVDFSFileHandle);
+
+  Session := MySession;
+  FileRecord := @(TXDVDFSFileHandle(aFileHandle).MyFileRecord);
+
+  Result := XDVDFS_FileClose(Session, FileRecord) = XDVDFS_NO_ERROR;
+  aFileHandle.Free;
+end;
+
+function TXDVDFileSystem.FindFirst(const aFilePath: string = '\*'): TSearchInfo;
+var
+  Session: PXDVDFS_SESSION;
+  FilePath: AnsiString;
+begin
+  Session := MySession;
+
+  Result := TXDVDFSSearchInfo.Create;
+  if Pos('*', aFilePath) > 0 then
+  begin
+    FilePath := AnsiString(ExtractFilePath(aFilePath));
+    TXDVDFSSearchInfo(Result).Mask := ExtractFileName(aFilePath);
+  end
+  else
+    FilePath := AnsiString(aFilePath);
+
+  if XDVDFS_GetFileInfo(Session, PAnsiChar(FilePath), @(TXDVDFSSearchInfo(Result).MySearchRecord)) = XDVDFS_NO_ERROR then
+  begin
+    // Skip root dir :
+    if TXDVDFSSearchInfo(Result).MySearchRecord.Position = 0 then
+    begin
+      if not FindNext(Result) then
+      begin
+        FreeAndNil(Result);
+        Exit;
+      end;
+    end;
+
+    // TODO : Check mask
+    Exit;
+  end;
+
+  FreeAndNil(Result);
+end;
+
+function TXDVDFileSystem.FindNext(SearchInfo: TSearchInfo): Boolean;
+var
+  Session: PXDVDFS_SESSION;
+begin
+  Session := MySession;
+
+  Result := XDVDFS_EnumFiles(Session, @(TXDVDFSSearchInfo(SearchInfo).MySearchRecord)) = XDVDFS_NO_ERROR;
+  // TODO : Check mask
+end;
+
+procedure TXDVDFileSystem.FindClose(SearchInfo: TSearchInfo);
+begin
+  SearchInfo.Free;
 end;
 
 { RLogicalVolume }
@@ -233,41 +519,32 @@ end;
 
 function RLogicalVolume.Mount(aDevice: string): Boolean;
 var
+  DeviceAttr: Integer;
   ExtStr: string;
-  Parent: string;
 begin
   Unmount;
 
+  // Determine full path and attributes for that :
   aDevice := ExpandFileName(aDevice);
-  Parent := ExtractFilePath(aDevice);
-  if FileExists(aDevice) then
+  DeviceAttr := GetFileAttributes(PChar(aDevice));
+
+  if DeviceAttr and FILE_ATTRIBUTE_DIRECTORY > 0 then
   begin
-    // Existing file, what format is it?
-    ExtStr := LowerCase(ExtractFileExt(aDevice));
-    if ExtStr = '.xbe' then
-      MyFileSystem := TFolderFS.Create(Parent, ExtractFileName(aDevice))
-    else
-    if ExtStr = '.iso' then
-      MyFileSystem := TXDVDFS.Create(aDevice, '');
+    // Opening folder - map it :
+    MyFileSystem := TMappedFolderFileSystem.Create(aDevice);
   end
   else
-  // No existing file, is it a container perhaps?
-  if FileExists(Parent) then
+  if DeviceAttr and (FILE_ATTRIBUTE_ARCHIVE or FILE_ATTRIBUTE_NORMAL) > 0 then
   begin
-    // Existing container, what format is it?
-    ExtStr := LowerCase(ExtractFileExt(Parent));
+    // Opening file, what format is it?
+    ExtStr := LowerCase(ExtractFileExt(aDevice));
     if ExtStr = '.iso' then
-      MyFileSystem := TXDVDFS.Create(Parent, ExtractFileName(aDevice));
+      MyFileSystem := TXDVDFileSystem.Create(aDevice);
+    // TODO : Add more types here, like .zip perhaps?
   end;
 
+  // Indicate succes/failure :
   Result := Assigned(MyFileSystem);
-  if (Result = False)
-  or (MyFileSystem.SelectedFile <> '') then
-    Exit;
-
-  // Select default.xbe (or any other xbe if not present) :
-  if not MyFileSystem.Select('default.xbe') then
-    MyFileSystem.Select('*.xbe'); //TODO -oDXBX: Support wildcards in Select method
 end;
 
 procedure RLogicalVolume.Unmount;
@@ -279,26 +556,26 @@ end;
 
 procedure RDrives.Create;
 begin
-  New(MyC);
-  New(MyD);
-  New(MyE);
-  New(MyT);
-  New(MyU);
-  New(MyX);
-  New(MyY);
-  New(MyZ);
+  New(MyC); MyC^.FLetter := 'C';
+  New(MyD); MyD^.FLetter := 'D';
+  New(MyE); MyE^.FLetter := 'E';
+  New(MyT); MyT^.FLetter := 'T';
+  New(MyU); MyU^.FLetter := 'U';
+  New(MyX); MyX^.FLetter := 'X';
+  New(MyY); MyY^.FLetter := 'Y';
+  New(MyZ); MyZ^.FLetter := 'Z';
 end;
 
 procedure RDrives.Free;
 begin
-  Dispose(MyC);
-  Dispose(MyD);
-  Dispose(MyE);
-  Dispose(MyT);
-  Dispose(MyU);
-  Dispose(MyX);
-  Dispose(MyY);
-  Dispose(MyZ);
+  MyC.Unmount; Dispose(MyC);
+  MyD.Unmount; Dispose(MyD);
+  MyE.Unmount; Dispose(MyE);
+  MyT.Unmount; Dispose(MyT);
+  MyU.Unmount; Dispose(MyU);
+  MyX.Unmount; Dispose(MyX);
+  MyY.Unmount; Dispose(MyY);
+  MyZ.Unmount; Dispose(MyZ);
 end;
 
 function RDrives.GetVolume(const aLetter: Char): PLogicalVolume;
@@ -317,22 +594,21 @@ begin
   end;
 end;
 
-function RDrives.Select(const aPath: string): Boolean;
-var
-  PathPtr: PChar;
-  Drive: PLogicalVolume;
+{ TXDVDFSSearchInfo }
+
+function TXDVDFSSearchInfo.GetAttributes: Integer;
 begin
-  Result := False;
-  PathPtr := PChar(aPath);
-  if Copy(aPath, 1, 4) = '\??\' then
-    Inc(PathPtr, 4);
+  Result := MySearchRecord.Attributes;
+end;
 
-  if PathPtr[1] <> ':' then
-    Exit;
+function TXDVDFSSearchInfo.GetFilename: string;
+begin
+  Result := string(AnsiString(MySearchRecord.Filename));
+end;
 
-  Drive := GetVolume(PathPtr[0]);
-  if Assigned(Drive) and Drive.IsMounted then
-    Result := Drive.FileSystem.Select(PathPtr+2);
+function TXDVDFSSearchInfo.GetFileSize: Int64;
+begin
+  Result := MySearchRecord.FileSize;
 end;
 
 initialization

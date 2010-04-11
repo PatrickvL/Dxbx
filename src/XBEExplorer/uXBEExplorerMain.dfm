@@ -71,6 +71,13 @@ object FormXBEExplorer: TFormXBEExplorer
         Action = actExit
       end
     end
+    object Extra1: TMenuItem
+      Caption = 'Extra'
+      object ExploreFileSystem1: TMenuItem
+        Caption = 'Explore Filesystem...'
+        OnClick = ExploreFileSystem1Click
+      end
+    end
     object Help1: TMenuItem
       Caption = 'Help'
       object About1: TMenuItem
