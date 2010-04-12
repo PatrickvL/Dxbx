@@ -97,9 +97,12 @@ type
   public
     property Letter: Char read FLetter;
     property FileSystem: TFileSystem read MyFileSystem;
+
     function IsMounted: Boolean;
-    function Mount(aDevice: string): Boolean;
     procedure Unmount;
+    function Mount(aDevice: string): Boolean;
+
+    function OpenImage(const aFileName: string; out aRelativeXBEFilePath: string): Boolean;
   end;
 
   // Drives is the top-level in our emulated filesystem,
@@ -517,6 +520,11 @@ begin
   Result := Assigned(MyFileSystem);
 end;
 
+procedure RLogicalVolume.Unmount;
+begin
+  FreeAndNil(MyFileSystem);
+end;
+
 function RLogicalVolume.Mount(aDevice: string): Boolean;
 var
   DeviceAttr: Integer;
@@ -524,32 +532,62 @@ var
 begin
   Unmount;
 
-  // Determine full path and attributes for that :
+  // Determine full path and attributes for the supplied image :
   aDevice := ExpandFileName(aDevice);
   DeviceAttr := GetFileAttributes(PChar(aDevice));
 
-  if DeviceAttr and FILE_ATTRIBUTE_DIRECTORY > 0 then
+  if (DeviceAttr and FILE_ATTRIBUTE_DIRECTORY) > 0 then
   begin
-    // Opening folder - map it :
+    // Opening a folder - create a mapping for it :
     MyFileSystem := TMappedFolderFileSystem.Create(aDevice);
   end
   else
-  if DeviceAttr and (FILE_ATTRIBUTE_ARCHIVE or FILE_ATTRIBUTE_NORMAL) > 0 then
+  if (DeviceAttr and (FILE_ATTRIBUTE_ARCHIVE or FILE_ATTRIBUTE_NORMAL)) > 0 then
   begin
-    // Opening file, what format is it?
+    // Opening a file, what format is it?
     ExtStr := LowerCase(ExtractFileExt(aDevice));
     if ExtStr = '.iso' then
+    begin
+      // TODO : Check validity of ISO
       MyFileSystem := TXDVDFileSystem.Create(aDevice);
-    // TODO : Add more types here, like .zip perhaps?
+    end;
+    // TODO : Add more archive formats here, like .bin/.cue/.zip perhaps?
   end;
 
   // Indicate succes/failure :
   Result := Assigned(MyFileSystem);
 end;
 
-procedure RLogicalVolume.Unmount;
+function RLogicalVolume.OpenImage(const aFileName: string; out aRelativeXBEFilePath: string): Boolean;
+var
+  Folder: string;
 begin
-  FreeAndNil(MyFileSystem);
+  Unmount;
+
+  // Split given filename in folder & filename :
+  Folder := ExpandFileName(aFileName);
+  aRelativeXBEFilePath := '';
+
+  // Walk path until we can mount the volume :
+  while Folder <> '' do
+  begin
+    if Mount(Folder) then
+      Break;
+
+    if aRelativeXBEFilePath <> '' then
+      aRelativeXBEFilePath := '\' + aRelativeXBEFilePath;
+
+    aRelativeXBEFilePath := ExtractFileName(Folder) + aRelativeXBEFilePath;
+    Folder := ExtractFilePath(Folder);
+  end;
+
+  if aRelativeXBEFilePath = '' then
+  begin
+    aRelativeXBEFilePath := 'default.xbe';
+    // TODO : Search for other .xbe when 'default.xbe' is not available
+  end;
+
+  Result := IsMounted;
 end;
 
 { RDrives }
