@@ -494,7 +494,8 @@ function xboxkrnl_IoCreateSymbolicLink
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
 ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+
 begin
   EmuSwapFS(fsWindows);
 
@@ -531,7 +532,7 @@ function xboxkrnl_IoDeleteSymbolicLink
 (
   SymbolicLinkName: PSTRING
 ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

@@ -45,7 +45,7 @@ var
   g_XBController: XBController;
 
 function XTL_EmuDInputInit: _bool; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   g_EmuShared.GetXBController(@g_XBController);
 
@@ -53,21 +53,21 @@ begin
 
   if Assigned(g_XBController.GetError()) then
   begin
-    Result := False;
+    Result := false;
     Exit;
   end;
 
-  Result := True;
+  Result := true;
 end;
 
 procedure XTL_EmuDInputCleanup; stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   g_XBController.ListenEnd();
 end;
 
 procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   g_XBController.ListenPoll(Controller);
   if Assigned(g_XBController.GetError()) then
