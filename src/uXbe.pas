@@ -442,67 +442,49 @@ end; // TXbe.ConstructorInit
 //------------------------------------------------------------------------------
 
 class function TXbe.FileExists(aFileName: string): Boolean;
+var
+  DummyStr: string;
 begin
-  Result := Drives.D.Mount(aFileName)
+  Result := Drives.D.OpenImage(aFileName, {out}DummyStr)
 //        and SameText(ExtractFileExt(Drives.D.FileSystem.SelectedFile), '.xbe');;
 end;
 
 constructor TXbe.Create(const aFileName: string);
 var
-  sFileType: string;
-  Folder: string;
   FileName: string;
   FileHandle: TFileHandle;
-
+  sFileType: string;
   ExSize: LongInt;
   lIndex, lIndex2: DWord;
   RawSize, RawAddr: DWord;
   I: DWord;
+  Drive: PLogicalVolume;
 begin
-  sFileType := ExtractFileExt(aFileName);
-
   ConstructorInit();
 
-  MyFile := TMemoryStream.Create;
-
-  // Split given filename in folder & filename :
-  Folder := ExpandFileName(aFileName);
-  FileName := '';
-
-  // Walk path until we can mount the volume :
-  while Folder <> '' do
-  begin
-    if Drives.D.Mount(Folder) then
-      Break;
-
-    if FileName <> '' then
-      FileName := '\' + FileName;
-
-    FileName := ExtractFileName(Folder) + FileName;
-    Folder := ExtractFilePath(Folder);
-  end;
-
-  if not Drives.D.IsMounted then
+  Drive := Drives.D;
+  if not Drive.OpenImage(aFileName, {out}FileName) then
   begin
     MessageDlg(DxbxFormat('Could not open path : %s', [aFileName]), mtError, [mbOk], 0);
     Exit;
   end;
 
-  if FileName = '' then
-    FileName := 'default.xbe';
+  MyFile := TMemoryStream.Create;
 
-  FileHandle := Drives.D.FileSystem.Open(FileName);
+  FileHandle := Drive.FileSystem.Open(FileName);
   try
-    MyFile.Size := Drives.D.FileSystem.Seek(FileHandle, 0, soFromEnd);
-    Drives.D.FileSystem.Seek(FileHandle, 0, soFromBeginning);
-    Drives.D.FileSystem.Read(FileHandle, MyFile.Memory^, MyFile.Size);
+    MyFile.Size := Drive.FileSystem.Seek(FileHandle, 0, soFromEnd);
+    Drive.FileSystem.Seek(FileHandle, 0, soFromBeginning);
+    Drive.FileSystem.Read(FileHandle, MyFile.Memory^, MyFile.Size);
   finally
-    Drives.D.FileSystem.Close(FileHandle);
+    Drive.FileSystem.Close(FileHandle);
   end;
 
   FRawData := MyFile.Memory;
 
   // verify xbe file was opened
+  sFileType := ExtractFileExt(aFileName);
+
   if MyFile.Size = 0 then
   begin
     MessageDlg(DxbxFormat('Could not open %s file', [sFileType]), mtError, [mbOk], 0);
