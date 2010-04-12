@@ -1079,12 +1079,14 @@ begin
 end; // DetermineFinalFunctionAndSymbolLocations
 
 function CacheFileName(const pXbeHeader: PXBE_HEADER): string;
-var
-  Key: Integer;
 begin
   CRC32Init();
-  DWord(Key) := CRC32(PByte(pXbeHeader), {Len=}pXbeHeader.dwSizeofHeaders);
-  Result := SymbolCacheFolder + IntToHex(Key, 8) + SymbolCacheFileExt;
+  Result := SymbolCacheFolder
+          // TitleID
+          + IntToHex(PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr).dwTitleId, 8)
+          // + CRC32 over XbeHeader :
+          + '_' + IntToHex(CRC32(PByte(pXbeHeader), {Len=}pXbeHeader.dwSizeofHeaders), 8)
+          + SymbolCacheFileExt;
 end;
 
 function TDetectedSymbols.LoadFromCache(const aCacheFile: string): Boolean;
