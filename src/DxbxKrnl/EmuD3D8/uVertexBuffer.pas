@@ -1290,7 +1290,7 @@ begin
 end;
 
 function XTL_VertexPatcher.Restore(): _bool;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   uiStream: UINT;
 begin
@@ -1550,7 +1550,7 @@ begin
 end;
 
 procedure XTL_EmuUpdateActiveTexture(); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   Stage: int;
   pTexture: PX_D3DResource;

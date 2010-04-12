@@ -193,8 +193,8 @@ function xboxkrnl_RtlLeaveCriticalSectionAndRegion(
   CriticalSection: PRTL_CRITICAL_SECTION
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlLowerChar(
-  Character: ANSICHAR
-  ): ANSICHAR; stdcall;
+  Character: _CHAR
+  ): _CHAR; stdcall;
 procedure xboxkrnl_RtlMapGenericMask(
   AccessMask: PACCESS_MASK;
   GenericMapping: PGENERIC_MAPPING
@@ -511,9 +511,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure xboxkrnl_RtlEnterCriticalSection(
+procedure xboxkrnl_RtlEnterCriticalSection
+(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ); stdcall;
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -551,16 +552,17 @@ begin
 
   JwaNative.RtlEnterCriticalSection(CriticalSection);
   Result := 0; // TODO -oDxbx : What should we return here?
-  
+
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlEqualString(
+function xboxkrnl_RtlEqualString
+(
   String1: PSTRING;
   String2: PSTRING;
   CaseInsensitive: BOOLEAN
-  ): BOOLEAN; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
+): BOOLEAN; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -681,11 +683,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure xboxkrnl_RtlInitAnsiString(
+procedure xboxkrnl_RtlInitAnsiString
+(
   DestinationString: PANSI_STRING; // OUT
   SourceString: PCSZ
-  ); stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -715,10 +718,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure xboxkrnl_RtlInitializeCriticalSection(
+procedure xboxkrnl_RtlInitializeCriticalSection
+(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ); stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:100
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -761,10 +765,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure xboxkrnl_RtlLeaveCriticalSection(
+procedure xboxkrnl_RtlLeaveCriticalSection
+(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+); stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   JwaNative.RtlLeaveCriticalSection(CriticalSection);
@@ -781,8 +786,8 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlLowerChar(Character: ANSICHAR): ANSICHAR; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+function xboxkrnl_RtlLowerChar(Character: _CHAR): _CHAR; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -834,10 +839,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlNtStatusToDosError(
+function xboxkrnl_RtlNtStatusToDosError
+(
   Status: NTSTATUS
-  ): ULONG; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+): ULONG; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -874,10 +880,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlTimeFieldsToTime(
+function xboxkrnl_RtlTimeFieldsToTime
+(
   TimeFields: PTIME_FIELDS;
   Time: PLARGE_INTEGER // OUT
-  ): LONGBOOL; stdcall;
+): LONGBOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -915,7 +922,7 @@ begin
 {$ENDIF}
 
   JwaNative.RtlTimeToTimeFields(Time, TimeFields);
-  
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -950,11 +957,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUnicodeStringToAnsiString(
+function xboxkrnl_RtlUnicodeStringToAnsiString
+(
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
   AllocateDestinationString: BOOLEAN
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);

@@ -39,8 +39,7 @@ uses
   uEmuD3D8Types,
   uFileSystem; // Drives
 
-type
-  _XBE_HEADER = packed record
+type _XBE_HEADER = packed record
     dwMagic: array [0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
     pbDigitalSignature: array [0..255] of Byte; // 0x0004 - digital signature
     dwBaseAddr: DWord; // 0x0104 - base address
@@ -114,8 +113,8 @@ type
   TSectionList = XBE_SECTIONLIST;
   PSectionList = PXBE_SECTIONLIST;
 
-  // Source:Cxbx  Branch:martin?  Translator:PatrickvL  Done:100
-  _XBE_SECTIONHEADER = packed record
+type _XBE_SECTIONHEADER = packed record
+  // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwFlags: array [0..3] of Byte;
     dwVirtualAddr: DWord; // virtual address
     dwVirtualSize: DWord; // virtual size

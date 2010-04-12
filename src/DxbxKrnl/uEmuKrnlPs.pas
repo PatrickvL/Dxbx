@@ -102,9 +102,12 @@ type PCSTProxyParam = packed record
 //pragma warning(push)
 //pragma warning(disable: 4731)  // disable ebp modification warning
 
-// Note : The signature of this function should conform to System.TThreadFunc !
-function PCSTProxy(Parameter: PPCSTProxyParam): Integer;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Dxbx Note : The signature of this function should conform to System.TThreadFunc !
+function PCSTProxy
+(
+    Parameter: PPCSTProxyParam
+): Integer;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 label
   callComplete;
 var
@@ -343,7 +346,7 @@ function {255} xboxkrnl_PsCreateSystemThreadEx
   DebugStack: BOOLEAN;
   StartRoutine: PKSTART_ROUTINE
 ): NTSTATUS; stdcall;
-// Source:Cxbx/XBMC  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Source:Cxbx/XBMC  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwThreadId: DWORD;
   hDupHandle: Handle;
@@ -432,7 +435,7 @@ end;
 //
 // Differences from NT: None.
 procedure {258} xboxkrnl_PsTerminateSystemThread({IN}ExitStatus: NTSTATUS); stdcall;
-// Source:XBMC  Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: int;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
