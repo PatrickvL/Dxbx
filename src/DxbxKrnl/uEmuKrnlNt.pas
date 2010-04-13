@@ -891,7 +891,7 @@ function xboxkrnl_NtFreeVirtualMemory
   FreeSize: PULONG; // OUT
   FreeType: ULONG
   ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -952,7 +952,7 @@ function xboxkrnl_NtOpenFile
   ShareAccess: ULONG; // dtACCESS_MASK;
   OpenOptions: ULONG // dtCreateOptions
 ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
@@ -1154,7 +1154,7 @@ function xboxkrnl_NtQueryFullAttributesFile
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
   szBuffer: PAnsiChar;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
@@ -1185,6 +1185,9 @@ begin
 
   Result := NtQueryFullAttributesFile(@NtObjAttr, Attributes);
 
+  if(FAILED(Result))then
+    EmuWarning('NtQueryFullAttributesFile failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1196,7 +1199,7 @@ function xboxkrnl_NtQueryInformationFile
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -1212,6 +1215,9 @@ begin
      [FileHandle, IoStatusBlock, FileInformation,
       Length, Ord(FileInfo)]);
 {$ENDIF}
+
+  // TODO -oCxbx: IIRC, this function is depreciated.  Maybe we should just use
+  // ZwQueryInformationFile instead?
 
 // Cxbx commented this out :
 //  if (FileInfo <> FilePositionInformation) and (FileInfo <> FileNetworkOpenInformation) then
@@ -1249,7 +1255,7 @@ begin
   end;
 
   if (FAILED(Result)) then
-    EmuWarning('NtQueryInformationFile failed!');
+    EmuWarning('NtQueryInformationFile failed! (0x%.08X)', [Result]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1341,7 +1347,7 @@ function xboxkrnl_NtQueryVolumeInformationFile
   Length: ULONG;
   FileInformationClass: FS_INFORMATION_CLASS
 ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:80
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
   SizeInfo: PFILE_FS_SIZE_INFORMATION;
@@ -1637,7 +1643,7 @@ function xboxkrnl_NtSuspendThread
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT OPTIONAL
 ): NTSTATUS; stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
 begin
@@ -1890,7 +1896,7 @@ begin
 end;
 
 procedure xboxkrnl_NtYieldExecution(); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 

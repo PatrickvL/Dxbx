@@ -51,6 +51,7 @@ function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; inline;
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
+function EmuXB2PC_D3DSTENCILOP(Value: X_D3DSTENCILOP): D3DSTENCILOP; inline;
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
@@ -99,7 +100,7 @@ const
 // render state conversion table
 
 CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
-  // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+  // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have
     // the correct lookup values;
@@ -107,12 +108,12 @@ CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 2
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 4
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 6
-    X_D3DRSSE_UNK,  $0004037c,     // 8  - D3DRS_SHADEMODE
+    X_D3DRSSE_UNK,  $0004037c,     // 8  - , D3DRS_SHADEMODE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 10
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 12
     $0004035c,     $00040300,     // 14 - D3DRS_ZWRITEENABLE, D3DRS_ALPHATESTENABLE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 16
-    X_D3DRSSE_UNK,  $00040344,     // 18
+    X_D3DRSSE_UNK,  $00040344,     // 18 - , D3DRS_SRCBLEND
     $00040348,     X_D3DRSSE_UNK,  // 20 - D3DRS_DESTBLEND
     X_D3DRSSE_UNK,  $00040354,     // 22 - , D3DRS_ZFUNC
     $00040340,     $0004033c,     // 24 - D3DRS_ALPHAREF, D3DRS_ALPHAFUNC
@@ -130,9 +131,9 @@ CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWord = (
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 48
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 50
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 52
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 54
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 56
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 58
+    $00040374,      $00040378,      // 54 - D3DRS_STENCILZFAIL, D3DRS_STENCILPASS
+    $00040364,      $00040368,      // 56 - D3DRS_STENCILFUNC, D3DRS_STENCILREF
+    $0004036c,      $00040360,      // 58 - D3DRS_STENCILMASK, D3DRS_STENCILWRITEMASK
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 60
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 62
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 64
@@ -573,6 +574,34 @@ function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := D3DSHADEMODE((Value and $3) + 1);
+end;
+
+// convert from xbox to pc stencilop modes
+function EmuXB2PC_D3DSTENCILOP(Value: X_D3DSTENCILOP): D3DSTENCILOP; inline;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+begin
+  case(Value)of
+    $1e00:
+      Result := D3DSTENCILOP_KEEP;
+    0:
+      Result := D3DSTENCILOP_ZERO;
+    $1e01:
+      Result := D3DSTENCILOP_REPLACE;
+    $1e02:
+      Result := D3DSTENCILOP_INCRSAT;
+    $1e03:
+      Result := D3DSTENCILOP_DECRSAT;
+    $150a:
+      Result := D3DSTENCILOP_INVERT;
+    $8507:
+      Result := D3DSTENCILOP_INCR;
+    $8508:
+      Result := D3DSTENCILOP_DECR;
+
+  else //default:
+    CxbxKrnlCleanup('Unknown D3DSTENCILOP (0x%.08X)', [Value]);
+    Result := D3DSTENCILOP(Value);
+  end;
 end;
 
 // convert from vertex count to primitive count (Xbox)
