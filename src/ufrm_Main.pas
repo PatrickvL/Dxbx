@@ -309,7 +309,7 @@ procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
 begin
-  EmuShared.Init;
+  PEmuShared(nil).Init;
 
   Emulation_State := esNone;
 
@@ -608,7 +608,7 @@ begin
   frm_Main.WindowProc := OldLBWindowProc;
   WriteSettingsIni;
 
-  EmuShared.Cleanup;
+  PEmuShared(nil).Cleanup;
 
   inherited Destroy;
 end; // Tfrm_Main.Create

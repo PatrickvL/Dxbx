@@ -45,24 +45,18 @@ uses
 const
   CXBX_MAX_PATH = 260;
 
-type EmuShared = packed record
-    m_Mutex: Mutex;
-    // Shared configuration
-    m_XBController: XBController;
-    m_XBVideo: XBVideo;
-    m_XbePath: array [0..CXBX_MAX_PATH - 1] of _char;
-
-    // Each process needs to call this to initialize shared memory
-    class function Init: Boolean; static;
-    // Each process needs to call this to cleanup shared memory
-    class procedure Cleanup; static;
+type EmuShared = object(Mutex)
+  public
     // Constructor / Deconstructor
     procedure Create;
     procedure Destroy;
     procedure DestroyNoFree;
 
-    procedure Lock();
-    procedure Unlock();
+    // Each process needs to call this to initialize shared memory
+    class function Init(): Boolean;
+
+    // Each process needs to call this to cleanup shared memory
+    class procedure Cleanup();
 
     // Xbox Video Accessors
     procedure GetXBVideo(video: PXBVideo);
@@ -75,15 +69,21 @@ type EmuShared = packed record
     // Xbe Path Accessors
     procedure GetXbePath(var Path: string);
     procedure SetXbePath(const Path: AnsiString);
+  private
+    // Shared configuration
+    m_XBController: XBController;
+    m_XBVideo: XBVideo;
+    m_XbePath: array [0..CXBX_MAX_PATH - 1] of _char;
   end;
   PEmuShared = ^EmuShared;
 
 procedure SetXbePath(const Path: PAnsiChar); stdcall;
 
-var hMapObject: Handle;
 // Exported Global Shared Memory Pointer
-var g_EmuShared: PEmuShared;
-var g_EmuSharedRefCount: Integer; // extern; ??
+var g_EmuShared: PEmuShared = NULL;
+var g_EmuSharedRefCount: int = 0; // extern; ??
+
+var hMapObject: Handle = 0{NULL};
 
 implementation
 
@@ -96,14 +96,15 @@ end;
 
 { EmuShared }
 
-class function EmuShared.Init: Boolean;
+class function EmuShared.Init(): Boolean;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   // Ensure initialization only occurs once
-  Result := True;
+  init := true;
   WriteLog('EmuShared.Init');
 
   // Prevent multiple initializations
-  if hMapObject <> 0 then
+  if hMapObject <> 0{NULL} then
     Exit;
 
 {$IFDEF DXBX_USE_JCLDEBUG}
@@ -113,17 +114,20 @@ begin
 
   // Create the shared memory "file"
   begin
-    hMapObject := CreateFileMapping(
+    hMapObject := CreateFileMapping
+    (
       INVALID_HANDLE_VALUE, // Paging file
-      nil, // default security attributes
+      NULL, // default security attributes
       PAGE_READWRITE, // read/write access
       0, // size: high 32 bits
-      SizeOf(EmuShared), // size: low 32 bits
+      sizeof(EmuShared), // size: low 32 bits
       'Local\EmuShared' // name of map object
       );
 
-    if GetLastError() = ERROR_ALREADY_EXISTS then
-      Result := False;
+    // Dxbx note : Cxbx does this after the hMapObject test, 
+    // but that could disturb GetLastError(), so check it here :
+    if(GetLastError() = ERROR_ALREADY_EXISTS) then
+      init := false;
 
     if hMapObject = 0 then
       CxbxKrnlCleanup('Could not map shared memory!');
@@ -131,7 +135,8 @@ begin
 
   // Memory map this file
   begin
-    g_EmuShared := PEmuShared(MapViewOfFile(
+    g_EmuShared := PEmuShared(MapViewOfFile
+    (
       hMapObject, // object to map view of
       FILE_MAP_WRITE, // read/write access
       0, // high offset:  map from
@@ -139,12 +144,12 @@ begin
       0 // default: map entire file
       ));
 
-    if not Assigned(g_EmuShared) then
+    if (g_EmuShared = NULL) then
       CxbxKrnlCleanup('Could not map view of shared memory!');
   end;
 
   // Executed only on first initialization of shared memory
-  if Result then
+  if(init) then
   begin
     ZeroMemory(g_EmuShared, SizeOf(EmuShared)); // clear memory
     g_EmuShared.Create; // call constructor
@@ -153,12 +158,13 @@ begin
   Inc(g_EmuSharedRefCount);
 end;
 
-class procedure EmuShared.Cleanup;
+class procedure EmuShared.Cleanup();
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   WriteLog('EmuShared.Cleanup');
   Dec(g_EmuSharedRefCount);
 
-  if g_EmuSharedRefCount = 0 then
+  if(g_EmuSharedRefCount = 0) then
   begin
     g_EmuShared.DestroyNoFree;
 
@@ -174,13 +180,15 @@ begin
 end;
 
 procedure EmuShared.Create;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
-  m_Mutex.Create;
+  inherited {m_Mutex.}Create;
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
 end;
 
 procedure EmuShared.DestroyNoFree;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   m_XBController.Save(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Save(PAnsiChar('Software\Dxbx\XBVideo'));
@@ -191,22 +199,10 @@ begin
   DestroyNoFree;
 end;
 
-procedure EmuShared.Lock();
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-begin
-  m_Mutex.Lock();
-end;
-
-procedure EmuShared.Unlock();
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-begin
-  m_Mutex.Unlock();
-end;
-
 // Xbox Video Accessors
 
 procedure EmuShared.GetXBVideo(video: PXBVideo);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Lock();
   video^ := {shared}m_XBVideo;
@@ -214,7 +210,7 @@ begin
 end;
 
 procedure EmuShared.SetXBVideo(const video: PXBVideo);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Lock();
   {shared}m_XBVideo := video^;
@@ -224,7 +220,7 @@ end;
 // Xbox Controller Accessors
 
 procedure EmuShared.GetXBController(ctrl: PXBController);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Lock();
   ctrl^ := {shared}m_XBController;
@@ -232,7 +228,7 @@ begin
 end;
 
 procedure EmuShared.SetXBController(const ctrl: PXBController);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Lock();
   {shared}m_XBController := ctrl^;
@@ -240,7 +236,7 @@ begin
 end;
 
 procedure EmuShared.GetXbePath(var Path: string);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Lock();
   {var}Path := string({shared}m_XbePath); // explicit cast to silence Unicode warnings
@@ -248,7 +244,7 @@ begin
 end;
 
 procedure EmuShared.SetXbePath(const Path: AnsiString);
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   WriteLog('EmuShared.SetXbePath(' + string(Path) + ')');
   Lock();
@@ -257,7 +253,7 @@ begin
 end;
 
 procedure SetXbePath(const Path: PAnsiChar); stdcall;
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   if Assigned(g_EmuShared) then
     g_EmuShared.SetXbePath(AnsiString(Path));
