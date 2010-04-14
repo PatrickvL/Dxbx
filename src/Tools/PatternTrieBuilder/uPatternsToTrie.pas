@@ -1044,6 +1044,12 @@ begin
     Exit;
   end;
 
+  if ParamStr(1) = '/?' then
+  begin
+    WriteLn('PatternTrieBuilder.exe [Folder Path]');
+    Exit;
+  end;
+
   PatternFolder := ParamStr(1);
   PatternFiles := TStringList.Create;
   try

@@ -3,7 +3,7 @@
 
 (*
     This file is part of Dxbx - a XBox emulator written in Delphi (ported over from cxbx)
-    Copyright (C) 2007 Shadow_tj and other members of the development team.
+    Copyright (C) 2010 Shadow_tj and other members of the development team.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
