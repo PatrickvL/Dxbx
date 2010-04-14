@@ -106,10 +106,10 @@ uses
 procedure DllMain(Reason: Integer);
 begin
   if Reason = DLL_PROCESS_ATTACH then
-    EmuShared.Init
+    PEmuShared(nil).Init
   else
     if Reason = DLL_PROCESS_DETACH then
-      EmuShared.Cleanup;
+      PEmuShared(nil).Cleanup;
 end;
 
 begin
