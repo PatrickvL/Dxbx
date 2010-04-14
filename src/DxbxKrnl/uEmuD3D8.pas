@@ -9303,6 +9303,7 @@ procedure XTL_EmuIDirect3DDevice8_SetSwapCallback
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetSwapCallback' +
       #13#10'(' +
       #13#10'   pCallback           : 0x%.08X' +
@@ -9310,6 +9311,7 @@ begin
       [PPointer(@pCallback)^]);
 
   DbgPrintf('pCallback: = 0x%.08X', [PPointer(@pCallback)^]);
+{$ENDIF}
 
   g_pSwapCallback := pCallback;
 
@@ -9321,7 +9323,9 @@ function XTL_EmuIDirect3DDevice8_PersistDisplay(): HRESULT; stdcall;
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PersistDisplay()');
+{$ENDIF}
 
   Result := S_OK;
 
@@ -9350,7 +9354,9 @@ procedure XTL_EmuIDirect3DDevice8_Unknown1(); stdcall;
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Unknown1()');
+{$ENDIF}
 
   // TODO -oCXBX: Find out what this actually is.
   // This function was only found in Run Like Hell (5233) @ 0x11FCD0.
@@ -9370,12 +9376,14 @@ function XTL_EmuIDirect3DDevice8_PrimeVertexCache
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PrimeVertexCache' +
       #13#10'(' +
       #13#10'   VertexCount           : 0x%.08X' +
       #13#10'   pIndexData            : 0x%.08X' +
       #13#10');',
       [VertexCount, pIndexData]);
+{$ENDIF}
 
   // TODO -oCXBX: Implement
   EmuWarning('PrimeVertexCache is not supported!');
@@ -9393,11 +9401,13 @@ function XTL_EmuIDirect3DDevice8_SetRenderState_SampleAlpha
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_SampleAlpha' +
       #13#10'(' +
       #13#10'   dwSampleAlpha         : 0x%.08X' +
       #13#10');',
       [dwSampleAlpha]);
+{$ENDIF}
 
   // TODO -oCXBX: Implement?
 
@@ -9423,12 +9433,14 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Deferred(
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_Deferred' +
       #13#10'(' +
       #13#10'   State               : 0x%.08X' +
       #13#10'   Value               : 0x%.08X' +
       #13#10');',
       [State, Value]);
+{$ENDIF}
 
   // TODO -oCXBX: HACK: Technically, this function doesn't need to be emulated.
   // The location of EmuD3DDeferredRenderState for 3911 isn't correct and at
@@ -9491,11 +9503,13 @@ function XTL_EmuIDirect3DDevice8_DeleteStateBlock
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_DeleteStateBlock' +
       #13#10'(' +
       #13#10'   Token               : 0x%.08X' +
       #13#10');',
       [Token]);
+{$ENDIF}
 
   Result := IDirect3DDevice8(g_pD3DDevice8).DeleteStateBlock(Token);
 
@@ -9508,10 +9522,11 @@ function XTL_EmuIDirect3DDevice8_SetModelView
   CONST pInverseModelView: PD3DMATRIX;
   CONST pComposite: PD3DMATRIX
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetModelView' +
       #13#10'(' +
       #13#10'   pModelView           : 0x%.08X' +
@@ -9519,8 +9534,9 @@ begin
       #13#10'   pComposite           : 0x%.08X' +
       #13#10');',
       [pModelView, pInverseModelView, pComposite]);
+{$ENDIF}
 
-  // TODO: Implement
+  // TODO -oCxbx: Implement
   CxbxKrnlCleanup('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
 
   EmuSwapFS(fsXbox);
@@ -9529,11 +9545,13 @@ begin
 end;
 
 procedure XTL_EmuIDirect3DDevice8_FlushVertexCache(); stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_FlushVertexCache();');
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 end;
@@ -9542,14 +9560,16 @@ function XTL_EmuIDirect3DDevice8_BeginPushBuffer
 (
    pPushBuffer: PX_D3DPushBuffer
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginPushBuffer' +
       #13#10'(' +
       #13#10'   pPushBuffer          : 0x%.08X' +
       #13#10');', [pPushBuffer]);
+{$ENDIF}
 
   //CxbxKrnlCleanup('BeginPushBuffer is not yet implemented!');
   EmuWarning('BeginPushBuffer is not yet implemented!');
@@ -9560,11 +9580,13 @@ begin
 end;
 
 function XTL_EmuIDirect3DDevice8_EndPushBuffer(): HRESULT; stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_EndPushBuffer();');
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -9572,14 +9594,16 @@ begin
 end;
 
 procedure XTL_EmuXMETAL_StartPush(Unknown: Pvoid); stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
+{$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuXMETAL_StartPush' +
       #13#10'(' +
       #13#10'   Unknown           : 0x%.08X' +
       #13#10');', [Unknown]);
+{$ENDIF}
 
   // This function is too low level to actually emulate
   asm int 3; end;
