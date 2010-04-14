@@ -3464,10 +3464,11 @@ begin
   if (pIndexData <> NULL) then
     DbgPrintf('EmuIDirect3DDevice8_SetIndcies(): pIndexData->EmuIndexBuffer8:= 0x%.08X', [pIndexData.Emu.IndexBuffer8]);
 
+  g_dwBaseVertexIndex := BaseVertexIndex;
+
   if (pIndexData <> nil) then
   begin
     g_pIndexBuffer := pIndexData;
-    g_dwBaseVertexIndex := BaseVertexIndex;
 
     // HACK: Halo Hack
     if (pIndexData.Emu.Lock = $00840863) then
@@ -3476,7 +3477,8 @@ begin
     EmuVerifyResourceIsRegistered(pIndexData);
 
     // HACK: Unreal Championship
-    if ((pIndexData.Emu.Lock and $FFFF0000) = $00490000) {or (pIndexData.Emu.Lock = $490046)} or (pIndexData.Emu.Lock = $10) then
+    if ((pIndexData.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexData.Emu.Lock and $F0000000) <> $00000000)
+    or (pIndexData.Emu.Lock = $10) then
     begin
       Result := E_FAIL;
       goto fail;
@@ -4850,7 +4852,7 @@ begin
                   if (CacheFormat = D3DFMT_P8) then //Palette
                   begin
                     EmuWarning('Unsupported texture format D3DFMT_P8, expanding to D3DFMT_A8R8G8B8');
-{#if 0
+
                     //
                     // create texture resource
                     //
@@ -4901,7 +4903,6 @@ begin
                     CxbxFree(pTexturePalette);
                     CxbxFree(pExpandedTexture);
                     CxbxFree(pTextureCache);
-}
                   end
                   else
                   begin
@@ -6653,7 +6654,7 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
   {2 EDX}Value: DWORD;
   {1 ECX}Method: DWORD // Dxbx note: The first argument should be here, to force it into ECX
   ); register; // __fastcall in Cxbx
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
 var
   State: int;
   v: int;
@@ -6686,8 +6687,8 @@ begin
     EmuWarning('RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!', [Method, Value])
   else
   begin
-    case (State) of
-      168: //D3DRS_COLORWRITEENABLE:
+    case _D3DRENDERSTATETYPE(State) of
+      D3DRS_COLORWRITEENABLE:
         begin
           OrigValue := Value;
 
@@ -6707,7 +6708,7 @@ begin
 {$ENDIF}
         end;
 
-      9: //D3DRS_SHADEMODE:
+      D3DRS_SHADEMODE:
         begin
           Value := EmuXB2PC_D3DSHADEMODE(Value);
 {$IFDEF DEBUG}
@@ -6715,7 +6716,7 @@ begin
 {$ENDIF}
         end;
 
-      171: //D3DRS_BLENDOP:
+      D3DRS_BLENDOP:
         begin
           Value := EmuXB2PC_D3DBLENDOP(Value);
 {$IFDEF DEBUG}
@@ -6723,7 +6724,7 @@ begin
 {$ENDIF}
         end;
 
-      19: //D3DRS_SRCBLEND:
+      D3DRS_SRCBLEND:
         begin
           Value := EmuXB2PC_D3DBLEND(Value);
 {$IFDEF DEBUG}
@@ -6731,7 +6732,7 @@ begin
 {$ENDIF}
         end;
 
-      20: //D3DRS_DESTBLEND:
+      D3DRS_DESTBLEND:
         begin
           Value := EmuXB2PC_D3DBLEND(Value);
 {$IFDEF DEBUG}
@@ -6739,7 +6740,7 @@ begin
 {$ENDIF}
         end;
 
-      23: //D3DRS_ZFUNC:
+      D3DRS_ZFUNC:
         begin
           Value := EmuXB2PC_D3DCMPFUNC(Value);
 {$IFDEF DEBUG}
@@ -6747,7 +6748,7 @@ begin
 {$ENDIF}
         end;
 
-      25: //D3DRS_ALPHAFUNC:
+      D3DRS_ALPHAFUNC:
         begin
           Value := EmuXB2PC_D3DCMPFUNC(Value);
 {$IFDEF DEBUG}
@@ -6755,40 +6756,86 @@ begin
 {$ENDIF}
         end;
 
-      15: //D3DRS_ALPHATESTENABLE:
+      D3DRS_ALPHATESTENABLE:
         begin
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_ALPHATESTENABLE := 0x%.08X', [Value]);
 {$ENDIF}
         end;
 
-      27: //D3DRS_ALPHABLENDENABLE:
+      D3DRS_ALPHABLENDENABLE:
         begin
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_ALPHABLENDENABLE := 0x%.08X', [Value]);
 {$ENDIF}
         end;
 
-      24: //D3DRS_ALPHAREF:
+      D3DRS_ALPHAREF:
         begin
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_ALPHAREF := %f', [DWtoF(Value)]);
 {$ENDIF}
         end;
 
-      14: //D3DRS_ZWRITEENABLE:
+      D3DRS_ZWRITEENABLE:
         begin
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_ZWRITEENABLE := 0x%.08X', [Value]);
 {$ENDIF}
         end;
 
-      26: //D3DRS_DITHERENABLE:
+      D3DRS_DITHERENABLE:
         begin
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_DITHERENABLE := 0x%.08X', [Value]);
 {$ENDIF}
         end;
+
+      D3DRS_STENCILZFAIL:
+        begin
+          Value := EmuXB2PC_D3DSTENCILOP(Value);
+{$IFDEF DEBUG}
+          DbgPrintf('D3DRS_STENCILZFAIL := 0x%.08X', [Value]);
+{$ENDIF}
+        end;
+
+      D3DRS_STENCILPASS:
+        begin
+          Value := EmuXB2PC_D3DSTENCILOP(Value);
+{$IFDEF DEBUG}
+          DbgPrintf('D3DRS_STENCILPASS := 0x%.08X', [Value]);
+{$ENDIF}
+        end;
+
+      D3DRS_STENCILFUNC:
+        begin
+          Value := EmuXB2PC_D3DCMPFUNC(Value);
+{$IFDEF DEBUG}
+          DbgPrintf('D3DRS_STENCILFUNC := 0x%.08X', [Value]);
+{$ENDIF}
+        end;
+
+      D3DRS_STENCILREF:
+        begin
+{$IFDEF DEBUG}
+          DbgPrintf('D3DRS_STENCILREF := 0x%.08X', [Value]);
+{$ENDIF}
+        end;
+
+      D3DRS_STENCILMASK:
+        begin
+{$IFDEF DEBUG}
+          DbgPrintf('D3DRS_STENCILMASK := 0x%.08X', [Value]);
+{$ENDIF}
+        end;
+
+      D3DRS_STENCILWRITEMASK:
+        begin
+{$IFDEF DEBUG}
+          DbgPrintf('D3DRS_STENCILWRITEMASK := 0x%.08X', [Value]);
+{$ENDIF}
+        end;
+
     else
       begin
         CxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [State]);
@@ -7733,7 +7780,7 @@ begin
 
       IDirect3DIndexBuffer8(pIndexBuffer).Unlock();
 
-      IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
+      IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), g_dwBaseVertexIndex);
 
       uiNumVertices := VertexCount;
       uiStartIndex := 0;
@@ -9455,6 +9502,91 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuIDirect3DDevice8_SetModelView
+(
+  CONST pModelView: PD3DMATRIX;
+  CONST pInverseModelView: PD3DMATRIX;
+  CONST pComposite: PD3DMATRIX
+): HRESULT; stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetModelView' +
+      #13#10'(' +
+      #13#10'   pModelView           : 0x%.08X' +
+      #13#10'   pInverseModelView    : 0x%.08X' +
+      #13#10'   pComposite           : 0x%.08X' +
+      #13#10');',
+      [pModelView, pInverseModelView, pComposite]);
+
+  // TODO: Implement
+  CxbxKrnlCleanup('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
+
+  EmuSwapFS(fsXbox);
+
+  Result := S_OK;
+end;
+
+procedure XTL_EmuIDirect3DDevice8_FlushVertexCache(); stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_FlushVertexCache();');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirect3DDevice8_BeginPushBuffer
+(
+   pPushBuffer: PX_D3DPushBuffer
+): HRESULT; stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginPushBuffer' +
+      #13#10'(' +
+      #13#10'   pPushBuffer          : 0x%.08X' +
+      #13#10');', [pPushBuffer]);
+
+  //CxbxKrnlCleanup('BeginPushBuffer is not yet implemented!');
+  EmuWarning('BeginPushBuffer is not yet implemented!');
+
+  EmuSwapFS(fsXbox);
+
+  Result := S_OK;
+end;
+
+function XTL_EmuIDirect3DDevice8_EndPushBuffer(): HRESULT; stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_EndPushBuffer();');
+
+  EmuSwapFS(fsXbox);
+
+  Result := S_OK;
+end;
+
+procedure XTL_EmuXMETAL_StartPush(Unknown: Pvoid); stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:10
+begin
+  EmuSwapFS(fsWindows);
+
+  DbgPrintf('EmuD3D8 : EmuXMETAL_StartPush' +
+      #13#10'(' +
+      #13#10'   Unknown           : 0x%.08X' +
+      #13#10');', [Unknown]);
+
+  // This function is too low level to actually emulate
+  asm int 3; end;
+
+  EmuSwapFS(fsXbox);
+end;
+
 exports
   XTL_EmuD3DCleanup,
   XTL_EmuD3DInit,
@@ -9484,7 +9616,8 @@ exports
   XTL_EmuIDirect3DDevice8_ApplyStateBlock name PatchPrefix + 'D3DDevice_ApplyStateBlock',
   XTL_EmuIDirect3DDevice8_BackFillMode name PatchPrefix + 'D3DDevice_BackFillMode',
   XTL_EmuIDirect3DDevice8_Begin name PatchPrefix + 'D3DDevice_Begin',
-  XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4',
+  XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4', // ??
+  XTL_EmuIDirect3DDevice8_BeginPushBuffer name PatchPrefix + 'D3DDevice_BeginPushBuffer', // ??
   // XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', // MARKED OUT BY CXBX
   //XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
@@ -9517,9 +9650,11 @@ exports
   XTL_EmuIDirect3DDevice8_DrawVerticesUP name PatchPrefix + 'D3DDevice_DrawVerticesUP@16',
   XTL_EmuIDirect3DDevice8_EnableOverlay name PatchPrefix + 'D3DDevice_EnableOverlay@4',
   XTL_EmuIDirect3DDevice8_End name PatchPrefix + 'D3DDevice_End',
-  XTL_EmuIDirect3DDevice8_EndPush name PatchPrefix + 'D3DDevice_EndPushBuffer@0',
+  XTL_EmuIDirect3DDevice8_EndPush name PatchPrefix + 'D3DDevice_EndPushBuffer@0', // ??
+  XTL_EmuIDirect3DDevice8_EndPushBuffer name PatchPrefix + 'D3DDevice_EndPushBuffer', // ??
   XTL_EmuIDirect3DDevice8_EndStateBlock name PatchPrefix + 'D3DDevice_EndStateBlock',
   XTL_EmuIDirect3DDevice8_EndVisibilityTest name PatchPrefix + 'D3DDevice_EndVisibilityTest@4',
+  XTL_EmuIDirect3DDevice8_FlushVertexCache name PatchPrefix + 'D3DDevice_FlushVertexCache', // ??
   XTL_EmuIDirect3DDevice8_GetBackBuffer name PatchPrefix + 'D3DDevice_GetBackBuffer',
   XTL_EmuIDirect3DDevice8_GetBackBuffer2 name PatchPrefix + 'D3DDevice_GetBackBuffer2@4',
   XTL_EmuIDirect3DDevice8_GetCreationParameters name PatchPrefix + 'D3DDevice_GetCreationParameters',
@@ -9570,6 +9705,7 @@ exports
   XTL_EmuIDirect3DDevice8_SetIndices name PatchPrefix + 'D3DDevice_SetIndices',
   XTL_EmuIDirect3DDevice8_SetLight name PatchPrefix + 'D3DDevice_SetLight',
   XTL_EmuIDirect3DDevice8_SetMaterial name PatchPrefix + 'D3DDevice_SetMaterial',
+  XTL_EmuIDirect3DDevice8_SetModelView name PatchPrefix + 'D3DDevice_SetModelView', // ??
   XTL_EmuIDirect3DDevice8_SetPalette name PatchPrefix + 'D3DDevice_SetPalette',
   XTL_EmuIDirect3DDevice8_SetPixelShader name PatchPrefix + 'D3DDevice_SetPixelShader',
   XTL_EmuIDirect3DDevice8_SetPixelShaderConstant name PatchPrefix + 'D3DDevice_SetPixelShaderConstant',
@@ -9667,6 +9803,8 @@ exports
 
   XTL_EmuIDirect3DVolumeTexture8_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
 
-  XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface';
+  XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface',
+
+  XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';
 
 end.
