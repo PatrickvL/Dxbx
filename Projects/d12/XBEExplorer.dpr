@@ -14,7 +14,8 @@ uses
   uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame},
   uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas',
   uFileSystem in '..\..\src\uFileSystem.pas',
-  uXDVDFS in '..\..\src\uXDVDFS.pas';
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uExploreFileSystem in '..\..\src\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem};
 
 {$R *.res}
 
@@ -22,6 +23,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFormXBEExplorer, FormXBEExplorer);
+  Application.CreateForm(TfrmExploreFileSystem, frmExploreFileSystem);
   Application.Title := FormXBEExplorer.Caption;
   if ParamCount > 0 then
     FormXBEExplorer.OpenFile(ParamStr(1));
