@@ -76,7 +76,9 @@ begin
   if Attr and FILE_ATTRIBUTE_OFFLINE              > 0 then Result := Result + ', Offline';
   if Attr and FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  > 0 then Result := Result + ', Not content indexed';
   if Attr and FILE_ATTRIBUTE_ENCRYPTED            > 0 then Result := Result + ', Encrypted';
+{$IF DECLARED (FILE_ATTRIBUTE_VIRTUAL)}
   if Attr and FILE_ATTRIBUTE_VIRTUAL              > 0 then Result := Result + ', Virtual';
+{$IFEND}
   Delete(Result, 1, 2);
 end;
 

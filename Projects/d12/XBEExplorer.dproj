@@ -111,6 +111,9 @@
 			<DCCReference Include="..\..\src\XBEExplorer\uStringsViewer.pas"/>
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
 			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uExploreFileSystem.pas">
+				<Form>frmExploreFileSystem</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
