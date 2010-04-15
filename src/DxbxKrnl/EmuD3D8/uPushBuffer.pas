@@ -203,7 +203,7 @@ var
   PCPrimitiveType: D3DPRIMITIVETYPE;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
   pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
-  pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
+  //pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
   maxIBSize: uint;
   dwCount: DWord;
   dwMethod: DWord;
@@ -235,11 +235,11 @@ begin
   pdwOrigPushData := pdwPushData;
 {$endif}
 
-  pIndexData := nil;
-  pVertexData := nil;
+  //pIndexData := nil;
+  //pVertexData := nil;
 
   dwVertexShader := DWORD(-1);
-  dwStride := DWORD(-1);
+  //dwStride := DWORD(-1);
 
   PCPrimitiveType := D3DPRIMITIVETYPE(-1);
   XBPrimitiveType := X_D3DPT_INVALID;
@@ -268,7 +268,7 @@ begin
 {$endif}
 
   pIndexBuffer := nil;
-  pVertexBuffer := nil;
+  // pVertexBuffer := nil;
   maxIBSize := 0; // TODO -oDXBX: Make this static
 
   VertPatch.Create; // Dxbx addition
