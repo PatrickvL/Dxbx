@@ -1053,7 +1053,7 @@ var
   pOrig2: Puint08;
   pOrig3: Puint08;
   i: uint32;
-  z: Integer;
+  z: uint32;
 begin
   pStream := @(m_pStreams[uiStream]);
   
@@ -1347,7 +1347,7 @@ var
   dwTexN: DWORD;
   VPDesc: VertexPatchDesc;
   VertPatch: XTL_VertexPatcher;
-  bPatched: _bool;
+  //bPatched: _bool;
 begin
   XTL_EmuUpdateDeferredStates();
 
@@ -1524,7 +1524,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  bPatched := VertPatch.Apply(@VPDesc);
+  {bPatched := }VertPatch.Apply(@VPDesc);
 
   if(bFVF) then
   begin
@@ -1608,7 +1608,7 @@ begin
     begin
       dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
       bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
-      bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
+      //bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
 
       // Interpret Width/Height/BPP
       if (X_Format = X_D3DFMT_X8R8G8B8) or (X_Format = X_D3DFMT_A8R8G8B8) then

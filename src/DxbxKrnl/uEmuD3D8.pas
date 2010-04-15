@@ -3462,7 +3462,7 @@ begin
   Result := D3D_OK;
 
   if (pIndexData <> NULL) then
-    DbgPrintf('EmuIDirect3DDevice8_SetIndcies(): pIndexData->EmuIndexBuffer8:= 0x%.08X', [pIndexData.Emu.IndexBuffer8]);
+    DbgPrintf('EmuIDirect3DDevice8_SetIndices(): pIndexData->EmuIndexBuffer8:= 0x%.08X', [pIndexData.Emu.IndexBuffer8]);
 
   g_dwBaseVertexIndex := BaseVertexIndex;
 
@@ -4879,7 +4879,7 @@ begin
 
                     w := 0;
                     c := 0;
-                    p := 0;
+                    //p := 0;
                     for y := 0 to (dwDataSize div 4) - 1 do
                     begin
                       if (c = dwMipWidth) then
