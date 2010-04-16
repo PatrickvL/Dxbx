@@ -2354,9 +2354,9 @@ var
   pVertexShader: PVERTEX_SHADER;
   pD3DVertexShader: PX_D3DVertexShader;
 begin
-  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsXbox); // GOTO XBOX
   XTL_EmuIDirect3DDevice8_GetVertexShader(@aHandle);
-  EmuSwapFS(fsXbox);
+  EmuSwapFS(fsWindows); // GOTO WINDOWS
   if (VshHandleIsVertexShader(aHandle)) then
   begin
     pD3DVertexShader := PX_D3DVertexShader(aHandle and $7FFFFFFF);
