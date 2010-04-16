@@ -57,10 +57,10 @@ var
   pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
 
 
-procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); stdcall;
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); stdcall; // forward
+procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); {NOPATCH}
+procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); {NOPATCH}
 {$IFDEF _DEBUG_TRACK_PB}
-procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD);
+procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
 
 implementation
@@ -80,7 +80,7 @@ procedure XTL_EmuExecutePushBuffer
 (
     pPushBuffer: PX_D3DPushBuffer; 
     pFixup: PX_D3DFixup
-); stdcall;
+); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   if (pFixup <> NULL) then
@@ -89,7 +89,7 @@ begin
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
 
-procedure EmuUnswizzleActiveTexture();
+procedure EmuUnswizzleActiveTexture(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pPixelContainer: PX_D3DPixelContainer;
@@ -193,7 +193,7 @@ end;
 procedure XTL_EmuExecutePushBufferRaw
 (
     pdwPushData: PDWord
-); stdcall;
+); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pIndexData: PVOID;
@@ -412,7 +412,7 @@ begin
         VPDesc.uiVertexStreamZeroStride := dwStride;
         VPDesc.hVertexShader := dwVertexShader;
 
-        {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, Null);
+        {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
         IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP
         (
@@ -505,7 +505,7 @@ begin
           // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
-          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, Null);
+          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
           IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
 
@@ -666,7 +666,7 @@ begin
           // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
-          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, Null);
+          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
           IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
 
@@ -727,7 +727,7 @@ end;
 
 {$IFDEF _DEBUG_TRACK_PB}
 
-procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD);
+procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:99
 var
   pActiveVB: XTL_PIDirect3DVertexBuffer8;
@@ -876,10 +876,6 @@ begin
   IDirect3DVertexBuffer8(pActiveVB).Unlock();
 end;
 {$ENDIF}
-
-exports
-  XTL_EmuExecutePushBuffer,
-  XTL_EmuExecutePushBufferRaw;
 
 end.
 

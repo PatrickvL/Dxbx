@@ -100,7 +100,7 @@ class function EmuShared.Init(): Boolean;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   // Ensure initialization only occurs once
-  init := true;
+  Result := true;
   WriteLog('EmuShared.Init');
 
   // Prevent multiple initializations
@@ -127,7 +127,7 @@ begin
     // Dxbx note : Cxbx does this after the hMapObject test, 
     // but that could disturb GetLastError(), so check it here :
     if(GetLastError() = ERROR_ALREADY_EXISTS) then
-      init := false;
+      Result := false;
 
     if hMapObject = 0 then
       CxbxKrnlCleanup('Could not map shared memory!');
@@ -149,7 +149,7 @@ begin
   end;
 
   // Executed only on first initialization of shared memory
-  if(init) then
+  if(Result) then
   begin
     ZeroMemory(g_EmuShared, SizeOf(EmuShared)); // clear memory
     g_EmuShared.Create; // call constructor

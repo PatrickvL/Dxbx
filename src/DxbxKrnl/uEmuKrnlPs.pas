@@ -477,9 +477,4 @@ begin
 
 end;
 
-//
-
-//exports
-//  xboxkrnl_PsCreateSystemThreadEx name 'PsCreateSystemThreadEx';
-
 end.

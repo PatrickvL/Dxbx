@@ -18,7 +18,10 @@
 unit uTypes;
 
 {$INCLUDE Dxbx.inc}
-{$POINTERMATH ON}
+
+{$IFDEF UNICODE}
+  {$POINTERMATH ON}
+{$ENDIF}
 
 interface
 
@@ -160,6 +163,7 @@ const
   BOOL_FALSE = BOOL(0);
 
 {$IFNDEF UNICODE}
+type
   UnicodeString = WideString;
 
 function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; inline;

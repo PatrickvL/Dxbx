@@ -200,7 +200,7 @@ begin
 end;
 *)
 
-function XOnlineLaunchNewImage
+function XTL_EmuXOnlineLaunchNewImage
 (
     lpImagePath: LPCSTR;
     pLaunchData: LPVOID
@@ -226,10 +226,12 @@ end;
 
 
 exports
-  XOnlineLaunchNewImage,
   XTL_EmuWSAStartup,
+
   XTL_EmuXNetGetEthernetLinkStatus,
-  XTL_EmuXNetStartup;
+  XTL_EmuXNetStartup,
+
+  XTL_EmuXOnlineLaunchNewImage;
 
 end.
 
