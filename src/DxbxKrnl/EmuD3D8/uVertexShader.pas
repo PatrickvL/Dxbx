@@ -944,7 +944,7 @@ begin
   if (pParams.C) then
   begin
     VshAddParameter(@pInstruction.C, pInstruction.a0x, @pParameters[ParamCount]);
-//    Inc(ParamCount);
+    Inc(ParamCount);
   end;
 end; // VshAddParameters
 

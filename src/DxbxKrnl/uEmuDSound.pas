@@ -53,6 +53,9 @@ const X_DSBPAUSE_RESUME = $00000000;
 const X_DSBPAUSE_PAUSE = $00000001;
 const X_DSBPAUSE_SYNCHPLAYBACK = $00000002;
 
+var
+  initialized: _bool;
+
 type
   WAVEFORMATEX = TWAVEFORMATEX;
   LPWAVEFORMATEX = MMSystem.PWaveFormatEx; // alias
@@ -503,10 +506,6 @@ function XTL_EmuDirectSoundCreate
     pUnknown: LPUNKNOWN
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-{$WRITEABLECONST ON}
-const
-  initialized: _bool = false;
-{$WRITEABLECONST OFF}
 var
   v: int;
 begin
@@ -522,9 +521,12 @@ begin
       [pguidDeviceId, ppDirectSound, pUnknown]);
 {$ENDIF}
 
-
+  initialized := false;
   Result := DS_OK;
-  
+
+  // Set this flag when this function is called
+  g_bDSoundCreateCalled := true;
+
   if not initialized or (not Assigned(g_pDSound8)) then
   begin
     Result := DirectSoundCreate8(NULL, PIDirectSound8(ppDirectSound), NULL);
@@ -1113,7 +1115,7 @@ begin
 
   // convert from Xbox to PC DSound
   begin
-    dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000 or $00080000;
+    dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000;
 
     if (pdsbd.dwFlags and (not dwAcceptableMask)) > 0 then
       EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', [pdsbd.dwFlags and not(dwAcceptableMask)]);
@@ -1719,7 +1721,7 @@ begin
          #13#10');',
          [pThis, dwReserved1, dwReserved2, dwFlags]);
 {$ENDIF}
-  if (dwFlags and (not DSBPLAY_LOOPING)) > 0 then
+  if (dwFlags and (not DSBPLAY_LOOPING or X_DSBPLAY_FROMSTART)) > 0 then
     CxbxKrnlCleanup('Unsupported Playing Flags');
 
   // rewind buffer
