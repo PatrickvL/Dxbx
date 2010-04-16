@@ -308,10 +308,19 @@ end;
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
+  i: Integer;
 begin
   PEmuShared(nil).Init;
 
   Emulation_State := esNone;
+
+  i := 640 + 2 * BorderWidth;
+  Constraints.MaxWidth := i; Constraints.MinWidth := i;
+  ClientWidth := i;
+
+  i := 480 + StatusBar.Height;
+  Constraints.MaxHeight := i; Constraints.MinHeight := i;
+  ClientHeight := i;
 
   // Dxbx Note : This prevents close-exceptions (we have with a "message WM_DROPFILES" procedure) :
   OldLBWindowProc := frm_Main.WindowProc; // store defualt WindowProc

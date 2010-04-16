@@ -4,13 +4,13 @@ object frm_Main: Tfrm_Main
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Dxbx'
-  ClientHeight = 393
-  ClientWidth = 509
+  ClientHeight = 480
+  ClientWidth = 640
   Color = 13160660
-  Constraints.MaxHeight = 441
-  Constraints.MaxWidth = 515
-  Constraints.MinHeight = 429
-  Constraints.MinWidth = 515
+  Constraints.MaxHeight = 524
+  Constraints.MaxWidth = 646
+  Constraints.MinHeight = 524
+  Constraints.MinWidth = 646
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -18,7 +18,7 @@ object frm_Main: Tfrm_Main
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poDefault
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
@@ -26,9 +26,10 @@ object frm_Main: Tfrm_Main
   object Image1: TImage
     Left = 0
     Top = 0
-    Width = 509
-    Height = 374
+    Width = 640
+    Height = 461
     Align = alClient
+    Center = True
     Picture.Data = {
       0A544A504547496D61676592AF0000FFD8FFE000104A46494600010201004800
       480000FFE110754578696600004D4D002A000000080007011200030000000100
@@ -1437,8 +1438,8 @@ object frm_Main: Tfrm_Main
       54E61BEBA2056097FE01BFA62A8E86E2461BC6E3E6A462AAFCCFF29FBB157FFF
       D9}
     Stretch = True
-    ExplicitWidth = 45
-    ExplicitHeight = 366
+    ExplicitWidth = 500
+    ExplicitHeight = 375
   end
   object ImageIcon: TImage
     Left = 8
@@ -1458,11 +1459,13 @@ object frm_Main: Tfrm_Main
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 374
-    Width = 509
+    Top = 461
+    Width = 640
     Height = 19
     Panels = <>
     SimplePanel = True
+    ExplicitTop = 374
+    ExplicitWidth = 509
   end
   object MainMenu1: TMainMenu
     Left = 8
