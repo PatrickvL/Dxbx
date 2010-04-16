@@ -2024,7 +2024,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetBackBuffer2' +
     #13#10'(' +
-    #13#10'   BackBuffer          : 0x%.08X' +
+    #13#10'   BackBuffer            : 0x%.08X' +
     #13#10');',
     [BackBuffer]);
 {$ENDIF}
@@ -3514,8 +3514,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTexture' +
     #13#10'(' +
-    #13#10'   Stage             : 0x%.08X' +
-    #13#10'   pTexture          : 0x%.08X' +
+    #13#10'   Stage               : 0x%.08X' +
+    #13#10'   pTexture            : 0x%.08X' +
     #13#10');',
     [Stage, pTexture]);
 {$ENDIF}
@@ -4159,12 +4159,12 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear'+
            #13#10'(' +
-           #13#10'   Count             : 0x%.08X' +
-           #13#10'   pRects            : 0x%.08X' +
-           #13#10'   Flags             : 0x%.08X' +
-           #13#10'   Color             : 0x%.08X' +
-           #13#10'   Z                 : %f' +
-           #13#10'   Stencil           : 0x%.08X' +
+           #13#10'   Count               : 0x%.08X' +
+           #13#10'   pRects              : 0x%.08X' +
+           #13#10'   Flags               : 0x%.08X' +
+           #13#10'   Color               : 0x%.08X' +
+           #13#10'   Z                   : %f' +
+           #13#10'   Stencil             : 0x%.08X' +
            #13#10');',
            [Count, pRects, Flags,
            Color, Z, Stencil]);
@@ -4271,7 +4271,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Swap' +
     #13#10'(' +
-    #13#10'   Flags             : 0x%.08X' +
+    #13#10'   Flags               : 0x%.08X' +
     #13#10');',
     [Flags]);
 {$ENDIF}
@@ -6665,8 +6665,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_Simple' +
     #13#10'(' +
-    #13#10'   Method            : 0x%.08X' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Method                : 0x%.08X' +
+    #13#10'   Value                 : 0x%.08X' +
     #13#10');',
     [Method, Value]);
 {$ENDIF}
@@ -6912,7 +6912,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_CullMode' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value                 : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -7093,7 +7093,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_ZEnable' +
     #13#10'(' +
-    #13#10'   Value               : 0x%.08X' +
+    #13#10'   Value                 : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -7277,8 +7277,8 @@ begin
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTransform' +
     #13#10'(' +
-    #13#10'   State               : 0x%.08X' +
-    #13#10'   pMatrix             : 0x%.08X' +
+    #13#10'   State                 : 0x%.08X' +
+    #13#10'   pMatrix               : 0x%.08X' +
     #13#10');',
     [Ord(State), pMatrix]);
 
