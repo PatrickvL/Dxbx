@@ -143,6 +143,7 @@ type
   P_char = PAnsiChar; // Use this to translate Cxbx's "char *" (because newer Delphi's PChar = PWideChar)
 
   _bool = Boolean; // Use this to translate Cxbx's "bool" (because Delphi is not case sensitive)
+  P_bool = ^_bool;
 
 //  LONGBOOL = ?
 //  BOOLEAN = ?;
