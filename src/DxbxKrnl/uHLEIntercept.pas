@@ -34,12 +34,16 @@ uses
   uDxbxKrnlUtils,
   uXbe,
   uEmuShared,
+  uEmu,
   uEmuFS,
   uHLEDatabase,
   // Dxbx
   uXboxLibraryUtils,
   uStoredTrieTypes,
-  DxLibraryAPIScanning;
+  DxLibraryAPIScanning,
+  uState, // EmuD3DDeferredRenderState
+  uEmuD3D8Types, // X_D3DTSS_UNK
+  uEmuXapi; // XTL_EmuXapiProcessHeap
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
@@ -48,17 +52,11 @@ procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 implementation
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
-(*
 var
 //  pCertificate: PXBE_CERTIFICATE;
-  dwLibraryVersions: uint32;
-  dwHLEEntries: uint32;
-
-  LastUnResolvedXRefs: uint32;
-  OrigUnResolvedXRefs: uint32;
-
-  p: Integer;
-*)
+  CacheFileNameStr: string;
+  Symbol: TSymbolInformation;
+  s, v: int;
 begin
 //  pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
 
@@ -76,285 +74,167 @@ begin
   DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
 {$ENDIF}
 
-  DetectedSymbols.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
+  SymbolManager.Clear;
 
-  EmuInstallWrappers(pXbeHeader);
+  // Note : Somehow, the output of CacheFileName() changes because of the
+  // following code, that's why we put the initial filename in a variable :
+  CacheFileNameStr := SymbolManager.CacheFileName(pXbeHeader);
 
-(*
-  dwLibraryVersions := pXbeHeader.dwLibraryVersions;
-  dwHLEEntries := HLEDataBaseSize div SizeOf(HLEData);
+  // Try to load the symbols from the cache :
+  if SymbolManager.LoadSymbolsFromCache(CacheFileNameStr) then
+    // If that succeeded, we don't have to scan and save anymore :
+    CacheFileNameStr := ''
+  else
+    // No cache found, start out symbol-scanning engine :
+    SymbolManager.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
 
-    LastUnResolvedXRefs := UnResolvedXRefs + 1;
-    OrigUnResolvedXRefs := UnResolvedXRefs;
+  // locate XapiProcessHeap
+  begin
+    // Resolve the address of the _XapiProcessHeap symbol (at least cross-referenced once, from XapiInitProcess) :
+    Symbol := SymbolManager.FindSymbol('_XapiProcessHeap');
+    if Assigned(Symbol) then
+      // and remember that in a global :
+      XTL_EmuXapiProcessHeap := Symbol.Address;
 
-    p := 0;
-    while UnResolvedXRefs < LastUnResolvedXRefs do
-    begin
-      Inc(p);
-{$IFDEF DEBUG}
-      DbgPrintf('HLE: Starting pass #' + IntToStr(p) + '...');
-{$ENDIF}
-
-      LastUnResolvedXRefs := UnResolvedXRefs;
-
-      _bool bFoundD3D := False;
-      for (uint32 v:=0;v<dwLibraryVersions;v++)
-      begin
-        uint16 MajorVersion := pLibraryVersion[v].wMajorVersion;
-        uint16 MinorVersion := pLibraryVersion[v].wMinorVersion;
-        uint16 BuildVersion := pLibraryVersion[v].wBuildVersion;
-        uint16 OrigBuildVersion := BuildVersion;
-
-        // aliases
-        if BuildVersion = 4928 then
-          BuildVersion := 4627;
-
-        if BuildVersion = 5659 then
-          BuildVersion := 5558;
-
-        Char szLibraryName[9] := (0);
-        for c := 0 to 7 do
-          szLibraryName[c] := pLibraryVersion[v].szName[c];
-
-        // TODO -oCXBX: HACK: These libraries are packed into one database
-        if StrComp(szLibraryName, 'D3DX8') = 0 then
-          StrCopy(szLibraryName, 'D3D8');
-
-        if StrComp(szLibraryName, 'D3D8') = 0 then
-        begin
-          if (bFoundD3D) then
-          begin
-{$IFDEF DEBUG}
-              //DbgPrintf('Redundant');
-{$ENDIF}
-              continue;
-          end;
-
-          bFoundD3D := True;
-        end;
-
-        if bXRefFirstPass then
-        begin
-          if (StrComp('XAPILIB', szLibraryName) = 0) and (MajorVersion = 1) and (MinorVersion = 0)
-          and ((BuildVersion = 3911) or (BuildVersion = 4034) or (BuildVersion = 4134) or (BuildVersion = 4361) or
-               (BuildVersion = 4432) or (BuildVersion = 4627) or (BuildVersion = 5558) or (BuildVersion = 5849)) then
-          begin
-            uint32 lower := pXbeHeader.dwBaseAddr;
-            uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
-
-            // locate XapiProcessHeap
-            begin
-              Pointer pFunc := 0;
-              uint ProcessHeapOffs;
-              uint RtlCreateHeapOffs;
-
-              if (BuildVersion >= 5849) then
-              begin
-                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5849, lower, upper);
-                ProcessHeapOffs := $51;
-                RtlCreateHeapOffs := $4A;
-              end
-              else if (BuildVersion >= 5558) then
-              begin
-                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5558, lower, upper);
-
-                // 5659 has an updated function
-                if (pFunc = 0) then
-                  pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_5659, lower, upper);
-
-                ProcessHeapOffs := $51;
-                RtlCreateHeapOffs := $4A;
-              end
-              else if (BuildVersion >= 4361) then
-              begin
-                if (OrigBuildVersion = 4928) then
-                begin
-                  pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4928, lower, upper);
-                  ProcessHeapOffs := $44;
-                  RtlCreateHeapOffs := $3B;
-                end
-                else
-                begin
-                  pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_4361, lower, upper);
-                  ProcessHeapOffs := $3E;
-                  RtlCreateHeapOffs := $37;
-                end;
-              end
-              else // 3911, 4034, 4134
-              begin
-                pFunc := EmuLocateFunction((OOVPA)@XapiInitProcess_1_0_3911, lower, upper);
-                ProcessHeapOffs := $3E;
-                RtlCreateHeapOffs := $37;
-              end;
-
-              if (pFunc <> 0) then
-              begin
-                XTL.EmuXapiProcessHeap := *(PVOID)((uint32)pFunc + ProcessHeapOffs);
-
-                XTL.g_pRtlCreateHeap := *(XTL.pfRtlCreateHeap)((uint32)pFunc + RtlCreateHeapOffs);
-                XTL.g_pRtlCreateHeap := (XTL.pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL.g_pRtlCreateHeap + RtlCreateHeapOffs + $04);
-
-{$IFDEF DEBUG}
-                DbgPrintf('HLE: $%.08X . EmuXapiProcessHeap', XTL.EmuXapiProcessHeap);
-                DbgPrintf('HLE: $%.08X . g_pRtlCreateHeap', XTL.g_pRtlCreateHeap);
-{$ENDIF}
-              end;
-            end;
-          end // not XAPILIB
-          else
-            if (StrComp('D3D8', szLibraryName) = 0) and (MajorVersion = 1) and (MinorVersion = 0)
-            and ((BuildVersion = 3925) or (BuildVersion = 4134) or (BuildVersion = 4361) or (BuildVersion = 4432) or
-                 (BuildVersion = 4627) or (BuildVersion = 5558) or (BuildVersion = 5849)) then
-            begin
-              uint32 lower := pXbeHeader.dwBaseAddr;
-              uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
-
-              Pointer pFunc := nil;
-
-              if (BuildVersion = 3925) then
-                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
-              else if (BuildVersion < 5558) then
-                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
-              else
-                pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_5558, lower, upper);
-
-              // locate D3DDeferredRenderState
-              if Assigned(pFunc) then
-              begin
-                // offset for stencil cull enable render state in the deferred render state buffer
-                Integer patchOffset := 0;
-
-                if (BuildVersion = 3925) then
-                begin
-                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $25) - $19F + 72*4);  // TODO: Clean up (?)
-                  patchOffset := 142*4 - 72*4; // TODO: Verify
-                end
-                else if (BuildVersion = 4134) then
-                begin
-                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $248 + 82*4);  // TODO: Verify
-                  patchOffset := 142*4 - 82*4;
-                end
-                else if (BuildVersion = 4361) then
-                begin
-                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $200 + 82*4);
-                  patchOffset := 142*4 - 82*4;
-                end
-                else if (BuildVersion = 4432) then
-                begin
-                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $204 + 83*4);
-                  patchOffset := 143*4 - 83*4;
-                end
-                else if (BuildVersion = 4627) then
-                begin
-                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
-                  patchOffset := 162*4 - 92*4;
-                end
-                else if (BuildVersion = 5558 or BuildVersion = 5849) then
-                begin
-                  // WARNING: Not thoroughly tested (just seemed very correct right away)
-                  XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
-                  patchOffset := 162*4 - 92*4;
-                end;
-
-                XRefDataBase[XREF_D3DDEVICE]                   := *(DWORD)((DWORD)pFunc + $03);
-                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 0*4;
-                XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 1*4;
-                XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 2*4;
-                XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 3*4;
-
-                for (Integer v:=0;v<44;v++)
-                  XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
-
-{$IFDEF DEBUG}
-                DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', XTL_EmuD3DDeferredRenderState);
-{$ENDIF}
-              end
-              else
-              begin
-                XTL_EmuD3DDeferredRenderState := 0;
-                EmuWarning('EmuD3DDeferredRenderState was not found!');
-              end;
-
-              // locate D3DDeferredTextureState
-              begin
-                pFunc := 0;
-
-                if (BuildVersion = 3925) then
-                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
-                else if (BuildVersion = 4134) then
-                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
-                else if (BuildVersion = 4361 or BuildVersion = 4432) then
-                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
-                else if (BuildVersion = 4627 or BuildVersion = 5558 or BuildVersion = 5849) then
-                  pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
-
-                if (pFunc <> 0) then
-                begin
-                  if (BuildVersion = 3925) then  // 0x18F180
-                    XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
-                  else if (BuildVersion = 4134) then
-                    XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
-                  else
-                    XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
-
-                  for (Integer s:=0;s<4;s++)
-                  begin
-                    for (Integer v:=0;v<32;v++)
-                      XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
-                  end;
-
-{$IFDEF DEBUG}
-                  DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState', XTL_EmuD3DDeferredTextureState);
-{$ENDIF}
-                end
-                else
-                begin
-                  XTL_EmuD3DDeferredTextureState := nil;
-                  CxbxKrnlCleanup('EmuD3DDeferredTextureState was not found!');
-                end;
-              end;
-
-          end;
-        end;
-
-{$IFDEF DEBUG}
-        DbgPrintf('HLE: * Searching HLE database for %s %d.%d.%d ...', pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
-{$ENDIF}
-
-        _bool found:=False;
-
-        for (uint32 d:=0;d<dwHLEEntries;d++)
-        begin
-          if (BuildVersion <> HLEDataBase[d].BuildVersion
-          or MinorVersion <> HLEDataBase[d].MinorVersion
-          or MajorVersion <> HLEDataBase[d].MajorVersion
-          or StrComp(szLibraryName, HLEDataBase[d].Library) <> 0) then
-            continue;
-
-          found := True;
-
-{$IFDEF DEBUG}
-          DbgPrintf('Found');
-{$ENDIF}
-
-          EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, pXbeHeader);
-        end;
-
-        if (not found) then
-{$IFDEF DEBUG}
-          DbgPrintf('Skipped');
-{$ENDIF}
-      end;
-
-      bXRefFirstPass := False;
-    end;
-
-    // display Xref summary
-{$IFDEF DEBUG}
-    DbgPrintf('HLE: Resolved ' + IntToStr(OrigUnResolvedXRefs - UnResolvedXRefs) + ' cross reference(s)');
+{$IFDEF DXBX_DEBUG}
+    if Assigned(XTL_EmuXapiProcessHeap) then
+      DbgPrintf('HLE: $%.08X . XapiProcessHeap',
+        [XTL_EmuXapiProcessHeap],
+        {MayRenderArguments=}False)
+    else
+      DbgPrintf('HLE : Can''t find XapiProcessHeap!',
+        [],
+        {MayRenderArguments=}False);
 {$ENDIF}
   end;
+
+  // locate D3DDeferredRenderState
+  begin
+//    if (StrComp('D3D8', szLibraryName) = 0) and (MajorVersion = 1) and (MinorVersion = 0)
+//    and ((BuildVersion = 3925) or (BuildVersion = 4134) or (BuildVersion = 4361) or (BuildVersion = 4432) or
+//         (BuildVersion = 4627) or (BuildVersion = 5558) or (BuildVersion = 5849)) then
+//    begin
+//      uint32 lower := pXbeHeader.dwBaseAddr;
+//      uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
+//
+//      Pointer pFunc := nil;
+//      if (BuildVersion = 3925) then
+//        pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
+//      else if (BuildVersion < 5558) then
+//        pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
+//      else
+//        pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_5558, lower, upper);
+    Symbol := SymbolManager.FindSymbol('D3DDevice_SetRenderState_CullMode');
+
+    // Symbol := SymbolManager.FindSymbol('_D3D__RenderState');
+    if Assigned(Symbol) then
+    begin
+(*
+      // offset for stencil cull enable render state in the deferred render state buffer
+      Integer patchOffset := 0;
+
+      if (BuildVersion = 3925) then
+      begin
+        XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $25) - $19F + 72*4);  // TODO: Clean up (?)
+        patchOffset := 142*4 - 72*4; // TODO: Verify
+      end
+      else if (BuildVersion = 4134) then
+      begin
+        XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $248 + 82*4);  // TODO: Verify
+        patchOffset := 142*4 - 82*4;
+      end
+      else if (BuildVersion = 4361) then
+      begin
+        XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $200 + 82*4);
+        patchOffset := 142*4 - 82*4;
+      end
+      else if (BuildVersion = 4432) then
+      begin
+        XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $204 + 83*4);
+        patchOffset := 143*4 - 83*4;
+      end
+      else if (BuildVersion = 4627) then
+      begin
+        XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+        patchOffset := 162*4 - 92*4;
+      end
+      else if (BuildVersion = 5558 or BuildVersion = 5849) then
+      begin
+        // WARNING: Not thoroughly tested (just seemed very correct right away)
+        XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+        patchOffset := 162*4 - 92*4;
+      end;
+
+      XRefDataBase[XREF_D3DDEVICE]                   := *(DWORD)((DWORD)pFunc + $03);
+      XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 0*4;
+      XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 1*4;
+      XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 2*4;
+      XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 3*4;
+
+      for (Integer v:=0;v<44;v++)
+        XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 *)
+      XTL_EmuD3DDeferredRenderState := nil; // ???
+
+{$IFDEF DEBUG}
+      DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
+{$ENDIF}
+    end
+    else
+    begin
+      XTL_EmuD3DDeferredRenderState := nil;
+      EmuWarning('EmuD3DDeferredRenderState was not found!');
+    end;
+  end;
+
+  // locate D3DDeferredTextureState
+  begin
+//    pFunc := 0;
+//    if (BuildVersion = 3925) then
+//      pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
+//    else if (BuildVersion = 4134) then
+//      pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
+//    else if (BuildVersion = 4361 or BuildVersion = 4432) then
+//      pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
+//    else if (BuildVersion = 4627 or BuildVersion = 5558 or BuildVersion = 5849) then
+//      pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
+//    Symbol := SymbolManager.FindSymbol('D3DDevice_SetTextureState_TexCoordIndex');
+
+    Symbol := SymbolManager.FindSymbol('_D3D__TextureState');
+    if Assigned(Symbol) then
+    begin
+//      if (BuildVersion = 3925) then  // 0x18F180
+//        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
+//      else if (BuildVersion = 4134) then
+//        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
+//      else
+//        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
+
+      XTL_EmuD3DDeferredTextureState := Symbol.Address;
+      for s := 0 to 4-1 do
+      begin
+        for v := 0 to 32-1 do
+          XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
+      end;
+
+      DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState',
+        [XTL_EmuD3DDeferredTextureState],
+        {MayRenderArguments=}False);
+    end
+    else
+    begin
+      XTL_EmuD3DDeferredTextureState := nil;
+      EmuWarning('EmuD3DDeferredTextureState was not found!');
+//      CxbxKrnlCleanup('EmuD3DDeferredTextureState was not found!');
+    end;
+  end;
+
+  // After detection of all symbols, see if we need to save that to cache :
+  if CacheFileNameStr <> '' then
+    SymbolManager.SaveSymbolsToCache(CacheFileNameStr);
+
+  // Now that the symbols are known, patch them up where needed :
+  EmuInstallWrappers(pXbeHeader);
 end;
 
 // install function interception wrapper
@@ -375,10 +255,11 @@ end;
 procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 var
   i: Integer;
-  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
+  DetectedSymbol: TSymbolInformation;
   OrgCode: TCodePointer;
   NewCode: TCodePointer;
   NrPatches: Integer;
+  XboxLibraryPatch: TXboxLibraryPatch;
 {$IFDEF DXBX_DEBUG}
   UsedPatches: TBits;
 {$ENDIF}
@@ -391,24 +272,25 @@ begin
   try
     UsedPatches.Size := AvailablePatches.Count + 1;
 {$ENDIF}
-    for i := 0 to DetectedSymbols.Count - 1 do
+
+    for i := 0 to SymbolManager.Count - 1 do
     begin
-      DetectedSymbol := DetectedSymbols[i];
-      if not Assigned(DetectedSymbol.Locations[0].SymbolLocation) then
+      DetectedSymbol := SymbolManager.Locations[i];
+      OrgCode := DetectedSymbol.Address;
+      if not Assigned(OrgCode) then
         continue;
 
-      DetectedSymbol.XboxLibraryPatch := XboxFunctionNameToLibraryPatch(DetectedSymbol.SymbolName);
-      if DetectedSymbol.XboxLibraryPatch = xlp_Unknown then
+      XboxLibraryPatch := XboxFunctionNameToLibraryPatch(DetectedSymbol.Name);
+      if XboxLibraryPatch = xlp_Unknown then
         continue;
 
-      OrgCode := DetectedSymbol.Locations[0].SymbolLocation;
-      NewCode := XboxLibraryPatchToPatch(DetectedSymbol.XboxLibraryPatch);
+      NewCode := XboxLibraryPatchToPatch(XboxLibraryPatch);
       Assert(Assigned(NewCode));
 
 {$IFDEF DXBX_DEBUG}
       DbgPrintf('DxbxHLE : Installed patch over $%.08X (to %s)', [
-        OrgCode, DetectedSymbol.SymbolName], {MayRenderArguments=}False);
-      UsedPatches[DetectedSymbol.XboxLibraryPatch] := True;
+        OrgCode, DetectedSymbol.Name], {MayRenderArguments=}False);
+      UsedPatches[XboxLibraryPatch] := True;
 {$ENDIF}
 
       EmuInstallWrapper(OrgCode, NewCode);

@@ -2240,7 +2240,7 @@ exports
   XTL_EmutimeKillEvent,
   XTL_EmutimeSetEvent,
   XTL_EmuXapiApplyKernelPatches,
-  XTL_EmuXapiBootDash,
+  XTL_EmuXapiBootDash name PatchPrefix + 'XapiBootToDash',
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
   XTL_EmuXFormatUtilityDrive,

@@ -95,14 +95,16 @@ end;
 { TDxbxAPIDebugInfoSource }
 
 function TDxbxAPIDebugInfoSource.GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean;
+(*
 var
   DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
+*)
 begin
-  Result := Assigned(DetectedSymbols);
+  Result := False;//Assigned(SymbolManager);
   if not Result then
     Exit;
-
-  DetectedSymbol := DetectedSymbols.FindByAddress(TCodePointer(Addr));
+(* TODO -oDxbx : Bring this code into a working state :
+  DetectedSymbol := SymbolManager.FindByAddress(TCodePointer(Addr));
   Result := Assigned(DetectedSymbol);
   if not Result then
     Exit;
@@ -120,6 +122,7 @@ begin
 //    if Assigned(DetectedSymbol.VersionedXboxLibrary) then
 //      BinaryFileName := DetectedSymbol.VersionedXboxLibrary.LibName + '.lib'; // Name of the binary file containing the symbol
   end;
+*)
 end;
 
 function TDxbxAPIDebugInfoSource.InitializeSource: Boolean;
