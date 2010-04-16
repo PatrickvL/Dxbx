@@ -41,6 +41,7 @@ uses
   uEmuAlloc,
   uEmuDInput,
   uXBController,
+  uXboxLibraryUtils, // PatchPrefix
   uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
 
 var
