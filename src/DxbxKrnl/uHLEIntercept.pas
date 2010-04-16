@@ -41,7 +41,7 @@ uses
   uXboxLibraryUtils,
   uStoredTrieTypes,
   DxLibraryAPIScanning,
-  uState, // EmuD3DDeferredRenderState
+  uState, // XTL_EmuD3DDeferredRenderState and XTL_EmuD3DDeferredTextureState
   uEmuD3D8Types, // X_D3DTSS_UNK
   uEmuXapi; // XTL_EmuXapiProcessHeap
 
@@ -110,13 +110,15 @@ begin
 
   // locate D3DDeferredRenderState
   begin
-//    if (StrComp('D3D8', szLibraryName) = 0) and (MajorVersion = 1) and (MinorVersion = 0)
-//    and ((BuildVersion = 3925) or (BuildVersion = 4134) or (BuildVersion = 4361) or (BuildVersion = 4432) or
-//         (BuildVersion = 4627) or (BuildVersion = 5558) or (BuildVersion = 5849)) then
-//    begin
-//      uint32 lower := pXbeHeader.dwBaseAddr;
-//      uint32 upper := pXbeHeader.dwBaseAddr + pXbeHeader.dwSizeofImage;
-//
+    XTL_EmuD3DDeferredRenderState := nil;
+    // First option; Just search for _D3D__RenderState itself !
+    Symbol := SymbolManager.FindSymbol('_D3D__RenderState');
+    if Assigned(Symbol) then
+      XTL_EmuD3DDeferredRenderState := Symbol.Address
+    else
+    begin
+      // Second option (Cxbx does this); Search for 'D3DDevice_SetRenderState_CullMode', and offset from that :
+      Symbol := SymbolManager.FindSymbol('D3DDevice_SetRenderState_CullMode');
 //      Pointer pFunc := nil;
 //      if (BuildVersion = 3925) then
 //        pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
@@ -124,10 +126,9 @@ begin
 //        pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
 //      else
 //        pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetRenderState_CullMode_1_0_5558, lower, upper);
-    Symbol := SymbolManager.FindSymbol('D3DDevice_SetRenderState_CullMode');
+    end;
 
-    // Symbol := SymbolManager.FindSymbol('_D3D__RenderState');
-    if Assigned(Symbol) then
+    if Assigned(XTL_EmuD3DDeferredRenderState) then
     begin
 (*
       // offset for stencil cull enable render state in the deferred render state buffer
@@ -170,25 +171,30 @@ begin
       XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 1*4;
       XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 2*4;
       XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 3*4;
-
-      for (Integer v:=0;v<44;v++)
-        XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 *)
-      XTL_EmuD3DDeferredRenderState := nil; // ???
+
+      for v :=0 to 44 -1 do
+        XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
 {$IFDEF DEBUG}
       DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
 {$ENDIF}
     end
     else
-    begin
-      XTL_EmuD3DDeferredRenderState := nil;
       EmuWarning('EmuD3DDeferredRenderState was not found!');
-    end;
   end;
 
   // locate D3DDeferredTextureState
   begin
+    XTL_EmuD3DDeferredTextureState := nil;
+    // First option; Just search for _D3D__TextureState itself !
+    Symbol := SymbolManager.FindSymbol('_D3D__TextureState');
+    if Assigned(Symbol) then
+      XTL_EmuD3DDeferredTextureState := Symbol.Address
+    else
+    begin
+      // Second option (Cxbx does this); Search for 'TexCoordIndex', and offset that :
+      Symbol := SymbolManager.FindSymbol('D3DDevice_SetTextureState_TexCoordIndex');
 //    pFunc := 0;
 //    if (BuildVersion = 3925) then
 //      pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
@@ -198,19 +204,19 @@ begin
 //      pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
 //    else if (BuildVersion = 4627 or BuildVersion = 5558 or BuildVersion = 5849) then
 //      pFunc := EmuLocateFunction((OOVPA)@IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
-//    Symbol := SymbolManager.FindSymbol('D3DDevice_SetTextureState_TexCoordIndex');
-
-    Symbol := SymbolManager.FindSymbol('_D3D__TextureState');
-    if Assigned(Symbol) then
-    begin
+      if Assigned(Symbol) then
+      begin
 //      if (BuildVersion = 3925) then  // 0x18F180
 //        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
 //      else if (BuildVersion = 4134) then
 //        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
 //      else
 //        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
+      end;
+    end;
 
-      XTL_EmuD3DDeferredTextureState := Symbol.Address;
+    if Assigned(XTL_EmuD3DDeferredTextureState) then
+    begin
       for s := 0 to 4-1 do
       begin
         for v := 0 to 32-1 do
@@ -222,11 +228,7 @@ begin
         {MayRenderArguments=}False);
     end
     else
-    begin
-      XTL_EmuD3DDeferredTextureState := nil;
       EmuWarning('EmuD3DDeferredTextureState was not found!');
-//      CxbxKrnlCleanup('EmuD3DDeferredTextureState was not found!');
-    end;
   end;
 
   // After detection of all symbols, see if we need to save that to cache :

@@ -9449,10 +9449,13 @@ begin
   // EmuD3DDeferredRenderState is fixed for 3911, this function should be
   // obsolete!
 
-  if (State > 81) and (State < 116) then
-    XTL_EmuD3DDeferredRenderState[State-82] := Value
-  else
-    CxbxKrnlCleanup('Unknown Deferred RenderState! (%d)', [State]);
+  if Assigned(XTL_EmuD3DDeferredRenderState) then // Dxbx addition
+  begin
+    if (State > 81) and (State < 116) then
+      XTL_EmuD3DDeferredRenderState[State-82] := Value
+    else
+      CxbxKrnlCleanup('Unknown Deferred RenderState! (%d)', [State]);
+  end;
 
   (*
   XDK 3911 Deferred RenderState values
