@@ -5324,9 +5324,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuGet2DSurfaceDesc' +
          #13#10'(' +
-         #13#10'   pPixelContainer   : 0x%.08X' +
-         #13#10'   dwLevel           : 0x%.08X' +
-         #13#10'   pDesc             : 0x%.08X' +
+         #13#10'   pPixelContainer     : 0x%.08X' +
+         #13#10'   dwLevel             : 0x%.08X' +
+         #13#10'   pDesc               : 0x%.08X' +
          #13#10');',
          [pPixelContainer, dwLevel, pDesc]);
 {$ENDIF}
@@ -6304,8 +6304,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTextureState_TexCoordIndex' +
     #13#10'(' +
-    #13#10'   Stage             : 0x%.08X' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Stage               : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Stage, Value]);
 {$ENDIF}
@@ -7277,8 +7277,8 @@ begin
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTransform' +
     #13#10'(' +
-    #13#10'   State             : 0x%.08X' +
-    #13#10'   pMatrix           : 0x%.08X' +
+    #13#10'   State               : 0x%.08X' +
+    #13#10'   pMatrix             : 0x%.08X' +
     #13#10');',
     [Ord(State), pMatrix]);
 
@@ -7687,9 +7687,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_DrawIndexedVertices' +
     #13#10'(' +
-    #13#10'   PrimitiveType     : 0x%.08X' +
-    #13#10'   VertexCount       : 0x%.08X' +
-    #13#10'   pIndexData        : 0x%.08X' +
+    #13#10'   PrimitiveType       : 0x%.08X' +
+    #13#10'   VertexCount         : 0x%.08X' +
+    #13#10'   pIndexData          : 0x%.08X' +
     #13#10');',
     [Ord(PrimitiveType), VertexCount, pIndexData]);
 {$ENDIF}
@@ -7904,8 +7904,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetLight' +
     #13#10'(' +
-    #13#10'   Index             : 0x%.08X' +
-    #13#10'   pLight            : 0x%.08X' +
+    #13#10'   Index               : 0x%.08X' +
+    #13#10'   pLight              : 0x%.08X' +
     #13#10');',
     [Index, pLight]);
 {$ENDIF}
@@ -7946,8 +7946,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_LightEnable' +
     #13#10'(' +
-    #13#10'   Index             : 0x%.08X' +
-    #13#10'   bEnable           : 0x%.08X' +
+    #13#10'   Index               : 0x%.08X' +
+    #13#10'   bEnable             : 0x%.08X' +
     #13#10');',
     [Index, bEnable]);
 {$ENDIF}
