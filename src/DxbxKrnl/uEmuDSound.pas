@@ -53,9 +53,6 @@ const X_DSBPAUSE_RESUME = $00000000;
 const X_DSBPAUSE_PAUSE = $00000001;
 const X_DSBPAUSE_SYNCHPLAYBACK = $00000002;
 
-var
-  initialized: _bool;
-
 type
   WAVEFORMATEX = TWAVEFORMATEX;
   LPWAVEFORMATEX = MMSystem.PWaveFormatEx; // alias
@@ -506,6 +503,10 @@ function XTL_EmuDirectSoundCreate
     pUnknown: LPUNKNOWN
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+{$WRITEABLECONST ON}
+const
+  initialized: _bool = false;
+{$WRITEABLECONST OFF}
 var
   v: int;
 begin
@@ -521,7 +522,6 @@ begin
       [pguidDeviceId, ppDirectSound, pUnknown]);
 {$ENDIF}
 
-  initialized := false;
   Result := DS_OK;
 
   // Set this flag when this function is called
