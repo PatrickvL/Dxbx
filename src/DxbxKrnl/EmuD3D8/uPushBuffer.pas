@@ -348,7 +348,13 @@ begin
 
       if (not VshHandleIsVertexShader(dwVertexShader)) then
       begin
-        if (dwVertexShader and D3DFVF_XYZRHW) > 0 then begin Inc(dwStride, sizeof(FLOAT) * 4); end;
+        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW) then begin Inc(dwStride, sizeof(FLOAT)*4); end;
+        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZ) then begin Inc(dwStride,sizeof(FLOAT)*3); end;
+        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB1) then begin Inc(dwStride, sizeof(FLOAT)*4); end;
+        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB2) then begin Inc(dwStride, sizeof(FLOAT)*5); end;
+        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB3) then begin Inc(dwStride, sizeof(FLOAT)*6); end;
+        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB4) then begin Inc(dwStride, sizeof(FLOAT)*7); end;
+        if (dwVertexShader and D3DFVF_NORMAL) > 0 then begin Inc(dwStride, sizeof(FLOAT)*3); end;
         if (dwVertexShader and D3DFVF_DIFFUSE) > 0 then begin Inc(dwStride, sizeof(DWORD)); end;
         if (dwVertexShader and D3DFVF_SPECULAR) > 0 then begin Inc(dwStride, sizeof(DWORD)); end;
 
@@ -406,7 +412,7 @@ begin
         VPDesc.uiVertexStreamZeroStride := dwStride;
         VPDesc.hVertexShader := dwVertexShader;
 
-        {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
+        {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, Null);
 
         IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP
         (
@@ -499,7 +505,7 @@ begin
           // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
-          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
+          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, Null);
 
           IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
 
@@ -660,7 +666,7 @@ begin
           // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
 
-          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
+          {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, Null);
 
           IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), 0);
 

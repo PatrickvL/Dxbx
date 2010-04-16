@@ -94,7 +94,7 @@ type XTL_VertexPatcher = object
     procedure Create;
     procedure Destroy;
 
-    function Apply(pPatchDesc: PVertexPatchDesc): _bool;
+    function Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
     function Restore(): _bool;
     // Dumps the cache to the console
     procedure DumpCache();
@@ -115,7 +115,7 @@ type XTL_VertexPatcher = object
     // Frees a cached, patched stream
     procedure FreeCachedStream(pStream: Pvoid);
     // Tries to apply a previously patched stream from the cache
-    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
+    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT; pbFatalError: P_bool): _bool;
     // Patches the types of the stream
     function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Normalize texture coordinates in FVF stream if needed
@@ -404,7 +404,7 @@ begin
 end;
 
 function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
-                                             uiStream: UINT): _bool;
+                                             uiStream: UINT; pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   uiStride: UINT;
@@ -425,6 +425,16 @@ begin
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
     IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
+    if (nil=pOrigVertexBuffer) then
+    begin
+
+      if (pbFatalError^) then
+        pbFatalError^ := true;
+
+      Result := false;
+      Exit;
+    end;
+
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
       CxbxKrnlCleanup('Could not retrieve original buffer size');
@@ -711,9 +721,9 @@ begin
               Inc(dwPosNew, 3 * sizeof(FLOAT));
               end;
            $15: begin// SHORT1
-              (*// Make it a SHORT2
-              (((SHORT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 0 * sizeof(SHORT)])) := *(SHORT)@pOrigData[uiVertex * uiStride + dwPosOrig];
-              (((SHORT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 1 * sizeof(SHORT)])) := $00; *)
+              // Make it a SHORT2
+              PSHORTs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := PSHORT(@pOrigData[uiVertex * uiStride + dwPosOrig])^;
+              PSHORTs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := $00;
 
               Inc(dwPosOrig, 1 * sizeof(SHORT));
               Inc(dwPosNew, 2 * sizeof(SHORT));
@@ -730,7 +740,7 @@ begin
                      @pOrigData[uiVertex * uiStride + dwPosOrig],
                      3 * sizeof(SHORT));
               // Make it a SHORT4 and set the last short to 1
-              (*(((SHORT )@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew + 3 * sizeof(SHORT)])) := $01; *)
+              PSHORTs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[3] := $01;
 
               Inc(dwPosOrig, 3 * sizeof(SHORT));
               Inc(dwPosNew, 4 * sizeof(SHORT));
@@ -913,7 +923,7 @@ begin
   begin
     // Copy stream for patching and caching.
     IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
-    if(FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
+    if (nil=pOrigVertexBuffer) or (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
       CxbxKrnlCleanup('Could not retrieve original FVF buffer size.');
     end;
@@ -1250,7 +1260,7 @@ begin
   Result := true;
 end;
 
-function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc): _bool;
+function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   Patched: _bool;
@@ -1269,7 +1279,7 @@ begin
   begin
     LocalPatched := false;
 
-    if (ApplyCachedStream(pPatchDesc, uiStream)) then
+    if (ApplyCachedStream(pPatchDesc, uiStream, pbFatalError)) then
     begin
       m_pStreams[uiStream].bUsedCached := true;
       continue;
@@ -1524,7 +1534,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  {bPatched := }VertPatch.Apply(@VPDesc);
+  {bPatched := }VertPatch.Apply(@VPDesc, NUll);
 
   if(bFVF) then
   begin

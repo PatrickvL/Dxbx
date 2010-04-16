@@ -7567,7 +7567,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
   if XTL_IsValidCurrentShader() then
   begin
@@ -7631,7 +7631,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
   if (XTL_IsValidCurrentShader()) then
   begin
@@ -7681,6 +7681,7 @@ var
 
   uiNumVertices: UINT;
   uiStartIndex: UINT;
+  FatalError: _bool;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7738,8 +7739,8 @@ begin
     VPDesc.hVertexShader := g_CurrentVertexShader;
 
     VertPatch.Create; // Dxbx addition;
-
-    {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
+    FatalError := false;
+    {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
 
     {$ifdef _DEBUG_TRACK_VB}
     if not g_bVBSkipStream then
@@ -7791,7 +7792,7 @@ begin
       uiStartIndex := DWORD(pIndexData) div 2;
     end;
 
-    if (XTL_IsValidCurrentShader()) then
+    if (XTL_IsValidCurrentShader()) and not FatalError then
     begin
       IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive(
         EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
@@ -7866,7 +7867,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc);
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
   {$ifdef _DEBUG_TRACK_VB}
   if ( not g_bVBSkipStream) then
