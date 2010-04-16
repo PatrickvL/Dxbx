@@ -3723,7 +3723,7 @@ end;
 {.$MESSAGE 'PatrickvL reviewed up to here'}
 
 exports
-  XTL_EmuIDirectSoundBuffer8_PlayEx,
+  XTL_EmuIDirectSoundBuffer8_PlayEx name PatchPrefix + 'IDirectSoundBuffer_PlayEx',
 
   XTL_EmuIDirectSoundStream_FlushEx,
 

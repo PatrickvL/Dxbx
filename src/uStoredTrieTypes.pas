@@ -146,6 +146,9 @@ type
     // RStoredCrossReference records stored in the trie !
   end;
 
+  TStoredCrossReferenceArray = array [0..(MaxInt div SizeOf(RStoredCrossReference))-1] of RStoredCrossReference;
+  PStoredCrossReferences = ^TStoredCrossReferenceArray;
+
   PStoredTrieNode = ^RStoredTrieNode;
   RStoredTrieNode = packed record
 {$IFDEF DXBX_RECTYPE}
@@ -218,11 +221,21 @@ type
     function GetStoredLibrary(const aStoredLibraryIndex: TLibraryIndex): PStoredLibrary;
     function GetGlobalFunction(const aGlobalFunctionIndex: TFunctionIndex): PStoredGlobalFunction;
     function GetFunctionName(const aGlobalFunctionIndex: TFunctionIndex): string;
-    function GetLibraryName(const aLibraryIndex: TLibraryIndex): string;
+    //function GetLibraryName(const aLibraryIndex: TLibraryIndex): string;
     function GetNode(const aNodeOffset: TByteOffset): PStoredTrieNode;
   end;
 
+function GetCrossReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredCrossReference;
+
 implementation
+
+function GetCrossReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredCrossReference;
+begin
+  if Assigned(aStoredLibraryFunction) then
+    Result := @(PStoredCrossReferences(IntPtr(aStoredLibraryFunction) + SizeOf(RStoredLibraryFunction))^[aIndex])
+  else
+    Result := nil;
+end;
 
 { TPatternTrieReader }
 
@@ -298,13 +311,13 @@ begin
   Result := GetString(StoredGlobalFunction.FunctionNameIndex);
 end;
 
-function TPatternTrieReader.GetLibraryName(const aLibraryIndex: TLibraryIndex): string;
-var
-  StoredLibrary: PStoredLibrary;
-begin
-  StoredLibrary := GetStoredLibrary(aLibraryIndex);
-  Result := Format('%8s %4d', [GetString(StoredLibrary.LibNameIndex), StoredLibrary.LibVersion]);
-end;
+//function TPatternTrieReader.GetLibraryName(const aLibraryIndex: TLibraryIndex): string;
+//var
+//  StoredLibrary: PStoredLibrary;
+//begin
+//  StoredLibrary := GetStoredLibrary(aLibraryIndex);
+//  Result := Format('%8s %4d', [GetString(StoredLibrary.LibNameIndex), StoredLibrary.LibVersion]);
+//end;
 
 function TPatternTrieReader.GetNode(const aNodeOffset: TByteOffset): PStoredTrieNode;
 begin
