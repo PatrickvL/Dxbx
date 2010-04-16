@@ -148,8 +148,8 @@ type _D3DIVB = packed record
   TD3DIVBArray = array [0..(MaxInt div SizeOf(D3DIVB)) - 1] of D3DIVB;
   PD3DIVBs = ^TD3DIVBArray;
 
-procedure XTL_EmuFlushIVB; stdcall;
-procedure XTL_EmuUpdateActiveTexture; stdcall;
+procedure XTL_EmuFlushIVB(); {NOPATCH}
+procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
 
 procedure CRC32Init;
 function CRC32(data: PByte; len: int): uint;
@@ -428,7 +428,7 @@ begin
     if (nil=pOrigVertexBuffer) then
     begin
 
-      if (pbFatalError^) then
+      if Assigned(pbFatalError) then
         pbFatalError^ := true;
 
       Result := false;
@@ -1345,7 +1345,7 @@ begin
   Result := true;
 end;
 
-procedure XTL_EmuFlushIVB();
+procedure XTL_EmuFlushIVB(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pdwVB: PDWORD;
@@ -1534,7 +1534,7 @@ begin
 
   VertPatch.Create; // Dxbx addition
 
-  {bPatched := }VertPatch.Apply(@VPDesc, NUll);
+  {bPatched := }VertPatch.Apply(@VPDesc, NULL);
 
   if(bFVF) then
   begin
@@ -1559,7 +1559,7 @@ begin
   g_IVBTblOffs := 0;
 end;
 
-procedure XTL_EmuUpdateActiveTexture(); stdcall;
+procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   Stage: int;

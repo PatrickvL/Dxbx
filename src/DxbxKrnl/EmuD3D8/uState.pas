@@ -33,7 +33,7 @@ uses
   uEmuXTL,
   uDxbxKrnlUtils;
 
-procedure XTL_EmuUpdateDeferredStates; stdcall;
+procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 
 // deferred state lookup tables
 var XTL_EmuD3DDeferredRenderState: PDWORDs;
@@ -48,7 +48,7 @@ uses
   uEmuD3D8, // g_BuildVersion
   uEmuD3D8Types;
 
-procedure XTL_EmuUpdateDeferredStates(); stdcall;
+procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwConv: DWORD;
@@ -390,9 +390,6 @@ begin
     *)
   end;
 end;
-
-exports
-  XTL_EmuUpdateDeferredStates;
 
 {.$MESSAGE 'PatrickvL reviewed up to here'}
 end.

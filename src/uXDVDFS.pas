@@ -411,7 +411,7 @@ begin
       end;
     end;
 
-    Entry := PXDVDFS_DIRECTORY_ENTRY(@Ptr[Position]);
+    Entry := PXDVDFS_DIRECTORY_ENTRY(@PBytes(Ptr)[Position]);
 
     // If Entry.StartSector = $FFFFFFFF or Position > 2040, we reached the last
     // entry of the sector

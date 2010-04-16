@@ -462,9 +462,5 @@ begin
   Result := EXCEPTION_CONTINUE_SEARCH;
 end;
 
-exports
-  EmuCleanup{,
-  EmuWarning};
-
 end.
 

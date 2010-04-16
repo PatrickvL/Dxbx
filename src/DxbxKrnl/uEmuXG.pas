@@ -56,7 +56,7 @@ procedure XTL_EmuXGUnswizzleRect
     rSrc: TRECT;
     poDst: TPOINT;
     dwBPP: DWORD
-) ; stdcall;
+); stdcall;
 
 implementation
 

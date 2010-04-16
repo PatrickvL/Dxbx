@@ -35,16 +35,16 @@ uses
   uEmu,
   uXBController;
 
-function XTL_EmuDInputInit: _bool; stdcall; // forward
-procedure XTL_EmuDInputCleanup; stdcall; // forward
-procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall; // forward
+function EmuDInputInit: _bool; {NOPATCH}
+procedure EmuDInputCleanup; {NOPATCH}
+procedure EmuDInputPoll(Controller: PXINPUT_STATE); {NOPATCH}
 
 implementation
 
 var
   g_XBController: XBController;
 
-function XTL_EmuDInputInit: _bool; stdcall;
+function EmuDInputInit: _bool; {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   g_EmuShared.GetXBController(@g_XBController);
@@ -60,24 +60,19 @@ begin
   Result := true;
 end;
 
-procedure XTL_EmuDInputCleanup; stdcall;
+procedure EmuDInputCleanup; {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   g_XBController.ListenEnd();
 end;
 
-procedure XTL_EmuDInputPoll(Controller: PXINPUT_STATE); stdcall;
+procedure EmuDInputPoll(Controller: PXINPUT_STATE); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   g_XBController.ListenPoll(Controller);
   if Assigned(g_XBController.GetError()) then
     MessageBox(0, g_XBController.GetError(), 'Dxbx [*UNHANDLED!*]', MB_OK);  // TODO -oCXBX: Handle this!
 end;
-
-exports
-  XTL_EmuDInputCleanup,
-  XTL_EmuDInputInit,
-  XTL_EmuDInputPoll;
 
 end.
 

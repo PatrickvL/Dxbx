@@ -66,7 +66,7 @@ uses
   uVertexBuffer,
   uState;
 
-procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32); stdcall; // forward
+procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32); {NOPATCH}
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
@@ -207,7 +207,7 @@ uses
   , uXboxLibraryUtils; // Should not be here, but needed for CxbxKrnlRegisterThread
 
 // Direct3D initialization (called before emulation begins)
-procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: uint32); stdcall;
+procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: uint32); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   dwThreadId: DWORD;
@@ -296,12 +296,12 @@ begin
   end;
 end; // XTL_EmuD3DInit
 
-// cleanup Direct3D
-procedure XTL_EmuD3DCleanup(); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  XTL_EmuDInputCleanup();
-end;
+//// cleanup Direct3D
+//procedure XTL_EmuD3DCleanup(); {NOPATCH}
+//// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+//begin
+//  XTL_EmuDInputCleanup();
+//end;
 
 // enumeration procedure for locating display device GUIDs
 function EmuEnumDisplayDevices(lpGUID: PGUID; lpDriverDescription: LPSTR;
@@ -445,7 +445,7 @@ begin
   end;
 
   // initialize direct input
-  if not XTL_EmuDInputInit() then
+  if not EmuDInputInit() then
     CxbxKrnlCleanup('Could not initialize DirectInput!');
 
 {$IFDEF DEBUG}
@@ -4907,10 +4907,10 @@ begin
                   else
                   begin
                     XTL_EmuXGUnswizzleRect
-                      (
+                    (
                       Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                       LockedRect.Pitch, iRect, iPoint, dwBPP
-                      );
+                    );
                   end;
                 end;
               end
@@ -7620,7 +7620,7 @@ begin
     VertexStreamZeroStride]);
 {$ENDIF}
 
-  Xtl_EmuUpdateDeferredStates();
+  XTL_EmuUpdateDeferredStates();
 
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
@@ -7852,7 +7852,7 @@ begin
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
     CxbxKrnlCleanup('g_pIndexBuffer <> 0');
 
-  Xtl_EmuUpdateDeferredStates();
+  XTL_EmuUpdateDeferredStates();
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
@@ -9616,15 +9616,12 @@ begin
 end;
 
 exports
-  XTL_EmuD3DCleanup,
-  XTL_EmuD3DInit,
-
   XTL_EmuGet2DSurfaceDesc,
   XTL_EmuGet2DSurfaceDescD, // TODO -oDXBX: Fix wrong prefix!
 
   XTL_EmuIDevice3D8_KickOff name PatchPrefix + 'D3D_KickOff',
 
-//  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // TODO -oDXBX: Marked out makes logging better.
+  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // TODO -oDXBX: Marked out makes logging better.
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D8_CheckDeviceMultiSampleType name PatchPrefix + 'Direct3D_CheckDeviceMultiSampleType',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
@@ -9647,7 +9644,7 @@ exports
   XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4', // ??
   XTL_EmuIDirect3DDevice8_BeginPushBuffer name PatchPrefix + 'D3DDevice_BeginPushBuffer', // ??
   // XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', // MARKED OUT BY CXBX
-  //XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0',
+  XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0', // TODO -oDXBX: Marked out makes logging better.
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
   XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + 'D3DDevice_BlockOnFence',
   XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank name PatchPrefix + 'D3DDevice_BlockUntilVerticalBlank@0',
@@ -9820,7 +9817,7 @@ exports
   XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
   XTL_EmuIDirect3DSurface8_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
 
-//  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc',
+  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc', // TODO -oDXBX: Marked out makes logging better.
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DTexture_GetSurfaceLevel',
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel2 name PatchPrefix + 'D3DTexture_GetSurfaceLevel2',
   XTL_EmuIDirect3DTexture8_LockRect name PatchPrefix + 'D3DTexture_LockRect',
