@@ -21,9 +21,11 @@ interface
 
 uses
   // Delphi
-  Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids,
+  Windows, Classes, SysUtils, Controls, ExtCtrls, Forms, Grids, Dialogs,
   // Dxbx
-  uTypes;
+  uTypes,
+  uDxbxUtils,
+  uViewerUtils;
 
 type
   THexViewer = class(TPanel)
@@ -31,18 +33,17 @@ type
     function GetOffset: DWord;
     procedure SetOffset(const Value: DWord);
   protected
+//    MyPopupMenu: TPopupMenu;
     MyHeader: TPanel;
     MyDrawGrid: TDrawGrid;
-    FMemory: MathPtr;
-    FSize: DWord;
-    FBase: DWord;
+    FRegionInfo: RRegionInfo;
     procedure DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
-  published
+    procedure GotoOffsetExecute(Sender: TObject);
   public
     property Offset: DWord read GetOffset write SetOffset;
     constructor Create(Owner: TComponent); override;
 
-    procedure SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
+    procedure SetRegion(const aRegionInfo: RRegionInfo);
   end;
 
 function BytesToString(const aSize: Integer): string;
@@ -54,11 +55,19 @@ begin
   Result := FormatFloat(',0', aSize) + ' bytes';
 end;
 
+{ THexViewer }
+
 constructor THexViewer.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
 
   BevelOuter := bvNone;
+
+//  MyPopupMenu = TPopupMenu.Create(Self);
+//  with MyPopupMenu do
+//  begin
+//
+//  end;
 
   MyHeader := TPanel.Create(Self);
   with MyHeader do
@@ -92,7 +101,24 @@ begin
     OnDrawCell := DoDrawCell;
   end;
   
-  SetRegion(nil, 0, 0, '');
+  SetRegion(FRegionInfo);
+end;
+
+procedure THexViewer.GotoOffsetExecute(Sender: TObject);
+var
+  NewOffset: Integer;
+  OffsetStr: string;
+begin
+  OffsetStr := DWord2Str(Offset);
+  OffsetStr := InputBox('Goto offset', 'Enter hexadecimal offset', OffsetStr);
+  if ScanHexDWord(PChar(OffsetStr), {var}NewOffset) then
+  begin
+    Offset := NewOffset;
+    if Offset = DWord(NewOffset) then
+      Exit;
+  end;
+
+  ShowMessage('Goto failed');
 end;
 
 procedure THexViewer.SetOffset(const Value: DWord);
@@ -118,17 +144,15 @@ begin
   Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
 end;
 
-procedure THexViewer.SetRegion(const aMemory: Pointer; const aSize, aBase: DWord; const aTitle: string);
+procedure THexViewer.SetRegion(const aRegionInfo: RRegionInfo);
 var
   NrRows: Integer;
 begin
-  FMemory := aMemory;
-  FSize := aSize;
-  FBase := aBase;
+  FRegionInfo := aRegionInfo;
 
-  MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%s)', [aTitle, DWord(FBase), DWord(FBase + FSize), BytesToString(FSize)]);
+  MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%s)', [FRegionInfo.Name, DWord(FRegionInfo.Buffer), DWord(FRegionInfo.Buffer) + FRegionInfo.Size, BytesToString(FRegionInfo.Size)]);
 
-  NrRows := (aSize + 15) shr 4;
+  NrRows := (FRegionInfo.Size + 15) shr 4;
 
   // We must have at least one row, for FixedRows to stay:
   if NrRows = 0 then
@@ -155,8 +179,8 @@ procedure THexViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
     Dec(Offset);
     for i := 1 to Len do
     begin
-      if IsPrintableChar(PAnsiChar(FMemory)[Offset + i]) then
-        Result[i] := Char(PAnsiChar(FMemory)[Offset + i])
+      if IsPrintableChar(PAnsiChar(FRegionInfo.Buffer)[Offset + i]) then
+        Result[i] := Char(PAnsiChar(FRegionInfo.Buffer)[Offset + i])
       else
         Result[i] := '.';
     end;
@@ -183,17 +207,17 @@ begin
       1..16:
         begin
           Offset := ((aRow - 1) * 16) + aCol - 1;
-          if Offset >= FSize then
+          if Offset >= FRegionInfo.Size then
             aStr := ''
           else
-            aStr := PByteToHexString(@FMemory[Offset], 1);
+            aStr := PByteToHexString(@(PAnsiChar(FRegionInfo.Buffer)[Offset]), 1);
         end;
       17:
         begin
           Offset := ((aRow - 1) * 16);
           Len := 16;
-          if Offset + DWord(Len) >= FSize then
-            Len := FSize - Offset;
+          if Offset + DWord(Len) >= FRegionInfo.Size then
+            Len := FRegionInfo.Size - Offset;
 
           aStr := _Ascii(Offset, Len);
         end;
