@@ -35,8 +35,10 @@ uses
   uTypes,
   uDxbxUtils,
   uXbe,
-  uHexViewer,
+  uViewerUtils,
+  uRegionViewer,
   uStringsViewer,
+  uDisassembleViewer,
   uExploreFileSystem;
 
 type
@@ -98,6 +100,8 @@ var
   FormXBEExplorer: TFormXBEExplorer;
 
 implementation
+
+uses uHexViewer; // THexViewer
 
 type
   TStringsHelper = class(TStrings)
@@ -273,6 +277,7 @@ var
   Grid: TStringGrid;
   i: DWord;
   Hdr: PXbeSectionHeader;
+  RegionInfo: RRegionInfo;
 begin
   if not (Sender is TStringGrid) then
     Exit;
@@ -293,8 +298,13 @@ begin
   Grid.Cells[10, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwTailSharedRefCountAddr));
   Grid.Cells[11, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).bzSectionDigest));
 
-  THexViewer(TStringGrid(Sender).Tag).SetRegion(@MyXBE.RawData[Hdr.dwRawAddr],
-    Hdr.dwSizeofRaw, Hdr.dwRawAddr, 'section "' + Grid.Cells[0, Grid.Row] + '"');
+  RegionInfo.Buffer := @MyXBE.RawData[Hdr.dwRawAddr];
+  RegionInfo.Size := Hdr.dwSizeofRaw;
+  RegionInfo.FileOffset := Hdr.dwRawAddr;
+  RegionInfo.VirtualAddres := Pointer(Hdr.dwVirtualAddr);
+  RegionInfo.Name := 'section "' + Grid.Cells[0, Grid.Row] + '"';
+
+  TRegionViewer(TStringGrid(Sender).Tag).SetRegion(RegionInfo);
 end; // SectionClick
 
 procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
@@ -389,6 +399,7 @@ end;
 function TFormXBEExplorer.OpenFile(const aFilePath: string): Boolean;
 var
   NodeResources: TTreeNode;
+  RegionInfo: RRegionInfo;
 
   procedure _AddRange(Start, Size: Integer; Title: string);
   begin
@@ -588,7 +599,7 @@ var
     Hdr: PXbeSectionHeader;
     ItemName: string;
     Splitter: TSplitter;
-    HexViewer: THexViewer;
+    RegionViewer: TRegionViewer;
   begin
     Result := TPanel.Create(Self);
 
@@ -646,12 +657,12 @@ var
     Splitter.Align := alTop;
     Splitter.Top := Grid.Height;
 
-    HexViewer := THexViewer.Create(Self);
-    HexViewer.PopupMenu := pmHexViewer;
-    HexViewer.Parent := Result;
-    HexViewer.Align := alClient;
+    RegionViewer := TRegionViewer.Create(Self);
+    RegionViewer.PopupMenu := pmHexViewer;
+    RegionViewer.Parent := Result;
+    RegionViewer.Align := alClient;
 
-    Grid.Tag := Integer(HexViewer);
+    Grid.Tag := Integer(RegionViewer);
     Grid.OnClick := SectionClick;
   end; // _Initialize_SectionHeaders
 
@@ -707,17 +718,18 @@ var
 //    _AddRange(TLS.dwDataStartAddr, TLS.dwDataEndAddr - TLS.dwDataStartAddr + 1, 'DataStart');
   end;
 
-  function _Initialize_HexViewer: THexViewer;
+  function _Initialize_RegionViewer: TRegionViewer;
   begin
-    Result := THexViewer.Create(Self);
+    Result := TRegionViewer.Create(Self);
     Result.PopupMenu := pmHexViewer;
-    Result.SetRegion(MyXBE.RawData, MyXBE.FileSize, 0, 'whole file');
+
+    Result.SetRegion(RegionInfo);
   end;
 
   function _Initialize_Strings: TStringsViewer;
   begin
     Result := TStringsViewer.Create(Self);
-    Result.SetRegion(MyXBE.RawData, MyXBE.FileSize);
+    Result.SetRegion(RegionInfo);
   end;
 
 var
@@ -725,7 +737,6 @@ var
   PreviousTreeNodeStr: string;
   i: Integer;
 begin // OpenFile
-
   // Construct current tree path (excluding first node) :
   Node0 := TreeView1.Selected;
   PreviousTreeNodeStr := '';
@@ -746,6 +757,12 @@ begin // OpenFile
   MyRanges.ScrollBars := ssBoth;
   MyRanges.Font.Name := 'Consolas';
   
+  RegionInfo.Buffer := MyXBE.RawData;
+  RegionInfo.Size := MyXBE.FileSize;
+  RegionInfo.FileOffset := 0;
+  RegionInfo.VirtualAddres := Pointer(MyXBE.m_Header.dwBaseAddr);
+  RegionInfo.Name := 'whole file';
+
   Node0 := _CreateNode(nil, 'File : ' + FXBEFileName, _CreateGrid_File);
   NodeXBEHeader := _CreateNode(Node0, 'XBE Header', _Initialize_XBEHeader);
 
@@ -757,7 +774,7 @@ begin // OpenFile
   _CreateNode(NodeXBEHeader, 'Library Versions', _Initialize_LibraryVersions);
   _CreateNode(NodeXBEHeader, 'TLS', _Initialize_TLS);
 
-  _CreateNode(Node0, 'Hex Viewer', _Initialize_HexViewer);
+  _CreateNode(Node0, 'Contents', _Initialize_RegionViewer);
   _CreateNode(Node0, 'Strings', _Initialize_Strings);
 
   TStringsHelper(MyRanges.Lines).Sort;

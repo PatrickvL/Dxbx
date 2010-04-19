@@ -1055,7 +1055,7 @@ procedure TSymbolManager.DetermineFinalLocations;
       or (CurrentSymbol.FirstPotentialFunctionLocationIndex = 0) then
         Name := Name + ' (XRef)';
 
-      DbgPrintf('HLE: 0x%.8x -> %s  [%s]',
+      DbgPrintf('Found at 0x%.8x : %s  [%s]',
         [CurrentSymbol.Address, Name, CurrentSymbol.Name],
         {MayRenderArguments=}False);
     end; // for Symbols

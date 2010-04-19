@@ -16,7 +16,11 @@ uses
   uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas',
   uXDVDFS in '..\..\src\uXDVDFS.pas',
   uFileSystem in '..\..\src\uFileSystem.pas',
-  uExploreFileSystem in '..\..\src\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem};
+  uExploreFileSystem in '..\..\src\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem},
+  uDisassembleViewer in '..\..\src\XBEExplorer\uDisassembleViewer.pas',
+  BeaEngine in '..\..\Libraries\BeaEngine\BeaEngine.pas',
+  uRegionViewer in '..\..\src\XBEExplorer\uRegionViewer.pas',
+  uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas';
 
 {$R *.res}
 

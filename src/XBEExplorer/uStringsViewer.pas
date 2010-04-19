@@ -23,18 +23,21 @@ uses
   // Delphi
   Windows, Classes, SysUtils, Controls, Graphics, Forms, Grids,
   // Dxbx
-  uDxbxUtils, uTypes;
+  uDxbxUtils,
+  uTypes,
+  uViewerUtils;
 
 type
   TStringsViewer = class(TDrawGrid)
   protected
+    FRegionInfo: RRegionInfo;
     MyStrings: TStringList;
     procedure DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
 
-    procedure SetRegion(const aMemory: Pointer; const aSize: Integer);
+    procedure SetRegion(const aRegionInfo: RRegionInfo);
   end;
 
 implementation
@@ -63,7 +66,7 @@ begin
   Options := [goThumbTracking];
   OnDrawCell := DoDrawCell;
 
-  SetRegion(nil, 0);
+  SetRegion(FRegionInfo);
 end;
 
 destructor TStringsViewer.Destroy;
@@ -73,7 +76,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TStringsViewer.SetRegion(const aMemory: Pointer; const aSize: Integer);
+procedure TStringsViewer.SetRegion(const aRegionInfo: RRegionInfo);
 const
   // String should at least be this long :
   MIN_STRING_LENGTH = 4;
@@ -96,7 +99,7 @@ var
     Len := i - StartOffset;
     if Len >= MIN_STRING_LENGTH then
     begin
-      SetString(Str, PAnsiChar(aMemory)+StartOffset, Len);
+      SetString(Str, PAnsiChar(FRegionInfo.Buffer)+StartOffset, Len);
 
       // Relatively short strings need some extra pruning :
       if Len <= SHORT_STRING_LENGTH then
@@ -122,15 +125,16 @@ var
 
 begin
   MyStrings.Clear;
-  if Assigned(aMemory) and (aSize >= MIN_STRING_LENGTH) then
+  FRegionInfo := aRegionInfo;
+  if Assigned(FRegionInfo.Buffer) and (FRegionInfo.Size >= MIN_STRING_LENGTH) then
   begin
     StartOffset := -1;
     i := 0;
-    while i < aSize do
+    while i < FRegionInfo.Size do
     begin
       // TODO : Here we should add Unicode detection too
       
-      if IsPrintableAsciiChar(PAnsiChar(aMemory)[i]) then
+      if IsPrintableAsciiChar(PAnsiChar(FRegionInfo.Buffer)[i]) then
       begin
         if StartOffset < 0 then
           StartOffset := i;

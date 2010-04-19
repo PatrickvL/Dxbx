@@ -15,39 +15,20 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
-unit uHLEDatabase;
-
-{$INCLUDE Dxbx.inc}
+unit uViewerUtils;
 
 interface
 
-uses
-  // Jedi Win32API
-  JwaWinType,
-  // Dxbx
-  uTypes;
-
-var
-//  HLEDataBaseSize: uint32; // extern
-  UnResolvedXRefs: uint32; // extern
-  bXRefFirstPass: _bool; // extern
-
 type
-// ******************************************************************
-// * HLEDataBase
-// ******************************************************************
-  HLEData = packed record // extern
-    Library_: PChar;
-
-    MajorVersionL: uint16;
-    MinorVersion: uint16;
-    BuildVersion: uint16;
-
-//    OovpaTable: POOVPATable;
-    OovpaTableSize: uint32;
+  RRegionInfo = record
+    Buffer: Pointer;
+    Size: Cardinal;
+    FileOffset: Cardinal;
+    VirtualAddres: Pointer;
+    Name: string;
   end;
-//HLEDataBase[];
 
 implementation
 
 end.
+

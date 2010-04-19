@@ -36,7 +36,6 @@ uses
   uEmuShared,
   uEmu,
   uEmuFS,
-  uHLEDatabase,
   // Dxbx
   uXboxLibraryUtils,
   uStoredTrieTypes,
@@ -173,7 +172,7 @@ begin
       XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 3*4;
 *)
 
-      for v :=0 to 44 -1 do
+      for v := 0 to 44-1 do
         XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
 {$IFDEF DEBUG}
@@ -246,11 +245,11 @@ var
 begin
   // Write JMP rel16 opcode (Jump near, displacement relative to next instruction) :
   FunctionAddr^ := $E9;
+  Inc(FunctionAddr);
   // Calculate relative address :
-  RelativeJMPAddress := (UIntPtr(WrapperAddr) - UIntPtr(FunctionAddr) - 5);
+  RelativeJMPAddress := (UIntPtr(WrapperAddr) - UIntPtr(FunctionAddr) - 4);
   // Write that after the JMP :
-  PCardinal(UIntPtr(FunctionAddr) + 1)^ := RelativeJMPAddress;
-//  CopyMemory(Pointer(IntPtr(FunctionAddr) + 1), @RelativeJMPAddress, 4);
+  PUInt32(FunctionAddr)^ := RelativeJMPAddress;
 end;
 
 // install function interception wrappers
@@ -290,8 +289,8 @@ begin
       Assert(Assigned(NewCode));
 
 {$IFDEF DXBX_DEBUG}
-      DbgPrintf('DxbxHLE : Installed patch over $%.08X (to %s)', [
-        OrgCode, DetectedSymbol.Name], {MayRenderArguments=}False);
+      DbgPrintf('HLE: 0x%.08X -> Emu%s (patching %s)', [
+        OrgCode, AvailablePatches[XboxLibraryPatch - 1], DetectedSymbol.Name], {MayRenderArguments=}False);
       UsedPatches[XboxLibraryPatch] := True;
 {$ENDIF}
 
@@ -308,7 +307,7 @@ begin
       if not UsedPatches[{XboxLibraryPatch=}(i + 1)] then
       begin
         Inc(NrPatches);
-        DbgPrintf('DxbxHLE : Unused patch %.3d : $%.08x (%s{Emu}%s)', [i, Integer(AvailablePatches.Objects[i]), PatchPrefix, AvailablePatches[i]]);
+        DbgPrintf('DxbxHLE : Unused patch %.3d : %s{Emu}%s', [i, PatchPrefix, AvailablePatches[i]]);
       end;
     end;
 
