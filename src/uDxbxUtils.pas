@@ -89,6 +89,10 @@ function HexToIntDef(const aLine: string; const aDefault: Integer): Integer;
 
 function Sscanf(const s: AnsiString; const fmt: AnsiString; const Pointers: array of Pointer): Integer;
 
+function BytesToString(const aSize: Integer): string;
+
+function TryReadLiteralString(const Ptr: PAnsiChar; const MaxStrLen: Integer = 260): UnicodeString;
+
 function StrLenLimit(Src: PAnsiChar; MaxLen: Cardinal): Cardinal;
 function StrLPas(const aPChar: PAnsiChar; const aMaxLength: Integer): AnsiString;
 
@@ -642,6 +646,65 @@ begin
       break;
     end;
   end;
+end;
+
+function BytesToString(const aSize: Integer): string;
+begin
+  Result := FormatFloat(',0', aSize) + ' bytes';
+end;
+
+function TryReadLiteralString(const Ptr: PAnsiChar; const MaxStrLen: Integer = 260): UnicodeString;
+const
+  // Here the (rather arbitrary) steering parameters :
+  MinStrLen = 3;
+  PrintableChars = [' '..#127];
+var
+  i: Integer;
+  NrAnsiChars: Integer;
+  NrWideZeros: Integer;
+begin
+  Result := '';
+
+  NrAnsiChars := 0;
+  NrWideZeros := 0;
+
+  // Dected as much string-contents as we can :
+  i := 0;
+  while i < MaxStrLen do
+  try
+    if Ptr[i] = #0 then
+    begin
+      // Zero's on odd position could indicate an UTF-16LE string :
+      if Odd(i) then
+      begin
+        Inc(NrWideZeros);
+        Inc(i);
+        continue;
+      end;
+
+      // The string ends on a #0 :
+      break;
+    end;
+
+    // It's no string when it contains non-printable characters :
+    if not (Ptr[i] in PrintableChars) then
+      Exit;
+
+    Inc(NrAnsiChars);
+    Inc(i);
+  except
+    // Save-guard against illegal memory-accesses :
+    Exit;
+  end;
+
+  // It's no string when it's too short :
+  if NrAnsiChars < MinStrLen then
+    Exit;
+
+  if Abs(NrAnsiChars - NrWideZeros) <= 1 then
+    Result := '"' + Copy(PWideChar(Ptr), 0, NrAnsiChars) + '"'
+  else
+    Result := '"' + UnicodeString(Copy(Ptr, 0, NrAnsiChars)) + '"';
 end;
 
 // Stupid Delphi has this hidden in the implementation section of SysUtils;

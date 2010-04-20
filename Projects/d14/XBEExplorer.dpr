@@ -19,8 +19,9 @@ uses
   uExploreFileSystem in '..\..\src\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem},
   uDisassembleViewer in '..\..\src\XBEExplorer\uDisassembleViewer.pas',
   BeaEngine in '..\..\Libraries\BeaEngine\BeaEngine.pas',
-  uRegionViewer in '..\..\src\XBEExplorer\uRegionViewer.pas',
-  uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas';
+  uSectionViewer in '..\..\src\XBEExplorer\uSectionViewer.pas',
+  uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas',
+  uDisassembleUtils in '..\..\src\uDisassembleUtils.pas';
 
 {$R *.res}
 

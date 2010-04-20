@@ -21,26 +21,26 @@ interface
 
 uses
   // Delphi
-  Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids,
-  // 3rd Party
-  BeaEngine,
+  Windows, Types, Classes, SysUtils, Controls, ComCtrls, Graphics, ExtCtrls, Forms, Grids,
+  StdCtrls, // TListBox
   // Dxbx
   uTypes,
+  uDxbxUtils,
+  uDisassembleUtils,
   uViewerUtils;
 
 type
-  TDisassemblerViewer = class(TPanel)
+  TDisassembleViewer = class(TPanel)
   private
     function GetOffset: DWord;
     procedure SetOffset(const Value: DWord);
   protected
     MyHeader: TPanel;
-    MyListBox: TDrawGrid;
+    MyListBox: TListBox;
     FRegionInfo: RRegionInfo;
-    MyDisAsm: TDISASM;
+    MyDisassemble: RDisassemble;
     MyInstructionOffsets: TList;
-    function DoDisasm(const aOffset: Cardinal): Cardinal;
-    procedure DoDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+    procedure DoDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
   public
     property Offset: DWord read GetOffset write SetOffset;
     constructor Create(Owner: TComponent); override;
@@ -51,14 +51,13 @@ type
 
 implementation
 
-const
-  DelphiSyntax = $00000800;
+{ TDisassembleViewer }
 
-{ TDisassemblerViewer }
-
-constructor TDisassemblerViewer.Create(Owner: TComponent);
+constructor TDisassembleViewer.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
+
+  Parent := TWinControl(Owner);
 
   MyInstructionOffsets := TList.Create;
 
@@ -73,7 +72,7 @@ begin
     BevelOuter := bvNone;
   end;
 
-  MyListBox := TDrawGrid.Create(Self);
+  MyListBox := TListBox.Create(Self);
   with MyListBox do
   begin
     Align := alClient;
@@ -83,160 +82,112 @@ begin
     BevelOuter := bvNone;
     BorderStyle := bsNone;
     Font.Name := 'Consolas';
-    DefaultRowHeight := 16;
-    DefaultColWidth := 20;
-    ColCount := 5;
-    ColWidths[0] := 64; // Offset
-    ColWidths[1] := 28; // extra padding
-    ColWidths[2] := 210; // Disassembly
-    ColWidths[3] := 28; // extra padding
-    ColWidths[4] := 96; // Hex dump
-    FixedCols := 1;
-    RowCount := 2; // Needed to be able to set FixedRows
-    FixedRows := 1;
-    Options := [goRangeSelect, goDrawFocusSelected, goThumbTracking];
-    OnDrawCell := DoDrawCell;
+//    Columns := 1;
+    Style := lbVirtualOwnerDraw;
+    OnDrawItem := DoDrawItem;
+    ScrollWidth := 0;//MaxInt;
   end;
+
 
   SetRegion(FRegionInfo);
 end;
 
-destructor TDisassemblerViewer.Destroy;
+destructor TDisassembleViewer.Destroy;
 begin
   FreeAndNil(MyInstructionOffsets);
 
   inherited Destroy;
 end;
 
-procedure TDisassemblerViewer.SetOffset(const Value: DWord);
-var
-  GridRect: TGridRect;
+procedure TDisassembleViewer.SetOffset(const Value: DWord);
+//var
+//  GridRect: TGridRect;
 begin
-  GridRect.Top := Integer(Value div 16) + MyListBox.FixedRows;
-  if GridRect.Top < MyListBox.RowCount then
-  begin
-    GridRect.Left := Integer(Value mod 16) + MyListBox.FixedCols;
-    GridRect.Right := GridRect.Left;
-    GridRect.Bottom := GridRect.Top;
-    MyListBox.Selection := GridRect;
-    MyListBox.TopRow := MyListBox.Selection.Top;
-  end;
+//  GridRect.Top := Integer(Value div 16) + MyDrawGrid.FixedRows;
+//  if GridRect.Top < MyDrawGrid.RowCount then
+//  begin
+//    GridRect.Left := Integer(Value mod 16) + MyDrawGrid.FixedCols;
+//    GridRect.Right := GridRect.Left;
+//    GridRect.Bottom := GridRect.Top;
+//    MyDrawGrid.Selection := GridRect;
+//    MyDrawGrid.TopRow := MyDrawGrid.Selection.Top;
+//  end;
 end;
 
-function TDisassemblerViewer.GetOffset: DWord;
-var
-  GridRect: TGridRect;
+function TDisassembleViewer.GetOffset: DWord;
+//var
+//  GridRect: TGridRect;
 begin
-  GridRect := MyListBox.Selection;
-  Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
+//  GridRect := MyDrawGrid.Selection;
+//  Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
+  Result := 0;
 end;
 
-function TDisassemblerViewer.DoDisasm(const aOffset: Cardinal): Cardinal;
-begin
-  ZeroMemory(@MyDisasm, SizeOf(MyDisAsm));
-  MyDisasm.VirtualAddr := UIntPtr(FRegionInfo.VirtualAddres) + aOffset;
-  MyDisasm.SecurityBlock := FRegionInfo.Size;
-  MyDisasm.EIP := UIntPtr(FRegionInfo.Buffer) + aOffset;
-
-  MyDisasm.Options := Tabulation + DelphiSyntax + PrefixedNumeral;
-//  MasmSyntax, GoAsmSyntax, NasmSyntax, ATSyntax;
-
-  Result := Disasm({var}MyDisasm);
-end;
-
-procedure TDisassemblerViewer.SetRegion(const aRegionInfo: RRegionInfo);
-var
-  Offset: Cardinal;
-  Len: Integer;
+procedure TDisassembleViewer.SetRegion(const aRegionInfo: RRegionInfo);
 begin
   FRegionInfo := aRegionInfo;
 
-//  MyHeader.Caption := Format('Disassemble viewing %s, %.08x .. %.08x (%s)', [aTitle, DWord(FBase), DWord(FBase + FSize), BytesToString(FSize)]);
+  MyDisassemble.Init(FRegionInfo.Buffer, FRegionInfo.Size, FRegionInfo.VirtualAddres);
+
+  MyHeader.Caption := Format('Disassemble viewing %s, %.08x .. %.08x (%s)', [
+    FRegionInfo.Name,
+    DWord(FRegionInfo.VirtualAddres),
+    DWord(FRegionInfo.VirtualAddres) + FRegionInfo.Size,
+    BytesToString(FRegionInfo.Size)]);
 
   MyInstructionOffsets.Clear;
 
-  Offset := 0;
-  while Offset < FRegionInfo.Size do
-  begin
-    Len := DoDisasm(Offset);
-    if Len = OUT_OF_BLOCK then
-      Break;
+  MyDisassemble.Offset := 0;
+  while MyDisassemble.DoDisasm do
+    MyInstructionOffsets.Add(Pointer(MyDisassemble.CurrentOffset));
 
-    if Len = UNKNOWN_OPCODE then
-    begin
-      // Mark invalid opcode :
-      MyInstructionOffsets.Add(Pointer(-Offset));
-      Inc(Offset, 1);
-      Continue;
-    end;
-
-    MyInstructionOffsets.Add(Pointer(Offset));
-
-    Inc(Offset, Len);
-  end;
-
-  MyListBox.RowCount := 2 + MyInstructionOffsets.Count;
-  MyListBox.FixedRows := 1;
+  MyListBox.Count := MyInstructionOffsets.Count;
   MyListBox.Repaint;
 end;
 
-procedure TDisassemblerViewer.DoDrawCell(Sender: TObject; ACol, ARow: Integer;
-  Rect: TRect; State: TGridDrawState);
+procedure TDisassembleViewer.DoDrawItem(Control: TWinControl; Index: Integer;
+    Rect: TRect; State: TOwnerDrawState);
 var
-  aStr: string;
-  Offset: Integer;
-  Len: Integer;
+  Offset: Cardinal;
+//  Addr: Pointer;
+  CommentStr: string;
+  LineStr: string;
 begin
-  if aRow = 0 then
-  begin
-    case aCol of
-      0: aStr := 'VirtAddr';
-      2: aStr := 'Disassembly';
-      4: aStr := 'Hex dump';  // Ascii dump? Flag?
-    end;
-  end
-  else
-  if aRow >= MyInstructionOffsets.Count then
-    aStr := ''
-  else
-  begin
-    Offset := Integer(MyInstructionOffsets[aRow - 1]);
-    case aCol of
-      0:
-        if Offset < 0 then
-          aStr := Format('%.08x', [UIntPtr(FRegionInfo.VirtualAddres) - Offset])
-        else
-          aStr := Format('%.08x', [UIntPtr(FRegionInfo.VirtualAddres) + Offset]);
-      2:
-        begin
-          if Offset < 0 then
-            aStr := '???'
-          else
-          begin
-            DoDisasm(Offset);
-            aStr := string(MyDisAsm.CompleteInstr);
-            if (MyDisAsm.Options and DelphiSyntax) = DelphiSyntax then
-            begin
-              // Transform the disassembled output into something more Delphi-like :
-              aStr := StringReplace(aStr, '0x', '$', [rfIgnoreCase, rfReplaceAll]);
-              aStr := StringReplace(aStr, ', dword ptr ', ', ', [rfIgnoreCase, rfReplaceAll]);
-              aStr := StringReplace(aStr, ' , ', ',', [rfIgnoreCase, rfReplaceAll]);
-            end;
-          end;
-        end;
-      4:
-        begin
-//          Offset := ((aRow - 1) * 16) + aCol - 1;
-//          if Offset >= FSize then
-          aStr := '';
-//          else
-//            aStr := PByteToHexString(@PBytes(FRegionInfo.Buffer)[Offset], 1);
-        end;
-    end;
-  end;
+  Offset := Cardinal(MyInstructionOffsets[Index]);
+
+  MyDisassemble.Offset := Offset;
+  MyDisassemble.DoDisasm;
+
+  // Add interesting details, like referenced string contents, labels etc.
+
+  // Only problem is, the referenced addresses in code assume post-load layout,
+  // while we're working with a Raw Xbe - so we need to do a bit of addresss
+  // conversion wizardry to make this work :
+  CommentStr := '';
+//  if MyDisassemble.ArgReadsFromMemory(2) then
+//  begin
+//    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(2) - UIntPtr(FRegionInfo.VirtualAddres);
+//    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
+//  end
+//  else
+//  if MyDisassemble.ArgReadsFromMemory(1) then
+//  begin
+//    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(1) - UIntPtr(FRegionInfo.VirtualAddres);
+//    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
+//  end;
+
+  if CommentStr <> '' then
+    CommentStr := '; ' + CommentStr;
+
+  LineStr := Format('%.08x %-20s %-40s %s', [
+    {Address}UIntPtr(FRegionInfo.VirtualAddres) + Offset,
+    MyDisassemble.HexStr,
+    MyDisassemble.OpcodeStr,
+    CommentStr
+    ]);
 
   MyListBox.Canvas.FillRect(Rect);
-  MyListBox.Canvas.TextOut(Rect.Left, Rect.Top, aStr);
+  DrawTextW(MyListBox.Canvas.Handle, LineStr, Length(LineStr), Rect, 0);
 end;
 
 end.

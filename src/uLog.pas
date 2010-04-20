@@ -155,63 +155,6 @@ begin
         and (LMemInfo.Protect and PAGE_GUARD = 0);
 end;
 
-function TryReadLiteralString(const Ptr: PAnsiChar; var aOutputStr: UnicodeString): Boolean;
-const
-  // Here the (rather arbitrary) steering parameters :
-  MinStrLen = 3;
-  MaxStrLen = 260;
-  PrintableChars = [' '..#127];
-var
-  i: Integer;
-  NrAnsiChars: Integer;
-  NrWideZeros: Integer;
-begin
-  Result := False;
-
-  NrAnsiChars := 0;
-  NrWideZeros := 0;
-
-  // Dected as much string-contents as we can :
-  i := 0;
-  while i < MaxStrLen do
-  try
-    if Ptr[i] = #0 then
-    begin
-      // Zero's on odd position could indicate an UTF-16LE string :
-      if Odd(i) then
-      begin
-        Inc(NrWideZeros);
-        Inc(i);
-        continue;
-      end;
-
-      // The string ends on a #0 :
-      break;
-    end;
-
-    // It's no string when it contains non-printable characters :
-    if not (Ptr[i] in PrintableChars) then
-      Exit;
-
-    Inc(NrAnsiChars);
-    Inc(i);
-  except
-    // Save-guard against illegal memory-accesses :
-    Exit;
-  end;
-
-  // It's no string when it's too short :
-  if NrAnsiChars < MinStrLen then
-    Exit;
-
-  if Abs(NrAnsiChars - NrWideZeros) <= 1 then
-    {var}aOutputStr := '"' + Copy(PWideChar(Ptr), 0, NrAnsiChars) + '"'
-  else
-    {var}aOutputStr := '"' + UnicodeString(Copy(Ptr, 0, NrAnsiChars)) + '"';
-
-  Result := True
-end;
-
 {$IFDEF DXBX_DLL}
 function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
 var
@@ -303,7 +246,8 @@ begin
 {$ENDIF}
 
     // See if it's a literal string :
-    if TryReadLiteralString(PAnsiChar(Ptr), {var}aOutputStr) then
+    aOutputStr := TryReadLiteralString(PAnsiChar(Ptr));
+    if aOutputStr <> '' then
       break;
 
     // See if we may still try indirect pointers :
