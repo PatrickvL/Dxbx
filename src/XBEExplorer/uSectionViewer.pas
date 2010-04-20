@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
-unit uRegionViewer;
+unit uSectionViewer;
 
 interface
 
@@ -28,10 +28,10 @@ uses
   uDisassembleViewer;
 
 type
-  TRegionViewer = class(TPageControl)
+  TSectionViewer = class(TPageControl)
   protected
     FHexViewer: THexViewer;
-    FDisassembleViewer: TDisassemblerViewer;
+    FDisassembleViewer: TDisassembleViewer;
   public
     constructor Create(Owner: TComponent); override;
 
@@ -40,9 +40,9 @@ type
 
 implementation
 
-{ TRegionViewer }
+{ TSectionViewer }
 
-constructor TRegionViewer.Create(Owner: TComponent);
+constructor TSectionViewer.Create(Owner: TComponent);
 
   procedure _NewTab(const aControl: TControl; const aTitle: string);
   var
@@ -64,13 +64,13 @@ begin
   Parent := TWinControl(Owner);
 
   FHexViewer := THexViewer.Create(Self);
-  FDisassembleViewer := TDisassemblerViewer.Create(Self);
+  FDisassembleViewer := TDisassembleViewer.Create(Self);
 
   _NewTab(FHexViewer, 'Hex view');
   _NewTab(FDisassembleViewer, 'Disassembly');
 end;
 
-procedure TRegionViewer.SetRegion(const aRegionInfo: RRegionInfo);
+procedure TSectionViewer.SetRegion(const aRegionInfo: RRegionInfo);
 begin
   FHexViewer.SetRegion(aRegionInfo);
   FDisassembleViewer.SetRegion(aRegionInfo);

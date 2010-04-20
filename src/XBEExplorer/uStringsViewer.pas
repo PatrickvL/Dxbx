@@ -85,7 +85,7 @@ const
   SHORT_STRING_FORBIDDEN_CHARS: set of AnsiChar = ['$', '^', '`', ']', '<', ';'];
 
 var
-  i: Integer;
+  i: Cardinal;
   StartOffset: Integer;
 
   procedure _HandleStringEnd;
@@ -96,7 +96,7 @@ var
     if StartOffset < 0 then
       Exit;
 
-    Len := i - StartOffset;
+    Len := Integer(i) - StartOffset;
     if Len >= MIN_STRING_LENGTH then
     begin
       SetString(Str, PAnsiChar(FRegionInfo.Buffer)+StartOffset, Len);

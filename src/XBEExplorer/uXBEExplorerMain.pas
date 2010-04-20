@@ -36,7 +36,7 @@ uses
   uDxbxUtils,
   uXbe,
   uViewerUtils,
-  uRegionViewer,
+  uSectionViewer,
   uStringsViewer,
   uDisassembleViewer,
   uExploreFileSystem;
@@ -304,7 +304,7 @@ begin
   RegionInfo.VirtualAddres := Pointer(Hdr.dwVirtualAddr);
   RegionInfo.Name := 'section "' + Grid.Cells[0, Grid.Row] + '"';
 
-  TRegionViewer(TStringGrid(Sender).Tag).SetRegion(RegionInfo);
+  TSectionViewer(TStringGrid(Sender).Tag).SetRegion(RegionInfo);
 end; // SectionClick
 
 procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
@@ -599,7 +599,7 @@ var
     Hdr: PXbeSectionHeader;
     ItemName: string;
     Splitter: TSplitter;
-    RegionViewer: TRegionViewer;
+    SectionViewer: TSectionViewer;
   begin
     Result := TPanel.Create(Self);
 
@@ -657,12 +657,12 @@ var
     Splitter.Align := alTop;
     Splitter.Top := Grid.Height;
 
-    RegionViewer := TRegionViewer.Create(Self);
-    RegionViewer.PopupMenu := pmHexViewer;
-    RegionViewer.Parent := Result;
-    RegionViewer.Align := alClient;
+    SectionViewer := TSectionViewer.Create(Self);
+    SectionViewer.PopupMenu := pmHexViewer;
+    SectionViewer.Parent := Result;
+    SectionViewer.Align := alClient;
 
-    Grid.Tag := Integer(RegionViewer);
+    Grid.Tag := Integer(SectionViewer);
     Grid.OnClick := SectionClick;
   end; // _Initialize_SectionHeaders
 
@@ -718,12 +718,20 @@ var
 //    _AddRange(TLS.dwDataStartAddr, TLS.dwDataEndAddr - TLS.dwDataStartAddr + 1, 'DataStart');
   end;
 
-  function _Initialize_RegionViewer: TRegionViewer;
+  function _Initialize_HexViewer: THexViewer;
+  var
+    OrgVA: Pointer;
   begin
-    Result := TRegionViewer.Create(Self);
+    Result := THexViewer.Create(Self);
     Result.PopupMenu := pmHexViewer;
 
+    // Trick the HexViewer into thinking the VA = 0 :
+    OrgVA := RegionInfo.VirtualAddres;
+    RegionInfo.VirtualAddres := nil;
+
+    // Signal the HexViewer and restore original VA :
     Result.SetRegion(RegionInfo);
+    RegionInfo.VirtualAddres := OrgVA;
   end;
 
   function _Initialize_Strings: TStringsViewer;
@@ -774,7 +782,7 @@ begin // OpenFile
   _CreateNode(NodeXBEHeader, 'Library Versions', _Initialize_LibraryVersions);
   _CreateNode(NodeXBEHeader, 'TLS', _Initialize_TLS);
 
-  _CreateNode(Node0, 'Contents', _Initialize_RegionViewer);
+  _CreateNode(Node0, 'Contents', _Initialize_HexViewer);
   _CreateNode(Node0, 'Strings', _Initialize_Strings);
 
   TStringsHelper(MyRanges.Lines).Sort;

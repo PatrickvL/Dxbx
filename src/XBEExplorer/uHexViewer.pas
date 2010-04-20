@@ -46,14 +46,7 @@ type
     procedure SetRegion(const aRegionInfo: RRegionInfo);
   end;
 
-function BytesToString(const aSize: Integer): string;
-
 implementation
-
-function BytesToString(const aSize: Integer): string;
-begin
-  Result := FormatFloat(',0', aSize) + ' bytes';
-end;
 
 { THexViewer }
 
@@ -150,7 +143,11 @@ var
 begin
   FRegionInfo := aRegionInfo;
 
-  MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%s)', [FRegionInfo.Name, DWord(FRegionInfo.Buffer), DWord(FRegionInfo.Buffer) + FRegionInfo.Size, BytesToString(FRegionInfo.Size)]);
+  MyHeader.Caption := Format('Hex viewing %s, %.08x .. %.08x (%s)', [
+    FRegionInfo.Name,
+    DWord(FRegionInfo.VirtualAddres),
+    DWord(FRegionInfo.VirtualAddres) + FRegionInfo.Size,
+    BytesToString(FRegionInfo.Size)]);
 
   NrRows := (FRegionInfo.Size + 15) shr 4;
 
