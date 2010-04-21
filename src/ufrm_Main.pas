@@ -196,7 +196,7 @@ begin
     AnsiQuotedStr(aXbe.XbePath, '"') + ' ' +
     IntToStr(aHandle) + ' ' +
     IntToStr(Ord(KernelDebugMode)) + ' ' +
-    KernelDebugFileName
+    AnsiQuotedStr(KernelDebugFileName, '"')
     ), nil, SW_SHOWNORMAL);
 end;
 

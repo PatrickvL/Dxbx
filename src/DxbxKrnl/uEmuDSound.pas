@@ -222,107 +222,104 @@ const DSB_FLAG_ADPCM = $00000001;
 const WAVE_FORMAT_XBOX_ADPCM = $0069;
 const DSB_FLAG_RECIEVEDATA = $00001000;
 
-type X_CMcpxStream = class(TObject)
-  (*
-    public:
-        // construct vtable (or grab ptr to existing)
-        X_CMcpxStream(class X_CDirectSoundStream *pParentStream) : pVtbl(&vtbl), pParentStream(pParentStream) {end;
+type
+  X_CDirectSoundStream = class; // forward
 
-    private:
-        // vtable (cached by each instance, via constructor)
-        struct _vtbl
-        {
-            DWORD Unknown1;                                                 // 0x00 - ???
-            DWORD Unknown2;                                                 // 0x04 - ???
-            DWORD Unknown3;                                                 // 0x08 - ???
-            DWORD Unknown4;                                                 // 0x0C - ???
+  X_CMcpxStream = class(TObject)
+  // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+  public
+    // construct vtable (or grab ptr to existing)
+    constructor Create(pParentStream :X_CDirectSoundStream); //begin {pVtbl := @vtbl;} Self.pParentStream := pParentStream; end;
 
-            //
-            // TODO -oCXBX: Function needs X_CMcpxStream "this" pointer (ecx!)
-            //
+  private
+    // Dxbx : 'virtual' creates vtable (cached by each instance, via constructor)
+    procedure Unknown1; virtual; // VMT 0x00 - ???
+    procedure Unknown2; virtual; // VMT 0x04 - ???
+    procedure Unknown3; virtual; // VMT 0x08 - ???
+    procedure Unknown4; virtual; // VMT 0x0C - ???
+     //
+    // TODO -oCXBX: Function needs X_CMcpxStream "this" pointer (ecx!)
+    //
 
-            VOID (WINAPI *Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);   // 0x10
-        end;
-        *pVtbl;
+    procedure Dummy_0x10(dwDummy1: DWORD; dwDummy2: DWORD); virtual; stdcall;  // 0x10
 
-        // global vtbl for this class
-        static _vtbl vtbl;
+    // Dxbx : global vtbl for this class...is compiled in automatically by Delphi, so leave it out :
+    // vtbl: _vtbl;
 
-        // debug mode guard for detecting naughty data accesses
-        #ifdef _DEBUG
-        DWORD DebugGuard[256];
-        #endif
+  // debug mode guard for detecting naughty data accesses
+{$ifdef _DEBUG}
+    DebugGuard: array[0..256-1] of DWORD;
+{$endif}
 
-    public:
-
-        class X_CDirectSoundStream *pParentStream;
-  *)
+  public
+    pParentStream: X_CDirectSoundStream;
   end;
 
-type X_CDirectSoundStream = class(TObject)
-  (*
-    public:
-        // construct vtable (or grab ptr to existing)
-        X_CDirectSoundStream() : pVtbl(&vtbl) { pMcpxStream = new X_CMcpxStream(this); end;
+  X_CDirectSoundStream = class(TObject)
+  // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+  public
+    // construct vtable (or grab ptr to existing)
+    constructor Create(); // begin { pVtbl := @vtbl;} pMcpxStream := X_CMcpxStream.Create(Self); end;
 
-    private:
-        // vtable (cached by each instance, via constructor)
-        struct _vtbl
-        {
-            ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
-            ULONG (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
-            DWORD Unknown;                                                  // 0x08
+  private
+    // Dxbx : 'virtual' creates vtable (cached by each instance, via constructor)
+    function AddRef({pThis: X_CDirectSoundStream}): ULONG; virtual; stdcall;          // VMT 0x00
+    function Release({pThis: X_CDirectSoundStream}): ULONG; virtual; stdcall;         // VMT 0x04
 
-            HRESULT (WINAPI *GetStatus)                                     // 0x0C
-            (
-                X_CDirectSoundStream   *pThis,
-                DWORD                  *pdwStatus
-            );
+    function GetInfo                                                                  // VMT 0x08
+    (
+        {pThis: X_CDirectSoundStream;}
+        pInfo: LPXMEDIAINFO
+    ): HRESULT; virtual; stdcall;
 
-            HRESULT (WINAPI *Process)                                       // 0x10
-            (
-                X_CDirectSoundStream   *pThis,
-                PXMEDIAPACKET           pInputBuffer,
-                PXMEDIAPACKET           pOutputBuffer
-            );
+    function GetStatus                                                                // VMT 0x0C
+    (
+        {pThis: X_CDirectSoundStream;}
+        pdwStatus: PDWORD
+    ): HRESULT; virtual; stdcall;
 
-            HRESULT (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
+    function Process                                                                  // VMT 0x10
+    (
+        {pThis: X_CDirectSoundStream;}
+        pInputBuffer: PXMEDIAPACKET;
+        pOutputBuffer: PXMEDIAPACKET
+    ): HRESULT; virtual; stdcall;
 
-            HRESULT (WINAPI *Flush)(X_CDirectSoundStream *pThis);           // 0x18
+    function Discontinuity({pThis: X_CDirectSoundStream}): HRESULT; virtual; stdcall; // VMT 0x14
 
-            DWORD Unknown2;                                                 // 0x1C - ???
-            DWORD Unknown3;                                                 // 0x20 - ???
-            DWORD Unknown4;                                                 // 0x24 - ???
-            DWORD Unknown5;                                                 // 0x28 - ???
-            DWORD Unknown6;                                                 // 0x2C - ???
-            DWORD Unknown7;                                                 // 0x30 - ???
-            DWORD Unknown8;                                                 // 0x34 - ???
-            DWORD Unknown9;                                                 // 0x38 - ???
-        end;
-        *pVtbl;
+    function Flush({pThis: X_CDirectSoundStream}): HRESULT; virtual; stdcall;         // VMT 0x18
 
-        // global vtbl for this class
-        static _vtbl vtbl;
+    procedure Unknown2; virtual;                                                      // VMT 0x1C - ???
+    procedure Unknown3; virtual;                                                      // VMT 0x20 - ???
+    procedure Unknown4; virtual;                                                      // VMT 0x24 - ???
+    procedure Unknown5; virtual;                                                      // VMT 0x28 - ???
+    procedure Unknown6; virtual;                                                      // VMT 0x2C - ???
+    procedure Unknown7; virtual;                                                      // VMT 0x30 - ???
+    procedure Unknown8; virtual;                                                      // VMT 0x34 - ???
+    procedure Unknown9; virtual;                                                      // VMT 0x38 - ???
 
-        DWORD Spacer[8];
-        PVOID pMcpxStream;
+    // Dxbx : global vtbl for this class...is compiled in automatically by Delphi, so leave it out :
+    // vtbl: _vtbl;
+  private
+    Spacer: array[0..8-1] of DWORD;
+    pMcpxStream: PVOID;
 
-        // debug mode guard for detecting naughty data accesses
-        #ifdef _DEBUG
-        DWORD DebugGuard[256];
-        #endif               *)
+    // debug mode guard for detecting naughty data accesses
+{$ifdef _DEBUG}
+    DebugGuard: array[0..256-1] of DWORD;
+{$endif}
 
-    public
-        // cached data
-        EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer;
-        EmuBuffer: PVOID;
-        EmuBufferDesc: PDSBUFFERDESC;
-        EmuLockPtr1: PVOID;
-        EmuLockBytes1: DWORD;
-        EmuLockPtr2: PVOID;
-        EmuLockBytes2: DWORD;
-        EmuPlayFlags: DWORD;
-    end;
+  public
+    // cached data
+    EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer;
+    EmuBuffer: PVOID;
+    EmuBufferDesc: PDSBUFFERDESC;
+    EmuLockPtr1: PVOID;
+    EmuLockBytes1: DWORD;
+    EmuLockPtr2: PVOID;
+    EmuLockBytes2: DWORD;
+    EmuPlayFlags: DWORD;
+  end;
   PX_CDirectSoundStream = X_CDirectSoundStream; // Dxbx note : Delphi's classes are already pointer-types
   PPX_CDirectSoundStream = ^PX_CDirectSoundStream;
 
@@ -565,7 +562,7 @@ end;
 
 function XTL_EmuIDirectSound8_AddRef
 (
-  pThis: XTL_LPDIRECTSOUND8
+    pThis: XTL_LPDIRECTSOUND8
 ): ULONG; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
@@ -2044,10 +2041,36 @@ begin
   Result := DS_OK;
 end;
 
-procedure XTL_EmuCMcpxStream_Dummy_0x10(dwDummy1: DWORD; dwDummy2: DWORD); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+{ X_CMcpxStream }
+
+constructor X_CMcpxStream.Create(pParentStream: X_CDirectSoundStream);
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
-  EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
+  Self.pParentStream := pParentStream;
+end;
+
+procedure X_CMcpxStream.Unknown1;
+begin
+end;
+
+procedure X_CMcpxStream.Unknown2;
+begin
+end;
+
+procedure X_CMcpxStream.Unknown3;
+begin
+end;
+
+procedure X_CMcpxStream.Unknown4;
+begin
+end;
+
+procedure {XTL_Emu}X_CMcpxStream.Dummy_0x10(dwDummy1: DWORD; dwDummy2: DWORD); stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+begin
+  // Causes deadlock in Halo...
+  // TODO -oCxbx: Verify that this is a Vista related problem (I HATE Vista!)
+//    EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
 end;
 
 function XTL_EmuCDirectSoundStream_SetVolume(pThis: PX_CDirectSoundStream; lVolume: LONG): ULONG; stdcall;
@@ -2098,9 +2121,20 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuCDirectSoundStream_AddRef(pThis: PX_CDirectSoundStream): ULONG; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+{ X_CDirectSoundStream }
+
+constructor X_CDirectSoundStream.Create();
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
+  pMcpxStream := X_CMcpxStream.Create(Self);
+end;
+
+function {XTL_Emu}X_CDirectSoundStream.AddRef({pThis: PX_CDirectSoundStream}): ULONG; stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+var
+  pThis: X_CDirectSoundStream;
+begin
+  pThis := Self;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2120,12 +2154,14 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuCDirectSoundStream_Release(pThis: PX_CDirectSoundStream): ULONG; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+function {XTL_Emu}X_CDirectSoundStream.Release({pThis: PX_CDirectSoundStream}): ULONG; stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
   uRet: ULONG;
   v: int;
+  pThis: PX_CDirectSoundStream;
 begin
+  pThis := Self;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2165,13 +2201,16 @@ begin
   Result := uRet;
 end;
 
-function XTL_EmuCDirectSoundStream_GetInfo
+function {XTL_Emu}X_CDirectSoundStream.GetInfo
 (
-    pThis: PX_CDirectSoundStream;
+    {pThis: PX_CDirectSoundStream;}
     pInfo: LPXMEDIAINFO
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  pThis: PX_CDirectSoundStream;
 begin
+  pThis := Self;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2199,13 +2238,16 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuCDirectSoundStream_GetStatus
+function {XTL_Emu}X_CDirectSoundStream.GetStatus
 (
-    pThis: PX_CDirectSoundStream;
+    {pThis: PX_CDirectSoundStream;}
     pdwStatus: PDWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  pThis: PX_CDirectSoundStream;
 begin
+  pThis := Self;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2226,14 +2268,17 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuCDirectSoundStream_Process
+function {XTL_Emu}X_CDirectSoundStream.Process
 (
-    pThis: PX_CDirectSoundStream;
+    {pThis: PX_CDirectSoundStream;}
     pInputBuffer: PXMEDIAPACKET;
     pOutputBuffer: PXMEDIAPACKET
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  pThis: PX_CDirectSoundStream;
 begin
+  pThis := Self;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2269,9 +2314,12 @@ begin
   Result := DS_OK;
 end;
 
-function XTL_EmuCDirectSoundStream_Discontinuity(pThis: PX_CDirectSoundStream): HRESULT; stdcall;
+function {XTL_Emu}X_CDirectSoundStream.Discontinuity({pThis: PX_CDirectSoundStream}): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  pThis: PX_CDirectSoundStream;
 begin
+  pThis := Self;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2290,9 +2338,12 @@ begin
 end;
 
 
-function XTL_EmuCDirectSoundStream_Flush(pThis: PX_CDirectSoundStream): HRESULT; stdcall;
+function {XTL_Emu}X_CDirectSoundStream.Flush({pThis: PX_CDirectSoundStream}): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+var
+  pThis: PX_CDirectSoundStream;
 begin
+  pThis := Self;
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -2305,6 +2356,38 @@ begin
   EmuSwapFS(fsXbox);
 
   Result := DS_OK;
+end;
+
+procedure X_CDirectSoundStream.Unknown2;
+begin
+end;
+
+procedure X_CDirectSoundStream.Unknown3;
+begin
+end;
+
+procedure X_CDirectSoundStream.Unknown4;
+begin
+end;
+
+procedure X_CDirectSoundStream.Unknown5;
+begin
+end;
+
+procedure X_CDirectSoundStream.Unknown6;
+begin
+end;
+
+procedure X_CDirectSoundStream.Unknown7;
+begin
+end;
+
+procedure X_CDirectSoundStream.Unknown8;
+begin
+end;
+
+procedure X_CDirectSoundStream.Unknown9;
+begin
 end;
 
 function XTL_EmuCDirectSound_SynchPlayback(pUnknown: PVOID): HRESULT; stdcall;
@@ -2322,7 +2405,7 @@ end;
 
 function XTL_EmuCDirectSoundStream_Pause
 (
-    pStream: PVOID; 
+    pStream: PVOID;
     dwPause: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2368,9 +2451,9 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetConeAngles
 (
-    pThis: PVOID; 
-    dwInsideConeAngle: DWORD; 
-    dwOutsideConeAngle: DWORD; 
+    pThis: PVOID;
+    dwInsideConeAngle: DWORD;
+    dwOutsideConeAngle: DWORD;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2395,8 +2478,8 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetConeOutsideVolume
 (
-    pThis: PVOID; 
-    lConeOutsideVolume: LONG; 
+    pThis: PVOID;
+    lConeOutsideVolume: LONG;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2420,8 +2503,8 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetAllParameters
 (
-    pThis: PVOID; 
-    pUnknown: PVOID; 
+    pThis: PVOID;
+    pUnknown: PVOID;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2445,9 +2528,9 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetMaxDistance
 (
-  pThis: PVOID;
-  fMaxDistance: D3DVALUE;
-  dwApply: DWORD
+    pThis: PVOID;
+    fMaxDistance: D3DVALUE;
+    dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -2470,8 +2553,8 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetMinDistance
 (
-    pThis: PVOID; 
-    fMinDistance: D3DVALUE; 
+    pThis: PVOID;
+    fMinDistance: D3DVALUE;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2495,10 +2578,10 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetVelocity
 (
-    pThis: PVOID; 
-    x: D3DVALUE; 
-    y: D3DVALUE; 
-    z: D3DVALUE; 
+    pThis: PVOID;
+    x: D3DVALUE;
+    y: D3DVALUE;
+    z: D3DVALUE;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2524,10 +2607,10 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetConeOrientation
 (
-    pThis: PVOID; 
-    x: D3DVALUE; 
-    y: D3DVALUE; 
-    z: D3DVALUE; 
+    pThis: PVOID;
+    x: D3DVALUE;
+    y: D3DVALUE;
+    z: D3DVALUE;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2553,10 +2636,10 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetPosition
 (
-    pThis: PVOID; 
-    x: D3DVALUE; 
-    y: D3DVALUE; 
-    z: D3DVALUE; 
+    pThis: PVOID;
+    x: D3DVALUE;
+    y: D3DVALUE;
+    z: D3DVALUE;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2582,7 +2665,7 @@ end;
 
 function XTL_EmuCDirectSoundStream_SetFrequency
 (
-    pThis: PVOID; 
+    pThis: PVOID;
     dwFrequency: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2605,8 +2688,8 @@ end;
 
 function XTL_EmuIDirectSoundStream_SetI3DL2Source
 (
-    pThis: PVOID; 
-    pds3db: PVOID; 
+    pThis: PVOID;
+    pds3db: PVOID;
     dwApply: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -3733,14 +3816,14 @@ exports
   XTL_EmuCDirectSound_GetSpeakerConfig,
   XTL_EmuCDirectSound_SynchPlayback,
 
-  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
-  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
-  XTL_EmuCDirectSoundStream_Flush name PatchPrefix + 'DirectSound.CDirectSoundStream.Flush',
-  XTL_EmuCDirectSoundStream_GetInfo name PatchPrefix + 'DirectSound.CDirectSoundStream.GetInfo',
-  XTL_EmuCDirectSoundStream_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundStream.GetStatus',
+//  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
+//  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
+//  XTL_EmuCDirectSoundStream_Flush name PatchPrefix + 'DirectSound.CDirectSoundStream.Flush',
+//  XTL_EmuCDirectSoundStream_GetInfo name PatchPrefix + 'DirectSound.CDirectSoundStream.GetInfo',
+//  XTL_EmuCDirectSoundStream_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundStream.GetStatus',
   XTL_EmuCDirectSoundStream_Pause name PatchPrefix + 'DirectSound.CDirectSoundStream.Pause',
-  XTL_EmuCDirectSoundStream_Process name PatchPrefix + 'DirectSound.CDirectSoundStream.Process',
-  XTL_EmuCDirectSoundStream_Release name PatchPrefix + 'DirectSound.CDirectSoundStream.Release',
+//  XTL_EmuCDirectSoundStream_Process name PatchPrefix + 'DirectSound.CDirectSoundStream.Process',
+//  XTL_EmuCDirectSoundStream_Release name PatchPrefix + 'DirectSound.CDirectSoundStream.Release',
   XTL_EmuCDirectSoundStream_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSoundStream.SetAllParameters',
   XTL_EmuCDirectSoundStream_SetConeAngles name PatchPrefix + 'DirectSound.CDirectSoundStream.SetConeAngles',
   XTL_EmuCDirectSoundStream_SetConeOrientation name PatchPrefix + 'DirectSound.CDirectSoundStream.SetConeOrientation',
@@ -3757,7 +3840,7 @@ exports
   XTL_EmuCDirectSoundStream_SetVelocity name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVelocity',
   XTL_EmuCDirectSoundStream_SetVolume name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVolume',
 
-  XTL_EmuCMcpxStream_Dummy_0x10,
+//  XTL_EmuCMcpxStream_Dummy_0x10,
 
   XTL_EmuDirectSoundCreate,
   XTL_EmuDirectSoundCreateBuffer,
