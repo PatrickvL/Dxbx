@@ -82,14 +82,9 @@ begin
     BevelOuter := bvNone;
     BorderStyle := bsNone;
     Font.Name := 'Consolas';
-//    Columns := 1;
     Style := lbVirtualOwnerDraw;
     OnDrawItem := DoDrawItem;
-    ScrollWidth := 0;//MaxInt;
   end;
-
-
-  SetRegion(FRegionInfo);
 end;
 
 destructor TDisassembleViewer.Destroy;
@@ -135,12 +130,13 @@ begin
     DWord(FRegionInfo.VirtualAddres) + FRegionInfo.Size,
     BytesToString(FRegionInfo.Size)]);
 
+  // Scan whole region for opcodes offsets :
   MyInstructionOffsets.Clear;
-
   MyDisassemble.Offset := 0;
   while MyDisassemble.DoDisasm do
     MyInstructionOffsets.Add(Pointer(MyDisassemble.CurrentOffset));
 
+  // Update the view on this data :
   MyListBox.Count := MyInstructionOffsets.Count;
   MyListBox.Repaint;
 end;
@@ -153,6 +149,9 @@ var
   CommentStr: string;
   LineStr: string;
 begin
+  if Index > MyInstructionOffsets.Count then
+    Exit;
+
   Offset := Cardinal(MyInstructionOffsets[Index]);
 
   MyDisassemble.Offset := Offset;
