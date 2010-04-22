@@ -77,7 +77,6 @@ uses
   uEmuXG in '..\..\src\DxbxKrnl\uEmuXG.pas',
   uEmuXOnline in '..\..\src\DxbxKrnl\uEmuXOnline.pas',
   uEmuXTL in '..\..\src\DxbxKrnl\uEmuXTL.pas',
-  uHLEDatabase in '..\..\src\DxbxKrnl\uHLEDatabase.pas',
   uHLEIntercept in '..\..\src\DxbxKrnl\uHLEIntercept.pas',
   DxLibraryAPIScanning in '..\..\src\DxbxKrnl\DxLibraryAPIScanning.pas',
   uDxbxDebugUtils in '..\..\src\DxbxKrnl\uDxbxDebugUtils.pas',
