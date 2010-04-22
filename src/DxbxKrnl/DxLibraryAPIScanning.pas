@@ -44,8 +44,6 @@ uses
   uXboxLibraryUtils;
 
 type
-  TScanStatus = (ssUndetermined, ssPatternDetected, ssCrossReferenceFailure, ssConfirmed);
-
   TSymbolInformation = class; // forward
 
   PPotentialFunctionLocation = ^RPotentialFunctionLocation;
@@ -57,7 +55,6 @@ type
     Address: TCodePointer;
     Symbol: TSymbolInformation;
     NextPotentialFunctionLocationIndex: Integer;
-    ScanStatus: TScanStatus;
     NrOfAvailableCrossReferences: Integer;
     NrOfSeeminglyCorrectCrossReferences: Integer;
 
@@ -100,7 +97,8 @@ type
     MyPotentialFunctionLocations: array of RPotentialFunctionLocation; // Lineair array for all potential function locations, 0 is invalid
     MyPotentialFunctionLocations_Count: Integer; // Number of potential function locations
     procedure AddPotentialSymbolLocation(const aLocation: TCodePointer; const aSymbol: TSymbolInformation);
-//    function PotentialFunctionLocationIndex(const aLocation: TCodePointer): Integer;
+  public
+    function FindPotentialFunctionLocation(const aLocation: TCodePointer): PPotentialFunctionLocation;
     // TODO : Add array for other symbol locations (for which we have no patterns, but do know their symbol)
   protected // Final function locations :
     MyFinalLocations: TList;
@@ -544,7 +542,6 @@ begin
     Address := aLocation;
     Symbol := aSymbol;
     NextPotentialFunctionLocationIndex := aSymbol.FirstPotentialFunctionLocationIndex;
-    ScanStatus := ssPatternDetected;
     NrOfAvailableCrossReferences := 0;
     NrOfSeeminglyCorrectCrossReferences := 0;
   end;
@@ -552,34 +549,34 @@ begin
   aSymbol.FirstPotentialFunctionLocationIndex := MyPotentialFunctionLocations_Count;
 end; // AddPotentialSymbolLocation
 
-//// Does a binary search over MyPotentialFunctionLocations for the given address.
-//// When found, the lowest index where this address appears is returned, -1 otherwise.
-//function TSymbolManager.PotentialFunctionLocationIndex(const aLocation: TCodePointer): Integer;
-//var
-//  L, H, I, C: Integer;
-//begin
-//  Result := -1;
-//  L := 1;
-//  H := MyPotentialFunctionLocations_Count;
-//  while L <= H do
-//  begin
-//    I := (L + H) shr 1;
-//    C := IntPtr(MyPotentialFunctionLocations[I].Address) - IntPtr(aLocation);
-//    if C < 0 then
-//      L := I + 1
-//    else
-//    begin
-//      if C = 0 then
-//      begin
-//        L := I;
+// Does a binary search over MyPotentialFunctionLocations for the given address.
+// When found, the lowest index where this address appears is returned, -1 otherwise.
+function TSymbolManager.FindPotentialFunctionLocation(const aLocation: TCodePointer): PPotentialFunctionLocation;
+var
+  L, H, I, C: Integer;
+begin
+  L := 1;
+  H := MyPotentialFunctionLocations_Count;
+  while L <= H do
+  begin
+    I := (L + H) shr 1;
+    Result := @(MyPotentialFunctionLocations[I]);
+    C := IntPtr(Result.Address) - IntPtr(aLocation);
+    if C < 0 then
+      L := I + 1
+    else
+    begin
+      if C = 0 then
+      begin
+        L := I;
 //        Result := L;
-//        // We need to find the left-most index, so no break here!
-//      end;
-//
-//      H := I - 1;
-//    end;
-//  end;
-//end; // PotentialFunctionLocationIndex
+        // We need to find the left-most index, so no break here!
+      end;
+
+      H := I - 1;
+    end;
+  end;
+end; // PotentialFunctionLocationIndex
 
 function TSymbolManager.IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
 begin
@@ -984,8 +981,9 @@ procedure TSymbolManager.DetermineFinalLocations;
       i := CurrentSymbol.FirstPotentialFunctionLocationIndex;
       while i > 0 do
       begin
-        if  (BestNrOfAvailableCrossReferences <= MyPotentialFunctionLocations[i].NrOfAvailableCrossReferences)
-        and (BestNrOfSeeminglyCorrectCrossReferences < MyPotentialFunctionLocations[i].NrOfSeeminglyCorrectCrossReferences) then
+        if  (BestNrOfAvailableCrossReferences < MyPotentialFunctionLocations[i].NrOfAvailableCrossReferences)
+        or ((BestNrOfAvailableCrossReferences = MyPotentialFunctionLocations[i].NrOfAvailableCrossReferences) and
+            (BestNrOfSeeminglyCorrectCrossReferences < MyPotentialFunctionLocations[i].NrOfSeeminglyCorrectCrossReferences)) then
         begin
           BestIndex := i;
           BestNrOfAvailableCrossReferences := MyPotentialFunctionLocations[i].NrOfAvailableCrossReferences;

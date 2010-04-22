@@ -58,7 +58,7 @@ var
 begin
   List := JclLastExceptStackList;
   if not GetLocationInfo(Caller(1), {var}CallerInfo) then
-    Result := Format('Exception at address %p', [Caller(1)])
+    Result := Format('Exception at address $%p', [Caller(1)])
   else
   begin
     if OnlyCallerModule then
@@ -83,9 +83,10 @@ begin
       Result := 'Exception ';
       for I := 0 to List.Count - 1 do
         if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
-          with Info do
-            Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
-            
+          Result := Result + LocationInfoToString(Info) + ' <- ';
+//          with Info do
+//            Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
+
       if List.Count > 0 then
         SetLength(Result, Length(Result) - 4);
     end;
@@ -95,26 +96,35 @@ end;
 { TDxbxAPIDebugInfoSource }
 
 function TDxbxAPIDebugInfoSource.GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean;
-(*
 var
-  DetectedSymbol: TDetectedVersionedXboxLibrarySymbol;
-*)
+  p: PPotentialFunctionLocation;
 begin
-  Result := False;//Assigned(SymbolManager);
+  Result := Assigned(SymbolManager);
   if not Result then
     Exit;
-(* TODO -oDxbx : Bring this code into a working state :
-  DetectedSymbol := SymbolManager.FindByAddress(TCodePointer(Addr));
-  Result := Assigned(DetectedSymbol);
+
+  p := SymbolManager.FindPotentialFunctionLocation(TCodePointer(Addr));
+  Result := Assigned(p) and Assigned(p.Symbol);
   if not Result then
     Exit;
 
   with Info do
   begin
-    Address := Pointer(DetectedSymbol.Locations[0].SymbolLocation); // Error address
-//    UnitName: string;               // Name of Delphi unit
-    ProcedureName := DetectedSymbol.SymbolName;
     OffsetFromProcName := Integer(IntPtr(Addr) - IntPtr(Address)); // Offset from Address to ProcedureName symbol location
+
+    // Early exit if address falls outside symbol-size;
+    // Note that the symbol length defaults to 4 when
+    // symbols are loaded from cache !
+    if OffsetFromProcName > p.Length then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    Address := Pointer(p{.Symbol}.Address); // Error address
+
+//    UnitName: string;               // Name of Delphi unit
+    ProcedureName := p.Symbol.Name;
 //    LineNumber: Integer;
 //    OffsetFromLineNumber: Integer;  // Offset from Address to LineNumber symbol location
 //    SourceName: string;             // Module file name
@@ -122,7 +132,6 @@ begin
 //    if Assigned(DetectedSymbol.VersionedXboxLibrary) then
 //      BinaryFileName := DetectedSymbol.VersionedXboxLibrary.LibName + '.lib'; // Name of the binary file containing the symbol
   end;
-*)
 end;
 
 function TDxbxAPIDebugInfoSource.InitializeSource: Boolean;

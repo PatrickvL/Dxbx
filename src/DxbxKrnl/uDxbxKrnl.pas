@@ -109,10 +109,10 @@ begin
 {$ENDIF}
 
   // update caches
-  CxbxKrnl_TLS := pTLS;
-  CxbxKrnl_TLSData := pTLSData;
-  CxbxKrnl_XbeHeader := pXbeHeader;
-  CxbxKrnl_hEmuParent := iif(IsWindow(hwndParent), hwndParent, 0);
+  DxbxKrnl_TLS := pTLS;
+  DxbxKrnl_TLSData := pTLSData;
+  DxbxKrnl_XbeHeader := pXbeHeader;
+  DxbxKrnl_hEmuParent := iif(IsWindow(hwndParent), hwndParent, 0);
 
   // For Unicode Conversions
   // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
@@ -274,7 +274,7 @@ begin
   begin
     EmuInitFS();
 
-    EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+    EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
   end;
 
   // duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
@@ -410,8 +410,8 @@ begin
 
   // remove 'paused' from rendering window caption text
   begin
-    if CxbxKrnl_hEmuParent <> 0 then
-      MyhWnd := CxbxKrnl_hEmuParent
+    if DxbxKrnl_hEmuParent <> 0 then
+      MyhWnd := DxbxKrnl_hEmuParent
     else
       MyhWnd := g_hEmuWindow;
 
@@ -471,8 +471,8 @@ begin
   // append 'paused' to rendering window caption text
 
   begin
-    if CxbxKrnl_hEmuParent <> 0 then
-      MyhWnd := CxbxKrnl_hEmuParent
+    if DxbxKrnl_hEmuParent <> 0 then
+      MyhWnd := DxbxKrnl_hEmuParent
     else
       MyhWnd := g_hEmuWindow;
 

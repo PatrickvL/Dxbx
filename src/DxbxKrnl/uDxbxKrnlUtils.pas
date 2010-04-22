@@ -33,6 +33,8 @@ uses
   uLog, // for WriteLog
   uXBE; // PXBE_TLS
 
+function XBE_FindSectionHeaderByName(pSectionName: PAnsiChar): PXBE_SECTIONHEADER;
+
 {$IF NOT DECLARED(YieldProcessor)}
 procedure YieldProcessor;
 {$IFEND}
@@ -47,18 +49,39 @@ procedure SetByteBits(var Bits: Byte; const aIndex: Integer; const aValue: Byte)
 
 var
   // ! thread local storage
-  CxbxKrnl_TLS: PXBE_TLS;
+  DxbxKrnl_TLS: PXBE_TLS;
   // thread local storage data
-  CxbxKrnl_TLSData: PVOID;
+  DxbxKrnl_TLSData: PVOID;
   // xbe header structure
-  CxbxKrnl_XbeHeader: PXBE_HEADER;
+  DxbxKrnl_XbeHeader: PXBE_HEADER;
   // parent window handle
-  CxbxKrnl_hEmuParent: HWND;
+  DxbxKrnl_hEmuParent: HWND;
 
   // thread handles
   g_hThreads: array [0..MAXIMUM_XBOX_THREADS - 1] of Handle;
 
 implementation
+
+function XBE_FindSectionHeaderByName(pSectionName: PAnsiChar): PXBE_SECTIONHEADER;
+var
+  i: Integer;
+begin
+  if Assigned(DxbxKrnl_XbeHeader) then
+  begin
+    Result := PXBE_SECTIONHEADER(DxbxKrnl_XbeHeader.dwSectionHeadersAddr);
+    i := DxbxKrnl_XbeHeader.dwSections;
+    while i > 0 do
+    begin
+      if (0=strncmp(pSectionName, PAnsiChar(Result.dwSectionNameAddr), XBE_SECTIONNAME_MAXLENGTH)) then
+        Break;
+
+      Inc(Result);
+      Dec(i);
+    end;
+  end;
+
+  Result := nil;
+end;
 
 procedure YieldProcessor;
 asm
