@@ -137,7 +137,7 @@ begin
   if(StartSuspended = TRUE) then
     SuspendThread(GetCurrentThread());
 
-  EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+  EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then
@@ -222,7 +222,9 @@ callComplete:
       if not Assigned(pfnNotificationRoutine) then
         continue;
 
-      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)', [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
+      DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)',
+        [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)],
+        {MayRenderArguments=}False);
 
       EmuSwapFS(fsXbox);
 

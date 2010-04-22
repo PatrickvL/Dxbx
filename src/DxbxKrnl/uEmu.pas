@@ -290,8 +290,8 @@ begin
 {$ENDIF}
         fflush(stdout);
 
-        if CxbxKrnl_hEmuParent <> 0 then
-          SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+        if DxbxKrnl_hEmuParent <> 0 then
+          SendMessage(DxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
         ExitProcess(1);
       end
@@ -326,8 +326,8 @@ begin
 {$ENDIF}
         fflush(stdout);
 
-        if CxbxKrnl_hEmuParent <> 0 then
-          SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+        if DxbxKrnl_hEmuParent <> 0 then
+          SendMessage(DxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
         ExitProcess(1);
       end;
@@ -454,8 +454,8 @@ begin
     Exit;
   end;
 
-  if (CxbxKrnl_hEmuParent <> 0) then
-    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+  if (DxbxKrnl_hEmuParent <> 0) then
+    SendMessage(DxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
   ExitProcess(1);
 

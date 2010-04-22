@@ -42,7 +42,7 @@ uses
   uEmuDInput,
   uXBController,
   uXboxLibraryUtils, // PatchPrefix
-  uDxbxKrnlUtils; // CxbxKrnl_XbeHeader
+  uDxbxKrnlUtils; // DxbxKrnl_XbeHeader
 
 var
   XTL_EmuXapiProcessHeap: PPVOID;
@@ -1196,8 +1196,8 @@ begin
 
     EmuSwapFS(fsXbox);
 
-    dwPeHeapReserve := CxbxKrnl_XbeHeader.dwPeHeapReserve;
-    dwPeHeapCommit := CxbxKrnl_XbeHeader.dwPeHeapCommit;
+    dwPeHeapReserve := DxbxKrnl_XbeHeader.dwPeHeapReserve;
+    dwPeHeapCommit := DxbxKrnl_XbeHeader.dwPeHeapCommit;
 
     XTL_EmuXapiProcessHeap^ := XTL_EmuRtlCreateHeap(HEAP_GROWABLE, nil, dwPeHeapReserve, dwPeHeapCommit, NULL, @HeapParameters);
   end;
@@ -1379,149 +1379,13 @@ begin
 end;
 
 
-function XTL_EmuXLoadSectionA
-(
-    pSectionName: LPCSTR
-): LPVOID; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  pRet: LPVOID;
-begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXLoadSectionA' +
-      #13#10'(' +
-      #13#10'   pSectionName       : 0x%.08X' +
-      #13#10');',
-      [pSectionName]);
-{$ENDIF}
-
-  // TODO -oCXBX: Search this .xbe for the section it wants to load.
-  // If we find it, return the address of it.
-
-  // Get the .xbe header
-  // MARKED OUT BY CXBX
-  {Xbe::Header* pXbeHeader = (Xbe::Header* ) $00010000;
-
-  // Get the number of sections this .xbe has and the
-  // location of the section headers.
-  DWORD dwNumSections = pXbeHeader.dwSections;
-  DWORD dwSectionAddr = pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
-
-  // Get section headers.
-  Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader* ) CxbxMalloc( sizeof( Xbe::SectionHeader ) * dwNumSections );
-
-  DWORD dwOffset = dwSectionAddr;
-
-  for( DWORD i = 0; i < dwNumSections; i++ )
-  begin
-    memcpy( @pSectionHeaders[i], ((DWORD* ) dwOffset), sizeof( Xbe::SectionHeader ) );
-    dwOffset += sizeof( Xbe::SectionHeader );
-  end;
-
-  // Find a match to the section name
-  DWORD dwSection = -1;
-
-  for( DWORD i = 0; i < dwNumSections; i++ )
-  begin
-    char szSectionName[32];
-    dwOffset = pSectionHeaders[i].dwSectionNameAddr - pXbeHeader.dwBaseAddr;
-    sprintf( szSectionName, '%s', ((DWORD* ) dwOffset) );
-
-    // Do we have a match?
-    if ( !strcmp( szSectionName, pSectionName ) ) then
-    begin
-      dwSection = i;
-      break;
-    end;
-  end;
-
-  // If we have a match, get the raw address of this section
-  // and return a pointer to that address.
-  if ( dwSection <> -1 ) then
-  begin
-    pRet = (LPVOID) pSectionHeaders[dwSection].dwRawAddr;
-  end;
-
-  // Free up the memory
-  CxbxFree( pSectionHeaders );}
-
-  pRet := NULL;
-
-  // MARKED OUT BY CXBX
-  (*int Section = -1;
-
-{$IFDEF DEBUG}
-  DbgPrintf('Sections: %d', [g_NumSections]);
-  DbgPrintf('Section List 0x%.08X', [g_pSectionList]);
-{$ENDIF}
-
-  if ( g_pSectionList ) then
-  begin
-    for( int i = 0; i < (int) g_NumSections; i++ )
-    begin
-      if ( !strcmp( g_pSectionList[i].szSectionName, pSectionName ) ) then
-      begin
-        Section = i;
-        break;
-      end;
-    end;
-
-    for (int i = 0; i < g_NumSections; i++)
-{$IFDEF DEBUG}
-      DbgPrintf('Section #%d: %s', [i, g_pSectionList[i].szSectionName]);
-{$ENDIF}
-
-    if (Section <> -1) then
-    begin
-      pRet = ((LPVOID) g_pSectionList[Section].dwSectionAddr);
-    end;
-
-    __asm int 3;
-  end
-  else
-  begin
-    EmuWarning('Section List not initialized!');
-    __asm int 3;
-  end;*)
-
-  EmuSwapFS(fsXbox);
-
-  Result := pRet;
-end;
-
-function XTL_EmuXFreeSectionA
-(
-    pSectionName: LPCSTR
-): BOOL; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXFreeSectionA' +
-      #13#10'(' +
-      #13#10'   pSectionName       : 0x%.08X' +
-      #13#10');',
-      [pSectionName]);
-{$ENDIF}
-
-  // TODO -oCXBX: Implement (if necessary)?
-//  CxbxKrnlCleanup('XFreeSectionA is not implemented');
-
-  EmuSwapFS(fsXbox);
-
-  Result := BOOL_TRUE;
-end;
-
 function XTL_EmuXGetSectionHandleA
 (
     pSectionName: LPCSTR
 ): HANDLE; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  pdwRet: PDWORD;
+  SectionHeader: PXBE_SECTIONHEADER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1533,43 +1397,23 @@ begin
       [pSectionName]);
 {$ENDIF}
 
-  pdwRet := NULL;
-  
-  // TODO -oCXBX: Implement (if necessary)?
-//  CxbxKrnlCleanup('XGetSectionHandleA is not implemented');
-
-  // TODO -oCXBX: Save the name and address of each section contained in
-  // this .xbe instead of adding this stuff by hand because the section
-  // address can change from one game region to the next, and some games
-  // will use the same engine and section name, so accuracy is not
-  // guarunteed.
-
-  // Metal Gear Solid II (NTSC)
-  if (0=strcmp( pSectionName, 'Rev24b' ) ) then
-  begin
-    pdwRet := PDWORD($648000);
-  end;
-
-  // Metal Slug 3 (NTSC)
-  if (0=strcmp(pSectionName, 'newpal')) then
-    pdwRet := PDWORD($26C000);
-  if (0=strcmp(pSectionName, 'msg_font')) then
-    pdwRet := PDWORD($270000);
-  if (0=strcmp(pSectionName, 'se_all')) then
-    pdwRet := PDWORD($272000);
-  if (0=strcmp(pSectionName, '.XTLID')) then
-    pdwRet := PDWORD($8C5000);
+  SectionHeader := XBE_FindSectionHeaderByName(pSectionName);
+  if Assigned(SectionHeader) then
+    Result := HANDLE(SectionHeader)
+  else
+    Result := INVALID_HANDLE_VALUE;
 
   EmuSwapFS(fsXbox);
-
-  Result := HANDLE(pdwRet);
 end;
+
 
 function XTL_EmuXLoadSectionByHandle
 (
     hSection: HANDLE
 ): LPVOID; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  SectionHeader: PXBE_SECTIONHEADER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1584,16 +1428,27 @@ begin
   // The handle should contain the address of this section by the hack
   // used in EmuXGetSectionHandleA.
 
-  EmuSwapFS(fsXbox);
+  SectionHeader := PXBE_SECTIONHEADER(hSection);
+  if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
+  begin
+    // TODO : Actually load the section here, including the symbol-detection + patching!
 
-  Result := LPVOID(hSection);
+    Inc(SectionHeader.dwSectionRefCount);
+    Result := LPVOID(SectionHeader.dwVirtualAddr);
+  end
+  else
+    Result := NULL;
+
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuXFreeSectionByHandle
 (
     hSection: HANDLE
 ): BOOL; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  SectionHeader: PXBE_SECTIONHEADER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1605,22 +1460,81 @@ begin
       [hSection]);
 {$ENDIF}
 
-  // TODO -oCXBX: Implement (if necessary)?
-//  CxbxKrnlCleanup('XLoadSectionByHandle is not implemented');
+  SectionHeader := PXBE_SECTIONHEADER(hSection);
+  if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
+  begin
+    Dec(SectionHeader.dwSectionRefCount);
+    if SectionHeader.dwSectionRefCount = 0 then
+      ; // TODO : Actually unload the section here
+
+    Result := BOOL_TRUE;
+  end
+  else
+    Result := BOOL_FALSE;
 
   EmuSwapFS(fsXbox);
-
-  Result := BOOL_TRUE;
 end;
 
+
+function XTL_EmuXLoadSectionA
+(
+    pSectionName: LPCSTR
+): LPVOID; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  SectionHandle: HANDLE;
+begin
+{$IFDEF DEBUG}
+  EmuSwapFS(fsWindows);
+  DbgPrintf('EmuXapi : EmuXLoadSectionA' +
+      #13#10'(' +
+      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10');',
+      [pSectionName]);
+  EmuSwapFS(fsXbox);
+{$ENDIF}
+
+  SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
+  if SectionHandle = INVALID_HANDLE_VALUE then
+    Result := NULL
+  else
+    Result := XTL_EmuXLoadSectionByHandle(SectionHandle);
+end;
+
+function XTL_EmuXFreeSectionA
+(
+    pSectionName: LPCSTR
+): BOOL; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  SectionHandle: HANDLE;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuXapi : EmuXFreeSectionA' +
+      #13#10'(' +
+      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10');',
+      [pSectionName]);
+{$ENDIF}
+
+  SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
+  if SectionHandle = INVALID_HANDLE_VALUE then
+    Result := BOOL_FALSE
+  else
+    Result := XTL_EmuXFreeSectionByHandle(SectionHandle);
+
+  EmuSwapFS(fsXbox);
+end;
 
 function XTL_EmuXGetSectionSize
 (
   hSection: HANDLE
 ): DWORD; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  dwSize: DWORD;
+  SectionHeader: PXBE_SECTIONHEADER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1632,21 +1546,13 @@ begin
       [hSection]);
 {$ENDIF}
 
-  dwSize := 0;
-
-  // Metal Slug 3 (NTSC)
-  if (hSection = HANDLE($26C000)) then  // newpal
-    dwSize := $31DA
-  else if (hSection = HANDLE($270000)) then  // msg_fong
-    dwSize := $115F
-  else if (hSection = HANDLE($272000)) then  // se_all
-    dwSize := $64F37E
-  else if (hSection = HANDLE($8C5000)) then  // .XTLID
-    dwSize := $480;
+  SectionHeader := PXBE_SECTIONHEADER(hSection);
+  if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
+    Result := SectionHeader.dwVirtualSize
+  else
+    Result := 0;
 
   EmuSwapFS(fsXbox);
-
-  Result := dwSize;
 end;
 
 

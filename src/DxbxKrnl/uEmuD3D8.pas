@@ -219,7 +219,7 @@ begin
   g_EmuShared.GetXBVideo(@g_XBVideo);
 
   if (g_XBVideo.GetFullscreen()) then
-    CxbxKrnl_hEmuParent := 0;
+    DxbxKrnl_hEmuParent := 0;
 
   // cache XbeHeader and size of XbeHeader
   g_XbeHeader := XbeHeader;
@@ -403,7 +403,7 @@ begin
 
   // create the window
   begin
-    dwStyle := iif(g_XBVideo.GetFullscreen() or (CxbxKrnl_hEmuParent = 0), WS_OVERLAPPEDWINDOW, WS_CHILD);
+    dwStyle := iif(g_XBVideo.GetFullscreen() or (DxbxKrnl_hEmuParent = 0), WS_OVERLAPPEDWINDOW, WS_CHILD);
 
     nTitleHeight := GetSystemMetrics(SM_CYCAPTION);
     nBorderWidth := GetSystemMetrics(SM_CXSIZEFRAME);
@@ -425,7 +425,7 @@ begin
     hwndParent := GetDesktopWindow();
     if not g_XBVideo.GetFullscreen() then
     begin
-      hwndParent := CxbxKrnl_hEmuParent;
+      hwndParent := DxbxKrnl_hEmuParent;
     end;
 
     g_hEmuWindow := CreateWindow
@@ -436,12 +436,12 @@ begin
     );
   end;
 
-  ShowWindow(g_hEmuWindow, iif((CxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen(), SW_SHOWDEFAULT, SW_SHOWMAXIMIZED));
+  ShowWindow(g_hEmuWindow, iif((DxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen(), SW_SHOWDEFAULT, SW_SHOWMAXIMIZED));
   UpdateWindow(g_hEmuWindow);
 
-  if (not g_XBVideo.GetFullscreen()) and (CxbxKrnl_hEmuParent <> 0) then
+  if (not g_XBVideo.GetFullscreen()) and (DxbxKrnl_hEmuParent <> 0) then
   begin
-    SetFocus(CxbxKrnl_hEmuParent);
+    SetFocus(DxbxKrnl_hEmuParent);
   end;
 
   // initialize direct input
@@ -515,7 +515,7 @@ begin
 
   if (not g_bIsFauxFullscreen) then
   begin
-    if (CxbxKrnl_hEmuParent <> 0) then
+    if (DxbxKrnl_hEmuParent <> 0) then
     begin
       SetParent(hWnd, 0);
     end
@@ -533,12 +533,12 @@ begin
   end
   else
   begin
-    if CxbxKrnl_hEmuParent <> 0 then
+    if DxbxKrnl_hEmuParent <> 0 then
     begin
-      SetParent(hWnd, CxbxKrnl_hEmuParent);
+      SetParent(hWnd, DxbxKrnl_hEmuParent);
       SetWindowLong(hWnd, GWL_STYLE, WS_CHILD);
       ShowWindow(hWnd, SW_MAXIMIZE);
-      SetFocus(CxbxKrnl_hEmuParent);
+      SetFocus(DxbxKrnl_hEmuParent);
     end
     else
     begin
@@ -652,9 +652,9 @@ begin
 
     WM_SETFOCUS:
       begin
-        if (CxbxKrnl_hEmuParent <> 0) then
+        if (DxbxKrnl_hEmuParent <> 0) then
         begin
-          SetFocus(CxbxKrnl_hEmuParent);
+          SetFocus(DxbxKrnl_hEmuParent);
         end;
       end;
 
@@ -688,7 +688,7 @@ var
   pFeedback: PXINPUT_FEEDBACK;
 begin
   // since callbacks come from here
-  EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+  EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : Timing thread is running.');
@@ -9615,6 +9615,51 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuIDirect3DDevice8_GetModelView(pModelView: PD3DXMATRIX): HRESULT; stdcall;
+// Branch:shogun  Revision:161  Translator:PatrickvL  Done:100
+var
+  mtxWorld, mtxView: TD3DXMATRIX;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetModelView' +
+      #13#10'(' +
+      #13#10'   pModelView        : 0x%.08X' +
+      #13#10');', [pModelView]);
+{$ENDIF}
+
+  // I hope this is right
+  IDirect3DDevice8(g_pD3DDevice8).GetTransform(D3DTS_WORLD, {out}mtxWorld);
+  IDirect3DDevice8(g_pD3DDevice8).GetTransform(D3DTS_VIEW, {out}mtxView);
+
+//  pModelView^ := mtxWorld * mtxView;
+  D3DXMatrixMultiply({out}pModelView^, mtxWorld, mtxView);
+
+  EmuSwapFS(fsXbox);
+
+  Result := S_OK;
+end;
+
+function XTL_EmuIDirect3DDevice8_SetBackMaterial(pMaterial: PD3DMATERIAL8): HRESULT; stdcall;
+// Branch:shogun  Revision:161  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetBackMaterial' +
+      #13#10'(' +
+      #13#10'   pMaterial         : 0x%.08X' +
+      #13#10');', [pMaterial]);
+{$ENDIF}
+
+  EmuWarning('SetBackMaterial is not supported!');
+
+  EmuSwapFS(fsXbox);
+
+  Result := S_OK;
+end;
+
 exports
   XTL_EmuGet2DSurfaceDesc,
   XTL_EmuGet2DSurfaceDescD, // TODO -oDXBX: Fix wrong prefix!
@@ -9689,6 +9734,7 @@ exports
   XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus name PatchPrefix + 'D3DDevice_GetDisplayFieldStatus',
   XTL_EmuIDirect3DDevice8_GetDisplayMode name PatchPrefix + 'D3DDevice_GetDisplayMode',
   XTL_EmuIDirect3DDevice8_GetGammaRamp name PatchPrefix + 'D3DDevice_GetGammaRamp',
+  XTL_EmuIDirect3DDevice8_GetModelView name PatchPrefix + 'D3DDevice_GetModelView', // ??
   XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
   XTL_EmuIDirect3DDevice8_GetProjectionViewportMatrix name PatchPrefix + 'D3DDevice_GetProjectionViewportMatrix',
   XTL_EmuIDirect3DDevice8_GetRenderTarget name PatchPrefix + 'D3DDevice_GetRenderTarget',
@@ -9725,6 +9771,7 @@ exports
   XTL_EmuIDirect3DDevice8_SelectVertexShader name PatchPrefix + 'D3DDevice_SelectVertexShader',
   XTL_EmuIDirect3DDevice8_SelectVertexShaderDirect name PatchPrefix + 'D3DDevice_SelectVertexShaderDirect',
   XTL_EmuIDirect3DDevice8_SetBackBufferScale name PatchPrefix + 'D3DDevice_SetBackBufferScale',
+  XTL_EmuIDirect3DDevice8_SetBackMaterial name PatchPrefix + 'D3DDevice_SetBackMaterial', // ??
   XTL_EmuIDirect3DDevice8_SetFlickerFilter name PatchPrefix + 'D3DDevice_SetFlickerFilter',
   XTL_EmuIDirect3DDevice8_SetGammaRamp name PatchPrefix + 'Direct3D8_SetGammaRamp',
   XTL_EmuIDirect3DDevice8_SetIndices name PatchPrefix + 'D3DDevice_SetIndices',

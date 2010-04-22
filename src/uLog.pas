@@ -39,6 +39,10 @@ var
   DebugMode: TDebugMode = dmNone;
   DebugFileName: string = '';
   
+{$IFDEF DXBX_DLL}
+function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
+{$ENDIF}
+
 procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
 procedure CloseLogs;
 procedure WriteLog(const aText: string);
@@ -52,6 +56,7 @@ procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Bool
 procedure printf(aStr: string); overload;
 procedure printf(aStr: string; Args: array of const); overload;
 
+function strncmp(lpString1, lpString2: PAnsiChar; size: size_t): Integer; overload;
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; overload;
@@ -156,6 +161,7 @@ begin
 end;
 
 {$IFDEF DXBX_DLL}
+// Subset of JclDebug.GetLocationInfoStr
 function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
 var
   AddStr: string;
@@ -171,7 +177,7 @@ begin
   DebugInfo: TJclDebugInfoSource; // Location object
   BinaryFileName: string;         // Name of the binary file containing the symbol
 *)
-  Result := Format('[%p] ', [aLocationInfo.Address]);
+  Result := Format('[$%p] ', [aLocationInfo.Address]);
 
   AddStr := aLocationInfo.UnitName + '.';
   if (Length(AddStr) > 1)
@@ -186,7 +192,8 @@ begin
   if aLocationInfo.OffsetFromProcName > 0 then
     Result := Result + Format(' + $%x', [aLocationInfo.OffsetFromProcName]);
 
-  if aLocationInfo.LineNumber > 0 then
+  if (aLocationInfo.LineNumber > 0)
+  or (aLocationInfo.SourceName <> '') then
   begin
     if aLocationInfo.OffsetFromLineNumber = 0 then
       AddStr := ''
@@ -424,22 +431,34 @@ begin
   printf(Format(aStr, Args));
 end;
 
-function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
+function strncmp(lpString1, lpString2: PAnsiChar; size: size_t): Integer; overload;
 begin
-  Result := 0;
-  while True do
+  Result := Size;
+  while Result > 0 do
   begin
-    // Stop at #0
-    if (lpString1^ = #0) or (lpString2^ = #0) then
+    // Stop at inequality :
+    if Ord(lpString1^) <> Ord(lpString2^) then
+    begin
+      Result := Ord(lpString1^) - Ord(lpString2^);
       Exit;
+    end;
 
-    Result := Ord(lpString1^) - Ord(lpString2^);
-    if Result <> 0 then
+    // Stop at #0
+    if (lpString1^ = #0) {and (lpString2^ = #0)} then
+    begin
+      Result := 0;
       Exit;
+    end;
 
     Inc(lpString1);
     Inc(lpString2);
+    Dec(Result);
   end;
+end;
+
+function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
+begin
+  Result := strncmp(lpString1, lpString2, {size=}MaxInt);
 end;
 
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; // overload;
