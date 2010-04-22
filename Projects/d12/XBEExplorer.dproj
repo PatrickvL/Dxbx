@@ -115,9 +115,10 @@
 				<Form>frmExploreFileSystem</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\src\XBEExplorer\uViewerUtils.pas"/>
-			<DCCReference Include="..\..\src\XBEExplorer\uRegionViewer.pas"/>
 			<DCCReference Include="..\..\src\XBEExplorer\uDisassembleViewer.pas"/>
 			<DCCReference Include="..\..\Libraries\BeaEngine\BeaEngine.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uSectionViewer.pas"/>
+			<DCCReference Include="..\..\src\uDisassembleUtils.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

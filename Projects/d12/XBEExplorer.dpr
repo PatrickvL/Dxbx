@@ -17,9 +17,10 @@ uses
   uXDVDFS in '..\..\src\uXDVDFS.pas',
   uExploreFileSystem in '..\..\src\XBEExplorer\uExploreFileSystem.pas' {frmExploreFileSystem},
   uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas',
-  uRegionViewer in '..\..\src\XBEExplorer\uRegionViewer.pas',
   uDisassembleViewer in '..\..\src\XBEExplorer\uDisassembleViewer.pas',
-  BeaEngine in '..\..\Libraries\BeaEngine\BeaEngine.pas';
+  BeaEngine in '..\..\Libraries\BeaEngine\BeaEngine.pas',
+  uSectionViewer in '..\..\src\XBEExplorer\uSectionViewer.pas',
+  uDisassembleUtils in '..\..\src\uDisassembleUtils.pas';
 
 {$R *.res}
 
