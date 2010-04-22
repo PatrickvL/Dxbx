@@ -410,7 +410,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
+{$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
       #13#10'('+
       #13#10'   hHeap               : 0x%.08X' +
@@ -1858,20 +1858,21 @@ begin
     fseek(fp, 0, SEEK_SET);
     fread(@g_SavedLaunchData, sizeof(LAUNCH_DATA), 1, fp);
     memcpy(pLaunchData, @g_SavedLaunchData, sizeof(LAUNCH_DATA));
-//    fread(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
-//    memcpy(@g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+//    fread(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);      // MARKED OUT CXBX
+//    memcpy(@g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA)); // MARKED OUT CXBX
     fclose(fp);
 
     // Delete the file once we're done.
     DeleteFile('CxbxLaunchData.bin');
 
     // HACK: Initialize XInput from restart
-    (*if (g_bXInputOpenCalled)
+    // MARKED OUT CXBX
+    {if (g_bXInputOpenCalled)
     begin
       EmuSwapFS(fsWindows);
       XTL_EmuXInputOpen( NULL, 0, 0, NULL );
       EmuSwapFS(fsXbox)
-    end;*)
+    end;}
 
     dwRet := ERROR_SUCCESS;
   end;

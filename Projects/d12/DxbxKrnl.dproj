@@ -101,7 +101,6 @@
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXG.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXOnline.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXTL.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uHLEDatabase.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uHLEIntercept.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\DxLibraryAPIScanning.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxDebugUtils.pas"/>
@@ -145,7 +144,8 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="HostApplication">D:\henkjan\test\Dxbx\Bin\default.exe</Parameters>
+						<Parameters Name="HostApplication">D:\henkjan\test\dxbx\dxbx2\Bin\Dxbx.exe</Parameters>
+						<Parameters Name="RunParams">D:\henkjan\test\playable\amiga\default.xbe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
