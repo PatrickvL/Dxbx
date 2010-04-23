@@ -108,7 +108,7 @@ begin
     ColWidths[2] := 200;
     Options := [goRangeSelect, goColSizing, goRowSelect];
 //    Color := FixedColor;
-    DrawingStyle := gdsClassic;
+//    DrawingStyle := gdsClassic;
     ShowHint := True;
     DefaultDrawing := False;
 //    DoubleBuffered := True;
