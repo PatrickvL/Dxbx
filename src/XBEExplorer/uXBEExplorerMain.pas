@@ -414,10 +414,11 @@ var
             // TODO : + CRC32 over XbeHeader :
             + '_*'
             + SymbolCacheFileExt;
-    if SysUtils.FindFirst(CacheFileName, faAnyFile, SearchRec) <> 0 then
-      LoadSymbolsFromCache(SymbolList, CacheFileName);
-
-    SysUtils.FindClose(SearchRec);
+    if SysUtils.FindFirst(CacheFileName, faAnyFile, SearchRec) = 0 then
+    begin
+      LoadSymbolsFromCache(SymbolList, SymbolCacheFolder + SearchRec.Name);
+      SysUtils.FindClose(SearchRec);
+    end;
   end;
 
 
