@@ -22,6 +22,7 @@ interface
 uses
   // Delphi
   Windows, SysUtils,
+  Classes, // TStringList
   // 3rd Party
   BeaEngine,
   // Dxbx
@@ -29,6 +30,8 @@ uses
 
 type
   PARGTYPE = ^TARGTYPE; // DO NOT USE OUTSIDE THIS UNIT!
+
+  TGetLabelEvent = function (const aVirtualAddress: Pointer): string of object;
 
   // Dxbx type wrapping the BeaEngine.TDISASM type, so we can easily switch
   // disassemblers if the need ever arises, by hiding the internals in this unit.
@@ -44,17 +47,22 @@ type
     function GetArg(const aArgNr: Integer): PARGTYPE;
   public
     Offset: Cardinal;
+    OnGetLabel: TGetLabelEvent;
     property Buffer: Pointer read FBuffer;
     property CurrentOffset: Cardinal read FCurrentOffset;
 
     procedure Init(const aBuffer: Pointer; const aSize: Cardinal; const aVirtualAddress: Pointer);
 
     function DoDisasm: Boolean;
+    function LabelStr: string;
     function OpcodeStr: string;
     function HexStr: string;
     function ArgReadsFromMemory(const aArgNr: Integer): Boolean;
     function ArgMemoryAddress(const aArgNr: Integer): Cardinal;
   end;
+
+var
+  SymbolList: TStringList;
 
 const
   DelphiSyntax = $00000080;
@@ -94,6 +102,15 @@ begin
     Inc(Offset, 1)
   else
     Inc(Offset, FLen);
+end;
+
+function RDisassemble.LabelStr: string;
+begin
+  if  (FLen <> OUT_OF_BLOCK)
+  and (Assigned(OnGetLabel)) then
+    Result := OnGetLabel(Pointer(MyDisasm.VirtualAddr))
+  else
+    Result := '';
 end;
 
 function RDisassemble.OpcodeStr: string;
@@ -167,6 +184,14 @@ begin
   with GetArg(aArgNr)^ do
     Result := Memory.Displacement;
 end;
+
+initialization
+
+  SymbolList := TStringList.Create;
+
+finalization
+
+  FreeAndNil(SymbolList);
 
 end.
 

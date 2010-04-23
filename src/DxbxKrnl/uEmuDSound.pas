@@ -241,7 +241,7 @@ type
     // TODO -oCXBX: Function needs X_CMcpxStream "this" pointer (ecx!)
     //
 
-    procedure Dummy_0x10(dwDummy1: DWORD; dwDummy2: DWORD); virtual; stdcall;  // 0x10
+    procedure Dummy_0x10({dwDummy1: DWORD;} dwDummy2: DWORD); virtual; stdcall;  // 0x10
 
     // Dxbx : global vtbl for this class...is compiled in automatically by Delphi, so leave it out :
     // vtbl: _vtbl;
@@ -2065,7 +2065,7 @@ procedure X_CMcpxStream.Unknown4;
 begin
 end;
 
-procedure {XTL_Emu}X_CMcpxStream.Dummy_0x10(dwDummy1: DWORD; dwDummy2: DWORD); stdcall;
+procedure {XTL_Emu}X_CMcpxStream.Dummy_0x10({dwDummy1: DWORD;} dwDummy2: DWORD); stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   // Causes deadlock in Halo...
@@ -2159,7 +2159,7 @@ function {XTL_Emu}X_CDirectSoundStream.Release({pThis: PX_CDirectSoundStream}): 
 var
   uRet: ULONG;
   v: int;
-  pThis: PX_CDirectSoundStream;
+  pThis: X_CDirectSoundStream;
 begin
   pThis := Self;
   EmuSwapFS(fsWindows);
