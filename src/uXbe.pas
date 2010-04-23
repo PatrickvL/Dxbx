@@ -343,11 +343,43 @@ function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileN
 procedure XbeLoaded;
 function GameRegionToString(const aGameRegion: Integer): string;
 
+procedure LoadSymbolsFromCache(const aStringList: TStringList; const aCacheFile: string);
+
 var
   DumpToolString: string;
   m_szAsciiTitle: string;
 
 implementation
+
+procedure LoadSymbolsFromCache(const aStringList: TStringList; const aCacheFile: string);
+var
+  i, j: Integer;
+  FuncStr, AddrStr: string;
+  Addr: Pointer;
+begin
+  with aStringList do
+  begin
+    LoadFromFile(aCacheFile);
+    // Split up each line into name and address, putting the name back as a string
+    // and the address in the Object column :
+    for i := 0 to Count - 1 do
+    begin
+      FuncStr := Strings[i];
+
+      j := Pos(':$', FuncStr); // TODO : Use LastPos here
+      AddrStr := Copy(FuncStr, j + 2, MaxInt);
+      System.Delete(FuncStr, j, MaxInt);
+
+      Addr := Pointer(HexToIntDef(AddrStr, 0));
+
+      Strings[i] := FuncStr;
+      Objects[i] := TObject(Addr);
+    end;
+
+    // Sort the list on address :
+    CustomSort(@SortObjects);
+  end;
+end;
 
 procedure XbeLoaded;
 begin

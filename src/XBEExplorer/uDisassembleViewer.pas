@@ -21,8 +21,7 @@ interface
 
 uses
   // Delphi
-  Windows, Types, Classes, SysUtils, Controls, ComCtrls, Graphics, ExtCtrls, Forms, Grids,
-  StdCtrls, // TListBox
+  Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids,
   // Dxbx
   uTypes,
   uDxbxUtils,
@@ -30,18 +29,24 @@ uses
   uViewerUtils;
 
 type
+  // This code is loosely based on http://cheatengine.org disassembly viewer code
+  // http://ce.colddot.nl/browser/Cheat%20Engine%206/disassemblerviewunit.pas
   TDisassembleViewer = class(TPanel)
   private
+    FTextMetric: TTextMetric;
     function GetOffset: DWord;
     procedure SetOffset(const Value: DWord);
   protected
-    MyHeader: TPanel;
-    MyListBox: TListBox;
+    MyHeading: TPanel;
+    MyDrawGrid: TDrawGrid;
     FRegionInfo: RRegionInfo;
     MyDisassemble: RDisassemble;
     MyInstructionOffsets: TList;
-    procedure DoDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    function GetLabelByVA(const aVirtualAddress: Pointer): string;
+    procedure GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint; Rect: TRect; State: TGridDrawState);
   public
+    OnGetLabel: TGetLabelEvent;
+
     property Offset: DWord read GetOffset write SetOffset;
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -49,7 +54,16 @@ type
     procedure SetRegion(const aRegionInfo: RRegionInfo);
   end;
 
+  TDisassemblerDrawGrid = class(TDrawGrid)
+  protected
+    procedure Paint; override;
+  end;
+
 implementation
+
+var
+  CYBorder: Integer;
+  CXBorder: Integer;
 
 { TDisassembleViewer }
 
@@ -57,33 +71,52 @@ constructor TDisassembleViewer.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
 
-  Parent := TWinControl(Owner);
-
   MyInstructionOffsets := TList.Create;
 
   BevelOuter := bvNone;
+  Parent := TWinControl(Owner);
 
-  MyHeader := TPanel.Create(Self);
-  with MyHeader do
+  Canvas.Font.Name := 'Consolas';
+  GetTextMetrics(Canvas.Handle, FTextMetric);
+
+  CYBorder := GetSystemMetrics(SM_CYBORDER);
+  CXBorder := GetSystemMetrics(SM_CXBORDER);
+
+  MyHeading := TPanel.Create(Self);
+  with MyHeading do
   begin
     Align := alTop;
     Parent := Self;
-    Height := 32;
+    Height := 2 * (CYBorder + FTextMetric.tmExternalLeading + FTextMetric.tmHeight + CYBorder);
     BevelOuter := bvNone;
   end;
 
-  MyListBox := TListBox.Create(Self);
-  with MyListBox do
+  MyDrawGrid := TDisassemblerDrawGrid.Create(Self);
+  with MyDrawGrid do
   begin
     Align := alClient;
-    Parent := Self;
-    BevelEdges := [];
-    BevelInner := bvNone;
-    BevelOuter := bvNone;
-    BorderStyle := bsNone;
+    BorderStyle := bsNone; // Remove unnessecary borders
+    ColCount := 4; // 'Addresss', 'Hexdump', 'Disassembly', 'Comments'
+    FixedCols := 0;
+    RowCount := 2;
+    FixedRows := 1;
+    GridLineWidth := 0; // Remove the lines between cells
+    DefaultRowHeight := CYBorder + FTextMetric.tmExternalLeading + FTextMetric.tmHeight + CYBorder;
+    DefaultColWidth := 1000;
+    ColWidths[0] := 80;
+    ColWidths[1] := 120;
+    ColWidths[2] := 200;
+    Options := [goRangeSelect, goColSizing, goRowSelect];
+//    Color := FixedColor;
+    DrawingStyle := gdsClassic;
+    ShowHint := True;
+    DefaultDrawing := False;
+//    DoubleBuffered := True;
+    OnDrawCell := GridDrawCellEvent;
+
     Font.Name := 'Consolas';
-    Style := lbVirtualOwnerDraw;
-    OnDrawItem := DoDrawItem;
+    Parent := Self;
+    // ParentFont := True; // Why doesn't this take the parent font?
   end;
 end;
 
@@ -95,27 +128,39 @@ begin
 end;
 
 procedure TDisassembleViewer.SetOffset(const Value: DWord);
-//var
-//  GridRect: TGridRect;
+var
+  GridRect: TGridRect;
 begin
-//  GridRect.Top := Integer(Value div 16) + MyDrawGrid.FixedRows;
-//  if GridRect.Top < MyDrawGrid.RowCount then
-//  begin
-//    GridRect.Left := Integer(Value mod 16) + MyDrawGrid.FixedCols;
-//    GridRect.Right := GridRect.Left;
-//    GridRect.Bottom := GridRect.Top;
-//    MyDrawGrid.Selection := GridRect;
-//    MyDrawGrid.TopRow := MyDrawGrid.Selection.Top;
-//  end;
+  GridRect.Top := Integer(Value div 16) + MyDrawGrid.FixedRows;
+  if GridRect.Top < MyDrawGrid.RowCount then
+  begin
+    GridRect.Left := Integer(Value mod 16) + MyDrawGrid.FixedCols;
+    GridRect.Right := GridRect.Left;
+    GridRect.Bottom := GridRect.Top;
+    MyDrawGrid.Selection := GridRect;
+    MyDrawGrid.TopRow := MyDrawGrid.Selection.Top;
+  end;
 end;
 
 function TDisassembleViewer.GetOffset: DWord;
-//var
-//  GridRect: TGridRect;
+var
+  GridRect: TGridRect;
 begin
-//  GridRect := MyDrawGrid.Selection;
-//  Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
-  Result := 0;
+  GridRect := MyDrawGrid.Selection;
+  Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
+end;
+
+function TDisassembleViewer.GetLabelByVA(const aVirtualAddress: Pointer): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  if Assigned(SymbolList) then
+  begin
+    i := SymbolList.IndexOfObject(TObject(aVirtualAddress));
+    if i >= 0 then
+      Result := SymbolList[i];
+  end;
 end;
 
 procedure TDisassembleViewer.SetRegion(const aRegionInfo: RRegionInfo);
@@ -123,8 +168,9 @@ begin
   FRegionInfo := aRegionInfo;
 
   MyDisassemble.Init(FRegionInfo.Buffer, FRegionInfo.Size, FRegionInfo.VirtualAddres);
+  MyDisassemble.OnGetLabel := GetLabelByVA;
 
-  MyHeader.Caption := Format('Disassemble viewing %s, %.08x .. %.08x (%s)', [
+  MyHeading.Caption := Format('Disassemble viewing %s, %.08x .. %.08x (%s)', [
     FRegionInfo.Name,
     DWord(FRegionInfo.VirtualAddres),
     DWord(FRegionInfo.VirtualAddres) + FRegionInfo.Size,
@@ -137,56 +183,282 @@ begin
     MyInstructionOffsets.Add(Pointer(MyDisassemble.CurrentOffset));
 
   // Update the view on this data :
-  MyListBox.Count := MyInstructionOffsets.Count;
-  MyListBox.Repaint;
+  MyDrawGrid.RowCount := 1 + MyInstructionOffsets.Count;
+  MyDrawGrid.FixedRows := 1;
+  MyDrawGrid.Invalidate;
 end;
 
-procedure TDisassembleViewer.DoDrawItem(Control: TWinControl; Index: Integer;
-    Rect: TRect; State: TOwnerDrawState);
+procedure TDisassembleViewer.GridDrawCellEvent(Sender: TObject; ACol, ARow: Longint;
+  Rect: TRect; State: TGridDrawState);
 var
   Offset: Cardinal;
-//  Addr: Pointer;
+  Address: UIntPtr;
+  LineHeight: Integer;
   CommentStr: string;
   LineStr: string;
 begin
-  if Index > MyInstructionOffsets.Count then
+  // Handle fixed cells (meaning: header-row) :
+  LineStr := '';
+  if gdFixed in State then
+  begin
+    Assert(aRow = 0);
+    // Determine header text :
+    case aCol of
+      0: LineStr := 'Address';
+      1: LineStr := 'Hexdump';
+      2: LineStr := 'Disassembly';
+      3: LineStr := 'Comment';
+    end;
+
+    // Clear background of header :
+    MyDrawGrid.Canvas.Brush.Color := MyDrawGrid.FixedColor;
+    MyDrawGrid.Canvas.FillRect(Rect);
+
+    // Draw header text :
+    if LineStr <> '' then
+    begin
+      MyDrawGrid.Canvas.Font.Color := clWindowText;
+      MyDrawGrid.Canvas.Font.Style := [fsBold];
+      MyDrawGrid.Canvas.TextRect(Rect, LineStr);
+    end;
+
+    // Done
     Exit;
+  end;
 
-  Offset := Cardinal(MyInstructionOffsets[Index]);
+  // Check end of data :
+  if aRow > MyInstructionOffsets.Count then
+  begin
+    // Clear contents :
+    MyDrawGrid.Canvas.Brush.Color := MyDrawGrid.Color;
+    MyDrawGrid.Canvas.FillRect(Rect);
+    Exit;
+  end;
 
-  MyDisassemble.Offset := Offset;
-  MyDisassemble.DoDisasm;
+  // Update drawing colors, depending on state :
+  if gdSelected in State then
+  begin
+    MyDrawGrid.Canvas.Brush.Color := clHighlight;
+    MyDrawGrid.Canvas.Font.Color := clHighlightText;
+  end
+  else
+  begin
+    MyDrawGrid.Canvas.Brush.Color := MyDrawGrid.Color;
+    MyDrawGrid.Canvas.Font.Color := clWindowText;
+  end;
 
-  // Add interesting details, like referenced string contents, labels etc.
+  // Retrieve the offset and address of this line :
+  Offset := Cardinal(MyInstructionOffsets[aRow - 1]);
+  Address := UIntPtr(FRegionInfo.VirtualAddres) + Offset;
 
-  // Only problem is, the referenced addresses in code assume post-load layout,
-  // while we're working with a Raw Xbe - so we need to do a bit of addresss
-  // conversion wizardry to make this work :
-  CommentStr := '';
-//  if MyDisassemble.ArgReadsFromMemory(2) then
-//  begin
-//    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(2) - UIntPtr(FRegionInfo.VirtualAddres);
-//    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
-//  end
-//  else
-//  if MyDisassemble.ArgReadsFromMemory(1) then
-//  begin
-//    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(1) - UIntPtr(FRegionInfo.VirtualAddres);
-//    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
-//  end;
+  // Disassemble this (if not done already) :
+  if MyDisassemble.CurrentOffset <> Offset then
+  begin
+    MyDisassemble.Offset := Offset;
+    MyDisassemble.DoDisasm;
 
-  if CommentStr <> '' then
-    CommentStr := '; ' + CommentStr;
+    // Double the LineHeight, if there's a label :
+    if MyDisassemble.LabelStr <> '' then
+      LineHeight := 2 * MyDrawGrid.DefaultRowHeight
+    else
+      LineHeight := MyDrawGrid.DefaultRowHeight;
 
-  LineStr := Format('%.08x %-20s %-40s %s', [
-    {Address}UIntPtr(FRegionInfo.VirtualAddres) + Offset,
-    MyDisassemble.HexStr,
-    MyDisassemble.OpcodeStr,
-    CommentStr
-    ]);
+    // Update this Row's height (only when needed) :
+    if MyDrawGrid.RowHeights[aRow] <> LineHeight then
+    begin
+      MyDrawGrid.RowHeights[aRow] := LineHeight;
+      MyDrawGrid.Invalidate;
+      Exit;
+    end;
+  end;
 
-  MyListBox.Canvas.FillRect(Rect);
-  DrawTextW(MyListBox.Canvas.Handle, LineStr, Length(LineStr), Rect, 0);
+  // Do we need to draw a label (we've already double the line-height for this) ?
+  if MyDisassemble.LabelStr <> '' then
+  begin
+    // Append the label (only in the first column) :
+    if aCol = 0 then
+    begin
+      // Extend this cell to a whole line :
+      Inc(Rect.Right, ClientWidth);
+
+      // Clear contents :
+      MyDrawGrid.Canvas.FillRect(Rect);
+
+      // Draw the label in bold :
+      MyDrawGrid.Canvas.Font.Style := [fsBold];
+      MyDrawGrid.Canvas.TextOut(Rect.Left + CXBorder, Rect.Top + CYBorder, MyDisassemble.LabelStr);
+
+      // Deduce back to a single cell :
+      Dec(Rect.Right, ClientWidth);
+    end
+    else
+      ; // Don't clear the other columns (or the label would be gone)
+
+    // Move the drawing rectangle to the next line :
+    OffsetRect(Rect, 0, MyDrawGrid.DefaultRowHeight);
+  end
+  else
+    // Single-line mode; Clear contents :
+    MyDrawGrid.Canvas.FillRect(Rect);
+
+  // Determine cell text :
+  case aCol of
+    0: LineStr := Format('%.08x', [Address]);
+    1: LineStr := Format('%-s', [MyDisassemble.HexStr]);
+    2: LineStr := Format('%-s', [MyDisassemble.OpcodeStr]);
+    3:
+    begin
+      // Add interesting details, like referenced string contents, labels etc.
+
+      // Only problem is, the referenced addresses in code assume post-load layout,
+      // while we're working with a Raw Xbe - so we need to do a bit of addresss
+      // conversion wizardry to make this work :
+      CommentStr := '';
+    //  if MyDisassemble.ArgReadsFromMemory(2) then
+    //  begin
+    //    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(2) - UIntPtr(FRegionInfo.VirtualAddres);
+    //    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
+    //  end
+    //  else
+    //  if MyDisassemble.ArgReadsFromMemory(1) then
+    //  begin
+    //    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(1) - UIntPtr(FRegionInfo.VirtualAddres);
+    //    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
+    //  end;
+
+      if CommentStr <> '' then
+        CommentStr := '; ' + CommentStr;
+
+      LineStr := Format('%s', [CommentStr]);
+    end;
+  end; // case
+
+  // Draw text (if there is any) :
+  if LineStr <> '' then
+  begin
+    // Shrink the drawing surface, by removing the border from all four sides :
+    InflateRect(Rect, -CXBorder, -CYBorder);
+
+    MyDrawGrid.Canvas.Font.Style := [];
+    MyDrawGrid.Canvas.TextRect(Rect, LineStr);
+  end;
+end;
+
+{ TDisassemblerDrawGrid }
+
+// Copy of TCustomDrawGrid.Paint, with all needless cruft removed
+// (DrawingStyle fixed on gdsClassic, no cell-lines, no HotTracking, etc.)
+// What's left : scrolling (including focus), cell drawing, multi-select.
+procedure TDisassemblerDrawGrid.Paint;
+var
+  DrawInfo: TGridDrawInfo;
+  Sel: TGridRect;
+  UpdateRect: TRect;
+
+  // Copy from private TCustomGrid.IsActiveControl
+  function IsActiveControl: Boolean;
+  var
+    H: Hwnd;
+    ParentForm: TCustomForm;
+  begin
+    Result := False;
+    ParentForm := GetParentForm(Self);
+    if Assigned(ParentForm) then
+      Result := (ParentForm.ActiveControl = Self) and
+        ((ParentForm = Screen.ActiveForm) or (ParentForm is TCustomActiveForm) or (ParentForm is TCustomDockForm))
+    else
+    begin
+      H := GetFocus;
+      while IsWindow(H) and not Result do
+      begin
+        if H = WindowHandle then
+          Result := True
+        else
+          H := GetParent(H);
+      end;
+    end;
+  end;
+
+  // Copy from implementation-only Grids.PointInGridRect
+  function PointInGridRect(Col, Row: Longint; const Rect: TGridRect): Boolean;
+  begin
+    Result := (Col >= Rect.Left) and (Col <= Rect.Right) and (Row >= Rect.Top)
+      and (Row <= Rect.Bottom);
+  end;
+
+  procedure DrawCells(ACol, ARow: Longint; StartX, StartY, StopX, StopY: Integer;
+    IncludeDrawState: TGridDrawState);
+  var
+    CurCol, CurRow: Longint;
+    AWhere, Where: TRect;
+    DrawState: TGridDrawState;
+  begin
+    CurRow := ARow;
+    Where.Top := StartY;
+    while (Where.Top < StopY) and (CurRow < RowCount) do
+    begin
+      CurCol := ACol;
+      Where.Left := StartX;
+      Where.Bottom := Where.Top + RowHeights[CurRow];
+      while (Where.Left < StopX) and (CurCol < ColCount) do
+      begin
+        Where.Right := Where.Left + ColWidths[CurCol];
+        if (Where.Right > Where.Left) and RectVisible(Canvas.Handle, Where) then
+        begin
+          DrawState := IncludeDrawState;
+          if IsActiveControl and (CurRow = Row) and (CurCol = Col)  then
+            SetCaretPos(Where.Left, Where.Top);
+          if PointInGridRect(CurCol, CurRow, Sel) then
+            Include(DrawState, gdSelected);
+          AWhere := Where;
+          DrawCell(CurCol, CurRow, AWhere, DrawState);
+        end;
+        Where.Left := Where.Right + DrawInfo.Horz.EffectiveLineWidth;
+        Inc(CurCol);
+      end;
+      Where.Top := Where.Bottom + DrawInfo.Vert.EffectiveLineWidth;
+      Inc(CurRow);
+    end;
+  end;
+
+var
+  FColOffset: Integer; // Can't access this private member, so we need to retrieve it otherwise:
+begin
+  FColOffset := GetScrollPos(Handle, SB_HORZ);
+
+  UpdateRect := Canvas.ClipRect;
+  CalcDrawInfo(DrawInfo);
+  with DrawInfo do
+  begin
+    { Draw the cells in the four areas }
+    Sel := Selection;
+    // Fixed row
+    DrawCells(
+      LeftCol, 0,
+      Horz.FixedBoundary - FColOffset, 0,
+      Horz.GridBoundary, {!! clip} Vert.FixedBoundary,
+      [gdFixed]);
+
+    // Data
+    DrawCells(
+      LeftCol, TopRow,
+      Horz.FixedBoundary - FColOffset, {!! clip} Vert.FixedBoundary,
+      Horz.GridBoundary, Vert.GridBoundary,
+      []);
+
+    { Fill in area not occupied by cells }
+    if Horz.GridBoundary < Horz.GridExtent then
+    begin
+      Canvas.Brush.Color := Color;
+      Canvas.FillRect(Rect(Horz.GridBoundary, 0, Horz.GridExtent, Vert.GridBoundary));
+    end;
+
+    if Vert.GridBoundary < Vert.GridExtent then
+    begin
+      Canvas.Brush.Color := Color;
+      Canvas.FillRect(Rect(0, Vert.GridBoundary, Horz.GridExtent, Vert.GridExtent));
+    end;
+  end;
 end;
 
 end.

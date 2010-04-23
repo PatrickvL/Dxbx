@@ -1207,49 +1207,28 @@ begin
           + SymbolCacheFileExt;
 end;
 
-function SortObjects(List: TStringList; Index1, Index2: Integer): Integer;
-begin
-  Result := IntPtr(List.Objects[Index1]) - IntPtr(List.Objects[Index2]);
-end;
-
 function TSymbolManager.LoadSymbolsFromCache(const aCacheFile: string): Boolean;
 var
   i, j: Integer;
   FuncStr, AddrStr: string;
   Addr: Pointer;
   CurrentSymbol: TSymbolInformation;
+  Symbols: TStringList;
 begin
   Result := False;
   if not FileExists(aCacheFile) then
     Exit;
 
-  with TStringList.Create do
+  Symbols := TStringList.Create;
   try
-    LoadFromFile(aCacheFile);
-    // Split up each line into name and address, putting the name back as a string
-    // and the address in the Object column :
-    for i := 0 to Count - 1 do
-    begin
-      FuncStr := Strings[i];
+    uXbe.LoadSymbolsFromCache(Symbols, aCacheFile);
 
-      j := Pos(':$', FuncStr); // TODO : Use LastPos here
-      AddrStr := Copy(FuncStr, j + 2, MaxInt);
-      System.Delete(FuncStr, j, MaxInt);
-
-      Addr := Pointer(HexToIntDef(AddrStr, 0));
-
-      Strings[i] := FuncStr;
-      Objects[i] := TObject(Addr);
-    end;
-
-    // Sort the list on address :
-    CustomSort(@SortObjects);
     // Add each entry to the list :
     MyFinalLocations.Count := Count;
     for i := 0 to Count - 1 do
     begin
-      FuncStr := Strings[i];
-      Addr := Pointer(Objects[i]);
+      FuncStr := Symbols[i];
+      Addr := Pointer(Symbols.Objects[i]);
       if Assigned(Addr) then
       begin
         CurrentSymbol := RegisterSpecificFunctionLocation(FuncStr, Addr);
@@ -1259,7 +1238,7 @@ begin
       end;
     end;
   finally
-    Free;
+    FreeAndNil(Symbols);
   end;
 
 {$IFDEF DXBX_DEBUG}

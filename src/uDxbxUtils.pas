@@ -184,6 +184,8 @@ function ReadD3DTextureFormatIntoBitmap(const aFormat: Byte; const aData: PBytes
 function GetDxbxBasePath: string;
 function SymbolCacheFolder: string;
 
+function SortObjects(List: TStringList; Index1, Index2: Integer): Integer;
+
 const
   SymbolCacheFileExt = '.sym';
 
@@ -1103,6 +1105,11 @@ end;
 function SymbolCacheFolder: string;
 begin
   Result := GetDxbxBasePath + '\SymbolCache\';
+end;
+
+function SortObjects(List: TStringList; Index1, Index2: Integer): Integer;
+begin
+  Result := IntPtr(List.Objects[Index1]) - IntPtr(List.Objects[Index2]);
 end;
 
 end.

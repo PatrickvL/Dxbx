@@ -38,6 +38,7 @@ uses
   uViewerUtils,
   uSectionViewer,
   uStringsViewer,
+  uDisassembleUtils,
   uDisassembleViewer,
   uExploreFileSystem;
 
@@ -401,6 +402,25 @@ var
   NodeResources: TTreeNode;
   RegionInfo: RRegionInfo;
 
+  procedure _LoadSymbols;
+  var
+    CacheFileName: string;
+    SearchRec: TSearchRec;
+  begin
+    SymbolList.Clear;
+    CacheFileName := SymbolCacheFolder
+            // TitleID
+            + IntToHex(MyXBE.m_Certificate.dwTitleId, 8)
+            // TODO : + CRC32 over XbeHeader :
+            + '_*'
+            + SymbolCacheFileExt;
+    if SysUtils.FindFirst(CacheFileName, faAnyFile, SearchRec) <> 0 then
+      LoadSymbolsFromCache(SymbolList, CacheFileName);
+
+    SysUtils.FindClose(SearchRec);
+  end;
+
+
   procedure _AddRange(Start, Size: Integer; Title: string);
   begin
     MyRanges.Lines.Add(Format('%.08x .. %.08x  %-32s  (%9d bytes)', [Start, Start+Size-1, Title, Size]));
@@ -757,6 +777,9 @@ begin // OpenFile
   CloseFile;
   MyXBE := TXbe.Create(aFilePath);
   FXBEFileName := ExtractFileName(aFilePath);
+
+  _LoadSymbols;
+
   Caption := Application.Title + ' - [' + FXBEFileName + ']';
   PageControl.Visible := True;
 
