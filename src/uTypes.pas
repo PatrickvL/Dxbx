@@ -176,7 +176,8 @@ function isdigit(c: AnsiChar): Boolean;
 function isxdigit(c: AnsiChar): Boolean;
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
-function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
+function strncpy(dest, source: PAnsiChar; len: Integer): PAnsiChar; overload; // cdecl
+function strncpy(dest, source: PWideChar; len: Integer): PWideChar; overload; // cdecl
 function wstrlen(const Str: PWideChar): Cardinal; overload;
 function memcmp(const ptr1, ptr2: Pvoid; num: size_t): int;
 function memcpy(destination: Pvoid; const source: Pvoid; num: size_t): Pvoid;// cdecl;
@@ -256,7 +257,12 @@ begin
   Result := StrCopy(Dest, Source);
 end;
 
-function strncpy(dest, source: PChar; len: Integer): PChar; // cdecl
+function strncpy(dest, source: PAnsiChar; len: Integer): PAnsiChar; // cdecl
+begin
+  Result := StrLCopy(Dest, Source, Len);
+end;
+
+function strncpy(dest, source: PWideChar; len: Integer): PWideChar; // cdecl
 begin
   Result := StrLCopy(Dest, Source, Len);
 end;
