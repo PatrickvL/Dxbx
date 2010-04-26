@@ -319,7 +319,8 @@ begin
 {$IFDEF _DEBUG_TRACE}
   // dump raw TLS data
   begin
-    if pNewTLS = nil then
+    if (pNewTLS = nil)
+    or (dwCopySize + dwZeroSize = 0) then
       DbgPrintf('EmuFS : TLS Non-Existant (OK)')
     else
     begin
@@ -388,7 +389,8 @@ begin
   if Assigned(pTLS) then
   begin
     // TLS Index Address := 0
-    PUInt32(pTLS.dwTLSIndexAddr)^ := 0;
+    if Assigned(PUInt32(pTLS.dwTLSIndexAddr)) then
+      PUInt32(pTLS.dwTLSIndexAddr)^ := 0;
 
     // dword @ pTLSData := pTLSData
     if Assigned(pNewTLS) then
