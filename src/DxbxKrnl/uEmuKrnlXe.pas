@@ -69,26 +69,25 @@ implementation
 function {327} xboxkrnl_XeLoadSection(
   Section: PXBE_SECTIONHEADER // In, out
   ): NTSTATUS; stdcall;
-// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:0
+// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('XeLoadSection');
-  EmuSwapFS(fsXbox);
+  if XTL_EmuXLoadSectionByHandle(XTL_SECTIONHANDLE(Section)) <> NULL then
+    Result := STATUS_SUCCESS
+  else
+    Result := STATUS_IMAGE_NOT_AT_BASE; // TODO -oDxbx : Determine & set correct LastError code
 end;
 
 // XeUnloadSection:
-// Subtracts one from the reference count of the specified section and loads
-// if the count is now below zero.
+// Subtracts one from the reference count of the specified section and unloads
+// if the count is now zero.
 //
 // New to the XBOX.
 function {328} xboxkrnl_XeUnloadSection(
   Section: PXBE_SECTIONHEADER // In, out
   ): NTSTATUS; stdcall;
-// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:0
+// Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('XeUnloadSection');
-  EmuSwapFS(fsXbox);
+  Result := XTL_EmuXFreeSectionByHandle(XTL_SECTIONHANDLE(Section));
 end;
 
 end.

@@ -610,12 +610,35 @@ end;
 
 procedure TSymbolManager.FindAndRememberPattern(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
 var
+  RetPos: PBytes;
   CrossReference: PStoredCrossReference;
   i: Integer;
   FunctionName: string;
   Symbol: TSymbolInformation;
 begin
   Assert(Assigned(FoundFunction));
+  Assert(FoundFunction.FunctionLength > 0);
+  Assert(FoundFunction.FunctionLength < 16384);
+
+  // Start at what's presumably the last function address :
+  RetPos := PBytes(aAddress + FoundFunction.FunctionLength - 1);
+
+  // Some functions end with NOP's, trace back to the last non-NOP byte :
+  while RetPos[0] = $90{NOP} do
+    Dec(UIntPtr(RetPos));
+
+  // Skip back 2 more bytes, and now check if there's a return-opcode there :
+  Dec(UIntPtr(RetPos), 2);
+  if (RetPos[0] = $C2) // retn word
+  or (RetPos[0] = $CA) // retnf word
+  or (RetPos[2] = $C3) // ret
+  or (RetPos[2] = $CB) // retf
+  then
+    // valid case
+    Assert(Assigned(FoundFunction))
+  else
+    // No ret opcode found, so no match :
+    Exit;
 
   // First, check all cross-references to have a valid address :
   IntPtr(CrossReference) := IntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);

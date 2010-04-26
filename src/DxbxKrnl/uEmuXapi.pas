@@ -225,6 +225,19 @@ var g_bXInputOpenCalled: _bool = false;
 // Note : Cxbx log indicates 'g_pRtlCreateHeap' is indeed
 // at the same address as 'EmuRtlCreateHeap'.
 
+type
+  XTL_SECTIONHANDLE = PXBE_SECTIONHEADER;
+
+function XTL_EmuXLoadSectionByHandle
+(
+    hSection: XTL_SECTIONHANDLE
+): LPVOID; stdcall; // published function, used for xboxkrnl_XeLoadSection
+
+function XTL_EmuXFreeSectionByHandle
+(
+    hSection: XTL_SECTIONHANDLE
+): BOOL; stdcall; // published function, used for xboxkrnl_XeUnloadSection
+
 implementation
 
 uses
@@ -1382,7 +1395,7 @@ end;
 function XTL_EmuXGetSectionHandleA
 (
     pSectionName: LPCSTR
-): HANDLE; stdcall;
+): XTL_SECTIONHANDLE; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   SectionHeader: PXBE_SECTIONHEADER;
@@ -1399,17 +1412,19 @@ begin
 
   SectionHeader := XBE_FindSectionHeaderByName(pSectionName);
   if Assigned(SectionHeader) then
-    Result := HANDLE(SectionHeader)
+    Result := XTL_SECTIONHANDLE(SectionHeader)
   else
-    Result := INVALID_HANDLE_VALUE;
+    Result := XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE);
 
   EmuSwapFS(fsXbox);
 end;
 
 
+// Adds one to the reference count of the specified section and loads if the
+// count is now above zero.
 function XTL_EmuXLoadSectionByHandle
 (
-    hSection: HANDLE
+    hSection: XTL_SECTIONHANDLE
 ): LPVOID; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
@@ -1428,23 +1443,25 @@ begin
   // The handle should contain the address of this section by the hack
   // used in EmuXGetSectionHandleA.
 
+  Result := NULL;
   SectionHeader := PXBE_SECTIONHEADER(hSection);
   if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
   begin
-    // TODO : Actually load the section here, including the symbol-detection + patching!
-
     Inc(SectionHeader.dwSectionRefCount);
-    Result := LPVOID(SectionHeader.dwVirtualAddr);
-  end
-  else
-    Result := NULL;
+    if SectionHeader.dwSectionRefCount > 0 then
+      // TODO : Actually load the section here, including the symbol-detection + patching!
+      Result := LPVOID(SectionHeader.dwVirtualAddr);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
 
+
+// Subtracts one from the reference count of the specified section and unloads
+// if the count is now zero.
 function XTL_EmuXFreeSectionByHandle
 (
-    hSection: HANDLE
+    hSection: XTL_SECTIONHANDLE
 ): BOOL; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
@@ -1482,7 +1499,7 @@ function XTL_EmuXLoadSectionA
 ): LPVOID; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  SectionHandle: HANDLE;
+  SectionHandle: XTL_SECTIONHANDLE;
 begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
@@ -1495,7 +1512,7 @@ begin
 {$ENDIF}
 
   SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
-  if SectionHandle = INVALID_HANDLE_VALUE then
+  if SectionHandle = XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE) then
     Result := NULL
   else
     Result := XTL_EmuXLoadSectionByHandle(SectionHandle);
@@ -1507,7 +1524,7 @@ function XTL_EmuXFreeSectionA
 ): BOOL; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  SectionHandle: HANDLE;
+  SectionHandle: XTL_SECTIONHANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1520,7 +1537,7 @@ begin
 {$ENDIF}
 
   SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
-  if SectionHandle = INVALID_HANDLE_VALUE then
+  if SectionHandle = XTL_SECTIONHANDLE(INVALID_HANDLE_VALUE) then
     Result := BOOL_FALSE
   else
     Result := XTL_EmuXFreeSectionByHandle(SectionHandle);
@@ -1530,7 +1547,7 @@ end;
 
 function XTL_EmuXGetSectionSize
 (
-  hSection: HANDLE
+  hSection: XTL_SECTIONHANDLE
 ): DWORD; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
