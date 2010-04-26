@@ -57,8 +57,10 @@ type
     function LabelStr: string;
     function OpcodeStr: string;
     function HexStr: string;
-    function ArgReadsFromMemory(const aArgNr: Integer): Boolean;
-    function ArgMemoryAddress(const aArgNr: Integer): Cardinal;
+    function GetLabelStr(const aVirtualAddr: Pointer): string;
+    function GetReferencedMemoryAddress(var TargetAddress: Cardinal): Boolean;
+//    function ArgReadsFromMemory(const aArgNr: Integer): Boolean;
+//    function ArgMemoryAddress(const aArgNr: Integer): Cardinal;
   end;
 
 var
@@ -104,11 +106,18 @@ begin
     Inc(Offset, FLen);
 end;
 
+function RDisassemble.GetLabelStr(const aVirtualAddr: Pointer): string;
+begin
+  if Assigned(OnGetLabel) then
+    Result := OnGetLabel(aVirtualAddr)
+  else
+    Result := '';
+end;
+
 function RDisassemble.LabelStr: string;
 begin
-  if  (FLen <> OUT_OF_BLOCK)
-  and (Assigned(OnGetLabel)) then
-    Result := OnGetLabel(Pointer(MyDisasm.VirtualAddr))
+  if FLen <> OUT_OF_BLOCK then
+    Result := GetLabelStr(Pointer(MyDisasm.VirtualAddr))
   else
     Result := '';
 end;
@@ -162,28 +171,64 @@ begin
   end;
 end;
 
-function RDisassemble.ArgReadsFromMemory(const aArgNr: Integer): Boolean;
+function RDisassemble.GetReferencedMemoryAddress(var TargetAddress: Cardinal): Boolean;
 begin
-  if (MyDisAsm.Instruction.Category and DATA_TRANSFER) = 0 then
+  Result := {((MyDisAsm.Instruction.Category and CONTROL_TRANSFER) > 0)
+        and} (MyDisasm.Instruction.AddrValue > 0);
+  if Result then
   begin
-    Result := False;
+    {var}TargetAddress := MyDisasm.Instruction.AddrValue;
     Exit;
   end;
 
-  with GetArg(aArgNr)^ do
-    Result := (SegmentReg = DSReg)
-          and (Memory.BaseRegister = 0)
-          and (ArgType = MEMORY_TYPE)
-          and (AccessMode = READ)
-//          and (Memory.Displacement >= FVirtualAddress)
-//          and (Memory.Displacement < FVirtualAddress + FSize);
+  Result := {((MyDisAsm.Instruction.Category and CONTROL_TRANSFER) > 0)
+        and} (MyDisasm.Instruction.Immediat > 0);
+  if Result then
+  begin
+    {var}TargetAddress := MyDisasm.Instruction.Immediat;
+    Exit;
+  end;
+
+  with GetArg(2)^ do
+    {var}TargetAddress := Memory.Displacement;
+  Result := (TargetAddress > 0);
+  if Result then
+    Exit;
+
+  with GetArg(1)^ do
+    {var}TargetAddress := Memory.Displacement;
+  Result := (TargetAddress > 0);
+  if Result then
+    Exit;
 end;
 
-function RDisassemble.ArgMemoryAddress(const aArgNr: Integer): Cardinal;
-begin
-  with GetArg(aArgNr)^ do
-    Result := Memory.Displacement;
-end;
+//  if ((MyDisasm.Instruction.ImplicitModifiedRegs and REG4) > 0)
+//  or (((MyDisasm.Argument1.ArgType and REG4) > 0) and (MyDisasm.Argument1.AccessMode = WRITE))
+//  or (((MyDisasm.Argument2.ArgType and REG4) > 0) and (MyDisasm.Argument2.AccessMode = WRITE)) then
+
+
+//function RDisassemble.ArgReadsFromMemory(const aArgNr: Integer): Boolean;
+//begin
+//  if (MyDisAsm.Instruction.Category and DATA_TRANSFER) = 0 then
+//  begin
+//    Result := False;
+//    Exit;
+//  end;
+//
+//  with GetArg(aArgNr)^ do
+//    Result := (SegmentReg = DSReg)
+//          and (Memory.BaseRegister = 0)
+//          and (ArgType = MEMORY_TYPE)
+//          and (AccessMode = READ)
+////          and (Memory.Displacement >= FVirtualAddress)
+////          and (Memory.Displacement < FVirtualAddress + FSize);
+//end;
+//
+//function RDisassemble.ArgMemoryAddress(const aArgNr: Integer): Cardinal;
+//begin
+//  with GetArg(aArgNr)^ do
+//    Result := Memory.Displacement;
+//end;
 
 initialization
 
