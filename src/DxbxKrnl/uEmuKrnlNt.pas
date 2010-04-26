@@ -1101,8 +1101,7 @@ begin
   mbstr := @FileInformation.FileName[0]; // TODO -oDXBX: Is this Ansi or Wide ?
   wcstr := FileDirInfo.FileName;
 
-  while (strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0) do
-  begin
+  repeat
     ZeroMemory(wcstr, 160*2);
 
     ret := NtQueryDirectoryFile
@@ -1123,7 +1122,7 @@ begin
     RestartScan := FALSE;
 
     // Xbox does not return . and ..
-  end;
+  until not ((strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0));
 
   // TODO -oCXBX: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
   CxbxFree(FileDirInfo);
