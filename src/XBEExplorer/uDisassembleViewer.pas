@@ -23,6 +23,7 @@ uses
   // Delphi
   Windows, Classes, SysUtils, Controls, Graphics, ExtCtrls, Forms, Grids,
   // Dxbx
+  uConsts,
   uTypes,
   uDxbxUtils,
   uDisassembleUtils,
@@ -304,8 +305,8 @@ begin
   // Determine cell text :
   case aCol of
     0: LineStr := Format('%.08x', [Address]);
-    1: LineStr := Format('%-s', [MyDisassemble.HexStr]);
-    2: LineStr := Format('%-s', [MyDisassemble.OpcodeStr]);
+    1: LineStr := MyDisassemble.HexStr;
+    2: LineStr := MyDisassemble.OpcodeStr;
     3:
     begin
       // Add interesting details, like referenced string contents, labels etc.
@@ -314,22 +315,24 @@ begin
       // while we're working with a Raw Xbe - so we need to do a bit of addresss
       // conversion wizardry to make this work :
       CommentStr := '';
-    //  if MyDisassemble.ArgReadsFromMemory(2) then
-    //  begin
-    //    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(2) - UIntPtr(FRegionInfo.VirtualAddres);
-    //    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
-    //  end
-    //  else
-    //  if MyDisassemble.ArgReadsFromMemory(1) then
-    //  begin
-    //    Addr := PAnsiChar(FRegionInfo.Buffer) + MyDisassemble.ArgMemoryAddress(1) - UIntPtr(FRegionInfo.VirtualAddres);
-    //    CommentStr := TryReadLiteralString(PAnsiChar(Addr));
-    //  end;
+      if MyDisassemble.GetReferencedMemoryAddress({var}Address) then
+      begin
+        CommentStr := MyDisassemble.GetLabelStr(Pointer(Address));
+        if  (CommentStr = '')
+        // TODO : Check XBE Range better than this
+        // Also, add support for strings referenced in another section :
+        and (Address > UIntPtr(FRegionInfo.VirtualAddres))
+        and (Address < UIntPtr(FRegionInfo.VirtualAddres) + FRegionInfo.Size) then
+        begin
+          Address := UIntPtr(FRegionInfo.Buffer) + Address - UIntPtr(FRegionInfo.VirtualAddres);
+          CommentStr := TryReadLiteralString(PAnsiChar(Address));
+        end;
+      end;
 
       if CommentStr <> '' then
         CommentStr := '; ' + CommentStr;
 
-      LineStr := Format('%s', [CommentStr]);
+      LineStr := CommentStr;
     end;
   end; // case
 

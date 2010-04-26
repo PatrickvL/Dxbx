@@ -842,6 +842,7 @@ begin
   
   Result := 0;
 end;
+
 { RGB32Scanlines }
 
 procedure RGB32Scanlines.Initialize(const aBitmap: TBitmap);
