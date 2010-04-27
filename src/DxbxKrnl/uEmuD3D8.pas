@@ -2928,7 +2928,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetPixelShader' +
     #13#10'(' +
-    #13#10'   Handle           : 0x%.08X' +
+    #13#10'   Handle             : 0x%.08X' +
     #13#10');',
     [Handle]);
 {$ENDIF}
@@ -3441,8 +3441,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetIndices' +
       #13#10'(' +
-      #13#10'   pIndexData        : 0x%.08X' +
-      #13#10'   BaseVertexIndex   : 0x%.08X' +
+      #13#10'   pIndexData          : 0x%.08X' +
+      #13#10'   BaseVertexIndex     : 0x%.08X' +
       #13#10');',
       [pIndexData, BaseVertexIndex]);
 {$ENDIF}
@@ -6516,7 +6516,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_TextureFactor' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -6912,7 +6912,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_CullMode' +
     #13#10'(' +
-    #13#10'   Value                 : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -7277,8 +7277,8 @@ begin
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetTransform' +
     #13#10'(' +
-    #13#10'   State                 : 0x%.08X' +
-    #13#10'   pMatrix               : 0x%.08X' +
+    #13#10'   State               : 0x%.08X' +
+    #13#10'   pMatrix             : 0x%.08X' +
     #13#10');',
     [Ord(State), pMatrix]);
 
@@ -7611,10 +7611,10 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_DrawVerticesUP' +
     #13#10'(' +
-    #13#10'   PrimitiveType          : 0x%.08X' +
-    #13#10'   VertexCount            : 0x%.08X' +
-    #13#10'   pVertexStreamZeroData  : 0x%.08X' +
-    #13#10'   VertexStreamZeroStride : 0x%.08X' +
+    #13#10'   PrimitiveType            : 0x%.08X' +
+    #13#10'   VertexCount              : 0x%.08X' +
+    #13#10'   pVertexStreamZeroData    : 0x%.08X' +
+    #13#10'   VertexStreamZeroStride   : 0x%.08X' +
     #13#10');',
     [Ord(PrimitiveType), VertexCount, pVertexStreamZeroData,
     VertexStreamZeroStride]);
@@ -9666,7 +9666,7 @@ exports
 
   XTL_EmuIDevice3D8_KickOff name PatchPrefix + '?KickOff@CDevice@D3D@@QAEXXZ',
 
-  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // TODO -oDXBX: Marked out makes logging better.
+//  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // TODO -oDXBX: Marked out makes logging better.
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D8_CheckDeviceMultiSampleType name PatchPrefix + 'Direct3D_CheckDeviceMultiSampleType',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
@@ -9688,7 +9688,7 @@ exports
   XTL_EmuIDirect3DDevice8_Begin name PatchPrefix + 'D3DDevice_Begin',
   XTL_EmuIDirect3DDevice8_BeginPush name PatchPrefix + 'D3DDevice_BeginPushBuffer@4', // ??
   XTL_EmuIDirect3DDevice8_BeginPushBuffer name PatchPrefix + 'D3DDevice_BeginPushBuffer', // ??
-  // XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', // MARKED OUT BY CXBX
+//  XTL_EmuIDirect3DDevice8_BeginStateBig name PatchPrefix + 'D3DDevice_BeginStateBig', // MARKED OUT BY CXBX
   XTL_EmuIDirect3DDevice8_BeginStateBlock name PatchPrefix + 'D3DDevice_BeginStateBlock@0', // TODO -oDXBX: Marked out makes logging better.
   XTL_EmuIDirect3DDevice8_BeginVisibilityTest name PatchPrefix + 'D3DDevice_BeginVisibilityTest@0', // [PvL] reviewed up to here
   XTL_EmuIDirect3DDevice8_BlockOnFence name PatchPrefix + 'D3DDevice_BlockOnFence',
@@ -9755,7 +9755,7 @@ exports
   XTL_EmuIDirect3DDevice8_GetViewportOffsetAndScale name PatchPrefix + 'D3DDevice_GetViewportOffsetAndScale',
   XTL_EmuIDirect3DDevice8_GetVisibilityTestResult name PatchPrefix + 'D3DDevice_GetVisibilityTestResult',
   XTL_EmuIDirect3DDevice8_InsertCallback name PatchPrefix + 'D3DDevice_InsertCallback',
-  XTL_EmuIDirect3DDevice8_InsertFence name PatchPrefix + 'D3DDevice_InsertFence',
+//  XTL_EmuIDirect3DDevice8_InsertFence name PatchPrefix + 'D3DDevice_InsertFence', // TODO -oDXBX: Marked out makes logging better.
   XTL_EmuIDirect3DDevice8_IsBusy name PatchPrefix + 'D3DDevice_IsBusy',
   XTL_EmuIDirect3DDevice8_IsFencePending name PatchPrefix + 'D3DDevice_IsFencePending',
   XTL_EmuIDirect3DDevice8_LightEnable name PatchPrefix + 'D3DDevice_LightEnable',
