@@ -621,7 +621,7 @@ begin
 //  Assert(FoundFunction.FunctionLength < High(Word)); // TODO : Use actual max length
 
   // Does the function extend beyond what we've tested already?
-  if FoundFunction.FunctionLength > (PATTERNLENGTH + FoundFunction.CRCLength) then
+  if FoundFunction.FunctionLength > (PATTERNSIZE + FoundFunction.CRCLength) then
   begin
     // Start at what's presumably the last function address :
     RetPos := PBytes(aAddress + FoundFunction.FunctionLength - 1);
