@@ -635,8 +635,10 @@ begin
     Dec(UIntPtr(RetPos), 2);
     if (RetPos[0] = $C2) // retn word
     or (RetPos[0] = $CA) // retnf word
+    or (RetPos[1] = $EB) {JMP + byte}
     or (RetPos[2] = $C3) // ret
     or (RetPos[2] = $CB) // retf
+    or (RetPos[2] = $CC) {int3}
     then
       // If this check holds, this address still seems to be a valid function - fall through.
     else
