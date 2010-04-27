@@ -245,9 +245,9 @@ begin
       #13#10'('+
       #13#10'   WaitMode            : 0x%.08X'+
       #13#10'   Alertable           : 0x%.08X'+
-      #13#10'   Interval            : 0x%.08X (%I64d)'+
+      #13#10'   Interval            : 0x%.16X' + // was %I64X
       #13#10');',
-      [WaitMode, Alertable, Interval, QuadPart(Interval)]);
+      [ord(WaitMode), ord(Alertable), Interval, QuadPart(Interval)]);
 {$ENDIF}
 
 
