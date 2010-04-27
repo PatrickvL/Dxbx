@@ -2137,7 +2137,7 @@ end;
 *)
 
 exports
-  XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
+//  XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
   XTL_EmuCreateFiber,
   XTL_EmuCreateMutex,
   XTL_EmuCreateSemaphore,
@@ -2173,7 +2173,7 @@ exports
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,
   XTL_EmuXGetDevices,
-  XTL_EmuXGetDeviceChanges, // TODO -oDXBX: Marked out makes logging better.
+//  XTL_EmuXGetDeviceChanges, // TODO -oDXBX: Marked out makes logging better.
   XTL_EmuXGetFileCacheSize,
   XTL_EmuXGetLaunchInfo,
   XTL_EmuXGetSectionHandleA,
