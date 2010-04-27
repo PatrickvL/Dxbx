@@ -1111,6 +1111,8 @@ end;
 function SortObjects(List: TStringList; Index1, Index2: Integer): Integer;
 begin
   Result := IntPtr(List.Objects[Index1]) - IntPtr(List.Objects[Index2]);
+  if Result = 0 then
+    Result := StrComp(PChar(List.Strings[Index1]), PChar(List.Strings[Index2]));
 end;
 
 end.
