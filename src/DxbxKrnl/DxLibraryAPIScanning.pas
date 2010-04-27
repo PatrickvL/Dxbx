@@ -617,30 +617,34 @@ var
   Symbol: TSymbolInformation;
 begin
   Assert(Assigned(FoundFunction));
-  Assert(FoundFunction.FunctionLength > 0);
-  Assert(FoundFunction.FunctionLength < 16384);
+//  Assert(FoundFunction.FunctionLength > 0);
+//  Assert(FoundFunction.FunctionLength < High(Word)); // TODO : Use actual max length
 
-  // Start at what's presumably the last function address :
-  RetPos := PBytes(aAddress + FoundFunction.FunctionLength - 1);
+  // Does the function extend beyond what we've tested already?
+  if FoundFunction.FunctionLength > (PATTERNLENGTH + FoundFunction.CRCLength) then
+  begin
+    // Start at what's presumably the last function address :
+    RetPos := PBytes(aAddress + FoundFunction.FunctionLength - 1);
 
-  // Some functions end with NOP's, trace back to the last non-NOP byte :
-  while RetPos[0] = $90{NOP} do
-    Dec(UIntPtr(RetPos));
+    // Some functions end with NOP's, trace back to the last non-NOP byte :
+    while RetPos[0] = $90{NOP} do
+      Dec(UIntPtr(RetPos));
 
-  // Skip back 2 more bytes, and now check if there's a return-opcode there :
-  Dec(UIntPtr(RetPos), 2);
-  if (RetPos[0] = $C2) // retn word
-  or (RetPos[0] = $CA) // retnf word
-  or (RetPos[2] = $C3) // ret
-  or (RetPos[2] = $CB) // retf
-  then
-    // valid case
-    Assert(Assigned(FoundFunction))
-  else
-    // No ret opcode found, so no match :
-    Exit;
+    // Skip back 2 more bytes, and now check if there's a return-opcode there :
+    // (We need to step back 2 bytes, as the retn opcodes have 2 argument-bytes)
+    Dec(UIntPtr(RetPos), 2);
+    if (RetPos[0] = $C2) // retn word
+    or (RetPos[0] = $CA) // retnf word
+    or (RetPos[2] = $C3) // ret
+    or (RetPos[2] = $CB) // retf
+    then
+      // If this check holds, this address still seems to be a valid function - fall through.
+    else
+      // No ret opcode found, so no match :
+      Exit;
+  end;
 
-  // First, check all cross-references to have a valid address :
+  // Check all cross-references to have a valid address :
   IntPtr(CrossReference) := IntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
   for i := 0 to FoundFunction.NrCrossReferences - 1 do
     if Assigned(GetCrossReferencedAddress(aAddress, CrossReference)) then
