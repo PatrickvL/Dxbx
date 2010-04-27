@@ -224,27 +224,6 @@ begin
   Result := PByte(IntPtr(Result) + PInteger(Result)^ + 4);
 end;
 
-//const
-//  // Source: http://ref.x86asm.net/coder32.html
-//  OPCODES_I32 = [$05, $0D, $15, $1D, $25, $2D, $35, $3D, $68, $69, $81, {} $A1, $A3, {} $A9, $B8..$BF, $C7, $E8, $E9];
-//  // TODO : $A3 is actually "mov DS[01234567], eax" - so it's an offset, but in DS...
-//  OPCODES_0F_I32 = [$80..$8F];
-//
-//  OPCODES_REL32 = [$70..$7F, $E0..$E3, $E8, $E9, $EB];
-//
-//function DetermineAddress(const aStartingAddress: PByte; const aOffset: Word): PByte;
-//begin
-//  IntPtr(Result) := IntPtr(aStartingAddress) + IntPtr(aOffset);
-//  if  (PByte(IntPtr(Result)-1)^ in OPCODES_I32)
-//  or ((PByte(IntPtr(Result)-2)^ = $0F) and (PByte(IntPtr(Result)-1)^ in OPCODES_0F_I32)) then
-//    Result := PByte(PInteger(Result)^)
-//  else
-//  begin
-//    // Assert(PByte(IntPtr(Result)-1)^ in OPCODES_REL32);
-//    Result := PByte(IntPtr(Result) + PInteger(Result)^ + 4);
-//  end;
-//end;
-
 {$IFDEF OVERFLOWCHECKS_ON}
   {$OVERFLOWCHECKS ON}
 {$ENDIF}
@@ -609,6 +588,15 @@ begin
 end;
 
 procedure TSymbolManager.FindAndRememberPattern(const aAddress: PByte; const FoundFunction: PStoredLibraryFunction);
+const
+  // Source: http://ref.x86asm.net/coder32.html
+  OPCODE_NOP = $90;
+  OPCODE_RETNi16 = $C2;
+  OPCODE_RETN = $C3;
+  OPCODE_RETFi16 = $CA;
+  OPCODE_RETF = $CB;
+  OPCODE_INT3 = $CC;
+  OPCODE_JMPrel8 = $EB;
 var
   RetPos: PBytes;
   CrossReference: PStoredCrossReference;
@@ -627,18 +615,19 @@ begin
     RetPos := PBytes(aAddress + FoundFunction.FunctionLength - 1);
 
     // Some functions end with NOP's, trace back to the last non-NOP byte :
-    while RetPos[0] = $90{NOP} do
+    while RetPos[0] = OPCODE_NOP do
       Dec(UIntPtr(RetPos));
 
     // Skip back 2 more bytes, and now check if there's a return-opcode there :
-    // (We need to step back 2 bytes, as the retn opcodes have 2 argument-bytes)
+    // (We need to step back 2 bytes, as some of the opcodes have 2 argument-bytes)
     Dec(UIntPtr(RetPos), 2);
-    if (RetPos[0] = $C2) // retn word
-    or (RetPos[0] = $CA) // retnf word
-    or (RetPos[1] = $EB) {JMP + byte}
-    or (RetPos[2] = $C3) // ret
-    or (RetPos[2] = $CB) // retf
-    or (RetPos[2] = $CC) {int3}
+    if (RetPos[0] = OPCODE_RETNi16)
+    or (RetPos[0] = OPCODE_RETFi16)
+    or (RetPos[1] = OPCODE_JMPrel8)
+    or (RetPos[2] = OPCODE_RETN)
+    or (RetPos[2] = OPCODE_RETF)
+    or (RetPos[2] = OPCODE_INT3)
+    // TODO : Check if the above suffices for all function-endings (what about other JMP's for example?)
     then
       // If this check holds, this address still seems to be a valid function - fall through.
     else
@@ -1107,90 +1096,6 @@ begin // DetermineFinalLocations
   // - fix doubles addresses (conflicts)
   // - compare output with Cxbx, determine who's right, fix our mis-matches ;-)
   // - fix cache-loading
-
-(*
-  PreviousLocation := nil;
-  j := 0;
-  SetLength(MyFinalLocations, MyPotentialFunctionLocations_Count);
-
-  // First, for each potential address, count the number of cross references that are seem to match :
-  for i := 1 to MyPotentialFunctionLocations_Count do
-  begin
-    CurrentLocation := @MyPotentialFunctionLocations[i];
-    for x := 0 to CurrentLocation.Symbol.GetCrossReferenceCount - 1 do
-    begin
-      // Determine each cross-reference address :
-      CrossReference := CurrentLocation.Symbol.CrossReferences[x];
-      CrossReferencedAddress := GetCrossReferencedAddress(CurrentLocation.Address, CrossReference);
-
-      // See if the referenced symbol is detected on this specific address :
-      CrossReferencedSymbol := FindOrAddSymbol(CrossReference.NameIndex, nil);
-      if CrossReferencedSymbol.FirstPotentialFunctionLocationIndex > 0 then
-      begin
-        CrossReferencedLocation := CrossReferencedSymbol.FindPotentialLocation(CrossReferencedAddress);
-        if not Assigned(CrossReferencedLocation) then
-        begin
-          CurrentLocation.ScanStatus := ssCrossReferenceFailure;
-          Break;
-        end;
-     end;
-    end;
-
-//    if CurrentLocation.ScanStatus = ssCrossReferenceFailure then
-//      Continue;
-
-    CurrentLocation.ScanStatus := ssConfirmed;
-
-    // Update the unknown symbol-locations :
-    for x := 0 to CurrentLocation.Symbol.GetCrossReferenceCount - 1 do
-    begin
-      // Determine each cross-reference address :
-      CrossReference := CurrentLocation.Symbol.CrossReferences[x];
-      CrossReferencedAddress := GetCrossReferencedAddress(CurrentLocation.Address, CrossReference);
-
-      // See if the referenced symbol is detected on this specific address :
-      CrossReferencedSymbol := FindOrAddSymbol(CrossReference.NameIndex, nil);
-      if CrossReferencedSymbol.FirstPotentialFunctionLocationIndex = 0 then
-        CrossReferencedSymbol.Address := CrossReferencedAddress;
-    end;
-
-
-    // Only display first occurrance :
-//      if CurrentLocation.Symbol.FirstPotentialFunctionLocationIndex <> i then
-//        Continue;
-
-{$IFDEF DXBX_EXTENSIVE_LOGGING}
-    if Assigned(PreviousLocation) then
-    begin
-      if (IntPtr(PreviousLocation.CodeEnd) >= IntPtr(CurrentLocation.Address)) then
-        DbgPrintf('DxbxHLE : OVERLAPS NEXT! :')
-      else
-      if (IntPtr(PreviousLocation.CodeEnd) + 1 < IntPtr(CurrentLocation.Address)) then
-        DbgPrintf('DxbxHLE : GAP!');
-    end;
-
-    DbgPrintf('DxbxHLE : Detected at $%.8x-$%.8x : ''%s''',
-      [CurrentLocation.Address, CurrentLocation.CodeEnd, CurrentLocation.Symbol.Name],
-      {MayRenderArguments=}False);
-{$ENDIF}
-
-    // register all cross-referenced symbols from this function too :
-    IntPtr(CrossReference) := IntPtr(FoundFunction) + SizeOf(RStoredLibraryFunction);
-    for i := 0 to FoundFunction.NrCrossReferences - 1 do
-    begin
-      FindOrAddSymbol(CrossReference.NameIndex, nil);
-      Inc(CrossReference);
-    end;
-
-    PreviousLocation := CurrentLocation;
-
-    MyFinalLocations[j] := CurrentLocation.Symbol;
-    Inc(j);
-  end;
-
-  // Size-fit the final locations :
-  SetLength(MyFinalLocations, j);
-*)
 end; // DetermineFinalLocations
 
 procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
