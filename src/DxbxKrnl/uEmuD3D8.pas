@@ -7334,7 +7334,7 @@ end;
 
 procedure XTL_EmuIDirect3DVertexBuffer8_Lock
 (
-  ppVertexBuffer: PPX_D3DVertexBuffer;
+  ppVertexBuffer: PX_D3DVertexBuffer;
   OffsetToLock: UINT;
   SizeToLock: UINT;
   ppbData: PPBYTE;
