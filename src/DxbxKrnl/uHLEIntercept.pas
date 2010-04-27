@@ -298,8 +298,9 @@ begin
       Assert(Assigned(NewCode));
 
 {$IFDEF DXBX_DEBUG}
-      DbgPrintf('HLE: 0x%.08X -> Emu%s (patching %s)', [
-        OrgCode, AvailablePatches[XboxLibraryPatch - 1], DetectedSymbol.Name], {MayRenderArguments=}False);
+      DbgPrintf('HLE: 0x%.08X -> %s (patching %s)', [
+        OrgCode, AvailablePatches[XboxLibraryPatch - 1],
+        DetectedSymbol.Name], {MayRenderArguments=}False);
       UsedPatches[XboxLibraryPatch] := True;
 {$ENDIF}
 

@@ -534,6 +534,7 @@ function TSymbolManager.FindPotentialFunctionLocation(const aLocation: TCodePoin
 var
   L, H, I, C: Integer;
 begin
+  Result := nil;
   L := 1;
   H := MyPotentialFunctionLocations_Count;
   while L <= H do
@@ -596,6 +597,7 @@ const
   OPCODE_RETFi16 = $CA;
   OPCODE_RETF = $CB;
   OPCODE_INT3 = $CC;
+  OPCODE_JMPrel32 = $E9;
   OPCODE_JMPrel8 = $EB;
 var
   RetPos: PBytes;
@@ -618,15 +620,16 @@ begin
     while RetPos[0] = OPCODE_NOP do
       Dec(UIntPtr(RetPos));
 
-    // Skip back 2 more bytes, and now check if there's a return-opcode there :
-    // (We need to step back 2 bytes, as some of the opcodes have 2 argument-bytes)
-    Dec(UIntPtr(RetPos), 2);
-    if (RetPos[0] = OPCODE_RETNi16)
-    or (RetPos[0] = OPCODE_RETFi16)
-    or (RetPos[1] = OPCODE_JMPrel8)
-    or (RetPos[2] = OPCODE_RETN)
-    or (RetPos[2] = OPCODE_RETF)
-    or (RetPos[2] = OPCODE_INT3)
+    // Skip back 4 more bytes, and now check if there's a return-opcode at the end :
+    // (We need to step back 4 bytes, as some of the opcodes have 4 argument-bytes)
+    Dec(UIntPtr(RetPos), 4);
+    if (RetPos[0] = OPCODE_JMPrel32)
+    or (RetPos[2] = OPCODE_RETNi16)
+    or (RetPos[2] = OPCODE_RETFi16)
+    or (RetPos[3] = OPCODE_JMPrel8)
+    or (RetPos[4] = OPCODE_RETN)
+    or (RetPos[4] = OPCODE_RETF)
+    or (RetPos[4] = OPCODE_INT3)
     // TODO : Check if the above suffices for all function-endings (what about other JMP's for example?)
     then
       // If this check holds, this address still seems to be a valid function - fall through.
@@ -1071,8 +1074,12 @@ procedure TSymbolManager.DetermineFinalLocations;
       or (CurrentSymbol.FirstPotentialFunctionLocationIndex = 0) then
         Name := Name + ' (XRef)';
 
-      DbgPrintf('Found at 0x%.8x : %s  [%s]',
-        [CurrentSymbol.Address, Name, CurrentSymbol.Name],
+
+      DbgPrintf('Found at 0x%.8x-0x%.8x : %s  [%s]',
+        [CurrentSymbol.Address,
+         UIntPtr(CurrentSymbol.Address) + CurrentSymbol.Length - 1,
+         Name,
+         CurrentSymbol.Name],
         {MayRenderArguments=}False);
     end; // for Symbols
   end; // _PrintLocationList
@@ -1143,8 +1150,8 @@ end;
 
 function TSymbolManager.LoadSymbolsFromCache(const aCacheFile: string): Boolean;
 var
-  i, j: Integer;
-  FuncStr, AddrStr: string;
+  i: Integer;
+  FuncStr: string;
   Addr: Pointer;
   CurrentSymbol: TSymbolInformation;
   Symbols: TStringList;
