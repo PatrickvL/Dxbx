@@ -74,6 +74,7 @@ type
     Name: string;
     FirstPotentialFunctionLocationIndex: Integer;
     StoredLibraryFunction: PStoredLibraryFunction; // can be nil for non-pattern symbols
+    XRefCause: string;
 
     function FindLocationIndex(const aAddress: TCodePointer): Integer;
     function FindPotentialLocation(const aAddress: TCodePointer): PPotentialFunctionLocation;
@@ -135,6 +136,7 @@ type
 
 var
   SymbolManager: TSymbolManager;
+  LibD3D8: PStoredLibrary;
 
 implementation
 
@@ -891,6 +893,9 @@ begin
       StoredLibrary := PatternTrieReader.GetStoredLibrary(j);
       StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
 
+      if SameLibName(StoredLibraryName, 'D3D8') then
+        LibD3D8 := StoredLibrary;
+
       // Only consider libraries with the same name :
       if SameLibName(StoredLibraryName, CurrentLibName) then
       begin
@@ -1027,6 +1032,7 @@ procedure TSymbolManager.DetermineFinalLocations;
         begin
           CrossReferencedAddress := GetCrossReferencedAddress(CurrentSymbol.Address, CrossReference);
           CrossReferencedSymbol.Address := CrossReferencedAddress;
+          CrossReferencedSymbol.XRefCause := CurrentSymbol.Name;
         end;
       end; // for CrossReferences
     end; // for Symbols
@@ -1072,7 +1078,7 @@ procedure TSymbolManager.DetermineFinalLocations;
       Name := DxbxUnmangleSymbolName(CurrentSymbol.Name);
       if (CurrentSymbol.StoredLibraryFunction = nil)
       or (CurrentSymbol.FirstPotentialFunctionLocationIndex = 0) then
-        Name := Name + ' (XRef)';
+        Name := Name + ' (XRef ' + CurrentSymbol.XRefCause + ')';
 
 
       DbgPrintf('Found at 0x%.8x-0x%.8x : %s  [%s]',

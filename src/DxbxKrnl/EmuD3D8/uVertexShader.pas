@@ -404,7 +404,7 @@ const g_OpCodeParams: array [0..19] of VSH_OPCODE_PARAMS =
     ( ILU:ILU_NOP; MAC:MAC_ARL; a:TRUE;  b:FALSE; c:FALSE )
 );
 
-const MAC_OpCode: array [VSH_MAC] of string = 
+const MAC_OpCode: array [VSH_MAC] of P_char =
 (
     'nop',
     'mov',
@@ -424,7 +424,7 @@ const MAC_OpCode: array [VSH_MAC] of string =
     '???'
 );
 
-const ILU_OpCode: array [VSH_ILU] of string = 
+const ILU_OpCode: array [VSH_ILU] of P_char =
 (
     'nop',
     'mov',
@@ -436,7 +436,7 @@ const ILU_OpCode: array [VSH_ILU] of string =
     'lit'
 );
 
-const OReg_Name: array [VSH_OREG_NAME] of string = 
+const OReg_Name: array [VSH_OREG_NAME] of P_char =
 (
     'oPos',
     '???',
@@ -518,22 +518,22 @@ end;
 
 // VertexShader.cpp
 
-function IsInUse(const pMask: Pboolean): Boolean; inline;
+function IsInUse(const pMask: Dxbx4Booleans): Boolean; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := PBooleans(pMask)[0] or PBooleans(pMask)[1] or PBooleans(pMask)[2] or PBooleans(pMask)[3];
+  Result := pMask[0] or pMask[1] or pMask[2] or pMask[3];
 end;
 
 function HasMACR(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := IsInUse(@(pInstruction.Output.MACRMask[0])) and (pInstruction.MAC <> MAC_NOP);
+  Result := IsInUse(pInstruction.Output.MACRMask) and (pInstruction.MAC <> MAC_NOP);
 end;
 
 function HasMACO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := IsInUse(@(pInstruction.Output.OutputMask[0])) and
+  Result := IsInUse(pInstruction.Output.OutputMask) and
             (pInstruction.Output.OutputMux = OMUX_MAC) and
             (pInstruction.MAC <> MAC_NOP);
 end;
@@ -541,7 +541,7 @@ end;
 function HasMACARL(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := (* Cxbx : (not IsInUse(@(pInstruction.Output.OutputMask[0]))) and
+  Result := (* Cxbx : (not IsInUse(pInstruction.Output.OutputMask)) and
             (pInstruction.Output.OutputMux = OMUX_MAC) and*)
             (pInstruction.MAC = MAC_ARL);
 end;
@@ -549,13 +549,13 @@ end;
 function HasILUR(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := IsInUse(@(pInstruction.Output.ILURMask[0])) and (pInstruction.ILU <> ILU_NOP);
+  Result := IsInUse(pInstruction.Output.ILURMask) and (pInstruction.ILU <> ILU_NOP);
 end;
 
 function HasILUO(pInstruction: PVSH_SHADER_INSTRUCTION): boolean; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := IsInUse(@(pInstruction.Output.OutputMask[0])) and
+  Result := IsInUse(pInstruction.Output.OutputMask) and
             (pInstruction.Output.OutputMux = OMUX_ILU) and
             (pInstruction.ILU <> ILU_NOP);
 end;

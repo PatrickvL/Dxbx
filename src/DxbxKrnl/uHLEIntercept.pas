@@ -113,41 +113,41 @@ begin
     // First option; Just search for _D3D__RenderState itself !
     Symbol := SymbolManager.FindSymbol('_D3D__RenderState');
     if Assigned(Symbol) then
-      XTL_EmuD3DDeferredRenderState := Symbol.Address
-    else
     begin
-      // Second option (Cxbx does this); Search for 'D3DDevice_SetRenderState_CullMode', and offset from that :
-      Symbol := SymbolManager.FindSymbol('D3DDevice_SetRenderState_CullMode');
-      if Assigned(Symbol) then
+      XTL_EmuD3DDeferredRenderState := Symbol.Address;
+      if Assigned(XTL_EmuD3DDeferredRenderState) then
       begin
-(*
         // offset for stencil cull enable render state in the deferred render state buffer
-        if (BuildVersion = 3925) then
+        if (LibD3D8.LibVersion = 3925) then
         begin
-          XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $25) - $19F + 72*4);  // TODO: Clean up (?)
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $19F - 72*4);  // TODO -oCxbx: Clean up (?)
         end
-        else if (BuildVersion = 4134) then
+        else if (LibD3D8.LibVersion = 4134) then
         begin
-          XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $248 + 82*4);  // TODO: Verify
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $248 - 82*4);  // TODO -oCxbx: Verify
         end
-        else if (BuildVersion = 4361) then
+        else if (LibD3D8.LibVersion = 4361) then
         begin
-          XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $200 + 82*4);
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $200 - 82*4);
         end
-        else if (BuildVersion = 4432) then
+        else if (LibD3D8.LibVersion = 4432) then
         begin
-          XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $204 + 83*4);
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $204 - 83*4);
         end
-        else if (BuildVersion = 4627) then
+        else if (LibD3D8.LibVersion = 4627) then
         begin
-          XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $24C - 92*4);
         end
-        else if (BuildVersion = 5558 or BuildVersion = 5849) then
+        else if (LibD3D8.LibVersion = 5558) or (LibD3D8.LibVersion = 5849) then
         begin
-          // WARNING: Not thoroughly tested (just seemed very correct right away)
-          XTL_EmuD3DDeferredRenderState := (DWORD)((DWORD)((uint32)pFunc + $2B) - $24C + 92*4);
+          // Cxbx WARNING: Not thoroughly tested (just seemed very correct right away)
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $24C - 92*4);
         end;
-*)
+
+        // Dxbx bases the above calculation on _D3D__RenderState itself,
+        // while Cxbx reads a reference from SetRenderState_CullMode.
+        // Here we correct the difference between those two addresses :
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), $18);
       end;
     end;
 
@@ -156,27 +156,27 @@ begin
 (*
       // offset for stencil cull enable render state in the deferred render state buffer
       Integer patchOffset := 0;
-      if (BuildVersion = 3925) then
+      if (LibD3D8.LibVersion = 3925) then
       begin
         patchOffset := 142*4 - 72*4; // TODO: Verify
       end
-      else if (BuildVersion = 4134) then
+      else if (LibD3D8.LibVersion = 4134) then
       begin
         patchOffset := 142*4 - 82*4;
       end
-      else if (BuildVersion = 4361) then
+      else if (LibD3D8.LibVersion = 4361) then
       begin
         patchOffset := 142*4 - 82*4;
       end
-      else if (BuildVersion = 4432) then
+      else if (LibD3D8.LibVersion = 4432) then
       begin
         patchOffset := 143*4 - 83*4;
       end
-      else if (BuildVersion = 4627) then
+      else if (LibD3D8.LibVersion = 4627) then
       begin
         patchOffset := 162*4 - 92*4;
       end
-      else if (BuildVersion = 5558 or BuildVersion = 5849) then
+      else if (LibD3D8.LibVersion = 5558 or LibD3D8.LibVersion = 5849) then
       begin
         // WARNING: Not thoroughly tested (just seemed very correct right away)
         patchOffset := 162*4 - 92*4;
@@ -204,24 +204,9 @@ begin
   // locate D3DDeferredTextureState
   begin
     XTL_EmuD3DDeferredTextureState := nil;
-    // First option; Just search for _D3D__TextureState itself !
     Symbol := SymbolManager.FindSymbol('_D3D__TextureState');
     if Assigned(Symbol) then
-      XTL_EmuD3DDeferredTextureState := Symbol.Address
-    else
-    begin
-      // Second option (Cxbx does this); Search for 'TexCoordIndex', and offset from that :
-      Symbol := SymbolManager.FindSymbol('D3DDevice_SetTextureState_TexCoordIndex');
-      if Assigned(Symbol) then
-      begin
-//      if (BuildVersion = 3925) then  // 0x18F180
-//        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $11) - $70); // TODO: Verify
-//      else if (BuildVersion = 4134) then
-//        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $18) - $70); // TODO: Verify
-//      else
-//        XTL_EmuD3DDeferredTextureState := (DWORD)((DWORD)((uint32)pFunc + $19) - $70);
-      end;
-    end;
+      XTL_EmuD3DDeferredTextureState := Symbol.Address;
 
     if Assigned(XTL_EmuD3DDeferredTextureState) then
     begin
