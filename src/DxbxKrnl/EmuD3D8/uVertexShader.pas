@@ -484,6 +484,8 @@ uses
   , uEmuFS
   , uEmuD3D8;
 
+{$DEFINE _DEBUG_TRACK_VS}
+
 procedure DbgVshPrintf(aStr: string); overload;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
