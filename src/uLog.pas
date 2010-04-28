@@ -436,17 +436,17 @@ begin
   Result := Size;
   while Result > 0 do
   begin
+    // Stop at #0
+    if (lpString1^ = #0) or (lpString2^ = #0) then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
     // Stop at inequality :
     if Ord(lpString1^) <> Ord(lpString2^) then
     begin
       Result := Ord(lpString1^) - Ord(lpString2^);
-      Exit;
-    end;
-
-    // Stop at #0
-    if (lpString1^ = #0) {and (lpString2^ = #0)} then
-    begin
-      Result := 0;
       Exit;
     end;
 
