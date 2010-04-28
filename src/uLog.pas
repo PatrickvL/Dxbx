@@ -339,6 +339,7 @@ begin
         // an EConvertError. (This is easier than having casts everywhere) :
         vtBoolean,
         vtPointer,
+        vtObject,
         vtInterface:
           Args[i].VType := vtInteger; // The data doesn't have to be changed, because it's already in-place
       end;
@@ -418,7 +419,10 @@ begin
   if LastChar(LineStr) = #10 then
   begin
     // Remove last newline :
-    SetLength(LineStr, Length(LineStr) - 2);
+    SetLength(LineStr, Length(LineStr) - 1);
+    if LastChar(LineStr) = #13 then
+      SetLength(LineStr, Length(LineStr) - 1);
+
     // Print normally (this will re-append the removed newline) :
     DbgPrintf(LineStr);
     // Start afresh :
