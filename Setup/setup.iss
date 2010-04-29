@@ -1,6 +1,6 @@
 [Setup]
 AppName=DXBX
-AppVerName=DXBX 0.1 Alpha
+AppVerName=DXBX 0.1 Release
 AppPublisher=Shadow_tj, Patrick
 DefaultDirName={pf}\DXBX
 DefaultGroupName=DXBX

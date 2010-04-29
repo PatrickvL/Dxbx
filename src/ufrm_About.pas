@@ -55,13 +55,9 @@ implementation
 
 {$R *.dfm}
 
-//------------------------------------------------------------------------------
-
 procedure Tfrm_About.FormCreate(Sender: TObject);
 begin
   Label1.Caption := Label1.Caption + ' ' + _DXBX_VERSION;
-end; // Tfrm_About.FormCreate
-
-//------------------------------------------------------------------------------
+end;
 
 end.

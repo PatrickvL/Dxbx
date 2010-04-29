@@ -454,12 +454,15 @@ object frm_About: Tfrm_About
     Width = 126
     Height = 18
     Caption = 'DXBX: - Version :'
+    Color = clBtnFace
     Font.Charset = ANSI_CHARSET
     Font.Color = clBlack
     Font.Height = -15
     Font.Name = 'Tahoma'
     Font.Style = [fsBold]
+    ParentColor = False
     ParentFont = False
+    Transparent = True
   end
   object lblAbout: TLabel
     Left = 16
@@ -479,6 +482,7 @@ object frm_About: Tfrm_About
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    Transparent = True
     WordWrap = True
   end
   object imgSignature2: TImage
