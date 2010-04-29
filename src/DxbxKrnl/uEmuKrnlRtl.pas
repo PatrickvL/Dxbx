@@ -286,10 +286,10 @@ procedure xboxkrnl_RtlRip(
   Part2: PCSZ;
   Part3: PCSZ
   ); stdcall;
-function xboxkrnl_RtlSnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlSprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlVsnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlVsprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_snprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_sprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_vsnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_vsprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
 
@@ -1129,35 +1129,35 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlSnprintf(): NTSTATUS; stdcall;
+function xboxkrnl_snprintf(): NTSTATUS; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlSnprintf');
+  Result := Unimplemented('snprintf');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlSprintf(): NTSTATUS; stdcall;
+function xboxkrnl_sprintf(): NTSTATUS; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlSprintf');
+  Result := Unimplemented('sprintf');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlVsnprintf(): NTSTATUS; stdcall;
+function xboxkrnl_vsnprintf(): NTSTATUS; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlVsnprintf');
+  Result := Unimplemented('vsnprintf');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlVsprintf(): NTSTATUS; stdcall;
+function xboxkrnl_vsprintf(): NTSTATUS; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlVsprintf');
+  Result := Unimplemented('vsprintf');
   EmuSwapFS(fsXbox);
 end;
 

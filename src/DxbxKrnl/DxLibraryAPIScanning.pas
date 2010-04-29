@@ -41,7 +41,11 @@ uses
   uDxbxKrnlUtils,
   uCRC16,
   uStoredTrieTypes,
-  uXboxLibraryUtils;
+  uXboxLibraryUtils,
+  uEmu, // EmuWarning
+  uState, // XTL_EmuD3DDeferredRenderState and XTL_EmuD3DDeferredTextureState
+  uEmuXapi, // XTL_EmuXapiProcessHeap
+  uEmuD3D8Types;// X_D3DRS_UNK
 
 type
   TSymbolInformation = class; // forward
@@ -117,6 +121,7 @@ type
     procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
     procedure TestAddressUsingPatternTrie(const aTestAddress: PByte);
     procedure DetermineFinalLocations;
+    procedure DetermineSpecialSymbols;
     procedure ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBE_HEADER);
   public
     StoredLibraryIndexedToScan: TBits;
@@ -1111,6 +1116,216 @@ begin // DetermineFinalLocations
   // - fix cache-loading
 end; // DetermineFinalLocations
 
+procedure TSymbolManager.DetermineSpecialSymbols;
+var
+  Symbol: TSymbolInformation;
+  s, v: int;
+
+  function _GetD3D_RenderStateReference(const aFunctionName: string): Pointer;
+  var
+    i: Integer;
+    StoredCrossReference: PStoredCrossReference;
+    SymbolName: string;
+  begin
+    Result := nil;
+
+    Symbol := SymbolManager.FindSymbol(aFunctionName);
+    if Symbol = nil then
+      Exit;
+
+    // Loop over all cross-references from this symbol :
+    for i := 0 to Symbol.CrossReferenceCount - 1 do
+    begin
+      StoredCrossReference := Symbol.CrossReferences[i];
+      if StoredCrossReference = nil then
+        Continue;
+
+      // Check if the name is indeed '_D3D__RenderState' :
+      SymbolName := PatternTrieReader.GetString(StoredCrossReference.NameIndex);
+      if not SameText(SymbolName, '_D3D__RenderState') then
+        Continue;
+
+      // Read the _D3D__RenderState cross-reference :
+      Result := GetCrossReferencedAddress(Symbol.Address, StoredCrossReference);
+
+      // Check if we're done now :
+      if Assigned(Result) then
+        Exit;
+    end;
+  end;
+
+begin
+  // locate XapiProcessHeap
+  begin
+    // Resolve the address of the _XapiProcessHeap symbol (at least cross-referenced once, from XapiInitProcess) :
+    Symbol := SymbolManager.FindSymbol('_XapiProcessHeap');
+    if Assigned(Symbol) then
+      // and remember that in a global :
+      XTL_EmuXapiProcessHeap := Symbol.Address;
+
+{$IFDEF DXBX_DEBUG}
+    if Assigned(XTL_EmuXapiProcessHeap) then
+      DbgPrintf('HLE: $%.08X . XapiProcessHeap',
+        [XTL_EmuXapiProcessHeap],
+        {MayRenderArguments=}False)
+    else
+      DbgPrintf('HLE : Can''t find XapiProcessHeap!',
+        [],
+        {MayRenderArguments=}False);
+{$ENDIF}
+  end;
+
+  // locate D3DDeferredRenderState
+  begin
+    XTL_EmuD3DDeferredRenderState := nil;
+(*
+    // First option; Just search for _D3D__RenderState itself !
+    Symbol := SymbolManager.FindSymbol('_D3D__RenderState');
+    if Assigned(Symbol) then
+    begin
+      XTL_EmuD3DDeferredRenderState := Symbol.Address;
+      if Assigned(XTL_EmuD3DDeferredRenderState) then
+      begin
+        // offset for stencil cull enable render state in the deferred render state buffer
+        if (LibD3D8.LibVersion = 3925) then
+        begin
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $19F - 72*4);  // TODO -oCxbx: Clean up (?)
+        end
+        else if (LibD3D8.LibVersion = 4134) then
+        begin
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $248 - 82*4);  // TODO -oCxbx: Verify
+        end
+        else if (LibD3D8.LibVersion = 4361) then
+        begin
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $200 - 82*4);
+        end
+        else if (LibD3D8.LibVersion = 4432) then
+        begin
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $204 - 83*4);
+        end
+        else if (LibD3D8.LibVersion = 4627) then
+        begin
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $24C - 92*4);
+        end
+        else if (LibD3D8.LibVersion = 5558) or (LibD3D8.LibVersion = 5849) then
+        begin
+          // Cxbx WARNING: Not thoroughly tested (just seemed very correct right away)
+          Dec(UIntPtr(XTL_EmuD3DDeferredRenderState), $24C - 92*4);
+        end;
+
+        // Dxbx bases the above calculation on _D3D__RenderState itself,
+        // while Cxbx reads a reference from SetRenderState_CullMode.
+        // Here we correct the difference between those two addresses :
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), $18);
+      end;
+    end;
+*)
+
+    // Dxbx Note : Our location of _D3D__RenderState is based on a cross-reference registration,
+    // which does not take the offset at which _D3D__RenderState is accessed into account (!)
+    // As long as we haven't fixed this, the best we can do is reading a cross-reference from
+    // a function that's known to access _D3D__RenderState at offset 0 (zero). Here we try to
+    // get the symbol and it's cross-reference :
+    XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3D_GetRenderState');
+    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_SetRenderStateNotInline@8');
+    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_SetPixelShader@4');
+    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_ApplyStateBlock');
+    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_CaptureStateBlock');
+    // there may be other fallbacks
+
+    if Assigned(XTL_EmuD3DDeferredRenderState) then
+    begin
+      // Calculate the location of D3DDeferredRenderState via an XDK-dependent offset to _D3D__RenderState :
+      if LibD3D8.LibVersion <= 3925 then
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), 72*4)  // TODO -oCxbx: Clean up (?)
+      else if LibD3D8.LibVersion <= 4134 then
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), 82*4)  // TODO -oCxbx: Verify
+      else if LibD3D8.LibVersion <= 4361 then
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), 82*4)
+      else if LibD3D8.LibVersion <= 4432 then
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), 83*4)
+      else if LibD3D8.LibVersion <= 4627 then
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), 92*4)
+      else if LibD3D8.LibVersion <= 5558 then
+        // Cxbx WARNING: Not thoroughly tested (just seemed very correct right away)
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), 92*4)
+      else if LibD3D8.LibVersion <= 5849 then
+        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), 92*4)
+      else
+        // Dxbx : What now?!
+
+(*
+      // offset for stencil cull enable render state in the deferred render state buffer
+      Integer patchOffset := 0;
+      if (LibD3D8.LibVersion = 3925) then
+      begin
+        patchOffset := 142*4 - 72*4; // TODO: Verify
+      end
+      else if (LibD3D8.LibVersion = 4134) then
+      begin
+        patchOffset := 142*4 - 82*4;
+      end
+      else if (LibD3D8.LibVersion = 4361) then
+      begin
+        patchOffset := 142*4 - 82*4;
+      end
+      else if (LibD3D8.LibVersion = 4432) then
+      begin
+        patchOffset := 143*4 - 83*4;
+      end
+      else if (LibD3D8.LibVersion = 4627) then
+      begin
+        patchOffset := 162*4 - 92*4;
+      end
+      else if (LibD3D8.LibVersion = 5558 or LibD3D8.LibVersion = 5849) then
+      begin
+        // WARNING: Not thoroughly tested (just seemed very correct right away)
+        patchOffset := 162*4 - 92*4;
+      end;
+*)
+(*
+      XRefDataBase[XREF_D3DDEVICE]                   := *(DWORD)((DWORD)pFunc + $03);
+      XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 0*4;
+      XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 1*4;
+      XRefDataBase[XREF_D3DRS_ROPZREAD]              := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 2*4;
+      XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] := (uint32)XTL_EmuD3DDeferredRenderState + patchOffset + 3*4;
+*)
+
+      for v := 0 to 44-1 do
+        XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
+
+{$IFDEF DEBUG}
+      DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
+{$ENDIF}
+    end
+    else
+      EmuWarning('EmuD3DDeferredRenderState was not found!');
+  end;
+
+  // locate D3DDeferredTextureState
+  begin
+    XTL_EmuD3DDeferredTextureState := nil;
+    Symbol := SymbolManager.FindSymbol('_D3D__TextureState');
+    if Assigned(Symbol) then
+      XTL_EmuD3DDeferredTextureState := Symbol.Address;
+
+    if Assigned(XTL_EmuD3DDeferredTextureState) then
+    begin
+      for s := 0 to 4-1 do
+      begin
+        for v := 0 to 32-1 do
+          XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
+      end;
+
+      DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState',
+        [XTL_EmuD3DDeferredTextureState],
+        {MayRenderArguments=}False);
+    end
+    else
+      EmuWarning('EmuD3DDeferredTextureState was not found!');
+  end;
+end; // DetermineSpecialSymbols
+
 procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 var
   ResourceStream: TResourceStream;
@@ -1128,6 +1343,8 @@ begin
       ScanMemoryRangeForLibraryPatterns(pXbeHeader);
 
       DetermineFinalLocations();
+
+      DetermineSpecialSymbols();
 
     finally
       FreeAndNil(PatternTrieReader);
@@ -1187,6 +1404,8 @@ begin
   finally
     FreeAndNil(Symbols);
   end;
+
+  DetermineSpecialSymbols();
 
 {$IFDEF DXBX_DEBUG}
   DbgPrintf('DxbxHLE : Loaded symbols : %d.', [MyPotentialFunctionLocations_Count]);
