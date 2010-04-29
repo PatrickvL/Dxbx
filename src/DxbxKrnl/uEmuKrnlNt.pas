@@ -1790,7 +1790,7 @@ begin
       #13#10'   Alertable            : 0x%.08X'+
       #13#10'   Timeout              : 0x%.08X (%d)'+
       #13#10');',
-      [Handle_, Ord(WaitMode), Alertable, QuadPart(Timeout)]);
+      [Handle_, Ord(WaitMode), Ord(Alertable), Timeout, QuadPart(Timeout)]);
 {$ENDIF}
 
   Result := JwaNative.NtWaitForSingleObject(Handle_, Alertable, Timeout);
