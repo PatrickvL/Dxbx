@@ -4,8 +4,6 @@ The following tasks are currently on our near-term TODO list :
 
 - Translate all emu-patches that are implemented by Cxbx
 
-- Translate EmuD3D8 to get some visual output of Dxbx calling actual Xbe code
-
 - Determine all Kernel API's signatures that are not currently known (marked with UNKNOWN_SIGNATURE)
 
 - Resolve differences between functions that end up in the same leaf, by adding extra data.
@@ -18,5 +16,5 @@ The following tasks are currently on our near-term TODO list :
 
 ShowStoppers !!
 - Incomplete translation of Cxbx, causin exceptions
-- Difference in interface-handling between C and Delphi (reference-counting automatically destroys interfaces that should be kept alive)
+
   
