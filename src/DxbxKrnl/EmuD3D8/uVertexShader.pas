@@ -2320,7 +2320,7 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Couldn''t assemble recompiled vertex shader');
-      EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
+      //EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
     end;
 
     // Dxbx addition : Release interface reference manually :
