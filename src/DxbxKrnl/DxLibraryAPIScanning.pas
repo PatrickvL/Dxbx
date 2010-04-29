@@ -1129,7 +1129,7 @@ var
   begin
     Result := nil;
 
-    Symbol := SymbolManager.FindSymbol(aFunctionName);
+    Symbol := FindSymbol(aFunctionName);
     if Symbol = nil then
       Exit;
 
@@ -1158,7 +1158,7 @@ begin
   // locate XapiProcessHeap
   begin
     // Resolve the address of the _XapiProcessHeap symbol (at least cross-referenced once, from XapiInitProcess) :
-    Symbol := SymbolManager.FindSymbol('_XapiProcessHeap');
+    Symbol := FindSymbol('_XapiProcessHeap');
     if Assigned(Symbol) then
       // and remember that in a global :
       XTL_EmuXapiProcessHeap := Symbol.Address;
@@ -1180,7 +1180,7 @@ begin
     XTL_EmuD3DDeferredRenderState := nil;
 (*
     // First option; Just search for _D3D__RenderState itself !
-    Symbol := SymbolManager.FindSymbol('_D3D__RenderState');
+    Symbol := FindSymbol('_D3D__RenderState');
     if Assigned(Symbol) then
     begin
       XTL_EmuD3DDeferredRenderState := Symbol.Address;
@@ -1226,11 +1226,11 @@ begin
     // As long as we haven't fixed this, the best we can do is reading a cross-reference from
     // a function that's known to access _D3D__RenderState at offset 0 (zero). Here we try to
     // get the symbol and it's cross-reference :
-    XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3D_GetRenderState');
+    XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_GetRenderState@8');
     if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_SetRenderStateNotInline@8');
     if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_SetPixelShader@4');
-    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_ApplyStateBlock');
-    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_CaptureStateBlock');
+    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_ApplyStateBlock@4');
+    if XTL_EmuD3DDeferredRenderState = nil then XTL_EmuD3DDeferredRenderState := _GetD3D_RenderStateReference('_D3DDevice_CaptureStateBlock@4');
     // there may be other fallbacks
 
     if Assigned(XTL_EmuD3DDeferredRenderState) then
@@ -1305,7 +1305,7 @@ begin
   // locate D3DDeferredTextureState
   begin
     XTL_EmuD3DDeferredTextureState := nil;
-    Symbol := SymbolManager.FindSymbol('_D3D__TextureState');
+    Symbol := FindSymbol('_D3D__TextureState');
     if Assigned(Symbol) then
       XTL_EmuD3DDeferredTextureState := Symbol.Address;
 

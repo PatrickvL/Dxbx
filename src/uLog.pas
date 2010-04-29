@@ -454,35 +454,6 @@ begin
     Result := 0
   else
     Result := Ord(lpString1^) - Ord(lpString2^);
-
-//  while (--n >= 0 && *s1 == *s2++)
-//		if (*s1++ == '\0')
-//			return(0);
-//	return(n<0 ? 0 : *s1 - *--s2);
-
-(*
-  Result := Size;
-  while Result > 0 do
-  begin
-    // Stop at #0
-    if (lpString1^ = #0) or (lpString2^ = #0) then
-    begin
-      Result := 0;
-      Exit;
-    end;
-
-    // Stop at inequality :
-    if Ord(lpString1^) <> Ord(lpString2^) then
-    begin
-      Result := Ord(lpString1^) - Ord(lpString2^);
-      Exit;
-    end;
-
-    Inc(lpString1);
-    Inc(lpString2);
-    Dec(Result);
-  end;
-*)
 end;
 
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
