@@ -437,6 +437,30 @@ end;
 
 function strncmp(lpString1, lpString2: PAnsiChar; size: size_t): Integer; overload;
 begin
+  while (size > 0) and (lpString1^ = lpString2^) do
+  begin
+    if lpString1^ = #0 then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    Dec(size);
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
+
+  if size = 0 then
+    Result := 0
+  else
+    Result := Ord(lpString1^) - Ord(lpString2^);
+
+//  while (--n >= 0 && *s1 == *s2++)
+//		if (*s1++ == '\0')
+//			return(0);
+//	return(n<0 ? 0 : *s1 - *--s2);
+
+(*
   Result := Size;
   while Result > 0 do
   begin
@@ -458,6 +482,7 @@ begin
     Inc(lpString2);
     Dec(Result);
   end;
+*)
 end;
 
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
