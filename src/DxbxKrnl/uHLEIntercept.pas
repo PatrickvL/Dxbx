@@ -38,11 +38,7 @@ uses
   uEmuFS,
   // Dxbx
   uXboxLibraryUtils,
-  uStoredTrieTypes,
-  DxLibraryAPIScanning,
-  uState, // XTL_EmuD3DDeferredRenderState and XTL_EmuD3DDeferredTextureState
-  uEmuD3D8Types, // X_D3DTSS_UNK
-  uEmuXapi; // XTL_EmuXapiProcessHeap
+  DxLibraryAPIScanning;
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
