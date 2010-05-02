@@ -235,7 +235,7 @@ end;
 
 // is this format linear?
 function EmuXBFormatIsLinear(Format: X_D3DFORMAT): BOOL_;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case (Format) of
     X_D3DFMT_LIN_A1R5G5B5,
@@ -243,6 +243,7 @@ begin
     X_D3DFMT_LIN_A8R8G8B8,
     X_D3DFMT_LIN_L8, // Added by Dxbx
     X_D3DFMT_LIN_R8B8,
+    X_D3DFMT_LIN_G8B8,
     X_D3DFMT_LIN_A4R4G4B4,
     X_D3DFMT_LIN_X8R8G8B8,
     X_D3DFMT_LIN_D24S8,
@@ -256,7 +257,7 @@ end;
 
 // convert from xbox to pc color formats
 function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case aFormat of
     X_D3DFMT_L8: // Swizzled
@@ -299,6 +300,12 @@ begin
     X_D3DFMT_LIN_R8B8: // Linear
     begin
       EmuWarning('X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5');
+      Result := D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
+    end;
+
+    X_D3DFMT_LIN_G8B8: // Linear
+    begin
+      EmuWarning('X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5');
       Result := D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
     end;
 
