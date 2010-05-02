@@ -569,13 +569,15 @@ end;
 //
 // Differences from NT: None.
 function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel()');
 
-  // I really tried to avoid adding this...
+  // Cxbx : I really tried to avoid adding this...
+  asm int 3; end;
+  CxbxKrnlCleanup('KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)');
 
   EmuSwapFS(fsXbox);
 

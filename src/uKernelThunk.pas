@@ -88,9 +88,9 @@ var
     {037}@xboxkrnl_FscSetCacheSize,
     {038}@xboxkrnl_HalClearSoftwareInterrupt,
     {039}@xboxkrnl_HalDisableSystemInterrupt,
-    {040}@xboxkrnl_HalDiskCachePartitionCount, // TODO -oDXBX: variable ?
-    {041}@xboxkrnl_HalDiskModelNumber, // TODO -oDXBX: variable ?
-    {042}@xboxkrnl_HalDiskSerialNumber, // TODO -oDXBX: variable ?
+    {040}@xboxkrnl_HalDiskCachePartitionCount, // variable
+    {041}@xboxkrnl_HalDiskModelNumber, // variable
+    {042}@xboxkrnl_HalDiskSerialNumber, // variable
     {043}@xboxkrnl_HalEnableSystemInterrupt,
     {044}@xboxkrnl_HalGetInterruptVector,
     {045}@xboxkrnl_HalReadSMBusValue,
@@ -404,7 +404,7 @@ var
     {352}@xboxkrnl_RtlRip,
     {353}@xboxkrnl_XboxLANKey,
     {354}@xboxkrnl_XboxAlternateSignatureKeys,
-    {355}@xboxkrnl_XePublicKeyData, // TODO -oDXBX: variable ?
+    {355}@xboxkrnl_XePublicKeyData, // variable
     {356}@xboxkrnl_HalBootSMCVideoMode, // variable
     {357}@xboxkrnl_IdexChannelObject,
     {358}@xboxkrnl_HalIsResetOrShutdownPending,

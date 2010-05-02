@@ -394,7 +394,7 @@ procedure TPatternTrie.Sort;
         // And nodes need to be sorted too (this works recursively) :
         _SortNode(aPatternNode.Children[i]);
     end;
-  end;
+  end; // _SortNode
 
 begin
   // Sort the whole trie :
@@ -939,7 +939,7 @@ begin
   finally
     FreeAndNil(PatternScanningContext.FunctionList);
   end;
-end;
+end; // ParseAndAppendPatternsToTrie
 
 function GeneratePatternTrie(const aPatternFiles: TStrings; const aOnlyPatches: Boolean): Integer;
 

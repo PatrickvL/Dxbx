@@ -72,7 +72,6 @@ begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuKrnl : AvGetSavedDataAddress();');
-
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -114,7 +113,7 @@ function {004} xboxkrnl_AvSetSavedDataAddress(
 begin
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : AvSetSavedDataAddress(' +
+  DbgPrintf('EmuKrnl : AvSetSavedDataAddress' +
     #13#10'(' +
     #13#10'  Address          : 0x%.8x' +
     #13#10')', [

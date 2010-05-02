@@ -129,9 +129,9 @@ const TRAY_CLOSED_NO_MEDIA = 64;
 const TRAY_OPEN = 16;
 begin
   EmuSwapFS(fsWindows);
-	
+
 {$IFDEF DEBUG}
-	DbgPrintf('EmuKrnl : HalReadSMCTrayState' +
+  DbgPrintf('EmuKrnl : HalReadSMCTrayState' +
       #13#10'(' +
       #13#10'   State              : 0x%.08X' +
       #13#10'   Count              : 0x%.08X' +
@@ -139,11 +139,11 @@ begin
       [State, Count]);
 {$ENDIF}
 
-	// TODO -oCXBX: Make this configurable?
-	// TODO -oCXBX: What is the count parameter for??
+  // TODO -oCXBX: Make this configurable?
+  // TODO -oCXBX: What is the count parameter for??
 
-	State^ := TRAY_CLOSED_NO_MEDIA;
-//	Count^ := 1;
+  State^ := TRAY_CLOSED_NO_MEDIA;
+//  Count^ := 1;
 
   EmuSwapFS(fsXbox);
 end;
