@@ -172,7 +172,8 @@ function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; inline;
 
 function tolower(c: AnsiChar): AnsiChar;
 function toupper(c: AnsiChar): AnsiChar;
-function isdigit(c: AnsiChar): Boolean;
+function isdigit(c: AnsiChar): Boolean; overload;
+function IsDigit(c: WideChar): Boolean; overload;
 function isxdigit(c: AnsiChar): Boolean;
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
@@ -242,9 +243,14 @@ begin
     Result := AnsiChar(Ord(c) + Ord('A') - Ord('a'));
 end;
 
-function isdigit(c: AnsiChar): Boolean;
+function isdigit(c: AnsiChar): Boolean; // overload;
 begin
   Result := c in ['0'..'9'];
+end;
+
+function IsDigit(c: WideChar): Boolean; // overload;
+begin
+  Result := CharInSet(c, ['0'..'9']);
 end;
 
 function isxdigit(c: AnsiChar): Boolean;

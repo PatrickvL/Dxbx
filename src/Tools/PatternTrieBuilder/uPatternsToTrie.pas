@@ -26,6 +26,7 @@ uses
   Windows, // ERROR_SUCCESS
   SysUtils, // CompareStr, FreeAndNil
   Classes, // TList
+  Forms, // Application
   Contnrs, // TObjectList
   Math, // Min
   // Dxbx
@@ -714,6 +715,291 @@ end; // Save
 
 //
 
+function LocateVisualStudioFilePath(const aFileName: string): string;
+var
+  VisualStudioCommonToolsFolder: string;
+begin
+  // Search for the specified file in the search-path :
+  Result := LocateExecutablePath(aFileName);
+  if IsFile(Result) then
+    Exit;
+
+  // Determine Visual Studio's Common\Tools folder :
+  VisualStudioCommonToolsFolder := GetEnvVarValue('VS71COMNTOOLS', {Dequote=}True);
+  if not IsFolder(VisualStudioCommonToolsFolder) then
+  begin
+    VisualStudioCommonToolsFolder := GetEnvVarValue('VS90COMNTOOLS', {Dequote=}True);
+    if not IsFolder(VisualStudioCommonToolsFolder) then
+    begin
+      // Visual Studio folder not found :
+      Result := '';
+      Exit;
+    end;
+  end;
+
+  // Search for the specified file in Visual Studio's Common\IDE folder :
+  Result := ExpandFileName(VisualStudioCommonToolsFolder + '\..\IDE\' + aFileName);
+  if IsFile(Result) then
+    Exit;
+
+  // Search for the specified file in Visual Studio's VC\bin folder :
+  Result := ExpandFileName(VisualStudioCommonToolsFolder + '\..\..\VC\bin\' + aFileName);
+  if not IsFile(Result) then
+    // File not found :
+    Result := '';
+end;
+
+var
+  LinkPath: string;
+  mspdb80Path: string;
+
+function LocateLink: Boolean;
+begin
+  LinkPath := LocateVisualStudioFilePath('link.exe');
+  mspdb80Path := LocateVisualStudioFilePath('mspdb80.dll');
+
+  Result := (LinkPath <> '') and (mspdb80Path <> '');
+  // TODO : mspdb80.dll is also needed, but is not installed in System32
+  // when Visual Studio is installed, but rather in Common7\IDE. Is this
+  // is the case, care must be taken so that Link.exe can find it!
+end;
+
+// Based on http://www.martinstoeckli.ch/delphi/delphi.html#AppRedirectOutput and
+// http://stackoverflow.com/questions/1212176/delphi-6-read-console-apps-output-while-running
+procedure RunLibDump(const aLibFileName: string; const aOutput: TStream);
+const
+  BLOCK_SIZE = 4300;
+var
+  CommandLine: string;
+  Security: TSecurityAttributes;
+  StdInPipe_Read, StdInPipe_Write: THandle;
+  Start: TStartUpInfo;
+  ProcessInfo: TProcessInformation;
+  KeepRunning: Boolean;
+  Buffer: array[0..BLOCK_SIZE-1] of Byte;
+  BytesAvail, BytesRead: DWord;
+begin
+  CommandLine := '"' + LinkPath + '" /dump /headers /rawdata /relocations "' +  aLibFileName + '"';
+
+  Security.nLength := SizeOf(TSecurityAttributes) ;
+  Security.bInheritHandle := True;
+  Security.lpSecurityDescriptor := nil;
+  if CreatePipe({var}StdInPipe_Read, {var}StdInPipe_Write, @Security, 0) then
+  try
+    ZeroMemory(@Start, Sizeof(Start));
+    Start.cb := SizeOf(Start) ;
+    Start.dwFlags := STARTF_USESTDHANDLES + STARTF_USESHOWWINDOW;
+    Start.wShowWindow := SW_HIDE;
+    Start.hStdInput := StdInPipe_Read;
+    Start.hStdOutput := StdInPipe_Write;
+
+    if CreateProcess(nil,
+                     PChar(CommandLine),
+                     @Security,
+                     @Security,
+                     True,
+                     NORMAL_PRIORITY_CLASS,
+                     nil,
+                     PChar(ExtractFilePath(mspdb80Path)),
+                     Start,
+                     {var}ProcessInfo) then
+    try
+      aOutput.Size := 16 * 1024 * 1024; // Reserve 16 MB upfront
+      aOutput.Position := 0;
+      repeat
+        KeepRunning := WaitForSingleObject(ProcessInfo.hProcess, 1) = WAIT_TIMEOUT;
+        Application.ProcessMessages;
+        while True do
+        begin
+          if not PeekNamedPipe(StdInPipe_Read, nil, 0, nil, @BytesAvail, nil) then
+            RaiseLastOSError;
+
+          if BytesAvail = 0 then
+            Break; // from while
+
+          if not ReadFile(StdInPipe_Read, {var}Buffer[0], BLOCK_SIZE, {var}BytesRead, nil) then
+            RaiseLastOSError;
+
+          while (BytesRead > 0) and (Buffer[BytesRead-1] = 0) do
+            Dec(BytesRead);
+
+          if BytesRead > 0 then
+          begin
+            // Write the output to the stream, and show the byte-count as a progress indicator :
+            aOutput.Write(Buffer, BytesRead);
+            Write('Dumping ', ExtractFileName(aLibFileName), ' : ', aOutput.Position, #13);
+          end;
+        end; // while True
+
+      until not KeepRunning;
+    finally
+      CloseHandle(ProcessInfo.hProcess);
+      CloseHandle(ProcessInfo.hThread);
+    end;
+  finally
+    CloseHandle(StdInPipe_Read);
+    CloseHandle(StdInPipe_Write);
+  end;
+
+  aOutput.Size := aOutput.Position;
+
+  // Overwrite progress line with a finish-message :
+  WriteLn('Dumped ', ExtractFileName(aLibFileName), '.               ');
+end; // RunLibDump
+
+procedure ConvertDumpToPattern(const aDump: TStringStream);
+const
+  SymbolStartMarker = 'COMDAT; sym= ';
+var
+  StringList: TStringList;
+  i, p: Integer;
+  ScanMode: (smUnknown, smReadSectionHeader, smReadRawData, smReadReallocations);
+
+  NrOfPatternsFound: Integer;
+  SymbolSizeHexStr: string;
+  SymbolName: string;
+  PatternString: string;
+  CrossReferences: string;
+
+  procedure _FlushPattern;
+  begin
+    if SymbolName = '' then
+      Exit;
+
+    PatternString := StringReplace(PatternString, ' ', '', [rfReplaceAll]);
+
+    // write a .pat file back to Input, so it can be scanned by ParseAndAppendPatternsToTrie'}
+    aDump.WriteString(Copy(PatternString, 1, 64));
+    aDump.WriteString(' 00 0000 '); // TODO : Add a real CRC here
+    aDump.WriteString(SymbolSizeHexStr);
+    aDump.WriteString(' :0000 ');
+    aDump.WriteString(SymbolName);
+    if CrossReferences <> '' then
+    begin
+      aDump.WriteString(' ');
+      aDump.WriteString(CrossReferences);
+    end;
+    if Length(PatternString) > 64 then
+    begin
+      aDump.WriteString(' ');
+      aDump.WriteString(Copy(PatternString, 65, MaxInt));
+    end;
+    aDump.WriteString(#13#10);
+
+    SetLength(SymbolName, 78);
+    Write(SymbolName, #13);
+    Inc(NrOfPatternsFound);
+
+    SymbolSizeHexStr := '';
+    SymbolName := '';
+    PatternString := '';
+    CrossReferences := '';
+  end;
+
+begin
+  StringList := TStringList.Create;
+  try
+    // Move the dump over to a stringlist :
+    StringList.Text := aDump.DataString;
+
+    aDump.Position := 0;
+    SymbolName := '';
+    NrOfPatternsFound := 0;
+
+    // Scan the dump line by line :
+    ScanMode := smUnknown;
+    for i := 0 to StringList.Count - 1 do
+    begin
+      // Check if we enter a new output block here :
+      p := Pos('#', StringList[i]);
+      if p > 0 then
+      begin
+        if Pos('SECTION HEADER #', StringList[i]) > 0 then
+        begin
+          _FlushPattern;
+          ScanMode := smReadSectionHeader;
+          Continue;
+        end;
+
+        if SymbolName <> '' then
+        begin
+          if Pos('RAW DATA #', StringList[i]) > 0 then
+          begin
+            ScanMode := smReadRawData;
+            Continue;
+          end;
+
+          if Pos('RELOCATIONS #', StringList[i]) > 0 then
+          begin
+            ScanMode := smReadReallocations;
+            Continue;
+          end;
+        end;
+      end;
+
+      case ScanMode of
+        smReadSectionHeader:
+        begin
+          p := Pos(SymbolStartMarker, StringList[i]);
+          if p > 0 then
+          begin
+            // Handle cases like :
+            // COMDAT; sym= "unsigned long const * const D3D::g_TextureFormatMask" (?g_TextureFormatMask@D3D@@3QBKB)
+            // COMDAT; sym= "void __stdcall D3D::InitializeVertexShaderFromFvf(struct D3D::VertexShader *,unsigned long)" (?InitializeVertexShaderFromFvf@D3D@@YGXPAUVertexShader@1@K@Z)
+            // COMDAT; sym= _D3DPRIMITIVETOVERTEXCOUNT
+            SymbolName := Copy(StringList[i], p + Length(SymbolStartMarker), MaxInt);
+
+            p := Pos('"', SymbolName);
+            if p > 0 then
+            begin
+              Delete(SymbolName, 1, p);
+              p := Pos('"', SymbolName);
+              if p > 0 then
+                Delete(SymbolName, 1, p);
+            end;
+
+            p := Pos('(', SymbolName);
+            if p > 0 then
+              Delete(SymbolName, 1, p);
+            if SymbolName[Length(SymbolName)] = ')' then
+              SetLength(SymbolName, Length(SymbolName) - 1);
+          end;
+
+          p := Pos('size of raw data', StringList[i]);
+          if p > 0 then
+          begin
+            SymbolSizeHexStr := Trim(Copy(StringList[i], 1, p - 1));
+            while Length(SymbolSizeHexStr) < 4 do
+              SymbolSizeHexStr := '0' + SymbolSizeHexStr;
+          end;
+        end;
+
+        smReadRawData:
+        begin
+          // Handle cases like :
+          //   00000000: 53 8A 5C 24 18 F6 C3 10 56 75 24 8B 35 00 00 00  S.\$.öÃ.Vu$.5...
+          //   000000A0: 05 46 6C 61 67 73 02 00 06 00                    .Flags....
+          p := Pos(':', StringList[i]);
+          if p > 8 then
+            PatternString := PatternString + Copy(StringList[i], p + 1, 16 *3);
+        end;
+
+        smReadReallocations:
+        begin
+          // TODO : Parse all cross-references (including their base-offset)
+        end;
+      end; // case
+    end; // for
+
+    _FlushPattern;
+    aDump.Size := aDump.Position;
+    WriteLn('Converted dump to ', NrOfPatternsFound, ' pattern format lines.             ');
+
+  finally
+    FreeAndNil(StringList)
+  end;
+end; // ConvertDumpToPattern
+
 const
   // Value Indexes :
   viPattern = 0;
@@ -941,36 +1227,67 @@ begin
   end;
 end; // ParseAndAppendPatternsToTrie
 
-function GeneratePatternTrie(const aPatternFiles: TStrings; const aOnlyPatches: Boolean): Integer;
+function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Boolean): Integer;
 
   procedure _ProcessPatternFiles(aPatternTrie: TPatternTrie);
   var
-    Input: TMemoryStream;
+    Input: TStringStream;
     i: Integer;
-    PatternFilePath, LibName: string;
+    FilePath, LibName, VersionStr: string;
+    LibVersion: Integer;
     VersionedXboxLibrary: PVersionedXboxLibrary;
   begin
-    Input := TMemoryStream.Create;
+    Input := TStringStream.Create(AnsiString(''));
     try
-      for i := 0 to aPatternFiles.Count - 1 do
+      for i := 0 to aFileList.Count - 1 do
       begin
-        // Get the Pattern FilePath, and figure out for which library and version it is :
-        PatternFilePath := aPatternFiles[i];
-        LibName := ChangeFileExt(ExtractFileName(PatternFilePath), '');
-        WriteLn('Adding "' + LibName + '"');
+        // Get the Pattern FilePath, and figure out for which library and LibVersion it is :
+        FilePath := aFileList[i];
+        LibName := ChangeFileExt(ExtractFileName(FilePath), '');
+
+        LibVersion := 0;
+        while (LibName <> '') and IsDigit(LibName[1]) do
+        begin
+          LibVersion := (LibVersion * 10) + Ord(LibName[1]) - Ord('0');
+          Delete(LibName, 1, 1);
+        end;
+
+        if LibVersion = 0 then
+        begin
+          // Get LibVersion string from the last few digits of the parent folder name :
+          VersionStr := ExtractFileDir(FilePath);
+          LibVersion := Length(VersionStr);
+          while (LibVersion > 0) and IsDigit(VersionStr[LibVersion]) do
+            Dec(LibVersion);
+
+          Delete(VersionStr, 1, LibVersion);
+          LibVersion := StrToIntDef(VersionStr, 0);
+        end;
+
+        Assert(LibName <> '');
+        Assert(LibVersion > 0);
+
+        WriteLn('Processing "', LibName, '" library, version ', LibVersion, '...');
 
         // Create and initialize this new library :
         VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
 {$IFDEF DXBX_RECTYPE}
         VersionedXboxLibrary.RecType := rtVersionedXboxLibrary;
 {$ENDIF}
-        VersionedXboxLibrary.LibVersion := StrToInt(Copy(LibName, 1, 4));
-        Delete(LibName, 1, 4);
+        VersionedXboxLibrary.LibVersion := LibVersion;
         VersionedXboxLibrary.LibName := LibName;
         aPatternTrie.VersionedLibraries.Add(VersionedXboxLibrary);
 
-        // Load pattern file into memory:
-        Input.LoadFromFile(PatternFilePath);
+        // If the file is a .lib :
+        if SameText(ExtractFileExt(FilePath), '.lib') then
+        begin
+          // Dump it with link.exe and convert that to pattern-format :
+          RunLibDump(FilePath, Input);
+          ConvertDumpToPattern(Input);
+        end
+        else
+          // Load pattern file into memory (assuming the file ext is .pat) :
+          Input.LoadFromFile(FilePath);
 
         // Parse patterns in this file and append them to the trie :
         ParseAndAppendPatternsToTrie(Input.Memory, aPatternTrie, aOnlyPatches, VersionedXboxLibrary);
@@ -991,17 +1308,17 @@ begin
   PatternTrie.VersionedLibraries := TList.Create;
   PatternTrie.VersionedFunctions := TList.Create;
   try
-    WriteLn('Adding ' + IntToStr(aPatternFiles.Count) + ' pattern files to trie...');
+    WriteLn('Adding ', aFileList.Count, ' files to trie...');
     _ProcessPatternFiles(PatternTrie);
 
     WriteLn('Sorting the trie...');
     PatternTrie.Sort;
 
-    WriteLn('Trie contains ' + IntToStr(PatternTrie.VersionedFunctions.Count) + ' unique patterns.');
+    WriteLn('Trie contains ', PatternTrie.VersionedFunctions.Count, ' unique patterns.');
 
     if DumpFileName <> '' then
     begin
-      WriteLn('Dumping the trie to "' + ExpandFileName(DumpFileName) + '"...');
+      WriteLn('Dumping the trie to "', ExpandFileName(DumpFileName), '"...');
       Output := TStringList.Create;
       try
         PatternTrie.Dump(Output);
@@ -1011,7 +1328,7 @@ begin
       end;
     end;
 
-    WriteLn('Saving the trie to "' + ExpandFileName(StoredTrieFileName) + '"...');
+    WriteLn('Saving the trie to "', ExpandFileName(StoredTrieFileName), '"...');
     PatternTrie.Save(ExpandFileName(StoredTrieFileName));
 
     Result := ERROR_SUCCESS;
@@ -1029,37 +1346,82 @@ end; // GeneratePatternTrie
 
 procedure PatternToTrie_Main;
 var
-  PatternFolder: string;
-  PatternFiles: TStringList;
+  LibPath: string;
+  LibFiles: TStringList;
+  i: Integer;
 begin
-  WriteLn(ChangeFileExt(ExtractFileName(ParamStr(0)), '') + ' - Converts Xbox pattern files to a trie file.'); // (and an Object Pascal unit).');
-  WriteLn('This tool is part of the Dxbx Xbox emulator project.');
-  WriteLn('See http://sourceforge.net/projects/dxbx');
+  WriteLn(ChangeFileExt(ExtractFileName(ParamStr(0)), ''), ' - Creates a trie of Xbox1 library symbols.');
   WriteLn('');
-
-  if ParamCount < 1 then
-  begin
-    WriteLn('ERROR! Missing argument. Please supply a folder containing the Xbox *.pat files.');
-    WriteLn('PatternTrieBuilder.exe [Folder Path]');
-    Exit;
-  end;
 
   if ParamStr(1) = '/?' then
   begin
-    WriteLn('PatternTrieBuilder.exe [Folder Path]');
+    WriteLn('This tool is part of the Dxbx Xbox emulator project,');
+    WriteLn('and parses the output of Link.exe [(c) Microsoft], and');
+    WriteLn('the output of IDA Pro Flirt tools pcf.exe [(c) Hex-Rays].');
+    WriteLn('');
+    WriteLn('Usage:');
+    WriteLn('> PatternTrieBuilder.exe [Folder|.lib|.pat file]+');
     Exit;
   end;
 
-  PatternFolder := ParamStr(1);
-  PatternFiles := TStringList.Create;
+  if LocateLink then
+  begin
+    WriteLn('Using "', LinkPath, '"');
+    WriteLn('and "', mspdb80Path, '".');
+    WriteLn('');
+  end
+  else
+  begin
+    if LinkPath = '' then
+      WriteLn('ERROR! Cannot find Link.exe!');
+    if mspdb80Path = '' then
+      WriteLn('ERROR! Cannot find mspdb80.dll!');
+    WriteLn('');
+    WriteLn('Please install Microsoft Visual Studio 2003 or later (or copy');
+    WriteLn('Link.exe and the accompanying mspdb80.dll in your searchpath).');
+    Exit;
+  end;
+
+  if ParamCount < 1 then
+  begin
+    WriteLn('ERROR! Missing argument. Supply a folder with Xbox1 .lib or .pat files,');
+    WriteLn('and/or the .lib and .pat files themselves.');
+    Exit;
+  end;
+
+  LibFiles := TStringList.Create;
   try
-    if FindFiles(PatternFolder, {aFileMask=}'*.pat', PatternFiles) <= 0 then
+    // Collect all .lib files specified on the command-line :
+    for i := 1 to ParamCount do
     begin
-      WriteLn('ERROR! No ".pat" pattern files found!');
+      LibPath := ExpandFileName(ParamStr(i));
+      if IsFolder(LibPath) then
+      begin
+        // Pick up all .lib files from the specified folder :
+        FindFiles(LibPath, {aFileMask=}'*.lib', LibFiles);
+        // Pick up all .pat files from the specified folder :
+        FindFiles(LibPath, {aFileMask=}'*.pat', LibFiles);
+      end
+      else
+      begin
+        // Add explicitly specified .lib and .pat files :
+        if SameText(ExtractFileExt(LibPath), '.lib')
+        or SameText(ExtractFileExt(LibPath), '.pat') then
+          LibFiles.Add(LibPath)
+        else
+          // Warn about unsupported files :
+          WriteLn('WARNING! File type not recognized : "', ParamStr(i), '"!');
+      end;
+    end; // for
+
+    // Check that we have files to work with :
+    if LibFiles.Count = 0 then
+    begin
+      WriteLn('ERROR! No ".lib" or ".pat" files found!');
       Exit;
     end;
 
-    ExitCode := GeneratePatternTrie(PatternFiles, {aOnlyPatches=}False);
+    ExitCode := GeneratePatternTrie(LibFiles, {aOnlyPatches=}False);
     if ExitCode = ERROR_SUCCESS then
     begin
       WriteLn('Done. Press enter to quit.');
@@ -1069,7 +1431,7 @@ begin
       WriteLn('ERROR! No trie file generated!');
 
   finally
-    FreeAndNil(PatternFiles);
+    FreeAndNil(LibFiles);
   end;
 end; // PatternToTrie_Main
 
