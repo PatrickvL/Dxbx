@@ -99,6 +99,13 @@ function StrLPas(const aPChar: PAnsiChar; const aMaxLength: Integer): AnsiString
 function iif(aTest: Boolean; const aTrue, aFalse: Integer): Integer; overload;
 function iif(aTest: Boolean; const aTrue, aFalse: string): string; overload;
 
+function GetEnvVarValue(const VarName: string; Dequote: Boolean = False): string;
+
+function LocateExecutablePath(const aFileName: string): string;
+
+function IsFile(const aFilePath: string): Boolean;
+function IsFolder(const aFilePath: string): Boolean;
+
 function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): Integer;
 
 function StartsWithText(const aString, aPrefix: string): Boolean;
@@ -366,6 +373,53 @@ begin
   Result := AnsiStrLIComp(PChar(aString), PChar(aPrefix), Length(aPrefix)) = 0;
 end;
 
+function GetEnvVarValue(const VarName: string; Dequote: Boolean = False): string;
+var
+  BufSize: Integer;
+begin
+  // Get required buffer size (inc. terminal #0)
+  BufSize := GetEnvironmentVariable(PChar(VarName), nil, 0);
+  if BufSize > 0 then
+  begin
+    // Read env var value into result string
+    SetLength(Result, BufSize - 1);
+    GetEnvironmentVariable(PChar(VarName), PChar(Result), BufSize);
+
+    if Dequote and CharInSet(Result[1], ['''', '"']) then
+      Result := AnsiDequotedStr(Result, Result[1]);
+  end
+  else
+    Result := '';
+end;
+
+function LocateExecutablePath(const aFileName: string): string;
+var
+  BufSize: Integer;
+  FilePath: PChar;
+begin
+  // Get required buffer size (inc. terminal #0)
+  BufSize := SearchPath(nil, PChar(aFileName), nil, 0, nil, {var}FilePath);
+  if BufSize > 0 then
+  begin
+    SetLength(Result, BufSize - 1);
+    SearchPath(nil, PChar(aFileName), nil, BufSize, PChar(Result), {var}FilePath);
+  end
+  else
+    Result := '';
+end;
+
+function IsFile(const aFilePath: string): Boolean;
+begin
+  Result := (aFilePath <> '')
+        and ((GetFileAttributes(PChar(aFilePath)) and (FILE_ATTRIBUTE_ARCHIVE or FILE_ATTRIBUTE_DIRECTORY)) = FILE_ATTRIBUTE_ARCHIVE);
+end;
+
+function IsFolder(const aFilePath: string): Boolean;
+begin
+  Result := (aFilePath <> '')
+        and ((GetFileAttributes(PChar(aFilePath)) and FILE_ATTRIBUTE_DIRECTORY) > 0);
+end;
+
 function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): Integer;
 var
   Status: Integer;
@@ -375,7 +429,6 @@ begin
   begin
     BeginUpdate;
     try
-      Clear;
       Status := FindFirst(IncludeTrailingPathDelimiter(aFolder) + aFileMask, faAnyFile, SearchRec);
       while Status = 0 do
       begin
