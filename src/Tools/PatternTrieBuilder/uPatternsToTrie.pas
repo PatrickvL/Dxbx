@@ -41,6 +41,7 @@ type
 
   RCrossReference = packed record
     Offset: Word;
+    BaseOffset: Word;
     Name: AnsiString;
   end;
 
@@ -463,6 +464,7 @@ var
       StoredCrossReference.RecType := rtStoredCrossReference;
 {$ENDIF}
       StoredCrossReference.Offset := aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].Offset;
+      StoredCrossReference.BaseOffset := aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].BaseOffset;
       StoredCrossReference.NameIndex := UniqueStrings.IndexOf(string(aLeaf.VersionedXboxLibraryFunction.CrossReferences[i].Name));
       OutputFile.WriteBuffer(StoredCrossReference, SizeOf(RStoredCrossReference));
     end;
@@ -853,32 +855,32 @@ const
 var
   StringList: TStringList;
   i, p: Integer;
+  Line: string;
   ScanMode: (smUnknown, smReadSectionHeader, smReadRawData, smReadReallocations);
 
-  NrOfPatternsFound: Integer;
   SymbolSizeHexStr: string;
   SymbolName: string;
   PatternString: string;
   CrossReferences: string;
+
+  NrOfPatternsFound: Integer;
 
   procedure _FlushPattern;
   begin
     if SymbolName = '' then
       Exit;
 
-    PatternString := StringReplace(PatternString, ' ', '', [rfReplaceAll]);
+    while Length(PatternString) < 64 do
+      PatternString := PatternString + '..';
 
-    // write a .pat file back to Input, so it can be scanned by ParseAndAppendPatternsToTrie'}
+    // write a .pat file back to Input, so it can be scanned by ParseAndAppendPatternsToTrie :
     aDump.WriteString(Copy(PatternString, 1, 64));
     aDump.WriteString(' 00 0000 '); // TODO : Add a real CRC here
     aDump.WriteString(SymbolSizeHexStr);
     aDump.WriteString(' :0000 ');
     aDump.WriteString(SymbolName);
     if CrossReferences <> '' then
-    begin
-      aDump.WriteString(' ');
       aDump.WriteString(CrossReferences);
-    end;
     if Length(PatternString) > 64 then
     begin
       aDump.WriteString(' ');
@@ -886,6 +888,7 @@ var
     end;
     aDump.WriteString(#13#10);
 
+    // Show some progress :
     SetLength(SymbolName, 78);
     Write(SymbolName, #13);
     Inc(NrOfPatternsFound);
@@ -894,7 +897,7 @@ var
     SymbolName := '';
     PatternString := '';
     CrossReferences := '';
-  end;
+  end; // _FlushPattern
 
 begin
   StringList := TStringList.Create;
@@ -910,11 +913,14 @@ begin
     ScanMode := smUnknown;
     for i := 0 to StringList.Count - 1 do
     begin
-      // Check if we enter a new output block here :
-      p := Pos('#', StringList[i]);
-      if p > 0 then
+      Line := StringList[i];
+      if Line = '' then
+        Continue;
+
+      if Line[1] >= 'R' then // Check block starts only when possible (for speed)
       begin
-        if Pos('SECTION HEADER #', StringList[i]) > 0 then
+        // Check if we enter a new output block here :
+        if StartsWithText(Line, 'SECTION HEADER #') then
         begin
           _FlushPattern;
           ScanMode := smReadSectionHeader;
@@ -923,13 +929,13 @@ begin
 
         if SymbolName <> '' then
         begin
-          if Pos('RAW DATA #', StringList[i]) > 0 then
+          if StartsWithText(Line, 'RAW DATA #') then
           begin
             ScanMode := smReadRawData;
             Continue;
           end;
 
-          if Pos('RELOCATIONS #', StringList[i]) > 0 then
+          if StartsWithText(Line, 'RELOCATIONS #') then
           begin
             ScanMode := smReadReallocations;
             Continue;
@@ -940,14 +946,22 @@ begin
       case ScanMode of
         smReadSectionHeader:
         begin
-          p := Pos(SymbolStartMarker, StringList[i]);
+          if Pos({Uni/I}'nitialized Data', Line) > 0 then
+          begin
+            // Skip data symbols :
+            SymbolName := '';
+            ScanMode := smUnknown;
+          end;
+
+          // Search for symbol name :
+          p := Pos(SymbolStartMarker, Line);
           if p > 0 then
           begin
             // Handle cases like :
             // COMDAT; sym= "unsigned long const * const D3D::g_TextureFormatMask" (?g_TextureFormatMask@D3D@@3QBKB)
             // COMDAT; sym= "void __stdcall D3D::InitializeVertexShaderFromFvf(struct D3D::VertexShader *,unsigned long)" (?InitializeVertexShaderFromFvf@D3D@@YGXPAUVertexShader@1@K@Z)
             // COMDAT; sym= _D3DPRIMITIVETOVERTEXCOUNT
-            SymbolName := Copy(StringList[i], p + Length(SymbolStartMarker), MaxInt);
+            SymbolName := Copy(Line, p + Length(SymbolStartMarker), MaxInt);
 
             p := Pos('"', SymbolName);
             if p > 0 then
@@ -965,10 +979,11 @@ begin
               SetLength(SymbolName, Length(SymbolName) - 1);
           end;
 
-          p := Pos('size of raw data', StringList[i]);
+          // Search for symbol size :
+          p := Pos('size of raw data', Line);
           if p > 0 then
           begin
-            SymbolSizeHexStr := Trim(Copy(StringList[i], 1, p - 1));
+            SymbolSizeHexStr := Trim(Copy(Line, 1, p - 1));
             while Length(SymbolSizeHexStr) < 4 do
               SymbolSizeHexStr := '0' + SymbolSizeHexStr;
           end;
@@ -979,24 +994,57 @@ begin
           // Handle cases like :
           //   00000000: 53 8A 5C 24 18 F6 C3 10 56 75 24 8B 35 00 00 00  S.\$.öÃ.Vu$.5...
           //   000000A0: 05 46 6C 61 67 73 02 00 06 00                    .Flags....
-          p := Pos(':', StringList[i]);
+          p := Pos(':', Line);
           if p > 8 then
-            PatternString := PatternString + Copy(StringList[i], p + 1, 16 *3);
+            PatternString := PatternString + StringReplace(Copy(Line, p + 1, 16 *3), ' ', '', [rfReplaceAll]);
         end;
 
         smReadReallocations:
         begin
-          // TODO : Parse all cross-references (including their base-offset)
+          // Handle cases like :
+          // 00000000  DIR32NB                    00000000        94  ?GetColorMaterial@D3D@@YGKXZ (unsigned long __stdcall D3D::GetColorMaterial(void))
+          // 00000014  DIR32                      00000174       2EA  _D3D__RenderState
+          // 00000049  REL32                      00000000       223  _D3DDevice_BeginStateBig@4
+          // 000000E4  REL32                      00000000        5A  ?ParseProgram@D3D@@YGPCKPCKPBKK@Z (unsigned long volatile * __stdcall D3D::ParseProgram(unsigned long volatile *,unsigned long const *,unsigned long))
+          if IsDigit(Line[2]) then
+          begin
+            // See if there's a unmangled symbol name too (we dont want those)
+            p := Pos('(', Line);
+            if p = 0 then
+              p := MaxInt;
+
+            // Parse and add cross-reference (Offset + Referenced SymbolName) :
+            CrossReferences := CrossReferences + ' ^' + {Offset=}Copy(Line, 6, 4) + {SymbolName=}Copy(Line, 58, p - 59);
+
+            // Add the base-offset (when it's not zero) :
+            if Copy(Line, 43, 4) <> '0000' then
+              CrossReferences := CrossReferences + '+' + {BaseOffset=}Copy(Line, 43, 4);
+
+            // Mask out all cross-reference locations in the pattern
+            if ScanHexWord(PAnsiChar(AnsiString({Offset=}Copy(Line, 6, 4))), {var}p) then
+            begin
+              p := 1 + (p * 2);
+              PatternString[p+0] := '.';
+              PatternString[p+1] := '.';
+              PatternString[p+2] := '.';
+              PatternString[p+3] := '.';
+              PatternString[p+4] := '.';
+              PatternString[p+5] := '.';
+              PatternString[p+6] := '.';
+              PatternString[p+7] := '.';
+            end;
+          end;
         end;
       end; // case
     end; // for
 
     _FlushPattern;
+    aDump.WriteString('---'#13#10);
     aDump.Size := aDump.Position;
-    WriteLn('Converted dump to ', NrOfPatternsFound, ' pattern format lines.             ');
+    WriteLn('Converted dump to ', NrOfPatternsFound, ' pattern format lines.                  ');
 
   finally
-    FreeAndNil(StringList)
+    FreeAndNil(StringList);
   end;
 end; // ConvertDumpToPattern
 
@@ -1173,8 +1221,20 @@ begin
       // Note : No check on 'functions-only', so other symbols will come through too :
       Inc(NrCrossReferences);
       SetLength(aVersionedXboxLibraryFunction.CrossReferences, NrCrossReferences);
-      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
       aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Offset := Word(Value);
+      aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].BaseOffset := 0;
+
+      Value := Pos('+', CrossReferencedFunctionName);
+      if Value > 0 then
+      begin
+        aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := Copy(CrossReferencedFunctionName, 1, Value - 1);
+        if ScanHexWord(PAnsiChar(CrossReferencedFunctionName) + Value, {var}Value) then
+          aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].BaseOffset := Value;
+      end
+      else
+      begin
+        aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
+      end;
     end;
 
     // Step to the next possible cross-reference :
@@ -1284,6 +1344,7 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
           // Dump it with link.exe and convert that to pattern-format :
           RunLibDump(FilePath, Input);
           ConvertDumpToPattern(Input);
+          Input.SaveToFile(ChangeFileExt(FilePath, '.pat'));
         end
         else
           // Load pattern file into memory (assuming the file ext is .pat) :

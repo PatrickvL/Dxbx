@@ -126,6 +126,7 @@ type
     RecType: TRecType;
 {$ENDIF}
     Offset: Word;
+    BaseOffset: Word;
     NameIndex: TStringTableIndex;
   end;
 
