@@ -32,7 +32,8 @@ uses
   // Dxbx
   uTypes,
   uDxbxUtils,
-  uStoredTrieTypes;
+  uStoredTrieTypes,
+  uCRC16;
 
 type
   TPattern = array of Word;
@@ -864,22 +865,53 @@ var
   PatternString: string;
   CrossReferences: string;
 
+  CRCBuffer: array [0..255] of Byte;
+
   NrOfPatternsFound: Integer;
 
   procedure _FlushPattern;
+  var
+    i: Integer;
+    CRCLength: Word;
+    CRCValue: Word;
   begin
     if SymbolName = '' then
       Exit;
 
-    // TODO : Handle data symbols (SymbolIsCode=False) somehow.
-    // At least, store their size and name for later usage.
+    if not SymbolIsCode then
+    begin
+      // TODO : Handle data symbols (SymbolIsCode=False) somehow.
+      // It would be nice if we stored their name and size for later usage.
+      Exit;
+    end;
 
-    while Length(PatternString) < 64 do
-      PatternString := PatternString + '..';
+    CRCValue := 0;
+    CRCLength := 0;
+    if Length(PatternString) > 64 then
+    begin
+      // Determine length of non-wildcard string after the first 64 hex chars :
+      i := 65;
+      while (CRCLength < $FF)
+        and (i < Length(PatternString))
+        and (PatternString[i] <> '.') do
+      begin
+        Inc(CRCLength);
+        Inc(i, 2);
+      end;
+      // Convert that part of the pattern to a byte-buffer and calculate the CRC for that data :
+      HexToBin(PChar(@PatternString[65]), CRCBuffer, CRCLength);
+      CRCValue := CalcCRC16(@CRCBuffer[0], CRCLength);
+    end
+    else
+    begin
+      // Pad the pattern with wildcards until it's at least 64 characters long :
+      while Length(PatternString) < 64 do
+        PatternString := PatternString + '..';
+    end;
 
     // write a .pat file back to Input, so it can be scanned by ParseAndAppendPatternsToTrie :
     aDump.WriteString(Copy(PatternString, 1, 64));
-    aDump.WriteString(' 00 0000 '); // TODO : Add a real CRC here (shorting pattern by CRC'ed part)
+    aDump.WriteString(Format(' %.2x %.4x ', [CRCLength, CRCValue]));
     aDump.WriteString(SymbolSizeHexStr);
     aDump.WriteString(' :0000 ');
     aDump.WriteString(SymbolName);
@@ -888,7 +920,7 @@ var
     if Length(PatternString) > 64 then
     begin
       aDump.WriteString(' ');
-      aDump.WriteString(Copy(PatternString, 65, MaxInt));
+      aDump.WriteString(Copy(PatternString, 65 + (CRCLength * 2), MaxInt));
     end;
     aDump.WriteString(#13#10);
 
@@ -1062,7 +1094,7 @@ begin
     _FlushPattern;
     aDump.WriteString('---'#13#10);
     aDump.Size := aDump.Position;
-    WriteLn('Converted dump to ', NrOfPatternsFound, ' pattern format lines.                  ');
+    WriteLn('Converted dump to ', NrOfPatternsFound, ' pattern format lines.                                  ');
 
   finally
     FreeAndNil(StringList);
@@ -1253,9 +1285,7 @@ begin
           aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].BaseOffset := Value;
       end
       else
-      begin
         aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := CrossReferencedFunctionName;
-      end;
     end;
 
     // Step to the next possible cross-reference :
