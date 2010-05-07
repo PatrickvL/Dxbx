@@ -761,9 +761,6 @@ begin
   mspdb80Path := LocateVisualStudioFilePath('mspdb80.dll');
 
   Result := (LinkPath <> '') and (mspdb80Path <> '');
-  // TODO : mspdb80.dll is also needed, but is not installed in System32
-  // when Visual Studio is installed, but rather in Common7\IDE. Is this
-  // is the case, care must be taken so that Link.exe can find it!
 end;
 
 // Based on http://www.martinstoeckli.ch/delphi/delphi.html#AppRedirectOutput and
@@ -795,6 +792,9 @@ begin
     Start.hStdInput := StdInPipe_Read;
     Start.hStdOutput := StdInPipe_Write;
 
+    // Note : mspdb80.dll is needed, but is not installed in System32 when
+    // Visual Studio is installed, but rather in Common7\IDE. By passing
+    // it's dir as CurrentDirectory, Link.exe can find it :
     if CreateProcess(nil,
                      PChar(CommandLine),
                      @Security,
@@ -859,6 +859,7 @@ var
   ScanMode: (smUnknown, smReadSectionHeader, smReadRawData, smReadReallocations);
 
   SymbolSizeHexStr: string;
+  SymbolIsCode: Boolean;
   SymbolName: string;
   PatternString: string;
   CrossReferences: string;
@@ -870,12 +871,15 @@ var
     if SymbolName = '' then
       Exit;
 
+    // TODO : Handle data symbols (SymbolIsCode=False) somehow.
+    // At least, store their size and name for later usage.
+
     while Length(PatternString) < 64 do
       PatternString := PatternString + '..';
 
     // write a .pat file back to Input, so it can be scanned by ParseAndAppendPatternsToTrie :
     aDump.WriteString(Copy(PatternString, 1, 64));
-    aDump.WriteString(' 00 0000 '); // TODO : Add a real CRC here
+    aDump.WriteString(' 00 0000 '); // TODO : Add a real CRC here (shorting pattern by CRC'ed part)
     aDump.WriteString(SymbolSizeHexStr);
     aDump.WriteString(' :0000 ');
     aDump.WriteString(SymbolName);
@@ -892,12 +896,16 @@ var
     SetLength(SymbolName, 78);
     Write(SymbolName, #13);
     Inc(NrOfPatternsFound);
+  end; // _FlushPattern
 
+  procedure _ReinitVariables;
+  begin
     SymbolSizeHexStr := '';
+    SymbolIsCode := True;
     SymbolName := '';
     PatternString := '';
     CrossReferences := '';
-  end; // _FlushPattern
+  end; // _ReinitVariables
 
 begin
   StringList := TStringList.Create;
@@ -906,8 +914,9 @@ begin
     StringList.Text := aDump.DataString;
 
     aDump.Position := 0;
-    SymbolName := '';
     NrOfPatternsFound := 0;
+
+    _ReinitVariables;
 
     // Scan the dump line by line :
     ScanMode := smUnknown;
@@ -917,17 +926,20 @@ begin
       if Line = '' then
         Continue;
 
-      if Line[1] >= 'R' then // Check block starts only when possible (for speed)
+      // Check block starts only when possible (for speed) :
+      if (Line[1] > 'F') and (Pos('#', Line) > 0) then
       begin
         // Check if we enter a new output block here :
         if StartsWithText(Line, 'SECTION HEADER #') then
         begin
           _FlushPattern;
+          _ReinitVariables;
           ScanMode := smReadSectionHeader;
           Continue;
         end;
 
-        if SymbolName <> '' then
+        // Only enter other blocks if we're scanning a named Code symbol :
+        if (SymbolName <> '') and SymbolIsCode then
         begin
           if StartsWithText(Line, 'RAW DATA #') then
           begin
@@ -941,16 +953,30 @@ begin
             Continue;
           end;
         end;
+
+        ScanMode := smUnknown;
       end;
 
       case ScanMode of
         smReadSectionHeader:
         begin
+          // Search for symbol size :
+          p := Pos('size of raw data', Line);
+          if p > 0 then
+          begin
+            SymbolSizeHexStr := Trim(Copy(Line, 1, p - 1));
+            while Length(SymbolSizeHexStr) < 4 do
+              SymbolSizeHexStr := '0' + SymbolSizeHexStr;
+
+            Continue;
+          end;
+
+          // Search for symbol data-marker :
           if Pos({Uni/I}'nitialized Data', Line) > 0 then
           begin
-            // Skip data symbols :
-            SymbolName := '';
-            ScanMode := smUnknown;
+            // Mark symbol as data :
+            SymbolIsCode := False;
+            Continue;
           end;
 
           // Search for symbol name :
@@ -977,15 +1003,10 @@ begin
               Delete(SymbolName, 1, p);
             if SymbolName[Length(SymbolName)] = ')' then
               SetLength(SymbolName, Length(SymbolName) - 1);
-          end;
 
-          // Search for symbol size :
-          p := Pos('size of raw data', Line);
-          if p > 0 then
-          begin
-            SymbolSizeHexStr := Trim(Copy(Line, 1, p - 1));
-            while Length(SymbolSizeHexStr) < 4 do
-              SymbolSizeHexStr := '0' + SymbolSizeHexStr;
+            // Last header value read, postpone scanning until next block :
+            ScanMode := smUnknown;
+            Continue;
           end;
         end;
 
