@@ -357,6 +357,11 @@ begin
       VersionedXboxLibraryFunction.CrossReferences[i].Offset,
       VersionedXboxLibraryFunction.CrossReferences[i].Name
       ]);
+
+    if VersionedXboxLibraryFunction.CrossReferences[i].BaseOffset > 0 then
+      Result := Result + Format('+%.4x', [
+        VersionedXboxLibraryFunction.CrossReferences[i].BaseOffset
+        ]);
   end;
 end;
 
