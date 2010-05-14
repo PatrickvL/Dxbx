@@ -1545,6 +1545,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// Dxbx note : This patch is not really needed, as the Xbox1 seems to use the SectionHeader address as a handle too.
 function XTL_EmuXGetSectionSize
 (
   hSection: XTL_SECTIONHANDLE
@@ -2187,7 +2188,7 @@ exports
   XTL_EmuXInputOpen,
   XTL_EmuXInputPoll,
   XTL_EmuXInputSetState,
-  XTL_EmuXLaunchNewImage,
+  XTL_EmuXLaunchNewImage name PatchPrefix + 'XLaunchNewImageA',
   XTL_EmuXLoadSectionA,
   XTL_EmuXLoadSectionByHandle,
   XTL_EmuXMountUtilityDrive,

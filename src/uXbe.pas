@@ -1237,7 +1237,7 @@ begin
         end;
       end;
 
-      for lIndex2 := 0 to Len - 1 do
+      lIndex2 := 0; while lIndex2 < Len do
       begin
         x_Gray := Byte(Data shl 4);
         aBitmap.Canvas.Pixels[x, y] := RGB(x_Gray, x_Gray, x_Gray);
@@ -1253,6 +1253,7 @@ begin
             break;
           end;
         end;
+        Inc(lIndex2);
       end;
 
       Inc(lIndex); // Index increment

@@ -786,7 +786,8 @@ var
 begin
   Len := StrLenLimit(aPChar, aMaxLength);
   SetLength(Result, Len);
-  Move(aPChar[0], Result[1], Len * SizeOf(AnsiChar));
+  if Len > 0 then
+    Move(aPChar[0], Result[1], Len * SizeOf(AnsiChar));
 end;
 
 function iif(aTest: Boolean; const aTrue, aFalse: Integer): Integer; overload;

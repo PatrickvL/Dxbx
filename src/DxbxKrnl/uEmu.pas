@@ -314,8 +314,8 @@ begin
       DbgPrintf(
               'Received Exception Code $%.08X @ EIP := $%.08X'+
               ''+
-              '  Press \''OK\'' to terminate emulation.'+
-              '  Press \''Cancel\'' to debug.',
+              '  Press ''OK'' to terminate emulation.'+
+              '  Press ''Cancel'' to debug.',
               [e.ContextRecord.Eip, e.ContextRecord.EFlags]);
 {$ENDIF}
 

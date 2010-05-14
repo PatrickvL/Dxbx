@@ -6434,15 +6434,15 @@ begin
 {$ENDIF}
 
   case (Type_) of
-    22:    // X_D3DTSS_BUMPENVMAT00
+    X_D3DTSS_BUMPENVMAT00:
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
-    23:    // X_D3DTSS_BUMPENVMAT01
+    X_D3DTSS_BUMPENVMAT01:
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
-    24:    // X_D3DTSS_BUMPENVMAT11
+    X_D3DTSS_BUMPENVMAT11:
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
-    25:    // X_D3DTSS_BUMPENVMAT10
+    X_D3DTSS_BUMPENVMAT10:
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
-    26:    // X_D3DTSS_BUMPENVLSCALE
+    X_D3DTSS_BUMPENVLSCALE:
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
    end;
 
