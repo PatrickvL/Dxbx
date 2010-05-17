@@ -97,6 +97,7 @@
 			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
 			<DCCReference Include="..\..\src\uStoredTrieTypes.pas"/>
 			<DCCReference Include="..\..\src\uTypes.pas"/>
+			<DCCReference Include="..\..\src\uCRC16.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
