@@ -26,7 +26,8 @@ uses
   uPatternsToTrie in '..\..\src\Tools\PatternTrieBuilder\uPatternsToTrie.pas',
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
   uStoredTrieTypes in '..\..\src\uStoredTrieTypes.pas',
-  uTypes in '..\..\src\uTypes.pas';
+  uTypes in '..\..\src\uTypes.pas',
+  uCRC16 in '..\..\src\uCRC16.pas';
 
 begin
   try
