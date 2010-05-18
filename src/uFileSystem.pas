@@ -534,7 +534,14 @@ begin
 
   // Determine full path and attributes for the supplied image :
   aDevice := ExpandFileName(aDevice);
-  DeviceAttr := GetFileAttributes(PChar(aDevice));
+  DeviceAttr := Integer(GetFileAttributes(PChar(aDevice)));
+
+  // Break out when device path doesn't exist :
+  if DeviceAttr = -1 then
+  begin
+    Result := False;
+    Exit;
+  end;
 
   if (DeviceAttr and FILE_ATTRIBUTE_DIRECTORY) > 0 then
   begin
