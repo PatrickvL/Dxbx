@@ -115,7 +115,7 @@ begin
     // Early exit if address falls outside symbol-size;
     // Note that the symbol length defaults to 4 when
     // symbols are loaded from cache !
-    if OffsetFromProcName > p.Length then
+    if OffsetFromProcName > Integer(p.Length) then
     begin
       Result := False;
       Exit;
