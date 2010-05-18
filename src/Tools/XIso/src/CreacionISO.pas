@@ -52,7 +52,7 @@ type
     FullPath: string;
     Size: Integer;
     DateTime: TDateTime;
-    Attributes: Integer;
+    Attributes: DWord;
     Contents: TListContents;
     PreviousLevel: TListContents;
   end;

@@ -48,6 +48,9 @@ const
   // Thread access rights
   THREAD_SET_CONTEXT = $0010; // See http://msdn.microsoft.com/en-us/library/ms686769(VS.85).aspx
 
+  // Trick to check validity of GetFileAttributes - this bit should be off :
+  FILE_ATTRIBUTE_INVALID = $10000000;
+
 type
   EMU_STATE = (esNone, esFileOpen, esRunning);
 
@@ -417,7 +420,7 @@ end;
 function IsFolder(const aFilePath: string): Boolean;
 begin
   Result := (aFilePath <> '')
-        and ((GetFileAttributes(PChar(aFilePath)) and FILE_ATTRIBUTE_DIRECTORY) > 0);
+        and ((GetFileAttributes(PChar(aFilePath)) and (FILE_ATTRIBUTE_DIRECTORY or FILE_ATTRIBUTE_INVALID)) = FILE_ATTRIBUTE_DIRECTORY);
 end;
 
 function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): Integer;
