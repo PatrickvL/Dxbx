@@ -1946,7 +1946,7 @@ function XTL_EmuIDirect3DDevice8_CreateImageSurface
   Format: X_D3DFORMAT;
   ppBackBuffer: PPX_D3DSurface
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   PCFormat: D3DFORMAT;
 begin
@@ -1972,6 +1972,20 @@ begin
     Height,
     PCFormat,
     PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface8)));
+
+	if FAILED(Result) and (Format = X_D3DFMT_LIN_D24S8) then
+	begin
+		EmuWarning('CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8');
+
+		Result := IDirect3DDevice8_CreateImageSurface(g_pD3DDevice8,
+      Width,
+      Height,
+      D3DFMT_A8R8G8B8,
+      PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface8)));
+	end;
+
+	if FAILED(Result) then
+		{EmuWarning}CxbxKrnlCleanup('CreateImageSurface failed! '+ #13#10 + 'Format = 0x%8.8X', [Format]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -4313,7 +4327,7 @@ function XTL_EmuIDirect3DResource8_Register
     pThis: PX_D3DResource; 
     pBase: PVOID
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
   pResource: PX_D3DResource;
@@ -4562,6 +4576,13 @@ begin
         Format := D3DFMT_A8R8G8B8;
       end;
 
+			if(X_Format = X_D3DFMT_LIN_D16) then // = 0x30
+      begin
+        {CxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D16 not yet supported!');
+        X_Format := X_D3DFMT_LIN_R5G6B5; // = 0x11;
+        Format := D3DFMT_R5G6B5;
+      end;
+
       dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
 
       bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
@@ -4581,8 +4602,8 @@ begin
         dwBPP := 4;
       end else
       if (X_Format = X_D3DFMT_R5G6B5) or (X_Format = X_D3DFMT_A4R4G4B4)
-      or (X_Format = X_D3DFMT_LIN_A4R4G4B4) or (X_Format = X_D3DFMT_A1R5G5B5)
-      or (X_Format = $28 { X_D3DFMT_G8B8 }) or (X_Format = X_D3DFMT_LIN_A1R5G5B5) then
+      or (X_Format = X_D3DFMT_A1R5G5B5)
+      or (X_Format = $28 { X_D3DFMT_G8B8 }) then
       begin
         bSwizzled := TRUE;
 
@@ -9172,7 +9193,7 @@ end;
 
 // * func: EmuD3DDevice_KickOff (D3D::CDevice::KickOff)
 procedure XTL_EmuIDevice3D8_KickOff(); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -9181,6 +9202,12 @@ begin
 {$ENDIF}
 
   // TODO -oCXBX: Anything (kick off and NOT wait for idle)?
+	// NOTE: We should actually emulate IDirect3DDevice8_KickPushBuffer()
+	// instead of this function.  When needed, use the breakpoint (int 3)
+	// to determine what is calling this function if it's something other
+	// than IDirect3DDevice8_KickPushBuffer() itself.
+
+//	__asm int 3;
 
   EmuSwapFS(fsXbox);
 end;
@@ -9617,6 +9644,7 @@ begin
 {$ENDIF}
 
   // This function is too low level to actually emulate
+  // Only use for debugging.
   asm int 3; end;
 
   EmuSwapFS(fsXbox);
