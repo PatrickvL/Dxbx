@@ -783,8 +783,10 @@ var
   KeepRunning: Boolean;
   Buffer: array[0..BLOCK_SIZE-1] of Byte;
   BytesAvail, BytesRead: DWord;
+  LogLine: string;
 begin
   CommandLine := '"' + LinkPath + '" /dump /headers /rawdata /relocations "' +  aLibFileName + '"';
+  LogLine := #13'Dumping ' + ExtractFileName(aLibFileName) + ' : ';
 
   Security.nLength := SizeOf(TSecurityAttributes) ;
   Security.bInheritHandle := True;
@@ -815,7 +817,7 @@ begin
       aOutput.Size := 16 * 1024 * 1024; // Reserve 16 MB upfront
       aOutput.Position := 0;
       repeat
-        KeepRunning := WaitForSingleObject(ProcessInfo.hProcess, 1) = WAIT_TIMEOUT;
+        KeepRunning := WaitForSingleObject(ProcessInfo.hProcess, 0) = WAIT_TIMEOUT;
         Application.ProcessMessages;
         while True do
         begin
@@ -835,7 +837,7 @@ begin
           begin
             // Write the output to the stream, and show the byte-count as a progress indicator :
             aOutput.Write(Buffer, BytesRead);
-            Write('Dumping ', ExtractFileName(aLibFileName), ' : ', aOutput.Position, #13);
+            Write(LogLine, aOutput.Position);
           end;
         end; // while True
 
@@ -852,10 +854,30 @@ begin
   aOutput.Size := aOutput.Position;
 
   // Overwrite progress line with a finish-message :
-  WriteLn('Dumped ', ExtractFileName(aLibFileName), '.               ');
+  WriteLn(#13'Dumped ', ExtractFileName(aLibFileName), '.               ');
 end; // RunLibDump
 
-procedure ConvertDumpToPattern(const aDump: TStringStream);
+type
+  TCustomMemoryStreamHelper = class helper for TCustomMemoryStream
+  public
+    procedure WriteString(const aString: AnsiString);
+    function DataString: AnsiString;
+  end;
+
+procedure TCustomMemoryStreamHelper.WriteString(const aString: AnsiString);
+begin
+  if Length(aString) > 0 then
+    Write(aString[1], Length(aString));
+end;
+
+function TCustomMemoryStreamHelper.DataString: AnsiString;
+begin
+  SetLength(Result, Size);
+  Position := 0;
+  Read(Result[1], Size);
+end;
+
+procedure ConvertDumpToPattern(const aDump: TCustomMemoryStream);
 const
   SymbolStartMarker = 'COMDAT; sym= ';
 var
@@ -948,7 +970,7 @@ begin
   StringList := TStringList.Create;
   try
     // Move the dump over to a stringlist :
-    StringList.Text := aDump.DataString;
+    StringList.Text := string(aDump.DataString);
 
     aDump.Position := 0;
     NrOfPatternsFound := 0;
@@ -1282,7 +1304,7 @@ begin
       aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Offset := Word(Value);
       aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].BaseOffset := 0;
 
-      Value := Pos('+', CrossReferencedFunctionName);
+      Value := Pos(AnsiString('+'), CrossReferencedFunctionName);
       if Value > 0 then
       begin
         aVersionedXboxLibraryFunction.CrossReferences[NrCrossReferences-1].Name := Copy(CrossReferencedFunctionName, 1, Value - 1);
@@ -1347,13 +1369,13 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
 
   procedure _ProcessPatternFiles(aPatternTrie: TPatternTrie);
   var
-    Input: TStringStream;
+    Input: TMemoryStream;
     i: Integer;
     FilePath, LibName, VersionStr: string;
     LibVersion: Integer;
     VersionedXboxLibrary: PVersionedXboxLibrary;
   begin
-    Input := TStringStream.Create(AnsiString(''));
+    Input := TMemoryStream.Create;
     try
       for i := 0 to aFileList.Count - 1 do
       begin
@@ -1481,24 +1503,6 @@ begin
     Exit;
   end;
 
-  if LocateLink then
-  begin
-    WriteLn('Using "', LinkPath, '"');
-    WriteLn('and "', mspdb80Path, '".');
-    WriteLn('');
-  end
-  else
-  begin
-    if LinkPath = '' then
-      WriteLn('ERROR! Cannot find Link.exe!');
-    if mspdb80Path = '' then
-      WriteLn('ERROR! Cannot find mspdb80.dll!');
-    WriteLn('');
-    WriteLn('Please install Microsoft Visual Studio 2003 or later (or copy');
-    WriteLn('Link.exe and the accompanying mspdb80.dll in your searchpath).');
-    Exit;
-  end;
-
   if ParamCount < 1 then
   begin
     WriteLn('ERROR! Missing argument. Supply a folder with Xbox1 .lib or .pat files,');
@@ -1538,6 +1542,34 @@ begin
       Exit;
     end;
 
+    // See if we need to handle a .lib file :
+    for i := 0 to LibFiles.Count - 1 do
+    begin
+      if SameText(ExtractFileExt(LibFiles[i]), '.lib') then
+      begin
+        // In that case, we need to have access to link.exe :
+        if LocateLink then
+        begin
+          WriteLn('Using "', LinkPath, '"');
+          WriteLn('and "', mspdb80Path, '".');
+          WriteLn('');
+          // No need to search any further :
+          Break;
+        end;
+
+        // No link.exe (or mspdb80.dll) found - show error and stop :
+        if LinkPath = '' then
+          WriteLn('ERROR! Cannot find Link.exe!');
+        if mspdb80Path = '' then
+          WriteLn('ERROR! Cannot find mspdb80.dll!');
+        WriteLn('');
+        WriteLn('Please install Microsoft Visual Studio 2003 or later (or copy');
+        WriteLn('Link.exe and the accompanying mspdb80.dll in your searchpath).');
+        Exit;
+      end;
+    end;
+
+    // Parse all files and generate a pattern-trie from it :
     ExitCode := GeneratePatternTrie(LibFiles, {aOnlyPatches=}False);
     if ExitCode = ERROR_SUCCESS then
     begin
