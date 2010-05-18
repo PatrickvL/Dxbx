@@ -1876,7 +1876,7 @@ function XTL_EmuDirectSoundCreateStream
     pdssd: PX_DSSTREAMDESC;
     ppStream: PPX_CDirectSoundStream
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:161  Translator:Shadow_Tj  Done:100
 var
   pDSBufferDesc: DirectSound.PDSBUFFERDESC;
   dwAcceptableMask: DWORD;
@@ -1935,12 +1935,15 @@ begin
       Exit;
     end;
 
-    // we only support 2 channels right now
-    if (pDSBufferDesc.lpwfxFormat.nChannels > 2) then
+   	if Assigned(pDSBufferDesc.lpwfxFormat) then
     begin
-      pDSBufferDesc.lpwfxFormat.nChannels := 2;
-      pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample) div 8;
-      pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec * pDSBufferDesc.lpwfxFormat.nBlockAlign;
+      // we only support 2 channels right now
+      if (pDSBufferDesc.lpwfxFormat.nChannels > 2) then
+      begin
+        pDSBufferDesc.lpwfxFormat.nChannels := 2;
+        pDSBufferDesc.lpwfxFormat.nBlockAlign := (2*pDSBufferDesc.lpwfxFormat.wBitsPerSample) div 8;
+        pDSBufferDesc.lpwfxFormat.nAvgBytesPerSec := pDSBufferDesc.lpwfxFormat.nSamplesPerSec * pDSBufferDesc.lpwfxFormat.nBlockAlign;
+      end;
     end;
   end;
 

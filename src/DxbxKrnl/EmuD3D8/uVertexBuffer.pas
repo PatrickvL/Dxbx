@@ -1560,7 +1560,7 @@ begin
 end;
 
 procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 var
   Stage: int;
   pTexture: PX_D3DResource;
@@ -1634,8 +1634,8 @@ begin
         dwBPP := 4;
       end
       else if (X_Format = X_D3DFMT_R5G6B5) or (X_Format = X_D3DFMT_A4R4G4B4)
-           or (X_Format = X_D3DFMT_LIN_A4R4G4B4) or (X_Format = X_D3DFMT_A1R5G5B5)
-           or (X_Format = X_D3DFMT_G8B8) or (X_Format = X_D3DFMT_LIN_A1R5G5B5) then
+           or (X_Format = X_D3DFMT_A1R5G5B5)
+           or (X_Format = X_D3DFMT_G8B8) then
       begin
         bSwizzled := TRUE;
 
@@ -1668,7 +1668,10 @@ begin
         dwPitch  := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT)+1)*64;
         dwBPP := 4;
       end
-      else if (X_Format = X_D3DFMT_LIN_R5G6B5) then
+      else if (X_Format = X_D3DFMT_LIN_R5G6B5)
+           or (X_Format = X_D3DFMT_LIN_D16)
+           or (X_Format = X_D3DFMT_LIN_A4R4G4B4)
+           or (X_Format = X_D3DFMT_LIN_A1R5G5B5) then
       begin
         // Linear 16 Bit
         dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
