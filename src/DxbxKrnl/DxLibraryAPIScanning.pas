@@ -207,13 +207,12 @@ begin
 end; // DxbxUnmangleSymbolName
 
 function SameLibName(StoredLibraryName, CurrentLibName: string): Boolean;
+// StoredLibraryName comes from our pattern files (like '4627xgraphics.pat' gives 'xgraphics')
+// CurrentLibName comes from the XBE header (like 'XGRAPHC')
 begin
-  // HACK: These libraries are considered the same :
-  if SameText(StoredLibraryName, 'D3DX8') then
-    StoredLibraryName := 'D3D8';
-
-  if SameText(CurrentLibName, 'D3DX8') then
-    CurrentLibName := 'D3D8';
+  // Map the pattern-based names to the linked names :
+  if SameText(StoredLibraryName, 'xgraphics') then
+    StoredLibraryName := 'XGRAPHC';
 
   Result := SameText(StoredLibraryName, CurrentLibName);
 end;
