@@ -186,7 +186,7 @@ type X_D3DPRESENT_PARAMETERS = packed record
     SwapEffect: D3DSWAPEFFECT;
     hDeviceWindow: HWND;
     Windowed: BOOL_;
-    EnableAutoDepthStencil: BOOL_;
+    EnableAutoDepthStencil: BOOL;
     AutoDepthStencilFormat: X_D3DFORMAT;
     Flags: DWORD;
 
