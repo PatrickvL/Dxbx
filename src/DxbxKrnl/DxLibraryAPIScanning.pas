@@ -948,12 +948,45 @@ var
   ScanEnd: UIntPtr;
   p: UIntPtr;
 
-  procedure _Test(const aAddress: UIntPtr; const aSymbolName: string);
+  procedure _ScanTest;
+
+    procedure _Test(const aAddress: UIntPtr; const aSymbolName: string);
+    begin
+      DbgPrintf('Testing at 0x%.08x for "%s"', [aAddress, aSymbolName]);
+      p := aAddress;
+      TestAddressUsingPatternTrie(PByte(p));
+      _Debug(FindSymbol(aSymbolName));
+    end;
+
   begin
-    DbgPrintf('Testing at 0x%.08x for "%s"', [aAddress, aSymbolName]);
-    p := aAddress;
-    TestAddressUsingPatternTrie(PByte(p));
-    _Debug(FindSymbol(aSymbolName));
+(*
+    // Turok - Fixed wrong locations and duplicates :
+    _Test($0001171D, 'XapiInitProcess'); // TODO : Use correct pattern-name!
+    _Test($00011A35, '_RaiseException@16');
+    _Test($00011A9D, '_XRegisterThreadNotifyRoutine@8');
+    _Test($001939B0, 'EmuIDirect3DDevice8_SetRenderState_StencilEnable'); // TODO : Use correct pattern-name!
+    _Test($00193A40, 'EmuIDirect3DDevice8_SetRenderState_StencilFail'); // TODO : Use correct pattern-name!
+    _Test($00193AB0, 'EmuIDirect3DDevice8_SetRenderState_YuvEnable'); // TODO : Use correct pattern-name!
+    _Test($00193AE0, 'EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable'); // TODO : Use correct pattern-name!
+    _Test($00193B50, 'EmuIDirect3DDevice8_SetRenderState_StencilCullEnable'); // TODO : Use correct pattern-name!
+    _Test($00193BC0, 'EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead'); // TODO : Use correct pattern-name!
+    _Test($00193BE0, 'EmuIDirect3DDevice8_SetRenderState_RopZRead'); // TODO : Use correct pattern-name!
+    _Test($00195170, '?SetTexture@D3DDevice@@SGJKPAUD3DBaseTexture@@@Z');
+    _Test($001960E0, 'EmuIDirect3DBaseTexture8_GetLevelCount'); // TODO : Use correct pattern-name!
+    _Test($001B018A, 'CDirectSound_SetRolloffFactor'); // TODO : Use correct pattern-name!
+    _Test($001F35E3, '_USBD_Init@8'); // Cxbx incorrectly calls this XInitDevices!
+*)
+(*
+    // Cxbx meshes :
+    _Test($0001DE60, '_D3DDevice_SetTile@8'); // EmuIDirect3DDevice8_SetTile
+    _Test($00020200, '?SetFence@D3D@@YGKK@Z'); // D3D::SetFence (XREF)
+    _Test($0002CC34, '_XapiProcessHeap');
+*)
+    // Turok - Still some Cxbx differences :
+    _Test($00194EA0, '_D3DDevice_SetLight@8'); // This scan works, but later on the symbol gets patched at 0x0013A4D0 ?
+    _Test($00195080, '_D3DDevice_LightEnable@8'); // This scan works, but later on the symbol gets patched at 0x00018D10 ?
+    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
+    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
   end;
 
 begin
@@ -979,31 +1012,7 @@ begin
   ZeroMemory(@(AllCrossReferences[0]), Length(AllCrossReferences) * SizeOf(AllCrossReferences[0]));
   AllCrossReferencesInUse := 1; // Start at index 1, so index 0 means 'no value'
 
-(*
-// TODO : Analyze and fix all missing and mismatching functions from Turok, compared to Cxbx :
-////_Test($0001171D, 'XapiInitProcess'); // TODO : Use correct pattern-name!
-_Test($001939B0, 'EmuIDirect3DDevice8_SetRenderState_StencilEnable'); // TODO : Use correct pattern-name!
-_Test($00193A40, 'EmuIDirect3DDevice8_SetRenderState_StencilFail'); // TODO : Use correct pattern-name!
-//_Test($00193AB0, 'EmuIDirect3DDevice8_SetRenderState_YuvEnable'); // TODO : Use correct pattern-name!
-_Test($00193AE0, 'EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable'); // TODO : Use correct pattern-name!
-_Test($00193B50, 'EmuIDirect3DDevice8_SetRenderState_StencilCullEnable'); // TODO : Use correct pattern-name!
-_Test($00193BC0, 'EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead'); // TODO : Use correct pattern-name!
-_Test($00193BE0, 'EmuIDirect3DDevice8_SetRenderState_RopZRead'); // TODO : Use correct pattern-name!
-////_Test($001960E0, 'EmuIDirect3DBaseTexture8_GetLevelCount'); // TODO : Use correct pattern-name!
-////_Test($001B018A, 'CDirectSound_SetRolloffFactor'); // TODO : Use correct pattern-name!
-_Test($001F35E3, 'EmuXInitDevices'); // TODO : Use correct pattern-name!
-// Cxbx meshes :
-_Test($0001DE60, 'EmuIDirect3DDevice8_SetTile'); // TODO : Use correct pattern-name!
-_Test($00020200, 'D3D::SetFence (XREF)'); // TODO : Use correct pattern-name!
-_Test($0002CC34, 'EmuXapiProcessHeap'); // TODO : Use correct pattern-name!
-  // Turok
-  _Test($00011A35, '_RaiseException@16');
-  _Test($00011A9D, '_XRegisterThreadNotifyRoutine@8');
-  _Test($00195170, '?SetTexture@D3DDevice@@SGJKPAUD3DBaseTexture@@@Z');
-  _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z');
-  _Test($0019D360, '_D3DDevice_Reset@4');
-
-*)
+//  _ScanTest;
 
   i := 0;
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
@@ -1127,6 +1136,30 @@ end; // DetectVersionedXboxLibraries
 
 procedure TSymbolManager.DetermineFinalLocations;
 
+  procedure _FinalTest;
+
+    procedure _Test(const aAddress: UIntPtr; const aSymbolName: string);
+    begin
+      DbgPrintf('Testing at 0x%.08x for "%s"', [aAddress, aSymbolName]);
+      _Debug(FindSymbol(aSymbolName));
+    end;
+
+  begin
+(*
+    _Test(?, '_D3D__RenderState'));
+    _Test(?, '?CommonSetDebugRegisters@D3D@@YIXXZ'));
+    _Test($00193BC0, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4'));
+    _Test($00193BE0, '_D3DDevice_SetRenderState_RopZRead@4'));
+    _Test($00193C00, '_D3DDevice_SetRenderState_DoNotCullUncompressed@4'));
+    _Test(?, '_XapiProcessHeap'));
+*)
+    // Turok - Still some Cxbx differences :
+    _Test($00194EA0, '_D3DDevice_SetLight@8'); // This scan works, but later on the symbol gets patched at 0x0013A4D0 ?
+    _Test($00195080, '_D3DDevice_LightEnable@8'); // This scan works, but later on the symbol gets patched at 0x00018D10 ?
+    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
+    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
+  end;
+
   procedure _AddMissingSymbols;
   var
     w: Word;
@@ -1167,9 +1200,15 @@ procedure TSymbolManager.DetermineFinalLocations;
           CrossReferencedAddress := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Address;
           CrossReferencedSymbol := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Symbol;
 
-          // Now add all cross-references that don't exist yet and count their references :
-          CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
-          Inc(CrossReferencedLocation.NrOfReferencesTo);
+          if CrossReferencedSymbol.HasFunctionInformation then
+            CrossReferencedLocation := CrossReferencedSymbol.FindPotentialLocation(CrossReferencedAddress)
+          else
+            // Add all cross-references that haven't been detected as function yet (probably data) :
+            CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
+
+          // Count all references :
+          if Assigned(CrossReferencedLocation) then
+            Inc(CrossReferencedLocation.NrOfReferencesTo);
         end; // for CrossReferences
       end; // while Locations
     end; // for Symbols
@@ -1309,7 +1348,8 @@ procedure TSymbolManager.DetermineFinalLocations;
     for w := Low(w) to High(w) do
     begin
       CurrentSymbol := MySymbolsHashedOnName[w];
-      if CurrentSymbol = nil then
+      if (CurrentSymbol = nil)
+      or (CurrentSymbol.Address = nil) then
         Continue;
 
       MyFinalLocations[MySymbolCount] := CurrentSymbol;
@@ -1349,16 +1389,14 @@ procedure TSymbolManager.DetermineFinalLocations;
 begin // DetermineFinalLocations
 
   _AddMissingSymbols;
+
+//  _FinalTest;
+
   repeat
     _SelectBestLocation();
   until _RemoveIncorrectAlternatives() = False;
 
-//_Debug(FindSymbol('_D3D__RenderState'));
-//_Debug(FindSymbol('?CommonSetDebugRegisters@D3D@@YIXXZ'));
-//_Debug(FindSymbol('_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4')); // 0x00193BC0
-//_Debug(FindSymbol('_D3DDevice_SetRenderState_RopZRead@4')); // 0x00193BE0
-//_Debug(FindSymbol('_D3DDevice_SetRenderState_DoNotCullUncompressed@4')); // 0x00193C00
-//_Debug(FindSymbol('_XapiProcessHeap'));
+//  _FinalTest;
 
   _PutSymbolsInList;
 
