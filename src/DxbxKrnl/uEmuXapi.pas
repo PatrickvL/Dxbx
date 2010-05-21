@@ -2179,7 +2179,7 @@ exports
   XTL_EmuXGetLaunchInfo,
   XTL_EmuXGetSectionHandleA,
   XTL_EmuXGetSectionSize,
-  XTL_EmuXInitDevices,
+  XTL_EmuXInitDevices name PatchPrefix + '_USBD_Init@8', // Cxbx calls this incorrect XInitDevices
   XTL_EmuXInputClose,
   XTL_EmuXInputGetCapabilities,
   XTL_EmuXInputOpen,
