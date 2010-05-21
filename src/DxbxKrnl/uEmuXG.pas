@@ -32,6 +32,7 @@ uses
   uLog,
   uEmu,
   uEmuFS,
+  uXboxLibraryUtils, // PatchPrefix
   uDxbxKrnlUtils;
 
 // From EmuXG.h :
@@ -393,10 +394,10 @@ begin
 end;
 
 exports
-  XTL_EmuXGIsSwizzledFormat,
-  XTL_EmuXGSwizzleBox,
-  XTL_EmuXGSwizzleRect,
-  XTL_EmuXGUnswizzleRect,
-  XTL_EmuXGWriteSurfaceOrTextureToXPR;
+  XTL_EmuXGIsSwizzledFormat name PatchPrefix + '_XGIsSwizzledFormat@4',
+  XTL_EmuXGSwizzleBox name PatchPrefix + '_XGSwizzleBox@40',
+  XTL_EmuXGSwizzleRect name PatchPrefix + '_XGSwizzleRect@32',
+  XTL_EmuXGUnswizzleRect name PatchPrefix + '_XGUnswizzleRect@32',
+  XTL_EmuXGWriteSurfaceOrTextureToXPR name PatchPrefix + '_XGWriteSurfaceOrTextureToXPR@12';
 
 end.

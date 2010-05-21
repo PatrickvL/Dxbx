@@ -109,7 +109,6 @@ type
     function AddPotentialSymbolLocation(const aLocation: TCodePointer; const aSymbol: TSymbolInformation): PPotentialFunctionLocation;
   public
     function FindPotentialFunctionLocation(const aLocation: TCodePointer): PPotentialFunctionLocation;
-    // TODO : Add array for other symbol locations (for which we have no patterns, but do know their symbol)
   protected // Final function locations :
     MyFinalLocations: TList;
     function GetCount: Integer;
@@ -515,15 +514,6 @@ begin
   Assert(Assigned(aLocation));
   Assert(Assigned(aSymbol));
 
-//  if MyPotentialFunctionLocations_Count > 0 then
-//  begin
-//    Assert(IntPtr(MyPotentialFunctionLocations[MyPotentialFunctionLocations_Count - 1].Address) <= IntPtr(aLocation),
-//      'AddPotentialSymbolLocation should be called with increasing locations!');
-//
-//    if (IntPtr(aLocation) + aSymbol.Length - 1) <= IntPtr(MyPotentialFunctionLocations[MyPotentialFunctionLocations_Count - 1].CodeEnd) then
-//      Exit;
-//  end;
-
   Inc(MyPotentialFunctionLocations_Count);
 
   // Grow using the so-called 'Doubling method' for O(1) average performance :
@@ -592,8 +582,10 @@ begin
 {$IFDEF DXBX_RECTYPE}
   Assert(aCrossReference.RecType = rtStoredCrossReference, 'StoredCrossReference type mismatch!');
 {$ENDIF}
-  // Use aCrossReference.Offset to determine the symbol-address that should be checked :
+  // TODO : Instead of arbitrarily trying both addressing methods,
+  // we should gather the method from the pattern trie!
 
+  // Use aCrossReference.Offset to determine the symbol-address that should be checked :
   Result := DetermineImmediateAddress(aStartingAddress, aCrossReference.Offset);
   Dec(UIntPtr(Result), aCrossReference.BaseOffset);
   if IsAddressWithinScanRange(Result) then
@@ -971,8 +963,12 @@ var
     _Test($00193B50, 'EmuIDirect3DDevice8_SetRenderState_StencilCullEnable'); // TODO : Use correct pattern-name!
     _Test($00193BC0, 'EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead'); // TODO : Use correct pattern-name!
     _Test($00193BE0, 'EmuIDirect3DDevice8_SetRenderState_RopZRead'); // TODO : Use correct pattern-name!
+    _Test($00194EA0, '_D3DDevice_SetLight@8');
+    _Test($00195080, '_D3DDevice_LightEnable@8');
     _Test($00195170, '?SetTexture@D3DDevice@@SGJKPAUD3DBaseTexture@@@Z');
     _Test($001960E0, 'EmuIDirect3DBaseTexture8_GetLevelCount'); // TODO : Use correct pattern-name!
+    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
+    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
     _Test($001B018A, 'CDirectSound_SetRolloffFactor'); // TODO : Use correct pattern-name!
     _Test($001F35E3, '_USBD_Init@8'); // Cxbx incorrectly calls this XInitDevices!
 *)
@@ -982,11 +978,6 @@ var
     _Test($00020200, '?SetFence@D3D@@YGKK@Z'); // D3D::SetFence (XREF)
     _Test($0002CC34, '_XapiProcessHeap');
 *)
-    // Turok - Still some Cxbx differences :
-    _Test($00194EA0, '_D3DDevice_SetLight@8'); // This scan works, but later on the symbol gets patched at 0x0013A4D0 ?
-    _Test($00195080, '_D3DDevice_LightEnable@8'); // This scan works, but later on the symbol gets patched at 0x00018D10 ?
-    _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
-    _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
   end;
 
 begin
@@ -1080,10 +1071,10 @@ begin
     end;
 
     PrevBestStoredLibraryIndex := -1;
+    BestStoredLibraryIndex := -1;
+
     // Sort the list and search (nearest) index of the needed version :
-    if StoredLibraryVersions.Count = 0 then
-      BestStoredLibraryIndex := -1
-    else
+    if StoredLibraryVersions.Count > 0 then
     begin
       StoredLibraryVersions.Sort;
       if StoredLibraryVersions.Find(IntToStr(CurrentXbeLibraryVersion.wBuildVersion), {var}j) then
@@ -1098,7 +1089,6 @@ begin
           PrevBestStoredLibraryIndex := Integer(StoredLibraryVersions.Objects[j-1]);
 
         BestStoredLibraryIndex := Integer(StoredLibraryVersions.Objects[j]);
-        // TODO : Test if the stringlist returns a version below - we should take one up (if possible) then!
       end;
     end;
 
@@ -1109,17 +1099,20 @@ begin
       if SameLibName(StoredLibraryName, 'D3D8') then
         LibD3D8 := StoredLibrary;
 
+      // Add this library to a set we'll use in the detection-code :
+      StoredLibraryIndexedToScan[BestStoredLibraryIndex] := True;
       if StoredLibrary.LibVersion = CurrentXbeLibraryVersion.wBuildVersion then
         DbgPrintf('... Got patterns for exactly this version!')
       else
       begin
-        DbgPrintf('... Approximating this with patterns from library %d.', [StoredLibrary.LibVersion]);
+        DbgPrintf('... Approximating this with patterns from version %d', [StoredLibrary.LibVersion]);
         if PrevBestStoredLibraryIndex > -1 then
+        begin
           StoredLibraryIndexedToScan[PrevBestStoredLibraryIndex] := True;
+          StoredLibrary := PatternTrieReader.GetStoredLibrary(PrevBestStoredLibraryIndex);
+          DbgPrintf('    and version %d.', [StoredLibrary.LibVersion]);
+        end;
       end;
-
-      // Add this library to a set we'll use in the detection-code :
-      StoredLibraryIndexedToScan[BestStoredLibraryIndex] := True;
     end
     else
       DbgPrintf('... No patterns registered for this library!');
@@ -1146,18 +1139,18 @@ procedure TSymbolManager.DetermineFinalLocations;
 
   begin
 (*
+    // Turok - Fixed wrong locations and duplicates :
     _Test(?, '_D3D__RenderState'));
     _Test(?, '?CommonSetDebugRegisters@D3D@@YIXXZ'));
+    _Test(?, '_XapiProcessHeap'));
     _Test($00193BC0, '_D3DDevice_SetRenderState_RopZCmpAlwaysRead@4'));
     _Test($00193BE0, '_D3DDevice_SetRenderState_RopZRead@4'));
     _Test($00193C00, '_D3DDevice_SetRenderState_DoNotCullUncompressed@4'));
-    _Test(?, '_XapiProcessHeap'));
-*)
-    // Turok - Still some Cxbx differences :
-    _Test($00194EA0, '_D3DDevice_SetLight@8'); // This scan works, but later on the symbol gets patched at 0x0013A4D0 ?
-    _Test($00195080, '_D3DDevice_LightEnable@8'); // This scan works, but later on the symbol gets patched at 0x00018D10 ?
+    _Test($00194EA0, '_D3DDevice_SetLight@8');
+    _Test($00195080, '_D3DDevice_LightEnable@8');
     _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
     _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
+*)
   end;
 
   procedure _AddMissingSymbols;
@@ -1403,8 +1396,6 @@ begin // DetermineFinalLocations
   _PrintLocationList;
 
   // TODO :
-  // - fix doubles addresses (conflicts)
-  // - compare output with Cxbx, determine who's right, fix our mis-matches ;-)
   // - fix cache-loading
 end; // DetermineFinalLocations
 
