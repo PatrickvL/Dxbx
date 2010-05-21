@@ -370,7 +370,7 @@ begin
       #13#10'   LineNumber                : 0x%.08X' +
       #13#10'   Message                   : 0x%.08X' + // Dxbx note : DbgPrintf show strings automatically
       #13#10');',
-      [FailedAssertion, FileName, Message_]);
+      [FailedAssertion, FileName, LineNumber, Pointer(Message_)]);
 {$ENDIF}
 
   JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message_);
