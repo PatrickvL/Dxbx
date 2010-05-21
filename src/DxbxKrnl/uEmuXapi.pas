@@ -2174,10 +2174,7 @@ exports
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,
   XTL_EmuXGetDevices,
-
-
-  //
-  XTL_EmuXGetDeviceChanges, // TODO -oDXBX: Marked out makes logging better.
+  XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetFileCacheSize,
   XTL_EmuXGetLaunchInfo,
   XTL_EmuXGetSectionHandleA,
