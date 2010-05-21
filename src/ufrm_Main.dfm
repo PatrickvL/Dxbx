@@ -7,7 +7,7 @@ object frm_Main: Tfrm_Main
   ClientHeight = 480
   ClientWidth = 640
   Color = 13160660
-  Constraints.MaxHeight = 524
+  Constraints.MaxHeight = 532
   Constraints.MaxWidth = 646
   Constraints.MinHeight = 524
   Constraints.MinWidth = 646
@@ -1464,8 +1464,6 @@ object frm_Main: Tfrm_Main
     Height = 19
     Panels = <>
     SimplePanel = True
-    ExplicitTop = 374
-    ExplicitWidth = 509
   end
   object MainMenu1: TMainMenu
     Left = 8
