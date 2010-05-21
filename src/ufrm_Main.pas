@@ -223,8 +223,7 @@ begin
     Emulation_State := esNone;
     AddjustMenu;
   end;
-end; // Tfrm_Main.actOpenXbeExecute
-
+end;
 
 procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
 begin
@@ -405,7 +404,7 @@ begin
   finally
     FreeAndNil({var}IniFile);
   end;
-end; // Tfrm_Main.ReadSettingsIni
+end;
 
 procedure Tfrm_Main.WMDROPFILES(var Msg: TMessage);
 var
@@ -472,7 +471,7 @@ begin
   finally
     FreeAndNil(IniFile);
   end;
-end; // Tfrm_Main.WriteSettingsIni
+end;
 
 procedure Tfrm_Main.actConsoleXbeInfoExecute(Sender: TObject);
 begin
@@ -481,7 +480,7 @@ begin
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.')
   else
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.'); // NOT!
-end; // Tfrm_Main.actConsoleXbeInfoExecute
+end;
 
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
@@ -501,7 +500,7 @@ begin
     WriteLog(m_szAsciiTitle + '''s .xbe info was successfully dumped.');
     MessageDlg(m_szAsciiTitle + '''s .xbe info was successfully dumped.', mtInformation, [mbOk], 0);
   end;
-end; // Tfrm_Main.actFileXbeInfoExecute
+end;
 
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
@@ -519,7 +518,7 @@ begin
     DebugMode := dmConsole;
     CreateLogs(DebugMode, DebugFileName);
   end;
-end; // Tfrm_Main.actConsoleDebugGuiExecute
+end;
 
 procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
@@ -547,7 +546,7 @@ begin
       AddjustMenu;
     end;
   end;
-end; // Tfrm_Main.actFileDebugGuiExecute
+end;
 
 procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
@@ -563,7 +562,7 @@ begin
     actConsoleDebugKernel.Checked := True;
     KernelDebugMode := dmConsole;
   end;
-end; // Tfrm_Main.actConsoleDebugKernelExecute
+end;
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
@@ -589,7 +588,7 @@ begin
       AddjustMenu;
     end;
   end;
-end; // Tfrm_Main.actFileDebugKernelExecute
+end;
 
 procedure Tfrm_Main.actAboutExecute(Sender: TObject);
 begin
@@ -600,7 +599,7 @@ begin
   end;
 
   FreeAndNil({var}frm_About);
-end; // Tfrm_Main.ActAboutExecute
+end;
 
 procedure Tfrm_Main.actCleanSymbolCacheExecute(Sender: TObject);
 begin
@@ -610,7 +609,7 @@ end;
 procedure Tfrm_Main.actCloseExecute(Sender: TObject);
 begin
   Close;
-end; // Tfrm_Main.actCloseExecute
+end;
 
 destructor Tfrm_Main.Destroy;
 begin
@@ -620,7 +619,7 @@ begin
   PEmuShared(nil).Cleanup;
 
   inherited Destroy;
-end; // Tfrm_Main.Create
+end;
 
 procedure Tfrm_Main.AddjustMenu;
 begin
@@ -654,11 +653,16 @@ begin
   begin
     mnu_Logbitmap.Enabled := True;
     mnu_Gambitmap.Enabled := True;
-    mnu_DumpxbeinfoTo.Enabled := True;
+    mnu_DumpxbeinfoTo.Enabled := FileExists(FApplicationDir + cXDKTrackerPath);
     mnu_CloseXbe.Enabled := True;
     actCloseXbe.Enabled := True;
     ActStartEmulation.Enabled := True;
   end;
+
+  // Init Tools
+  actXbeExplorer.Enabled := FileExists(FApplicationDir + cXbeExplorerPath);
+  actXdkTracker.Enabled := FileExists(FApplicationDir + cXDKTrackerPath);
+  actXIso.Enabled := FileExists(FApplicationDir + cXIsoPath);
 end;
 
 procedure Tfrm_Main.actExportGameImageExecute(Sender: TObject);
@@ -715,7 +719,7 @@ begin
     FreeAndNil(bmp);
     WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
   end;
-end; // Tfrm_Main.actExportLogoExecute
+end;
 
 procedure Tfrm_Main.actXbeExplorerExecute(Sender: TObject);
 var
@@ -783,8 +787,6 @@ begin
   mnu_RecentXbefiles.Insert(0, TempItem);
   mnu_RecentXbefiles.Enabled := True;
 end;
-
-//------------------------------------------------------------------------------
 
 procedure Tfrm_Main.ReopenXbe(Sender: TObject);
 var
