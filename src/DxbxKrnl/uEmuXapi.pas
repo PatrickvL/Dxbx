@@ -1703,7 +1703,7 @@ begin
   // Save the launch data
   if (pLaunchData <> NULL) then
   begin
-    CopyMemory(@g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+    CopyMemory({Dest=}@g_SavedLaunchData, {Source=}pLaunchData, sizeof(LAUNCH_DATA));
 
     // Save the launch data parameters to disk for later.
 {$IFDEF DEBUG}
@@ -1711,10 +1711,12 @@ begin
 {$ENDIF}
 
     fp := fopen('CxbxLaunchData.bin', 'wb');
-
-    fseek(fp, 0, SEEK_SET);
-    fwrite(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
-    fclose(fp);
+    if Assigned(fp) then
+    begin
+      fseek(fp, 0, SEEK_SET);
+      fwrite(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+      fclose(fp);
+    end;
   end;
 
   g_bXLaunchNewImageCalled := true;
@@ -1736,6 +1738,8 @@ function XTL_EmuXGetLaunchInfo
   pLaunchData: PLAUNCH_DATA
 ): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+const
+  ERROR_LAUNCHDATA_NOT_FOUND = 1168;
 var
   dwRet: HRESULT; // Cxbx uses DWORD;
   fp: PFILE;
@@ -1751,7 +1755,7 @@ begin
       [pdwLaunchDataType, pLaunchData]);
 {$ENDIF}
 
-  dwRet := E_FAIL;
+  dwRet := ERROR_LAUNCHDATA_NOT_FOUND; // Dxbx note : Cxbx incorrectly uses E_FAIL here!
 
   // Has XLaunchNewImage been called since we've started this round?
   if (g_bXLaunchNewImageCalled) then
@@ -1761,7 +1765,7 @@ begin
     pdwLaunchDataType^ := LDT_TITLE;
 
     // Copy saved launch data
-    CopyMemory(pLaunchData, @g_SavedLaunchData, sizeof(LAUNCH_DATA));
+    CopyMemory({Dest=}pLaunchData, {Source=}@g_SavedLaunchData, sizeof(LAUNCH_DATA));
 
     dwRet := ERROR_SUCCESS;
   end;
@@ -2138,7 +2142,7 @@ end;
 *)
 
 exports
-//  XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
+  XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
   XTL_EmuCreateFiber,
   XTL_EmuCreateMutex,
   XTL_EmuCreateSemaphore,
@@ -2150,7 +2154,6 @@ exports
   XTL_EmuPulseEvent,
   XTL_EmuQueryPerformanceCounter,
   XTL_EmuQueryPerformanceFrequency,
-  XTL_EmuXInputGetState,
   XTL_EmuQueueUserAPC,
   XTL_EmuRaiseException,
   XTL_EmuReleaseSemaphore,
@@ -2173,8 +2176,8 @@ exports
   XTL_EmuXFormatUtilityDrive,
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,
-  XTL_EmuXGetDevices,
   XTL_EmuXGetDeviceChanges,
+  XTL_EmuXGetDevices,
   XTL_EmuXGetFileCacheSize,
   XTL_EmuXGetLaunchInfo,
   XTL_EmuXGetSectionHandleA,
@@ -2182,6 +2185,7 @@ exports
   XTL_EmuXInitDevices name PatchPrefix + '_USBD_Init@8', // Cxbx incorrectly calls this XInitDevices
   XTL_EmuXInputClose,
   XTL_EmuXInputGetCapabilities,
+  XTL_EmuXInputGetState,
   XTL_EmuXInputOpen,
   XTL_EmuXInputPoll,
   XTL_EmuXInputSetState,

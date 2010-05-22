@@ -499,23 +499,21 @@ type
   end;
   PMM_STATISTICS = ^MM_STATISTICS;
 
-(*
 // ******************************************************************
 // * IO_STATUS_BLOCK *Same as Win2k/XP*
 // ******************************************************************
 type
+  _IO_STATUS_BLOCK = record
+    u1: record case Integer of
+      0: (Status: NTSTATUS);
+      1: (Pointer: PVOID);
+    end;
+    Information: ULONG_PTR;
+  end;
+  IO_STATUS_BLOCK = _IO_STATUS_BLOCK;
+  PIO_STATUS_BLOCK = ^IO_STATUS_BLOCK;
 
-  u1  = packed record
-    union
-    begin
-        NTSTATUS Status;
-        PVOID    Pointer;
-     end;;
-
-    ULONG_PTR Information;
- end;
-IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
-
+(*
 // ******************************************************************
 // * EVENT_TYPE
 // ******************************************************************

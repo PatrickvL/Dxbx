@@ -156,7 +156,7 @@ begin
   end;
 
   Inc(g_EmuSharedRefCount);
-end;
+end; // Init
 
 class procedure EmuShared.Cleanup();
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
