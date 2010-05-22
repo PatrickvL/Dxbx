@@ -389,6 +389,7 @@ begin
   if Result^ = INVALID_HANDLE_VALUE then
   begin
     Dispose(Result);
+    Result := nil;
     Exit;
   end;
 
@@ -430,7 +431,7 @@ end;
 function fclose(stream: PFILE): int;
 begin
   FileClose(stream^);
-//  Dispose(stream); : this crashes dxbx
+  Dispose(stream);
   Result := 0;
 end;
 

@@ -32,7 +32,7 @@ uses
   JwaNative,
   JwaNTStatus,
   // OpenXDK
-  XboxKrnl,
+  XboxKrnl, // reintroduces PIO_STATUS_BLOCK !
   // Dxbx
   uTypes,
   uDxbxUtils,
@@ -874,7 +874,7 @@ begin
       [FileHandle, IoStatusBlock]);
 {$ENDIF}
 
-  ret := JwaNative.NtFlushBuffersFile(FileHandle, PIO_STATUS_BLOCK(IoStatusBlock));
+  ret := JwaNative.NtFlushBuffersFile(FileHandle, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock));
 
   EmuSwapFS(fsXbox);
 
@@ -1106,7 +1106,7 @@ begin
 
     ret := NtQueryDirectoryFile
         (
-            FileHandle, Event, PIO_APC_ROUTINE(ApcRoutine), ApcContext, PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
+            FileHandle, Event, PIO_APC_ROUTINE(ApcRoutine), ApcContext, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
             $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
         );
 
@@ -1373,7 +1373,7 @@ begin
   ret := NtQueryVolumeInformationFile
   (
       FileHandle,
-      PIO_STATUS_BLOCK(IoStatusBlock),
+      JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
       PFILE_FS_SIZE_INFORMATION(FileInformation), Length,
       FS_INFORMATION_CLASS(FileInformationClass)
   );
@@ -1670,15 +1670,15 @@ procedure xboxkrnl_NtUserIoApcDispatcher
   IoStatusBlock: PIO_STATUS_BLOCK;
   Reserved: ULONG
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:5
-(*var
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
   dwEsi: uint32;
   dwEax: uint32;
-  dwEcx: uint32; *)
+  dwEcx: uint32;
 begin
-  // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
+  // Cxbx Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
-  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsWindows); // Dxbx note : Yeah, well, we'll just make sure that we're in PC mode!
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtUserIoApcDispatcher' +
@@ -1689,77 +1689,69 @@ begin
         #13#10');',
         [ApcContext, IoStatusBlock, Reserved]);
 
-    (*DbgPrintf('IoStatusBlock.Pointer     : 0x%.08X' +
-        #13#10'IoStatusBlock.Information : 0x%.08X',
-        [IoStatusBlock.u1.Pointer, IoStatusBlock.Information]); *)
+  DbgPrintf('IoStatusBlock->Pointer     : 0x%.08X' +
+      #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.u1.Pointer, IoStatusBlock.Information]);
 {$ENDIF}
 
-    EmuSwapFS(fsXbox);   // Xbox FS
+  EmuSwapFS(fsXbox);   // Xbox FS
 
+  dwEsi := uint32(IoStatusBlock);
 
-    (*dwEsi := uint32(IoStatusBlock);
+  if((IoStatusBlock.u1.Status and $C0000000) = $C0000000) then
+  begin
+    dwEcx := 0;
+    dwEax := JwaNative.RtlNtStatusToDosError(IoStatusBlock.u1.Status);
+  end
+  else
+  begin
+    dwEcx := DWORD(IoStatusBlock.Information);
+    dwEax := 0;
+  end;
 
-    if((IoStatusBlock.u1.Status and $C0000000) = $C0000000)
-    {
-        dwEcx = 0;
-        dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock.u1.Status);
-    }
-    else
-    {
-        dwEcx = (DWORD)IoStatusBlock.Information;
-        dwEax = 0;
-    }
+  (*
+  // ~XDK 3911??
+  if(true) then
+  begin
+    dwEsi := dw2;
+    dwEcx := dw1;
+    dwEax := dw3;
 
-    /*
-    // ~XDK 3911??
-    if(true)
-    {
-        dwEsi = dw2;
-        dwEcx = dw1;
-        dwEax = dw3;
+  end
+  else
+  begin
+    dwEsi := dw1;
+    dwEcx := dw2;
+    dwEax := dw3;
+  end;*)
 
-    }
-    else
-    {
-        dwEsi = dw1;
-        dwEcx = dw2;
-        dwEax = dw3;
-    }//*/
+  asm
+    pushad
+    (*
+    mov esi, IoStatusBlock
+    mov ecx, dwEcx
+    mov eax, dwEax
+    *)
+    // TODO -oCXBX: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
+    // Seems to be XDK/version dependand??
+    mov esi, dwEsi
+    mov ecx, dwEcx
+    mov eax, dwEax
 
-    __asm
-    {
-        pushad
-        /*
-        mov esi, IoStatusBlock
-        mov ecx, dwEcx
-        mov eax, dwEax
-        */
-        // TODO -oCXBX: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
-        // Seems to be XDK/version dependand??
-        mov esi, dwEsi
-        mov ecx, dwEcx
-        mov eax, dwEax
+    push esi
+    push ecx
+    push eax
 
-        push esi
-        push ecx
-        push eax
+    call ApcContext
 
-        call ApcContext
-
-        popad
-    }
-
-    EmuSwapFS(fsWindows);   // Win2k/XP FS
+    popad
+  end;
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
+  EmuSwapFS(fsWindows);   // Win2k/XP FS
+
+  DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
 {$ENDIF}
 
-    return;*)
-
-
-  EmuSwapFS(fsWindows);
-  Unimplemented('NtUserIoApcDispatcher');
   EmuSwapFS(fsXbox);
 end;
 

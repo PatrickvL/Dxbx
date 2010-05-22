@@ -2663,8 +2663,8 @@ begin
       PFILE f := fopen(pFileName, 'wb');
       if Assigned(f) then
       begin
-          fwrite(pFunction, sizeof(VSH_SHADER_HEADER) + pHeader.NumInst * 16, 1, f);
-          fclose(f);
+        fwrite(pFunction, sizeof(VSH_SHADER_HEADER) + pHeader.NumInst * 16, 1, f);
+        fclose(f);
       end;
       Inc(FailedShaderCount);
     end;

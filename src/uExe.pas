@@ -234,7 +234,7 @@ cleanup:
         printf('Exe::Exe: ERROR -> %s', GetError());
     }
 
-    fclose(ExeFile);
+    //fclose(ExeFile);
         *)
   finally
     FreeAndNil({var}ExeFile);

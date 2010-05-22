@@ -728,7 +728,7 @@ end;
 {$IFDEF _DEBUG_TRACK_PB}
 
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:99
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pActiveVB: XTL_PIDirect3DVertexBuffer8;
   VBDesc: D3DVERTEXBUFFER_DESC;
@@ -758,19 +758,21 @@ begin
   
   // retrieve stream data
   IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @pActiveVB, {out}uiStride);
+
   sprintf(@szFileName[0], 'C:\CxbxMesh-0x%.08X.x', [pIndexData]);
   dbgVertices := fopen(szFileName, 'wt');
 
-    // retrieve stream desc
+  // retrieve stream desc
   IDirect3DVertexBuffer8(pActiveVB).GetDesc({out}VBDesc);
 
-    // unlock just in case
+  // unlock just in case
   IDirect3DVertexBuffer8(pActiveVB).Unlock();
 
-    // grab ptr
+  // grab ptr
   IDirect3DVertexBuffer8(pActiveVB).Lock(0, 0, {out}pVBData, D3DLOCK_READONLY);
 
-    // print out stream data
+  // print out stream data
+  if Assigned(dbgVertices) then // Dxbx addition
   begin
     maxIndex := 0;
 
@@ -787,9 +789,8 @@ begin
     if (maxIndex > ((VBDesc.Size div uiStride) - 1)) then
       maxIndex := (VBDesc.Size div uiStride) - 1;
 
-{$IFDEF DEBUG}
-    fprintf(dbgVertices, 'xof 0303txt 0032');
-    fprintf(dbgVertices, '');
+    fprintf(dbgVertices, 'xof 0303txt 0032'#13#10);
+    fprintf(dbgVertices, ''#13#10);
     fprintf(dbgVertices, '//'#13#10);
     fprintf(dbgVertices, '//  Vertex Stream Data (0x%.08X)...'#13#10, [pActiveVB]);
     fprintf(dbgVertices, '//'#13#10);
@@ -798,44 +799,39 @@ begin
     fprintf(dbgVertices, '//  FVF    : 0x%.08X'#13#10, [VBDesc.FVF]);
     fprintf(dbgVertices, '//  iCount : %d'#13#10, [dwCount div 2]);
     fprintf(dbgVertices, '//'#13#10);
-    fprintf(dbgVertices, '');
-    fprintf(dbgVertices, 'Frame SCENE_ROOT {');
-    fprintf(dbgVertices, '');
-    fprintf(dbgVertices, '  FrameTransformMatrix {');
-    fprintf(dbgVertices, '    1.000000,0.000000,0.000000,0.000000,');
-    fprintf(dbgVertices, '    0.000000,1.000000,0.000000,0.000000,');
-    fprintf(dbgVertices, '    0.000000,0.000000,1.000000,0.000000,');
-    fprintf(dbgVertices, '    0.000000,0.000000,0.000000,1.000000;;');
-    fprintf(dbgVertices, '  }');
-    fprintf(dbgVertices, '');
-    fprintf(dbgVertices, '  Frame Turok1 {');
-    fprintf(dbgVertices, '');
-    fprintf(dbgVertices, '    FrameTransformMatrix {');
-    fprintf(dbgVertices, '      1.000000,0.000000,0.000000,0.000000,');
-    fprintf(dbgVertices, '      0.000000,1.000000,0.000000,0.000000,');
-    fprintf(dbgVertices, '      0.000000,0.000000,1.000000,0.000000,');
-    fprintf(dbgVertices, '      0.000000,0.000000,0.000000,1.000000;;');
-    fprintf(dbgVertices, '    }');
-    fprintf(dbgVertices, '');
-    fprintf(dbgVertices, '    Mesh {');
-    fprintf(dbgVertices, '      %d;', [maxIndex + 1]);
-{$ENDIF}
+    fprintf(dbgVertices, ''#13#10);
+    fprintf(dbgVertices, 'Frame SCENE_ROOT {#13#10');
+    fprintf(dbgVertices, ''#13#10);
+    fprintf(dbgVertices, '  FrameTransformMatrix {#13#10');
+    fprintf(dbgVertices, '    1.000000,0.000000,0.000000,0.000000,'#13#10);
+    fprintf(dbgVertices, '    0.000000,1.000000,0.000000,0.000000,'#13#10);
+    fprintf(dbgVertices, '    0.000000,0.000000,1.000000,0.000000,'#13#10);
+    fprintf(dbgVertices, '    0.000000,0.000000,0.000000,1.000000;;'#13#10);
+    fprintf(dbgVertices, '  }'#13#10);
+    fprintf(dbgVertices, ''#13#10);
+    fprintf(dbgVertices, '  Frame Turok1 {'#13#10);
+    fprintf(dbgVertices, ''#13#10);
+    fprintf(dbgVertices, '    FrameTransformMatrix {'#13#10);
+    fprintf(dbgVertices, '      1.000000,0.000000,0.000000,0.000000,'#13#10);
+    fprintf(dbgVertices, '      0.000000,1.000000,0.000000,0.000000,'#13#10);
+    fprintf(dbgVertices, '      0.000000,0.000000,1.000000,0.000000,'#13#10);
+    fprintf(dbgVertices, '      0.000000,0.000000,0.000000,1.000000;;'#13#10);
+    fprintf(dbgVertices, '    }#13#10');
+    fprintf(dbgVertices, ''#13#10);
+    fprintf(dbgVertices, '    Mesh {'#13#10);
+    fprintf(dbgVertices, '      %d;#13#10', [maxIndex + 1]);
 
     max := maxIndex + 1;
     for v := 0 to max -1 do
     begin
-{$IFDEF DEBUG}
-      fprintf(dbgVertices, '      %f;%f;%f;%s', [
+      fprintf(dbgVertices, '      %f;%f;%f;%s'#13#10, [
         PFLOAT(@pVBData[v * uiStride + 0]),
         PFLOAT(@pVBData[v * uiStride + 4]),
         PFLOAT(@pVBData[v * uiStride + 8]),
         iif(v < (max - 1), ',', ';')]);
-{$ENDIF}
     end;
 
-{$IFDEF DEBUG}
-    fprintf(dbgVertices, '      %d;', [dwCount - 2]);
-{$ENDIF}
+    fprintf(dbgVertices, '      %d;'#13#10, [dwCount - 2]);
 
     pwVal := PWORD(pIndexData);
 
@@ -849,10 +845,8 @@ begin
 
     for i := 2 to max - 1 do
     begin
-{$IFDEF DEBUG}
-      fprintf(dbgVertices, '      3;%d,%d,%d;%s',
+      fprintf(dbgVertices, '      3;%d,%d,%d;%s'#13#10,
         [a, b, c, iif(i < (max - 1), ',', ';')]);
-{$ENDIF}
 
       a := b;
       b := c;
@@ -863,11 +857,9 @@ begin
       lc := c;
     end;
 
-{$IFDEF DEBUG}
-    fprintf(dbgVertices, '    }');
-    fprintf(dbgVertices, '  }');
-    fprintf(dbgVertices, '}');
-{$ENDIF}
+    fprintf(dbgVertices, '    }'#13#10);
+    fprintf(dbgVertices, '  }'#13#10);
+    fprintf(dbgVertices, '}'#13#10);
 
     fclose(dbgVertices);
   end;
