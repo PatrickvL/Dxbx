@@ -430,7 +430,7 @@ end;
 function fclose(stream: PFILE): int;
 begin
   FileClose(stream^);
-  Dispose(stream);
+//  Dispose(stream); : this crashes dxbx
   Result := 0;
 end;
 
