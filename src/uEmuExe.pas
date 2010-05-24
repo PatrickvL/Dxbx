@@ -47,7 +47,7 @@ type _IMAGE_TLS_DIRECTORY = packed record
     AddressOfCallbacks: DWord;
     SizeOfZeroFill: DWord;
     Characteristics: DWord;
-  end;
+  end; // packed size = 24
   TImageTlsDirectory = _IMAGE_TLS_DIRECTORY;
   IMAGE_TLS_DIRECTORY = _IMAGE_TLS_DIRECTORY;
   PImageTlsDirectory = ^TImageTlsDirectory;
@@ -183,8 +183,9 @@ var
       RaiseLastOSError;
 
     Move(aXbe.RawData[aRawOffset], Pointer(aVirtualAddr)^, aRawSize);
-    if not VirtualProtect(Pointer(aVirtualAddr), aRawSize, aProtection, {var}old_protection) then
-      RaiseLastOSError;
+// Dxbx Note : Restoring the page-protection crashes some xbe's writing to TLS, so skip it for now!
+//    if not VirtualProtect(Pointer(aVirtualAddr), aRawSize, aProtection, {var}old_protection) then
+//      RaiseLastOSError;
   end;
 
 begin

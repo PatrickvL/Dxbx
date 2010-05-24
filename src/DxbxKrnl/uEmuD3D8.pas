@@ -195,7 +195,7 @@ type EmuD3D8CreateDeviceProxyData = packed record
     {union} case Integer of
       0: ({volatile} hRet: HRESULT);
       1: ({volatile} bCreate: _bool); // false: release
-  end;
+  end; // packed size = 29
 
 var g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
 

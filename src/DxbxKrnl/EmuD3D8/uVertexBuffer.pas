@@ -60,7 +60,7 @@ type _VertexPatchDesc = packed record
     uiVertexStreamZeroStride: UINT;
     // The current vertex shader, used to identify the streams
     hVertexShader: DWORD;
-  end;
+  end; // packed size = 28
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
 
@@ -70,7 +70,7 @@ type _PATCHEDSTREAM = packed record
     uiOrigStride: UINT;
     uiNewStride: UINT;
     bUsedCached: _bool;
-  end;
+  end; // size = 17 packed / 20 normal
   PATCHEDSTREAM = _PATCHEDSTREAM;
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
 
@@ -85,7 +85,7 @@ type _CACHEDSTREAM = packed record
     uiCount: uint32;             // CRC32 check count
     dwPrimitiveCount: uint32;
     lLastUsed: long;             // For cache removal purposes
-  end;
+  end; // packed size = 56
   CACHEDSTREAM = _CACHEDSTREAM;
   PCACHEDSTREAM = ^CACHEDSTREAM;
 
@@ -122,7 +122,7 @@ type XTL_VertexPatcher = object
     function NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Patches the primitive of the stream
     function PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
-  end;
+  end; // size = 288
 
 // inline vertex buffer emulation
 var g_pIVBVertexBuffer: PDWORD = nil;
@@ -141,7 +141,7 @@ type _D3DIVB = packed record
     TexCoord2: TD3DXVECTOR2; // TexCoord2
     TexCoord3: TD3DXVECTOR2; // TexCoord3
     TexCoord4: TD3DXVECTOR2; // TexCoord4
-  end;
+  end; // packed size = 72
   D3DIVB = _D3DIVB;
 
   PD3DIVB = ^D3DIVB;

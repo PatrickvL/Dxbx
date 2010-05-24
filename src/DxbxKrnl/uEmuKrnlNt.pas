@@ -137,7 +137,7 @@ function xboxkrnl_NtQueryDirectoryFile(
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS;
   FileMask: PSTRING;
-  RestartScan: CHARBOOL
+  RestartScan: _BOOLEAN
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -1049,7 +1049,7 @@ function xboxkrnl_NtQueryDirectoryFile
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS;
   FileMask: PSTRING;
-  RestartScan: CHARBOOL
+  RestartScan: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var

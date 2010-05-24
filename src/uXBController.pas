@@ -57,13 +57,13 @@ type XINPUT_GAMEPAD = packed record
     sThumbLY: SHORT;
     sThumbRX: SHORT;
     sThumbRY: SHORT;
-  end;
+  end; // packed size = 12
   PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
 
 type XINPUT_STATE = packed record
     dwPacketNumber: DWord;
     Gamepad: XINPUT_GAMEPAD;
-  end;
+  end; // packed size = 16
   PXINPUT_STATE = ^XINPUT_STATE;
 
 
@@ -121,7 +121,7 @@ type XBCtrlObjectCfg = packed record
   dwDevice: int; // offset into m_InputDevice
   dwInfo: int; // extended information, depending on dwFlags
   dwFlags: int; // flags explaining the data format
-end;
+end; // packed size = 12
 
 // class: XBController
 type XBController = object(Error)
@@ -176,7 +176,7 @@ type XBController = object(Error)
     // Etc State Variables
     m_dwInputDeviceCount: int;
     m_dwCurObject: int;
-  end;
+  end; // size = 6760
   PXBController = ^XBController;
 
 // Offsets into analog button array

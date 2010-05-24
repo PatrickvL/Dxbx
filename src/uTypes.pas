@@ -149,15 +149,115 @@ type
   _bool = Boolean; // Use this to translate Cxbx's "bool" (because Delphi is not case sensitive)
   P_bool = ^_bool;
 
-//  LONGBOOL = ?
-//  BOOLEAN = ?;
-  CHARBOOL = ByteBool; // Cxbx : unsigned char = AnsiChar in Delphi
+  // TODO : How should we translate Cxbx's "boolean" to Delphi? Boolean?
+
+  // LONGBOOL = ?;
+  _BOOLEAN = ByteBool; // Use this to translate Cxbx's "BOOLEAN" (because Delphi is not case sensitive)
+  P_BOOLEAN = ^_BOOLEAN;
+  // From Cxbx EmuXapi.h : "typedef unsigned char BOOLEAN" (unsigned char = AnsiChar in Delphi)
 
   BOOL_ = LongBool; // Use this when Dxbx is better of with boolean-BOOL (as opposed to int-BOOL below)
+  BOOL = int; // Use this to translate Cxbx's "BOOL" to Delphi (pending casing, _bool might be better)
 
-  BOOL = int;
   // See http://blog.delphi-jedi.net/2008/09/25/bool-boolean-and-integer/
   // and http://discuss.joelonsoftware.com/default.asp?joel.3.355854.11
+
+(* From http://www.codeguru.com/forum/showthread.php?t=332831
+Q: What is the difference between 'BOOL' and 'bool'?
+A: 'bool' is a built-in C++ type while 'BOOL' is a Microsoft specific type that is defined as an 'int'.
+You can find it in 'windef.h':
+Code:
+  typedef int                 BOOL;
+
+  #ifndef FALSE
+  #define FALSE               0
+  #endif
+
+  #ifndef TRUE
+  #define TRUE                1
+  #endif
+
+The only possible values for a 'bool' are 'true' and 'false', whereas for 'BOOL' you can
+use any 'int' value, though 'TRUE' and 'FALSE' macros are defined in 'windef.h' header.
+
+Q: What is the size of 'BOOL' and 'bool'?
+A: If you use the 'sizeof' operator, it will yield 1 for 'bool',
+   though according to the standard the size of' bool' is implementation defined,
+   and 4 for 'BOOL', on 32-bits platform, where 'sizeof(int)' is 4 bytes.
+   If the size of 'int' changes to 8 bytes on 64-bits platforms, 'sizeof(BOOL)' will yield 8 instead.
+
+Q: Does 'BOOL' has to do with MFC?
+A: 'BOOL' was used by Microsoft long before 'bool' was actually added to the C++ language,
+   but it has nothing to do with MFC. Many Windows API returns a 'BOOL' to indicate success or failure.
+
+Q: Is it OK if I test the return of a Windows SDK function against 'TRUE'?
+Code:
+  BOOL ret = SomeSDKFunction();
+  if(TRUE == ret)
+  {
+    // do something
+  }
+A: Actually no, it is not OK. If you read the documentation for APIs you can see that for most of them:
+
+Quote:
+Originally Posted by MSDN
+If the function succeeds, the return value is nonzero.
+
+If the function fails, the return value is zero. To get extended error information, call GetLastError().
+'TRUE' is defined as 1, but nothing guarantees that the function actually returns 'TRUE' (a value that is
+nonzero) or some other value. In fact there are functions that indeed return multiple values like –1, 0 or 1.
+
+Here are several examples:
+
+Code:
+  BOOL EnableMenuItem(HMENU hMenu, UINT uIDEnableItem, UINT uEnable );
+
+This function returns 4 possible values.
+
+Quote:
+  Originally Posted by MSDN
+  The return value specifies the previous state of the menu item (it is either MF_DISABLED,
+  MF_ENABLED, or MF_GRAYED). If the menu item does not exist, the return value is -1.
+
+Code:
+  BOOL GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax );
+
+Quote:
+  Originally Posted by MSDN
+  If the function retrieves a message other than WM_QUIT, the return value is nonzero.
+  If the function retrieves the WM_QUIT message, the return value is zero.
+  If there is an error, the return value is -1.
+
+This is another example that other values than 0 and 1 can be used as a 'BOOL'.
+
+So you should code it like:
+
+Code:
+  BOOL ret = SomeWinAPI();
+  if(ret)
+  {
+    // do something
+  }
+
+And for the functions that are know to return values like -1 you also must take that into account.
+For instance in the case of 'GetMessage()':
+
+Code:
+  BOOL ret = GetMessage(...);
+  if(ret == 0)
+  {
+    // WM_QUIT
+  }
+  else if(ret == -1)
+  {
+    // error
+  }
+  else
+  {
+    // success
+  }
+
+*)
 
 const
   BOOL_TRUE = BOOL(1);
@@ -526,5 +626,18 @@ function ToFLOAT(const aValue: SHORT): FLOAT;
 begin
   Result := 0.0 + aValue;
 end;
+
+initialization
+
+  // Delphi boolean types :
+  Assert(SizeOf(Boolean) = 1);
+  Assert(SizeOf(ByteBool) = 1);
+  Assert(SizeOf(LongBool) = 4);
+
+  // C boolean types :
+  Assert(SizeOf(_bool) = 1); // Same as in VisualStudio C++ : http://msdn.microsoft.com/en-us/library/tf4dy80a.aspx
+  Assert(SizeOf(_BOOLEAN) = 1);
+  Assert(SizeOf(BOOL_) = 4);
+  Assert(SizeOf(BOOL) = 4);
 
 end.

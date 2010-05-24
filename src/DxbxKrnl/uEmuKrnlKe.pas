@@ -65,7 +65,7 @@ function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeDelayExecutionThread(
   WaitMode: KPROCESSOR_MODE;
-  Alertable: CHARBOOL;
+  Alertable: _BOOLEAN;
   Interval: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -231,7 +231,7 @@ end;
 function xboxkrnl_KeDelayExecutionThread
 (
   WaitMode: KPROCESSOR_MODE;
-  Alertable: CHARBOOL;
+  Alertable: _BOOLEAN;
   Interval: PLARGE_INTEGER
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100

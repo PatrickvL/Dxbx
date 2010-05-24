@@ -39,7 +39,7 @@ type
     uiKey: uint32;
     pResource: Pvoid;
     pNext: PRTNode;
-  end;
+  end; // packed size = 12
 
 type ResourceTracker = object(Mutex)
   public
@@ -82,7 +82,7 @@ type ResourceTracker = object(Mutex)
     // list of "live" vertex buffers for debugging purposes
     m_head: PRTNode;
     m_tail: PRTNode;
-  end;
+  end; // size = 24
 
 //
 // all of our resource trackers

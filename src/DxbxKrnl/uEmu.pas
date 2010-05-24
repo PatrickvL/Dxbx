@@ -87,7 +87,7 @@ type XInputSetStateStatus = packed record
     hDevice: HANDLE;
     dwLatency: DWORD;
     pFeedback: PVOID;
-  end;
+  end; // packed size = 12
 
 var g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
