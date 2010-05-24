@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmu,
   uEmuAlloc,
@@ -84,7 +85,7 @@ function {021} xboxkrnl_ExInterlockedCompareExchange64(
   ): LONGLONG; stdcall;
 function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
-  QuotaCharged: PBOOLEAN // OUT
+  QuotaCharged: P_BOOLEAN // OUT
   ): SIZE_T; stdcall;
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
@@ -266,7 +267,7 @@ end;
 
 function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
-  QuotaCharged: PBOOLEAN // OUT
+  QuotaCharged: P_BOOLEAN // OUT
   ): SIZE_T; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin

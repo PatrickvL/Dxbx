@@ -73,22 +73,22 @@ type _XINPUT_POLLING_PARAMETERS = packed record
     bInputInterval: BYTE;
     bOutputInterval: BYTE;
     ReservedMBZ2: BYTE;
-end;
+end; // packed size = 4
 XINPUT_POLLING_PARAMETERS = _XINPUT_POLLING_PARAMETERS;
 PXINPUT_POLLING_PARAMETERS = ^XINPUT_POLLING_PARAMETERS;
 
 type _POLLING_PARAMETERS_HANDLE = packed record
     pPollingParameters: PXINPUT_POLLING_PARAMETERS;
-    
+
     dwPort: DWORD;
-end;
+end; // packed size = 8
 POLLING_PARAMETERS_HANDLE = _POLLING_PARAMETERS_HANDLE;
 PPOLLING_PARAMETERS_HANDLE = ^POLLING_PARAMETERS_HANDLE;
 
 type _XPP_DEVICE_TYPE = packed record
     // Note : Cxbx has size 3, but XTL_EmuXGetDevices seems to indicate size 4 :
     Reserved: array [0..4-1] of ULONG;
-end;
+end; // packed size = 16
 XPP_DEVICE_TYPE = _XPP_DEVICE_TYPE;
 PXPP_DEVICE_TYPE = ^XPP_DEVICE_TYPE;
 
@@ -99,14 +99,14 @@ type _XINPUT_GAMEPAD = packed record
     sThumbLY: SHORT;
     sThumbRX: SHORT;
     sThumbRY: SHORT;
-end;
+end; // packed size = 12
 XINPUT_GAMEPAD = _XINPUT_GAMEPAD;
 PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
 
 type _XINPUT_RUMBLE = packed record
     wLeftMotorSpeed: WORD;
     wRightMotorSpeed: WORD;
-end;
+end; // packed size = 4
 XINPUT_RUMBLE = _XINPUT_RUMBLE;
 PXINPUT_RUMBLE = ^XINPUT_RUMBLE;
 
@@ -121,7 +121,7 @@ type _XINPUT_CAPABILITIES = packed record
     Out_: record
       Rumble: XINPUT_RUMBLE;
     end;
-end;
+end; // packed size = 20
 XINPUT_CAPABILITIES = _XINPUT_CAPABILITIES;
 PXINPUT_CAPABILITIES = ^XINPUT_CAPABILITIES;
 
@@ -138,7 +138,7 @@ type _XINPUT_FEEDBACK_HEADER = packed record
     dwStatus: DWORD;
     hEvent: HANDLE; // OPTIONAL ;
     Reserved: array [0..58-1] of BYTE;
-end;
+end; // packed size = 66
 XINPUT_FEEDBACK_HEADER = _XINPUT_FEEDBACK_HEADER;
 PXINPUT_FEEDBACK_HEADER = ^XINPUT_FEEDBACK_HEADER;
 
@@ -146,7 +146,7 @@ type _XINPUT_FEEDBACK = packed record
     Header: XINPUT_FEEDBACK_HEADER;
     // union
     Rumble: XINPUT_RUMBLE;
-end;
+end; // packed size = 70
 XINPUT_FEEDBACK = _XINPUT_FEEDBACK;
 PXINPUT_FEEDBACK = ^XINPUT_FEEDBACK;
 
@@ -165,14 +165,14 @@ type _RTL_HEAP_PARAMETERS = packed record
 // Was:
 //    Length: UInt32;
 //    Unknown: array [0..$2C-1] of BYTE;
-end;
+end; // packed size = 48
 RTL_HEAP_PARAMETERS = _RTL_HEAP_PARAMETERS;
 PRTL_HEAP_PARAMETERS = ^RTL_HEAP_PARAMETERS;
 
 type _RTL_HEAP_DEFINITION = packed record
     Length: ULONG;
     Unknown: array [0..11-1] of ULONG;
-end;
+end; // packed size = 48
 RTL_HEAP_DEFINITION = _RTL_HEAP_DEFINITION;
 PRTL_HEAP_DEFINITION = ^RTL_HEAP_DEFINITION;
 
@@ -181,15 +181,15 @@ type XTHREAD_NOTIFY_PROC = procedure(fCreate: BOOL); stdcall;
 type _XTHREAD_NOTIFICATION = packed record
     Reserved: LIST_ENTRY;
     pfnNotifyRoutine: XTHREAD_NOTIFY_PROC;
-end;
+end; // packed size = 12
 XTHREAD_NOTIFICATION = _XTHREAD_NOTIFICATION;
 PXTHREAD_NOTIFICATION = ^XTHREAD_NOTIFICATION;
 
 const XCALCSIG_SIGNATURE_SIZE = 20;
-  
+
 type _XCALCSIG_SIGNATURE = packed record
     Signature: array [0..XCALCSIG_SIGNATURE_SIZE-1] of BYTE;
-end;
+end; // packed size = 20
 XCALCSIG_SIGNATURE = _XCALCSIG_SIGNATURE;
 PXCALCSIG_SIGNATURE = ^XCALCSIG_SIGNATURE;
 
@@ -199,7 +199,7 @@ const MAX_LAUNCH_DATA_SIZE = 1024 * 3;
 
 type _LAUNCH_DATA = packed record
   Data: array [0..MAX_LAUNCH_DATA_SIZE] of BYTE;
-end;
+end; // packed size = 3073
 LAUNCH_DATA = _LAUNCH_DATA;
 PLAUNCH_DATA = ^LAUNCH_DATA;
 

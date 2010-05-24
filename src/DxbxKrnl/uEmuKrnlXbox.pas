@@ -46,7 +46,7 @@ type
     MinorVersion: Word;
     BuildNumber: Word;
     QFE: Word; // This might well be a flags member, just like in _XBE_LIBRARYVERSION
-  end;
+  end; // packed size = 8
   PX_DllVersionInfo = ^X_DllVersionInfo;
 
 var

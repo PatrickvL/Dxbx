@@ -70,8 +70,8 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   ThreadId: PULONG; // out, optional
   StartContext1: PVOID;
   StartContext2: PVOID;
-  CreateSuspended: BOOLEAN;
-  DebugStack: BOOLEAN;
+  CreateSuspended: _BOOLEAN;
+  DebugStack: _BOOLEAN;
   StartRoutine: PKSTART_ROUTINE
   ): NTSTATUS; stdcall;
 function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -95,7 +95,7 @@ type PCSTProxyParam = packed record
     StartRoutine: PKSTART_ROUTINE;
     StartSuspended: BOOL_;
     hStartedEvent: HANDLE;
-  end;
+  end; // packed size = 20
   PPCSTProxyParam = ^PCSTProxyParam;
 
 // PsCreateSystemThread(Ex) proxy procedure
@@ -344,8 +344,8 @@ function {255} xboxkrnl_PsCreateSystemThreadEx
   ThreadId: PULONG; // out, optional
   StartContext1: PVOID;
   StartContext2: PVOID;
-  CreateSuspended: BOOLEAN;
-  DebugStack: BOOLEAN;
+  CreateSuspended: _BOOLEAN;
+  DebugStack: _BOOLEAN;
   StartRoutine: PKSTART_ROUTINE
 ): NTSTATUS; stdcall;
 // Source:Cxbx/XBMC  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100

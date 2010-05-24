@@ -39,7 +39,7 @@ type Mutex = object
     m_OwnerProcess: LONG;   // Current owner process (or zero)
     m_OwnerThread: LONG;    // Current owner thread
     m_LockCount: LONG;      // Lock count within this thread
-  end;
+  end; // size = 16
 
 implementation
 

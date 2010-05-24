@@ -157,7 +157,7 @@ type _X_D3DDISPLAYMODE = packed record
     RefreshRate: UINT;
     Flags: DWORD;
     Format: X_D3DFORMAT;
-  end;
+  end; // packed size = 20
   X_D3DDISPLAYMODE = _X_D3DDISPLAYMODE;
   PX_D3DDISPLAYMODE = ^X_D3DDISPLAYMODE;
 
@@ -170,7 +170,7 @@ type _X_D3DSURFACE_DESC = packed record
     MultiSampleType: D3DMULTISAMPLE_TYPE;
     Width: UINT;
     Height: UINT;
-  end;
+  end; // packed size = 28
   X_D3DSURFACE_DESC = _X_D3DSURFACE_DESC;
   PX_D3DSURFACE_DESC = ^X_D3DSURFACE_DESC;
 
@@ -197,7 +197,7 @@ type X_D3DPRESENT_PARAMETERS = packed record
     // Assert(Integer(@(PX_D3DPRESENT_PARAMETERS(nil).BufferSurfaces[0])) = SizeOf(_D3DPRESENT_PARAMETERS_));
     BufferSurfaces: array [0..3-1] of XTL_PIDirect3DSurface8;
     DepthStencilSurface: XTL_PIDirect3DSurface8;
-  end;
+  end; // packed size = 68
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -205,7 +205,7 @@ type _X_D3DGAMMARAMP = packed record
     Red: array [0..256-1] of BYTE;
     Green: array [0..256-1] of BYTE;
     Blue: array [0..256-1] of BYTE;
-  end;
+  end; // packed size = 768
   X_D3DGAMMARAMP = _X_D3DGAMMARAMP;
   PX_D3DGAMMARAMP = ^X_D3DGAMMARAMP;
 
@@ -220,7 +220,7 @@ type X_D3DVertexShader = packed record
     Flags: DWORD;
     UnknownC: array [0..59] of DWORD;
     ); // union
-  end;
+  end; // packed size = 252
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -243,7 +243,8 @@ type _X_D3DPIXELSHADERDEF = packed record // <- blueshogun 10/1/07
     PSC0Mapping: DWORD;                      // Mapping of c0 regs to D3D constants
     PSC1Mapping: DWORD;                      // Mapping of c1 regs to D3D constants
     PSFinalCombinerConstants: DWORD;         // Final combiner constant mapping
-  end; X_D3DPIXELSHADERDEF = _X_D3DPIXELSHADERDEF;
+  end; // packed size = 240
+  X_D3DPIXELSHADERDEF = _X_D3DPIXELSHADERDEF;
   PX_D3DPIXELSHADERDEF = ^X_D3DPIXELSHADERDEF;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -252,7 +253,8 @@ type _STREAM_DYNAMIC_PATCH = packed record
     ConvertedStride: DWORD;
     NbrTypes: DWORD;        // Number of the stream data types
     pTypes: PUINTs;         // The stream data types (xbox)
-  end; STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH;
+  end; // packed size = 16
+  STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH;
   PSTREAM_DYNAMIC_PATCH = ^STREAM_DYNAMIC_PATCH;
 
   TSTREAM_DYNAMIC_PATCHArray = array [0..MaxInt div SizeOf(STREAM_DYNAMIC_PATCH) - 1] of STREAM_DYNAMIC_PATCH;
@@ -262,7 +264,8 @@ type _STREAM_DYNAMIC_PATCH = packed record
 type _VERTEX_DYNAMIC_PATCH = packed record
     NbrStreams: UINT; // The number of streams the vertex shader uses
     pStreamPatches: PSTREAM_DYNAMIC_PATCHs;
-  end; VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH;
+  end; // packed size = 8
+  VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH;
   PVERTEX_DYNAMIC_PATCH = ^VERTEX_DYNAMIC_PATCH;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -279,7 +282,8 @@ type _VERTEX_SHADER = packed record
     Status: DWORD;
     // Needed for dynamic stream patching
     VertexDynamicPatch: VERTEX_DYNAMIC_PATCH;
-  end; VERTEX_SHADER = _VERTEX_SHADER;
+  end; // packed size = 40
+  VERTEX_SHADER = _VERTEX_SHADER;
   PVERTEX_SHADER = ^VERTEX_SHADER;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -298,7 +302,7 @@ type X_D3DResource = object
     7: ({Emu}VertexBuffer8: XTL_PIDirect3DVertexBuffer8);
     8: ({Emu}IndexBuffer8: XTL_PIDirect3DIndexBuffer8);
     end; // union
-  end;
+  end; // size = 12
   PX_D3DResource = ^X_D3DResource;
 
 
@@ -342,13 +346,13 @@ const X_D3DLOCK_READONLY = $00000080;
 
 type X_D3DVertexBuffer = object(X_D3DResource)
   public
-  end;
+  end; // size = 12
   PX_D3DVertexBuffer = ^X_D3DVertexBuffer;
   PPX_D3DVertexBuffer = ^PX_D3DVertexBuffer;
 
 type X_D3DIndexBuffer = object(X_D3DResource)
   public
-  end;
+  end; // size = 12
   PX_D3DIndexBuffer = ^X_D3DIndexBuffer;
   PPX_D3DIndexBuffer = ^PX_D3DIndexBuffer;
 
@@ -356,7 +360,7 @@ type X_D3DPushBuffer = object(X_D3DResource)
   public
     Size: ULONG;
     AllocationSize: ULONG;
-  end;
+  end; // size = 20
   PX_D3DPushBuffer = ^X_D3DPushBuffer;
   PPX_D3DPushBuffer = ^PX_D3DPushBuffer;
 
@@ -365,12 +369,12 @@ type X_D3DFixup = object(X_D3DResource)
     Run: ULONG;
     Next: ULONG;
     Size: ULONG;
-  end;
+  end; // size = 24
   PX_D3DFixup = ^X_D3DFixup;
   PPX_D3DFixup = ^PX_D3DFixup;
 
   X_D3DPalette = object(X_D3DResource)
-  end;
+  end; // size = 12
   PX_D3DPalette = ^X_D3DPalette;
   PPX_D3DPalette = ^PX_D3DPalette;
 
@@ -389,7 +393,7 @@ type X_D3DPixelContainer = object(X_D3DResource)
   public
     Format: X_D3DFORMAT; // Format information about the texture.
     Size: DWORD; // Size of a non power-of-2 texture, must be zero otherwise
-  end;
+  end; // size = 20
   PX_D3DPixelContainer = ^X_D3DPixelContainer;
   PPX_D3DPixelContainer = ^PX_D3DPixelContainer;
   
@@ -427,27 +431,27 @@ const X_D3DSIZE_PITCH_MASK   = $FF000000;   // Pitch / 64 - 1
 const X_D3DSIZE_PITCH_SHIFT  = 24;
 
 type X_D3DBaseTexture = object(X_D3DPixelContainer)
-  end;
+  end; // size = 20
   PX_D3DBaseTexture = ^X_D3DBaseTexture;
   PPX_D3DBaseTexture = ^PX_D3DBaseTexture;
 
 type X_D3DTexture = object(X_D3DBaseTexture)
-  end;
-  PX_D3DTexture = ^X_D3DTexture; 
-  PPX_D3DTexture = ^PX_D3DTexture; 
+  end; // size = 20
+  PX_D3DTexture = ^X_D3DTexture;
+  PPX_D3DTexture = ^PX_D3DTexture;
 
 type X_D3DVolumeTexture = object(X_D3DBaseTexture)
-  end;
+  end; // size = 20
   PX_D3DVolumeTexture = ^X_D3DVolumeTexture;
   PPX_D3DVolumeTexture = ^PX_D3DVolumeTexture;
 
 type X_D3DCubeTexture = object(X_D3DBaseTexture)
-  end;
+  end; // size = 20
   PX_D3DCubeTexture = ^X_D3DCubeTexture;
   PPX_D3DCubeTexture = ^PX_D3DCubeTexture;
 
 type X_D3DSurface = object(X_D3DPixelContainer)
-  end;
+  end; // size = 20
   PX_D3DSurface = ^X_D3DSurface;
   PPX_D3DSurface = ^PX_D3DSurface;
 
@@ -458,7 +462,7 @@ type X_D3DTILE = packed record
     Pitch: DWORD;
     ZStartTag: DWORD;
     ZOffset: DWORD;
-  end;
+  end; // packed size = 24
   PX_D3DTILE = ^X_D3DTILE;
 
 type X_D3DCALLBACKTYPE = ( // blueshogun96 10/1/07
@@ -476,14 +480,15 @@ type X_D3DFIELDTYPE = (
 type _X_D3DFIELD_STATUS = packed record
     Field: X_D3DFIELDTYPE;
     VBlankCount: UINT;
-  end; X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
+  end; // packed size = 8
+  X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
   PX_D3DFIELD_STATUS= ^X_D3DFIELD_STATUS;
 
 type D3DVBLANKDATA = packed record
     VBlank: DWORD;
     Swap: DWORD;
     Flags: DWORD;
-  end;
+  end; // packed size = 12
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
 
 type _D3DSWAPDATA = packed record
@@ -492,7 +497,8 @@ type _D3DSWAPDATA = packed record
     MissedVBlanks: DWORD;
     TimeUntilSwapVBlank: DWORD;
     TimeBetweenSwapVBlanks: DWORD;
-  end; D3DSWAPDATA = _D3DSWAPDATA;
+  end; // packed size = 20
+  D3DSWAPDATA = _D3DSWAPDATA;
   PD3DSWAPDATA = ^D3DSWAPDATA;
 
 // D3DVBLANKCALLBACK
@@ -598,14 +604,16 @@ type _X_VERTEXSHADERINPUT = packed record
     Format: DWORD;
     TesselationType: BYTE;
     TesselationSource: BYTE;
-  end; X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
+  end; // packed size = 14
+  X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
 
 // ******************************************************************
 // * X_VERTEXATTRIBUTEFORMAT
 // ******************************************************************
 type _X_VERTEXATTRIBUTEFORMAT = packed record
     pVertexShaderInput: array [0..15] of X_VERTEXSHADERINPUT;
-  end; X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
+  end; // packed size = 224
+  X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
   PX_VERTEXATTRIBUTEFORMAT = ^X_VERTEXATTRIBUTEFORMAT;
 
 // ******************************************************************
@@ -615,7 +623,8 @@ type _X_STREAMINPUT = packed record
     VertexBuffer: PX_D3DVertexBuffer;
     Stride: UINT;
     Offset: UINT;
-  end; X_STREAMINPUT = _X_STREAMINPUT;
+  end; // packed size = 12
+  X_STREAMINPUT = _X_STREAMINPUT;
   PX_STREAMINPUT = ^X_STREAMINPUT;
   PPX_STREAMINPUT = ^PX_STREAMINPUT;
 

@@ -74,7 +74,7 @@ type EmuShared = object(Mutex)
     m_XBController: XBController;
     m_XBVideo: XBVideo;
     m_XbePath: array [0..CXBX_MAX_PATH - 1] of _char;
-  end;
+  end; // size = 7156
   PEmuShared = ^EmuShared;
 
 procedure SetXbePath(const Path: PAnsiChar); stdcall;

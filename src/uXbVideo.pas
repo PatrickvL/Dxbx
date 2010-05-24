@@ -73,7 +73,7 @@ type
     // Hardware YUV Toggling
     procedure SetHardwareYUV(bHardwareYUV: _BOOL);
     function GetHardwareYUV: _BOOL;
-  end;
+  end; // packed size = 120
   PXBVideo = ^XBVideo;
 
 implementation

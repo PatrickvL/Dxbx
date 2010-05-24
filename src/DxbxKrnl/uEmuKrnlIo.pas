@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmuFS,
   uEmuFile,
@@ -59,10 +60,10 @@ type IRP = packed record
     ThreadListEntry: LIST_ENTRY;
     IoStatus: IO_STATUS_BLOCK;
     RequestorMode: KPROCESSOR_MODE;
-    PendingReturned: BOOLEAN;
+    PendingReturned: _BOOLEAN;
     StackCount: CHAR;
     CurrentLocation: CHAR;
-    Cancel: BOOLEAN;
+    Cancel: _BOOLEAN;
     CancelIrql: KIRQL;
     ApcEnvironment: CCHAR;
     AllocationFlags: UCHAR;
@@ -102,7 +103,7 @@ type IRP = packed record
       PVOID  CompletionKey;
      end; Tail;
 *)
-  end;
+  end; // packed size = 3
   PIRP = ^IRP;
 
   PDRIVER_EXTENSION = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
@@ -131,7 +132,7 @@ type IRP = packed record
     TimerRoutine: PIO_TIMER_ROUTINE;
     Context: PVOID;
     DeviceObject: PDEVICE_OBJECT;
-  end;
+  end; // packed size = 24
   PIO_TIMER = ^IO_TIMER;
 
 {type} DRIVER_OBJECT = packed record
@@ -151,7 +152,7 @@ type IRP = packed record
     DriverStartIo: PDRIVER_STARTIO;
     DriverUnload: PDRIVER_UNLOAD;
     MajorFunction: array [0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
-  end;
+  end; // packed size = 166
   PDRIVER_OBJECT = ^DRIVER_OBJECT;
 
 {type} DEVICE_OBJECT = packed record
@@ -185,7 +186,7 @@ type IRP = packed record
     Spare1: USHORT;
     DeviceObjectExtension: PDEVOBJ_EXTENSION;
     Reserved: PVOID;
-  end;
+  end; // packed size = 115
 
 type FILE_OBJECT = packed record
 // Source: XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
@@ -193,7 +194,7 @@ type FILE_OBJECT = packed record
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
    // ...
-  end;
+  end; // packed size = 6
   PFILE_OBJECT = ^FILE_OBJECT;
 
 type SHARE_ACCESS = packed record
@@ -205,7 +206,7 @@ type SHARE_ACCESS = packed record
     SharedRead: ULONG;
     SharedWrite: ULONG;
     SharedDelete: ULONG;
-  end;
+  end; // packed size = 28
   PSHARE_ACCESS = ^SHARE_ACCESS;
 
 var {064}xboxkrnl_IoCompletionObjectType: POBJECT_TYPE = NULL;
@@ -236,7 +237,7 @@ function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   InputBufferLength: ULONG;
   OutputBuffer: PVOID; // OUT OPTIONAL
   OutputBufferLength: ULONG;
-  InternalDeviceIoControl: BOOLEAN;
+  InternalDeviceIoControl: _BOOLEAN;
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall;
@@ -254,7 +255,7 @@ function {063} xboxkrnl_IoCheckShareAccess(
   DesiredShareAccess: ULONG;
   FileObject: PFILE_OBJECT; // OUT
   ShareAccess: PSHARE_ACCESS; // OUT
-  Update: BOOLEAN
+  Update: _BOOLEAN
   ): NTSTATUS; stdcall;
 function {065} xboxkrnl_IoCreateDevice(
   DriverObject: PDRIVER_OBJECT;
@@ -262,7 +263,7 @@ function {065} xboxkrnl_IoCreateDevice(
   DeviceName: PUNICODE_STRING;
   DeviceType: DEVICE_TYPE;
   DeviceCharacteristics: ULONG;
-  Exclusive: BOOLEAN;
+  Exclusive: _BOOLEAN;
   DeviceObject: PPDEVICE_OBJECT // out
   ): NTSTATUS; stdcall;
 function {066} xboxkrnl_IoCreateFile(
@@ -305,7 +306,7 @@ function xboxkrnl_IoSynchronousDeviceIoControlRequest(
   OutputBuffer: PVOID; // OPTIONAL
   OutputBufferLength: ULONG;
   unknown_use_zero: PDWORD; // OPTIONAL
-  InternalDeviceIoControl: BOOLEAN
+  InternalDeviceIoControl: _BOOLEAN
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoSynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -353,7 +354,7 @@ function {061} xboxkrnl_IoBuildDeviceIoControlRequest(
   InputBufferLength: ULONG;
   OutputBuffer: PVOID; // OUT OPTIONAL
   OutputBufferLength: ULONG;
-  InternalDeviceIoControl: BOOLEAN;
+  InternalDeviceIoControl: _BOOLEAN;
   Event: PKEVENT;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
   ): PIRP; stdcall;
@@ -387,7 +388,7 @@ function {063} xboxkrnl_IoCheckShareAccess(
   DesiredShareAccess: ULONG;
   FileObject: PFILE_OBJECT; // OUT
   ShareAccess: PSHARE_ACCESS; // OUT
-  Update: BOOLEAN
+  Update: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -430,7 +431,7 @@ function {065} xboxkrnl_IoCreateDevice(
   DeviceName: PUNICODE_STRING;
   DeviceType: DEVICE_TYPE;
   DeviceCharacteristics: ULONG;
-  Exclusive: BOOLEAN;
+  Exclusive: _BOOLEAN;
   DeviceObject: PPDEVICE_OBJECT // out
   ): NTSTATUS; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
@@ -659,7 +660,7 @@ function xboxkrnl_IoSynchronousDeviceIoControlRequest(
   OutputBuffer: PVOID; // OPTIONAL
   OutputBufferLength: ULONG;
   unknown_use_zero: PDWORD; // OPTIONAL
-  InternalDeviceIoControl: BOOLEAN
+  InternalDeviceIoControl: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin

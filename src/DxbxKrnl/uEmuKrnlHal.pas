@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmuFS,
   uEmuFile,
@@ -107,7 +108,7 @@ procedure {049} xboxkrnl_HalReturnToFirmware(
 function {050} xboxkrnl_HalWriteSMBusValue(
   Address: UCHAR;
   Command: UCHAR;
-  WordFlag: BOOLEAN;
+  WordFlag: _BOOLEAN;
   Value: ULONG
   ): ULONG; stdcall;
 function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -271,7 +272,7 @@ end;
 function {050} xboxkrnl_HalWriteSMBusValue(
   Address: UCHAR;
   Command: UCHAR;
-  WordFlag: BOOLEAN; // TODO -oDXBX: What should we use: LONGBOOL or WORDBOOL?
+  WordFlag: _BOOLEAN;
   Value: ULONG
   ): ULONG; stdcall;
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0

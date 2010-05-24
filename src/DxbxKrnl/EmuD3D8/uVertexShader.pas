@@ -200,7 +200,7 @@ type _VSH_OPCODE_PARAMS = packed record
     A: boolean;
     B: boolean;
     C: boolean;
-  end;
+  end; // packed size = 5
   VSH_OPCODE_PARAMS = _VSH_OPCODE_PARAMS;
   PVSH_OPCODE_PARAMS = ^VSH_OPCODE_PARAMS;
 
@@ -218,7 +218,7 @@ type _VSH_PARAMETER = packed record
     Neg: boolean;                           // TRUE if negated, FALSE if not
     Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
     Address: int16;                         // Register address
-  end;
+  end; // packed size = 8
   VSH_PARAMETER = _VSH_PARAMETER;
   PVSH_PARAMETER = ^VSH_PARAMETER;
 
@@ -234,7 +234,7 @@ type _VSH_OUTPUT = packed record
     // ILU output R register
     ILURMask: Dxbx4Booleans;
     ILURAddress: boolean;
-  end;
+  end; // packed size = 18
   VSH_OUTPUT = _VSH_OUTPUT;
 
 // The raw, parsed shader instruction (can be many combined [paired] instructions)
@@ -246,7 +246,7 @@ type _VSH_SHADER_INSTRUCTION = packed record
     B: VSH_PARAMETER;
     C: VSH_PARAMETER;
     a0x: boolean;
-  end;
+  end; // packed size = 45
   VSH_SHADER_INSTRUCTION = _VSH_SHADER_INSTRUCTION;
   PVSH_SHADER_INSTRUCTION = ^VSH_SHADER_INSTRUCTION;
 
@@ -270,7 +270,7 @@ type _VSH_IMD_OUTPUT = packed record
     Type_: VSH_IMD_OUTPUT_TYPE;
     Mask: Dxbx4Booleans;
     Address: UInt16;
-  end;
+  end; // packed size = 7
   VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
   PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
 
@@ -279,7 +279,7 @@ type _VSH_IMD_PARAMETER = packed record
     Active: boolean;
     Parameter: VSH_PARAMETER;
     IsA0X: boolean;
-  end;
+  end; // packed size = 10
   VSH_IMD_PARAMETER = _VSH_IMD_PARAMETER;
   PVSH_IMD_PARAMETER = ^VSH_IMD_PARAMETER;
 
@@ -293,7 +293,7 @@ type _VSH_INTERMEDIATE_FORMAT = packed record
     ILU: VSH_ILU;
     Output: VSH_IMD_OUTPUT;
     Parameters: array [0..3-1] of VSH_IMD_PARAMETER;
-  end;
+  end; // packed size = 41
   VSH_INTERMEDIATE_FORMAT = _VSH_INTERMEDIATE_FORMAT;
   PVSH_INTERMEDIATE_FORMAT = ^VSH_INTERMEDIATE_FORMAT;
 
@@ -303,7 +303,7 @@ type _VSH_FIELDMAPPING = packed record
     SubToken: uint08;
     StartBit: uint08;
     BitLength: uint08;
-  end;
+  end; // packed size = 4
   VSH_FIELDMAPPING = _VSH_FIELDMAPPING;
   PVSH_FIELDMAPPING = ^VSH_FIELDMAPPING;
 
@@ -312,7 +312,7 @@ type _VSH_SHADER_HEADER = packed record
     Version: uint08;
     NumInst: uint08;
     Unknown0: uint08;
-  end;
+  end; // packed size = 4
   VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
   PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
 
@@ -320,7 +320,7 @@ type _VSH_XBOX_SHADER = packed record
     ShaderHeader: VSH_SHADER_HEADER;
     IntermediateCount: uint16;
     Intermediate: array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT;
-  end;
+  end; // packed size = 41990
   VSH_XBOX_SHADER = _VSH_XBOX_SHADER;
   PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
 
@@ -1643,13 +1643,13 @@ end;
 type _VSH_TYPE_PATCH_DATA = packed record
     NbrTypes: DWORD;
     Types: array [0..256-1] of UINT;
-  end;
+  end; // packed size = 1028
   VSH_TYPE_PATCH_DATA = _VSH_TYPE_PATCH_DATA;
 
 type _VSH_STREAM_PATCH_DATA = packed record
     NbrStreams: DWORD;
     pStreamPatches: array [0..256-1] of STREAM_DYNAMIC_PATCH;
-  end;
+  end; // packed size = 4100
   VSH_STREAM_PATCH_DATA = _VSH_STREAM_PATCH_DATA;
 
 type _VSH_PATCH_DATA = packed record
@@ -1657,7 +1657,7 @@ type _VSH_PATCH_DATA = packed record
     ConvertedStride: DWORD;
     TypePatchData: VSH_TYPE_PATCH_DATA;
     StreamPatchData: VSH_STREAM_PATCH_DATA;
-  end;
+  end; // packed size = 5133
   VSH_PATCH_DATA = _VSH_PATCH_DATA;
   PVSH_PATCH_DATA = ^VSH_PATCH_DATA;
 

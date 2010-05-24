@@ -42,7 +42,7 @@ type _XGPOINT3D = packed record
     u: DWORD;
     v: DWORD;
     w: DWORD;
-end;
+end; // packed size = 12
 XGPOINT3D = _XGPOINT3D;
 PXGPOINT3D = ^XGPOINT3D;
 

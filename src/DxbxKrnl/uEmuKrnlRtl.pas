@@ -87,12 +87,12 @@ function xboxkrnl_RtlCompareMemoryUlong(
 function xboxkrnl_RtlCompareString(
   String1: PSTRING;
   String2: PSTRING;
-  CaseInsensitive: BOOLEAN
+  CaseInsensitive: _BOOLEAN
   ): LONG; stdcall;
 function xboxkrnl_RtlCompareUnicodeString(
   String1: PUNICODE_STRING;
   String2: PUNICODE_STRING;
-  CaseInsensitive: BOOLEAN
+  CaseInsensitive: _BOOLEAN
   ): LONG; stdcall;
 procedure xboxkrnl_RtlCopyString(
   DestinationString: PSTRING;
@@ -105,14 +105,14 @@ procedure xboxkrnl_RtlCopyUnicodeString(
 function xboxkrnl_RtlCreateUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PWSTR
-  ): BOOLEAN; stdcall;
+  ): _BOOLEAN; stdcall;
 function xboxkrnl_RtlDowncaseUnicodeChar(
   Source: WCHAR
   ): WCHAR; stdcall;
 function xboxkrnl_RtlDowncaseUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: BOOLEAN
+  AllocateDestinationString: _BOOLEAN
   ): NTSTATUS; stdcall;
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
@@ -123,13 +123,13 @@ function xboxkrnl_RtlEnterCriticalSectionAndRegion(
 function xboxkrnl_RtlEqualString(
   String1: PSTRING;
   String2: PSTRING;
-  CaseInsensitive: BOOLEAN
-  ): BOOLEAN; stdcall;
+  CaseInsensitive: _BOOLEAN
+  ): _BOOLEAN; stdcall;
 function xboxkrnl_RtlEqualUnicodeString(
   String1: PUNICODE_STRING;
   String2: PUNICODE_STRING;
-  CaseInsensitive: BOOLEAN
-  ): BOOLEAN; stdcall;
+  CaseInsensitive: _BOOLEAN
+  ): _BOOLEAN; stdcall;
 function xboxkrnl_RtlExtendedIntegerMultiply(
   Multiplicand: LARGE_INTEGER;
   Multiplier: LONG
@@ -225,14 +225,14 @@ procedure xboxkrnl_RtlTimeToTimeFields(
   ); stdcall;
 function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): BOOLEAN; stdcall;
+  ): _BOOLEAN; stdcall;
 function xboxkrnl_RtlUlongByteSwap(
   Source: ULONG
   ): ULONG; stdcall;
 function xboxkrnl_RtlUnicodeStringToAnsiString(
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: BOOLEAN
+  AllocateDestinationString: _BOOLEAN
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUnicodeStringToInteger(
   Str: PUNICODE_STRING;
@@ -257,7 +257,7 @@ function xboxkrnl_RtlUpcaseUnicodeChar(
 function xboxkrnl_RtlUpcaseUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: BOOLEAN
+  AllocateDestinationString: _BOOLEAN
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
   MbString: PAnsiChar;
@@ -435,7 +435,7 @@ end;
 function xboxkrnl_RtlCompareString(
   String1: PSTRING;
   String2: PSTRING;
-  CaseInsensitive: BOOLEAN
+  CaseInsensitive: _BOOLEAN
   ): LONG; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -447,7 +447,7 @@ end;
 function xboxkrnl_RtlCompareUnicodeString(
   String1: PUNICODE_STRING;
   String2: PUNICODE_STRING;
-  CaseInsensitive: BOOLEAN
+  CaseInsensitive: _BOOLEAN
   ): LONG; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -481,7 +481,7 @@ end;
 function xboxkrnl_RtlCreateUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PWSTR
-  ): BOOLEAN; stdcall;
+  ): _BOOLEAN; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -502,7 +502,7 @@ end;
 function xboxkrnl_RtlDowncaseUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: BOOLEAN
+  AllocateDestinationString: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -560,8 +560,8 @@ function xboxkrnl_RtlEqualString
 (
   String1: PSTRING;
   String2: PSTRING;
-  CaseInsensitive: BOOLEAN
-): BOOLEAN; stdcall;
+  CaseInsensitive: _BOOLEAN
+): _BOOLEAN; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -584,8 +584,8 @@ end;
 function xboxkrnl_RtlEqualUnicodeString(
   String1: PUNICODE_STRING;
   String2: PUNICODE_STRING;
-  CaseInsensitive: BOOLEAN
-  ): BOOLEAN; stdcall;
+  CaseInsensitive: _BOOLEAN
+  ): _BOOLEAN; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -929,7 +929,7 @@ end;
 function xboxkrnl_RtlTryEnterCriticalSection
 (
   CriticalSection: PRTL_CRITICAL_SECTION
-): BOOLEAN; stdcall;
+): _BOOLEAN; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -961,7 +961,7 @@ function xboxkrnl_RtlUnicodeStringToAnsiString
 (
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: BOOLEAN
+  AllocateDestinationString: _BOOLEAN
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -1040,12 +1040,12 @@ end;
 function xboxkrnl_RtlUpcaseUnicodeString(
   DestinationString: PUNICODE_STRING;
   SourceString: PUNICODE_STRING;
-  AllocateDestinationString: BOOLEAN
+  AllocateDestinationString: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := JwaNative.RtlUpcaseUnicodeString(DestinationString, SourceString, AllocateDestinationString);
+  Result := JwaNative.RtlUpcaseUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
   EmuSwapFS(fsXbox);
 end;
 
