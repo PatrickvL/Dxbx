@@ -64,13 +64,13 @@ type _VertexPatchDesc = packed record
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
 
-type _PATCHEDSTREAM = packed record
+type _PATCHEDSTREAM = {not packed!} record
     pOriginalStream: XTL_PIDirect3DVertexBuffer8;
     pPatchedStream: XTL_PIDirect3DVertexBuffer8;
     uiOrigStride: UINT;
     uiNewStride: UINT;
     bUsedCached: _bool;
-  end; // size = 17 packed / 20 normal
+  end; // size = 17 packed / 20 normal (as in Cxbx)
   PATCHEDSTREAM = _PATCHEDSTREAM;
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
 
@@ -89,7 +89,7 @@ type _CACHEDSTREAM = packed record
   CACHEDSTREAM = _CACHEDSTREAM;
   PCACHEDSTREAM = ^CACHEDSTREAM;
 
-type XTL_VertexPatcher = object
+type VertexPatcher = object
   public
     procedure Create;
     procedure Destroy;
@@ -222,7 +222,7 @@ begin
 end;
 
 
-procedure XTL_VertexPatcher.Create;
+procedure VertexPatcher.Create;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   m_uiNbrStreams := 0;
@@ -234,12 +234,12 @@ begin
   CRC32Init();
 end;
 
-procedure XTL_VertexPatcher.Destroy;
+procedure VertexPatcher.Destroy;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
 end;
 
-procedure XTL_VertexPatcher.DumpCache();
+procedure VertexPatcher.DumpCache();
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pNode: PRTNode;
@@ -265,7 +265,7 @@ begin
   end;
 end;
 
-procedure XTL_VertexPatcher.CacheStream(pPatchDesc: PVertexPatchDesc;
+procedure VertexPatcher.CacheStream(pPatchDesc: PVertexPatchDesc;
                                         uiStream: UINT);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -376,7 +376,7 @@ begin
 end;
 
 
-procedure XTL_VertexPatcher.FreeCachedStream(pStream: Pvoid);
+procedure VertexPatcher.FreeCachedStream(pStream: Pvoid);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pCachedStream_: PCACHEDSTREAM;
@@ -403,7 +403,7 @@ begin
   g_PatchedStreamsCache.remove(pStream);
 end;
 
-function XTL_VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
+function VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
                                              uiStream: UINT; pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -546,7 +546,7 @@ begin
 end;
 
 
-function XTL_VertexPatcher.GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
+function VertexPatcher.GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pDynamicPatch: PVERTEX_DYNAMIC_PATCH;
@@ -573,7 +573,7 @@ begin
   Result := 0;
 end;
 
-function XTL_VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc;
+function VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc;
                                        uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -864,7 +864,7 @@ begin
   Result := true;
 end;
 
-function XTL_VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
+function VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
 // Branch:shogun  Revision:  Translator:PatrickvL  Done:100
 var
   bHasLinearTex: _bool;
@@ -1041,7 +1041,7 @@ begin
   Result := m_bPatched;
 end;
 
-function XTL_VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc; 
+function VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc;
                                           uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -1260,7 +1260,7 @@ begin
   Result := true;
 end;
 
-function XTL_VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
+function VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   Patched: _bool;
@@ -1299,7 +1299,7 @@ begin
   Result := Patched;
 end;
 
-function XTL_VertexPatcher.Restore(): _bool;
+function VertexPatcher.Restore(): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   uiStream: UINT;
@@ -1356,7 +1356,7 @@ var
   dwPos: DWORD;
   dwTexN: DWORD;
   VPDesc: VertexPatchDesc;
-  VertPatch: XTL_VertexPatcher;
+  VertPatch: VertexPatcher;
   //bPatched: _bool;
 begin
   XTL_EmuUpdateDeferredStates();

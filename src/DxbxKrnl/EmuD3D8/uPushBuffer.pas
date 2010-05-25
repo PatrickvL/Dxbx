@@ -213,7 +213,7 @@ var
   VertexCount: UINT;
   PrimitiveCount: UINT;
   VPDesc: VertexPatchDesc;
-  VertPatch: XTL_VertexPatcher;
+  VertPatch: VertexPatcher;
   mi: uint;
   pwVal: PWORD;
 

@@ -27,13 +27,14 @@ uses
   Windows,
   SysUtils,
   // Dxbx
-  uTypes;
+  uTypes
+  , uError;
 
 // Dxbx Note : Cxbx uses BOOL in this unit, but that's an int-based type and we prefer a true boolean type,
 // so we'll use the _BOOL type (=System.Boolean) instead for our property getters and setters.
 
 type
-  XBVideo = packed record
+  XBVideo = object(Error)
   private
     // Configuration
     m_szVideoResolution: array [0..100-1] of _char;
@@ -73,7 +74,7 @@ type
     // Hardware YUV Toggling
     procedure SetHardwareYUV(bHardwareYUV: _BOOL);
     function GetHardwareYUV: _BOOL;
-  end; // packed size = 120
+  end; // size = 128 (as in Cxbx)
   PXBVideo = ^XBVideo;
 
 implementation

@@ -4418,53 +4418,55 @@ begin
       pVertexBuffer := PX_D3DVertexBuffer(pResource);
 
       // create vertex buffer
-      dwSize := EmuCheckAllocationSize(pBase, true);
-
-      if dwSize = DWORD(-1) then
       begin
-        // TODO -oCXBX: once this is known to be working, remove the warning
-        EmuWarning('Vertex buffer allocation size unknown');
-        dwSize := $2000; // temporarily assign a small buffer, which will be increased later
-      end;
+        dwSize := EmuCheckAllocationSize(pBase, true);
 
-      hRet := IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8,
-        dwSize, 0, 0, D3DPOOL_MANAGED,
-        {ppVertexBuffer}@(pResource^.Emu.VertexBuffer8));
-
-      if (FAILED(hRet)) then
-      begin
-        // TODO -oCXBX: Hack for Crazy Taxi 3?
-        sprintf(szString, 'CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
-
-        if ( dwSize <> 0 ) then
-          CxbxKrnlCleanup( String(szString) )
-        else
+        if dwSize = DWORD(-1) then
         begin
-          EmuWarning( String(szString) );
-          EmuSwapFS(fsXbox);
-          Result := hRet;
-          Exit;
+          // TODO -oCXBX: once this is known to be working, remove the warning
+          EmuWarning('Vertex buffer allocation size unknown');
+          dwSize := $2000; // temporarily assign a small buffer, which will be increased later
         end;
-     end;
+
+        hRet := IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8,
+          dwSize, 0, 0, D3DPOOL_MANAGED,
+          {ppVertexBuffer}@(pResource^.Emu.VertexBuffer8)
+        );
+
+        if (FAILED(hRet)) then
+        begin
+          // TODO -oCXBX: Hack for Crazy Taxi 3?
+          sprintf(szString, 'CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
+
+          if ( dwSize <> 0 ) then
+            CxbxKrnlCleanup( String(szString) )
+          else
+          begin
+            EmuWarning( string(szString) );
+            EmuSwapFS(fsXbox);
+            Result := hRet;
+            Exit;
+          end;
+       end;
 
 
-{$IFDEF _DEBUG_TRACK_VB}
-      g_VBTrackTotal.insert(pResource.Emu.VertexBuffer8);
-{$ENDIF}
+  {$IFDEF _DEBUG_TRACK_VB}
+        g_VBTrackTotal.insert(pResource.Emu.VertexBuffer8);
+  {$ENDIF}
 
-      pData := nil;
+        pData := nil;
 
-      hRet := IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Lock(0, 0, {out}pData, 0);
+        hRet := IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Lock(0, 0, {out}pData, 0);
 
-      if FAILED(hRet) then
-        CxbxKrnlCleanup('VertexBuffer Lock Failed!');
+        if FAILED(hRet) then
+          CxbxKrnlCleanup('VertexBuffer Lock Failed!');
 
-      memcpy(pData, pBase, dwSize);
+        memcpy(pData, pBase, dwSize);
 
-      IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock();
+        IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock();
 
-      pResource.Data := ULONG(pData);
-
+        pResource.Data := ULONG(pData);
+      end;
 {$IFDEF DEBUG}
       DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created VertexBuffer (0x%.08X)', [pResource.Emu.VertexBuffer8]);
 {$ENDIF}
@@ -4496,7 +4498,8 @@ begin
         begin
           hRet := IDirect3DDevice8_CreateIndexBuffer(g_pD3DDevice8,
             dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
-            @(pIndexBuffer^.Emu.IndexBuffer8));
+            @(pIndexBuffer^.Emu.IndexBuffer8)
+          );
 
           if (FAILED(hRet)) then
             CxbxKrnlCleanup('CreateIndexBuffer Failed!');
@@ -7569,7 +7572,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawVertices
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   VPDesc: VertexPatchDesc;
-  VertPatch: XTL_VertexPatcher;
+  VertPatch: VertexPatcher;
 //  bPatched: _bool;
 begin
   EmuSwapFS(fsWindows);
@@ -7631,7 +7634,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawVerticesUP
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   VPDesc: VertexPatchDesc;
-  VertPatch: XTL_VertexPatcher;
+  VertPatch: VertexPatcher;
 //  bPatched: _bool;
 begin
   EmuSwapFS(fsWindows);
@@ -7700,7 +7703,7 @@ var
   hRet: HRESULT;
   pData: PBYTE;
   VPDesc: VertexPatchDesc;
-  VertPatch: XTL_VertexPatcher;
+  VertPatch: VertexPatcher;
 //  bPatched: _bool;
   pbData: PBYTE;
   bActiveIB: _bool;
@@ -7857,7 +7860,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   VPDesc: VertexPatchDesc;
-  VertPatch: XTL_VertexPatcher;
+  VertPatch: VertexPatcher;
 //  bPatched: _bool;
 begin
   EmuSwapFS(fsWindows);

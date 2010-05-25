@@ -175,7 +175,7 @@ type _X_D3DSURFACE_DESC = packed record
   PX_D3DSURFACE_DESC = ^X_D3DSURFACE_DESC;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-type X_D3DPRESENT_PARAMETERS = packed record
+type _X_D3DPRESENT_PARAMETERS = packed record
     BackBufferWidth: UINT;
     BackBufferHeight: UINT;
     BackBufferFormat: X_D3DFORMAT;
@@ -198,6 +198,7 @@ type X_D3DPRESENT_PARAMETERS = packed record
     BufferSurfaces: array [0..3-1] of XTL_PIDirect3DSurface8;
     DepthStencilSurface: XTL_PIDirect3DSurface8;
   end; // packed size = 68
+  X_D3DPRESENT_PARAMETERS = _X_D3DPRESENT_PARAMETERS;
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -218,9 +219,9 @@ type X_D3DVertexShader = packed record
      1: ( Handle: DWORD;
     UnknownB: DWORD;
     Flags: DWORD;
-    UnknownC: array [0..59] of DWORD;
+    UnknownC: array [0..$59-1] of DWORD;
     ); // union
-  end; // packed size = 252
+  end; // packed size = 368
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -248,24 +249,24 @@ type _X_D3DPIXELSHADERDEF = packed record // <- blueshogun 10/1/07
   PX_D3DPIXELSHADERDEF = ^X_D3DPIXELSHADERDEF;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-type _STREAM_DYNAMIC_PATCH = packed record
+type _STREAM_DYNAMIC_PATCH_ = packed record
     NeedPatch: BOOL_;       // This is to know whether is data which must be patched
     ConvertedStride: DWORD;
     NbrTypes: DWORD;        // Number of the stream data types
     pTypes: PUINTs;         // The stream data types (xbox)
   end; // packed size = 16
-  STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH;
+  STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH_;
   PSTREAM_DYNAMIC_PATCH = ^STREAM_DYNAMIC_PATCH;
 
   TSTREAM_DYNAMIC_PATCHArray = array [0..MaxInt div SizeOf(STREAM_DYNAMIC_PATCH) - 1] of STREAM_DYNAMIC_PATCH;
   PSTREAM_DYNAMIC_PATCHs = ^TSTREAM_DYNAMIC_PATCHArray;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-type _VERTEX_DYNAMIC_PATCH = packed record
+type _VERTEX_DYNAMIC_PATCH_ = packed record
     NbrStreams: UINT; // The number of streams the vertex shader uses
     pStreamPatches: PSTREAM_DYNAMIC_PATCHs;
   end; // packed size = 8
-  VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH;
+  VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH_;
   PVERTEX_DYNAMIC_PATCH = ^VERTEX_DYNAMIC_PATCH;
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -484,11 +485,12 @@ type _X_D3DFIELD_STATUS = packed record
   X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
   PX_D3DFIELD_STATUS= ^X_D3DFIELD_STATUS;
 
-type D3DVBLANKDATA = packed record
+type _D3DVBLANKDATA = packed record
     VBlank: DWORD;
     Swap: DWORD;
     Flags: DWORD;
   end; // packed size = 12
+  D3DVBLANKDATA = _D3DVBLANKDATA;
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
 
 type _D3DSWAPDATA = packed record
@@ -598,13 +600,13 @@ const X_VST_STATE = 3;
 // ******************************************************************
 // * X_VERTEXSHADERINPUT
 // ******************************************************************
-type _X_VERTEXSHADERINPUT = packed record
+type _X_VERTEXSHADERINPUT = {not packed!} record
     IndexOfStream: DWORD;
     Offset: DWORD;
     Format: DWORD;
     TesselationType: BYTE;
     TesselationSource: BYTE;
-  end; // packed size = 14
+  end; // size = 14 packed, 16 normal (as in Cxbx)
   X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
 
 // ******************************************************************
@@ -612,7 +614,7 @@ type _X_VERTEXSHADERINPUT = packed record
 // ******************************************************************
 type _X_VERTEXATTRIBUTEFORMAT = packed record
     pVertexShaderInput: array [0..15] of X_VERTEXSHADERINPUT;
-  end; // packed size = 224
+  end; // packed size = 256
   X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
   PX_VERTEXATTRIBUTEFORMAT = ^X_VERTEXATTRIBUTEFORMAT;
 

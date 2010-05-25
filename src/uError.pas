@@ -53,7 +53,7 @@ type
     // current error information
     m_bFatal: _bool;
     m_szError: PChar;
-  end;
+  end; // size = 8
 
 implementation
 

@@ -36,6 +36,14 @@ uses
   uXbe,
   uDxbxKrnlUtils,
   uDxbxDebugUtils,
+{$IFDEF LOG_STRUCT_SIZES}
+  uError,
+  uMutex,
+  uVertexBuffer,
+  uXBController,
+  uXBVideo,
+  uEmuD3D8Types,
+{$ENDIF LOG_STRUCT_SIZES}
   uEmuShared,
   uEmu,
   uEmuFS,
@@ -116,6 +124,40 @@ begin
 
   // For Unicode Conversions
   // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
+{$IFDEF LOG_STRUCT_SIZES}
+  Dbgprintf('sizeof(EmuShared) = %d', [sizeof(EmuShared)]);
+  //Dbgprintf('sizeof(EmuThis) = %d', [sizeof(EmuThis)]);
+  Dbgprintf('sizeof(Error) = %d', [sizeof(Error)]);
+  Dbgprintf('sizeof(Mutex) = %d', [sizeof(Mutex)]);
+  Dbgprintf('sizeof(PATCHEDSTREAM) = %d', [sizeof(PATCHEDSTREAM)]);
+  Dbgprintf('sizeof(VertexPatcher) = %d', [sizeof(VertexPatcher)]);
+  //Dbgprintf('sizeof(Wnd) = %d', [sizeof(Wnd)]);
+  Dbgprintf('sizeof(XBController) = %d', [sizeof(XBController)]);
+  Dbgprintf('sizeof(Xbe) = %d', [Xbe.InstanceSize]);
+  Dbgprintf('sizeof(XBVideo) = %d', [sizeof(XBVideo)]);
+  //Dbgprintf('sizeof(X_CDirectSoundStream) = %d', [sizeof(X_CDirectSoundStream)]);
+  //Dbgprintf('sizeof(X_CMcpxStream) = %d', [sizeof(X_CMcpxStream)]);
+  Dbgprintf('sizeof(X_D3DFixup) = %d', [sizeof(X_D3DFixup)]);
+  Dbgprintf('sizeof(X_D3DPixelContainer) = %d', [sizeof(X_D3DPixelContainer)]);
+  Dbgprintf('sizeof(X_D3DPushBuffer) = %d', [sizeof(X_D3DPushBuffer)]);
+  Dbgprintf('sizeof(X_D3DResource) = %d', [sizeof(X_D3DResource)]);
+  Dbgprintf('sizeof(X_D3DTILE) = %d', [sizeof(X_D3DTILE)]);
+  Dbgprintf('sizeof(X_D3DVertexShader) = %d', [sizeof(X_D3DVertexShader)]);
+  Dbgprintf('sizeof(_D3DSWAPDATA) = %d', [sizeof(_D3DSWAPDATA)]);
+  Dbgprintf('sizeof(_D3DVBLANKDATA) = %d', [sizeof(_D3DVBLANKDATA)]);
+  Dbgprintf('sizeof(_STREAM_DYNAMIC_PATCH_) = %d', [sizeof(_STREAM_DYNAMIC_PATCH_)]);
+  Dbgprintf('sizeof(_VERTEX_DYNAMIC_PATCH_) = %d', [sizeof(_VERTEX_DYNAMIC_PATCH_)]);
+  Dbgprintf('sizeof(_VERTEX_SHADER) = %d', [sizeof(_VERTEX_SHADER)]);
+  Dbgprintf('sizeof(_X_D3DDISPLAYMODE) = %d', [sizeof(_X_D3DDISPLAYMODE)]);
+  Dbgprintf('sizeof(_X_D3DFIELD_STATUS) = %d', [sizeof(_X_D3DFIELD_STATUS)]);
+  Dbgprintf('sizeof(_X_D3DGAMMARAMP) = %d', [sizeof(_X_D3DGAMMARAMP)]);
+  Dbgprintf('sizeof(_X_D3DPIXELSHADERDEF) = %d', [sizeof(_X_D3DPIXELSHADERDEF)]);
+  Dbgprintf('sizeof(_X_D3DPRESENT_PARAMETERS) = %d', [sizeof(_X_D3DPRESENT_PARAMETERS)]);
+  Dbgprintf('sizeof(_X_D3DSURFACE_DESC) = %d', [sizeof(_X_D3DSURFACE_DESC)]);
+  Dbgprintf('sizeof(_X_STREAMINPUT) = %d', [sizeof(_X_STREAMINPUT)]);
+  Dbgprintf('sizeof(_X_VERTEXATTRIBUTEFORMAT) = %d', [sizeof(_X_VERTEXATTRIBUTEFORMAT)]);
+  Dbgprintf('sizeof(_X_VERTEXSHADERINPUT) = %d', [sizeof(_X_VERTEXSHADERINPUT)]);
+{$ENDIF LOG_STRUCT_SIZES}
 
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuMain : Debug Trace Enabled.');
