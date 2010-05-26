@@ -35,11 +35,11 @@ const g_bVBSkipStream: _bool = false;
 
 type
   PRTNode = ^RTNode;
-  RTNode = packed record
+  RTNode = record
     uiKey: uint32;
     pResource: Pvoid;
     pNext: PRTNode;
-  end; // packed size = 12
+  end; // size = 12
 
 type ResourceTracker = object(Mutex)
   public

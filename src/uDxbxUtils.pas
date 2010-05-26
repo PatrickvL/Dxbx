@@ -64,7 +64,7 @@ type
 
   TSetXbePath = procedure(const Path: PAnsiChar); cdecl;
 
-  TKernelThunkTable = packed array [0..NUMBER_OF_THUNKS - 1] of UIntPtr;
+  TKernelThunkTable = array [0..NUMBER_OF_THUNKS - 1] of UIntPtr;
   PKernelThunkTable = ^TKernelThunkTable;
 
   TGetKernelThunkTable = function: PKernelThunkTable; cdecl;
@@ -140,7 +140,7 @@ type
   end;
   PRGB32 = ^TRGB32;
 
-  TRGB32Array = packed array [0..MaxInt div SizeOf(TRGB32)-1] of TRGB32;
+  TRGB32Array = array [0..MaxInt div SizeOf(TRGB32)-1] of TRGB32;
   PRGB32Array = ^TRGB32Array;
 
   RGB32Scanlines = record
@@ -165,7 +165,7 @@ type
   TRGB16 = WORD;
   PRGB16 = ^TRGB16;
 
-  TRGB16Array = packed array [0..MaxInt div SizeOf(TRGB16)-1] of TRGB16;
+  TRGB16Array = array [0..MaxInt div SizeOf(TRGB16)-1] of TRGB16;
   PRGB16Array = ^TRGB16Array;
 
   RGB16Scanlines = record

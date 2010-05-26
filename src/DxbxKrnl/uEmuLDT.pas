@@ -45,8 +45,7 @@ procedure EmuDeallocateLDT(wSelector: uint16);
 
 implementation
 
-{$A1}
-type RLDT_ENTRY_Bits = packed record
+type RLDT_ENTRY_Bits = record
   private
     Flags: DWord;
     function GetBits(const aIndex: Integer): Integer;
@@ -62,26 +61,27 @@ type RLDT_ENTRY_Bits = packed record
     property Default_Big: Integer index $1601 read GetBits write SetBits; // 1 bit at offset 22
     property Granularity: Integer index $1701 read GetBits write SetBits; // 1 bit at offset 23
     property BaseHi: Integer index $1808 read GetBits write SetBits; // 8 bits at offset 24
-  end; // packed size = 4
+  end; // size = 4 (as implicitly in Cxbx)
 
-type RLDT_ENTRY_Bytes = packed record
+type RLDT_ENTRY_Bytes = record
     BaseMid: Byte;
     Flags1: Byte; // Declare as bytes to avoid alignment
     Flags2: Byte; // Problems.
     BaseHi: Byte;
-  end; // packed size = 4
+  end; // size = 4 (as implicitly in Cxbx)
 
-type RLDT_ENTRY_HighWord = packed record
+type RLDT_ENTRY_HighWord = record
     case Integer of
     0: (Bytes: RLDT_ENTRY_Bytes);
     1: (Bits: RLDT_ENTRY_Bits); // Bit-fields are handled seperatly
-  end; // packed size = 4
+  end; // size = 4 (as implicitly in Cxbx)
 
-type DXBX_LDT_ENTRY = packed record
+type DXBX_LDT_ENTRY = record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     LimitLow: Word;
     BaseLow: Word;
     HighWord: RLDT_ENTRY_HighWord;
-  end; // packed size = 8
+  end; // size = 8 (as in Cxbx)
 
 {$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}

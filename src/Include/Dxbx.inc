@@ -54,7 +54,7 @@
 
 // Apply our default compiler options before jedi.inc goes ahead :
 
-{$ALIGN 4}                // Alignment of fields (align standaard on 4 bytes - TODO: Research if 8-byte boundaries are better?!)
+{$ALIGN 4}                // Alignment of fields (align on 4 bytes, just like Cxbx)
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}           // Boolean short-circuit evaluation (don't evaluate more boolean expressions than nessecary)
 {$DEBUGINFO ON}

@@ -50,7 +50,7 @@ uses
 
 const MAX_NBR_STREAMS = 16;
 
-type _VertexPatchDesc = packed record
+type _VertexPatchDesc = record
     PrimitiveType: X_D3DPRIMITIVETYPE;
     dwVertexCount: DWORD;
     dwPrimitiveCount: DWORD;
@@ -60,11 +60,11 @@ type _VertexPatchDesc = packed record
     uiVertexStreamZeroStride: UINT;
     // The current vertex shader, used to identify the streams
     hVertexShader: DWORD;
-  end; // packed size = 28
+  end; // size = 28 (as in Cxbx)
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
 
-type _PATCHEDSTREAM = {not packed!} record
+type _PATCHEDSTREAM = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     pOriginalStream: XTL_PIDirect3DVertexBuffer8;
     pPatchedStream: XTL_PIDirect3DVertexBuffer8;
@@ -75,7 +75,7 @@ type _PATCHEDSTREAM = {not packed!} record
   PATCHEDSTREAM = _PATCHEDSTREAM;
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
 
-type _CACHEDSTREAM = packed record
+type _CACHEDSTREAM = record
     uiCRC32: uint32;
     uiCheckFrequency: uint32;
     uiCacheHit: uint32;
@@ -86,7 +86,7 @@ type _CACHEDSTREAM = packed record
     uiCount: uint32;             // CRC32 check count
     dwPrimitiveCount: uint32;
     lLastUsed: long;             // For cache removal purposes
-  end; // packed size = 56
+  end; // size = 56 (as in Cxbx)
   CACHEDSTREAM = _CACHEDSTREAM;
   PCACHEDSTREAM = ^CACHEDSTREAM;
 
@@ -123,7 +123,7 @@ type VertexPatcher = object
     function NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Patches the primitive of the stream
     function PatchPrimitive(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
-  end; // size = 288
+  end; // size = 336 (as in Cxbx)
 
 // inline vertex buffer emulation
 var g_pIVBVertexBuffer: PDWORD = nil;
@@ -131,7 +131,7 @@ var g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
 var g_IVBFVF: DWORD = 0;
 var g_CurrentVertexShader: DWord = 0;
 
-type _D3DIVB = packed record
+type _D3DIVB = record
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
     Blend1: FLOAT; // Blend1
@@ -142,10 +142,10 @@ type _D3DIVB = packed record
     TexCoord2: TD3DXVECTOR2; // TexCoord2
     TexCoord3: TD3DXVECTOR2; // TexCoord3
     TexCoord4: TD3DXVECTOR2; // TexCoord4
-  end; // packed size = 72
+  end; // size = 72 (as in Cxbx)
   D3DIVB = _D3DIVB;
-
   PD3DIVB = ^D3DIVB;
+
   TD3DIVBArray = array [0..(MaxInt div SizeOf(D3DIVB)) - 1] of D3DIVB;
   PD3DIVBs = ^TD3DIVBArray;
 

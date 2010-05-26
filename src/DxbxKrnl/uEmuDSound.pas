@@ -59,7 +59,7 @@ type
   LPCWAVEFORMATEX = MMSystem.PWaveFormatEx;
   LPCDSI3DL2BUFFER = Pvoid;
 
-type X_DSBUFFERDESC = packed record
+type X_DSBUFFERDESC = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwSize: DWORD;
     dwFlags: DWORD;
@@ -70,7 +70,7 @@ type X_DSBUFFERDESC = packed record
   end;
   PX_DSBUFFERDESC = ^X_DSBUFFERDESC;
 
-type X_DSSTREAMDESC = packed record
+type X_DSSTREAMDESC = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwFlags: DWORD;
     dwMaxAttachedPackets: DWORD;
@@ -85,7 +85,7 @@ type REFERENCE_TIME = LONGLONG;
   PPREFERENCE_TIME = ^REFERENCE_TIME;
   LPREFERENCE_TIME = ^REFERENCE_TIME;
 
-type _XMEDIAPACKET = packed record
+type _XMEDIAPACKET = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     pvBuffer: LPVOID;
     dwMaxSize: DWORD;
@@ -103,7 +103,7 @@ type _XMEDIAPACKET = packed record
   PXMEDIAPACKET = ^XMEDIAPACKET;
   LPXMEDIAPACKET = ^XMEDIAPACKET;
 
-type _XMEDIAINFO = packed record
+type _XMEDIAINFO = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwFlags: DWORD;
     dwInputSize: DWORD;
@@ -120,7 +120,7 @@ const XMO_STREAMF_OUTPUT_ASYNC                = $00000008;      // The object su
 const XMO_STREAMF_IN_PLACE                    = $00000010;      // The object supports in-place modification of data
 const XMO_STREAMF_MASK                        = $0000001F;
 
-type X_DSFILTERDESC = packed record
+type X_DSFILTERDESC = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwMode: DWORD;
     dwQCoefficient: DWORD;
@@ -134,7 +134,7 @@ const DSFILTER_MODE_DLS2          = $00000001;      // DLS2 mode
 const DSFILTER_MODE_PARAMEQ       = $00000002;      // Parametric equalizer mode
 const DSFILTER_MODE_MULTI         = $00000003;      // Multifunction mode
 
-type _DSLFODESC = packed record
+type _DSLFODESC = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwLFO: DWORD;
     dwDelay: DWORD;
@@ -146,7 +146,7 @@ type _DSLFODESC = packed record
   DSLFODESC = _DSLFODESC;
   LPCDSLFODESC = ^DSLFODESC;
 
-type xbox_adpcmwaveformat_tag = packed record
+type xbox_adpcmwaveformat_tag = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     wfx: WAVEFORMATEX;            // WAVEFORMATEX data
     wSamplesPerBlock: WORD;       // Number of samples per encoded block.  It must be 64.
@@ -155,7 +155,7 @@ type xbox_adpcmwaveformat_tag = packed record
   PXBOXADPCMWAVEFORMAT = ^XBOXADPCMWAVEFORMAT;
   LPXBOXADPCMWAVEFORMAT = PXBOXADPCMWAVEFORMAT;
 
-type X_DSOUTPUTLEVELS = packed record
+type X_DSOUTPUTLEVELS = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwAnalogLeftTotalPeak: DWORD;// analog peak
     dwAnalogRightTotalPeak: DWORD;
@@ -176,7 +176,7 @@ type X_DSOUTPUTLEVELS = packed record
   end;
   PX_DSOUTPUTLEVELS = ^X_DSOUTPUTLEVELS;
 
-type X_DSCAPS = packed record
+type X_DSCAPS = record
     dwFree2DBuffers: DWORD;
     dwFree3DBuffers: DWORD;
     dwFreeBufferSGEs: DWORD;
@@ -189,13 +189,13 @@ type XTL_PIDirectSoundStream = type PInterface;
 type LPDIRECTSOUND = type PInterface;
 type LPDIRECTSOUNDSTREAM = XTL_PIDirectSoundStream;
 
-type X_CDirectSound = packed record
+type X_CDirectSound = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     // TODO -oCXBX: Fill this in?
   end;
   PX_CDirectSound = ^X_CDirectSound;
 
-type X_CDirectSoundBuffer = packed record
+type X_CDirectSoundBuffer = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     UnknownA: array [0..$20-1] of BYTE; // Offset: 0x00
     {union}case Integer of

@@ -50,7 +50,7 @@ type
 
 
 // Moved from uEmuXapi.pas, to prevent circular references :
-type _XINPUT_GAMEPAD = packed record
+type _XINPUT_GAMEPAD = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     wButtons: Word;
     bAnalogButtons: array [0..8-1] of Byte;
@@ -58,11 +58,11 @@ type _XINPUT_GAMEPAD = packed record
     sThumbLY: SHORT;
     sThumbRX: SHORT;
     sThumbRY: SHORT;
-  end; // packed size = 18 (as in Cxbx)
+  end; // size = 18 (as in Cxbx)
   XINPUT_GAMEPAD = _XINPUT_GAMEPAD;
   PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
 
-type _XINPUT_STATE = {not packed!} record
+type _XINPUT_STATE = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     dwPacketNumber: DWord;
     Gamepad: XINPUT_GAMEPAD;
@@ -120,12 +120,12 @@ const XBCTRL_MAX_DEVICES = XBCTRL_OBJECT_COUNT;
 
 
 // Xbox Controller Object Config
-type XBCtrlObjectCfg = packed record
+type XBCtrlObjectCfg = record
 // Branch:shogun  Revision:161  Translator:Shadow_Tj  Done:100
   dwDevice: int; // offset into m_InputDevice
   dwInfo: int; // extended information, depending on dwFlags
   dwFlags: int; // flags explaining the data format
-end; // packed size = 12 (as in Cxbx)
+end; // size = 12 (as in Cxbx)
 
 // class: XBController
 type XBController = object(Error)
@@ -167,7 +167,7 @@ type XBController = object(Error)
     // DirectInput
     m_pDirectInput8: IDIRECTINPUT8;
     // DirectInput Devices
-    m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of packed record
+    m_InputDevice: array [0..XBCTRL_MAX_DEVICES - 1] of record
       m_Device: IDIRECTINPUTDEVICE8;
       m_Flags: int;
     end;

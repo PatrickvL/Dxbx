@@ -41,12 +41,12 @@ uses
   uDxbxKrnl;
 
 type
-  X_DllVersionInfo = packed record
+  X_DllVersionInfo = record
     MajorVersion: Word;
     MinorVersion: Word;
     BuildNumber: Word;
     QFE: Word; // This might well be a flags member, just like in _XBE_LIBRARYVERSION
-  end; // packed size = 8
+  end; // size = 8
   PX_DllVersionInfo = ^X_DllVersionInfo;
 
 var

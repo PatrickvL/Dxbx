@@ -38,11 +38,11 @@ uses
 // From EmuXG.h :
 
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-type _XGPOINT3D = packed record
+type _XGPOINT3D = record
     u: DWORD;
     v: DWORD;
     w: DWORD;
-end; // packed size = 12
+end; // size = 12
 XGPOINT3D = _XGPOINT3D;
 PXGPOINT3D = ^XGPOINT3D;
 
