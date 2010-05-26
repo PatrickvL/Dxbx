@@ -587,12 +587,12 @@ begin
 
   // Use aCrossReference.Offset to determine the symbol-address that should be checked :
   Result := DetermineImmediateAddress(aStartingAddress, aCrossReference.Offset);
-  Dec(UIntPtr(Result), aCrossReference.BaseOffset);
+  Dec(IntPtr(Result), aCrossReference.BaseOffset);
   if IsAddressWithinScanRange(Result) then
     Exit;
 
   Result := DetermineRelativeAddress(aStartingAddress, aCrossReference.Offset);
-  Dec(UIntPtr(Result), aCrossReference.BaseOffset);
+  Dec(IntPtr(Result), aCrossReference.BaseOffset);
   if IsAddressWithinScanRange(Result) then
     Exit;
 
@@ -971,12 +971,15 @@ var
     _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
     _Test($001B018A, 'CDirectSound_SetRolloffFactor'); // TODO : Use correct pattern-name!
     _Test($001F35E3, '_USBD_Init@8'); // Cxbx incorrectly calls this XInitDevices!
-*)
-(*
+
     // Cxbx meshes :
     _Test($0001DE60, '_D3DDevice_SetTile@8'); // EmuIDirect3DDevice8_SetTile
     _Test($00020200, '?SetFence@D3D@@YGKK@Z'); // D3D::SetFence (XREF)
     _Test($0002CC34, '_XapiProcessHeap');
+
+    // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
+    _Test($0001F2C0, '?GetSurfaceFormat@PixelJar@D3D@@YGKPAUD3DPixelContainer@@0@Z'); // from EmuIDirect3DDevice8_Clear
+    _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
 *)
   end;
 
@@ -1150,6 +1153,8 @@ procedure TSymbolManager.DetermineFinalLocations;
     _Test($00195080, '_D3DDevice_LightEnable@8');
     _Test($001997F0, '?Get2DSurfaceDesc@PixelJar@D3D@@YGXPAUD3DPixelContainer@@IPAU_D3DSURFACE_DESC@@@Z'); //HLE: 0x001997F0 -> EmuGet2DSurfaceDesc
     _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
+    // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
+    _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
 *)
   end;
 
