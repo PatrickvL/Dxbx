@@ -62,6 +62,9 @@ var
 
 implementation
 
+uses
+  uDxbxKrnl;
+
 function XBE_FindSectionHeaderByName(pSectionName: PAnsiChar): PXBE_SECTIONHEADER;
 var
   i: Integer;
@@ -90,36 +93,12 @@ end;
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
 begin
-  CxbxKrnlCleanup(DxbxFormat(szErrorMessage, Args, {MayRenderArguments=}True));
+  uDxbxKrnl.DxbxKrnlCleanup(szErrorMessage, Args);
 end;
 
 procedure CxbxKrnlCleanup(const szErrorMessage: string);
-var
-  szBuffer1: string;
-//  buffer: array [0..15] of char;
 begin
-  // Print out ErrorMessage (if exists)
-  if szErrorMessage <> '' then
-  begin
-    szBuffer1 := {Format} 'CxbxKrnlCleanup : Received Fatal Message ->'#13#13 + szErrorMessage;
-{$IFDEF DEBUG}
-    DbgPrintf(szBuffer1);
-{$ENDIF}
-    MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONSTOP);
-  end;
-
-{$IFDEF DEBUG}
-  DbgPrintf('DxbxKrnl: Terminating Process');
-{$ENDIF}
-  fflush(stdout);
-
-  // Cleanup debug output
-  CloseLogs(); // FreeConsole();
-
-       (* if (GetConsoleTitle(buffer, 16) <> '') then
-            freopen('nul', 'w', stdout); *)
-
-  TerminateProcess(GetCurrentProcess(), 0);
+  uDxbxKrnl.DxbxKrnlCleanup(szErrorMessage);
 end;
 
 // Tooling methods to get and set stretches of bits inside a DWORD,

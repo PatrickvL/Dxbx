@@ -2142,7 +2142,7 @@ end;
 *)
 
 exports
-  XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
+  //XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
   XTL_EmuCreateFiber,
   XTL_EmuCreateMutex,
   XTL_EmuCreateSemaphore,

@@ -1082,7 +1082,7 @@ begin
 {$ENDIF}
 
   if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
-      CxbxKrnlCleanup('Unsupported FileInformationClass');
+    DxbxKrnlCleanup('Unsupported FileInformationClass');
 
   Ret := STATUS_SUCCESS; // DXBX - Ret might not have been initialized
 
@@ -1220,7 +1220,7 @@ begin
 
 // Cxbx commented this out :
 //  if (FileInfo <> FilePositionInformation) and (FileInfo <> FileNetworkOpenInformation) then
-//    CxbxKrnlCleanup('Unknown FILE_INFORMATION_CLASS 0x%.08X', [Ord(FileInfo)]);
+//    DxbxKrnlCleanup('Unknown FILE_INFORMATION_CLASS 0x%.08X', [Ord(FileInfo)]);
 
   Result := JwaNative.NtQueryInformationFile(
     FileHandle,
@@ -1368,7 +1368,7 @@ begin
 
   // Safety/Sanity Check
   if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileFsVolumeInformation{FileDirectoryInformation}) then
-      CxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
+    DxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
 
   ret := NtQueryVolumeInformationFile
   (

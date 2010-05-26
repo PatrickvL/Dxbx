@@ -270,7 +270,7 @@ begin
     aHandle,
     Pointer(XbeTLS.dwDataStartAddr),
     XbeTls,
-    PXbeLibraryVersion(@(aXbe.m_LibraryVersion[0])),
+    PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr),
     KernelDebugMode,
     PAnsiChar(AnsiString(KernelDebugFileName)),
     XbeHeader,
