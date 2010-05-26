@@ -67,18 +67,16 @@ procedure CxbxKrnlInit(
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc); stdcall;
 
+procedure DxbxKrnlCleanup(const szErrorMessage: string); overload;
+procedure DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
+
 procedure CxbxKrnlRegisterThread(const hThread: Handle);
 procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
-procedure EmuXRefFailure;
 procedure CxbxKrnlResume();
-procedure EmuPanic(); stdcall; //
-procedure CxbxKrnlNoFunc; cdecl;
 procedure CxbxKrnlSuspend();
 
 exports
-  CxbxKrnlInit,
-  CxbxKrnlNoFunc,
-  EmuPanic name '_EmuPanic@0';
+  CxbxKrnlInit;
 
   (*Exports EmuCleanThread name '_EmuCleanThread@0';
   { TODO -oDXBX: name need to be set }
@@ -100,7 +98,7 @@ procedure CxbxKrnlInit(
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
-// Branch:martin  Revision:39  Translator:Patrick  Done:100
+// Branch:shogun  Revision:162  Translator:Patrick  Done:100
 var
 //  MemXbeHeader: PXBE_HEADER;
 //  old_protection: DWord;
@@ -396,13 +394,49 @@ begin
   DbgPrintf('EmuMain : Initial thread ended.');
 {$ENDIF}
 
+  fflush(stdout);
+
   CxbxKrnlTerminateThread();
 end;
 
-procedure CxbxKrnlRegisterThread(const hThread: Handle);
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
+procedure DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
+begin
+  DxbxKrnlCleanup(DxbxFormat(szErrorMessage, Args, {MayRenderArguments=}True));
+end;
+
+procedure DxbxKrnlCleanup(const szErrorMessage: string);
 var
-  v: Integer;
+  szBuffer1: string;
+//  buffer: array [0..15] of char;
+begin
+  // Print out ErrorMessage (if exists)
+  if szErrorMessage <> '' then
+  begin
+    szBuffer1 := {Format} 'CxbxKrnlCleanup : Received Fatal Message ->'#13#13 + szErrorMessage;
+{$IFDEF DEBUG}
+    DbgPrintf(szBuffer1);
+{$ENDIF}
+    MessageBox(0, @(szBuffer1[1]), 'DxbxKrnl', MB_OK or MB_ICONSTOP);
+  end;
+
+{$IFDEF DEBUG}
+  DbgPrintf('DxbxKrnl: Terminating Process');
+{$ENDIF}
+  fflush(stdout);
+
+  // Cleanup debug output
+  CloseLogs(); // FreeConsole();
+
+       (* if (GetConsoleTitle(buffer, 16) <> '') then
+            freopen('nul', 'w', stdout); *)
+
+  TerminateProcess(GetCurrentProcess(), 0);
+end;
+
+procedure CxbxKrnlRegisterThread(const hThread: Handle);
+// Branch:shogun  Revision:162  Translator:Shadow_tj  Done:100
+var
+  v: int;
 begin
   v := 0;
   while v < MAXIMUM_XBOX_THREADS do
@@ -419,73 +453,12 @@ begin
   CxbxKrnlCleanup('There are too many active threads!');
 end;
 
-procedure CxbxKrnlTerminateThread();
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  EmuCleanupFS;
-
-  TerminateThread(GetCurrentThread(), 0);
-end;
-
 // alert for the situation where an Xref function body is hit
 
-procedure EmuXRefFailure();
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-  CxbxKrnlCleanup('XRef-only function body reached. Fatal Error.');
-end;
-
-procedure CxbxKrnlResume();
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-var
-  v: Integer;
-  dwExitCode: DWORD;
-  szBuffer: array [0..256-1] of Char;
-  MyhWnd: Handle;
-begin
-  if (not g_bEmuSuspended) then
-    Exit;
-
-  // remove 'paused' from rendering window caption text
-  begin
-    if DxbxKrnl_hEmuParent <> 0 then
-      MyhWnd := DxbxKrnl_hEmuParent
-    else
-      MyhWnd := g_hEmuWindow;
-
-    GetWindowText(MyhWnd, szBuffer, 255);
-    szBuffer[strlen(szBuffer)-9] := #0;
-    SetWindowText(MyhWnd, szBuffer);
-  end;
-
-  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
-  begin
-    if (g_hThreads[v] <> 0) then
-    begin
-      if GetExitCodeThread(g_hThreads[v], {var}dwExitCode) and (dwExitCode = STILL_ACTIVE) then
-      begin
-        // resume thread if it is active
-        ResumeThread(g_hThreads[v]);
-      end
-      else
-      begin
-        // remove thread from thread list if it is dead
-        g_hThreads[v] := 0;
-      end;
-    end;
-  end;
-
-  g_bEmuSuspended := False;
-end;
-
 procedure CxbxKrnlSuspend();
-// Branch:martin  Revision:39  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
-  v: Integer;
+  v: int;
   dwExitCode: DWORD;
   szBuffer: array [0..256-1] of Char;
   MyhWnd: Handle;
@@ -524,32 +497,61 @@ begin
     SetWindowText(MyhWnd, szBuffer);
   end;
 
-  g_bEmuSuspended := True;
+  g_bEmuSuspended := true;
+end;
+
+procedure CxbxKrnlResume();
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+var
+  v: int;
+  dwExitCode: DWORD;
+  szBuffer: array [0..256-1] of Char;
+  MyhWnd: Handle;
+begin
+  if (not g_bEmuSuspended) then
+    Exit;
+
+  // remove 'paused' from rendering window caption text
+  begin
+    if DxbxKrnl_hEmuParent <> 0 then
+      MyhWnd := DxbxKrnl_hEmuParent
+    else
+      MyhWnd := g_hEmuWindow;
+
+    GetWindowText(MyhWnd, szBuffer, 255);
+    szBuffer[strlen(szBuffer)-9] := #0;
+    SetWindowText(MyhWnd, szBuffer);
+  end;
+
+  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
+  begin
+    if (g_hThreads[v] <> 0) then
+    begin
+      if GetExitCodeThread(g_hThreads[v], {var}dwExitCode) and (dwExitCode = STILL_ACTIVE) then
+      begin
+        // resume thread if it is active
+        ResumeThread(g_hThreads[v]);
+      end
+      else
+      begin
+        // remove thread from thread list if it is dead
+        g_hThreads[v] := 0;
+      end;
+    end;
+  end;
+
+  g_bEmuSuspended := false;
 end;
 
 
-procedure EmuPanic(); stdcall;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
+procedure CxbxKrnlTerminateThread();
+// Branch:shogun  Revision:162  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : EmuPanic');
-{$ENDIF}
+  EmuCleanupFS;
 
-  CxbxKrnlCleanup('Kernel Panic!');
-
-  EmuSwapFS(fsXbox);
-end;
-
-procedure CxbxKrnlNoFunc;
-// Branch:martin  Revision:39  Translator:Shadow_tj  Done:100
-begin
-{$IFDEF DEBUG}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuMain : CxbxKrnlNoFunc();');
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  TerminateThread(GetCurrentThread(), 0);
 end;
 
 end.

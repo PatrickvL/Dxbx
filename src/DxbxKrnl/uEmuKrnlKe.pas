@@ -577,7 +577,7 @@ begin
 
   // Cxbx : I really tried to avoid adding this...
   asm int 3; end;
-  CxbxKrnlCleanup('KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)');
+  DxbxKrnlCleanup('KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)');
 
   EmuSwapFS(fsXbox);
 
@@ -782,7 +782,7 @@ begin
       [Timer, QuadPart(@DueTime), Period, Dpc]);
 {$ENDIF}
 
-  CxbxKrnlCleanup('KeSetTimerEx is not implemented');
+  DxbxKrnlCleanup('KeSetTimerEx is not implemented');
 
   EmuSwapFS(fsXbox);
 

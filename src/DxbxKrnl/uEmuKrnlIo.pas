@@ -479,7 +479,7 @@ begin
   Result := STATUS_SUCCESS;
 
   // TODO -oCXBX: Try redirecting to NtCreateFile if this function ever is run into
-  CxbxKrnlCleanup('IoCreateFile not implemented');
+  DxbxKrnlCleanup('IoCreateFile not implemented');
 
   EmuSwapFS(fsXbox);
 end;

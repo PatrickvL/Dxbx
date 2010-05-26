@@ -1481,7 +1481,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDeviceCaps' +
     #13#10'(' +
-    #13#10'   pCaps                   : 0x%.08X' +
+    #13#10'   pCaps                     : 0x%.08X' +
     #13#10');',
     [pCaps]);
 {$ENDIF}
@@ -3713,7 +3713,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDisplayMode' +
       #13#10'(' +
-      #13#10'   pMode             : 0x%.08X' +
+      #13#10'   pMode               : 0x%.08X' +
       #13#10');',
       [pMode]);
 {$ENDIF}
@@ -4391,7 +4391,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DResource8_Register' +
     #13#10'(' +
-    #13#10'   pThis             : 0x%.08X (.Data: 0x%.08X)' +
+    #13#10'   pThis             : 0x%.08X (->Data: 0x%.08X)' +
     #13#10'   pBase             : 0x%.08X' +
     #13#10');',
     [pThis, pThis.Data, pBase]);
@@ -5154,7 +5154,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DResource8_Release' +
     #13#10'(' +
-    #13#10'   pThis             : 0x%.08X' +
+    #13#10'   pThis               : 0x%.08X' +
     #13#10');',
     [pThis]);
 {$ENDIF}
@@ -5459,8 +5459,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DSurface8_GetDesc' +
     #13#10'(' +
-    #13#10'   pThis             : 0x%.08X' +
-    #13#10'   pDesc             : 0x%.08X' +
+    #13#10'   pThis               : 0x%.08X' +
+    #13#10'   pDesc               : 0x%.08X' +
     #13#10');',
     [pThis, pDesc]);
 {$ENDIF}
@@ -7957,7 +7957,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetMaterial' +
     #13#10'(' +
-    #13#10'   pMaterial         : 0x%.08X' +
+    #13#10'   pMaterial           : 0x%.08X' +
     #13#10');',
     [pMaterial]);
 {$ENDIF}
