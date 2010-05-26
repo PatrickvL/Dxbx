@@ -19,7 +19,7 @@ unit uDxbxKrnl;
 
 {$INCLUDE Dxbx.inc}
 
-{.$DEFINE LOG_STRUCT_SIZES}
+{$DEFINE LOG_STRUCT_SIZES}
 
 interface
 
@@ -41,9 +41,11 @@ uses
 {$IFDEF LOG_STRUCT_SIZES}
   uError,
   uMutex,
-  uVertexBuffer,
   uXBController,
   uXBVideo,
+  uVertexBuffer,
+  uVertexShader,
+  uEmuLDT,
   uEmuD3D8Types,
 {$ENDIF LOG_STRUCT_SIZES}
   uEmuShared,
@@ -101,6 +103,17 @@ procedure CxbxKrnlInit(
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
 // Branch:shogun  Revision:162  Translator:Patrick  Done:100
+{$IFDEF LOG_STRUCT_SIZES}
+var
+  LogOnlyDifferences: Boolean;
+
+  procedure _TypeSize(const aTypeName: string; const aActualSize, aExpectedSize: Integer);
+  begin
+    if (aActualSize <> aExpectedSize) or (LogOnlyDifferences = False) then
+      Dbgprintf('sizeof(%s) = %d  (Cxbx has %d)', [aTypeName, aActualSize, aExpectedSize]);
+  end;
+{$ENDIF LOG_STRUCT_SIZES}
+
 var
 //  MemXbeHeader: PXBE_HEADER;
 //  old_protection: DWord;
@@ -108,6 +121,7 @@ var
   pCertificate: PXBE_CERTIFICATE;
   hDupHandle: Handle;
   OldExceptionFilter: TFNTopLevelExceptionFilter;
+
 begin
   // debug console allocation (if configured)
   CreateLogs(DbgMode, string(szDebugFileName)); // Initialize logging interface
@@ -125,43 +139,66 @@ begin
   // For Unicode Conversions
   // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
 {$IFDEF LOG_STRUCT_SIZES}
-  Dbgprintf('sizeof(EmuShared) = %d', [sizeof(EmuShared)]);
-  //Dbgprintf('sizeof(EmuThis) = %d', [sizeof(EmuThis)]);
-  Dbgprintf('sizeof(Error) = %d', [sizeof(Error)]);
-  Dbgprintf('sizeof(Mutex) = %d', [sizeof(Mutex)]);
-  Dbgprintf('sizeof(PATCHEDSTREAM) = %d', [sizeof(PATCHEDSTREAM)]);
-  Dbgprintf('sizeof(VertexPatcher) = %d', [sizeof(VertexPatcher)]);
-  //Dbgprintf('sizeof(Wnd) = %d', [sizeof(Wnd)]);
-  Dbgprintf('sizeof(XBController) = %d', [sizeof(XBController)]);
-  Dbgprintf('sizeof(Xbe) = %d', [Xbe.InstanceSize]);
-  Dbgprintf('sizeof(XBVideo) = %d', [sizeof(XBVideo)]);
-  Dbgprintf('sizeof(XINPUT_GAMEPAD) = %d', [sizeof(_XINPUT_GAMEPAD)]);
-  Dbgprintf('sizeof(XINPUT_STATE) = %d', [sizeof(_XINPUT_STATE)]);
-  //Dbgprintf('sizeof(X_CDirectSoundStream) = %d', [sizeof(X_CDirectSoundStream)]);
-  //Dbgprintf('sizeof(X_CMcpxStream) = %d', [sizeof(X_CMcpxStream)]);
-  Dbgprintf('sizeof(X_D3DBaseTexture) = %d', [sizeof(X_D3DBaseTexture)]);
-  Dbgprintf('sizeof(X_D3DCubeTexture) = %d', [sizeof(X_D3DCubeTexture)]);
-  Dbgprintf('sizeof(X_D3DFixup) = %d', [sizeof(X_D3DFixup)]);
-  Dbgprintf('sizeof(X_D3DPixelContainer) = %d', [sizeof(X_D3DPixelContainer)]);
-  Dbgprintf('sizeof(X_D3DPushBuffer) = %d', [sizeof(X_D3DPushBuffer)]);
-  Dbgprintf('sizeof(X_D3DResource) = %d', [sizeof(X_D3DResource)]);
-  Dbgprintf('sizeof(X_D3DSurface) = %d', [sizeof(X_D3DSurface)]);
-  Dbgprintf('sizeof(X_D3DTILE) = %d', [sizeof(X_D3DTILE)]);
-  Dbgprintf('sizeof(X_D3DVertexShader) = %d', [sizeof(X_D3DVertexShader)]);
-  Dbgprintf('sizeof(_D3DSWAPDATA) = %d', [sizeof(_D3DSWAPDATA)]);
-  Dbgprintf('sizeof(_D3DVBLANKDATA) = %d', [sizeof(_D3DVBLANKDATA)]);
-  Dbgprintf('sizeof(_STREAM_DYNAMIC_PATCH_) = %d', [sizeof(_STREAM_DYNAMIC_PATCH_)]);
-  Dbgprintf('sizeof(_VERTEX_DYNAMIC_PATCH_) = %d', [sizeof(_VERTEX_DYNAMIC_PATCH_)]);
-  Dbgprintf('sizeof(_VERTEX_SHADER) = %d', [sizeof(_VERTEX_SHADER)]);
-  Dbgprintf('sizeof(_X_D3DDISPLAYMODE) = %d', [sizeof(_X_D3DDISPLAYMODE)]);
-  Dbgprintf('sizeof(_X_D3DFIELD_STATUS) = %d', [sizeof(_X_D3DFIELD_STATUS)]);
-  Dbgprintf('sizeof(_X_D3DGAMMARAMP) = %d', [sizeof(_X_D3DGAMMARAMP)]);
-  Dbgprintf('sizeof(_X_D3DPIXELSHADERDEF) = %d', [sizeof(_X_D3DPIXELSHADERDEF)]);
-  Dbgprintf('sizeof(_X_D3DPRESENT_PARAMETERS) = %d', [sizeof(_X_D3DPRESENT_PARAMETERS)]);
-  Dbgprintf('sizeof(_X_D3DSURFACE_DESC) = %d', [sizeof(_X_D3DSURFACE_DESC)]);
-  Dbgprintf('sizeof(_X_STREAMINPUT) = %d', [sizeof(_X_STREAMINPUT)]);
-  Dbgprintf('sizeof(_X_VERTEXATTRIBUTEFORMAT) = %d', [sizeof(_X_VERTEXATTRIBUTEFORMAT)]);
-  Dbgprintf('sizeof(_X_VERTEXSHADERINPUT) = %d', [sizeof(_X_VERTEXSHADERINPUT)]);
+  LogOnlyDifferences := False;
+  _TypeSize('EmuShared', sizeof(EmuShared), 7164);
+  //_TypeSize('EmuThis', sizeof(EmuThis), 1);
+  _TypeSize('Error', sizeof(Error), 8);
+  _TypeSize('Mutex', sizeof(Mutex), 16);
+  _TypeSize('PATCHEDSTREAM', sizeof(PATCHEDSTREAM), 20);
+  _TypeSize('VertexPatcher', sizeof(VertexPatcher), 336);
+  //_TypeSize('Wnd', sizeof(Wnd), ?);
+  _TypeSize('XBCtrlObjectCfg', sizeof(XBCtrlObjectCfg), 12);
+  _TypeSize('XBController', sizeof(XBController), 6760);
+  //_TypeSize('Xbe', Xbe.InstanceSize, 1180);
+  _TypeSize('XBVideo', sizeof(XBVideo), 128);
+  _TypeSize('XINPUT_GAMEPAD', sizeof(_XINPUT_GAMEPAD), 18);
+  _TypeSize('XINPUT_STATE', sizeof(_XINPUT_STATE), 24);
+  //_TypeSize('X_CDirectSoundStream', X_CDirectSoundStream.InstanceSize, 0);
+  //_TypeSize('X_CMcpxStream', X_CMcpxStream.InstanceSize, 0);
+  _TypeSize('X_D3DBaseTexture', sizeof(X_D3DBaseTexture), 20);
+  _TypeSize('X_D3DCubeTexture', sizeof(X_D3DCubeTexture), 20);
+  _TypeSize('X_D3DFixup', sizeof(X_D3DFixup), 24);
+  _TypeSize('X_D3DPixelContainer', sizeof(X_D3DPixelContainer), 20);
+  _TypeSize('X_D3DPushBuffer', sizeof(X_D3DPushBuffer), 20);
+  _TypeSize('X_D3DResource', sizeof(X_D3DResource), 12);
+  _TypeSize('X_D3DSurface', sizeof(X_D3DSurface), 20);
+  _TypeSize('X_D3DTILE', sizeof(X_D3DTILE), 24);
+  _TypeSize('X_D3DVertexShader', sizeof(X_D3DVertexShader), 368);
+  _TypeSize('_D3DSWAPDATA', sizeof(_D3DSWAPDATA), 20);
+  _TypeSize('_D3DVBLANKDATA', sizeof(_D3DVBLANKDATA), 12);
+  _TypeSize('_PATCHEDSTREAM', sizeof(_PATCHEDSTREAM), 20);
+  _TypeSize('_CACHEDSTREAM', sizeof(_CACHEDSTREAM), 56);
+  _TypeSize('_D3DIVB', sizeof(_D3DIVB), 72);
+  _TypeSize('_STREAM_DYNAMIC_PATCH_', sizeof(_STREAM_DYNAMIC_PATCH_), 16);
+  _TypeSize('_VERTEX_DYNAMIC_PATCH_', sizeof(_VERTEX_DYNAMIC_PATCH_), 8);
+  _TypeSize('_VERTEX_SHADER', sizeof(_VERTEX_SHADER), 40);
+  _TypeSize('_X_D3DDISPLAYMODE', sizeof(_X_D3DDISPLAYMODE), 20);
+  _TypeSize('_X_D3DFIELD_STATUS', sizeof(_X_D3DFIELD_STATUS), 8);
+  _TypeSize('_X_D3DGAMMARAMP', sizeof(_X_D3DGAMMARAMP), 768);
+  _TypeSize('_X_D3DPIXELSHADERDEF', sizeof(_X_D3DPIXELSHADERDEF), 240);
+  _TypeSize('_X_D3DPRESENT_PARAMETERS', sizeof(_X_D3DPRESENT_PARAMETERS), 68);
+  _TypeSize('_X_D3DSURFACE_DESC', sizeof(_X_D3DSURFACE_DESC), 28);
+  _TypeSize('_X_STREAMINPUT', sizeof(_X_STREAMINPUT), 12);
+  _TypeSize('_X_VERTEXATTRIBUTEFORMAT', sizeof(_X_VERTEXATTRIBUTEFORMAT), 256);
+  _TypeSize('_X_VERTEXSHADERINPUT', sizeof(_X_VERTEXSHADERINPUT), 16);
+  _TypeSize('X_D3DPalette', sizeof(X_D3DPalette), 12);
+  _TypeSize('X_D3DVertexBuffer', sizeof(X_D3DVertexBuffer), 12);
+  _TypeSize('X_D3DIndexBuffer', sizeof(X_D3DIndexBuffer), 12);
+
+  _TypeSize('_VSH_OPCODE_PARAMS', sizeof(_VSH_OPCODE_PARAMS), 12);
+  _TypeSize('_VSH_PARAMETER', sizeof(_VSH_PARAMETER), 28);
+  _TypeSize('_VSH_OUTPUT', sizeof(_VSH_OUTPUT), 24);
+  _TypeSize('_VSH_SHADER_INSTRUCTION', sizeof(_VSH_SHADER_INSTRUCTION), 120);
+  _TypeSize('_VSH_IMD_OUTPUT', sizeof(_VSH_IMD_OUTPUT), 12);
+  _TypeSize('_VSH_IMD_PARAMETER', sizeof(_VSH_IMD_PARAMETER), 36);
+  _TypeSize('_VSH_INTERMEDIATE_FORMAT', sizeof(_VSH_INTERMEDIATE_FORMAT), 136);
+  _TypeSize('_VSH_FIELDMAPPING', sizeof(_VSH_FIELDMAPPING), 8);
+  _TypeSize('_VSH_SHADER_HEADER', sizeof(_VSH_SHADER_HEADER), 4);
+  _TypeSize('_VSH_XBOX_SHADER', sizeof(_VSH_XBOX_SHADER), 139272);
+  //_TypeSize('_VSH_TYPE_PATCH_DATA', sizeof(VSH_TYPE_PATCH_DATA), 1028);
+  //_TypeSize('_VSH_STREAM_PATCH_DATA', sizeof(VSH_STREAM_PATCH_DATA), 4100);
+  //_TypeSize('_VSH_PATCH_DATA', sizeof(VSH_PATCH_DATA), 5136);
+
 {$ENDIF LOG_STRUCT_SIZES}
 
 {$IFDEF _DEBUG_TRACE}

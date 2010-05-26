@@ -83,11 +83,11 @@ const XINPUT_SETSTATE_LATENCY = 4;
 const XINPUT_SETSTATE_SLOTS = 16;
 
 // XInputSetState status waiters
-type XInputSetStateStatus = packed record
+type XInputSetStateStatus = record
     hDevice: HANDLE;
     dwLatency: DWORD;
     pFeedback: PVOID;
-  end; // packed size = 12
+  end; // size = 12
 
 var g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 

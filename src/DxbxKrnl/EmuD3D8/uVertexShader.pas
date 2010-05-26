@@ -20,6 +20,8 @@ unit uVertexShader;
 
 {$INCLUDE Dxbx.inc}
 
+{$MINENUMSIZE 4} // Enums in this unit need to be 4 bytes !
+
 interface
 
 uses
@@ -194,17 +196,17 @@ type _VSH_MAC =
 );
 VSH_MAC = _VSH_MAC;
 
-type _VSH_OPCODE_PARAMS = packed record
+type _VSH_OPCODE_PARAMS = record
     ILU: VSH_ILU;
     MAC: VSH_MAC;
     A: boolean;
     B: boolean;
     C: boolean;
-  end; // packed size = 5
+  end; // size = 12 (as in Cxbx)
   VSH_OPCODE_PARAMS = _VSH_OPCODE_PARAMS;
   PVSH_OPCODE_PARAMS = ^VSH_OPCODE_PARAMS;
 
-type _VSH_SWIZZLE = 
+type _VSH_SWIZZLE =
 (
     SWIZZLE_X = 0,
     SWIZZLE_Y,
@@ -213,16 +215,16 @@ type _VSH_SWIZZLE =
 );
 VSH_SWIZZLE = _VSH_SWIZZLE;
 
-type _VSH_PARAMETER = packed record
+type _VSH_PARAMETER = record
     ParameterType: VSH_PARAMETER_TYPE;      // Parameter type, R, V or C
     Neg: boolean;                           // TRUE if negated, FALSE if not
     Swizzle: array [0..4-1] of VSH_SWIZZLE; // The four swizzles
     Address: int16;                         // Register address
-  end; // packed size = 8
+  end; // size = 28 (as in Cxbx)
   VSH_PARAMETER = _VSH_PARAMETER;
   PVSH_PARAMETER = ^VSH_PARAMETER;
 
-type _VSH_OUTPUT = packed record
+type _VSH_OUTPUT = record
     // Output register
     OutputMux: VSH_OUTPUT_MUX;       // MAC or ILU used as output
     OutputType: VSH_OUTPUT_TYPE;     // C or O
@@ -234,11 +236,11 @@ type _VSH_OUTPUT = packed record
     // ILU output R register
     ILURMask: Dxbx4Booleans;
     ILURAddress: boolean;
-  end; // packed size = 18
+  end; // size = 24 (as in Cxbx)
   VSH_OUTPUT = _VSH_OUTPUT;
 
 // The raw, parsed shader instruction (can be many combined [paired] instructions)
-type _VSH_SHADER_INSTRUCTION = packed record
+type _VSH_SHADER_INSTRUCTION = record
     ILU: VSH_ILU;
     MAC: VSH_MAC;
     Output: VSH_OUTPUT;
@@ -246,11 +248,11 @@ type _VSH_SHADER_INSTRUCTION = packed record
     B: VSH_PARAMETER;
     C: VSH_PARAMETER;
     a0x: boolean;
-  end; // packed size = 45
+  end; // size = 120 (as in Cxbx)
   VSH_SHADER_INSTRUCTION = _VSH_SHADER_INSTRUCTION;
   PVSH_SHADER_INSTRUCTION = ^VSH_SHADER_INSTRUCTION;
 
-type _VSH_IMD_OUTPUT_TYPE = 
+type _VSH_IMD_OUTPUT_TYPE =
 (
     IMD_OUTPUT_C,
     IMD_OUTPUT_R,
@@ -266,61 +268,61 @@ type _VSH_IMD_INSTRUCTION_TYPE =
 );
 VSH_IMD_INSTRUCTION_TYPE = _VSH_IMD_INSTRUCTION_TYPE;
 
-type _VSH_IMD_OUTPUT = packed record
+type _VSH_IMD_OUTPUT = record
     Type_: VSH_IMD_OUTPUT_TYPE;
     Mask: Dxbx4Booleans;
     Address: UInt16;
-  end; // packed size = 7
+  end; // size = 12 (as in Cxbx)
   VSH_IMD_OUTPUT = _VSH_IMD_OUTPUT;
   PVSH_IMD_OUTPUT = ^VSH_IMD_OUTPUT;
 
 
-type _VSH_IMD_PARAMETER = packed record
+type _VSH_IMD_PARAMETER = record
     Active: boolean;
     Parameter: VSH_PARAMETER;
     IsA0X: boolean;
-  end; // packed size = 10
+  end; // size = 36 (as in Cxbx)
   VSH_IMD_PARAMETER = _VSH_IMD_PARAMETER;
   PVSH_IMD_PARAMETER = ^VSH_IMD_PARAMETER;
 
   TVSH_IMD_PARAMETERArray = array [0..(MaxInt div SizeOf(VSH_IMD_PARAMETER)) - 1] of VSH_IMD_PARAMETER;
   PVSH_IMD_PARAMETERs = ^TVSH_IMD_PARAMETERArray;
 
-type _VSH_INTERMEDIATE_FORMAT = packed record
+type _VSH_INTERMEDIATE_FORMAT = record
     IsCombined: boolean;
     InstructionType: VSH_IMD_INSTRUCTION_TYPE;
     MAC: VSH_MAC;
     ILU: VSH_ILU;
     Output: VSH_IMD_OUTPUT;
     Parameters: array [0..3-1] of VSH_IMD_PARAMETER;
-  end; // packed size = 41
+  end; // size = 136 (as in Cxbx)
   VSH_INTERMEDIATE_FORMAT = _VSH_INTERMEDIATE_FORMAT;
   PVSH_INTERMEDIATE_FORMAT = ^VSH_INTERMEDIATE_FORMAT;
 
 // Used for xvu spec definition
-type _VSH_FIELDMAPPING = packed record
+type _VSH_FIELDMAPPING = record
     FieldName: VSH_FIELD_NAME;
     SubToken: uint08;
     StartBit: uint08;
     BitLength: uint08;
-  end; // packed size = 4
+  end; // size = 8 (as in Cxbx)
   VSH_FIELDMAPPING = _VSH_FIELDMAPPING;
   PVSH_FIELDMAPPING = ^VSH_FIELDMAPPING;
 
-type _VSH_SHADER_HEADER = packed record
+type _VSH_SHADER_HEADER = record
     Type_: uint08;
     Version: uint08;
     NumInst: uint08;
     Unknown0: uint08;
-  end; // packed size = 4
+  end; // size = 4 (as in Cxbx)
   VSH_SHADER_HEADER = _VSH_SHADER_HEADER;
   PVSH_SHADER_HEADER = ^VSH_SHADER_HEADER;
 
-type _VSH_XBOX_SHADER = packed record
+type _VSH_XBOX_SHADER = record
     ShaderHeader: VSH_SHADER_HEADER;
     IntermediateCount: uint16;
     Intermediate: array [0..VSH_MAX_INTERMEDIATE_COUNT -1] of VSH_INTERMEDIATE_FORMAT;
-  end; // packed size = 41990
+  end; // size = 139272 (as in Cxbx)
   VSH_XBOX_SHADER = _VSH_XBOX_SHADER;
   PVSH_XBOX_SHADER = ^VSH_XBOX_SHADER;
 
@@ -1640,24 +1642,24 @@ end;
 // * Vertex shader declaration recompiler
 // ****************************************************************************
 
-type _VSH_TYPE_PATCH_DATA = packed record
+type _VSH_TYPE_PATCH_DATA = record
     NbrTypes: DWORD;
     Types: array [0..256-1] of UINT;
-  end; // packed size = 1028
+  end; // size = 1028 (as in Cxbx)
   VSH_TYPE_PATCH_DATA = _VSH_TYPE_PATCH_DATA;
 
-type _VSH_STREAM_PATCH_DATA = packed record
+type _VSH_STREAM_PATCH_DATA = record
     NbrStreams: DWORD;
     pStreamPatches: array [0..256-1] of STREAM_DYNAMIC_PATCH;
-  end; // packed size = 4100
+  end; // size = 4100 (as in Cxbx)
   VSH_STREAM_PATCH_DATA = _VSH_STREAM_PATCH_DATA;
 
-type _VSH_PATCH_DATA = packed record
+type _VSH_PATCH_DATA = record
     NeedPatching: boolean;
     ConvertedStride: DWORD;
     TypePatchData: VSH_TYPE_PATCH_DATA;
     StreamPatchData: VSH_STREAM_PATCH_DATA;
-  end; // packed size = 5133
+  end; // size = 5136 (as in Cxbx)
   VSH_PATCH_DATA = _VSH_PATCH_DATA;
   PVSH_PATCH_DATA = ^VSH_PATCH_DATA;
 

@@ -40,14 +40,14 @@ uses
   uKernelThunk,
   uDxbxKrnl;
 
-type _IMAGE_TLS_DIRECTORY = packed record
+type _IMAGE_TLS_DIRECTORY = record
     StartAddressOfRawData: DWord;
     EndAddressOfRawData: DWord;
     AddressOfIndex: DWord;
     AddressOfCallbacks: DWord;
     SizeOfZeroFill: DWord;
     Characteristics: DWord;
-  end; // packed size = 24
+  end; // size = 24
   TImageTlsDirectory = _IMAGE_TLS_DIRECTORY;
   IMAGE_TLS_DIRECTORY = _IMAGE_TLS_DIRECTORY;
   PImageTlsDirectory = ^TImageTlsDirectory;
