@@ -65,12 +65,13 @@ type _VertexPatchDesc = packed record
   PVertexPatchDesc = ^VertexPatchDesc;
 
 type _PATCHEDSTREAM = {not packed!} record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     pOriginalStream: XTL_PIDirect3DVertexBuffer8;
     pPatchedStream: XTL_PIDirect3DVertexBuffer8;
     uiOrigStride: UINT;
     uiNewStride: UINT;
     bUsedCached: _bool;
-  end; // size = 17 packed / 20 normal (as in Cxbx)
+  end; // size = 20 (as in Cxbx)
   PATCHEDSTREAM = _PATCHEDSTREAM;
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
 

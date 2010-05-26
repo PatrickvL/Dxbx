@@ -35,6 +35,7 @@ uses
 
 type
   XBVideo = object(Error)
+  // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   private
     // Configuration
     m_szVideoResolution: array [0..100-1] of _char;

@@ -74,7 +74,7 @@ begin
   DbgPrintf('EmuXapi : EmuXGIsSwizzledFormat' +
       #13#10'(' +
       #13#10'   Format              : 0x%.08X' +
-      #13#10')',
+      #13#10');',
       [Ord(Format)]);
   EmuSwapFS(fsXbox);
 {$ENDIF}

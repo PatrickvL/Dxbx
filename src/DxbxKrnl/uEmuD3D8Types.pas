@@ -150,19 +150,19 @@ type _X_D3DRESOURCETYPE =
 );
 X_D3DRESOURCETYPE = _X_D3DRESOURCETYPE;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _X_D3DDISPLAYMODE = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Width: UINT;
     Height: UINT;
     RefreshRate: UINT;
     Flags: DWORD;
     Format: X_D3DFORMAT;
-  end; // packed size = 20
+  end; // packed size = 20 (as in Cxbx)
   X_D3DDISPLAYMODE = _X_D3DDISPLAYMODE;
   PX_D3DDISPLAYMODE = ^X_D3DDISPLAYMODE;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _X_D3DSURFACE_DESC = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Format: X_D3DFORMAT;
     Type_: X_D3DRESOURCETYPE;
     Usage: DWORD;
@@ -170,12 +170,12 @@ type _X_D3DSURFACE_DESC = packed record
     MultiSampleType: D3DMULTISAMPLE_TYPE;
     Width: UINT;
     Height: UINT;
-  end; // packed size = 28
+  end; // packed size = 28 (as in Cxbx)
   X_D3DSURFACE_DESC = _X_D3DSURFACE_DESC;
   PX_D3DSURFACE_DESC = ^X_D3DSURFACE_DESC;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _X_D3DPRESENT_PARAMETERS = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     BackBufferWidth: UINT;
     BackBufferHeight: UINT;
     BackBufferFormat: X_D3DFORMAT;
@@ -197,23 +197,23 @@ type _X_D3DPRESENT_PARAMETERS = packed record
     // Assert(Integer(@(PX_D3DPRESENT_PARAMETERS(nil).BufferSurfaces[0])) = SizeOf(_D3DPRESENT_PARAMETERS_));
     BufferSurfaces: array [0..3-1] of XTL_PIDirect3DSurface8;
     DepthStencilSurface: XTL_PIDirect3DSurface8;
-  end; // packed size = 68
+  end; // packed size = 68 (as in Cxbx)
   X_D3DPRESENT_PARAMETERS = _X_D3DPRESENT_PARAMETERS;
   PX_D3DPRESENT_PARAMETERS = ^X_D3DPRESENT_PARAMETERS;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _X_D3DGAMMARAMP = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Red: array [0..256-1] of BYTE;
     Green: array [0..256-1] of BYTE;
     Blue: array [0..256-1] of BYTE;
-  end; // packed size = 768
+  end; // packed size = 768 (as in Cxbx)
   X_D3DGAMMARAMP = _X_D3DGAMMARAMP;
   PX_D3DGAMMARAMP = ^X_D3DGAMMARAMP;
 
 const X_PIXELSHADER_FAKE_HANDLE = $DEADBEEF;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type X_D3DVertexShader = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     {union}case Integer of
      0: ( UnknownA: DWORD);
      1: ( Handle: DWORD;
@@ -221,11 +221,11 @@ type X_D3DVertexShader = packed record
     Flags: DWORD;
     UnknownC: array [0..$59-1] of DWORD;
     ); // union
-  end; // packed size = 368
+  end; // packed size = 368 (as in Cxbx)
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _X_D3DPIXELSHADERDEF = packed record // <- blueshogun 10/1/07
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     PSAlphaInputs: array [0..8-1] of DWORD;  // Alpha inputs for each stage
     PSFinalCombinerInputsABCD: DWORD;        // Final combiner inputs
     PSFinalCombinerInputsEFG: DWORD;         // Final combiner inputs (continued)
@@ -244,33 +244,33 @@ type _X_D3DPIXELSHADERDEF = packed record // <- blueshogun 10/1/07
     PSC0Mapping: DWORD;                      // Mapping of c0 regs to D3D constants
     PSC1Mapping: DWORD;                      // Mapping of c1 regs to D3D constants
     PSFinalCombinerConstants: DWORD;         // Final combiner constant mapping
-  end; // packed size = 240
+  end; // packed size = 240 (as in Cxbx)
   X_D3DPIXELSHADERDEF = _X_D3DPIXELSHADERDEF;
   PX_D3DPIXELSHADERDEF = ^X_D3DPIXELSHADERDEF;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _STREAM_DYNAMIC_PATCH_ = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     NeedPatch: BOOL_;       // This is to know whether is data which must be patched
     ConvertedStride: DWORD;
     NbrTypes: DWORD;        // Number of the stream data types
     pTypes: PUINTs;         // The stream data types (xbox)
-  end; // packed size = 16
+  end; // packed size = 16 (as in Cxbx)
   STREAM_DYNAMIC_PATCH = _STREAM_DYNAMIC_PATCH_;
   PSTREAM_DYNAMIC_PATCH = ^STREAM_DYNAMIC_PATCH;
 
   TSTREAM_DYNAMIC_PATCHArray = array [0..MaxInt div SizeOf(STREAM_DYNAMIC_PATCH) - 1] of STREAM_DYNAMIC_PATCH;
   PSTREAM_DYNAMIC_PATCHs = ^TSTREAM_DYNAMIC_PATCHArray;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _VERTEX_DYNAMIC_PATCH_ = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     NbrStreams: UINT; // The number of streams the vertex shader uses
     pStreamPatches: PSTREAM_DYNAMIC_PATCHs;
-  end; // packed size = 8
+  end; // packed size = 8 (as in Cxbx)
   VERTEX_DYNAMIC_PATCH = _VERTEX_DYNAMIC_PATCH_;
   PVERTEX_DYNAMIC_PATCH = ^VERTEX_DYNAMIC_PATCH;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _VERTEX_SHADER = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Handle: DWORD;
     // These are the parameters given by the XBE,
     // we save them to be be able to return them when necassary.
@@ -283,12 +283,12 @@ type _VERTEX_SHADER = packed record
     Status: DWORD;
     // Needed for dynamic stream patching
     VertexDynamicPatch: VERTEX_DYNAMIC_PATCH;
-  end; // packed size = 40
+  end; // packed size = 40 (as in Cxbx)
   VERTEX_SHADER = _VERTEX_SHADER;
   PVERTEX_SHADER = ^VERTEX_SHADER;
 
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type X_D3DResource = object
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     Common: DWORD;
     Data: DWORD;
@@ -303,7 +303,7 @@ type X_D3DResource = object
     7: ({Emu}VertexBuffer8: XTL_PIDirect3DVertexBuffer8);
     8: ({Emu}IndexBuffer8: XTL_PIDirect3DIndexBuffer8);
     end; // union
-  end; // size = 12
+  end; // size = 12 (as in Cxbx)
   PX_D3DResource = ^X_D3DResource;
 
 
@@ -358,19 +358,21 @@ type X_D3DIndexBuffer = object(X_D3DResource)
   PPX_D3DIndexBuffer = ^PX_D3DIndexBuffer;
 
 type X_D3DPushBuffer = object(X_D3DResource)
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     Size: ULONG;
     AllocationSize: ULONG;
-  end; // size = 20
+  end; // size = 20 (as in Cxbx)
   PX_D3DPushBuffer = ^X_D3DPushBuffer;
   PPX_D3DPushBuffer = ^PX_D3DPushBuffer;
 
 type X_D3DFixup = object(X_D3DResource)
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     Run: ULONG;
     Next: ULONG;
     Size: ULONG;
-  end; // size = 24
+  end; // size = 24 (as in Cxbx)
   PX_D3DFixup = ^X_D3DFixup;
   PPX_D3DFixup = ^PX_D3DFixup;
 
@@ -379,7 +381,7 @@ type X_D3DFixup = object(X_D3DResource)
   PX_D3DPalette = ^X_D3DPalette;
   PPX_D3DPalette = ^PX_D3DPalette;
 
-type _X_D3DPALETTESIZE = 
+type _X_D3DPALETTESIZE =
 (
     D3DPALETTE_256              = 0,
     D3DPALETTE_128              = 1,
@@ -391,13 +393,14 @@ type _X_D3DPALETTESIZE =
 X_D3DPALETTESIZE = _X_D3DPALETTESIZE;
 
 type X_D3DPixelContainer = object(X_D3DResource)
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     Format: X_D3DFORMAT; // Format information about the texture.
     Size: DWORD; // Size of a non power-of-2 texture, must be zero otherwise
-  end; // size = 20
+  end; // size = 20 (as in Cxbx)
   PX_D3DPixelContainer = ^X_D3DPixelContainer;
   PPX_D3DPixelContainer = ^PX_D3DPixelContainer;
-  
+
 // pixel container "format" masks
 const X_D3DFORMAT_RESERVED1_MASK      = $00000003;      // Must be zero
 const X_D3DFORMAT_DMACHANNEL_MASK     = $00000003;
@@ -432,38 +435,44 @@ const X_D3DSIZE_PITCH_MASK   = $FF000000;   // Pitch / 64 - 1
 const X_D3DSIZE_PITCH_SHIFT  = 24;
 
 type X_D3DBaseTexture = object(X_D3DPixelContainer)
-  end; // size = 20
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+  end; // size = 20 (as in Cxbx)
   PX_D3DBaseTexture = ^X_D3DBaseTexture;
   PPX_D3DBaseTexture = ^PX_D3DBaseTexture;
 
 type X_D3DTexture = object(X_D3DBaseTexture)
-  end; // size = 20
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+  end; // size = 20 (as in Cxbx)
   PX_D3DTexture = ^X_D3DTexture;
   PPX_D3DTexture = ^PX_D3DTexture;
 
 type X_D3DVolumeTexture = object(X_D3DBaseTexture)
-  end; // size = 20
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+  end; // size = 20 (as in Cxbx)
   PX_D3DVolumeTexture = ^X_D3DVolumeTexture;
   PPX_D3DVolumeTexture = ^PX_D3DVolumeTexture;
 
 type X_D3DCubeTexture = object(X_D3DBaseTexture)
-  end; // size = 20
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+  end; // size = 20 (as in Cxbx)
   PX_D3DCubeTexture = ^X_D3DCubeTexture;
   PPX_D3DCubeTexture = ^PX_D3DCubeTexture;
 
 type X_D3DSurface = object(X_D3DPixelContainer)
-  end; // size = 20
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+  end; // size = 20 (as in Cxbx)
   PX_D3DSurface = ^X_D3DSurface;
   PPX_D3DSurface = ^PX_D3DSurface;
 
 type X_D3DTILE = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Flags: DWORD;
     pMemory: PVOID;
     Size: DWORD;
     Pitch: DWORD;
     ZStartTag: DWORD;
     ZOffset: DWORD;
-  end; // packed size = 24
+  end; // packed size = 24 (as in Cxbx)
   PX_D3DTILE = ^X_D3DTILE;
 
 type X_D3DCALLBACKTYPE = ( // blueshogun96 10/1/07
@@ -481,25 +490,27 @@ type X_D3DFIELDTYPE = (
 type _X_D3DFIELD_STATUS = packed record
     Field: X_D3DFIELDTYPE;
     VBlankCount: UINT;
-  end; // packed size = 8
+  end; // packed size = 8 (as in Cxbx)
   X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
   PX_D3DFIELD_STATUS= ^X_D3DFIELD_STATUS;
 
 type _D3DVBLANKDATA = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     VBlank: DWORD;
     Swap: DWORD;
     Flags: DWORD;
-  end; // packed size = 12
+  end; // packed size = 12 (as in Cxbx)
   D3DVBLANKDATA = _D3DVBLANKDATA;
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
 
 type _D3DSWAPDATA = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Swap: DWORD;
     SwapVBlank: DWORD;
     MissedVBlanks: DWORD;
     TimeUntilSwapVBlank: DWORD;
     TimeBetweenSwapVBlanks: DWORD;
-  end; // packed size = 20
+  end; // packed size = 20 (as in Cxbx)
   D3DSWAPDATA = _D3DSWAPDATA;
   PD3DSWAPDATA = ^D3DSWAPDATA;
 
@@ -601,20 +612,22 @@ const X_VST_STATE = 3;
 // * X_VERTEXSHADERINPUT
 // ******************************************************************
 type _X_VERTEXSHADERINPUT = {not packed!} record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     IndexOfStream: DWORD;
     Offset: DWORD;
     Format: DWORD;
     TesselationType: BYTE;
     TesselationSource: BYTE;
-  end; // size = 14 packed, 16 normal (as in Cxbx)
+  end; // size = 16 (as in Cxbx)
   X_VERTEXSHADERINPUT = _X_VERTEXSHADERINPUT;
 
 // ******************************************************************
 // * X_VERTEXATTRIBUTEFORMAT
 // ******************************************************************
 type _X_VERTEXATTRIBUTEFORMAT = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     pVertexShaderInput: array [0..15] of X_VERTEXSHADERINPUT;
-  end; // packed size = 256
+  end; // packed size = 256 (as in Cxbx)
   X_VERTEXATTRIBUTEFORMAT = _X_VERTEXATTRIBUTEFORMAT;
   PX_VERTEXATTRIBUTEFORMAT = ^X_VERTEXATTRIBUTEFORMAT;
 
@@ -622,10 +635,11 @@ type _X_VERTEXATTRIBUTEFORMAT = packed record
 // * X_STREAMINPUT
 // ******************************************************************
 type _X_STREAMINPUT = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     VertexBuffer: PX_D3DVertexBuffer;
     Stride: UINT;
     Offset: UINT;
-  end; // packed size = 12
+  end; // packed size = 12 (as in Cxbx)
   X_STREAMINPUT = _X_STREAMINPUT;
   PX_STREAMINPUT = ^X_STREAMINPUT;
   PPX_STREAMINPUT = ^PX_STREAMINPUT;
