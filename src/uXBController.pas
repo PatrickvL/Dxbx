@@ -50,20 +50,24 @@ type
 
 
 // Moved from uEmuXapi.pas, to prevent circular references :
-type XINPUT_GAMEPAD = packed record
+type _XINPUT_GAMEPAD = packed record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     wButtons: Word;
-    bAnalogButtons: array [0..9-1] of Byte;
+    bAnalogButtons: array [0..8-1] of Byte;
     sThumbLX: SHORT;
     sThumbLY: SHORT;
     sThumbRX: SHORT;
     sThumbRY: SHORT;
-  end; // packed size = 12
+  end; // packed size = 18 (as in Cxbx)
+  XINPUT_GAMEPAD = _XINPUT_GAMEPAD;
   PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
 
-type XINPUT_STATE = packed record
+type _XINPUT_STATE = {not packed!} record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     dwPacketNumber: DWord;
     Gamepad: XINPUT_GAMEPAD;
-  end; // packed size = 16
+  end; // size = 24 (as in Cxbx)
+  XINPUT_STATE = _XINPUT_STATE;
   PXINPUT_STATE = ^XINPUT_STATE;
 
 
@@ -121,7 +125,7 @@ type XBCtrlObjectCfg = packed record
   dwDevice: int; // offset into m_InputDevice
   dwInfo: int; // extended information, depending on dwFlags
   dwFlags: int; // flags explaining the data format
-end; // packed size = 12
+end; // packed size = 12 (as in Cxbx)
 
 // class: XBController
 type XBController = object(Error)
@@ -176,7 +180,7 @@ type XBController = object(Error)
     // Etc State Variables
     m_dwInputDeviceCount: int;
     m_dwCurObject: int;
-  end; // size = 6760
+  end; // size = 6760 (as in Cxbx)
   PXBController = ^XBController;
 
 // Offsets into analog button array

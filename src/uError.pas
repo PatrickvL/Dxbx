@@ -31,6 +31,7 @@ uses
 type
   // inherit from this class for handy error reporting capability
   Error = object
+  // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     // return current error (zero if there is none)
     function GetError(): PChar;
@@ -53,7 +54,7 @@ type
     // current error information
     m_bFatal: _bool;
     m_szError: PChar;
-  end; // size = 8
+  end; // size = 8 (as in Cxbx)
 
 implementation
 

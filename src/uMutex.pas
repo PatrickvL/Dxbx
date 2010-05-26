@@ -30,6 +30,7 @@ uses
 
 // Mutex object (intended to be inherited from)
 type Mutex = object
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     procedure Create;
     procedure Lock;
@@ -39,7 +40,7 @@ type Mutex = object
     m_OwnerProcess: LONG;   // Current owner process (or zero)
     m_OwnerThread: LONG;    // Current owner thread
     m_LockCount: LONG;      // Lock count within this thread
-  end; // size = 16
+  end; // size = 16 (as in Cxbx)
 
 implementation
 

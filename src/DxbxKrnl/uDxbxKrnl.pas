@@ -19,6 +19,8 @@ unit uDxbxKrnl;
 
 {$INCLUDE Dxbx.inc}
 
+{.$DEFINE LOG_STRUCT_SIZES}
+
 interface
 
 uses
@@ -133,12 +135,17 @@ begin
   Dbgprintf('sizeof(XBController) = %d', [sizeof(XBController)]);
   Dbgprintf('sizeof(Xbe) = %d', [Xbe.InstanceSize]);
   Dbgprintf('sizeof(XBVideo) = %d', [sizeof(XBVideo)]);
+  Dbgprintf('sizeof(XINPUT_GAMEPAD) = %d', [sizeof(_XINPUT_GAMEPAD)]);
+  Dbgprintf('sizeof(XINPUT_STATE) = %d', [sizeof(_XINPUT_STATE)]);
   //Dbgprintf('sizeof(X_CDirectSoundStream) = %d', [sizeof(X_CDirectSoundStream)]);
   //Dbgprintf('sizeof(X_CMcpxStream) = %d', [sizeof(X_CMcpxStream)]);
+  Dbgprintf('sizeof(X_D3DBaseTexture) = %d', [sizeof(X_D3DBaseTexture)]);
+  Dbgprintf('sizeof(X_D3DCubeTexture) = %d', [sizeof(X_D3DCubeTexture)]);
   Dbgprintf('sizeof(X_D3DFixup) = %d', [sizeof(X_D3DFixup)]);
   Dbgprintf('sizeof(X_D3DPixelContainer) = %d', [sizeof(X_D3DPixelContainer)]);
   Dbgprintf('sizeof(X_D3DPushBuffer) = %d', [sizeof(X_D3DPushBuffer)]);
   Dbgprintf('sizeof(X_D3DResource) = %d', [sizeof(X_D3DResource)]);
+  Dbgprintf('sizeof(X_D3DSurface) = %d', [sizeof(X_D3DSurface)]);
   Dbgprintf('sizeof(X_D3DTILE) = %d', [sizeof(X_D3DTILE)]);
   Dbgprintf('sizeof(X_D3DVertexShader) = %d', [sizeof(X_D3DVertexShader)]);
   Dbgprintf('sizeof(_D3DSWAPDATA) = %d', [sizeof(_D3DSWAPDATA)]);
