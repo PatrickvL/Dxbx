@@ -2517,10 +2517,10 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_CreateVertexShader' +
     #13#10'(' +
-    #13#10'   pDeclaration      : 0x%.08X' +
-    #13#10'   pFunction         : 0x%.08X' +
-    #13#10'   pHandle           : 0x%.08X' +
-    #13#10'   Usage             : 0x%.08X' +
+    #13#10'   pDeclaration        : 0x%.08X' +
+    #13#10'   pFunction           : 0x%.08X' +
+    #13#10'   pHandle             : 0x%.08X' +
+    #13#10'   Usage               : 0x%.08X' +
     #13#10');',
     [pDeclaration, pFunction, pHandle, Usage]);
 {$ENDIF}
@@ -6566,7 +6566,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_ZBias' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -6587,7 +6587,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -6641,7 +6641,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_FogColor' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -6662,7 +6662,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -6889,7 +6889,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_VertexBlend' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
