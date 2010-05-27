@@ -50,6 +50,15 @@ uses
 
 const MAX_NBR_STREAMS = 16;
 
+// Dxbx note :
+// When _VertexPatchDesc is sized like Cxbx, all vertex drawing
+// is currepted (see mesh, light and texture demo's).
+// However, the sizeof of _VertexPatchDesc is wrong this way!
+// TODO -cDxbx :
+// Either the layout has to be fixed (while keeping it's size)
+// or the offending code must be fixed. For now keep this :
+{$ALIGN 1}
+
 type _VertexPatchDesc = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     PrimitiveType: X_D3DPRIMITIVETYPE;
@@ -64,6 +73,8 @@ type _VertexPatchDesc = record
   end; // size = 28 (as in Cxbx)
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
+
+{$ALIGN 4} // Restore 4-byte alignment
 
 type _PATCHEDSTREAM = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
