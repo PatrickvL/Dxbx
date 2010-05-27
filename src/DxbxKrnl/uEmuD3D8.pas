@@ -5387,8 +5387,6 @@ begin
     if FAILED(hRet) then
       EmuWarning('IDirect3DTexture8::GetSurfaceDesc failed!');
 
-    DbgPrintf('Okay');
-
     { marked out by cxbx
      Integer dwDumpTexture := 0;
      szBuffer: array [0..255-1] of Char;
@@ -6615,7 +6613,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_FillMode' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -9704,7 +9702,7 @@ exports
 
   XTL_EmuIDevice3D8_KickOff name PatchPrefix + '?KickOff@CDevice@D3D@@QAEXXZ',
 
-  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8',
+//  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // better for dxbx logging
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D8_CheckDeviceMultiSampleType name PatchPrefix + 'Direct3D_CheckDeviceMultiSampleType',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
