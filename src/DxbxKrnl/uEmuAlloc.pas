@@ -39,7 +39,7 @@ uses
 function CxbxMalloc(x: Integer): Pointer;
 function CxbxCalloc(x, y: Integer): Pointer;
 procedure CxbxFree(x: Pointer);
-//function CxbxCallocDebug(NbrElements: size_t; ElementSize: size_t; pFile: PAnsiChar; Line: int): Pvoid;
+//function CxbxCallocDebug(NbrElements: size_t; ElementSize: size_t; pFile: P_char; Line: int): Pvoid;
 function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
 function CxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
 function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
@@ -140,7 +140,7 @@ type
 type _CXBX_MEMORY_BLOCK = packed record
     pMem: Pvoid;
     Size: size_t;
-    pFile: PAnsiChar;
+    pFile: P_char;
     Line: uint32;
     Type_: CXBX_ALLOC_TYPE;
     pNext: PCXBX_MEMORY_BLOCK;
@@ -159,7 +159,7 @@ var g_MemoryMutex: Mutex;
 function GetMemStart(pBlock: PCXBX_MEMORY_BLOCK): PVOID; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := Pvoid(PAnsiChar(pBlock.pMem) - sizeof(MEMORY_GUARD));
+  Result := Pvoid(P_char(pBlock.pMem) - sizeof(MEMORY_GUARD));
 end;
 
 // ******************************************************************
@@ -169,7 +169,7 @@ end;
 function GetMemEnd(pBlock: PCXBX_MEMORY_BLOCK): PVOID; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  Result := Pvoid(PAnsiChar(pBlock.pMem) + pBlock.Size);
+  Result := Pvoid(P_char(pBlock.pMem) + pBlock.Size);
 end;
 
 // ******************************************************************
@@ -232,7 +232,7 @@ end;
 // ******************************************************************
 function InsertMemoryBlock(pMem: Pvoid;
                            Size: size_t;
-                           pFile: PAnsiChar;
+                           pFile: P_char;
                            Line: int;
                            Type_: CXBX_ALLOC_TYPE): PCXBX_MEMORY_BLOCK;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -240,12 +240,13 @@ var
   pBlock: PCXBX_MEMORY_BLOCK;
   Length: size_t;
 begin
-  pBlock := PCXBX_MEMORY_BLOCK(malloc(sizeof(CXBX_MEMORY_BLOCK)));
-  pBlock.pMem := Puint08(IntPtr(pMem) + sizeof(MEMORY_GUARD));
+  pBlock := PCXBX_MEMORY_BLOCK(
+            malloc(sizeof(CXBX_MEMORY_BLOCK)));
+  pBlock.pMem := Puint08(UIntPtr(pMem) + sizeof(MEMORY_GUARD));
   pBlock.Size := Size;
   Length := strlen(pFile) + 1;
-  pBlock.pFile := PAnsiChar(malloc(Length) * SizeOf(AnsiChar));
-  memcpy(pBlock.pFile, pFile, Length * SizeOf(AnsiChar));
+  pBlock.pFile := P_char(malloc(Length));
+  memcpy(pBlock.pFile, pFile, Length);
   pBlock.pNext := NULL;
   pBlock.Line := Line;
   pBlock.Type_ := Type_;
@@ -282,11 +283,14 @@ begin
     pFree := g_pFirstBlock;
     g_pFirstBlock := g_pFirstBlock.pNext;
     if pFree = g_pLastBlock then
+    begin
       g_pLastBlock := NULL;
+    end;
   end
   else
   begin
     pPrev := NULL;
+    // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :    
     pCur := g_pFirstBlock; while Assigned(pCur) do
     begin
       if IsThisMemoryBlock(pMem, pCur) then
@@ -316,6 +320,7 @@ function FindMemoryBlock(pMem: Pvoid): PCXBX_MEMORY_BLOCK;
 var
   pCur: PCXBX_MEMORY_BLOCK;
 begin
+  // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :    
   pCur := g_pFirstBlock; while Assigned(pCur) do
   begin
     if IsThisMemoryBlock(pMem, pCur) then
@@ -338,6 +343,7 @@ function FindMemoryBlockIn(const pMem: Pvoid): PCXBX_MEMORY_BLOCK;
 var
   pCur: PCXBX_MEMORY_BLOCK;
 begin
+  // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :    
   pCur := g_pFirstBlock; while Assigned(pCur) do
   begin
     if InThisMemoryBlock(pMem, pCur) then
@@ -368,6 +374,7 @@ begin
             '* Dumping memory allocations                         *'#13#10 +
             '******************************************************');
 {$ENDIF}
+  // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :    
   pCur := g_pFirstBlock; while Assigned(pCur) do
   begin
 {$IFDEF DEBUG}
@@ -393,7 +400,7 @@ end;
 // * CxbxMallocDebug - Debug track malloc
 // ******************************************************************
 function CxbxMallocDebug(Size: size_t;
-                         pFile: PAnsiChar;
+                         pFile: P_char;
                          Line: int): Pvoid;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -435,7 +442,7 @@ end;
 // ******************************************************************
 function CxbxCallocDebug(NbrElements: size_t;
                          ElementSize: size_t;
-                         pFile: PAnsiChar;
+                         pFile: P_char;
                          Line: int): Pvoid;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -477,7 +484,7 @@ end;
 // * CxbxFreeDebug - Debug track free
 // ******************************************************************
 procedure CxbxFreeDebug(pMem: Pvoid;
-                        pFile: PAnsiChar;
+                        pFile: P_char;
                         Line: int);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -531,7 +538,7 @@ end;
 function CxbxRtlAllocDebug(Heap: HANDLE;
                            Flags: DWORD;
                            Bytes: SIZE_T;
-                           pFile: PAnsiChar;
+                           pFile: P_char;
                            Line: int): Pvoid;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -577,7 +584,7 @@ end;
 function CxbxRtlFreeDebug(Heap: HANDLE;
                           Flags: DWORD;
                           pMem: PVOID;
-                          pFile: PAnsiChar;
+                          pFile: P_char;
                           Line: int): BOOL;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -633,7 +640,7 @@ function CxbxRtlReallocDebug(Heap: HANDLE;
                              Flags: DWORD;
                              pMem: PVOID;
                              Bytes: SIZE_T;
-                             pFile: PAnsiChar;
+                             pFile: P_char;
                              Line: int): Pvoid;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -712,7 +719,7 @@ end;
 function CxbxRtlSizeHeapDebug(Heap: HANDLE;
                               Flags: DWORD;
                               pMem: PVOID;
-                              pFile: PAnsiChar;
+                              pFile: P_char;
                               Line: int): SIZE_T;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -780,7 +787,6 @@ begin
     lpBuffer.RegionSize := pBlock.Size;
     lpBuffer.BaseAddress := pBlock.pMem;
   end;
-
   g_MemoryMutex.Unlock();
   Result := Size;
 end;

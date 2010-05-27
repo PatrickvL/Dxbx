@@ -369,7 +369,7 @@ function xboxkrnl_NtCreateEvent
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  szBuffer: PAnsiChar;
+  szBuffer: P_char;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.POBJECT_ATTRIBUTES;
@@ -448,7 +448,7 @@ function xboxkrnl_NtCreateFile
 var
   ReplaceChar: AnsiChar;
   ReplaceIndex: int;
-  szBuffer: PAnsiChar;
+  szBuffer: P_char;
   v: int;
   CurIndex: int;
   NtUnicodeString: UNICODE_STRING;
@@ -678,7 +678,7 @@ function xboxkrnl_NtCreateMutant
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  szBuffer: PAnsichar;
+  szBuffer: P_char;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
@@ -1057,7 +1057,7 @@ var
   NtFileMask: UNICODE_STRING;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   FileDirInfo: PFILE_DIRECTORY_INFORMATION;
-  mbstr: PAnsiChar;
+  mbstr: P_char;
   wcstr: pwchar_t;
 begin
   EmuSwapFS(fsWindows);
@@ -1155,7 +1155,7 @@ function xboxkrnl_NtQueryFullAttributesFile
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
-  szBuffer: PAnsiChar;
+  szBuffer: P_char;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;

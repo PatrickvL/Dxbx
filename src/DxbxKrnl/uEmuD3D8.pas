@@ -19,6 +19,8 @@ unit uEmuD3D8;
 
 {$INCLUDE Dxbx.inc}
 
+{.$define _DEBUG_DUMP_TEXTURE_SETTEXTURE}
+
 interface
 
 uses
@@ -2700,6 +2702,15 @@ begin
     [Register_, pConstantData, ConstantCount]);
 {$ENDIF}
 
+(* Dxbx note : Is this what's needed?
+  {hRet :=} IDirect3DDevice8(g_pD3DDevice8).SetPixelShaderConstant
+  (
+    Register_,
+    {untyped const}pConstantData^,
+    ConstantCount
+  );
+*)
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2752,7 +2763,7 @@ begin
   hRet := IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant
   (
     Register_,
-    pConstantData,
+    {untyped const}pConstantData^,
     ConstantCount
   );
 
@@ -3528,7 +3539,7 @@ function XTL_EmuIDirect3DDevice8_SetTexture
 var
   pBaseTexture8: XTL_PIDirect3DBaseTexture8;
   dwDumpTexture: int;
-  szBuffer: PAnsiChar;
+  szBuffer: array [0..256-1] of Char;
   face: int;
 begin
   EmuSwapFS(fsWindows);
@@ -3574,9 +3585,9 @@ begin
             D3DRTYPE_TEXTURE:
             begin
               inc(dwDumpTexture);
-              StrFmt(szBuffer, 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
+              StrFmt(@szBuffer[0], 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
               IDirect3DTexture8(pTexture.Emu.Texture8).UnlockRect(0);
-              D3DXSaveTextureToFile(PChar(szBuffer), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
+              D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
             end;
 
             D3DRTYPE_CUBETEXTURE:
@@ -3585,9 +3596,9 @@ begin
               while face < 6 do
               begin
                 inc(dwDumpTexture);
-                StrFmt(szBuffer, 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
+                StrFmt(@szBuffer[0], 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
                 IDirect3DTexture8(pTexture.Emu.CubeTexture8).UnlockRect(face);
-                D3DXSaveTextureToFile(PChar(szBuffer), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
+                D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
                 Inc(Face);
               end;
             end;
@@ -4509,7 +4520,7 @@ begin
 
           pData := nil;
 
-          hRet := IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Lock(0, dwSize, pData, 0);
+          hRet := IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
 
           if (FAILED(hRet)) then
             CxbxKrnlCleanup('IndexBuffer Lock Failed!');
@@ -6042,8 +6053,8 @@ procedure XTL_EmuIDirect3DDevice8_UpdateOverlay
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   ddsd2: DDSURFACEDESC2;
-  pDest: PAnsiChar;
-  pSour: PAnsiChar;
+  pDest: P_char;
+  pSour: P_char;
   w: DWORD;
   h: DWORD;
   v: UInt32;
@@ -6103,13 +6114,13 @@ begin
 
       ddsd2.dwSize := sizeof(ddsd2);
 
-      if (FAILED(IDirectDrawSurface7(g_pDDSOverlay7).Lock(nil, ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0))) then
+      if (FAILED(IDirectDrawSurface7(g_pDDSOverlay7).Lock(nil, {out}ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0))) then
         EmuWarning('Unable to lock overlay surface!');
 
       // copy data
       begin
-        pDest := PAnsiChar(ddsd2.lpSurface);
-        pSour := PAnsiChar(pSurface.Emu.Lock);
+        pDest := P_char(ddsd2.lpSurface);
+        pSour := P_char(pSurface.Emu.Lock);
 
         w := g_dwOverlayW;
         h := g_dwOverlayH;
@@ -7400,7 +7411,7 @@ begin
 
   pVertexBuffer8 := ppVertexBuffer^.Emu.VertexBuffer8;
 
-  hRet := IDirect3DVertexBuffer8(pVertexBuffer8).Lock(OffsetToLock, SizeToLock, ppbData^, Flags);
+  hRet := IDirect3DVertexBuffer8(pVertexBuffer8).Lock(OffsetToLock, SizeToLock, {out}ppbData^, Flags);
 
   if (FAILED(hRet)) then
     EmuWarning('VertexBuffer Lock Failed!');
@@ -7683,7 +7694,7 @@ begin
     (
         EmuPrimitiveType(VPDesc.PrimitiveType),
         VPDesc.dwPrimitiveCount,
-        VPDesc.pVertexStreamZeroData,
+        {untyped const}VPDesc.pVertexStreamZeroData^,
         VPDesc.uiVertexStreamZeroStride
     );
 
@@ -7748,7 +7759,7 @@ begin
           CxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
       pData := nil;
-      hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Lock(0, dwSize, pData, 0);
+      hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
 
       if (FAILED(hRet)) then
           CxbxKrnlCleanup('IndexBuffer Lock Failed!');
@@ -7811,7 +7822,7 @@ begin
           CxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*2]);
 
       pbData := NULL;
-      IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, 0, {? var/@}pbData, 0);
+      IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, 0, {out}pbData, 0);
 
       if (pbData = nil) then
         CxbxKrnlCleanup('Could not lock index buffer!');
@@ -7917,7 +7928,14 @@ begin
     begin
       IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitiveUP
       (
-          EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
+          EmuPrimitiveType(VPDesc.PrimitiveType),
+          0,
+          VPDesc.dwVertexCount,
+          VPDesc.dwPrimitiveCount,
+          {untyped const}pIndexData^,
+          D3DFMT_INDEX16,
+          {untyped const}VPDesc.pVertexStreamZeroData^,
+          VPDesc.uiVertexStreamZeroStride
       );
     end;
 
@@ -8377,7 +8395,7 @@ begin
   Result := IDirect3DDevice8(g_pD3DDevice8).GetVertexShaderConstant
     (
     Register_ + 96,
-    pConstantData,
+    {out}pConstantData^,
     ConstantCount
     );
 
@@ -9032,7 +9050,7 @@ begin
   // blueshogun96 10/1/07
   // I'm assuming this is the same as the PC version...
 
-  Result := IDirect3DDevice8(g_pD3DDevice8).CreateStateBlock(Type_, pToken^);
+  Result := IDirect3DDevice8(g_pD3DDevice8).CreateStateBlock(Type_, {out}pToken^);
 
   if (FAILED(Result)) then
     EmuWarning('CreateStateBlock failed!');
