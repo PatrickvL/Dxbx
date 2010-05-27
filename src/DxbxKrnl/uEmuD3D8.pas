@@ -3386,11 +3386,11 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_CreateIndexBuffer' +
          #13#10'(' +
-         #13#10'   Length            : 0x%.08X' +
-         #13#10'   Usage             : 0x%.08X' +
-         #13#10'   Format            : 0x%.08X' +
-         #13#10'   Pool              : 0x%.08X' +
-         #13#10'   ppIndexBuffer     : 0x%.08X' +
+         #13#10'   Length              : 0x%.08X' +
+         #13#10'   Usage               : 0x%.08X' +
+         #13#10'   Format              : 0x%.08X' +
+         #13#10'   Pool                : 0x%.08X' +
+         #13#10'   ppIndexBuffer       : 0x%.08X' +
          #13#10');',
          [Length, Usage, Ord(Format), Ord(Pool), ppIndexBuffer]);
 {$ENDIF}
@@ -3523,6 +3523,9 @@ function XTL_EmuIDirect3DDevice8_SetTexture
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pBaseTexture8: XTL_PIDirect3DBaseTexture8;
+  dwDumpTexture: int;
+  szBuffer: PAnsiChar;
+  face: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3559,39 +3562,35 @@ begin
       pBaseTexture8 := pTexture.Emu.BaseTexture8;
 
       {$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
-      if (pTexture <> NULL) and (pTexture.Emu.Texture8 <> NULL) then
-      begin
-        int dwDumpTexture := 0; 
-
-        szBuffer: array [0..256-1] of AnsiChar;
-
-        case (pTexture.EmuResource8.GetType()) of
+        if (pTexture <> NULL) and (pTexture.Emu.Texture8 <> NULL) then
         begin
-          D3DRTYPE_TEXTURE:
-          begin
-            sprintf(szBuffer, 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture++, pTexture.Emu.Texture8]);
+          dwDumpTexture := 0;
 
-            pTexture.Emu.Texture8.UnlockRect(0);
-
-            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.Emu.Texture8, NULL);
-          end;
-
-          D3DRTYPE_CUBETEXTURE:
-          begin
-            for(int face:=0;face<6;face++)
+          case (IDirect3DResource8(pTexture.Emu.Resource8).GetType()) of
+            D3DRTYPE_TEXTURE:
             begin
-              sprintf(szBuffer, 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture++, pTexture.Emu.Texture8]);
+              inc(dwDumpTexture);
+              StrFmt(szBuffer, 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
+              IDirect3DTexture8(pTexture.Emu.Texture8).UnlockRect(0);
+              D3DXSaveTextureToFile(PChar(szBuffer), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
+            end;
 
-              pTexture.EmuCubeTexture8.UnlockRect(D3DCUBEMAP_FACES(face), 0);
-
-              D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.Emu.Texture8, NULL);
+            D3DRTYPE_CUBETEXTURE:
+            begin
+              face := 0;
+              while face < 6 do
+              begin
+                inc(dwDumpTexture);
+                StrFmt(szBuffer, 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
+                IDirect3DTexture8(pTexture.Emu.CubeTexture8).UnlockRect(face);
+                D3DXSaveTextureToFile(PChar(szBuffer), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
+                Inc(Face);
+              end;
             end;
           end;
         end;
-      end;
       {$endif}
     end;
-
   end;
 
 
@@ -7143,7 +7142,7 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_StencilEnable' +
     #13#10'(' +
-    #13#10'   Value             : 0x%.08X' +
+    #13#10'   Value               : 0x%.08X' +
     #13#10');',
     [Value]);
 {$ENDIF}
@@ -9902,7 +9901,7 @@ exports
   XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
   XTL_EmuIDirect3DSurface8_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
 
-  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc',
+//  XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc', // DXBX : better
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DTexture_GetSurfaceLevel',
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel2 name PatchPrefix + 'D3DTexture_GetSurfaceLevel2',
   XTL_EmuIDirect3DTexture8_LockRect name PatchPrefix + 'D3DTexture_LockRect',
