@@ -264,7 +264,7 @@ begin
 
   m_CurrentState := XBCTRL_STATE_NONE;
 
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  for v := 0 to XBCTRL_MAX_DEVICES-1 do
   begin
     m_DeviceName[v][0] := #0;
 
@@ -272,7 +272,7 @@ begin
     m_InputDevice[v].m_Flags := 0;
   end;
 
-  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+  for v := 0 to XBCTRL_OBJECT_COUNT-1 do
   begin
     m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
     m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
@@ -317,7 +317,7 @@ begin
     // Load Device Names
     SetLength(szValueName, 64);
 
-    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+    for v := 0 to XBCTRL_MAX_DEVICES-1 do
     begin
       // default is a null string
       m_DeviceName[v][0] := #0;
@@ -331,7 +331,7 @@ begin
     // Load Object Configuration
     SetLength(szValueName, 64);
 
-    for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+    for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
       // default object configuration
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
@@ -367,7 +367,7 @@ begin
     // Save Device Names
     SetLength(szValueName, 64);
 
-    for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+    for v := 0 to XBCTRL_MAX_DEVICES-1 do
     begin
       sprintf(@szValueName[1], 'DeviceName $%.02X', [v]);
 
@@ -382,7 +382,7 @@ begin
     // Save Object Configuration
     SetLength(szValueName, 64);
 
-    for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+    for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
       sprintf(@szValueName[1], 'Object : "%s"', [m_DeviceNameLookup[v]]);
       
@@ -450,6 +450,7 @@ begin
   ObjectInstance.dwSize := sizeof(DIDEVICEOBJECTINSTANCE);
 
   // Monitor for significant device state changes
+  if m_dwInputDeviceCount > 0 then // Dxbx addition, to prevent underflow
   for v := m_dwInputDeviceCount - 1 downto 0 do
   begin
     // Poll the current device
@@ -512,7 +513,7 @@ begin
       end
       else
       begin
-        for b := 0 to 2 - 1 do
+        for b := 0 to 2-1 do
         begin
           if (abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK) then
           begin
@@ -576,7 +577,7 @@ begin
       dwFlags := DEVICE_FLAG_KEYBOARD;
 
       // Check for Keyboard State Change
-      for r := 0 to 256 - 1 do
+      for r := 0 to 256-1 do
       begin
         if (KeyState[r] <> 0) then
         begin
@@ -607,7 +608,7 @@ begin
       dwFlags := DEVICE_FLAG_MOUSE;
 
       // Detect Button State Change
-      for r := 0 to 4 - 1 do
+      for r := 0 to 4-1 do
       begin
         // 0x80 is the mask for button push
         if (MouseState.rgbButtons[r] and $80) > 0 then
@@ -738,10 +739,10 @@ begin
 
   DInputInit(hwnd);
 
-  for v := XBCTRL_MAX_DEVICES - 1 downto m_dwInputDeviceCount do
+  for v := XBCTRL_MAX_DEVICES-1 downto m_dwInputDeviceCount do
     m_DeviceName[v][0] := #0;
 
-  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+  for v := 0 to XBCTRL_OBJECT_COUNT-1 do
   begin
     if m_ObjectConfig[XBCtrlObject(v)].dwDevice >= m_dwInputDeviceCount then
     begin
@@ -1018,7 +1019,7 @@ function XBController.DeviceIsUsed(szDeviceName: P_char): _bool;
 var
   v: Integer;
 begin
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  for v := 0 to XBCTRL_MAX_DEVICES-1 do
   begin
     if (strncmp(m_DeviceName[v], szDeviceName, 255) = 0) then
     begin
@@ -1116,6 +1117,7 @@ begin
 
   // Set cooperative level and acquire
   begin
+    if m_dwInputDeviceCount > 0 then // Dxbx addition, to prevent underflow
     for v := m_dwInputDeviceCount - 1 downto 0 do
     begin
       IDirectInputDevice8(m_InputDevice[v].m_Device).SetCooperativeLevel(ahwnd, DISCL_NONEXCLUSIVE or DISCL_FOREGROUND);
@@ -1142,6 +1144,7 @@ procedure XBController.DInputCleanup;
 var
   v: int;
 begin
+  if m_dwInputDeviceCount > 0 then // Dxbx addition, to prevent underflow
   for v := m_dwInputDeviceCount - 1 downto 0 do
   begin
     IDirectInputDevice8(m_InputDevice[v].m_Device).Unacquire();
@@ -1170,7 +1173,7 @@ begin
   m_ObjectConfig[aobject].dwFlags := dwFlags;
 
   // Purge unused device slots
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  for v := 0 to XBCTRL_MAX_DEVICES-1 do
   begin
     InUse := false;
 
@@ -1188,14 +1191,14 @@ function XBController.Insert(szDeviceName: P_char): int;
 var
   v: int;
 begin
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  for v := 0 to XBCTRL_MAX_DEVICES-1 do
     if (strcmp(@m_DeviceName[v], szDeviceName) = 0) then
     begin
       Result := v;
       Exit;
     end;
 
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  for v := 0 to XBCTRL_MAX_DEVICES-1 do
   begin
     if (m_DeviceName[v][0] = #0) then
     begin
@@ -1220,7 +1223,7 @@ begin
   Old := -1;
 
   // locate old device name position
-  for v := 0 to XBCTRL_MAX_DEVICES - 1 do
+  for v := 0 to XBCTRL_MAX_DEVICES-1 do
   begin
     if (strcmp(m_DeviceName[v], szDeviceName) = 0) then
     begin
@@ -1237,7 +1240,7 @@ begin
   end;
 
   // Update all Old values
-  for v := 0 to XBCTRL_OBJECT_COUNT - 1 do
+  for v := 0 to XBCTRL_OBJECT_COUNT-1 do
   begin
     if m_ObjectConfig[XBCtrlObject(v)].dwDevice = old then
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := pos

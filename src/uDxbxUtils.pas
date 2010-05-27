@@ -1013,10 +1013,12 @@ begin
 
   // Precalculate x-swizzle :
   SetLength(xswizzle, width);
+  if width > 0 then // Dxbx addition, to prevent underflow
   for x := 0 to width - 1 do
     xswizzle[x] := _Swizzle(x, {Max=}(height * 2), {Shift=}0);
 
   // Loop over all lines :
+  if height > 0 then // Dxbx addition, to prevent underflow
   for y := 0 to height - 1 do
   begin
     // Calculate y-swizzle :
@@ -1024,6 +1026,7 @@ begin
 
     // Copy whole line in one go (using pre-calculated x-swizzle) :
     yscanline := aOutput.Scanlines[y];
+    if width > 0 then // Dxbx addition, to prevent underflow
     for x := 0 to width - 1 do
       yscanline[x] := PRGB32Array(aData)[xswizzle[x] + sy];
   end; // for y
@@ -1117,7 +1120,7 @@ begin
               + (aData[j + 6] shl 16)
               + (aData[j + 7] shl 24);
 
-    for p := 0 to 16 - 1 do
+    for p := 0 to 16-1 do
     begin
       aOutput.Pixels[x + {xo=}(p and 3), y + {yo=}(p shr 2)]^ := color32b[pixelmap and 3];
       pixelmap := pixelmap shr 2;

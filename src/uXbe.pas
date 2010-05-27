@@ -597,7 +597,7 @@ begin
       RawAddr := GetAddr(m_SectionHeader[lIndex].dwSectionNameAddr);
       if RawAddr <> 0 then
       begin
-        for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH - 1 do
+        for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH-1 do
         begin
           m_szSectionName[lIndex][lIndex2] := AnsiChar(RawData[RawAddr + lIndex2]);
           if m_szSectionName[lIndex][lIndex2] = #0 then
@@ -930,7 +930,7 @@ begin
   for lIndex := 0 to m_Header.dwSections - 1 do
   begin
     TmpStr := '';
-    for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH - 1 do
+    for lIndex2 := 0 to XBE_SECTIONNAME_MAXLENGTH-1 do
     begin
       if m_szSectionName[lIndex][lIndex2] <> #0 then
         TmpStr := TmpStr + Char(m_szSectionName[lIndex][lIndex2])

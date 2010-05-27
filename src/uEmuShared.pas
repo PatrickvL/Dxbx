@@ -46,6 +46,7 @@ const
   CXBX_MAX_PATH = 260;
 
 type EmuShared = object(Mutex)
+  // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     // Constructor / Deconstructor
     procedure Create;

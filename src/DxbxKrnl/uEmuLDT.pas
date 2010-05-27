@@ -110,7 +110,7 @@ var
 begin
   InitializeCriticalSection({var}EmuLDTLock);
 
-  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
+  for v := 0 to MAXIMUM_XBOX_THREADS-1 do
     FreeLDTEntries[v] := UInt16((v * 8) + 7 + 8);
 end;
 

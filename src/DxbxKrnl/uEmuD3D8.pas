@@ -705,7 +705,7 @@ begin
 
     // Poll input
     begin
-      for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
+      for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
       begin
         hDevice := g_pXInputSetStateStatus[v].hDevice;
 
@@ -744,7 +744,7 @@ begin
       // TODO -oCXBX: Fixme.  This may not be right...
       g_SwapData.SwapVBlank := 1;
 
-      if (Addr(g_pVBCallback) <> NULL) then
+      if (Assigned(g_pVBCallback)) then
       begin
         EmuSwapFS(fsXbox);
         g_pVBCallback(@g_VBData);
@@ -916,7 +916,7 @@ begin
           g_EmuCDPD.BehaviorFlags := D3DCREATE_SOFTWARE_VERTEXPROCESSING;
           g_dwVertexShaderUsage := D3DUSAGE_SOFTWAREPROCESSING;
         end;
-
+// [PatrickvL] Reviewed up to here
         // redirect to windows Direct3D
         g_EmuCDPD.hRet := IDirect3D8(g_pD3D8).CreateDevice
         (
@@ -976,6 +976,7 @@ begin
           IDirectDraw7(g_pDD7).GetFourCCCodes({var}dwCodes, lpCodes);
 
           g_bSupportsYUY2 := false;
+          if dwCodes > 0 then // Dxbx addition, to prevent underflow
           for v := 0 to dwCodes - 1 do
           begin
             if (PDWORDs(lpCodes)[v] = MAKEFOURCC('Y', 'U', 'Y', '2')) then
@@ -1136,7 +1137,7 @@ begin
 
   if (pResource.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
   begin
-    for v := 0 to 16 - 1 do
+    for v := 0 to 16-1 do
     begin
       if (pCache[v].Data = 0) then
       begin
@@ -1515,6 +1516,7 @@ begin
   if (Address < 136) and VshHandleIsVertexShader(Handle) then
   begin
     pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
+    if pVertexShader.Size > 0 then // Dxbx addition, to prevent underflow
     for i := Address to pVertexShader.Size - 1 do
     begin
       // TODO -oCXBX: This seems very fishy
@@ -1596,6 +1598,7 @@ begin
 {$ENDIF}
 
   ret := IDirect3D8(g_pD3D8).GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+  if ret > 0 then // Dxbx addition, to prevent underflow
   for v := 0 to ret - 1 do
   begin
     if (IDirect3D8(g_pD3D8).EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, {out}Mode) <> D3D_OK) then
@@ -1778,7 +1781,7 @@ begin
   // remove D3DSGR_IMMEDIATE
   dwPCFlags := dwFlags and (not $00000002);
 
-  for v := 0 to 255 - 1 do
+  for v := 0 to 255-1 do
   begin
       PCRamp.red[v] := pRamp.red[v];
       PCRamp.green[v] := pRamp.green[v];
@@ -2726,6 +2729,7 @@ begin
 {$ENDIF}
 
 {$IFDEF _DEBUG_TRACK_VS_CONST}
+  if ConstantCount > 0 then // Dxbx addition, to prevent underflow
   for i := 0 to ConstantCount - 1 do
   begin
    {$IFDEF DEBUG}
@@ -4716,6 +4720,7 @@ begin
           w := dwWidth;
           h := dwHeight;
 
+          if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
           for v := 0 to dwMipMapLevels - 1 do
           begin
             if (((1 shl v) >= w) or ((1 shl v) >= h)) then
@@ -4829,6 +4834,7 @@ begin
           dwMipPitch := dwPitch;
 
           // iterate through the number of mipmap levels
+          if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
           for level := 0 to dwMipMapLevels - 1 do
           begin
             // copy over data (deswizzle if necessary)
@@ -4855,6 +4861,7 @@ begin
 
               // TODO -oCXBX: handle this horrible situation
               pDest := LockedRect.pBits;
+              if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
               for v := 0 to dwMipHeight - 1 do
               begin
                 memset(pDest, 0, dwMipWidth * dwBPP);
@@ -4904,6 +4911,7 @@ begin
                     w := 0;
                     c := 0;
                     //p := 0;
+                    if (dwDataSize div 4) > 0 then // Dxbx addition, to prevent underflow
                     for y := 0 to (dwDataSize div 4) - 1 do
                     begin
                       if (c = dwMipWidth) then
@@ -4954,6 +4962,7 @@ begin
                 end
                 else
                 begin
+                  if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
                   for v := 0 to dwMipHeight - 1 do
                   begin
                     memcpy(pDest, Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth * dwBPP);
@@ -5211,7 +5220,7 @@ begin
     begin
       if (pResource8 <> nil) then
       begin
-        for v := 0 to 16 - 1 do
+        for v := 0 to 16-1 do
         begin
           if (pCache[v].Data = pThis.Data) and (pThis.Data <> 0) then
           begin
@@ -6110,6 +6119,7 @@ begin
           memcpy(pDest, pSour, h * w * 2)
         else
         begin
+          if h > 0 then // Dxbx addition, to prevent underflow
           for y := 0 to h - 1 do
           begin
             memcpy(pDest, pSour, w * 2);
@@ -6174,6 +6184,7 @@ begin
         // grayscale
         if (false) then
         begin
+          if g_dwOverlayH > 0 then // Dxbx addition, to prevent underflow
           for y := 0 to g_dwOverlayH - 1 do
           begin
             stop := g_dwOverlayW * 4;
@@ -6204,7 +6215,7 @@ begin
             pCurByte := @pCurByte[4];
 
             a := 0;
-            for x := 0 to 2 - 1 do
+            for x := 0 to 2-1 do
             begin
               R := Y2[a] + 1.402*(V2-128);
               G := Y2[a] - 0.344*(U2-128) - 0.714*(V2-128);

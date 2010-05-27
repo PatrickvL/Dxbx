@@ -232,7 +232,7 @@ var
   Ptr: PBYTE;
 begin
   // Have we got this baby in buffer ?
-  for i := 0 to DISK_BUFFER - 1 do
+  for i := 0 to DISK_BUFFER-1 do
   begin
     if This.SectorList[i] = SectorNumber then
     begin
@@ -243,7 +243,7 @@ begin
   end;
 
   // Nope, load the sector and store it in buffer
-  for i := 0 to DISK_BUFFER - 1 do
+  for i := 0 to DISK_BUFFER-1 do
   begin
     index := This.WriteIndex;
     This.WriteIndex := (This.WriteIndex + 1) mod DISK_BUFFER;
@@ -288,7 +288,7 @@ var
   i: int;
 begin
   // Find the sector in the lock list and decrease its usage count
-  for i := 0 to DISK_BUFFER - 1 do
+  for i := 0 to DISK_BUFFER-1 do
   begin
     if (This.SectorList[i] = SectorNumber) and (This.LockList[i] > 0) then
     begin

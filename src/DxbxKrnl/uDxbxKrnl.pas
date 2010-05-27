@@ -510,7 +510,7 @@ begin
   if (g_bEmuSuspended or g_bEmuException) then
     Exit;
 
-  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
+  for v := 0 to MAXIMUM_XBOX_THREADS-1 do
   begin
     if (g_hThreads[v] <> 0) then
     begin
@@ -567,7 +567,7 @@ begin
     SetWindowText(MyhWnd, szBuffer);
   end;
 
-  for v := 0 to MAXIMUM_XBOX_THREADS - 1 do
+  for v := 0 to MAXIMUM_XBOX_THREADS-1 do
   begin
     if (g_hThreads[v] <> 0) then
     begin
