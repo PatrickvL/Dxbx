@@ -63,7 +63,7 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  Message_: PANSICHAR
+  Message_: P_CHAR
   ); stdcall;
 procedure xboxkrnl_RtlCaptureContext(
   ContextRecord: PCONTEXT
@@ -356,7 +356,7 @@ procedure xboxkrnl_RtlAssert(
   FailedAssertion: PVOID;
   FileName: PVOID;
   LineNumber: ULONG;
-  Message_: PANSICHAR
+  Message_: P_CHAR
   ); stdcall;
 // Source:shogun  Branch:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin

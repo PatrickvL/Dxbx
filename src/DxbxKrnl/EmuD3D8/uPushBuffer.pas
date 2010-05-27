@@ -419,7 +419,7 @@ begin
         (
             PCPrimitiveType,
             VPDesc.dwPrimitiveCount,
-            VPDesc.pVertexStreamZeroData,
+            {untyped const}VPDesc.pVertexStreamZeroData^,
             VPDesc.uiVertexStreamZeroStride
         );
 

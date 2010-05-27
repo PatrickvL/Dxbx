@@ -66,7 +66,7 @@ procedure CxbxKrnlInit(
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: TDebugMode;
-  szDebugFileName: PAnsiChar;
+  szDebugFileName: P_char;
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc); stdcall;
@@ -98,7 +98,7 @@ procedure CxbxKrnlInit(
   pTLS: PXBE_TLS;
   pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: TDebugMode;
-  szDebugFileName: PAnsiChar;
+  szDebugFileName: P_char;
   pXbeHeader: PXBE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);

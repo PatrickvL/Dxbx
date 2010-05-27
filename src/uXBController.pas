@@ -1107,7 +1107,7 @@ begin
   end;
 
   // Enumerate Controller objects
-  // Dxbx : for loop not possible here :
+  // Dxbx note : While instead of for, as loop variable is not a 'simple local variable' :
   m_dwCurObject := 0; while m_dwCurObject < m_dwInputDeviceCount do
   begin
     IDirectInputDevice8(m_InputDevice[m_dwCurObject].m_Device).EnumObjects(TDIEnumDeviceObjectsCallbackA(@WrapEnumObjectsCallback), Addr(Self), DIDFT_ALL);

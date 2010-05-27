@@ -74,7 +74,7 @@ type _VertexPatchDesc = record
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
 
-{$ALIGN 4} // Restore 4-byte alignment
+{.$ALIGN 4} // Restore 4-byte alignment
 
 type _PATCHEDSTREAM = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -648,12 +648,12 @@ begin
     pPatchDesc.dwVertexCount := Desc.Size div uiStride;
     dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
 
-    if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, PByte(pOrigData), 0))) then
+    if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pOrigData), 0))) then
     begin
       CxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
     IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
-    if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, PByte(pNewData), 0))) then
+    if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, {out}PByte(pNewData), 0))) then
     begin
       CxbxKrnlCleanup('Couldn''t lock the new buffer');
     end;
@@ -1560,10 +1560,10 @@ begin
   end;
 
   IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP(
-        EmuPrimitiveType(VPDesc.PrimitiveType),
-        VPDesc.dwPrimitiveCount,
-        VPDesc.pVertexStreamZeroData,
-        VPDesc.uiVertexStreamZeroStride);
+      EmuPrimitiveType(VPDesc.PrimitiveType),
+      VPDesc.dwPrimitiveCount,
+      {untyped const}VPDesc.pVertexStreamZeroData^,
+      VPDesc.uiVertexStreamZeroStride);
 
   if(bFVF) then
   begin

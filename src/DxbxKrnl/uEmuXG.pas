@@ -318,6 +318,7 @@ begin
   if (dwMaskW > dwMaskMax) then
     dwMaskMax := dwMaskW;
 
+  // Dxbx note : Translated 'for' to 'while', because counter is shifted instead of incremented :
   i := 1; while i <= dwMaskMax do
   begin
     if (i <= dwMaskU) then

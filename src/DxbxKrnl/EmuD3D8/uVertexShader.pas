@@ -865,6 +865,7 @@ begin
       Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'xvsw.1.1'#10));
   end;
 
+  // Dxbx note : Translated 'for' to 'while', because loop condition is a complex expression :
   i := 0; while (i < pShader.IntermediateCount) and ((i < 128) or (not Truncate)) do
   begin
     pIntermediate := @(pShader.Intermediate[i]);
@@ -1290,6 +1291,7 @@ var
 begin
   PosC38 := -1;
   deleted := 0;
+  // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
   i := 0; while i < pShader.IntermediateCount do
   begin
     pIntermediate := @pShader.Intermediate[i];
@@ -1357,7 +1359,8 @@ begin
   if (deleted <> 3) then
   begin
     EmuWarning('Applying screen space vertex shader patching hack!');
-    i := 0; while i < pShader.IntermediateCount  do
+    // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
+    i := 0; while i < pShader.IntermediateCount do
     begin
       pIntermediate := @pShader.Intermediate[i];
 
@@ -1451,6 +1454,7 @@ begin
   end;
 
   // TODO -oCXBX: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
+  // Dxbx note : Translated 'for' to 'while', because counter is incremented twice :
   i := 0; while i < pShader.IntermediateCount do
   begin
     pIntermediate := @pShader.Intermediate[i];
@@ -1579,7 +1583,7 @@ begin
         VshInsertIntermediate(pShader, @TmpIntermediate, i + 1);
       end;
       Inc(i);
-    end; // while
+    end; // if
 
     Inc(i);
   end; // while
