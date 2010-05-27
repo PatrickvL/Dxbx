@@ -142,7 +142,7 @@ begin
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then
   begin
-    for i := 0 to 16 - 1 do
+    for i := 0 to 16-1 do
     begin
       pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification[i]);
 
@@ -214,7 +214,7 @@ callComplete:
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then
   begin
-    for i := 0 to 16 - 1 do
+    for i := 0 to 16-1 do
     begin
       pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification[i]);
 
@@ -453,7 +453,7 @@ begin
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then
   begin
-    for i := 0 to 16 - 1 do
+    for i := 0 to 16-1 do
     begin
       pfnNotificationRoutine := {XTL.}XTHREAD_NOTIFY_PROC(g_pfnThreadNotification[i]);
 

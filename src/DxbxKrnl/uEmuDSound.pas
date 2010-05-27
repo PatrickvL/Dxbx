@@ -389,7 +389,7 @@ var
   dwAudioBytes, dwAudioBytes2: DWORD;
   hRet: HRESULT;
 begin
-  for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do 
+  for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
   begin
     if (g_pDSoundStreamCache[v] = nil) or (g_pDSoundStreamCache[v].EmuBuffer = nil) then
       continue;
@@ -540,11 +540,11 @@ begin
 
 
     // clear sound buffer cache
-    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1  do
+    for v := 0 to SOUNDBUFFER_CACHE_SIZE-1  do
       g_pDSoundBufferCache[v] := nil;
 
     // clear sound stream cache
-    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
+    for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
       g_pDSoundStreamCache[v] := nil;
 
     initialized := true;
@@ -1243,7 +1243,7 @@ begin
 
   // cache this sound buffer
   begin
-    for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1 do
+    for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
     begin
       if (g_pDSoundBufferCache[v] = nil) then
       begin
@@ -1541,7 +1541,7 @@ begin
       if (uRet = 0) then
       begin
         // remove cache entry
-        for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1 do
+        for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
         begin
           if (g_pDSoundBufferCache[v] = pThis) then
               g_pDSoundBufferCache[v] := nil;
@@ -1973,11 +1973,11 @@ begin
         CxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed!');
 
       // clear sound buffer cache
-      for v := 0 to SOUNDBUFFER_CACHE_SIZE - 1 do
+      for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
         g_pDSoundBufferCache[v] := nil;
 
       // clear sound stream cache
-      for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
+      for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
         g_pDSoundStreamCache[v] := nil;
 
       // Let's count DirectSound as being initialized now
@@ -1994,7 +1994,7 @@ begin
 
   // cache this sound stream
   begin
-    for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
+    for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
     begin
       if (g_pDSoundStreamCache[v] = nil) then
       begin
@@ -2184,7 +2184,7 @@ begin
     if (uRet = 0) then
     begin
       // remove cache entry
-      for v := 0 to SOUNDSTREAM_CACHE_SIZE - 1 do
+      for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
       begin
         if (g_pDSoundStreamCache[v] = pThis) then
           g_pDSoundStreamCache[v] := nil;

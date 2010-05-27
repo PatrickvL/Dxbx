@@ -51,6 +51,7 @@ uses
 const MAX_NBR_STREAMS = 16;
 
 type _VertexPatchDesc = record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     PrimitiveType: X_D3DPRIMITIVETYPE;
     dwVertexCount: DWORD;
     dwPrimitiveCount: DWORD;
@@ -76,6 +77,7 @@ type _PATCHEDSTREAM = record
   PPATCHEDSTREAM = ^PATCHEDSTREAM;
 
 type _CACHEDSTREAM = record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     uiCRC32: uint32;
     uiCheckFrequency: uint32;
     uiCacheHit: uint32;
@@ -91,6 +93,7 @@ type _CACHEDSTREAM = record
   PCACHEDSTREAM = ^CACHEDSTREAM;
 
 type VertexPatcher = object
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     procedure Create;
     procedure Destroy;
@@ -132,6 +135,7 @@ var g_IVBFVF: DWORD = 0;
 var g_CurrentVertexShader: DWord = 0;
 
 type _D3DIVB = record
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
     Blend1: FLOAT; // Blend1
@@ -182,10 +186,10 @@ begin
   if not bFirstTime then
     Exit;
 
-  for i := 0 to 256 - 1 do
+  for i := 0 to 256-1 do
   begin
     crc := i shl 24;
-    for j := 0 to 8 - 1 do
+    for j := 0 to 8-1 do
     begin
       if (crc and $80000000) > 0 then
         crc := (crc shl 1) xor $04c11db7
@@ -892,7 +896,7 @@ begin
   bHasLinearTex := false;
   pStream := nil; // DXBX - pstream might not have been initialized
 
-  for i := 0 to 4 - 1 do
+  for i := 0 to 4-1 do
   begin
     pPixelContainer := PX_D3DPixelContainer(EmuD3DActiveTexture[i]);
     if (Assigned(pPixelContainer) and EmuXBFormatIsLinear((X_D3DFORMAT(pPixelContainer.Format) and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT)) then
@@ -1213,6 +1217,7 @@ begin
     pOrig2 := @pOrigVertexData[pPatchDesc.dwOffset + 2 * pStream.uiOrigStride];
     pOrig3 := @pOrigVertexData[pPatchDesc.dwOffset + 3 * pStream.uiOrigStride];
 
+    if (pPatchDesc.dwPrimitiveCount div 2) > 0 then // Dxbx addition, to prevent underflow
     for i := 0 to (pPatchDesc.dwPrimitiveCount div 2) - 1 do
     begin
       memcpy(pPatch1, pOrig1, pStream.uiOrigStride * 3); // Vertex 0,1,2 := Vertex 0,1,2
@@ -1231,7 +1236,7 @@ begin
 
       if (pPatchDesc.hVertexShader and D3DFVF_XYZRHW) > 0 then
       begin
-        for z := 0 to 6 - 1 do
+        for z := 0 to 6-1 do
         begin
           if (PFLOATs(@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] = 0.0) then
               PFLOATs(@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] := 1.0;
@@ -1379,7 +1384,8 @@ begin
 
   DbgPrintf('g_IVBTblOffs := %d', [g_IVBTblOffs]);
 
-  for v:=0 to g_IVBTblOffs - 1 do
+  if g_IVBTblOffs > 0 then // Dxbx addition, to prevent underflow
+  for v := 0 to g_IVBTblOffs - 1 do
   begin
     dwPos := dwCurFVF and D3DFVF_POSITION_MASK;
 
@@ -1603,7 +1609,7 @@ begin
   //
   // DEBUGGING
   //
-  for Stage := 0 to 4 - 1 do
+  for Stage := 0 to 4-1 do
   begin
     pTexture := EmuD3DActiveTexture[Stage];
 
@@ -1722,6 +1728,7 @@ begin
         dwMipMapLevels := 6;
 
       // iterate through the number of mipmap levels
+      if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
       for level := 0 to dwMipMapLevels - 1 do
       begin
         {hRet := }IDirect3DTexture8(pResource.Emu.Texture8).LockRect(level, {out}LockedRect, NULL, 0);
@@ -1770,6 +1777,7 @@ begin
             end
             else
             begin
+              if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
               for v := 0 to dwMipHeight - 1 do
               begin
                 memcpy(pDest, pSrc + dwMipOffs, dwMipWidth * dwBPP);

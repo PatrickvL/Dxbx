@@ -143,6 +143,7 @@ begin
       dwChunkSize := pRect.right - pRect.left;
     end;
 
+    if dwMaxY > 0 then // Dxbx addition, to prevent underflow
     for y := 0 to dwMaxY - 1 do
     begin
       memcpy(pSrc, pDst, dwChunkSize);
@@ -224,6 +225,7 @@ begin
         dwChunkSize := pBox.Right - pBox.Left;
       end;
 
+      if dwMaxY > 0 then // Dxbx addition, to prevent underflow
       for y := 0 to dwMaxY - 1 do
       begin
         memcpy(pSrc, pDst, dwChunkSize);
@@ -342,14 +344,17 @@ begin
   // dwV := dwSV;
   // dwU := dwSU;
 
+  if dwDepth > 0 then // Dxbx addition, to prevent underflow
   for z := 0 to dwDepth - 1 do
   begin
     dwV := dwSV;
 
+    if dwHeight > 0 then // Dxbx addition, to prevent underflow
     for y := 0 to dwHeight - 1 do
     begin
       dwU := dwSU;
 
+      if dwWidth > 0 then // Dxbx addition, to prevent underflow
       for x := 0 to dwWidth - 1 do
       begin
         memcpy(pDstBuff, @(PByte(pSrcBuff)[(dwU or dwV or dwW)*dwBPP]), dwBPP);

@@ -138,6 +138,7 @@ begin
 
     dwLevelCount := IDirect3DTexture8(pTexture).GetLevelCount();
 
+    if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
     for v := 0 to dwLevelCount - 1 do
     begin
       hRet := IDirect3DTexture8(pTexture).GetLevelDesc(v, {out}SurfaceDesc);
@@ -438,6 +439,7 @@ begin
 
         pwVal := PWORD(pdwPushData + 1);
 
+        if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
         begin
           if (s mod 8 = 0) then printf('  ');
@@ -452,6 +454,7 @@ begin
 
 
       pwVal := PWORD(IntPtr(pdwPushData) + SizeOf(pdwPushData^)); // TODO -oDXBX: Is this correctly translated?
+      if dwCount > 0 then // Dxbx addition, to prevent underflow
       for mi := 0 to dwCount - 1 do
       begin
         pIBMem[mi+2] := pwVal^; Inc(pwVal); // Cxbx has : pwVal[mi];
@@ -560,6 +563,7 @@ begin
 
         pwVal := PWORD(pIndexData);
 
+        if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
         begin
           if (s mod 8) = 0 then printf(#13#10'  ');
@@ -778,6 +782,7 @@ begin
 
     pwChk := PWORD(pIndexData);
 
+    if dwCount > 0 then // Dxbx addition, to prevent underflow
     for chk := 0 to dwCount - 1 do
     begin
       x := pwChk^; Inc(pwChk);
@@ -843,6 +848,7 @@ begin
 
     la := a; lb := b; lc := c;
 
+    if max > 0 then // Dxbx addition, to prevent underflow
     for i := 2 to max - 1 do
     begin
       fprintf(dbgVertices, '      3;%d,%d,%d;%s'#13#10,

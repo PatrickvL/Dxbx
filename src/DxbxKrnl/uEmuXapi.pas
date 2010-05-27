@@ -578,14 +578,14 @@ begin
     [Unknown1, Unknown2]);
 {$ENDIF}
 
-  for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
+  for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
   begin
     g_pXInputSetStateStatus[v].hDevice := 0;
     g_pXInputSetStateStatus[v].dwLatency := 0;
     g_pXInputSetStateStatus[v].pFeedback := nil;
   end;
 
-  for v := 0 to XINPUT_HANDLE_SLOTS - 1 do
+  for v := 0 to XINPUT_HANDLE_SLOTS-1 do
   begin
     g_hInputHandle[v] := 0;
   end;
@@ -814,7 +814,7 @@ begin
   //
 
   begin
-    for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
+    for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
     begin
       hDevice := g_pXInputSetStateStatus[v].hDevice;
 
@@ -983,7 +983,7 @@ begin
     //
     found := false;
 
-    for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
+    for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
     begin
       if (g_pXInputSetStateStatus[v].hDevice = hDevice) then
       begin
@@ -1007,7 +1007,7 @@ begin
 
     if (not found) then
     begin
-      for v := 0 to XINPUT_SETSTATE_SLOTS - 1 do
+      for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
       begin
         if (g_pXInputSetStateStatus[v].hDevice = 0) then
         begin
@@ -1311,7 +1311,7 @@ begin
                       'If you''re reading this message than tell blueshogun you saw it!!!');
 
     // Find an empty spot in the thread notification array
-    for i := 0 to 16 - 1 do // TODO -oDxbx: Constantify 16
+    for i := 0 to 16-1 do // TODO -oDxbx: Constantify 16
     begin
       // If we find one, then add it to the array, and break the loop so
       // that we don't accidently register the same routine twice!
@@ -1326,7 +1326,7 @@ begin
   else
   begin
     // Go through each routine and nullify the routine passed in.
-    for i := 0 to 16 - 1 do // TODO -oDxbx: Constantify 16
+    for i := 0 to 16-1 do // TODO -oDxbx: Constantify 16
     begin
       if (Addr(pThreadNotification.pfnNotifyRoutine) = Addr(g_pfnThreadNotification[i])) then
       begin

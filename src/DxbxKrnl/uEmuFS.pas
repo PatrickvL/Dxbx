@@ -328,6 +328,7 @@ begin
 
       stop := (pTLS.dwDataEndAddr - pTLS.dwDataStartAddr) + pTLS.dwSizeofZeroFill;
 
+      if stop > 0 then // Dxbx addition, to prevent underflow
       for v := 0 to stop - 1 do
       begin
         if (v mod $10) = 0 then

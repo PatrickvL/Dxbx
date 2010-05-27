@@ -346,12 +346,14 @@ const X_D3DLOCK_TILED = $00000040; // Xbox extension
 const X_D3DLOCK_READONLY = $00000080;
 
 type X_D3DVertexBuffer = object(X_D3DResource)
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
   end; // size = 12 (as in Cxbx)
   PX_D3DVertexBuffer = ^X_D3DVertexBuffer;
   PPX_D3DVertexBuffer = ^PX_D3DVertexBuffer;
 
 type X_D3DIndexBuffer = object(X_D3DResource)
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
   end; // size = 12 (as in Cxbx)
   PX_D3DIndexBuffer = ^X_D3DIndexBuffer;
@@ -376,7 +378,8 @@ type X_D3DFixup = object(X_D3DResource)
   PX_D3DFixup = ^X_D3DFixup;
   PPX_D3DFixup = ^PX_D3DFixup;
 
-  X_D3DPalette = object(X_D3DResource)
+type X_D3DPalette = object(X_D3DResource)
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   end; // size = 12 (as in Cxbx)
   PX_D3DPalette = ^X_D3DPalette;
   PPX_D3DPalette = ^PX_D3DPalette;
