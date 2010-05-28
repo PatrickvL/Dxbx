@@ -20,6 +20,11 @@ unit uEmuD3D8;
 {$INCLUDE Dxbx.inc}
 
 {.$define _DEBUG_DUMP_TEXTURE_SETTEXTURE}
+{.$define _DEBUG_DUMP_TEXTURE_REGISTER}
+{.$define _DEBUG_TRACK_VS}
+{.$define _DEBUG_TRACE_VB}
+{.$define _DEBUG_TRACK_VS_CONST}
+
 
 interface
 
@@ -2510,8 +2515,12 @@ var
   DeclarationSize: DWORD;
   Handle: DWORD;
 
-(*  pFileName: array [0..30-1] of Char;*)
-(*  FailedShaderCount: Integer;*)
+{$ifdef _DEBUG_TRACK_VS}
+  pFileName: PAnsiChar;//array [0..30-1] of Char;
+  FailedShaderCount: Integer;
+  pHeader: pVSH_SHADER_HEADER;
+  f: PFILE;
+{$endif}
 const
   dummy: AnsiString =
     'vs.1.1'#13#10 +
@@ -2662,10 +2671,10 @@ begin
     if Assigned(pFunction) then
     begin
       FailedShaderCount := 0;
-      VSH_SHADER_HEADER *pHeader := (VSH_SHADER_HEADER)pFunction;
-      EmuWarning('Couldn't create vertex shader!');
-      sprintf(pFileName, 'failed%05d.xvu', FailedShaderCount);
-      PFILE f := fopen(pFileName, 'wb');
+      pHeader := PVSH_SHADER_HEADER(pFunction);
+      EmuWarning('Couldn`t create vertex shader!');
+      StrFmt(pFileName, 'failed%05d.xvu', [FailedShaderCount]);
+      f := fopen(pFileName, 'wb');
       if Assigned(f) then
       begin
         fwrite(pFunction, sizeof(VSH_SHADER_HEADER) + pHeader.NumInst * 16, 1, f);
@@ -4399,6 +4408,15 @@ var
 
   dummy: Pointer;
   szString: array [0..256 -1] of AnsiChar;
+
+{$IFDEF _DEBUG_DUMP_TEXTURE_REGISTER}
+  dwDumpSurface: int;
+  szBuffer: array [0..255 - 1] of Char;
+  dwDumpCube: Integer;
+  pSurface: IDirect3DSurface8;
+  dwDumpTex: Integer;
+{$ENDIF}
+
 begin
   EmuSwapFS(fsWindows);
 
@@ -5008,41 +5026,33 @@ begin
 {$IFDEF _DEBUG_DUMP_TEXTURE_REGISTER}
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         begin
-          int dwDumpSurface := 0;
+          dwDumpSurface := 0;
 
-          szBuffer: array [0..255 - 1] of AnsiChar;
-
-          StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface++]);
-
-          D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pResource.Emu.Surface8, 0, 0);
+          StrFmt(@szBuffer[0], '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface]); Inc(dwDumpSurface);
+          D3DXSaveSurfaceToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DSurface8(pResource.Emu.Surface8), 0, 0);
         end
         else
         if (bCubemap) then
         begin
-          Integer dwDumpCube := 0;
-
-          szBuffer: array [0..255 - 1] of Char;
-
-          for (Integer v := 0; v < 6; v++)
+          dwDumpCube := 0;
+          v := 0;
+          while v < 6 do
           begin
-            pSurface := 0;
+            pSurface := nil;
 
-            StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegCubeTex%.03d -%d.bmp', [X_Format, dwDumpCube++, v]);
+            StrFmt(szBuffer, '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegCubeTex%.03d -%d.bmp', [X_Format, dwDumpCube, v]); inc(dwDumpCube);
 
-            IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).GetCubeMapSurface((D3DCUBEMAP_FACES)v, 0, @pSurface);
+            IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).GetCubeMapSurface(D3DCUBEMAP_FACES(v), 0, @pSurface);
 
             D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pSurface, 0, 0);
+            Inc(v);
           end;
         end
         else
         begin
-          Integer dwDumpTex := 0;
-
-          szBuffer: array [0..255 - 1] of Char;
-
-          StrFmt(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER '%.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex++]);
-
-          D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource.Emu.Texture8, 0);
+          dwDumpTex := 0;
+          StrFmt(szBuffer,' _DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex]); inc(dwDumpTex);
+          D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, IDirect3DTexture8(pResource.Emu.Texture8), 0);
         end;
 {$endif}
       end;
@@ -5241,7 +5251,7 @@ begin
         end;
 
 {$ifdef _DEBUG_TRACE_VB}
-        Type_ := pResource8.GetType();
+        Type_ := IDirect3DResource8(pResource8).GetType();
 {$endif}
 
         uRet := IDirect3DResource8(pResource8)._Release();

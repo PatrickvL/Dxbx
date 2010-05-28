@@ -24,6 +24,7 @@ uses
   // Delphi
   Windows,
   // Dxbx
+  uEmu,
   uTypes,
   uLog,
   uDxbxUtils, // iif
@@ -31,6 +32,8 @@ uses
   uEmuD3D8Utils;
 
 {$INCLUDE Dxbx.inc}
+
+{.$define _DEBUG_TRACK_PS}
 
 // From PixelShader.h :
 

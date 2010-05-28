@@ -19,7 +19,7 @@ unit uDxbxKrnl;
 
 {$INCLUDE Dxbx.inc}
 
-{$DEFINE LOG_STRUCT_SIZES}
+{.$DEFINE LOG_STRUCT_SIZES}
 
 interface
 
