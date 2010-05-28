@@ -2755,10 +2755,10 @@ begin
    {$IFDEF DEBUG}
       printf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
              [Register_ - 96 + i, Register_ + i,
-             (pConstantData + 4 * i),
-             (pConstantData + 4 * i + 1),
-             (pConstantData + 4 * i + 2),
-             (pConstantData + 4 * i + 3)]);
+             (DWord(pConstantData) + 4 * i),
+             (DWord(pConstantData) + 4 * i + 1),
+             (DWord(pConstantData) + 4 * i + 2),
+             (DWord(pConstantData) + 4 * i + 3)]);
    {$ENDIF}
   end;
 {$ENDIF}
