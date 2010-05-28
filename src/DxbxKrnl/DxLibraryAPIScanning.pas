@@ -1013,7 +1013,7 @@ begin
   while i < pXbeHeader.dwSections do
   begin
     p := UIntPtr(Section.dwVirtualAddr);
-    ScanEnd := UIntPtr(Section.dwVirtualAddr) + Section.dwVirtualSize;
+    ScanEnd := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw; // Don't scan outside of raw size!
 
 {$IFDEF DXBX_DEBUG}
     DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x '{(%s)}+' from $%.8x to $%.8x', [
@@ -1169,6 +1169,7 @@ procedure TSymbolManager.DetermineFinalLocations;
     CrossReferencedAddress: TCodePointer;
     CrossReferencedLocation: PPotentialFunctionLocation;
   begin
+    DbgPrintf('DxbxHLE : Adding missing symbols');
     // Loop over all symbols :
     for w := Low(w) to High(w) do
     begin
@@ -1220,6 +1221,7 @@ procedure TSymbolManager.DetermineFinalLocations;
     NrOfReferencesToBestLocation: Integer;
     i: Integer;
   begin
+    DbgPrintf('DxbxHLE : Selecting best locations');
     // Loop over all symbols and select their best address :
     for w := Low(w) to High(w) do
     begin
@@ -1260,6 +1262,7 @@ procedure TSymbolManager.DetermineFinalLocations;
     CrossReferencedSymbol: TSymbolInformation;
     CrossReferencedAddress: TCodePointer;
   begin
+    DbgPrintf('DxbxHLE : Removing incorrect alternatives');
     Result := False;
     // Loop over all symbols :
     for w := Low(w) to High(w) do
@@ -1339,6 +1342,7 @@ procedure TSymbolManager.DetermineFinalLocations;
     w: Word;
     CurrentSymbol: TSymbolInformation;
   begin
+    DbgPrintf('DxbxHLE : Collecting final symbols');
     MyFinalLocations.Count := MySymbolCount;
     MySymbolCount := 0;
 
@@ -1409,6 +1413,7 @@ var
   Symbol: TSymbolInformation;
   s, v: int;
 begin
+  DbgPrintf('DxbxHLE : Determining special symbols');
   // locate XapiProcessHeap
   begin
     // Resolve the address of the _XapiProcessHeap symbol (at least cross-referenced once, from XapiInitProcess) :
