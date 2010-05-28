@@ -138,6 +138,7 @@ type
   INT = JwaWinType.INT; // = Integer;
   size_t = JwaWinType.size_t; // = Longword;
   wchar_t = JwaWinType.wchar_t; // = WideChar;
+  FLOAT = JwaWinType.FLOAT;
 
   pwchar_t = PWideChar;
 
@@ -263,6 +264,9 @@ Code:
 const
   BOOL_TRUE = BOOL(1);
   BOOL_FALSE = BOOL(0);
+
+const
+  HNULL = 0;
 
 {$IFNDEF UNICODE}
 type
