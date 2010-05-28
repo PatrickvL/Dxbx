@@ -501,7 +501,7 @@ uses
   , uEmuFS
   , uEmuD3D8;
 
-{$DEFINE _DEBUG_TRACK_VS}
+{.$DEFINE _DEBUG_TRACK_VS}
 
 // VertexShader.h
 
