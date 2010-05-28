@@ -1708,9 +1708,9 @@ begin
         dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
 
         // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
-        dwCompressedSize := dwWidth*dwHeight;
+        dwCompressedSize := dwWidth * dwHeight;
 
-        if (X_Format = X_D3DFMT_DXT1) then     // 64bits per block/per 16 texels
+        if (X_Format = X_D3DFMT_DXT1) then // 64bits per block/per 16 texels
           dwCompressedSize := dwCompressedSize div 2;
 
         dwBPP := 1;

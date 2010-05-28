@@ -36,7 +36,9 @@ const // instead of using uEmuD3D8Types :
 //  X_D3DFMT_X8R8G8B8 = $07; // 7, Swizzled
 //  X_D3DFMT_P8 = $0B; // 11, Swizzled, 8-bit Palletized
   X_D3DFMT_DXT1 = $0C; // 12, Compressed, opaque/one-bit alpha
+  X_D3DFMT_DXT2 = $0E;
   X_D3DFMT_DXT3 = $0E; // 14, Compressed, linear alpha
+  X_D3DFMT_DXT4 = $0F;
   X_D3DFMT_DXT5 = $0F; // 15, Compressed, interpolated alpha
 
 const
@@ -1141,7 +1143,9 @@ function ReadD3DTextureFormatIntoBitmap(
 begin
   case aFormat of
     X_D3DFMT_DXT1,
+    //X_D3DFMT_DXT2,
     X_D3DFMT_DXT3,
+    //X_D3DFMT_DXT4,
     X_D3DFMT_DXT5:
       // Read the compressed texture into the bitmap :
       Result := ReadS3TCFormatIntoBitmap(aFormat, aData, aDataSize, aOutput);

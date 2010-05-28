@@ -132,6 +132,7 @@ type
   // Note : These types are aliasses to JwaWinType, so we don't have to include that unit :
   PCSZ = JwaWinType.PCSZ; // = ^AnsiChar; // Dxbx assumption!
   PVOID = JwaWinType.PVOID; // = Pointer;
+  PPvoid = JwaWinType.PPVOID; // = ^PVOID;
   PLPVOID = System.PPointer;
   LONG = JwaWinType.LONG; // = Longint;
   INT = JwaWinType.INT; // = Integer;

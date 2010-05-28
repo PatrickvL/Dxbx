@@ -331,11 +331,13 @@ begin
     X_D3DFMT_DXT1: // Compressed
       Result := D3DFMT_DXT1;
 
+    //X_D3DFMT_DXT2,
     X_D3DFMT_DXT3: // Compressed
-      Result := D3DFMT_DXT2;
-
-    X_D3DFMT_DXT5: // Compressed
       Result := D3DFMT_DXT3;
+
+    //X_D3DFMT_DXT4,
+    X_D3DFMT_DXT5: // Compressed
+      Result := D3DFMT_DXT5;
 
     X_D3DFMT_YUY2: // Swizzled
       Result := D3DFMT_YUY2;
@@ -392,10 +394,14 @@ begin
 //      Result := X_D3DFMT_R5G6B5; // Swizzled
     D3DFMT_D24S8:
       Result := X_D3DFMT_D24S8; // Swizzled
-    D3DFMT_DXT3:
+    D3DFMT_DXT5:
       Result := X_D3DFMT_DXT5; // Compressed
-    D3DFMT_DXT2:
+    D3DFMT_DXT4:
+      Result := X_D3DFMT_DXT4;
+    D3DFMT_DXT3:
       Result := X_D3DFMT_DXT3; // Compressed
+    D3DFMT_DXT2:
+      Result := X_D3DFMT_DXT2;
     D3DFMT_DXT1:
       Result := X_D3DFMT_DXT1; // Compressed
     D3DFMT_A1R5G5B5:

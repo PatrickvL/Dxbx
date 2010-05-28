@@ -1897,7 +1897,7 @@ begin
   // TODO -oCXBX: Garbage Collection
   ppStream^ := X_CDirectSoundStream.Create;
 
-  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(SizeOf(DSBUFFERDESC)));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(sizeof(DSBUFFERDESC)));
 
   // convert from Xbox to PC DSound
   begin
