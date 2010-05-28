@@ -161,7 +161,7 @@ end;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
 begin
-  asm int 13; end; // TODO -oDXBX: Implement
+  asm int 3; end; // TODO -oDXBX: Implement
 end;
 
 end.

@@ -405,6 +405,7 @@ begin
         VertexCount := (dwCount*sizeof(DWORD)) div dwStride;
         PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
 
+        ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
         VPDesc.dwVertexCount := VertexCount;
         VPDesc.PrimitiveType := XBPrimitiveType;
         VPDesc.dwPrimitiveCount := PrimitiveCount;

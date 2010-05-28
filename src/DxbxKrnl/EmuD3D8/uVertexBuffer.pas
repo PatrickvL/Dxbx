@@ -634,12 +634,12 @@ begin
 
   // Do some groovey patchin'
 
-  pStream := @m_pStreams[uiStream];
-  pStreamPatch := @m_pDynamicPatch.pStreamPatches[uiStream];
+  pStream := @(m_pStreams[uiStream]);
+  pStreamPatch := @(m_pDynamicPatch.pStreamPatches[uiStream]);
 
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
-    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), uiStride);
+    IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
       CxbxKrnlCleanup('Could not retrieve original buffer size');
@@ -652,7 +652,7 @@ begin
     begin
       CxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
-    IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
+    IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
     if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, {out}PByte(pNewData), 0))) then
     begin
       CxbxKrnlCleanup('Couldn''t lock the new buffer');
@@ -671,7 +671,7 @@ begin
       CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
     end;
     uiStride  := pPatchDesc.uiVertexStreamZeroStride;
-    pOrigData := pPatchDesc.pVertexStreamZeroData;
+    pOrigData := Puint08(pPatchDesc.pVertexStreamZeroData);
     // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
     dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
     pNewVertexBuffer := NULL;
@@ -1543,6 +1543,7 @@ begin
     end;
   end;
 
+  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
   VPDesc.dwOffset := 0;

@@ -7705,8 +7705,10 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
+  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
+  VPDesc.dwPrimitiveCount := VertexCount; // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
   VPDesc.dwOffset := StartVertex;
   VPDesc.pVertexStreamZeroData := nil;
   VPDesc.uiVertexStreamZeroStride := 0;
@@ -7769,6 +7771,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
+  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwOffset := 0;
@@ -7878,8 +7881,10 @@ begin
     if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
       EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
+    ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
     VPDesc.PrimitiveType := PrimitiveType;
     VPDesc.dwVertexCount := VertexCount;
+    VPDesc.dwPrimitiveCount := VertexCount; // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
     VPDesc.dwOffset := 0;
     VPDesc.pVertexStreamZeroData := nil;
     VPDesc.uiVertexStreamZeroStride := 0;
@@ -8005,8 +8010,10 @@ begin
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
 
 
+  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
+  VPDesc.dwPrimitiveCount := VertexCount; // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := pVertexStreamZeroData;
   VPDesc.uiVertexStreamZeroStride := VertexStreamZeroStride;
