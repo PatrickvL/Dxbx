@@ -550,7 +550,7 @@ begin
     DbgPrintf('EmuXapi : EmuXMountUtilityDrive' +
         #13#10'(' +
         #13#10'   fFormatClean        : 0x%.08X' +
-        #13#10');', [Ord(fFormatClean)]);
+        #13#10');', [fFormatClean]);
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}

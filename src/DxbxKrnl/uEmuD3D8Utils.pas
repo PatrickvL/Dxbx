@@ -51,9 +51,6 @@ function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: XTL_PIDirec
 function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height: LongWord; Format: TD3DFormat;
   ppSurface: PIDirect3DSurface8): HResult;
-function IDirect3DDevice8_GetBackBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
-  BackBuffer: LongWord; _Type: TD3DBackBufferType;
-  ppBackBuffer: PIDirect3DSurface8): HResult;
 function IDirect3DDevice8_CreateIndexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Length: LongWord; Usage: DWord; Format: TD3DFormat; Pool: TD3DPool;
   ppIndexBuffer: PIDirect3DIndexBuffer8): HResult;
@@ -124,15 +121,6 @@ begin
   Result := IDirect3DDevice8(aDirect3DDevice8).CreateImageSurface(
     Width, Height, Format,
     ppSurface);
-end;
-
-function IDirect3DDevice8_GetBackBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
-  BackBuffer: LongWord; _Type: TD3DBackBufferType;
-  ppBackBuffer: PIDirect3DSurface8): HResult;
-begin
-  Result := IDirect3DDevice8(aDirect3DDevice8).GetBackBuffer(
-    BackBuffer, _Type,
-    ppBackBuffer);
 end;
 
 function IDirect3DDevice8_CreateIndexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;

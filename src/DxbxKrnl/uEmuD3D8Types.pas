@@ -693,9 +693,9 @@ const
   // Compressed Formats
 
   X_D3DFMT_DXT1 = $0C; // opaque/one-bit alpha
-  X_D3DFMT_DXT2 = $0E; // linear alpha
+  X_D3DFMT_DXT2 = $0E;
   X_D3DFMT_DXT3 = $0E; // linear alpha
-  X_D3DFMT_DXT4 = $0F; // interpolated alpha
+  X_D3DFMT_DXT4 = $0F;
   X_D3DFMT_DXT5 = $0F; // interpolated alpha
 
   // Linear Formats

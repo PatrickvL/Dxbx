@@ -43,15 +43,20 @@ uses
   uEmuAlloc,
   uEmuLDT;
 
+procedure EmuInitFS();
+
+procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
+
+procedure EmuCleanupFS();
+
+function EmuIsXboxFS(): _bool; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
+
+// Dxbx addition :
 type
   TSwapFS = (fsSwap, fsWindows, fsXbox);
 
-procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
-procedure EmuInitFS;
-function EmuIsXboxFS: ByteBool; {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF}
 procedure EmuSwapFS(); {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF} overload;
 procedure EmuSwapFS(const aSwapTo: TSwapFS); {$IFDEF SUPPORTS_INLINE_ASM}inline; {$ENDIF} overload;
-procedure EmuCleanupFS;
 
 function DumpCurrentFS(): string;
 
@@ -79,68 +84,54 @@ const
   DxbxFS_SwapFS = FS_ArbitraryUserPointer; // = $14 : UInt16
   DxbxFS_IsXboxFS = FS_ArbitraryUserPointer + SizeOf(UInt16); // = $16 : ByteBool
 
-var
-  // Xbox is a single process system, and because of this fact, demos
-  // and games are likely to suffer from Xbox-Never-Sleeps syndrome.
-  //
-  // Basically, there are situations where the Xbe will have no
-  // reason to bother yielding to other threads. One solution to this
-  // problem is to keep track of the number of function intercepts,
-  // and every so often, force a sleep. This is the rate at which
-  // those forced sleeps occur.
-  // Automatically insert after this many EmuFS() swaps :
-  EmuAutoSleepRate: Integer = -1;
-
 implementation
 
 // is the current fs register the xbox emulation variety?
-function EmuIsXboxFS: ByteBool;
+function EmuIsXboxFS(): _bool;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := ByteBool(GetTIBEntryWord(DxbxFS_IsXboxFS));
+  Result := (GetTIBEntryWord(DxbxFS_IsXboxFS) <> 0);
 end;
-(* was :
-var
-  chk: Byte;
-begin
-  asm
-    mov ah, fs:[DxbxFS_IsXboxFS]
-    mov chk, ah
-  end;
 
-  Result := (chk = 1);
-end;
-*)
+//
+// Xbox is a single process system, and because of this fact, demos
+// and games are likely to suffer from Xbox-Never-Sleeps syndrome.
+//
+// Basically, there are situations where the Xbe will have no
+// reason to bother yielding to other threads. One solution to this
+// problem is to keep track of the number of function intercepts,
+// and every so often, force a sleep. This is the rate at which
+// those forced sleeps occur.
+// Automatically insert after this many EmuFS() swaps :
+var EmuAutoSleepRate: uint32 = uint32(-1);
 
+//
 // This function is used to swap between the native Win2k/XP FS:
 // structure, and the Emu FS: structure. Before running Windows
 // code, you *must* swap over to Win2k/XP FS. Similarly, before
 // running Xbox code, you *must* swap back over to Emu FS.
 //
-// NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
+// Dxbx NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
 // inside the Xbox FS state, or the Win32 kernel will merrily
 // restore the FS register - which is NOT what we want here!
-procedure EmuSwapFS;
+procedure EmuSwapFS();
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 {$WRITEABLECONST ON}
 const
   // Note that this is only the *approximate* interception count,
   // because not all interceptions swap the FS register, and some
   // non-interception code uses it
-  dwInterceptionCount: Integer = 0;
+  dwInterceptionCount: uint32 = 0;
 {$WRITEABLECONST OFF}
-//var CurrentFS: Word;
+var
+  CurrentFS: Word;
 begin
   asm
     mov ax, fs:[DxbxFS_SwapFS]
     mov fs, ax
   end;
 
-/// The block below causes problems;
-/// Maybe we should just disable it and find another
-/// solution for Xbox-never-sleeps?
-(*
-  // Every "N" interceptions, perform various periodic services
+  // every "N" interceptions, perform various periodic services
   Inc(dwInterceptionCount);
   if dwInterceptionCount >= EmuAutoSleepRate then
   begin
@@ -155,7 +146,7 @@ begin
     CurrentFS := GetFS();
 
     // Yield!
-    SwitchToThread;
+    Sleep(1); // Dxbx used SwitchToThread, but that keeps the application burning cycles
 
     // Restore the FS register again :
     SetFS(CurrentFS);
@@ -163,7 +154,6 @@ begin
     // Back to Zero!
     dwInterceptionCount := 0;
   end;
-*)
 end; // EmuSwapFS
 
 {$IFDEF DXBX_EXTENSIVE_CALLSTACK_LOGGING}
@@ -314,7 +304,11 @@ begin
     memcpy(pNewTLS, pTLSData, dwCopySize);
   end
   else
+  begin
     pNewTLS := nil;
+    dwCopySize := 0;
+    dwZeroSize := 0;
+  end;
 
 {$IFDEF _DEBUG_TRACE}
   // dump raw TLS data
@@ -353,11 +347,11 @@ begin
 
   // allocate LDT entry
   begin
-    dwSize := SizeOf(XboxKrnl.KPCR);
+    dwSize := sizeof(XboxKrnl.KPCR);
 
     NewPcr := CxbxMalloc(dwSize);
     memset(NewPcr, 0, dwSize);
-    NewFS := EmuAllocateLDT(UInt32(NewPcr), UInt32(UIntPtr(NewPcr) + dwSize));
+    NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(UIntPtr(NewPcr) + dwSize));
   end;
 
   // update "OrgFS" with NewFS and (bIsXboxFS = False)
@@ -370,12 +364,12 @@ begin
 
   // generate TIB
   begin
-    EThread := CxbxMalloc(SizeOf(xboxkrnl.ETHREAD));
+    EThread := CxbxMalloc(sizeof(xboxkrnl.ETHREAD));
 
     EThread.Tcb.TlsData := pNewTLS;
     EThread.UniqueThread := GetCurrentThreadId();
 
-    memcpy(@(NewPcr.NtTib), OrgNtTib, SizeOf(NT_TIB));
+    memcpy(@(NewPcr.NtTib), OrgNtTib, sizeof(NT_TIB));
 
     NewPcr.NtTib.Self := @(NewPcr.NtTib);
 
@@ -383,7 +377,7 @@ begin
 
     NewPcr.Prcb := @(NewPcr.PrcbData);
 
-    NewPcr.SelfPcr := NewPcr; // TODO -oDXBX: Is this correct?
+//    NewPcr.SelfPcr := NewPcr; // TODO -oDXBX: Is this correct?
   end;
 
   // prepare TLS
@@ -391,11 +385,11 @@ begin
   begin
     // TLS Index Address := 0
     if Assigned(PUInt32(pTLS.dwTLSIndexAddr)) then
-      PUInt32(pTLS.dwTLSIndexAddr)^ := 0;
+      Puint32(pTLS.dwTLSIndexAddr)^ := 0;
 
     // dword @ pTLSData := pTLSData
     if Assigned(pNewTLS) then
-      PPointer(pNewTLS)^ := pNewTLS;
+      PPvoid(pNewTLS)^ := pNewTLS;
   end;
 
   // update "NewFS" with OrgFS and (bIsXboxFS = True)
@@ -420,8 +414,8 @@ end;
 procedure EmuCleanupFS();
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 var
-  wSwapFS: Word;
-  pTLSData: PByte;
+  wSwapFS: uint16;
+  pTLSData: Puint08;
 begin
   wSwapFS := GetTIBEntryWord(DxbxFS_SwapFS);
   if wSwapFS = 0 then
@@ -433,7 +427,7 @@ begin
 
   EmuSwapFS(fsWindows);
 
-  if Assigned(pTLSData) then
+  if (pTLSData <> nil) then
     CxbxFree(pTLSData);
 
   EmuDeallocateLDT(wSwapFS);

@@ -337,7 +337,11 @@ begin
 
         // Change all pointers into integers, so those don't raise
         // an EConvertError. (This is easier than having casts everywhere) :
-        vtBoolean,
+        vtBoolean:
+        begin
+          Args[i].VInteger := Ord(Args[i].VBoolean);
+          Args[i].VType := vtInteger;
+        end;
         vtPointer,
         vtObject,
         vtInterface:

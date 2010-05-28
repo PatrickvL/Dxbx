@@ -272,8 +272,8 @@ var
   TlsDataSize: ULONG;
   StartContext1: PVOID;
   StartContext2: PVOID;
-  CreateSuspended: LONGBOOL;
-  DebugStack: LONGBOOL;
+  CreateSuspended: _BOOLEAN;
+  DebugStack: _BOOLEAN;
 begin
   EmuSwapFS(fsWindows);
 

@@ -60,7 +60,7 @@ begin
   begin
     // Grab the lock, letting us look at the variables
     while InterlockedCompareExchange({var}m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
-      SwitchToThread; // Cxbx has : Sleep(1);
+      Sleep(1); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
 
     // Are we the the new owner?
     if m_OwnerProcess = 0 then
@@ -86,7 +86,7 @@ begin
       InterlockedExchange({var}m_MutexLock, 0);
 
       // Wait and try again
-      SwitchToThread; // Cxbx has : Sleep(1);
+      Sleep(1); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
       continue;
     end;
 
@@ -104,7 +104,7 @@ procedure Mutex.Unlock;
 begin
   // Grab the lock, letting us look at the variables
   while InterlockedCompareExchange({var}m_MutexLock, {Exchange} 1, {Comperand} 0) <> 0 do
-    SwitchToThread; // Cxbx has : Sleep(1);
+    Sleep(1); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
 
   // Decrement the lock count
   if InterlockedDecrement({var}m_LockCount) <= 0 then
