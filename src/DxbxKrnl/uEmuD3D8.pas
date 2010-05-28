@@ -429,7 +429,7 @@ var
 begin
   // register window class
   begin
-    hDxbxDLL := MainInstance;
+    hDxbxDLL := HInstance; // = $10000000 (ImageBase of DxbxKrnl.DLL)
 
     logBrush.lbStyle := BS_SOLID;
     logBrush.lbColor := RGB(0, 0, 0);
@@ -437,12 +437,13 @@ begin
 
     g_hBgBrush := CreateBrushIndirect(logBrush);
 
+    ZeroMemory(@wc, SizeOf(wc));
     wc.cbSize := sizeof(WNDCLASSEX);
     wc.style := CS_CLASSDC;
     wc.lpfnWndProc := @EmuMsgProc;
     wc.cbClsExtra := 0;
     wc.cbWndExtra := 0;
-    wc.hInstance := GetModuleHandle(NULL); // MainInstance; ??
+    wc.hInstance := GetModuleHandle(NULL); // = $00010000 (ImageBase of Dxbx.exe)
     wc.hIcon := LoadIcon(hDxbxDll, MAKEINTRESOURCE(IDI_CXBX));
     wc.hCursor := LoadCursor(0, IDC_ARROW);
     wc.hbrBackground := g_hBgBrush;
@@ -638,7 +639,7 @@ begin
       begin
         DeleteObject(g_hBgBrush);
         PostQuitMessage(0);
-        Result := D3D_OK;
+        Result := S_OK;
         Exit;
       end;
 
@@ -735,7 +736,7 @@ begin
         if (g_XBVideo.GetFullscreen() or g_bIsFauxFullscreen) then
         begin
           SetCursor(0);
-          Result := D3D_OK;
+          Result := S_OK;
           Exit;
         end;
 
@@ -747,7 +748,7 @@ begin
     Exit;
   end;
 
-  Result := D3D_OK;
+  Result := S_OK;
 end; // EmuMsgProc
 
 // timing thread procedure
