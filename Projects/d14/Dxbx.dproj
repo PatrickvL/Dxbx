@@ -23,6 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<BRCC_CompilerToUse>rc</BRCC_CompilerToUse>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_Inlining>off</DCC_Inlining>
@@ -148,6 +149,7 @@
 			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
 			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas"/>
+			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

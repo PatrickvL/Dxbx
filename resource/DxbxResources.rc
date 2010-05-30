@@ -1,3 +1,4 @@
+ICON_0 ICON "Dxbx.ico"
 ButtonLaunchHoover RCDATA "Button Launch (Hoover).jpg"
 ButtonLaunchNormal RCDATA "Button Launch (Normal).jpg"
 ButtonLaunchPressed RCDATA "Button Launch (Pressed).jpg"

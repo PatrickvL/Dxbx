@@ -23,6 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<BRCC_CompilerToUse>rc</BRCC_CompilerToUse>
 			<DCC_DependencyCheckOutputName>XBEExplorer.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -94,6 +95,11 @@
 			<DelphiCompile Include="XBEExplorer.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
+			<RcCompile Include="..\..\resource\XBEExplorerResources.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>XBEExplorerResources.res</Form>
+			</RcCompile>
 			<DCCReference Include="..\..\src\XBEExplorer\uXBEExplorerMain.pas">
 				<Form>FormXBEExplorer</Form>
 			</DCCReference>
@@ -115,6 +121,12 @@
 			<DCCReference Include="..\..\src\XBEExplorer\uExploreFileSystem.pas">
 				<Form>frmExploreFileSystem</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\src\XBEExplorer\uDisassembleViewer.pas"/>
+			<DCCReference Include="..\..\Libraries\BeaEngine\BeaEngine.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uSectionViewer.pas"/>
+			<DCCReference Include="..\..\src\XBEExplorer\uViewerUtils.pas"/>
+			<DCCReference Include="..\..\src\uDisassembleUtils.pas"/>
+			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
