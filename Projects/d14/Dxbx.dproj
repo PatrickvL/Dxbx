@@ -23,6 +23,12 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_Inlining>off</DCC_Inlining>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_DependencyCheckOutputName>Dxbx.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -112,6 +118,11 @@
 			<DelphiCompile Include="Dxbx.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
+			<RcCompile Include="..\..\resource\DxbxResources.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>DxbxResources.res</Form>
+			</RcCompile>
 			<DCCReference Include="..\..\src\uEmuShared.pas"/>
 			<DCCReference Include="..\..\src\uError.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
@@ -136,6 +147,7 @@
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Types.pas"/>
 			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
+			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

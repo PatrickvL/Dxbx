@@ -341,7 +341,7 @@ function BetterTime(x_timeDate: uint32): string;
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
 
 procedure XbeLoaded;
-function GameRegionToString(const aGameRegion: Integer): string;
+function GameRegionToString(const aGameRegion: Cardinal): string;
 
 procedure LoadSymbolsFromCache(const aStringList: TStringList; const aCacheFile: string);
 
@@ -424,7 +424,7 @@ begin
 end; // GetWordVal
 
 
-function GameRegionToString(const aGameRegion: Integer): string;
+function GameRegionToString(const aGameRegion: Cardinal): string;
 begin
   if (aGameRegion and XBEIMAGE_GAME_REGION_ALL) = XBEIMAGE_GAME_REGION_ALL then
     Result := 'ALL'
