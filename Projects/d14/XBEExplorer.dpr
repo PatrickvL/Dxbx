@@ -1,5 +1,7 @@
 program XBEExplorer;
 
+{$R 'XBEExplorerResources.res' '..\..\resource\XBEExplorerResources.rc'}
+
 uses
   Forms,
   SysUtils,
@@ -21,7 +23,8 @@ uses
   BeaEngine in '..\..\Libraries\BeaEngine\BeaEngine.pas',
   uSectionViewer in '..\..\src\XBEExplorer\uSectionViewer.pas',
   uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas',
-  uDisassembleUtils in '..\..\src\uDisassembleUtils.pas';
+  uDisassembleUtils in '..\..\src\uDisassembleUtils.pas',
+  VistaIconFix in '..\..\src\VistaIconFix.pas';
 
 {$R *.res}
 

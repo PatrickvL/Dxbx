@@ -48,7 +48,8 @@ uses
   uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uXDVDFS in '..\..\src\uXDVDFS.pas',
   uFileSystem in '..\..\src\uFileSystem.pas',
-  uData in '..\..\src\Tools\XdkTracker\src\uData.pas';
+  uData in '..\..\src\Tools\XdkTracker\src\uData.pas',
+  VistaIconFix in '..\..\src\VistaIconFix.pas';
 
 {$R *.RES}
 
