@@ -1,0 +1,7 @@
+ButtonLaunchHoover RCDATA "Button Launch (Hover).jpg"
+ButtonLaunchNormal RCDATA "Button Launch (Normal).jpg"
+ButtonLaunchPressed RCDATA "Button Launch (Pressed).jpg"
+About RCDATA "Dxbx About.jpg"
+GUIHeaderLeft RCDATA "Dxbx GUI Header left.jpg"
+GUIHeaderCenter RCDATA "Dxbx GUI Header center.jpg"
+GUIHeaderRight RCDATA "Dxbx GUI Header right.jpg"
