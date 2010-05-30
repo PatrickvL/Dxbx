@@ -34,7 +34,7 @@ type
     DumpInfo: string; // first line of dump file, mentions dump-tool & version
     FileName: string;
     Title: string;
-    GameRegion: Integer;
+    GameRegion: Cardinal;
     IsDuplicate: Boolean; // temporary
 
     property LibVersions: TStringList read MyLibVersions;

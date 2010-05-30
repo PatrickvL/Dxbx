@@ -162,7 +162,7 @@ begin
 
   frm_About.Release;
   frm_About := nil;
-end; // TfrmMain.About1Click
+end;
 
 procedure TfrmXdkTracker.VisitShadowTjwebsite1Click(Sender: TObject);
 begin
@@ -172,12 +172,12 @@ end;
 procedure TfrmXdkTracker.VisitCaustikswebsite1Click(Sender: TObject);
 begin
   ShellExecute(0, cOpen, cWEBSITE_CXBX, nil, nil, SW_SHOWNORMAL);
-end; // TfrmMain.VisitCaustikswebsite1Click
+end;
 
 procedure TfrmXdkTracker.VisitCxbxForum1Click(Sender: TObject);
 begin
   ShellExecute(0, cOpen, cWEBSITE_FORUM, nil, nil, SW_SHOWNORMAL);
-end; // TfrmMain.VisitCxbxForum1Click
+end;
 
 procedure TfrmXdkTracker.WMCopyData(var Msg: TWMCopyData);
 
@@ -583,7 +583,7 @@ begin
         else
         if StartsWithText(FileContents[j], 'Game Region') then
         begin
-          ScanHexDWord(PChar(Copy(FileContents[j], Length(FileContents[j]) - 7, 8)), {var}XBEInfo.GameRegion);
+          ScanHexDWord(PChar(Copy(FileContents[j], Length(FileContents[j]) - 7, 8)), {var}Integer(XBEInfo.GameRegion));
         end
         else
         if StartsWithText(FileContents[j], 'Library Name') then

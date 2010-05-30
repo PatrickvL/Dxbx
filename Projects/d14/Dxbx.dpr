@@ -1,4 +1,4 @@
-(*
+  (*
     This file is part of Dxbx - a XBox emulator written in Delphi (ported over from cxbx)
     Copyright (C) 2007 Shadow_tj and other members of the development team.
 
@@ -18,6 +18,8 @@
 program Dxbx;
 
 {$INCLUDE Dxbx.inc}
+
+{$R 'DxbxResources.res' '..\..\resource\DxbxResources.rc'}
 
 uses
   SysUtils,
@@ -45,7 +47,8 @@ uses
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
   uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uXDVDFS in '..\..\src\uXDVDFS.pas',
-  uFileSystem in '..\..\src\uFileSystem.pas';
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uData in '..\..\src\Tools\XdkTracker\src\uData.pas';
 
 {$R *.RES}
 
