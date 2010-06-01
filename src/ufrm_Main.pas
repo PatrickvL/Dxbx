@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows, SysUtils, StrUtils, Classes, Messages, Controls, StdCtrls, ComCtrls, ExtCtrls,
+  Types, GraphUtil,
   Grids, Menus, ActnList, Forms, Dialogs, Graphics, jpeg,
   ShellAPI, IniFiles,
   xmldom, XMLIntf, msxmldom, XMLDoc,
@@ -44,6 +45,9 @@ uses
   ufrm_ControllerConfig,
   ufrm_VideoConfig,
   ufrm_About;
+
+const
+  clXboxGreen = $22CC88;//22BB77;//27BB73;//00DE97;//0DB366;//0FB869;
 
 type
   Tfrm_Main = class(TForm)
@@ -183,7 +187,7 @@ type
     Emulation_State: EMU_STATE;
 
     OldLBWindowProc: TWndMethod;
-    backgroundImage: TBitmap;
+    BackgroundImage: TBitmap;
     procedure LaunchXBE(const aXbe: TXbe);
     procedure CloseXbe;
 
@@ -214,6 +218,24 @@ var
   frm_Main: Tfrm_Main;
 
 implementation
+
+procedure GradientHorizontalLineCanvas(const ACanvas: TCanvas;
+  const AStartColor, AEndColor: TColor; const X, Y, Width: Integer);
+var
+  ARect: TRect;
+begin
+  ARect := Types.Rect(X, Y, X + Width, Y + ACanvas.Pen.Width);
+  GradientFillCanvas(ACanvas, AStartColor, AEndColor, ARect, gdHorizontal);
+end;
+
+procedure GradientVerticalLineCanvas(const ACanvas: TCanvas;
+  const AStartColor, AEndColor: TColor; const X, Y, Height: Integer);
+var
+  ARect: TRect;
+begin
+  ARect := Types.Rect(X, Y, X + ACanvas.Pen.Width, Y + Height);
+  GradientFillCanvas(ACanvas, AStartColor, AEndColor, ARect, gdVertical);
+end;
 
 { Tfrm_Main }
 
@@ -383,6 +405,8 @@ begin
 end;
 
 procedure Tfrm_Main.dgXbeInfosDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  Where: TRect;
 begin
 //  BitBlt(
 //    {DestDC=}TDrawGrid(Sender).Canvas.Handle,
@@ -392,7 +416,18 @@ begin
 //    {Rop=}SRCCOPY);
 //
 //  SetBkMode(TDrawGrid(Sender).Canvas.Handle, TRANSPARENT);
-  DrawText(TDrawGrid(Sender).Canvas.Handle, GetCellText(aCol, aRow), -1, Rect, DT_RIGHT + DT_RTLREADING);
+
+  Where := Rect;
+  InflateRect(Where, -4, -4);
+  DrawText(TDrawGrid(Sender).Canvas.Handle, GetCellText(aCol, aRow), -1, Where, DT_RIGHT + DT_RTLREADING);
+
+  if gdFixed in State then
+  begin
+    Where := Rect;
+    TDrawGrid(Sender).Canvas.Pen.Color := clLime;
+    TDrawGrid(Sender).Canvas.Pen.Width := 2;
+    GradientVerticalLineCanvas(TDrawGrid(Sender).Canvas, clBlack, clXboxGreen, Where.Right-2, Where.Top, Where.Bottom - Where.Top);
+  end;
 end;
 
 procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
@@ -435,7 +470,7 @@ begin
 
   PEmuShared(nil).Cleanup;
 
-  FreeAndNil(backgroundImage);
+  FreeAndNil(BackgroundImage);
 
   inherited Destroy;
 end;
@@ -445,7 +480,7 @@ var
   XBEFilePath: string;
   i: Integer;
 begin
-  backgroundImage := TBitmap.Create;
+  BackgroundImage := TBitmap.Create;
 
   RedrawBackground;
   UpdateLaunchButton;
@@ -521,8 +556,8 @@ end;
 
 procedure Tfrm_Main.FormPaint(Sender: TObject);
 begin
-  if Assigned(backgroundImage) then
-    Canvas.Draw(0, 0, backgroundImage);
+  if Assigned(BackgroundImage) then
+    Canvas.Draw(0, 0, BackgroundImage);
 end;
 
 procedure Tfrm_Main.RedrawBackground;
@@ -531,23 +566,27 @@ var
   JPEGImage: TJPEGImage;
 begin
   MinWidth := 0;
-  if Assigned(backgroundImage) then
+  if Assigned(BackgroundImage) then
   begin
-    backgroundImage.SetSize(Width, Height);
-    backgroundImage.Canvas.Brush.Color := Color;
-    backgroundImage.Canvas.FillRect(backgroundImage.Canvas.ClipRect);
+    BackgroundImage.SetSize(Width, Height);
+    BackgroundImage.Canvas.Brush.Color := Color;
+    BackgroundImage.Canvas.FillRect(BackgroundImage.Canvas.ClipRect);
 
     JPEGImage := GetJPEGResource('GUIHeaderLeft');
     Inc(MinWidth, JPEGImage.Width);
-    backgroundImage.Canvas.Draw(0, 0, JPEGImage);
+    BackgroundImage.Canvas.Draw(0, 0, JPEGImage);
 
     JPEGImage := GetJPEGResource('GUIHeaderRight');
     Inc(MinWidth, JPEGImage.Width);
-    backgroundImage.Canvas.Draw(Width - JPEGImage.Width, 0, JPEGImage);
+    BackgroundImage.Canvas.Draw(Width - JPEGImage.Width, 0, JPEGImage);
 
     JPEGImage := GetJPEGResource('GUIHeaderCenter');
     Inc(MinWidth, JPEGImage.Width);
-    backgroundImage.Canvas.Draw((Width - JPEGImage.Width) div 2, 0, JPEGImage);
+    BackgroundImage.Canvas.Draw((Width - JPEGImage.Width) div 2, 0, JPEGImage);
+
+    BackgroundImage.Canvas.Pen.Width := 2;
+    GradientHorizontalLineCanvas(BackgroundImage.Canvas, clBlack, clXboxGreen, 0, dgXbeInfos.Top - 2, Width div 2);
+    GradientHorizontalLineCanvas(BackgroundImage.Canvas, clXboxGreen, clBlack, 0 + Width div 2, dgXbeInfos.Top - 2, Width div 2);
 
     Constraints.MinWidth := MinWidth;
   end;
