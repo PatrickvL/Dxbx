@@ -97,10 +97,13 @@ object frm_Main: Tfrm_Main
     BevelOuter = bvNone
     BorderStyle = bsNone
     DefaultColWidth = 120
+    DrawingStyle = gdsGradient
     FixedColor = clGray
     FixedCols = 0
     RowCount = 99
-    Options = [goFixedVertLine, goFixedHorzLine, goColSizing, goRowSelect]
+    GradientEndColor = clGray
+    GradientStartColor = clBlack
+    Options = [goColSizing, goRowSelect]
     ParentColor = True
     TabOrder = 1
     OnClick = dgXbeInfosClick
