@@ -130,7 +130,7 @@ type
     XMLDocument: TXMLDocument;
     lblFreeTextFilter: TLabel;
     cbFreeTextFilter: TComboBox;
-    procedure ActStartEmulationExecute(Sender: TObject);
+    procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
     procedure actConfigControllerExecute(Sender: TObject);
@@ -168,10 +168,8 @@ type
     procedure UpdateLaunchButton;
     function LoadXbe(const aFileName: string): Boolean;
   private
-    ApplicationDir: string;
     MyXBEList: TStringList;
     EnabledItems: array of TXbeInfo;
-    procedure UpdateGameList;
     procedure UpdateFilter;
 //    function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
 //    function FindByFileName(const aFileName: string): Integer;
@@ -202,7 +200,7 @@ type
     procedure WMDROPFILES(var Msg: TMessage); //message WM_DROPFILES;
     procedure LBWindowProc(var Message: TMessage);
 
-    procedure AddjustMenu;
+    procedure AdjustMenu;
     procedure UpdateIcon(const aXbe: TXBE);
     function GetCellText(aCol, aRow: Integer): string;
   public
@@ -242,254 +240,27 @@ end;
 {$R *.DFM}
 
 const
-  cXDKTrackerPath = 'XdkTracker.exe';
   cXbeExplorerPath = 'XbeExplorer.exe';
+  cXDKTrackerPath = 'XdkTracker.exe';
   cXIsoPath = 'xIso.exe';
-
-procedure Tfrm_Main.LaunchXBE(const aXbe: TXbe);
-begin
-  ShellExecute(0, 'open', PChar(ParamStr(0)), PChar(
-    '/load ' +
-    AnsiQuotedStr(aXbe.XbePath, '"') + ' ' +
-//    IntToStr(Self.Handle) + ' ' +
-    IntToStr(dgXbeInfos.Handle) + ' ' +
-    IntToStr(Ord(KernelDebugMode)) + ' ' +
-    AnsiQuotedStr(KernelDebugFileName, '"')
-    ), nil, SW_SHOWNORMAL);
-
-  Caption := m_szAsciiTitle + ' - Dxbx [Emulating]'
-end;
-
-procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
-begin
-//  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
-  if XbeOpenDialog.Execute then
-    LoadXbe(XbeOpenDialog.FileName);
-end;
-
-function Tfrm_Main.LoadXbe(const aFileName: string): Boolean;
-begin
-  if Assigned(m_Xbe) then
-    CloseXbe();
-
-  Result := OpenXbe(aFileName, {var}m_Xbe);
-  if Result then
-  begin
-    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
-    UpdateIcon(m_Xbe);
-
-    RecentXbeAdd(XbeOpenDialog.FileName);
-    Emulation_State := esFileOpen;
-    AddjustMenu;
-  end
-  else
-  begin
-    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-    Emulation_State := esNone;
-    AddjustMenu;
-  end;
-end;
-
-procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
-begin
-  CloseXbe();
-end;
-
-procedure Tfrm_Main.CloseXbe;
-begin
-  FreeAndNil(m_Xbe);
-  Emulation_State := esNone;
-  UpdateIcon(nil);
-  AddjustMenu;
-
-  WriteLog(Format('DXBX: %s Closed...', [m_szAsciiTitle]));
-  StatusBar.SimpleText := 'DXBX:';
-end;
-
-function Tfrm_Main.SendCommandToXdkTracker: Boolean;
-var
-  stringToSend: string;
-  copyDataStruct: TCopyDataStruct;
-
-  function _SendData(copyDataStruct: TCopyDataStruct): Boolean;
-  var
-    receiverHandle: Windows.THandle;
-    res: Integer;
-  begin
-    Result := False;
-    receiverHandle := FindWindow(PChar('TfrmXdkTracker'), nil);
-    if receiverHandle = 0 then
-      Exit;
-
-    res := SendMessage(receiverHandle, WM_COPYDATA, Integer(Handle), Integer(@copyDataStruct));
-    if res > 0 then
-      Result := True;
-  end;
-
-begin
-  stringToSend := 'READXML';
-
-  copyDataStruct.dwData := Integer(0); //use it to identify the message contents
-  copyDataStruct.cbData := 1 + Length(stringToSend);
-  copyDataStruct.lpData := PChar(stringToSend);
-
-  Result := _SendData(copyDataStruct);
-end;
-
-procedure Tfrm_Main.UpdateGameList;
-begin
-  dgXbeInfos.RowCount := Length(EnabledItems) + 1;
-  dgXbeInfos.ColCount := 5;
-  dgXbeInfos.Repaint;
-end;
-
-function Tfrm_Main.GetCellText(aCol, aRow: Integer): string;
-begin
-  Result := '';
-  if aRow = 0 then
-  begin
-    case aCol of
-      0: Result := 'Title';
-      1: Result := 'Region';
-      2: Result := 'Version';
-      3: Result := 'DumpInfo';
-      4: Result := 'Path';
-    end;
-    Exit;
-  end;
-
-
-  Dec(aRow);
-  if aRow < Length(EnabledItems) then
-    case aCol of
-      0: Result := EnabledItems[aRow].Title;
-      1: Result := GameRegionToString(EnabledItems[aRow].GameRegion); // TODO : Show this as images later on
-      2: Result := EnabledItems[aRow].LibVersions.Values['D3D8'];
-      3: Result := EnabledItems[aRow].DumpInfo;
-      4: Result := EnabledItems[aRow].FileName;
-    end;
-end;
-
-procedure Tfrm_Main.imgLaunchButtonClick(Sender: TObject);
-begin
-  ActStartEmulationExecute(Sender);
-end;
-
-procedure Tfrm_Main.imgLaunchButtonMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  imgLaunchButton.Tag := 2;
-  UpdateLaunchButton;
-end;
-
-procedure Tfrm_Main.imgLaunchButtonMouseEnter(Sender: TObject);
-begin
-  imgLaunchButton.Tag := 1;
-  UpdateLaunchButton;
-end;
-
-procedure Tfrm_Main.imgLaunchButtonMouseLeave(Sender: TObject);
-begin
-  imgLaunchButton.Tag := 0;
-  UpdateLaunchButton;
-end;
-
-procedure Tfrm_Main.imgLaunchButtonMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-begin
-  imgLaunchButton.Tag := 1;
-  UpdateLaunchButton;
-end;
-
-procedure Tfrm_Main.dgXbeInfosClick(Sender: TObject);
-begin
-  LoadXbe(GetCellText(dgXbeInfos.Row, {Path=Col}4));
-end;
-
-procedure Tfrm_Main.dgXbeInfosDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
-var
-  Where: TRect;
-begin
-//  BitBlt(
-//    {DestDC=}TDrawGrid(Sender).Canvas.Handle,
-//    {X=}Rect.Left, {Y=}Rect.Top, {Width=}(Rect.Right - Rect.Left), {Height=}(Rect.Bottom - Rect.Top),
-//    {SrcDC=}BackgroundImage.Canvas.Handle,
-//    {XSrc=}((Rect.Right - Rect.Left) * aCol) + TStringGrid(Sender).Left, {YSrc=}((Rect.Bottom - Rect.Top) * aRow) + TStringGrid(Sender).Top,
-//    {Rop=}SRCCOPY);
-//
-//  SetBkMode(TDrawGrid(Sender).Canvas.Handle, TRANSPARENT);
-
-  Where := Rect;
-  InflateRect(Where, -4, -4);
-  DrawText(TDrawGrid(Sender).Canvas.Handle, GetCellText(aCol, aRow), -1, Where, DT_RIGHT + DT_RTLREADING);
-
-  if gdFixed in State then
-  begin
-    Where := Rect;
-    TDrawGrid(Sender).Canvas.Pen.Color := clLime;
-    TDrawGrid(Sender).Canvas.Pen.Width := 2;
-    GradientVerticalLineCanvas(TDrawGrid(Sender).Canvas, clBlack, clXboxGreen, Where.Right-2, Where.Top, Where.Bottom - Where.Top);
-  end;
-end;
-
-procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
-begin
-  frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
-
-  if frm_ControllerConfig.ShowModal = mrOk then
-  begin
-  end;
-
-  FreeAndNil({var}frm_ControllerConfig);
-end;
-
-procedure Tfrm_Main.actConfigVideoExecute(Sender: TObject);
-begin
-  frm_VideoConfig := Tfrm_VideoConfig.Create(nil);
-
-  if frm_VideoConfig.ShowModal = mrOk then
-  begin
-  end;
-
-  FreeAndNil({var}frm_VideoConfig);
-end;
-
-procedure Tfrm_Main.ActStartEmulationExecute(Sender: TObject);
-begin
-  if not Assigned(m_Xbe) then
-  begin
-    MessageDlg('No xbe file loaded', mtInformation, [mbOk], 0);
-    Exit;
-  end;
-
-  LaunchXBE(m_Xbe);
-end;
-
-destructor Tfrm_Main.Destroy;
-begin
-  WindowProc := OldLBWindowProc;
-  WriteSettingsIni;
-
-  PEmuShared(nil).Cleanup;
-
-  FreeAndNil(BackgroundImage);
-
-  inherited Destroy;
-end;
 
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
-  i: Integer;
+//  i: Integer;
 begin
+  dgXbeInfos.ColCount := 5;
+
   BackgroundImage := TBitmap.Create;
 
   RedrawBackground;
   UpdateLaunchButton;
 
-  ApplicationDir := ExtractFilePath(Application.ExeName);
+  FApplicationDir := ExtractFilePath(Application.ExeName);
 
   MyXBEList := TStringList.Create;
   MyXBEList.CaseSensitive := False;
-  if LoadXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE) > 0 then
+  if LoadXBEList(FApplicationDir + cXDK_TRACKER_DATA_FILE) > 0 then
     UpdateFilter;
 
   PEmuShared(nil).Init;
@@ -519,14 +290,13 @@ begin
   WindowProc := LBWindowProc; // replace default WindowProc
   DragAcceptFiles(Handle, True); // now ListBox1 accept dropped files
 
-  FApplicationDir := ExtractFilePath(Application.ExeName);
   StatusBar.SimpleText := 'DXBX: No Xbe Loaded...';
 
   ReadSettingsIni;
 
   CreateLogs(DebugMode, DebugFileName);
 
-  AddjustMenu;
+  AdjustMenu;
 
   XBEFilePath := ParamStr(1);
 
@@ -538,7 +308,7 @@ begin
       LaunchXBE(m_Xbe);
     // TODO : Error logging should go here
   end;
-end;
+end; // FormCreate
 
 procedure Tfrm_Main.FormDestroy(Sender: TObject);
 begin
@@ -548,16 +318,59 @@ begin
     CloseXbe();
 end;
 
-procedure Tfrm_Main.FormResize(Sender: TObject);
+destructor Tfrm_Main.Destroy;
 begin
-  RedrawBackground;
-  Invalidate;
+  WindowProc := OldLBWindowProc;
+
+  PEmuShared(nil).Cleanup;
+
+  FreeAndNil(BackgroundImage);
+
+  inherited Destroy;
+end;
+
+procedure Tfrm_Main.WMDROPFILES(var Msg: TMessage);
+var
+  pcFileName: PChar;
+  i, iSize, iFileCount: Integer;
+begin
+  pcFileName := ''; // to avoid compiler warning message
+  iFileCount := DragQueryFile(Msg.wParam, $FFFFFFFF, pcFileName, 255);
+  for i := 0 to iFileCount - 1 do
+  begin
+    iSize := DragQueryFile(Msg.wParam, i, nil, 0) + 1;
+    pcFileName := StrAlloc(iSize);
+    try
+      DragQueryFile(Msg.wParam, i, pcFileName, iSize);
+      if LoadXbe(pcFileName) then
+        Break;
+    finally
+      StrDispose(pcFileName);
+    end;
+  end;
+
+  DragFinish(Msg.wParam);
+end; // WMDROPFILES
+
+procedure Tfrm_Main.LBWindowProc(var Message: TMessage);
+begin
+  if Message.Msg = WM_DROPFILES then
+    WMDROPFILES(Message); // handle WM_DROPFILES message
+
+  OldLBWindowProc(Message);
+  // call default ListBox1 WindowProc method to handle all other messages
 end;
 
 procedure Tfrm_Main.FormPaint(Sender: TObject);
 begin
   if Assigned(BackgroundImage) then
     Canvas.Draw(0, 0, BackgroundImage);
+end;
+
+procedure Tfrm_Main.FormResize(Sender: TObject);
+begin
+  RedrawBackground;
+  Invalidate;
 end;
 
 procedure Tfrm_Main.RedrawBackground;
@@ -590,7 +403,131 @@ begin
 
     Constraints.MinWidth := MinWidth;
   end;
+end; // RedrawBackground
+
+function Tfrm_Main.GetCellText(aCol, aRow: Integer): string;
+begin
+  Result := '';
+  if aRow = 0 then
+  begin
+    case aCol of
+      0: Result := 'Title';
+      1: Result := 'Region';
+      2: Result := 'Version';
+      3: Result := 'DumpInfo';
+      4: Result := 'Path';
+    end;
+    Exit;
+  end;
+
+  Dec(aRow);
+  if aRow < Length(EnabledItems) then
+    case aCol of
+      0: Result := EnabledItems[aRow].Title;
+      1: Result := GameRegionToString(EnabledItems[aRow].GameRegion); // TODO : Show this as images later on
+      2: Result := EnabledItems[aRow].LibVersions.Values['D3D8'];
+      3: Result := EnabledItems[aRow].DumpInfo;
+      4: Result := EnabledItems[aRow].FileName;
+    end;
+end; // GetCellText
+
+procedure Tfrm_Main.dgXbeInfosClick(Sender: TObject);
+begin
+  LoadXbe(GetCellText(dgXbeInfos.Row, {Path=Col}4));
 end;
+
+procedure Tfrm_Main.dgXbeInfosDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  Where: TRect;
+  Format: UINT;
+begin
+  if gdFixed in State then
+  begin
+    // Put gradient lines next to the header columns :
+    Where := Rect;
+    TDrawGrid(Sender).Canvas.Pen.Color := clLime;
+    TDrawGrid(Sender).Canvas.Pen.Width := 2;
+    GradientVerticalLineCanvas(TDrawGrid(Sender).Canvas, clBlack, clXboxGreen, Where.Right-2, Where.Top, Where.Bottom - Where.Top);
+    // Render titles in bold :
+    TDrawGrid(Sender).Canvas.Font.Style := [fsBold];
+  end;
+
+  // Draw cell's text :
+  Where := Rect;
+  InflateRect(Where, -4, -4);
+  Inc(Where.Top, 3);
+  if aCol = 2 then // Align 'Version' column right :
+    Format := DT_RIGHT
+  else
+    Format := DT_LEFT;
+  DrawText(TDrawGrid(Sender).Canvas.Handle, GetCellText(aCol, aRow), -1, Where, Format or DT_RTLREADING);
+end; // dgXbeInfosDrawCell
+
+procedure Tfrm_Main.cbFreeTextFilterKeyPress(Sender: TObject; var Key: Char);
+var
+  i: Integer;
+  Str: string;
+begin
+  if Key = #13 then
+  begin
+    // Make the current text the first in the dropdown list :
+    Str := cbFreeTextFilter.Text;
+    i := cbFreeTextFilter.Items.IndexOf(Str);
+    if i >= 0 then
+      cbFreeTextFilter.Items.Move(i, 0)
+    else
+    begin
+      cbFreeTextFilter.Items.Add(Str);
+      if cbFreeTextFilter.Items.Count > 10 then
+        cbFreeTextFilter.Items.Delete(cbFreeTextFilter.Items.Count - 1);
+    end;
+
+    // Apply the chosen filter :
+    UpdateFilter;
+  end;
+end; // cbFreeTextFilterKeyPress
+
+procedure Tfrm_Main.cbFreeTextFilterSelect(Sender: TObject);
+begin
+  UpdateFilter;
+end;
+
+procedure Tfrm_Main.UpdateFilter;
+var
+  i, CurrentRow: Integer;
+  FilterStr: string;
+
+  function _MaySee: Boolean;
+  var
+    i: Integer;
+  begin
+    Result := (FilterStr = '');
+    if not Result then
+      for i := 0 to dgXbeInfos.ColCount - 1 do
+      begin
+        Result := AnsiContainsText(GetCellText(i, CurrentRow+1), FilterStr);
+        if Result then
+          Exit;
+      end;
+  end;
+
+begin
+  // Build a list of Xbe's that pass the filter :
+  SetLength(EnabledItems, MyXBEList.Count);
+  CurrentRow := 0;
+  FilterStr := cbFreeTextFilter.Text;
+  for i := 0 to MyXBEList.Count - 1 do
+  begin
+    EnabledItems[CurrentRow] := TXbeInfo(MyXBEList.Objects[i]);
+    if _MaySee then
+      Inc(CurrentRow);
+  end;
+
+  SetLength(EnabledItems, CurrentRow);
+  // Make the grid show the filtered list :
+  dgXbeInfos.RowCount := 1 + CurrentRow;
+  dgXbeInfos.Repaint;
+end; // UpdateFilter
 
 procedure Tfrm_Main.UpdateLaunchButton;
 var
@@ -605,106 +542,66 @@ begin
   imgLaunchButton.Canvas.Draw(0, 0, GetJPEGResource(LaunchButtonResName));
 end;
 
-procedure Tfrm_Main.LBWindowProc(var Message: TMessage);
+procedure Tfrm_Main.imgLaunchButtonMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if Message.Msg = WM_DROPFILES then
-    WMDROPFILES(Message); // handle WM_DROPFILES message
-
-  OldLBWindowProc(Message);
-  // call default ListBox1 WindowProc method to handle all other messages
+  imgLaunchButton.Tag := 2;
+  UpdateLaunchButton;
 end;
 
-procedure Tfrm_Main.ReadSettingsIni;
-var
-  DxbxIniFilePath: string;
-  IniFile: TIniFile;
-  i: Integer;
+procedure Tfrm_Main.imgLaunchButtonMouseEnter(Sender: TObject);
 begin
-  DxbxIniFilePath := FApplicationDir + 'Dxbx.Ini';
-  if not FileExists(DxbxIniFilePath) then
-  begin
-    // Setting defaults
-    DebugMode := dmNone;
-    KernelDebugMode := dmFile;
+  imgLaunchButton.Tag := 1;
+  UpdateLaunchButton;
+end;
 
+procedure Tfrm_Main.imgLaunchButtonMouseLeave(Sender: TObject);
+begin
+  imgLaunchButton.Tag := 0;
+  UpdateLaunchButton;
+end;
+
+procedure Tfrm_Main.imgLaunchButtonMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  imgLaunchButton.Tag := 1;
+  UpdateLaunchButton;
+end;
+
+procedure Tfrm_Main.imgLaunchButtonClick(Sender: TObject);
+begin
+  actStartEmulationExecute(Sender);
+end;
+
+procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
+begin
+  frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
+
+  if frm_ControllerConfig.ShowModal = mrOk then
+  begin
+  end;
+
+  FreeAndNil({var}frm_ControllerConfig);
+end;
+
+procedure Tfrm_Main.actConfigVideoExecute(Sender: TObject);
+begin
+  frm_VideoConfig := Tfrm_VideoConfig.Create(nil);
+
+  if frm_VideoConfig.ShowModal = mrOk then
+  begin
+  end;
+
+  FreeAndNil({var}frm_VideoConfig);
+end;
+
+procedure Tfrm_Main.actStartEmulationExecute(Sender: TObject);
+begin
+  if not Assigned(m_Xbe) then
+  begin
+    MessageDlg('No xbe file loaded', mtInformation, [mbOk], 0);
     Exit;
   end;
 
-  IniFile := TIniFile.Create(DxbxIniFilePath);
-  try
-    DebugMode := TDebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', Ord(dmNone)));
-    DebugFileName := IniFile.ReadString('Settings', 'DxbxDebugFileName', '');
-
-    KernelDebugMode := TDebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(dmNone)));
-    KernelDebugFileName := IniFile.ReadString('Settings', 'KrnlDebugFileName', '');
-
-    // Read recent XBE files
-    with TStringList.Create do
-    try
-      Delimiter := '|';
-      StrictDelimiter := True;
-
-      DelimitedText := IniFile.ReadString('Recent', 'XBEs', '');
-      mnu_RecentXbefiles.Clear;
-      for i := 0 to Count - 1 do
-        RecentXbeAdd(Strings[i]);
-    finally
-      Free;
-    end;
-  finally
-    FreeAndNil({var}IniFile);
-  end;
-end;
-
-procedure Tfrm_Main.WMDROPFILES(var Msg: TMessage);
-var
-  pcFileName: PChar;
-  i, iSize, iFileCount: Integer;
-begin
-  pcFileName := ''; // to avoid compiler warning message
-  iFileCount := DragQueryFile(Msg.wParam, $FFFFFFFF, pcFileName, 255);
-  for i := 0 to iFileCount - 1 do
-  begin
-    iSize := DragQueryFile(Msg.wParam, i, nil, 0) + 1;
-    pcFileName := StrAlloc(iSize);
-    try
-      DragQueryFile(Msg.wParam, i, pcFileName, iSize);
-      if LoadXbe(pcFileName) then
-        Break;
-    finally
-      StrDispose(pcFileName);
-    end;
-  end;
-
-  DragFinish(Msg.wParam);
-end;
-
-procedure Tfrm_Main.WriteSettingsIni;
-var
-  IniFile: TIniFile;
-  RecentTMP: string;
-  i: Integer;
-begin
-  IniFile := TIniFile.Create(FApplicationDir + 'Dxbx.Ini');
-  try
-    // Recent XBEs write
-    RecentTMP := '';
-    if mnu_RecentXbefiles.Count >= 1 then
-    begin
-      RecentTMP := mnu_RecentXbefiles.Items[0].Hint;
-      for i := 1 to mnu_RecentXbefiles.Count - 1 do
-        RecentTMP := RecentTMP + '|' + mnu_RecentXbefiles.Items[i].Hint;
-    end;
-    IniFile.WriteString('Recent', 'XBEs', RecentTMP);
-
-    IniFile.WriteInteger('Settings', 'DxbxDebug', Ord(DebugMode));
-    IniFile.WriteString('Settings', 'DxbxDebugFileName', DebugFileName);
-
-    IniFile.WriteInteger('Settings', 'KrnlDebug', Ord(KernelDebugMode));
-    IniFile.WriteString('Settings', 'KrnlDebugFileName', KernelDebugFileName);
-  finally
-    FreeAndNil(IniFile);
-  end;
+  LaunchXBE(m_Xbe);
 end;
 
 procedure Tfrm_Main.actConsoleXbeInfoExecute(Sender: TObject);
@@ -734,7 +631,7 @@ begin
     WriteLog(m_szAsciiTitle + '''s .xbe info was successfully dumped.');
     MessageDlg(m_szAsciiTitle + '''s .xbe info was successfully dumped.', mtInformation, [mbOk], 0);
   end;
-end;
+end; // actFileXbeInfoExecute
 
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
@@ -752,7 +649,7 @@ begin
     DebugMode := dmConsole;
     CreateLogs(DebugMode, DebugFileName);
   end;
-end;
+end; // actConsoleDebugGuiExecute
 
 procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
@@ -760,7 +657,7 @@ begin
   begin
     actFileDebugGui.Checked := False;
     CloseLogs;
-    AddjustMenu;
+    AdjustMenu;
   end
   else
   begin
@@ -777,10 +674,10 @@ begin
       DebugFileName := SaveDialog.FileName;
 
       CreateLogs(DebugMode, DebugFileName);
-      AddjustMenu;
+      AdjustMenu;
     end;
   end;
-end;
+end; // actFileDebugGuiExecute
 
 procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
@@ -796,7 +693,7 @@ begin
     actConsoleDebugKernel.Checked := True;
     KernelDebugMode := dmConsole;
   end;
-end;
+end; // actConsoleDebugKernelExecute
 
 procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
@@ -804,7 +701,7 @@ begin
   begin
     actFileDebugKernel.Checked := False;
     CloseLogs;
-    AddjustMenu;
+    AdjustMenu;
   end
   else
   begin
@@ -819,10 +716,10 @@ begin
       CloseLogs;
       KernelDebugMode := dmFile;
       KernelDebugFileName := SaveDialog.FileName;
-      AddjustMenu;
+      AdjustMenu;
     end;
   end;
-end;
+end; // actFileDebugKernelExecute
 
 procedure Tfrm_Main.actAboutExecute(Sender: TObject);
 begin
@@ -845,111 +742,16 @@ begin
   Close;
 end;
 
-procedure Tfrm_Main.AddjustMenu;
+procedure Tfrm_Main.actOpenXbeExecute(Sender: TObject);
 begin
-  // Init File
-  actOpenXbe.Enabled := True;
-  actCloseXbe.Enabled := False;
-
-  actSaveXbe.Enabled := False;
-  actSaveXbeAs.Enabled := False;
-
-  mnu_RecentXbefiles.Enabled := (mnu_RecentXbefiles.Count > 0);
-
-  actClose.Enabled := True;
-
-  // Init Edit
-  mnu_Logbitmap.Enabled := False;
-  mnu_Patch.Enabled := False;
-  mnu_DumpxbeinfoTo.Enabled := False;
-  mnu_Gambitmap.Enabled := False;
-
-  // Init View
-  actConsoleDebugGui.Checked := (DebugMode = dmConsole);
-  actFileDebugGui.Checked := (DebugMode = dmFile);
-
-  actConsoleDebugKernel.Checked := (KernelDebugMode = dmConsole);
-  actFileDebugKernel.Checked := (KernelDebugMode = dmFile);
-
-  ActStartEmulation.Enabled := False;
-
-  if Emulation_State = esFileOpen then
-  begin
-    mnu_Logbitmap.Enabled := True;
-    mnu_Gambitmap.Enabled := True;
-    mnu_DumpxbeinfoTo.Enabled := FileExists(FApplicationDir + cXDKTrackerPath);
-    mnu_CloseXbe.Enabled := True;
-    actCloseXbe.Enabled := True;
-    ActStartEmulation.Enabled := True;
-  end;
-
-  // Init Tools
-  actXbeExplorer.Enabled := FileExists(FApplicationDir + cXbeExplorerPath);
-  actXdkTracker.Enabled := FileExists(FApplicationDir + cXDKTrackerPath);
-  actXIso.Enabled := FileExists(FApplicationDir + cXIsoPath);
+//  XbeOpenDialog.Filter := DIALOG_FILTER_XBE;
+  if XbeOpenDialog.Execute then
+    LoadXbe(XbeOpenDialog.FileName);
 end;
 
-procedure Tfrm_Main.cbFreeTextFilterKeyPress(Sender: TObject; var Key: Char);
-var
-  i: Integer;
-  Str: string;
+procedure Tfrm_Main.actCloseXbeExecute(Sender: TObject);
 begin
-  if Key = #13 then
-  begin
-    Str := cbFreeTextFilter.Text;
-    i := cbFreeTextFilter.Items.IndexOf(Str);
-    if i >= 0 then
-      cbFreeTextFilter.Items.Move(i, 0)
-    else
-    begin
-      cbFreeTextFilter.Items.Add(Str);
-      if cbFreeTextFilter.Items.Count > 10 then
-        cbFreeTextFilter.Items.Delete(cbFreeTextFilter.Items.Count - 1);
-    end;
-
-    UpdateFilter;
-  end;
-end;
-
-procedure Tfrm_Main.cbFreeTextFilterSelect(Sender: TObject);
-begin
-  UpdateFilter;
-end;
-
-procedure Tfrm_Main.UpdateFilter;
-var
-  i, CurrentRow: Integer;
-  FilterStr: string;
-
-  function _MaySee: Boolean;
-  var
-    i: Integer;
-  begin
-    Result := (FilterStr = '');
-    if Result then
-      Exit;
-
-    for i := 0 to dgXbeInfos.ColCount - 1 do
-    begin
-      Result := AnsiContainsText(GetCellText(i, CurrentRow+1), FilterStr);
-      if Result then
-        Exit;
-    end;
-  end;
-
-begin
-  SetLength(EnabledItems, MyXBEList.Count);
-  CurrentRow := 0;
-  FilterStr := cbFreeTextFilter.Text;
-  for i := 0 to MyXBEList.Count - 1 do
-  begin
-    EnabledItems[CurrentRow] := TXbeInfo(MyXBEList.Objects[i]);
-    if _MaySee then
-      Inc(CurrentRow);
-  end;
-
-  SetLength(EnabledItems, CurrentRow);
-  UpdateGameList;
+  CloseXbe();
 end;
 
 procedure Tfrm_Main.actExportGameImageExecute(Sender: TObject);
@@ -978,7 +780,7 @@ begin
     FreeAndNil(bmp);
     WriteLog(m_szAsciiTitle + '''s game image was successfully exported.');
   end;
-end;
+end; // actExportGameImageExecute
 
 procedure Tfrm_Main.actExportLogoExecute(Sender: TObject);
 var
@@ -1006,7 +808,7 @@ begin
     FreeAndNil(bmp);
     WriteLog(m_szAsciiTitle + '''s logo bitmap was successfully exported.');
   end;
-end;
+end; // actExportLogoExecute
 
 procedure Tfrm_Main.actXbeExplorerExecute(Sender: TObject);
 var
@@ -1049,30 +851,166 @@ begin
   end;
 end;
 
-procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
+procedure Tfrm_Main.ReadSettingsIni;
 var
-  TempItem: TMenuItem;
+  DxbxIniFilePath: string;
+  IniFile: TIniFile;
   i: Integer;
 begin
-  for i := 0 to mnu_RecentXbefiles.Count - 1 do
+  DxbxIniFilePath := FApplicationDir + 'Dxbx.Ini';
+  if not FileExists(DxbxIniFilePath) then
   begin
-    if mnu_RecentXbefiles.Items[i].Hint = aFileName then
-    begin
-      mnu_RecentXbefiles.Remove(mnu_RecentXbefiles.Items[i]);
-      Break;
-    end;
+    // Setting defaults
+    DebugMode := dmNone;
+    KernelDebugMode := dmFile;
+
+    Exit;
   end;
 
-  TempItem := TMenuItem.Create(mnu_RecentXbefiles);
-  TempItem.Hint := aFileName;
-  TempItem.Caption := aFileName;
-  TempItem.OnClick := ReopenXbe;
+  IniFile := TIniFile.Create(DxbxIniFilePath);
+  try
+    DebugMode := TDebugMode(IniFile.ReadInteger('Settings', 'DxbxDebug', Ord(dmNone)));
+    DebugFileName := IniFile.ReadString('Settings', 'DxbxDebugFileName', '');
 
-  while mnu_RecentXbefiles.Count >= _RecentXbeLimit do
-    mnu_RecentXbefiles.Remove(mnu_RecentXbefiles.Items[mnu_RecentXbefiles.Count - 1]);
+    KernelDebugMode := TDebugMode(IniFile.ReadInteger('Settings', 'KrnlDebug', Ord(dmNone)));
+    KernelDebugFileName := IniFile.ReadString('Settings', 'KrnlDebugFileName', '');
 
-  mnu_RecentXbefiles.Insert(0, TempItem);
-  mnu_RecentXbefiles.Enabled := True;
+    // Read recent XBE files
+    with TStringList.Create do
+    try
+      Delimiter := '|';
+      StrictDelimiter := True;
+
+      DelimitedText := IniFile.ReadString('Recent', 'XBEs', '');
+      mnu_RecentXbefiles.Clear;
+      for i := 0 to Count - 1 do
+        RecentXbeAdd(Strings[i]);
+    finally
+      Free;
+    end;
+  finally
+    FreeAndNil({var}IniFile);
+  end;
+end; // ReadSettingsIni
+
+procedure Tfrm_Main.WriteSettingsIni;
+var
+  IniFile: TIniFile;
+  RecentTMP: string;
+  i: Integer;
+begin
+  IniFile := TIniFile.Create(FApplicationDir + 'Dxbx.Ini');
+  try
+    // Recent XBEs write
+    RecentTMP := '';
+    if mnu_RecentXbefiles.Count >= 1 then
+    begin
+      RecentTMP := mnu_RecentXbefiles.Items[0].Hint;
+      for i := 1 to mnu_RecentXbefiles.Count - 1 do
+        RecentTMP := RecentTMP + '|' + mnu_RecentXbefiles.Items[i].Hint;
+    end;
+    IniFile.WriteString('Recent', 'XBEs', RecentTMP);
+
+    IniFile.WriteInteger('Settings', 'DxbxDebug', Ord(DebugMode));
+    IniFile.WriteString('Settings', 'DxbxDebugFileName', DebugFileName);
+
+    IniFile.WriteInteger('Settings', 'KrnlDebug', Ord(KernelDebugMode));
+    IniFile.WriteString('Settings', 'KrnlDebugFileName', KernelDebugFileName);
+  finally
+    FreeAndNil(IniFile);
+  end;
+end; // WriteSettingsIni
+
+procedure Tfrm_Main.AdjustMenu;
+begin
+  // Init File
+  actOpenXbe.Enabled := True;
+  actCloseXbe.Enabled := False;
+
+  actSaveXbe.Enabled := False;
+  actSaveXbeAs.Enabled := False;
+
+  mnu_RecentXbefiles.Enabled := (mnu_RecentXbefiles.Count > 0);
+
+  actClose.Enabled := True;
+
+  // Init Edit
+  mnu_Logbitmap.Enabled := False;
+  mnu_Patch.Enabled := False;
+  mnu_DumpxbeinfoTo.Enabled := False;
+  mnu_Gambitmap.Enabled := False;
+
+  // Init View
+  actConsoleDebugGui.Checked := (DebugMode = dmConsole);
+  actFileDebugGui.Checked := (DebugMode = dmFile);
+
+  actConsoleDebugKernel.Checked := (KernelDebugMode = dmConsole);
+  actFileDebugKernel.Checked := (KernelDebugMode = dmFile);
+
+  ActStartEmulation.Enabled := False;
+
+  if Emulation_State = esFileOpen then
+  begin
+    mnu_Logbitmap.Enabled := True;
+    mnu_Gambitmap.Enabled := True;
+    mnu_DumpxbeinfoTo.Enabled := FileExists(FApplicationDir + cXDKTrackerPath);
+    mnu_CloseXbe.Enabled := True;
+    actCloseXbe.Enabled := True;
+    ActStartEmulation.Enabled := True;
+  end;
+
+  // Init Tools
+  actXbeExplorer.Enabled := FileExists(FApplicationDir + cXbeExplorerPath);
+  actXdkTracker.Enabled := FileExists(FApplicationDir + cXDKTrackerPath);
+  actXIso.Enabled := FileExists(FApplicationDir + cXIsoPath);
+end; // AdjustMenu
+
+procedure Tfrm_Main.LaunchXBE(const aXbe: TXbe);
+begin
+  ShellExecute(0, 'open', PChar(ParamStr(0)), PChar(
+    '/load ' +
+    AnsiQuotedStr(aXbe.XbePath, '"') + ' ' +
+//    IntToStr(Self.Handle) + ' ' +
+    IntToStr(dgXbeInfos.Handle) + ' ' +
+    IntToStr(Ord(KernelDebugMode)) + ' ' +
+    AnsiQuotedStr(KernelDebugFileName, '"')
+    ), nil, SW_SHOWNORMAL);
+
+  Caption := m_szAsciiTitle + ' - Dxbx [Emulating]'
+end;
+
+function Tfrm_Main.LoadXbe(const aFileName: string): Boolean;
+begin
+  if Assigned(m_Xbe) then
+    CloseXbe();
+
+  Result := OpenXbe(aFileName, {var}m_Xbe);
+  if Result then
+  begin
+    StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
+    UpdateIcon(m_Xbe);
+
+    RecentXbeAdd(XbeOpenDialog.FileName);
+    Emulation_State := esFileOpen;
+    AdjustMenu;
+  end
+  else
+  begin
+    MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
+    Emulation_State := esNone;
+    AdjustMenu;
+  end;
+end; // LoadXbe
+
+procedure Tfrm_Main.CloseXbe;
+begin
+  FreeAndNil(m_Xbe);
+  Emulation_State := esNone;
+  UpdateIcon(nil);
+  AdjustMenu;
+
+  WriteLog(Format('DXBX: %s Closed...', [m_szAsciiTitle]));
+  StatusBar.SimpleText := 'DXBX:';
 end;
 
 procedure Tfrm_Main.ReopenXbe(Sender: TObject);
@@ -1099,8 +1037,34 @@ begin
   StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle]);
   UpdateIcon(m_Xbe);
   Emulation_State := esFileOpen;
-  AddjustMenu;
-end;
+  AdjustMenu;
+end; // ReopenXbe
+
+procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
+var
+  TempItem: TMenuItem;
+  i: Integer;
+begin
+  for i := 0 to mnu_RecentXbefiles.Count - 1 do
+  begin
+    if mnu_RecentXbefiles.Items[i].Hint = aFileName then
+    begin
+      mnu_RecentXbefiles.Remove(mnu_RecentXbefiles.Items[i]);
+      Break;
+    end;
+  end;
+
+  TempItem := TMenuItem.Create(mnu_RecentXbefiles);
+  TempItem.Hint := aFileName;
+  TempItem.Caption := aFileName;
+  TempItem.OnClick := ReopenXbe;
+
+  while mnu_RecentXbefiles.Count >= _RecentXbeLimit do
+    mnu_RecentXbefiles.Remove(mnu_RecentXbefiles.Items[mnu_RecentXbefiles.Count - 1]);
+
+  mnu_RecentXbefiles.Insert(0, TempItem);
+  mnu_RecentXbefiles.Enabled := True;
+end; // RecentXbeAdd
 
 procedure Tfrm_Main.UpdateIcon(const aXbe: TXBE);
 var
@@ -1149,7 +1113,7 @@ begin
     Caption := m_szAsciiTitle + ' - Dxbx'
   else
     Caption := 'Dxbx';
-end;
+end; // UpdateIcon
 
 function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
 var
@@ -1183,7 +1147,7 @@ begin
 
     Result.LibVersions.Sort;
   end;
-end;
+end; // _ReadXBEInfoFromNode
 
 function Tfrm_Main.InsertXBEInfo(const aXBEInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
 (*var
@@ -1226,7 +1190,7 @@ var
 begin
   Result := 0;
   if aImportFilePath = '' then
-    aImportFilePath := ApplicationDir + 'Dump.dat';
+    aImportFilePath := FApplicationDir + 'Dump.dat';
 
   if not FileExists(aImportFilePath) then
     Exit;
@@ -1292,5 +1256,34 @@ begin
   end;
 end; // Tfrm_Main.LoadXBEList
 
-end.
+function Tfrm_Main.SendCommandToXdkTracker: Boolean;
+var
+  stringToSend: string;
+  copyDataStruct: TCopyDataStruct;
 
+  function _SendData(copyDataStruct: TCopyDataStruct): Boolean;
+  var
+    receiverHandle: Windows.THandle;
+    res: Integer;
+  begin
+    Result := False;
+    receiverHandle := FindWindow(PChar('TfrmXdkTracker'), nil);
+    if receiverHandle = 0 then
+      Exit;
+
+    res := SendMessage(receiverHandle, WM_COPYDATA, Integer(Handle), Integer(@copyDataStruct));
+    if res > 0 then
+      Result := True;
+  end;
+
+begin
+  stringToSend := 'READXML';
+
+  copyDataStruct.dwData := Integer(0); //use it to identify the message contents
+  copyDataStruct.cbData := 1 + Length(stringToSend);
+  copyDataStruct.lpData := PChar(stringToSend);
+
+  Result := _SendData(copyDataStruct);
+end; // SendCommandToXdkTracker
+
+end.

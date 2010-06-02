@@ -205,7 +205,7 @@ begin
     {VirtualAddr=}XBE_IMAGE_BASE,
     {NewProtect}PAGE_READWRITE);
 
-  // Restore just enough of the EXE header to make Windows API's like BeginThread work again :
+  // Restore just enough of the EXE header to make Windows API's like CreateThread work again :
   ReinitExeImageHeader;
 
   // Load all sections to their requested Virtual Address :
