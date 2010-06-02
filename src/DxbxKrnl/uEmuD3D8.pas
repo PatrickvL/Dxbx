@@ -117,10 +117,10 @@ var
   g_bIsFauxFullscreen: BOOL_ = FALSE;
   g_bHackUpdateSoftwareOverlay: BOOL_ = FALSE;
 
-function EmuRenderWindow(lpVoid: LPVOID): DWORD; // no stdcall !
-function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; // no stdcall !
+function EmuRenderWindow(lpVoid: LPVOID): DWORD; stdcall;
+function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
-function EmuUpdateTickCount(lpVoid: LPVOID): DWORD; // no stdcall !
+function EmuUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
 
 
 var
@@ -278,6 +278,23 @@ begin
   ZeroMemory(@g_EmuCDPD, SizeOf(g_EmuCDPD));
 end;
 
+function DoPresent: UINT;
+begin
+  Result := IDirect3DDevice8(g_pD3DDevice8).Present(nil, nil, 0, nil);
+  if Result = D3D_OK then
+    Exit;
+
+  if Result = UINT(D3DERR_DEVICELOST) then
+  repeat
+    Result := IDirect3DDevice8(g_pD3DDevice8).TestCooperativeLevel;
+    if(Result = UINT(D3DERR_DEVICELOST)) then //Device is lost and cannot be reset yet
+      Sleep(500) //Wait a bit so we don't burn through cycles for no reason
+    else
+      if(Result = UINT(D3DERR_DEVICENOTRESET)) then //Lost but we can reset it now
+        Result := IDirect3DDevice8(g_pD3DDevice8).Reset(PD3DPresentParameters(g_EmuCDPD.pPresentationParameters)^);
+  until Result = UINT(D3D_OK);
+end;
+
 // Direct3D initialization (called before emulation begins)
 procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: uint32); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -300,7 +317,7 @@ begin
   // create timing thread
   begin
     dwThreadId := 0;
-    hThread := BeginThread(nil, 0, @EmuUpdateTickCount, nil, 0, {var} dwThreadId);
+    hThread := CreateThread(nil, 0, @EmuUpdateTickCount, nil, 0, {var}dwThreadId);
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
@@ -314,14 +331,14 @@ begin
 
   // create the create device proxy thread
   begin
-    BeginThread(nil, 0, @EmuCreateDeviceProxy, nil, 0, {var} dwThreadId);
+    CreateThread(nil, 0, @EmuCreateDeviceProxy, nil, 0, {var}dwThreadId);
   end;
 
   // create window message processing thread
   begin
     g_bRenderWindowActive := false;
 
-    BeginThread(nil, 0, @EmuRenderWindow, nil, 0, {var} dwThreadId);
+    CreateThread(nil, 0, @EmuRenderWindow, nil, 0, {var}dwThreadId);
 
     while not g_bRenderWindowActive do
       Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
@@ -406,7 +423,7 @@ begin
 end; // EmuEnumDisplayDevices
 
 // window message processing thread
-function EmuRenderWindow(lpVoid: LPVOID): DWORD; // no stdcall !
+function EmuRenderWindow(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
   IDI_CXBX = 101;
@@ -752,9 +769,10 @@ begin
 end; // EmuMsgProc
 
 // timing thread procedure
-function EmuUpdateTickCount(lpVoid: LPVOID): DWORD; // no stdcall !
+function EmuUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
+  //curvb: int;
   v: int;
   hDevice: HANDLE;
   dwLatency: DWORD;
@@ -770,6 +788,8 @@ begin
   timeBeginPeriod(0);
 
   // current vertical blank count
+  //curvb := 0;
+
   while true do
   begin
     xboxkrnl_KeTickCount := timeGetTime();
@@ -817,7 +837,7 @@ begin
       // TODO -oCXBX: Fixme.  This may not be right...
       g_SwapData.SwapVBlank := 1;
 
-      if (Assigned(g_pVBCallback)) then
+      if (Addr(g_pVBCallback) <> NULL) then
       begin
         EmuSwapFS(fsXbox);
         g_pVBCallback(@g_VBData);
@@ -840,7 +860,7 @@ begin
 end; // EmuUpdateTickCount
 
 // thread dedicated to create devices
-function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; // no stdcall !
+function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   D3DDisplayMode: TD3DDisplayMode; // X_D3DDISPLAYMODE; // TODO -oDXBX: : What type should we use?
@@ -4338,14 +4358,14 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Present' +
-           #13#10'(' +
-           #13#10'   pSourceRect       : 0x%.08X' +
-           #13#10'   pDestRect         : 0x%.08X' +
-           #13#10'   pDummy1           : 0x%.08X' +
-           #13#10'   pDummy2           : 0x%.08X' +
-           #13#10');',
-           [pSourceRect, pDestRect, pDummy1, pDummy2]);
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Present' +
+         #13#10'(' +
+         #13#10'   pSourceRect       : 0x%.08X' +
+         #13#10'   pDestRect         : 0x%.08X' +
+         #13#10'   pDummy1           : 0x%.08X' +
+         #13#10'   pDummy2           : 0x%.08X' +
+         #13#10');',
+         [pSourceRect, pDestRect, pDummy1, pDummy2]);
 {$ENDIF}
 
   // release back buffer lock
@@ -9849,7 +9869,7 @@ exports
 
   XTL_EmuIDirect3DBaseTexture8_GetLevelCount name PatchPrefix + 'D3DBaseTexture_GetLevelCount@4',
 
-  XTL_EmuIDirect3DCubeTexture8_LockRect  name PatchPrefix + 'D3DCubeTexture8_LockRect',
+  XTL_EmuIDirect3DCubeTexture8_LockRect  name PatchPrefix + 'D3DCubeTexture8_LockRect', // _D3DCubeTexture_LockRect@24
 
   XTL_EmuIDirect3DDevice8_AddRef name PatchPrefix + 'D3DDevice_AddRef@0',
   XTL_EmuIDirect3DDevice8_ApplyStateBlock name PatchPrefix + 'D3DDevice_ApplyStateBlock',
@@ -10049,5 +10069,10 @@ exports
   XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface',
 
   XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';
+
+initialization
+
+  ZeroMemory(@g_VBData, SizeOf(g_VBData));
+  ZeroMemory(@g_SwapData, SizeOf(g_SwapData));
 
 end.

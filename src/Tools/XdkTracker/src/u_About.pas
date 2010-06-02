@@ -21,8 +21,7 @@ interface
 
 uses
   // Delphi
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, JPeg,
+  StdCtrls, ExtCtrls, Classes, Controls, Forms, jpeg,
   // Dxbx
   uConsts;
 

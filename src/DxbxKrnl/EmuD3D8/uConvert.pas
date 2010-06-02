@@ -64,8 +64,8 @@ const X_D3DRSSE_UNK = $7fffffff;
 
 const
   // lookup table for converting vertex count to primitive count
-  EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of UINT = (
-  // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+  EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of {U}INT = (
+  // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     (0, 0), // NULL
     (1, 0), // X_D3DPT_POINTLIST
     (2, 0), // X_D3DPT_LINELIST
@@ -82,7 +82,7 @@ const
 const
   // conversion table for xbox->pc primitive types
   EmuPrimitiveTypeLookup: array [0..11] of D3DPRIMITIVETYPE = (
-  // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+  // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     D3DPRIMITIVETYPE(0),   // NULL                 = 0
     D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
     D3DPT_LINELIST,        // D3DPT_LINELIST       = 2,
@@ -197,7 +197,7 @@ implementation
 
 // is this format swizzled, and if so - how many BPP?
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): BOOL_;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := TRUE;
   case Format of
@@ -382,7 +382,7 @@ end;
 
 // convert from pc to xbox color formats
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case aFormat of
     D3DFMT_YUY2:
@@ -446,7 +446,7 @@ end;
 
 // convert from xbox to pc d3d lock flags
 function EmuXB2PC_D3DLock(Flags: DWord): DWord; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   NewFlags: DWord;
 begin
@@ -471,7 +471,7 @@ end;
 
 // convert from xbox to pc multisample formats
 function EmuXB2PC_D3DMultiSampleFormat(aType: DWORD): D3DMULTISAMPLE_TYPE;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case aType of
     $0011:
@@ -502,7 +502,7 @@ end;
 
 // convert from xbox to pc texture transform state types
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   if (uint32(State) < 2) then
     Result := D3DTRANSFORMSTATETYPE(Ord(State) + 2)
@@ -522,7 +522,7 @@ end;
 
 // convert from xbox to pc blend ops
 function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case(Value) of
     $8006:
@@ -555,7 +555,7 @@ end;
 
 // convert from xbox to pc blend types
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   if (Value < 2) then
     Result := D3DBLEND(Value + 1)
@@ -564,34 +564,35 @@ begin
   else
   begin
     CxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
+
     Result := D3DBLEND(Value);
   end;
 end;
 
 // convert from xbox to pc comparison functions
 function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := D3DCMPFUNC((Value and $F) + 1);
 end;
 
 // convert from xbox to pc fill modes
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := D3DFILLMODE((Value and $F) + 1);
 end;
 
 // convert from xbox to pc shade modes
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := D3DSHADEMODE((Value and $3) + 1);
 end;
 
 // convert from xbox to pc stencilop modes
 function EmuXB2PC_D3DSTENCILOP(Value: X_D3DSTENCILOP): D3DSTENCILOP; inline;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case(Value)of
     $1e00:
@@ -619,21 +620,21 @@ end;
 
 // convert from vertex count to primitive count (Xbox)
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := (VertexCount - int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1]) div int(EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]));
 end;
 
 // convert from primitive count to vertex count (Xbox)
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := ((UInt((PrimitiveCount))*EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]) + EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1]);
+  Result := (((PrimitiveCount)*EmuD3DVertexToPrimitive[Ord(PrimitiveType)][0]) + EmuD3DVertexToPrimitive[Ord(PrimitiveType)][1]);
 end;
 
 // convert xbox->pc primitive type
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   if DWORD(PrimitiveType) > DWord(Ord(High(D3DPRIMITIVETYPE))) then
     Result := D3DPRIMITIVETYPE($7FFFFFFF)

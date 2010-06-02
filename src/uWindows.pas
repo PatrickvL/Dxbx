@@ -50,6 +50,4 @@ begin
     Result := Result + '\';
 end;
 
-
-
 end.

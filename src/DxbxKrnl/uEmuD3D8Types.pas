@@ -115,6 +115,8 @@ type X_D3DCALLBACK = PVOID;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 type _X_D3DPRIMITIVETYPE =
 (
+    X_D3DPT_NONE = 0, // Dxbx addition
+
     X_D3DPT_POINTLIST = 1,
     X_D3DPT_LINELIST = 2,
     X_D3DPT_LINELOOP = 3, // Xbox only

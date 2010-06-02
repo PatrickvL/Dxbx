@@ -106,7 +106,7 @@ type PCSTProxyParam = record
 function PCSTProxy
 (
     Parameter: PPCSTProxyParam
-): Integer;
+): Integer; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 label
   callComplete;
@@ -383,7 +383,7 @@ begin
     iPCSTProxyParam.StartSuspended := CreateSuspended;
     iPCSTProxyParam.hStartedEvent := CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    ThreadHandle^ := BeginThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}dwThreadId);
+    ThreadHandle^ := CreateThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}@dwThreadId);
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
