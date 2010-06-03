@@ -88,7 +88,7 @@ exports
   *)
 
 var
-  Xbe: TXbe;
+  g_Xbe: TXbe;
 
 implementation
 
@@ -252,8 +252,8 @@ begin
 *)
   // Initialize current directory
   g_EmuShared.GetXbePath({var}szBuffer);
-  if (szBuffer = '') and Assigned(Xbe) then
-    szBuffer := ExtractFilePath(Xbe.XbePath);
+  if (szBuffer = '') and Assigned(g_Xbe) then
+    szBuffer := ExtractFilePath(g_Xbe.XbePath);
 
   if szBuffer <> '' then
   begin
