@@ -331,6 +331,7 @@ begin
   ReadSettingsIni;
 
   CreateLogs(DebugMode, DebugFileName);
+  //CreateLogs(KernelDebugMode, KernelDebugFileName);
 
   AdjustMenu;
 
@@ -683,17 +684,16 @@ procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
   if DebugMode = dmConsole then
   begin
-    actConsoleDebugGui.Checked := False;
-    DebugMode := dmNone;
     CloseLogs;
+    DebugMode := dmNone;
+    AdjustMenu;
   end
   else
   begin
     CloseLogs;
-    actFileDebugGui.Checked := False;
-    actConsoleDebugGui.Checked := True;
     DebugMode := dmConsole;
-    CreateLogs(DebugMode, DebugFileName);
+    CreateLogs(DebugMode);
+    AdjustMenu;
   end;
 end; // actConsoleDebugGuiExecute
 
@@ -701,8 +701,8 @@ procedure Tfrm_Main.actFileDebugGuiExecute(Sender: TObject);
 begin
   if DebugMode = dmFile then
   begin
-    actFileDebugGui.Checked := False;
     CloseLogs;
+    DebugMode := dmNone;
     AdjustMenu;
   end
   else
@@ -718,7 +718,6 @@ begin
       CloseLogs;
       DebugMode := dmFile;
       DebugFileName := SaveDialog.FileName;
-
       CreateLogs(DebugMode, DebugFileName);
       AdjustMenu;
     end;
@@ -729,15 +728,16 @@ procedure Tfrm_Main.actConsoleDebugKernelExecute(Sender: TObject);
 begin
   if KernelDebugMode = dmConsole then
   begin
-    actConsoleDebugKernel.Checked := False;
-    CloseLogs;
+    //CloseLogs;
+    KernelDebugMode := dmNone;
+    AdjustMenu;
   end
   else
   begin
-    CloseLogs;
-    actFileDebugKernel.Checked := False;
-    actConsoleDebugKernel.Checked := True;
+    //CloseLogs;
     KernelDebugMode := dmConsole;
+    //CreateLogs(KernelDebugMode);
+    AdjustMenu;
   end;
 end; // actConsoleDebugKernelExecute
 
@@ -745,8 +745,8 @@ procedure Tfrm_Main.actFileDebugKernelExecute(Sender: TObject);
 begin
   if KernelDebugMode = dmFile then
   begin
-    actFileDebugKernel.Checked := False;
-    CloseLogs;
+    //CloseLogs;
+    KernelDebugMode := dmNone;
     AdjustMenu;
   end
   else
@@ -759,9 +759,10 @@ begin
     SaveDialog.Filter := DIALOG_FILTER_TEXT;
     if SaveDialog.Execute then
     begin
-      CloseLogs;
+      //CloseLogs;
       KernelDebugMode := dmFile;
       KernelDebugFileName := SaveDialog.FileName;
+      //CreateLogs(KernelDebugMode, KernelDebugFileName);
       AdjustMenu;
     end;
   end;

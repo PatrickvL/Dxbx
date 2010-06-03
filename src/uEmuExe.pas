@@ -201,7 +201,7 @@ begin
   // Copy the complete XBEHeader over to the ImageBase :
   _ReadXbeBlock(
     {RawOffset=}0,
-    {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use Xbe.dwSizeofHeader
+    {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use aXbe.dwSizeofHeader
     {VirtualAddr=}XBE_IMAGE_BASE,
     {NewProtect}PAGE_READWRITE);
 
@@ -209,7 +209,7 @@ begin
   ReinitExeImageHeader;
 
   // Load all sections to their requested Virtual Address :
-  Xbe := aXbe;
+  g_Xbe := aXbe;
   XbeHeader := PXbeHeader(XBE_IMAGE_BASE);
   XbeSectionHeader := PXbeSectionHeader(XbeHeader.dwSectionHeadersAddr);
   for i := 0 to XbeHeader.dwSections - 1 do
