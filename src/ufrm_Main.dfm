@@ -5,6 +5,7 @@ object frm_Main: Tfrm_Main
   ClientHeight = 600
   ClientWidth = 803
   Color = clBlack
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWhite
   Font.Height = -11
@@ -12,7 +13,7 @@ object frm_Main: Tfrm_Main
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
-  Position = poDesigned
+  Position = poScreenCenter
   Visible = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -85,7 +86,6 @@ object frm_Main: Tfrm_Main
     Height = 19
     Panels = <>
     SimplePanel = True
-    ExplicitWidth = 800
   end
   object dgXbeInfos: TDrawGrid
     Left = 3
@@ -108,7 +108,6 @@ object frm_Main: Tfrm_Main
     TabOrder = 1
     OnClick = dgXbeInfosClick
     OnDrawCell = dgXbeInfosDrawCell
-    ExplicitWidth = 640
   end
   object cbFreeTextFilter: TComboBox
     Left = 133

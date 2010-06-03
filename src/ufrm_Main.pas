@@ -38,6 +38,7 @@ uses
   uLog,
   uWindows,
   uDxbxUtils,
+  uFileSystem,
   uXbe,
   uEmuShared,
   uDxbxXml,
@@ -218,7 +219,7 @@ var
 implementation
 
 procedure GradientHorizontalLineCanvas(const ACanvas: TCanvas;
-  const AStartColor, AEndColor: TColor; const X, Y, Width: Integer);
+  const AStartColor, AEndColor: TColor; const X, Y, Width: Integer); overload;
 var
   ARect: TRect;
 begin
@@ -227,12 +228,46 @@ begin
 end;
 
 procedure GradientVerticalLineCanvas(const ACanvas: TCanvas;
-  const AStartColor, AEndColor: TColor; const X, Y, Height: Integer);
+  const AStartColor, AEndColor: TColor; const X, Y, Height: Integer); overload;
 var
   ARect: TRect;
 begin
   ARect := Types.Rect(X, Y, X + ACanvas.Pen.Width, Y + Height);
   GradientFillCanvas(ACanvas, AStartColor, AEndColor, ARect, gdVertical);
+end;
+
+procedure GradientHorizontalLineCanvas(const ACanvas: TCanvas;
+  const aColors: array of TColor; const X, Y, Width: Integer); overload;
+var
+  Steps: Integer;
+  i: Integer;
+  Current, Next: Integer;
+begin
+  Current := X;
+  Steps := Length(aColors) - 1;
+  for i := 1 to Steps do
+  begin
+    Next := X + ((Width * i) div Steps);
+    GradientHorizontalLineCanvas(ACanvas, aColors[i-1], aColors[i], Current, Y, Next - Current);
+    Current := Next;
+  end;
+end;
+
+procedure GradientVerticalLineCanvas(const ACanvas: TCanvas;
+  const aColors: array of TColor; const X, Y, Height: Integer); overload;
+var
+  Steps: Integer;
+  i: Integer;
+  Current, Next: Integer;
+begin
+  Current := Y;
+  Steps := Length(aColors) - 1;
+  for i := 1 to Steps do
+  begin
+    Next := Y + ((Height * i) div Steps);
+    GradientVerticalLineCanvas(ACanvas, aColors[i-1], aColors[i], X, Current, Next - Current);
+    Current := Next;
+  end;
 end;
 
 { Tfrm_Main }
@@ -247,6 +282,7 @@ const
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
+  DummyStr: string;
 //  i: Integer;
 begin
   dgXbeInfos.ColCount := 5;
@@ -301,8 +337,7 @@ begin
   XBEFilePath := ParamStr(1);
 
   if  (XBEFilePath <> '')
-  and SameText(ExtractFileExt(XBEFilePath), '.xbe')
-  and TXbe.FileExists(XBEFilePath) then
+  and Drives.D.OpenImage(XBEFilePath, {out}DummyStr) then
   begin
     if OpenXbe(XBEFilePath, {var}m_Xbe) then
       LaunchXBE(m_Xbe);
@@ -373,36 +408,48 @@ begin
   Invalidate;
 end;
 
+type
+  TProtectedJPEGImage = class(TJPEGImage);
+
 procedure Tfrm_Main.RedrawBackground;
 var
   MinWidth: Integer;
   JPEGImage: TJPEGImage;
 begin
-  MinWidth := 0;
-  if Assigned(BackgroundImage) then
-  begin
-    BackgroundImage.SetSize(Width, Height);
-    BackgroundImage.Canvas.Brush.Color := Color;
-    BackgroundImage.Canvas.FillRect(BackgroundImage.Canvas.ClipRect);
+  if not Assigned(BackgroundImage) then
+    Exit;
 
-    JPEGImage := GetJPEGResource('GUIHeaderLeft');
-    Inc(MinWidth, JPEGImage.Width);
-    BackgroundImage.Canvas.Draw(0, 0, JPEGImage);
+  // Make sure the background image covers the entire form :
+  BackgroundImage.SetSize(Width, Height);
+  BackgroundImage.Canvas.Brush.Color := Color;
+  BackgroundImage.Canvas.FillRect(BackgroundImage.Canvas.ClipRect);
 
-    JPEGImage := GetJPEGResource('GUIHeaderRight');
-    Inc(MinWidth, JPEGImage.Width);
-    BackgroundImage.Canvas.Draw(Width - JPEGImage.Width, 0, JPEGImage);
+  // Draw the left side of the header :
+  JPEGImage := GetJPEGResource('GUIHeaderLeft');
+  BackgroundImage.Canvas.Draw(0, 0, JPEGImage);
+  MinWidth := JPEGImage.Width;
 
-    JPEGImage := GetJPEGResource('GUIHeaderCenter');
-    Inc(MinWidth, JPEGImage.Width);
-    BackgroundImage.Canvas.Draw((Width - JPEGImage.Width) div 2, 0, JPEGImage);
+  // Draw the right side of the header :
+  JPEGImage := GetJPEGResource('GUIHeaderRight');
+  BackgroundImage.Canvas.Draw(Width - JPEGImage.Width, 0, JPEGImage);
+  Inc(MinWidth, JPEGImage.Width);
 
-    BackgroundImage.Canvas.Pen.Width := 2;
-    GradientHorizontalLineCanvas(BackgroundImage.Canvas, clBlack, clXboxGreen, 0, dgXbeInfos.Top - 2, Width div 2);
-    GradientHorizontalLineCanvas(BackgroundImage.Canvas, clXboxGreen, clBlack, 0 + Width div 2, dgXbeInfos.Top - 2, Width div 2);
+  // Draw the center of the header :
+  JPEGImage := GetJPEGResource('GUIHeaderCenter');
+  BackgroundImage.Canvas.Draw((Width - JPEGImage.Width) div 2, 0, JPEGImage);
 
-    Constraints.MinWidth := MinWidth;
-  end;
+  // Make sure the form can't be resized any smaller than the sum of header-image widths :
+  Inc(MinWidth, JPEGImage.Width);
+  Constraints.MinWidth := MinWidth;
+
+  // Draw a nice little gradient just above the grid :
+  BackgroundImage.Canvas.Pen.Width := 2;
+  GradientHorizontalLineCanvas(BackgroundImage.Canvas, [clBlack, clXboxGreen, clXboxGreen, clXboxGreen, clBlack], 0, dgXbeInfos.Top - 2, Width);
+
+  // Draw a (tiled!) grating as background for the info-pane :
+  JPEGImage := GetJPEGResource('GUIBackgroundGrating');
+  BackgroundImage.Canvas.Brush.Bitmap := TProtectedJPEGImage(JPEGImage).Bitmap;
+  BackgroundImage.Canvas.FillRect(Types.Rect(dgXbeInfos.Width, dgXbeInfos.Top, Width, dgXbeInfos.Top + dgXbeInfos.Height));
 end; // RedrawBackground
 
 function Tfrm_Main.GetCellText(aCol, aRow: Integer): string;
@@ -445,9 +492,8 @@ begin
   begin
     // Put gradient lines next to the header columns :
     Where := Rect;
-    TDrawGrid(Sender).Canvas.Pen.Color := clLime;
     TDrawGrid(Sender).Canvas.Pen.Width := 2;
-    GradientVerticalLineCanvas(TDrawGrid(Sender).Canvas, clBlack, clXboxGreen, Where.Right-2, Where.Top, Where.Bottom - Where.Top);
+    GradientVerticalLineCanvas(TDrawGrid(Sender).Canvas, [clBlack, clXboxGreen, clGray], Where.Right-2, Where.Top, Where.Bottom - Where.Top);
     // Render titles in bold :
     TDrawGrid(Sender).Canvas.Font.Style := [fsBold];
   end;
