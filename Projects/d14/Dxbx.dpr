@@ -86,8 +86,7 @@ begin
   if  (XBEFilePath <> '')
   and SameText(ParamStr(1), '/load')
   and SameText(ExtractFileExt(XBEFilePath), '.xbe') // TODO : Add ISO support here
-  and TXbe.FileExists(XBEFilePath)
-  and (StrToIntDef(ParamStr(3), 0) > 0) then
+  and TXbe.FileExists(XBEFilePath) then
   begin
     // Transfer control to the main emulator-code inside our DLL :
     DxbxMain(@(Data[0]), SizeOf(Data));

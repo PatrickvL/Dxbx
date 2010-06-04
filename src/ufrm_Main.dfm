@@ -42,7 +42,7 @@ object frm_Main: Tfrm_Main
     Center = True
     Stretch = True
   end
-  object Label1: TLabel
+  object lblXbeInformation: TLabel
     Left = 642
     Top = 277
     Width = 153
@@ -148,24 +148,6 @@ object frm_Main: Tfrm_Main
     end
     object Edit1: TMenuItem
       Caption = '&Edit'
-      object mnu_Logbitmap: TMenuItem
-        Caption = 'Logo bitmap'
-        Enabled = False
-        object Import1: TMenuItem
-          Caption = 'Import'
-          Enabled = False
-        end
-        object mnu_ExportLogoBitmap: TMenuItem
-          Action = actExportLogo
-        end
-      end
-      object mnu_Gambitmap: TMenuItem
-        Caption = 'Game image'
-        Enabled = False
-        object mnu_ExportGameBitmap: TMenuItem
-          Action = actExportGameImage
-        end
-      end
       object mnu_Patch: TMenuItem
         Caption = 'Patch'
         Enabled = False
@@ -301,16 +283,6 @@ object frm_Main: Tfrm_Main
       Caption = 'Close Xbe'
       OnExecute = actCloseXbeExecute
     end
-    object actSaveXbe: TAction
-      Category = 'File'
-      Caption = 'Save Xbe'
-      Enabled = False
-    end
-    object actSaveXbeAs: TAction
-      Category = 'File'
-      Caption = 'Save Xbe As...'
-      Enabled = False
-    end
     object actConsoleXbeInfo: TAction
       Category = 'Edit'
       Caption = '&Console'
@@ -343,15 +315,6 @@ object frm_Main: Tfrm_Main
       Caption = '&File'
       OnExecute = actFileDebugKernelExecute
     end
-    object actImportLogo: TAction
-      Category = 'Edit'
-      Caption = 'Import'
-    end
-    object actExportLogo: TAction
-      Category = 'Edit'
-      Caption = 'Export'
-      OnExecute = actExportLogoExecute
-    end
     object actXdkTracker: TAction
       Category = 'Tools'
       Caption = 'XdkTracker'
@@ -359,18 +322,13 @@ object frm_Main: Tfrm_Main
     end
     object actXIso: TAction
       Category = 'Tools'
-      Caption = 'xIso - DXBX Edition'
+      Caption = 'xIso - Dxbx Edition'
       OnExecute = actXIsoExecute
     end
     object actXdkTrackerXbeInfo: TAction
       Category = 'Edit'
       Caption = 'XDKTracker'
       OnExecute = actXdkTrackerXbeInfoExecute
-    end
-    object actExportGameImage: TAction
-      Category = 'Edit'
-      Caption = 'Export'
-      OnExecute = actExportGameImageExecute
     end
     object actCleanSymbolCache: TAction
       Category = 'Settings'
@@ -390,13 +348,6 @@ object frm_Main: Tfrm_Main
     Filter = 'Text Documents ( *.txt )|*.txt'
     Left = 104
     Top = 12
-  end
-  object LogoSaveDialog: TSaveDialog
-    FileName = 'logo.bmp'
-    Filter = 'Bitmap Image Files (*.bmp)|*.bmp'
-    Title = 'Export Logo Bitmap'
-    Left = 104
-    Top = 76
   end
   object ExeSaveDialog: TSaveDialog
     DefaultExt = '*.exe'
