@@ -256,7 +256,7 @@ var
   f: THandle;
 begin
   Result := nil;
-  f := FileOpen(MountPoint + '\' + aFilePath, fmOpenRead);
+  f := THandle(FileOpen(MountPoint + '\' + aFilePath, fmOpenRead));
   if f = THandle(-1) then
   begin
     // Handle GetLastError
@@ -291,7 +291,10 @@ function TMappedFolderFileSystem.FindFirst(const aFilePath: string = '\*'): TSea
 begin
   Result := TMappedSearchInfo.Create;
   if SysUtils.FindFirst(MountPoint + '\' + aFilePath, faAnyFile, TMappedSearchInfo(Result).SearchRec) <> 0 then
+  begin
     FreeAndNil(Result);
+    Exit;
+  end;
 
   // Skip '.' and '..' directory entries :
   if (TMappedSearchInfo(Result).SearchRec.Name = '.')
@@ -384,7 +387,7 @@ constructor TXDVDFileSystem.Create(const aContainer: string);
 begin
   inherited Create;
   FMountPoint := aContainer;
-  MyContainer := FileOpen(aContainer, fmOpenRead or fmShareDenyWrite);
+  MyContainer := THandle(FileOpen(aContainer, fmOpenRead or fmShareDenyWrite));
   New(MySession);
   ZeroMemory(MySession, SizeOf(MySession^));
   if not XDVDFS_Mount(MySession, @TXDVDFS_ReadSectorsFunc, Pointer(MyContainer)) then
@@ -566,6 +569,30 @@ begin
 end;
 
 function RLogicalVolume.OpenImage(const aFileName: string; out aRelativeXBEFilePath: string): Boolean;
+
+  function _FindXbe(const aXbeFileName: string): Boolean;
+  var
+    SearchInfo: TSearchInfo;
+  begin
+    SearchInfo := MyFileSystem.FindFirst(aXbeFileName);
+    Result := Assigned(SearchInfo);
+    if Result then
+      MyFileSystem.FindClose(SearchInfo);
+  end;
+
+  function _FindSomeXbe(out aXbeFileName: string): Boolean;
+  var
+    SearchInfo: TSearchInfo;
+  begin
+    SearchInfo := MyFileSystem.FindFirst('*.xbe');
+    Result := Assigned(SearchInfo);
+    if Result then
+    begin
+      {out}aXbeFileName := SearchInfo.Filename;
+      MyFileSystem.FindClose(SearchInfo);
+    end;
+  end;
+
 var
   Folder: string;
 begin
@@ -588,13 +615,27 @@ begin
     Folder := ExtractFilePath(Folder);
   end;
 
-  if aRelativeXBEFilePath = '' then
+  if not IsMounted then
   begin
-    aRelativeXBEFilePath := 'default.xbe';
-    // TODO : Search for other .xbe when 'default.xbe' is not available
+    Result := False;
+    Exit;
   end;
 
-  Result := IsMounted;
+  if _FindXbe(aRelativeXBEFilePath) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  if _FindXbe('default.xbe') then
+  begin
+    aRelativeXBEFilePath := 'default.xbe';
+    Result := True;
+    Exit;
+  end;
+
+  // Search for any xbe when the given and 'default.xbe' are not available :
+  Result := _FindSomeXbe({var}aRelativeXBEFilePath);
 end;
 
 { RDrives }
