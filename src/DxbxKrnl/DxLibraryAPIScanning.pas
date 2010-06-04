@@ -117,12 +117,14 @@ type
     property Count: Integer read GetCount;
     property Locations[const aIndex: Integer]: TSymbolInformation read GetLocation; default;
   protected
+    MyAddressesPotentiallyContainingCode: TBits;
     MyAddressesScanned: TBits;
     ScanUpper: UIntPtr;
     PatternTrieReader: TPatternTrieReader;
     AllCrossReferences: array of record Symbol: TSymbolInformation; Address: TCodePointer; IsDuplicate: Boolean; end;
     AllCrossReferencesInUse: Integer;
     procedure _Debug(const aSymbol: TSymbolInformation);
+    function IsAddressWithinCodeRange(const aAddress: TCodePointer): Boolean;
     function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
     function GetCrossReferencedAddress(const aStartingAddress: PByte; const aCrossReference: PStoredCrossReference): TCodePointer;
     procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
@@ -381,6 +383,7 @@ begin
   StoredLibraryIndexedToScan := TBits.Create;
   MyFinalLocations := TList.Create;
   MyAddressesScanned := TBits.Create;
+  MyAddressesPotentiallyContainingCode := TBits.Create;
 end;
 
 destructor TSymbolManager.Destroy;
@@ -389,6 +392,7 @@ begin
   FreeAndNil(StoredLibraryIndexedToScan);
   FreeAndNil(MyFinalLocations);
   FreeAndNil(MyAddressesScanned);
+  FreeAndNil(MyAddressesPotentiallyContainingCode);
 
   inherited Destroy;
 end;
@@ -571,6 +575,12 @@ begin
   end;
 end; // FindPotentialFunctionLocation
 
+function TSymbolManager.IsAddressWithinCodeRange(const aAddress: TCodePointer): Boolean;
+begin
+  Result := (UIntPtr(aAddress) < UIntPtr(MyAddressesPotentiallyContainingCode.Size))
+        and MyAddressesPotentiallyContainingCode[Integer(aAddress)];
+end;
+
 function TSymbolManager.IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
 begin
   Result := (UIntPtr(aAddress) >= XBE_IMAGE_BASE) and (UIntPtr(aAddress) <= ScanUpper);
@@ -710,7 +720,7 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     begin
       // If a cross-reference falls outside the valid range, we consider this a false hit :
       AllCrossReferences[c+x].Address := GetCrossReferencedAddress(aTestAddress, CrossReference);
-      if AllCrossReferences[c+x].Address = nil then
+      if (AllCrossReferences[c+x].Address = nil) then
         Exit;
 
       AllCrossReferences[c+x].Symbol := FindOrAddSymbol(CrossReference.NameIndex, {Function=}nil);
@@ -745,23 +755,30 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     x: Integer;
     ReferencedAddress: PByte;
   begin
-    Result := False;
     for x := 0 to aStoredLibraryFunction.NrCrossReferences - 1 do
     begin
       if AllCrossReferences[aCrossReferencesIndex+x].IsDuplicate then
         Continue;
 
-      // Make sure the referenced address is scanned too :
+      // Determine which referenced address is to be scanned too :
       ReferencedAddress := AllCrossReferences[aCrossReferencesIndex+x].Address;
-      TestAddressUsingPatternTrie({var}ReferencedAddress, {DoForwardScan=}False);
-      // Referenced address was changed, re-apply the actual address :
-      ReferencedAddress := AllCrossReferences[aCrossReferencesIndex+x].Address;
+      // Only scan at addresses where there might be code (as we're about to check
+      // if this address does indeed validate against the symbol's function-pattern) :
+      if IsAddressWithinCodeRange(ReferencedAddress) then
+      begin
+        TestAddressUsingPatternTrie({var}ReferencedAddress, {DoForwardScan=}False);
+        // Referenced address was changed, re-apply the actual address :
+        ReferencedAddress := AllCrossReferences[aCrossReferencesIndex+x].Address;
 
-      // Now see if the referenced address does indeed matches the symbol being referenced:
-      if AllCrossReferences[aCrossReferencesIndex+x].Symbol.HasFunctionInformation then
-        // If that symbol doesn't occur at the referenced address, we quit here :
-        if AllCrossReferences[aCrossReferencesIndex+x].Symbol.FindPotentialLocationIndex(ReferencedAddress) = 0 then
-          Exit;
+        // Now see if the referenced address does indeed matches the symbol being referenced:
+        if AllCrossReferences[aCrossReferencesIndex+x].Symbol.HasFunctionInformation then
+          // If that symbol doesn't occur at the referenced address, we quit here :
+          if AllCrossReferences[aCrossReferencesIndex+x].Symbol.FindPotentialLocationIndex(ReferencedAddress) = 0 then
+          begin
+            Result := False;
+            Exit;
+          end;
+      end;
     end;
 
     Result := True;
@@ -983,23 +1000,61 @@ var
 *)
   end;
 
+  function _SectionCanContainCode(const aSection: PXBE_SECTIONHEADER): Boolean;
+  var
+    SectionName: string;
+  begin
+    SectionName := string(PAnsiChar(aSection.dwSectionNameAddr));
+    // TODO : Improve the check if a section can contain code,
+    // for now skip resource sections (beginning with an '$') :
+    Result := SectionName[1] <> '$';
+  end;
+
+var
+  SectionLower, SectionUpper: UIntPtr;
 begin
+  Assert(Assigned(pXbeHeader));
+  Assert(pXbeHeader.dwSections > 0);
+
   // Determine upper bound for scanning, based on the XBE sections :
   ScanUpper := Low(ScanUpper);
-  i := pXbeHeader.dwSections;
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
-  while i > 0 do
+  for i := 0 to pXbeHeader.dwSections - 1 do
   begin
     if ScanUpper < UIntPtr(Section.dwVirtualAddr) + Section.dwVirtualSize then
       ScanUpper := UIntPtr(Section.dwVirtualAddr) + Section.dwVirtualSize;
 
     Inc(Section);
-    Dec(i);
   end;
 
   // Reserve a bit per address to see which addresses are already scanned :
   MyAddressesScanned.Size := 0;
   MyAddressesScanned.Size := ScanUpper;
+
+  // Reserve a bit per address to see which addresses might contain code :
+  MyAddressesPotentiallyContainingCode.Size := 0;
+  MyAddressesPotentiallyContainingCode.Size := ScanUpper;
+
+  // Determine where all code can reside :
+  UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
+  for i := 0 to pXbeHeader.dwSections - 1 do
+  begin
+    if _SectionCanContainCode(Section) then
+    begin
+      // Calculate the range in which code can fall :
+      SectionLower := UIntPtr(Section.dwVirtualAddr);
+      SectionUpper := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw;
+
+      // Mark all bytes that might contain code :
+      while SectionLower <= SectionUpper do
+      begin
+        MyAddressesPotentiallyContainingCode[Integer(SectionLower)] := True;
+        Inc(SectionLower);
+      end;
+    end;
+
+    Inc(Section);
+  end;
 
   // Allocate the cross-references pool :
   SetLength(AllCrossReferences, 1024);
@@ -1008,32 +1063,38 @@ begin
 
 //  _ScanTest;
 
-  i := 0;
+  // Do the actual scanning per section :
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
-  while i < pXbeHeader.dwSections do
+  for i := 0 to pXbeHeader.dwSections - 1 do
   begin
-    p := UIntPtr(Section.dwVirtualAddr);
-    ScanEnd := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw; // Don't scan outside of raw size!
+    // Only for the sections that can contain code :
+    if _SectionCanContainCode(Section) then
+    begin
+      p := UIntPtr(Section.dwVirtualAddr);
+      ScanEnd := UIntPtr(Section.dwVirtualAddr) + Section.dwSizeofRaw; // Don't scan outside of raw size!
 
 {$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x '{(%s)}+' from $%.8x to $%.8x', [
-      i, {string(PAnsiChar(GetAddr(Section.dwSectionNameAddr))), }p, ScanEnd],
-      {MayRenderArguments=}False);
+      DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x (%s) from $%.8x to $%.8x', [
+        i, string(PAnsiChar(Section.dwSectionNameAddr)), p, ScanEnd],
+        {MayRenderArguments=}False);
 {$ENDIF}
 
-    while p < ScanEnd do
-    try
-      TestAddressUsingPatternTrie({var}PByte(p));
-    except
+      while p < ScanEnd do
+      try
+        TestAddressUsingPatternTrie({var}PByte(p));
+      except
 {$IFDEF DXBX_DEBUG}
-      DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
+        DbgPrintf('DxbxHLE : Exception while scanning on address $%.8x', [p]);
 {$ENDIF}
-      Inc(p);
+        Inc(p);
+      end;
     end;
 
     Inc(Section);
-    Inc(i);
   end;
+
+  // Set of 'potentially code'-addresses is no longer needed :
+  MyAddressesPotentiallyContainingCode.Size := 0;
 end; // ScanMemoryRangeForLibraryPatterns
 
 procedure TSymbolManager.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
