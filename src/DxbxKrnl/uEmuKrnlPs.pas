@@ -191,6 +191,7 @@ begin
   except
     on E: Exception do
     begin
+      EmuSwapFS(fsWindows);
       // TODO -oDXBX: How do we intercept ntdll.ZwRaiseException here ?
       //      EmuException(E);
       DbgPrintf('EmuKrnl : PCSTProxy : Catched an exception : ' + E.Message);

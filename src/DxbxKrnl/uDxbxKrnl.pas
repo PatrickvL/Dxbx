@@ -420,6 +420,7 @@ begin
   except
     on E: Exception do
     begin
+      EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
       DbgPrintf('EmuMain : Catched an exception : ' + E.Message);
 {$IFDEF DXBX_USE_JCLDEBUG}
