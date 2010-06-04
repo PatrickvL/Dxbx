@@ -220,10 +220,8 @@ function {160} xboxkrnl_KfRaiseIrql(
   NewIrql: KIRQL
   ): KIRQL; register;
 function {161} xboxkrnl_KfLowerIrql(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   NewIrql: KIRQL
-  ): KIRQL; register;
+  ): KIRQL; stdcall;
 function {163} xboxkrnl_KiUnlockDispatcherDatabase(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {252} xboxkrnl_PhyGetLinkState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {253} xboxkrnl_PhyInitialize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -430,16 +428,8 @@ end;
 // ARGUMENTS NewIrql = Irql to lower to
 // NOTES Uses fastcall convention
 function {161} xboxkrnl_KfLowerIrql(
-  // Dxbx : This argument makes the 'register' calling convention
-  // functionally equivalent to the 'fastcall' calling convention.
-  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-  // They differ as follows:
-  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
-  ): KIRQL; register;
+  NewIrql: KIRQL
+  ): KIRQL; stdcall;
 // Source:shogun  Revision:0.8.1-Pre2  Branch:Dxbx  Translator:shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
