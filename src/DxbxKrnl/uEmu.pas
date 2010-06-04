@@ -19,6 +19,8 @@ unit uEmu;
 
 {$INCLUDE Dxbx.inc}
 
+{.$define _DEBUG}
+
 interface
 
 uses
@@ -31,7 +33,12 @@ uses
   , JwaWinBase
   , JwaWinType
   , JwaWinNt
+{$ifdef _DEBUG}
+  // JCL
+  , JclDebug
   // DXBX
+  , uDxbxDebugUtils
+{$endif}
   , uEmuD3D8Types
   , uConsts
   , uTypes
@@ -48,31 +55,34 @@ function EmuCheckAllocationSize(pBase: PVOID; largeBound: _bool): int;
 // print call stack trace
 {$ifdef _DEBUG}
 procedure EmuPrintStackTrace(ContextRecord: PCONTEXT);
+
+var dbgCritical: CRITICAL_SECTION;
 {$endif}
 
 // global flags specifying current emulation state
-var g_bEmuException: _bool = False;
-var g_bEmuSuspended: _bool = False;
+var g_bEmuException: _bool = false;
+var g_bEmuSuspended: _bool = false;
+var g_bPrintfOn: _boolean = true;
 
 // global exception patching address
-var g_HaloHack: array [0..4-1] of uint32;
+var g_HaloHack: array [0..4-1] of uint32; // = {0};
 
 // Dead to Rights hack
-var g_DeadToRightsHack: array [0..2-1] of uint32;
+var g_DeadToRightsHack: array [0..2-1] of uint32; // = {0};
 
 // global exception patching address
 var funcExclude: array [0..2048-1] of uint32;
 
 // partition emulation directory handles
-var g_hCurDir: Handle = 0;
+var g_hCurDir: HANDLE = 0;
 var g_strCurDrive: string = '';
-var g_hTDrive: Handle = 0;
+var g_hTDrive: HANDLE = 0;
 var g_strTDrive: string = '';
-var g_hUDrive: Handle = 0;
+var g_hUDrive: HANDLE = 0;
 var g_strUDrive: string = '';
-var g_hZDrive: Handle = 0;
+var g_hZDrive: HANDLE = 0;
 var g_strZDrive: string = '';
-var g_hEmuWindow: Handle = 0; // rendering window
+var g_hEmuWindow: HWND = 0; // rendering window
 
 // thread notification routine
 var g_pfnThreadNotification: array [0..16-1] of PVOID;
@@ -87,16 +97,13 @@ type XInputSetStateStatus = record
     hDevice: HANDLE;
     dwLatency: DWORD;
     pFeedback: PVOID;
-  end; // size = 12
-
+end; // size = 12
 var g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
 
 // 4 controllers
 const XINPUT_HANDLE_SLOTS = 4;
 
 var g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
-
-  g_bPrintfOn: Boolean = True;
 
 procedure EmuWarning(szWarningMessage: string); overload;
 procedure EmuWarning(szWarningMessage: string; const Args: array of const); overload;
@@ -136,6 +143,7 @@ var
   dwCur: DWORD;
   dwValue: DWORD;
   dwPtr: DWORD;
+  Context: JwaWinNT.CONTEXT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -170,13 +178,12 @@ begin
           // go through and fix any other pointers in the ESI allocation chunk
           begin
             dwESI := e.ContextRecord.Esi;
-            dwSize := EmuCheckAllocationSize(PVOID(dwESI), False);
+            dwSize := EmuCheckAllocationSize(PVOID(dwESI), false);
 
             // dword aligned
             Dec(dwSize, 4 - (dwSize mod 4));
 
-            v := 0;
-            while v < dwSize do
+            v := 0; while v < dwSize do
             begin
               dwCur := PDWORD(dwESI+v)^;
 
@@ -220,10 +227,9 @@ begin
               dwSize := EmuCheckAllocationSize(PVOID(dwPtr), false);
 
               // dword aligned
-              dwSize := dwSize - (4 - dwSize mod 4);
+              Dec(dwSize, 4 - dwSize mod 4);
 
-              v := 0;
-              while v < dwSize do
+              v := 0; while v < dwSize do
               begin
                 dwCur := (dwPtr+v);
 
@@ -262,6 +268,11 @@ begin
         e.ContextRecord.Eip, e.ContextRecord.EFlags,
         e.ContextRecord.Eax, e.ContextRecord.Ebx, e.ContextRecord.Ecx, e.ContextRecord.Edx,
         e.ContextRecord.Esi, e.ContextRecord.Edi, e.ContextRecord.Esp, e.ContextRecord.Ebp]);
+
+{$ifdef _DEBUG}
+     Context := (e.ContextRecord)^;
+     EmuPrintStackTrace(@Context);
+{$endif}
   end;
 {$ENDIF}
 
@@ -279,7 +290,7 @@ begin
         '  Press Abort to terminate emulation.'+
         '  Press Retry to debug.'+
         '  Press Ignore to continue emulation.',
-        [e.ContextRecord.EFlags]);
+        [e.ContextRecord.Eip]);
 {$ENDIF}
       Inc(e.ContextRecord.Eip);
       ret := MessageBox(g_hEmuWindow, buffer, 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
@@ -302,7 +313,7 @@ begin
           DbgPrintf('EmuMain : Ignored Breakpoint Exception');
 {$ENDIF}
 
-          g_bEmuException := False;
+          g_bEmuException := false;
 
           Result := EXCEPTION_CONTINUE_EXECUTION;
           Exit;
@@ -316,7 +327,7 @@ begin
               ''+
               '  Press ''OK'' to terminate emulation.'+
               '  Press ''Cancel'' to debug.',
-              [e.ContextRecord.Eip, e.ContextRecord.EFlags]);
+              [e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip]);
 {$ENDIF}
 
       if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
@@ -334,7 +345,7 @@ begin
     end;
   end;
 
-  g_bEmuException := False;
+  g_bEmuException := false;
 
   Result := EXCEPTION_CONTINUE_SEARCH;
 end;
@@ -462,5 +473,100 @@ begin
   Result := EXCEPTION_CONTINUE_SEARCH;
 end;
 
-end.
+{$ifdef _DEBUG}
+// print call stack trace
+procedure EmuPrintStackTrace(ContextRecord: PCONTEXT);
+(*
+const STACK_MAX     = 16;
+const SYMBOL_MAXLEN = 64;
+*)
+var
+  i: int;
+(*
+  module: IMAGEHLP_MODULE64;
+  fSymInitialized: BOOL;
+  frame: STACKFRAME64;
+  dwDisplacement: DWORD64;
+  pSymbol: PSYMBOL_INFO;
+  symbol: array [0..sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN-1] of BYTE;
+*)
+  Info: TJclLocationInfo;
+begin
 
+  EnterCriticalSection(dbgCritical);
+
+  with JclCreateStackList({Raw=}True, {AIgnoreLevels=}0, {FirstCaller=}Pointer(ContextRecord.Eip)) do
+  try
+    for I := 0 to Count - 1 do
+      if GetLocationInfo(Items[I].CallerAddr, {var}Info) then
+        DbgPrintf(' %2d: %s', [i, LocationInfoToString(Info)])
+      else
+        DbgPrintf(' %2d: 0x%.08x', [i, Items[I].CallerAddr])
+  finally
+    Free;
+  end;
+(*
+  IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
+
+  fSymInitialized := SymInitialize(GetCurrentProcess(), NULL, TRUE);
+
+  STACKFRAME64 frame := { sizeof(STACKFRAME64) };
+  frame.AddrPC.Offset    := ContextRecord.Eip;
+  frame.AddrPC.Mode      := AddrModeFlat;
+  frame.AddrFrame.Offset := ContextRecord.Ebp;
+  frame.AddrFrame.Mode   := AddrModeFlat;
+  frame.AddrStack.Offset := ContextRecord.Esp;
+  frame.AddrStack.Mode   := AddrModeFlat;
+
+  for i = 0 to STACK_MAX-1 do
+  begin
+    if(not StackWalk64(
+            IMAGE_FILE_MACHINE_I386,
+            GetCurrentProcess(),
+            GetCurrentThread(),
+            @frame,
+            ContextRecord,
+            NULL,
+            SymFunctionTableAccess64,
+            SymGetModuleBase64,
+            NULL)) then
+            break;
+
+    DWORD64 dwDisplacement := 0;
+    PSYMBOL_INFO pSymbol := 0;
+    BYTE symbol[sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN];
+
+    SymGetModuleInfo64(GetCurrentProcess(), frame.AddrPC.Offset, &module);
+
+    if(fSymInitialized) then
+    begin
+      pSymbol := PSYMBOL_INFO(symbol);
+      pSymbol.SizeOfStruct := sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
+      pSymbol.MaxNameLen := SYMBOL_MAXLEN;
+
+      if(not SymFromAddr(GetCurrentProcess(), frame.AddrPC.Offset, @dwDisplacement, pSymbol)) then
+        pSymbol := 0;
+    end;
+
+    if(module.ModuleName) then
+      printf(' %2d: %-8s 0x%.08X', [i, module.ModuleName, frame.AddrPC.Offset])
+    else
+      printf(' %2d: %8c 0x%.08X', [i, ' ', frame.AddrPC.Offset]);
+
+    if(pSymbol) then
+    begin
+      printf(' %s+0x%.04X\n', [pSymbol.Name, dwDisplacement]);
+    end
+    else
+      printf('\n');
+  end;
+  printf('\n');
+
+  if(fSymInitialized) then
+    SymCleanup(GetCurrentProcess());
+*)
+  LeaveCriticalSection(dbgCritical);
+end;
+{$endif}
+
+end.

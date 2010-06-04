@@ -25,12 +25,7 @@ uses
   // Delphi
   SysUtils,
   // JCL
-  JclDebug,
-  // Dxbx
-  uTypes,
-  uLog,
-  uXboxLibraryUtils,
-  DxLibraryAPIScanning;
+  JclDebug;
 
 {$IFDEF DXBX_USE_JCLDEBUG}
 type
@@ -47,6 +42,13 @@ function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): stri
 implementation
 
 {$IFDEF DXBX_USE_JCLDEBUG}
+
+uses
+  // Dxbx
+  uTypes,
+  uLog,
+  uXboxLibraryUtils,
+  DxLibraryAPIScanning;
 
 function JclLastExceptStackListToString(OnlyCallerModule: Boolean = False): string;
 var
@@ -83,9 +85,11 @@ begin
       Result := 'Exception ';
       for I := 0 to List.Count - 1 do
         if GetLocationInfo(List.Items[I].CallerAddr, {var}Info) then
-          Result := Result + LocationInfoToString(Info) + ' <- ';
+          Result := Result + LocationInfoToString(Info) + ' <- '
 //          with Info do
 //            Result := Result + Format('[%s: %s at line %d] <- ', [UnitName, ProcedureName, LineNumber]);
+        else
+          Result := Result + Format('$%p <- ', [List.Items[I].CallerAddr]);
 
       if List.Count > 0 then
         SetLength(Result, Length(Result) - 4);
