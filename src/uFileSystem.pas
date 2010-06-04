@@ -205,7 +205,10 @@ end;
 
 type
   TMappedFileHandle = class(TFileHandle)
+  protected
     Handle: THandle;
+  public
+    destructor Destroy; override;
   end;
 
   TMappedSearchInfo = class(TSearchInfo)
@@ -214,6 +217,8 @@ type
     function GetAttributes: Integer; override;
     function GetFilename: string; override;
     function GetFileSize: Int64; override;
+  public
+    destructor Destroy; override;
   end;
 
   TMappedFolderFileSystem = class(TFileSystem)
@@ -281,10 +286,7 @@ function TMappedFolderFileSystem.Close(const aFileHandle: TFileHandle): Boolean;
 begin
   Result := Assigned(aFileHandle);
   if Result then
-  begin
-    FileClose(TMappedFileHandle(aFileHandle).Handle);
     aFileHandle.Free;
-  end;
 end;
 
 function TMappedFolderFileSystem.FindFirst(const aFilePath: string = '\*'): TSearchInfo;
@@ -317,10 +319,27 @@ end;
 
 procedure TMappedFolderFileSystem.FindClose(SearchInfo: TSearchInfo);
 begin
-  SearchInfo.Free;
+  if Assigned(SearchInfo) then
+    SearchInfo.Free;
+end;
+
+{ TMappedFileHandle }
+
+destructor TMappedFileHandle.Destroy;
+begin
+  FileClose(Handle);
+
+  inherited Destroy;
 end;
 
 { TMappedSearchInfo }
+
+destructor TMappedSearchInfo.Destroy;
+begin
+  SysUtils.FindClose(SearchRec);
+
+  inherited Destroy;
+end;
 
 function TMappedSearchInfo.GetAttributes: Integer;
 begin
@@ -621,7 +640,7 @@ begin
     Exit;
   end;
 
-  if _FindXbe(aRelativeXBEFilePath) then
+  if (aRelativeXBEFilePath <> '') and _FindXbe(aRelativeXBEFilePath) then
   begin
     Result := True;
     Exit;

@@ -70,7 +70,7 @@ function xboxkrnl_KeDelayExecutionThread(
   ): NTSTATUS; stdcall;
 function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeEnterCriticalRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeGetCurrentIrql(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeGetCurrentIrql(): KIRQL; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -105,7 +105,7 @@ procedure xboxkrnl_KeQuerySystemTime(
   CurrentTime: PLARGE_INTEGER
   ); stdcall;
 function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
-function xboxkrnl_KeRaiseIrqlToSynchLevel(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeRaiseIrqlToSynchLevel(): KIRQL; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeReleaseMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeReleaseSemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeRemoveByKeyDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -272,12 +272,17 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeGetCurrentIrql(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeGetCurrentIrql(): KIRQL; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
+var
+  Pcr: PKPCR;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeGetCurrentIrql');
+  DbgPrintf('EmuKrnl : KeGetCurrentIrql()');
   EmuSwapFS(fsXbox);
+
+  Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
+  Result := Pcr.Irql;
 end;
 
 function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall;
@@ -564,32 +569,77 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+const DISPATCH_LEVEL = 2; // ??
+const SYNCH_LEVEL = DISPATCH_LEVEL;
+
 // KeRaiseIrqlToDpcLevel:
 // Raises IRQL to DISPATCH_LEVEL.  Like KeRaiseIrql except returns old level directly.
 //
 // Differences from NT: None.
 function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+var
+  Pcr: PKPCR;
+  CurrentIrql: KIRQL;
 begin
   EmuSwapFS(fsWindows);
-
   DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel()');
-
-  // Cxbx : I really tried to avoid adding this...
-//  asm int 3; end;
-//  DxbxKrnlCleanup('KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)');
-
   EmuSwapFS(fsXbox);
 
-  Result := 0;
+  Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
+
+  // Save and update IRQL
+  CurrentIrql := Pcr.Irql;
+  Pcr.Irql := DISPATCH_LEVEL;
+
+{$ifdef IRQL_DEBUG}
+  // Validate correct raise
+  if (CurrentIrql > DISPATCH_LEVEL) then
+  begin
+    // Crash system
+    KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                 CurrentIrql,
+                 DISPATCH_LEVEL,
+                 0,
+                 1);
+  end;
+{$endif}
+
+  // Return the previous value
+  Result := CurrentIrql;
 end;
 
-function xboxkrnl_KeRaiseIrqlToSynchLevel(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeRaiseIrqlToSynchLevel(): KIRQL; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
+var
+  Pcr: PKPCR;
+  CurrentIrql: KIRQL;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeRaiseIrqlToSynchLevel');
+  DbgPrintf('EmuKrnl : KeRaiseIrqlToSynchLevel()');
   EmuSwapFS(fsXbox);
+
+  Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
+
+  // Save and update IRQL
+  CurrentIrql := Pcr.Irql;
+  Pcr.Irql := SYNCH_LEVEL;
+
+{$ifdef IRQL_DEBUG}
+  // Validate correct raise
+  if (CurrentIrql > SYNCH_LEVEL) then
+  begin
+    // Crash system
+    KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                 CurrentIrql,
+                 SYNCH_LEVEL,
+                 0,
+                 1);
+  end;
+{$endif}
+
+  // Return the previous value
+  Result := CurrentIrql;
 end;
 
 function xboxkrnl_KeReleaseMutant(): NTSTATUS; stdcall;

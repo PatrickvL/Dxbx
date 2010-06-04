@@ -1096,8 +1096,13 @@ begin
   else
     ImageLogo.Hide;
 
-  if Assigned(m_XBE) and m_XBE.ExportIconBitmap(ImageIcon.Picture.Bitmap) then
-    ImageIcon.Show
+  if Assigned(m_XBE) then
+  begin
+    if not m_XBE.ExportIconBitmap(ImageIcon.Picture.Bitmap) then
+      ImageIcon.Picture.Assign(GetJPEGResource('GUIIconNotAvailable'));
+
+    ImageIcon.Show;
+  end
   else
     ImageIcon.Hide;
 
