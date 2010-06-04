@@ -43,6 +43,8 @@ uses
   uEmuAlloc,
   uEmuLDT;
 
+function GetCurrentKPCR(): PKPCR; // inline;
+
 procedure EmuInitFS();
 
 procedure EmuGenerateFS(pTLS: PXBE_TLS; pTLSData: PVOID);
