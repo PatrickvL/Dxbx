@@ -576,8 +576,8 @@ begin
   DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel()');
 
   // Cxbx : I really tried to avoid adding this...
-  asm int 3; end;
-  DxbxKrnlCleanup('KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)');
+//  asm int 3; end;
+//  DxbxKrnlCleanup('KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)');
 
   EmuSwapFS(fsXbox);
 
