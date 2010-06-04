@@ -304,7 +304,7 @@ begin
     // Get XBE Name :
     XBEPath := WideString(Params^);
     Inc(Params);
-    // Get DCHandle ;
+    // Get DCHandle :
     DCHandle := StrToIntDef(WideString(Params^), 0);
     Inc(Params);
     // Get KernelDebugMode :

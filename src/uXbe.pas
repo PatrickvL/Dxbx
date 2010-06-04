@@ -705,6 +705,7 @@ end; // TXbe.Create
 
 destructor TXbe.Destroy;
 begin
+  m_szAsciiTitle := '';
   ConstructorInit();
 
   inherited Destroy;

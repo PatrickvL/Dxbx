@@ -68,15 +68,28 @@ begin
   Result := True;
 end; // EnumDevices
 
-function EnumModeusCallBack(const lpDDSurfaceDesc: TDDSurfaceDesc2;
+function EnumDisplayModesCallBack(const lpDDSurfaceDesc: TDDSurfaceDesc2;
   lpContext: Pointer): HResult; stdcall;
+var
+  Width, Height: DWord;
 begin
-  TStrings(lpContext).Add(IntToStr(lpDDSurfaceDesc.dwWidth) + ' X ' +
-    IntToStr(lpDDSurfaceDesc.dwHeight) + ', ' +
+  Width := lpDDSurfaceDesc.dwWidth;
+  Height := lpDDSurfaceDesc.dwHeight;
+
+  // Ugly check for portrait display's :
+  // TODO -cDxbx : This can surely be done much cleaner!
+  if Width < Height then
+  begin
+    // Just swap the width & height for now :
+    Width := lpDDSurfaceDesc.dwHeight;
+    Height := lpDDSurfaceDesc.dwWidth;
+  end;
+
+  TStrings(lpContext).Add(IntToStr(Width) + ' X ' + IntToStr(Height) + ', ' +
     IntToStr(lpDDSurfaceDesc.ddpfPixelFormat.dwRGBBitCount) +
     ' bits/pixel');
   Result := DDENUMRET_OK;
-end; // EnumModeusCallBack
+end; // EnumDisplayModesCallBack
 
 procedure Tfrm_VideoConfig.FormCreate(Sender: TObject);
 var
@@ -92,7 +105,7 @@ begin
     tempDirectDraw := nil;
   end;
   edt_VideoResolution.Items.Add('Automatic (Default)');
-  FDirectDraw.EnumDisplayModes(0, nil, edt_VideoResolution.Items, EnumModeusCallBack);
+  FDirectDraw.EnumDisplayModes(0, nil, edt_VideoResolution.Items, EnumDisplayModesCallBack);
 
   // Read the XBVideo settings from shared memory :
   g_EmuShared.GetXBVideo(@FXBVideo);
