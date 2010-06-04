@@ -123,6 +123,7 @@ type
     PatternTrieReader: TPatternTrieReader;
     AllCrossReferences: array of record Symbol: TSymbolInformation; Address: TCodePointer; IsDuplicate: Boolean; end;
     AllCrossReferencesInUse: Integer;
+    FCurrentTestAddress: PByte;
     procedure _Debug(const aSymbol: TSymbolInformation);
     function IsAddressWithinCodeRange(const aAddress: TCodePointer): Boolean;
     function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
@@ -762,6 +763,12 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
 
       // Determine which referenced address is to be scanned too :
       ReferencedAddress := AllCrossReferences[aCrossReferencesIndex+x].Address;
+
+      // Do not test symbols on the originating address, as we're probably
+      // still busy scanning for all possible symbols that could reside there :
+      if ReferencedAddress = FCurrentTestAddress then
+        Continue;
+
       // Only scan at addresses where there might be code (as we're about to check
       // if this address does indeed validate against the symbol's function-pattern) :
       if IsAddressWithinCodeRange(ReferencedAddress) then
@@ -822,10 +829,8 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
 
             if DoForwardScan then
               if not _CheckForwardFunctionCrossReferences(aStoredLibraryFunction, Location.CrossReferencesIndex) then
-              begin
+                // If the forward function scan fails, invalidate this location (but keep checking other children!) :
                 Location.Address := nil;
-                Exit;
-              end;
           end;
         end;
       end;
@@ -997,8 +1002,11 @@ var
     // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
     _Test($0001F2C0, '?GetSurfaceFormat@PixelJar@D3D@@YGKPAUD3DPixelContainer@@0@Z'); // from EmuIDirect3DDevice8_Clear
     _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
+    // Psx :
+    _Test($00114A09, '_IDirectSoundBuffer_Play@16');
+    _Test($00115AC2, '_DirectSoundCreate@12');
 *)
-  end;
+  end; // _ScanTest
 
   function _SectionCanContainCode(const aSection: PXBE_SECTIONHEADER): Boolean;
   var
@@ -1081,6 +1089,10 @@ begin
 
       while p < ScanEnd do
       try
+        // Store the addres we're about to scan, so it can
+        // be used in _CheckForwardFunctionCrossReferences :
+        FCurrentTestAddress := PByte(p);
+        // Now scan this address, collecting all symbols :
         TestAddressUsingPatternTrie({var}PByte(p));
       except
 {$IFDEF DXBX_DEBUG}
@@ -1216,8 +1228,10 @@ procedure TSymbolManager.DetermineFinalLocations;
     _Test($0019D360, '_D3DDevice_Reset@4'); //HLE: 0x0019D360 -> EmuIDirect3DDevice8_Reset
     // Compiled Xdk samples\Tutorials\Tut01_CreateDevice\Release :
     _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
+    // Psx :
+    _Test($00115AC2, '_DirectSoundCreate@12');
 *)
-  end;
+  end; // _FinalTest
 
   procedure _AddMissingSymbols;
   var

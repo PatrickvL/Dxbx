@@ -506,7 +506,7 @@ begin
     dmFile:
       if not LogFileOpen then
       try
-        if (aOutputFileName = '') or not FileExists(aOutputFileName) then
+        if aOutputFileName = '' then
           aOutputFileName := DXBX_KERNEL_DEBUG_FILENAME;
 
         AssignFile({var}LogFile, aOutputFileName);
