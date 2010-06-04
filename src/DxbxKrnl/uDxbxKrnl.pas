@@ -26,6 +26,7 @@ interface
 uses
   // Delphi
   Windows, // DWord
+  Messages, // WM_PARENTNOTIFY
   SysUtils, // Format
   Math, // IfThen
   // Jedi Win32API
@@ -454,6 +455,10 @@ var
   szBuffer1: string;
 //  buffer: array [0..15] of char;
 begin
+  g_bEmuException := true;
+
+  CxbxKrnlResume();
+    
   // Print out ErrorMessage (if exists)
   if szErrorMessage <> '' then
   begin
@@ -470,15 +475,20 @@ begin
   fflush(stdout);
 
   // Cleanup debug output
-  CloseLogs(); // FreeConsole();
+  begin
+    CloseLogs(); // FreeConsole();
 
-       (* if (GetConsoleTitle(buffer, 16) <> '') then
-            freopen('nul', 'w', stdout); *)
+    (* if (GetConsoleTitle(buffer, 16) <> '') then
+        freopen('nul', 'w', stdout); *)
+  end;
+
+  if(DxbxKrnl_hEmuParent <> HNULL) then
+    SendMessage(DxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
   TerminateProcess(GetCurrentProcess(), 0);
 end;
 
-procedure CxbxKrnlRegisterThread(const hThread: Handle);
+procedure CxbxKrnlRegisterThread(const hThread: HANDLE);
 // Branch:shogun  Revision:162  Translator:Shadow_tj  Done:100
 var
   v: int;
@@ -506,7 +516,7 @@ var
   v: int;
   dwExitCode: DWORD;
   szBuffer: array [0..256-1] of Char;
-  MyhWnd: Handle;
+  _hWnd: HANDLE;
 begin
   if (g_bEmuSuspended or g_bEmuException) then
     Exit;
@@ -532,14 +542,14 @@ begin
 
   begin
     if DxbxKrnl_hEmuParent <> 0 then
-      MyhWnd := DxbxKrnl_hEmuParent
+      _hWnd := DxbxKrnl_hEmuParent
     else
-      MyhWnd := g_hEmuWindow;
+      _hWnd := g_hEmuWindow;
 
-    GetWindowText(MyhWnd, szBuffer, 255 - 10);
+    GetWindowText(_hWnd, szBuffer, 255 - 10);
 
     strcat(szBuffer, ' (paused)');
-    SetWindowText(MyhWnd, szBuffer);
+    SetWindowText(_hWnd, szBuffer);
   end;
 
   g_bEmuSuspended := true;
@@ -551,7 +561,7 @@ var
   v: int;
   dwExitCode: DWORD;
   szBuffer: array [0..256-1] of Char;
-  MyhWnd: Handle;
+  _hWnd: Handle;
 begin
   if (not g_bEmuSuspended) then
     Exit;
@@ -559,13 +569,13 @@ begin
   // remove 'paused' from rendering window caption text
   begin
     if DxbxKrnl_hEmuParent <> 0 then
-      MyhWnd := DxbxKrnl_hEmuParent
+      _hWnd := DxbxKrnl_hEmuParent
     else
-      MyhWnd := g_hEmuWindow;
+      _hWnd := g_hEmuWindow;
 
-    GetWindowText(MyhWnd, szBuffer, 255);
+    GetWindowText(_hWnd, szBuffer, 255);
     szBuffer[strlen(szBuffer)-9] := #0;
-    SetWindowText(MyhWnd, szBuffer);
+    SetWindowText(_hWnd, szBuffer);
   end;
 
   for v := 0 to MAXIMUM_XBOX_THREADS-1 do
