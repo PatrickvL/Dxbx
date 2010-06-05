@@ -151,17 +151,26 @@ begin
   Result := ((GridRect.Top - 1) * 16) + GridRect.Left - 1
 end;
 
+const
+  ShowMangledNames = False; // Change this into a setting
+
 function TDisassembleViewer.GetLabelByVA(const aVirtualAddress: Pointer): string;
 var
   i: Integer;
 begin
   Result := '';
-  if Assigned(SymbolList) then
-  begin
-    i := SymbolList.IndexOfObject(TObject(aVirtualAddress));
-    if i >= 0 then
-      Result := SymbolList[i];
-  end;
+  if SymbolList = nil then
+    Exit;
+
+  i := SymbolList.IndexOfObject(TObject(aVirtualAddress));
+  if i < 0 then
+    Exit;
+
+  Result := SymbolList[i];
+  if ShowMangledNames then
+    Exit;
+
+  Result := DxbxUnmangleSymbolName(Result);
 end;
 
 procedure TDisassembleViewer.SetRegion(const aRegionInfo: RRegionInfo);
