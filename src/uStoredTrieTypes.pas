@@ -216,6 +216,8 @@ type
   public
     procedure LoadFromStream(const aStream: TStream);
 
+    function NrOfStrings: Cardinal;
+    function NrOfFunctions: Cardinal;
     function GetByteOffset(const aOffset: TByteOffset): PByteOffset;
     function GetStringPointerByIndex(const aStringIndex: TStringTableIndex): PAnsiChar;
     function GetString(const aStringIndex: TStringTableIndex): string;
@@ -253,6 +255,16 @@ begin
   StoredLibrariesList := PStoredLibrariesList(GetByteOffset(StoredSignatureTrieHeader.LibraryTable.LibrariesOffset));
 end;
 
+function TPatternTrieReader.NrOfStrings: Cardinal;
+begin
+  Result := StoredSignatureTrieHeader.StringTable.NrStrings;
+end;
+
+function TPatternTrieReader.NrOfFunctions: Cardinal;
+begin
+  Result := StoredSignatureTrieHeader.GlobalFunctionTable.NrOfFunctions;
+end;
+
 function TPatternTrieReader.GetByteOffset(const aOffset: TByteOffset): PByteOffset;
 begin
   UIntPtr(Result) := UIntPtr(StoredSignatureTrieHeader) + aOffset;
@@ -262,7 +274,7 @@ function TPatternTrieReader.GetStringPointerByIndex(const aStringIndex: TStringT
 var
   Offset: TByteOffset;
 begin
-  if {(aStringIndex < 0) or} (aStringIndex >= StoredSignatureTrieHeader.StringTable.NrStrings) then
+  if {(aStringIndex < 0) or} (aStringIndex >= NrOfStrings) then
     raise EListError.CreateFmt('String index out of bounds (%d)', [aStringIndex]);
 
   Offset := StringOffsetList[aStringIndex];
