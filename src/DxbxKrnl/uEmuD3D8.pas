@@ -5502,7 +5502,7 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuSurface8: = 0x%.08X', [pPixelContainer.Emu.Surface8]);
 {$ENDIF}
-    hRet := IDirect3DSurface8(pPixelContainer.Emu.Surface8).GetDesc(SurfaceDesc);
+    hRet := IDirect3DSurface8(pPixelContainer.Emu.Surface8).GetDesc({out}SurfaceDesc);
     { marked by cxbx
      Integer dwDumpSurface := 0;
      szBuffer: array [0..255-1] of Char;
@@ -5519,17 +5519,18 @@ begin
     // TODO -oCXBX: Work on Namco Museum hack later...
     // if pPixelContainer.Emu.Texture8 = (IDirect3DTexture8($078A0044)) then
 
-    hRet := IDirect3DTexture8(pPixelContainer.Emu.Texture8).GetLevelDesc(dwLevel, SurfaceDesc);
-    //hRet = IDirect3DSurface8(pPixelContainer.Emu.Surface8).GetDesc(@SurfaceDesc);
+    hRet := IDirect3DTexture8(pPixelContainer.Emu.Texture8).GetLevelDesc(dwLevel, {out}SurfaceDesc);
+    //hRet = IDirect3DSurface8(pPixelContainer.Emu.Surface8).GetDesc({out}SurfaceDesc);
     if FAILED(hRet) then
       EmuWarning('IDirect3DTexture8::GetSurfaceDesc failed!');
 
-    { marked out by cxbx
-     Integer dwDumpTexture := 0;
+    DbgPrintf('Okay');
+     { marked by cxbx
+     int dwDumpTexture := 0;
      szBuffer: array [0..255-1] of Char;
      StrFmt(szBuffer, 'C:\Aaron\Textures\GetDescTexture%.03d.bmp', dwDumpTexture++);
      D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Texture8, 0);
-    }
+     }
   end;
 
   // rearrange into xbox format (remove D3DPOOL)
@@ -5831,6 +5832,7 @@ begin
     if (Flags and not ($80 or $40)) > 0 then
       CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags]);
 
+    // Remove old lock(s)
     if (Level = 6) or (Level = 7) or (Level = 8) or (Level = 9) then
     begin
       // HACK: Unreal Championship crashes when the texture level reaches 9...

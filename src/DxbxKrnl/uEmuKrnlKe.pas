@@ -550,7 +550,7 @@ begin
   DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 {$ENDIF}
 
-  QueryPerformanceCounter({var}Counter);
+  QueryPerformanceCounter({var}Counter); // NtQueryPerformanceCounter ???
 
   EmuSwapFS(fsXbox);
 

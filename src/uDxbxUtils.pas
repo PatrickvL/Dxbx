@@ -773,9 +773,12 @@ begin
       break;
     end;
 
-    // It's no string when it contains non-printable characters :
+    // It's no longer a string when it contains non-printable characters :
     if not (Ptr[i] in PrintableChars) then
-      Exit;
+      if Ptr[i-1] = #0 then
+        Break
+      else
+        Exit;
 
     Inc(NrAnsiChars);
     Inc(i);

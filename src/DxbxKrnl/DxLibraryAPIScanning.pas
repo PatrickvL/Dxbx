@@ -66,6 +66,7 @@ type
   TSymbolInformation = class(TObject)
   private
     function GetHasPotentialLocations: Boolean;
+    function GetIsSymbolNameUsedInFunctions: Boolean;
     function GetHasFunctionInformation: Boolean;
     function GetHasCrossReferences: Boolean;
     function GetLength: Cardinal;
@@ -82,6 +83,7 @@ type
     function FindPotentialLocation(const aAddress: TCodePointer): PPotentialFunctionLocation;
     function AddPotentialLocation(const aAddress: TCodePointer): PPotentialFunctionLocation;
 
+    property IsSymbolNameUsedInFunctions: Boolean read GetIsSymbolNameUsedInFunctions;
     property HasPotentialLocations: Boolean read GetHasPotentialLocations;
     property HasFunctionInformation: Boolean read GetHasFunctionInformation;
     property HasCrossReferences: Boolean read GetHasCrossReferences;
@@ -114,6 +116,7 @@ type
     property Count: Integer read GetCount;
     property Locations[const aIndex: Integer]: TSymbolInformation read GetLocation; default;
   protected
+    MySymbolNamesUsedInFunctions: TBits;
     MyAddressesPotentiallyContainingCode: TBits;
     MyAddressesScanned: TBits;
     ScanUpper: UIntPtr;
@@ -253,6 +256,11 @@ begin
   Result := (FirstPotentialFunctionLocationIndex > 0);
 end;
 
+function TSymbolInformation.GetIsSymbolNameUsedInFunctions: Boolean;
+begin
+  Result := SymbolManager.MySymbolNamesUsedInFunctions[NameIndex];
+end;
+
 function TSymbolInformation.GetHasFunctionInformation: Boolean;
 begin
   Result := Assigned(StoredLibraryFunction);
@@ -325,6 +333,7 @@ begin
   MyFinalLocations := TList.Create;
   MyAddressesScanned := TBits.Create;
   MyAddressesPotentiallyContainingCode := TBits.Create;
+  MySymbolNamesUsedInFunctions := TBits.Create;
 end;
 
 destructor TSymbolManager.Destroy;
@@ -334,6 +343,7 @@ begin
   FreeAndNil(MyFinalLocations);
   FreeAndNil(MyAddressesScanned);
   FreeAndNil(MyAddressesPotentiallyContainingCode);
+  FreeAndNil(MySymbolNamesUsedInFunctions);
 
   inherited Destroy;
 end;
@@ -796,7 +806,7 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
 {$IFDEF DXBX_RECTYPE}
     Assert(aStoredTrieNode.RecType = rtStoredTrieNode, 'StoredTrieNode type mismatch!');
 {$ENDIF}
-    // Calculate the position of the data after this TreeNode (StretchPtr) :
+    // Calculate the position of the data after this TrieNode (StretchPtr) :
     NrChildren := aStoredTrieNode.NrChildrenByte1;
     UIntPtr(StretchPtr) := UIntPtr(aStoredTrieNode) + SizeOf(RStoredTrieNode);
     if NrChildren >= 128 then
@@ -1215,10 +1225,22 @@ procedure TSymbolManager.DetermineFinalLocations;
           CrossReferencedSymbol := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Symbol;
 
           if CrossReferencedSymbol.HasFunctionInformation then
-            CrossReferencedLocation := CrossReferencedSymbol.FindPotentialLocation(CrossReferencedAddress)
+          begin
+            // A cross referenced symbol with function-information should
+            // have been detected at the referenced addres :
+            CrossReferencedLocation := CrossReferencedSymbol.FindPotentialLocation(CrossReferencedAddress);
+            // If there's no potential location at that address for that symbol :
+            if CrossReferencedLocation = nil then
+            begin
+              // Then we invalidate the originating location :
+              CurrentLocation.Address := nil;
+              Break;
+            end;
+          end
           else
-            // Add all cross-references that haven't been detected as function yet (probably data) :
-            CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
+            // Add all cross-references that haven't been detected as function yet (ONLY if it must be data!) :
+            if not CrossReferencedSymbol.IsSymbolNameUsedInFunctions then
+              CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
 
           // Count all references :
           if Assigned(CrossReferencedLocation) then
@@ -1403,7 +1425,18 @@ procedure TSymbolManager.DetermineFinalLocations;
     end; // for Symbols
   end; // _PrintLocationList
 
+var
+  i: Integer;
 begin // DetermineFinalLocations
+
+  // Reserve a bit per SymbolNameIndex, to indicate if it could be a code symbol :
+  MySymbolNamesUsedInFunctions.Size := 0;
+  MySymbolNamesUsedInFunctions.Size := PatternTrieReader.NrOfStrings;
+  // Loop over all functions and mark their NameIndexes as code;
+  // In _AddMissingSymbols we'll use this to only register missing
+  // references to symbols that are guaranteed to be data :
+  for i := 0 to PatternTrieReader.NrOfFunctions - 1 do
+    MySymbolNamesUsedInFunctions[PatternTrieReader.GetGlobalFunction(i).FunctionNameIndex] := True;
 
   _AddMissingSymbols;
 
@@ -1414,6 +1447,8 @@ begin // DetermineFinalLocations
   until _RemoveIncorrectAlternatives() = False;
 
 //  _FinalTest;
+
+  MySymbolNamesUsedInFunctions.Size := 0;
 
   _PutSymbolsInList;
 

@@ -106,7 +106,7 @@ end;
 // install function interception wrappers
 procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 var
-  i: Integer;
+  i, j: Integer;
   DetectedSymbol: TSymbolInformation;
   OrgCode: TCodePointer;
   NewCode: TCodePointer;
@@ -147,6 +147,22 @@ begin
 {$ENDIF}
 
       EmuInstallWrapper(OrgCode, NewCode);
+
+      // Fill the remainder of the patched function with "int 3" opcodes,
+      // so that it breaks early when patches are placed incorrectly.
+      // (Ofcourse, we'll have to fix the symbol-detection too than).
+      if Assigned(DetectedSymbol.StoredLibraryFunction) then
+      begin
+        j :=  DetectedSymbol.StoredLibraryFunction.FunctionLength - 5;
+        Inc(PByte(OrgCode), 5);
+        while j > 0 do
+        begin
+          Dec(j);
+          PByte(OrgCode)^ := $CC; // int 3;
+          Inc(PByte(OrgCode));
+        end;
+      end;
+
       Inc(NrPatches);
     end;
 
