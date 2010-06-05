@@ -38,7 +38,8 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl;
+  uDxbxKrnl,
+  uDxbxUtils;
 
 procedure {005} xboxkrnl_DbgBreakPoint(
   ); stdcall;
@@ -51,9 +52,8 @@ function {007} xboxkrnl_DbgLoadImageSymbols(
   ProcessId: ULONG_PTR
   ): NTSTATUS; stdcall;
 function {008} xboxkrnl_DbgPrint(
-  Format: PCCH;
-  Args: array of const
-  ): ULONG; stdcall;
+  Format: PCCH
+  ): ULONG; cdecl; // varargs;
 function {010} xboxkrnl_DbgPrompt(
   Prompt: PCCH;
   Response: PCH; // OUT
@@ -98,13 +98,22 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+// Dxbx note : In C, this function uses varargs ('...'), which Delphi doesn't
+// support directly (we have array of const, but those are put on the stack
+// as TVarRec's, which is quite different from C's varargs).
+// Luckily, there's still a way to get to these arguments using RVarArgsReader!
 function {008} xboxkrnl_DbgPrint(
-  Format: PCCH;
-  Args: array of const // TODO -oDXBX: Check if this is a correct translation of '...'
-  ): ULONG; stdcall;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+  Format: PCCH
+  ): ULONG; cdecl; // varargs;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:1
+//var
+//  va: RVarArgsReader;
 begin
   EmuSwapFS(fsWindows);
+  // TODO : Either parse the varargs, or somehow call into a
+  // 'varargs'-version of sprintf and use the resulting string.
+  //
+  //  va.Create(Format, SizeOf(Format));
   Result := Unimplemented('DbgPrint');
   EmuSwapFS(fsXbox);
 end;
