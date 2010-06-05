@@ -84,7 +84,7 @@ procedure SetXbePath(const Path: PAnsiChar); stdcall;
 var g_EmuShared: PEmuShared = NULL;
 var g_EmuSharedRefCount: int = 0; // extern; ??
 
-var hMapObject: Handle = 0{NULL};
+var hMapObject: Handle = HNULL;
 
 implementation
 
@@ -105,7 +105,7 @@ begin
   WriteLog('EmuShared.Init');
 
   // Prevent multiple initializations
-  if hMapObject <> 0{NULL} then
+  if hMapObject <> HNULL then
     Exit;
 
 {$IFDEF DXBX_USE_JCLDEBUG}
@@ -130,7 +130,7 @@ begin
     if(GetLastError() = ERROR_ALREADY_EXISTS) then
       Result := false;
 
-    if hMapObject = 0 then
+    if hMapObject = HNULL then
       CxbxKrnlCleanup('Could not map shared memory!');
   end;
 

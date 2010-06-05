@@ -48,8 +48,13 @@ var
   {154}xboxkrnl_KeSystemTime: DWord;
   {157}xboxkrnl_KeTimeIncrement: DWord = $2710;
 
-function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeAlertResumeThread(
+  ThreadHandle: HANDLE;
+  PreviousSuspendCount: PULONG
+  ): NTSTATUS; stdcall;
+function xboxkrnl_KeAlertThread(
+  ThreadHandle: HANDLE
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeBoostPriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_KeBugCheck(
   BugCheckMode: ULONG
@@ -61,7 +66,10 @@ function xboxkrnl_KeBugCheckEx(
   BugCheckParameter3: PVOID;
   BugCheckParameter4: PVOID
   ): NTSTATUS; stdcall;
-function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeCancelTimer(
+  hTimerHandle: HANDLE;
+  pbPreviousState: PBOOLEAN
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeDelayExecutionThread(
   WaitMode: KPROCESSOR_MODE;
@@ -96,7 +104,10 @@ function xboxkrnl_KeInsertQueueApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeLeaveCriticalRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KePulseEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KePulseEvent(
+  hEventHandle: HANDLE;
+  pPreviousState: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -113,14 +124,23 @@ function xboxkrnl_KeRemoveDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeRemoveEntryDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeRemoveQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeRemoveQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeResetEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeResetEvent(
+  hEventHandle: HANDLE;
+  pPreviousState: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeRestoreFloatingPointState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeResumeThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeResumeThread(
+  hThread: HANDLE;
+  dwResumeCount: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeRundownQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSaveFloatingPointState(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSetBasePriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSetDisableBoostThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeSetEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSetEvent(
+  hEventHandle: HANDLE;
+  pPreviousState: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeSetEventBoostPriority(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSetPriorityProcess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeSetPriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -136,7 +156,10 @@ function xboxkrnl_KeSetTimerEx(
   Dpc: PKDPC // OPTIONAL
   ): LONGBOOL; stdcall;
 function xboxkrnl_KeStallExecutionProcessor(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeSuspendThread(
+  hThread: HANDLE;
+  dwLastResumeCount: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -144,19 +167,24 @@ function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATU
 
 implementation
 
-function xboxkrnl_KeAlertResumeThread(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeAlertResumeThread(
+  ThreadHandle: HANDLE;
+  PreviousSuspendCount: PULONG
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeAlertResumeThread');
+  Result := JwaNative.NtAlertResumeThread(ThreadHandle, PreviousSuspendCount);
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeAlertThread(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeAlertThread(
+  ThreadHandle: HANDLE
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeAlertThread');
+  Result := JwaNative.NtAlertThread(ThreadHandle);
   EmuSwapFS(fsXbox);
 end;
 
@@ -212,11 +240,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeCancelTimer(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeCancelTimer(
+  hTimerHandle: HANDLE;
+  pbPreviousState: PBOOLEAN
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeCancelTimer');
+  Result := JwaNative.NtCancelTimer(hTimerHandle, pbPreviousState);
   EmuSwapFS(fsXbox);
 end;
 
@@ -249,7 +280,6 @@ begin
       #13#10');',
       [Ord(WaitMode), Alertable, Interval, QuadPart(Interval)]);
 {$ENDIF}
-
 
   ret := NtDelayExecution(Alertable, PLARGE_INTEGER(Interval));
   EmuSwapFS(fsXbox);
@@ -482,11 +512,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KePulseEvent(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KePulseEvent(
+  hEventHandle: HANDLE;
+  pPreviousState: PULONG
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KePulseEvent');
+  Result := JwaNative.NtPulseEvent(hEventHandle, pPreviousState);
   EmuSwapFS(fsXbox);
 end;
 
@@ -698,11 +731,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeResetEvent(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeResetEvent(
+  hEventHandle: HANDLE;
+  pPreviousState: PULONG
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeResetEvent');
+  Result := JwaNative.NtResetEvent(hEventHandle, pPreviousState);
   EmuSwapFS(fsXbox);
 end;
 
@@ -714,11 +750,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeResumeThread(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeResumeThread(
+  hThread : HANDLE;
+  dwResumeCount : PULONG
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeResumeThread');
+  Result := JwaNative.NtResumeThread(hThread, dwResumeCount);
   EmuSwapFS(fsXbox);
 end;
 
@@ -754,11 +793,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeSetEvent(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeSetEvent(
+  hEventHandle: HANDLE;
+  pPreviousState: PULONG
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeSetEvent');
+  Result := JwaNative.NtSetEvent(hEventHandle, pPreviousState);
   EmuSwapFS(fsXbox);
 end;
 
@@ -847,11 +889,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeSuspendThread(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeSuspendThread(
+  hThread: HANDLE;
+  dwLastResumeCount: PULONG
+  ): NTSTATUS; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeSuspendThread');
+  Result := JwaNative.NtSuspendThread(hThread, dwLastResumeCount);
   EmuSwapFS(fsXbox);
 end;
 

@@ -53,7 +53,10 @@ function xboxkrnl_NtAllocateVirtualMemory(
   AllocationType: DWORD;
   Protect: DWORD
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtCancelTimer(
+  hTimerHandle: HANDLE;
+  pbPreviousState: PBOOLEAN
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtClearEvent(
   EventHandle: HANDLE
   ): NTSTATUS; stdcall;
@@ -90,7 +93,12 @@ function xboxkrnl_NtCreateSemaphore(
   InitialCount: ULONG;
   MaximumCount: ULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtCreateTimer(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
+function xboxkrnl_NtCreateTimer(
+  pTimerHandle : PHANDLE;
+  DesiredAccess : ACCESS_MASK;
+  pObjectAttributes : POBJECT_ATTRIBUTES;
+  TimerType : TIMER_TYPE
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtDeleteFile(pObjectAttributes: dtObjectAttributes): NTSTATUS; stdcall;
 function xboxkrnl_NtDeviceIoControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pIoControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
 function xboxkrnl_NtDuplicateObject(
@@ -156,7 +164,13 @@ function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryTimer(
+  hTimerHandle: HANDLE;
+  TimerInformationClass: TIMER_INFORMATION_CLASS;
+  pTimerInformation: PVOID;
+  TimerInformationLength: ULONG;
+  ResultLength: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryVirtualMemory(
   BaseAddress: PVOID;
   Buffer: PMEMORY_BASIC_INFORMATION
@@ -280,11 +294,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCancelTimer(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_NtCancelTimer(
+  hTimerHandle: HANDLE;
+  pbPreviousState: PBOOLEAN
+  ): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtCancelTimer');
+  Result := JwaNative.NtCancelTimer(hTimerHandle, pbPreviousState);
   EmuSwapFS(fsXbox);
 end;
 
@@ -775,11 +792,16 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCreateTimer(FileHandle: dtU32; DesiredAccess: dtACCESS_MASK; pObjectAttributes: dtObjectAttributes; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_NtCreateTimer(
+  pTimerHandle : PHANDLE;
+  DesiredAccess : ACCESS_MASK;
+  pObjectAttributes : POBJECT_ATTRIBUTES;
+  TimerType : TIMER_TYPE
+  ): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtCreateTimer');
+  Result := JwaNative.NtCreateTimer(pTimerHandle, DesiredAccess, Pointer(pObjectAttributes), TimerType);
   EmuSwapFS(fsXbox);
 end;
 
@@ -1291,11 +1313,17 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryTimer(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_NtQueryTimer(
+  hTimerHandle: HANDLE;
+  TimerInformationClass: TIMER_INFORMATION_CLASS;
+  pTimerInformation: PVOID;
+  TimerInformationLength: ULONG;
+  ResultLength: PULONG
+  ): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueryTimer');
+  Result := JwaNative.NtQueryTimer(hTimerHandle, TimerInformationClass, pTimerInformation, TimerInformationLength, ResultLength);
   EmuSwapFS(fsXbox);
 end;
 

@@ -203,6 +203,28 @@ function SortObjects(List: TStringList; Index1, Index2: Integer): Integer;
 
 function DxbxUnmangleSymbolName(const aStr: string): string;
 
+type
+  // Helper type to get access to cdecl varargs, code published by Barry Kelly on :
+  // http://stackoverflow.com/questions/298373/how-can-a-function-with-varargs-retrieve-the-contents-of-the-stack\
+  // For usage, see comments in implementation.
+  RVarArgsReader = record
+  private
+    FArgPtr: PByte;
+    class function Align(Ptr: Pointer; Align: Integer): Pointer; static;
+  public
+    constructor Create(LastArg: Pointer; Size: Integer);
+    // Read bytes, signed words etc. using Int32
+    // Make an unsigned version if necessary.
+    function ReadInt32: Integer;
+    // Exact floating-point semantics depend on C compiler.
+    // Delphi compiler passes Extended as 10-byte float; most C
+    // compilers pass all floating-point values as 8-byte floats.
+    function ReadDouble: Double;
+    function ReadExtended: Extended;
+    function ReadPChar: PChar;
+    procedure ReadArg(var Arg; Size: Integer);
+  end;
+
 const
   SymbolCacheFileExt = '.sym';
 
@@ -1241,5 +1263,112 @@ begin
   Result := StringReplace(Result, '::', '.', [rfReplaceAll]);
 end; // DxbxUnmangleSymbolName
 
+{ RVarArgsReader }
+
+constructor RVarArgsReader.Create(LastArg: Pointer; Size: Integer);
+begin
+  FArgPtr := LastArg;
+  // 32-bit x86 stack is generally 4-byte aligned
+  FArgPtr := Align(FArgPtr + Size, 4);
+end;
+
+class function RVarArgsReader.Align(Ptr: Pointer; Align: Integer): Pointer;
+begin
+  Integer(Result) := (Integer(Ptr) + Align - 1) and not (Align - 1);
+end;
+
+function RVarArgsReader.ReadInt32: Integer;
+begin
+  ReadArg(Result, SizeOf(Integer));
+end;
+
+function RVarArgsReader.ReadDouble: Double;
+begin
+  ReadArg(Result, SizeOf(Double));
+end;
+
+function RVarArgsReader.ReadExtended: Extended;
+begin
+  ReadArg(Result, SizeOf(Extended));
+end;
+
+function RVarArgsReader.ReadPChar: PChar;
+begin
+  ReadArg(Result, SizeOf(PChar));
+end;
+
+procedure RVarArgsReader.ReadArg(var Arg; Size: Integer);
+begin
+  Move(FArgPtr^, Arg, Size);
+  FArgPtr := Align(FArgPtr + Size, 4);
+end;
+
+(*
+// Usage of RVarArgsReader :
+
+// Declare a function type with 'cdecl varargs' calling convention :
+type
+  PDump = procedure(const types: string) cdecl varargs;
+
+// Define a variable that points to that special function type,
+// and direct it to an actual implementation :
+var
+  MyDump: PDump = @Dump;
+
+// Implement the function without the 'varargs' directive,
+// and instead access the varargs with a 'RVarArgsReader' :
+procedure Dump(const types: string); cdecl;
+var
+  ap: RVarArgsReader;
+  cp: PChar;
+begin
+  cp := PChar(types);
+  ap := RVarArgsReader.Create(@types, SizeOf(string));
+  while True do
+  begin
+    case cp^ of
+      #0:
+      begin
+        Writeln;
+        Exit;
+      end;
+
+      'i': Write(ap.ReadInt32, ' ');
+      'd': Write(ap.ReadDouble, ' ');
+      'e': Write(ap.ReadExtended, ' ');
+      's': Write(ap.ReadPChar, ' ');
+    else
+      Writeln('Unknown format');
+      Exit;
+    end;
+    Inc(cp);
+  end;
+end;
+
+procedure ExampleVarArgCalls;
+
+  function AsDouble(e: Extended): Double;
+  begin
+    Result := e;
+  end;
+
+  function AsSingle(e: Extended): Single;
+  begin
+    Result := e;
+  end;
+
+begin
+  MyDump('iii', 10, 20, 30);
+  MyDump('sss', 'foo', 'bar', 'baz');
+
+  // Looks like Delphi passes Extended in byte-aligned
+  // stack offset, very strange; thus this doesn't work.
+  MyDump('e', 2.0);
+  // These two are more reliable.
+  MyDump('d', AsDouble(2));
+  // Singles passed as 8-byte floats.
+  MyDump('d', AsSingle(2));
+end;
+*)
 end.
 

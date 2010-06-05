@@ -61,6 +61,9 @@ function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; overload;
 
+//type Tsprintf = function (aBuffer: PAnsiChar): Integer; cdecl varargs;
+//var sprintf: Tsprintf;
+
 implementation
 
 {$IFDEF DXBX_DLL}
