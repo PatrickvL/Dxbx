@@ -383,7 +383,7 @@ end;
 
 procedure XbeLoaded;
 begin
-  WriteLog(DxbxFormat('DXBX: %s  loaded.', [m_szAsciiTitle]));
+  WriteLog(DxbxFormat('DXBX: %s loaded.', [m_szAsciiTitle]));
 end;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
@@ -565,8 +565,19 @@ begin
 
   WriteLog('DXBX: Reading Certificate...OK');
 
-  m_szAsciiTitle := WideCharToString(m_Certificate.wszTitleName);
-  WriteLog('DXBX: Title identified as ' + m_szAsciiTitle);
+  m_szAsciiTitle := Trim(WideCharToString(m_Certificate.wszTitleName));
+  if m_szAsciiTitle <> '' then
+    WriteLog('DXBX: Title identified as ' + m_szAsciiTitle)
+  else
+  begin
+    m_szAsciiTitle := ExtractFileName(aFileName);
+    if SameText(m_szAsciiTitle, 'default.xbe') then
+      m_szAsciiTitle := ExtractFileName(ExtractFileDir(aFileName))
+    else
+      m_szAsciiTitle := ChangeFileExt(m_szAsciiTitle, '');
+
+    WriteLog('DXBX: Title chosen as ' + m_szAsciiTitle);
+  end;
 
   // read xbe section headers
   begin

@@ -153,6 +153,10 @@ var
   SymbolManager: TSymbolManager;
   LibD3D8: PStoredLibrary;
 
+const
+  OPCODE_NOP = $90;
+  OPCODE_JMP = $E9;
+
 implementation
 
 uses
@@ -632,14 +636,24 @@ end;
 procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; const DoForwardScan: Boolean = True);
 
   function _MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
+  var
+    LengthWithoutNops: Integer;
   begin
+    // Don't count the nops at the end of the function (if any) :
+    LengthWithoutNops := aStoredLibraryFunction.FunctionLength;
+    while (LengthWithoutNops > 0) and (aTestAddress[LengthWithoutNops-1] = OPCODE_NOP) do
+      Dec(LengthWithoutNops);
+
     // Skip small functions with only one cross-reference, because those are
     // very common. Instead, we hope they will be discovered via other functions :
-    if (aStoredLibraryFunction.FunctionLength < 6)
-    and (aStoredLibraryFunction.NrCrossReferences = 1) then
-      Result := False
+    case aStoredLibraryFunction.NrCrossReferences of
+      0: Result := (LengthWithoutNops >= 7);
+      1: Result := (LengthWithoutNops > 5)
+               and (aTestAddress^ <> OPCODE_JMP);
+      2: Result := (LengthWithoutNops >= 10);
     else
       Result := True;
+    end;
   end;
 
   function _CountFunctionCRC(const aStoredLibraryFunction: PStoredLibraryFunction; const aAddress: PByte): Boolean;
@@ -1464,24 +1478,27 @@ var
   s, v: int;
 begin
   DbgPrintf('DxbxHLE : Determining special symbols');
-  // locate XapiProcessHeap
+  // locate D3DDeferredTextureState
   begin
-    // Resolve the address of the _XapiProcessHeap symbol (at least cross-referenced once, from XapiInitProcess) :
-    Symbol := FindSymbol('_XapiProcessHeap');
+    XTL_EmuD3DDeferredTextureState := nil;
+    Symbol := FindSymbol('_D3D__TextureState');
     if Assigned(Symbol) then
-      // and remember that in a global :
-      XTL_EmuXapiProcessHeap := Symbol.Address;
+      XTL_EmuD3DDeferredTextureState := Symbol.Address;
 
-{$IFDEF DXBX_DEBUG}
-    if Assigned(XTL_EmuXapiProcessHeap) then
-      DbgPrintf('HLE: $%.08X . XapiProcessHeap',
-        [XTL_EmuXapiProcessHeap],
-        {MayRenderArguments=}False)
-    else
-      DbgPrintf('HLE : Can''t find XapiProcessHeap!',
-        [],
+    if Assigned(XTL_EmuD3DDeferredTextureState) then
+    begin
+      for s := 0 to 4-1 do
+      begin
+        for v := 0 to 32-1 do
+          XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
+      end;
+
+      DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState',
+        [XTL_EmuD3DDeferredTextureState],
         {MayRenderArguments=}False);
-{$ENDIF}
+    end
+    else
+      EmuWarning('EmuD3DDeferredTextureState was not found!');
   end;
 
   // locate D3DDeferredRenderState
@@ -1517,27 +1534,24 @@ begin
       EmuWarning('EmuD3DDeferredRenderState was not found!');
   end;
 
-  // locate D3DDeferredTextureState
+  // locate XapiProcessHeap
   begin
-    XTL_EmuD3DDeferredTextureState := nil;
-    Symbol := FindSymbol('_D3D__TextureState');
+    // Resolve the address of the _XapiProcessHeap symbol (at least cross-referenced once, from XapiInitProcess) :
+    Symbol := FindSymbol('_XapiProcessHeap');
     if Assigned(Symbol) then
-      XTL_EmuD3DDeferredTextureState := Symbol.Address;
+      // and remember that in a global :
+      XTL_EmuXapiProcessHeap := Symbol.Address;
 
-    if Assigned(XTL_EmuD3DDeferredTextureState) then
-    begin
-      for s := 0 to 4-1 do
-      begin
-        for v := 0 to 32-1 do
-          XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
-      end;
-
-      DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState',
-        [XTL_EmuD3DDeferredTextureState],
-        {MayRenderArguments=}False);
-    end
+{$IFDEF DXBX_DEBUG}
+    if Assigned(XTL_EmuXapiProcessHeap) then
+      DbgPrintf('HLE: $%.08X . XapiProcessHeap',
+        [XTL_EmuXapiProcessHeap],
+        {MayRenderArguments=}False)
     else
-      EmuWarning('EmuD3DDeferredTextureState was not found!');
+      DbgPrintf('HLE : Can''t find XapiProcessHeap!',
+        [],
+        {MayRenderArguments=}False);
+{$ENDIF}
   end;
 end; // DetermineSpecialSymbols
 
