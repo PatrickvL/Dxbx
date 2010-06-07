@@ -229,7 +229,7 @@ exports
   XTL_EmuWSAStartup,
 
   XTL_EmuXNetGetEthernetLinkStatus,
-  // XTL_EmuXNetStartup, : DXBX marked out for better logging
+  XTL_EmuXNetStartup, //: DXBX marked out for better logging
 
   XTL_EmuXOnlineLaunchNewImage;
 

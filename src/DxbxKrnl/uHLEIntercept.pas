@@ -95,7 +95,7 @@ var
   RelativeJMPAddress: UInt32;
 begin
   // Write JMP rel16 opcode (Jump near, displacement relative to next instruction) :
-  FunctionAddr^ := $E9;
+  FunctionAddr^ := OPCODE_JMP;
   Inc(FunctionAddr);
   // Calculate relative address :
   RelativeJMPAddress := (UIntPtr(WrapperAddr) - UIntPtr(FunctionAddr) - 4);
