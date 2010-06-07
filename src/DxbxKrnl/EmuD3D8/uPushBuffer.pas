@@ -216,7 +216,7 @@ var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
   mi: uint;
-  pwVal: PWORD;
+  pwVal: PWORDs;
 
 {$ifdef _DEBUG_TRACK_PB}
   pdwOrigPushData: PDWORD;
@@ -420,7 +420,7 @@ begin
         (
             PCPrimitiveType,
             VPDesc.dwPrimitiveCount,
-            {untyped const}VPDesc.pVertexStreamZeroData^,
+            VPDesc.pVertexStreamZeroData,
             VPDesc.uiVertexStreamZeroStride
         );
 
@@ -438,14 +438,14 @@ begin
         printf('');
         printf('  Index Array Data...');
 
-        pwVal := PWORD(pdwPushData + 1);
+        pwVal := PWORDs(pdwPushData + 1);
 
         if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
         begin
           if (s mod 8 = 0) then printf('  ');
 
-          printf('  %.04X', [pwVal^]); Inc(pwVal);
+          printf('  %.04X', [pwVal[s]]);
         end;
 
         printf('');
@@ -454,11 +454,11 @@ begin
       {$endif}
 
 
-      pwVal := PWORD(IntPtr(pdwPushData) + SizeOf(pdwPushData^)); // TODO -oDXBX: Is this correctly translated?
+      pwVal := PWORDs(IntPtr(pdwPushData) + SizeOf(pdwPushData^)); // TODO -oDXBX: Is this correctly translated?
       if dwCount > 0 then // Dxbx addition, to prevent underflow
       for mi := 0 to dwCount - 1 do
       begin
-        pIBMem[mi+2] := pwVal^; Inc(pwVal); // Cxbx has : pwVal[mi];
+        pIBMem[mi+2] := pwVal[mi];
       end;
 
 
@@ -562,14 +562,14 @@ begin
         printf('  Index Array Data...');
 {$ENDIF}
 
-        pwVal := PWORD(pIndexData);
+        pwVal := PWORDs(pIndexData);
 
         if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
         begin
           if (s mod 8) = 0 then printf(#13#10'  ');
 
-          printf('  %.04X', [pwVal^]); Inc(pwVal);
+          printf('  %.04X', [pwVal[s]]);
         end;
 
 {$IFDEF DEBUG}
@@ -740,7 +740,7 @@ var
   pVBData: PBYTE;
   uiStride: UINT;
   szFileName: array [0..128 - 1] of AnsiChar;
-  pwVal: PWORD;
+  pwVal: PWORDs;
   maxIndex: uint32;
   pwChk: PWORD;
   chk: uint;
@@ -839,7 +839,7 @@ begin
 
     fprintf(dbgVertices, '      %d;'#13#10, [dwCount - 2]);
 
-    pwVal := PWORD(pIndexData);
+    pwVal := PWORDs(pIndexData);
 
     max := dwCount;
 

@@ -501,7 +501,7 @@ uses
   , uEmuFS
   , uEmuD3D8;
 
-{.$DEFINE _DEBUG_TRACK_VS}
+{$DEFINE _DEBUG_TRACK_VS}
 
 // VertexShader.h
 
@@ -1395,7 +1395,7 @@ begin
         MulIntermediate.Parameters[1].Parameter.Neg           := FALSE;
         VshSetSwizzle(@MulIntermediate.Parameters[1], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
         MulIntermediate.Parameters[2].Active                  := FALSE;
-        VshInsertIntermediate(pShader, @MulIntermediate, ++i);
+        Inc(i); VshInsertIntermediate(pShader, @MulIntermediate, i);
 
         // Add offset with r10 to oPos (add oPos.[mask], r10, c59)
         AddIntermediate := MulIntermediate;
@@ -1405,8 +1405,7 @@ begin
         AddIntermediate.Parameters[0].Parameter.ParameterType := PARAM_R;
         AddIntermediate.Parameters[0].Parameter.Address       := 10;
         AddIntermediate.Parameters[1].Parameter.Address       := ConvertCRegister(59);
-        Inc(i);
-        VshInsertIntermediate(pShader, @AddIntermediate, i);
+        Inc(i); VshInsertIntermediate(pShader, @AddIntermediate, i);
       end;
 
       Inc(i);
@@ -2220,7 +2219,7 @@ begin
   // TODO -oCXBX: Put these in one struct
   ZeroMemory(@PatchData, SizeOf(PatchData));
 
-  DbgVshPrintf('DWORD dwVSHDecl[] = '#13#10'{'#13#10);
+  DbgVshPrintf('DWORD dwVSHDecl[] ='#13#10'{'#13#10);
 
   while pRecompiled^ <> DEF_VSH_END do
   begin
@@ -2334,7 +2333,7 @@ begin
 
 
     // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-    if(0 <> strcmp(pShaderDisassembly, 'vs.1.1')) then
+    if(0=strcmp(pShaderDisassembly, 'vs.1.1'#10)) then
     begin
       EmuWarning('Cannot assemble empty vertex shader!');
       hRet := D3DXERR_INVALIDDATA;

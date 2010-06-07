@@ -67,7 +67,7 @@ type ResourceTracker = object(Mutex)
     // check for existance of an explicit key
     function exists(uiKey: uint32): _bool; overload;
 
-    // retrieves aresource using the resource ointer as key, explicit locking needed
+    // retrieves a resource using the resource pointer as key, explicit locking needed
     function get(pResource: Pvoid): Pvoid; overload;
 
     // retrieves a resource using an explicit key, explicit locking needed

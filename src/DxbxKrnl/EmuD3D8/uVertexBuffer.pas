@@ -52,12 +52,12 @@ const MAX_NBR_STREAMS = 16;
 
 // Dxbx note :
 // When _VertexPatchDesc is sized like Cxbx, all vertex drawing
-// is currepted (see mesh, light and texture demo's).
+// is corrupted (see mesh, light and texture demo's).
 // However, the sizeof of _VertexPatchDesc is wrong this way!
 // TODO -cDxbx :
 // Either the layout has to be fixed (while keeping it's size)
 // or the offending code must be fixed. For now keep this :
-{$ALIGN 1}
+{.$ALIGN 1}
 
 type _VertexPatchDesc = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -126,11 +126,14 @@ type VertexPatcher = object
     // Returns the number of streams of a patch
     function GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
     // Caches a patched stream
-    procedure CacheStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT);
+    procedure CacheStream(pPatchDesc: PVertexPatchDesc; 
+                          uiStream: UINT);
     // Frees a cached, patched stream
     procedure FreeCachedStream(pStream: Pvoid);
     // Tries to apply a previously patched stream from the cache
-    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT; pbFatalError: P_bool): _bool;
+    function ApplyCachedStream(pPatchDesc: PVertexPatchDesc; 
+                               uiStream: UINT; 
+                               pbFatalError: P_bool): _bool;
     // Patches the types of the stream
     function PatchStream(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
     // Normalize texture coordinates in FVF stream if needed
@@ -143,7 +146,7 @@ type VertexPatcher = object
 var g_pIVBVertexBuffer: PDWORD = nil;
 var g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
 var g_IVBFVF: DWORD = 0;
-var g_CurrentVertexShader: DWord = 0;
+var g_CurrentVertexShader: DWORD = 0;
 
 type _D3DIVB = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -420,7 +423,8 @@ begin
 end;
 
 function VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
-                                             uiStream: UINT; pbFatalError: P_bool): _bool;
+                                         uiStream: UINT; 
+                                         pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   uiStride: UINT;
@@ -428,8 +432,8 @@ var
   Desc: D3DVERTEXBUFFER_DESC;
   pCalculateData: Pvoid;
   uiLength: UINT;
-  uiKey: uint32;
   bApplied: _bool;
+  uiKey: uint32;
   pCachedStream_: PCACHEDSTREAM;
   bMismatch: _bool;
   Checksum: uint32;
@@ -484,7 +488,7 @@ begin
     bMismatch := false;
     if (pCachedStream_.uiCount = (pCachedStream_.uiCheckFrequency - 1)) then
     begin
-      if Assigned(pPatchDesc.pVertexStreamZeroData) then
+      if (nil=pPatchDesc.pVertexStreamZeroData) then
       begin
         if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pCalculateData), 0))) then
         begin
@@ -590,7 +594,7 @@ begin
 end;
 
 function VertexPatcher.PatchStream(pPatchDesc: PVertexPatchDesc;
-                                       uiStream: UINT): _bool;
+                                   uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pStream: PPATCHEDSTREAM;
@@ -1058,7 +1062,7 @@ begin
 end;
 
 function VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc;
-                                          uiStream: UINT): _bool;
+                                      uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pStream: PPATCHEDSTREAM;
@@ -1220,13 +1224,13 @@ begin
   if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
   begin
     pPatch1 := @pPatchedVertexData[pPatchDesc.dwOffset     * pStream.uiOrigStride];
-    pPatch2 := @pPatchedVertexData[pPatchDesc.dwOffset + 3 * pStream.uiOrigStride];
-    pPatch3 := @pPatchedVertexData[pPatchDesc.dwOffset + 4 * pStream.uiOrigStride];
-    pPatch4 := @pPatchedVertexData[pPatchDesc.dwOffset + 5 * pStream.uiOrigStride];
+    pPatch2 := @pPatchedVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiOrigStride];
+    pPatch3 := @pPatchedVertexData[(pPatchDesc.dwOffset + 4) * pStream.uiOrigStride];
+    pPatch4 := @pPatchedVertexData[(pPatchDesc.dwOffset + 5) * pStream.uiOrigStride];
 
     pOrig1 := @pOrigVertexData[pPatchDesc.dwOffset     * pStream.uiOrigStride];
-    pOrig2 := @pOrigVertexData[pPatchDesc.dwOffset + 2 * pStream.uiOrigStride];
-    pOrig3 := @pOrigVertexData[pPatchDesc.dwOffset + 3 * pStream.uiOrigStride];
+    pOrig2 := @pOrigVertexData[(pPatchDesc.dwOffset + 2) * pStream.uiOrigStride];
+    pOrig3 := @pOrigVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiOrigStride];
 
     if (pPatchDesc.dwPrimitiveCount div 2) > 0 then // Dxbx addition, to prevent underflow
     for i := 0 to (pPatchDesc.dwPrimitiveCount div 2) - 1 do
@@ -1387,6 +1391,13 @@ begin
   if(bFVF and ((g_CurrentVertexShader and D3DFVF_POSITION_MASK) <> D3DFVF_XYZRHW)) then
   begin
     dwCurFVF := g_CurrentVertexShader;
+
+    // HACK: Halo...
+    if(dwCurFVF = 0) then
+    begin
+      EmuWarning('EmuFlushIVB(): using g_IVBFVF instead of current FVF!');
+      dwCurFVF := g_IVBFVF;
+    end;
   end
   else
   begin
@@ -1563,7 +1574,7 @@ begin
   IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP(
       EmuPrimitiveType(VPDesc.PrimitiveType),
       VPDesc.dwPrimitiveCount,
-      {untyped const}VPDesc.pVertexStreamZeroData^,
+      VPDesc.pVertexStreamZeroData,
       VPDesc.uiVertexStreamZeroStride);
 
   if(bFVF) then
@@ -1635,7 +1646,7 @@ begin
 
     if (X_Format <> $CD) and (IDirect3DResource8(pTexture.Emu.Resource8).GetType() = D3DRTYPE_TEXTURE) then
     begin
-      dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
+      dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
       bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
       //bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
 
@@ -1666,7 +1677,8 @@ begin
         dwPitch := dwWidth * 2;
         dwBPP := 2;
       end
-      else if (X_Format = X_D3DFMT_L8) or (X_Format = X_D3DFMT_P8) or (X_Format = X_D3DFMT_AL8) or (X_Format = X_D3DFMT_A8L8) then
+      else if (X_Format = X_D3DFMT_L8) or (X_Format = X_D3DFMT_P8) 
+           or (X_Format = X_D3DFMT_AL8) or (X_Format = X_D3DFMT_A8L8) then
       begin
         bSwizzled := TRUE;
 
@@ -1687,10 +1699,8 @@ begin
         dwPitch  := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT)+1)*64;
         dwBPP := 4;
       end
-      else if (X_Format = X_D3DFMT_LIN_R5G6B5)
-           or (X_Format = X_D3DFMT_LIN_D16)
-           or (X_Format = X_D3DFMT_LIN_A4R4G4B4)
-           or (X_Format = X_D3DFMT_LIN_A1R5G5B5) then
+      else if (X_Format = X_D3DFMT_LIN_R5G6B5)   or (X_Format = X_D3DFMT_LIN_D16)
+           or (X_Format = X_D3DFMT_LIN_A4R4G4B4) or (X_Format = X_D3DFMT_LIN_A1R5G5B5) then
       begin
         // Linear 16 Bit
         dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1818,4 +1828,3 @@ end;
 
 {.$MESSAGE 'PatrickvL reviewed up to here'}
 end.
-
