@@ -1609,7 +1609,7 @@ begin
 
   if (pThis <> nil) and not (pThis.EmuBuffer = nil) then
   begin
-    hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus(pdwStatus^);
+    hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus({out}pdwStatus^);
   end
   else
   begin

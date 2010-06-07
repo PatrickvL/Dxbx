@@ -667,9 +667,9 @@ begin
       RawSize := m_SectionHeader[lIndex].dwSizeofRaw;
       RawAddr := m_SectionHeader[lIndex].dwRawAddr;
       SetLength(m_bzSection[lIndex], RawSize);
-      if RawSize > 0 then
-        for lIndex2 := 0 to RawSize - 1 do
-          m_bzSection[lIndex][lIndex2] := Byte(RawData[RawAddr + lIndex2]);
+      if RawSize > 0 then // Dxbx addition, to prevent underflow
+      for lIndex2 := 0 to RawSize - 1 do
+        m_bzSection[lIndex][lIndex2] := Byte(RawData[RawAddr + lIndex2]);
 
       WriteLog(DxbxFormat('DXBX: Reading Section 0x%.4x... OK', [lIndex]));
     end;

@@ -539,7 +539,6 @@ begin
   end;
 
   // append 'paused' to rendering window caption text
-
   begin
     if DxbxKrnl_hEmuParent <> 0 then
       _hWnd := DxbxKrnl_hEmuParent

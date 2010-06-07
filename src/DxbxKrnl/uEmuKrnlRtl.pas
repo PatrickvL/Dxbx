@@ -1059,7 +1059,7 @@ function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := JwaNative.RtlUpcaseUnicodeToMultiByteN(MbString, MbSize, ResultSize^, UnicodeString, UnicodeSize);
+  Result := JwaNative.RtlUpcaseUnicodeToMultiByteN(MbString, MbSize, {var}ResultSize^, UnicodeString, UnicodeSize);
   EmuSwapFS(fsXbox);
 end;
 
