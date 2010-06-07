@@ -1573,7 +1573,7 @@ begin
     [pCaps]);
 {$ENDIF}
 
-  IDirect3D8(g_pD3D8).GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF), pCaps^);
+  IDirect3D8(g_pD3D8).GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF), {out}pCaps^);
 
   EmuSwapFS(fsXbox);
 end;
@@ -5467,7 +5467,7 @@ begin
 
   EmuVerifyResourceIsRegistered(pPixelContainer);
 
-  IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).LockRect(FaceType, Level, pLockedRect^, pRect, Flags);
+  IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).LockRect(FaceType, Level, {out}pLockedRect^, pRect, Flags);
 
   EmuSwapFS(fsXbox);
 end;
@@ -5956,7 +5956,7 @@ begin
 
   EmuVerifyResourceIsRegistered(pThis);
   pVolumeTexture8 := pThis.Emu.VolumeTexture8;
-  Result := IDirect3DVolumeTexture8(pVolumeTexture8).LockBox(Level, pLockedVolume^, pBox, Flags);
+  Result := IDirect3DVolumeTexture8(pVolumeTexture8).LockBox(Level, {out}pLockedVolume^, pBox, Flags);
 
   if (FAILED(Result)) then
     EmuWarning('LockBox Failed!');
@@ -5991,7 +5991,7 @@ begin
 {$ENDIF}
 
   EmuVerifyResourceIsRegistered(pThis);
-  Result := IDirect3DCubeTexture8(pThis.Emu.CubeTexture8).LockRect(FaceType, Level, pLockedBox^, pRect, Flags);
+  Result := IDirect3DCubeTexture8(pThis.Emu.CubeTexture8).LockRect(FaceType, Level, {out}pLockedBox^, pRect, Flags);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8062,9 +8062,9 @@ begin
           0,
           VPDesc.dwVertexCount,
           VPDesc.dwPrimitiveCount,
-          {untyped const}pIndexData^,
+          pIndexData,
           D3DFMT_INDEX16,
-          {untyped const}VPDesc.pVertexStreamZeroData^,
+          VPDesc.pVertexStreamZeroData,
           VPDesc.uiVertexStreamZeroStride
       );
     end;
@@ -9889,7 +9889,7 @@ exports
   XTL_EmuIDirect3DDevice8_Clear name PatchPrefix + 'D3DDevice_Clear',
   XTL_EmuIDirect3DDevice8_CopyRects name PatchPrefix + 'D3DDevice_CopyRects',
   XTL_EmuIDirect3DDevice8_CreateCubeTexture name PatchPrefix + 'D3DDevice_CreateCubeTexture',
-  XTL_EmuIDirect3DDevice8_CreateImageSurface name PatchPrefix + 'D3DDevice_CreateImageSurface',
+//  XTL_EmuIDirect3DDevice8_CreateImageSurface name PatchPrefix + 'D3DDevice_CreateImageSurface',
   XTL_EmuIDirect3DDevice8_CreateIndexBuffer name PatchPrefix + 'D3DDevice_CreateIndexBuffer',
   XTL_EmuIDirect3DDevice8_CreateIndexBuffer2 name PatchPrefix + 'D3DDevice_CreateIndexBuffer2',
   XTL_EmuIDirect3DDevice8_CreatePalette name PatchPrefix + 'D3DDevice_CreatePalette',
@@ -10067,7 +10067,7 @@ exports
   XTL_EmuIDirect3DVertexBuffer8_Lock name PatchPrefix + 'D3DVertexBuffer_Lock',
   XTL_EmuIDirect3DVertexBuffer8_Lock2 name PatchPrefix + 'D3DVertexBuffer_Lock2',
 
-  XTL_EmuIDirect3DVolumeTexture8_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
+  //XTL_EmuIDirect3DVolumeTexture8_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
 
   XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface',
 

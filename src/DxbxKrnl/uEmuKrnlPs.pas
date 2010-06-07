@@ -63,16 +63,16 @@ function {254} xboxkrnl_PsCreateSystemThread(
   lpThreadId: PULONG // thread identifier
   ): NTSTATUS; stdcall;
 function {255} xboxkrnl_PsCreateSystemThreadEx(
-  ThreadHandle: PHANDLE; // out
+  pThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
-  ThreadId: PULONG; // out, optional
-  StartContext1: PVOID;
-  StartContext2: PVOID;
+  pThreadId: PULONG; // out, optional
+  pStartContext1: PVOID;
+  pStartContext2: PVOID;
   CreateSuspended: _BOOLEAN;
   DebugStack: _BOOLEAN;
-  StartRoutine: PKSTART_ROUTINE
+  pStartRoutine: PKSTART_ROUTINE
   ): NTSTATUS; stdcall;
 function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
@@ -187,6 +187,8 @@ begin
       // jmp near esi
     end;
 
+callComplete:
+
 {$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
   except
     on E: Exception do
@@ -204,7 +206,6 @@ begin
   end; // try
 {$ENDIF}
 
-callComplete:
    EmuSwapFS(fsWindows);
 
 {$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
@@ -338,16 +339,16 @@ end;
 // New to the XBOX.
 function {255} xboxkrnl_PsCreateSystemThreadEx
 (
-  ThreadHandle: PHANDLE; // out
+  pThreadHandle: PHANDLE; // out
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
-  ThreadId: PULONG; // out, optional
-  StartContext1: PVOID;
-  StartContext2: PVOID;
+  pThreadId: PULONG; // out, optional
+  pStartContext1: PVOID;
+  pStartContext2: PVOID;
   CreateSuspended: _BOOLEAN;
   DebugStack: _BOOLEAN;
-  StartRoutine: PKSTART_ROUTINE
+  pStartRoutine: PKSTART_ROUTINE
 ): NTSTATUS; stdcall;
 // Source:Cxbx/XBMC  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -371,32 +372,32 @@ begin
     #13#10'   DebugStack          : 0x%.08x' +
     #13#10'   StartRoutine        : 0x%.08x' +
     #13#10');',
-    [ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
-    StartContext1, StartContext2, CreateSuspended, DebugStack, Addr(StartRoutine)]);
+    [pThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, pThreadId,
+    pStartContext1, pStartContext2, CreateSuspended, DebugStack, Addr(pStartRoutine)]);
 {$ENDIF}
 
   // create thread, using our special proxy technique
   begin
     // PCSTProxy is responsible for cleaning up this pointer
-    iPCSTProxyParam.StartContext1 := StartContext1;
-    iPCSTProxyParam.StartContext2 := StartContext2;
-    iPCSTProxyParam.StartRoutine := StartRoutine;
+    iPCSTProxyParam.StartContext1 := pStartContext1;
+    iPCSTProxyParam.StartContext2 := pStartContext2;
+    iPCSTProxyParam.StartRoutine := pStartRoutine;
     iPCSTProxyParam.StartSuspended := CreateSuspended;
     iPCSTProxyParam.hStartedEvent := CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    ThreadHandle^ := CreateThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}@dwThreadId);
+    pThreadHandle^ := CreateThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}@dwThreadId);
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : ThreadHandle : 0x%.04x, ThreadId : 0x%.04x', [ThreadHandle^, dwThreadId]);
+    DbgPrintf('EmuKrnl : ThreadHandle : 0x%.04x, ThreadId : 0x%.04x', [pThreadHandle^, dwThreadId]);
 {$ENDIF}
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
       hDupHandle := 0;
 
-      if not DuplicateHandle(GetCurrentProcess(), ThreadHandle^, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
+      if not DuplicateHandle(GetCurrentProcess(), pThreadHandle^, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
       begin
 {$IFDEF DEBUG}
         DbgPrintf('EmuKrnl : PsCreateSystemThreadEx - Couldn''t duplicate handle!');
@@ -406,8 +407,8 @@ begin
       CxbxKrnlRegisterThread(hDupHandle);
     end;
 
-    if(ThreadId <> NULL) then
-      {out}ThreadId^ := dwThreadId;
+    if(pThreadId <> NULL) then
+      pThreadId^ := dwThreadId;
   end;
 
   EmuSwapFS(fsXbox);
