@@ -1687,7 +1687,7 @@ begin
       #13#10'   lpTitlePath      : 0x%.08X (%s)' +
       #13#10'   pLaunchData      : 0x%.08X' +
       #13#10');',
-      [lpTitlePath, lpTitlePath, pLaunchData]);
+      [UIntPtr(lpTitlePath), lpTitlePath, pLaunchData]);
 {$ENDIF}
 
   // If this function succeeds, it doesn't get a chance to return anything.

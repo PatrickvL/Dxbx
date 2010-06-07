@@ -465,7 +465,19 @@ end;
 
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
 begin
-  Result := strncmp(lpString1, lpString2, {size=}MaxInt);
+  while lpString1^ = lpString2^ do
+  begin
+    if lpString1^ = #0 then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
+
+  Result := Ord(lpString1^) - Ord(lpString2^);
 end;
 
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; // overload;

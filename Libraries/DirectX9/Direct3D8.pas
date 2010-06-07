@@ -3130,14 +3130,14 @@ type
     function GetCurrentTexturePalette(out PaletteNumber: LongWord): HResult; stdcall;
     function DrawPrimitive(PrimitiveType: TD3DPrimitiveType; StartVertex, PrimitiveCount: LongWord): HResult; stdcall;
     function DrawIndexedPrimitive(_Type: TD3DPrimitiveType; minIndex, NumVertices, startIndex, primCount: LongWord): HResult; stdcall;
-    function DrawPrimitiveUP(PrimitiveType: TD3DPrimitiveType; PrimitiveCount: LongWord; const pVertexStreamZeroData; VertexStreamZeroStride: LongWord): HResult; stdcall;
+    function DrawPrimitiveUP(PrimitiveType: TD3DPrimitiveType; PrimitiveCount: LongWord; pVertexStreamZeroData: Pointer; VertexStreamZeroStride: LongWord): HResult; stdcall;
     function DrawIndexedPrimitiveUP(PrimitiveType: TD3DPrimitiveType; MinVertexIndex, NumVertexIndices, PrimitiveCount: LongWord; const pIndexData; IndexDataFormat: TD3DFormat; const pVertexStreamZeroData; VertexStreamZeroStride: LongWord): HResult; stdcall;
     function ProcessVertices(SrcStartIndex, DestIndex, VertexCount: LongWord; pDestBuffer: IDirect3DVertexBuffer8; Flags: DWord): HResult; stdcall;
     function CreateVertexShader(pDeclaration, pFunction: PDWord; out pHandle: DWord; Usage: DWord): HResult; stdcall;
     function SetVertexShader(Handle: DWord): HResult; stdcall;
     function GetVertexShader(out pHandle: DWord): HResult; stdcall;
     function DeleteVertexShader(Handle: DWord): HResult; stdcall;
-    function SetVertexShaderConstant(_Register: DWord; const pConstantData; ConstantCount: DWord): HResult; stdcall;
+    function SetVertexShaderConstant(_Register: DWord; pConstantData: Pointer; ConstantCount: DWord): HResult; stdcall;
     function GetVertexShaderConstant(_Register: DWord; out pConstantData; ConstantCount: DWord): HResult; stdcall;
     function GetVertexShaderDeclaration(Handle: DWord; pData: Pointer; out pSizeOfData: DWord): HResult; stdcall;
     function GetVertexShaderFunction(Handle: DWord; pData: Pointer; out pSizeOfData: DWord): HResult; stdcall;

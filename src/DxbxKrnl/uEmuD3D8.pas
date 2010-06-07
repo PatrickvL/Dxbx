@@ -83,7 +83,7 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
 //  a: FLOAT; b: FLOAT): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
-function XTL_EmuIDirect3DDevice8_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
+procedure XTL_EmuIDirect3DDevice8_GetVertexShader({CONST} pHandle: PDWORD); stdcall; // forward
 
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource;
   pBase: PVOID): HRESULT; stdcall;
@@ -2011,7 +2011,7 @@ begin
 
   { MARKED OUT BY CXBX
   kthx := 0;
-  StrFmt(FileName, 'C:\Aaron\Textures\SourceSurface-%d.bmp', kthx++);
+  sprintf(FileName, 'C:\Aaron\Textures\SourceSurface-%d.bmp', [kthx]); Inc(kthx);
 
   D3DXSaveSurfaceToFile(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, nil, nil);
   }
@@ -2618,7 +2618,8 @@ var
 
 {$ifdef _DEBUG_TRACK_VS}
   pFileName: PAnsiChar;//array [0..30-1] of Char;
-  FailedShaderCount: Integer;
+{$J+}const FailedShaderCount: int = 0;{$J-}
+var
   pHeader: pVSH_SHADER_HEADER;
   f: PFILE;
 {$endif}
@@ -2652,7 +2653,7 @@ begin
   // TODO -oCXBX: support this situation
   if (pDeclaration = NULL) then
   begin
-    pHandle^ := 0;
+    pHandle^ := HNULL;
     EmuSwapFS(fsXbox);
     Result := S_OK;
     Exit;
@@ -2695,6 +2696,7 @@ begin
   begin
     if pRecompiledFunction = NULL then
     begin
+      // Dxbx Note : As suggested by StrikerX3
       hRet := D3DERR_INVALIDCALL; // Use fallback if recompilation failed
     end
     else
@@ -2781,7 +2783,7 @@ begin
       FailedShaderCount := 0;
       pHeader := PVSH_SHADER_HEADER(pFunction);
       EmuWarning('Couldn`t create vertex shader!');
-      StrFmt(pFileName, 'failed%05d.xvu', [FailedShaderCount]);
+      sprintf(pFileName, 'failed%05d.xvu', [FailedShaderCount]);
       f := fopen(pFileName, 'wb');
       if Assigned(f) then
       begin
@@ -2841,7 +2843,7 @@ function XTL_EmuIDirect3DDevice8_SetVertexShaderConstant
 var
   hRet: HRESULT;
   {$IFDEF _DEBUG_TRACK_VS_CONST}
-  i: integer;
+  i: uint32;
   {$ENDIF}
 begin
   EmuSwapFS(fsWindows);
@@ -2863,10 +2865,10 @@ begin
    {$IFDEF DEBUG}
       printf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
              [Register_ - 96 + i, Register_ + i,
-             (DWord(pConstantData) + 4 * i),
-             (DWord(pConstantData) + 4 * i + 1),
-             (DWord(pConstantData) + 4 * i + 2),
-             (DWord(pConstantData) + 4 * i + 3)]);
+             Pfloats(pConstantData)[4 * i],
+             Pfloats(pConstantData)[4 * i + 1],
+             Pfloats(pConstantData)[4 * i + 2],
+             Pfloats(pConstantData)[4 * i + 3]]);
    {$ENDIF}
   end;
 {$ENDIF}
@@ -2880,7 +2882,7 @@ begin
   hRet := IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant
   (
     Register_,
-    {untyped const}pConstantData^,
+    pConstantData,
     ConstantCount
   );
 
@@ -3704,7 +3706,7 @@ begin
             D3DRTYPE_TEXTURE:
             begin
               inc(dwDumpTexture);
-              StrFmt(@szBuffer[0], 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
+              sprintf(@szBuffer[0], 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
               IDirect3DTexture8(pTexture.Emu.Texture8).UnlockRect(0);
               D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
             end;
@@ -3715,7 +3717,7 @@ begin
               while face < 6 do
               begin
                 inc(dwDumpTexture);
-                StrFmt(@szBuffer[0], 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
+                sprintf(@szBuffer[0], 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
                 IDirect3DTexture8(pTexture.Emu.CubeTexture8).UnlockRect(face);
                 D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
                 Inc(Face);
@@ -3749,7 +3751,7 @@ begin
   { -- MARKED OUT BY CXBX
   int dwDumpTexture := 0;
   szBuffer: array [0..256-1] of AnsiChar;
-  StrFmt(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', dwDumpTexture++, pDummyTexture);
+  sprintf(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', [dwDumpTexture, pDummyTexture]); Inc(dwDumpTexture);
   pDummyTexture.UnlockRect(0);
   D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pDummyTexture, 0);
   }
@@ -3821,7 +3823,7 @@ begin
 
          szBuffer: array [0..255-1] of Char;
 
-        StrFmt(szBuffer, 'C:\Aaron\Textures\0x%.08X-SwitchTexture%.03d.bmp', pTexture, dwDumpTexture++);
+        sprintf(szBuffer, 'C:\Aaron\Textures\0x%.08X-SwitchTexture%.03d.bmp', [pTexture, dwDumpTexture]); Inc(dwDumpTexture);
 
         pTexture.Emu.Texture8.UnlockRect(0);
 
@@ -5136,7 +5138,7 @@ begin
         begin
           dwDumpSurface := 0;
 
-          StrFmt(@szBuffer[0], '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface]); Inc(dwDumpSurface);
+          sprintf(@szBuffer[0], '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface]); Inc(dwDumpSurface);
           D3DXSaveSurfaceToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DSurface8(pResource.Emu.Surface8), 0, 0);
         end
         else
@@ -5148,7 +5150,7 @@ begin
           begin
             pSurface := nil;
 
-            StrFmt(szBuffer, '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegCubeTex%.03d -%d.bmp', [X_Format, dwDumpCube, v]); inc(dwDumpCube);
+            sprintf(szBuffer, '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegCubeTex%.03d -%d.bmp', [X_Format, dwDumpCube, v]); Inc(dwDumpCube);
 
             IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).GetCubeMapSurface(D3DCUBEMAP_FACES(v), 0, @pSurface);
 
@@ -5159,7 +5161,7 @@ begin
         else
         begin
           dwDumpTex := 0;
-          StrFmt(szBuffer,' _DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex]); inc(dwDumpTex);
+          sprintf(szBuffer,' _DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex]); Inc(dwDumpTex);
           D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, IDirect3DTexture8(pResource.Emu.Texture8), 0);
         end;
 {$endif}
@@ -5506,7 +5508,7 @@ begin
     { marked by cxbx
      Integer dwDumpSurface := 0;
      szBuffer: array [0..255-1] of Char;
-     StrFmt(szBuffer, 'C:\Aaron\Textures\Surface%.03d.bmp', dwDumpSurface++);
+     sprintf(szBuffer, 'C:\Aaron\Textures\Surface%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
      D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Surface8, 0, 0);
     }
   end
@@ -5528,7 +5530,7 @@ begin
      { marked by cxbx
      int dwDumpTexture := 0;
      szBuffer: array [0..255-1] of Char;
-     StrFmt(szBuffer, 'C:\Aaron\Textures\GetDescTexture%.03d.bmp', dwDumpTexture++);
+     sprintf(szBuffer, 'C:\Aaron\Textures\GetDescTexture%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
      D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Texture8, 0);
      }
   end;
@@ -7075,7 +7077,7 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_CullMode
 (
   Value: DWORD
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -7665,8 +7667,9 @@ function XTL_EmuIDirect3DDevice8_SetVertexShader
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   RealHandle: DWORD;
-  vOffset: TD3DXVECTOR4;
-  vScale: TD3DXVECTOR4;
+const
+  vScale: TD3DXVECTOR4 = (x: 2.0 / 640; y: -2.0 / 480; z: 0.0; w: 0.0);
+  vOffset: TD3DXVECTOR4 = (x: -1.0; y: 1.0; z: 0.0; w: 1.0);
 begin
   EmuSwapFS(fsWindows);
 
@@ -7686,11 +7689,11 @@ begin
   if (g_VertexShaderConstantMode <> X_VSCM_NONERESERVED) then
   begin
     // TODO -oCXBX: Proper solution.
-    with vScale do begin x := 2.0 / 640; y := -2.0 / 480; z := 0.0; w := 0.0; end;
-    with vOffset do begin x := -1.0; y := 1.0; z := 0.0; w := 1.0; end;
+//    with vScale do begin x := 2.0 / 640; y := -2.0 / 480; z := 0.0; w := 0.0; end;
+//    with vOffset do begin x := -1.0; y := 1.0; z := 0.0; w := 1.0; end;
 
-    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant(58, vScale, 1);
-    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant(59, vOffset, 1);
+    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant(58, @vScale, 1);
+    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant(59, @vOffset, 1);
   end;
 
   if (VshHandleIsVertexShader(aHandle)) then
@@ -7772,7 +7775,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawVerticesUP
   pVertexStreamZeroData: PVOID;
   VertexStreamZeroStride: UINT
 ); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 var
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
@@ -7817,7 +7820,7 @@ begin
     (
         EmuPrimitiveType(VPDesc.PrimitiveType),
         VPDesc.dwPrimitiveCount,
-        {untyped const}VPDesc.pVertexStreamZeroData^,
+        VPDesc.pVertexStreamZeroData,
         VPDesc.uiVertexStreamZeroStride
     );
 
@@ -8475,11 +8478,11 @@ begin
     pMode^ := g_VertexShaderConstantMode;
 end;
 
-function XTL_EmuIDirect3DDevice8_GetVertexShader
+procedure XTL_EmuIDirect3DDevice8_GetVertexShader
 (
   {CONST} pHandle: PDWORD
-): HRESULT; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+); stdcall;
+// Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -8495,8 +8498,6 @@ begin
     pHandle ^:= g_CurrentVertexShader;
 
   EmuSwapFS(fsXbox);
-
-  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_GetVertexShaderConstant
