@@ -1253,7 +1253,9 @@ procedure TSymbolManager.DetermineFinalLocations;
           end
           else
             // Add all cross-references that haven't been detected as function yet (ONLY if it must be data!) :
-            if not CrossReferencedSymbol.IsSymbolNameUsedInFunctions then
+            if CrossReferencedSymbol.IsSymbolNameUsedInFunctions then
+              CrossReferencedLocation := nil
+            else
               CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
 
           // Count all references :
