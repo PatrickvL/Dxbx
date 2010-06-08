@@ -174,6 +174,7 @@ var
   kt_tbl: PDWORDs;
   EntryPoint: DWord;
   XbeTLS: PXbeTLS;
+  XbeTlsData: PVOID;
 
   procedure _ReadXbeBlock(const aRawOffset, aRawSize, aVirtualAddr, aProtection: DWord);
   var
@@ -263,12 +264,15 @@ begin
   Result := True;
 
   XbeTLS := PXbeTls(XbeHeader.dwTLSAddr);
-//  XbeTLS := aXbe.m_TLS;
+  if Assigned(XbeTLS) then
+    XbeTlsData := Pointer(XbeTLS.dwDataStartAddr)
+  else
+    XbeTlsData := nil;
 
   // Launch the XBE :
   CxbxKrnlInit(
     aHandle,
-    Pointer(XbeTLS.dwDataStartAddr),
+    XbeTlsData,
     XbeTls,
     PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr),
     KernelDebugMode,
