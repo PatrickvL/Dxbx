@@ -7734,7 +7734,7 @@ begin
   ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
-  VPDesc.dwPrimitiveCount := VertexCount; // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
+  VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount); // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
   VPDesc.dwOffset := StartVertex;
   VPDesc.pVertexStreamZeroData := nil;
   VPDesc.uiVertexStreamZeroStride := 0;
@@ -7910,7 +7910,7 @@ begin
     ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
     VPDesc.PrimitiveType := PrimitiveType;
     VPDesc.dwVertexCount := VertexCount;
-    VPDesc.dwPrimitiveCount := VertexCount; // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
+    VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount); // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
     VPDesc.dwOffset := 0;
     VPDesc.pVertexStreamZeroData := nil;
     VPDesc.uiVertexStreamZeroStride := 0;
@@ -8039,7 +8039,7 @@ begin
   ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
-  VPDesc.dwPrimitiveCount := VertexCount; // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
+  VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount); // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := pVertexStreamZeroData;
   VPDesc.uiVertexStreamZeroStride := VertexStreamZeroStride;
