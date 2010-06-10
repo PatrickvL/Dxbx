@@ -473,14 +473,14 @@ const OReg_Name: array [VSH_OREG_NAME] of P_char =
 
 // Dxbx forward declarations :
 
-function VshHandleIsVertexShader(aHandle: DWORD): Boolean; // forward
-function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; // forward
+function VshHandleIsVertexShader(aHandle: DWORD): boolean; inline; // forward
+function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; inline; // forward
 
 function XTL_EmuRecompileVshDeclaration(
   pDeclaration: PDWORD;
   ppRecompiledDeclaration: PPDWORD;
   pDeclarationSize: PDWORD;
-  IsFixedFunction: Boolean;
+  IsFixedFunction: boolean;
   pVertexDynamicPatch: PVERTEX_DYNAMIC_PATCH
 ): DWORD; // forward
 function XTL_EmuRecompileVshFunction(
@@ -490,7 +490,7 @@ function XTL_EmuRecompileVshFunction(
     bNoReservedConstants: boolean
 ) : HRESULT; // forward
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER); // forward
-function XTL_IsValidCurrentShader(): Boolean; // forward
+function IsValidCurrentShader(): boolean; // forward
 function XTL_VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH; // forward
 
 implementation
@@ -523,13 +523,13 @@ begin
 {$endif}
 end;
 
-function VshHandleIsVertexShader(aHandle: DWORD): Boolean;
+function VshHandleIsVertexShader(aHandle: DWORD): boolean; // inline
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := (aHandle and $80000000) <> 0;
 end;
 
-function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader;
+function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; // inline
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := PX_D3DVertexShader(aHandle and $7FFFFFFF);
@@ -1460,12 +1460,13 @@ begin
     // Combining not supported in vs.1.1
     pIntermediate.IsCombined := FALSE;
 
-    { MARKED OUT CXBX
-    if (pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OFOG)
-    {
+    (* MARKED OUT CXBX
+    if (pIntermediate.Output.Type = IMD_OUTPUT_O) and (pIntermediate.Output.Address = OREG_OFOG) then
+    begin
         // The PC shader assembler doesn't like masks on scalar registers
-        VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
-    }
+        VshSetOutputMask(@pIntermediate.Output, TRUE, TRUE, TRUE, TRUE);
+    end;
+    *)
 
     if (pIntermediate.InstructionType = IMD_ILU) and (pIntermediate.ILU = ILU_RCC) then
     begin
@@ -2379,7 +2380,7 @@ begin
 end;
 
 // Checks for failed vertex shaders, and shaders that would need patching
-function XTL_IsValidCurrentShader(): boolean;
+function IsValidCurrentShader(): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   aHandle: DWORD;
@@ -2414,7 +2415,7 @@ begin
   end;
 
   Result := TRUE;
-end; // XTL_IsValidCurrentShader
+end; // IsValidCurrentShader
 
 function XTL_VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100

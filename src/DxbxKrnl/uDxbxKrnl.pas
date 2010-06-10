@@ -61,7 +61,7 @@ type
   TEntryProc = procedure();
 //  PEntryProc = ^TEntryProc;
 
-procedure CxbxKrnlInit(
+procedure DxbxKrnlInit(
   hwndParent: HWND;
   pTLSData: PVOID;
   pTLS: PXBE_TLS;
@@ -81,7 +81,7 @@ procedure CxbxKrnlResume();
 procedure CxbxKrnlSuspend();
 
 exports
-  CxbxKrnlInit;
+  DxbxKrnlInit;
 
   (*Exports EmuCleanThread name '_EmuCleanThread@0';
   { TODO -oDXBX: name need to be set }
@@ -93,7 +93,7 @@ var
 
 implementation
 
-procedure CxbxKrnlInit(
+procedure DxbxKrnlInit(
   hwndParent: HWND;
   pTLSData: PVOID;
   pTLS: PXBE_TLS;
@@ -205,7 +205,7 @@ begin
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuMain : Debug Trace Enabled.');
 
-  DbgPrintf('EmuMain : 0x%.8x : CxbxKrnlInit' +
+  DbgPrintf('EmuMain : 0x%.8x : DxbxKrnlInit' +
     #13#10'(' +
     #13#10'   hwndParent          : 0x%.8x' +
     #13#10'   pTLSData            : 0x%.8x' +
@@ -217,7 +217,7 @@ begin
     #13#10'   dwXBEHeaderSize     : 0x%.8x' +
     #13#10'   Entry               : 0x%.8x' +
     #13#10')', [
-      @CxbxKrnlInit,
+      @DxbxKrnlInit,
       hwndParent,
       pTLSData,
       pTLS,
@@ -397,7 +397,7 @@ begin
     // halo : 1744F0 (bink)
     //_asm int 3;
 
-    { Marked out by cxbx
+    (* Marked out by cxbx
     for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do
     begin
         _bool bExclude = False;
@@ -413,7 +413,7 @@ begin
         if not bExclude then
             *(uint08* )(funcAddr[v]) := 0xCC;
     end
-    }
+    *)
 
     Entry();
 

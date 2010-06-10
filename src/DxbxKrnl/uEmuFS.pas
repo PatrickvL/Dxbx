@@ -116,15 +116,12 @@ var EmuAutoSleepRate: uint32 = uint32(-1);
 // Dxbx NOTE : DO NOT USE WriteLn (or seemingly other I/O) while
 // inside the Xbox FS state, or the Win32 kernel will merrily
 // restore the FS register - which is NOT what we want here!
+{static}var dwInterceptionCount: uint32 = 0;
+// Note that this is only the *approximate* interception count,
+// because not all interceptions swap the FS register, and some
+// non-interception code uses it
 procedure EmuSwapFS();
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
-{$WRITEABLECONST ON}
-const
-  // Note that this is only the *approximate* interception count,
-  // because not all interceptions swap the FS register, and some
-  // non-interception code uses it
-  dwInterceptionCount: uint32 = 0;
-{$WRITEABLECONST OFF}
 var
   CurrentFS: Word;
 begin
