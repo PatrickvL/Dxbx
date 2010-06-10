@@ -393,13 +393,10 @@ end; // XTL_EmuD3DInit
 //end;
 
 // enumeration procedure for locating display device GUIDs
+{static}var dwEnumCount: DWORD = 0;
 function EmuEnumDisplayDevices(lpGUID: PGUID; lpDriverDescription: LPSTR;
   lpDriverName: LPSTR; lpContext: LPVOID; hm: HMONITOR): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-{$WRITEABLECONST ON}
-const
-  dwEnumCount: DWORD = 0;
-{$WRITEABLECONST OFF}
 begin
   Inc(dwEnumCount); // Cxbx uses post-increment and compares+1 :
   if (dwEnumCount = g_XBVideo.GetDisplayAdapter()) then
@@ -591,14 +588,10 @@ begin
 end; // EmuRenderWindow
 
 // simple helper function
+{static}var lRestore: LONG = 0; lRestoreEx: LONG = 0;
+{static}var lRect: TRect = ();
 procedure ToggleFauxFullscreen(hWnd: HWND);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-{$WRITEABLECONST ON}
-const
-  lRestore: LONG = 0;
-  lRestoreEx: LONG = 0;
-  lRect: TRect = ();
-{$WRITEABLECONST OFF}
 begin
   if (g_XBVideo.GetFullscreen()) then
     Exit;
@@ -644,12 +637,9 @@ begin
 end;
 
 // rendering window message procedure
+{static}var bAutoPaused: _bool = false;
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-{$WRITEABLECONST ON}
-const
-  bAutoPaused: _bool = false;
-{$WRITEABLECONST OFF}
 begin
   case (msg) of
     WM_DESTROY:
@@ -1746,6 +1736,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+{static}var ModeAdder: uint = 0; // Dxbx note : Changed Cxbx's int to uint to prevent warning
 function XTL_EmuIDirect3D8_EnumAdapterModes
 (
   Adapter: UINT;
@@ -1753,10 +1744,6 @@ function XTL_EmuIDirect3D8_EnumAdapterModes
   pMode: PX_D3DDISPLAYMODE
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-{$WRITEABLECONST ON}
-const
-  ModeAdder: uint = 0; // Dxbx note : Changed Cxbx's int to uint to prevent warning
-{$WRITEABLECONST OFF}
 var
   PCMode: D3DDISPLAYMODE;
 begin
@@ -2114,13 +2101,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+{static}var pBackBuffer: PX_D3DSurface = nil;
 function XTL_EmuIDirect3DDevice8_GetBackBuffer2
 (
     BackBuffer: INT
 ): PX_D3DSurface; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  pBackBuffer: PX_D3DSurface;
   hRet: HRESULT;
 begin
   EmuSwapFS(fsWindows);
@@ -2170,7 +2157,8 @@ begin
         hRet := IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface8));
 }
 
-  New({var PX_D3DSurface}pBackBuffer);
+  if pBackBuffer = nil then // Dxbx addition, to initialize this 'static' var only once
+    New({var PX_D3DSurface}pBackBuffer);
 
   if (BackBuffer = -1) then
       BackBuffer := 0;
@@ -2625,8 +2613,8 @@ var
 {$endif}
 const
   dummy: AnsiString =
-    'vs.1.1'#13#10 +
-    'mov oPos, v0'#13#10;
+    'vs.1.1'#10 +
+    'mov oPos, v0'#10;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3054,20 +3042,17 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+{static}var dwHandle: DWORD = 0;
 function XTL_EmuIDirect3DDevice8_SetPixelShader
 (
   Handle: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-{$WRITEABLECONST ON}
-const
-  dwHandle: DWORD = 0;
-{$WRITEABLECONST OFF}
 const
   szDiffusePixelShader: AnsiString =
-    #13#10'ps.1.0'#13#10 +
-    #13#10'tex t0'#13#10 +
-    #13#10'mov r0, t0'#13#10;
+    'ps.1.0'#10 +
+    'tex t0'#10 +
+    'mov r0, t0'#10;
 var
   pShader: XTL_LPD3DXBUFFER;
   pErrors: XTL_LPD3DXBUFFER;
@@ -3090,7 +3075,6 @@ begin
   begin
     // programmable pipeline
     //*
-
     if (dwHandle = 0) then
     begin
       // simplest possible pixel shader, simply output the texture input
@@ -3098,7 +3082,7 @@ begin
       pErrors := nil;
 
       // assemble the shader
-      D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, nil, @pShader, @pErrors);
+      D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, NULL, @pShader, @pErrors);
 
       // create the shader device handle
       Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
@@ -3120,7 +3104,7 @@ begin
     g_bFakePixelShaderLoaded := TRUE;
   end
   // Fixed Pipeline, or Recompiled Programmable Pipeline
-  else if (Handle = 0) then
+  else if (Handle = HNULL) then
   begin
     g_bFakePixelShaderLoaded := FALSE;
     IDirect3DDevice8(g_pD3DDevice8).SetPixelShader(Handle);
@@ -3649,6 +3633,9 @@ fail:
   EmuSwapFS(fsXbox);
 end;
 
+{$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
+{static}var dwDumpTexture: int := 0;
+{$endif}
 function XTL_EmuIDirect3DDevice8_SetTexture
 (
     Stage: DWORD;
@@ -3658,7 +3645,6 @@ function XTL_EmuIDirect3DDevice8_SetTexture
 var
   pBaseTexture8: XTL_PIDirect3DBaseTexture8;
 {$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
-  dwDumpTexture: int;
   szBuffer: array [0..256-1] of Char;
   face: int;
 {$endif}
@@ -3700,12 +3686,12 @@ begin
       {$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
         if (pTexture <> NULL) and (pTexture.Emu.Texture8 <> NULL) then
         begin
-          dwDumpTexture := 0;
+          // dwDumpTexture := 0; // Dxbx note : Do not reset 'static' var
 
           case (IDirect3DResource8(pTexture.Emu.Resource8).GetType()) of
             D3DRTYPE_TEXTURE:
             begin
-              inc(dwDumpTexture);
+              Inc(dwDumpTexture);
               sprintf(@szBuffer[0], 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
               IDirect3DTexture8(pTexture.Emu.Texture8).UnlockRect(0);
               D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
@@ -3716,7 +3702,7 @@ begin
               face := 0;
               while face < 6 do
               begin
-                inc(dwDumpTexture);
+                Inc(dwDumpTexture);
                 sprintf(@szBuffer[0], 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
                 IDirect3DTexture8(pTexture.Emu.CubeTexture8).UnlockRect(face);
                 D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
@@ -7454,8 +7440,7 @@ begin
     #13#10');',
     [Ord(State), pMatrix]);
 
-  { Commented by CXBX
-
+  (* Commented by CXBX
   DbgPrintf('pMatrix (%d)', [State]);
   DbgPrintf('begin ');
   DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._11, pMatrix._12, pMatrix._13, pMatrix._14]);
@@ -7464,19 +7449,21 @@ begin
   DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._41, pMatrix._42, pMatrix._43, pMatrix._44]);
   DbgPrintf(' end;');
 
-  if (State = 6 and (pMatrix._11 = 1.0) and (pMatrix._22 = 1.0) and (pMatrix._33 = 1.0) and (pMatrix._44 = 1.0)) then
+  if (State = 6) and (pMatrix._11 = 1.0) and (pMatrix._22 = 1.0) and (pMatrix._33 = 1.0) and (pMatrix._44 = 1.0) then
   begin
     Xtl_g_bSkipPush := TRUE;
     DbgPrintf('SkipPush ON');
   end
   else
   begin
-    Xtl_g_bSkipPush := False;
+    Xtl_g_bSkipPush := FALSE;
     DbgPrintf('SkipPush OFF');
   end;
-  }
+  *)
 
-  Result := IDirect3DDevice8(g_pD3DDevice8).SetTransform(EmuXB2PC_D3DTS(State), pMatrix^);
+  State := EmuXB2PC_D3DTS(State);
+
+  Result := IDirect3DDevice8(g_pD3DDevice8).SetTransform(State, pMatrix);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7637,6 +7624,7 @@ begin
     g_pVertexBuffer := pStreamData;
 
   pVertexBuffer8 := NULL;
+
   if (pStreamData <> NULL) then
   begin
     EmuVerifyResourceIsRegistered(pStreamData);
@@ -7685,7 +7673,6 @@ begin
 
   // Store viewport offset and scale in constant registers 58 (c-38) and
   // 59 (c-37) used for screen space transformation.
-
   if (g_VertexShaderConstantMode <> X_VSCM_NONERESERVED) then
   begin
     // TODO -oCXBX: Proper solution.
@@ -7696,11 +7683,15 @@ begin
     IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant(59, @vOffset, 1);
   end;
 
-  if (VshHandleIsVertexShader(aHandle)) then
-    RealHandle := PVERTEX_SHADER(VshHandleGetVertexShader(aHandle).Handle).Handle
-  else
-    RealHandle := aHandle;
 
+  if (VshHandleIsVertexShader(aHandle)) then
+  begin
+    RealHandle := PVERTEX_SHADER(VshHandleGetVertexShader(aHandle).Handle).Handle
+  end
+  else
+  begin
+    RealHandle := aHandle;
+  end;
   Result := IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(RealHandle);
 
   EmuSwapFS(fsXbox);
@@ -7710,7 +7701,8 @@ procedure XTL_EmuIDirect3DDevice8_DrawVertices
 (
   PrimitiveType: X_D3DPRIMITIVETYPE;
   StartVertex: UINT;
-  VertexCount: UINT); stdcall;
+  VertexCount: UINT
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   VPDesc: VertexPatchDesc;
@@ -7731,7 +7723,8 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
+  VPDesc.VertexPatchDesc(); // Dxbx needs to clear records on stack explicitly
+
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount); // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
@@ -7740,22 +7733,24 @@ begin
   VPDesc.uiVertexStreamZeroStride := 0;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
-  VertPatch.Create; // Dxbx addition
+  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-  if XTL_IsValidCurrentShader() then
+  if IsValidCurrentShader() then
   begin
     {$ifdef _DEBUG_TRACK_VB}
     if (not g_bVBSkipStream) then
     begin
     {$endif}
+
       IDirect3DDevice8(g_pD3DDevice8).DrawPrimitive
       (
           EmuPrimitiveType(VPDesc.PrimitiveType),
           StartVertex,
           VPDesc.dwPrimitiveCount
       );
+
     {$ifdef _DEBUG_TRACK_VB}
     end;
     {$endif}
@@ -7763,7 +7758,7 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch.Destroy; // Dxbx addition
+  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   EmuSwapFS(fsXbox);
 end;
@@ -7805,11 +7800,11 @@ begin
   VPDesc.uiVertexStreamZeroStride := VertexStreamZeroStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
-  VertPatch.Create; // Dxbx addition
+  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
-  if (XTL_IsValidCurrentShader()) then
+  if (IsValidCurrentShader()) then
   begin
     {$ifdef _DEBUG_TRACK_VB}
     if ( not g_bVBSkipStream) then
@@ -7831,7 +7826,7 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch.Destroy; // Dxbx addition
+  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   EmuSwapFS(fsXbox);
 end;
@@ -7916,7 +7911,7 @@ begin
     VPDesc.uiVertexStreamZeroStride := 0;
     VPDesc.hVertexShader := g_CurrentVertexShader;
 
-    VertPatch.Create; // Dxbx addition;
+    VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
     FatalError := false;
     {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
 
@@ -7970,7 +7965,7 @@ begin
       uiStartIndex := DWORD(pIndexData) div 2;
     end;
 
-    if (XTL_IsValidCurrentShader()) and not FatalError then
+    if (IsValidCurrentShader()) and not FatalError then
     begin
       IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive(
         EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
@@ -7990,7 +7985,7 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch.Destroy; // Dxbx addition;
+  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
@@ -8045,7 +8040,7 @@ begin
   VPDesc.uiVertexStreamZeroStride := VertexStreamZeroStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
-  VertPatch.Create; // Dxbx addition
+  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
@@ -8054,7 +8049,7 @@ begin
   begin
   {$endif}
 
-    if (XTL_IsValidCurrentShader()) then
+    if (IsValidCurrentShader()) then
     begin
       IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitiveUP
       (
@@ -8075,7 +8070,7 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch.Destroy; // Dxbx addition
+  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   EmuSwapFS(fsXbox);
 end;
@@ -8495,7 +8490,9 @@ begin
 {$ENDIF}
 
   if Assigned(pHandle) then
-    pHandle ^:= g_CurrentVertexShader;
+  begin
+    pHandle^ := g_CurrentVertexShader;
+  end;
 
   EmuSwapFS(fsXbox);
 end;

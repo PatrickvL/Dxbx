@@ -619,6 +619,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+{static}var bFirst: BOOL_ = TRUE;
 function XTL_EmuXGetDeviceChanges
 (
   DeviceType: PXPP_DEVICE_TYPE;
@@ -626,10 +627,6 @@ function XTL_EmuXGetDeviceChanges
   pdwRemovals: PDWORD
 ): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-{$WRITEABLECONST ON}
-const
-  bFirst: BOOL_ = TRUE;
-{$WRITEABLECONST OFF}
 begin
   EmuSwapFS(fsWindows);
 
@@ -644,6 +641,7 @@ begin
 {$ENDIF}
 
   Result := BOOL_FALSE;
+  // bFirst := TRUE; - Dxbx Note : Do not reset 'static' var
 
   // Return 1 Controller Inserted initially, then no changes forever
   if bFirst then

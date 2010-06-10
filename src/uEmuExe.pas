@@ -163,7 +163,7 @@ begin
 *)
 end;
 
-// Load XBE sections in Virtual Memory, and call CxbxKrnlInit (from a new thread?)
+// Load XBE sections in Virtual Memory, and call DxbxKrnlInit (TODO : from a new thread?)
 function MapAndRunXBE(const aXbe: TXbe; const aHandle: THandle): Boolean;
 var
   Protection: DWord;
@@ -175,6 +175,7 @@ var
   EntryPoint: DWord;
   XbeTLS: PXbeTLS;
   XbeTlsData: PVOID;
+  XbeLibraryVersion: PXbeLibraryVersion;
 
   procedure _ReadXbeBlock(const aRawOffset, aRawSize, aVirtualAddr, aProtection: DWord);
   var
@@ -269,12 +270,14 @@ begin
   else
     XbeTlsData := nil;
 
+  XbeLibraryVersion := PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr);
+  
   // Launch the XBE :
-  CxbxKrnlInit(
+  DxbxKrnlInit(
     aHandle,
     XbeTlsData,
     XbeTls,
-    PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr),
+    XbeLibraryVersion,
     KernelDebugMode,
     PAnsiChar(AnsiString(KernelDebugFileName)),
     XbeHeader,

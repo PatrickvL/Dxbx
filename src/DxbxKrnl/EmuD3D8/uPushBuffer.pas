@@ -191,6 +191,9 @@ begin
 
 end;
 
+{static} var pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8 = nil; // = XTL_PIDirect3DIndexBuffer8
+//{static} var pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8 = nil; // = XTL_PIDirect3DVertexBuffer8
+{static} var maxIBSize: uint = 0;
 procedure XTL_EmuExecutePushBufferRaw
 (
     pdwPushData: PDWord
@@ -203,9 +206,6 @@ var
   dwStride: DWord;
   PCPrimitiveType: D3DPRIMITIVETYPE;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
-  pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8; // = XTL_PIDirect3DIndexBuffer8
-  //pVertexBuffer: XTL_LPDIRECT3DVERTEXBUFFER8; // = XTL_PIDirect3DVertexBuffer8
-  maxIBSize: uint;
   dwCount: DWord;
   dwMethod: DWord;
   bInc: BOOL_;
@@ -268,11 +268,14 @@ begin
   end;
 {$endif}
 
+  (* Dxbx note : Do not initialize these 'static' var's :
   pIndexBuffer := nil;
-  // pVertexBuffer := nil;
-  maxIBSize := 0; // TODO -oDXBX: Make this static
+  pVertexBuffer := nil;
 
-  VertPatch.Create; // Dxbx addition
+  maxIBSize := 0;
+  *)
+
+  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
   while(true) do
   begin
@@ -362,7 +365,7 @@ begin
         Inc(dwStride, ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*sizeof(FLOAT)*2);
       end;
 
-      { MARKED OUT BY CXBX
+      (* MARKED OUT BY CXBX
       // create cached vertex buffer only once, with maxed out size
       if (pVertexBuffer = nil) then
       begin
@@ -386,7 +389,7 @@ begin
 
         pVertexBuffer.Unlock();
       end;
-      }
+      *)
 
       {$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
@@ -520,7 +523,7 @@ begin
 
           if (not g_bPBSkipPusher) then
           begin
-            if (XTL_IsValidCurrentShader()) then
+            if (IsValidCurrentShader()) then
             begin
               IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
               (
@@ -680,7 +683,7 @@ begin
           begin
           {$endif}
 
-          if (not g_bPBSkipPusher) and XTL_IsValidCurrentShader() then
+          if (not g_bPBSkipPusher) and IsValidCurrentShader() then
           begin
             IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
             (
@@ -709,7 +712,7 @@ begin
     Inc(pdwPushData);
   end;
 
-  VertPatch.Destroy; // Dxbx addition
+  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
 {$ifdef _DEBUG_TRACK_PB}
   if (bShowPB) then
@@ -754,7 +757,7 @@ var
   la, lb, lc: DWORD;
   i: uint;
 begin
-  if (not XTL_IsValidCurrentShader() or (dwCount = 0)) then
+  if (not IsValidCurrentShader() or (dwCount = 0)) then
     Exit;
 
   pActiveVB := NULL;

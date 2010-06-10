@@ -523,18 +523,18 @@ begin
         end;
       end;
 
-      (*/* Cxbx : temporarily disabled
-      if (dwHow == -1)
-      {
-          for(int b=0;b<4;b++)
-          {
-              if (abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV)
-              {
-                  dwHow = FIELD_OFFSET(PDIJOYSTATE(nil).rgdwPOV[b]);
-              }
-          }
-      }
-      //*/ *)
+      (* Cxbx : temporarily disabled
+      if (dwHow = DWord(-1)) then
+      begin
+        for {int}b := 0 to 4-1 do
+        begin
+          if (Abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV) then
+          begin
+            dwHow := FIELD_OFFSET(PDIJOYSTATE(nil).rgdwPOV[b]);
+          end;
+        end;
+      end;
+      *)
 
       if (dwHow = -1) then
       begin

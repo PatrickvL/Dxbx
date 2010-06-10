@@ -70,6 +70,7 @@ type _VertexPatchDesc = record
     uiVertexStreamZeroStride: UINT;
     // The current vertex shader, used to identify the streams
     hVertexShader: DWORD;
+    procedure VertexPatchDesc();
   end; // size = 28 (as in Cxbx)
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
@@ -106,8 +107,8 @@ type _CACHEDSTREAM = record
 type VertexPatcher = object
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
-    procedure Create;
-    procedure Destroy;
+    procedure VertexPatcher;
+    procedure _VertexPatcher;
 
     function Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
     function Restore(): _bool;
@@ -187,12 +188,9 @@ uses
 
 var crctab: array [0..256-1] of uint;
 
+{static}var bFirstTime: boolean = true;
 procedure CRC32Init;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-{$WRITEABLECONST ON}
-const
-  bFirstTime: boolean = true;
-{$WRITEABLECONST OFF}
 var
   i, j: int;
   crc: uint;
@@ -240,8 +238,16 @@ begin
   result := not result;
 end;
 
+{ _VertexPatchDesc }
 
-procedure VertexPatcher.Create;
+procedure _VertexPatchDesc.VertexPatchDesc();
+begin
+  ZeroMemory(@Self, SizeOf(Self));
+end;
+
+{ VertexPatcher }
+
+procedure VertexPatcher.VertexPatcher;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   m_uiNbrStreams := 0;
@@ -253,7 +259,7 @@ begin
   CRC32Init();
 end;
 
-procedure VertexPatcher.Destroy;
+procedure VertexPatcher._VertexPatcher;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
 end;
@@ -1562,7 +1568,7 @@ begin
   VPDesc.uiVertexStreamZeroStride := uiStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
-  VertPatch.Create; // Dxbx addition
+  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
   {bPatched := }VertPatch.Apply(@VPDesc, NULL);
 
@@ -1584,7 +1590,7 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch.Destroy; // Dxbx addition
+  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   g_IVBTblOffs := 0;
 end;

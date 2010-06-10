@@ -605,10 +605,10 @@ begin
 
   uRet := g_pDSound8RefCount; Dec(g_pDSound8RefCount);
 
-  { temporarily (?) disabled by cxbx
+  (* temporarily (?) disabled by cxbx
   if (uRet = 1) then
     pThis._Release();
-  //}
+  *)
 
   EmuSwapFS(fsXbox);
 
@@ -2162,7 +2162,7 @@ function {XTL_Emu}X_CDirectSoundStream.Release({pThis: PX_CDirectSoundStream}): 
 var
   uRet: ULONG;
   v: int;
-  pThis: X_CDirectSoundStream;
+  pThis: PX_CDirectSoundStream;
 begin
   pThis := Self;
   EmuSwapFS(fsWindows);
@@ -3778,12 +3778,9 @@ end;
 // ******************************************************************
 // * func: EmuDirectSoundGetSampleTime
 // ******************************************************************
+{static} var dwStart: DWORD = 0;
 function XTL_EmuDirectSoundGetSampleTime(): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-{$WRITEABLECONST ON}
-const // static
-  dwStart: DWORD = 0;
-{$WRITEABLECONST OFF}
 var
   dwRet: DWORD;
 begin

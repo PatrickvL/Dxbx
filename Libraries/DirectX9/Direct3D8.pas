@@ -3095,7 +3095,7 @@ type
     function BeginScene: HResult; stdcall;
     function EndScene: HResult; stdcall;
     function Clear(Count: DWord; pRects: PD3DRect; Flags: DWord; Color: TD3DColor; Z: Single; Stencil: DWord): HResult; stdcall;
-    function SetTransform(State: TD3DTransformStateType; const pMatrix: TD3DMatrix): HResult; stdcall;
+    function SetTransform(State: TD3DTransformStateType; pMatrix: PD3DMatrix): HResult; stdcall;
     function GetTransform(State: TD3DTransformStateType; out pMatrix: TD3DMatrix): HResult; stdcall;
     function MultiplyTransform(State: TD3DTransformStateType; const pMatrix: TD3DMatrix): HResult; stdcall;
     function SetViewport(const pViewport: TD3DViewport8): HResult; stdcall;
