@@ -1092,7 +1092,7 @@ var
 begin
   pStream := @(m_pStreams[uiStream]);
   
-  if(Ord(pPatchDesc.PrimitiveType) < 1) or (pPatchDesc.PrimitiveType >= X_D3DPT_MAX) then
+  if(pPatchDesc.PrimitiveType < X_D3DPT_POINTLIST) or (pPatchDesc.PrimitiveType >= X_D3DPT_MAX) then
   begin
     CxbxKrnlCleanup('Unknown primitive type: 0x%.02X', [Ord(pPatchDesc.PrimitiveType)]);
   end;
@@ -1117,10 +1117,10 @@ begin
   // Skip primitives that don't need further patching.
   case (pPatchDesc.PrimitiveType) of
     X_D3DPT_QUADLIST: begin
-      EmuWarning('VertexPatcher::PatchPrimitive: Processing D3DPT_QUADLIST');
+      //EmuWarning('VertexPatcher::PatchPrimitive: Processing D3DPT_QUADLIST');
       end;
     X_D3DPT_LINELOOP: begin
-      EmuWarning('VertexPatcher::PatchPrimitive: Processing D3DPT_LINELOOP');
+      //EmuWarning('VertexPatcher::PatchPrimitive: Processing D3DPT_LINELOOP');
       end;
 
   else //    default:
@@ -1284,7 +1284,7 @@ begin
   m_bPatched := true;
 
   Result := true;
-end;
+end; // VertexPatcher.PatchPrimitive
 
 function VertexPatcher.Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1323,7 +1323,11 @@ begin
   end;
 
   Result := Patched;
-end;
+
+  // Dxbx addition : Update dwPrimitiveCount if that hasn't been done yet :
+  if not Result then
+    pPatchDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(pPatchDesc.PrimitiveType, pPatchDesc.dwVertexCount);
+end; // VertexPatcher.Apply
 
 function VertexPatcher.Restore(): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1393,6 +1397,7 @@ begin
 
   // Parse IVB table with current FVF shader if possible.
   bFVF := not VshHandleIsVertexShader(g_CurrentVertexShader);
+
   if(bFVF and ((g_CurrentVertexShader and D3DFVF_POSITION_MASK) <> D3DFVF_XYZRHW)) then
   begin
     dwCurFVF := g_CurrentVertexShader;
@@ -1559,7 +1564,8 @@ begin
     end;
   end;
 
-  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
+  VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
+
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
   VPDesc.dwOffset := 0;

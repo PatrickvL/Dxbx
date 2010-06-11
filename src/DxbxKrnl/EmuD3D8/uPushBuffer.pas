@@ -204,6 +204,7 @@ var
   pVertexData: PVOID;
   dwVertexShader: DWord;
   dwStride: DWord;
+  pIBMem: array [0..4-1] of WORD;
   PCPrimitiveType: D3DPRIMITIVETYPE;
   XBPrimitiveType: X_D3DPRIMITIVETYPE;
   dwCount: DWord;
@@ -212,7 +213,7 @@ var
   hRet: HRESULT;
   pData: PWORDArray;
   VertexCount: UINT;
-  PrimitiveCount: UINT;
+//  PrimitiveCount: UINT;
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
   mi: uint;
@@ -241,6 +242,9 @@ begin
 
   dwVertexShader := DWORD(-1);
   //dwStride := DWORD(-1);
+
+  // cache of last 4 indices
+  pIBMem[0] := $FFFF; pIBMem[1] := $FFFF; pIBMem[2] := $FFFF; pIBMem[3] := $FFFF;
 
   PCPrimitiveType := D3DPRIMITIVETYPE(-1);
   XBPrimitiveType := X_D3DPT_INVALID;
@@ -274,8 +278,6 @@ begin
 
   maxIBSize := 0;
   *)
-
-  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
   while(true) do
   begin
@@ -352,12 +354,20 @@ begin
 
       if (not VshHandleIsVertexShader(dwVertexShader)) then
       begin
+        (*if(dwVertexShader and D3DFVF_XYZRHW) > 0 then begin Inc(dwStride, sizeof(FLOAT)*4); end;
+        if(dwVertexShader and D3DFVF_XYZ) > 0   then begin Inc(dwStride, sizeof(FLOAT)*3); end;
+        if(dwVertexShader and D3DFVF_XYZB1) > 0 then begin Inc(dwStride, sizeof(FLOAT)); end;
+        if(dwVertexShader and D3DFVF_XYZB2) > 0 then begin Inc(dwStride, sizeof(FLOAT)*2); end;
+        if(dwVertexShader and D3DFVF_XYZB3) > 0 then begin Inc(dwStride, sizeof(FLOAT)*3); end;
+        if(dwVertexShader and D3DFVF_XYZB4) > 0 then begin Inc(dwStride, sizeof(FLOAT)*4); end;*)
+
         if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW) then begin Inc(dwStride, sizeof(FLOAT)*4); end;
         if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZ) then begin Inc(dwStride,sizeof(FLOAT)*3); end;
         if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB1) then begin Inc(dwStride, sizeof(FLOAT)*4); end;
         if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB2) then begin Inc(dwStride, sizeof(FLOAT)*5); end;
         if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB3) then begin Inc(dwStride, sizeof(FLOAT)*6); end;
         if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB4) then begin Inc(dwStride, sizeof(FLOAT)*7); end;
+
         if (dwVertexShader and D3DFVF_NORMAL) > 0 then begin Inc(dwStride, sizeof(FLOAT)*3); end;
         if (dwVertexShader and D3DFVF_DIFFUSE) > 0 then begin Inc(dwStride, sizeof(DWORD)); end;
         if (dwVertexShader and D3DFVF_SPECULAR) > 0 then begin Inc(dwStride, sizeof(DWORD)); end;
@@ -406,16 +416,19 @@ begin
       if (dwVertexShader <> DWord(-1)) then
       begin
         VertexCount := (dwCount*sizeof(DWORD)) div dwStride;
-        PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
+        // Dxbx note : (dw)Primitive will always be calculated in VertPatch.Apply
 
-        ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
+        VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
+
         VPDesc.dwVertexCount := VertexCount;
+        // DON'T : VPDesc.dwPrimitiveCount := PrimitiveCount;
         VPDesc.PrimitiveType := XBPrimitiveType;
-        VPDesc.dwPrimitiveCount := PrimitiveCount;
         VPDesc.dwOffset := 0;
         VPDesc.pVertexStreamZeroData := pVertexData;
         VPDesc.uiVertexStreamZeroStride := dwStride;
         VPDesc.hVertexShader := dwVertexShader;
+
+        VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
         {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
@@ -441,7 +454,7 @@ begin
         printf('');
         printf('  Index Array Data...');
 
-        pwVal := PWORDs(pdwPushData + 1);
+        pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Is this correctly translated?
 
         if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
@@ -457,13 +470,12 @@ begin
       {$endif}
 
 
-      pwVal := PWORDs(IntPtr(pdwPushData) + SizeOf(pdwPushData^)); // TODO -oDXBX: Is this correctly translated?
+      pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Is this correctly translated?
       if dwCount > 0 then // Dxbx addition, to prevent underflow
       for mi := 0 to dwCount - 1 do
       begin
         pIBMem[mi+2] := pwVal[mi];
       end;
-
 
       // perform rendering
       if (pIBMem[0] <> $FFFF) then
@@ -501,16 +513,19 @@ begin
 
         // render indexed vertices
         begin
-          PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount + 2);
+          // Dxbx note : (dw)Primitive will always be calculated in VertPatch.Apply
+          VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
           VPDesc.dwVertexCount := dwCount;
           VPDesc.PrimitiveType := XBPrimitiveType;
-          VPDesc.dwPrimitiveCount := PrimitiveCount;
+          // DON'T : VPDesc.dwPrimitiveCount := PrimitiveCount;
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
           // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
+
+          VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
@@ -527,8 +542,8 @@ begin
             begin
               IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
               (
-                  PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
-//                  PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
+                  PCPrimitiveType, 0, 8*1024*1024, 0, VPDesc.dwPrimitiveCount{PrimitiveCount}
+//                  PCPrimitiveType, 0, dwCount*2, 0, VPDesc.dwPrimitiveCount{PrimitiveCount}
               );
             end;
           end;
@@ -615,7 +630,7 @@ begin
       end;
       {$endif}
 
-      Inc(Cardinal(pdwPushData), (dwCount div 2) - Cardinal(iif(bInc, 0, 2)));
+      Inc(pdwPushData, (dwCount div 2) - iif(bInc, 0, 2));
 
       // perform rendering
       begin
@@ -663,16 +678,19 @@ begin
 
         // render indexed vertices
         begin
-          PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount);
+          // Dxbx note : (dw)Primitive will always be calculated in VertPatch.Apply
+          VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
           VPDesc.dwVertexCount := dwCount;
           VPDesc.PrimitiveType := XBPrimitiveType;
-          VPDesc.dwPrimitiveCount := PrimitiveCount;
+          // DON'T : VPDesc.dwPrimitiveCount := PrimitiveCount;
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
           // TODO -oCXBX: Set the current shader and let the patcher handle it..
           VPDesc.hVertexShader := g_CurrentVertexShader;
+
+          VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
           {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
@@ -687,7 +705,7 @@ begin
           begin
             IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
             (
-                PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, PrimitiveCount
+                PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, VPDesc.dwPrimitiveCount{PrimitiveCount}
             );
           end;
 
