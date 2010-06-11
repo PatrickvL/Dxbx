@@ -66,7 +66,7 @@ const X_D3DRSSE_UNK = $7fffffff;
 
 const
 // lookup table for converting vertex count to primitive count
-EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of {U}INT = (
+EmuD3DVertexToPrimitive: array [0..Ord(X_D3DPT_POLYGON)] of array [0..2-1] of {U}INT = (
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     (0, 0), // NULL
     (1, 0), // X_D3DPT_POINTLIST
@@ -83,20 +83,19 @@ EmuD3DVertexToPrimitive: array [0..11-1] of array [0..2-1] of {U}INT = (
 
 const
 // conversion table for xbox->pc primitive types
-EmuPrimitiveTypeLookup: array [0..11] of D3DPRIMITIVETYPE = (
+EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     D3DPRIMITIVETYPE(0),   // NULL                 = 0
-    D3DPT_POINTLIST,       // D3DPT_POINTLIST      = 1,
-    D3DPT_LINELIST,        // D3DPT_LINELIST       = 2,
-    D3DPT_LINESTRIP,       // D3DPT_LINELOOP       = 3,  Xbox
-    D3DPT_LINESTRIP,       // D3DPT_LINESTRIP      = 4,
-    D3DPT_TRIANGLELIST,    // D3DPT_TRIANGLELIST   = 5,
-    D3DPT_TRIANGLESTRIP,   // D3DPT_TRIANGLESTRIP  = 6,
-    D3DPT_TRIANGLEFAN,     // D3DPT_TRIANGLEFAN    = 7,
-    D3DPT_TRIANGLELIST,    // D3DPT_QUADLIST       = 8,  Xbox
-    D3DPT_TRIANGLESTRIP,   // D3DPT_QUADSTRIP      = 9,  Xbox
-    D3DPT_TRIANGLEFAN,     // D3DPT_POLYGON        = 10, Xbox
-    D3DPRIMITIVETYPE(11)   // D3DPT_MAX            = 11,
+    D3DPT_POINTLIST,       // X_D3DPT_POINTLIST      = 1,
+    D3DPT_LINELIST,        // X_D3DPT_LINELIST       = 2,
+    D3DPT_LINESTRIP,       // X_D3DPT_LINELOOP       = 3,  Xbox
+    D3DPT_LINESTRIP,       // X_D3DPT_LINESTRIP      = 4,
+    D3DPT_TRIANGLELIST,    // X_D3DPT_TRIANGLELIST   = 5,
+    D3DPT_TRIANGLESTRIP,   // X_D3DPT_TRIANGLESTRIP  = 6,
+    D3DPT_TRIANGLEFAN,     // X_D3DPT_TRIANGLEFAN    = 7,
+    D3DPT_TRIANGLELIST,    // X_D3DPT_QUADLIST       = 8,  Xbox
+    D3DPT_TRIANGLESTRIP,   // X_D3DPT_QUADSTRIP      = 9,  Xbox
+    D3DPT_TRIANGLEFAN      // X_D3DPT_POLYGON        = 10, Xbox
 );
 
 // render state conversion table
@@ -109,16 +108,16 @@ CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWORD = (
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 2
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 4
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 6
-    X_D3DRSSE_UNK,  $0004037c,     // 8  - , D3DRS_SHADEMODE
+    X_D3DRSSE_UNK,  $0004037c,      // 8  - , D3DRS_SHADEMODE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 10
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 12
-    $0004035c,     $00040300,     // 14 - D3DRS_ZWRITEENABLE, D3DRS_ALPHATESTENABLE
+    $0004035c,      $00040300,      // 14 - D3DRS_ZWRITEENABLE, D3DRS_ALPHATESTENABLE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 16
-    X_D3DRSSE_UNK,  $00040344,     // 18 - , D3DRS_SRCBLEND
-    $00040348,     X_D3DRSSE_UNK,  // 20 - D3DRS_DESTBLEND
-    X_D3DRSSE_UNK,  $00040354,     // 22 - , D3DRS_ZFUNC
-    $00040340,     $0004033c,     // 24 - D3DRS_ALPHAREF, D3DRS_ALPHAFUNC
-    $00040310,     $00040304,     // 26 - D3DRS_DITHERENABLE, D3DRS_ALPHABLENDENABLE
+    X_D3DRSSE_UNK,  $00040344,      // 18 - , D3DRS_SRCBLEND
+    $00040348,      X_D3DRSSE_UNK,  // 20 - D3DRS_DESTBLEND
+    X_D3DRSSE_UNK,  $00040354,      // 22 - , D3DRS_ZFUNC
+    $00040340,      $0004033c,      // 24 - D3DRS_ALPHAREF, D3DRS_ALPHAFUNC
+    $00040310,      $00040304,      // 26 - D3DRS_DITHERENABLE, D3DRS_ALPHABLENDENABLE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 28
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 30
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 32
@@ -189,9 +188,9 @@ CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWORD = (
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 162
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 164
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 166
-    $00040358,     X_D3DRSSE_UNK,  // 168 - D3DRS_COLORWRITEENABLE
-    X_D3DRSSE_UNK,  $00040350,     // 170
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK  // 172
+    $00040358,      X_D3DRSSE_UNK,  // 168 - D3DRS_COLORWRITEENABLE
+    X_D3DRSSE_UNK,  $00040350,      // 170
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK   // 172
   );
 
 implementation
@@ -528,22 +527,22 @@ function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case(Value) of
-    $8006:
+    X_D3DBLENDOP_ADD:
       Result := D3DBLENDOP_ADD;
-    $800a:
+    X_D3DBLENDOP_SUBTRACT:
       Result := D3DBLENDOP_SUBTRACT;
-    $800b:
+    X_D3DBLENDOP_REVSUBTRACT:
       Result := D3DBLENDOP_REVSUBTRACT;
-    $8007:
+    X_D3DBLENDOP_MIN:
       Result := D3DBLENDOP_MIN;
-    $8008:
+    X_D3DBLENDOP_MAX:
       Result := D3DBLENDOP_MAX;
-    $F006:
+    X_D3DBLENDOP_ADDSIGNED:
     begin
       CxbxKrnlCleanup('D3DBLENDOP_ADDSIGNED is not supported!');
       Result := D3DBLENDOP_ADD;
     end;
-    $F005:
+    X_D3DBLENDOP_REVSUBTRACTSIGNED:
     begin
       CxbxKrnlCleanup('D3DBLENDOP_REVSUBTRACTSIGNED is not supported!');
       Result := D3DBLENDOP_REVSUBTRACT;
@@ -563,7 +562,7 @@ begin
   if (Value < 2) then
     Result := D3DBLEND(Value + 1)
   else if (Value < $309) then
-    Result := D3DBLEND((Value and $F) + 3)
+    Result := D3DBLEND((Value and $F) shl 3)
   else
   begin
     CxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
@@ -598,25 +597,25 @@ function EmuXB2PC_D3DSTENCILOP(Value: X_D3DSTENCILOP): D3DSTENCILOP; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case(Value)of
-    $1e00:
+    X_D3DSTENCILOP_KEEP:
       Result := D3DSTENCILOP_KEEP;
-    0:
+    X_D3DSTENCILOP_ZERO:
       Result := D3DSTENCILOP_ZERO;
-    $1e01:
+    X_D3DSTENCILOP_REPLACE:
       Result := D3DSTENCILOP_REPLACE;
-    $1e02:
+    X_D3DSTENCILOP_INCRSAT:
       Result := D3DSTENCILOP_INCRSAT;
-    $1e03:
+    X_D3DSTENCILOP_DECRSAT:
       Result := D3DSTENCILOP_DECRSAT;
-    $150a:
+    X_D3DSTENCILOP_INVERT:
       Result := D3DSTENCILOP_INVERT;
-    $8507:
+    X_D3DSTENCILOP_INCR:
       Result := D3DSTENCILOP_INCR;
-    $8508:
+    X_D3DSTENCILOP_DECR:
       Result := D3DSTENCILOP_DECR;
 
   else //default:
-    CxbxKrnlCleanup('Unknown D3DSTENCILOP (0x%.08X)', [Value]);
+    CxbxKrnlCleanup('Unknown D3DSTENCILOP (0x%.08X)', [Ord(Value)]);
     Result := D3DSTENCILOP(Value);
   end;
 end;
@@ -639,13 +638,10 @@ end;
 function EmuPrimitiveType(PrimitiveType: X_D3DPRIMITIVETYPE): D3DPRIMITIVETYPE; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  if (DWORD(PrimitiveType) = $7FFFFFFF) then
-  begin
-      Result :=  D3DPRIMITIVETYPE($7FFFFFFF);
-      Exit;
-  end;
-
-  Result := EmuPrimitiveTypeLookup[Ord(PrimitiveType)]
+  if Ord(PrimitiveType) >= Ord(X_D3DPT_MAX) then
+    Result := D3DPRIMITIVETYPE($7FFFFFFF)
+  else
+    Result := EmuPrimitiveTypeLookup[Ord(PrimitiveType)];
 end;
 
 {.$MESSAGE 'PatrickvL reviewed up to here'}

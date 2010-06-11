@@ -122,6 +122,8 @@ function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
 function EmuUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
 
+const
+  RESOURCE_CACHE_SIZE = 16;
 
 var
   // Static Variable(s)
@@ -150,7 +152,7 @@ var
   // g_BuildVersion: uint32;
 
   // resource caching for _Register
-  g_EmuD3DResourceCache: array [0..16 - 1] of X_D3DResource; // Cxbx calls this 'pCache'
+  g_EmuD3DResourceCache: array [0..RESOURCE_CACHE_SIZE - 1] of X_D3DResource; // Cxbx calls this 'pCache'
 
   // current active index buffer
   g_pIndexBuffer: PX_D3DIndexBuffer = NULL; // current active index buffer
@@ -1191,29 +1193,30 @@ begin
   if (pResource.Emu.Lock <> 0) and (pResource.Emu.Lock <> $EEEEEEEE) and (pResource.Emu.Lock <> $FFFFFFFF) then
     Exit;
 
-  // Already 'Registered' implicitly
+  // Already "Registered" implicitly
   if (    IsSpecialResource(pResource.Data)
       and (   ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_D3DREND) > 0)
            or ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_D3DSTEN) > 0)))
   or (pResource.Data = $B00BBABE) then
     Exit;
 
-  for v := 0 to 16-1 do
-  begin
-    if (g_EmuD3DResourceCache[v].Data = pResource.Data) and (pResource.Data <> 0) then
+  if (pResource.Data <> 0) then // Dxbx addition : This won't change here, so check outside the loop
+    for v := 0 to RESOURCE_CACHE_SIZE-1 do
     begin
-      pResource.Emu.Resource8 := g_EmuD3DResourceCache[v].Emu.Resource8;
-      Exit;
+      if (g_EmuD3DResourceCache[v].Data = pResource.Data) then
+      begin
+        pResource.Emu.Resource8 := g_EmuD3DResourceCache[v].Emu.Resource8;
+        Exit;
+      end;
     end;
-  end;
 
   EmuSwapFS(fsXbox);
-  XTL_EmuIDirect3DResource8_Register(pResource, nil {(PVOID)pResource.Data});
+  XTL_EmuIDirect3DResource8_Register(pResource, nil(*PVOID(pResource.Data)*));
   EmuSwapFS(fsWindows);
 
   if (pResource.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
   begin
-    for v := 0 to 16-1 do
+    for v := 0 to RESOURCE_CACHE_SIZE-1 do
     begin
       if (g_EmuD3DResourceCache[v].Data = 0) then
       begin
@@ -1222,7 +1225,7 @@ begin
         break;
       end;
 
-      if (v = 15) then // Dxbx note : Cxbx uses 16 here, but that's just plain wrong!
+      if (v = RESOURCE_CACHE_SIZE-1) then // Dxbx note : Cxbx uses 16 here, but that's just plain wrong!
         CxbxKrnlCleanup('X_D3DResource cache is maxed out!');
     end;
   end;
@@ -3610,8 +3613,8 @@ begin
     EmuVerifyResourceIsRegistered(pIndexData);
 
     // HACK: Unreal Championship
-    if ((pIndexData.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexData.Emu.Lock and $F0000000) <> $00000000)
-    or (pIndexData.Emu.Lock = $10) then
+    if ((pIndexData.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexData.Emu.Lock and $F0000000) <> $00000000) or
+        (pIndexData.Emu.Lock = $10) then
     begin
       Result := E_FAIL;
       goto fail;
@@ -3715,8 +3718,7 @@ begin
     end;
   end;
 
-
-    { --- MARKED OUT BY CXBX --
+  (* --- MARKED OUT BY CXBX --
     IDirect3DTexture8 *pDummyTexture[4] := (0, 0, 0, 0);
 
     if (pDummyTexture[Stage] = 0) then
@@ -3732,15 +3734,15 @@ begin
                 CxbxKrnlCleanup('Could not create dummy texture!');
         end;
      end;
-    }
+  //*)
 
-  { -- MARKED OUT BY CXBX
+  (* -- MARKED OUT BY CXBX
   int dwDumpTexture := 0;
   szBuffer: array [0..256-1] of AnsiChar;
   sprintf(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', [dwDumpTexture, pDummyTexture]); Inc(dwDumpTexture);
   pDummyTexture.UnlockRect(0);
   D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pDummyTexture, 0);
-  }
+  //*)
 
   // hRet = IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
   Result := IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(iif((g_iWireframe = 0), pBaseTexture8, nil)));
@@ -5304,7 +5306,7 @@ begin
 //    uRet = IDirect3DBaseTexture8(pThis.Emu.BaseTexture8)._Release();
     Dispose(pThis);
   end
-  else  if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
+  else if(IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
     dwPtr := DWORD(pThis.Emu.Lock);
     pRefCount := PDWORD(dwPtr + g_dwOverlayP*g_dwOverlayH);
@@ -5337,14 +5339,15 @@ begin
     begin
       if (pResource8 <> nil) then
       begin
-        for v := 0 to 16-1 do
-        begin
-          if (g_EmuD3DResourceCache[v].Data = pThis.Data) and (pThis.Data <> 0) then
+        if (pThis.Data <> 0) then // Dxbx addition : This won't change here, so check outside the loop
+          for v := 0 to RESOURCE_CACHE_SIZE-1 do
           begin
-            g_EmuD3DResourceCache[v].Data := 0;
-            break;
+            if (g_EmuD3DResourceCache[v].Data = pThis.Data) then
+            begin
+              g_EmuD3DResourceCache[v].Data := 0;
+              break;
+            end;
           end;
-        end;
 
 {$ifdef _DEBUG_TRACE_VB}
         Type_ := IDirect3DResource8(pResource8).GetType();
@@ -5435,7 +5438,6 @@ procedure XTL_EmuLock2DSurface
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
@@ -5453,7 +5455,7 @@ begin
 
   EmuVerifyResourceIsRegistered(pPixelContainer);
 
-  IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).LockRect(FaceType, Level, {out}pLockedRect^, pRect, Flags);
+  {ignore hRet:=}IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).LockRect(FaceType, Level, {out}pLockedRect^, pRect, Flags);
 
   EmuSwapFS(fsXbox);
 end;
@@ -5491,12 +5493,16 @@ begin
     DbgPrintf('EmuSurface8: = 0x%.08X', [pPixelContainer.Emu.Surface8]);
 {$ENDIF}
     hRet := IDirect3DSurface8(pPixelContainer.Emu.Surface8).GetDesc({out}SurfaceDesc);
-    { marked by cxbx
+
+    (* marked by cxbx
      Integer dwDumpSurface := 0;
+
      szBuffer: array [0..255-1] of Char;
+
      sprintf(szBuffer, 'C:\Aaron\Textures\Surface%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
+
      D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Surface8, 0, 0);
-    }
+    *)
   end
   else
   begin
@@ -5513,12 +5519,16 @@ begin
       EmuWarning('IDirect3DTexture8::GetSurfaceDesc failed!');
 
     DbgPrintf('Okay');
-     { marked by cxbx
-     int dwDumpTexture := 0;
-     szBuffer: array [0..255-1] of Char;
-     sprintf(szBuffer, 'C:\Aaron\Textures\GetDescTexture%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
-     D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Texture8, 0);
-     }
+
+    (* marked by cxbx
+    int dwDumpTexture := 0;
+
+    szBuffer: array [0..255-1] of Char;
+
+    sprintf(szBuffer, 'C:\Aaron\Textures\GetDescTexture%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
+
+    D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Texture8, 0);
+    *)
   end;
 
   // rearrange into xbox format (remove D3DPOOL)
@@ -5529,7 +5539,7 @@ begin
     pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
     if (Ord(pDesc.Type_) > 7) then
-      CxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc.Type > 7');
+      CxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc->Type > 7');
 
     pDesc.Usage := SurfaceDesc.Usage;
     pDesc.Size := SurfaceDesc.Size;
@@ -5606,27 +5616,32 @@ begin
   else
   begin
     pSurface8 := pThis.Emu.Surface8;
+
+
+
     Result := IDirect3DSurface8(pSurface8).GetDesc(SurfaceDesc);
 
     // rearrange into windows format (remove D3DPool)
-    // Convert Format (PC->Xbox)
-    pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-    pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
+    begin
+      // Convert Format (PC->Xbox)
+      pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+      pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
-    if (Ord(pDesc.Type_) > 7) then
-      CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc.Type > 7');
+      if (Ord(pDesc.Type_) > 7) then
+        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7');
 
-    pDesc.Usage := SurfaceDesc.Usage;
-    pDesc.Size := SurfaceDesc.Size;
+      pDesc.Usage := SurfaceDesc.Usage;
+      pDesc.Size := SurfaceDesc.Size;
 
-    // TODO -oCXBX: Convert from Xbox to PC!!
-    if (SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE) then
-      pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE($0011)
-    else
-      CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)', [@SurfaceDesc.MultiSampleType]);
+      // TODO -oCXBX: Convert from Xbox to PC!!
+      if (SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE) then
+        pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE($0011)
+      else
+        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)', [Ord(SurfaceDesc.MultiSampleType)]);
 
-    pDesc.Width  := SurfaceDesc.Width;
-    pDesc.Height := SurfaceDesc.Height;
+      pDesc.Width  := SurfaceDesc.Width;
+      pDesc.Height := SurfaceDesc.Height;
+    end;
   end;
 
   EmuSwapFS(fsXbox);
@@ -5665,7 +5680,7 @@ begin
 {$ENDIF}
 
   // Cxbx (shogun) commented this :
-  //if not Assigned(pThis.Emu.Surface8) or (pThis.Emu.Surface8 = XTL_PIDirect3DSurface8($00000004)) then
+  //if(nil=pThis.Emu.Surface8) or (pThis.Emu.Surface8 = XTL_PIDirect3DSurface8($00000004)) then
   //begin
   //  EmuWarning('Invalid Surface!');
   //  EmuSwapFS(fsWindows);
@@ -5810,6 +5825,7 @@ begin
   end
   else
   begin
+    // Dxbx note : Copied this over from EmuIDirect3DSurface8_LockRect, seems the right thing to do
     if (Flags and X_D3DLOCK_TILED) > 0 then
       EmuWarning('D3DLOCK_TILED ignored!');
 
@@ -5832,7 +5848,6 @@ begin
     end
     else
     begin
-      // Remove old lock(s)
       IDirect3DTexture8(pTexture8).UnlockRect(Level);
 
       hRet := IDirect3DTexture8(pTexture8).LockRect(Level, {out}pLockedRect^, pRect, NewFlags);
@@ -5944,7 +5959,9 @@ begin
 {$ENDIF}
 
   EmuVerifyResourceIsRegistered(pThis);
+
   pVolumeTexture8 := pThis.Emu.VolumeTexture8;
+
   Result := IDirect3DVolumeTexture8(pVolumeTexture8).LockBox(Level, {out}pLockedVolume^, pBox, Flags);
 
   if (FAILED(Result)) then
@@ -5980,6 +5997,7 @@ begin
 {$ENDIF}
 
   EmuVerifyResourceIsRegistered(pThis);
+
   Result := IDirect3DCubeTexture8(pThis.Emu.CubeTexture8).LockRect(FaceType, Level, {out}pLockedBox^, pRect, Flags);
 
   EmuSwapFS(fsXbox);
@@ -6817,7 +6835,7 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
   ); register; // __fastcall in Cxbx
 // Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
 var
-  State: int;
+  State: D3DRenderStateType;//int;
   v: int;
   OrigValue: DWORD;
 begin
@@ -6832,9 +6850,9 @@ begin
     [Method, Value]);
 {$ENDIF}
 
-  State := -1;
+  int(State) := -1;
 
-  // TODO -oCXBX: make this faster and more elegant
+(*  // TODO -oCXBX: make this faster and more elegant
   for v := 0 to 174-1 do
   begin
     if (EmuD3DRenderStateSimpleEncoded[v] = Method) then
@@ -6843,8 +6861,30 @@ begin
       break;
     end;
   end;
+*)
+  // Dxbx note : Let the compiler sort this out, should be much quicker :
+  case Method of
+    $040300: State := D3DRS_ALPHATESTENABLE;
+    $040304: State := D3DRS_ALPHABLENDENABLE;
+    $040310: State := D3DRS_DITHERENABLE;
+    $04033c: State := D3DRS_ALPHAFUNC;
+    $040340: State := D3DRS_ALPHAREF;
+    $040344: State := D3DRS_SRCBLEND;
+    $040348: State := D3DRS_DESTBLEND;
+    $040350: State := D3DRS_BLENDOP;
+    $040354: State := D3DRS_ZFUNC;
+    $040358: State := D3DRS_COLORWRITEENABLE;
+    $04035c: State := D3DRS_ZWRITEENABLE;
+    $040360: State := D3DRS_STENCILWRITEMASK;
+    $040364: State := D3DRS_STENCILFUNC;
+    $040368: State := D3DRS_STENCILREF;
+    $04036c: State := D3DRS_STENCILMASK;
+    $040374: State := D3DRS_STENCILZFAIL;
+    $040378: State := D3DRS_STENCILPASS;
+    $04037c: State := D3DRS_SHADEMODE;
+  end;
 
-  if (State = -1) then
+  if (int(State) = -1) then
     EmuWarning('RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!', [Method, Value])
   else
   begin
@@ -6954,7 +6994,7 @@ begin
 
       D3DRS_STENCILZFAIL:
         begin
-          Value := EmuXB2PC_D3DSTENCILOP(Value);
+          Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_STENCILZFAIL := 0x%.08X', [Value]);
 {$ENDIF}
@@ -6962,7 +7002,7 @@ begin
 
       D3DRS_STENCILPASS:
         begin
-          Value := EmuXB2PC_D3DSTENCILOP(Value);
+          Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_STENCILPASS := 0x%.08X', [Value]);
 {$ENDIF}
@@ -6999,12 +7039,12 @@ begin
 
     else
       begin
-        CxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [State]);
+        CxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(State)]);
       end;
     end;
 
     // TODO -oCXBX: verify these params as you add support for them!
-    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRENDERSTATETYPE(State), Value);
+    IDirect3DDevice8(g_pD3DDevice8).SetRenderState({D3DRENDERSTATETYPE}(State), Value);
   end;
 
   EmuSwapFS(fsXbox);
@@ -7971,6 +8011,21 @@ begin
       IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive(
         EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
       );
+      (* Cxbx has this commented out :
+      if( (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) ) then
+      begin
+        g_pD3DDevice8.DrawPrimitive
+        (
+          EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount
+        );
+      end
+      else
+      begin
+        g_pD3DDevice8.DrawIndexedPrimitive
+        (
+          EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
+        );
+      end; *)
     end;
 
 
@@ -8155,12 +8210,11 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderTarget' +
            #13#10'(' +
            #13#10'   pRenderTarget     : 0x%.08X' + // TODO -oDxbx : Restore? (0x%.08X)' +
-           #13#10'   pNewZStencil      : 0x%.08X (0x%.08X)' +
+           #13#10'   pNewZStencil      : 0x%.08X' + // TODO -oDxbx : Restore? (0x%.08X)' +
            #13#10');',
            [pRenderTarget, {iif(pRenderTarget <> nil, pRenderTarget.Emu.Surface8, nil),}
            pNewZStencil{,  iif(pNewZStencil <> nil, pNewZStencil.Emu.Surface8, nil)}]);
 {$ENDIF}
-
 
   pPCRenderTarget := nil;
   pPCNewZStencil := nil;
@@ -8173,7 +8227,9 @@ begin
       pPCRenderTarget := pRenderTarget.Emu.Surface8;
     end
     else
+    begin
       pPCRenderTarget := g_pCachedRenderTarget.Emu.Surface8;
+    end;
   end;
 
   if (pNewZStencil <> nil) then
@@ -8184,7 +8240,9 @@ begin
       pPCNewZStencil := pNewZStencil.Emu.Surface8;
     end
     else
+    begin
       pPCNewZStencil := g_pCachedZStencilSurface.Emu.Surface8;
+    end;
  end;
 
   // TODO -oCXBX: Follow that stencil!
@@ -8214,12 +8272,11 @@ function XTL_EmuIDirect3DDevice8_CreatePalette2
 ): PX_D3DPalette; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
-  lk: array [0..5-1] of int = (
+  lk: array [D3DPALETTE_256..D3DPALETTE_32] of int = (
       256 * sizeof(D3DCOLOR),    // D3DPALETTE_256
       128 * sizeof(D3DCOLOR),    // D3DPALETTE_128
       64 * sizeof(D3DCOLOR),     // D3DPALETTE_64
-      32 * sizeof(D3DCOLOR),     // D3DPALETTE_32
-      32 * sizeof(D3DCOLOR)      // Dxbx addition for D3DPALETTE_MAX
+      32 * sizeof(D3DCOLOR)      // D3DPALETTE_32
   );
 var
   pPalette: PX_D3DPalette;
@@ -8238,7 +8295,7 @@ begin
 
   pPalette.Common := 0;
   pPalette.Emu.Lock := $8000BEEF; // emulated reference count for palettes
-  pPalette.Data := DWORD(AllocMem(lk[Ord(Size)] * sizeof(uint08)));
+  pPalette.Data := DWORD(AllocMem(lk[Size] * sizeof(uint08)));
 
   EmuSwapFS(fsXbox);
 
@@ -9388,7 +9445,7 @@ begin
   // TODO -oCXBX: I'm sure there is a better way to handle this.
 
   (* // Commented out by CXBX
-  if not Assigned(pTexture) then
+  if (nil=pTexture) then
   begin
 {$IFDEF DEBUG}
     DbgPrintf( 'Creating new texture...');
@@ -9398,7 +9455,7 @@ begin
   else
   begin
 {$IFDEF DEBUG}
-    DbgPrintf( 'pTexture: = 0x%.08X'#13#10'pTexture.EmuTexture8', [pTexture, (pTexture).Emu.BaseTexture8]);
+    DbgPrintf( 'pTexture: = 0x%.08X'#13#10'pTexture.EmuTexture8', [pTexture, pTexture.Emu.BaseTexture8]);
 {$ENDIF}
   end; *)
 
@@ -9410,8 +9467,8 @@ begin
 
 //  printf( 'Setting texture...' + );
 //  pTexture.Emu.BaseTexture8 = g_EmuD3DActiveTexture[0].Emu.BaseTexture8;
-//  pTexture := g_EmuD3DActiveTexture[0];
-//  pTexture.Data := (X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_TEXCLON);
+  pTexture := g_EmuD3DActiveTexture[0];
+  pTexture.Data := (X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_TEXCLON);
 
 //  printf( 'Adding reference...' + );
 //  IDirect3DBaseTexture8(pTexture.Emu.BaseTexture8)._AddRef();
@@ -9420,10 +9477,10 @@ begin
 //  EmuIDirect3DResource8_AddRef(pTexture);
 //  EmuSwapFS(fsWindows);
 
-//  Result := IDirect3DDevice8(g_pD3DDevice8).GetTexture(0, &(*ppTexture).Emu.BaseTexture8);
+//  Result := IDirect3DDevice8(g_pD3DDevice8).GetTexture(0, @(ppTexture^.Emu.BaseTexture8));
 
 //  printf( 'Verifying resource...' + );
-//  EmuVerifyResourceIsRegistered((*ppTexture));
+//  EmuVerifyResourceIsRegistered(ppTexture^);
 
   EmuSwapFS(fsXbox);
 end;

@@ -107,9 +107,28 @@ type X_D3DBLEND = DWORD;
 type X_D3DCMPFUNC = DWORD;
 type X_D3DFILLMODE = DWORD;
 type X_D3DSHADEMODE = DWORD;
-type X_D3DSTENCILOP = DWORD;
+type X_D3DSTENCILOP = (
+  X_D3DSTENCILOP_ZERO           = 0,
+  X_D3DSTENCILOP_KEEP           = $1e00,
+  X_D3DSTENCILOP_REPLACE        = $1e01,
+  X_D3DSTENCILOP_INCRSAT        = $1e02,
+  X_D3DSTENCILOP_DECRSAT        = $1e03,
+  X_D3DSTENCILOP_INVERT         = $150a,
+  X_D3DSTENCILOP_INCR           = $8507,
+  X_D3DSTENCILOP_DECR           = $8508,
+  X_D3DSTENCILOP_FORCE_DWORD    = $7fffffff
+);
 type X_D3DTEXTURESTAGESTATETYPE = DWORD;
 type X_D3DCALLBACK = PVOID;
+
+const
+  X_D3DBLENDOP_ADD              = $8006;
+  X_D3DBLENDOP_SUBTRACT         = $800a;
+  X_D3DBLENDOP_REVSUBTRACT      = $800b;
+  X_D3DBLENDOP_MIN              = $8007;
+  X_D3DBLENDOP_MAX              = $8008;
+  X_D3DBLENDOP_ADDSIGNED        = $f006;       // Xbox extension
+  X_D3DBLENDOP_REVSUBTRACTSIGNED= $f005;       // Xbox extension
 
 // Primitives supported by draw-primitive API
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
