@@ -33,7 +33,7 @@ uses
 
 {$INCLUDE Dxbx.inc}
 
-{.$define _DEBUG_TRACK_PS}
+{$define _DEBUG_TRACK_PS}
 
 // From PixelShader.h :
 
@@ -799,18 +799,20 @@ end;
 function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF; ppRecompiled: PLPD3DXBUFFER): HRESULT;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  szPshString: array [0..2048] of AnsiChar;    // I'm sure that's big enough...
+  szPshString: array [0..2048] of _char;    // I'm sure that's big enough...
 begin
 
   // Dump the contents of the PixelShader def
 {$ifdef _DEBUG_TRACK_PS}
   XTL_DumpPixelShaderDefToFile(pPSDef);
-  XTL_PrintPixelShaderDefContents(pPSDef);
+
+  // Azurik like to create and destroy the same shader every frame! O_o
+//  XTL_PrintPixelShaderDefContents(pPSDef);
 {$endif}
 
   // First things first, set the pixel shader version
   // TODO -oCXBX: ps.1.1 might be a better idea...
-  sprintf(@szPshString[0], '%s', ['ps.1.0'#13#10]);
+  sprintf(@szPshString[0], '%s', ['ps.1.0'#10]);
 
   // Handle Texture declarations
   if (pPSDef.PSTextureModes <> 0) then

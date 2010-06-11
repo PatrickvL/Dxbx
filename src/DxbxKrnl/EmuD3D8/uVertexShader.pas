@@ -2342,7 +2342,7 @@ begin
     else
       hRet := D3DXAssembleShader(pShaderDisassembly,
                                 strlen(pShaderDisassembly),
-                                D3DXASM_SKIPVALIDATION,
+                                {Flags=}D3DXASM_SKIPVALIDATION,
                                 {ppConstants=}NULL,
                                 {ppCompiledShader=}PID3DXBuffer(ppRecompiled),
                                 {ppCompilationErrors=}@pErrors); // Dxbx addition

@@ -147,7 +147,6 @@ type VertexPatcher = object
 var g_pIVBVertexBuffer: PDWORD = nil;
 var g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
 var g_IVBFVF: DWORD = 0;
-var g_CurrentVertexShader: DWORD = 0;
 
 type _D3DIVB = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
