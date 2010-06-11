@@ -346,6 +346,8 @@ const X_D3DLOCK_NOFLUSH  = $00000010; // Xbox extension
 const X_D3DLOCK_NOOVERWRITE = $00000020;
 const X_D3DLOCK_TILED = $00000040; // Xbox extension
 const X_D3DLOCK_READONLY = $00000080;
+const X_D3DLOCK_ALL_SUPPORTED = X_D3DLOCK_TILED or X_D3DLOCK_READONLY;
+
 
 type X_D3DVertexBuffer = object(X_D3DResource)
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -736,6 +738,13 @@ const
 var
   // cached active texture
   EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
+
+const
+  X_D3DCLEAR_ZBUFFER = $00000001;
+  X_D3DCLEAR_STENCIL = $00000002;
+  X_D3DCLEAR_TARGET  = $000000f0;
+
+  X_D3DCLEAR_ALL_SUPPORTED = X_D3DCLEAR_ZBUFFER or X_D3DCLEAR_STENCIL or X_D3DCLEAR_TARGET;
 
 implementation
 

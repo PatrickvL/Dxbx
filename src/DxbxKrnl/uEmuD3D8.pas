@@ -2612,7 +2612,7 @@ var
   f: PFILE;
 {$endif}
 const
-  dummy: AnsiString =
+  dummy: P_char =
     'vs.1.1'#10 +
     'mov oPos, v0'#10;
 begin
@@ -2707,12 +2707,12 @@ begin
     if (FAILED(hRet)) then
     begin
       EmuWarning('Trying fallback:'#13#10'%s', [dummy]);
-      hRet := D3DXAssembleShader(PAnsiChar(dummy),
-                                 Length(dummy),
-                                 D3DXASM_SKIPVALIDATION,
-                                 NULL,
-                                 @pRecompiledBuffer,
-                                 NULL);
+      hRet := D3DXAssembleShader(dummy,
+                                 strlen(dummy),
+                                 {Flags=}D3DXASM_SKIPVALIDATION,
+                                 {ppConstants}NULL,
+                                 {ppCompiledShader}@pRecompiledBuffer,
+                                 {ppCopmilationErrors}NULL);
       if not (FAILED(hRet)) then
         hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexShader
         (
@@ -3028,7 +3028,7 @@ begin
   // redirect to windows d3d
   Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader
   (
-    pFunction, 
+    pFunction,
     {out}pHandle^
   );
 
@@ -3049,7 +3049,7 @@ function XTL_EmuIDirect3DDevice8_SetPixelShader
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 const
-  szDiffusePixelShader: AnsiString =
+  szDiffusePixelShader: P_char =
     'ps.1.0'#10 +
     'tex t0'#10 +
     'mov r0, t0'#10;
@@ -3082,7 +3082,7 @@ begin
       pErrors := nil;
 
       // assemble the shader
-      D3DXAssembleShader(PAnsiChar(szDiffusePixelShader), Length(szDiffusePixelShader) - 1, 0, NULL, @pShader, @pErrors);
+      D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader) - 1, {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
 
       // create the shader device handle
       Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
@@ -4311,17 +4311,17 @@ begin
     // TODO -oCXBX: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
     newFlags := 0;
 
-    if (Flags and $000000f0) > 0 then
+    if (Flags and X_D3DCLEAR_TARGET) > 0 then
         newFlags := newFlags or D3DCLEAR_TARGET;
 
-    if (Flags and $00000001) > 0 then
+    if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then
         newFlags := newFlags or D3DCLEAR_ZBUFFER;
 
-    if (Flags and $00000002) > 0 then
+    if (Flags and X_D3DCLEAR_STENCIL) > 0 then
         newFlags := newFlags or D3DCLEAR_STENCIL;
 
-    if (Flags and (not ($000000f0 or $00000001 or $00000002))) > 0 then
-        EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not ($000000f0 or $00000001 or $00000002))]);
+    if (Flags and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
+        EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not X_D3DCLEAR_ALL_SUPPORTED)]);
 
     Flags := newFlags;
   end;
@@ -5683,18 +5683,18 @@ begin
   end
   else
   begin
-    if (Flags and $40) > 0 then
+    if (Flags and X_D3DLOCK_TILED) > 0 then
       EmuWarning('D3DLOCK_TILED ignored!');
 
     pSurface8 := pThis.Emu.Surface8;
 
     NewFlags := 0;
 
-    if (Flags and $80) > 0 then
-      NewFlags:= NewFlags or D3DLOCK_READONLY;
+    if (Flags and X_D3DLOCK_READONLY) > 0 then
+      NewFlags := NewFlags or D3DLOCK_READONLY;
 
-    if (Flags and not ($80 or $40)) > 0 then
-      CxbxKrnlCleanup('EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)', [Flags]);
+    if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
+      CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
 
     try
       // Remove old lock(s)
@@ -5810,15 +5810,18 @@ begin
   end
   else
   begin
+    if (Flags and X_D3DLOCK_TILED) > 0 then
+      EmuWarning('D3DLOCK_TILED ignored!');
+
     pTexture8 := pThis.Emu.Texture8;
 
     NewFlags := 0;
 
-    if (Flags and $80) > 0 then
-      NewFlags:= NewFlags or D3DLOCK_READONLY;
+    if (Flags and X_D3DLOCK_READONLY) > 0 then
+      NewFlags := NewFlags or D3DLOCK_READONLY;
 
-    if (Flags and not ($80 or $40)) > 0 then
-      CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags]);
+    if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
+      CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
 
     // Remove old lock(s)
     if (Level = 6) or (Level = 7) or (Level = 8) or (Level = 9) then
@@ -7441,15 +7444,15 @@ begin
     [Ord(State), pMatrix]);
 
   (* Commented by CXBX
-  DbgPrintf('pMatrix (%d)', [State]);
-  DbgPrintf('begin ');
+  DbgPrintf('pMatrix (%d)', [Ord(State)]);
+  DbgPrintf('{');
   DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._11, pMatrix._12, pMatrix._13, pMatrix._14]);
   DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._21, pMatrix._22, pMatrix._23, pMatrix._24]);
   DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._31, pMatrix._32, pMatrix._33, pMatrix._34]);
   DbgPrintf('    %.08f,%.08f,%.08f,%.08f', [pMatrix._41, pMatrix._42, pMatrix._43, pMatrix._44]);
-  DbgPrintf(' end;');
+  DbgPrintf('}');
 
-  if (State = 6) and (pMatrix._11 = 1.0) and (pMatrix._22 = 1.0) and (pMatrix._33 = 1.0) and (pMatrix._44 = 1.0) then
+  if (Ord(State) = 6) and (pMatrix._11 = 1.0) and (pMatrix._22 = 1.0) and (pMatrix._33 = 1.0) and (pMatrix._44 = 1.0) then
   begin
     Xtl_g_bSkipPush := TRUE;
     DbgPrintf('SkipPush ON');
@@ -7727,7 +7730,6 @@ begin
 
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
-  VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount); // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
   VPDesc.dwOffset := StartVertex;
   VPDesc.pVertexStreamZeroData := nil;
   VPDesc.uiVertexStreamZeroStride := 0;
@@ -7905,7 +7907,6 @@ begin
     ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
     VPDesc.PrimitiveType := PrimitiveType;
     VPDesc.dwVertexCount := VertexCount;
-    VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount); // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
     VPDesc.dwOffset := 0;
     VPDesc.pVertexStreamZeroData := nil;
     VPDesc.uiVertexStreamZeroStride := 0;
@@ -8034,7 +8035,6 @@ begin
   ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
-  VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount); // TODO -cDxbx : Why doesn't VertPatch.Apply set this?
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := pVertexStreamZeroData;
   VPDesc.uiVertexStreamZeroStride := VertexStreamZeroStride;
