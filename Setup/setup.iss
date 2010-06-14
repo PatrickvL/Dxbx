@@ -1,12 +1,12 @@
 [Setup]
 AppName=DXBX
-AppVerName=DXBX 0.1 Release
+AppVerName=DXBX 0.2 Release
 AppPublisher=Shadow_tj, Patrick
 DefaultDirName={pf}\DXBX
 DefaultGroupName=DXBX
 OutputDir=..
 OutputBaseFilename=setup
-SetupIconFile=..\resource\Cxbx.ico
+SetupIconFile=..\resource\Dxbx.ico
 Compression=lzma
 SolidCompression=yes
 

@@ -34,7 +34,7 @@ const
   CDXBXDLLNAME = 'Dxbx.dll';
 
   // Application Versions
-  _DXBX_VERSION = '0.1 Release' {$IFDEF DEBUG} + ' Debug'{$ENDIF};
+  _DXBX_VERSION = '0.2 Release' {$IFDEF DEBUG} + ' Debug'{$ENDIF};
   _XDK_TRACKER_VERSION = '2.1';
   _XBE_EXPLORER_VERSION = '1.1';
 
