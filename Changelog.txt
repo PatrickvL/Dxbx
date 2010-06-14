@@ -1,6 +1,9 @@
 DXBX Changelog, this changelog has been implemented from version 0.0.9
 So the changes from version 0.0.8 and below are not documented.
 
+version 0.2 release:
+Screens are working alot better, even xpong and xmarbles produces screens.
+
 Version 0.1 Release:
 Alot of translation work, Xbe explorer improved alot.
 First screenshots are finally produced.
