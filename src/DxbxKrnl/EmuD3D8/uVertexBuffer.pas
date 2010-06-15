@@ -456,6 +456,10 @@ begin
     IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
     if (nil=pOrigVertexBuffer) then
     begin
+      (*if(nil=g_pVertexBuffer) or (nil=g_pVertexBuffer.EmuVertexBuffer8) then
+        CxbxKrnlCleanup('Unable to retrieve original buffer (Stream := %d)', [uiStream]);
+      else
+        pOrigVertexBuffer := g_pVertexBuffer.EmuVertexBuffer8;*)
 
       if Assigned(pbFatalError) then
         pbFatalError^ := true;
@@ -647,6 +651,7 @@ begin
 
   // Do some groovey patchin'
 
+  ZeroMemory(@Desc, Sizeof(D3DVERTEXBUFFER_DESC));
   pStream := @(m_pStreams[uiStream]);
   pStreamPatch := @(m_pDynamicPatch.pStreamPatches[uiStream]);
 
@@ -739,15 +744,16 @@ begin
               Inc(dwPosOrig, sizeof(D3DCOLOR));
               Inc(dwPosNew, sizeof(D3DCOLOR));
               end;
-           $16: begin //NORMPACKED3
-              dwPacked := PDWORDs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
+           $16: //NORMPACKED3
+              begin
+                dwPacked := PDWORDs(@pOrigData[uiVertex * uiStride + dwPosOrig])[0];
 
-              PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := (ToFLOAT(dwPacked and $7ff)) / 1023.0;
-              PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := (ToFLOAT((dwPacked shr 11) and $7ff)) / 1023.0;
-              PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := (ToFLOAT((dwPacked shr 22) and $3ff)) / 511.0;
+                PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[0] := (ToFLOAT(dwPacked and $7ff)) / 1023.0;
+                PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[1] := (ToFLOAT((dwPacked shr 11) and $7ff)) / 1023.0;
+                PFLOATs(@pNewData[uiVertex * pStreamPatch.ConvertedStride + dwPosNew])[2] := (ToFLOAT((dwPacked shr 22) and $3ff)) / 511.0;
 
-              Inc(dwPosOrig, sizeof(DWORD));
-              Inc(dwPosNew, 3 * sizeof(FLOAT));
+                Inc(dwPosOrig, sizeof(DWORD));
+                Inc(dwPosNew, 3 * sizeof(FLOAT));
               end;
            $15: begin// SHORT1
               // Make it a SHORT2
@@ -951,7 +957,9 @@ begin
   else
   begin
     // Copy stream for patching and caching.
+
     IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
+
     if (nil=pOrigVertexBuffer) or (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
       CxbxKrnlCleanup('Could not retrieve original FVF buffer size.');
@@ -1095,7 +1103,7 @@ var
   z: uint32;
 begin
   pStream := @(m_pStreams[uiStream]);
-  
+
   if(pPatchDesc.PrimitiveType < X_D3DPT_POINTLIST) or (pPatchDesc.PrimitiveType >= X_D3DPT_MAX) then
   begin
     CxbxKrnlCleanup('Unknown primitive type: 0x%.02X', [Ord(pPatchDesc.PrimitiveType)]);
@@ -1177,7 +1185,7 @@ begin
 
     // We will add exactly one more line
     dwOriginalSize  := pPatchDesc.dwPrimitiveCount * pStream.uiOrigStride;
-    dwNewSize       := pPatchDesc.dwPrimitiveCount * pStream.uiOrigStride + pStream.uiOrigStride;
+    dwNewSize       := (pPatchDesc.dwPrimitiveCount * pStream.uiOrigStride) + pStream.uiOrigStride;
   end;
 
   if(pPatchDesc.pVertexStreamZeroData = nil) then

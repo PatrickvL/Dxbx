@@ -1980,7 +1980,7 @@ function XTL_EmuIDirect3DDevice8_CopyRects
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 {var
   kthx: Integer;
-  FileName: array [0..255 - 1] of Char;}
+  FileName: array [0..255 - 1] of _char;}
 begin
   EmuSwapFS(fsWindows);
 
@@ -2003,7 +2003,7 @@ begin
   kthx := 0;
   sprintf(FileName, 'C:\Aaron\Textures\SourceSurface-%d.bmp', [kthx]); Inc(kthx);
 
-  D3DXSaveSurfaceToFile(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, nil, nil);
+  D3DXSaveSurfaceToFileA(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, nil, nil);
   }
 
   Result := IDirect3DDevice8(g_pD3DDevice8).CopyRects
@@ -2153,7 +2153,7 @@ begin
          end;
 
         // Debug: Save this image temporarily
-        //D3DXSaveSurfaceToFile('C:\Aaron\Textures\FrontBuffer.bmp', D3DXIFF_BMP, pBackBuffer.Emu.Surface8, NULL, NULL);
+        //D3DXSaveSurfaceToFileA('C:\Aaron\Textures\FrontBuffer.bmp', D3DXIFF_BMP, pBackBuffer.Emu.Surface8, NULL, NULL);
      end;
 
     if (BackBuffer <> -1) then
@@ -2608,7 +2608,7 @@ var
   Handle: DWORD;
 
 {$ifdef _DEBUG_TRACK_VS}
-  pFileName: PAnsiChar;//array [0..30-1] of Char;
+  pFileName: array [0..30-1] of _char;
 {$J+}const FailedShaderCount: int = 0;{$J-}
 var
   pHeader: pVSH_SHADER_HEADER;
@@ -2774,8 +2774,8 @@ begin
       FailedShaderCount := 0;
       pHeader := PVSH_SHADER_HEADER(pFunction);
       EmuWarning('Couldn`t create vertex shader!');
-      sprintf(pFileName, 'failed%05d.xvu', [FailedShaderCount]);
-      f := fopen(pFileName, 'wb');
+      sprintf(@pFileName[0], 'failed%05d.xvu', [FailedShaderCount]);
+      f := fopen(@pFileName[0], 'wb');
       if Assigned(f) then
       begin
         fwrite(pFunction, sizeof(VSH_SHADER_HEADER) + pHeader.NumInst * 16, 1, f);
@@ -3648,7 +3648,7 @@ function XTL_EmuIDirect3DDevice8_SetTexture
 var
   pBaseTexture8: XTL_PIDirect3DBaseTexture8;
 {$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
-  szBuffer: array [0..256-1] of Char;
+  szBuffer: array [0..256-1] of _char;
   face: int;
 {$endif}
 begin
@@ -3694,10 +3694,11 @@ begin
           case (IDirect3DResource8(pTexture.Emu.Resource8).GetType()) of
             D3DRTYPE_TEXTURE:
             begin
-              Inc(dwDumpTexture);
               sprintf(@szBuffer[0], 'SetTextureNorm - %.03d (0x%.08X).bmp', [dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
+              Inc(dwDumpTexture);
               IDirect3DTexture8(pTexture.Emu.Texture8).UnlockRect(0);
-              D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
+
+              D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
             end;
 
             D3DRTYPE_CUBETEXTURE:
@@ -3708,7 +3709,7 @@ begin
                 Inc(dwDumpTexture);
                 sprintf(@szBuffer[0], 'SetTextureCube%d - %.03d (0x%.08X).bmp', [face, dwDumpTexture, UIntPtr(pTexture.Emu.Texture8)]);
                 IDirect3DTexture8(pTexture.Emu.CubeTexture8).UnlockRect(face);
-                D3DXSaveTextureToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
+                D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pTexture.Emu.Texture8), NULL);
                 Inc(Face);
               end;
             end;
@@ -3738,10 +3739,10 @@ begin
 
   (* -- MARKED OUT BY CXBX
   int dwDumpTexture := 0;
-  szBuffer: array [0..256-1] of AnsiChar;
+  szBuffer: array [0..256-1] of _char;
   sprintf(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', [dwDumpTexture, pDummyTexture]); Inc(dwDumpTexture);
   pDummyTexture.UnlockRect(0);
-  D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pDummyTexture, 0);
+  D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, pDummyTexture, 0);
   //*)
 
   // hRet = IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
@@ -3784,13 +3785,15 @@ begin
     [Method, Data, Format]);
 {$ENDIF}
 
-  Stage := High(Stage); //  Dxbx note : was -1, but that violated subrange bound;
+  Stage := DWord(-1);
 
   for v := 0 to 4-1 do
+  begin
     if (StageLookup[v] = Method) then
       Stage := v;
+  end;
 
-  if (Stage = High(Stage)) then
+  if (Stage = DWord(-1)) then
   begin
     EmuWarning('Unknown Method (0x%.08X)', [Method]);
   end
@@ -3809,13 +3812,13 @@ begin
     begin
          Integer dwDumpTexture := 0;
 
-         szBuffer: array [0..255-1] of Char;
+         szBuffer: array [0..255-1] of _char;
 
         sprintf(szBuffer, 'C:\Aaron\Textures\0x%.08X-SwitchTexture%.03d.bmp', [pTexture, dwDumpTexture]); Inc(dwDumpTexture);
 
         pTexture.Emu.Texture8.UnlockRect(0);
 
-        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture.Emu.BaseTexture8, 0);
+        D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, pTexture.Emu.BaseTexture8, 0);
      end;
     }
   end;
@@ -4509,7 +4512,7 @@ var
 
 {$IFDEF _DEBUG_DUMP_TEXTURE_REGISTER}
   dwDumpSurface: int;
-  szBuffer: array [0..255 - 1] of Char;
+  szBuffer: array [0..255 - 1] of _char;
   dwDumpCube: Integer;
   pSurface: IDirect3DSurface8;
   dwDumpTex: Integer;
@@ -5127,7 +5130,7 @@ begin
           dwDumpSurface := 0;
 
           sprintf(@szBuffer[0], '_DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegSurface%.03d.bmp', [X_Format, dwDumpSurface]); Inc(dwDumpSurface);
-          D3DXSaveSurfaceToFile(PChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DSurface8(pResource.Emu.Surface8), 0, 0);
+          D3DXSaveSurfaceToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DSurface8(pResource.Emu.Surface8), 0, 0);
         end
         else
         if (bCubemap) then
@@ -5142,7 +5145,7 @@ begin
 
             IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).GetCubeMapSurface(D3DCUBEMAP_FACES(v), 0, @pSurface);
 
-            D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pSurface, 0, 0);
+            D3DXSaveSurfaceToFileA(szBuffer, D3DXIFF_BMP, pSurface, 0, 0);
             Inc(v);
           end;
         end
@@ -5150,7 +5153,7 @@ begin
         begin
           dwDumpTex := 0;
           sprintf(szBuffer,' _DEBUG_DUMP_TEXTURE_REGISTER %.03d - RegTexture%.03d.bmp', [X_Format, dwDumpTex]); Inc(dwDumpTex);
-          D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, IDirect3DTexture8(pResource.Emu.Texture8), 0);
+          D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, IDirect3DTexture8(pResource.Emu.Texture8), 0);
         end;
 {$endif}
       end;
@@ -5497,11 +5500,11 @@ begin
     (* marked by cxbx
      Integer dwDumpSurface := 0;
 
-     szBuffer: array [0..255-1] of Char;
+     szBuffer: array [0..255-1] of _char;
 
      sprintf(szBuffer, 'C:\Aaron\Textures\Surface%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
 
-     D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Surface8, 0, 0);
+     D3DXSaveSurfaceToFileA(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Surface8, 0, 0);
     *)
   end
   else
@@ -5523,11 +5526,11 @@ begin
     (* marked by cxbx
     int dwDumpTexture := 0;
 
-    szBuffer: array [0..255-1] of Char;
+    szBuffer: array [0..255-1] of _char;
 
     sprintf(szBuffer, 'C:\Aaron\Textures\GetDescTexture%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
 
-    D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Texture8, 0);
+    D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, pPixelContainer.Emu.Texture8, 0);
     *)
   end;
 
@@ -7770,6 +7773,7 @@ begin
 
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
+  // Dxbx : Why not this : VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount);
   VPDesc.dwOffset := StartVertex;
   VPDesc.pVertexStreamZeroData := nil;
   VPDesc.uiVertexStreamZeroStride := 0;
