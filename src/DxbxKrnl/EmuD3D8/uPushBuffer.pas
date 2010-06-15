@@ -379,7 +379,7 @@ begin
       // create cached vertex buffer only once, with maxed out size
       if (pVertexBuffer = nil) then
       begin
-        hRet := IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, 2047*SizeOf(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
+        hRet := IDirect3DDevice8(aDirect3DDevice8).CreateVertexBuffer(2047*SizeOf(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
 
         if (FAILED(hRet)) then
           CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
@@ -416,12 +416,11 @@ begin
       if (dwVertexShader <> DWord(-1)) then
       begin
         VertexCount := (dwCount*sizeof(DWORD)) div dwStride;
-        // Dxbx note : (dw)Primitive will always be calculated in VertPatch.Apply
 
         VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
         VPDesc.dwVertexCount := VertexCount;
-        // DON'T : VPDesc.dwPrimitiveCount := PrimitiveCount;
+          // Dxbx note : Dont set dwPrimitiveCount, it will always be calculated in VertPatch.Apply
         VPDesc.PrimitiveType := XBPrimitiveType;
         VPDesc.dwOffset := 0;
         VPDesc.pVertexStreamZeroData := pVertexData;
@@ -454,7 +453,7 @@ begin
         printf('');
         printf('  Index Array Data...');
 
-        pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Is this correctly translated?
+        pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Do older Delphi's add 4 bytes too?
 
         if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
@@ -470,7 +469,7 @@ begin
       {$endif}
 
 
-      pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Is this correctly translated?
+      pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Do older Delphi's add 4 bytes too?
       if dwCount > 0 then // Dxbx addition, to prevent underflow
       for mi := 0 to dwCount - 1 do
       begin
@@ -513,12 +512,11 @@ begin
 
         // render indexed vertices
         begin
-          // Dxbx note : (dw)Primitive will always be calculated in VertPatch.Apply
           VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
           VPDesc.dwVertexCount := dwCount;
           VPDesc.PrimitiveType := XBPrimitiveType;
-          // DON'T : VPDesc.dwPrimitiveCount := PrimitiveCount;
+          // Dxbx note : Dont set dwPrimitiveCount, it will always be calculated in VertPatch.Apply
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
@@ -678,12 +676,11 @@ begin
 
         // render indexed vertices
         begin
-          // Dxbx note : (dw)Primitive will always be calculated in VertPatch.Apply
           VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
           VPDesc.dwVertexCount := dwCount;
           VPDesc.PrimitiveType := XBPrimitiveType;
-          // DON'T : VPDesc.dwPrimitiveCount := PrimitiveCount;
+          // Dxbx note : Dont set dwPrimitiveCount, it will always be calculated in VertPatch.Apply
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
@@ -761,7 +758,7 @@ var
   pVBData: PBYTE;
   uiStride: UINT;
   szFileName: array [0..128 - 1] of AnsiChar;
-  pwVal: PWORDs;
+  pwVal: PWORD;
   maxIndex: uint32;
   pwChk: PWORD;
   chk: uint;
@@ -860,7 +857,7 @@ begin
 
     fprintf(dbgVertices, '      %d;'#13#10, [dwCount - 2]);
 
-    pwVal := PWORDs(pIndexData);
+    pwVal := PWORD(pIndexData);
 
     max := dwCount;
 

@@ -46,9 +46,6 @@ function IDirect3DDevice8_GetRenderTarget(const aDirect3DDevice8: XTL_PIDirect3D
   ppRenderTarget: PIDirect3DSurface8): HResult;
 function IDirect3DDevice8_GetDepthStencilSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   ppZStencilSurface: PIDirect3DSurface8): HResult;
-function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
-  Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool;
-  ppVertexBuffer: PIDirect3DVertexBuffer8): HResult;
 function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height: LongWord; Format: TD3DFormat;
   ppSurface: PIDirect3DSurface8): HResult;
@@ -106,15 +103,6 @@ begin
   Result := IDirect3DDevice8(aDirect3DDevice8).GetDepthStencilSurface(ppZStencilSurface);
 end;
 
-function IDirect3DDevice8_CreateVertexBuffer(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
-  Length: LongWord; Usage, FVF: DWord; Pool: TD3DPool;
-  ppVertexBuffer: PIDirect3DVertexBuffer8): HResult;
-begin
-  Result := IDirect3DDevice8(aDirect3DDevice8).CreateVertexBuffer(
-    Length, Usage, FVF, Pool,
-    ppVertexBuffer);
-end;
-
 function IDirect3DDevice8_CreateImageSurface(const aDirect3DDevice8: XTL_PIDirect3DDevice8;
   Width, Height: LongWord; Format: TD3DFormat;
   ppSurface: PIDirect3DSurface8): HResult;
@@ -161,17 +149,9 @@ begin
 end;
 
 function D3DMATRIX_MULTIPLY(const a, b: D3DMATRIX): D3DMATRIX;
-var
-  i, j, k: int;
 begin
   // TODO -oDxbx : Test if this is a correct implementation :
-  // (Source : http://www.tantalon.com/pete/cppopt/projects/TemplateMeta/TemplateMeta.h )
-  ZeroMemory(@Result, SizeOf(Result));
-  for i:=0 to 4-1 do
-    for j:=0 to 4-1 do
-      for k:=0 to 4-1 do
-        Result.m[i, j] := Result.m[i, j] + (a.m[k, j] * b.m[i, k]);
-(* unrolled :
+  // Unrolled version source : http://www.tantalon.com/pete/cppopt/final.htm#TemplateMetaprogramming
   Result.m[0,0] := a.m[0,0]*b.m[0,0] + a.m[1,0]*b.m[0,1] + a.m[2,0]*b.m[0,2] + a.m[3,0]*b.m[0,3];
   Result.m[0,1] := a.m[0,1]*b.m[0,0] + a.m[1,1]*b.m[0,1] + a.m[2,1]*b.m[0,2] + a.m[3,1]*b.m[0,3];
   Result.m[0,2] := a.m[0,2]*b.m[0,0] + a.m[1,2]*b.m[0,1] + a.m[2,2]*b.m[0,2] + a.m[3,2]*b.m[0,3];
@@ -191,7 +171,6 @@ begin
   Result.m[3,1] := a.m[0,1]*b.m[3,0] + a.m[1,1]*b.m[3,1] + a.m[2,1]*b.m[3,2] + a.m[3,1]*b.m[3,3];
   Result.m[3,2] := a.m[0,2]*b.m[3,0] + a.m[1,2]*b.m[3,1] + a.m[2,2]*b.m[3,2] + a.m[3,2]*b.m[3,3];
   Result.m[3,3] := a.m[0,3]*b.m[3,0] + a.m[1,3]*b.m[3,1] + a.m[2,3]*b.m[3,2] + a.m[3,3]*b.m[3,3];
-*)
 end;
 
 end.

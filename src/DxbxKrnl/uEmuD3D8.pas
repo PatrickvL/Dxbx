@@ -1120,7 +1120,7 @@ begin
           {Usage=}0,
           {FVF=}0,
           {Pool=}D3DPOOL_MANAGED,
-          @g_pDummyBuffer
+          {ppVertexBuffer=}@g_pDummyBuffer
         );
 
         for Streams := 0 to 8-1 do
@@ -4558,9 +4558,9 @@ begin
           dwSize := $2000; // temporarily assign a small buffer, which will be increased later
         end;
 
-        hRet := IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8,
+        hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(
           dwSize, 0, 0, D3DPOOL_MANAGED,
-          {ppVertexBuffer}@(pResource.Emu.VertexBuffer8)
+          {ppVertexBuffer=}@(pResource.Emu.VertexBuffer8)
         );
 
         if (FAILED(hRet)) then
@@ -6077,12 +6077,12 @@ begin
 
   New({PX_D3DVertexBuffer}pD3DVertexBuffer);
 
-  hRet := IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8,
+  hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(
     Length, 
     0, 
     0, 
     D3DPOOL_MANAGED,
-    @(pD3DVertexBuffer.Emu.VertexBuffer8)
+    {ppVertexBuffer=}@(pD3DVertexBuffer.Emu.VertexBuffer8)
   );
 
   if (FAILED(hRet)) then
@@ -6836,7 +6836,7 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
 // Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
 var
   State: D3DRenderStateType;//int;
-  v: int;
+//  v: int;
   OrigValue: DWORD;
 begin
   EmuSwapFS(fsWindows);
@@ -7625,7 +7625,7 @@ begin
   EmuWarning('Not correctly implemented yet!');
   {ignore HRESULT?}IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(
     StreamNumber,
-    @pVertexBuffer,
+    {ppVertexBuffer=}@pVertexBuffer,
     {out}pStride^);
 
   EmuSwapFS(fsXbox);
