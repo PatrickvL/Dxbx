@@ -213,7 +213,7 @@ var
   hRet: HRESULT;
   pData: PWORDArray;
   VertexCount: UINT;
-//  PrimitiveCount: UINT;
+  PrimitiveCount: UINT;
   VPDesc: VertexPatchDesc;
   VertPatch: VertexPatcher;
   mi: uint;
@@ -416,12 +416,13 @@ begin
       if (dwVertexShader <> DWord(-1)) then
       begin
         VertexCount := (dwCount*sizeof(DWORD)) div dwStride;
+        PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
 
         VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
         VPDesc.dwVertexCount := VertexCount;
         VPDesc.PrimitiveType := XBPrimitiveType;
-        VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount);
+        VPDesc.dwPrimitiveCount := PrimitiveCount;
         VPDesc.dwOffset := 0;
         VPDesc.pVertexStreamZeroData := pVertexData;
         VPDesc.uiVertexStreamZeroStride := dwStride;
@@ -433,7 +434,7 @@ begin
 
         IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP
         (
-            EmuPrimitiveType(XBPrimitiveType), // Cxbx has PCPrimitiveType,
+            PCPrimitiveType, // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType),
             VPDesc.dwPrimitiveCount,
             VPDesc.pVertexStreamZeroData,
             VPDesc.uiVertexStreamZeroStride
@@ -512,11 +513,12 @@ begin
 
         // render indexed vertices
         begin
+          PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount + 2);
           VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
           VPDesc.dwVertexCount := dwCount;
           VPDesc.PrimitiveType := XBPrimitiveType;
-          VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount + 2);
+          VPDesc.dwPrimitiveCount := PrimitiveCount;
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
@@ -540,8 +542,8 @@ begin
             begin
               IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
               (
-                  EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
-                  // Cxbx has : PCPrimitiveType, 0, 8*1024*1024, 0, VPDesc.dwPrimitiveCount
+                  PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
+                  // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
               );
             end;
           end;
@@ -676,11 +678,12 @@ begin
 
         // render indexed vertices
         begin
+          PrimitiveCount := EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount);
           VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
           VPDesc.dwVertexCount := dwCount;
           VPDesc.PrimitiveType := XBPrimitiveType;
-          VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount);
+          VPDesc.dwPrimitiveCount := PrimitiveCount;
           VPDesc.dwOffset := 0;
           VPDesc.pVertexStreamZeroData := nil;
           VPDesc.uiVertexStreamZeroStride := 0;
@@ -702,8 +705,8 @@ begin
           begin
             IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
             (
-                EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
-                // Cxbx has : PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, VPDesc.dwPrimitiveCount
+                PCPrimitiveType, 0, (*dwCount*2*)8*1024*1024, 0, PrimitiveCount
+                // Dxbx : Why not this : EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, 0, VPDesc.dwPrimitiveCount
             );
           end;
 
