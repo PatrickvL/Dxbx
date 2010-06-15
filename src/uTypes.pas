@@ -50,22 +50,31 @@ type
   TRawSection = TVarByteArray;
 
   TWordArray = array [0..(MaxInt div SizeOf(Word)) - 1] of Word;
-  PWORDs = ^TWordArray;
+  PWORDs = ^TWordArray; // READ NOTE BELOW!
 
   TDWordArray = array [0..(MaxInt div SizeOf(DWord)) - 1] of DWord;
-  PDWORDs = ^TDWordArray;
+  PDWORDs = ^TDWordArray; // READ NOTE BELOW!
 
   TBooleanArray = array [0..(MaxInt div SizeOf(Boolean)) -1] of Boolean;
-  PBooleans = ^TBooleanArray;
+  PBooleans = ^TBooleanArray; // READ NOTE BELOW!
 
   TByteArray = array [0..(MaxInt div SizeOf(Byte)) -1] of Byte;
-  PBytes = ^TByteArray;
+  PBytes = ^TByteArray; // READ NOTE BELOW!
 
   TSHORTArray = array [0..(MaxInt div SizeOf(SHORT)) - 1] of SHORT;
-  PSHORTs = ^TSHORTArray;
+  PSHORTs = ^TSHORTArray; // READ NOTE BELOW!
 
   TFLOATArray = array [0..(MaxInt div SizeOf(FLOAT)) - 1] of FLOAT;
-  PFLOATs = ^TFLOATArray;
+  PFLOATs = ^TFLOATArray; // READ NOTE BELOW!
+
+  // Dxbx Note :
+  // The above pointer-to-array types are only meant as a helper type for indexing.
+  // (We use this because older Delphi's don't allow indexing of pointers.)
+  // But be warned! Never do pointer arithmitic with these types!
+  // If you do, the unit of calculation used by the compiler is equal to the size of
+  // the array. A simple "Inc(PFLOATs(p))" would compile into "add esi, $7FFFFFFC",
+  // which is not quite what we meant! In these cases write "Inc(PFLOAT(p))" (see? no 's'!)
+  // that would compile into the following correct assembly : "add esi, 4".
 
 {$IF NOT DECLARED(PDWord)}
   PDWord = ^DWord;

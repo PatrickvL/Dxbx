@@ -412,18 +412,22 @@ begin
     if pCachedStream_.bIsUP and Assigned(pCachedStream_.pStreamUP) then
     begin
       CxbxFree(pCachedStream_.pStreamUP);
+//      pCachedStream_.pStreamUP := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     if Assigned(pCachedStream_.Stream.pOriginalStream) then
     begin
       IDirect3DVertexBuffer8(pCachedStream_.Stream.pOriginalStream)._Release();
+//      pCachedStream_.Stream.pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     if Assigned(pCachedStream_.Stream.pPatchedStream) then
     begin
+{.$MESSAGE 'FreeCachedStream hits an int 3 because of this call to pPatchedStream._Release() :'}
       IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream)._Release();
+//      pCachedStream_.Stream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     CxbxFree(pCachedStream_);
   end;
-  g_PatchedStreamsCache.Unlock();
+  g_PatchedStreamsCache.Unlock(); // Dxbx addition - Unlock _after_ update!
   g_PatchedStreamsCache.remove(pStream);
 end;
 
@@ -1193,7 +1197,7 @@ begin
       dwNewSizeWR := dwNewSize + dwOriginalSizeWR - dwOriginalSize;
     end;
 
-    IDirect3DDevice8_CreateVertexBuffer(g_pD3DDevice8, dwNewSizeWR, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@(pStream.pPatchedStream)));
+    IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(dwNewSizeWR, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@(pStream.pPatchedStream)));
 
     if (pStream.pOriginalStream <> nil) then
     begin
@@ -1275,10 +1279,15 @@ begin
 
   if (pPatchDesc.pVertexStreamZeroData = nil) then
   begin
-    IDirect3DVertexBuffer8(pStream.pOriginalStream).Unlock();
-    IDirect3DVertexBuffer8(pStream.pPatchedStream).Unlock();
+//    if (pStream.pOriginalStream <> nil) then // Dxbx addition
+      IDirect3DVertexBuffer8(pStream.pOriginalStream).Unlock();
 
-    IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiOrigStride);
+//    if (pStream.pPatchedStream <> nil) then // Dxbx addition
+    begin
+      IDirect3DVertexBuffer8(pStream.pPatchedStream).Unlock();
+
+      IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiOrigStride);
+    end;
   end;
 
   m_bPatched := true;
@@ -1423,9 +1432,9 @@ begin
 
     if(dwPos = D3DFVF_XYZ) then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin
@@ -1437,10 +1446,10 @@ begin
     end
     else if(dwPos = D3DFVF_XYZRHW) then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Rhw;        Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Rhw;        Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin
@@ -1451,10 +1460,10 @@ begin
     end
     else if(dwPos = D3DFVF_XYZB1) then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Blend1;     Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Blend1;     Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin
@@ -1472,9 +1481,9 @@ begin
 // Cxbx     if(dwPos = D3DFVF_NORMAL) then // <- This didn't look right but if it is, change it back...
     if(dwCurFVF and D3DFVF_NORMAL) > 0 then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.y; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.z; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.y; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.z; Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin
@@ -1487,7 +1496,7 @@ begin
 
     if(dwCurFVF and D3DFVF_DIFFUSE) > 0 then
     begin
-      PDWORDs(pdwVB)[0] := g_IVBTable[v].dwDiffuse; Inc(PDWORDs(pdwVB));
+      PDWORDs(pdwVB)[0] := g_IVBTable[v].dwDiffuse; Inc(PDWORD(pdwVB));
 
       if(v = 0) then
       begin
@@ -1499,7 +1508,7 @@ begin
 
     if(dwCurFVF and D3DFVF_SPECULAR) > 0 then
     begin
-      PDWORDs(pdwVB)[0] := g_IVBTable[v].dwSpecular; Inc(PDWORDs(pdwVB));
+      PDWORDs(pdwVB)[0] := g_IVBTable[v].dwSpecular; Inc(PDWORD(pdwVB));
 
       if(v = 0) then
       begin
@@ -1513,8 +1522,8 @@ begin
 
     if(dwTexN >= 1) then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.y; Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin
@@ -1526,8 +1535,8 @@ begin
 
     if(dwTexN >= 2) then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.y; Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin
@@ -1539,8 +1548,8 @@ begin
 
     if(dwTexN >= 3) then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.y; Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin
@@ -1552,8 +1561,8 @@ begin
 
     if(dwTexN >= 4) then
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.x; Inc(PFLOATs(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.y; Inc(PFLOATs(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.x; Inc(PFLOAT(pdwVB));
+      PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.y; Inc(PFLOAT(pdwVB));
 
       if(v = 0) then
       begin

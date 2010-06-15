@@ -562,7 +562,7 @@ begin
   if (Value < 2) then
     Result := D3DBLEND(Value + 1)
   else if (Value < $309) then
-    Result := D3DBLEND((Value and $F) shl 3)
+    Result := D3DBLEND((Value and $F) + 3)
   else
   begin
     CxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
