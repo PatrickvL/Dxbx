@@ -5371,9 +5371,12 @@ begin
             g_VBTrackDisable.remove(pResource8);
           end;
 {$endif}
-
           //delete pThis;
+
+          pThis.Emu.Resource8 := nil; // Dxbx addition - nil out after decreasing reference count
         end;
+
+        pResource8 := nil; // Dxbx addition - nil out after decreasing reference count
       end;
     end;
 
@@ -7984,6 +7987,7 @@ begin
       begin
         bActiveIB := true;
         IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+        pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
        end;
     end;
 
@@ -8047,6 +8051,7 @@ begin
     begin
       IDirect3DDevice8(g_pD3DDevice8).SetIndices(nil, 0);
       IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+      pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
     {$ifdef _DEBUG_TRACK_VB}

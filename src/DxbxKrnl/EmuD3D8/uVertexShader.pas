@@ -2355,7 +2355,10 @@ begin
 
     // Dxbx addition : Release interface reference manually :
     if Assigned(pErrors) then
+    begin
       ID3DXBuffer(pErrors)._Release;
+      pErrors := nil;
+    end;
 
     CxbxFree(pShaderDisassembly);
   end;
