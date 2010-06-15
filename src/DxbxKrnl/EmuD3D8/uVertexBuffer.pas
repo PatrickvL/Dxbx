@@ -412,18 +412,18 @@ begin
     if pCachedStream_.bIsUP and Assigned(pCachedStream_.pStreamUP) then
     begin
       CxbxFree(pCachedStream_.pStreamUP);
-//      pCachedStream_.pStreamUP := nil; // Dxbx addition - nil out after decreasing reference count
+      pCachedStream_.pStreamUP := nil; // Dxbx addition - nil out after freeing
     end;
     if Assigned(pCachedStream_.Stream.pOriginalStream) then
     begin
       IDirect3DVertexBuffer8(pCachedStream_.Stream.pOriginalStream)._Release();
-//      pCachedStream_.Stream.pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
+      pCachedStream_.Stream.pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     if Assigned(pCachedStream_.Stream.pPatchedStream) then
     begin
 {.$MESSAGE 'FreeCachedStream hits an int 3 because of this call to pPatchedStream._Release() :'}
       IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream)._Release();
-//      pCachedStream_.Stream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
+      pCachedStream_.Stream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     CxbxFree(pCachedStream_);
   end;
@@ -573,6 +573,7 @@ begin
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
     IDirect3DVertexBuffer8(pOrigVertexBuffer)._Release();
+    pOrigVertexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
   end;
 
   Result := bApplied;
@@ -878,6 +879,7 @@ begin
     begin
       // The stream was already primitive patched, release the previous vertex buffer to avoid memory leaks
       IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release();
+      pStream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     pStream.pPatchedStream := pNewVertexBuffer;
   end
@@ -1067,6 +1069,7 @@ begin
     if Assigned(pStream.pPatchedStream) then
     begin
       IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release();
+      pStream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
     pStream.pPatchedStream := pNewVertexBuffer;
@@ -1364,11 +1367,13 @@ begin
     if (m_pStreams[uiStream].pOriginalStream <> NULL) then
     begin
       IDirect3DVertexBuffer8(m_pStreams[uiStream].pOriginalStream)._Release();
+      m_pStreams[uiStream].pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
     if (m_pStreams[uiStream].pPatchedStream <> NULL) then
     begin
       IDirect3DVertexBuffer8(m_pStreams[uiStream].pPatchedStream)._Release();
+      m_pStreams[uiStream].pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
     if (not m_pStreams[uiStream].bUsedCached) then

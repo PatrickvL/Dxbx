@@ -486,6 +486,7 @@ begin
           if (pIndexBuffer <> nil) then
           begin
             IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+            pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
           end;
 
           hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer8(@pIndexBuffer));
@@ -640,6 +641,7 @@ begin
           if (pIndexBuffer <> nil) then
           begin
             IDirect3DIndexBuffer8(pIndexBuffer)._Release();
+            pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
           end;
 
           hRet := IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, PIDirect3DIndexBuffer8(@pIndexBuffer));
