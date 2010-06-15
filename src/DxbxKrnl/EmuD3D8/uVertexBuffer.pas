@@ -1573,7 +1573,7 @@ begin
 
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
-  VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount); // Dxbx addition
+  // Dxbx : Why not this : VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount);
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := g_IVBTable;
   VPDesc.uiVertexStreamZeroStride := uiStride;

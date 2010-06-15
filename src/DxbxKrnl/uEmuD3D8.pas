@@ -7910,19 +7910,21 @@ begin
 {$ENDIF}
 
     // update index buffer, if necessary
-
     if Assigned(g_pIndexBuffer) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
     begin
       dwSize := VertexCount*2;   // 16-bit indices
 
-      hRet := IDirect3DDevice8_CreateIndexBuffer(g_pD3DDevice8,
+      hRet := IDirect3DDevice8_CreateIndexBuffer
+      (g_pD3DDevice8,
           dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
-          @(g_pIndexBuffer.Emu.IndexBuffer8));
+          @(g_pIndexBuffer.Emu.IndexBuffer8)
+      );
 
       if (FAILED(hRet)) then
           CxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
       pData := nil;
+
       hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
 
       if (FAILED(hRet)) then
@@ -7956,6 +7958,7 @@ begin
 
     VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
     FatalError := false;
+
     {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
 
     {$ifdef _DEBUG_TRACK_VB}
@@ -7964,13 +7967,14 @@ begin
     {$endif}
 
     bActiveIB := false;
+
     pIndexBuffer := nil;
 
     // check if there is an active index buffer
     begin
       BaseIndex := 0;
 
-      IDirect3DDevice8(g_pD3DDevice8).GetIndices(@pIndexBuffer, BaseIndex);
+      IDirect3DDevice8(g_pD3DDevice8).GetIndices(@pIndexBuffer, {out}BaseIndex);
 
       if (pIndexBuffer <> nil) then
       begin
@@ -7978,6 +7982,9 @@ begin
         IDirect3DIndexBuffer8(pIndexBuffer)._Release();
        end;
     end;
+
+    // uiNumVertices := 0;
+    // uiStartIndex := 0;
 
     // TODO -oCXBX: caching (if it becomes noticably slow to recreate the buffer each time)
     if not bActiveIB then
@@ -7988,6 +7995,7 @@ begin
           CxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*2]);
 
       pbData := NULL;
+
       IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, 0, {out}pbData, 0);
 
       if (pbData = nil) then
@@ -8017,20 +8025,19 @@ begin
       (* Cxbx has this commented out :
       if( (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) ) then
       begin
-        g_pD3DDevice8.DrawPrimitive
+        IDirect3DDevice8(g_pD3DDevice8).DrawPrimitive
         (
           EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount
         );
       end
       else
       begin
-        g_pD3DDevice8.DrawIndexedPrimitive
+        IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
         (
           EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
         );
       end; *)
     end;
-
 
     if (not bActiveIB) then
     begin
@@ -8053,8 +8060,8 @@ end;
 procedure XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP
 (
   PrimitiveType: X_D3DPRIMITIVETYPE;
-  VertexCount: UINT; 
-  pIndexData: PVOID; 
+  VertexCount: UINT;
+  pIndexData: PVOID;
   pVertexStreamZeroData: PVOID;
   VertexStreamZeroStride: UINT
 );
@@ -8078,17 +8085,14 @@ begin
     [Ord(PrimitiveType), VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride]);
 {$ENDIF}
 
-  EmuWarning('Using Indexed Vertices (UP)!');
-
   // update index buffer, if necessary
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
-    CxbxKrnlCleanup('g_pIndexBuffer <> 0');
+    CxbxKrnlCleanup('g_pIndexBuffer != 0');
 
   XTL_EmuUpdateDeferredStates();
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
-
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8104,7 +8108,7 @@ begin
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, NULL);
 
   {$ifdef _DEBUG_TRACK_VB}
-  if ( not g_bVBSkipStream) then
+  if (not g_bVBSkipStream) then
   begin
   {$endif}
 
@@ -8112,14 +8116,8 @@ begin
     begin
       IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitiveUP
       (
-          EmuPrimitiveType(VPDesc.PrimitiveType),
-          0,
-          VPDesc.dwVertexCount,
-          VPDesc.dwPrimitiveCount,
-          pIndexData,
-          D3DFMT_INDEX16,
-          VPDesc.pVertexStreamZeroData,
-          VPDesc.uiVertexStreamZeroStride
+          EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData,
+          D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
       );
     end;
 
