@@ -7766,7 +7766,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-  VPDesc.VertexPatchDesc(); // Dxbx needs to clear records on stack explicitly
+  VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
@@ -7834,7 +7834,8 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
+  VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
+
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwOffset := 0;
@@ -7944,7 +7945,8 @@ begin
     if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
       EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
-    ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
+    VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
+
     VPDesc.PrimitiveType := PrimitiveType;
     VPDesc.dwVertexCount := VertexCount;
     VPDesc.dwOffset := 0;
@@ -8008,7 +8010,8 @@ begin
 
     if (IsValidCurrentShader()) and not FatalError then
     begin
-      IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive(
+      IDirect3DDevice8(g_pD3DDevice8).DrawIndexedPrimitive
+      (
         EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
       );
       (* Cxbx has this commented out :
@@ -8087,7 +8090,8 @@ begin
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
 
 
-  ZeroMemory(@VPDesc, SizeOf(VPDesc)); // Dxbx needs to clear records on stack explicitly
+  VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
+
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
   VPDesc.dwOffset := 0;

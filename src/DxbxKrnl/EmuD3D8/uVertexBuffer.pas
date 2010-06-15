@@ -397,7 +397,7 @@ begin
   pCachedStream_.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount;
   pCachedStream_.lLastUsed := clock();
   g_PatchedStreamsCache.insert(uiKey, pCachedStream_);
-end;
+end; // VertexPatcher.CacheStream
 
 
 procedure VertexPatcher.FreeCachedStream(pStream: Pvoid);
@@ -572,7 +572,7 @@ begin
   end;
 
   Result := bApplied;
-end;
+end; // VertexPatcher.ApplyCachedStream
 
 
 function VertexPatcher.GetNbrStreams(pPatchDesc: PVertexPatchDesc): UINT;
@@ -891,7 +891,7 @@ begin
   m_bPatched := true;
 
   Result := true;
-end;
+end; // VertexPatcher.PatchStream
 
 function VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
 // Branch:shogun  Revision:  Translator:PatrickvL  Done:100
@@ -1068,7 +1068,7 @@ begin
   end;
 
   Result := m_bPatched;
-end;
+end; // VertexPatcher.NormalizeTexCoords
 
 function VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc;
                                       uiStream: UINT): _bool;
@@ -1332,10 +1332,6 @@ begin
   end;
 
   Result := Patched;
-
-  // Dxbx addition : Update dwPrimitiveCount if that hasn't been done yet :
-  if not Result then
-    pPatchDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(pPatchDesc.PrimitiveType, pPatchDesc.dwVertexCount);
 end; // VertexPatcher.Apply
 
 function VertexPatcher.Restore(): _bool;
@@ -1382,7 +1378,7 @@ begin
   end;
 
   Result := true;
-end;
+end; // VertexPatcher.Restore
 
 procedure XTL_EmuFlushIVB(); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -1577,6 +1573,7 @@ begin
 
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
+  VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount); // Dxbx addition
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := g_IVBTable;
   VPDesc.uiVertexStreamZeroStride := uiStride;
@@ -1607,7 +1604,7 @@ begin
   VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   g_IVBTblOffs := 0;
-end;
+end; // XTL_EmuFlushIVB
 
 procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
 // Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
@@ -1844,7 +1841,7 @@ begin
     IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.Emu.Texture8));
 
   end;
-end;
+end; // XTL_EmuUpdateActiveTexture
 
 {.$MESSAGE 'PatrickvL reviewed up to here'}
 end.
