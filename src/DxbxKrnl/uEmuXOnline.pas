@@ -30,6 +30,7 @@ uses
   // Jedi Win32API
   JwaWinType,
   // Dxbx
+  uTypes,
   uLog,
   uEmuFS;
 
@@ -215,7 +216,7 @@ begin
       #13#10'   lpImagePath           : 0x%.08X' +
       #13#10'   pLaunchData           : 0x%.08X' +
       #13#10');',
-      [lpImagePath, pLaunchData]);
+      [UIntPtr(lpImagePath), pLaunchData]);
 {$ENDIF}
   // TODO -oCXBX: Launch another .xbe from Cxbx someday?
 

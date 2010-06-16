@@ -3601,7 +3601,7 @@ begin
       #13#10'   dwFlags             : 0x%.08X' +
       #13#10'   ppImageDesc         : 0x%.08X' +
       #13#10');',
-      [pszImageName, pImageLoc, dwFlags, ppImageDesc]);
+      [UIntPtr(pszImageName), pImageLoc, dwFlags, ppImageDesc]);
 {$ENDIF}
 
    EmuSwapFS(fsXbox);

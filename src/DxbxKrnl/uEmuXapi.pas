@@ -32,9 +32,9 @@ uses
   JwaWinBase,
   JwaNative,
   // Dxbx
-  uTypes,
   uDxbxUtils,
   uLog, // DbgPrintf
+  UTypes,
   uXbe,
   uEmu,
   uEmuFS, // EmuSwapFS
@@ -1049,7 +1049,7 @@ begin
       #13#10'   bInitialOwner       : 0x%.08X' +
       #13#10'   lpName              : 0x%.08X' +
       #13#10');',
-      [lpMutexAttributes, bInitialOwner, lpName]);
+      [lpMutexAttributes, bInitialOwner, UIntPtr(lpName)]);
 {$ENDIF}
 
   Result := CreateMutexA(PSecurityAttributes(lpMutexAttributes), bInitialOwner <> BOOL_FALSE, lpName);
@@ -1405,7 +1405,7 @@ begin
       #13#10'(' +
       #13#10'   pSectionName       : 0x%.08X' +
       #13#10');',
-      [pSectionName]);
+      [UIntPtr(pSectionName)]);
 {$ENDIF}
 
   SectionHeader := XBE_FindSectionHeaderByName(pSectionName);
@@ -1505,7 +1505,7 @@ begin
       #13#10'(' +
       #13#10'   pSectionName       : 0x%.08X' +
       #13#10');',
-      [pSectionName]);
+      [UIntPtr(pSectionName)]);
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -1531,7 +1531,7 @@ begin
       #13#10'(' +
       #13#10'   pSectionName       : 0x%.08X' +
       #13#10');',
-      [pSectionName]);
+      [UIntPtr(pSectionName)]);
 {$ENDIF}
 
   SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);
