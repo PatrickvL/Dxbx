@@ -1121,6 +1121,12 @@ begin
       pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLESTRIP;
       end;
 
+    X_D3DPT_QUADLIST: begin
+      Dec(pPatchDesc.dwVertexCount, pPatchDesc.dwVertexCount mod 2);
+      pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLELIST;
+    end;
+
+
     // Convex polygon is the same as a triangle fan.
     X_D3DPT_POLYGON: begin
       pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLEFAN;
@@ -1155,8 +1161,8 @@ begin
   dwNewSize         := 0;
 
   // sizes with the rest of the buffer
-  //dwOriginalSizeWR  := 0;
-  //dwNewSizeWR       := 0;
+  dwOriginalSizeWR  := 0;
+  dwNewSizeWR       := 0;
 
   // vertex data arrays
   pOrigVertexData := nil;
