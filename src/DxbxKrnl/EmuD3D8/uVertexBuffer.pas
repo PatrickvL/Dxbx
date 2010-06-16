@@ -1083,7 +1083,7 @@ end; // VertexPatcher.NormalizeTexCoords
 
 function VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc;
                                       uiStream: UINT): _bool;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:90
 var
   pStream: PPATCHEDSTREAM;
   dwOriginalSize: DWORD;
@@ -1120,12 +1120,6 @@ begin
       Dec(pPatchDesc.dwVertexCount, pPatchDesc.dwVertexCount mod 2);
       pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLESTRIP;
       end;
-
-    X_D3DPT_QUADLIST: begin
-      Dec(pPatchDesc.dwVertexCount, pPatchDesc.dwVertexCount mod 2);
-      pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLELIST;
-    end;
-
 
     // Convex polygon is the same as a triangle fan.
     X_D3DPT_POLYGON: begin
@@ -1261,10 +1255,12 @@ begin
     if (pPatchDesc.dwPrimitiveCount div 2) > 0 then // Dxbx addition, to prevent underflow
     for i := 0 to (pPatchDesc.dwPrimitiveCount div 2) - 1 do
     begin
-      memcpy(pPatch1, pOrig1, pStream.uiOrigStride * 3); // Vertex 0,1,2 := Vertex 0,1,2
+      // DXBX THIS WILL CRASH PatchPrimitive
+      // DXBX TODO: FIX THIS !!!
+      (*memcpy(pPatch1, pOrig1, pStream.uiOrigStride * 3); // Vertex 0,1,2 := Vertex 0,1,2
       memcpy(pPatch2, pOrig2, pStream.uiOrigStride);     // Vertex 3     := Vertex 2
       memcpy(pPatch3, pOrig3, pStream.uiOrigStride);     // Vertex 4     := Vertex 3
-      memcpy(pPatch4, pOrig1, pStream.uiOrigStride);     // Vertex 5     := Vertex 0
+      memcpy(pPatch4, pOrig1, pStream.uiOrigStride);     // Vertex 5     := Vertex 0 *)
 
       Inc(pPatch1, pStream.uiOrigStride * 6);
       Inc(pPatch2, pStream.uiOrigStride * 6);
