@@ -427,7 +427,7 @@ begin
     end;
     CxbxFree(pCachedStream_);
   end;
-  g_PatchedStreamsCache.Unlock(); // Dxbx addition - Unlock _after_ update!
+  g_PatchedStreamsCache.Unlock(); // Dxbx addition - Unlock _after_ update?
   g_PatchedStreamsCache.remove(pStream);
 end;
 
@@ -1101,12 +1101,11 @@ var
 
   pPatch012: Puint08;
   pPatch34: Puint08;
-  pPatch3: Puint08;
   pPatch5: Puint08;
 
   pOrig012: Puint08;
-  pOrig2: Puint08;
-  pOrig3: Puint08;
+  pOrig23: Puint08;
+
   i: uint32;
   z: uint32;
 begin
@@ -1186,7 +1185,7 @@ begin
     // so that's 2 times as many primitives, and 50% more vertices :
     pPatchDesc.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount * TRIANGLES_PER_QUAD;
 
-    // This is a list of sqares/rectangles, so we convert it to a list of triangles
+    // This is a list of squares/rectangles, so we convert it to a list of triangles
     dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride * VERTICES_PER_QUAD;
     dwNewSize       := pPatchDesc.dwVertexCount * pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD;
   end
@@ -1263,18 +1262,20 @@ begin
 
     // Calculate where the original vertices come from :
     pOrig012 := @pOrigVertexData[ pPatchDesc.dwOffset      * pStream.uiOrigStride];
-    pOrig2 :=   @pOrigVertexData[(pPatchDesc.dwOffset + 2) * pStream.uiOrigStride];
+    pOrig23 :=  @pOrigVertexData[(pPatchDesc.dwOffset + 2) * pStream.uiOrigStride];
 
     // Now that dwOffset isn't used anymore, make sure the index points to the vertex of the same 'virtual' primitive :
     pPatchDesc.dwOffset := (pPatchDesc.dwOffset * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) div VERTICES_PER_QUAD;
 
+    // Dxbx note : Cxbx handles primitives, but it's cleaner to loop over vertices :
     // Loop over all quads :
     if (pPatchDesc.dwVertexCount div VERTICES_PER_QUAD) > 0 then // Dxbx addition, to prevent underflow
     for i := 0 to (pPatchDesc.dwVertexCount div VERTICES_PER_QUAD) - 1 do
     begin
       memcpy(pPatch012, pOrig012, pStream.uiOrigStride * 3); // Vertex T1_V0,T1_V1,T1_V2 := Vertex Q_V0,Q_V1,Q_V2
-      memcpy(pPatch34,  pOrig2,   pStream.uiOrigStride * 2); // Vertex T2_V0,T2_V1       := Vertex Q_V2,Q_V3
+      memcpy(pPatch34,  pOrig23,  pStream.uiOrigStride * 2); // Vertex T2_V0,T2_V1       := Vertex Q_V2,Q_V3
       memcpy(pPatch5,   pOrig012, pStream.uiOrigStride);     // Vertex T2_V2             := Vertex Q_V0
+      // Dxbx note : Cxbx copies in four steps (0,1,2 + 2 + 3 + 0), but it can be done in three (0,1,2 + 2,3 + 0)!
 
       if (pPatchDesc.hVertexShader and D3DFVF_XYZRHW) > 0 then
       begin
@@ -1292,12 +1293,13 @@ begin
       Inc(pPatch5,   pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
 
       Inc(pOrig012, pStream.uiOrigStride * VERTICES_PER_QUAD);
-      Inc(pOrig2,   pStream.uiOrigStride * VERTICES_PER_QUAD);
+      Inc(pOrig23,  pStream.uiOrigStride * VERTICES_PER_QUAD);
     end;
   end
   // LineLoop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
   begin
+    // Copy all vertices
     memcpy(@pPatchedVertexData[pPatchDesc.dwOffset], @pOrigVertexData[pPatchDesc.dwOffset], dwOriginalSize);
     // Append a second copy of the first vertex to the end, completing the strip to form a loop :
     memcpy(@pPatchedVertexData[pPatchDesc.dwOffset + dwOriginalSize], @pOrigVertexData[pPatchDesc.dwOffset], pStream.uiOrigStride);
@@ -1399,6 +1401,8 @@ begin
       if (Self.m_bAllocatedStreamZeroData) then
       begin
         CxbxFree(m_pNewVertexStreamZeroData);
+//        m_pNewVertexStreamZeroData := nil; // Dxbx addition
+//        Self.m_bAllocatedStreamZeroData := False; // Dxbx addition
       end;
     end
     else

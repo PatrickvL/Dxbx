@@ -754,6 +754,9 @@ begin
   end;
 end;
 
+{static}var lAccumX: LongInt = 0;
+{static}var lAccumY: LongInt = 0;
+{static}var lAccumZ: LongInt = 0;
 procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
 // Branch:shogun  Revision:161  Translator:Shadow_Tj  Done:100
 var
@@ -772,17 +775,12 @@ var
   KeyboardState: array [0..256-1] of BYTE;
   bKey: BYTE;
   MouseState: DIMOUSESTATE2;
-{$WRITEABLECONST ON}
-const
-  lAccumX: LongInt = 0;
-  lAccumY: LongInt = 0;
-  lAccumZ: LongInt = 0;
-{$WRITEABLECONST OFF}
 begin
   if(Controller = NULL) then
     Exit;
 
   pDevice := NULL;
+
   // Never used : hRet := 0;
   // Never used : dwFlags := 0;
 
@@ -799,7 +797,7 @@ begin
     dwFlags := m_ObjectConfig[v].dwFlags;
     dwInfo := m_ObjectConfig[v].dwInfo;
 
-    if (Integer(dwDevice) = -1) then
+    if (dwDevice = DWord(-1)) then
       continue;
 
     pDevice := m_InputDevice[dwDevice].m_Device;
@@ -819,6 +817,8 @@ begin
     // Interpret PC Joystick Input
     if (dwFlags and DEVICE_FLAG_JOYSTICK) > 0 then
     begin
+      ZeroMemory(@JoyState, SizeOf(JoyState));
+
       if (IDirectInputDevice8(pDevice).GetDeviceState(sizeof(JoyState), @JoyState) <> DI_OK) then
         continue;
 
@@ -853,6 +853,8 @@ begin
     // Interpret PC KeyBoard Input
     else if (dwFlags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
+      ZeroMemory(@KeyboardState, SizeOf(KeyboardState));
+
       if (IDirectInputDevice8(pDevice).GetDeviceState(sizeof(KeyboardState), @KeyboardState) <> DI_OK) then
         continue;
 
@@ -866,6 +868,8 @@ begin
     // Interpret PC Mouse Input
     else if (dwFlags and DEVICE_FLAG_MOUSE) > 0 then
     begin
+      ZeroMemory(@MouseState, SizeOf(MouseState));
+
       if (IDirectInputDevice8(pDevice).GetDeviceState(sizeof(MouseState), @MouseState) <> DI_OK) then
         continue;
 
@@ -878,6 +882,10 @@ begin
       end
       else if (dwFlags and DEVICE_FLAG_AXIS) > 0 then
       begin
+        // static LONG lAccumX = 0;
+        // static LONG lAccumY = 0;
+        // static LONG lAccumZ = 0;
+
         Inc(lAccumX, MouseState.lX * 300);
         Inc(lAccumY, MouseState.lY * 300);
         Inc(lAccumZ, MouseState.lZ * 300);
@@ -922,82 +930,107 @@ begin
     // Map Xbox Joystick Input
     if (v >= XBCTRL_OBJECT_LTHUMBPOSX) and (v <= XBCTRL_OBJECT_RTHUMB) then
     begin
-      case (v) of
+      case (v)
+      of
         XBCTRL_OBJECT_LTHUMBPOSY:
-          Controller.Gamepad.sThumbLY := Controller.Gamepad.sThumbLY + wValue;
+          Inc(Controller.Gamepad.sThumbLY, wValue);
+
         XBCTRL_OBJECT_LTHUMBNEGY:
-          Controller.Gamepad.sThumbLY := Controller.Gamepad.sThumbLY - wValue;
+          Dec(Controller.Gamepad.sThumbLY, wValue);
+
         XBCTRL_OBJECT_RTHUMBPOSY:
-          Controller.Gamepad.sThumbRY := Controller.Gamepad.sThumbRY + wValue;
+          Inc(Controller.Gamepad.sThumbRY, wValue);
+
         XBCTRL_OBJECT_RTHUMBNEGY:
-          Controller.Gamepad.sThumbRY := Controller.Gamepad.sThumbRY - wValue;
+          Dec(Controller.Gamepad.sThumbRY, wValue);
+
         XBCTRL_OBJECT_LTHUMBPOSX:
-          Controller.Gamepad.sThumbLX := Controller.Gamepad.sThumbLX + wValue;
+          Inc(Controller.Gamepad.sThumbLX, wValue);
+
         XBCTRL_OBJECT_LTHUMBNEGX:
-          Controller.Gamepad.sThumbLX := Controller.Gamepad.sThumbLX - wValue;
+          Dec(Controller.Gamepad.sThumbLX, wValue);
+
         XBCTRL_OBJECT_RTHUMBPOSX:
-          Controller.Gamepad.sThumbRX := Controller.Gamepad.sThumbRX + wValue;
+          Inc(Controller.Gamepad.sThumbRX, wValue);
+
         XBCTRL_OBJECT_RTHUMBNEGX:
-          Controller.Gamepad.sThumbRX := Controller.Gamepad.sThumbRX - wValue;
+          Dec(Controller.Gamepad.sThumbRX, wValue);
+
         XBCTRL_OBJECT_A:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] := (wValue div 128);
+
         XBCTRL_OBJECT_B:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] := (wValue div 128);
+
         XBCTRL_OBJECT_X:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] := (wValue div 128);
+
         XBCTRL_OBJECT_Y:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] := (wValue div 128);
+
         XBCTRL_OBJECT_WHITE:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] := (wValue div 128);
+
         XBCTRL_OBJECT_BLACK:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] := (wValue div 128);
+
         XBCTRL_OBJECT_LTRIGGER:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] := (wValue div 128);
+
         XBCTRL_OBJECT_RTRIGGER:
           Controller.Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] := (wValue div 128);
+
         XBCTRL_OBJECT_DPADUP:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_UP
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_DPAD_UP;
+
         XBCTRL_OBJECT_DPADDOWN:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_DOWN
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_DPAD_DOWN;
+
         XBCTRL_OBJECT_DPADLEFT:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_LEFT
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_DPAD_LEFT;
+
         XBCTRL_OBJECT_DPADRIGHT:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_DPAD_RIGHT
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_DPAD_RIGHT;
+
         XBCTRL_OBJECT_BACK:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_BACK
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_BACK;
+
         XBCTRL_OBJECT_START:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_START
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_START;
+
         XBCTRL_OBJECT_LTHUMB:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_LEFT_THUMB
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_LEFT_THUMB;
+
         XBCTRL_OBJECT_RTHUMB:
           if (wValue > 0) then
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons or XINPUT_GAMEPAD_RIGHT_THUMB
           else
             Controller.Gamepad.wButtons := Controller.Gamepad.wButtons and not XINPUT_GAMEPAD_RIGHT_THUMB;
-      end;
-    end;
-  end;
+
+      end; // case
+    end; // if Joystick Input
+  end; // for all devices
 end;
 
 

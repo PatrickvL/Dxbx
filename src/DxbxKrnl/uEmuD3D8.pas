@@ -657,7 +657,7 @@ begin
         Exit;
       end;
 
-    WM_SYSKEYDOWN:
+    WM_SYSKEYDOWN: // Alt pressed +
       begin
         if (wParam = VK_RETURN) then
         begin
@@ -669,7 +669,7 @@ begin
         end;
       end;
 
-    WM_KEYDOWN:
+    WM_KEYDOWN: // Normal key press :
       begin
         // disable fullscreen if we are set to faux mode, and faux fullscreen is active
         if (wParam = VK_ESCAPE) then

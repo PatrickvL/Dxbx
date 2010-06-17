@@ -70,6 +70,7 @@ procedure EmuDInputPoll(Controller: PXINPUT_STATE); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   g_XBController.ListenPoll(Controller);
+
   if Assigned(g_XBController.GetError()) then
     MessageBox(0, g_XBController.GetError(), 'Dxbx [*UNHANDLED!*]', MB_OK);  // TODO -oCXBX: Handle this!
 end;

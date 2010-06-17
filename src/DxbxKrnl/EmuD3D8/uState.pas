@@ -49,7 +49,7 @@ uses
   uEmuD3D8Types;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
 var
   dwConv: DWORD;
   v: int;
@@ -183,7 +183,7 @@ begin
         if (pCur[X_D3DTSS_ADDRESSU+Adjust2] = 5) then
           CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[X_D3DTSS_ADDRESSU]);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[X_D3DTSS_ADDRESSU+Adjust2]);
       end;
 
       if (pCur[X_D3DTSS_ADDRESSV+Adjust2] <> X_D3DTSS_UNK) then
@@ -303,8 +303,8 @@ begin
       if (pCur[X_D3DTSS_TEXTURETRANSFORMFLAGS-Adjust1] <> X_D3DTSS_UNK) then
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[X_D3DTSS_TEXTURETRANSFORMFLAGS-Adjust1]);
 
-      if (pCur[X_D3DTSS_BORDERCOLOR] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[X_D3DTSS_BORDERCOLOR]);
+//      if (pCur[X_D3DTSS_BORDERCOLOR] <> X_D3DTSS_UNK) then // Cxbx : This is NOT a deferred texture state!
+//        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[X_D3DTSS_BORDERCOLOR]);
 
 
       (* Cxbx has this disabled :

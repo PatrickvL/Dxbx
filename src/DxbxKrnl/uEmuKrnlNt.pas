@@ -1351,7 +1351,7 @@ begin
       BaseAddress,
       {(NtDll::MEMORY_INFORMATION_CLASS)NtDll::}MemoryBasicInformation,
       {(NtDll::PMEMORY_BASIC_INFORMATION)}Buffer,
-      SizeOf(MEMORY_BASIC_INFORMATION),
+      sizeof(MEMORY_BASIC_INFORMATION),
       nil
   );
 
