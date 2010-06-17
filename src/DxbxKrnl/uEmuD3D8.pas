@@ -528,6 +528,11 @@ begin
   ShowWindow(g_hEmuWindow, iif((DxbxKrnl_hEmuParent = 0) or g_XBVideo.GetFullscreen(), SW_SHOWDEFAULT, SW_SHOWMAXIMIZED));
   UpdateWindow(g_hEmuWindow);
 
+  // Dxbx addition, to notify the main Dxbx GUI we're here (I'm using a user message id here,
+  // as WM_PARENTNOTIFY doesn't reach the GUI somehow?) :
+  if DxbxKrnl_hEmuParent <> 0 then
+    SendMessage(DxbxKrnl_hEmuParent, WM_USER_PARENTNOTIFY, WM_CREATE, 0);
+
   if (not g_XBVideo.GetFullscreen()) and (DxbxKrnl_hEmuParent <> 0) then
   begin
     SetFocus(DxbxKrnl_hEmuParent);
@@ -693,7 +698,7 @@ begin
         else if (wParam = VK_F11) then
         begin
           Inc(g_iWireframe); // Cxbx uses post-increment and compares+1 :
-          if g_iWireframe = 2-1 then
+          if g_iWireframe = 3 then
             g_iWireframe := 0;
         end
         else if (wParam = VK_F12) then

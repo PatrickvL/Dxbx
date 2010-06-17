@@ -120,6 +120,8 @@ type
     XMLDocument: TXMLDocument;
     lblFreeTextFilter: TLabel;
     cbFreeTextFilter: TComboBox;
+    actStopEmulation: TAction;
+    Stop1: TMenuItem;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -151,6 +153,11 @@ type
     procedure dgXbeInfosClick(Sender: TObject);
     procedure cbFreeTextFilterKeyPress(Sender: TObject; var Key: Char);
     procedure cbFreeTextFilterSelect(Sender: TObject);
+    procedure actStopEmulationExecute(Sender: TObject);
+  protected
+    procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure WndProc(var Message: TMessage); override;
+    procedure StopEmulation;
   private
     procedure UpdateBackground;
     procedure UpdateLaunchButton;
@@ -177,7 +184,7 @@ type
 
     OldLBWindowProc: TWndMethod;
     BackgroundImage: TBitmap;
-    function GetEmuWindowHandle(const aEmuDisplayMode: Integer = 0): THandle;
+    function GetEmuWindowHandle(const aEmuDisplayMode: Integer = 1): THandle;
     procedure LaunchXBE;
     procedure CloseXbe;
 
@@ -269,12 +276,127 @@ const
   cXDKTrackerPath = 'XdkTracker.exe';
   cXIsoPath = 'xIso.exe';
 
+var
+  m_hwndChild: Handle = 0;
+
+// Key messages can be trapped at the application level :
+procedure Tfrm_Main.AppMessage(var Msg: TMsg; var Handled: Boolean);
+begin
+//case Msg.message of WM_PAINT,WM_NCMOUSEMOVE..WM_NCXBUTTONDBLCLK, WM_COMMAND..WM_GESTURENOTIFY, WM_MOUSEFIRST..WM_MOUSELAST, WM_NCMOUSEHOVER..WM_MOUSELEAVE:; else
+//DbgPrintf('AppMessage() Msg.message = %d (%x)   LOWORD(Msg.wParam) = %d (%x)', [Msg.message, Msg.message, LOWORD(Msg.wParam), LOWORD(Msg.wParam)]);
+//end;
+
+  Handled := False;
+  case Msg.message of
+//    WM_USER_PARENTNOTIFY,
+//    WM_PARENTNOTIFY:
+//      case LOWORD(Msg.wParam) of
+//        WM_CREATE:
+//        begin
+//          m_hwndChild := GetWindow(Msg.hwnd, GW_CHILD);
+//          UpdateTitleInformation;
+//          Handled := True;
+//        end;
+//
+//        WM_DESTROY:
+//        begin
+//          m_hwndChild := HNULL;
+//          UpdateTitleInformation;
+//          Handled := True;
+//        end;
+//      end;
+
+    WM_SYSKEYDOWN:
+      if m_hwndChild <> 0 then
+      begin
+        SendMessage(m_hwndChild, Msg.message, Msg.wParam, Msg.lParam);
+        Handled := True;
+      end;
+
+    WM_KEYDOWN:
+      case Msg.wParam of
+        VK_F6:
+        begin
+          if (m_hwndChild <> 0) and (Emulation_State = esRunning) then
+          begin
+            StopEmulation;
+            Handled := True;
+          end;
+        end;
+      else
+        if m_hwndChild <> 0 then
+        begin
+          SendMessage(m_hwndChild, Msg.message, Msg.wParam, Msg.lParam);
+          Handled := True;
+        end;
+      end;
+  end;
+end;
+
+procedure Tfrm_Main.WndProc(var Message: TMessage);
+begin
+  case Message.Msg of
+    WM_USER_PARENTNOTIFY:
+      case LOWORD(Message.WParam) of
+        WM_CREATE:
+        begin
+          m_hwndChild := GetWindow(Self.Handle, GW_CHILD);
+          UpdateTitleInformation;
+          Message.Result := 1;
+          Exit;
+        end;
+      end;
+
+    WM_PARENTNOTIFY:
+      case LOWORD(Message.WParam) of
+        WM_DESTROY:
+        begin
+          m_hwndChild := HNULL;
+          UpdateTitleInformation;
+          Message.Result := 1;
+          Exit;
+        end;
+      end;
+
+//    WM_SYSKEYDOWN:
+//      if m_hwndChild <> 0 then
+//      begin
+//        SendMessage(m_hwndChild, Message.Msg, Message.WParam, Message.LParam);
+//        Message.Result := 1;
+//        Exit;
+//      end;
+//
+//    WM_KEYDOWN:
+//      case Message.WParam of
+//        VK_F6:
+//        begin
+//          if (m_hwndChild <> 0) and (Emulation_State = esRunning) then
+//          begin
+//            StopEmulation;
+//            Message.Result := 1;
+//            Exit;
+//          end;
+//        end;
+//      else
+//        if m_hwndChild <> 0 then
+//        begin
+//          SendMessage(m_hwndChild, Message.Msg, Message.WParam, Message.LParam);
+//          Message.Result := 1;
+//          Exit;
+//        end;
+//      end;
+  end;
+
+  inherited WndProc(Message);
+end;
+
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
   DummyStr: string;
 //  i: Integer;
 begin
+  Application.OnMessage := AppMessage;
   dgXbeInfos.ColCount := 5;
 
   BackgroundImage := TBitmap.Create;
@@ -323,8 +445,6 @@ begin
 
   CreateLogs(DebugMode, DebugFileName);
   //CreateLogs(KernelDebugMode, KernelDebugFileName);
-
-  AdjustMenu;
 
   XBEFilePath := ParamStr(1);
 
@@ -677,6 +797,11 @@ begin
   LaunchXBE;
 end;
 
+procedure Tfrm_Main.actStopEmulationExecute(Sender: TObject);
+begin
+  StopEmulation;
+end;
+
 procedure Tfrm_Main.actConsoleXbeInfoExecute(Sender: TObject);
 begin
   // dump xbe information to debug console
@@ -958,7 +1083,8 @@ begin
   actFileDebugKernel.Checked := (KernelDebugMode = dmFile);
 
   // Update Emulation menu actions :
-  actStartEmulation.Enabled := Assigned(m_Xbe);
+  actStartEmulation.Enabled := (Emulation_State = esFileOpen);
+  actStopEmulation.Enabled := (Emulation_State = esRunning);
 
   // Update Tools menu actions :
   actXbeExplorer.Enabled := FileExists(FApplicationDir + cXbeExplorerPath);
@@ -970,7 +1096,7 @@ begin
   mnu_DumpxbeinfoTo.Enabled := Assigned(m_Xbe) and actXdkTracker.Enabled;
 end; // AdjustMenu
 
-function Tfrm_Main.GetEmuWindowHandle(const aEmuDisplayMode: Integer = 0): THandle;
+function Tfrm_Main.GetEmuWindowHandle(const aEmuDisplayMode: Integer = 1): THandle;
 begin
   // Where should the xbox emulation screen be drawn?
   case aEmuDisplayMode of
@@ -997,7 +1123,7 @@ begin
   // transfers control to DxbxMain() in our emulation dll, which start emulation :
   ShellExecute(0, 'open', PChar(ParamStr(0)), PChar(Parameters), nil, SW_SHOWNORMAL);
 
-  Emulation_State := esRunning;
+  Emulation_State := esRunning; // m_bCanStart := false;
   UpdateTitleInformation;
 end;
 
@@ -1010,14 +1136,12 @@ begin
     RecentXbeAdd(XbeOpenDialog.FileName);
     Emulation_State := esFileOpen;
     UpdateTitleInformation;
-    AdjustMenu;
   end
   else
   begin
     MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
     Emulation_State := esNone;
     UpdateTitleInformation;
-    AdjustMenu;
   end;
 end; // LoadXbe
 
@@ -1029,7 +1153,6 @@ begin
 
     Emulation_State := esNone;
     UpdateTitleInformation;
-    AdjustMenu;
 
     WriteLog(Format('DXBX: %s Closed...', [m_szAsciiTitle]));
   end;
@@ -1056,7 +1179,6 @@ begin
 
   Emulation_State := esFileOpen;
   UpdateTitleInformation;
-  AdjustMenu;
 end; // ReopenXbe
 
 procedure Tfrm_Main.RecentXbeAdd(aFileName: string);
@@ -1146,6 +1268,8 @@ begin
     StatusBar.SimpleText := Format('DXBX: %s Loaded', [m_szAsciiTitle])
   else
     StatusBar.SimpleText := 'DXBX: No Xbe Loaded...';
+
+  AdjustMenu;
 end; // UpdateTitleInformation
 
 function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
@@ -1318,5 +1442,17 @@ begin
 
   Result := _SendData(copyDataStruct);
 end; // SendCommandToXdkTracker
+
+procedure Tfrm_Main.StopEmulation;
+begin
+  if IsWindow(m_hwndChild) then
+  begin
+    SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
+    Emulation_State := esFileOpen; // m_bCanStart := true;
+    m_hwndChild := HNULL;
+
+    UpdateTitleInformation;
+  end;
+end;
 
 end.

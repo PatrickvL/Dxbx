@@ -214,6 +214,9 @@ object frm_Main: Tfrm_Main
       object Start1: TMenuItem
         Action = ActStartEmulation
       end
+      object Stop1: TMenuItem
+        Action = actStopEmulation
+      end
     end
     object ools1: TMenuItem
       Caption = 'Tools'
@@ -334,6 +337,12 @@ object frm_Main: Tfrm_Main
       Category = 'Settings'
       Caption = 'Clean Symbol Cache'
       OnExecute = actCleanSymbolCacheExecute
+    end
+    object actStopEmulation: TAction
+      Category = 'Emulation'
+      Caption = 'Stop'
+      ShortCut = 117
+      OnExecute = actStopEmulationExecute
     end
   end
   object XbeOpenDialog: TOpenDialog
