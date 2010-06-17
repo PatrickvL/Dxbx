@@ -367,7 +367,7 @@ begin
             break;
         end;
       end;
-
+(* Note : This is a major slowdown! 7 fps becomes 300 fps without this!
       // See if this argument can be translated to an additional string :
       if _TryArgumentToString(Args[i], {var}ArgumentAsString) then
       begin
@@ -381,6 +381,7 @@ begin
 
         Inc(CurrentPercentageOffset, Length(ArgumentAsString));
       end;
+*)
     end;
 
     // Now try to format the string, including it's arguments :
