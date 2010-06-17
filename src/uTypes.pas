@@ -92,7 +92,8 @@ type
 
   PUInt32 = ^UInt32;
   PUInt16 = ^UInt16;
-  PUInt8 = PBytes;//PAnsiChar; //^UInt8;
+  // IMPORTANT! Defining PUInt8 as 'PBytes' led to increments with whole arrays at a time!
+  PUInt8 = PByte; // TODO : Find a better solution for older Delphi's to index this type (array [0..0] without bounds-checking?)
 
   UInt08 = UInt8;
   PUInt08 = PUInt8;

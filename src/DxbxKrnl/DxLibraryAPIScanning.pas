@@ -1514,6 +1514,7 @@ begin
     if Assigned(XTL_EmuD3DDeferredRenderState) then
     begin
       // Calculate the location of D3DDeferredRenderState via an XDK-dependent offset to _D3D__RenderState :
+      // Dxbx note : XTL_EmuD3DDeferredRenderState:PDWORDs cast to UIntPtr to avoid incrementing with that many array-sizes!
       if LibD3D8.LibVersion <= 3925 then
         Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), X_D3DRS_DEFERRED_START_3925 * 4)
       else if LibD3D8.LibVersion <= 4361 then
