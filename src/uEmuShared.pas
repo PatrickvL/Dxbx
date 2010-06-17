@@ -240,7 +240,7 @@ procedure EmuShared.GetXbePath(var Path: string);
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Lock();
-  {var}Path := string({shared}m_XbePath); // explicit cast to silence Unicode warnings
+  {var}Path := string(AnsiString({shared}m_XbePath)); // explicit cast to silence Unicode warnings
   Unlock();
 end;
 

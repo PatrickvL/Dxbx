@@ -79,14 +79,14 @@ procedure DxbxMain(const aData: Pointer; const aSize: Cardinal); stdcall; extern
 
 var
   XBEFilePath: string;
+  DummyStr: string;
 begin
   XBEFilePath := ParamStr(2);
 
-  // Check if Dxbx is invoked with the intention to map&run an XBE (if not, we'll show the GUI) :
+  // Check if Dxbx is invoked with the intention to map&run a supplied image (if not, we'll show the GUI) :
   if  (XBEFilePath <> '')
   and SameText(ParamStr(1), '/load')
-  and SameText(ExtractFileExt(XBEFilePath), '.xbe') // TODO : Add ISO support here
-  and TXbe.FileExists(XBEFilePath) then
+  and Drives.D.OpenImage(XBEFilePath, {out}DummyStr) then // out ignored for now
   begin
     // Transfer control to the main emulator-code inside our DLL :
     DxbxMain(@(Data[0]), SizeOf(Data));
