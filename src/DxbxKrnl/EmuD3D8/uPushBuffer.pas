@@ -733,8 +733,6 @@ begin
     Inc(pdwPushData);
   end;
 
-  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
-
 {$ifdef _DEBUG_TRACK_PB}
   if (bShowPB) then
   begin

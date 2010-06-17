@@ -227,7 +227,7 @@ const
   DETECT_SENSITIVITY_POV = 50000;
 
 // Input Device Name Lookup Table
-const m_DeviceNameLookup: array [0..XBCTRL_OBJECT_COUNT-1] of string = (
+const m_DeviceNameLookup: array [XBCtrlObject] of string = (
 // Branch:shogun  Revision:161  Translator:Shadow_Tj  Done:100
 
   // Analog Axis
@@ -235,7 +235,7 @@ const m_DeviceNameLookup: array [0..XBCTRL_OBJECT_COUNT-1] of string = (
   'RThumbPosX', 'RThumbNegX', 'RThumbPosY', 'RThumbNegY',
 
   // Analog Buttons
-  'X', 'Y', 'A', 'B', 'White', 'Black', 'LTrigger', 'RTrigger',
+  'A', 'B', 'X', 'Y', 'Black', 'White', 'LTrigger', 'RTrigger',
 
   // Digital Buttons
   'DPadUp', 'DPadDown', 'DPadLeft', 'DPadRight',
@@ -337,7 +337,7 @@ begin
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
 
-      szValueName := Format('Object : "%s"', [AnsiString(m_DeviceNameLookup[v])]);
+      szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
 
       dwType := REG_BINARY; dwSize := sizeof(XBCtrlObjectCfg);
 
@@ -382,7 +382,7 @@ begin
     // Save Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
-      szValueName := Format('Object : "%s"', [AnsiString(m_DeviceNameLookup[v])]);
+      szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
       
       dwType := REG_BINARY; dwSize := sizeof(XBCtrlObjectCfg);
 
@@ -561,7 +561,7 @@ begin
 {$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected %s%s on %s', [szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType]);
 {$ENDIF}
-        szStatus := Format('Success: %s Mapped to "%s%s" on "%s"!', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName]);
+        szStatus := Format('Success: %s Mapped to "%s%s" on "%s"!', [m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName]);
 
         Result := true;
         Exit;
@@ -595,7 +595,7 @@ begin
 {$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected Key %d on SysKeyboard', [dwHow]);
 {$ENDIF}
-        szStatus := Format('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
+        szStatus := Format('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[CurConfigObject], dwHow]);
 
         Result := true;
         Exit;
@@ -631,7 +631,7 @@ begin
 {$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected Button %d on SysMouse', [dwHow]);
 {$ENDIF}
-        szStatus := Format('Success: %s Mapped to Button %d on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
+        szStatus := Format('Success: %s Mapped to Button %d on SysMouse', [m_DeviceNameLookup[CurConfigObject], dwHow]);
 
         Result := true;
         Exit;
@@ -702,8 +702,8 @@ begin
 
 {$IFDEF DEBUG}
           DbgPrintf('Dxbx: Detected Movement on the %s%s on SysMouse', [szDirection, szObjName]);
-          DbgPrintf('Success: %s Mapped to %s%s on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, szObjName]);
 {$ENDIF}
+          szStatus := Format('Success: %s Mapped to %s%s on SysMouse', [m_DeviceNameLookup[CurConfigObject], szDirection, szObjName]);
 
           Result := true;
           Exit;
@@ -751,7 +751,7 @@ begin
     if m_ObjectConfig[XBCtrlObject(v)].dwDevice >= m_dwInputDeviceCount then
     begin
 {$IFDEF DEBUG}
-      DbgPrintf('Warning: Device Mapped to %s was not found!', [m_DeviceNameLookup[v]]);
+      DbgPrintf('Warning: Device Mapped to %s was not found!', [m_DeviceNameLookup[XBCtrlObject(v)]]);
 {$ENDIF}
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
     end;

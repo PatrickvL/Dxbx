@@ -218,7 +218,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
       Caption = 'Start'
       TabOrder = 5
     end
-    object btnLeftThumb: TButton
+    object btn_LeftThumb: TButton
       Left = 168
       Top = 48
       Width = 75
@@ -275,7 +275,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
       TabOrder = 3
     end
   end
-  object btn_Accept: TButton
+  object btnAccept: TButton
     Left = 364
     Top = 247
     Width = 75
@@ -285,7 +285,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     ModalResult = 1
     TabOrder = 4
   end
-  object btn_Cancel: TButton
+  object btnCancel: TButton
     Left = 444
     Top = 247
     Width = 75
@@ -295,7 +295,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     ModalResult = 2
     TabOrder = 5
   end
-  object btn_LoadConfig: TButton
+  object btnLoadConfig: TButton
     Left = 24
     Top = 207
     Width = 157
@@ -303,7 +303,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     Caption = 'Load Configuration'
     TabOrder = 6
   end
-  object btn_SaveConfig: TButton
+  object btnSaveConfig: TButton
     Left = 187
     Top = 206
     Width = 153
