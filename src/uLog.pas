@@ -295,7 +295,7 @@ var
   i: Integer;
   NrOfArguments: Integer;
   CurrentPercentageOffset: Integer;
-  ArgumentAsString: UnicodeString;
+//  ArgumentAsString: UnicodeString;
 begin
   try
     if Length(Args) = 0 then
