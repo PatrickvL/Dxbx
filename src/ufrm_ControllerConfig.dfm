@@ -281,6 +281,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     Width = 75
     Height = 25
     Caption = 'Accept'
+    Default = True
     ModalResult = 1
     TabOrder = 4
   end
@@ -289,6 +290,7 @@ object frm_ControllerConfig: Tfrm_ControllerConfig
     Top = 247
     Width = 75
     Height = 25
+    Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 5

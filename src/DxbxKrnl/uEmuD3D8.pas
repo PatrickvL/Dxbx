@@ -2873,6 +2873,7 @@ begin
   // TODO -oCXBX: HACK: Since Xbox vertex shader constants range from -96 to 96, during conversion
   // some shaders need to add 96 to use ranges 0 to 192.  This fixes 3911 - 4361 games and XDK
   // samples, but breaks Turok.
+
   if g_BuildVersion <= 4361 then
     Inc(Register_, 96);
 

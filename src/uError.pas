@@ -34,7 +34,7 @@ type
   // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
     // return current error (zero if there is none)
-    function GetError(): PChar;
+    function GetError(): string;
 
     // is the current error fatal? (class is "dead" on fatal errors)
     function IsFatal(): _bool;
@@ -49,11 +49,11 @@ type
     procedure Finalize;
 
     // protected so only derived class may set an error
-    procedure SetError(const x_szError: PChar; x_bFatal: _bool);
+    procedure SetError(const x_szError: string; x_bFatal: _bool);
   private
     // current error information
     m_bFatal: _bool;
-    m_szError: PChar;
+    m_szError: string;
   end; // size = 8 (as in Cxbx)
 
 implementation
@@ -62,16 +62,16 @@ implementation
 
 procedure Error.Initialize;
 begin
-  m_szError := nil;
+  m_szError := '';
   m_bFatal := False;
 end;
 
 procedure Error.Finalize;
 begin
-  StrDispose(m_szError);
+  m_szError := '';
 end;
 
-function Error.GetError(): PChar;
+function Error.GetError(): string;
 begin
   Result := m_szError;
 end;
@@ -81,16 +81,9 @@ begin
   Result := m_bFatal;
 end;
 
-procedure Error.SetError(const x_szError: PChar; x_bFatal: _bool);
+procedure Error.SetError(const x_szError: string; x_bFatal: _bool);
 begin
-  if not Assigned(m_szError) then
-    m_szError := StrAlloc(256);//{ m_szError = new char[256]; }
-
-  strncpy(m_szError, x_szError, 255);
-
-  if m_szError <> '' then
-    m_szError := x_szError;
-
+  m_szError := x_szError;
   m_bFatal := x_bFatal;
 end;
 
@@ -103,8 +96,7 @@ begin
     Exit;
   end;
 
-  StrDispose(m_szError);
-  m_szError := nil;
+  m_szError := '';
 
   m_bFatal := False;
 

@@ -26,6 +26,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Tabs, ComCtrls
   // Dxbx
+  , uTypes
   , uXBController
   , uEmuShared
   ;
@@ -73,6 +74,7 @@ type
   private
     g_XBController: XBController;
     g_bHasChanges: Boolean;
+    procedure ConfigureInput(Sender: TObject);
   end;
 
 
@@ -84,7 +86,39 @@ implementation
 {$R *.DFM}
 
 procedure Tfrm_ControllerConfig.FormCreate(Sender: TObject);
+
+  procedure _Register(const aButton: TButton; const aXBCtrlObject: XBCtrlObject);
+  begin
+    aButton.Tag := Ord(aXBCtrlObject);
+    aButton.OnClick := ConfigureInput;
+  end;
+
 begin
+  _Register(btn_X, XBCTRL_OBJECT_X);
+  _Register(btn_Y, XBCTRL_OBJECT_Y);
+  _Register(btn_A, XBCTRL_OBJECT_A);
+  _Register(btn_B, XBCTRL_OBJECT_B);
+  _Register(btn_White, XBCTRL_OBJECT_WHITE);
+  _Register(btn_Black, XBCTRL_OBJECT_BLACK);
+  _Register(btn_LeftTrigger, XBCTRL_OBJECT_LTRIGGER);
+  _Register(btn_RightTrigger, XBCTRL_OBJECT_RTRIGGER);
+  _Register(btn_LeftUp, XBCTRL_OBJECT_LTHUMBNEGY);
+  _Register(btn_LeftDown, XBCTRL_OBJECT_LTHUMBPOSY);
+  _Register(btn_LeftLeft, XBCTRL_OBJECT_LTHUMBNEGX);
+  _Register(btn_LeftRight, XBCTRL_OBJECT_LTHUMBPOSX);
+  _Register(btn_DPadUp, XBCTRL_OBJECT_DPADUP);
+  _Register(btn_DPadDown, XBCTRL_OBJECT_DPADDOWN);
+  _Register(btn_DPadLeft, XBCTRL_OBJECT_DPADLEFT);
+  _Register(btn_DPadRight, XBCTRL_OBJECT_DPADRIGHT);
+  _Register(btn_Back, XBCTRL_OBJECT_BACK);
+  _Register(btn_Start, XBCTRL_OBJECT_START);
+  _Register(btnLeftThumb, XBCTRL_OBJECT_LTHUMB);
+  _Register(btn_RightThumb, XBCTRL_OBJECT_RTHUMB);
+  _Register(btn_RightUp, XBCTRL_OBJECT_RTHUMBNEGY);
+  _Register(btn_RightDown, XBCTRL_OBJECT_RTHUMBPOSY);
+  _Register(btn_RightLeft, XBCTRL_OBJECT_RTHUMBNEGX);
+  _Register(btn_RightRight, XBCTRL_OBJECT_RTHUMBPOSX);
+
   // reset changes flag
   g_bHasChanges := False;
 
@@ -108,7 +142,7 @@ begin
     case MessageBox(0, 'Do you wish to apply your changes?', 'Dxbx', MB_ICONQUESTION or MB_YESNOCANCEL) of
       IDYES:
         begin
-//        PostMessage(hWndDlg, WM_COMMAND, IDC_INPUT_CONFIG_ACCEPT, 0);
+          g_EmuShared.SetXBController(@g_XBController);
           {var}CanClose := True;
         end;
       IDNO:
@@ -122,6 +156,78 @@ begin
   end
   else
     {var}CanClose := True;
+end;
+
+{static}var bConfigDone: _bool = true;
+
+procedure Tfrm_ControllerConfig.ConfigureInput(Sender: TObject);
+var
+  hWndDlg: THandle;
+  szNewText: string;
+  szOrgText: string;
+  v: int;
+  Msg: TMsg;
+begin
+  if not (Sender is TButton) then
+    Exit;
+
+  hWndDlg := Handle;
+
+  (*! ensure only one input is configured at a time *)
+  if(not bConfigDone) then Exit;
+
+  bConfigDone := false;
+
+  // disable all buttons
+  // EnableButtonWindows(hWndDlg, hWndButton, False);
+
+  szNewText := 'Recieved no user input, try again...';
+
+  Caption := 'Waiting for your input...';
+  szOrgText := TButton(Sender).Caption;
+
+  g_XBController.ConfigBegin(hWndDlg, XBCtrlObject(TButton(Sender).Tag));
+
+  // wait for input, or 5 second timeout
+  for v := 100 downto 0 do
+  begin
+    // update the button text every second
+    if (v mod 20) = 0 then
+      TButton(Sender).Caption := IntToStr((v+19) div 20);
+
+    if g_XBController.GetError() <> '' then
+      Break;
+
+    if g_XBController.ConfigPoll({var}szNewText) then
+    begin
+      g_bHasChanges := TRUE;
+      Break;
+    end;
+
+    Sleep(50);
+  end;
+
+  if g_XBController.GetError() = '' then
+    g_XBController.ConfigEnd();
+
+  // enable all buttons
+//  EnableButtonWindows(hWndDlg, hWndButton, True);
+
+  // update window with status
+  begin
+    if g_XBController.GetError() <> '' then
+      szNewText := g_XBController.GetError();
+
+    TButton(Sender).Caption := szOrgText;
+    Caption := szNewText;
+
+    while(PeekMessage({var}Msg, hWndDlg, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE)) do
+      ;
+    while(PeekMessage({var}Msg, hWndDlg, WM_KEYFIRST,   WM_KEYLAST,   PM_REMOVE)) do
+      ;
+  end;
+
+  bConfigDone := true;
 end;
 
 (*
