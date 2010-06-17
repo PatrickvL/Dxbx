@@ -1225,8 +1225,9 @@ begin
         break;
       end;
 
-      if (v = RESOURCE_CACHE_SIZE-1) then // Dxbx note : Cxbx uses 16 here, but that's just plain wrong!
-        CxbxKrnlCleanup('X_D3DResource cache is maxed out!');
+      // DXBX MARKED OUT - CXBX WAS TESTING 16, but that was never hit... we do hit it.
+      //if (v = RESOURCE_CACHE_SIZE-1) then // Dxbx note : Cxbx uses 16 here, but that's just plain wrong!
+      //  CxbxKrnlCleanup('X_D3DResource cache is maxed out!');
     end;
   end;
 end; // EmuVerifyResourceIsRegistered
