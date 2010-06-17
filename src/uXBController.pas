@@ -138,7 +138,7 @@ type XBController = object(Error)
     procedure Save(szRegistryKey: P_char);
     // Configuration
     procedure ConfigBegin(ahwnd: HWND; object_: XBCtrlObject);
-    function ConfigPoll(szStatus: P_char): _bool; // true if polling detected a change
+    function ConfigPoll(var szStatus: string): _bool; // true if polling detected a change
     procedure ConfigEnd();
     // Listening
     procedure ListenBegin(hwnd: HWND);
@@ -241,6 +241,9 @@ const m_DeviceNameLookup: array [0..XBCTRL_OBJECT_COUNT-1] of string = (
   'DPadUp', 'DPadDown', 'DPadLeft', 'DPadRight',
   'Back', 'Start', 'LThumb', 'RThumb');
 
+var
+  g_XBController: XBController;
+
 implementation
 
 function WrapEnumGameCtrlCallback(var lpddi: TDIDeviceInstanceA; pvRef: Pointer): BOOL; stdcall;
@@ -315,30 +318,29 @@ begin
   if (RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, {var}hKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
     // Load Device Names
-    SetLength(szValueName, 64);
-
     for v := 0 to XBCTRL_MAX_DEVICES-1 do
     begin
       // default is a null string
       m_DeviceName[v][0] := #0;
 
-      sprintf(@szValueName[1], 'DeviceName 0x%.02X', [v]);
+      szValueName := Format('DeviceName 0x%.02X', [v]);
 
       dwType := REG_SZ; dwSize := 260;
       RegQueryValueExA(hKey, PAnsiChar(szValueName), NULL, @dwType, PByte(@(m_DeviceName[v])), @dwSize);
     end;
 
     // Load Object Configuration
-    SetLength(szValueName, 64);
-
     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
       // default object configuration
       m_ObjectConfig[XBCtrlObject(v)].dwDevice := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
-      sprintf(@szValueName[1], 'Object : %s', [m_DeviceNameLookup[v]]);
+
+      szValueName := Format('Object : "%s"', [AnsiString(m_DeviceNameLookup[v])]);
+
       dwType := REG_BINARY; dwSize := sizeof(XBCtrlObjectCfg);
+
       RegQueryValueExA(hKey, PAnsiChar(szValueName), NULL, @dwType, @m_ObjectConfig[XBCtrlObject(v)], @dwSize);
     end;
 
@@ -365,11 +367,9 @@ begin
   if (RegCreateKeyExA(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, hKey, @dwDisposition) = ERROR_SUCCESS) then
   begin
     // Save Device Names
-    SetLength(szValueName, 64);
-
     for v := 0 to XBCTRL_MAX_DEVICES-1 do
     begin
-      sprintf(@szValueName[1], 'DeviceName $%.02X', [v]);
+      szValueName := Format('DeviceName 0x%.02X', [v]);
 
       dwType := REG_SZ; dwSize := 260;
 
@@ -380,11 +380,9 @@ begin
     end;
 
     // Save Object Configuration
-    SetLength(szValueName, 64);
-
     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
-      sprintf(@szValueName[1], 'Object : "%s"', [m_DeviceNameLookup[v]]);
+      szValueName := Format('Object : "%s"', [AnsiString(m_DeviceNameLookup[v])]);
       
       dwType := REG_BINARY; dwSize := sizeof(XBCtrlObjectCfg);
 
@@ -409,7 +407,7 @@ begin
 
   DInputInit(ahwnd);
 
-  if Self{:Error}.GetError <> '' then
+  if Self{:Error}.GetError() <> '' then
     Exit;
 
   lPrevMouseX := -1;
@@ -419,7 +417,7 @@ begin
   CurConfigObject := object_;
 end;
 
-function XBController.ConfigPoll(szStatus: P_char): _bool;
+function XBController.ConfigPoll(var szStatus: string): _bool;
 // Branch:shogun  Revision:161  Translator:Shadow_Tj  Done:100
 var
   DeviceInstance: DIDEVICEINSTANCE;
@@ -466,12 +464,13 @@ begin
       end;
     end;
 
-    dwHow := -1;
-    // Never used : dwFlags := m_InputDevice[v].m_Flags;
+    dwHow := -1;  dwFlags := m_InputDevice[v].m_Flags;
 
     // Detect Joystick Input
     if (m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) > 0 then
     begin
+      ZeroMemory(@JoyState, sizeof(DIJOYSTATE));
+
       // Get Joystick State
       begin
         hRet := IDirectInputDevice8(m_InputDevice[v].m_Device).GetDeviceState(sizeof(DIJOYSTATE), @JoyState);
@@ -561,8 +560,8 @@ begin
 
 {$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected %s%s on %s', [szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType]);
-        DbgPrintf('Success: %s Mapped to "%s%s" on "%s"!', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName]);
 {$ENDIF}
+        szStatus := Format('Success: %s Mapped to "%s%s" on "%s"!', [m_DeviceNameLookup[Ord(CurConfigObject)], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName]);
 
         Result := true;
         Exit;
@@ -572,6 +571,8 @@ begin
     // Detect Keyboard Input
     else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_KEYBOARD) > 0 then
     begin
+      ZeroMemory(@KeyState, sizeof(DIKEYSTATE));
+
       IDirectInputDevice8(m_InputDevice[v].m_Device).GetDeviceState(sizeof(DIKEYSTATE), @KeyState);
 
       dwFlags := DEVICE_FLAG_KEYBOARD;
@@ -593,8 +594,9 @@ begin
 
 {$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected Key %d on SysKeyboard', [dwHow]);
-        DbgPrintf('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
 {$ENDIF}
+        szStatus := Format('Success: %s Mapped to Key %d on SysKeyboard', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
+
         Result := true;
         Exit;
       end;
@@ -603,6 +605,8 @@ begin
     // Detect Mouse Input
     else if (m_InputDevice[v].m_Flags and DEVICE_FLAG_MOUSE) > 0 then
     begin
+      ZeroMemory(@MouseState, sizeof(MouseState));
+
       IDirectInputDevice8(m_InputDevice[v].m_Device).GetDeviceState(sizeof(MouseState), @MouseState);
 
       dwFlags := DEVICE_FLAG_MOUSE;
@@ -626,8 +630,8 @@ begin
 
 {$IFDEF DEBUG}
         DbgPrintf('Dxbx: Detected Button %d on SysMouse', [dwHow]);
-        DbgPrintf('Success: %s Mapped to Button %d on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
 {$ENDIF}
+        szStatus := Format('Success: %s Mapped to Button %d on SysMouse', [m_DeviceNameLookup[Ord(CurConfigObject)], dwHow]);
 
         Result := true;
         Exit;

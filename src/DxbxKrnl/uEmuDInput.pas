@@ -41,9 +41,6 @@ procedure EmuDInputPoll(Controller: PXINPUT_STATE); {NOPATCH}
 
 implementation
 
-var
-  g_XBController: XBController;
-
 function EmuDInputInit: _bool; {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -51,7 +48,7 @@ begin
 
   g_XBController.ListenBegin(g_hEmuWindow);
 
-  if Assigned(g_XBController.GetError()) then
+  if g_XBController.GetError() <> '' then
   begin
     Result := false;
     Exit;
@@ -71,8 +68,8 @@ procedure EmuDInputPoll(Controller: PXINPUT_STATE); {NOPATCH}
 begin
   g_XBController.ListenPoll(Controller);
 
-  if Assigned(g_XBController.GetError()) then
-    MessageBox(0, g_XBController.GetError(), 'Dxbx [*UNHANDLED!*]', MB_OK);  // TODO -oCXBX: Handle this!
+  if g_XBController.GetError() <> '' then
+    MessageBox(0, PChar(g_XBController.GetError()), 'Dxbx [*UNHANDLED!*]', MB_OK);  // TODO -oCXBX: Handle this!
 end;
 
 end.
