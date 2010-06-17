@@ -7814,8 +7814,6 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
-
   EmuSwapFS(fsXbox);
 end;
 
@@ -7882,8 +7880,6 @@ begin
    end;
 
   VertPatch.Restore();
-
-  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   EmuSwapFS(fsXbox);
 end;
@@ -8067,8 +8063,6 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
-
   EmuSwapFS(fsXbox);
   Result := D3D_OK;
 end;
@@ -8142,8 +8136,6 @@ begin
   {$endif}
 
   VertPatch.Restore();
-
-  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
 
   EmuSwapFS(fsXbox);
 end;

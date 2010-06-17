@@ -107,8 +107,7 @@ type _CACHEDSTREAM = record
 type VertexPatcher = object
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
   public
-    procedure VertexPatcher;
-    procedure _VertexPatcher;
+    procedure VertexPatcher();
 
     function Apply(pPatchDesc: PVertexPatchDesc; pbFatalError: P_bool): _bool;
     function Restore(): _bool;
@@ -246,7 +245,7 @@ end;
 
 { VertexPatcher }
 
-procedure VertexPatcher.VertexPatcher;
+procedure VertexPatcher.VertexPatcher();
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   m_uiNbrStreams := 0;
@@ -256,11 +255,6 @@ begin
   m_pNewVertexStreamZeroData := NULL;
   m_pDynamicPatch := NULL;
   CRC32Init();
-end;
-
-procedure VertexPatcher._VertexPatcher;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-begin
 end;
 
 procedure VertexPatcher.DumpCache();
@@ -1348,7 +1342,7 @@ begin
       continue;
     end;
 
-	// Dxbx note : Different from Cxbx, to avoid lazy boolean evaluation :
+    // Dxbx note : Different from Cxbx, to avoid lazy boolean evaluation :
     if PatchPrimitive(pPatchDesc, uiStream) then
       LocalPatched := True;
     if PatchStream(pPatchDesc, uiStream) then
@@ -1401,8 +1395,8 @@ begin
       if (Self.m_bAllocatedStreamZeroData) then
       begin
         CxbxFree(m_pNewVertexStreamZeroData);
-//        m_pNewVertexStreamZeroData := nil; // Dxbx addition
-//        Self.m_bAllocatedStreamZeroData := False; // Dxbx addition
+        m_pNewVertexStreamZeroData := nil; // Dxbx addition
+        Self.m_bAllocatedStreamZeroData := False; // Dxbx addition
       end;
     end
     else
@@ -1636,8 +1630,6 @@ begin
 
   VertPatch.Restore();
 
-  VertPatch._VertexPatcher(); // Dxbx addition : explicit finalizer
-
   g_IVBTblOffs := 0;
 end; // XTL_EmuFlushIVB
 
@@ -1691,6 +1683,7 @@ begin
     if (pTexture = NULL) then
       continue;
 
+    //(*
     pResource := pTexture;
     pPixelContainer := PX_D3DPixelContainer(pTexture);
 
@@ -1874,7 +1867,7 @@ begin
     end;
 
     IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.Emu.Texture8));
-
+    //*)
   end;
 end; // XTL_EmuUpdateActiveTexture
 

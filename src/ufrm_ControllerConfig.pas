@@ -55,16 +55,16 @@ type
     btn_DPadRight: TButton;
     btn_Back: TButton;
     btn_Start: TButton;
-    btnLeftThumb: TButton;
+    btn_LeftThumb: TButton;
     btn_RightThumb: TButton;
     btn_RightUp: TButton;
     btn_RightDown: TButton;
     btn_RightLeft: TButton;
     btn_RightRight: TButton;
-    btn_Accept: TButton;
-    btn_Cancel: TButton;
-    btn_LoadConfig: TButton;
-    btn_SaveConfig: TButton;
+    btnAccept: TButton;
+    btnCancel: TButton;
+    btnLoadConfig: TButton;
+    btnSaveConfig: TButton;
     Bevel1: TBevel;
     Label1: TLabel;
     sTabControl1: TTabControl;
@@ -94,30 +94,37 @@ procedure Tfrm_ControllerConfig.FormCreate(Sender: TObject);
   end;
 
 begin
-  _Register(btn_X, XBCTRL_OBJECT_X);
-  _Register(btn_Y, XBCTRL_OBJECT_Y);
+  // Analog Axis
+  _Register(btn_LeftRight, XBCTRL_OBJECT_LTHUMBPOSX);
+  _Register(btn_LeftLeft, XBCTRL_OBJECT_LTHUMBNEGX);
+  _Register(btn_LeftDown, XBCTRL_OBJECT_LTHUMBNEGY);
+  _Register(btn_LeftUp, XBCTRL_OBJECT_LTHUMBPOSY);
+
+  _Register(btn_RightRight, XBCTRL_OBJECT_RTHUMBPOSX);
+  _Register(btn_RightLeft, XBCTRL_OBJECT_RTHUMBNEGX);
+  _Register(btn_RightDown, XBCTRL_OBJECT_RTHUMBNEGY);
+  _Register(btn_RightUp, XBCTRL_OBJECT_RTHUMBPOSY);
+
+  // Analog Buttons
   _Register(btn_A, XBCTRL_OBJECT_A);
   _Register(btn_B, XBCTRL_OBJECT_B);
-  _Register(btn_White, XBCTRL_OBJECT_WHITE);
+  _Register(btn_X, XBCTRL_OBJECT_X);
+  _Register(btn_Y, XBCTRL_OBJECT_Y);
   _Register(btn_Black, XBCTRL_OBJECT_BLACK);
+  _Register(btn_White, XBCTRL_OBJECT_WHITE);
   _Register(btn_LeftTrigger, XBCTRL_OBJECT_LTRIGGER);
   _Register(btn_RightTrigger, XBCTRL_OBJECT_RTRIGGER);
-  _Register(btn_LeftUp, XBCTRL_OBJECT_LTHUMBNEGY);
-  _Register(btn_LeftDown, XBCTRL_OBJECT_LTHUMBPOSY);
-  _Register(btn_LeftLeft, XBCTRL_OBJECT_LTHUMBNEGX);
-  _Register(btn_LeftRight, XBCTRL_OBJECT_LTHUMBPOSX);
+
+  // Digital Buttons
   _Register(btn_DPadUp, XBCTRL_OBJECT_DPADUP);
   _Register(btn_DPadDown, XBCTRL_OBJECT_DPADDOWN);
   _Register(btn_DPadLeft, XBCTRL_OBJECT_DPADLEFT);
   _Register(btn_DPadRight, XBCTRL_OBJECT_DPADRIGHT);
+
   _Register(btn_Back, XBCTRL_OBJECT_BACK);
   _Register(btn_Start, XBCTRL_OBJECT_START);
-  _Register(btnLeftThumb, XBCTRL_OBJECT_LTHUMB);
+  _Register(btn_LeftThumb, XBCTRL_OBJECT_LTHUMB);
   _Register(btn_RightThumb, XBCTRL_OBJECT_RTHUMB);
-  _Register(btn_RightUp, XBCTRL_OBJECT_RTHUMBNEGY);
-  _Register(btn_RightDown, XBCTRL_OBJECT_RTHUMBPOSY);
-  _Register(btn_RightLeft, XBCTRL_OBJECT_RTHUMBNEGX);
-  _Register(btn_RightRight, XBCTRL_OBJECT_RTHUMBPOSX);
 
   // reset changes flag
   g_bHasChanges := False;

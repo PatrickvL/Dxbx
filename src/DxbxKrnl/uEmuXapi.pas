@@ -92,17 +92,6 @@ end; // packed size = 16
 XPP_DEVICE_TYPE = _XPP_DEVICE_TYPE;
 PXPP_DEVICE_TYPE = ^XPP_DEVICE_TYPE;
 
-type _XINPUT_GAMEPAD = packed record
-    wButtons: WORD;
-    bAnalogButtons: array [0..8-1] of BYTE;
-    sThumbLX: SHORT;
-    sThumbLY: SHORT;
-    sThumbRX: SHORT;
-    sThumbRY: SHORT;
-end; // packed size = 12
-XINPUT_GAMEPAD = _XINPUT_GAMEPAD;
-PXINPUT_GAMEPAD = ^XINPUT_GAMEPAD;
-
 type _XINPUT_RUMBLE = packed record
     wLeftMotorSpeed: WORD;
     wRightMotorSpeed: WORD;
