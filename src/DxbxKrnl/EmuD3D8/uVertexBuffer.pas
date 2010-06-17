@@ -1081,6 +1081,11 @@ begin
   Result := m_bPatched;
 end; // VertexPatcher.NormalizeTexCoords
 
+const
+  VERTICES_PER_QUAD = 4;
+  VERTICES_PER_TRIANGLE = 3;
+  TRIANGLES_PER_QUAD = 2;
+
 function VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc;
                                       uiStream: UINT): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:90
@@ -1094,12 +1099,12 @@ var
   pPatchedVertexData: PBYTE;
   Desc: D3DVERTEXBUFFER_DESC;
 
-  pPatch1: Puint08;
-  pPatch2: Puint08;
+  pPatch012: Puint08;
+  pPatch34: Puint08;
   pPatch3: Puint08;
-  pPatch4: Puint08;
+  pPatch5: Puint08;
 
-  pOrig1: Puint08;
+  pOrig012: Puint08;
   pOrig2: Puint08;
   pOrig3: Puint08;
   i: uint32;
@@ -1117,6 +1122,8 @@ begin
     // Quad strip is just like a triangle strip, but requires two
     // vertices per primitive.
     X_D3DPT_QUADSTRIP: begin
+      // Dxbx note : Shouldn't the 'two vertices per primitive' requirement always be met?
+      // In other words : Is the next fixup ever needed at all?
       Dec(pPatchDesc.dwVertexCount, pPatchDesc.dwVertexCount mod 2);
       pPatchDesc.PrimitiveType := X_D3DPT_TRIANGLESTRIP;
       end;
@@ -1175,11 +1182,13 @@ begin
   // Quad list
   if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
   begin
-    pPatchDesc.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount * 2;
+    // We're going to convert 1 quad (4 vertices) to 2 triangles (2*3=6 vertices),
+    // so that's 2 times as many primitives, and 50% more vertices :
+    pPatchDesc.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount * TRIANGLES_PER_QUAD;
 
     // This is a list of sqares/rectangles, so we convert it to a list of triangles
-    dwOriginalSize  := pPatchDesc.dwPrimitiveCount * pStream.uiOrigStride * 2;
-    dwNewSize       := pPatchDesc.dwPrimitiveCount * pStream.uiOrigStride * 3;
+    dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride * VERTICES_PER_QUAD;
+    dwNewSize       := pPatchDesc.dwVertexCount * pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD;
   end
   // Line loop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
@@ -1187,8 +1196,8 @@ begin
     Inc(pPatchDesc.dwPrimitiveCount, 1);
 
     // We will add exactly one more line
-    dwOriginalSize  := pPatchDesc.dwPrimitiveCount * pStream.uiOrigStride;
-    dwNewSize       := (pPatchDesc.dwPrimitiveCount * pStream.uiOrigStride) + pStream.uiOrigStride;
+    dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride;
+    dwNewSize       := dwOriginalSize + pStream.uiOrigStride;
   end;
 
   if(pPatchDesc.pVertexStreamZeroData = nil) then
@@ -1234,6 +1243,10 @@ begin
     pPatchDesc.pVertexStreamZeroData := pPatchedVertexData;
   end;
 
+(* Dxbx Note : This seems to be completely wrong, as for starters the dwOffset isn't multiplied with the stride,
+   and what about the preceding vertices, shouldn't they be converted too?!?
+   This mainly becomes a problem whenever dwOffset <> 0 though.
+*)
   // Copy the nonmodified data
   memcpy(pPatchedVertexData, pOrigVertexData, pPatchDesc.dwOffset);
   memcpy(@pPatchedVertexData[pPatchDesc.dwOffset+dwNewSize],
@@ -1243,50 +1256,50 @@ begin
   // Quad list
   if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
   begin
-    pPatch1 := @pPatchedVertexData[pPatchDesc.dwOffset     * pStream.uiOrigStride];
-    pPatch2 := @pPatchedVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiOrigStride];
-    pPatch3 := @pPatchedVertexData[(pPatchDesc.dwOffset + 4) * pStream.uiOrigStride];
-    pPatch4 := @pPatchedVertexData[(pPatchDesc.dwOffset + 5) * pStream.uiOrigStride];
+    // Calculate where the new vertices should go :
+    pPatch012 := @pPatchedVertexData[ pPatchDesc.dwOffset      * pStream.uiOrigStride];
+    pPatch34 :=  @pPatchedVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiOrigStride];
+    pPatch5 :=   @pPatchedVertexData[(pPatchDesc.dwOffset + 5) * pStream.uiOrigStride];
 
-    pOrig1 := @pOrigVertexData[pPatchDesc.dwOffset     * pStream.uiOrigStride];
-    pOrig2 := @pOrigVertexData[(pPatchDesc.dwOffset + 2) * pStream.uiOrigStride];
-    pOrig3 := @pOrigVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiOrigStride];
+    // Calculate where the original vertices come from :
+    pOrig012 := @pOrigVertexData[ pPatchDesc.dwOffset      * pStream.uiOrigStride];
+    pOrig2 :=   @pOrigVertexData[(pPatchDesc.dwOffset + 2) * pStream.uiOrigStride];
 
-    if (pPatchDesc.dwPrimitiveCount div 2) > 0 then // Dxbx addition, to prevent underflow
-    for i := 0 to (pPatchDesc.dwPrimitiveCount div 2) - 1 do
+    // Now that dwOffset isn't used anymore, make sure the index points to the vertex of the same 'virtual' primitive :
+    pPatchDesc.dwOffset := (pPatchDesc.dwOffset * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) div VERTICES_PER_QUAD;
+
+    // Loop over all quads :
+    if (pPatchDesc.dwVertexCount div VERTICES_PER_QUAD) > 0 then // Dxbx addition, to prevent underflow
+    for i := 0 to (pPatchDesc.dwVertexCount div VERTICES_PER_QUAD) - 1 do
     begin
-      // DXBX THIS WILL CRASH PatchPrimitive
-      // DXBX TODO: FIX THIS !!!
-      (*memcpy(pPatch1, pOrig1, pStream.uiOrigStride * 3); // Vertex 0,1,2 := Vertex 0,1,2
-      memcpy(pPatch2, pOrig2, pStream.uiOrigStride);     // Vertex 3     := Vertex 2
-      memcpy(pPatch3, pOrig3, pStream.uiOrigStride);     // Vertex 4     := Vertex 3
-      memcpy(pPatch4, pOrig1, pStream.uiOrigStride);     // Vertex 5     := Vertex 0 *)
-
-      Inc(pPatch1, pStream.uiOrigStride * 6);
-      Inc(pPatch2, pStream.uiOrigStride * 6);
-      Inc(pPatch3, pStream.uiOrigStride * 6);
-      Inc(pPatch4, pStream.uiOrigStride * 6);
-
-      Inc(pOrig1, pStream.uiOrigStride * 4);
-      Inc(pOrig2, pStream.uiOrigStride * 4);
-      Inc(pOrig3, pStream.uiOrigStride * 4);
+      memcpy(pPatch012, pOrig012, pStream.uiOrigStride * 3); // Vertex T1_V0,T1_V1,T1_V2 := Vertex Q_V0,Q_V1,Q_V2
+      memcpy(pPatch34,  pOrig2,   pStream.uiOrigStride * 2); // Vertex T2_V0,T2_V1       := Vertex Q_V2,Q_V3
+      memcpy(pPatch5,   pOrig012, pStream.uiOrigStride);     // Vertex T2_V2             := Vertex Q_V0
 
       if (pPatchDesc.hVertexShader and D3DFVF_XYZRHW) > 0 then
       begin
-        for z := 0 to 6-1 do
+        for z := 0 to (VERTICES_PER_TRIANGLE*TRIANGLES_PER_QUAD)-1 do
         begin
-          if (PFLOATs(@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] = 0.0) then
-              PFLOATs(@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[2] := 1.0;
-          if (PFLOATs(@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[3] = 0.0) then
-              PFLOATs(@pPatchedVertexData[pPatchDesc.dwOffset + i * pStream.uiOrigStride * 6 + z * pStream.uiOrigStride])[3] := 1.0;
+          if (PFLOATs(@pPatch012[z * pStream.uiOrigStride])[2] = 0.0) then
+              PFLOATs(@pPatch012[z * pStream.uiOrigStride])[2] := 1.0;
+          if (PFLOATs(@pPatch012[z * pStream.uiOrigStride])[3] = 0.0) then
+              PFLOATs(@pPatch012[z * pStream.uiOrigStride])[3] := 1.0;
         end;
       end;
+
+      Inc(pPatch012, pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
+      Inc(pPatch34,  pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
+      Inc(pPatch5,   pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
+
+      Inc(pOrig012, pStream.uiOrigStride * VERTICES_PER_QUAD);
+      Inc(pOrig2,   pStream.uiOrigStride * VERTICES_PER_QUAD);
     end;
   end
   // LineLoop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
   begin
     memcpy(@pPatchedVertexData[pPatchDesc.dwOffset], @pOrigVertexData[pPatchDesc.dwOffset], dwOriginalSize);
+    // Append a second copy of the first vertex to the end, completing the strip to form a loop :
     memcpy(@pPatchedVertexData[pPatchDesc.dwOffset + dwOriginalSize], @pOrigVertexData[pPatchDesc.dwOffset], pStream.uiOrigStride);
   end;
 
@@ -1333,8 +1346,11 @@ begin
       continue;
     end;
 
-    LocalPatched := LocalPatched or PatchPrimitive(pPatchDesc, uiStream);
-    LocalPatched := LocalPatched or PatchStream(pPatchDesc, uiStream);
+	// Dxbx note : Different from Cxbx, to avoid lazy boolean evaluation :
+    if PatchPrimitive(pPatchDesc, uiStream) then
+      LocalPatched := True;
+    if PatchStream(pPatchDesc, uiStream) then
+      LocalPatched := True;
     if LocalPatched and (nil=pPatchDesc.pVertexStreamZeroData) then
     begin
       // Insert the patched stream in the cache

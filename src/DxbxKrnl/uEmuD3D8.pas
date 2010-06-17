@@ -7796,7 +7796,7 @@ begin
       IDirect3DDevice8(g_pD3DDevice8).DrawPrimitive
       (
           EmuPrimitiveType(VPDesc.PrimitiveType),
-          StartVertex,
+          VPDesc.dwOffset, // Dxbx note : Cxbx wrongly uses StartVertex here!
           VPDesc.dwPrimitiveCount
       );
 
@@ -7916,62 +7916,62 @@ begin
     [Ord(PrimitiveType), VertexCount, pIndexData]);
 {$ENDIF}
 
-    // update index buffer, if necessary
-    if Assigned(g_pIndexBuffer) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
-    begin
-      dwSize := VertexCount*2;   // 16-bit indices
+  // update index buffer, if necessary
+  if Assigned(g_pIndexBuffer) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+  begin
+    dwSize := VertexCount*2;   // 16-bit indices
 
-      hRet := IDirect3DDevice8_CreateIndexBuffer
-      (g_pD3DDevice8,
-          dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
-          @(g_pIndexBuffer.Emu.IndexBuffer8)
-      );
+    hRet := IDirect3DDevice8_CreateIndexBuffer
+    (g_pD3DDevice8,
+        dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+        @(g_pIndexBuffer.Emu.IndexBuffer8)
+    );
 
-      if (FAILED(hRet)) then
-          CxbxKrnlCleanup('CreateIndexBuffer Failed!');
+    if (FAILED(hRet)) then
+        CxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
-      pData := nil;
+    pData := nil;
 
-      hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
+    hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
 
-      if (FAILED(hRet)) then
-          CxbxKrnlCleanup('IndexBuffer Lock Failed!');
+    if (FAILED(hRet)) then
+        CxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
-      memcpy(pData, Pvoid(g_pIndexBuffer.Data), dwSize);
+    memcpy(pData, Pvoid(g_pIndexBuffer.Data), dwSize);
 
-      IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Unlock();
+    IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Unlock();
 
-      g_pIndexBuffer.Data := ULONG(pData);
+    g_pIndexBuffer.Data := ULONG(pData);
 
-      hRet := IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8), g_dwBaseVertexIndex);
+    hRet := IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8), g_dwBaseVertexIndex);
 
-      if (FAILED(hRet)) then
-          CxbxKrnlCleanup('SetIndices Failed!');
-    end;
+    if (FAILED(hRet)) then
+        CxbxKrnlCleanup('SetIndices Failed!');
+  end;
 
-    XTL_EmuUpdateDeferredStates();
+  XTL_EmuUpdateDeferredStates();
 
-    if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
-      EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
+  if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
+    EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
 
-    VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
+  VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
-    VPDesc.PrimitiveType := PrimitiveType;
-    VPDesc.dwVertexCount := VertexCount;
-    VPDesc.dwOffset := 0;
-    VPDesc.pVertexStreamZeroData := nil;
-    VPDesc.uiVertexStreamZeroStride := 0;
-    VPDesc.hVertexShader := g_CurrentVertexShader;
+  VPDesc.PrimitiveType := PrimitiveType;
+  VPDesc.dwVertexCount := VertexCount;
+  VPDesc.dwOffset := 0;
+  VPDesc.pVertexStreamZeroData := nil;
+  VPDesc.uiVertexStreamZeroStride := 0;
+  VPDesc.hVertexShader := g_CurrentVertexShader;
 
-    VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
-    FatalError := false;
+  VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
+  FatalError := false;
 
-    {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
+  {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
 
-    {$ifdef _DEBUG_TRACK_VB}
-    if not g_bVBSkipStream then
-    begin
-    {$endif}
+  {$ifdef _DEBUG_TRACK_VB}
+  if not g_bVBSkipStream then
+  begin
+  {$endif}
 
     bActiveIB := false;
 
