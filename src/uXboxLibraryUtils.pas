@@ -31,7 +31,8 @@ uses
   // 3rd party
   JclPeImage,
   // Dxbx
-  uTypes;
+  uTypes,
+  uDxbxUtils;
 
 type
   // This type is used to indicate all Xbox library functions that we patch.
@@ -96,7 +97,9 @@ end;
 function XboxFunctionNameToLibraryPatch(const aFunctionName: string): TXboxLibraryPatch;
 var
   Index: Integer;
+  DemangledFunctionName: string;
 begin
+  // First option : Try to find exact string :
   Index := AvailablePatches.IndexOf(aFunctionName);
   if Index >= 0 then
   begin
@@ -107,8 +110,20 @@ begin
 
   if aFunctionName <> '' then
   begin
+    // Second option : unmangle the name (unless it is double-escaped) :
     if CharInSet(aFunctionName[1], ['?', '@', '_']) then
     begin
+      if (aFunctionName[1] <> aFunctionName[2]) then
+      begin
+        DemangledFunctionName := DxbxUnmangleSymbolName(aFunctionName);
+        if DemangledFunctionName <> aFunctionName then
+        begin
+          Result := XboxFunctionNameToLibraryPatch(DemangledFunctionName);
+          if Result > xlp_Unknown then
+            Exit;
+        end;
+      end;
+
       // Also try finding a patch without a prefix character :
       Result := XboxFunctionNameToLibraryPatch(Copy(aFunctionName, 2, MaxInt));
       Exit;
