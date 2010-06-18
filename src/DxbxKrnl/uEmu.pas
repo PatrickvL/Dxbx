@@ -135,7 +135,7 @@ function EmuException(E: LPEXCEPTION_POINTERS): int; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_tj  Done:30
 var
   fix: UInt32;
-  buffer: array [0..256 -1] of char;
+  buffer: string;
   ret: int;
   dwESI: DWORD;
   dwSize: DWORD;
@@ -283,17 +283,16 @@ begin
 
     if e.ExceptionRecord.ExceptionCode = $80000003 then
     begin
-{$IFDEF DEBUG}
-      DbgPrintf(
+      buffer := Format(
         'Received Breakpoint Exception (int 3) @ EIP := $%.08X'+
         ''+
         '  Press Abort to terminate emulation.'+
         '  Press Retry to debug.'+
         '  Press Ignore to continue emulation.',
         [e.ContextRecord.Eip]);
-{$ENDIF}
+
       Inc(e.ContextRecord.Eip);
-      ret := MessageBox(g_hEmuWindow, buffer, 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
+      ret := MessageBox(g_hEmuWindow, PChar(buffer), 'Dxbx', MB_ICONSTOP or MB_ABORTRETRYIGNORE);
       if ret = IDABORT then
       begin
 {$IFDEF DEBUG}
@@ -321,16 +320,14 @@ begin
     end
     else
     begin
-{$IFDEF DEBUG}
-      DbgPrintf(
+      buffer := Format(
               'Received Exception Code $%.08X @ EIP := $%.08X'+
               ''+
               '  Press ''OK'' to terminate emulation.'+
               '  Press ''Cancel'' to debug.',
               [e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip]);
-{$ENDIF}
 
-      if MessageBox(g_hEmuWindow, buffer, 'Cxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
+      if MessageBox(g_hEmuWindow, PChar(buffer), 'Dxbx', MB_ICONSTOP or MB_OKCANCEL) = IDOK then
       begin
 {$IFDEF DEBUG}
         DbgPrintf('EmuMain : Aborting Emulation');
@@ -359,7 +356,7 @@ var
   dwRet: DWORD;
 begin
 {$IFDEF _DEBUG_ALLOC}
-  dwRet := CxbxVirtualQueryDebug(pBase, MemoryBasicInfo, SizeOf(MemoryBasicInfo));
+  dwRet := DxbxVirtualQueryDebug(pBase, MemoryBasicInfo, SizeOf(MemoryBasicInfo));
   if (dwRet = -1) then
 {$ENDIF}
     dwRet := VirtualQuery(pBase, {var}MemoryBasicInfo, SizeOf(MemoryBasicInfo));

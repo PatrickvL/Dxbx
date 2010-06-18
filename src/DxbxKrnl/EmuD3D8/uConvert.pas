@@ -375,7 +375,7 @@ begin
       Result := D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 
   else
-    CxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)', [aFormat]);
+    DxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)', [aFormat]);
     Result := D3DFORMAT(aFormat);
   end;
 end;
@@ -439,7 +439,7 @@ begin
     D3DFMT_VERTEXDATA:
       Result := X_D3DFMT_VERTEXDATA;
   else
-    CxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]);
+    DxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]);
     Result := X_D3DFORMAT(aFormat);
   end;
 end;
@@ -495,7 +495,7 @@ begin
     $2233:
       Result := D3DMULTISAMPLE_9_SAMPLES;
   else
-    CxbxKrnlCleanup( 'Unknown Multisample Type (0x%X)!'#13#10 +
+    DxbxKrnlCleanup( 'Unknown Multisample Type (0x%X)!'#13#10 +
                  'If this value is greater than 0xFFFF contact blueshogun!', [aType] );
 
     Result := D3DMULTISAMPLE_NONE;
@@ -516,7 +516,7 @@ begin
     Result := D3DTRANSFORMSTATETYPE(Ord(D3DTS_TEXTURE7) + 1)
   else
   begin
-    CxbxKrnlCleanup('Unknown Transform State Type (%d)', [Ord(State)]);
+    DxbxKrnlCleanup('Unknown Transform State Type (%d)', [Ord(State)]);
 
     Result := State;
   end;
@@ -539,17 +539,17 @@ begin
       Result := D3DBLENDOP_MAX;
     X_D3DBLENDOP_ADDSIGNED:
     begin
-      CxbxKrnlCleanup('D3DBLENDOP_ADDSIGNED is not supported!');
+      DxbxKrnlCleanup('D3DBLENDOP_ADDSIGNED is not supported!');
       Result := D3DBLENDOP_ADD;
     end;
     X_D3DBLENDOP_REVSUBTRACTSIGNED:
     begin
-      CxbxKrnlCleanup('D3DBLENDOP_REVSUBTRACTSIGNED is not supported!');
+      DxbxKrnlCleanup('D3DBLENDOP_REVSUBTRACTSIGNED is not supported!');
       Result := D3DBLENDOP_REVSUBTRACT;
     end;
   else
 
-    CxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
+    DxbxKrnlCleanup('Unknown D3DBLENDOP (0x%.08X)', [Value]);
 
     Result := D3DBLENDOP(Value);
   end;
@@ -565,7 +565,7 @@ begin
     Result := D3DBLEND((Value and $F) + 3)
   else
   begin
-    CxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
+    DxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
 
     Result := D3DBLEND(Value);
   end;
@@ -615,7 +615,7 @@ begin
       Result := D3DSTENCILOP_DECR;
 
   else //default:
-    CxbxKrnlCleanup('Unknown D3DSTENCILOP (0x%.08X)', [Ord(Value)]);
+    DxbxKrnlCleanup('Unknown D3DSTENCILOP (0x%.08X)', [Ord(Value)]);
     Result := D3DSTENCILOP(Value);
   end;
 end;

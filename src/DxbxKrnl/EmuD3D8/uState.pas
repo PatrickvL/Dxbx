@@ -181,7 +181,7 @@ begin
       if (pCur[X_D3DTSS_ADDRESSU+Adjust2] <> X_D3DTSS_UNK) then
       begin
         if (pCur[X_D3DTSS_ADDRESSU+Adjust2] = 5) then
-          CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+          DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[X_D3DTSS_ADDRESSU+Adjust2]);
       end;
@@ -189,7 +189,7 @@ begin
       if (pCur[X_D3DTSS_ADDRESSV+Adjust2] <> X_D3DTSS_UNK) then
       begin
         if (pCur[X_D3DTSS_ADDRESSV+Adjust2] = 5) then
-          CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+          DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[X_D3DTSS_ADDRESSV+Adjust2]); // Dxbx fix
       end;
@@ -197,7 +197,7 @@ begin
       if (pCur[X_D3DTSS_ADDRESSW+Adjust2] <> X_D3DTSS_UNK) then
       begin
         if (pCur[X_D3DTSS_ADDRESSW+Adjust2] = 5) then
-          CxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
+          DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[X_D3DTSS_ADDRESSW+Adjust2]); // Dxbx fix
       end;
@@ -205,7 +205,7 @@ begin
       if (pCur[X_D3DTSS_MAGFILTER+Adjust2] <> X_D3DTSS_UNK) then
       begin
         if (pCur[X_D3DTSS_MAGFILTER+Adjust2] = 4) then
-          CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
+          DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[X_D3DTSS_MAGFILTER+Adjust2]); // Dxbx fix
       end;
@@ -213,7 +213,7 @@ begin
       if (pCur[X_D3DTSS_MINFILTER+Adjust2] <> X_D3DTSS_UNK) then
       begin
         if (pCur[X_D3DTSS_MINFILTER+Adjust2] = 4) then
-          CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
+          DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MINFILTER, pCur[X_D3DTSS_MINFILTER+Adjust2]);
       end;
@@ -221,7 +221,7 @@ begin
       if (pCur[X_D3DTSS_MIPFILTER+Adjust2] <> X_D3DTSS_UNK) then
       begin
         if (pCur[X_D3DTSS_MIPFILTER+Adjust2] = 4) then
-          CxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
+          DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[X_D3DTSS_MIPFILTER+Adjust2]);
       end;
@@ -246,7 +246,7 @@ begin
         and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDTEXTUREALPHA)
         and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDFACTORALPHA)
         and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDCURRENTALPHA) then
-          CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)', [pCur[X_D3DTSS_COLOROP-Adjust1]]);
+          DxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)', [pCur[X_D3DTSS_COLOROP-Adjust1]]);
 
         // Dirty Hack: 22 = D3DTOP_DOTPRODUCT3
              if ( pCur[X_D3DTSS_COLOROP-Adjust1] = X_D3DTOP_DOTPRODUCT3 ) then
@@ -276,7 +276,7 @@ begin
         if  (pCur[X_D3DTSS_ALPHAOP-Adjust1]  > 12)
         and (pCur[X_D3DTSS_ALPHAOP-Adjust1] <> 14)
         and (pCur[X_D3DTSS_ALPHAOP-Adjust1] <> 13) then
-          CxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)', [pCur[X_D3DTSS_ALPHAOP-Adjust1]]);
+          DxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)', [pCur[X_D3DTSS_ALPHAOP-Adjust1]]);
 
              if ( pCur[X_D3DTSS_ALPHAOP-Adjust1] = X_D3DTOP_BLENDTEXTUREALPHA ) then
           IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDTEXTUREALPHA)

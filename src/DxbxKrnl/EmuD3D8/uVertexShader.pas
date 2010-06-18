@@ -917,7 +917,7 @@ begin
           else
             Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s', [OReg_Name[VSH_OREG_NAME(pIntermediate.Output.Address)]]));
       else
-        CxbxKrnlCleanup('Invalid output register in vertex shader!');
+        DxbxKrnlCleanup('Invalid output register in vertex shader!');
       end;
       VshWriteOutputMask(pIntermediate.Output.Mask, pDisassembly, @DisassemblyPos);
     end;
@@ -986,7 +986,7 @@ procedure VshVerifyBufferBounds(pShader: PVSH_XBOX_SHADER);
 begin
   if (pShader.IntermediateCount = VSH_MAX_INTERMEDIATE_COUNT) then
   begin
-    CxbxKrnlCleanup('Shader exceeds conversion buffer!');
+    DxbxKrnlCleanup('Shader exceeds conversion buffer!');
   end;
 end;
 
@@ -1929,7 +1929,7 @@ begin
     pStreamPatch.NbrTypes := pPatchData.TypePatchData.NbrTypes;
     pStreamPatch.NeedPatch := pPatchData.NeedPatching;
     // 2010/01/12 - revel8n - fixed allocated data size and type
-    pStreamPatch.pTypes := PUINT(CxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(UINT))); //VSH_TYPE_PATCH_DATA)));
+    pStreamPatch.pTypes := PUINT(DxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(UINT))); //VSH_TYPE_PATCH_DATA)));
     memcpy(pStreamPatch.pTypes, @(pPatchData.TypePatchData.Types[0]), pPatchData.TypePatchData.NbrTypes * sizeof(UINT));//VSH_TYPE_PATCH_DATA));
 
     Result := TRUE;
@@ -2225,7 +2225,7 @@ begin
 
   // Calculate size of declaration
   DeclarationSize := VshGetDeclarationSize(pDeclaration);
-  ppRecompiledDeclaration^ := PDWORD(CxbxMalloc(DeclarationSize));
+  ppRecompiledDeclaration^ := PDWORD(DxbxMalloc(DeclarationSize));
   pRecompiled := ppRecompiledDeclaration^;
   memcpy(pRecompiled, pDeclaration, DeclarationSize);
   pDeclarationSize^ := DeclarationSize;
@@ -2249,7 +2249,7 @@ begin
   // Copy the patches to the vertex shader struct
   StreamsSize := PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
   pVertexDynamicPatch.NbrStreams := PatchData.StreamPatchData.NbrStreams;
-  pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCHs(CxbxMalloc(StreamsSize));
+  pVertexDynamicPatch.pStreamPatches := PSTREAM_DYNAMIC_PATCHs(DxbxMalloc(StreamsSize));
   memcpy(pVertexDynamicPatch.pStreamPatches,
          @(PatchData.StreamPatchData.pStreamPatches[0]),
          StreamsSize);
@@ -2278,7 +2278,7 @@ var
 begin
   pShaderHeader := PVSH_SHADER_HEADER(pFunction);
   EOI := false;
-  pShader := PVSH_XBOX_SHADER(CxbxMalloc(sizeof(VSH_XBOX_SHADER)));
+  pShader := PVSH_XBOX_SHADER(DxbxMalloc(sizeof(VSH_XBOX_SHADER)));
   hRet := 0;
   pErrors := nil;
 
@@ -2332,7 +2332,7 @@ begin
     // The size of the shader is
     pOriginalSize^ := DWORD(pToken) - DWORD(pFunction);
 
-    pShaderDisassembly := P_char(CxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
+    pShaderDisassembly := P_char(DxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
     DbgVshPrintf('-- Before conversion --'#13#10);
     VshWriteShader(pShader, pShaderDisassembly, FALSE);
     DbgVshPrintf('%s', [pShaderDisassembly]);
@@ -2373,10 +2373,10 @@ begin
       pErrors := nil;
     end;
 
-    CxbxFree(pShaderDisassembly);
+    DxbxFree(pShaderDisassembly);
   end;
 
-  CxbxFree(pShader);
+  DxbxFree(pShader);
   Result := hRet;
 end; // XTL_EmuRecompileVshFunction
 
@@ -2388,9 +2388,9 @@ begin
   if pVertexShader.VertexDynamicPatch.NbrStreams > 0 then // Dxbx addition, to prevent underflow
   for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
   begin
-    CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes);
+    DxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes);
   end;
-  CxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches);
+  DxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches);
   pVertexShader.VertexDynamicPatch.pStreamPatches := NULL;
   pVertexShader.VertexDynamicPatch.NbrStreams := 0;
 end;

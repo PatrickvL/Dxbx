@@ -39,8 +39,8 @@ function XBE_FindSectionHeaderByName(pSectionName: PAnsiChar): PXBE_SECTIONHEADE
 procedure YieldProcessor;
 {$IFEND}
 
-procedure CxbxKrnlCleanup(const szErrorMessage: string); overload;
-procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
+procedure DxbxKrnlCleanup(const szErrorMessage: string); overload;
+procedure DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
 
 function GetDWordBits(const Bits: DWORD; const aIndex: Integer): Integer;
 procedure SetDWordBits(var Bits: DWORD; const aIndex: Integer; const aValue: Integer);
@@ -91,14 +91,14 @@ asm
   pause; // rep nop;
 end;
 
-procedure CxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
+procedure DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
 begin
-  uDxbxKrnl.DxbxKrnlCleanup(szErrorMessage, Args);
+  uDxbxKrnl._DxbxKrnlCleanup(szErrorMessage, Args);
 end;
 
-procedure CxbxKrnlCleanup(const szErrorMessage: string);
+procedure DxbxKrnlCleanup(const szErrorMessage: string);
 begin
-  uDxbxKrnl.DxbxKrnlCleanup(szErrorMessage);
+  uDxbxKrnl._DxbxKrnlCleanup(szErrorMessage);
 end;
 
 // Tooling methods to get and set stretches of bits inside a DWORD,

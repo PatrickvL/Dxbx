@@ -297,7 +297,7 @@ begin
     dwCopySize := pTLS.dwDataEndAddr - pTLS.dwDataStartAddr;
     dwZeroSize := pTLS.dwSizeofZeroFill;
 
-    pNewTLS := CxbxMalloc(dwCopySize + dwZeroSize + $100 { + HACK: extra safety padding 0x100});
+    pNewTLS := DxbxMalloc(dwCopySize + dwZeroSize + $100 { + HACK: extra safety padding 0x100});
 
     memset(pNewTLS, 0, dwCopySize + dwZeroSize + $100);
     memcpy(pNewTLS, pTLSData, dwCopySize);
@@ -348,7 +348,7 @@ begin
   begin
     dwSize := sizeof(XboxKrnl.KPCR);
 
-    NewPcr := CxbxMalloc(dwSize);
+    NewPcr := DxbxMalloc(dwSize);
     memset(NewPcr, 0, dwSize);
     NewFS := EmuAllocateLDT(uint32(NewPcr), uint32(UIntPtr(NewPcr) + dwSize));
   end;
@@ -363,7 +363,7 @@ begin
 
   // generate TIB
   begin
-    EThread := CxbxMalloc(sizeof(xboxkrnl.ETHREAD));
+    EThread := DxbxMalloc(sizeof(xboxkrnl.ETHREAD));
 
     EThread.Tcb.TlsData := pNewTLS;
     EThread.UniqueThread := GetCurrentThreadId();
@@ -427,7 +427,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if (pTLSData <> nil) then
-    CxbxFree(pTLSData);
+    DxbxFree(pTLSData);
 
   EmuDeallocateLDT(wSwapFS);
 end;

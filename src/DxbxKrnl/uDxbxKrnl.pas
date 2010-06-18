@@ -72,13 +72,13 @@ procedure DxbxKrnlInit(
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc); stdcall;
 
-procedure DxbxKrnlCleanup(const szErrorMessage: string); overload;
-procedure DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
+procedure _DxbxKrnlCleanup(const szErrorMessage: string); overload;
+procedure _DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const); overload;
 
-procedure CxbxKrnlRegisterThread(const hThread: Handle);
-procedure CxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
-procedure CxbxKrnlResume();
-procedure CxbxKrnlSuspend();
+procedure DxbxKrnlRegisterThread(const hThread: Handle);
+procedure DxbxKrnlTerminateThread(); // EmuCleanThread(); // export;
+procedure DxbxKrnlResume();
+procedure DxbxKrnlSuspend();
 
 exports
   DxbxKrnlInit;
@@ -277,7 +277,7 @@ begin
 
   g_hCurDir := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
   if g_hCurDir = INVALID_HANDLE_VALUE then
-    CxbxKrnlCleanup('Could not map D:\');
+    _DxbxKrnlCleanup('Could not map D:\');
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuMain : CurDir := ' + szBuffer);
@@ -305,7 +305,7 @@ begin
       g_hTDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
       if g_hTDrive = INVALID_HANDLE_VALUE then
-        CxbxKrnlCleanup('Could not map T:\');
+        _DxbxKrnlCleanup('Could not map T:\');
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuMain : T Data := ' + g_strTDrive);
@@ -324,7 +324,7 @@ begin
       g_hUDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
       if g_hUDrive = INVALID_HANDLE_VALUE then
-        CxbxKrnlCleanup('Could not map U:\');
+        _DxbxKrnlCleanup('Could not map U:\');
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuMain : U Data := ' + g_strUDrive);
@@ -346,7 +346,7 @@ begin
       g_hZDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
       if g_hUDrive = INVALID_HANDLE_VALUE then
-        CxbxKrnlCleanup('Could not map Z:\');
+        _DxbxKrnlCleanup('Could not map Z:\');
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuMain : Z Data := ' + g_strZDrive);
@@ -369,7 +369,7 @@ begin
     if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
       DbgPrintf('EmuMain : Couldn''t duplicate handle!');
 
-    CxbxKrnlRegisterThread(hDupHandle);
+    DxbxKrnlRegisterThread(hDupHandle);
   end;
 
   
@@ -442,27 +442,27 @@ begin
 
   fflush(stdout);
 
-  CxbxKrnlTerminateThread();
+  DxbxKrnlTerminateThread();
 end;
 
-procedure DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
+procedure _DxbxKrnlCleanup(const szErrorMessage: string; const Args: array of const);
 begin
-  DxbxKrnlCleanup(DxbxFormat(szErrorMessage, Args, {MayRenderArguments=}True));
+  _DxbxKrnlCleanup(DxbxFormat(szErrorMessage, Args, {MayRenderArguments=}True));
 end;
 
-procedure DxbxKrnlCleanup(const szErrorMessage: string);
+procedure _DxbxKrnlCleanup(const szErrorMessage: string);
 var
   szBuffer1: string;
 //  buffer: array [0..15] of char;
 begin
   g_bEmuException := true;
 
-  CxbxKrnlResume();
+  DxbxKrnlResume();
     
   // Print out ErrorMessage (if exists)
   if szErrorMessage <> '' then
   begin
-    szBuffer1 := {Format} 'CxbxKrnlCleanup : Received Fatal Message ->'#13#13 + szErrorMessage;
+    szBuffer1 := {Format} 'DxbxKrnlCleanup : Received Fatal Message ->'#13#13 + szErrorMessage;
 {$IFDEF DEBUG}
     DbgPrintf(szBuffer1);
 {$ENDIF}
@@ -488,7 +488,7 @@ begin
   TerminateProcess(GetCurrentProcess(), 0);
 end;
 
-procedure CxbxKrnlRegisterThread(const hThread: HANDLE);
+procedure DxbxKrnlRegisterThread(const hThread: HANDLE);
 // Branch:shogun  Revision:162  Translator:Shadow_tj  Done:100
 var
   v: int;
@@ -505,12 +505,12 @@ begin
     Inc(v);
   end;
 
-  CxbxKrnlCleanup('There are too many active threads!');
+  _DxbxKrnlCleanup('There are too many active threads!');
 end;
 
 // alert for the situation where an Xref function body is hit
 
-procedure CxbxKrnlSuspend();
+procedure DxbxKrnlSuspend();
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   v: int;
@@ -554,7 +554,7 @@ begin
   g_bEmuSuspended := true;
 end;
 
-procedure CxbxKrnlResume();
+procedure DxbxKrnlResume();
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   v: int;
@@ -598,7 +598,7 @@ begin
 end;
 
 
-procedure CxbxKrnlTerminateThread();
+procedure DxbxKrnlTerminateThread();
 // Branch:shogun  Revision:162  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);

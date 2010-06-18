@@ -1118,7 +1118,7 @@ begin
     RtlInitUnicodeString(@NtFileMask, @(wszObjectName[0]));
   end;
 
-  FileDirInfo := PFILE_DIRECTORY_INFORMATION(CxbxMalloc($40 + 160*2));
+  FileDirInfo := PFILE_DIRECTORY_INFORMATION(DxbxMalloc($40 + 160*2));
 
   mbstr := @FileInformation.FileName[0]; // TODO -oDXBX: Is this Ansi or Wide ?
   wcstr := FileDirInfo.FileName;
@@ -1147,7 +1147,7 @@ begin
   until not ((strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0));
 
   // TODO -oCXBX: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
-  CxbxFree(FileDirInfo);
+  DxbxFree(FileDirInfo);
 
   Result := ret;
 

@@ -173,7 +173,7 @@ begin
            [NumberOfBytes]);
 {$ENDIF}
 
-  pRet := CxbxMalloc(NumberOfBytes);
+  pRet := DxbxMalloc(NumberOfBytes);
   EmuSwapFS(fsXbox);
   Result := pRet;
 end;
@@ -201,7 +201,7 @@ begin
 {$ENDIF}
 
   // TODO -oCXBX: Actually implement this
-  pRet := CxbxMalloc(NumberOfBytes);
+  pRet := DxbxMalloc(NumberOfBytes);
 
   EmuSwapFS(fsXbox);
   Result := pRet;

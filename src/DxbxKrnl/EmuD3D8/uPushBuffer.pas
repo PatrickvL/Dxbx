@@ -84,7 +84,7 @@ procedure XTL_EmuExecutePushBuffer
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   if (pFixup <> NULL) then
-    CxbxKrnlCleanup('PushBuffer has fixups');
+    DxbxKrnlCleanup('PushBuffer has fixups');
 
   XTL_EmuExecutePushBufferRaw(PDWORD(pPushBuffer.Data));
 end;
@@ -154,7 +154,7 @@ begin
         // Cxbx has this commented out :
         //if (SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8) then
         //  break;
-        //CxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
+        //DxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
 
         hRet := IDirect3DTexture8(pTexture).LockRect(v, {out}LockedRect, NULL, 0);
 
@@ -337,7 +337,7 @@ begin
 
       if (dwVertexShader > $FFFF) then
       begin
-        CxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!');
+        DxbxKrnlCleanup('Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!');
         dwVertexShader := 0;
       end
       else if (dwVertexShader = 0) then
@@ -382,7 +382,7 @@ begin
         hRet := IDirect3DDevice8(aDirect3DDevice8).CreateVertexBuffer(2047*SizeOf(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, @pVertexBuffer);
 
         if (FAILED(hRet)) then
-          CxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
+          DxbxKrnlCleanup('Unable to create vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
 
       end;
 
@@ -393,7 +393,7 @@ begin
         hRet := pVertexBuffer.Lock(0, dwCount*4, @pData, 0);
 
         if (FAILED(hRet)) then
-          CxbxKrnlCleanup('Unable to lock vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
+          DxbxKrnlCleanup('Unable to lock vertex buffer cache for PushBuffer emulation ($1818, dwCount : %d)', [dwCount]);
 
         memcpy(pData, pVertexData, dwCount*4);
 
@@ -499,7 +499,7 @@ begin
         end;
 
         if (FAILED(hRet)) then
-          CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1808, dwCount : %d)', [dwCount]);
+          DxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1808, dwCount : %d)', [dwCount]);
 
         // copy index data
         begin
@@ -654,7 +654,7 @@ begin
         end;
 
         if (FAILED(hRet)) then
-          CxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1800, dwCount : %d)', [dwCount]);
+          DxbxKrnlCleanup('Unable to create index buffer for PushBuffer emulation ($1800, dwCount : %d)', [dwCount]);
 
         // copy index data
         begin
@@ -738,7 +738,7 @@ begin
   begin
 {$IFDEF DEBUG}
     printf('');
-    printf('CxbxDbg> ');
+    printf('DxbxDbg> ');
 {$ENDIF}
     fflush(stdout);
   end;
@@ -786,7 +786,7 @@ begin
   // retrieve stream data
   IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @pActiveVB, {out}uiStride);
 
-  sprintf(@szFileName[0], 'C:\CxbxMesh-0x%.08X.x', [pIndexData]);
+  sprintf(@szFileName[0], 'C:\DxbxMesh-0x%.08X.x', [pIndexData]);
   dbgVertices := fopen(szFileName, 'wt');
 
   // retrieve stream desc
