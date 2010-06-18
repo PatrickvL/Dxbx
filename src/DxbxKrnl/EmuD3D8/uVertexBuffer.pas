@@ -299,7 +299,7 @@ var
   uiChecksum: UINT;
 begin
   pCalculateData := NULL;
-  pCachedStream_ := PCACHEDSTREAM(CxbxMalloc(sizeof(CACHEDSTREAM)));
+  pCachedStream_ := PCACHEDSTREAM(DxbxMalloc(sizeof(CACHEDSTREAM)));
 
   ZeroMemory(pCachedStream_, sizeof(CACHEDSTREAM));
 
@@ -349,11 +349,11 @@ begin
     IDirect3DVertexBuffer8(m_pStreams[uiStream].pPatchedStream)._AddRef();
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
-      CxbxKrnlCleanup('Could not retrieve original buffer size');
+      DxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pCalculateData), 0))) then
     begin
-      CxbxKrnlCleanup('Couldn''t lock the original buffer');
+      DxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
 
     uiLength := Desc.Size;
@@ -365,7 +365,7 @@ begin
     // There should only be one stream (stream zero) in this case
     if (uiStream <> 0) then
     begin
-      CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
+      DxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
     end;
     // uiStride := pPatchDesc.uiVertexStreamZeroStride; // DXBX, uiStride never used
     pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
@@ -405,7 +405,7 @@ begin
   begin
     if pCachedStream_.bIsUP and Assigned(pCachedStream_.pStreamUP) then
     begin
-      CxbxFree(pCachedStream_.pStreamUP);
+      DxbxFree(pCachedStream_.pStreamUP);
       pCachedStream_.pStreamUP := nil; // Dxbx addition - nil out after freeing
     end;
     if Assigned(pCachedStream_.Stream.pOriginalStream) then
@@ -419,7 +419,7 @@ begin
       IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream)._Release();
       pCachedStream_.Stream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
-    CxbxFree(pCachedStream_);
+    DxbxFree(pCachedStream_);
   end;
   g_PatchedStreamsCache.Unlock(); // Dxbx addition - Unlock _after_ update?
   g_PatchedStreamsCache.remove(pStream);
@@ -443,7 +443,7 @@ var
 begin
   pCalculateData := NULL;
   bApplied := false;
-  //pCachedStream_ := PCACHEDSTREAM(CxbxMalloc(sizeof(CACHEDSTREAM)));
+  //pCachedStream_ := PCACHEDSTREAM(DxbxMalloc(sizeof(CACHEDSTREAM)));
 
   if (nil=pPatchDesc.pVertexStreamZeroData) then
   begin
@@ -451,7 +451,7 @@ begin
     if (nil=pOrigVertexBuffer) then
     begin
       (*if(nil=g_pVertexBuffer) or (nil=g_pVertexBuffer.EmuVertexBuffer8) then
-        CxbxKrnlCleanup('Unable to retrieve original buffer (Stream := %d)', [uiStream]);
+        DxbxKrnlCleanup('Unable to retrieve original buffer (Stream := %d)', [uiStream]);
       else
         pOrigVertexBuffer := g_pVertexBuffer.EmuVertexBuffer8;*)
 
@@ -464,7 +464,7 @@ begin
 
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
-      CxbxKrnlCleanup('Could not retrieve original buffer size');
+      DxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
     uiLength := Desc.Size;
     uiKey := uint32(pOrigVertexBuffer);
@@ -475,7 +475,7 @@ begin
     // There should only be one stream (stream zero) in this case
     if (uiStream <> 0) then
     begin
-      CxbxKrnlCleanup('Trying to find a cached Draw..UP with more than stream zero!');
+      DxbxKrnlCleanup('Trying to find a cached Draw..UP with more than stream zero!');
     end;
     uiStride := pPatchDesc.uiVertexStreamZeroStride;
     pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
@@ -499,7 +499,7 @@ begin
       begin
         if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pCalculateData), 0))) then
         begin
-          CxbxKrnlCleanup('Couldn''t lock the original buffer');
+          DxbxKrnlCleanup('Couldn''t lock the original buffer');
         end;
       end;
       // Use the cached stream length (which is a must for the UP stream)
@@ -655,7 +655,7 @@ begin
     IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(uiStream, PIDirect3DVertexBuffer8(@pOrigVertexBuffer), {out}uiStride);
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
-      CxbxKrnlCleanup('Could not retrieve original buffer size');
+      DxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
     // Set a new (exact) vertex count
     pPatchDesc.dwVertexCount := Desc.Size div uiStride;
@@ -663,12 +663,12 @@ begin
 
     if (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, {out}PByte(pOrigData), 0))) then
     begin
-      CxbxKrnlCleanup('Couldn''t lock the original buffer');
+      DxbxKrnlCleanup('Couldn''t lock the original buffer');
     end;
     IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(dwNewSize, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
     if (FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, {out}PByte(pNewData), 0))) then
     begin
-      CxbxKrnlCleanup('Couldn''t lock the new buffer');
+      DxbxKrnlCleanup('Couldn''t lock the new buffer');
     end;
     if (nil=pStream.pOriginalStream) then
     begin
@@ -681,17 +681,17 @@ begin
     // There should only be one stream (stream zero) in this case
     if (uiStream <> 0) then
     begin
-      CxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
+      DxbxKrnlCleanup('Trying to patch a Draw..UP with more than stream zero!');
     end;
     uiStride  := pPatchDesc.uiVertexStreamZeroStride;
     pOrigData := Puint08(pPatchDesc.pVertexStreamZeroData);
     // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
     dwNewSize := pPatchDesc.dwVertexCount * pStreamPatch.ConvertedStride;
     pNewVertexBuffer := NULL;
-    pNewData := CxbxMalloc(dwNewSize);
+    pNewData := DxbxMalloc(dwNewSize);
     if (nil=pNewData) then
     begin
-      CxbxKrnlCleanup('Couldn''t allocate the new stream zero buffer');
+      DxbxKrnlCleanup('Couldn''t allocate the new stream zero buffer');
     end;
   end;
 
@@ -855,7 +855,7 @@ begin
               end;
           else
           begin
-            CxbxKrnlCleanup('Unhandled stream type: 0x%.02X', [pStreamPatch.pTypes[uiType]]);
+            DxbxKrnlCleanup('Unhandled stream type: 0x%.02X', [pStreamPatch.pTypes[uiType]]);
           end;
        end;
     end;
@@ -867,7 +867,7 @@ begin
 
     if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), pStreamPatch.ConvertedStride))) then
     begin
-      CxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
+      DxbxKrnlCleanup('Failed to set the type patched buffer as the new stream source!');
     end;
     if Assigned(pStream.pPatchedStream) then
     begin
@@ -958,18 +958,18 @@ begin
 
     if (nil=pOrigVertexBuffer) or (FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).GetDesc({out}Desc))) then
     begin
-      CxbxKrnlCleanup('Could not retrieve original FVF buffer size.');
+      DxbxKrnlCleanup('Could not retrieve original FVF buffer size.');
     end;
     uiVertexCount := Desc.Size div uiStride;
 
     if(FAILED(IDirect3DVertexBuffer8(pOrigVertexBuffer).Lock(0, 0, {out}pOrigData, 0))) then
     begin
-      CxbxKrnlCleanup('Couldn''t lock original FVF buffer.');
+      DxbxKrnlCleanup('Couldn''t lock original FVF buffer.');
     end;
     IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(Desc.Size, 0, 0, D3DPOOL_MANAGED, PIDirect3DVertexBuffer8(@pNewVertexBuffer));
     if(FAILED(IDirect3DVertexBuffer8(pNewVertexBuffer).Lock(0, 0, {out}PByte(pData), 0))) then
     begin
-      CxbxKrnlCleanup('Couldn''t lock new FVF buffer.');
+      DxbxKrnlCleanup('Couldn''t lock new FVF buffer.');
     end;
     memcpy(pData, pOrigData, Desc.Size);
     IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
@@ -1058,7 +1058,7 @@ begin
 
     if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), uiStride))) then
     begin
-      CxbxKrnlCleanup('Failed to set the texcoord patched FVF buffer as the new stream source.');
+      DxbxKrnlCleanup('Failed to set the texcoord patched FVF buffer as the new stream source.');
     end;
     if Assigned(pStream.pPatchedStream) then
     begin
@@ -1107,7 +1107,7 @@ begin
 
   if(pPatchDesc.PrimitiveType < X_D3DPT_POINTLIST) or (pPatchDesc.PrimitiveType >= X_D3DPT_MAX) then
   begin
-    CxbxKrnlCleanup('Unknown primitive type: 0x%.02X', [Ord(pPatchDesc.PrimitiveType)]);
+    DxbxKrnlCleanup('Unknown primitive type: 0x%.02X', [Ord(pPatchDesc.PrimitiveType)]);
   end;
 
   // Unsupported primitives that don't need deep patching.
@@ -1145,7 +1145,7 @@ begin
 
   if Assigned(pPatchDesc.pVertexStreamZeroData) and (uiStream > 0) then
   begin
-    CxbxKrnlCleanup('Draw..UP call with more than one stream!');
+    DxbxKrnlCleanup('Draw..UP call with more than one stream!');
   end;
 
   pStream.uiOrigStride := 0;
@@ -1199,7 +1199,7 @@ begin
     begin
       if (FAILED(IDirect3DVertexBuffer8(pStream.pOriginalStream).GetDesc({out}Desc))) then
       begin
-        CxbxKrnlCleanup('Could not retrieve buffer size');
+        DxbxKrnlCleanup('Could not retrieve buffer size');
       end;
 
       // Here we save the full buffer size
@@ -1227,7 +1227,7 @@ begin
     dwOriginalSizeWR := dwOriginalSize;
     dwNewSizeWR := dwNewSize;
 
-    m_pNewVertexStreamZeroData := CxbxMalloc(dwNewSizeWR);
+    m_pNewVertexStreamZeroData := DxbxMalloc(dwNewSizeWR);
     m_bAllocatedStreamZeroData := true;
 
     pPatchedVertexData := m_pNewVertexStreamZeroData;
@@ -1394,7 +1394,7 @@ begin
     begin
       if (Self.m_bAllocatedStreamZeroData) then
       begin
-        CxbxFree(m_pNewVertexStreamZeroData);
+        DxbxFree(m_pNewVertexStreamZeroData);
         m_pNewVertexStreamZeroData := nil; // Dxbx addition
         Self.m_bAllocatedStreamZeroData := False; // Dxbx addition
       end;
@@ -1500,7 +1500,7 @@ begin
 
     else
     begin
-      CxbxKrnlCleanup('Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)', [g_IVBFVF, dwPos]);
+      DxbxKrnlCleanup('Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)', [g_IVBFVF, dwPos]);
     end;
 
 // Cxbx     if(dwPos = D3DFVF_NORMAL) then // <- This didn't look right but if it is, change it back...
@@ -1780,7 +1780,7 @@ begin
       end
       else
       begin
-        CxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
+        DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
       end;
 
       // as we iterate through mipmap levels, we'll adjust the source resource offset

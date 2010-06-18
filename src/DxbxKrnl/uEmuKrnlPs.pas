@@ -236,7 +236,7 @@ callComplete:
     end;
   end;
 
-  CxbxKrnlTerminateThread();
+  DxbxKrnlTerminateThread();
 
   Result := 0;
 end; // PCSTProxy
@@ -404,7 +404,7 @@ begin
 {$ENDIF}
       end;
 
-      CxbxKrnlRegisterThread(hDupHandle);
+      DxbxKrnlRegisterThread(hDupHandle);
     end;
 
     if(pThreadId <> NULL) then
@@ -473,7 +473,7 @@ begin
     end;
   end;
 
-  //CxbxKrnlTerminateThread();
+  //DxbxKrnlTerminateThread();
   EmuCleanupFS();
 
   //_endthreadex(ExitStatus);

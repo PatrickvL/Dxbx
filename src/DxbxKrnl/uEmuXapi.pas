@@ -355,7 +355,7 @@ begin
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  AllocatedAddress := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
+  AllocatedAddress := DxbxRtlAlloc(hHeap, dwFlags, dwBytes);
   if Assigned(AllocatedAddress) then
   begin
     Result := PVOID(RoundUp(uint32(AllocatedAddress) + 1, HEAP_HEADERSIZE));
@@ -394,7 +394,7 @@ begin
   if Assigned(lpMem) then
     lpMem := (PPointer(lpMem)-1)^;
 
-  Result := CxbxRtlFree(hHeap, dwFlags, lpMem);
+  Result := DxbxRtlFree(hHeap, dwFlags, lpMem);
 
   EmuSwapFS(fsXbox);
 end;
@@ -423,13 +423,13 @@ begin
       [hHeap, dwFlags, lpMem, dwBytes]);
 {$ENDIF}
 
-  // Dxbx note : Realloc cannot be implemented via CxbxRtlRealloc because of possible alignment-mismatches.
+  // Dxbx note : Realloc cannot be implemented via DxbxRtlRealloc because of possible alignment-mismatches.
   // We solve this by doing a new Alloc, copying over the original lpMem contents and freeing it :
 
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
 
-  AllocatedAddress := CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
+  AllocatedAddress := DxbxRtlAlloc(hHeap, dwFlags, dwBytes);
   if Assigned(AllocatedAddress) then
   begin
     Result := PVOID(RoundUp(uint32(AllocatedAddress) + 1, HEAP_HEADERSIZE));
@@ -442,9 +442,9 @@ begin
   begin
     AllocatedAddress := (PPointer(lpMem)-1)^;
     if Assigned(Result) then
-      memcpy({destination=}Result, {source=}lpMem, {size=}CxbxRtlSizeHeap(hHeap, dwFlags, AllocatedAddress) - HEAP_HEADERSIZE);
+      memcpy({destination=}Result, {source=}lpMem, {size=}DxbxRtlSizeHeap(hHeap, dwFlags, AllocatedAddress) - HEAP_HEADERSIZE);
 
-    CxbxRtlFree(hHeap, dwFlags, AllocatedAddress);
+    DxbxRtlFree(hHeap, dwFlags, AllocatedAddress);
   end;
 
 {$IFDEF DXBX_DEBUG_TRACE}
@@ -477,7 +477,7 @@ begin
   if Assigned(lpMem) then
     lpMem := (PPointer(lpMem)-1)^;
 
-  Result := CxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
+  Result := DxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1010,7 +1010,7 @@ begin
 
       if (v = XINPUT_SETSTATE_SLOTS) then
       begin
-        CxbxKrnlCleanup('Ran out of XInputSetStateStatus slots!');
+        DxbxKrnlCleanup('Ran out of XInputSetStateStatus slots!');
       end;
     end;
   end;
@@ -1265,7 +1265,7 @@ begin
       [UnknownA, UnknownB, UnknownC]);
 {$ENDIF}
 
-  CxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
+  DxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
 
   EmuSwapFS(fsXbox);
 end;
@@ -1294,7 +1294,7 @@ begin
   begin
     // I honestly don't expect this to happen, but if it does...
     if (g_iThreadNotificationCount >= 16) then
-      CxbxKrnlCleanup('Too many thread notification routines installed'#13#10 +
+      DxbxKrnlCleanup('Too many thread notification routines installed'#13#10 +
                       'If you''re reading this message than tell blueshogun you saw it!!!');
 
     // Find an empty spot in the thread notification array
@@ -1682,7 +1682,7 @@ begin
 
   // If no path is specified, then the xbe is rebooting to dashboard
   if (nil = lpTitlePath) then
-    CxbxKrnlCleanup('The xbe is rebooting (XLaunchNewImage)');
+    DxbxKrnlCleanup('The xbe is rebooting (XLaunchNewImage)');
 
   // Ignore any other attempts to execute other .xbe files (for now).
   EmuWarning('Not executing the xbe!');
@@ -1694,10 +1694,10 @@ begin
 
     // Save the launch data parameters to disk for later.
 {$IFDEF DEBUG}
-    DbgPrintf('Saving launch data as CxbxLaunchData.bin...');
+    DbgPrintf('Saving launch data as DxbxLaunchData.bin...');
 {$ENDIF}
 
-    fp := fopen('CxbxLaunchData.bin', 'wb');
+    fp := fopen('DxbxLaunchData.bin', 'wb');
     if Assigned(fp) then
     begin
       fseek(fp, 0, SEEK_SET);
@@ -1759,9 +1759,9 @@ begin
 
   fp := NULL;
 
-  // Does CxbxLaunchData.bin exist?
+  // Does DxbxLaunchData.bin exist?
   if (not g_bXLaunchNewImageCalled) then
-    fp := fopen('CxbxLaunchData.bin', 'rb');
+    fp := fopen('DxbxLaunchData.bin', 'rb');
 
   // If it does exist, load it.
   if Assigned(fp) then
@@ -1778,7 +1778,7 @@ begin
     fclose(fp);
 
     // Delete the file once we're done.
-    DeleteFile('CxbxLaunchData.bin');
+    DeleteFile('DxbxLaunchData.bin');
 
     // HACK: Initialize XInput from restart
     // MARKED OUT CXBX

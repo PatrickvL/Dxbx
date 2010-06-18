@@ -431,12 +431,12 @@ begin
   hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
 
   if (FAILED(hRet)) then
-    CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
+    DxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
   hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus(dwStatus);
 
   if (FAILED(hRet)) then
-    CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
+    DxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
   // release old buffer
   while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do begin end;
@@ -446,7 +446,7 @@ begin
   hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pThis.EmuBufferDesc^, PIDirectSoundBuffer(@(pThis.EmuDirectSoundBuffer8)), NULL);
 
   if (FAILED(hRet)) then
-    CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
+    DxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
 
   IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
@@ -469,12 +469,12 @@ begin
   hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetCurrentPosition(@dwPlayCursor, @dwWriteCursor);
 
   if (FAILED(hRet)) then
-    CxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
+    DxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
   hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus(dwStatus);
 
   if (FAILED(hRet)) then
-    CxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
+    DxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');
 
   // release old buffer
   while(IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release() > 0) do begin end;
@@ -484,7 +484,7 @@ begin
   hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pThis.EmuBufferDesc^, @pThis.EmuDirectSoundBuffer8, nil);
 
   if (FAILED(hRet)) then
-    CxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
+    DxbxKrnlCleanup('IDirectSoundBuffer8 resize Failed!');
 
   IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).SetCurrentPosition(dwPlayCursor);
 
@@ -529,14 +529,14 @@ begin
     Result := DirectSoundCreate8(NULL, PIDirectSound8(ppDirectSound), NULL);
 
     if FAILED(Result) then
-      CxbxKrnlCleanup('DirectSoundCreate8 Failed!');
+      DxbxKrnlCleanup('DirectSoundCreate8 Failed!');
 
     g_pDSound8 := ppDirectSound^;
 
     Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
     if FAILED(Result) then
-      CxbxKrnlCleanup('IDirectSound8(g_pDSound8).SetCooperativeLevel Failed!');
+      DxbxKrnlCleanup('IDirectSound8(g_pDSound8).SetCooperativeLevel Failed!');
 
 
     // clear sound buffer cache
@@ -1107,7 +1107,7 @@ begin
 
   dwEmuFlags := 0;
 
-  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(sizeof(DSBUFFERDESC)));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(DxbxMalloc(sizeof(DSBUFFERDESC)));
   bIsSpecial := false;
 
   // convert from Xbox to PC DSound
@@ -1130,7 +1130,7 @@ begin
 
     if (pdsbd.lpwfxFormat <> NULL) then
     begin
-      pDSBufferDesc.lpwfxFormat := CxbxMalloc(sizeof(WAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
+      pDSBufferDesc.lpwfxFormat := DxbxMalloc(sizeof(WAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
       memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, sizeof(WAVEFORMATEX));
 
       if (pDSBufferDesc.lpwfxFormat.wFormatTag = WAVE_FORMAT_XBOX_ADPCM) then
@@ -1170,8 +1170,8 @@ begin
 
       // TODO -oCXBX: A better response to this scenario if possible.
 
-      pDSBufferDescSpecial := DirectSound.PDSBUFFERDESC(CxbxMalloc(sizeof(DSBUFFERDESC)));
-      pDSBufferDescSpecial.lpwfxFormat := PWAVEFORMATEX(CxbxMalloc(sizeof(WAVEFORMATEX)));
+      pDSBufferDescSpecial := DirectSound.PDSBUFFERDESC(DxbxMalloc(sizeof(DSBUFFERDESC)));
+      pDSBufferDescSpecial.lpwfxFormat := PWAVEFORMATEX(DxbxMalloc(sizeof(WAVEFORMATEX)));
 
       //memset(pDSBufferDescSpecial.lpwfxFormat, 0, sizeof(WAVEFORMATEX));
       //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC));
@@ -1189,7 +1189,7 @@ begin
       pDSBufferDescSpecial.dwBufferBytes := 3 * pDSBufferDescSpecial.lpwfxFormat.nAvgBytesPerSec;
 
       // MARKED OUT CXBX
-//    pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)/*+pdsbd.lpwfxFormat.cbSize*/);
+//    pDSBufferDesc.lpwfxFormat := (WAVEFORMATEX*)DxbxMalloc(sizeof(WAVEFORMATEX)/*+pdsbd.lpwfxFormat.cbSize*/);
 
 ////  pDSBufferDesc.lpwfxFormat.cbSize := sizeof( WAVEFORMATEX );
 //    pDSBufferDesc.lpwfxFormat.nChannels := 1;
@@ -1253,7 +1253,7 @@ begin
     end;
 
     if (v = SOUNDBUFFER_CACHE_SIZE) then
-      CxbxKrnlCleanup('SoundBuffer cache out of slots!');
+      DxbxKrnlCleanup('SoundBuffer cache out of slots!');
   end;
 
   EmuSwapFS(fsXbox);
@@ -1434,7 +1434,7 @@ begin
     hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
     if (FAILED(hRet)) then
-        CxbxKrnlCleanup('DirectSoundBuffer Lock Failed!');
+        DxbxKrnlCleanup('DirectSoundBuffer Lock Failed!');
 
     pThis.EmuLockPtr1 := ppvAudioPtr1^;
     pThis.EmuLockBytes1 := pdwAudioBytes1^;
@@ -1548,9 +1548,9 @@ begin
         end;
 
         if (pThis.EmuBufferDesc.lpwfxFormat <> NULL) then
-          CxbxFree(pThis.EmuBufferDesc.lpwfxFormat);
+          DxbxFree(pThis.EmuBufferDesc.lpwfxFormat);
 
-        CxbxFree(pThis.EmuBufferDesc);
+        DxbxFree(pThis.EmuBufferDesc);
 
         dispose(pThis);
       end;
@@ -1719,7 +1719,7 @@ begin
          [pThis, dwReserved1, dwReserved2, dwFlags]);
 {$ENDIF}
   if (dwFlags and (not DSBPLAY_LOOPING or X_DSBPLAY_FROMSTART)) > 0 then
-    CxbxKrnlCleanup('Unsupported Playing Flags');
+    DxbxKrnlCleanup('Unsupported Playing Flags');
 
   // rewind buffer
   if ((dwFlags and X_DSBPLAY_FROMSTART) <> X_DSBPLAY_FROMSTART) then
@@ -1897,7 +1897,7 @@ begin
   // TODO -oCXBX: Garbage Collection
   ppStream^ := X_CDirectSoundStream.Create;
 
-  pDSBufferDesc := DirectSound.PDSBUFFERDESC(CxbxMalloc(sizeof(DSBUFFERDESC)));
+  pDSBufferDesc := DirectSound.PDSBUFFERDESC(DxbxMalloc(sizeof(DSBUFFERDESC)));
 
   // convert from Xbox to PC DSound
   begin
@@ -1915,7 +1915,7 @@ begin
 
     if (pdssd.lpwfxFormat <> NULL) then
     begin
-      pDSBufferDesc.lpwfxFormat := PWAVEFORMATEX(CxbxMalloc(sizeof(WAVEFORMATEX)));
+      pDSBufferDesc.lpwfxFormat := PWAVEFORMATEX(DxbxMalloc(sizeof(WAVEFORMATEX)));
       memcpy(pDSBufferDesc.lpwfxFormat, pdssd.lpwfxFormat, sizeof(WAVEFORMATEX));
     end;
 
@@ -1965,12 +1965,12 @@ begin
 
       // Create the DirectSound buffer before continuing...
       if (FAILED(DirectSoundCreate8(NULL, PIDirectSound8(@g_pDSound8), NULL))) then
-        CxbxKrnlCleanup('Unable to initialize DirectSound!');
+        DxbxKrnlCleanup('Unable to initialize DirectSound!');
 
       hRet := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
       if (FAILED(hRet)) then
-        CxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed!');
+        DxbxKrnlCleanup('g_pDSound8.SetCooperativeLevel Failed!');
 
       // clear sound buffer cache
       for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
@@ -2004,7 +2004,7 @@ begin
     end;
 
     if (v = SOUNDSTREAM_CACHE_SIZE) then
-        CxbxKrnlCleanup('SoundStream cache out of slots!');
+        DxbxKrnlCleanup('SoundStream cache out of slots!');
   end;
 
   EmuSwapFS(fsXbox);
@@ -2191,9 +2191,9 @@ begin
       end;
 
       if (pThis.EmuBufferDesc.lpwfxFormat <> NULL) then
-        CxbxFree(pThis.EmuBufferDesc.lpwfxFormat);
+        DxbxFree(pThis.EmuBufferDesc.lpwfxFormat);
 
-      CxbxFree(pThis.EmuBufferDesc);
+      DxbxFree(pThis.EmuBufferDesc);
 
       pThis.Free;
     end;

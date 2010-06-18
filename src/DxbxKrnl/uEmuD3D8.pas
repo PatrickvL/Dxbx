@@ -213,7 +213,7 @@ implementation
 uses
   // Dxbx
   uDxbxKrnl
-  , uXboxLibraryUtils; // Should not be here, but needed for CxbxKrnlRegisterThread
+  , uXboxLibraryUtils; // Should not be here, but needed for DxbxKrnlRegisterThread
 
 procedure DxbxResetGlobals;
 begin
@@ -327,7 +327,7 @@ begin
 
       DuplicateHandle(GetCurrentProcess(), hThread, GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS);
 
-      CxbxKrnlRegisterThread(hDupHandle);
+      DxbxKrnlRegisterThread(hDupHandle);
     end;
   end;
 
@@ -355,7 +355,7 @@ begin
     // xbox Direct3DCreate8 returns '1' always, so we need our own ptr
     IDirect3D8(g_pD3D8) := Direct3DCreate8(D3D_SDK_VERSION);
     if (g_pD3D8 = NULL) then
-      CxbxKrnlCleanup('Could not initialize Direct3D8!');
+      DxbxKrnlCleanup('Could not initialize Direct3D8!');
 
     DevType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
     IDirect3D8(g_pD3D8).GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, {out}g_D3DCaps);
@@ -540,7 +540,7 @@ begin
 
   // initialize direct input
   if not EmuDInputInit() then
-    CxbxKrnlCleanup('Could not initialize DirectInput!');
+    DxbxKrnlCleanup('Could not initialize DirectInput!');
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : Message-Pump thread is running.');
@@ -588,7 +588,7 @@ begin
 
 //        delete dbgConsole;
 
-    CxbxKrnlCleanup('');
+    DxbxKrnlCleanup('');
   end;
 
   Result := D3D_OK;
@@ -716,19 +716,19 @@ begin
               if (bAutoPaused) then
               begin
                 bAutoPaused := false;
-                CxbxKrnlResume();
+                DxbxKrnlResume();
               end;
             end;
 
           SIZE_MINIMIZED:
             begin
               if (g_XBVideo.GetFullscreen()) then
-                CxbxKrnlCleanup('');
+                DxbxKrnlCleanup('');
 
               if (not g_bEmuSuspended) then
               begin
                 bAutoPaused := true;
-                CxbxKrnlSuspend();
+                DxbxKrnlSuspend();
               end;
             end;
         end;
@@ -951,7 +951,7 @@ begin
             // if (g_EmuCDPD.pPresentationParameters.MultiSampleType = $00001121) then
             //   g_EmuCDPD.pPresentationParameters.MultiSampleType := D3DMULTISAMPLE_2_SAMPLES
             // else
-            //   CxbxKrnlCleanup('Unknown MultiSampleType (0x%.08X)', [g_EmuCDPD.pPresentationParameters.MultiSampleType]);
+            //   DxbxKrnlCleanup('Unknown MultiSampleType (0x%.08X)', [g_EmuCDPD.pPresentationParameters.MultiSampleType]);
           end;
 
           g_EmuCDPD.pPresentationParameters.Flags := D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
@@ -1023,13 +1023,13 @@ begin
         begin
           // TODO -oDXBX: Use DXGetErrorDescription(g_EmuCDPD.hRet); (requires another DLL though)
           if (g_EmuCDPD.hRet = D3DERR_INVALIDCALL) then
-            CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Invalid Call)')
+            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Invalid Call)')
           else if (g_EmuCDPD.hRet = D3DERR_NOTAVAILABLE) then
-            CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Not Available)')
+            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Not Available)')
           else if (g_EmuCDPD.hRet = D3DERR_OUTOFVIDEOMEMORY) then
-            CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Out of Video Memory)');
+            DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Out of Video Memory)');
 
-          CxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Unknown)');
+          DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Unknown)');
         end;
 
         // cache device pointer
@@ -1049,11 +1049,11 @@ begin
             hRet := DirectDrawCreateEx({lpGUID=}@g_ddguid, {out}IDirectDraw7(g_pDD7), {iid=}IID_IDirectDraw7, {pUnkOuter=}NULL);
 
           if (FAILED(hRet)) then
-            CxbxKrnlCleanup('Could not initialize DirectDraw7');
+            DxbxKrnlCleanup('Could not initialize DirectDraw7');
 
           hRet := IDirectDraw7(g_pDD7).SetCooperativeLevel(0, DDSCL_NORMAL);
           if (FAILED(hRet)) then
-            CxbxKrnlCleanup('Could not set cooperative level');
+            DxbxKrnlCleanup('Could not set cooperative level');
         end;
 
         // check for YUY2 overlay support
@@ -1062,7 +1062,7 @@ begin
           dwCodes := 0;
           lpCodes := nil;
           IDirectDraw7(g_pDD7).GetFourCCCodes({var}dwCodes, lpCodes);
-          lpCodes := CxbxMalloc(dwCodes*sizeof(DWORD));
+          lpCodes := DxbxMalloc(dwCodes*sizeof(DWORD));
           IDirectDraw7(g_pDD7).GetFourCCCodes({var}dwCodes, lpCodes);
 
           g_bSupportsYUY2 := false;
@@ -1076,7 +1076,7 @@ begin
             end;
           end;
 
-          CxbxFree(lpCodes);
+          DxbxFree(lpCodes);
 
           if (not g_bSupportsYUY2) then
             EmuWarning('YUY2 overlays are not supported in hardware, could be slow!');
@@ -1104,7 +1104,7 @@ begin
           hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSPrimary, nil);
 
           if (FAILED(hRet)) then
-            CxbxKrnlCleanup('Could not create primary surface (0x%.08X)', [hRet]);
+            DxbxKrnlCleanup('Could not create primary surface (0x%.08X)', [hRet]);
         end;
 
         // update render target cache
@@ -1232,7 +1232,7 @@ begin
 
       // DXBX MARKED OUT - CXBX WAS TESTING 16, but that was never hit... we do hit it.
       //if (v = RESOURCE_CACHE_SIZE-1) then // Dxbx note : Cxbx uses 16 here, but that's just plain wrong!
-      //  CxbxKrnlCleanup('X_D3DResource cache is maxed out!');
+      //  DxbxKrnlCleanup('X_D3DResource cache is maxed out!');
     end;
   end;
 end; // EmuVerifyResourceIsRegistered
@@ -1406,7 +1406,7 @@ begin
 {$ENDIF}
 
   if (Ord(RType) > 7) then
-    CxbxKrnlCleanup('RType > 7');
+    DxbxKrnlCleanup('RType > 7');
 
   Result := IDirect3D8(g_pD3D8).CheckDeviceFormat
   (
@@ -1916,7 +1916,7 @@ begin
 {$ENDIF}{
   ret := IDirect3DDevice8(g_pD3DDevice8).BeginStateBlock();
 
-  CxbxKrnlCleanup('BeginStateBig is not implemented');
+  DxbxKrnlCleanup('BeginStateBig is not implemented');
   EmuSwapFS(fsXbox);
   Result := ret;
 end; }
@@ -2070,7 +2070,7 @@ begin
   end;
 
   if FAILED(Result) then
-    {EmuWarning}CxbxKrnlCleanup('CreateImageSurface failed! '+ #13#10 + 'Format = 0x%8.8X', [Format]);
+    {EmuWarning}DxbxKrnlCleanup('CreateImageSurface failed! '+ #13#10 + 'Format = 0x%8.8X', [Format]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2175,7 +2175,7 @@ begin
   hRet := IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface8));
 
   if (FAILED(hRet)) then
-    CxbxKrnlCleanup('Unable to retrieve back buffer');
+    DxbxKrnlCleanup('Unable to retrieve back buffer');
 
   // update data pointer
   pBackBuffer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_SURFACE;
@@ -2639,8 +2639,8 @@ begin
 {$ENDIF}
 
   // create emulated shader struct
-  pD3DVertexShader := PX_D3DVertexShader(CxbxMalloc(sizeof(X_D3DVertexShader)));
-  pVertexShader := PVERTEX_SHADER(CxbxMalloc(sizeof(VERTEX_SHADER)));
+  pD3DVertexShader := PX_D3DVertexShader(DxbxMalloc(sizeof(X_D3DVertexShader)));
+  pVertexShader := PVERTEX_SHADER(DxbxMalloc(sizeof(VERTEX_SHADER)));
 
   // TODO -oCXBX: Intelligently fill out these fields as necessary
   ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
@@ -2737,9 +2737,9 @@ begin
   // Save the status, to remove things later
   pVertexShader.Status := hRet;
 
-  CxbxFree(pRecompiledDeclaration);
+  DxbxFree(pRecompiledDeclaration);
 
-  pVertexShader.pDeclaration := PDWORD(CxbxMalloc(DeclarationSize));
+  pVertexShader.pDeclaration := PDWORD(DxbxMalloc(DeclarationSize));
   memcpy(pVertexShader.pDeclaration, pDeclaration, DeclarationSize);
 
   pVertexShader.FunctionSize := 0;
@@ -2752,7 +2752,7 @@ begin
   begin
     if (pFunction <> NULL) then
     begin
-      pVertexShader.pFunction := PDWORD(CxbxMalloc(VertexShaderSize));
+      pVertexShader.pFunction := PDWORD(DxbxMalloc(VertexShaderSize));
       memcpy(pVertexShader.pFunction, pFunction, VertexShaderSize);
       pVertexShader.FunctionSize := VertexShaderSize;
     end
@@ -3150,9 +3150,9 @@ begin
      4: //D3DRTYPE_VOLUMETEXTURE
         XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
      5: //D3DRTYPE_CUBETEXTURE
-        CxbxKrnlCleanup('Cube textures temporarily not supported!');
+        DxbxKrnlCleanup('Cube textures temporarily not supported!');
   else
-    CxbxKrnlCleanup('D3DResource := %d is not supported!', [Ord(D3DResource)]);
+    DxbxKrnlCleanup('D3DResource := %d is not supported!', [Ord(D3DResource)]);
   end;
   
   Result := pTexture;
@@ -3292,7 +3292,7 @@ begin
   else
   begin
     dwSize := g_dwOverlayP * g_dwOverlayH;
-    dwPtr := DWORD(CxbxMalloc(dwSize + sizeof(DWORD)));
+    dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
 
     pRefCount := PDWORD(dwPtr + dwSize);
 
@@ -3402,7 +3402,7 @@ begin
   else
   begin
     dwSize := g_dwOverlayP * g_dwOverlayH;
-    dwPtr := DWORD(CxbxMalloc(dwSize + sizeof(DWORD)));
+    dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
 
     pRefCount := PDWORD(dwPtr + dwSize);
 
@@ -3475,7 +3475,7 @@ begin
   end
   else if (PCFormat = D3DFMT_YUY2) then
   begin
-    CxbxKrnlCleanup('YUV not supported for cube textures');
+    DxbxKrnlCleanup('YUV not supported for cube textures');
   end;
 
   New({var PX_D3DCubeTexture}ppCubeTexture^);
@@ -3734,12 +3734,12 @@ begin
         if (Stage = 0) then
         begin
             if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
-                CxbxKrnlCleanup('Could not create dummy texture!');
+                DxbxKrnlCleanup('Could not create dummy texture!');
         end
         else if (Stage = 1) then
         begin
             if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
-                CxbxKrnlCleanup('Could not create dummy texture!');
+                DxbxKrnlCleanup('Could not create dummy texture!');
         end;
      end;
   //*)
@@ -3891,7 +3891,7 @@ begin
 
   if (g_IVBTable = nil) then
   begin
-    g_IVBTable := CxbxMalloc(sizeof(_D3DIVB)*1024);
+    g_IVBTable := DxbxMalloc(sizeof(_D3DIVB)*1024);
   end;
 
   g_IVBTblOffs := 0;
@@ -3902,7 +3902,7 @@ begin
 
   if (g_pIVBVertexBuffer = nil) then
   begin
-    g_pIVBVertexBuffer := CxbxMalloc(sizeof(_D3DIVB)*1024);
+    g_pIVBVertexBuffer := DxbxMalloc(sizeof(_D3DIVB)*1024);
   end;
 
   EmuSwapFS(fsXbox);
@@ -4143,7 +4143,7 @@ begin
       g_IVBFVF := g_IVBFVF or D3DFVF_XYZRHW;
     end;
   else
-    CxbxKrnlCleanup('Unknown IVB Register: %d', [Register_]);
+    DxbxKrnlCleanup('Unknown IVB Register: %d', [Register_]);
   end;
 
   EmuSwapFS(fsXbox);
@@ -4258,8 +4258,8 @@ begin
 
     // MARKED OUT BY CXBX
     // TODO -oCXBX: Should technically clean this up at some point..but on XP doesnt matter much
-//    CxbxFree(g_pIVBVertexBuffer);
-//    CxbxFree(g_IVBTable);
+//    DxbxFree(g_pIVBVertexBuffer);
+//    DxbxFree(g_IVBTable);
 
   EmuSwapFS(fsXbox);
 
@@ -4579,7 +4579,7 @@ begin
           sprintf(szString, 'CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
 
           if ( dwSize <> 0 ) then
-            CxbxKrnlCleanup( String(szString) )
+            DxbxKrnlCleanup( String(szString) )
           else
           begin
             EmuWarning( string(szString) );
@@ -4599,7 +4599,7 @@ begin
         hRet := IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Lock(0, 0, {out}pData, 0);
 
         if FAILED(hRet) then
-          CxbxKrnlCleanup('VertexBuffer Lock Failed!');
+          DxbxKrnlCleanup('VertexBuffer Lock Failed!');
 
         memcpy(pData, pBase, dwSize);
 
@@ -4642,14 +4642,14 @@ begin
           );
 
           if (FAILED(hRet)) then
-            CxbxKrnlCleanup('CreateIndexBuffer Failed!');
+            DxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
           pData := nil;
 
           hRet := IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
 
           if (FAILED(hRet)) then
-            CxbxKrnlCleanup('IndexBuffer Lock Failed!');
+            DxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
           memcpy(pData, pBase, dwSize);
 
@@ -4714,14 +4714,14 @@ begin
       // TODO -oCXBX: HACK: Temporary?
       if (X_Format = X_D3DFMT_LIN_D24S8) then // = $2E
       begin
-        {CxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D24S8 not yet supported!');
+        {DxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D24S8 not yet supported!');
         X_Format := X_D3DFMT_LIN_A8R8G8B8; // = $12
         Format := D3DFMT_A8R8G8B8;
       end;
 
       if(X_Format = X_D3DFMT_LIN_D16) then // = 0x30
       begin
-        {CxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D16 not yet supported!');
+        {DxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D16 not yet supported!');
         X_Format := X_D3DFMT_LIN_R5G6B5; // = 0x11;
         Format := D3DFMT_R5G6B5;
       end;
@@ -4816,7 +4816,7 @@ begin
       end
       else
       begin
-        CxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
+        DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
       end;
 
       if (X_Format = X_D3DFMT_YUY2) then
@@ -4834,7 +4834,7 @@ begin
         //
 
         dwSize := g_dwOverlayP * g_dwOverlayH;
-        dwPtr := DWORD(CxbxMalloc(dwSize + sizeof(DWORD)));
+        dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
 
         pRefCount := PDWORD(dwPtr + dwSize);
 
@@ -4879,7 +4879,7 @@ begin
           );
 
           if (FAILED(hRet)) then
-            CxbxKrnlCleanup('CreateImageSurface Failed!');
+            DxbxKrnlCleanup('CreateImageSurface Failed!');
 
 {$IFDEF DEBUG}
           DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created ImageSurface(0x%.08X, 0x%.08X)', [pResource, pResource.Emu.Surface8]);
@@ -4931,7 +4931,7 @@ begin
               D3DPOOL_MANAGED, @(pResource.Emu.CubeTexture8));
 
             if (FAILED(hRet)) then
-              CxbxKrnlCleanup('CreateCubeTexture Failed!');
+              DxbxKrnlCleanup('CreateCubeTexture Failed!');
 
 {$IFDEF DEBUG}
             DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created CubeTexture(0x%.08X, 0x%.08X)', [pResource, pResource.Emu.CubeTexture8]);
@@ -4950,7 +4950,7 @@ begin
               );
 
             if (FAILED(hRet)) then
-              CxbxKrnlCleanup('CreateTexture Failed!');
+              DxbxKrnlCleanup('CreateTexture Failed!');
 
 {$IFDEF DEBUG}
             DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Texture (0x%.08X, 0x%.08X)', [pResource, pResource.Emu.Texture8]);
@@ -5028,9 +5028,9 @@ begin
                     dwDataSize := dwMipWidth * dwMipHeight * 4;
                     dwPaletteSize := 256 * 4; // Note: This is not allways true, it can be 256- 128- 64- or 32*4
 
-                    pTextureCache := CxbxMalloc(dwDataSize);
-                    pExpandedTexture := CxbxMalloc(dwDataSize);
-                    pTexturePalette := CxbxMalloc(256 * 4);
+                    pTextureCache := DxbxMalloc(dwDataSize);
+                    pExpandedTexture := DxbxMalloc(dwDataSize);
+                    pTexturePalette := DxbxMalloc(256 * 4);
 
                     // First we need to unswizzle the texture data
                     XTL_EmuXGUnswizzleRect
@@ -5069,9 +5069,9 @@ begin
                     memcpy(pPixelData, pExpandedTexture, dwDataSize);
 
                     // Flush unused data buffers
-                    CxbxFree(pTexturePalette);
-                    CxbxFree(pExpandedTexture);
-                    CxbxFree(pTextureCache);
+                    DxbxFree(pTexturePalette);
+                    DxbxFree(pExpandedTexture);
+                    DxbxFree(pTextureCache);
                   end
                   else
                   begin
@@ -5203,7 +5203,7 @@ begin
     begin
       pFixup := PX_D3DFixup(pResource);
 
-      CxbxKrnlCleanup('IDirect3DResource8::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported' +
+      DxbxKrnlCleanup('IDirect3DResource8::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported' +
                 #13#10'0x%.08X (pFixup->Common)' +
                 #13#10'0x%.08X (pFixup->Data)' +
                 #13#10'0x%.08X (pFixup->Lock)' +
@@ -5214,7 +5214,7 @@ begin
     end;
 
   else // case
-    CxbxKrnlCleanup('IDirect3DResource8.Register.Common Type 0x%.08X not yet supported', [dwCommonType]);
+    DxbxKrnlCleanup('IDirect3DResource8.Register.Common Type 0x%.08X not yet supported', [dwCommonType]);
   end;
 
   EmuSwapFS(fsXbox);
@@ -5328,7 +5328,7 @@ begin
         g_YuvSurface := NULL;
 
       // free memory associated with this special resource handle
-      CxbxFree(PVOID(dwPtr));
+      DxbxFree(PVOID(dwPtr));
     end;
 
     EmuSwapFS(fsXbox);
@@ -5552,7 +5552,7 @@ begin
     pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
     if (Ord(pDesc.Type_) > 7) then
-      CxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc->Type > 7');
+      DxbxKrnlCleanup('EmuGet2DSurfaceDesc: pDesc->Type > 7');
 
     pDesc.Usage := SurfaceDesc.Usage;
     pDesc.Size := SurfaceDesc.Size;
@@ -5561,7 +5561,7 @@ begin
     if SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE then
       pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE($0011)
     else
-      CxbxKrnlCleanup(Format('EmuGet2DSurfaceDesc Unknown Multisample format! (%d)', [Ord(SurfaceDesc.MultiSampleType)]));
+      DxbxKrnlCleanup(Format('EmuGet2DSurfaceDesc Unknown Multisample format! (%d)', [Ord(SurfaceDesc.MultiSampleType)]));
 
     pDesc.Width := SurfaceDesc.Width;
     pDesc.Height := SurfaceDesc.Height;
@@ -5641,7 +5641,7 @@ begin
       pDesc.Type_ := X_D3DRESOURCETYPE(SurfaceDesc._Type);
 
       if (Ord(pDesc.Type_) > 7) then
-        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7');
+        DxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7');
 
       pDesc.Usage := SurfaceDesc.Usage;
       pDesc.Size := SurfaceDesc.Size;
@@ -5650,7 +5650,7 @@ begin
       if (SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE) then
         pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE($0011)
       else
-        CxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)', [Ord(SurfaceDesc.MultiSampleType)]);
+        DxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)', [Ord(SurfaceDesc.MultiSampleType)]);
 
       pDesc.Width  := SurfaceDesc.Width;
       pDesc.Height := SurfaceDesc.Height;
@@ -5722,7 +5722,7 @@ begin
       NewFlags := NewFlags or D3DLOCK_READONLY;
 
     if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
-      CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
+      DxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
 
     try
       // Remove old lock(s)
@@ -5850,7 +5850,7 @@ begin
       NewFlags := NewFlags or D3DLOCK_READONLY;
 
     if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
-      CxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
+      DxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
 
     // Remove old lock(s)
     if (Level = 6) or (Level = 7) or (Level = 8) or (Level = 9) then
@@ -6169,12 +6169,12 @@ begin
         hRet := IDirectDraw7(g_pDD7).CreateSurface(ddsd2, @g_pDDSOverlay7, NULL);
 
         if (FAILED(hRet)) then
-          CxbxKrnlCleanup('Could not create overlay surface');
+          DxbxKrnlCleanup('Could not create overlay surface');
 
         hRet := IDirectDraw7(g_pDD7).CreateClipper(0, {out}IDirectDrawClipper(g_pDDClipper), NULL);
 
         if (FAILED(hRet)) then
-          CxbxKrnlCleanup('Could not create overlay clipper');
+          DxbxKrnlCleanup('Could not create overlay clipper');
 
         {Dxbx unused hRet :=} IDirectDrawClipper(g_pDDClipper).SetHWnd(0, g_hEmuWindow);
       end;
@@ -6503,7 +6503,7 @@ begin
 {$ENDIF}
 
   if (Value > $00030000) then
-    CxbxKrnlCleanup('EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
+    DxbxKrnlCleanup('EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)', [Value]);
 
   IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
 
@@ -7052,7 +7052,7 @@ begin
 
     else
       begin
-        CxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(State)]);
+        DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(State)]);
       end;
     end;
 
@@ -7087,7 +7087,7 @@ begin
   else if (Value = 5) then
     Value := 3
   else
-    CxbxKrnlCleanup('Unsupported D3DVERTEXBLENDFLAGS (%d)', [Value]);
+    DxbxKrnlCleanup('Unsupported D3DVERTEXBLENDFLAGS (%d)', [Value]);
 
   IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_VERTEXBLEND, Value);
 
@@ -7141,7 +7141,7 @@ begin
     $901:
       Value := D3DCULL_CCW;
   else
-    CxbxKrnlCleanup('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', [Value]);
+    DxbxKrnlCleanup('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', [Value]);
   end;
 
   IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_CULLMODE, Value);
@@ -7699,7 +7699,7 @@ begin
   Result := IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(StreamNumber, IDirect3DVertexBuffer8(pVertexBuffer8), Stride);
 
   if FAILED(RESULT) then
-    CxbxKrnlCleanup('SetStreamSource Failed!');
+    DxbxKrnlCleanup('SetStreamSource Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -7922,7 +7922,7 @@ begin
   // update index buffer, if necessary
   if Assigned(g_pIndexBuffer) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
   begin
-    dwSize := VertexCount*2;   // 16-bit indices
+    dwSize := VertexCount * SizeOf(Word);   // 16-bit indices
 
     hRet := IDirect3DDevice8_CreateIndexBuffer
     (g_pD3DDevice8,
@@ -7931,14 +7931,14 @@ begin
     );
 
     if (FAILED(hRet)) then
-        CxbxKrnlCleanup('CreateIndexBuffer Failed!');
+        DxbxKrnlCleanup('CreateIndexBuffer Failed!');
 
     pData := nil;
 
     hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
 
     if (FAILED(hRet)) then
-        CxbxKrnlCleanup('IndexBuffer Lock Failed!');
+        DxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
     memcpy(pData, Pvoid(g_pIndexBuffer.Data), dwSize);
 
@@ -7949,7 +7949,7 @@ begin
     hRet := IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8), g_dwBaseVertexIndex);
 
     if (FAILED(hRet)) then
-        CxbxKrnlCleanup('SetIndices Failed!');
+        DxbxKrnlCleanup('SetIndices Failed!');
   end;
 
   XTL_EmuUpdateDeferredStates();
@@ -7970,6 +7970,7 @@ begin
   FatalError := false;
 
   {Dxbx unused bPatched :=} VertPatch.Apply(@VPDesc, @FatalError);
+//  VertexCount := VPDesc.dwVertexCount; // TODO -oDxbx : Shouldn't we use the new VertexCount?!?
 
   {$ifdef _DEBUG_TRACK_VB}
   if not g_bVBSkipStream then
@@ -7986,7 +7987,7 @@ begin
 
       IDirect3DDevice8(g_pD3DDevice8).GetIndices(@pIndexBuffer, {out}BaseIndex);
 
-      if (pIndexBuffer <> nil) then
+      if (nil<>pIndexBuffer) then
       begin
         bActiveIB := true;
         IDirect3DIndexBuffer8(pIndexBuffer)._Release();
@@ -7998,21 +7999,21 @@ begin
     // uiStartIndex := 0;
 
     // TODO -oCXBX: caching (if it becomes noticably slow to recreate the buffer each time)
-    if not bActiveIB then
+    if(not bActiveIB) then
     begin
-      IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(VertexCount*2, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
+      IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
       if (pIndexBuffer = NULL) then
-          CxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*2]);
+          DxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*SizeOf(Word)]);
 
       pbData := NULL;
 
       IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, 0, {out}pbData, 0);
 
-      if (pbData = nil) then
-        CxbxKrnlCleanup('Could not lock index buffer!');
+      if (nil=pbData) then
+        DxbxKrnlCleanup('Could not lock index buffer!');
 
-      memcpy(pbData, pIndexData, VertexCount * 2);
+      memcpy(pbData, pIndexData, VertexCount * SizeOf(Word));
 
       IDirect3DIndexBuffer8(pIndexBuffer).Unlock();
 
@@ -8023,8 +8024,9 @@ begin
     end
     else
     begin
-      uiNumVertices := DWORD(pIndexData) div 2 + VertexCount;
-      uiStartIndex := DWORD(pIndexData) div 2;
+      // Dxbx note : Cxbx does this in reverse, but this is more efficient :
+      uiStartIndex := DWORD(pIndexData) div SizeOf(Word);
+      uiNumVertices := uiStartIndex + VertexCount; // TODO -oDxbx : Is adding uiStartIndex actually correct???
     end;
 
     if (IsValidCurrentShader()) and not FatalError then
@@ -8050,14 +8052,14 @@ begin
       end; *)
     end;
 
-    if (not bActiveIB) then
+    if(not bActiveIB) then
     begin
       IDirect3DDevice8(g_pD3DDevice8).SetIndices(nil, 0);
       IDirect3DIndexBuffer8(pIndexBuffer)._Release();
       pIndexBuffer := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
-    {$ifdef _DEBUG_TRACK_VB}
+  {$ifdef _DEBUG_TRACK_VB}
   end;
   {$endif}
 
@@ -8097,7 +8099,7 @@ begin
 
   // update index buffer, if necessary
   if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
-    CxbxKrnlCleanup('g_pIndexBuffer != 0');
+    DxbxKrnlCleanup('g_pIndexBuffer != 0');
 
   XTL_EmuUpdateDeferredStates();
 
@@ -8479,17 +8481,17 @@ begin
     pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
 
     RealHandle := pVertexShader.Handle;
-    CxbxFree(pVertexShader.pDeclaration);
+    DxbxFree(pVertexShader.pDeclaration);
 
     if Assigned(pVertexShader.pFunction) then
     begin
-      CxbxFree(pVertexShader.pFunction);
+      DxbxFree(pVertexShader.pFunction);
     end;
 
     XTL_FreeVertexDynamicPatch(pVertexShader);
 
-    CxbxFree(pVertexShader);
-    CxbxFree(pD3DVertexShader);
+    DxbxFree(pVertexShader);
+    DxbxFree(pD3DVertexShader);
   end;
 
   Result := IDirect3DDevice8(g_pD3DDevice8).DeleteVertexShader(RealHandle);
@@ -8856,7 +8858,7 @@ begin
   // so that we can return a valid page aligned pointer
   //
 
-  Result := CxbxMalloc(dwSize + $1000);
+  Result := DxbxMalloc(dwSize + $1000);
 
   // align to page boundary
   begin
@@ -9710,7 +9712,7 @@ begin
     if (State > 81) and (State < 116) then
       XTL_EmuD3DDeferredRenderState[State-82] := Value
     else
-      CxbxKrnlCleanup('Unknown Deferred RenderState! (%d)', [State]);
+      DxbxKrnlCleanup('Unknown Deferred RenderState! (%d)', [State]);
   end;
 
   (*
@@ -9796,7 +9798,7 @@ begin
 {$ENDIF}
 
   // TODO -oCxbx: Implement
-  CxbxKrnlCleanup('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
+  DxbxKrnlCleanup('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
 
   EmuSwapFS(fsXbox);
 
@@ -9830,7 +9832,7 @@ begin
       #13#10');', [pPushBuffer]);
 {$ENDIF}
 
-  //CxbxKrnlCleanup('BeginPushBuffer is not yet implemented!');
+  //DxbxKrnlCleanup('BeginPushBuffer is not yet implemented!');
   EmuWarning('BeginPushBuffer is not yet implemented!');
 
   EmuSwapFS(fsXbox);

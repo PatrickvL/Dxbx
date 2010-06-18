@@ -36,68 +36,68 @@ uses
   uMutex;
 
 
-function CxbxMalloc(x: Integer): Pointer;
-function CxbxCalloc(x, y: Integer): Pointer;
-procedure CxbxFree(x: Pointer);
-//function CxbxCallocDebug(NbrElements: size_t; ElementSize: size_t; pFile: P_char; Line: int): Pvoid;
-function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
-function CxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
-function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
-function CxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
+function DxbxMalloc(x: Integer): Pointer;
+function DxbxCalloc(x, y: Integer): Pointer;
+procedure DxbxFree(x: Pointer);
+//function DxbxCallocDebug(NbrElements: size_t; ElementSize: size_t; pFile: P_char; Line: int): Pvoid;
+function DxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
+function DxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
+function DxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
+function DxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
 
 implementation
 
 {$IFDEF _DEBUG_ALLOC}
 
 (*
-const CxbxMalloc(x)                            CxbxMallocDebug(x, __FILE__, __LINE__);
-const CxbxCalloc(x, y)                         CxbxCallocDebug(x, y, __FILE__, __LINE__);
-const CxbxFree(x)                              CxbxFreeDebug(x, __FILE__, __LINE__);
-const CxbxRtlAlloc(Heap, Flags, Bytes)         CxbxRtlAllocDebug(Heap, Flags, Bytes, __FILE__, __LINE__);
-const CxbxRtlFree(Heap, Flags, pMem)           CxbxRtlFreeDebug(Heap, Flags, pMem, __FILE__, __LINE__);
-const CxbxRtlRealloc(Heap, Flags, pMem, Bytes) CxbxRtlReallocDebug(Heap, Flags, pMem, Bytes, __FILE__, __LINE__);
-const CxbxRtlSizeHeap(Heap, Flags, pMem)       CxbxRtlSizeHeapDebug(Heap, Flags, pMem, __FILE__, __LINE__);
+const DxbxMalloc(x)                            DxbxMallocDebug(x, __FILE__, __LINE__);
+const DxbxCalloc(x, y)                         DxbxCallocDebug(x, y, __FILE__, __LINE__);
+const DxbxFree(x)                              DxbxFreeDebug(x, __FILE__, __LINE__);
+const DxbxRtlAlloc(Heap, Flags, Bytes)         DxbxRtlAllocDebug(Heap, Flags, Bytes, __FILE__, __LINE__);
+const DxbxRtlFree(Heap, Flags, pMem)           DxbxRtlFreeDebug(Heap, Flags, pMem, __FILE__, __LINE__);
+const DxbxRtlRealloc(Heap, Flags, pMem, Bytes) DxbxRtlReallocDebug(Heap, Flags, pMem, Bytes, __FILE__, __LINE__);
+const DxbxRtlSizeHeap(Heap, Flags, pMem)       DxbxRtlSizeHeapDebug(Heap, Flags, pMem, __FILE__, __LINE__);
 *)
 
 {$ELSE !_DEBUG_ALLOC}
 
-function CxbxMalloc(x: Integer): Pointer;
+function DxbxMalloc(x: Integer): Pointer;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := malloc(x);
 end;
 
-function CxbxCalloc(x, y: Integer): Pointer;
+function DxbxCalloc(x, y: Integer): Pointer;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := calloc(x, y);
 end;
 
-procedure CxbxFree(x: Pointer);
+procedure DxbxFree(x: Pointer);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   free(x);
 end;
 
-function CxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
+function DxbxRtlAlloc(Heap: HANDLE; Flags: ULONG; Bytes: SIZE_T): PVOID;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := JwaNative.RtlAllocateHeap(Heap, Flags, Bytes);
 end;
 
-function CxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
+function DxbxRtlFree(Heap: Handle; Flags: DWORD; pMem: PVOID): BOOL;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := BOOL(JwaNative.RtlFreeHeap(Heap, Flags, pMem));
 end;
 
-function CxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
+function DxbxRtlRealloc(Heap: HANDLE; Flags: ULONG; pMem: PVOID; Bytes: SIZE_T): PVOID;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := JwaNative.RtlReAllocateHeap(Heap, Flags, pMem, Bytes);
 end;
 
-function CxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
+function DxbxRtlSizeHeap(Heap: HANDLE; Flags: ULONG; pMem: PVOID): SIZE_T;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := JwaNative.RtlSizeHeap(Heap, Flags, pMem);
@@ -360,9 +360,9 @@ end;
 
 
 // ******************************************************************
-// * CxbxAllocDump - Dump the memory allocations
+// * DxbxAllocDump - Dump the memory allocations
 // ******************************************************************
-procedure CxbxAllocDump(DumpData: _bool);
+procedure DxbxAllocDump(DumpData: _bool);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pCur: PCXBX_MEMORY_BLOCK;
@@ -397,9 +397,9 @@ end;
 
 
 // ******************************************************************
-// * CxbxMallocDebug - Debug track malloc
+// * DxbxMallocDebug - Debug track malloc
 // ******************************************************************
-function CxbxMallocDebug(Size: size_t;
+function DxbxMallocDebug(Size: size_t;
                          pFile: P_char;
                          Line: int): Pvoid;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -415,7 +415,7 @@ begin
   if(nil=pMem) then
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('CxbxMallocDebug: Allocation failed' +
+    DbgPrintf('DxbxMallocDebug: Allocation failed' +
         #13#10'    Size: %d' +
         #13#10'    File: %s' +
         #13#10'    Line: %d',
@@ -438,9 +438,9 @@ begin
 end;
 
 // ******************************************************************
-// * CxbxCallocDebug - Debug track calloc
+// * DxbxCallocDebug - Debug track calloc
 // ******************************************************************
-function CxbxCallocDebug(NbrElements: size_t;
+function DxbxCallocDebug(NbrElements: size_t;
                          ElementSize: size_t;
                          pFile: P_char;
                          Line: int): Pvoid;
@@ -457,7 +457,7 @@ begin
   if(nil=pMem) then
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('CxbxCallocDebug: Allocation failed' +
+    DbgPrintf('DxbxCallocDebug: Allocation failed' +
         #13#10'    NbrElements: %d' +
         #13#10'    ElementSize: %d' +
         #13#10'    File       : %s' +
@@ -481,9 +481,9 @@ begin
 end;
 
 // ******************************************************************
-// * CxbxFreeDebug - Debug track free
+// * DxbxFreeDebug - Debug track free
 // ******************************************************************
-procedure CxbxFreeDebug(pMem: Pvoid;
+procedure DxbxFreeDebug(pMem: Pvoid;
                         pFile: P_char;
                         Line: int);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -500,7 +500,7 @@ begin
   if(pFree = NULL) then
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('CxbxFreeDebug: free on non-existent block: 0x%.08X! ' +
+    DbgPrintf('DxbxFreeDebug: free on non-existent block: 0x%.08X! ' +
               'Possibly a multiple free.' +
         #13#10'    File: %s' +
         #13#10'    Line: %d',
@@ -512,7 +512,7 @@ begin
     if not CheckIntegrity(pFree) then
     begin
 {$IFDEF DEBUG}
-      DbgPrintf('CxbxFreeDebug: Free on damaged block' +
+      DbgPrintf('DxbxFreeDebug: Free on damaged block' +
           #13#10'    Block   : 0x%.08X' +
           #13#10'    Allocation' +
           #13#10'        File: %s' +
@@ -533,9 +533,9 @@ begin
 end;
 
 // ******************************************************************
-// * CxbxRtlAllocDebug - Debug track RTL alloc
+// * DxbxRtlAllocDebug - Debug track RTL alloc
 // ******************************************************************
-function CxbxRtlAllocDebug(Heap: HANDLE;
+function DxbxRtlAllocDebug(Heap: HANDLE;
                            Flags: DWORD;
                            Bytes: SIZE_T;
                            pFile: P_char;
@@ -550,11 +550,11 @@ begin
   g_MemoryMutex.Lock();
 
   //pMem := NtDll.RtlAllocateHeap(Heap, Flags, Bytes + 2 * SizeOf(MEMORY_GUARD));
-  pMem := CxbxRtlAlloc(Heap, Flags, Bytes + 2 * SizeOf(MEMORY_GUARD));
+  pMem := DxbxRtlAlloc(Heap, Flags, Bytes + 2 * SizeOf(MEMORY_GUARD));
   if(nil=pMem) then
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('CxbxRtlAllocDebug: Allocation failed' +
+    DbgPrintf('DxbxRtlAllocDebug: Allocation failed' +
         #13#10'    Heap  : 0x%.08X' +
         #13#10'    Flags : 0x%.08X' +
         #13#10'    Bytes : %d' +
@@ -579,9 +579,9 @@ begin
 end;
 
 // ******************************************************************
-// * CxbxRtlFreeDebug - Debug track RTL Free
+// * DxbxRtlFreeDebug - Debug track RTL Free
 // ******************************************************************
-function CxbxRtlFreeDebug(Heap: HANDLE;
+function DxbxRtlFreeDebug(Heap: HANDLE;
                           Flags: DWORD;
                           pMem: PVOID;
                           pFile: P_char;
@@ -602,7 +602,7 @@ begin
   if(pFree = NULL) then
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('CxbxRtlFreeDebug: free on non-existent block: 0x%.08X! ' +
+    DbgPrintf('DxbxRtlFreeDebug: free on non-existent block: 0x%.08X! ' +
               'Possibly a multiple free.' +
         #13#10'    File: %s' +
         #13#10'    Line: %d',
@@ -614,7 +614,7 @@ begin
     if not CheckIntegrity(pFree) then
     begin
 {$IFDEF DEBUG}
-      DbgPrintf('CxbxRtlFreeDebug: Free on damaged block' +
+      DbgPrintf('DxbxRtlFreeDebug: Free on damaged block' +
           #13#10'    Block   : $.%08X' +
           #13#10'    Allocation' +
           #13#10'        File: %s' +
@@ -625,7 +625,7 @@ begin
           [pFree.pMem, pFree.pFile, pFree.Line, pFile, Line]);
 {$ENDIF}
     end;
-    Result := CxbxRtlFree(Heap, Flags, GetMemStart(pFree));
+    Result := DxbxRtlFree(Heap, Flags, GetMemStart(pFree));
     free(pFree.pFile);
     free(pFree);
   end;
@@ -634,9 +634,9 @@ begin
 end;
 
 // ******************************************************************
-// * CxbxRtlReallocDebug - Debug track RTL realloc
+// * DxbxRtlReallocDebug - Debug track RTL realloc
 // ******************************************************************
-function CxbxRtlReallocDebug(Heap: HANDLE;
+function DxbxRtlReallocDebug(Heap: HANDLE;
                              Flags: DWORD;
                              pMem: PVOID;
                              Bytes: SIZE_T;
@@ -656,7 +656,7 @@ begin
   if(pRealloc = NULL) then
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('CxbxRtlRealloc: realloc on non-existent block: 0x%.08X!' +
+    DbgPrintf('DxbxRtlRealloc: realloc on non-existent block: 0x%.08X!' +
         #13#10'    File: %s' +
         #13#10'    Line: %d',
         [pMem, pFile, Line]);
@@ -667,7 +667,7 @@ begin
     if not CheckIntegrity(pRealloc) then
     begin
 {$IFDEF DEBUG}
-      DbgPrintf('CxbxRtlReallocDebug: Realloc on damaged block' +
+      DbgPrintf('DxbxRtlReallocDebug: Realloc on damaged block' +
           #13#10'    Block   : 0x.%08X' +
           #13#10'    Allocation' +
           #13#10'        Size: %d' +
@@ -682,13 +682,13 @@ begin
            Bytes, pFile, Line]);
 {$ENDIF}
     end;
-    pNewMem := CxbxRtlReAlloc(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * sizeof(MEMORY_GUARD));
+    pNewMem := DxbxRtlReAlloc(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * sizeof(MEMORY_GUARD));
     free(pRealloc.pFile);
     free(pRealloc);
     if(nil=pNewMem) then
     begin
 {$IFDEF DEBUG}
-      DbgPrintf('CxbxRtlReallocDebug: Reallocation failed' +
+      DbgPrintf('DxbxRtlReallocDebug: Reallocation failed' +
           #13#10'    Heap  : 0x%.08X' +
           #13#10'    Flags : 0x%.08X' +
           #13#10'    pMem  : 0x%.08X' +
@@ -714,9 +714,9 @@ begin
 end;
 
 // ******************************************************************
-// * CxbxRtlSizeHeapDebug - Debug track RTL heap size
+// * DxbxRtlSizeHeapDebug - Debug track RTL heap size
 // ******************************************************************
-function CxbxRtlSizeHeapDebug(Heap: HANDLE;
+function DxbxRtlSizeHeapDebug(Heap: HANDLE;
                               Flags: DWORD;
                               pMem: PVOID;
                               pFile: P_char;
@@ -734,7 +734,7 @@ begin
   if(pBlock = NULL) then
   begin
 {$IFDEF DEBUG}
-    DbgPrintf('CxbxRtlSizeHeap: size heap on non-existent block: 0x%.08X! ' +
+    DbgPrintf('DxbxRtlSizeHeap: size heap on non-existent block: 0x%.08X! ' +
         #13#10'    File: %s' +
         #13#10'    Line: %d',
         [pMem, pFile, Line]);
@@ -742,12 +742,12 @@ begin
   end
   else
   begin
-    ActualSize := CxbxRtlSizeHeap(Heap, Flags, GetMemStart(pBlock))
+    ActualSize := DxbxRtlSizeHeap(Heap, Flags, GetMemStart(pBlock))
                         - 2 * SizeOf(MEMORY_GUARD);
 {$IFDEF DEBUG}
     if(ActualSize <> pBlock.Size) then
     begin
-      DbgPrintf('CxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d' +
+      DbgPrintf('DxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d' +
           #13#10'    File  : %s' +
           #13#10'    Line  : %d',
           [ActualSize,
@@ -764,9 +764,9 @@ begin
 end;
 
 // ******************************************************************
-// * CxbxVirtualQueryDebug - Debug virtual query
+// * DxbxVirtualQueryDebug - Debug virtual query
 // ******************************************************************
-function CxbxVirtualQueryDebug(lpAddress: LPCVOID;
+function DxbxVirtualQueryDebug(lpAddress: LPCVOID;
                                lpBuffer: PMEMORY_BASIC_INFORMATION;
                                dwLength: DWORD): DWORD;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100

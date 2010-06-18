@@ -126,7 +126,7 @@ begin
   else
   begin
     if Assigned(pPoint) and ((pPoint.x <> 0) or (pPoint.y <> 0)) then
-      CxbxKrnlCleanup('Temporarily unsupported swizzle (very easy fix)');
+      DxbxKrnlCleanup('Temporarily unsupported swizzle (very easy fix)');
 
     dwMaxY := Height;
     dwChunkSize := Width;
@@ -207,7 +207,7 @@ begin
     else
     begin
       if (pPoint <> NULL) and ((pPoint.u <> 0) or (pPoint.u <> 0) or (pPoint.w <> 0)) then
-        CxbxKrnlCleanup('Temporarily unsupported swizzle (easy fix)');
+        DxbxKrnlCleanup('Temporarily unsupported swizzle (easy fix)');
 
       dwMaxY := Height;
       // dwMaxZ := Depth;

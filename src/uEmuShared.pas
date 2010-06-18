@@ -38,7 +38,7 @@ uses
   , uXbVideo
   , uXBController
 {$IFDEF DXBX_DLL}
-  , uDxbxKrnlUtils // CxbxKrnlCleanup
+  , uDxbxKrnlUtils // DxbxKrnlCleanup
 {$ENDIF}
   ;
 
@@ -89,7 +89,7 @@ var hMapObject: Handle = HNULL;
 implementation
 
 {$IFNDEF DXBX_DLL}
-procedure CxbxKrnlCleanup(const aMessage: string);
+procedure DxbxKrnlCleanup(const aMessage: string);
 begin
   raise Exception.Create(aMessage);
 end;
@@ -131,7 +131,7 @@ begin
       Result := false;
 
     if hMapObject = HNULL then
-      CxbxKrnlCleanup('Could not map shared memory!');
+      DxbxKrnlCleanup('Could not map shared memory!');
   end;
 
   // Memory map this file
@@ -146,7 +146,7 @@ begin
       ));
 
     if (g_EmuShared = NULL) then
-      CxbxKrnlCleanup('Could not map view of shared memory!');
+      DxbxKrnlCleanup('Could not map view of shared memory!');
   end;
 
   // Executed only on first initialization of shared memory

@@ -154,7 +154,7 @@ begin
   // so that we can return a valid page aligned pointer
   //
 
-  pRet := CxbxMalloc(NumberOfBytes + $1000);
+  pRet := DxbxMalloc(NumberOfBytes + $1000);
 
   // align to page boundary
   begin
@@ -210,7 +210,7 @@ begin
   // so that we can return a valid page aligned pointer
   //
 
-  pRet := CxbxMalloc(NumberOfBytes + $1000);
+  pRet := DxbxMalloc(NumberOfBytes + $1000);
 
   // align to page boundary
   begin
@@ -251,7 +251,7 @@ begin
 {$ENDIF}
 
   // TODO -oCXBX: should this be aligned?
-  Result := CxbxMalloc(NumberOfBytes);
+  Result := DxbxMalloc(NumberOfBytes);
 
   EmuSwapFS(fsXbox);
 end;
@@ -351,7 +351,7 @@ begin
 
   if(OrigBaseAddress <> @xLaunchDataPage) then
   begin
-    CxbxFree(OrigBaseAddress);
+    DxbxFree(OrigBaseAddress);
   end
   else
   begin
@@ -380,7 +380,7 @@ begin
       [BaseAddress, NumberOfBytes]);
 {$ENDIF}
 
-  CxbxFree(BaseAddress);
+  DxbxFree(BaseAddress);
 
   EmuSwapFS(fsXbox);
   Result := STATUS_SUCCESS;
