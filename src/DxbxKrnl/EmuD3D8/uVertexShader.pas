@@ -175,7 +175,8 @@ type _VSH_OUTPUT_MUX =
 );
 VSH_OUTPUT_MUX = _VSH_OUTPUT_MUX;
 
-type _VSH_ILU = 
+// Dxbx note : ILU stands for 'Inverse Logic Unit' opcodes
+type _VSH_ILU =
 (
     ILU_NOP = 0,
     ILU_MOV,
@@ -188,7 +189,8 @@ type _VSH_ILU =
 );
 VSH_ILU = _VSH_ILU;
 
-type _VSH_MAC = 
+// Dxbx note : MAC stands for 'Multiply And Accumulate' opcodes
+type _VSH_MAC =
 (
     MAC_NOP,
     MAC_MOV,
@@ -203,16 +205,16 @@ type _VSH_MAC =
     MAC_MAX,
     MAC_SLT,
     MAC_SGE,
-    MAC_ARL,
-    MAC_UNK1, // Dxbx addition
-    MAC_UNK2  // Dxbx addition
+    MAC_ARL
 );
 VSH_MAC = _VSH_MAC;
 
 type _VSH_OPCODE_PARAMS = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    ILU: VSH_ILU;
-    MAC: VSH_MAC;
+// Dxbx Note : Since we split up g_OpCodeParams into g_OpCodeParams_ILU and g_OpCodeParams_MAC
+// the following two members aren't needed anymore :
+//    ILU: VSH_ILU;
+//    MAC: VSH_MAC;
     A: boolean;
     B: boolean;
     C: boolean;
@@ -342,7 +344,7 @@ type _VSH_XBOX_SHADER = record
 // Local constants
 const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING = 
 (
-    // Field Name         DWORD BitPos BitSize
+    //          Field Name            DWORD         BitPos           BitSize
     ( FieldName:FLD_ILU;              SubToken:1;   StartBit:25;     BitLength:3 ),
     ( FieldName:FLD_MAC;              SubToken:1;   StartBit:21;     BitLength:4 ),
     ( FieldName:FLD_CONST;            SubToken:1;   StartBit:13;     BitLength:8 ),
@@ -394,29 +396,36 @@ const g_FieldMapping: array [VSH_FIELD_NAME] of VSH_FIELDMAPPING =
     ( FieldName:FLD_FINAL;            SubToken:3;   StartBit: 0;     BitLength:1 )
 );
 
-const g_OpCodeParams: array [0..19] of VSH_OPCODE_PARAMS = 
+const g_OpCodeParams_ILU: array [VSH_ILU] of VSH_OPCODE_PARAMS =
 (
-    // ILU OP   MAC OP  ParamA ParamB ParamC
-    ( ILU:ILU_MOV; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
-    ( ILU:ILU_RCP; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
-    ( ILU:ILU_RCC; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
-    ( ILU:ILU_RSQ; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
-    ( ILU:ILU_EXP; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
-    ( ILU:ILU_LOG; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
-    ( ILU:ILU_LIT; MAC:MAC_NOP; a:FALSE; b:FALSE; c:TRUE  ),
-    ( ILU:ILU_NOP; MAC:MAC_MOV; a:TRUE;  b:FALSE; c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_MUL; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_ADD; a:TRUE;  b:FALSE; c:TRUE  ),
-    ( ILU:ILU_NOP; MAC:MAC_MAD; a:TRUE;  b:TRUE;  c:TRUE  ),
-    ( ILU:ILU_NOP; MAC:MAC_DP3; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_DPH; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_DP4; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_DST; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_MIN; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_MAX; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_SLT; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_SGE; a:TRUE;  b:TRUE;  c:FALSE ),
-    ( ILU:ILU_NOP; MAC:MAC_ARL; a:TRUE;  b:FALSE; c:FALSE )
+    //     ILU OP       MAC OP      ParamA   ParamB   ParamC
+    ( {ILU:ILU_NOP; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:FALSE ), // Dxbx note : Unused
+    ( {ILU:ILU_MOV; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:TRUE  ),
+    ( {ILU:ILU_RCP; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:TRUE  ),
+    ( {ILU:ILU_RCC; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:TRUE  ),
+    ( {ILU:ILU_RSQ; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:TRUE  ),
+    ( {ILU:ILU_EXP; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:TRUE  ),
+    ( {ILU:ILU_LOG; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:TRUE  ),
+    ( {ILU:ILU_LIT; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:TRUE  )
+);
+
+const g_OpCodeParams_MAC: array [VSH_MAC] of VSH_OPCODE_PARAMS =
+(
+    //     ILU OP       MAC OP      ParamA   ParamB   ParamC
+    ( {ILU:ILU_NOP; MAC:MAC_NOP;} a:FALSE; b:FALSE; c:FALSE ), // Dxbx note : Unused
+    ( {ILU:ILU_NOP; MAC:MAC_MOV;} a:TRUE;  b:FALSE; c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_MUL;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_ADD;} a:TRUE;  b:FALSE; c:TRUE  ),
+    ( {ILU:ILU_NOP; MAC:MAC_MAD;} a:TRUE;  b:TRUE;  c:TRUE  ),
+    ( {ILU:ILU_NOP; MAC:MAC_DP3;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_DPH;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_DP4;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_DST;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_MIN;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_MAX;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_SLT;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_SGE;} a:TRUE;  b:TRUE;  c:FALSE ),
+    ( {ILU:ILU_NOP; MAC:MAC_ARL;} a:TRUE;  b:FALSE; c:FALSE )
 );
 
 const MAC_OpCode: array [VSH_MAC] of P_char =
@@ -434,9 +443,7 @@ const MAC_OpCode: array [VSH_MAC] of P_char =
     'max',
     'slt',
     'sge',
-    'mov', // really 'arl'
-    '???',
-    '???'
+    'mov' // Cxbx says : really 'arl' - Dxbx asks : Why can't we use 'arl' then?
 );
 
 const ILU_OpCode: array [VSH_ILU] of P_char =
@@ -581,7 +588,7 @@ end;
 
 // Retrieves a number of bits in the instruction token
 function VshGetFromToken(pShaderToken: Puint32;
-                         SubToken: uint08; 
+                         SubToken: uint08;
                          StartBit: uint08;
                          BitLength: uint08): int; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -606,23 +613,17 @@ begin
                                    g_FieldMapping[FieldName].BitLength));
 end;
 
-function VshGetOpCodeParams(ILU: VSH_ILU; 
+function VshGetOpCodeParams(ILU: VSH_ILU;
                             MAC: VSH_MAC): PVSH_OPCODE_PARAMS;
-// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-var
-  i: int;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  for i := 0 to High(g_OpCodeParams) - 1 do
-  begin
-    if ((ILU <> ILU_NOP) and (ILU = g_OpCodeParams[i].ILU))
-    or ((MAC <> MAC_NOP) and (MAC = g_OpCodeParams[i].MAC)) then
-    begin
-      Result := PVSH_OPCODE_PARAMS(@g_OpCodeParams[i]);
-      Exit;
-    end;
-  end;
-
-  Result := NULL;
+  if ILU in [ILU_MOV..ILU_LIT] then
+    Result := PVSH_OPCODE_PARAMS(@g_OpCodeParams_ILU[ILU])
+  else
+    if MAC in [MAC_MOV..MAC_ARL] then
+      Result := PVSH_OPCODE_PARAMS(@g_OpCodeParams_MAC[MAC])
+    else
+      Result := nil;
 end;
 
 procedure VshParseInstruction(pShaderToken: Puint32;
@@ -843,7 +844,7 @@ begin
   end;
 end; // VshWriteParameter
 
-procedure VshWriteShader(pShader: PVSH_XBOX_SHADER; 
+procedure VshWriteShader(pShader: PVSH_XBOX_SHADER;
                          pDisassembly: P_char; 
                          Truncate: boolean);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -882,11 +883,19 @@ begin
     // Print the op code
     if(pIntermediate.InstructionType = IMD_MAC) then
     begin
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [MAC_OpCode[pIntermediate.MAC]]))
+      // Dxbx addition : Safeguard against incorrect MAC opcodes :
+      if (Ord(pIntermediate.MAC) < Ord(Low(VSH_MAC))) or (Ord(pIntermediate.MAC) > Ord(HIGH(VSH_MAC))) then
+        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '??? '))
+      else
+        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [MAC_OpCode[pIntermediate.MAC]]))
     end
     else
     begin
-      Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [ILU_OpCode[pIntermediate.ILU]]));
+      // Dxbx addition : Safeguard against incorrect ILU opcodes :
+      if (Ord(pIntermediate.ILU) < Ord(Low(VSH_ILU))) or (Ord(pIntermediate.ILU) > Ord(HIGH(VSH_ILU))) then
+        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '??? '))
+      else
+        Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s ', [ILU_OpCode[pIntermediate.ILU]]));
     end;
 
     // Print the output parameter
@@ -902,7 +911,11 @@ begin
         IMD_OUTPUT_R:
           Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'r%d', [pIntermediate.Output.Address]));
         IMD_OUTPUT_O:
-          Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s', [OReg_Name[VSH_OREG_NAME(pIntermediate.Output.Address)]]));
+          // Dxbx addition : Safeguard against incorrect VSH_OREG_NAME values :
+          if (pIntermediate.Output.Address < Ord(Low(VSH_OREG_NAME))) or (pIntermediate.Output.Address > Ord(HIGH(VSH_OREG_NAME))) then
+            // don't add anything
+          else
+            Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s', [OReg_Name[VSH_OREG_NAME(pIntermediate.Output.Address)]]));
       else
         CxbxKrnlCleanup('Invalid output register in vertex shader!');
       end;
@@ -924,8 +937,8 @@ begin
   pDisassembly[DisassemblyPos] := #0;
 end; // VshWriteShader
 
-procedure VshAddParameter(pParameter: PVSH_PARAMETER; 
-                          a0x: boolean; 
+procedure VshAddParameter(pParameter: PVSH_PARAMETER;
+                          a0x: boolean;
                           pIntermediateParameter: PVSH_IMD_PARAMETER);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
@@ -934,7 +947,7 @@ begin
   pIntermediateParameter.IsA0X := a0x;
 end;
 
-procedure VshAddParameters(pInstruction: PVSH_SHADER_INSTRUCTION; 
+procedure VshAddParameters(pInstruction: PVSH_SHADER_INSTRUCTION;
                            ILU: VSH_ILU;
                            MAC: VSH_MAC;
                            pParameters: PVSH_IMD_PARAMETERs);
