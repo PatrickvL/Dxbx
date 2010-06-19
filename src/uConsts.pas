@@ -21,6 +21,10 @@ unit uConsts;
 
 interface
 
+uses
+  // Delphi
+  Messages; // WM_USER
+
 const
   XBOX_MEMORY_SIZE = 128*1024*1024;
 
@@ -136,6 +140,8 @@ const
   EXCEPTION_CONTINUE_SEARCH = 0;
   EXCEPTION_EXECUTE_HANDLER = 1;
   EXCEPTION_CONTINUE_EXECUTION = -1;
+
+  WM_USER_PARENTNOTIFY = WM_USER + 123;
 
   cXDK_TRACKER_DATA_FILE = 'GameData.dat';
   cXDk_TRACKER_XML_VERSION = '1.1';

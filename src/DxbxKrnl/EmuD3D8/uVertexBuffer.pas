@@ -50,15 +50,6 @@ uses
 
 const MAX_NBR_STREAMS = 16;
 
-// Dxbx note :
-// When _VertexPatchDesc is sized like Cxbx, all vertex drawing
-// is corrupted (see mesh, light and texture demo's).
-// However, the sizeof of _VertexPatchDesc is wrong this way!
-// TODO -cDxbx :
-// Either the layout has to be fixed (while keeping it's size)
-// or the offending code must be fixed. For now keep this :
-{.$ALIGN 1}
-
 type _VertexPatchDesc = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     PrimitiveType: X_D3DPRIMITIVETYPE;
@@ -74,8 +65,6 @@ type _VertexPatchDesc = record
   end; // size = 28 (as in Cxbx)
   VertexPatchDesc = _VertexPatchDesc;
   PVertexPatchDesc = ^VertexPatchDesc;
-
-{.$ALIGN 4} // Restore 4-byte alignment
 
 type _PATCHEDSTREAM = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -318,7 +307,7 @@ begin
         if (DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed) < (clock() + MAX_STREAM_NOT_USED_TIME)) then
         begin
 {$IFDEF DEBUG}
-          printf('!!!Found an old stream, %2.2f', [{FLOAT}((clock() + MAX_STREAM_NOT_USED_TIME) - DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed)) / {FLOAT}(CLOCKS_PER_SEC)]);
+          DbgPrintf('!!!Found an old stream, %2.2f', [{FLOAT}((clock() + MAX_STREAM_NOT_USED_TIME) - DWord(PCACHEDSTREAM(pNode.pResource).lLastUsed)) / {FLOAT}(CLOCKS_PER_SEC)]);
 {$ENDIF}
           uiKey := pNode.uiKey;
           break;
@@ -335,7 +324,7 @@ begin
     if (uiKey <> 0) then
     begin
 {$IFDEF DEBUG}
-      printf('!!!Removing stream');
+      DbgPrintf('!!!Removing stream');
 {$ENDIF}
       FreeCachedStream(Pvoid(uiKey));
     end;
@@ -485,8 +474,8 @@ begin
     //pCachedStream_.bIsUP := true;
     //pCachedStream_.pStreamUP := pCalculateData;
   end;
-  g_PatchedStreamsCache.Lock();
 
+  g_PatchedStreamsCache.Lock();
   pCachedStream_ := PCACHEDSTREAM(g_PatchedStreamsCache.get(uiKey));
   if Assigned(pCachedStream_) then
   begin
@@ -646,7 +635,6 @@ begin
 
   // Do some groovey patchin'
 
-  ZeroMemory(@Desc, Sizeof(D3DVERTEXBUFFER_DESC));
   pStream := @(m_pStreams[uiStream]);
   pStreamPatch := @(m_pDynamicPatch.pStreamPatches[uiStream]);
 
@@ -696,11 +684,11 @@ begin
   end;
 
   if pPatchDesc.dwVertexCount > 0 then // Dxbx addition, to prevent underflow
+  if pStreamPatch.NbrTypes > 0 then // Dxbx addition, to prevent underflow
   for uiVertex := 0 to pPatchDesc.dwVertexCount - 1 do
   begin
     dwPosOrig := 0;
     dwPosNew := 0;
-    if pStreamPatch.NbrTypes > 0 then // Dxbx addition, to prevent underflow
     for uiType := 0 to pStreamPatch.NbrTypes - 1 do
     begin
       case(pStreamPatch.pTypes[uiType]) of
@@ -1180,8 +1168,8 @@ begin
     pPatchDesc.dwPrimitiveCount := pPatchDesc.dwPrimitiveCount * TRIANGLES_PER_QUAD;
 
     // This is a list of squares/rectangles, so we convert it to a list of triangles
-    dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride * VERTICES_PER_QUAD;
-    dwNewSize       := pPatchDesc.dwVertexCount * pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD;
+    dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride;
+    dwNewSize       := (pPatchDesc.dwVertexCount * VERTICES_PER_QUAD div VERTICES_PER_TRIANGLE) * pStream.uiOrigStride;
   end
   // Line loop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
@@ -1342,11 +1330,11 @@ begin
       continue;
     end;
 
-    // Dxbx note : Different from Cxbx, to avoid lazy boolean evaluation :
-    if PatchPrimitive(pPatchDesc, uiStream) then
-      LocalPatched := True;
-    if PatchStream(pPatchDesc, uiStream) then
-      LocalPatched := True;
+    // TODO -ODxbx : How does 'LocalPatched |= call()' work in C if LocalPatched is true already?
+    if not LocalPatched then
+      LocalPatched := PatchPrimitive(pPatchDesc, uiStream);
+    if not LocalPatched then
+      LocalPatched := PatchStream(pPatchDesc, uiStream);
     if LocalPatched and (nil=pPatchDesc.pVertexStreamZeroData) then
     begin
       // Insert the patched stream in the cache

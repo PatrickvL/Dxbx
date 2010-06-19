@@ -152,19 +152,15 @@ begin
   begin
     New(m_head);
     m_tail := m_head;
-    m_tail.pResource := nil;
-    m_tail.pNext := nil;
+  end
+  else
+  begin
+    New(m_tail.pNext);
+    m_tail := m_tail.pNext;
   end;
 
   m_tail.pResource := pResource;
   m_tail.uiKey := uiKey;
-
-  New(m_tail.pNext);
-
-  m_tail := m_tail.pNext;
-
-  m_tail.pResource := nil;
-  m_tail.uiKey := 0;
   m_tail.pNext := nil;
 
   Self.Unlock();
@@ -198,14 +194,8 @@ begin
       else
       begin
         m_head := cur.pNext;
-
-        if (m_head.pNext = nil) then
-        begin
-          Dispose(m_head);
-
-          m_head := nil;
+        if (m_head = nil) then
           m_tail := nil;
-        end;
       end;
 
       Dispose(cur);

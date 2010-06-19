@@ -234,7 +234,7 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
 function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtWaitForSingleObjectEx(
   Handle_: HANDLE;
-  WaitMode: AnsiCHAR;
+  WaitMode: _CHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
@@ -242,7 +242,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Count: ULONG;
   Handles: PHANDLE;
   WaitType: WAIT_TYPE;
-  WaitMode: AnsiCHAR;
+  WaitMode: _CHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
@@ -463,7 +463,7 @@ function xboxkrnl_NtCreateFile
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  ReplaceChar: AnsiChar;
+  ReplaceChar: _char;
   ReplaceIndex: int;
   szBuffer: P_char;
   v: int;
@@ -1794,7 +1794,7 @@ end;
 function xboxkrnl_NtWaitForSingleObjectEx
 (
   Handle_: HANDLE;
-  WaitMode: AnsiCHAR;
+  WaitMode: _CHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
 ): NTSTATUS; stdcall;
@@ -1827,7 +1827,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx
   Count: ULONG;
   Handles: PHANDLE;
   WaitType: WAIT_TYPE;
-  WaitMode: AnsiCHAR;
+  WaitMode: _CHAR;
   Alertable: LONGBOOL;
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;

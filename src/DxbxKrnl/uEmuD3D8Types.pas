@@ -765,6 +765,12 @@ const
 
   X_D3DCLEAR_ALL_SUPPORTED = X_D3DCLEAR_ZBUFFER or X_D3DCLEAR_STENCIL or X_D3DCLEAR_TARGET;
 
+const
+  // D3DRS_CULLMODE value
+  X_D3DCULL_NONE = 0; // No culling
+  X_D3DCULL_CW   = $900; // Clockwise culling
+  X_D3DCULL_CCW  = $901; // Cull counter clockwise triangles
+
 implementation
 
 function IsSpecialResource(x: DWORD): Boolean;

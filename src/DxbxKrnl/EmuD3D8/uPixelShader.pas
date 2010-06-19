@@ -440,7 +440,7 @@ procedure DbgPshPrintf(aStr: string); overload;
 begin
 {$ifdef _DEBUG_TRACK_PS}
   if (g_bPrintfOn) then
-    printf(aStr);
+    DbgPrintf(aStr);
 {$endif}
 end;
 
@@ -449,7 +449,7 @@ procedure DbgPshPrintf(aStr: string; Args: array of const); overload;
 begin
 {$ifdef _DEBUG_TRACK_PS}
   if (g_bPrintfOn) then
-    printf(aStr, Args);
+    DbgPrintf(aStr, Args);
 {$endif}
 end;
 

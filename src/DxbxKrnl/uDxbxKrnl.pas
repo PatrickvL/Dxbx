@@ -26,7 +26,7 @@ interface
 uses
   // Delphi
   Windows, // DWord
-  Messages, // WM_PARENTNOTIFY
+  Messages, // WM_DESTROY
   SysUtils, // Format
   Math, // IfThen
   // Jedi Win32API
@@ -483,7 +483,7 @@ begin
   end;
 
   if(DxbxKrnl_hEmuParent <> HNULL) then
-    SendMessage(DxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+    SendMessage(DxbxKrnl_hEmuParent, WM_USER_PARENTNOTIFY, WM_DESTROY, 0);
 
   TerminateProcess(GetCurrentProcess(), 0);
 end;
