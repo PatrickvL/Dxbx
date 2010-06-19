@@ -670,7 +670,7 @@ begin
       pInstruction.B.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
 
   else
-    DbgVshPrintf('Invalid instruction, parameter B type unknown %d'#13#10, [Ord(pInstruction.B.ParameterType)]);
+    DbgVshPrintf('Invalid instruction, parameter B type unknown %d'#10, [Ord(pInstruction.B.ParameterType)]);
     Exit;
   end;
 
@@ -693,8 +693,9 @@ begin
     PARAM_C: begin
         pInstruction.C.Address := ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
       end;
+
     else begin
-        DbgVshPrintf('Invalid instruction, parameter C type unknown %d'#13#10, [Ord(pInstruction.C.ParameterType)]);
+        DbgVshPrintf('Invalid instruction, parameter C type unknown %d'#10, [Ord(pInstruction.C.ParameterType)]);
         Exit;
     end;
   end;
@@ -738,7 +739,7 @@ begin
 end;
 
 // Print functions
-function VshGetRegisterName(ParameterType: VSH_PARAMETER_TYPE): AnsiChar;
+function VshGetRegisterName(ParameterType: VSH_PARAMETER_TYPE): _char;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case (ParameterType) of
@@ -765,7 +766,7 @@ const
 begin
   if (OutputMask[0]) and (OutputMask[1]) and (OutputMask[2]) and (OutputMask[3]) then
   begin
-    // All compoenents are there, no need to print the mask
+    // All components are there, no need to print the mask
     Exit;
   end;
 
@@ -845,7 +846,7 @@ begin
 end; // VshWriteParameter
 
 procedure VshWriteShader(pShader: PVSH_XBOX_SHADER;
-                         pDisassembly: P_char; 
+                         pDisassembly: P_char;
                          Truncate: boolean);
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
@@ -1053,7 +1054,7 @@ begin
   // Output param
   pIntermediate.Output.Type_ := IMD_OUTPUT_R;
   pIntermediate.Output.Address := Word(pInstruction.Output.MACRAddress);
-  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.MACRMask[0]), sizeof(boolean) * 4);
+  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.MACRMask[0]), sizeof(pIntermediate.Output.Mask[0]));
 
   // Other parameters
   VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, @pIntermediate.Parameters[0]);
@@ -1087,7 +1088,7 @@ begin
   else
     pIntermediate.Output.Type_ := IMD_OUTPUT_O;
   pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
-  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(boolean) * 4);
+  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(pIntermediate.Output.Mask[0]));
 
   // Other parameters
   VshAddParameters(pInstruction, ILU_NOP, pInstruction.MAC, @pIntermediate.Parameters[0]);
@@ -1152,7 +1153,7 @@ begin
     pIntermediate.Output.Address := 1
   else
     pIntermediate.Output.Address := Word(pInstruction.Output.ILURAddress);
-  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.ILURMask[0]), sizeof(boolean) * 4);
+  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.ILURMask[0]), sizeof(pIntermediate.Output.Mask[0]));
 
   // Other parameters
   VshAddParameters(pInstruction, pInstruction.ILU, MAC_NOP, @pIntermediate.Parameters[0]);
@@ -1187,7 +1188,7 @@ begin
     pIntermediate.Output.Type_ := IMD_OUTPUT_O;
 
   pIntermediate.Output.Address := pInstruction.Output.OutputAddress;
-  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(boolean) * 4);
+  memcpy(@(pIntermediate.Output.Mask[0]), @(pInstruction.Output.OutputMask[0]), sizeof(pIntermediate.Output.Mask[0]));
 
   // Other parameters
   VshAddParameters(pInstruction, pInstruction.ILU, MAC_NOP, @pIntermediate.Parameters[0]);
@@ -1323,7 +1324,7 @@ begin
                pIntermediate.Parameters[1].Active and
                (pIntermediate.Parameters[1].Parameter.ParameterType = PARAM_R) then
             begin
-              DbgVshPrintf('PosC38 = %d i = %d'#13#10, [PosC38, i]);
+              DbgVshPrintf('PosC38 = %d i = %d'#10, [PosC38, i]);
               for j := (i-1) downto 0 do
               begin
                 pIntermediate1W := @pShader.Intermediate[j];
@@ -1334,7 +1335,7 @@ begin
                     (pIntermediate1W.Output.Address = 
                      Word(pIntermediate.Parameters[1].Parameter.Address)) then
                 begin
-                  DbgVshPrintf('Deleted +rcc r1.x, r12.w'#13#10);
+                  DbgVshPrintf('Deleted +rcc r1.x, r12.w'#10);
                   VshDeleteIntermediate(pShader, j);
                   Inc(deleted);
                   Dec(i);
@@ -1346,7 +1347,7 @@ begin
             VshDeleteIntermediate(pShader, i);
             Inc(deleted);
             Dec(i);
-            DbgVshPrintf('Deleted mad oPos.xyz, r12, r1.x, c-37'#13#10);
+            DbgVshPrintf('Deleted mad oPos.xyz, r12, r1.x, c-37'#10);
             break;
           end
           else if (pIntermediate.Parameters[k].Parameter.Address = -38) then
@@ -1355,7 +1356,7 @@ begin
             PosC38 := i;
             Inc(deleted);
             Dec(i);
-            DbgVshPrintf('Deleted mul oPos.xyz, r12, c-38'#13#10);
+            DbgVshPrintf('Deleted mul oPos.xyz, r12, c-38'#10);
           end;
         end;
       end;
@@ -1710,7 +1711,7 @@ var
   Pos: DWORD;
 begin
   Pos := 0;
-  while PDWord(UIntPtr(pDeclaration) + (Pos * SizeOf(DWORD)))^ <> DEF_VSH_END do
+  while PDWord(UIntPtr(pDeclaration) + (Pos * sizeof(DWORD)))^ <> DEF_VSH_END do
   begin
     Inc(Pos);
   end;
@@ -1815,7 +1816,7 @@ begin
   begin
     EmuWarning('Token NOP found, but extra parameters are given!');
   end;
-  DbgVshPrintf(#9'D3DVSD_NOP(),'#13#10);
+  DbgVshPrintf(#9'D3DVSD_NOP(),'#10);
 end;
 
 function VshConvertToken_CONSTMEM(pToken: PDWORD): DWORD;
@@ -1830,14 +1831,14 @@ begin
   ConstantAddress := ((pToken^ shr D3DVSD_CONSTADDRESSSHIFT) and $FF);
   Count           := (pToken^ and D3DVSD_CONSTCOUNTMASK) shr D3DVSD_CONSTCOUNTSHIFT;
 
-  DbgVshPrintf('%d, %d),'#13#10, [ConstantAddress, Count]);
+  DbgVshPrintf('%d, %d),'#10, [ConstantAddress, Count]);
 
   //pToken = D3DVSD_CONST(ConstantAddress, Count);
 
   if Count > 0 then // Dxbx addition, to prevent underflow
   for i := 0 to Count - 1 do
   begin
-    DbgVshPrintf(#9'0x%08X,'#13#10, [pToken]);
+    DbgVshPrintf(#9'0x%08X,'#10, [pToken]);
   end;
   Result := Count;
 end; // VshConvertToken_CONSTMEM
@@ -1871,7 +1872,7 @@ begin
       DbgVshPrintf('%d', [NewVertexRegister]);
     end;
 
-    DbgVshPrintf('),'#13#10);
+    DbgVshPrintf('),'#10);
 
     pToken^ := D3DVSD_TESSUV(NewVertexRegister);
   end
@@ -1906,7 +1907,7 @@ begin
       DbgVshPrintf('%d', [NewVertexRegisterOut]);
     end;
 
-    DbgVshPrintf('),'#13#10);
+    DbgVshPrintf('),'#10);
     pToken^ := D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
   end;
 end; // VshConverToken_TESSELATOR
@@ -1921,7 +1922,7 @@ begin
 
   if (CurrentStream >= 0) then
   begin
-    DbgVshPrintf('NeedPatching: %d'#13#10, [Ord(pPatchData.NeedPatching)]);
+    DbgVshPrintf('NeedPatching: %d'#10, [Ord(pPatchData.NeedPatching)]);
 
     pStreamPatch := pPatchData.StreamPatchData.pStreamPatches[CurrentStream];
 
@@ -1948,13 +1949,13 @@ begin
   // D3DVSD_STREAM_TESS
   if (pToken^ and D3DVSD_STREAMTESSMASK) > 0 then
   begin
-    DbgVshPrintf(#9'D3DVSD_STREAM_TESS(),'#13#10);
+    DbgVshPrintf(#9'D3DVSD_STREAM_TESS(),'#10);
   end
   // D3DVSD_STREAM
   else
   begin
     StreamNumber := VshGetVertexStream(pToken^);
-    DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#13#10, [StreamNumber]);
+    DbgVshPrintf(#9'D3DVSD_STREAM(%d),'#10, [StreamNumber]);
 
     // new stream
     // copy current data to structure
@@ -1975,7 +1976,7 @@ var
   SkipCount: DWORD;
 begin
   SkipCount := (pToken^ and D3DVSD_SKIPCOUNTMASK) shr D3DVSD_SKIPCOUNTSHIFT;
-  DbgVshPrintf(#9'D3DVSD_SKIP(%d),'#13#10, [SkipCount]);
+  DbgVshPrintf(#9'D3DVSD_SKIP(%d),'#10, [SkipCount]);
 end;
 
 procedure VshConvertToken_STREAMDATA_SKIPBYTES(pToken: PDWORD);
@@ -1984,7 +1985,7 @@ var
   SkipBytesCount: DWORD;
 begin
   SkipBytesCount := (pToken^ and D3DVSD_SKIPCOUNTMASK) shr D3DVSD_SKIPCOUNTSHIFT;
-  DbgVshPrintf(#9'D3DVSD_SKIPBYTES(%d), /* xbox ext. */'#13#10, [SkipBytesCount]);
+  DbgVshPrintf(#9'D3DVSD_SKIPBYTES(%d), /* xbox ext. */'#10, [SkipBytesCount]);
   if (SkipBytesCount mod sizeof(DWORD)) > 0 then
   begin
     EmuWarning('D3DVSD_SKIPBYTES can''t be converted to D3DVSD_SKIP, not divisble by 4.');
@@ -2137,11 +2138,11 @@ begin
       NewDataType := $FF;
     end;
   else // default:
-    DbgVshPrintf('Unknown data type for D3DVSD_REG: 0x%02X'#13#10, [DataType]);
+    DbgVshPrintf('Unknown data type for D3DVSD_REG: 0x%02X'#10, [DataType]);
   end;
   pToken^ := D3DVSD_REG(NewVertexRegister, NewDataType);
 
-  DbgVshPrintf('),'#13#10);
+  DbgVshPrintf('),'#10);
 
   if (NewDataType = $FF) then
   begin
@@ -2192,7 +2193,7 @@ begin
     D3DVSD_TOKEN_CONSTMEM:
       Step := VshConvertToken_CONSTMEM(pToken);
   else
-    DbgVshPrintf('Unknown token type: %d'#13#10, [VshGetTokenType(pToken^)]);
+    DbgVshPrintf('Unknown token type: %d'#10, [VshGetTokenType(pToken^)]);
   end;
 
   Result := Step;
@@ -2233,18 +2234,18 @@ begin
   // TODO -oCXBX: Put these in one struct
   ZeroMemory(@PatchData, SizeOf(PatchData));
 
-  DbgVshPrintf('DWORD dwVSHDecl[] ='#13#10'{'#13#10);
+  DbgVshPrintf('DWORD dwVSHDecl[] ='#10'{'#10);
 
   while pRecompiled^ <> DEF_VSH_END do
   begin
     Step := VshRecompileToken(pRecompiled, IsFixedFunction, @PatchData);
     Inc(pRecompiled, Step); // Older Delphi's might need : Inc(UIntPtr(pRecompiled), Step * SizeOf(DWord));
   end;
-  DbgVshPrintf(#9'D3DVSD_END()'#13#10'};'#13#10);
+  DbgVshPrintf(#9'D3DVSD_END()'#10'};'#10);
 
   VshAddStreamPatch(@PatchData);
 
-  DbgVshPrintf('NbrStreams: %d'#13#10, [PatchData.StreamPatchData.NbrStreams]);
+  DbgVshPrintf('NbrStreams: %d'#10, [PatchData.StreamPatchData.NbrStreams]);
 
   // Copy the patches to the vertex shader struct
   StreamsSize := PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
@@ -2333,17 +2334,17 @@ begin
     pOriginalSize^ := DWORD(pToken) - DWORD(pFunction);
 
     pShaderDisassembly := P_char(DxbxMalloc(pShader.IntermediateCount * 50)); // Should be plenty
-    DbgVshPrintf('-- Before conversion --'#13#10);
+    DbgVshPrintf('-- Before conversion --'#10);
     VshWriteShader(pShader, pShaderDisassembly, FALSE);
     DbgVshPrintf('%s', [pShaderDisassembly]);
-    DbgVshPrintf('-----------------------'#13#10);
+    DbgVshPrintf('-----------------------'#10);
 
     VshConvertShader(pShader, bNoReservedConstants);
     VshWriteShader(pShader, pShaderDisassembly, TRUE);
 
-    DbgVshPrintf('-- After conversion ---'#13#10);
+    DbgVshPrintf('-- After conversion ---'#10);
     DbgVshPrintf('%s', [pShaderDisassembly]);
-    DbgVshPrintf('-----------------------'#13#10);
+    DbgVshPrintf('-----------------------'#10);
 
 
     // HACK: Azurik. Prevent Direct3D from trying to assemble this.

@@ -21,7 +21,6 @@ interface
 
 uses
   // Delphi
-  Messages, // WM_USER
   Windows,
   SysUtils,
   Classes,
@@ -56,8 +55,6 @@ const
 
   // Trick to check validity of GetFileAttributes - this bit should be off :
   FILE_ATTRIBUTE_INVALID = $10000000;
-
-  WM_USER_PARENTNOTIFY = WM_USER + 123;
 
 type
   EMU_STATE = (esNone, esFileOpen, esRunning);

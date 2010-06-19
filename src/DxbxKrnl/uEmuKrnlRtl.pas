@@ -696,10 +696,10 @@ begin
   DbgPrintf('EmuKrnl : RtlInitAnsiString' +
       #13#10'(' +
       #13#10'   DestinationString   : 0x%.08X' + // Dxbx : This fails :' (%s)' +
-      #13#10'   SourceString        : 0x%.08X' +
+      #13#10'   SourceString        : 0x%.08X ("%s")' +
       #13#10');',
       [DestinationString, { Dxbx : This fails : PSTRING_Buffer(DestinationString), }
-       SourceString]);
+       SourceString, PAnsiChar(SourceString)]);
 {$ENDIF}
 
   JwaNative.RtlInitAnsiString(DestinationString, SourceString);

@@ -404,9 +404,9 @@ begin
       {$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
-        printf('NVPB_InlineVertexArray(...)');
-        printf('  dwCount : %d', [dwCount]);
-        printf('  dwVertexShader : 0x%08X', [dwVertexShader]);
+        DbgPrintf('NVPB_InlineVertexArray(...)');
+        DbgPrintf('  dwCount : %d', [dwCount]);
+        DbgPrintf('  dwVertexShader : 0x%08X', [dwVertexShader]);
       end;
       {$endif}
 
@@ -450,22 +450,22 @@ begin
       {$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
-        printf('  NVPB_FixLoop(%d)', [dwCount]);
-        printf('');
-        printf('  Index Array Data...');
+        DbgPrintf('  NVPB_FixLoop(%d)', [dwCount]);
+        DbgPrintf('');
+        DbgPrintf('  Index Array Data...');
 
         pwVal := PWORDs(pdwPushData + 1); // TODO -oDXBX: Do older Delphi's add 4 bytes too?
 
         if dwCount > 0 then // Dxbx addition, to prevent underflow
         for s := 0 to dwCount - 1 do
         begin
-          if (s mod 8 = 0) then printf('  ');
+          if (s mod 8 = 0) then printf(#13#10'  ');
 
           printf('  %.04X', [pwVal[s]]);
         end;
 
-        printf('');
-        printf('');
+        printf(#13#10);
+        DbgPrintf('');
       end;
       {$endif}
 
@@ -575,11 +575,9 @@ begin
       {$ifdef _DEBUG_TRACK_PB}
       if (bShowPB) then
       begin
-{$IFDEF DEBUG}
-        printf('  NVPB_InlineIndexArray(0x%.08X, %d)...', [pIndexData, dwCount]);
-        printf('');
-        printf('  Index Array Data...');
-{$ENDIF}
+        DbgPrintf('  NVPB_InlineIndexArray(0x%.08X, %d)...', [pIndexData, dwCount]);
+        DbgPrintf('');
+        DbgPrintf('  Index Array Data...');
 
         pwVal := PWORDs(pIndexData);
 
@@ -591,9 +589,7 @@ begin
           printf('  %.04X', [pwVal[s]]);
         end;
 
-{$IFDEF DEBUG}
         printf(#13#10);
-{$ENDIF}
 
         pActiveVB := nil;
 
@@ -614,13 +610,13 @@ begin
         // print out stream data
         begin
 {$IFDEF DEBUG}
-          printf('');
-          printf('  Vertex Stream Data (0x%.08X)...', [pActiveVB]);
-          printf('');
-          printf('  Format : %d', [Ord(VBDesc.Format)]);
-          printf('  Size   : %d bytes', [VBDesc.Size]);
-          printf('  FVF    : 0x%.08X', [VBDesc.FVF]);
-          printf('');
+          DbgPrintf('');
+          DbgPrintf('  Vertex Stream Data (0x%.08X)...', [pActiveVB]);
+          DbgPrintf('');
+          DbgPrintf('  Format : %d', [Ord(VBDesc.Format)]);
+          DbgPrintf('  Size   : %d bytes', [VBDesc.Size]);
+          DbgPrintf('  FVF    : 0x%.08X', [VBDesc.FVF]);
+          DbgPrintf('');
 {$ENDIF}
         end;
 
@@ -737,8 +733,8 @@ begin
   if (bShowPB) then
   begin
 {$IFDEF DEBUG}
-    printf('');
-    printf('DxbxDbg> ');
+    DbgPrintf('');
+    DbgPrintf('DxbxDbg> ');
 {$ENDIF}
     fflush(stdout);
   end;

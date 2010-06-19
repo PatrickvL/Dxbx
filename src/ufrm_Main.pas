@@ -286,6 +286,10 @@ begin
 //DbgPrintf('AppMessage() Msg.message = %d (%x)   LOWORD(Msg.wParam) = %d (%x)', [Msg.message, Msg.message, LOWORD(Msg.wParam), LOWORD(Msg.wParam)]);
 //end;
 
+  // Dxbx : Protect against a loss of the child handle (otherwise, the GUI we would hang) :
+  if not IsWindow(m_hwndChild) then
+    m_hwndChild := HNULL;
+
   Handled := False;
   case Msg.message of
 //    WM_USER_PARENTNOTIFY,

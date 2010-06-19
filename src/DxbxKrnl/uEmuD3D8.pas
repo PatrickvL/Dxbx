@@ -2860,7 +2860,7 @@ begin
   for i := 0 to ConstantCount - 1 do
   begin
    {$IFDEF DEBUG}
-      printf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
+      DbgPrintf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
              [Register_ - 96 + i, Register_ + i,
              Pfloats(pConstantData)[4 * i],
              Pfloats(pConstantData)[4 * i + 1],
@@ -6870,7 +6870,7 @@ begin
   begin
     if (EmuD3DRenderStateSimpleEncoded[v] = Method) then
     begin
-      State := v;
+      State := D3DRenderStateType(v);
       break;
     end;
   end;
@@ -6896,7 +6896,7 @@ begin
     $040378: State := D3DRS_STENCILPASS;
     $04037c: State := D3DRS_SHADEMODE;
   end;
-
+(**)
   if (int(State) = -1) then
     EmuWarning('RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!', [Method, Value])
   else
@@ -7134,11 +7134,11 @@ begin
   // convert from Xbox D3D to PC D3D enumeration
   // TODO -oCXBX: XDK-Specific Tables? So far they are the same
   case (Value) of
-    0:
+    X_D3DCULL_NONE: // 0
       Value := D3DCULL_NONE;
-    $900:
+    X_D3DCULL_CW: // $900
       Value := D3DCULL_CW;
-    $901:
+    X_D3DCULL_CCW: // $901
       Value := D3DCULL_CCW;
   else
     DxbxKrnlCleanup('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', [Value]);
