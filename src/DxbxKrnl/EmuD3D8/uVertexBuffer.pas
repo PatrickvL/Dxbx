@@ -1169,7 +1169,7 @@ begin
 
     // This is a list of squares/rectangles, so we convert it to a list of triangles
     dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride;
-    dwNewSize       := (pPatchDesc.dwVertexCount * VERTICES_PER_QUAD div VERTICES_PER_TRIANGLE) * pStream.uiOrigStride;
+    dwNewSize       := (pPatchDesc.dwVertexCount * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD div VERTICES_PER_QUAD) * pStream.uiOrigStride;
   end
   // Line loop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
@@ -1263,6 +1263,8 @@ begin
       begin
         for z := 0 to (VERTICES_PER_TRIANGLE*TRIANGLES_PER_QUAD)-1 do
         begin
+          // For all vertices, change the z and rhw component to 1.0 if they are equal to 0.0 :
+          // TODO : Explain why this is needed...?
           if (PFLOATs(@pPatch012[z * pStream.uiOrigStride])[2] = 0.0) then
               PFLOATs(@pPatch012[z * pStream.uiOrigStride])[2] := 1.0;
           if (PFLOATs(@pPatch012[z * pStream.uiOrigStride])[3] = 0.0) then
@@ -1330,11 +1332,12 @@ begin
       continue;
     end;
 
-    // TODO -ODxbx : How does 'LocalPatched |= call()' work in C if LocalPatched is true already?
-    if not LocalPatched then
-      LocalPatched := PatchPrimitive(pPatchDesc, uiStream);
-    if not LocalPatched then
-      LocalPatched := PatchStream(pPatchDesc, uiStream);
+    // Dxbx note : Cxbx does 'LocalPatched |= PatchPrimitive();' which is a arithmetic or operation.
+    // In Delphi, booleans are lazy evaluated, which could mean missing the call completly. We fix that like this :
+    if PatchPrimitive(pPatchDesc, uiStream) then
+      LocalPatched := True;
+    if PatchStream(pPatchDesc, uiStream) then
+      LocalPatched := True;
     if LocalPatched and (nil=pPatchDesc.pVertexStreamZeroData) then
     begin
       // Insert the patched stream in the cache
