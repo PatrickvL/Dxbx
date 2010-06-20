@@ -176,7 +176,7 @@ var
   g_YuvSurface: PX_D3DSurface = NULL;
   g_fYuvEnabled: BOOL_ = FALSE;
   g_dwVertexShaderUsage: DWORD = 0;
-  g_VertexShaderSlots: array [0..136 - 1] of DWORD;
+  g_VertexShaderSlots: array [0..X_D3DVS_XBOX_NR_ADDRESS_SLOTS{=136} - 1] of DWORD;
 
   // cached palette pointer
   g_pCurrentPalette: PVOID;
@@ -1598,7 +1598,7 @@ begin
       [Handle, Address]);
 {$ENDIF}
 
-  if (Address < 136) and VshHandleIsVertexShader(Handle) then
+  if (Address < X_D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) and VshHandleIsVertexShader(Handle) then
   begin
     pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
     if pVertexShader.Size > 0 then // Dxbx addition, to prevent underflow
@@ -1636,14 +1636,14 @@ begin
 
   if (VshHandleIsVertexShader(Handle)) then
   begin
-    pVertexShader := PVERTEX_SHADER((PX_D3DVertexShader(Handle and $7FFFFFFF)).Handle);
+    pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
     IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(pVertexShader.Handle);
   end
   else if (Handle = 0) then
   begin
     IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(D3DFVF_XYZ or D3DFVF_TEX0);
   end
-  else if (Address < 136) then
+  else if (Address < X_D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) then
   begin
     pVertexShader2 := PX_D3DVertexShader(g_VertexShaderSlots[Address]);
 
@@ -2622,8 +2622,8 @@ var
 {$endif}
 const
   dummy: P_char =
-    'vs.1.1'#10 +
-    'mov oPos, v0'#10;
+    'vs.1.1'#13#10 +
+    'mov oPos, v0'#13#10;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2672,7 +2672,7 @@ begin
     hRet := XTL_EmuRecompileVshFunction(PDWORD(pFunction),
                                         @pRecompiledBuffer,
                                         @VertexShaderSize,
-                                        g_VertexShaderConstantMode = X_VSCM_NONERESERVED);
+                                        (g_VertexShaderConstantMode and X_VSCM_NONERESERVED) > 0); // Dxbx fix
     if (SUCCEEDED(hRet)) then
     begin
       pRecompiledFunction := PDWORD(ID3DXBuffer(pRecompiledBuffer).GetBufferPointer());
@@ -2861,7 +2861,7 @@ begin
   begin
    {$IFDEF DEBUG}
       DbgPrintf('SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }',
-             [Register_ - 96 + i, Register_ + i,
+             [Register_ + X_VSCM_CORRECTION{=96} + i, Register_ + i, // Dxbx fix
              Pfloats(pConstantData)[4 * i],
              Pfloats(pConstantData)[4 * i + 1],
              Pfloats(pConstantData)[4 * i + 2],
@@ -2870,12 +2870,14 @@ begin
   end;
 {$ENDIF}
 
-  // TODO -oCXBX: HACK: Since Xbox vertex shader constants range from -96 to 96, during conversion
-  // some shaders need to add 96 to use ranges 0 to 192.  This fixes 3911 - 4361 games and XDK
+  // TODO -oCXBX: HACK: Since Xbox vertex shader constants range from -96 to 95, during conversion
+  // some shaders need to add 96 to use ranges 0 to 191.  This fixes 3911 - 4361 games and XDK
   // samples, but breaks Turok.
 
-  if g_BuildVersion <= 4361 then
-    Inc(Register_, 96);
+// Dxbx : This Turok-oriented hack (for SDK 4627 and higher) shouldn't be needed anymore,
+// since the bugs in VertexShader should be fixed now. So always correct constants again :
+//  if g_BuildVersion <= 4361 then
+  Inc(Register_, X_VSCM_CORRECTION{=96});
 
   hRet := IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant
   (
@@ -3060,9 +3062,9 @@ function XTL_EmuIDirect3DDevice8_SetPixelShader
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 const
   szDiffusePixelShader: P_char =
-    'ps.1.0'#10 +
-    'tex t0'#10 +
-    'mov r0, t0'#10;
+    'ps.1.0'#13#10 +
+    'tex t0'#13#10 +
+    'mov r0, t0'#13#10;
 var
   pShader: XTL_LPD3DXBUFFER;
   pErrors: XTL_LPD3DXBUFFER;
@@ -4515,7 +4517,7 @@ var
   pTexturePalette: PBytes;
 
   dummy: Pointer;
-  szString: array [0..256 -1] of AnsiChar;
+  szString: string;
 
 {$IFDEF _DEBUG_DUMP_TEXTURE_REGISTER}
   dwDumpSurface: int;
@@ -4568,7 +4570,8 @@ begin
           dwSize := $2000; // temporarily assign a small buffer, which will be increased later
         end;
 
-        hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(
+        hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer
+        (
           dwSize, 0, 0, D3DPOOL_MANAGED,
           {ppVertexBuffer=}@(pResource.Emu.VertexBuffer8)
         );
@@ -4576,19 +4579,20 @@ begin
         if (FAILED(hRet)) then
         begin
           // TODO -oCXBX: Hack for Crazy Taxi 3?
-          sprintf(szString, 'CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
+          szString := SysUtils.Format('CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
 
           if ( dwSize <> 0 ) then
-            DxbxKrnlCleanup( String(szString) )
+            DxbxKrnlCleanup( szString )
           else
           begin
-            EmuWarning( string(szString) );
+            EmuWarning( szString );
+
             EmuSwapFS(fsXbox);
+
             Result := hRet;
             Exit;
           end;
-       end;
-
+        end;
 
   {$IFDEF _DEBUG_TRACK_VB}
         g_VBTrackTotal.insert(pResource.Emu.VertexBuffer8);
@@ -4636,7 +4640,8 @@ begin
         end
         else
         begin
-          hRet := IDirect3DDevice8_CreateIndexBuffer(g_pD3DDevice8,
+          hRet := IDirect3DDevice8_CreateIndexBuffer
+          (g_pD3DDevice8,
             dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
             @(pIndexBuffer.Emu.IndexBuffer8)
           );
@@ -4674,23 +4679,23 @@ begin
       pPushBuffer := PX_D3DPushBuffer(pResource);
 
       // create push buffer
-      dwSize := EmuCheckAllocationSize(pBase, true);
-
-      if dwSize = DWORD(-1) then
       begin
-        // TODO -oCXBX: once this is known to be working, remove the warning
-        EmuWarning('Push buffer allocation size unknown');
+        dwSize := EmuCheckAllocationSize(pBase, true);
 
-        pPushBuffer.Emu.Lock := X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
-      end
-      else
-      begin
-        pResource.Data := ULONG(pBase);
+        if dwSize = DWORD(-1) then
+        begin
+          // TODO -oCXBX: once this is known to be working, remove the warning
+          EmuWarning('Push buffer allocation size unknown');
+
+          pPushBuffer.Emu.Lock := X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
+        end
+        else
+          pResource.Data := ULONG(pBase);
+      end;
 
 {$IFDEF DEBUG}
-        DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pPushBuffer.Size, pPushBuffer.AllocationSize]);
+      DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pPushBuffer.Size, pPushBuffer.AllocationSize]);
 {$ENDIF}
-      end;
     end;
 
 
@@ -4727,7 +4732,6 @@ begin
       end;
 
       dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
-
       bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
       bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
 
@@ -7706,7 +7710,7 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexShader
 (
-  aHandle: DWORD
+  Handle: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
@@ -7722,31 +7726,32 @@ begin
     #13#10'(' +
     #13#10'   Handle              : 0x%.08X' +
     #13#10');',
-    [aHandle]);
+    [Handle]);
 {$ENDIF}
 
-  g_CurrentVertexShader := aHandle;
+  // Result := D3D_OK;
+
+  g_CurrentVertexShader := Handle;
 
   // Store viewport offset and scale in constant registers 58 (c-38) and
   // 59 (c-37) used for screen space transformation.
-  if (g_VertexShaderConstantMode <> X_VSCM_NONERESERVED) then
+  if (g_VertexShaderConstantMode and X_VSCM_NONERESERVED) = 0 then // Dxbx fix
   begin
     // TODO -oCXBX: Proper solution.
 //    with vScale do begin x := 2.0 / 640; y := -2.0 / 480; z := 0.0; w := 0.0; end;
 //    with vOffset do begin x := -1.0; y := 1.0; z := 0.0; w := 1.0; end;
 
-    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant(58, @vScale, 1);
-    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant(59, @vOffset, 1);
+    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant({58=}X_VSCM_RESERVED_CONSTANT1{=-38}+X_VSCM_CORRECTION{=96}, @vScale, 1);
+    IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant({59=}X_VSCM_RESERVED_CONSTANT2{=-37}+X_VSCM_CORRECTION{=96}, @vOffset, 1);
   end;
 
-
-  if (VshHandleIsVertexShader(aHandle)) then
+  if (VshHandleIsVertexShader(Handle)) then
   begin
-    RealHandle := PVERTEX_SHADER(VshHandleGetVertexShader(aHandle).Handle).Handle
+    RealHandle := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle).Handle
   end
   else
   begin
-    RealHandle := aHandle;
+    RealHandle := Handle;
   end;
   Result := IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(RealHandle);
 
@@ -7920,7 +7925,7 @@ begin
 {$ENDIF}
 
   // update index buffer, if necessary
-  if Assigned(g_pIndexBuffer) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
+  if (g_pIndexBuffer <> nil) and (g_pIndexBuffer.Emu.Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
   begin
     dwSize := VertexCount * SizeOf(Word);   // 16-bit indices
 
@@ -7987,7 +7992,7 @@ begin
 
       IDirect3DDevice8(g_pD3DDevice8).GetIndices(@pIndexBuffer, {out}BaseIndex);
 
-      if (nil<>pIndexBuffer) then
+      if (pIndexBuffer <> nil) then
       begin
         bActiveIB := true;
         IDirect3DIndexBuffer8(pIndexBuffer)._Release();
@@ -8003,14 +8008,14 @@ begin
     begin
       IDirect3DDevice8(g_pD3DDevice8).CreateIndexBuffer(VertexCount*SizeOf(Word), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, @pIndexBuffer);
 
-      if (pIndexBuffer = NULL) then
+      if (pIndexBuffer = nil) then
           DxbxKrnlCleanup('Could not create index buffer! (%d bytes)', [VertexCount*SizeOf(Word)]);
 
-      pbData := NULL;
+      pbData := nil;
 
       IDirect3DIndexBuffer8(pIndexBuffer).Lock(0, 0, {out}pbData, 0);
 
-      if (nil=pbData) then
+      if (pbData = nil) then
         DxbxKrnlCleanup('Could not lock index buffer!');
 
       memcpy(pbData, pIndexData, VertexCount * SizeOf(Word));
@@ -8076,7 +8081,7 @@ procedure XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP
   pIndexData: PVOID;
   pVertexStreamZeroData: PVOID;
   VertexStreamZeroStride: UINT
-);
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   VPDesc: VertexPatchDesc;
@@ -8588,7 +8593,7 @@ begin
 
   Result := IDirect3DDevice8(g_pD3DDevice8).GetVertexShaderConstant
     (
-    Register_ + 96,
+    Register_ + X_VSCM_CORRECTION{=96},
     {out}pConstantData^,
     ConstantCount
     );

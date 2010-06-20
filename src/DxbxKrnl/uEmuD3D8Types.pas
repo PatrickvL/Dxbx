@@ -245,6 +245,9 @@ type X_D3DVertexShader = record
   end; // size = 368 (as in Cxbx)
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
+const
+  X_D3DVS_XBOX_NR_ADDRESS_SLOTS = 136;
+
 type _X_D3DPIXELSHADERDEF = record // <- blueshogun 10/1/07
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     PSAlphaInputs: array [0..8-1] of DWORD;  // Alpha inputs for each stage
@@ -625,10 +628,15 @@ const X_D3DTSS_UNK = $7fffffff;
 
 type X_VERTEXSHADERCONSTANTMODE = DWORD;
 
-const X_VSCM_96 = 0;
-const X_VSCM_192 = 1;
-const X_VSCM_192FIXEDPIPELINE = 2;
-const X_VSCM_NONERESERVED = 16;
+const X_VSCM_96               = $00; // Enables constants 0..95
+const X_VSCM_192              = $01; // Enables constants -96..-1 on top of 0..95
+const X_VSCM_192FIXEDPIPELINE = $02; // Unsupported?
+const X_VSCM_NONERESERVED     = $10; // Do not reserve constant -38 and -37
+
+const X_VSCM_RESERVED_CONSTANT1 = -38; // Becomes 58 after correction
+const X_VSCM_RESERVED_CONSTANT2 = -37; // Becomes 59 after correction
+
+const X_VSCM_CORRECTION = 96; // Add 96 to arrive at the range 0..191 (instead of 96..95)
 
 // Vertex shader types
 const X_VST_NORMAL = 1;
