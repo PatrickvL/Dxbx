@@ -300,7 +300,7 @@ begin
   try
     if Length(Args) = 0 then
       MayRenderArguments := False;
-      
+
     if MayRenderArguments then
     begin
       // Count the number of single '%' characters in the formatting string,
@@ -485,6 +485,7 @@ function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; // ove
 begin
   Result := Length(aString);
   memcpy(aBuffer, @(aString[1]), Result);
+  aBuffer[Result] := #0;
 end;
 
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of const): Integer; // overload;
