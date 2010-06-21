@@ -1639,7 +1639,7 @@ begin
     pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
     IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(pVertexShader.Handle);
   end
-  else if (Handle = 0) then
+  else if (Handle = HNULL) then
   begin
     IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(D3DFVF_XYZ or D3DFVF_TEX0);
   end
@@ -1653,7 +1653,7 @@ begin
     end
     else
     begin
-        EmuWarning('g_VertexShaderSlots[%d] := 0', [Address]);
+        EmuWarning('g_VertexShaderSlots[%d] = 0', [Address]);
     end;
   end;
 
@@ -2593,6 +2593,9 @@ begin
   Result := D3D_OK;
 end;
 
+{$ifdef _DEBUG_TRACK_VS}
+{static}var FailedShaderCount: int = 0;
+{$endif}
 function XTL_EmuIDirect3DDevice8_CreateVertexShader
 (
   pDeclaration: PDWORD;
@@ -2615,7 +2618,6 @@ var
 
 {$ifdef _DEBUG_TRACK_VS}
   pFileName: array [0..30-1] of _char;
-{$J+}const FailedShaderCount: int = 0;{$J-}
 var
   pHeader: pVSH_SHADER_HEADER;
   f: PFILE;
@@ -2721,8 +2723,8 @@ begin
                                  {Flags=}D3DXASM_SKIPVALIDATION,
                                  {ppConstants}NULL,
                                  {ppCompiledShader}@pRecompiledBuffer,
-                                 {ppCopmilationErrors}NULL);
-      if not (FAILED(hRet)) then
+                                 {ppCompilationErrors}NULL);
+//      if not (FAILED(hRet)) then
         hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexShader
         (
             pRecompiledDeclaration,
@@ -2779,7 +2781,7 @@ begin
     begin
       FailedShaderCount := 0;
       pHeader := PVSH_SHADER_HEADER(pFunction);
-      EmuWarning('Couldn`t create vertex shader!');
+      EmuWarning('Couldn''t create vertex shader!');
       sprintf(@pFileName[0], 'failed%05d.xvu', [FailedShaderCount]);
       f := fopen(@pFileName[0], 'wb');
       if Assigned(f) then
@@ -2873,11 +2875,11 @@ begin
   // TODO -oCXBX: HACK: Since Xbox vertex shader constants range from -96 to 95, during conversion
   // some shaders need to add 96 to use ranges 0 to 191.  This fixes 3911 - 4361 games and XDK
   // samples, but breaks Turok.
-
-// Dxbx : This Turok-oriented hack (for SDK 4627 and higher) shouldn't be needed anymore,
-// since the bugs in VertexShader should be fixed now. So always correct constants again :
-//  if g_BuildVersion <= 4361 then
-  Inc(Register_, X_VSCM_CORRECTION{=96});
+  // Dxbx note : 4627 samples show that the Register value arriving in this function is already
+  // incremented with 96 (even though the code for these samples supplies 0, maybe there's a
+  // macro responsible for that?)
+  if g_BuildVersion <= 4361 then
+    Inc(Register_, X_VSCM_CORRECTION{=96});
 
   hRet := IDirect3DDevice8(g_pD3DDevice8).SetVertexShaderConstant
   (
@@ -9784,9 +9786,9 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetModelView
 (
-  CONST pModelView: PD3DMATRIX;
-  CONST pInverseModelView: PD3DMATRIX;
-  CONST pComposite: PD3DMATRIX
+  {CONST} pModelView: PD3DMATRIX;
+  {CONST} pInverseModelView: PD3DMATRIX;
+  {CONST} pComposite: PD3DMATRIX
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin

@@ -65,7 +65,7 @@ end;
 
 function XTL_EmuXNetStartup
 (
-    const pDummy: PVOID
+    {const} pDummy: PVOID
 ): INT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
