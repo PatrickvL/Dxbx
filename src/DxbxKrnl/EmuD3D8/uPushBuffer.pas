@@ -42,9 +42,22 @@ uses
   , uEmuXG
   , uEmuD3D8Types;
 
+// From PushBuffer.h :
+
+procedure XTL_EmuExecutePushBuffer
+(
+  pPushBuffer: PX_D3DPushBuffer;
+  pFixup: PX_D3DFixup
+); {NOPATCH}
+
+procedure XTL_EmuExecutePushBufferRaw
+(
+  pdwPushData: PDWORD
+); {NOPATCH}
+
 // primary push buffer
 var g_dwPrimaryPBCount: uint32 = 0;
-var g_pPrimaryPB: PDWORD = nil;
+var g_pPrimaryPB: PDWORD = nil; // Dxbx note : Cxbx uses Puint32 for this
 
 // push buffer debugging
 var XTL_g_bStepPush: _bool = false;
@@ -57,8 +70,6 @@ var
   pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
 
 
-procedure XTL_EmuExecutePushBuffer(pPushBuffer: PX_D3DPushBuffer; pFixup: PX_D3DFixup); {NOPATCH}
-procedure XTL_EmuExecutePushBufferRaw(pdwPushData: PDWord); {NOPATCH}
 {$IFDEF _DEBUG_TRACK_PB}
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
@@ -75,6 +86,7 @@ uses
   , uVertexShader
   , uConvert;
 
+// From PushBuffer.cpp :
 
 procedure XTL_EmuExecutePushBuffer
 (
@@ -114,7 +126,7 @@ begin
   // for current usages, we're always on stage 0
   pPixelContainer := PX_D3DPixelContainer(EmuD3DActiveTexture[0]);
 
-  if (pPixelContainer = NULL) or ((pPixelContainer.Common and X_D3DCOMMON_ISLOCKED) = 0) then
+  if (pPixelContainer = NULL) or (0 = (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
     Exit;
 
   XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
@@ -849,9 +861,9 @@ begin
     for v := 0 to max -1 do
     begin
       fprintf(dbgVertices, '      %f;%f;%f;%s'#13#10, [
-        PFLOAT(@pVBData[v * uiStride + 0]),
-        PFLOAT(@pVBData[v * uiStride + 4]),
-        PFLOAT(@pVBData[v * uiStride + 8]),
+        PFLOAT(@pVBData[v * uiStride + 0])^,
+        PFLOAT(@pVBData[v * uiStride + 4])^,
+        PFLOAT(@pVBData[v * uiStride + 8])^,
         iif(v < (max - 1), ',', ';')]);
     end;
 
