@@ -90,7 +90,7 @@ procedure XTL_EmuXGSwizzleRect
     pDest: LPVOID;
     Width: DWORD;
     Height: DWORD;
-    CONST pPoint: LPPOINT;
+    {CONST} pPoint: LPPOINT;
     BytesPerPixel: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -161,12 +161,12 @@ procedure XTL_EmuXGSwizzleBox
     pSource: LPCVOID;
     RowPitch: DWORD;
     SlicePitch: DWORD;
-    CONST pBox: PD3DBOX;
+    {CONST} pBox: PD3DBOX;
     pDest: LPVOID;
     Width: DWORD;
     Height: DWORD;
     Depth: DWORD;
-    CONST pPoint: PXGPOINT3D;
+    {CONST} pPoint: PXGPOINT3D;
     BytesPerPixel: DWORD
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -373,7 +373,7 @@ end;
 function XTL_EmuXGWriteSurfaceOrTextureToXPR
 (
   pResource: LPVOID;
-  const cPath: P_char;
+  {const} cPath: P_char;
   bWriteSurfaceAsTexture: BOOL
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100

@@ -1137,7 +1137,10 @@ begin
       StoredLibrary := PatternTrieReader.GetStoredLibrary(BestStoredLibraryIndex);
       StoredLibraryName := PatternTrieReader.GetString(StoredLibrary.LibNameIndex);
       if SameLibName(StoredLibraryName, 'D3D8') then
+      begin
         LibD3D8 := StoredLibrary;
+        g_BuildVersion := LibD3D8.LibVersion;
+      end;
 
       // Add this library to a set we'll use in the detection-code :
       StoredLibraryIndexedToScan[BestStoredLibraryIndex] := True;
