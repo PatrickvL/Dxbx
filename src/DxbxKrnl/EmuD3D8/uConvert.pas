@@ -357,7 +357,7 @@ begin
 
     X_D3DFMT_LIN_D16, // Linear
     X_D3DFMT_D16: // Swizzled
-      Result := D3DFMT_D16; // TODO -oCXBX: D3DDMT_D16 on Xbox is always lockable
+      Result := D3DFMT_D16; // TODO -oCXBX: D3DFMT_D16 on Xbox is always lockable
 
     X_D3DFMT_L6V5U5: // Swizzled
       Result := D3DFMT_L6V5U5;
@@ -374,6 +374,8 @@ begin
     $FFFFFFFF:
       Result := D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 
+    X_D3DFMT_INDEX16: // Dxbx addition : Pass-through internal format that shouldn't raise a warning :
+      Result := D3DFMT_INDEX16;
   else
     DxbxKrnlCleanup('EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)', [aFormat]);
     Result := D3DFORMAT(aFormat);

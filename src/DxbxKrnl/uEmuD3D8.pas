@@ -3359,7 +3359,7 @@ begin
 {$ENDIF}
 
   // Convert Format (Xbox->PC)
-  PCFormat := EmuXB2PC_D3DFormat(Cardinal(Format));
+  PCFormat := EmuXB2PC_D3DFormat(Format);
 
   // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
   if (PCFormat = D3DFMT_D16) then
@@ -3435,8 +3435,8 @@ function XTL_EmuIDirect3DDevice8_CreateCubeTexture
     EdgeLength: UINT; 
     Levels: UINT; 
     Usage: DWORD;
-    Format: D3DFORMAT;
-    Pool: D3DPOOL; 
+    Format: X_D3DFORMAT;
+    Pool: D3DPOOL;
     ppCubeTexture: PPX_D3DCubeTexture
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -3459,7 +3459,7 @@ begin
 {$ENDIF}
 
   // Convert Format (Xbox->PC)
-  PCFormat := EmuXB2PC_D3DFormat(Cardinal(Format));
+  PCFormat := EmuXB2PC_D3DFormat(Format);
 
   // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
   if (PCFormat = D3DFMT_D16) then
@@ -3504,7 +3504,7 @@ function XTL_EmuIDirect3DDevice8_CreateIndexBuffer
 (
   Length: UINT;
   Usage: DWORD;
-  Format: D3DFORMAT;
+  Format: X_D3DFORMAT;
   Pool: D3DPOOL;
   ppIndexBuffer: PPX_D3DIndexBuffer
 ): HRESULT; stdcall;
@@ -3564,9 +3564,9 @@ begin
 
   XTL_EmuIDirect3DDevice8_CreateIndexBuffer
   (
-      Length, 
-      0, 
-      D3DFMT_INDEX16, 
+      Length,
+      0,
+      X_D3DFMT_INDEX16,
       D3DPOOL_MANAGED,
       @Result);
 end;
@@ -10124,8 +10124,8 @@ exports
   XTL_EmuIDirect3DDevice8_Unknown1 name PatchPrefix + 'D3DDevice_Unknown', // TODO -oDXBX: Fix wrong prefix!
   XTL_EmuIDirect3DDevice8_UpdateOverlay name PatchPrefix + 'D3DDevice_UpdateOverlay',
 
-  XTL_EmuIDirect3DPalette8_Lock name PatchPrefix + 'D3DDevice_Lock', // TODO -oDXBX: Fix wrong prefix!
-  XTL_EmuIDirect3DPalette8_Lock2 name PatchPrefix + 'D3DDevice_Lock2', // TODO -oDXBX: Fix wrong prefix!
+  XTL_EmuIDirect3DPalette8_Lock name PatchPrefix + 'D3DPalette_Lock',
+  XTL_EmuIDirect3DPalette8_Lock2 name PatchPrefix + 'D3DPalette_Lock2',
 
   XTL_EmuIDirect3DResource8_AddRef name PatchPrefix + 'D3DResource_AddRef',
   XTL_EmuIDirect3DResource8_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',

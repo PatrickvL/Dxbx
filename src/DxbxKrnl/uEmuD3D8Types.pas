@@ -761,6 +761,7 @@ const
 
   X_D3DFMT_VERTEXDATA = $64;
 
+  X_D3DFMT_INDEX16 = DWord(D3DFMT_INDEX16); // Dxbx addition : Not an Xbox format, used internally
 
 var
   // cached active texture
