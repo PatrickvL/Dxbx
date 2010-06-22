@@ -3812,9 +3812,9 @@ exports
 
   XTL_EmuIDirectSoundStream_FlushEx,
 
-  XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'DirectSound.CDirectSound.CommitDeferredSettings',
-  XTL_EmuCDirectSound_GetSpeakerConfig name PatchPrefix + 'DirectSound.CDirectSound.GetSpeakerConfig',
-  XTL_EmuCDirectSound_SynchPlayback name PatchPrefix + 'DirectSound.CDirectSound.SynchPlayback',
+  XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'CDirectSound.CommitDeferredSettings',
+  XTL_EmuCDirectSound_GetSpeakerConfig name PatchPrefix + 'CDirectSound.GetSpeakerConfig',
+  XTL_EmuCDirectSound_SynchPlayback name PatchPrefix + 'CDirectSound.SynchPlayback',
 
 //  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
 //  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
