@@ -3096,7 +3096,7 @@ begin
       pErrors := nil;
 
       // assemble the shader
-      D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader) - 1, {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
+      D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader), {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
 
       // create the shader device handle
       Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
@@ -5039,7 +5039,7 @@ begin
                     pTexturePalette := DxbxMalloc(256 * 4);
 
                     // First we need to unswizzle the texture data
-                    XTL_EmuXGUnswizzleRect
+                    EmuXGUnswizzleRect
                     (
                       Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                       LockedRect.Pitch, iRect, iPoint, dwBPP
@@ -5081,7 +5081,7 @@ begin
                   end
                   else
                   begin
-                    XTL_EmuXGUnswizzleRect
+                    EmuXGUnswizzleRect
                     (
                       Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                       LockedRect.Pitch, iRect, iPoint, dwBPP
@@ -8593,9 +8593,15 @@ begin
     [Register_, pConstantData, ConstantCount]);
 {$ENDIF}
 
+  // TODO -oDxbx: If we ever find a title that calls this, check if this correction
+  // should indeed be done version-dependantly (like in SetVertexShaderConstant);
+  // It seems logical that these two mirror eachother, but it could well be different:
+  if g_BuildVersion <= 4361 then
+    Inc(Register_, X_VSCM_CORRECTION{=96});
+
   Result := IDirect3DDevice8(g_pD3DDevice8).GetVertexShaderConstant
     (
-    Register_ + X_VSCM_CORRECTION{=96},
+    Register_,
     {out}pConstantData^,
     ConstantCount
     );
