@@ -46,7 +46,7 @@ end; // size = 12
 XGPOINT3D = _XGPOINT3D;
 PXGPOINT3D = ^XGPOINT3D;
 
-procedure XTL_EmuXGUnswizzleRect
+procedure EmuXGUnswizzleRect
 (
     pSrcBuff: PVOID;
     dwWidth: DWORD;
@@ -57,7 +57,7 @@ procedure XTL_EmuXGUnswizzleRect
     rSrc: TRECT;
     poDst: TPOINT;
     dwBPP: DWORD
-); stdcall;
+); {NOPATCH}
 
 implementation
 
@@ -238,7 +238,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuXGUnswizzleRect
+procedure EmuXGUnswizzleRect
 (
     pSrcBuff: PVOID;
     dwWidth: DWORD;
@@ -249,7 +249,7 @@ procedure XTL_EmuXGUnswizzleRect
     rSrc: TRECT;
     poDst: TPOINT;
     dwBPP: DWORD
-); stdcall;
+); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwOffsetU: DWORD;
@@ -368,6 +368,35 @@ begin
     end;
     dwW := (dwW - dwMaskW) and dwMaskW;
   end;
+end; // EmuXGUnswizzleRect NOPATCH
+
+procedure XTL_EmuXGUnswizzleRect
+(
+    pSrcBuff: PVOID;
+    dwWidth: DWORD;
+    dwHeight: DWORD;
+    dwDepth: DWORD;
+    pDstBuff: PVOID;
+    dwPitch: DWORD;
+    rSrc: TRECT;
+    poDst: TPOINT;
+    dwBPP: DWORD
+); stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+  EmuXGUnswizzleRect(
+    pSrcBuff,
+    dwWidth,
+    dwHeight,
+    dwDepth,
+    pDstBuff,
+    dwPitch,
+    rSrc,
+    poDst,
+    dwBPP);
+
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuXGWriteSurfaceOrTextureToXPR

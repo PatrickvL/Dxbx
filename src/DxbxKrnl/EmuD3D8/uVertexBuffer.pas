@@ -1810,7 +1810,7 @@ begin
             end
             else
             begin
-              XTL_EmuXGUnswizzleRect
+              EmuXGUnswizzleRect
               (
                 pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                 LockedRect.Pitch, iRect, iPoint, dwBPP

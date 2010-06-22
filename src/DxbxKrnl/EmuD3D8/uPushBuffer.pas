@@ -182,7 +182,7 @@ begin
 
         pTemp := malloc(dwHeight*dwPitch);
 
-        XTL_EmuXGUnswizzleRect
+        EmuXGUnswizzleRect
         (
             LockedRect.pBits, dwWidth, dwHeight, dwDepth,
             pTemp, dwPitch, iRect, iPoint, dwBPP
