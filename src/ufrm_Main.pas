@@ -417,7 +417,6 @@ begin
 
   PEmuShared(nil).Init;
 
-  Emulation_State := esNone;
 (*
   // Calculated the exact X resolution :
   i := GetSystemMetrics(SM_CXFIXEDFRAME);
@@ -790,7 +789,29 @@ begin
   FreeAndNil({var}frm_VideoConfig);
 end;
 
+function CanRunXbe(const aXbe: TXbe; var NoRunReason: string): Boolean;
+var
+  i: Integer;
+begin
+  NoRunReason := '';
+  if Length(aXbe.m_LibraryVersion) = 0 then
+    NoRunReason := 'No linked libraries found!'
+  else
+    for i := 0 to Length(aXbe.m_LibraryVersion) - 1 do
+    begin
+      if Pos('lt', aXbe.m_LibraryVersion[i].szName) > 0 then
+      begin
+        NoRunReason := 'Cannot patch link-time optimized libraries!';
+        Break;
+      end;
+    end;
+
+  Result := (NoRunReason = '');
+end;
+
 procedure Tfrm_Main.actStartEmulationExecute(Sender: TObject);
+var
+  NoRunReason: string;
 begin
   if not Assigned(m_Xbe) then
   begin
@@ -798,7 +819,10 @@ begin
     Exit;
   end;
 
-  LaunchXBE;
+  if CanRunXbe(m_Xbe, {var}NoRunReason) then
+    LaunchXBE
+  else
+    MessageDlg('Cannot launch xbe!'#13#10 + NoRunReason, mtError, [mbOk], 0);
 end;
 
 procedure Tfrm_Main.actStopEmulationExecute(Sender: TObject);
@@ -1138,13 +1162,11 @@ begin
   if Result then
   begin
     RecentXbeAdd(XbeOpenDialog.FileName);
-    Emulation_State := esFileOpen;
     UpdateTitleInformation;
   end
   else
   begin
     MessageDlg('Can not open Xbe file.', mtWarning, [mbOk], 0);
-    Emulation_State := esNone;
     UpdateTitleInformation;
   end;
 end; // LoadXbe
@@ -1155,7 +1177,6 @@ begin
   begin
     FreeAndNil(m_Xbe);
 
-    Emulation_State := esNone;
     UpdateTitleInformation;
 
     WriteLog(Format('DXBX: %s Closed...', [m_szAsciiTitle]));
@@ -1181,7 +1202,6 @@ begin
     Exit;
   end;
 
-  Emulation_State := esFileOpen;
   UpdateTitleInformation;
 end; // ReopenXbe
 
@@ -1233,7 +1253,7 @@ begin
     ImageIcon.Hide;
 
   if Assigned(m_XBE) then
-  try
+  begin
     lblXbeInformation.Caption := Format(
       '%s'#13 +
       'ID:%.08x'#13 +
@@ -1245,7 +1265,7 @@ begin
       GameRegionToString(m_XBE.m_Certificate.dwGameRegion)]);
 
     // Add library versions (TODO : Sort them alfabetically)
-    for i := 0 to m_XBE.m_Header.dwLibraryVersions - 1 do
+    for i := 0 to Integer(m_XBE.m_Header.dwLibraryVersions) - 1 do
     begin
       LibName := string(Copy(m_XBE.m_LibraryVersion[i].szName, 1, XBE_LIBRARYNAME_MAXLENGTH));
       Version := IntToStr(m_XBE.m_LibraryVersion[i].wMajorVersion) + '.' +
@@ -1254,16 +1274,37 @@ begin
       lblXbeInformation.Caption := lblXbeInformation.Caption +
         #13 + LibName + StringOfChar(' ', 8 - Length(LibName)) + ':' + Version;
     end;
-  except
+
+    if CanRunXbe(m_Xbe, {var}LibName) then
+    begin
+      // Update Xbe compatibility state only if not running already :
+      if Emulation_State <> esRunning then
+        Emulation_State := esFileOpen;
+    end
+    else
+    begin
+      // Update Xbe compatibility state only if not running already :
+      if Emulation_State <> esRunning then
+        Emulation_State := esInvalidFile;
+
+      lblXbeInformation.Caption := lblXbeInformation.Caption + #13#13'Cannot start this XBE!'#13#10 + LibName;
+      // TODO : Set a Disabled state in imgLaunchButton.Tag
+    end;
   end
   else
+  begin
     lblXbeInformation.Caption := '';
+    Emulation_State := esNone;
+  end;
 
+  // Convert emulation state to a nice caption
   case Emulation_State of
     esNone:
       Caption := 'Dxbx';
     esFileOpen:
       Caption := m_szAsciiTitle + ' - Dxbx';
+    esInvalidFile:
+      Caption := m_szAsciiTitle + ' - Dxbx [Incompatible]';
     esRunning:
       Caption := m_szAsciiTitle + ' - Dxbx [Emulating]';
   end;
@@ -1452,7 +1493,6 @@ begin
   if IsWindow(m_hwndChild) then
   begin
     SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
-    Emulation_State := esFileOpen; // m_bCanStart := true;
     m_hwndChild := HNULL;
 
     UpdateTitleInformation;
