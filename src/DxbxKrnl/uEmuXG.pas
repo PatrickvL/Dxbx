@@ -30,6 +30,8 @@ uses
   // Dxbx
   uTypes,
   uLog,
+  uEmuD3D8Types,
+  uConvert,
   uEmu,
   uEmuFS,
   uXboxLibraryUtils, // PatchPrefix
@@ -65,21 +67,25 @@ implementation
 
 function XTL_EmuXGIsSwizzledFormat
 (
-    Format: D3DFORMAT
-): PVOID; stdcall;
+    Format: X_D3DFORMAT
+): _bool; stdcall; // Dxbx addition : This check should return a boolean
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  Dummy: DWORD;
 begin
-{$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
+  
+{$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuXapi : EmuXGIsSwizzledFormat' +
       #13#10'(' +
       #13#10'   Format              : 0x%.08X' +
       #13#10');',
       [Ord(Format)]);
-  EmuSwapFS(fsXbox);
 {$ENDIF}
 
-  Result := nil;
+  Result := EmuXBFormatIsSwizzled(Format, @Dummy);
+
+  EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuXGSwizzleRect

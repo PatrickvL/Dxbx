@@ -3812,7 +3812,8 @@ exports
 
   XTL_EmuIDirectSoundStream_FlushEx,
 
-  XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'CDirectSound.CommitDeferredSettings',
+  // XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'CDirectSound.CommitDeferredSettings', // Disabled, is CDirectSound_CommitDeferredSettingsA (Xref) in Cxbx!
+  XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + '_IDirectSound_CommitDeferredSettings@4', // Use it for interface method instead (Cxbx names this wrong)
   XTL_EmuCDirectSound_GetSpeakerConfig name PatchPrefix + 'CDirectSound.GetSpeakerConfig',
   XTL_EmuCDirectSound_SynchPlayback name PatchPrefix + 'CDirectSound.SynchPlayback',
 
@@ -3859,7 +3860,7 @@ exports
   XTL_EmuIDirectSound8_EnableHeadphones name PatchPrefix + 'IDirectSound_EnableHeadphones',
   XTL_EmuIDirectSound8_GetCaps name PatchPrefix + 'IDirectSound_GetCaps',
   XTL_EmuIDirectSound8_GetOutputLevels name PatchPrefix + 'IDirectSound_GetOutputLevels',
-  XTL_EmuIDirectSound8_Release name PatchPrefix + 'IDirectSound_Release',
+  XTL_EmuIDirectSound8_Release name PatchPrefix + '_IDirectSound_Release@4', // Was 'IDirectSound_Release'
   XTL_EmuIDirectSound8_SetAllParameters name PatchPrefix + 'IDirectSound_SetAllParameters',
   XTL_EmuIDirectSound8_SetDopplerFactor name PatchPrefix + 'IDirectSound_SetDopplerFactor',
   XTL_EmuIDirectSound8_SetI3DL2Listener name PatchPrefix + 'IDirectSound_SetI3DL2Listener',
@@ -3879,7 +3880,7 @@ exports
   XTL_EmuIDirectSoundBuffer8_Lock name PatchPrefix + 'IDirectSoundBuffer_Lock',
   XTL_EmuIDirectSoundBuffer8_Pause name PatchPrefix + 'IDirectSoundBuffer_Pause',
   XTL_EmuIDirectSoundBuffer8_Play name PatchPrefix + 'IDirectSoundBuffer_Play',
-  XTL_EmuIDirectSoundBuffer8_Release name PatchPrefix + 'IDirectSoundBuffer_Release',
+  XTL_EmuIDirectSoundBuffer8_Release name PatchPrefix + '_IDirectSoundBuffer_Release@4',
   XTL_EmuIDirectSoundBuffer8_SetBufferData name PatchPrefix + 'IDirectSoundBuffer_SetBufferData',
   XTL_EmuIDirectSoundBuffer8_SetConeAngles name PatchPrefix + 'IDirectSoundBuffer_SetConeAngles',
   XTL_EmuIDirectSoundBuffer8_SetConeOrientation name PatchPrefix + 'IDirectSoundBuffer_SetConeOrientation',
