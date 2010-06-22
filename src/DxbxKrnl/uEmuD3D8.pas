@@ -10148,9 +10148,9 @@ exports
 
   XTL_EmuIDirect3DVolumeTexture8_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
 
-  XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface',
+  XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface';
 
-  XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';
+//  XTL_EmuXMETAL_StartPush name PatchPrefix + 'XMETAL_StartPush';  // DXBX - MARKED OUT 4x4 EVO 2
 
 initialization
 
