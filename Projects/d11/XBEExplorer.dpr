@@ -1,5 +1,7 @@
 program XBEExplorer;
 
+{$R '..\..\resource\XBEExplorerResources.res' '..\..\resource\XBEExplorerResources.rc'}
+
 uses
   Forms,
   uXBEExplorerMain in '..\..\src\XBEExplorer\uXBEExplorerMain.pas' {FormXBEExplorer},
@@ -12,7 +14,13 @@ uses
   uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
   uConsoleClass in '..\..\src\uConsoleClass.pas',
   uHexViewer in '..\..\src\XBEExplorer\uHexViewer.pas' {HexViewer: TFrame},
-  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas';
+  uStringsViewer in '..\..\src\XBEExplorer\uStringsViewer.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uViewerUtils in '..\..\src\XBEExplorer\uViewerUtils.pas',
+  uSectionViewer in '..\..\src\XBEExplorer\uSectionViewer.pas',
+  uDisassembleViewer in '..\..\src\XBEExplorer\uDisassembleViewer.pas',
+  uDisassembleUtils in '..\..\src\uDisassembleUtils.pas';
 
 {$R *.res}
 

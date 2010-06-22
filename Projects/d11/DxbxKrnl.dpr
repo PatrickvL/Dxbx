@@ -78,7 +78,6 @@ uses
   uEmuXG in '..\..\src\DxbxKrnl\uEmuXG.pas',
   uEmuXOnline in '..\..\src\DxbxKrnl\uEmuXOnline.pas',
   uEmuXTL in '..\..\src\DxbxKrnl\uEmuXTL.pas',
-  uHLEDatabase in '..\..\src\DxbxKrnl\uHLEDatabase.pas',
   uHLEIntercept in '..\..\src\DxbxKrnl\uHLEIntercept.pas',
   DxLibraryAPIScanning in '..\..\src\DxbxKrnl\DxLibraryAPIScanning.pas',
   uDxbxDebugUtils in '..\..\src\DxbxKrnl\uDxbxDebugUtils.pas',
@@ -94,7 +93,11 @@ uses
   uEmuExe in '..\..\src\uEmuExe.pas',
   uProlog in '..\..\src\uProlog.pas',
   uExe in '..\..\src\uExe.pas',
-  uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas';
+  uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas',
+  uPixelShader in '..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas';
 
 // TODO : This is temporary, until uEmuExe can determine LoadTimeDLLBase correctly :
 {$IMAGEBASE $10000000}

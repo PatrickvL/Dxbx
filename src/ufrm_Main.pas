@@ -656,7 +656,7 @@ begin
     Format := DT_RIGHT
   else
     Format := DT_LEFT;
-  DrawText(TDrawGrid(Sender).Canvas.Handle, GetCellText(aCol, aRow), -1, Where, Format or DT_RTLREADING);
+  DrawText(TDrawGrid(Sender).Canvas.Handle, PChar(GetCellText(aCol, aRow)), -1, Where, Format or DT_RTLREADING);
 end; // dgXbeInfosDrawCell
 
 procedure Tfrm_Main.cbFreeTextFilterKeyPress(Sender: TObject; var Key: Char);

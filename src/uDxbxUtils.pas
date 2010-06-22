@@ -209,8 +209,8 @@ type
   // For usage, see comments in implementation.
   RVarArgsReader = record
   private
-    FArgPtr: PByte;
-    class function Align(Ptr: Pointer; Align: Integer): Pointer; static;
+    FArgPtr: IntPtr;
+    class function Align(Ptr: IntPtr; Align: Integer): IntPtr; static;
   public
     constructor Create(LastArg: Pointer; Size: Integer);
     // Read bytes, signed words etc. using Int32
@@ -1270,14 +1270,14 @@ end; // DxbxUnmangleSymbolName
 
 constructor RVarArgsReader.Create(LastArg: Pointer; Size: Integer);
 begin
-  FArgPtr := LastArg;
+  FArgPtr := IntPtr(LastArg);
   // 32-bit x86 stack is generally 4-byte aligned
   FArgPtr := Align(FArgPtr + Size, 4);
 end;
 
-class function RVarArgsReader.Align(Ptr: Pointer; Align: Integer): Pointer;
+class function RVarArgsReader.Align(Ptr: IntPtr; Align: Integer): IntPtr;
 begin
-  Integer(Result) := (Integer(Ptr) + Align - 1) and not (Align - 1);
+  Result := (Ptr + Align - 1) and not (Align - 1);
 end;
 
 function RVarArgsReader.ReadInt32: Integer;
@@ -1302,7 +1302,7 @@ end;
 
 procedure RVarArgsReader.ReadArg(var Arg; Size: Integer);
 begin
-  Move(FArgPtr^, Arg, Size);
+  Move(PByte(FArgPtr)^, Arg, Size);
   FArgPtr := Align(FArgPtr + Size, 4);
 end;
 
