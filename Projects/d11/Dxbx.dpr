@@ -19,6 +19,10 @@ program Dxbx;
 
 {$INCLUDE Dxbx.inc}
 
+
+
+{$R '..\..\resource\DxbxResources.res' '..\..\resource\DxbxResources.rc'}
+
 uses
   SysUtils,
   Forms,
@@ -43,7 +47,10 @@ uses
   uDxbxXml in '..\..\src\uDxbxXml.pas',
   XboxKrnl in '..\..\Libraries\OpenXDK\include\xboxkrnl\XboxKrnl.pas',
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
-  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas';
+  uEmuD3D8Types in '..\..\src\DxbxKrnl\uEmuD3D8Types.pas',
+  uXDVDFS in '..\..\src\uXDVDFS.pas',
+  uFileSystem in '..\..\src\uFileSystem.pas',
+  uData in '..\..\src\Tools\XdkTracker\src\uData.pas';
 
 {$R *.RES}
 

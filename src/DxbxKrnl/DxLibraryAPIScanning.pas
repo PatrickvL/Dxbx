@@ -641,7 +641,7 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
   begin
     // Don't count the nops at the end of the function (if any) :
     LengthWithoutNops := aStoredLibraryFunction.FunctionLength;
-    while (LengthWithoutNops > 0) and (aTestAddress[LengthWithoutNops-1] = OPCODE_NOP) do
+    while (LengthWithoutNops > 0) and (PBytes(aTestAddress)[LengthWithoutNops-1] = OPCODE_NOP) do
       Dec(LengthWithoutNops);
 
     // Skip small functions with only one cross-reference, because those are
