@@ -57,7 +57,7 @@ const
   FILE_ATTRIBUTE_INVALID = $10000000;
 
 type
-  EMU_STATE = (esNone, esFileOpen, esRunning);
+  EMU_STATE = (esNone, esFileOpen, esInvalidFile, esRunning);
 
   TDebugInfoType = (ditConsole, ditFile);
   EnumAutoConvert = (CONVERT_TO_MANUAL, CONVERT_TO_XBEPATH, CONVERT_TO_WINDOWSTEMP);
