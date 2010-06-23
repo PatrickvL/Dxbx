@@ -1405,8 +1405,8 @@ begin
     Usage, Ord(RType), CheckFormat]);
 {$ENDIF}
 
-  if (Ord(RType) > 7) then
-    DxbxKrnlCleanup('RType > 7');
+  if (RType > X_D3DRTYPE_INDEXBUFFER) then
+    DxbxKrnlCleanup('RType > 7 (X_D3DRTYPE_INDEXBUFFER)');
 
   Result := IDirect3D8(g_pD3D8).CheckDeviceFormat
   (
@@ -3142,18 +3142,18 @@ function XTL_EmuIDirect3DDevice8_CreateTexture2
     Levels: UINT;
     Usage: DWORD;
     Format: X_D3DFORMAT;
-    D3DResource: D3DRESOURCETYPE
+    D3DResource: X_D3DRESOURCETYPE
 ): PX_D3DResource; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pTexture: PX_D3DTexture;
 begin
-  case Ord(D3DResource) of
-     3: //D3DRTYPE_TEXTURE
+  case D3DResource of
+     X_D3DRTYPE_TEXTURE: // 3
         XTL_EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-     4: //D3DRTYPE_VOLUMETEXTURE
+     X_D3DRTYPE_VOLUMETEXTURE: // 4
         XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-     5: //D3DRTYPE_CUBETEXTURE
+     X_D3DRTYPE_CUBETEXTURE: // 5
         DxbxKrnlCleanup('Cube textures temporarily not supported!');
   else
     DxbxKrnlCleanup('D3DResource := %d is not supported!', [Ord(D3DResource)]);
@@ -3207,27 +3207,23 @@ begin
     EmuWarning('D3DFMT_D16 is an unsupported texture format!');
     PCFormat := D3DFMT_R5G6B5;
   end
-  else
-  if (PCFormat = D3DFMT_P8) then
+  else if (PCFormat = D3DFMT_P8) then
   begin
     EmuWarning('D3DFMT_P8 is an unsupported texture format!');
     PCFormat := D3DFMT_X8R8G8B8;
   end
-  else
-  if (PCFormat = D3DFMT_D24S8) then
+  else if (PCFormat = D3DFMT_D24S8) then
   begin
     EmuWarning('D3DFMT_D24S8 is an unsupported texture format!');
     PCFormat := D3DFMT_X8R8G8B8;
   end
-  else
-  if (PCFormat = D3DFMT_YUY2) then
+  else if (PCFormat = D3DFMT_YUY2) then
   begin
     // cache the overlay size
     g_dwOverlayW := Width;
     g_dwOverlayH := Height;
     g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
   end;
-
 
   if (PCFormat <> D3DFMT_YUY2) then
   begin
@@ -3266,7 +3262,8 @@ begin
         'Height: 0 -> 256');
     end;
 
-    Result := IDirect3DDevice8_CreateTexture(g_pD3DDevice8,
+    Result := IDirect3DDevice8_CreateTexture
+    (g_pD3DDevice8,
       Width, Height, Levels,
       PCUsage, // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
       PCFormat, PCPool, @(ppTexture^.Emu.Texture8)
@@ -3308,7 +3305,7 @@ begin
 
     ppTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
     ppTexture^.Emu.Lock := dwPtr;
-    ppTexture^.Format := $24;
+    ppTexture^.Format := X_D3DFMT_YUY2{=$24};
 
     ppTexture^.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
                     or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
@@ -3648,7 +3645,7 @@ fail:
 end;
 
 {$ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE}
-{static}var dwDumpTexture: int := 0;
+{static}var dwDumpTexture: int = 0;
 {$endif}
 function XTL_EmuIDirect3DDevice8_SetTexture
 (
@@ -4988,7 +4985,7 @@ begin
               if (bCubemap) then
                 hRet := IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).LockRect(D3DCUBEMAP_FACES(r), 0, LockedRect, NULL, 0)
               else
-                hRet := IDirect3DTexture8(pResource.Emu.Texture8).LockRect(level, LockedRect, NULL, 0);
+                hRet := IDirect3DTexture8(pResource.Emu.Texture8).LockRect(level, {out}LockedRect, NULL, 0);
             end;
 
             iRect := Classes.Rect(0, 0, 0, 0);
@@ -7617,7 +7614,11 @@ begin
 
   {Dxbx unused hRet :=} IDirect3DVertexBuffer8(pVertexBuffer8).Lock(0, 0, {out}pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
+{$IFDEF DEBUG}
+  DbgPrintf('pbData : 0x%.08X', [pbData]);
+{$ENDIF}
   EmuSwapFS(fsXbox);
+
   Result := pbData;
 end;
 
@@ -7790,7 +7791,6 @@ begin
 
   VPDesc.PrimitiveType := PrimitiveType;
   VPDesc.dwVertexCount := VertexCount;
-  // Dxbx : Why not this : VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount);
   VPDesc.dwOffset := StartVertex;
   VPDesc.pVertexStreamZeroData := nil;
   VPDesc.uiVertexStreamZeroStride := 0;
@@ -8420,7 +8420,7 @@ begin
          [pThis, Flags]);
 {$ENDIF}
 
-  Result := PD3DCOLOR(@(pThis.Data));
+  Result := PD3DCOLOR(pThis.Data);
 
   EmuSwapFS(fsXbox);
 end;
@@ -10129,7 +10129,7 @@ exports
 
   XTL_EmuIDirect3DResource8_AddRef name PatchPrefix + 'D3DResource_AddRef',
   XTL_EmuIDirect3DResource8_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',
-  XTL_EmuIDirect3DResource8_GetType name PatchPrefix + 'D3DResource_GetType',
+  //XTL_EmuIDirect3DResource8_GetType name PatchPrefix + 'D3DResource_GetType', // Dxbx note : This patch crashes XPRViewer !
   XTL_EmuIDirect3DResource8_IsBusy name PatchPrefix + 'D3DResource_IsBusy',
   XTL_EmuIDirect3DResource8_Register name PatchPrefix + 'D3DResource_Register',
   XTL_EmuIDirect3DResource8_Release name PatchPrefix + 'D3DResource_Release',

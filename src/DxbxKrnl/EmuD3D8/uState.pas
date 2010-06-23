@@ -191,7 +191,7 @@ begin
         if (pCur[X_D3DTSS_ADDRESSV+Adjust2] = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[X_D3DTSS_ADDRESSV+Adjust2]); // Dxbx fix
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[X_D3DTSS_ADDRESSV+Adjust2]);
       end;
 
       if (pCur[X_D3DTSS_ADDRESSW+Adjust2] <> X_D3DTSS_UNK) then
@@ -199,7 +199,7 @@ begin
         if (pCur[X_D3DTSS_ADDRESSW+Adjust2] = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[X_D3DTSS_ADDRESSW+Adjust2]); // Dxbx fix
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[X_D3DTSS_ADDRESSW+Adjust2]);
       end;
 
       if (pCur[X_D3DTSS_MAGFILTER+Adjust2] <> X_D3DTSS_UNK) then
@@ -207,7 +207,7 @@ begin
         if (pCur[X_D3DTSS_MAGFILTER+Adjust2] = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[X_D3DTSS_MAGFILTER+Adjust2]); // Dxbx fix
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[X_D3DTSS_MAGFILTER+Adjust2]);
       end;
 
       if (pCur[X_D3DTSS_MINFILTER+Adjust2] <> X_D3DTSS_UNK) then
@@ -240,8 +240,7 @@ begin
       begin
         // Dxbx fix : Use Adjust-ment consistently :
         if  (pCur[X_D3DTSS_COLOROP-Adjust1]  > 12)
-        and (not (pCur[X_D3DTSS_COLOROP-Adjust1] >= 17)
-        and (pCur[X_D3DTSS_COLOROP-Adjust1] <= 21))
+        and (not (pCur[X_D3DTSS_COLOROP-Adjust1] >= 17) and (pCur[X_D3DTSS_COLOROP-Adjust1] <= 21))
         and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_DOTPRODUCT3)
         and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDTEXTUREALPHA)
         and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDFACTORALPHA)

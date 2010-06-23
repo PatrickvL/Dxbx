@@ -439,7 +439,7 @@ const X_D3DFORMAT_CUBEMAP             = $00000004;      // Set if the texture if
 const X_D3DFORMAT_BORDERSOURCE_COLOR  = $00000008;
 const X_D3DFORMAT_DIMENSION_MASK      = $000000F0;      // # of dimensions
 const X_D3DFORMAT_DIMENSION_SHIFT     = 4;
-const X_D3DFORMAT_FORMAT_MASK         = $0000FF00;
+const X_D3DFORMAT_FORMAT_MASK         = $0000FF00;      // See X_D3DFMT_*
 const X_D3DFORMAT_FORMAT_SHIFT        = 8;
 const X_D3DFORMAT_MIPMAP_MASK         = $000F0000;
 const X_D3DFORMAT_MIPMAP_SHIFT        = 16;
@@ -762,10 +762,6 @@ const
   X_D3DFMT_VERTEXDATA = $64;
 
   X_D3DFMT_INDEX16 = DWord(D3DFMT_INDEX16); // Dxbx addition : Not an Xbox format, used internally
-
-var
-  // cached active texture
-  EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
 
 const
   X_D3DCLEAR_ZBUFFER = $00000001;

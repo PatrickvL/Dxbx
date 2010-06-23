@@ -124,7 +124,7 @@ var
   pTemp: Pointer;
 begin
   // for current usages, we're always on stage 0
-  pPixelContainer := PX_D3DPixelContainer(EmuD3DActiveTexture[0]);
+  pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[0]);
 
   if (pPixelContainer = NULL) or (0 = (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
     Exit;
