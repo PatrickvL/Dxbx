@@ -273,7 +273,7 @@ begin
 end;
 
 procedure VertexPatcher.CacheStream(pPatchDesc: PVertexPatchDesc;
-                                        uiStream: UINT);
+                                    uiStream: UINT);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
 //  uiStride: UINT; // DXBX, uiStride never used
@@ -884,7 +884,7 @@ begin
 end; // VertexPatcher.PatchStream
 
 function VertexPatcher.NormalizeTexCoords(pPatchDesc: PVertexPatchDesc; uiStream: UINT): _bool;
-// Branch:shogun  Revision:  Translator:PatrickvL  Done:100
+// Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
 var
   bHasLinearTex: _bool;
   bTexIsLinear: array [0..4-1] of _bool;
@@ -912,8 +912,8 @@ begin
 
   for i := 0 to 4-1 do
   begin
-    pPixelContainer := PX_D3DPixelContainer(EmuD3DActiveTexture[i]);
-    if (Assigned(pPixelContainer) and EmuXBFormatIsLinear((X_D3DFORMAT(pPixelContainer.Format) and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT)) then
+    pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[i]);
+    if (Assigned(pPixelContainer) and EmuXBFormatIsLinear(X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT))) then
     begin
       bHasLinearTex := true; bTexIsLinear[i] := true;
       pLinearPixelContainer[i] := pPixelContainer;
@@ -1669,7 +1669,7 @@ begin
   //
   for Stage := 0 to 4-1 do
   begin
-    pTexture := EmuD3DActiveTexture[Stage];
+    pTexture := g_EmuD3DActiveTexture[Stage];
 
     if (pTexture = NULL) then
       continue;
