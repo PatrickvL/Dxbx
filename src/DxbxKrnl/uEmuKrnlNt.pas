@@ -389,7 +389,7 @@ var
   szBuffer: P_char;
   wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtUnicodeString: UNICODE_STRING;
-  NtObjAttr: JwaWinType.POBJECT_ATTRIBUTES;
+  NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
   ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
@@ -423,7 +423,7 @@ begin
 
   // redirect to NtCreateEvent
   if Assigned(szBuffer) then
-    ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, NtObjAttr, EVENT_TYPE(EventType), InitialState)
+    ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, @NtObjAttr, EVENT_TYPE(EventType), InitialState)
   else
     ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, nil, EVENT_TYPE(EventType), InitialState);
 
@@ -536,7 +536,7 @@ begin
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$CxbxPath\EmuDisk\T\%s"', [szBuffer]);
+      DbgPrintf('  New:"$DxbxPath\EmuDisk\T\%s"', [szBuffer]);
 {$ENDIF}
     end
     else if ((szBuffer[0] = 'U') or (szBuffer[0] = 'u')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
@@ -548,7 +548,7 @@ begin
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$CxbxPath\EmuDisk\U\%s"', [szBuffer]);
+      DbgPrintf('  New:"$DxbxPath\EmuDisk\U\%s"', [szBuffer]);
 {$ENDIF}
     end
     else if ((szBuffer[0] = 'Z') or (szBuffer[0] = 'z')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
@@ -560,7 +560,7 @@ begin
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$CxbxPath\EmuDisk\Z\%s"', [szBuffer]);
+      DbgPrintf('  New:"$DxbxPath\EmuDisk\Z\%s"', [szBuffer]);
 {$ENDIF}
     end;
 
