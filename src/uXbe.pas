@@ -367,10 +367,15 @@ begin
       FuncStr := Strings[i];
 
       j := Pos(':$', FuncStr); // TODO : Use LastPos here
-      AddrStr := Copy(FuncStr, j + 2, MaxInt);
-      System.Delete(FuncStr, j, MaxInt);
+      if j > 0 then
+      begin
+        AddrStr := Copy(FuncStr, j + 2, MaxInt);
+        System.Delete(FuncStr, j, MaxInt);
 
-      Addr := Pointer(HexToIntDef(AddrStr, 0));
+        Addr := Pointer(HexToIntDef(AddrStr, 0));
+      end
+      else
+        Addr := nil;
 
       Strings[i] := FuncStr;
       Objects[i] := TObject(Addr);
