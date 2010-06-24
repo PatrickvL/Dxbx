@@ -51,7 +51,7 @@ function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Bool
 
 procedure DbgPrintf(aStr: string); overload;
 procedure DbgPrintf(aStr: string; Arg: Variant); overload;
-procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True); overload;
+procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = False); overload;
 
 procedure printf(aStr: string); overload;
 procedure printf(aStr: string; Args: array of const); overload;
@@ -400,7 +400,7 @@ begin
   end;
 end; // DxbxFormat
 
-procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = True);
+procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Boolean = False);
 begin
   WriteLog(DxbxFormat(aStr, Args, MayRenderArguments));
 end;

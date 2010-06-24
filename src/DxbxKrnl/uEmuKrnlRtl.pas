@@ -40,7 +40,8 @@ uses
   uEmuXapi,
   uEmuKrnl,
   uDxbxUtils,
-  uDxbxKrnl;
+  uDxbxKrnl,
+  uDxbxKrnlUtils;
 
 function xboxkrnl_RtlAnsiStringToUnicodeString(
   DestinationString: PUNICODE_STRING;
@@ -309,10 +310,12 @@ begin
   DbgPrintf('EmuKrnl : RtlAnsiStringToUnicodeString'+
       #13#10'('+
       #13#10'   DestinationString         : 0x%.08X'+
-      #13#10'   SourceString              : 0x%.08X'+
+      #13#10'   SourceString              : 0x%.08X ("%s")'+
       #13#10'   AllocateDestinationString : 0x%.08X'+
       #13#10');',
-      [DestinationString, SourceString, AllocateDestinationString]);
+      [DestinationString,
+       SourceString, PSTRING_String(SourceString),
+       AllocateDestinationString]);
 {$ENDIF}
 
   Result := JwaNative.RtlAnsiStringToUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
@@ -365,12 +368,15 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlAssert' +
       #13#10'(' +
-      #13#10'   FailedAssertion           : 0x%.08X' +
-      #13#10'   FileName                  : 0x%.08X' +
-      #13#10'   LineNumber                : 0x%.08X' +
-      #13#10'   Message                   : 0x%.08X' + // Dxbx note : DbgPrintf show strings automatically
+      #13#10'   FailedAssertion           : 0x%.08X ("%s")' +
+      #13#10'   FileName                  : 0x%.08X ("%s")' +
+      #13#10'   LineNumber                : 0x%.08X (%d)' +
+      #13#10'   Message                   : 0x%.08X ("%s")' +
       #13#10');',
-      [FailedAssertion, FileName, LineNumber, Pointer(Message_)]);
+      [Pointer(FailedAssertion), PAnsiChar(FailedAssertion),
+       Pointer(FileName), PAnsiChar(FileName),
+       LineNumber, LineNumber,
+       Pointer(Message_), PAnsiChar(Message_)]);
 {$ENDIF}
 
   JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message_);
@@ -569,11 +575,11 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlEqualString' +
       #13#10'(' +
-      #13#10'  String1            : 0x%.08X (%s)' +
-      #13#10'  String2            : 0x%.08X (%s)' +
+      #13#10'  String1            : 0x%.08X ("%s")' +
+      #13#10'  String2            : 0x%.08X ("%s")' +
       #13#10'  CaseInsensitive    : 0x%.08X' +
       #13#10');',
-      [String1, PSTRING_Buffer(String1), String2, PSTRING_Buffer(String2), CaseInsensitive]);
+      [String1, PSTRING_String(String1), String2, PSTRING_String(String2), CaseInsensitive]);
 {$ENDIF}
 
   Result := JwaNative.RtlEqualString(String1, String2, CaseInsensitive);
@@ -695,11 +701,11 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlInitAnsiString' +
       #13#10'(' +
-      #13#10'   DestinationString   : 0x%.08X' + // Dxbx : This fails :' (%s)' +
+      #13#10'   DestinationString   : 0x%.08X' +
       #13#10'   SourceString        : 0x%.08X ("%s")' +
       #13#10');',
-      [DestinationString, { Dxbx : This fails : PSTRING_Buffer(DestinationString), }
-       SourceString, PAnsiChar(SourceString)]);
+      [DestinationString,
+       SourceString, AnsiString(SourceString)]);
 {$ENDIF}
 
   JwaNative.RtlInitAnsiString(DestinationString, SourceString);
@@ -971,10 +977,12 @@ begin
   DbgPrintf('EmuKrnl : RtlUnicodeStringToAnsiString'+
       #13#10'('+
       #13#10'   DestinationString         : 0x%.08X'+
-      #13#10'   SourceString              : 0x%.08X'+
+      #13#10'   SourceString              : 0x%.08X ("%s")'+
       #13#10'   AllocateDestinationString : 0x%.08X'+
       #13#10');',
-      [DestinationString, SourceString, AllocateDestinationString]);
+      [DestinationString,
+       SourceString, PUNICODE_STRING_String(SourceString),
+       AllocateDestinationString]);
 {$ENDIF}
 
   Result := JwaNative.RtlUnicodeStringToAnsiString(DestinationString, SourceString, AllocateDestinationString);

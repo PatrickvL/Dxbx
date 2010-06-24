@@ -394,12 +394,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if  Assigned(ObjectAttributes)
-  and Assigned(ObjectAttributes.ObjectName) then
-    szBuffer := ObjectAttributes.ObjectName.Buffer
-  else
-    szBuffer := nil;
-
+  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateEvent' +
@@ -487,14 +482,14 @@ begin
      #13#10'   CreateDisposition   : 0x%.08X' +
      #13#10'   CreateOptions       : 0x%.08X' +
      #13#10');',
-     [FileHandle, DesiredAccess, ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName),
+     [FileHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
      IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 {$ENDIF}
 
   ReplaceChar := #0;
   ReplaceIndex := -1;
 
-  szBuffer := ObjectAttributes.ObjectName.Buffer;
+  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
   if (szBuffer <> NULL) then
   begin
@@ -515,7 +510,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
+      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
       DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -528,7 +523,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
+      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
       DbgPrintf('  New:"$XbePath\\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -540,7 +535,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
+      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\T\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -552,7 +547,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
+      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\U\%s"', [szBuffer]);
 {$ENDIF}
     end
@@ -564,7 +559,7 @@ begin
 
 {$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [PSTRING_Buffer(ObjectAttributes.ObjectName)]);
+      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
       DbgPrintf('  New:"$CxbxPath\EmuDisk\Z\%s"', [szBuffer]);
 {$ENDIF}
     end;
@@ -703,10 +698,7 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  if Assigned(ObjectAttributes) then
-    szBuffer := ObjectAttributes.ObjectName.Buffer
-  else
-    szBuffer := nil;
+  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateMutant' +
@@ -764,13 +756,15 @@ begin
   DbgPrintf('EmuKrnl : NtCreateSemaphore' +
      #13#10'(' +
      #13#10'   SemaphoreHandle     : 0x%.08X' +
-     #13#10'   ObjectAttributes    : 0x%.08X' +
+     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
      #13#10'   InitialCount        : 0x%.08X' +
      #13#10'   MaximumCount        : 0x%.08X' +
      #13#10');',
-     [SemaphoreHandle, ObjectAttributes,
+     [SemaphoreHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
      InitialCount, MaximumCount]);
 {$ENDIF}
+
+  // TODO -oDxbx : Fix NT Unicode <> Xbox ANSI difference on ObjectName (see NTCreateEvent above)!
 
   // redirect to Win2k/XP
   Result := JwaNative.NtCreateSemaphore
@@ -987,7 +981,7 @@ begin
     #13#10'   ShareAccess         : 0x%.08X' +
     #13#10'   CreateOptions       : 0x%.08X' +
     #13#10');',
-    [FileHandle, DesiredAccess, ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName),
+    [FileHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
      IoStatusBlock, ShareAccess, OpenOptions]);
   EmuSwapFS(fsXbox);
 {$ENDIF}
@@ -1095,12 +1089,12 @@ begin
       #13#10'   FileInformation      : 0x%.08X' +
       #13#10'   Length               : 0x%.08X' +
       #13#10'   FileInformationClass : 0x%.08X' +
-      #13#10'   FileMask             : 0x%.08X (%s)' +
+      #13#10'   FileMask             : 0x%.08X ("%s")' +
       #13#10'   RestartScan          : 0x%.08X' +
       #13#10');',
       [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
        FileInformation, Length, Ord(FileInformationClass), FileMask,
-       PSTRING_Buffer(FileMask), RestartScan]);
+       PSTRING_String(FileMask), RestartScan]);
 {$ENDIF}
 
   if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
@@ -1187,13 +1181,13 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryFullAttributesFile'+
      #13#10'('+
-     #13#10'   ObjectAttributes    : 0x%.08X (%s)'+
+     #13#10'   ObjectAttributes    : 0x%.08X ("%s")'+
      #13#10'   Attributes          : 0x%.08X'+
      #13#10');',
-     [ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName), Attributes]);
+     [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), Attributes]);
 {$ENDIF}
 
-  szBuffer := ObjectAttributes.ObjectName.Buffer;
+  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
   // initialize object attributes
   begin

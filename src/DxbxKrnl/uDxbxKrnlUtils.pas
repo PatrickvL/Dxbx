@@ -27,6 +27,8 @@ uses
   SysUtils,
   // Jedi Win32API
   JwaWinType,
+  // OpenXdk
+  XboxKrnl, // POBJECT_ATTRIBUTES
   // Dxbx
   uConsts,
   uTypes,
@@ -46,6 +48,10 @@ function GetDWordBits(const Bits: DWORD; const aIndex: Integer): Integer;
 procedure SetDWordBits(var Bits: DWORD; const aIndex: Integer; const aValue: Integer);
 function GetByteBits(const Bits: Byte; const aIndex: Integer): Byte;
 procedure SetByteBits(var Bits: Byte; const aIndex: Integer; const aValue: Byte);
+
+function PSTRING_String(const aValue: PANSI_STRING): PAnsiChar;
+function PUNICODE_STRING_String(const aValue: PUNICODE_STRING): PAnsiChar;
+function POBJECT_ATTRIBUTES_String(const aValue: XboxKrnl.POBJECT_ATTRIBUTES): PAnsiChar;
 
 var
   // ! thread local storage
@@ -174,6 +180,40 @@ begin
 
   Offset := aIndex shr 8;
   {var}Bits := (Bits and (not (Mask shl Offset))) or DWORD(aValue shl Offset);
+end;
+
+function PSTRING_String(const aValue: PANSI_STRING): PAnsiChar;
+begin
+  if Assigned(aValue) then
+    Result := PAnsiChar(aValue.Buffer)
+  else
+    Result := nil;
+end;
+
+const
+  IntermediateStringMax = 16;
+var
+  IntermediateStrings: array [0..IntermediateStringMax-1] of AnsiString;
+  IntermediateStringCounter: Integer = 0;
+function PUNICODE_STRING_String(const aValue: PUNICODE_STRING): PAnsiChar;
+begin
+  if Assigned(aValue) then
+  begin
+    // Dxbx note : Keep a few copys around, to prevent invalid stack access :
+    IntermediateStrings[IntermediateStringCounter] := AnsiString(UnicodeString(aValue.Buffer));
+    Result := PAnsiChar(IntermediateStrings[IntermediateStringCounter]); // This cast now points to a buffered string
+    IntermediateStringCounter := (IntermediateStringCounter + 1) mod IntermediateStringMax;
+  end
+  else
+    Result := nil;
+end;
+
+function POBJECT_ATTRIBUTES_String(const aValue: XboxKrnl.POBJECT_ATTRIBUTES): PAnsiChar;
+begin
+  if Assigned(aValue) then
+    Result := PSTRING_String(aValue.ObjectName) // Dxbx note : This is ANSI on Xbox!
+  else
+    Result := nil;
 end;
 
 end.

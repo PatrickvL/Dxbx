@@ -135,7 +135,6 @@ function GetErrorString(const aError: DWord): string;
 
 function PointerToString(const aPointer: Pointer): string;
 
-function PSTRING_Buffer(const aValue: PANSI_STRING): string;
 function QuadPart(const aValue: PLARGE_INTEGER): Int64;
 
 type
@@ -844,14 +843,6 @@ end;
 function PointerToString(const aPointer: Pointer): string;
 begin
   Result := IntToHex(Integer(aPointer), 8);
-end;
-
-function PSTRING_Buffer(const aValue: PANSI_STRING): string;
-begin
-  if Assigned(aValue) then
-    Result := string(AnsiString(aValue.Buffer))
-  else
-    Result := '';
 end;
 
 function QuadPart(const aValue: PLARGE_INTEGER): Int64;

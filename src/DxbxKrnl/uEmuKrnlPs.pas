@@ -225,8 +225,7 @@ callComplete:
         continue;
 
       DbgPrintf('EmKrnl : Calling pfnNotificationRoutine[%d] (0x%.08X)',
-        [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)],
-        {MayRenderArguments=}False);
+        [g_iThreadNotificationCount, Addr(pfnNotificationRoutine)]);
 
       EmuSwapFS(fsXbox);
 
