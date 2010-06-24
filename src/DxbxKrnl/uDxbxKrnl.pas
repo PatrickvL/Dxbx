@@ -462,7 +462,7 @@ begin
   // Print out ErrorMessage (if exists)
   if szErrorMessage <> '' then
   begin
-    szBuffer1 := {Format} 'DxbxKrnlCleanup : Received Fatal Message ->'#13#13 + szErrorMessage;
+    szBuffer1 := {Format} 'DxbxKrnlCleanup : Received Fatal Message ->'#13#10#13#10 + szErrorMessage;
 {$IFDEF DEBUG}
     DbgPrintf(szBuffer1);
 {$ENDIF}
