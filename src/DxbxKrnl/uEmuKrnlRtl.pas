@@ -118,9 +118,9 @@ function xboxkrnl_RtlDowncaseUnicodeString(
 procedure xboxkrnl_RtlEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-function xboxkrnl_RtlEnterCriticalSectionAndRegion(
+procedure xboxkrnl_RtlEnterCriticalSectionAndRegion(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_RtlEqualString(
   String1: PSTRING;
   String2: PSTRING;
@@ -190,9 +190,9 @@ function xboxkrnl_RtlIntegerToUnicodeString(
 procedure xboxkrnl_RtlLeaveCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ); stdcall;
-function xboxkrnl_RtlLeaveCriticalSectionAndRegion(
+procedure xboxkrnl_RtlLeaveCriticalSectionAndRegion(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 function xboxkrnl_RtlLowerChar(
   Character: _CHAR
   ): _CHAR; stdcall;
@@ -205,8 +205,18 @@ procedure xboxkrnl_RtlMoveMemory(
   Source: PVOID;
   Length: SIZE_T
   ); stdcall;
-function xboxkrnl_RtlMultiByteToUnicodeN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_RtlMultiByteToUnicodeSize(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlMultiByteToUnicodeN(
+  dst: LPWSTR;
+  dstlen: DWORD;
+  reslen: LPDWORD;
+  src: LPCSTR;
+  srclen: DWORD
+  ): NTSTATUS; stdcall;
+function xboxkrnl_RtlMultiByteToUnicodeSize(
+  size: PDWORD;
+  str: LPCSTR;
+  len: UINT
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlNtStatusToDosError(
   Status: NTSTATUS
   ): ULONG; stdcall;
@@ -240,7 +250,13 @@ function xboxkrnl_RtlUnicodeStringToInteger(
   Base: ULONG;
   Value: PULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_RtlUnicodeToMultiByteN(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlUnicodeToMultiByteN(
+  dst: LPSTR;
+  dstlen: DWORD;
+  reslen: LPDWORD;
+  src: LPCWSTR;
+  srclen: DWORD
+  ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUnicodeToMultiByteSize(
   BytesInMultiByteString: PULONG;
   UnicodeString: PWSTR;
@@ -542,9 +558,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlEnterCriticalSectionAndRegion(
+procedure xboxkrnl_RtlEnterCriticalSectionAndRegion(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): NTSTATUS; stdcall;
+  ); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:50
 begin
   EmuSwapFS(fsWindows);
@@ -556,8 +572,7 @@ begin
            [CriticalSection]);
 {$ENDIF}
 
-  JwaNative.RtlEnterCriticalSection(CriticalSection);
-  Result := 0; // TODO -oDxbx : What should we return here?
+  JwaNative.RtlEnterCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
 
   EmuSwapFS(fsXbox);
 end;
@@ -782,13 +797,15 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlLeaveCriticalSectionAndRegion(
+procedure xboxkrnl_RtlLeaveCriticalSectionAndRegion(
   CriticalSection: PRTL_CRITICAL_SECTION
-  ): NTSTATUS; stdcall;
-// Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:0
+  ); stdcall;
+// Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlLeaveCriticalSectionAndRegion');
+
+  JwaNative.RtlLeaveCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -829,16 +846,26 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlMultiByteToUnicodeN(): NTSTATUS; stdcall;
-// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_RtlMultiByteToUnicodeN(
+  dst: LPWSTR;
+  dstlen: DWORD;
+  reslen: LPDWORD;
+  src: LPCSTR;
+  srclen: DWORD
+  ): NTSTATUS; stdcall;
+// Source:wine  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlMultiByteToUnicodeN');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlMultiByteToUnicodeSize(): NTSTATUS; stdcall;
-// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_RtlMultiByteToUnicodeSize(
+  size: PDWORD;
+  str: LPCSTR;
+  len: UINT
+  ): NTSTATUS; stdcall;
+// Source:wine  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlMultiByteToUnicodeSize');
@@ -1002,8 +1029,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlUnicodeToMultiByteN(): NTSTATUS; stdcall;
-// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_RtlUnicodeToMultiByteN(
+  dst: LPSTR;
+  dstlen: DWORD;
+  reslen: LPDWORD;
+  src: LPCWSTR;
+  srclen: DWORD
+  ): NTSTATUS; stdcall;
+// Source:wine  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('RtlUnicodeToMultiByteN');

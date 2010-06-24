@@ -1220,6 +1220,9 @@ var
 begin
   Result := False;
   dwLength := m_Header.dwSizeofLogoBitmap;
+  if (dwLength = 0) or (m_Header.dwLogoBitmapAddr = 0) then
+    Exit;
+
   RLE := GetAddr(m_Header.dwLogoBitmapAddr);
   if RLE = 0 then
     Exit;

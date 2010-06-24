@@ -219,7 +219,10 @@ function xboxkrnl_NtSetInformationFile(
   FileInformationClass: ULONG // Dxbx Note : This could be declared as FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSetSystemTime(
+  {const}NewTime: PLARGE_INTEGER;
+  OldTime: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtSuspendThread(
@@ -231,7 +234,11 @@ procedure xboxkrnl_NtUserIoApcDispatcher(
   IoStatusBlock: PIO_STATUS_BLOCK;
   Reserved: ULONG
   ); stdcall;
-function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtWaitForSingleObject(
+  Handle: HANDLE;
+  Alertable: _BOOLEAN;
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtWaitForSingleObjectEx(
   Handle_: HANDLE;
   WaitMode: _CHAR;
@@ -1635,8 +1642,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtSetSystemTime(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_NtSetSystemTime(
+  {const}NewTime: PLARGE_INTEGER;
+  OldTime: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
+// Branch:wine  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtSetSystemTime');
@@ -1777,8 +1787,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtWaitForSingleObject(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_NtWaitForSingleObject(
+  Handle: HANDLE;
+  Alertable: _BOOLEAN;
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
+// Branch:msdn  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('NtWaitForSingleObject');

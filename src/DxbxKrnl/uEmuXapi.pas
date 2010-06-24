@@ -1431,13 +1431,19 @@ begin
   // used in EmuXGetSectionHandleA.
 
   Result := NULL;
+  
+  // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
+  
   SectionHeader := PXBE_SECTIONHEADER(hSection);
   if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
   begin
     Inc(SectionHeader.dwSectionRefCount);
-    if SectionHeader.dwSectionRefCount > 0 then
+    if SectionHeader.dwSectionRefCount = 1 then
+    begin
       // TODO : Actually load the section here, including the symbol-detection + patching!
-      Result := LPVOID(SectionHeader.dwVirtualAddr);
+    end;
+
+    Result := LPVOID(SectionHeader.dwVirtualAddr);
   end;
 
   EmuSwapFS(fsXbox);
@@ -1464,12 +1470,16 @@ begin
       [hSection]);
 {$ENDIF}
 
+  // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
+  
   SectionHeader := PXBE_SECTIONHEADER(hSection);
-  if Assigned(SectionHeader) then // TODO -oDxbx : Check section handle more thoroughly than this
+  if Assigned(SectionHeader) and (SectionHeader.dwSectionRefCount > 0) then
   begin
     Dec(SectionHeader.dwSectionRefCount);
     if SectionHeader.dwSectionRefCount = 0 then
-      ; // TODO : Actually unload the section here
+    begin
+      // TODO : Actually unload the section here
+    end;
 
     Result := BOOL_TRUE;
   end

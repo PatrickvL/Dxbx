@@ -41,19 +41,29 @@ uses
   uEmuKrnl,
   uDxbxKrnl,
   uDxbxKrnlUtils;
-  
+
 var {040}xboxkrnl_HalDiskCachePartitionCount: DWORD;
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-var {041}xboxkrnl_HalDiskModelNumber: DWORD;
+var {041}xboxkrnl_HalDiskModelNumber: ANSI_STRING; // TODO : Fill this with something sensible
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-var {042}xboxkrnl_HalDiskSerialNumber: DWORD;
+var {042}xboxkrnl_HalDiskSerialNumber: ANSI_STRING; // TODO : Fill this with something sensible
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
 // TODO -oCXBX: Verify this!
 var {356}xboxkrnl_HalBootSMCVideoMode: DWORD = 1;
 // Source:Cxbx  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+
+var HalpSMCScratchRegister: DWORD;
+// Source:Dxbx  Translator:PatrickvL  Done:100
+
+
+const
+  SMC_ADDRESS = 0; // TODO : What value should this have?
+
+  SMC_COMMAND_SCRATCH = 0; // TODO : What value should this have?
+
 
 procedure {009} xboxkrnl_HalReadSMCTrayState(
   State: PDWORD;
@@ -80,12 +90,10 @@ function {044} xboxkrnl_HalGetInterruptVector(
   Affinity: PKAFFINITY
   ): ULONG; stdcall;
 procedure {045} xboxkrnl_HalReadSMBusValue(
-  BusNumber: ULONG;
-  SlotNumber: ULONG;
-  RegisterNumber: ULONG;
-  Buffer: PVOID;
-  Length: ULONG;
-  WritePCISpace: LONGBOOL
+  Address: UCHAR;
+  Command: UCHAR;
+  WordFlag: _BOOLEAN;
+  Value: PULONG
   ); stdcall;
 procedure {046} xboxkrnl_HalReadWritePCISpace(
   BusNumber: ULONG;
@@ -111,11 +119,13 @@ function {050} xboxkrnl_HalWriteSMBusValue(
   WordFlag: _BOOLEAN;
   Value: ULONG
   ): ULONG; stdcall;
-function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function {360} xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {358} xboxkrnl_HalIsResetOrShutdownPending(): _BOOLEAN; stdcall;
+function {360} xboxkrnl_HalInitiateShutdown(): NTSTATUS; stdcall;
 procedure {365} xboxkrnl_HalEnableSecureTrayEject(
   ); stdcall;
-function {366} xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {366} xboxkrnl_HalWriteSMCScratchRegister(
+  ScratchRegister: DWORD
+  ): NTSTATUS; stdcall;
 
 implementation
 
@@ -199,18 +209,18 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+
 procedure {045} xboxkrnl_HalReadSMBusValue(
-  BusNumber: ULONG;
-  SlotNumber: ULONG;
-  RegisterNumber: ULONG;
-  Buffer: PVOID;
-  Length: ULONG;
-  WritePCISpace: LONGBOOL
+  Address: UCHAR;
+  Command: UCHAR;
+  WordFlag: _BOOLEAN;
+  Value: PULONG
   ); stdcall;
-// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:1
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalReadSMBusValue');
+  Value^ := 0; // TODO : Zero is probably the safest value to return
   EmuSwapFS(fsXbox);
 end;
 
@@ -282,11 +292,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function {358} xboxkrnl_HalIsResetOrShutdownPending(): NTSTATUS; stdcall;
+function {358} xboxkrnl_HalIsResetOrShutdownPending(): _BOOLEAN; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalIsResetOrShutdownPending');
+  Unimplemented('HalIsResetOrShutdownPending');
+  Result := False;
   EmuSwapFS(fsXbox);
 end;
 
@@ -312,12 +323,26 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function {366} xboxkrnl_HalWriteSMCScratchRegister(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function {366} xboxkrnl_HalWriteSMCScratchRegister(
+  ScratchRegister: DWORD
+  ): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('HalWriteSMCScratchRegister');
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : HalWriteSMCScratchRegister' +
+      #13#10'(' +
+      #13#10'   ScratchRegister     : 0x%.08X' +
+      #13#10');',
+      [ScratchRegister]);
+{$ENDIF}
+
+  HalpSMCScratchRegister := ScratchRegister;
+
   EmuSwapFS(fsXbox);
+
+  // TODO : Is this the way we need to set the value?
+  Result := xboxkrnl_HalWriteSMBusValue(SMC_ADDRESS, SMC_COMMAND_SCRATCH, {WordFlag=}False, ScratchRegister);
 end;
 
 end.

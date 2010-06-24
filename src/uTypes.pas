@@ -164,7 +164,7 @@ type
   _bool = Boolean; // Use this to translate Cxbx's "bool" (because Delphi is not case sensitive)
   P_bool = ^_bool;
 
-  // TODO : How should we translate Cxbx's "boolean" to Delphi? Boolean?
+  // TODO : How should we translate Cxbx's "boolean" (lowercase) to Delphi? Boolean?
 
   // LONGBOOL = ?;
   _BOOLEAN = ByteBool; // Use this to translate Cxbx's "BOOLEAN" (because Delphi is not case sensitive)

@@ -34,6 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  uTypes,
   uXbe,
   uEmuFS,
   uEmuFile,
@@ -87,7 +88,10 @@ function {328} xboxkrnl_XeUnloadSection(
   ): NTSTATUS; stdcall;
 // Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:100
 begin
-  Result := XTL_EmuXFreeSectionByHandle(XTL_SECTIONHANDLE(Section));
+  if XTL_EmuXFreeSectionByHandle(XTL_SECTIONHANDLE(Section)) = BOOL_TRUE then
+    Result := STATUS_SUCCESS
+  else
+    Result := STATUS_INVALID_PARAMETER;
 end;
 
 end.
