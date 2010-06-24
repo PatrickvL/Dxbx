@@ -63,7 +63,7 @@ procedure DxbxMain(const aData: MathPtr; const aSize: DWord); stdcall;
 
 exports
   DxbxMain;
-  
+
 var
   pwCommandLine: PWideChar;
   CommandLine: WideString;
@@ -84,6 +84,8 @@ var
   NewOptionalHeader: PImageOptionalHeader;
   NewTLSDirectory: PImageTlsDirectory;
   TLSIndex: DWord;
+
+  Xbe_lfanew: LongInt;
 
 procedure PrepareXBoxMemoryMap;
 var
@@ -156,11 +158,8 @@ end;
 
 procedure ReinitXbeImageHeader;
 begin
-  // TODO -oDxbx
-(*
-  ExeDosHeader.e_magic := $....; // 'XB'; (...'EH') Overwrites XbeHeader.dwMagic
-  ExeDosHeader._lfanew := NewDosHeader._lfanew; // Overwrites XbeHeader.pbDigitalSignature
-*)
+  ExeDosHeader.e_magic := $5842; // 'XB'; (...'EH') Overwrites XbeHeader.dwMagic
+  ExeDosHeader._lfanew := Xbe_lfanew;
 end;
 
 // Load XBE sections in Virtual Memory, and call DxbxKrnlInit (TODO : from a new thread?)
@@ -206,6 +205,9 @@ begin
     {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use aXbe.dwSizeofHeader
     {VirtualAddr=}XBE_IMAGE_BASE,
     {NewProtect}PAGE_READWRITE);
+
+  // Remember the ExeDosHeader._lfanew value, as we're about to overwrite it :
+  Xbe_lfanew := ExeDosHeader._lfanew;
 
   // Restore just enough of the EXE header to make Windows API's like CreateThread work again :
   ReinitExeImageHeader;

@@ -37,14 +37,16 @@ uses
   uEmu,
   uEmuFS,
   // Dxbx
-  uXboxLibraryUtils,
-  DxLibraryAPIScanning;
+  uXboxLibraryUtils;
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
 procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 
 implementation
+
+uses
+  DxLibraryAPIScanning;
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
  begin
