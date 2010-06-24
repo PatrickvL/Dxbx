@@ -3336,7 +3336,7 @@ begin
     // HACK: Skip this on unsupported flags
     if(pThis.EmuFlags and DSB_FLAG_RECIEVEDATA) > 0 then
     begin
-      EmuWarning('Not adding reference to a potentially pad pointer!');
+      EmuWarning('Not adding reference to a potentially bad pointer!');
     end
     else
     begin

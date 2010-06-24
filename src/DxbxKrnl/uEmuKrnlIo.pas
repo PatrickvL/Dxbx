@@ -463,7 +463,7 @@ begin
      #13#10'(' +
      #13#10'   FileHandle          : 0x%.08X' +
      #13#10'   DesiredAccess       : 0x%.08X' +
-     #13#10'   ObjectAttributes    : 0x%.08X (%s)' +
+     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
      #13#10'   IoStatusBlock       : 0x%.08X' +
      #13#10'   AllocationSize      : 0x%.08X' +
      #13#10'   FileAttributes      : 0x%.08X' +
@@ -472,7 +472,7 @@ begin
      #13#10'   CreateOptions       : 0x%.08X' +
      #13#10'   Options             : 0x%.08X' +
      #13#10');',
-     [FileHandle, DesiredAccess, ObjectAttributes, PSTRING_Buffer(ObjectAttributes.ObjectName),
+     [FileHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
       IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options]);
 {$ENDIF}
 
@@ -503,11 +503,11 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : IoCreateSymbolicLink' +
      #13#10'(' +
-     #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
-     #13#10'   DeviceName          : 0x%.08X (%s)' +
+     #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' +
+     #13#10'   DeviceName          : 0x%.08X ("%s")' +
      #13#10');',
-     [SymbolicLinkName, PSTRING_Buffer(SymbolicLinkName),
-     DeviceName, PSTRING_Buffer(DeviceName)]);
+     [SymbolicLinkName, PSTRING_String(SymbolicLinkName),
+     DeviceName, PSTRING_String(DeviceName)]);
 {$ENDIF}
 
   // TODO -oCXBX: Actually um...implement this function
@@ -540,9 +540,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : IoDeleteSymbolicLink' +
       #13#10'(' +
-      #13#10'   SymbolicLinkName    : 0x%.08X (%s)' +
+      #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' +
       #13#10');',
-      [SymbolicLinkName, PSTRING_Buffer(SymbolicLinkName)]);
+      [SymbolicLinkName, PSTRING_String(SymbolicLinkName)]);
 {$ENDIF}
 
   // TODO -oCXBX: Actually um...implement this function
@@ -711,9 +711,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : IoDismountVolumeByName' +
       #13#10'(' +
-      #13#10'   VolumeName        : 0x%.08X (%s)' +
+      #13#10'   VolumeName        : 0x%.08X ("%s")' +
       #13#10');',
-      [VolumeName, PSTRING_Buffer(VolumeName)]);
+      [VolumeName, PSTRING_String(VolumeName)]);
 {$ENDIF}
 
   // TODO -oCXBX: Anything?

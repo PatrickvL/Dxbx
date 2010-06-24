@@ -1047,8 +1047,7 @@ begin
 
 {$IFDEF DXBX_DEBUG}
       DbgPrintf('DxbxHLE : Detecting functions in section $%0.4x (%s) from $%.8x to $%.8x', [
-        i, string(PAnsiChar(Section.dwSectionNameAddr)), p, ScanEnd],
-        {MayRenderArguments=}False);
+        i, string(PAnsiChar(Section.dwSectionNameAddr)), p, ScanEnd]);
 {$ENDIF}
 
       while p < ScanEnd do
@@ -1439,8 +1438,7 @@ procedure TSymbolManager.DetermineFinalLocations;
         [CurrentSymbol.Address,
          UIntPtr(CurrentSymbol.Address) + UInt(CurrentSymbol.Length) - 1,
          Name,
-         CurrentSymbol.Name],
-        {MayRenderArguments=}False);
+         CurrentSymbol.Name]);
     end; // for Symbols
   end; // _PrintLocationList
 
@@ -1499,8 +1497,7 @@ begin
       end;
 
       DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState',
-        [XTL_EmuD3DDeferredTextureState],
-        {MayRenderArguments=}False);
+        [XTL_EmuD3DDeferredTextureState]);
     end
     else
       EmuWarning('EmuD3DDeferredTextureState was not found!');
@@ -1551,12 +1548,9 @@ begin
 {$IFDEF DXBX_DEBUG}
     if Assigned(XTL_EmuXapiProcessHeap) then
       DbgPrintf('HLE: $%.08X . XapiProcessHeap',
-        [XTL_EmuXapiProcessHeap],
-        {MayRenderArguments=}False)
+        [XTL_EmuXapiProcessHeap])
     else
-      DbgPrintf('HLE : Can''t find XapiProcessHeap!',
-        [],
-        {MayRenderArguments=}False);
+      DbgPrintf('HLE : Can''t find XapiProcessHeap!');
 {$ENDIF}
   end;
 end; // DetermineSpecialSymbols

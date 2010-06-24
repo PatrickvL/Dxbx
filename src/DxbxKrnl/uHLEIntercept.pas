@@ -142,7 +142,7 @@ begin
 {$IFDEF DXBX_DEBUG}
       DbgPrintf('HLE: 0x%.08X -> %s (patching %s)', [
         OrgCode, AvailablePatches[XboxLibraryPatch - 1],
-        DetectedSymbol.Name], {MayRenderArguments=}False);
+        DetectedSymbol.Name]);
       UsedPatches[XboxLibraryPatch] := True;
 {$ENDIF}
 

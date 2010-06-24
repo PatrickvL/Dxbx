@@ -171,8 +171,7 @@ begin
   try
     try
       uLog.DbgPrintf('DxbxErrorHandler(%d,$%.8x) %s',
-        [ErrorCode, ErrorAddr, JclLastExceptStackListToString],
-        {MayRenderArguments=}False);
+        [ErrorCode, ErrorAddr, JclLastExceptStackListToString]);
     except
       // ignore
     end;
