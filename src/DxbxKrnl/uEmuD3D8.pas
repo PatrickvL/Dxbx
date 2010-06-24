@@ -149,7 +149,7 @@ var
   g_iWireframe: int = 0;
 
   // build version
-  // g_BuildVersion: uint32;
+  // g_BuildVersion: uint32; // Dxbx note : Already declared in uState.pas
 
   // resource caching for _Register
   g_EmuD3DResourceCache: array [0..RESOURCE_CACHE_SIZE - 1] of X_D3DResource; // Cxbx calls this 'pCache'
@@ -168,7 +168,7 @@ var
 
   // current swap information
   g_SwapData: D3DSWAPDATA; // = {0};
-  g_SwapLast: DWORD = 0;
+//  g_SwapLast: DWORD = 0; // Dxbx note : Unused
 
   // cached Direct3D state variable(s)
   g_pCachedRenderTarget: PX_D3DSurface = NULL;
@@ -260,7 +260,7 @@ begin
   g_VBLastSwap := 0;
 
   ZeroMemory(@g_SwapData, SizeOf(g_SwapData));
-  g_SwapLast := 0;
+//  g_SwapLast := 0;
 
   g_pCachedRenderTarget := NULL;
   g_pCachedZStencilSurface := NULL;

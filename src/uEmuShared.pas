@@ -84,9 +84,9 @@ procedure SetXbePath(const Path: PAnsiChar); stdcall;
 var g_EmuShared: PEmuShared = NULL;
 var g_EmuSharedRefCount: int = 0; // extern; ??
 
-var hMapObject: Handle = HNULL;
-
 implementation
+
+var hMapObject: Handle = HNULL; // Dxbx note : This is not a global, just unit-scope
 
 {$IFNDEF DXBX_DLL}
 procedure DxbxKrnlCleanup(const aMessage: string);

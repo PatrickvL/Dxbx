@@ -30,8 +30,8 @@ uses
   
 // exported globals
 
-const g_bVBSkipStream: _bool = false;
-//const g_bPBSkipPusher: _bool = false;
+var g_bVBSkipStream: _bool = false;
+//const g_bPBSkipPusher: _bool = false; // Dxbx note : Already declared in uPushBuffer.pas
 
 type
   PRTNode = ^RTNode;

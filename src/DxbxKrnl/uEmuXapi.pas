@@ -206,7 +206,7 @@ var g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
 // Xbe section list
 var g_SectionList: PXBE_SECTIONLIST;
 // Number of sections
-var g_NumSections: int;
+//var g_NumSections: int; // Dxbx note : Unused
 
 var g_bXLaunchNewImageCalled: _bool = false;
 var g_bXInputOpenCalled: _bool = false;

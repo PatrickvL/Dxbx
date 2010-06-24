@@ -83,7 +83,7 @@ begin
       [Ord(Format)]);
 {$ENDIF}
 
-  Result := False; // EmuXBFormatIsSwizzled(Format, @Dummy); // Crashes X-Marbles & XPong
+  Result := False; // EmuXBFormatIsSwizzled(Format, @Dummy); // When enabled, X-Marbles & XPong show nothing
 
   EmuSwapFS(fsXbox);
 end;

@@ -66,10 +66,6 @@ var XTL_g_bBrkPush: _bool = false;
 
 var g_bPBSkipPusher: _bool = false;
 
-var
-  pIBMem: array [0..3] of Word = ($FFFF, $FFFF, $FFFF, $FFFF);
-
-
 {$IFDEF _DEBUG_TRACK_PB}
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
