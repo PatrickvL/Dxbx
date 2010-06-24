@@ -40,6 +40,7 @@ uses
   uStoredTrieTypes,
   uXboxLibraryUtils,
   uEmu, // EmuWarning
+  uEmuExe, // ReinitXbeImageHeader, ReinitExeImageHeader
   uState, // XTL_EmuD3DDeferredRenderState and XTL_EmuD3DDeferredTextureState
   uEmuXapi, // XTL_EmuXapiProcessHeap
   uEmuD3D8Types;// X_D3DRS_UNK
@@ -1611,12 +1612,14 @@ end; // DxbxScanForLibraryAPIs
 class function TSymbolManager.CacheFileName(const pXbeHeader: PXBE_HEADER): string;
 begin
   CRC32Init();
+  ReinitXbeImageHeader;
   Result := SymbolCacheFolder
           // TitleID
           + IntToHex(PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr).dwTitleId, 8)
           // + CRC32 over XbeHeader :
           + '_' + IntToHex(CRC32(PByte(pXbeHeader), {Len=}pXbeHeader.dwSizeofHeaders), 8)
           + SymbolCacheFileExt;
+  ReinitExeImageHeader;
 end;
 
 function TSymbolManager.LoadSymbolsFromCache(const aCacheFile: string): Boolean;
