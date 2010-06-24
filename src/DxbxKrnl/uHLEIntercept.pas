@@ -47,12 +47,7 @@ procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
 implementation
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
-var
-//  pCertificate: PXBE_CERTIFICATE;
-  CacheFileNameStr: string;
-begin
-//  pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
-
+ begin
   // initialize openxdk emulation (TODO)
   if pLibraryVersion = nil then
   begin
@@ -67,23 +62,7 @@ begin
   DbgPrintf('DxbxHLE: Detected Microsoft XDK application...');
 {$ENDIF}
 
-  SymbolManager.Clear;
-
-  // Note : Somehow, the output of CacheFileName() changes because of the
-  // following code, that's why we put the initial filename in a variable :
-  CacheFileNameStr := SymbolManager.CacheFileName(pXbeHeader);
-
-  // Try to load the symbols from the cache :
-  if SymbolManager.LoadSymbolsFromCache(CacheFileNameStr) then
-    // If that succeeded, we don't have to scan and save anymore :
-    CacheFileNameStr := ''
-  else
-    // No cache found, start out symbol-scanning engine :
-    SymbolManager.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
-
-  // After detection of all symbols, see if we need to save that to cache :
-  if CacheFileNameStr <> '' then
-    SymbolManager.SaveSymbolsToCache(CacheFileNameStr);
+  SymbolManager.DxbxScanForLibraryAPIs(pLibraryVersion, pXbeHeader);
 
   // Now that the symbols are known, patch them up where needed :
   EmuInstallWrappers(pXbeHeader);

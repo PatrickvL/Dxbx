@@ -1558,7 +1558,10 @@ end; // DetermineSpecialSymbols
 procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
 var
   ResourceStream: TResourceStream;
+  CacheFileNameStr: string;
 begin
+  Clear;
+
   // Get StoredPatternTrie from resource :
   ResourceStream := TResourceStream.Create(LibModuleList.ResInstance, 'StoredPatternTrie', RT_RCDATA);
   try
@@ -1568,10 +1571,21 @@ begin
 
       DetectVersionedXboxLibraries(pLibraryVersion, pXbeHeader);
 
-      // Scan Patterns using this trie :
-      ScanMemoryRangeForLibraryPatterns(pXbeHeader);
+      // Note : Somehow, the output of CacheFileName() changes because of the
+      // following code, that's why we put the initial filename in a variable :
+      CacheFileNameStr := CacheFileName(pXbeHeader);
 
-      DetermineFinalLocations();
+      // Try to load the symbols from the cache :
+      if LoadSymbolsFromCache(CacheFileNameStr) then
+        // If that succeeded, we don't have to scan and save anymore :
+        CacheFileNameStr := ''
+      else
+      begin
+        // Scan Patterns using this trie :
+        ScanMemoryRangeForLibraryPatterns(pXbeHeader);
+
+        DetermineFinalLocations();
+      end;
 
       DetermineSpecialSymbols();
 
@@ -1587,6 +1601,11 @@ begin
 {$IFDEF DXBX_DEBUG}
   DbgPrintf('DxbxHLE : Detected %d symbols, chosen from %d potential locations.', [Count, MyPotentialFunctionLocations_Count]);
 {$ENDIF}
+
+  // After detection of all symbols, see if we need to save that to cache :
+  if CacheFileNameStr <> '' then
+    SaveSymbolsToCache(CacheFileNameStr);
+
 end; // DxbxScanForLibraryAPIs
 
 class function TSymbolManager.CacheFileName(const pXbeHeader: PXBE_HEADER): string;
@@ -1617,8 +1636,8 @@ begin
     uXbe.LoadSymbolsFromCache(Symbols, aCacheFile);
 
     // Add each entry to the list :
-    MyFinalLocations.Count := Count;
-    for i := 0 to Count - 1 do
+    MyFinalLocations.Count := Symbols.Count;
+    for i := 0 to Symbols.Count - 1 do
     begin
       FuncStr := Symbols[i];
       Addr := Pointer(Symbols.Objects[i]);
@@ -1634,10 +1653,9 @@ begin
     FreeAndNil(Symbols);
   end;
 
-  DetermineSpecialSymbols();
-
 {$IFDEF DXBX_DEBUG}
-  DbgPrintf('DxbxHLE : Loaded symbols : %d.', [MyPotentialFunctionLocations_Count]);
+  if Result then
+    DbgPrintf('DxbxHLE : Loaded symbols : %d.', [MyPotentialFunctionLocations_Count]);
 {$ENDIF}
 end; // LoadSymbolsFromCache
 
