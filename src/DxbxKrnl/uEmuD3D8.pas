@@ -3154,9 +3154,15 @@ begin
      X_D3DRTYPE_VOLUMETEXTURE: // 4
         XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
      X_D3DRTYPE_CUBETEXTURE: // 5
-        DxbxKrnlCleanup('Cube textures temporarily not supported!');
+     begin
+       EmuSwapFS(fsWindows);
+       DxbxKrnlCleanup('Cube textures temporarily not supported');  // TODO : implement this
+       EmuSwapFS(fsXbox);
+     end;
   else
+    EmuSwapFS(fsWindows);
     DxbxKrnlCleanup('D3DResource := %d is not supported!', [Ord(D3DResource)]);
+    EmuSwapFS(fsXbox);
   end;
   
   Result := pTexture;
