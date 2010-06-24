@@ -43,7 +43,7 @@ uses
 
 function {035} xboxkrnl_FscGetCacheSize(
   ): SIZE_T; stdcall;
-function {036} xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure {036} xboxkrnl_FscInvalidateIdleBlocks(); stdcall;
 function {037} xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
   ): LONG; stdcall;
@@ -59,11 +59,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function {036} xboxkrnl_FscInvalidateIdleBlocks(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure {036} xboxkrnl_FscInvalidateIdleBlocks(); stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('FscInvalidateIdleBlocks');
+  Unimplemented('FscInvalidateIdleBlocks');
   EmuSwapFS(fsXbox);
 end;
 
