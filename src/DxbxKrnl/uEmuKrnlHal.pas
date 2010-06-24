@@ -219,8 +219,21 @@ procedure {045} xboxkrnl_HalReadSMBusValue(
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:1
 begin
   EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : HalReadSMBusValue' +
+      #13#10'(' +
+      #13#10'   Address             : 0x%.08X' +
+      #13#10'   Command             : 0x%.08X' +
+      #13#10'   WordFlag            : 0x%.08X' +
+      #13#10'   Value               : 0x%.08X' +
+      #13#10');',
+      [Address, Command, WordFlag, Value]);
+{$ENDIF}
+
   Unimplemented('HalReadSMBusValue');
   Value^ := 0; // TODO : Zero is probably the safest value to return
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -288,7 +301,20 @@ function {050} xboxkrnl_HalWriteSMBusValue(
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : HalWriteSMBusValue' +
+      #13#10'(' +
+      #13#10'   Address             : 0x%.08X' +
+      #13#10'   Command             : 0x%.08X' +
+      #13#10'   WordFlag            : 0x%.08X' +
+      #13#10'   Value               : 0x%.08X' +
+      #13#10');',
+      [Address, Command, WordFlag, Value]);
+{$ENDIF}
+
   Result := Unimplemented('HalWriteSMBusValue');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -329,6 +355,7 @@ function {366} xboxkrnl_HalWriteSMCScratchRegister(
 // Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
   EmuSwapFS(fsWindows);
+
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : HalWriteSMCScratchRegister' +
       #13#10'(' +

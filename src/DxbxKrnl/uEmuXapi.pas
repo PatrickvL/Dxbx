@@ -31,6 +31,7 @@ uses
   JwaWinType,
   JwaWinBase,
   JwaNative,
+  JwaNTStatus,
   // Dxbx
   uDxbxUtils,
   uLog, // DbgPrintf
@@ -249,7 +250,7 @@ procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches()');
+  DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches() // Perhaps XapiInitProcess isn''t found?');
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -1174,6 +1175,16 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+procedure XTL_EmuXapiInitAutoPowerDown(); stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+{$IFDEF DEBUG}
+  EmuSwapFS(fsWindows);
+  DbgPrintf('EmuXapi : EmuXapiInitAutoPowerDown() // Perhaps XapiInitProcess isn''t found?');
+  EmuSwapFS(fsXbox);
+{$ENDIF}
+end;
+
 procedure XTL_EmuXapiInitProcess(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
@@ -1205,7 +1216,7 @@ end;
 
 procedure XTL_EmuXapiThreadStartup
 (
-    StartRoutine: StartRoutineFunc; 
+    StartRoutine: StartRoutineFunc;
     StartContext: PVOID
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1228,13 +1239,35 @@ begin
   // TODO -oCXBX: Call thread notify routines ?
 end;
 
+function XTL_EmuXapiValidateDiskPartitionEx(
+  PartitionName: PANSI_STRING;
+  BytesPerCluster: DWORD
+  ): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:Patrick  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DXBX_DEBUG}
+  DbgPrintf('EmuXapi : EmuXapiValidateDiskPartitionEx' +
+      #13#10'(' +
+      #13#10'   PartitionName       : 0x%.08X ("%s")' +
+      #13#10'   BytesPerCluster     : 0x%.08X' +
+      #13#10')',
+      [PartitionName, PSTRING_String(PartitionName), BytesPerCluster]);
+{$ENDIF}
+
+  EmuSwapFS(fsXbox);
+
+  Result := STATUS_SUCCESS;
+end;
+
 (* Cxbx : Too High Level!
 XTL.NTSTATUS CDECL XTL_XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : XapiSetupPerTitleDriveLetters' +
+  DbgPrintf('EmuXapi : EmuXapiSetupPerTitleDriveLetters' +
       #13#10'(' +
       #13#10'   dwTitleId           : 0x%.08X' +
       #13#10'   wszTitleName        : 0x%.08X' +
@@ -1250,13 +1283,13 @@ begin
 end;
 *)
 
-procedure XTL_EmuXapiBootDash(UnknownA: DWORD; UnknownB: DWORD; UnknownC: DWORD); stdcall;
+procedure XTL_EmuXapiBootToDash(UnknownA: DWORD; UnknownB: DWORD; UnknownC: DWORD); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXapiBootDash' +
+  DbgPrintf('EmuXapi : EmuXapiBootToDash' +
       #13#10'(' +
       #13#10'   UnknownA            : 0x%.08X' +
       #13#10'   UnknownB            : 0x%.08X' +
@@ -1265,7 +1298,7 @@ begin
       [UnknownA, UnknownB, UnknownC]);
 {$ENDIF}
 
-  DxbxKrnlCleanup('Emulation Terminated (XapiBootDash)');
+  DxbxKrnlCleanup('Emulation Terminated (XapiBootToDash)');
 
   EmuSwapFS(fsXbox);
 end;
@@ -2049,7 +2082,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : XCalculateSignatureBegin' +
+  DbgPrintf('EmuXapi : EumXCalculateSignatureBegin' +
       #13#10'(' +
       #13#10'   dwFlags             : 0x%.08X' +
       #13#10');',
@@ -2073,7 +2106,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : XCalculateSignatureBeginEx' +
+  DbgPrintf('EmuXapi : EmuXCalculateSignatureBeginEx' +
     #13#10'(' +
     #13#10'   dwFlags             : 0x%.08X' +
     #13#10'   dwAltTitleId        : 0x%.08X' +
@@ -2099,7 +2132,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : XCalculateSignatureUpdate' +
+  DbgPrintf('EmuXapi : EmuXCalculateSignatureUpdate' +
            #13#10'(' +
            #13#10'   hCalcSig            : 0x%.08X' +
            #13#10'   pbData              : 0x%.08X' +
@@ -2124,7 +2157,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : XCalculateSignatureEnd' +
+  DbgPrintf('EmuXapi : EmuXCalculateSignatureEnd' +
       #13#10'(' +
       #13#10'   hCalcSig            : 0x%.08X' +
       #13#10'   pSignature          : 0x%.08X' +
@@ -2167,9 +2200,11 @@ exports
   XTL_EmutimeKillEvent,
   XTL_EmutimeSetEvent,
   XTL_EmuXapiApplyKernelPatches,
-  XTL_EmuXapiBootDash name PatchPrefix + 'XapiBootToDash',
+  XTL_EmuXapiBootToDash,
+  XTL_EmuXapiInitAutoPowerDown,
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
+  XTL_EmuXapiValidateDiskPartitionEx,
   XTL_EmuXFormatUtilityDrive,
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,
