@@ -53,7 +53,7 @@ var
   // thread local storage data
   DxbxKrnl_TLSData: PVOID;
   // xbe header structure
-  DxbxKrnl_XbeHeader: PXBE_HEADER;
+  DxbxKrnl_XbeHeader: PXBE_HEADER; // TODO -oDxbx : How about using g_XbeHeader instead?
   // parent window handle
   DxbxKrnl_hEmuParent: HWND;
 

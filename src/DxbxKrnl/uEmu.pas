@@ -85,8 +85,8 @@ var g_strZDrive: string = '';
 var g_hEmuWindow: HWND = 0; // rendering window
 
 // thread notification routine
-var g_pfnThreadNotification: array [0..16-1] of PVOID;
-var g_iThreadNotificationCount: int;
+//var g_pfnThreadNotification: array [0..16-1] of PVOID; // Dxbx : Already declared in uEmuPS.pas
+//var g_iThreadNotificationCount: int; // Dxbx : Already declared in uEmuPS.pas
 
 // NOTE: this is an arbitrary latency
 const XINPUT_SETSTATE_LATENCY = 4;
@@ -98,12 +98,12 @@ type XInputSetStateStatus = record
     dwLatency: DWORD;
     pFeedback: PVOID;
 end; // size = 12
-var g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus;
+//var g_pXInputSetStateStatus: array [0..XINPUT_SETSTATE_SLOTS - 1] of XInputSetStateStatus; // Dxbx : Already declared in uEmuXapi.pas
 
 // 4 controllers
 const XINPUT_HANDLE_SLOTS = 4;
 
-var g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE;
+//var g_hInputHandle: array [0..XINPUT_HANDLE_SLOTS - 1] of HANDLE; // Dxbx : Already declared in uEmuXapi.pas
 
 procedure EmuWarning(szWarningMessage: string); overload;
 procedure EmuWarning(szWarningMessage: string; const Args: array of const); overload;

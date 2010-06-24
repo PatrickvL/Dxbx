@@ -40,7 +40,7 @@ var XTL_EmuD3DDeferredRenderState: PDWORDs;
 var XTL_EmuD3DDeferredTextureState: PDWORDs;
 
 var g_BuildVersion: uint32;
-var g_OrigBuildVersion: uint32;
+// var g_OrigBuildVersion: uint32; // Dxbx note : Unused
 
 implementation
 

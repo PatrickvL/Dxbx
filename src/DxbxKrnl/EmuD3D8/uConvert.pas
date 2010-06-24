@@ -201,32 +201,40 @@ function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): BOOL_;
 begin
   Result := TRUE;
   case Format of
-    X_D3DFMT_L8, // 0x00
-    X_D3DFMT_AL8, // 0x01
-    X_D3DFMT_P8, // 0x0B
-    X_D3DFMT_A8: // 0x19
+
+    X_D3DFMT_L8,       // 0x00
+    X_D3DFMT_AL8,      // 0x01
+    X_D3DFMT_P8,       // 0x0B
+    X_D3DFMT_A8:       // 0x19
       pBPP^ := 1;
 
     X_D3DFMT_A1R5G5B5, // 0x02
     X_D3DFMT_X1R5G5B5, // 0x03
     X_D3DFMT_A4R4G4B4, // 0x04
-    X_D3DFMT_R5G6B5, // 0x05
-    X_D3DFMT_A8L8, // 0x1A
-    X_D3DFMT_L6V5U5, // Added by Dxbx
-    X_D3DFMT_V8U8, // Added by Dxbx
-    X_D3DFMT_D16: // Added by Dxbx
+    X_D3DFMT_R5G6B5,   // 0x05
+    X_D3DFMT_A8L8,     // 0x1A
+    X_D3DFMT_R6G5B5,   // 0x27 Added by Dxbx
+    X_D3DFMT_G8B8,     // 0x28
+    X_D3DFMT_R8B8,     // 0x29 Added by Dxbx
+    X_D3DFMT_D16,      // 0x2C Added by Dxbx
+    X_D3DFMT_F16,      // 0x2D Added by Dxbx
+    X_D3DFMT_L16,      // 0x32 Added by Dxbx
+    X_D3DFMT_R5G5B5A1, // 0x38 Added by Dxbx
+    X_D3DFMT_R4G4B4A4: // 0x39 Added by Dxbx
       pBPP^ := 2;
 
     X_D3DFMT_A8R8G8B8, // 0x06
     X_D3DFMT_X8R8G8B8, // 0x07
-    X_D3DFMT_YUY2, // Added by Dxbx
-    X_D3DFMT_D24S8, // Added by Dxbx
-    X_D3DFMT_F24S8, // Added by Dxbx
-    X_D3DFMT_V16U16, // Added by Dxbx
-    X_D3DFMT_A8B8G8R8: // Added by Dxbx
+    X_D3DFMT_D24S8,    // 0x2A Added by Dxbx
+    X_D3DFMT_F24S8,    // 0x2B Added by Dxbx
+    X_D3DFMT_V16U16,   // 0x33 Added by Dxbx
+    X_D3DFMT_A8B8G8R8, // 0x3A Added by Dxbx
+    X_D3DFMT_B8G8R8A8, // 0x3B Added by Dxbx
+    X_D3DFMT_R8G8B8A8: // 0x3C Added by Dxbx
+
       pBPP^ := 4;
 
-  // TODO -oDXBX: Where do we put X_D3DFMT_UYVY ?
+  // TODO -oDXBX: Where do we put X_D3DFMT_YUY2 (0x24) and X_D3DFMT_UYVY (0x25) ?
 
   else
     Result := FALSE;
@@ -241,14 +249,27 @@ begin
     X_D3DFMT_LIN_A1R5G5B5, // 0x10
     X_D3DFMT_LIN_R5G6B5,   // 0x11
     X_D3DFMT_LIN_A8R8G8B8, // 0x12
-    X_D3DFMT_LIN_L8, // Added by Dxbx
+    X_D3DFMT_LIN_L8,       // 0x13 Added by Dxbx
     X_D3DFMT_LIN_R8B8,     // 0x16
     X_D3DFMT_LIN_G8B8,     // 0x17
+    X_D3DFMT_LIN_AL8,      // 0x1B Added by Dxbx
+    X_D3DFMT_LIN_X1R5G5B5, // 0x1C Added by Dxbx
     X_D3DFMT_LIN_A4R4G4B4, // 0x1D
     X_D3DFMT_LIN_X8R8G8B8, // 0x1E
+    X_D3DFMT_LIN_A8,       // 0x1F Added by Dxbx
+    X_D3DFMT_LIN_A8L8,     // 0x20 Added by Dxbx
     X_D3DFMT_LIN_D24S8,    // 0x2E
+    X_D3DFMT_LIN_F24S8,    // 0x2F Added by Dxbx
     X_D3DFMT_LIN_D16,      // 0x30
-    X_D3DFMT_LIN_A8B8G8R8: // 0x3F
+    X_D3DFMT_LIN_F16,      // 0x31 Added by Dxbx
+    X_D3DFMT_LIN_L16,      // 0x35 Added by Dxbx
+    X_D3DFMT_LIN_V16U16,   // 0x36 Added by Dxbx
+    X_D3DFMT_LIN_R6G5B5,   // 0x37 Added by Dxbx
+    X_D3DFMT_LIN_R5G5B5A1, // 0x3D Added by Dxbx
+    X_D3DFMT_LIN_R4G4B4A4, // 0x3E Added by Dxbx
+    X_D3DFMT_LIN_A8B8G8R8, // 0x3F
+    X_D3DFMT_LIN_B8G8R8A8, // 0x40 Added by Dxbx
+    X_D3DFMT_LIN_R8G8B8A8: // 0x41 Added by Dxbx
       Result := TRUE;
   else
     Result := FALSE;
