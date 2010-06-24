@@ -156,6 +156,7 @@ var
 
 const
   OPCODE_NOP = $90;
+  OPCODE_INT3 = $CC;
   OPCODE_JMP = $E9;
 
 implementation
@@ -638,20 +639,20 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
 
   function _MayCheckFunction(const aStoredLibraryFunction: PStoredLibraryFunction): Boolean;
   var
-    LengthWithoutNops: Integer;
+    LengthWithoutPadding: Integer;
   begin
-    // Don't count the nops at the end of the function (if any) :
-    LengthWithoutNops := aStoredLibraryFunction.FunctionLength;
-    while (LengthWithoutNops > 0) and (PBytes(aTestAddress)[LengthWithoutNops-1] = OPCODE_NOP) do
-      Dec(LengthWithoutNops);
+    // Don't count padding bytes (NOP and INT3 for now) at the end of the function (if any) :
+    LengthWithoutPadding := aStoredLibraryFunction.FunctionLength;
+    while (LengthWithoutPadding > 0) and (PBytes(aTestAddress)[LengthWithoutPadding-1] in [OPCODE_NOP, OPCODE_INT3]) do
+      Dec(LengthWithoutPadding);
 
     // Skip small functions with only one cross-reference, because those are
     // very common. Instead, we hope they will be discovered via other functions :
     case aStoredLibraryFunction.NrCrossReferences of
-      0: Result := (LengthWithoutNops >= 7);
-      1: Result := (LengthWithoutNops > 5)
+      0: Result := (LengthWithoutPadding >= 7);
+      1: Result := (LengthWithoutPadding > 5)
                and (aTestAddress^ <> OPCODE_JMP);
-      2: Result := (LengthWithoutNops >= 10);
+      2: Result := (LengthWithoutPadding >= 10);
     else
       Result := True;
     end;
