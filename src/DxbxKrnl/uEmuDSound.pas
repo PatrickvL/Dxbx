@@ -391,7 +391,7 @@ var
 begin
   for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
   begin
-    if (g_pDSoundStreamCache[v] = nil) or (g_pDSoundStreamCache[v].EmuBuffer = nil) then
+    if (g_pDSoundStreamCache[v] = nil) or (g_pDSoundStreamCache[v].EmuBuffer = NULL) then
       continue;
 
     hRet := IDirectSoundBuffer(g_pDSoundStreamCache[v].EmuDirectSoundBuffer8).Lock(0, g_pDSoundStreamCache[v].EmuBufferDesc.dwBufferBytes, @pAudioPtr, @dwAudioBytes, @pAudioPtr2, @dwAudioBytes2, 0);
@@ -524,7 +524,7 @@ begin
   // Set this flag when this function is called
   g_bDSoundCreateCalled := true;
 
-  if not initialized or (not Assigned(g_pDSound8)) then
+  if ((not initialized) or (nil=g_pDSound8)) then
   begin
     Result := DirectSoundCreate8(NULL, PIDirectSound8(ppDirectSound), NULL);
 
@@ -1115,7 +1115,7 @@ begin
     dwAcceptableMask := $00000010 or $00000020 or $00000080 or $00000100 or $00002000 or $00040000;
 
     if (pdsbd.dwFlags and (not dwAcceptableMask)) > 0 then
-      EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', [pdsbd.dwFlags and not(dwAcceptableMask)]);
+      EmuWarning('Use of unsupported pdsbd.dwFlags mask(s) ($%.08X)', [pdsbd.dwFlags and (not dwAcceptableMask)]);
 
     pDSBufferDesc.dwSize := sizeof(DirectSound.DSBUFFERDESC);
     pDSBufferDesc.dwFlags := (pdsbd.dwFlags and dwAcceptableMask) or DSBCAPS_CTRLVOLUME or DSBCAPS_GETCURRENTPOSITION2;
@@ -1608,7 +1608,7 @@ begin
 
   hRet := DS_OK;
 
-  if (pThis <> nil) and not (pThis.EmuBuffer = nil) then
+  if (pThis <> nil) and (pThis.EmuBuffer = nil) then
   begin
     hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus({out}pdwStatus^);
   end
@@ -1719,7 +1719,7 @@ begin
          #13#10');',
          [pThis, dwReserved1, dwReserved2, dwFlags]);
 {$ENDIF}
-  if (dwFlags and (not DSBPLAY_LOOPING or X_DSBPLAY_FROMSTART)) > 0 then
+  if (dwFlags and (not (DSBPLAY_LOOPING or X_DSBPLAY_FROMSTART))) > 0 then
     DxbxKrnlCleanup('Unsupported Playing Flags');
 
   // rewind buffer
