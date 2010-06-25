@@ -619,11 +619,14 @@ begin
   DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel()');
   EmuSwapFS(fsXbox);
 
-  Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
+  // TODO : DXBX - This we get from reactos, but
+  // Using the PCr gives exceptions.
+
+(*  Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
 
   // Save and update IRQL
   CurrentIrql := Pcr.Irql;
-  Pcr.Irql := DISPATCH_LEVEL;
+//  Pcr.Irql := DISPATCH_LEVEL;
 
 {$ifdef IRQL_DEBUG}
   // Validate correct raise
@@ -639,7 +642,9 @@ begin
 {$endif}
 
   // Return the previous value
-  Result := CurrentIrql;
+  Result := CurrentIrql; *)
+
+  Result := 0;
 end;
 
 function xboxkrnl_KeRaiseIrqlToSynchLevel(): KIRQL; stdcall;

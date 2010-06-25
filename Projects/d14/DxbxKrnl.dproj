@@ -65,7 +65,6 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 						<Parameters Name="HostApplication">..\..\bin\Dxbx.exe</Parameters>
-						<Parameters Name="RunParams">&quot;D:\Workspaces\SVN\dxbx_2\Bin\donut\donut_retail.xbe&quot;</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -161,7 +160,6 @@
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXG.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXOnline.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuXTL.pas"/>
-			<DCCReference Include="..\..\src\DxbxKrnl\uHLEDatabase.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uHLEIntercept.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\DxLibraryAPIScanning.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uDxbxDebugUtils.pas"/>
