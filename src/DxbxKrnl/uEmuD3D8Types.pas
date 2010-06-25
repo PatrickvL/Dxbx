@@ -171,6 +171,10 @@ type _X_D3DRESOURCETYPE =
 );
 X_D3DRESOURCETYPE = _X_D3DRESOURCETYPE;
 
+const X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER = $00000001;
+const X_D3DPRESENTFLAG_INTERLACED          = $00000020;
+const X_D3DPRESENTFLAG_FIELD               = $00000080;
+
 type _X_D3DDISPLAYMODE = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Width: UINT;

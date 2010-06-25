@@ -494,6 +494,12 @@ var
   var
     TabSheet: TTabSheet;
   begin
+    if aContents = nil then
+    begin
+      Result := nil;
+      Exit;
+    end;
+
     TabSheet := TTabSheet.Create(Self);
     TabSheet.PageControl := PageControl;
     TabSheet.TabVisible := False;
@@ -622,6 +628,12 @@ var
     Splitter: TSplitter;
     SectionViewer: TSectionViewer;
   begin
+    if Length(MyXBE.m_SectionHeader)  = 0 then
+    begin
+      Result := nil;
+      Exit;
+    end;
+
     Result := TPanel.Create(Self);
 
     Grid := NewGrid(2, [' ', 'Member:', 'Flags', 'Virtual Address', 'Virtual Size',
@@ -694,6 +706,12 @@ var
     LibVer: PXbeLibraryVersion;
     ItemName: string;
   begin
+    if Length(MyXBE.m_LibraryVersion) = 0 then
+    begin
+      Result := nil;
+      Exit;
+    end;
+
     Result := NewGrid(1, ['Member:', 'szName', 'wMajorVersion', 'wMinorVersion', 'wBuildVersion', 'dwFlags']);
     Result.RowCount := 4;
     Result.Options := Result.Options + [goRowSelect];
@@ -726,6 +744,12 @@ var
     o: DWord;
     TLS: PXbeTls;
   begin
+    if MyXBE.m_TLS = nil then
+    begin
+      Result := nil;
+      Exit;
+    end;
+
     o := VA2RVA(MyXBE.m_Header.dwTLSAddr);
     TLS := MyXBE.m_TLS;
     Result := NewGrid(3, ['Member', 'Type', 'Offset', 'Value', 'Meaning']);
