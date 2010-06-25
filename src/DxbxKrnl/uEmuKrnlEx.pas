@@ -74,15 +74,17 @@ function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Lock: PKSPIN_LOCK
   ): LARGE_INTEGER; stdcall;
 procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
-  Addend: PLARGE_INTEGER;
-  Increment: ULONG
-  ); stdcall;
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  Increment: ULONG;
+  Addend: PLARGE_INTEGER
+  ); register;
 function {021} xboxkrnl_ExInterlockedCompareExchange64(
-  Destination: PLONGLONG; // OUT
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   Exchange: PLONGLONG;
+  Destination: PLONGLONG; // OUT
   Comparand: PLONGLONG;
   Lock: PKSPIN_LOCK
-  ): LONGLONG; stdcall;
+  ): LONGLONG; register;
 function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
   QuotaCharged: P_BOOLEAN // OUT
@@ -115,19 +117,22 @@ function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueLength: SIZE_T
   ): NTSTATUS; stdcall;
 function {032} xboxkrnl_ExfInterlockedInsertHeadList(
-  ListHead: PLIST_ENTRY;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListEntry: PLIST_ENTRY;
+  ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall;
+  ): PLIST_ENTRY; register;
 function {033} xboxkrnl_ExfInterlockedInsertTailList(
-  ListHead: PLIST_ENTRY;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListEntry: PLIST_ENTRY;
-  Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall;
-function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall;
+  ): PLIST_ENTRY; register;
+function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  ListHead: PLIST_ENTRY;
+  Lock: PKSPIN_LOCK
+  ): PLIST_ENTRY; register;
 
 
 implementation
@@ -242,9 +247,10 @@ begin
 end;
 
 procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
-  Addend: PLARGE_INTEGER;
-  Increment: ULONG
-  ); stdcall;
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  Increment: ULONG;
+  Addend: PLARGE_INTEGER
+  ); register;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -253,11 +259,12 @@ begin
 end;
 
 function {021} xboxkrnl_ExInterlockedCompareExchange64(
-  Destination: PLONGLONG; // OUT
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   Exchange: PLONGLONG;
+  Destination: PLONGLONG; // OUT
   Comparand: PLONGLONG;
   Lock: PKSPIN_LOCK
-  ): LONGLONG; stdcall;
+  ): LONGLONG; register;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -460,10 +467,11 @@ begin
 end;
 
 function {032} xboxkrnl_ExfInterlockedInsertHeadList(
-  ListHead: PLIST_ENTRY;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListEntry: PLIST_ENTRY;
+  ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall;
+  ): PLIST_ENTRY; register;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -473,10 +481,11 @@ begin
 end;
 
 function {033} xboxkrnl_ExfInterlockedInsertTailList(
-  ListHead: PLIST_ENTRY;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListEntry: PLIST_ENTRY;
+  ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall;
+  ): PLIST_ENTRY; register;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -486,9 +495,10 @@ begin
 end;
 
 function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; stdcall;
+  ): PLIST_ENTRY; register;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);

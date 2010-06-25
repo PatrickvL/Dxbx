@@ -70,8 +70,10 @@ procedure {009} xboxkrnl_HalReadSMCTrayState(
   Count: PDWORD
   ); stdcall;
 procedure {038} xboxkrnl_HalClearSoftwareInterrupt(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Request: KIRQL
-  ); stdcall;
+  ); register;
 function {039} xboxkrnl_HalDisableSystemInterrupt(
   Vector: ULONG;
   Irql: KIRQL
@@ -108,8 +110,10 @@ function {047} xboxkrnl_HalRegisterShutdownNotification(
   Arg2: UNKNOWN
   ): NTSTATUS; stdcall;
 procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Request: KIRQL
-  ); stdcall;
+  ); register;
 procedure {049} xboxkrnl_HalReturnToFirmware(
   Routine: RETURN_FIRMWARE
   ); stdcall;
@@ -160,8 +164,10 @@ begin
 end;
 
 procedure {038} xboxkrnl_HalClearSoftwareInterrupt(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Request: KIRQL
-  ); stdcall;
+  ); register;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -264,8 +270,10 @@ begin
 end;
 
 procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Request: KIRQL
-  ); stdcall;
+  ); register;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
