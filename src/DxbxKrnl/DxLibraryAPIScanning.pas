@@ -1228,45 +1228,52 @@ procedure TSymbolManager.DetermineFinalLocations;
       while i > 0 do
       begin
         CurrentLocation := @(MyPotentialFunctionLocations[i]);
-        i := CurrentLocation.NextPotentialFunctionLocationIndex;
 
         // For now, skip locations that where added later and thus have no cross-references cached :
-        if CurrentLocation.CrossReferencesIndex = 0 then
-          Continue;
-
-        // Loop over each cross-reference reachable from this symbol-address :
-        for x := 0 to CurrentSymbol.CrossReferenceCount - 1 do
+        if CurrentLocation.CrossReferencesIndex > 0 then
         begin
-          if AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].IsDuplicate then
-            Continue;
-
-          CrossReferencedAddress := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Address;
-          CrossReferencedSymbol := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Symbol;
-
-          if CrossReferencedSymbol.HasFunctionInformation then
+          // Loop over each cross-reference reachable from this symbol-address :
+          for x := 0 to CurrentSymbol.CrossReferenceCount - 1 do
           begin
-            // A cross referenced symbol with function-information should
-            // have been detected at the referenced addres :
-            CrossReferencedLocation := CrossReferencedSymbol.FindPotentialLocation(CrossReferencedAddress);
-            // If there's no potential location at that address for that symbol :
-            if CrossReferencedLocation = nil then
-            begin
-              // Then we invalidate the originating location :
-              CurrentLocation.Address := nil;
-              Break;
-            end;
-          end
-          else
-            // Add all cross-references that haven't been detected as function yet (ONLY if it must be data!) :
-            if CrossReferencedSymbol.IsSymbolNameUsedInFunctions then
-              CrossReferencedLocation := nil
-            else
-              CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
+            if AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].IsDuplicate then
+              Continue;
 
-          // Count all references :
-          if Assigned(CrossReferencedLocation) then
-            Inc(CrossReferencedLocation.NrOfReferencesTo);
-        end; // for CrossReferences
+            CrossReferencedAddress := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Address;
+            CrossReferencedSymbol := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Symbol;
+
+            if CrossReferencedSymbol.HasFunctionInformation then
+            begin
+              // A cross referenced symbol with function-information should
+              // have been detected at the referenced addres :
+              CrossReferencedLocation := CrossReferencedSymbol.FindPotentialLocation(CrossReferencedAddress);
+              // If there's no potential location at that address for that symbol :
+              if CrossReferencedLocation = nil then
+              begin
+                // Then we invalidate the originating location :
+                CurrentLocation.Address := nil;
+                Break;
+              end;
+            end
+            else
+              // Add all cross-references that haven't been detected as function yet (ONLY if it must be data!) :
+              if CrossReferencedSymbol.IsSymbolNameUsedInFunctions then
+                CrossReferencedLocation := nil
+              else
+              begin
+                CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
+
+                // Re-determine the CurrentLocation, as the above add might have enlarged the
+                // MyPotentialFunctionLocations, invalidating the pointer we're working with :
+                CurrentLocation := @(MyPotentialFunctionLocations[i]);
+              end;
+
+            // Count all references :
+            if Assigned(CrossReferencedLocation) then
+              Inc(CrossReferencedLocation.NrOfReferencesTo);
+          end; // for CrossReferences
+        end;
+
+        i := CurrentLocation.NextPotentialFunctionLocationIndex;
       end; // while Locations
     end; // for Symbols
   end; // _AddMissingSymbols
