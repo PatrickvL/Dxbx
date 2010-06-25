@@ -6858,7 +6858,7 @@ end;
 // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Value: DWORD;
+  {2 EDX}Value: DWORD; // Dxbx note: This argument should be here, to force it into EDX
   {1 ECX}Method: DWORD // Dxbx note: The first argument should be here, to force it into ECX
   ); register; // __fastcall in Cxbx
 // Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
@@ -9709,7 +9709,7 @@ end;
 // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_Deferred(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Value: DWORD;
+  {2 EDX}Value: DWORD; // Dxbx note: This argument should be here, to force it into EDX
   {1 ECX}State: DWORD // Dxbx note: The first argument should be here, to force it into ECX
   ); register; // __fastcall in Cxbx
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100

@@ -238,8 +238,10 @@ function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
   ): _BOOLEAN; stdcall;
 function xboxkrnl_RtlUlongByteSwap(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Source: ULONG
-  ): ULONG; stdcall;
+  ): ULONG; register;
 function xboxkrnl_RtlUnicodeStringToAnsiString(
   DestinationString: PSTRING; // OUT
   SourceString: PUNICODE_STRING;
@@ -291,8 +293,10 @@ procedure xboxkrnl_RtlUpperString(
   SourceString: PSTRING
   ); stdcall;
 function xboxkrnl_RtlUshortByteSwap(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Source: USHORT
-  ): USHORT; // No stdcall (was fastcall)!
+  ): USHORT; register; // No stdcall (was fastcall)!
 function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_RtlZeroMemory(
   Destination: PVOID;
@@ -981,8 +985,10 @@ begin
 end;
 
 function xboxkrnl_RtlUlongByteSwap(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Source: ULONG
-  ): ULONG; stdcall;
+  ): ULONG; register;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1126,8 +1132,10 @@ begin
 end;
 
 function xboxkrnl_RtlUshortByteSwap(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Source: USHORT
-  ): USHORT; // No stdcall (was fastcall)!
+  ): USHORT; register; // No stdcall (was fastcall)!
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);

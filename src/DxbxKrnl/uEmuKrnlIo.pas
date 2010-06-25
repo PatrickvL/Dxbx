@@ -309,8 +309,16 @@ function xboxkrnl_IoSynchronousDeviceIoControlRequest(
   InternalDeviceIoControl: _BOOLEAN
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoSynchronousFsdRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IofCallDriver(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  Irp: PIRP;
+  DeviceObject: PDEVICE_OBJECT
+  ): NTSTATUS; register;
+procedure xboxkrnl_IofCompleteRequest(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  PriorityBoost: CCHAR;
+  Irp: PIRP
+  ); register;
 function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoDismountVolumeByName(
   VolumeName: PSTRING
@@ -677,7 +685,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IofCallDriver(): NTSTATUS; stdcall;
+function xboxkrnl_IofCallDriver(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  Irp: PIRP;
+  DeviceObject: PDEVICE_OBJECT
+  ): NTSTATUS; register;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -685,11 +697,15 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IofCompleteRequest(): NTSTATUS; stdcall;
+procedure xboxkrnl_IofCompleteRequest(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  PriorityBoost: CCHAR;
+  Irp: PIRP
+  ); register;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('IofCompleteRequest');
+  Unimplemented('IofCompleteRequest');
   EmuSwapFS(fsXbox);
 end;
 

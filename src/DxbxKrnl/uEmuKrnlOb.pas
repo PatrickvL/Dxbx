@@ -57,8 +57,16 @@ function xboxkrnl_ObReferenceObjectByHandle(
   ): NTSTATUS; stdcall;
 function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_ObfDereferenceObject(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  Object_: PVOID
+  ); register;
+procedure xboxkrnl_ObfReferenceObject(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  Object_: PVOID
+  ); register;
 
 implementation
 
@@ -137,19 +145,27 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObfDereferenceObject(): NTSTATUS; stdcall;
+procedure xboxkrnl_ObfDereferenceObject(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  Object_: PVOID
+  ); register;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObfDereferenceObject');
+  Unimplemented('ObfDereferenceObject');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObfReferenceObject(): NTSTATUS; stdcall;
+procedure xboxkrnl_ObfReferenceObject(
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  Object_: PVOID
+  ); register;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ObfReferenceObject');
+  Unimplemented('ObfReferenceObject');
   EmuSwapFS(fsXbox);
 end;
 
