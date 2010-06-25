@@ -1734,8 +1734,7 @@ begin
     pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
 
     // TODO -oCXBX: Make this configurable in the future?
-    // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-    pMode.Flags := $000000A1;
+    pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
     // TODO -oCXBX: Retrieve from current CreateDevice settings?
     pMode.Width := 640;
@@ -1795,8 +1794,7 @@ begin
     pMode.RefreshRate := PCMode.RefreshRate;
 
     // TODO -oCXBX: Make this configurable in the future?
-    // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-    pMode.Flags := $000000A1;
+    pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
     pMode.Format := EmuPC2XB_D3DFormat(PCMode.Format)
   end
   else
@@ -3759,6 +3757,13 @@ begin
   D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, pDummyTexture, 0);
   //*)
 
+  // Dxbx Note : As suggested by StrikerX3, as a fix for missing textures in Panzer :
+  if (pBaseTexture8 <> NULL) then
+  begin
+    // Make sure the texture has no locks, otherwise we get blank polygons
+    IDirect3DTexture8(pTexture.Emu.Texture8).UnlockRect(0);
+  end;
+
   // hRet = IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
   Result := IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(iif((g_iWireframe = 0), pBaseTexture8, nil)));
 
@@ -3868,7 +3873,7 @@ begin
     pMode.Format := EmuPC2XB_D3DFormat(pPCMode.Format);
 
     // TODO -oCXBX: Make this configurable in the future?
-    pMode.Flags := $000000A1; // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
+    pMode.Flags := X_D3DPRESENTFLAG_FIELD or X_D3DPRESENTFLAG_INTERLACED or X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
     // TODO -oCXBX: Retrieve from current CreateDevice settings?
     pMode.Width := 640;
@@ -4859,7 +4864,7 @@ begin
                              or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
                              or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
       end
-      else
+      else // X_Format <> X_D3DFMT_YUY2
       begin
         if (bSwizzled or bCompressed) then
         begin
@@ -5350,7 +5355,8 @@ begin
 
     if (pThis.Emu.Lock = $8000BEEF) then
     begin
-      Dispose(PVOID(pThis.Data));
+      FreeMem(PVOID(pThis.Data)); // FreeMem, because XTL_EmuIDirect3DDevice8_CreatePalette2 used AllocMem
+      PVOID(pThis.Data) := nil; // Make sure the Data pointer can't be accessed anymore
       Dec(pThis.Emu.Lock);
       uRet := pThis.Emu.Lock;
     end
