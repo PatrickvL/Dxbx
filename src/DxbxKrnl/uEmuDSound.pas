@@ -1537,6 +1537,7 @@ begin
     if (pThis.EmuFlags and DSB_FLAG_RECIEVEDATA) = 0 then
     begin
       uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
+      pThis.EmuDirectSoundBuffer8 := nil;
 
       if (uRet = 0) then
       begin
@@ -2180,6 +2181,7 @@ begin
   if (pThis <> nil) and (pThis.EmuDirectSoundBuffer8 <> nil) then
   begin
     uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
+    pThis.EmuDirectSoundBuffer8 := nil;
 
     if (uRet = 0) then
     begin
