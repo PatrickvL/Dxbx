@@ -176,14 +176,19 @@ var
   XbeTlsData: PVOID;
   XbeLibraryVersion: PXbeLibraryVersion;
 
-  procedure _ReadXbeBlock(const aRawOffset, aRawSize, aVirtualAddr, aProtection: DWord);
+  procedure _ReadXbeBlock(aRawOffset, aRawSize, aVirtualAddr, aVirtualSize, aProtection: DWord);
   var
     old_protection: DWord;
   begin
-    if not VirtualProtect(Pointer(aVirtualAddr), aRawSize, PAGE_READWRITE, {var}old_protection) then
+    Assert(aVirtualSize >= aRawSize);
+    if aVirtualSize = 0 then
+      Exit;
+
+    if not VirtualProtect(Pointer(aVirtualAddr), aVirtualSize, PAGE_READWRITE, {var}old_protection) then
       RaiseLastOSError;
 
-    Move(aXbe.RawData[aRawOffset], Pointer(aVirtualAddr)^, aRawSize);
+    if aRawSize > 0 then
+      Move(aXbe.RawData[aRawOffset], Pointer(aVirtualAddr)^, aRawSize);
 // Dxbx Note : Restoring the page-protection crashes some xbe's writing to TLS, so skip it for now!
 //    if not VirtualProtect(Pointer(aVirtualAddr), aRawSize, aProtection, {var}old_protection) then
 //      RaiseLastOSError;
@@ -204,6 +209,7 @@ begin
     {RawOffset=}0,
     {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use aXbe.dwSizeofHeader
     {VirtualAddr=}XBE_IMAGE_BASE,
+    {VirtualSize=}XBE_HEADER_SIZE,
     {NewProtect}PAGE_READWRITE);
 
   // Remember the ExeDosHeader._lfanew value, as we're about to overwrite it :
@@ -229,6 +235,7 @@ begin
       {RawOffset=}XbeSectionHeader.dwRawAddr,
       {RawSize=}XbeSectionHeader.dwSizeofRaw,
       {VirtualAddr=}XbeSectionHeader.dwVirtualAddr,
+      {VirtualSize=}XbeSectionHeader.dwVirtualSize,
       {NewProtect}Protection);
 
     WriteLog(Format('EmuExe: Loading Section 0x%.4x... OK', [i]));

@@ -286,26 +286,29 @@ begin
   Grid := TStringGrid(Sender);
   i := Grid.Row - Grid.FixedRows;
   Hdr := @(MyXBE.m_SectionHeader[i]);
-  i := (i * SizeOf(TXbeSectionHeader)) + MyXBE.m_Header.dwSectionHeadersAddr - MyXBE.m_Header.dwBaseAddr;
+  if Assigned(Hdr) and (Hdr.dwSizeofRaw > 0) then
+  begin
+    i := (i * SizeOf(TXbeSectionHeader)) + MyXBE.m_Header.dwSectionHeadersAddr - MyXBE.m_Header.dwBaseAddr;
 
-  Grid.Cells[2, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwFlags));
-  Grid.Cells[3, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualAddr));
-  Grid.Cells[4, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualSize));
-  Grid.Cells[5, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwRawAddr));
-  Grid.Cells[6, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSizeofRaw));
-  Grid.Cells[7, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionNameAddr));
-  Grid.Cells[8, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionRefCount));
-  Grid.Cells[9, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwHeadSharedRefCountAddr));
-  Grid.Cells[10, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwTailSharedRefCountAddr));
-  Grid.Cells[11, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).bzSectionDigest));
+    Grid.Cells[2, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwFlags));
+    Grid.Cells[3, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualAddr));
+    Grid.Cells[4, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwVirtualSize));
+    Grid.Cells[5, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwRawAddr));
+    Grid.Cells[6, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSizeofRaw));
+    Grid.Cells[7, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionNameAddr));
+    Grid.Cells[8, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwSectionRefCount));
+    Grid.Cells[9, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwHeadSharedRefCountAddr));
+    Grid.Cells[10, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).dwTailSharedRefCountAddr));
+    Grid.Cells[11, 2] :=  DWord2Str(i + FIELD_OFFSET(PXbeSectionHeader(nil).bzSectionDigest));
 
-  RegionInfo.Buffer := @MyXBE.RawData[Hdr.dwRawAddr];
-  RegionInfo.Size := Hdr.dwSizeofRaw;
-  RegionInfo.FileOffset := Hdr.dwRawAddr;
-  RegionInfo.VirtualAddres := Pointer(Hdr.dwVirtualAddr);
-  RegionInfo.Name := 'section "' + Grid.Cells[0, Grid.Row] + '"';
+    RegionInfo.Buffer := @MyXBE.RawData[Hdr.dwRawAddr];
+    RegionInfo.Size := Hdr.dwSizeofRaw;
+    RegionInfo.FileOffset := Hdr.dwRawAddr;
+    RegionInfo.VirtualAddres := Pointer(Hdr.dwVirtualAddr);
+    RegionInfo.Name := 'section "' + Grid.Cells[0, Grid.Row] + '"';
 
-  TSectionViewer(TStringGrid(Sender).Tag).SetRegion(RegionInfo);
+    TSectionViewer(TStringGrid(Sender).Tag).SetRegion(RegionInfo);
+  end;
 end; // SectionClick
 
 procedure TFormXBEExplorer.LibVersionClick(Sender: TObject);
@@ -440,7 +443,7 @@ var
     while Result >= 0 do
     begin
       Hdr := @(MyXBE.m_SectionHeader[Result]);
-      if (Hdr.dwVirtualAddr <= VA) and (Hdr.dwVirtualAddr + Hdr.dwVirtualSize > VA) then
+      if Assigned(Hdr) and (Hdr.dwVirtualAddr <= VA) and (Hdr.dwVirtualAddr + Hdr.dwVirtualSize > VA) then
         Exit;
 
       Dec(Result);
@@ -451,13 +454,13 @@ var
   var
     Hdr: PXbeSectionHeader;
   begin
+    Result := '';
     if (aSectionNr >= 0) and (aSectionNr < Length(MyXBE.m_SectionHeader)) then
     begin
       Hdr := @(MyXBE.m_SectionHeader[aSectionNr]);
-      Result := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr, XBE_SECTIONNAME_MAXLENGTH);
-    end
-    else
-      Result := '';
+      if Assigned(Hdr) then
+        Result := MyXBE.GetAddrStr(Hdr.dwSectionNameAddr, XBE_SECTIONNAME_MAXLENGTH);
+    end;
   end;
 
   function VA2RVA(const VA: DWord): DWord;
@@ -480,14 +483,14 @@ var
     aSectionNr: Integer;
     Hdr: PXbeSectionHeader;
   begin
+    Result := '';
     aSectionNr := GetSectionNrByVA(VA);
     if (aSectionNr >= 0) and (aSectionNr < Length(MyXBE.m_SectionHeader)) then
     begin
       Hdr := @(MyXBE.m_SectionHeader[aSectionNr]);
-      Result := GetSectionName(aSectionNr) + Format(' + %x', [VA-Hdr.dwVirtualAddr]);
-    end
-    else
-      Result := '';
+      if Assigned(Hdr) then
+        Result := GetSectionName(aSectionNr) + Format(' + %x', [VA-Hdr.dwVirtualAddr]);
+    end;
   end;
 
   function _CreateNode(const aParentNode: TTreeNode; const aName: string; aContents: TControl): TTreeNode;
@@ -652,35 +655,43 @@ var
     for i := 0 to Length(MyXBE.m_SectionHeader) - 1 do
     begin
       Hdr := @(MyXBE.m_SectionHeader[i]);
-      ItemName := GetSectionName(i);
-      GridAddRow(Grid, [
-        ItemName,
-        DWord2Str(o),
-        PByteToHexString(@Hdr.dwFlags[0], 4),
-        DWord2Str(Hdr.dwVirtualAddr),
-        DWord2Str(Hdr.dwVirtualSize),
-        DWord2Str(Hdr.dwRawAddr),
-        DWord2Str(Hdr.dwSizeofRaw),
-        DWord2Str(Hdr.dwSectionNameAddr),
-        DWord2Str(Hdr.dwSectionRefCount),
-        DWord2Str(Hdr.dwHeadSharedRefCountAddr),
-        DWord2Str(Hdr.dwTailSharedRefCountAddr),
-        PByteToHexString(@Hdr.bzSectionDigest[0], 20)
-      ]);
+      if Assigned(Hdr) then
+      begin
+        ItemName := GetSectionName(i);
+        GridAddRow(Grid, [
+          ItemName,
+          DWord2Str(o),
+          PByteToHexString(@Hdr.dwFlags[0], 4),
+          DWord2Str(Hdr.dwVirtualAddr),
+          DWord2Str(Hdr.dwVirtualSize),
+          DWord2Str(Hdr.dwRawAddr),
+          DWord2Str(Hdr.dwSizeofRaw),
+          DWord2Str(Hdr.dwSectionNameAddr),
+          DWord2Str(Hdr.dwSectionRefCount),
+          DWord2Str(Hdr.dwHeadSharedRefCountAddr),
+          DWord2Str(Hdr.dwTailSharedRefCountAddr),
+          PByteToHexString(@Hdr.bzSectionDigest[0], 20)
+        ]);
 
-      // Add image tab when this section seems to contain a XPR resource :
-      if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
-        _CreateNode(NodeResources, 'Image ' + ItemName,
-          _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
+        // Add image tab when this section seems to contain a XPR resource :
+        if Assigned(MyXBE.m_bzSection[i]) then
+        begin
+          if PXPR_IMAGE(MyXBE.m_bzSection[i]).hdr.Header.dwMagic = XPR_MAGIC_VALUE then
+            _CreateNode(NodeResources, 'Image ' + ItemName,
+              _Initialize_XPRSection(PXPR_IMAGE(MyXBE.m_bzSection[i])));
 
-      // Add INI tab when this section seems to start with a BOM :
-      if PWord(MyXBE.m_bzSection[i])^ = $FEFF then
-        _CreateNode(NodeResources, 'INI ' + ItemName,
-          _Initialize_IniSection(PWideCharToString(@MyXBE.m_bzSection[i][2], (Hdr.dwSizeofRaw div SizeOf(WideChar)) - 1)));
+          // Add INI tab when this section seems to start with a BOM :
+          if PWord(MyXBE.m_bzSection[i])^ = $FEFF then
+            _CreateNode(NodeResources, 'INI ' + ItemName,
+              _Initialize_IniSection(PWideCharToString(@MyXBE.m_bzSection[i][2], (Hdr.dwSizeofRaw div SizeOf(WideChar)) - 1)));
+        end;
 
-      _AddRange(o, SizeOf(TXbeSectionHeader), 'SectionHeader ' + ItemName);
-      _AddRange(Hdr.dwRawAddr, Hdr.dwSizeofRaw, 'SectionContents ' + ItemName);
-      _AddRange(Hdr.dwSectionNameAddr - MyXBE.m_Header.dwBaseAddr, Length(ItemName)+1, 'SectionName ' + ItemName);
+        _AddRange(o, SizeOf(TXbeSectionHeader), 'SectionHeader ' + ItemName);
+        _AddRange(Hdr.dwRawAddr, Hdr.dwSizeofRaw, 'SectionContents ' + ItemName);
+        _AddRange(Hdr.dwSectionNameAddr - MyXBE.m_Header.dwBaseAddr, Length(ItemName)+1, 'SectionName ' + ItemName);
+      end
+      else
+        GridAddRow(Grid, ['!NIL!']);
 
       Inc(o, SizeOf(TXbeSectionHeader));
     end;

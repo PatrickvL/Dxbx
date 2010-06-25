@@ -981,7 +981,8 @@ var
     SectionName := string(PAnsiChar(aSection.dwSectionNameAddr));
     // TODO : Improve the check if a section can contain code,
     // for now skip resource sections (beginning with an '$') :
-    Result := SectionName[1] <> '$';
+    Result := (SectionName[1] <> '$')
+          and (aSection.dwSizeofRaw > 0); // only when there's something in it!
   end;
 
 var
