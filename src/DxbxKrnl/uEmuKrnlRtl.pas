@@ -69,7 +69,12 @@ procedure xboxkrnl_RtlAssert(
 procedure xboxkrnl_RtlCaptureContext(
   ContextRecord: PCONTEXT
   ); stdcall;
-function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlCaptureStackBackTrace(
+  FramesToSkip: ULONG;
+  FramesToCapture: ULONG;
+  BackTrace: PPVOID;
+  BackTraceHash: PULONG
+  ): USHORT; stdcall;
 function xboxkrnl_RtlCharToInteger(
   Str: PCSZ;
   Base: ULONG;
@@ -297,7 +302,11 @@ function xboxkrnl_RtlUshortByteSwap(
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Source: USHORT
   ): USHORT; register;
-function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlWalkFrameChain(
+  Callers: PPVOID;
+  Count: ULONG;
+  Flags: ULONG
+  ): ULONG; stdcall;
 procedure xboxkrnl_RtlZeroMemory(
   Destination: PVOID;
   Length: SIZE_T
@@ -307,10 +316,28 @@ procedure xboxkrnl_RtlRip(
   Part2: PCSZ;
   Part3: PCSZ
   ); stdcall;
-function xboxkrnl_snprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_sprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_vsnprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_vsprintf(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_RtlSnprintf(
+  Buffer: P_char;
+  BufferSize: size_t;
+  FormatString: P_char
+  // args
+  ): NTSTATUS; cdecl; // INCOMPLETE_SIGNATURE
+function xboxkrnl_RtlSprintf(
+  Buffer: P_char;
+  FormatString: P_char
+  // args
+  ): NTSTATUS; cdecl; // INCOMPLETE_SIGNATURE
+function xboxkrnl_RtlVsnprintf(
+  Buffer: P_char;
+  BufferSize: size_t;
+  FormatString: P_char
+  // varargs
+  ): NTSTATUS; cdecl; // INCOMPLETE_SIGNATURE
+function xboxkrnl_RtlVsprintf(
+  Buffer: P_char;
+  FormatString: P_char
+  // varargs
+  ): NTSTATUS; cdecl; // INCOMPLETE_SIGNATURE
 
 implementation
 
@@ -414,7 +441,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_RtlCaptureStackBackTrace(): NTSTATUS; stdcall;
+function xboxkrnl_RtlCaptureStackBackTrace(
+  FramesToSkip: ULONG;
+  FramesToCapture: ULONG;
+  BackTrace: PPVOID;
+  BackTraceHash: PULONG
+  ): USHORT; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1145,7 +1177,11 @@ begin
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
-function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall;
+function xboxkrnl_RtlWalkFrameChain(
+  Callers: PPVOID;
+  Count: ULONG;
+  Flags: ULONG
+  ): ULONG; stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1180,35 +1216,54 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_snprintf(): NTSTATUS; stdcall;
+// Returns length in bytes of buffer filling. -1 means buffer overflow
+function xboxkrnl_RtlSnprintf(
+  Buffer: P_char;
+  BufferSize: size_t;
+  FormatString: P_char
+  // args
+  ): NTSTATUS; cdecl;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('snprintf');
+  Result := Unimplemented('RtlSnprintf');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_sprintf(): NTSTATUS; stdcall;
+function xboxkrnl_RtlSprintf(
+  Buffer: P_char;
+  FormatString: P_char
+  // args
+  ): NTSTATUS; cdecl;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('sprintf');
+  Result := Unimplemented('RtlSprintf');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_vsnprintf(): NTSTATUS; stdcall;
+function xboxkrnl_RtlVsnprintf(
+  Buffer: P_char;
+  BufferSize: size_t;
+  FormatString: P_char
+  // varargs
+  ): NTSTATUS; cdecl;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('vsnprintf');
+  Result := Unimplemented('RtlVsnprintf');
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_vsprintf(): NTSTATUS; stdcall;
+function xboxkrnl_RtlVsprintf(
+  Buffer: P_char;
+  FormatString: P_char
+  // varargs
+  ): NTSTATUS; cdecl;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('vsprintf');
+  Result := Unimplemented('RtlVsprintf');
   EmuSwapFS(fsXbox);
 end;
 

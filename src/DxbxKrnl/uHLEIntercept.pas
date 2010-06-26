@@ -54,7 +54,7 @@ procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE
   if pLibraryVersion = nil then
   begin
 {$IFDEF DXBX_DEBUG}
-    DbgPrintf('DxbxHLE: Detected OpenXDK application... cannot patch!');
+    DbgPrintf('DxbxHLE: Detected no libraries at all... cannot patch!');
 {$ENDIF}
     Exit;
   end;

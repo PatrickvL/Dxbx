@@ -151,7 +151,7 @@ var
     {099}@xboxkrnl_KeDelayExecutionThread,
     {100}@xboxkrnl_KeDisconnectInterrupt,
     {101}@xboxkrnl_KeEnterCriticalRegion,
-    {102}@xboxkrnl_MmGlobalData,
+    {102}@xboxkrnl_MmGlobalData, // variable
     {103}@xboxkrnl_KeGetCurrentIrql,
     {104}@xboxkrnl_KeGetCurrentThread,
     {105}@xboxkrnl_KeInitializeApc,
@@ -203,7 +203,7 @@ var
     {151}@xboxkrnl_KeStallExecutionProcessor,
     {152}@xboxkrnl_KeSuspendThread,
     {153}@xboxkrnl_KeSynchronizeExecution,
-    {154}@xboxkrnl_KeSystemTime,
+    {154}@xboxkrnl_KeSystemTime, // variable
     {155}@xboxkrnl_KeTestAlertThread,
     {156}@xboxkrnl_KeTickCount, // variable
     {157}@xboxkrnl_KeTimeIncrement,
@@ -211,7 +211,7 @@ var
     {159}@xboxkrnl_KeWaitForSingleObject,
     {160}@xboxkrnl_KfRaiseIrql,
     {161}@xboxkrnl_KfLowerIrql,
-    {162}@xboxkrnl_KiBugCheckData,
+    {162}@xboxkrnl_KiBugCheckData, // variable
     {163}@xboxkrnl_KiUnlockDispatcherDatabase,
     {164}@xboxkrnl_LaunchDataPage, // variable
     {165}@xboxkrnl_MmAllocateContiguousMemory,
@@ -289,16 +289,16 @@ var
     {237}@xboxkrnl_NtWriteFileGather,
     {238}@xboxkrnl_NtYieldExecution,
     {239}@xboxkrnl_ObCreateObject,
-    {240}@xboxkrnl_ObDirectoryObjectType,
+    {240}@xboxkrnl_ObDirectoryObjectType, // variable
     {241}@xboxkrnl_ObInsertObject,
     {242}@xboxkrnl_ObMakeTemporaryObject,
     {243}@xboxkrnl_ObOpenObjectByName,
     {244}@xboxkrnl_ObOpenObjectByPointer,
-    {245}@xboxkrnl_ObpObjectHandleTable,
+    {245}@xboxkrnl_ObpObjectHandleTable, // variable
     {246}@xboxkrnl_ObReferenceObjectByHandle,
     {247}@xboxkrnl_ObReferenceObjectByName,
     {248}@xboxkrnl_ObReferenceObjectByPointer,
-    {249}@xboxkrnl_ObSymbolicLinkObjectType,
+    {249}@xboxkrnl_ObSymbolicLinkObjectType, // variable
     {250}@xboxkrnl_ObfDereferenceObject,
     {251}@xboxkrnl_ObfReferenceObject,
     {252}@xboxkrnl_PhyGetLinkState,
@@ -370,12 +370,12 @@ var
     {318}@xboxkrnl_RtlUshortByteSwap,
     {319}@xboxkrnl_RtlWalkFrameChain,
     {320}@xboxkrnl_RtlZeroMemory,
-    {321}@xboxkrnl_XboxEEPROMKey,
-    {322}@xboxkrnl_XboxHardwareInfo,
-    {323}@xboxkrnl_XboxHDKey,
-    {324}@xboxkrnl_XboxKrnlVersion,
-    {325}@xboxkrnl_XboxSignatureKey,
-    {326}@xboxkrnl_XeImageFileName,
+    {321}@xboxkrnl_XboxEEPROMKey, // variable
+    {322}@xboxkrnl_XboxHardwareInfo, // variable
+    {323}@xboxkrnl_XboxHDKey, // variable
+    {324}@xboxkrnl_XboxKrnlVersion, // variable
+    {325}@xboxkrnl_XboxSignatureKey, // variable
+    {326}@xboxkrnl_XeImageFileName, // variable
     {327}@xboxkrnl_XeLoadSection,
     {328}@xboxkrnl_XeUnloadSection,
     {329}@xboxkrnl_READ_PORT_BUFFER_UCHAR,
@@ -402,18 +402,18 @@ var
     {350}@xboxkrnl_XcCryptService,
     {351}@xboxkrnl_XcUpdateCrypto,
     {352}@xboxkrnl_RtlRip,
-    {353}@xboxkrnl_XboxLANKey,
-    {354}@xboxkrnl_XboxAlternateSignatureKeys,
+    {353}@xboxkrnl_XboxLANKey, // variable
+    {354}@xboxkrnl_XboxAlternateSignatureKeys, // variable
     {355}@xboxkrnl_XePublicKeyData, // variable
     {356}@xboxkrnl_HalBootSMCVideoMode, // variable
-    {357}@xboxkrnl_IdexChannelObject,
+    {357}@xboxkrnl_IdexChannelObject, // variable
     {358}@xboxkrnl_HalIsResetOrShutdownPending,
     {359}@xboxkrnl_IoMarkIrpMustComplete,
     {360}@xboxkrnl_HalInitiateShutdown,
-    {361}@xboxkrnl_snprintf,
-    {362}@xboxkrnl_sprintf,
-    {363}@xboxkrnl_vsnprintf,
-    {364}@xboxkrnl_vsprintf,
+    {361}@xboxkrnl_RtlSnprintf,
+    {362}@xboxkrnl_RtlSprintf,
+    {363}@xboxkrnl_RtlVsnprintf,
+    {364}@xboxkrnl_RtlVsprintf,
     {365}@xboxkrnl_HalEnableSecureTrayEject,
     {366}@xboxkrnl_HalWriteSMCScratchRegister,
     {367}@xboxkrnl_UnknownAPI367,

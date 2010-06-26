@@ -74,7 +74,9 @@ function {255} xboxkrnl_PsCreateSystemThreadEx(
   DebugStack: _BOOLEAN;
   pStartRoutine: PKSTART_ROUTINE
   ): NTSTATUS; stdcall;
-function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function {256} xboxkrnl_PsQueryStatistics(
+  ProcessStatistics: PPS_STATISTICS
+  ): NTSTATUS; stdcall;
 function {257} xboxkrnl_PsSetCreateThreadNotifyRoutine(
   NotifyRoutine: PCREATE_THREAD_NOTIFY_ROUTINE
   ): NTSTATUS; stdcall;
@@ -386,6 +388,9 @@ begin
 
     pThreadHandle^ := CreateThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}@dwThreadId);
 
+    // Make sure the Xbox1 code runs on one core :
+    SetThreadAffinityMask(dwThreadId, g_XboxCPU);
+
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
 {$IFDEF DEBUG}
@@ -415,7 +420,9 @@ begin
   Result := STATUS_SUCCESS;
 end;
 
-function {256} xboxkrnl_PsQueryStatistics(): NTSTATUS; stdcall;
+function {256} xboxkrnl_PsQueryStatistics(
+  ProcessStatistics: PPS_STATISTICS
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);

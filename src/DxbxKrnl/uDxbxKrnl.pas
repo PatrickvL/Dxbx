@@ -90,6 +90,7 @@ exports
 
 var
   g_Xbe: TXbe;
+  g_XboxCPU: DWORD_PTR;
 
 implementation
 
@@ -387,6 +388,11 @@ begin
 
   // Re-route unhandled exceptions to our emulation-execption handler :
   OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
+
+  // Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
+  // this will better aproximate the environment with regard to multi-threading) :
+  g_XboxCPU := 1; // TODO : Safer to get one bit from GetProcessAffinityMask
+  SetThreadAffinityMask(GetCurrentThreadID(), g_XboxCPU);
 
   // Xbe entry point
   try

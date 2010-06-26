@@ -499,6 +499,14 @@ type
   end;
   PMM_STATISTICS = ^MM_STATISTICS;
 
+type
+  PS_STATISTICS = packed record
+    Length: ULONG;
+    ThreadCount: ULONG;
+    HandleCount: ULONG;
+  end;
+  PPS_STATISTICS = ^PS_STATISTICS;
+
 // ******************************************************************
 // * IO_STATUS_BLOCK *Same as Win2k/XP*
 // ******************************************************************
@@ -745,7 +753,7 @@ type
     DeferredContext: PVOID;
     SystemArgument1: PVOID;
     SystemArgument2: PVOID
-    ); stdcall; // TODO -oDxbx : Is this indeed the necessary calling convention?
+    ); stdcall;
 
 
 // ******************************************************************
@@ -1118,15 +1126,13 @@ type
   POBJECT_TYPE = ^OBJECT_TYPE;
 
 //
-// DXBX Addition : Xbox Refurb Info - TODO : Complete this!
+// DXBX Addition : Xbox Refurb Info
 //
 type
   XBOX_REFURB_INFO = packed record
-    //
-    FirstBootTime: FILETIME;
-    //
+    Signature: DWORD;
     PowerCycleCount: DWORD;
-    //
+    FirstBootTime: FILETIME;
   end;
   PXBOX_REFURB_INFO = ^XBOX_REFURB_INFO;
 

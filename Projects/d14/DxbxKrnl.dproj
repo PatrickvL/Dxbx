@@ -109,7 +109,7 @@
 			<DelphiCompile Include="DxbxKrnl.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<RcCompile Include="..\..\Resource\StoredTrie.rc">
+			<RcCompile Include="..\..\resource\StoredTrie.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
 				<Form>StoredTrie.res</Form>
@@ -173,16 +173,12 @@
 			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPushBuffer.pas"/>
 			<DCCReference Include="..\..\src\uDxbxUtils.pas"/>
 			<DCCReference Include="..\..\src\uEmuExe.pas"/>
-			<DCCReference Include="..\..\src\uProlog.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uResourceTracker.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\uEmuD3D8Utils.pas"/>
 			<DCCReference Include="..\..\src\DxbxKrnl\EmuD3D8\uPixelShader.pas"/>
 			<DCCReference Include="..\..\src\uXDVDFS.pas"/>
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
-			<RcCompile Include="..\..\src\Tools\PatternTrieBuilder\StoredTrie.rc">
-				<Form>..\..\Resource\StoredTrie.res</Form>
-			</RcCompile>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

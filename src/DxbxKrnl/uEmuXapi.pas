@@ -262,7 +262,7 @@ function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuXapi : EmuXFormatUtilityDrive()');
+  DbgPrintf('EmuXapi : EmuXFormatUtilityDrive();');
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -1870,7 +1870,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXGetFileCacheSize()');
+  DbgPrintf('EmuXapi : EmuXGetFileCacheSize();');
 {$ENDIF}
 
   // Return the default cache size for now.
