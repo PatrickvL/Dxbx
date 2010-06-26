@@ -56,6 +56,7 @@ procedure DbgPrintf(aStr: string; Args: array of const; MayRenderArguments: Bool
 procedure printf(aStr: string); overload;
 procedure printf(aStr: string; Args: array of const); overload;
 
+function strncmp(lpString1, lpString2: PWideChar; size: size_t): Integer; overload;
 function strncmp(lpString1, lpString2: PAnsiChar; size: size_t): Integer; overload;
 function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
 function sprintf(aBuffer: PAnsiChar; const aString: AnsiString): Integer; overload;
@@ -443,6 +444,27 @@ begin
   printf(Format(aStr, Args));
 end;
 
+function strncmp(lpString1, lpString2: PWideChar; size: size_t): Integer; overload;
+begin
+  while (size > 0) and (lpString1^ = lpString2^) do
+  begin
+    if lpString1^ = #0 then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    Dec(size);
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
+
+  if size = 0 then
+    Result := 0
+  else
+    Result := Ord(lpString1^) - Ord(lpString2^);
+end;
+
 function strncmp(lpString1, lpString2: PAnsiChar; size: size_t): Integer; overload;
 begin
   while (size > 0) and (lpString1^ = lpString2^) do
@@ -558,7 +580,7 @@ procedure WriteLog(const aText: string);
     i: Integer;
   begin
     i := Pos(':', aText);
-    if (i < 15) and (Copy(aText, 1, 3) = 'Emu') then
+    if (i < 15) and (strncmp(PChar(aText), 'Emu', 3) = 0) then
       // Prefix the text with the CurrentThreadID :
       Result := Copy(aText, 1, i - 1)
               + '(0x' + IntToHex(GetCurrentThreadID(), 1) + ')'

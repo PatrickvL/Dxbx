@@ -319,100 +319,108 @@ end;
 
 function {051} xboxkrnl_InterlockedCompareExchange(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Exchange: LONG; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Destination: PLONG; // Dxbx note: This argument should be here, to force it into ECX
-  {3 stack}Comparand: LONG // Dxbx note: This argument should be here, to force it into the first stack-slot
-  ): LONG; register;
+  {2 EDX}Exchange: LONG;
+  {1 ECX}Destination: PLONG;
+  {3 stack}Comparand: LONG
+  ): LONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedCompareExchange({var}Destination^, Exchange, Comparand);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {052} xboxkrnl_InterlockedDecrement(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Addend: PLONG // out, volatile
-  ): LONG; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Addend: PLONG // out, volatile
+  ): LONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedDecrement({var}Addend^);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {053} xboxkrnl_InterlockedIncrement(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Addend: PLONG // out, volatile
-  ): LONG; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Addend: PLONG // out, volatile
+  ): LONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedIncrement({var}Addend^);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {054} xboxkrnl_InterlockedExchange(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Value: LONG; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Destination: PLONG // Dxbx note: The first argument should be here, to force it into ECX
-  ): LONG; register;
+  {2 EDX}Value: LONG;
+  {1 ECX}Destination: PLONG
+  ): LONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedExchange({var}Destination^, Value);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {055} xboxkrnl_InterlockedExchangeAdd(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Value: LONG; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Addend: PLONG // Dxbx note: The first argument should be here, to force it into ECX
-  ): LONG; register;
+  {2 EDX}Value: LONG;
+  {1 ECX}Addend: PLONG
+  ): LONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedExchangeAdd({var}Addend^, Value);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {056} xboxkrnl_InterlockedFlushSList(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  ListHead: PSLIST_HEADER
-  ): PSINGLE_LIST_ENTRY; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}ListHead: PSLIST_HEADER
+  ): PSINGLE_LIST_ENTRY; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   // TODO -oDxbx : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {057} xboxkrnl_InterlockedPopEntrySList(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  ListHead: PSLIST_HEADER
-  ): PSLIST_ENTRY; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}ListHead: PSLIST_HEADER
+  ): PSLIST_ENTRY; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedPopEntrySList(ListHead);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {058} xboxkrnl_InterlockedPushEntrySList(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  ListEntry: PSLIST_ENTRY;
-  ListHead: PSLIST_HEADER
-  ): PSLIST_ENTRY; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}ListEntry: PSLIST_ENTRY;
+  {1 ECX}ListHead: PSLIST_HEADER
+  ): PSLIST_ENTRY; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := InterlockedPushEntrySList(ListHead, ListEntry);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 // Raises the hardware priority (irql)
@@ -420,16 +428,10 @@ end;
 // RETURN VALUE previous irq level
 // NOTES Uses fastcall convention
 function {160} xboxkrnl_KfRaiseIrql(
-  // Dxbx : This argument makes the 'register' calling convention
-  // functionally equivalent to the 'fastcall' calling convention.
-  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-  // They differ as follows:
-  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
-  ): KIRQL; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}NewIrql: KIRQL
+  ): KIRQL; register; // fastcall simulation - See Translation guide
 // Source:shogun  Revision:0.8.1-Pre2  Branch:Dxbx  Translator:shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -444,22 +446,17 @@ begin
 
   EmuSwapFS(fsXbox);
   Result := 0;
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
 // NOTES Uses fastcall convention
 function {161} xboxkrnl_KfLowerIrql(
-  // Dxbx : This argument makes the 'register' calling convention
-  // functionally equivalent to the 'fastcall' calling convention.
-  // Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-  // They differ as follows:
-  // register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-  // fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  NewIrql: KIRQL // Dxbx note : This argument should be here, to force it into ECX
-  ): KIRQL; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}NewIrql: KIRQL
+  ): KIRQL; register; // VALIDATED fastcall simulation - See Translation guide
 // Source:shogun  Revision:0.8.1-Pre2  Branch:Dxbx  Translator:shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);

@@ -139,7 +139,7 @@ begin
         while j > 0 do
         begin
           Dec(j);
-          PByte(OrgCode)^ := $CC; // int 3;
+          PByte(OrgCode)^ := OPCODE_INT3;
           Inc(PByte(OrgCode));
         end;
       end;

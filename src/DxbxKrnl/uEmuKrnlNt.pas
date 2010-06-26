@@ -1258,7 +1258,7 @@ begin
   //
   begin
     (* Commented out by Cxbx
-    _asm int 3;
+    asm int 3 end;
     NtDll::FILE_NETWORK_OPEN_INFORMATION *pInfo = (NtDll::FILE_NETWORK_OPEN_INFORMATION* )FileInformation;
 
     if (FileInfo = FileNetworkOpenInformation) and (pInfo.AllocationSize.LowPart = 57344) then
@@ -1460,7 +1460,7 @@ begin
 
 // Halo...
 //    if Assigned(ByteOffset) and (ByteOffset.QuadPart = $00120800) then
-//        _asm int 3
+//      asm int 3 end;
 
   Result := JwaNative.NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
@@ -1904,7 +1904,7 @@ begin
 
   // Halo..
   //    if Assigned(ByteOffset) and (ByteOffset.QuadPart = $01C00800) then
-  //        _asm int 3
+  //      asm int 3 end
 
   Result := JwaNative.NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 

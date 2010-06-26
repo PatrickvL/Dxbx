@@ -686,10 +686,10 @@ begin
 end;
 
 function xboxkrnl_IofCallDriver(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  Irp: PIRP;
-  DeviceObject: PDEVICE_OBJECT
-  ): NTSTATUS; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}Irp: PIRP;
+  {1 ECX}DeviceObject: PDEVICE_OBJECT
+  ): NTSTATUS; register; // fastcall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -698,15 +698,16 @@ begin
 end;
 
 procedure xboxkrnl_IofCompleteRequest(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  PriorityBoost: CCHAR;
-  Irp: PIRP
-  ); register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}PriorityBoost: CCHAR;
+  {1 ECX}Irp: PIRP
+  ); register; // fastcall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('IofCompleteRequest');
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall;

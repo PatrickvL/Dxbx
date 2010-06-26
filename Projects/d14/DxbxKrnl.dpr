@@ -27,7 +27,9 @@ library DxbxKrnl;
   with your DLL. To avoid using BORLNDMM.DLL, pass string information
   using PChar or ShortString parameters. }
 
-{$R 'StoredTrie.res' '..\..\Resource\StoredTrie.rc'}
+
+
+{$R 'StoredTrie.res' '..\..\resource\StoredTrie.rc'}
 
 uses
   Windows,
@@ -91,7 +93,6 @@ uses
   uPushBuffer in '..\..\src\DxbxKrnl\EmuD3D8\uPushBuffer.pas',
   uDxbxUtils in '..\..\src\uDxbxUtils.pas',
   uEmuExe in '..\..\src\uEmuExe.pas',
-  uProlog in '..\..\src\uProlog.pas',
   uExe in '..\..\src\uExe.pas',
   uResourceTracker in '..\..\src\DxbxKrnl\uResourceTracker.pas',
   uEmuD3D8Utils in '..\..\src\DxbxKrnl\uEmuD3D8Utils.pas',
