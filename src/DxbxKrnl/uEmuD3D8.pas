@@ -2898,17 +2898,11 @@ begin
   Result := hRet;
 end;
 
-// Dxbx: This argument makes the 'register' calling convention
-// functionally equivalent to the 'fastcall' calling convention.
-// Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-// They differ as follows:
-// register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-// fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant1(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}const pConstantData: PVOID; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Register_: INT // Dxbx note: The first argument should be here, to force it into ECX
-  ); register; // __fastcall in Cxbx
+  {2 EDX}const pConstantData: PVOID;
+  {1 ECX}Register_: INT
+  ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
@@ -2926,17 +2920,11 @@ begin
   XTL_EmuIDirect3DDevice8_SetVertexShaderConstant(Register_, pConstantData, 1);
 end;
 
-// Dxbx: This argument makes the 'register' calling convention
-// functionally equivalent to the 'fastcall' calling convention.
-// Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-// They differ as follows:
-// register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-// fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstant4(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}const pConstantData: PVOID; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Register_: INT // Dxbx note: The first argument should be here, to force it into ECX
-  ); register; // __fastcall in Cxbx
+  {2 EDX}const pConstantData: PVOID;
+  {1 ECX}Register_: INT
+  ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
@@ -2954,18 +2942,12 @@ begin
   XTL_EmuIDirect3DDevice8_SetVertexShaderConstant(Register_, pConstantData, 4);
 end;
 
-// Dxbx: This argument makes the 'register' calling convention
-// functionally equivalent to the 'fastcall' calling convention.
-// Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-// They differ as follows:
-// register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-// fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SetVertexShaderConstantNotInline(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}const pConstantData: PVOID; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Register_: INT; // Dxbx note: This argument should be here, to force it into ECX
-  {3 stack}ConstantCount: DWORD // Dxbx note: This argument should be here, to force it into the first stack-slot
-  ); register; // __fastcall in Cxbx
+  {2 EDX}const pConstantData: PVOID;
+  {1 ECX}Register_: INT;
+  {3 stack}ConstantCount: DWORD
+  ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
@@ -2982,6 +2964,7 @@ begin
 
   // Dxbx note: Shouldn't we return the result of this call?
   XTL_EmuIDirect3DDevice8_SetVertexShaderConstant(Register_, pConstantData, ConstantCount div 4);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 procedure XTL_EmuIDirect3DDevice8_DeletePixelShader
@@ -3602,7 +3585,7 @@ begin
     chk := 0; // Dxbx : this should become a writeable const
     if (chk++ = 0) then
     begin
-      asm int 3
+      asm int 3 end;
     end;
   end;
   }
@@ -3770,19 +3753,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-// Dxbx: This argument makes the 'register' calling convention
-// functionally equivalent to the 'fastcall' calling convention.
-// Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-// They differ as follows:
-// register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-// fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SwitchTexture
 (
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Data: DWORD; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Method: DWORD; // Dxbx note: This argument should be here, to force it into ECX
-  {3 stack}Format: DWORD // Dxbx note: This argument should be here, to force it into the first stack-slot
-); register; // __fastcall in Cxbx
+  {2 EDX}Data: DWORD;
+  {1 ECX}Method: DWORD;
+  {3 stack}Format: DWORD
+); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
   StageLookup: array [0..4-1] of DWORD = ( $00081b00, $00081b40, $00081b80, $00081bc0 );
@@ -3843,6 +3820,7 @@ begin
   end;
 
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function XTL_EmuIDirect3DDevice8_GetDisplayMode
@@ -6850,17 +6828,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-// Dxbx: This argument makes the 'register' calling convention
-// functionally equivalent to the 'fastcall' calling convention.
-// Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-// They differ as follows:
-// register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-// fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Value: DWORD; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}Method: DWORD // Dxbx note: The first argument should be here, to force it into ECX
-  ); register; // __fastcall in Cxbx
+  {2 EDX}Value: DWORD;
+  {1 ECX}Method: DWORD
+  ); register; // VALIDATED fastcall simulation - See Translation guide
 // Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
 var
   State: D3DRenderStateType;//int;
@@ -7930,11 +7902,11 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_DrawIndexedVertices' +
-    #13#10'(' +
-    #13#10'   PrimitiveType       : 0x%.08X' +
-    #13#10'   VertexCount         : 0x%.08X' +
-    #13#10'   pIndexData          : 0x%.08X' +
-    #13#10');',
+      #13#10'(' +
+      #13#10'   PrimitiveType       : 0x%.08X' +
+      #13#10'   VertexCount         : 0x%.08X' +
+      #13#10'   pIndexData          : 0x%.08X' +
+      #13#10');',
     [Ord(PrimitiveType), VertexCount, pIndexData]);
 {$ENDIF}
 
@@ -9455,7 +9427,7 @@ begin
   // to determine what is calling this function if it's something other
   // than IDirect3DDevice8_KickPushBuffer() itself.
 
-//  __asm int 3;
+//  asm int 3 end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -9701,17 +9673,11 @@ begin
   Result := S_OK;
 end;
 
-// Dxbx: This argument makes the 'register' calling convention
-// functionally equivalent to the 'fastcall' calling convention.
-// Quote from http://www.codeguru.com/forum/showthread.php?t=466266 :
-// They differ as follows:
-// register: (left to right) EAX, EDX, ECX, remaining pushed on stack right to left, callee cleans
-// fastcall: (left to right) ECX, EDX, remaining pushed on stack left to right, callee cleans
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_Deferred(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  {2 EDX}Value: DWORD; // Dxbx note: This argument should be here, to force it into EDX
-  {1 ECX}State: DWORD // Dxbx note: The first argument should be here, to force it into ECX
-  ); register; // __fastcall in Cxbx
+  {2 EDX}Value: DWORD;
+  {1 ECX}State: DWORD
+  ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -9779,6 +9745,7 @@ begin
   *)
 
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function XTL_EmuIDirect3DDevice8_DeleteStateBlock
@@ -9893,7 +9860,7 @@ begin
 
   // This function is too low level to actually emulate
   // Only use for debugging.
-  asm int 3; end;
+  asm int 3 end;
 
   EmuSwapFS(fsXbox);
 end;

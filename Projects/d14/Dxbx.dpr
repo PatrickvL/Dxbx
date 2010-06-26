@@ -33,7 +33,6 @@ uses
   ufrm_VideoConfig in '..\..\src\ufrm_VideoConfig.pas',
   uLog in '..\..\src\uLog.pas',
   uMutex in '..\..\src\uMutex.pas',
-  uProlog in '..\..\src\uProlog.pas',
   uTime in '..\..\src\uTime.pas',
   uTypes in '..\..\src\uTypes.pas',
   uWindows in '..\..\src\uWindows.pas',

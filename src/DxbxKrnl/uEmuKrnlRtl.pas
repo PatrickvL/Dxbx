@@ -296,7 +296,7 @@ function xboxkrnl_RtlUshortByteSwap(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   Source: USHORT
-  ): USHORT; register; // No stdcall (was fastcall)!
+  ): USHORT; register;
 function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_RtlZeroMemory(
   Destination: PVOID;
@@ -985,15 +985,16 @@ begin
 end;
 
 function xboxkrnl_RtlUlongByteSwap(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Source: ULONG
-  ): ULONG; register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Source: ULONG
+  ): ULONG; register; // fastcall simulation - See Translation guide
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := JwaNative.RtlUlongByteSwap(Source);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function xboxkrnl_RtlUnicodeStringToAnsiString
@@ -1132,15 +1133,16 @@ begin
 end;
 
 function xboxkrnl_RtlUshortByteSwap(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Source: USHORT
-  ): USHORT; register; // No stdcall (was fastcall)!
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Source: USHORT
+  ): USHORT; register; // fastcall simulation - See Translation guide
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   Result := JwaNative.RtlUshortByteSwap(Source);
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function xboxkrnl_RtlWalkFrameChain(): NTSTATUS; stdcall;

@@ -164,15 +164,16 @@ begin
 end;
 
 procedure {038} xboxkrnl_HalClearSoftwareInterrupt(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Request: KIRQL
-  ); register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Request: KIRQL
+  ); register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalClearSoftwareInterrupt');
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {039} xboxkrnl_HalDisableSystemInterrupt(
@@ -270,15 +271,16 @@ begin
 end;
 
 procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Request: KIRQL
-  ); register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Request: KIRQL
+  ); register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('HalRequestSoftwareInterrupt');
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 procedure {049} xboxkrnl_HalReturnToFirmware

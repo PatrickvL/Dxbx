@@ -133,7 +133,6 @@
 			<DCCReference Include="..\..\src\ufrm_VideoConfig.pas"/>
 			<DCCReference Include="..\..\src\uLog.pas"/>
 			<DCCReference Include="..\..\src\uMutex.pas"/>
-			<DCCReference Include="..\..\src\uProlog.pas"/>
 			<DCCReference Include="..\..\src\uTime.pas"/>
 			<DCCReference Include="..\..\src\uTypes.pas"/>
 			<DCCReference Include="..\..\src\uWindows.pas"/>

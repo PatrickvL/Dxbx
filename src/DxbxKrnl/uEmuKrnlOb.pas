@@ -146,27 +146,29 @@ begin
 end;
 
 procedure xboxkrnl_ObfDereferenceObject(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Object_: PVOID
-  ); register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Object_: PVOID
+  ); register; // fastcall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ObfDereferenceObject');
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 procedure xboxkrnl_ObfReferenceObject(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Object_: PVOID
-  ); register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
+  {1 ECX}Object_: PVOID
+  ); register; // fastcall simulation - See Translation guide
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ObfReferenceObject');
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 end.

@@ -395,7 +395,7 @@ begin
     // _USE_XGMATH Disabled in mesh :[
     // halo : dword_0_2E2D18
     // halo : 1744F0 (bink)
-    //_asm int 3;
+    // asm int 3 end;
 
     (* Marked out by cxbx
     for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do

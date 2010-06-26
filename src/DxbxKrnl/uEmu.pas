@@ -162,10 +162,10 @@ begin
           begin
             // nop sled over bink calls
             (* Cxbx marked this out :
-            memset(Pvoid($2CBA4), $90, $2CBAF - $2CBA4);
-            memset(Pvoid($2CBBD), $90, $2CBD5 - $2CBBD);
+            memset(Pvoid($2CBA4), $90, $2CBAF - $2CBA4); // OPCODE_NOP
+            memset(Pvoid($2CBBD), $90, $2CBD5 - $2CBBD); // OPCODE_NOP
             *)
-            memset(Pvoid($2CAE0), $90, $2CE1E - $2CAE0);
+            memset(Pvoid($2CAE0), $90, $2CE1E - $2CAE0); // OPCODE_NOP
           end;
 
           fix := g_HaloHack[1] + (e.ContextRecord.Eax - $803A6000);

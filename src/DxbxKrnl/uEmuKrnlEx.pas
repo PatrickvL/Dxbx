@@ -79,7 +79,7 @@ procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   Addend: PLARGE_INTEGER
   ); register;
 function {021} xboxkrnl_ExInterlockedCompareExchange64(
-  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   Exchange: PLONGLONG;
   Destination: PLONGLONG; // OUT
   Comparand: PLONGLONG;
@@ -117,19 +117,19 @@ function {029} xboxkrnl_ExSaveNonVolatileSetting(
   ValueLength: SIZE_T
   ): NTSTATUS; stdcall;
 function {032} xboxkrnl_ExfInterlockedInsertHeadList(
-  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListEntry: PLIST_ENTRY;
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; register;
 function {033} xboxkrnl_ExfInterlockedInsertTailList(
-  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListEntry: PLIST_ENTRY;
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; register;
 function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
-  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   ListHead: PLIST_ENTRY;
   Lock: PKSPIN_LOCK
   ): PLIST_ENTRY; register;
@@ -247,29 +247,31 @@ begin
 end;
 
 procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
-  FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  Increment: ULONG;
-  Addend: PLARGE_INTEGER
-  ); register;
+  {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
+  {2 EDX}Increment: ULONG;
+  {1 ECX}Addend: PLARGE_INTEGER
+  ); register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeStatistic');
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {021} xboxkrnl_ExInterlockedCompareExchange64(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  Exchange: PLONGLONG;
-  Destination: PLONGLONG; // OUT
-  Comparand: PLONGLONG;
-  Lock: PKSPIN_LOCK
-  ): LONGLONG; register;
+  {2 EDX}Exchange: PLONGLONG;
+  {1 ECX}Destination: PLONGLONG; // OUT
+  {3 stack}Comparand: PLONGLONG;
+  {4 stack}Lock: PKSPIN_LOCK
+  ): LONGLONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Result := Unimplemented('ExInterlockedCompareExchange64');
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {023} xboxkrnl_ExQueryPoolBlockSize(
@@ -468,43 +470,46 @@ end;
 
 function {032} xboxkrnl_ExfInterlockedInsertHeadList(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  ListEntry: PLIST_ENTRY;
-  ListHead: PLIST_ENTRY;
-  Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; register;
+  {2 EDX}ListEntry: PLIST_ENTRY;
+  {1 ECX}ListHead: PLIST_ENTRY;
+  {3 stack}Lock: PKSPIN_LOCK
+  ): PLIST_ENTRY; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertHeadList');
   Result := nil;
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {033} xboxkrnl_ExfInterlockedInsertTailList(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  ListEntry: PLIST_ENTRY;
-  ListHead: PLIST_ENTRY;
-  Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; register;
+  {2 EDX}ListEntry: PLIST_ENTRY;
+  {1 ECX}ListHead: PLIST_ENTRY;
+  {3 stack}Lock: PKSPIN_LOCK
+  ): PLIST_ENTRY; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedInsertTailList');
   Result := nil;
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 function {034} xboxkrnl_ExfInterlockedRemoveHeadList(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-  ListHead: PLIST_ENTRY;
-  Lock: PKSPIN_LOCK
-  ): PLIST_ENTRY; register;
+  {2 EDX}ListHead: PLIST_ENTRY;
+  {1 ECX}Lock: PKSPIN_LOCK
+  ): PLIST_ENTRY; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExfInterlockedRemoveHeadList');
   Result := nil;
   EmuSwapFS(fsXbox);
+  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 end.
