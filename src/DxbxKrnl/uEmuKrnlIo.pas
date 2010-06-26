@@ -289,8 +289,20 @@ function xboxkrnl_IoDeleteSymbolicLink(
 function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoInvalidDeviceRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoQueryFileInformation(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoQueryVolumeInformation(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoQueryFileInformation(
+  FileObject: PFILE_OBJECT;
+  FileInformationClass: FILE_INFORMATION_CLASS;
+  Length: ULONG;
+  {OUT}FileInformation: PVOID;
+  {OUT}ReturnedLength: PULONG
+  ): NTSTATUS; stdcall;
+function xboxkrnl_IoQueryVolumeInformation(
+  FileObject: PFILE_OBJECT;
+  FsInformationClass: FS_INFORMATION_CLASS;
+  Length: ULONG;
+  {OUT}FsInformation: PVOID;
+  {OUT}ReturnedLength: PULONG
+  ): NTSTATUS; stdcall;
 function xboxkrnl_IoQueueThreadIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoRemoveShareAccess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -583,7 +595,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IoQueryFileInformation(): NTSTATUS; stdcall;
+function xboxkrnl_IoQueryFileInformation(
+  FileObject: PFILE_OBJECT;
+  FileInformationClass: FILE_INFORMATION_CLASS;
+  Length: ULONG;
+  {OUT}FileInformation: PVOID;
+  {OUT}ReturnedLength: PULONG
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -591,7 +609,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IoQueryVolumeInformation(): NTSTATUS; stdcall;
+function xboxkrnl_IoQueryVolumeInformation(
+  FileObject: PFILE_OBJECT;
+  FsInformationClass: FS_INFORMATION_CLASS;
+  Length: ULONG;
+  {OUT}FsInformation: PVOID;
+  {OUT}ReturnedLength: PULONG
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);

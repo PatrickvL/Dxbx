@@ -507,7 +507,45 @@ begin
 end;
 
 
-{static}var initialized: _bool = false;
+function AssureDirectSoundCreate(const FromOriginalDSoundCreate: Boolean = False): HRESULT;
+var
+  v: int;
+begin
+  if (nil=g_pDSound8) then
+  begin
+    if (not FromOriginalDSoundCreate) then
+    begin
+      if g_bDSoundCreateCalled then
+        EmuWarning('Initializing DirectSound pointer even though DirectSoundCreate was already called!?')
+      else
+        EmuWarning('Initializing DirectSound pointer since DirectSoundCreate was not called!');
+    end;
+
+    // Create the DirectSound buffer before continuing...
+    Result := DirectSoundCreate8(NULL, PIDirectSound8(@g_pDSound8), NULL);
+    if FAILED(Result) then
+      DxbxKrnlCleanup('DirectSoundCreate8 Failed!');
+
+    Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+
+    if FAILED(Result) then
+      DxbxKrnlCleanup('g_pDSound8->SetCooperativeLevel Failed!');
+
+    // clear sound buffer cache
+    for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
+      g_pDSoundBufferCache[v] := nil;
+
+    // clear sound stream cache
+    for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
+      g_pDSoundStreamCache[v] := nil;
+
+    g_pDSound8RefCount := 1;
+  end
+  else
+    if FromOriginalDSoundCreate then
+      EmuWarning('DirectSound already initialized! Ignoring');
+end;
+
 function XTL_EmuDirectSoundCreate
 (
     pguidDeviceId: LPVOID;
@@ -515,8 +553,6 @@ function XTL_EmuDirectSoundCreate
     pUnknown: LPUNKNOWN
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  v: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -535,37 +571,12 @@ begin
   // Set this flag when this function is called
   g_bDSoundCreateCalled := true;
 
-  if ((not initialized) or (nil=g_pDSound8)) then
-  begin
-    Result := DirectSoundCreate8(NULL, PIDirectSound8(ppDirectSound), NULL);
-
-    if FAILED(Result) then
-      DxbxKrnlCleanup('DirectSoundCreate8 Failed!');
-
-    g_pDSound8 := ppDirectSound^;
-
-    Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
-
-    if FAILED(Result) then
-      DxbxKrnlCleanup('g_pDSound8->SetCooperativeLevel Failed!');
-
-    // clear sound buffer cache
-    for v := 0 to SOUNDBUFFER_CACHE_SIZE-1  do
-      g_pDSoundBufferCache[v] := nil;
-
-    // clear sound stream cache
-    for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
-      g_pDSoundStreamCache[v] := nil;
-
-    initialized := true;
-  end;
+  AssureDirectSoundCreate(True); // Dxbx addition - use one implementation for DirectSoundCreate
 
   // This way we can be sure that this function returns a valid
   // DirectSound8 pointer even if we initialized it elsewhere!
   if (nil=ppDirectSound^) and Assigned(g_pDSound8) then
     ppDirectSound^ := g_pDSound8;
-
-  g_pDSound8RefCount := 1;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1243,6 +1254,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes]);
 {$ENDIF}
+
+  AssureDirectSoundCreate(); // Dxbx addition - use one implementation for DirectSoundCreate8
 
   hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(iif(bIsSpecial, pDSBufferDescSpecial, pDSBufferDesc)^, @(ppBuffer^.EmuDirectSoundBuffer8), NULL);
 
@@ -1970,35 +1983,8 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreateStream, *ppStream := 0x%.08X', [ppStream^]);
 {$ENDIF}
-  if (nil=g_pDSound8) then
-  begin
-    if (not g_bDSoundCreateCalled) then
-    begin
-      EmuWarning('Initializing DirectSound pointer since it DirectSoundCreate was not called!');
 
-      // Create the DirectSound buffer before continuing...
-      if (FAILED(DirectSoundCreate8(NULL, PIDirectSound8(@g_pDSound8), NULL))) then
-        DxbxKrnlCleanup('Unable to initialize DirectSound!');
-
-      hRet := IDirectSound8(g_pDSound8).SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
-
-      if (FAILED(hRet)) then
-        DxbxKrnlCleanup('g_pDSound8->SetCooperativeLevel Failed!');
-
-      // clear sound buffer cache
-      for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
-        g_pDSoundBufferCache[v] := nil;
-
-      // clear sound stream cache
-      for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
-        g_pDSoundStreamCache[v] := nil;
-
-      // Let's count DirectSound as being initialized now
-      g_bDSoundCreateCalled := true;
-    end
-    else
-      EmuWarning('DirectSound not initialized!');
-  end;
+  AssureDirectSoundCreate(); // Dxbx addition - use one implementation for DirectSoundCreate8
 
   hRet := IDirectSound8(g_pDSound8).CreateSoundBuffer(pDSBufferDesc^, PIDirectSoundBuffer(@(ppStream^.EmuDirectSoundBuffer8)), NULL);
 
@@ -3185,7 +3171,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuDirectSoundUseFullHRTF()');
+  DbgPrintf('EmuDSound : EmuDirectSoundUseFullHRTF();');
 {$ENDIF}
 
   // TODO -oCXBX: Actually implement this
@@ -3526,7 +3512,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuIDirectSoundStream_Flush()');
+  DbgPrintf('EmuDSound : EmuIDirectSoundStream_Flush();');
 {$ENDIF}
 
   // TODO -oCXBX: Actually implement

@@ -320,6 +320,7 @@ begin
   begin
     dwThreadId := 0;
     hThread := CreateThread(nil, 0, @EmuUpdateTickCount, nil, 0, {var}dwThreadId);
+    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
@@ -334,6 +335,7 @@ begin
   // create the create device proxy thread
   begin
     CreateThread(nil, 0, @EmuCreateDeviceProxy, nil, 0, {var}dwThreadId);
+    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
   end;
 
   // create window message processing thread
@@ -341,6 +343,7 @@ begin
     g_bRenderWindowActive := false;
 
     CreateThread(nil, 0, @EmuRenderWindow, nil, 0, {var}dwThreadId);
+    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
 
     while not g_bRenderWindowActive do
       Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
@@ -1879,7 +1882,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_AddRef()');
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_AddRef();');
 {$ENDIF}
 
   Result := ULONG(IDirect3DDevice8(g_pD3DDevice8)._AddRef());
@@ -2465,7 +2468,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetRenderTarget2()');
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetRenderTarget2();');
 {$ENDIF}
 
   pSurface8 := g_pCachedRenderTarget.Emu.Surface8;
@@ -2522,7 +2525,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDepthStencilSurface2()');
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetDepthStencilSurface2();');
 {$ENDIF}
 
   pSurface8 := g_pCachedZStencilSurface.Emu.Surface8;
@@ -7383,7 +7386,7 @@ begin
     [Value]);
 {$ENDIF}
 
-  EmuWarning('SetRenderState_MultiSampleMode is not supported!');
+  EmuWarning('SetRenderState_MultiSampleMode is not supported!'); // TODO -oDxbx : Use D3DMULTISAMPLE_TYPE somewhere for this?
 
   EmuSwapFS(fsXbox);
 end;
@@ -9418,7 +9421,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_KickOff()');
+  DbgPrintf('EmuD3D8 : EmuD3DDevice_KickOff();');
 {$ENDIF}
 
   // TODO -oCXBX: Anything (kick off and NOT wait for idle)?
@@ -9521,7 +9524,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuD3DDevice_SetStateUP()');
+  DbgPrintf('EmuD3D8 : EmuD3DDevice_SetStateUP();');
 {$ENDIF}
 
   // TODO -oCXBX: Anything?
@@ -9579,7 +9582,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PersistDisplay()');
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PersistDisplay();');
 {$ENDIF}
 
   Result := S_OK;
@@ -9610,7 +9613,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Unknown1()');
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Unknown1();');
 {$ENDIF}
 
   // TODO -oCXBX: Find out what this actually is.
@@ -9666,7 +9669,7 @@ begin
 
   // TODO -oCXBX: Implement?
 
-  EmuWarning('SampleAlpha not supported!');
+  EmuWarning('SetRenderState_SampleAlpha not supported!');
 
   EmuSwapFS(fsXbox);
 

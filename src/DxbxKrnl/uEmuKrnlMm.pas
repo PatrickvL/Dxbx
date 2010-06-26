@@ -44,7 +44,8 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-function xboxkrnl_MmGlobalData(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+var {102}xboxkrnl_MmGlobalData: PVOID;
+
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG
   ): PVOID; stdcall;
@@ -114,14 +115,6 @@ function xboxkrnl_MmDbgReleaseAddress(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmDbgWriteCheck(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 
 implementation
-
-function xboxkrnl_MmGlobalData(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
-begin
-  EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmGlobalData');
-  EmuSwapFS(fsXbox);
-end;
 
 // MmAllocateContiguousMemory:
 // Allocates a range of physically contiguous, cache-aligned memory from the

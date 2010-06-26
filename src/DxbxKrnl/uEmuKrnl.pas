@@ -286,6 +286,10 @@ function Unimplemented(const aAPI: string): NTSTATUS;
 begin
   WriteLog('EmuKrnl : Unimplemented API : ' + aAPI);
   Result := STATUS_PROCEDURE_NOT_FOUND; // abuse a standard NT error code
+
+  // Make sure we're noticing this :
+  Beep(750, 500);
+  Sleep(1250);
 end;
 
 // Initializes an OBJECT_ATTRIBUTES.
@@ -383,6 +387,7 @@ begin
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
+// Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
 function {056} xboxkrnl_InterlockedFlushSList(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
@@ -391,7 +396,6 @@ function {056} xboxkrnl_InterlockedFlushSList(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Can we safely assume that the Xbox LIST strucures are the same as WinXP's ?
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!

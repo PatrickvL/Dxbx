@@ -223,7 +223,16 @@ function xboxkrnl_NtSetSystemTime(
   {const}NewTime: PLARGE_INTEGER;
   OldTime: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSetTimerEx(
+  TimerHandle: HANDLE;
+  DueTime: PLARGE_INTEGER;
+  TimerApcRoutine: PTIMER_APC_ROUTINE; {OPTIONAL}
+  ApcMode: KPROCESSOR_MODE;
+  TimerContext: PVOID;  {OPTIONAL}
+  ResumeTimer: _BOOLEAN;
+  Period: LONG; {OPTIONAL}
+  {OUT} PreviousState: P_BOOLEAN {OPTIONAL}
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_NtSuspendThread(
   ThreadHandle: HANDLE;
@@ -1121,7 +1130,7 @@ begin
 
   FileDirInfo := PFILE_DIRECTORY_INFORMATION(DxbxMalloc($40 + 160*2));
 
-  mbstr := @FileInformation.FileName[0]; // TODO -oDXBX: Is this Ansi or Wide ?
+  mbstr := @FileInformation.FileName[0]; // DXBX note : This is Ansi on XBox!
   wcstr := FileDirInfo.FileName;
 
   repeat
@@ -1653,7 +1662,16 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtSetTimerEx(): NTSTATUS; stdcall;
+function xboxkrnl_NtSetTimerEx(
+  TimerHandle: HANDLE;
+  DueTime: PLARGE_INTEGER;
+  TimerApcRoutine: PTIMER_APC_ROUTINE; {OPTIONAL}
+  ApcMode: KPROCESSOR_MODE;
+  TimerContext: PVOID;  {OPTIONAL}
+  ResumeTimer: _BOOLEAN;
+  Period: LONG; {OPTIONAL}
+  {OUT} PreviousState: P_BOOLEAN {OPTIONAL}
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);

@@ -77,7 +77,7 @@ function xboxkrnl_KeDelayExecutionThread(
   Interval: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeEnterCriticalRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_KeEnterCriticalRegion(); stdcall;
 function xboxkrnl_KeGetCurrentIrql(): KIRQL; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -103,15 +103,18 @@ function xboxkrnl_KeInsertQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueueApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInsertQueueDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeIsExecutingDpc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeLeaveCriticalRegion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+procedure xboxkrnl_KeLeaveCriticalRegion(); stdcall;
 function xboxkrnl_KePulseEvent(
   hEventHandle: HANDLE;
   pPreviousState: PULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeQueryPerformanceCounter(
+  PerformanceFrequency: PLARGE_INTEGER
+  ): LARGE_INTEGER; stdcall;
+function xboxkrnl_KeQueryPerformanceFrequency(
+  ): LARGE_INTEGER; stdcall;
 procedure xboxkrnl_KeQuerySystemTime(
   CurrentTime: PLARGE_INTEGER
   ); stdcall;
@@ -294,11 +297,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeEnterCriticalRegion(): NTSTATUS; stdcall;
+procedure xboxkrnl_KeEnterCriticalRegion(); stdcall;
 // Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeEnterCriticalRegion');
+  Unimplemented('KeEnterCriticalRegion');
   EmuSwapFS(fsXbox);
 end;
 
@@ -308,7 +311,7 @@ var
   Pcr: PKPCR;
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeGetCurrentIrql()');
+  DbgPrintf('EmuKrnl : KeGetCurrentIrql();');
   EmuSwapFS(fsXbox);
 
   Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
@@ -504,11 +507,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeLeaveCriticalRegion(): NTSTATUS; stdcall;
+procedure xboxkrnl_KeLeaveCriticalRegion(); stdcall;
 // Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeLeaveCriticalRegion');
+  Unimplemented('KeLeaveCriticalRegion');
   EmuSwapFS(fsXbox);
 end;
 
@@ -539,10 +542,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeQueryPerformanceCounter(): NTSTATUS; stdcall;
+function xboxkrnl_KeQueryPerformanceCounter(
+  PerformanceFrequency: PLARGE_INTEGER
+  ): LARGE_INTEGER; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  Counter: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -550,29 +553,25 @@ begin
   DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 {$ENDIF}
 
-  QueryPerformanceCounter({var}Counter); // NtQueryPerformanceCounter ???
+  NtQueryPerformanceCounter(@Result, PerformanceFrequency);
 
   EmuSwapFS(fsXbox);
-
-  Result := Counter.QuadPart;
 end;
 
-function xboxkrnl_KeQueryPerformanceFrequency(): NTSTATUS; stdcall;
+function xboxkrnl_KeQueryPerformanceFrequency(
+  ): LARGE_INTEGER; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  Frequency: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency()');
+  DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency();');
 {$ENDIF}
 
   // Xbox Performance Counter Frequency := 337F98h
-  QueryPerformanceFrequency({var}Frequency);
+  QueryPerformanceFrequency({var}Result);
 
   EmuSwapFS(fsXbox);
-  Result := Frequency.QuadPart;
 end;
 
 procedure xboxkrnl_KeQuerySystemTime
@@ -616,7 +615,7 @@ var
   CurrentIrql: KIRQL;
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel()');
+  DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel();');
   EmuSwapFS(fsXbox);
 
   // TODO : DXBX - This we get from reactos, but
@@ -654,7 +653,7 @@ var
   CurrentIrql: KIRQL;
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeRaiseIrqlToSynchLevel()');
+  DbgPrintf('EmuKrnl : KeRaiseIrqlToSynchLevel();');
   EmuSwapFS(fsXbox);
 
   Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
