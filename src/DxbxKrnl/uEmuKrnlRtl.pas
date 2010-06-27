@@ -344,8 +344,8 @@ implementation
 uses
   uXboxLibraryUtils;
 
-// Critical Section implementation from Wine, modified to use Xbox1 data structure.
-// See http://source.winehq.org/source/dlls/ntdll/critsection.c
+// Critical Section implementation from ReactOS, modified to use Xbox1 data structure.
+// See http://code.google.com/p/reactos-mirror/source/browse/trunk/reactos/lib/rtl/critical.c
 
 procedure X_RtlInitializeCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
 begin
@@ -359,27 +359,35 @@ end;
 
 function X_RtlTryEnterCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION): _BOOLEAN;
 begin
+  // It's not ours
   Result := FALSE;
+
+  // Try to take control
   if (InterlockedCompareExchange({var}CriticalSection.LockCount, 0, -1) = -1) then
   begin
-    CriticalSection.OwningThread   := GetCurrentThreadId();
+    // It's ours
+    CriticalSection.OwningThread := GetCurrentThreadId();
     CriticalSection.RecursionCount := 1;
     Result := TRUE;
   end
   else if (CriticalSection.OwningThread = GetCurrentThreadId()) then
   begin
-    InterlockedDecrement({var}CriticalSection.LockCount);
+    // It's already ours
+    InterlockedIncrement({var}CriticalSection.LockCount);
     Inc(CriticalSection.RecursionCount);
     Result := TRUE;
   end;
 end;
 
-function get_semaphore(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION): HANDLE; inline;
+function RtlpCreateCriticalSectionSem(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION): HANDLE;
 begin
+  // Check if we have an event
   Result := CriticalSection.LockSemaphore;
   if (Result = 0) then
   begin
+    // No, so create it
     if (NtCreateSemaphore(@Result, SEMAPHORE_ALL_ACCESS, NULL, 0, 1) <> 0) then
+      // We failed, this is bad...
       Exit;
 
     if (InterlockedCompareExchange({var}Integer(CriticalSection.LockSemaphore), Result, 0) <> 0) then
@@ -390,53 +398,72 @@ begin
   end;
 end;
 
-function wait_semaphore(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION; timeout: int): NTSTATUS; inline;
+procedure X_RtlpWaitForCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
 var
   sem: HANDLE;
 begin
-  sem := get_semaphore(CriticalSection);
-  Result := WaitForMultipleObjects(1, @sem, False, timeout);
-end;
-
-procedure X_RtlpWaitForCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
-begin
-  while wait_semaphore(CriticalSection, 5) <> STATUS_WAIT_0 do
+  sem := RtlpCreateCriticalSectionSem(CriticalSection);
+  while WaitForMultipleObjects(1, @sem, False, {timeout=}5) <> STATUS_WAIT_0 do
     ;
 end;
 
 procedure X_RtlEnterCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
 begin
-  if (InterlockedIncrement({var}CriticalSection.LockCount) > 0) then
+  // Try to Lock it
+  if (InterlockedIncrement({var}CriticalSection.LockCount) <> 0) then
   begin
-    if (CriticalSection.OwningThread <> GetCurrentThreadId()) then
+    // We've failed to lock it! Does this thread
+    // actually own it?
+    if (CriticalSection.OwningThread = GetCurrentThreadId()) then
     begin
-      // Wait for it
-      X_RtlpWaitForCriticalSection(CriticalSection);
-
-      CriticalSection.OwningThread := GetCurrentThreadId();
-      CriticalSection.RecursionCount := 0;
+      // You own it, so you'll get it when you're done with it! No need to
+      // use the interlocked functions as only the thread who already owns
+      // the lock can modify this data. */
+      Inc(CriticalSection.RecursionCount);
+      Exit;
     end;
+
+    // NOTE - CriticalSection->OwningThread can be NULL here because changing
+    //        this information is not serialized. This happens when thread a
+    //        acquires the lock (LockCount == 0) and thread b tries to
+    //        acquire it as well (LockCount == 1) but thread a hasn't had a
+    //        chance to set the OwningThread! So it's not an error when
+    //        OwningThread is NULL here!
+
+    // We don't own it, so we must wait for it
+    X_RtlpWaitForCriticalSection(CriticalSection);
   end;
 
-  Inc(CriticalSection.RecursionCount);
+  // Lock successful. Changing this information has not to be serialized because
+  // only one thread at a time can actually change it (the one who acquired
+  // the lock)!
+  CriticalSection.OwningThread := GetCurrentThreadId();
+  CriticalSection.RecursionCount := 1;
 end;
 
 procedure X_RtlpUnWaitCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
 begin
-  NtReleaseSemaphore(get_semaphore(CriticalSection), 1, NULL);
+  NtReleaseSemaphore(RtlpCreateCriticalSectionSem(CriticalSection), 1, NULL);
 end;
 
 procedure X_RtlLeaveCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
 begin
+  // Decrease the Recursion Count. No need to do this atomically because only
+  // the thread who holds the lock can call this function (unless the program
+  // is totally screwed...
   Dec(CriticalSection.RecursionCount);
   if (CriticalSection.RecursionCount > 0) then
+    // Someone still owns us, but we are free. This needs to be done atomically.
     InterlockedDecrement({var}CriticalSection.LockCount)
   else
   begin
+    // Nobody owns us anymore. No need to do this atomically. See comment
+    // above.
     CriticalSection.OwningThread := 0;
+    // Was someone wanting us? This needs to be done atomically.
     if (InterlockedDecrement({var}CriticalSection.LockCount) >= 0) then
     begin
-      // someone is waiting
+      // Let him have us
       X_RtlpUnWaitCriticalSection(CriticalSection);
     end;
   end;
