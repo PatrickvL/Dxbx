@@ -277,19 +277,16 @@ var
   NewFS, OrgFS: UInt16;
   OrgNtTib: PNT_TIB;
   dwCopySize, dwZeroSize: UInt32;
-{$IFDEF _DEBUG_TRACE}
   stop: UInt32;
   v: UInt32;
   bByte: PUInt8;
   Line: string;
-{$ENDIF}
   dwSize: uint32;
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
-{$IFDEF DXBX_EXTREME_LOGGING}
-  DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
-{$ENDIF}
+  if MayLog(lfCxbx or lfExtreme) then
+    DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
 
   // copy global TLS to the current thread
   if Assigned(pTLS) then
@@ -309,8 +306,8 @@ begin
     dwZeroSize := 0;
   end;
 
-{$IFDEF _DEBUG_TRACE}
   // dump raw TLS data
+  if MayLog(lfCxbx or lfTrace) then
   begin
     if (pNewTLS = nil)
     or (dwCopySize + dwZeroSize = 0) then
@@ -339,7 +336,6 @@ begin
       DbgPrintf(Line);
     end;
   end;
-{$ENDIF}
 
   OrgFS := GetFS();
   OrgNtTib := GetTIB();
@@ -357,9 +353,8 @@ begin
   OrgNtTib.union_b.Dxbx_SwapFS := NewFS;
   OrgNtTib.union_b.Dxbx_IsXboxFS := False;
 
-{$IFDEF DXBX_EXTREME_LOGGING}
-  DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
-{$ENDIF}
+  if MayLog(lfCxbx or lfExtreme) then
+    DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
 
   // generate TIB
   begin
@@ -398,15 +393,15 @@ begin
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
 
-{$IFDEF DXBX_EXTREME_LOGGING}
-  DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr));
+  if MayLog(lfCxbx or lfExtreme) then
+  begin
+    DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr));
 
-  DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
-{$ENDIF}
+    DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
+  end;
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuFS : CurrentFS=%.04x  OrgFS=%d  NewFS=%d  pTLS=0x%.08x', [GetFS(), OrgFS, NewFS, pTLS]);
-{$ENDIF}
+  if MayLog(lfCxbx or lfDebug) then
+    DbgPrintf('EmuFS : CurrentFS=%.04x  OrgFS=%d  NewFS=%d  pTLS=0x%.08x', [GetFS(), OrgFS, NewFS, pTLS]);
 end;
 
 // cleanup fs segment selector emulation

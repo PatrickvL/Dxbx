@@ -121,10 +121,10 @@ function xboxkrnl_RtlDowncaseUnicodeString(
   AllocateDestinationString: _BOOLEAN
   ): NTSTATUS; stdcall;
 procedure xboxkrnl_RtlEnterCriticalSection(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ); stdcall;
 procedure xboxkrnl_RtlEnterCriticalSectionAndRegion(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ); stdcall;
 function xboxkrnl_RtlEqualString(
   String1: PSTRING;
@@ -179,7 +179,7 @@ procedure xboxkrnl_RtlInitUnicodeString(
   SourceString: LPCWSTR
   ); stdcall;
 procedure xboxkrnl_RtlInitializeCriticalSection(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ); stdcall;
 function xboxkrnl_RtlIntegerToChar(
   Value: ULONG;
@@ -193,10 +193,10 @@ function xboxkrnl_RtlIntegerToUnicodeString(
   Str: PUNICODE_STRING
   ): NTSTATUS; stdcall;
 procedure xboxkrnl_RtlLeaveCriticalSection(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ); stdcall;
 procedure xboxkrnl_RtlLeaveCriticalSectionAndRegion(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ); stdcall;
 function xboxkrnl_RtlLowerChar(
   Character: _CHAR
@@ -240,7 +240,7 @@ procedure xboxkrnl_RtlTimeToTimeFields(
   TimeFields: PTIME_FIELDS // out
   ); stdcall;
 function xboxkrnl_RtlTryEnterCriticalSection(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ): _BOOLEAN; stdcall;
 function xboxkrnl_RtlUlongByteSwap(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -343,6 +343,106 @@ implementation
 
 uses
   uXboxLibraryUtils;
+
+// Critical Section implementation from Wine, modified to use Xbox1 data structure.
+// See http://source.winehq.org/source/dlls/ntdll/critsection.c
+
+procedure X_RtlInitializeCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
+begin
+  CriticalSection.LockCount      := -1;
+  CriticalSection.RecursionCount := 0;
+  CriticalSection.OwningThread   := 0;
+
+  NtClose(CriticalSection.LockSemaphore);
+  CriticalSection.LockSemaphore  := 0;
+end;
+
+function X_RtlTryEnterCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION): _BOOLEAN;
+begin
+  Result := FALSE;
+  if (InterlockedCompareExchange({var}CriticalSection.LockCount, 0, -1) = -1) then
+  begin
+    CriticalSection.OwningThread   := GetCurrentThreadId();
+    CriticalSection.RecursionCount := 1;
+    Result := TRUE;
+  end
+  else if (CriticalSection.OwningThread = GetCurrentThreadId()) then
+  begin
+    InterlockedDecrement({var}CriticalSection.LockCount);
+    Inc(CriticalSection.RecursionCount);
+    Result := TRUE;
+  end;
+end;
+
+function get_semaphore(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION): HANDLE; inline;
+begin
+  Result := CriticalSection.LockSemaphore;
+  if (Result = 0) then
+  begin
+    if (NtCreateSemaphore(@Result, SEMAPHORE_ALL_ACCESS, NULL, 0, 1) <> 0) then
+      Exit;
+
+    if (InterlockedCompareExchange({var}Integer(CriticalSection.LockSemaphore), Result, 0) <> 0) then
+    begin
+      NtClose(Result);  // somebody beat us to it
+      Result := CriticalSection.LockSemaphore;
+    end;
+  end;
+end;
+
+function wait_semaphore(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION; timeout: int): NTSTATUS; inline;
+var
+  sem: HANDLE;
+begin
+  sem := get_semaphore(CriticalSection);
+  Result := WaitForMultipleObjects(1, @sem, False, timeout);
+end;
+
+procedure X_RtlpWaitForCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
+begin
+  while wait_semaphore(CriticalSection, 5) <> STATUS_WAIT_0 do
+    ;
+end;
+
+procedure X_RtlEnterCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
+begin
+  if (InterlockedIncrement({var}CriticalSection.LockCount) > 0) then
+  begin
+    if (CriticalSection.OwningThread <> GetCurrentThreadId()) then
+    begin
+      // Wait for it
+      X_RtlpWaitForCriticalSection(CriticalSection);
+
+      CriticalSection.OwningThread := GetCurrentThreadId();
+      CriticalSection.RecursionCount := 0;
+    end;
+  end;
+
+  Inc(CriticalSection.RecursionCount);
+end;
+
+procedure X_RtlpUnWaitCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
+begin
+  NtReleaseSemaphore(get_semaphore(CriticalSection), 1, NULL);
+end;
+
+procedure X_RtlLeaveCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
+begin
+  Dec(CriticalSection.RecursionCount);
+  if (CriticalSection.RecursionCount > 0) then
+    InterlockedDecrement({var}CriticalSection.LockCount)
+  else
+  begin
+    CriticalSection.OwningThread := 0;
+    if (InterlockedDecrement({var}CriticalSection.LockCount) >= 0) then
+    begin
+      // someone is waiting
+      X_RtlpUnWaitCriticalSection(CriticalSection);
+    end;
+  end;
+end;
+
+//
 
 function xboxkrnl_RtlAnsiStringToUnicodeString(
   DestinationString: PUNICODE_STRING;
@@ -571,7 +671,7 @@ end;
 
 procedure xboxkrnl_RtlEnterCriticalSection
 (
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -587,15 +687,15 @@ begin
 
   // Cxbx : This seems redundant, but xbox software doesn't always do it
   if(CriticalSection.LockCount = -1) then
-    JwaNative.RtlInitializeCriticalSection(CriticalSection);
+    X_RtlInitializeCriticalSection(CriticalSection);
 
-  JwaNative.RtlEnterCriticalSection(CriticalSection);
+  X_RtlEnterCriticalSection(CriticalSection);
 
   EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_RtlEnterCriticalSectionAndRegion(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ); stdcall;
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:50
 begin
@@ -608,7 +708,7 @@ begin
            [CriticalSection]);
 {$ENDIF}
 
-  JwaNative.RtlEnterCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
+  X_RtlEnterCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
 
   EmuSwapFS(fsXbox);
 end;
@@ -777,7 +877,7 @@ end;
 
 procedure xboxkrnl_RtlInitializeCriticalSection
 (
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -792,7 +892,7 @@ begin
            [CriticalSection]);   }
 {$ENDIF}
 
-  JwaNative.RtlInitializeCriticalSection(CriticalSection);
+  X_RtlInitializeCriticalSection(CriticalSection);
 
   EmuSwapFS(fsXbox);
 end;
@@ -824,24 +924,24 @@ end;
 
 procedure xboxkrnl_RtlLeaveCriticalSection
 (
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  JwaNative.RtlLeaveCriticalSection(CriticalSection);
+
+  X_RtlLeaveCriticalSection(CriticalSection);
+
   EmuSwapFS(fsXbox);
 end;
 
 procedure xboxkrnl_RtlLeaveCriticalSectionAndRegion(
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
   ); stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
   EmuSwapFS(fsWindows);
-
-  JwaNative.RtlLeaveCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
-
+  X_RtlLeaveCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
   EmuSwapFS(fsXbox);
 end;
 
@@ -997,7 +1097,7 @@ end;
 
 function xboxkrnl_RtlTryEnterCriticalSection
 (
-  CriticalSection: PRTL_CRITICAL_SECTION
+  CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION
 ): _BOOLEAN; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -1011,7 +1111,7 @@ begin
         [CriticalSection]);
 {$ENDIF}
 
-  Result := JwaNative.RtlTryEnterCriticalSection(CriticalSection);
+  Result := X_RtlTryEnterCriticalSection(CriticalSection);
 
   EmuSwapFS(fsXbox);
 end;
