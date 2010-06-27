@@ -38,14 +38,14 @@ uses
 var
   DebugMode: TDebugMode = dmNone;
   DebugFileName: string = '';
-  
+
 {$IFDEF DXBX_DLL}
 function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
 {$ENDIF}
 
 procedure CreateLogs(aDebugMode: TDebugMode; aOutputFileName: string = '');
 procedure CloseLogs;
-procedure WriteLog(const aText: string);
+procedure WriteLog(aText: string);
 
 function DxbxFormat(aStr: string; Args: array of const; MayRenderArguments: Boolean = False): string;
 
@@ -64,6 +64,35 @@ function sprintf(aBuffer: PAnsiChar; const aString: AnsiString; Args: array of c
 
 //type Tsprintf = function (aBuffer: PAnsiChar): Integer; cdecl varargs;
 //var sprintf: Tsprintf;
+
+type
+  TLogProc = procedure;
+const
+  //TLogFlag = (      // Use these flags to indicate...
+    lfAlways        = $00000001; // ... logging that should always be visible
+    lfDebug         = $00000002; // ... debug logging  normal level
+    lfTrace         = $00000004; // ... debug logging  higher level of detail
+    lfExtreme       = $00000008; // ... debug logging  that generates a lot of output
+    lfCxbx          = $00000010; // ... Cxbx logs this too
+    lfDxbx          = $00000020; // ... logging that's unique to Dxbx
+    lfKernel        = $00000040; // ... this concerns a Kernel API
+    lfPatch         = $00000080; // ... this concerns a emulation patch
+    lfSymbolScan    = $00000100; //
+    lfPixelShader   = $00000200; //
+    lfVertexShader  = $00000400; //
+    lfVertexBuffer  = $00000800; //
+    lfPushBuffer    = $00001000; //
+    lfInvalid       = $00002000; //
+
+
+type  TLogFlags = DWORD; // 'set of TLogFlag' prevents inlining of MayLog
+
+var
+  // This field indicates all logging flags that are currently active :
+  g_ActiveLogFlags: TLogFlags = lfAlways or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfSymbolScan;
+
+function MayLog(const aFlags: TLogFlags): Boolean; inline;
+procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); inline;
 
 implementation
 
@@ -134,6 +163,18 @@ end;
 
 var
   ZeroChar: Char = #0;
+
+// TODO : Apply this to all DbgPrintf calls, and put those in inline methods to speed things up
+function MayLog(const aFlags: TLogFlags): Boolean; // inline;
+begin
+  Result := (aFlags or g_ActiveLogFlags) > 0;
+end;
+
+procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); // inline;
+begin
+  if MayLog(aFlags) then
+    aLogProc();
+end;
 
 // Checks whether the given address is a valid address
 // Source : getmem.inc
@@ -353,7 +394,7 @@ begin
       end;
 
       if not MayRenderArguments then
-        continue;
+        Continue;
 
       // Step to the next percentage-character :
       while CurrentPercentageOffset < Length(aStr) do
@@ -365,7 +406,7 @@ begin
           if (aStr[CurrentPercentageOffset] = '%') then
             Inc(CurrentPercentageOffset)
           else
-            break;
+            Break;
         end;
       end;
 (* Note : This is a major slowdown! 7 fps becomes 300 fps without this!
@@ -573,51 +614,46 @@ begin
   end;
 end;
 
-procedure WriteLog(const aText: string);
+threadvar
+  CurrentThreadIDInsertStr: string;
 
-  function _Text: string;
-  var
-    i: Integer;
-  begin
-    i := Pos(':', aText);
-    if (i < 15) and (strncmp(PChar(aText), 'Emu', 3) = 0) then
-      // Prefix the text with the CurrentThreadID :
-      Result := Copy(aText, 1, i - 1)
-              + '(0x' + IntToHex(GetCurrentThreadID(), 1) + ')'
-              + Copy(aText, i, MaxInt)
-    else
-      Result := aText;
-  end;
-
+procedure WriteLog(aText: string);
 var
-  CurrentFS: Word;
+  i: Integer;
 begin
-  OutputDebugString(PChar(aText));
-  
-  if Assigned(ConsoleControl) then
-  begin
-    EnterCriticalSection({var}DxbxLogLock);
+  EnterCriticalSection({var}DxbxLogLock);
+  try
     try
-      ConsoleControl.WriteTextLine(_Text());
-    finally
-      LeaveCriticalSection({var}DxbxLogLock);
-    end;
-  end;
+      OutputDebugString(PChar(aText));
 
-  if LogFileOpen then
-  begin
-    EnterCriticalSection({var}DxbxLogLock);
-    CurrentFS := GetFS();
-    try
-      WriteLn({var}LogFile, _Text());
-      // BUGFIX : Because the above call goes through kernel32.WriteFile,
-      // which alters the FS register, we have to restore it afterwards :
-      SetFS(CurrentFS);
-          
-      Flush({var}LogFile);
-    finally
-      LeaveCriticalSection({var}DxbxLogLock);
+      if Assigned(ConsoleControl) or LogFileOpen then
+      begin
+        i := Pos(':', aText);
+        if (i > 0) and (i < 15) and (strncmp(PChar(aText), 'Emu', 3) = 0) then
+        begin
+          // Calculate the string to insert only once, as in some titles (like TechCertGame)
+          // redetermining this on every call leads to crashes (don't know why that is) :
+          if CurrentThreadIDInsertStr = '' then
+            CurrentThreadIDInsertStr := '(0x' + IntToHex(GetCurrentThreadID(), 1) + ')';
+
+          // Prefix the text with the CurrentThreadID :
+          Insert(CurrentThreadIDInsertStr, {var}aText, i);
+        end;
+
+        if Assigned(ConsoleControl) then
+          ConsoleControl.WriteTextLine(aText);
+
+        if LogFileOpen then
+        begin
+          WriteLn({var}LogFile, aText);
+
+          Flush({var}LogFile);
+        end;
+      end;
+    except
     end;
+  finally
+    LeaveCriticalSection({var}DxbxLogLock);
   end;
 end; // WriteLog
 

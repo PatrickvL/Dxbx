@@ -435,7 +435,7 @@ function {160} xboxkrnl_KfRaiseIrql(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
   {1 ECX}NewIrql: KIRQL
-  ): KIRQL; register; // fastcall simulation - See Translation guide
+  ): KIRQL; register; // VALIDATED fastcall simulation - See Translation guide
 // Source:shogun  Revision:0.8.1-Pre2  Branch:Dxbx  Translator:shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -450,7 +450,6 @@ begin
 
   EmuSwapFS(fsXbox);
   Result := 0;
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
 // Restores the irq level on the current processor

@@ -784,19 +784,22 @@ type
   );
   PKOBJECTS = ^KOBJECTS;
 
-(*
 // ******************************************************************
 // * RTL_CRITICAL_SECTION
 // ******************************************************************
 type
-
-RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION  = packed record
-                   Unknown: array [0..4-1] of DWORD;                                     // 0x00
-    LongInt                LockCount;                                      // 0x10
-    LongInt                RecursionCount;                                 // 0x14
-    ULONG               OwningThread;                                   // 0x18
- end;
-*)
+  RTL_CRITICAL_SECTION = packed record
+    Unknown: array [0..3-1] of DWORD;                      // 0x00
+    LockSemaphore: HANDLE; // Dxbx addition
+    //
+    //  The following three fields control entering and exiting the critical
+    //  section for the resource
+    //
+    LockCount: LongInt;                                    // 0x10
+    RecursionCount: LongInt;                               // 0x14
+    OwningThread: ULONG;                                   // 0x18
+  end;
+  PRTL_CRITICAL_SECTION = ^RTL_CRITICAL_SECTION;
 
 // ******************************************************************
 // * NT_TIB
