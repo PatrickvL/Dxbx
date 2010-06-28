@@ -350,6 +350,7 @@ uses
 procedure X_RtlInitializeCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
 begin
   CriticalSection.LockCount      := -1;
+
   CriticalSection.RecursionCount := 0;
   CriticalSection.OwningThread   := 0;
 
@@ -403,18 +404,21 @@ var
   sem: HANDLE;
 begin
   sem := RtlpCreateCriticalSectionSem(CriticalSection);
-  while WaitForMultipleObjects(1, @sem, False, {timeout=}5) <> STATUS_WAIT_0 do
+  while WaitForSingleObject(sem, {timeout=}5) <> STATUS_WAIT_0 do
     ;
 end;
 
 procedure X_RtlEnterCriticalSection(CriticalSection: XboxKrnl.PRTL_CRITICAL_SECTION);
+var
+  CurrentThreadId: DWORD;
 begin
+  CurrentThreadId := GetCurrentThreadId();
   // Try to Lock it
   if (InterlockedIncrement({var}CriticalSection.LockCount) <> 0) then
   begin
     // We've failed to lock it! Does this thread
     // actually own it?
-    if (CriticalSection.OwningThread = GetCurrentThreadId()) then
+    if (CriticalSection.OwningThread = CurrentThreadId) then
     begin
       // You own it, so you'll get it when you're done with it! No need to
       // use the interlocked functions as only the thread who already owns
@@ -437,7 +441,7 @@ begin
   // Lock successful. Changing this information has not to be serialized because
   // only one thread at a time can actually change it (the one who acquired
   // the lock)!
-  CriticalSection.OwningThread := GetCurrentThreadId();
+  CriticalSection.OwningThread := CurrentThreadId;
   CriticalSection.RecursionCount := 1;
 end;
 

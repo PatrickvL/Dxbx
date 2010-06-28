@@ -144,7 +144,7 @@ begin
     RaiseLastOSError;
 
   // Clear out the whole range, overwriting the complete launcher EXE :
-//  ZeroMemory(ExeDosHeader, XBOX_MEMORY_SIZE);
+  ZeroMemory(ExeDosHeader, XBOX_MEMORY_SIZE);
 
   // Restore just as much of the headers to keep WinAPI's working :
   ReinitExeImageHeader;
@@ -332,6 +332,9 @@ begin
 
     // Now we got the arguments, start by initializing the Xbox memory map :
     PrepareXBoxMemoryMap;
+
+    // TODO : Setup LaunchData and Initialize kernel
+    // (which will launch the Xbe on itself), instead here.
 
     // Now we can load and run the XBE :
     MapAndRunXBE(TXbe.Create(XbePath), DCHandle);
