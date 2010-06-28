@@ -1170,7 +1170,7 @@ begin
       [hThread, lpExitCode]);
 {$ENDIF}
 
-  Result := BOOL(GetExitCodeThread(hThread, {var}Cardinal(lpExitCode)));
+  Result := BOOL(GetExitCodeThread(hThread, {var}Cardinal(lpExitCode^)));
 
   EmuSwapFS(fsXbox);
 end;
