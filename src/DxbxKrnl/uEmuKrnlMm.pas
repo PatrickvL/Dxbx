@@ -461,6 +461,18 @@ begin
   // TODO -oCXBX: Actually set this up to be remember across a 'reboot'
   EmuWarning('MmPersistContiguousMemory is being ignored');
 
+  // [PatrickvL] Shared memory would be a perfect fit for this,
+  // but the supplied pointer is already allocated. In order to
+  // change the 'shared' state of this memory, we would have to
+  // obtain the complete memory range (via CreateFileMapping)
+  // in one go, and use this for all allocation (much work, this).
+  // Another way would be assume 'contiguous memory' is the
+  // only type of memory being persisted, which would simplify
+  // the allocation procedure significantly.
+  // Another way could be to persist all registered blocks
+  // of memory at application shutdown, but restoring it in
+  // the next run at the same addresses could be troublesome.
+
   EmuSwapFS(fsXbox);
 end;
 

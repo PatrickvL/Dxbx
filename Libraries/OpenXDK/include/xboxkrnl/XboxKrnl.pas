@@ -790,14 +790,17 @@ type
 type
   RTL_CRITICAL_SECTION = packed record
     Unknown: array [0..3-1] of DWORD;                      // 0x00
-    LockSemaphore: HANDLE; // Dxbx addition
+
+    // Dxbx Note : Unknown might well be an in-place mutex, which would save us from
+    // allocating a separate synchronization primitive (a semaphore right now) :
+    LockSemaphore: HANDLE; // Dxbx addition - not sure this is right, but I had to put this somewhere!
     //
     //  The following three fields control entering and exiting the critical
     //  section for the resource
     //
-    LockCount: LongInt;                                    // 0x10
-    RecursionCount: LongInt;                               // 0x14
-    OwningThread: ULONG;                                   // 0x18
+    LockCount: LongInt;                                    // 0x10 = 16
+    RecursionCount: LongInt;                               // 0x14 = 20
+    OwningThread: ULONG;                                   // 0x18 = 24
   end;
   PRTL_CRITICAL_SECTION = ^RTL_CRITICAL_SECTION;
 

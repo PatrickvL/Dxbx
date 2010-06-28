@@ -446,7 +446,7 @@ begin
   DbgPrintf('EmuMain : Initial thread ended.');
 {$ENDIF}
 
-  fflush(stdout);
+//  fflush(stdout);
 
   DxbxKrnlTerminateThread();
 end;

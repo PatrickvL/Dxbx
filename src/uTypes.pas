@@ -555,7 +555,8 @@ end;
 
 procedure fflush(stream: PFILE);
 begin
-  // TODO -oDxbx : How doe we implement this?
+  if Assigned(stream) then
+    FlushFileBuffers(stream^);
 end;
 
 // Note: Instead of calling FIELD_OFFSET(Type, Member)

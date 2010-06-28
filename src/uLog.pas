@@ -164,7 +164,7 @@ end;
 var
   ZeroChar: Char = #0;
 
-// TODO : Apply this to all DbgPrintf calls, and put those in inline methods to speed things up
+// TODO -oDxbx: Apply this to all DbgPrintf calls, and put those in inline methods to speed things up
 function MayLog(const aFlags: TLogFlags): Boolean; // inline;
 begin
   Result := (aFlags or g_ActiveLogFlags) > 0;
