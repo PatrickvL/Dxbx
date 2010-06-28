@@ -1,6 +1,16 @@
 DXBX Changelog, this changelog has been implemented from version 0.0.9
 So the changes from version 0.0.8 and below are not documented.
 
+Version 0.3 Release:
+- Controllers are working
+- More homebrew is working
+- First screen displayed by Blade2
+- Intro Movie played by Rayman arena
+- Alot of bugs fixed, also alot of translation bugs found this time.
+- First sounds samples are also working.
+
+Huge improvements this time.....
+
 version 0.2 release:
 Screens are working alot better, even xpong and xmarbles produces screens.
 
