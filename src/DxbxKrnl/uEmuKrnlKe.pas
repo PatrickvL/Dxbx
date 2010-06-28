@@ -284,7 +284,7 @@ begin
       [Ord(WaitMode), Alertable, Interval, QuadPart(Interval)]);
 {$ENDIF}
 
-  ret := NtDelayExecution(Alertable, PLARGE_INTEGER(Interval));
+  ret := NtDelayExecution(Alertable, Interval);
   EmuSwapFS(fsXbox);
   Result := ret;
 end;

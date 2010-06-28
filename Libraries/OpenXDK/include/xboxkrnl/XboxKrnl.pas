@@ -877,33 +877,22 @@ type
 // ******************************************************************
 // *
 // * NOTE: KPCR is the structure which exists at the FS: segment.
+// * KPCR stands for : "Kernel Processor Control Region"
 // *
 // ******************************************************************
 type
   // Dxbx note : Pointer-type is normally defined AFTER record, but now BEFORE because of recursive declaration :
   PKPCR = ^KPCR;
-  KPCR = packed record
-    NtTib: NT_TIB; // 0x00
-    SelfPcr: PKPCR; // 0x1C
-    Prcb: PKPRCB; // 0x20
-    Irql: UCHAR; // 0x24
+  _KPCR = packed record
+    NtTib: NT_TIB;   // 0x00
+    SelfPcr: PKPCR;  // 0x1C - flat address of this PCR
+    Prcb: PKPRCB;    // 0x20 - Pointer to Prcb (PrcbData?)
+    Irql: KIRQL;     // 0x24
     Padding1: array [0..3-1] of UCHAR;
     PrcbData: KPRCB; // 0x28
   end;
+  KPCR = _KPCR;
 
-
-// Structure of the data at FS
-type _FS_STRUCTURE = packed record
-// Source: Undocumented.h  Branch:Dxbx  Translator:PatrickvL  Done:100
-    ExceptionFrame: PPVOID;              // 000 Current exception handler information
-    TlsDataTop: PVOID;                   // 004 Pointer to current TLS data top
-    unknown2: array [0..$1C-1] of BYTE;  // 008
-    CurrentIrql: KIRQL;                  // 024 Current IRQL of the OS
-    ThreadObject: PKTHREAD;              // 028 Thread structure of the current thread
-    unknown3: array [0..$100-1] of BYTE; // ??? just padding - real size is unknown
-  end;
-  FS_STRUCTURE = _FS_STRUCTURE;
-  PFS_STRUCTURE = ^FS_STRUCTURE;
 
 // ******************************************************************
 // * EEPROM_INDEX
