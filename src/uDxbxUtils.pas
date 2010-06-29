@@ -76,6 +76,16 @@ type
 
   TLineCallback = function (aLinePtr: PAnsiChar; aLength: Integer; aData: Pointer): Boolean;
 
+  TStreamHelper = class helper for TStream
+  public
+    procedure WriteString(const aString: AnsiString);
+  end;
+
+  TCustomMemoryStreamHelper = class helper for TCustomMemoryStream
+  public
+    function DataString: AnsiString;
+  end;
+
   TPreallocatedMemoryStream = class(TCustomMemoryStream)
   public
     constructor Create(const aAddress: Pointer; aSize: Integer);
@@ -888,6 +898,23 @@ begin
     Result := 'No description for error #' + IntToStr(aError)
   else
     Result := Result + ' (#' + IntToStr(aError) + ')';
+end;
+
+{ TStreamHelper }
+
+procedure TStreamHelper.WriteString(const aString: AnsiString);
+begin
+  if Length(aString) > 0 then
+    Write(aString[1], Length(aString));
+end;
+
+{ TCustomMemoryStreamHelper }
+
+function TCustomMemoryStreamHelper.DataString: AnsiString;
+begin
+  SetLength(Result, Size);
+  Position := 0;
+  Read(Result[1], Size);
 end;
 
 { TPreallocatedMemoryStream }
