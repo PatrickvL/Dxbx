@@ -56,7 +56,7 @@ type
   public
     Address: TCodePointer;
     Symbol: TSymbolInformation;
-    CrossReferencesIndex: Integer;
+    SymbolReferencesIndex: Integer;
     NrOfReferencesTo: Integer;
     NextPotentialFunctionLocationIndex: Integer;
 
@@ -69,10 +69,10 @@ type
     function GetHasPotentialLocations: Boolean;
     function GetIsSymbolNameUsedInFunctions: Boolean;
     function GetHasFunctionInformation: Boolean;
-    function GetHasCrossReferences: Boolean;
+    function GetHasSymbolReferences: Boolean;
     function GetLength: Cardinal;
-    function GetCrossReferenceCount: Integer;
-    function GetCrossReference(const aIndex: Integer): PStoredCrossReference;
+    function GetSymbolReferenceCount: Integer;
+    function GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
   public
     NameIndex: TStringTableIndex;
     Name: string;
@@ -87,17 +87,17 @@ type
     property IsSymbolNameUsedInFunctions: Boolean read GetIsSymbolNameUsedInFunctions;
     property HasPotentialLocations: Boolean read GetHasPotentialLocations;
     property HasFunctionInformation: Boolean read GetHasFunctionInformation;
-    property HasCrossReferences: Boolean read GetHasCrossReferences;
+    property HasSymbolReferences: Boolean read GetHasSymbolReferences;
 
     property Length: Cardinal read GetLength;
-    property CrossReferenceCount: Integer read GetCrossReferenceCount;
-    property CrossReferences[const aIndex: Integer]: PStoredCrossReference read GetCrossReference;
+    property SymbolReferenceCount: Integer read GetSymbolReferenceCount;
+    property SymbolReferences[const aIndex: Integer]: PStoredSymbolReference read GetSymbolReference;
   end;
 
   TSymbolManager = class(TObject)
   protected // Symbols :
     MySymbolsHashedOnName: array [Word] of TSymbolInformation; // Hash table for all detected symbols, hashed on Name
-    MySymbolCount: Integer; // Number of detected symbols (including cross-references)
+    MySymbolCount: Integer; // Number of detected symbols (including symbol-references)
     function FindSymbol(const aNameIndex: TStringTableIndex): TSymbolInformation; overload;
     function FindOrAddSymbol(const aNameIndex: TStringTableIndex; const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation; overload;
     function FindOrAddSymbol(const aName: string; const aFoundFunction: PStoredLibraryFunction = nil): TSymbolInformation; overload;
@@ -122,13 +122,13 @@ type
     MyAddressesScanned: TBits;
     ScanUpper: UIntPtr;
     PatternTrieReader: TPatternTrieReader;
-    AllCrossReferences: array of record Symbol: TSymbolInformation; Address: TCodePointer; IsDuplicate: Boolean; end;
-    AllCrossReferencesInUse: Integer;
+    AllSymbolReferences: array of record Symbol: TSymbolInformation; Address: TCodePointer; MustSkip: Boolean; end;
+    AllSymbolReferencesInUse: Integer;
     FCurrentTestAddress: PByte;
     procedure _Debug(const aSymbol: TSymbolInformation);
     function IsAddressWithinCodeRange(const aAddress: TCodePointer): Boolean;
     function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
-    function GetCrossReferencedAddress(const aStartingAddress: PByte; const aCrossReference: PStoredCrossReference): TCodePointer;
+    function GetReferencedSymbolAddress(const aStartingAddress: PByte; const aSymbolReference: PStoredSymbolReference): TCodePointer;
     procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
     procedure TestAddressUsingPatternTrie(var aTestAddress: PByte; const DoForwardScan: Boolean = True);
     procedure DetermineFinalLocations;
@@ -272,9 +272,9 @@ begin
   Result := Assigned(StoredLibraryFunction);
 end;
 
-function TSymbolInformation.GetHasCrossReferences: Boolean;
+function TSymbolInformation.GetHasSymbolReferences: Boolean;
 begin
-  Result := (CrossReferenceCount > 0);
+  Result := (SymbolReferenceCount > 0);
 end;
 
 function TSymbolInformation.GetLength: Cardinal;
@@ -286,17 +286,17 @@ begin
     Result := SizeOf(DWORD);
 end;
 
-function TSymbolInformation.GetCrossReferenceCount: Integer;
+function TSymbolInformation.GetSymbolReferenceCount: Integer;
 begin
   if Assigned(StoredLibraryFunction) then
-    Result := StoredLibraryFunction.NrCrossReferences
+    Result := StoredLibraryFunction.NrSymbolReferences
   else
     Result := 0;
 end;
 
-function TSymbolInformation.GetCrossReference(const aIndex: Integer): PStoredCrossReference;
+function TSymbolInformation.GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
 begin
-  Result := GetCrossReferenceByIndex(StoredLibraryFunction, aIndex);
+  Result := GetSymbolReferenceByIndex(StoredLibraryFunction, aIndex);
 end;
 
 function TSymbolInformation.FindPotentialLocationIndex(const aAddress: TCodePointer): Integer;
@@ -543,28 +543,29 @@ begin
   Result := (UIntPtr(aAddress) >= XBE_IMAGE_BASE) and (UIntPtr(aAddress) <= ScanUpper);
 end;
 
-function TSymbolManager.GetCrossReferencedAddress(const aStartingAddress: PByte;
-  const aCrossReference: PStoredCrossReference): TCodePointer;
+function TSymbolManager.GetReferencedSymbolAddress(const aStartingAddress: PByte;
+  const aSymbolReference: PStoredSymbolReference): TCodePointer;
 begin
 {$IFDEF DXBX_RECTYPE}
-  Assert(aCrossReference.RecType = rtStoredCrossReference, 'StoredCrossReference type mismatch!');
+  Assert(aSymbolReference.RecType = rtStoredSymbolReference, 'StoredSymbolReference type mismatch!');
 {$ENDIF}
-  // TODO : Instead of arbitrarily trying both addressing methods,
-  // we should gather the method from the pattern trie!
-
-  // Use aCrossReference.Offset to determine the symbol-address that should be checked :
-  Result := DetermineImmediateAddress(aStartingAddress, aCrossReference.Offset);
-  Dec(IntPtr(Result), aCrossReference.BaseOffset);
-  if IsAddressWithinScanRange(Result) then
+  // Use aSymbolReference to determine the symbol-address that should be checked :
+  if (aSymbolReference.ReferenceFlags and rfIsRelative) > 0 then
+    Result := DetermineRelativeAddress(aStartingAddress, aSymbolReference.Offset)
+  else
+  if (aSymbolReference.ReferenceFlags and rfIsAbsolute) > 0 then
+    Result := DetermineImmediateAddress(aStartingAddress, aSymbolReference.Offset)
+  else
+  begin
+    // TODO : Handle rfIsSectionRel
+    Result := nil;
     Exit;
+  end;
 
-  Result := DetermineRelativeAddress(aStartingAddress, aCrossReference.Offset);
-  Dec(IntPtr(Result), aCrossReference.BaseOffset);
-  if IsAddressWithinScanRange(Result) then
-    Exit;
-
-  Result := nil;
-end; // GetCrossReferencedAddress
+  Dec(IntPtr(Result), aSymbolReference.BaseOffset); // Must be signed ptr, for negative offsets!
+  if not IsAddressWithinScanRange(Result) then
+    Result := nil;
+end; // GetReferencedSymbolAddress
 
 function TSymbolManager.RegisterSpecificFunctionLocation(const aFunctionName: string; const aAddress: PByte): TSymbolInformation;
 begin
@@ -580,7 +581,7 @@ var
   f: Integer;
   c: Integer;
   CurrentLocation: PPotentialFunctionLocation;
-  CrossReference: PStoredCrossReference;
+  SymbolReference: PStoredSymbolReference;
 begin
   if aSymbol = nil then
     Exit;
@@ -588,7 +589,7 @@ begin
   DbgPrintf('SYMBOL : "%s"', [aSymbol.Name]);
   DbgPrintf('Length : %d', [aSymbol.Length]);
   DbgPrintf('Address : $%.08x', [aSymbol.Address]);
-  DbgPrintf('CrossReferenceCount : %d', [aSymbol.CrossReferenceCount]);
+  DbgPrintf('SymbolReferenceCount : %d', [aSymbol.SymbolReferenceCount]);
   DbgPrintf('PotentialLocations :');
   c := 10;
   f := aSymbol.FirstPotentialFunctionLocationIndex;
@@ -602,20 +603,20 @@ begin
       CurrentLocation.Address,
       CurrentLocation.NrOfReferencesTo]);
 
-    if CurrentLocation.CrossReferencesIndex > 0 then
+    if CurrentLocation.SymbolReferencesIndex > 0 then
     begin
-      for i := 0 to aSymbol.CrossReferenceCount - 1 do
+      for i := 0 to aSymbol.SymbolReferenceCount - 1 do
       begin
-        CrossReference := aSymbol.GetCrossReference(i);
-        Assert(Assigned(CrossReference));
+        SymbolReference := aSymbol.GetSymbolReference(i);
+        Assert(Assigned(SymbolReference));
 
-        DbgPrintf('  CrossReference %2d : $%0.4x -> $%.08x = "%s"+$%.04x%s', [
+        DbgPrintf('  SymbolReference %2d : $%0.4x -> $%.08x = "%s"+$%.04x%s', [
           i+1,
-          CrossReference.Offset,
-          AllCrossReferences[CurrentLocation.CrossReferencesIndex+i].Address,
-          AllCrossReferences[CurrentLocation.CrossReferencesIndex+i].Symbol.Name,
-          CrossReference.BaseOffset,
-          DuplicateString[AllCrossReferences[CurrentLocation.CrossReferencesIndex+i].IsDuplicate]
+          SymbolReference.Offset,
+          AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Address,
+          AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].Symbol.Name,
+          SymbolReference.BaseOffset,
+          DuplicateString[AllSymbolReferences[CurrentLocation.SymbolReferencesIndex+i].MustSkip]
           ]);
       end;
     end;
@@ -646,9 +647,9 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     while (LengthWithoutPadding > 0) and (PBytes(aTestAddress)[LengthWithoutPadding-1] in [OPCODE_NOP, OPCODE_INT3]) do
       Dec(LengthWithoutPadding);
 
-    // Skip small functions with only one cross-reference, because those are
+    // Skip small functions with only one symbol-reference, because those are
     // very common. Instead, we hope they will be discovered via other functions :
-    case aStoredLibraryFunction.NrCrossReferences of
+    case aStoredLibraryFunction.NrSymbolReferences of
       0: Result := (LengthWithoutPadding >= 7);
       1: Result := (LengthWithoutPadding > 5)
                and (aTestAddress^ <> OPCODE_JMP);
@@ -666,69 +667,82 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
       Result := True;
   end;
 
-  function _CheckAndRememberFunctionCrossReferences(const aSymbol: TSymbolInformation): Boolean;
+  function _CheckAndRememberFunctionSymbolReferences(const aSymbol: TSymbolInformation): Boolean;
   var
-    CrossReference: PStoredCrossReference;
+    SymbolReference: PStoredSymbolReference;
     c, x, i: Integer;
   begin
-    Result := (aSymbol.CrossReferenceCount = 0);
+    Result := (aSymbol.SymbolReferenceCount = 0);
     if Result then
       Exit;
 
-    // Make sure there's space for the cross-references :
-    c := AllCrossReferencesInUse + aSymbol.CrossReferenceCount;
-    while Length(AllCrossReferences) < c do
-      SetLength(AllCrossReferences, Length(AllCrossReferences) * 2);
-    c := AllCrossReferencesInUse;
+    // Make sure there's space for the symbol-references :
+    c := AllSymbolReferencesInUse + aSymbol.SymbolReferenceCount;
+    while Length(AllSymbolReferences) < c do
+      SetLength(AllSymbolReferences, Length(AllSymbolReferences) * 2);
+    c := AllSymbolReferencesInUse;
 
-    // Read all cross-references and check if they point to a valid address :
-    UIntPtr(CrossReference) := UIntPtr(aSymbol.StoredLibraryFunction) + SizeOf(RStoredLibraryFunction);
-    for x := 0 to aSymbol.CrossReferenceCount - 1 do
+    // Read all symbol-references and check if they point to a valid address :
+    UIntPtr(SymbolReference) := UIntPtr(aSymbol.StoredLibraryFunction) + SizeOf(RStoredLibraryFunction);
+    for x := 0 to aSymbol.SymbolReferenceCount - 1 do
     begin
-      // If a cross-reference falls outside the valid range, we consider this a false hit :
-      AllCrossReferences[c+x].Address := GetCrossReferencedAddress(aTestAddress, CrossReference);
-      if (AllCrossReferences[c+x].Address = nil) then
-        Exit;
+      AllSymbolReferences[c+x].Symbol := FindOrAddSymbol(SymbolReference.NameIndex, {Function=}nil);
 
-      AllCrossReferences[c+x].Symbol := FindOrAddSymbol(CrossReference.NameIndex, {Function=}nil);
-
-      // Self-references should always point to the test-address :
-      if AllCrossReferences[c+x].Symbol = aSymbol then
-        if AllCrossReferences[c+x].Address <> aTestAddress then
-          Exit;
+      // Determine which references shouldn't be checked further :
+      AllSymbolReferences[c+x].MustSkip := False
+        // Skip Structured Exception Handling labels (would generate lots of alternatives) :
+        or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__SEH', Length('__SEH')) = 0)
+        // Skip kernel call references (for now, but can be resolved later) :
+        or (strncmp(PChar(AllSymbolReferences[c+x].Symbol.Name), '__imp__', Length('__imp__')) = 0);
 
       // Check that any duplicate symbol-references are all pointing to the same address :
-      AllCrossReferences[c+x].IsDuplicate := False;
-      for i := 0 to x - 1 do
-      begin
-        if (AllCrossReferences[c+i].Symbol = AllCrossReferences[c+x].Symbol) then
-        begin
-          AllCrossReferences[c+i].IsDuplicate := True;
-          // Same symbol, but different address-reference means a false hit, which must be skipped :
-          if (AllCrossReferences[c+i].Address <> AllCrossReferences[c+x].Address) then
-            Exit;
-        end;
-      end; // for prior CrossReferences
+      if AllSymbolReferences[c+x].MustSkip then
+        Continue;
 
-      Inc(CrossReference);
-    end; // for CrossReferences
+      // If a symbol-reference falls outside the valid range, we consider this a false hit :
+      AllSymbolReferences[c+x].Address := GetReferencedSymbolAddress(aTestAddress, SymbolReference);
+      if (AllSymbolReferences[c+x].Address = nil) then
+        Exit;
+
+      // Self-references should always point to the test-address :
+      if AllSymbolReferences[c+x].Symbol = aSymbol then
+        if AllSymbolReferences[c+x].Address <> aTestAddress then
+          Exit;
+
+      begin
+        for i := 0 to x - 1 do
+        begin
+          if (AllSymbolReferences[c+i].Symbol = AllSymbolReferences[c+x].Symbol) then
+          begin
+            AllSymbolReferences[c+i].MustSkip := True;
+            // Same symbol, but different address-reference means a false hit, which must be skipped :
+            if (AllSymbolReferences[c+i].Address <> AllSymbolReferences[c+x].Address) then
+              Exit;
+          end;
+        end; // for prior SymbolReferences
+      end;
+
+      Inc(SymbolReference);
+    end; // for SymbolReferences
 
     Result := True;
-  end; // _CheckAndRememberFunctionCrossReferences
+  end; // _CheckAndRememberFunctionSymbolReferences
 
-  function _CheckForwardFunctionCrossReferences(const aStoredLibraryFunction: PStoredLibraryFunction;
-    const aCrossReferencesIndex: Integer): Boolean;
+  function _CheckForwardFunctionSymbolReferences(const aStoredLibraryFunction: PStoredLibraryFunction;
+    const aSymbolReferencesIndex: Integer): Boolean;
   var
     x: Integer;
     ReferencedAddress: PByte;
   begin
-    for x := 0 to aStoredLibraryFunction.NrCrossReferences - 1 do
+if aTestAddress = Pointer($000340B3) then
+  DbgPrintf('testing for gamepad _XInputOpen@16');
+    for x := 0 to aStoredLibraryFunction.NrSymbolReferences - 1 do
     begin
-      if AllCrossReferences[aCrossReferencesIndex+x].IsDuplicate then
+      if AllSymbolReferences[aSymbolReferencesIndex+x].MustSkip then
         Continue;
 
       // Determine which referenced address is to be scanned too :
-      ReferencedAddress := AllCrossReferences[aCrossReferencesIndex+x].Address;
+      ReferencedAddress := AllSymbolReferences[aSymbolReferencesIndex+x].Address;
 
       // Do not test symbols on the originating address, as we're probably
       // still busy scanning for all possible symbols that could reside there :
@@ -741,12 +755,12 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
       begin
         TestAddressUsingPatternTrie({var}ReferencedAddress, {DoForwardScan=}False);
         // Referenced address was changed, re-apply the actual address :
-        ReferencedAddress := AllCrossReferences[aCrossReferencesIndex+x].Address;
+        ReferencedAddress := AllSymbolReferences[aSymbolReferencesIndex+x].Address;
 
         // Now see if the referenced address does indeed matches the symbol being referenced:
-        if AllCrossReferences[aCrossReferencesIndex+x].Symbol.HasFunctionInformation then
+        if AllSymbolReferences[aSymbolReferencesIndex+x].Symbol.HasFunctionInformation then
           // If that symbol doesn't occur at the referenced address, we quit here :
-          if AllCrossReferences[aCrossReferencesIndex+x].Symbol.FindPotentialLocationIndex(ReferencedAddress) = 0 then
+          if AllSymbolReferences[aSymbolReferencesIndex+x].Symbol.FindPotentialLocationIndex(ReferencedAddress) = 0 then
           begin
             Result := False;
             Exit;
@@ -755,7 +769,7 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     end;
 
     Result := True;
-  end; // _CheckForwardFunctionCrossReferences
+  end; // _CheckForwardFunctionSymbolReferences
 
   procedure _CheckLeafFunctions(aStoredLibraryFunction: PStoredLibraryFunction; NrChildren: Integer; const aAddress: PByte);
   var
@@ -764,7 +778,9 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     Symbol: TSymbolInformation;
     Location: PPotentialFunctionLocation;
   begin
-    // Check the possible functions further, and find the most number of seemingly valid cross-references :
+if aTestAddress = Pointer($00016966) then
+  DbgPrintf('_SetLastError@4 doesn''t reach a leaf?');
+    // Check the possible functions further, and find the most number of seemingly valid symbol-references :
     for i := 0 to NrChildren - 1 do
     begin
 {$IFDEF DXBX_RECTYPE}
@@ -781,30 +797,30 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
       begin
         Symbol := FindOrAddSymbol(FunctionName, aStoredLibraryFunction);
 
-        // Check if all cross-references are within the expected memory-range :
-        if _CheckAndRememberFunctionCrossReferences(Symbol) then
+        // Check if all symbol-references are within the expected memory-range :
+        if _CheckAndRememberFunctionSymbolReferences(Symbol) then
         begin
           // Only now add the current location as a candidate for this function :
           Location := SymbolManager.AddPotentialSymbolLocation(aTestAddress, Symbol);
 
-          // Persist the cross-references determined for this location :
-          if aStoredLibraryFunction.NrCrossReferences > 0 then
+          // Persist the symbol-references determined for this location :
+          if aStoredLibraryFunction.NrSymbolReferences > 0 then
           begin
-            Location.CrossReferencesIndex := AllCrossReferencesInUse;
-            Inc(AllCrossReferencesInUse, aStoredLibraryFunction.NrCrossReferences);
+            Location.SymbolReferencesIndex := AllSymbolReferencesInUse;
+            Inc(AllSymbolReferencesInUse, aStoredLibraryFunction.NrSymbolReferences);
 
             if DoForwardScan then
-              if not _CheckForwardFunctionCrossReferences(aStoredLibraryFunction, Location.CrossReferencesIndex) then
+              if not _CheckForwardFunctionSymbolReferences(aStoredLibraryFunction, Location.SymbolReferencesIndex) then
                 // If the forward function scan fails, invalidate this location (but keep checking other children!) :
                 Location.Address := nil;
           end;
         end;
       end;
 
-      // Skip to the next stored library function (including a step over all cross-references) :
+      // Skip to the next stored library function (including a step over all symbol-references) :
       Inc(UIntPtr({var}aStoredLibraryFunction),
         SizeOf(RStoredLibraryFunction) +
-        (SizeOf(RStoredCrossReference) * aStoredLibraryFunction.NrCrossReferences)
+        (SizeOf(RStoredSymbolReference) * aStoredLibraryFunction.NrSymbolReferences)
         );
     end; // for NrChildren
   end; // _CheckLeafFunctions
@@ -971,6 +987,8 @@ var
     // Psx :
     _Test($00114A09, '_IDirectSoundBuffer_Play@16');
     _Test($00115AC2, '_DirectSoundCreate@12');
+    // Gamepad
+    _Test($000340B3, '_XInputOpen@16');
 *)
   end; // _ScanTest
 
@@ -1031,12 +1049,12 @@ begin
     Inc(Section);
   end;
 
-  // Allocate the cross-references pool :
-  SetLength(AllCrossReferences, 1024);
-  ZeroMemory(@(AllCrossReferences[0]), Length(AllCrossReferences) * SizeOf(AllCrossReferences[0]));
-  AllCrossReferencesInUse := 1; // Start at index 1, so index 0 means 'no value'
+  // Allocate the symbol-references pool :
+  SetLength(AllSymbolReferences, 1024);
+  ZeroMemory(@(AllSymbolReferences[0]), Length(AllSymbolReferences) * SizeOf(AllSymbolReferences[0]));
+  AllSymbolReferencesInUse := 1; // Start at index 1, so index 0 means 'no value'
 
-//  _ScanTest;
+  _ScanTest;
 
   // Do the actual scanning per section :
   UIntPtr(Section) := UIntPtr(pXbeHeader) + pXbeHeader.dwSectionHeadersAddr - pXbeHeader.dwBaseAddr;
@@ -1056,7 +1074,7 @@ begin
       while p < ScanEnd do
       try
         // Store the addres we're about to scan, so it can
-        // be used in _CheckForwardFunctionCrossReferences :
+        // be used in _CheckForwardFunctionSymbolReferences :
         FCurrentTestAddress := PByte(p);
         // Now scan this address, collecting all symbols :
         TestAddressUsingPatternTrie({var}PByte(p));
@@ -1199,6 +1217,8 @@ procedure TSymbolManager.DetermineFinalLocations;
     _Test($00019610, '_D3DDevice_Clear@24'); // EmuIDirect3DDevice8_Clear
     // Psx :
     _Test($00115AC2, '_DirectSoundCreate@12');
+    // Gamepad
+    _Test($000340B3, '_XInputOpen@16');
 *)
   end; // _FinalTest
 
@@ -1209,9 +1229,9 @@ procedure TSymbolManager.DetermineFinalLocations;
     i: Integer;
     CurrentLocation: PPotentialFunctionLocation;
     x: Integer;
-    CrossReferencedSymbol: TSymbolInformation;
-    CrossReferencedAddress: TCodePointer;
-    CrossReferencedLocation: PPotentialFunctionLocation;
+    SymbolReferencedSymbol: TSymbolInformation;
+    SymbolReferencedAddress: TCodePointer;
+    SymbolReferencedLocation: PPotentialFunctionLocation;
   begin
     DbgPrintf('DxbxHLE : Adding missing symbols');
     // Loop over all symbols :
@@ -1220,7 +1240,7 @@ procedure TSymbolManager.DetermineFinalLocations;
       CurrentSymbol := MySymbolsHashedOnName[w];
       if (CurrentSymbol = nil) then
         Continue;
-      if (not CurrentSymbol.HasCrossReferences) then
+      if (not CurrentSymbol.HasSymbolReferences) then
         Continue;
 
       // Iterate over all potential locations of this symbol :
@@ -1229,25 +1249,25 @@ procedure TSymbolManager.DetermineFinalLocations;
       begin
         CurrentLocation := @(MyPotentialFunctionLocations[i]);
 
-        // For now, skip locations that where added later and thus have no cross-references cached :
-        if CurrentLocation.CrossReferencesIndex > 0 then
+        // For now, skip locations that where added later and thus have no symbol-references cached :
+        if CurrentLocation.SymbolReferencesIndex > 0 then
         begin
-          // Loop over each cross-reference reachable from this symbol-address :
-          for x := 0 to CurrentSymbol.CrossReferenceCount - 1 do
+          // Loop over each symbol-reference reachable from this symbol-address :
+          for x := 0 to CurrentSymbol.SymbolReferenceCount - 1 do
           begin
-            if AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].IsDuplicate then
+            if AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].MustSkip then
               Continue;
 
-            CrossReferencedAddress := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Address;
-            CrossReferencedSymbol := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Symbol;
+            SymbolReferencedAddress := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Address;
+            SymbolReferencedSymbol := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Symbol;
 
-            if CrossReferencedSymbol.HasFunctionInformation then
+            if SymbolReferencedSymbol.HasFunctionInformation then
             begin
               // A cross referenced symbol with function-information should
               // have been detected at the referenced addres :
-              CrossReferencedLocation := CrossReferencedSymbol.FindPotentialLocation(CrossReferencedAddress);
+              SymbolReferencedLocation := SymbolReferencedSymbol.FindPotentialLocation(SymbolReferencedAddress);
               // If there's no potential location at that address for that symbol :
-              if CrossReferencedLocation = nil then
+              if SymbolReferencedLocation = nil then
               begin
                 // Then we invalidate the originating location :
                 CurrentLocation.Address := nil;
@@ -1255,12 +1275,12 @@ procedure TSymbolManager.DetermineFinalLocations;
               end;
             end
             else
-              // Add all cross-references that haven't been detected as function yet (ONLY if it must be data!) :
-              if CrossReferencedSymbol.IsSymbolNameUsedInFunctions then
-                CrossReferencedLocation := nil
+              // Add all symbol-references that haven't been detected as function yet (ONLY if it must be data!) :
+              if SymbolReferencedSymbol.IsSymbolNameUsedInFunctions then
+                SymbolReferencedLocation := nil
               else
               begin
-                CrossReferencedLocation := CrossReferencedSymbol.AddPotentialLocation(CrossReferencedAddress);
+                SymbolReferencedLocation := SymbolReferencedSymbol.AddPotentialLocation(SymbolReferencedAddress);
 
                 // Re-determine the CurrentLocation, as the above add might have enlarged the
                 // MyPotentialFunctionLocations, invalidating the pointer we're working with :
@@ -1268,9 +1288,9 @@ procedure TSymbolManager.DetermineFinalLocations;
               end;
 
             // Count all references :
-            if Assigned(CrossReferencedLocation) then
-              Inc(CrossReferencedLocation.NrOfReferencesTo);
-          end; // for CrossReferences
+            if Assigned(SymbolReferencedLocation) then
+              Inc(SymbolReferencedLocation.NrOfReferencesTo);
+          end; // for SymbolReferences
         end;
 
         i := CurrentLocation.NextPotentialFunctionLocationIndex;
@@ -1324,8 +1344,8 @@ procedure TSymbolManager.DetermineFinalLocations;
     CurrentLocation: PPotentialFunctionLocation;
     Remove: Boolean;
     x: Integer;
-    CrossReferencedSymbol: TSymbolInformation;
-    CrossReferencedAddress: TCodePointer;
+    SymbolReferencedSymbol: TSymbolInformation;
+    SymbolReferencedAddress: TCodePointer;
   begin
     DbgPrintf('DxbxHLE : Removing incorrect alternatives');
     Result := False;
@@ -1335,7 +1355,7 @@ procedure TSymbolManager.DetermineFinalLocations;
       CurrentSymbol := MySymbolsHashedOnName[w];
       if (CurrentSymbol = nil) then
         Continue;
-      if (not CurrentSymbol.HasCrossReferences) then
+      if (not CurrentSymbol.HasSymbolReferences) then
         Continue;
 
       // Iterate over all potential locations of this symbol :
@@ -1346,30 +1366,30 @@ procedure TSymbolManager.DetermineFinalLocations;
         CurrentLocation := @(MyPotentialFunctionLocations[i]);
         i := CurrentLocation.NextPotentialFunctionLocationIndex;
 
-        // Loop over each cross-reference reachable from this symbol-address :
+        // Loop over each symbol-reference reachable from this symbol-address :
         Remove := False;
-        if  (CurrentLocation.CrossReferencesIndex > 0)
+        if  (CurrentLocation.SymbolReferencesIndex > 0)
         and (CurrentLocation.Address = CurrentSymbol.Address) then
         begin
-          for x := 0 to CurrentSymbol.CrossReferenceCount - 1 do
+          for x := 0 to CurrentSymbol.SymbolReferenceCount - 1 do
           begin
-            if AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].IsDuplicate then
+            if AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].MustSkip then
               Continue;
 
             // Check if one of the potential locations of the referenced symbol is detected at the referenced address :
-            CrossReferencedAddress := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Address;
-            CrossReferencedSymbol := AllCrossReferences[CurrentLocation.CrossReferencesIndex + x].Symbol;
-            Assert(Assigned(CrossReferencedSymbol));
+            SymbolReferencedAddress := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Address;
+            SymbolReferencedSymbol := AllSymbolReferences[CurrentLocation.SymbolReferencesIndex + x].Symbol;
+            Assert(Assigned(SymbolReferencedSymbol));
 
-//            if CrossReferencedSymbol.HasFunctionInformation then
-//            if CrossReferencedSymbol.HasPotentialLocations then
-            if CrossReferencedSymbol.Address <> CrossReferencedAddress then
+//            if SymbolReferencedSymbol.HasFunctionInformation then
+//            if SymbolReferencedSymbol.HasPotentialLocations then
+            if SymbolReferencedSymbol.Address <> SymbolReferencedAddress then
             begin
               // Discard this alternative if the above check failed :
               Remove := True;
               Break;
             end;
-          end; // for CrossReferences
+          end; // for SymbolReferences
         end;
 
         if Remove then
@@ -1378,7 +1398,7 @@ procedure TSymbolManager.DetermineFinalLocations;
           CurrentLocation.Address := nil;
           CurrentLocation.Symbol := nil;
           CurrentLocation.NrOfReferencesTo := 0;
-          CurrentLocation.CrossReferencesIndex := 0;
+          CurrentLocation.SymbolReferencesIndex := 0;
           CurrentLocation.NextPotentialFunctionLocationIndex := 0;
 
           // Decouple current alternative :
@@ -1467,13 +1487,13 @@ begin // DetermineFinalLocations
 
   _AddMissingSymbols;
 
-//  _FinalTest;
+  _FinalTest;
 
   repeat
     _SelectBestLocation();
   until _RemoveIncorrectAlternatives() = False;
 
-//  _FinalTest;
+  _FinalTest;
 
   MySymbolNamesUsedInFunctions.Size := 0;
 
@@ -1549,7 +1569,7 @@ begin
 
   // locate XapiProcessHeap
   begin
-    // Resolve the address of the _XapiProcessHeap symbol (at least cross-referenced once, from XapiInitProcess) :
+    // Resolve the address of the _XapiProcessHeap symbol (at least referenced once, from XapiInitProcess) :
     Symbol := FindSymbol('_XapiProcessHeap');
     if Assigned(Symbol) then
       // and remember that in a global :
