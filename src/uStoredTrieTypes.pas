@@ -43,7 +43,7 @@ type
     rtStoredLibrary,
     rtStoredGlobalFunction,
     rtStoredLibraryFunction,
-    rtStoredCrossReference,
+    rtStoredSymbolReference,
     rtStoredTrieNode);
 {$ENDIF}
 
@@ -66,11 +66,7 @@ type
 
   TStringTableIndex = type BaseIndexType; /// Use this everywhere a string is uniquely identified.
 
-  RStoredStringTable = packed record
-    NrStrings: BaseIndexType; /// The number of strings in this table (no duplicates, sorted for faster searching)
-    StringOffsets: TByteOffset; /// The start of the string table (each string is one TByteOffset into the AnsiCharData)
-    AnsiCharData: TByteOffset; /// The start of the actual string data (AnsiChars, no separators)
-  end;
+  TFunctionIndex = type BaseIndexType; /// Use this everywhere a function is uniquely identified.
 
   PStringOffsetList = ^TStringOffsetList;
   TStringOffsetList = array [0..MaxListSize-1] of TByteOffset;
@@ -87,12 +83,7 @@ type
   end;
 
   PStoredLibrariesList = ^TStoredLibrariesList;
-  TStoredLibrariesList = array [0..MaxListSize-1] of RStoredLibrary;
-
-  RStoredLibraryTable = packed record
-    NrOfLibraries: Word; /// The number of libraries in this table
-    LibrariesOffset: TByteOffset; /// The location of the first stored library
-  end;
+  TStoredLibrariesList = array [0..(MaxInt div SizeOf(RStoredLibrary))-1] of RStoredLibrary;
 
   // A function occurs in two locations - per library and global.
   // This record contains the global function information.
@@ -107,29 +98,25 @@ type
   PGlobalFunctionList = ^TGlobalFunctionList;
   TGlobalFunctionList = array [0..MaxListSize-1] of RStoredGlobalFunction;
 
-  // Global functions can be indicated using a number in the range [0..NrOfFunctions-1].
-  // These unique global function numbers can be put in a to-be generated code unit,
-  // so we can refer to them by number, instead of name. This saves quite some space
-  // in release-builds, because with this method we won't even need to store the
-  // function-names in the file anymore. (All this is yet to-be-done/TODO for now.)
-  RStoredGlobalFunctionTable = packed record
-    NrOfFunctions: BaseIndexType; /// The number of global functions in this table
-    GlobalFunctionsOffset: TByteOffset; /// The location of the first stored function
-  end;
-
-  TFunctionIndex = type BaseIndexType; /// Use this everywhere a function is uniquely identified.
-
-  // All functions that reference other symbols, use this cross-reference record.
-  PStoredCrossReference = ^RStoredCrossReference;
-  RStoredCrossReference = packed record
+  // All functions that reference other symbols, use this symbol-reference record.
+  PStoredSymbolReference = ^RStoredSymbolReference;
+  RStoredSymbolReference = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
-    Offset: Word;
-    BaseOffset: SmallInt;
-    NameIndex: TStringTableIndex;
+    Offset: Word; /// Offset from start of parent function
+    BaseOffset: SmallInt; /// Offset to apply to the referenced address to get to the base of the referenced symbol (only applicable to data symbols)
+    NameIndex: TStringTableIndex; /// Name of the reference (by index)
+    ReferenceFlags: Word; /// Indications about the type & usage of this reference
   end;
 
+const
+  // ReferenceFlags
+  rfIsAbsolute       = $0001; // If set, reference is an absolute address
+  rfIsRelative       = $0002; // If set, is a relative address
+  rfIsSectionRel     = $0004; // If set, is a 'section-relative' address (Which means what!?)
+
+type
   // A function occurs in two locations - per library and global.
   // This record contains the per-library function information.
   PStoredLibraryFunction = ^RStoredLibraryFunction;
@@ -139,16 +126,16 @@ type
 {$ENDIF}
     GlobalFunctionIndex: TFunctionIndex; /// The unique index of this function in the RStoredGlobalFunctionTable
     LibraryIndex: TLibraryIndex; /// The unique index of the libray containing this function
-    CRCLength: Byte;
+    CRCLength: Byte; /// TODO : This could be removed once the CRC covers the whole function (except its references)
     CRCValue: Word;
     FunctionLength: Word;
-    NrCrossReferences: Word;
-    // Note : Directly following this record, there are 'NrCrossReferences'
-    // RStoredCrossReference records stored in the trie !
+    NrSymbolReferences: Word;
+    // Note : Directly following this record, there are 'NrSymbolReferences'
+    // RStoredSymbolReference records stored in the trie !
   end;
 
-  TStoredCrossReferenceArray = array [0..(MaxInt div SizeOf(RStoredCrossReference))-1] of RStoredCrossReference;
-  PStoredCrossReferences = ^TStoredCrossReferenceArray;
+  TStoredSymbolReferenceArray = array [0..(MaxInt div SizeOf(RStoredSymbolReference))-1] of RStoredSymbolReference;
+  PStoredSymbolReferences = ^TStoredSymbolReferenceArray;
 
   PStoredTrieNode = ^RStoredTrieNode;
   RStoredTrieNode = packed record
@@ -175,6 +162,11 @@ type
     //
     // The "don't care" bytes are not stored in the output,
     // but the amount of them is indicated by the Node Type Flags.
+    //
+    // Directly following a leaf node, we have 'NrChildren' occurrances
+    // of RStoredLibraryFunction. TODO : Change this into FunctionIndexes,
+    // and order these alphabetically, so we can find (and scan) specific
+    // functions by name.
   end;
 
   TStretchHeaderByte = type Byte;
@@ -182,9 +174,28 @@ type
   PStoredSignatureTrieHeader = ^RStoredSignatureTrieHeader;
   RStoredSignatureTrieHeader = packed record
     Header: array [0..5] of AnsiChar; // Chosen so this record becomes a nice 32 bytes large
-    StringTable: RStoredStringTable;
-    LibraryTable: RStoredLibraryTable;
-    GlobalFunctionTable: RStoredGlobalFunctionTable;
+
+    StringTable: packed record
+      NrStrings: BaseIndexType; /// The number of strings in this table (no duplicates, sorted for faster searching)
+      StringOffsets: TByteOffset; /// The start of the string table (each string is one TByteOffset into the AnsiCharData)
+      AnsiCharData: TByteOffset; /// The start of the actual string data (AnsiChars, no separators)
+    end;
+
+    LibraryTable: packed record
+      NrOfLibraries: Word; /// The number of libraries in this table
+      LibrariesOffset: TByteOffset; /// The location of the first stored library
+    end;
+
+    // Global functions can be indicated using a number in the range [0..NrOfFunctions-1].
+    // These unique global function numbers can be put in a to-be generated code unit,
+    // so we can refer to them by number, instead of name. This saves quite some space
+    // in release-builds, because with this method we won't even need to store the
+    // function-names in the file anymore. (All this is yet to-be-done/TODO for now.)
+    GlobalFunctionTable: packed record
+      NrOfFunctions: BaseIndexType; /// The number of global functions in this table
+      GlobalFunctionsOffset: TByteOffset; /// The location of the first stored function
+    end;
+
     TrieRootNode: TByteOffset; /// The location of the root of the Trie, this location contains a RStoredTrieNode
   end;
 
@@ -228,14 +239,14 @@ type
     function GetNode(const aNodeOffset: TByteOffset): PStoredTrieNode;
   end;
 
-function GetCrossReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredCrossReference;
+function GetSymbolReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredSymbolReference;
 
 implementation
 
-function GetCrossReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredCrossReference;
+function GetSymbolReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredSymbolReference;
 begin
   if Assigned(aStoredLibraryFunction) then
-    Result := @(PStoredCrossReferences(IntPtr(aStoredLibraryFunction) + SizeOf(RStoredLibraryFunction))^[aIndex])
+    Result := @(PStoredSymbolReferences(IntPtr(aStoredLibraryFunction) + SizeOf(RStoredLibraryFunction))^[aIndex])
   else
     Result := nil;
 end;
