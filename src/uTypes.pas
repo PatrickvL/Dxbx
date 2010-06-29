@@ -294,13 +294,22 @@ function isdigit(c: AnsiChar): Boolean; overload;
 function IsDigit(c: WideChar): Boolean; overload;
 function isxdigit(c: AnsiChar): Boolean;
 
+function strncmp(lpString1, lpString2: PWideChar; size: size_t): Integer; overload;
+function strncmp(lpString1, lpString2: PAnsiChar; size: size_t): Integer; overload;
+
+function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
+function strcmp(lpString1, lpString2: PWideChar): Integer; overload;
+
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
 function strncpy(dest, source: PAnsiChar; len: Integer): PAnsiChar; overload; // cdecl
 function strncpy(dest, source: PWideChar; len: Integer): PWideChar; overload; // cdecl
+
 function wstrlen(const Str: PWideChar): Cardinal; overload;
+
 function memcmp(const ptr1, ptr2: Pvoid; num: size_t): int;
 function memcpy(destination: Pvoid; const source: Pvoid; num: size_t): Pvoid;// cdecl;
 function memset(const ptr: Pvoid; value: Byte; num: size_t): Pvoid;// cdecl;
+
 function clock(): DWord; // cdecl;
 
 function mbstowcs(wcstr: pwchar_t; const mbstr: PAnsiChar; max: size_t): size_t;
@@ -374,6 +383,82 @@ end;
 function isxdigit(c: AnsiChar): Boolean;
 begin
   Result := c in ['0'..'9', 'A'..'Z', 'a'..'z'];
+end;
+
+function strncmp(lpString1, lpString2: PWideChar; size: size_t): Integer; overload;
+begin
+  while (size > 0) and (lpString1^ = lpString2^) do
+  begin
+    if lpString1^ = #0 then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    Dec(size);
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
+
+  if size = 0 then
+    Result := 0
+  else
+    Result := Ord(lpString1^) - Ord(lpString2^);
+end;
+
+function strncmp(lpString1, lpString2: PAnsiChar; size: size_t): Integer; overload;
+begin
+  while (size > 0) and (lpString1^ = lpString2^) do
+  begin
+    if lpString1^ = #0 then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    Dec(size);
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
+
+  if size = 0 then
+    Result := 0
+  else
+    Result := Ord(lpString1^) - Ord(lpString2^);
+end;
+
+function strcmp(lpString1, lpString2: PAnsiChar): Integer; overload;
+begin
+  while lpString1^ = lpString2^ do
+  begin
+    if lpString1^ = #0 then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
+
+  Result := Ord(lpString1^) - Ord(lpString2^);
+end;
+
+function strcmp(lpString1, lpString2: PWideChar): Integer; overload;
+begin
+  while lpString1^ = lpString2^ do
+  begin
+    if lpString1^ = #0 then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    Inc(lpString1);
+    Inc(lpString2);
+  end;
+
+  Result := Ord(lpString1^) - Ord(lpString2^);
 end;
 
 function strcpy(dest, source: PAnsiChar): PAnsiChar; // cdecl
