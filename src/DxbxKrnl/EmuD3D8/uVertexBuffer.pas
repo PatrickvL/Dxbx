@@ -141,6 +141,7 @@ type _D3DIVB = record
     Position: TD3DXVECTOR3; // Position
     Rhw: FLOAT; // Rhw
     Blend1: FLOAT; // Blend1
+    // Dxbx note : Shouldn't we add Blend2, Blend3 and Blend4 for D3DFVF_XYZB2, D3DFVF_XYZB3 and D3DFVF_XYZB4 ?!
     dwSpecular: DWORD; // Specular
     dwDiffuse: DWORD; // Diffuse
     Normal: TD3DXVECTOR3; // Normal
@@ -998,43 +999,44 @@ begin
   dwTexN := (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
 
   // Normalize texture coordinates.
+  if (dwTexN >= 1) then // Dxbx addition, no need to test this every loop
   if uiVertexCount > 0 then // Dxbx addition, to prevent underflow
   for uiVertex := 0 to uiVertexCount - 1 do
   begin
     pUVData := Puint08(pData + (uiVertex * uiStride) + uiOffset);
 
-    if (dwTexN >= 1) then
+//    if (dwTexN >= 1) then
     begin
       if (bTexIsLinear[0]) then
       begin
         PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[0].Size and X_D3DSIZE_WIDTH_MASK) + 1);
         PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[0].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
-      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
     end;
 
     if (dwTexN >= 2) then
     begin
+      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
       if (bTexIsLinear[1]) then
       begin
         PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1);
         PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
-      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
     end;
 
     if (dwTexN >= 3) then
     begin
+      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
       if (bTexIsLinear[2]) then
       begin
         PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1);
         PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
-      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
     end;
 
     if((dwTexN >= 4) and bTexIsLinear[3]) then
     begin
+      Inc(PByte(pUVData), sizeof(FLOAT) * 2);
       PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1);
       PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
     end;
@@ -1278,7 +1280,10 @@ begin
 
       Inc(pOrig012, pStream.uiOrigStride * VERTICES_PER_QUAD);
       Inc(pOrig23,  pStream.uiOrigStride * VERTICES_PER_QUAD);
-    end;
+    end; // for
+
+    // Finally, correct dwVertexCount to take the new vertices into account :
+    pPatchDesc.dwVertexCount := pPatchDesc.dwPrimitiveCount * VERTICES_PER_TRIANGLE;
   end
   // LineLoop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
@@ -1287,6 +1292,9 @@ begin
     memcpy(@pPatchedVertexData[pPatchDesc.dwOffset], @pOrigVertexData[pPatchDesc.dwOffset], dwOriginalSize);
     // Append a second copy of the first vertex to the end, completing the strip to form a loop :
     memcpy(@pPatchedVertexData[pPatchDesc.dwOffset + dwOriginalSize], @pOrigVertexData[pPatchDesc.dwOffset], pStream.uiOrigStride);
+
+    // Finally, correct dwVertexCount to take the new vertex into account :
+    Inc(pPatchDesc.dwVertexCount, 1);
   end;
 
   if (pPatchDesc.pVertexStreamZeroData = nil) then
@@ -1420,6 +1428,8 @@ begin
 
   uiStride := 0;
 
+//g_CurrentVertexShader := g_CurrentVertexShader  and not D3DFVF_TEXCOUNT_MASK;
+
   // Parse IVB table with current FVF shader if possible.
   bFVF := not VshHandleIsVertexShader(g_CurrentVertexShader);
 
@@ -1441,11 +1451,11 @@ begin
 
   DbgPrintf('g_IVBTblOffs := %d', [g_IVBTblOffs]);
 
+  dwPos := dwCurFVF and D3DFVF_POSITION_MASK; // Dxbx note : Do this once, not in each for-loop
+
   if g_IVBTblOffs > 0 then // Dxbx addition, to prevent underflow
   for v := 0 to g_IVBTblOffs - 1 do
   begin
-    dwPos := dwCurFVF and D3DFVF_POSITION_MASK;
-
     if(dwPos = D3DFVF_XYZ) then
     begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
@@ -1547,7 +1557,7 @@ begin
       end;
 
       DbgPrintf('IVB TexCoord1 := {%f, %f}', [g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y]);
-    end;
+//    end;
 
     if(dwTexN >= 2) then
     begin
@@ -1560,7 +1570,7 @@ begin
       end;
 
       DbgPrintf('IVB TexCoord2 := {%f, %f}', [g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y]);
-    end;
+//    end;
 
     if(dwTexN >= 3) then
     begin
@@ -1573,7 +1583,7 @@ begin
       end;
 
       DbgPrintf('IVB TexCoord3 := {%f, %f}', [g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y]);
-    end;
+//    end;
 
     if(dwTexN >= 4) then
     begin
@@ -1587,13 +1597,15 @@ begin
 
       DbgPrintf('IVB TexCoord4 := {%f, %f}', [g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y]);
     end;
+    end;
+    end;
+    end;
   end;
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
-  // Dxbx : Why not this : VPDesc.dwPrimitiveCount := EmuD3DVertex2PrimitiveCount(VPDesc.PrimitiveType, VPDesc.dwVertexCount);
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := g_IVBTable;
   VPDesc.uiVertexStreamZeroStride := uiStride;

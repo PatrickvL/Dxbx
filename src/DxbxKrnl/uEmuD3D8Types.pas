@@ -780,6 +780,47 @@ const
   X_D3DCULL_CW   = $900; // Clockwise culling
   X_D3DCULL_CCW  = $901; // Cull counter clockwise triangles
 
+const
+  X_D3DVSDE_POSITION     = 0;
+  X_D3DVSDE_BLENDWEIGHT  = 1;
+  X_D3DVSDE_NORMAL       = 2;
+  X_D3DVSDE_DIFFUSE      = 3;
+  X_D3DVSDE_SPECULAR     = 4;
+  X_D3DVSDE_FOG          = 5; // Xbox extension
+  X_D3DVSDE_BACKDIFFUSE  = 7; // Xbox extension
+  X_D3DVSDE_BACKSPECULAR = 8; // Xbox extension
+  X_D3DVSDE_TEXCOORD0    = 9;
+  X_D3DVSDE_TEXCOORD1    = 10;
+  X_D3DVSDE_TEXCOORD2    = 11;
+  X_D3DVSDE_TEXCOORD3    = 12;
+  X_D3DVSDE_UNKNOWN      = $FFFFFFFF;
+
+const
+  // bit declarations for _Type fields
+  X_D3DVSDT_FLOAT1      = $12;    // 1D float expanded to (value; 0.; 0.; 1.)
+  X_D3DVSDT_FLOAT2      = $22;    // 2D float expanded to (value; value; 0.; 1.)
+  X_D3DVSDT_FLOAT3      = $32;    // 3D float expanded to (value; value; value; 1.)
+  X_D3DVSDT_FLOAT4      = $42;    // 4D float
+  X_D3DVSDT_D3DCOLOR    = $40;    // 4D packed unsigned bytes mapped to 0. to 1. range
+//X_D3DVSDT_UBYTE4      = $05;    // 4D unsigned byte   Dxbx note : Not supported on Xbox ?
+  X_D3DVSDT_SHORT2      = $25;    // 2D signed short expanded to (value; value; 0.; 1.)
+  X_D3DVSDT_SHORT4      = $45;    // 4D signed short
+
+  //  Xbox only declarations :
+  X_D3DVSDT_NORMSHORT1  = $11; // xbox ext.
+  X_D3DVSDT_NORMSHORT2  = $21; // xbox ext.
+  X_D3DVSDT_NORMSHORT3  = $31; // xbox ext. nsp
+  X_D3DVSDT_NORMSHORT4  = $41; // xbox ext.
+  X_D3DVSDT_NORMPACKED3 = $16; // xbox ext. nsp
+  X_D3DVSDT_SHORT1      = $15; // xbox ext. nsp
+  X_D3DVSDT_SHORT3      = $35; // xbox ext. nsp
+  X_D3DVSDT_PBYTE1      = $14; // xbox ext. nsp
+  X_D3DVSDT_PBYTE2      = $24; // xbox ext. nsp
+  X_D3DVSDT_PBYTE3      = $34; // xbox ext. nsp
+  X_D3DVSDT_PBYTE4      = $44; // xbox ext.
+  X_D3DVSDT_FLOAT2H     = $72; // xbox ext.
+  X_D3DVSDT_NONE        = $02; // xbox ext. nsp
+
 implementation
 
 function IsSpecialResource(x: DWORD): Boolean;
