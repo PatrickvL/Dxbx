@@ -635,7 +635,7 @@ begin
       end;
       {$endif}
 
-      Inc(pdwPushData, (dwCount div 2) - iif(bInc, 0, 2));
+      Inc(pdwPushData, (dwCount div 2) - DWord(iif(bInc, 0, 2)));
 
       // perform rendering
       begin
