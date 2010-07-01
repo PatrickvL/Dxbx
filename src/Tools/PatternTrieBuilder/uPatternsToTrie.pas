@@ -1246,10 +1246,6 @@ begin
   // Remember the function name :
   aVersionedXboxLibraryFunction.Name := string(AnsiString(aVersionedXboxLibraryFunction.ScanParts[viFunctionName]));
 
-if aVersionedXboxLibraryFunction.Name = '_SetLastError@4' then
-  aVersionedXboxLibraryFunction.Name := string(AnsiString(aVersionedXboxLibraryFunction.ScanParts[viFunctionName]));
-
-
   // Now, see if we need to filter
   if aContext.OnlyPatches then
   begin

@@ -734,8 +734,6 @@ procedure TSymbolManager.TestAddressUsingPatternTrie(var aTestAddress: PByte; co
     x: Integer;
     ReferencedAddress: PByte;
   begin
-if aTestAddress = Pointer($000340B3) then
-  DbgPrintf('testing for gamepad _XInputOpen@16');
     for x := 0 to aStoredLibraryFunction.NrSymbolReferences - 1 do
     begin
       if AllSymbolReferences[aSymbolReferencesIndex+x].MustSkip then
@@ -778,8 +776,6 @@ if aTestAddress = Pointer($000340B3) then
     Symbol: TSymbolInformation;
     Location: PPotentialFunctionLocation;
   begin
-if aTestAddress = Pointer($00016966) then
-  DbgPrintf('_SetLastError@4 doesn''t reach a leaf?');
     // Check the possible functions further, and find the most number of seemingly valid symbol-references :
     for i := 0 to NrChildren - 1 do
     begin
@@ -988,6 +984,7 @@ var
     _Test($00114A09, '_IDirectSoundBuffer_Play@16');
     _Test($00115AC2, '_DirectSoundCreate@12');
     // Gamepad
+    _Test($00016966, '_SetLastError@4');
     _Test($000340B3, '_XInputOpen@16');
 *)
   end; // _ScanTest
@@ -1218,6 +1215,7 @@ procedure TSymbolManager.DetermineFinalLocations;
     // Psx :
     _Test($00115AC2, '_DirectSoundCreate@12');
     // Gamepad
+    _Test($00016966, '_SetLastError@4');
     _Test($000340B3, '_XInputOpen@16');
 *)
   end; // _FinalTest

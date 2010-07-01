@@ -79,8 +79,6 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
   ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8): HRESULT; stdcall// forward
 
-//function XTL_EmuIDirect3DDevice8_SetVertexData2f(Register_: Integer;
-//  a: FLOAT; b: FLOAT): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
 procedure XTL_EmuIDirect3DDevice8_GetVertexShader({CONST} pHandle: PDWORD); stdcall; // forward
@@ -3905,8 +3903,8 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexData2f
 (
-    Register_: int; 
-    a: FLOAT; 
+    Register_: int;
+    a: FLOAT;
     b: FLOAT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -3924,6 +3922,7 @@ begin
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
+  // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b,a=0.0-1.0)
   Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, a, b, 0.0, 1.0);
 end;
 
@@ -3943,8 +3942,8 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexData2s
 (
-    Register_: int; 
-    a: SHORT; 
+    Register_: int;
+    a: SHORT;
     b: SHORT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -3965,6 +3964,7 @@ begin
 
   dwA := a; dwB := b;
 
+  // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b,a=0 or 1)
   Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), 0.0, 1.0);
 end;
 
@@ -4005,20 +4005,20 @@ begin
   case Cardinal(Register_) of
     // TODO -oCXBX: Blend weight.
 
-    0: // D3DVSDE_POSITION
+    {0=}X_D3DVSDE_POSITION:
       begin
         o := g_IVBTblOffs;
         g_IVBTable[o].Position.x := a;
         g_IVBTable[o].Position.y := b;
         g_IVBTable[o].Position.z := c;
-        g_IVBTable[o].Rhw := 1.0;
+        g_IVBTable[o].Rhw := 1.0; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
 
         Inc(g_IVBTblOffs);
 
         g_IVBFVF := g_IVBFVF or D3DFVF_XYZRHW;
       end;
 
-    1: // D3DVSDE_BLENDWEIGHT
+    {1=}X_D3DVSDE_BLENDWEIGHT:
       begin
         o := g_IVBTblOffs;
 
@@ -4032,7 +4032,7 @@ begin
         g_IVBFVF := g_IVBFVF or D3DFVF_XYZB1;
       end;
 
-    2: // D3DVSDE_NORMAL
+    {2=}X_D3DVSDE_NORMAL:
       begin
         o := g_IVBTblOffs;
 
@@ -4045,7 +4045,7 @@ begin
         g_IVBFVF := g_IVBFVF or D3DFVF_NORMAL;
       end;
 
-   3: // D3DVSDE_DIFFUSE
+   {3=}X_D3DVSDE_DIFFUSE:
       begin
         o := g_IVBTblOffs;
         ca := FtoDW(d) shl 24;
@@ -4058,7 +4058,7 @@ begin
         g_IVBFVF := g_IVBFVF or D3DFVF_DIFFUSE;
       end;
 
-    4: // D3DVSDE_SPECULAR
+    {4=}X_D3DVSDE_SPECULAR:
       begin
         o := g_IVBTblOffs;
         ca := FtoDW(d) shl 24;
@@ -4070,8 +4070,7 @@ begin
 
         g_IVBFVF := g_IVBFVF or D3DFVF_SPECULAR;
       end;
-
-    9: // D3DVSDE_TEXCOORD0
+    {9=}X_D3DVSDE_TEXCOORD0:
       begin
         o := g_IVBTblOffs;
         g_IVBTable[o].TexCoord1.x := a;
@@ -4079,11 +4078,12 @@ begin
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1) then
         begin
-          g_IVBFVF := g_IVBFVF or D3DFVF_TEX1;
+          // Dxbx fix : Use mask, else the format might get expanded incorrectly :
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX1;
         end;
       end;
 
-    10: // D3DVSDE_TEXCOORD1
+    {10=}X_D3DVSDE_TEXCOORD1:
       begin
         o := g_IVBTblOffs;
         g_IVBTable[o].TexCoord2.x := a;
@@ -4091,11 +4091,12 @@ begin
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX2) then
         begin
-          g_IVBFVF := g_IVBFVF or D3DFVF_TEX2;
+          // Dxbx fix : Use mask, else the format might get expanded incorrectly :
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX2;
         end;
       end;
 
-    11: // D3DVSDE_TEXCOORD2
+    {11=}X_D3DVSDE_TEXCOORD2:
       begin
         o := g_IVBTblOffs;
         g_IVBTable[o].TexCoord3.x := a;
@@ -4103,11 +4104,12 @@ begin
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX3) then
         begin
-          g_IVBFVF := g_IVBFVF or D3DFVF_TEX3;
+          // Dxbx fix : Use mask, else the format might get expanded incorrectly :
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX3;
         end;
       end;
 
-    12: // D3DVSDE_TEXCOORD3
+    {12=}X_D3DVSDE_TEXCOORD3:
       begin
         o := g_IVBTblOffs;
         g_IVBTable[o].TexCoord4.x := a;
@@ -4115,11 +4117,12 @@ begin
 
         if ((g_IVBFVF and D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX4) then
         begin
-          g_IVBFVF := g_IVBFVF or D3DFVF_TEX4;
+          // Dxbx fix : Use mask, else the format might get expanded incorrectly :
+          g_IVBFVF := (g_IVBFVF and (not D3DFVF_TEXCOUNT_MASK)) or D3DFVF_TEX4;
         end;
       end;
 
-    $FFFFFFFF:
+    { $FFFFFFFF=}X_D3DVSDE_UNKNOWN: // Dxbx note : Is this D3DVSD_END perhaps?
     begin
       o := g_IVBTblOffs;
       g_IVBTable[o].Position.x := a;
@@ -4130,8 +4133,9 @@ begin
       // Copy current color to next vertex
       g_IVBTable[o+1].dwDiffuse := g_IVBTable[o].dwDiffuse;
       g_IVBTable[o+1].dwSpecular := g_IVBTable[o].dwSpecular;
+      // Dxbx note : Must we copy Blend1 (blendweight) too?
 
-      g_IVBTblOffs := g_IVBTblOffs + 1; // TODO -oDXBX: Use Inc()?
+      Inc(g_IVBTblOffs);
 
       g_IVBFVF := g_IVBFVF or D3DFVF_XYZRHW;
     end;
@@ -4172,6 +4176,8 @@ begin
 
   dwA := a; dwB := b; dwC := c; dwD := d;
 
+  // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b=0.0-255.0, a=0.0-1.0)
+  // TODO -oDxbx : Shouldn't these be multiplied with 256.0 ?
   Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
 end;
 
@@ -4203,6 +4209,7 @@ begin
 
   dwA := a; dwB := b; dwC := c; dwD := d;
 
+  // TODO -oDxbx : Handle Vertex Attributes that need a Color
   Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
 end;
 
@@ -4229,6 +4236,7 @@ begin
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
+  // TODO -oDxbx note : Is this correct? Shouldn't it be r,b,g,a ?
   a := DWtoF((Color and $FF000000) shr 24);
   r := DWtoF((Color and $00FF0000) shr 16);
   g := DWtoF((Color and $0000FF00) shr 8);
