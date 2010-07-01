@@ -74,6 +74,7 @@ uses
   uState;
 
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boolean;
+function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: boolean): uint;
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 
 procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32); {NOPATCH}
@@ -325,6 +326,40 @@ begin
   else
     Result := False;
   end;
+end;
+
+function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: boolean): uint;
+begin
+(*
+  D3DFVF_POSITION_MASK    = $00E; // Dec  /2  #fl
+
+  D3DFVF_XYZ              = $002; //  2 > 1 > 3
+  D3DFVF_XYZRHW           = $004; //  4 > 2 > 4
+  D3DFVF_XYZB1            = $006; //  6 > 3 > 4
+  D3DFVF_XYZB2            = $008; //  8 > 4 > 5
+  D3DFVF_XYZB3            = $00a; // 10 > 5 > 6
+  D3DFVF_XYZB4            = $00c; // 12 > 6 > 7
+*)
+  // Divide the D3DFVF by two, this gives almost the number of floats needed for the format :
+  Result := (dwVertexShader and D3DFVF_POSITION_MASK) shr 1;
+  if Result >= (D3DFVF_XYZB1 shr 1) then
+    // Any format from D3DFVF_XYZB1 and above need 1 extra float :
+    Inc(Result, 1)
+  else
+    // The other formats (XYZ and XYZRHW) need 2 extra floats :
+    Inc(Result, 2);
+
+  // Express the size in bytes, instead of floats :
+  Result := Result * sizeof(FLOAT);
+
+  // Note : Officially, D3DFVF_NORMAL cannot be combined with D3DFVF_XYZRHW!
+  if (dwVertexShader and D3DFVF_NORMAL) > 0 then begin Inc(Result, sizeof(FLOAT)*3); end;
+
+  if (dwVertexShader and D3DFVF_DIFFUSE) > 0 then begin Inc(Result, sizeof(DWORD)); end;
+  if (dwVertexShader and D3DFVF_SPECULAR) > 0 then begin Inc(Result, sizeof(DWORD)); end;
+
+  if bIncludeTextures then
+    Inc(Result, ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*sizeof(FLOAT)*2);
 end;
 
 // A wrapper for Present() with an extra safeguard to restore 'device lost' errors :
@@ -3947,7 +3982,7 @@ begin
   g_IVBFVF := 0;
 
   // default values
-  ZeroMemory(g_IVBTable, sizeof(_D3DIVB)*1024);
+  ZeroMemory(@(g_IVBTable[0]), sizeof(_D3DIVB)*1024);
 
   if (g_pIVBVertexBuffer = nil) then
   begin
@@ -5694,7 +5729,7 @@ begin
 
 
 
-    Result := IDirect3DSurface8(pSurface8).GetDesc(SurfaceDesc);
+    Result := IDirect3DSurface8(pSurface8).GetDesc({out}SurfaceDesc);
 
     // rearrange into windows format (remove D3DPool)
     begin
@@ -8096,7 +8131,7 @@ begin
         EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
       );
       (* Cxbx has this commented out :
-      if( (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) ) then
+      if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
       begin
         IDirect3DDevice8(g_pD3DDevice8).DrawPrimitive
         (

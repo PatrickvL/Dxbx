@@ -614,7 +614,7 @@ var
 begin
   // FVF buffers doesn't have Xbox extensions, but texture coordinates may
   // need normalization if used with linear textures.
-  if (not VshHandleIsVertexShader(pPatchDesc.hVertexShader)) then
+  if (VshHandleIsFVF(pPatchDesc.hVertexShader)) then
   begin
     if (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) > 0 then
     begin
@@ -973,30 +973,7 @@ begin
   end;
 
   // Locate texture coordinate offset in vertex structure.
-  uiOffset := 0;
-  if (pPatchDesc.hVertexShader and D3DFVF_XYZRHW) > 0  then
-    Inc(uiOffset, (sizeof(FLOAT) * 4))
-  else
-  begin
-    if (pPatchDesc.hVertexShader and D3DFVF_XYZ) > 0 then
-      Inc(uiOffset, (sizeof(FLOAT) * 3 ))
-    else if (pPatchDesc.hVertexShader and D3DFVF_XYZB1) > 0 then
-      Inc(uiOffset, (sizeof(FLOAT) *4 ))
-    else if (pPatchDesc.hVertexShader and D3DFVF_XYZB2) > 0 then
-      Inc(uiOffset, (sizeof(FLOAT) * 5))
-    else if (pPatchDesc.hVertexShader and D3DFVF_XYZB3) > 0 then
-      Inc(uiOffset, (sizeof(FLOAT) * 6))
-    else if (pPatchDesc.hVertexShader and D3DFVF_XYZB4) > 0 then
-      Inc (uiOffset, (sizeof(FLOAT) * 7));
-
-    if (pPatchDesc.hVertexShader and D3DFVF_NORMAL) > 0 then
-      Inc(uiOffset, (sizeof(FLOAT) * 3));
-  end;
-
-  if(pPatchDesc.hVertexShader and D3DFVF_DIFFUSE) > 0 then
-    Inc(uiOffset, sizeof(DWORD));
-  if(pPatchDesc.hVertexShader and D3DFVF_SPECULAR) > 0 then
-    Inc(uiOffset, sizeof(DWORD));
+  uiOffset := DxbxFVFToVertexSizeInBytes(pPatchDesc.hVertexShader, {aIncludeTextures}False);
 
   dwTexN := (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
 
@@ -1014,7 +991,7 @@ begin
         PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[0].Size and X_D3DSIZE_WIDTH_MASK) + 1);
         PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[0].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
-    end;
+//    end;
 
     if (dwTexN >= 2) then
     begin
@@ -1024,7 +1001,7 @@ begin
         PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[1].Size and X_D3DSIZE_WIDTH_MASK) + 1);
         PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[1].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
-    end;
+//    end;
 
     if (dwTexN >= 3) then
     begin
@@ -1034,13 +1011,16 @@ begin
         PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[2].Size and X_D3DSIZE_WIDTH_MASK) + 1);
         PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[2].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
       end;
-    end;
+//    end;
 
     if((dwTexN >= 4) and bTexIsLinear[3]) then
     begin
       Inc(PByte(pUVData), sizeof(FLOAT) * 2);
       PFLOATs(pUVData)[0] := PFLOATs(pUVData)[0] / (( pLinearPixelContainer[3].Size and X_D3DSIZE_WIDTH_MASK) + 1);
       PFLOATs(pUVData)[1] := PFLOATs(pUVData)[1] / (((pLinearPixelContainer[3].Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1);
+    end;
+    end;
+    end;
     end;
   end;
 
@@ -1157,12 +1137,12 @@ begin
   if (pPatchDesc.pVertexStreamZeroData = nil) then
   begin
     IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, PIDirect3DVertexBuffer8(@(pStream.pOriginalStream)), {out}pStream.uiOrigStride);
-    pStream.uiNewStride := pStream.uiOrigStride; // The stride is still the same
   end
   else
   begin
     pStream.uiOrigStride := pPatchDesc.uiVertexStreamZeroStride;
   end;
+  pStream.uiNewStride := pStream.uiOrigStride; // The stride is still the same
 
   // Quad list
   if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
@@ -1259,11 +1239,11 @@ begin
     for i := 0 to (pPatchDesc.dwVertexCount div VERTICES_PER_QUAD) - 1 do
     begin
       memcpy(pPatch012, pOrig012, pStream.uiOrigStride * 3); // Vertex T1_V0,T1_V1,T1_V2 := Vertex Q_V0,Q_V1,Q_V2
-      memcpy(pPatch34,  pOrig23,  pStream.uiOrigStride * 2); // Vertex T2_V0,T2_V1       := Vertex Q_V2,Q_V3
-      memcpy(pPatch5,   pOrig012, pStream.uiOrigStride);     // Vertex T2_V2             := Vertex Q_V0
+      memcpy(pPatch34,  pOrig23,  pStream.uiOrigStride * 2); // Vertex T2_V0,T2_V1       := Vertex           Q_V2,Q_V3
+      memcpy(pPatch5,   pOrig012, pStream.uiOrigStride);     // Vertex             T2_V2 := Vertex Q_V0
       // Dxbx note : Cxbx copies in four steps (0,1,2 + 2 + 3 + 0), but it can be done in three (0,1,2 + 2,3 + 0)!
 
-      if (pPatchDesc.hVertexShader and D3DFVF_XYZRHW) > 0 then
+      if (pPatchDesc.hVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW then
       begin
         for z := 0 to (VERTICES_PER_TRIANGLE*TRIANGLES_PER_QUAD)-1 do
         begin
@@ -1424,14 +1404,13 @@ var
 begin
   XTL_EmuUpdateDeferredStates();
 
-  pdwVB := PDWORD(g_IVBTable);
+//  pdwVB := PDWORD(g_IVBTable);
+  pdwVB := PDWORD(g_pIVBVertexBuffer);
 
   uiStride := 0;
 
-//g_CurrentVertexShader := g_CurrentVertexShader  and not D3DFVF_TEXCOUNT_MASK;
-
   // Parse IVB table with current FVF shader if possible.
-  bFVF := not VshHandleIsVertexShader(g_CurrentVertexShader);
+  bFVF := VshHandleIsFVF(g_CurrentVertexShader);
 
   if(bFVF and ((g_CurrentVertexShader and D3DFVF_POSITION_MASK) <> D3DFVF_XYZRHW)) then
   begin
@@ -1456,21 +1435,7 @@ begin
   if g_IVBTblOffs > 0 then // Dxbx addition, to prevent underflow
   for v := 0 to g_IVBTblOffs - 1 do
   begin
-    if(dwPos = D3DFVF_XYZ) then
-    begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
-
-      if(v = 0) then
-      begin
-        Inc(uiStride, (sizeof(FLOAT)*3));
-      end;
-
-      DbgPrintf('IVB Position := {%f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z]);
-
-    end
-    else if(dwPos = D3DFVF_XYZRHW) then
+    if(dwPos = D3DFVF_XYZRHW) then
     begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
@@ -1484,40 +1449,54 @@ begin
 
       DbgPrintf('IVB Position := {%f, %f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw]);
     end
-    else if(dwPos = D3DFVF_XYZB1) then
+    else // XYZRHW cannot be combined with NORMAL, but the other XYZ formats can :
     begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Blend1;     Inc(PFLOAT(pdwVB));
-
-      if(v = 0) then
+      if(dwPos = D3DFVF_XYZ) then
       begin
-        Inc(uiStride, (sizeof(FLOAT)*4));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
+
+        if(v = 0) then
+        begin
+          Inc(uiStride, (sizeof(FLOAT)*3));
+        end;
+
+        DbgPrintf('IVB Position := {%f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z]);
+
+      end
+      else if(dwPos = D3DFVF_XYZB1) then
+      begin
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.x; Inc(PFLOAT(pdwVB));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Blend1;     Inc(PFLOAT(pdwVB));
+
+        if(v = 0) then
+        begin
+          Inc(uiStride, (sizeof(FLOAT)*4));
+        end;
+
+        DbgPrintf('IVB Position := {%f, %f, %f, %f', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1]);
+      end
+      else
+      begin
+        DxbxKrnlCleanup('Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)', [g_IVBFVF, dwPos]);
       end;
 
-      DbgPrintf('IVB Position := {%f, %f, %f, %f', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1]);
-    end
-
-    else
-    begin
-      DxbxKrnlCleanup('Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)', [g_IVBFVF, dwPos]);
-    end;
-
-// Cxbx     if(dwPos = D3DFVF_NORMAL) then // <- This didn't look right but if it is, change it back...
-    if(dwCurFVF and D3DFVF_NORMAL) > 0 then
-    begin
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.x; Inc(PFLOAT(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.y; Inc(PFLOAT(pdwVB));
-      PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.z; Inc(PFLOAT(pdwVB));
-
-      if(v = 0) then
+      if(dwCurFVF and D3DFVF_NORMAL) > 0 then
       begin
-        Inc(uiStride, (sizeof(FLOAT)*3));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.x; Inc(PFLOAT(pdwVB));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.y; Inc(PFLOAT(pdwVB));
+        PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.z; Inc(PFLOAT(pdwVB));
+
+        if(v = 0) then
+        begin
+          Inc(uiStride, (sizeof(FLOAT)*3));
+        end;
+
+        DbgPrintf('IVB Normal := {%f, %f, %f}', [g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z]);
       end;
-
-      DbgPrintf('IVB Normal := {%f, %f, %f}', [g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z]);
-
     end;
 
     if(dwCurFVF and D3DFVF_DIFFUSE) > 0 then
@@ -1607,7 +1586,7 @@ begin
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
   VPDesc.dwOffset := 0;
-  VPDesc.pVertexStreamZeroData := g_IVBTable;
+  VPDesc.pVertexStreamZeroData := g_pIVBVertexBuffer;//g_IVBTable;
   VPDesc.uiVertexStreamZeroStride := uiStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 

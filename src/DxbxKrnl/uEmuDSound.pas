@@ -480,7 +480,7 @@ begin
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('Unable to retrieve current position for resize reallocation!');
 
-    hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus(dwStatus);
+    hRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).GetStatus({out}dwStatus);
 
     if (FAILED(hRet)) then
       DxbxKrnlCleanup('Unable to retrieve current status for resize reallocation!');

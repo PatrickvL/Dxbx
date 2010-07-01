@@ -482,6 +482,7 @@ const OReg_Name: array [VSH_OREG_NAME] of P_char =
 
 // Dxbx forward declarations :
 
+function VshHandleIsFVF(aHandle: DWORD): boolean; // inline
 function VshHandleIsVertexShader(aHandle: DWORD): boolean; inline; // forward
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; inline; // forward
 
@@ -530,6 +531,12 @@ begin
   if (g_bPrintfOn) then
     printf(aStr, Args);
 {$endif}
+end;
+
+function VshHandleIsFVF(aHandle: DWORD): boolean; // inline
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result := (aHandle and $80000000) = 0;
 end;
 
 function VshHandleIsVertexShader(aHandle: DWORD): boolean; // inline
