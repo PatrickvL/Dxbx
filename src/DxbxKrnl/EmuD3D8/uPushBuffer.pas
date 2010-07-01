@@ -359,28 +359,9 @@ begin
       //
 
       dwStride := 0;
-
-      if (not VshHandleIsVertexShader(dwVertexShader)) then
+      if (VshHandleIsFVF(dwVertexShader)) then
       begin
-        (*if(dwVertexShader and D3DFVF_XYZRHW) > 0 then begin Inc(dwStride, sizeof(FLOAT)*4); end;
-        if(dwVertexShader and D3DFVF_XYZ) > 0   then begin Inc(dwStride, sizeof(FLOAT)*3); end;
-        if(dwVertexShader and D3DFVF_XYZB1) > 0 then begin Inc(dwStride, sizeof(FLOAT)); end;
-        if(dwVertexShader and D3DFVF_XYZB2) > 0 then begin Inc(dwStride, sizeof(FLOAT)*2); end;
-        if(dwVertexShader and D3DFVF_XYZB3) > 0 then begin Inc(dwStride, sizeof(FLOAT)*3); end;
-        if(dwVertexShader and D3DFVF_XYZB4) > 0 then begin Inc(dwStride, sizeof(FLOAT)*4); end;*)
-
-        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW) then begin Inc(dwStride, sizeof(FLOAT)*4); end;
-        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZ) then begin Inc(dwStride,sizeof(FLOAT)*3); end;
-        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB1) then begin Inc(dwStride, sizeof(FLOAT)*4); end;
-        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB2) then begin Inc(dwStride, sizeof(FLOAT)*5); end;
-        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB3) then begin Inc(dwStride, sizeof(FLOAT)*6); end;
-        if ((dwVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZB4) then begin Inc(dwStride, sizeof(FLOAT)*7); end;
-
-        if (dwVertexShader and D3DFVF_NORMAL) > 0 then begin Inc(dwStride, sizeof(FLOAT)*3); end;
-        if (dwVertexShader and D3DFVF_DIFFUSE) > 0 then begin Inc(dwStride, sizeof(DWORD)); end;
-        if (dwVertexShader and D3DFVF_SPECULAR) > 0 then begin Inc(dwStride, sizeof(DWORD)); end;
-
-        Inc(dwStride, ((dwVertexShader and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT)*sizeof(FLOAT)*2);
+        dwStride := DxbxFVFToVertexSizeInBytes(dwVertexShader, {IncludeTextures=}True);
       end;
 
       (* MARKED OUT BY CXBX

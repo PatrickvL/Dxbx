@@ -351,6 +351,7 @@ const X_D3DCOMMON_INTREFCOUNT_MASK   = $00780000;
 const X_D3DCOMMON_INTREFCOUNT_SHIFT  = 19;
 const X_D3DCOMMON_D3DCREATED         = $01000000;
 const X_D3DCOMMON_ISLOCKED           = $02000010; // Surface is currently locked (potential unswizzle candidate)
+//??const X_D3DCOMMON_ISLOCKED           = $02000000; // Surface is currently locked (potential unswizzle candidate)
 const X_D3DCOMMON_UNUSED_MASK        = $FE000000;
 const X_D3DCOMMON_UNUSED_SHIFT       = 25;
 
