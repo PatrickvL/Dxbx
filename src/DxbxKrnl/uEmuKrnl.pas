@@ -287,9 +287,9 @@ begin
   WriteLog('EmuKrnl : Unimplemented API : ' + aAPI);
   Result := STATUS_PROCEDURE_NOT_FOUND; // abuse a standard NT error code
 
-  // Make sure we're noticing this :
-  Beep(750, 500);
-  Sleep(1250);
+//  // Make sure we're noticing this :
+//  Beep(750, 500);
+//  Sleep(1250);
 end;
 
 // Initializes an OBJECT_ATTRIBUTES.

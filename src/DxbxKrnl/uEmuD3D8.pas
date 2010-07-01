@@ -73,6 +73,9 @@ uses
   uVertexBuffer,
   uState;
 
+function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boolean;
+function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
+
 procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32); {NOPATCH}
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
@@ -278,9 +281,56 @@ begin
   ZeroMemory(@g_EmuCDPD, SizeOf(g_EmuCDPD));
 end;
 
-function DoPresent: UINT;
+// Generic unlocking of a D3DResource.
+//
+// Dxbx Note : As suggested by StrikerX3, we should call this for any resource
+// that's locked while it shouldn't be anymore; So call this before Lock() itself,
+// before SetTexture(), SetStreamSource(), SetIndices() and maybe other calls too.
+function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boolean;
 begin
-  Result := IDirect3DDevice8(g_pD3DDevice8).Present(nil, nil, 0, nil);
+  Result := Assigned(pResource) and Assigned(pResource.Emu.Resource8);
+  if not Result then
+    Exit;
+
+  case (IDirect3DResource8(pResource.Emu.Resource8).GetType()) of
+    D3DRTYPE_SURFACE:
+      IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect();
+
+    D3DRTYPE_VOLUME:
+      // TODO -oDxbx : Totally untested! Volume's aren't used yet!
+      IDirect3DVolume8(pResource.Emu.Resource8).UnlockBox();
+
+    D3DRTYPE_TEXTURE:
+      IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(uiLevel);
+
+    D3DRTYPE_VOLUMETEXTURE:
+      // TODO -oDxbx : Totally untested! VolumeTexture's aren't used yet!?
+      IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture8).UnlockBox(uiLevel);
+
+    D3DRTYPE_CUBETEXTURE:
+    begin
+      IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel);
+      IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel);
+      IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel);
+      IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel);
+      IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel);
+      IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel);
+    end;
+
+    D3DRTYPE_VERTEXBUFFER:
+      IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock();
+
+    D3DRTYPE_INDEXBUFFER:
+      IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Unlock();
+  else
+    Result := False;
+  end;
+end;
+
+// A wrapper for Present() with an extra safeguard to restore 'device lost' errors :
+function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
+begin
+  Result := IDirect3DDevice8(g_pD3DDevice8).Present(pSourceRect, pDestRect, pDummy1, pDummy2);
   if Result = D3D_OK then
     Exit;
 
@@ -1131,6 +1181,7 @@ begin
 
         for Streams := 0 to 8-1 do
         begin
+          // Dxbx note : Why do we need a dummy stream at all?
           IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(Streams, IDirect3DVertexBuffer8(g_pDummyBuffer), 1);
         end;
 
@@ -2002,7 +2053,9 @@ begin
     pDestinationSurface, pDestPointsArray]);
 {$ENDIF}
 
-  IDirect3DSurface8(pSourceSurface.Emu.Surface8).UnlockRect();
+  // Dxbx addition : This is safer than a hardcoded call to UnlockRect like Cxbx does :
+  DxbxUnlockD3DResource(pSourceSurface);
+//  IDirect3DSurface8(pSourceSurface.Emu.Surface8).UnlockRect();
 
   { MARKED OUT BY CXBX
   kthx := 0;
@@ -2723,7 +2776,7 @@ begin
                                  {ppConstants}NULL,
                                  {ppCompiledShader}@pRecompiledBuffer,
                                  {ppCompilationErrors}NULL);
-//      if not (FAILED(hRet)) then
+      if not (FAILED(hRet)) then // Dxbx addition
         hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexShader
         (
             pRecompiledDeclaration,
@@ -3264,14 +3317,18 @@ begin
     end
     else
     begin
-      IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(0, {out}LockedRect, NULL, 0);
+      // Dxbx addition : Check if LockRect actually succeeds :
+      if IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(0, {out}LockedRect, NULL, 0) <> D3D_OK then
+        EmuWarning('EmuIDirect3DDevice8_CreateTexture : LockRect Failed!')
+      else
+      begin
+        ppTexture^.Data := DWORD(LockedRect.pBits);
+        ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
 
-      ppTexture^.Data := DWORD(LockedRect.pBits);
-      ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
+        g_DataToTexture.insert(ppTexture^.Data, ppTexture^);
 
-      g_DataToTexture.insert(ppTexture^.Data, ppTexture^);
-
-      IDirect3DTexture8(ppTexture^.Emu.Texture8).UnlockRect(0);
+        IDirect3DTexture8(ppTexture^.Emu.Texture8).UnlockRect(0);
+      end;
     end;
 
 {$IFDEF DEBUG}
@@ -3616,6 +3673,7 @@ begin
       goto fail;
     end;
 
+    DxbxUnlockD3DResource(pIndexData); // Dxbx addition
     pIndexBuffer := pIndexData.Emu.IndexBuffer8;
 
     if (pIndexData.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
@@ -3742,11 +3800,8 @@ begin
   //*)
 
   // Dxbx Note : As suggested by StrikerX3, as a fix for missing textures in Panzer :
-  if (pBaseTexture8 <> NULL) then
-  begin
-    // Make sure the texture has no locks, otherwise we get blank polygons
-    IDirect3DTexture8(pTexture.Emu.Texture8).UnlockRect(0);
-  end;
+  // Make sure the texture has no locks, otherwise we get blank polygons
+  DxbxUnlockD3DResource(pTexture);
 
   // hRet = IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
   Result := IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(iif((g_iWireframe = 0), pBaseTexture8, nil)));
@@ -3801,6 +3856,9 @@ begin
     pTexture := g_DataToTexture.get(Data);
 
     EmuWarning('Switching Texture 0x%.08X (0x%.08X) @ Stage %d', [pTexture, pTexture.Emu.BaseTexture8, Stage]);
+
+    // Dxbx addition : Attempt to fix missing textures :
+    DxbxUnlockD3DResource(pTexture);
 
     {hRet := }IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(pTexture.Emu.BaseTexture8));
 
@@ -5007,7 +5065,7 @@ begin
                 memset(pDest, 0, dwMipWidth * dwBPP);
 
                 Inc(pDest, LockedRect.Pitch);
-                Inc(pSrc, dwMipPitch);
+                // Inc(pSrc, dwMipPitch); // Dxbx note : Unused
               end;
             end
             else
@@ -5404,8 +5462,8 @@ function XTL_EmuIDirect3DResource8_IsBusy
     pThis: PX_D3DResource
 ): LONGBOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  pResource8: XTL_PIDirect3DResource8;
+//var
+//  pResource8: XTL_PIDirect3DResource8;
 begin
   EmuSwapFS(fsWindows);
 
@@ -5416,7 +5474,7 @@ begin
     #13#10');',
     [pThis]);
 {$ENDIF}
-  pResource8 := pThis.Emu.Resource8;
+  // pResource8 := pThis.Emu.Resource8;
   EmuSwapFS(fsXbox);
 
   Result := FALSE;
@@ -7689,7 +7747,7 @@ begin
 
     pVertexBuffer8 := pStreamData.Emu.VertexBuffer8;
     IDirect3DVertexBuffer8(pVertexBuffer8).Unlock();
-   end;
+  end;
 
   {$ifdef _DEBUG_TRACK_VB}
   if (pStreamData <> NULL) then

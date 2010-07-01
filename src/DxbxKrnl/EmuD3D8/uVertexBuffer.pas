@@ -400,19 +400,19 @@ begin
     end;
     if Assigned(pCachedStream_.Stream.pOriginalStream) then
     begin
-      IDirect3DVertexBuffer8(pCachedStream_.Stream.pOriginalStream)._Release();
-      pCachedStream_.Stream.pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
+      if IDirect3DVertexBuffer8(pCachedStream_.Stream.pOriginalStream)._Release() = 0 then
+        pCachedStream_.Stream.pOriginalStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     if Assigned(pCachedStream_.Stream.pPatchedStream) then
     begin
 {.$MESSAGE 'FreeCachedStream hits an int 3 because of this call to pPatchedStream._Release() :'}
-      IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream)._Release();
-      pCachedStream_.Stream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
+      if IDirect3DVertexBuffer8(pCachedStream_.Stream.pPatchedStream)._Release() = 0 then
+        pCachedStream_.Stream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
     DxbxFree(pCachedStream_);
   end;
-  g_PatchedStreamsCache.Unlock(); // Dxbx addition - Unlock _after_ update?
   g_PatchedStreamsCache.remove(pStream);
+  g_PatchedStreamsCache.Unlock(); // Dxbx addition - Unlock _after_ update?
 end;
 
 function VertexPatcher.ApplyCachedStream(pPatchDesc: PVertexPatchDesc;
@@ -851,8 +851,10 @@ begin
   end;
   if (nil = pPatchDesc.pVertexStreamZeroData) then
   begin
-    IDirect3DVertexBuffer8(pNewVertexBuffer).Unlock();
-    IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
+    if Assigned(pNewVertexBuffer) then // Dxbx addition
+      IDirect3DVertexBuffer8(pNewVertexBuffer).Unlock();
+    if Assigned(pOrigVertexBuffer) then // Dxbx addition
+      IDirect3DVertexBuffer8(pOrigVertexBuffer).Unlock();
 
     if (FAILED(IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(uiStream, IDirect3DVertexBuffer8(pNewVertexBuffer), pStreamPatch.ConvertedStride))) then
     begin
@@ -1052,8 +1054,8 @@ begin
     end;
     if Assigned(pStream.pPatchedStream) then
     begin
-      IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release();
-      pStream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
+      if IDirect3DVertexBuffer8(pStream.pPatchedStream)._Release() = 0 then
+        pStream.pPatchedStream := nil; // Dxbx addition - nil out after decreasing reference count
     end;
 
     pStream.pPatchedStream := pNewVertexBuffer;
@@ -1299,15 +1301,13 @@ begin
 
   if (pPatchDesc.pVertexStreamZeroData = nil) then
   begin
-//    if (pStream.pOriginalStream <> nil) then // Dxbx addition
+    if (pStream.pOriginalStream <> nil) then // Dxbx addition
       IDirect3DVertexBuffer8(pStream.pOriginalStream).Unlock();
 
-//    if (pStream.pPatchedStream <> nil) then // Dxbx addition
-    begin
+    if (pStream.pPatchedStream <> nil) then // Dxbx addition
       IDirect3DVertexBuffer8(pStream.pPatchedStream).Unlock();
 
-      IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiOrigStride);
-    end;
+    IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiOrigStride);
   end;
 
   m_bPatched := true;
@@ -1801,7 +1801,11 @@ begin
       if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
       for level := 0 to dwMipMapLevels - 1 do
       begin
-        {hRet := }IDirect3DTexture8(pResource.Emu.Texture8).LockRect(level, {out}LockedRect, NULL, 0);
+        hRet := IDirect3DTexture8(pResource.Emu.Texture8).LockRect(level, {out}LockedRect, NULL, 0);
+
+        // Dxbx addition : Mirror the behaviour in EmuUnswizzleActiveTexture :
+        if (FAILED(hRet)) then
+          continue;
 
         iRect := classes.Rect(0, 0, 0, 0);
         iPoint := classes.Point(0, 0);
@@ -1869,6 +1873,7 @@ begin
       end;
     end;
 
+    DxbxUnlockD3DResource(pTexture); // Dxbx addition
     IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.Emu.Texture8));
     //*)
   end;
