@@ -2408,6 +2408,7 @@ begin
   for i := 0 to pVertexShader.VertexDynamicPatch.NbrStreams - 1 do
   begin
     DxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes);
+    pVertexShader.VertexDynamicPatch.pStreamPatches[i].pTypes := nil;
   end;
   DxbxFree(pVertexShader.VertexDynamicPatch.pStreamPatches);
   pVertexShader.VertexDynamicPatch.pStreamPatches := NULL;

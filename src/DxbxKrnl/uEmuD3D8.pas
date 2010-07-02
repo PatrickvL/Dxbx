@@ -4215,7 +4215,7 @@ begin
         end;
       end;
 
-    { $FFFFFFFF=}X_D3DVSDE_UNKNOWN: // Dxbx note : Is this D3DVSD_END perhaps?
+    { $FFFFFFFF=}X_D3DVSDE_VERTEX:
     begin
       o := g_IVBTblOffs;
       g_IVBTable[o].Position.x := a;
@@ -5165,9 +5165,9 @@ begin
                     memcpy(pPixelData, pExpandedTexture, dwDataSize);
 
                     // Flush unused data buffers
-                    DxbxFree(pTexturePalette);
-                    DxbxFree(pExpandedTexture);
-                    DxbxFree(pTextureCache);
+                    DxbxFree(pTexturePalette); pTexturePalette := nil;
+                    DxbxFree(pExpandedTexture); pExpandedTexture := nil;
+                    DxbxFree(pTextureCache); pTextureCache := nil;
                   end
                   else
                   begin
