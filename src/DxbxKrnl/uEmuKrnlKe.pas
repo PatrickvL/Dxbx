@@ -610,9 +610,9 @@ const SYNCH_LEVEL = DISPATCH_LEVEL;
 // Differences from NT: None.
 function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-var
+(*var
   Pcr: PKPCR;
-  CurrentIrql: KIRQL;
+  CurrentIrql: KIRQL; *)
 begin
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel();');

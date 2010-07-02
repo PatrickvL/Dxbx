@@ -1116,8 +1116,6 @@ begin
   if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
     DxbxKrnlCleanup('Unsupported FileInformationClass');
 
-  Ret := STATUS_SUCCESS; // DXBX - Ret might not have been initialized
-
   // initialize FileMask
   begin
     if (FileMask <> nil) then
