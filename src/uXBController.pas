@@ -322,8 +322,7 @@ begin
     begin
       // default is a null string
       m_DeviceName[v][0] := #0;
-
-      szValueName := Format('DeviceName 0x%.02X', [v]);
+      szValueName := AnsiString(Format('DeviceName 0x%.02X', [v]));
 
       dwType := REG_SZ; dwSize := 260;
       RegQueryValueExA(hKey, PAnsiChar(szValueName), NULL, @dwType, PByte(@(m_DeviceName[v])), @dwSize);
@@ -337,7 +336,7 @@ begin
       m_ObjectConfig[XBCtrlObject(v)].dwInfo := -1;
       m_ObjectConfig[XBCtrlObject(v)].dwFlags := 0;
 
-      szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
+      szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
 
       dwType := REG_BINARY; dwSize := sizeof(XBCtrlObjectCfg);
 
@@ -369,7 +368,7 @@ begin
     // Save Device Names
     for v := 0 to XBCTRL_MAX_DEVICES-1 do
     begin
-      szValueName := Format('DeviceName 0x%.02X', [v]);
+      szValueName := AnsiString(Format('DeviceName 0x%.02X', [v]));
 
       dwType := REG_SZ; dwSize := 260;
 
@@ -382,7 +381,7 @@ begin
     // Save Object Configuration
     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
-      szValueName := Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]);
+      szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
       
       dwType := REG_BINARY; dwSize := sizeof(XBCtrlObjectCfg);
 

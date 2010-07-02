@@ -508,6 +508,24 @@ procedure {329} xboxkrnl_READ_PORT_BUFFER_UCHAR(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*
+EAD_PORT_BUFFER_UCHAR proc near
+
+arg_0       = dword ptr  4
+arg_4       = dword ptr  8
+arg_8       = dword ptr  0Ch
+
+        mov eax, edi
+        mov edx, [esp+arg_0]
+        mov edi, [esp+arg_4]
+        mov ecx, [esp+arg_8]
+        rep ins     byte ptr es:[edi],  dx
+        mov edi, eax
+        retn    0Ch
+READ_PORT_BUFFER_UCHAR endp
+*)
+
   Unimplemented('READ_PORT_BUFFER_UCHAR');
   EmuSwapFS(fsXbox);
 end;
@@ -520,6 +538,24 @@ procedure {330} xboxkrnl_READ_PORT_BUFFER_USHORT(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*
+READ_PORT_BUFFER_USHORT proc near
+
+arg_0       = dword ptr  4
+arg_4       = dword ptr  8
+arg_8       = dword ptr  0Ch
+
+        mov eax, edi
+        mov edx, [esp+arg_0]
+        mov edi, [esp+arg_4]
+        mov ecx, [esp+arg_8]
+        rep ins     word ptr es:[edi],  dx
+        mov edi, eax
+        retn    0Ch
+READ_PORT_BUFFER_USHORT endp
+*)
+
   Unimplemented('READ_PORT_BUFFER_USHORT');
   EmuSwapFS(fsXbox);
 end;
@@ -532,6 +568,23 @@ procedure {331} xboxkrnl_READ_PORT_BUFFER_ULONG(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*READ_PORT_BUFFER_ULONG proc near
+
+arg_0       = dword ptr  4
+arg_4       = dword ptr  8
+arg_8       = dword ptr  0Ch
+
+        mov eax, edi
+        mov edx, [esp+arg_0]
+        mov edi, [esp+arg_4]
+        mov ecx, [esp+arg_8]
+        rep ins     dword ptr es:[edi], dx
+        mov edi, eax
+        retn    0Ch
+READ_PORT_BUFFER_ULONG endp
+*)
+
   Unimplemented('READ_PORT_BUFFER_ULONG');
   EmuSwapFS(fsXbox);
 end;
@@ -556,6 +609,26 @@ procedure {333} xboxkrnl_WRITE_PORT_BUFFER_USHORT(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+
+(*
+        public WRITE_PORT_BUFFER_USHORT
+WRITE_PORT_BUFFER_USHORT proc near
+
+arg_0       = dword ptr  4
+arg_4       = dword ptr  8
+arg_8       = dword ptr  0Ch
+
+        mov eax, esi
+        mov edx, [esp+arg_0]
+        mov esi, [esp+arg_4]
+        mov ecx, [esp+arg_8]
+        rep outsw
+        mov esi, eax
+        retn    0Ch
+WRITE_PORT_BUFFER_USHORT endp
+end
+*)
+
   Unimplemented('WRITE_PORT_BUFFER_USHORT');
   EmuSwapFS(fsXbox);
 end;
