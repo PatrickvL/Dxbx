@@ -70,11 +70,9 @@ function XTL_EmuXGIsSwizzledFormat
     Format: X_D3DFORMAT
 ): _bool; stdcall; // Dxbx addition : This check should return a boolean
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  Dummy: DWORD;
 begin
   EmuSwapFS(fsWindows);
-  
+
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuXapi : EmuXGIsSwizzledFormat' +
       #13#10'(' +
@@ -83,7 +81,7 @@ begin
       [Ord(Format)]);
 {$ENDIF}
 
-  Result := False; // EmuXBFormatIsSwizzled(Format, @Dummy); // When enabled, X-Marbles & XPong show nothing
+  Result := False;
 
   EmuSwapFS(fsXbox);
 end;

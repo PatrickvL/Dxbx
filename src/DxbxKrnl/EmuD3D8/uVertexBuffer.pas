@@ -1651,10 +1651,6 @@ var
   pDest: PBYTE;
   v: DWORD;
 begin
-  dwWidth := 0;
-  dwHeight := 0;
-  dwBPP := 0;
-
   //
   // DEBUGGING
   //
@@ -1665,7 +1661,6 @@ begin
     if (pTexture = NULL) then
       continue;
 
-    //(*
     pResource := pTexture;
     pPixelContainer := PX_D3DPixelContainer(pTexture);
 
@@ -1854,7 +1849,6 @@ begin
 
     DxbxUnlockD3DResource(pTexture); // Dxbx addition
     IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.Emu.Texture8));
-    //*)
   end;
 end; // XTL_EmuUpdateActiveTexture
 
