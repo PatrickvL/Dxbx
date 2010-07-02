@@ -382,7 +382,7 @@ begin
     for v := 0 to XBCTRL_OBJECT_COUNT-1 do
     begin
       szValueName := AnsiString(Format('Object : "%s"', [m_DeviceNameLookup[XBCtrlObject(v)]]));
-      
+
       dwType := REG_BINARY; dwSize := sizeof(XBCtrlObjectCfg);
 
       if (m_ObjectConfig[XBCtrlObject(v)].dwDevice <> -1) then
@@ -757,9 +757,15 @@ begin
   end;
 end;
 
+function IsAnalog(v: XBCtrlObject): boolean;
+begin
+  Result := (v <= XBCTRL_OBJECT_RTRIGGER);
+end;
+
 {static}var lAccumX: LongInt = 0;
 {static}var lAccumY: LongInt = 0;
 {static}var lAccumZ: LongInt = 0;
+{static}var lKeyPressure: array [XBCtrlObject] of LongInt;
 procedure XBController.ListenPoll(Controller: PXINPUT_STATE);
 // Branch:shogun  Revision:161  Translator:Shadow_Tj  Done:100
 var
@@ -864,9 +870,26 @@ begin
       bKey := KeyboardState[dwInfo];
 
       if (bKey and $80) > 0 then
-        wValue := 32767
+      begin
+        // Dxbx addition : For analog controls, key presses build up pressure when being (de)pressed longer.
+        // The following code uses a power increase of 5000, which reaches max pressure in about 6 measurements,
+        // which is fast enough for most applications, but still allows for a little accuracy when needed.
+        // TODO : Make the press & release power configurable per XBCtrlObject.
+
+        Inc(lKeyPressure[v], 5000);
+        if (not IsAnalog(v))
+        or (lKeyPressure[v] > 32767) then
+          lKeyPressure[v] := 32767;
+      end
       else
-        wValue := 0;
+      begin
+        Dec(lKeyPressure[v], 7500);
+        if (not IsAnalog(v))
+        or (lKeyPressure[v] < 0) then
+          lKeyPressure[v] := 0;
+      end;
+
+      wValue := lKeyPressure[v];
     end
     // Interpret PC Mouse Input
     else if (dwFlags and DEVICE_FLAG_MOUSE) > 0 then
