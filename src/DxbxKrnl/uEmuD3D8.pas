@@ -6350,6 +6350,7 @@ begin
     [pSurface, SrcRect, DstRect, EnableColorKey, ColorKey]);
 {$ENDIF}
 
+// Cxbx has #ifndef UnrealChampionshipHack
   if Assigned(pSurface) then
   begin
     // manually copy data over to overlay
@@ -6359,7 +6360,7 @@ begin
 
       ddsd2.dwSize := sizeof(ddsd2);
 
-      if (FAILED(IDirectDrawSurface7(g_pDDSOverlay7).Lock(nil, {out}ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0))) then
+      if (FAILED(IDirectDrawSurface7(g_pDDSOverlay7).Lock(NULL, {out}ddsd2, DDLOCK_SURFACEMEMORYPTR or DDLOCK_WAIT, 0))) then
         EmuWarning('Unable to lock overlay surface!');
 
       // copy data
@@ -6385,7 +6386,7 @@ begin
         end;
       end;
 
-      IDirectDrawSurface7(g_pDDSOverlay7).Unlock(nil);
+      IDirectDrawSurface7(g_pDDSOverlay7).Unlock(NULL);
     end;
 
     // update overlay!
@@ -6403,15 +6404,15 @@ begin
 
       GetWindowRect(g_hEmuWindow, {var}DestRect);
 
-      DestRect.left   := DestRect.left + nBorderWidth;
-      DestRect.right  := DestRect.right - nBorderWidth;
-      DestRect.top    := DestRect.top + nTitleHeight + nBorderHeight;
-      DestRect.bottom := DestRect.bottom - nBorderHeight;
+      Inc(DestRect.left,   nBorderWidth);
+      Dec(DestRect.right,  nBorderWidth);
+      Inc(DestRect.top,    nTitleHeight + nBorderHeight);
+      Dec(DestRect.bottom, nBorderHeight);
 
-      DestRect.left   := DestRect.left - aMonitorInfo.rcMonitor.left;
-      DestRect.right  := DestRect.right - aMonitorInfo.rcMonitor.left;
-      DestRect.top    := DestRect.top - aMonitorInfo.rcMonitor.top;
-      DestRect.bottom := DestRect.bottom - aMonitorInfo.rcMonitor.top;
+      Dec(DestRect.left,   aMonitorInfo.rcMonitor.left);
+      Dec(DestRect.right,  aMonitorInfo.rcMonitor.left);
+      Dec(DestRect.top,    aMonitorInfo.rcMonitor.top);
+      Dec(DestRect.bottom, aMonitorInfo.rcMonitor.top);
 
       ZeroMemory(@ddofx, sizeof(ddofx));
 
@@ -6425,35 +6426,38 @@ begin
     begin
       // TODO -oCXBX: dont assume X8R8G8B8 ?
       pBackBuffer := nil;
+
       hRet := IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer);
 
       // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-      if (hRet = D3D_OK) and (IDirect3DSurface8(pBackBuffer).LockRect(LockedRectDest, NULL, 0) = D3D_OK) then
+      if (hRet = D3D_OK) and (IDirect3DSurface8(pBackBuffer).LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
       begin
         pCurByte := Puint08(pSurface.Emu.Lock);
+
         pDest2 := Puint08(LockedRectDest.pBits);
 
-        dx := 0; dy := 0;
-        
+        dx:=0; dy:=0;
+
         dwImageSize := g_dwOverlayP*g_dwOverlayH;
 
         // grayscale
         if (false) then
         begin
           if g_dwOverlayH > 0 then // Dxbx addition, to prevent underflow
-          for y := 0 to g_dwOverlayH - 1 do
+          for y := 0 to g_dwOverlayH-1 do
           begin
-            stop := g_dwOverlayW * 4;
-            while Uint32(x) < stop do
+            stop := g_dwOverlayW*4;
+            x := 0; while Uint32(x) < stop do
             begin
-              Y3 := Uint08(pCurByte[0]);
+              Y3 := pCurByte^;
               pDest2[x+0] := Y3;
               pDest2[x+1] := Y3;
               pDest2[x+2] := Y3;
               pDest2[x+3] := $FF;
+
               pCurByte := @(pCurByte[2]); // Inc(pCurByte, 2) doesn't work
               Inc(x, 4);
-            end; // While
+            end; // while
 
             pDest2:= @pDest2[LockedRectDest.Pitch];
          end;
@@ -6461,14 +6465,12 @@ begin
         // full color conversion (YUY2->XRGB)
         else
         begin
-          v := 0;
-          while v < dwImageSize do
+          v := 0; while v < dwImageSize do
           begin
-            Y2[0] := pCurByte[0];
-            U2 := pCurByte[1];
-            Y2[1] := pCurByte[2];
-            V2 := pCurByte[3];
-            pCurByte := @pCurByte[4];
+            Y2[0] := pCurByte^; Inc(pCurByte);
+            U2 := pCurByte^; Inc(pCurByte);
+            Y2[1] := pCurByte^; Inc(pCurByte);
+            V2 := pCurByte^; Inc(pCurByte);
 
             a := 0;
             for x := 0 to 2-1 do
@@ -6477,20 +6479,9 @@ begin
               G := Y2[a] - 0.344*(U2-128) - 0.714*(V2-128);
               B := Y2[a] + 1.772*(U2-128);
 
-              if R < 0 then
-                R := 0;
-              if R > 255 then
-                R := 255;
-
-              if G < 0 then
-                G := 0;
-              if G > 255 then
-                G := 255;
-
-              if B < 0 then
-                B := 0;
-              if B > 255 then
-                B := 255;
+              if R < 0 then R := 0; if R > 255 then R := 255;
+              if G < 0 then G := 0; if G > 255 then G := 255;
+              if B < 0 then B := 0; if B > 255 then B := 255;
 
               i := (dy*uint32(LockedRectDest.Pitch)+(dx+uint32(x))*4);
 
@@ -6502,7 +6493,7 @@ begin
               Inc(a);
             end;
 
-            Inc(Dx, 2);
+            Inc(dx, 2);
 
             if ((dx mod g_dwOverlayW) = 0) then
             begin
@@ -6511,7 +6502,7 @@ begin
             end;
 
             Inc(v, 4);
-          end; // While
+          end; // while
         end;
 
         IDirect3DSurface8(pBackBuffer).UnlockRect();
