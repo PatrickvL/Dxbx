@@ -1562,10 +1562,10 @@ begin
     if (0=(pThis.EmuFlags and DSB_FLAG_RECIEVEDATA)) then
     begin
       uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
-      pThis.EmuDirectSoundBuffer8 := nil; // Dxbx addition : nil out after free
 
       if (uRet = 0) then
       begin
+        pThis.EmuDirectSoundBuffer8 := nil; // Dxbx addition : nil out after free
         // remove cache entry
         for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
         begin
@@ -1961,7 +1961,7 @@ begin
       Exit;
     end;
 
-    if (pDSBufferDesc.lpwfxFormat <> nil) then
+    if (pDSBufferDesc.lpwfxFormat <> NULL) then
     begin
       // we only support 2 channels right now
       if (pDSBufferDesc.lpwfxFormat.nChannels > 2) then
@@ -2179,10 +2179,10 @@ begin
   if (pThis <> nil) and (pThis.EmuDirectSoundBuffer8 <> nil) then
   begin
     uRet := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._Release();
-    pThis.EmuDirectSoundBuffer8 := nil; // Dxbx addition : nil out after free
 
     if (uRet = 0) then
     begin
+      pThis.EmuDirectSoundBuffer8 := nil; // Dxbx addition : nil out after free
       // remove cache entry
       for v := 0 to SOUNDSTREAM_CACHE_SIZE-1 do
       begin
@@ -3722,7 +3722,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuIDirectSound8_SetFilter' +
+  DbgPrintf('EmuDSound : EmuIDirectSound8_GetCaps' +
       #13#10'(' +
       #13#10'   pThis               : 0x%.08X' +
       #13#10'   pDSCaps             : 0x%.08X' +
@@ -3732,6 +3732,8 @@ begin
 
   // Get PC's DirectSound capabilities
   ZeroMemory(@DSCapsPC, sizeof(DSCAPS));
+
+  AssureDirectSoundCreate(); // Dxbx addition - use one implementation for DirectSoundCreate8
 
   hRet := IDirectSound8(g_pDSound8).GetCaps({out}DSCapsPC);
   if(FAILED(hRet)) then

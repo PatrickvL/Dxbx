@@ -117,7 +117,7 @@ type
   {$ELSE}
     PUINT = ^UINT;
   {$ENDIF}
-  PUINTs = PUINT; // Dxbx addition, to give older Delphis an indexable type
+  PUINTs = PUINT;
 {$ELSE}
   TUINTArray = array [0..MaxInt div SizeOf(UINT)-1] of UINT;
   PUINTs = ^TUINTArray; // Dxbx addition, to give older Delphis an indexable type

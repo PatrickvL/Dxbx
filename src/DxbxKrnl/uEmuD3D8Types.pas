@@ -794,7 +794,7 @@ const
   X_D3DVSDE_TEXCOORD1    = 10;
   X_D3DVSDE_TEXCOORD2    = 11;
   X_D3DVSDE_TEXCOORD3    = 12;
-  X_D3DVSDE_UNKNOWN      = $FFFFFFFF;
+  X_D3DVSDE_VERTEX       = $FFFFFFFF; // Xbox extension for Begin/End drawing
 
 const
   // bit declarations for _Type fields
