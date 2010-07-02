@@ -3218,6 +3218,8 @@ function XTL_EmuIDirect3DDevice8_CreateTexture2
 var
   pTexture: PX_D3DTexture;
 begin
+  // Dxbx note : No EmuSwapFS needed here
+
   case D3DResource of
      X_D3DRTYPE_TEXTURE: // 3
         XTL_EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
@@ -5873,6 +5875,8 @@ var
   dwSize: DWORD;
   pRefCount: PDWORD;
 begin
+  // Dxbx note : No EmuSwapFS needed here
+
   // In a special situation, we are actually returning a memory ptr with high bit set
   if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
   begin
@@ -5885,7 +5889,7 @@ begin
 
     Result := pThis;
     Exit;
-   end;
+  end;
 
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis, Level, @pSurfaceLevel);
 
@@ -6162,6 +6166,8 @@ function XTL_EmuIDirect3DDevice8_CreateVertexBuffer
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
+  // Dxbx note : No EmuSwapFS needed here
+
   ppVertexBuffer^ := XTL_EmuIDirect3DDevice8_CreateVertexBuffer2(Length);
   Result := D3D_OK;
 end;
@@ -8368,6 +8374,8 @@ function XTL_EmuIDirect3DDevice8_CreatePalette
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
+  // Dxbx note : No EmuSwapFS needed here
+
   ppPalette^ := XTL_EmuIDirect3DDevice8_CreatePalette2(Size);
   Result := D3D_OK;
 end;
@@ -8485,6 +8493,8 @@ function XTL_EmuIDirect3DPalette8_Lock
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
+  // Dxbx note : No EmuSwapFS needed here
+
   ppColors^ := XTL_EmuIDirect3DPalette8_Lock2(pThis, Flags);
 
   Result := D3D_OK;

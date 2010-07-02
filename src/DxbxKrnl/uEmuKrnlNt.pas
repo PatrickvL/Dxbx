@@ -1723,10 +1723,14 @@ var
   dwEsi: uint32;
   dwEax: uint32;
   dwEcx: uint32;
+  bWasXboxFS: Boolean; // Dxbx addition
 begin
   // Cxbx Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
-  EmuSwapFS(fsWindows); // Dxbx note : Yeah, well, we'll just make sure that we're in PC mode!
+  // Dxbx note : Yeah, well, that may be so but it's still an kernel API,
+  // so we'll just make sure that we're in PC mode for the logging at least!
+  bWasXboxFS := EmuIsXboxFS(); // Dxbx addition
+  EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtUserIoApcDispatcher' +
@@ -1741,8 +1745,6 @@ begin
       #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.u1.Pointer, IoStatusBlock.Information]);
 {$ENDIF}
 
-  EmuSwapFS(fsXbox);   // Xbox FS
-
   dwEsi := uint32(IoStatusBlock);
 
   if((IoStatusBlock.u1.Status and $C0000000) = $C0000000) then
@@ -1755,6 +1757,9 @@ begin
     dwEcx := DWORD(IoStatusBlock.Information);
     dwEax := 0;
   end;
+
+  if bWasXboxFS then // Dxbx addition : Swap back only here, if necessary
+    EmuSwapFS(fsXbox);   // Xbox FS
 
   (*
   // ~XDK 3911??
@@ -1796,11 +1801,10 @@ begin
 
 {$IFDEF DEBUG}
   EmuSwapFS(fsWindows);   // Win2k/XP FS
-
   DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
+  if bWasXboxFS then // Dxbx addition : Swap back only here, if necessary
+    EmuSwapFS(fsXbox);
 {$ENDIF}
-
-  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtWaitForSingleObject(
