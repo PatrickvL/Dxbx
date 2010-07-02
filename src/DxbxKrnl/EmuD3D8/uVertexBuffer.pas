@@ -1594,6 +1594,8 @@ begin
 
   {bPatched := }VertPatch.Apply(@VPDesc, NULL);
 
+  bFVF := True; // This fixes jumping triangles on Nvidia chipsets, as suggested by Defiance
+
   if(bFVF) then
   begin
     IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(dwCurFVF);

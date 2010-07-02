@@ -841,7 +841,7 @@ begin
 
   // TODO -oCXBX: Actually implement this
 
-  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsXbox);
 
   Result := S_OK;
 end;

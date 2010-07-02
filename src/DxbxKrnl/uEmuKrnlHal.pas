@@ -300,6 +300,8 @@ begin
 {$ENDIF}
 
   DxbxKrnlCleanup('Xbe has rebooted : HalReturnToFirmware(%d)', [Ord(Routine)]);
+
+  EmuSwapFS(fsXbox); // Dxbx addition : Not really necessary
 end;
 
 function {050} xboxkrnl_HalWriteSMBusValue(

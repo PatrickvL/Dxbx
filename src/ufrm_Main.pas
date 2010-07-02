@@ -799,13 +799,13 @@ begin
   else
     for i := 0 to Length(aXbe.m_LibraryVersion) - 1 do
     begin
-      if Pos({D3D}'8LTCG', UpperCase(String(aXbe.m_LibraryVersion[i].szName))) > 0 then
+      if Pos({D3D}'8LTCG', UpperCase(string(AnsiString(aXbe.m_LibraryVersion[i].szName)))) > 0 then
       begin
         NoRunReason := 'Cannot patch link-time optimized libraries!';
         Break;
       end;
 
-      if Pos({D3D}'8D', UpperCase(String(aXbe.m_LibraryVersion[i].szName))) > 0 then
+      if Pos({D3D}'8D', UpperCase(string(AnsiString(aXbe.m_LibraryVersion[i].szName)))) > 0 then
       begin
         NoRunReason := 'Cannot patch debug libraries!';
         Break;
