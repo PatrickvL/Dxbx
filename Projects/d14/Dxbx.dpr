@@ -28,9 +28,7 @@ uses
   uError in '..\..\src\uError.pas',
   uExe in '..\..\src\uExe.pas',
   ufrm_About in '..\..\src\ufrm_About.pas',
-  ufrm_ControllerConfig in '..\..\src\ufrm_ControllerConfig.pas',
   ufrm_Main in '..\..\src\ufrm_Main.pas',
-  ufrm_VideoConfig in '..\..\src\ufrm_VideoConfig.pas',
   uLog in '..\..\src\uLog.pas',
   uMutex in '..\..\src\uMutex.pas',
   uTime in '..\..\src\uTime.pas',
@@ -48,7 +46,8 @@ uses
   uXDVDFS in '..\..\src\uXDVDFS.pas',
   uFileSystem in '..\..\src\uFileSystem.pas',
   uData in '..\..\src\Tools\XdkTracker\src\uData.pas',
-  VistaIconFix in '..\..\src\VistaIconFix.pas';
+  VistaIconFix in '..\..\src\VistaIconFix.pas',
+  ufrm_Configuration in '..\..\src\ufrm_Configuration.pas' {fmConfiguration};
 
 {$R *.RES}
 

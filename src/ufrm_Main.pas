@@ -43,8 +43,7 @@ uses
   uEmuShared,
   uDxbxXml,
   uData,
-  ufrm_ControllerConfig,
-  ufrm_VideoConfig,
+  ufrm_Configuration,
   ufrm_About;
 
 const
@@ -72,15 +71,11 @@ type
     mnu_DebugoutputGUI: TMenuItem;
     mnu_DebugoutputKernel: TMenuItem;
     mnu_ConfigControler: TMenuItem;
-    mnu_ConfigAudio: TMenuItem;
-    mnu_Configvideo: TMenuItem;
     Start1: TMenuItem;
     ActionList: TActionList;
     actStartEmulation: TAction;
     actAbout: TAction;
-    actConfigController: TAction;
-    actConfigAudio: TAction;
-    actConfigVideo: TAction;
+    actConfiguration: TAction;
     actClose: TAction;
     actOpenXbe: TAction;
     actCloseXbe: TAction;
@@ -125,8 +120,7 @@ type
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
-    procedure actConfigControllerExecute(Sender: TObject);
-    procedure actConfigVideoExecute(Sender: TObject);
+    procedure actConfigurationExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure actConsoleXbeInfoExecute(Sender: TObject);
     procedure actFileXbeInfoExecute(Sender: TObject);
@@ -767,26 +761,15 @@ begin
   actStartEmulationExecute(Sender);
 end;
 
-procedure Tfrm_Main.actConfigControllerExecute(Sender: TObject);
+procedure Tfrm_Main.actConfigurationExecute(Sender: TObject);
 begin
-  frm_ControllerConfig := Tfrm_ControllerConfig.Create(nil);
+  fmConfiguration := TfmConfiguration.Create(nil);
 
-  if frm_ControllerConfig.ShowModal = mrOk then
+  if fmConfiguration.ShowModal = mrOk then
   begin
   end;
 
-  FreeAndNil({var}frm_ControllerConfig);
-end;
-
-procedure Tfrm_Main.actConfigVideoExecute(Sender: TObject);
-begin
-  frm_VideoConfig := Tfrm_VideoConfig.Create(nil);
-
-  if frm_VideoConfig.ShowModal = mrOk then
-  begin
-  end;
-
-  FreeAndNil({var}frm_VideoConfig);
+  FreeAndNil({var}fmConfiguration);
 end;
 
 function CanRunXbe(const aXbe: TXbe; var NoRunReason: string): Boolean;

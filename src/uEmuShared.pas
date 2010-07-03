@@ -51,7 +51,9 @@ type EmuShared = object(Mutex)
     // Constructor / Deconstructor
     procedure Create;
     procedure Destroy;
-    procedure DestroyNoFree;
+
+    procedure Load;
+    procedure Save;
 
     // Each process needs to call this to initialize shared memory
     class function Init(): Boolean;
@@ -167,7 +169,7 @@ begin
 
   if(g_EmuSharedRefCount = 0) then
   begin
-    g_EmuShared.DestroyNoFree;
+    g_EmuShared.Save;
 
     UnmapViewOfFile(g_EmuShared);
     g_EmuShared := nil;
@@ -184,11 +186,16 @@ procedure EmuShared.Create;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   inherited {m_Mutex.}Create;
+  Load;
+end;
+
+procedure EmuShared.Load;
+begin
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
 end;
 
-procedure EmuShared.DestroyNoFree;
+procedure EmuShared.Save;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   m_XBController.Save(PAnsiChar('Software\Dxbx\XBController'));
@@ -197,7 +204,7 @@ end;
 
 procedure EmuShared.Destroy;
 begin
-  DestroyNoFree;
+  Save;
 end;
 
 // Xbox Video Accessors
