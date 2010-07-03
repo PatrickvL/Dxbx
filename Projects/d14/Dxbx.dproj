@@ -128,9 +128,7 @@
 			<DCCReference Include="..\..\src\uError.pas"/>
 			<DCCReference Include="..\..\src\uExe.pas"/>
 			<DCCReference Include="..\..\src\ufrm_About.pas"/>
-			<DCCReference Include="..\..\src\ufrm_ControllerConfig.pas"/>
 			<DCCReference Include="..\..\src\ufrm_Main.pas"/>
-			<DCCReference Include="..\..\src\ufrm_VideoConfig.pas"/>
 			<DCCReference Include="..\..\src\uLog.pas"/>
 			<DCCReference Include="..\..\src\uMutex.pas"/>
 			<DCCReference Include="..\..\src\uTime.pas"/>
@@ -149,6 +147,9 @@
 			<DCCReference Include="..\..\src\uFileSystem.pas"/>
 			<DCCReference Include="..\..\src\Tools\XdkTracker\src\uData.pas"/>
 			<DCCReference Include="..\..\src\VistaIconFix.pas"/>
+			<DCCReference Include="..\..\src\ufrm_Configuration.pas">
+				<Form>fmConfiguration</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

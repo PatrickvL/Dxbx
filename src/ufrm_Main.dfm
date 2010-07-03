@@ -195,18 +195,11 @@ object frm_Main: Tfrm_Main
     end
     object Settings1: TMenuItem
       Caption = '&Settings'
-      object mnu_ConfigControler: TMenuItem
-        Action = actConfigController
-        Caption = 'Config Controllers'
-      end
-      object mnu_ConfigAudio: TMenuItem
-        Action = actConfigAudio
-      end
-      object mnu_Configvideo: TMenuItem
-        Action = actConfigVideo
-      end
       object miCleanSymbolCache: TMenuItem
         Action = actCleanSymbolCache
+      end
+      object mnu_ConfigControler: TMenuItem
+        Action = actConfiguration
       end
     end
     object Emulation1: TMenuItem
@@ -256,20 +249,10 @@ object frm_Main: Tfrm_Main
       Caption = 'About'
       OnExecute = actAboutExecute
     end
-    object actConfigController: TAction
+    object actConfiguration: TAction
       Category = 'Settings'
-      Caption = 'Config Controller'
-      OnExecute = actConfigControllerExecute
-    end
-    object actConfigVideo: TAction
-      Category = 'Settings'
-      Caption = 'Config Video'
-      OnExecute = actConfigVideoExecute
-    end
-    object actConfigAudio: TAction
-      Category = 'Settings'
-      Caption = 'Config Audio'
-      Enabled = False
+      Caption = 'Configuration'
+      OnExecute = actConfigurationExecute
     end
     object actOpenXbe: TAction
       Category = 'File'
