@@ -485,6 +485,7 @@ const OReg_Name: array [VSH_OREG_NAME] of P_char =
 function VshHandleIsFVF(aHandle: DWORD): boolean; // inline
 function VshHandleIsVertexShader(aHandle: DWORD): boolean; inline; // forward
 function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; inline; // forward
+function VshHandleGetRealHandle(aHandle: DWORD): DWORD; // forward
 
 function XTL_EmuRecompileVshDeclaration(
   pDeclaration: PDWORD;
@@ -501,7 +502,8 @@ function XTL_EmuRecompileVshFunction(
 ) : HRESULT; // forward
 procedure XTL_FreeVertexDynamicPatch(pVertexShader: PVERTEX_SHADER); // forward
 function IsValidCurrentShader(): boolean; // forward
-function XTL_VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH; // forward
+function VshHandleIsValidShader(aHandle: DWORD): boolean; // forward
+function VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH; // forward
 
 implementation
 
@@ -549,6 +551,26 @@ function VshHandleGetVertexShader(aHandle: DWORD): PX_D3DVertexShader; // inline
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   Result := PX_D3DVertexShader(aHandle and $7FFFFFFF);
+end;
+
+function VshHandleGetRealHandle(aHandle: DWORD): DWORD;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  pD3DVertexShader: PX_D3DVertexShader;
+  pVertexShader: PVERTEX_SHADER;
+begin
+  if VshHandleIsVertexShader(aHandle) then
+  begin
+    pD3DVertexShader := VshHandleGetVertexShader(aHandle);
+    Assert(Assigned(pD3DVertexShader));
+
+    pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
+    Assert(Assigned(pVertexShader));
+
+    Result := pVertexShader.Handle;
+  end
+  else
+    Result := aHandle;
 end;
 
 // VertexShader.cpp
@@ -2415,20 +2437,24 @@ begin
   pVertexShader.VertexDynamicPatch.NbrStreams := 0;
 end;
 
-// Checks for failed vertex shaders, and shaders that would need patching
 function IsValidCurrentShader(): boolean;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-var
-  aHandle: DWORD;
-  pVertexShader: PVERTEX_SHADER;
-  pD3DVertexShader: PX_D3DVertexShader;
 begin
-  EmuSwapFS(fsXbox); // GOTO XBOX
-  XTL_EmuIDirect3DDevice8_GetVertexShader(@aHandle);
-  EmuSwapFS(fsWindows); // GOTO WINDOWS
+  // Dxbx addition : There's no need to go to XboxFS and call
+  // XTL_EmuIDirect3DDevice8_GetVertexShader, just check g_CurrentVertexShader :
+  Result := VshHandleIsValidShader(g_CurrentVertexShader);
+end; // IsValidCurrentShader
+
+// Checks for failed vertex shaders, and shaders that would need patching
+function VshHandleIsValidShader(aHandle: DWORD): boolean;
+// Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
+var
+  pD3DVertexShader: PX_D3DVertexShader;
+  pVertexShader: PVERTEX_SHADER;
+begin
   if (VshHandleIsVertexShader(aHandle)) then
   begin
-    pD3DVertexShader := PX_D3DVertexShader(aHandle and $7FFFFFFF);
+    pD3DVertexShader := VshHandleGetVertexShader(aHandle);
     pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
     if (pVertexShader.Status <> 0) then
     begin
@@ -2451,9 +2477,9 @@ begin
   end;
 
   Result := TRUE;
-end; // IsValidCurrentShader
+end; // IsValidShaderHandle
 
-function XTL_VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH;
+function VshGetVertexDynamicPatch(Handle: DWORD): PVERTEX_DYNAMIC_PATCH;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 var
   pD3DVertexShader: PX_D3DVertexShader;
@@ -2473,7 +2499,7 @@ begin
     end;
   end;
   Result := NULL;
-end; // XTL_VshGetVertexDynamicPatch
+end; // VshGetVertexDynamicPatch
 
 {.$MESSAGE 'PatrickvL reviewed up to here'}
 end.
