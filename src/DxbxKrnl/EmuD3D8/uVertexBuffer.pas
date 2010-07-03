@@ -571,7 +571,7 @@ var
 begin
   if (VshHandleIsVertexShader(g_CurrentVertexShader)) then
   begin
-    pDynamicPatch := XTL_VshGetVertexDynamicPatch(g_CurrentVertexShader);
+    pDynamicPatch := VshGetVertexDynamicPatch(g_CurrentVertexShader);
     if Assigned(pDynamicPatch) then
     begin
       Result := pDynamicPatch.NbrStreams;
@@ -1595,6 +1595,7 @@ begin
   {bPatched := }VertPatch.Apply(@VPDesc, NULL);
 
   bFVF := True; // This fixes jumping triangles on Nvidia chipsets, as suggested by Defiance
+  // As a result however, this change also seems to remove the texture of the fonts in XSokoban!?!
 
   if(bFVF) then
   begin

@@ -250,7 +250,8 @@ type X_D3DVertexShader = record
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
 const
-  X_D3DVS_XBOX_NR_ADDRESS_SLOTS = 136;
+  D3DVS_XBOX_RESERVEDXYZRHWSLOTS = 12;
+  D3DVS_XBOX_NR_ADDRESS_SLOTS = 136;
 
 type _X_D3DPIXELSHADERDEF = record // <- blueshogun 10/1/07
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -301,7 +302,7 @@ type _VERTEX_SHADER = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Handle: DWORD;
     // These are the parameters given by the XBE,
-    // we save them to be be able to return them when necassary.
+    // we save them to be able to return them when necessary.
     Size: UINT;
     pDeclaration: PDWORD;
     DeclarationSize: DWORD;

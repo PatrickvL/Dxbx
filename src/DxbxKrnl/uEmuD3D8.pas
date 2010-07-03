@@ -85,7 +85,7 @@ function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
 
 function XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader({CONST} pHandle: PDWORD); stdcall; // forward
+function XTL_EmuIDirect3DDevice8_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
 
 function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource;
   pBase: PVOID): HRESULT; stdcall;
@@ -178,7 +178,7 @@ var
   g_YuvSurface: PX_D3DSurface = NULL;
   g_fYuvEnabled: BOOL_ = FALSE;
   g_dwVertexShaderUsage: DWORD = 0;
-  g_VertexShaderSlots: array [0..X_D3DVS_XBOX_NR_ADDRESS_SLOTS{=136} - 1] of DWORD;
+  g_VertexShaderSlots: array [0..D3DVS_XBOX_NR_ADDRESS_SLOTS{=136} - 1] of DWORD;
 
   // cached palette pointer
   g_pCurrentPalette: PVOID;
@@ -1685,7 +1685,7 @@ begin
       [Handle, Address]);
 {$ENDIF}
 
-  if (Address < X_D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) and VshHandleIsVertexShader(Handle) then
+  if (Address < D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) and VshHandleIsVertexShader(Handle) then
   begin
     pVertexShader := PVERTEX_SHADER(VshHandleGetVertexShader(Handle).Handle);
     if pVertexShader.Size > 0 then // Dxbx addition, to prevent underflow
@@ -1730,17 +1730,17 @@ begin
   begin
     IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(D3DFVF_XYZ or D3DFVF_TEX0);
   end
-  else if (Address < X_D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) then
+  else if (Address < D3DVS_XBOX_NR_ADDRESS_SLOTS{=136}) then
   begin
     pVertexShader2 := PX_D3DVertexShader(g_VertexShaderSlots[Address]);
 
     if (pVertexShader2 <> NULL) then
     begin
-      IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(PVERTEX_SHADER(PX_D3DVertexShader(g_VertexShaderSlots[Address]).Handle).Handle);
+      IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(PVERTEX_SHADER(pVertexShader2.Handle).Handle);
     end
     else
     begin
-        EmuWarning('g_VertexShaderSlots[%d] = 0', [Address]);
+      EmuWarning('g_VertexShaderSlots[%d] = 0', [Address]);
     end;
   end;
 
@@ -7839,6 +7839,11 @@ begin
   end
   else
   begin
+    // Dxbx addition : When setting D3DFVF_XYZRHW, g_VertexShaderSlots 0-D3DVS_XBOX_RESERVEDXYZRHWSLOTS-1 should be destroyed :
+    if (Handle and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW then
+      for RealHandle := 0 to D3DVS_XBOX_RESERVEDXYZRHWSLOTS-1 do
+        g_VertexShaderSlots[RealHandle] := 0;
+
     RealHandle := Handle;
   end;
   Result := IDirect3DDevice8(g_pD3DDevice8).SetVertexShader(RealHandle);
@@ -8514,11 +8519,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShaderSize
+function XTL_EmuIDirect3DDevice8_GetVertexShaderSize
 (
   Handle_: DWORD;
   pSize: PUINT
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pD3DVertexShader: PX_D3DVertexShader;
@@ -8535,16 +8540,23 @@ begin
     [Handle_, pSize]);
 {$ENDIF}
 
-  if Assigned(pSize) and VshHandleIsVertexShader(Handle_) then
+  if Assigned(pSize) then
   begin
-    pD3DVertexShader := PX_D3DVertexShader(Handle_ and $7FFFFFFF);
-    pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
-    pSize^ := pVertexShader.Size;
+    if VshHandleIsVertexShader(Handle_) then
+    begin
+      pD3DVertexShader := VshHandleGetVertexShader(Handle_);
+      pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
+      pSize^ := pVertexShader.Size;
+    end
+    else
+    begin
+      pSize^ := 0;
+    end;
+
+    Result := D3D_OK;
   end
-  else if Assigned(pSize) then
-  begin
-    pSize^ := 0;
-  end;
+  else
+    Result := D3DERR_INVALIDCALL;
 
   EmuSwapFS(fsXbox);
 end;
@@ -8573,7 +8585,7 @@ begin
 
   if (VshHandleIsVertexShader(Handle)) then
   begin
-    pD3DVertexShader := PX_D3DVertexShader(Handle and $7FFFFFFF);
+    pD3DVertexShader := VshHandleGetVertexShader(Handle);
     pVertexShader := PVERTEX_SHADER(pD3DVertexShader.Handle);
 
     RealHandle := pVertexShader.Handle;
@@ -8638,10 +8650,10 @@ begin
     pMode^ := g_VertexShaderConstantMode;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetVertexShader
+function XTL_EmuIDirect3DDevice8_GetVertexShader
 (
   {CONST} pHandle: PDWORD
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -8654,10 +8666,14 @@ begin
     [pHandle]);
 {$ENDIF}
 
-  if Assigned(pHandle) then
+  if  Assigned(pHandle)
+  and VshHandleIsValidShader(g_CurrentVertexShader) then
   begin
     pHandle^ := g_CurrentVertexShader;
-  end;
+    Result := D3D_OK;
+  end
+  else
+    Result := D3DERR_INVALIDCALL;
 
   EmuSwapFS(fsXbox);
 end;
