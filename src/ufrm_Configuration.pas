@@ -35,6 +35,14 @@ uses
   , uEmuShared
   ;
 
+// The Xbox controller image is borrowed from http://halo.wikia.com/wiki/Halo_Controls
+// Some day, we should probably photograph or draw our own. Until then, this one suffices.
+//
+// Also, take a look at the following shots of the controller configuration of pcsx2 :
+// http://charlii-5800.blog.friendster.com/2007/07/how-to-use-pcsx2-the-playstation-2-emulator/
+// These pad settings allow more space per button, while we reserve space for just one character.
+// It's okay for keyboard control, but joystick and mouse control needs space for a wider description.
+
 type
   TfmConfiguration = class(TForm)
     TreeView1: TTreeView;
