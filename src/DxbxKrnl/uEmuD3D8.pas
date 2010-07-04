@@ -352,8 +352,9 @@ begin
   // Express the size in bytes, instead of floats :
   Result := Result * sizeof(FLOAT);
 
-  // Note : Officially, D3DFVF_NORMAL cannot be combined with D3DFVF_XYZRHW!
-  if (dwVertexShader and D3DFVF_NORMAL) > 0 then begin Inc(Result, sizeof(FLOAT)*3); end;
+  // D3DFVF_NORMAL cannot be combined with D3DFVF_XYZRHW :
+  if (dwVertexShader and D3DFVF_POSITION_MASK) <> D3DFVF_XYZRHW then
+    if (dwVertexShader and D3DFVF_NORMAL) > 0 then begin Inc(Result, sizeof(FLOAT)*3); end;
 
   if (dwVertexShader and D3DFVF_DIFFUSE) > 0 then begin Inc(Result, sizeof(DWORD)); end;
   if (dwVertexShader and D3DFVF_SPECULAR) > 0 then begin Inc(Result, sizeof(DWORD)); end;
@@ -3710,7 +3711,7 @@ begin
       goto fail;
     end;
 
-    DxbxUnlockD3DResource(pIndexData); // Dxbx addition
+//    DxbxUnlockD3DResource(pIndexData); // Dxbx addition
     pIndexBuffer := pIndexData.Emu.IndexBuffer8;
 
     if (pIndexData.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
@@ -3894,8 +3895,7 @@ begin
 
     EmuWarning('Switching Texture 0x%.08X (0x%.08X) @ Stage %d', [pTexture, pTexture.Emu.BaseTexture8, Stage]);
 
-    // Dxbx addition : Attempt to fix missing textures :
-    DxbxUnlockD3DResource(pTexture);
+//    DxbxUnlockD3DResource(pTexture); // Dxbx addition : Attempt to fix missing textures
 
     {hRet := }IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(pTexture.Emu.BaseTexture8));
 
@@ -7963,18 +7963,18 @@ begin
     begin
     {$endif}
 
-    IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP
-    (
-        EmuPrimitiveType(VPDesc.PrimitiveType),
-        VPDesc.dwPrimitiveCount,
-        VPDesc.pVertexStreamZeroData,
-        VPDesc.uiVertexStreamZeroStride
-    );
+      IDirect3DDevice8(g_pD3DDevice8).DrawPrimitiveUP
+      (
+          EmuPrimitiveType(VPDesc.PrimitiveType),
+          VPDesc.dwPrimitiveCount,
+          VPDesc.pVertexStreamZeroData,
+          VPDesc.uiVertexStreamZeroStride
+      );
 
     {$ifdef _DEBUG_TRACK_VB}
      end;
     {$endif}
-   end;
+  end;
 
   VertPatch.Restore();
 
@@ -8231,7 +8231,7 @@ begin
     end;
 
   {$ifdef _DEBUG_TRACK_VB}
-   end;
+  end;
   {$endif}
 
   VertPatch.Restore();

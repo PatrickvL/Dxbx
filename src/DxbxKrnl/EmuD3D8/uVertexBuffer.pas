@@ -1850,7 +1850,7 @@ begin
       end;
     end;
 
-    DxbxUnlockD3DResource(pTexture); // Dxbx addition
+//    DxbxUnlockD3DResource(pTexture); // Dxbx addition
     IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.Emu.Texture8));
   end;
 end; // XTL_EmuUpdateActiveTexture
