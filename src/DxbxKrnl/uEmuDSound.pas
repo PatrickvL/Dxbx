@@ -22,7 +22,7 @@ unit uEmuDSound;
 
 interface
 
-implementation
+{}implementation{}
 
 uses
   // Delphi
@@ -229,7 +229,7 @@ type
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
   public
     // construct vtable (or grab ptr to existing)
-    constructor Create(pParentStream :X_CDirectSoundStream); //begin {pVtbl := @vtbl;} Self.pParentStream := pParentStream; end;
+    constructor Create(pParentStream: {*}X_CDirectSoundStream); //begin {pVtbl := @vtbl;} Self.pParentStream := pParentStream; end;
 
   private
     // Dxbx : 'virtual' creates vtable (cached by each instance, via constructor)
@@ -247,7 +247,8 @@ type
     // vtbl: _vtbl;
 
   // debug mode guard for detecting naughty data accesses
-{$ifdef _DEBUG}
+{$ifdef DEBUG}
+  private
     DebugGuard: array[0..256-1] of DWORD;
 {$endif}
 
@@ -305,7 +306,7 @@ type
     pMcpxStream: PVOID;
 
     // debug mode guard for detecting naughty data accesses
-{$ifdef _DEBUG}
+{$ifdef DEBUG}
     DebugGuard: array[0..256-1] of DWORD;
 {$endif}
 
@@ -336,6 +337,8 @@ var g_pDSound8RefCount: int = 0;
 var g_pDSoundBufferCache: array [0..SOUNDBUFFER_CACHE_SIZE-1] of PX_CDirectSoundBuffer;
 var g_pDSoundStreamCache: array [0..SOUNDSTREAM_CACHE_SIZE-1] of PX_CDirectSoundStream;
 var g_bDSoundCreateCalled: Boolean = false; // Dxbx note : Boolean is simpler than Cxbx's int.
+
+{implementation}
 
 function iif(const aValue: Boolean; const aTrue, aFalse: DirectSound.PDSBUFFERDESC): DirectSound.PDSBUFFERDESC; overload;
 begin
