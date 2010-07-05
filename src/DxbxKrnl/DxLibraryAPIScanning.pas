@@ -1524,7 +1524,7 @@ begin
           XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
       end;
 
-      DbgPrintf('HLE: $%.08X . EmuD3DDeferredTextureState',
+      DbgPrintf('HLE: $%.08X -> EmuD3DDeferredTextureState',
         [XTL_EmuD3DDeferredTextureState]);
     end
     else
@@ -1558,7 +1558,7 @@ begin
         XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
 {$IFDEF DEBUG}
-      DbgPrintf('HLE: $%.08X . EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
+      DbgPrintf('HLE: $%.08X -> EmuD3DDeferredRenderState', [XTL_EmuD3DDeferredRenderState]);
 {$ENDIF}
     end
     else
@@ -1575,7 +1575,7 @@ begin
 
 {$IFDEF DXBX_DEBUG}
     if Assigned(XTL_EmuXapiProcessHeap) then
-      DbgPrintf('HLE: $%.08X . XapiProcessHeap',
+      DbgPrintf('HLE: $%.08X -> XapiProcessHeap',
         [XTL_EmuXapiProcessHeap])
     else
       DbgPrintf('HLE : Can''t find XapiProcessHeap!');
