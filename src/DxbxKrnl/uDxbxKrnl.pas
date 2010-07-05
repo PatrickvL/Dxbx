@@ -47,6 +47,7 @@ uses
   uVertexBuffer,
   uVertexShader,
   uEmuLDT,
+  uEmuDSound,
   uEmuD3D8Types,
 {$ENDIF LOG_STRUCT_SIZES}
   uEmuShared,
@@ -142,6 +143,10 @@ begin
   // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
 {$IFDEF LOG_STRUCT_SIZES}
   LogOnlyDifferences := False;
+  _TypeSize('X_CMcpxStream_pParentStream_Offset', FIELD_OFFSET(X_CMcpxStream(nil).pParentStream), 1028);
+  _TypeSize('X_CDirectSoundStream_pMcpxStream_Offset', FIELD_OFFSET(X_CDirectSoundStream(nil).pMcpxStream), 36);
+  _TypeSize('X_CDirectSoundStream_EmuPlayFlags_Offset', FIELD_OFFSET(X_CDirectSoundStream(nil).EmuPlayFlags), 1092);
+
   _TypeSize('EmuShared', sizeof(EmuShared), 7164);
   //_TypeSize('EmuThis', sizeof(EmuThis), 1);
   _TypeSize('Error', sizeof(Error), 8);
