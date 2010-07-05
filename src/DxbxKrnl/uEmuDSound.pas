@@ -225,7 +225,7 @@ const DSB_FLAG_RECIEVEDATA = $00001000;
 type
   X_CDirectSoundStream = class; // forward
 
-  X_CMcpxStream = class(TObject)
+  X_CMediaObject = class(TObject) // Cxbx incorrectly calls this X_CMcpxStream
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
   public
     // construct vtable (or grab ptr to existing)
@@ -233,15 +233,34 @@ type
 
   private
     // Dxbx : 'virtual' creates vtable (cached by each instance, via constructor)
-    procedure Unknown1; virtual; // VMT 0x00 - ???
-    procedure Unknown2; virtual; // VMT 0x04 - ???
-    procedure Unknown3; virtual; // VMT 0x08 - ???
-    procedure Unknown4; virtual; // VMT 0x0C - ???
-     //
-    // TODO -oCXBX: Function needs X_CMcpxStream "this" pointer (ecx!)
-    //
+    function AddRef({pThis: PX_CMediaObject}): ULONG; virtual; stdcall;          // VMT 0x00
+    function Release({pThis: PX_CMediaObject}): ULONG; virtual; stdcall;         // VMT 0x04
 
-    procedure Dummy_0x10({dwDummy1: DWORD;} dwDummy2: DWORD); virtual; stdcall;  // 0x10
+    function GetInfo                                                            // VMT 0x08
+    (
+        {pThis: PX_CMediaObject;}
+        pInfo: LPXMEDIAINFO
+    ): HRESULT; virtual; stdcall;
+
+    function GetStatus                                                          // VMT 0x0C
+    (
+        {pThis: PX_CMediaObject;}
+        pdwStatus: PDWORD
+    ): HRESULT; virtual; stdcall;
+
+    //
+    // TODO -oCXBX: Function needs X_CMediaObject "this" pointer (ecx!)
+    //
+    function Process                                                            // VMT 0x10
+    (
+        {pThis: PX_CMediaObject;}
+        pInputBuffer: PXMEDIAPACKET;
+        pOutputBuffer: PXMEDIAPACKET
+    ): HRESULT; virtual; stdcall;
+
+    function Discontinuity({pThis: PX_CMediaObject}): HRESULT; virtual; stdcall; // VMT 0x14
+
+    function Flush({pThis: PX_CMediaObject}): HRESULT; virtual; stdcall;         // VMT 0x18
 
     // Dxbx : global vtbl for this class...is compiled in automatically by Delphi, so leave it out :
     // vtbl: _vtbl;
@@ -255,40 +274,42 @@ type
   public
     pParentStream: X_CDirectSoundStream;
   end;
+  PX_CMediaObject = X_CMediaObject; // Dxbx note : Delphi's classes are already pointer-types
+  PPX_CMediaObject = ^PX_CMediaObject;
 
   X_CDirectSoundStream = class(TObject)
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
   public
     // construct vtable (or grab ptr to existing)
-    constructor Create(); // begin { pVtbl := @vtbl;} pMcpxStream := X_CMcpxStream.Create(Self); end;
+    constructor Create(); // begin { pVtbl := @vtbl;} pXMediaObject := X_CMediaObject.Create(Self); end;
 
   private
     // Dxbx : 'virtual' creates vtable (cached by each instance, via constructor)
-    function AddRef({pThis: X_CDirectSoundStream}): ULONG; virtual; stdcall;          // VMT 0x00
-    function Release({pThis: X_CDirectSoundStream}): ULONG; virtual; stdcall;         // VMT 0x04
+    function AddRef({pThis: PX_CDirectSoundStream}): ULONG; virtual; stdcall;          // VMT 0x00
+    function Release({pThis: PX_CDirectSoundStream}): ULONG; virtual; stdcall;         // VMT 0x04
 
-    function GetInfo                                                                  // VMT 0x08
+    function GetInfo                                                                    // VMT 0x08
     (
-        {pThis: X_CDirectSoundStream;}
+        {pThis: PX_CDirectSoundStream;}
         pInfo: LPXMEDIAINFO
     ): HRESULT; virtual; stdcall;
 
-    function GetStatus                                                                // VMT 0x0C
+    function GetStatus                                                                  // VMT 0x0C
     (
-        {pThis: X_CDirectSoundStream;}
+        {pThis: PX_CDirectSoundStream;}
         pdwStatus: PDWORD
     ): HRESULT; virtual; stdcall;
 
-    function Process                                                                  // VMT 0x10
+    function Process                                                                    // VMT 0x10
     (
-        {pThis: X_CDirectSoundStream;}
+        {pThis: PX_CDirectSoundStream;}
         pInputBuffer: PXMEDIAPACKET;
         pOutputBuffer: PXMEDIAPACKET
     ): HRESULT; virtual; stdcall;
 
-    function Discontinuity({pThis: X_CDirectSoundStream}): HRESULT; virtual; stdcall; // VMT 0x14
+    function Discontinuity({pThis: PX_CDirectSoundStream}): HRESULT; virtual; stdcall; // VMT 0x14
 
-    function Flush({pThis: X_CDirectSoundStream}): HRESULT; virtual; stdcall;         // VMT 0x18
+    function Flush({pThis: PX_CDirectSoundStream}): HRESULT; virtual; stdcall;         // VMT 0x18
 
     procedure Unknown2; virtual;                                                      // VMT 0x1C - ???
     procedure Unknown3; virtual;                                                      // VMT 0x20 - ???
@@ -303,7 +324,7 @@ type
     // vtbl: _vtbl;
   private
     Spacer: array[0..8-1] of DWORD;
-    pMcpxStream: PVOID;
+    pXMediaObject: PVOID;
 
     // debug mode guard for detecting naughty data accesses
 {$ifdef DEBUG}
@@ -2046,37 +2067,199 @@ begin
   Result := DS_OK;
 end;
 
-{ X_CMcpxStream }
+{ X_CMediaObject }
 
-constructor X_CMcpxStream.Create(pParentStream: X_CDirectSoundStream);
+constructor X_CMediaObject.Create(pParentStream: X_CDirectSoundStream);
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   Self.pParentStream := pParentStream;
 end;
 
-procedure X_CMcpxStream.Unknown1;
+function {XTL_Emu}X_CMediaObject.AddRef({pThis: PX_CMediaObject}): ULONG; stdcall; // virtual;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  pThis: PX_CMediaObject;
 begin
+  pThis := Self;
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : X_CMediaObject.AddRef' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10');',
+      [pThis]);
+{$ENDIF}
+
+//  if (pThis <> nil) then
+//    if (pThis.EmuDirectSoundBuffer8 <> nil) then // Cxbx HACK: Ignore unsupported codecs.
+//      IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8)._AddRef();
+
+  EmuSwapFS(fsXbox);
+
+  Result := DS_OK;
 end;
 
-procedure X_CMcpxStream.Unknown2;
+function {XTL_Emu}X_CMediaObject.Release({pThis: PX_CMediaObject}): ULONG; stdcall; // virtual;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  pThis: PX_CMediaObject;
 begin
+  pThis := Self;
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : X_CMediaObject.Release' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10');',
+      [pThis]);
+{$ENDIF}
+
+  EmuSwapFS(fsXbox);
+
+  Result := 0;
 end;
 
-procedure X_CMcpxStream.Unknown3;
+function {XTL_Emu}X_CMediaObject.GetInfo
+(
+    {pThis: PX_CMediaObject;}
+    pInfo: LPXMEDIAINFO
+): HRESULT; stdcall; // virtual;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  pThis: PX_CMediaObject;
 begin
+  pThis := Self;
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : X_CMediaObject.GetInfo' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10'   pInfo                     : 0x%.08X' +
+      #13#10');',
+      [pThis, pInfo]);
+{$ENDIF}
+
+  // TODO -oDXBX: A (real) implementation?
+  EmuWarning('X_CMediaObject.GetInfo is not yet supported!');
+
+  EmuSwapFS(fsXbox);
+
+  Result := DS_OK;
 end;
 
-procedure X_CMcpxStream.Unknown4;
+function {XTL_Emu}X_CMediaObject.GetStatus
+(
+    {pThis: PX_CMediaObject;}
+    pdwStatus: PDWORD
+): HRESULT; stdcall; // virtual;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  pThis: PX_CMediaObject;
 begin
+  pThis := Self;
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : X_CMediaObject.GetStatus' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10'   pdwStatus                 : 0x%.08X' +
+      #13#10');',
+      [pThis, pdwStatus]);
+{$ENDIF}
+
+  EmuWarning('X_CMediaObject.GetStatus is not yet implemented');
+
+  pdwStatus^ := DSBSTATUS_PLAYING;
+
+  EmuSwapFS(fsXbox);
+
+  Result := DS_OK;
 end;
 
-procedure {XTL_Emu}X_CMcpxStream.Dummy_0x10({dwDummy1: DWORD;} dwDummy2: DWORD); stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+function {XTL_Emu}X_CMediaObject.Process
+(
+    {pThis: PX_CMediaObject;}
+    pInputBuffer: PXMEDIAPACKET;
+    pOutputBuffer: PXMEDIAPACKET
+): HRESULT; stdcall; // virtual;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  pThis: PX_CMediaObject;
 begin
+  pThis := Self;
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : X_CMediaObject.Process' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10'   pInputBuffer              : 0x%.08X' +
+      #13#10'   pOutputBuffer             : 0x%.08X' +
+      #13#10');',
+      [pThis, pInputBuffer, pOutputBuffer]);
+{$ENDIF}
+
+  // TODO -oDXBX: Actually Process
+
+  EmuSwapFS(fsXbox);
+
+  Result := DS_OK;
+end;
+
+function {XTL_Emu}X_CMediaObject.Discontinuity({pThis: PX_CMediaObject}): HRESULT; stdcall; // virtual;
+// Was Dummy_0x10
+// Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
+var
+  pThis: PX_CMediaObject;
+begin
+  pThis := Self;
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : X_CMediaObject.Discontinuity' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10');',
+      [pThis]);
+{$ENDIF}
+
   // Causes deadlock in Halo...
   // TODO -oCxbx: Verify that this is a Vista related problem (I HATE Vista!)
-//    EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
+  //    EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
+
+  // TODO -oDXBX: Actually Process
+
+  EmuSwapFS(fsXbox);
+
+  Result := DS_OK;
 end;
+
+
+function {XTL_Emu}X_CMediaObject.Flush({pThis: PX_CMediaObject}): HRESULT; stdcall; // virtual;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  pThis: PX_CMediaObject;
+begin
+  pThis := Self;
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : X_CMediaObject.Flush();',
+            [pThis]);
+{$ENDIF}
+
+  // TODO -oDXBX: Actually Flush
+
+  EmuSwapFS(fsXbox);
+
+  Result := DS_OK;
+end;
+
+//
 
 function XTL_EmuCDirectSoundStream_SetVolume(pThis: PX_CDirectSoundStream; lVolume: LONG): ULONG; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -2131,13 +2314,13 @@ end;
 constructor X_CDirectSoundStream.Create();
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
-  pMcpxStream := X_CMcpxStream.Create(Self);
+  pXMediaObject := X_CMediaObject.Create(Self);
 end;
 
-function {XTL_Emu}X_CDirectSoundStream.AddRef({pThis: PX_CDirectSoundStream}): ULONG; stdcall;
+function {XTL_Emu}X_CDirectSoundStream.AddRef({pThis: PX_CDirectSoundStream}): ULONG; stdcall; // virtual
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
-  pThis: X_CDirectSoundStream;
+  pThis: PX_CDirectSoundStream;
 begin
   pThis := Self;
   EmuSwapFS(fsWindows);
@@ -2159,7 +2342,7 @@ begin
   Result := DS_OK;
 end;
 
-function {XTL_Emu}X_CDirectSoundStream.Release({pThis: PX_CDirectSoundStream}): ULONG; stdcall;
+function {XTL_Emu}X_CDirectSoundStream.Release({pThis: PX_CDirectSoundStream}): ULONG; stdcall; // virtual
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
   uRet: ULONG;
@@ -2211,7 +2394,7 @@ function {XTL_Emu}X_CDirectSoundStream.GetInfo
 (
     {pThis: PX_CDirectSoundStream;}
     pInfo: LPXMEDIAINFO
-): HRESULT; stdcall;
+): HRESULT; stdcall; // virtual
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pThis: PX_CDirectSoundStream;
@@ -2248,7 +2431,7 @@ function {XTL_Emu}X_CDirectSoundStream.GetStatus
 (
     {pThis: PX_CDirectSoundStream;}
     pdwStatus: PDWORD
-): HRESULT; stdcall;
+): HRESULT; stdcall; // virtual
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pThis: PX_CDirectSoundStream;
@@ -2279,7 +2462,7 @@ function {XTL_Emu}X_CDirectSoundStream.Process
     {pThis: PX_CDirectSoundStream;}
     pInputBuffer: PXMEDIAPACKET;
     pOutputBuffer: PXMEDIAPACKET
-): HRESULT; stdcall;
+): HRESULT; stdcall; // virtual
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pThis: PX_CDirectSoundStream;
@@ -2320,7 +2503,7 @@ begin
   Result := DS_OK;
 end;
 
-function {XTL_Emu}X_CDirectSoundStream.Discontinuity({pThis: PX_CDirectSoundStream}): HRESULT; stdcall;
+function {XTL_Emu}X_CDirectSoundStream.Discontinuity({pThis: PX_CDirectSoundStream}): HRESULT; stdcall; // virtual
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pThis: PX_CDirectSoundStream;
@@ -2344,7 +2527,7 @@ begin
 end;
 
 
-function {XTL_Emu}X_CDirectSoundStream.Flush({pThis: PX_CDirectSoundStream}): HRESULT; stdcall;
+function {XTL_Emu}X_CDirectSoundStream.Flush({pThis: PX_CDirectSoundStream}): HRESULT; stdcall; // virtual
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   pThis: PX_CDirectSoundStream;
@@ -2364,37 +2547,39 @@ begin
   Result := DS_OK;
 end;
 
-procedure X_CDirectSoundStream.Unknown2;
+procedure X_CDirectSoundStream.Unknown2; // virtual;
 begin
 end;
 
-procedure X_CDirectSoundStream.Unknown3;
+procedure X_CDirectSoundStream.Unknown3; // virtual;
 begin
 end;
 
-procedure X_CDirectSoundStream.Unknown4;
+procedure X_CDirectSoundStream.Unknown4; // virtual;
 begin
 end;
 
-procedure X_CDirectSoundStream.Unknown5;
+procedure X_CDirectSoundStream.Unknown5; // virtual;
 begin
 end;
 
-procedure X_CDirectSoundStream.Unknown6;
+procedure X_CDirectSoundStream.Unknown6; // virtual;
 begin
 end;
 
-procedure X_CDirectSoundStream.Unknown7;
+procedure X_CDirectSoundStream.Unknown7; // virtual;
 begin
 end;
 
-procedure X_CDirectSoundStream.Unknown8;
+procedure X_CDirectSoundStream.Unknown8; // virtual;
 begin
 end;
 
-procedure X_CDirectSoundStream.Unknown9;
+procedure X_CDirectSoundStream.Unknown9; // virtual;
 begin
 end;
+
+//
 
 function XTL_EmuCDirectSound_SynchPlayback(pUnknown: PVOID): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -3742,7 +3927,7 @@ begin
   if(FAILED(hRet)) then
     EmuWarning('Failed to get PC DirectSound caps!');
 
-  // Convert PC . Xbox
+  // Convert PC -> Xbox
   if Assigned(pDSCaps) then
   begin
     // WARNING: This may not be accurate under Windows Vista...
@@ -3851,7 +4036,7 @@ exports
   XTL_EmuCDirectSoundStream_SetVelocity name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVelocity',
   XTL_EmuCDirectSoundStream_SetVolume name PatchPrefix + 'DirectSound.CDirectSoundStream.SetVolume',
 
-//  XTL_EmuCMcpxStream_Dummy_0x10,
+//  XTL_EmuX_CMediaObject_Dummy_0x10,
 
   XTL_EmuDirectSoundCreate,
   XTL_EmuDirectSoundCreateBuffer,
