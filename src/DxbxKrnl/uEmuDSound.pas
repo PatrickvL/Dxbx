@@ -2623,11 +2623,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush',
+(*  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush',
       #13#10'(' +
       #13#10'   pThis                     : 0x%.08X' +
       #13#10');',
-      [pThis]);
+      [pThis]);  *)
 {$ENDIF}
 
   // TODO -oCXBX: Actually Flush
