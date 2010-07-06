@@ -179,14 +179,8 @@ type
 
     EnabledItems: array of TXbeInfo;
     procedure UpdateFilter;
-//    function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
-//    function FindByFileName(const aFileName: string): Integer;
     function InsertXBEInfo(const aXbeInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
-//    procedure SaveXBEList(const aFilePath, aPublishedBy: string);
-//    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
     function LoadXBEList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
-//    procedure ImportTxtDumps(const aTxtDumpsFolder: TFileName);
-//    procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
   private
     m_Xbe: TXbe;
 
@@ -1125,6 +1119,7 @@ begin
   begin
     ImportXBEGameList(ImportDialog.FileName, {aUseImportDialog=}True);
     UpdateFilter;
+    SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
   end;
 end;
 

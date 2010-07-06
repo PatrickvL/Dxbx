@@ -81,8 +81,8 @@ type
     function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
     function FindByFileName(const aFileName: string): Integer;
     function InsertXBEInfo(const aXbeInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
-    procedure SaveXBEList(const aFilePath, aPublishedBy: string);
     function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
+    procedure SaveXBEList(const aFilePath, aPublishedBy: string);
     function LoadXBEList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
     procedure ImportTxtDumps(const aTxtDumpsFolder: TFileName);
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
@@ -140,7 +140,7 @@ begin
     SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}frm_Publisher.edtPublisher.Text)
   else
     SaveXBEList(ApplicationDir + cXDK_TRACKER_DATA_FILE, {aPublishedBy=}'');
-    
+
   FreeStringListObjects(MyXBEList);
   FreeAndNil({var}MyXBEList);
 
