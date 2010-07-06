@@ -66,7 +66,7 @@ type
     XBEDevKitRetail1: TMenuItem;
     Crea1: TMenuItem;
     ToolBar2: TToolBar;
-    ToolButton1: TToolButton;
+    btnExtractAll: TToolButton;
     ImageList2: TImageList;
     ImageList3: TImageList;
     ToolButton2: TToolButton;
@@ -112,7 +112,7 @@ type
     procedure XBEDevKitRetail1Click(Sender: TObject);
     procedure Crea1Click(Sender: TObject);
     procedure ToolButton2Click(Sender: TObject);
-    procedure ToolButton1Click(Sender: TObject);
+    procedure btnExtractAllClick(Sender: TObject);
     procedure ToolButton4Click(Sender: TObject);
     procedure ToolButton10Click(Sender: TObject);
     procedure Opciones1Click(Sender: TObject);
@@ -471,6 +471,8 @@ begin
     end;
   end;
 
+  btnExtractAll.Enabled := True;
+
   Treeview1.Items.EndUpdate;
   Treeview1.Items[0].Expand(True);
   Treeview1.Items[0].Selected := True;
@@ -536,7 +538,7 @@ var
 begin
   DragAcceptFiles(Self.Handle, True);
 
-  CDUnit := TCDROM.Create(Self);
+(*  CDUnit := TCDROM.Create(Self);
   if (CDUnit <> nil) and (CDUnit.ASPISupport) then
   begin
     CDUnit.ErrorEnable := True;
@@ -552,7 +554,7 @@ begin
     AssignDevicesToList();
   end
   else
-    MessageBox(frm_Main.Handle, PChar(SInstalarASPI), nil, MB_OK or MB_ICONWARNING);
+    MessageBox(frm_Main.Handle, PChar(SInstalarASPI), nil, MB_OK or MB_ICONWARNING); *)
 
   for i := 0 to ParamCount - 1 do
   begin
@@ -961,7 +963,7 @@ begin
   MessageBox(Handle, PChar(SFinExtraccion), PChar(SMessage), MB_OK or MB_ICONINFORMATION);
 end;
 
-procedure Tfrm_Main.ToolButton1Click(Sender: TObject);
+procedure Tfrm_Main.btnExtractAllClick(Sender: TObject);
 var
   Folder: string;
   HA, SCSI, LUN: Byte;
