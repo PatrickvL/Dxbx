@@ -71,6 +71,7 @@ type
   XTL_PIDirectSound8 = type PInterface;
   XTL_PIDirectSoundBuffer = type PInterface;
   XTL_PIDirectSoundBuffer8 = type PInterface;
+  XTL_PIDirectSoundListener = type PInterface; // Dxbx addition
 
   // DirectInput interface types :
 

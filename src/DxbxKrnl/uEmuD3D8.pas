@@ -1891,7 +1891,7 @@ begin
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3D8_EnumAdapterModes
 
-procedure XTL_EmuIDirect3D8_KickOffAndWaitForIdle(); stdcall;
+procedure XTL_EmuIDirect3D8_KickOffAndWaitForIdle(); stdcall; // UNKNOWN_SIGNATURE
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1900,26 +1900,7 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3D8_KickOffAndWaitForIdle();');
 {$ENDIF}
 
-  // TODO -oCXBX: Actually do something here?
-
-  EmuSwapFS(fsXbox);
-end;
-
-procedure XTL_EmuIDirect3D8_KickOffAndWaitForIdle2(dwDummy1, dwDummy2: DWORD); stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3D8_KickOffAndWaitForIdle' +
-    #13#10'(' +
-    #13#10'   dwDummy1          : 0x%.08X' +
-    #13#10'   dwDummy2          : 0x%.08X' +
-    #13#10');',
-    [dwDummy1, dwDummy2]);
-{$ENDIF}
-
-  // TODO -oCXBX: Actually do something here?
+  // TODO -oCXBX: Actually do something
 
   EmuSwapFS(fsXbox);
 end;
@@ -10046,7 +10027,6 @@ exports
   XTL_EmuIDirect3D8_GetAdapterModeCount name PatchPrefix + 'Direct3D_GetAdapterModeCount',
   XTL_EmuIDirect3D8_GetDeviceCaps name PatchPrefix + 'Direct3D_GetDeviceCaps',
   XTL_EmuIDirect3D8_KickOffAndWaitForIdle name PatchPrefix + 'KickOffAndWaitForIdle',
-  XTL_EmuIDirect3D8_KickOffAndWaitForIdle2 name PatchPrefix + 'KickOffAndWaitForIdle2', // no prefix also ?
   XTL_EmuIDirect3D8_SetPushBufferSize name PatchPrefix + 'Direct3D_SetPushBufferSize',
 
   XTL_EmuIDirect3DBaseTexture8_GetLevelCount name PatchPrefix + 'D3DBaseTexture_GetLevelCount@4',

@@ -463,7 +463,7 @@ begin
       end;
     end;
 
-    dwHow := -1;  dwFlags := m_InputDevice[v].m_Flags;
+    dwHow := -1; // {unused:}dwFlags := m_InputDevice[v].m_Flags;
 
     // Detect Joystick Input
     if (m_InputDevice[v].m_Flags and DEVICE_FLAG_JOYSTICK) > 0 then
