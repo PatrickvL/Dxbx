@@ -1058,6 +1058,9 @@ begin
 
   // TODO -oCXBX: Actually do something
 
+  // TODO -oDxbx : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
+  // IDirectSound3DListener(pThis^.EmuListener).SetPosition(x, y, z, dwApply);
+
   EmuSwapFS(fsXbox);
 
   Result := DS_OK;
@@ -1090,6 +1093,9 @@ begin
 {$ENDIF}
 
   // TODO -oCXBX: Actually do something
+
+  // TODO -oDxbx : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
+  // IDirectSound3DListener(pThis^.EmuListener).SetVelocity(x, y, z, dwApply);
 
   EmuSwapFS(fsXbox);
 
@@ -2617,8 +2623,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush();',
-            [pThis]);
+  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush',
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10');',
+      [pThis]);
 {$ENDIF}
 
   // TODO -oCXBX: Actually Flush
@@ -3658,6 +3667,8 @@ function XTL_EmuIDirectSoundBuffer8_Pause
     dwPause: DWORD          
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+//var
+//  dwFlags: DWord;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3676,14 +3687,14 @@ begin
   // Unstable!
   (*if (pThis <> NULL) then
   begin
-    if(pThis.EmuDirectSoundBuffer8)
+    if(pThis.EmuDirectSoundBuffer8) then
     begin
       if (dwPause = X_DSBPAUSE_PAUSE) then
         result := pThis.EmuDirectSoundBuffer8.Stop();
       if (dwPause = X_DSBPAUSE_RESUME) then
       begin
-        DWORD dwFlags = (pThis.EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
-        result := pThis.EmuDirectSoundBuffer8.Play(0, 0, dwFlags);
+        dwFlags := iif((pThis.EmuPlayFlags & X_DSBPLAY_LOOPING) > 0, DSBPLAY_LOOPING, 0);
+        result := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Play(0, 0, dwFlags);
       end;
       if (dwPause = X_DSBPAUSE_SYNCHPLAYBACK) then
         EmuWarning('DSBPAUSE_SYNCHPLAYBACK is not yet supported!');
@@ -3697,22 +3708,26 @@ end;
 //// ******************************************************************
 //// * func: EmuIDirectSoundBuffer_Pause
 //// ******************************************************************
-//extern 'C' HRESULT __stdcall XTL_EmuIDirectSoundBuffer_PauseEx
+//function {extern 'C'} XTL_EmuIDirectSoundBuffer_PauseEx
 //(
 //    pThis: PX_CDirectSoundBuffer;
 //    rtTimestamp: REFERENCE_TIME;
 //    dwPause: DWORD
 //): HRESULT; stdcall;
+//// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+//var
+//  ret: HRESULT;
+//  dwFlags: DWORD;
 //begin
 //  EmuSwapFS(fsWindows);
 //
 //{$IFDEF DEBUG}
 //  DbgPrintf('EmuDSound : EmuIDirectSoundBuffer_PauseEx' +
-//      '(' +
-//      '  pThis          : 0x%.08X' +
-//      '   rtTimestamp             : 0x%.08X' +
-//      '   dwPause                 : 0x%.08X' +
-//      ');',
+//      #13#10'(' +
+//      #13#10'   pThis                   : 0x%.08X' +
+//      #13#10'   rtTimestamp             : 0x%.08X' +
+//      #13#10'   dwPause                 : 0x%.08X' +
+//      #13#10');',
 //      [pThis, rtTimestamp, dwPause);
 //{$ENDIF}
 //
@@ -3720,27 +3735,27 @@ end;
 //  // TODO: Implement time stamp feature (a thread maybe?)
 //  EmuWarning('IDirectSoundBuffer_PauseEx not fully implemented!');
 //
-//  HRESULT ret;
+//  ret := DS_OK;
 //
-//  if(pThis != NULL)
-//  {
-//    if(pThis.EmuDirectSoundBuffer8)
-//    {
-//      if(dwPause == X_DSBPAUSE_PAUSE)
-//        ret = pThis.EmuDirectSoundBuffer8.Stop();
-//      if(dwPause == X_DSBPAUSE_RESUME)
-//      {
-//        DWORD dwFlags = (pThis.EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
-//        ret = pThis.EmuDirectSoundBuffer8.Play(0, 0, dwFlags);
-//      }
-//      if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
+//  if(pThis <> NULL) then
+//  begin
+//    if(pThis.EmuDirectSoundBuffer8) then
+//    begin
+//      if(dwPause = X_DSBPAUSE_PAUSE) then
+//        ret := pThis.EmuDirectSoundBuffer8.Stop();
+//      if(dwPause = X_DSBPAUSE_RESUME) then
+//      begin
+//        dwFlags := iif((pThis.EmuPlayFlags & X_DSBPLAY_LOOPING) > 0, DSBPLAY_LOOPING, 0);
+//        ret := IDirectSoundBuffer(pThis.EmuDirectSoundBuffer8).Play(0, 0, dwFlags);
+//      end;
+//      if(dwPause = X_DSBPAUSE_SYNCHPLAYBACK) then
 //        EmuWarning('DSBPAUSE_SYNCHPLAYBACK is not yet supported!');
-//    }
-//  }
+//    end;
+//  end;
 //
 //  EmuSwapFS(fsXbox);
 //
-//  return ret;
+//  result := ret;
 //end;
 
 // ******************************************************************
@@ -3875,7 +3890,7 @@ begin
 
   Result := DS_OK;
 
-  EmuWarning('EmuCDirectSoundStream_SetMode ignored');
+  EmuWarning('EmuCDirectSoundStream_SetFormat ignored');
 
   EmuSwapFS(fsXbox);
 end;
