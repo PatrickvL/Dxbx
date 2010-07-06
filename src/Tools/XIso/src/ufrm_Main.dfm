@@ -131,24 +131,24 @@ object frm_Main: Tfrm_Main
         Control = ToolBar1
         ImageIndex = -1
         MinHeight = 21
-        Width = 624
+        Width = 622
       end
       item
         Control = ToolBar3
         ImageIndex = -1
         MinHeight = 22
-        Width = 624
+        Width = 622
       end
       item
         Control = ToolBar2
         ImageIndex = -1
         MinHeight = 22
-        Width = 624
+        Width = 622
       end>
     object ToolBar1: TToolBar
-      Left = 9
+      Left = 12
       Top = 0
-      Width = 611
+      Width = 608
       Height = 21
       AutoSize = True
       ButtonHeight = 21
@@ -159,9 +159,9 @@ object frm_Main: Tfrm_Main
       TabOrder = 0
     end
     object ToolBar2: TToolBar
-      Left = 9
+      Left = 12
       Top = 47
-      Width = 611
+      Width = 608
       Height = 22
       AutoSize = True
       Caption = 'ToolBar2'
@@ -179,14 +179,15 @@ object frm_Main: Tfrm_Main
         ShowHint = True
         OnClick = ToolButton2Click
       end
-      object ToolButton1: TToolButton
+      object btnExtractAll: TToolButton
         Left = 23
         Top = 0
         Hint = 'Extract All'
+        Enabled = False
         ImageIndex = 10
         ParentShowHint = False
         ShowHint = True
-        OnClick = ToolButton1Click
+        OnClick = btnExtractAllClick
       end
       object ToolButton14: TToolButton
         Left = 46
@@ -261,9 +262,9 @@ object frm_Main: Tfrm_Main
       end
     end
     object ToolBar3: TToolBar
-      Left = 9
+      Left = 12
       Top = 23
-      Width = 611
+      Width = 608
       Height = 22
       AutoSize = True
       Caption = 'ToolBar3'
