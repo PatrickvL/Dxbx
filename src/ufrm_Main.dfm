@@ -139,6 +139,18 @@ object frm_Main: Tfrm_Main
         Caption = 'Recent Xbe files'
         Enabled = False
       end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object Gamelist1: TMenuItem
+        Caption = '&Game list'
+        object Import1: TMenuItem
+          Action = actImportGameList
+        end
+        object Export1: TMenuItem
+          Action = actExportGameList
+        end
+      end
       object N1: TMenuItem
         Caption = '-'
       end
@@ -215,9 +227,6 @@ object frm_Main: Tfrm_Main
       Caption = 'Tools'
       object miXbeExplorer: TMenuItem
         Action = actXbeExplorer
-      end
-      object XdkTracker1: TMenuItem
-        Action = actXdkTracker
       end
       object xIso1: TMenuItem
         Action = actXIso
@@ -301,11 +310,6 @@ object frm_Main: Tfrm_Main
       Caption = '&File'
       OnExecute = actFileDebugKernelExecute
     end
-    object actXdkTracker: TAction
-      Category = 'Tools'
-      Caption = 'XdkTracker'
-      OnExecute = actXdkTrackerExecute
-    end
     object actXIso: TAction
       Category = 'Tools'
       Caption = 'xIso - Dxbx Edition'
@@ -326,6 +330,16 @@ object frm_Main: Tfrm_Main
       Caption = 'Stop'
       ShortCut = 117
       OnExecute = actStopEmulationExecute
+    end
+    object actImportGameList: TAction
+      Category = 'File'
+      Caption = '&Import'
+      OnExecute = actImportGameListExecute
+    end
+    object actExportGameList: TAction
+      Category = 'File'
+      Caption = '&Export'
+      OnExecute = actExportGameListExecute
     end
   end
   object XbeOpenDialog: TOpenDialog
@@ -352,5 +366,17 @@ object frm_Main: Tfrm_Main
     Left = 8
     Top = 80
     DOMVendorDesc = 'MSXML'
+  end
+  object ImportDialog: TOpenDialog
+    DefaultExt = '*.xml'
+    Filter = 'Xml Files ( *.xml )|*.xml'
+    Left = 184
+    Top = 12
+  end
+  object ExportDialog: TSaveDialog
+    DefaultExt = '*.xml'
+    Filter = 'Xml Files ( *.xml )|*.xml'
+    Left = 216
+    Top = 12
   end
 end

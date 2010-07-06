@@ -44,6 +44,7 @@ uses
   uDxbxXml,
   uData,
   ufrm_Configuration,
+  uImportGames,
   ufrm_About;
 
 const
@@ -95,9 +96,7 @@ type
     actFileDebugKernel: TAction;
     ExeSaveDialog: TSaveDialog;
     ools1: TMenuItem;
-    XdkTracker1: TMenuItem;
     xIso1: TMenuItem;
-    actXdkTracker: TAction;
     actXIso: TAction;
     N8: TMenuItem;
     XDKTracker2: TMenuItem;
@@ -117,6 +116,14 @@ type
     cbFreeTextFilter: TComboBox;
     actStopEmulation: TAction;
     Stop1: TMenuItem;
+    N4: TMenuItem;
+    Gamelist1: TMenuItem;
+    Import1: TMenuItem;
+    Export1: TMenuItem;
+    actImportGameList: TAction;
+    actExportGameList: TAction;
+    ImportDialog: TOpenDialog;
+    ExportDialog: TSaveDialog;
     procedure actStartEmulationExecute(Sender: TObject);
     procedure actOpenXbeExecute(Sender: TObject);
     procedure actCloseXbeExecute(Sender: TObject);
@@ -130,7 +137,6 @@ type
     procedure actFileDebugKernelExecute(Sender: TObject);
     procedure actAboutExecute(Sender: TObject);
     procedure actCloseExecute(Sender: TObject);
-    procedure actXdkTrackerExecute(Sender: TObject);
     procedure actXIsoExecute(Sender: TObject);
     procedure actXdkTrackerXbeInfoExecute(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -148,11 +154,19 @@ type
     procedure cbFreeTextFilterKeyPress(Sender: TObject; var Key: Char);
     procedure cbFreeTextFilterSelect(Sender: TObject);
     procedure actStopEmulationExecute(Sender: TObject);
+    procedure actImportGameListExecute(Sender: TObject);
+    procedure actExportGameListExecute(Sender: TObject);
   protected
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure WndProc(var Message: TMessage); override;
     procedure StopEmulation;
   private
+    procedure SaveXBEList(const aFilePath, aPublishedBy: string);
+    Function ImportXBEGameList(aImportFilePath: string = ''; aUseImportDialog: Boolean = False): Integer;
+    function FindByFileName(const aFileName: string): Integer;
+    function ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
+    function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
+    function _ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
     procedure UpdateBackground;
     procedure UpdateLaunchButton;
     procedure UpdateTitleInformation;
@@ -161,6 +175,8 @@ type
     function LoadXbe(const aFileName: string): Boolean;
   private
     MyXBEList: TStringList;
+    ApplicationDir: string;
+
     EnabledItems: array of TXbeInfo;
     procedure UpdateFilter;
 //    function FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
@@ -388,6 +404,15 @@ begin
   inherited WndProc(Message);
 end;
 
+function Tfrm_Main.FindByFileName(const aFileName: string): Integer;
+begin
+  for Result := 0 to MyXBEList.Count - 1 do
+    if SameText(TXBEInfo(MyXBEList.Objects[Result]).FileName, aFileName) then
+      Exit;
+
+  Result := -1;
+end;
+
 procedure Tfrm_Main.FormCreate(Sender: TObject);
 var
   XBEFilePath: string;
@@ -395,6 +420,8 @@ var
 //  i: Integer;
 begin
   Application.OnMessage := AppMessage;
+  ApplicationDir := ExtractFilePath(Application.ExeName);
+
   dgXbeInfos.ColCount := 5;
 
   BackgroundImage := TBitmap.Create;
@@ -828,6 +855,52 @@ begin
     WriteLog(m_szAsciiTitle + '`s .xbe info was successfully dumped.'); // NOT!
 end;
 
+procedure Tfrm_Main.SaveXBEList(const aFilePath, aPublishedBy: string);
+var
+  XMLRootNode: IXMLNode;
+  PublishedNode: IXMLNode;
+  GameListNode: IXMLNode;
+  XBEInfoNode: IXMLNode;
+  XDKnode: IXMLNode;
+  i, j: Integer;
+  XBEInfo: TXBEInfo;
+begin
+  if not XMLDocument.Active then
+    XMLDocument.Active := True;
+
+  XMLDocument.ChildNodes.Clear;
+  XMLRootNode := XMLDocument.AddChild('XBEInfo');
+  XMLRootNode.SetAttribute('Version', cXDk_TRACKER_XML_VERSION);
+
+  PublishedNode := XMLRootNode.AddChild('PublishedInfo');
+  XML_WriteString(PublishedNode, 'PublishedBy', aPublishedBy);
+
+  GameListNode := XMLRootNode.AddChild('GameList');
+
+  for i := 0 to MyXBEList.Count - 1 do
+  begin
+    XBEInfo := TXBEInfo(MyXBEList.Objects[i]);
+    XBEInfoNode := GameListNode.AddChild('Game');
+
+    XML_WriteString(XBEInfoNode, 'FileName', XBEInfo.FileName);
+    XML_WriteString(XBEInfoNode, 'Title', XBEInfo.Title);
+    XML_WriteString(XBEInfoNode, 'GameRegion', IntToStr(XBEInfo.GameRegion));
+    XML_WriteString(XBEInfoNode, 'DumpInfo', XBEInfo.DumpInfo);
+    XDKnode := XBEInfoNode.AddChild('XDKVersions');
+
+    for j := 0 to XBEInfo.LibVersions.Count - 1 do
+      XML_WriteString(XDKnode, XBEInfo.LibVersions.Names[j], XBEInfo.LibVersions.ValueFromIndex[j]);
+  end;
+
+  XMLDocument.SaveToFile(aFilePath);
+end; // TfrmMain.SaveXBEList
+
+procedure Tfrm_Main.actExportGameListExecute(Sender: TObject);
+begin
+  if ExportDialog.Execute then
+    SaveXBEList(ExportDialog.FileName, '');
+end;
+
 procedure Tfrm_Main.actFileXbeInfoExecute(Sender: TObject);
 begin
   SaveDialog.FileName := m_Xbe.DetermineDumpFileName;
@@ -846,7 +919,216 @@ begin
     WriteLog(m_szAsciiTitle + '''s .xbe info was successfully dumped.');
     MessageDlg(m_szAsciiTitle + '''s .xbe info was successfully dumped.', mtInformation, [mbOk], 0);
   end;
-end; // actFileXbeInfoExecute
+end;
+
+function Tfrm_Main._ReadXBEInfoFromNode(const XBEInfoNode: IXMLNode): TXBEInfo;
+var
+  XDKNode, LibNode: IXMLNode;
+  GameRegion: String;
+begin
+  Result := TXBEInfo.Create;
+  Result.FileName := XML_ReadString(XBEInfoNode, 'FileName');
+  if Result.FileName = '' then
+  begin
+    // Old-style 'Name' values are read here :
+    Result.Title := XML_ReadString(XBEInfoNode, 'Name');
+    Result.DumpInfo := '';
+    Result.GameRegion := 0;
+  end
+  else
+  begin
+    Result.Title := XML_ReadString(XBEInfoNode, 'Title');
+    GameRegion := XML_ReadString(XBEInfoNode, 'GameRegion');
+    if GameRegion[1] = '-' then
+      Result.GameRegion := 0
+    else
+      Result.GameRegion := StrToIntDef(GameRegion, 0);
+
+    Result.DumpInfo := XML_ReadString(XBEInfoNode, 'DumpInfo');
+  end;
+
+  XDKNode := XBEInfoNode.ChildNodes.FindNode('XDKVersions');
+  if Assigned(XDKNode) then
+  begin
+    LibNode := XDKNode.ChildNodes.First;
+    while Assigned(LibNode) do
+    begin
+      Result.LibVersions.Values[LibNode.LocalName] := LibNode.Text;
+      LibNode := LibNode.NextSibling;
+    end;
+
+    Result.LibVersions.Sort;
+  end;
+end;
+
+function Tfrm_Main.FindDuplicate(const aXBEInfo: TXBEInfo): Integer;
+begin
+  // Initially we don't know if this XBE is already present :
+  Result := -1;
+
+  // Try searching by title :
+  if (Result < 0) and (aXBEInfo.Title <> '') then
+    Result := MyXBEList.IndexOf(aXBEInfo.Title);
+
+  // Try searching by title, but use FileName for backwards compatibility :
+  if (Result < 0) and (aXBEInfo.FileName <> '') then
+    Result := MyXBEList.IndexOf(aXBEInfo.FileName);
+
+  // Try searching by filename :
+  if (Result < 0) and (aXBEInfo.FileName <> '') then
+    Result := FindByFileName(aXBEInfo.FileName);
+
+  // Try searching by filename, but use Title as last resort :
+  if (Result < 0) and (aXBEInfo.Title <> '') then
+    Result := FindByFileName(aXBEInfo.Title);
+
+  // TODO : Add other search-methods here
+
+  // Not found at all, no other searches possible :
+  if Result < 0 then
+    Exit;
+
+  // Mark it a no-match when the region mis-matches :
+  if (TXBEInfo(MyXBEList.Objects[Result]).GameRegion <> aXBEInfo.GameRegion) then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  // Mark it a no-match when the library versions mis-match :
+  if (TXBEInfo(MyXBEList.Objects[Result]).LibVersions.Text <> aXBEInfo.LibVersions.Text) then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  // TODO : Add other non-duplicate tests here
+end;
+
+function Tfrm_Main.ShowImportList(const XBEImportList: TStringList; Publisher: string): Integer;
+var
+  i: Integer;
+  XBEInfo: TXBEInfo;
+begin
+  Result := 0;
+
+  frm_XBEList := Tfrm_XBEList.Create(Self);
+  try
+    // Precalculate the IsDuplicate members (this will be used to feed the checkboxes) :
+    for i := 0 to XBEImportList.Count - 1 do
+    begin
+      XBEInfo := TXBEInfo(XBEImportList.Objects[i]);
+      XBEInfo.IsDuplicate := FindDuplicate(XBEInfo) >= 0;
+    end;
+
+    // Put this list into the view :
+    frm_XBEList.FillXBEList(XBEImportList, {ShowAsImport=}True);
+
+    if frm_XBEList.ShowModal = mrOk then
+    begin
+      for i := 0 to frm_XBEList.lst_XBEs.Items.Count - 1 do
+        if  frm_XBEList.lst_XBEs.Items[i].Checked
+        and InsertXBEInfo(TXBEInfo(frm_XBEList.lst_XBEs.Items[i].Data)) then
+          Inc(Result);
+
+      MyXBEList.Sort;
+    end;
+  finally
+    frm_XBEList.Release;
+    frm_XBEList := nil;
+  end;
+end; // ShowImportList
+
+function Tfrm_Main.ImportXBEGameList(aImportFilePath: string = '';
+  aUseImportDialog: Boolean = False): Integer;
+var
+  XMLRootNode: IXMLNode;
+  XMLNode: IXMLNode;
+  XBEInfoNode: IXMLNode;
+  Publisher: string;
+  FileName: string;
+  XBEImportList: TStringList;
+  i: Integer;
+begin
+  Result := 0;
+  if aImportFilePath = '' then
+    aImportFilePath := ApplicationDir + 'Dump.dat';
+
+  if not FileExists(aImportFilePath) then
+    Exit;
+
+  XmlDocument.Active := False;
+  XmlDocument.FileName := aImportFilePath;
+  try
+    XmlDocument.Active := True;
+  except
+    on E: EDOMParseError do
+    begin
+      MessageDlg('Error parsing the file!', mtError, [mbOk], -1);
+      XmlDocument.Active := False;
+    end
+    else
+      XmlDocument.Active := False;
+  end;
+
+  if not XmlDocument.Active then
+    Exit;
+
+  XBEImportList := TStringList.Create;
+  try
+    XMLRootNode := XMLDocument.DocumentElement;
+
+    XMLNode := XMLRootNode.ChildNodes.FindNode('PublishedInfo');
+    if Assigned(XMLNode) then
+      Publisher := XML_ReadString(XMLNode, 'PublishedBy');
+
+    XMLNode := XMLRootNode.ChildNodes.FindNode('GameList');
+    if Assigned(XMLNode) then
+      XBEInfoNode := XMLNode.ChildNodes.First
+    else
+      XBEInfoNode := XMLRootNode;
+
+    while Assigned(XBEInfoNode) do
+    begin
+      FileName := XML_ReadString(XBEInfoNode, 'FileName');
+      if FileName = '' then
+        // Old-style 'Name' values are read here, interpreted as FileName :
+        FileName := XML_ReadString(XBEInfoNode, 'Name');
+
+      // For now, only add to list when the user can intervene,
+      // or when not yet present :
+      if aUseImportDialog
+      or (FindByFileName(FileName) < 0) then
+        XBEImportList.AddObject('', _ReadXBEInfoFromNode(XBEInfoNode));
+
+      XBEInfoNode := XBEInfoNode.NextSibling;
+    end;
+
+ //   if aUseImportDialog then
+ //     Result := ShowImportList(XBEImportList, Publisher)
+//    else
+      for i := 0 to XBEImportList.Count - 1 do
+        if InsertXBEInfo(TXBEInfo(XBEImportList.Objects[i])) then
+          Inc(Result);
+
+    MyXBEList.Sort;
+
+  finally
+    FreeAndNil({var}XBEImportList);
+  end;
+end;
+
+procedure Tfrm_Main.actImportGameListExecute(Sender: TObject);
+begin
+  // Import another gamedata (next to the already loaded version)
+  if ImportDialog.Execute then
+  begin
+    ImportXBEGameList(ImportDialog.FileName, {aUseImportDialog=}True);
+    UpdateFilter;
+  end;
+end;
+
+// actFileXbeInfoExecute
 
 procedure Tfrm_Main.actConsoleDebugGuiExecute(Sender: TObject);
 begin
@@ -989,11 +1271,6 @@ begin
   StartTool(cXbeExplorerPath, Parameters);
 end;
 
-procedure Tfrm_Main.actXdkTrackerExecute(Sender: TObject);
-begin
-  StartTool(cXbeExplorerPath);
-end;
-
 procedure Tfrm_Main.actXIsoExecute(Sender: TObject);
 begin
   StartTool(cXIsoPath);
@@ -1105,12 +1382,11 @@ begin
 
   // Update Tools menu actions :
   actXbeExplorer.Enabled := FileExists(FApplicationDir + cXbeExplorerPath);
-  actXdkTracker.Enabled := FileExists(FApplicationDir + cXDKTrackerPath);
   actXIso.Enabled := FileExists(FApplicationDir + cXIsoPath);
 
   // Update Edit menu actions (should be done after actXdkTracker update) :
   mnu_Patch.Enabled := False;
-  mnu_DumpxbeinfoTo.Enabled := Assigned(m_Xbe) and actXdkTracker.Enabled;
+  mnu_DumpxbeinfoTo.Enabled := Assigned(m_Xbe);
 end; // AdjustMenu
 
 function Tfrm_Main.GetEmuWindowHandle(const aEmuDisplayMode: Integer = 1): THandle;
