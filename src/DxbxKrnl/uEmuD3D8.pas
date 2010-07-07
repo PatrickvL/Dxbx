@@ -2126,6 +2126,10 @@ begin
     Height,
     PCFormat,
     PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface8)));
+  DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
+        ppBackBuffer^.Emu.Surface8,
+        Result,
+        Width, Height, Ord(PCFormat)]);
 
   if FAILED(Result) and (Format = X_D3DFMT_LIN_D24S8) then
   begin
@@ -2136,6 +2140,10 @@ begin
       Height,
       D3DFMT_A8R8G8B8,
       PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface8)));
+    DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
+        ppBackBuffer^.Emu.Surface8,
+        Result,
+        Width, Height, Ord(D3DFMT_A8R8G8B8)]);
   end;
 
   if FAILED(Result) then
@@ -3287,16 +3295,16 @@ begin
 
   if (PCFormat <> D3DFMT_YUY2) then
   begin
-    PCUsage := Usage and (D3DUSAGE_RENDERTARGET);
-// //Cxbx    PCUsage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
+//    PCUsage := Usage and (D3DUSAGE_RENDERTARGET);
+    PCUsage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
     PCPool := D3DPOOL_MANAGED;
 
     EmuAdjustPower2(@Width, @Height);
 
     New({var PX_D3DTexture}ppTexture^);
 
-// //Cxbx    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
-    if (Usage and (D3DUSAGE_RENDERTARGET)) > 0 then
+    if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
+//    if (Usage and (D3DUSAGE_RENDERTARGET)) > 0 then
       PCPool := D3DPOOL_DEFAULT;
 
     // Cxbx HACK: Width and Height sometimes set to 0xFFFF and 0 in Crazy Taxi 3
@@ -3328,6 +3336,9 @@ begin
       PCUsage, // TODO -oCXBX: Xbox Allows a border to be drawn (maybe hack this in software ;[)
       PCFormat, PCPool, @(ppTexture^.Emu.Texture8)
     );
+
+    DbgPrintf('Texture created @ 0x%08X [hRet = 0x%08X]: %dx%d, %d levels, usage = 0x%08X, format = 0x%08X', [
+            ppTexture^.Emu.Texture8, Result, Width, Height, Levels, Ord(PCUsage), Ord(PCFormat)]);
 
     if (FAILED(Result)) then
     begin
@@ -3610,6 +3621,9 @@ begin
     IDirect3DIndexBuffer8(ppIndexBuffer^.Emu.IndexBuffer8).Lock(0, Length, {out PByte}pData, 0);
 
     ppIndexBuffer^.Data := DWORD(pData);
+
+    // StrikerX3: experimenting...
+    IDirect3DIndexBuffer8(ppIndexBuffer^.Emu.IndexBuffer8).Unlock();
   end;
 
   EmuSwapFS(fsXbox);
@@ -3692,8 +3706,8 @@ begin
       goto fail;
     end;
 
-//    DxbxUnlockD3DResource(pIndexData); // Dxbx addition
     pIndexBuffer := pIndexData.Emu.IndexBuffer8;
+    DxbxUnlockD3DResource(pIndexData); // Dxbx addition
 
     if (pIndexData.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
       Result := IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(pIndexBuffer), BaseVertexIndex);
@@ -7646,6 +7660,12 @@ begin
   pVertexBuffer8 := ppVertexBuffer.Emu.VertexBuffer8;
 
   hRet := IDirect3DVertexBuffer8(pVertexBuffer8).Lock(OffsetToLock, SizeToLock, {out}ppbData^, Flags);
+  (*DbgPrintf('VertexBuffer 0x%08X was locked: 0x%x - 0x%x, hRet = 0x%08x', [
+        pVertexBuffer8,
+        OffsetToLock,
+        SizeToLock,
+        hRet
+        ]);*)
 
   if (FAILED(hRet)) then
     EmuWarning('VertexBuffer Lock Failed!');
@@ -7681,6 +7701,10 @@ begin
   {Dxbx unused hRet :=} IDirect3DVertexBuffer8(pVertexBuffer8).Lock(0, 0, {out}pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
 {$IFDEF DEBUG}
+  (*DbgPrintf('VertexBuffer 0x%08X was locked (2): hRet = 0x%08x', [
+        pVertexBuffer8,
+        hRet
+        ]);*)
   DbgPrintf('pbData : 0x%.08X', [pbData]);
 {$ENDIF}
   EmuSwapFS(fsXbox);
@@ -7721,7 +7745,7 @@ end;
 function XTL_EmuIDirect3DDevice8_SetStreamSource
 (
   StreamNumber: UINT;
-  pStreamData: PX_D3DVertexBuffer; 
+  pStreamData: PX_D3DVertexBuffer;
   Stride: UINT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -7759,7 +7783,8 @@ begin
     EmuVerifyResourceIsRegistered(pStreamData);
 
     pVertexBuffer8 := pStreamData.Emu.VertexBuffer8;
-    IDirect3DVertexBuffer8(pVertexBuffer8).Unlock();
+    if Assigned(pVertexBuffer8) then
+      IDirect3DVertexBuffer8(pVertexBuffer8).Unlock();
   end;
 
   {$ifdef _DEBUG_TRACK_VB}
@@ -8291,19 +8316,24 @@ function XTL_EmuIDirect3DDevice8_SetRenderTarget
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
+  pRenderTarget_EmuSurface8: Pointer;
+  pNewZStencil_EmuSurface8: Pointer;
+
   pPCRenderTarget: XTL_PIDirect3DSurface8;
   pPCNewZStencil: XTL_PIDirect3DSurface8;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
+  if Assigned(pRenderTarget) then pRenderTarget_EmuSurface8 := pRenderTarget.Emu.Surface8 else pRenderTarget_EmuSurface8 := nil;
+  if Assigned(pNewZStencil) then pNewZStencil_EmuSurface8 := pNewZStencil.Emu.Surface8 else pNewZStencil_EmuSurface8 := nil;
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderTarget' +
            #13#10'(' +
-           #13#10'   pRenderTarget     : 0x%.08X' + // TODO -oDxbx : Restore? (0x%.08X)' +
-           #13#10'   pNewZStencil      : 0x%.08X' + // TODO -oDxbx : Restore? (0x%.08X)' +
+           #13#10'   pRenderTarget     : 0x%.08X (0x%.08X)' +
+           #13#10'   pNewZStencil      : 0x%.08X (0x%.08X)' +
            #13#10');',
-           [pRenderTarget, {iif(pRenderTarget <> nil, pRenderTarget.Emu.Surface8, nil),}
-           pNewZStencil{,  iif(pNewZStencil <> nil, pNewZStencil.Emu.Surface8, nil)}]);
+           [pRenderTarget, pRenderTarget_EmuSurface8,
+           pNewZStencil, pNewZStencil_EmuSurface8]);
 {$ENDIF}
 
   pPCRenderTarget := nil;
@@ -8336,10 +8366,26 @@ begin
  end;
 
   // TODO -oCXBX: Follow that stencil!
+  if Assigned(pRenderTarget) then pRenderTarget_EmuSurface8 := pRenderTarget.Emu.Surface8 else pRenderTarget_EmuSurface8 := nil;
+  if Assigned(pNewZStencil) then pNewZStencil_EmuSurface8 := pNewZStencil.Emu.Surface8 else pNewZStencil_EmuSurface8 := nil;
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderTarget' +
+      #13#10'(' +
+      #13#10'   pRenderTarget       : 0x%.08X (0x%.08X)' +
+      #13#10'   pNewZStencil        : 0x%.08X (0x%.08X)' +
+      #13#10');',
+      [ pRenderTarget, pRenderTarget_EmuSurface8,
+        pNewZStencil,  pNewZStencil_EmuSurface8]);
+
   Result := IDirect3DDevice8(g_pD3DDevice8).SetRenderTarget(IDirect3DSurface8(pPCRenderTarget), IDirect3DSurface8(pPCNewZStencil));
 
   if FAILED(Result) then
-    EmuWarning('SetRenderTarget failed! (0x%.08X)', [Result]);
+    EmuWarning('SetRenderTarget failed!' +
+            ' pRenderTarget = 0x%.08X, pPCRenderTarget = 0x%.08X,' +
+            ' pNewZStencil = 0x%.08X, pPCNewZStencil = 0x%.08X,' +
+            ' hRet = 0x%.08X',
+            [pRenderTarget, pPCRenderTarget,
+            pNewZStencil, pPCNewZStencil,
+            Result]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -8473,6 +8519,10 @@ begin
   // Dxbx note : No EmuSwapFS needed here
 
   ppColors^ := XTL_EmuIDirect3DPalette8_Lock2(pThis, Flags);
+  (*DbgPrintf('Pallete 0x%08X was locked: return = 0x%08x', [
+        pThis,
+        ppColors^
+        ]);*)
 
   Result := D3D_OK;
 end;

@@ -791,7 +791,7 @@ type
   RTL_CRITICAL_SECTION = packed record
     Unknown: array [0..3-1] of DWORD;                      // 0x00
 
-    // Dxbx Note : Unknown might well be an in-place mutex, which would save us from
+    // Dxbx Note : Unknown is an in-place event (also known as RawEvent), which would save us from
     // allocating a separate synchronization primitive (a semaphore right now) :
     LockSemaphore: HANDLE; // Dxbx addition - not sure this is right, but I had to put this somewhere!
     //
@@ -827,6 +827,17 @@ type
   end;
   PNT_TIB = ^NT_TIB;
 
+// StrikerX3 NOTE: The following table maps the NT TIB structure to Xbox TIB
+//
+//     offsets
+// NT_TIB  XBOX_TIB   contents
+//  0x00     0x00     Current SEH Frame
+//  0x04     0x04     Stack Limit
+//  0x08     0x08     Stack Base
+//   ??      0x20     Unknown
+//   ??      0x24     Unknown
+//  0x18     0x28     Ptr to TIB (self)
+
 // ******************************************************************
 // * KTHREAD
 // ******************************************************************
@@ -836,7 +847,7 @@ type
 // ******************************************************************
 type
   KTHREAD = packed record
-    UnknownA: array [0..$28 - 1] of UCHAR;
+    UnknownA: array [0..$28 - 1] of UCHAR; // StrikerX3 NOTE: This is actually XBOX_TIB
     TlsData: PVOID; // 0x28
     UnknownB: array [0..$E4 - 1] of UCHAR; // 0x2C
   end;
@@ -853,7 +864,7 @@ type
   ETHREAD = packed record
     Tcb: KTHREAD;
     UnknownA: array [0..$1C - 1] of UCHAR; // 0x110
-    UniqueThread: DWORD; // 0x12C
+    UniqueThread: DWORD; // 0x12C  StrikerX3 NOTE: GetCurrentThreadId() returns this
   end;
   PETHREAD = ^ETHREAD;
 

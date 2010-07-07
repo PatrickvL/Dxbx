@@ -291,6 +291,7 @@ begin
   begin
     dwCount := (pdwPushData^ shr 18);
     dwMethod := (pdwPushData^ and $3FFFF);
+    DbgPrintf('  Method: 0x%.08X      Count: 0x%.08X', [dwMethod, dwCount]);
 
     // Interpret GPU Instruction
     if (dwMethod = $000017FC) then  // NVPB_SetBeginEnd
