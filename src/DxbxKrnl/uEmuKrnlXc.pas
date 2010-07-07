@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmuFS,
   uEmuFile,
@@ -72,10 +73,14 @@ implementation
 procedure xboxkrnl_XcSHAInit(
   pbSHAContext: PUCHAR
   ); stdcall;
-// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
+// Source:shogun  Branch:163  Translator:JoaoHadouken  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('XcSHAInit');
+  DbgPrintf('EmuKrnl : XcSHAInit' +
+      #13#10'(' +
+      #13#10'   pbSHAContext        : 0x%.08X' +
+      #13#10');',
+      [pbSHAContext]);
   EmuSwapFS(fsXbox);
 end;
 
@@ -84,10 +89,16 @@ procedure xboxkrnl_XcSHAUpdate(
   pbInput: PUCHAR;
   dwInputLength: ULONG
   ); stdcall;
-// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
+// Source:shogun  Branch:163  Translator:JoaoHadouken  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('XcSHAUpdate');
+  DbgPrintf('EmuKrnl : XcSHAUpdate' +
+      #13#10'(' +
+      #13#10'   pbSHAContext        : 0x%.08X' +
+      #13#10'   pbInput             : 0x%.08X' +
+      #13#10'   dwInputLength       : 0x%.08X' +
+      #13#10');',
+      [pbSHAContext, pbInput, dwInputLength]);
   EmuSwapFS(fsXbox);
 end;
 
@@ -95,10 +106,25 @@ procedure xboxkrnl_XcSHAFinal(
   pbSHAContext: PUCHAR;
   pbDigest: PUCHAR
   ); stdcall;
-// Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
+// Source:shogun  Branch:163  Translator:JoaoHadouken  Done:100
+var
+  v: int;
 begin
   EmuSwapFS(fsWindows);
-  Unimplemented('XcSHAFinal');
+  DbgPrintf('EmuKrnl : XcSHAFinal' +
+      #13#10'(' +
+      #13#10'    pbSHAContext        : 0x%.08X' +
+      #13#10'    pbDigest            : 0x%.08X' +
+      #13#10');',
+      [pbSHAContext, pbDigest]);
+
+  if Assigned(pbDigest) then
+    // for now, we dont care about the digest
+    for v:=0 to 20-1 do
+    begin
+      PBytes(pbDigest)[v] := 0;
+    end;
+
   EmuSwapFS(fsXbox);
 end;
 
