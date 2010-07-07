@@ -402,8 +402,8 @@ function xboxkrnl_NtCreateEvent
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  szBuffer: P_char;
-  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
+  szBuffer: AnsiString;
+  wszObjectName: UnicodeString;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
   ret: NTSTATUS;
@@ -425,12 +425,11 @@ begin
 {$ENDIF}
 
   // initialize object attributes
-  if (szBuffer <> nil) then
+  if (szBuffer <> '') then
   begin
-    mbstowcs(@(wszObjectName[0]), '\??\', 4);
-    mbstowcs(@(wszObjectName[0+4]), szBuffer, 160-1);
+    wszObjectName := '\??\' + szBuffer;
 
-    RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
+    RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
     InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
   end;
@@ -438,7 +437,7 @@ begin
   NtObjAttr.RootDirectory := 0;
 
   // redirect to NtCreateEvent
-  if Assigned(szBuffer) then
+  if ('' <> szBuffer) then
     ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, @NtObjAttr, EVENT_TYPE(EventType), InitialState)
   else
     ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, nil, EVENT_TYPE(EventType), InitialState);
@@ -476,14 +475,16 @@ function xboxkrnl_NtCreateFile
 var
   ReplaceChar: _char;
   ReplaceIndex: int;
-  szBuffer: P_char;
+  szBuffer: AnsiString;
   v: int;
   CurIndex: int;
+  wszObjectName: UnicodeString;
   NtUnicodeString: UNICODE_STRING;
-  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
+
+  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtCreateFile' +
@@ -498,93 +499,62 @@ begin
      #13#10'   CreateDisposition   : 0x%.08X' +
      #13#10'   CreateOptions       : 0x%.08X' +
      #13#10');',
-     [FileHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
+     [FileHandle, DesiredAccess, ObjectAttributes, szBuffer,
      IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
 {$ENDIF}
 
   ReplaceChar := #0;
   ReplaceIndex := -1;
 
-  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
-
-  if (szBuffer <> NULL) then
+  if (szBuffer <> '') then
   begin
 {$IFDEF DEBUG}
     //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
 {$ENDIF}
 
     // Trim this (\??\) off :
-    if (szBuffer[0] = '\') and (szBuffer[1] = '?') and (szBuffer[2] = '?') and (szBuffer[3] = '\') then
-      Inc(szBuffer, 4);
+    if (szBuffer[1] = '\') and (szBuffer[2] = '?') and (szBuffer[3] = '?') and (szBuffer[4] = '\') then
+      System.Delete(szBuffer, 1, 4);
 
-    // D:\ should map to current directory
-    if ((szBuffer[0] = 'D') or (szBuffer[0] = 'd')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
+    // Check if the path starts with a volume indicator :
+    if (szBuffer[2] = ':') {and (szBuffer[3] = '\')} then
     begin
-      Inc(szBuffer, 3);
+      System.Delete(szBuffer, 2, 1); // Remove ':'
 
-      ObjectAttributes.RootDirectory := g_hCurDir;
+      case szBuffer[1] of // Check the volume letter, and set the RootDirectory accordingly
+        't', 'T': ObjectAttributes.RootDirectory := g_hTDrive;
+        'u', 'U': ObjectAttributes.RootDirectory := g_hUDrive;
+        'z', 'Z': ObjectAttributes.RootDirectory := g_hZDrive;
+      else
+//        'd', 'D', // D:\ should map to current directory
+//        'y', 'Y', // Going to map Y:\ to current directory as well (dashboard test, 3944)
+//        'q', 'Q': // Dxbx addition : Some homebrews map Q: to current Xbe dir too
+        ObjectAttributes.RootDirectory := g_hCurDir;
+        // TODO -oDxbx : We should probably use the settings made by IoCreateSymbolicLink here,
+        // once that function is implemented.
+      end;
 
-{$IFDEF DEBUG}
       DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
       DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
-{$ENDIF}
-    end
-    // Going to map Y:\ to current directory as well (dashboard test, 3944)
-    else if ((szBuffer[0] = 'Y') or (szBuffer[0] = 'y')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      Inc(szBuffer, 3);
-
-      ObjectAttributes.RootDirectory := g_hCurDir;
-
-{$IFDEF DEBUG}
-      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$XbePath\\%s"', [szBuffer]);
-{$ENDIF}
-    end
-    else if ((szBuffer[0] = 'T') or (szBuffer[0] = 't')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      Inc(szBuffer, 3);
-
-      ObjectAttributes.RootDirectory := g_hTDrive;
-
-{$IFDEF DEBUG}
-      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$DxbxPath\EmuDisk\T\%s"', [szBuffer]);
-{$ENDIF}
-    end
-    else if ((szBuffer[0] = 'U') or (szBuffer[0] = 'u')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      Inc(szBuffer, 3);
-
-      ObjectAttributes.RootDirectory := g_hUDrive;
-
-{$IFDEF DEBUG}
-      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$DxbxPath\EmuDisk\U\%s"', [szBuffer]);
-{$ENDIF}
-    end
-    else if ((szBuffer[0] = 'Z') or (szBuffer[0] = 'z')) and (szBuffer[1] = ':') and (szBuffer[2] = '\') then
-    begin
-      Inc(szBuffer, 3);
-
-      ObjectAttributes.RootDirectory := g_hZDrive;
-
-{$IFDEF DEBUG}
-      DbgPrintf('EmuKrnl : NtCreateFile Corrected path...');
-      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      DbgPrintf('  New:"$DxbxPath\EmuDisk\Z\%s"', [szBuffer]);
-{$ENDIF}
+      if ObjectAttributes.RootDirectory = g_hCurDir then
+      begin
+        System.Delete(szBuffer, 1, 2);
+        DbgPrintf('  New:"$XbePath\%s"', [szBuffer])
+      end
+      else
+      begin
+        DbgPrintf('  New:"$DxbxPath\EmuDisk\%s"', [szBuffer]);
+        System.Delete(szBuffer, 1, 2);
+      end;
     end;
 
     // Ignore wildcards. Xapi FindFirstFile uses the same path buffer for
     // NtOpenFile and NtQueryDirectoryFile. Wildcards are only parsed by
     // the latter.
+    // Dxbx note : Does this still apply, now that we use the correct string length?
+    if szBuffer <> '' then
     begin
-      v := 0;
+      v := 1;
       while szBuffer[v] <> #0 do
       begin
         // FIXME: Fallback to parent directory if wildcard is found.
@@ -596,25 +566,21 @@ begin
 
         Inc(v);
       end;
-    end;
 
-    // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
-    if (ReplaceIndex > -1) then
-    begin
-      ReplaceChar := szBuffer[ReplaceIndex];
-      szBuffer[ReplaceIndex] := #0;
-    end;
+      if (ReplaceIndex > -1) then
+      begin
+        ReplaceChar := szBuffer[ReplaceIndex];
+        szBuffer[ReplaceIndex] := #0;
+      end;
 
-    //printf('Aftr : %s', szBuffer); // MARKED OUT BY CXBX
+      //printf('Aftr : %s', szBuffer); // MARKED OUT BY CXBX
+    end;
   end;
 
   // initialize object attributes
-  if (szBuffer <> NULL) then
-    mbstowcs(@(wszObjectName[0]), szBuffer, MAX_PATH-1)
-  else
-    wszObjectName[0] := 0;
+  wszObjectName := UnicodeString(szBuffer);
 
-  JwaNative.RtlInitUniCodeString(@NtUnicodeString, @(wszObjectName[0]));
+  JwaNative.RtlInitUniCodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
   JwaWinType.InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
 
@@ -637,8 +603,8 @@ begin
       szBuffer[ReplaceIndex] := ReplaceChar;
 
     // Strip filename from path.
-    CurIndex := strlen(szBuffer) - 1;
-    while (CurIndex >= 0) do
+    CurIndex := Length(szBuffer);
+    while (CurIndex >= 1) do
     begin
       if (szBuffer[CurIndex] = '\') then
       begin
@@ -649,8 +615,8 @@ begin
       Dec(CurIndex);
     end;
 
-    if (CurIndex = -1) then
-      ReplaceIndex := 0;
+    if (CurIndex < 1) then
+      ReplaceIndex := 1;
 
     // Modify buffer again.
     ReplaceChar := szBuffer[ReplaceIndex];
@@ -659,8 +625,8 @@ begin
     DbgPrintf('  New:"$CurRoot\%s"', [szBuffer]);
 {$ENDIF}
 
-    mbstowcs(@(wszObjectName[0]), szBuffer, MAX_PATH-1);
-    JwaNative.RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
+    wszObjectName := UnicodeString(szBuffer);
+    JwaNative.RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
     Result := JwaNative.NtCreateFile(
         FileHandle, DesiredAccess, @NtObjAttr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
@@ -674,10 +640,6 @@ begin
   else
     DbgPrintf('EmuKrnl : NtCreateFile = 0x%.08X', [FileHandle^]);
 {$ENDIF}
-
-  // restore original buffer
-  if (ReplaceIndex <> -1) then
-    szBuffer[ReplaceIndex] := ReplaceChar;
 
   // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
   //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
@@ -706,8 +668,8 @@ function xboxkrnl_NtCreateMutant
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  szBuffer: P_char;
-  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
+  szBuffer: AnsiString;
+  wszObjectName: UnicodeString;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
   ret: NTSTATUS;
@@ -727,12 +689,11 @@ begin
 {$ENDIF}
 
   // initialize object attributes
-  if (szBuffer <> nil) then
+  if (szBuffer <> '') then
   begin
-    mbstowcs(@(wszObjectName[0]), '\??\', 4);
-    mbstowcs(@(wszObjectName[0+4]), szBuffer, MAX_PATH-1);
+    wszObjectName := '\??\' + szBuffer;
 
-    RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
+    RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
     InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
   end;
@@ -740,7 +701,7 @@ begin
   NtObjAttr.RootDirectory := 0;
 
   // redirect to NtCreateMutant
-  if Assigned(szBuffer) then
+  if ('' <> szBuffer) then
     ret := NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, @NtObjAttr, InitialOwner)
   else
     ret := NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, nil, InitialOwner);
@@ -988,7 +949,7 @@ function xboxkrnl_NtOpenFile
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : NtOpenFile' +
+  DbgPrintf('EmuKrnl : NtOpenFile >>' + // Dxbx note : >> indicates this is a forward
     #13#10'(' +
     #13#10'   FileHandle          : 0x%.08X' +
     #13#10'   DesiredAccess       : 0x%.08X' +
@@ -1086,13 +1047,16 @@ function xboxkrnl_NtQueryDirectoryFile
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   ret: NTSTATUS;
+  szBuffer: AnsiString;
+  wszObjectName: UnicodeString;
   NtFileMask: UNICODE_STRING;
-  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
   FileDirInfo: PFILE_DIRECTORY_INFORMATION;
   mbstr: P_char;
   wcstr: pwchar_t;
 begin
   EmuSwapFS(fsWindows);
+
+  szBuffer := PSTRING_String(FileMask);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryDirectoryFile' +
@@ -1110,7 +1074,7 @@ begin
       #13#10');',
       [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
        FileInformation, Length, Ord(FileInformationClass), FileMask,
-       PSTRING_String(FileMask), RestartScan]);
+       szBuffer, RestartScan]);
 {$ENDIF}
 
   if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
@@ -1118,18 +1082,15 @@ begin
 
   // initialize FileMask
   begin
-    if (FileMask <> nil) then
-      mbstowcs(@(wszObjectName[0]), FileMask.Buffer, 160-1)
-    else
-      mbstowcs(@(wszObjectName[0]), '', 160-1);
+    wszObjectName := UnicodeString(szBuffer);
 
-    RtlInitUnicodeString(@NtFileMask, @(wszObjectName[0]));
+    RtlInitUnicodeString(@NtFileMask, PWideChar(wszObjectName));
   end;
 
   FileDirInfo := PFILE_DIRECTORY_INFORMATION(DxbxMalloc($40 + 160*2));
 
   mbstr := @FileInformation.FileName[0]; // DXBX note : This is Ansi on XBox!
-  wcstr := FileDirInfo.FileName;
+  wcstr := @FileDirInfo.FileName[0];
 
   repeat
     ZeroMemory(wcstr, 160*2);
@@ -1185,12 +1146,14 @@ function xboxkrnl_NtQueryFullAttributesFile
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
-  szBuffer: P_char;
-  wszObjectName: array [0..MAX_PATH-1] of wchar_t;
+  szBuffer: AnsiString;
+  wszObjectName: UnicodeString;
   NtUnicodeString: UNICODE_STRING;
   NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
 begin
   EmuSwapFS(fsWindows);
+
+  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtQueryFullAttributesFile'+
@@ -1198,16 +1161,14 @@ begin
      #13#10'   ObjectAttributes    : 0x%.08X ("%s")'+
      #13#10'   Attributes          : 0x%.08X'+
      #13#10');',
-     [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), Attributes]);
+     [ObjectAttributes, szBuffer, Attributes]);
 {$ENDIF}
-
-  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
   // initialize object attributes
   begin
-    mbstowcs(@(wszObjectName[0]), szBuffer, 160-1);
+    wszObjectName := UnicodeString(szBuffer);
 
-    RtlInitUnicodeString(@NtUnicodeString, @(wszObjectName[0]));
+    RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
     InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
   end;
@@ -1636,6 +1597,9 @@ begin
          Length, Ord(FileInformationClass)]);
 {$ENDIF}
 
+  // TODO some FileInformationClasses contain file paths.
+  // These should be corrected just like NtCreateFile.
+  // Other Nt functions might require the same attention
   Result := JwaNative.NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FILE_INFORMATION_CLASS(FileInformationClass));
 
   EmuSwapFS(fsXbox);
