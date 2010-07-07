@@ -49,9 +49,9 @@ procedure SetDWordBits(var Bits: DWORD; const aIndex: Integer; const aValue: Int
 function GetByteBits(const Bits: Byte; const aIndex: Integer): Byte;
 procedure SetByteBits(var Bits: Byte; const aIndex: Integer; const aValue: Byte);
 
-function PSTRING_String(const aValue: PANSI_STRING): PAnsiChar;
-function PUNICODE_STRING_String(const aValue: PUNICODE_STRING): PAnsiChar;
-function POBJECT_ATTRIBUTES_String(const aValue: XboxKrnl.POBJECT_ATTRIBUTES): PAnsiChar;
+function PSTRING_String(const aValue: PANSI_STRING): AnsiString;
+function PUNICODE_STRING_String(const aValue: PUNICODE_STRING): AnsiString;
+function POBJECT_ATTRIBUTES_String(const aValue: XboxKrnl.POBJECT_ATTRIBUTES): AnsiString;
 
 var
   // ! thread local storage
@@ -182,38 +182,33 @@ begin
   {var}Bits := (Bits and (not (Mask shl Offset))) or DWORD(aValue shl Offset);
 end;
 
-function PSTRING_String(const aValue: PANSI_STRING): PAnsiChar;
+function PSTRING_String(const aValue: PANSI_STRING): AnsiString;
 begin
   if Assigned(aValue) then
-    Result := PAnsiChar(aValue.Buffer)
+    SetString(Result, aValue.Buffer, aValue.Length)
   else
-    Result := nil;
+    Result := '';
 end;
 
-const
-  IntermediateStringMax = 16;
+function PUNICODE_STRING_String(const aValue: PUNICODE_STRING): AnsiString;
 var
-  IntermediateStrings: array [0..IntermediateStringMax-1] of AnsiString;
-  IntermediateStringCounter: Integer = 0;
-function PUNICODE_STRING_String(const aValue: PUNICODE_STRING): PAnsiChar;
+  TmpUnicodeStr: UnicodeString;
 begin
   if Assigned(aValue) then
   begin
-    // Dxbx note : Keep a few copys around, to prevent invalid stack access :
-    IntermediateStrings[IntermediateStringCounter] := AnsiString(UnicodeString(aValue.Buffer));
-    Result := PAnsiChar(IntermediateStrings[IntermediateStringCounter]); // This cast now points to a buffered string
-    IntermediateStringCounter := (IntermediateStringCounter + 1) mod IntermediateStringMax;
+    SetString(TmpUnicodeStr, aValue.Buffer, aValue.Length);
+    Result := AnsiString(TmpUnicodeStr);
   end
   else
-    Result := nil;
+    Result := '';
 end;
 
-function POBJECT_ATTRIBUTES_String(const aValue: XboxKrnl.POBJECT_ATTRIBUTES): PAnsiChar;
+function POBJECT_ATTRIBUTES_String(const aValue: XboxKrnl.POBJECT_ATTRIBUTES): AnsiString;
 begin
   if Assigned(aValue) then
     Result := PSTRING_String(aValue.ObjectName) // Dxbx note : This is ANSI on Xbox!
   else
-    Result := nil;
+    Result := '';
 end;
 
 end.
