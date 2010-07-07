@@ -281,7 +281,7 @@ begin
 
   g_strCurDrive := szBuffer;
 
-  g_hCurDir := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+  g_hCurDir := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
   if g_hCurDir = INVALID_HANDLE_VALUE then
     _DxbxKrnlCleanup('Could not map D:\');
 
@@ -308,7 +308,7 @@ begin
       CreateDirectory(PChar(szBuffer), nil);
 
       g_strTDrive := szBuffer;
-      g_hTDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+      g_hTDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
 
       if g_hTDrive = INVALID_HANDLE_VALUE then
         _DxbxKrnlCleanup('Could not map T:\');
@@ -327,7 +327,7 @@ begin
       CreateDirectory(PChar(szBuffer), nil);
 
       g_strUDrive := szBuffer;
-      g_hUDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+      g_hUDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
 
       if g_hUDrive = INVALID_HANDLE_VALUE then
         _DxbxKrnlCleanup('Could not map U:\');
@@ -349,7 +349,7 @@ begin
       *)
 
       g_strZDrive := szBuffer;
-      g_hZDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+      g_hZDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
 
       if g_hUDrive = INVALID_HANDLE_VALUE then
         _DxbxKrnlCleanup('Could not map Z:\');

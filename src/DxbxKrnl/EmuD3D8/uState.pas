@@ -340,7 +340,7 @@ begin
     and (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_POINTSPRITEENABLE] = DWord(BOOL_TRUE)) then // Dxbx note : DWord cast to prevent warning
     begin
       // pCur := Texture Stage 3 States
-      pCur := @(XTL_EmuD3DDeferredTextureState[2*32]);
+      pCur := @(XTL_EmuD3DDeferredTextureState[3*32]); // StrikerX3: why was this 2*32?
 
       // set the point sprites texture
       IDirect3DDevice8(g_pD3DDevice8).GetTexture(3, PIDirect3DBaseTexture8(@pTexture));
