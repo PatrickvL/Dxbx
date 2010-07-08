@@ -2317,46 +2317,46 @@ begin
 
   IDirect3DDevice8(g_pD3DDevice8).GetViewport({out}currentViewport);
   // resize to fit current viewport (otherwise crashes occur)
-  begin
-    if(dwX < currentViewport.X) then
-    begin
-      EmuWarning('Moving Viewport->X to %d', [currentViewport.X]);
-      pViewport.X := currentViewport.X;
-    end;
-    if(dwY < currentViewport.Y) then
-    begin
-      EmuWarning('Moving Viewport->Y to %d', [currentViewport.Y]);
-      pViewport.Y := currentViewport.Y;
-    end;
-    if (dwWidth > currentViewport.Width - dwX) then
-    begin
-      EmuWarning('Resizing Viewport.Width to %d', [currentViewport.Width - dwX]);
-      pViewport.Width := currentViewport.Width - dwX;
-    end;
-
-    if (dwHeight > currentViewport.Height - dwY) then
-    begin
-      EmuWarning('Resizing Viewport.Height to %d', [currentViewport.Height - dwY]);
-      pViewport.Height := currentViewport.Height - dwY;
-    end;
-  end;
+//  begin
+//    if(dwX < currentViewport.X) then
+//    begin
+//      EmuWarning('Moving Viewport->X to %d', [currentViewport.X]);
+//      pViewport.X := currentViewport.X;
+//    end;
+//    if(dwY < currentViewport.Y) then
+//    begin
+//      EmuWarning('Moving Viewport->Y to %d', [currentViewport.Y]);
+//      pViewport.Y := currentViewport.Y;
+//    end;
+//    if (dwWidth > currentViewport.Width - dwX) then
+//    begin
+//      EmuWarning('Resizing Viewport.Width to %d', [currentViewport.Width - dwX]);
+//      pViewport.Width := currentViewport.Width - dwX;
+//    end;
+//
+//    if (dwHeight > currentViewport.Height - dwY) then
+//    begin
+//      EmuWarning('Resizing Viewport.Height to %d', [currentViewport.Height - dwY]);
+//      pViewport.Height := currentViewport.Height - dwY;
+//    end;
+//  end;
 
   Result := IDirect3DDevice8(g_pD3DDevice8).SetViewport(pViewport^);
 
   // restore originals
-  begin
-    if(dwX < currentViewport.X) then
-      pViewport.X := dwX;
-
-    if(dwY < currentViewport.Y) then
-      pViewport.Y := dwY;
-
-    if(dwWidth > currentViewport.Width) then
-      pViewport.Width := dwWidth;
-
-    if(dwHeight > currentViewport.Height) then
-      pViewport.Height := dwHeight;
-  end;
+//  begin
+//    if(dwX < currentViewport.X) then
+//      pViewport.X := dwX;
+//
+//    if(dwY < currentViewport.Y) then
+//      pViewport.Y := dwY;
+//
+//    if(dwWidth > currentViewport.Width) then
+//      pViewport.Width := dwWidth;
+//
+//    if(dwHeight > currentViewport.Height) then
+//      pViewport.Height := dwHeight;
+//  end;
 
   if FAILED(Result) then
   begin
@@ -3299,7 +3299,10 @@ begin
     PCUsage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
     PCPool := D3DPOOL_MANAGED;
 
-    EmuAdjustPower2(@Width, @Height);
+    if ((g_D3DCaps.TextureCaps and D3DPTEXTURECAPS_POW2) <> 0) then
+    begin
+      EmuAdjustPower2(@Width, @Height);
+    end;
 
     New({var PX_D3DTexture}ppTexture^);
 
@@ -3839,6 +3842,11 @@ begin
   // hRet = IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
   Result := IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(iif((g_iWireframe = 0), pBaseTexture8, nil)));
 
+  if FAILED(Result) then
+  begin
+    EmuWarning('SetTextureFailed!\n');
+  end;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -3979,7 +3987,7 @@ begin
   g_IVBFVF := 0;
 
   // default values
-  ZeroMemory(@(g_IVBTable[0]), sizeof(_D3DIVB)*1024);
+  ZeroMemory(g_IVBTable, sizeof(_D3DIVB)*1024);
 
   if (g_pIVBVertexBuffer = nil) then
   begin
@@ -4054,8 +4062,16 @@ begin
 
   dwA := a; dwB := b;
 
+  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
+  begin
+    dwA := DWORD(a > 0);
+    dwB := DWORD(b > 0);
+  end;
+
+
   // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b,a=0 or 1)
-  Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), 0.0, 1.0);
+  //Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), 0.0, 1.0);
+  Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, (dwA), (dwB), 0.0, 1.0);
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexData4f
@@ -4101,7 +4117,7 @@ begin
         g_IVBTable[o].Position.x := a;
         g_IVBTable[o].Position.y := b;
         g_IVBTable[o].Position.z := c;
-        g_IVBTable[o].Rhw := 1.0; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
+        g_IVBTable[o].Rhw := d; //1.0; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
 
         Inc(g_IVBTblOffs);
 
@@ -4138,10 +4154,10 @@ begin
    {3=}X_D3DVSDE_DIFFUSE:
       begin
         o := g_IVBTblOffs;
-        ca := FtoDW(d) shl 24;
-        cr := FtoDW(a) shl 16;
-        cg := FtoDW(b) shl 8;
-        cb := FtoDW(c) shl 0;
+        ca := Trunc(d * 255) shl 24; //FtoDW(d) shl 24;
+        cr := Trunc(a * 255) shl 16; //FtoDW(a) shl 16;
+        cg := Trunc(b * 255) shl 8; //FtoDW(b) shl 8;
+        cb := Trunc(c * 255) shl 0; //FtoDW(c) shl 0;
 
         g_IVBTable[o].dwDiffuse := ca or cr or cg or cb;
 
@@ -4151,10 +4167,10 @@ begin
     {4=}X_D3DVSDE_SPECULAR:
       begin
         o := g_IVBTblOffs;
-        ca := FtoDW(d) shl 24;
-        cr := FtoDW(a) shl 16;
-        cg := FtoDW(b) shl 8;
-        cb := FtoDW(c) shl 0;
+        ca := Trunc(d * 255) shl 24; //FtoDW(d) shl 24;
+        cr := Trunc(a * 255) shl 16; //FtoDW(a) shl 16;
+        cg := Trunc(b * 255) shl 8; //FtoDW(b) shl 8;
+        cb := Trunc(c * 255) shl 0; //FtoDW(c) shl 0;
 
         g_IVBTable[o].dwSpecular := ca or cr or cg or cb;
 
@@ -4248,7 +4264,7 @@ function XTL_EmuIDirect3DDevice8_SetVertexData4ub
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Patrickvl  Done:100
 var
-  dwA, dwB, dwC, dwD: DWORD;
+  dwA, dwB, dwC, dwD: FLOAT;
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
@@ -4266,17 +4282,26 @@ begin
 
   dwA := a; dwB := b; dwC := c; dwD := d;
 
+  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
+  begin
+    dwA := dwA / 255.0;
+    dwB := dwB / 255.0;
+    dwC := dwC / 255.0;
+    dwD := dwD / 255.0;
+  end;
+
   // TODO -oDxbx : Handle Vertex Attributes that need a Color (in this case, r,g,b=0.0-255.0, a=0.0-1.0)
   // TODO -oDxbx : Shouldn't these be multiplied with 256.0 ?
-  Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+  //Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+  Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, (dwA), (dwB), (dwC), (dwD));
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexData4s
 (
     Register_: INT;
     a: SHORT;
-    b: SHORT; 
-    c: SHORT; 
+    b: SHORT;
+    c: SHORT;
     d: SHORT
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Patrickvl  Done:100
@@ -4299,8 +4324,17 @@ begin
 
   dwA := a; dwB := b; dwC := c; dwD := d;
 
+  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
+  begin
+    dwA := DWORD(a > 0);
+    dwB := DWORD(b > 0);
+    dwC := DWORD(c > 0);
+    dwD := DWORD(d > 0);
+  end;
+
   // TODO -oDxbx : Handle Vertex Attributes that need a Color
-  Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+  //Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+  Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, (dwA), (dwB), (dwC), (dwD));
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexDataColor
@@ -4327,10 +4361,18 @@ begin
 {$ENDIF}
 
   // TODO -oDxbx note : Is this correct? Shouldn't it be r,b,g,a ?
-  a := DWtoF((Color and $FF000000) shr 24);
-  r := DWtoF((Color and $00FF0000) shr 16);
-  g := DWtoF((Color and $0000FF00) shr 8);
-  b := DWtoF((Color and $000000FF) shr 0);
+  a := ((Color and $FF000000) shr 24);
+  r := ((Color and $00FF0000) shr 16);
+  g := ((Color and $0000FF00) shr 8);
+  b := ((Color and $000000FF) shr 0);
+
+  if (Register_ = X_D3DVSDE_DIFFUSE) or (Register_ = X_D3DVSDE_SPECULAR) then
+  begin
+    a := a / 255.0;
+    r := r / 255.0;
+    g := g / 255.0;
+    b := b / 255.0;
+  end;
 
   Result := XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_, r, g, b, a);
 end;
@@ -7883,6 +7925,8 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
+  EmuUnswizzleActiveTexture();
+
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
   VPDesc.PrimitiveType := PrimitiveType;
@@ -7948,6 +7992,8 @@ begin
 {$ENDIF}
 
   XTL_EmuUpdateDeferredStates();
+
+  EmuUnswizzleActiveTexture();
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -8056,6 +8102,8 @@ begin
   end;
 
   XTL_EmuUpdateDeferredStates();
+
+  EmuUnswizzleActiveTexture();
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [DWORD(PrimitiveType)]);
@@ -8205,6 +8253,8 @@ begin
     DxbxKrnlCleanup('g_pIndexBuffer != 0');
 
   XTL_EmuUpdateDeferredStates();
+
+  EmuUnswizzleActiveTexture();
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);

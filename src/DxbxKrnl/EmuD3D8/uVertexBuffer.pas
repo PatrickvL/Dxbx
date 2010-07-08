@@ -1074,6 +1074,8 @@ var
 
   i: uint32;
   z: uint32;
+
+  dwRemainingSize : DWORD;
 begin
   pStream := @(m_pStreams[uiStream]);
 
@@ -1213,10 +1215,18 @@ begin
    This mainly becomes a problem whenever dwOffset <> 0 though.
 *)
   // Copy the nonmodified data
-  memcpy(pPatchedVertexData, pOrigVertexData, pPatchDesc.dwOffset);
-  memcpy(@pPatchedVertexData[pPatchDesc.dwOffset+dwNewSize],
-         @pOrigVertexData[pPatchDesc.dwOffset+dwOriginalSize],
-         dwOriginalSizeWR - pPatchDesc.dwOffset - dwOriginalSize);
+  if (pPatchDesc.dwOffset > 0) then
+  begin
+    memcpy(pPatchedVertexData, pOrigVertexData, pPatchDesc.dwOffset * pStream.uiOrigStride);
+  end;
+  dwRemainingSize := dwOriginalSizeWR - (pPatchDesc.dwOffset * pStream.uiOrigStride) - dwOriginalSize;
+  if (dwRemainingSize > 0) then
+  begin
+    memcpy(
+      pPatchedVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwNewSize,
+      pOrigVertexData + (pPatchDesc.dwOffset * pStream.uiOrigStride) + dwOriginalSize,
+      dwRemainingSize);
+  end;
 
   // Quad list
   if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
@@ -1586,7 +1596,7 @@ begin
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
   VPDesc.dwOffset := 0;
-  VPDesc.pVertexStreamZeroData := g_pIVBVertexBuffer;//g_IVBTable;
+  VPDesc.pVertexStreamZeroData := g_pIVBVertexBuffer; //g_IVBTable;
   VPDesc.uiVertexStreamZeroStride := uiStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 
