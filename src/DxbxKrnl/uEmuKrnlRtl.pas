@@ -358,14 +358,21 @@ uses
 // Critical Section implementation from ReactOS, modified to use Xbox1 data structure.
 // See http://code.google.com/p/reactos-mirror/source/browse/trunk/reactos/lib/rtl/critical.c
 
+// Call this when changing any Xbox1 field that can be mapped to the 'free' Native section :
+procedure X_MimickNative(CriticalSection: PRTL_CRITICAL_SECTION);
+begin
+  // CriticalSection.Overlapped.DebugInfo := nil; // May not be safe to do
+  CriticalSection.Overlapped.LockCount := CriticalSection.LockCount;
+  // CriticalSection.Overlapped.LockSemaphore - do not overwrite, as we use this one for native synchronization
+  CriticalSection.Overlapped.OwningThread := CriticalSection.OwningThread;
+end;
+
 procedure X_RtlInitializeCriticalSection(CriticalSection: PRTL_CRITICAL_SECTION);
 begin
-  CriticalSection.LockCount      := -1;
-  CriticalSection.RecursionCount := 0;
-  CriticalSection.OwningThread   := 0;
+  ZeroMemory(CriticalSection, SizeOf(CriticalSection));
+  CriticalSection.LockCount := -1;
 
-  // NtClose(CriticalSection.LockSemaphore); - DON'T ! This causes $C0000008 exceptions!
-  CriticalSection.LockSemaphore  := 0;
+  X_MimickNative(CriticalSection);
 end;
 
 function X_RtlTryEnterCriticalSection(CriticalSection: PRTL_CRITICAL_SECTION): _BOOLEAN;
@@ -379,6 +386,8 @@ begin
     // It's ours
     CriticalSection.OwningThread := GetCurrentThreadId();
     CriticalSection.RecursionCount := 1;
+
+    X_MimickNative(CriticalSection);
     Result := TRUE;
   end
   else if (CriticalSection.OwningThread = GetCurrentThreadId()) then
@@ -386,6 +395,8 @@ begin
     // It's already ours
     InterlockedIncrement({var}CriticalSection.LockCount);
     Inc(CriticalSection.RecursionCount);
+
+    X_MimickNative(CriticalSection);
     Result := TRUE;
   end;
 end;
@@ -393,7 +404,7 @@ end;
 function RtlpCreateCriticalSectionSem(CriticalSection: PRTL_CRITICAL_SECTION): HANDLE;
 begin
   // Check if we have an event
-  Result := CriticalSection.LockSemaphore;
+  Result := CriticalSection.Overlapped.LockSemaphore;
   if (Result = 0) then
   begin
     // No, so create it
@@ -401,11 +412,13 @@ begin
       // We failed, this is bad...
       Exit;
 
-    if (InterlockedCompareExchange({var}Integer(CriticalSection.LockSemaphore), Result, 0) <> 0) then
+    if (InterlockedCompareExchange({var}Integer(CriticalSection.Overlapped.LockSemaphore), Result, 0) <> 0) then
     begin
       NtClose(Result);  // somebody beat us to it
-      Result := CriticalSection.LockSemaphore;
+      Result := CriticalSection.Overlapped.LockSemaphore;
     end;
+
+    X_MimickNative(CriticalSection);
   end;
 end;
 
@@ -426,6 +439,8 @@ begin
   // Try to Lock it
   if (InterlockedIncrement({var}CriticalSection.LockCount) <> 0) then
   begin
+    X_MimickNative(CriticalSection);
+
     // We've failed to lock it! Does this thread
     // actually own it?
     if (CriticalSection.OwningThread = CurrentThreadId) then
@@ -453,6 +468,8 @@ begin
   // the lock)!
   CriticalSection.OwningThread := CurrentThreadId;
   CriticalSection.RecursionCount := 1;
+
+  X_MimickNative(CriticalSection);
 end;
 
 procedure X_RtlpUnWaitCriticalSection(CriticalSection: PRTL_CRITICAL_SECTION);
@@ -481,6 +498,8 @@ begin
       X_RtlpUnWaitCriticalSection(CriticalSection);
     end;
   end;
+
+  X_MimickNative(CriticalSection);
 end;
 
 {$ENDIF XBOX_CRITICAL_SECTION}
