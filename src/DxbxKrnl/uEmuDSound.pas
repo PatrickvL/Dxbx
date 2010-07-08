@@ -1321,6 +1321,7 @@ begin
   ppBuffer^.EmuLockPtr2 := nil;
   ppBuffer^.EmuLockBytes2 := 0;
   ppBuffer^.EmuFlags := dwEmuFlags;
+  ppBuffer^.EmuListener := nil; // Dxbx addition : Prevent automatic interface release-problems on non-nil!
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuDSound : EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X', [ppBuffer^, pDSBufferDesc.dwBufferBytes]);
@@ -1339,7 +1340,7 @@ begin
 
   // Dxbx addition : Create a IDirectSound3DListener too, so that all 3-D sound effects can be implemented through that,
   // since on the Xbox1 there is a 1:1 correspondence between the IDirectSound8 object and the listener :
-  if (pdsbd.dwFlags and X_DSBCAPS_CTRL3D) > 0 then
+  if (ppBuffer^.EmuBufferDesc.dwFlags and X_DSBCAPS_CTRL3D) > 0 then
   begin
     if FAILED(IDirectSoundBuffer(ppBuffer^.EmuDirectSoundBuffer8).
          QueryInterface(IDirectSound3DListener, {out}IDirectSound3DListener(ppBuffer^.EmuListener))) then
@@ -2623,11 +2624,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-(*  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush',
+  DbgPrintf('EmuDSound : EmuCDirectSoundStream_Flush' +
       #13#10'(' +
       #13#10'   pThis                     : 0x%.08X' +
       #13#10');',
-      [pThis]);  *)
+      [pThis]);
 {$ENDIF}
 
   // TODO -oCXBX: Actually Flush
