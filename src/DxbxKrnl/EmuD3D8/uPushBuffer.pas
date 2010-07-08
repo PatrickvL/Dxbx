@@ -70,6 +70,8 @@ var g_bPBSkipPusher: _bool = false;
 procedure DbgDumpMesh(pIndexData: PWORD; dwCount: DWORD); {NOPATCH}
 {$ENDIF}
 
+procedure EmuUnswizzleActiveTexture(); {NOPATCH}
+
 implementation
 
 uses
@@ -118,9 +120,13 @@ var
   iPoint: TPoint;
 
   pTemp: Pointer;
+
+  Stage: int;
 begin
+  for Stage := 0 to 4 - 1 do
+  begin
   // for current usages, we're always on stage 0
-  pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[0]);
+  pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[Stage]);
 
   if (pPixelContainer = NULL) or (0 = (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
     Exit;
@@ -195,6 +201,7 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('Active texture was unswizzled');
 {$ENDIF}
+  end;
   end;
 
 end;
