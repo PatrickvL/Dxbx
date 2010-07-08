@@ -787,20 +787,67 @@ type
 // ******************************************************************
 // * RTL_CRITICAL_SECTION
 // ******************************************************************
+
+(* Below, we define the Xbox1 CriticalSection struct to look as much as the Native version.
+   Individually, they look like this :
+
+  Native._RTL_CRITICAL_SECTION = record
+    {0x00}DebugInfo: PRTL_CRITICAL_SECTION_DEBUG;
+    {0x04}LockCount: LONG;
+    {0x08}RecursionCount: LONG;
+    {0x0C}OwningThread: HANDLE;
+    {0x10}LockSemaphore: HANDLE;
+    {0x14}SpinCount: ULONG_PTR;
+  end; {0x18}
+
+  Xbox1._RTL_CRITICAL_SECTION = record
+    {0x00}RawEvent: array [0..4-1] of ULONG_PTR
+    {0x10}LockCount: LONG;
+    {0x14}RecursionCount: LONG;
+    {0x18}OwningThread: HANDLE;
+  end; {0x1C}
+*)
+
 type
   RTL_CRITICAL_SECTION = packed record
-    Unknown: array [0..3-1] of DWORD;                      // 0x00
+    // There's four different declarations possible of this section :
+    Overlapped: record case Integer of
+      0: (Unknown: array [0..4-1] of DWORD                ); // 0x00 .. 0x0F
+      1: (RawEvent: array [0..4-1] of ULONG_PTR           ); // 0x00 .. 0x0F
 
-    // Dxbx Note : Unknown is an in-place event (also known as RawEvent), which would save us from
-    // allocating a separate synchronization primitive (a semaphore right now) :
-    LockSemaphore: HANDLE; // Dxbx addition - not sure this is right, but I had to put this somewhere!
-    //
+      //  The following field is used for blocking when there is contention for
+      //  the resource [Xbox1]
+      2: (Event: packed record
+            Type_: UCHAR;                                    // 0x00
+            Absolute_: UCHAR;                                // 0x01
+            Size: UCHAR;                                     // 0x02
+            Inserted: UCHAR;                                 // 0x03
+            SignalState: LONG;                               // 0x04
+            WaitListHead: LIST_ENTRY;                        // 0x08 .. 0x0F
+          end);
+
+      // Dxbx Note : On the Xbox1, this data is an in-place event (also known as a RawEvent, which
+      // you can see above), which doesn't have to be allocated anymore, as it's already in-place.
+      //
+      // However, I haven't found an way to initialize such a beast on WinNT.
+      //
+      // So as an alternative, I now try to mimick as much of the native _RTL_CRITICAL_SECTION in here,
+      // in an attempt to make WinNT see this structure as if it was a native critical section
+      // (which I hope will make it compatible with WaitForSingle/MultipleObjects, and other API's) :
+      3: (
+        DebugInfo: PRTL_CRITICAL_SECTION_DEBUG;              // 0x00 - keep this nil
+
+        LockCount: LONG;                                     // 0x04 - Copy Xbox1.LockCount into this
+        LockSemaphore: HANDLE;                               // 0x08 - overlaps Native.RecursionCount, safest to reuse
+        OwningThread: HANDLE                                 // 0x0C - Copy Xbox1.OwningThread into this
+        );
+    end;
+
     //  The following three fields control entering and exiting the critical
-    //  section for the resource
-    //
-    LockCount: LongInt;                                    // 0x10 = 16
-    RecursionCount: LongInt;                               // 0x14 = 20
-    OwningThread: ULONG;                                   // 0x18 = 24
+    //  section for the resource [Xbox1]
+    LockCount: LongInt;                                   // 0x10 = 16
+    RecursionCount: LongInt;                              // 0x14 = 20
+    OwningThread: ULONG                                   // 0x18 = 24
   end;
   PRTL_CRITICAL_SECTION = ^RTL_CRITICAL_SECTION;
 

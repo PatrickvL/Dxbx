@@ -1054,7 +1054,7 @@ const
 
 function VertexPatcher.PatchPrimitive(pPatchDesc: PVertexPatchDesc;
                                       uiStream: UINT): _bool;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:90
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pStream: PPATCHEDSTREAM;
   dwOriginalSize: DWORD;
