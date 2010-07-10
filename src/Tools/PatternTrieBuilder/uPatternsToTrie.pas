@@ -248,13 +248,26 @@ end;
 function TPatternTrieNode.AddLeaf(const aFunction: PVersionedXboxLibraryFunction): Boolean;
 
   function _CanBeMerged(const aFunction1, aFunction2: PVersionedXboxLibraryFunction): Boolean;
+  var
+    i: Integer;
   begin
     Result := (aFunction1.Stored.FunctionLength = aFunction2.Stored.FunctionLength)
           and (aFunction1.Stored.CRCValue = aFunction2.Stored.CRCValue)
           and (aFunction1.Stored.CRCLength = aFunction2.Stored.CRCLength)
-          // TODO : Is needs to be a contents-compare; Is it really?
-          and (aFunction1.SymbolReferences = aFunction2.SymbolReferences);
+          and (Length(aFunction1.SymbolReferences) = Length(aFunction2.SymbolReferences));
+
+    for i := 0 to Length(aFunction1.SymbolReferences) - 1 do
+    begin
+      if not Result then
+        Exit;
+
+      Result := (aFunction1.SymbolReferences[i].Offset        = aFunction2.SymbolReferences[i].Offset)
+            and (aFunction1.SymbolReferences[i].BaseOffset    = aFunction2.SymbolReferences[i].BaseOffset)
+            and (aFunction1.SymbolReferences[i].ReferenceFlag = aFunction2.SymbolReferences[i].ReferenceFlag)
+            and (aFunction1.SymbolReferences[i].Name          = aFunction2.SymbolReferences[i].Name);
+    end;
   end;
+
 var
   i: Integer;
   Leaf: TPatternTrieLeaf;
