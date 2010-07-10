@@ -76,6 +76,16 @@ type
 
   TLineCallback = function (aLinePtr: PAnsiChar; aLength: Integer; aData: Pointer): Boolean;
 
+  TGenericCompare = function (const List: Pointer; const Index: Integer; const SearchData: Pointer): Integer;
+
+  function GenericBinarySearch(const List: Pointer; const Count: Integer; const SearchData: Pointer; const Compare: TGenericCompare; out Index: Integer): Boolean;
+
+type
+  TListHelper = class helper for TList
+  public
+    function BinarySearch(const SearchData: Pointer; out Index: Integer; const Compare: TListSortCompare = nil): Boolean;
+  end;
+
   TStreamHelper = class helper for TStream
   public
     procedure WriteString(const aString: AnsiString);
@@ -126,6 +136,7 @@ function IsFolder(const aFilePath: string): Boolean;
 
 function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): Integer;
 
+function StartsWithString(const aString, aPrefix: AnsiString): Boolean;
 function StartsWithText(const aString, aPrefix: string): Boolean;
 
 procedure Swap(var aElement1, aElement2); overload;
@@ -407,6 +418,11 @@ begin
     Result := dwValue
   else
     Result := dwValue - ((dwValue - 1) mod dwMult) + (dwMult - 1);
+end;
+
+function StartsWithString(const aString, aPrefix: AnsiString): Boolean;
+begin
+  Result := strncmp(PAnsiChar(aString), PAnsiChar(aPrefix), Length(aPrefix)) = 0;
 end;
 
 function StartsWithText(const aString, aPrefix: string): Boolean;
@@ -898,6 +914,70 @@ begin
     Result := 'No description for error #' + IntToStr(aError)
   else
     Result := Result + ' (#' + IntToStr(aError) + ')';
+end;
+
+// Note : This is a modified copy of TStringList.Find(), which is
+// the only binary search method in the entire Delphi RTL+VCL.
+function GenericBinarySearch(const List: Pointer; const Count: Integer; const SearchData: Pointer; const Compare: TGenericCompare; out Index: Integer): Boolean;
+var
+  L, H, I, C: Integer;
+begin
+  Result := False;
+  L := 0;
+  H := Count - 1;
+  while L <= H do
+  begin
+    I := (L + H) shr 1;
+    C := Compare(List, I, SearchData);
+    if C < 0 then
+      L := I + 1
+    else
+    begin
+      if C = 0 then
+      begin
+        Result := True;
+        L := I;
+        Break;
+      end;
+
+      H := I - 1;
+    end;
+  end;
+
+  {out}Index := L;
+end; // GenericBinarySearch
+
+{ TListHelper }
+
+function InternalListCompare(const List: TList; const Index: Integer; const SearchData: Pointer): Integer;
+begin
+  Result := IntPtr(List[Index]) - IntPtr(SearchData);
+end;
+
+type
+  PCompareList = ^RCompareList;
+  RCompareList = record
+    Compare: TListSortCompare;
+    List: TList;
+  end;
+
+function ExternalListCompare(const State: PCompareList; const Index: Integer; const SearchData: Pointer): Integer;
+begin
+  Result := State.Compare(State.List[Index], SearchData);
+end;
+
+function TListHelper.BinarySearch(const SearchData: Pointer; out Index: Integer; const Compare: TListSortCompare = nil): Boolean;
+var
+  State: RCompareList;
+begin
+  if @Compare = nil then
+    Result := GenericBinarySearch({List=}Self, Count, SearchData, @InternalListCompare, {out}Index)
+  else
+  begin
+    State.Compare := Compare;
+    State.List := Self;
+    Result := GenericBinarySearch({List=}@State, Count, SearchData, @ExternalListCompare, {out}Index);
+  end;
 end;
 
 { TStreamHelper }

@@ -47,15 +47,22 @@ type
     Name: AnsiString;
   end;
 
+  PVersionedXboxLibrary = ^RVersionedXboxLibrary;
+  RVersionedXboxLibrary = packed record
+    LibVersion: Integer;
+    LibVersionFlag: TLibraryVersionFlag;
+    LibNameIndex: Integer;
+    LibName: string;
+  end;
+
   PVersionedXboxLibraryFunction = ^RVersionedXboxLibraryFunction;
   RVersionedXboxLibraryFunction = packed record
     VersionedXboxLibrary: PVersionedXboxLibrary;
     ScanParts: array of PAnsiChar; // Used when scanning the .pat lines
     Name: string; // should be AnsiString, but then we'd need TAnsiStringList which Delphi doesn't have.
-    CRCLength: Byte;
-    CRCValue: Word;
-    TotalLength: Word;
     SymbolReferences: array of RSymbolReference;
+    GlobalFunctionIndex: TFunctionIndex; // Used in _WriteLeaf
+    Stored: RStoredLibraryFunction;
   end;
 
   TPatternTrieNode = class(TObject)
@@ -239,24 +246,47 @@ begin
 end;
 
 function TPatternTrieNode.AddLeaf(const aFunction: PVersionedXboxLibraryFunction): Boolean;
+
+  function _CanBeMerged(const aFunction1, aFunction2: PVersionedXboxLibraryFunction): Boolean;
+  begin
+    Result := (aFunction1.Stored.FunctionLength = aFunction2.Stored.FunctionLength)
+          and (aFunction1.Stored.CRCValue = aFunction2.Stored.CRCValue)
+          and (aFunction1.Stored.CRCLength = aFunction2.Stored.CRCLength)
+          // TODO : Is needs to be a contents-compare; Is it really?
+          and (aFunction1.SymbolReferences = aFunction2.SymbolReferences);
+  end;
 var
   i: Integer;
   Leaf: TPatternTrieLeaf;
 begin
-  // TODO : Merge identical functions from multiple library version (and fill AvailableInVersions)
-
   // Search in all leafs, to see if this function is already present :
   for i := 0 to NrChildren - 1 do
   begin
     Leaf := TPatternTrieLeaf(Children[i]);
 
-    // Check if there's a leaf already with the same name, from the same library :
-    if  (Leaf.VersionedXboxLibraryFunction.Name = aFunction.Name)
-    and (Leaf.VersionedXboxLibraryFunction.VersionedXboxLibrary = aFunction.VersionedXboxLibrary) then
+    // Check if there's a leaf function already with the same name :
+    if  (Leaf.VersionedXboxLibraryFunction.Name = aFunction.Name) then
     begin
-      // If so, don't add this duplicate (these do occur somehow).
-      Result := False;
-      Exit;
+      // Check if it's from the same versioned library :
+      if Leaf.VersionedXboxLibraryFunction.VersionedXboxLibrary = aFunction.VersionedXboxLibrary then
+      begin
+        // If so, don't add this duplicate (these do occur somehow).
+        Result := False;
+        Exit;
+      end;
+
+      // Check if the other identifying variables could be merged :
+      if _CanBeMerged(aFunction, Leaf.VersionedXboxLibraryFunction) then
+      begin
+        // Merge identical functions from multiple library version (and fill AvailableInVersions)
+        Leaf.VersionedXboxLibraryFunction.Stored.AvailableInVersions :=
+          Leaf.VersionedXboxLibraryFunction.Stored.AvailableInVersions
+            + [aFunction.VersionedXboxLibrary.LibVersionFlag];
+
+        // Now that the function is merged, don't add another function for it :
+        Result := False;
+        Exit;
+      end;
     end;
   end;
 
@@ -344,9 +374,9 @@ var
 begin
   Result := Format('%d. %.2x %.4x %.4x [%8s %4d] %s', [
     LeafNr,
-    VersionedXboxLibraryFunction.CRCLength,
-    VersionedXboxLibraryFunction.CRCValue,
-    VersionedXboxLibraryFunction.TotalLength,
+    VersionedXboxLibraryFunction.Stored.CRCLength,
+    VersionedXboxLibraryFunction.Stored.CRCValue,
+    VersionedXboxLibraryFunction.Stored.FunctionLength,
     VersionedXboxLibraryFunction.VersionedXboxLibrary.LibName,
     VersionedXboxLibraryFunction.VersionedXboxLibrary.LibVersion,
     VersionedXboxLibraryFunction.Name
@@ -444,52 +474,23 @@ end; // Dump
 procedure TPatternTrie.Save(const aFileName: string);
 var
   UniqueStrings: TStringList;
-  GlobalFunctions: TStringList;
+  AllFunctions: TStringList;
   OutputFile: TFileStream;
 
-  procedure _WriteLeaf(const aLeaf: TPatternTrieLeaf);
+  procedure _WriteLeaf(const aLeaf: TPatternTrieLeaf; const aParentNodeOffset: TByteOffset);
   var
-    StoredLibraryFunction: RStoredLibraryFunction;
-    i: Integer;
-    StoredSymbolReference: RStoredSymbolReference;
+    FunctionIndex: TFunctionIndex;
   begin
-{$IFDEF DXBX_RECTYPE}
-    StoredLibraryFunction.RecType := rtStoredLibraryFunction;
-{$ENDIF}
-    StoredLibraryFunction.GlobalFunctionIndex := GlobalFunctions.IndexOf(aLeaf.VersionedXboxLibraryFunction.Name);
-    StoredLibraryFunction.LibraryIndex := VersionedLibraries.IndexOf(aLeaf.VersionedXboxLibraryFunction.VersionedXboxLibrary);
-    StoredLibraryFunction.CRCLength := aLeaf.VersionedXboxLibraryFunction.CRCLength;
-    StoredLibraryFunction.CRCValue := aLeaf.VersionedXboxLibraryFunction.CRCValue;
-    StoredLibraryFunction.FunctionLength := aLeaf.VersionedXboxLibraryFunction.TotalLength;
-    StoredLibraryFunction.NrSymbolReferences := Length(aLeaf.VersionedXboxLibraryFunction.SymbolReferences);
-    OutputFile.WriteBuffer(StoredLibraryFunction, SizeOf(RStoredLibraryFunction));
+    aLeaf.VersionedXboxLibraryFunction.Stored.PatternLeafNodeOffset := aParentNodeOffset;
+    FunctionIndex := aLeaf.VersionedXboxLibraryFunction.GlobalFunctionIndex;
+    OutputFile.WriteBuffer(FunctionIndex, SizeOf(FunctionIndex));
+  end; // _WriteLeaf
 
-    // Write out all symbol-references here :
-    for i := 0 to Length(aLeaf.VersionedXboxLibraryFunction.SymbolReferences) - 1 do
-    begin
-{$IFDEF DXBX_RECTYPE}
-      StoredSymbolReference.RecType := rtStoredSymbolReference;
-{$ENDIF}
-      StoredSymbolReference.Offset := aLeaf.VersionedXboxLibraryFunction.SymbolReferences[i].Offset;
-      StoredSymbolReference.BaseOffset := aLeaf.VersionedXboxLibraryFunction.SymbolReferences[i].BaseOffset;
-      StoredSymbolReference.NameIndex := UniqueStrings.IndexOf(string(aLeaf.VersionedXboxLibraryFunction.SymbolReferences[i].Name));
-      case aLeaf.VersionedXboxLibraryFunction.SymbolReferences[i].ReferenceFlag of
-        'D':
-          StoredSymbolReference.ReferenceFlags := rfIsAbsolute;
-        'R':
-          StoredSymbolReference.ReferenceFlags := rfIsRelative;
-        'S':
-          StoredSymbolReference.ReferenceFlags := rfIsSectionRel;
-      end;
-      OutputFile.WriteBuffer(StoredSymbolReference, SizeOf(RStoredSymbolReference));
-    end;
-
-  end;
-
-  procedure _WriteTrieNodes(const aPatternNode: TPatternTrieNode; Depth: Integer);
+  procedure _WriteTrieNodes(const aPatternNode: TPatternTrieNode; const aParentNodeOffset: TByteOffset; Depth: Integer);
   var
     i: Integer;
     ChildrenAreLeafNodes: Boolean;
+    CurrentNodeOffset: TByteOffset;
     Len, NrFixed, NrWildcards, PrevIndex: Integer;
     StoredTrieNode: RStoredTrieNode;
     PreviousSiblingOffset: TByteOffset;
@@ -501,7 +502,7 @@ var
       // Remember this position (this is where the next sibling will be written) :
       CurrentPosition := OutputFile.Position;
       // Go to the position of the 'NextSiblingOffset' field in the previous sibling :
-      OutputFile.Position := aPreviousSiblingPosition + UIntPtr(@(PStoredTrieNode(nil).NextSiblingOffset));
+      OutputFile.Position := aPreviousSiblingPosition + {UIntPtr}(FIELD_OFFSET(PStoredTrieNode(nil).NextSiblingOffset));
       OutputFile.Write(CurrentPosition, SizeOf(TByteOffset));
       // Return to the previous position, and remember that for the next call to this method :
       OutputFile.Position := CurrentPosition;
@@ -572,6 +573,8 @@ var
     end;
 
     // Write the node record to file already (it will be updated later on) :
+    StoredTrieNode.ParentNodeOffset := aParentNodeOffset;
+    CurrentNodeOffset := OutputFile.Position;
     OutputFile.WriteBuffer(StoredTrieNode, Len);
 
     // Determine how many pattern bytes need to be handled :
@@ -610,121 +613,233 @@ var
     begin
       // Write the children (either leafs or recursive nodes) :
       if ChildrenAreLeafNodes then
-        _WriteLeaf(TPatternTrieLeaf(aPatternNode.Children[i]))
+        _WriteLeaf(TPatternTrieLeaf(aPatternNode.Children[i]), CurrentNodeOffset)
       else
       begin
         // Update the previous sibling's NextSiblingOffset member :
         if {HasPrevious=}i > 0 then
           _SetPreviousSibling_NextSiblingOffset({var}PreviousSiblingOffset);
 
-        _WriteTrieNodes(aPatternNode.Children[i], Depth);
+        _WriteTrieNodes(aPatternNode.Children[i], {aParentNodeOffset=}CurrentNodeOffset, Depth);
       end;
     end;
   end; // _WriteTrieNodes
 
 var
   i, j: Integer;
+  CurrentFunction: PVersionedXboxLibraryFunction;
+  FunctionIndex: TFunctionIndex;
+  TmpString: string;
   StringOffsets: array of TByteOffset;
+  PrevOutputString: AnsiString;
+  OutputString: AnsiString;
+  StoredStringHeader: RStoredStringHeader;
   StoredSignatureTrieHeader: RStoredSignatureTrieHeader;
   StoredLibrary: RStoredLibrary;
-  StoredGlobalFunction: RStoredGlobalFunction;
-begin
+  StoredLibraryFunction: RStoredLibraryFunction;
+  StoredSymbolReference: RStoredSymbolReference;
+begin // Save
+{$IFDEF DXBX_RECTYPE}
+  StoredStringHeader.RecType := rtStoredStringHeader;
+  StoredLibrary.RecType := rtStoredLibrary;
+  StoredSymbolReference.RecType := rtStoredSymbolReference;
+{$ENDIF}
+
   OutputFile := TFileStream.Create(aFileName, fmCreate);
   UniqueStrings := TStringList.Create;
-  GlobalFunctions := TStringList.Create;
+  AllFunctions := TStringList.Create;
   try
-    // Collect all global function names in a string list :
-    GlobalFunctions.Sorted := True;
-    GlobalFunctions.Duplicates := dupIgnore;
-    GlobalFunctions.CaseSensitive := False;
-    for i := 0 to VersionedFunctions.Count - 1 do
-      GlobalFunctions.Add(PVersionedXboxLibraryFunction(VersionedFunctions[i]).Name);
-
-    // Collect all strings, and bring it down to one occurrence per unique string :
-    UniqueStrings.Assign(GlobalFunctions);
-    // There's no TStringList.Assign, so do that ourselves here :
+    // Collection for all strings (one occurrence per unique string) :
     UniqueStrings.Sorted := True;
     UniqueStrings.Duplicates := dupIgnore;
-    UniqueStrings.CaseSensitive := False;
+    UniqueStrings.CaseSensitive := True;
 
-    // Add all symbol-reference names to the unique string list :
+    // Collect all functions in a list :
+    AllFunctions.Duplicates := dupAccept;
+    AllFunctions.CaseSensitive := True;
     for i := 0 to VersionedFunctions.Count - 1 do
     begin
-      for j := 0 to Length(PVersionedXboxLibraryFunction(VersionedFunctions[i]).SymbolReferences) - 1 do
-        UniqueStrings.Add(string(PVersionedXboxLibraryFunction(VersionedFunctions[i]).SymbolReferences[j].Name));
+      // Add each function to the functionlist :
+      CurrentFunction := PVersionedXboxLibraryFunction(VersionedFunctions[i]);
+      TmpString := CurrentFunction.Name;
+      AllFunctions.AddObject(TmpString, TObject(CurrentFunction));
+
+      // Function names are one origin of strings :
+      UniqueStrings.Add(TmpString);
+
+      // Add all symbol-reference names to the unique string list too :
+      for j := 0 to Length(CurrentFunction.SymbolReferences) - 1 do
+      begin
+        TmpString := string(CurrentFunction.SymbolReferences[j].Name);
+        UniqueStrings.Add(TmpString);
+      end
+    end;
+
+    // Sort the functions and register their new index for later use in _WriteLeaf :
+    AllFunctions.Sorted := True;
+    for i := 0 to AllFunctions.Count - 1 do
+    begin
+      CurrentFunction := PVersionedXboxLibraryFunction(AllFunctions.Objects[i]);
+      CurrentFunction.GlobalFunctionIndex := i;
     end;
 
     // Also, add all library names to the unique string list :
     for i := 0 to VersionedLibraries.Count - 1 do
-      UniqueStrings.Add(PVersionedXboxLibrary(VersionedLibraries[i]).LibName);
+    begin
+      TmpString := PVersionedXboxLibrary(VersionedLibraries[i]).LibName;
+      UniqueStrings.Add(TmpString);
+    end;
 
     // Initialize the header record :
     ZeroMemory(@StoredSignatureTrieHeader, SizeOf(StoredSignatureTrieHeader));
-    StoredSignatureTrieHeader.Header := 'DxTrie';
+    StoredSignatureTrieHeader.Header := 'DxbxTrie';
 
-    // Initialize the string table information :
-    StoredSignatureTrieHeader.StringTable.NrStrings := UniqueStrings.Count;
-    StoredSignatureTrieHeader.StringTable.StringOffsets := SizeOf(StoredSignatureTrieHeader);
-    StoredSignatureTrieHeader.StringTable.AnsiCharData := StoredSignatureTrieHeader.StringTable.StringOffsets + TByteOffset(SizeOf(TByteOffset) * UniqueStrings.Count);
+    // Initialize the string table information, the first section of data after the header :
+    StoredSignatureTrieHeader.StringTable.NrOfStrings := UniqueStrings.Count;
+    StoredSignatureTrieHeader.StringTable.IndexedStringOffsets := SizeOf(StoredSignatureTrieHeader);
+    StoredSignatureTrieHeader.StringTable.StringsOffset := StoredSignatureTrieHeader.StringTable.IndexedStringOffsets + TByteOffset(SizeOf(TByteOffset) * UniqueStrings.Count);
 
-    // Start by writing the AnsiCharData :
-    OutputFile.Position := StoredSignatureTrieHeader.StringTable.AnsiCharData;
+    // Start by writing the string data, we know exactly where it will start, the size will be known afterwards :
+    OutputFile.Position := StoredSignatureTrieHeader.StringTable.StringsOffset;
     SetLength(StringOffsets, UniqueStrings.Count);
+    FunctionIndex := 0;
+    PrevOutputString := '';
     for i := 0 to UniqueStrings.Count - 1 do
     begin
-      // Write the string to the output and remember the resulting file position :
-      OutputFile.WriteString(AnsiString(UniqueStrings[i]));
-      StringOffsets[i] := OutputFile.Position;
-    end;
+      // Populate the string header with the index of the first function that bares this name,
+      // and the number of functions that follow (zero means there's no function for this string) :
+      begin
+        // We start at the current function index (even when the delta will become zero,
+        // because we need to be able to do a binary search - see TPatternTrieReader.GetFunctionName) :
+        StoredStringHeader.FirstFunctionIndex := FunctionIndex;
 
-    // Remember this location, so we know where to put the LibraryTable :
+        // Read the current string, and step over all functions that match that name (could be zero).
+        // Do note, that both UniqueStrings and AllFunctions are sorted, allowing a stepping lookup :
+        TmpString := UniqueStrings[i];
+        while (FunctionIndex < AllFunctions.Count)
+          and (TmpString = AllFunctions[FunctionIndex]) do
+            Inc(FunctionIndex);
+
+        // Calculate the delta, and store that in the header :
+        StoredStringHeader.NrOfFunctions := FunctionIndex - StoredStringHeader.FirstFunctionIndex;
+      end;
+
+      // First, write the string header (which indicates the functions associated with this string) :
+      OutputFile.WriteBuffer(StoredStringHeader, SizeOf(RStoredStringHeader));
+
+      // Make sure we write the strings in Ansi format (else, Unicode Delphi's would garble the output) :
+      OutputString := AnsiString(TmpString);
+{$IFDEF DXBX_TRIE_COMPRESS_STRINGS}
+      // Compress simple string-prefix reduction (first 1 uncompressed, then 3 compressed) :
+      if (i and 3) > 0 then
+      begin
+        j := 1;
+        while (j <= Length(OutputString)) and (j <= Length(PrevOutputString)) and (OutputString[j] = PrevOutputString[j]) and (j < 256) do
+          Inc(j);
+        Dec(j);
+
+        if j = 0 then
+          OutputString := #0 + OutputString
+        else
+        begin
+          // Mark with 1 byte how many lead-bytes of the preceding string are identical (we don't store them again) :
+          Delete({var}OutputString, 1, j - 1);
+          OutputString[1] := AnsiChar(j);
+        end;
+      end
+      else
+        PrevOutputString := OutputString;
+{$ENDIF}
+
+      // Right after the header, write the actual string (no zero terminator character needed)
+      // and remember the resulting file position (the first byte AFTER the complete string) :
+      OutputFile.WriteString(OutputString);
+      StringOffsets[i] := OutputFile.Position;
+    end; // for UniqueStrings
+
+    // Remember where we ended, so we know where to put the LibraryTable :
     StoredSignatureTrieHeader.LibraryTable.NrOfLibraries := VersionedLibraries.Count;
     StoredSignatureTrieHeader.LibraryTable.LibrariesOffset := OutputFile.Position;
 
-    // Now that the string data is written, put the StringOffsets in place :
-    OutputFile.Position := StoredSignatureTrieHeader.StringTable.StringOffsets;
+    // Now that the string data is written, put the IndexedStringOffsets in place :
+    OutputFile.Position := StoredSignatureTrieHeader.StringTable.IndexedStringOffsets;
     OutputFile.WriteBuffer(StringOffsets[0], Length(StringOffsets) * SizeOf(StringOffsets[0]));
     SetLength(StringOffsets, 0); // and clear them already
 
-    // Write libraries :
+    // Write the libraries to the position we just remembered :
     OutputFile.Position := StoredSignatureTrieHeader.LibraryTable.LibrariesOffset;
     for i := 0 to VersionedLibraries.Count - 1 do
     begin
-{$IFDEF DXBX_RECTYPE}
-      StoredLibrary.RecType := rtStoredLibrary;
-{$ENDIF}
       StoredLibrary.LibVersion := PVersionedXboxLibrary(VersionedLibraries[i]).LibVersion;
       StoredLibrary.LibNameIndex := UniqueStrings.IndexOf(PVersionedXboxLibrary(VersionedLibraries[i]).LibName);
-
       OutputFile.WriteBuffer(StoredLibrary, SizeOf(StoredLibrary));
     end;
 
-    // Write global functions :
-    StoredSignatureTrieHeader.GlobalFunctionTable.NrOfFunctions := GlobalFunctions.Count;
-    StoredSignatureTrieHeader.GlobalFunctionTable.GlobalFunctionsOffset := OutputFile.Position;
+    // TODO : Split the symbol references up (for better re-use) over these parts :
+    // 1) offsets
+    // 2) symbol indexes
+    // 3) BaseOffset corrections
 
-    for i := 0 to GlobalFunctions.Count - 1 do
+    // Write symbol-references :
+    StoredSignatureTrieHeader.ReferencesTable.NrOfReferences := 0;
+    StoredSignatureTrieHeader.ReferencesTable.ReferencesOffset := OutputFile.Position;
+    for i := 0 to AllFunctions.Count - 1 do
     begin
-{$IFDEF DXBX_RECTYPE}
-      StoredGlobalFunction.RecType := rtStoredGlobalFunction;
-{$ENDIF}
-      StoredGlobalFunction.FunctionNameIndex := UniqueStrings.IndexOf(GlobalFunctions[i]);
-      OutputFile.WriteBuffer(StoredGlobalFunction, SizeOf(StoredGlobalFunction));
+      CurrentFunction := PVersionedXboxLibraryFunction(AllFunctions.Objects[i]);
+      CurrentFunction.Stored.FirstSymbolReference := StoredSignatureTrieHeader.ReferencesTable.NrOfReferences;
+      for j := 0 to Length(CurrentFunction.SymbolReferences) - 1 do
+      begin
+        StoredSymbolReference.Offset := CurrentFunction.SymbolReferences[j].Offset;
+        StoredSymbolReference.BaseOffset := CurrentFunction.SymbolReferences[j].BaseOffset;
+        StoredSymbolReference.NameIndex := UniqueStrings.IndexOf(string(CurrentFunction.SymbolReferences[j].Name));
+        case CurrentFunction.SymbolReferences[j].ReferenceFlag of
+          'D':
+            StoredSymbolReference.ReferenceFlags := rfIsAbsolute;
+          'R':
+            StoredSymbolReference.ReferenceFlags := rfIsRelative;
+          'S':
+            StoredSymbolReference.ReferenceFlags := rfIsSectionRel;
+        end;
+
+        OutputFile.WriteBuffer(StoredSymbolReference, SizeOf(RStoredSymbolReference));
+      end;
+
+      Inc(StoredSignatureTrieHeader.ReferencesTable.NrOfReferences, Length(CurrentFunction.SymbolReferences));
     end;
 
-    // Write trie :
-    StoredSignatureTrieHeader.TrieRootNode := OutputFile.Position;
+    // Reserve space for functions but write them after processing leaf nodes,
+    // so that each function can point to the leaf in which it ended up in :
+    // (This will be necessary when scanning for one specific function.)
+    StoredSignatureTrieHeader.FunctionTable.NrOfFunctions := AllFunctions.Count;
+    StoredSignatureTrieHeader.FunctionTable.FunctionsOffset := OutputFile.Position;
+    OutputFile.Position := OutputFile.Position + (AllFunctions.Count * SizeOf(StoredLibraryFunction));
 
-    // Write out a compact format for all nodes and leafs.
+    // Write the trie - a compact format for all nodes and leafs.
     // This whole file will be included in our Xbox Krnl DLL as a resource,
     // so it's going to be a readonly structure, that must be fast to parse :
-    _WriteTrieNodes(Self, 0);
+    StoredSignatureTrieHeader.TrieRootNode := OutputFile.Position;
+    _WriteTrieNodes(Self, {aParentNodeOffset=}0, {Depth=}0);
+
+    // Write functions :
+    OutputFile.Position := StoredSignatureTrieHeader.FunctionTable.FunctionsOffset;
+    for i := 0 to AllFunctions.Count - 1 do
+    begin
+      CurrentFunction := PVersionedXboxLibraryFunction(AllFunctions.Objects[i]);
+
+      StoredLibraryFunction := CurrentFunction.Stored;
+{$IFDEF DXBX_RECTYPE}
+      StoredLibraryFunction.RecType := rtStoredLibraryFunction;
+{$ENDIF}
+      StoredLibraryFunction.NrOfSymbolReferences := Length(CurrentFunction.SymbolReferences);
+
+      OutputFile.WriteBuffer(StoredLibraryFunction, SizeOf(StoredLibraryFunction));
+    end;
 
     // Last, go back to the start of the file, and write the completed header there :
     OutputFile.Position := 0;
     OutputFile.WriteBuffer(StoredSignatureTrieHeader, SizeOf(StoredSignatureTrieHeader));
   finally
-    FreeAndNil(GlobalFunctions);
+    FreeAndNil(AllFunctions);
     FreeAndNil(UniqueStrings);
     FreeAndNil(OutputFile);
   end;
@@ -1176,6 +1291,7 @@ begin
   New(VersionedXboxLibraryFunction);
   SetLength(VersionedXboxLibraryFunction.ScanParts, 16);
   VersionedXboxLibraryFunction.VersionedXboxLibrary := aContext.VersionedXboxLibrary;
+  VersionedXboxLibraryFunction.Stored.AvailableInVersions := [aContext.VersionedXboxLibrary.LibVersionFlag];
 
   Prev := aLine;
   NrValues := 0;
@@ -1189,7 +1305,7 @@ begin
   if (NrValues > viFunctionName) and (NrValues <= viFunctionName + (2 * MAX_NR_OF_SYMBOL_REFERENCES)) then
   begin
     SetLength(VersionedXboxLibraryFunction.ScanParts, NrValues);
-    aContext.FunctionList.AddObject(string(AnsiString(VersionedXboxLibraryFunction.ScanParts[viFunctionName])), Pointer(VersionedXboxLibraryFunction));
+    aContext.FunctionList.AddObject(string(AnsiString(VersionedXboxLibraryFunction.ScanParts[viFunctionName])), Pointer(VersionedXboxLibraryFunction))
   end
   else
     Dispose(VersionedXboxLibraryFunction);
@@ -1218,11 +1334,11 @@ var
     // shouldn't even be mentioned in the list of references :
 
     // No __tls stuff :
-    if (strncmp(PAnsiChar(SymbolReferencedFunctionName), PAnsiChar('__tls'), Length('__tls')) = 0)
+    if StartsWithString(SymbolReferencedFunctionName,'__tls')
     // No internal labels :
-    or (strncmp(PAnsiChar(SymbolReferencedFunctionName), PAnsiChar('$L'), Length('$L')) = 0)
+    or StartsWithString(SymbolReferencedFunctionName, '$L')
     // No ___ stuff :
-    or (strncmp(PAnsiChar(SymbolReferencedFunctionName), PAnsiChar('___'), Length('___')) = 0) then
+    or StartsWithString(SymbolReferencedFunctionName, '___') then
     begin
       Result := False;
       Exit;
@@ -1264,25 +1380,29 @@ begin
   for i := 0 to PATTERNSIZE - 1 do
   begin
     if ScanHexByte(aLine, {var}Value) then
-      // Every succesfully scanned hexadecimal byte, is added as-is to the patter-array :
-      VersionedXboxLibraryFunctionPattern[i] := Value
+    begin
+      // Every succesfully scanned hexadecimal byte, is added as-is to the pattern-array :
+      VersionedXboxLibraryFunctionPattern[i] := Value;
+    end
     else
+    begin
       // Everything else is probably a "don't care" indicator, so put that in here :
       VersionedXboxLibraryFunctionPattern[i] := PatternDontCareValue;
+    end;
     Inc(aLine, 2);
   end;
 
   // Scan the CRC length :
   if ScanHexByte(aVersionedXboxLibraryFunction.ScanParts[viCRCLength], {var}Value) then
-    aVersionedXboxLibraryFunction.CRCLength := Byte(Value);
+    aVersionedXboxLibraryFunction.Stored.CRCLength := Byte(Value);
 
   // Scan the CRC value :
   if ScanHexWord(aVersionedXboxLibraryFunction.ScanParts[viCRCValue], {var}Value) then
-    aVersionedXboxLibraryFunction.CRCValue := Word(Value);
+    aVersionedXboxLibraryFunction.Stored.CRCValue := Word(Value);
 
   // Scan the function length :
   if ScanHexWord(aVersionedXboxLibraryFunction.ScanParts[viFunctionLength], {var}Value) then
-    aVersionedXboxLibraryFunction.TotalLength := Word(Value);
+    aVersionedXboxLibraryFunction.Stored.FunctionLength := Word(Value);
 
   Result := True;
 
@@ -1291,6 +1411,7 @@ begin
   NrSymbolReferences := 0;
   // Pre-allocate enough space, to prevent reallocations :
   SetLength(aVersionedXboxLibraryFunction.SymbolReferences, Length(aVersionedXboxLibraryFunction.ScanParts) div 2);
+//  SetLength(aVersionedXboxLibraryFunction.SymbolReferences, MAX_NR_OF_SYMBOL_REFERENCES); // Ridiculously large, but save a lot of reallocation
   // Scan all symbol-references, and add the valid ones to the function :
   while (i + 1) < Length(aVersionedXboxLibraryFunction.ScanParts) do
   begin
@@ -1312,7 +1433,7 @@ begin
     // Check if the symbol reference must be known :
     if _MustRegisterReference then
     begin
-      // Remember the symbol-reference function name :
+      // Remember the cross-reference function name :
       Inc(NrSymbolReferences);
       Assert(NrSymbolReferences < High(Byte), aVersionedXboxLibraryFunction.Name);
       aVersionedXboxLibraryFunction.SymbolReferences[NrSymbolReferences-1].Offset := Word(Value);
@@ -1427,10 +1548,8 @@ function GeneratePatternTrie(const aFileList: TStrings; const aOnlyPatches: Bool
 
         // Create and initialize this new library :
         VersionedXboxLibrary := AllocMem(SizeOf(RVersionedXboxLibrary));
-{$IFDEF DXBX_RECTYPE}
-        VersionedXboxLibrary.RecType := rtVersionedXboxLibrary;
-{$ENDIF}
         VersionedXboxLibrary.LibVersion := LibVersion;
+        VersionedXboxLibrary.LibVersionFlag := LibraryVersionNumberToFlag(LibVersion);
         VersionedXboxLibrary.LibName := LibName;
         aPatternTrie.VersionedLibraries.Add(VersionedXboxLibrary);
 
