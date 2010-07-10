@@ -26,7 +26,8 @@ uses
   SysUtils,
   Classes, // MaxListSize
   // Dxbx
-  uTypes;
+  uTypes,
+  uDxbxUtils;
 
 const
   PATTERNSIZE = 32; // A pattern is 32 bytes long
@@ -39,25 +40,25 @@ type
 {$IFDEF DXBX_RECTYPE}
   TRecType = (
     rtUnknown,
-    rtVersionedXboxLibrary,
     rtStoredLibrary,
-    rtStoredGlobalFunction,
+    rtStoredStringHeader,
     rtStoredLibraryFunction,
     rtStoredSymbolReference,
     rtStoredTrieNode);
 {$ENDIF}
 
-  PVersionedXboxLibrary = ^RVersionedXboxLibrary;
-  RVersionedXboxLibrary = packed record
-{$IFDEF DXBX_RECTYPE}
-    RecType: TRecType;
-{$ENDIF}
-    LibVersion: Integer;
-    LibNameIndex: Integer;
-    LibName: string;
-  end;
-
   TLibVersion = Word; // The 4-digit version number of an XDK library
+
+  // Here follow all 32 lib versions we know of, usable as a flag :
+  // Note : In the following enumeration, 5849.16 is left out to stay within 32 bits
+  // but also because that version cannot be identified seperatly from 5849.
+  TLibraryVersionFlag = (
+    lib3424, lib3911, lib3925, lib3936, lib3937, lib3941, lib3944, lib3948,
+    lib3950, lib4034, lib4039, lib4134, lib4242, lib4361, lib4400, lib4432,
+    lib4531, lib4627, lib4721, lib4831, lib4920, lib4928, lib5028, lib5120,
+    lib5233, lib5344, lib5455, lib5558, lib5659, lib5788, lib5849, lib5933);
+
+  TLibraryVersionFlags = set of TLibraryVersionFlag;
 
   BaseIndexType = Cardinal; // A Word suffices for less than 65536 strings & functions, use Cardinal for larger sets
 
@@ -67,9 +68,21 @@ type
   TStringTableIndex = type BaseIndexType; /// Use this everywhere a string is uniquely identified.
 
   TFunctionIndex = type BaseIndexType; /// Use this everywhere a function is uniquely identified.
+  PFunctionIndex = ^TFunctionIndex;
 
-  PStringOffsetList = ^TStringOffsetList;
-  TStringOffsetList = array [0..MaxListSize-1] of TByteOffset;
+  // This header is put right before a string and indicates which (if any) functions are associated with it.
+  PStoredStringHeader = ^RStoredStringHeader;
+  RStoredStringHeader = packed record
+{$IFDEF DXBX_RECTYPE}
+    RecType: TRecType;
+{$ENDIF}
+    NrOfFunctions: Word; // Note : Even if a string has zero functions, the FirstFunctionIndex will be set (to Prev+Count)
+    FirstFunctionIndex: TFunctionIndex; // Using a binary search over the strings, the accompanying functions can be found,
+    // but also vice-versa: Given a function index, the string that 'associates' this function can be binary-searched too!
+  end;
+
+  PIndexedStringOffsets = ^TIndexedStringOffsets;
+  TIndexedStringOffsets = array [0..MaxListSize-1] of TByteOffset;
 
   TLibraryIndex = type Byte; /// Use this everywhere a library is uniquely identified.
 
@@ -84,21 +97,9 @@ type
 
   PStoredLibrariesList = ^TStoredLibrariesList;
   TStoredLibrariesList = array [0..(MaxInt div SizeOf(RStoredLibrary))-1] of RStoredLibrary;
+  TSymbolReferenceIndex = type BaseIndexType;
 
-  // A function occurs in two locations - per library and global.
-  // This record contains the global function information.
-  PStoredGlobalFunction = ^RStoredGlobalFunction;
-  RStoredGlobalFunction = packed record
-{$IFDEF DXBX_RECTYPE}
-    RecType: TRecType;
-{$ENDIF}
-    FunctionNameIndex: TStringTableIndex; /// This record only has the index to the name of this function.
-  end;
-
-  PGlobalFunctionList = ^TGlobalFunctionList;
-  TGlobalFunctionList = array [0..MaxListSize-1] of RStoredGlobalFunction;
-
-  // All functions that reference other symbols, use this symbol-reference record.
+  // All functions that reference other symbols, use this record.
   PStoredSymbolReference = ^RStoredSymbolReference;
   RStoredSymbolReference = packed record
 {$IFDEF DXBX_RECTYPE}
@@ -108,6 +109,7 @@ type
     BaseOffset: SmallInt; /// Offset to apply to the referenced address to get to the base of the referenced symbol (only applicable to data symbols)
     NameIndex: TStringTableIndex; /// Name of the reference (by index)
     ReferenceFlags: Word; /// Indications about the type & usage of this reference
+    // TODO : Split up the Offsets, SymbolNames and BaseOffset, to increase re-use
   end;
 
 const
@@ -117,31 +119,34 @@ const
   rfIsSectionRel     = $0004; // If set, is a 'section-relative' address (Which means what!?)
 
 type
-  // A function occurs in two locations - per library and global.
-  // This record contains the per-library function information.
+  PStoredSymbolReferencesList = ^TStoredSymbolReferencesList;
+  TStoredSymbolReferencesList = array [0..(MaxInt div SizeOf(RStoredSymbolReference))-1] of RStoredSymbolReference;
+
+  // This record contains the function information (shared by at most 32 libraries).
   PStoredLibraryFunction = ^RStoredLibraryFunction;
   RStoredLibraryFunction = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
-    GlobalFunctionIndex: TFunctionIndex; /// The unique index of this function in the RStoredGlobalFunctionTable
-    LibraryIndex: TLibraryIndex; /// The unique index of the libray containing this function
-    CRCLength: Byte; /// TODO : This could be removed once the CRC covers the whole function (except its references)
-    CRCValue: Word;
+    PatternLeafNodeOffset: TByteOffset; /// Use this to backtrace the pattern associated with this function
     FunctionLength: Word;
-    NrSymbolReferences: Word;
-    // Note : Directly following this record, there are 'NrSymbolReferences'
-    // RStoredSymbolReference records stored in the trie !
+    CRCValue: Word;
+    CRCLength: Byte; /// TODO : This could be removed once the CRC covers the whole function (except its references)
+    NrOfSymbolReferences: Byte; // A byte is enough for 255 symbol references, no function will use that much!
+    FirstSymbolReference: TSymbolReferenceIndex; /// The index of the first reference (the others are right next to it)
+    AvailableInVersions: TLibraryVersionFlags; /// Indicates which XDK versions this exact function occurs in (LibraryIndex can go)
+//    LibraryNameIndex: TStringTableIndex; /// Just the name of the library this function originates from (not really important)
   end;
 
-  TStoredSymbolReferenceArray = array [0..(MaxInt div SizeOf(RStoredSymbolReference))-1] of RStoredSymbolReference;
-  PStoredSymbolReferences = ^TStoredSymbolReferenceArray;
+  PStoredLibraryFunctionsList = ^TStoredLibraryFunctionsList;
+  TStoredLibraryFunctionsList = array [0..(MaxInt div SizeOf(RStoredLibraryFunction))-1] of RStoredLibraryFunction;
 
   PStoredTrieNode = ^RStoredTrieNode;
   RStoredTrieNode = packed record
 {$IFDEF DXBX_RECTYPE}
     RecType: TRecType;
 {$ENDIF}
+    ParentNodeOffset: TByteOffset; // so we can backtrace the pattern for one single function
     NextSiblingOffset: TByteOffset;
     NrChildrenByte1: Byte;
     // The next byte is optional, only used when the actual number of
@@ -164,26 +169,26 @@ type
     // but the amount of them is indicated by the Node Type Flags.
     //
     // Directly following a leaf node, we have 'NrChildren' occurrances
-    // of RStoredLibraryFunction. TODO : Change this into FunctionIndexes,
-    // and order these alphabetically, so we can find (and scan) specific
-    // functions by name.
+    // of FunctionIndexes into the stored FunctionTable array (which
+    // are ordered alphabetically, so we can find (and scan) specific
+    // functions by name).
   end;
 
   TStretchHeaderByte = type Byte;
 
   PStoredSignatureTrieHeader = ^RStoredSignatureTrieHeader;
   RStoredSignatureTrieHeader = packed record
-    Header: array [0..5] of AnsiChar; // Chosen so this record becomes a nice 32 bytes large
+    Header: array [0..7] of AnsiChar; // 'DxbxTrie'
 
     StringTable: packed record
-      NrStrings: BaseIndexType; /// The number of strings in this table (no duplicates, sorted for faster searching)
-      StringOffsets: TByteOffset; /// The start of the string table (each string is one TByteOffset into the AnsiCharData)
-      AnsiCharData: TByteOffset; /// The start of the actual string data (AnsiChars, no separators)
+      NrOfStrings: BaseIndexType; /// The number of strings in this table (no duplicates, sorted for faster searching)
+      IndexedStringOffsets: TByteOffset; /// The start of the string table (each string is one TByteOffset into the StringsOffset)
+      StringsOffset: TByteOffset; /// The start of the string data (header + AnsiChars, no separators)
     end;
 
     LibraryTable: packed record
       NrOfLibraries: Word; /// The number of libraries in this table
-      LibrariesOffset: TByteOffset; /// The location of the first stored library
+      LibrariesOffset: TByteOffset; /// The location of the first library
     end;
 
     // Global functions can be indicated using a number in the range [0..NrOfFunctions-1].
@@ -191,9 +196,15 @@ type
     // so we can refer to them by number, instead of name. This saves quite some space
     // in release-builds, because with this method we won't even need to store the
     // function-names in the file anymore. (All this is yet to-be-done/TODO for now.)
-    GlobalFunctionTable: packed record
-      NrOfFunctions: BaseIndexType; /// The number of global functions in this table
-      GlobalFunctionsOffset: TByteOffset; /// The location of the first stored function
+
+    FunctionTable: packed record
+      NrOfFunctions: BaseIndexType; /// The number of functions in this table (sorted on name)
+      FunctionsOffset: TByteOffset; /// The location of the first function
+    end;
+
+    ReferencesTable: packed record
+      NrOfReferences: BaseIndexType; /// The number of references in this table
+      ReferencesOffset: TByteOffset; /// The location of the first reference
     end;
 
     TrieRootNode: TByteOffset; /// The location of the root of the Trie, this location contains a RStoredTrieNode
@@ -220,35 +231,45 @@ type
   TPatternTrieReader = class(TObject)
   public
     StoredSignatureTrieHeader: PStoredSignatureTrieHeader;
-    StringOffsetList: PStringOffsetList;
-    StringTableStartPtr: PAnsiChar;
-    GlobalFunctionList: PGlobalFunctionList;
+    IndexedStringOffsets: PIndexedStringOffsets;
+    StringTableStartPtr: Pointer;
     StoredLibrariesList: PStoredLibrariesList;
+    StoredLibraryFunctionsList: PStoredLibraryFunctionsList;
+    StoredSymbolReferencesList: PStoredSymbolReferencesList;
+    function GetByteOffset(const aOffset: TByteOffset): PByteOffset;
   public
     procedure LoadFromStream(const aStream: TStream);
 
     function NrOfStrings: Cardinal;
     function NrOfFunctions: Cardinal;
-    function GetByteOffset(const aOffset: TByteOffset): PByteOffset;
-    function GetStringPointerByIndex(const aStringIndex: TStringTableIndex): PAnsiChar;
+    function NrOfReferences: Cardinal;
+    function GetStringHeader(const aStringIndex: TStringTableIndex): PStoredStringHeader;
     function GetString(const aStringIndex: TStringTableIndex): string;
     function GetStoredLibrary(const aStoredLibraryIndex: TLibraryIndex): PStoredLibrary;
-    function GetGlobalFunction(const aGlobalFunctionIndex: TFunctionIndex): PStoredGlobalFunction;
-    function GetFunctionName(const aGlobalFunctionIndex: TFunctionIndex): string;
+    function GetStoredLibraryFunction(const aStoredFunctionIndex: TFunctionIndex): PStoredLibraryFunction;
+    function GetSymbolReference(const aStoredSymbolReferencesIndex: TSymbolReferenceIndex): PStoredSymbolReference;
+    function GetFunctionName(const aStoredLibraryFunctionIndex: TFunctionIndex): string;
     //function GetLibraryName(const aLibraryIndex: TLibraryIndex): string;
     function GetNode(const aNodeOffset: TByteOffset): PStoredTrieNode;
   end;
 
-function GetSymbolReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredSymbolReference;
+function LibraryVersionNumberToFlag(const aLibraryVersionNumber: Integer): TLibraryVersionFlag;
+
+var
+  LibraryVersionFlagToInt: array [TLibraryVersionFlag] of Integer = (
+    3424, 3911, 3925, 3936, 3937, 3941, 3944, 3948,
+    3950, 4034, 4039, 4134, 4242, 4361, 4400, 4432,
+    4531, 4627, 4721, 4831, 4920, 4928, 5028, 5120,
+    5233, 5344, 5455, 5558, 5659, 5788, 5849, 5933
+  );
 
 implementation
 
-function GetSymbolReferenceByIndex(const aStoredLibraryFunction: PStoredLibraryFunction; const aIndex: Integer): PStoredSymbolReference;
+function LibraryVersionNumberToFlag(const aLibraryVersionNumber: Integer): TLibraryVersionFlag;
 begin
-  if Assigned(aStoredLibraryFunction) then
-    Result := @(PStoredSymbolReferences(IntPtr(aStoredLibraryFunction) + SizeOf(RStoredLibraryFunction))^[aIndex])
-  else
-    Result := nil;
+  Result := Low(TLibraryVersionFlag);
+  while aLibraryVersionNumber > LibraryVersionFlagToInt[Result] do
+    Inc(Result);
 end;
 
 { TPatternTrieReader }
@@ -260,20 +281,26 @@ begin
   else
     Assert(False, 'Stream class not handled yet!'); // TODO
 
-  StringOffsetList := PStringOffsetList(GetByteOffset(StoredSignatureTrieHeader.StringTable.StringOffsets));
-  StringTableStartPtr := PAnsiChar(GetByteOffset(StoredSignatureTrieHeader.StringTable.AnsiCharData));
-  GlobalFunctionList := PGlobalFunctionList(GetByteOffset(StoredSignatureTrieHeader.GlobalFunctionTable.GlobalFunctionsOffset));
+  IndexedStringOffsets := PIndexedStringOffsets(GetByteOffset(StoredSignatureTrieHeader.StringTable.IndexedStringOffsets));
+  StringTableStartPtr := GetByteOffset(StoredSignatureTrieHeader.StringTable.StringsOffset);
   StoredLibrariesList := PStoredLibrariesList(GetByteOffset(StoredSignatureTrieHeader.LibraryTable.LibrariesOffset));
+  StoredLibraryFunctionsList := PStoredLibraryFunctionsList(GetByteOffset(StoredSignatureTrieHeader.FunctionTable.FunctionsOffset));
+  StoredSymbolReferencesList := PStoredSymbolReferencesList(GetByteOffset(StoredSignatureTrieHeader.ReferencesTable.ReferencesOffset));
 end;
 
 function TPatternTrieReader.NrOfStrings: Cardinal;
 begin
-  Result := StoredSignatureTrieHeader.StringTable.NrStrings;
+  Result := StoredSignatureTrieHeader.StringTable.NrOfStrings;
 end;
 
 function TPatternTrieReader.NrOfFunctions: Cardinal;
 begin
-  Result := StoredSignatureTrieHeader.GlobalFunctionTable.NrOfFunctions;
+  Result := StoredSignatureTrieHeader.FunctionTable.NrOfFunctions;
+end;
+
+function TPatternTrieReader.NrOfReferences: Cardinal;
+begin
+  Result := StoredSignatureTrieHeader.ReferencesTable.NrOfReferences;
 end;
 
 function TPatternTrieReader.GetByteOffset(const aOffset: TByteOffset): PByteOffset;
@@ -281,15 +308,20 @@ begin
   UIntPtr(Result) := UIntPtr(StoredSignatureTrieHeader) + aOffset;
 end;
 
-function TPatternTrieReader.GetStringPointerByIndex(const aStringIndex: TStringTableIndex): PAnsiChar;
-var
-  Offset: TByteOffset;
+function TPatternTrieReader.GetStringHeader(const aStringIndex: TStringTableIndex): PStoredStringHeader;
 begin
+{$IFDEF DEBUG}
   if {(aStringIndex < 0) or} (aStringIndex >= NrOfStrings) then
     raise EListError.CreateFmt('String index out of bounds (%d)', [aStringIndex]);
+{$ENDIF}
 
-  Offset := StringOffsetList[aStringIndex];
-  Result := PAnsiChar(GetByteOffset(Offset));
+  if aStringIndex = 0 then
+    Result := StringTableStartPtr
+  else
+    Result := PStoredStringHeader(GetByteOffset(IndexedStringOffsets[aStringIndex - 1]));
+{$IFDEF DXBX_RECTYPE}
+  Assert(Result.RecType = rtStoredStringHeader, 'StoredStringHeader type mismatch!');
+{$ENDIF}
 end;
 
 function TPatternTrieReader.GetString(const aStringIndex: TStringTableIndex): string;
@@ -298,17 +330,34 @@ var
   Len: Integer;
   Value: AnsiString;
 begin
-  if aStringIndex = 0 then
-    StrBase := StringTableStartPtr
-  else
-    StrBase := GetStringPointerByIndex(aStringIndex - 1);
+{$IFDEF DEBUG}
+  if {(aStringIndex < 0) or} (aStringIndex >= NrOfStrings) then
+    raise EListError.CreateFmt('String index out of bounds (%d)', [aStringIndex]);
+{$ENDIF}
 
-  StrEnd := GetStringPointerByIndex(aStringIndex);
-
+  StrBase := PAnsiChar(GetStringHeader(aStringIndex)) + SizeOf(RStoredStringHeader);
+  // Don't call GetStringHeader for the end-pointer, as that would go out of bounds :
+  StrEnd := PAnsiChar(GetByteOffset(IndexedStringOffsets[aStringIndex]));
   Len := StrEnd - StrBase;
   SetLength(Value, Len);
   Move(StrBase^, Value[1], Len);
-  Result := string(Value);
+{$IFDEF DXBX_TRIE_COMPRESS_STRINGS}
+  // Decompress simple string-prefix reduction (first 1 uncompressed, then 3 compressed) :
+  if (aStringIndex and 3) > 0 then
+  begin
+    // Read & remove repeat count byte :
+    Len := Ord(Value[1]);
+    Delete(Value, 1, 1);
+  end
+  else
+{$ENDIF}
+    Len := 0;
+
+  Result := string(Value); // In Unicode Delphi's, this compiles into an explicit AnsiString>UnicodeString upcast
+
+  // When asked for, prepend prefix of previous string  :
+  if Len > 0 then
+    Result := Copy(GetString(aStringIndex and (not 3)), 1, Len) + Result;
 end;
 
 function TPatternTrieReader.GetStoredLibrary(const aStoredLibraryIndex: TLibraryIndex): PStoredLibrary;
@@ -319,20 +368,61 @@ begin
 {$ENDIF}
 end;
 
-function TPatternTrieReader.GetGlobalFunction(const aGlobalFunctionIndex: TFunctionIndex): PStoredGlobalFunction;
+function TPatternTrieReader.GetStoredLibraryFunction(const aStoredFunctionIndex: TFunctionIndex): PStoredLibraryFunction;
 begin
-  Result := @(GlobalFunctionList[aGlobalFunctionIndex]);
+{$IFDEF DEBUG}
+  if {(aGlobalFunctionIndex < 0) or} (aStoredFunctionIndex >= NrOfFunctions) then
+    raise EListError.CreateFmt('Function index out of bounds (%d)', [aStoredFunctionIndex]);
+{$ENDIF}
+
+  Result := @(StoredLibraryFunctionsList[aStoredFunctionIndex]);
 {$IFDEF DXBX_RECTYPE}
-  Assert(Result.RecType = rtStoredGlobalFunction, 'StoredGlobalFunction type mismatch!');
+  Assert(Result.RecType = rtStoredLibraryFunction, 'StoredFunctionIndex type mismatch!');
 {$ENDIF}
 end;
 
-function TPatternTrieReader.GetFunctionName(const aGlobalFunctionIndex: TFunctionIndex): string;
-var
-  StoredGlobalFunction: PStoredGlobalFunction;
+function TPatternTrieReader.GetSymbolReference(const aStoredSymbolReferencesIndex: TSymbolReferenceIndex): PStoredSymbolReference;
 begin
-  StoredGlobalFunction := GetGlobalFunction(aGlobalFunctionIndex);
-  Result := GetString(StoredGlobalFunction.FunctionNameIndex);
+{$IFDEF DEBUG}
+  if {(aStoredSymbolReferencesIndex < 0) or} (aStoredSymbolReferencesIndex >= NrOfReferences) then
+    raise EListError.CreateFmt('SymbolReference index out of bounds (%d)', [aStoredSymbolReferencesIndex]);
+{$ENDIF}
+
+  Result := @(StoredSymbolReferencesList[aStoredSymbolReferencesIndex]);
+{$IFDEF DXBX_RECTYPE}
+  Assert(Result.RecType = rtStoredSymbolReference, 'SymbolReference type mismatch!');
+{$ENDIF}
+end;
+
+function CompareFunctionIndexToStringIndex(const Self: TPatternTrieReader; const StringIndex: TStringTableIndex;
+  const aStoredLibraryFunctionIndex: TFunctionIndex): Integer;
+var
+  StringHeader: PStoredStringHeader;
+begin
+  // Compare the supplied FunctionIndex to to the FirstFunctionIndex associated with this string :
+  StringHeader := Self.GetStringHeader(StringIndex);
+  if aStoredLibraryFunctionIndex < StringHeader.FirstFunctionIndex then
+    Result := 1
+  else
+    if (aStoredLibraryFunctionIndex >= (StringHeader.FirstFunctionIndex + StringHeader.NrOfFunctions))
+    or (StringHeader.NrOfFunctions = 0) then
+      Result := -1
+    else
+      Result := 0;
+end;
+
+function TPatternTrieReader.GetFunctionName(const aStoredLibraryFunctionIndex: TFunctionIndex): string;
+var
+  StringTableIndex: TStringTableIndex;
+begin
+  // Do a binary search over the string headers, and stop at the string-table index
+  // where this function is associated with the string. This way, we know what string to return :
+  GenericBinarySearch({List=}Self, {Count=}NrOfStrings,
+    {SearchData=}Pointer(aStoredLibraryFunctionIndex), @CompareFunctionIndexToStringIndex,
+    {out}Integer(StringTableIndex));
+  Assert(StringTableIndex < NrOfStrings);
+
+  Result := GetString(StringTableIndex);
 end;
 
 //function TPatternTrieReader.GetLibraryName(const aLibraryIndex: TLibraryIndex): string;

@@ -51,6 +51,8 @@
 {$ENDIF}
 
 {.$DEFINE DXBX_RECTYPE} // Include RecType info in PatternTrie
+{.$DEFINE DXBX_TRIE_COMPRESS_STRINGS} // Apply prefix reduction to string stored in the Trie
+
 
 // Apply our default compiler options before jedi.inc goes ahead :
 
