@@ -7925,7 +7925,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-  EmuUnswizzleActiveTexture();
+//  EmuUnswizzleActiveTexture(); // This messes up textures in PSTest2_4627
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
@@ -7993,7 +7993,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-  EmuUnswizzleActiveTexture();
+//  EmuUnswizzleActiveTexture(); // This messes up the letters in Chunktro
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
