@@ -26,6 +26,7 @@ interface
 uses
   // Delphi
   Windows,
+  Classes,
   ShellAPI,
   SysUtils, // SafeLoadLibrary
   Math, // Min
@@ -35,8 +36,9 @@ uses
   uConsts,
   uTypes,
   uDxbxUtils,
+  uFileSystem, // Drives
   uLog,
-  uXbe,
+  uXbe, // PXbeHeader
   uKernelThunk,
   uDxbxKrnl;
 
@@ -57,7 +59,7 @@ procedure PrepareXBoxMemoryMap;
 procedure ReinitExeImageHeader;
 procedure ReinitXbeImageHeader;
 
-function MapAndRunXBE(const aXbe: TXbe; const aHandle: THandle): Boolean;
+function MapAndRunXBE(const aFilePath: string; const aHandle: THandle): Boolean;
 
 procedure DxbxMain(const aData: MathPtr; const aSize: DWord); stdcall;
 
@@ -75,25 +77,27 @@ implementation
 
 var
   ExeDosHeader: PImageDosHeader;
-  ExeNtHeader: PImageNtHeaders32;
-  ExeOptionalHeader: PImageOptionalHeader;
-  ExeHeaderSize: DWord;
-
   NewDosHeader: PImageDosHeader;
-  NewNtHeader: PImageNtHeaders32;
-  NewOptionalHeader: PImageOptionalHeader;
-  NewTLSDirectory: PImageTlsDirectory;
-  TLSIndex: DWord;
-
   Xbe_lfanew: LongInt;
 
 procedure PrepareXBoxMemoryMap;
 var
+  ExeNtHeader: PImageNtHeaders32;
+  ExeOptionalHeader: PImageOptionalHeader;
+  ExeHeaderSize: DWord;
+
+  NewNtHeader: PImageNtHeaders32;
+  NewOptionalHeader: PImageOptionalHeader;
+
   ExeSectionHeader: PImageSectionHeader;
   NewSectionHeader: PImageSectionHeader;
   i: Integer;
-  NewSection: Pointer;
+  NewSection: Pvoid;
+
+  NewTLSDirectory: PImageTlsDirectory;
+
   Protection: DWord;
+  TLSIndex: DWord;
 begin
   // Determine EXE's header locations & size :
   ExeDosHeader := PImageDosHeader(XBE_IMAGE_BASE); // = $10000
@@ -105,7 +109,7 @@ begin
   NewDosHeader := PImageDosHeader(AllocMem(ExeHeaderSize));
   NewNtHeader := PImageNtHeaders32(IntPtr(NewDosHeader) + ExeDosHeader._lfanew);
   NewOptionalHeader := @(NewNtHeader.OptionalHeader);
-  Move(ExeDosHeader^, NewDosHeader^, ExeHeaderSize);
+  memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
 
   // Make sure the new DOS header points to the new relative NtHeader location :
   NewDosHeader._lfanew := UIntPtr(NewNtHeader) - UIntPtr(XBE_IMAGE_BASE);
@@ -120,7 +124,7 @@ begin
     begin
       // Allocate a new copy of this section :
       NewSection := AllocMem(ExeSectionHeader.Misc.VirtualSize);
-      Move(Pointer(ExeSectionHeader.VirtualAddress + UIntPtr(ExeDosHeader))^, NewSection^, ExeSectionHeader.Misc.VirtualSize);
+      memcpy(NewSection, Pvoid(ExeSectionHeader.VirtualAddress + UIntPtr(ExeDosHeader)), ExeSectionHeader.Misc.VirtualSize);
       NewSectionHeader.VirtualAddress := UIntPtr(NewSection) - UIntPtr(ExeDosHeader);
 
       if NewOptionalHeader.BaseOfData = ExeSectionHeader.VirtualAddress then
@@ -131,7 +135,7 @@ begin
     Inc(NewSectionHeader);
   end;
 
-  NewTLSDirectory := PImageTlsDirectory(UIntPtr(ExeDosHeader) + NewNtHeader.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
+  NewTLSDirectory := PImageTlsDirectory(UIntPtr(ExeDosHeader) + NewOptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
 
   if not VirtualProtect(NewTLSDirectory, SizeOf(TImageTlsDirectory), PAGE_READWRITE, {var}Protection) then
     RaiseLastOSError;
@@ -140,7 +144,7 @@ begin
   NewTLSDirectory.AddressOfIndex := UIntPtr(@TLSIndex) - UIntPtr(ExeDosHeader);
 
   // Make sure we can write to the complete EXE's memory-range :
-  if not VirtualProtect(ExeDosHeader, XBOX_MEMORY_SIZE, PAGE_READWRITE, {var}Protection) then
+  if not VirtualProtect(Pvoid(XBE_IMAGE_BASE), XBOX_MEMORY_SIZE, PAGE_READWRITE, {var}Protection) then
     RaiseLastOSError;
 
   // Clear out the whole range, overwriting the complete launcher EXE :
@@ -163,8 +167,12 @@ begin
 end;
 
 // Load XBE sections in Virtual Memory, and call DxbxKrnlInit (TODO : from a new thread?)
-function MapAndRunXBE(const aXbe: TXbe; const aHandle: THandle): Boolean;
+function MapAndRunXBE(const aFilePath: string; const aHandle: THandle): Boolean;
 var
+  Drive: PLogicalVolume;
+  XbeFilePath: string;
+  FileHandle: TFileHandle;
+
   Protection: DWord;
   XbeHeader: PXbeHeader;
   XbeSectionHeader: PXbeSectionHeader;
@@ -173,7 +181,7 @@ var
   kt_tbl: PDWORDs;
   EntryPoint: DWord;
   XbeTLS: PXbeTLS;
-  XbeTlsData: PVOID;
+  XbeTlsData: Pvoid;
   XbeLibraryVersion: PXbeLibraryVersion;
 
   procedure _ReadXbeBlock(aRawOffset, aRawSize, aVirtualAddr, aVirtualSize, aProtection: DWord);
@@ -184,62 +192,81 @@ var
     if aVirtualSize = 0 then
       Exit;
 
-    if not VirtualProtect(Pointer(aVirtualAddr), aVirtualSize, PAGE_READWRITE, {var}old_protection) then
+    if not VirtualProtect(Pvoid(aVirtualAddr), aVirtualSize, PAGE_READWRITE, {var}old_protection) then
       RaiseLastOSError;
 
     if aRawSize > 0 then
-      Move(aXbe.RawData[aRawOffset], Pointer(aVirtualAddr)^, aRawSize);
+    begin
+      Drive.FileSystem.Seek(FileHandle, aRawOffset, soFromBeginning);
+      Drive.FileSystem.Read(FileHandle, Pvoid(aVirtualAddr)^, aRawSize);
+    end;
 // Dxbx Note : Restoring the page-protection crashes some xbe's writing to TLS, so skip it for now!
-//    if not VirtualProtect(Pointer(aVirtualAddr), aRawSize, aProtection, {var}old_protection) then
+//    if not VirtualProtect(Pvoid(aVirtualAddr), aRawSize, aProtection, {var}old_protection) then
 //      RaiseLastOSError;
   end;
 
 begin
+  Result := False;
   WriteLog('EmuExe: Loading Sections...');
 
   // Make sure we can write to the original range of Xbox memory (128 MB, starting at $10000) :
-  if not VirtualProtect(Pointer(XBE_IMAGE_BASE), XBOX_MEMORY_SIZE, PAGE_READWRITE, {var}Protection) then
+  if not VirtualProtect(Pvoid(XBE_IMAGE_BASE), XBOX_MEMORY_SIZE, PAGE_READWRITE, {var}Protection) then
     RaiseLastOSError;
 
   // Clear out the whole EXE range :
-  ZeroMemory(Pointer(XBE_IMAGE_BASE), XBOX_MEMORY_SIZE);
+  ZeroMemory(Pvoid(XBE_IMAGE_BASE), XBOX_MEMORY_SIZE);
 
-  // Copy the complete XBEHeader over to the ImageBase :
-  _ReadXbeBlock(
-    {RawOffset=}0,
-    {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use aXbe.dwSizeofHeader
-    {VirtualAddr=}XBE_IMAGE_BASE,
-    {VirtualSize=}XBE_HEADER_SIZE,
-    {NewProtect}PAGE_READWRITE);
-
-  // Remember the ExeDosHeader._lfanew value, as we're about to overwrite it :
-  Xbe_lfanew := ExeDosHeader._lfanew;
-
-  // Restore just enough of the EXE header to make Windows API's like CreateThread work again :
-  ReinitExeImageHeader;
-
-  // Load all sections to their requested Virtual Address :
-  g_Xbe := aXbe;
-  XbeHeader := PXbeHeader(XBE_IMAGE_BASE);
-  XbeSectionHeader := PXbeSectionHeader(XbeHeader.dwSectionHeadersAddr);
-  for i := 0 to XbeHeader.dwSections - 1 do
+  // Read the Xbe using our generic FileSystem implementation, allowing loading from xISO's :
+  Drive := Drives.D;
+  if not Drive.OpenImage(aFilePath, {out}XbeFilePath) then
   begin
-    // Determine protection, based on actual section flags :
-    Protection := PAGE_READONLY;
-    if (XbeSectionHeader.dwFlags[0] and XBE_SECTIONHEADER_FLAG_Writable) > 0 then
-      Protection := PAGE_READWRITE;
-    if (XbeSectionHeader.dwFlags[0] and XBE_SECTIONHEADER_FLAG_Executable) > 0 then
-      Protection := PAGE_EXECUTE_READWRITE;
+//    MessageDlg(DxbxFormat('Could not open path : %s', [aFilePath]), mtError, [mbOk], 0);
+    Exit;
+  end;
 
+  g_Xbe_XbePath := aFilePath;
+  FileHandle := Drive.FileSystem.Open(XbeFilePath);
+  try
+    // Copy the complete XBEHeader over to the ImageBase :
     _ReadXbeBlock(
-      {RawOffset=}XbeSectionHeader.dwRawAddr,
-      {RawSize=}XbeSectionHeader.dwSizeofRaw,
-      {VirtualAddr=}XbeSectionHeader.dwVirtualAddr,
-      {VirtualSize=}XbeSectionHeader.dwVirtualSize,
-      {NewProtect}Protection);
+      {RawOffset=}0,
+      {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use aXbe.dwSizeofHeader
+      {VirtualAddr=}XBE_IMAGE_BASE,
+      {VirtualSize=}XBE_HEADER_SIZE,
+      {NewProtect}PAGE_READWRITE);
 
-    WriteLog(Format('EmuExe: Loading Section 0x%.4x... OK', [i]));
-    Inc(XbeSectionHeader);
+    // Remember the ExeDosHeader._lfanew value, as we're about to overwrite it :
+    // (This field can be restored by calling ReinitXbeImageHeader)
+    Xbe_lfanew := ExeDosHeader._lfanew;
+
+    // Restore just enough of the EXE header to make Windows API's like CreateThread work again :
+    ReinitExeImageHeader;
+
+    // Load all sections to their requested Virtual Address :
+    XbeHeader := PXbeHeader(XBE_IMAGE_BASE);
+    XbeSectionHeader := PXbeSectionHeader(XbeHeader.dwSectionHeadersAddr);
+    for i := 0 to XbeHeader.dwSections - 1 do
+    begin
+      // Determine protection, based on actual section flags :
+      Protection := PAGE_READONLY;
+      if (XbeSectionHeader.dwFlags[0] and XBE_SECTIONHEADER_FLAG_Writable) > 0 then
+        Protection := PAGE_READWRITE;
+      if (XbeSectionHeader.dwFlags[0] and XBE_SECTIONHEADER_FLAG_Executable) > 0 then
+        Protection := PAGE_EXECUTE_READWRITE;
+
+      _ReadXbeBlock(
+        {RawOffset=}XbeSectionHeader.dwRawAddr,
+        {RawSize=}XbeSectionHeader.dwSizeofRaw,
+        {VirtualAddr=}XbeSectionHeader.dwVirtualAddr,
+        {VirtualSize=}XbeSectionHeader.dwVirtualSize,
+        {NewProtect}Protection);
+
+      WriteLog(Format('EmuExe: Loading Section 0x%.4x... OK', [i]));
+      Inc(XbeSectionHeader);
+    end;
+
+  finally
+    Drive.FileSystem.Close(FileHandle);
   end;
 
   // Decode kernel thunk table address :
@@ -249,7 +276,7 @@ begin
 
   // Patch the Kernel Thunk Table, to use the actual functions :
   WriteLog('EmuExe: Hijacking Kernel Imports...');
-  kt_tbl := Pointer(kt);
+  DWord(kt_tbl) := kt;
   i := 0;
   while kt_tbl[i] <> 0 do
   begin
@@ -265,6 +292,8 @@ begin
 
     Inc(i);
   end; // while
+  // Make sure Delphi doesn't automatically deallocates this :
+  DWord(kt_tbl) := 0;
 
   // Decode entry point address :
   EntryPoint := XbeHeader.dwEntryAddr xor XOR_EP_RETAIL;
@@ -275,7 +304,7 @@ begin
 
   XbeTLS := PXbeTls(XbeHeader.dwTLSAddr);
   if Assigned(XbeTLS) then
-    XbeTlsData := Pointer(XbeTLS.dwDataStartAddr)
+    XbeTlsData := Pvoid(XbeTLS.dwDataStartAddr)
   else
     XbeTlsData := nil;
 
@@ -337,7 +366,7 @@ begin
     // (which will launch the Xbe on itself), instead here.
 
     // Now we can load and run the XBE :
-    MapAndRunXBE(TXbe.Create(XbePath), DCHandle);
+    MapAndRunXBE(XbePath, DCHandle);
   end;
   
   // Prevent the process from returning to the overwritten EXE location

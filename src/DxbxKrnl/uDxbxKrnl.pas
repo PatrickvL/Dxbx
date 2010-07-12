@@ -90,7 +90,7 @@ exports
   *)
 
 var
-  g_Xbe: TXbe;
+  g_Xbe_XbePath: string;
   g_XboxCPU: DWORD_PTR;
 
 implementation
@@ -259,8 +259,8 @@ begin
 *)
   // Initialize current directory
   g_EmuShared.GetXbePath({var}szBuffer);
-  if (szBuffer = '') and Assigned(g_Xbe) then
-    szBuffer := ExtractFilePath(g_Xbe.XbePath);
+  if (szBuffer = '') and (g_Xbe_XbePath <> '') then
+    szBuffer := ExtractFilePath(g_Xbe_XbePath);
 
   if szBuffer <> '' then
   begin
