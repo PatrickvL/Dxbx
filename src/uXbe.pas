@@ -280,8 +280,7 @@ type _XBE_SECTIONHEADER = packed record
   PPXPR_FILE_HEADER = ^PXPR_FILE_HEADER;
 *)
 
-  // TODO -oDxbx : Remove most dependancies on this TXbe type, at least in
-  // MapAndRun but maybe also in OpenXbe and it's callers.
+  // TODO -oDxbx : Remove most dependancies on this TXbe type in OpenXbe and it's callers.
   // Instead, start accessesing Xbe's (and other resources) via Drives.D.FileSystem,
   // which would create a better layer of seperation. Do note, that some kernel
   // I/O functions (like asynchronuous file access) don't map too well to this
