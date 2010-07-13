@@ -168,7 +168,7 @@ type
 
   // LONGBOOL = ?;
   _BOOLEAN = ByteBool; // Use this to translate Cxbx's "BOOLEAN" (because Delphi is not case sensitive)
-  P_BOOLEAN = ^_BOOLEAN;
+
   // From Cxbx EmuXapi.h : "typedef unsigned char BOOLEAN" (unsigned char = AnsiChar in Delphi)
 
   BOOL_ = LongBool; // Use this when Dxbx is better of with logical-BOOL (as opposed to int-BOOL below)

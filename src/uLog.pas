@@ -173,7 +173,7 @@ var
 function MayLog(const aFlags: TLogFlags): Boolean; // inline;
 begin
   Result := ((aFlags or g_ActiveLogFlags) > 0)
-        and ((aFlags or g_DisabledLogFlags) = 0);
+        and ((aFlags and g_DisabledLogFlags) = 0);
 end;
 
 procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); // inline;
