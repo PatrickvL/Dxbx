@@ -234,6 +234,8 @@ uses
   // Dxbx
   uEmuKrnlPs; // g_pfnThreadNotification
 
+const lfUnit = lfCxbx or lfKernel;
+
 function _XINPUT_POLLING_PARAMETERS.GetBits(const aIndex: Integer): Byte;
 begin
   Result := GetByteBits(_Flag, aIndex);
@@ -308,8 +310,8 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
+  if MayLog(lfUnit or lfHeap) then
+    DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
     #13#10'(' +
     #13#10'   Flags               : 0x%.08X' +
     #13#10'   Base                : 0x%.08X' +
@@ -319,7 +321,6 @@ begin
     #13#10'   RtlHeapParams       : 0x%.08X' +
     #13#10');',
     [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
-{$ENDIF}
 
   ZeroMemory(@RtlHeapDefinition, sizeof(RtlHeapDefinition));
 
@@ -343,15 +344,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
+  if MayLog(lfUnit or lfHeap or lfExtreme) then
+    DbgPrintf('EmuXapi : EmuRtlAllocateHeap' +
       #13#10'(' +
       #13#10'   hHeap               : 0x%.08X' +
       #13#10'   dwFlags             : 0x%.08X' +
       #13#10'   dwBytes             : 0x%.08X' +
       #13#10');',
       [hHeap, dwFlags, dwBytes]);
-{$ENDIF}
 
   if dwBytes > 0 then
     Inc(dwBytes, HEAP_HEADERSIZE);
@@ -365,9 +365,8 @@ begin
   else
     Result := nil;
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('pRet : 0x%.08X', [Result]);
-{$ENDIF}
+  if MayLog(lfUnit or lfHeap or lfTrace or lfExtreme) then
+    DbgPrintf('pRet : 0x%.08X', [Result]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -382,15 +381,14 @@ function XTL_EmuRtlFreeHeap
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DXBX_DEBUG_TRACE}
-  DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
+  if MayLog(lfUnit or lfHeap or lfExtreme) then
+    DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
     #13#10'(' +
     #13#10'   hHeap               : 0x%.08X' +
     #13#10'   dwFlags             : 0x%.08X' +
     #13#10'   lpMem               : 0x%.08X' +
     #13#10');',
     [hHeap, dwFlags, lpMem]);
-{$ENDIF}
 
   if Assigned(lpMem) then
     lpMem := (PPointer(lpMem)-1)^;
@@ -413,8 +411,8 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
+  if MayLog(lfUnit or lfHeap or lfExtreme) then
+    DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
       #13#10'('+
       #13#10'   hHeap               : 0x%.08X' +
       #13#10'   dwFlags             : 0x%.08X' +
@@ -422,7 +420,6 @@ begin
       #13#10'   dwBytes             : 0x%.08X' +
       #13#10');',
       [hHeap, dwFlags, lpMem, dwBytes]);
-{$ENDIF}
 
   // Dxbx note : Realloc cannot be implemented via DxbxRtlRealloc because of possible alignment-mismatches.
   // We solve this by doing a new Alloc, copying over the original lpMem contents and freeing it :
@@ -448,9 +445,8 @@ begin
     DxbxRtlFree(hHeap, dwFlags, AllocatedAddress);
   end;
 
-{$IFDEF DXBX_DEBUG_TRACE}
-  DbgPrintf('pRet : 0x%.08X', [Result]);
-{$ENDIF}
+  if MayLog(lfUnit or lfHeap or lfTrace or lfExtreme) then
+    DbgPrintf('pRet : 0x%.08X', [Result]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -465,15 +461,14 @@ function XTL_EmuRtlSizeHeap
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
+  if MayLog(lfUnit or lfHeap) then
+    DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
       #13#10'(' +
       #13#10'   hHeap               : 0x%.08X' +
       #13#10'   dwFlags             : 0x%.08X' +
       #13#10'   lpMem               : 0x%.08X' +
       #13#10');',
       [hHeap, dwFlags, lpMem]);
-{$ENDIF}
 
   if Assigned(lpMem) then
     lpMem := (PPointer(lpMem)-1)^;
@@ -491,13 +486,12 @@ function XTL_EmuQueryPerformanceCounter
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuQueryPerformanceCounter' +
+  if MayLog(lfUnit or lfExtreme) then
+    DbgPrintf('EmuXapi : EmuQueryPerformanceCounter' +
       #13#10'(' +
       #13#10'   lpPerformanceCount  : 0x%.08X' +
       #13#10');',
       [lpPerformanceCount]);
-{$ENDIF}
 
   Result := BOOL(QueryPerformanceCounter({var}lpPerformanceCount^));
 
@@ -515,13 +509,12 @@ function XTL_EmuQueryPerformanceFrequency
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency' +
       #13#10'(' +
       #13#10'   lpFrequency         : 0x%.08X' +
       #13#10');',
       [lpFrequency]);
-{$ENDIF}
 
   Result := BOOL(QueryPerformanceFrequency({var}lpFrequency^));
 
@@ -1612,13 +1605,12 @@ function XTL_EmuRtlDestroyHeap
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuRtlDestroyHeap' +
+  if MayLog(lfUnit or lfHeap) then
+    DbgPrintf('EmuXapi : EmuRtlDestroyHeap' +
       #13#10'(' +
       #13#10'   HeapHandle         : 0x%.08X' +
       #13#10');',
       [HeapHandle]);
-{$ENDIF}
 
   HANDLE(Result) := JwaNative.RtlDestroyHeap(HeapHandle);
 

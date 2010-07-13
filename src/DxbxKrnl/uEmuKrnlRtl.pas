@@ -538,6 +538,7 @@ function xboxkrnl_RtlAppendStringToString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlAppendStringToString(DestinationString, AppendThisString);
   EmuSwapFS(fsXbox);
 end;
@@ -549,6 +550,7 @@ function xboxkrnl_RtlAppendUnicodeStringToString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlAppendUnicodeStringToString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
@@ -560,6 +562,7 @@ function xboxkrnl_RtlAppendUnicodeToString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlAppendUnicodeToString(Destination, Source);
   EmuSwapFS(fsXbox);
 end;
@@ -599,6 +602,7 @@ procedure xboxkrnl_RtlCaptureContext(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlCaptureContext(ContextRecord);
   EmuSwapFS(fsXbox);
 end;
@@ -612,6 +616,7 @@ function xboxkrnl_RtlCaptureStackBackTrace(
 // Source:?  Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := Unimplemented('RtlCaptureStackBackTrace');
   EmuSwapFS(fsXbox);
 end;
@@ -624,6 +629,7 @@ function xboxkrnl_RtlCharToInteger(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlCharToInteger(Str, Base, Value);
   EmuSwapFS(fsXbox);
 end;
@@ -636,6 +642,7 @@ function xboxkrnl_RtlCompareMemory(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlCompareMemory(Source1, Source2, Length);
   EmuSwapFS(fsXbox);
 end;
@@ -648,6 +655,7 @@ function xboxkrnl_RtlCompareMemoryUlong(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlCompareMemoryUlong(Source, Length, Value);
   EmuSwapFS(fsXbox);
 end;
@@ -660,6 +668,7 @@ function xboxkrnl_RtlCompareString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlCompareString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
 end;
@@ -672,6 +681,7 @@ function xboxkrnl_RtlCompareUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlCompareUnicodeString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
 end;
@@ -683,6 +693,7 @@ procedure xboxkrnl_RtlCopyString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlCopyString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
@@ -694,6 +705,7 @@ procedure xboxkrnl_RtlCopyUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlCopyUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
@@ -705,6 +717,7 @@ function xboxkrnl_RtlCreateUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlCreateUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
@@ -715,6 +728,7 @@ function xboxkrnl_RtlDowncaseUnicodeChar(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlDowncaseUnicodeChar(Source);
   EmuSwapFS(fsXbox);
 end;
@@ -727,6 +741,7 @@ function xboxkrnl_RtlDowncaseUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlDowncaseUnicodeString(DestinationString, SourceString, AllocateDestinationString);
   EmuSwapFS(fsXbox);
 end;
@@ -820,6 +835,7 @@ function xboxkrnl_RtlEqualUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlEqualUnicodeString(String1, String2, CaseInsensitive);
   EmuSwapFS(fsXbox);
 end;
@@ -831,6 +847,7 @@ function xboxkrnl_RtlExtendedIntegerMultiply(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlExtendedIntegerMultiply(Multiplicand, Multiplier);
   EmuSwapFS(fsXbox);
 end;
@@ -843,6 +860,7 @@ function xboxkrnl_RtlExtendedLargeIntegerDivide(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlExtendedLargeIntegerDivide(Dividend, Divisor, Remainder);
   EmuSwapFS(fsXbox);
 end;
@@ -855,6 +873,7 @@ function xboxkrnl_RtlExtendedMagicDivide(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlExtendedMagicDivide(Dividend, MagicDivisor, JwaWinType.CCHAR(ShiftCount));
   EmuSwapFS(fsXbox);
 end;
@@ -867,6 +886,7 @@ procedure xboxkrnl_RtlFillMemory(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlFillMemory(Destination, Length, Fill);
   EmuSwapFS(fsXbox);
 end;
@@ -879,6 +899,7 @@ procedure xboxkrnl_RtlFillMemoryUlong(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlFillMemoryUlong(Destination, Length, Fill);
   EmuSwapFS(fsXbox);
 end;
@@ -889,6 +910,7 @@ procedure xboxkrnl_RtlFreeAnsiString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlFreeAnsiString(AnsiString);
   EmuSwapFS(fsXbox);
 end;
@@ -899,6 +921,7 @@ procedure xboxkrnl_RtlFreeUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlFreeUnicodeString(UnicodeString);
   EmuSwapFS(fsXbox);
 end;
@@ -910,6 +933,7 @@ procedure xboxkrnl_RtlGetCallersAddress(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlGetCallersAddress(CallersAddress, CallersCaller);
   EmuSwapFS(fsXbox);
 end;
@@ -945,6 +969,7 @@ procedure xboxkrnl_RtlInitUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlInitUnicodeString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
@@ -984,6 +1009,7 @@ function xboxkrnl_RtlIntegerToChar(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlIntegerToChar(Value, Base, Length, Str);
   EmuSwapFS(fsXbox);
 end;
@@ -996,6 +1022,7 @@ function xboxkrnl_RtlIntegerToUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlIntegerToUnicodeString(Value, Base, Str);
   EmuSwapFS(fsXbox);
 end;
@@ -1007,13 +1034,12 @@ procedure xboxkrnl_RtlLeaveCriticalSection
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-
+  // TODO -oDxbx : Add logging
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlLeaveCriticalSection(CriticalSection);
 {$ELSE}
   JwaNative.RtlLeaveCriticalSection(CriticalSection);
 {$ENDIF}
-
   EmuSwapFS(fsXbox);
 end;
 
@@ -1023,6 +1049,7 @@ procedure xboxkrnl_RtlLeaveCriticalSectionAndRegion(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:50
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
 {$IFDEF XBOX_CRITICAL_SECTION}
   X_RtlLeaveCriticalSection(CriticalSection); // TODO : Do something better (region-related?)
 {$ELSE}
@@ -1052,6 +1079,7 @@ procedure xboxkrnl_RtlMapGenericMask(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlMapGenericMask(AccessMask, GenericMapping);
   EmuSwapFS(fsXbox);
 end;
@@ -1064,6 +1092,7 @@ procedure xboxkrnl_RtlMoveMemory(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlMoveMemory(Destination, Source, Length);
   EmuSwapFS(fsXbox);
 end;
@@ -1131,6 +1160,7 @@ procedure xboxkrnl_RtlRaiseStatus(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlRaiseStatus(Status);
   EmuSwapFS(fsXbox);
 end;
@@ -1170,10 +1200,10 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuKrnl : RtlTimeToTimeFields' +
         #13#10'(' +
-        #13#10'   Time                : 0x%.08X' +
+        #13#10'   Time                : 0x%.08X (%d)' +
         #13#10'   TimeFields          : 0x%.08X' +
         #13#10');',
-        [Time, TimeFields]);
+        [Time, QuadPart(Time), TimeFields]);
 {$ENDIF}
 
   JwaNative.RtlTimeToTimeFields(Time, TimeFields);
@@ -1214,6 +1244,7 @@ function xboxkrnl_RtlUlongByteSwap(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUlongByteSwap(Source);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -1254,6 +1285,7 @@ function xboxkrnl_RtlUnicodeStringToInteger(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUnicodeStringToInteger(Str, Base, Value);
   EmuSwapFS(fsXbox);
 end;
@@ -1280,6 +1312,7 @@ function xboxkrnl_RtlUnicodeToMultiByteSize(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUnicodeToMultiByteSize(BytesInMultiByteString, UnicodeString, BytesInUnicodeString);
   EmuSwapFS(fsXbox);
 end;
@@ -1293,6 +1326,7 @@ procedure xboxkrnl_RtlUnwind(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlUnwind(TargetFrame, TargetIp, ExceptionRecord, ReturnValue);
   EmuSwapFS(fsXbox);
 end;
@@ -1303,6 +1337,7 @@ function xboxkrnl_RtlUpcaseUnicodeChar(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUpcaseUnicodeChar(SourceCharacter);
   EmuSwapFS(fsXbox);
 end;
@@ -1315,6 +1350,7 @@ function xboxkrnl_RtlUpcaseUnicodeString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUpcaseUnicodeString(DestinationString, SourceString, Boolean(AllocateDestinationString));
   EmuSwapFS(fsXbox);
 end;
@@ -1329,6 +1365,7 @@ function xboxkrnl_RtlUpcaseUnicodeToMultiByteN(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUpcaseUnicodeToMultiByteN(MbString, MbSize, {var}ResultSize^, UnicodeString, UnicodeSize);
   EmuSwapFS(fsXbox);
 end;
@@ -1339,6 +1376,7 @@ function xboxkrnl_RtlUpperChar(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUpperChar(Character);
   EmuSwapFS(fsXbox);
 end;
@@ -1350,6 +1388,7 @@ procedure xboxkrnl_RtlUpperString(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlUpperString(DestinationString, SourceString);
   EmuSwapFS(fsXbox);
 end;
@@ -1362,6 +1401,7 @@ function xboxkrnl_RtlUshortByteSwap(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   Result := JwaNative.RtlUshortByteSwap(Source);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -1386,6 +1426,7 @@ procedure xboxkrnl_RtlZeroMemory(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+  // TODO -oDxbx : Add logging
   JwaNative.RtlZeroMemory(Destination, Length);
   EmuSwapFS(fsXbox);
 end;

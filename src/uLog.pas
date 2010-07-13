@@ -80,13 +80,21 @@ const
     lfVertexBuffer  = $00000800; //
     lfPushBuffer    = $00001000; //
     lfInvalid       = $00002000; //
+    lfHeap          = $00004000; //
+    lfFile          = $00008000; //
+    lfSound         = $00010000; //
+    lfGraphics      = $00020000; //
+    lfThreading     = $00040000; //
+
+// Note : Some units declare (and use) lfUnit, a variable that best describes the logging in these units.
 
 
-type  TLogFlags = DWORD; // 'set of TLogFlag' prevents inlining of MayLog
+type TLogFlags = DWORD; // 'set of TLogFlag' prevents inlining of MayLog
 
 var
   // This field indicates all logging flags that are currently active :
   g_ActiveLogFlags: TLogFlags = lfAlways or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfSymbolScan;
+  g_DisabledLogFlags: TLogFlags = lfHeap;
 
 function MayLog(const aFlags: TLogFlags): Boolean; inline;
 procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); inline;
@@ -164,7 +172,8 @@ var
 // TODO -oDxbx: Apply this to all DbgPrintf calls, and put those in inline methods to speed things up
 function MayLog(const aFlags: TLogFlags): Boolean; // inline;
 begin
-  Result := (aFlags or g_ActiveLogFlags) > 0;
+  Result := ((aFlags or g_ActiveLogFlags) > 0)
+        and ((aFlags or g_DisabledLogFlags) = 0);
 end;
 
 procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); // inline;

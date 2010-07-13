@@ -485,7 +485,7 @@ begin
      #13#10'   DesiredAccess       : 0x%.08X' +
      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
      #13#10'   IoStatusBlock       : 0x%.08X' +
-     #13#10'   AllocationSize      : 0x%.08X' +
+     #13#10'   AllocationSize      : 0x%.08X (%d)' +
      #13#10'   FileAttributes      : 0x%.08X' +
      #13#10'   ShareAccess         : 0x%.08X' +
      #13#10'   Disposition         : 0x%.08X' +
@@ -493,7 +493,7 @@ begin
      #13#10'   Options             : 0x%.08X' +
      #13#10');',
      [FileHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-      IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options]);
+      IoStatusBlock, AllocationSize, QuadPart(AllocationSize), FileAttributes, ShareAccess, Disposition, CreateOptions, Options]);
 {$ENDIF}
 
   Result := STATUS_SUCCESS;

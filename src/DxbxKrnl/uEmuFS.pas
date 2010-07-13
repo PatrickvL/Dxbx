@@ -88,6 +88,8 @@ const
 
 implementation
 
+const lfUnit = lfCxbx or lfThreading;
+
 // is the current fs register the xbox emulation variety?
 function EmuIsXboxFS(): _bool;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
@@ -298,7 +300,7 @@ var
   NewPcr: PKPCR;
   EThread: PETHREAD;
 begin
-  if MayLog(lfCxbx or lfExtreme) then
+  if MayLog(lfUnit or lfExtreme) then
     DbgPrintf('Entering EmuGenerateFS() : '#13#10 + DumpCurrentFS());
 
   // copy global TLS to the current thread
@@ -320,7 +322,7 @@ begin
   end;
 
   // dump raw TLS data
-  if MayLog(lfCxbx or lfTrace) then
+  if MayLog(lfUnit or lfTrace) then
   begin
     if (pNewTLS = nil)
     or (dwCopySize + dwZeroSize = 0) then
@@ -369,7 +371,7 @@ begin
     Dxbx_IsXboxFS := False;
   end;
 
-  if MayLog(lfCxbx or lfExtreme) then
+  if MayLog(lfUnit or lfExtreme) then
     DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
 
   // generate TIB
@@ -412,14 +414,14 @@ begin
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
 
-  if MayLog(lfCxbx or lfExtreme) then
+  if MayLog(lfUnit or lfExtreme) then
   begin
     DbgPrintf('Xbox FS'#13#10 + DumpXboxFS(NewPcr));
 
     DbgPrintf('swap back into the "OrgFS" : '#13#10 + DumpCurrentFS());
   end;
 
-  if MayLog(lfCxbx or lfDebug) then
+  if MayLog(lfUnit or lfDebug) then
     DbgPrintf('EmuFS : CurrentFS=%.04x  OrgFS=%d  NewFS=%d  pTLS=0x%.08x', [GetFS(), OrgFS, NewFS, pTLS]);
 end;
 
