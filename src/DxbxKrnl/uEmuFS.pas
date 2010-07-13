@@ -196,6 +196,19 @@ begin
   Result := GetTIBEntry(FS_SelfPcr);
 end;
 
+type
+  RDxbxTIBUserData = record
+    Dxbx_SwapFS: Word;
+    Dxbx_IsXboxFS: ByteBool;
+    Dxbx_Reserved: ByteBool;
+  end;
+  PDxbxTIBUserData = ^RDxbxTIBUserData;
+
+function DxbxTIBUserData(const aTIB: PNT_TIB): PDxbxTIBUserData; inline;
+begin
+  Result := PDxbxTIBUserData(@(aTIB.ArbitraryUserPointer));
+end;
+
 function DumpXboxFS(const aFS: PKPCR): string;
 begin
   with aFS.NtTib do
@@ -206,24 +219,24 @@ begin
       '$%.02x KPCR.NT_TIB.SubSystemTib: PVOID = $%.08x'#13#10 +
       '$%.02x KPCR.NT_TIB.FiberData: PVOID = $%.08x'#13#10 +
       '$%.02x KPCR.NT_TIB.Version: ULONG = $%.08x'#13#10 +
-      '$%.02x KPCR.NT_TIB.Dxbx_SwapFS: WORD = $%.04x'#13#10 +
-      '$%.02x KPCR.NT_TIB.Dxbx_IsXboxFS: WORDBOOL = $%.04x'#13#10 +
+//      '$%.02x KPCR.NT_TIB.Dxbx_SwapFS: WORD = $%.04x'#13#10 +
+//      '$%.02x KPCR.NT_TIB.Dxbx_IsXboxFS: WORDBOOL = $%.04x'#13#10 +
       '$%.02x KPCR.NT_TIB.Self: PNT_TIB = $%.08x',
       [FIELD_OFFSET(PKPCR(nil).NtTib.ExceptionList), ExceptionList,
       FIELD_OFFSET(PKPCR(nil).NtTib.StackBase), StackBase,
       FIELD_OFFSET(PKPCR(nil).NtTib.StackLimit), StackLimit,
       FIELD_OFFSET(PKPCR(nil).NtTib.SubSystemTib), SubSystemTib,
-      FIELD_OFFSET(PKPCR(nil).NtTib.union_a.FiberData), union_a.FiberData,
-      FIELD_OFFSET(PKPCR(nil).NtTib.union_a.Version), union_a.Version,
-      FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_SwapFS), union_b.Dxbx_SwapFS,
-      FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_IsXboxFS), union_b.Dxbx_IsXboxFS,
+      FIELD_OFFSET(PKPCR(nil).NtTib.FiberData), FiberData,
+      FIELD_OFFSET(PKPCR(nil).NtTib.Version), Version,
+//      FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_SwapFS), union_b.Dxbx_SwapFS,
+//      FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_IsXboxFS), union_b.Dxbx_IsXboxFS,
       FIELD_OFFSET(PKPCR(nil).NtTib.Self), aFS.NtTib.Self]);
 
   with aFS^ do
     Result := Result + DxbxFormat(#13#10 +
       '$%.02x KPCR.SelfPcr: PKPCR = $%.08x'#13#10 +
       '$%.02x KPCR.Prcb: PKPRCB = $%.08x'#13#10 +
-      '$%.02x KPCR.Irql: UCHAR = %3d',
+      '$%.02x KPCR.Irql: KIRQL = %3d',
       [FIELD_OFFSET(PKPCR(nil).SelfPcr), SelfPcr,
       FIELD_OFFSET(PKPCR(nil).Prcb), Prcb,
       FIELD_OFFSET(PKPCR(nil).Irql), Irql]);
@@ -350,8 +363,11 @@ begin
   end;
 
   // update "OrgFS" with NewFS and (bIsXboxFS = False)
-  OrgNtTib.union_b.Dxbx_SwapFS := NewFS;
-  OrgNtTib.union_b.Dxbx_IsXboxFS := False;
+  with DxbxTIBUserData(OrgNtTib)^ do
+  begin
+    Dxbx_SwapFS := NewFS;
+    Dxbx_IsXboxFS := False;
+  end;
 
   if MayLog(lfCxbx or lfExtreme) then
     DbgPrintf('update "OrgFS" ($%.04x) with NewFS ($%.04x) and (bIsXboxFS = False) : '#13#10 + DumpCurrentFS(), [OrgFS, NewFS]);
@@ -387,8 +403,11 @@ begin
   end;
 
   // update "NewFS" with OrgFS and (bIsXboxFS = True)
-  NewPcr.NtTib.union_b.Dxbx_SwapFS := OrgFS;
-  NewPcr.NtTib.union_b.Dxbx_IsXboxFS := True;
+  with DxbxTIBUserData(@(NewPcr.NtTib))^ do
+  begin
+    Dxbx_SwapFS := OrgFS;
+    Dxbx_IsXboxFS := True;
+  end;
 
   // save "TLSPtr" inside NewFS.StackBase
   NewPcr.NtTib.StackBase := pNewTLS;
@@ -427,14 +446,45 @@ begin
   EmuDeallocateLDT(wSwapFS);
 end;
 
-initialization
+procedure AssertCorrectXboxStructDeclarations;
+begin
+  // Check all structs defined in XboxKrnl for correct size :
+  Assert(SizeOf(ANSI_STRING) = $08);
+  Assert(SizeOf(UNICODE_STRING) = $08);
+  Assert(SizeOf(LIST_ENTRY) = $08);
+  Assert(SizeOf(OBJECT_ATTRIBUTES) = $0C);
+  Assert(SizeOf(MM_STATISTICS) = $24);
+  Assert(SizeOf(PS_STATISTICS) = $0C);
+  Assert(SizeOf(IO_STATUS_BLOCK) = $08);
+  Assert(SizeOf(LAUNCH_DATA_HEADER) = $214);
+  Assert(SizeOf(LAUNCH_DATA_PAGE) = $1000);
+  Assert(SizeOf(DISPATCHER_HEADER) = $10);
+  Assert(SizeOf(KTIMER) = $28);
+  Assert(SizeOf(KDPC) = $1C);
+  Assert(SizeOf(RTL_CRITICAL_SECTION) = $1C);
+  Assert(SizeOf(NT_TIB) = $1C);
+  Assert(SizeOf(KTHREAD) = $110);
+  Assert(SizeOf(ETHREAD) = $140);
+  Assert(SizeOf(FLOATING_SAVE_AREA) = $204);
+  Assert(SizeOf(FX_SAVE_AREA) = $210);
+  Assert(SizeOf(KPRCB) = $25C);
+  Assert(SizeOf(KPCR) = $284);
+  Assert(SizeOf(XBOX_HARDWARE_INFO) = $08);
+  Assert(SizeOf(XBOX_REFURB_INFO) = $10);
 
-  Assert(FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_SwapFS) = DxbxFS_SwapFS);
-  Assert(FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_IsXboxFS) = DxbxFS_IsXboxFS);
+  // Check KPCR definition for correct offsets :
+//  Assert(FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_SwapFS) = DxbxFS_SwapFS);
+//  Assert(FIELD_OFFSET(PKPCR(nil).NtTib.union_b.Dxbx_IsXboxFS) = DxbxFS_IsXboxFS);
   Assert(FIELD_OFFSET(PKPCR(nil).SelfPcr) = FS_SelfPcr);
   Assert(FIELD_OFFSET(PKPCR(nil).Prcb) = FS_Prcb);
   Assert(FIELD_OFFSET(PKPCR(nil).Irql) = FS_Irql);
   Assert(FIELD_OFFSET(PKPCR(nil).PrcbData) = FS_PrcbData);
+
+end;
+
+initialization
+
+  AssertCorrectXboxStructDeclarations;
 
 {$IFDEF DXBX_EXTENSIVE_CALLSTACK_LOGGING}
   LastCallStackInfo[True] := JclCreateStackList(False, 0, nil, True);

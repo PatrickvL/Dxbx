@@ -1706,15 +1706,15 @@ begin
         [ApcContext, IoStatusBlock, Reserved]);
 
   DbgPrintf('IoStatusBlock->Pointer     : 0x%.08X' +
-      #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.u1.Pointer, IoStatusBlock.Information]);
+      #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.Status, IoStatusBlock.Information]);
 {$ENDIF}
 
   dwEsi := uint32(IoStatusBlock);
 
-  if((IoStatusBlock.u1.Status and $C0000000) = $C0000000) then
+  if((IoStatusBlock.Status and $C0000000) = $C0000000) then
   begin
     dwEcx := 0;
-    dwEax := JwaNative.RtlNtStatusToDosError(IoStatusBlock.u1.Status);
+    dwEax := JwaNative.RtlNtStatusToDosError(IoStatusBlock.Status);
   end
   else
   begin
