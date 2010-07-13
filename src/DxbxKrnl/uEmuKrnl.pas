@@ -154,8 +154,6 @@ const
 type
   Unknown = INT_PTR; // generic 32 bit argument type
   dtU32 = Unknown;
-  dtObjectAttributes = Unknown;
-  dtACCESS_MASK = Unknown;
   dtBLOB = Unknown;
 
 function Unimplemented(const aAPI: string): NTSTATUS;
