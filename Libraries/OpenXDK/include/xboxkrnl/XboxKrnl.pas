@@ -283,6 +283,8 @@ type
 type
 {$IFDEF DXBX_USE_JWA_TYPES}
   _STRING = JwaWinType._STRING;
+  PSTRING = JwaWinType.PSTRING;
+
   ANSI_STRING = JwaWinType.ANSI_STRING;
   PANSI_STRING = JwaWinType.PANSI_STRING;
 {$ELSE}
@@ -291,9 +293,15 @@ type
     {0x02}MaximumLength: USHORT;
     {0x04}Buffer: PAnsiChar;
   end; {=0x08}
+  // Delphi : Don't redeclare STRING = _STRING;
+  PSTRING = ^_STRING;
+
   ANSI_STRING = _STRING;
   PANSI_STRING = ^ANSI_STRING;
 {$ENDIF}
+
+type
+  POBJECT_STRING = PSTRING;
 
 // ******************************************************************
 // * UNICODE_STRING  *Same as Win2k/XP*
