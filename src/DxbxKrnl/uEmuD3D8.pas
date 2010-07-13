@@ -94,6 +94,13 @@ function XTL_EmuIDirect3DDevice8_CreateTexture(Width: UINT; Height: UINT;
 function XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width: UINT; Height: UINT;
     Depth: UINT; Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT;
     Pool: D3DPOOL; ppVolumeTexture: PPX_D3DVolumeTexture): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_CreateCubeTexture(
+    EdgeLength: UINT;
+    Levels: UINT;
+    Usage: DWORD;
+    Format: X_D3DFORMAT;
+    Pool: D3DPOOL;
+    ppCubeTexture: PPX_D3DCubeTexture): HRESULT; stdcall;
 function XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis: PX_D3DTexture;
     Level: UINT;
     ppSurfaceLevel: PPX_D3DSurface): HRESULT; stdcall;
@@ -3216,11 +3223,8 @@ begin
      X_D3DRTYPE_VOLUMETEXTURE: // 4
         XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
      X_D3DRTYPE_CUBETEXTURE: // 5
-     begin
-       EmuSwapFS(fsWindows);
-       DxbxKrnlCleanup('Cube textures temporarily not supported');  // TODO : implement this
-       EmuSwapFS(fsXbox);
-     end;
+       // TODO -oDxbx : Check what the actual EdgeLength value should be
+       XTL_EmuIDirect3DDevice8_CreateCubeTexture({EdgeLength=?}Width, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
   else
     EmuSwapFS(fsWindows);
     DxbxKrnlCleanup('D3DResource := %d is not supported!', [Ord(D3DResource)]);
@@ -3507,8 +3511,8 @@ end;
 
 function XTL_EmuIDirect3DDevice8_CreateCubeTexture
 (
-    EdgeLength: UINT; 
-    Levels: UINT; 
+    EdgeLength: UINT;
+    Levels: UINT;
     Usage: DWORD;
     Format: X_D3DFORMAT;
     Pool: D3DPOOL;
@@ -8254,7 +8258,7 @@ begin
 
   XTL_EmuUpdateDeferredStates();
 
-  EmuUnswizzleActiveTexture();
+//  EmuUnswizzleActiveTexture(); // This messes up the loading screen background image in Rayman Arena
 
   if (PrimitiveType = X_D3DPT_LINELOOP) or (PrimitiveType = X_D3DPT_QUADLIST) then
     EmuWarning('Unsupported PrimitiveType! (%d)', [Ord(PrimitiveType)]);
