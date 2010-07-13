@@ -281,7 +281,7 @@ begin
       #13#10'   Alertable           : 0x%.08X'+
       #13#10'   Interval            : 0x%.16X' + // was %I64X
       #13#10');',
-      [Ord(WaitMode), Alertable, Interval, QuadPart(Interval)]);
+      [Ord(WaitMode), Alertable, QuadPart(Interval)]);
 {$ENDIF}
 
   ret := NtDelayExecution(Alertable, Interval);
@@ -579,8 +579,6 @@ procedure xboxkrnl_KeQuerySystemTime
   CurrentTime: PLARGE_INTEGER
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  SystemTime: _SYSTEMTIME;
 begin
   EmuSwapFS(fsWindows);
 
@@ -594,9 +592,8 @@ begin
 
   // TODO -oCXBX: optimize for WinXP if speed ever becomes important here
 
-  GetSystemTime({var}SystemTime);
-
-  SystemTimeToFileTime({var}SystemTime, {var}PFILETIME(CurrentTime)^);
+  // Dxbx note : We use a more direct implementation than Cxbx here :
+  {ignore result}JwaNative.NtQuerySystemTime(CurrentTime);
 
   EmuSwapFS(fsXbox);
 end;
