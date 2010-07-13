@@ -24,7 +24,8 @@ interface
 uses
   // Jedi Win32API
   JwaWinType,
-  JwaWinNT;
+  JwaWinNT,
+  JwaNative;
 
 (*
 // ******************************************************************
@@ -210,165 +211,191 @@ const OUT =;
 type
   KPROCESSOR_MODE = CCHAR;
 
-(*
 // ******************************************************************
 // * MODE
 // ******************************************************************
 type
- MODE = (
+  MODE = {enum}(
     KernelMode,
     UserMode,
     MaximumMode
- );
+  );
 
 // ******************************************************************
-// * WAIT_TYPE
+// * WAIT_TYPE *Same as Win2k/XP*
 // ******************************************************************
 type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
-   **** if a constant has a value, do not assign a new value **** )
- _WAIT_TYPE
-begin
+   **** if a constant has a value, do not assign a new value ****)
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _WAIT_TYPE = JwaWinType._WAIT_TYPE;
+  WAIT_TYPE = JwaWinType.WAIT_TYPE;
+{$ELSE}
+  _WAIT_TYPE = {enum}(
     WaitAll = 0,
     WaitAny = 1
- end;
-WAIT_TYPE;
-*)
+  );
+  WAIT_TYPE = _WAIT_TYPE;
+{$ENDIF}
 
 // ******************************************************************
-// * LARGE_INTEGER
+// * LARGE_INTEGER  *Same as Win2k/XP*
 // ******************************************************************
 type
 {$IFDEF DXBX_USE_JWA_TYPES}
   LARGE_INTEGER = JwaWinType.LARGE_INTEGER;
   PLARGE_INTEGER = JwaWinType.PLARGE_INTEGER;
 {$ELSE}
-  LARGE_INTEGER = packed record
+  LARGE_INTEGER = record
     case Integer of
       0: (
-        LowPart: DWORD;
-        HighPart: LongInt);
+        {0x00}LowPart: DWORD;
+        {0x04}HighPart: LongInt);
       1: (
-        QuadPart: LONGLONG);
-  end;
+        {0x00}QuadPart: LONGLONG);
+  end; {=0x08}
   PLARGE_INTEGER = ^LARGE_INTEGER;
 {$ENDIF}
 
 // ******************************************************************
-// * ULARGE_INTEGER
+// * ULARGE_INTEGER *Same as Win2k/XP*
 // ******************************************************************
 type
 {$IFDEF DXBX_USE_JWA_TYPES}
   ULARGE_INTEGER = JwaWinType.ULARGE_INTEGER;
   PULARGE_INTEGER = JwaWinType.PULARGE_INTEGER;
 {$ELSE}
-  ULARGE_INTEGER = packed record
+  ULARGE_INTEGER = record
     case Integer of
       0: (
-        LowPart: DWORD;
-        HighPart: DWORD);
+        {0x00}LowPart: DWORD;
+        {0x04}HighPart: DWORD);
       1: (
-        QuadPart: ULONGLONG);
-  end;
+        {0x00}QuadPart: ULONGLONG);
+  end; {=0x08}
   PULARGE_INTEGER = ^ULARGE_INTEGER;
 {$ENDIF}
 
+// ******************************************************************
+// * STRING  *Same as Win2k/XP*
+// ******************************************************************
+type
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _STRING = JwaWinType._STRING;
+  ANSI_STRING = JwaWinType.ANSI_STRING;
+  PANSI_STRING = JwaWinType.PANSI_STRING;
+{$ELSE}
+  _STRING = record
+    {0x00}Length: USHORT;
+    {0x02}MaximumLength: USHORT;
+    {0x04}Buffer: PAnsiChar;
+  end; {=0x08}
+  ANSI_STRING = _STRING;
+  PANSI_STRING = ^ANSI_STRING;
+{$ENDIF}
+
+// ******************************************************************
+// * UNICODE_STRING  *Same as Win2k/XP*
+// ******************************************************************
+type
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _UNICODE_STRING = JwaWinType._UNICODE_STRING;
+  UNICODE_STRING = JwaWinType.UNICODE_STRING;
+  PUNICODE_STRING = JwaWinType.PUNICODE_STRING;
+{$ELSE}
+  _UNICODE_STRING = record
+    {0x00}Length: USHORT;
+    {0x02}MaximumLength: USHORT;
+    {0x04}Buffer: PWideChar;
+  end; {=0x08}
+  UNICODE_STRING = _UNICODE_STRING;
+  PUNICODE_STRING = ^UNICODE_STRING;
+{$ENDIF}
+
+// ******************************************************************
+// * LIST_ENTRY  *Same as Win2k/XP*
+// ******************************************************************
+type
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _LIST_ENTRY = JwaWinType._LIST_ENTRY;
+  LIST_ENTRY = JwaWinType.LIST_ENTRY;
+  PLIST_ENTRY = JwaWinType.PLIST_ENTRY;
+{$ELSE}
+  PLIST_ENTRY = ^LIST_ENTRY;
+  _LIST_ENTRY = record
+    {0x00}Flink: PLIST_ENTRY;
+    {0x04}Blink: PLIST_ENTRY;
+  end; {=0x08}
+  LIST_ENTRY = _LIST_ENTRY;
+{$ENDIF}
+
 (*
-// ******************************************************************
-// * STRING
-// ******************************************************************
-type
-
-STRING,ANSI_STRING,*PSTRING,*PANSI_STRING  = packed record
-    USHORT  Length;
-    USHORT  MaximumLength;
-    PCHAR   Buffer;
- end;G;
-
-// ******************************************************************
-// * UNICODE_STRING
-// ******************************************************************
-type
-
-UNICODE_STRING,*PUNICODE_STRING  = packed record
-    USHORT  Length;
-    USHORT  MaximumLength;
-    USHORT *Buffer;
- end;
-
-// ******************************************************************
-// * LIST_ENTRY
-// ******************************************************************
-type
-
-LIST_ENTRY,*PLIST_ENTRY  = packed record
-    struct _LIST_ENTRY *Flink;
-    struct _LIST_ENTRY *Blink;
- end;
-
 // ******************************************************************
 // * FILE_FS_SIZE_INFORMATION
 // ******************************************************************
 type
 
-FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = packed record
+FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = record
     LARGE_INTEGER   TotalAllocationUnits;
     LARGE_INTEGER   AvailableAllocationUnits;
     ULONG           SectorsPerAllocationUnit;
     ULONG           BytesPerSector;
  end;
+*)
 
 // ******************************************************************
-// * FILE_INFORMATION_CLASS
+// * FILE_INFORMATION_CLASS *Same as Win2k/XP*
 // ******************************************************************
 type
- _FILE_INFORMATION_CLASS = (
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _FILE_INFORMATION_CLASS = JwaNative._FILE_INFORMATION_CLASS;
+  FILE_INFORMATION_CLASS = JwaNative.FILE_INFORMATION_CLASS;
+  PFILE_INFORMATION_CLASS = JwaNative.PFILE_INFORMATION_CLASS;
+{$ELSE}
+  _FILE_INFORMATION_CLASS = {enum}(
     FileFiller0,
     FileDirectoryInformation, // = 1
-    FileFullDirectoryInformation,
-    FileBothDirectoryInformation,
-    FileBasicInformation,
-    FileStandardInformation,
-    FileInternalInformation,
-    FileEaInformation,
-    FileAccessInformation,
-    FileNameInformation,
-    FileRenameInformation,
-    FileLinkInformation,
-    FileNamesInformation,
-    FileDispositionInformation,
-    FilePositionInformation,
-    FileFullEaInformation,
-    FileModeInformation,
-    FileAlignmentInformation,
-    FileAllInformation,
-    FileAllocationInformation,
-    FileEndOfFileInformation,
-    FileAlternateNameInformation,
-    FileStreamInformation,
-    FilePipeInformation,
-    FilePipeLocalInformation,
-    FilePipeRemoteInformation,
-    FileMailslotQueryInformation,
-    FileMailslotSetInformation,
-    FileCompressionInformation,
-    FileCopyOnWriteInformation,
-    FileCompletionInformation,
-    FileMoveClusterInformation,
-    FileQuotaInformation,
-    FileReparsePointInformation,
-    FileNetworkOpenInformation,
-    FileObjectIdInformation,
-    FileTrackingInformation,
-    FileOleDirectoryInformation,
-    FileContentIndexInformation,
-    FileInheritContentIndexInformation,
-    FileOleInformation,
-    FileMaximumInformation
- );
+    FileFullDirectoryInformation, // = 2
+    FileBothDirectoryInformation, // = 3
+    FileBasicInformation, // = 4
+    FileStandardInformation, // = 5
+    FileInternalInformation, // = 6
+    FileEaInformation, // = 7
+    FileAccessInformation, // = 8
+    FileNameInformation, // = 9
+    FileRenameInformation, // = 10
+    FileLinkInformation, // = 11
+    FileNamesInformation, // = 12
+    FileDispositionInformation, // = 13
+    FilePositionInformation, // = 14
+    FileFullEaInformation, // = 15
+    FileModeInformation, // = 16
+    FileAlignmentInformation, // = 17
+    FileAllInformation, // = 18
+    FileAllocationInformation, // = 19
+    FileEndOfFileInformation, // = 20
+    FileAlternateNameInformation, // = 21
+    FileStreamInformation, // = 22
+    FilePipeInformation, // = 23
+    FilePipeLocalInformation, // = 24
+    FilePipeRemoteInformation, // = 25
+    FileMailslotQueryInformation, // = 26
+    FileMailslotSetInformation, // = 27
+    FileCompressionInformation, // = 28
+    FileObjectIdInformation, // = 29
+    FileCompletionInformation, // = 30
+    FileMoveClusterInformation, // = 31
+    FileQuotaInformation, // = 32
+    FileReparsePointInformation, // = 33
+    FileNetworkOpenInformation, // = 34
+    FileAttributeTagInformation, // = 35
+    FileTrackingInformation, // = 36
+    FileMaximumInformation // = 37
+  );
   FILE_INFORMATION_CLASS = _FILE_INFORMATION_CLASS;
   PFILE_INFORMATION_CLASS = ^FILE_INFORMATION_CLASS;
+{$ENDIF}
 
 // ******************************************************************
 // * CreateDisposition Values for NtCreateFile
@@ -412,7 +439,6 @@ const FILE_VALID_OPTION_FLAGS =                 $00ffffff;
 const FILE_VALID_PIPE_OPTION_FLAGS =            $00000032;
 const FILE_VALID_MAILSLOT_OPTION_FLAGS =        $00000032;
 const FILE_VALID_SET_FLAGS =                    $00000036;
-*)
 
 // ******************************************************************
 // * OBJECT_ATTRIBUTES
@@ -422,13 +448,13 @@ const FILE_VALID_SET_FLAGS =                    $00000036;
 //     SecurityQualityOfService fields.  Also, ObjectName is ANSI, not
 //     Unicode.
 type
-  _OBJECT_ATTRIBUTES = packed record
-    RootDirectory: HANDLE;
-    ObjectName: PANSI_STRING;
-    Attributes: ULONG;
- end;
- OBJECT_ATTRIBUTES = _OBJECT_ATTRIBUTES;
- POBJECT_ATTRIBUTES = ^OBJECT_ATTRIBUTES;
+  _OBJECT_ATTRIBUTES = record
+    {0x00}RootDirectory: HANDLE;
+    {0x04}ObjectName: PANSI_STRING;
+    {0x08}Attributes: ULONG;
+  end; {=0x0C}
+  OBJECT_ATTRIBUTES = _OBJECT_ATTRIBUTES;
+  POBJECT_ATTRIBUTES = ^OBJECT_ATTRIBUTES;
 
 // Flags for OBJECT_ATTRIBUTES::Attributes
 const OBJ_INHERIT             = $00000002;
@@ -440,16 +466,19 @@ const OBJ_OPENLINK            = $00000100;
 const OBJ_KERNEL_HANDLE       = $00000200;
 const OBJ_VALID_ATTRIBUTES    = $000003F2;
 
-(*
 // ******************************************************************
-// * FSINFOCLASS
+// * FSINFOCLASS *Same as Win2k/XP*
 // ******************************************************************
 type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
-   **** if a constant has a value, do not assign a new value **** )
- _FSINFOCLASS
-begin
+   **** if a constant has a value, do not assign a new value ****)
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _FSINFOCLASS = JwaNative._FSINFOCLASS;
+  FS_INFORMATION_CLASS = JwaNative.FS_INFORMATION_CLASS;
+  PFS_INFORMATION_CLASS = JwaNative.PFS_INFORMATION_CLASS;
+{$ELSE}
+  _FSINFOCLASS = {enum}(
     FileFsVolumeInformation       = 1,
     FileFsLabelInformation,      // 2
     FileFsSizeInformation,       // 3
@@ -459,15 +488,18 @@ begin
     FileFsFullSizeInformation,   // 7
     FileFsObjectIdInformation,   // 8
     FileFsMaximumInformation
- end;
-FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
+  );
+  FS_INFORMATION_CLASS = _FSINFOCLASS;
+  PFS_INFORMATION_CLASS = ^FS_INFORMATION_CLASS;
+{$ENDIF}
 
+(*
 // ******************************************************************
 // * FILE_DIRECTORY_INFORMATION
 // ******************************************************************
 type
 
-FILE_DIRECTORY_INFORMATION  = packed record _FILE_DIRECTORY_INFORMATION
+FILE_DIRECTORY_INFORMATION  = record _FILE_DIRECTORY_INFORMATION
  
     ULONG           NextEntryOffset;
     ULONG           FileIndex;
@@ -482,59 +514,74 @@ FILE_DIRECTORY_INFORMATION  = packed record _FILE_DIRECTORY_INFORMATION
                 FileName: array [0..1-1] of CHAR;        // Offset: 0x40
  end;
 *)
-// *******************************************
-// * MM_STATISTICS
+
+// ******************************************************************
+// * MM_STATISTICS (Memory manager statistics)
 // ******************************************************************
 type
-  MM_STATISTICS = packed record
-    Length: ULONG;
-    TotalPhysicalPages: ULONG;
-    AvailablePages: ULONG;
-    VirtualMemoryBytesCommitted: ULONG;
-    VirtualMemoryBytesReserved: ULONG;
-    CachePagesCommitted: ULONG;
-    PoolPagesCommitted: ULONG;
-    StackPagesCommitted: ULONG;
-    ImagePagesCommitted: ULONG;
-  end;
+  _MM_STATISTICS = record
+    {0x00}Length: ULONG;
+    {0x04}TotalPhysicalPages: ULONG;
+    {0x08}AvailablePages: ULONG;
+    {0x0C}VirtualMemoryBytesCommitted: ULONG;
+    {0x10}VirtualMemoryBytesReserved: ULONG;
+    {0x14}CachePagesCommitted: ULONG;
+    {0x18}PoolPagesCommitted: ULONG;
+    {0x1C}StackPagesCommitted: ULONG;
+    {0x20}ImagePagesCommitted: ULONG;
+  end; {=0x24}
+  MM_STATISTICS = _MM_STATISTICS;
   PMM_STATISTICS = ^MM_STATISTICS;
 
+// ******************************************************************
+// * PS_STATISTICS (Process statistics)
+// ******************************************************************
 type
-  PS_STATISTICS = packed record
-    Length: ULONG;
-    ThreadCount: ULONG;
-    HandleCount: ULONG;
-  end;
+  _PS_STATISTICS = record
+    {0x00}Length: ULONG;
+    {0x04}ThreadCount: ULONG;
+    {0x08}HandleCount: ULONG;
+  end; {=0x0C}
+  PS_STATISTICS = _PS_STATISTICS;
   PPS_STATISTICS = ^PS_STATISTICS;
 
 // ******************************************************************
 // * IO_STATUS_BLOCK *Same as Win2k/XP*
 // ******************************************************************
 type
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _IO_STATUS_BLOCK = JwaNative._IO_STATUS_BLOCK;
+  IO_STATUS_BLOCK = JwaNative.IO_STATUS_BLOCK;
+  PIO_STATUS_BLOCK = JwaNative.PIO_STATUS_BLOCK;
+{$ELSE}
   _IO_STATUS_BLOCK = record
-    u1: record case Integer of
-      0: (Status: NTSTATUS);
-      1: (Pointer: PVOID);
-    end;
-    Information: ULONG_PTR;
-  end;
+    {union} case Integer of
+      0: ({0x00}Status: NTSTATUS);
+      1: ({0x00}Pointer: PVOID;
+    {0x04}Information: ULONG_PTR;
+    ); // close last union case
+  end; {=0x08}
   IO_STATUS_BLOCK = _IO_STATUS_BLOCK;
   PIO_STATUS_BLOCK = ^IO_STATUS_BLOCK;
+{$ENDIF}
 
-(*
 // ******************************************************************
-// * EVENT_TYPE
+// * EVENT_TYPE *Same as Win2k/XP*
 // ******************************************************************
 type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
-   **** if a constant has a value, do not assign a new value **** )
- _EVENT_TYPE
-begin
+   **** if a constant has a value, do not assign a new value ****)
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _EVENT_TYPE = JwaWinType._EVENT_TYPE;
+  EVENT_TYPE = JwaWinType.EVENT_TYPE;
+{$ELSE}
+  _EVENT_TYPE = {enum}(
     NotificationEvent = 0,
     SynchronizationEvent
- end;
-EVENT_TYPE;
+  );
+  EVENT_TYPE = _EVENT_TYPE;
+{$ENDIF}
 
 // ******************************************************************
 // * BUS_DATA_TYPE
@@ -542,9 +589,8 @@ EVENT_TYPE;
 type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
-   **** if a constant has a value, do not assign a new value **** )
- _BUS_DATA_TYPE
-begin
+   **** if a constant has a value, do not assign a new value ****)
+  BUS_DATA_TYPE = {enum}(
     ConfigurationSpaceUndefined = $FF,
     Cmos                        = $0,
     EisaConfiguration           = $1,
@@ -558,16 +604,16 @@ begin
     MPSAConfiguration           = $9,
     PNPISAConfiguration         = $A,
     SgiInternalConfiguration    = $B,
-    MaximumBusDataType          = $C,
- end;
-BUS_DATA_TYPE;
+    MaximumBusDataType          = $C
+  );
 
+(*
 // ******************************************************************
 // * PCI_SLOT_NUMBER
 // ******************************************************************
 type
 
-    bits  = packed record
+    bits  = record
     union
     begin
         struct
@@ -591,7 +637,7 @@ const PCI_TYPE2_ADDRESSES =             5;
 // ******************************************************************
 type
 
-    type0  = packed record
+    type0  = record
     USHORT  VendorID;                   // 0x00 (ro)
     USHORT  DeviceID;                   // 0x02 (ro)
     USHORT  Command;                    // 0x04 Device control
@@ -667,64 +713,70 @@ type
 // * LAUNCH_DATA_HEADER
 // ******************************************************************
 type
-  LAUNCH_DATA_HEADER = packed record
-    dwLaunchDataType: DWORD;
-    dwTitleId: DWORD;
-    szLaunchPath: array [0..520 - 1] of UCHAR;
-    dwFlags: DWORD;
-  end;
+  LAUNCH_DATA_HEADER = record
+    {0x000}dwLaunchDataType: DWORD;
+    {0x004}dwTitleId: DWORD;
+    {0x008}szLaunchPath: array [0..520 - 1] of UCHAR;
+    {0x210}dwFlags: DWORD;
+  end; {=0x214}
   PLAUNCH_DATA_HEADER = ^LAUNCH_DATA_HEADER;
+
+const PAGE_SIZE=$1000; // *Same as Win2k/XP*
 
 // ******************************************************************
 // * LAUNCH_DATA_PAGE
 // ******************************************************************
+const MAX_LAUNCH_DATA_SIZE = 3072;
 type
-  LAUNCH_DATA_PAGE = packed record
-    Header: LAUNCH_DATA_HEADER;
-    Pad: array [0..492 - 1] of UCHAR;
-    LaunchData: array [0..3072 - 1] of UCHAR;
-  end;
+  LAUNCH_DATA_PAGE = record
+    {0x000}Header: LAUNCH_DATA_HEADER;
+    {0x214}Pad: array [0..(PAGE_SIZE-MAX_LAUNCH_DATA_SIZE-SizeOf(LAUNCH_DATA_HEADER)) - 1] of UCHAR;
+    {0x400}LaunchData: array [0..MAX_LAUNCH_DATA_SIZE - 1] of UCHAR;
+  end; {=0x1000}
   PLAUNCH_DATA_PAGE = ^LAUNCH_DATA_PAGE;
 
 // ******************************************************************
 // * DISPATCHER_HEADER
 // ******************************************************************
 type
-  DISPATCHER_HEADER = packed record
-    Type_: UCHAR; // 0x00
-    Absolute: UCHAR; // 0x01
-    Size: UCHAR; // 0x02
-    Inserted: UCHAR; // 0x03
-    SignalState: LongInt; // 0x04
-    WaitListHead: LIST_ENTRY; // 0x08
-  end;
+  DISPATCHER_HEADER = record
+    {0x00}Type_: UCHAR;
+    {0x01}Absolute: UCHAR;
+    {0x02}Size: UCHAR;
+    {0x03}Inserted: UCHAR;
+    {0x04}SignalState: LongInt;
+    {0x08}WaitListHead: LIST_ENTRY;
+  end; {=0x10}
 
-(*
 // ******************************************************************
-// * TIMER_TYPE
+// * TIMER_TYPE *Same as Win2k/XP*
 // ******************************************************************
 type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
-   **** if a constant has a value, do not assign a new value **** )
- _TIMER_TYPE
-begin
+   **** if a constant has a value, do not assign a new value ****)
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _TIMER_TYPE = JwaWinType._TIMER_TYPE;
+  TIMER_TYPE = JwaWinType.TIMER_TYPE;
+{$ELSE}
+  _TIMER_TYPE = {enum}(
     NotificationTimer     = 0,
     SynchronizationTimer  = 1
- end;
-TIMER_TYPE;
-*)
-// ******************************************************************
+  );
+  TIMER_TYPE = _TIMER_TYPE;
+{$ENDIF}
+
+  // ******************************************************************
 // * KTIMER (Timer Object)
 // ******************************************************************
 type
-  KTIMER = packed record
-    Header: DISPATCHER_HEADER; // 0x00
-    DueTime: ULARGE_INTEGER; // 0x10
-    TimerListEntry: LIST_ENTRY; // 0x18
-    Dpc: _PKDPC; // 0x20
-    Period: LongInt; // 0x24
-  end;
+  KTIMER = record
+    {0x00}Header: DISPATCHER_HEADER;
+    {0x10}DueTime: ULARGE_INTEGER;
+    {0x18}TimerListEntry: LIST_ENTRY;
+    {0x20}Dpc: _PKDPC;
+    {0x24}Period: LongInt;
+  end; {=0x28}
   PKTIMER = ^KTIMER;
 
 // ******************************************************************
@@ -760,16 +812,16 @@ type
 // * KDPC (Deferred Procedure Call (DPC) Object)
 // ******************************************************************
 type
-  KDPC = packed record
-    Type_: CSHORT; // 0x00
-    Number: UCHAR; // 0x02
-    Importance: UCHAR; // 0x03
-    DpcListEntry: LIST_ENTRY; // 0x04
-    DeferredRoutine: PKDEFERRED_ROUTINE; // 0x0C
-    DeferredContext: PVOID;
-    SystemArgument1: PVOID;
-    SystemArgument2: PVOID;
-  end;
+  KDPC = record
+    {0x00}Type_: CSHORT;
+    {0x02}Number: UCHAR;
+    {0x03}Importance: UCHAR;
+    {0x04}DpcListEntry: LIST_ENTRY;
+    {0x0C}DeferredRoutine: PKDEFERRED_ROUTINE;
+    {0x10}DeferredContext: PVOID;
+    {0x14}SystemArgument1: PVOID;
+    {0x18}SystemArgument2: PVOID;
+  end; {=0x1C}
   PKDPC = ^KDPC;
 
 // ******************************************************************
@@ -798,18 +850,18 @@ type
     {0x0C}OwningThread: HANDLE;
     {0x10}LockSemaphore: HANDLE;
     {0x14}SpinCount: ULONG_PTR;
-  end; {0x18}
+  end; {=0x18}
 
   Xbox1._RTL_CRITICAL_SECTION = record
     {0x00}RawEvent: array [0..4-1] of ULONG_PTR
     {0x10}LockCount: LONG;
     {0x14}RecursionCount: LONG;
     {0x18}OwningThread: HANDLE;
-  end; {0x1C}
+  end; {=0x1C}
 *)
 
 type
-  RTL_CRITICAL_SECTION = packed record
+  RTL_CRITICAL_SECTION = record
     // There's four different declarations possible of this section :
     Overlapped: record case Integer of
       0: (Unknown: array [0..4-1] of DWORD                ); // 0x00 .. 0x0F
@@ -817,14 +869,14 @@ type
 
       //  The following field is used for blocking when there is contention for
       //  the resource [Xbox1]
-      2: (Event: packed record
-            Type_: UCHAR;                                    // 0x00
-            Absolute_: UCHAR;                                // 0x01
-            Size: UCHAR;                                     // 0x02
-            Inserted: UCHAR;                                 // 0x03
-            SignalState: LONG;                               // 0x04
-            WaitListHead: LIST_ENTRY;                        // 0x08 .. 0x0F
-          end);
+      2: (Event: record
+            {0x00}Type_: UCHAR;
+            {0x01}Absolute_: UCHAR;
+            {0x02}Size: UCHAR;
+            {0x03}Inserted: UCHAR;
+            {0x04}SignalState: LONG;
+            {0x08}WaitListHead: LIST_ENTRY;                  // 0x08 .. 0x0F
+          end); {=0x10}
 
       // Dxbx Note : On the Xbox1, this data is an in-place event (also known as a RawEvent, which
       // you can see above), which doesn't have to be allocated anymore, as it's already in-place.
@@ -835,44 +887,47 @@ type
       // in an attempt to make WinNT see this structure as if it was a native critical section
       // (which I hope will make it compatible with WaitForSingle/MultipleObjects, and other API's) :
       3: (
-        DebugInfo: PRTL_CRITICAL_SECTION_DEBUG;              // 0x00 - keep this nil
-
-        LockCount: LONG;                                     // 0x04 - Copy Xbox1.LockCount into this
-        LockSemaphore: HANDLE;                               // 0x08 - overlaps Native.RecursionCount, safest to reuse
-        OwningThread: HANDLE                                 // 0x0C - Copy Xbox1.OwningThread into this
+        {0x00}DebugInfo: PRTL_CRITICAL_SECTION_DEBUG;        // keep this nil
+        {0x04}LockCount: LONG;                               // Copy Xbox1.LockCount into this
+        {0x08}LockSemaphore: HANDLE;                         // overlaps Native.RecursionCount, safest to reuse
+        {0x0C}OwningThread: HANDLE                           // Copy Xbox1.OwningThread into this
         );
     end;
 
     //  The following three fields control entering and exiting the critical
     //  section for the resource [Xbox1]
-    LockCount: LongInt;                                   // 0x10 = 16
-    RecursionCount: LongInt;                              // 0x14 = 20
-    OwningThread: ULONG                                   // 0x18 = 24
-  end;
+    {0x10}LockCount: LongInt;
+    {0x14}RecursionCount: LongInt;
+    {0x18}OwningThread: ULONG
+  end; {=0x1C}
   PRTL_CRITICAL_SECTION = ^RTL_CRITICAL_SECTION;
 
 // ******************************************************************
-// * NT_TIB
+// * NT_TIB - "Thread Information Block" *Same as Win2k/XP*
+// ******************************************************************
+// * See http://www.nirsoft.net/kernel_struct/vista/NT_TIB.html
 // ******************************************************************
 type
-  NT_TIB = packed record
-    ExceptionList: PEXCEPTION_REGISTRATION_RECORD; // 0x00
-    StackBase: PVOID; // 0x04
-    StackLimit: PVOID; // 0x08
-    SubSystemTib: PVOID; // 0x0C
-    union_a: packed record case Integer of
-       0: ( FiberData: PVOID ); // 0x10 for TIB
-       1: ( Version: ULONG ); // 0x10 for TEB (?)
-    end;
-    union_b: packed record case Integer of
-      0: ( ArbitraryUserPointer: PVOID ); // 0x14
-      1: ( Dxbx_SwapFS: Word; // 0x14;
-           Dxbx_IsXboxFS: ByteBool; // 0x16
-           Dxbx_Reserved: ByteBool); // 0x17
-    end;
-    Self: PNT_TIB; // 0x18
-  end;
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _NT_TIB = JwaNative._NT_TIB;
+  NT_TIB = JwaNative.NT_TIB;
+  PNT_TIB = JwaNative.PNT_TIB;
+{$ELSE}
+  _NT_TIB = record
+    {0x00}ExceptionList: PEXCEPTION_REGISTRATION_RECORD;
+    {0x04}StackBase: PVOID;
+    {0x08}StackLimit: PVOID;
+    {0x0C}SubSystemTib: PVOID;
+    {union}case Integer of
+       0: ( {0x10}FiberData: PVOID);
+       1: ( {0x10}Version: ULONG; // for TEB (?)
+    {0x14}ArbitraryUserPointer: PVOID;
+    {0x18}Self: PNT_TIB
+    ); // close last union case
+  end; {=0x1C}
+  NT_TIB = _NT_TIB;
   PNT_TIB = ^NT_TIB;
+{$ENDIF}
 
 // StrikerX3 NOTE: The following table maps the NT TIB structure to Xbox TIB
 //
@@ -888,50 +943,122 @@ type
 // ******************************************************************
 // * KTHREAD
 // ******************************************************************
-// *
 // * NOTE: INCOMPLETE!!
-// *
+// * See http://www.nirsoft.net/kernel_struct/vista/KTHREAD.html
 // ******************************************************************
 type
-  KTHREAD = packed record
-    UnknownA: array [0..$28 - 1] of UCHAR; // StrikerX3 NOTE: This is actually XBOX_TIB
-    TlsData: PVOID; // 0x28
-    UnknownB: array [0..$E4 - 1] of UCHAR; // 0x2C
-  end;
+  KTHREAD = record
+    {0x00}Header: DISPATCHER_HEADER;
+    {0x10}UnknownA: array [0..$18 - 1] of UCHAR;
+    {0x28}TlsData: PVOID;
+    {0x2C}UnknownB: array [0..$E4 - 1] of UCHAR;
+  end; {=0x110}
   PKTHREAD = ^KTHREAD;
 
 // ******************************************************************
-// * ETHREAD
+// * ETHREAD (Thread Object)
 // ******************************************************************
-// *
 // * NOTE: INCOMPLETE!!
-// *
+// * See http://www.nirsoft.net/kernel_struct/vista/ETHREAD.html
 // ******************************************************************
 type
-  ETHREAD = packed record
-    Tcb: KTHREAD;
-    UnknownA: array [0..$1C - 1] of UCHAR; // 0x110
-    UniqueThread: DWORD; // 0x12C  StrikerX3 NOTE: GetCurrentThreadId() returns this
-  end;
+  ETHREAD = record
+    {0x000}Tcb: KTHREAD;
+    {0x110}CreateTime: LARGE_INTEGER;
+    {0x118}ExitTime: LARGE_INTEGER;
+    {union}case Integer of
+      0: ( {0x120}ExitStatus: NTSTATUS);
+      1: ( {0x120}OfsChain: PVOID;
+    {0x124}UnknownA: array [0..$8 - 1] of UCHAR;
+    {0x12C}UniqueThread: DWORD; // StrikerX3 NOTE: GetCurrentThreadId() returns this
+    {0x130}StartAddress: PVOID;
+    {0x134}IrpList: LIST_ENTRY;
+//#ifdef DEVKIT
+    {0x13C}DebugData: PVOID;
+//#endif // DEVKIT
+    ); // close last union case
+  end; {=0x140}
   PETHREAD = ^ETHREAD;
 
- // ******************************************************************
-// * KPCRB
+const
+  SIZE_OF_FX_REGISTERS = 128;
+
+// DXBX Addition
+type _FLOATING_SAVE_AREA = record
+    {0x000}ControlWord: USHORT;
+    {0x002}StatusWord: USHORT;
+    {0x004}TagWord: USHORT;
+    {0x006}ErrorOpcode: USHORT;
+    {0x008}ErrorOffset: ULONG;
+    {0x00C}ErrorSelector: ULONG;
+    {0x010}DataOffset: ULONG;
+    {0x014}DataSelector: ULONG;
+    {0x018}MXCsr: ULONG;
+    {0x01C}Reserved2: ULONG;
+    {0x020}RegisterArea: array [0..SIZE_OF_FX_REGISTERS-1] of UCHAR;
+    {0x0A0}XmmRegisterArea: array [0..SIZE_OF_FX_REGISTERS-1] of UCHAR;
+    {0x120}Reserved4: array [0..224-1] of UCHAR;
+    {0x200}Cr0NpxState: ULONG;
+  end; {=0x204}
+  FLOATING_SAVE_AREA = _FLOATING_SAVE_AREA;
+
+// DXBX Addition
+type _FX_SAVE_AREA  = record
+    {0x000}FloatSave: FLOATING_SAVE_AREA;
+    {0x204}Align16Byte: array [0..3-1] of ULONG;
+  end; {=0x210}
+  FX_SAVE_AREA = _FX_SAVE_AREA;
+  PFX_SAVE_AREA = ^FX_SAVE_AREA;
+
 // ******************************************************************
-// *
-// * NOTE: INCOMPLETE!!
-// *
+// * KPRCB - "Kernel Processor Region Control Block"
+// ******************************************************************
+// * See http://www.nirsoft.net/kernel_struct/vista/KPRCB.html
 // ******************************************************************
 type
-  KPRCB = packed record
-    CurrentThread: PKTHREAD; // 0x00, KPCR : 0x28
-    NextThread: PKTHREAD; // 0x04, KPCR : 0x2C
-    IdleThread: PKTHREAD; // 0x08, KPCR : 0x30
+  KPRCB = record
+    {0x000}CurrentThread: PKTHREAD; // KPCR : 0x28
+    {0x004}NextThread: PKTHREAD; // KPCR : 0x2C
+    {0x008}IdleThread: PKTHREAD; // KPCR : 0x30
+    {0x00C}NpxThread: PKTHREAD; // KPCR : 0x34
 
-    // This is the total size of the structure (presumably)
-    Unknown: array [0..$250 - 1] of UCHAR; // 0x0C, KPCR : 0x34
-  end;
+    {0x010}InterruptCount: ULONG;             // per processor counts
+    {0x014}DpcTime: ULONG;
+    {0x018}InterruptTime: ULONG;
+    {0x01C}DebugDpcTime: ULONG;               // per dpc tick count
+
+    // Kernel performance counters.
+    {0x020}KeContextSwitches: ULONG;
+
+    // DPC interrupt requested.
+    {0x024}DpcInterruptRequested: ULONG;
+
+    // DPC list head, spinlock, and count.
+    {0x028}DpcListHead: LIST_ENTRY;
+    {0x030}DpcRoutineActive: ULONG;
+    {0x034}DpcStack: PVOID;
+
+    // QuantumEnd indicator
+    {0x038}QuantumEnd: ULONG;
+
+    // Npx save area
+    {0x03C}NpxSaveArea: FX_SAVE_AREA;
+
+    // network stack handshaking for debug monitor
+    {0x24C}DmEnetFunc: PVOID;
+
+    // devkit specific data
+    {0x250}DebugMonitorData: PVOID; // debugger global data
+//#ifdef DEVKIT
+    {0x254}DebugHaltThread: PVOID; // function for debug synchronization
+    {0x258}DebugDoubleFault: PVOID; // double-fault handler
+//#endif // DEVKIT
+
+  end; {=0x25C}
   PKPRCB = ^KPRCB;
+
+type
+  KIRQL = ULONG; // Dxbx addition, to ensure this types takes 4 bytes (instead of 1)
 
 // ******************************************************************
 // * KPCR
@@ -944,14 +1071,13 @@ type
 type
   // Dxbx note : Pointer-type is normally defined AFTER record, but now BEFORE because of recursive declaration :
   PKPCR = ^KPCR;
-  _KPCR = packed record
-    NtTib: NT_TIB;   // 0x00
-    SelfPcr: PKPCR;  // 0x1C - flat address of this PCR
-    Prcb: PKPRCB;    // 0x20 - Pointer to Prcb (PrcbData?)
-    Irql: KIRQL;     // 0x24
-    Padding1: array [0..3-1] of UCHAR;
-    PrcbData: KPRCB; // 0x28
-  end;
+  _KPCR = record
+    {0x00}NtTib: NT_TIB;   // Thread Information Block
+    {0x1C}SelfPcr: PKPCR;  // flat address of this PCR
+    {0x20}Prcb: PKPRCB;    // Pointer to Prcb (PrcbData?)
+    {0x24}Irql: KIRQL;
+    {0x28}PrcbData: KPRCB; // Kernel Processor Region Control Block
+  end; {=0x284}
   KPCR = _KPCR;
 
 
@@ -962,7 +1088,7 @@ type
   (**** Convert following enum types to constants. ****
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value ****)
-  EEPROM_INDEX = (
+  EEPROM_INDEX = {enum}(
     EEPROM_MISC = $11
   );
   PEEPROM_INDEX = ^EEPROM_INDEX;
@@ -971,13 +1097,13 @@ type
 // * XBOX_HARDWARE_INFO
 // ******************************************************************
 type
-  XBOX_HARDWARE_INFO = packed record
-    Flags: ULONG;
-    Unknown1: UCHAR;
-    Unknown2: UCHAR;
-    Unknown3: UCHAR;
-    Unknown4: UCHAR;
-  end;
+  XBOX_HARDWARE_INFO = record
+    {0x00}Flags: ULONG;
+    {0x04}Unknown1: UCHAR;
+    {0x05}Unknown2: UCHAR;
+    {0x06}Unknown3: UCHAR;
+    {0x07}Unknown4: UCHAR;
+  end; {=0x08}
 
 (*
 // ******************************************************************
@@ -985,7 +1111,7 @@ type
 // ******************************************************************
 type
 
-TIME_FIELDS,*PTIME_FIELDS  = packed record
+TIME_FIELDS,*PTIME_FIELDS  = record
     USHORT  Year;
     USHORT  Month;
     USHORT  Day;
@@ -1156,37 +1282,27 @@ begin
 
 *)
 
+
 //
 // DXBX Addition : Object Type Object
 //
 type
-  OBJECT_TYPE = packed record
-(*
-    ERESOURCE Mutex;
-    LIST_ENTRY TypeList;
-    UNICODE_STRING Name;
-    PVOID DefaultObject;
-    ULONG Index;
-    ULONG TotalNumberOfObjects;
-    ULONG TotalNumberOfHandles;
-    ULONG HighWaterNumberOfObjects;
-    ULONG HighWaterNumberOfHandles;
-    OBJECT_TYPE_INITIALIZER TypeInfo;
-    ULONG Key;
-    ERESOURCE ObjectLocks[4];
-*)
+  _OBJECT_TYPE = record
+    // TODO : FInd out how this struct is defined
   end;
+  OBJECT_TYPE = _OBJECT_TYPE;
   POBJECT_TYPE = ^OBJECT_TYPE;
 
 //
 // DXBX Addition : Xbox Refurb Info
 //
 type
-  XBOX_REFURB_INFO = packed record
-    Signature: DWORD;
-    PowerCycleCount: DWORD;
-    FirstBootTime: FILETIME;
-  end;
+  _XBOX_REFURB_INFO = record
+    {0x00}Signature: DWORD;
+    {0x04}PowerCycleCount: DWORD;
+    {0x08}FirstBootTime: FILETIME;
+  end; {=0x10}
+  XBOX_REFURB_INFO = _XBOX_REFURB_INFO;
   PXBOX_REFURB_INFO = ^XBOX_REFURB_INFO;
 
 //
