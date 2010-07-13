@@ -321,7 +321,7 @@ function xboxkrnl_NtSetTimerEx(
   TimerContext: PVOID;  {OPTIONAL}
   ResumeTimer: _BOOLEAN;
   Period: LONG; {OPTIONAL}
-  {OUT} PreviousState: P_BOOLEAN {OPTIONAL}
+  {OUT} PreviousState: PBOOLEAN {OPTIONAL}
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSignalAndWaitForSingleObjectEx(
   SignalHandle: HANDLE;
@@ -504,7 +504,17 @@ function xboxkrnl_NtCancelTimer(
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  if MayLog(lfDxbx or lfKernel) then
+    DbgPrintf('EmuKrnl : NtCancelTimer' +
+      #13#10'(' +
+      #13#10'   pTimerHandle        : 0x%.08X' +
+      #13#10'   pbPreviousState     : 0x%.08X' +
+      #13#10');',
+      [hTimerHandle, pbPreviousState]);
+
   Result := JwaNative.NtCancelTimer(hTimerHandle, pbPreviousState);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -848,13 +858,12 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtDeleteFile' +
+  if MayLog(lfDxbx or lfKernel or lfFile) then
+   DbgPrintf('EmuKrnl : NtDeleteFile' +
     #13#10'(' +
     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
     #13#10');',
     [pObjectAttributes, POBJECT_ATTRIBUTES_String(pObjectAttributes)]);
-{$ENDIF}
 
   // initialize object attributes
   NativeObjectAttributes := ObjectAttributesToNT(pObjectAttributes, 'NtDeleteFile');
@@ -868,10 +877,9 @@ begin
     // redirect to Win2k/XP
     Result := JwaNative.NtDeleteFile(@NativeObjectAttributes.NtObjAttr);
 
-{$IFDEF DEBUG}
   if FAILED(Result) then
-    DbgPrintf('EmuKrnl : NtDeleteFile failed! (0x%.08X)', [Result]);
-{$ENDIF}
+    if MayLog(lfDxbx or lfKernel or lfFile) then
+      DbgPrintf('EmuKrnl : NtDeleteFile failed! (0x%.08X)', [Result]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -941,7 +949,7 @@ end;
 
 function xboxkrnl_NtFlushBuffersFile
 (
-  FileHandle: HANDLE; // Was PVOID
+  FileHandle: HANDLE;
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -1468,7 +1476,20 @@ function xboxkrnl_NtQueryTimer(
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
+
+  if MayLog(lfDxbx or lfKernel) then
+    DbgPrintf('EmuKrnl : NtQueryTimer' +
+      #13#10'(' +
+      #13#10'   hTimerHandle           : 0x%.08X' +
+      #13#10'   TimerInformationClass  : 0x%.08X' +
+      #13#10'   pTimerInformation      : 0x%.08X' +
+      #13#10'   TimerInformationLength : 0x%.08X' +
+      #13#10'   ResultLength           : 0x%.08X' +
+      #13#10');',
+      [hTimerHandle, Ord(TimerInformationClass), pTimerInformation, TimerInformationLength, ResultLength]);
+
   Result := JwaNative.NtQueryTimer(hTimerHandle, TimerInformationClass, pTimerInformation, TimerInformationLength, ResultLength);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1478,6 +1499,8 @@ function xboxkrnl_NtQueryVirtualMemory
   Buffer: PMEMORY_BASIC_INFORMATION
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  ReturnLength: ULONG;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1496,11 +1519,30 @@ begin
       {(NtDll::MEMORY_INFORMATION_CLASS)NtDll::}MemoryBasicInformation,
       {(NtDll::PMEMORY_BASIC_INFORMATION)}Buffer,
       sizeof(MEMORY_BASIC_INFORMATION),
-      nil
+      @ReturnLength
   );
 
   if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtQueryVirtualMemory failed! (0x%.08X)', [Result]);
+  begin
+    if BaseAddress = Pointer($7FFF0000) then
+    begin
+      // Fix for "Forza Motorsport", which iterates over 2 Gb of memory in 64 Kb chunks,
+      // but fails on this last query. It's not done though, as after this Forza tries to
+      // NtAllocateVirtualMemory at address $00000000 (3 times, actually) which fails too...
+      Buffer.BaseAddress := BaseAddress;
+      Buffer.AllocationBase := BaseAddress;
+      Buffer.AllocationProtect := 2;
+      Buffer.RegionSize := 64 * 1024;
+      Buffer.State := 4096;
+      Buffer.Protect := 2;
+      Buffer.Type_ := 262144;
+
+      Result := STATUS_SUCCESS;
+      DbgPrintf('EmuKrnl : NtQueryVirtualMemory : Applied fix for "Forza Motorsport" !');
+    end
+    else
+      EmuWarning('EmuKrnl : NtQueryVirtualMemory failed! (0x%.08X)', [Result]);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1822,12 +1864,28 @@ function xboxkrnl_NtSetTimerEx(
   TimerContext: PVOID;  {OPTIONAL}
   ResumeTimer: _BOOLEAN;
   Period: LONG; {OPTIONAL}
-  {OUT} PreviousState: P_BOOLEAN {OPTIONAL}
+  {OUT} PreviousState: PBOOLEAN {OPTIONAL}
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtSetTimerEx');
+
+  if MayLog(lfDxbx or lfKernel) then
+    DbgPrintf('EmuKrnl : NtSetTimerEx' +
+      #13#10'(' +
+      #13#10'   TimerHandle            : 0x%.08X' +
+      #13#10'   DueTime                : 0x%.08X (%d)' +
+      #13#10'   TimerApcRoutine        : 0x%.08X' +
+      #13#10'   ApcMode                : 0x%.08X' +
+      #13#10'   TimerContext           : 0x%.08X' +
+      #13#10'   ResumeTimer            : 0x%.08X' +
+      #13#10'   Period                 : 0x%.08X' +
+      #13#10'   PreviousState          : 0x%.08X' +
+      #13#10');',
+      [TimerHandle, DueTime, QuadPart(DueTime), Addr(TimerApcRoutine), Ord(ApcMode), TimerContext, ResumeTimer, Period, PreviousState]);
+
+  Result := JwaNative.NtSetTimer{Ex}(TimerHandle, DueTime, TimerApcRoutine, {ApcMode,} TimerContext, ResumeTimer, Period, PreviousState);
+
   EmuSwapFS(fsXbox);
 end;
 

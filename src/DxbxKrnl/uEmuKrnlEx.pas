@@ -87,7 +87,7 @@ function {021} xboxkrnl_ExInterlockedCompareExchange64(
   ): LONGLONG; register;
 function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
-  QuotaCharged: P_BOOLEAN // OUT
+  QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall;
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
@@ -276,7 +276,7 @@ end;
 
 function {023} xboxkrnl_ExQueryPoolBlockSize(
   PoolBlock: PVOID;
-  QuotaCharged: P_BOOLEAN // OUT
+  QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
