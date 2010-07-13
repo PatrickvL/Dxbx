@@ -33,8 +33,6 @@ uses
   , DirectInput
   , Direct3D
   , XInput
-  // OpenXDK
-  , XboxKrnl // NULL
   // Dxbx
   , uTypes
   , uError
