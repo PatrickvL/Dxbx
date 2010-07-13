@@ -574,10 +574,36 @@ function xboxkrnl_NtCreateDirectoryObject(
   DirectoryHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES
 ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  NativeObjectAttributes: RNativeObjectAttributes;
+  DesiredAccess: ACCESS_MASK;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtCreateDirectoryObject');
+
+  if MayLog(lfDxbx or lfKernel or lfFile) then
+    DbgPrintf('EmuKrnl : NtCreateDirectoryObject' +
+        #13#10'(' +
+        #13#10'   DirectoryHandle     : 0x%.08X' +
+        #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+        #13#10');',
+        [DirectoryHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+
+  // initialize object attributes
+  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtCreateDirectoryObject');
+
+  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+  DesiredAccess := DIRECTORY_CREATE_OBJECT;
+
+  // redirect to Win2k/XP
+  Result := JwaNative.NtCreateDirectoryObject(DirectoryHandle, DesiredAccess, @NativeObjectAttributes.NtObjAttr);
+
+  if FAILED(Result) then
+    EmuWarning('EmuKrnl : NtCreateDirectoryObject failed! (0x%.08X)', [Result])
+  else
+    if MayLog(lfUnit or lfFile) then
+      DbgPrintf('EmuKrnl : NtCreateDirectoryObject = 0x%.08X', [DirectoryHandle^]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -785,16 +811,26 @@ begin
 end;
 
 function xboxkrnl_NtCreateTimer(
-  pTimerHandle : PHANDLE;
-  DesiredAccess : ACCESS_MASK;
-  pObjectAttributes : POBJECT_ATTRIBUTES;
-  TimerType : TIMER_TYPE
+  pTimerHandle: PHANDLE;
+  DesiredAccess: ACCESS_MASK;
+  pObjectAttributes: POBJECT_ATTRIBUTES;
+  TimerType: TIMER_TYPE
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   NativeObjectAttributes: RNativeObjectAttributes;
 begin
   EmuSwapFS(fsWindows);
+
+  if MayLog(lfDxbx or lfKernel) then
+    DbgPrintf('EmuKrnl : NtCreateTimer' +
+      #13#10'(' +
+      #13#10'   pTimerHandle        : 0x%.08X' +
+      #13#10'   DesiredAccess       : 0x%.08X' +
+      #13#10'   pObjectAttributes   : 0x%.08X ("%s")' +
+      #13#10'   TimerType           : 0x%.08X' +
+      #13#10');',
+      [pTimerHandle, DesiredAccess, pObjectAttributes, POBJECT_ATTRIBUTES_String(pObjectAttributes), Ord(TimerType)]);
 
   // Dxbx addition : Fix NT Unicode <> Xbox ANSI difference on ObjectName :
   NativeObjectAttributes := ObjectAttributesToNT(pObjectAttributes);
@@ -982,10 +1018,36 @@ function xboxkrnl_NtOpenDirectoryObject(
   DirectoryHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES
 ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  NativeObjectAttributes: RNativeObjectAttributes;
+  DesiredAccess: ACCESS_MASK;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtOpenDirectoryObject');
+
+  if MayLog(lfDxbx or lfKernel or lfFile) then
+    DbgPrintf('EmuKrnl : NtOpenDirectoryObject' +
+        #13#10'(' +
+        #13#10'   DirectoryHandle     : 0x%.08X' +
+        #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+        #13#10');',
+        [DirectoryHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+
+  // initialize object attributes
+  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtOpenDirectoryObject');
+
+  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+  DesiredAccess := DIRECTORY_TRAVERSE;
+
+  // redirect to Win2k/XP
+  Result := JwaNative.NtOpenDirectoryObject(DirectoryHandle, DesiredAccess, @NativeObjectAttributes.NtObjAttr);
+
+  if FAILED(Result) then
+    EmuWarning('EmuKrnl : NtOpenDirectoryObject failed! (0x%.08X)', [Result])
+  else
+    if MayLog(lfUnit or lfFile) then
+      DbgPrintf('EmuKrnl : NtOpenDirectoryObject = 0x%.08X', [DirectoryHandle^]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1215,10 +1277,30 @@ function xboxkrnl_NtQueryDirectoryObject(
   Context: PULONG; // OUT
   ReturnLength: PULONG  // OUT OPTIONAL
 ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueryDirectoryObject');
+
+  if MayLog(lfDxbx or lfKernel or lfFile) then
+    DbgPrintf('EmuKrnl : NtQueryDirectoryObject' +
+        #13#10'(' +
+        #13#10'   DirectoryHandle     : 0x%.08X' +
+        #13#10'   Buffer              : 0x%.08X' +
+        #13#10'   Length              : 0x%.08X' +
+        #13#10'   RestartScan         : 0x%.08X' +
+        #13#10'   Context             : 0x%.08X' +
+        #13#10'   ReturnLength        : 0x%.08X' +
+        #13#10');',
+        [DirectoryHandle, Buffer, Length, RestartScan, Context, ReturnLength]);
+
+  // redirect to Win2k/XP
+  Result := JwaNative.NtQueryDirectoryObject(DirectoryHandle, Buffer, Length,
+    {ReturnSingleEntry=}False, // TODO -oDxbx : Is this the correct value?
+    RestartScan, Context, ReturnLength);
+
+  if FAILED(Result) then
+    EmuWarning('EmuKrnl : NtQueryDirectoryObject failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
