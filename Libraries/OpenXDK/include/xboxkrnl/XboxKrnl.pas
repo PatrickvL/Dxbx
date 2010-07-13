@@ -941,7 +941,7 @@ type
 //  0x18     0x28     Ptr to TIB (self)
 
 // ******************************************************************
-// * KTHREAD
+// * KTHREAD (Kernel Thread)
 // ******************************************************************
 // * NOTE: INCOMPLETE!!
 // * See http://www.nirsoft.net/kernel_struct/vista/KTHREAD.html
@@ -956,7 +956,7 @@ type
   PKTHREAD = ^KTHREAD;
 
 // ******************************************************************
-// * ETHREAD (Thread Object)
+// * ETHREAD (Executive Thread Object)
 // ******************************************************************
 // * NOTE: INCOMPLETE!!
 // * See http://www.nirsoft.net/kernel_struct/vista/ETHREAD.html
