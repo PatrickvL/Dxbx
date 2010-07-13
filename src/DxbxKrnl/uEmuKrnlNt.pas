@@ -380,7 +380,7 @@ begin
   end
   else // close normal handles
 {$ENDIF}
-    Result := NtClose(Handle);
+    Result := JwaNative.NtClose(Handle);
 
   EmuSwapFS(fsXbox);
 end;
@@ -429,18 +429,18 @@ begin
   begin
     wszObjectName := '\??\' + szBuffer;
 
-    RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
+    JwaNative.RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
-    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+    JwaWinType.InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
   end;
 
   NtObjAttr.RootDirectory := 0;
 
   // redirect to NtCreateEvent
   if ('' <> szBuffer) then
-    ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, @NtObjAttr, EVENT_TYPE(EventType), InitialState)
+    ret := JwaNative.NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, @NtObjAttr, EVENT_TYPE(EventType), InitialState)
   else
-    ret := NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, nil, EVENT_TYPE(EventType), InitialState);
+    ret := JwaNative.NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, nil, EVENT_TYPE(EventType), InitialState);
 
   if (FAILED(ret)) then
     EmuWarning('NtCreateEvent Failed!');
@@ -693,18 +693,18 @@ begin
   begin
     wszObjectName := '\??\' + szBuffer;
 
-    RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
+    JwaNative.RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
-    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+    JwaWinType.InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
   end;
 
   NtObjAttr.RootDirectory := 0;
 
   // redirect to NtCreateMutant
   if ('' <> szBuffer) then
-    ret := NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, @NtObjAttr, InitialOwner)
+    ret := JwaNative.NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, @NtObjAttr, InitialOwner)
   else
-    ret := NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, nil, InitialOwner);
+    ret := JwaNative.NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, nil, InitialOwner);
 
   if (FAILED(ret)) then
       EmuWarning('NtCreateMutant Failed!');
@@ -830,7 +830,7 @@ begin
 {$ENDIF}
 
   // redirect to Win2k/XP
-  ret := NtDuplicateObject
+  ret := JwaNative.NtDuplicateObject
   (
       GetCurrentProcess(),
       SourceHandle,
@@ -898,7 +898,7 @@ begin
       [BaseAddress, FreeSize, FreeType]);
 {$ENDIF}
 
-  Result := NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+  Result := JwaNative.NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1084,7 +1084,7 @@ begin
   begin
     wszObjectName := UnicodeString(szBuffer);
 
-    RtlInitUnicodeString(@NtFileMask, PWideChar(wszObjectName));
+    JwaNative.RtlInitUnicodeString(@NtFileMask, PWideChar(wszObjectName));
   end;
 
   FileDirInfo := PFILE_DIRECTORY_INFORMATION(DxbxMalloc($40 + 160*2));
@@ -1095,7 +1095,7 @@ begin
   repeat
     ZeroMemory(wcstr, 160*2);
 
-    ret := NtQueryDirectoryFile
+    ret := JwaNative.NtQueryDirectoryFile
         (
             FileHandle, Event, PIO_APC_ROUTINE(ApcRoutine), ApcContext, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
             $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
@@ -1168,12 +1168,12 @@ begin
   begin
     wszObjectName := UnicodeString(szBuffer);
 
-    RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
+    JwaNative.RtlInitUnicodeString(@NtUnicodeString, PWideChar(wszObjectName));
 
-    InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
+    JwaWinType.InitializeObjectAttributes(@NtObjAttr, @NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL);
   end;
 
-  Result := NtQueryFullAttributesFile(@NtObjAttr, Attributes);
+  Result := JwaNative.NtQueryFullAttributesFile(@NtObjAttr, Attributes);
 
   if(FAILED(Result))then
     EmuWarning('NtQueryFullAttributesFile failed! (0x%.08X)', [Result]);
@@ -1367,7 +1367,7 @@ begin
   if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileFsVolumeInformation{FileDirectoryInformation}) then
     DxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
 
-  ret := NtQueryVolumeInformationFile
+  ret := JwaNative.NtQueryVolumeInformationFile
   (
       FileHandle,
       JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
@@ -1533,7 +1533,7 @@ begin
       [ThreadHandle, PreviousSuspendCount]);
 {$ENDIF}
 
-  ret := NtResumeThread(ThreadHandle, PreviousSuspendCount);
+  ret := JwaNative.NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
   Sleep(10);
 
@@ -1669,7 +1669,7 @@ begin
       [ThreadHandle, PreviousSuspendCount]);
 {$ENDIF}
 
-  ret := NtSuspendThread(ThreadHandle, PreviousSuspendCount);
+  ret := JwaNative.NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
   EmuSwapFS(fsXbox);
 
@@ -1844,7 +1844,7 @@ begin
        Timeout, QuadPart(Timeout)]);
 {$ENDIF}
 
-  ret := NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
+  ret := JwaNative.NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
 
   EmuSwapFS(fsXbox);
 
@@ -1916,7 +1916,7 @@ begin
   // DbgPrintf('EmuKrnl : NtYieldExecution();');
 {$ENDIF}
 
-  NtYieldExecution();
+  JwaNative.NtYieldExecution();
 
   EmuSwapFS(fsXbox);
 end;
