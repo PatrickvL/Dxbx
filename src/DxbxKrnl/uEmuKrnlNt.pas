@@ -63,7 +63,10 @@ function xboxkrnl_NtClearEvent(
 function xboxkrnl_NtClose(
   Handle: Handle
   ): NTSTATUS; stdcall; {EXPORTNUM(187)}
-function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtCreateDirectoryObject(
+  DirectoryHandle: PHANDLE; // OUT
+  ObjectAttributes: POBJECT_ATTRIBUTES
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateEvent(
   EventHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
@@ -81,7 +84,12 @@ function xboxkrnl_NtCreateFile(
   CreateDisposition: ULONG; // dtCreateDisposition;
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtCreateIoCompletion(FileHandle: dtU32; DesiredAccess: ACCESS_MASK; pObjectAttributes: POBJECT_ATTRIBUTES; pszUnknownArgs: dtBLOB): NTSTATUS; stdcall;
+function xboxkrnl_NtCreateIoCompletion(
+  FileHandle: dtU32;
+  DesiredAccess: ACCESS_MASK;
+  pObjectAttributes: POBJECT_ATTRIBUTES;
+  pszUnknownArgs: dtBLOB
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateMutant(
   MutantHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -99,8 +107,21 @@ function xboxkrnl_NtCreateTimer(
   pObjectAttributes : POBJECT_ATTRIBUTES;
   TimerType : TIMER_TYPE
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtDeleteFile(pObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
-function xboxkrnl_NtDeviceIoControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; pIoControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
+function xboxkrnl_NtDeleteFile(
+  pObjectAttributes: POBJECT_ATTRIBUTES
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtDeviceIoControlFile(
+  FileHandle: dtU32;
+  Event: dtU32;
+  pApcRoutine: dtU32;
+  pApcContext: dtU32;
+  pIoStatusBlock: dtU32;
+  pIoControlCode: dtU32;
+  pInputBuffer: dtU32;
+  InputBufferLength: dtU32;
+  pOutputBuffer: dtU32;
+  OutputBufferLength: dtU32
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtDuplicateObject(
   SourceHandle: HANDLE;
   TargetHandle: PHANDLE;
@@ -115,8 +136,22 @@ function xboxkrnl_NtFreeVirtualMemory(
   FreeSize: PULONG; // OUT
   FreeType: ULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtFsControlFile(FileHandle: dtU32; Event: dtU32; pApcRoutine: dtU32; pApcContext: dtU32; pIoStatusBlock: dtU32; FsControlCode: dtU32; pInputBuffer: dtU32; InputBufferLength: dtU32; pOutputBuffer: dtU32; OutputBufferLength: dtU32): NTSTATUS; stdcall;
-function xboxkrnl_NtOpenDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtFsControlFile(
+  FileHandle: dtU32;
+  Event: dtU32;
+  pApcRoutine: dtU32;
+  pApcContext: dtU32;
+  pIoStatusBlock: dtU32;
+  FsControlCode: dtU32;
+  pInputBuffer: dtU32;
+  InputBufferLength: dtU32;
+  pOutputBuffer: dtU32;
+  OutputBufferLength: dtU32
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtOpenDirectoryObject(
+  DirectoryHandle: PHANDLE; // OUT
+  ObjectAttributes: POBJECT_ATTRIBUTES
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtOpenFile(
   FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
@@ -125,9 +160,20 @@ function xboxkrnl_NtOpenFile(
   ShareAccess: ACCESS_MASK;
   OpenOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
-function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtOpenSymbolicLinkObject(
+  pFileHandle: dtU32;
+  pObjectAttributes: POBJECT_ATTRIBUTES
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtProtectVirtualMemory(
+  BaseAddress: PPVOID; // OUT
+  RegionSize: PSIZE_T; // OUT
+  NewProtect: ULONG;
+  OldProtect: PULONG // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtPulseEvent(
+  EventHandle: HANDLE;
+  PreviousState: PLONG // OUT OPTIONAL
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueueApcThread(
   ThreadHandle: HANDLE;
   ApcRoutine: PIO_APC_ROUTINE;
@@ -147,8 +193,18 @@ function xboxkrnl_NtQueryDirectoryFile(
   FileMask: PSTRING;
   RestartScan: _BOOLEAN
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryDirectoryObject(
+  DirectoryHandle: HANDLE;
+  Buffer: PVOID; // OUT
+  Length: ULONG;
+  RestartScan: _BOOLEAN;
+  Context: PULONG; // OUT
+  ReturnLength: PULONG  // OUT OPTIONAL
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryEvent(
+  EventHandle: HANDLE;
+  EventInformation: PEVENT_BASIC_INFORMATION // OUT
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryFullAttributesFile(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
@@ -160,10 +216,23 @@ function xboxkrnl_NtQueryInformationFile(
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtQueryIoCompletion(
+  IoCompletionHandle: HANDLE;
+  IoCompletionInformation: PIO_COMPLETION_BASIC_INFORMATION // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryMutant(
+  MutantHandle: HANDLE;
+  MutantInformation: PMUTANT_BASIC_INFORMATION // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtQuerySemaphore(
+  SemaphoreHandle: HANDLE;
+  SemaphoreInformation: PSEMAPHORE_BASIC_INFORMATION // OUT
+  ): NTSTATUS; stdcall;
+function xboxkrnl_NtQuerySymbolicLinkObject(
+  LinkHandle: HANDLE;
+  LinkTarget: POBJECT_STRING; // OUT
+  ReturnedLength: PULONG // OUT  OPTIONAL
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryTimer(
   hTimerHandle: HANDLE;
   TimerInformationClass: TIMER_INFORMATION_CLASS;
@@ -192,7 +261,16 @@ function xboxkrnl_NtReadFile(
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtReadFileScatter(
+  FileHandle: HANDLE;
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
+  ApcContext: PVOID; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  SegmentArray: PFILE_SEGMENT_ELEMENT;
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
   PreviousCount: PULONG // OUT
@@ -202,7 +280,13 @@ function xboxkrnl_NtReleaseSemaphore(
   ReleaseCount: ULONG;
   PreviousCount: PULONG
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtRemoveIoCompletion(
+  IoCompletionHandle: HANDLE;
+  KeyContext: PPVOID; // OUT
+  ApcContext: PPVOID; // OUT
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtResumeThread(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT
@@ -218,7 +302,13 @@ function xboxkrnl_NtSetInformationFile(
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSetIoCompletion(
+  IoCompletionHandle: HANDLE;
+  KeyContext: PVOID;
+  ApcContext: PVOID;
+  IoStatus: NTSTATUS;
+  IoStatusInformation: ULONG_PTR
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetSystemTime(
   {const}NewTime: PLARGE_INTEGER;
   OldTime: PLARGE_INTEGER
@@ -233,7 +323,13 @@ function xboxkrnl_NtSetTimerEx(
   Period: LONG; {OPTIONAL}
   {OUT} PreviousState: P_BOOLEAN {OPTIONAL}
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtSignalAndWaitForSingleObjectEx(
+  SignalHandle: HANDLE;
+  WaitHandle: HANDLE;
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: BOOLEAN;
+  Timeout: PLARGE_INTEGER // OPTIONAL
+  ): NTSTATUS; stdcall;
 function xboxkrnl_NtSuspendThread(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG // OUT OPTIONAL
@@ -272,7 +368,16 @@ function xboxkrnl_NtWriteFile(
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_NtWriteFileGather(
+  FileHandle: HANDLE;
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
+  ApcContext: PVOID; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  SegmentArray: PFILE_SEGMENT_ELEMENT;
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
+  ): NTSTATUS; stdcall;
 procedure xboxkrnl_NtYieldExecution(); stdcall;
 
 implementation
@@ -465,7 +570,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtCreateDirectoryObject(): NTSTATUS; stdcall;
+function xboxkrnl_NtCreateDirectoryObject(
+  DirectoryHandle: PHANDLE; // OUT
+  ObjectAttributes: POBJECT_ATTRIBUTES
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -870,7 +978,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtOpenDirectoryObject(): NTSTATUS; stdcall;
+function xboxkrnl_NtOpenDirectoryObject(
+  DirectoryHandle: PHANDLE; // OUT
+  ObjectAttributes: POBJECT_ATTRIBUTES
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -940,7 +1051,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtProtectVirtualMemory(): NTSTATUS; stdcall;
+function xboxkrnl_NtProtectVirtualMemory(
+  BaseAddress: PPVOID; // OUT
+  RegionSize: PSIZE_T; // OUT
+  NewProtect: ULONG;
+  OldProtect: PULONG // OUT
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -948,7 +1064,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtPulseEvent(): NTSTATUS; stdcall;
+function xboxkrnl_NtPulseEvent(
+  EventHandle: HANDLE;
+  PreviousState: PLONG // OUT OPTIONAL
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1088,7 +1207,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryDirectoryObject(): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryDirectoryObject(
+  DirectoryHandle: HANDLE;
+  Buffer: PVOID; // OUT
+  Length: ULONG;
+  RestartScan: _BOOLEAN;
+  Context: PULONG; // OUT
+  ReturnLength: PULONG  // OUT OPTIONAL
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1096,7 +1222,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryEvent(): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryEvent(
+  EventHandle: HANDLE;
+  EventInformation: PEVENT_BASIC_INFORMATION // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1104,11 +1233,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryFullAttributesFile
-(
+function xboxkrnl_NtQueryFullAttributesFile(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Attributes: PVOID // OUT
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
   NativeObjectAttributes: RNativeObjectAttributes;
@@ -1135,14 +1263,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryInformationFile
-(
+function xboxkrnl_NtQueryInformationFile(
   FileHandle: HANDLE;
   IoStatusBlock: PIO_STATUS_BLOCK; //   OUT
   FileInformation: PVOID; //   OUT
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
-  ): NTSTATUS; stdcall;
+): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1204,7 +1331,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryIoCompletion(): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryIoCompletion(
+  IoCompletionHandle: HANDLE;
+  IoCompletionInformation: PIO_COMPLETION_BASIC_INFORMATION // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1212,7 +1342,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQueryMutant(): NTSTATUS; stdcall;
+function xboxkrnl_NtQueryMutant(
+  MutantHandle: HANDLE;
+  MutantInformation: PMUTANT_BASIC_INFORMATION // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1220,7 +1353,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQuerySemaphore(): NTSTATUS; stdcall;
+function xboxkrnl_NtQuerySemaphore(
+  SemaphoreHandle: HANDLE;
+  SemaphoreInformation: PSEMAPHORE_BASIC_INFORMATION // OUT
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1228,7 +1364,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtQuerySymbolicLinkObject(): NTSTATUS; stdcall;
+function xboxkrnl_NtQuerySymbolicLinkObject(
+  LinkHandle: HANDLE;
+  LinkTarget: POBJECT_STRING; // OUT
+  ReturnedLength: PULONG // OUT  OPTIONAL
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1389,7 +1529,16 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtReadFileScatter(): NTSTATUS; stdcall;
+function xboxkrnl_NtReadFileScatter(
+  FileHandle: HANDLE;
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
+  ApcContext: PVOID; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  SegmentArray: PFILE_SEGMENT_ELEMENT;
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1454,7 +1603,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtRemoveIoCompletion(): NTSTATUS; stdcall;
+function xboxkrnl_NtRemoveIoCompletion(
+  IoCompletionHandle: HANDLE;
+  KeyContext: PPVOID; // OUT
+  ApcContext: PPVOID; // OUT
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  Timeout: PLARGE_INTEGER
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1551,7 +1706,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtSetIoCompletion(): NTSTATUS; stdcall;
+function xboxkrnl_NtSetIoCompletion(
+  IoCompletionHandle: HANDLE;
+  KeyContext: PVOID;
+  ApcContext: PVOID;
+  IoStatus: NTSTATUS;
+  IoStatusInformation: ULONG_PTR
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1588,7 +1749,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtSignalAndWaitForSingleObjectEx(): NTSTATUS; stdcall;
+function xboxkrnl_NtSignalAndWaitForSingleObjectEx(
+  SignalHandle: HANDLE;
+  WaitHandle: HANDLE;
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: BOOLEAN;
+  Timeout: PLARGE_INTEGER // OPTIONAL
+  ): NTSTATUS; stdcall;
 // Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1857,7 +2024,16 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtWriteFileGather(): NTSTATUS; stdcall;
+function xboxkrnl_NtWriteFileGather(
+  FileHandle: HANDLE;
+  Event: HANDLE; // OPTIONAL
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
+  ApcContext: PVOID; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  SegmentArray: PFILE_SEGMENT_ELEMENT;
+  Length: ULONG;
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
