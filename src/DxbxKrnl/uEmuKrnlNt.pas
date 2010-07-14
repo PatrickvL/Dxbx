@@ -1896,10 +1896,27 @@ function xboxkrnl_NtSignalAndWaitForSingleObjectEx(
   Alertable: BOOLEAN;
   Timeout: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+// Branch:dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtSignalAndWaitForSingleObjectEx');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtSignalAndWaitForSingleObjectEx'+
+      #13#10'('+
+      #13#10'   SignalHandle         : 0x%.08X'+
+      #13#10'   WaitHandle           : 0x%.08X'+
+      #13#10'   WaitMode             : 0x%.08X'+
+      #13#10'   Alertable            : 0x%.08X'+
+      #13#10'   Timeout              : 0x%.08X (%d)'+
+      #13#10');',
+      [SignalHandle, WaitHandle, Ord(WaitMode), Alertable, Timeout, QuadPart(Timeout)]);
+
+  // TODO -oDxbx : What should we do with the (currently ignored) WaitMode?
+  Result := JwaNative.NtSignalAndWaitForSingleObject(SignalHandle, WaitHandle, Alertable, Timeout);
+
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('Finished waiting for 0x%.08X', [WaitHandle]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2096,7 +2113,6 @@ var
   ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
-
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtWaitForMultipleObjectsEx' +
