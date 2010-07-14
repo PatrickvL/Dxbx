@@ -184,7 +184,7 @@ function xboxkrnl_NtQueueApcThread(
 function xboxkrnl_NtQueryDirectoryFile(
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // TODO -oCXBX: define this routine's prototype
+  ApcRoutine: PIO_APC_ROUTINE;
   ApcContext: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK; // out
   FileInformation: PFILE_DIRECTORY_INFORMATION; // out
@@ -254,7 +254,7 @@ function xboxkrnl_NtQueryVolumeInformationFile(
 function xboxkrnl_NtReadFile(
   FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // OPTIONAL
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID; // OUT
@@ -361,7 +361,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
 function xboxkrnl_NtWriteFile(
   FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: DWORD; // Dxbx correction (was PVOID)
-  ApcRoutine: PVOID;
+  ApcRoutine: PIO_APC_ROUTINE;
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID;
@@ -527,7 +527,7 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtClearEvent'+
+    DbgPrintf('EmuKrnl : NtClearEvent' +
       #13#10'('+
       #13#10'   EventHandle         : 0x%.8x' +
       #13#10');',
@@ -1138,10 +1138,23 @@ function xboxkrnl_NtPulseEvent(
   EventHandle: HANDLE;
   PreviousState: PLONG // OUT OPTIONAL
 ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtPulseEvent');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtPulseEvent' +
+      #13#10'('+
+      #13#10'   EventHandle         : 0x%.8x' +
+      #13#10'   PreviousState       : 0x%.8x' +
+      #13#10');',
+      [EventHandle, PreviousState]);
+
+  Result := JwaNative.NtPulseEvent(EventHandle, PULONG(PreviousState));
+
+  if (FAILED(Result)) then
+    EmuWarning('EmuKrnl : NtPulseEvent failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1189,7 +1202,7 @@ function xboxkrnl_NtQueryDirectoryFile
 (
   FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // TODO -oCXBX: define this routine's prototype
+  ApcRoutine: PIO_APC_ROUTINE;
   ApcContext: PVOID;
   IoStatusBlock: PIO_STATUS_BLOCK; // out
   FileInformation: PFILE_DIRECTORY_INFORMATION; // out
@@ -1226,7 +1239,7 @@ begin
       #13#10'   FileMask             : 0x%.08X ("%s")' +
       #13#10'   RestartScan          : 0x%.08X' +
       #13#10');',
-      [FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+      [FileHandle, Event, Addr(ApcRoutine), ApcContext, IoStatusBlock,
        FileInformation, Length, Ord(FileInformationClass), FileMask,
        szBuffer, RestartScan]);
 {$ENDIF}
@@ -1251,7 +1264,7 @@ begin
 
     ret := JwaNative.NtQueryDirectoryFile
         (
-            FileHandle, Event, PIO_APC_ROUTINE(ApcRoutine), ApcContext, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
+            FileHandle, Event, ApcRoutine, ApcContext, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
             $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
         );
 
@@ -1316,10 +1329,25 @@ function xboxkrnl_NtQueryEvent(
   EventHandle: HANDLE;
   EventInformation: PEVENT_BASIC_INFORMATION // OUT
 ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  ResultLength: ULONG;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueryEvent');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtQueryEvent' +
+      #13#10'('+
+      #13#10'   EventHandle         : 0x%.8x' +
+      #13#10'   EventInformation    : 0x%.8x' +
+      #13#10');',
+      [EventHandle, EventInformation]);
+
+  Result := JwaNative.NtQueryEvent(EventHandle, EventBasicInformation, EventInformation, SizeOf(EventInformation^), @ResultLength);
+
+  if (FAILED(Result)) then
+    EmuWarning('EmuKrnl : NtQueryEvent failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1436,10 +1464,25 @@ function xboxkrnl_NtQueryMutant(
   MutantHandle: HANDLE;
   MutantInformation: PMUTANT_BASIC_INFORMATION // OUT
 ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  ResultLength: ULONG;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueryMutant');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtQueryMutant' +
+      #13#10'('+
+      #13#10'   MutantHandle        : 0x%.8x' +
+      #13#10'   MutantInformation   : 0x%.8x' +
+      #13#10');',
+      [MutantHandle, MutantInformation]);
+
+  Result := JwaNative.NtQueryMutant(MutantHandle, MutantBasicInformation, MutantInformation, SizeOf(MutantInformation^), @ResultLength);
+
+  if (FAILED(Result)) then
+    EmuWarning('EmuKrnl : NtQueryMutant failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1447,10 +1490,25 @@ function xboxkrnl_NtQuerySemaphore(
   SemaphoreHandle: HANDLE;
   SemaphoreInformation: PSEMAPHORE_BASIC_INFORMATION // OUT
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  ResultLength: ULONG;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQuerySemaphore');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtQuerySemaphore' +
+      #13#10'('+
+      #13#10'   SemaphoreHandle     : 0x%.8x' +
+      #13#10'   SemaphoreInformation: 0x%.8x' +
+      #13#10');',
+      [SemaphoreHandle, SemaphoreInformation]);
+
+  Result := JwaNative.NtQuerySemaphore(SemaphoreHandle, SemaphoreBasicInformation, SemaphoreInformation, SizeOf(SemaphoreInformation^), @ResultLength);
+
+  if (FAILED(Result)) then
+    EmuWarning('EmuKrnl : NtQuerySemaphore failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1615,7 +1673,7 @@ function xboxkrnl_NtReadFile
 (
   FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: HANDLE; // OPTIONAL
-  ApcRoutine: PVOID; // OPTIONAL
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID; // OUT
@@ -1638,7 +1696,7 @@ begin
         #13#10'   Length              : 0x%.08X' +
         #13#10'   ByteOffset          : 0x%.08X (%d)' +
         #13#10');',
-        [FileHandle, Event, ApcRoutine,
+        [FileHandle, Event, Addr(ApcRoutine),
          ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
 
 // Halo...
@@ -1663,10 +1721,30 @@ function xboxkrnl_NtReadFileScatter(
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtReadFileScatter');
+
+  if MayLog(lfUnit or lfFile) then
+    DbgPrintf('EmuKrnl : NtReadFileScatter' +
+        #13#10'(' +
+        #13#10'   FileHandle          : 0x%.08X' +
+        #13#10'   Event               : 0x%.08X' +
+        #13#10'   ApcRoutine          : 0x%.08X' +
+        #13#10'   ApcContext          : 0x%.08X' +
+        #13#10'   IoStatusBlock       : 0x%.08X' +
+        #13#10'   SegmentArray        : 0x%.08X' +
+        #13#10'   Length              : 0x%.08X' +
+        #13#10'   ByteOffset          : 0x%.08X (%d)' +
+        #13#10');',
+        [FileHandle, Event, Addr(ApcRoutine),
+         ApcContext, IoStatusBlock, SegmentArray, Length, ByteOffset, QuadPart(ByteOffset)]);
+
+  Result := JwaNative.NtReadFileScatter(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, SegmentArray, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
+
+  if (FAILED(Result)) then
+    EmuWarning('EmuKrnl : NtReadFileScatter failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2142,7 +2220,7 @@ function xboxkrnl_NtWriteFile
 (
   FileHandle: HANDLE; // TODO -oCXBX: correct paramters
   Event: DWORD; // Dxbx correction (was PVOID)
-  ApcRoutine: PVOID;
+  ApcRoutine: PIO_APC_ROUTINE;
   ApcContext: PVOID;
   IoStatusBlock: PVOID; // OUT
   Buffer: PVOID;
@@ -2165,7 +2243,7 @@ begin
        #13#10'   Length              : 0x%.08X' +
        #13#10'   ByteOffset          : 0x%.08X (0x%.08X)' +
        #13#10');',
-       [FileHandle, Event, ApcRoutine,
+       [FileHandle, Event, Addr(ApcRoutine),
        ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
 
   // Halo..
@@ -2190,10 +2268,30 @@ function xboxkrnl_NtWriteFileGather(
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtWriteFileGather');
+
+  if MayLog(lfUnit or lfFile) then
+    DbgPrintf('EmuKrnl : NtWriteFileGather' +
+        #13#10'(' +
+        #13#10'   FileHandle          : 0x%.08X' +
+        #13#10'   Event               : 0x%.08X' +
+        #13#10'   ApcRoutine          : 0x%.08X' +
+        #13#10'   ApcContext          : 0x%.08X' +
+        #13#10'   IoStatusBlock       : 0x%.08X' +
+        #13#10'   SegmentArray        : 0x%.08X' +
+        #13#10'   Length              : 0x%.08X' +
+        #13#10'   ByteOffset          : 0x%.08X (%d)' +
+        #13#10');',
+        [FileHandle, Event, Addr(ApcRoutine),
+         ApcContext, IoStatusBlock, SegmentArray, Length, ByteOffset, QuadPart(ByteOffset)]);
+
+  Result := JwaNative.NtWriteFileGather(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, SegmentArray, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
+
+  if (FAILED(Result)) then
+    EmuWarning('EmuKrnl : NtWriteFileGather failed! (0x%.08X)', [Result]);
+
   EmuSwapFS(fsXbox);
 end;
 
