@@ -3355,17 +3355,13 @@ begin
     else
     begin
       // Dxbx addition : Check if LockRect actually succeeds :
-      if IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(0, {out}LockedRect, NULL, 0) <> D3D_OK then
-        EmuWarning('EmuIDirect3DDevice8_CreateTexture : LockRect Failed!')
-      else
-      begin
-        ppTexture^.Data := DWORD(LockedRect.pBits);
-        ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
+      IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(0, {out}LockedRect, NULL, 0);
+      ppTexture^.Data := DWORD(LockedRect.pBits);
+      ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
 
-        g_DataToTexture.insert(ppTexture^.Data, ppTexture^);
+      g_DataToTexture.insert(ppTexture^.Data, ppTexture^);
 
-        IDirect3DTexture8(ppTexture^.Emu.Texture8).UnlockRect(0);
-      end;
+      IDirect3DTexture8(ppTexture^.Emu.Texture8).UnlockRect(0);
     end;
 
 {$IFDEF DEBUG}
