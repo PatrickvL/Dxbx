@@ -87,7 +87,7 @@ function xboxkrnl_NtCreateFile(
 function xboxkrnl_NtCreateIoCompletion(
   FileHandle: dtU32;
   DesiredAccess: ACCESS_MASK;
-  pObjectAttributes: POBJECT_ATTRIBUTES;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
   pszUnknownArgs: dtBLOB
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateMutant(
@@ -102,13 +102,13 @@ function xboxkrnl_NtCreateSemaphore(
   MaximumCount: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateTimer(
-  pTimerHandle : PHANDLE;
-  DesiredAccess : ACCESS_MASK;
-  pObjectAttributes : POBJECT_ATTRIBUTES;
-  TimerType : TIMER_TYPE
+  pTimerHandle: PHANDLE;
+  DesiredAccess: ACCESS_MASK;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  TimerType: TIMER_TYPE
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtDeleteFile(
-  pObjectAttributes: POBJECT_ATTRIBUTES
+  ObjectAttributes: POBJECT_ATTRIBUTES
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtDeviceIoControlFile(
   FileHandle: dtU32;
@@ -162,7 +162,7 @@ function xboxkrnl_NtOpenFile(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtOpenSymbolicLinkObject(
   pFileHandle: dtU32;
-  pObjectAttributes: POBJECT_ATTRIBUTES
+  ObjectAttributes: POBJECT_ATTRIBUTES
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtProtectVirtualMemory(
   BaseAddress: PPVOID; // OUT
@@ -207,7 +207,7 @@ function xboxkrnl_NtQueryEvent(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryFullAttributesFile(
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  Attributes: PVOID // OUT
+  FileInformation: PFILE_NETWORK_OPEN_INFORMATION // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryInformationFile(
   FileHandle: HANDLE;
@@ -386,15 +386,29 @@ const lfUnit = lfCxbx or lfKernel;
 
 type
   RNativeObjectAttributes = record
+    // Internal variables :
     wszObjectName: UnicodeString;
     NtUnicodeString: UNICODE_STRING;
     NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
+    // This is what should be passed on to Windows
+    // after ObjectAttributesToNT() has been called :
+    NtObjAttrPtr: JwaWinType.POBJECT_ATTRIBUTES;
   end;
 
 function ObjectAttributesToNT(ObjectAttributes: POBJECT_ATTRIBUTES; const aFileAPIName: string = ''): RNativeObjectAttributes;
 var
   szBuffer: AnsiString;
 begin
+  if ObjectAttributes = nil then
+  begin
+    // When the pointer is nil, make sure we pass nil to Windows too :
+    Result.NtObjAttrPtr := nil;
+    Exit;
+  end;
+
+  // ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
+  Result.NtObjAttrPtr := @(Result.NtObjAttr);
+
   szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
 {$IFDEF DEBUG}
@@ -458,10 +472,7 @@ begin
   JwaNative.RtlInitUnicodeString(@Result.NtUnicodeString, PWideChar(Result.wszObjectName));
 
   // Initialize the NT ObjectAttributes :
-  if Assigned(ObjectAttributes) then
-    JwaWinType.InitializeObjectAttributes(@Result.NtObjAttr, @Result.NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL)
-  else
-    JwaWinType.InitializeObjectAttributes(@Result.NtObjAttr, @Result.NtUnicodeString, 0, 0, NULL);
+  JwaWinType.InitializeObjectAttributes(@Result.NtObjAttr, @Result.NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL)
 end;
 
 
@@ -535,8 +546,8 @@ begin
 
   Result := JwaNative.NtClearEvent(EventHandle);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtClearEvent failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtClearEvent failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -606,10 +617,10 @@ begin
   DesiredAccess := DIRECTORY_CREATE_OBJECT;
 
   // redirect to Win2k/XP
-  Result := JwaNative.NtCreateDirectoryObject(DirectoryHandle, DesiredAccess, @NativeObjectAttributes.NtObjAttr);
+  Result := JwaNative.NtCreateDirectoryObject(DirectoryHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr);
 
-  if FAILED(Result) then
-    EmuWarning('EmuKrnl : NtCreateDirectoryObject failed! (0x%.08X)', [Result])
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCreateDirectoryObject failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit or lfFile) then
       DbgPrintf('EmuKrnl : NtCreateDirectoryObject = 0x%.08X', [DirectoryHandle^]);
@@ -627,7 +638,7 @@ function xboxkrnl_NtCreateEvent
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   NativeObjectAttributes: RNativeObjectAttributes;
-  ret: NTSTATUS;
+  DesiredAccess: ACCESS_MASK;
 begin
   EmuSwapFS(fsWindows);
 
@@ -644,18 +655,22 @@ begin
 
   // initialize object attributes
   NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
-  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+
+  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+  DesiredAccess := EVENT_ALL_ACCESS;
 
   // redirect to Win2k/XP
-  ret := JwaNative.NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, @NativeObjectAttributes.NtObjAttr, EVENT_TYPE(EventType), InitialState);
+  Result := JwaNative.NtCreateEvent(EventHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, EVENT_TYPE(EventType), InitialState);
 
-  if (FAILED(ret)) then
-    EmuWarning('EmuKrnl : NtCreateEvent failed! (0x%.08X)', [ret])
+  // From http://msdn.microsoft.com/en-us/library/ff566423(v=VS.85).aspx
+  // "returns STATUS_SUCCESS" :
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCreateEvent failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit) then
       DbgPrintf('EmuKrnl : NtCreateEvent EventHandle = 0x%.08X', [EventHandle^]);
 
-  Result := ret;
   EmuSwapFS(fsXbox);
 end;
 
@@ -686,17 +701,21 @@ begin
     DbgPrintf('EmuKrnl : NtCreateFile' +
      #13#10'(' +
      #13#10'   FileHandle          : 0x%.08X' +
-     #13#10'   DesiredAccess       : 0x%.08X' +
+     #13#10'   DesiredAccess       : 0x%.08X (%s)' +
      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
      #13#10'   IoStatusBlock       : 0x%.08X' +
      #13#10'   AllocationSize      : 0x%.08X (%d)' +
      #13#10'   FileAttributes      : 0x%.08X' +
      #13#10'   ShareAccess         : 0x%.08X' +
-     #13#10'   CreateDisposition   : 0x%.08X' +
-     #13#10'   CreateOptions       : 0x%.08X' +
+     #13#10'   CreateDisposition   : 0x%.08X (%s)' +
+     #13#10'   CreateOptions       : 0x%.08X (%s)' +
      #13#10');',
-     [FileHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-     IoStatusBlock, AllocationSize, QuadPart(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions]);
+     [FileHandle,
+      DesiredAccess, AccessMaskToString(DesiredAccess),
+      ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
+     IoStatusBlock, AllocationSize, QuadPart(AllocationSize), FileAttributes, ShareAccess,
+     CreateDisposition, CreateDispositionToString(CreateDisposition),
+     CreateOptions, CreateOptionsToString(CreateOptions)]);
 
   // initialize object attributes
   NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtCreateFile');
@@ -707,12 +726,12 @@ begin
 
   // redirect to Win2k/XP
   Result := JwaNative.NtCreateFile(
-      FileHandle, DesiredAccess, @NativeObjectAttributes.NtObjAttr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+      FileHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
       JwaWinType.PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
   );
 
-  if FAILED(Result) then
-    EmuWarning('EmuKrnl : NtCreateFile failed! (0x%.08X)', [Result])
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCreateFile failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit or lfFile) then
       DbgPrintf('EmuKrnl : NtCreateFile = 0x%.08X', [FileHandle^]);
@@ -723,7 +742,7 @@ end;
 function xboxkrnl_NtCreateIoCompletion(
   FileHandle: dtU32;
   DesiredAccess: ACCESS_MASK;
-  pObjectAttributes: POBJECT_ATTRIBUTES;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
   pszUnknownArgs: dtBLOB
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
@@ -742,7 +761,7 @@ function xboxkrnl_NtCreateMutant
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   NativeObjectAttributes: RNativeObjectAttributes;
-  ret: NTSTATUS;
+  DesiredAccess: ACCESS_MASK;
 begin
   EmuSwapFS(fsWindows);
 
@@ -757,18 +776,19 @@ begin
 
   // initialize object attributes
   NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
-  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+
+  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+  DesiredAccess := MUTANT_ALL_ACCESS;
 
   // redirect to Win2k/XP
-  ret := JwaNative.NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, @NativeObjectAttributes.NtObjAttr, InitialOwner);
+  Result := JwaNative.NtCreateMutant(MutantHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, InitialOwner);
 
-  if (FAILED(ret)) then
-    EmuWarning('EmuKrnl : NtCreateMutant failed! (0x%.08X)', [ret])
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCreateMutant failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit) then
       DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle = 0x%.08X', [MutantHandle]);
-
-  Result := ret;
 
   EmuSwapFS(fsXbox);
 end;
@@ -783,6 +803,7 @@ function xboxkrnl_NtCreateSemaphore
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   NativeObjectAttributes: RNativeObjectAttributes;
+  DesiredAccess: ACCESS_MASK;
 begin
   EmuSwapFS(fsWindows);
 
@@ -799,20 +820,23 @@ begin
 
   // Dxbx addition : Fix NT Unicode <> Xbox ANSI difference on ObjectName :
   NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
-  NativeObjectAttributes.NtObjAttr.RootDirectory := 0; //??
+//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+
+  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+  DesiredAccess := SEMAPHORE_ALL_ACCESS;
 
   // redirect to Win2k/XP
   Result := JwaNative.NtCreateSemaphore
   (
       SemaphoreHandle,
-      SEMAPHORE_ALL_ACCESS,
-      @NativeObjectAttributes.NtObjAttr,
+      DesiredAccess,
+      NativeObjectAttributes.NtObjAttrPtr,
       InitialCount,
       MaximumCount
   );
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtCreateSemaphore failed! (0x%.08X)', [Result])
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCreateSemaphore failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit) then
       DbgPrintf('EmuKrnl : NtCreateSemaphore SemaphoreHandle = 0x%.08X', [SemaphoreHandle^]);
@@ -823,7 +847,7 @@ end;
 function xboxkrnl_NtCreateTimer(
   pTimerHandle: PHANDLE;
   DesiredAccess: ACCESS_MASK;
-  pObjectAttributes: POBJECT_ATTRIBUTES;
+  ObjectAttributes: POBJECT_ATTRIBUTES;
   TimerType: TIMER_TYPE
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
@@ -837,21 +861,21 @@ begin
       #13#10'(' +
       #13#10'   pTimerHandle        : 0x%.08X' +
       #13#10'   DesiredAccess       : 0x%.08X' +
-      #13#10'   pObjectAttributes   : 0x%.08X ("%s")' +
+      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
       #13#10'   TimerType           : 0x%.08X' +
       #13#10');',
-      [pTimerHandle, DesiredAccess, pObjectAttributes, POBJECT_ATTRIBUTES_String(pObjectAttributes), Ord(TimerType)]);
+      [pTimerHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), Ord(TimerType)]);
 
   // Dxbx addition : Fix NT Unicode <> Xbox ANSI difference on ObjectName :
-  NativeObjectAttributes := ObjectAttributesToNT(pObjectAttributes);
-  NativeObjectAttributes.NtObjAttr.RootDirectory := 0; //??
+  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
+//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
 
-  Result := JwaNative.NtCreateTimer(pTimerHandle, DesiredAccess, @NativeObjectAttributes.NtObjAttr, TimerType);
+  Result := JwaNative.NtCreateTimer(pTimerHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, TimerType);
 
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtDeleteFile(pObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
+function xboxkrnl_NtDeleteFile(ObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   NativeObjectAttributes: RNativeObjectAttributes;
@@ -863,10 +887,10 @@ begin
     #13#10'(' +
     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
     #13#10');',
-    [pObjectAttributes, POBJECT_ATTRIBUTES_String(pObjectAttributes)]);
+    [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(pObjectAttributes, 'NtDeleteFile');
+  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtDeleteFile');
 
   // Never delete from XbePath :
   if (NativeObjectAttributes.NtObjAttr.RootDirectory = g_hCurDir)
@@ -875,11 +899,11 @@ begin
     Result := STATUS_OBJECT_PATH_NOT_FOUND
   else
     // redirect to Win2k/XP
-    Result := JwaNative.NtDeleteFile(@NativeObjectAttributes.NtObjAttr);
+    Result := JwaNative.NtDeleteFile(NativeObjectAttributes.NtObjAttrPtr);
 
-  if FAILED(Result) then
+  if (Result <> STATUS_SUCCESS) then
     if MayLog(lfDxbx or lfKernel or lfFile) then
-      DbgPrintf('EmuKrnl : NtDeleteFile failed! (0x%.08X)', [Result]);
+      EmuWarning('NtDeleteFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -915,7 +939,8 @@ function xboxkrnl_NtDuplicateObject
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  ret: NTSTATUS;
+  DesiredAccess: ACCESS_MASK;
+  Attributes: ULONG;
 begin
   EmuSwapFS(fsWindows);
 
@@ -929,20 +954,25 @@ begin
       [SourceHandle, TargetHandle, Options]);
 {$ENDIF}
 
+  DesiredAccess := 0; // TODO -oDxbx : Should be set is Options <> DUPLICATE_SAME_ACCESS
+  Attributes := 0; // TODO -oDxbx : Should be set is Options <> DUPLICATE_SAME_ATTRIBUTES
+
   // redirect to Win2k/XP
-  ret := JwaNative.NtDuplicateObject
+  Result := JwaNative.NtDuplicateObject
   (
       GetCurrentProcess(),
       SourceHandle,
       GetCurrentProcess(),
       TargetHandle,
-      0, 0, Options
+      DesiredAccess,
+      Attributes,
+      Options
   );
 
-  if not (ret = STATUS_SUCCESS) then
-      EmuWarning('Object was not duplicated!');
-
-  Result := ret;
+  // From http://msdn.microsoft.com/en-us/library/ms724251(VS.85).aspx
+  // "If the function fails, the return value is zero" :
+  if Result = 0 then
+    EmuWarning('Object was not duplicated!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -953,8 +983,6 @@ function xboxkrnl_NtFlushBuffersFile
   IoStatusBlock: PIO_STATUS_BLOCK // OUT
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -967,11 +995,9 @@ begin
       [FileHandle, IoStatusBlock]);
 {$ENDIF}
 
-  ret := JwaNative.NtFlushBuffersFile(FileHandle, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock));
+  Result := JwaNative.NtFlushBuffersFile(FileHandle, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock));
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 // NtFreeVirtualMemory:
@@ -1048,10 +1074,10 @@ begin
   DesiredAccess := DIRECTORY_TRAVERSE;
 
   // redirect to Win2k/XP
-  Result := JwaNative.NtOpenDirectoryObject(DirectoryHandle, DesiredAccess, @NativeObjectAttributes.NtObjAttr);
+  Result := JwaNative.NtOpenDirectoryObject(DirectoryHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr);
 
-  if FAILED(Result) then
-    EmuWarning('EmuKrnl : NtOpenDirectoryObject failed! (0x%.08X)', [Result])
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtOpenDirectoryObject failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit or lfFile) then
       DbgPrintf('EmuKrnl : NtOpenDirectoryObject = 0x%.08X', [DirectoryHandle^]);
@@ -1084,14 +1110,16 @@ begin
   DbgPrintf('EmuKrnl : NtOpenFile' +
     #13#10'(' +
     #13#10'   FileHandle          : 0x%.08X' +
-    #13#10'   DesiredAccess       : 0x%.08X' +
+    #13#10'   DesiredAccess       : 0x%.08X (%s)' +
     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
     #13#10'   IoStatusBlock       : 0x%.08X' +
     #13#10'   ShareAccess         : 0x%.08X' +
-    #13#10'   CreateOptions       : 0x%.08X' +
+    #13#10'   OpenOptions         : 0x%.08X (%s)' +
     #13#10');',
-    [FileHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-     IoStatusBlock, ShareAccess, OpenOptions]);
+    [FileHandle,
+     DesiredAccess, AccessMaskToString(DesiredAccess),
+     ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
+     IoStatusBlock, ShareAccess, OpenOptions, CreateOptionsToString(OpenOptions)]);
 {$ENDIF}
 
   // initialize object attributes
@@ -1099,13 +1127,13 @@ begin
 
   // redirect to Win2k/XP
   Result := JwaNative.NtOpenFile(
-      FileHandle, DesiredAccess, @NativeObjectAttributes.NtObjAttr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+      FileHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
       ShareAccess, OpenOptions
   );
 
 {$IFDEF DEBUG}
-  if FAILED(Result) then
-    DbgPrintf('EmuKrnl : NtOpenFile failed! (0x%.08X)', [Result])
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtOpenFile failed! (%s)', [NTStatusToString(Result)])
   else
     DbgPrintf('EmuKrnl : NtOpenFile = 0x%.08X', [FileHandle^]);
 {$ENDIF}
@@ -1113,7 +1141,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; pObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
+function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; ObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -1152,8 +1180,8 @@ begin
 
   Result := JwaNative.NtPulseEvent(EventHandle, PULONG(PreviousState));
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtPulseEvent failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtPulseEvent failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1192,8 +1220,8 @@ begin
     PIO_STATUS_BLOCK(ApcStatusBlock),
     Pointer(ApcReserved));
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtQueueApcThread failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueueApcThread failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1213,7 +1241,6 @@ function xboxkrnl_NtQueryDirectoryFile
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  ret: NTSTATUS;
   szBuffer: AnsiString;
   wszObjectName: UnicodeString;
   NtFileMask: UNICODE_STRING;
@@ -1262,7 +1289,7 @@ begin
   repeat
     ZeroMemory(wcstr, 160*2);
 
-    ret := JwaNative.NtQueryDirectoryFile
+    Result := JwaNative.NtQueryDirectoryFile
         (
             FileHandle, Event, ApcRoutine, ApcContext, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
             $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
@@ -1284,8 +1311,6 @@ begin
 
   // TODO -oCXBX: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
   DxbxFree(FileDirInfo);
-
-  Result := ret;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1319,8 +1344,8 @@ begin
     {ReturnSingleEntry=}False, // TODO -oDxbx : Is this the correct value?
     RestartScan, Context, ReturnLength);
 
-  if FAILED(Result) then
-    EmuWarning('EmuKrnl : NtQueryDirectoryObject failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueryDirectoryObject failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1345,15 +1370,15 @@ begin
 
   Result := JwaNative.NtQueryEvent(EventHandle, EventBasicInformation, EventInformation, SizeOf(EventInformation^), @ResultLength);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtQueryEvent failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueryEvent failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtQueryFullAttributesFile(
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  Attributes: PVOID // OUT
+  FileInformation: PFILE_NETWORK_OPEN_INFORMATION // OUT
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
@@ -1365,18 +1390,18 @@ begin
   DbgPrintf('EmuKrnl : NtQueryFullAttributesFile'+
      #13#10'('+
      #13#10'   ObjectAttributes    : 0x%.08X ("%s")'+
-     #13#10'   Attributes          : 0x%.08X'+
+     #13#10'   FileInformation     : 0x%.08X'+
      #13#10');',
-     [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), Attributes]);
+     [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), FileInformation]);
 {$ENDIF}
 
   // initialize object attributes
   NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtQueryFullAttributesFile');
 
-  Result := JwaNative.NtQueryFullAttributesFile(@NativeObjectAttributes.NtObjAttr, Attributes);
+  Result := JwaNative.NtQueryFullAttributesFile(NativeObjectAttributes.NtObjAttrPtr, FileInformation);
 
-  if(FAILED(Result))then
-    EmuWarning('EmuKrnl : NtQueryFullAttributesFile failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueryFullAttributesFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1443,8 +1468,8 @@ begin
     *)
   end;
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtQueryInformationFile failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueryInformationFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1480,8 +1505,8 @@ begin
 
   Result := JwaNative.NtQueryMutant(MutantHandle, MutantBasicInformation, MutantInformation, SizeOf(MutantInformation^), @ResultLength);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtQueryMutant failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueryMutant failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1506,8 +1531,8 @@ begin
 
   Result := JwaNative.NtQuerySemaphore(SemaphoreHandle, SemaphoreBasicInformation, SemaphoreInformation, SizeOf(SemaphoreInformation^), @ResultLength);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtQuerySemaphore failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQuerySemaphore failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1580,8 +1605,9 @@ begin
       @ReturnLength
   );
 
-  if (FAILED(Result)) then
+  if (Result <> STATUS_SUCCESS) then
   begin
+    EmuWarning('NtQueryVirtualMemory failed! (%s)', [NTStatusToString(Result)]);
     if BaseAddress = Pointer($7FFF0000) then
     begin
       // Fix for "Forza Motorsport", which iterates over 2 Gb of memory in 64 Kb chunks,
@@ -1597,9 +1623,7 @@ begin
 
       Result := STATUS_SUCCESS;
       DbgPrintf('EmuKrnl : NtQueryVirtualMemory : Applied fix for "Forza Motorsport" !');
-    end
-    else
-      EmuWarning('EmuKrnl : NtQueryVirtualMemory failed! (0x%.08X)', [Result]);
+    end;
   end;
 
   EmuSwapFS(fsXbox);
@@ -1620,7 +1644,6 @@ function xboxkrnl_NtQueryVolumeInformationFile
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 var
-  ret: NTSTATUS;
   SizeInfo: PFILE_FS_SIZE_INFORMATION;
 begin
   EmuSwapFS(fsWindows);
@@ -1641,7 +1664,7 @@ begin
   if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileFsVolumeInformation{FileDirectoryInformation}) then
     DxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
 
-  ret := JwaNative.NtQueryVolumeInformationFile
+  Result := JwaNative.NtQueryVolumeInformationFile
   (
       FileHandle,
       JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
@@ -1659,8 +1682,6 @@ begin
     SizeInfo.SectorsPerAllocationUnit          := 32;
     SizeInfo.BytesPerSector                    := 512;
   end;
-
-  Result := ret;
 
   EmuSwapFS(fsXbox);
 end;
@@ -1705,8 +1726,8 @@ begin
 
   Result := JwaNative.NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtReadFile failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtReadFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1742,8 +1763,8 @@ begin
 
   Result := JwaNative.NtReadFileScatter(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, SegmentArray, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtReadFileScatter failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtReadFileScatter failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1754,8 +1775,6 @@ function xboxkrnl_NtReleaseMutant
   PreviousCount: PULONG // OUT
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1768,13 +1787,14 @@ begin
       [MutantHandle, PreviousCount]);
 
   // redirect to Win2k/XP
-  ret := JwaNative.NtReleaseMutant(MutantHandle, PreviousCount);
+  Result := JwaNative.NtReleaseMutant(MutantHandle, PreviousCount);
 
-  if(FAILED(ret)) then
-    EmuWarning('EmuKrnl : NtReleaseMutant failed! (0x%.08X)', [ret]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtReleaseMutant failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 
+  // TODO -oDxbx : Should we really fake success?
   Result := STATUS_SUCCESS;
 end;
 
@@ -1799,8 +1819,8 @@ begin
 
   Result := JwaNative.NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PLONG(PreviousCount));
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtReleaseSemaphore failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtReleaseSemaphore failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1825,8 +1845,6 @@ function xboxkrnl_NtResumeThread
   PreviousSuspendCount: PULONG // OUT
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1838,13 +1856,11 @@ begin
       #13#10');',
       [ThreadHandle, PreviousSuspendCount]);
 
-  ret := JwaNative.NtResumeThread(ThreadHandle, PreviousSuspendCount);
+  Result := JwaNative.NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
   Sleep(10);
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 function xboxkrnl_NtSetEvent
@@ -1853,8 +1869,6 @@ function xboxkrnl_NtSetEvent
   PreviousState: PLONG // OUT
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1866,14 +1880,12 @@ begin
       #13#10');',
       [EventHandle, PreviousState]);
 
-  ret := JwaNative.NtSetEvent(EventHandle, PULONG(PreviousState));
+  Result := JwaNative.NtSetEvent(EventHandle, PULONG(PreviousState));
 
-  if (FAILED(ret)) then
-    EmuWarning('EmuKrnl : NtSetEvent failed! (0x%.08X)', [ret]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtSetEvent failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 function xboxkrnl_NtSetInformationFile
@@ -2004,8 +2016,6 @@ function xboxkrnl_NtSuspendThread
   PreviousSuspendCount: PULONG // OUT OPTIONAL
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
-var
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2017,11 +2027,9 @@ begin
       #13#10');',
       [ThreadHandle, PreviousSuspendCount]);
 
-  ret := JwaNative.NtSuspendThread(ThreadHandle, PreviousSuspendCount);
+  Result := JwaNative.NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 procedure xboxkrnl_NtUserIoApcDispatcher
@@ -2187,8 +2195,6 @@ function xboxkrnl_NtWaitForMultipleObjectsEx
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  ret: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2205,11 +2211,9 @@ begin
       [Count, Handles, Ord(WaitType), Ord(WaitMode), Alertable,
        Timeout, QuadPart(Timeout)]);
 
-  ret := JwaNative.NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
+  Result := JwaNative.NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
 
   EmuSwapFS(fsXbox);
-
-  Result := ret;
 end;
 
 // NtWriteFile:
@@ -2252,8 +2256,8 @@ begin
 
   Result := JwaNative.NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtWriteFile failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtWriteFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2289,8 +2293,8 @@ begin
 
   Result := JwaNative.NtWriteFileGather(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, SegmentArray, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
-  if (FAILED(Result)) then
-    EmuWarning('EmuKrnl : NtWriteFileGather failed! (0x%.08X)', [Result]);
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtWriteFileGather failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
