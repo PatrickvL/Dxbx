@@ -34,6 +34,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uTypes,
   uLog,
   uEmu,
   uEmuAlloc,
@@ -79,7 +80,9 @@ function xboxkrnl_MmFreeSystemMemory(
 function xboxkrnl_MmGetPhysicalAddress(
   BaseAddress: PVOID
   ): PHYSICAL_ADDRESS; stdcall;
-function xboxkrnl_MmIsAddressValid(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_MmIsAddressValid(
+  VirtualAddress: PVOID
+  ): _BOOLEAN; stdcall;
 function xboxkrnl_MmLockUnlockBufferPages(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmLockUnlockPhysicalPage(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmMapIoSpace(
@@ -393,11 +396,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_MmIsAddressValid(): NTSTATUS; stdcall;
+function xboxkrnl_MmIsAddressValid(
+  VirtualAddress: PVOID
+  ): _BOOLEAN; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('MmIsAddressValid');
+  Result := _BOOLEAN(Unimplemented('MmIsAddressValid'));
   EmuSwapFS(fsXbox);
 end;
 
