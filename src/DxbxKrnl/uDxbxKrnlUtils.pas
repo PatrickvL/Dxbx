@@ -56,6 +56,7 @@ function PUNICODE_STRING_String(const aValue: PUNICODE_STRING): AnsiString;
 function POBJECT_ATTRIBUTES_String(const aValue: XboxKrnl.POBJECT_ATTRIBUTES): AnsiString;
 
 function CreateDispositionToString(CreateDisposition: ULONG): string;
+function FileAttributesToString(FileAttributes: ULONG): string;
 function CreateOptionsToString(CreateOptions: ULONG): string;
 function AccessMaskToString(AccessMask: ACCESS_MASK): string;
 function NTStatusToString(aStatus: NTSTATUS): string;
@@ -218,6 +219,7 @@ begin
     Result := '';
 end;
 
+
 function CreateDispositionToString(CreateDisposition: ULONG): string;
 begin
   case CreateDisposition of
@@ -228,13 +230,65 @@ begin
     FILE_OVERWRITE: Result := 'FILE_OVERWRITE';
     FILE_OVERWRITE_IF: Result := 'FILE_OVERWRITE_IF';
   else
+    // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
     Result := '';
   end;
+end;
+
+function FileAttributesToString(FileAttributes: ULONG): string;
+begin
+  Result := '';
+
+  // Handle individual attributes :
+  if (FileAttributes and FILE_ATTRIBUTE_READONLY) > 0 then Result := Result + '|FILE_ATTRIBUTE_READONLY';
+  if (FileAttributes and FILE_ATTRIBUTE_HIDDEN) > 0 then Result := Result + '|FILE_ATTRIBUTE_HIDDEN';
+  if (FileAttributes and FILE_ATTRIBUTE_SYSTEM) > 0 then Result := Result + '|FILE_ATTRIBUTE_SYSTEM';
+  if (FileAttributes and FILE_ATTRIBUTE_DIRECTORY) > 0 then Result := Result + '|FILE_ATTRIBUTE_DIRECTORY';
+  if (FileAttributes and FILE_ATTRIBUTE_ARCHIVE) > 0 then Result := Result + '|FILE_ATTRIBUTE_ARCHIVE';
+  if (FileAttributes and FILE_ATTRIBUTE_DEVICE) > 0 then Result := Result + '|FILE_ATTRIBUTE_DEVICE';
+  if (FileAttributes and FILE_ATTRIBUTE_NORMAL) > 0 then Result := Result + '|FILE_ATTRIBUTE_NORMAL';
+  if (FileAttributes and FILE_ATTRIBUTE_TEMPORARY) > 0 then Result := Result + '|FILE_ATTRIBUTE_TEMPORARY';
+  if (FileAttributes and FILE_ATTRIBUTE_SPARSE_FILE) > 0 then Result := Result + '|FILE_ATTRIBUTE_SPARSE_FILE';
+  if (FileAttributes and FILE_ATTRIBUTE_REPARSE_POINT) > 0 then Result := Result + '|FILE_ATTRIBUTE_REPARSE_POINT';
+  if (FileAttributes and FILE_ATTRIBUTE_COMPRESSED) > 0 then Result := Result + '|FILE_ATTRIBUTE_COMPRESSED';
+  if (FileAttributes and FILE_ATTRIBUTE_OFFLINE) > 0 then Result := Result + '|FILE_ATTRIBUTE_OFFLINE';
+  if (FileAttributes and FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) > 0 then Result := Result + '|FILE_ATTRIBUTE_NOT_CONTENT_INDEXED';
+  if (FileAttributes and FILE_ATTRIBUTE_ENCRYPTED) > 0 then Result := Result + '|FILE_ATTRIBUTE_ENCRYPTED';
+
+  // Handle individual flags :
+  if (FileAttributes and FILE_FLAG_WRITE_THROUGH) > 0 then Result := Result + '|FILE_FLAG_WRITE_THROUGH';
+  if (FileAttributes and FILE_FLAG_OVERLAPPED) > 0 then Result := Result + '|FILE_FLAG_OVERLAPPED';
+  if (FileAttributes and FILE_FLAG_NO_BUFFERING) > 0 then Result := Result + '|FILE_FLAG_NO_BUFFERING';
+  if (FileAttributes and FILE_FLAG_RANDOM_ACCESS) > 0 then Result := Result + '|FILE_FLAG_RANDOM_ACCESS';
+  if (FileAttributes and FILE_FLAG_SEQUENTIAL_SCAN) > 0 then Result := Result + '|FILE_FLAG_SEQUENTIAL_SCAN';
+  if (FileAttributes and FILE_FLAG_DELETE_ON_CLOSE) > 0 then Result := Result + '|FILE_FLAG_DELETE_ON_CLOSE';
+  if (FileAttributes and FILE_FLAG_BACKUP_SEMANTICS) > 0 then Result := Result + '|FILE_FLAG_BACKUP_SEMANTICS';
+  if (FileAttributes and FILE_FLAG_POSIX_SEMANTICS) > 0 then Result := Result + '|FILE_FLAG_POSIX_SEMANTICS';
+  if (FileAttributes and FILE_FLAG_FIRST_PIPE_INSTANCE) > 0 then Result := Result + '|FILE_FLAG_FIRST_PIPE_INSTANCE';
+
+  // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
+
+  if Result <> '' then System.Delete(Result, 1, 1);
 end;
 
 function CreateOptionsToString(CreateOptions: ULONG): string;
 begin
   Result := '';
+
+  // Handle combined flags (which must be removed once seen, hence the specific order) :
+  if (CreateOptions and FILE_STRUCTURED_STORAGE) = FILE_STRUCTURED_STORAGE then
+  begin
+    Result := Result + '|FILE_STRUCTURED_STORAGE';
+    CreateOptions := CreateOptions and (not FILE_STRUCTURED_STORAGE);
+  end;
+
+  if (CreateOptions and FILE_COPY_STRUCTURED_STORAGE) = FILE_COPY_STRUCTURED_STORAGE then
+  begin
+    Result := Result + '|FILE_COPY_STRUCTURED_STORAGE';
+    CreateOptions := CreateOptions and (not FILE_COPY_STRUCTURED_STORAGE);
+  end;
+
+  // Handle individual flags :
   if (CreateOptions and FILE_DIRECTORY_FILE) > 0 then Result := Result + '|FILE_DIRECTORY_FILE';
   if (CreateOptions and FILE_WRITE_THROUGH) > 0 then Result := Result + '|FILE_WRITE_THROUGH';
   if (CreateOptions and FILE_SEQUENTIAL_ONLY) > 0 then Result := Result + '|FILE_SEQUENTIAL_ONLY';
@@ -255,12 +309,13 @@ begin
   if (CreateOptions and FILE_OPEN_REPARSE_POINT) > 0 then Result := Result + '|FILE_OPEN_REPARSE_POINT';
   if (CreateOptions and FILE_OPEN_NO_RECALL) > 0 then Result := Result + '|FILE_OPEN_NO_RECALL';
   if (CreateOptions and FILE_OPEN_FOR_FREE_SPACE_QUERY) > 0 then Result := Result + '|FILE_OPEN_FOR_FREE_SPACE_QUERY';
-//const FILE_COPY_STRUCTURED_STORAGE =            $00000041;
-//const FILE_STRUCTURED_STORAGE =                 $00000441;
+  if (CreateOptions and FILE_OPEN_FOR_FREE_SPACE_QUERY) > 0 then Result := Result + '|FILE_OPEN_FOR_FREE_SPACE_QUERY';
 //const FILE_VALID_OPTION_FLAGS =                 $00ffffff;
 //const FILE_VALID_PIPE_OPTION_FLAGS =            $00000032;
 //const FILE_VALID_MAILSLOT_OPTION_FLAGS =        $00000032;
 //const FILE_VALID_SET_FLAGS =                    $00000036;
+
+  // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
 
   if Result <> '' then System.Delete(Result, 1, 1);
 end;
@@ -268,11 +323,27 @@ end;
 function AccessMaskToString(AccessMask: ACCESS_MASK): string;
 begin
   Result := '';
+
+  // Handle generic flags :
   if (AccessMask and GENERIC_READ) > 0 then Result := Result + '|GENERIC_READ';
   if (AccessMask and GENERIC_WRITE) > 0 then Result := Result + '|GENERIC_WRITE';
   if (AccessMask and GENERIC_EXECUTE) > 0 then Result := Result + '|GENERIC_EXECUTE';
   if (AccessMask and GENERIC_ALL) > 0 then Result := Result + '|GENERIC_ALL';
 
+  // Handle combined flags (which must be removed once seen, hence the specific order) :
+  if (AccessMask and STANDARD_RIGHTS_ALL) = STANDARD_RIGHTS_ALL then
+  begin
+    Result := Result + '|STANDARD_RIGHTS_ALL';
+    AccessMask := AccessMask and (not STANDARD_RIGHTS_ALL);
+  end;
+
+  if (AccessMask and STANDARD_RIGHTS_REQUIRED) = STANDARD_RIGHTS_REQUIRED then
+  begin
+    Result := Result + '|STANDARD_RIGHTS_REQUIRED';
+    AccessMask := AccessMask and (not STANDARD_RIGHTS_REQUIRED);
+  end;
+
+  // Handle individual flags :
   if (AccessMask and DELETE) > 0 then Result := Result + '|DELETE';
   if (AccessMask and READ_CONTROL) > 0 then Result := Result + '|READ_CONTROL';
   if (AccessMask and WRITE_DAC) > 0 then Result := Result + '|WRITE_DAC';
@@ -282,8 +353,12 @@ begin
   if (AccessMask and ACCESS_SYSTEM_SECURITY) > 0 then Result := Result + '|ACCESS_SYSTEM_SECURITY';
   if (AccessMask and MAXIMUM_ALLOWED) > 0 then Result := Result + '|MAXIMUM_ALLOWED';
 
-  // TODO -oDxbx: Add the unhandled part of the mask as hexadecimal string
-  
+  // Handle the specific rights as hexadecimal string (since we can't guess their meaning here) :
+  // TODO -oDxbx: Maybe we should add a parameter to this function, to choose between various sets of meanings
+  if (AccessMask and SPECIFIC_RIGHTS_ALL) > 0 then Result := Result + Format('|0x%.4x', [AccessMask and SPECIFIC_RIGHTS_ALL]);
+
+  // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
+
   if Result <> '' then System.Delete(Result, 1, 1);
 end;
 
@@ -974,11 +1049,13 @@ STATUS_MP_PROCESSOR_MISMATCH     ((NTSTATUS)0x40000029L)
 //    STATUS_IMAGE_GAME_REGION_VIOLATION: Result := 'STATUS_IMAGE_GAME_REGION_VIOLATION'; // XBOX
 //    STATUS_IMAGE_MEDIA_TYPE_VIOLATION: Result := 'STATUS_IMAGE_MEDIA_TYPE_VIOLATION'; // XBOX
   else
+    // TODO -oDxbx: Check if we ever encounter unhandled values, and what those might mean.
     Result := Format('0x%.08X', [aStatus]);
     Exit;
   end;
 
-//  Result := Format('0x%.08X ', [aStatus]) + Result;
+  // Note : Enable the following line to prepend the string with the NtStatus code (will result in longer log lines) :
+  //  Result := Format('0x%.08X ', [aStatus]) + Result;
 end;
 
 end.

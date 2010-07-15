@@ -132,31 +132,31 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value ****)
 
-  CXBX_ALLOC_TYPE = (
-    CXBX_ALLOC_NORMAL,
-    CXBX_ALLOC_RTL
+  DXBX_ALLOC_TYPE = (
+    DXBX_ALLOC_NORMAL,
+    DXBX_ALLOC_RTL
   );
 
-type _CXBX_MEMORY_BLOCK = packed record
+type _DXBX_MEMORY_BLOCK = packed record
     pMem: Pvoid;
     Size: size_t;
     pFile: P_char;
     Line: uint32;
-    Type_: CXBX_ALLOC_TYPE;
-    pNext: PCXBX_MEMORY_BLOCK;
+    Type_: DXBX_ALLOC_TYPE;
+    pNext: PDXBX_MEMORY_BLOCK;
 end;
-CXBX_MEMORY_BLOCK = _CXBX_MEMORY_BLOCK;
-PCXBX_MEMORY_BLOCK = ^CXBX_MEMORY_BLOCK;
+DXBX_MEMORY_BLOCK = _DXBX_MEMORY_BLOCK;
+PDXBX_MEMORY_BLOCK = ^DXBX_MEMORY_BLOCK;
  
-var g_pFirstBlock: PCXBX_MEMORY_BLOCK = NULL;
-var g_pLastBlock: PCXBX_MEMORY_BLOCK = NULL;
+var g_pFirstBlock: PDXBX_MEMORY_BLOCK = NULL;
+var g_pLastBlock: PDXBX_MEMORY_BLOCK = NULL;
 var g_MemoryMutex: Mutex;
 
 // ******************************************************************
 // * GetMemStart - Retrieves the actual start of the allocated memory
 // *               block (first guard)
 // ******************************************************************
-function GetMemStart(pBlock: PCXBX_MEMORY_BLOCK): PVOID; inline;
+function GetMemStart(pBlock: PDXBX_MEMORY_BLOCK): PVOID; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := Pvoid(P_char(pBlock.pMem) - sizeof(MEMORY_GUARD));
@@ -166,7 +166,7 @@ end;
 // * GetMemEnd - Retrieves the end of the allocated memory block
 // *             (second guard)
 // ******************************************************************
-function GetMemEnd(pBlock: PCXBX_MEMORY_BLOCK): PVOID; inline;
+function GetMemEnd(pBlock: PDXBX_MEMORY_BLOCK): PVOID; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := Pvoid(P_char(pBlock.pMem) + pBlock.Size);
@@ -175,7 +175,7 @@ end;
 // ******************************************************************
 // * CheckIntegrity - Prints if the memory block is overwritten
 // ******************************************************************
-function CheckIntegrity(pBlock: PCXBX_MEMORY_BLOCK): _bool;
+function CheckIntegrity(pBlock: PDXBX_MEMORY_BLOCK): _bool;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   Integrity: _bool;
@@ -208,7 +208,7 @@ end;
 // * IsThisMemoryBlock - Simple block matching function
 // ******************************************************************
 function IsThisMemoryBlock(pMem: Pvoid; 
-                           pBlock: PCXBX_MEMORY_BLOCK): _bool; inline;
+                           pBlock: PDXBX_MEMORY_BLOCK): _bool; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := Assigned(pBlock) and (pMem = pBlock.pMem);
@@ -218,7 +218,7 @@ end;
 // * InThisMemoryBlock - Simple block matching function
 // ******************************************************************
 function InThisMemoryBlock(const pMem: Pvoid; 
-                           pBlock: PCXBX_MEMORY_BLOCK): _bool; inline;
+                           pBlock: PDXBX_MEMORY_BLOCK): _bool; inline;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
   Result := Assigned(pBlock)
@@ -234,14 +234,14 @@ function InsertMemoryBlock(pMem: Pvoid;
                            Size: size_t;
                            pFile: P_char;
                            Line: int;
-                           Type_: CXBX_ALLOC_TYPE): PCXBX_MEMORY_BLOCK;
+                           Type_: DXBX_ALLOC_TYPE): PDXBX_MEMORY_BLOCK;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pBlock: PCXBX_MEMORY_BLOCK;
+  pBlock: PDXBX_MEMORY_BLOCK;
   Length: size_t;
 begin
-  pBlock := PCXBX_MEMORY_BLOCK(
-            malloc(sizeof(CXBX_MEMORY_BLOCK)));
+  pBlock := PDXBX_MEMORY_BLOCK(
+            malloc(sizeof(DXBX_MEMORY_BLOCK)));
   pBlock.pMem := Puint08(UIntPtr(pMem) + sizeof(MEMORY_GUARD));
   pBlock.Size := Size;
   Length := strlen(pFile) + 1;
@@ -270,12 +270,12 @@ end;
 // ******************************************************************
 // * RemoveMemoryBlock - Removes a memory block from the tracker
 // ******************************************************************
-function RemoveMemoryBlock(pMem: Pvoid): PCXBX_MEMORY_BLOCK;
+function RemoveMemoryBlock(pMem: Pvoid): PDXBX_MEMORY_BLOCK;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pFree: PCXBX_MEMORY_BLOCK;
-  pCur: PCXBX_MEMORY_BLOCK;
-  pPrev: PCXBX_MEMORY_BLOCK;
+  pFree: PDXBX_MEMORY_BLOCK;
+  pCur: PDXBX_MEMORY_BLOCK;
+  pPrev: PDXBX_MEMORY_BLOCK;
 begin
   pFree := NULL;
   if IsThisMemoryBlock(pMem, g_pFirstBlock) then
@@ -315,10 +315,10 @@ end;
 // ******************************************************************
 // * FindMemoryBlock - Finds a memory block in the tracker
 // ******************************************************************
-function FindMemoryBlock(pMem: Pvoid): PCXBX_MEMORY_BLOCK;
+function FindMemoryBlock(pMem: Pvoid): PDXBX_MEMORY_BLOCK;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pCur: PCXBX_MEMORY_BLOCK;
+  pCur: PDXBX_MEMORY_BLOCK;
 begin
   // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :    
   pCur := g_pFirstBlock; while Assigned(pCur) do
@@ -338,10 +338,10 @@ end;
 // ******************************************************************
 // * FindMemoryBlockIn - Finds a memory block in the tracker
 // ******************************************************************
-function FindMemoryBlockIn(const pMem: Pvoid): PCXBX_MEMORY_BLOCK;
+function FindMemoryBlockIn(const pMem: Pvoid): PDXBX_MEMORY_BLOCK;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pCur: PCXBX_MEMORY_BLOCK;
+  pCur: PDXBX_MEMORY_BLOCK;
 begin
   // Dxbx note : Translated 'for' to 'while', because counter is dereferenced instead of incremented :    
   pCur := g_pFirstBlock; while Assigned(pCur) do
@@ -365,7 +365,7 @@ end;
 procedure DxbxAllocDump(DumpData: _bool);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pCur: PCXBX_MEMORY_BLOCK;
+  pCur: PDXBX_MEMORY_BLOCK;
 begin
   g_MemoryMutex.Lock();
 
@@ -385,7 +385,7 @@ begin
         #13#10'    Line : %d' +
         #13#10'    Type : %s',
         [pCur.pMem, pCur.Size, pCur.pFile, pCur.Line,
-        iif(pCur.Type_ = CXBX_ALLOC_NORMAL, 'NORMAL', 'RTL')]);
+        iif(pCur.Type_ = DXBX_ALLOC_NORMAL, 'NORMAL', 'RTL')]);
 {$ENDIF}
     CheckIntegrity(pCur);
     
@@ -406,7 +406,7 @@ function DxbxMallocDebug(Size: size_t;
 var
   pRetMem: Pvoid;
   pMem: Pvoid;
-  pBlock: PCXBX_MEMORY_BLOCK;
+  pBlock: PDXBX_MEMORY_BLOCK;
 begin
   pRetMem := NULL;
   g_MemoryMutex.Lock();
@@ -428,7 +428,7 @@ begin
                                 Size, 
                                 pFile, 
                                 Line, 
-                                CXBX_ALLOC_NORMAL);
+                                DXBX_ALLOC_NORMAL);
     pRetMem := pBlock.pMem;
   end;
 
@@ -448,7 +448,7 @@ function DxbxCallocDebug(NbrElements: size_t;
 var
   pRetMem: Pvoid;
   pMem: Pvoid;
-  pBlock: PCXBX_MEMORY_BLOCK;
+  pBlock: PDXBX_MEMORY_BLOCK;
 begin
   pRetMem := NULL;
   g_MemoryMutex.Lock();
@@ -471,7 +471,7 @@ begin
                                 NbrElements * ElementSize, 
                                 pFile, 
                                 Line, 
-                                CXBX_ALLOC_NORMAL);
+                                DXBX_ALLOC_NORMAL);
     pRetMem := pBlock.pMem;
   end;
 
@@ -488,7 +488,7 @@ procedure DxbxFreeDebug(pMem: Pvoid;
                         Line: int);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pFree: PCXBX_MEMORY_BLOCK;
+  pFree: PDXBX_MEMORY_BLOCK;
 begin
   if pMem = NULL then
   begin
@@ -544,7 +544,7 @@ function DxbxRtlAllocDebug(Heap: HANDLE;
 var
   pRetMem: Pvoid;
   pMem: Pvoid;
-  pBlock: PCXBX_MEMORY_BLOCK;
+  pBlock: PDXBX_MEMORY_BLOCK;
 begin
   pRetMem := NULL;
   g_MemoryMutex.Lock();
@@ -569,7 +569,7 @@ begin
                                 Bytes, 
                                 pFile, 
                                 Line, 
-                                CXBX_ALLOC_RTL);
+                                DXBX_ALLOC_RTL);
     pRetMem := pBlock.pMem;
   end;
 
@@ -588,7 +588,7 @@ function DxbxRtlFreeDebug(Heap: HANDLE;
                           Line: int): BOOL;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  pFree: PCXBX_MEMORY_BLOCK;
+  pFree: PDXBX_MEMORY_BLOCK;
 begin
   Result := FALSE;
   if(pMem = NULL) then
@@ -645,9 +645,9 @@ function DxbxRtlReallocDebug(Heap: HANDLE;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pRetMem: Pvoid;
-  pRealloc: PCXBX_MEMORY_BLOCK;
+  pRealloc: PDXBX_MEMORY_BLOCK;
   pNewMem: Pvoid;
-  pBlock: PCXBX_MEMORY_BLOCK;
+  pBlock: PDXBX_MEMORY_BLOCK;
 begin
   pRetMem := NULL;
   g_MemoryMutex.Lock();
@@ -704,7 +704,7 @@ begin
                                   Bytes, 
                                   pFile, 
                                   Line, 
-                                  CXBX_ALLOC_RTL);
+                                  DXBX_ALLOC_RTL);
       pRetMem := pBlock.pMem;
     end;
   end;
@@ -724,7 +724,7 @@ function DxbxRtlSizeHeapDebug(Heap: HANDLE;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   Size: SIZE_T;
-  pBlock: PCXBX_MEMORY_BLOCK;
+  pBlock: PDXBX_MEMORY_BLOCK;
   ActualSize: SIZE_T;
 begin
   Size := 0;
@@ -772,7 +772,7 @@ function DxbxVirtualQueryDebug(lpAddress: LPCVOID;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   Size: DWORD;
-  pBlock: PCXBX_MEMORY_BLOCK;
+  pBlock: PDXBX_MEMORY_BLOCK;
 begin
   Size := 0;
   g_MemoryMutex.Lock();

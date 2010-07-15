@@ -94,10 +94,13 @@ type TLogFlags = DWORD; // 'set of TLogFlag' prevents inlining of MayLog
 var
   // This field indicates all logging flags that are currently active :
   g_ActiveLogFlags: TLogFlags = lfAlways or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfSymbolScan;
-  g_DisabledLogFlags: TLogFlags = lfHeap;
+  g_DisabledLogFlags: TLogFlags = lfHeap or lfExtreme;
 
 function MayLog(const aFlags: TLogFlags): Boolean; inline;
-procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); inline;
+
+procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); inline; overload;
+procedure Log(const aFlags: TLogFlags; const aLogMsg: string); inline; overload;
+procedure Log(const aFlags: TLogFlags; const aLogMsg: string; Args: array of const); overload;
 
 implementation
 
@@ -180,6 +183,18 @@ procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); // inline;
 begin
   if MayLog(aFlags) then
     aLogProc();
+end;
+
+procedure Log(const aFlags: TLogFlags; const aLogMsg: string); // inline;
+begin
+  if MayLog(aFlags) then
+    DbgPrintf(aLogMsg);
+end;
+
+procedure Log(const aFlags: TLogFlags; const aLogMsg: string; Args: array of const);
+begin
+  if MayLog(aFlags) then
+    DbgPrintf(aLogMsg, Args);
 end;
 
 // Checks whether the given address is a valid address
