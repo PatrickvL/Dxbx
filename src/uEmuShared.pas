@@ -43,7 +43,7 @@ uses
   ;
 
 const
-  CXBX_MAX_PATH = 260;
+  DXBX_MAX_PATH = 260;
 
 type EmuShared = object(Mutex)
   // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -76,7 +76,7 @@ type EmuShared = object(Mutex)
     // Shared configuration
     m_XBController: XBController;
     m_XBVideo: XBVideo;
-    m_XbePath: array [0..CXBX_MAX_PATH - 1] of _char;
+    m_XbePath: array [0..DXBX_MAX_PATH - 1] of _char;
   end; // size = 7164 (as in Cxbx)
   PEmuShared = ^EmuShared;
 

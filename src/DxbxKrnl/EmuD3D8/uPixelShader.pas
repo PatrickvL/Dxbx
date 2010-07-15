@@ -33,8 +33,6 @@ uses
 
 {$INCLUDE Dxbx.inc}
 
-{$define _DEBUG_TRACK_PS}
-
 // From PixelShader.h :
 
 (*---------------------------------------------------------------------------*)
@@ -435,22 +433,20 @@ function XTL_EmuRecompilePshDef(pPSDef: PX_D3DPIXELSHADERDEF; ppRecompiled: PLPD
 
 implementation
 
+const lfUnit = lfCxbx or lfPixelShader;
+
 procedure DbgPshPrintf(aStr: string); overload;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-{$ifdef _DEBUG_TRACK_PS}
-  if (g_bPrintfOn) then
-    DbgPrintf(aStr);
-{$endif}
+  if (g_bPrintfOn) then // TODO -oDxbx: Remove this once our logging relies on MayLog completely
+  Log(lfUnit, aStr);
 end;
 
 procedure DbgPshPrintf(aStr: string; Args: array of const); overload;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-{$ifdef _DEBUG_TRACK_PS}
-  if (g_bPrintfOn) then
-    DbgPrintf(aStr, Args);
-{$endif}
+  if (g_bPrintfOn) then // TODO -oDxbx: Remove this once our logging relies on MayLog completely
+  Log(lfUnit, aStr, Args);
 end;
 
 // From PixelShader.cpp -----------------------------------------------------------
@@ -803,12 +799,12 @@ var
 begin
 
   // Dump the contents of the PixelShader def
-{$ifdef _DEBUG_TRACK_PS}
-  XTL_DumpPixelShaderDefToFile(pPSDef);
+  if MayLog(lfUnit) then
+    XTL_DumpPixelShaderDefToFile(pPSDef);
 
   // Azurik like to create and destroy the same shader every frame! O_o
-//  XTL_PrintPixelShaderDefContents(pPSDef);
-{$endif}
+  if MayLog(lfUnit or lfExtreme) then
+    XTL_PrintPixelShaderDefContents(pPSDef);
 
   // First things first, set the pixel shader version
   // TODO -oCXBX: ps.1.1 might be a better idea...

@@ -705,17 +705,20 @@ begin
      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
      #13#10'   IoStatusBlock       : 0x%.08X' +
      #13#10'   AllocationSize      : 0x%.08X (%d)' +
-     #13#10'   FileAttributes      : 0x%.08X' +
-     #13#10'   ShareAccess         : 0x%.08X' +
+     #13#10'   FileAttributes      : 0x%.08X (%s)' +
+     #13#10'   ShareAccess         : 0x%.08X (%s)' +
      #13#10'   CreateDisposition   : 0x%.08X (%s)' +
      #13#10'   CreateOptions       : 0x%.08X (%s)' +
      #13#10');',
      [FileHandle,
       DesiredAccess, AccessMaskToString(DesiredAccess),
       ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-     IoStatusBlock, AllocationSize, QuadPart(AllocationSize), FileAttributes, ShareAccess,
-     CreateDisposition, CreateDispositionToString(CreateDisposition),
-     CreateOptions, CreateOptionsToString(CreateOptions)]);
+      IoStatusBlock,
+      AllocationSize, QuadPart(AllocationSize),
+      FileAttributes, FileAttributesToString(FileAttributes),
+      ShareAccess, AccessMaskToString(ShareAccess),
+      CreateDisposition, CreateDispositionToString(CreateDisposition),
+      CreateOptions, CreateOptionsToString(CreateOptions)]);
 
   // initialize object attributes
   NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtCreateFile');
@@ -860,11 +863,11 @@ begin
     DbgPrintf('EmuKrnl : NtCreateTimer' +
       #13#10'(' +
       #13#10'   pTimerHandle        : 0x%.08X' +
-      #13#10'   DesiredAccess       : 0x%.08X' +
+      #13#10'   DesiredAccess       : 0x%.08X (%s)' +
       #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
       #13#10'   TimerType           : 0x%.08X' +
       #13#10');',
-      [pTimerHandle, DesiredAccess, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), Ord(TimerType)]);
+      [pTimerHandle, DesiredAccess, AccessMaskToString(DesiredAccess), ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), Ord(TimerType)]);
 
   // Dxbx addition : Fix NT Unicode <> Xbox ANSI difference on ObjectName :
   NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
