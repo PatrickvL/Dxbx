@@ -346,17 +346,17 @@ function xboxkrnl_NtWaitForSingleObject(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWaitForSingleObjectEx(
   Handle_: HANDLE;
-  WaitMode: _CHAR;
-  Alertable: LONGBOOL;
-  Timeout: PLARGE_INTEGER
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: _BOOLEAN;
+  Timeout: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWaitForMultipleObjectsEx(
   Count: ULONG;
   Handles: PHANDLE;
   WaitType: WAIT_TYPE;
-  WaitMode: _CHAR;
-  Alertable: LONGBOOL;
-  Timeout: PLARGE_INTEGER
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: _BOOLEAN;
+  Timeout: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFile(
   FileHandle: HANDLE; // TODO -oCXBX: correct paramters
@@ -791,7 +791,7 @@ begin
     EmuWarning('NtCreateMutant failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit) then
-      DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle = 0x%.08X', [MutantHandle]);
+      DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle = 0x%.08X', [MutantHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2161,9 +2161,9 @@ end;
 function xboxkrnl_NtWaitForSingleObjectEx
 (
   Handle_: HANDLE;
-  WaitMode: _CHAR;
-  Alertable: LONGBOOL;
-  Timeout: PLARGE_INTEGER
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: _BOOLEAN;
+  Timeout: PLARGE_INTEGER // OPTIONAL
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -2188,16 +2188,22 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+type
+  AHANDLES = array [0..1000] of HANDLE;
+  PHANDLEs = ^AHANDLES;
+
 function xboxkrnl_NtWaitForMultipleObjectsEx
 (
   Count: ULONG;
   Handles: PHANDLE;
   WaitType: WAIT_TYPE;
-  WaitMode: _CHAR;
-  Alertable: LONGBOOL;
-  Timeout: PLARGE_INTEGER
+  WaitMode: KPROCESSOR_MODE;
+  Alertable: _BOOLEAN;
+  Timeout: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  i: Integer;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2214,6 +2220,17 @@ begin
       [Count, Handles, Ord(WaitType), Ord(WaitMode), Alertable,
        Timeout, QuadPart(Timeout)]);
 
+  if MayLog(lfUnit) then // Add lfExtreme later
+  begin
+    // Dump at most 8 handles :
+    i := 0; while (i < Count) and (i < 8) do
+    begin
+      DbgPrintf('   Handles[%d] : 0x%.08X', [i, PHANDLEs(Handles)[i]]);
+      Inc(i);
+    end;
+  end;
+
+  // TODO -oDxbx : What should we do with the (currently ignored) WaitMode?
   Result := JwaNative.NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
 
   EmuSwapFS(fsXbox);

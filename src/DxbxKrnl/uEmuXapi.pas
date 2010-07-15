@@ -1901,26 +1901,9 @@ begin
 end;
 
 
-function XTL_EmuPulseEvent(hEvent: HANDLE): BOOL; stdcall;
+//function XTL_EmuPulseEvent(hEvent: HANDLE): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuPulseEvent' +
-      #13#10'(' +
-      #13#10'   hEvent            : 0x%.08X' +
-      #13#10');',
-      [hEvent]);
-{$ENDIF}
-
-  // TODO -oCXBX: This function might be a bit too high level.  If it is,
-  // feel free to implement NtPulseEvent in EmuKrnl.cpp
-
-  Result := BOOL(PulseEvent(hEvent));
-
-  EmuSwapFS(fsXbox);
-end;
+// Dxbx note : Removed this, as we've implemented NtPulseEvent in uEmuKrnlNt.pas
 
 
 function XTL_EmuCreateSemaphore
@@ -2173,7 +2156,6 @@ exports
   XTL_EmuGetOverlappedResult,
   XTL_EmuGetThreadPriority,
   XTL_EmuGetTimeZoneInformation,
-  XTL_EmuPulseEvent,
   XTL_EmuQueryPerformanceCounter,
   XTL_EmuQueryPerformanceFrequency,
   XTL_EmuQueueUserAPC,
