@@ -478,6 +478,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+(* Dxbx note : Disabled, too high level.
 function XTL_EmuQueryPerformanceCounter
 (
   lpPerformanceCount: PLARGE_INTEGER
@@ -500,7 +501,9 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
+(* Dxbx note : Disabled, too high level.
 function XTL_EmuQueryPerformanceFrequency
 (
   lpFrequency: PLARGE_INTEGER
@@ -520,6 +523,7 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 function XTL_EmuXMountUtilityDrive
 (
@@ -1014,6 +1018,7 @@ begin
   Result := ret;
 end;
 
+(* Dxbx note : Disabled, too high level.
 function XTL_EmuCreateMutex
 (
     lpMutexAttributes: LPSECURITY_ATTRIBUTES;
@@ -1039,7 +1044,9 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
+(* Dxbx note : Disabled, too high level.
 function XTL_EmuCloseHandle
 (
     hObject: HANDLE
@@ -1060,6 +1067,7 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 function XTL_EmuSetThreadPriorityBoost
 (
@@ -1873,6 +1881,7 @@ begin
 end;
 
 
+(* Dxbx note : Disabled, too high level.
 function XTL_EmuSignalObjectAndWait
 (
   hObjectToSignal: HANDLE;
@@ -1899,13 +1908,14 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
-
+*)
 
 //function XTL_EmuPulseEvent(hEvent: HANDLE): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 // Dxbx note : Removed this, as we've implemented NtPulseEvent in uEmuKrnlNt.pas
 
 
+(* Dxbx note : Disabled, too high level.
 function XTL_EmuCreateSemaphore
 (
   lpSemaphoreAttributes: LPVOID;
@@ -1937,8 +1947,10 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 
+(* Dxbx note : Disabled, too high level.
 function XTL_EmuReleaseSemaphore
 (
   hSemaphore: HANDLE;
@@ -1965,6 +1977,7 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 
 function XTL_EmutimeSetEvent
@@ -2149,18 +2162,18 @@ end;
 exports
   //XTL_EmuCloseHandle, // TODO -oDXBX: This makes emuclose instead of ntclose;
   XTL_EmuCreateFiber,
-  XTL_EmuCreateMutex,
-  XTL_EmuCreateSemaphore,
+//  XTL_EmuCreateMutex,
+//  XTL_EmuCreateSemaphore,
   XTL_EmuDeleteFiber,
   XTL_EmuGetExitCodeThread,
   XTL_EmuGetOverlappedResult,
   XTL_EmuGetThreadPriority,
   XTL_EmuGetTimeZoneInformation,
-  XTL_EmuQueryPerformanceCounter,
-  XTL_EmuQueryPerformanceFrequency,
+//  XTL_EmuQueryPerformanceCounter,
+//  XTL_EmuQueryPerformanceFrequency,
   XTL_EmuQueueUserAPC,
   XTL_EmuRaiseException,
-  XTL_EmuReleaseSemaphore,
+//  XTL_EmuReleaseSemaphore,
   XTL_EmuRtlAllocateHeap,
   XTL_EmuRtlCreateHeap,
   XTL_EmuRtlDestroyHeap,
@@ -2170,7 +2183,7 @@ exports
   XTL_EmuRtlSizeHeap,
   XTL_EmuSetThreadPriority,
   XTL_EmuSetThreadPriorityBoost,
-  XTL_EmuSignalObjectAndWait,
+//  XTL_EmuSignalObjectAndWait,
   XTL_EmutimeKillEvent,
   XTL_EmutimeSetEvent,
   XTL_EmuXapiApplyKernelPatches,
