@@ -21,24 +21,34 @@ unit uEmuFile;
 
 interface
 
-{$IFDEF DXBX_EMUHANDLES}
-
 uses
   // Jedi Win32API
   JwaWinType,
-  JwaWinNT;
+  JwaWinNT,
+  JwaNTStatus;
 
 const
   // Maximum number of open handles in the system
   EMU_MAX_HANDLES = 1024;
 
 type
+  TEmuNtObject = class; // forward
+
   // Wrapper of a handle object
   TEmuHandle = class(TObject)
-    // TODO -oDXBX:
+  protected
+    FNtObject: TEmuNtObject;
+    destructor Destroy; override; // Not public, so it can't be called directly
+  public
+    property NtObject: TEmuNtObject read FNtObject;
+
+    constructor Create(const aNtObject: TEmuNtObject);
+
+    function NtClose(): NTSTATUS;
+    function NtDuplicateObject(TargetHandle: PHANDLE; Options: DWORD): NTSTATUS;
   end;
 
-  // An NT fake object
+  // An fake NT object
   TEmuNtObject = class(TObject) // TODO -oDXBX:
   private
     RefCount: ULONG; // Reference count
@@ -46,25 +56,54 @@ type
     Name: PWideChar; // Object name (Unicode, because we handle after-conversion strings)
     NameLength: ULONG;
     PermanentFlag: Bool; // Permanent status
+    destructor Destroy; override; // Not public, so it can't be called directly
   public
-    // Decrements the reference count of this object (never override)
-    procedure NtClose();
-    // These functions mimic the Nt* calls
+    constructor Create; virtual;
 
-    // Increments the reference count of this object
-    // For file handles, a whole new EmuFile structure is returned.
-    // For other objects (the default implementation), "self" is returned.
-    function NtDuplicateObject(): TEmuNtObject; virtual;
+    // Create a new EmuHandle for this object, and return is as a HANDLE :
+    function NewHandle: HANDLE;
+
+    // These functions mimic the Nt* calls :
+
+    // Decrements the reference count of this object (never override)
+    function NtClose(): NTSTATUS;
+
+    // Increments the reference count of this object.
+    // For some object types, a whole new TEmuNtObject object is returned.
+    // For other objects (the default implementation), "Self" is returned.
+    function NtDuplicateObject(Options: DWORD): TEmuNtObject; virtual;
   end;
 
-  // Emulated file handle
+(*
+  // Emulated handle to file
   TEmuNtFile = class(TEmuNtObject)
   private
     File_: HANDLE; // The Windows file handle
     // Volume: TEmuNtVolume; // Pointer to the volume from which this came
   public
     // TODO -oCXBX: We need to override NtDuplicateObject in this case
+    // A whole new EmuNtFile object should be returned.
   end;
+*)
+
+  // Emulated handle to symbolic link object
+  TEmuNtSymbolicLinkObject = class(TEmuNtObject)
+  protected
+    destructor Destroy; override; // Not public, so it can't be called directly
+  public
+    SymbolicLinkName, DeviceName: AnsiString;
+    function ReturnLength: ULONG;
+
+    function Init(aSymbolicLinkName, aDeviceName: AnsiString): NTSTATUS;
+  end;
+
+function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): BOOL; inline
+function HandleToEmuHandle(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
+function EmuHandleToHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
+
+function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: string): TEmuNtSymbolicLinkObject;
+
+implementation
 
 var
   // Array of EmuHandles in the system
@@ -79,18 +118,7 @@ var
   // Lock on the handle system
   {EmuHandle.}HandleLock: _RTL_CRITICAL_SECTION;
 
-function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): BOOL; inline
-function EmuHandleToPtr(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
-function PtrToEmuHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
-
-{$ENDIF}
-
-implementation
-
-{$IFDEF DXBX_EMUHANDLES}
-
 // is hFile a 'special' emulated handle?
-
 function IsEmuHandle(hFile: {xboxkrnl.}HANDLE): BOOL; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
@@ -98,21 +126,122 @@ begin
 end;
 
 // convert from 'special' emulated handle to a pointer
-
-function EmuHandleToPtr(hFile: {xboxkrnl.}HANDLE): TEmuHandle; inline;
+function HandleToEmuHandle(hFile: {xboxkrnl.}HANDLE): TEmuHandle; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := TEmuHandle(uint32(hFile) - $80000000);
 end;
 
-// convert from 'special' emulated handle to a pointer
-
-function PtrToEmuHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
+// convert from a pointer to 'special' emulated handle
+function EmuHandleToHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := HANDLE(uint32(apEmuHandle) + $80000000);
 end;
 
-{$ENDIF}
+{ TEmuHandle }
+
+constructor TEmuHandle.Create(const aNtObject: TEmuNtObject);
+begin
+  inherited Create;
+
+  FNtObject := aNtObject;
+end;
+
+destructor TEmuHandle.Destroy;
+begin
+  Assert(False, 'May not be destroyed directly!');
+end;
+
+function TEmuHandle.NtClose(): NTSTATUS;
+begin
+  Assert(Assigned(FNtObject));
+
+  Result := FNtObject.NtClose();
+
+  inherited Destroy;
+end;
+
+function TEmuHandle.NtDuplicateObject(TargetHandle: PHANDLE; Options: DWORD): NTSTATUS;
+begin
+  TargetHandle^ := FNtObject.NtDuplicateObject(Options).NewHandle;
+  Result := STATUS_SUCCESS;
+end;
+
+{ TEmuNtObject }
+
+constructor TEmuNtObject.Create;
+begin
+  inherited Create;
+
+  RefCount := 1;
+end;
+
+destructor TEmuNtObject.Destroy;
+begin
+  Assert(False, 'May not be destroyed directly!');
+end;
+
+function TEmuNtObject.NewHandle: HANDLE;
+begin
+  Result := EmuHandleToHandle(TEmuHandle.Create(Self));
+end;
+
+function TEmuNtObject.NtClose(): NTSTATUS;
+begin
+  Dec(RefCount);
+  if RefCount <= 0 then
+    inherited Destroy;
+
+  Result := STATUS_SUCCESS;
+end;
+
+function TEmuNtObject.NtDuplicateObject(Options: DWORD): TEmuNtObject;
+begin
+  Inc(RefCount);
+  Result := Self;
+end;
+
+{ TEmuNtSymbolicLinkObject }
+
+var
+  NtSymbolicLinkObjects: array['A'..'Z'] of TEmuNtSymbolicLinkObject;
+
+function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: string): TEmuNtSymbolicLinkObject;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+begin
+  if (Length(aSymbolicLinkName) = 6) and (aSymbolicLinkName[5] in ['A'..'Z']) then
+    Result := NtSymbolicLinkObjects[aSymbolicLinkName[5]]
+  else
+    Result := nil;
+end;
+
+destructor TEmuNtSymbolicLinkObject.Destroy;
+begin
+  NtSymbolicLinkObjects[SymbolicLinkName[5]] := nil;
+
+  inherited Destroy;
+end;
+
+function TEmuNtSymbolicLinkObject.ReturnLength: ULONG;
+begin
+  Result := Length(DeviceName);
+end;
+
+function TEmuNtSymbolicLinkObject.Init(aSymbolicLinkName, aDeviceName: AnsiString): NTSTATUS;
+begin
+  Result := STATUS_OBJECT_NAME_INVALID;
+  if (Length(aSymbolicLinkName) = 6) and (aSymbolicLinkName[5] in ['A'..'Z']) then
+  begin
+    Result := STATUS_OBJECT_NAME_COLLISION;
+    if NtSymbolicLinkObjects[aSymbolicLinkName[5]] = nil then
+    begin
+      Result := STATUS_SUCCESS;
+      Self.SymbolicLinkName := aSymbolicLinkName;
+      Self.DeviceName := aDeviceName;
+      NtSymbolicLinkObjects[aSymbolicLinkName[5]] := Self;
+    end;
+  end;
+end;
 
 end.

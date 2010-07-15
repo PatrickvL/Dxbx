@@ -523,23 +523,32 @@ function xboxkrnl_IoCreateSymbolicLink
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
 ): NTSTATUS; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:60
+var
+  EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : IoCreateSymbolicLink' +
      #13#10'(' +
-     #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' +
-     #13#10'   DeviceName          : 0x%.08X ("%s")' +
+     #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' + // "\??\E:"
+     #13#10'   DeviceName          : 0x%.08X ("%s")' + // "\Device\Harddisk0\Partition1"
      #13#10');',
      [SymbolicLinkName, PSTRING_String(SymbolicLinkName),
      DeviceName, PSTRING_String(DeviceName)]);
 {$ENDIF}
 
-  // TODO -oCXBX: Actually um...implement this function
-  Result := STATUS_OBJECT_NAME_COLLISION;
+  EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(PSTRING_String(SymbolicLinkName));
+  if Assigned(EmuNtSymbolicLinkObject) then
+    Result := STATUS_OBJECT_NAME_COLLISION
+  else
+  begin
+    EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject.Create;
+    Result := EmuNtSymbolicLinkObject.Init(PSTRING_String(SymbolicLinkName), PSTRING_String(DeviceName));
+    if Result <> STATUS_SUCCESS then
+      EmuNtSymbolicLinkObject.NtClose;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -562,19 +571,25 @@ function xboxkrnl_IoDeleteSymbolicLink
   SymbolicLinkName: PSTRING
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : IoDeleteSymbolicLink' +
       #13#10'(' +
-      #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' +
+      #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' + // "\??\E:"
       #13#10');',
       [SymbolicLinkName, PSTRING_String(SymbolicLinkName)]);
 {$ENDIF}
 
-  // TODO -oCXBX: Actually um...implement this function
-  Result := STATUS_OBJECT_NAME_NOT_FOUND;
+  EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(PSTRING_String(SymbolicLinkName));
+  if Assigned(EmuNtSymbolicLinkObject) then
+    // Destroy the object once all handles to it are closed too :
+    Result := EmuNtSymbolicLinkObject.NtClose
+  else
+    Result := STATUS_OBJECT_NAME_NOT_FOUND;
 
   EmuSwapFS(fsXbox);
 end;
