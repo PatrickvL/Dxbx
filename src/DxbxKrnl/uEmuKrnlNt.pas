@@ -211,7 +211,7 @@ function xboxkrnl_NtQueryFullAttributesFile(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryInformationFile(
   FileHandle: HANDLE;
-  IoStatusBlock: PIO_STATUS_BLOCK; //   OUT
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   FileInformation: PVOID; //   OUT
   Length: ULONG;
   FileInfo: FILE_INFORMATION_CLASS
@@ -252,11 +252,11 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   FileInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReadFile(
-  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
+  FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
   ApcContext: PVOID;
-  IoStatusBlock: PVOID; // OUT
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   Buffer: PVOID; // OUT
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER // OPTIONAL
@@ -296,8 +296,8 @@ function xboxkrnl_NtSetEvent(
   PreviousState: PLONG // OUT // Dxbx Note : Shouldn't this be PULONg instead?
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSetInformationFile(
-  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
-  IoStatusBlock: PVOID; // OUT
+  FileHandle: HANDLE;
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   FileInformation: PVOID;
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS
@@ -359,14 +359,14 @@ function xboxkrnl_NtWaitForMultipleObjectsEx(
   Timeout: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFile(
-  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
-  Event: DWORD; // Dxbx correction (was PVOID)
-  ApcRoutine: PIO_APC_ROUTINE;
-  ApcContext: PVOID;
-  IoStatusBlock: PVOID; // OUT
+  FileHandle: HANDLE;
+  Event: HANDLE; // Dxbx correction (was PVOID)
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
+  ApcContext: PVOID; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   Buffer: PVOID;
   Length: ULONG;
-  ByteOffset: PLARGE_INTEGER
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtWriteFileGather(
   FileHandle: HANDLE;
@@ -391,23 +391,25 @@ type
     NtUnicodeString: UNICODE_STRING;
     NtObjAttr: JwaWinType.OBJECT_ATTRIBUTES;
     // This is what should be passed on to Windows
-    // after ObjectAttributesToNT() has been called :
+    // after DxbxObjectAttributesToNT() has been called :
     NtObjAttrPtr: JwaWinType.POBJECT_ATTRIBUTES;
   end;
 
-function ObjectAttributesToNT(ObjectAttributes: POBJECT_ATTRIBUTES; const aFileAPIName: string = ''): RNativeObjectAttributes;
+function DxbxObjectAttributesToNT(ObjectAttributes: POBJECT_ATTRIBUTES; var NativeObjectAttributes: RNativeObjectAttributes; const aFileAPIName: string = ''): NTSTATUS;
 var
   szBuffer: AnsiString;
+  EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
+  Result := STATUS_SUCCESS;
   if ObjectAttributes = nil then
   begin
     // When the pointer is nil, make sure we pass nil to Windows too :
-    Result.NtObjAttrPtr := nil;
+    NativeObjectAttributes.NtObjAttrPtr := nil;
     Exit;
   end;
 
   // ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
-  Result.NtObjAttrPtr := @(Result.NtObjAttr);
+  NativeObjectAttributes.NtObjAttrPtr := @(NativeObjectAttributes.NtObjAttr);
 
   szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
@@ -425,42 +427,41 @@ begin
     // Check if the path starts with a volume indicator :
     if (Length(szBuffer) >= 2) and (szBuffer[2] = ':') then
     begin
-      // TODO -oDxbx : Use FindNtSymbolicLinkObjectByName to resolve the device path via the volume letter,
-      // and convert the resulting device path to a local path via a configurable lookup (and of those
-      // devices, at least the CdRom should be read from EmuShared, so we can support runtime disc-changes).
-
+      // Look up the symbolic link information using the drive letter :
+      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter(szBuffer[1]);
       System.Delete(szBuffer, 2, 1); // Remove ':'
+    end
+    else
+    begin
+      // Look up via the device path :
+      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByDevice(szBuffer);
+      // TODO : Fixup szBuffer path here
+    end;
 
-      case szBuffer[1] of // Check the volume letter, and set the RootDirectory accordingly
-        't', 'T': ObjectAttributes.RootDirectory := g_hTDrive;
-        'u', 'U': ObjectAttributes.RootDirectory := g_hUDrive;
-        'z', 'Z': ObjectAttributes.RootDirectory := g_hZDrive;
-      else
-//        'd', 'D', // D:\ should map to current directory
-//        'y', 'Y', // Going to map Y:\ to current directory as well (dashboard test, 3944)
-//        'q', 'Q': // Dxbx addition : Some homebrews map Q: to current Xbe dir too
-        ObjectAttributes.RootDirectory := g_hCurDir;
-        // TODO -oDxbx : We should probably use the settings made by IoCreateSymbolicLink here,
-        // once that function is implemented.
-      end;
+    if EmuNtSymbolicLinkObject = nil then
+    begin
+      Result := STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
+      Exit;
+    end;
 
+    ObjectAttributes.RootDirectory := EmuNtSymbolicLinkObject.RootDirectory;
+
+    if MayLog(lfUnit or lfFile) then
+    begin
+      DbgPrintf('EmuKrnl : %s Corrected path...', [aFileAPIName]);
+      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+    end;
+    if ObjectAttributes.RootDirectory = g_hCurDir then
+    begin
+      System.Delete(szBuffer, 1, 2);
       if MayLog(lfUnit or lfFile) then
-      begin
-        DbgPrintf('EmuKrnl : %s Corrected path...', [aFileAPIName]);
-        DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-      end;
-      if ObjectAttributes.RootDirectory = g_hCurDir then
-      begin
-        System.Delete(szBuffer, 1, 2);
-        if MayLog(lfUnit or lfFile) then
-          DbgPrintf('  New:"$XbePath\%s"', [szBuffer])
-      end
-      else
-      begin
-        if MayLog(lfUnit or lfFile) then
-          DbgPrintf('  New:"$DxbxPath\EmuDisk\%s"', [szBuffer]);
-        System.Delete(szBuffer, 1, 2);
-      end;
+        DbgPrintf('  New:"$XbePath\%s"', [szBuffer])
+    end
+    else
+    begin
+      if MayLog(lfUnit or lfFile) then
+        DbgPrintf('  New:"$DxbxPath\EmuDisk\%s"', [szBuffer]);
+      System.Delete(szBuffer, 1, 2);
     end;
   end
   else
@@ -468,11 +469,16 @@ begin
     szBuffer := '\??\' + szBuffer;
 
   // Convert Ansi to Unicode :
-  Result.wszObjectName := UnicodeString(szBuffer);
-  JwaNative.RtlInitUnicodeString(@Result.NtUnicodeString, PWideChar(Result.wszObjectName));
+  NativeObjectAttributes.wszObjectName := UnicodeString(szBuffer);
+  JwaNative.RtlInitUnicodeString(@NativeObjectAttributes.NtUnicodeString, 
+                                 PWideChar(NativeObjectAttributes.wszObjectName));
 
   // Initialize the NT ObjectAttributes :
-  JwaWinType.InitializeObjectAttributes(@Result.NtObjAttr, @Result.NtUnicodeString, ObjectAttributes.Attributes, ObjectAttributes.RootDirectory, NULL)
+  JwaWinType.InitializeObjectAttributes(@NativeObjectAttributes.NtObjAttr,
+                                        @NativeObjectAttributes.NtUnicodeString,
+                                        ObjectAttributes.Attributes,
+                                        ObjectAttributes.RootDirectory,
+                                        NULL);
 end;
 
 
@@ -604,13 +610,16 @@ begin
         [DirectoryHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtCreateDirectoryObject');
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtCreateDirectoryObject');
 
-  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
-  DesiredAccess := DIRECTORY_CREATE_OBJECT;
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+    DesiredAccess := DIRECTORY_CREATE_OBJECT;
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtCreateDirectoryObject(DirectoryHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr);
+    // redirect to Win2k/XP
+    Result := JwaNative.NtCreateDirectoryObject(DirectoryHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr);
+  end;
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateDirectoryObject failed! (%s)', [NTStatusToString(Result)])
@@ -647,14 +656,16 @@ begin
        Ord(EventType), Ord(InitialState)]);
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
-//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
 
-  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
-  DesiredAccess := EVENT_ALL_ACCESS;
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+    DesiredAccess := EVENT_ALL_ACCESS;
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtCreateEvent(EventHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, EVENT_TYPE(EventType), InitialState);
+    // redirect to Win2k/XP
+    Result := JwaNative.NtCreateEvent(EventHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, EVENT_TYPE(EventType), InitialState);
+  end;
 
   // From http://msdn.microsoft.com/en-us/library/ff566423(v=VS.85).aspx
   // "returns STATUS_SUCCESS" :
@@ -714,17 +725,19 @@ begin
       CreateOptions, CreateOptionsToString(CreateOptions)]);
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtCreateFile');
-
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtCreateFile');
   // Dxbx note : The messy business in Cxbx for supporting the calls from Xapi FindFirstFile
   // to NtOpenFile and NtQueryDirectoryFile, which use the same buffer (albeit with a different
   // Length) is fixed since we started to honour the Length field (see PSTRING_String).
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtCreateFile(
-      FileHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
-      JwaWinType.PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
-  );
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // redirect to Win2k/XP
+    Result := JwaNative.NtCreateFile(
+        FileHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+        JwaWinType.PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
+    );
+  end;
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateFile failed! (%s)', [NTStatusToString(Result)])
@@ -771,14 +784,16 @@ begin
       [MutantHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), InitialOwner]);
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
-//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
 
-  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
-  DesiredAccess := MUTANT_ALL_ACCESS;
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+    DesiredAccess := MUTANT_ALL_ACCESS;
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtCreateMutant(MutantHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, InitialOwner);
+    // redirect to Win2k/XP
+    Result := JwaNative.NtCreateMutant(MutantHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, InitialOwner);
+  end;
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateMutant failed! (%s)', [NTStatusToString(Result)])
@@ -811,25 +826,28 @@ begin
       #13#10'   InitialCount        : 0x%.08X' +
       #13#10'   MaximumCount        : 0x%.08X' +
       #13#10');',
-      [SemaphoreHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-      InitialCount, MaximumCount]);
+      [SemaphoreHandle,
+       ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
+       InitialCount, MaximumCount]);
 
   // Dxbx addition : Fix NT Unicode <> Xbox ANSI difference on ObjectName :
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
-//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
 
-  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
-  DesiredAccess := SEMAPHORE_ALL_ACCESS;
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+    DesiredAccess := SEMAPHORE_ALL_ACCESS;
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtCreateSemaphore
-  (
+    // redirect to Win2k/XP
+    Result := JwaNative.NtCreateSemaphore
+    (
       SemaphoreHandle,
       DesiredAccess,
       NativeObjectAttributes.NtObjAttrPtr,
       InitialCount,
       MaximumCount
-  );
+    );
+  end;
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtCreateSemaphore failed! (%s)', [NTStatusToString(Result)])
@@ -860,18 +878,23 @@ begin
       #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
       #13#10'   TimerType           : 0x%.08X' +
       #13#10');',
-      [pTimerHandle, DesiredAccess, AccessMaskToString(DesiredAccess), ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), Ord(TimerType)]);
+      [pTimerHandle,
+       DesiredAccess, AccessMaskToString(DesiredAccess),
+       ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
+       Ord(TimerType)]);
 
   // Dxbx addition : Fix NT Unicode <> Xbox ANSI difference on ObjectName :
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes);
-//  NativeObjectAttributes.NtObjAttr.RootDirectory := 0;
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
 
-  Result := JwaNative.NtCreateTimer(pTimerHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, TimerType);
+  if (Result = STATUS_SUCCESS) then
+    Result := JwaNative.NtCreateTimer(pTimerHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, TimerType);
 
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtDeleteFile(ObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
+function xboxkrnl_NtDeleteFile(
+  ObjectAttributes: POBJECT_ATTRIBUTES
+  ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   NativeObjectAttributes: RNativeObjectAttributes;
@@ -886,16 +909,19 @@ begin
     [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtDeleteFile');
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtDeleteFile');
 
-  // Never delete from XbePath :
-  if (NativeObjectAttributes.NtObjAttr.RootDirectory = g_hCurDir)
-  // Nor when no filename was given (better not to trust the handle, or random files might get deleted!) :
-  or (NativeObjectAttributes.wszObjectName = '') then
-    Result := STATUS_OBJECT_PATH_NOT_FOUND
-  else
-    // redirect to Win2k/XP
-    Result := JwaNative.NtDeleteFile(NativeObjectAttributes.NtObjAttrPtr);
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // Never delete from XbePath :
+    if (NativeObjectAttributes.NtObjAttr.RootDirectory = g_hCurDir)
+    // Nor when no filename was given (better not to trust the handle, or random files might get deleted!) :
+    or (NativeObjectAttributes.wszObjectName = '') then
+      Result := STATUS_OBJECT_PATH_NOT_FOUND
+    else
+      // redirect to Win2k/XP
+      Result := JwaNative.NtDeleteFile(NativeObjectAttributes.NtObjAttrPtr);
+  end;
 
   if (Result <> STATUS_SUCCESS) then
     if MayLog(lfDxbx or lfKernel or lfFile) then
@@ -1073,13 +1099,16 @@ begin
         [DirectoryHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtOpenDirectoryObject');
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtOpenDirectoryObject');
 
-  // TODO -oDxbx : Is this the correct ACCESS_MASK? :
-  DesiredAccess := DIRECTORY_TRAVERSE;
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // TODO -oDxbx : Is this the correct ACCESS_MASK? :
+    DesiredAccess := DIRECTORY_TRAVERSE;
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtOpenDirectoryObject(DirectoryHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr);
+    // redirect to Win2k/XP
+    Result := JwaNative.NtOpenDirectoryObject(DirectoryHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr);
+  end;
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtOpenDirectoryObject failed! (%s)', [NTStatusToString(Result)])
@@ -1128,13 +1157,16 @@ begin
 {$ENDIF}
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtOpenFile');
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtOpenFile');
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtOpenFile(
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // redirect to Win2k/XP
+    Result := JwaNative.NtOpenFile(
       FileHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
       ShareAccess, OpenOptions
-  );
+    );
+  end;
 
 {$IFDEF DEBUG}
   if (Result <> STATUS_SUCCESS) then
@@ -1426,9 +1458,10 @@ begin
 {$ENDIF}
 
   // initialize object attributes
-  NativeObjectAttributes := ObjectAttributesToNT(ObjectAttributes, 'NtQueryFullAttributesFile');
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtQueryFullAttributesFile');
 
-  Result := JwaNative.NtQueryFullAttributesFile(NativeObjectAttributes.NtObjAttrPtr, FileInformation);
+  if (Result = STATUS_SUCCESS) then
+    Result := JwaNative.NtQueryFullAttributesFile(NativeObjectAttributes.NtObjAttrPtr, FileInformation);
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtQueryFullAttributesFile failed! (%s)', [NTStatusToString(Result)]);
@@ -1604,7 +1637,7 @@ begin
 
       if Assigned(LinkTarget) then
       begin
-        // TODO : Put this into a tooling function, honouring MaximumLength
+        // TODO -oDxbx: Put this into a tooling function, honouring MaximumLength and returning NTSTATUS
         LinkTarget.Length := Length(EmuNtSymbolicLinkObject.DeviceName);
         memcpy(LinkTarget.Buffer, PAnsiChar(EmuNtSymbolicLinkObject.DeviceName), LinkTarget.Length);
       end;
@@ -1762,11 +1795,11 @@ end;
 // Differences from NT: There is no Key parameter.
 function xboxkrnl_NtReadFile
 (
-  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
+  FileHandle: HANDLE;
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
   ApcContext: PVOID;
-  IoStatusBlock: PVOID; // OUT
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   Buffer: PVOID; // OUT
   Length: ULONG;
   ByteOffset: PLARGE_INTEGER // OPTIONAL
@@ -1863,9 +1896,6 @@ begin
     EmuWarning('NtReleaseMutant failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
-
-  // TODO -oDxbx : Should we really fake success?
-  Result := STATUS_SUCCESS;
 end;
 
 function xboxkrnl_NtReleaseSemaphore
@@ -1960,8 +1990,8 @@ end;
 
 function xboxkrnl_NtSetInformationFile
 (
-  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
-  IoStatusBlock: PVOID; // OUT
+  FileHandle: HANDLE;
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   FileInformation: PVOID;
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS
@@ -2347,14 +2377,14 @@ end;
 // Differences from NT: There is no Key parameter.
 function xboxkrnl_NtWriteFile
 (
-  FileHandle: HANDLE; // TODO -oCXBX: correct paramters
-  Event: DWORD; // Dxbx correction (was PVOID)
-  ApcRoutine: PIO_APC_ROUTINE;
-  ApcContext: PVOID;
-  IoStatusBlock: PVOID; // OUT
+  FileHandle: HANDLE;
+  Event: HANDLE; // Dxbx correction (was PVOID)
+  ApcRoutine: PIO_APC_ROUTINE; // OPTIONAL
+  ApcContext: PVOID; // OPTIONAL
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   Buffer: PVOID;
   Length: ULONG;
-  ByteOffset: PLARGE_INTEGER
+  ByteOffset: PLARGE_INTEGER // OPTIONAL
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin

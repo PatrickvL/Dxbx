@@ -22,14 +22,45 @@ unit uEmuFile;
 interface
 
 uses
+  // Delphi
+  Windows, // CreateDirectory
   // Jedi Win32API
   JwaWinType,
   JwaWinNT,
-  JwaNTStatus;
+  JwaNTStatus,
+  // Dxbx
+  uTypes,
+  uLog,
+  uDxbxUtils,
+  uDxbxKrnlUtils;
 
 const
   // Maximum number of open handles in the system
   EMU_MAX_HANDLES = 1024;
+
+const
+  // D: is DVD Player
+  DriveD = '\??\D:';
+  DeviceD = '\Device\Cdrom0';
+  // T: is Title persistent data region
+  DriveT = '\??\T:';
+  DeviceT = '\Device\Harddisk0\Partition1';
+  // U: is User persistent data region
+  DriveU = '\??\U:';
+  DeviceU = '\Device\Harddisk0\Partition2';
+  // Z: is Title utility data region
+  DriveZ = '\??\Z:';
+  DeviceZ = '\Device\Harddisk0\Partition3';
+
+  // TODO -oDxbx find out what the original partitions are and apply that above
+  // PS: Boxplorer shows this mapping :
+  // C: \Device\Harddisk0\Partition2
+  // D: \Device\Cdrom0
+  // E: \Device\Harddisk0\Partition1
+  // F: \Device\Harddisk0\Partition6
+  // X: \Device\Harddisk0\Partition3
+  // Y: \Device\Harddisk0\Partition4
+  // Z: \Device\Harddisk0\Partition5
 
 type
   TEmuNtObject = class; // forward
@@ -49,7 +80,7 @@ type
   end;
 
   // An fake NT object
-  TEmuNtObject = class(TObject) // TODO -oDXBX:
+  TEmuNtObject = class(TObject)
   private
     RefCount: ULONG; // Reference count
   protected
@@ -92,19 +123,26 @@ type
     destructor Destroy; override; // Not public, so it can't be called directly
   public
     SymbolicLinkName, DeviceName: AnsiString;
+    RootDirectory: Handle;
     function ReturnLength: ULONG;
 
     function Init(aSymbolicLinkName, aDeviceName: AnsiString): NTSTATUS;
   end;
 
-function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): BOOL; inline
+function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): Boolean; inline
 function HandleToEmuHandle(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
 function EmuHandleToHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 
-function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: string): TEmuNtSymbolicLinkObject;
+function FindNtSymbolicLinkObjectByVolumeLetter(const aVolumeLetter: AnsiChar): TEmuNtSymbolicLinkObject;
+function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: AnsiString): TEmuNtSymbolicLinkObject;
+function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNtSymbolicLinkObject;
+
+function DxbxCreateSymbolicLink(SymbolicLinkName, DeviceName: AnsiString): NTSTATUS;
+function DxbxAssignDeviceToPath(DeviceName: AnsiString; RootDirectory: string): Handle;
 
 implementation
 
+(*
 var
   // Array of EmuHandles in the system
   {EmuHandle.}Handles: array [0..EMU_MAX_HANDLES - 1] of TEmuHandle;
@@ -117,9 +155,10 @@ var
 
   // Lock on the handle system
   {EmuHandle.}HandleLock: _RTL_CRITICAL_SECTION;
+*)
 
 // is hFile a 'special' emulated handle?
-function IsEmuHandle(hFile: {xboxkrnl.}HANDLE): BOOL; inline;
+function IsEmuHandle(hFile: {xboxkrnl.}HANDLE): Boolean; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
   Result := (uint32(hFile) > $80000000) and (int32(hFile) <> -1);
@@ -207,14 +246,82 @@ end;
 var
   NtSymbolicLinkObjects: array['A'..'Z'] of TEmuNtSymbolicLinkObject;
 
-function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: string): TEmuNtSymbolicLinkObject;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function FindNtSymbolicLinkObjectByVolumeLetter(const aVolumeLetter: AnsiChar): TEmuNtSymbolicLinkObject;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  if (Length(aSymbolicLinkName) = 6) and (aSymbolicLinkName[5] in ['A'..'Z']) then
-    Result := NtSymbolicLinkObjects[aSymbolicLinkName[5]]
+  if aVolumeLetter in ['A'..'Z'] then
+    Result := NtSymbolicLinkObjects[aVolumeLetter]
   else
     Result := nil;
 end;
+
+function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: AnsiString): TEmuNtSymbolicLinkObject;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  // SymbolicLinkName must look like this : "\??\D:"
+  // For now, do a simple input check :
+  if Length(aSymbolicLinkName) = 6 then
+    Result := FindNtSymbolicLinkObjectByVolumeLetter(aSymbolicLinkName[5])
+  else
+    Result := nil;
+end;
+
+function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNtSymbolicLinkObject;
+// Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  VolumeLetter: Char;
+begin
+  for VolumeLetter := 'A' to 'Z' do
+  begin
+    Result := NtSymbolicLinkObjects[VolumeLetter];
+    if StartsWithString(Result.DeviceName, aDeviceName) then
+      Exit;
+  end;
+
+  Result := nil;
+end;
+
+function DxbxCreateSymbolicLink(SymbolicLinkName, DeviceName: AnsiString): NTSTATUS;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
+begin
+  EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(SymbolicLinkName);
+  if Assigned(EmuNtSymbolicLinkObject) then
+    Result := STATUS_OBJECT_NAME_COLLISION
+  else
+  begin
+    EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject.Create;
+    Result := EmuNtSymbolicLinkObject.Init(SymbolicLinkName, DeviceName);
+    if Result <> STATUS_SUCCESS then
+      EmuNtSymbolicLinkObject.NtClose;
+  end;
+end;
+
+var
+  Devices: array of record DeviceName: AnsiString; RootDirectory: Handle; end;
+
+function DxbxAssignDeviceToPath(DeviceName: AnsiString; RootDirectory: string): Handle;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  i: Integer;
+begin
+  CreateDirectory(PChar(RootDirectory), nil); // TODO : Does this work over multiple levels?
+
+  Result := CreateFile(PChar(RootDirectory), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
+  if Result = INVALID_HANDLE_VALUE then
+    DxbxKrnlCleanup('Could not map ' + string(DeviceName))
+  else
+    DbgPrintf('EmuMain : Mapped "%s" to "%s"', [DeviceName, RootDirectory]);
+
+  i := Length(Devices);
+  SetLength(Devices, i + 1);
+
+  Devices[i].DeviceName := DeviceName;
+  Devices[i].RootDirectory := Result;
+end;
+
+//
 
 destructor TEmuNtSymbolicLinkObject.Destroy;
 begin
@@ -229,6 +336,9 @@ begin
 end;
 
 function TEmuNtSymbolicLinkObject.Init(aSymbolicLinkName, aDeviceName: AnsiString): NTSTATUS;
+var
+  i: Integer;
+  RootDirectory: Handle;
 begin
   Result := STATUS_OBJECT_NAME_INVALID;
   if (Length(aSymbolicLinkName) = 6) and (aSymbolicLinkName[5] in ['A'..'Z']) then
@@ -236,10 +346,24 @@ begin
     Result := STATUS_OBJECT_NAME_COLLISION;
     if NtSymbolicLinkObjects[aSymbolicLinkName[5]] = nil then
     begin
-      Result := STATUS_SUCCESS;
-      Self.SymbolicLinkName := aSymbolicLinkName;
-      Self.DeviceName := aDeviceName;
-      NtSymbolicLinkObjects[aSymbolicLinkName[5]] := Self;
+      // Look up the partition in the list of pre-registered devices :
+      Result := STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
+      RootDirectory := 0;
+      for i := 0 to Length(Devices) - 1 do
+        if Devices[i].DeviceName = aDeviceName then
+        begin
+          RootDirectory := Devices[i].RootDirectory;
+          Break;
+        end;
+
+      if RootDirectory > 0 then
+      begin
+        Result := STATUS_SUCCESS;
+        Self.SymbolicLinkName := aSymbolicLinkName;
+        Self.DeviceName := aDeviceName;
+        Self.RootDirectory := RootDirectory;
+        NtSymbolicLinkObjects[aSymbolicLinkName[5]] := Self;
+      end;
     end;
   end;
 end;

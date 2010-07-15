@@ -75,13 +75,6 @@ var funcExclude: array [0..2048-1] of uint32;
 
 // partition emulation directory handles
 var g_hCurDir: HANDLE = 0;
-var g_strCurDrive: string = '';
-var g_hTDrive: HANDLE = 0;
-var g_strTDrive: string = '';
-var g_hUDrive: HANDLE = 0;
-var g_strUDrive: string = '';
-var g_hZDrive: HANDLE = 0;
-var g_strZDrive: string = '';
 var g_hEmuWindow: HWND = 0; // rendering window
 
 // thread notification routine
