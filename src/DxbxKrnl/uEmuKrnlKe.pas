@@ -559,6 +559,7 @@ begin
 {$ENDIF}
 
   JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency);
+  // TODO -oDxbx : We should probably appy a conversion factor here, to fake Xbox1-like increment-speed behaviour
 
   EmuSwapFS(fsXbox);
 
@@ -579,6 +580,9 @@ begin
 
   // Xbox Performance Counter Frequency := 337F98h
   JwaWinBase.QueryPerformanceFrequency({var}PerformanceFrequency);
+  // TODO -oDxbx : We should probably return the real Xbox1 frequency here,
+  // to make subsequent calculations behave the same as on the real Xbox1 :
+  // PerformanceFrequency.QuadPart := $337F98;
 
   EmuSwapFS(fsXbox);
 
