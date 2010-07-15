@@ -72,7 +72,7 @@ function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Addend: PLARGE_INTEGER;
   Increment: LARGE_INTEGER;
   Lock: PKSPIN_LOCK
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 procedure {020} xboxkrnl_ExInterlockedAddLargeStatistic(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   Increment: ULONG;
@@ -237,12 +237,12 @@ function {019} xboxkrnl_ExInterlockedAddLargeInteger(
   Addend: PLARGE_INTEGER;
   Increment: LARGE_INTEGER;
   Lock: PKSPIN_LOCK
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('ExInterlockedAddLargeInteger');
-  Result.QuadPart := 0;
+  LARGE_INTEGER(Result).QuadPart := 0;
   EmuSwapFS(fsXbox);
 end;
 

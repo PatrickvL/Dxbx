@@ -111,10 +111,9 @@ function xboxkrnl_KePulseEvent(
 function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeQueryPerformanceCounter(
-  PerformanceFrequency: PLARGE_INTEGER
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 function xboxkrnl_KeQueryPerformanceFrequency(
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 procedure xboxkrnl_KeQuerySystemTime(
   CurrentTime: PLARGE_INTEGER
   ); stdcall;
@@ -543,9 +542,12 @@ begin
 end;
 
 function xboxkrnl_KeQueryPerformanceCounter(
-  PerformanceFrequency: PLARGE_INTEGER
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+const
+  PerformanceFrequency: PLARGE_INTEGER = nil;
+var
+  PerformanceCounter: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -553,14 +555,18 @@ begin
   DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 {$ENDIF}
 
-  NtQueryPerformanceCounter(@Result, PerformanceFrequency);
+  JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency);
 
   EmuSwapFS(fsXbox);
+
+  Result := _LARGE_INTEGER(PerformanceCounter);
 end;
 
 function xboxkrnl_KeQueryPerformanceFrequency(
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  PerformanceFrequency: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -569,9 +575,11 @@ begin
 {$ENDIF}
 
   // Xbox Performance Counter Frequency := 337F98h
-  QueryPerformanceFrequency({var}Result);
+  JwaWinBase.QueryPerformanceFrequency({var}PerformanceFrequency);
 
   EmuSwapFS(fsXbox);
+
+  Result := _LARGE_INTEGER(PerformanceFrequency);
 end;
 
 procedure xboxkrnl_KeQuerySystemTime

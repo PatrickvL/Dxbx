@@ -148,17 +148,17 @@ function xboxkrnl_RtlEqualUnicodeString(
 function xboxkrnl_RtlExtendedIntegerMultiply(
   Multiplicand: LARGE_INTEGER;
   Multiplier: LONG
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 function xboxkrnl_RtlExtendedLargeIntegerDivide(
   Dividend: LARGE_INTEGER;
   Divisor: ULONG;
   Remainder: PULONG
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 function xboxkrnl_RtlExtendedMagicDivide(
   Dividend: LARGE_INTEGER;
   MagicDivisor: LARGE_INTEGER;
   ShiftCount: CCHAR
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 procedure xboxkrnl_RtlFillMemory(
   Destination: PVOID;
   Length: SIZE_T;
@@ -843,12 +843,12 @@ end;
 function xboxkrnl_RtlExtendedIntegerMultiply(
   Multiplicand: LARGE_INTEGER;
   Multiplier: LONG
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   // TODO -oDxbx : Add logging
-  Result := JwaNative.RtlExtendedIntegerMultiply(Multiplicand, Multiplier);
+  Result := _LARGE_INTEGER(JwaNative.RtlExtendedIntegerMultiply(Multiplicand, Multiplier));
   EmuSwapFS(fsXbox);
 end;
 
@@ -856,12 +856,12 @@ function xboxkrnl_RtlExtendedLargeIntegerDivide(
   Dividend: LARGE_INTEGER;
   Divisor: ULONG;
   Remainder: PULONG
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   // TODO -oDxbx : Add logging
-  Result := JwaNative.RtlExtendedLargeIntegerDivide(Dividend, Divisor, Remainder);
+  Result := _LARGE_INTEGER(JwaNative.RtlExtendedLargeIntegerDivide(Dividend, Divisor, Remainder));
   EmuSwapFS(fsXbox);
 end;
 
@@ -869,12 +869,12 @@ function xboxkrnl_RtlExtendedMagicDivide(
   Dividend: LARGE_INTEGER;
   MagicDivisor: LARGE_INTEGER;
   ShiftCount: CCHAR
-  ): LARGE_INTEGER; stdcall;
+  ): _LARGE_INTEGER; stdcall;
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
   // TODO -oDxbx : Add logging
-  Result := JwaNative.RtlExtendedMagicDivide(Dividend, MagicDivisor, JwaWinType.CCHAR(ShiftCount));
+  Result := _LARGE_INTEGER(JwaNative.RtlExtendedMagicDivide(Dividend, MagicDivisor, JwaWinType.CCHAR(ShiftCount)));
   EmuSwapFS(fsXbox);
 end;
 

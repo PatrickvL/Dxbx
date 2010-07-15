@@ -244,6 +244,7 @@ type
 // ******************************************************************
 type
 {$IFDEF DXBX_USE_JWA_TYPES}
+
   LARGE_INTEGER = JwaWinType.LARGE_INTEGER;
   PLARGE_INTEGER = JwaWinType.PLARGE_INTEGER;
 {$ELSE}
@@ -257,6 +258,10 @@ type
   end; {=0x08}
   PLARGE_INTEGER = ^LARGE_INTEGER;
 {$ENDIF}
+
+  // Dxbx note : Use this as a return-type, to make Delphi fill EDX:EAX instead of stack!!
+  // See http://rvelthuis.de/articles/articles-convert.html#returns
+  _LARGE_INTEGER = Int64;
 
 // ******************************************************************
 // * ULARGE_INTEGER *Same as Win2k/XP*
