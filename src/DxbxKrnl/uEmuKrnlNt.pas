@@ -2203,7 +2203,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  i: Integer;
+  i: ULONG;
 begin
   EmuSwapFS(fsWindows);
 

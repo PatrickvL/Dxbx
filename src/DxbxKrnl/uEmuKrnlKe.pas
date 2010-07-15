@@ -283,7 +283,10 @@ begin
       [Ord(WaitMode), Alertable, QuadPart(Interval)]);
 {$ENDIF}
 
-  ret := NtDelayExecution(Alertable, Interval);
+  //  ret := NtDelayExecution(Alertable, Interval);
+  // TODO -oDxbx : Find out why NtDelayExecution causes long delays, disable it for now :
+  ret := STATUS_SUCCESS;
+
   EmuSwapFS(fsXbox);
   Result := ret;
 end;
