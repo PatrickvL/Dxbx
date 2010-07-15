@@ -2254,11 +2254,11 @@ begin
     New({var PX_D3DSurface}pBackBuffer);
 
   if (BackBuffer = -1) then
-      BackBuffer := 0;
+      BackBuffer := 0; // TODO : Use actual FrontBuffer number here
 
   hRet := IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface8));
 
-  if (FAILED(hRet)) then
+  if (hRet <> D3D_OK) then
     DxbxKrnlCleanup('Unable to retrieve back buffer');
 
   // update data pointer
@@ -2269,18 +2269,18 @@ begin
   Result := pBackBuffer;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_GetBackBuffer
+function XTL_EmuIDirect3DDevice8_GetBackBuffer
 (
   BackBuffer: INT;
   Type_: D3DBACKBUFFER_TYPE;
   ppBackBuffer: PPX_D3DSurface
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetBackBuffer' +
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetBackBuffer >>' +
       #13#10'(' +
       #13#10'   BackBuffer        : 0x%.08X' +
       #13#10'   Type              : 0x%.08X' +
@@ -2291,7 +2291,15 @@ begin
   end;
 {$ENDIF}
 
-  ppBackBuffer^ := XTL_EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer);
+  // Allow backbuffer -1 and up to the allocated BackBufferCount, but nothing beyond this :
+  if (BackBuffer < -1) or (BackBuffer >= g_EmuCDPD.pPresentationParameters.BackBufferCount) then
+    Result := D3DERR_INVALIDCALL
+  else
+  begin
+    ppBackBuffer^ := XTL_EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer);
+
+    Result := D3D_OK;
+  end;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetViewport
@@ -4504,10 +4512,14 @@ begin
   // release back buffer lock
   begin
     if IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer) = D3D_OK then
+    begin
       IDirect3DSurface8(pBackBuffer).UnlockRect();
+      IDirect3DSurface8(pBackBuffer)._Release;
+    end;
+    // TODO : What about the other backbuffers?
   end;
 
-  hRet := IDirect3DDevice8(g_pD3DDevice8).Present(pSourceRect, pDestRect, HWND(pDummy1), pDummy2);
+  hRet := DxbxPresent(pSourceRect, pDestRect, HWND(pDummy1), pDummy2);
 
   // not really accurate because you definately dont always present on every vblank
   g_VBData.Swap := g_VBData.VBlank;
@@ -4544,13 +4556,13 @@ function XTL_EmuIDirect3DDevice8_Swap
   Flags: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-var
-  pBackBuffer: XTL_PIDirect3DSurface8;
+const
+  X_D3DSWAP_DEFAULT = 0;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Swap' +
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Swap >>' +
     #13#10'(' +
     #13#10'   Flags               : 0x%.08X' +
     #13#10');',
@@ -4558,32 +4570,13 @@ begin
 {$ENDIF}
 
   // TODO -oCXBX: Ensure this flag is always the same across library versions
-  if (Flags <> 0) then
-    EmuWarning('XTL.EmuIDirect3DDevice8_Swap: Flags <> 0');
-
-  // release back buffer lock
-  begin
-    if IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer) = D3D_OK then
-      IDirect3DSurface8(pBackBuffer).UnlockRect();
-  end;
-
-  Result := IDirect3DDevice8(g_pD3DDevice8).Present(nil, nil, 0, nil);
-
-  // Handle Swap Callback function
-  begin
-    Inc(g_SwapData.Swap);
-
-    if Assigned(g_pSwapCallback { is func <> NULL}) then
-    begin
-      EmuSwapFS(fsXbox);
-      g_pSwapCallback(@g_SwapData);
-      EmuSwapFS(fsWindows);
-    end;
-  end;
-  
-  g_bHackUpdateSoftwareOverlay := FALSE;
+  if (Flags <> X_D3DSWAP_DEFAULT) then
+    EmuWarning('XTL.EmuIDirect3DDevice8_Swap: Flags <> D3DSWAP_DEFAULT');
 
   EmuSwapFS(fsXbox);
+
+  // Forward to Present
+  Result := XTL_EmuIDirect3DDevice8_Present(nil, nil, nil, nil);
 end;
 
 function XTL_EmuIDirect3DResource8_Register
@@ -6543,12 +6536,13 @@ begin
         end;
 
         IDirect3DSurface8(pBackBuffer).UnlockRect();
+        IDirect3DSurface8(pBackBuffer)._Release;
       end;
 
       // Update overlay if present was not called since the last call to
       // EmuIDirect3DDevice8_UpdateOverlay.
       if g_bHackUpdateSoftwareOverlay then
-        IDirect3DDevice8(g_pD3DDevice8).Present(nil, nil, 0, nil);
+        DxbxPresent(nil, nil, 0, nil);
 
       g_bHackUpdateSoftwareOverlay := TRUE;
     end;
