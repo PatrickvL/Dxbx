@@ -617,7 +617,7 @@ end;
 
 function fwrite(ptr: PVOID; size: size_t; nelem: size_t; stream: PFILE): size_t;
 begin
-  Result := FileWrite(stream^, ptr, size * nelem);
+  Result := FileWrite(stream^, PAnsiChar(ptr)[0], size * nelem);
 end;
 
 function fprintf(stream: PFILE; format: PAnsiChar): int; // overload;
@@ -627,8 +627,13 @@ end;
 
 // http://www.cplusplus.com/reference/clibrary/cstdio/fprintf/
 function fprintf(stream: PFILE; format: PAnsiChar; Args: array of const): int; // overload;
+var
+  FormatStr: AnsiString; 
+  ResultStr: AnsiString;
 begin
-  Result := fprintf(stream, PAnsiChar(AnsiString(SysUtils.Format(string(format), Args))));
+  FormatStr := AnsiString(format);
+  ResultStr := AnsiString(SysUtils.Format(string(FormatStr), Args));
+  Result := fprintf(stream, PAnsiChar(ResultStr));
 end;
 
 function fclose(stream: PFILE): int;
