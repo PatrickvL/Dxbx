@@ -161,7 +161,7 @@ function xboxkrnl_NtOpenFile(
   OpenOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtOpenSymbolicLinkObject(
-  pFileHandle: dtU32;
+  LinkHandle: PHANDLE;
   ObjectAttributes: POBJECT_ATTRIBUTES
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtProtectVirtualMemory(
@@ -411,10 +411,6 @@ begin
 
   szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
 
-{$IFDEF DEBUG}
-  //printf('Orig : %s', szBuffer); // MARKED OUT BY CXBX
-{$ENDIF}
-
   // Always trim '\??\' off :
   if  (Length(szBuffer) >= 4)
   and (szBuffer[1] = '\')
@@ -429,6 +425,10 @@ begin
     // Check if the path starts with a volume indicator :
     if (Length(szBuffer) >= 2) and (szBuffer[2] = ':') then
     begin
+      // TODO -oDxbx : Use FindNtSymbolicLinkObjectByName to resolve the device path via the volume letter,
+      // and convert the resulting device path to a local path via a configurable lookup (and of those
+      // devices, at least the CdRom should be read from EmuShared, so we can support runtime disc-changes).
+
       System.Delete(szBuffer, 2, 1); // Remove ':'
 
       case szBuffer[1] of // Check the volume letter, and set the RootDirectory accordingly
@@ -561,10 +561,8 @@ function xboxkrnl_NtClose
     Handle: HANDLE
 ): NTSTATUS; stdcall; {XBSYSAPI EXPORTNUM(187)}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-{$IFDEF DXBX_EMUHANDLES}
 var
   iEmuHandle: TEmuHandle;
-{$ENDIF}
 begin
   EmuSwapFS(fsWindows);
 
@@ -574,18 +572,13 @@ begin
       #13#10'   Handle              : 0x%.8x' +
       #13#10');', [Handle]);
 
-{$IFDEF DXBX_EMUHANDLES}
-  // delete 'special' handles
+  // Check for 'special' handles :
   if IsEmuHandle(Handle) then
   begin
-    iEmuHandle := EmuHandleToPtr(Handle);
-
-    iEmuHandle.Free;
-
-    Result := STATUS_SUCCESS;
+    iEmuHandle := HandleToEmuHandle(Handle);
+    Result := iEmuHandle.NtClose;
   end
   else // close normal handles
-{$ENDIF}
     Result := JwaNative.NtClose(Handle);
 
   EmuSwapFS(fsXbox);
@@ -944,6 +937,7 @@ function xboxkrnl_NtDuplicateObject
 var
   DesiredAccess: ACCESS_MASK;
   Attributes: ULONG;
+  iEmuHandle: TEmuHandle;
 begin
   EmuSwapFS(fsWindows);
 
@@ -957,20 +951,28 @@ begin
       [SourceHandle, TargetHandle, Options]);
 {$ENDIF}
 
-  DesiredAccess := 0; // TODO -oDxbx : Should be set is Options <> DUPLICATE_SAME_ACCESS
-  Attributes := 0; // TODO -oDxbx : Should be set is Options <> DUPLICATE_SAME_ATTRIBUTES
+  DesiredAccess := 0; // TODO -oDxbx : Should be set if Options <> DUPLICATE_SAME_ACCESS
+  Attributes := 0; // TODO -oDxbx : Should be set if Options <> DUPLICATE_SAME_ATTRIBUTES
 
-  // redirect to Win2k/XP
-  Result := JwaNative.NtDuplicateObject
-  (
-      GetCurrentProcess(),
-      SourceHandle,
-      GetCurrentProcess(),
-      TargetHandle,
-      DesiredAccess,
-      Attributes,
-      Options
-  );
+  // Check for 'special' handles :
+  if IsEmuHandle(SourceHandle) then
+  begin
+    // Retrieve the EmuHandle and forward this call to it :
+    iEmuHandle := HandleToEmuHandle(SourceHandle);
+    Result := iEmuHandle.NtDuplicateObject(TargetHandle, Options);
+  end
+  else
+    // redirect to Win2k/XP
+    Result := JwaNative.NtDuplicateObject
+    (
+        GetCurrentProcess(),
+        SourceHandle,
+        GetCurrentProcess(),
+        TargetHandle,
+        DesiredAccess,
+        Attributes,
+        Options
+    );
 
   // From http://msdn.microsoft.com/en-us/library/ms724251(VS.85).aspx
   // "If the function fails, the return value is zero" :
@@ -1144,11 +1146,36 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_NtOpenSymbolicLinkObject(pFileHandle: dtU32; ObjectAttributes: POBJECT_ATTRIBUTES): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_NtOpenSymbolicLinkObject(
+  LinkHandle: PHANDLE;
+  ObjectAttributes: POBJECT_ATTRIBUTES
+  ): NTSTATUS; stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtOpenSymbolicLinkObject');
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject' +
+    #13#10'(' +
+    #13#10'   LinkHandle          : 0x%.08X' +
+    #13#10'   ObjectAttributes    : 0x%.08X ("%s")' + // "\??\E:"
+    #13#10');',
+    [LinkHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+{$ENDIF}
+
+  // Find the TEmuNtSymbolicLinkObject via the name in ObjectAttributes :
+  EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(POBJECT_ATTRIBUTES_String(ObjectAttributes));
+  if Assigned(EmuNtSymbolicLinkObject) then
+  begin
+    // Return a new handle (which is an EmuHandle, actually) :
+    LinkHandle^ := EmuNtSymbolicLinkObject.NewHandle;
+    Result := STATUS_SUCCESS;
+  end
+  else
+    Result := STATUS_OBJECT_NAME_NOT_FOUND;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1545,10 +1572,50 @@ function xboxkrnl_NtQuerySymbolicLinkObject(
   LinkTarget: POBJECT_STRING; // OUT
   ReturnedLength: PULONG // OUT  OPTIONAL
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  EmuHandle: TEmuHandle;
+  EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQuerySymbolicLinkObject');
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : NtQuerySymbolicLinkObject' +
+    #13#10'(' +
+    #13#10'   LinkHandle          : 0x%.08X' +
+    #13#10'   LinkTarget          : 0x%.08X' +
+    #13#10'   ReturnedLength      : 0x%.08X' +
+    #13#10');',
+    [LinkHandle, LinkHandle, ReturnedLength]);
+{$ENDIF}
+
+  // Check that we actually got an EmuHandle :
+  Result := STATUS_INVALID_HANDLE;
+  if IsEmuHandle(LinkHandle) then
+  begin
+    // Check that this handle actually is an NtSymbolicLinkObject :
+    Result := STATUS_OBJECT_TYPE_MISMATCH;
+    EmuHandle := HandleToEmuHandle(LinkHandle);
+    if EmuHandle.NtObject is TEmuNtSymbolicLinkObject then
+    begin
+      // Retrieve the NtSymbolicLinkObject and populate the output arguments :
+      Result := STATUS_SUCCESS;
+      EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject(EmuHandle.NtObject);
+
+      if Assigned(LinkTarget) then
+      begin
+        // TODO : Put this into a tooling function, honouring MaximumLength
+        LinkTarget.Length := Length(EmuNtSymbolicLinkObject.DeviceName);
+        memcpy(LinkTarget.Buffer, PAnsiChar(EmuNtSymbolicLinkObject.DeviceName), LinkTarget.Length);
+      end;
+
+      if Assigned(ReturnedLength) then
+      begin
+        ReturnedLength^ := EmuNtSymbolicLinkObject.ReturnLength;
+      end;
+    end;
+  end;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2005,10 +2072,20 @@ begin
       [SignalHandle, WaitHandle, Ord(WaitMode), Alertable, Timeout, QuadPart(Timeout)]);
 
   // TODO -oDxbx : What should we do with the (currently ignored) WaitMode?
-  Result := JwaNative.NtSignalAndWaitForSingleObject(SignalHandle, WaitHandle, Alertable, Timeout);
 
-  if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('Finished waiting for 0x%.08X', [WaitHandle]);
+  // Check that no EmuHandle is passed into this call :
+  if IsEmuHandle(SignalHandle) then
+  begin
+    Result := STATUS_INVALID_HANDLE;
+    DbgPrintf('WaitFor EmuHandle not supported!');
+  end
+  else
+  begin
+    Result := JwaNative.NtSignalAndWaitForSingleObject(SignalHandle, WaitHandle, Alertable, Timeout);
+
+    if MayLog(lfUnit or lfTrace) then
+      DbgPrintf('Finished waiting for 0x%.08X', [WaitHandle]);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2150,10 +2227,19 @@ begin
       #13#10');',
       [Handle, Alertable, Timeout, QuadPart(Timeout)]);
 
-  Result := JwaNative.NtWaitForSingleObject(Handle, Alertable, Timeout);
+  // Check that no EmuHandle is passed into this call :
+  if IsEmuHandle(Handle) then
+  begin
+    Result := STATUS_INVALID_HANDLE;
+    DbgPrintf('WaitFor EmuHandle not supported!');
+  end
+  else
+  begin
+    Result := JwaNative.NtWaitForSingleObject(Handle, Alertable, Timeout);
 
-  if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('Finished waiting for 0x%.08X', [Handle]);
+    if MayLog(lfUnit or lfTrace) then
+      DbgPrintf('Finished waiting for 0x%.08X', [Handle]);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2180,16 +2266,26 @@ begin
       [Handle_, Ord(WaitMode), Alertable, Timeout, QuadPart(Timeout)]);
 
   // TODO -oDxbx : What should we do with the (currently ignored) WaitMode?
-  Result := JwaNative.NtWaitForSingleObject(Handle_, Alertable, Timeout);
 
-  if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('Finished waiting for 0x%.08X', [Handle_]);
+  // Check that no EmuHandle is passed into this call :
+  if IsEmuHandle(Handle_) then
+  begin
+    Result := STATUS_INVALID_HANDLE;
+    DbgPrintf('WaitFor EmuHandle not supported!');
+  end
+  else
+  begin
+    Result := JwaNative.NtWaitForSingleObject(Handle_, Alertable, Timeout);
+
+    if MayLog(lfUnit or lfTrace) then
+      DbgPrintf('Finished waiting for 0x%.08X', [Handle_]);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
 
 type
-  AHANDLES = array [0..1000] of HANDLE;
+  AHANDLES = array [0..10000] of HANDLE;
   PHANDLEs = ^AHANDLES;
 
 function xboxkrnl_NtWaitForMultipleObjectsEx
@@ -2204,6 +2300,7 @@ function xboxkrnl_NtWaitForMultipleObjectsEx
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: ULONG;
+  Handle_: HANDLE;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2220,18 +2317,26 @@ begin
       [Count, Handles, Ord(WaitType), Ord(WaitMode), Alertable,
        Timeout, QuadPart(Timeout)]);
 
-  if MayLog(lfUnit) then // Add lfExtreme later
+  // Check that no EmuHandles are passed into this call :
+  Result := STATUS_SUCCESS;
+  for i := 0 to Count - 1 do
   begin
-    // Dump at most 8 handles :
-    i := 0; while (i < Count) and (i < 8) do
+    Handle_ := PHANDLEs(Handles)[i];
+    if MayLog(lfUnit) then // Add lfExtreme later
+      DbgPrintf('   Handles[%d] : 0x%.08X', [i, Handle_]);
+
+    if IsEmuHandle(Handle_) then
     begin
-      DbgPrintf('   Handles[%d] : 0x%.08X', [i, PHANDLEs(Handles)[i]]);
-      Inc(i);
+      DbgPrintf('WaitFor EmuHandle not supported!');
+      Result := STATUS_INVALID_HANDLE;
+      Break;
     end;
   end;
 
   // TODO -oDxbx : What should we do with the (currently ignored) WaitMode?
-  Result := JwaNative.NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
+
+  if Result = STATUS_SUCCESS then
+    Result := JwaNative.NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
 
   EmuSwapFS(fsXbox);
 end;
