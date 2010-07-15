@@ -53,6 +53,7 @@ uses
   uEmuShared,
   uEmu,
   uEmuFS,
+  uEmuFile,
   uEmuD3D8,
   uHLEIntercept;
 
@@ -118,10 +119,9 @@ var
 {$ENDIF LOG_STRUCT_SIZES}
 
 var
-//  MemXbeHeader: PXBE_HEADER;
-//  old_protection: DWord;
   szBuffer: string;
   pCertificate: PXBE_CERTIFICATE;
+  TitleStr: string;
   hDupHandle: Handle;
   OldExceptionFilter: TFNTopLevelExceptionFilter;
 
@@ -138,6 +138,7 @@ begin
   DxbxKrnl_TLSData := pTLSData;
   DxbxKrnl_XbeHeader := pXbeHeader;
   DxbxKrnl_hEmuParent := iif(IsWindow(hwndParent), hwndParent, 0);
+  pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
 
   // For Unicode Conversions
   // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
@@ -218,7 +219,7 @@ begin
     #13#10'   pTLS                : 0x%.8x' +
     #13#10'   pLibraryVersion     : 0x%.8x' +
     #13#10'   DebugConsole        : 0x%.8x' +
-    #13#10'   DebugFileName       : 0x%.8x' +
+    #13#10'   DebugFileName       : 0x%.8x (%s)' +
     #13#10'   pXBEHeader          : 0x%.8x' +
     #13#10'   dwXBEHeaderSize     : 0x%.8x' +
     #13#10'   Entry               : 0x%.8x' +
@@ -229,7 +230,7 @@ begin
       pTLS,
       pLibraryVersion,
       Ord(DbgMode),
-      Pointer(szDebugFileName), // Print as pointer, not as string! (will be added automatically)
+      Pointer(szDebugFileName), AnsiString(szDebugFileName),
       pXbeHeader,
       dwXbeHeaderSize,
       Addr(Entry)
@@ -240,125 +241,44 @@ begin
  {$ENDIF}
 {$ENDIF}
 
-(* Dxbx note : We don't need to do this anymore, since we load XBE's at $10000 already:
-  // Load the necessary pieces of XBEHeader
+  // Determine Xbe Path :
   begin
-    MemXbeHeader := PXBE_HEADER($00010000);
+    g_EmuShared.GetXbePath({var}szBuffer);
+    if (szBuffer = '') and (g_Xbe_XbePath <> '') then
+      szBuffer := ExtractFilePath(g_Xbe_XbePath);
 
-    VirtualProtect(MemXbeHeader, $1000, PAGE_READWRITE, {var} old_protection);
-
-    // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-    MemXbeHeader.dwSizeofHeaders := pXbeHeader.dwSizeofHeaders;
-    MemXbeHeader.dwCertificateAddr := pXbeHeader.dwCertificateAddr;
-    MemXbeHeader.dwPeHeapReserve := pXbeHeader.dwPeHeapReserve;
-    MemXbeHeader.dwPeHeapCommit := pXbeHeader.dwPeHeapCommit;
-
-    CopyMemory(@MemXbeHeader.dwInitFlags, @pXbeHeader.dwInitFlags, SizeOf(pXbeHeader.dwInitFlags));
-    CopyMemory(Pointer(pXbeHeader.dwCertificateAddr), MathPtr(pXbeHeader) + pXbeHeader.dwCertificateAddr - $00010000, SizeOf(XBE_CERTIFICATE));
-  end;
-*)
-  // Initialize current directory
-  g_EmuShared.GetXbePath({var}szBuffer);
-  if (szBuffer = '') and (g_Xbe_XbePath <> '') then
-    szBuffer := ExtractFilePath(g_Xbe_XbePath);
-
-  if szBuffer <> '' then
-  begin
-{$IFDEF DEBUG}
-    DbgPrintf('EmuMain : XBEPath := ' + szBuffer);
-{$ENDIF}
-    SetCurrentDirectory(PChar(szBuffer));
-  end
-  else
-  begin
-    // When no path is registered in EmuShared, fall back on current directory :
-    SetLength(szBuffer, MAX_PATH);
-    SetLength(szBuffer, GetCurrentDirectory(MAX_PATH, @(szBuffer[1])));
-    // Make sure the CurrentDir ends with a trailing backslash :
-    if szBuffer[Length(szBuffer)] <> '\' then
-      szBuffer := szBuffer + '\';
+    if szBuffer <> '' then
+    begin
+      DbgPrintf('EmuMain : XBEPath := ' + szBuffer);
+      SetCurrentDirectory(PChar(szBuffer));
+    end
+    else
+    begin
+      // When no path is registered in EmuShared, fall back on current directory :
+      SetLength(szBuffer, MAX_PATH);
+      SetLength(szBuffer, GetCurrentDirectory(MAX_PATH, @(szBuffer[1])));
+      // Make sure the CurrentDir ends with a trailing backslash :
+      if szBuffer[Length(szBuffer)] <> '\' then
+        szBuffer := szBuffer + '\';
+    end;
   end;
 
-  g_strCurDrive := szBuffer;
-
-  g_hCurDir := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
-  if g_hCurDir = INVALID_HANDLE_VALUE then
-    _DxbxKrnlCleanup('Could not map D:\');
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : CurDir := ' + szBuffer);
-{$ENDIF}
-
-  // initialize EmuDisk
+  // Initialize devices :
   begin
-    DxbxBasePath := GetDxbxBasePath;
-    CreateDirectory(PChar(DxbxBasePath), nil);
+    g_hCurDir := DxbxAssignDeviceToPath(DeviceD, szBuffer);
+    DxbxBasePath := GetDxbxBasePath + '\EmuDisk\';
+    TitleStr := IntToHex(pCertificate.dwTitleId, 8);
+    DxbxAssignDeviceToPath(DeviceT, DxbxBasePath + 'T\' + TitleStr);
+    DxbxAssignDeviceToPath(DeviceU, DxbxBasePath + 'U\' + TitleStr);
+    DxbxAssignDeviceToPath(DeviceZ, DxbxBasePath + 'Z\' + TitleStr);
+  end;
 
-    // create EmuDisk directory
-    szBuffer := DxbxBasePath + '\EmuDisk';
-    CreateDirectory(PChar(szBuffer), nil);
-
-    // create T:\ directory
-    begin
-      szBuffer := DxbxBasePath + '\EmuDisk\T';
-      CreateDirectory(PChar(szBuffer), nil);
-
-      pCertificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
-      szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
-      CreateDirectory(PChar(szBuffer), nil);
-
-      g_strTDrive := szBuffer;
-      g_hTDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
-
-      if g_hTDrive = INVALID_HANDLE_VALUE then
-        _DxbxKrnlCleanup('Could not map T:\');
-
-{$IFDEF DEBUG}
-      DbgPrintf('EmuMain : T Data := ' + g_strTDrive);
-{$ENDIF}
-    end;
-
-    // create U:\ directory
-    begin
-      szBuffer := DxbxBasePath + '\EmuDisk\U';
-      CreateDirectory(PChar(szBuffer), nil);
-
-      szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
-      CreateDirectory(PChar(szBuffer), nil);
-
-      g_strUDrive := szBuffer;
-      g_hUDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
-
-      if g_hUDrive = INVALID_HANDLE_VALUE then
-        _DxbxKrnlCleanup('Could not map U:\');
-
-{$IFDEF DEBUG}
-      DbgPrintf('EmuMain : U Data := ' + g_strUDrive);
-{$ENDIF}
-    end;
-
-    // create Z:\ directory
-    begin
-      szBuffer := DxbxBasePath + '\EmuDisk\Z';
-      CreateDirectory(PChar(szBuffer), nil);
-
-      (* marked out by cxbx
-      //is it necessary to make this directory title unique?
-      szBuffer := szBuffer + '\' + IntToHex(pCertificate.dwTitleId, 8);
-      CreateDirectory(PChar(szBuffer), nil);
-      *)
-
-      g_strZDrive := szBuffer;
-      g_hZDrive := CreateFile(PChar(szBuffer), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
-
-      if g_hUDrive = INVALID_HANDLE_VALUE then
-        _DxbxKrnlCleanup('Could not map Z:\');
-
-{$IFDEF DEBUG}
-      DbgPrintf('EmuMain : Z Data := ' + g_strZDrive);
-{$ENDIF}
-    end;
-
+  // Create default symbolic links :
+  begin
+    DxbxCreateSymbolicLink(DriveD, DeviceD);
+    DxbxCreateSymbolicLink(DriveT, DeviceT);
+    DxbxCreateSymbolicLink(DriveU, DeviceU);
+    DxbxCreateSymbolicLink(DriveZ, DeviceZ);
   end;
 
   // initialize FS segment selector

@@ -219,8 +219,7 @@ var {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 function {059} xboxkrnl_IoAllocateIrp(
-  StackSize: CCHAR;
-  ChargeQuota: LONGBOOL
+  StackSize: CCHAR
   ): PIRP; stdcall;
 function {060} xboxkrnl_IoBuildAsynchronousFsdRequest(
   MajorFunction: ULONG;
@@ -340,8 +339,7 @@ function xboxkrnl_IoMarkIrpMustComplete(): NTSTATUS; stdcall; // UNKNOWN_SIGNATU
 implementation
 
 function {059} xboxkrnl_IoAllocateIrp(
-  StackSize: CCHAR;
-  ChargeQuota: LONGBOOL // TODO -oDXBX: Should this be a WordBool??
+  StackSize: CCHAR
   ): PIRP; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -524,8 +522,6 @@ function xboxkrnl_IoCreateSymbolicLink
   DeviceName: PSTRING
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:60
-var
-  EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   EmuSwapFS(fsWindows);
 
@@ -539,16 +535,7 @@ begin
      DeviceName, PSTRING_String(DeviceName)]);
 {$ENDIF}
 
-  EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(PSTRING_String(SymbolicLinkName));
-  if Assigned(EmuNtSymbolicLinkObject) then
-    Result := STATUS_OBJECT_NAME_COLLISION
-  else
-  begin
-    EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject.Create;
-    Result := EmuNtSymbolicLinkObject.Init(PSTRING_String(SymbolicLinkName), PSTRING_String(DeviceName));
-    if Result <> STATUS_SUCCESS then
-      EmuNtSymbolicLinkObject.NtClose;
-  end;
+  Result := DxbxCreateSymbolicLink(PSTRING_String(SymbolicLinkName), PSTRING_String(DeviceName));
 
   EmuSwapFS(fsXbox);
 end;
