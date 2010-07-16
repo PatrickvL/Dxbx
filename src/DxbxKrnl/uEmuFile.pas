@@ -24,6 +24,7 @@ interface
 uses
   // Delphi
   Windows, // CreateDirectory
+  FileCtrl, // ForceDirectories
   // Jedi Win32API
   JwaWinType,
   JwaWinNT,
@@ -44,13 +45,13 @@ const
   DeviceD = '\Device\Cdrom0';
   // T: is Title persistent data region
   DriveT = '\??\T:';
-  DeviceT = '\Device\Harddisk0\Partition1';
+  DeviceT = '\Device\Harddisk0\Partition2';
   // U: is User persistent data region
   DriveU = '\??\U:';
-  DeviceU = '\Device\Harddisk0\Partition2';
+  DeviceU = '\Device\Harddisk0\Partition1';
   // Z: is Title utility data region
   DriveZ = '\??\Z:';
-  DeviceZ = '\Device\Harddisk0\Partition3';
+  DeviceZ = '\Device\Harddisk0\Partition6';
 
   // TODO -oDxbx find out what the original partitions are and apply that above
   // PS: Boxplorer shows this mapping :
@@ -274,7 +275,7 @@ begin
   for VolumeLetter := 'A' to 'Z' do
   begin
     Result := NtSymbolicLinkObjects[VolumeLetter];
-    if StartsWithString(Result.DeviceName, aDeviceName) then
+    if Assigned(Result) and StartsWithString(aDeviceName, Result.DeviceName) then
       Exit;
   end;
 
@@ -306,7 +307,7 @@ function DxbxAssignDeviceToPath(DeviceName: AnsiString; RootDirectory: string): 
 var
   i: Integer;
 begin
-  CreateDirectory(PChar(RootDirectory), nil); // TODO : Does this work over multiple levels?
+  ForceDirectories(RootDirectory);
 
   Result := CreateFile(PChar(RootDirectory), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
   if Result = INVALID_HANDLE_VALUE then
