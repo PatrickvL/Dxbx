@@ -1102,7 +1102,10 @@ type
    **** e.g. v1 = n, where v1 is constant and n is the value ****
    **** if a constant has a value, do not assign a new value ****)
   EEPROM_INDEX = {enum}(
-    EEPROM_MISC = $11
+    EEPROM_LANGUAGE = $007,
+    EEPROM_VIDEO    = $008,
+    EEPROM_AUDIO    = $009,
+    EEPROM_MISC     = $11
   );
   PEEPROM_INDEX = ^EEPROM_INDEX;
 

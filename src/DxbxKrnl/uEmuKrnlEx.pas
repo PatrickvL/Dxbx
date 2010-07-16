@@ -344,7 +344,7 @@ begin
     end;
 
     // Language
-    $007:
+    Ord(EEPROM_LANGUAGE):
     begin
       // TODO -oCXBX: configurable language or autodetect of some sort
       if (Type_ <> nil) then
@@ -358,7 +358,7 @@ begin
     end;
 
     // Video Flags
-    $008:
+    Ord(EEPROM_VIDEO):
     begin
       // TODO -oCXBX: configurable video flags or autodetect of some sort
       if (Type_ <> nil) then
@@ -371,8 +371,7 @@ begin
         ResultLength^ := $04;
     end;
 
-    // Audio Flags
-    $009:
+    Ord(EEPROM_AUDIO):
     begin
       if (Type_ <> nil) then
         Type_^ := $04;
@@ -408,7 +407,6 @@ begin
   end;
 
   EmuSwapFS(fsXbox);
-
   Result := STATUS_SUCCESS;
 end;
 
