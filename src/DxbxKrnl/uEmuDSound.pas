@@ -4044,10 +4044,11 @@ begin
       [pThis, pDSCaps]);
 {$ENDIF}
 
+  AssureDirectSoundCreate(); // Dxbx addition - use one implementation for DirectSoundCreate8
+
   // Get PC's DirectSound capabilities
   ZeroMemory(@DSCapsPC, sizeof(DSCAPS));
-
-  AssureDirectSoundCreate(); // Dxbx addition - use one implementation for DirectSoundCreate8
+  DSCapsPC.dwSize := sizeof(DSCAPS);
 
   hRet := IDirectSound8(g_pDSound8).GetCaps({out}DSCapsPC);
   if(FAILED(hRet)) then
