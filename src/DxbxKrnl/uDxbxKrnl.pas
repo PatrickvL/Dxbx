@@ -268,9 +268,9 @@ begin
     g_hCurDir := DxbxAssignDeviceToPath(DeviceD, szBuffer);
     DxbxBasePath := GetDxbxBasePath + '\EmuDisk\';
     TitleStr := IntToHex(pCertificate.dwTitleId, 8);
-    DxbxAssignDeviceToPath(DeviceT, DxbxBasePath + 'T\' + TitleStr);
-    DxbxAssignDeviceToPath(DeviceU, DxbxBasePath + 'U\' + TitleStr);
-    DxbxAssignDeviceToPath(DeviceZ, DxbxBasePath + 'Z\' + TitleStr);
+    DxbxAssignDeviceToPath(DeviceT, DxbxBasePath + 'TDATA\' + TitleStr + '\');
+    DxbxAssignDeviceToPath(DeviceU, DxbxBasePath + 'UDATA\' + TitleStr + '\');
+    DxbxAssignDeviceToPath(DeviceZ, DxbxBasePath + 'ZDATA\' + TitleStr + '\');
   end;
 
   // Create default symbolic links :
