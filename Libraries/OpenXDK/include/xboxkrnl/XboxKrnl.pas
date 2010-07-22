@@ -1399,6 +1399,23 @@ end;
 KSYSTEM_TIME = _KSYSTEM_TIME;
 PKSYSTEM_TIME = ^KSYSTEM_TIME;
 
+//
+// DXBX Addition : SMC Video modes
+//
+const SMC_VIDEO_MODE_VMODE0       = $01;
+const SMC_VIDEO_MODE_VMODE1       = $02;
+const SMC_VIDEO_MODE_VMODE2       = $04;
+
+const SMC_VIDEO_MODE_SCART        = $00;
+const SMC_VIDEO_MODE_HDTV         = $01;
+const SMC_VIDEO_MODE_VGA          = $02;
+const SMC_VIDEO_MODE_RFU          = $03;
+const SMC_VIDEO_MODE_SVIDEO       = $04;
+const SMC_VIDEO_MODE_STANDARD     = $06;
+const SMC_VIDEO_MODE_NONE         = $07;
+
+const SMC_VIDEO_MODE_VMODE_MASK   = $07;
+
 implementation
 
 end.

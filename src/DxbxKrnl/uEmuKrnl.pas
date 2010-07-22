@@ -191,18 +191,18 @@ procedure InitializeObjectAttributes(
   dummy: Pointer
   );
 
-var xLaunchDataPage: LAUNCH_DATA_PAGE; // (pointed to by LaunchDataPage)
+var xLaunchDataPage: LAUNCH_DATA_PAGE; // (pointed to by xboxkrnl_LaunchDataPage)
 
-var {156}xboxkrnl_KeTickCount: DWORD = 0;
+var {156}xboxkrnl_KeTickCount: DWORD = 0; // (updated by EmuUpdateTickCount)
 // Source:Cxbx  Branch:Shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 
 var {162}xboxkrnl_KiBugCheckData: array [0..5 - 1] of ULONG_PTR;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 
 var {164}xboxkrnl_LaunchDataPage: PLAUNCH_DATA_PAGE = @xLaunchDataPage;
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
-var {357}xboxkrnl_IdexChannelObject: DWord;
+var {357}xboxkrnl_IdexChannelObject: array [0..$1000] of Byte; // TODO -oDxbx : Determine size, structure & filling behind this
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 // The following API names are derived from Pedro's APILogger V2

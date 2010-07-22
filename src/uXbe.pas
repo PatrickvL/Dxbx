@@ -39,6 +39,11 @@ uses
   uEmuD3D8Types,
   uFileSystem; // Drives
 
+const
+  XBOX_KEY_LENGTH = 16;
+
+  XBEIMAGE_ALTERNATE_TITLE_ID_COUNT = 16;
+
 type _XBEIMAGE_HEADER = packed record
     dwMagic: array [0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
     pbDigitalSignature: array [0..255] of Byte; // 0x0004 - digital signature
@@ -80,20 +85,22 @@ type _XBEIMAGE_HEADER = packed record
   TXbeHeader = XBEIMAGE_HEADER;
   PXbeHeader = PXBEIMAGE_HEADER;
 
+  XBOX_KEY_DATA = array [0..XBOX_KEY_LENGTH-1] of UCHAR;
+
   _XBE_CERTIFICATE = packed record
     dwSize: DWord; // 0x0000 - size of certificate
     dwTimeDate: DWord; // 0x0004 - timedate stamp
     dwTitleId: DWord; // 0x0008 - title id
     wszTitleName: array [0..XBE_TITLENAME_MAXLENGTH-1] of WideChar; // 0x000C - title name (unicode)
-    dwAlternateTitleId: array [0..15] of Dword; // 0x005C - alternate title ids
+    dwAlternateTitleId: array [0..XBEIMAGE_ALTERNATE_TITLE_ID_COUNT-1] of Dword; // 0x005C - alternate title ids
     dwAllowedMedia: Dword; // 0x009C - allowed media types
     dwGameRegion: DWord; // 0x00A0 - game region
     dwGameRatings: DWord; // 0x00A4 - game ratings
     dwDiskNumber: DWord; // 0x00A8 - disk number
     dwVersion: Dword; // 0x00AC - version
-    bzLanKey: array [0..15] of Byte; // 0x00B0 - lan key
-    bzSignatureKey: array [0..15] of Byte; // 0x00C0 - signature key
-    bzTitleAlternateSignatureKey: array [0..15] of array [0..15] of Byte; // 0x00D0 - alternate signature keys
+    bzLanKey: XBOX_KEY_DATA; // 0x00B0 - lan key
+    bzSignatureKey: XBOX_KEY_DATA; // 0x00C0 - signature key
+    bzTitleAlternateSignatureKey: array [0..XBEIMAGE_ALTERNATE_TITLE_ID_COUNT-1] of XBOX_KEY_DATA; // 0x00D0 - alternate signature keys
   end;
   XBE_CERTIFICATE = _XBE_CERTIFICATE;
   PXBE_CERTIFICATE = ^XBE_CERTIFICATE;

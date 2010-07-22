@@ -43,7 +43,7 @@ uses
 var
   {240}xboxkrnl_ObDirectoryObjectType: POBJECT_TYPE = NULL;
   {245}xboxkrnl_ObpObjectHandleTable: array [0..0] of DWord; // TODO -oDXBX: Determine array size
-  {249}xboxkrnl_ObSymbolicLinkObjectType: POBJECT_TYPE = NULL;
+  {249}xboxkrnl_ObSymbolicLinkObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : Assign TEmuNtSymbolicLinkObject ?
 
 function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE

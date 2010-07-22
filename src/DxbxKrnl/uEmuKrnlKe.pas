@@ -42,10 +42,13 @@ uses
   uDxbxUtils,
   uDxbxKrnlUtils;
 
+const
+  CLOCK_TIME_INCREMENT = $2710;
+
 var
   {120}xboxkrnl_KeInterruptTime: KSYSTEM_TIME;
-  {154}xboxkrnl_KeSystemTime: KSYSTEM_TIME;
-  {157}xboxkrnl_KeTimeIncrement: DWord = $2710;
+  {154}xboxkrnl_KeSystemTime: KSYSTEM_TIME; // (updated by EmuUpdateTickCount)
+  {157}xboxkrnl_KeTimeIncrement: ULONG = CLOCK_TIME_INCREMENT;
 
 function xboxkrnl_KeAlertResumeThread(
   ThreadHandle: HANDLE;

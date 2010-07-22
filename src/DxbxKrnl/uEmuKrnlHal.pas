@@ -42,17 +42,17 @@ uses
   uDxbxKrnl,
   uDxbxKrnlUtils;
 
-var {040}xboxkrnl_HalDiskCachePartitionCount: DWORD;
+var {040}xboxkrnl_HalDiskCachePartitionCount: DWORD = 4; // This enables Partition3..7 TODO -oDxbx : Make this configurable
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-var {041}xboxkrnl_HalDiskModelNumber: ANSI_STRING; // TODO : Fill this with something sensible
+var {041}xboxkrnl_HalDiskModelNumber: ANSI_STRING; // TODO -oDxbx: Fill this with something sensible
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-var {042}xboxkrnl_HalDiskSerialNumber: ANSI_STRING; // TODO : Fill this with something sensible
+var {042}xboxkrnl_HalDiskSerialNumber: ANSI_STRING; // TODO -oDxbx: Fill this with something sensible
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-// TODO -oCXBX: Verify this!
-var {356}xboxkrnl_HalBootSMCVideoMode: DWORD = 1;
+// TODO -oDxbx : Make this configurable
+var {356}xboxkrnl_HalBootSMCVideoMode: DWORD = SMC_VIDEO_MODE_VMODE0;
 // Source:Cxbx  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 
 var HalpSMCScratchRegister: DWORD;
