@@ -106,8 +106,8 @@ procedure {046} xboxkrnl_HalReadWritePCISpace(
   WritePCISpace: LONGBOOL
   ); stdcall;
 function {047} xboxkrnl_HalRegisterShutdownNotification(
-  Arg1: UNKNOWN;
-  Arg2: UNKNOWN
+  ShutdownRegistration: UNKNOWN;
+  Register_: _BOOLEAN
   ): NTSTATUS; stdcall;
 procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -260,8 +260,8 @@ begin
 end;
 
 function {047} xboxkrnl_HalRegisterShutdownNotification(
-  Arg1: UNKNOWN;
-  Arg2: UNKNOWN
+  ShutdownRegistration: UNKNOWN;
+  Register_: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin

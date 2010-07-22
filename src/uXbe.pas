@@ -39,7 +39,7 @@ uses
   uEmuD3D8Types,
   uFileSystem; // Drives
 
-type _XBE_HEADER = packed record
+type _XBEIMAGE_HEADER = packed record
     dwMagic: array [0..3] of AnsiChar; // 0x0000 - magic number [should be "XBEH"]
     pbDigitalSignature: array [0..255] of Byte; // 0x0004 - digital signature
     dwBaseAddr: DWord; // 0x0104 - base address
@@ -74,11 +74,11 @@ type _XBE_HEADER = packed record
     dwLogoBitmapAddr: DWord; // 0x0170 - logo bitmap address
     dwSizeofLogoBitmap: DWord; // 0x0174 - logo bitmap size
   end;
-  XBE_HEADER = _XBE_HEADER;
-  PXBE_HEADER = ^XBE_HEADER;
+  XBEIMAGE_HEADER = _XBEIMAGE_HEADER;
+  PXBEIMAGE_HEADER = ^XBEIMAGE_HEADER;
 
-  TXbeHeader = XBE_HEADER;
-  PXbeHeader = PXBE_HEADER;
+  TXbeHeader = XBEIMAGE_HEADER;
+  PXbeHeader = PXBEIMAGE_HEADER;
 
   _XBE_CERTIFICATE = packed record
     dwSize: DWord; // 0x0000 - size of certificate
@@ -296,7 +296,7 @@ type _XBE_SECTIONHEADER = packed record
     function GetFileSize: Int64;
   public
     XbePath: string;
-    m_Header: XBE_HEADER;
+    m_Header: XBEIMAGE_HEADER;
     m_Certificate: XBE_CERTIFICATE;
     m_SectionHeader: array of XBE_SECTIONHEADER;
     m_LibraryVersion: array of XBE_LIBRARYVERSION;

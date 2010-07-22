@@ -32,6 +32,7 @@ uses
   Math, // Min
   // Jedi
   JclWin32,
+  JwaNative,
   // Dxbx
   uConsts,
   uTypes,
@@ -40,6 +41,8 @@ uses
   uLog,
   uXbe, // PXbeHeader
   uKernelThunk,
+  uEmuFile,
+  uEmuKrnlXe, // xboxkrnl_XeImageFileName
   uDxbxKrnl;
 
 type _IMAGE_TLS_DIRECTORY = record
@@ -309,7 +312,12 @@ begin
     XbeTlsData := nil;
 
   XbeLibraryVersion := PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr);
-  
+
+  // Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
+  g_EmuXbePath := DeviceHarddisk0Partition1 + XbeFilePath;
+  RtlInitAnsiString(@xboxkrnl_XeImageFileName, PCSZ(g_EmuXbePath));
+  // TODO -oDxbx : Make sure this matches g_hCurDir
+
   // Launch the XBE :
   DxbxKrnlInit(
     aHandle,

@@ -67,7 +67,7 @@ var
   // thread local storage data
   DxbxKrnl_TLSData: PVOID;
   // xbe header structure
-  DxbxKrnl_XbeHeader: PXBE_HEADER; // TODO -oDxbx : How about using g_XbeHeader instead?
+  DxbxKrnl_XbeHeader: PXBEIMAGE_HEADER; // TODO -oDxbx : How about using g_XbeHeader instead?
   // parent window handle
   DxbxKrnl_hEmuParent: HWND;
 
@@ -204,7 +204,7 @@ var
 begin
   if Assigned(aValue) then
   begin
-    SetString(TmpUnicodeStr, aValue.Buffer, aValue.Length);
+    SetString(TmpUnicodeStr, aValue.Buffer, aValue.Length div 2 );
     Result := AnsiString(TmpUnicodeStr);
   end
   else
@@ -309,7 +309,7 @@ begin
   if (CreateOptions and FILE_OPEN_REPARSE_POINT) > 0 then Result := Result + '|FILE_OPEN_REPARSE_POINT';
   if (CreateOptions and FILE_OPEN_NO_RECALL) > 0 then Result := Result + '|FILE_OPEN_NO_RECALL';
   if (CreateOptions and FILE_OPEN_FOR_FREE_SPACE_QUERY) > 0 then Result := Result + '|FILE_OPEN_FOR_FREE_SPACE_QUERY';
-  if (CreateOptions and FILE_OPEN_FOR_FREE_SPACE_QUERY) > 0 then Result := Result + '|FILE_OPEN_FOR_FREE_SPACE_QUERY';
+
 //const FILE_VALID_OPTION_FLAGS =                 $00ffffff;
 //const FILE_VALID_PIPE_OPTION_FLAGS =            $00000032;
 //const FILE_VALID_MAILSLOT_OPTION_FLAGS =        $00000032;

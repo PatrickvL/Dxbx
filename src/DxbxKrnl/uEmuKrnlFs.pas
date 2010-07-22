@@ -46,16 +46,20 @@ function {035} xboxkrnl_FscGetCacheSize(
 procedure {036} xboxkrnl_FscInvalidateIdleBlocks(); stdcall;
 function {037} xboxkrnl_FscSetCacheSize(
   uCachePages: ULONG
-  ): LONG; stdcall;
+  ): NTSTATUS; stdcall;
+
+var
+  FscNumberOfCachePages: SIZE_T = 1; // Default, 1 page of cache
 
 implementation
 
 function {035} xboxkrnl_FscGetCacheSize(
   ): SIZE_T; stdcall;
-// Source:Dxbx - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
+// Source:Dxbx  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('FscGetCacheSize');
+  DbgPrintf('EmuKrnl : FscGetCacheSize();');
+  Result := FscNumberOfCachePages;
   EmuSwapFS(fsXbox);
 end;
 
@@ -67,7 +71,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function {037} xboxkrnl_FscSetCacheSize(uCachePages: ULONG): LONG; stdcall;
+function {037} xboxkrnl_FscSetCacheSize(
+  uCachePages: ULONG
+  ): NTSTATUS; stdcall;
 // Source:Cxbx  Branch:shogun  Revision:0.8.2-Pre2  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -80,10 +86,13 @@ begin
       [uCachePages]);
 {$ENDIF}
 
-  EmuWarning('FscSetCacheSize is being ignored');
+  // TODO -oDxbx : Actually make this have some effect somehow?
+
+  FscNumberOfCachePages := uCachePages;
+
   EmuSwapFS(fsXbox);
   
-  Result := 0;
+  Result := STATUS_SUCCESS;
 end;
 
 end.

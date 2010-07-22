@@ -85,10 +85,10 @@ function xboxkrnl_NtCreateFile(
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateIoCompletion(
-  FileHandle: dtU32;
+  FileHandle: PHANDLE;
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  pszUnknownArgs: dtBLOB
+  Count: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateMutant(
   MutantHandle: PHANDLE; // OUT
@@ -111,16 +111,16 @@ function xboxkrnl_NtDeleteFile(
   ObjectAttributes: POBJECT_ATTRIBUTES
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtDeviceIoControlFile(
-  FileHandle: dtU32;
-  Event: dtU32;
-  pApcRoutine: dtU32;
-  pApcContext: dtU32;
-  pIoStatusBlock: dtU32;
-  pIoControlCode: dtU32;
-  pInputBuffer: dtU32;
-  InputBufferLength: dtU32;
-  pOutputBuffer: dtU32;
-  OutputBufferLength: dtU32
+  FileHandle: HANDLE;
+  Event: HANDLE;
+  pApcRoutine: PIO_APC_ROUTINE;
+  pApcContext: PVOID;
+  pIoStatusBlock: PIO_STATUS_BLOCK;
+  pIoControlCode: ULONG;
+  pInputBuffer: PVOID;
+  InputBufferLength: ULONG;
+  pOutputBuffer: PVOID;
+  OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtDuplicateObject(
   SourceHandle: HANDLE;
@@ -137,16 +137,16 @@ function xboxkrnl_NtFreeVirtualMemory(
   FreeType: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtFsControlFile(
-  FileHandle: dtU32;
-  Event: dtU32;
-  pApcRoutine: dtU32;
-  pApcContext: dtU32;
-  pIoStatusBlock: dtU32;
-  FsControlCode: dtU32;
-  pInputBuffer: dtU32;
-  InputBufferLength: dtU32;
-  pOutputBuffer: dtU32;
-  OutputBufferLength: dtU32
+  FileHandle: HANDLE;
+  Event: HANDLE;
+  pApcRoutine: PIO_APC_ROUTINE;
+  pApcContext: PVOID;
+  pIoStatusBlock: PIO_STATUS_BLOCK;
+  FsControlCode: ULONG;
+  pInputBuffer: PVOID;
+  InputBufferLength: ULONG;
+  pOutputBuffer: PVOID;
+  OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtOpenDirectoryObject(
   DirectoryHandle: PHANDLE; // OUT
@@ -186,8 +186,8 @@ function xboxkrnl_NtQueryDirectoryFile(
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PIO_APC_ROUTINE;
   ApcContext: PVOID;
-  IoStatusBlock: PIO_STATUS_BLOCK; // out
-  FileInformation: PFILE_DIRECTORY_INFORMATION; // out
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  FileInformation: PFILE_DIRECTORY_INFORMATION; // OUT
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS;
   FileMask: PSTRING;
@@ -273,7 +273,7 @@ function xboxkrnl_NtReadFileScatter(
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReleaseMutant(
   MutantHandle: HANDLE;
-  PreviousCount: PULONG // OUT
+  PreviousCount: PULONG // OUT OPTIONAL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReleaseSemaphore(
   SemaphoreHandle: HANDLE;
@@ -316,12 +316,12 @@ function xboxkrnl_NtSetSystemTime(
 function xboxkrnl_NtSetTimerEx(
   TimerHandle: HANDLE;
   DueTime: PLARGE_INTEGER;
-  TimerApcRoutine: PTIMER_APC_ROUTINE; {OPTIONAL}
+  TimerApcRoutine: PTIMER_APC_ROUTINE; // OPTIONAL
   ApcMode: KPROCESSOR_MODE;
-  TimerContext: PVOID;  {OPTIONAL}
+  TimerContext: PVOID; // OPTIONAL
   ResumeTimer: _BOOLEAN;
-  Period: LONG; {OPTIONAL}
-  {OUT} PreviousState: PBOOLEAN {OPTIONAL}
+  Period: LONG; // OPTIONAL
+  PreviousState: PBOOLEAN // OUT OPTIONAL
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtSignalAndWaitForSingleObjectEx(
   SignalHandle: HANDLE;
@@ -398,6 +398,7 @@ type
 function DxbxObjectAttributesToNT(ObjectAttributes: POBJECT_ATTRIBUTES; var NativeObjectAttributes: RNativeObjectAttributes; const aFileAPIName: string = ''): NTSTATUS;
 var
   szBuffer: AnsiString;
+  XboxFullPath: AnsiString;
   EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   Result := STATUS_SUCCESS;
@@ -429,39 +430,60 @@ begin
     begin
       // Look up the symbolic link information using the drive letter :
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter(szBuffer[1]);
-      System.Delete(szBuffer, 2, 1); // Remove ':'
+      System.Delete(szBuffer, 1, 3); // Remove 'C:\'
+    end
+    else if StartsWithString(szBuffer, '$HOME') then // xbmp uses this (along with 'e::\' prefixes)
+    begin
+      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
+      System.Delete(szBuffer, 1, 6); // Remove '$HOME'
     end
     else
     begin
       // Look up via the device path :
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByDevice(szBuffer);
-      // TODO : Fixup szBuffer path here
+      // Fixup szBuffer path here
+      if Assigned(EmuNtSymbolicLinkObject) then
+        System.Delete(szBuffer, 1, Length(EmuNtSymbolicLinkObject.XboxFullPath)); // Remove '\Device\Harddisk0\Partition2'
     end;
 
-    if EmuNtSymbolicLinkObject = nil then
+    if Assigned(EmuNtSymbolicLinkObject) then
     begin
-      Result := STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
-      Exit;
+      XboxFullPath := EmuNtSymbolicLinkObject.XboxFullPath;
+      ObjectAttributes.RootDirectory := EmuNtSymbolicLinkObject.RootDirectoryHandle;
+    end
+    else
+    begin
+      // No symbolic link - as last resort, check if the path accesses a partition from Harddisk0 :
+      if not StartsWithText(szBuffer, DeviceHarddisk0 + '\Partition') then
+      begin
+        Result := STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
+        Exit;
+      end;
+
+      XboxFullPath := szBuffer;
+      // Remove Harddisk0 prefix, in the hope that the remaining path might work :
+      System.Delete(szBuffer, 1, Length(DeviceHarddisk0) + 1);
+      // And set Root to the folder containing the partition-folders :
+      ObjectAttributes.RootDirectory := DxbxBasePathHandle;
     end;
 
-    ObjectAttributes.RootDirectory := EmuNtSymbolicLinkObject.RootDirectory;
+    // Check for special case : Partition0
+    if StartsWithText(XboxFullPath, DeviceHarddisk0Partition0) then
+    begin
+      DxbxKrnlCleanup('Partition0 access not implemented yet! Tell PatrickvL what title triggers this.');
+      // TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
+      // (This file probably needs to be pre-initialized somehow too).
+    end;
 
     if MayLog(lfUnit or lfFile) then
     begin
       DbgPrintf('EmuKrnl : %s Corrected path...', [aFileAPIName]);
       DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
-    end;
-    if ObjectAttributes.RootDirectory = g_hCurDir then
-    begin
-      System.Delete(szBuffer, 1, 2);
-      if MayLog(lfUnit or lfFile) then
+
+      if ObjectAttributes.RootDirectory = g_hCurDir then
         DbgPrintf('  New:"$XbePath\%s"', [szBuffer])
-    end
-    else
-    begin
-      if MayLog(lfUnit or lfFile) then
+      else
         DbgPrintf('  New:"$DxbxPath\EmuDisk\%s"', [szBuffer]);
-      System.Delete(szBuffer, 1, 2);
     end;
   end
   else
@@ -470,7 +492,7 @@ begin
 
   // Convert Ansi to Unicode :
   NativeObjectAttributes.wszObjectName := UnicodeString(szBuffer);
-  JwaNative.RtlInitUnicodeString(@NativeObjectAttributes.NtUnicodeString, 
+  JwaNative.RtlInitUnicodeString(@NativeObjectAttributes.NtUnicodeString,
                                  PWideChar(NativeObjectAttributes.wszObjectName));
 
   // Initialize the NT ObjectAttributes :
@@ -749,10 +771,10 @@ begin
 end;
 
 function xboxkrnl_NtCreateIoCompletion(
-  FileHandle: dtU32;
+  FileHandle: PHANDLE;
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  pszUnknownArgs: dtBLOB
+  Count: ULONG
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -763,7 +785,7 @@ end;
 
 function xboxkrnl_NtCreateMutant
 (
-  {OUT}MutantHandle: PHANDLE;
+  MutantHandle: PHANDLE; // OUT
   ObjectAttributes: POBJECT_ATTRIBUTES;
   InitialOwner: Boolean
   ): NTSTATUS; stdcall;
@@ -935,16 +957,16 @@ end;
 //
 // Differences from NT: None known.
 function xboxkrnl_NtDeviceIoControlFile(
-  FileHandle: dtU32;
-  Event: dtU32;
-  pApcRoutine: dtU32;
-  pApcContext: dtU32;
-  pIoStatusBlock: dtU32;
-  pIoControlCode: dtU32;
-  pInputBuffer: dtU32;
-  InputBufferLength: dtU32;
-  pOutputBuffer: dtU32;
-  OutputBufferLength: dtU32
+  FileHandle: HANDLE;
+  Event: HANDLE;
+  pApcRoutine: PIO_APC_ROUTINE;
+  pApcContext: PVOID;
+  pIoStatusBlock: PIO_STATUS_BLOCK;
+  pIoControlCode: ULONG;
+  pInputBuffer: PVOID;
+  InputBufferLength: ULONG;
+  pOutputBuffer: PVOID;
+  OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -1061,16 +1083,16 @@ begin
 end;
 
 function xboxkrnl_NtFsControlFile(
-  FileHandle: dtU32;
-  Event: dtU32;
-  pApcRoutine: dtU32;
-  pApcContext: dtU32;
-  pIoStatusBlock: dtU32;
-  FsControlCode: dtU32;
-  pInputBuffer: dtU32;
-  InputBufferLength: dtU32;
-  pOutputBuffer: dtU32;
-  OutputBufferLength: dtU32
+  FileHandle: HANDLE;
+  Event: HANDLE;
+  pApcRoutine: PIO_APC_ROUTINE;
+  pApcContext: PVOID;
+  pIoStatusBlock: PIO_STATUS_BLOCK;
+  FsControlCode: ULONG;
+pInputBuffer: PVOID;
+  InputBufferLength: ULONG;
+  pOutputBuffer: PVOID;
+  OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -1125,8 +1147,7 @@ end;
 //     IoStatusBlock, NULL, 0, ShareAccess, OPEN_EXISTING, OpenOptions);
 //
 // Differences from NT: See NtCreateFile.
-function xboxkrnl_NtOpenFile
-(
+function xboxkrnl_NtOpenFile(
   FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
@@ -1294,8 +1315,8 @@ function xboxkrnl_NtQueryDirectoryFile
   Event: HANDLE; // OPTIONAL
   ApcRoutine: PIO_APC_ROUTINE;
   ApcContext: PVOID;
-  IoStatusBlock: PIO_STATUS_BLOCK; // out
-  FileInformation: PFILE_DIRECTORY_INFORMATION; // out
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
+  FileInformation: PFILE_DIRECTORY_INFORMATION; // OUT
   Length: ULONG;
   FileInformationClass: FILE_INFORMATION_CLASS;
   FileMask: PSTRING;
@@ -1629,6 +1650,7 @@ begin
     // Check that this handle actually is an NtSymbolicLinkObject :
     Result := STATUS_OBJECT_TYPE_MISMATCH;
     EmuHandle := HandleToEmuHandle(LinkHandle);
+    // TODO -oDxbx : Make this thread-safe via reference-counting on the EmuHandle object :
     if EmuHandle.NtObject is TEmuNtSymbolicLinkObject then
     begin
       // Retrieve the NtSymbolicLinkObject and populate the output arguments :
@@ -1637,14 +1659,20 @@ begin
 
       if Assigned(LinkTarget) then
       begin
-        // TODO -oDxbx: Put this into a tooling function, honouring MaximumLength and returning NTSTATUS
-        LinkTarget.Length := Length(EmuNtSymbolicLinkObject.DeviceName);
-        memcpy(LinkTarget.Buffer, PAnsiChar(EmuNtSymbolicLinkObject.DeviceName), LinkTarget.Length);
+        // TODO -oDxbx: Put this into a tooling function, returning NTSTATUS :
+        LinkTarget.Length := Length(EmuNtSymbolicLinkObject.XboxFullPath);
+        if LinkTarget.Length > LinkTarget.MaximumLength then
+        begin
+          Result := STATUS_BUFFER_TOO_SMALL;
+          LinkTarget.Length := LinkTarget.MaximumLength;
+        end;
+
+        memcpy(LinkTarget.Buffer, PAnsiChar(EmuNtSymbolicLinkObject.XboxFullPath), LinkTarget.Length);
       end;
 
       if Assigned(ReturnedLength) then
       begin
-        ReturnedLength^ := EmuNtSymbolicLinkObject.ReturnLength;
+        ReturnedLength^ := Length(EmuNtSymbolicLinkObject.XboxFullPath); // Return full length (even if buffer was too small)
       end;
     end;
   end;
@@ -1746,8 +1774,6 @@ function xboxkrnl_NtQueryVolumeInformationFile
   FileInformationClass: FS_INFORMATION_CLASS
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
-var
-  SizeInfo: PFILE_FS_SIZE_INFORMATION;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1771,19 +1797,17 @@ begin
   (
       FileHandle,
       JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
-      PFILE_FS_SIZE_INFORMATION(FileInformation), Length,
-      FS_INFORMATION_CLASS(FileInformationClass)
+      FileInformation, Length,
+      FileInformationClass
   );
 
   // NOTE: TODO -oCXBX: Dynamically fill in, or allow configuration?
   if (FileInformationClass = FileFsSizeInformation) then
   begin
-    SizeInfo := PFILE_FS_SIZE_INFORMATION(FileInformation);
-
-    SizeInfo.TotalAllocationUnits.QuadPart     := $4C468;
-    SizeInfo.AvailableAllocationUnits.QuadPart := $2F125;
-    SizeInfo.SectorsPerAllocationUnit          := 32;
-    SizeInfo.BytesPerSector                    := 512;
+    FileInformation.TotalAllocationUnits.QuadPart     := $4C468;
+    FileInformation.AvailableAllocationUnits.QuadPart := $2F125;
+    FileInformation.SectorsPerAllocationUnit          := 32;
+    FileInformation.BytesPerSector                    := XBOX_HD_SECTOR_SIZE;
   end;
 
   EmuSwapFS(fsXbox);
@@ -1875,7 +1899,7 @@ end;
 function xboxkrnl_NtReleaseMutant
 (
   MutantHandle: HANDLE;
-  PreviousCount: PULONG // OUT
+  PreviousCount: PULONG // OUT OPTIONAL
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -2049,12 +2073,12 @@ end;
 function xboxkrnl_NtSetTimerEx(
   TimerHandle: HANDLE;
   DueTime: PLARGE_INTEGER;
-  TimerApcRoutine: PTIMER_APC_ROUTINE; {OPTIONAL}
+  TimerApcRoutine: PTIMER_APC_ROUTINE; // OPTIONAL
   ApcMode: KPROCESSOR_MODE;
-  TimerContext: PVOID;  {OPTIONAL}
+  TimerContext: PVOID; // OPTIONAL
   ResumeTimer: _BOOLEAN;
-  Period: LONG; {OPTIONAL}
-  {OUT} PreviousState: PBOOLEAN {OPTIONAL}
+  Period: LONG; // OPTIONAL
+  PreviousState: PBOOLEAN // OUT OPTIONAL
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin

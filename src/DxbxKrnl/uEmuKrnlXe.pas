@@ -34,6 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
+  uConsts,
   uTypes,
   uXbe,
   uEmuFS,
@@ -45,7 +46,7 @@ uses
 var {355}xboxkrnl_XePublicKeyData: DWord;
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-var {326}xboxkrnl_XeImageFileName: PANSI_STRING;
+var {326}xboxkrnl_XeImageFileName: ANSI_STRING;
 // Source:Xbox-Linux  Branch:Dxbx  Translator:PatrickvL  Done:100
 //
 // XeImageFileName.Buffer points to path of XBE
@@ -54,21 +55,30 @@ var {326}xboxkrnl_XeImageFileName: PANSI_STRING;
 // Size of XeImageFileName.Buffer is stored in XeImageFileName.Length
 
 function {327} xboxkrnl_XeLoadSection(
-  Section: PXBE_SECTIONHEADER // In, out
+  Section: PXBE_SECTIONHEADER // IN, OUT
   ): NTSTATUS; stdcall;
 function {328} xboxkrnl_XeUnloadSection(
-  Section: PXBE_SECTIONHEADER // In, out
+  Section: PXBE_SECTIONHEADER // IN, OUT
   ): NTSTATUS; stdcall;
 
+function XeImageHeader(): PXBEIMAGE_HEADER;
+
+const XBEIMAGE_STANDARD_BASE_ADDRESS = XBE_IMAGE_BASE;
+
 implementation
-  
+
+function XeImageHeader(): PXBEIMAGE_HEADER;
+begin
+  Result := PXBEIMAGE_HEADER(XBEIMAGE_STANDARD_BASE_ADDRESS);
+end;
+
 // XeLoadSection:
 // Adds one to the reference count of the specified section and loads if the
 // count is now above zero.
 //
 // New to the XBOX.
 function {327} xboxkrnl_XeLoadSection(
-  Section: PXBE_SECTIONHEADER // In, out
+  Section: PXBE_SECTIONHEADER // IN, OUT
   ): NTSTATUS; stdcall;
 // Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:100
 begin
@@ -84,7 +94,7 @@ end;
 //
 // New to the XBOX.
 function {328} xboxkrnl_XeUnloadSection(
-  Section: PXBE_SECTIONHEADER // In, out
+  Section: PXBE_SECTIONHEADER // IN, OUT
   ): NTSTATUS; stdcall;
 // Source:XBMC  Branch:dxbx  Translator:PatrickvL  Done:100
 begin

@@ -263,13 +263,13 @@ function {065} xboxkrnl_IoCreateDevice(
   DeviceType: DEVICE_TYPE;
   DeviceCharacteristics: ULONG;
   Exclusive: _BOOLEAN;
-  DeviceObject: PPDEVICE_OBJECT // out
+  DeviceObject: PPDEVICE_OBJECT // OUT
   ): NTSTATUS; stdcall;
 function {066} xboxkrnl_IoCreateFile(
-  FileHandle: PHANDLE; // out
+  FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  IoStatusBlock: PIO_STATUS_BLOCK; // out
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   AllocationSize: PLARGE_INTEGER;
   FileAttributes: ULONG;
   ShareAccess: ULONG;
@@ -281,26 +281,31 @@ function xboxkrnl_IoCreateSymbolicLink(
   SymbolicLinkName: PSTRING;
   DeviceName: PSTRING
   ): NTSTATUS; stdcall;
-function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoDeleteDevice(
+  DeviceObject: PDEVICE_OBJECT
+): NTSTATUS; stdcall;
 function xboxkrnl_IoDeleteSymbolicLink(
   SymbolicLinkName: PSTRING
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoFreeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoInitializeIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_IoInvalidDeviceRequest(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoInvalidDeviceRequest(
+  DeviceObject: PDEVICE_OBJECT;
+  Irp: PIRP
+): NTSTATUS; stdcall;
 function xboxkrnl_IoQueryFileInformation(
   FileObject: PFILE_OBJECT;
   FileInformationClass: FILE_INFORMATION_CLASS;
   Length: ULONG;
-  {OUT}FileInformation: PVOID;
-  {OUT}ReturnedLength: PULONG
+  FileInformation: PVOID; // OUT
+  ReturnedLength: PULONG // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoQueryVolumeInformation(
   FileObject: PFILE_OBJECT;
   FsInformationClass: FS_INFORMATION_CLASS;
   Length: ULONG;
-  {OUT}FsInformation: PVOID;
-  {OUT}ReturnedLength: PULONG
+  FsInformation: PVOID; // OUT
+  ReturnedLength: PULONG // OUT
   ): NTSTATUS; stdcall;
 function xboxkrnl_IoQueueThreadIrp(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_IoRemoveShareAccess(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
@@ -330,7 +335,9 @@ procedure xboxkrnl_IofCompleteRequest(
   PriorityBoost: CCHAR;
   Irp: PIRP
   ); register;
-function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_IoDismountVolume(
+  DeviceObject: PDEVICE_OBJECT
+): NTSTATUS; stdcall;
 function xboxkrnl_IoDismountVolumeByName(
   VolumeName: PSTRING
   ): NTSTATUS; stdcall;
@@ -415,34 +422,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-// IoCreateDevice
-//
-// Allocates memory for and intializes a device object for use for
-// a driver.
-//
-// Parameters
-//    DriverObject
-//       Driver object passed by IO Manager when the driver was loaded.
-//
-//    DeviceExtensionSize
-//       Number of bytes for the device extension.
-//
-//    DeviceName
-//       Unicode name of device.
-//
-//    DeviceType
-//       Device type of the new device.
-//
-//    DeviceCharacteristics
-//       Bit mask of device characteristics.
-//
-//    Exclusive
-//       TRUE if only one thread can access the device at a time.
-//
-//    DeviceObject
-//       On successful return this parameter is filled by pointer to
-//       allocated device object.
-
 function {065} xboxkrnl_IoCreateDevice(
   DriverObject: PDRIVER_OBJECT;
   DeviceExtensionSize: ULONG;
@@ -450,7 +429,7 @@ function {065} xboxkrnl_IoCreateDevice(
   DeviceType: DEVICE_TYPE;
   DeviceCharacteristics: ULONG;
   Exclusive: _BOOLEAN;
-  DeviceObject: PPDEVICE_OBJECT // out
+  DeviceObject: PPDEVICE_OBJECT // OUT
   ): NTSTATUS; stdcall;
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -461,10 +440,10 @@ end;
 
 function {066} xboxkrnl_IoCreateFile
 (
-  FileHandle: PHANDLE; // out
+  FileHandle: PHANDLE; // OUT
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
-  IoStatusBlock: PIO_STATUS_BLOCK; // out
+  IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   AllocationSize: PLARGE_INTEGER;
   FileAttributes: ULONG;
   ShareAccess: ULONG;
@@ -540,7 +519,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IoDeleteDevice(): NTSTATUS; stdcall;
+function xboxkrnl_IoDeleteDevice(
+  DeviceObject: PDEVICE_OBJECT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -597,7 +578,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_IoInvalidDeviceRequest(): NTSTATUS; stdcall;
+function xboxkrnl_IoInvalidDeviceRequest(
+  DeviceObject: PDEVICE_OBJECT;
+  Irp: PIRP
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -609,8 +593,8 @@ function xboxkrnl_IoQueryFileInformation(
   FileObject: PFILE_OBJECT;
   FileInformationClass: FILE_INFORMATION_CLASS;
   Length: ULONG;
-  {OUT}FileInformation: PVOID;
-  {OUT}ReturnedLength: PULONG
+  FileInformation: PVOID; // OUT
+  ReturnedLength: PULONG // OUT
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
@@ -623,12 +607,13 @@ function xboxkrnl_IoQueryVolumeInformation(
   FileObject: PFILE_OBJECT;
   FsInformationClass: FS_INFORMATION_CLASS;
   Length: ULONG;
-  {OUT}FsInformation: PVOID;
-  {OUT}ReturnedLength: PULONG
+  FsInformation: PVOID; // OUT
+  ReturnedLength: PULONG // OUT
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+  // Dxbx note : This is almost identical to NtQueryVolumeInformationFile
   Result := Unimplemented('IoQueryVolumeInformation');
   EmuSwapFS(fsXbox);
 end;
@@ -741,10 +726,11 @@ begin
   EmuSwapFS(fsWindows);
   Unimplemented('IofCompleteRequest');
   EmuSwapFS(fsXbox);
-  asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
 
-function xboxkrnl_IoDismountVolume(): NTSTATUS; stdcall;
+function xboxkrnl_IoDismountVolume(
+  DeviceObject: PDEVICE_OBJECT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);

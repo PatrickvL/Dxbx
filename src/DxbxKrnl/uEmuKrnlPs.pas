@@ -48,32 +48,24 @@ var {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE;
 // Source: OpenXDK - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 function {254} xboxkrnl_PsCreateSystemThread(
-(* XBMC says :
- ThreadHandle: PHANDLE; // OUT
- ThreadId: PULONG; // OUT, OPTIONAL
- StartContext1: PVOID;
- StartContext2: PVOID;
- DebugStack: LONGBOOL
-*)
-  lpThreadAttributes: PULONG; // SD
-  dwStackSize: DWORD; // initial stack size
-  lpStartAddress: PKSTART_ROUTINE; // thread function
-  lpParameter: PVOID; // thread argument
-  dwCreationFlags: DWORD; // creation option
-  lpThreadId: PULONG // thread identifier
-  ): NTSTATUS; stdcall;
+  ThreadHandle: PHANDLE; // OUT
+  ThreadId: PULONG; // OUT, OPTIONAL
+  StartAddress: PKSTART_ROUTINE; // thread function
+  StartContext: PVOID;
+  DebugStack: _BOOLEAN
+): NTSTATUS; stdcall;
 function {255} xboxkrnl_PsCreateSystemThreadEx(
-  pThreadHandle: PHANDLE; // out
+  pThreadHandle: PHANDLE; // OUT
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
-  pThreadId: PULONG; // out, optional
-  pStartContext1: PVOID;
-  pStartContext2: PVOID;
+  pThreadId: PULONG; // OUT, OPTIONAL
+  StartAddress: PKSTART_ROUTINE; // thread function
+  StartContext: PVOID;
   CreateSuspended: _BOOLEAN;
   DebugStack: _BOOLEAN;
-  pStartRoutine: PKSTART_ROUTINE
-  ): NTSTATUS; stdcall;
+  pStartRoutine: PKSYSTEM_ROUTINE
+): NTSTATUS; stdcall;
 function {256} xboxkrnl_PsQueryStatistics(
   ProcessStatistics: PPS_STATISTICS
   ): NTSTATUS; stdcall;
@@ -92,9 +84,9 @@ implementation
 
 // PsCreateSystemThread proxy parameters
 type PCSTProxyParam = record
-    StartContext1: PVOID;
-    StartContext2: PVOID;
-    StartRoutine: PKSTART_ROUTINE;
+    StartAddress: PKSTART_ROUTINE;
+    StartContext: PVOID;
+    StartRoutine: PKSYSTEM_ROUTINE;
     StartSuspended: BOOL_;
     hStartedEvent: HANDLE;
   end; // size = 20
@@ -113,27 +105,27 @@ function PCSTProxy
 label
   callComplete;
 var
-  StartContext1: PVOID;
-  StartContext2: PVOID;
-  StartRoutine: PKSTART_ROUTINE;
+  StartAddress: PKSTART_ROUTINE;
+  StartContext: PVOID;
+  StartRoutine: PKSYSTEM_ROUTINE;
   StartSuspended: BOOL_;
   i: int;
   pfnNotificationRoutine: XTHREAD_NOTIFY_PROC;
   OldExceptionFilter: LPTOP_LEVEL_EXCEPTION_FILTER;
 begin
-  StartContext1 := Parameter.StartContext1;
-  StartContext2 := Parameter.StartContext2;
+  StartAddress := Parameter.StartAddress;
+  StartContext := Parameter.StartContext;
   StartRoutine := Parameter.StartRoutine;
   StartSuspended := Parameter.StartSuspended;
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : PCSTProxy' +
     #13#10'(' +
-    #13#10'   StartContext1       : 0x%.08x' +
-    #13#10'   StartContext2       : 0x%.08x' +
+    #13#10'   StartAddress        : 0x%.08x' +
+    #13#10'   StartContext        : 0x%.08x' +
     #13#10'   StartRoutine        : 0x%.08x' +
     #13#10');',
-    [StartContext1, StartContext2, Addr(StartRoutine)]);
+    [Addr(StartAddress), StartContext, Addr(StartRoutine)]);
 {$ENDIF}
 
   if(StartSuspended = TRUE) then
@@ -172,13 +164,13 @@ begin
 
     EmuSwapFS(fsXbox);
 
-//    StartRoutine(StartContext1, StartContext2);
-
+    StartRoutine(StartAddress, StartContext);
+(*
     // use the special calling convention
     asm
       mov         esi, StartRoutine
-      push        StartContext2
-      push        StartContext1
+      push        StartContext
+      push        StartAddress
 
       push        offset callComplete
       lea         ebp, [esp-4]
@@ -188,7 +180,7 @@ begin
       // Note : This jmp reads like this in Cxbx (which doesn't compile) :
       // jmp near esi
     end;
-
+*)
 callComplete:
 
 {$IFNDEF DISABLE_THREAD_EXCEPTION_HANDLING}
@@ -245,6 +237,22 @@ end; // PCSTProxy
 
 ////
 
+procedure PspSystemThreadStartup(
+  StartRoutine: PKSTART_ROUTINE;
+  StartContext: PVOID
+); stdcall;
+begin
+  try
+    StartRoutine(StartContext);
+  except
+    // (PspUnhandledExceptionInSystemThread(GetExceptionInformation()))
+  end;
+
+  xboxkrnl_PsTerminateSystemThread(STATUS_SUCCESS);
+end;
+
+const KERNEL_STACK_SIZE = $3000;
+
 // PsCreateSystemThread:
 // Creates a system thread.  Same as:
 // PsCreateSystemThreadEx(ThreadHandle, NULL, 0x3000, 0, ThreadId, StartContext1,
@@ -252,73 +260,51 @@ end; // PCSTProxy
 //
 // New to the XBOX.  (It is too different from NT to be considered the same)
 function {254} xboxkrnl_PsCreateSystemThread(
-(* XBMC says :
- ThreadHandle: PHANDLE; // OUT
- ThreadId: PULONG; // OUT, OPTIONAL
- StartContext1: PVOID;
- StartContext2: PVOID;
- DebugStack: LONGBOOL
-*)
-  lpThreadAttributes: PULONG; // SD
-  dwStackSize: DWORD; // initial stack size
-  lpStartAddress: PKSTART_ROUTINE; // thread function
-  lpParameter: PVOID; // thread argument
-  dwCreationFlags: DWORD; // creation option
-  lpThreadId: PULONG // thread identifier
-  ): NTSTATUS; stdcall;
-// Source:Cxbx  Branch:Dxbx  Translator:PatrickvL  Done:25
-// TODO -oDXBX: Should we use XBMC's version?
+  ThreadHandle: PHANDLE; // OUT
+  ThreadId: PULONG; // OUT, OPTIONAL
+  StartAddress: PKSTART_ROUTINE; // thread function
+  StartContext: PVOID;
+  DebugStack: _BOOLEAN
+): NTSTATUS; stdcall;
+// Source:XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  ThreadHandle: HANDLE;
   ThreadExtraSize: ULONG;
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
-  StartContext1: PVOID;
-  StartContext2: PVOID;
   CreateSuspended: _BOOLEAN;
-  DebugStack: _BOOLEAN;
 begin
   EmuSwapFS(fsWindows);
 
-  // TODO -oDXBX: How to apply the local arguments like lpThreadAttributes ?
-  ThreadHandle := 0;
-  ThreadExtraSize := dwStackSize; // ??
-  KernelStackSize := dwStackSize; // ??
-  TlsDataSize := 0; // ??
-  StartContext1 := lpParameter; // ??
-  StartContext2 := nil; // ??
-  CreateSuspended := (dwCreationFlags and CREATE_SUSPENDED) > 0;
-  DebugStack := False; // ??
-
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : PsCreateSystemThread' +
+  DbgPrintf('EmuKrnl : PsCreateSystemThread >>' +
     #13#10'(' +
-    #13#10'   lpThreadAttributes  : 0x%.08x' +
-    #13#10'   dwStackSize         : 0x%.08x' +
-    #13#10'   lpStartAddress      : 0x%.08x' +
-    #13#10'   lpParameter         : 0x%.08x' +
-    #13#10'   dwCreationFlags     : 0x%.08x' +
+    #13#10'   ThreadHandle        : 0x%.08x' +
     #13#10'   ThreadId            : 0x%.08x' +
+    #13#10'   StartAddress        : 0x%.08x' +
+    #13#10'   StartContext        : 0x%.08x' +
+    #13#10'   DebugStack          : 0x%.08x' +
     #13#10');',
-    [lpThreadAttributes^, dwStackSize, Addr(lpStartAddress), lpParameter,
-    dwCreationFlags, Addr(lpThreadId)]);
+    [ThreadHandle, ThreadId, Addr(StartAddress), StartContext,
+    Ord(DebugStack)]);
 {$ENDIF}
 
-// PsCreateSystemThreadEx(ThreadHandle, NULL, 0x3000, 0, ThreadId, StartContext1,
-//     StartContext2, FALSE, DebugStack, PspSystemThreadStartup);
+  ThreadExtraSize := 0;
+  KernelStackSize := KERNEL_STACK_SIZE;
+  TlsDataSize := 0;
+  CreateSuspended := False;
 
   // Pass-through to Ex-implementation :
   Result := xboxkrnl_PsCreateSystemThreadEx(
-    {dummy}@ThreadHandle,
+    ThreadHandle,
     ThreadExtraSize,
     KernelStackSize,
     TlsDataSize,
-    {ThreadId=}lpThreadId,
-    StartContext1,
-    StartContext2,
+    ThreadId,
+    Addr(StartAddress),
+    StartContext,
     CreateSuspended,
     DebugStack,
-    {StartRoutine=}lpStartAddress
+    Addr(PspSystemThreadStartup)
     );
 
   EmuSwapFS(fsXbox);
@@ -340,16 +326,16 @@ end;
 // New to the XBOX.
 function {255} xboxkrnl_PsCreateSystemThreadEx
 (
-  pThreadHandle: PHANDLE; // out
+  pThreadHandle: PHANDLE; // OUT
   ThreadExtraSize: ULONG; // XBMC Says : ObjectAttributes: PVOID; // OPTIONAL
   KernelStackSize: ULONG;
   TlsDataSize: ULONG;
-  pThreadId: PULONG; // out, optional
-  pStartContext1: PVOID;
-  pStartContext2: PVOID;
+  pThreadId: PULONG; // OUT, OPTIONAL
+  StartAddress: PKSTART_ROUTINE; // thread function
+  StartContext: PVOID;
   CreateSuspended: _BOOLEAN;
   DebugStack: _BOOLEAN;
-  pStartRoutine: PKSTART_ROUTINE
+  pStartRoutine: PKSYSTEM_ROUTINE
 ): NTSTATUS; stdcall;
 // Source:Cxbx/XBMC  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -367,22 +353,22 @@ begin
     #13#10'   KernelStackSize     : 0x%.08x' +
     #13#10'   TlsDataSize         : 0x%.08x' +
     #13#10'   ThreadId            : 0x%.08x' +
-    #13#10'   StartContext1       : 0x%.08x' +
-    #13#10'   StartContext2       : 0x%.08x' +
+    #13#10'   StartAddress        : 0x%.08x' +
+    #13#10'   StartContext        : 0x%.08x' +
     #13#10'   CreateSuspended     : 0x%.08x' +
     #13#10'   DebugStack          : 0x%.08x' +
     #13#10'   StartRoutine        : 0x%.08x' +
     #13#10');',
     [pThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, pThreadId,
-    pStartContext1, pStartContext2, CreateSuspended, DebugStack, Addr(pStartRoutine)]);
+    Addr(StartAddress), StartContext, CreateSuspended, DebugStack, Addr(pStartRoutine)]);
 {$ENDIF}
 
   // create thread, using our special proxy technique
   begin
     // PCSTProxy is responsible for cleaning up this pointer
-    iPCSTProxyParam.StartContext1 := pStartContext1;
-    iPCSTProxyParam.StartContext2 := pStartContext2;
-    iPCSTProxyParam.StartRoutine := pStartRoutine;
+    iPCSTProxyParam.StartAddress := Addr(StartAddress);
+    iPCSTProxyParam.StartContext := StartContext;
+    iPCSTProxyParam.StartRoutine := Addr(pStartRoutine);
     iPCSTProxyParam.StartSuspended := CreateSuspended;
     iPCSTProxyParam.hStartedEvent := CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -444,7 +430,9 @@ end;
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-procedure {258} xboxkrnl_PsTerminateSystemThread({IN}ExitStatus: NTSTATUS); stdcall;
+procedure {258} xboxkrnl_PsTerminateSystemThread(
+  ExitStatus: NTSTATUS
+  ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   i: int;

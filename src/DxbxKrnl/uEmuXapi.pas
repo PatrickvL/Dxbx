@@ -33,6 +33,7 @@ uses
   JwaNative,
   JwaNTStatus,
   // Dxbx
+  XboxKrnl,
   uDxbxUtils,
   uLog, // DbgPrintf
   UTypes,
@@ -50,17 +51,16 @@ var
 
 type
   LPTIMECALLBACK = TFNTIMECALLBACK;
-  ProcedureStdCall = procedure; stdcall;
-
-  StartRoutineFunc = function (const StartContext: PVOID): Int; stdcall;
 
   LPSECURITY_ATTRIBUTES = PVOID;
 
   PRTL_HEAP_COMMIT_ROUTINE = function(
     Base: PVOID;
-    OUT CommitAddress: PPVOID;
-    OUT CommitSize: PSIZE_T
+    CommitAddress: PPVOID; // OUT
+    CommitSize: PSIZE_T // OUT
     ): NTSTATUS; stdcall;
+
+  LPFIBER_START_ROUTINE = Pointer; // TODO -oDxbx: declare this better!
 
 type _XINPUT_POLLING_PARAMETERS = packed record
   private
@@ -126,7 +126,7 @@ const XINPUT_DEVSUBTYPE_GC_SNOWBOARD            = $40;
 
 type _XINPUT_FEEDBACK_HEADER = packed record
     dwStatus: DWORD;
-    hEvent: HANDLE; // OPTIONAL ;
+    hEvent: HANDLE; // OPTIONAL
     Reserved: array [0..58-1] of BYTE;
 end; // packed size = 66
 XINPUT_FEEDBACK_HEADER = _XINPUT_FEEDBACK_HEADER;
@@ -269,6 +269,9 @@ begin
 {$ENDIF}
 
   // TODO -oCXBX: yeah... we'll format... riiiiight
+
+  // Dxbx note : Well, the cache partitions might well be formatted
+  // (once a sufficiently old partition is choosen, that is.)
 
   Result := BOOL_TRUE;
 end;
@@ -478,7 +481,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(* Dxbx note : Disabled, too high level.
+(* Dxbx note : Disabled, too high level. See xboxkrnl_KeQueryPerformanceCounter
 function XTL_EmuQueryPerformanceCounter
 (
   lpPerformanceCount: PLARGE_INTEGER
@@ -503,7 +506,7 @@ begin
 end;
 *)
 
-(* Dxbx note : Disabled, too high level.
+(* Dxbx note : Disabled, too high level. See xboxkrnl_KeQueryPerformanceFrequency
 function XTL_EmuQueryPerformanceFrequency
 (
   lpFrequency: PLARGE_INTEGER
@@ -525,6 +528,8 @@ begin
 end;
 *)
 
+// Dxbx note : This function selects the oldest cache partition and formats it.
+// So once we support this in the kernel, we don't need this patch anymore.
 function XTL_EmuXMountUtilityDrive
 (
     fFormatClean: BOOL
@@ -837,7 +842,7 @@ end;
 function XTL_EmuXInputGetCapabilities
 (
   hDevice: HANDLE;
-  {OUT} pCapabilities: PXINPUT_CAPABILITIES
+  pCapabilities: PXINPUT_CAPABILITIES // OUT
 ): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -879,7 +884,7 @@ end;
 function XTL_EmuXInputGetState
 (
     hDevice: HANDLE;
-    {OUT} pState: PXINPUT_STATE
+    pState: PXINPUT_STATE // OUT
 ): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -1018,7 +1023,7 @@ begin
   Result := ret;
 end;
 
-(* Dxbx note : Disabled, too high level.
+(* Dxbx note : Disabled, too high level. See xboxkrnl_NtCreateMutant
 function XTL_EmuCreateMutex
 (
     lpMutexAttributes: LPSECURITY_ATTRIBUTES;
@@ -1046,7 +1051,7 @@ begin
 end;
 *)
 
-(* Dxbx note : Disabled, too high level.
+(* Dxbx note : Disabled, too high level. See xboxkrnl_NtClose
 function XTL_EmuCloseHandle
 (
     hObject: HANDLE
@@ -1217,7 +1222,7 @@ end;
 
 procedure XTL_EmuXapiThreadStartup
 (
-    StartRoutine: StartRoutineFunc;
+    StartRoutine: PKSTART_ROUTINE;
     StartContext: PVOID
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1262,7 +1267,7 @@ begin
   Result := STATUS_SUCCESS;
 end;
 
-(* Cxbx : Too High Level!
+(* Cxbx : Too High Level! Dxbx note : This ultimately ends up in xboxkrnl_IoCreateSymbolicLink
 XTL.NTSTATUS CDECL XTL_XapiSetupPerTitleDriveLetters(DWord dwTitleId, PWideChar wszTitleName)
 begin
   EmuSwapFS(fsWindows);
@@ -1361,9 +1366,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-type
-  LPFIBER_START_ROUTINE = Pointer; // TODO -oDxbx: declare this better!
-   
 function XTL_EmuCreateFiber
 (
   dwStackSize: DWORD;
@@ -1413,6 +1415,8 @@ begin
 end;
 
 
+// Dxbx note : This functinos doesn't need a patch (as Xbox returns SectionHeader as handle too),
+// but it's used by XTL_EmuXLoadSectionA and XTL_EmuXFreeSectionA (and these need patching).
 function XTL_EmuXGetSectionHandleA
 (
     pSectionName: LPCSTR
@@ -1576,7 +1580,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-// Dxbx note : This patch is not really needed, as the Xbox1 seems to use the SectionHeader address as a handle too.
+(* Dxbx note : This patch is not really needed, as the Xbox1 seems to use the SectionHeader address as a handle too.
 function XTL_EmuXGetSectionSize
 (
   hSection: XTL_SECTIONHANDLE
@@ -1603,11 +1607,12 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 
 function XTL_EmuRtlDestroyHeap
 (
-    {IN}HeapHandle: HANDLE
+    HeapHandle: HANDLE
 ): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -1864,6 +1869,7 @@ begin
 end;
 
 
+(* Dxbx note : Disabled, too high level. See xboxkrnl_FscGetCacheSize
 function XTL_EmuXGetFileCacheSize(): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -1873,15 +1879,14 @@ begin
   DbgPrintf('EmuXapi : EmuXGetFileCacheSize();');
 {$ENDIF}
 
-  // Return the default cache size for now.
-  // TODO -oCXBX: Save the file cache size if/when set.
-  Result := 64 * 1024;
+  Result := xboxkrnl_FscGetCacheSize() shl PAGE_SHIFT;
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 
-(* Dxbx note : Disabled, too high level.
+(* Dxbx note : Disabled, too high level. See xboxkrnl_NtSignalAndWaitForSingleObjectEx
 function XTL_EmuSignalObjectAndWait
 (
   hObjectToSignal: HANDLE;
@@ -1915,7 +1920,7 @@ end;
 // Dxbx note : Removed this, as we've implemented NtPulseEvent in uEmuKrnlNt.pas
 
 
-(* Dxbx note : Disabled, too high level.
+(* Dxbx note : Disabled, too high level. See xboxkrnl_NtCreateSemaphore
 function XTL_EmuCreateSemaphore
 (
   lpSemaphoreAttributes: LPVOID;
@@ -1950,7 +1955,7 @@ end;
 *)
 
 
-(* Dxbx note : Disabled, too high level.
+(* Dxbx note : Disabled, too high level. See xboxkrnl_NtReleaseSemaphore
 function XTL_EmuReleaseSemaphore
 (
   hSemaphore: HANDLE;
@@ -2191,16 +2196,16 @@ exports
   XTL_EmuXapiInitAutoPowerDown,
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
-  XTL_EmuXapiValidateDiskPartitionEx,
+//  XTL_EmuXapiValidateDiskPartitionEx,
   XTL_EmuXFormatUtilityDrive,
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,
   XTL_EmuXGetDeviceChanges,
   XTL_EmuXGetDevices,
-  XTL_EmuXGetFileCacheSize,
+//  XTL_EmuXGetFileCacheSize,
   XTL_EmuXGetLaunchInfo,
   XTL_EmuXGetSectionHandleA,
-  XTL_EmuXGetSectionSize,
+//  XTL_EmuXGetSectionSize,
   XTL_EmuXInitDevices name PatchPrefix + '_USBD_Init@8', // Cxbx incorrectly calls this XInitDevices
   XTL_EmuXInputClose,
   XTL_EmuXInputGetCapabilities,

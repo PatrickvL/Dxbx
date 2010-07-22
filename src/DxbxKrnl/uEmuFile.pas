@@ -24,11 +24,12 @@ interface
 uses
   // Delphi
   Windows, // CreateDirectory
-  FileCtrl, // ForceDirectories
+  SysUtils, // ForceDirectories, ExtractFilePath
   // Jedi Win32API
   JwaWinType,
   JwaWinNT,
   JwaNTStatus,
+  JwaNative,
   // Dxbx
   uTypes,
   uLog,
@@ -40,28 +41,48 @@ const
   EMU_MAX_HANDLES = 1024;
 
 const
-  // D: is DVD Player
-  DriveD = '\??\D:';
-  DeviceD = '\Device\Cdrom0';
-  // T: is Title persistent data region
-  DriveT = '\??\T:';
-  DeviceT = '\Device\Harddisk0\Partition2';
-  // U: is User persistent data region
-  DriveU = '\??\U:';
-  DeviceU = '\Device\Harddisk0\Partition1';
-  // Z: is Title utility data region
-  DriveZ = '\??\Z:';
-  DeviceZ = '\Device\Harddisk0\Partition6';
+  DriveSerial: AnsiString = '\??\serial:';
+  DriveCdRom0: AnsiString = '\??\CdRom0:'; // CD-ROM device
+  DriveMbfs: AnsiString = '\??\mbfs:'; // media board's file system area device
+  DriveMbcom: AnsiString = '\??\mbcom:'; // media board's communication area device
+  DriveMbrom: AnsiString = '\??\mbrom:'; // media board's boot ROM device
 
-  // TODO -oDxbx find out what the original partitions are and apply that above
-  // PS: Boxplorer shows this mapping :
-  // C: \Device\Harddisk0\Partition2
-  // D: \Device\Cdrom0
-  // E: \Device\Harddisk0\Partition1
-  // F: \Device\Harddisk0\Partition6
-  // X: \Device\Harddisk0\Partition3
-  // Y: \Device\Harddisk0\Partition4
-  // Z: \Device\Harddisk0\Partition5
+  DriveC: AnsiString = '\??\C:'; // C: is HDD0
+  DriveD: AnsiString = '\??\D:'; // D: is DVD Player
+  DriveE: AnsiString = '\??\E:';
+  DriveF: AnsiString = '\??\F:';
+  DriveT: AnsiString = '\??\T:'; // T: is Title persistent data region
+  DriveU: AnsiString = '\??\U:'; // U: is User persistent data region
+  DriveV: AnsiString = '\??\V:';
+  DriveW: AnsiString = '\??\W:';
+  DriveX: AnsiString = '\??\X:';
+  DriveY: AnsiString = '\??\Y:'; // Y: is Dashboard volume (contains "xboxdash.xbe" and "XDASH" folder + contents)
+  DriveZ: AnsiString = '\??\Z:'; // Z: is Title utility data region
+
+  DeviceCdrom0: AnsiString = '\Device\Cdrom0';
+  DeviceHarddisk0: AnsiString = '\Device\Harddisk0';
+
+  DeviceHarddisk0Partition0: AnsiString = '\Device\Harddisk0\Partition0\'; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
+  DeviceHarddisk0Partition1: AnsiString = '\Device\Harddisk0\Partition1\'; // Data partition. Contains TDATA and UDATA folders.
+  DeviceHarddisk0Partition2: AnsiString = '\Device\Harddisk0\Partition2\'; // Shell partition. Contains Dashboard (cpxdash.xbe, evoxdash.xbe or xboxdash.xbe)
+  DeviceHarddisk0Partition3: AnsiString = '\Device\Harddisk0\Partition3\'; // First cache partition. Contains cache data (from here up to largest number)
+  DeviceHarddisk0Partition4: AnsiString = '\Device\Harddisk0\Partition4\';
+  DeviceHarddisk0Partition5: AnsiString = '\Device\Harddisk0\Partition5\';
+  DeviceHarddisk0Partition6: AnsiString = '\Device\Harddisk0\Partition6\';
+  DeviceHarddisk0Partition7: AnsiString = '\Device\Harddisk0\Partition7\';
+  DeviceHarddisk0Partition8: AnsiString = '\Device\Harddisk0\Partition8\';
+  DeviceHarddisk0Partition9: AnsiString = '\Device\Harddisk0\Partition9\';
+  DeviceHarddisk0Partition10: AnsiString = '\Device\Harddisk0\Partition10\';
+  DeviceHarddisk0Partition11: AnsiString = '\Device\Harddisk0\Partition11\';
+  DeviceHarddisk0Partition12: AnsiString = '\Device\Harddisk0\Partition12\';
+  DeviceHarddisk0Partition13: AnsiString = '\Device\Harddisk0\Partition13\';
+  DeviceHarddisk0Partition14: AnsiString = '\Device\Harddisk0\Partition14\';
+  DeviceHarddisk0Partition15: AnsiString = '\Device\Harddisk0\Partition15\';
+  DeviceHarddisk0Partition16: AnsiString = '\Device\Harddisk0\Partition16\';
+  DeviceHarddisk0Partition17: AnsiString = '\Device\Harddisk0\Partition17\';
+  DeviceHarddisk0Partition18: AnsiString = '\Device\Harddisk0\Partition18\';
+  DeviceHarddisk0Partition19: AnsiString = '\Device\Harddisk0\Partition19\';
+  DeviceHarddisk0Partition20: AnsiString = '\Device\Harddisk0\Partition20\'; // 20 = Largest possible partition number
 
 type
   TEmuNtObject = class; // forward
@@ -88,7 +109,7 @@ type
     Name: PWideChar; // Object name (Unicode, because we handle after-conversion strings)
     NameLength: ULONG;
     PermanentFlag: Bool; // Permanent status
-    destructor Destroy; override; // Not public, so it can't be called directly
+    destructor Destroy; override; // Shouln't be called directly
   public
     constructor Create; virtual;
 
@@ -121,25 +142,29 @@ type
   // Emulated handle to symbolic link object
   TEmuNtSymbolicLinkObject = class(TEmuNtObject)
   protected
-    destructor Destroy; override; // Not public, so it can't be called directly
+    destructor Destroy; override; // Shouln't be called directly
   public
-    SymbolicLinkName, DeviceName: AnsiString;
-    RootDirectory: Handle;
-    function ReturnLength: ULONG;
+    DriveLetter: AnsiChar;
+    SymbolicLinkName: AnsiString;
+    XboxFullPath: AnsiString;
+    NativePath: string;
+    RootDirectoryHandle: Handle;
 
-    function Init(aSymbolicLinkName, aDeviceName: AnsiString): NTSTATUS;
+    function Init(aSymbolicLinkName, aFullPath: AnsiString): NTSTATUS;
   end;
 
 function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): Boolean; inline
 function HandleToEmuHandle(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
 function EmuHandleToHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 
+function SymbolicLinkToDriveLetter(aSymbolicLinkName: AnsiString): AnsiChar;
 function FindNtSymbolicLinkObjectByVolumeLetter(const aVolumeLetter: AnsiChar): TEmuNtSymbolicLinkObject;
 function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: AnsiString): TEmuNtSymbolicLinkObject;
 function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNtSymbolicLinkObject;
 
-function DxbxCreateSymbolicLink(SymbolicLinkName, DeviceName: AnsiString): NTSTATUS;
-function DxbxAssignDeviceToPath(DeviceName: AnsiString; RootDirectory: string): Handle;
+function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string): Boolean;
+function DxbxGetDeviceNativeRootHandle(XboxFullPath: AnsiString): Handle;
+function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATUS;
 
 implementation
 
@@ -219,7 +244,9 @@ end;
 
 destructor TEmuNtObject.Destroy;
 begin
-  Assert(False, 'May not be destroyed directly!');
+  Assert(RefCount <= 0);
+
+  inherited Destroy;
 end;
 
 function TEmuNtObject.NewHandle: HANDLE;
@@ -231,7 +258,7 @@ function TEmuNtObject.NtClose(): NTSTATUS;
 begin
   Dec(RefCount);
   if RefCount <= 0 then
-    inherited Destroy;
+    Destroy;
 
   Result := STATUS_SUCCESS;
 end;
@@ -247,24 +274,49 @@ end;
 var
   NtSymbolicLinkObjects: array['A'..'Z'] of TEmuNtSymbolicLinkObject;
 
+function SymbolicLinkToDriveLetter(aSymbolicLinkName: AnsiString): AnsiChar;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  // SymbolicLinkName must look like this : "\??\D:"
+  if  (Length(aSymbolicLinkName) = 6)
+  and (aSymbolicLinkName[1] = '\')
+  and (aSymbolicLinkName[2] = '?')
+  and (aSymbolicLinkName[3] = '?')
+  and (aSymbolicLinkName[4] = '\')
+  and (aSymbolicLinkName[6] = ':') then
+  begin
+    Result := aSymbolicLinkName[5];
+    case Result of
+      'A'..'Z':
+        Exit;
+      'a'..'z':
+      begin
+        Result := AnsiChar(Ord(Result) + Ord('A') - Ord('a'));
+        Exit;
+      end;
+    end;
+  end;
+
+  Result := #0;
+end;
+
 function FindNtSymbolicLinkObjectByVolumeLetter(const aVolumeLetter: AnsiChar): TEmuNtSymbolicLinkObject;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  if aVolumeLetter in ['A'..'Z'] then
-    Result := NtSymbolicLinkObjects[aVolumeLetter]
+  case aVolumeLetter of
+    'A'..'Z':
+      Result := NtSymbolicLinkObjects[aVolumeLetter];
+    'a'..'z':
+      Result := NtSymbolicLinkObjects[AnsiChar(Ord(aVolumeLetter) + Ord('A') - Ord('a'))];
   else
     Result := nil;
+  end;
 end;
 
 function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: AnsiString): TEmuNtSymbolicLinkObject;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
-  // SymbolicLinkName must look like this : "\??\D:"
-  // For now, do a simple input check :
-  if Length(aSymbolicLinkName) = 6 then
-    Result := FindNtSymbolicLinkObjectByVolumeLetter(aSymbolicLinkName[5])
-  else
-    Result := nil;
+  Result := FindNtSymbolicLinkObjectByVolumeLetter(SymbolicLinkToDriveLetter(aSymbolicLinkName));
 end;
 
 function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNtSymbolicLinkObject;
@@ -275,14 +327,14 @@ begin
   for VolumeLetter := 'A' to 'Z' do
   begin
     Result := NtSymbolicLinkObjects[VolumeLetter];
-    if Assigned(Result) and StartsWithString(aDeviceName, Result.DeviceName) then
+    if Assigned(Result) and StartsWithText(aDeviceName, Result.XboxFullPath) then
       Exit;
   end;
 
   Result := nil;
 end;
 
-function DxbxCreateSymbolicLink(SymbolicLinkName, DeviceName: AnsiString): NTSTATUS;
+function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATUS;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
@@ -293,77 +345,143 @@ begin
   else
   begin
     EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject.Create;
-    Result := EmuNtSymbolicLinkObject.Init(SymbolicLinkName, DeviceName);
+    Result := EmuNtSymbolicLinkObject.Init(SymbolicLinkName, FullPath);
     if Result <> STATUS_SUCCESS then
       EmuNtSymbolicLinkObject.NtClose;
   end;
 end;
 
 var
-  Devices: array of record DeviceName: AnsiString; RootDirectory: Handle; end;
+  Devices: array of record XboxFullPath: AnsiString; NativePath: string; NativeRootHandle: Handle; end;
 
-function DxbxAssignDeviceToPath(DeviceName: AnsiString; RootDirectory: string): Handle;
+function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string): Boolean;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   i: Integer;
 begin
-  ForceDirectories(RootDirectory);
+  Result := ForceDirectories(ExtractFilePath(NativePath));
+  if Result then
+  begin
+    i := Length(Devices);
+    SetLength(Devices, i + 1);
 
-  Result := CreateFile(PChar(RootDirectory), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, HNULL);
-  if Result = INVALID_HANDLE_VALUE then
-    DxbxKrnlCleanup('Could not map ' + string(DeviceName))
-  else
-    DbgPrintf('EmuMain : Mapped "%s" to "%s"', [DeviceName, RootDirectory]);
+    Devices[i].XboxFullPath := XboxFullPath;
+    Devices[i].NativePath := NativePath;
+  end;
+end;
 
-  i := Length(Devices);
-  SetLength(Devices, i + 1);
+function DxbxGetDeviceNativeRootHandle(XboxFullPath: AnsiString): Handle;
+var
+  i: Integer;
+begin
+  for i := 0 to Length(Devices) - 1 do
+  begin
+    if StartsWithText(XboxFullPath, Devices[i].XboxFullPath) then
+    begin
+      // Not all that nice; get a handle to the native folder :
+      if Devices[i].NativeRootHandle = 0 then
+        Devices[i].NativeRootHandle := CreateFile(PChar(Devices[i].NativePath),
+          GENERIC_READ,
+          FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE,
+          NULL,
+          OPEN_EXISTING,
+          FILE_FLAG_BACKUP_SEMANTICS,
+          HNULL);
 
-  Devices[i].DeviceName := DeviceName;
-  Devices[i].RootDirectory := Result;
+      Result := Devices[i].NativeRootHandle;
+      Exit;
+    end;
+  end;
+
+  Result := INVALID_HANDLE_VALUE;
 end;
 
 //
 
 destructor TEmuNtSymbolicLinkObject.Destroy;
 begin
-  NtSymbolicLinkObjects[SymbolicLinkName[5]] := nil;
+  if DriveLetter in ['A'..'Z'] then
+    NtSymbolicLinkObjects[DriveLetter] := nil;
+
+  if RootDirectoryHandle <> INVALID_HANDLE_VALUE then
+    JwaNative.NtClose(RootDirectoryHandle);
 
   inherited Destroy;
 end;
 
-function TEmuNtSymbolicLinkObject.ReturnLength: ULONG;
-begin
-  Result := Length(DeviceName);
-end;
-
-function TEmuNtSymbolicLinkObject.Init(aSymbolicLinkName, aDeviceName: AnsiString): NTSTATUS;
+function TEmuNtSymbolicLinkObject.Init(aSymbolicLinkName, aFullPath: AnsiString): NTSTATUS;
 var
+  IsNativePath: Boolean;
   i: Integer;
-  RootDirectory: Handle;
+  ExtraPath: string;
+  DeviceIndex: Integer;
 begin
   Result := STATUS_OBJECT_NAME_INVALID;
-  if (Length(aSymbolicLinkName) = 6) and (aSymbolicLinkName[5] in ['A'..'Z']) then
+  DriveLetter := SymbolicLinkToDriveLetter(aSymbolicLinkName);
+  if DriveLetter in ['A'..'Z'] then
   begin
     Result := STATUS_OBJECT_NAME_COLLISION;
-    if NtSymbolicLinkObjects[aSymbolicLinkName[5]] = nil then
+    if FindNtSymbolicLinkObjectByVolumeLetter(DriveLetter) = nil then
     begin
       // Look up the partition in the list of pre-registered devices :
       Result := STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
-      RootDirectory := 0;
-      for i := 0 to Length(Devices) - 1 do
-        if Devices[i].DeviceName = aDeviceName then
-        begin
-          RootDirectory := Devices[i].RootDirectory;
-          Break;
-        end;
 
-      if RootDirectory > 0 then
+      // Make a distinction between Xbox paths (starting with '\Device'...) and Native paths :
+      IsNativePath := (aFullPath[1] <> '\');
+      if IsNativePath then
+        DeviceIndex := 0
+      else
+      begin
+        DeviceIndex := -1;
+        for i := 0 to Length(Devices) - 1 do
+          if StartsWithText(aFullPath, Devices[i].XboxFullPath) then
+          begin
+            DeviceIndex := i;
+            Break;
+          end;
+      end;
+
+      if DeviceIndex >= 0 then
       begin
         Result := STATUS_SUCCESS;
         Self.SymbolicLinkName := aSymbolicLinkName;
-        Self.DeviceName := aDeviceName;
-        Self.RootDirectory := RootDirectory;
-        NtSymbolicLinkObjects[aSymbolicLinkName[5]] := Self;
+        Self.XboxFullPath := aFullPath; // TODO : What path do we remember in IsNativePath mode?
+        if IsNativePath then
+        begin
+          Self.NativePath := '';
+          ExtraPath := aFullPath;
+        end
+        else
+        begin
+          Self.NativePath := Devices[DeviceIndex].NativePath;
+          // Handle the case where a sub folder of the partition is mounted (instead of it's root) :
+          ExtraPath := Copy(aFullPath, Length(Devices[i].XboxFullPath) + 1, MaxInt);
+        end;
+
+        if ExtraPath <> '' then
+        begin
+          Self.NativePath := Self.NativePath + ExtraPath;
+          ForceDirectories(Self.NativePath);
+        end;
+
+        Self.RootDirectoryHandle := CreateFile(PChar(Self.NativePath),
+          GENERIC_READ,
+          FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE,
+          NULL,
+          OPEN_EXISTING,
+          FILE_FLAG_BACKUP_SEMANTICS,
+          HNULL);
+
+        if Self.RootDirectoryHandle = INVALID_HANDLE_VALUE then
+        begin
+          Result := STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
+          DxbxKrnlCleanup('Could not map ' + string(NativePath));
+        end
+        else
+        begin
+          NtSymbolicLinkObjects[DriveLetter] := Self;
+          DbgPrintf('EmuMain : Linked "%s" to "%s" (residing at "%s")', [aSymbolicLinkName, aFullPath, NativePath]);
+        end;
       end;
     end;
   end;

@@ -250,6 +250,7 @@ const
 
 var
   DxbxBasePath: string;
+  DxbxBasePathHandle: Handle;
 
 implementation
 
