@@ -209,13 +209,13 @@ type SHARE_ACCESS = packed record
   end; // packed size = 28
   PSHARE_ACCESS = ^SHARE_ACCESS;
 
-var {064}xboxkrnl_IoCompletionObjectType: POBJECT_TYPE = NULL;
+var {064}xboxkrnl_IoCompletionObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
-var {070}xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL;
+var {070}xboxkrnl_IoDeviceObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
-var {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL;
+var {071}xboxkrnl_IoFileObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
 // Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 function {059} xboxkrnl_IoAllocateIrp(
