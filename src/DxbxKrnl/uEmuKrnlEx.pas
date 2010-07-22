@@ -41,7 +41,9 @@ uses
   uEmuFile,
   uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl;
+  uEmuKrnlNt,
+  uDxbxKrnl,
+  uDxbxUtils;
 
 var
   {016}xboxkrnl_ExEventObjectType: POBJECT_TYPE = NULL;
@@ -91,15 +93,15 @@ function {023} xboxkrnl_ExQueryPoolBlockSize(
   ): SIZE_T; stdcall;
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
   ValueIndex: DWORD;
-  Type_: PDWORD; // out
-  Value: PUCHAR; // out
+  Type_: PDWORD; // OUT
+  Value: PUCHAR; // OUT
   ValueLength: SIZE_T;
-  ResultLength: PSIZE_T // out, OPTIONAL
+  ResultLength: PSIZE_T // OUT, OPTIONAL
   ): NTSTATUS; stdcall;
 function {025} xboxkrnl_ExReadWriteRefurbInfo(
-  Arg1: PXBOX_REFURB_INFO;
-  Arg2Size: DWORD;
-  Arg3: LONGBOOL
+  pRefurbInfo: PXBOX_REFURB_INFO; // OUT
+  dwBufferSize: ULONG;
+  aIsWriteMode: _BOOLEAN
   ): NTSTATUS; stdcall;
 procedure {026} xboxkrnl_ExRaiseException(
   ExceptionRecord: PEXCEPTION_RECORD
@@ -292,10 +294,10 @@ end;
 function {024} xboxkrnl_ExQueryNonVolatileSetting
 (
   ValueIndex: DWORD;
-  Type_: PDWORD; // out
-  Value: PUCHAR; // out
+  Type_: PDWORD; // OUT
+  Value: PUCHAR; // OUT
   ValueLength: SIZE_T;
-  ResultLength: PSIZE_T // out, OPTIONAL
+  ResultLength: PSIZE_T // OUT, OPTIONAL
 ): NTSTATUS; stdcall;
 // Source:OpenXDK  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -411,14 +413,74 @@ begin
 end;
 
 function {025} xboxkrnl_ExReadWriteRefurbInfo(
-  Arg1: PXBOX_REFURB_INFO;
-  Arg2Size: DWORD;
-  Arg3: LONGBOOL
+  pRefurbInfo: PXBOX_REFURB_INFO; // OUT
+  dwBufferSize: ULONG;
+  aIsWriteMode: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Source:XBMC - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
+var
+  FileName: _STRING;
+  ObjectAttributes: OBJECT_ATTRIBUTES;
+  IoStatusBlock: IO_STATUS_BLOCK;
+  ConfigPartitionHandle: Handle;
+  RefurbInfoCopy: XBOX_REFURB_INFO;
+  ByteOffset: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('ExReadWriteRefurbInfo');
+
+  DbgPrintf('EmuKrnl : ExReadWriteRefurbInfo' +
+         #13#10'(' +
+         #13#10'   pRefurbInfo         : 0x%.08X' +
+         #13#10'   dwBufferSize        : 0x%.08X' +
+         #13#10'   aIsWriteMode        : 0x%.08X' +
+         #13#10');',
+         [pRefurbInfo, dwBufferSize, aIsWriteMode]);
+
+  if Assigned(pRefurbInfo) then
+  begin
+    if dwBufferSize <> SizeOf(XBOX_REFURB_INFO) then
+      Result := STATUS_INVALID_PARAMETER
+    else
+    begin
+      // Open partition 0 directly :
+      RtlInitAnsiString(@FileName, PCSZ(PAnsiChar(DeviceHarddisk0Partition0)));
+      InitializeObjectAttributes(@ObjectAttributes, @FileName, OBJ_CASE_INSENSITIVE, 0, NULL);
+      Result := xboxkrnl_NtOpenFile(
+                @ConfigPartitionHandle,
+                GENERIC_READ or iif(aIsWriteMode, GENERIC_WRITE, 0) or SYNCHRONIZE,
+                @ObjectAttributes,
+                @IoStatusBlock,
+                FILE_SHARE_READ or FILE_SHARE_WRITE,
+                FILE_SYNCHRONOUS_IO_ALERT);
+
+      if (NT_SUCCESS(Result)) then
+      begin
+        ByteOffset.QuadPart := XBOX_REFURB_INFO_SECTOR_INDEX * XBOX_HD_SECTOR_SIZE;
+        if aIsWriteMode then
+        begin
+          RefurbInfoCopy := pRefurbInfo^;
+          RefurbInfoCopy.Signature_ := XBOX_REFURB_INFO_SIGNATURE;
+          Result := xboxkrnl_NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, @IoStatusBlock, @RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, @ByteOffset);
+        end
+        else
+        begin
+          Result := xboxkrnl_NtReadFile(ConfigPartitionHandle, 0, NULL, NULL, @IoStatusBlock, @RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, @ByteOffset);
+          if (NT_SUCCESS(Result)) then
+          begin
+            if RefurbInfoCopy.Signature_ = XBOX_REFURB_INFO_SIGNATURE then
+              // No signature - clear output buffer :
+              ZeroMemory(pRefurbInfo, SizeOf(XBOX_REFURB_INFO))
+            else
+              pRefurbInfo^ := RefurbInfoCopy;
+          end;
+        end;
+        NtClose(ConfigPartitionHandle);
+      end;
+    end;
+  end
+  else
+    Result := STATUS_UNSUCCESSFUL; // This may never happen!
+
   EmuSwapFS(fsXbox);
 end;
 

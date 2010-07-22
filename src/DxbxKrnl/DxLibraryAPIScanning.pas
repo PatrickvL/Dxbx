@@ -128,23 +128,23 @@ type
     function IsAddressWithinCodeRange(const aAddress: TCodePointer): Boolean;
     function IsAddressWithinScanRange(const aAddress: TCodePointer): Boolean;
     function GetReferencedSymbolAddress(const aStartingAddress: PByte; const aSymbolReference: PStoredSymbolReference): TCodePointer;
-    procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+    procedure DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
     procedure TestAddressUsingPatternTrie(var aTestAddress: PByte; const DoForwardScan: Boolean = True);
     procedure DetermineFinalLocations;
     procedure DetermineSpecialSymbols;
-    procedure ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBE_HEADER);
+    procedure ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBEIMAGE_HEADER);
   public
     LibraryVersionsToScan: TLibraryVersionFlags;
     constructor Create;
     destructor Destroy; override;
 
-    procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+    procedure DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
 
     procedure Clear;
 
     function RegisterSpecificFunctionLocation(const aFunctionName: string; const aAddress: PByte): TSymbolInformation;
 
-    class function CacheFileName(const pXbeHeader: PXBE_HEADER): string;
+    class function CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
     function LoadSymbolsFromCache(const aCacheFile: string): Boolean;
     procedure SaveSymbolsToCache(const aCacheFile: string);
   end;
@@ -891,7 +891,7 @@ begin
   Inc({var}aTestAddress);
 end; // TestAddressUsingPatternTrie
 
-procedure TSymbolManager.ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBE_HEADER);
+procedure TSymbolManager.ScanMemoryRangeForLibraryPatterns(const pXbeHeader: PXBEIMAGE_HEADER);
 var
   i: DWord;
   Section: PXBE_SECTIONHEADER;
@@ -1070,7 +1070,7 @@ begin
   MyAddressesPotentiallyContainingCode.Size := 0;
 end; // ScanMemoryRangeForLibraryPatterns
 
-procedure TSymbolManager.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+procedure TSymbolManager.DetectVersionedXboxLibraries(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
 var
   CurrentXbeLibraryVersion: PXBE_LIBRARYVERSION;
   CurrentLibName: string;
@@ -1550,7 +1550,7 @@ begin
   end;
 end; // DetermineSpecialSymbols
 
-procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBE_HEADER);
+procedure TSymbolManager.DxbxScanForLibraryAPIs(const pLibraryVersion: PXBE_LIBRARYVERSION; const pXbeHeader: PXBEIMAGE_HEADER);
 var
   ResourceStream: TResourceStream;
   CacheFileNameStr: string;
@@ -1603,7 +1603,7 @@ begin
 
 end; // DxbxScanForLibraryAPIs
 
-class function TSymbolManager.CacheFileName(const pXbeHeader: PXBE_HEADER): string;
+class function TSymbolManager.CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
 begin
   CRC32Init();
   ReinitXbeImageHeader;

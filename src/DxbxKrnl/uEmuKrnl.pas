@@ -59,6 +59,33 @@ const
   VIDEO_MEMORY = $F0040000;
   VIDEO_LIMIT = VIDEO_MEMORY + (640 * 480 * 4);
 
+  XBOX_HD_SECTOR_SIZE           = 512;
+
+  XBOX_BOOT_SECTOR_INDEX        = 0;
+  XBOX_REFURB_INFO_SECTOR_INDEX = 3;
+  XBOX_CACHE_DB_SECTOR_INDEX    = 4;
+  XBOX_CONFIG_SECTOR_INDEX      = 8;
+  XBOX_NUM_CONFIG_SECTORS       = 8;
+
+  XBOX_REFURB_INFO_SIGNATURE    = 'RFRB';
+
+  XBOX_CONFIG_DATA_SIZE         = SizeOf(PXBOX_CONFIG_SECTOR(nil).Data);
+  XBOX_CONFIG_SECTOR_BEGIN_SIGNATURE = $79132568;
+  XBOX_CONFIG_SECTOR_END_SIGNATURE   = $AA550000;
+  XBOX_CONFIG_VERSION                = $00000001;
+  XBOX_CONFIG_SECTOR_COUNT           = $00000001;
+
+  XDISK_SECTOR_SIZE             = XBOX_HD_SECTOR_SIZE;
+
+  XDISK_UNPARTITIONED_SECTORS   = 1024; // Total number of reserved sectors (for XBOX_NUM_CONFIG_SECTORS and more?)
+  XDISK_SHELL_PARTITION_SECTORS = 1024000; // Number of sectors in shell partition (number 2)
+  XDISK_CACHE_PARTITION_SECTORS = 1536000; // Number of sectors in cache partition (number 3 and upwards)
+
+  XDISK_DATA_PARTITION          = 1;
+  XDISK_SHELL_PARTITION         = 2;
+  XDISK_FIRST_CACHE_PARTITION   = 3;
+  XDISK_F_PARTITION             = 6;
+
   // Global XBOX NT Definitions
   DELETE = $00010000;
   SYNCHRONIZE = $00100000;
@@ -153,8 +180,6 @@ const
 
 type
   Unknown = INT_PTR; // generic 32 bit argument type
-  dtU32 = Unknown;
-  dtBLOB = Unknown;
 
 function Unimplemented(const aAPI: string): NTSTATUS;
 
@@ -192,12 +217,12 @@ function {051} xboxkrnl_InterlockedCompareExchange(
 function {052} xboxkrnl_InterlockedDecrement(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Addend: PLONG // out, volatile
+  Addend: PLONG // OUT, volatile
   ): LONG; register;
 function {053} xboxkrnl_InterlockedIncrement(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  Addend: PLONG // out, volatile
+  Addend: PLONG // OUT, volatile
   ): LONG; register;
 function {054} xboxkrnl_InterlockedExchange(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
@@ -336,7 +361,7 @@ end;
 function {052} xboxkrnl_InterlockedDecrement(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  {1 ECX}Addend: PLONG // out, volatile
+  {1 ECX}Addend: PLONG // OUT, volatile
   ): LONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
@@ -349,7 +374,7 @@ end;
 function {053} xboxkrnl_InterlockedIncrement(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-  {1 ECX}Addend: PLONG // out, volatile
+  {1 ECX}Addend: PLONG // OUT, volatile
   ): LONG; register; // fastcall simulation - See Translation guide
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin

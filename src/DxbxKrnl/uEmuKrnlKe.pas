@@ -283,9 +283,10 @@ begin
       [Ord(WaitMode), Alertable, QuadPart(Interval)]);
 {$ENDIF}
 
-  //  ret := NtDelayExecution(Alertable, Interval);
+   // Dxbx note : The Interval is expressed in milliseconds, multiplied by -10000 :
+   ret := NtDelayExecution(Alertable, Interval);
   // TODO -oDxbx : Find out why NtDelayExecution causes long delays, disable it for now :
-  ret := STATUS_SUCCESS;
+//  ret := STATUS_SUCCESS;
 
   EmuSwapFS(fsXbox);
   Result := ret;
@@ -544,6 +545,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+const
+  XBOX_PERFORMANCE_FREQUENCY = $337F98; // = 3.375000 Mhz;
+
+var
+  NativePerformanceCounter: LARGE_INTEGER;
+  NativePerformanceFrequency: LARGE_INTEGER;
+
 function xboxkrnl_KeQueryPerformanceCounter(
   ): _LARGE_INTEGER; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -558,8 +566,17 @@ begin
   DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 {$ENDIF}
 
+  if NativePerformanceFrequency.QuadPart = 0 then
+  begin
+    JwaNative.NtQueryPerformanceCounter(@NativePerformanceCounter, @NativePerformanceFrequency);
+  end;
+
   JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency);
-  // TODO -oDxbx : We should probably appy a conversion factor here, to fake Xbox1-like increment-speed behaviour
+
+  // Re-base the performance counter to increase accuracy of the following conversion :
+  PerformanceCounter.QuadPart := PerformanceCounter.QuadPart - NativePerformanceCounter.QuadPart;
+  // We appy a conversion factor here, to fake Xbox1-like increment-speed behaviour :
+  PerformanceCounter.QuadPart := PerformanceCounter.QuadPart * XBOX_PERFORMANCE_FREQUENCY div NativePerformanceFrequency.QuadPart;
 
   EmuSwapFS(fsXbox);
 
@@ -578,11 +595,9 @@ begin
   DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency();');
 {$ENDIF}
 
-  // Xbox Performance Counter Frequency := 337F98h
-  JwaWinBase.QueryPerformanceFrequency({var}PerformanceFrequency);
-  // TODO -oDxbx : We should probably return the real Xbox1 frequency here,
+  // We should probably return the real Xbox1 frequency here,
   // to make subsequent calculations behave the same as on the real Xbox1 :
-  // PerformanceFrequency.QuadPart := $337F98;
+  PerformanceFrequency.QuadPart := XBOX_PERFORMANCE_FREQUENCY;
 
   EmuSwapFS(fsXbox);
 

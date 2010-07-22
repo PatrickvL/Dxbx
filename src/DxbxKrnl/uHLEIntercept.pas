@@ -39,16 +39,16 @@ uses
   // Dxbx
   uXboxLibraryUtils;
 
-procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
+procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBEIMAGE_HEADER);
 procedure EmuInstallWrapper(FunctionAddr: PByte; WrapperAddr: PVOID); inline;
-procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
+procedure EmuInstallWrappers(const pXbeHeader: PXBEIMAGE_HEADER);
 
 implementation
 
 uses
   DxLibraryAPIScanning;
 
-procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBE_HEADER);
+procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBEIMAGE_HEADER);
  begin
   // initialize openxdk emulation (TODO)
   if pLibraryVersion = nil then
@@ -85,7 +85,7 @@ begin
 end;
 
 // install function interception wrappers
-procedure EmuInstallWrappers(const pXbeHeader: PXBE_HEADER);
+procedure EmuInstallWrappers(const pXbeHeader: PXBEIMAGE_HEADER);
 var
   i, j: Integer;
   DetectedSymbol: TSymbolInformation;

@@ -734,7 +734,8 @@ type
   end; {=0x214}
   PLAUNCH_DATA_HEADER = ^LAUNCH_DATA_HEADER;
 
-const PAGE_SIZE=$1000; // *Same as Win2k/XP*
+const PAGE_SHIFT = 12;
+const PAGE_SIZE= 1 shl PAGE_SHIFT; // = 64 Kb, *Same as Win2k/XP*
 
 // ******************************************************************
 // * LAUNCH_DATA_PAGE
@@ -805,8 +806,13 @@ type
 // ******************************************************************
 type
   PKSTART_ROUTINE = procedure(
-    StartContext1: PVOID;
-    StartContext2: PVOID
+    StartContext: PVOID
+    ); stdcall;
+
+type
+  PKSYSTEM_ROUTINE = procedure(
+    StartRoutine: PKSTART_ROUTINE; // OPTIONAL
+    StartContext: PVOID
     ); stdcall;
 
 // ******************************************************************
@@ -1304,7 +1310,7 @@ begin
 //
 type
   _OBJECT_TYPE = record
-    // TODO : FInd out how this struct is defined
+    // TODO : Find out how this struct is defined
   end;
   OBJECT_TYPE = _OBJECT_TYPE;
   POBJECT_TYPE = ^OBJECT_TYPE;
@@ -1314,12 +1320,31 @@ type
 //
 type
   _XBOX_REFURB_INFO = record
+    {union} case Integer of
+    // Dxbx addition to ease access to signature as string[4] :
+    0: ( Signature_: string[4] );
+    1: (
     {0x00}Signature: DWORD;
     {0x04}PowerCycleCount: DWORD;
     {0x08}FirstBootTime: FILETIME;
+    );
   end; {=0x10}
   XBOX_REFURB_INFO = _XBOX_REFURB_INFO;
   PXBOX_REFURB_INFO = ^XBOX_REFURB_INFO;
+
+//
+//  DXBX Addition : FAT32 X-Box config sector
+//
+type _XBOX_CONFIG_SECTOR = record
+    {0x000}SectorBeginSignature: ULONG;
+    {0x004}Version: ULONG;
+    {0x008}SectorCount: ULONG;
+    {0x00C}Data: array[0..492-1] of UCHAR;
+    {0x1F8}Checksum: ULONG;
+    {0x1FC}SectorEndSignature: ULONG;
+end; {=0x200}
+XBOX_CONFIG_SECTOR = _XBOX_CONFIG_SECTOR;
+PXBOX_CONFIG_SECTOR = ^XBOX_CONFIG_SECTOR;
 
 //
 // DXBX Addition : Xbox Interrupt Mode - Source: ReactOS

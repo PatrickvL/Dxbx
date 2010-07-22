@@ -246,7 +246,7 @@ function xboxkrnl_RtlTimeFieldsToTime(
   ): LONGBOOL; stdcall;
 procedure xboxkrnl_RtlTimeToTimeFields(
   Time: PLARGE_INTEGER;
-  TimeFields: PTIME_FIELDS // out
+  TimeFields: PTIME_FIELDS // OUT
   ); stdcall;
 function xboxkrnl_RtlTryEnterCriticalSection(
   CriticalSection: PRTL_CRITICAL_SECTION
@@ -1191,7 +1191,7 @@ end;
 procedure xboxkrnl_RtlTimeToTimeFields
 (
   Time: PLARGE_INTEGER;
-  TimeFields: PTIME_FIELDS // out
+  TimeFields: PTIME_FIELDS // OUT
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin

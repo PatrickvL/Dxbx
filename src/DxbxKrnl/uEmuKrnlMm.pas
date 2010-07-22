@@ -64,7 +64,7 @@ function xboxkrnl_MmAllocateSystemMemory(
 function xboxkrnl_MmClaimGpuInstanceMemory(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_MmCreateKernelStack(
   NumberOfBytes: ULONG;
-  Unknown: ULONG
+  DebuggerThread: _BOOLEAN
   ): PVOID; stdcall;
 procedure xboxkrnl_MmDeleteKernelStack(
   EndAddress: PVOID;
@@ -100,7 +100,7 @@ function xboxkrnl_MmQueryAllocationSize(
   BaseAddress: PVOID
   ): NTSTATUS; stdcall;
 function xboxkrnl_MmQueryStatistics(
-  MemoryStatistics: PMM_STATISTICS // out
+  MemoryStatistics: PMM_STATISTICS // OUT
   ): NTSTATUS; stdcall;
 procedure xboxkrnl_MmSetAddressProtect(
   BaseAddress: PVOID;
@@ -263,7 +263,7 @@ end;
 // Differences from NT: Custom stack size.
 function xboxkrnl_MmCreateKernelStack(
   NumberOfBytes: ULONG;
-  Unknown: ULONG
+  DebuggerThread: _BOOLEAN
   ): PVOID; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -273,13 +273,13 @@ begin
   DbgPrintf('EmuKrnl : MmCreateKernelStack' +
       #13#10'(' +
       #13#10'   NumberOfBytes            : 0x%.08X' +
-      #13#10'   Unknown                  : 0x%.08X' +
+      #13#10'   DebuggerThread           : 0x%.08X' +
       #13#10');',
-      [NumberOfBytes, Unknown]);
+      [NumberOfBytes, DebuggerThread]);
 {$ENDIF}
 
-  if (Unknown <> 0) then
-    EmuWarning('MmCreateKernelStack unknown parameter ignored');
+  if (DebuggerThread <> FALSE) then
+    EmuWarning('MmCreateKernelStack : DebuggerThread ignored');
 
   Result := NULL;
   if (FAILED(JwaNative.NtAllocateVirtualMemory(GetCurrentProcess(), @Result, 0, @NumberOfBytes, MEM_COMMIT, PAGE_READWRITE))) then
@@ -509,7 +509,7 @@ begin
 end;
 
 function xboxkrnl_MmQueryStatistics(
-  MemoryStatistics: PMM_STATISTICS // out
+  MemoryStatistics: PMM_STATISTICS // OUT
   ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var

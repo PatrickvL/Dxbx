@@ -77,7 +77,7 @@ function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boo
 function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: boolean): uint;
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 
-procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: UInt32); {NOPATCH}
+procedure XTL_EmuD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: UInt32); {NOPATCH}
 function XTL_EmuIDirect3D8_CreateDevice(Adapter: UINT; DeviceType: D3DDEVTYPE;
   hFocusWindow: HWND; BehaviorFlags: DWORD;
   pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
@@ -145,7 +145,7 @@ var
   g_dwOverlayH: DWORD = 480;     // Cached Overlay Height
   g_dwOverlayP: DWORD = 640;     // Cached Overlay Pitch
 
-  g_XbeHeader: PXBE_HEADER = NULL;         // XbeHeader
+  g_XbeHeader: PXBEIMAGE_HEADER = NULL;         // XbeHeader
   g_XbeHeaderSize: uint32 = 0;             // XbeHeaderSize
   g_D3DCaps: D3DCAPS8;                     // Direct3D8 Caps
   g_hBgBrush: HBRUSH = 0;                  // Background Brush
@@ -389,7 +389,7 @@ begin
 end;
 
 // Direct3D initialization (called before emulation begins)
-procedure XTL_EmuD3DInit(XbeHeader: PXBE_HEADER; XbeHeaderSize: uint32); {NOPATCH}
+procedure XTL_EmuD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: uint32); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   dwThreadId: DWORD;

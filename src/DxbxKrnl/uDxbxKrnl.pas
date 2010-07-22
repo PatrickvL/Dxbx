@@ -70,7 +70,7 @@ procedure DxbxKrnlInit(
   pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: TDebugMode;
   szDebugFileName: P_char;
-  pXbeHeader: PXBE_HEADER;
+  pXbeHeader: PXBEIMAGE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc); stdcall;
 
@@ -91,7 +91,8 @@ exports
   *)
 
 var
-  g_Xbe_XbePath: string;
+  g_Xbe_XbePath: AnsiString; // The path of the running Xbe, as seen from Windows
+  g_EmuXbePath: AnsiString; // The path of the running Xbe, as seen from Xbox1 (including \Device\Harddisk0\Partition1\)
   g_XboxCPU: DWORD_PTR;
 
 implementation
@@ -103,7 +104,7 @@ procedure DxbxKrnlInit(
   pLibraryVersion: PXBE_LIBRARYVERSION;
   DbgMode: TDebugMode;
   szDebugFileName: P_char;
-  pXbeHeader: PXBE_HEADER;
+  pXbeHeader: PXBEIMAGE_HEADER;
   dwXbeHeaderSize: DWord;
   Entry: TEntryProc);
 // Branch:shogun  Revision:162  Translator:Patrick  Done:100
@@ -265,20 +266,45 @@ begin
 
   // Initialize devices :
   begin
-    g_hCurDir := DxbxAssignDeviceToPath(DeviceD, szBuffer);
     DxbxBasePath := GetDxbxBasePath + '\EmuDisk\';
+    DxbxBasePathHandle := CreateFile(PChar(DxbxBasePath),
+          GENERIC_READ,
+          FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE,
+          NULL,
+          OPEN_EXISTING,
+          FILE_FLAG_BACKUP_SEMANTICS,
+          HNULL);
+
     TitleStr := IntToHex(pCertificate.dwTitleId, 8);
-    DxbxAssignDeviceToPath(DeviceT, DxbxBasePath + 'TDATA\' + TitleStr + '\');
-    DxbxAssignDeviceToPath(DeviceU, DxbxBasePath + 'UDATA\' + TitleStr + '\');
-    DxbxAssignDeviceToPath(DeviceZ, DxbxBasePath + 'ZDATA\' + TitleStr + '\');
+
+    // Games may assume they are running from CdRom :
+    DxbxRegisterDeviceNativePath(DeviceCdrom0, szBuffer);
+
+    // Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, DxbxBasePath + 'Partition0_ConfigData.bin');
+    // The first two partitions are for Data and Shell files, respectively :
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition1, DxbxBasePath + 'Partition1\');
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition2, DxbxBasePath + 'Partition2\');
+    // The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition3, DxbxBasePath + 'Partition3\');
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition4, DxbxBasePath + 'Partition4\');
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition5, DxbxBasePath + 'Partition5\');
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition6, DxbxBasePath + 'Partition6\');
+    DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition7, DxbxBasePath + 'Partition7\');
   end;
 
   // Create default symbolic links :
   begin
-    DxbxCreateSymbolicLink(DriveD, DeviceD);
-    DxbxCreateSymbolicLink(DriveT, DeviceT);
-    DxbxCreateSymbolicLink(DriveU, DeviceU);
-    DxbxCreateSymbolicLink(DriveZ, DeviceZ);
+    DxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
+    DxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + 'TDATA\' + TitleStr + '\'); // Title data to T:
+    DxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + 'UDATA\' + TitleStr + '\'); // User data to U:
+    DxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition2); // Officially unused, but contains Dashboard files
+    DxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6 + 'ZDATA\' + TitleStr + '\'); // Utility data to Z:
+
+    // Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
+    DxbxCreateSymbolicLink(DriveC, szBuffer);
+    g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter('C').RootDirectoryHandle;
+    // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
   end;
 
   // initialize FS segment selector
