@@ -6210,6 +6210,7 @@ function XTL_EmuIDirect3DDevice8_CreateVertexBuffer2
 var
   pD3DVertexBuffer: PX_D3DVertexBuffer;
   hRet: HRESULT;
+  NewLength: UINT;
 begin
   EmuSwapFS(fsWindows);
 
@@ -6221,12 +6222,23 @@ begin
          [Length]);
 {$ENDIF}
 
+  NewLength := Length;
+
+  // DXBX Addition, vertuxbuffer length need to be at least a vertexbuffer length large.
+  // At least 1 vertexbuffer needs to fit in.
+  if (NewLength = DWORD(-1)) or (Length = 0) then
+  begin
+    // TODO -oCXBX: once this is known to be working, remove the warning
+    EmuWarning('Vertex buffer allocation size unknown');
+    NewLength := $2000; // temporarily assign a small buffer, which will be increased later
+  end;
+
   New({PX_D3DVertexBuffer}pD3DVertexBuffer);
 
   hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(
-    Length, 
-    0, 
-    0, 
+    NewLength,
+    0,
+    0,
     D3DPOOL_MANAGED,
     {ppVertexBuffer=}@(pD3DVertexBuffer.Emu.VertexBuffer8)
   );
