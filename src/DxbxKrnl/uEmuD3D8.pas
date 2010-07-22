@@ -4687,7 +4687,7 @@ begin
       begin
         dwSize := EmuCheckAllocationSize(pBase, true);
 
-        if dwSize = DWORD(-1) then
+        if (dwSize = DWORD(-1)) or (dwSize = 0) then
         begin
           // TODO -oCXBX: once this is known to be working, remove the warning
           EmuWarning('Vertex buffer allocation size unknown');
@@ -4697,7 +4697,7 @@ begin
         hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer
         (
           dwSize, 0, 0, D3DPOOL_MANAGED,
-          {ppVertexBuffer=}@(pResource.Emu.VertexBuffer8)
+          {ppVertexBuffer=}@(pVertexBuffer.Emu.VertexBuffer8)
         );
 
         if (FAILED(hRet)) then
