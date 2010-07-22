@@ -46,10 +46,10 @@ uses
   uDxbxUtils;
 
 var
-  {016}xboxkrnl_ExEventObjectType: POBJECT_TYPE = NULL;
-  {022}xboxkrnl_ExMutantObjectType: POBJECT_TYPE = NULL;
-  {030}xboxkrnl_ExSemaphoreObjectType: POBJECT_TYPE = NULL;
-  {031}xboxkrnl_ExTimerObjectType: POBJECT_TYPE = NULL;
+  {016}xboxkrnl_ExEventObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
+  {022}xboxkrnl_ExMutantObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
+  {030}xboxkrnl_ExSemaphoreObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
+  {031}xboxkrnl_ExTimerObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
 
 function {012} xboxkrnl_ExAcquireReadWriteLockExclusive(
   Arg1: DWORD

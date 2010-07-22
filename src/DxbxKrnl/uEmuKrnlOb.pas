@@ -41,7 +41,7 @@ uses
   uDxbxKrnl;
 
 var
-  {240}xboxkrnl_ObDirectoryObjectType: POBJECT_TYPE = NULL;
+  {240}xboxkrnl_ObDirectoryObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
   {245}xboxkrnl_ObpObjectHandleTable: array [0..0] of DWord; // TODO -oDXBX: Determine array size
   {249}xboxkrnl_ObSymbolicLinkObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : Assign TEmuNtSymbolicLinkObject ?
 

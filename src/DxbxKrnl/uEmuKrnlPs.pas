@@ -44,7 +44,7 @@ uses
   uEmu,
   uDxbxDebugUtils;
 
-var {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE;
+var {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
 // Source: OpenXDK - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 function {254} xboxkrnl_PsCreateSystemThread(
