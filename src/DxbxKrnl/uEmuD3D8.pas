@@ -39,6 +39,7 @@ uses
   Math,
   // Jedi Win32API
   JwaWinType,
+  JwaNative,
   // DirectX
   Direct3D, // PD3DCOLOR
   Direct3D8, // D3DDEVTYPE
@@ -56,6 +57,7 @@ uses
   uEmu,
   uEmuAlloc,
   uEmuKrnl,
+  uEmuKrnlKe,
   uEmuXTL,
   uVertexShader,
   uPixelShader,
@@ -884,6 +886,8 @@ begin
   while true do
   begin
     xboxkrnl_KeTickCount := timeGetTime();
+    {ignore result}JwaNative.NtQuerySystemTime(@xboxkrnl_KeSystemTime);
+
     Sleep(1); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
 //    Sleep(1000 div 50{hz}); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
 

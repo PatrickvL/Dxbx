@@ -40,12 +40,11 @@ uses
   uEmuXapi,
   uEmuKrnl,
   uDxbxUtils,
-  uDxbxKrnl,
   uDxbxKrnlUtils;
 
 var
-  {120}xboxkrnl_KeInterruptTime: DWord;
-  {154}xboxkrnl_KeSystemTime: DWord;
+  {120}xboxkrnl_KeInterruptTime: KSYSTEM_TIME;
+  {154}xboxkrnl_KeSystemTime: KSYSTEM_TIME;
   {157}xboxkrnl_KeTimeIncrement: DWord = $2710;
 
 function xboxkrnl_KeAlertResumeThread(
@@ -622,8 +621,10 @@ begin
 
   // TODO -oCXBX: optimize for WinXP if speed ever becomes important here
 
-  // Dxbx note : We use a more direct implementation than Cxbx here :
-  {ignore result}JwaNative.NtQuerySystemTime(CurrentTime);
+  // Dxbx note : We use a more direct implementation than Cxbx here,
+  // which depends on xboxkrnl_KeSystemTime getting updated in EmuUpdateTickCount :
+  CurrentTime.HighPart := xboxkrnl_KeSystemTime.High1Time;
+  CurrentTime.LowPart := xboxkrnl_KeSystemTime.LowPart;
 
   EmuSwapFS(fsXbox);
 end;

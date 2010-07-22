@@ -780,7 +780,7 @@ type
   TIMER_TYPE = _TIMER_TYPE;
 {$ENDIF}
 
-  // ******************************************************************
+// ******************************************************************
 // * KTIMER (Timer Object)
 // ******************************************************************
 type
@@ -1387,6 +1387,17 @@ type
     ThreadId: HANDLE;
     Create: LONGBOOL
     ); stdcall;
+
+//
+// DXBX Addition : System time
+//
+type _KSYSTEM_TIME = record
+    LowPart: ULONG;
+    High1Time: LONG;
+    High2Time: LONG;
+end;
+KSYSTEM_TIME = _KSYSTEM_TIME;
+PKSYSTEM_TIME = ^KSYSTEM_TIME;
 
 implementation
 
