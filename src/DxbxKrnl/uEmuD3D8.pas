@@ -6906,14 +6906,20 @@ begin
     [Value]);
 {$ENDIF}
 
-  if (g_iWireframe = 0) then
-    dwFillMode := EmuXB2PC_D3DFILLMODE(Value)
-  else if (g_iWireframe = 1) then
-    dwFillMode := D3DFILL_WIREFRAME
-  else
-    dwFillMode := D3DFILL_POINT;
+  if ((Value and $FF00) = $1B00) then
+  begin
+    if(g_iWireframe = 0) then
+      dwFillMode := EmuXB2PC_D3DFILLMODE(Value)
+    else
+    begin
+      if(g_iWireframe = 1) then
+        dwFillMode := D3DFILL_WIREFRAME
+      else
+        dwFillMode := D3DFILL_POINT;
+    end;
 
-  IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_FILLMODE, dwFillMode);
+    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_FILLMODE, dwFillMode);
+  end;
 
   EmuSwapFS(fsXbox);
 end;
