@@ -45,7 +45,8 @@ uses
   uEmuKrnl,
   uDxbxKrnl;
 
-var {102}xboxkrnl_MmGlobalData: PVOID;
+var {102}xboxkrnl_MmGlobalData: array [0..8-1] of PVOID = (nil, nil, nil, nil, nil, nil, nil, nil);
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
 
 function xboxkrnl_MmAllocateContiguousMemory(
   NumberOfBytes: ULONG

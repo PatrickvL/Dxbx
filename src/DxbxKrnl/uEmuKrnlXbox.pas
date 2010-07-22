@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uXbe,
   uLog,
   uEmuFS,
   uEmuFile,
@@ -50,15 +51,15 @@ type
   PX_DllVersionInfo = ^X_DllVersionInfo;
 
 var
-  {321}xboxkrnl_XboxEEPROMKey: array [0..16 - 1] of UCHAR; // Source OpenXDK
-  {322}xboxkrnl_XboxHardwareInfo: XBOX_HARDWARE_INFO; // Source OpenXDK
-  {323}xboxkrnl_XboxHDKey: array [0..16 - 1] of UCHAR; // Source OpenXDK
+  {321}xboxkrnl_XboxEEPROMKey: XBOX_KEY_DATA; // TODO -oDxbx : Initialize this
+  {322}xboxkrnl_XboxHardwareInfo: XBOX_HARDWARE_INFO; // Source OpenXDK // TODO -oDxbx : Initialize this
+  {323}xboxkrnl_XboxHDKey: XBOX_KEY_DATA; // TODO -oDxbx : Initialize this
   {324}xboxkrnl_XboxKrnlVersion: X_DllVersionInfo; // Xbox Kernel version (part of kernel thunk table)
   // Source:nkpatcher  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-  {325}xboxkrnl_XboxSignatureKey: array [0..16 - 1] of Byte; // Source OpenXDK
-  {353}xboxkrnl_XboxLANKey: DWord;
-  {354}xboxkrnl_XboxAlternateSignatureKeys: DWord;
+  {325}xboxkrnl_XboxSignatureKey: XBOX_KEY_DATA; // TODO -oDxbx : Initialize this
+  {353}xboxkrnl_XboxLANKey: XBOX_KEY_DATA; // TODO -oDxbx : Initialize this
+  {354}xboxkrnl_XboxAlternateSignatureKeys: array [0..XBEIMAGE_ALTERNATE_TITLE_ID_COUNT-1] of XBOX_KEY_DATA; // TODO -oDxbx : Initialize this
 
 procedure SetKernelVersion(const aBuild: Word);
 function GetKernelVersion: Word;
@@ -83,6 +84,6 @@ end;
 initialization
 
   // Default Dxbx to emulating kernel version 5838 :
-  SetKernelVersion(5838);
+  SetKernelVersion(5838); // TODO -odxbx : Make this configurable
   
 end.

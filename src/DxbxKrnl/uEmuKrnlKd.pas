@@ -22,29 +22,14 @@ unit uEmuKrnlKd;
 interface
 
 uses
-  // Delphi
-  SysUtils,
-  // Jedi Win32API
-  JwaWinType,
-  JwaWinBase,
-  JwaWinNT,
-  JwaNative,
-  JwaNTStatus,
-  // OpenXDK
-  XboxKrnl,
   // Dxbx
-  uLog,
-  uEmuFS,
-  uEmuFile,
-  uEmuXapi,
-  uEmuKrnl,
-  uDxbxKrnl;
+  uTypes;
 
-var {088}xboxkrnl_KdDebuggerEnabled: ByteBool;
-// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:0
+var {088}xboxkrnl_KdDebuggerEnabled: _BOOLEAN = FALSE;
+// Source:?  Branch:Dxbx  Translator:PatrickvL  Done:100
 
-var {089}xboxkrnl_KdDebuggerNotPresent: LONGBOOL;
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:0
+var {089}xboxkrnl_KdDebuggerNotPresent: _BOOLEAN = TRUE;
+// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 
 implementation
 
