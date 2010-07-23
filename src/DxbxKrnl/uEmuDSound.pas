@@ -34,6 +34,7 @@ uses
   , DirectSound
   , DirectMusic
   // Dxbx
+  , uEmuKrnl
   , uTypes
   , uLog
   , uEmu
@@ -1955,7 +1956,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetVolume
 (
-    pThis: PX_CDirectSoundBuffer; 
+    pThis: PX_CDirectSoundBuffer;
     lVolume: LONG
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -1979,6 +1980,20 @@ begin
 
 //    return hRet;
   Result := S_OK;
+end;
+
+function XTL_EmuIDirectSoundBuffer8_SetOutputBuffer
+(
+    pThis: XTL_LPDIRECTSOUND8;
+    pOutputBuffer: XTL_LPDIRECTSOUND8
+): HRESULT; stdcall;
+// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  Result := Unimplemented('KeBoostPriorityThread');
+
+  EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirectSoundBuffer8_SetFrequency
@@ -4229,6 +4244,7 @@ exports
   XTL_EmuIDirectSoundBuffer8_SetRolloffFactor name PatchPrefix + 'IDirectSoundBuffer_SetRolloffFactor',
   XTL_EmuIDirectSoundBuffer8_SetVelocity name PatchPrefix + 'IDirectSoundBuffer_SetVelocity',
   XTL_EmuIDirectSoundBuffer8_SetVolume name PatchPrefix + 'IDirectSoundBuffer_SetVolume',
+  XTL_EmuIDirectSoundBuffer8_SetOutputBuffer name PatchPrefix + 'IDirectSoundBuffer_SetOutputBuffer',
   XTL_EmuIDirectSoundBuffer8_Stop name PatchPrefix + 'IDirectSoundBuffer_Stop',
   XTL_EmuIDirectSoundBuffer8_StopEx name PatchPrefix + 'IDirectSoundBuffer_StopEx',
 
