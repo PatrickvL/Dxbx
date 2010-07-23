@@ -93,7 +93,9 @@ exports
 var
   g_Xbe_XbePath: AnsiString; // The path of the running Xbe, as seen from Windows
   g_EmuXbePath: AnsiString; // The path of the running Xbe, as seen from Xbox1 (including \Device\Harddisk0\Partition1\)
-  g_XboxCPU: DWORD_PTR;
+
+  g_CPUXbox: DWORD_PTR;
+  g_CPUOthers: DWORD_PTR;
 
 implementation
 
@@ -342,8 +344,21 @@ begin
 
   // Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
   // this will better aproximate the environment with regard to multi-threading) :
-  g_XboxCPU := 1; // TODO : Safer to get one bit from GetProcessAffinityMask
-  SetThreadAffinityMask(GetCurrentThreadID(), g_XboxCPU);
+  begin
+    GetProcessAffinityMask(GetCurrentProcess(), {var lpProcessAffinityMask=}g_CPUXbox, {var lpSystemAffinityMask=}g_CPUOthers{ignored});
+    // For the other threads, remove one bit from the processor mask :
+    g_CPUOthers := ((g_CPUXbox - 1) and g_CPUXbox);
+    // Test if there are any other cores available :
+    if g_CPUOthers > 0 then
+      // If so, make sure the Xbox threads run on the core NOT running Xbox code :
+      g_CPUXbox := g_CPUXbox and (not g_CPUOthers)
+    else
+      // Else the other threads must run on the same core as the Xbox code :
+      g_CPUOthers := g_CPUXbox;
+
+    // Make sure Xbox1 code runs on one core :
+    SetThreadAffinityMask(GetCurrentThreadID(), g_CPUXbox);
+  end;
 
   // Xbe entry point
   try

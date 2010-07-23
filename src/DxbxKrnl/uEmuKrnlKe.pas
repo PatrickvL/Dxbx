@@ -182,6 +182,8 @@ var
 
 implementation
 
+const lfUnit = lfCxbx or lfKernel;
+
 function xboxkrnl_KeAlertResumeThread(
   ThreadHandle: HANDLE;
   PreviousSuspendCount: PULONG
@@ -224,13 +226,12 @@ procedure xboxkrnl_KeBugCheck
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeBugCheck' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KeBugCheck' +
       #13#10'(' +
       #13#10'   BugCheckMode      : 0x%.08X' +
       #13#10');',
       [BugCheckMode]);
-{$ENDIF}
 
   // TODO -oCXBX: Investigate XapiFiberStartup maybe?
 
@@ -289,15 +290,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeDelayExecutionThread'+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KeDelayExecutionThread'+
       #13#10'('+
       #13#10'   WaitMode            : 0x%.08X'+
       #13#10'   Alertable           : 0x%.08X'+
       #13#10'   Interval            : 0x%.16X' + // was %I64X
       #13#10');',
       [Ord(WaitMode), Alertable, QuadPart(Interval)]);
-{$ENDIF}
 
    // Dxbx note : The Interval is expressed in milliseconds, multiplied by -10000 :
    ret := NtDelayExecution(Alertable, Interval);
@@ -332,9 +332,12 @@ function xboxkrnl_KeGetCurrentIrql(): KIRQL; stdcall;
 var
   Pcr: PKPCR;
 begin
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeGetCurrentIrql();');
-  EmuSwapFS(fsXbox);
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeGetCurrentIrql();');
+    EmuSwapFS(fsXbox);
+  end;
 
   Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
   Result := Pcr.Irql;
@@ -345,9 +348,12 @@ function xboxkrnl_KeGetCurrentThread(): PKTHREAD; stdcall;
 var
   Pcr: PKPCR;
 begin
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeGetCurrentThread();');
-  EmuSwapFS(fsXbox);
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeGetCurrentThread();');
+    EmuSwapFS(fsXbox);
+  end;
 
   Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
   Result := Pcr.Prcb.CurrentThread;
@@ -381,25 +387,24 @@ procedure xboxkrnl_KeInitializeDpc
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeInitializeDpc' +
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeInitializeDpc' +
       #13#10'(' +
       #13#10'   Dpc                 : 0x%.08X' +
       #13#10'   DeferredRoutine     : 0x%.08X' +
       #13#10'   DeferredContext     : 0x%.08X' +
       #13#10');',
       [Dpc, Addr(DeferredRoutine), DeferredContext]);
-{$ENDIF}
+    EmuSwapFS(fsXbox);
+  end;
 
   // inialize Dpc field values
   Dpc.Number := 0;
   Dpc.DeferredRoutine := DeferredRoutine;
   Dpc.Type_ := CSHORT(Ord({enum KOBJECTS.}DpcObject));
   Dpc.DeferredContext := DeferredContext;
-
-  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_KeInitializeEvent(): NTSTATUS; stdcall;
@@ -453,16 +458,17 @@ procedure xboxkrnl_KeInitializeTimerEx
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeInitializeTimerEx' +
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeInitializeTimerEx' +
       #13#10'(' +
       #13#10'   Timer               : 0x%.08X' +
       #13#10'   Type                : 0x%.08X' +
       #13#10');',
       [Timer, Ord(Type_)]);
-{$ENDIF}
+    EmuSwapFS(fsXbox);
+  end;
 
   Timer.Header.Type_ := UCHAR(Ord(Type_) + 8);
   Timer.Header.Inserted := 0;
@@ -474,8 +480,6 @@ begin
   Timer.Header.WaitListHead.Blink := @(Timer.Header.WaitListHead);
   Timer.DueTime.QuadPart := 0;
   Timer.Period := 0;
-
-  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_KeInsertByKeyDeviceQueue(): NTSTATUS; stdcall;
@@ -566,16 +570,17 @@ function xboxkrnl_KeQueryInterruptTime(): ULONGLONG; stdcall;
 var
   CurrentTime: LARGE_INTEGER;
 begin
-  EmuSwapFS(fsWindows);
-
-  DbgPrintf('EmuKrnl : KeQueryInterruptTime');
+  if MayLog(lfUnit or lfExtreme) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeQueryInterruptTime();');
+    EmuSwapFS(fsXbox);
+  end;
 
   // Dxbx note : We depend on xboxkrnl_KeInterruptTime getting updated in EmuUpdateTickCount :
   CurrentTime.HighPart := xboxkrnl_KeInterruptTime.High1Time;
   CurrentTime.LowPart := xboxkrnl_KeInterruptTime.LowPart;
   Result := CurrentTime.QuadPart;
-
-  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_KeQueryPerformanceCounter(
@@ -588,9 +593,8 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
-{$ENDIF}
+  if MayLog(lfUnit or lfExtreme) then
+    DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 
   JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency{=nil});
 
@@ -610,17 +614,16 @@ function xboxkrnl_KeQueryPerformanceFrequency(
 var
   PerformanceFrequency: LARGE_INTEGER;
 begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency();');
-{$ENDIF}
+  if MayLog(lfUnit or lfExtreme) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency();');
+    EmuSwapFS(fsXbox);
+  end;
 
   // Dxbx note : We return the real Xbox1 frequency here,
   // to make subsequent calculations behave the same as on the real Xbox1 :
   PerformanceFrequency.QuadPart := XBOX_PERFORMANCE_FREQUENCY;
-
-  EmuSwapFS(fsXbox);
 
   Result := _LARGE_INTEGER(PerformanceFrequency);
 end;
@@ -631,15 +634,16 @@ procedure xboxkrnl_KeQuerySystemTime
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeQuerySystemTime'+
+  if MayLog(lfUnit or lfExtreme) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeQuerySystemTime'+
       #13#10'('+
       #13#10'   CurrentTime         : 0x%.08X'+
       #13#10');',
       [CurrentTime]);
-{$ENDIF}
+    EmuSwapFS(fsXbox);
+  end;
 
   // TODO -oCXBX: optimize for WinXP if speed ever becomes important here
 
@@ -647,8 +651,6 @@ begin
   // which depends on xboxkrnl_KeSystemTime getting updated in EmuUpdateTickCount :
   CurrentTime.HighPart := xboxkrnl_KeSystemTime.High1Time;
   CurrentTime.LowPart := xboxkrnl_KeSystemTime.LowPart;
-
-  EmuSwapFS(fsXbox);
 end;
 
 const DISPATCH_LEVEL = 2; // ??
@@ -664,9 +666,12 @@ function xboxkrnl_KeRaiseIrqlToDpcLevel(): KIRQL; stdcall;
   Pcr: PKPCR;
   CurrentIrql: KIRQL; *)
 begin
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel();');
-  EmuSwapFS(fsXbox);
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeRaiseIrqlToDpcLevel();');
+    EmuSwapFS(fsXbox);
+  end;
 
   // TODO : DXBX - This we get from reactos, but
   // Using the PCr gives exceptions.
@@ -702,9 +707,12 @@ var
   Pcr: PKPCR;
   CurrentIrql: KIRQL;
 begin
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeRaiseIrqlToSynchLevel();');
-  EmuSwapFS(fsXbox);
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeRaiseIrqlToSynchLevel();');
+    EmuSwapFS(fsXbox);
+  end;
 
   Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
 
@@ -890,17 +898,18 @@ function xboxkrnl_KeSetTimer
 ): LONGBOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-{$IFDEF DEBUG}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : KeSetTimer' +
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuKrnl : KeSetTimer >>' +
       #13#10'(' +
       #13#10'   Timer               : 0x%.08X' +
       #13#10'   DueTime             : 0x%.16X' + // was %I64X
       #13#10'   Dpc                 : 0x%.08X' +
       #13#10');',
       [Timer, QuadPart(@DueTime), Dpc]);
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+    EmuSwapFS(fsXbox);
+  end;
 
   // Call the newer function and supply a period of 0 (source: ReactOS)
   Result := xboxkrnl_KeSetTimerEx(Timer, DueTime, {Period=}0, Dpc);
@@ -917,8 +926,8 @@ function xboxkrnl_KeSetTimerEx
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KeSetTimerEx' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : KeSetTimerEx' +
       #13#10'(' +
       #13#10'   Timer               : 0x%.08X' +
       #13#10'   DueTime             : 0x%.16X' + // was %I64X
@@ -926,7 +935,6 @@ begin
       #13#10'   Dpc                 : 0x%.08X' +
       #13#10');',
       [Timer, QuadPart(@DueTime), Period, Dpc]);
-{$ENDIF}
 
   DxbxKrnlCleanup('KeSetTimerEx is not implemented');
 

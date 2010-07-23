@@ -502,14 +502,15 @@ begin
   // cache XbeHeader and size of XbeHeader
   g_XbeHeader := XbeHeader;
   g_XbeHeaderSize := XbeHeaderSize;
-  
+
   // create timing thread
   begin
     dwThreadId := 0;
     hThread := CreateThread(nil, 0, @EmuThreadUpdateTickCount, nil, 0, {var}dwThreadId);
+    // If possible, assign this thread to another core than the one that runs Xbox1 code :
+    SetThreadAffinityMask(dwThreadId, g_CPUOthers);
     // We set the priority of this thread a bit higher, to assure reliable timing :
     SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
-    // TODO : If possible, call SetThreadAffinityMask to assign this thread to another CPU than the CPU that runs the XBE.
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
@@ -525,21 +526,24 @@ begin
   begin
     dwThreadId := 0;
     hThread := CreateThread(nil, 0, @EmuThreadPollInput, nil, 0, {var}dwThreadId);
-    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
+    // If possible, assign this thread to another core than the one that runs Xbox1 code :
+    SetThreadAffinityMask(dwThreadId, g_CPUOthers);
   end;
 
   // create vblank handling thread
   begin
     dwThreadId := 0;
     hThread := CreateThread(nil, 0, @EmuThreadHandleVBlank, nil, 0, {var}dwThreadId);
-    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
+    // Make sure VBlank callbacks run on the same core as the one that runs Xbox1 code :
+    SetThreadAffinityMask(dwThreadId, g_CPUXbox);
   end;
 
   // create the create device proxy thread
   begin
     dwThreadId := 0;
     CreateThread(nil, 0, @EmuThreadCreateDeviceProxy, nil, 0, {var}dwThreadId);
-    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
+    // If possible, assign this thread to another core than the one that runs Xbox1 code :
+    SetThreadAffinityMask(dwThreadId, g_CPUOthers);
   end;
 
   // create window message processing thread
@@ -548,7 +552,8 @@ begin
 
     dwThreadId := 0;
     hThread := CreateThread(nil, 0, @EmuThreadRenderWindow, nil, 0, {var}dwThreadId);
-    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
+    // If possible, assign this thread to another core than the one that runs Xbox1 code :
+    SetThreadAffinityMask(dwThreadId, g_CPUOthers);
 
     while not g_bRenderWindowActive do
       Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?

@@ -374,8 +374,8 @@ begin
 
     pThreadHandle^ := CreateThread(NULL, 0, @PCSTProxy, @iPCSTProxyParam, 0, {var}@dwThreadId);
 
-    // Make sure the Xbox1 code runs on one core :
-    SetThreadAffinityMask(dwThreadId, g_XboxCPU);
+    // Make sure Xbox1 code runs on one core :
+    SetThreadAffinityMask(dwThreadId, g_CPUXbox);
 
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
