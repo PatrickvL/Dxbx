@@ -251,11 +251,12 @@ var g_SavedLaunchData: {XTL_}LAUNCH_DATA;
 procedure XTL_EmuXapiApplyKernelPatches(); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches() // Perhaps XapiInitProcess isn''t found?');
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuXapi : EmuXapiApplyKernelPatches() // Perhaps XapiInitProcess isn''t found?');
+    EmuSwapFS(fsXbox);
+  end;
 
   // we dont really feel like patching, now do we?
 end;
@@ -263,11 +264,12 @@ end;
 function XTL_EmuXFormatUtilityDrive(): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-{$IFDEF _DEBUG_TRACE}
-  EmuSwapFS(fsWindows);
-  DbgPrintf('EmuXapi : EmuXFormatUtilityDrive();');
-  EmuSwapFS(fsXbox);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuXapi : EmuXFormatUtilityDrive();');
+    EmuSwapFS(fsXbox);
+  end;
 
   // TODO -oCXBX: yeah... we'll format... riiiiight
 
@@ -285,13 +287,12 @@ function XTL_EmuGetTimeZoneInformation
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuGetTimeZoneInformation' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuGetTimeZoneInformation' +
       #13#10'(' +
       #13#10'   lpTimeZoneInformation : 0x%.08X' +
       #13#10');',
       [lpTimeZoneInformation]);
-{$ENDIF}
 
   Result := GetTimeZoneInformation({var}lpTimeZoneInformation^);
 
@@ -316,15 +317,15 @@ begin
 
   if MayLog(lfUnit or lfHeap) then
     DbgPrintf('EmuXapi : EmuRtlCreateHeap' +
-    #13#10'(' +
-    #13#10'   Flags               : 0x%.08X' +
-    #13#10'   Base                : 0x%.08X' +
-    #13#10'   Reserve             : 0x%.08X' +
-    #13#10'   Commit              : 0x%.08X' +
-    #13#10'   Lock                : 0x%.08X' +
-    #13#10'   RtlHeapParams       : 0x%.08X' +
-    #13#10');',
-    [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
+        #13#10'(' +
+        #13#10'   Flags               : 0x%.08X' +
+        #13#10'   Base                : 0x%.08X' +
+        #13#10'   Reserve             : 0x%.08X' +
+        #13#10'   Commit              : 0x%.08X' +
+        #13#10'   Lock                : 0x%.08X' +
+        #13#10'   RtlHeapParams       : 0x%.08X' +
+        #13#10');',
+        [Flags, Base, Reserve, Commit, Lock, RtlHeapParams]);
 
   ZeroMemory(@RtlHeapDefinition, sizeof(RtlHeapDefinition));
 
@@ -387,12 +388,12 @@ begin
 
   if MayLog(lfUnit or lfHeap or lfExtreme) then
     DbgPrintf('EmuXapi : EmuRtlFreeHeap' +
-    #13#10'(' +
-    #13#10'   hHeap               : 0x%.08X' +
-    #13#10'   dwFlags             : 0x%.08X' +
-    #13#10'   lpMem               : 0x%.08X' +
-    #13#10');',
-    [hHeap, dwFlags, lpMem]);
+        #13#10'(' +
+        #13#10'   hHeap               : 0x%.08X' +
+        #13#10'   dwFlags             : 0x%.08X' +
+        #13#10'   lpMem               : 0x%.08X' +
+        #13#10');',
+        [hHeap, dwFlags, lpMem]);
 
   if Assigned(lpMem) then
     lpMem := (PPointer(lpMem)-1)^;
@@ -417,13 +418,13 @@ begin
 
   if MayLog(lfUnit or lfHeap or lfExtreme) then
     DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
-      #13#10'('+
-      #13#10'   hHeap               : 0x%.08X' +
-      #13#10'   dwFlags             : 0x%.08X' +
-      #13#10'   lpMem               : 0x%.08X' +
-      #13#10'   dwBytes             : 0x%.08X' +
-      #13#10');',
-      [hHeap, dwFlags, lpMem, dwBytes]);
+        #13#10'('+
+        #13#10'   hHeap               : 0x%.08X' +
+        #13#10'   dwFlags             : 0x%.08X' +
+        #13#10'   lpMem               : 0x%.08X' +
+        #13#10'   dwBytes             : 0x%.08X' +
+        #13#10');',
+        [hHeap, dwFlags, lpMem, dwBytes]);
 
   // Dxbx note : Realloc cannot be implemented via DxbxRtlRealloc because of possible alignment-mismatches.
   // We solve this by doing a new Alloc, copying over the original lpMem contents and freeing it :
@@ -467,12 +468,12 @@ begin
 
   if MayLog(lfUnit or lfHeap) then
     DbgPrintf('EmuXapi : EmuRtlSizeHeap' +
-      #13#10'(' +
-      #13#10'   hHeap               : 0x%.08X' +
-      #13#10'   dwFlags             : 0x%.08X' +
-      #13#10'   lpMem               : 0x%.08X' +
-      #13#10');',
-      [hHeap, dwFlags, lpMem]);
+        #13#10'(' +
+        #13#10'   hHeap               : 0x%.08X' +
+        #13#10'   dwFlags             : 0x%.08X' +
+        #13#10'   lpMem               : 0x%.08X' +
+        #13#10');',
+        [hHeap, dwFlags, lpMem]);
 
   if Assigned(lpMem) then
     lpMem := (PPointer(lpMem)-1)^;
@@ -489,16 +490,20 @@ function XTL_EmuQueryPerformanceCounter
 ): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
   if MayLog(lfUnit or lfExtreme) then
+  begin
+    EmuSwapFS(fsWindows);
     DbgPrintf('EmuXapi : EmuQueryPerformanceCounter >>' +
-      #13#10'(' +
-      #13#10'   lpPerformanceCount  : 0x%.08X' +
-      #13#10');',
-      [lpPerformanceCount]);
+        #13#10'(' +
+        #13#10'   lpPerformanceCount  : 0x%.08X' +
+        #13#10');',
+        [lpPerformanceCount]);
+    EmuSwapFS(fsXbox);
+  end;
 
-  EmuSwapFS(fsXbox);
+  // Dxbx note : Xbox uses rdtsc here, which we could do too (since we bound the
+  // Xbe execution to a single processor), but then we must change the frequency
+  // too (which would be best to keep static). For now, forward it to the kernel :
 
   _LARGE_INTEGER(lpPerformanceCount^) := xboxkrnl_KeQueryPerformanceCounter;
   Result := BOOL_TRUE;
@@ -515,15 +520,19 @@ function XTL_EmuQueryPerformanceFrequency
 ): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
   if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
     DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency >>' +
       #13#10'(' +
       #13#10'   lpFrequency         : 0x%.08X' +
       #13#10');',
       [lpFrequency]);
-  EmuSwapFS(fsXbox);
+    EmuSwapFS(fsXbox);
+  end;
+
+  // Dxbx note : Xbox returns 733,333,333 ticks per second here, which
+  // nicely corresponds to the number of cycles of the Xbox1 Pentium 3.
 
   _LARGE_INTEGER(lpFrequency^) := xboxkrnl_KeQueryPerformanceFrequency;
   Result := BOOL_TRUE;
@@ -1648,15 +1657,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuQueueUserAPC' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuQueueUserAPC' +
       #13#10'(' +
       #13#10'   pfnAPC           : 0x%.08X' +
       #13#10'   hThread          : 0x%.08X' +
       #13#10'   dwData           : 0x%.08X' +
       #13#10');',
       [Addr(pfnAPC), hThread, dwData]);
-{$ENDIF}
 
   // dwRet := 0;
 
@@ -1688,8 +1696,8 @@ function XTL_EmuGetOverlappedResult
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuGetOverlappedResult' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuGetOverlappedResult' +
       #13#10'(' +
       #13#10'   hFile            : 0x%.08X' +
       #13#10'   lpOverlapped     : 0x%.08X' +
@@ -1697,7 +1705,6 @@ begin
       #13#10'   bWait            : 0x%.08X' +
       #13#10');',
       [hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait]);
-{$ENDIF}
 
   Result := BOOL(GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, bWait <> BOOL_FALSE));
 
@@ -1720,14 +1727,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXLaunchNewImage' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuXLaunchNewImage' +
       #13#10'(' +
       #13#10'   lpTitlePath      : 0x%.08X (%s)' +
       #13#10'   pLaunchData      : 0x%.08X' +
       #13#10');',
       [UIntPtr(lpTitlePath), lpTitlePath, pLaunchData]);
-{$ENDIF}
 
   // If this function succeeds, it doesn't get a chance to return anything.
   dwRet := ERROR_GEN_FAILURE;
@@ -1785,14 +1791,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXGetLaunchInfo' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuXGetLaunchInfo' +
       #13#10'(' +
       #13#10'   pdwLaunchDataType : 0x%.08X' +
       #13#10'   pLaunchData       : 0x%.08X' +
       #13#10');',
       [pdwLaunchDataType, pLaunchData]);
-{$ENDIF}
 
   dwRet := ERROR_LAUNCHDATA_NOT_FOUND; // Dxbx note : Cxbx incorrectly uses E_FAIL here!
 
@@ -1858,13 +1863,12 @@ procedure XTL_EmuXSetProcessQuantumLength
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXSetProcessQuantumLength' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuXSetProcessQuantumLength' +
       #13#10'(' +
       #13#10'   dwMilliseconds    : 0x%.08X' +
       #13#10');',
       [dwMilliseconds]);
-{$ENDIF}
 
   // TODO -oCXBX: Implement?
   EmuWarning('XSetProcessQuantumLength is being ignored!');
@@ -1879,9 +1883,8 @@ function XTL_EmuXGetFileCacheSize(): DWORD; stdcall;
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXGetFileCacheSize();');
-{$ENDIF}
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuXGetFileCacheSize();');
 
   Result := xboxkrnl_FscGetCacheSize() shl PAGE_SHIFT;
 
@@ -1902,8 +1905,8 @@ function XTL_EmuSignalObjectAndWait
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuSignalObjectAndWait' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuSignalObjectAndWait' +
       #13#10'(' +
       #13#10'   hObjectToSignal   : 0x%.08X' +
       #13#10'   hObjectToWaitOn   : 0x%.08X' +
@@ -1911,7 +1914,6 @@ begin
       #13#10'   bAlertable        : 0x%.08X' +
       #13#10');',
       [hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable]);
-{$ENDIF}
 
   Result := BOOL(SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable <> BOOL_FALSE));
 
@@ -1936,8 +1938,8 @@ function XTL_EmuCreateSemaphore
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuCreateSemaphore' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuCreateSemaphore' +
       #13#10'(' +
       #13#10'   lpSemaphoreAttributes : 0x%.08X' +
       #13#10'   lInitialCount         : 0x%.08X' +
@@ -1945,7 +1947,6 @@ begin
       #13#10'   lpName                : 0x%.08X (%s)' +
       #13#10');',
       [lpSemaphoreAttributes, lInitialCount, lMaximumCount, lpName]);
-{$ENDIF}
 
   if Assigned(lpSemaphoreAttributes) then
     EmuWarning( 'lpSemaphoreAttributes != NULL' );
@@ -1970,15 +1971,14 @@ function XTL_EmuReleaseSemaphore
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuReleaseSemaphore' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuReleaseSemaphore' +
       #13#10'(' +
       #13#10'   hSemaphore        : 0x%.08X' +
       #13#10'   lReleaseCount     : 0x%.08X' +
       #13#10'   lpPreviousCount   : 0x%.08X' +
       #13#10');',
       [hSemaphore, lReleaseCount, lpPreviousCount]);
-{$ENDIF}
 
   Result := BOOL(ReleaseSemaphore(hSemaphore, lReleaseCount, lpPreviousCount));
   if (BOOL_FALSE = Result) then
@@ -2001,8 +2001,8 @@ function XTL_EmutimeSetEvent
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmutimeSetEvent' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmutimeSetEvent' +
       #13#10'(' +
       #13#10'   uDelay            : 0x%.08X' +
       #13#10'   uResolution       : 0x%.08X' +
@@ -2011,7 +2011,6 @@ begin
       #13#10'   fuEvent           : 0x%.08X' +
       #13#10');',
       [uDelay, uResolution, Addr(fptc), dwUser, fuEvent]);
-{$ENDIF}
 
   Result := timeSetEvent(uDelay, uResolution, fptc, DWORD_PTR(dwUser), fuEvent);
 
@@ -2027,13 +2026,12 @@ function XTL_EmutimeKillEvent
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmutimeKillEvent' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmutimeKillEvent' +
       #13#10'(' +
       #13#10'   uTimerID          : 0x%.08X' +
       #13#10');',
       [uTimerID]);
-{$ENDIF}
 
   Result := timeKillEvent(uTimerID);
 
@@ -2052,8 +2050,8 @@ procedure XTL_EmuRaiseException
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuRaiseException' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuRaiseException' +
       #13#10'(' +
       #13#10'   dwExceptionCode   : 0x%.08X' +
       #13#10'   dwExceptionFlags  : 0x%.08X' +
@@ -2061,7 +2059,6 @@ begin
       #13#10'   lpArguments       : 0x%.08X' +
       #13#10');',
       [dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments]);
-{$ENDIF}
 
   // TODO -oCXBX: Implement or not?
 //  RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
@@ -2078,13 +2075,12 @@ function XTL_EmuXCalculateSignatureBegin
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EumXCalculateSignatureBegin' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EumXCalculateSignatureBegin' +
       #13#10'(' +
       #13#10'   dwFlags             : 0x%.08X' +
       #13#10');',
       [dwFlags]);
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -2102,14 +2098,13 @@ function XTL_EmuXCalculateSignatureBeginEx
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXCalculateSignatureBeginEx' +
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuXapi : EmuXCalculateSignatureBeginEx' +
     #13#10'(' +
     #13#10'   dwFlags             : 0x%.08X' +
     #13#10'   dwAltTitleId        : 0x%.08X' +
     #13#10');',
     [dwFlags, dwAltTitleId]);
-{$ENDIF}
 
   EmuSwapFS(fsXbox);
 
@@ -2126,19 +2121,18 @@ function XTL_EmuXCalculateSignatureUpdate
 ): DWord; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXCalculateSignatureUpdate' +
-           #13#10'(' +
-           #13#10'   hCalcSig            : 0x%.08X' +
-           #13#10'   pbData              : 0x%.08X' +
-           #13#10'   cbData              : 0x%.08X' +
-           #13#10');',
-            [hCalcSig, pbData, cbData]);
-{$ENDIF}
-
-  EmuSwapFS(fsXbox);
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuXapi : EmuXCalculateSignatureUpdate' +
+        #13#10'(' +
+        #13#10'   hCalcSig            : 0x%.08X' +
+        #13#10'   pbData              : 0x%.08X' +
+        #13#10'   cbData              : 0x%.08X' +
+        #13#10');',
+        [hCalcSig, pbData, cbData]);
+    EmuSwapFS(fsXbox);
+  end;
 
   Result := ERROR_SUCCESS;
 end;
@@ -2151,18 +2145,17 @@ function XTL_EmuXCalculateSignatureEnd
 ): DWord; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXCalculateSignatureEnd' +
+  if MayLog(lfUnit) then
+  begin
+    EmuSwapFS(fsWindows);
+    DbgPrintf('EmuXapi : EmuXCalculateSignatureEnd' +
       #13#10'(' +
       #13#10'   hCalcSig            : 0x%.08X' +
       #13#10'   pSignature          : 0x%.08X' +
       #13#10');',
       [hCalcSig, pSignature]);
-{$ENDIF}
-
-  EmuSwapFS(fsXbox);
+    EmuSwapFS(fsXbox);
+  end;
 
   Result := ERROR_SUCCESS;
 end;
