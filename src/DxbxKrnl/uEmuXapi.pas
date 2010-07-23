@@ -42,6 +42,7 @@ uses
   uEmuFS, // EmuSwapFS
   uEmuAlloc,
   uEmuDInput,
+  uEmuKrnlKe,
   uXBController,
   uXboxLibraryUtils, // PatchPrefix
   uDxbxKrnlUtils; // DxbxKrnl_XbeHeader
@@ -481,7 +482,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-(* Dxbx note : Disabled, too high level. See xboxkrnl_KeQueryPerformanceCounter
+// Dxbx note : Forwarded to xboxkrnl_KeQueryPerformanceCounter
 function XTL_EmuQueryPerformanceCounter
 (
   lpPerformanceCount: PLARGE_INTEGER
@@ -491,22 +492,23 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfExtreme) then
-    DbgPrintf('EmuXapi : EmuQueryPerformanceCounter' +
+    DbgPrintf('EmuXapi : EmuQueryPerformanceCounter >>' +
       #13#10'(' +
       #13#10'   lpPerformanceCount  : 0x%.08X' +
       #13#10');',
       [lpPerformanceCount]);
 
-  Result := BOOL(QueryPerformanceCounter({var}lpPerformanceCount^));
+  EmuSwapFS(fsXbox);
+
+  _LARGE_INTEGER(lpPerformanceCount^) := xboxkrnl_KeQueryPerformanceCounter;
+  Result := BOOL_TRUE;
 
   // debug - 4x speed
   //lpPerformanceCount.QuadPart *= 4;
-
-  EmuSwapFS(fsXbox);
 end;
-*)
 
-(* Dxbx note : Disabled, too high level. See xboxkrnl_KeQueryPerformanceFrequency
+
+// Dxbx note : Forwarded to xboxkrnl_KeQueryPerformanceFrequency
 function XTL_EmuQueryPerformanceFrequency
 (
   lpFrequency: PLARGE_INTEGER
@@ -516,17 +518,17 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency' +
+    DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency >>' +
       #13#10'(' +
       #13#10'   lpFrequency         : 0x%.08X' +
       #13#10');',
       [lpFrequency]);
-
-  Result := BOOL(QueryPerformanceFrequency({var}lpFrequency^));
-
   EmuSwapFS(fsXbox);
+
+  _LARGE_INTEGER(lpFrequency^) := xboxkrnl_KeQueryPerformanceFrequency;
+  Result := BOOL_TRUE;
 end;
-*)
+
 
 // Dxbx note : This function selects the oldest cache partition and formats it.
 // So once we support this in the kernel, we don't need this patch anymore.
@@ -1245,6 +1247,8 @@ begin
   // TODO -oCXBX: Call thread notify routines ?
 end;
 
+
+// TODO -oDxbx: Once our NtQueryVolumeInformationFile works on partitions, we can disable this patch
 function XTL_EmuXapiValidateDiskPartitionEx(
   PartitionName: PANSI_STRING;
   BytesPerCluster: DWORD
@@ -2174,8 +2178,8 @@ exports
   XTL_EmuGetOverlappedResult,
   XTL_EmuGetThreadPriority,
   XTL_EmuGetTimeZoneInformation,
-//  XTL_EmuQueryPerformanceCounter,
-//  XTL_EmuQueryPerformanceFrequency,
+  XTL_EmuQueryPerformanceCounter,
+  XTL_EmuQueryPerformanceFrequency,
   XTL_EmuQueueUserAPC,
   XTL_EmuRaiseException,
 //  XTL_EmuReleaseSemaphore,
@@ -2196,7 +2200,7 @@ exports
   XTL_EmuXapiInitAutoPowerDown,
   XTL_EmuXapiInitProcess,
   XTL_EmuXapiThreadStartup,
-//  XTL_EmuXapiValidateDiskPartitionEx,
+  XTL_EmuXapiValidateDiskPartitionEx,
   XTL_EmuXFormatUtilityDrive,
   XTL_EmuXFreeSectionA,
   XTL_EmuXFreeSectionByHandle,

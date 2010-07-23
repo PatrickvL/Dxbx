@@ -37,7 +37,6 @@ uses
   uLog,
   uEmuFS,
   uEmuFile,
-  uEmuXapi,
   uEmuKrnl,
   uDxbxUtils,
   uDxbxKrnlUtils;
@@ -46,7 +45,7 @@ const
   CLOCK_TIME_INCREMENT = $2710;
 
 var
-  {120}xboxkrnl_KeInterruptTime: KSYSTEM_TIME;
+  {120}xboxkrnl_KeInterruptTime: KSYSTEM_TIME; // (updated by EmuUpdateTickCount)
   {154}xboxkrnl_KeSystemTime: KSYSTEM_TIME; // (updated by EmuUpdateTickCount)
   {157}xboxkrnl_KeTimeIncrement: ULONG = CLOCK_TIME_INCREMENT;
 
@@ -72,16 +71,20 @@ function xboxkrnl_KeCancelTimer(
   hTimerHandle: HANDLE;
   pbPreviousState: PBOOLEAN
   ): NTSTATUS; stdcall;
-function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeConnectInterrupt(
+  Interrupt: PKINTERRUPT
+): _BOOLEAN; stdcall;
 function xboxkrnl_KeDelayExecutionThread(
   WaitMode: KPROCESSOR_MODE;
   Alertable: _BOOLEAN;
   Interval: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeDisconnectInterrupt(
+  Interrupt: PKINTERRUPT
+): _BOOLEAN; stdcall;
 procedure xboxkrnl_KeEnterCriticalRegion(); stdcall;
-function xboxkrnl_KeGetCurrentIrql(): KIRQL; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeGetCurrentIrql(): KIRQL; stdcall;
+function xboxkrnl_KeGetCurrentThread(): PKTHREAD; stdcall;
 function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeInitializeDeviceQueue(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 procedure xboxkrnl_KeInitializeDpc(
@@ -111,7 +114,7 @@ function xboxkrnl_KePulseEvent(
   pPreviousState: PULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_KeQueryBasePriorityThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_KeQueryInterruptTime(): ULONGLONG; stdcall;
 function xboxkrnl_KeQueryPerformanceCounter(
   ): _LARGE_INTEGER; stdcall;
 function xboxkrnl_KeQueryPerformanceFrequency(
@@ -168,6 +171,14 @@ function xboxkrnl_KeSynchronizeExecution(): NTSTATUS; stdcall; // UNKNOWN_SIGNAT
 function xboxkrnl_KeTestAlertThread(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeWaitForMultipleObjects(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
 function xboxkrnl_KeWaitForSingleObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+
+const
+  XBOX_PERFORMANCE_FREQUENCY = $337F98; // = 3.375000 Mhz;
+
+var
+  NativePerformanceCounter: LARGE_INTEGER = (QuadPart:0);
+  NativePerformanceFrequency: LARGE_INTEGER = (QuadPart:0);
+  NativeToXboxSpeedFactor: float;
 
 implementation
 
@@ -255,11 +266,14 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeConnectInterrupt(): NTSTATUS; stdcall;
+function xboxkrnl_KeConnectInterrupt(
+  Interrupt: PKINTERRUPT
+): _BOOLEAN; stdcall;
 // Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeConnectInterrupt');
+  Unimplemented('KeConnectInterrupt');
+  Result := False;
   EmuSwapFS(fsXbox);
 end;
 
@@ -294,11 +308,14 @@ begin
   Result := ret;
 end;
 
-function xboxkrnl_KeDisconnectInterrupt(): NTSTATUS; stdcall;
+function xboxkrnl_KeDisconnectInterrupt(
+  Interrupt: PKINTERRUPT
+): _BOOLEAN; stdcall;
 // Branch:dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeDisconnectInterrupt');
+  Unimplemented('KeDisconnectInterrupt');
+  Result := False;
   EmuSwapFS(fsXbox);
 end;
 
@@ -323,12 +340,17 @@ begin
   Result := Pcr.Irql;
 end;
 
-function xboxkrnl_KeGetCurrentThread(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeGetCurrentThread(): PKTHREAD; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
+var
+  Pcr: PKPCR;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeGetCurrentThread');
+  DbgPrintf('EmuKrnl : KeGetCurrentThread();');
   EmuSwapFS(fsXbox);
+
+  Pcr := GetCurrentKPCR(); // ReactOS calls this KeGetPcr();
+  Result := Pcr.Prcb.CurrentThread;
 end;
 
 function xboxkrnl_KeInitializeApc(): NTSTATUS; stdcall;
@@ -539,20 +561,22 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_KeQueryInterruptTime(): NTSTATUS; stdcall;
-// Branch:dxbx  Translator:PatrickvL  Done:0
+function xboxkrnl_KeQueryInterruptTime(): ULONGLONG; stdcall;
+// Branch:dxbx  Translator:PatrickvL  Done:100
+var
+  CurrentTime: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('KeQueryInterruptTime');
+
+  DbgPrintf('EmuKrnl : KeQueryInterruptTime');
+
+  // Dxbx note : We depend on xboxkrnl_KeInterruptTime getting updated in EmuUpdateTickCount :
+  CurrentTime.HighPart := xboxkrnl_KeInterruptTime.High1Time;
+  CurrentTime.LowPart := xboxkrnl_KeInterruptTime.LowPart;
+  Result := CurrentTime.QuadPart;
+
   EmuSwapFS(fsXbox);
 end;
-
-const
-  XBOX_PERFORMANCE_FREQUENCY = $337F98; // = 3.375000 Mhz;
-
-var
-  NativePerformanceCounter: LARGE_INTEGER;
-  NativePerformanceFrequency: LARGE_INTEGER;
 
 function xboxkrnl_KeQueryPerformanceCounter(
   ): _LARGE_INTEGER; stdcall;
@@ -568,17 +592,12 @@ begin
   DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 {$ENDIF}
 
-  if NativePerformanceFrequency.QuadPart = 0 then
-  begin
-    JwaNative.NtQueryPerformanceCounter(@NativePerformanceCounter, @NativePerformanceFrequency);
-  end;
-
-  JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency);
+  JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency{=nil});
 
   // Re-base the performance counter to increase accuracy of the following conversion :
   PerformanceCounter.QuadPart := PerformanceCounter.QuadPart - NativePerformanceCounter.QuadPart;
   // We appy a conversion factor here, to fake Xbox1-like increment-speed behaviour :
-  PerformanceCounter.QuadPart := PerformanceCounter.QuadPart * XBOX_PERFORMANCE_FREQUENCY div NativePerformanceFrequency.QuadPart;
+  PerformanceCounter.QuadPart := Trunc(NativeToXboxSpeedFactor * PerformanceCounter.QuadPart);
 
   EmuSwapFS(fsXbox);
 
@@ -597,7 +616,7 @@ begin
   DbgPrintf('EmuKrnl : KeQueryPerformanceFrequency();');
 {$ENDIF}
 
-  // We should probably return the real Xbox1 frequency here,
+  // Dxbx note : We return the real Xbox1 frequency here,
   // to make subsequent calculations behave the same as on the real Xbox1 :
   PerformanceFrequency.QuadPart := XBOX_PERFORMANCE_FREQUENCY;
 
@@ -977,8 +996,17 @@ begin
   xLaunchDataPage.Header.dwFlags := 0;
 end;
 
+procedure PerformanceCounters_Init;
+begin
+  JwaNative.NtQueryPerformanceCounter(@NativePerformanceCounter, @NativePerformanceFrequency);
+
+  NativeToXboxSpeedFactor := XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
+end;
+
 initialization
 
   xLaunchDataPage_Init;
+
+  PerformanceCounters_Init;
 
 end.

@@ -1353,6 +1353,15 @@ type
   KINTERRUPT_MODE = (LevelSensitive, Latched);
 
 //
+// DXBX Addition : Xbox Kernel Interrupt structure
+//
+type _KINTERRUPT = record
+  // TODO -oDxbx : How's this declared?
+end;
+KINTERRUPT = _KINTERRUPT;
+PKINTERRUPT = ^KINTERRUPT;
+
+//
 // DXBX Addition : Hardware Interface Type - Source: ReactOS
 //
 type

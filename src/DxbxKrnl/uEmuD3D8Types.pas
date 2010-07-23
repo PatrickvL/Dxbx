@@ -512,8 +512,8 @@ type X_D3DTILE = record
   PX_D3DTILE = ^X_D3DTILE;
 
 type X_D3DCALLBACKTYPE = ( // blueshogun96 10/1/07
-    X_D3DCALLBACK_READ = 1,
-    X_D3DCALLBACK_WRITE = 2
+    X_D3DCALLBACK_READ = 0, // Fixed PatrickvL 10/7/22
+    X_D3DCALLBACK_WRITE = 1
   );
 
 type X_D3DFIELDTYPE = (
@@ -531,14 +531,24 @@ type _X_D3DFIELD_STATUS = record
   X_D3DFIELD_STATUS = _X_D3DFIELD_STATUS;
   PX_D3DFIELD_STATUS= ^X_D3DFIELD_STATUS;
 
+// VBlank flags
+const D3DVBLANK_SWAPDONE   = 1;
+const D3DVBLANK_SWAPMISSED = 2;
+
 type _D3DVBLANKDATA = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
-    VBlank: DWORD;
-    Swap: DWORD;
+    VBlankCounter: DWORD;
+    SwapCounter: DWORD;
     Flags: DWORD;
   end; // size = 12 (as in Cxbx)
   D3DVBLANKDATA = _D3DVBLANKDATA;
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
+
+// Swap flags
+const D3DSWAP_DEFAULT    = $00000000;
+const D3DSWAP_COPY       = $00000001;
+const D3DSWAP_BYPASSCOPY = $00000002;
+const D3DSWAP_FINISH     = $00000004;
 
 type _D3DSWAPDATA = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
