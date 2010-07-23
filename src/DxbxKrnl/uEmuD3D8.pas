@@ -5726,7 +5726,7 @@ begin
   // pResource8 := pThis.Emu.Resource8;
   EmuSwapFS(fsXbox);
 
-  Result := FALSE;
+  Result := True;
 end;
 
 function XTL_EmuIDirect3DResource8_GetType
@@ -6758,11 +6758,11 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetOverlayUpdateStatus();');
 {$ENDIF}
 
-  // TODO -oCXBX: Actually check for update status
+//  Result := D3DDevice_GetOverlayUpdateStatus();
 
   EmuSwapFS(fsXbox);
 
-  Result := FALSE;
+  Result := True;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank(); stdcall;
