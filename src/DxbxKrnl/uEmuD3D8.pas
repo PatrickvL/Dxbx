@@ -1704,8 +1704,11 @@ begin
     [pFieldStatus]);
 {$ENDIF}
 
-  pFieldStatus.Field := X_D3DFIELDTYPE(iif(g_VBData.VBlankCounter and 1 = 0, Ord(X_D3DFIELD_ODD), Ord(X_D3DFIELD_EVEN)));
-  pFieldStatus.VBlankCount := g_VBData.VBlankCounter;
+//  pFieldStatus.Field := X_D3DFIELDTYPE(iif(g_VBData.VBlankCounter and 1 = 0, Ord(X_D3DFIELD_ODD), Ord(X_D3DFIELD_EVEN)));
+//  pFieldStatus.VBlankCount := g_VBData.VBlankCounter;
+	pFieldStatus.Field := X_D3DFIELD_PROGRESSIVE;
+	pFieldStatus.VBlankCount := 0;
+
 
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus
