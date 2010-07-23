@@ -462,7 +462,7 @@ begin
     D3DFMT_VERTEXDATA:
       Result := X_D3DFMT_VERTEXDATA;
   else
-    DxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (%d)', [Ord(aFormat)]);
+    DxbxKrnlCleanup('EmuPC2XB_D3DFormat: Unknown Format (0x%.08X)', [Ord(aFormat)]);
     Result := X_D3DFORMAT(aFormat);
   end;
 end;

@@ -128,10 +128,12 @@ var
   g_bIsFauxFullscreen: BOOL_ = FALSE;
   g_bHackUpdateSoftwareOverlay: BOOL_ = FALSE;
 
-function EmuRenderWindow(lpVoid: LPVOID): DWORD; stdcall;
-function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadRenderWindow(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
 function EmuMsgProc(hWnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall; // forward
-function EmuUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadPollInput(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadHandleVBlank(lpVoid: LPVOID): DWORD; stdcall;
 
 const
   RESOURCE_CACHE_SIZE = 16;
@@ -390,6 +392,98 @@ begin
   until Result = UINT(D3D_OK);
 end;
 
+const
+  MillisecondsPerSecond = 1000;
+
+type
+  DxbxTimer = record
+    PerformanceCounterFrequency: LARGE_INTEGER;
+    CurrentPerformanceCounter: LARGE_INTEGER;
+    PreviousPerformanceCounter: LARGE_INTEGER;
+    TicksToWait: int;
+    TicksPerSleep1: int;
+    procedure InitTicks(const aTicksToWait: int);
+    procedure InitMilliseconds(const aMillisecondsToWait: float);
+    procedure InitFPS(const aFramesPerSecond: int);
+    procedure Wait;
+  end;
+
+procedure DxbxTimer.InitTicks(const aTicksToWait: int);
+begin
+  QueryPerformanceFrequency({var}TLargeInteger(PerformanceCounterFrequency));
+  QueryPerformanceCounter({var}TLargeInteger(CurrentPerformanceCounter));
+  PreviousPerformanceCounter.QuadPart := 0;
+  TicksToWait := aTicksToWait;
+
+  // Calculate how many ticks pass during Sleep(1) :
+  TicksPerSleep1 := int(PerformanceCounterFrequency.QuadPart * 2 div MillisecondsPerSecond);
+
+  // Raise the accuracy of Sleep to it's maximum :
+  timeBeginPeriod(1);
+
+  // TODO : Add a finalizer with timeEndPeriod(1);
+end;
+
+procedure DxbxTimer.InitMilliseconds(const aMillisecondsToWait: float);
+begin
+  // Determine the number of counts (ticks) per second :
+  QueryPerformanceFrequency({var}TLargeInteger(PerformanceCounterFrequency));
+  // Initialize the timer by calculating the number of ticks this takes :
+  InitTicks(Trunc(aMillisecondsToWait * PerformanceCounterFrequency.QuadPart / MillisecondsPerSecond));
+  // Say, there are 5,000,000 ticks per second, that would be 5,000 ticks per millisecond,
+  // which would let 16.66666... milliseconds become 83,333 ticks.
+end;
+
+procedure DxbxTimer.InitFPS(const aFramesPerSecond: int);
+begin
+  // Initialize the FPS counter by calculating the (floating point) number of milliseconds that takes :
+  InitMilliseconds(MillisecondsPerSecond / aFramesPerSecond); // 60 Hz becomes 16.66666... milliseconds
+end;
+
+procedure DxbxTimer.Wait;
+var
+  TicksPassed: int;
+  TicksLeft: int;
+  i: int;
+begin
+  // Note : Even though we used timeBeginPeriod, Sleep is not really accurate.
+  // So we do what VirtualDub does (http://www.virtualdub.org/blog/pivot/entry.php?id=272)
+  // we make this thread run at THREAD_PRIORITY_HIGHEST, and take care of the frequency and
+  // accuracy ourselves here.
+  //
+  // See http://www.geisswerks.com/ryan/FAQS/timing.html).
+
+  if (PreviousPerformanceCounter.QuadPart <> 0) then
+  begin
+    while True do
+    begin
+      QueryPerformanceCounter({var}TLargeInteger(CurrentPerformanceCounter));
+
+      TicksPassed := int(CurrentPerformanceCounter.QuadPart - PreviousPerformanceCounter.QuadPart);
+      if (TicksPassed <= 0) then // time wrap
+        Break;
+
+      TicksLeft := TicksToWait - TicksPassed;
+      if (TicksLeft <= 0) then // time's up
+        Break;
+
+      if (TicksLeft > TicksPerSleep1) then
+        // if > 0.002s left, do Sleep(1), which will actually sleep some
+        //  steady amount, probably 1-2 ms,
+        //  and do so in a nice way (cpu meter drops; laptop battery spared).
+        Sleep(TicksLeft div TicksPerSleep1)
+      else
+        // otherwise, do a few Sleep(0)'s, which just give up the timeslice,
+        //  but don't really save cpu or battery, but do pass a tiny
+        //  amount of time.
+//        for i := 0 to 10-1 do
+          Sleep(0); // causes thread to give up its timeslice
+    end; // while True
+  end;
+
+  PreviousPerformanceCounter := CurrentPerformanceCounter;
+end; // Wait
+
 // Direct3D initialization (called before emulation begins)
 procedure XTL_EmuD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: uint32); {NOPATCH}
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -412,8 +506,10 @@ begin
   // create timing thread
   begin
     dwThreadId := 0;
-    hThread := CreateThread(nil, 0, @EmuUpdateTickCount, nil, 0, {var}dwThreadId);
-    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
+    hThread := CreateThread(nil, 0, @EmuThreadUpdateTickCount, nil, 0, {var}dwThreadId);
+    // We set the priority of this thread a bit higher, to assure reliable timing :
+    SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
+    // TODO : If possible, call SetThreadAffinityMask to assign this thread to another CPU than the CPU that runs the XBE.
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
     begin
@@ -425,9 +521,24 @@ begin
     end;
   end;
 
+  // create input handling thread
+  begin
+    dwThreadId := 0;
+    hThread := CreateThread(nil, 0, @EmuThreadPollInput, nil, 0, {var}dwThreadId);
+    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
+  end;
+
+  // create vblank handling thread
+  begin
+    dwThreadId := 0;
+    hThread := CreateThread(nil, 0, @EmuThreadHandleVBlank, nil, 0, {var}dwThreadId);
+    // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
+  end;
+
   // create the create device proxy thread
   begin
-    CreateThread(nil, 0, @EmuCreateDeviceProxy, nil, 0, {var}dwThreadId);
+    dwThreadId := 0;
+    CreateThread(nil, 0, @EmuThreadCreateDeviceProxy, nil, 0, {var}dwThreadId);
     // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
   end;
 
@@ -435,7 +546,8 @@ begin
   begin
     g_bRenderWindowActive := false;
 
-    CreateThread(nil, 0, @EmuRenderWindow, nil, 0, {var}dwThreadId);
+    dwThreadId := 0;
+    hThread := CreateThread(nil, 0, @EmuThreadRenderWindow, nil, 0, {var}dwThreadId);
     // Note : Don't call SetThreadAffinityMask here, let the OS schedule this thread
 
     while not g_bRenderWindowActive do
@@ -518,7 +630,7 @@ begin
 end; // EmuEnumDisplayDevices
 
 // window message processing thread
-function EmuRenderWindow(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadRenderWindow(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
   IDI_CXBX = 101;
@@ -538,6 +650,7 @@ var
   x, y, nWidth, nHeight: Integer;
   hwndParent: HWND;
   lPrintfOn: _bool;
+  UpdateTimer: DxbxTimer;
 begin
   // register window class
   begin
@@ -656,7 +769,9 @@ begin
     lPrintfOn := g_bPrintfOn;
 
     g_bRenderWindowActive := true;
-    
+
+    UpdateTimer.InitFPS(10); // Poll messages at least 10 times per second
+
     while msg.message <> WM_QUIT do
     begin
       if PeekMessage({var}msg, 0, 0, 0, PM_REMOVE) then
@@ -666,7 +781,7 @@ begin
       end
       else
       begin
-        Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
+        UpdateTimer.Wait;
 
         // if we've just switched back to display off, clear buffer & display prompt
         if not g_bPrintfOn and lPrintfOn then
@@ -688,7 +803,7 @@ begin
   end;
 
   Result := D3D_OK;
-end; // EmuRenderWindow
+end; // EmuThreadRenderWindow
 
 // simple helper function
 {static}var lRestore: LONG = 0; lRestoreEx: LONG = 0;
@@ -861,77 +976,131 @@ begin
   Result := S_OK;
 end; // EmuMsgProc
 
+
 // timing thread procedure
-function EmuUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  //curvb: int;
+  UpdateTimer: DxbxTimer;
+  NativeSystemTime: KSYSTEM_TIME;
+  Tmp: LARGE_INTEGER;
+begin
+{$IFDEF DEBUG}
+  DbgPrintf('EmuD3D8 : Update timer thread is running.');
+{$ENDIF}
+
+  // Update the various Xbox kernel timers as often as reasonable, without swamping the CPU;
+  UpdateTimer.InitFPS(100); // 100 updates per second should be enough
+
+  while true do // TODO -oDxbx: When do we break out of this while loop ?
+  begin
+    UpdateTimer.Wait;
+
+    // Dxbx note : Just like with xboxkrnl_KeQueryPerformanceCounter,
+    // we apply a factor here, so that these counters don't run too fast :
+
+    xboxkrnl_KeTickCount := Trunc(NativeToXboxSpeedFactor * timeGetTime());
+
+    {ignore result}JwaNative.NtQuerySystemTime(@NativeSystemTime);
+    Tmp.HighPart := NativeSystemTime.High1Time;
+    Tmp.LowPart := NativeSystemTime.LowPart;
+    Tmp.QuadPart := Trunc(NativeToXboxSpeedFactor * Tmp.QuadPart);
+    xboxkrnl_KeSystemTime.High1Time := Tmp.HighPart;
+    xboxkrnl_KeSystemTime.LowPart := Tmp.LowPart;
+
+    // For now, set InterruptTime to native SystemTime, but according to
+    // http://msdn.microsoft.com/en-us/library/ee662306(VS.85).aspx
+    // that's not the best solution. TODO -oDxbx: Determine what's better.
+    xboxkrnl_KeInterruptTime := xboxkrnl_KeSystemTime;
+
+  end; // while
+end; // EmuThreadUpdateTickCount
+
+
+function EmuThreadPollInput(lpVoid: LPVOID): DWORD; stdcall;
+// Branch:Dxbx Translator:PatrickvL  Done:100
+var
+  UpdateTimer: DxbxTimer;
   v: int;
   hDevice: HANDLE;
   dwLatency: DWORD;
   pFeedback: PXINPUT_FEEDBACK;
 begin
+{$IFDEF DEBUG}
+  DbgPrintf('EmuD3D8 : Input polling thread is running.');
+{$ENDIF}
+
+  UpdateTimer.InitFPS(20); // Poll input 20 times per second
+
+  while True do // TODO -oDxbx: When do we break out of this while loop ?
+  begin
+    UpdateTimer.Wait;
+
+    // Poll input
+    for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
+    begin
+      hDevice := g_pXInputSetStateStatus[v].hDevice;
+
+      if hDevice = 0 then
+        continue;
+
+      dwLatency := g_pXInputSetStateStatus[v].dwLatency;
+      Inc(g_pXInputSetStateStatus[v].dwLatency);
+
+      if (dwLatency < XINPUT_SETSTATE_LATENCY) then
+        continue;
+
+      g_pXInputSetStateStatus[v].dwLatency := 0;
+
+      pFeedback := PXINPUT_FEEDBACK(g_pXInputSetStateStatus[v].pFeedback);
+      if pFeedback = nil then
+        continue;
+
+      // Only update slot if it has not already been updated
+      if pFeedback.Header.dwStatus <> ERROR_SUCCESS then
+      begin
+        if pFeedback.Header.hEvent <> 0 then
+        begin
+          SetEvent(pFeedback.Header.hEvent);
+        end;
+
+        pFeedback.Header.dwStatus := ERROR_SUCCESS;
+      end;
+    end; // for
+  end; // while True
+end; // EmuThreadPollInput
+
+
+// thread dedicated to updating VBlank
+function EmuThreadHandleVBlank(lpVoid: LPVOID): DWORD; stdcall;
+// Branch:Dxbx Translator:PatrickvL  Done:100
+const
+  VBlankHertz = 60; // TODO -oDxbx : Make VBlankHertz dependant on PAL (50 Hz) or NTSC (60 Hz) emulation
+var
+  UpdateTimer: DxbxTimer;
+begin
   // since callbacks come from here
   EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : Timing thread is running.');
+  DbgPrintf('EmuD3D8 : VBlank handling thread is running.');
 {$ENDIF}
 
-  timeBeginPeriod(0);
+  UpdateTimer.InitFPS(VBlankHertz);
 
-  // current vertical blank count
-  //curvb := 0;
-
-  while true do
+  while True do // TODO -oDxbx: When do we break out of this while loop ?
   begin
-    xboxkrnl_KeTickCount := timeGetTime();
-    {ignore result}JwaNative.NtQuerySystemTime(@xboxkrnl_KeSystemTime);
+    UpdateTimer.Wait;
 
-    Sleep(1); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
-//    Sleep(1000 div 50{hz}); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
-
-    // Poll input
+    // Handle VBlank functionality
+    if g_bRenderWindowActive then
     begin
-      for v := 0 to XINPUT_SETSTATE_SLOTS-1 do
-      begin
-        hDevice := g_pXInputSetStateStatus[v].hDevice;
-
-        if hDevice = 0 then
-          continue;
-
-        dwLatency := g_pXInputSetStateStatus[v].dwLatency;
-        Inc(g_pXInputSetStateStatus[v].dwLatency);
-
-        if (dwLatency < XINPUT_SETSTATE_LATENCY) then
-          continue;
-
-        g_pXInputSetStateStatus[v].dwLatency := 0;
-
-        pFeedback := PXINPUT_FEEDBACK(g_pXInputSetStateStatus[v].pFeedback);
-        if pFeedback = nil then
-          continue;
-
-        // Only update slot if it has not already been updated
-        if pFeedback.Header.dwStatus <> ERROR_SUCCESS then
-        begin
-          if pFeedback.Header.hEvent <> 0 then
-          begin
-            SetEvent(pFeedback.Header.hEvent);
-          end;
-
-          pFeedback.Header.dwStatus := ERROR_SUCCESS;
-        end;
-      end;
-    end;
-
-    // trigger vblank callback
-    begin
-      Inc(g_VBData.VBlank);
+      Inc(g_VBData.VBlankCounter);
 
       // TODO -oCXBX: Fixme.  This may not be right...
       g_SwapData.SwapVBlank := 1;
 
+      // Trigger VBlank callback
       if (Addr(g_pVBCallback) <> NULL) then
       begin
         EmuSwapFS(fsXbox);
@@ -939,23 +1108,22 @@ begin
         EmuSwapFS(fsWindows);
       end;
 
-      g_VBData.Swap := 0;
+      // Reset Swap counter :
+      g_VBData.SwapCounter := 0;
 
       // TODO -oCxbx: This can't be accurate...
       g_SwapData.TimeUntilSwapVBlank := 0;
 
       // TODO -oCxbx: Recalculate this for PAL version if necessary.
       // Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
-   // g_SwapData.TimeBetweenSwapVBlanks = 1/60;
-      g_SwapData.TimeBetweenSwapVBlanks := 0;
+      g_SwapData.TimeBetweenSwapVBlanks := 0; //MillisecondsPerSecond div VBlankHertz;
     end;
-  end; // while
+  end; // while True
+end; // EmuThreadHandleVBlank
 
-  timeEndPeriod(0);
-end; // EmuUpdateTickCount
 
 // thread dedicated to create devices
-function EmuCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
+function EmuThreadCreateDeviceProxy(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   D3DDisplayMode: TD3DDisplayMode; // X_D3DDISPLAYMODE; // TODO -oDXBX: : What type should we use?
@@ -1285,7 +1453,7 @@ begin
   end; // while true
 
   Result := D3D_OK;
-end; // EmuCreateDeviceProxy
+end; // EmuThreadCreateDeviceProxy
 
 // check if a resource has been registered yet (if not, register it)
 procedure EmuVerifyResourceIsRegistered(pResource: PX_D3DResource); //inline;
@@ -1531,8 +1699,8 @@ begin
     [pFieldStatus]);
 {$ENDIF}
 
-  pFieldStatus.Field := X_D3DFIELDTYPE(iif(g_VBData.VBlank and 1 = 0, Ord(X_D3DFIELD_ODD), Ord(X_D3DFIELD_EVEN)));
-  pFieldStatus.VBlankCount := g_VBData.VBlank;
+  pFieldStatus.Field := X_D3DFIELDTYPE(iif(g_VBData.VBlankCounter and 1 = 0, Ord(X_D3DFIELD_ODD), Ord(X_D3DFIELD_EVEN)));
+  pFieldStatus.VBlankCount := g_VBData.VBlankCounter;
 
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus
@@ -4526,19 +4694,21 @@ begin
   hRet := DxbxPresent(pSourceRect, pDestRect, HWND(pDummy1), pDummy2);
 
   // not really accurate because you definately dont always present on every vblank
-  g_VBData.Swap := g_VBData.VBlank;
+  g_VBData.SwapCounter := g_VBData.VBlankCounter;
 
-  if (g_VBData.VBlank = g_VBLastSwap + 1) then
-    g_VBData.Flags := 1 // D3DVBLANK_SWAPDONE
+  if (g_VBData.VBlankCounter = g_VBLastSwap + 1) then
+    g_VBData.Flags := D3DVBLANK_SWAPDONE
   else
   begin
-    g_VBData.Flags := 2; // D3DVBLANK_SWAPMISSED
+    g_VBData.Flags := D3DVBLANK_SWAPMISSED;
     Inc(g_SwapData.MissedVBlanks);
   end;
 
+  g_VBLastSwap := g_VBData.VBlankCounter; // TODO -oDxbx: Should we do this ?
+
   // Handle Swap Callback function
   begin
-    Inc(g_SwapData.Swap);
+    g_SwapData.Swap := D3DSWAP_DEFAULT; // TODO -oDxbx : Should we do this ? Cxbx did Inc(g_SwapData.Swap);
 
     if Assigned(g_pSwapCallback{ is func <> NULL}) then
     begin

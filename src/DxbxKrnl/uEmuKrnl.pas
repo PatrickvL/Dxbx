@@ -35,8 +35,7 @@ uses
   // Dxbx
   uLog,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi;
+  uEmuFile;
 
 const
 // The following symbols come from The NASMX Project, nasmx\inc\xbox\kernel.inc
