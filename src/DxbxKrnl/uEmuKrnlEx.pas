@@ -447,7 +447,7 @@ begin
       InitializeObjectAttributes(@ObjectAttributes, @FileName, OBJ_CASE_INSENSITIVE, 0, NULL);
       Result := xboxkrnl_NtOpenFile(
                 @ConfigPartitionHandle,
-                GENERIC_READ or iif(aIsWriteMode, GENERIC_WRITE, 0) or SYNCHRONIZE,
+                GENERIC_READ or DWORD(iif(aIsWriteMode, GENERIC_WRITE, 0)) or SYNCHRONIZE,
                 @ObjectAttributes,
                 @IoStatusBlock,
                 FILE_SHARE_READ or FILE_SHARE_WRITE,

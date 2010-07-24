@@ -413,7 +413,7 @@ function TEmuNtSymbolicLinkObject.Init(aSymbolicLinkName, aFullPath: AnsiString)
 var
   IsNativePath: Boolean;
   i: Integer;
-  ExtraPath: string;
+  ExtraPath: AnsiString;
   DeviceIndex: Integer;
 begin
   Result := STATUS_OBJECT_NAME_INVALID;
@@ -455,12 +455,12 @@ begin
         begin
           Self.NativePath := Devices[DeviceIndex].NativePath;
           // Handle the case where a sub folder of the partition is mounted (instead of it's root) :
-          ExtraPath := Copy(aFullPath, Length(Devices[i].XboxFullPath) + 1, MaxInt);
+          ExtraPath := Copy(aFullPath, Length(Devices[DeviceIndex].XboxFullPath) + 1, MaxInt);
         end;
 
         if ExtraPath <> '' then
         begin
-          Self.NativePath := Self.NativePath + ExtraPath;
+          Self.NativePath := Self.NativePath + string(ExtraPath);
           ForceDirectories(Self.NativePath);
         end;
 

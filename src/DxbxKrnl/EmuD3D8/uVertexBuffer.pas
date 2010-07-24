@@ -132,7 +132,7 @@ type VertexPatcher = object
   end; // size = 336 (as in Cxbx)
 
 // inline vertex buffer emulation
-var g_pIVBVertexBuffer: PDWORD = nil;
+var g_pIVBVertexBuffer: array of DWORD = nil;
 var g_IVBPrimitiveType: X_D3DPRIMITIVETYPE = X_D3DPT_INVALID;
 var g_IVBFVF: DWORD = 0;
 
@@ -153,9 +153,6 @@ type _D3DIVB = record
   D3DIVB = _D3DIVB;
   PD3DIVB = ^D3DIVB;
 
-  TD3DIVBArray = array [0..(MaxInt div SizeOf(D3DIVB)) - 1] of D3DIVB;
-  PD3DIVBs = ^TD3DIVBArray;
-
 procedure XTL_EmuFlushIVB(); {NOPATCH}
 procedure XTL_EmuUpdateActiveTexture(); {NOPATCH}
 
@@ -167,7 +164,7 @@ const MAX_STREAM_NOT_USED_TIME = (2 * CLOCKS_PER_SEC); // TODO -oCXBX: Trim the 
 
 // inline vertex buffer emulation
 var g_IVBTblOffs: UINT = 0;
-var g_IVBTable: PD3DIVBs = nil;
+var g_IVBTable: array of D3DIVB = nil;
 
 implementation
 
@@ -616,7 +613,7 @@ begin
   // need normalization if used with linear textures.
   if (VshHandleIsFVF(pPatchDesc.hVertexShader)) then
   begin
-    if (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) > 0 then
+    if (pPatchDesc.hVertexShader and D3DFVF_TEXCOUNT_MASK) <> 0 then
     begin
       Result := NormalizeTexCoords(pPatchDesc, uiStream);
       Exit;
@@ -1414,7 +1411,12 @@ var
 begin
   XTL_EmuUpdateDeferredStates();
 
-//  pdwVB := PDWORD(g_IVBTable);
+  // Make sure g_pIVBVertexBuffer has enough space :
+  if Length(g_pIVBVertexBuffer) < (sizeof(_D3DIVB)*g_IVBTblOffs) then
+    SetLength(g_pIVBVertexBuffer, (sizeof(_D3DIVB)*g_IVBTblOffs));
+
+  // Dxbx note : Cxbx re-uses g_IVBTable, but has a risk over overwriting data,
+  // so we populate g_pIVBVertexBuffer instead :
   pdwVB := PDWORD(g_pIVBVertexBuffer);
 
   uiStride := 0;
@@ -1440,7 +1442,9 @@ begin
 
   DbgPrintf('g_IVBTblOffs := %d', [g_IVBTblOffs]);
 
-  dwPos := dwCurFVF and D3DFVF_POSITION_MASK; // Dxbx note : Do this once, not in each for-loop
+  // Dxbx note : Do this once, not inside the for-loop :
+  dwPos := dwCurFVF and D3DFVF_POSITION_MASK;
+  dwTexN := (dwCurFVF and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
 
   if g_IVBTblOffs > 0 then // Dxbx addition, to prevent underflow
   for v := 0 to g_IVBTblOffs - 1 do
@@ -1533,8 +1537,6 @@ begin
       DbgPrintf('IVB Specular := 0x%.08X', [g_IVBTable[v].dwSpecular]);
     end;
 
-    dwTexN := (dwCurFVF and D3DFVF_TEXCOUNT_MASK) shr D3DFVF_TEXCOUNT_SHIFT;
-
     if(dwTexN >= 1) then
     begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.x; Inc(PFLOAT(pdwVB));
@@ -1596,7 +1598,7 @@ begin
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
   VPDesc.dwOffset := 0;
-  VPDesc.pVertexStreamZeroData := g_pIVBVertexBuffer; //g_IVBTable;
+  VPDesc.pVertexStreamZeroData := g_pIVBVertexBuffer;
   VPDesc.uiVertexStreamZeroStride := uiStride;
   VPDesc.hVertexShader := g_CurrentVertexShader;
 

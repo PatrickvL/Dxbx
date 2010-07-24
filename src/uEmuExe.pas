@@ -314,7 +314,7 @@ begin
   XbeLibraryVersion := PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr);
 
   // Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
-  g_EmuXbePath := DeviceHarddisk0Partition1 + XbeFilePath;
+  g_EmuXbePath := DeviceHarddisk0Partition1 + AnsiString(XbeFilePath);
   RtlInitAnsiString(@xboxkrnl_XeImageFileName, PCSZ(g_EmuXbePath));
   // TODO -oDxbx : Make sure this matches g_hCurDir
 

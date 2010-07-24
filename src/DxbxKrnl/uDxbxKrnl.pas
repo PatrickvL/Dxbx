@@ -91,7 +91,7 @@ exports
   *)
 
 var
-  g_Xbe_XbePath: AnsiString; // The path of the running Xbe, as seen from Windows
+  g_Xbe_XbePath: string; // The path of the running Xbe, as seen from Windows
   g_EmuXbePath: AnsiString; // The path of the running Xbe, as seen from Xbox1 (including \Device\Harddisk0\Partition1\)
 
   g_CPUXbox: DWORD_PTR;
@@ -124,7 +124,7 @@ var
 var
   szBuffer: string;
   pCertificate: PXBE_CERTIFICATE;
-  TitleStr: string;
+  TitleStr: AnsiString;
   hDupHandle: Handle;
   OldExceptionFilter: TFNTopLevelExceptionFilter;
 
@@ -277,7 +277,7 @@ begin
           FILE_FLAG_BACKUP_SEMANTICS,
           HNULL);
 
-    TitleStr := IntToHex(pCertificate.dwTitleId, 8);
+    TitleStr := AnsiString(IntToHex(pCertificate.dwTitleId, 8));
 
     // Games may assume they are running from CdRom :
     DxbxRegisterDeviceNativePath(DeviceCdrom0, szBuffer);
@@ -304,7 +304,7 @@ begin
     DxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6 + 'ZDATA\' + TitleStr + '\'); // Utility data to Z:
 
     // Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-    DxbxCreateSymbolicLink(DriveC, szBuffer);
+    DxbxCreateSymbolicLink(DriveC, AnsiString(szBuffer));
     g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter('C').RootDirectoryHandle;
     // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
   end;

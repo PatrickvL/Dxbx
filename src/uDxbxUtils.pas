@@ -137,7 +137,8 @@ function IsFolder(const aFilePath: string): Boolean;
 function FindFiles(const aFolder, aFileMask: TFileName; aFileNames: TStrings): Integer;
 
 function StartsWithString(const aString, aPrefix: AnsiString): Boolean;
-function StartsWithText(const aString, aPrefix: string): Boolean;
+function StartsWithText(const aString, aPrefix: AnsiString): Boolean; overload;
+function StartsWithText(const aString, aPrefix: UnicodeString): Boolean; overload;
 
 procedure Swap(var aElement1, aElement2); overload;
 function RoundUp(dwValue, dwMult: DWord): DWord;
@@ -426,9 +427,14 @@ begin
   Result := strncmp(PAnsiChar(aString), PAnsiChar(aPrefix), Length(aPrefix)) = 0;
 end;
 
-function StartsWithText(const aString, aPrefix: string): Boolean;
+function StartsWithText(const aString, aPrefix: AnsiString): Boolean; // overload
 begin
-  Result := AnsiStrLIComp(PChar(aString), PChar(aPrefix), Length(aPrefix)) = 0;
+  Result := AnsiStrLIComp(PAnsiChar(aString), PAnsiChar(aPrefix), Length(aPrefix)) = 0;
+end;
+
+function StartsWithText(const aString, aPrefix: UnicodeString): Boolean; // overload
+begin
+  Result := AnsiStrLIComp(PWideChar(aString), PWideChar(aPrefix), Length(aPrefix)) = 0;
 end;
 
 function GetEnvVarValue(const VarName: string; Dequote: Boolean = False): string;
