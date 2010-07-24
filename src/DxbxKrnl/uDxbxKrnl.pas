@@ -54,6 +54,7 @@ uses
   uEmu,
   uEmuFS,
   uEmuFile,
+  uEmuXapi,
   uEmuD3D8,
   uHLEIntercept;
 
@@ -244,6 +245,23 @@ begin
  {$ENDIF}
 {$ENDIF}
 
+  // Duplicate process handle in order to retain Suspend/Resume thread rights from a remote thread
+  begin
+    hDupHandle := 0;
+
+    if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
+      DbgPrintf('EmuMain : Couldn''t duplicate handle!');
+
+    DxbxKrnlRegisterThread(hDupHandle); // Dxbx note : Is this correct? hDupHandle is a process, not a thread handle?
+  end;
+
+  // initialize FS segment selector
+  begin
+    EmuInitFS();
+
+    EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
+  end;
+
   // Determine Xbe Path :
   begin
     g_EmuShared.GetXbePath({var}szBuffer);
@@ -306,10 +324,22 @@ begin
   // Create default symbolic links :
   begin
     DxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
-    DxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + 'TDATA\' + TitleStr + '\'); // Title data to T:
-    DxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + 'UDATA\' + TitleStr + '\'); // User data to U:
-    DxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition2); // Officially unused, but contains Dashboard files
-    DxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6 + 'ZDATA\' + TitleStr + '\'); // Utility data to Z:
+    DxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files)
+    DxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
+
+    DxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + 'TDATA\' + TitleStr + '\'); // Partition1\Title data goes to T:
+    DxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + 'UDATA\' + TitleStr + '\'); // Partition1\User data goes to U:
+
+    DxbxCreateSymbolicLink(DriveX, DeviceHarddisk0Partition3); // Partition3 goes to X:
+    DxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y:
+
+    // Mount the Utility drive (Z:) conditionally :
+    if (DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
+    begin
+      EmuSwapFS(fsXbox);
+      XTL_EmuXMountUtilityDrive({fFormatClean=}BOOL_FALSE);
+      EmuSwapFS(fsWindows);
+    end;
 
     // Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
     DxbxCreateSymbolicLink(DriveC, AnsiString(szBuffer));
@@ -317,25 +347,8 @@ begin
     // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
   end;
 
-  // initialize FS segment selector
-  begin
-    EmuInitFS();
-
-    EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
-  end;
-
-  // Duplicate process handle in order to retain Suspend/Resume thread rights from a remote thread
-  begin
-    hDupHandle := 0;
-
-    if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
-      DbgPrintf('EmuMain : Couldn''t duplicate handle!');
-
-    DxbxKrnlRegisterThread(hDupHandle); // Dxbx note : Is this correct? hDupHandle is a process, not a thread handle?
-  end;
-
 {$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Determineing CPU affinity.');
+  DbgPrintf('EmuMain : Determining CPU affinity.');
 {$ENDIF}
 
   // Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,

@@ -42,6 +42,7 @@ uses
   uEmuFS, // EmuSwapFS
   uEmuAlloc,
   uEmuDInput,
+  uEmuFile,
   uEmuKrnlKe,
   uXBController,
   uXboxLibraryUtils, // PatchPrefix
@@ -228,6 +229,11 @@ function XTL_EmuXFreeSectionByHandle
 (
     hSection: XTL_SECTIONHANDLE
 ): BOOL; stdcall; // published function, used for xboxkrnl_XeUnloadSection
+
+function XTL_EmuXMountUtilityDrive
+(
+    fFormatClean: BOOL
+): BOOL; stdcall; // published function, used for DxbxKrnlInit
 
 implementation
 
@@ -545,20 +551,39 @@ function XTL_EmuXMountUtilityDrive
 (
     fFormatClean: BOOL
 ): BOOL; stdcall;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:60
+var
+  pCertificate: PXBE_CERTIFICATE;
+  TitleStr: AnsiString;
+  status: NTSTATUS;
 begin
+  EmuSwapFS(fsWindows);
+
 {$IFDEF _DEBUG_TRACE}
-  begin
-    EmuSwapFS(fsWindows);
-    DbgPrintf('EmuXapi : EmuXMountUtilityDrive' +
+  DbgPrintf('EmuXapi : EmuXMountUtilityDrive' +
         #13#10'(' +
         #13#10'   fFormatClean        : 0x%.08X' +
         #13#10');', [fFormatClean]);
-    EmuSwapFS(fsXbox);
-  end;
 {$ENDIF}
 
-  Result := BOOL_TRUE;
+  // TODO -oDxbx : Select the oldest cache partition somehow.
+
+  // For now, select partition6 as 'Utility data' drive, and link it to Z:
+  pCertificate := PXBE_CERTIFICATE(DxbxKrnl_XbeHeader.dwCertificateAddr);
+  TitleStr := AnsiString(IntToHex(pCertificate.dwTitleId, 8));
+  status := DxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6 + 'Dxbx_ZDATA_' + TitleStr + '\');
+  // Dxbx note : The ZDATA convention is not actually what the Xbox does, but for now
+  // allows us to skip the partition-selection and formatting of the Utility drive,
+  // by creating a unique subfolder per title.
+
+  // TODO -oDxbx : Implement 'formatting' (cleaning) of the Utility drive
+
+  if NT_SUCCESS(status) then
+    Result := BOOL_TRUE
+  else
+    Result := BOOL_FALSE;
+
+  EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuXInitDevices
