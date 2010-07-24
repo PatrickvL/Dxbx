@@ -477,19 +477,20 @@ var
 begin
   NewFlags := 0;
 
- // Need to convert the flags,
- //TODO -oCXBX: fix the xbox extensions
+  // Need to convert the flags,
+  //TODO -oCXBX: fix the xbox extensions
+  // Dxbx note : Cxbx uses XOR here, that can't be right! We'll be using OR.
   if (Flags and X_D3DLOCK_NOFLUSH) > 0 then
-    NewFlags := NewFlags xor 0;
+    NewFlags := NewFlags or 0;
 
   if (Flags and X_D3DLOCK_NOOVERWRITE) > 0 then
-    NewFlags := NewFlags xor D3DLOCK_NOOVERWRITE;
+    NewFlags := NewFlags or D3DLOCK_NOOVERWRITE;
 
   if (Flags and X_D3DLOCK_TILED) > 0 then
-    NewFlags := NewFlags xor 0;
+    NewFlags := NewFlags or 0;
 
   if (Flags and X_D3DLOCK_READONLY) > 0 then
-    NewFlags := NewFlags xor D3DLOCK_READONLY;
+    NewFlags := NewFlags or D3DLOCK_READONLY;
 
   Result := NewFlags;
 end;
