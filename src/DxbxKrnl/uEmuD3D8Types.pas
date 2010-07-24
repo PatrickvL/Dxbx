@@ -102,9 +102,28 @@ type
 
 // TODO -oCXBX: fill out these enumeration tables for convienance
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+
+type X_D3DMULTISAMPLE_TYPE = DWORD;
 type X_D3DFORMAT = DWORD;
 type X_D3DBLENDOP = DWORD;
-type X_D3DBLEND = DWORD;
+type X_D3DBLEND = (
+  X_D3DBLEND_ZERO               = 0,
+  X_D3DBLEND_ONE                = 1,
+  X_D3DBLEND_SRCCOLOR           = $300,
+  X_D3DBLEND_INVSRCCOLOR        = $301,
+  X_D3DBLEND_SRCALPHA           = $302,
+  X_D3DBLEND_INVSRCALPHA        = $303,
+  X_D3DBLEND_DESTALPHA          = $304,
+  X_D3DBLEND_INVDESTALPHA       = $305,
+  X_D3DBLEND_DESTCOLOR          = $306,
+  X_D3DBLEND_INVDESTCOLOR       = $307,
+  X_D3DBLEND_SRCALPHASAT        = $308,
+  X_D3DBLEND_CONSTANTCOLOR      = $8001,
+  X_D3DBLEND_INVCONSTANTCOLOR   = $8002,
+  X_D3DBLEND_CONSTANTALPHA      = $8003,
+  X_D3DBLEND_INVCONSTANTALPHA   = $8004,
+  X_D3DBLEND_FORCE_DWORD        = $7fffffff
+);
 type X_D3DCMPFUNC = DWORD;
 type X_D3DFILLMODE = DWORD;
 type X_D3DSHADEMODE = DWORD;
@@ -120,6 +139,7 @@ type X_D3DSTENCILOP = (
   X_D3DSTENCILOP_FORCE_DWORD    = $7fffffff
 );
 type X_D3DTEXTURESTAGESTATETYPE = DWORD;
+type X_D3DCOLORWRITEENABLE = DWORD;
 type X_D3DCALLBACK = PVOID;
 
 const
@@ -175,6 +195,19 @@ X_D3DRESOURCETYPE = _X_D3DRESOURCETYPE;
 const X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER = $00000001;
 const X_D3DPRESENTFLAG_INTERLACED          = $00000020;
 const X_D3DPRESENTFLAG_FIELD               = $00000080;
+
+type X_D3DVERTEXBLENDFLAGS= (
+    X_D3DVBF_DISABLE           = 0,     // Disable vertex blending
+    X_D3DVBF_1WEIGHTS          = 1,     // 2 matrix blending
+    X_D3DVBF_2WEIGHTS2MATRICES = 2,     // Xbox ext. nsp.
+    X_D3DVBF_2WEIGHTS          = 3,     // 3 matrix blending
+    X_D3DVBF_3WEIGHTS3MATRICES = 4,     // Xbox ext. nsp.
+    X_D3DVBF_3WEIGHTS          = 5,     // 4 matrix blending
+    X_D3DVBF_4WEIGHTS4MATRICES = 6,     // Xbox ext. nsp.
+
+    X_D3DVBF_MAX               = 7,
+    X_D3DVBF_FORCE_DWORD       = $7fffffff
+);
 
 type _X_D3DDISPLAYMODE = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -833,6 +866,13 @@ const
   X_D3DVSDT_PBYTE4      = $44; // xbox ext.
   X_D3DVSDT_FLOAT2H     = $72; // xbox ext.
   X_D3DVSDT_NONE        = $02; // xbox ext. nsp
+
+const
+  X_D3DCOLORWRITEENABLE_RED   = (1 shl 16);
+  X_D3DCOLORWRITEENABLE_GREEN = (1 shl 8);
+  X_D3DCOLORWRITEENABLE_BLUE  = (1 shl 0);
+  X_D3DCOLORWRITEENABLE_ALPHA = (1 shl 24);
+  X_D3DCOLORWRITEENABLE_ALL   = $01010101; // Xbox ext.
 
 implementation
 

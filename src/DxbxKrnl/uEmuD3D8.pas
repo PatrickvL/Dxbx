@@ -157,6 +157,7 @@ var
   g_XBVideo: XBVideo;
   g_pVBCallback: D3DVBLANKCALLBACK = NULL; // Vertical-Blank callback routine
   g_pSwapCallback: D3DSWAPCALLBACK = NULL; // Swap/Present callback routine
+  g_bIsBusy: BOOL;
 
   // wireframe toggle
   g_iWireframe: int = 0;
@@ -377,7 +378,9 @@ end;
 // A wrapper for Present() with an extra safeguard to restore 'device lost' errors :
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 begin
+  g_bIsBusy := BOOL_TRUE;
   Result := IDirect3DDevice8(g_pD3DDevice8).Present(pSourceRect, pDestRect, pDummy1, pDummy2);
+  g_bIsBusy := BOOL_FALSE;
   if Result = D3D_OK then
     Exit;
 
@@ -444,7 +447,7 @@ procedure DxbxTimer.Wait;
 var
   TicksPassed: int;
   TicksLeft: int;
-  i: int;
+//  i: int;
 begin
   // Note : Even though we used timeBeginPeriod, Sleep is not really accurate.
   // So we do what VirtualDub does (http://www.virtualdub.org/blog/pivot/entry.php?id=272)
@@ -525,7 +528,7 @@ begin
   // create input handling thread
   begin
     dwThreadId := 0;
-    hThread := CreateThread(nil, 0, @EmuThreadPollInput, nil, 0, {var}dwThreadId);
+    {hThread :=} CreateThread(nil, 0, @EmuThreadPollInput, nil, 0, {var}dwThreadId);
     // If possible, assign this thread to another core than the one that runs Xbox1 code :
     SetThreadAffinityMask(dwThreadId, g_CPUOthers);
   end;
@@ -533,7 +536,7 @@ begin
   // create vblank handling thread
   begin
     dwThreadId := 0;
-    hThread := CreateThread(nil, 0, @EmuThreadHandleVBlank, nil, 0, {var}dwThreadId);
+    {hThread :=} CreateThread(nil, 0, @EmuThreadHandleVBlank, nil, 0, {var}dwThreadId);
     // Make sure VBlank callbacks run on the same core as the one that runs Xbox1 code :
     SetThreadAffinityMask(dwThreadId, g_CPUXbox);
   end;
@@ -551,7 +554,7 @@ begin
     g_bRenderWindowActive := false;
 
     dwThreadId := 0;
-    hThread := CreateThread(nil, 0, @EmuThreadRenderWindow, nil, 0, {var}dwThreadId);
+    {hThread :=} CreateThread(nil, 0, @EmuThreadRenderWindow, nil, 0, {var}dwThreadId);
     // If possible, assign this thread to another core than the one that runs Xbox1 code :
     SetThreadAffinityMask(dwThreadId, g_CPUOthers);
 
@@ -1613,7 +1616,7 @@ begin
   Result := g_EmuCDPD.hRet;
 end; // XTL_EmuIDirect3D8_CreateDevice
 
-function XTL_EmuIDirect3DDevice8_IsBusy: {LONG?}BOOL; stdcall;
+function XTL_EmuIDirect3DDevice8_IsBusy: BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1626,7 +1629,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := BOOL_FALSE;
+  Result := g_bIsBusy; // Dxbx note : We read a boolean that's only true while inside Present()
 end; // XTL_EmuIDirect3DDevice8_IsBusy
 
 procedure XTL_EmuIDirect3DDevice8_GetCreationParameters(pParameters: PD3DDEVICE_CREATION_PARAMETERS); stdcall;
@@ -2472,7 +2475,7 @@ begin
 {$ENDIF}
 
   // Allow backbuffer -1 and up to the allocated BackBufferCount, but nothing beyond this :
-  if (BackBuffer < -1) or (BackBuffer >= g_EmuCDPD.pPresentationParameters.BackBufferCount) then
+  if (BackBuffer < -1) or (BackBuffer >= int(g_EmuCDPD.pPresentationParameters.BackBufferCount)) then
     Result := D3DERR_INVALIDCALL
   else
   begin
@@ -2487,12 +2490,14 @@ function XTL_EmuIDirect3DDevice8_SetViewport
   pViewport: PD3DVIEWPORT8
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:162+StrickerX3_patch  Translator:Shadow_Tj  Done:100
+(*
 var
   dwX: DWORD;
   dwY: DWORD;
   dwWidth: DWORD;
   dwHeight: DWORD;
   currentViewport: D3DVIEWPORT8;
+*)
 begin
   EmuSwapFS(fsWindows);
 
@@ -2505,6 +2510,7 @@ begin
     pViewport.Height, pViewport.MinZ, pViewport.MaxZ]);
 {$ENDIF}
 
+(*
   dwX := pViewport.X;
   dwY := pViewport.Y;
   dwWidth := pViewport.Width;
@@ -2535,7 +2541,7 @@ begin
 //      pViewport.Height := currentViewport.Height - dwY;
 //    end;
 //  end;
-
+*)
   Result := IDirect3DDevice8(g_pD3DDevice8).SetViewport(pViewport^);
 
   // restore originals
@@ -4166,21 +4172,11 @@ begin
 
   g_IVBPrimitiveType := PrimitiveType;
 
-  if (g_IVBTable = nil) then
-  begin
-    g_IVBTable := DxbxMalloc(sizeof(_D3DIVB)*1024);
-  end;
-
   g_IVBTblOffs := 0;
   g_IVBFVF := 0;
-
   // default values
-  ZeroMemory(g_IVBTable, sizeof(_D3DIVB)*1024);
-
-  if (g_pIVBVertexBuffer = nil) then
-  begin
-    g_pIVBVertexBuffer := DxbxMalloc(sizeof(_D3DIVB)*1024);
-  end;
+  if Length(g_IVBTable) > 0 then
+    ZeroMemory(@g_IVBTable[0], sizeof(_D3DIVB)*Length(g_IVBTable));
 
   EmuSwapFS(fsXbox);
 
@@ -4295,6 +4291,17 @@ begin
 {$ENDIF}
 
   hRet := S_OK;
+
+  // Check if g_IVBTable has enough space for the current g_IVBTblOffs
+  // (and one extra for the "Copy current color to next vertex" case) :
+  if Length(g_IVBTable) <= (int(g_IVBTblOffs) + 1) then
+  begin
+    // Grow with 128 vertices at a time :
+    SetLength(g_IVBTable, g_IVBTblOffs + 128);
+
+    // default values
+    ZeroMemory(@g_IVBTable[g_IVBTblOffs], sizeof(_D3DIVB)*128);
+  end;
 
   case Cardinal(Register_) of
     // TODO -oCXBX: Blend weight.
@@ -5709,7 +5716,7 @@ end;
 function XTL_EmuIDirect3DResource8_IsBusy
 (
     pThis: PX_D3DResource
-): LONGBOOL; stdcall;
+): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 //var
 //  pResource8: XTL_PIDirect3DResource8;
@@ -5726,7 +5733,9 @@ begin
   // pResource8 := pThis.Emu.Resource8;
   EmuSwapFS(fsXbox);
 
-  Result := True;
+  // TODO -oDxbx : This is just an experiment, as Cxbx returns False, while shadow_tj got
+  // 'Dead or alive volleyball' to work when returning True here; Let's see what this flag does :
+  Result := g_bIsBusy;
 end;
 
 function XTL_EmuIDirect3DResource8_GetType
@@ -7169,7 +7178,6 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
 var
   State: D3DRenderStateType;//int;
 //  v: int;
-  OrigValue: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7223,19 +7231,7 @@ begin
     case _D3DRENDERSTATETYPE(State) of
       D3DRS_COLORWRITEENABLE:
         begin
-          OrigValue := Value;
-
-          Value := 0;
-
-          if (OrigValue and (1 shl 16)) > 0 then
-            Value:= Value or D3DCOLORWRITEENABLE_RED;
-          if (OrigValue and (1 shl 8)) > 0 then
-              Value:= Value or D3DCOLORWRITEENABLE_GREEN;
-          if (OrigValue and (1 shl 0)) > 0 then
-              Value:= Value or D3DCOLORWRITEENABLE_BLUE;
-          if (OrigValue and (1 shl 24)) > 0 then
-              Value:= Value or D3DCOLORWRITEENABLE_ALPHA;
-
+          Value := EmuXB2PC_D3DCOLORWRITEENABLE(Value);
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_COLORWRITEENABLE := 0x%.08X', [Value]);
 {$ENDIF}
@@ -7259,7 +7255,7 @@ begin
 
       D3DRS_SRCBLEND:
         begin
-          Value := EmuXB2PC_D3DBLEND(Value);
+          Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_SRCBLEND := 0x%.08X', [Value]);
 {$ENDIF}
@@ -7267,7 +7263,7 @@ begin
 
       D3DRS_DESTBLEND:
         begin
-          Value := EmuXB2PC_D3DBLEND(Value);
+          Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
 {$IFDEF DEBUG}
           DbgPrintf('D3DRS_DESTBLEND := 0x%.08X', [Value]);
 {$ENDIF}
@@ -7384,7 +7380,7 @@ end;
 
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend
 (
-  Value: DWORD
+  Value: X_D3DVERTEXBLENDFLAGS
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
@@ -7395,20 +7391,10 @@ begin
     #13#10'(' +
     #13#10'   Value               : 0x%.08X' +
     #13#10');',
-    [Value]);
+    [Ord(Value)]);
 {$ENDIF}
 
-  // convert from Xbox direct3d to PC direct3d enumeration
-  if (Value <= 1) then
-    Value := Value
-  else if (Value = 3) then
-    Value := 2
-  else if (Value = 5) then
-    Value := 3
-  else
-    DxbxKrnlCleanup('Unsupported D3DVERTEXBLENDFLAGS (%d)', [Value]);
-
-  IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_VERTEXBLEND, Value);
+  IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_VERTEXBLEND, EmuXB2PC_D3DVERTEXBLENDFLAGS(Value));
 
   EmuSwapFS(fsXbox);
 end;
@@ -7673,6 +7659,7 @@ begin
     [Value]);
 {$ENDIF}
 
+  // TODO -oDxbx: If Value is D3DMULTISAMPLE_TYPE, then we should convert it from Xbox to Native!
   IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
 
   EmuSwapFS(fsXbox);
@@ -9300,7 +9287,7 @@ function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType
   DeviceType: D3DDEVTYPE;
   SurfaceFormat: X_D3DFORMAT;
   Windowed: BOOL;
-  MultiSampleType: D3DMULTISAMPLE_TYPE
+  MultiSampleType: X_D3DMULTISAMPLE_TYPE
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
@@ -9354,7 +9341,7 @@ begin
     Windowed := BOOL_FALSE;
 
   // TODO -oCXBX: Convert from Xbox to PC!!
-  PCMultiSampleType := EmuXB2PC_D3DMultiSampleFormat(DWORD(MultiSampleType));
+  PCMultiSampleType := EmuXB2PC_D3DMultiSampleFormat(MultiSampleType);
 
  // Now call the real CheckDeviceMultiSampleType with the corrected parameters.
  Result := IDirect3D8(g_pD3D8).CheckDeviceMultiSampleType
@@ -10069,6 +10056,7 @@ begin
   Result := S_OK;
 end;
 
+(* Dxbx note : Disabled, as we DO have EmuD3DDeferredRenderState pin-pointed correctly
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_Deferred(
   {0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   {2 EDX}Value: DWORD;
@@ -10102,7 +10090,7 @@ begin
       DxbxKrnlCleanup('Unknown Deferred RenderState! (%d)', [State]);
   end;
 
-  (*
+  {
   XDK 3911 Deferred RenderState values
     D3DRS_FOGENABLE                 = 82,   // TRUE to enable fog blending
     D3DRS_FOGTABLEMODE              = 83,   // D3DFOGMODE
@@ -10138,11 +10126,12 @@ begin
     D3DRS_POINTSIZE_MAX             = 113,  // float point size max threshold
     D3DRS_PATCHEDGESTYLE            = 114,  // D3DPATCHEDGESTYLE
     D3DRS_PATCHSEGMENTS             = 115,  // DWORD number of segments per edge when drawing patches
-  *)
+  }
 
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
 end;
+*)
 
 function XTL_EmuIDirect3DDevice8_DeleteStateBlock
 (
@@ -10429,7 +10418,7 @@ exports
   XTL_EmuIDirect3DDevice8_SetPixelShaderProgram name PatchPrefix + 'D3DDevice_SetPixelShaderProgram',
   XTL_EmuIDirect3DDevice8_SetRenderState_BackFillMode name PatchPrefix + 'D3DDevice_SetRenderState_BackFillMode',
   XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name PatchPrefix + 'D3DDevice_SetRenderState_CullMode',
-  XTL_EmuIDirect3DDevice8_SetRenderState_Deferred name PatchPrefix + 'D3DDevice_SetRenderState_Deferred',
+//   XTL_EmuIDirect3DDevice8_SetRenderState_Deferred name PatchPrefix + 'D3DDevice_SetRenderState_Deferred',
   XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed name PatchPrefix + 'D3DDevice_SetRenderState_DoNotCullUncompressed',
   XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name PatchPrefix + 'D3DDevice_SetRenderState_Dxt1NoiseEnable',
   XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name PatchPrefix + 'D3DDevice_SetRenderState_EdgeAntiAlias',

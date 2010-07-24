@@ -384,6 +384,19 @@ implementation
 
 const lfUnit = lfCxbx or lfKernel;
 
+function DxbxFillStringBuffer(const aTarget: PSTRING; const aAnsiString: AnsiString): NTSTATUS;
+begin
+  Result := STATUS_SUCCESS;
+  aTarget.Length := Length(aAnsiString);
+  if aTarget.Length > aTarget.MaximumLength then
+  begin
+    Result := STATUS_BUFFER_TOO_SMALL;
+    aTarget.Length := aTarget.MaximumLength;
+  end;
+
+  memcpy(aTarget.Buffer, PAnsiChar(aAnsiString), aTarget.Length);
+end;
+
 type
   RNativeObjectAttributes = record
     // Internal variables :
@@ -1658,17 +1671,7 @@ begin
       EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject(EmuHandle.NtObject);
 
       if Assigned(LinkTarget) then
-      begin
-        // TODO -oDxbx: Put this into a tooling function, returning NTSTATUS :
-        LinkTarget.Length := Length(EmuNtSymbolicLinkObject.XboxFullPath);
-        if LinkTarget.Length > LinkTarget.MaximumLength then
-        begin
-          Result := STATUS_BUFFER_TOO_SMALL;
-          LinkTarget.Length := LinkTarget.MaximumLength;
-        end;
-
-        memcpy(LinkTarget.Buffer, PAnsiChar(EmuNtSymbolicLinkObject.XboxFullPath), LinkTarget.Length);
-      end;
+        Result := DxbxFillStringBuffer(LinkTarget, EmuNtSymbolicLinkObject.XboxFullPath);
 
       if Assigned(ReturnedLength) then
       begin
@@ -2376,7 +2379,7 @@ begin
   for i := 0 to Count - 1 do
   begin
     Handle_ := PHANDLEs(Handles)[i];
-    if MayLog(lfUnit) then // Add lfExtreme later
+    if MayLog(lfUnit or lfExtreme) then
       DbgPrintf('   Handles[%d] : 0x%.08X', [i, Handle_]);
 
     if IsEmuHandle(Handle_) then

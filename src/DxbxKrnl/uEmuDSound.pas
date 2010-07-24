@@ -383,7 +383,7 @@ var
   dwAudioBytes, dwAudioBytes2: DWORD;
   hRet: HRESULT;
 begin
-  for v := 0 to SOUNDBUFFER_CACHE_SIZE -1 do 
+  for v := 0 to SOUNDBUFFER_CACHE_SIZE -1 do
   begin
     if (g_pDSoundBufferCache[v] = nil) or (g_pDSoundBufferCache[v].EmuBuffer = nil) then
       continue;
@@ -1991,7 +1991,7 @@ function XTL_EmuIDirectSoundBuffer8_SetOutputBuffer
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('KeBoostPriorityThread');
+  Result := Unimplemented('IDirectSoundBuffer8_SetOutputBuffer');
 
   EmuSwapFS(fsXbox);
 end;

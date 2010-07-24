@@ -44,7 +44,7 @@ function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
 
 function EmuXB2PC_D3DLock(Flags: DWORD): DWORD; inline;
-function EmuXB2PC_D3DMultiSampleFormat(aType: DWORD): D3DMULTISAMPLE_TYPE;
+function EmuXB2PC_D3DMultiSampleFormat(aType: X_D3DMULTISAMPLE_TYPE): D3DMULTISAMPLE_TYPE;
 
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
 function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
@@ -53,6 +53,8 @@ function EmuXB2PC_D3DCMPFUNC(Value: X_D3DCMPFUNC): D3DCMPFUNC; inline;
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
 function EmuXB2PC_D3DSTENCILOP(Value: X_D3DSTENCILOP): D3DSTENCILOP; inline;
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
+function EmuXB2PC_D3DVERTEXBLENDFLAGS(Value: X_D3DVERTEXBLENDFLAGS): D3DVERTEXBLENDFLAGS; inline;
+function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD; inline;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
@@ -495,7 +497,7 @@ end;
 // Code translated from Convert.h :
 
 // convert from xbox to pc multisample formats
-function EmuXB2PC_D3DMultiSampleFormat(aType: DWORD): D3DMULTISAMPLE_TYPE;
+function EmuXB2PC_D3DMultiSampleFormat(aType: X_D3DMULTISAMPLE_TYPE): D3DMULTISAMPLE_TYPE;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
   case aType of
@@ -582,13 +584,29 @@ end;
 function EmuXB2PC_D3DBLEND(Value: X_D3DBLEND): D3DBLEND; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  if (Value < 2) then
-    Result := D3DBLEND(Value + 1)
-  else if (Value < $309) then
-    Result := D3DBLEND((Value and $F) + 3)
+  case Value of
+    X_D3DBLEND_ZERO               : Result := D3DBLEND_ZERO;
+    X_D3DBLEND_ONE                : Result := D3DBLEND_ONE;
+    X_D3DBLEND_SRCCOLOR           : Result := D3DBLEND_SRCCOLOR;
+    X_D3DBLEND_INVSRCCOLOR        : Result := D3DBLEND_INVSRCCOLOR;
+    X_D3DBLEND_SRCALPHA           : Result := D3DBLEND_SRCALPHA;
+    X_D3DBLEND_INVSRCALPHA        : Result := D3DBLEND_INVSRCALPHA;
+    X_D3DBLEND_DESTALPHA          : Result := D3DBLEND_DESTALPHA;
+    X_D3DBLEND_INVDESTALPHA       : Result := D3DBLEND_INVDESTALPHA;
+    X_D3DBLEND_DESTCOLOR          : Result := D3DBLEND_DESTCOLOR;
+    X_D3DBLEND_INVDESTCOLOR       : Result := D3DBLEND_INVDESTCOLOR;
+    X_D3DBLEND_SRCALPHASAT        : Result := D3DBLEND_SRCALPHASAT;
+(* Xbox only :
+    X_D3DBLEND_CONSTANTCOLOR      : Result := ; // $8001,
+    X_D3DBLEND_INVCONSTANTCOLOR   : Result := ; // $8002,
+    X_D3DBLEND_CONSTANTALPHA      : Result := ; // $8003,
+    X_D3DBLEND_INVCONSTANTALPHA   : Result := ; // $8004,
+   Xbox doesn't support :
+    // D3DBLEND_BOTHSRCALPHA       = 12,
+    // D3DBLEND_BOTHINVSRCALPHA    = 13,
+*)
   else
-  begin
-    DxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Value]);
+    DxbxKrnlCleanup('Unknown Xbox D3DBLEND Extension (0x%.08X)', [Ord(Value)]);
 
     Result := D3DBLEND(Value);
   end;
@@ -641,6 +659,43 @@ begin
     DxbxKrnlCleanup('Unknown D3DSTENCILOP (0x%.08X)', [Ord(Value)]);
     Result := D3DSTENCILOP(Value);
   end;
+end;
+
+// convert from Xbox direct3d to PC direct3d enumeration
+function EmuXB2PC_D3DVERTEXBLENDFLAGS(Value: X_D3DVERTEXBLENDFLAGS): D3DVERTEXBLENDFLAGS; inline;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  case(Value)of
+    X_D3DVBF_DISABLE           : Result := D3DVBF_DISABLE;
+    X_D3DVBF_1WEIGHTS          : Result := D3DVBF_1WEIGHTS;
+    X_D3DVBF_2WEIGHTS          : Result := D3DVBF_2WEIGHTS;
+    X_D3DVBF_3WEIGHTS          : Result := D3DVBF_3WEIGHTS;
+(* Xbox only :
+    X_D3DVBF_2WEIGHTS2MATRICES : Result := ;
+    X_D3DVBF_3WEIGHTS3MATRICES : Result := ;
+    X_D3DVBF_4WEIGHTS4MATRICES : Result := ;
+   Xbox doesn't support :
+    D3DVBF_TWEENING = 255,
+    D3DVBF_0WEIGHTS = 256
+*)
+  else //default:
+    DxbxKrnlCleanup('Unsupported D3DVERTEXBLENDFLAGS (%d)', [Ord(Value)]);
+    Result := D3DVERTEXBLENDFLAGS(Value);
+  end;
+end;
+
+function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD; inline;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result := 0;
+  if (Value and X_D3DCOLORWRITEENABLE_RED) > 0 then
+    Result := Result or D3DCOLORWRITEENABLE_RED;
+  if (Value and X_D3DCOLORWRITEENABLE_GREEN) > 0 then
+    Result := Result or D3DCOLORWRITEENABLE_GREEN;
+  if (Value and X_D3DCOLORWRITEENABLE_BLUE) > 0 then
+    Result := Result or D3DCOLORWRITEENABLE_BLUE;
+  if (Value and X_D3DCOLORWRITEENABLE_ALPHA) > 0 then
+    Result := Result or D3DCOLORWRITEENABLE_ALPHA;
 end;
 
 // convert from vertex count to primitive count (Xbox)
