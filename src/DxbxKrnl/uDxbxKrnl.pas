@@ -266,6 +266,10 @@ begin
     end;
   end;
 
+{$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Initializing devices.');
+{$ENDIF}
+
   // Initialize devices :
   begin
     DxbxBasePath := GetDxbxBasePath + '\EmuDisk\';
@@ -295,6 +299,10 @@ begin
     DxbxRegisterDeviceNativePath(DeviceHarddisk0Partition7, DxbxBasePath + 'Partition7\');
   end;
 
+{$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Creating default symbolic links.');
+{$ENDIF}
+
   // Create default symbolic links :
   begin
     DxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
@@ -316,31 +324,19 @@ begin
     EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
   end;
 
-  // duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
+  // Duplicate process handle in order to retain Suspend/Resume thread rights from a remote thread
   begin
     hDupHandle := 0;
 
     if not DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), @hDupHandle, 0, False, DUPLICATE_SAME_ACCESS) then
       DbgPrintf('EmuMain : Couldn''t duplicate handle!');
 
-    DxbxKrnlRegisterThread(hDupHandle);
+    DxbxKrnlRegisterThread(hDupHandle); // Dxbx note : Is this correct? hDupHandle is a process, not a thread handle?
   end;
 
-  
 {$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Initializing Direct3D.');
+  DbgPrintf('EmuMain : Determineing CPU affinity.');
 {$ENDIF}
-
-  XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
-
-  EmuHLEIntercept(pLibraryVersion, pXbeHeader);
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Initial thread starting.');
-{$ENDIF}
-
-  // Re-route unhandled exceptions to our emulation-execption handler :
-  OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
 
   // Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
   // this will better aproximate the environment with regard to multi-threading) :
@@ -359,6 +355,25 @@ begin
     // Make sure Xbox1 code runs on one core :
     SetThreadAffinityMask(GetCurrentThreadID(), g_CPUXbox);
   end;
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Intercepting functions.');
+{$ENDIF}
+
+  EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Initializing Direct3D.');
+{$ENDIF}
+
+  XTL_EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Initial thread starting.');
+{$ENDIF}
+
+  // Re-route unhandled exceptions to our emulation-execption handler :
+  OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
 
   // Xbe entry point
   try
