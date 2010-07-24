@@ -339,16 +339,17 @@ function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATU
 var
   EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
+  // Check if this symbolic link already exists :
   EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(SymbolicLinkName);
   if Assigned(EmuNtSymbolicLinkObject) then
-    Result := STATUS_OBJECT_NAME_COLLISION
-  else
-  begin
-    EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject.Create;
-    Result := EmuNtSymbolicLinkObject.Init(SymbolicLinkName, FullPath);
-    if Result <> STATUS_SUCCESS then
-      EmuNtSymbolicLinkObject.NtClose;
-  end;
+    // In that case, close it :
+    EmuNtSymbolicLinkObject.NtClose;
+
+  // Now (re)create a symbolic link object, and initialize it with the new definition :
+  EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject.Create;
+  Result := EmuNtSymbolicLinkObject.Init(SymbolicLinkName, FullPath);
+  if Result <> STATUS_SUCCESS then
+    EmuNtSymbolicLinkObject.NtClose;
 end;
 
 var
