@@ -434,7 +434,7 @@ begin
       mbstr := @(PFILE_NAME_INFORMATION(FileInformation).FileName[0]);
     end;
 
-//    FileRenameInformation: ; // = 10 FILE_RENAME_INFORMATION
+    FileRenameInformation, // = 10 FILE_RENAME_INFORMATION
     FileLinkInformation: // = 11 FILE_LINK_INFORMATION
     begin
       CopySize := SizeOf(FILE_LINK_INFORMATION);

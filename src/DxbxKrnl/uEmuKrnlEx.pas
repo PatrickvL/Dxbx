@@ -92,11 +92,11 @@ function {023} xboxkrnl_ExQueryPoolBlockSize(
   QuotaCharged: PBOOLEAN // OUT
   ): SIZE_T; stdcall;
 function {024} xboxkrnl_ExQueryNonVolatileSetting(
-  ValueIndex: DWORD;
-  Type_: PDWORD; // OUT
-  Value: PUCHAR; // OUT
-  ValueLength: SIZE_T;
-  ResultLength: PSIZE_T // OUT, OPTIONAL
+  ValueIndex: ULONG;
+  Type_: PULONG; // OUT
+  Value: PDWORD; // OUT
+  ValueLength: ULONG;
+  ResultLength: PULONG // OUT, OPTIONAL
   ): NTSTATUS; stdcall;
 function {025} xboxkrnl_ExReadWriteRefurbInfo(
   pRefurbInfo: PXBOX_REFURB_INFO; // OUT
@@ -293,11 +293,11 @@ end;
 // and updated by ExSaveNonVolatileSetting.
 function {024} xboxkrnl_ExQueryNonVolatileSetting
 (
-  ValueIndex: DWORD;
-  Type_: PDWORD; // OUT
-  Value: PUCHAR; // OUT
-  ValueLength: SIZE_T;
-  ResultLength: PSIZE_T // OUT, OPTIONAL
+  ValueIndex: ULONG;
+  Type_: PULONG; // OUT
+  Value: PDWORD; // OUT
+  ValueLength: ULONG;
+  ResultLength: PULONG // OUT, OPTIONAL
 ): NTSTATUS; stdcall;
 // Source:OpenXDK  Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
@@ -316,9 +316,8 @@ begin
 {$ENDIF}
 
   // handle eeprom read
-  case ValueIndex of
-    // Factory Game Region
-    $104:
+  case XC_VALUE_INDEX(ValueIndex) of
+    XC_FACTORY_GAME_REGION:
     begin
       // TODO -oCXBX: configurable region or autodetect of some sort
       if (Type_ <> nil) then
@@ -331,8 +330,7 @@ begin
         ResultLength^ := $04;
     end;
 
-    // Factory AC Region
-    $103:
+    XC_FACTORY_AV_REGION:
     begin
       // TODO -oCXBX: configurable region or autodetect of some sort
       if (Type_ <> nil) then
@@ -345,8 +343,7 @@ begin
         ResultLength^ := $04;
     end;
 
-    // Language
-    Ord(EEPROM_LANGUAGE):
+    XC_LANGUAGE: // Was Ord(EEPROM_LANGUAGE):
     begin
       // TODO -oCXBX: configurable language or autodetect of some sort
       if (Type_ <> nil) then
@@ -359,8 +356,7 @@ begin
         ResultLength^ := $04;
     end;
 
-    // Video Flags
-    Ord(EEPROM_VIDEO):
+    XC_VIDEO_FLAGS: // Was Ord(EEPROM_VIDEO):
     begin
       // TODO -oCXBX: configurable video flags or autodetect of some sort
       if (Type_ <> nil) then
@@ -373,19 +369,31 @@ begin
         ResultLength^ := $04;
     end;
 
-    Ord(EEPROM_AUDIO):
+    XC_AUDIO_FLAGS: // Was Ord(EEPROM_AUDIO):
     begin
       if (Type_ <> nil) then
         Type_^ := $04;
 
       if (Value <> nil) then
-        Value^ := 0;
+        Value^ := $0;
 
       if (ResultLength <> nil) then
         ResultLength^ := $04;
     end;
 
-    Ord(EEPROM_MISC):
+    XC_PARENTAL_CONTROL_GAMES: // Zapper queries this
+    begin
+      if (Type_ <> nil) then
+        Type_^ := $0;
+
+      if (Value <> nil) then
+        Value^ := $0; // = XC_PC_ESRB_ALL;
+
+      if (ResultLength <> nil) then
+        ResultLength^ := $04;
+    end;
+
+    XC_MISC_FLAGS: // Was Ord(EEPROM_MISC):
     begin
       if (Type_ <> nil) then
         Type_^ := $04;
@@ -405,7 +413,7 @@ begin
     //*)
 
   else
-    EmuWarning('ExQueryNonVolatileSetting unknown ValueIndex (%d)', [ValueIndex]);
+    EmuWarning('ExQueryNonVolatileSetting unhandled ValueIndex (%d)', [ValueIndex]);
   end;
 
   EmuSwapFS(fsXbox);
