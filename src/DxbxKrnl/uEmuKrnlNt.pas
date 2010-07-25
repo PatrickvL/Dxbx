@@ -81,7 +81,7 @@ function xboxkrnl_NtCreateFile(
   AllocationSize: PLARGE_INTEGER; // OPTIONAL,
   FileAttributes: ULONG;
   ShareAccess: ACCESS_MASK;
-  CreateDisposition: ULONG; // dtCreateDisposition;
+  CreateDisposition: ULONG;
   CreateOptions: ULONG // dtCreateOptions
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateIoCompletion(
@@ -113,13 +113,13 @@ function xboxkrnl_NtDeleteFile(
 function xboxkrnl_NtDeviceIoControlFile(
   FileHandle: HANDLE;
   Event: HANDLE;
-  pApcRoutine: PIO_APC_ROUTINE;
-  pApcContext: PVOID;
-  pIoStatusBlock: PIO_STATUS_BLOCK;
-  pIoControlCode: ULONG;
-  pInputBuffer: PVOID;
+  ApcRoutine: PIO_APC_ROUTINE;
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK;
+  IoControlCode: ULONG;
+  InputBuffer: PVOID;
   InputBufferLength: ULONG;
-  pOutputBuffer: PVOID;
+  OutputBuffer: PVOID;
   OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtDuplicateObject(
@@ -139,13 +139,13 @@ function xboxkrnl_NtFreeVirtualMemory(
 function xboxkrnl_NtFsControlFile(
   FileHandle: HANDLE;
   Event: HANDLE;
-  pApcRoutine: PIO_APC_ROUTINE;
-  pApcContext: PVOID;
-  pIoStatusBlock: PIO_STATUS_BLOCK;
+  ApcRoutine: PIO_APC_ROUTINE;
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK;
   FsControlCode: ULONG;
-  pInputBuffer: PVOID;
+  InputBuffer: PVOID;
   InputBufferLength: ULONG;
-  pOutputBuffer: PVOID;
+  OutputBuffer: PVOID;
   OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtOpenDirectoryObject(
@@ -733,7 +733,7 @@ function xboxkrnl_NtCreateFile
   AllocationSize: PLARGE_INTEGER; // OPTIONAL,
   FileAttributes: ULONG;
   ShareAccess: ACCESS_MASK;
-  CreateDisposition: ULONG; // dtCreateDisposition;
+  CreateDisposition: ULONG;
   CreateOptions: ULONG // dtCreateOptions
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
@@ -803,10 +803,37 @@ function xboxkrnl_NtCreateIoCompletion(
   ObjectAttributes: POBJECT_ATTRIBUTES;
   Count: ULONG
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  NativeObjectAttributes: RNativeObjectAttributes;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtCreateIoCompletion');
+
+  DbgPrintf('EmuKrnl : NtCreateIoCompletion' +
+      #13#10'(' +
+      #13#10'   FileHandle          : 0x%.08X' +
+      #13#10'   DesiredAccess       : 0x%.08X (%s)' +
+      #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+      #13#10'   Count               : 0x%.08X' +
+      #13#10');',
+      [FileHandle,
+      DesiredAccess, AccessMaskToString(DesiredAccess),
+      ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
+      Count]);
+
+  // initialize object attributes
+  Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
+
+  if (Result = STATUS_SUCCESS) then
+  begin
+    // redirect to Win2k/XP
+    Result := JwaNative.NtCreateIoCompletion(
+      FileHandle,
+      DesiredAccess,
+      NativeObjectAttributes.NtObjAttrPtr,
+      Count);
+  end;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -986,19 +1013,49 @@ end;
 function xboxkrnl_NtDeviceIoControlFile(
   FileHandle: HANDLE;
   Event: HANDLE;
-  pApcRoutine: PIO_APC_ROUTINE;
-  pApcContext: PVOID;
-  pIoStatusBlock: PIO_STATUS_BLOCK;
-  pIoControlCode: ULONG;
-  pInputBuffer: PVOID;
+  ApcRoutine: PIO_APC_ROUTINE;
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK;
+  IoControlCode: ULONG;
+  InputBuffer: PVOID;
   InputBufferLength: ULONG;
-  pOutputBuffer: PVOID;
+  OutputBuffer: PVOID;
   OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtDeviceIoControlFile');
+
+  DbgPrintf('EmuKrnl : NtDeviceIoControlFile' +
+      #13#10'('+
+      #13#10'   FileHandle          : 0x%.08X' +
+      #13#10'   Event               : 0x%.08X' +
+      #13#10'   ApcRoutine          : 0x%.08X' +
+      #13#10'   ApcContext          : 0x%.08X' +
+      #13#10'   IoStatusBlock       : 0x%.08X' +
+      #13#10'   IoControlCode       : 0x%.08X' +
+      #13#10'   InputBuffer         : 0x%.08X' +
+      #13#10'   InputBufferLength   : 0x%.08X' +
+      #13#10'   OutputBuffer        : 0x%.08X' +
+      #13#10'   OutputBufferLength  : 0x%.08X' +
+      #13#10');',
+      [FileHandle, Event, Addr(ApcRoutine), ApcContext,
+       IoStatusBlock, IoControlCode,
+       InputBuffer, InputBufferLength,
+       OutputBuffer, OutputBufferLength]);
+
+  Result := JwaNative.NtDeviceIoControlFile(
+    FileHandle,
+    Event,
+    ApcRoutine,
+    ApcContext,
+    IoStatusBlock,
+    IoControlCode,
+    InputBuffer,
+    InputBufferLength,
+    OutputBuffer,
+    OutputBufferLength);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1095,11 +1152,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtFreeVirtualMemory'+
+  DbgPrintf('EmuKrnl : NtFreeVirtualMemory' +
       #13#10'('+
-      #13#10'   BaseAddress         : 0x%.08X'+
-      #13#10'   FreeSize            : 0x%.08X'+
-      #13#10'   FreeType            : 0x%.08X'+
+      #13#10'   BaseAddress         : 0x%.08X' +
+      #13#10'   FreeSize            : 0x%.08X' +
+      #13#10'   FreeType            : 0x%.08X' +
       #13#10');',
       [BaseAddress, FreeSize, FreeType]);
 {$ENDIF}
@@ -1112,19 +1169,50 @@ end;
 function xboxkrnl_NtFsControlFile(
   FileHandle: HANDLE;
   Event: HANDLE;
-  pApcRoutine: PIO_APC_ROUTINE;
-  pApcContext: PVOID;
-  pIoStatusBlock: PIO_STATUS_BLOCK;
+  ApcRoutine: PIO_APC_ROUTINE;
+  ApcContext: PVOID;
+  IoStatusBlock: PIO_STATUS_BLOCK;
   FsControlCode: ULONG;
-pInputBuffer: PVOID;
+  InputBuffer: PVOID;
   InputBufferLength: ULONG;
-  pOutputBuffer: PVOID;
+  OutputBuffer: PVOID;
   OutputBufferLength: ULONG
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtFsControlFile');
+
+  DbgPrintf('EmuKrnl : NtFsControlFile' +
+      #13#10'('+
+      #13#10'   FileHandle          : 0x%.08X' +
+      #13#10'   Event               : 0x%.08X' +
+      #13#10'   ApcRoutine          : 0x%.08X' +
+      #13#10'   ApcContext          : 0x%.08X' +
+      #13#10'   IoStatusBlock       : 0x%.08X' +
+      #13#10'   FsControlCode       : 0x%.08X' +
+      #13#10'   InputBuffer         : 0x%.08X' +
+      #13#10'   InputBufferLength   : 0x%.08X' +
+      #13#10'   OutputBuffer        : 0x%.08X' +
+      #13#10'   OutputBufferLength  : 0x%.08X' +
+      #13#10');',
+      [FileHandle, Event,
+       Addr(ApcRoutine), ApcContext,
+       IoStatusBlock, FsControlCode,
+       InputBuffer, InputBufferLength,
+       OutputBuffer, OutputBufferLength]);
+
+  Result := JwaNative.NtFsControlFile(
+    FileHandle,
+    Event,
+    ApcRoutine,
+    ApcContext,
+    IoStatusBlock,
+    FsControlCode,
+    InputBuffer,
+    InputBufferLength,
+    OutputBuffer,
+    OutputBufferLength);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1195,13 +1283,15 @@ begin
     #13#10'   DesiredAccess       : 0x%.08X (%s)' +
     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
     #13#10'   IoStatusBlock       : 0x%.08X' +
-    #13#10'   ShareAccess         : 0x%.08X' +
+    #13#10'   ShareAccess         : 0x%.08X (%s)' +
     #13#10'   OpenOptions         : 0x%.08X (%s)' +
     #13#10');',
     [FileHandle,
      DesiredAccess, AccessMaskToString(DesiredAccess),
      ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-     IoStatusBlock, ShareAccess, OpenOptions, CreateOptionsToString(OpenOptions)]);
+     IoStatusBlock,
+     ShareAccess, AccessMaskToString(ShareAccess),
+     OpenOptions, CreateOptionsToString(OpenOptions)]);
 {$ENDIF}
 
   // initialize object attributes
@@ -2462,7 +2552,7 @@ begin
        #13#10'   IoStatusBlock       : 0x%.08X' +
        #13#10'   Buffer              : 0x%.08X' +
        #13#10'   Length              : 0x%.08X' +
-       #13#10'   ByteOffset          : 0x%.08X (0x%.08X)' +
+       #13#10'   ByteOffset          : 0x%.08X (%d)' +
        #13#10');',
        [FileHandle, Event, Addr(ApcRoutine),
        ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);

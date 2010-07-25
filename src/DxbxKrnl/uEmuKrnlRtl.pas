@@ -220,16 +220,16 @@ procedure xboxkrnl_RtlMoveMemory(
   Length: SIZE_T
   ); stdcall;
 function xboxkrnl_RtlMultiByteToUnicodeN(
-  dst: LPWSTR;
-  dstlen: DWORD;
-  reslen: LPDWORD;
-  src: LPCSTR;
-  srclen: DWORD
+  UnicodeString: PWCH; // OUT
+  MaxBytesInUnicodeString: ULONG;
+  BytesInUnicodeString: PULONG; // OUT OPTIONAL
+  MultiByteString: PCH;
+  BytesInMultiByteString: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlMultiByteToUnicodeSize(
-  size: PDWORD;
-  str: LPCSTR;
-  len: UINT
+  BytesInUnicodeString: PULONG; // OUT
+  MultiByteString: PCH;
+  BytesInMultiByteString: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlNtStatusToDosError(
   Status: NTSTATUS
@@ -267,11 +267,11 @@ function xboxkrnl_RtlUnicodeStringToInteger(
   Value: PULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUnicodeToMultiByteN(
-  dst: LPSTR;
-  dstlen: DWORD;
-  reslen: LPDWORD;
-  src: LPCWSTR;
-  srclen: DWORD
+  MultiByteString: PCH; // OUT
+  MaxBytesInMultiByteString: ULONG;
+  BytesInMultiByteString: PULONG; // OUT OPTIONAL
+  UnicodeString: PWCH;
+  BytesInUnicodeString: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_RtlUnicodeToMultiByteSize(
   BytesInMultiByteString: PULONG;
@@ -1098,28 +1098,71 @@ begin
 end;
 
 function xboxkrnl_RtlMultiByteToUnicodeN(
-  dst: LPWSTR;
-  dstlen: DWORD;
-  reslen: LPDWORD;
-  src: LPCSTR;
-  srclen: DWORD
+  UnicodeString: PWCH; // OUT
+  MaxBytesInUnicodeString: ULONG;
+  BytesInUnicodeString: PULONG; // OUT OPTIONAL
+  MultiByteString: PCH;
+  BytesInMultiByteString: ULONG
   ): NTSTATUS; stdcall;
-// Source:wine  Branch:dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  MaxChars: ULONG;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlMultiByteToUnicodeN');
+
+  DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
+           #13#10'(' +
+           #13#10'   UnicodeString          : 0x%.08X' +
+           #13#10'   MaxBytesInUnicodeString: 0x%.08X' +
+           #13#10'   BytesInUnicodeString   : 0x%.08X' +
+           #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
+           #13#10'   BytesInMultiByteString : 0x%.08X' +
+           #13#10');',
+           [Pointer(UnicodeString), MaxBytesInUnicodeString,
+            BytesInUnicodeString,
+            Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
+
+  MaxChars := MaxBytesInUnicodeString div SizeOf(WideChar);
+  if MaxChars > BytesInMultiByteString then
+    MaxChars := BytesInMultiByteString;
+
+  if Assigned(BytesInUnicodeString) then
+    BytesInUnicodeString^ := MaxChars;
+
+  while MaxChars > 0 do
+  begin
+    // Just zero-extend all Ansi characters :
+    UnicodeString^ := WideChar(MultiByteString^);
+    Inc(UnicodeString);
+    Inc(MultiByteString);
+    Dec(MaxChars);
+  end;
+
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlMultiByteToUnicodeSize(
-  size: PDWORD;
-  str: LPCSTR;
-  len: UINT
+  BytesInUnicodeString: PULONG; // OUT
+  MultiByteString: PCH;
+  BytesInMultiByteString: ULONG
   ): NTSTATUS; stdcall;
-// Source:wine  Branch:dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlMultiByteToUnicodeSize');
+
+  DbgPrintf('EmuKrnl : RtlMultiByteToUnicodeN' +
+           #13#10'(' +
+           #13#10'   BytesInUnicodeString   : 0x%.08X' +
+           #13#10'   MultiByteString        : 0x%.08X' +// ("%s")' +
+           #13#10'   BytesInMultiByteString : 0x%.08X' +
+           #13#10');',
+           [BytesInUnicodeString,
+            Pointer(MultiByteString), {AnsiString(MultiByteString), }BytesInMultiByteString]);
+
+  BytesInUnicodeString^ := BytesInMultiByteString * SizeOf(WideChar);
+
+  Result := STATUS_SUCCESS;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1285,22 +1328,65 @@ function xboxkrnl_RtlUnicodeStringToInteger(
 // Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : RtlUnicodeStringToInteger' +
+      #13#10'('+
+      #13#10'   Str                       : 0x%.08X ("%s")' +
+      #13#10'   Base                      : 0x%.08X' +
+      #13#10'   Value                     : 0x%.08X' +
+      #13#10');',
+      [Str, PUNICODE_STRING_String(Str), Base, Value]);
+{$ENDIF}
+
   Result := JwaNative.RtlUnicodeStringToInteger(Str, Base, Value);
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_RtlUnicodeToMultiByteN(
-  dst: LPSTR;
-  dstlen: DWORD;
-  reslen: LPDWORD;
-  src: LPCWSTR;
-  srclen: DWORD
+  MultiByteString: PCH; // OUT
+  MaxBytesInMultiByteString: ULONG;
+  BytesInMultiByteString: PULONG; // OUT OPTIONAL
+  UnicodeString: PWCH;
+  BytesInUnicodeString: ULONG
   ): NTSTATUS; stdcall;
-// Source:wine  Branch:dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  MaxChars: ULONG;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('RtlUnicodeToMultiByteN');
+
+  DbgPrintf('EmuKrnl : RtlUnicodeToMultiByteN' +
+      #13#10'(' +
+      #13#10'   MultiByteString          : 0x%.08X' +
+      #13#10'   MaxBytesInMultiByteString: 0x%.08X' +
+      #13#10'   BytesInMultiByteString   : 0x%.08X' +
+      #13#10'   UnicodeString            : 0x%.08X' +// ("%s")' +
+      #13#10'   BytesInUnicodeString     : 0x%.08X' +
+      #13#10');',
+      [Pointer(MultiByteString), MaxBytesInMultiByteString,
+       BytesInMultiByteString,
+       Pointer(UnicodeString), {WideString(UnicodeString), }BytesInUnicodeString]);
+
+  MaxChars := BytesInUnicodeString div SizeOf(WideChar);
+  if MaxChars > MaxBytesInMultiByteString then
+    MaxChars := MaxBytesInMultiByteString;
+
+  if Assigned(BytesInMultiByteString) then
+    BytesInMultiByteString^ := MaxChars;
+
+  while MaxChars > 0 do
+  begin
+    if UnicodeString^ > #255 then
+      MultiByteString^ := '?'
+    else
+      MultiByteString^ := AnsiChar(UnicodeString^);
+
+    Inc(UnicodeString);
+    Inc(MultiByteString);
+    Dec(MaxChars);
+  end;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1309,11 +1395,24 @@ function xboxkrnl_RtlUnicodeToMultiByteSize(
   UnicodeString: PWSTR;
   BytesInUnicodeString: ULONG
   ): NTSTATUS; stdcall;
-// Source:JwaNative  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
-  Result := JwaNative.RtlUnicodeToMultiByteSize(BytesInMultiByteString, UnicodeString, BytesInUnicodeString);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : RtlUnicodeToMultiByteSize' +
+      #13#10'('+
+      #13#10'   BytesInMultiByteString    : 0x%.08X' +
+      #13#10'   UnicodeString             : 0x%.08X' +// ("%s")' +
+      #13#10'   BytesInUnicodeString      : 0x%.08X' +
+      #13#10');',
+      [BytesInMultiByteString, Pointer(UnicodeString), {PWideChar(UnicodeString), }BytesInUnicodeString]);
+{$ENDIF}
+
+  BytesInMultiByteString^ := BytesInUnicodeString div SizeOf(WideChar);
+
+  Result := STATUS_SUCCESS;
+
   EmuSwapFS(fsXbox);
 end;
 
