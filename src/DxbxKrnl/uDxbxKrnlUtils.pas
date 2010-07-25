@@ -62,6 +62,7 @@ function CreateOptionsToString(CreateOptions: ULONG): string;
 function AccessMaskToString(AccessMask: ACCESS_MASK): string;
 function NTStatusToString(aStatus: NTSTATUS): string;
 function FileInformationClassToString(FileInformationClass: FILE_INFORMATION_CLASS): string;
+function FsInformationClassToString(FsInformationClass: FS_INFORMATION_CLASS): string;
 
 var
   // ! thread local storage
@@ -1100,6 +1101,23 @@ begin
     FileAttributeTagInformation: Result := 'FileAttributeTagInformation';
     FileTrackingInformation: Result := 'FileTrackingInformation';
     FileMaximumInformation: Result := 'FileMaximumInformation';
+  else
+    Result := '';
+  end;
+end;
+
+function FsInformationClassToString(FsInformationClass: FS_INFORMATION_CLASS): string;
+begin
+  case FsInformationClass of
+    FileFsVolumeInformation: Result := 'FileFsVolumeInformation';
+    FileFsLabelInformation: Result := 'FileFsLabelInformation';
+    FileFsSizeInformation: Result := 'FileFsSizeInformation';
+    FileFsDeviceInformation: Result := 'FileFsDeviceInformation';
+    FileFsAttributeInformation: Result := 'FileFsAttributeInformation';
+    FileFsControlInformation: Result := 'FileFsControlInformation';
+    FileFsFullSizeInformation: Result := 'FileFsFullSizeInformation';
+    FileFsObjectIdInformation: Result := 'FileFsObjectIdInformation';
+    FileFsMaximumInformation: Result := 'FileFsMaximumInformation';
   else
     Result := '';
   end;

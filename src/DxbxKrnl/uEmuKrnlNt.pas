@@ -1804,13 +1804,13 @@ begin
       #13#10'   IoStatusBlock       : 0x%.08X' +
       #13#10'   FileInformation     : 0x%.08X' +
       #13#10'   Length              : 0x%.08X' +
-      #13#10'   FsInformationClass  : 0x%.08X' + // (%s)' +
+      #13#10'   FsInformationClass  : 0x%.08X (%s)' +
       #13#10');',
       [FileHandle, IoStatusBlock, FileInformation,
-       Length, Ord(FsInformationClass){, FsInformationClassToString(FsInformationClass)}]);
+       Length, Ord(FsInformationClass), FsInformationClassToString(FsInformationClass)]);
 
   // Safety/Sanity Check
-  if (FsInformationClass <> FileFsSizeInformation) and (FsInformationClass <> FileFsVolumeInformation{FileDirectoryInformation}) then
+  if (FsInformationClass <> FileFsSizeInformation) and (FsInformationClass <> FileFsVolumeInformation) then
     DxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FsInformationClass');
 
   Result := JwaNative.NtQueryVolumeInformationFile

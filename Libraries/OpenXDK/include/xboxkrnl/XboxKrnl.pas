@@ -1115,6 +1115,47 @@ type
   );
   PEEPROM_INDEX = ^EEPROM_INDEX;
 
+type _XC_VALUE_INDEX = (
+    XC_TIMEZONE_BIAS                  = $0000,
+    XC_TZ_STD_NAME                    = $0001,
+    XC_TZ_STD_DATE                    = $0002,
+    XC_TZ_STD_BIAS                    = $0003,
+    XC_TZ_DLT_NAME                    = $0004,
+    XC_TZ_DLT_DATE                    = $0005,
+    XC_TZ_DLT_BIAS                    = $0006,
+    XC_LANGUAGE                       = $0007,
+    XC_VIDEO_FLAGS                    = $0008,
+    XC_AUDIO_FLAGS                    = $0009,
+    XC_PARENTAL_CONTROL_GAMES         = $000A,
+    XC_PARENTAL_CONTROL_PASSWORD      = $000B,
+    XC_PARENTAL_CONTROL_MOVIES        = $000C,
+    XC_ONLINE_IP_ADDRESS              = $000D,
+    XC_ONLINE_DNS_ADDRESS             = $000E,
+    XC_ONLINE_DEFAULT_GATEWAY_ADDRESS = $000F,
+    XC_ONLINE_SUBNET_ADDRESS          = $0010,
+    XC_MISC_FLAGS                     = $0011,
+    XC_DVD_REGION                     = $0012,
+    // end of user configurations
+    XC_MAX_OS                         = $00FF,
+
+    // start of factory settings
+    XC_FACTORY_SERIAL_NUMBER          = $0100,
+    XC_FACTORY_ETHERNET_ADDR          = $0101,
+    XC_FACTORY_ONLINE_KEY             = $0102,
+    XC_FACTORY_AV_REGION              = $0103,
+    XC_FACTORY_GAME_REGION            = $0104,
+    // end of factory settings
+    XC_MAX_FACTORY                    = $01FF,
+
+    // special value to access the encryption section of the EEPROM
+    // or to access the entire EEPROM at once
+    XC_ENCRYPTED_SECTION              = $FFFE,
+    XC_MAX_ALL                        = $FFFF
+);
+XC_VALUE_INDEX = _XC_VALUE_INDEX;
+
+const XC_FACTORY_START_INDEX = XC_FACTORY_SERIAL_NUMBER;
+
 // ******************************************************************
 // * XBOX_HARDWARE_INFO
 // ******************************************************************
