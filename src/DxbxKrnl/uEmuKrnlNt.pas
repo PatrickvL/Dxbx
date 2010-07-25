@@ -214,7 +214,7 @@ function xboxkrnl_NtQueryInformationFile(
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   FileInformation: PVOID; //   OUT
   Length: ULONG;
-  FileInfo: FILE_INFORMATION_CLASS
+  FileInformationClass: FILE_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtQueryIoCompletion(
   IoCompletionHandle: HANDLE;
@@ -249,7 +249,7 @@ function xboxkrnl_NtQueryVolumeInformationFile(
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   FileInformation: PFILE_FS_SIZE_INFORMATION; // OUT
   Length: ULONG;
-  FileInformationClass: FS_INFORMATION_CLASS
+  FsInformationClass: FS_INFORMATION_CLASS
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtReadFile(
   FileHandle: HANDLE;
@@ -443,12 +443,12 @@ begin
     begin
       // Look up the symbolic link information using the drive letter :
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter(szBuffer[1]);
-      System.Delete(szBuffer, 1, 3); // Remove 'C:\'
+      System.Delete(szBuffer, 1, 2); // Remove 'C:'
     end
     else if StartsWithString(szBuffer, '$HOME') then // xbmp uses this (along with 'e::\' prefixes)
     begin
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
-      System.Delete(szBuffer, 1, 6); // Remove '$HOME'
+      System.Delete(szBuffer, 1, 5); // Remove '$HOME'
     end
     else
     begin
@@ -456,11 +456,17 @@ begin
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByDevice(szBuffer);
       // Fixup szBuffer path here
       if Assigned(EmuNtSymbolicLinkObject) then
+      begin
         System.Delete(szBuffer, 1, Length(EmuNtSymbolicLinkObject.XboxFullPath)); // Remove '\Device\Harddisk0\Partition2'
+      end;
     end;
 
     if Assigned(EmuNtSymbolicLinkObject) then
     begin
+      // If the remaining path starts with a '\', remove it (to prevent working in a native root) :
+      if (Length(szBuffer) > 0) and (szBuffer[1] = '\') then
+        System.Delete(szBuffer, 1, 1);
+
       XboxFullPath := EmuNtSymbolicLinkObject.XboxFullPath;
       ObjectAttributes.RootDirectory := EmuNtSymbolicLinkObject.RootDirectoryHandle;
     end
@@ -769,8 +775,16 @@ begin
   begin
     // redirect to Win2k/XP
     Result := JwaNative.NtCreateFile(
-        FileHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
-        JwaWinType.PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
+        FileHandle,
+        DesiredAccess or GENERIC_READ, // Dxbx note : Add READ access, so NtQueryInformationFile doesn't fail
+        NativeObjectAttributes.NtObjAttrPtr,
+        JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
+        JwaWinType.PLARGE_INTEGER(AllocationSize),
+        FileAttributes,
+        ShareAccess,
+        CreateDisposition,
+        CreateOptions,
+        NULL, 0
     );
   end;
 
@@ -1341,7 +1355,6 @@ var
   wszObjectName: UnicodeString;
   NtFileMask: UNICODE_STRING;
   FileDirInfo: PFILE_DIRECTORY_INFORMATION;
-  mbstr: P_char;
   wcstr: pwchar_t;
 begin
   EmuSwapFS(fsWindows);
@@ -1358,17 +1371,16 @@ begin
       #13#10'   IoStatusBlock        : 0x%.08X' +
       #13#10'   FileInformation      : 0x%.08X' +
       #13#10'   Length               : 0x%.08X' +
-      #13#10'   FileInformationClass : 0x%.08X' +
+      #13#10'   FileInformationClass : 0x%.08X (%s)' +
       #13#10'   FileMask             : 0x%.08X ("%s")' +
       #13#10'   RestartScan          : 0x%.08X' +
       #13#10');',
       [FileHandle, Event, Addr(ApcRoutine), ApcContext, IoStatusBlock,
-       FileInformation, Length, Ord(FileInformationClass), FileMask,
-       szBuffer, RestartScan]);
+       FileInformation, Length,
+       Ord(FileInformationClass), FileInformationClassToString(FileInformationClass),
+       FileMask, szBuffer,
+       RestartScan]);
 {$ENDIF}
-
-  if (FileInformationClass <> FileDirectoryInformation) then   // Due to unicode->string conversion
-    DxbxKrnlCleanup('Unsupported FileInformationClass');
 
   // initialize FileMask
   begin
@@ -1377,33 +1389,28 @@ begin
     JwaNative.RtlInitUnicodeString(@NtFileMask, PWideChar(wszObjectName));
   end;
 
-  FileDirInfo := PFILE_DIRECTORY_INFORMATION(DxbxMalloc($40 + 160*2));
+  FileDirInfo := PFILE_DIRECTORY_INFORMATION(DxbxMalloc(Length*2));
 
-  mbstr := @FileInformation.FileName[0]; // DXBX note : This is Ansi on XBox!
   wcstr := @FileDirInfo.FileName[0];
 
   repeat
-    ZeroMemory(wcstr, 160*2);
+//    ZeroMemory(wcstr, 160*2); ??
 
     Result := JwaNative.NtQueryDirectoryFile
         (
             FileHandle, Event, ApcRoutine, ApcContext, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock), FileDirInfo,
-            $40+160*2, FILE_INFORMATION_CLASS(FileInformationClass), TRUE, @NtFileMask, RestartScan
+            Length * 2, FileInformationClass, {ReturnSingleEntry=}TRUE, @NtFileMask, RestartScan
         );
-
-    // convert from PC to Xbox
-    begin
-      memcpy(FileInformation, FileDirInfo, $40);
-
-      wcstombs(mbstr, wcstr, 160);
-
-      FileInformation.FileNameLength := FileInformation.FileNameLength div 2;
-    end;
-
     RestartScan := FALSE;
 
-    // Xbox does not return . and ..
-  until not ((strcmp(mbstr, '.') = 0) or (strcmp(mbstr, '..') = 0));
+    // Xbox does not return '.' and '..', so skip those :
+  until not ((strcmp(wcstr, '.') = 0) or (strcmp(wcstr, '..') = 0));
+
+  if Result = STATUS_SUCCESS then
+  begin
+    if not DxbxPC2XB_FILE_INFORMATION(FileDirInfo, FileInformation, FileInformationClass) then
+      memcpy(FileInformation, FileDirInfo, Length);
+  end;
 
   // TODO -oCXBX: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
   DxbxFree(FileDirInfo);
@@ -1508,9 +1515,11 @@ function xboxkrnl_NtQueryInformationFile(
   IoStatusBlock: PIO_STATUS_BLOCK; //   OUT
   FileInformation: PVOID; //   OUT
   Length: ULONG;
-  FileInfo: FILE_INFORMATION_CLASS
+  FileInformationClass: FILE_INFORMATION_CLASS
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+var
+  NativeFileInformation: array of Byte;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1521,10 +1530,10 @@ begin
      #13#10'   IoStatusBlock       : 0x%.08X' +
      #13#10'   FileInformation     : 0x%.08X' +
      #13#10'   Length              : 0x%.08X' +
-     #13#10'   FileInformationClass: 0x%.08X' +
+     #13#10'   FileInformationClass: 0x%.08X (%s)' +
      #13#10');',
      [FileHandle, IoStatusBlock, FileInformation,
-      Length, Ord(FileInfo)]);
+      Length, Ord(FileInformationClass), FileInformationClassToString(FileInformationClass)]);
 {$ENDIF}
 
   // TODO -oCxbx: IIRC, this function is depreciated.  Maybe we should just use
@@ -1534,13 +1543,21 @@ begin
 //  if (FileInfo <> FilePositionInformation) and (FileInfo <> FileNetworkOpenInformation) then
 //    DxbxKrnlCleanup('Unknown FILE_INFORMATION_CLASS 0x%.08X', [Ord(FileInfo)]);
 
+  SetLength(NativeFileInformation, Length * 2);
+
   Result := JwaNative.NtQueryInformationFile(
     FileHandle,
     JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
-    JwaNative.PFILE_FS_SIZE_INFORMATION(FileInformation),
-    Length,
-    JwaNative.FILE_INFORMATION_CLASS(FileInfo)
+    @NativeFileInformation[0],
+    Length * 2,
+    JwaNative.FILE_INFORMATION_CLASS(FileInformationClass)
   );
+
+  if Result = STATUS_SUCCESS then
+  begin
+    if not DxbxPC2XB_FILE_INFORMATION(@NativeFileInformation[0], FileInformation, FileInformationClass) then
+      memcpy(FileInformation, @NativeFileInformation[0], Length);
+  end;
 
   //
   // DEBUGGING!
@@ -1774,7 +1791,7 @@ function xboxkrnl_NtQueryVolumeInformationFile
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   FileInformation: PFILE_FS_SIZE_INFORMATION; // OUT
   Length: ULONG;
-  FileInformationClass: FS_INFORMATION_CLASS
+  FsInformationClass: FS_INFORMATION_CLASS
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
@@ -1787,25 +1804,27 @@ begin
       #13#10'   IoStatusBlock       : 0x%.08X' +
       #13#10'   FileInformation     : 0x%.08X' +
       #13#10'   Length              : 0x%.08X' +
-      #13#10'   FileInformationClass: 0x%.08X' +
+      #13#10'   FsInformationClass  : 0x%.08X' + // (%s)' +
       #13#10');',
       [FileHandle, IoStatusBlock, FileInformation,
-       Length, Ord(FileInformationClass)]);
+       Length, Ord(FsInformationClass){, FsInformationClassToString(FsInformationClass)}]);
 
   // Safety/Sanity Check
-  if (FileInformationClass <> FileFsSizeInformation) and (FileInformationClass <> FileFsVolumeInformation{FileDirectoryInformation}) then
-    DxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FileInformationClass');
+  if (FsInformationClass <> FileFsSizeInformation) and (FsInformationClass <> FileFsVolumeInformation{FileDirectoryInformation}) then
+    DxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FsInformationClass');
 
   Result := JwaNative.NtQueryVolumeInformationFile
   (
       FileHandle,
       JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
       FileInformation, Length,
-      FileInformationClass
+      FsInformationClass
   );
 
+  // TODO : Do FS_INFORMATION_CLASS conversion here, just like DxbxPC2XB_FILE_INFORMATION
+
   // NOTE: TODO -oCXBX: Dynamically fill in, or allow configuration?
-  if (FileInformationClass = FileFsSizeInformation) then
+  if (FsInformationClass = FileFsSizeInformation) then
   begin
     FileInformation.TotalAllocationUnits.QuadPart     := $4C468;
     FileInformation.AvailableAllocationUnits.QuadPart := $2F125;
@@ -2024,6 +2043,8 @@ function xboxkrnl_NtSetInformationFile
   FileInformationClass: FILE_INFORMATION_CLASS
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+var
+  NativeFileInformation: array of Byte;
 begin
   EmuSwapFS(fsWindows);
 
@@ -2039,10 +2060,24 @@ begin
          [FileHandle, IoStatusBlock, FileInformation,
          Length, Ord(FileInformationClass)]);
 
-  // TODO some FileInformationClasses contain file paths.
+  SetLength(NativeFileInformation, Length * 2);
+
+  // Note : Some FileInformationClasses contain file paths.
   // These should be corrected just like NtCreateFile.
   // Other Nt functions might require the same attention
-  Result := JwaNative.NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
+
+  Result := JwaNative.NtSetInformationFile(
+    FileHandle,
+    IoStatusBlock,
+    NativeFileInformation,
+    Length * 2,
+    FileInformationClass);
+
+  if Result = STATUS_SUCCESS then
+  begin
+    if not DxbxPC2XB_FILE_INFORMATION(@NativeFileInformation[0], FileInformation, FileInformationClass) then
+      memcpy(FileInformation, NativeFileInformation, Length);
+  end;
 
   EmuSwapFS(fsXbox);
 end;

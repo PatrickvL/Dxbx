@@ -599,6 +599,7 @@ function xboxkrnl_IoQueryFileInformation(
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
+  // Dxbx note : This is almost identical to NtQueryInformationFile
   Result := Unimplemented('IoQueryFileInformation');
   EmuSwapFS(fsXbox);
 end;
