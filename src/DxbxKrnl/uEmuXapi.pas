@@ -571,14 +571,14 @@ begin
   // For now, select partition6 as 'Utility data' drive, and link it to Z:
   pCertificate := PXBE_CERTIFICATE(DxbxKrnl_XbeHeader.dwCertificateAddr);
   TitleStr := AnsiString(IntToHex(pCertificate.dwTitleId, 8));
-  status := DxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6 + 'Dxbx_ZDATA_' + TitleStr + '\');
+  status := DxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6 + '\Dxbx_ZDATA_' + TitleStr + '\');
   // Dxbx note : The ZDATA convention is not actually what the Xbox does, but for now
   // allows us to skip the partition-selection and formatting of the Utility drive,
   // by creating a unique subfolder per title.
 
   // TODO -oDxbx : Implement 'formatting' (cleaning) of the Utility drive
 
-  if NT_SUCCESS(status) then
+  if status = STATUS_SUCCESS then
     Result := BOOL_TRUE
   else
     Result := BOOL_FALSE;
@@ -1468,9 +1468,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXGetSectionHandleA' +
       #13#10'(' +
-      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10'   pSectionName       : 0x%.08X ("%s")' +
       #13#10');',
-      [UIntPtr(pSectionName)]);
+      [UIntPtr(pSectionName), PAnsiChar(pSectionName)]);
 {$ENDIF}
 
   SectionHeader := XBE_FindSectionHeaderByName(pSectionName);
@@ -1578,9 +1578,9 @@ begin
   EmuSwapFS(fsWindows);
   DbgPrintf('EmuXapi : EmuXLoadSectionA' +
       #13#10'(' +
-      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10'   pSectionName       : 0x%.08X ("%s")' +
       #13#10');',
-      [UIntPtr(pSectionName)]);
+      [UIntPtr(pSectionName), PAnsiChar(pSectionName)]);
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -1604,9 +1604,9 @@ begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuXapi : EmuXFreeSectionA' +
       #13#10'(' +
-      #13#10'   pSectionName       : 0x%.08X' +
+      #13#10'   pSectionName       : 0x%.08X ("%s")' +
       #13#10');',
-      [UIntPtr(pSectionName)]);
+      [UIntPtr(pSectionName), PAnsiChar(pSectionName)]);
 {$ENDIF}
 
   SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);

@@ -29,6 +29,7 @@ uses
   JwaWinType,
   JwaWinNT,
   JwaNTStatus,
+  JwaNative,
   // OpenXdk
   XboxKrnl, // POBJECT_ATTRIBUTES
   // Dxbx
@@ -60,6 +61,7 @@ function FileAttributesToString(FileAttributes: ULONG): string;
 function CreateOptionsToString(CreateOptions: ULONG): string;
 function AccessMaskToString(AccessMask: ACCESS_MASK): string;
 function NTStatusToString(aStatus: NTSTATUS): string;
+function FileInformationClassToString(FileInformationClass: FILE_INFORMATION_CLASS): string;
 
 var
   // ! thread local storage
@@ -1056,6 +1058,51 @@ STATUS_MP_PROCESSOR_MISMATCH     ((NTSTATUS)0x40000029L)
 
   // Note : Enable the following line to prepend the string with the NtStatus code (will result in longer log lines) :
   //  Result := Format('0x%.08X ', [aStatus]) + Result;
+end;
+
+function FileInformationClassToString(FileInformationClass: FILE_INFORMATION_CLASS): string;
+begin
+  case FileInformationClass of
+    FileDirectoryInformation: Result := 'FileDirectoryInformation';
+    FileFullDirectoryInformation: Result := 'FileFullDirectoryInformation';
+    FileBothDirectoryInformation: Result := 'FileBothDirectoryInformation';
+    FileBasicInformation: Result := 'FileBasicInformation';
+    FileStandardInformation: Result := 'FileStandardInformation';
+    FileInternalInformation: Result := 'FileInternalInformation';
+    FileEaInformation: Result := 'FileEaInformation';
+    FileAccessInformation: Result := 'FileAccessInformation';
+    FileNameInformation: Result := 'FileNameInformation';
+    FileRenameInformation: Result := 'FileRenameInformation';
+    FileLinkInformation: Result := 'FileLinkInformation';
+    FileNamesInformation: Result := 'FileNamesInformation';
+    FileDispositionInformation: Result := 'FileDispositionInformation';
+    FilePositionInformation: Result := 'FilePositionInformation';
+    FileFullEaInformation: Result := 'FileFullEaInformation';
+    FileModeInformation: Result := 'FileModeInformation';
+    FileAlignmentInformation: Result := 'FileAlignmentInformation';
+    FileAllInformation: Result := 'FileAllInformation';
+    FileAllocationInformation: Result := 'FileAllocationInformation';
+    FileEndOfFileInformation: Result := 'FileEndOfFileInformation';
+    FileAlternateNameInformation: Result := 'FileAlternateNameInformation';
+    FileStreamInformation: Result := 'FileStreamInformation';
+    FilePipeInformation: Result := 'FilePipeInformation';
+    FilePipeLocalInformation: Result := 'FilePipeLocalInformation';
+    FilePipeRemoteInformation: Result := 'FilePipeRemoteInformation';
+    FileMailslotQueryInformation: Result := 'FileMailslotQueryInformation';
+    FileMailslotSetInformation: Result := 'FileMailslotSetInformation';
+    FileCompressionInformation: Result := 'FileCompressionInformation';
+    FileObjectIdInformation: Result := 'FileObjectIdInformation';
+    FileCompletionInformation: Result := 'FileCompletionInformation';
+    FileMoveClusterInformation: Result := 'FileMoveClusterInformation';
+    FileQuotaInformation: Result := 'FileQuotaInformation';
+    FileReparsePointInformation: Result := 'FileReparsePointInformation';
+    FileNetworkOpenInformation: Result := 'FileNetworkOpenInformation';
+    FileAttributeTagInformation: Result := 'FileAttributeTagInformation';
+    FileTrackingInformation: Result := 'FileTrackingInformation';
+    FileMaximumInformation: Result := 'FileMaximumInformation';
+  else
+    Result := '';
+  end;
 end;
 
 end.

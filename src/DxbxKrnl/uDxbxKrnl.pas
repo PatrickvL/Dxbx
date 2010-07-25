@@ -285,6 +285,34 @@ begin
   end;
 
 {$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Determining CPU affinity.');
+{$ENDIF}
+
+  // Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
+  // this will better aproximate the environment with regard to multi-threading) :
+  begin
+    GetProcessAffinityMask(GetCurrentProcess(), {var lpProcessAffinityMask=}g_CPUXbox, {var lpSystemAffinityMask=}g_CPUOthers{ignored});
+    // For the other threads, remove one bit from the processor mask :
+    g_CPUOthers := ((g_CPUXbox - 1) and g_CPUXbox);
+    // Test if there are any other cores available :
+    if g_CPUOthers > 0 then
+      // If so, make sure the Xbox threads run on the core NOT running Xbox code :
+      g_CPUXbox := g_CPUXbox and (not g_CPUOthers)
+    else
+      // Else the other threads must run on the same core as the Xbox code :
+      g_CPUOthers := g_CPUXbox;
+
+    // Make sure Xbox1 code runs on one core :
+    SetThreadAffinityMask(GetCurrentThreadID(), g_CPUXbox);
+  end;
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuMain : Intercepting functions.');
+{$ENDIF}
+
+  EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+
+{$IFDEF DEBUG}
   DbgPrintf('EmuMain : Initializing devices.');
 {$ENDIF}
 
@@ -323,12 +351,17 @@ begin
 
   // Create default symbolic links :
   begin
+    // Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
+    DxbxCreateSymbolicLink(DriveC, AnsiString(szBuffer));
+    g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter('C').RootDirectoryHandle;
+    // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
+
     DxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
-    DxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files)
+    DxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
     DxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
 
-    DxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + 'TDATA\' + TitleStr + '\'); // Partition1\Title data goes to T:
-    DxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + 'UDATA\' + TitleStr + '\'); // Partition1\User data goes to U:
+    DxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + '\TDATA\' + TitleStr + '\'); // Partition1\Title data goes to T:
+    DxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + '\UDATA\' + TitleStr + '\'); // Partition1\User data goes to U:
 
     DxbxCreateSymbolicLink(DriveX, DeviceHarddisk0Partition3); // Partition3 goes to X:
     DxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y:
@@ -337,43 +370,10 @@ begin
     if (DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
     begin
       EmuSwapFS(fsXbox);
-      XTL_EmuXMountUtilityDrive({fFormatClean=}BOOL_FALSE);
+      XTL_EmuXMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_FormatUtilityDrive);
       EmuSwapFS(fsWindows);
     end;
-
-    // Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-    DxbxCreateSymbolicLink(DriveC, AnsiString(szBuffer));
-    g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter('C').RootDirectoryHandle;
-    // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
   end;
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Determining CPU affinity.');
-{$ENDIF}
-
-  // Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
-  // this will better aproximate the environment with regard to multi-threading) :
-  begin
-    GetProcessAffinityMask(GetCurrentProcess(), {var lpProcessAffinityMask=}g_CPUXbox, {var lpSystemAffinityMask=}g_CPUOthers{ignored});
-    // For the other threads, remove one bit from the processor mask :
-    g_CPUOthers := ((g_CPUXbox - 1) and g_CPUXbox);
-    // Test if there are any other cores available :
-    if g_CPUOthers > 0 then
-      // If so, make sure the Xbox threads run on the core NOT running Xbox code :
-      g_CPUXbox := g_CPUXbox and (not g_CPUOthers)
-    else
-      // Else the other threads must run on the same core as the Xbox code :
-      g_CPUOthers := g_CPUXbox;
-
-    // Make sure Xbox1 code runs on one core :
-    SetThreadAffinityMask(GetCurrentThreadID(), g_CPUXbox);
-  end;
-
-{$IFDEF DEBUG}
-  DbgPrintf('EmuMain : Intercepting functions.');
-{$ENDIF}
-
-  EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuMain : Initializing Direct3D.');
@@ -385,7 +385,7 @@ begin
   DbgPrintf('EmuMain : Initial thread starting.');
 {$ENDIF}
 
-  // Re-route unhandled exceptions to our emulation-execption handler :
+  // Re-route unhandled exceptions to our emulation-exception handler :
   OldExceptionFilter := SetUnhandledExceptionFilter(TFNTopLevelExceptionFilter(@EmuException));
 
   // Xbe entry point

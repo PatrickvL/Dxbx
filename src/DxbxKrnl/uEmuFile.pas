@@ -62,27 +62,27 @@ const
   DeviceCdrom0: AnsiString = '\Device\Cdrom0';
   DeviceHarddisk0: AnsiString = '\Device\Harddisk0';
 
-  DeviceHarddisk0Partition0: AnsiString = '\Device\Harddisk0\Partition0\'; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
-  DeviceHarddisk0Partition1: AnsiString = '\Device\Harddisk0\Partition1\'; // Data partition. Contains TDATA and UDATA folders.
-  DeviceHarddisk0Partition2: AnsiString = '\Device\Harddisk0\Partition2\'; // Shell partition. Contains Dashboard (cpxdash.xbe, evoxdash.xbe or xboxdash.xbe)
-  DeviceHarddisk0Partition3: AnsiString = '\Device\Harddisk0\Partition3\'; // First cache partition. Contains cache data (from here up to largest number)
-  DeviceHarddisk0Partition4: AnsiString = '\Device\Harddisk0\Partition4\';
-  DeviceHarddisk0Partition5: AnsiString = '\Device\Harddisk0\Partition5\';
-  DeviceHarddisk0Partition6: AnsiString = '\Device\Harddisk0\Partition6\';
-  DeviceHarddisk0Partition7: AnsiString = '\Device\Harddisk0\Partition7\';
-  DeviceHarddisk0Partition8: AnsiString = '\Device\Harddisk0\Partition8\';
-  DeviceHarddisk0Partition9: AnsiString = '\Device\Harddisk0\Partition9\';
-  DeviceHarddisk0Partition10: AnsiString = '\Device\Harddisk0\Partition10\';
-  DeviceHarddisk0Partition11: AnsiString = '\Device\Harddisk0\Partition11\';
-  DeviceHarddisk0Partition12: AnsiString = '\Device\Harddisk0\Partition12\';
-  DeviceHarddisk0Partition13: AnsiString = '\Device\Harddisk0\Partition13\';
-  DeviceHarddisk0Partition14: AnsiString = '\Device\Harddisk0\Partition14\';
-  DeviceHarddisk0Partition15: AnsiString = '\Device\Harddisk0\Partition15\';
-  DeviceHarddisk0Partition16: AnsiString = '\Device\Harddisk0\Partition16\';
-  DeviceHarddisk0Partition17: AnsiString = '\Device\Harddisk0\Partition17\';
-  DeviceHarddisk0Partition18: AnsiString = '\Device\Harddisk0\Partition18\';
-  DeviceHarddisk0Partition19: AnsiString = '\Device\Harddisk0\Partition19\';
-  DeviceHarddisk0Partition20: AnsiString = '\Device\Harddisk0\Partition20\'; // 20 = Largest possible partition number
+  DeviceHarddisk0Partition0: AnsiString = '\Device\Harddisk0\Partition0'; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
+  DeviceHarddisk0Partition1: AnsiString = '\Device\Harddisk0\Partition1'; // Data partition. Contains TDATA and UDATA folders.
+  DeviceHarddisk0Partition2: AnsiString = '\Device\Harddisk0\Partition2'; // Shell partition. Contains Dashboard (cpxdash.xbe, evoxdash.xbe or xboxdash.xbe)
+  DeviceHarddisk0Partition3: AnsiString = '\Device\Harddisk0\Partition3'; // First cache partition. Contains cache data (from here up to largest number)
+  DeviceHarddisk0Partition4: AnsiString = '\Device\Harddisk0\Partition4';
+  DeviceHarddisk0Partition5: AnsiString = '\Device\Harddisk0\Partition5';
+  DeviceHarddisk0Partition6: AnsiString = '\Device\Harddisk0\Partition6';
+  DeviceHarddisk0Partition7: AnsiString = '\Device\Harddisk0\Partition7';
+  DeviceHarddisk0Partition8: AnsiString = '\Device\Harddisk0\Partition8';
+  DeviceHarddisk0Partition9: AnsiString = '\Device\Harddisk0\Partition9';
+  DeviceHarddisk0Partition10: AnsiString = '\Device\Harddisk0\Partition10';
+  DeviceHarddisk0Partition11: AnsiString = '\Device\Harddisk0\Partition11';
+  DeviceHarddisk0Partition12: AnsiString = '\Device\Harddisk0\Partition12';
+  DeviceHarddisk0Partition13: AnsiString = '\Device\Harddisk0\Partition13';
+  DeviceHarddisk0Partition14: AnsiString = '\Device\Harddisk0\Partition14';
+  DeviceHarddisk0Partition15: AnsiString = '\Device\Harddisk0\Partition15';
+  DeviceHarddisk0Partition16: AnsiString = '\Device\Harddisk0\Partition16';
+  DeviceHarddisk0Partition17: AnsiString = '\Device\Harddisk0\Partition17';
+  DeviceHarddisk0Partition18: AnsiString = '\Device\Harddisk0\Partition18';
+  DeviceHarddisk0Partition19: AnsiString = '\Device\Harddisk0\Partition19';
+  DeviceHarddisk0Partition20: AnsiString = '\Device\Harddisk0\Partition20'; // 20 = Largest possible partition number
 
 type
   TEmuNtObject = class; // forward
@@ -165,6 +165,8 @@ function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNt
 function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string): Boolean;
 function DxbxGetDeviceNativeRootHandle(XboxFullPath: AnsiString): Handle;
 function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATUS;
+function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
+  FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 
 implementation
 
@@ -395,6 +397,118 @@ begin
   end;
 
   Result := INVALID_HANDLE_VALUE;
+end;
+
+// Create a copy of the native (WideChar based) file information record
+// to Xbox (AnsiChar based) format, returning the length of the filling.
+function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
+  FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
+var
+  CopySize: DWord;
+  StringLengthOffset: DWord;
+  mbstr: P_char;
+  wcstr: pwchar_t;
+begin
+  Result := True;
+  case FileInformationClass of
+    FileDirectoryInformation: // = 1 FILE_DIRECTORY_INFORMATION
+    begin
+      CopySize := SizeOf(FILE_DIRECTORY_INFORMATION);
+      StringLengthOffset := FIELD_OFFSET(PFILE_DIRECTORY_INFORMATION(nil).FileNameLength);
+      wcstr := @(PFILE_DIRECTORY_INFORMATION(NativeFileInformation).FileName[0]);
+      mbstr := @(PFILE_DIRECTORY_INFORMATION(FileInformation).FileName[0]);
+    end;
+
+//    FileFullDirectoryInformation: ; // = 2 ?
+//    FileBothDirectoryInformation: ; // = 3 ?
+//    FileBasicInformation: ; // = 4 FILE_BASIC_INFORMATION / FILE_READ_ATTRIBUTES
+//    FileStandardInformation: ; // = 5 FILE_STANDARD_INFORMATION
+//    FileInternalInformation: ; // = 6 FILE_INTERNAL_INFORMATION
+//    FileEaInformation: ; // = 7 FILE_EA_INFORMATION
+//    FileAccessInformation: ; // = 8 ?
+    FileNameInformation: // = 9 FILE_NAME_INFORMATION
+    begin
+      CopySize := SizeOf(FILE_NAME_INFORMATION);
+      StringLengthOffset := FIELD_OFFSET(PFILE_NAME_INFORMATION(nil).FileNameLength);
+      wcstr := @(PFILE_NAME_INFORMATION(NativeFileInformation).FileName[0]);
+      mbstr := @(PFILE_NAME_INFORMATION(FileInformation).FileName[0]);
+    end;
+
+//    FileRenameInformation: ; // = 10 FILE_RENAME_INFORMATION
+    FileLinkInformation: // = 11 FILE_LINK_INFORMATION
+    begin
+      CopySize := SizeOf(FILE_LINK_INFORMATION);
+      StringLengthOffset := FIELD_OFFSET(PFILE_LINK_INFORMATION(nil).FileNameLength);
+      wcstr := @(PFILE_LINK_INFORMATION(NativeFileInformation).FileName[0]);
+      mbstr := @(PFILE_LINK_INFORMATION(FileInformation).FileName[0]);
+    end;
+
+    FileNamesInformation: // = 12 FILE_NAMES_INFORMATION
+    begin
+      // TODO -oDxbx : How should we support multiple information records (linked via NextEntryOffset) ?
+      CopySize := SizeOf(FILE_NAMES_INFORMATION);
+      StringLengthOffset := FIELD_OFFSET(PFILE_NAMES_INFORMATION(nil).FileNameLength);
+      wcstr := @(PFILE_NAMES_INFORMATION(NativeFileInformation).FileName[0]);
+      mbstr := @(PFILE_NAMES_INFORMATION(FileInformation).FileName[0]);
+    end;
+
+//    FileDispositionInformation: ; // = 13 FILE_DISPOSITION_INFORMATION
+//    FilePositionInformation: ; // = 14 FILE_POSITION_INFORMATION
+//    FileFullEaInformation: ; // = 15 ? / FILE_READ_EA
+//    FileModeInformation: ; // = 16 FILE_MODE_INFORMATION
+//    FileAlignmentInformation: ; // = 17 FILE_ALIGNMENT_INFORMATION
+    FileAllInformation: // = 18 FILE_ALL_INFORMATION / FILE_READ_ATTRIBUTES
+    begin
+      CopySize := SizeOf(FILE_ALL_INFORMATION);
+      StringLengthOffset := FIELD_OFFSET(PFILE_ALL_INFORMATION(nil).NameInformation.FileNameLength);
+      wcstr := @(PFILE_ALL_INFORMATION(NativeFileInformation).NameInformation.FileName[0]);
+      mbstr := @(PFILE_ALL_INFORMATION(FileInformation).NameInformation.FileName[0]);
+    end;
+
+//    FileAllocationInformation: ; // = 19 FILE_ALLOCATION_INFORMATION
+//    FileEndOfFileInformation: ; // = 20 FILE_END_OF_FILE_INFORMATION
+//    FileAlternateNameInformation: ; // = 21 FILE_NAME_INFORMATION
+    FileStreamInformation: // = 22 FILE_STREAM_INFORMATION
+    begin
+      // TODO -oDxbx : How should we support multiple information records (linked via NextEntryOffset) ?
+      CopySize := SizeOf(FILE_STREAM_INFORMATION);
+      StringLengthOffset := FIELD_OFFSET(PFILE_STREAM_INFORMATION(nil).StreamNameLength);
+      wcstr := @(PFILE_STREAM_INFORMATION(NativeFileInformation).StreamName[0]);
+      mbstr := @(PFILE_STREAM_INFORMATION(FileInformation).StreamName[0]);
+    end;
+
+//    FilePipeInformation: ; // = 23 ? / FILE_READ_ATTRIBUTES
+//    FilePipeLocalInformation: ; // = 24 ? / FILE_READ_ATTRIBUTES
+//    FilePipeRemoteInformation: ; // = 25 ? / FILE_READ_ATTRIBUTES
+//    FileMailslotQueryInformation: ; // = 26 ?
+//    FileMailslotSetInformation: ; // = 27 ?
+//    FileCompressionInformation: ; // = 28 ?
+//    FileObjectIdInformation: ; // = 29 ?
+//    FileCompletionInformation: ; // = 30 FILE_COMPLETION_INFORMATION
+//    FileMoveClusterInformation: ; // = 31 FILE_MOVE_CLUSTER_INFORMATION
+//    FileQuotaInformation: ; // = 32 ?
+//    FileReparsePointInformation: ; // = 33 ?
+//    FileNetworkOpenInformation: ; // = 34 FILE_NETWORK_OPEN_INFORMATION / FILE_READ_ATTRIBUTES
+//    FileAttributeTagInformation: ; // = 35 FILE_ATTRIBUTE_TAG_INFORMATION / FILE_READ_ATTRIBUTES
+//    FileTrackingInformation: ; // = 36 ?
+//    FileMaximumInformation: ; // = 37 ?
+
+//    FileFsSizeInformation: ;
+//    FileFsVolumeInformation: ;
+  else
+    // No Wide>Ansi conversion needed
+    Result := False;
+    Exit;
+  end;
+
+  // convert from PC to Xbox
+  memcpy(FileInformation, NativeFileInformation, CopySize);
+
+  // Halve the amount of memory needed for the string :
+  PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div 2;
+
+  // Convert the WideChar string to Ansi :
+  wcstombs(mbstr, wcstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
 end;
 
 //
