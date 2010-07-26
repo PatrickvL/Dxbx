@@ -1138,6 +1138,8 @@ begin
     Dec(MaxChars);
   end;
 
+  Result := STATUS_SUCCESS;
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1386,6 +1388,8 @@ begin
     Inc(MultiByteString);
     Dec(MaxChars);
   end;
+
+  Result := STATUS_SUCCESS;
 
   EmuSwapFS(fsXbox);
 end;
