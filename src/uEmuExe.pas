@@ -195,14 +195,15 @@ var
     if aVirtualSize = 0 then
       Exit;
 
-    if not VirtualProtect(Pvoid(aVirtualAddr), aVirtualSize, PAGE_READWRITE, {var}old_protection) then
-      RaiseLastOSError;
+//    if not VirtualProtect(Pvoid(aVirtualAddr), aVirtualSize, PAGE_READWRITE, {var}old_protection) then
+//      RaiseLastOSError;
 
     if aRawSize > 0 then
     begin
       Drive.FileSystem.Seek(FileHandle, aRawOffset, soFromBeginning);
       Drive.FileSystem.Read(FileHandle, Pvoid(aVirtualAddr)^, aRawSize);
     end;
+
 // Dxbx Note : Restoring the page-protection crashes some xbe's writing to TLS, so skip it for now!
 //    if not VirtualProtect(Pvoid(aVirtualAddr), aRawSize, aProtection, {var}old_protection) then
 //      RaiseLastOSError;
@@ -223,7 +224,7 @@ begin
   Drive := Drives.D;
   if not Drive.OpenImage(aFilePath, {out}XbeFilePath) then
   begin
-//    MessageDlg(DxbxFormat('Could not open path : %s', [aFilePath]), mtError, [mbOk], 0);
+    WriteLog(Format('EmuExe: Could not open path : %s', [aFilePath]));
     Exit;
   end;
 
@@ -233,7 +234,7 @@ begin
     // Copy the complete XBEHeader over to the ImageBase :
     _ReadXbeBlock(
       {RawOffset=}0,
-      {RawSize=}XBE_HEADER_SIZE, // =$1000, this could use aXbe.dwSizeofHeader
+      {RawSize=}XBE_HEADER_SIZE, // =$1000 TODO : Should we use it's own dwSizeofHeader instead?
       {VirtualAddr=}XBE_IMAGE_BASE,
       {VirtualSize=}XBE_HEADER_SIZE,
       {NewProtect}PAGE_READWRITE);
@@ -273,62 +274,69 @@ begin
   end;
 
   // Decode kernel thunk table address :
-  kt := XbeHeader.dwKernelImageThunkAddr xor XOR_KT_RETAIL;
-  if kt > XOR_MAX_VIRTUAL_ADDRESS then
-    kt := XbeHeader.dwKernelImageThunkAddr xor XOR_KT_DEBUG;
-
-  // Patch the Kernel Thunk Table, to use the actual functions :
-  WriteLog('EmuExe: Hijacking Kernel Imports...');
-  DWord(kt_tbl) := kt;
-  i := 0;
-  while kt_tbl[i] <> 0 do
   begin
-    t := kt_tbl[i] and $7FFFFFFF;
-    if  (t < NUMBER_OF_THUNKS)
-    and (DWord(KernelThunkTable[t]) > NUMBER_OF_THUNKS) then
-    begin
-      kt_tbl[i] := DWord(KernelThunkTable[t]);
-      WriteLog(Format('EmuExe: Thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + DWord(i * 4), kt_tbl[i]]));
-    end
-    else
-      WriteLog(Format('EmuExe: Out-of-range thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + DWord(i * 4), kt_tbl[i]]));
+    kt := XbeHeader.dwKernelImageThunkAddr xor XOR_KT_RETAIL;
+    if kt > XOR_MAX_VIRTUAL_ADDRESS then
+      kt := XbeHeader.dwKernelImageThunkAddr xor XOR_KT_DEBUG;
+  end;
 
-    Inc(i);
-  end; // while
-  // Make sure Delphi doesn't automatically deallocates this :
-  DWord(kt_tbl) := 0;
+  // Process the Kernel thunk table to map Kernel function calls to their actual address :
+  begin
+    WriteLog('EmuExe: Hijacking Kernel Imports...');
+    DWord(kt_tbl) := kt;
+    i := 0;
+    while kt_tbl[i] <> 0 do
+    begin
+      t := kt_tbl[i] and $7FFFFFFF;
+      if  (t < NUMBER_OF_THUNKS)
+      and (DWord(KernelThunkTable[t]) > NUMBER_OF_THUNKS) then
+      begin
+        kt_tbl[i] := DWord(KernelThunkTable[t]);
+        WriteLog(Format('EmuExe: Thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + DWord(i * 4), kt_tbl[i]]));
+      end
+      else
+        WriteLog(Format('EmuExe: Out-of-range thunk %.3d : *0x%.8X := 0x%.8X', [t, kt + DWord(i * 4), kt_tbl[i]]));
+
+      Inc(i);
+    end; // while
+    DWord(kt_tbl) := 0; // Make sure Delphi doesn't automatically deallocate this variable
+  end;
 
   // Decode entry point address :
-  EntryPoint := XbeHeader.dwEntryAddr xor XOR_EP_RETAIL;
-  if EntryPoint > XOR_MAX_VIRTUAL_ADDRESS then
-    EntryPoint := XbeHeader.dwEntryAddr xor XOR_EP_DEBUG;
+  begin
+    EntryPoint := XbeHeader.dwEntryAddr xor XOR_EP_RETAIL;
+    if EntryPoint > XOR_MAX_VIRTUAL_ADDRESS then
+      EntryPoint := XbeHeader.dwEntryAddr xor XOR_EP_DEBUG;
+  end;
 
   Result := True;
 
-  XbeTLS := PXbeTls(XbeHeader.dwTLSAddr);
-  if Assigned(XbeTLS) then
-    XbeTlsData := Pvoid(XbeTLS.dwDataStartAddr)
-  else
-    XbeTlsData := nil;
-
-  XbeLibraryVersion := PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr);
-
-  // Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
-  g_EmuXbePath := DeviceHarddisk0Partition1 + AnsiString(XbeFilePath);
-  RtlInitAnsiString(@xboxkrnl_XeImageFileName, PCSZ(g_EmuXbePath));
-  // TODO -oDxbx : Make sure this matches g_hCurDir
-
   // Launch the XBE :
-  DxbxKrnlInit(
-    aHandle,
-    XbeTlsData,
-    XbeTls,
-    XbeLibraryVersion,
-    KernelDebugMode,
-    PAnsiChar(AnsiString(KernelDebugFileName)),
-    XbeHeader,
-    XbeHeader.dwSizeofHeaders,
-    TEntryProc(EntryPoint));
+  begin
+    XbeTLS := PXbeTls(XbeHeader.dwTLSAddr);
+    if Assigned(XbeTLS) then
+      XbeTlsData := Pvoid(XbeTLS.dwDataStartAddr)
+    else
+      XbeTlsData := nil;
+
+    XbeLibraryVersion := PXbeLibraryVersion(XbeHeader.dwLibraryVersionsAddr);
+
+    // Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
+    g_EmuXbePath := DeviceHarddisk0Partition1 + AnsiString(XbeFilePath);
+    RtlInitAnsiString(@xboxkrnl_XeImageFileName, PCSZ(g_EmuXbePath));
+    // TODO -oDxbx : Make sure this matches g_hCurDir
+
+    DxbxKrnlInit(
+      aHandle,
+      XbeTlsData,
+      XbeTls,
+      XbeLibraryVersion,
+      KernelDebugMode,
+      PAnsiChar(AnsiString(KernelDebugFileName)),
+      XbeHeader,
+      XbeHeader.dwSizeofHeaders,
+      TEntryProc(EntryPoint));
+  end;
 end;
 
 var

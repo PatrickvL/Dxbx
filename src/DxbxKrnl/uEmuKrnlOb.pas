@@ -45,18 +45,49 @@ var
   {245}xboxkrnl_ObpObjectHandleTable: array [0..0] of DWord; // TODO -oDXBX: Determine array size
   {249}xboxkrnl_ObSymbolicLinkObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : Assign TEmuNtSymbolicLinkObject ?
 
-function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObMakeTemporaryObject(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObOpenObjectByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObOpenObjectByPointer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObCreateObject(
+  ObjectType: POBJECT_TYPE;
+  ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
+  ObjectBodySize: ULONG;
+  Object_: PPVOID
+): NTSTATUS; stdcall;
+function xboxkrnl_ObInsertObject(
+  Object_: PVOID;
+  ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
+  ObjectPointerBias: ULONG;
+  ReturnedHandle: PHANDLE // OUT
+): NTSTATUS; stdcall;
+function xboxkrnl_ObMakeTemporaryObject(
+  Object_: PVOID
+): NTSTATUS; stdcall;
+function xboxkrnl_ObOpenObjectByName(
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  ObjectType: POBJECT_TYPE;
+  ParseContext: PVOID; // OUT, OPTIONAL
+  ReturnedHandle: PHANDLE // OUT
+): NTSTATUS; stdcall;
+function xboxkrnl_ObOpenObjectByPointer(
+  Object_: PVOID;
+  ObjectType: POBJECT_TYPE;
+  Handle: PHANDLE // OUT
+): NTSTATUS; stdcall;
 function xboxkrnl_ObReferenceObjectByHandle(
   Handle: HANDLE;
   ObjectType: POBJECT_TYPE; // OPTIONAL?
   Object_: PPVOID
   ): NTSTATUS; stdcall;
-function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
-function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall; // UNKNOWN_SIGNATURE
+function xboxkrnl_ObReferenceObjectByName(
+  ObjectName: POBJECT_STRING;
+  Attributes: ULONG;
+  ObjectType: POBJECT_TYPE;
+  ParseContext: PVOID; // OUT, OPTIONAL
+  Object_: PPVOID // OUT
+): NTSTATUS; stdcall;
+function xboxkrnl_ObReferenceObjectByPointer(
+  Handle: HANDLE;
+  ObjectType: POBJECT_TYPE; // OPTIONAL
+  Object_: PVOID // OUT
+): NTSTATUS; stdcall;
 procedure xboxkrnl_ObfDereferenceObject(
   FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
   FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
@@ -70,7 +101,12 @@ procedure xboxkrnl_ObfReferenceObject(
 
 implementation
 
-function xboxkrnl_ObCreateObject(): NTSTATUS; stdcall;
+function xboxkrnl_ObCreateObject(
+  ObjectType: POBJECT_TYPE;
+  ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
+  ObjectBodySize: ULONG;
+  Object_: PPVOID
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -78,7 +114,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObInsertObject(): NTSTATUS; stdcall;
+function xboxkrnl_ObInsertObject(
+  Object_: PVOID;
+  ObjectAttributes: POBJECT_ATTRIBUTES; // OPTIONAL
+  ObjectPointerBias: ULONG;
+  ReturnedHandle: PHANDLE // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -86,7 +127,9 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObMakeTemporaryObject(): NTSTATUS; stdcall;
+function xboxkrnl_ObMakeTemporaryObject(
+  Object_: PVOID
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -94,7 +137,12 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObOpenObjectByName(): NTSTATUS; stdcall;
+function xboxkrnl_ObOpenObjectByName(
+  ObjectAttributes: POBJECT_ATTRIBUTES;
+  ObjectType: POBJECT_TYPE;
+  ParseContext: PVOID; // OUT, OPTIONAL
+  ReturnedHandle: PHANDLE // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -102,7 +150,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObOpenObjectByPointer(): NTSTATUS; stdcall;
+function xboxkrnl_ObOpenObjectByPointer(
+  Object_: PVOID;
+  ObjectType: POBJECT_TYPE;
+  Handle: PHANDLE // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -129,7 +181,13 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObReferenceObjectByName(): NTSTATUS; stdcall;
+function xboxkrnl_ObReferenceObjectByName(
+  ObjectName: POBJECT_STRING;
+  Attributes: ULONG;
+  ObjectType: POBJECT_TYPE;
+  ParseContext: PVOID; // OUT, OPTIONAL
+  Object_: PPVOID // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);
@@ -137,7 +195,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function xboxkrnl_ObReferenceObjectByPointer(): NTSTATUS; stdcall;
+function xboxkrnl_ObReferenceObjectByPointer(
+  Handle: HANDLE;
+  ObjectType: POBJECT_TYPE; // OPTIONAL
+  Object_: PVOID // OUT
+): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:0
 begin
   EmuSwapFS(fsWindows);

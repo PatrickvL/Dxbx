@@ -1518,6 +1518,8 @@ begin
 
   wcstr := @FileDirInfo.FileName[0];
 
+  Result := STATUS_SUCCESS; // Fix stupid Delphi warning that Result might not be assigned...
+
   while True do
   begin
 //    ZeroMemory(wcstr, 160*2); ??
@@ -1723,10 +1725,36 @@ function xboxkrnl_NtQueryIoCompletion(
   IoCompletionHandle: HANDLE;
   IoCompletionInformation: PIO_COMPLETION_BASIC_INFORMATION // OUT
 ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  IoCompletionInformationClass: IO_COMPLETION_INFORMATION_CLASS;
+  IoCompletionInformationLength: ULONG;
+  ResultLength: ULONG;
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtQueryIoCompletion');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtQueryIoCompletion' +
+      #13#10'('+
+      #13#10'   IoCompletionHandle     : 0x%.8x' +
+      #13#10'   IoCompletionInformation: 0x%.8x' +
+      #13#10');',
+      [IoCompletionHandle, IoCompletionInformation]);
+
+  // Dxbx note : Xbox uses only one type, NT offers a choice from one (duh!) :
+  IoCompletionInformationClass := IoCompletionBasicInformation;
+  IoCompletionInformationLength := SizeOf(IO_COMPLETION_BASIC_INFORMATION);
+
+  Result := JwaNative.NtQueryIoCompletion(
+    IoCompletionHandle,
+    IoCompletionInformationClass,
+    IoCompletionInformation,
+    IoCompletionInformationLength,
+    @ResultLength);
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueryIoCompletion failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2120,10 +2148,31 @@ function xboxkrnl_NtRemoveIoCompletion(
   IoStatusBlock: PIO_STATUS_BLOCK; // OUT
   Timeout: PLARGE_INTEGER
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtRemoveIoCompletion');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtRemoveIoCompletion' +
+      #13#10'('+
+      #13#10'   IoCompletionHandle     : 0x%.8x' +
+      #13#10'   KeyContext             : 0x%.8x' +
+      #13#10'   ApcContext             : 0x%.8x' +
+      #13#10'   IoStatusBlock          : 0x%.8x' +
+      #13#10'   Timeout                : 0x%.8x (%d)' +
+      #13#10');',
+      [IoCompletionHandle, KeyContext, ApcContext, IoStatusBlock, Timeout, QuadPart(Timeout)]);
+
+  Result := JwaNative.NtRemoveIoCompletion(
+    IoCompletionHandle,
+    {CompletionKey=}KeyContext^,
+    {CompletionValue=}ApcContext^, // TODO -oDxbx : Not sure this is correct
+    IoStatusBlock,
+    Timeout);
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtRemoveIoCompletion failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2236,10 +2285,31 @@ function xboxkrnl_NtSetIoCompletion(
   IoStatus: NTSTATUS;
   IoStatusInformation: ULONG_PTR
   ): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  Result := Unimplemented('NtSetIoCompletion');
+
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuKrnl : NtSetIoCompletion' +
+      #13#10'('+
+      #13#10'   IoCompletionHandle     : 0x%.8x' +
+      #13#10'   KeyContext             : 0x%.8x' +
+      #13#10'   ApcContext             : 0x%.8x' +
+      #13#10'   IoStatus               : 0x%.8x' +
+      #13#10'   IoStatusInformation    : 0x%.8x (%d)' +
+      #13#10');',
+      [IoCompletionHandle, KeyContext, ApcContext, IoStatus, IoStatusInformation]);
+
+  Result := JwaNative.NtSetIoCompletion(
+    IoCompletionHandle,
+    {CompletionKey=}ULONG(KeyContext^),
+    {CompletionValue=}ULONG(ApcContext^), // TODO -oDxbx : Not sure this is correct
+    IoStatus,
+    IoStatusInformation);
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtSetIoCompletion failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
