@@ -369,8 +369,8 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmFreeSystemMemory'+
-      #13#10'('+
+  DbgPrintf('EmuKrnl : MmFreeSystemMemory' +
+      #13#10'(' +
       #13#10'   BaseAddress              : 0x%.08X' +
       #13#10'   NumberOfBytes            : 0x%.08X' +
       #13#10');',
@@ -498,8 +498,8 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmQueryAllocationSize'+
-      #13#10'('+
+  DbgPrintf('EmuKrnl : MmQueryAllocationSize' +
+      #13#10'(' +
       #13#10'   BaseAddress              : 0x%.08X' +
       #13#10');',
       [BaseAddress]);
@@ -519,8 +519,8 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmQueryStatistics'+
-      #13#10'('+
+  DbgPrintf('EmuKrnl : MmQueryStatistics' +
+      #13#10'(' +
       #13#10'   MemoryStatistics         : 0x%.08X' +
       #13#10');',
       [MemoryStatistics]);
@@ -555,8 +555,8 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : MmSetAddressProtect'+
-      #13#10'('+
+  DbgPrintf('EmuKrnl : MmSetAddressProtect' +
+      #13#10'(' +
       #13#10'   BaseAddress              : 0x%.08X' +
       #13#10'   NumberOfBytes            : 0x%.08X' +
       #13#10'   NewProtect               : 0x%.08X' +

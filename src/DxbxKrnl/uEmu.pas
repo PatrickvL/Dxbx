@@ -277,10 +277,10 @@ begin
     if e.ExceptionRecord.ExceptionCode = $80000003 then
     begin
       buffer := Format(
-        'Received Breakpoint Exception (int 3) @ EIP := $%.08X'+
-        ''+
-        '  Press Abort to terminate emulation.'+
-        '  Press Retry to debug.'+
+        'Received Breakpoint Exception (int 3) @ EIP := $%.08X' +
+        '' +
+        '  Press Abort to terminate emulation.' +
+        '  Press Retry to debug.' +
         '  Press Ignore to continue emulation.',
         [e.ContextRecord.Eip]);
 
@@ -314,9 +314,9 @@ begin
     else
     begin
       buffer := Format(
-              'Received Exception Code $%.08X @ EIP := $%.08X'+
-              ''+
-              '  Press ''OK'' to terminate emulation.'+
+              'Received Exception Code $%.08X @ EIP := $%.08X' +
+              '' +
+              '  Press ''OK'' to terminate emulation.' +
               '  Press ''Cancel'' to debug.',
               [e.ExceptionRecord.ExceptionCode, e.ContextRecord.Eip]);
 

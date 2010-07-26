@@ -48,7 +48,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuWSAStartup' +
+  DbgPrintf('XOnline : EmuWSAStartup' +
       #13#10'(' +
       #13#10'   wVersionRequested   : 0x%.08X' +
       #13#10'   lpWSAData           : 0x%.08X' +
@@ -72,7 +72,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXNetStartup' +
+  DbgPrintf('XOnline : EmuXNetStartup' +
     #13#10'(' +
     #13#10'   pDummy              : 0x%.08X' +
     #13#10');',
@@ -91,7 +91,7 @@ function XTL_EmuXNetGetEthernetLinkStatus(): DWORD; stdcall;
 begin
   EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXNetGetEthernetLinkStatus();');
+  DbgPrintf('XOnline : EmuXNetGetEthernetLinkStatus();');
 {$ENDIF}
   EmuSwapFS(fsXbox);
 
@@ -111,14 +111,14 @@ begin
     EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuXapi : EmuThis.Emusocket'
-           '('
-           '   this                : 0x%.08X'
-           '   af                  : 0x%.08X'
-           '   ctype                : 0x%.08X'
-           '   protocol            : 0x%.08X'
-           ');',
-           [this, af, ctype, protocol);
+    DbgPrintf('XOnline : EmuThis.Emusocket' +
+        #13#10'(' +
+        #13#10'   this                : 0x%.08X' +
+        #13#10'   af                  : 0x%.08X' +
+        #13#10'   ctype               : 0x%.08X' +
+        #13#10'   protocol            : 0x%.08X' +
+        #13#10');',
+        [this, af, ctype, protocol);
 {$ENDIF}
 
     SOCKET ret = socket(af, ctype, protocol);
@@ -134,14 +134,14 @@ begin
     EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuXapi : EmuThis.Emubind'
-           '('
-           '   this                : 0x%.08X'
-           '   s                   : 0x%.08X'
-           '   name                : 0x%.08X'
-           '   namelen             : 0x%.08X'
-           ');',
-           [this, s, name, namelen);
+    DbgPrintf('XOnline : EmuThis.Emubind' +
+        #13#10'(' +
+        #13#10'   this                : 0x%.08X' +
+        #13#10'   s                   : 0x%.08X' +
+        #13#10'   name                : 0x%.08X' +
+        #13#10'   namelen             : 0x%.08X' +
+        #13#10');',
+        [this, s, name, namelen);
 {$ENDIF}
 
     // TODO -oCXBX:: Host-To-Network order if necessary (probably not?)
@@ -159,13 +159,13 @@ begin
     EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuXapi : EmuThis.Emulisten'
-           '('
-           '   this                : 0x%.08X'
-           '   s                   : 0x%.08X'
-           '   listen              : 0x%.08X'
-           ');',
-           [this, s, backlog);
+    DbgPrintf('XOnline : EmuThis.Emulisten' +
+        #13#10'(' +
+        #13#10'   this                : 0x%.08X' +
+        #13#10'   s                   : 0x%.08X' +
+        #13#10'   listen              : 0x%.08X' +
+        #13#10');',
+        [this, s, backlog);
 {$ENDIF}
 
     // TODO -oCXBX: Host-To-Network order if necessary (probably not?)
@@ -183,14 +183,14 @@ begin
     EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuXapi : EmuThis.Emuioctlsocket'
-           '('
-           '   this                : 0x%.08X'
-           '   s                   : 0x%.08X'
-           '   cmd                 : 0x%.08X'
-           '   argp                : 0x%.08X'
-           ');',
-           [this, s, cmd, argp]);
+    DbgPrintf('XOnline : EmuThis.Emuioctlsocket' +
+        #13#10'(' +
+        #13#10'   this                : 0x%.08X' +
+        #13#10'   s                   : 0x%.08X' +
+        #13#10'   cmd                 : 0x%.08X' +
+        #13#10'   argp                : 0x%.08X' +
+        #13#10');',
+        [this, s, cmd, argp]);
 {$ENDIF}
 
     Integer ret := ioctlsocket(s, cmd, argp);

@@ -543,11 +543,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtAllocateVirtualMemory'+
-      #13#10'('+
-      #13#10'   BaseAddress         : 0x%.8x (0x%.8x)'+
+    DbgPrintf('EmuKrnl : NtAllocateVirtualMemory' +
+      #13#10'(' +
+      #13#10'   BaseAddress         : 0x%.8x (0x%.8x)' +
       #13#10'   ZeroBits            : 0x%.8x' +
-      #13#10'   AllocationSize      : 0x%.8x (0x%.8x)'+
+      #13#10'   AllocationSize      : 0x%.8x (0x%.8x)' +
       #13#10'   AllocationType      : 0x%.8x' +
       #13#10'   Protect             : 0x%.8x' +
       #13#10');',
@@ -592,7 +592,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtClearEvent' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   EventHandle         : 0x%.8x' +
       #13#10');',
       [EventHandle]);
@@ -1048,7 +1048,7 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : NtDeviceIoControlFile' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   FileHandle          : 0x%.08X' +
       #13#10'   Event               : 0x%.08X' +
       #13#10'   ApcRoutine          : 0x%.08X' +
@@ -1098,11 +1098,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtDuplicateObject'+
-      #13#10'('+
-      #13#10'   SourceHandle        : 0x%.08X'+
-      #13#10'   TargetHandle        : 0x%.08X'+
-      #13#10'   Options             : 0x%.08X'+
+  DbgPrintf('EmuKrnl : NtDuplicateObject' +
+      #13#10'(' +
+      #13#10'   SourceHandle        : 0x%.08X' +
+      #13#10'   TargetHandle        : 0x%.08X' +
+      #13#10'   Options             : 0x%.08X' +
       #13#10');',
       [SourceHandle, TargetHandle, Options]);
 {$ENDIF}
@@ -1148,10 +1148,10 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtFlushBuffersFile'+
-      #13#10'('+
-      #13#10'   FileHandle          : 0x%.08X'+
-      #13#10'   IoStatusBlock       : 0x%.08X'+
+  DbgPrintf('EmuKrnl : NtFlushBuffersFile' +
+      #13#10'(' +
+      #13#10'   FileHandle          : 0x%.08X' +
+      #13#10'   IoStatusBlock       : 0x%.08X' +
       #13#10');',
       [FileHandle, IoStatusBlock]);
 {$ENDIF}
@@ -1180,7 +1180,7 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : NtFreeVirtualMemory' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   BaseAddress         : 0x%.08X' +
       #13#10'   FreeSize            : 0x%.08X' +
       #13#10'   FreeType            : 0x%.08X' +
@@ -1210,7 +1210,7 @@ begin
   EmuSwapFS(fsWindows);
 
   DbgPrintf('EmuKrnl : NtFsControlFile' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   FileHandle          : 0x%.08X' +
       #13#10'   Event               : 0x%.08X' +
       #13#10'   ApcRoutine          : 0x%.08X' +
@@ -1407,7 +1407,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtPulseEvent' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   EventHandle         : 0x%.8x' +
       #13#10'   PreviousState       : 0x%.8x' +
       #13#10');',
@@ -1600,7 +1600,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtQueryEvent' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   EventHandle         : 0x%.8x' +
       #13#10'   EventInformation    : 0x%.8x' +
       #13#10');',
@@ -1625,10 +1625,10 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtQueryFullAttributesFile'+
-     #13#10'('+
-     #13#10'   ObjectAttributes    : 0x%.08X ("%s")'+
-     #13#10'   FileInformation     : 0x%.08X'+
+  DbgPrintf('EmuKrnl : NtQueryFullAttributesFile' +
+     #13#10'(' +
+     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
+     #13#10'   FileInformation     : 0x%.08X' +
      #13#10');',
      [ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes), FileInformation]);
 {$ENDIF}
@@ -1735,7 +1735,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtQueryIoCompletion' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   IoCompletionHandle     : 0x%.8x' +
       #13#10'   IoCompletionInformation: 0x%.8x' +
       #13#10');',
@@ -1770,7 +1770,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtQueryMutant' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   MutantHandle        : 0x%.8x' +
       #13#10'   MutantInformation   : 0x%.8x' +
       #13#10');',
@@ -1796,7 +1796,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtQuerySemaphore' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   SemaphoreHandle     : 0x%.8x' +
       #13#10'   SemaphoreInformation: 0x%.8x' +
       #13#10');',
@@ -2098,10 +2098,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtReleaseMutant'+
-      #13#10'('+
-      #13#10'   MutantHandle         : 0x%.08X'+
-      #13#10'   PreviousCount        : 0x%.08X'+
+    DbgPrintf('EmuKrnl : NtReleaseMutant' +
+      #13#10'(' +
+      #13#10'   MutantHandle         : 0x%.08X' +
+      #13#10'   PreviousCount        : 0x%.08X' +
       #13#10');',
       [MutantHandle, PreviousCount]);
 
@@ -2154,7 +2154,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtRemoveIoCompletion' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   IoCompletionHandle     : 0x%.8x' +
       #13#10'   KeyContext             : 0x%.8x' +
       #13#10'   ApcContext             : 0x%.8x' +
@@ -2186,10 +2186,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtResumeThread'+
-      #13#10'('+
-      #13#10'   ThreadHandle         : 0x%.08X'+
-      #13#10'   PreviousSuspendCount : 0x%.08X'+
+    DbgPrintf('EmuKrnl : NtResumeThread' +
+      #13#10'(' +
+      #13#10'   ThreadHandle         : 0x%.08X' +
+      #13#10'   PreviousSuspendCount : 0x%.08X' +
       #13#10');',
       [ThreadHandle, PreviousSuspendCount]);
 
@@ -2213,10 +2213,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuKrnl : NtSetEvent'+
-      #13#10'('+
-      #13#10'   EventHandle          : 0x%.08X'+
-      #13#10'   PreviousState        : 0x%.08X'+
+    DbgPrintf('EmuKrnl : NtSetEvent' +
+      #13#10'(' +
+      #13#10'   EventHandle          : 0x%.08X' +
+      #13#10'   PreviousState        : 0x%.08X' +
       #13#10');',
       [EventHandle, PreviousState]);
 
@@ -2291,7 +2291,7 @@ begin
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : NtSetIoCompletion' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   IoCompletionHandle     : 0x%.8x' +
       #13#10'   KeyContext             : 0x%.8x' +
       #13#10'   ApcContext             : 0x%.8x' +
@@ -2373,13 +2373,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtSignalAndWaitForSingleObjectEx'+
-      #13#10'('+
-      #13#10'   SignalHandle         : 0x%.08X'+
-      #13#10'   WaitHandle           : 0x%.08X'+
-      #13#10'   WaitMode             : 0x%.08X'+
-      #13#10'   Alertable            : 0x%.08X'+
-      #13#10'   Timeout              : 0x%.08X (%d)'+
+    DbgPrintf('EmuKrnl : NtSignalAndWaitForSingleObjectEx' +
+      #13#10'(' +
+      #13#10'   SignalHandle         : 0x%.08X' +
+      #13#10'   WaitHandle           : 0x%.08X' +
+      #13#10'   WaitMode             : 0x%.08X' +
+      #13#10'   Alertable            : 0x%.08X' +
+      #13#10'   Timeout              : 0x%.08X (%d)' +
       #13#10');',
       [SignalHandle, WaitHandle, Ord(WaitMode), Alertable, Timeout, QuadPart(Timeout)]);
 
@@ -2415,10 +2415,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtSuspendThread'+
-      #13#10'('+
-      #13#10'   ThreadHandle         : 0x%.08X'+
-      #13#10'   PreviousSuspendCount : 0x%.08X'+
+    DbgPrintf('EmuKrnl : NtSuspendThread' +
+      #13#10'(' +
+      #13#10'   ThreadHandle         : 0x%.08X' +
+      #13#10'   PreviousSuspendCount : 0x%.08X' +
       #13#10');',
       [ThreadHandle, PreviousSuspendCount]);
 
@@ -2537,11 +2537,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtWaitForSingleObject'+
-      #13#10'('+
-      #13#10'   Handle               : 0x%.08X'+
-      #13#10'   Alertable            : 0x%.08X'+
-      #13#10'   Timeout              : 0x%.08X (%d)'+
+    DbgPrintf('EmuKrnl : NtWaitForSingleObject' +
+      #13#10'(' +
+      #13#10'   Handle               : 0x%.08X' +
+      #13#10'   Alertable            : 0x%.08X' +
+      #13#10'   Timeout              : 0x%.08X (%d)' +
       #13#10');',
       [Handle, Alertable, Timeout, QuadPart(Timeout)]);
 
@@ -2577,12 +2577,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx'+
-      #13#10'('+
-      #13#10'   Handle               : 0x%.08X'+
-      #13#10'   WaitMode             : 0x%.08X'+
-      #13#10'   Alertable            : 0x%.08X'+
-      #13#10'   Timeout              : 0x%.08X (%d)'+
+    DbgPrintf('EmuKrnl : NtWaitForSingleObjectEx' +
+      #13#10'(' +
+      #13#10'   Handle               : 0x%.08X' +
+      #13#10'   WaitMode             : 0x%.08X' +
+      #13#10'   Alertable            : 0x%.08X' +
+      #13#10'   Timeout              : 0x%.08X (%d)' +
       #13#10');',
       [Handle_, Ord(WaitMode), Alertable, Timeout, QuadPart(Timeout)]);
 

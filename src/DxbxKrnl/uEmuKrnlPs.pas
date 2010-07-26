@@ -440,11 +440,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl: PsTerminateSystemThread'+
-         '('+
-         '   ExitStatus          : 0x%.08X'+
-         ')',
-         [ExitStatus]);
+  DbgPrintf('EmuKrnl : PsTerminateSystemThread' +
+      #13#10'(' +
+      #13#10'   ExitStatus          : 0x%.08X' +
+      #13#10')',
+      [ExitStatus]);
 
   // call thread notification routine(s)
   if (g_iThreadNotificationCount <> 0) then
