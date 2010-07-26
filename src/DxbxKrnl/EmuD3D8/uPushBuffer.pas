@@ -37,10 +37,10 @@ uses
   , uTypes
   , uDxbxUtils // iif
   , uResourceTracker
+  , uEmuD3D8Types
   , uVertexBuffer
   , uEmu
-  , uEmuXG
-  , uEmuD3D8Types;
+  , uEmuXG;
 
 // From PushBuffer.h :
 
@@ -77,12 +77,11 @@ implementation
 uses
   // Dxbx
     uDxbxKrnlUtils
-  , uEmuD3D8
   , uLog
+  , uEmuD3D8
+  , uConvert
   , uState
-  , uEmuXTL
-  , uVertexShader
-  , uConvert;
+  , uVertexShader;
 
 // From PushBuffer.cpp :
 

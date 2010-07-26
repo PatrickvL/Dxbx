@@ -37,12 +37,11 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
-  uEmu,
-  uEmuFS,
-  uEmuFile,
-  uEmuXapi,
-  uEmuKrnl,
   uEmuAlloc,
+  uEmuFS,
+  uEmu,
+  uEmuFile,
+  uEmuKrnl,
   uDxbxKrnl,
   uDxbxKrnlUtils;
 

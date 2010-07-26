@@ -70,8 +70,9 @@ type
 
   XTL_PIDirectSound8 = type PInterface;
   XTL_PIDirectSoundBuffer = type PInterface;
-  XTL_PIDirectSoundBuffer8 = type PInterface;
   XTL_PIDirectSoundListener = type PInterface; // Dxbx addition
+
+  XTL_PIDirectSoundBuffer8 = XTL_PIDirectSoundBuffer;
 
   // DirectInput interface types :
 
@@ -94,7 +95,8 @@ type
   XTL_LPDIRECTSOUND8 = XTL_PIDirectSound8;
   XTL_PLPDIRECTSOUND8 = ^XTL_LPDIRECTSOUND8;
 
-  XTL_LPDIRECTSOUNDBUFFER8 = XTL_PIDirectSoundBuffer8;
+  XTL_LPDIRECTSOUNDBUFFER = XTL_PIDirectSoundBuffer;
+  XTL_LPDIRECTSOUNDBUFFER8 = XTL_LPDIRECTSOUNDBUFFER;
 
   XTL_LPDIRECTINPUT8 = XTL_PIDirectInput8;
   XTL_LPDIRECTINPUTDEVICE8 = XTL_PIDirectInputDevice8;

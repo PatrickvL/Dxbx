@@ -24,12 +24,12 @@ uses
   // Delphi
   Windows,
   // Dxbx
-  uEmu,
   uTypes,
-  uLog,
   uDxbxUtils, // iif
+  uLog,
   uEmuD3D8Types,
-  uEmuD3D8Utils;
+  uEmuD3D8Utils,
+  uEmu;
 
 {$INCLUDE Dxbx.inc}
 

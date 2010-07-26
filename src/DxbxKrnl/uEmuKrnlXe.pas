@@ -33,13 +33,12 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
-  uLog,
   uConsts,
   uTypes,
+  uLog,
   uXbe,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
+  uEmuXapi, // XTL_SECTIONHANDLE, XTL_EmuXLoadSectionByHandle
   uEmuKrnl,
   uDxbxKrnl;
 

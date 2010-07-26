@@ -49,31 +49,30 @@ uses
   XboxKrnl,
   // Dxbx
   uConsts,
+  uXbVideo,
+  uTypes, // Use after uXBVideo, to declare BOOL correctly!
   uDxbxUtils,
   uLog,
   uXbe,
-  uPushBuffer,
-  uEmuDInput,
-  uEmu,
+  uDxbxKrnlUtils,
+  uState,
+  uResourceTracker,
+  uEmuShared,
   uEmuAlloc,
+  uEmuFS,
+  uEmu,
+  uEmuDInput,
   uEmuKrnl,
   uEmuKrnlKe,
-  uEmuXTL,
-  uVertexShader,
-  uPixelShader,
-  uResourceTracker,
-  uConvert,
   uEmuD3D8Types,
   uEmuD3D8Utils,
-  uXbVideo,
-  uTypes, // Use after uXBVideo, to declare BOOL correctly!
-  uEmuShared,
-  uEmuFS,
-  uEmuXapi,
-  uEmuXG,
-  uDxbxKrnlUtils,
+  uConvert,
+  uPixelShader,
+  uPushBuffer,
+  uVertexShader,
   uVertexBuffer,
-  uState;
+  uEmuXapi, // PXINPUT_FEEDBACK
+  uEmuXG;
 
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boolean;
 function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: boolean): uint;

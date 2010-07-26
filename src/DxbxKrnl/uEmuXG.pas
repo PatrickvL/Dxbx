@@ -31,11 +31,11 @@ uses
   uTypes,
   uLog,
   uEmuD3D8Types,
-  uConvert,
-  uEmu,
   uEmuFS,
+  uEmu,
   uXboxLibraryUtils, // PatchPrefix
-  uDxbxKrnlUtils;
+  uDxbxKrnlUtils,
+  uConvert;
 
 // From EmuXG.h :
 

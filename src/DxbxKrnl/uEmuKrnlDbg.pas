@@ -33,13 +33,11 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uDxbxUtils,
   uLog,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
   uEmuKrnl,
-  uDxbxKrnl,
-  uDxbxUtils;
+  uDxbxKrnl;
 
 procedure {005} xboxkrnl_DbgBreakPoint(
   ); stdcall;

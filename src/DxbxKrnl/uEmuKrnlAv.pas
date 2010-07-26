@@ -35,8 +35,6 @@ uses
   // Dxbx
   uLog,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
   uEmuKrnl,
   uDxbxKrnl;
 

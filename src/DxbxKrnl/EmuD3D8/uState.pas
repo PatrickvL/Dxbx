@@ -30,7 +30,6 @@ uses
   // Dxbx
   uTypes,
   uDxbxUtils, // iif
-  uEmuXTL,
   uDxbxKrnlUtils;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}

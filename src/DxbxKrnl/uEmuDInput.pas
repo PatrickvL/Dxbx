@@ -31,9 +31,9 @@ uses
   // Dxbx
   uTypes,
   uError,
+  uXBController,
   uEmuShared,
-  uEmu,
-  uXBController;
+  uEmu;
 
 function EmuDInputInit: _bool; {NOPATCH}
 procedure EmuDInputCleanup; {NOPATCH}

@@ -32,8 +32,8 @@ uses
   JwaNative,
   // Dxbx
   uTypes,
-  uLog,
   uDxbxUtils,
+  uLog,
   uDxbxKrnlUtils;
 
 const
@@ -513,7 +513,8 @@ begin
 end;
 
 // Create a copy of the native (WideChar based) file information record
-// to Xbox (AnsiChar based) format, returning the length of the filling.
+// to Xbox (AnsiChar based) format. Returns True if a string-conversion
+// was performed.
 function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 var
@@ -537,8 +538,9 @@ begin
   end;
 end;
 
-// Create a copy of the native (WideChar based) file information record
-// to Xbox (AnsiChar based) format, returning the length of the filling.
+// Create a copy of the Xbox (Ansi based) file information record
+// to Native (WideChar based) format. Returns True if a string-conversion
+// was performed.
 function DxbxXB2PC_FILE_INFORMATION(FileInformation, NativeFileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 var
@@ -554,10 +556,10 @@ begin
     // convert from PC to Xbox
     memcpy(NativeFileInformation, FileInformation, CopySize);
 
-    // Halve the amount of memory needed for the string :
+    // Double the amount of memory needed for the string :
     PInteger(MathPtr(NativeFileInformation) + StringLengthOffset)^ := PInteger(MathPtr(NativeFileInformation) + StringLengthOffset)^ * 2;
 
-    // Convert the Ansi string to WideChar :
+    // Convert the Wide string to Ansi :
     mbstowcs(wcstr, mbstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
   end;
 end;
