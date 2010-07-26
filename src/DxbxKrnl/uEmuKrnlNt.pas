@@ -1656,18 +1656,17 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtQueryInformationFile' +
-     #13#10'(' +
-     #13#10'   FileHandle          : 0x%.08X' +
-     #13#10'   IoStatusBlock       : 0x%.08X' +
-     #13#10'   FileInformation     : 0x%.08X' +
-     #13#10'   Length              : 0x%.08X' +
-     #13#10'   FileInformationClass: 0x%.08X (%s)' +
-     #13#10');',
-     [FileHandle, IoStatusBlock, FileInformation,
-      Length, Ord(FileInformationClass), FileInformationClassToString(FileInformationClass)]);
-{$ENDIF}
+  if MayLog(lfUnit or lfTrace) then
+    DbgPrintf('EmuKrnl : NtQueryInformationFile' +
+       #13#10'(' +
+       #13#10'   FileHandle          : 0x%.08X' +
+       #13#10'   IoStatusBlock       : 0x%.08X' +
+       #13#10'   FileInformation     : 0x%.08X' +
+       #13#10'   Length              : 0x%.08X' +
+       #13#10'   FileInformationClass: 0x%.08X (%s)' +
+       #13#10');',
+       [FileHandle, IoStatusBlock, FileInformation,
+        Length, Ord(FileInformationClass), FileInformationClassToString(FileInformationClass)]);
 
   // TODO -oCxbx: IIRC, this function is depreciated.  Maybe we should just use
   // ZwQueryInformationFile instead?
@@ -2201,16 +2200,21 @@ begin
          #13#10'   IoStatusBlock        : 0x%.08X' +
          #13#10'   FileInformation      : 0x%.08X' +
          #13#10'   Length               : 0x%.08X' +
-         #13#10'   FileInformationClass : 0x%.08X' +
+         #13#10'   FileInformationClass : 0x%.08X (%s)' +
          #13#10');',
          [FileHandle, IoStatusBlock, FileInformation,
-         Length, Ord(FileInformationClass)]);
+          Length, Ord(FileInformationClass), FileInformationClassToString(FileInformationClass)]);
 
   SetLength(NativeFileInformation, Length * 2);
 
   // Note : Some FileInformationClasses contain file paths.
   // These should be corrected just like NtCreateFile.
   // Other Nt functions might require the same attention
+
+  // Dxbx Note : Pay attention! This is the reverse - From XBox to Native
+  // (all other conversions are Native to Xbox) :
+  if not DxbxXB2PC_FILE_INFORMATION(FileInformation, @NativeFileInformation[0], FileInformationClass) then
+    memcpy(NativeFileInformation, FileInformation, Length);
 
   Result := JwaNative.NtSetInformationFile(
     FileHandle,
@@ -2219,12 +2223,7 @@ begin
     Length * 2,
     FileInformationClass);
 
-  if Result = STATUS_SUCCESS then
-  begin
-    if not DxbxPC2XB_FILE_INFORMATION(@NativeFileInformation[0], FileInformation, FileInformationClass) then
-      memcpy(FileInformation, NativeFileInformation, Length);
-  end
-  else
+  if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtSetInformationFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);

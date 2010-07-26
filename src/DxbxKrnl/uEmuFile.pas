@@ -167,6 +167,8 @@ function DxbxGetDeviceNativeRootHandle(XboxFullPath: AnsiString): Handle;
 function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATUS;
 function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
+function DxbxXB2PC_FILE_INFORMATION(FileInformation, NativeFileInformation: PVOID;
+  FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 
 implementation
 
@@ -399,116 +401,162 @@ begin
   Result := INVALID_HANDLE_VALUE;
 end;
 
+type
+  RFileInformationValues = record
+    CopySize: DWord;
+    StringLengthOffset: DWord;
+    mbstr: P_char;
+    wcstr: pwchar_t;
+  end;
+
+function Dxbx_FileInformationValues(NativeFileInformation, FileInformation: PVOID;
+  FileInformationClass: FILE_INFORMATION_CLASS): RFileInformationValues;
+begin
+  with Result do
+  begin
+    case FileInformationClass of
+      FileDirectoryInformation: // = 1 FILE_DIRECTORY_INFORMATION
+      begin
+        CopySize := SizeOf(FILE_DIRECTORY_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_DIRECTORY_INFORMATION(nil).FileNameLength);
+        wcstr := @(PFILE_DIRECTORY_INFORMATION(NativeFileInformation).FileName[0]);
+        mbstr := @(PFILE_DIRECTORY_INFORMATION(FileInformation).FileName[0]);
+      end;
+
+  //    FileFullDirectoryInformation: ; // = 2 ?
+  //    FileBothDirectoryInformation: ; // = 3 ?
+  //    FileBasicInformation: ; // = 4 FILE_BASIC_INFORMATION / FILE_READ_ATTRIBUTES
+  //    FileStandardInformation: ; // = 5 FILE_STANDARD_INFORMATION
+  //    FileInternalInformation: ; // = 6 FILE_INTERNAL_INFORMATION
+  //    FileEaInformation: ; // = 7 FILE_EA_INFORMATION
+  //    FileAccessInformation: ; // = 8 ?
+      FileNameInformation: // = 9 FILE_NAME_INFORMATION
+      begin
+        CopySize := SizeOf(FILE_NAME_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_NAME_INFORMATION(nil).FileNameLength);
+        wcstr := @(PFILE_NAME_INFORMATION(NativeFileInformation).FileName[0]);
+        mbstr := @(PFILE_NAME_INFORMATION(FileInformation).FileName[0]);
+      end;
+
+      FileRenameInformation, // = 10 FILE_RENAME_INFORMATION
+      FileLinkInformation: // = 11 FILE_LINK_INFORMATION
+      begin
+        CopySize := SizeOf(FILE_LINK_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_LINK_INFORMATION(nil).FileNameLength);
+        wcstr := @(PFILE_LINK_INFORMATION(NativeFileInformation).FileName[0]);
+        mbstr := @(PFILE_LINK_INFORMATION(FileInformation).FileName[0]);
+      end;
+
+      FileNamesInformation: // = 12 FILE_NAMES_INFORMATION
+      begin
+        // TODO -oDxbx : How should we support multiple information records (linked via NextEntryOffset) ?
+        CopySize := SizeOf(FILE_NAMES_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_NAMES_INFORMATION(nil).FileNameLength);
+        wcstr := @(PFILE_NAMES_INFORMATION(NativeFileInformation).FileName[0]);
+        mbstr := @(PFILE_NAMES_INFORMATION(FileInformation).FileName[0]);
+      end;
+
+  //    FileDispositionInformation: ; // = 13 FILE_DISPOSITION_INFORMATION
+  //    FilePositionInformation: ; // = 14 FILE_POSITION_INFORMATION
+  //    FileFullEaInformation: ; // = 15 ? / FILE_READ_EA
+  //    FileModeInformation: ; // = 16 FILE_MODE_INFORMATION
+  //    FileAlignmentInformation: ; // = 17 FILE_ALIGNMENT_INFORMATION
+      FileAllInformation: // = 18 FILE_ALL_INFORMATION / FILE_READ_ATTRIBUTES
+      begin
+        CopySize := SizeOf(FILE_ALL_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_ALL_INFORMATION(nil).NameInformation.FileNameLength);
+        wcstr := @(PFILE_ALL_INFORMATION(NativeFileInformation).NameInformation.FileName[0]);
+        mbstr := @(PFILE_ALL_INFORMATION(FileInformation).NameInformation.FileName[0]);
+      end;
+
+  //    FileAllocationInformation: ; // = 19 FILE_ALLOCATION_INFORMATION
+  //    FileEndOfFileInformation: ; // = 20 FILE_END_OF_FILE_INFORMATION
+  //    FileAlternateNameInformation: ; // = 21 FILE_NAME_INFORMATION
+      FileStreamInformation: // = 22 FILE_STREAM_INFORMATION
+      begin
+        // TODO -oDxbx : How should we support multiple information records (linked via NextEntryOffset) ?
+        CopySize := SizeOf(FILE_STREAM_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_STREAM_INFORMATION(nil).StreamNameLength);
+        wcstr := @(PFILE_STREAM_INFORMATION(NativeFileInformation).StreamName[0]);
+        mbstr := @(PFILE_STREAM_INFORMATION(FileInformation).StreamName[0]);
+      end;
+
+  //    FilePipeInformation: ; // = 23 ? / FILE_READ_ATTRIBUTES
+  //    FilePipeLocalInformation: ; // = 24 ? / FILE_READ_ATTRIBUTES
+  //    FilePipeRemoteInformation: ; // = 25 ? / FILE_READ_ATTRIBUTES
+  //    FileMailslotQueryInformation: ; // = 26 ?
+  //    FileMailslotSetInformation: ; // = 27 ?
+  //    FileCompressionInformation: ; // = 28 ?
+  //    FileObjectIdInformation: ; // = 29 ?
+  //    FileCompletionInformation: ; // = 30 FILE_COMPLETION_INFORMATION
+  //    FileMoveClusterInformation: ; // = 31 FILE_MOVE_CLUSTER_INFORMATION
+  //    FileQuotaInformation: ; // = 32 ?
+  //    FileReparsePointInformation: ; // = 33 ?
+  //    FileNetworkOpenInformation: ; // = 34 FILE_NETWORK_OPEN_INFORMATION / FILE_READ_ATTRIBUTES
+  //    FileAttributeTagInformation: ; // = 35 FILE_ATTRIBUTE_TAG_INFORMATION / FILE_READ_ATTRIBUTES
+  //    FileTrackingInformation: ; // = 36 ?
+  //    FileMaximumInformation: ; // = 37 ?
+
+  //    FileFsSizeInformation: ;
+  //    FileFsVolumeInformation: ;
+    else
+      // No Wide>Ansi conversion needed
+      CopySize := 0;
+      StringLengthOffset := 0;
+      mbstr := nil;
+      wcstr := nil;
+    end; // case
+  end; // with
+end;
+
 // Create a copy of the native (WideChar based) file information record
 // to Xbox (AnsiChar based) format, returning the length of the filling.
 function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 var
-  CopySize: DWord;
-  StringLengthOffset: DWord;
-  mbstr: P_char;
-  wcstr: pwchar_t;
+  FileInformationValues: RFileInformationValues;
 begin
-  Result := True;
-  case FileInformationClass of
-    FileDirectoryInformation: // = 1 FILE_DIRECTORY_INFORMATION
-    begin
-      CopySize := SizeOf(FILE_DIRECTORY_INFORMATION);
-      StringLengthOffset := FIELD_OFFSET(PFILE_DIRECTORY_INFORMATION(nil).FileNameLength);
-      wcstr := @(PFILE_DIRECTORY_INFORMATION(NativeFileInformation).FileName[0]);
-      mbstr := @(PFILE_DIRECTORY_INFORMATION(FileInformation).FileName[0]);
-    end;
+  FileInformationValues := Dxbx_FileInformationValues(NativeFileInformation, FileInformation, FileInformationClass);
+  with FileInformationValues do
+  begin
+    Result := (CopySize > 0);
+    if not Result then
+      Exit;
 
-//    FileFullDirectoryInformation: ; // = 2 ?
-//    FileBothDirectoryInformation: ; // = 3 ?
-//    FileBasicInformation: ; // = 4 FILE_BASIC_INFORMATION / FILE_READ_ATTRIBUTES
-//    FileStandardInformation: ; // = 5 FILE_STANDARD_INFORMATION
-//    FileInternalInformation: ; // = 6 FILE_INTERNAL_INFORMATION
-//    FileEaInformation: ; // = 7 FILE_EA_INFORMATION
-//    FileAccessInformation: ; // = 8 ?
-    FileNameInformation: // = 9 FILE_NAME_INFORMATION
-    begin
-      CopySize := SizeOf(FILE_NAME_INFORMATION);
-      StringLengthOffset := FIELD_OFFSET(PFILE_NAME_INFORMATION(nil).FileNameLength);
-      wcstr := @(PFILE_NAME_INFORMATION(NativeFileInformation).FileName[0]);
-      mbstr := @(PFILE_NAME_INFORMATION(FileInformation).FileName[0]);
-    end;
+    // convert from PC to Xbox
+    memcpy(FileInformation, NativeFileInformation, CopySize);
 
-    FileRenameInformation, // = 10 FILE_RENAME_INFORMATION
-    FileLinkInformation: // = 11 FILE_LINK_INFORMATION
-    begin
-      CopySize := SizeOf(FILE_LINK_INFORMATION);
-      StringLengthOffset := FIELD_OFFSET(PFILE_LINK_INFORMATION(nil).FileNameLength);
-      wcstr := @(PFILE_LINK_INFORMATION(NativeFileInformation).FileName[0]);
-      mbstr := @(PFILE_LINK_INFORMATION(FileInformation).FileName[0]);
-    end;
+    // Halve the amount of memory needed for the string :
+    PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div 2;
 
-    FileNamesInformation: // = 12 FILE_NAMES_INFORMATION
-    begin
-      // TODO -oDxbx : How should we support multiple information records (linked via NextEntryOffset) ?
-      CopySize := SizeOf(FILE_NAMES_INFORMATION);
-      StringLengthOffset := FIELD_OFFSET(PFILE_NAMES_INFORMATION(nil).FileNameLength);
-      wcstr := @(PFILE_NAMES_INFORMATION(NativeFileInformation).FileName[0]);
-      mbstr := @(PFILE_NAMES_INFORMATION(FileInformation).FileName[0]);
-    end;
-
-//    FileDispositionInformation: ; // = 13 FILE_DISPOSITION_INFORMATION
-//    FilePositionInformation: ; // = 14 FILE_POSITION_INFORMATION
-//    FileFullEaInformation: ; // = 15 ? / FILE_READ_EA
-//    FileModeInformation: ; // = 16 FILE_MODE_INFORMATION
-//    FileAlignmentInformation: ; // = 17 FILE_ALIGNMENT_INFORMATION
-    FileAllInformation: // = 18 FILE_ALL_INFORMATION / FILE_READ_ATTRIBUTES
-    begin
-      CopySize := SizeOf(FILE_ALL_INFORMATION);
-      StringLengthOffset := FIELD_OFFSET(PFILE_ALL_INFORMATION(nil).NameInformation.FileNameLength);
-      wcstr := @(PFILE_ALL_INFORMATION(NativeFileInformation).NameInformation.FileName[0]);
-      mbstr := @(PFILE_ALL_INFORMATION(FileInformation).NameInformation.FileName[0]);
-    end;
-
-//    FileAllocationInformation: ; // = 19 FILE_ALLOCATION_INFORMATION
-//    FileEndOfFileInformation: ; // = 20 FILE_END_OF_FILE_INFORMATION
-//    FileAlternateNameInformation: ; // = 21 FILE_NAME_INFORMATION
-    FileStreamInformation: // = 22 FILE_STREAM_INFORMATION
-    begin
-      // TODO -oDxbx : How should we support multiple information records (linked via NextEntryOffset) ?
-      CopySize := SizeOf(FILE_STREAM_INFORMATION);
-      StringLengthOffset := FIELD_OFFSET(PFILE_STREAM_INFORMATION(nil).StreamNameLength);
-      wcstr := @(PFILE_STREAM_INFORMATION(NativeFileInformation).StreamName[0]);
-      mbstr := @(PFILE_STREAM_INFORMATION(FileInformation).StreamName[0]);
-    end;
-
-//    FilePipeInformation: ; // = 23 ? / FILE_READ_ATTRIBUTES
-//    FilePipeLocalInformation: ; // = 24 ? / FILE_READ_ATTRIBUTES
-//    FilePipeRemoteInformation: ; // = 25 ? / FILE_READ_ATTRIBUTES
-//    FileMailslotQueryInformation: ; // = 26 ?
-//    FileMailslotSetInformation: ; // = 27 ?
-//    FileCompressionInformation: ; // = 28 ?
-//    FileObjectIdInformation: ; // = 29 ?
-//    FileCompletionInformation: ; // = 30 FILE_COMPLETION_INFORMATION
-//    FileMoveClusterInformation: ; // = 31 FILE_MOVE_CLUSTER_INFORMATION
-//    FileQuotaInformation: ; // = 32 ?
-//    FileReparsePointInformation: ; // = 33 ?
-//    FileNetworkOpenInformation: ; // = 34 FILE_NETWORK_OPEN_INFORMATION / FILE_READ_ATTRIBUTES
-//    FileAttributeTagInformation: ; // = 35 FILE_ATTRIBUTE_TAG_INFORMATION / FILE_READ_ATTRIBUTES
-//    FileTrackingInformation: ; // = 36 ?
-//    FileMaximumInformation: ; // = 37 ?
-
-//    FileFsSizeInformation: ;
-//    FileFsVolumeInformation: ;
-  else
-    // No Wide>Ansi conversion needed
-    Result := False;
-    Exit;
+    // Convert the WideChar string to Ansi :
+    wcstombs(mbstr, wcstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
   end;
+end;
 
-  // convert from PC to Xbox
-  memcpy(FileInformation, NativeFileInformation, CopySize);
+// Create a copy of the native (WideChar based) file information record
+// to Xbox (AnsiChar based) format, returning the length of the filling.
+function DxbxXB2PC_FILE_INFORMATION(FileInformation, NativeFileInformation: PVOID;
+  FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
+var
+  FileInformationValues: RFileInformationValues;
+begin
+  FileInformationValues := Dxbx_FileInformationValues(NativeFileInformation, FileInformation, FileInformationClass);
+  with FileInformationValues do
+  begin
+    Result := (CopySize > 0);
+    if not Result then
+      Exit;
 
-  // Halve the amount of memory needed for the string :
-  PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div 2;
+    // convert from PC to Xbox
+    memcpy(NativeFileInformation, FileInformation, CopySize);
 
-  // Convert the WideChar string to Ansi :
-  wcstombs(mbstr, wcstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
+    // Halve the amount of memory needed for the string :
+    PInteger(MathPtr(NativeFileInformation) + StringLengthOffset)^ := PInteger(MathPtr(NativeFileInformation) + StringLengthOffset)^ * 2;
+
+    // Convert the Ansi string to WideChar :
+    mbstowcs(wcstr, mbstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
+  end;
 end;
 
 //
