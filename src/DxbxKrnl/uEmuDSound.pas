@@ -655,13 +655,16 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetNotificationPositions
 (
-    pThis: XTL_LPDIRECTSOUND8
-): ULONG; stdcall;
+    pThis: XTL_LPDIRECTSOUND8;
+    pBuffer: XTL_LPDIRECTSOUNDBUFFER;
+    dwNotifyCount: DWORD;
+    paNotifies: Pointer // LPCDSBPOSITIONNOTIFY
+): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirectSoundBuffer8_SetNotificationPositions');
+  Result := Unimplemented('XTL_EmuIDirectSoundBuffer8_SetNotificationPositions');
 
   EmuSwapFS(fsXbox);
 end;
@@ -1049,24 +1052,38 @@ function XTL_EmuIDirectSound8_GetSpeakerConfig
     pThis: XTL_LPDIRECTSOUND8;
     pdwSpeakerConfig: LPDWORD
 ): HRESULT; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuIDirectSound8_GetSpeakerConfig');
+{$IFDEF DEBUG}
+  DbgPrintf('EmuDSound : EmuIDirectSound8_GetSpeakerConfig' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10'   pdwSpeakerConfig          : 0x%.08X' +
+      #13#10');',
+      [pThis, pdwSpeakerConfig]);
+{$ENDIF}
+
+  pdwSpeakerConfig^ := 0; // STEREO
+//  Result := IDirectSound(pThis.EmuDirectSound).GetSpeakerConfig({out}pdwSpeakerConfig^); ??
 
   EmuSwapFS(fsXbox);
 end;
 
 function XTL_EmuIDirectSound8_GetEffectData
 (
-    pThis: XTL_LPDIRECTSOUND8
-): ULONG; stdcall;
+    pThis: XTL_LPDIRECTSOUND8;
+    dwEffectIndex: DWORD;
+    dwOffset: DWORD;
+    pvData: LPVOID;
+    dwDataSize: DWORD
+): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirectSound8_GetEffectData');
+  Result := Unimplemented('XTL_EmuIDirectSound8_GetEffectData');
 
   EmuSwapFS(fsXbox);
 end;
@@ -1191,13 +1208,14 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetEG
 (
-    pThis: XTL_LPDIRECTSOUND8
-): ULONG; stdcall;
+    pThis: XTL_LPDIRECTSOUND8;
+    pEnvelopeDesc: Pointer // LPCDSENVELOPEDESC
+): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirectSoundBuffer8_SetEG');
+  Result := Unimplemented('XTL_EmuIDirectSoundBuffer8_SetEG');
 
   EmuSwapFS(fsXbox);
 end;
@@ -4813,7 +4831,7 @@ exports
   XTL_EmuIDirectSoundBuffer8_SetMixBins name PatchPrefix + 'IDirectSoundBuffer_SetMixBins',
   XTL_EmuIDirectSoundBuffer8_SetMixBinVolumes name PatchPrefix + 'IDirectSoundBuffer_SetMixBinVolumes',
   XTL_EmuIDirectSoundBuffer8_SetMode name PatchPrefix + 'IDirectSoundBuffer_SetMode',
-  XTL_EmuIDirectSoundBuffer8_SetNotificationPositions name PatchPrefix + 'IDirectSoundBuffer_SetNotificationPositions',
+//  XTL_EmuIDirectSoundBuffer8_SetNotificationPositions name PatchPrefix + 'IDirectSoundBuffer_SetNotificationPositions',
   XTL_EmuIDirectSoundBuffer8_SetOutputBuffer name PatchPrefix + 'IDirectSoundBuffer_SetOutputBuffer',
   XTL_EmuIDirectSoundBuffer8_SetPitch name PatchPrefix + 'IDirectSoundBuffer_SetPitch',
   XTL_EmuIDirectSoundBuffer8_SetPlayRegion name PatchPrefix + 'IDirectSoundBuffer_SetPlayRegion',
