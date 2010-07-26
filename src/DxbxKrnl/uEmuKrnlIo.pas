@@ -598,6 +598,7 @@ function xboxkrnl_IoQueryVolumeInformation(
 begin
   EmuSwapFS(fsWindows);
   // Dxbx note : This is almost identical to NtQueryVolumeInformationFile
+  // DxbxPC2XB_FS_INFORMATION
   Result := Unimplemented('IoQueryVolumeInformation');
   EmuSwapFS(fsXbox);
 end;

@@ -165,7 +165,11 @@ function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNt
 function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string; IsFile: Boolean = False): Boolean;
 function DxbxGetDeviceNativeRootHandle(XboxFullPath: AnsiString): Handle;
 function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATUS;
-function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
+
+function DxbxPC2XB_FS_INFORMATION(NativeFileInformation, FileInformation: PVOID;
+  FsInformationClass: FS_INFORMATION_CLASS): Boolean;
+
+  function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 function DxbxXB2PC_FILE_INFORMATION(FileInformation, NativeFileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
@@ -412,6 +416,55 @@ type
     wcstr: pwchar_t;
   end;
 
+function Dxbx_FsInformationValues(NativeFileInformation, FileInformation: PVOID;
+  FsInformationClass: FS_INFORMATION_CLASS): RFileInformationValues;
+begin
+  with Result do
+  begin
+    case FsInformationClass of
+      FileFsVolumeInformation: // = 1 FILE_FS_VOLUME_INFORMATION
+      begin
+        CopySize := SizeOf(FILE_FS_VOLUME_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_FS_VOLUME_INFORMATION(nil).VolumeLabelLength);
+        wcstr := @(PFILE_FS_VOLUME_INFORMATION(NativeFileInformation).VolumeLabel[0]);
+        mbstr := @(PFILE_FS_VOLUME_INFORMATION(FileInformation).VolumeLabel[0]);
+      end;
+
+      FileFsLabelInformation: // = 2 FILE_FS_LABEL_INFORMATION
+      begin
+        CopySize := SizeOf(FILE_FS_LABEL_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_FS_LABEL_INFORMATION(nil).VolumeLabelLength);
+        wcstr := @(PFILE_FS_LABEL_INFORMATION(NativeFileInformation).VolumeLabel);
+        mbstr := @(PFILE_FS_LABEL_INFORMATION(FileInformation).VolumeLabel);
+      end;
+
+//      FileFsSizeInformation: ; // = 3 FILE_FS_SIZE_INFORMATION
+//      FileFsDeviceInformation: ; // = 4 FILE_FS_DEVICE_INFORMATION
+      FileFsAttributeInformation: // = 5 FILE_FS_ATTRIBUTE_INFORMATION
+      begin
+        CopySize := SizeOf(FILE_FS_ATTRIBUTE_INFORMATION);
+        StringLengthOffset := FIELD_OFFSET(PFILE_FS_ATTRIBUTE_INFORMATION(nil).FileSystemNameLength);
+        wcstr := @(PFILE_FS_ATTRIBUTE_INFORMATION(NativeFileInformation).FileSystemName[0]);
+        mbstr := @(PFILE_FS_ATTRIBUTE_INFORMATION(FileInformation).FileSystemName[0]);
+      end;
+
+//      FileFsControlInformation: ; // = 6 FILE_FS_CONTROL_INFORMATION
+//      FileFsFullSizeInformation: ; // = 7 FILE_FS_FULL_SIZE_INFORMATION
+//      FileFsObjectIdInformation: // = 8 FILE_FS_OBJECTID_INFORMATION
+//      begin
+//        // Dxbx note : This struct does contain string data, but differs between Xb and PC.
+//        // Luckily, our only caller, NtQueryVolumeInformationFile, doesn't support that type !
+//      end;
+    else
+      // No Wide>Ansi conversion needed
+      CopySize := 0;
+      StringLengthOffset := 0;
+      mbstr := nil;
+      wcstr := nil;
+    end; // case
+  end; // with
+end;
+
 function Dxbx_FileInformationValues(NativeFileInformation, FileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): RFileInformationValues;
 begin
@@ -512,6 +565,38 @@ begin
   end; // with
 end;
 
+// Create a copy of the native (WideChar based) fs information record
+// to Xbox (AnsiChar based) format. Returns True if a string-conversion
+// was performed.
+function DxbxPC2XB_FS_INFORMATION(NativeFileInformation, FileInformation: PVOID;
+  FsInformationClass: FS_INFORMATION_CLASS): Boolean;
+var
+  FileInformationValues: RFileInformationValues;
+begin
+  FileInformationValues := Dxbx_FsInformationValues(NativeFileInformation, FileInformation, FsInformationClass);
+  with FileInformationValues do
+  begin
+    Result := (CopySize > 0);
+    if not Result then
+      Exit;
+
+    // convert from PC to Xbox
+    memcpy(FileInformation, NativeFileInformation, CopySize);
+
+    // Halve the amount of memory needed for the string :
+    PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div 2;
+
+    // Convert the WideChar string to Ansi :
+    wcstombs(mbstr, wcstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
+
+    DbgPrintf('DxbxPC2XB_FS_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
+      FsInformationClassToString(FsInformationClass),
+      CopySize,
+      PAnsiChar(mbstr),
+      PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
+  end;
+end;
+
 // Create a copy of the native (WideChar based) file information record
 // to Xbox (AnsiChar based) format. Returns True if a string-conversion
 // was performed.
@@ -535,6 +620,12 @@ begin
 
     // Convert the WideChar string to Ansi :
     wcstombs(mbstr, wcstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
+
+    DbgPrintf('DxbxPC2XB_FILE_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
+      FileInformationClassToString(FileInformationClass),
+      CopySize,
+      PAnsiChar(mbstr),
+      PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
   end;
 end;
 
