@@ -3362,12 +3362,16 @@ begin
       // create the shader device handle
       Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
 
+      // TODO -oDxbx : Shouldn't we release pShader here? (It could be a resource leak!)
+
       if (FAILED(Result)) then
       begin
         EmuWarning('Could not create pixel shader');
         EmuWarning(string(AnsiString(PAnsiChar(ID3DXBuffer(pErrors).GetBufferPointer)))); // Dxbx addition
       end;
     end;
+
+    // TODO -oDxbx : Shouldn't we release pErrors here? (It could be a resource leak!)
 
     if (not FAILED(Result)) then
       Result := IDirect3DDevice8(g_pD3DDevice8).SetPixelShader(dwHandle);
@@ -5738,14 +5742,25 @@ begin
   Result := g_bIsBusy;
 end;
 
-function XTL_EmuIDirect3DResource8_GetDevice
+procedure XTL_EmuIDirect3DResource8_GetDevice
 (
-    pThis: PX_D3DResource
-): BOOL; stdcall;
+  pThis: PX_D3DResource;
+  ppDevice: XTL_PPIDirect3DDevice8 // PPD3DDevice ?
+); stdcall;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('IDirect3DResource8_GetDevice');
+{$IFDEF DEBUG}
+  DbgPrintf('EmuD3D8 : IDirect3DResource8_GetDevice' +
+    #13#10'(' +
+    #13#10'   pThis             : 0x%.08X' +
+    #13#10'   ppDevice          : 0x%.08X' +
+    #13#10');',
+    [pThis, ppDevice]);
+{$ENDIF}
+
+  ppDevice^ := g_pD3DDevice8; // TODO -oDxbx : Is this correct?
 
   EmuSwapFS(fsXbox);
 end;
@@ -9501,34 +9516,49 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DResource8_SetPrivateData
+function XTL_EmuIDirect3DResource8_SetPrivateData
 (
-  pThis: PX_D3DResource
-); stdcall;
+  pThis: PX_D3DResource;
+  refguid: REFGUID;
+  pData: Pvoid;
+  SizeOfData: DWORD;
+  Flags: DWORD
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
   Unimplemented('XTL_EmuIDirect3DResource8_SetPrivateData');
 
   EmuSwapFS(fsXbox);
+
+  Result := S_OK;
 end;
 
-procedure XTL_EmuIDirect3DResource8_GetPrivateData
+function XTL_EmuIDirect3DResource8_GetPrivateData
 (
-  pThis: PX_D3DResource
-); stdcall;
+  pThis: PX_D3DResource;
+  refguid: REFGUID;
+  pData: Pvoid;
+  SizeOfData: PDWORD
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
   Unimplemented('XTL_EmuIDirect3DResource8_GetPrivateData');
 
   EmuSwapFS(fsXbox);
+
+  Result := S_OK;
 end;
 
 procedure XTL_EmuIDirect3DResource8_FreePrivateData
 (
-  pThis: PX_D3DResource
+  pThis: PX_D3DResource;
+  refguid: REFGUID
 ); stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -10236,17 +10266,20 @@ end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexBlendModelView
 (
-  {CONST} pModelView: PD3DMATRIX;
-  {CONST} pInverseModelView: PD3DMATRIX;
-  {CONST} pComposite: PD3DMATRIX
+  Count: UINT;
+  pModelViews: PD3DMATRIX;
+  pInverseModelViews: PD3DMATRIX;
+  pProjectionViewport: PD3DMATRIX
 ): HRESULT; stdcall;
-// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
   Unimplemented('XTL_EmuIDirect3DDevice8_SetVertexBlendModelView');
 
   EmuSwapFS(fsXbox);
+
+  Result := S_OK;
 end;
 
 

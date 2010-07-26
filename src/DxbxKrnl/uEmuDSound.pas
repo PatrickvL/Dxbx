@@ -60,7 +60,7 @@ type
   LPCWAVEFORMATEX = MMSystem.PWaveFormatEx;
   LPCDSI3DL2BUFFER = Pvoid;
 
-type X_DSBUFFERDESC = record
+type _X_DSBUFFERDESC = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwSize: DWORD;
     dwFlags: DWORD;
@@ -69,9 +69,10 @@ type X_DSBUFFERDESC = record
     lpMixBins: LPVOID;      // TODO -oCXBX: Implement
     dwInputMixBin: DWORD;
   end;
+  X_DSBUFFERDESC = _X_DSBUFFERDESC;
   PX_DSBUFFERDESC = ^X_DSBUFFERDESC;
 
-type X_DSSTREAMDESC = record
+type _X_DSSTREAMDESC = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwFlags: DWORD;
     dwMaxAttachedPackets: DWORD;
@@ -80,6 +81,7 @@ type X_DSSTREAMDESC = record
     lpvContext: LPVOID;
     lpMixBins: PVOID;      // TODO -oCXBX: Correct Parameter
   end;
+  X_DSSTREAMDESC = _X_DSSTREAMDESC;
   PX_DSSTREAMDESC = ^X_DSSTREAMDESC;
 
 type REFERENCE_TIME = LONGLONG;
@@ -121,12 +123,13 @@ const XMO_STREAMF_OUTPUT_ASYNC                = $00000008;      // The object su
 const XMO_STREAMF_IN_PLACE                    = $00000010;      // The object supports in-place modification of data
 const XMO_STREAMF_MASK                        = $0000001F;
 
-type X_DSFILTERDESC = record
+type _X_DSFILTERDESC = record
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
     dwMode: DWORD;
     dwQCoefficient: DWORD;
     adwCoefficients: array [0..4-1] of DWORD;
 end;
+X_DSFILTERDESC = _X_DSFILTERDESC;
 PX_DSFILTERDESC = ^X_DSFILTERDESC;
 
 // X_DSFILTERDESC modes

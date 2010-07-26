@@ -46,7 +46,7 @@ uses
 // TODO -oDXBX: Translate all other IRP defines from ReactOS
 const IRP_MJ_MAXIMUM_FUNCTION = $1B;
 
-type IRP = packed record
+type _IRP = packed record
     cType: CSHORT;
     Size: USHORT;
 (*
@@ -104,27 +104,30 @@ type IRP = packed record
      end; Tail;
 *)
   end; // packed size = 3
+  IRP = _IRP;
   PIRP = ^IRP;
 
-  PDRIVER_EXTENSION = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  PFAST_IO_DISPATCH = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  PDRIVER_INITIALIZE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  PDRIVER_STARTIO = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  PDRIVER_UNLOAD = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  PDRIVER_DISPATCH = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  PIO_TIMER_ROUTINE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  PVPB = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  DEVICE_TYPE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  KDEVICE_QUEUE = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
-  KEVENT = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_EXTENSION = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PFAST_IO_DISPATCH = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_INITIALIZE = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_STARTIO = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_DELETEDEVICE = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_DISMOUNTVOLUME = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_UNLOAD = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PDRIVER_DISPATCH = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PIO_TIMER_ROUTINE = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  PVPB = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  DEVICE_TYPE = ULONG;
+  KDEVICE_QUEUE = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
+  KEVENT = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
   PKEVENT = ^KEVENT;
-  PDEVOBJ_EXTENSION = UNKNOWN; // TODO -oDXBX: Lookup in ReactOS
+  PDEVOBJ_EXTENSION = INT_PTR; // TODO -oDXBX: Lookup in ReactOS
 
   PDEVICE_OBJECT = ^DEVICE_OBJECT; // forward;
   PPDEVICE_OBJECT = ^PDEVICE_OBJECT;
 
 // I/O Timer Object
-{type} IO_TIMER = packed record
+{type} _IO_TIMER = packed record
 // Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
     Type_: USHORT;
     TimerEnabled: USHORT;
@@ -133,71 +136,51 @@ type IRP = packed record
     Context: PVOID;
     DeviceObject: PDEVICE_OBJECT;
   end; // packed size = 24
+  IO_TIMER = _IO_TIMER;
   PIO_TIMER = ^IO_TIMER;
 
-{type} DRIVER_OBJECT = packed record
-// Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
-    Type_: CSHORT;
-    Size: CSHORT;
-    DeviceObject: PDEVICE_OBJECT;
-    Flags: ULONG;
-    DriverStart: PVOID;
-    DriverSize: ULONG;
-    DriverSection: PVOID;
-    DriverExtension: PDRIVER_EXTENSION;
-    DriverName: UNICODE_STRING;
-    HardwareDatabase: PUNICODE_STRING;
-    FastIoDispatch: PFAST_IO_DISPATCH;
-    DriverInit: PDRIVER_INITIALIZE;
+{type} _DRIVER_OBJECT = packed record
+// Branch:Dxbx  Translator:PatrickvL  Done:100
     DriverStartIo: PDRIVER_STARTIO;
-    DriverUnload: PDRIVER_UNLOAD;
+    DriverDeleteDevice: PDRIVER_DELETEDEVICE;
+    DriverDismountVolume: PDRIVER_DISMOUNTVOLUME;
     MajorFunction: array [0..IRP_MJ_MAXIMUM_FUNCTION] of PDRIVER_DISPATCH;
-  end; // packed size = 166
+  end; // packed size = ?
+  DRIVER_OBJECT = _DRIVER_OBJECT;
   PDRIVER_OBJECT = ^DRIVER_OBJECT;
 
-{type} DEVICE_OBJECT = packed record
-// Source: XBMC / ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+{type} _DEVICE_OBJECT = packed record
+// Branch:Dxbx  Translator:PatrickvL  Done:100
     Type_: CSHORT;
     Size: USHORT;
     ReferenceCount: LONG;
     DriverObject: PDRIVER_OBJECT;
-    // Source: ReactOS
-    NextDevice: PDEVICE_OBJECT;
-    AttachedDevice: PDEVICE_OBJECT;
+    MountedOrSelfDevice: PDEVICE_OBJECT;
     CurrentIrp: PIRP;
-    Timer: PIO_TIMER;
     Flags: ULONG;
-    Characteristics: ULONG;
-    Vpb: PVPB; // volatile
     DeviceExtension: PVOID;
-    DeviceType: DEVICE_TYPE;
+    DeviceType: UCHAR;
     StackSize: CCHAR;
-//    union {
-    ListEntry: LIST_ENTRY;
-//      Wcb: WAIT_CONTEXT_BLOCK;
-//    } Queue; // TODO -oDxbx
+    DeletePending: _BOOLEAN;
+    SectorSize: USHORT;
     AlignmentRequirement: ULONG;
     DeviceQueue: KDEVICE_QUEUE;
-    Dpc: KDPC;
-    ActiveThreadCount: ULONG;
-    SecurityDescriptor: PSECURITY_DESCRIPTOR;
     DeviceLock: KEVENT;
-    SectorSize: USHORT;
-    Spare1: USHORT;
-    DeviceObjectExtension: PDEVOBJ_EXTENSION;
-    Reserved: PVOID;
-  end; // packed size = 115
+    StartIoKey: ULONG;
+  end; // packed size = ?
+  DEVICE_OBJECT = _DEVICE_OBJECT;
 
-type FILE_OBJECT = packed record
+type _FILE_OBJECT = packed record
 // Source: XBMC  Branch:Dxbx  Translator:PatrickvL  Done:100
     Type_: CSHORT;
     Size: CSHORT;
     DeviceObject: PDEVICE_OBJECT;
    // ...
   end; // packed size = 6
+  FILE_OBJECT = _FILE_OBJECT;
   PFILE_OBJECT = ^FILE_OBJECT;
 
-type SHARE_ACCESS = packed record
+type _SHARE_ACCESS = packed record
 // Source: ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
     OpenCount: ULONG;
     Readers: ULONG;
@@ -207,6 +190,7 @@ type SHARE_ACCESS = packed record
     SharedWrite: ULONG;
     SharedDelete: ULONG;
   end; // packed size = 28
+  SHARE_ACCESS = _SHARE_ACCESS;
   PSHARE_ACCESS = ^SHARE_ACCESS;
 
 var {064}xboxkrnl_IoCompletionObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
