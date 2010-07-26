@@ -36,12 +36,10 @@ uses
   XboxKrnl,
   // Dxbx
   uTypes,
+  uDxbxUtils,
   uLog,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
   uEmuKrnl,
-  uDxbxUtils,
   uDxbxKrnl,
   uDxbxKrnlUtils;
 

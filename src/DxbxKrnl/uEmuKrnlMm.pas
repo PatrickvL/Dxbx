@@ -36,12 +36,10 @@ uses
   // Dxbx
   uTypes,
   uLog,
-  uEmu,
-  uEmuAlloc,
   uResourceTracker,
+  uEmuAlloc,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
+  uEmu,
   uEmuKrnl,
   uDxbxKrnl;
 

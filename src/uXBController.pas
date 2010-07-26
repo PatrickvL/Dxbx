@@ -39,7 +39,6 @@ uses
   , uDxbxUtils
   , uLog
   , uEmuD3D8Types
-//  , uEmuXTL
   ;
 
 type

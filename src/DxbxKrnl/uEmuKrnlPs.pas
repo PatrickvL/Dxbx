@@ -36,12 +36,11 @@ uses
   uTypes,
   uLog,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
+  uEmu,
+  uEmuXapi, // XTHREAD_NOTIFY_PROC
   uEmuKrnl,
   uDxbxKrnl,
   uDxbxKrnlUtils,
-  uEmu,
   uDxbxDebugUtils;
 
 var {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?

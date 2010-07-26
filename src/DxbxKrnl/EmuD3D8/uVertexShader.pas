@@ -34,11 +34,11 @@ uses
   , Direct3D8
   , D3DX8
   // Dxbx
-  , uEmu
   , uTypes
   , uEmuD3D8Types
   , uEmuD3D8Utils
   , uDxbxKrnlUtils
+  , uEmu
   , uEmuAlloc;
 
 

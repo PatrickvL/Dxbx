@@ -29,12 +29,9 @@ uses
   // DirectX
   , Direct3D8 // was Direct3D9 ?!
   // Dxbx
-  , uEmuD3D8Types
-  , uConsts
   , uTypes
-  , uLog
-  , uXboxLibraryUtils
   , uDxbxKrnlUtils
+  , uEmuD3D8Types
   , uEmu;
 
 function EmuXBFormatIsSwizzled(Format: X_D3DFORMAT; pBPP: PDWord): BOOL_;

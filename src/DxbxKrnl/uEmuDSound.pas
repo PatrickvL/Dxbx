@@ -34,15 +34,15 @@ uses
   , DirectSound
   , DirectMusic
   // Dxbx
-  , uEmuKrnl
   , uTypes
   , uLog
-  , uEmu
   , uEmuAlloc
   , uEmuFS
+  , uEmu
   , uXboxLibraryUtils
-  , uDxbxKrnlUtils
   , uEmuD3D8Types
+  , uDxbxKrnlUtils
+  , uEmuKrnl
   ;
 
 // EmuIDirectSoundBuffer8_Play flags
@@ -991,18 +991,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirectSoundStream_SetI3DL2Source
-(
-    pThis: XTL_LPDIRECTSOUND8
-): ULONG; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  Unimplemented('XTL_EmuIDirectSoundStream_SetI3DL2Source');
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuIDirectSound8_CreateSoundStream
 (
@@ -1199,18 +1187,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirectSoundBuffer8_SetPitch
-(
-    pThis: XTL_LPDIRECTSOUND8
-): ULONG; stdcall;
-// Branch:Dxbx  Translator:Shadow_Tj  Done:0
-begin
-  EmuSwapFS(fsWindows);
-
-  Unimplemented('XTL_EmuIDirectSoundBuffer8_SetPitch');
-
-  EmuSwapFS(fsXbox);
-end;
 
 function XTL_EmuIDirectSoundBuffer8_SetEG
 (

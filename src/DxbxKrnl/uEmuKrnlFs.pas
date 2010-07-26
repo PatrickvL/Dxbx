@@ -34,10 +34,8 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
-  uEmu,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
+  uEmu,
   uEmuKrnl,
   uDxbxKrnl;
 

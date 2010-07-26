@@ -36,8 +36,8 @@ uses
   // Dxbx
   uConsts,
   uTypes,
-  uDxbxUtils,
   uFileSystem, // Drives
+  uDxbxUtils,
   uLog,
   uXbe, // PXbeHeader
   uKernelThunk,

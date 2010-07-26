@@ -36,8 +36,6 @@ uses
   uTypes,
   uLog,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
   uEmuKrnl,
   uDxbxKrnl,
   uDxbxKrnlUtils;

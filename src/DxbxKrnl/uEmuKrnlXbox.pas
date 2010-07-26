@@ -33,11 +33,9 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
-  uXbe,
   uLog,
+  uXbe,
   uEmuFS,
-  uEmuFile,
-  uEmuXapi,
   uEmuKrnl,
   uDxbxKrnl;
 

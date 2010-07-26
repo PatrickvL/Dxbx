@@ -51,8 +51,8 @@ uses
   uEmuD3D8Types,
 {$ENDIF LOG_STRUCT_SIZES}
   uEmuShared,
-  uEmu,
   uEmuFS,
+  uEmu,
   uEmuFile,
   uEmuXapi,
   uEmuD3D8,

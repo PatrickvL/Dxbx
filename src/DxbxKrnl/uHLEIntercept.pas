@@ -28,15 +28,14 @@ uses
   Classes, // TBits
   // Jedi Win32API
   JwaWinType,
-  // Cxbx
+  // Dxbx
   uTypes,
   uLog,
   uDxbxKrnlUtils,
   uXbe,
   uEmuShared,
-  uEmu,
   uEmuFS,
-  // Dxbx
+  uEmu,
   uXboxLibraryUtils;
 
 procedure EmuHLEIntercept(pLibraryVersion: PXBE_LIBRARYVERSION; pXbeHeader: PXBEIMAGE_HEADER);

@@ -34,8 +34,7 @@ uses
   XboxKrnl,
   // Dxbx
   uLog,
-  uEmuFS,
-  uEmuFile;
+  uEmuFS;
 
 const
 // The following symbols come from The NASMX Project, nasmx\inc\xbox\kernel.inc

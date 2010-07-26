@@ -33,8 +33,8 @@ uses
 {$ENDIF}
   // Dxbx
   , uTypes
-  , uMutex
   , uLog
+  , uMutex
   , uXbVideo
   , uXBController
 {$IFDEF DXBX_DLL}

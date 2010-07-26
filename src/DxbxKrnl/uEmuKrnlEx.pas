@@ -34,16 +34,15 @@ uses
   XboxKrnl,
   // Dxbx
   uTypes,
+  uDxbxUtils,
   uLog,
-  uEmu,
   uEmuAlloc,
   uEmuFS,
+  uEmu,
   uEmuFile,
-  uEmuXapi,
   uEmuKrnl,
   uEmuKrnlNt,
-  uDxbxKrnl,
-  uDxbxUtils;
+  uDxbxKrnl;
 
 var
   {016}xboxkrnl_ExEventObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?

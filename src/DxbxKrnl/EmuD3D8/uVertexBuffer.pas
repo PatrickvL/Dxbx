@@ -37,16 +37,16 @@ uses
   // Dxbx
   , uTypes // CLOCKS_PER_SEC, clock()
   , uLog
-  , uEmu
-  , uEmuXG
-  , uState
   , uDxbxKrnlUtils
+  , uState
   , uResourceTracker
   , uEmuAlloc
-  , uConvert
-  , uVertexShader
+  , uEmu
+  , uEmuXG
   , uEmuD3D8Types
-  , uEmuD3D8Utils;
+  , uEmuD3D8Utils
+  , uConvert
+  , uVertexShader;
 
 const MAX_NBR_STREAMS = 16;
 

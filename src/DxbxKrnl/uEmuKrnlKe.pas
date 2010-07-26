@@ -34,11 +34,10 @@ uses
   XboxKrnl,
   // Dxbx
   uTypes,
+  uDxbxUtils,
   uLog,
   uEmuFS,
-  uEmuFile,
   uEmuKrnl,
-  uDxbxUtils,
   uDxbxKrnlUtils;
 
 const

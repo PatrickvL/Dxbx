@@ -39,11 +39,11 @@ uses
   // DXBX
   , uDxbxDebugUtils
 {$endif}
-  , uEmuD3D8Types
   , uConsts
   , uTypes
   , uLog
   , uEmuFS
+  , uEmuD3D8Types
   , uDxbxKrnlUtils;
 
 // exception handler
