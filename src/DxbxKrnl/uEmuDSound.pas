@@ -1046,13 +1046,14 @@ end;
 
 function XTL_EmuIDirectSound8_GetSpeakerConfig
 (
-    pThis: XTL_LPDIRECTSOUND8
-): ULONG; stdcall;
+    pThis: XTL_LPDIRECTSOUND8;
+    pdwSpeakerConfig: LPDWORD
+): HRESULT; stdcall;
 // Branch:Dxbx  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirectSound8_GetSpeakerConfig');
+  Result := Unimplemented('XTL_EmuIDirectSound8_GetSpeakerConfig');
 
   EmuSwapFS(fsXbox);
 end;

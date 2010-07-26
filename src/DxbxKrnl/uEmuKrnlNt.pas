@@ -1547,6 +1547,7 @@ begin
 
   if Result = STATUS_SUCCESS then
   begin
+    // Convert possible string data from PC to XBox format (Unicode>Ansi) :
     if not DxbxPC2XB_FILE_INFORMATION(FileDirInfo, FileInformation, FileInformationClass) then
       memcpy(FileInformation, FileDirInfo, Length);
   end
@@ -1695,6 +1696,7 @@ begin
 
   if Result = STATUS_SUCCESS then
   begin
+    // Convert possible string data from PC to XBox format (Unicode>Ansi) :
     if not DxbxPC2XB_FILE_INFORMATION(@NativeFileInformation[0], FileInformation, FileInformationClass) then
       memcpy(FileInformation, @NativeFileInformation[0], Length);
   end
@@ -1965,6 +1967,8 @@ function xboxkrnl_NtQueryVolumeInformationFile
   FsInformationClass: FS_INFORMATION_CLASS
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+var
+  NativeFileInformation: array of Byte;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1980,21 +1984,27 @@ begin
       [FileHandle, IoStatusBlock, FileInformation,
        Length, Ord(FsInformationClass), FsInformationClassToString(FsInformationClass)]);
 
-  // Safety/Sanity Check
-  if (FsInformationClass <> FileFsSizeInformation) and (FsInformationClass <> FileFsVolumeInformation) then
-    DxbxKrnlCleanup('NtQueryVolumeInformationFile: Unsupported FsInformationClass');
+  if (FsInformationClass = FileFsObjectIdInformation) then
+    Result := STATUS_INVALID_INFO_CLASS
+  else
+  begin
+    SetLength(NativeFileInformation, Length * 2);
 
-  Result := JwaNative.NtQueryVolumeInformationFile
-  (
+    Result := JwaNative.NtQueryVolumeInformationFile
+    (
       FileHandle,
       JwaNative.PIO_STATUS_BLOCK(IoStatusBlock),
-      FileInformation, Length,
+      @NativeFileInformation[0],
+      Length * 2,
       FsInformationClass
-  );
+    );
+  end;
 
   if Result = STATUS_SUCCESS then
   begin
-    // TODO : Do FS_INFORMATION_CLASS conversion here, just like DxbxPC2XB_FILE_INFORMATION
+    // Convert possible string data from PC to XBox format (Unicode>Ansi) :
+    if not DxbxPC2XB_FS_INFORMATION(@NativeFileInformation[0], FileInformation, FsInformationClass) then
+      memcpy(FileInformation, @NativeFileInformation[0], Length);
 
     // NOTE: TODO -oCXBX: Dynamically fill in, or allow configuration?
     if (FsInformationClass = FileFsSizeInformation) then
