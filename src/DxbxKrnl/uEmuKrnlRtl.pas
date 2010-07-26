@@ -516,11 +516,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : RtlAnsiStringToUnicodeString'+
-      #13#10'('+
-      #13#10'   DestinationString         : 0x%.08X'+
-      #13#10'   SourceString              : 0x%.08X ("%s")'+
-      #13#10'   AllocateDestinationString : 0x%.08X'+
+  DbgPrintf('EmuKrnl : RtlAnsiStringToUnicodeString' +
+      #13#10'(' +
+      #13#10'   DestinationString         : 0x%.08X' +
+      #13#10'   SourceString              : 0x%.08X ("%s")' +
+      #13#10'   AllocateDestinationString : 0x%.08X' +
       #13#10');',
       [DestinationString,
        SourceString, PSTRING_String(SourceString),
@@ -1306,11 +1306,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : RtlUnicodeStringToAnsiString'+
-      #13#10'('+
-      #13#10'   DestinationString         : 0x%.08X'+
-      #13#10'   SourceString              : 0x%.08X ("%s")'+
-      #13#10'   AllocateDestinationString : 0x%.08X'+
+  DbgPrintf('EmuKrnl : RtlUnicodeStringToAnsiString' +
+      #13#10'(' +
+      #13#10'   DestinationString         : 0x%.08X' +
+      #13#10'   SourceString              : 0x%.08X ("%s")' +
+      #13#10'   AllocateDestinationString : 0x%.08X' +
       #13#10');',
       [DestinationString,
        SourceString, PUNICODE_STRING_String(SourceString),
@@ -1333,7 +1333,7 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlUnicodeStringToInteger' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   Str                       : 0x%.08X ("%s")' +
       #13#10'   Base                      : 0x%.08X' +
       #13#10'   Value                     : 0x%.08X' +
@@ -1405,7 +1405,7 @@ begin
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : RtlUnicodeToMultiByteSize' +
-      #13#10'('+
+      #13#10'(' +
       #13#10'   BytesInMultiByteString    : 0x%.08X' +
       #13#10'   UnicodeString             : 0x%.08X' +// ("%s")' +
       #13#10'   BytesInUnicodeString      : 0x%.08X' +

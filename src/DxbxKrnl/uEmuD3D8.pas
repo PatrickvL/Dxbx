@@ -2337,7 +2337,7 @@ begin
   end;
 
   if FAILED(Result) then
-    {EmuWarning}DxbxKrnlCleanup('CreateImageSurface failed! '+ #13#10 + 'Format = 0x%8.8X', [Format]);
+    {EmuWarning}DxbxKrnlCleanup('CreateImageSurface failed! ' + #13#10 + 'Format = 0x%8.8X', [Format]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -4546,7 +4546,7 @@ var
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8: EmuIDirect3DDevice8_SetVertexDataColor >>' +
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexDataColor >>' +
     #13#10'(' +
     #13#10'   Register          : 0x%.08X' +
     #13#10'   Color             : 0x%.08X' +
@@ -4633,7 +4633,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear'+
+    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear' +
            #13#10'(' +
            #13#10'   Count               : 0x%.08X' +
            #13#10'   pRects              : 0x%.08X' +
@@ -7951,7 +7951,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetStreamSource2'+
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetStreamSource2' +
             #13#10'(' +
             #13#10'   StreamNumber             : 0x%.08X' +
             #13#10'   pStride                  : 0x%.08X' +
@@ -10207,7 +10207,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginPushBuffer' +
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BeginPushBuffer' +
       #13#10'(' +
       #13#10'   pPushBuffer          : 0x%.08X' +
       #13#10');', [pPushBuffer]);

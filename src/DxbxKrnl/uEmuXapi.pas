@@ -424,7 +424,7 @@ begin
 
   if MayLog(lfUnit or lfHeap or lfExtreme) then
     DbgPrintf('EmuXapi : EmuRtlReAllocateHeap' +
-        #13#10'('+
+        #13#10'(' +
         #13#10'   hHeap               : 0x%.08X' +
         #13#10'   dwFlags             : 0x%.08X' +
         #13#10'   lpMem               : 0x%.08X' +

@@ -463,9 +463,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KfRaiseIrql'+
-      #13#10'('+
-      #13#10'   NewIrql            : 0x%.08X'+
+  DbgPrintf('EmuKrnl : KfRaiseIrql' +
+      #13#10'(' +
+      #13#10'   NewIrql            : 0x%.08X' +
       #13#10');',
       [NewIrql]);
 {$ENDIF}
@@ -487,9 +487,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : KfLowerIrql'+
-      #13#10'('+
-      #13#10'   NewIrql            : 0x%.08X'+
+  DbgPrintf('EmuKrnl : KfLowerIrql' +
+      #13#10'(' +
+      #13#10'   NewIrql            : 0x%.08X' +
       #13#10');',
       [NewIrql]);
 {$ENDIF}

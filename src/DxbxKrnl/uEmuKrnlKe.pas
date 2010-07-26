@@ -291,10 +291,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : KeDelayExecutionThread'+
-      #13#10'('+
-      #13#10'   WaitMode            : 0x%.08X'+
-      #13#10'   Alertable           : 0x%.08X'+
+    DbgPrintf('EmuKrnl : KeDelayExecutionThread' +
+      #13#10'(' +
+      #13#10'   WaitMode            : 0x%.08X' +
+      #13#10'   Alertable           : 0x%.08X' +
       #13#10'   Interval            : 0x%.16X' + // was %I64X
       #13#10');',
       [Ord(WaitMode), Alertable, QuadPart(Interval)]);
@@ -637,9 +637,9 @@ begin
   if MayLog(lfUnit or lfExtreme) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuKrnl : KeQuerySystemTime'+
-      #13#10'('+
-      #13#10'   CurrentTime         : 0x%.08X'+
+    DbgPrintf('EmuKrnl : KeQuerySystemTime' +
+      #13#10'(' +
+      #13#10'   CurrentTime         : 0x%.08X' +
       #13#10');',
       [CurrentTime]);
     EmuSwapFS(fsXbox);
