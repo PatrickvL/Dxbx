@@ -653,6 +653,227 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+function XTL_EmuIDirectSoundBuffer8_SetNotificationPositions
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundBuffer8_SetNotificationPositions');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetLFO
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetLFO');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetEG
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetEG');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetFilter
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetFilter');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetMixBins
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetMixBins');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetMixBinVolumes
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetMixBinVolumes');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_Pause
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_Pause');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_PauseEx
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_Pause');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSound8_CommitDeferredSettings
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSound8_CommitDeferredSettings');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundBuffer8_SetAllParameters
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundBuffer8_SetAllParameters');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetFormat
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetFormat');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetFrequency
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetFormat');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetOutputBuffer
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetOutputBuffer');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetAllParameters
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetAllParameters');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetConeAngles
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetConeAngles');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetConeOrientation
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetConeOrientation');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundStream_SetConeOutsideVolume
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundStream_SetConeOutsideVolume');
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuIDirectSound8_Compact
 (
     pThis: XTL_LPDIRECTSOUND8
@@ -831,6 +1052,32 @@ begin
   EmuSwapFS(fsWindows);
 
   Unimplemented('XTL_EmuIDirectSoundStream_QueryInterface');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundBuffer8_SetPitch
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundBuffer8_SetPitch');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirectSoundBuffer8_SetEG
+(
+    pThis: XTL_LPDIRECTSOUND8
+): ULONG; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirectSoundBuffer8_SetEG');
 
   EmuSwapFS(fsXbox);
 end;
@@ -1898,7 +2145,7 @@ end;
 
 function XTL_EmuIDirectSoundBuffer8_SetPitch
 (
-    pThis: PX_CDirectSoundBuffer; 
+    pThis: PX_CDirectSoundBuffer;
     lPitch: LONG
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -4345,12 +4592,11 @@ end;
 exports
   XTL_EmuIDirectSoundBuffer8_PlayEx name PatchPrefix + 'IDirectSoundBuffer_PlayEx',
 
-  XTL_EmuIDirectSoundStream_FlushEx,
 
-  // XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'CDirectSound.CommitDeferredSettings', // Disabled, is CDirectSound_CommitDeferredSettingsA (Xref) in Cxbx!
-  XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + '_IDirectSound_CommitDeferredSettings@4', // Use it for interface method instead (Cxbx names this wrong)
-  XTL_EmuCDirectSound_GetSpeakerConfig name PatchPrefix + 'CDirectSound.GetSpeakerConfig',
-  XTL_EmuCDirectSound_SynchPlayback name PatchPrefix + 'CDirectSound.SynchPlayback',
+    // XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'CDirectSound.CommitDeferredSettings', // Disabled, is CDirectSound_CommitDeferredSettingsA (Xref) in Cxbx!
+    XTL_EmuCDirectSound_CommitDeferredSettings name PatchPrefix + 'CDirectSound.CommitDeferredSettings@4', // Use it for interface method instead (Cxbx names this wrong)
+    XTL_EmuCDirectSound_GetSpeakerConfig name PatchPrefix + 'CDirectSound.GetSpeakerConfig',
+    XTL_EmuCDirectSound_SynchPlayback name PatchPrefix + 'CDirectSound.SynchPlayback',
 
 //  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
 //  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
@@ -4387,12 +4633,12 @@ exports
 
   XTL_EmuIDirectSound_EnableHeadphones,
 
+  XTL_EmuIDirectSound8_CommitDeferredSettings name PatchPrefix + 'IDirectSound_CommitDeferredSettings',
+
   XTL_EmuIDirectSound8_SetCooperativeLevel name PatchPrefix + 'IDirectSound_SetCooperativeLevel',
   XTL_EmuIDirectSound8_Compact name PatchPrefix + 'IDirectSound_Compact',
   XTL_EmuIDirectSound8_AddRef name PatchPrefix + 'IDirectSound_AddRef',
   XTL_EmuIDirectSound8_Release name PatchPrefix + '_IDirectSound_Release@4', // Was 'IDirectSound_Release'
-
-
   XTL_EmuIDirectSound8_QueryInterfaceC name PatchPrefix + 'IDirectSound_QueryInterfaceC',
   XTL_EmuIDirectSound8_QueryInterface name PatchPrefix + 'IDirectSound_QueryInterface',
   XTL_EmuIDirectSound8_GetCaps name PatchPrefix + 'IDirectSound_GetCaps',
@@ -4425,7 +4671,7 @@ exports
   XTL_EmuIDirectSoundBuffer8_QueryInterface name PatchPrefix + 'IDirectSoundBuffer_Unlock',
   XTL_EmuIDirectSoundBuffer8_QueryInterfaceC name PatchPrefix + 'IDirectSoundBuffer_QueryInterfaceC',
   XTL_EmuIDirectSoundBuffer8_SetVolume name PatchPrefix + 'IDirectSoundBuffer_SetVolume',
-
+  XTL_EmuIDirectSoundBuffer8_SetNotificationPositions name PatchPrefix + 'IDirectSoundBuffer_SetNotificationPositions',
 
 
   XTL_EmuIDirectSoundBuffer8_Unlock name PatchPrefix + 'IDirectSoundBuffer_Unlock',
@@ -4433,7 +4679,7 @@ exports
   XTL_EmuIDirectSoundBuffer8_AddRef name PatchPrefix + 'IDirectSoundBuffer_AddRef',
   XTL_EmuIDirectSoundBuffer8_Release name PatchPrefix + '_IDirectSoundBuffer_Release@4',
   XTL_EmuIDirectSoundBuffer8_SetPitch name PatchPrefix + 'IDirectSoundBuffer_SetPitch',
-
+  XTL_EmuIDirectSoundBuffer8_SetEG name PatchPrefix + 'IDirectSoundBuffer_SetEG',
   XTL_EmuIDirectSoundBuffer8_GetCurrentPosition name PatchPrefix + 'IDirectSoundBuffer_GetCurrentPosition',
   XTL_EmuIDirectSoundBuffer8_GetStatus name PatchPrefix + 'IDirectSoundBuffer_GetStatus',
   XTL_EmuIDirectSoundBuffer8_Lock name PatchPrefix + 'IDirectSoundBuffer_Lock',
@@ -4466,11 +4712,29 @@ exports
   XTL_EmuIDirectSoundBuffer8_SetOutputBuffer name PatchPrefix + 'IDirectSoundBuffer_SetOutputBuffer',
   XTL_EmuIDirectSoundBuffer8_Stop name PatchPrefix + 'IDirectSoundBuffer_Stop',
   XTL_EmuIDirectSoundBuffer8_StopEx name PatchPrefix + 'IDirectSoundBuffer_StopEx',
+  XTL_EmuIDirectSoundBuffer8_SetAllParameters name PatchPrefix + 'IDirectSoundBuffer_SetAllParameters',
 
 
   XTL_EmuIDirectSoundStream_QueryInterface,
   XTL_EmuIDirectSoundStream_QueryInterfaceC,
+  XTL_EmuIDirectSoundStream_SetLFO,
+  XTL_EmuIDirectSoundStream_SetEG,
+  XTL_EmuIDirectSoundStream_SetFilter,
+  XTL_EmuIDirectSoundStream_SetMixBins,
+  XTL_EmuIDirectSoundStream_SetMixBinVolumes,
+  XTL_EmuIDirectSoundStream_Pause,
+  XTL_EmuIDirectSoundStream_PauseEx,
+  XTL_EmuIDirectSoundStream_SetFormat,
+  XTL_EmuIDirectSoundStream_SetFrequency,
+  XTL_EmuIDirectSoundStream_SetOutputBuffer,
+  XTL_EmuIDirectSoundStream_SetAllParameters,
+  XTL_EmuIDirectSoundStream_SetConeAngles,
+  XTL_EmuIDirectSoundStream_SetConeOrientation,
+  XTL_EmuIDirectSoundStream_SetConeOutsideVolume,
+  XTL_EmuIDirectSoundStream_SetMaxDistance,
 
+
+  XTL_EmuIDirectSoundStream_FlushEx,
   XTL_EmuIDirectSoundStream_Flush,
   XTL_EmuIDirectSoundStream_SetHeadroom,
   XTL_EmuIDirectSoundStream_SetI3DL2Source,
