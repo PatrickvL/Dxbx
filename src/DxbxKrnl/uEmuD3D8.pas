@@ -5738,6 +5738,18 @@ begin
   Result := g_bIsBusy;
 end;
 
+function XTL_EmuIDirect3DResource8_GetDevice
+(
+    pThis: PX_D3DResource
+): BOOL; stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+  Result := Unimplemented('IDirect3DResource8_GetDevice');
+
+  EmuSwapFS(fsXbox);
+end;
+
 function XTL_EmuIDirect3DResource8_GetType
 (
     pThis: PX_D3DResource
@@ -9489,6 +9501,42 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+procedure XTL_EmuIDirect3DResource8_SetPrivateData
+(
+  pThis: PX_D3DResource
+); stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DResource8_SetPrivateData');
+
+  EmuSwapFS(fsXbox);
+end;
+
+procedure XTL_EmuIDirect3DResource8_GetPrivateData
+(
+  pThis: PX_D3DResource
+); stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DResource8_GetPrivateData');
+
+  EmuSwapFS(fsXbox);
+end;
+
+procedure XTL_EmuIDirect3DResource8_FreePrivateData
+(
+  pThis: PX_D3DResource
+); stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DResource8_FreePrivateData');
+
+  EmuSwapFS(fsXbox);
+end;
+
 procedure XTL_EmuIDirect3DVertexBuffer8_GetDesc
 (
   pThis: PX_D3DVertexBuffer;
@@ -10186,6 +10234,22 @@ begin
   Result := S_OK;
 end;
 
+function XTL_EmuIDirect3DDevice8_SetVertexBlendModelView
+(
+  {CONST} pModelView: PD3DMATRIX;
+  {CONST} pInverseModelView: PD3DMATRIX;
+  {CONST} pComposite: PD3DMATRIX
+): HRESULT; stdcall;
+// Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DDevice8_SetVertexBlendModelView');
+
+  EmuSwapFS(fsXbox);
+end;
+
+
 procedure XTL_EmuIDirect3DDevice8_FlushVertexCache(); stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
@@ -10416,13 +10480,14 @@ exports
   XTL_EmuIDirect3DDevice8_SetLight name PatchPrefix + 'D3DDevice_SetLight',
   XTL_EmuIDirect3DDevice8_SetMaterial name PatchPrefix + 'D3DDevice_SetMaterial',
   XTL_EmuIDirect3DDevice8_SetModelView name PatchPrefix + 'D3DDevice_SetModelView', // ??
+  XTL_EmuIDirect3DDevice8_SetVertexBlendModelView name PatchPrefix + 'D3DDevice_SetVertexBlendModelView', // ??
   XTL_EmuIDirect3DDevice8_SetPalette name PatchPrefix + 'D3DDevice_SetPalette',
   XTL_EmuIDirect3DDevice8_SetPixelShader name PatchPrefix + 'D3DDevice_SetPixelShader',
   XTL_EmuIDirect3DDevice8_SetPixelShaderConstant name PatchPrefix + 'D3DDevice_SetPixelShaderConstant',
   XTL_EmuIDirect3DDevice8_SetPixelShaderProgram name PatchPrefix + 'D3DDevice_SetPixelShaderProgram',
   XTL_EmuIDirect3DDevice8_SetRenderState_BackFillMode name PatchPrefix + 'D3DDevice_SetRenderState_BackFillMode',
   XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name PatchPrefix + 'D3DDevice_SetRenderState_CullMode',
-//   XTL_EmuIDirect3DDevice8_SetRenderState_Deferred name PatchPrefix + 'D3DDevice_SetRenderState_Deferred',
+//  XTL_EmuIDirect3DDevice8_SetRenderState_Deferred name PatchPrefix + 'D3DDevice_SetRenderState_Deferred',
   XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed name PatchPrefix + 'D3DDevice_SetRenderState_DoNotCullUncompressed',
   XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name PatchPrefix + 'D3DDevice_SetRenderState_Dxt1NoiseEnable',
   XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name PatchPrefix + 'D3DDevice_SetRenderState_EdgeAntiAlias',
@@ -10495,10 +10560,15 @@ exports
   XTL_EmuIDirect3DPalette8_Lock2 name PatchPrefix + 'D3DPalette_Lock2',
 
   XTL_EmuIDirect3DResource8_AddRef name PatchPrefix + 'D3DResource_AddRef',
-  XTL_EmuIDirect3DResource8_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',
-  //XTL_EmuIDirect3DResource8_GetType name PatchPrefix + 'D3DResource_GetType', // Dxbx note : This patch crashes XPRViewer !
   XTL_EmuIDirect3DResource8_IsBusy name PatchPrefix + 'D3DResource_IsBusy',
+  XTL_EmuIDirect3DResource8_GetDevice name PatchPrefix + 'D3DResource_GetDevice',
   XTL_EmuIDirect3DResource8_Register name PatchPrefix + 'D3DResource_Register',
+  XTL_EmuIDirect3DResource8_BlockUntilNotBusy name PatchPrefix + 'D3DResource_BlockUntilNotBusy',
+  XTL_EmuIDirect3DResource8_SetPrivateData name PatchPrefix + 'D3DResource_SetPrivateData',
+  XTL_EmuIDirect3DResource8_GetPrivateData name PatchPrefix + 'D3DResource_GetPrivateData',
+  XTL_EmuIDirect3DResource8_FreePrivateData name PatchPrefix + 'D3DResource_FreePrivateData',
+
+  XTL_EmuIDirect3DResource8_GetType name PatchPrefix + 'D3DResource_GetType',
   XTL_EmuIDirect3DResource8_Release name PatchPrefix + 'D3DResource_Release',
 
   XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
