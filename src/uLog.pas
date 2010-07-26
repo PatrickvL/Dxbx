@@ -39,6 +39,8 @@ var
   DebugMode: TDebugMode = dmNone;
   DebugFileName: string = '';
 
+function IsValidAddress(const aPtr: Pointer): Boolean;
+
 {$IFDEF DXBX_DLL}
 function LocationInfoToString(const aLocationInfo: TJclLocationInfo): string;
 {$ENDIF}

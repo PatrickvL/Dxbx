@@ -1087,12 +1087,12 @@ const
 var
   UpdateTimer: DxbxTimer;
 begin
-  // since callbacks come from here
-  EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
-
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : VBlank handling thread is running.');
 {$ENDIF}
+
+  // since callbacks come from here
+  EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
   UpdateTimer.InitFPS(VBlankHertz);
 
@@ -6807,7 +6807,11 @@ begin
     [Addr(pCallback)]); // Dxbx: Check this causes no call!
 {$ENDIF}
 
-  g_pVBCallback := pCallback;
+  if IsValidAddress(Addr(pCallback)) then
+    g_pVBCallback := pCallback
+  else
+    // Dxbx note : Zapper passes the Handle of a previously created thread here... wierd!
+    EmuWarning('SetVerticalBlankCallback ignored invalid Callback address');
 
   EmuSwapFS(fsXbox);
 end;
