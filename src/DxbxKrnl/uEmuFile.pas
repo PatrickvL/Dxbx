@@ -162,7 +162,7 @@ function FindNtSymbolicLinkObjectByVolumeLetter(const aVolumeLetter: AnsiChar): 
 function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: AnsiString): TEmuNtSymbolicLinkObject;
 function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNtSymbolicLinkObject;
 
-function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string): Boolean;
+function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string; IsFile: Boolean = False): Boolean;
 function DxbxGetDeviceNativeRootHandle(XboxFullPath: AnsiString): Handle;
 function DxbxCreateSymbolicLink(SymbolicLinkName, FullPath: AnsiString): NTSTATUS;
 function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOID;
@@ -359,12 +359,15 @@ end;
 var
   Devices: array of record XboxFullPath: AnsiString; NativePath: string; NativeRootHandle: Handle; end;
 
-function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string): Boolean;
+function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string; IsFile: Boolean = False): Boolean;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   i: Integer;
 begin
-  Result := ForceDirectories(ExtractFilePath(NativePath));
+  if IsFile then
+    Result := True // Actually, this is the Config sectors partition (partition0) registered as a file
+  else
+    Result := ForceDirectories(ExtractFilePath(NativePath));
   if Result then
   begin
     i := Length(Devices);

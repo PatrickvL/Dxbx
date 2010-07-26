@@ -271,7 +271,7 @@ type _X_D3DGAMMARAMP = record
 
 const X_PIXELSHADER_FAKE_HANDLE = $DEADBEEF;
 
-type X_D3DVertexShader = record
+type _X_D3DVertexShader = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     {union}case Integer of
      0: ( UnknownA: DWORD);
@@ -281,6 +281,7 @@ type X_D3DVertexShader = record
     UnknownC: array [0..$59-1] of DWORD;
     ); // union
   end; // size = 368 (as in Cxbx)
+  X_D3DVertexShader = _X_D3DVertexShader;
   PX_D3DVertexShader = ^X_D3DVertexShader;
 
 const
@@ -533,7 +534,7 @@ type X_D3DSurface = object(X_D3DPixelContainer)
   PX_D3DSurface = ^X_D3DSurface;
   PPX_D3DSurface = ^PX_D3DSurface;
 
-type X_D3DTILE = record
+type _X_D3DTILE = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
     Flags: DWORD;
     pMemory: PVOID;
@@ -542,6 +543,7 @@ type X_D3DTILE = record
     ZStartTag: DWORD;
     ZOffset: DWORD;
   end; // size = 24 (as in Cxbx)
+  X_D3DTILE = _X_D3DTILE;
   PX_D3DTILE = ^X_D3DTILE;
 
 type X_D3DCALLBACKTYPE = ( // blueshogun96 10/1/07

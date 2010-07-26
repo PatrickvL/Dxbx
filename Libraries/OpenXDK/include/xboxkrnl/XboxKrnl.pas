@@ -343,19 +343,24 @@ type
   LIST_ENTRY = _LIST_ENTRY;
 {$ENDIF}
 
-(*
 // ******************************************************************
-// * FILE_FS_SIZE_INFORMATION
+// * FILE_FS_SIZE_INFORMATION  *Same as Win2k/XP*
 // ******************************************************************
 type
-
-FILE_FS_SIZE_INFORMATION,*PFILE_FS_SIZE_INFORMATION  = record
-    LARGE_INTEGER   TotalAllocationUnits;
-    LARGE_INTEGER   AvailableAllocationUnits;
-    ULONG           SectorsPerAllocationUnit;
-    ULONG           BytesPerSector;
- end;
-*)
+{$IFDEF DXBX_USE_JWA_TYPES}
+  _FILE_FS_SIZE_INFORMATION = JwaNative._FILE_FS_SIZE_INFORMATION;
+  FILE_FS_SIZE_INFORMATION = JwaNative.FILE_FS_SIZE_INFORMATION;
+  PFILE_FS_SIZE_INFORMATION = JwaNative.PFILE_FS_SIZE_INFORMATION;
+{$ELSE}
+  _FILE_FS_SIZE_INFORMATION = record
+    {0x00}TotalAllocationUnits: LARGE_INTEGER;
+    {0x08}AvailableAllocationUnits: LARGE_INTEGER;
+    {0x10}SectorsPerAllocationUnit: ULONG;
+    {0x14}BytesPerSector: ULONG;
+  end; {=0x18}
+  FILE_FS_SIZE_INFORMATION = _FILE_FS_SIZE_INFORMATION;
+  PFILE_FS_SIZE_INFORMATION = ^FILE_FS_SIZE_INFORMATION;
+{$ENDIF}
 
 // ******************************************************************
 // * FILE_INFORMATION_CLASS *Same as Win2k/XP*
@@ -1035,7 +1040,7 @@ type _FX_SAVE_AREA  = record
 // * See http://www.nirsoft.net/kernel_struct/vista/KPRCB.html
 // ******************************************************************
 type
-  KPRCB = record
+  _KPRCB = record
     {0x000}CurrentThread: PKTHREAD; // KPCR : 0x28
     {0x004}NextThread: PKTHREAD; // KPCR : 0x2C
     {0x008}IdleThread: PKTHREAD; // KPCR : 0x30
@@ -1074,6 +1079,7 @@ type
 //#endif // DEVKIT
 
   end; {=0x25C}
+  KPRCB = _KPRCB;
   PKPRCB = ^KPRCB;
 
 type

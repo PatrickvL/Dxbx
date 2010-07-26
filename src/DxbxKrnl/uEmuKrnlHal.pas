@@ -59,6 +59,18 @@ var HalpSMCScratchRegister: DWORD;
 // Source:Dxbx  Translator:PatrickvL  Done:100
 
 
+type
+  PHAL_SHUTDOWN_REGISTRATION = ^HAL_SHUTDOWN_REGISTRATION;
+
+  PHAL_SHUTDOWN_NOTIFICATION = procedure(ShutdownRegistration: PHAL_SHUTDOWN_REGISTRATION);
+
+  _HAL_SHUTDOWN_REGISTRATION = record
+    NotificationRoutine: PHAL_SHUTDOWN_NOTIFICATION;
+    Priority: LONG;
+    ListEntry: LIST_ENTRY;
+  end;
+  HAL_SHUTDOWN_REGISTRATION = _HAL_SHUTDOWN_REGISTRATION;
+
 const
   SMC_ADDRESS = 0; // TODO : What value should this have?
 
@@ -106,7 +118,7 @@ procedure {046} xboxkrnl_HalReadWritePCISpace(
   WritePCISpace: LONGBOOL
   ); stdcall;
 function {047} xboxkrnl_HalRegisterShutdownNotification(
-  ShutdownRegistration: UNKNOWN;
+  ShutdownRegistration: PHAL_SHUTDOWN_REGISTRATION;
   Register_: _BOOLEAN
   ): NTSTATUS; stdcall;
 procedure {048} xboxkrnl_HalRequestSoftwareInterrupt(
@@ -260,7 +272,7 @@ begin
 end;
 
 function {047} xboxkrnl_HalRegisterShutdownNotification(
-  ShutdownRegistration: UNKNOWN;
+  ShutdownRegistration: PHAL_SHUTDOWN_REGISTRATION;
   Register_: _BOOLEAN
   ): NTSTATUS; stdcall;
 // Source:APILogger - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0

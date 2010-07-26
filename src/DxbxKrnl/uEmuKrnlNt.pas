@@ -412,6 +412,7 @@ function DxbxObjectAttributesToNT(ObjectAttributes: POBJECT_ATTRIBUTES; var Nati
 var
   szBuffer: AnsiString;
   XboxFullPath: AnsiString;
+  NativePath: string;
   EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   Result := STATUS_SUCCESS;
@@ -444,8 +445,12 @@ begin
       // Look up the symbolic link information using the drive letter :
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter(szBuffer[1]);
       System.Delete(szBuffer, 1, 2); // Remove 'C:'
+
+      // If the remaining path starts with a ':', remove it (to prevent errors) :
+      if (Length(szBuffer) > 0) and (szBuffer[1] = ':') then
+        System.Delete(szBuffer, 1, 1);  // xbmp needs this, as it accesses 'e::\'
     end
-    else if StartsWithString(szBuffer, '$HOME') then // xbmp uses this (along with 'e::\' prefixes)
+    else if StartsWithString(szBuffer, '$HOME') then // xbmp uses this (TODO : There maybe more macros?)
     begin
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
       System.Delete(szBuffer, 1, 5); // Remove '$HOME'
@@ -468,6 +473,7 @@ begin
         System.Delete(szBuffer, 1, 1);
 
       XboxFullPath := EmuNtSymbolicLinkObject.XboxFullPath;
+      NativePath := EmuNtSymbolicLinkObject.NativePath;
       ObjectAttributes.RootDirectory := EmuNtSymbolicLinkObject.RootDirectoryHandle;
     end
     else
@@ -484,6 +490,7 @@ begin
       System.Delete(szBuffer, 1, Length(DeviceHarddisk0) + 1);
       // And set Root to the folder containing the partition-folders :
       ObjectAttributes.RootDirectory := DxbxBasePathHandle;
+      NativePath := DxbxBasePath;
     end;
 
     // Check for special case : Partition0
@@ -499,10 +506,10 @@ begin
       DbgPrintf('EmuKrnl : %s Corrected path...', [aFileAPIName]);
       DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
 
-      if ObjectAttributes.RootDirectory = g_hCurDir then
-        DbgPrintf('  New:"$XbePath\%s"', [szBuffer])
+      if StartsWithText(NativePath, DxbxBasePath) then
+        DbgPrintf('  New:"$DxbxPath\EmuDisk%s%s"', [Copy(NativePath, Length(DxbxBasePath), MaxInt), szBuffer])
       else
-        DbgPrintf('  New:"$DxbxPath\EmuDisk\%s"', [szBuffer]);
+        DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
     end;
   end
   else
@@ -1011,7 +1018,7 @@ begin
   if (Result = STATUS_SUCCESS) then
   begin
     // Never delete from XbePath :
-    if (NativeObjectAttributes.NtObjAttr.RootDirectory = g_hCurDir)
+    if (not StartsWithText(NativeObjectAttributes.wszObjectName, DxbxBasePath))
     // Nor when no filename was given (better not to trust the handle, or random files might get deleted!) :
     or (NativeObjectAttributes.wszObjectName = '') then
       Result := STATUS_OBJECT_PATH_NOT_FOUND
