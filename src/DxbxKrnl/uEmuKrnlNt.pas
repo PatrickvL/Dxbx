@@ -102,7 +102,7 @@ function xboxkrnl_NtCreateSemaphore(
   MaximumCount: ULONG
   ): NTSTATUS; stdcall;
 function xboxkrnl_NtCreateTimer(
-  pTimerHandle: PHANDLE;
+  TimerHandle: PHANDLE;
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   TimerType: TIMER_TYPE
@@ -506,8 +506,11 @@ begin
     end;
   end
   else
+  begin
     // For non-file API calls, prefix with '\??\' again :
     szBuffer := '\??\' + szBuffer;
+    ObjectAttributes.RootDirectory := 0;
+  end;
 
   // Convert Ansi to Unicode :
   NativeObjectAttributes.wszObjectName := UnicodeString(szBuffer);
@@ -573,6 +576,9 @@ begin
 
   Result := JwaNative.NtCancelTimer(hTimerHandle, pbPreviousState);
 
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCancelTimer failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -628,6 +634,9 @@ begin
   else // close normal handles
     Result := JwaNative.NtClose(Handle);
 
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtClose failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -666,7 +675,7 @@ begin
     EmuWarning('NtCreateDirectoryObject failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit or lfFile) then
-      DbgPrintf('EmuKrnl : NtCreateDirectoryObject = 0x%.08X', [DirectoryHandle^]);
+      DbgPrintf('EmuKrnl : NtCreateDirectoryObject DirectoryHandle^ = 0x%.08X', [DirectoryHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -705,7 +714,7 @@ begin
     DesiredAccess := EVENT_ALL_ACCESS;
 
     // redirect to Win2k/XP
-    Result := JwaNative.NtCreateEvent(EventHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, EVENT_TYPE(EventType), InitialState);
+    Result := JwaNative.NtCreateEvent(EventHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, EventType, InitialState);
   end;
 
   // From http://msdn.microsoft.com/en-us/library/ff566423(v=VS.85).aspx
@@ -714,7 +723,7 @@ begin
     EmuWarning('NtCreateEvent failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit) then
-      DbgPrintf('EmuKrnl : NtCreateEvent EventHandle = 0x%.08X', [EventHandle^]);
+      DbgPrintf('EmuKrnl : NtCreateEvent EventHandle^ = 0x%.08X', [EventHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -792,7 +801,7 @@ begin
     EmuWarning('NtCreateFile failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit or lfFile) then
-      DbgPrintf('EmuKrnl : NtCreateFile = 0x%.08X', [FileHandle^]);
+      DbgPrintf('EmuKrnl : NtCreateFile FileHandle^ = 0x%.08X', [FileHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -833,6 +842,12 @@ begin
       NativeObjectAttributes.NtObjAttrPtr,
       Count);
   end;
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCreateIoCompletion failed! (%s)', [NTStatusToString(Result)])
+  else
+    if MayLog(lfUnit) then
+      DbgPrintf('EmuKrnl : NtCreateIoCompletion FileHandle^ = 0x%.08X', [FileHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -875,7 +890,7 @@ begin
     EmuWarning('NtCreateMutant failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit) then
-      DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle = 0x%.08X', [MutantHandle^]);
+      DbgPrintf('EmuKrnl : NtCreateMutant MutantHandle^ = 0x%.08X', [MutantHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -929,13 +944,13 @@ begin
     EmuWarning('NtCreateSemaphore failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit) then
-      DbgPrintf('EmuKrnl : NtCreateSemaphore SemaphoreHandle = 0x%.08X', [SemaphoreHandle^]);
+      DbgPrintf('EmuKrnl : NtCreateSemaphore SemaphoreHandle^ = 0x%.08X', [SemaphoreHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_NtCreateTimer(
-  pTimerHandle: PHANDLE;
+  TimerHandle: PHANDLE;
   DesiredAccess: ACCESS_MASK;
   ObjectAttributes: POBJECT_ATTRIBUTES;
   TimerType: TIMER_TYPE
@@ -949,12 +964,12 @@ begin
   if MayLog(lfDxbx or lfKernel) then
     DbgPrintf('EmuKrnl : NtCreateTimer' +
       #13#10'(' +
-      #13#10'   pTimerHandle        : 0x%.08X' +
+      #13#10'   TimerHandle         : 0x%.08X' +
       #13#10'   DesiredAccess       : 0x%.08X (%s)' +
       #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
       #13#10'   TimerType           : 0x%.08X' +
       #13#10');',
-      [pTimerHandle,
+      [TimerHandle,
        DesiredAccess, AccessMaskToString(DesiredAccess),
        ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
        Ord(TimerType)]);
@@ -963,7 +978,13 @@ begin
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes);
 
   if (Result = STATUS_SUCCESS) then
-    Result := JwaNative.NtCreateTimer(pTimerHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, TimerType);
+    Result := JwaNative.NtCreateTimer(TimerHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, TimerType);
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtCreateTimer failed! (%s)', [NTStatusToString(Result)])
+  else
+    if MayLog(lfUnit) then
+      DbgPrintf('EmuKrnl : NtCreateTimer TimerHandle^ = 0x%.08X', [TimerHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1056,6 +1077,9 @@ begin
     OutputBuffer,
     OutputBufferLength);
 
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtDeviceIoControlFile failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1133,6 +1157,9 @@ begin
 {$ENDIF}
 
   Result := JwaNative.NtFlushBuffersFile(FileHandle, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock));
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtFlushBuffersFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1213,6 +1240,9 @@ begin
     OutputBuffer,
     OutputBufferLength);
 
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtFsControlFile failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1251,7 +1281,7 @@ begin
     EmuWarning('NtOpenDirectoryObject failed! (%s)', [NTStatusToString(Result)])
   else
     if MayLog(lfUnit or lfFile) then
-      DbgPrintf('EmuKrnl : NtOpenDirectoryObject = 0x%.08X', [DirectoryHandle^]);
+      DbgPrintf('EmuKrnl : NtOpenDirectoryObject DirectoryHandle^ = 0x%.08X', [DirectoryHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1310,7 +1340,7 @@ begin
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtOpenFile failed! (%s)', [NTStatusToString(Result)])
   else
-    DbgPrintf('EmuKrnl : NtOpenFile = 0x%.08X', [FileHandle^]);
+    DbgPrintf('EmuKrnl : NtOpenFile FileHandle^ = 0x%.08X', [FileHandle^]);
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
@@ -1345,6 +1375,11 @@ begin
   end
   else
     Result := STATUS_OBJECT_NAME_NOT_FOUND;
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtOpenSymbolicLinkObject failed! (%s)', [NTStatusToString(Result)])
+  else
+    DbgPrintf('EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X', [LinkHandle^]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1483,7 +1518,8 @@ begin
 
   wcstr := @FileDirInfo.FileName[0];
 
-  repeat
+  while True do
+  begin
 //    ZeroMemory(wcstr, 160*2); ??
 
     Result := JwaNative.NtQueryDirectoryFile
@@ -1493,14 +1529,21 @@ begin
         );
     RestartScan := FALSE;
 
-    // Xbox does not return '.' and '..', so skip those :
-  until not ((strcmp(wcstr, '.') = 0) or (strcmp(wcstr, '..') = 0));
+    if Result <> STATUS_SUCCESS then
+      Break;
+
+    // Xbox does not return '.' and '..', so we're done when we found something else :
+    if (strcmp(wcstr, '.') <> 0) and (strcmp(wcstr, '..') <> 0) then
+      Break;
+  end;
 
   if Result = STATUS_SUCCESS then
   begin
     if not DxbxPC2XB_FILE_INFORMATION(FileDirInfo, FileInformation, FileInformationClass) then
       memcpy(FileInformation, FileDirInfo, Length);
-  end;
+  end
+  else
+    EmuWarning('NtQueryDirectoryFile failed! (%s)', [NTStatusToString(Result)]);
 
   // TODO -oCXBX: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
   DxbxFree(FileDirInfo);
@@ -1647,7 +1690,9 @@ begin
   begin
     if not DxbxPC2XB_FILE_INFORMATION(@NativeFileInformation[0], FileInformation, FileInformationClass) then
       memcpy(FileInformation, @NativeFileInformation[0], Length);
-  end;
+  end
+  else
+    EmuWarning('NtQueryInformationFile failed! (%s)', [NTStatusToString(Result)]);
 
   //
   // DEBUGGING!
@@ -1671,9 +1716,6 @@ begin
     end;
     *)
   end;
-
-  if (Result <> STATUS_SUCCESS) then
-    EmuWarning('NtQueryInformationFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1787,6 +1829,9 @@ begin
     end;
   end;
 
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQuerySymbolicLinkObject failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -1813,6 +1858,9 @@ begin
       [hTimerHandle, Ord(TimerInformationClass), pTimerInformation, TimerInformationLength, ResultLength]);
 
   Result := JwaNative.NtQueryTimer(hTimerHandle, TimerInformationClass, pTimerInformation, TimerInformationLength, ResultLength);
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtQueryTimer failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -1911,16 +1959,21 @@ begin
       FsInformationClass
   );
 
-  // TODO : Do FS_INFORMATION_CLASS conversion here, just like DxbxPC2XB_FILE_INFORMATION
-
-  // NOTE: TODO -oCXBX: Dynamically fill in, or allow configuration?
-  if (FsInformationClass = FileFsSizeInformation) then
+  if Result = STATUS_SUCCESS then
   begin
-    FileInformation.TotalAllocationUnits.QuadPart     := $4C468;
-    FileInformation.AvailableAllocationUnits.QuadPart := $2F125;
-    FileInformation.SectorsPerAllocationUnit          := 32;
-    FileInformation.BytesPerSector                    := XBOX_HD_SECTOR_SIZE;
-  end;
+    // TODO : Do FS_INFORMATION_CLASS conversion here, just like DxbxPC2XB_FILE_INFORMATION
+
+    // NOTE: TODO -oCXBX: Dynamically fill in, or allow configuration?
+    if (FsInformationClass = FileFsSizeInformation) then
+    begin
+      FileInformation.TotalAllocationUnits.QuadPart     := $4C468;
+      FileInformation.AvailableAllocationUnits.QuadPart := $2F125;
+      FileInformation.SectorsPerAllocationUnit          := 32;
+      FileInformation.BytesPerSector                    := XBOX_HD_SECTOR_SIZE;
+    end;
+  end
+  else
+    EmuWarning('NtQueryInformationFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2094,6 +2147,9 @@ begin
 
   Result := JwaNative.NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtResumeThread failed! (%s)', [NTStatusToString(Result)]);
+
   Sleep(10);
 
   EmuSwapFS(fsXbox);
@@ -2167,7 +2223,9 @@ begin
   begin
     if not DxbxPC2XB_FILE_INFORMATION(@NativeFileInformation[0], FileInformation, FileInformationClass) then
       memcpy(FileInformation, NativeFileInformation, Length);
-  end;
+  end
+  else
+    EmuWarning('NtSetInformationFile failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2228,6 +2286,9 @@ begin
 
   Result := JwaNative.NtSetTimer{Ex}(TimerHandle, DueTime, TimerApcRoutine, {ApcMode,} TimerContext, ResumeTimer, Period, PreviousState);
 
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtSetTimerEx failed! (%s)', [NTStatusToString(Result)]);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2258,7 +2319,7 @@ begin
   // Check that no EmuHandle is passed into this call :
   if IsEmuHandle(SignalHandle) then
   begin
-    Result := STATUS_INVALID_HANDLE;
+    Result := WAIT_FAILED;
     DbgPrintf('WaitFor EmuHandle not supported!');
   end
   else
@@ -2268,6 +2329,9 @@ begin
     if MayLog(lfUnit or lfTrace) then
       DbgPrintf('Finished waiting for 0x%.08X', [WaitHandle]);
   end;
+
+  if (Result = WAIT_FAILED) then
+    EmuWarning('NtSignalAndWaitForSingleObjectEx failed! (%s)', [NTStatusToString(GetLastError)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2290,6 +2354,9 @@ begin
       [ThreadHandle, PreviousSuspendCount]);
 
   Result := JwaNative.NtSuspendThread(ThreadHandle, PreviousSuspendCount);
+
+  if (Result <> STATUS_SUCCESS) then
+    EmuWarning('NtSuspendThread failed! (%s)', [NTStatusToString(Result)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2412,7 +2479,7 @@ begin
   // Check that no EmuHandle is passed into this call :
   if IsEmuHandle(Handle) then
   begin
-    Result := STATUS_INVALID_HANDLE;
+    Result := WAIT_FAILED;
     DbgPrintf('WaitFor EmuHandle not supported!');
   end
   else
@@ -2422,6 +2489,9 @@ begin
     if MayLog(lfUnit or lfTrace) then
       DbgPrintf('Finished waiting for 0x%.08X', [Handle]);
   end;
+
+  if (Result = WAIT_FAILED) then
+    EmuWarning('NtWaitForSingleObject failed! (%s)', [NTStatusToString(GetLastError)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2452,7 +2522,7 @@ begin
   // Check that no EmuHandle is passed into this call :
   if IsEmuHandle(Handle_) then
   begin
-    Result := STATUS_INVALID_HANDLE;
+    Result := WAIT_FAILED;
     DbgPrintf('WaitFor EmuHandle not supported!');
   end
   else
@@ -2462,6 +2532,9 @@ begin
     if MayLog(lfUnit or lfTrace) then
       DbgPrintf('Finished waiting for 0x%.08X', [Handle_]);
   end;
+
+  if (Result = WAIT_FAILED) then
+    EmuWarning('NtWaitForSingleObjectEx failed! (%s)', [NTStatusToString(GetLastError)]);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2510,7 +2583,7 @@ begin
     if IsEmuHandle(Handle_) then
     begin
       DbgPrintf('WaitFor EmuHandle not supported!');
-      Result := STATUS_INVALID_HANDLE;
+      Result := WAIT_FAILED;
       Break;
     end;
   end;
@@ -2519,6 +2592,9 @@ begin
 
   if Result = STATUS_SUCCESS then
     Result := JwaNative.NtWaitForMultipleObjects(Count, Handles, WaitType, Alertable, PLARGE_INTEGER(Timeout));
+
+  if (Result = WAIT_FAILED) then
+    EmuWarning('NtWaitForMultipleObjectsEx failed! (%s)', [NTStatusToString(GetLastError)]);
 
   EmuSwapFS(fsXbox);
 end;

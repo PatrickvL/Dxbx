@@ -380,7 +380,7 @@ begin
     WaitForSingleObject(iPCSTProxyParam.hStartedEvent, 1000);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuKrnl : ThreadHandle : 0x%.04x, ThreadId : 0x%.04x', [pThreadHandle^, dwThreadId]);
+    DbgPrintf('EmuKrnl : pThreadHandle^ : 0x%.04x, ThreadId : 0x%.04x', [pThreadHandle^, dwThreadId]);
 {$ENDIF}
 
     // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
