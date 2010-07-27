@@ -412,6 +412,7 @@ begin
           Args[i].VInteger := Ord(Args[i].VBoolean);
           Args[i].VType := vtInteger;
         end;
+        // vtExtended: ; // Delphi converts Single and Double to Extended (SLOW!), and points to it on stack
         vtPointer,
         vtObject,
         vtInterface:
@@ -583,12 +584,21 @@ begin
   end;
 end;
 
-threadvar
-  CurrentThreadIDInsertStr: string;
+
+// Dxbx note : We don't use threadvar here (although that would be much easier),
+// but TlsAlloc/TlsGetValue, because that doesn't interfere with the XBE's TLS!
+var
+  TlsIndex: Integer = 0;
+type
+  RCurrentThreadIDInsert = record
+    Str: string;
+  end;
+  PCurrentThreadIDInsert = ^RCurrentThreadIDInsert;
 
 procedure WriteLog(aText: string);
 var
   i: Integer;
+  CurrentThreadIDInsert: PCurrentThreadIDInsert;
 begin
   EnterCriticalSection({var}DxbxLogLock);
   try
@@ -602,11 +612,21 @@ begin
         begin
           // Calculate the string to insert only once, as in some titles (like TechCertGame)
           // redetermining this on every call leads to crashes (don't know why that is) :
-          if CurrentThreadIDInsertStr = '' then
-            CurrentThreadIDInsertStr := '(0x' + IntToHex(GetCurrentThreadID(), 1) + ')';
+          begin
+            if TlsIndex = 0 then
+              TlsIndex := TlsAlloc();
+
+            CurrentThreadIDInsert := PCurrentThreadIDInsert(TlsGetValue(TlsIndex));
+            if CurrentThreadIDInsert = nil then
+            begin
+              New(CurrentThreadIDInsert);
+              CurrentThreadIDInsert.Str := '(0x' + IntToHex(GetCurrentThreadID(), 1) + ')';
+              TlsSetValue(TlsIndex, CurrentThreadIDInsert);
+            end;
+          end;
 
           // Prefix the text with the CurrentThreadID :
-          Insert(CurrentThreadIDInsertStr, {var}aText, i);
+          Insert(CurrentThreadIDInsert.Str, {var}aText, i);
         end;
 
         if Assigned(ConsoleControl) then
@@ -626,9 +646,13 @@ begin
   end;
 end; // WriteLog
 
+var
+  s: Single;
 initialization
 
   InitializeCriticalSection({var}DxbxLogLock);
+  s := 1.3;
+  DxbxFormat('test %f', [s]);
 
 finalization
 
