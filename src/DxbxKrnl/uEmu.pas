@@ -42,9 +42,9 @@ uses
   , uConsts
   , uTypes
   , uLog
+  , uDxbxKrnlUtils
   , uEmuFS
-  , uEmuD3D8Types
-  , uDxbxKrnlUtils;
+  , uEmuD3D8Types;
 
 // exception handler
 function EmuException(e: LPEXCEPTION_POINTERS): int; stdcall;

@@ -36,9 +36,9 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
+  uDxbxKrnlUtils,
   uEmuFS,
-  uEmuKrnl,
-  uDxbxKrnlUtils;
+  uEmuKrnl;
 
 const
   CLOCK_TIME_INCREMENT = $2710;

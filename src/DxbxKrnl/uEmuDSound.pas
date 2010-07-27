@@ -36,13 +36,13 @@ uses
   // Dxbx
   , uTypes
   , uLog
-  , uEmuAlloc
-  , uEmuFS
-  , uEmu
-  , uXboxLibraryUtils
-  , uEmuD3D8Types
   , uDxbxKrnlUtils
-  , uEmuKrnl
+  , uEmuAlloc // DxbxMalloc
+  , uEmuFS // EmuSwapFS
+  , uEmuKrnl // Unimplemented
+  , uXboxLibraryUtils // PatchPrefix
+  , uEmuD3D8Types // XTL_PIDirectSoundBuffer, XTL_PIDirectSoundListener
+  , uEmu // EmuWarning
   ;
 
 // EmuIDirectSoundBuffer_Play flags

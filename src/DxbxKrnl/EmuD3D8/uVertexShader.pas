@@ -35,11 +35,11 @@ uses
   , D3DX8
   // Dxbx
   , uTypes
+  , uDxbxKrnlUtils
   , uEmuD3D8Types
   , uEmuD3D8Utils
-  , uDxbxKrnlUtils
-  , uEmu
-  , uEmuAlloc;
+  , uEmuAlloc
+  , uEmu;
 
 
 type Dxbx4Booleans = array [0..4-1] of boolean;

@@ -39,6 +39,7 @@ uses
   uDxbxUtils,
   uLog, // DbgPrintf
   uXbe,
+  uDxbxKrnlUtils, // DxbxKrnl_XbeHeader
   uEmuAlloc,
   uEmuFS, // EmuSwapFS
   uEmu,
@@ -46,8 +47,7 @@ uses
   uEmuFile,
   uEmuKrnlKe,
   uXBController,
-  uXboxLibraryUtils, // PatchPrefix
-  uDxbxKrnlUtils; // DxbxKrnl_XbeHeader
+  uXboxLibraryUtils; // PatchPrefix
 
 var
   XTL_EmuXapiProcessHeap: PPVOID;

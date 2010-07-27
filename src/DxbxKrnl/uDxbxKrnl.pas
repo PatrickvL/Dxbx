@@ -37,8 +37,8 @@ uses
   uDxbxUtils,
   uLog,
   uXbe,
-  uDxbxKrnlUtils,
   uDxbxDebugUtils,
+  uDxbxKrnlUtils,
 {$IFDEF LOG_STRUCT_SIZES}
   uError,
   uMutex,

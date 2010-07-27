@@ -30,11 +30,11 @@ uses
   // Dxbx
   uTypes,
   uLog,
+  uDxbxKrnlUtils,
   uEmuD3D8Types,
   uEmuFS,
   uEmu,
   uXboxLibraryUtils, // PatchPrefix
-  uDxbxKrnlUtils,
   uConvert;
 
 // From EmuXG.h :
