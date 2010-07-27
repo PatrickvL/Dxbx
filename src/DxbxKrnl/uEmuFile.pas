@@ -718,11 +718,9 @@ begin
         end;
 
         if ExtraPath <> '' then
-        begin
           Self.NativePath := Self.NativePath + string(ExtraPath);
-          ForceDirectories(Self.NativePath);
-        end;
 
+        ForceDirectories(Self.NativePath);
         Self.RootDirectoryHandle := CreateFile(PChar(Self.NativePath),
           GENERIC_READ,
           FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE,
@@ -734,12 +732,12 @@ begin
         if Self.RootDirectoryHandle = INVALID_HANDLE_VALUE then
         begin
           Result := STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
-          DxbxKrnlCleanup('Could not map ' + string(NativePath));
+          DxbxKrnlCleanup('Could not map ' + string(Self.NativePath));
         end
         else
         begin
           NtSymbolicLinkObjects[DriveLetter] := Self;
-          DbgPrintf('EmuMain : Linked "%s" to "%s" (residing at "%s")', [aSymbolicLinkName, aFullPath, NativePath]);
+          DbgPrintf('EmuMain : Linked "%s" to "%s" (residing at "%s")', [aSymbolicLinkName, aFullPath, Self.NativePath]);
         end;
       end;
     end;
