@@ -36,11 +36,11 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
+  uDxbxKrnlUtils,
   uEmuFS,
   uEmuFile,
   uEmuKrnl,
-  uDxbxKrnl,
-  uDxbxKrnlUtils;
+  uDxbxKrnl;
 
 // TODO -oDXBX: Translate all other IRP defines from ReactOS
 const IRP_MJ_MAXIMUM_FUNCTION = $1B;

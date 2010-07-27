@@ -38,10 +38,10 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
+  uDxbxKrnlUtils,
   uEmuFS,
   uEmuKrnl,
-  uDxbxKrnl,
-  uDxbxKrnlUtils;
+  uDxbxKrnl;
 
 type
 {$IFDEF XBOX_CRITICAL_SECTION}

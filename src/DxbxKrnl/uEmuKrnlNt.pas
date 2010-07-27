@@ -37,13 +37,13 @@ uses
   uTypes,
   uDxbxUtils,
   uLog,
+  uDxbxKrnlUtils,
   uEmuAlloc,
   uEmuFS,
   uEmu,
   uEmuFile,
   uEmuKrnl,
-  uDxbxKrnl,
-  uDxbxKrnlUtils;
+  uDxbxKrnl;
 
 function xboxkrnl_NtAllocateVirtualMemory(
   BaseAddress: PPVOID; // OUT * ?

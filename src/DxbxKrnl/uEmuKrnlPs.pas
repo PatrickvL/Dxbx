@@ -35,13 +35,13 @@ uses
   // Dxbx
   uTypes,
   uLog,
+  uDxbxDebugUtils,
+  uDxbxKrnlUtils,
   uEmuFS,
   uEmu,
   uEmuXapi, // XTHREAD_NOTIFY_PROC
   uEmuKrnl,
-  uDxbxKrnl,
-  uDxbxKrnlUtils,
-  uDxbxDebugUtils;
+  uDxbxKrnl;
 
 var {259}xboxkrnl_PsThreadObjectType: POBJECT_TYPE = NULL; // TODO -oDxbx : What should we initialize this to?
 // Source: OpenXDK - Uncertain  Branch:Dxbx  Translator:PatrickvL  Done:0

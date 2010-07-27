@@ -39,11 +39,11 @@ uses
   uCRC16,
   uStoredTrieTypes,
   uXboxLibraryUtils,
-  uEmu, // EmuWarning
-  uEmuExe, // ReinitXbeImageHeader, ReinitExeImageHeader
+  uEmuD3D8Types,// X_D3DRS_UNK
   uState, // XTL_EmuD3DDeferredRenderState and XTL_EmuD3DDeferredTextureState
+  uEmu, // EmuWarning
   uEmuXapi, // XTL_EmuXapiProcessHeap
-  uEmuD3D8Types;// X_D3DRS_UNK
+  uEmuExe; // ReinitXbeImageHeader, ReinitExeImageHeader
 
 type
   TSymbolInformation = class; // forward

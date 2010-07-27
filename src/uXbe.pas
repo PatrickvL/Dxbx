@@ -36,7 +36,7 @@ uses
   uTime,
   uDxbxUtils,
   uLog,
-  uEmuD3D8Types,
+  uEmuD3D8Types, // X_D3DBaseTexture
   uFileSystem; // Drives
 
 const
@@ -229,7 +229,7 @@ type _XBE_SECTIONHEADER = packed record
 
   TXprHeader = XPR_HEADER;
   PXprHeader = PXPR_HEADER;
-  
+
   // Layout of SaveImage.xbx saved game image file
   //
   // File is XPR0 format. Since the XPR will always contain only a single

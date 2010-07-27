@@ -78,10 +78,10 @@ uses
   // Dxbx
     uDxbxKrnlUtils
   , uLog
-  , uEmuD3D8
   , uConvert
   , uState
-  , uVertexShader;
+  , uVertexShader
+  , uEmuD3D8;
 
 // From PushBuffer.cpp :
 

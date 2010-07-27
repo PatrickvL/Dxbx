@@ -35,10 +35,10 @@ uses
   // Dxbx
   uTypes,
   uLog,
+  uDxbxKrnlUtils,
   uEmuFS,
   uEmuKrnl,
-  uDxbxKrnl,
-  uDxbxKrnlUtils;
+  uDxbxKrnl;
 
 var {040}xboxkrnl_HalDiskCachePartitionCount: DWORD = 4; // This enables Partition3..7 TODO -oDxbx : Make this configurable
 // Source:OpenXDK  Branch:Dxbx  Translator:PatrickvL  Done:100
