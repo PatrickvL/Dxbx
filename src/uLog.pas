@@ -362,6 +362,8 @@ var
   CurrentPercentageOffset: Integer;
 //  ArgumentAsString: UnicodeString;
 begin
+  EnterCriticalSection({var}DxbxLogLock);
+  try
   try
     if Length(Args) = 0 then
       MayRenderArguments := False;
@@ -462,6 +464,9 @@ begin
       for i := Low(Args) to High(Args) do
         Result := Result + #13#10 + TVarRecToString(Args[i]);
     end;
+  end;
+  finally
+    LeaveCriticalSection({var}DxbxLogLock);
   end;
 end; // DxbxFormat
 
