@@ -341,11 +341,11 @@ type
     {VMT 0x00}function AddRef(): ULONG; virtual; stdcall;
     {VMT 0x04}function Release(): ULONG; virtual; stdcall;
     // XMediaObject interface :
-    {VMT 0x08}function GetInfo(pInfo: LPXMEDIAINFO): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x0C}function GetStatus(pdwStatus: PDWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x10}function Process(pInputBuffer: PXMEDIAPACKET; pOutputBuffer: PXMEDIAPACKET): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x14}function Discontinuity(): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x18}function Flush(): HRESULT; stdcall; // virtual;  virtual; stdcall;
+    {VMT 0x08}function GetInfo(pInfo: LPXMEDIAINFO): HRESULT; virtual; stdcall;
+    {VMT 0x0C}function GetStatus(pdwStatus: PDWORD): HRESULT; virtual; stdcall;
+    {VMT 0x10}function Process(pInputBuffer: PXMEDIAPACKET; pOutputBuffer: PXMEDIAPACKET): HRESULT; virtual; stdcall;
+    {VMT 0x14}function Discontinuity(): HRESULT; virtual; stdcall;
+    {VMT 0x18}function Flush(): HRESULT; virtual; stdcall;
 {$ifdef DEBUG}
   protected
     // debug mode guard for detecting naughty data accesses
@@ -359,9 +359,9 @@ type
   TXFileMediaObject = class(TXMediaObject)
   // Branch:Dxbx  Translator:PatrickvL  Done:100
   public
-    // XMediaObject interface :
-    {VMT 0x1C}function Seek(lOffset: LONG; dwOrigin: DWORD; pdwAbsolute: LPDWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x20}function GetLength(pdwLength: LPDWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
+    // XFileMediaObject interface :
+    {VMT 0x1C}function Seek(lOffset: LONG; dwOrigin: DWORD; pdwAbsolute: LPDWORD): HRESULT; virtual; stdcall;
+    {VMT 0x20}function GetLength(pdwLength: LPDWORD): HRESULT; virtual; stdcall;
     {VMT 0x24}procedure DoWork(); virtual; stdcall;
   end;
 
@@ -369,20 +369,74 @@ type
   // Branch:Dxbx  Translator:PatrickvL  Done:100
   public
     // XWaveFileMediaObject interface :
-    {VMT 0x28}function GetFormat(ppwfxFormat: PLPCWAVEFORMATEX): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x2C}function GetLoopRegion(pdwLoopStart: LPDWORD; pdwLoopLength: LPDWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
+    {VMT 0x28}function GetFormat(ppwfxFormat: PLPCWAVEFORMATEX): HRESULT; virtual; stdcall;
+    {VMT 0x2C}function GetLoopRegion(pdwLoopStart: LPDWORD; pdwLoopLength: LPDWORD): HRESULT; virtual; stdcall;
   end;
 
   TXWmaFileMediaObject = class(TXFileMediaObject)
   // Branch:Dxbx  Translator:PatrickvL  Done:100
   public
     // XWmaFileMediaObject interface :
-    {VMT 0x28}function GetFileHeader(pFileHeader: PWMAXMOFileHeader): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x2C}function GetFileContentDescription(pContentDesc: PWMAXMOFileContDesc): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x30}function SeekToTime(dwSeek: DWORD; pdwAcutalSeek: LPDWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
+    {VMT 0x28}function GetFileHeader(pFileHeader: PWMAXMOFileHeader): HRESULT; virtual; stdcall;
+    {VMT 0x2C}function GetFileContentDescription(pContentDesc: PWMAXMOFileContDesc): HRESULT; virtual; stdcall;
+    {VMT 0x30}function SeekToTime(dwSeek: DWORD; pdwAcutalSeek: LPDWORD): HRESULT; virtual; stdcall;
   end;
 *)
 
+(*
+  TIDirectSoundBuffer = class(TObject)
+  // Branch:Dxbx  Translator:PatrickvL  Done:100
+  public
+    {0x}function QueryInterfaceC(const PIID iid; PLPVOID ppvInterface): HRESULT; stdcall; virtual;
+    {0x}function QueryInterface IDirectSoundBuffer_QueryInterfaceC(): HRESULT; stdcall; virtual;
+    // IUnknown interface :
+    {VMT 0x00}function AddRef(): ULONG; virtual; stdcall;
+    {VMT 0x04}function Release(): ULONG; virtual; stdcall;
+    // IDirectSoundBuffer interface :
+    {VMT 0x1C}function SetFormat(pwfxFormat: LPCWAVEFORMATEX): HRESULT; virtual; stdcall;
+    {VMT 0x20}function SetFrequency(dwFrequency: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x24}function SetVolume(lVolume: LONG): HRESULT; virtual; stdcall;
+    {VMT 0x28}function SetPitch(lPitch: LONG): HRESULT; virtual; stdcall;
+    {VMT 0x2C}function SetLFO(pLFODesc: LPCDSLFODESC): HRESULT; virtual; stdcall;
+    {VMT 0x30}function SetEG(pEnvelopeDesc: LPCDSENVELOPEDESC): HRESULT; virtual; stdcall;
+    {VMT 0x34}function SetFilter(pFilterDesc: LPCDSFILTERDESC): HRESULT; virtual; stdcall;
+    {VMT 0x38}function SetHeadroom(dwHeadroom: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x3C}function SetOutputBuffer(pOutputBuffer: LPDIRECTSOUNDBUFFER): HRESULT; virtual; stdcall;
+    {VMT 0x40}function SetMixBins(pMixBins: LPCDSMIXBINS): HRESULT; virtual; stdcall;
+    {VMT 0x44}function SetMixBinVolumes(pMixBins: LPCDSMIXBINS): HRESULT; virtual; stdcall;
+    {VMT 0x48}function SetAllParameters(pds3db: LPCDS3DBUFFER; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x4C}function SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x50}function SetConeOrientation(x, y, z: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x54}function SetConeOutsideVolume(lConeOutsideVolume: LONG; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x58}function SetMaxDistance(flMaxDistance: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x5C}function SetMinDistance(flMinDistance: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x60}function SetMode(dwMode, dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x64}function SetPosition(x, y, z: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x68}function SetVelocity(x, y, z: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x6C}function SetDistanceFactor(flDistanceFactor: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x70}function SetDopplerFactor(flDopplerFactor: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x74}function SetRolloffFactor(flRolloffFactor: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x78}function SetRolloffCurve(pflPoints: PFLOAT; dwPointCount, dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x7C}function SetI3DL2Source(pds3db: LPCDSI3DL2BUFFER; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {0x}function Play(dwReserved1, dwReserved2, dwFlags: DWORD): HRESULT; stdcall; virtual;
+    {0x}function PlayEx(rtTimeStamp: REFERENCE_TIME; dwFlags: DWORD): HRESULT; stdcall; virtual;
+    {0x}function Stop(): HRESULT; stdcall; virtual;
+    {0x}function StopEx(rtTimeStamp: REFERENCE_TIME; dwFlags: DWORD): HRESULT; stdcall; virtual;
+    {VMT 0x80}function Pause(dwPause: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x84}function PauseEx(rtTimestamp: REFERENCE_TIME; dwPause: DWORD): HRESULT; virtual; stdcall;
+    {0x}function SetPlayRegion(dwPlayStart, dwPlayLength: DWORD): HRESULT; stdcall; virtual;
+    {0x}function SetLoopRegion(dwLoopStart, dwLoopLength: DWORD): HRESULT; stdcall; virtual;
+    {0x}function GetStatus(pdwStatus: LPDWORD): HRESULT; stdcall; virtual;
+    {0x}function GetCurrentPosition(pdwPlayCursor: LPDWORD; pdwWriteCursor: LPDWORD): HRESULT; stdcall; virtual;
+    {0x}function SetCurrentPosition(dwPlayCursor: DWORD): HRESULT; stdcall; virtual;
+    {0x}function SetBufferData(pvBufferData: LPVOID; dwBufferBytes: DWORD): HRESULT; stdcall; virtual;
+    {0x}function Lock(dwOffset, dwBytes: DWORD; ppvAudioPtr1: PLPVOID; pdwAudioBytes1: LPDWORD; ppvAudioPtr2: PLPVOID; pdwAudioBytes2: LPDWORD; dwFlags: DWORD): HRESULT; stdcall; virtual;
+    {0x}function Unlock(pvLock1: LPVOID; dwLockSize1: DWORD; pvLock2: LPVOID; dwLockSize2: DWORD): HRESULT; stdcall; virtual;
+    {0x}function Restore(): HRESULT; stdcall; virtual;
+    {0x}function SetNotificationPositions(dwNotifyCount: DWORD; paNotifies: LPCDSBPOSITIONNOTIFY): HRESULT; stdcall; virtual;
+    {VMT 0x8C}function GetVoiceProperties(pVoiceProps: LPDSVOICEPROPS): HRESULT; virtual; stdcall;
+  end;
+*)
   TIDirectSoundStream = class(TXMediaObject)
   // Branch:Dxbx  Translator:PatrickvL  Done:100
   public
@@ -390,41 +444,41 @@ type
     {VMT 0x00}function AddRef(): ULONG; override; stdcall;
     {VMT 0x04}function Release(): ULONG; override; stdcall;
     // XMediaObject interface :
-    {VMT 0x08}function GetInfo(pInfo: LPXMEDIAINFO): HRESULT; stdcall; // virtual;  override; stdcall;
-    {VMT 0x0C}function GetStatus(pdwStatus: PDWORD): HRESULT; stdcall; // virtual;  override; stdcall;
-    {VMT 0x10}function Process(pInputBuffer: PXMEDIAPACKET; pOutputBuffer: PXMEDIAPACKET): HRESULT; stdcall; // virtual;  override; stdcall;
-    {VMT 0x14}function Discontinuity(): HRESULT; stdcall; // virtual;  override; stdcall;
-    {VMT 0x18}function Flush(): HRESULT; stdcall; // virtual;  override; stdcall;
+    {VMT 0x08}function GetInfo(pInfo: LPXMEDIAINFO): HRESULT; override; stdcall;
+    {VMT 0x0C}function GetStatus(pdwStatus: PDWORD): HRESULT; override; stdcall;
+    {VMT 0x10}function Process(pInputBuffer: PXMEDIAPACKET; pOutputBuffer: PXMEDIAPACKET): HRESULT; override; stdcall;
+    {VMT 0x14}function Discontinuity(): HRESULT; override; stdcall;
+    {VMT 0x18}function Flush(): HRESULT; override; stdcall;
     // IDirectSoundStream interface :
-    {VMT 0x1C}function SetFormat(pwfxFormat: LPCWAVEFORMATEX): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x20}function SetFrequency(dwFrequency: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x24}function SetVolume(lVolume: LONG): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x28}function SetPitch(lPitch: LONG): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x2C}function SetLFO(pLFODesc: LPCDSLFODESC): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x30}function SetEG(pEnvelopeDesc: LPCDSENVELOPEDESC): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x34}function SetFilter(pFilterDesc: LPCDSFILTERDESC): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x38}function SetHeadroom(dwHeadroom: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x3C}function SetOutputBuffer(pOutputBuffer: LPDIRECTSOUNDBUFFER): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x40}function SetMixBins(pMixBins: LPCDSMIXBINS): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x44}function SetMixBinVolumes(pMixBins: LPCDSMIXBINS): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x48}function SetAllParameters(pds3db: LPCDS3DBUFFER; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x4C}function SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x50}function SetConeOrientation(x, y, z: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x54}function SetConeOutsideVolume(lConeOutsideVolume: LONG; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x58}function SetMaxDistance(flMaxDistance: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x5C}function SetMinDistance(flMinDistance: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x60}function SetMode(dwMode, dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x64}function SetPosition(x, y, z: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x68}function SetVelocity(x, y, z: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x6C}function SetDistanceFactor(flDistanceFactor: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x70}function SetDopplerFactor(flDopplerFactor: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x74}function SetRolloffFactor(flRolloffFactor: FLOAT; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x78}function SetRolloffCurve(pflPoints: PFLOAT; dwPointCount, dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x7C}function SetI3DL2Source(pds3db: LPCDSI3DL2BUFFER; dwApply: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x80}function Pause(dwPause: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x84}function PauseEx(rtTimestamp: REFERENCE_TIME; dwPause: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x88}function FlushEx(rtTimeStamp: REFERENCE_TIME; dwFlags: DWORD): HRESULT; stdcall; // virtual;  virtual; stdcall;
-    {VMT 0x8C}function GetVoiceProperties(pVoiceProps: LPDSVOICEPROPS): HRESULT; stdcall; // virtual;  virtual; stdcall;
+    {VMT 0x1C}function SetFormat(pwfxFormat: LPCWAVEFORMATEX): HRESULT; virtual; stdcall;
+    {VMT 0x20}function SetFrequency(dwFrequency: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x24}function SetVolume(lVolume: LONG): HRESULT; virtual; stdcall;
+    {VMT 0x28}function SetPitch(lPitch: LONG): HRESULT; virtual; stdcall;
+    {VMT 0x2C}function SetLFO(pLFODesc: LPCDSLFODESC): HRESULT; virtual; stdcall;
+    {VMT 0x30}function SetEG(pEnvelopeDesc: LPCDSENVELOPEDESC): HRESULT; virtual; stdcall;
+    {VMT 0x34}function SetFilter(pFilterDesc: LPCDSFILTERDESC): HRESULT; virtual; stdcall;
+    {VMT 0x38}function SetHeadroom(dwHeadroom: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x3C}function SetOutputBuffer(pOutputBuffer: LPDIRECTSOUNDBUFFER): HRESULT; virtual; stdcall;
+    {VMT 0x40}function SetMixBins(pMixBins: LPCDSMIXBINS): HRESULT; virtual; stdcall;
+    {VMT 0x44}function SetMixBinVolumes(pMixBins: LPCDSMIXBINS): HRESULT; virtual; stdcall;
+    {VMT 0x48}function SetAllParameters(pds3db: LPCDS3DBUFFER; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x4C}function SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x50}function SetConeOrientation(x, y, z: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x54}function SetConeOutsideVolume(lConeOutsideVolume: LONG; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x58}function SetMaxDistance(flMaxDistance: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x5C}function SetMinDistance(flMinDistance: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x60}function SetMode(dwMode, dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x64}function SetPosition(x, y, z: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x68}function SetVelocity(x, y, z: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x6C}function SetDistanceFactor(flDistanceFactor: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x70}function SetDopplerFactor(flDopplerFactor: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x74}function SetRolloffFactor(flRolloffFactor: FLOAT; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x78}function SetRolloffCurve(pflPoints: PFLOAT; dwPointCount, dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x7C}function SetI3DL2Source(pds3db: LPCDSI3DL2BUFFER; dwApply: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x80}function Pause(dwPause: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x84}function PauseEx(rtTimestamp: REFERENCE_TIME; dwPause: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x88}function FlushEx(rtTimeStamp: REFERENCE_TIME; dwFlags: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x8C}function GetVoiceProperties(pVoiceProps: LPDSVOICEPROPS): HRESULT; virtual; stdcall;
   public
     // cached data
     EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer;
@@ -4561,6 +4615,51 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuCDirectSound_SetVelocity name PatchPrefix + 'DirectSound.CDirectSound.SetVelocity',
   XTL_EmuCDirectSound_SynchPlayback name PatchPrefix + 'DirectSound.CDirectSound.SynchPlayback',
 
+(*
+  XTL_EmuCDirectSoundBuffer_GetCurrentPosition name PatchPrefix + 'DirectSound.CDirectSoundBuffer.GetCurrentPosition',
+  XTL_EmuCDirectSoundBuffer_GetStatus name PatchPrefix + 'DirectSound.CDirectSoundBuffer.GetStatus',
+  XTL_EmuCDirectSoundBuffer_GetVoiceProperties name PatchPrefix + 'DirectSound.CDirectSoundBuffer.GetVoiceProperties',
+  XTL_EmuCDirectSoundBuffer_Lock name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Lock',
+  XTL_EmuCDirectSoundBuffer_Pause name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Pause',
+  XTL_EmuCDirectSoundBuffer_PauseEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.PauseEx',
+  XTL_EmuCDirectSoundBuffer_Play name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Play',
+  XTL_EmuCDirectSoundBuffer_PlayEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.PlayEx',
+  XTL_EmuCDirectSoundBuffer_Restore name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Restore',
+  XTL_EmuCDirectSoundBuffer_SetAllParameters name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetAllParameters',
+  XTL_EmuCDirectSoundBuffer_SetBufferData name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetBufferData',
+  XTL_EmuCDirectSoundBuffer_SetConeAngles name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetConeAngles',
+  XTL_EmuCDirectSoundBuffer_SetConeOrientation name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetConeOrientation',
+  XTL_EmuCDirectSoundBuffer_SetConeOutsideVolume name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetConeOutsideVolume',
+  XTL_EmuCDirectSoundBuffer_SetCurrentPosition name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetCurrentPosition',
+  XTL_EmuCDirectSoundBuffer_SetDistanceFactor name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetDistanceFactor',
+  XTL_EmuCDirectSoundBuffer_SetDopplerFactor name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetDopplerFactor',
+  XTL_EmuCDirectSoundBuffer_SetEG name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetEG',
+  XTL_EmuCDirectSoundBuffer_SetFilter name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetFilter',
+  XTL_EmuCDirectSoundBuffer_SetFormat name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetFormat',
+  XTL_EmuCDirectSoundBuffer_SetFrequency name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetFrequency',
+  XTL_EmuCDirectSoundBuffer_SetHeadroom name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetHeadroom',
+  XTL_EmuCDirectSoundBuffer_SetI3DL2Source name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetI3DL2Source',
+  XTL_EmuCDirectSoundBuffer_SetLFO name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetLFO',
+  XTL_EmuCDirectSoundBuffer_SetLoopRegion name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetLoopRegion',
+  XTL_EmuCDirectSoundBuffer_SetMaxDistance name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMaxDistance',
+  XTL_EmuCDirectSoundBuffer_SetMinDistance name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMinDistance',
+  XTL_EmuCDirectSoundBuffer_SetMixBins name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMixBins',
+  XTL_EmuCDirectSoundBuffer_SetMixBinVolumes name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMixBinVolumes',
+  XTL_EmuCDirectSoundBuffer_SetMode name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetMode',
+  XTL_EmuCDirectSoundBuffer_SetNotificationPositions name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetNotificationPositions',
+  XTL_EmuCDirectSoundBuffer_SetOutputBuffer name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetOutputBuffer',
+  XTL_EmuCDirectSoundBuffer_SetPitch name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPitch',
+  XTL_EmuCDirectSoundBuffer_SetPlayRegion name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPlayRegion',
+  XTL_EmuCDirectSoundBuffer_SetPosition name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetPosition',
+  XTL_EmuCDirectSoundBuffer_SetRolloffCurve name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetRolloffCurve',
+  XTL_EmuCDirectSoundBuffer_SetRolloffFactor name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetRolloffFactor',
+  XTL_EmuCDirectSoundBuffer_SetVelocity name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetVelocity',
+  XTL_EmuCDirectSoundBuffer_SetVolume name PatchPrefix + 'DirectSound.CDirectSoundBuffer.SetVolume',
+  XTL_EmuCDirectSoundBuffer_Stop name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Stop',
+  XTL_EmuCDirectSoundBuffer_StopEx name PatchPrefix + 'DirectSound.CDirectSoundBuffer.StopEx',
+  XTL_EmuCDirectSoundBuffer_Unlock name PatchPrefix + 'DirectSound.CDirectSoundBuffer.Unlock',
+*)
+
 //  XTL_EmuCDirectSoundStream_AddRef name PatchPrefix + 'DirectSound.CDirectSoundStream.AddRef',
 //  XTL_EmuCDirectSoundStream_Discontinuity name PatchPrefix + 'DirectSound.CDirectSoundStream.Discontinuity',
 //  XTL_EmuCDirectSoundStream_Flush name PatchPrefix + 'DirectSound.CDirectSoundStream.Flush',
@@ -4641,8 +4740,10 @@ exports // Keep this list sorted, with newlines between patch groups :
   XTL_EmuIDirectSoundBuffer_AddRef,
   XTL_EmuIDirectSoundBuffer_GetCurrentPosition,
   XTL_EmuIDirectSoundBuffer_GetStatus,
+  XTL_EmuIDirectSoundBuffer_GetVoiceProperties,
   XTL_EmuIDirectSoundBuffer_Lock,
   XTL_EmuIDirectSoundBuffer_Pause,
+  //XTL_EmuIDirectSoundBuffer_PauseEx,
   XTL_EmuIDirectSoundBuffer_Play,
   XTL_EmuIDirectSoundBuffer_PlayEx,
   XTL_EmuIDirectSoundBuffer_QueryInterface,
