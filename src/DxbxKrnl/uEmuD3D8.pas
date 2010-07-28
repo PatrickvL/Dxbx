@@ -2260,7 +2260,7 @@ begin
 {$ENDIF}
 
   // Dxbx addition : This is safer than a hardcoded call to UnlockRect like Cxbx does :
-  DxbxUnlockD3DResource(pSourceSurface);
+  DxbxUnlockD3DResource(pSourceSurface); // Dxbx addition
 //  IDirect3DSurface8(pSourceSurface.Emu.Surface8).UnlockRect();
 
   { MARKED OUT BY CXBX
@@ -4034,7 +4034,11 @@ begin
 
   // Dxbx Note : As suggested by StrikerX3, as a fix for missing textures in Panzer :
   // Make sure the texture has no locks, otherwise we get blank polygons
-  DxbxUnlockD3DResource(pTexture);
+
+  if not IsSpecialResource(pTexture.Data) and not ((pTexture.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
+  begin
+    DxbxUnlockD3DResource(pTexture);
+  end;
 
   // hRet = IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
   Result := IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(iif((g_iWireframe = 0), pBaseTexture8, nil)));
