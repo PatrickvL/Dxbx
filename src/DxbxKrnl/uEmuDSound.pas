@@ -2358,7 +2358,10 @@ begin
         #13#10');',
         [Self, pwfxFormat]);
 
-  Result := DS_OK;
+  // TODO: implement this
+  //Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(pwfxFormat);
+
+  Result := ds_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -2379,12 +2382,9 @@ begin
          #13#10');',
          [Self, dwFrequency]);
 
-//    HRESULT hRet = IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(dwFrequency);
+  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(dwFrequency);
 
   EmuSwapFS(fsXbox);
-
-//    return hRet;
-  Result := S_OK;
 end;
 
 
@@ -2406,12 +2406,9 @@ begin
 
   // TODO -oCXBX: Ensure that 4627 & 4361 are intercepting far enough back
   // (otherwise pThis is manipulated!)
-//    HRESULT hRet = IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
+  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume);
 
   EmuSwapFS(fsXbox);
-
-//    return hRet;
-  Result := S_OK;
 end;
 
 function TIDirectSoundBuffer.SetPitch
@@ -2431,9 +2428,9 @@ begin
          [Self, lPitch]);
 
   // TODO -oCXBX: Translate params, then make the PC DirectSound call
-  EmuSwapFS(fsXbox);
+  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lPitch);
 
-  Result := DS_OK;
+  EmuSwapFS(fsXbox);
 end;
 
 function TIDirectSoundBuffer.SetLFO
