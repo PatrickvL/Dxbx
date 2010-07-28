@@ -26,6 +26,7 @@ uses
   Windows, // for DWord
   SysUtils, // for Format
   StrUtils, // for IfThen
+  IniFiles, // for TIniFile
   Classes,
   Controls,
   Dialogs, // for MessageDlg
@@ -363,28 +364,39 @@ var
   FuncStr, AddrStr: string;
   Addr: Pointer;
 begin
+  with TIniFile.Create(aCacheFile) do
+  try
+    ReadSectionValues('Symbols', aStringList);
+  finally
+    Free;
+  end;
+
   with aStringList do
   begin
-    LoadFromFile(aCacheFile);
     // Split up each line into name and address, putting the name back as a string
     // and the address in the Object column :
     for i := 0 to Count - 1 do
     begin
       FuncStr := Strings[i];
 
-      j := Pos(':$', FuncStr); // TODO : Use LastPos here
+      // In the [Symbols] section, each line looks like this :
+      // ?Pause@CDirectSoundStream@DirectSound@@QAGJK@Z=$000CCDB1;DirectSound.CDirectSoundStream.Pause
+      // ^-------mangled function name----------------^ ^address^ ^----unmangled function name-------^
+
+      // Find the split-location :
+      j := Pos('=$', FuncStr);
       if j > 0 then
       begin
-        AddrStr := Copy(FuncStr, j + 2, MaxInt);
-        System.Delete(FuncStr, j, MaxInt);
-
+        // Get the 8-digit memory address from this position (the additional unmangled name is ignored),
+        // Convert that address to a pointer, and put that in the Object-part of the output StringList :
+        AddrStr := Copy(FuncStr, j + 2, 8);
         Addr := Pointer(HexToIntDef(AddrStr, 0));
-      end
-      else
-        Addr := nil;
+        Objects[i] := TObject(Addr);
 
-      Strings[i] := FuncStr;
-      Objects[i] := TObject(Addr);
+        // Extract the mangled function name, and put that in the String-part of the output StringList :
+        System.Delete(FuncStr, j, MaxInt);
+        Strings[i] := FuncStr;
+      end;
     end;
 
     // Sort the list on address :
@@ -576,7 +588,7 @@ begin
 
   WriteLog('DXBX: Reading Certificate...OK');
 
-  m_szAsciiTitle := Trim(WideCharToString(m_Certificate.wszTitleName));
+  m_szAsciiTitle := Trim(WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH));
   if m_szAsciiTitle <> '' then
     WriteLog('DXBX: Title identified as ' + m_szAsciiTitle)
   else
@@ -746,7 +758,7 @@ end; // TXbe.GetTLSData
 function TXbe.DetermineDumpFileName: string;
 begin
   // Use Title, or when that's empty, the parent folder name : 
-  Result := WideCharToString(m_Certificate.wszTitleName);
+  Result := WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH);
   if Result = '' then
     Result := 'xbe';
 

@@ -704,7 +704,7 @@ begin
 
       // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
 
-      AsciiTitle := XbeCert.wszTitleName; // No wcstombs needed, Delphi does this automatically
+      AsciiTitle := string(WideCharMaxLenToString(XbeCert.wszTitleName, XBE_TITLENAME_MAXLENGTH));
     end;
 
     AsciiTitle := 'Dxbx: Emulating ' + AsciiTitle;
@@ -1785,7 +1785,11 @@ begin
   Result := D3D_OK;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetBackBufferScale(x, y: FLOAT); stdcall;
+procedure XTL_EmuIDirect3DDevice8_SetBackBufferScale
+(
+  x: FLOAT;
+  y: FLOAT
+); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -10335,7 +10339,10 @@ begin
   Result := S_OK;
 end;
 
-procedure XTL_EmuXMETAL_StartPush(Unknown: Pvoid); stdcall;
+procedure XTL_EmuXMETAL_StartPush
+(
+  Unknown: Pvoid
+); stdcall;
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -10354,7 +10361,10 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-function XTL_EmuIDirect3DDevice8_GetModelView(pModelView: PD3DXMATRIX): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_GetModelView
+(
+  pModelView: PD3DXMATRIX
+): HRESULT; stdcall;
 // Branch:shogun  Revision:161  Translator:PatrickvL  Done:100
 var
   mtxWorld, mtxView: TD3DXMATRIX;
@@ -10380,7 +10390,10 @@ begin
   Result := S_OK;
 end;
 
-function XTL_EmuIDirect3DDevice8_SetBackMaterial(pMaterial: PD3DMATERIAL8): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_SetBackMaterial
+(
+  pMaterial: PD3DMATERIAL8
+): HRESULT; stdcall;
 // Branch:shogun  Revision:161  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -10402,18 +10415,21 @@ end;
 
 // -- NEW METHODS
 
-function XTL_EmuIDirect3DDevice8_GetRasterStatus(pRasterStatus: PD3DRASTER_STATUS): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_GetRasterStatus
+(
+  pRasterStatus: PD3DRASTER_STATUS
+): HRESULT; stdcall;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetBackMaterial' +
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetRasterStatus' +
       #13#10'(' +
       #13#10'   pRasterStatus      : 0x%.08X' +
       #13#10');', [pRasterStatus]);
 {$ENDIF}
 
-  Result := IDirect3DDevice8(g_pD3DDevice8).GetRasterStatus(pRasterStatus);
+  Result := IDirect3DDevice8(g_pD3DDevice8).GetRasterStatus({out}pRasterStatus^);
 
   EmuSwapFS(fsXbox);
 end;

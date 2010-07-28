@@ -28,6 +28,7 @@ uses
   Windows,
   SysUtils,
   Classes,
+  IniFiles,
   FileCtrl, // ForceDirectories
   // Dxbx
   uConsts,
@@ -146,7 +147,7 @@ type
 
     class function CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
     function LoadSymbolsFromCache(const aCacheFile: string): Boolean;
-    procedure SaveSymbolsToCache(const aCacheFile: string);
+    procedure SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
   end;
 
 var
@@ -253,7 +254,7 @@ end;
 
 function TSymbolInformation.GetSymbolReference(const aIndex: Integer): PStoredSymbolReference;
 begin
-  Result := SymbolManager.PatternTrieReader.GetSymbolReference(StoredLibraryFunction.FirstSymbolReference + aIndex);
+  Result := SymbolManager.PatternTrieReader.GetSymbolReference(StoredLibraryFunction.FirstSymbolReference + Cardinal(aIndex));
 {$IFDEF DXBX_RECTYPE}
   Assert(Result.RecType = rtStoredSymbolReference, 'StoredSymbolReference type mismatch!');
 {$ENDIF}
@@ -900,7 +901,7 @@ var
 
   procedure _CheckStringToFunctionMappings;
   var
-    s, f, i: Integer;
+    s, f: Integer;
     Str: AnsiString;
     sh: PStoredStringHeader;
     FuncName: AnsiString;
@@ -908,10 +909,10 @@ var
     for s := 0 to PatternTrieReader.StoredSignatureTrieHeader.StringTable.NrOfStrings - 1 do
     begin
       sh := PatternTrieReader.GetStringHeader(s);
-      str := PatternTrieReader.GetString(s);
+      str := AnsiString(PatternTrieReader.GetString(s));
       for f := 0 to Integer(sh.NrOfFunctions) - 1 do
       begin
-        FuncName := PatternTrieReader.GetFunctionName(sh.FirstFunctionIndex + f);
+        FuncName := AnsiString(PatternTrieReader.GetFunctionName(sh.FirstFunctionIndex + Cardinal(f)));
         Assert(FuncName = Str);
       end;
     end;
@@ -1448,8 +1449,6 @@ procedure TSymbolManager.DetermineFinalLocations;
     end; // for Symbols
   end; // _PrintLocationList
 
-var
-  i: Integer;
 begin // DetermineFinalLocations
 
   _AddMissingSymbols;
@@ -1599,19 +1598,24 @@ begin
 
   // After detection of all symbols, see if we need to save that to cache :
   if CacheFileNameStr <> '' then
-    SaveSymbolsToCache(CacheFileNameStr);
+    SaveSymbolsToCache(pXbeHeader, CacheFileNameStr);
 
 end; // DxbxScanForLibraryAPIs
 
 class function TSymbolManager.CacheFileName(const pXbeHeader: PXBEIMAGE_HEADER): string;
+var
+  m_Certificate: PXBE_CERTIFICATE;
 begin
   CRC32Init();
   ReinitXbeImageHeader;
+  m_Certificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
   Result := SymbolCacheFolder
           // TitleID
-          + IntToHex(PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr).dwTitleId, 8)
+          + IntToHex(m_Certificate.dwTitleId, 8)
           // + CRC32 over XbeHeader :
           + '_' + IntToHex(CRC32(PByte(pXbeHeader), {Len=}pXbeHeader.dwSizeofHeaders), 8)
+          // TitleName
+          + '_' + string(WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH))
           + SymbolCacheFileExt;
   ReinitExeImageHeader;
 end;
@@ -1656,11 +1660,15 @@ begin
 {$ENDIF}
 end; // LoadSymbolsFromCache
 
-procedure TSymbolManager.SaveSymbolsToCache(const aCacheFile: string);
+procedure TSymbolManager.SaveSymbolsToCache(const pXbeHeader: PXBEIMAGE_HEADER; const aCacheFile: string);
 var
   i: Integer;
   Symbol: TSymbolInformation;
+  m_Certificate: PXBE_CERTIFICATE;
 begin
+  if Count <= 0 then
+    Exit;
+
   if not ForceDirectories(ExtractFilePath(aCacheFile)) then
     Exit;
 
@@ -1669,12 +1677,30 @@ begin
     for i := 0 to Self.Count - 1 do
     begin
       Symbol := Locations[i];
-      AddObject(Symbol.Name + ':$' + IntToHex(Integer(Symbol.Address), 8), TObject(Symbol.Address));
+      AddObject(Symbol.Name, TObject(Symbol.Address));
     end;
 
     CustomSort(@SortObjects);
 
-    SaveToFile(aCacheFile);
+    with TIniFile.Create(aCacheFile) do
+    try
+      // Remove the entire [Symbols] section :
+      EraseSection('Symbols');
+
+      // Add some Xbe info into a separate section, can be expanded upon later :
+      m_Certificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
+      WriteString('XbeInfo', 'TitleID', IntToHex(m_Certificate.dwTitleId, 8));
+      WriteString('XbeInfo', 'TitleName', string(WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH)));
+
+      // (Re)generate the complete [Symbols] section :
+      // In the [Symbols] section, each line looks like this :
+      // ?Pause@CDirectSoundStream@DirectSound@@QAGJK@Z=$000CCDB1;DirectSound.CDirectSoundStream.Pause
+      // ^-------mangled function name----------------^ ^address^ ^----unmangled function name-------^
+      for i := 0 to Count - 1 do
+        WriteString('Symbols', Strings[i], Format('$%.8x;%s', [Integer(Objects[i]), DxbxUnmangleSymbolName(Strings[i])]));
+    finally
+      Free;
+    end;
   finally
     Free;
   end;
