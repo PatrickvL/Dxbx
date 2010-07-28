@@ -10399,6 +10399,25 @@ begin
   Result := S_OK;
 end;
 
+
+// -- NEW METHODS
+
+function XTL_EmuIDirect3DDevice8_GetRasterStatus(pRasterStatus: PD3DRASTER_STATUS): HRESULT; stdcall;
+begin
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetBackMaterial' +
+      #13#10'(' +
+      #13#10'   pRasterStatus      : 0x%.08X' +
+      #13#10');', [pRasterStatus]);
+{$ENDIF}
+
+  Result := IDirect3DDevice8(g_pD3DDevice8).GetRasterStatus(pRasterStatus);
+
+  EmuSwapFS(fsXbox);
+end;
+
 exports
   XTL_EmuGet2DSurfaceDesc,
   XTL_EmuGet2DSurfaceDescD, // TODO -oDXBX: Fix wrong prefix!
@@ -10475,6 +10494,7 @@ exports
   XTL_EmuIDirect3DDevice8_GetModelView name PatchPrefix + 'D3DDevice_GetModelView', // ??
   XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
   XTL_EmuIDirect3DDevice8_GetProjectionViewportMatrix name PatchPrefix + 'D3DDevice_GetProjectionViewportMatrix',
+  XTL_EmuIDirect3DDevice8_GetRasterStatus name PatchPrefix + 'D3DDevice_GetRasterStatus',
   XTL_EmuIDirect3DDevice8_GetRenderTarget name PatchPrefix + 'D3DDevice_GetRenderTarget',
   XTL_EmuIDirect3DDevice8_GetRenderTarget2 name PatchPrefix + 'D3DDevice_GetRenderTarget2',
   XTL_EmuIDirect3DDevice8_GetShaderConstantMode name PatchPrefix + 'D3DDevice_GetShaderConstantMode',
