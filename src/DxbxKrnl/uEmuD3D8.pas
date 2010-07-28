@@ -421,8 +421,18 @@ begin
   PreviousPerformanceCounter.QuadPart := 0;
   TicksToWait := aTicksToWait;
 
-  // Calculate how many ticks pass during Sleep(1) :
-  TicksPerSleep1 := int(PerformanceCounterFrequency.QuadPart * 2 div MillisecondsPerSecond);
+  // Calculate how many ticks pass during Sleep(1), by using the Performance counter
+  // frequency (which is measured in ticks per second) and dividing that by 1000
+  // to get the number of ticks per millisecond (which is the unit of time Sleep
+  // works with) :
+  TicksPerSleep1 := int(PerformanceCounterFrequency.QuadPart div MillisecondsPerSecond);
+
+  // However, Sleep(1) actually sleeps around 1-2 ms (*if* timeBeginPeriod(1) is called,
+  // otherwise it would Sleep almost 10 ms!). If we worked with the lower bound, any deviation
+  // would mean we would overshoot the waiting period. Using the average (1,5 ms) might sound
+  // better, but still has the same behaviour. Only when we use the upper bound (2 ms), the risk
+  // of overshooting our waiting period is reduced to near-never. So factor that in here :
+  TicksPerSleep1 := TicksPerSleep1 * 2;
 
   // Raise the accuracy of Sleep to it's maximum :
   timeBeginPeriod(1);
@@ -449,7 +459,7 @@ end;
 procedure DxbxTimer.Wait;
 var
   TicksPassed: int;
-  TicksLeft: int;
+  TicksToWait: int;
 //  i: int;
 begin
   // Note : Even though we used timeBeginPeriod, Sleep is not really accurate.
@@ -463,27 +473,50 @@ begin
   begin
     while True do
     begin
+      // Get current performance counter value :
       QueryPerformanceCounter({var}TLargeInteger(CurrentPerformanceCounter));
 
+      // Calculate how many ticks have passed since last timer expiration :
       TicksPassed := int(CurrentPerformanceCounter.QuadPart - PreviousPerformanceCounter.QuadPart);
-      if (TicksPassed <= 0) then // time wrap
+
+      // Safeguard against a time wrap (this can presumably happen sometimes with Performance counters) :
+      if (TicksPassed <= 0) then
         Break;
 
-      TicksLeft := TicksToWait - TicksPassed;
-      if (TicksLeft <= 0) then // time's up
+      // Calculate how many ticks we still have to wait :
+      TicksToWait := TicksToWait - TicksPassed;
+      // Stop this loop when the wait time's up :
+      if (TicksToWait <= 0) then
         Break;
 
-      if (TicksLeft > TicksPerSleep1) then
-        // if > 0.002s left, do Sleep(1), which will actually sleep some
-        //  steady amount, probably 1-2 ms,
-        //  and do so in a nice way (cpu meter drops; laptop battery spared).
-        Sleep(TicksLeft div TicksPerSleep1)
+      // Check if the number of tick we still have to wait, is more than
+      // the number of ticks that would pass when doing a Sleep(1) :
+      if (TicksToWait > TicksPerSleep1) then
+      begin
+        // In this case, we can do the most efficient wait, by Sleep()ing
+        // this thread, which costs the least amount of CPU overhead.
+        // The number of milliseconds we should wait for can be calculated
+        // by dividing the number of TicksToWait by the number of ticks
+        // that passes during a Sleep(1). This way, we Sleep as long as we
+        // possibly can, without risking 'overshooting' our waiting period.
+        // To be safe, we *do* safeguard against EDivByZero, by testing
+        // that the previously calculated TicksPerSleep1 is indeed positive :
+        if TicksPerSleep1 > 0 then
+          Sleep(TicksToWait div TicksPerSleep1)
+        else
+          // If somehow TicksPerSleep1 became 0 (or less!), just Sleep
+          // 1 millisecond (or 2, depending on the system's deviation),
+          // which results in a maximum frequency of about 500 updates
+          // per second. The alternative Sleep(0), as done below, eats
+          // up way to much CPU time, so that's not an option here.
+          Sleep(1);
+      end
       else
-        // otherwise, do a few Sleep(0)'s, which just give up the timeslice,
-        //  but don't really save cpu or battery, but do pass a tiny
-        //  amount of time.
-//        for i := 0 to 10-1 do
-          Sleep(0); // causes thread to give up its timeslice
+        // If the TicksToWait is less then the time for a Sleep(1),
+        // then just give up this timeslice. If this happens a lot,
+        // it will incur much CPU usage (with all the thread switching
+        // going on), but it would at least spend a tiny amount of time:
+        Sleep(0); // This causes thread to give up its timeslice
     end; // while True
   end;
 
