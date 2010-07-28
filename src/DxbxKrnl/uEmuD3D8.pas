@@ -304,6 +304,10 @@ begin
   if not Result then
     Exit;
 
+  if IsSpecialResource(pResource.Data) and ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
+    Exit;
+
+
   case (IDirect3DResource8(pResource.Emu.Resource8).GetType()) of
     D3DRTYPE_SURFACE:
       IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect();
@@ -4035,11 +4039,7 @@ begin
   // Dxbx Note : As suggested by StrikerX3, as a fix for missing textures in Panzer :
   // Make sure the texture has no locks, otherwise we get blank polygons
 
-  if not IsSpecialResource(pTexture.Data) and not ((pTexture.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
-  begin
-    DxbxUnlockD3DResource(pTexture);
-  end;
-
+  DxbxUnlockD3DResource(pTexture);
   // hRet = IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, pDummyTexture[Stage]); // MARKED OUT BY CXBX
   Result := IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DBaseTexture8(iif((g_iWireframe = 0), pBaseTexture8, nil)));
 
