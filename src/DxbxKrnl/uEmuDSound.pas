@@ -3961,7 +3961,8 @@ begin
       #13#10');',
       [Self, pInputBuffer, pOutputBuffer]);
 
-  if (Self.EmuDirectSoundBuffer8 <> NULL) then
+  if  (Self <> nil)
+  and (Self.EmuDirectSoundBuffer8 <> NULL) then
   begin
     // update buffer data cache
     Self.EmuBuffer := pInputBuffer.pvBuffer;
@@ -4027,11 +4028,23 @@ function TIDirectSoundStream.SetFormat
 (
   pwfxFormat: LPCWAVEFORMATEX
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSoundStream.SetFormat');
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuDSound : TIDirectSoundStream.SetFormat' +
+      #13#10'(' +
+      #13#10'   pStream                   : 0x%.08X' +
+      #13#10'   pwfxFormat                : 0x%.08X' +
+      #13#10');',
+      [Self, pwfxFormat]);
+
+  if  (Self <> nil)
+  and (Self.EmuDirectSoundBuffer8 <> NULL) then
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFormat(pwfxFormat)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -4052,10 +4065,14 @@ begin
       #13#10');',
       [Self, dwFrequency]);
 
-  // TODO -oCXBX: Actually implement this
+  if  (Self <> nil)
+  and (Self.EmuDirectSoundBuffer8 <> NULL) then
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetFrequency(dwFrequency)
+  else
+    Result := DS_OK;
+
   EmuSwapFS(fsXbox);
 
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetVolume
@@ -4074,11 +4091,13 @@ begin
       #13#10');',
       [Self, lVolume]);
 
-  // TODO -oCXBX: Actually SetVolume
+  if  (Self <> nil)
+  and (Self.EmuDirectSoundBuffer8 <> NULL) then
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).SetVolume(lVolume)
+  else
+    Result := DS_OK;
 
   EmuSwapFS(fsXbox);
-
-  Result := DS_OK;
 end;
 
 function TIDirectSoundStream.SetPitch

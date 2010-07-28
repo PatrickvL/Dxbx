@@ -140,6 +140,8 @@ function StartsWithString(const aString, aPrefix: AnsiString): Boolean;
 function StartsWithText(const aString, aPrefix: AnsiString): Boolean; overload;
 function StartsWithText(const aString, aPrefix: UnicodeString): Boolean; overload;
 
+function WideCharMaxLenToString(Source: PWideChar; MaxLen: Integer): UnicodeString;
+
 procedure Swap(var aElement1, aElement2); overload;
 function RoundUp(dwValue, dwMult: DWord): DWord;
 
@@ -435,6 +437,20 @@ end;
 function StartsWithText(const aString, aPrefix: UnicodeString): Boolean; // overload
 begin
   Result := AnsiStrLIComp(PWideChar(aString), PWideChar(aPrefix), Length(aPrefix)) = 0;
+end;
+
+function WideCharMaxLenToString(Source: PWideChar; MaxLen: Integer): UnicodeString;
+var
+  ActualLen: Integer;
+begin
+  ActualLen := 0;
+  if Assigned(Source) then
+    while (ActualLen < MaxLen)
+      and (Source[ActualLen] <> #0)do
+        Inc(ActualLen);
+
+  SetLength(Result, ActualLen);
+  memcpy(@Result[1], Source, ActualLen * SizeOf(WideChar));
 end;
 
 function GetEnvVarValue(const VarName: string; Dequote: Boolean = False): string;
