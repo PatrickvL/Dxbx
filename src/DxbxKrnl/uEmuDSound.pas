@@ -45,33 +45,20 @@ uses
   , uEmu // EmuWarning
   ;
 
-// EmuIDirectSoundBuffer_Play flags
-const X_DSBPLAY_LOOPING = $00000001;
-const X_DSBPLAY_FROMSTART = $00000002;
+// Flags for wFormatTag field of WAVEFORMAT
+const X_WAVE_FORMAT_PCM = 1;
+const X_WAVE_FORMAT_XBOX_ADPCM = $0069;
+const X_WAVE_FORMAT_VOXWARE_VR12 = $0077;
+const X_WAVE_FORMAT_VOXWARE_SC03 = $007A;
+const X_WAVE_FORMAT_VOXWARE_SC06 = $007B;
+const X_WAVE_FORMAT_EXTENSIBLE = $FFFE;
 
-// EmuIDirectSoundBuffer_Pause flags
-const X_DSBPAUSE_RESUME = $00000000;
-const X_DSBPAUSE_PAUSE = $00000001;
-const X_DSBPAUSE_SYNCHPLAYBACK = $00000002;
+// Status constants for XMediaObject
+const XMO_STATUSF_ACCEPT_INPUT_DATA           = $00000001;
+const XMO_STATUSF_ACCEPT_OUTPUT_DATA          = $00000002;
+const XMO_STATUSF_MASK                        = $00000003;
 
-const DSB_FLAG_ADPCM = $00000001;
-const WAVE_FORMAT_XBOX_ADPCM = $0069;
-const DSB_FLAG_RECIEVEDATA = $00001000;
-
-// DirectSound Buffer creation flags - Most match to native DirectSound8 :
-
-const X_DSBCAPS_CTRL3D              = $00000010;     // The buffer supports 3D
-const X_DSBCAPS_CTRLFREQUENCY       = $00000020;     // The buffer supports frequency changes
-const X_DSBCAPS_CTRLVOLUME          = $00000080;     // The buffer supports volume changes
-const X_DSBCAPS_CTRLPOSITIONNOTIFY  = $00000100;     // The buffer supports position notifications
-const X_DSBCAPS_MIXIN               = $00002000;     // The buffer is to be used as the destination of a submix operation
-const X_DSBCAPS_LOCDEFER            = $00040000;     // The buffer does not acquire resources at creation
-const X_DSBCAPS_FXIN                = $00080000;     // The buffer is to be used as the destination of a post-effects submix operation
-
-const X_DSSTREAMCAPS_CTRL3D = X_DSBCAPS_CTRL3D;
-const X_DSSTREAMCAPS_LOCDEFER = X_DSBCAPS_LOCDEFER;
-
-// XMEDIAINFO Flags
+// Flags for dwFlags field of XMEDIAINFO
 const XMO_STREAMF_FIXED_SAMPLE_SIZE           = $00000001;      // The object supports only a fixed sample size
 const XMO_STREAMF_FIXED_PACKET_ALIGNMENT      = $00000002;      // The object supports only a fixed packet alignment
 const XMO_STREAMF_INPUT_ASYNC                 = $00000004;      // The object supports receiving input data asynchronously
@@ -79,11 +66,51 @@ const XMO_STREAMF_OUTPUT_ASYNC                = $00000008;      // The object su
 const XMO_STREAMF_IN_PLACE                    = $00000010;      // The object supports in-place modification of data
 const XMO_STREAMF_MASK                        = $0000001F;
 
+// Values for pdwStatus field of XMediaPacket
+const XMEDIAPACKET_STATUS_SUCCESS             = S_OK;
+const XMEDIAPACKET_STATUS_PENDING             = E_PENDING;
+const XMEDIAPACKET_STATUS_FLUSHED             = E_ABORT;
+const XMEDIAPACKET_STATUS_FAILURE             = E_FAIL;
+
+// Flags for dwFlags argument of TIDirectSoundBuffer.Play/PlayEx
+const X_DSBPLAY_LOOPING = $00000001;
+const X_DSBPLAY_FROMSTART = $00000002;
+const X_DSBPLAY_SYNCHPLAYBACK = $00000004;
+
+// EmuIDirectSoundBuffer_Pause flags
+const X_DSBPAUSE_RESUME = $00000000;
+const X_DSBPAUSE_PAUSE = $00000001;
+const X_DSBPAUSE_SYNCHPLAYBACK = $00000002;
+
+// Dxbx note : Shouldn't these be native? Then where's their definition?
+const DSB_FLAG_ADPCM = $00000001;
+const DSB_FLAG_RECIEVEDATA = $00001000;
+
+// DirectSound Buffer creation flags - Most match to native DirectSound8 :
+const X_DSBCAPS_CTRL3D              = $00000010;     // The buffer supports 3D
+const X_DSBCAPS_CTRLFREQUENCY       = $00000020;     // The buffer supports frequency changes
+const X_DSBCAPS_CTRLVOLUME          = $00000080;     // The buffer supports volume changes
+const X_DSBCAPS_CTRLPOSITIONNOTIFY  = $00000100;     // The buffer supports position notifications
+const X_DSBCAPS_MIXIN               = $00002000;     // The buffer is to be used as the destination of a submix operation
+const X_DSBCAPS_MUTE3DATMAXDISTANCE = $00020000;
+const X_DSBCAPS_LOCDEFER            = $00040000;     // The buffer does not acquire resources at creation
+const X_DSBCAPS_FXIN                = $00080000;     // The buffer is to be used as the destination of a post-effects submix operation
+const X_DSBCAPS_FXIN2               = $00100000;
+
+// DirectSound Stream creation flags
+const X_DSSTREAMCAPS_CTRL3D              = X_DSBCAPS_CTRL3D;              // The stream supports 3D
+const X_DSSTREAMCAPS_CTRLFREQUENCY       = X_DSBCAPS_CTRLFREQUENCY;       // The stream supports frequency changes
+const X_DSSTREAMCAPS_CTRLVOLUME          = X_DSBCAPS_CTRLVOLUME;          // The stream supports volume changes
+const X_DSSTREAMCAPS_MUTE3DATMAXDISTANCE = X_DSBCAPS_MUTE3DATMAXDISTANCE; // The 3D stream is muted at max distance and beyond
+const X_DSSTREAMCAPS_LOCDEFER            = X_DSBCAPS_LOCDEFER;            // The stream does not acquire resources at creation
+const X_DSSTREAMCAPS_NOCOALESCE          = $20000000;
+const X_DSSTREAMCAPS_ACCURATENOTIFY      = $40000000;
+
 // X_DSFILTERDESC modes
-const DSFILTER_MODE_BYPASS        = $00000000;      // The filter is bypassed
-const DSFILTER_MODE_DLS2          = $00000001;      // DLS2 mode
-const DSFILTER_MODE_PARAMEQ       = $00000002;      // Parametric equalizer mode
-const DSFILTER_MODE_MULTI         = $00000003;      // Multifunction mode
+const X_DSFILTER_MODE_BYPASS        = $00000000;      // The filter is bypassed
+const X_DSFILTER_MODE_DLS2          = $00000001;      // DLS2 mode
+const X_DSFILTER_MODE_PARAMEQ       = $00000002;      // Parametric equalizer mode
+const X_DSFILTER_MODE_MULTI         = $00000003;      // Multifunction mode
 
 // size of sound buffer cache (used for periodic sound buffer updates)
 const SOUNDBUFFER_CACHE_SIZE = $100;
@@ -108,6 +135,8 @@ type
   LPCDSEFFECTIMAGELOC = Pvoid;
   LPCDSBPOSITIONNOTIFY = Pvoid;
 
+  LPFNXMEDIAOBJECTCALLBACK = procedure (pStreamContext: LPVOID; pPacketContext: LPVOID; dwStatus: DWORD); stdcall;
+
   TIDirectSoundStream = class; // forward
 
    PX_CDirectSoundStream = TIDirectSoundStream; // Dxbx note : Delphi's classes are already pointer-types
@@ -129,13 +158,13 @@ type
 
   _X_DSBUFFERDESC = record
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    dwSize: DWORD;
-    dwFlags: DWORD;
-    dwBufferBytes: DWORD;
-    lpwfxFormat: LPWAVEFORMATEX;
-    lpMixBins: LPVOID;      // TODO -oCXBX: Implement
-    dwInputMixBin: DWORD;
-  end;
+    {0x00}dwSize: DWORD;
+    {0x04}dwFlags: DWORD;
+    {0x08}dwBufferBytes: DWORD;
+    {0x0C}lpwfxFormat: LPWAVEFORMATEX;
+    {0x10}lpMixBins: LPCDSMIXBINS;      // TODO -oCXBX: Implement
+    {0x14}dwInputMixBin: DWORD;
+  end; {=0x18}
    X_DSBUFFERDESC = _X_DSBUFFERDESC;
   PX_DSBUFFERDESC = ^X_DSBUFFERDESC;
   LPCDSBUFFERDESC = PX_DSBUFFERDESC;
@@ -143,13 +172,13 @@ type
 
   _X_DSSTREAMDESC = record
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    dwFlags: DWORD;
-    dwMaxAttachedPackets: DWORD;
-    lpwfxFormat: LPWAVEFORMATEX;
-    lpfnCallback: PVOID;   // TODO -oCXBX: Correct Parameter
-    lpvContext: LPVOID;
-    lpMixBins: PVOID;      // TODO -oCXBX: Correct Parameter
-  end;
+    {0x00}dwFlags: DWORD;
+    {0x04}dwMaxAttachedPackets: DWORD;
+    {0x08}lpwfxFormat: LPWAVEFORMATEX;
+    {0x0C}lpfnCallback: LPFNXMEDIAOBJECTCALLBACK;
+    {0x10}lpvContext: LPVOID;
+    {0x14}lpMixBins: LPCDSMIXBINS;
+  end; {=0x18}
    X_DSSTREAMDESC = _X_DSSTREAMDESC;
   PX_DSSTREAMDESC = ^X_DSSTREAMDESC;
   LPCDSSTREAMDESC = PX_DSSTREAMDESC;
@@ -157,18 +186,17 @@ type
 
   _XMEDIAPACKET = record
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    pvBuffer: LPVOID;
-    dwMaxSize: DWORD;
-    pdwCompletedSize: PDWORD;
-    pdwStatus: PDWORD;
-    case Integer of // union {
-    0: (hCompletionEvent: HANDLE);
-    1: (
-        pContext: PVOID;
+    {0x00}pvBuffer: LPVOID;
+    {0x04}dwMaxSize: DWORD;
+    {0x08}pdwCompletedSize: PDWORD;
+    {0x0C}pdwStatus: PDWORD;
+    {union} case Integer of
+    0: ({0x10}hCompletionEvent: HANDLE);
+    1: ({0x10}pContext: PVOID;
     // end;
-      prtTimestamp: PREFERENCE_TIME;
-    ); // end of union
-  end;
+    {0x14}prtTimestamp: PREFERENCE_TIME;
+    ); // close last union case
+  end; {=0x18}
     XMEDIAPACKET = _XMEDIAPACKET;
    PXMEDIAPACKET = ^XMEDIAPACKET;
   LPXMEDIAPACKET = ^XMEDIAPACKET;
@@ -176,11 +204,11 @@ type
 
   _XMEDIAINFO = record
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    dwFlags: DWORD;
-    dwInputSize: DWORD;
-    dwOutputSize: DWORD;
-    dwMaxLookahead: DWORD;
-  end;
+    {0x00}dwFlags: DWORD;
+    {0x04}dwInputSize: DWORD;
+    {0x08}dwOutputSize: DWORD;
+    {0x0C}dwMaxLookahead: DWORD;
+  end; {=0x10}
     XMEDIAINFO = _XMEDIAINFO;
    PXEIDIAINFO = ^XMEDIAINFO;
   LPXMEDIAINFO = ^XMEDIAINFO;
@@ -188,10 +216,10 @@ type
 
   _X_DSFILTERDESC = record
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    dwMode: DWORD;
-    dwQCoefficient: DWORD;
-    adwCoefficients: array [0..4-1] of DWORD;
-  end;
+    {0x00}dwMode: DWORD;
+    {0x04}dwQCoefficient: DWORD;
+    {0x08}adwCoefficients: array [0..4-1] of DWORD;
+  end; {=0x18}
    X_DSFILTERDESC = _X_DSFILTERDESC;
   PX_DSFILTERDESC = ^X_DSFILTERDESC;
   LPCDSFILTERDESC = PX_DSFILTERDESC;
@@ -199,13 +227,13 @@ type
 
   _DSLFODESC = record
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    dwLFO: DWORD;
-    dwDelay: DWORD;
-    dwDelta: DWORD;
-    lPitchModulation: LONG;
-    lFilterCutOffRange: LONG;
-    lAmplitudeModulation: LONG;
-  end;
+    {0x00}dwLFO: DWORD;
+    {0x04}dwDelay: DWORD;
+    {0x08}dwDelta: DWORD;
+    {0x0C}lPitchModulation: LONG;
+    {0x10}lFilterCutOffRange: LONG;
+    {0x14}lAmplitudeModulation: LONG;
+  end; {=0x18}
      DSLFODESC = _DSLFODESC;
     PDSLFODESC = ^DSLFODESC;
   LPCDSLFODESC = PDSLFODESC;
@@ -237,32 +265,32 @@ type
 
   X_DSOUTPUTLEVELS = record
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    dwAnalogLeftTotalPeak: DWORD;// analog peak
-    dwAnalogRightTotalPeak: DWORD;
-    dwAnalogLeftTotalRMS: DWORD;// analog RMS
-    dwAnalogRightTotalRMS: DWORD;
-    dwDigitalFrontLeftPeak: DWORD;// digital peak levels
-    dwDigitalFrontCenterPeak: DWORD;
-    dwDigitalFrontRightPeak: DWORD;
-    dwDigitalBackLeftPeak: DWORD;
-    dwDigitalBackRightPeak: DWORD;
-    dwDigitalLowFrequencyPeak: DWORD;
-    dwDigitalFrontLeftRMS: DWORD;// digital RMS levels
-    dwDigitalFrontCenterRMS: DWORD;
-    dwDigitalFrontRightRMS: DWORD;
-    dwDigitalBackLeftRMS: DWORD;
-    dwDigitalBackRightRMS: DWORD;
-    dwDigitalLowFrequencyRMS: DWORD;
-  end;
+    {0x00}dwAnalogLeftTotalPeak: DWORD;// analog peak
+    {0x04}dwAnalogRightTotalPeak: DWORD;
+    {0x08}dwAnalogLeftTotalRMS: DWORD;// analog RMS
+    {0x0C}dwAnalogRightTotalRMS: DWORD;
+    {0x10}dwDigitalFrontLeftPeak: DWORD;// digital peak levels
+    {0x14}dwDigitalFrontCenterPeak: DWORD;
+    {0x18}dwDigitalFrontRightPeak: DWORD;
+    {0x1C}dwDigitalBackLeftPeak: DWORD;
+    {0x20}dwDigitalBackRightPeak: DWORD;
+    {0x24}dwDigitalLowFrequencyPeak: DWORD;
+    {0x28}dwDigitalFrontLeftRMS: DWORD;// digital RMS levels
+    {0x2C}dwDigitalFrontCenterRMS: DWORD;
+    {0x30}dwDigitalFrontRightRMS: DWORD;
+    {0x34}dwDigitalBackLeftRMS: DWORD;
+    {0x38}dwDigitalBackRightRMS: DWORD;
+    {0x3C}dwDigitalLowFrequencyRMS: DWORD;
+  end; {=0x40}
   PX_DSOUTPUTLEVELS = ^X_DSOUTPUTLEVELS;
 
 
   _X_DSCAPS = record
-    dwFree2DBuffers: DWORD;
-    dwFree3DBuffers: DWORD;
-    dwFreeBufferSGEs: DWORD;
-    dwMemoryAllocated: DWORD;
-  end;
+    {0x00}dwFree2DBuffers: DWORD;
+    {0x04}dwFree3DBuffers: DWORD;
+    {0x08}dwFreeBufferSGEs: DWORD;
+    {0x0C}dwMemoryAllocated: DWORD;
+  end; {=0x10}
    X_DSCAPS = _X_DSCAPS;
   PX_DSCAPS = ^X_DSCAPS;
    LPDSCAPS = PX_DSCAPS;
@@ -361,6 +389,14 @@ type
     {VMT 0x2C}function GetFileContentDescription(pContentDesc: PWMAXMOFileContDesc): HRESULT; virtual; stdcall;
     {VMT 0x30}function SeekToTime(dwSeek: DWORD; pdwAcutalSeek: LPDWORD): HRESULT; virtual; stdcall;
   end;
+
+  TXAc97MediaObject = class(TXMediaObject)
+  // Branch:Dxbx  Translator:PatrickvL  Done:100
+  public
+    // XAc97MediaObject interface :
+    {VMT 0x1C}function SetMode(dwMode: DWORD): HRESULT; virtual; stdcall;
+    {VMT 0x20}function GetCurrentPosition(pdwMode: LPDWORD): HRESULT; virtual; stdcall;
+  end;
 *)
 
   TIDirectSoundBuffer = class(TObject)
@@ -416,18 +452,19 @@ type
     {VMT 0xAC}function GetVoiceProperties(pVoiceProps: LPDSVOICEPROPS): HRESULT; virtual; stdcall;
   public
   // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-    UnknownA: array [0..$20-1] of BYTE; // Offset: 0x00
-    EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer; // Offset: 0x20
-    UnknownB: array [0..$0C-1] of BYTE; // Offset: 0x24
-    EmuBuffer: PVOID;                   // Offset: 0x30
-    EmuBufferDesc: PDSBUFFERDESC;       // Offset: 0x34
-    EmuLockPtr1: PVOID;                 // Offset: 0x38
-    EmuLockBytes1: DWORD;               // Offset: 0x3C
-    EmuLockPtr2: PVOID;                 // Offset: 0x40
-    EmuLockBytes2: DWORD;               // Offset: 0x44
-    EmuPlayFlags: DWORD;                // Offset: 0x48
-    EmuFlags: DWORD;                    // Offset: 0x4C
-    EmuListener: XTL_PIDirectSoundListener; // Offset: 0x50 Dxbx addition - to support 3D sound emulation through IDirectSound3DListener
+    // TODO -oDxbx: In Cxbx, the following variables start at {0x00} - is that still correct/necessary?
+    {0x00}UnknownA: array [0..$20-1] of BYTE;
+    {0x20}EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer;
+    {0x24}UnknownB: array [0..$0C-1] of BYTE;
+    {0x30}EmuBuffer: PVOID;
+    {0x34}EmuBufferDesc: PDSBUFFERDESC;
+    {0x38}EmuLockPtr1: PVOID;
+    {0x3C}EmuLockBytes1: DWORD;
+    {0x40}EmuLockPtr2: PVOID;
+    {0x44}EmuLockBytes2: DWORD;
+    {0x48}EmuPlayFlags: DWORD;
+    {0x4C}EmuFlags: DWORD;
+    {0x50}EmuListener: XTL_PIDirectSoundListener; // Dxbx addition - to support 3D sound emulation through IDirectSound3DListener
   end;
 
   TIDirectSoundStream = class(TXMediaObject)
@@ -475,15 +512,16 @@ type
   public
     // cached data
     EmuDirectSoundBuffer8: XTL_PIDirectSoundBuffer;
-    EmuBuffer: PVOID;                   // Offset: 0x30
-    EmuBufferDesc: PDSBUFFERDESC;       // Offset: 0x34
-    EmuLockPtr1: PVOID;                 // Offset: 0x38
-    EmuLockBytes1: DWORD;               // Offset: 0x3C
-    EmuLockPtr2: PVOID;                 // Offset: 0x40
-    EmuLockBytes2: DWORD;               // Offset: 0x44
-    EmuPlayFlags: DWORD;                // Offset: 0x48
-    EmuFlags: DWORD;                    // Offset: 0x4C
-    EmuListener: XTL_PIDirectSoundListener; // Offset: 0x50 Dxbx addition - to support 3D sound emulation through IDirectSound3DListener
+    // TODO -oDxbx: In Cxbx, the following variables start at {0x30} - is that still correct/necessary?
+    EmuBuffer: PVOID;
+    EmuBufferDesc: PDSBUFFERDESC;
+    EmuLockPtr1: PVOID;
+    EmuLockBytes1: DWORD;
+    EmuLockPtr2: PVOID;
+    EmuLockBytes2: DWORD;
+    EmuPlayFlags: DWORD;
+    EmuFlags: DWORD;
+    EmuListener: XTL_PIDirectSoundListener; // Dxbx addition - to support 3D sound emulation through IDirectSound3DListener
   end;
 
   XTL_PIDirectSoundStream = type PInterface;
@@ -975,7 +1013,7 @@ begin
       pDSBufferDesc.lpwfxFormat := {PWAVEFORMATEX}DxbxMalloc(sizeof(WAVEFORMATEX) + pdsbd.lpwfxFormat.cbSize);
       memcpy(pDSBufferDesc.lpwfxFormat, pdsbd.lpwfxFormat, sizeof(WAVEFORMATEX));
 
-      if (pDSBufferDesc.lpwfxFormat.wFormatTag = WAVE_FORMAT_XBOX_ADPCM) then
+      if (pDSBufferDesc.lpwfxFormat.wFormatTag = X_WAVE_FORMAT_XBOX_ADPCM) then
       begin
         dwEmuFlags := dwEmuFlags or DSB_FLAG_ADPCM;
 
@@ -1189,7 +1227,7 @@ begin
     if (pDSBufferDesc.lpwfxFormat <> NULL) and (pDSBufferDesc.lpwfxFormat.wFormatTag <> WAVE_FORMAT_PCM) then
     begin
       EmuWarning('Invalid WAVE_FORMAT!');
-      if (pDSBufferDesc.lpwfxFormat.wFormatTag = WAVE_FORMAT_XBOX_ADPCM) then
+      if (pDSBufferDesc.lpwfxFormat.wFormatTag = X_WAVE_FORMAT_XBOX_ADPCM) then
         EmuWarning('WAVE_FORMAT_XBOX_ADPCM Unsupported!');
 
       ppStream^.EmuDirectSoundBuffer8 := nil;
@@ -4752,7 +4790,7 @@ begin
       [nChannels, nSamplesPerSec, pwfx]);
 
   // Fill out the pwfx structure with the appropriate data
-  pwfx.wfx.wFormatTag       := WAVE_FORMAT_XBOX_ADPCM;
+  pwfx.wfx.wFormatTag       := X_WAVE_FORMAT_XBOX_ADPCM;
   pwfx.wfx.nChannels        := nChannels;
   pwfx.wfx.nSamplesPerSec   := nSamplesPerSec;
   pwfx.wfx.nAvgBytesPerSec  := (nSamplesPerSec*nChannels * 36) div 64;
