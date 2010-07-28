@@ -1567,21 +1567,37 @@ function TIDirectSound.SetCooperativeLevel
     hWnd: HWND;
     dwLevel: DWORD
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuIDirectSound_SetCooperativeLevel');
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuDSound : TIDirectSound.SetCooperativeLevel' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10'   hWnd                      : 0x%.08X' +
+      #13#10'   dwLevel                   : 0x%.08X' +
+      #13#10');',
+      [Self, hWnd, dwLevel]);
+
+  Result := IDirectSound8(g_pDSound8).SetCooperativeLevel(hWnd, dwLevel);
 
   EmuSwapFS(fsXbox);
 end;
 
 function TIDirectSound.Compact(): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:Shadow_tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('XTL_EmuIDirectSound_Compact');
+  if MayLog(lfUnit) then
+    DbgPrintf('EmuDSound : TIDirectSound.Compact' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10');',
+      [Self]);
+
+  Result := IDirectSound8(g_pDSound8).Compact;
 
   EmuSwapFS(fsXbox);
 end;
