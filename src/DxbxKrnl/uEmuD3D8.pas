@@ -9597,11 +9597,11 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DVertexBuffer8_GetDesc
+function XTL_EmuIDirect3DVertexBuffer8_GetDesc
 (
   pThis: PX_D3DVertexBuffer;
   pDesc: PD3DVERTEXBUFFER_DESC
-); stdcall;
+): HResult; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -9615,7 +9615,7 @@ begin
     [pThis, pDesc]);
 {$ENDIF}
 
-  // TODO -oCXBX: Implement
+  Result := IDirect3DVertexBuffer8(pThis).GetDesc(pDesc^);
 
   EmuSwapFS(fsXbox);
 end;
