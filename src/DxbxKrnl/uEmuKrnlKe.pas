@@ -236,7 +236,7 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : KeBugCheck' +
       #13#10'(' +
-      #13#10'   BugCheckMode      : 0x%.08X' +
+      #13#10'   BugCheckMode         : 0x%.08X' +
       #13#10');',
       [BugCheckMode]);
 
@@ -300,9 +300,9 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : KeDelayExecutionThread' +
       #13#10'(' +
-      #13#10'   WaitMode            : 0x%.08X' +
-      #13#10'   Alertable           : 0x%.08X' +
-      #13#10'   Interval            : 0x%.16X' + // was %I64X
+      #13#10'   WaitMode             : 0x%.08X' +
+      #13#10'   Alertable            : 0x%.08X' +
+      #13#10'   Interval             : 0x%.16X' + // was %I64X
       #13#10');',
       [Ord(WaitMode), Alertable, QuadPart(Interval)]);
 
@@ -417,9 +417,9 @@ begin
     EmuSwapFS(fsWindows);
     DbgPrintf('EmuKrnl : KeInitializeDpc' +
       #13#10'(' +
-      #13#10'   Dpc                 : 0x%.08X' +
-      #13#10'   DeferredRoutine     : 0x%.08X' +
-      #13#10'   DeferredContext     : 0x%.08X' +
+      #13#10'   Dpc                  : 0x%.08X' +
+      #13#10'   DeferredRoutine      : 0x%.08X' +
+      #13#10'   DeferredContext      : 0x%.08X' +
       #13#10');',
       [Dpc, Addr(DeferredRoutine), DeferredContext]);
     EmuSwapFS(fsXbox);
@@ -488,8 +488,8 @@ begin
     EmuSwapFS(fsWindows);
     DbgPrintf('EmuKrnl : KeInitializeTimerEx' +
       #13#10'(' +
-      #13#10'   Timer               : 0x%.08X' +
-      #13#10'   Type                : 0x%.08X' +
+      #13#10'   Timer                : 0x%.08X' +
+      #13#10'   Type                 : 0x%.08X' +
       #13#10');',
       [Timer, Ord(Type_)]);
     EmuSwapFS(fsXbox);
@@ -672,7 +672,7 @@ begin
   if MayLog(lfUnit or lfExtreme) then
     DbgPrintf('EmuKrnl : KeQuerySystemTime' +
       #13#10'(' +
-      #13#10'   CurrentTime         : 0x%.08X' +
+      #13#10'   CurrentTime          : 0x%.08X' +
       #13#10');',
       [CurrentTime]);
 
@@ -934,9 +934,9 @@ begin
     EmuSwapFS(fsWindows);
     DbgPrintf('EmuKrnl : KeSetTimer >>' +
       #13#10'(' +
-      #13#10'   Timer               : 0x%.08X' +
-      #13#10'   DueTime             : 0x%.16X' + // was %I64X
-      #13#10'   Dpc                 : 0x%.08X' +
+      #13#10'   Timer                : 0x%.08X' +
+      #13#10'   DueTime              : 0x%.16X' + // was %I64X
+      #13#10'   Dpc                  : 0x%.08X' +
       #13#10');',
       [Timer, QuadPart(@DueTime), Dpc]);
     EmuSwapFS(fsXbox);
@@ -960,10 +960,10 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuKrnl : KeSetTimerEx' +
       #13#10'(' +
-      #13#10'   Timer               : 0x%.08X' +
-      #13#10'   DueTime             : 0x%.16X' + // was %I64X
-      #13#10'   Period              : 0x%.08X' +
-      #13#10'   Dpc                 : 0x%.08X' +
+      #13#10'   Timer                : 0x%.08X' +
+      #13#10'   DueTime              : 0x%.16X' + // was %I64X
+      #13#10'   Period               : 0x%.08X' +
+      #13#10'   Dpc                  : 0x%.08X' +
       #13#10');',
       [Timer, QuadPart(@DueTime), Period, Dpc]);
 
@@ -1056,7 +1056,7 @@ begin
   // TODO -oDxbx: Use DxbxMinimumResolution, XBOX_PERFORMANCE_FREQUENCY, CLOCK_TIME_INCREMENT
   // or any other magic to calculate the value for NativeToXbox_TickCountMultiplier so that
   // DxbxXboxGetTickCount will match the Xbox frequency !!!
-  NativeToXbox_TickCountMultiplier := Trunc(DxbxUserSharedData.TickCountMultiplier / NativeToXbox_FactorForPerformanceFrequency); // ??
+  NativeToXbox_TickCountMultiplier := Trunc(DxbxUserSharedData.TickCountMultiplier * NativeToXbox_FactorForPerformanceFrequency); // ??
 end;
 
 //
