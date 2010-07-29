@@ -450,7 +450,8 @@ begin
         Inc(ActualLen);
 
   SetLength(Result, ActualLen);
-  memcpy(@Result[1], Source, ActualLen * SizeOf(WideChar));
+  if ActualLen > 0 then
+    memcpy(@Result[1], Source, ActualLen * SizeOf(WideChar));
 end;
 
 function GetEnvVarValue(const VarName: string; Dequote: Boolean = False): string;

@@ -406,7 +406,7 @@ type
     PerformanceCounterFrequency: LARGE_INTEGER;
     CurrentPerformanceCounter: LARGE_INTEGER;
     PreviousPerformanceCounter: LARGE_INTEGER;
-    TicksToWait: int;
+    TicksBetweenTimeOuts: int;
     TicksPerSleep1: int;
     procedure InitTicks(const aTicksToWait: int);
     procedure InitMilliseconds(const aMillisecondsToWait: float);
@@ -419,7 +419,7 @@ begin
   QueryPerformanceFrequency({var}TLargeInteger(PerformanceCounterFrequency));
   QueryPerformanceCounter({var}TLargeInteger(CurrentPerformanceCounter));
   PreviousPerformanceCounter.QuadPart := 0;
-  TicksToWait := aTicksToWait;
+  TicksBetweenTimeOuts := aTicksToWait;
 
   // Calculate how many ticks pass during Sleep(1), by using the Performance counter
   // frequency (which is measured in ticks per second) and dividing that by 1000
@@ -484,7 +484,7 @@ begin
         Break;
 
       // Calculate how many ticks we still have to wait :
-      TicksToWait := TicksToWait - TicksPassed;
+      TicksToWait := TicksBetweenTimeOuts - TicksPassed;
       // Stop this loop when the wait time's up :
       if (TicksToWait <= 0) then
         Break;
@@ -1020,14 +1020,11 @@ begin
   Result := S_OK;
 end; // EmuMsgProc
 
-
 // timing thread procedure
 function EmuThreadUpdateTickCount(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   UpdateTimer: DxbxTimer;
-  NativeSystemTime: KSYSTEM_TIME;
-  Tmp: LARGE_INTEGER;
 begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : Update timer thread is running.');
@@ -1039,24 +1036,13 @@ begin
   while true do // TODO -oDxbx: When do we break out of this while loop ?
   begin
     UpdateTimer.Wait;
-
     // Dxbx note : Just like with xboxkrnl_KeQueryPerformanceCounter,
-    // we apply a factor here, so that these counters don't run too fast :
+    // we apply a factor here, so that this counter doesn't run too fast :
 
     xboxkrnl_KeTickCount := Trunc(NativeToXboxSpeedFactor * timeGetTime());
-
-    {ignore result}JwaNative.NtQuerySystemTime(@NativeSystemTime);
-    Tmp.HighPart := NativeSystemTime.High1Time;
-    Tmp.LowPart := NativeSystemTime.LowPart;
-    Tmp.QuadPart := Trunc(NativeToXboxSpeedFactor * Tmp.QuadPart);
-    xboxkrnl_KeSystemTime.High1Time := Tmp.HighPart;
-    xboxkrnl_KeSystemTime.LowPart := Tmp.LowPart;
-
-    // For now, set InterruptTime to native SystemTime, but according to
-    // http://msdn.microsoft.com/en-us/library/ee662306(VS.85).aspx
-    // that's not the best solution. TODO -oDxbx: Determine what's better.
-    xboxkrnl_KeInterruptTime := xboxkrnl_KeSystemTime;
-
+    // TODO -oDxbx: Use KUSER_SHARED_DATA TickCount.Low here, as suggested by
+    // http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Time/NtGetTickCount.html
+    // And perhaps we should put this update somewhere else, like in EmuSwapFS() ?
   end; // while
 end; // EmuThreadUpdateTickCount
 
