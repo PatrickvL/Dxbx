@@ -2055,9 +2055,11 @@ begin
         [FileHandle, Event, Addr(ApcRoutine),
          ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
 
+{$IFDEF GAME_HACKS_ENABLED}
 // Halo...
 //    if Assigned(ByteOffset) and (ByteOffset.QuadPart = $00120800) then
 //      asm int 3 end;
+{$ENDIF}
 
   Result := JwaNative.NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 
@@ -2718,9 +2720,11 @@ begin
        [FileHandle, Event, Addr(ApcRoutine),
        ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
 
+{$IFDEF GAME_HACKS_ENABLED}
   // Halo..
   //    if Assigned(ByteOffset) and (ByteOffset.QuadPart = $01C00800) then
   //      asm int 3 end
+{$ENDIF}
 
   Result := JwaNative.NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, JwaWinType.PLARGE_INTEGER(ByteOffset), nil);
 

@@ -918,9 +918,11 @@ begin
       #13#10');',
       [Self]);
 
+{$IFDEF GAME_HACKS_ENABLED}
   // Causes deadlock in Halo...
   // TODO -oCxbx: Verify that this is a Vista related problem (I HATE Vista!)
   //    EmuWarning('EmuCMcpxStream_Dummy_0x10 is ignored!');
+{$ENDIF}
 
   // TODO -oDXBX: Actually Process
 
@@ -1401,7 +1403,6 @@ end;
 function XTL_EmuDirectSoundGetSampleTime(): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
-  dwRet: DWORD;
   Delta: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);

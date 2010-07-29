@@ -802,7 +802,9 @@ begin
   if MayLog(lfUnit) then
     XTL_DumpPixelShaderDefToFile(pPSDef);
 
+{$IFDEF GAME_HACKS_ENABLED}
   // Azurik like to create and destroy the same shader every frame! O_o
+{$ENDIF}
   if MayLog(lfUnit or lfExtreme) then
     XTL_PrintPixelShaderDefContents(pPSDef);
 

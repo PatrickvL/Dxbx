@@ -829,7 +829,7 @@ const
   X_D3DCULL_CW   = $900; // Clockwise culling
   X_D3DCULL_CCW  = $901; // Cull counter clockwise triangles
 
-const
+const // vertex input registers for fixed function vertex shader
   X_D3DVSDE_POSITION     = 0;
   X_D3DVSDE_BLENDWEIGHT  = 1;
   X_D3DVSDE_NORMAL       = 2;
@@ -884,6 +884,22 @@ function IsSpecialResource(x: DWORD): Boolean;
 begin
  Result := (x and X_D3DRESOURCE_DATA_FLAG_SPECIAL) = X_D3DRESOURCE_DATA_FLAG_SPECIAL;
 end;
+
+//function
+//const // vertex input registers for fixed function vertex shader
+//  X_D3DVSDE_POSITION     = 0;
+//  X_D3DVSDE_BLENDWEIGHT  = 1;
+//  X_D3DVSDE_NORMAL       = 2;
+//  X_D3DVSDE_DIFFUSE      = 3;
+//  X_D3DVSDE_SPECULAR     = 4;
+//  X_D3DVSDE_FOG          = 5; // Xbox extension
+//  X_D3DVSDE_BACKDIFFUSE  = 7; // Xbox extension
+//  X_D3DVSDE_BACKSPECULAR = 8; // Xbox extension
+//  X_D3DVSDE_TEXCOORD0    = 9;
+//  X_D3DVSDE_TEXCOORD1    = 10;
+//  X_D3DVSDE_TEXCOORD2    = 11;
+//  X_D3DVSDE_TEXCOORD3    = 12;
+//  X_D3DVSDE_VERTEX       = $FFFFFFFF; // Xbox extension for Begin/End drawing
 
 end.
 

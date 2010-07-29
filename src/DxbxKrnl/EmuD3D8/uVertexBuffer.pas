@@ -421,7 +421,7 @@ var
   pOrigVertexBuffer: XTL_PIDirect3DVertexBuffer8;
   Desc: D3DVERTEXBUFFER_DESC;
   pCalculateData: Pvoid;
-  uiLength: UINT;
+//UNUSED  uiLength: UINT;
   bApplied: _bool;
   uiKey: uint32;
   pCachedStream_: PCACHEDSTREAM;
@@ -453,7 +453,7 @@ begin
     begin
       DxbxKrnlCleanup('Could not retrieve original buffer size');
     end;
-    uiLength := Desc.Size;
+    //UNUSED uiLength := Desc.Size;
     uiKey := uint32(pOrigVertexBuffer);
     //pCachedStream_.bIsUP := false;
   end
@@ -467,7 +467,7 @@ begin
     uiStride := pPatchDesc.uiVertexStreamZeroStride;
     pCalculateData := Puint08(pPatchDesc.pVertexStreamZeroData);
     // TODO -oCXBX: This is sometimes the number of indices, which isn't too good
-    uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
+    //UNUSED uiLength := pPatchDesc.dwVertexCount * pPatchDesc.uiVertexStreamZeroStride;
     uiKey := uint32(pCalculateData);
     //pCachedStream_.bIsUP := true;
     //pCachedStream_.pStreamUP := pCalculateData;
@@ -1412,7 +1412,7 @@ begin
   XTL_EmuUpdateDeferredStates();
 
   // Make sure g_pIVBVertexBuffer has enough space :
-  if Length(g_pIVBVertexBuffer) < (sizeof(_D3DIVB)*g_IVBTblOffs) then
+  if Length(g_pIVBVertexBuffer) < Integer(sizeof(_D3DIVB)*g_IVBTblOffs) then
     SetLength(g_pIVBVertexBuffer, (sizeof(_D3DIVB)*g_IVBTblOffs));
 
   // Dxbx note : Cxbx re-uses g_IVBTable, but has a risk over overwriting data,
@@ -1428,12 +1428,14 @@ begin
   begin
     dwCurFVF := g_CurrentVertexShader;
 
+{$IFDEF GAME_HACKS_ENABLED}
     // HACK: Halo...
     if(dwCurFVF = 0) then
     begin
       EmuWarning('EmuFlushIVB(): using g_IVBFVF instead of current FVF!');
       dwCurFVF := g_IVBFVF;
     end;
+{$ENDIF}
   end
   else
   begin
@@ -1862,7 +1864,7 @@ begin
       end;
     end;
 
-//    DxbxUnlockD3DResource(pTexture); // Dxbx addition
+    DxbxUnlockD3DResource(pTexture); // Dxbx addition
     IDirect3DDevice8(g_pD3DDevice8).SetTexture(Stage, IDirect3DTexture8(pTexture.Emu.Texture8));
   end;
 end; // XTL_EmuUpdateActiveTexture

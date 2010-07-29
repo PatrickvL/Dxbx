@@ -392,10 +392,12 @@ begin
   try
     EmuSwapFS(fsXbox);
 
+{$IFDEF GAME_HACKS_ENABLED}
     // _USE_XGMATH Disabled in mesh :[
     // halo : dword_0_2E2D18
     // halo : 1744F0 (bink)
     // asm int 3 end;
+{$ENDIF}
 
     (* Marked out by cxbx
     for v := 0 to (SizeOf(FuncAddr / SizeOf(UInt32)) - 1 do
