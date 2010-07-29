@@ -281,6 +281,127 @@ const
 const
   HNULL = 0;
 
+//
+// Dxbx note : The following constants and types should really be part of JwaNative, but aren't :
+//
+
+type
+  _KSYSTEM_TIME = record
+    LowPart: ULONG;
+    High1Time: LONG;
+    High2Time: LONG;
+  end;
+
+  KSYSTEM_TIME = _KSYSTEM_TIME;
+  PKSYSTEM_TIME = ^KSYSTEM_TIME;
+
+{$MINENUMSIZE 4}
+
+type {enum} NT_PRODUCT_TYPE = (
+    NtProductWinNt = 1, 
+    NtProductLanManNt = 2, 
+    NtProductServer = 3);
+
+type {enum} ALTERNATIVE_ARCHITECTURE_TYPE = (
+    StandardDesign = 0,
+    NEC98x86 = 1,
+    EndAlternatives = 2);
+
+const PROCESSOR_FEATURE_MAX = 64;
+
+const MAX_WOW64_SHARED_ENTRIES = 16;
+
+type
+  // _KUSER_SHARED_DATA structure, containing many valuable kernel fields :
+  // See http://www.nirsoft.net/kernel_struct/vista/KUSER_SHARED_DATA.html
+  _KUSER_SHARED_DATA = record
+    // Current low 32-bit of tick count and tick count multiplier.
+    // N.B. The tick count is updated each time the clock ticks.
+    {volatile} TickCountLowDeprecated: ULONG;
+    TickCountMultiplier: ULONG;
+    // Current 64-bit interrupt time in 100ns units.
+    {volatile} InterruptTime: KSYSTEM_TIME;
+    // Current 64-bit system time in 100ns units.
+    {volatile} SystemTime: KSYSTEM_TIME;
+    // Current 64-bit time zone bias.
+    {volatile} TimeZoneBias: KSYSTEM_TIME;
+    ImageNumberLow: WORD;
+    ImageNumberHigh: WORD;
+    NtSystemRoot: array [0..260-1] of WCHAR;
+    MaxStackTraceDepth: ULONG;
+    CryptoExponent: ULONG;
+    TimeZoneId: ULONG;
+    LargePageMinimum: ULONG;
+    Reserved2: array [0..7-1] of ULONG;
+    NtProductType: NT_PRODUCT_TYPE;
+    ProductTypeIsValid: UCHAR;
+    NtMajorVersion: ULONG;
+    NtMinorVersion: ULONG;
+    ProcessorFeatures: array [0..PROCESSOR_FEATURE_MAX-1] of UCHAR;
+    Reserved1: ULONG;
+    Reserved3: ULONG;
+    {volatile} TimeSlip: ULONG;
+    AlternativeArchitecture: ALTERNATIVE_ARCHITECTURE_TYPE;
+    SystemExpirationDate: LARGE_INTEGER;
+    SuiteMask: ULONG;
+    KdDebuggerEnabled: UCHAR;
+    NXSupportPolicy: UCHAR;
+    {volatile} ActiveConsoleId: ULONG;
+    {volatile} DismountCount: ULONG;
+    ComPlusPackage: ULONG;
+    LastSystemRITEventTickCount: ULONG;
+    NumberOfPhysicalPages: ULONG;
+    SafeBootMode: UCHAR;
+    SharedDataFlags: ULONG;
+    TraceLogging: ULONG; { Dxbx note this flag contains :
+     ULONG DbgErrorPortPresent: 1;
+     ULONG DbgElevationEnabled: 1;
+     ULONG DbgVirtEnabled: 1;
+     ULONG DbgInstallerDetectEnabled: 1;
+     ULONG SystemDllRelocated: 1;
+     ULONG SpareBits: 27; }
+    TestRetInstruction: ULONGLONG;
+    SystemCall: ULONG;
+    SystemCallReturn: ULONG;
+    SystemCallPad: array [0..3-1] of ULONGLONG;
+    {union} case Integer of
+      0:( {volatile} TickCount: KSYSTEM_TIME);
+      1:( {volatile} TickCountQuad: ULONG64;
+    {end of union, fallthrough:}
+    Cookie: ULONG;
+    Wow64SharedInformation: array [0..MAX_WOW64_SHARED_ENTRIES-1] of ULONG;
+    // Below is for Vista and up :
+    UserModeGlobalLogger: array [0..8-1] of WORD;
+    HeapTracingPid: array [0..2] of ULONG;
+    CritSecTracingPid: array [0..2] of ULONG;
+    ImageFileExecutionOptions: ULONG;
+    {union} case Integer of
+      0:( AffinityPad: UINT64);
+      1:( ActiveProcessorAffinity: ULONG;
+    {end of union, fallthrough:}
+    InterruptTimeBias: UINT64;
+    );); // close all unions
+  end;
+  // TODO -oDxbx : Fix the above declaration, as currently TickCount ends up at offset $318,
+  // while it should be at offset $320 - maybe this is due to a Delpi alignment issue?
+  KUSER_SHARED_DATA = _KUSER_SHARED_DATA;
+  PKUSER_SHARED_DATA = ^KUSER_SHARED_DATA;
+
+// KUSER_SHARED_DATA Offsets
+// See http://native-nt-toolkit.googlecode.com/svn/trunk/ndk/asm.h
+const USER_SHARED_DATA_TICK_COUNT_LOW_DEPRECATED = $0;
+const USER_SHARED_DATA_INTERRUPT_TIME        = $8;
+const USER_SHARED_DATA_SYSTEM_TIME           = $14;
+const USER_SHARED_DATA_TICK_COUNT            = $320;
+
+// Virtual memory location of KUSER_SHARED_DATA :
+// See http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_pertest2.c.htm
+const MM_SHARED_USER_DATA_VA = $7FFE0000;
+
+// Dxbx addition - Easily accessable pointer to KUSER_SHARED_DATA :
+const DxbxUserSharedData: PKUSER_SHARED_DATA = PKUSER_SHARED_DATA(MM_SHARED_USER_DATA_VA);
+// TODO -oDxbx : To support WoW64, we should determine the location of UserSharedData dynamically!
+
 {$IFNDEF UNICODE}
 type
   UnicodeString = WideString;
