@@ -44,8 +44,11 @@ const
   CLOCK_TIME_INCREMENT = $2710;
 
 var
-  {120}xboxkrnl_KeInterruptTime: KSYSTEM_TIME; // (updated by EmuUpdateTickCount)
-  {154}xboxkrnl_KeSystemTime: KSYSTEM_TIME; // (updated by EmuUpdateTickCount)
+  // Dxbx note : These two where once values, but instead we now point to
+  // the native Windows versions (see ConnectWindowsTimersToThunkTable) :
+  xboxkrnl_KeInterruptTimePtr: PKSYSTEM_TIME; // Used for KernelThunk[120]
+  xboxkrnl_KeSystemTimePtr: PKSYSTEM_TIME; // Used for KernelThunk[154]
+
   {157}xboxkrnl_KeTimeIncrement: ULONG = CLOCK_TIME_INCREMENT;
 
 function xboxkrnl_KeAlertResumeThread(
@@ -285,7 +288,7 @@ function xboxkrnl_KeDelayExecutionThread
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
 var
-  ret: NTSTATUS;
+  NativeInterval: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 
@@ -298,13 +301,31 @@ begin
       #13#10');',
       [Ord(WaitMode), Alertable, QuadPart(Interval)]);
 
-   // Dxbx note : The Interval is expressed in milliseconds, multiplied by -10000 :
-   ret := NtDelayExecution(Alertable, Interval);
-  // TODO -oDxbx : Find out why NtDelayExecution causes long delays, disable it for now :
-//  ret := STATUS_SUCCESS;
+  // Dxbx note : The Interval can be negative or positive.
+  // When negative, it's a relative wait, when positive it's
+  // a wait for an absolute time to pass.
+  // For absolute waits, the Xbox seems to compare against the
+  // KeSystemTime, while for relative waits, it corrects the
+  // remaining time using KeInterruptTime.
+  // A negative value is expressed in 100 nanosecond units,
+  // which means 1 millisecond is indicated by the value
+  // 10,000 and 1 second is indicated by 10,000,000.
+  // The fact that this timer uses 100 nanosecond units,
+  // and the Xbox combines these measures with the system/
+  // interrupt timers, indicates that these timers use the
+  // same scale... TODO : Take that into account in our
+  // timing thread!
+  if Interval.QuadPart < 0 then
+  begin
+    // TODO -oDxbx : Find out why NtDelayExecution causes long delays, disable it for now :
+    NativeInterval.QuadPart := Interval.QuadPart div 10000;
+
+    Result := NtDelayExecution(Alertable, @NativeInterval);
+  end
+  else
+    Result := STATUS_SUCCESS;
 
   EmuSwapFS(fsXbox);
-  Result := ret;
 end;
 
 function xboxkrnl_KeDisconnectInterrupt(
@@ -576,9 +597,14 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  // Dxbx note : We depend on xboxkrnl_KeInterruptTime getting updated in EmuUpdateTickCount :
-  CurrentTime.HighPart := xboxkrnl_KeInterruptTime.High1Time;
-  CurrentTime.LowPart := xboxkrnl_KeInterruptTime.LowPart;
+  // Dxbx note : We use a more direct implementation than Cxbx here,
+  // which depends on xboxkrnl_KeSystemTimePtr set to the native
+  // Windows SystemTimer (see ConnectWindowsTimersToThunkTable) :
+  repeat
+    CurrentTime.HighPart := xboxkrnl_KeInterruptTimePtr^.High1Time;
+    CurrentTime.LowPart := xboxkrnl_KeInterruptTimePtr^.LowPart;
+  until CurrentTime.HighPart = xboxkrnl_KeInterruptTimePtr^.High2Time;
+
   Result := CurrentTime.QuadPart;
 end;
 
@@ -644,12 +670,13 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  // TODO -oCXBX: optimize for WinXP if speed ever becomes important here
-
   // Dxbx note : We use a more direct implementation than Cxbx here,
-  // which depends on xboxkrnl_KeSystemTime getting updated in EmuUpdateTickCount :
-  CurrentTime.HighPart := xboxkrnl_KeSystemTime.High1Time;
-  CurrentTime.LowPart := xboxkrnl_KeSystemTime.LowPart;
+  // which depends on xboxkrnl_KeSystemTimePtr set to the native
+  // Windows SystemTimer (see ConnectWindowsTimersToThunkTable) :
+  repeat
+    CurrentTime.HighPart := xboxkrnl_KeSystemTimePtr^.High1Time;
+    CurrentTime.LowPart := xboxkrnl_KeSystemTimePtr^.LowPart;
+  until CurrentTime.HighPart = xboxkrnl_KeSystemTimePtr^.High2Time;
 end;
 
 const DISPATCH_LEVEL = 2; // ??

@@ -23,8 +23,11 @@ interface
 
 uses
   // Delphi
+  Windows, // for ULONG
   Types, // for DWord
   SysUtils, // for IntToStr
+  // OpenXdk
+  XboxKrnl,
   // Dxbx
   uTypes,
   uDxbxUtils,
@@ -169,7 +172,7 @@ var
     {117}@xboxkrnl_KeInsertQueue,
     {118}@xboxkrnl_KeInsertQueueApc,
     {119}@xboxkrnl_KeInsertQueueDpc,
-    {120}@xboxkrnl_KeInterruptTime,
+    {120}nil,// xboxkrnl_KeInterruptTime variable
     {121}@xboxkrnl_KeIsExecutingDpc,
     {122}@xboxkrnl_KeLeaveCriticalRegion,
     {123}@xboxkrnl_KePulseEvent,
@@ -203,7 +206,7 @@ var
     {151}@xboxkrnl_KeStallExecutionProcessor,
     {152}@xboxkrnl_KeSuspendThread,
     {153}@xboxkrnl_KeSynchronizeExecution,
-    {154}@xboxkrnl_KeSystemTime, // variable
+    {154}nil, // xboxkrnl_KeSystemTime variable
     {155}@xboxkrnl_KeTestAlertThread,
     {156}@xboxkrnl_KeTickCount, // variable
     {157}@xboxkrnl_KeTimeIncrement, // variable
@@ -431,5 +434,51 @@ var
     );
 
 implementation
+
+// See http://www.nirsoft.net/kernel_struct/vista/KUSER_SHARED_DATA.html
+// http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_pertest2.c.htm
+type _KUSER_SHARED_DATA = record
+  // Current low 32-bit of tick count and tick count multiplier.
+  // N.B. The tick count is updated each time the clock ticks.
+  {volatile} TickCountLowDeprecated: ULONG;
+  TickCountMultiplier: ULONG;
+  // Current 64-bit interrupt time in 100ns units.
+  {volatile} InterruptTime: KSYSTEM_TIME;
+  // Current 64-bit system time in 100ns units.
+  {volatile} SystemTime: KSYSTEM_TIME;
+  // Current 64-bit time zone bias.
+  {volatile} TimeZoneBias: KSYSTEM_TIME;
+  // there's more, but we're not interested in that
+end;
+KUSER_SHARED_DATA = _KUSER_SHARED_DATA;
+PKUSER_SHARED_DATA = ^KUSER_SHARED_DATA;
+
+const MM_SHARED_USER_DATA_VA = $7FFE0000;
+
+function USER_SHARED_DATA: PKUSER_SHARED_DATA; inline;
+begin
+  Result := PKUSER_SHARED_DATA(MM_SHARED_USER_DATA_VA);
+end;
+
+procedure ConnectWindowsTimersToThunkTable;
+var
+  UserSharedData: PKUSER_SHARED_DATA;
+begin
+  // Couple the xbox thunks for xboxkrnl_KeInterruptTime and xboxkrnl_KeSystemTime
+  // to their actual counterparts on Windows, this way we won't have to spend any
+  // time on updating them ourselves, and still get highly accurate timers!
+  // See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
+  UserSharedData := USER_SHARED_DATA;
+
+  xboxkrnl_KeInterruptTimePtr := @UserSharedData.InterruptTime;
+  xboxkrnl_KeSystemTimePtr := @UserSharedData.SystemTime;
+
+  KernelThunkTable[120] := xboxkrnl_KeInterruptTimePtr;
+  KernelThunkTable[154] := xboxkrnl_KeSystemTimePtr;
+end;
+
+initialization
+
+  ConnectWindowsTimersToThunkTable;
 
 end.
