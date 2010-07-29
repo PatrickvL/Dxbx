@@ -588,7 +588,7 @@ begin
 
   WriteLog('DXBX: Reading Certificate...OK');
 
-  m_szAsciiTitle := Trim(WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH));
+  m_szAsciiTitle := Trim(PWideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH));
   if m_szAsciiTitle <> '' then
     WriteLog('DXBX: Title identified as ' + m_szAsciiTitle)
   else
@@ -758,7 +758,7 @@ end; // TXbe.GetTLSData
 function TXbe.DetermineDumpFileName: string;
 begin
   // Use Title, or when that's empty, the parent folder name : 
-  Result := WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH);
+  Result := PWideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH);
   if Result = '' then
     Result := 'xbe';
 

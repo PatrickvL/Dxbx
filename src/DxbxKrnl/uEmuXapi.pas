@@ -35,6 +35,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uConsts, // XBE_SECTIONNAME_MAXLENGTH
   uTypes,
   uDxbxUtils,
   uLog, // DbgPrintf
@@ -1472,7 +1473,7 @@ begin
       #13#10'(' +
       #13#10'   pSectionName       : 0x%.08X ("%s")' +
       #13#10');',
-      [UIntPtr(pSectionName), PAnsiChar(pSectionName)]);
+      [UIntPtr(pSectionName), PAnsiCharMaxLenToString(pSectionName, XBE_SECTIONNAME_MAXLENGTH)]);
 {$ENDIF}
 
   SectionHeader := XBE_FindSectionHeaderByName(pSectionName);
@@ -1582,7 +1583,7 @@ begin
       #13#10'(' +
       #13#10'   pSectionName       : 0x%.08X ("%s")' +
       #13#10');',
-      [UIntPtr(pSectionName), PAnsiChar(pSectionName)]);
+      [UIntPtr(pSectionName), PAnsiCharMaxLenToString(pSectionName, XBE_SECTIONNAME_MAXLENGTH)]);
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -1608,7 +1609,7 @@ begin
       #13#10'(' +
       #13#10'   pSectionName       : 0x%.08X ("%s")' +
       #13#10');',
-      [UIntPtr(pSectionName), PAnsiChar(pSectionName)]);
+      [UIntPtr(pSectionName), PAnsiCharMaxLenToString(pSectionName, XBE_SECTIONNAME_MAXLENGTH)]);
 {$ENDIF}
 
   SectionHandle := XTL_EmuXGetSectionHandleA(pSectionName);

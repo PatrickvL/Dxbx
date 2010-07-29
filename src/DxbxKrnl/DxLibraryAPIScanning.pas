@@ -1615,7 +1615,7 @@ begin
           // + CRC32 over XbeHeader :
           + '_' + IntToHex(CRC32(PByte(pXbeHeader), {Len=}pXbeHeader.dwSizeofHeaders), 8)
           // TitleName
-          + '_' + string(WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH))
+          + '_' + string(PWideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH))
           + SymbolCacheFileExt;
   ReinitExeImageHeader;
 end;
@@ -1690,7 +1690,7 @@ begin
       // Add some Xbe info into a separate section, can be expanded upon later :
       m_Certificate := PXBE_CERTIFICATE(pXbeHeader.dwCertificateAddr);
       WriteString('XbeInfo', 'TitleID', IntToHex(m_Certificate.dwTitleId, 8));
-      WriteString('XbeInfo', 'TitleName', string(WideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH)));
+      WriteString('XbeInfo', 'TitleName', string(PWideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH)));
 
       // (Re)generate the complete [Symbols] section :
       // In the [Symbols] section, each line looks like this :

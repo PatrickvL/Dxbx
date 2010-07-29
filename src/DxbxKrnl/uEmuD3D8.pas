@@ -742,7 +742,7 @@ begin
 
       // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
 
-      AsciiTitle := string(WideCharMaxLenToString(XbeCert.wszTitleName, XBE_TITLENAME_MAXLENGTH));
+      AsciiTitle := string(PWideCharMaxLenToString(XbeCert.wszTitleName, XBE_TITLENAME_MAXLENGTH));
     end;
 
     AsciiTitle := 'Dxbx: Emulating ' + AsciiTitle;

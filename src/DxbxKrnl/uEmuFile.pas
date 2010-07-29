@@ -572,6 +572,7 @@ function DxbxPC2XB_FS_INFORMATION(NativeFileInformation, FileInformation: PVOID;
   FsInformationClass: FS_INFORMATION_CLASS): Boolean;
 var
   FileInformationValues: RFileInformationValues;
+  StrLen: Integer;
 begin
   FileInformationValues := Dxbx_FsInformationValues(NativeFileInformation, FileInformation, FsInformationClass);
   with FileInformationValues do
@@ -584,15 +585,16 @@ begin
     memcpy(FileInformation, NativeFileInformation, CopySize);
 
     // Halve the amount of memory needed for the string :
-    PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div 2;
+    StrLen := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div SizeOf(WideChar);
+    PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := StrLen;
 
     // Convert the WideChar string to Ansi :
-    wcstombs(mbstr, wcstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
+    wcstombs(mbstr, wcstr, StrLen);
 
     DbgPrintf('DxbxPC2XB_FS_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
       FsInformationClassToString(FsInformationClass),
       CopySize,
-      PAnsiChar(mbstr),
+      PCharToString(mbstr, StrLen),
       PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
   end;
 end;
@@ -604,6 +606,7 @@ function DxbxPC2XB_FILE_INFORMATION(NativeFileInformation, FileInformation: PVOI
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 var
   FileInformationValues: RFileInformationValues;
+  StrLen: Integer;
 begin
   FileInformationValues := Dxbx_FileInformationValues(NativeFileInformation, FileInformation, FileInformationClass);
   with FileInformationValues do
@@ -616,15 +619,16 @@ begin
     memcpy(FileInformation, NativeFileInformation, CopySize);
 
     // Halve the amount of memory needed for the string :
-    PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div 2;
+    StrLen := PInteger(MathPtr(FileInformation) + StringLengthOffset)^ div SizeOf(WideChar);
+    PInteger(MathPtr(FileInformation) + StringLengthOffset)^ := StrLen;
 
     // Convert the WideChar string to Ansi :
-    wcstombs(mbstr, wcstr, PInteger(MathPtr(FileInformation) + StringLengthOffset)^);
+    wcstombs(mbstr, wcstr, StrLen);
 
     DbgPrintf('DxbxPC2XB_FILE_INFORMATION, %s : %d bytes copied, converted "%s" (%d bytes)', [
       FileInformationClassToString(FileInformationClass),
       CopySize,
-      PAnsiChar(mbstr),
+      PCharToString(mbstr, StrLen),
       PInteger(MathPtr(FileInformation) + StringLengthOffset)^]);
   end;
 end;
