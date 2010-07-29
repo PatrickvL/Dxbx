@@ -3470,7 +3470,7 @@ begin
     hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
     if (FAILED(hRet)) then
-        DxbxKrnlCleanup('DirectSoundBuffer Lock Failed!');
+      DxbxKrnlCleanup('DirectSoundBuffer Lock Failed!');
 
     Self.EmuLockPtr1 := ppvAudioPtr1^;
     Self.EmuLockBytes1 := pdwAudioBytes1^;

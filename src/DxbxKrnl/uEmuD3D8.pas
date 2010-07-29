@@ -436,6 +436,10 @@ begin
 
   // Raise the accuracy of Sleep to it's maximum :
   timeBeginPeriod(1);
+  // Dxbx Note : We really shouldn't do this, as you can read about on
+  // http://blogs.msdn.com/b/larryosterman/archive/2009/09/02/what-s-the-difference-between-gettickcount-and-timegettime.aspx
+  // Instead, we could use NtDelayExecutionThread as an alternative (and hopefully accurate)
+  // timing mechanism (see below).
 
   // TODO : Add a finalizer with timeEndPeriod(1);
 end;
@@ -517,6 +521,7 @@ begin
         // it will incur much CPU usage (with all the thread switching
         // going on), but it would at least spend a tiny amount of time:
         Sleep(0); // This causes thread to give up its timeslice
+        // TODO : What about pausing the cpu a little (rep nop) instead?
     end; // while True
   end;
 
@@ -1030,19 +1035,16 @@ begin
   DbgPrintf('EmuD3D8 : Update timer thread is running.');
 {$ENDIF}
 
-  // Update the various Xbox kernel timers as often as reasonable, without swamping the CPU;
+  // Update the Xbox TickCount as often as reasonable, without swamping the CPU;
   UpdateTimer.InitFPS(100); // 100 updates per second should be enough
 
   while true do // TODO -oDxbx: When do we break out of this while loop ?
   begin
     UpdateTimer.Wait;
-    // Dxbx note : Just like with xboxkrnl_KeQueryPerformanceCounter,
-    // we apply a factor here, so that this counter doesn't run too fast :
 
-    xboxkrnl_KeTickCount := Trunc(NativeToXboxSpeedFactor * timeGetTime());
-    // TODO -oDxbx: Use KUSER_SHARED_DATA TickCount.Low here, as suggested by
-    // http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Time/NtGetTickCount.html
-    // And perhaps we should put this update somewhere else, like in EmuSwapFS() ?
+    // TODO -oDxbx : Perhaps we should put this update somewhere else,
+    // like in EmuSwapFS(), so we can get rid of this entire timer thread ?
+    xboxkrnl_KeTickCount := DxbxXboxGetTickCount();
   end; // while
 end; // EmuThreadUpdateTickCount
 

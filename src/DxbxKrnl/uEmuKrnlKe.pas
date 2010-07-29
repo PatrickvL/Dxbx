@@ -180,7 +180,12 @@ const
 var
   NativePerformanceCounter: LARGE_INTEGER = (QuadPart:0);
   NativePerformanceFrequency: LARGE_INTEGER = (QuadPart:0);
-  NativeToXboxSpeedFactor: float;
+  NativeToXbox_FactorForPerformanceFrequency: float;
+
+  NativeToXbox_TickCountMultiplier: DWORD;
+  NativeTickCountLowPtr: PDWORD;
+
+function DxbxXboxGetTickCount(): DWORD;
 
 implementation
 
@@ -600,16 +605,13 @@ begin
   // Dxbx note : We use a more direct implementation than Cxbx here,
   // which depends on xboxkrnl_KeSystemTimePtr set to the native
   // Windows SystemTimer (see ConnectWindowsTimersToThunkTable) :
-  repeat
-    CurrentTime.HighPart := xboxkrnl_KeInterruptTimePtr^.High1Time;
-    CurrentTime.LowPart := xboxkrnl_KeInterruptTimePtr^.LowPart;
-  until CurrentTime.HighPart = xboxkrnl_KeInterruptTimePtr^.High2Time;
+
+  ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @CurrentTime);
 
   Result := CurrentTime.QuadPart;
 end;
 
-function xboxkrnl_KeQueryPerformanceCounter(
-  ): _LARGE_INTEGER; stdcall;
+function xboxkrnl_KeQueryPerformanceCounter(): _LARGE_INTEGER; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 const
   PerformanceFrequency: PLARGE_INTEGER = nil;
@@ -621,20 +623,26 @@ begin
   if MayLog(lfUnit or lfExtreme) then
     DbgPrintf('EmuKrnl : KeQueryPerformanceCounter();');
 
+  // Dxbx note : Xbox actually uses the RDTSC machine code instruction for this,
+  // and we could do that too, because we're bound to a single core anyway.
+  //
+  // TODO -oDxbx: Switch over do RDTSC, and factor in the difference between
+  // native and Xbox processor frequencies.
+
+
   JwaNative.NtQueryPerformanceCounter(@PerformanceCounter, PerformanceFrequency{=nil});
 
   // Re-base the performance counter to increase accuracy of the following conversion :
   PerformanceCounter.QuadPart := PerformanceCounter.QuadPart - NativePerformanceCounter.QuadPart;
   // We appy a conversion factor here, to fake Xbox1-like increment-speed behaviour :
-  PerformanceCounter.QuadPart := Trunc(NativeToXboxSpeedFactor * PerformanceCounter.QuadPart);
+  PerformanceCounter.QuadPart := Trunc(NativeToXbox_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
 
   EmuSwapFS(fsXbox);
 
   Result := _LARGE_INTEGER(PerformanceCounter);
 end;
 
-function xboxkrnl_KeQueryPerformanceFrequency(
-  ): _LARGE_INTEGER; stdcall;
+function xboxkrnl_KeQueryPerformanceFrequency(): _LARGE_INTEGER; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   PerformanceFrequency: LARGE_INTEGER;
@@ -673,10 +681,7 @@ begin
   // Dxbx note : We use a more direct implementation than Cxbx here,
   // which depends on xboxkrnl_KeSystemTimePtr set to the native
   // Windows SystemTimer (see ConnectWindowsTimersToThunkTable) :
-  repeat
-    CurrentTime.HighPart := xboxkrnl_KeSystemTimePtr^.High1Time;
-    CurrentTime.LowPart := xboxkrnl_KeSystemTimePtr^.LowPart;
-  until CurrentTime.HighPart = xboxkrnl_KeSystemTimePtr^.High2Time;
+  ReadSystemTimeIntoLargeInteger(xboxkrnl_KeSystemTimePtr, CurrentTime);
 end;
 
 const DISPATCH_LEVEL = 2; // ??
@@ -1034,13 +1039,52 @@ procedure PerformanceCounters_Init;
 begin
   JwaNative.NtQueryPerformanceCounter(@NativePerformanceCounter, @NativePerformanceFrequency);
 
-  NativeToXboxSpeedFactor := XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
+  NativeToXbox_FactorForPerformanceFrequency := XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
 end;
+
+procedure InitializeXboxTickCount();
+begin
+  if DxbxUserSharedData.NtMajorVersion < 6 then
+    // For WinXP, use the deprecated tick counter :
+    // See http://www.purebasic.fr/english/viewtopic.php?f=12&t=39017
+    NativeTickCountLowPtr := DxbxNtTickCountLowDeprecated
+  else
+    // On Vista and above, we use KUSER_SHARED_DATA TickCount.Low here, as suggested by
+    // http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Time/NtGetTickCount.html
+    NativeTickCountLowPtr := @(DxbxNtTickCount.LowPart);
+
+  // TODO -oDxbx: Use DxbxMinimumResolution, XBOX_PERFORMANCE_FREQUENCY, CLOCK_TIME_INCREMENT
+  // or any other magic to calculate the value for NativeToXbox_TickCountMultiplier so that
+  // DxbxXboxGetTickCount will match the Xbox frequency !!!
+  NativeToXbox_TickCountMultiplier := DxbxMinimumResolution; // ??
+end;
+
+//
+
+// This is a modified copy of GetTickCount, which reads the native TickCount(Low),
+// and corrects the result by a factor which takes care of the conversion from
+// native to Xbox frequency, resulting in behaviour approaching that of the original Xbox :
+{$IFDEF PURE_PASCAL}
+function DxbxXboxGetTickCount(): DWORD;
+begin
+  Result := DWORD((ULONGLONG(NativeTickCountLowPtr^) * NativeToXbox_TickCountMultiplier) shr $18);
+end;
+{$ELSE}
+function DxbxXboxGetTickCount(): DWORD;
+asm
+  mov edx, [NativeTickCountLowPtr]
+  mov eax, [edx]
+  mul dword ptr [NativeToXbox_TickCountMultiplier] // fill EAX, EDX with multiplication
+  shrd eax,edx, $18 // Divide by (1 shl 24)
+end;
+{$ENDIF}
 
 initialization
 
   xLaunchDataPage_Init;
 
   PerformanceCounters_Init;
+
+  InitializeXboxTickCount();
 
 end.

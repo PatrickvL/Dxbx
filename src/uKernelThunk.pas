@@ -435,50 +435,25 @@ var
 
 implementation
 
-// See http://www.nirsoft.net/kernel_struct/vista/KUSER_SHARED_DATA.html
-// http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_pertest2.c.htm
-type _KUSER_SHARED_DATA = record
-  // Current low 32-bit of tick count and tick count multiplier.
-  // N.B. The tick count is updated each time the clock ticks.
-  {volatile} TickCountLowDeprecated: ULONG;
-  TickCountMultiplier: ULONG;
-  // Current 64-bit interrupt time in 100ns units.
-  {volatile} InterruptTime: KSYSTEM_TIME;
-  // Current 64-bit system time in 100ns units.
-  {volatile} SystemTime: KSYSTEM_TIME;
-  // Current 64-bit time zone bias.
-  {volatile} TimeZoneBias: KSYSTEM_TIME;
-  // there's more, but we're not interested in that
-end;
-KUSER_SHARED_DATA = _KUSER_SHARED_DATA;
-PKUSER_SHARED_DATA = ^KUSER_SHARED_DATA;
-
-const MM_SHARED_USER_DATA_VA = $7FFE0000;
-
-function USER_SHARED_DATA: PKUSER_SHARED_DATA; inline;
-begin
-  Result := PKUSER_SHARED_DATA(MM_SHARED_USER_DATA_VA);
-end;
-
-procedure ConnectWindowsTimersToThunkTable;
-var
-  UserSharedData: PKUSER_SHARED_DATA;
+procedure ConnectWindowsTimersToThunkTable();
 begin
   // Couple the xbox thunks for xboxkrnl_KeInterruptTime and xboxkrnl_KeSystemTime
   // to their actual counterparts on Windows, this way we won't have to spend any
   // time on updating them ourselves, and still get highly accurate timers!
   // See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
-  UserSharedData := USER_SHARED_DATA;
 
-  xboxkrnl_KeInterruptTimePtr := @UserSharedData.InterruptTime;
-  xboxkrnl_KeSystemTimePtr := @UserSharedData.SystemTime;
+  xboxkrnl_KeInterruptTimePtr := DxbxNtSystemTime;
+  xboxkrnl_KeSystemTimePtr := DxbxNtInterruptTime;
 
   KernelThunkTable[120] := xboxkrnl_KeInterruptTimePtr;
   KernelThunkTable[154] := xboxkrnl_KeSystemTimePtr;
+
+  // Note that we can't do the same for TickCount, as that timer
+  // updates slower on the xbox. See EmuThreadUpdateTickCount().
 end;
 
 initialization
 
-  ConnectWindowsTimersToThunkTable;
+  ConnectWindowsTimersToThunkTable();
 
 end.

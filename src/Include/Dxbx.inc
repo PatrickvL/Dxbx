@@ -76,6 +76,10 @@
 {$WARNINGS ON}            // Generate compiler warning messages
 {$WRITEABLECONST OFF}     // Writeable typed constants (constants may not be changed)
 
+{$IF DECLARED(UnicodeString)}
+  {$STRINGCHECKS OFF}     // Turn off slow (and very unneeded!) UnicodeString type checking
+{$IFEND}
+
 // In _DEBUG mode we want as much debugging features as possible :
 
 {$IFDEF _DEBUG}
