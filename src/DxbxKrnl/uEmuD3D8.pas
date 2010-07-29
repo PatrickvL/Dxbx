@@ -9317,6 +9317,7 @@ end;
 
 function XTL_EmuIDirect3DTexture8_GetLevelDesc
 (
+  pThis: PX_D3DTexture;
   Level: UINT;
   pDesc: PX_D3DSURFACE_DESC
 ): HRESULT; stdcall;
@@ -9327,15 +9328,18 @@ begin
 {$IFDEF _DEBUG_TRACE}
   DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_GetLevelDesc' +
     #13#10'(' +
+    #13#10'   pThis               : 0x%.08X' +
     #13#10'   Level               : 0x%.08X' +
     #13#10'   pDesc               : 0x%.08X' +
     #13#10');',
-    [Level, pDesc]);
+    [pThis, Level, pDesc]);
 {$ENDIF}
+
+  IDirect3DTexture8(pThis).GetLevelDesc(Level, PD3DSURFACE_DESC(pDesc)^);
 
   EmuSwapFS(fsXbox);
 
-  Result := D3D_OK;
+  Result := S_OK;
 end;
 
 function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType
@@ -10480,7 +10484,7 @@ function XTL_EmuIDirect3DCubeTexture8_GetCubeMapSurface2
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DCubeTexture8_GetLevelDesc');
+  Unimplemented('XTL_EmuIDirect3DCubeTexture8_GetCubeMapSurface2');
 
   EmuSwapFS(fsXbox);
 
@@ -10699,11 +10703,9 @@ exports
   XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
   XTL_EmuIDirect3DSurface8_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
 
-
   XTL_EmuIDirect3DCubeTexture8_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
   XTL_EmuIDirect3DCubeTexture8_GetCubeMapSurface2 name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
   XTL_EmuIDirect3DCubeTexture8_LockRect name PatchPrefix + 'D3DCubeTexture8_LockRect', // _D3DCubeTexture_LockRect@24
-
 
   XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc', // DXBX : better
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DTexture_GetSurfaceLevel',
