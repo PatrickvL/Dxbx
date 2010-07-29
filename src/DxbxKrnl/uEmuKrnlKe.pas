@@ -320,15 +320,15 @@ begin
   // interrupt timers, indicates that these timers use the
   // same scale... TODO : Take that into account in our
   // timing thread!
-  if Interval.QuadPart < 0 then
+//  if Interval.QuadPart < 0 then
   begin
-    // TODO -oDxbx : Find out why NtDelayExecution causes long delays, disable it for now :
-    NativeInterval.QuadPart := Interval.QuadPart div 10000;
-
-    Result := NtDelayExecution(Alertable, @NativeInterval);
-  end
-  else
-    Result := STATUS_SUCCESS;
+    Result := NtDelayExecution(Alertable, Interval);
+//  end
+//  else
+//  begin
+//    // TODO -oDxbx : Fix this case
+//    Result := STATUS_SUCCESS;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -595,12 +595,10 @@ function xboxkrnl_KeQueryInterruptTime(): ULONGLONG; stdcall;
 var
   CurrentTime: LARGE_INTEGER;
 begin
+  EmuSwapFS(fsWindows);
+
   if MayLog(lfUnit or lfExtreme) then
-  begin
-    EmuSwapFS(fsWindows);
     DbgPrintf('EmuKrnl : KeQueryInterruptTime();');
-    EmuSwapFS(fsXbox);
-  end;
 
   // Dxbx note : We use a more direct implementation than Cxbx here,
   // which depends on xboxkrnl_KeSystemTimePtr set to the native
@@ -609,6 +607,8 @@ begin
   ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @CurrentTime);
 
   Result := CurrentTime.QuadPart;
+
+  EmuSwapFS(fsXbox);
 end;
 
 function xboxkrnl_KeQueryPerformanceCounter(): _LARGE_INTEGER; stdcall;
@@ -667,21 +667,21 @@ procedure xboxkrnl_KeQuerySystemTime
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 begin
+  EmuSwapFS(fsWindows);
+
   if MayLog(lfUnit or lfExtreme) then
-  begin
-    EmuSwapFS(fsWindows);
     DbgPrintf('EmuKrnl : KeQuerySystemTime' +
       #13#10'(' +
       #13#10'   CurrentTime         : 0x%.08X' +
       #13#10');',
       [CurrentTime]);
-    EmuSwapFS(fsXbox);
-  end;
 
   // Dxbx note : We use a more direct implementation than Cxbx here,
   // which depends on xboxkrnl_KeSystemTimePtr set to the native
   // Windows SystemTimer (see ConnectWindowsTimersToThunkTable) :
   ReadSystemTimeIntoLargeInteger(xboxkrnl_KeSystemTimePtr, CurrentTime);
+
+  EmuSwapFS(fsXbox);
 end;
 
 const DISPATCH_LEVEL = 2; // ??
@@ -1056,7 +1056,7 @@ begin
   // TODO -oDxbx: Use DxbxMinimumResolution, XBOX_PERFORMANCE_FREQUENCY, CLOCK_TIME_INCREMENT
   // or any other magic to calculate the value for NativeToXbox_TickCountMultiplier so that
   // DxbxXboxGetTickCount will match the Xbox frequency !!!
-  NativeToXbox_TickCountMultiplier := DxbxMinimumResolution; // ??
+  NativeToXbox_TickCountMultiplier := Trunc(DxbxUserSharedData.TickCountMultiplier / NativeToXbox_FactorForPerformanceFrequency); // ??
 end;
 
 //

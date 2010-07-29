@@ -36,10 +36,12 @@ uses
   // Dxbx
   , uTypes
   , uLog
+  , uDxbxUtils // ReadSystemTimeIntoLargeInteger
   , uDxbxKrnlUtils
   , uEmuAlloc // DxbxMalloc
   , uEmuFS // EmuSwapFS
   , uEmuKrnl // Unimplemented
+  , uEmuKrnlKe // xboxkrnl_KeInterruptTimePtr
   , uXboxLibraryUtils // PatchPrefix
   , uEmuD3D8Types // XTL_PIDirectSoundBuffer, XTL_PIDirectSoundListener
   , uEmu // EmuWarning
@@ -1395,30 +1397,43 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-{static} var dwStart: DWORD = 0;
+{static} var GetSampleTime_Start: LARGE_INTEGER = (QuadPart:0);
 function XTL_EmuDirectSoundGetSampleTime(): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   dwRet: DWORD;
+  Delta: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
     DbgPrintf('EmuDSound : DirectSoundGetSampleTime();');
 
-  // FIXME: This is the best I could think of for now.
-  // Check the XDK documentation for the description of what this function
-  // can actually do.  BTW, this function accesses the NVIDIA SoundStorm APU
+  // Originally, this function accesses the NVIDIA SoundStorm APU
   // register directly (0xFE80200C).
+  // The SDK documentation says this sample counter updates with a frequency
+  // of 48 KHz, and could reset unexpectedly. It relies on the existence of
+  // the DirectSound object.
 
-  // TODO -oCXBX: Handle reset at certain event?
   // TODO -oCXBX: Wait until a DirectSoundBuffer/Stream is being played?
-  if dwStart = 0 then dwStart := GetTickCount(); // Dxbx note : Assign static var only once
-  dwRet := GetTickCount() - dwStart;
+  if GetSampleTime_Start.QuadPart = 0 then ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @GetSampleTime_Start);
+
+  ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @Delta);
+  Delta.QuadPart := Delta.QuadPart - GetSampleTime_Start.QuadPart;
+
+  // Handle reset when underflow occurs :
+  if Delta.QuadPart < 0 then
+  begin
+    GetSampleTime_Start.QuadPart := 0;
+    Result := 0;
+  end
+  else
+  begin
+    // Convert "units of approximately 100 nanoseconds" to 48 KHz :
+    Result := DWORD((Delta.QuadPart * 48000) div (10 * 1000 * 1000));
+  end;
 
   EmuSwapFS(fsXbox);
-
-  Result := dwRet; // TODO -oDXBX: Should we (and Cxbx) really return dwRet here?
 end;
 
 //
@@ -2047,13 +2062,21 @@ function TIDirectSound.GetTime
 (
     prtCurrent: PREFERENCE_TIME
 ): HRESULT; stdcall; // virtual;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  CurrentTime: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 
-  Result := Unimplemented('TIDirectSound.GetTime');
+  // Dxbx note : The SDK documentation says "time returned by the master clock is a 64-bit value"
+  // "measured in units of approximately 100 nanoseconds", which reminds me of the InterruptTimer.
+  // So just return that for now :
+  ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @CurrentTime);
+  prtCurrent^ := GetSampleTime_Start.QuadPart;
 
   EmuSwapFS(fsXbox);
+
+  Result := DS_OK;
 end;
 
 function TIDirectSound.GetOutputLevels
