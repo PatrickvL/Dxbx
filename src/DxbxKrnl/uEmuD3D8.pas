@@ -6360,10 +6360,10 @@ end;
 
 function XTL_EmuIDirect3DCubeTexture8_LockRect
 (
-  pThis: PX_D3DCubeTexture; 
+  pThis: PX_D3DCubeTexture;
   FaceType: D3DCUBEMAP_FACES;
-  Level: UINT; 
-  pLockedBox: PD3DLOCKED_RECT; 
+  Level: UINT;
+  pLockedBox: PD3DLOCKED_RECT;
   pRect: PRECT;
   Flags: DWORD
 ): HRESULT; stdcall;
@@ -10438,6 +10438,7 @@ function XTL_EmuIDirect3DDevice8_GetRasterStatus
 (
   pRasterStatus: PD3DRASTER_STATUS
 ): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
 
@@ -10452,6 +10453,40 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+
+procedure XTL_EmuIDirect3DCubeTexture8_GetLevelDesc
+(
+  pThis: PX_D3DCubeTexture;
+  Level: UINT;
+  pDesc: PD3DSURFACE_DESC
+) stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DCubeTexture8_GetLevelDesc');
+
+  EmuSwapFS(fsXbox);
+end;
+
+function XTL_EmuIDirect3DCubeTexture8_GetCubeMapSurface2
+(
+  pThis: PX_D3DCubeTexture;
+  FaceType: D3DCUBEMAP_FACES;
+  Level: UINT;
+  ppCubeMapSurface: PPX_D3DSurface
+): HRESULT; stdcall;
+// Branch:Dxbx  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DCubeTexture8_GetLevelDesc');
+
+  EmuSwapFS(fsXbox);
+
+  Result := D3D_OK;
+end;
+
 
 exports
   XTL_EmuGet2DSurfaceDesc,
@@ -10471,8 +10506,6 @@ exports
   XTL_EmuIDirect3D8_SetPushBufferSize name PatchPrefix + 'Direct3D_SetPushBufferSize',
 
   XTL_EmuIDirect3DBaseTexture8_GetLevelCount name PatchPrefix + 'D3DBaseTexture_GetLevelCount@4',
-
-  XTL_EmuIDirect3DCubeTexture8_LockRect  name PatchPrefix + 'D3DCubeTexture8_LockRect', // _D3DCubeTexture_LockRect@24
 
   XTL_EmuIDirect3DDevice8_AddRef name PatchPrefix + 'D3DDevice_AddRef@0',
   XTL_EmuIDirect3DDevice8_ApplyStateBlock name PatchPrefix + 'D3DDevice_ApplyStateBlock',
@@ -10662,8 +10695,15 @@ exports
   XTL_EmuIDirect3DResource8_GetType name PatchPrefix + 'D3DResource_GetType',
   XTL_EmuIDirect3DResource8_Release name PatchPrefix + 'D3DResource_Release',
 
+
   XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
   XTL_EmuIDirect3DSurface8_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
+
+
+  XTL_EmuIDirect3DCubeTexture8_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
+  XTL_EmuIDirect3DCubeTexture8_GetCubeMapSurface2 name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
+  XTL_EmuIDirect3DCubeTexture8_LockRect name PatchPrefix + 'D3DCubeTexture8_LockRect', // _D3DCubeTexture_LockRect@24
+
 
   XTL_EmuIDirect3DTexture8_GetLevelDesc name PatchPrefix + 'D3DTexture_GetLevelDesc', // DXBX : better
   XTL_EmuIDirect3DTexture8_GetSurfaceLevel name PatchPrefix + 'D3DTexture_GetSurfaceLevel',
