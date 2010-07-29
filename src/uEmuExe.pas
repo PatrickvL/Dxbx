@@ -188,8 +188,8 @@ var
   XbeLibraryVersion: PXbeLibraryVersion;
 
   procedure _ReadXbeBlock(aRawOffset, aRawSize, aVirtualAddr, aVirtualSize, aProtection: DWord);
-  var
-    old_protection: DWord;
+  (*var
+    old_protection: DWord; *)
   begin
     Assert(aVirtualSize >= aRawSize);
     if aVirtualSize = 0 then

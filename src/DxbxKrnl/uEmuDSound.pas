@@ -3315,7 +3315,7 @@ begin
   end
   else
   begin
-    pdwStatus^ := 0;
+//    pdwStatus^ := 0;
   end;
 
   EmuSwapFS(fsXbox);

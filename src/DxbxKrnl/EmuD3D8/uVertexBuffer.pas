@@ -1126,8 +1126,8 @@ begin
   dwNewSize         := 0;
 
   // sizes with the rest of the buffer
-  dwOriginalSizeWR  := 0;
-  dwNewSizeWR       := 0;
+  //dwOriginalSizeWR  := 0; // DXBX: Value Assigned never used
+  //dwNewSizeWR       := 0; // DXBX: Value Assigned never used
 
   // vertex data arrays
   pOrigVertexData := nil;
