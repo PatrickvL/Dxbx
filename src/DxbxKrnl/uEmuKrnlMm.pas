@@ -215,9 +215,11 @@ begin
     pRet := PVOID(dwRet);
   end;
 
+{$IFDEF GAME_HACKS_ENABLED}
   if Count < 4 then
     g_HaloHack[Count] := uint32(pRet);
   Inc(Count);
+{$ENDIF}
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
@@ -562,15 +564,15 @@ begin
       [BaseAddress, NumberOfBytes, NewProtect]);
 {$ENDIF}
 
+{$IFDEF GAME_HACKS_ENABLED}
   // Halo Hack
   if(BaseAddress = PVOID($80366000)) then
   begin
     BaseAddress := PVOID((g_HaloHack[0] + ($80366000 - $80061000)));
 
-{$IFDEF DEBUG}
     DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
-{$ENDIF}
   end;
+{$ENDIF}
 
   if(not VirtualProtect(BaseAddress, NumberOfBytes, NewProtect and (not PAGE_WRITECOMBINE), @dwOldProtect)) then
     EmuWarning('VirtualProtect Failed!');

@@ -1794,8 +1794,10 @@ begin
 
   g_bXLaunchNewImageCalled := true;
 
+{$IFDEF GAME_HACKS_ENABLED}
   // Temporary Hack (Unreal): Jump back to the entry point
-//  Puint32(start) := Puint32($21C13B);
+  Puint32(start) := Puint32($21C13B);
+{$ENDIF}
 
   EmuSwapFS(fsXbox);
 

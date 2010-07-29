@@ -292,8 +292,8 @@ function xboxkrnl_KeDelayExecutionThread
   Interval: PLARGE_INTEGER
 ): NTSTATUS; stdcall;
 // Branch:shogun  Revision:145  Translator:PatrickvL  Done:100
-var
-  NativeInterval: LARGE_INTEGER;
+//var
+//  NativeInterval: LARGE_INTEGER;
 begin
   EmuSwapFS(fsWindows);
 

@@ -64,11 +64,13 @@ var g_bEmuException: _bool = false;
 var g_bEmuSuspended: _bool = false;
 var g_bPrintfOn: _boolean = true;
 
+{$IFDEF GAME_HACKS_ENABLED}
 // global exception patching address
 var g_HaloHack: array [0..4-1] of uint32; // = {0};
 
 // Dead to Rights hack
 var g_DeadToRightsHack: array [0..2-1] of uint32; // = {0};
+{$ENDIF}
 
 // global exception patching address
 var funcExclude: array [0..2048-1] of uint32;
@@ -127,9 +129,10 @@ end;
 function EmuException(E: LPEXCEPTION_POINTERS): int; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_tj  Done:30
 var
-  fix: UInt32;
   buffer: string;
   ret: int;
+{$IFDEF GAME_HACKS_ENABLED}
+  fix: UInt32;
   dwESI: DWORD;
   dwSize: DWORD;
   v: DWORD;
@@ -137,11 +140,13 @@ var
   dwValue: DWORD;
   dwPtr: DWORD;
 //  Context: JwaWinNT.CONTEXT;
+{$ENDIF}
 begin
   EmuSwapFS(fsWindows);
 
   g_bEmuException := true;
 
+{$IFDEF GAME_HACKS_ENABLED}
   // check for Halo hack
   begin
     if E.ExceptionRecord.ExceptionCode = $C0000005 then
@@ -194,9 +199,7 @@ begin
             PDWORD($39CE24)^ := g_HaloHack[1] + (dwValue - $803A6000);
           end;
 
-{$IFDEF DEBUG}
           DbgPrintf('EmuMain : Halo Access Adjust 1 was applied!');
-{$ENDIF}
 
           g_bEmuException := false;
 
@@ -233,9 +236,7 @@ begin
               end;
             end;
 
-{$IFDEF DEBUG}
             DbgPrintf('EmuMain : Halo Access Adjust 2 was applied!');
-{$ENDIF}
             g_bEmuException := false;
 
             Result := EXCEPTION_CONTINUE_EXECUTION;
@@ -244,6 +245,7 @@ begin
         end;
     end; // if E.ExceptionRecord.ExceptionCode = $C0000005 then
   end;
+{$ENDIF GAME_HACKS_ENABLED}
 
   // print debug information
 {$IFDEF DEBUG}

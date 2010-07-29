@@ -944,7 +944,7 @@ begin
           Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, 'r%d', [pIntermediate.Output.Address]));
         IMD_OUTPUT_O:
           // Dxbx addition : Safeguard against incorrect VSH_OREG_NAME values :
-          if (pIntermediate.Output.Address > Ord(HIGH(VSH_OREG_NAME))) then
+          if (Integer(pIntermediate.Output.Address) > Ord(HIGH(VSH_OREG_NAME))) then
             // don't add anything
           else
             Inc(DisassemblyPos, sprintf(pDisassembly + DisassemblyPos, '%s', [OReg_Name[VSH_OREG_NAME(pIntermediate.Output.Address)]]));
@@ -2387,6 +2387,7 @@ begin
     DbgVshPrintf('-----------------------'#13#10);
 
 
+//{$IFDEF GAME_HACKS_ENABLED}??
     // HACK: Azurik. Prevent Direct3D from trying to assemble this.
     if(0=strcmp(pShaderDisassembly, 'vs.1.1'#13#10)) then
     begin
