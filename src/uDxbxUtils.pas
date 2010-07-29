@@ -141,7 +141,8 @@ function StartsWithString(const aString, aPrefix: AnsiString): Boolean;
 function StartsWithText(const aString, aPrefix: AnsiString): Boolean; overload;
 function StartsWithText(const aString, aPrefix: UnicodeString): Boolean; overload;
 
-function WideCharMaxLenToString(Source: PWideChar; MaxLen: Integer): UnicodeString;
+function PAnsiCharMaxLenToString(Source: PAnsiChar; MaxLen: Integer): AnsiString;
+function PWideCharMaxLenToString(Source: PWideChar; MaxLen: Integer): UnicodeString;
 
 procedure Swap(var aElement1, aElement2); overload;
 function RoundUp(dwValue, dwMult: DWord): DWord;
@@ -471,14 +472,30 @@ begin
   Result := AnsiStrLIComp(PWideChar(aString), PWideChar(aPrefix), Length(aPrefix)) = 0;
 end;
 
-function WideCharMaxLenToString(Source: PWideChar; MaxLen: Integer): UnicodeString;
+// TODO : Other solutions are PCharToString(), StrLPas(), but definately not PAnsiChar()!
+function PAnsiCharMaxLenToString(Source: PAnsiChar; MaxLen: Integer): AnsiString;
 var
   ActualLen: Integer;
 begin
   ActualLen := 0;
   if Assigned(Source) then
     while (ActualLen < MaxLen)
-      and (Source[ActualLen] <> #0)do
+      and (Source[ActualLen] < #9) do // Anything below tab will be treated as end of string
+        Inc(ActualLen);
+
+  SetLength(Result, ActualLen);
+  if ActualLen > 0 then
+    memcpy(@Result[1], Source, ActualLen * SizeOf(AnsiChar));
+end;
+
+function PWideCharMaxLenToString(Source: PWideChar; MaxLen: Integer): UnicodeString;
+var
+  ActualLen: Integer;
+begin
+  ActualLen := 0;
+  if Assigned(Source) then
+    while (ActualLen < MaxLen)
+      and (Source[ActualLen] < #9) do // Anything below tab will be treated as end of string
         Inc(ActualLen);
 
   SetLength(Result, ActualLen);

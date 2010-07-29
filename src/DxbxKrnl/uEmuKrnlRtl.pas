@@ -583,10 +583,10 @@ begin
       #13#10'   LineNumber                : 0x%.08X (%d)' +
       #13#10'   Message                   : 0x%.08X ("%s")' +
       #13#10');',
-      [Pointer(FailedAssertion), PAnsiChar(FailedAssertion),
-       Pointer(FileName), PAnsiChar(FileName),
+      [Pointer(FailedAssertion), PAnsiCharMaxLenToString(FailedAssertion, 260),
+       Pointer(FileName), PAnsiCharMaxLenToString(FileName, 260),
        LineNumber, LineNumber,
-       Pointer(Message_), PAnsiChar(Message_)]);
+       Pointer(Message_), PAnsiCharMaxLenToString(Message_, 260)]);
 {$ENDIF}
 
   JwaNative.RtlAssert(FailedAssertion, FileName, LineNumber, Message_);
