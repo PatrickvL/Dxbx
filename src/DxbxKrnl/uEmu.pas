@@ -136,7 +136,7 @@ var
   dwCur: DWORD;
   dwValue: DWORD;
   dwPtr: DWORD;
-  Context: JwaWinNT.CONTEXT;
+//  Context: JwaWinNT.CONTEXT;
 begin
   EmuSwapFS(fsWindows);
 

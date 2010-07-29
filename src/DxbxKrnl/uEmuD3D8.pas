@@ -6836,10 +6836,8 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BlockUntilVerticalBlank();');
 {$ENDIF}
 
-  // Marked out by cxbx
-  // segaGT tends to freeze with this on
-  //    if (g_XBVideo.GetVSync())
-  IDirectDraw7(g_pDD7).WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+  if (g_XBVideo.GetVSync()) then
+    IDirectDraw7(g_pDD7).WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
   EmuSwapFS(fsXbox);
 end;
@@ -6859,8 +6857,7 @@ begin
     #13#10');',
     [Addr(pCallback)]); // Dxbx: Check this causes no call!
 {$ENDIF}
-
-  if IsValidAddress(Addr(pCallback)) then
+  if IsValidAddress(@pCallback) then
     g_pVBCallback := pCallback
   else
     // Dxbx note : Zapper passes the Handle of a previously created thread here... wierd!
