@@ -1822,7 +1822,7 @@ begin
   // TODO -oCXBX: Actually do something
 
   // TODO -oDxbx : Call upon the PrimaryBuffer (but do check for the existence of a Listener!) :
-  // IDirectSound3DListener(Self.EmuListener).SetAllParameters(nil{???}, dwApply);
+  //IDirectSound3DListener(Self.EmuListener).SetAllParameters(nil{???}, dwApply);
 
   EmuSwapFS(fsXbox);
 
@@ -2394,35 +2394,35 @@ begin
          #13#10');',
          [Self]);
 
-  uRet := 0;
+  uRet := DS_OK;
 
-  if (Self <> nil) then
+(*  if (Self <> nil) then
   begin
     if (0=(Self.EmuFlags and DSB_FLAG_RECIEVEDATA)) then
     begin
-      uRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release();
+        uRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release();
 
-      if (uRet = 0) then
-      begin
-        Self.EmuDirectSoundBuffer8 := nil; // Dxbx addition : nil out after free
-        IDirectSound3DListener(Self.EmuListener) := nil; // Dxbx addition : Implicitly release of Listener
-
-        // remove cache entry
-        for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
+        if (uRet = 0) then
         begin
-          if (g_pDSoundBufferCache[v] = Self) then
-            g_pDSoundBufferCache[v] := nil;
-        end;
+          Self.EmuDirectSoundBuffer8 := nil; // Dxbx addition : nil out after free
+          IDirectSound3DListener(Self.EmuListener) := nil; // Dxbx addition : Implicitly release of Listener
 
-        if (Self.EmuBufferDesc.lpwfxFormat <> NULL) then
-          DxbxFree(Self.EmuBufferDesc.lpwfxFormat);
+          // remove cache entry
+          for v := 0 to SOUNDBUFFER_CACHE_SIZE-1 do
+          begin
+            if (g_pDSoundBufferCache[v] = Self) then
+              g_pDSoundBufferCache[v] := nil;
+          end;
 
-        DxbxFree(Self.EmuBufferDesc);
+          if (Self.EmuBufferDesc.lpwfxFormat <> NULL) then
+            DxbxFree(Self.EmuBufferDesc.lpwfxFormat);
 
-        Self.Free;
+          DxbxFree(Self.EmuBufferDesc);
+
+          Self.Free;
       end;
     end;
-  end;
+  end; *)
 
   EmuSwapFS(fsXbox);
 
@@ -3994,14 +3994,14 @@ begin
     Dxbx_TIDirectSoundStream_Resize(Self, pInputBuffer.dwMaxSize);
 
     if (pInputBuffer.pdwStatus <> nil) then
-      pInputBuffer.pdwStatus^ := DS_OK;
+      pInputBuffer.pdwStatus^ := S_OK;
 
     DxbxHackUpdateSoundStreams();
   end
   else
   begin
     if (pInputBuffer.pdwStatus <> nil) then
-      pInputBuffer.pdwStatus^ := DS_OK;
+      pInputBuffer.pdwStatus^ := S_OK;
   end;
 
   EmuSwapFS(fsXbox);

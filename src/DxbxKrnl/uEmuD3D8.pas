@@ -10340,7 +10340,7 @@ begin
 {$ENDIF}
 
   // TODO -oCxbx: Implement
-  DxbxKrnlCleanup('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
+//  DxbxKrnlCleanup('SetModelView not yet implemented (should be easy fix, tell blueshogun)');
 
   EmuSwapFS(fsXbox);
 
