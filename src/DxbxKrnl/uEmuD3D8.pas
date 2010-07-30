@@ -6880,8 +6880,7 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BlockUntilVerticalBlank();');
 {$ENDIF}
 
-  if (g_XBVideo.GetVSync()) then
-    IDirectDraw7(g_pDD7).WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+  IDirectDraw7(g_pDD7).WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
   EmuSwapFS(fsXbox);
 end;

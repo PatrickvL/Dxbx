@@ -195,7 +195,7 @@ var
 function IsEmuHandle(hFile: {xboxkrnl.}HANDLE): Boolean; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := (uint32(hFile) > $80000000) and (int32(hFile) >= 0);
+  Result := (uint32(hFile) > $80000000) and (int32(hFile) <> -2);
 end;
 
 // convert from 'special' emulated handle to a pointer
