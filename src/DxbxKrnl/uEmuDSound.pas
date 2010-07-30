@@ -2069,11 +2069,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-  // Dxbx note : The SDK documentation says "time returned by the master clock is a 64-bit value"
-  // "measured in units of approximately 100 nanoseconds", which reminds me of the InterruptTimer.
-  // So just return that for now :
- // ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @CurrentTime);
- // prtCurrent^ := GetSampleTime_Start.QuadPart;
+  if Assigned(prtCurrent) then
+  begin
+    // Dxbx note : The SDK documentation says "time returned by the master clock is a 64-bit value"
+    // "measured in units of approximately 100 nanoseconds", which reminds me of the InterruptTimer.
+    // So just return that for now :
+    ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @CurrentTime);
+    prtCurrent^ := CurrentTime.QuadPart;
+  end;
 
   EmuSwapFS(fsXbox);
 
@@ -2394,16 +2397,15 @@ begin
          #13#10');',
          [Self]);
 
-  Result := DS_OK;
-  if (Self <> nil) and assigned(Self.EmuDirectSoundBuffer8) then
-    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release();
-
   //TODO DXBX: - This is not good to release... it crashes rayamn menu items hard.
-(*  if (Self <> nil) then
+  if (Self <> nil) then
   begin
     if (0=(Self.EmuFlags and DSB_FLAG_RECIEVEDATA)) then
     begin
-        uRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release();
+        if Assigned(Self.EmuDirectSoundBuffer8) then
+          uRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release()
+        else
+          uRet := 0;
 
         if (uRet = 0) then
         begin
@@ -2425,11 +2427,11 @@ begin
           Self.Free;
       end;
     end;
-  end; *)
+  end;
 
   EmuSwapFS(fsXbox);
 
-//  Result := uRet;
+  Result := uRet;
 end;
 
 function TIDirectSoundBuffer.SetFormat
