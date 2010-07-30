@@ -2072,8 +2072,8 @@ begin
   // Dxbx note : The SDK documentation says "time returned by the master clock is a 64-bit value"
   // "measured in units of approximately 100 nanoseconds", which reminds me of the InterruptTimer.
   // So just return that for now :
-  ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @CurrentTime);
-  prtCurrent^ := GetSampleTime_Start.QuadPart;
+ // ReadSystemTimeIntoLargeInteger(xboxkrnl_KeInterruptTimePtr, @CurrentTime);
+ // prtCurrent^ := GetSampleTime_Start.QuadPart;
 
   EmuSwapFS(fsXbox);
 
