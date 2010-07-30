@@ -74,7 +74,7 @@ var
     {020}@xboxkrnl_ExInterlockedAddLargeStatistic,
     {021}@xboxkrnl_ExInterlockedCompareExchange64,
     {022}@xboxkrnl_ExMutantObjectType, // variable
-    {023}@xboxkrnl_ExQueryPoolBlockSize,
+    {023}nil, //@xboxkrnl_ExQueryPoolBlockSize,
     {024}@xboxkrnl_ExQueryNonVolatileSetting,
     {025}@xboxkrnl_ExReadWriteRefurbInfo,
     {026}@xboxkrnl_ExRaiseException,
