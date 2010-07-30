@@ -153,8 +153,8 @@ type
     function Init(aSymbolicLinkName, aFullPath: AnsiString): NTSTATUS;
   end;
 
-function IsEmuHandle(hFile: {xboxkrnl::} HANDLE): Boolean; inline
-function HandleToEmuHandle(hFile: {xboxkrnl::} HANDLE): TEmuHandle; inline;
+function IsEmuHandle(hFile: {xboxkrnl.}HANDLE): Boolean; inline
+function HandleToEmuHandle(hFile: {xboxkrnl.}HANDLE): TEmuHandle; inline;
 function EmuHandleToHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 
 function SymbolicLinkToDriveLetter(aSymbolicLinkName: AnsiString): AnsiChar;
@@ -191,25 +191,29 @@ var
   {EmuHandle.}HandleLock: _RTL_CRITICAL_SECTION;
 *)
 
+
 // is hFile a 'special' emulated handle?
 function IsEmuHandle(hFile: {xboxkrnl.}HANDLE): Boolean; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := (uint32(hFile) > $80000000) and (int32(hFile) <> -2);
+  // High bit must be set, the rest should indicate a valid address and it should be an TEmuHandle instance :
+  Result := (int32(hFile) < 0)
+        and IsValidAddress(Pointer(hFile and $7FFFFFFF))
+        and (TClass(PPointer(hFile)^) = TEmuHandle);
 end;
 
 // convert from 'special' emulated handle to a pointer
 function HandleToEmuHandle(hFile: {xboxkrnl.}HANDLE): TEmuHandle; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := TEmuHandle(uint32(hFile) - $80000000);
+  Result := TEmuHandle(hFile and $7FFFFFFF);
 end;
 
 // convert from a pointer to 'special' emulated handle
 function EmuHandleToHandle(apEmuHandle: TEmuHandle): HANDLE; inline;
 // Branch:martin  Revision:39  Translator:PatrickvL  Done:100
 begin
-  Result := HANDLE(uint32(apEmuHandle) + $80000000);
+  Result := HANDLE(uint32(apEmuHandle) or $80000000);
 end;
 
 { TEmuHandle }

@@ -1825,7 +1825,7 @@ function xboxkrnl_NtQuerySymbolicLinkObject(
   ): NTSTATUS; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 var
-  EmuHandle: TEmuHandle;
+  iEmuHandle: TEmuHandle;
   EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
 begin
   EmuSwapFS(fsWindows);
@@ -1846,13 +1846,13 @@ begin
   begin
     // Check that this handle actually is an NtSymbolicLinkObject :
     Result := STATUS_OBJECT_TYPE_MISMATCH;
-    EmuHandle := HandleToEmuHandle(LinkHandle);
+    iEmuHandle := HandleToEmuHandle(LinkHandle);
     // TODO -oDxbx : Make this thread-safe via reference-counting on the EmuHandle object :
-    if EmuHandle.NtObject is TEmuNtSymbolicLinkObject then
+    if iEmuHandle.NtObject is TEmuNtSymbolicLinkObject then
     begin
       // Retrieve the NtSymbolicLinkObject and populate the output arguments :
       Result := STATUS_SUCCESS;
-      EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject(EmuHandle.NtObject);
+      EmuNtSymbolicLinkObject := TEmuNtSymbolicLinkObject(iEmuHandle.NtObject);
 
       if Assigned(LinkTarget) then
         Result := DxbxFillStringBuffer(LinkTarget, EmuNtSymbolicLinkObject.XboxFullPath);
