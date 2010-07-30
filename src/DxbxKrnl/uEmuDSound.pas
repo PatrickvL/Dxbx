@@ -3336,7 +3336,7 @@ begin
 
   hRet := DS_OK;
 
-  if (Self <> nil) and (Self.EmuBuffer = nil) then
+  if (Self <> nil) and (Self.EmuDirectSoundBuffer8 <> nil) then
   begin
     hRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).GetStatus({out}pdwStatus^);
   end
