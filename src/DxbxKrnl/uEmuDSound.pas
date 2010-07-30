@@ -2394,8 +2394,11 @@ begin
          #13#10');',
          [Self]);
 
-  uRet := DS_OK;
+  Result := DS_OK;
+  if (Self <> nil) and assigned(Self.EmuDirectSoundBuffer8) then
+    Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release();
 
+  //TODO DXBX: - This is not good to release... it crashes rayamn menu items hard.
 (*  if (Self <> nil) then
   begin
     if (0=(Self.EmuFlags and DSB_FLAG_RECIEVEDATA)) then
@@ -2426,7 +2429,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := uRet;
+//  Result := uRet;
 end;
 
 function TIDirectSoundBuffer.SetFormat
