@@ -10907,7 +10907,7 @@ function XTL_EmuIDirect3DDevice8_GetPixelShaderFunction
   Handle: DWORD;
   pData: PX_D3DPIXELSHADERDEF
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:100
+// Branch:DXBX  Translator:Shadow_Tj  Done:50
 begin
   EmuSwapFS(fsWindows);
 
@@ -10920,7 +10920,7 @@ begin
     [Handle, pData]);
 {$ENDIF}
 
-  IDirect3DDevice8(g_pD3DDevice8).GetPixelShaderFunction(Handle, pData);
+//  IDirect3DDevice8(g_pD3DDevice8).GetPixelShaderFunction(Handle, pData);
   Result := S_OK;
 
   EmuSwapFS(fsXbox);
