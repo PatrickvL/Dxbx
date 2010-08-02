@@ -10764,7 +10764,7 @@ begin
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetVertexShaderInputDirect');
 
   EmuSwapFS(fsXbox);
-end; *)
+end;         *)
 
 function XTL_EmuIDirect3DPushBuffer8_SetPalette
 (
@@ -10838,7 +10838,7 @@ function XTL_EmuIDirect3DDevice8_SetRenderState_SetRenderStateNotInline
   State: D3DRENDERSTATETYPE;
   Value: DWORD
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:100
+// Branch:DXBX  Translator:Shadow_Tj  Done:0
 begin
   EmuSwapFS(fsWindows);
 
@@ -10851,13 +10851,28 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+
+(*function XTL_EmuIDirect3DDevice8_GetPushDistance
+(
+): HRESULT; stdcall;
+// Branch:DXBX  Translator:Shadow_Tj  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DDevice8_GetPushDistance');
+
+  EmuSwapFS(fsXbox);
+end; *)
+
+
+
 exports
   XTL_EmuGet2DSurfaceDesc,
   XTL_EmuGet2DSurfaceDescD, // TODO -oDXBX: Fix wrong prefix!
 
   XTL_EmuIDevice3D8_KickOff name PatchPrefix + '?KickOff@CDevice@D3D@@QAEXXZ',
 
-//  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // better for dxbx logging
+  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // better for dxbx logging
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D8_CheckDeviceMultiSampleType name PatchPrefix + 'Direct3D_CheckDeviceMultiSampleType',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
@@ -10892,7 +10907,7 @@ exports
   XTL_EmuIDirect3DDevice8_CreatePalette2 name PatchPrefix + 'D3DDevice_CreatePalette2',
   XTL_EmuIDirect3DDevice8_CreatePixelShader name PatchPrefix + 'D3DDevice_CreatePixelShader@8',
   XTL_EmuIDirect3DDevice8_CreateStateBlock name PatchPrefix + 'D3DDevice_CreateStateBlock',
-(*  XTL_EmuIDirect3DDevice8_CreateSurface name PatchPrefix + 'D3DDevice_CreateSurface', *)
+(*  XTL_EmuIDirect3DDevice8_CreateSurface name PatchPrefix + 'D3DDevice_CreateSurface', *)  // TODO -oDXBX: NOT YET IMPLEMENTED
   XTL_EmuIDirect3DDevice8_CreateTexture name PatchPrefix + 'D3DDevice_CreateTexture',
   XTL_EmuIDirect3DDevice8_CreateTexture2 name PatchPrefix + 'D3DDevice_CreateTexture2',
   XTL_EmuIDirect3DDevice8_CreateVertexBuffer name PatchPrefix + 'D3DDevice_CreateVertexBuffer',
@@ -10926,6 +10941,7 @@ exports
   XTL_EmuIDirect3DDevice8_GetModelView name PatchPrefix + 'D3DDevice_GetModelView', // ??
   XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus name PatchPrefix + 'D3DDevice_GetOverlayUpdateStatus',
   XTL_EmuIDirect3DDevice8_GetProjectionViewportMatrix name PatchPrefix + 'D3DDevice_GetProjectionViewportMatrix',
+(*  XTL_EmuIDirect3DDevice8_D3DDevice_GetPushDistance name PatchPrefix + 'D3DDevice_D3DDevice_GetPushDistance', *) // TODO -oDXBX: NOT YET IMPLEMENTED
   XTL_EmuIDirect3DDevice8_GetRasterStatus name PatchPrefix + 'D3DDevice_GetRasterStatus',
   XTL_EmuIDirect3DDevice8_GetRenderTarget name PatchPrefix + 'D3DDevice_GetRenderTarget',
   XTL_EmuIDirect3DDevice8_GetRenderTarget2 name PatchPrefix + 'D3DDevice_GetRenderTarget2',
@@ -10975,7 +10991,7 @@ exports
   XTL_EmuIDirect3DDevice8_SetPixelShaderProgram name PatchPrefix + 'D3DDevice_SetPixelShaderProgram',
   XTL_EmuIDirect3DDevice8_SetRenderState_BackFillMode name PatchPrefix + 'D3DDevice_SetRenderState_BackFillMode',
   XTL_EmuIDirect3DDevice8_SetRenderState_CullMode name PatchPrefix + 'D3DDevice_SetRenderState_CullMode',
-//  XTL_EmuIDirect3DDevice8_SetRenderState_Deferred name PatchPrefix + 'D3DDevice_SetRenderState_Deferred',
+//  XTL_EmuIDirect3DDevice8_SetRenderState_Deferred name PatchPrefix + 'D3DDevice_SetRenderState_Deferred', Dxbx note : Disabled, as we DO have EmuD3DDeferredRenderState pin-pointed correctly
   XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed name PatchPrefix + 'D3DDevice_SetRenderState_DoNotCullUncompressed',
   XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable name PatchPrefix + 'D3DDevice_SetRenderState_Dxt1NoiseEnable',
   XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias name PatchPrefix + 'D3DDevice_SetRenderState_EdgeAntiAlias',
@@ -11062,7 +11078,7 @@ exports
 
 
   XTL_EmuIDirect3DSurface8_GetDesc name PatchPrefix + 'D3DSurface_GetDesc',
-(*  XTL_EmuIDirect3DSurface8_GetContainer2 name PatchPrefix + 'D3DSurface_GetContainer2', *)
+(*  XTL_EmuIDirect3DSurface8_GetContainer2 name PatchPrefix + 'D3DSurface_GetContainer2', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuIDirect3DSurface8_LockRect name PatchPrefix + 'D3DSurface_LockRect@16',
 
   XTL_EmuIDirect3DCubeTexture8_GetLevelDesc name PatchPrefix + 'D3DCubeTexture_GetLevelDesc',
@@ -11077,24 +11093,24 @@ exports
 
   XTL_EmuIDirect3DPushBuffer8_SetModelView name PatchPrefix + 'D3DPushBuffer_SetModelView',
   XTL_EmuIDirect3DPushBuffer8_SetVertexBlendModelView name PatchPrefix + 'D3DPushBuffer_SetVertexBlendModelView',
-(*  XTL_EmuIDirect3DPushBuffer8_SetVertexShaderInputDirect name PatchPrefix + 'D3DPushBuffer_SetVertexShaderInputDirect', *)
+(*  XTL_EmuIDirect3DPushBuffer8_SetVertexShaderInputDirect name PatchPrefix + 'D3DPushBuffer_SetVertexShaderInputDirect', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuIDirect3DPushBuffer8_SetPalette name PatchPrefix + 'D3DPushBuffer_SetPalette',
   XTL_EmuIDirect3DPushBuffer8_SetVertexShaderConstant name PatchPrefix + 'D3DPushBuffer_SetVertexShaderConstant',
-(*  XTL_EmuIDirect3DPushBuffer8_SetRenderState name PatchPrefix + 'D3DPushBuffer_SetRenderState',
-  XTL_EmuIDirect3DPushBuffer8_CopyRects name PatchPrefix + 'D3DPushBuffer_CopyRects', *)
+(*  XTL_EmuIDirect3DPushBuffer8_SetRenderState name PatchPrefix + 'D3DPushBuffer_SetRenderState', // TODO -oDXBX: NOT YET IMPLEMENTED YET
+  XTL_EmuIDirect3DPushBuffer8_CopyRects name PatchPrefix + 'D3DPushBuffer_CopyRects', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
 
 
   XTL_EmuIDirect3DVertexBuffer8_GetDesc name PatchPrefix + 'D3DVertexBuffer_GetDesc',
   XTL_EmuIDirect3DVertexBuffer8_Lock name PatchPrefix + 'D3DVertexBuffer_Lock',
   XTL_EmuIDirect3DVertexBuffer8_Lock2 name PatchPrefix + 'D3DVertexBuffer_Lock2',
 
-(* XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc',
-   XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2',
-   XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox', *)
+(* XTL_EmuIDirect3DVolume_GetDesc name PatchPrefix + 'D3DVolume_GetDesc', // TODO -oDXBX: NOT YET IMPLEMENTED YET
+   XTL_EmuIDirect3DVolume_GetContainer2 name PatchPrefix + 'GetContainer2', // TODO -oDXBX: NOT YET IMPLEMENTED YET
+   XTL_EmuIDirect3DVolume_LockBox name PatchPrefix + 'D3DVolume_LockBox', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
 
 
   XTL_EmuIDirect3DVolumeTexture8_GetLevelDesc name PatchPrefix + 'D3DVolumeTexture_GetLevelDesc',
-(*  XTL_EmuIDirect3DVolumeTexture8_GetVolumeLevel2 name PatchPrefix + 'D3DVolumeTexture_GetVolumeLevel2', *)
+(*  XTL_EmuIDirect3DVolumeTexture8_GetVolumeLevel2 name PatchPrefix + 'D3DVolumeTexture_GetVolumeLevel2', *) // TODO -oDXBX: NOT YET IMPLEMENTED YET
   XTL_EmuIDirect3DVolumeTexture8_LockBox name PatchPrefix + 'D3DVolumeTexture_LockBox',
 
   XTL_EmuLock2DSurface name PatchPrefix + 'Lock2DSurface';
