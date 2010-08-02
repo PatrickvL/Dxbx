@@ -310,34 +310,34 @@ begin
 
   case (IDirect3DResource8(pResource.Emu.Resource8).GetType()) of
     D3DRTYPE_SURFACE:
-      repeat until IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect() = S_OK;
+      repeat until IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect() = D3D_OK;
 
     D3DRTYPE_VOLUME:
       // TODO -oDxbx : Totally untested! Volume's aren't used yet!
-      repeat until IDirect3DVolume8(pResource.Emu.Resource8).UnlockBox() = S_OK;
+      repeat until IDirect3DVolume8(pResource.Emu.Resource8).UnlockBox() = D3D_OK;
 
     D3DRTYPE_TEXTURE:
-      repeat until IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(uiLevel) = S_OK;
+      repeat until IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(uiLevel) = D3D_OK;
 
     D3DRTYPE_VOLUMETEXTURE:
       // TODO -oDxbx : Totally untested! VolumeTexture's aren't used yet!?
-      repeat until IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture8).UnlockBox(uiLevel) = S_OK;
+      repeat until IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture8).UnlockBox(uiLevel) = D3D_OK;
 
     D3DRTYPE_CUBETEXTURE:
     begin
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) = S_OK;
+      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) = D3D_OK;
+      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) = D3D_OK;
+      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) = D3D_OK;
+      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) = D3D_OK;
+      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) = D3D_OK;
+      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) = D3D_OK;
     end;
 
     D3DRTYPE_VERTEXBUFFER:
-      repeat until IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock() = S_OK;
+      repeat until IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock() = D3D_OK;
 
     D3DRTYPE_INDEXBUFFER:
-      repeat until IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Unlock() = S_OK;
+      repeat until IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Unlock() = D3D_OK;
   else
     Result := False;
   end;
@@ -913,7 +913,7 @@ begin
       begin
         DeleteObject(g_hBgBrush);
         PostQuitMessage(0);
-        Result := S_OK;
+        Result := D3D_OK;
         Exit;
       end;
 
@@ -1010,7 +1010,7 @@ begin
         if (g_XBVideo.GetFullscreen() or g_bIsFauxFullscreen) then
         begin
           SetCursor(0);
-          Result := S_OK;
+          Result := D3D_OK;
           Exit;
         end;
 
@@ -1022,7 +1022,7 @@ begin
     Exit;
   end;
 
-  Result := S_OK;
+  Result := D3D_OK;
 end; // EmuMsgProc
 
 // timing thread procedure
@@ -2428,7 +2428,7 @@ begin
 {$ENDIF}
 
 { unsafe, somehow  -- MARKED OUT BY CXBX --
-    HRESULT hRet := S_OK;
+    HRESULT hRet := D3D_OK;
 
     X_D3DSurface *pBackBuffer := new X_D3DSurface();
 
@@ -2708,7 +2708,7 @@ begin
   g_VertexShaderConstantMode := Mode;
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -2963,7 +2963,7 @@ begin
   begin
     pHandle^ := HNULL;
     EmuSwapFS(fsXbox);
-    Result := S_OK;
+    Result := D3D_OK;
     Exit;
   end;
 
@@ -4359,7 +4359,7 @@ begin
     [Register_, a, b, c, d]);
 {$ENDIF}
 
-  hRet := S_OK;
+  hRet := D3D_OK;
 
   // Check if g_IVBTable has enough space for the current g_IVBTblOffs
   // (and one extra for the "Copy current color to next vertex" case) :
@@ -4922,7 +4922,7 @@ begin
     [pThis, pThis.Data, pBase]);
 {$ENDIF}
 
-  hRet := S_OK;
+  hRet := D3D_OK;
 
   pResource := pThis;
 
@@ -6880,6 +6880,9 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_BlockUntilVerticalBlank();');
 {$ENDIF}
 
+  // - DXBX - DO NOT ENABLE GetVSync CHECK... ALMOST EVERY GAME CRASHES WHEN YOU DO NOT WAIT !!!
+  // segaGT tends to freeze with this on
+	//    if(g_XBVideo.GetVSync())
   IDirectDraw7(g_pDD7).WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
   EmuSwapFS(fsXbox);
@@ -9388,7 +9391,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType
@@ -9611,7 +9614,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DResource8_GetPrivateData
@@ -9629,7 +9632,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DResource8_FreePrivateData
@@ -9761,7 +9764,7 @@ begin
 
   {hRet := }XTL_EmuIDirect3DDevice8_SetPixelShader(dwHandle);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_CreateStateBlock
@@ -9919,7 +9922,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 //#pragma warning(default:4244)
 
@@ -9951,7 +9954,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -9993,7 +9996,7 @@ begin
     [pTexture]);
 {$ENDIF}
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   // TODO -oCXBX: I'm sure there is a better way to handle this.
 
@@ -10127,7 +10130,7 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PersistDisplay();');
 {$ENDIF}
 
-  Result := S_OK;
+  Result := D3D_OK;
 
 {$IFDEF GAME_HACKS_ENABLED}
   // TODO -oCXBX: If this functionality is ever really needed, an idea for
@@ -10192,7 +10195,7 @@ begin
 
   EmuSwapFS(fsWindows);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetRenderState_SampleAlpha
@@ -10217,7 +10220,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 (* Dxbx note : Disabled, as we DO have EmuD3DDeferredRenderState pin-pointed correctly
@@ -10343,7 +10346,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexBlendModelView
@@ -10361,7 +10364,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -10397,7 +10400,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_EndPushBuffer(): HRESULT; stdcall;
@@ -10411,7 +10414,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuXMETAL_StartPush
@@ -10462,7 +10465,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetBackMaterial
@@ -10484,7 +10487,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -10713,11 +10716,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*  D3DPushBuffer_SetModelView(pPushBuffer, Offset, pModelView, pInverseModelView, pComposite);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetModelView');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10736,11 +10739,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*  D3DPushBuffer_SetVertexBlendModelView(pPushBuffer, Offset, Count, pModelViews, pInverseModelViews, pProjectionViewport);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetVertexBlendModelView');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10775,11 +10778,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*  D3DPushBuffer_SetPalette(pPushBuffer, Offset, Stage, pPalette);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetPalette');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10797,11 +10800,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*D3DPushBuffer_SetVertexShaderConstant(pPushBuffer, Offset, Register, pConstantData, ConstantCount);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetVertexShaderConstant');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10841,7 +10844,7 @@ begin
 
 { D3DDIRTY_RENDERSTATE(State);
   D3DDevice_SetRenderStateNotInline(State, Value);
-  return S_OK; }
+  return D3D_OK; }
 
   Unimplemented('XTL_EmuIDirect3DDevice8_SetRenderState_SetRenderStateNotInline');
 
