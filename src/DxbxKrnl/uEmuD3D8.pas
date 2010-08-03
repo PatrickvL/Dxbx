@@ -1428,6 +1428,8 @@ begin
 //        if Assigned(g_pCachedZStencilSurface.Emu.Surface8) then
 //          PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface := g_pCachedZStencilSurface;
 
+        DxbxHack_HadZEnable := False;
+
         IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer
         (
           {Length=}1,
@@ -4760,8 +4762,6 @@ begin
   end;
 
   Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, newFlags, Color, Z, Stencil);
-
-  DxbxHack_HadZEnable := False;
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear returns 0x%.08X', [Result]);
   EmuSwapFS(fsXbox);
