@@ -34,6 +34,7 @@ uses
   uDxbxKrnlUtils;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
+function VersionAdjust_D3DTSS(const NewValue: DWORD): DWORD; {NOPATCH}
 
 // deferred state lookup tables
 var XTL_EmuD3DDeferredRenderState: PDWORDs;
@@ -46,11 +47,37 @@ var XTL_EmuD3DRenderState_ComplexCorrection: Integer; // Dxbx addition, to allow
 var g_BuildVersion: uint32;
 // var g_OrigBuildVersion: uint32; // Dxbx note : Unused
 
+
 implementation
 
 uses
   uEmuD3D8, // g_BuildVersion
   uEmuD3D8Types;
+
+// For 3925, the actual D3DTSS flags have different values.
+// This function maps new indexes to old ones, so that we
+// can read a specific member from the emulated XBE's
+// XTL_EmuD3DDeferredTextureState buffer.
+function VersionAdjust_D3DTSS(const NewValue: DWORD): DWORD;
+const
+  OLD_X_D3DTSS_COLOROP = 0;
+  OLD_X_D3DTSS_TEXTURETRANSFORMFLAGS = 9;
+  OLD_X_D3DTSS_ADDRESSU = 10;
+  OLD_X_D3DTSS_ALPHAKILL = 21;
+begin
+  Result := NewValue;
+  if g_BuildVersion <= 3925 then
+  begin
+    // In SDK 3925 (or at somewhere else between 3911 and 4361), the deferred texture states where switched;
+    // D3DTSS_COLOROP ..D3DTSS_TEXTURETRANSFORMFLAGS ranged  0.. 9 which has become 12..21
+    // D3DTSS_ADDRESSU..D3DTSS_ALPHAKILL             ranged 10..21 which has become  0..11
+    if (NewValue <= X_D3DTSS_TEXTURETRANSFORMFLAGS) then
+      if (NewValue <= X_D3DTSS_ALPHAKILL) then
+        Inc(Result, OLD_X_D3DTSS_ADDRESSU)
+      else
+        Dec(Result, {NEW}X_D3DTSS_COLOROP);
+  end;
+end;
 
 procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 // Branch:shogun  Revision:163  Translator:PatrickvL  Done:100
@@ -58,11 +85,9 @@ var
   dwConv: DWORD;
   v: int;
   pCur: PDWORDs;
+  X_D3DTSS: DWORD;
   pTexture: XTL_PIDirect3DBaseTexture8;
   dwValue: DWORD;
-  bHack3925: _bool;
-  Adjust1: int;
-  Adjust2: int;
 begin
   // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
   if (XTL_EmuD3DDeferredRenderState <> nil) then
@@ -170,12 +195,6 @@ begin
     *)
   end;
 
-  // For 3925, the actual D3DTSS flags have different values.
-  // TODO -oDxbx : Check all other SDK versions if they differ too...
-  bHack3925 := (g_BuildVersion = 3925);
-  Adjust1 := iif(bHack3925, 12, 0);
-  Adjust2 := iif(bHack3925, 10, 0);
-
   // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
   if (XTL_EmuD3DDeferredTextureState <> nil) then
   begin
@@ -183,100 +202,117 @@ begin
     begin
       pCur := @(XTL_EmuD3DDeferredTextureState[v*X_D3DTS_STAGESIZE]);
 
-      if (pCur[X_D3DTSS_ADDRESSU+Adjust2] <> X_D3DTSS_UNK) then
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ADDRESSU)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
       begin
-        if (pCur[X_D3DTSS_ADDRESSU+Adjust2] = 5) then
+        if (X_D3DTSS = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[X_D3DTSS_ADDRESSU+Adjust2]);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSU, X_D3DTSS);
       end;
 
-      if (pCur[X_D3DTSS_ADDRESSV+Adjust2] <> X_D3DTSS_UNK) then
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ADDRESSV)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
       begin
-        if (pCur[X_D3DTSS_ADDRESSV+Adjust2] = 5) then
+        if (X_D3DTSS = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[X_D3DTSS_ADDRESSV+Adjust2]);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSV, X_D3DTSS);
       end;
 
-      if (pCur[X_D3DTSS_ADDRESSW+Adjust2] <> X_D3DTSS_UNK) then
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ADDRESSW)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
       begin
-        if (pCur[X_D3DTSS_ADDRESSW+Adjust2] = 5) then
+        if (X_D3DTSS = 5) then
           DxbxKrnlCleanup('ClampToEdge is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[X_D3DTSS_ADDRESSW+Adjust2]);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ADDRESSW, X_D3DTSS);
       end;
 
-      if (pCur[X_D3DTSS_MAGFILTER+Adjust2] <> X_D3DTSS_UNK) then
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MAGFILTER)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
       begin
-        if (pCur[X_D3DTSS_MAGFILTER+Adjust2] = 4) then
+        if (X_D3DTSS = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[X_D3DTSS_MAGFILTER+Adjust2]);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAGFILTER, X_D3DTSS);
       end;
 
-      if (pCur[X_D3DTSS_MINFILTER+Adjust2] <> X_D3DTSS_UNK) then
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MINFILTER)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
       begin
-        if (pCur[X_D3DTSS_MINFILTER+Adjust2] = 4) then
+        if (X_D3DTSS = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MINFILTER, pCur[X_D3DTSS_MINFILTER+Adjust2]);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MINFILTER, X_D3DTSS);
       end;
 
-      if (pCur[X_D3DTSS_MIPFILTER+Adjust2] <> X_D3DTSS_UNK) then
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MIPFILTER)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
       begin
-        if (pCur[X_D3DTSS_MIPFILTER+Adjust2] = 4) then
+        if (X_D3DTSS = 4) then
           DxbxKrnlCleanup('QuinCunx is unsupported (temporarily)');
 
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[X_D3DTSS_MIPFILTER+Adjust2]);
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MIPFILTER, X_D3DTSS);
       end;
 
-      if (pCur[X_D3DTSS_MIPMAPLODBIAS+Adjust2] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MIPMAPLODBIAS, pCur[X_D3DTSS_MIPMAPLODBIAS+Adjust2]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MIPMAPLODBIAS)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MIPMAPLODBIAS, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_MAXMIPLEVEL+Adjust2] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAXMIPLEVEL, pCur[X_D3DTSS_MAXMIPLEVEL+Adjust2]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MAXMIPLEVEL)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAXMIPLEVEL, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_MAXANISOTROPY+Adjust2] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[X_D3DTSS_MAXANISOTROPY+Adjust2]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_MAXANISOTROPY)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAXANISOTROPY, X_D3DTSS);
 
-      // TODO -oDxbx : Handle X_D3DTSS_COLORKEYOP (Xbox ext.)
-      // TODO -oDxbx : Handle X_D3DTSS_COLORSIGN (Xbox ext.)
-      // TODO -oDxbx : Handle X_D3DTSS_ALPHAKILL (Xbox ext.)
+      // TODO -oDxbx : Emulate X_D3DTSS_COLORKEYOP (Xbox ext.)
+      // TODO -oDxbx : Emulate X_D3DTSS_COLORSIGN (Xbox ext.)
+      // TODO -oDxbx : Emulate X_D3DTSS_ALPHAKILL (Xbox ext.)
 
-      if (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, EmuXB2PC_D3DTEXTUREOP(pCur[X_D3DTSS_COLOROP-Adjust1]));
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_COLOROP)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, EmuXB2PC_D3DTEXTUREOP(X_D3DTSS));
 
-      if (pCur[X_D3DTSS_COLORARG0-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG0, pCur[X_D3DTSS_COLORARG0-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_COLORARG0)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG0, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_COLORARG1-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG1, pCur[X_D3DTSS_COLORARG1-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_COLORARG1)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG1, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_COLORARG2-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG2, pCur[X_D3DTSS_COLORARG2-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_COLORARG2)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG2, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_ALPHAOP-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, EmuXB2PC_D3DTEXTUREOP(pCur[X_D3DTSS_ALPHAOP-Adjust1]));
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ALPHAOP)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, EmuXB2PC_D3DTEXTUREOP(X_D3DTSS));
 
-      if (pCur[X_D3DTSS_ALPHAARG0-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG0, pCur[X_D3DTSS_ALPHAARG0-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ALPHAARG0)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG0, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_ALPHAARG1-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG1, pCur[X_D3DTSS_ALPHAARG1-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ALPHAARG1)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG1, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_ALPHAARG2-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG2, pCur[X_D3DTSS_ALPHAARG2-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_ALPHAARG2)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG2, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_RESULTARG-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_RESULTARG, pCur[X_D3DTSS_RESULTARG-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_RESULTARG)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_RESULTARG, X_D3DTSS);
 
-      if (pCur[X_D3DTSS_TEXTURETRANSFORMFLAGS-Adjust1] <> X_D3DTSS_UNK) then
-        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[X_D3DTSS_TEXTURETRANSFORMFLAGS-Adjust1]);
+      X_D3DTSS := pCur[VersionAdjust_D3DTSS(X_D3DTSS_TEXTURETRANSFORMFLAGS)];
+      if (X_D3DTSS <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, X_D3DTSS);
 
-//      if (pCur[X_D3DTSS_BORDERCOLOR] <> X_D3DTSS_UNK) then // Cxbx : This is NOT a deferred texture state!
-//        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[X_D3DTSS_BORDERCOLOR]);
-
+      // Cxbx note : D3DTSS_BORDERCOLOR is NOT a deferred texture state!
 
       (* Cxbx has this disabled :
       // To check for unhandled texture stage state changes

@@ -225,6 +225,9 @@ type EmuD3D8CreateDeviceProxyData = packed record
 
 var g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
 
+var
+  DxbxHack_HadZEnable: Boolean = False;
+
 implementation
 
 uses
@@ -1421,6 +1424,10 @@ begin
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
         IDirect3DDevice8_GetDepthStencilSurface(g_pD3DDevice8, @(g_pCachedZStencilSurface.Emu.Surface8));
 
+//        // Dxbx addition : Put the DepthStencilSurface in the PresentParameters structure too :
+//        if Assigned(g_pCachedZStencilSurface.Emu.Surface8) then
+//          PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface := g_pCachedZStencilSurface;
+
         IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer
         (
           {Length=}1,
@@ -1580,6 +1587,23 @@ begin
   dwHeight^ := NewHeight;
 end; // EmuAdjustPower2
 
+procedure DumpPresentationParameters(pPresentationParameters: PX_D3DPRESENT_PARAMETERS);
+begin
+  // Print a few of the pPresentationParameters contents to the console
+  DbgPrintf('BackBufferWidth:        = %d' +
+      #13#10'BackBufferHeight:       = %d' +
+      #13#10'BackBufferFormat:       = 0x%.08X' +
+      #13#10'BackBufferCount:        = 0x%.08X' +
+      #13#10'SwapEffect:             = 0x%.08X' +
+      #13#10'EnableAutoDepthStencil: = 0x%.08X' +
+      #13#10'AutoDepthStencilFormat: = 0x%.08X' +
+      #13#10'Flags:                  = 0x%.08X',
+      [ pPresentationParameters.BackBufferWidth, pPresentationParameters.BackBufferHeight,
+        pPresentationParameters.BackBufferFormat, pPresentationParameters.BackBufferCount,
+        Ord(pPresentationParameters.SwapEffect), pPresentationParameters.EnableAutoDepthStencil,
+        pPresentationParameters.AutoDepthStencilFormat, pPresentationParameters.Flags]);
+end;
+
 function XTL_EmuIDirect3D8_CreateDevice
 (
     Adapter: UINT;
@@ -1606,20 +1630,7 @@ begin
       [ Adapter, Ord(DeviceType), hFocusWindow,
         BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface]);
 
-  // Print a few of the pPresentationParameters contents to the console
-  DbgPrintf('BackBufferWidth:        = %d' +
-      #13#10'BackBufferHeight:       = %d' +
-      #13#10'BackBufferFormat:       = 0x%.08X' +
-      #13#10'BackBufferCount:        = 0x%.08X' +
-      #13#10'SwapEffect:             = 0x%.08X' +
-      #13#10'EnableAutoDepthStencil: = 0x%.08X' +
-      #13#10'AutoDepthStencilFormat: = 0x%.08X' +
-      #13#10'Flags:                  = 0x%.08X',
-      [ pPresentationParameters.BackBufferWidth, pPresentationParameters.BackBufferHeight,
-        pPresentationParameters.BackBufferFormat, pPresentationParameters.BackBufferCount,
-        Ord(pPresentationParameters.SwapEffect), pPresentationParameters.EnableAutoDepthStencil,
-        pPresentationParameters.AutoDepthStencilFormat, pPresentationParameters.Flags]);
-
+  DumpPresentationParameters(pPresentationParameters);
 {$ENDIF}
 
   // Cache parameters
@@ -2731,6 +2742,9 @@ begin
       #13#10');',
       [pPresentationParameters]);
 {$ENDIF}
+
+  DumpPresentationParameters(pPresentationParameters);
+
   EmuWarning('Device Reset is being utterly ignored');
 
   EmuSwapFS(fsXbox);
@@ -4702,7 +4716,6 @@ function XTL_EmuIDirect3DDevice8_Clear
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   newFlags: DWORD;
-  Enabled: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -4729,17 +4742,14 @@ begin
       newFlags := newFlags or D3DCLEAR_TARGET;
 
     // Only clear ZBuffer if we actually have one :
-    IDirect3DDevice8(g_pD3DDevice8).GetRenderState(D3DRS_ZENABLE, {out}Enabled);
-    if Enabled <> DWord(BOOL_FALSE) then
+    if DxbxHack_HadZEnable then
     begin
       if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then
         newFlags := newFlags or D3DCLEAR_ZBUFFER;
     end;
 
-    // Check if Stencil buffer is enabled.. if not, then dont use it with the clear
-    // Otherwise clear will not work.
-    IDirect3DDevice8(g_pD3DDevice8).GetRenderState(D3DRS_STENCILENABLE, {out}Enabled);
-    if Enabled <> DWord(BOOL_FALSE) then
+    // Only clear Stencil buffer if there actually is one :
+    if PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).EnableAutoDepthStencil <> DWORD(BOOL_FALSE) then
     begin
       if (Flags and X_D3DCLEAR_STENCIL) > 0 then
         newFlags := newFlags or D3DCLEAR_STENCIL;
@@ -4751,6 +4761,9 @@ begin
 
   Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, newFlags, Color, Z, Stencil);
 
+  DxbxHack_HadZEnable := False;
+
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear returns 0x%.08X', [Result]);
   EmuSwapFS(fsXbox);
 end;
 
@@ -7057,7 +7070,7 @@ begin
          [Stage, Type_, Value]);
 {$ENDIF}
 
-  case (Type_) of
+  case VersionAdjust_D3DTSS(Type_) of
     X_D3DTSS_BUMPENVMAT00:
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
     X_D3DTSS_BUMPENVMAT01:
@@ -7734,6 +7747,10 @@ begin
   // Maybe the z-buffer isn't cleared ?
 //  if Value > 0 then // Dxbx addition - prevent change when recieving 0 value
     IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_ZENABLE, Value);
+
+  // Dxbx addition : HACK! Remember if we saw ZEnable True, so clear knows it may clear the ZBuffer :
+  if Value > 0 then
+    DxbxHack_HadZEnable := True;
 
   EmuSwapFS(fsXbox);
 end;

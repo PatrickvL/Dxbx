@@ -688,6 +688,7 @@ const X_D3DWRAP_V = $00001000;
 const X_D3DWRAP_W = $00100000;
 
 // X_D3DTEXTURESTAGESTATETYPE values :
+// Dxbx note : See VersionAdjust_D3DTSS(), as these might need correction for older SDK versions!
 const X_D3DTSS_ADDRESSU = 0;
 const X_D3DTSS_ADDRESSV = 1;
 const X_D3DTSS_ADDRESSW = 2;
