@@ -65,7 +65,6 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 						<Parameters Name="HostApplication">..\..\bin\Dxbx.exe</Parameters>
-						<Parameters Name="RunParams">&quot;D:\Patrick\xbox\Games\MystIII\default.xbe&quot;</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
