@@ -41,7 +41,9 @@ function EmuXB2PC_D3DFormat(aFormat: X_D3DFORMAT): D3DFORMAT; inline;
 function EmuPC2XB_D3DFormat(aFormat: D3DFORMAT): X_D3DFORMAT; inline;
 
 function EmuXB2PC_D3DLock(Flags: DWORD): DWORD; inline;
+
 function EmuXB2PC_D3DMultiSampleFormat(aType: X_D3DMULTISAMPLE_TYPE): D3DMULTISAMPLE_TYPE;
+function EmuPC2XB_D3DMultiSampleFormat(aType: D3DMULTISAMPLE_TYPE): X_D3DMULTISAMPLE_TYPE;
 
 function EmuXB2PC_D3DTS(State: D3DTRANSFORMSTATETYPE): D3DTRANSFORMSTATETYPE; inline;
 function EmuXB2PC_D3DBLENDOP(Value: X_D3DBLENDOP): D3DBLENDOP; inline;
@@ -499,30 +501,53 @@ end;
 function EmuXB2PC_D3DMultiSampleFormat(aType: X_D3DMULTISAMPLE_TYPE): D3DMULTISAMPLE_TYPE;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  case aType of
-    $0011:
+  case aType and $FFFF of
+    $0011: // X_D3DMULTISAMPLE_NONE
       Result := D3DMULTISAMPLE_NONE;
 
-    $1021,
-    $1121,
-    $2021,
-    $2012:
+    $1021, // X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR
+    $1121, // X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX
+    $2021, // X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR
+    $2012: // X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR
       Result := D3DMULTISAMPLE_2_SAMPLES;
 
-    $1022,
-    $1222,
-    $2022,
-    $2222:
+    $1022, // X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR
+    $1222, // X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN
+    $2022, // X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR
+    $2222: // X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN
       Result := D3DMULTISAMPLE_4_SAMPLES;
 
-    $1233,
-    $2233:
+    $1233, // X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN
+    $2233: // X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN
       Result := D3DMULTISAMPLE_9_SAMPLES;
   else
-    DxbxKrnlCleanup( 'Unknown Multisample Type (0x%X)!'#13#10 +
-                 'If this value is greater than 0xFFFF contact blueshogun!', [aType] );
+    EmuWarning('Unknown Multisample Type (0x%X)!'#13#10 +
+               'If this value is greater than 0xFFFF contact blueshogun!', [aType] );
 
     Result := D3DMULTISAMPLE_NONE;
+  end;
+end;
+
+// convert from pc to xbox multisample formats
+function EmuPC2XB_D3DMultiSampleFormat(aType: D3DMULTISAMPLE_TYPE): X_D3DMULTISAMPLE_TYPE;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  case aType of
+    D3DMULTISAMPLE_NONE:
+      Result := $0011; // X_D3DMULTISAMPLE_NONE
+
+    D3DMULTISAMPLE_2_SAMPLES:
+      Result := $1121; // X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX
+
+    D3DMULTISAMPLE_4_SAMPLES:
+      Result := $1222; // X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN
+
+    D3DMULTISAMPLE_9_SAMPLES:
+      Result := $2233; // X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN
+  else
+    EmuWarning('Unknown Multisample Type (0x%X)!', [Ord(aType)] );
+
+    Result := $0011;
   end;
 end;
 

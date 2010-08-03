@@ -211,11 +211,9 @@ var g_EmuD3DActiveTexture: array [0..X_D3DTS_STAGECOUNT-1] of PX_D3DResource; //
 
 // information passed to the create device proxy thread
 type EmuD3D8CreateDeviceProxyData = packed record
-    Adapter: UINT;
-    DeviceType: D3DDEVTYPE;
-    hFocusWindow: HWND;
-    BehaviorFlags: DWORD;
-    pPresentationParameters: PX_D3DPRESENT_PARAMETERS;
+    CreationParameters: D3DDEVICE_CREATION_PARAMETERS;
+    pPresentationParameters: PX_D3DPRESENT_PARAMETERS; // Original Xbox version
+    NativePresentationParameters: D3DPRESENT_PARAMETERS; // Converted to Windows
     ppReturnedDeviceInterface: XTL_PPIDirect3DDevice8;
     {volatile} bReady: _bool;
     {union} case Integer of
@@ -401,7 +399,7 @@ begin
       Sleep(500) //Wait a bit so we don't burn through cycles for no reason
     else
       if(Result = UINT(D3DERR_DEVICENOTRESET)) then //Lost but we can reset it now
-        Result := IDirect3DDevice8(g_pD3DDevice8).Reset(PD3DPresentParameters(g_EmuCDPD.pPresentationParameters)^);
+        Result := IDirect3DDevice8(g_pD3DDevice8).Reset({const}g_EmuCDPD.NativePresentationParameters);
   until Result = UINT(S_OK);
 end;
 
@@ -635,9 +633,10 @@ begin
     PresParam.BackBufferHeight := 480;
     PresParam.BackBufferFormat := X_D3DFMT_A8R8G8B8; //=6
     PresParam.BackBufferCount := 1;
+    PresParam.MultiSampleType := $0011; // X_D3DMULTISAMPLE_NONE
+    PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
     PresParam.EnableAutoDepthStencil := BOOL_TRUE;
     PresParam.AutoDepthStencilFormat := X_D3DFMT_D24S8; //=$2A
-    PresParam.SwapEffect := D3DSWAPEFFECT_DISCARD;
 
     EmuSwapFS(fsXbox);
     XTL_EmuIDirect3D8_CreateDevice(
@@ -1213,93 +1212,89 @@ begin
 
         // make adjustments to parameters to make sense with windows Direct3D
         begin
-          g_EmuCDPD.DeviceType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
-          g_EmuCDPD.Adapter := g_XBVideo.GetDisplayAdapter();
-
-          g_EmuCDPD.pPresentationParameters.Windowed := not g_XBVideo.GetFullscreen();
-
-          if (g_XBVideo.GetVSync()) then
-            g_EmuCDPD.pPresentationParameters.SwapEffect := D3DSWAPEFFECT_COPY_VSYNC;
-
+          g_EmuCDPD.CreationParameters.AdapterOrdinal := g_XBVideo.GetDisplayAdapter();
+          g_EmuCDPD.CreationParameters.DeviceType := iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF);
           // Note: Instead of the hFocusWindow argument, we use the global g_hEmuWindow here:
-          g_EmuCDPD.hFocusWindow := g_hEmuWindow;
-
-          TD3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat) := EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
-          TD3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat) := EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
-
-          if (not g_XBVideo.GetVSync() and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) > 0) and g_XBVideo.GetFullscreen()) then
-            g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
-          else
-          begin
-            if ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE) > 0) and g_XBVideo.GetFullscreen() then
-              g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_ONE
-            else
-              g_EmuCDPD.pPresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_DEFAULT;
-          end;
-
-          // Cxbx HACK: Disable Tripple Buffering for now...
-          // TODO -oCXBX: Enumerate maximum BackBufferCount if possible.
-          if g_EmuCDPD.pPresentationParameters.BackBufferCount > 1 then
-          begin
-            EmuWarning('Limiting BackBufferCount to 1...');
-            g_EmuCDPD.pPresentationParameters.BackBufferCount := 1;
-          end;
-
-          // TODO -oCXBX: Support Xbox extensions if possible
-          if (g_EmuCDPD.pPresentationParameters.MultiSampleType <> D3DMULTISAMPLE_NONE) then
-          begin
-            EmuWarning('MultiSampleType 0x%.08X is not supported!', [Ord(g_EmuCDPD.pPresentationParameters.MultiSampleType)]);
-
-            g_EmuCDPD.pPresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;
-
-            // TODO -oCXBX: Check card for multisampling abilities // MARKDE OUT BY CXBX
-            // if (g_EmuCDPD.pPresentationParameters.MultiSampleType = $00001121) then
-            //   g_EmuCDPD.pPresentationParameters.MultiSampleType := D3DMULTISAMPLE_2_SAMPLES
-            // else
-            //   DxbxKrnlCleanup('Unknown MultiSampleType (0x%.08X)', [g_EmuCDPD.pPresentationParameters.MultiSampleType]);
-          end;
-
-          g_EmuCDPD.pPresentationParameters.Flags := D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+          g_EmuCDPD.CreationParameters.hFocusWindow := g_hEmuWindow;
+          // g_EmuCDPD.CreationParameters.BehaviorFlags := ?;
 
           // retrieve resolution from configuration
-          if (g_EmuCDPD.pPresentationParameters.Windowed) then
+          g_EmuCDPD.NativePresentationParameters.BackBufferWidth := g_EmuCDPD.pPresentationParameters.BackBufferWidth;
+          g_EmuCDPD.NativePresentationParameters.BackBufferHeight := g_EmuCDPD.pPresentationParameters.BackBufferHeight;
+
+          g_EmuCDPD.NativePresentationParameters.Windowed := not g_XBVideo.GetFullscreen();
+          if (g_EmuCDPD.NativePresentationParameters.Windowed) then
           begin
             sscanf(g_XBVideo.GetVideoResolution(), '%d x %d', [
-              @(g_EmuCDPD.pPresentationParameters.BackBufferWidth),
-              @(g_EmuCDPD.pPresentationParameters.BackBufferHeight)]);
+              @(g_EmuCDPD.NativePresentationParameters.BackBufferWidth),
+              @(g_EmuCDPD.NativePresentationParameters.BackBufferHeight)]);
 
             IDirect3D8(g_pD3D8).GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), {out}D3DDisplayMode);
 
-            g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DDisplayMode.Format);
-            g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz := 0;
+            g_EmuCDPD.NativePresentationParameters.BackBufferFormat := D3DDisplayMode.Format;
+            g_EmuCDPD.NativePresentationParameters.FullScreen_RefreshRateInHz := 0; // ??
           end
           else
           begin
             sscanf(g_XBVideo.GetVideoResolution(), '%d x %d %*dbit %s (%d hz)', [
-              @(g_EmuCDPD.pPresentationParameters.BackBufferWidth),
-              @(g_EmuCDPD.pPresentationParameters.BackBufferHeight),
+              @(g_EmuCDPD.NativePresentationParameters.BackBufferWidth),
+              @(g_EmuCDPD.NativePresentationParameters.BackBufferHeight),
               @(szBackBufferFormat[0]),
-              @(g_EmuCDPD.pPresentationParameters.FullScreen_RefreshRateInHz)]);
+              @(g_EmuCDPD.NativePresentationParameters.FullScreen_RefreshRateInHz)]);
 
             if (strcmp(szBackBufferFormat, 'x1r5g5b5') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_X1R5G5B5)
+              g_EmuCDPD.NativePresentationParameters.BackBufferFormat := D3DFMT_X1R5G5B5
             else if (strcmp(szBackBufferFormat, 'r5g6r5') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_R5G6B5)
+              g_EmuCDPD.NativePresentationParameters.BackBufferFormat := D3DFMT_R5G6B5
             else if (strcmp(szBackBufferFormat, 'x8r8g8b8') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_X8R8G8B8)
-            else if (strcmp(szBackBufferFormat, 'a8r8g8b8') = 0) then
-              g_EmuCDPD.pPresentationParameters.BackBufferFormat := X_D3DFORMAT(D3DFMT_A8R8G8B8);
+              g_EmuCDPD.NativePresentationParameters.BackBufferFormat := D3DFMT_X8R8G8B8
+            else //if (strcmp(szBackBufferFormat, 'a8r8g8b8') = 0) then
+              g_EmuCDPD.NativePresentationParameters.BackBufferFormat := D3DFMT_A8R8G8B8
+//            else
+//              g_EmuCDPD.NativePresentationParameters.BackBufferFormat := EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.BackBufferFormat);
+          end;
+
+          g_EmuCDPD.NativePresentationParameters.BackBufferCount := g_EmuCDPD.pPresentationParameters.BackBufferCount;
+
+          // Cxbx HACK: Disable Tripple Buffering for now...
+          // TODO -oCXBX: Enumerate maximum BackBufferCount if possible.
+          if g_EmuCDPD.NativePresentationParameters.BackBufferCount > 4 then
+          begin
+            EmuWarning('Limiting BackBufferCount to 4...');
+            g_EmuCDPD.NativePresentationParameters.BackBufferCount := 4;
+          end;
+
+          g_EmuCDPD.NativePresentationParameters.MultiSampleType := D3DMULTISAMPLE_NONE;//EmuXB2PC_D3DMultiSampleFormat(g_EmuCDPD.pPresentationParameters.MultiSampleType);
+
+          if (g_XBVideo.GetVSync()) then
+            g_EmuCDPD.NativePresentationParameters.SwapEffect := D3DSWAPEFFECT_COPY_VSYNC
+          else
+            g_EmuCDPD.NativePresentationParameters.SwapEffect := g_EmuCDPD.pPresentationParameters.SwapEffect; // D3DSWAPEFFECT_COPY; // D3DSWAPEFFECT_DISCARD ??
+
+          g_EmuCDPD.NativePresentationParameters.hDeviceWindow := g_EmuCDPD.pPresentationParameters.hDeviceWindow;
+          g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil := g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil <> BOOL_FALSE;
+          g_EmuCDPD.NativePresentationParameters.AutoDepthStencilFormat := EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters.AutoDepthStencilFormat);
+          g_EmuCDPD.NativePresentationParameters.Flags := D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+
+          if (not g_XBVideo.GetVSync() and ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_IMMEDIATE) > 0) and g_XBVideo.GetFullscreen()) then
+            g_EmuCDPD.NativePresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_IMMEDIATE
+          else
+          begin
+            if ((g_D3DCaps.PresentationIntervals and D3DPRESENT_INTERVAL_ONE) > 0) and g_XBVideo.GetFullscreen() then
+              g_EmuCDPD.NativePresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_ONE
+            else
+              g_EmuCDPD.NativePresentationParameters.FullScreen_PresentationInterval := D3DPRESENT_INTERVAL_DEFAULT;
           end;
         end;
 
         // detect vertex processing capabilities
-        if ((g_D3DCaps.DevCaps and D3DDEVCAPS_HWTRANSFORMANDLIGHT) > 0) and (g_EmuCDPD.DeviceType = D3DDEVTYPE_HAL) then
+        if ((g_D3DCaps.DevCaps and D3DDEVCAPS_HWTRANSFORMANDLIGHT) > 0) and (g_EmuCDPD.CreationParameters.DeviceType = D3DDEVTYPE_HAL) then
         begin
 {$IFDEF DEBUG}
           DbgPrintf('EmuD3D8 : Using hardware vertex processing');
 {$ENDIF}
 
-          g_EmuCDPD.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
+          g_EmuCDPD.CreationParameters.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
           g_dwVertexShaderUsage := 0;
         end
         else
@@ -1308,18 +1303,18 @@ begin
           DbgPrintf('EmuD3D8 : Using software vertex processing');
 {$ENDIF}
 
-          g_EmuCDPD.BehaviorFlags := D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+          g_EmuCDPD.CreationParameters.BehaviorFlags := D3DCREATE_SOFTWARE_VERTEXPROCESSING;
           g_dwVertexShaderUsage := D3DUSAGE_SOFTWAREPROCESSING;
         end;
 // [PatrickvL] Reviewed up to here
         // redirect to windows Direct3D
         g_EmuCDPD.hRet := IDirect3D8(g_pD3D8).CreateDevice
         (
-          g_EmuCDPD.Adapter,
-          g_EmuCDPD.DeviceType,
-          g_EmuCDPD.hFocusWindow,
-          g_EmuCDPD.BehaviorFlags,
-          {var}PD3DPresentParameters(g_EmuCDPD.pPresentationParameters)^,
+          g_EmuCDPD.CreationParameters.AdapterOrdinal,
+          g_EmuCDPD.CreationParameters.DeviceType,
+          g_EmuCDPD.CreationParameters.hFocusWindow,
+          g_EmuCDPD.CreationParameters.BehaviorFlags,
+          {var}g_EmuCDPD.NativePresentationParameters,
           PIDirect3DDevice8(g_EmuCDPD.ppReturnedDeviceInterface)
         );
 
@@ -1336,6 +1331,12 @@ begin
 
           DxbxKrnlCleanup('IDirect3D8.CreateDevice failed (Unknown)');
         end;
+
+        // Update Xbox PresentationParameters :
+        g_EmuCDPD.pPresentationParameters.BackBufferWidth := g_EmuCDPD.NativePresentationParameters.BackBufferWidth;
+        g_EmuCDPD.pPresentationParameters.BackBufferHeight := g_EmuCDPD.NativePresentationParameters.BackBufferHeight;
+        g_EmuCDPD.pPresentationParameters.BackBufferFormat := EmuPC2XB_D3DFormat(g_EmuCDPD.NativePresentationParameters.BackBufferFormat);
+        g_EmuCDPD.pPresentationParameters.BackBufferCount := g_EmuCDPD.NativePresentationParameters.BackBufferCount;
 
         // cache device pointer
         g_pD3DDevice8 := g_EmuCDPD.ppReturnedDeviceInterface^;
@@ -1636,10 +1637,10 @@ begin
 {$ENDIF}
 
   // Cache parameters
-  g_EmuCDPD.Adapter := Adapter;
-  g_EmuCDPD.DeviceType := DeviceType;
-  g_EmuCDPD.hFocusWindow := hFocusWindow;
-  g_EmuCDPD.BehaviorFlags := BehaviorFlags; // Dxbx addition
+  g_EmuCDPD.CreationParameters.AdapterOrdinal := Adapter;
+  g_EmuCDPD.CreationParameters.DeviceType := DeviceType;
+  g_EmuCDPD.CreationParameters.hFocusWindow := hFocusWindow;
+  g_EmuCDPD.CreationParameters.BehaviorFlags := BehaviorFlags; // Dxbx addition
   g_EmuCDPD.pPresentationParameters := pPresentationParameters;
   g_EmuCDPD.ppReturnedDeviceInterface := ppReturnedDeviceInterface;
 
@@ -1898,7 +1899,10 @@ begin
       [pCaps]);
 {$ENDIF}
 
-  IDirect3D8(g_pD3D8).GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF), {out}pCaps^);
+  IDirect3D8(g_pD3D8).GetDeviceCaps(
+    g_XBVideo.GetDisplayAdapter(),
+    iif(g_XBVideo.GetDirect3DDevice() = 0, D3DDEVTYPE_HAL, D3DDEVTYPE_REF),
+    {out}pCaps^);
 
   EmuSwapFS(fsXbox);
 end;
@@ -2523,7 +2527,7 @@ begin
 {$ENDIF}
 
   // Allow backbuffer -1 and up to the allocated BackBufferCount, but nothing beyond this :
-  if (BackBuffer < -1) or (BackBuffer >= int(g_EmuCDPD.pPresentationParameters.BackBufferCount)) then
+  if (BackBuffer < -1) or (BackBuffer >= int(g_EmuCDPD.NativePresentationParameters.BackBufferCount)) then
     Result := D3DERR_INVALIDCALL
   else
   begin
@@ -4751,7 +4755,9 @@ begin
     end;
 
     // Only clear Stencil buffer if there actually is one :
-    if PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).EnableAutoDepthStencil <> DWORD(BOOL_FALSE) then
+    // if g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil then
+    // TODO -oDxbx: The above check should work (but doesn't!) so for now look at the Xbox PresParam instead :
+    if g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil <> BOOL_FALSE then
     begin
       if (Flags and X_D3DCLEAR_STENCIL) > 0 then
         newFlags := newFlags or D3DCLEAR_STENCIL;
@@ -5999,13 +6005,7 @@ begin
 
     pDesc.Usage := SurfaceDesc.Usage;
     pDesc.Size := SurfaceDesc.Size;
-
-    // TODO -oCXBX: Convert from Xbox to PC!!
-    if SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE then
-      pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE($0011)
-    else
-      DxbxKrnlCleanup(Format('EmuGet2DSurfaceDesc Unknown Multisample format! (%d)', [Ord(SurfaceDesc.MultiSampleType)]));
-
+    pDesc.MultiSampleType := EmuPC2XB_D3DMultiSampleFormat(SurfaceDesc.MultiSampleType);
     pDesc.Width := SurfaceDesc.Width;
     pDesc.Height := SurfaceDesc.Height;
   end;
@@ -6062,7 +6062,7 @@ begin
     pDesc.Format := EmuPC2XB_D3DFormat(D3DFMT_YUY2);
     pDesc.Height := g_dwOverlayH;
     pDesc.Width := g_dwOverlayW;
-    pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE(0);
+    pDesc.MultiSampleType := X_D3DMULTISAMPLE_TYPE(0);
     pDesc.Size := g_dwOverlayP * g_dwOverlayH;
     pDesc.Type_ := X_D3DRTYPE_SURFACE;
     pDesc.Usage := 0;
@@ -6075,7 +6075,6 @@ begin
 
     Result := IDirect3DSurface8(pSurface8).GetDesc({out}SurfaceDesc);
 
-    // rearrange into windows format (remove D3DPool)
     begin
       // Convert Format (PC->Xbox)
       pDesc.Format := EmuPC2XB_D3DFormat(SurfaceDesc.Format);
@@ -6086,13 +6085,7 @@ begin
 
       pDesc.Usage := SurfaceDesc.Usage;
       pDesc.Size := SurfaceDesc.Size;
-
-      // TODO -oCXBX: Convert from Xbox to PC!!
-      if (SurfaceDesc.MultiSampleType = D3DMULTISAMPLE_NONE) then
-        pDesc.MultiSampleType := D3DMULTISAMPLE_TYPE($0011)
-      else
-        DxbxKrnlCleanup('EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)', [Ord(SurfaceDesc.MultiSampleType)]);
-
+      pDesc.MultiSampleType := EmuPC2XB_D3DMultiSampleFormat(SurfaceDesc.MultiSampleType);
       pDesc.Width  := SurfaceDesc.Width;
       pDesc.Height := SurfaceDesc.Height;
     end;
@@ -9479,11 +9472,11 @@ begin
   if (Windowed <> BOOL_FALSE) then
     Windowed := BOOL_FALSE;
 
-  // TODO -oCXBX: Convert from Xbox to PC!!
+  // Convert MultiSampleType from Xbox to PC :
   PCMultiSampleType := EmuXB2PC_D3DMultiSampleFormat(MultiSampleType);
 
- // Now call the real CheckDeviceMultiSampleType with the corrected parameters.
- Result := IDirect3D8(g_pD3D8).CheckDeviceMultiSampleType
+  // Now call the real CheckDeviceMultiSampleType with the corrected parameters.
+  Result := IDirect3D8(g_pD3D8).CheckDeviceMultiSampleType
     (
     Adapter,
     DeviceType,
