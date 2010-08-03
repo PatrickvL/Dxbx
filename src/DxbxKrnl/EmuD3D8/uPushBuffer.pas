@@ -122,7 +122,7 @@ var
 
   Stage: int;
 begin
-  for Stage := 0 to 4 - 1 do
+  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
   // for current usages, we're always on stage 0
   pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[Stage]);

@@ -1671,7 +1671,7 @@ begin
   //
   // DEBUGGING
   //
-  for Stage := 0 to 4-1 do
+  for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
     pTexture := g_EmuD3DActiveTexture[Stage];
 
