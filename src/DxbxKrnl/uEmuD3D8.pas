@@ -4698,6 +4698,7 @@ function XTL_EmuIDirect3DDevice8_Clear
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   newFlags: DWORD;
+  StencilEnabled: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -4726,8 +4727,14 @@ begin
     if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then
         newFlags := newFlags or D3DCLEAR_ZBUFFER;
 
-    if (Flags and X_D3DCLEAR_STENCIL) > 0 then
-        newFlags := newFlags or D3DCLEAR_STENCIL;
+    // Check if Stencil buffer is enabled.. if not, then dont use it with the clear
+    // Otherwise clear will not work.
+    IDirect3DDevice8(g_pD3DDevice8).GetRenderState(D3DRS_STENCILENABLE, StencilEnabled);
+    if StencilEnabled = BOOL_TRUE then
+    begin
+      if (Flags and X_D3DCLEAR_STENCIL) > 0 then
+          newFlags := newFlags or D3DCLEAR_STENCIL;
+    end;
 
     if (Flags and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
         EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not X_D3DCLEAR_ALL_SUPPORTED)]);
@@ -4735,7 +4742,7 @@ begin
     Flags := newFlags;
   end;
 
-  Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, Flags, Color, Z, Stencil);
+  Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, newFlags, Color, Z, Stencil);
 
   EmuSwapFS(fsXbox);
 end;
