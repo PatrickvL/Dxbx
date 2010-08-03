@@ -1484,10 +1484,10 @@ begin
 
     if Assigned(XTL_EmuD3DDeferredTextureState) then
     begin
-      for s := 0 to 4-1 do
+      for s := 0 to X_D3DTS_STAGECOUNT-1 do
       begin
-        for v := 0 to 32-1 do
-          XTL_EmuD3DDeferredTextureState[v+s*32] := X_D3DTSS_UNK;
+        for v := 0 to X_D3DTS_STAGESIZE-1 do
+          XTL_EmuD3DDeferredTextureState[(s*X_D3DTS_STAGESIZE)+v] := X_D3DTSS_UNK;
       end;
 
       DbgPrintf('HLE: $%.08X -> EmuD3DDeferredTextureState',
@@ -1510,17 +1510,31 @@ begin
       // Calculate the location of D3DDeferredRenderState via an XDK-dependent offset to _D3D__RenderState :
       // Dxbx note : XTL_EmuD3DDeferredRenderState:PDWORDs cast to UIntPtr to avoid incrementing with that many array-sizes!
       if LibD3D8.LibVersion <= 3925 then
-        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), X_D3DRS_DEFERRED_START_3925 * 4)
+      begin
+        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_3925;
+        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_3925;
+      end
       else if LibD3D8.LibVersion <= 4361 then
-        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), X_D3DRS_DEFERRED_START_4361 * 4)
+      begin
+        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_4361;
+        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_4361;
+      end
       else if LibD3D8.LibVersion <= 4432 then
-        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), X_D3DRS_DEFERRED_START_4432 * 4)
-      else if LibD3D8.LibVersion <= 5933 then
-        Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), X_D3DRS_DEFERRED_START_5933 * 4)
+      begin
+        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_4432;
+        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_4432;
+      end
       else
-        ; // Dxbx : What now?!
+      begin
+        Assert(LibD3D8.LibVersion <= 5933);
 
-      for v := 0 to X_D3DRS_DEFERRED_SIZE_5933 - 1 do // TODO : Use the actual number per SDK version
+        XTL_EmuD3DDeferredRenderState_Start := X_D3DRS_DEFERRED_START_5933;
+        XTL_EmuD3DDeferredRenderState_Size := X_D3DRS_DEFERRED_SIZE_5933;
+      end;
+
+      XTL_EmuD3DRenderState_ComplexCorrection := (XTL_EmuD3DDeferredRenderState_Start + XTL_EmuD3DDeferredRenderState_Size) - X_D3DRS_PSTEXTUREMODES;
+      Inc(UIntPtr(XTL_EmuD3DDeferredRenderState), XTL_EmuD3DDeferredRenderState_Start * 4);
+      for v := 0 to XTL_EmuD3DDeferredRenderState_Size - 1 do
         XTL_EmuD3DDeferredRenderState[v] := X_D3DRS_UNK;
 
 {$IFDEF DEBUG}

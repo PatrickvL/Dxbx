@@ -140,6 +140,8 @@ type X_D3DSTENCILOP = (
   X_D3DSTENCILOP_FORCE_DWORD    = $7fffffff
 );
 type X_D3DTEXTURESTAGESTATETYPE = DWORD;
+type X_D3DTEXTUREOP = DWORD;
+type X_D3DRENDERSTATETYPE = DWORD;
 type X_D3DCOLORWRITEENABLE = DWORD;
 type X_D3DCALLBACK = PVOID;
 
@@ -613,6 +615,12 @@ const X_D3DRS_DEFERRED_SIZE_4361 = 35;
 const X_D3DRS_DEFERRED_SIZE_4432 = 44; // ?? (4627 is 44)
 const X_D3DRS_DEFERRED_SIZE_5933 = 44;
 
+// X_D3DRENDERSTATETYPE values :
+
+// The following constants are offsets into XTL_EmuD3DDeferredRenderState,
+// which is determined by offsetting _D3D__RenderState with the SDK-version
+// dependant X_D3DRS_DEFERRED_START_* constant (which we remember in the
+// XTL_EmuD3DDeferredRenderState_Start variable for easy access).
 const X_D3DRS_DEFERRED_FOGENABLE = 0;
 const X_D3DRS_DEFERRED_FOGTABLEMODE = 1;
 const X_D3DRS_DEFERRED_FOGSTART = 2;
@@ -638,6 +646,40 @@ const X_D3DRS_DEFERRED_POINTSCALE_C = 30;
 const X_D3DRS_DEFERRED_POINTSIZE_MAX = 31;
 const X_D3DRS_DEFERRED_PATCHSEGMENTS = 33;
 
+// Note : These are the complex render state constants from SDK 5933,
+// for other SDK versions they need to be corrected with
+// the XTL_EmuD3DRenderState_ComplexCorrection variable :
+const X_D3DRS_PSTEXTUREMODES              = 136; // Xbox ext.
+const X_D3DRS_VERTEXBLEND                 = 137;
+const X_D3DRS_FOGCOLOR                    = 138;
+const X_D3DRS_FILLMODE                    = 139;
+const X_D3DRS_BACKFILLMODE                = 140;
+const X_D3DRS_TWOSIDEDLIGHTING            = 141;
+const X_D3DRS_NORMALIZENORMALS            = 142;
+const X_D3DRS_ZENABLE                     = 143;
+const X_D3DRS_STENCILENABLE               = 144;
+const X_D3DRS_STENCILFAIL                 = 145;
+const X_D3DRS_FRONTFACE                   = 146;
+const X_D3DRS_CULLMODE                    = 147;
+const X_D3DRS_TEXTUREFACTOR               = 148;
+const X_D3DRS_ZBIAS                       = 149;
+const X_D3DRS_LOGICOP                     = 150; // Xbox ext.
+const X_D3DRS_EDGEANTIALIAS               = 151; // Xbox ext.
+const X_D3DRS_MULTISAMPLEANTIALIAS        = 152;
+const X_D3DRS_MULTISAMPLEMASK             = 153;
+const X_D3DRS_MULTISAMPLEMODE             = 154; // Xbox ext.
+const X_D3DRS_MULTISAMPLERENDERTARGETMODE = 155; // Xbox ext.
+const X_D3DRS_SHADOWFUNC                  = 156; // Xbox ext.
+const X_D3DRS_LINEWIDTH                   = 157; // Xbox ext.
+const X_D3DRS_SAMPLEALPHA                 = 158; // Xbox ext.
+const X_D3DRS_DXT1NOISEENABLE             = 159; // Xbox ext.
+const X_D3DRS_YUVENABLE                   = 160; // Xbox ext.
+const X_D3DRS_OCCLUSIONCULLENABLE         = 161; // Xbox ext.
+const X_D3DRS_STENCILCULLENABLE           = 162; // Xbox ext.
+const X_D3DRS_ROPZCMPALWAYSREAD           = 163; // Xbox ext.
+const X_D3DRS_ROPZREAD                    = 164; // Xbox ext.
+const X_D3DRS_DONOTCULLUNCOMPRESSED       = 165; // Xbox ext.
+
 // deferred render state "unknown" flag
 const X_D3DRS_UNK =  $7fffffff;
 
@@ -645,6 +687,7 @@ const X_D3DWRAP_U = $00000010;
 const X_D3DWRAP_V = $00001000;
 const X_D3DWRAP_W = $00100000;
 
+// X_D3DTEXTURESTAGESTATETYPE values :
 const X_D3DTSS_ADDRESSU = 0;
 const X_D3DTSS_ADDRESSV = 1;
 const X_D3DTSS_ADDRESSW = 2;
@@ -654,6 +697,10 @@ const X_D3DTSS_MIPFILTER = 5;
 const X_D3DTSS_MIPMAPLODBIAS = 6;
 const X_D3DTSS_MAXMIPLEVEL = 7;
 const X_D3DTSS_MAXANISOTROPY = 8;
+const X_D3DTSS_COLORKEYOP = 9; // Xbox ext.
+const X_D3DTSS_COLORSIGN = 10; // Xbox ext.
+const X_D3DTSS_ALPHAKILL = 11; // Xbox ext.
+{}const X_D3DTSS_DEFERRED_TEXTURE_STATE_MAX = 12;
 const X_D3DTSS_COLOROP = 12;
 const X_D3DTSS_COLORARG0 = 13;
 const X_D3DTSS_COLORARG1 = 14;
@@ -664,17 +711,47 @@ const X_D3DTSS_ALPHAARG1 = 18;
 const X_D3DTSS_ALPHAARG2 = 19;
 const X_D3DTSS_RESULTARG = 20;
 const X_D3DTSS_TEXTURETRANSFORMFLAGS = 21;
+{}const X_D3DTSS_DEFERRED_MAX = 22;
 const X_D3DTSS_BUMPENVMAT00 = 22;
 const X_D3DTSS_BUMPENVMAT01 = 23;
 const X_D3DTSS_BUMPENVMAT11 = 24;
 const X_D3DTSS_BUMPENVMAT10 = 25;
 const X_D3DTSS_BUMPENVLSCALE = 26;
-//const X_D3DTSS_BORDERCOLOR = 29;
+const X_D3DTSS_BUMPENVLOFFSET = 27;
+const X_D3DTSS_TEXCOORDINDEX = 28;
+const X_D3DTSS_BORDERCOLOR = 29;
+const X_D3DTSS_COLORKEYCOLOR = 30; // Xbox ext.
 
+const X_D3DTS_STAGECOUNT = 4; // Dxbx addition
+const X_D3DTS_STAGESIZE = 32; // Dxbx addition
+
+// X_D3DTEXTUREOP values :
+const X_D3DTOP_DISABLE = 1;
+const X_D3DTOP_SELECTARG1 = 2;
+const X_D3DTOP_SELECTARG2 = 3;
+const X_D3DTOP_MODULATE = 4;
+const X_D3DTOP_MODULATE2X = 5;
+const X_D3DTOP_MODULATE4X = 6;
+const X_D3DTOP_ADD = 7;
+const X_D3DTOP_ADDSIGNED = 8;
+const X_D3DTOP_ADDSIGNED2X = 9;
+const X_D3DTOP_SUBTRACT = 10;
+const X_D3DTOP_ADDSMOOTH = 11;
+const X_D3DTOP_BLENDDIFFUSEALPHA = 12;
 const X_D3DTOP_BLENDCURRENTALPHA = 13;
 const X_D3DTOP_BLENDTEXTUREALPHA = 14;
 const X_D3DTOP_BLENDFACTORALPHA = 15;
+const X_D3DTOP_BLENDTEXTUREALPHAPM = 16;
+const X_D3DTOP_PREMODULATE = 17;
+const X_D3DTOP_MODULATEALPHA_ADDCOLOR = 18;
+const X_D3DTOP_MODULATECOLOR_ADDALPHA = 19;
+const X_D3DTOP_MODULATEINVALPHA_ADDCOLOR = 20;
+const X_D3DTOP_MODULATEINVCOLOR_ADDALPHA = 21;
 const X_D3DTOP_DOTPRODUCT3 = 22;
+const X_D3DTOP_MULTIPLYADD = 23;
+const X_D3DTOP_LERP = 24;
+const X_D3DTOP_BUMPENVMAP = 25;
+const X_D3DTOP_BUMPENVMAPLUMINANCE = 26;
 
 // deferred texture stage state "unknown" flag
 const X_D3DTSS_UNK = $7fffffff;

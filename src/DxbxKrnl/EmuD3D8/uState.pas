@@ -29,6 +29,7 @@ uses
   Direct3D8, // IDirect3DBaseTexture8
   // Dxbx
   uTypes,
+  uConvert,
   uDxbxUtils, // iif
   uDxbxKrnlUtils;
 
@@ -37,6 +38,10 @@ procedure XTL_EmuUpdateDeferredStates(); {NOPATCH}
 // deferred state lookup tables
 var XTL_EmuD3DDeferredRenderState: PDWORDs;
 var XTL_EmuD3DDeferredTextureState: PDWORDs;
+
+var XTL_EmuD3DDeferredRenderState_Start: DWord; // Dxbx addition, to allow for SDK version dependant shifting
+var XTL_EmuD3DDeferredRenderState_Size: DWord; // Dxbx addition
+var XTL_EmuD3DRenderState_ComplexCorrection: Integer; // Dxbx addition, to allow for SDK version dependant shifting
 
 var g_BuildVersion: uint32;
 // var g_OrigBuildVersion: uint32; // Dxbx note : Unused
@@ -166,6 +171,7 @@ begin
   end;
 
   // For 3925, the actual D3DTSS flags have different values.
+  // TODO -oDxbx : Check all other SDK versions if they differ too...
   bHack3925 := (g_BuildVersion = 3925);
   Adjust1 := iif(bHack3925, 12, 0);
   Adjust2 := iif(bHack3925, 10, 0);
@@ -173,9 +179,9 @@ begin
   // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
   if (XTL_EmuD3DDeferredTextureState <> nil) then
   begin
-    for v := 0 to 4-1 do
+    for v := 0 to X_D3DTS_STAGECOUNT-1 do
     begin
-      pCur := @(XTL_EmuD3DDeferredTextureState[v*32]);
+      pCur := @(XTL_EmuD3DDeferredTextureState[v*X_D3DTS_STAGESIZE]);
 
       if (pCur[X_D3DTSS_ADDRESSU+Adjust2] <> X_D3DTSS_UNK) then
       begin
@@ -234,30 +240,12 @@ begin
       if (pCur[X_D3DTSS_MAXANISOTROPY+Adjust2] <> X_D3DTSS_UNK) then
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[X_D3DTSS_MAXANISOTROPY+Adjust2]);
 
-      // TODO -oCXBX: Use a lookup table, this is not always a 1:1 map
-      if (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTSS_UNK) then
-      begin
-        // Dxbx fix : Use Adjust-ment consistently :
-        if  (pCur[X_D3DTSS_COLOROP-Adjust1]  > 12)
-        and (not (pCur[X_D3DTSS_COLOROP-Adjust1] >= 17) and (pCur[X_D3DTSS_COLOROP-Adjust1] <= 21))
-        and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_DOTPRODUCT3)
-        and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDTEXTUREALPHA)
-        and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDFACTORALPHA)
-        and (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTOP_BLENDCURRENTALPHA) then
-          DxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)', [pCur[X_D3DTSS_COLOROP-Adjust1]]);
+      // TODO -oDxbx : Handle X_D3DTSS_COLORKEYOP (Xbox ext.)
+      // TODO -oDxbx : Handle X_D3DTSS_COLORSIGN (Xbox ext.)
+      // TODO -oDxbx : Handle X_D3DTSS_ALPHAKILL (Xbox ext.)
 
-        // Dirty Hack: 22 = D3DTOP_DOTPRODUCT3
-             if ( pCur[X_D3DTSS_COLOROP-Adjust1] = X_D3DTOP_DOTPRODUCT3 ) then
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DOTPRODUCT3)
-        else if ( pCur[X_D3DTSS_COLOROP-Adjust1] = X_D3DTOP_BLENDTEXTUREALPHA ) then
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA)
-        else if ( pCur[X_D3DTSS_COLOROP-Adjust1] = X_D3DTOP_BLENDFACTORALPHA ) then
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDFACTORALPHA)
-        else if ( pCur[X_D3DTSS_COLOROP-Adjust1] = X_D3DTOP_BLENDCURRENTALPHA ) then
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDCURRENTALPHA)
-        else
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, pCur[X_D3DTSS_COLOROP-Adjust1]);
-      end;
+      if (pCur[X_D3DTSS_COLOROP-Adjust1] <> X_D3DTSS_UNK) then
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, EmuXB2PC_D3DTEXTUREOP(pCur[X_D3DTSS_COLOROP-Adjust1]));
 
       if (pCur[X_D3DTSS_COLORARG0-Adjust1] <> X_D3DTSS_UNK) then
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG0, pCur[X_D3DTSS_COLORARG0-Adjust1]);
@@ -268,23 +256,8 @@ begin
       if (pCur[X_D3DTSS_COLORARG2-Adjust1] <> X_D3DTSS_UNK) then
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLORARG2, pCur[X_D3DTSS_COLORARG2-Adjust1]);
 
-      // TODO -oCXBX: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
       if (pCur[X_D3DTSS_ALPHAOP-Adjust1] <> X_D3DTSS_UNK) then
-      begin
-        if  (pCur[X_D3DTSS_ALPHAOP-Adjust1]  > 12)
-        and (pCur[X_D3DTSS_ALPHAOP-Adjust1] <> 14)
-        and (pCur[X_D3DTSS_ALPHAOP-Adjust1] <> 13) then
-          DxbxKrnlCleanup('(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)', [pCur[X_D3DTSS_ALPHAOP-Adjust1]]);
-
-             if ( pCur[X_D3DTSS_ALPHAOP-Adjust1] = X_D3DTOP_BLENDTEXTUREALPHA ) then
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDTEXTUREALPHA)
-        else if ( pCur[X_D3DTSS_ALPHAOP-Adjust1] = X_D3DTOP_BLENDFACTORALPHA ) then
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDFACTORALPHA)
-        else if ( pCur[X_D3DTSS_ALPHAOP-Adjust1] = X_D3DTOP_BLENDCURRENTALPHA ) then
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDCURRENTALPHA)
-        else
-          IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[X_D3DTSS_ALPHAOP-Adjust1]);
-      end;
+        IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, EmuXB2PC_D3DTEXTUREOP(pCur[X_D3DTSS_ALPHAOP-Adjust1]));
 
       if (pCur[X_D3DTSS_ALPHAARG0-Adjust1] <> X_D3DTSS_UNK) then
         IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAARG0, pCur[X_D3DTSS_ALPHAARG0-Adjust1]);
@@ -307,7 +280,7 @@ begin
 
       (* Cxbx has this disabled :
       // To check for unhandled texture stage state changes
-      for(int r=0;r<32;r++)
+      for(int r=0;r<X_D3DTS_STAGESIZE;r++)
       begin
         static const int unchecked[] =
         begin
@@ -339,7 +312,7 @@ begin
     and (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_POINTSPRITEENABLE] = DWord(BOOL_TRUE)) then // Dxbx note : DWord cast to prevent warning
     begin
       // pCur := Texture Stage 3 States
-      pCur := @(XTL_EmuD3DDeferredTextureState[3*32]); // StrikerX3: why was this 2*32?
+      pCur := @(XTL_EmuD3DDeferredTextureState[3*X_D3DTS_STAGESIZE]); // StrikerX3: why was this 2*32? PatrickvL: Probably a bug.
 
       // set the point sprites texture
       IDirect3DDevice8(g_pD3DDevice8).GetTexture(3, PIDirect3DBaseTexture8(@pTexture));
@@ -351,7 +324,7 @@ begin
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
       // in that case we have to copy over the stage by hand
-      for v := 0 to 30-1 do
+      for v := 0 to XTL_EmuD3DDeferredRenderState_Size-1 do
       begin
         if (pCur[v] <> X_D3DTSS_UNK) then
         begin
@@ -368,7 +341,7 @@ begin
 
     // programmable pipeline
     //*
-    for v:=0 to 4-1 do
+    for v:=0 to X_D3DTS_STAGECOUNT-1 do
     begin
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);

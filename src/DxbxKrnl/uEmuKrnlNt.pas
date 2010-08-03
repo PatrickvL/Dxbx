@@ -604,6 +604,8 @@ begin
       [EventHandle]);
 
   Result := JwaNative.NtClearEvent(EventHandle);
+  // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
+  // that would require us to create the event's kernel object with the Ob* api's too!
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtClearEvent failed! (%s)', [NTStatusToString(Result)]);
@@ -721,6 +723,8 @@ begin
 
     // redirect to Win2k/XP
     Result := JwaNative.NtCreateEvent(EventHandle, DesiredAccess, NativeObjectAttributes.NtObjAttrPtr, EventType, InitialState);
+    // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
+    // that would require us to create the event's kernel object with the Ob* api's too!
   end;
 
   // From http://msdn.microsoft.com/en-us/library/ff566423(v=VS.85).aspx
@@ -1420,6 +1424,8 @@ begin
       [EventHandle, PreviousState]);
 
   Result := JwaNative.NtPulseEvent(EventHandle, PULONG(PreviousState));
+  // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
+  // that would require us to create the event's kernel object with the Ob* api's too!
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtPulseEvent failed! (%s)', [NTStatusToString(Result)]);
@@ -1614,6 +1620,8 @@ begin
       [EventHandle, EventInformation]);
 
   Result := JwaNative.NtQueryEvent(EventHandle, EventBasicInformation, EventInformation, SizeOf(EventInformation^), @ResultLength);
+  // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
+  // that would require us to create the event's kernel object with the Ob* api's too!
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtQueryEvent failed! (%s)', [NTStatusToString(Result)]);
@@ -2239,6 +2247,8 @@ begin
       [EventHandle, PreviousState]);
 
   Result := JwaNative.NtSetEvent(EventHandle, PULONG(PreviousState));
+  // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
+  // that would require us to create the event's kernel object with the Ob* api's too!
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtSetEvent failed! (%s)', [NTStatusToString(Result)]);

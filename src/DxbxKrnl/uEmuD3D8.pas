@@ -115,6 +115,10 @@ procedure XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
   EnableColorKey: BOOL;
   ColorKey: D3DCOLOR); stdcall;
 function XTL_EmuIDirect3DDevice8_CreateVertexBuffer2(Length: UINT): PX_D3DVertexBuffer; stdcall;
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple_Internal(
+  State: D3DRenderStateType;
+  Value: DWORD
+  ); {NOPATCH}
 
 var
   // Global(s)
@@ -203,7 +207,7 @@ var
 var g_EmuD3DTileCache: array [0..$08 - 1] of X_D3DTILE;
 
 // cached active texture
-var g_EmuD3DActiveTexture: array [0..4 - 1] of PX_D3DResource; // = {0,0,0,0};
+var g_EmuD3DActiveTexture: array [0..X_D3DTS_STAGECOUNT-1] of PX_D3DResource; // = {0,0,0,0};
 
 // information passed to the create device proxy thread
 type EmuD3D8CreateDeviceProxyData = packed record
@@ -4044,7 +4048,7 @@ begin
   end;
 
   (* --- MARKED OUT BY CXBX --
-    IDirect3DTexture8 *pDummyTexture[4] := (0, 0, 0, 0);
+    IDirect3DTexture8 *pDummyTexture[X_D3DTS_STAGECOUNT] := (0, 0, 0, 0);
 
     if (pDummyTexture[Stage] = 0) then
     begin
@@ -4119,7 +4123,7 @@ procedure XTL_EmuIDirect3DDevice8_SwitchTexture
 ); register; // fastcall simulation - See Translation guide
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 const
-  StageLookup: array [0..4-1] of DWORD = ( $00081b00, $00081b40, $00081b80, $00081bc0 );
+  StageLookup: array [0..X_D3DTS_STAGECOUNT-1] of DWORD = ( $00081b00, $00081b40, $00081b80, $00081bc0 );
 var
   Stage: DWORD;
   v: int;
@@ -4140,7 +4144,7 @@ begin
 
   Stage := DWord(-1);
 
-  for v := 0 to 4-1 do
+  for v := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
     if (StageLookup[v] = Method) then
       Stage := v;
@@ -4698,7 +4702,7 @@ function XTL_EmuIDirect3DDevice8_Clear
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   newFlags: DWORD;
-  StencilEnabled: DWORD;
+  Enabled: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -4722,24 +4726,27 @@ begin
     newFlags := 0;
 
     if (Flags and X_D3DCLEAR_TARGET) > 0 then
-        newFlags := newFlags or D3DCLEAR_TARGET;
+      newFlags := newFlags or D3DCLEAR_TARGET;
 
-    if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then
+    // Only clear ZBuffer if we actually have one :
+    IDirect3DDevice8(g_pD3DDevice8).GetRenderState(D3DRS_ZENABLE, {out}Enabled);
+    if Enabled <> DWord(BOOL_FALSE) then
+    begin
+      if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then
         newFlags := newFlags or D3DCLEAR_ZBUFFER;
+    end;
 
     // Check if Stencil buffer is enabled.. if not, then dont use it with the clear
     // Otherwise clear will not work.
-    IDirect3DDevice8(g_pD3DDevice8).GetRenderState(D3DRS_STENCILENABLE, StencilEnabled);
-    if StencilEnabled = BOOL_TRUE then
+    IDirect3DDevice8(g_pD3DDevice8).GetRenderState(D3DRS_STENCILENABLE, {out}Enabled);
+    if Enabled <> DWord(BOOL_FALSE) then
     begin
       if (Flags and X_D3DCLEAR_STENCIL) > 0 then
-          newFlags := newFlags or D3DCLEAR_STENCIL;
+        newFlags := newFlags or D3DCLEAR_STENCIL;
     end;
 
     if (Flags and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
-        EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not X_D3DCLEAR_ALL_SUPPORTED)]);
-
-    Flags := newFlags;
+      EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not X_D3DCLEAR_ALL_SUPPORTED)]);
   end;
 
   Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, newFlags, Color, Z, Stencil);
@@ -6590,7 +6597,7 @@ begin
   begin
     if (Enable <> BOOL_FALSE) and (g_pDDSOverlay7 = nil) then
     begin
-        // initialize overlay surface
+      // initialize overlay surface
       if (g_bSupportsYUY2) then
       begin
         ZeroMemory(@ddsd2, sizeof(ddsd2));
@@ -6619,7 +6626,7 @@ begin
       end;
     end;
   end;
-  
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -6851,8 +6858,9 @@ begin
       if g_bHackUpdateSoftwareOverlay then
         DxbxPresent(nil, nil, 0, nil);
 
-      g_bHackUpdateSoftwareOverlay := TRUE;
     end;
+
+    g_bHackUpdateSoftwareOverlay := TRUE;
   end
   else
   begin
@@ -6865,17 +6873,13 @@ end;
 function XTL_EmuIDirect3DDevice8_GetOverlayUpdateStatus(): LONGBOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
-  EmuSwapFS(fsWindows);
-
 {$IFDEF DEBUG}
+  EmuSwapFS(fsWindows);
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_GetOverlayUpdateStatus();');
+  EmuSwapFS(fsXbox);
 {$ENDIF}
 
-//  Result := D3DDevice_GetOverlayUpdateStatus();
-
-  EmuSwapFS(fsXbox);
-
-  Result := True;
+  Result := (g_bHackUpdateSoftwareOverlay = False);
 end;
 
 procedure XTL_EmuIDirect3DDevice8_BlockUntilVerticalBlank(); stdcall;
@@ -6889,7 +6893,7 @@ begin
 
   // - DXBX - DO NOT ENABLE GetVSync CHECK... ALMOST EVERY GAME CRASHES WHEN YOU DO NOT WAIT !!!
   // segaGT tends to freeze with this on
-	//    if(g_XBVideo.GetVSync())
+  //    if(g_XBVideo.GetVSync())
   IDirectDraw7(g_pDD7).WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
   EmuSwapFS(fsXbox);
@@ -7064,7 +7068,7 @@ begin
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
     X_D3DTSS_BUMPENVLSCALE:
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
-   end;
+  end;
 
   EmuSwapFS(fsXbox);
 end;
@@ -7280,7 +7284,6 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple(
 // Branch:shogun  Revision:20100412  Translator:Shadow_Tj  Done:100
 var
   State: D3DRenderStateType;//int;
-//  v: int;
 begin
   EmuSwapFS(fsWindows);
 
@@ -7293,18 +7296,6 @@ begin
     [Method, Value]);
 {$ENDIF}
 
-  int(State) := -1;
-
-(*  // TODO -oCXBX: make this faster and more elegant
-  for v := 0 to 174-1 do
-  begin
-    if (EmuD3DRenderStateSimpleEncoded[v] = Method) then
-    begin
-      State := D3DRenderStateType(v);
-      break;
-    end;
-  end;
-*)
   // Dxbx note : Let the compiler sort this out, should be much quicker :
   case Method of
     $040300: State := D3DRS_ALPHATESTENABLE;
@@ -7325,160 +7316,171 @@ begin
     $040374: State := D3DRS_STENCILZFAIL;
     $040378: State := D3DRS_STENCILPASS;
     $04037c: State := D3DRS_SHADEMODE;
+  else
+    int(State) := -1;
   end;
-(**)
+
   if (int(State) = -1) then
     EmuWarning('RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!', [Method, Value])
   else
-  begin
-    case _D3DRENDERSTATETYPE(State) of
-      D3DRS_COLORWRITEENABLE:
-        begin
-          Value := EmuXB2PC_D3DCOLORWRITEENABLE(Value);
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_COLORWRITEENABLE := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_SHADEMODE:
-        begin
-          Value := EmuXB2PC_D3DSHADEMODE(Value);
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_SHADEMODE := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_BLENDOP:
-        begin
-          Value := EmuXB2PC_D3DBLENDOP(Value);
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_BLENDOP := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_SRCBLEND:
-        begin
-          Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_SRCBLEND := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_DESTBLEND:
-        begin
-          Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_DESTBLEND := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_ZFUNC:
-        begin
-          Value := EmuXB2PC_D3DCMPFUNC(Value);
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_ZFUNC := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_ALPHAFUNC:
-        begin
-          Value := EmuXB2PC_D3DCMPFUNC(Value);
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_ALPHAFUNC := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_ALPHATESTENABLE:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_ALPHATESTENABLE := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_ALPHABLENDENABLE:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_ALPHABLENDENABLE := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_ALPHAREF:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_ALPHAREF := %d', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_ZWRITEENABLE:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_ZWRITEENABLE := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_DITHERENABLE:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_DITHERENABLE := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_STENCILZFAIL:
-        begin
-          Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_STENCILZFAIL := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_STENCILPASS:
-        begin
-          Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_STENCILPASS := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_STENCILFUNC:
-        begin
-          Value := EmuXB2PC_D3DCMPFUNC(Value);
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_STENCILFUNC := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_STENCILREF:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_STENCILREF := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_STENCILMASK:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_STENCILMASK := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-      D3DRS_STENCILWRITEMASK:
-        begin
-{$IFDEF DEBUG}
-          DbgPrintf('D3DRS_STENCILWRITEMASK := 0x%.08X', [Value]);
-{$ENDIF}
-        end;
-
-    else
-      begin
-        DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(State)]);
-      end;
-    end;
-
-    // TODO -oCXBX: verify these params as you add support for them!
-    IDirect3DDevice8(g_pD3DDevice8).SetRenderState({D3DRENDERSTATETYPE}(State), Value);
-  end;
+    // Use a helper for the simple render states, as SetRenderStateNotInline
+    // needs to be able to call it too :
+    XTL_EmuIDirect3DDevice8_SetRenderState_Simple_Internal(State, Value);
 
   EmuSwapFS(fsXbox);
+end;
+
+procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple_Internal(
+  State: D3DRenderStateType;
+  Value: DWORD
+  ); {NOPATCH}
+// Branch:Dxbx  Translator:Shadow_Tj  Done:100
+begin
+  case _D3DRENDERSTATETYPE(State) of
+    D3DRS_COLORWRITEENABLE:
+      begin
+        Value := EmuXB2PC_D3DCOLORWRITEENABLE(Value);
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_COLORWRITEENABLE := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_SHADEMODE:
+      begin
+        Value := EmuXB2PC_D3DSHADEMODE(Value);
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_SHADEMODE := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_BLENDOP:
+      begin
+        Value := EmuXB2PC_D3DBLENDOP(Value);
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_BLENDOP := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_SRCBLEND:
+      begin
+        Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_SRCBLEND := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_DESTBLEND:
+      begin
+        Value := EmuXB2PC_D3DBLEND(X_D3DBLEND(Value));
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_DESTBLEND := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_ZFUNC:
+      begin
+        Value := EmuXB2PC_D3DCMPFUNC(Value);
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_ZFUNC := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_ALPHAFUNC:
+      begin
+        Value := EmuXB2PC_D3DCMPFUNC(Value);
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_ALPHAFUNC := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_ALPHATESTENABLE:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_ALPHATESTENABLE := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_ALPHABLENDENABLE:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_ALPHABLENDENABLE := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_ALPHAREF:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_ALPHAREF := %d', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_ZWRITEENABLE:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_ZWRITEENABLE := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_DITHERENABLE:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_DITHERENABLE := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_STENCILZFAIL:
+      begin
+        Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_STENCILZFAIL := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_STENCILPASS:
+      begin
+        Value := EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP(Value));
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_STENCILPASS := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_STENCILFUNC:
+      begin
+        Value := EmuXB2PC_D3DCMPFUNC(Value);
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_STENCILFUNC := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_STENCILREF:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_STENCILREF := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_STENCILMASK:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_STENCILMASK := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+    D3DRS_STENCILWRITEMASK:
+      begin
+{$IFDEF DEBUG}
+        DbgPrintf('D3DRS_STENCILWRITEMASK := 0x%.08X', [Value]);
+{$ENDIF}
+      end;
+
+  else
+    begin
+      DxbxKrnlCleanup('Unsupported RenderState (0x%.08X)', [int(State)]);
+    end;
+  end;
+
+  // TODO -oCXBX: verify these params as you add support for them!
+  IDirect3DDevice8(g_pD3DDevice8).SetRenderState({D3DRENDERSTATETYPE}(State), Value);
 end;
 
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend
@@ -10258,8 +10260,9 @@ begin
 
   if Assigned(XTL_EmuD3DDeferredRenderState) then // Dxbx addition
   begin
-    if (State > 81) and (State < 116) then
-      XTL_EmuD3DDeferredRenderState[State-82] := Value
+    if  (State >= XTL_EmuD3DDeferredRenderState_Start)
+    and (State < XTL_EmuD3DDeferredRenderState_Start + XTL_EmuD3DDeferredRenderState_Size) then
+      XTL_EmuD3DDeferredRenderState[State-XTL_EmuD3DDeferredRenderState_Start] := Value
     else
       DxbxKrnlCleanup('Unknown Deferred RenderState! (%d)', [State]);
   end;
@@ -10452,7 +10455,8 @@ function XTL_EmuIDirect3DDevice8_GetModelView
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:161  Translator:PatrickvL  Done:100
 var
-  mtxWorld, mtxView: TD3DXMATRIX;
+  Out: D3DMATRIX;
+  mtxWorld, mtxView: D3DMATRIX;
 begin
   EmuSwapFS(fsWindows);
 
@@ -10463,16 +10467,36 @@ begin
       #13#10');', [pModelView]);
 {$ENDIF}
 
-  // I hope this is right
-  IDirect3DDevice8(g_pD3DDevice8).GetTransform(D3DTS_WORLD, {out}mtxWorld);
-  IDirect3DDevice8(g_pD3DDevice8).GetTransform(D3DTS_VIEW, {out}mtxView);
+  // Dxbx note : Blueshogun remarked "I hope this is right". When Dxbx is running,
+  // Rayman Arena it crashes after logging this (when going from the menu to ingame).
+  // TODO -oDxbx : Find out if the crash occurs in here, or after this call (and fix it!)
 
-//  pModelView^ := mtxWorld * mtxView;
-  D3DXMatrixMultiply({out}pModelView^, mtxWorld, mtxView);
+  Result := IDirect3DDevice8(g_pD3DDevice8).GetTransform(D3DTS_WORLD, {out}mtxWorld);
+  if (FAILED(Result)) then
+    EmuWarning('Unable to get projection matrix!');
+
+  Result := IDirect3DDevice8(g_pD3DDevice8).GetTransform(D3DTS_VIEW, {out}mtxView);
+  if (FAILED(Result)) then
+    EmuWarning('Unable to get projection matrix!');
+
+  // Clear the destination matrix
+  ZeroMemory(@Out, sizeof(D3DMATRIX));
+
+(*
+  D3DXMatrixIdentity({out}mtxViewport);
+  mtxViewport._11 := Width / ClipWidth;
+  mtxViewport._22 := -(Height / ClipHeight);
+  mtxViewport._41 := -(ClipX * mtxViewport._11);
+  mtxViewport._42 := -(ClipY * mtxViewport._22);
+*)
+
+  // Multiply world and view matrix together
+  Out := D3DMATRIX_MULTIPLY(mtxWorld, mtxView);
+
+  if Assigned(pModelView) then
+    pModelView^ := Out;
 
   EmuSwapFS(fsXbox);
-
-  Result := S_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetBackMaterial
@@ -10842,20 +10866,107 @@ end; *)
 
 function XTL_EmuIDirect3DDevice8_SetRenderState_SetRenderStateNotInline
 (
-  State: D3DRENDERSTATETYPE;
+  State: X_D3DRENDERSTATETYPE;
   Value: DWORD
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:0
+// Branch:DXBX  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
 
-{ D3DDIRTY_RENDERSTATE(State);
-  D3DDevice_SetRenderStateNotInline(State, Value);
-  return S_OK; }
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetRenderState_SetRenderStateNotInline >> ' +
+      #13#10'(' +
+      #13#10'   State                   : 0x%.08X' +
+      #13#10'   Value                   : 0x%.08X' +
+      #13#10');',
+      [State, Value]);
 
-  Unimplemented('XTL_EmuIDirect3DDevice8_SetRenderState_SetRenderStateNotInline');
+  Result := S_OK;
+  if (State < XTL_EmuD3DDeferredRenderState_Start) then
+  begin
+    // Simple states - Just pass them on to our helper :
+    XTL_EmuIDirect3DDevice8_SetRenderState_Simple_Internal(D3DRENDERSTATETYPE(State), Value);
+    EmuSwapFS(fsXbox);
+    Exit;
+  end;
 
+  if  (State >= XTL_EmuD3DDeferredRenderState_Start)
+  and (State < XTL_EmuD3DDeferredRenderState_Start + XTL_EmuD3DDeferredRenderState_Size) then
+  begin
+    // Deferred states - Since XTL_EmuIDirect3DDevice8_SetRenderState_Deferred
+    // is not patched anymore, we'll set the DeferredRenderState here ourselves :
+    XTL_EmuD3DDeferredRenderState[State - XTL_EmuD3DDeferredRenderState_Start] := Value;
+    EmuSwapFS(fsXbox);
+    Exit;
+  end;
+
+  // Complex states - each has a separate setter (which are patches,
+  // so switch back to Xbox FS first) :
   EmuSwapFS(fsXbox);
+  // Oh, and take the SDK-version dependant Complex RenderState correction into account :
+  case (Integer(State) - XTL_EmuD3DRenderState_ComplexCorrection) of
+    X_D3DRS_BACKFILLMODE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_BackFillMode(Value);
+    X_D3DRS_CULLMODE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_CullMode(Value);
+    X_D3DRS_DONOTCULLUNCOMPRESSED:
+      XTL_EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed(Value);
+    X_D3DRS_DXT1NOISEENABLE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable(Value);
+    X_D3DRS_EDGEANTIALIAS:
+      XTL_EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias(Value);
+    X_D3DRS_FILLMODE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_FillMode(Value);
+    X_D3DRS_FOGCOLOR:
+      XTL_EmuIDirect3DDevice8_SetRenderState_FogColor(Value);
+    X_D3DRS_FRONTFACE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_FrontFace(Value);
+    X_D3DRS_LINEWIDTH:
+      XTL_EmuIDirect3DDevice8_SetRenderState_LineWidth(Value);
+    X_D3DRS_LOGICOP:
+      XTL_EmuIDirect3DDevice8_SetRenderState_LogicOp(Value);
+    X_D3DRS_MULTISAMPLEANTIALIAS:
+      XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias(Value);
+    X_D3DRS_MULTISAMPLEMASK:
+      XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMask(Value);
+    X_D3DRS_MULTISAMPLEMODE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleMode(Value);
+    X_D3DRS_MULTISAMPLERENDERTARGETMODE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode(Value);
+    X_D3DRS_NORMALIZENORMALS:
+      XTL_EmuIDirect3DDevice8_SetRenderState_NormalizeNormals(Value);
+    X_D3DRS_OCCLUSIONCULLENABLE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable(Value);
+    X_D3DRS_PSTEXTUREMODES:
+      XTL_EmuIDirect3DDevice8_SetRenderState_PSTextureModes(Value);
+    X_D3DRS_ROPZCMPALWAYSREAD:
+      XTL_EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead(Value);
+    X_D3DRS_ROPZREAD:
+      XTL_EmuIDirect3DDevice8_SetRenderState_RopZRead(Value);
+    X_D3DRS_SAMPLEALPHA:
+      XTL_EmuIDirect3DDevice8_SetRenderState_SampleAlpha(Value);
+    X_D3DRS_SHADOWFUNC:
+      XTL_EmuIDirect3DDevice8_SetRenderState_ShadowFunc(Value);
+    X_D3DRS_STENCILCULLENABLE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_StencilCullEnable(Value);
+    X_D3DRS_STENCILENABLE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_StencilEnable(Value);
+    X_D3DRS_STENCILFAIL:
+      XTL_EmuIDirect3DDevice8_SetRenderState_StencilFail(Value);
+    X_D3DRS_TEXTUREFACTOR:
+      XTL_EmuIDirect3DDevice8_SetRenderState_TextureFactor(Value);
+    X_D3DRS_VERTEXBLEND:
+      XTL_EmuIDirect3DDevice8_SetRenderState_VertexBlend(Value);
+    X_D3DRS_YUVENABLE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_YuvEnable(Value);
+    X_D3DRS_ZBIAS:
+      XTL_EmuIDirect3DDevice8_SetRenderState_ZBias(Value);
+    X_D3DRS_ZENABLE:
+      XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable(Value);
+    X_D3DRS_TWOSIDEDLIGHTING:
+      XTL_EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting(Value);
+  else
+    Result := E_FAIL;
+  end;
 end;
 
 
