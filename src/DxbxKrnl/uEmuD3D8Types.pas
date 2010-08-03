@@ -105,6 +105,7 @@ type
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 
 type X_D3DMULTISAMPLE_TYPE = DWORD;
+type X_D3DSWAPEFFECT = D3DSWAPEFFECT; // Same as on Windows Direct3D
 type X_D3DFORMAT = DWORD;
 type X_D3DBLENDOP = DWORD;
 type X_D3DBLEND = (
@@ -229,7 +230,7 @@ type _X_D3DSURFACE_DESC = record
     Type_: X_D3DRESOURCETYPE;
     Usage: DWORD;
     Size: UINT;
-    MultiSampleType: D3DMULTISAMPLE_TYPE;
+    MultiSampleType: X_D3DMULTISAMPLE_TYPE;
     Width: UINT;
     Height: UINT;
   end; // size = 28 (as in Cxbx)
@@ -243,9 +244,9 @@ type _X_D3DPRESENT_PARAMETERS = record
     BackBufferFormat: X_D3DFORMAT;
     BackBufferCount: UINT;
 
-    MultiSampleType: D3DMULTISAMPLE_TYPE;
+    MultiSampleType: X_D3DMULTISAMPLE_TYPE;
 
-    SwapEffect: D3DSWAPEFFECT;
+    SwapEffect: X_D3DSWAPEFFECT;
     hDeviceWindow: HWND;
     Windowed: BOOL_;
     EnableAutoDepthStencil: BOOL;
