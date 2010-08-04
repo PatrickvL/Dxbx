@@ -2398,14 +2398,13 @@ begin
          [Self]);
 
   //TODO DXBX: - This is not good to release... it crashes rayamn menu items hard.
+  uRet := 0;
   if (Self <> nil) then
   begin
     if (0=(Self.EmuFlags and DSB_FLAG_RECIEVEDATA)) then
     begin
         if Assigned(Self.EmuDirectSoundBuffer8) then
-          uRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release()
-        else
-          uRet := 0;
+          uRet := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8)._Release();
 
         if (uRet = 0) then
         begin

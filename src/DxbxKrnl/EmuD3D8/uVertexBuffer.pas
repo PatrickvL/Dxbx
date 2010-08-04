@@ -1649,7 +1649,7 @@ var
   bSwizzled: BOOL_;
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
-  bCubemap: BOOL_;
+//  bCubemap: BOOL_;
 
   dwCompressedOffset: DWORD;
   dwMipOffs: DWORD;

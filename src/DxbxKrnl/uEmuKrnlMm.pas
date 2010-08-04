@@ -531,8 +531,8 @@ begin
   ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
 
   MemoryStatistics.Length := sizeof(MM_STATISTICS);
-  MemoryStatistics.TotalPhysicalPages := MemoryStatus.dwTotalVirtual div 4096;
-  MemoryStatistics.AvailablePages := MemoryStatus.dwAvailVirtual div 4096;
+  MemoryStatistics.TotalPhysicalPages := MemoryStatus.dwTotalVirtual div PAGE_SIZE;
+  MemoryStatistics.AvailablePages := MemoryStatus.dwAvailVirtual div PAGE_SIZE;
 
   // HACK (does this matter?)
   MemoryStatistics.VirtualMemoryBytesReserved := MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys;

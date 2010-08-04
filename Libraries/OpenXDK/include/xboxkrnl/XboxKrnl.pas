@@ -740,7 +740,7 @@ type
   PLAUNCH_DATA_HEADER = ^LAUNCH_DATA_HEADER;
 
 const PAGE_SHIFT = 12;
-const PAGE_SIZE= 1 shl PAGE_SHIFT; // = 64 Kb, *Same as Win2k/XP*
+const PAGE_SIZE = 1 shl PAGE_SHIFT; // = 4096 bytes = 4 Kib, *Same as Win2k/XP*
 
 // ******************************************************************
 // * LAUNCH_DATA_PAGE

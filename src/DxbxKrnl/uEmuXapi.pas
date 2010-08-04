@@ -232,10 +232,7 @@ function XTL_EmuXFreeSectionByHandle
     hSection: XTL_SECTIONHANDLE
 ): BOOL; stdcall; // published function, used for xboxkrnl_XeUnloadSection
 
-function XTL_EmuXMountUtilityDrive
-(
-    fFormatClean: BOOL
-): BOOL; stdcall; // published function, used for DxbxKrnlInit
+function DxbxMountUtilityDrive(fFormatClean: BOOL): BOOL; // published function, used for DxbxKrnlInit
 
 implementation
 
@@ -513,7 +510,7 @@ begin
   // Xbe execution to a single processor), but then we must change the frequency
   // too (which would be best to keep static). For now, forward it to the kernel :
 
-  _LARGE_INTEGER(lpPerformanceCount^) := xboxkrnl_KeQueryPerformanceCounter;
+  _LARGE_INTEGER(lpPerformanceCount^) := xboxkrnl_KeQueryPerformanceCounter();
   Result := BOOL_TRUE;
 
   // debug - 4x speed
@@ -531,7 +528,7 @@ begin
   if MayLog(lfUnit) then
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency >>' +
+    DbgPrintf('EmuXapi : EmuQueryPerformanceFrequency' +
       #13#10'(' +
       #13#10'   lpFrequency         : 0x%.08X' +
       #13#10');',
@@ -540,9 +537,14 @@ begin
   end;
 
   // Dxbx note : Xbox returns 733,333,333 ticks per second here, which
-  // nicely corresponds to the number of cycles of the Xbox1 Pentium 3.
+  // nicely corresponds to the number of cycles of the Xbox1 Pentium 3 :
+//    lpFrequency.QuadPart = 733333333; // This implementation returns RDTSC as PerformanceCounter
+
+  // Return the frequency of the legacy core frequency (13.5Mhz) divided by four to
+  // obtain the ACPI timer frequency (3.375Mhz).
 
   _LARGE_INTEGER(lpFrequency^) := xboxkrnl_KeQueryPerformanceFrequency;
+
   Result := BOOL_TRUE;
 end;
 
@@ -554,10 +556,6 @@ function XTL_EmuXMountUtilityDrive
     fFormatClean: BOOL
 ): BOOL; stdcall;
 // Branch:Dxbx  Translator:PatrickvL  Done:60
-var
-  pCertificate: PXBE_CERTIFICATE;
-  TitleStr: AnsiString;
-  status: NTSTATUS;
 begin
   EmuSwapFS(fsWindows);
 
@@ -568,6 +566,19 @@ begin
         #13#10');', [fFormatClean]);
 {$ENDIF}
 
+  Result := DxbxMountUtilityDrive(fFormatClean);
+
+  EmuSwapFS(fsXbox);
+end;
+
+// Tooling function, doesn't do FS-swapping, so can be used at initialization time too.
+function DxbxMountUtilityDrive(fFormatClean: BOOL): BOOL;
+// Branch:Dxbx  Translator:PatrickvL  Done:60
+var
+  pCertificate: PXBE_CERTIFICATE;
+  TitleStr: AnsiString;
+  status: NTSTATUS;
+begin
   // TODO -oDxbx : Select the oldest cache partition somehow.
 
   // For now, select partition6 as 'Utility data' drive, and link it to Z:
@@ -584,13 +595,11 @@ begin
     Result := BOOL_TRUE
   else
     Result := BOOL_FALSE;
-
-  EmuSwapFS(fsXbox);
 end;
 
 procedure XTL_EmuXInitDevices
 (
-    Unknown1: DWORD; 
+    Unknown1: DWORD;
     Unknown2: PVOID
 ); stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
@@ -660,7 +669,7 @@ function XTL_EmuXGetDeviceChanges
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
+  if MayLog(lfUnit or lfExtreme) then
   DbgPrintf('EmuXapi : EmuXGetDeviceChanges' +
     #13#10'(' +
     #13#10'   DeviceType          : 0x%.08X' +
@@ -668,7 +677,6 @@ begin
     #13#10'   pdwRemovals         : 0x%.08X' +
     #13#10');',
     [DeviceType, pdwInsertions, pdwRemovals]);
-{$ENDIF}
 
   Result := BOOL_FALSE;
   // bFirst := TRUE; - Dxbx Note : Do not reset 'static' var
@@ -931,14 +939,13 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXInputGetState' +
+  if MayLog(lfUnit or lfExtreme) then
+    DbgPrintf('EmuXapi : EmuXInputGetState' +
        #13#10'(' +
        #13#10'   hDevice             : 0x%.08X' +
        #13#10'   pState              : 0x%.08X' +
        #13#10');',
        [hDevice, pState]);
-{$ENDIF}
 
   Result := ERROR_INVALID_HANDLE;
 
@@ -1158,7 +1165,7 @@ begin
       [hThread, nPriority]);
 {$ENDIF}
 
-  bRet := BOOL_TRUE; //SetThreadPriority(hThread, nPriority);  // marked by cxbx
+  bRet := BOOL(SetThreadPriority(hThread, nPriority));  // marked by cxbx
 
   if bRet = BOOL_FALSE then
     EmuWarning('SetThreadPriority Failed!');
@@ -1734,10 +1741,11 @@ begin
       #13#10');',
       [hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait]);
 
-  Result := BOOL(GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, bWait <> BOOL_FALSE));
+  Result := BOOL(GetOverlappedResult(hFile, lpOverlapped^, {var}lpNumberOfBytesTransferred^, JwaWinType.BOOL(bWait)));
 
-//  if (bWait) then
-//    bRet := TRUE; // Sucker...
+  DbgPrintf('EmuXapi : EmuGetOverlappedResult lpNumberOfBytesTransferred^ = 0x%.08X', [lpNumberOfBytesTransferred^]);
+//  if (bWait = BOOL_TRUE) then
+//    Result := BOOL_TRUE; // Sucker...
 
   EmuSwapFS(fsXbox);
 end;

@@ -56,6 +56,8 @@ var
   // This method returns the actual patch function address for each patched method.
   function XboxLibraryPatchToPatch(const aValue: TXboxLibraryPatch): TCodePointer;
 
+procedure CleanupAvailablePatches;
+
 implementation
 
 function TransformExportFunctionNameIntoXboxFunctionName(const aValue: string): string;
@@ -186,9 +188,18 @@ begin
   AvailablePatches.Sort;
 end;
 
+procedure CleanupAvailablePatches;
+begin
+  FreeAndNil(AvailablePatches);
+end;
+
 initialization
 
   DetermineAvailablePatches;
+
+finalization
+
+  CleanupAvailablePatches;
 
 end.
 

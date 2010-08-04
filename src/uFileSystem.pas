@@ -98,6 +98,8 @@ type
     property Letter: Char read FLetter;
     property FileSystem: TFileSystem read MyFileSystem;
 
+    procedure Create;
+
     function IsMounted: Boolean;
     procedure Unmount;
     function Mount(aDevice: string): Boolean;
@@ -537,6 +539,11 @@ end;
 
 { RLogicalVolume }
 
+procedure RLogicalVolume.Create;
+begin
+  ZeroMemory(@Self, SizeOf(Self));
+end;
+
 function RLogicalVolume.IsMounted: Boolean;
 begin
   Result := Assigned(MyFileSystem);
@@ -661,14 +668,16 @@ end;
 
 procedure RDrives.Create;
 begin
-  New(MyC); MyC^.FLetter := 'C';
-  New(MyD); MyD^.FLetter := 'D';
-  New(MyE); MyE^.FLetter := 'E';
-  New(MyT); MyT^.FLetter := 'T';
-  New(MyU); MyU^.FLetter := 'U';
-  New(MyX); MyX^.FLetter := 'X';
-  New(MyY); MyY^.FLetter := 'Y';
-  New(MyZ); MyZ^.FLetter := 'Z';
+  ZeroMemory(@Self, SizeOf(Self));
+
+  New(MyC); MyC.Create; MyC^.FLetter := 'C';
+  New(MyD); MyD.Create; MyD^.FLetter := 'D';
+  New(MyE); MyE.Create; MyE^.FLetter := 'E';
+  New(MyT); MyT.Create; MyT^.FLetter := 'T';
+  New(MyU); MyU.Create; MyU^.FLetter := 'U';
+  New(MyX); MyX.Create; MyX^.FLetter := 'X';
+  New(MyY); MyY.Create; MyY^.FLetter := 'Y';
+  New(MyZ); MyZ.Create; MyZ^.FLetter := 'Z';
 end;
 
 procedure RDrives.Free;
