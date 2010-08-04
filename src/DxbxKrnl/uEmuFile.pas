@@ -174,6 +174,8 @@ function DxbxPC2XB_FS_INFORMATION(NativeFileInformation, FileInformation: PVOID;
 function DxbxXB2PC_FILE_INFORMATION(FileInformation, NativeFileInformation: PVOID;
   FileInformationClass: FILE_INFORMATION_CLASS): Boolean;
 
+procedure CleanupSymbolicLinks;
+
 implementation
 
 (*
@@ -256,7 +258,9 @@ end;
 
 destructor TEmuNtObject.Destroy;
 begin
-  Assert(RefCount <= 0);
+{$IFNDEF DXBX_TRACE_MEMLEAKS} // Disabled for mem-leak tracing :
+  Assert(RefCount <= 0); 
+{$ENDIF}
 
   inherited Destroy;
 end;
@@ -751,5 +755,19 @@ begin
     end;
   end;
 end;
+
+procedure CleanupSymbolicLinks;
+var
+  VolumeLetter: Char;
+begin
+  for VolumeLetter := 'A' to 'Z' do
+    FreeAndNil(NtSymbolicLinkObjects[VolumeLetter])
+end;
+
+initialization
+
+finalization
+
+  CleanupSymbolicLinks;
 
 end.

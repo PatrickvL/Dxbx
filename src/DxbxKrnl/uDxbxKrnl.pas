@@ -29,6 +29,9 @@ uses
   Messages, // WM_DESTROY
   SysUtils, // Format
   Math, // IfThen
+{$IFDEF DXBX_TRACE_MEMLEAKS}
+  FastMM4,
+{$ENDIF}
   // Jedi Win32API
   JwaWinType,
   // Dxbx
@@ -99,6 +102,12 @@ var
   g_CPUOthers: DWORD_PTR;
 
 implementation
+
+{$IFDEF DXBX_TRACE_MEMLEAKS}
+uses
+  DxLibraryAPIScanning, 
+  uXboxLibraryUtils;
+{$ENDIF}
 
 procedure DxbxKrnlInit(
   hwndParent: HWND;
@@ -368,11 +377,7 @@ begin
 
     // Mount the Utility drive (Z:) conditionally :
     if (DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_MountUtilityDrive) > 0 then
-    begin
-      EmuSwapFS(fsXbox);
-      XTL_EmuXMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_FormatUtilityDrive);
-      EmuSwapFS(fsWindows);
-    end;
+      DxbxMountUtilityDrive({fFormatClean=}DxbxKrnl_XbeHeader.dwInitFlags[0] and XBE_INIT_FLAG_FormatUtilityDrive);
   end;
 
 {$IFDEF DEBUG}
@@ -487,7 +492,17 @@ begin
   if(DxbxKrnl_hEmuParent <> HNULL) then
     SendMessage(DxbxKrnl_hEmuParent, WM_USER_PARENTNOTIFY, WM_DESTROY, 0);
 
+{$IFDEF DXBX_TRACE_MEMLEAKS}
+  // cleanup as much as possible and report remaining allocations (leaks) :
+  FreeAndNil(SymbolManager);
+  CleanupAvailablePatches;
+  CleanupSymbolicLinks;
+
+  //LogAllocatedBlocksToFile(0,0); //  FinalizeMemoryManager;
+  ExitProcess(0);
+{$ELSE}
   TerminateProcess(GetCurrentProcess(), 0);
+{$ENDIF}
 end;
 
 procedure DxbxKrnlRegisterThread(const hThread: HANDLE);

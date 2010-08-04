@@ -3414,10 +3414,15 @@ begin
       // assemble the shader
       D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader), {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
 
-      // create the shader device handle
-      Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
+      if Assigned(pShader) then
+      begin
+        // create the shader device handle
+        Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
 
-      // TODO -oDxbx : Shouldn't we release pShader here? (It could be a resource leak!)
+        // Dxbx note : We must release pShader here, else we would have a resource leak!
+        ID3DXBuffer(pShader)._Release;
+        pShader := nil;
+      end;
 
       if (FAILED(Result)) then
       begin
@@ -5490,9 +5495,9 @@ begin
                     memcpy(pPixelData, pExpandedTexture, dwDataSize);
 
                     // Flush unused data buffers
-                    DxbxFree(pTexturePalette); pTexturePalette := nil;
-                    DxbxFree(pExpandedTexture); pExpandedTexture := nil;
-                    DxbxFree(pTextureCache); pTextureCache := nil;
+                    DxbxFree(pTexturePalette); // pTexturePalette := nil;
+                    DxbxFree(pExpandedTexture); // pExpandedTexture := nil;
+                    DxbxFree(pTextureCache); // pTextureCache := nil;
                   end
                   else
                   begin

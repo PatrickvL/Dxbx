@@ -26,7 +26,6 @@ uses
   Forms,
   uEmuShared in '..\..\src\uEmuShared.pas',
   uError in '..\..\src\uError.pas',
-  uExe in '..\..\src\uExe.pas',
   ufrm_About in '..\..\src\ufrm_About.pas',
   ufrm_Main in '..\..\src\ufrm_Main.pas',
   uLog in '..\..\src\uLog.pas',

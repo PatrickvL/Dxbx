@@ -53,7 +53,7 @@ function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
 function EmuXB2PC_D3DSTENCILOP(Value: X_D3DSTENCILOP): D3DSTENCILOP; inline;
 function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
 function EmuXB2PC_D3DVERTEXBLENDFLAGS(Value: X_D3DVERTEXBLENDFLAGS): D3DVERTEXBLENDFLAGS; inline;
-function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD; inline;
+function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
 function EmuXB2PC_D3DTEXTUREOP(Value: X_D3DTEXTUREOP): DWORD;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
@@ -100,6 +100,7 @@ EmuPrimitiveTypeLookup: array [0..Ord(X_D3DPT_POLYGON)] of D3DPRIMITIVETYPE = (
     D3DPT_TRIANGLEFAN      // X_D3DPT_POLYGON        = 10, Xbox
 );
 
+(* Dxbx note : Not used anymore, replaced by a switch in XTL_EmuIDirect3DDevice8_SetRenderState_Simple()
 // render state conversion table
 CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWORD = (
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
@@ -194,7 +195,7 @@ CONST {XTL.}EmuD3DRenderStateSimpleEncoded: array [0..174-1] of DWORD = (
     X_D3DRSSE_UNK,  $00040350,      // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK   // 172
   );
-
+*)
 implementation
 
 // is this format swizzled, and if so - how many BPP?
@@ -708,7 +709,7 @@ begin
   end;
 end;
 
-function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD; inline;
+function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
 // Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := 0;

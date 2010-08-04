@@ -126,7 +126,6 @@
 			</RcCompile>
 			<DCCReference Include="..\..\src\uEmuShared.pas"/>
 			<DCCReference Include="..\..\src\uError.pas"/>
-			<DCCReference Include="..\..\src\uExe.pas"/>
 			<DCCReference Include="..\..\src\ufrm_About.pas"/>
 			<DCCReference Include="..\..\src\ufrm_Main.pas"/>
 			<DCCReference Include="..\..\src\uLog.pas"/>

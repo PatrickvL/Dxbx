@@ -454,6 +454,12 @@ begin
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
       System.Delete(szBuffer, 1, 5); // Remove '$HOME'
     end
+//    else if StartsWithString(szBuffer, '.') then // 4x4 uses this
+//    begin
+//      // TODO : How should we keep track of the current directory ?
+//      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
+//      System.Delete(szBuffer, 1, 5); // Remove '.'
+//    end
     else
     begin
       // Look up via the device path :
@@ -1734,6 +1740,8 @@ begin
     *)
   end;
 
+  SetLength(NativeFileInformation, 0);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2026,6 +2034,8 @@ begin
   else
     EmuWarning('NtQueryInformationFile failed! (%s)', [NTStatusToString(Result)]);
 
+  SetLength(NativeFileInformation, 0);
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -2302,6 +2312,8 @@ begin
 
   if (Result <> STATUS_SUCCESS) then
     EmuWarning('NtSetInformationFile failed! (%s)', [NTStatusToString(Result)]);
+
+  SetLength(NativeFileInformation, 0);
 
   EmuSwapFS(fsXbox);
 end;

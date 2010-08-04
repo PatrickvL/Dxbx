@@ -426,7 +426,11 @@ begin
   (*if (GetConsoleTitle(buffer, 16) <> '') then
     freopen('nul', 'w', stdout); *)
 
+{$IFDEF DXBX_TRACE_MEMLEAKS}
+  ExitProcess(0);
+{$ELSE}
   TerminateProcess(GetCurrentProcess(), 0);
+{$ENDIF}
 end;
 
 // Exception handler for that tough final exit :)
