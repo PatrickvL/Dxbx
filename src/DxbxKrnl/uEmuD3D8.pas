@@ -6550,7 +6550,7 @@ begin
 
   // DXBX Addition, vertexbuffer length need to be at least a vertexbuffer length large.
   // At least 1 vertexbuffer needs to fit in.
-  if (NewLength = DWORD(-1)) or (Length = 0) then
+  if (NewLength = DWORD(-1)) or (NewLength = 0) then
   begin
     // TODO -oCXBX: once this is known to be working, remove the warning
     EmuWarning('Vertex buffer allocation size unknown');
