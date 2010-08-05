@@ -584,10 +584,10 @@ type _D3DVBLANKDATA = record
   PD3DVBLANKDATA = ^D3DVBLANKDATA;
 
 // Swap flags
-const D3DSWAP_DEFAULT    = $00000000;
-const D3DSWAP_COPY       = $00000001;
-const D3DSWAP_BYPASSCOPY = $00000002;
-const D3DSWAP_FINISH     = $00000004;
+const X_D3DSWAP_DEFAULT    = $00000000;
+const X_D3DSWAP_COPY       = $00000001;
+const X_D3DSWAP_BYPASSCOPY = $00000002;
+const X_D3DSWAP_FINISH     = $00000004;
 
 type _D3DSWAPDATA = record
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100

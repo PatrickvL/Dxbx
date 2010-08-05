@@ -2175,6 +2175,7 @@ begin
     end;
     { $02=}X_D3DVSDT_NONE: begin
       DbgVshPrintf('D3DVSDT_NONE /* xbox ext. nsp */');
+      // TODO -oDxbx: Use D3DVSD_NOP ?
       NewDataType := $FF;
     end;
   else // default:

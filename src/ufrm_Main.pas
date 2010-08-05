@@ -1754,7 +1754,7 @@ begin
   begin
     SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
     m_hwndChild := HNULL;
-
+    Application.ProcessMessages;
     Emulation_State := esFileOpen;
     UpdateTitleInformation;
     AdjustMenu;
