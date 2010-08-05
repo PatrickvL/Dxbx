@@ -351,14 +351,14 @@ end;
 function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: boolean): uint;
 begin
 (*
-  D3DFVF_POSITION_MASK    = $00E; // Dec  /2  #fl
+  X_D3DFVF_POSITION_MASK    = $00E; // Dec  /2  #fl
 
-  D3DFVF_XYZ              = $002; //  2 > 1 > 3
-  D3DFVF_XYZRHW           = $004; //  4 > 2 > 4
-  D3DFVF_XYZB1            = $006; //  6 > 3 > 4
-  D3DFVF_XYZB2            = $008; //  8 > 4 > 5
-  D3DFVF_XYZB3            = $00a; // 10 > 5 > 6
-  D3DFVF_XYZB4            = $00c; // 12 > 6 > 7
+  X_D3DFVF_XYZ              = $002; //  2 > 1 > 3
+  X_D3DFVF_XYZRHW           = $004; //  4 > 2 > 4
+  X_D3DFVF_XYZB1            = $006; //  6 > 3 > 4
+  X_D3DFVF_XYZB2            = $008; //  8 > 4 > 5
+  X_D3DFVF_XYZB3            = $00a; // 10 > 5 > 6
+  X_D3DFVF_XYZB4            = $00c; // 12 > 6 > 7
 *)
   // Divide the D3DFVF by two, this gives almost the number of floats needed for the format :
   Result := (dwVertexShader and D3DFVF_POSITION_MASK) shr 1;
@@ -1414,12 +1414,14 @@ begin
         end;
 
         // update render target cache
+        Dispose({var}g_pCachedRenderTarget); // Dxbx addition : Prevent memory leaks
         New({var X_D3DSurface:}g_pCachedRenderTarget);
         g_pCachedRenderTarget.Common := 0;
         g_pCachedRenderTarget.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DREND;
         IDirect3DDevice8_GetRenderTarget(g_pD3DDevice8, @(g_pCachedRenderTarget.Emu.Surface8));
 
         // update z-stencil surface cache
+        Dispose({var}g_pCachedZStencilSurface); // Dxbx addition : Prevent memory leaks
         New({var}g_pCachedZStencilSurface);
         g_pCachedZStencilSurface.Common := 0;
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
@@ -3069,6 +3071,13 @@ begin
     //*/
   end;
 
+  // Dxbx addition : Prevent memory leaks
+  if Assigned(pRecompiledBuffer) then
+  begin
+    ID3DXBuffer(pRecompiledBuffer)._Release();
+    pRecompiledBuffer := NULL;
+  end;
+
   // Save the status, to remove things later
   pVertexShader.Status := hRet;
 
@@ -3647,7 +3656,7 @@ begin
 
     ppTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
     ppTexture^.Emu.Lock := dwPtr;
-    ppTexture^.Format := X_D3DFMT_YUY2{=$24};
+    ppTexture^.Format := X_D3DFMT_YUY2;
 
     ppTexture^.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
                     or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
@@ -3755,7 +3764,7 @@ begin
     // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
     ppVolumeTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
     ppVolumeTexture^.Emu.Lock := dwPtr;
-    ppVolumeTexture^.Format := $24;
+    ppVolumeTexture^.Format := X_D3DFMT_YUY2;
 
     ppVolumeTexture^.Size  := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
                            or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
@@ -4821,7 +4830,7 @@ begin
 
   // Handle Swap Callback function
   begin
-    g_SwapData.Swap := D3DSWAP_DEFAULT; // TODO -oDxbx : Should we do this ? Cxbx did Inc(g_SwapData.Swap);
+    g_SwapData.Swap := X_D3DSWAP_DEFAULT; // TODO -oDxbx : Should we do this ? Cxbx did Inc(g_SwapData.Swap);
 
     if Assigned(g_pSwapCallback{ is func <> NULL}) then
     begin
@@ -4843,8 +4852,6 @@ function XTL_EmuIDirect3DDevice8_Swap
   Flags: DWORD
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
-const
-  X_D3DSWAP_DEFAULT = 0;
 begin
   EmuSwapFS(fsWindows);
 
@@ -4858,7 +4865,7 @@ begin
 
   // TODO -oCXBX: Ensure this flag is always the same across library versions
   if (Flags <> X_D3DSWAP_DEFAULT) then
-    EmuWarning('XTL.EmuIDirect3DDevice8_Swap: Flags <> D3DSWAP_DEFAULT');
+    EmuWarning('XTL.EmuIDirect3DDevice8_Swap: Flags <> X_D3DSWAP_DEFAULT');
 
   EmuSwapFS(fsXbox);
 
@@ -5261,7 +5268,7 @@ begin
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
         pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
         pPixelContainer.Emu.Lock := dwPtr;
-        pPixelContainer.Format := $24;
+        pPixelContainer.Format := X_D3DFMT_YUY2;
 
         pPixelContainer.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
                              or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
@@ -6055,7 +6062,7 @@ begin
 
   if IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
   begin
-    pDesc.Format := EmuPC2XB_D3DFormat(D3DFMT_YUY2);
+    pDesc.Format := X_D3DFMT_YUY2; // EmuPC2XB_D3DFormat(D3DFMT_YUY2);
     pDesc.Height := g_dwOverlayH;
     pDesc.Width := g_dwOverlayW;
     pDesc.MultiSampleType := X_D3DMULTISAMPLE_TYPE(0);
@@ -6206,7 +6213,18 @@ var
   dwSize: DWORD;
   pRefCount: PDWORD;
 begin
-  // Dxbx note : No EmuSwapFS needed here
+  EmuSwapFS(fsWindows);
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuD3D8 : EmuIDirect3DTexture8_GetSurfaceLevel2' +
+      #13#10'(' +
+      #13#10'   pThis                     : 0x%.08X' +
+      #13#10'   Level                     : 0x%.08X' +
+      #13#10');',
+      [pThis, Level]);
+{$ENDIF}
+
+  EmuVerifyResourceIsRegistered(pThis); // Dxbx addition
 
   // In a special situation, we are actually returning a memory ptr with high bit set
   if (IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0)) then
@@ -6219,12 +6237,15 @@ begin
     Inc(pRefCount^);
 
     Result := pThis;
-    Exit;
+  end
+  else
+  begin
+    XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis, Level, @pSurfaceLevel);
+
+    Result := pSurfaceLevel;
   end;
 
-  XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis, Level, @pSurfaceLevel);
-
-  Result := pSurfaceLevel;                                                
+  EmuSwapFS(fsXbox);
 end;
 
 
@@ -6527,7 +6548,7 @@ begin
 
   NewLength := Length;
 
-  // DXBX Addition, vertuxbuffer length need to be at least a vertexbuffer length large.
+  // DXBX Addition, vertexbuffer length need to be at least a vertexbuffer length large.
   // At least 1 vertexbuffer needs to fit in.
   if (NewLength = DWORD(-1)) or (Length = 0) then
   begin
@@ -9362,13 +9383,13 @@ begin
   // so that we can return a valid page aligned pointer
   //
 
-  Result := DxbxMalloc(dwSize + $1000);
+  Result := DxbxMalloc(dwSize + PAGE_SIZE);
 
   // align to page boundary
   begin
     dwRet := DWORD(Result);
 
-    Inc(dwRet, $1000 - dwRet mod $1000);
+    Inc(dwRet, PAGE_SIZE - dwRet mod PAGE_SIZE);
 
     g_AlignCache.insert(dwRet, Result);
 

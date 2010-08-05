@@ -149,12 +149,12 @@ begin
   // so that we can return a valid page aligned pointer
   //
 
-  pRet := DxbxMalloc(NumberOfBytes + $1000);
+  pRet := DxbxMalloc(NumberOfBytes + PAGE_SIZE);
 
   // align to page boundary
   begin
     dwRet := DWORD(pRet);
-    Inc(dwRet, $1000 - (dwRet mod $1000));
+    Inc(dwRet, PAGE_SIZE - (dwRet mod PAGE_SIZE));
     g_AlignCache.insert(dwRet, pRet);
     pRet := PVOID(dwRet);
   end;
@@ -205,12 +205,12 @@ begin
   // so that we can return a valid page aligned pointer
   //
 
-  pRet := DxbxMalloc(NumberOfBytes + $1000);
+  pRet := DxbxMalloc(NumberOfBytes + PAGE_SIZE);
 
   // align to page boundary
   begin
     dwRet := DWORD(pRet);
-    Inc(dwRet, $1000 - (dwRet mod $1000));
+    Inc(dwRet, PAGE_SIZE - (dwRet mod PAGE_SIZE));
     g_AlignCache.insert(dwRet, pRet);
     pRet := PVOID(dwRet);
   end;
