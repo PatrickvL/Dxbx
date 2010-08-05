@@ -172,7 +172,7 @@ type
   // From Cxbx EmuXapi.h : "typedef unsigned char BOOLEAN" (unsigned char = AnsiChar in Delphi)
 
   BOOL_ = LongBool; // Use this when Dxbx is better of with logical-BOOL (as opposed to int-BOOL below)
-  BOOL = int; // Use this to translate Cxbx's "BOOL" to Delphi (pending casing, _bool might be better)
+  BOOL = type int; // Use this to translate Cxbx's "BOOL" to Delphi (pending casing, _bool might be better)
 
   // See http://blog.delphi-jedi.net/2008/09/25/bool-boolean-and-integer/
   // and http://discuss.joelonsoftware.com/default.asp?joel.3.355854.11
