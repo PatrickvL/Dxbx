@@ -643,10 +643,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtClose' +
-      #13#10'(' +
-      #13#10'   Handle              : 0x%.8x' +
-      #13#10');', [Handle]);
+    LogBegin('EmuKrnl : NtClose').
+      _(Handle, 'Handle').
+    LogEnd;
 
   // Check for 'special' handles :
   if IsEmuHandle(Handle) then
@@ -777,27 +776,17 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfFile) then
-    DbgPrintf('EmuKrnl : NtCreateFile' +
-     #13#10'(' +
-     #13#10'   FileHandle          : 0x%.08X' +
-     #13#10'   DesiredAccess       : 0x%.08X (%s)' +
-     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-     #13#10'   IoStatusBlock       : 0x%.08X' +
-     #13#10'   AllocationSize      : 0x%.08X (%d)' +
-     #13#10'   FileAttributes      : 0x%.08X (%s)' +
-     #13#10'   ShareAccess         : 0x%.08X (%s)' +
-     #13#10'   CreateDisposition   : 0x%.08X (%s)' +
-     #13#10'   CreateOptions       : 0x%.08X (%s)' +
-     #13#10');',
-     [FileHandle,
-      DesiredAccess, AccessMaskToString(DesiredAccess),
-      ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-      IoStatusBlock,
-      AllocationSize, QuadPart(AllocationSize),
-      FileAttributes, FileAttributesToString(FileAttributes),
-      ShareAccess, AccessMaskToString(ShareAccess),
-      CreateDisposition, CreateDispositionToString(CreateDisposition),
-      CreateOptions, CreateOptionsToString(CreateOptions)]);
+    LogBegin('EmuKrnl : NtCreateFile').
+      _(FileHandle, 'FileHandle').
+      _ACCESS_MASK(DesiredAccess, 'DesiredAccess').
+      _(ObjectAttributes, 'ObjectAttributes').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(AllocationSize, 'AllocationSize').
+      _FileAttributes(FileAttributes).
+      _ACCESS_MASK(ShareAccess, 'ShareAccess').
+      _CreateDisposition(CreateDisposition).
+      _CreateOptions(CreateOptions).
+    LogEnd;
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtCreateFile');
@@ -1331,23 +1320,15 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtOpenFile' +
-    #13#10'(' +
-    #13#10'   FileHandle          : 0x%.08X' +
-    #13#10'   DesiredAccess       : 0x%.08X (%s)' +
-    #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-    #13#10'   IoStatusBlock       : 0x%.08X' +
-    #13#10'   ShareAccess         : 0x%.08X (%s)' +
-    #13#10'   OpenOptions         : 0x%.08X (%s)' +
-    #13#10');',
-    [FileHandle,
-     DesiredAccess, AccessMaskToString(DesiredAccess),
-     ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-     IoStatusBlock,
-     ShareAccess, AccessMaskToString(ShareAccess),
-     OpenOptions, CreateOptionsToString(OpenOptions)]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuKrnl : NtOpenFile').
+      _(FileHandle, 'FileHandle').
+      _ACCESS_MASK(DesiredAccess, 'DesiredAccess').
+      _(ObjectAttributes, 'ObjectAttributes').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _ACCESS_MASK(ShareAccess, 'ShareAccess').
+      _CreateOptions(OpenOptions, 'OpenOptions').
+    LogEnd;
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtOpenFile');
