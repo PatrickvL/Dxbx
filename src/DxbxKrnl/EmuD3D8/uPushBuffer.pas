@@ -778,7 +778,7 @@ begin
   // retrieve stream data
   IDirect3DDevice8(g_pD3DDevice8).GetStreamSource(0, @pActiveVB, {out}uiStride);
 
-  sprintf(@szFileName[0], 'C:\DxbxMesh-0x%.08X.x', [pIndexData]);
+  sprintf(@szFileName[0], DxbxDebugFolder +'\DxbxMesh-0x%.08X.x', [pIndexData]);
   dbgVertices := fopen(szFileName, 'wt');
 
   // retrieve stream desc

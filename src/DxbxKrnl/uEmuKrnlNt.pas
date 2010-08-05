@@ -34,6 +34,7 @@ uses
   // OpenXDK
   XboxKrnl, // reintroduces PIO_STATUS_BLOCK !
   // Dxbx
+  uConsts,
   uTypes,
   uDxbxUtils,
   uLog,
@@ -409,7 +410,8 @@ type
 
 function DxbxObjectAttributesToNT(ObjectAttributes: POBJECT_ATTRIBUTES; var NativeObjectAttributes: RNativeObjectAttributes; const aFileAPIName: string = ''): NTSTATUS;
 var
-  szBuffer: AnsiString;
+  OriginalPath: string;
+  RelativePath: AnsiString;
   XboxFullPath: AnsiString;
   NativePath: string;
   EmuNtSymbolicLinkObject: TEmuNtSymbolicLinkObject;
@@ -425,58 +427,63 @@ begin
   // ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
   NativeObjectAttributes.NtObjAttrPtr := @(NativeObjectAttributes.NtObjAttr);
 
-  szBuffer := POBJECT_ATTRIBUTES_String(ObjectAttributes);
+  RelativePath := POBJECT_ATTRIBUTES_String(ObjectAttributes);
+  OriginalPath := string(RelativePath);
 
   // Always trim '\??\' off :
-  if  (Length(szBuffer) >= 4)
-  and (szBuffer[1] = '\')
-  and (szBuffer[2] = '?')
-  and (szBuffer[3] = '?')
-  and (szBuffer[4] = '\') then
-    System.Delete(szBuffer, 1, 4);
+  if  (Length(RelativePath) >= 4)
+  and (RelativePath[1] = '\')
+  and (RelativePath[2] = '?')
+  and (RelativePath[3] = '?')
+  and (RelativePath[4] = '\') then
+    System.Delete(RelativePath, 1, 4);
 
   // Check if we where called from a File-handling API :
   if aFileAPIName <> '' then
   begin
+    EmuNtSymbolicLinkObject := nil;
     // Check if the path starts with a volume indicator :
-    if (Length(szBuffer) >= 2) and (szBuffer[2] = ':') then
+    if (Length(RelativePath) >= 2) and (RelativePath[2] = ':') then
     begin
       // Look up the symbolic link information using the drive letter :
-      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter(szBuffer[1]);
-      System.Delete(szBuffer, 1, 2); // Remove 'C:'
+      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter(RelativePath[1]);
+      System.Delete(RelativePath, 1, 2); // Remove 'C:'
 
       // If the remaining path starts with a ':', remove it (to prevent errors) :
-      if (Length(szBuffer) > 0) and (szBuffer[1] = ':') then
-        System.Delete(szBuffer, 1, 1);  // xbmp needs this, as it accesses 'e::\'
+      if (Length(RelativePath) > 0) and (RelativePath[1] = ':') then
+        System.Delete(RelativePath, 1, 1);  // xbmp needs this, as it accesses 'e::\'
     end
-    else if StartsWithString(szBuffer, '$HOME') then // xbmp uses this (TODO : There maybe more macros?)
+    // Check if the path starts with a macro indicator :
+    else if StartsWithString(RelativePath, '$') then
     begin
-      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
-      System.Delete(szBuffer, 1, 5); // Remove '$HOME'
+      if StartsWithString(RelativePath, '$HOME') then // "xbmp" needs this
+      begin
+        EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+        System.Delete(RelativePath, 1, 5); // Remove '$HOME'
+      end
+      else
+        DxbxKrnlCleanup('Unsupported path macro : ' + OriginalPath);
     end
-    else if StartsWithString(szBuffer, '.') then // 4x4 uses this
+    // Check if the path starts with a relative path indicator :
+    else if StartsWithString(RelativePath, '.') then // "4x4 Evo 2" needs this
     begin
-      // TODO -oDxbx: How should we keep track of the current directory ?
-      // For now, use the XBE path (D:) :
-      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
-      System.Delete(szBuffer, 1, 1); // Remove the '.'
+      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+      System.Delete(RelativePath, 1, 1); // Remove the '.'
     end
     else
     begin
-      // Look up via the device path :
-      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByDevice(szBuffer);
-      // Fixup szBuffer path here
+      // The path seems to be a device path, look it up :
+      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByDevice(RelativePath);
+      // Fixup RelativePath path here
       if Assigned(EmuNtSymbolicLinkObject) then
-      begin
-        System.Delete(szBuffer, 1, Length(EmuNtSymbolicLinkObject.XboxFullPath)); // Remove '\Device\Harddisk0\Partition2'
-      end;
+        System.Delete(RelativePath, 1, Length(EmuNtSymbolicLinkObject.XboxFullPath)); // Remove '\Device\Harddisk0\Partition2'
     end;
 
     if Assigned(EmuNtSymbolicLinkObject) then
     begin
       // If the remaining path starts with a '\', remove it (to prevent working in a native root) :
-      if (Length(szBuffer) > 0) and (szBuffer[1] = '\') then
-        System.Delete(szBuffer, 1, 1);
+      if (Length(RelativePath) > 0) and (RelativePath[1] = '\') then
+        System.Delete(RelativePath, 1, 1);
 
       XboxFullPath := EmuNtSymbolicLinkObject.XboxFullPath;
       NativePath := EmuNtSymbolicLinkObject.NativePath;
@@ -485,15 +492,16 @@ begin
     else
     begin
       // No symbolic link - as last resort, check if the path accesses a partition from Harddisk0 :
-      if not StartsWithText(szBuffer, DeviceHarddisk0 + '\Partition') then
+      if not StartsWithText(RelativePath, DeviceHarddisk0 + '\Partition') then
       begin
         Result := STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
+        EmuWarning('Path not available : ' + OriginalPath);
         Exit;
       end;
 
-      XboxFullPath := szBuffer;
+      XboxFullPath := RelativePath;
       // Remove Harddisk0 prefix, in the hope that the remaining path might work :
-      System.Delete(szBuffer, 1, Length(DeviceHarddisk0) + 1);
+      System.Delete(RelativePath, 1, Length(DeviceHarddisk0) + 1);
       // And set Root to the folder containing the partition-folders :
       ObjectAttributes.RootDirectory := DxbxBasePathHandle;
       NativePath := DxbxBasePath;
@@ -510,23 +518,23 @@ begin
     if MayLog(lfUnit or lfFile) then
     begin
       DbgPrintf('EmuKrnl : %s Corrected path...', [aFileAPIName]);
-      DbgPrintf('  Org:"%s"', [POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+      DbgPrintf('  Org:"%s"', [OriginalPath]);
 
       if StartsWithText(NativePath, DxbxBasePath) then
-        DbgPrintf('  New:"$DxbxPath\EmuDisk%s%s"', [Copy(NativePath, Length(DxbxBasePath), MaxInt), szBuffer])
+        DbgPrintf('  New:"$DxbxPath\EmuDisk%s%s"', [Copy(NativePath, Length(DxbxBasePath), MaxInt), RelativePath])
       else
-        DbgPrintf('  New:"$XbePath\%s"', [szBuffer]);
+        DbgPrintf('  New:"$XbePath\%s"', [RelativePath]);
     end;
   end
   else
   begin
     // For non-file API calls, prefix with '\??\' again :
-    szBuffer := '\??\' + szBuffer;
+    RelativePath := '\??\' + RelativePath;
     ObjectAttributes.RootDirectory := 0;
   end;
 
   // Convert Ansi to Unicode :
-  NativeObjectAttributes.wszObjectName := UnicodeString(szBuffer);
+  NativeObjectAttributes.wszObjectName := UnicodeString(RelativePath);
   JwaNative.RtlInitUnicodeString(@NativeObjectAttributes.NtUnicodeString,
                                  PWideChar(NativeObjectAttributes.wszObjectName));
 

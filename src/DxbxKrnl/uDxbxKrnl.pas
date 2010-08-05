@@ -362,7 +362,8 @@ begin
   begin
     // Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
     DxbxCreateSymbolicLink(DriveC, AnsiString(szBuffer));
-    g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter('C').RootDirectoryHandle;
+    Assert(DriveC[5] = DxbxDefaultXbeVolumeLetter); // By design DriveC is the default volume for an Xbe
+    g_hCurDir := FindNtSymbolicLinkObjectByVolumeLetter(DxbxDefaultXbeVolumeLetter).RootDirectoryHandle;
     // TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
 
     DxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
