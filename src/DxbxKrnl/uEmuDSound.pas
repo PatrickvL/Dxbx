@@ -3170,11 +3170,9 @@ begin
   if (Self.EmuDirectSoundBuffer8 = nil) then
     EmuWarning('pBuffer.EmuDirectSoundBuffer8 == 0');
 
-  EmuWarning('StopEx not yet implemented!');
+  Result := IDirectSoundBuffer(Self.EmuDirectSoundBuffer8).Stop();
 
   EmuSwapFS(fsXbox);
-
-  Result := DS_OK;
 end;
 
 function TIDirectSoundBuffer.Pause
