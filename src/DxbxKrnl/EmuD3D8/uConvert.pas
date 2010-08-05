@@ -55,6 +55,7 @@ function EmuXB2PC_D3DSHADEMODE(Value: X_D3DSHADEMODE): D3DSHADEMODE; inline;
 function EmuXB2PC_D3DVERTEXBLENDFLAGS(Value: X_D3DVERTEXBLENDFLAGS): D3DVERTEXBLENDFLAGS; inline;
 function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
 function EmuXB2PC_D3DTEXTUREOP(Value: X_D3DTEXTUREOP): DWORD;
+function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
@@ -756,6 +757,22 @@ begin
   else
     Result := 0;
   end;
+end;
+
+function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
+begin
+  Result := 0;
+
+  // TODO -oCXBX: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
+  if (Value and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
+    EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Value and (not X_D3DCLEAR_ALL_SUPPORTED)]);
+
+  if (Value and X_D3DCLEAR_TARGET) > 0 then
+    Result := Result or D3DCLEAR_TARGET;
+  if (Value and X_D3DCLEAR_ZBUFFER) > 0 then
+    Result := Result or D3DCLEAR_ZBUFFER;
+  if (Value and X_D3DCLEAR_STENCIL) > 0 then
+    Result := Result or D3DCLEAR_STENCIL;
 end;
 
 // convert from vertex count to primitive count (Xbox)

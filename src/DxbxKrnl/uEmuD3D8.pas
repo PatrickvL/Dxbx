@@ -4726,12 +4726,12 @@ function XTL_EmuIDirect3DDevice8_Clear
 ): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
-  newFlags: DWORD;
+  PCFlags: DWORD;
 begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear' +
+  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear' +
       #13#10'(' +
       #13#10'   Count                     : 0x%.08X' +
       #13#10'   pRects                    : 0x%.08X' +
@@ -4740,39 +4740,30 @@ begin
       #13#10'   Z                         : %f' +
       #13#10'   Stencil                   : 0x%.08X' +
       #13#10');',
-           [Count, pRects, Flags,
-           Color, Z, Stencil]);
+      [Count, pRects, Flags, Color, Z, Stencil]);
 {$ENDIF}
 
   // make adjustments to parameters to make sense with windows d3d
   begin
-    // TODO -oCXBX: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
-    newFlags := 0;
-
-    if (Flags and X_D3DCLEAR_TARGET) > 0 then
-      newFlags := newFlags or D3DCLEAR_TARGET;
+    // First, convert from Xbox to PC, after which we'll remove the invalid flags :
+    PCFlags := EmuXB2PC_D3DCLEAR_FLAGS(Flags);
 
     // Only clear ZBuffer if we actually have one :
-    if DxbxHack_HadZEnable then
-    begin
-      if (Flags and X_D3DCLEAR_ZBUFFER) > 0 then
-        newFlags := newFlags or D3DCLEAR_ZBUFFER;
-    end;
+    if not DxbxHack_HadZEnable then
+      PCFlags := PCFlags and (not D3DCLEAR_ZBUFFER);
 
     // Only clear Stencil buffer if there actually is one :
-    // if g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil then
+    // if not g_EmuCDPD.NativePresentationParameters.EnableAutoDepthStencil then
     // TODO -oDxbx: The above check should work (but doesn't!) so for now look at the Xbox PresParam instead :
-    if g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil <> BOOL_FALSE then
-    begin
-      if (Flags and X_D3DCLEAR_STENCIL) > 0 then
-        newFlags := newFlags or D3DCLEAR_STENCIL;
-    end;
-
-    if (Flags and (not X_D3DCLEAR_ALL_SUPPORTED)) > 0 then
-      EmuWarning('Unsupported Flag(s) for IDirect3DDevice8_Clear: 0x%.08X', [Flags and (not X_D3DCLEAR_ALL_SUPPORTED)]);
+    if g_EmuCDPD.pPresentationParameters.EnableAutoDepthStencil = BOOL_FALSE then
+      PCFlags := PCFlags and (not D3DCLEAR_STENCIL);
   end;
 
-  Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, newFlags, Color, Z, Stencil);
+  // Since we filter the flags, make sure there are some left (else, clear isn't necessary) :
+  if PCFlags > 0 then
+    Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, PCFlags, Color, Z, Stencil)
+  else
+    Result := S_OK;
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear returns 0x%.08X', [Result]);
   EmuSwapFS(fsXbox);

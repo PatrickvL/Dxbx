@@ -282,6 +282,10 @@ type
   PULARGE_INTEGER = ^ULARGE_INTEGER;
 {$ENDIF}
 
+  // Dxbx note : Use this as a return-type, to make Delphi fill EDX:EAX instead of stack!!
+  // See http://rvelthuis.de/articles/articles-convert.html#returns
+  _ULARGE_INTEGER = Int64;
+
 // ******************************************************************
 // * STRING  *Same as Win2k/XP*
 // ******************************************************************
