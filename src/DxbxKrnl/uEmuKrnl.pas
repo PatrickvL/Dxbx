@@ -348,7 +348,17 @@ function {051} xboxkrnl_InterlockedCompareExchange(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedCompareExchange' +
+      #13#10'(' +
+      #13#10'   Exchange           : 0x%.08X' +
+      #13#10'   Destination        : 0x%.08X' +
+      #13#10'   Comparand          : 0x%.08X' +
+      #13#10');',
+      [Exchange, Destination, Comparand]);
+{$ENDIF}
+
   Result := InterlockedCompareExchange({var}Destination^, Exchange, Comparand);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -362,7 +372,15 @@ function {052} xboxkrnl_InterlockedDecrement(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedDecrement' +
+      #13#10'(' +
+      #13#10'   Addend             : 0x%.08X' +
+      #13#10');',
+      [Addend]);
+{$ENDIF}
+
   Result := InterlockedDecrement({var}Addend^);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -376,7 +394,15 @@ function {053} xboxkrnl_InterlockedIncrement(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedIncrement' +
+      #13#10'(' +
+      #13#10'   Addend             : 0x%.08X' +
+      #13#10');',
+      [Addend]);
+{$ENDIF}
+
   Result := InterlockedIncrement({var}Addend^);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -390,7 +416,16 @@ function {054} xboxkrnl_InterlockedExchange(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedExchange' +
+      #13#10'(' +
+      #13#10'   Value              : 0x%.08X' +
+      #13#10'   Destination        : 0x%.08X' +
+      #13#10');',
+      [Value, Destination]);
+{$ENDIF}
+
   Result := InterlockedExchange({var}Destination^, Value);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -404,7 +439,16 @@ function {055} xboxkrnl_InterlockedExchangeAdd(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedExchangeAdd' +
+      #13#10'(' +
+      #13#10'   Value              : 0x%.08X' +
+      #13#10'   Addend             : 0x%.08X' +
+      #13#10');',
+      [Value, Addend]);
+{$ENDIF}
+
   Result := InterlockedExchangeAdd({var}Addend^, Value);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -419,7 +463,15 @@ function {056} xboxkrnl_InterlockedFlushSList(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedFlushSList' +
+      #13#10'(' +
+      #13#10'   ListHead           : 0x%.08X' +
+      #13#10');',
+      [ListHead]);
+{$ENDIF}
+
   Result := InterlockedFlushSList(ListHead);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -433,7 +485,15 @@ function {057} xboxkrnl_InterlockedPopEntrySList(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
+      #13#10'(' +
+      #13#10'   ListHead           : 0x%.08X' +
+      #13#10');',
+      [ListHead]);
+{$ENDIF}
+
   Result := InterlockedPopEntrySList(ListHead);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
@@ -447,7 +507,16 @@ function {058} xboxkrnl_InterlockedPushEntrySList(
 // Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   EmuSwapFS(fsWindows);
-  // TODO -oDxbx : Add logging
+
+{$IFDEF DEBUG}
+  DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
+      #13#10'(' +
+      #13#10'   ListEntry          : 0x%.08X' +
+      #13#10'   ListHead           : 0x%.08X' +
+      #13#10');',
+      [ListEntry, ListHead]);
+{$ENDIF}
+
   Result := InterlockedPushEntrySList(ListHead, ListEntry);
   EmuSwapFS(fsXbox);
   asm int 3 end; // REMOVE THIS AFTER VALIDATING fastcall (caller fills EDX, ECX and stack)!
