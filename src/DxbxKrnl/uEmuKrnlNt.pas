@@ -454,12 +454,13 @@ begin
       EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
       System.Delete(szBuffer, 1, 5); // Remove '$HOME'
     end
-//    else if StartsWithString(szBuffer, '.') then // 4x4 uses this
-//    begin
-//      // TODO : How should we keep track of the current directory ?
-//      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
-//      System.Delete(szBuffer, 1, 5); // Remove '.'
-//    end
+    else if StartsWithString(szBuffer, '.') then // 4x4 uses this
+    begin
+      // TODO -oDxbx: How should we keep track of the current directory ?
+      // For now, use the XBE path (D:) :
+      EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByVolumeLetter('D');
+      System.Delete(szBuffer, 1, 1); // Remove the '.'
+    end
     else
     begin
       // Look up via the device path :
@@ -1470,7 +1471,7 @@ begin
     ThreadHandle,
     PKNORMAL_ROUTINE(ApcRoutine),
     ApcRoutineContext,
-    PIO_STATUS_BLOCK(ApcStatusBlock),
+    JwaNative.PIO_STATUS_BLOCK(ApcStatusBlock),
     Pointer(ApcReserved));
 
   if (Result <> STATUS_SUCCESS) then
