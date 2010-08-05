@@ -1756,6 +1756,7 @@ begin
     m_hwndChild := HNULL;
 
     UpdateTitleInformation;
+    AdjustMenu;
   end;
 end;
 
