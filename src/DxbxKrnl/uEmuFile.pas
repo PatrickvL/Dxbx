@@ -148,7 +148,7 @@ type
     SymbolicLinkName: AnsiString;
     XboxFullPath: AnsiString;
     NativePath: string;
-    RootDirectoryHandle: Handle;
+    RootDirectoryHandle: HANDLE;
 
     function Init(aSymbolicLinkName, aFullPath: AnsiString): NTSTATUS;
   end;
@@ -161,6 +161,7 @@ function SymbolicLinkToDriveLetter(aSymbolicLinkName: AnsiString): AnsiChar;
 function FindNtSymbolicLinkObjectByVolumeLetter(const aVolumeLetter: AnsiChar): TEmuNtSymbolicLinkObject;
 function FindNtSymbolicLinkObjectByName(const aSymbolicLinkName: AnsiString): TEmuNtSymbolicLinkObject;
 function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNtSymbolicLinkObject;
+function FindNtSymbolicLinkObjectByRootHandle(const aHandle: HANDLE): TEmuNtSymbolicLinkObject;
 
 function DxbxRegisterDeviceNativePath(XboxFullPath: AnsiString; NativePath: string; IsFile: Boolean = False): Boolean;
 function DxbxGetDeviceNativeRootHandle(XboxFullPath: AnsiString): Handle;
@@ -336,7 +337,7 @@ begin
 end;
 
 function FindNtSymbolicLinkObjectByDevice(const aDeviceName: AnsiString): TEmuNtSymbolicLinkObject;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 var
   VolumeLetter: Char;
 begin
@@ -344,6 +345,21 @@ begin
   begin
     Result := NtSymbolicLinkObjects[VolumeLetter];
     if Assigned(Result) and StartsWithText(aDeviceName, Result.XboxFullPath) then
+      Exit;
+  end;
+
+  Result := nil;
+end;
+
+function FindNtSymbolicLinkObjectByRootHandle(const aHandle: HANDLE): TEmuNtSymbolicLinkObject;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+var
+  VolumeLetter: Char;
+begin
+  for VolumeLetter := 'A' to 'Z' do
+  begin
+    Result := NtSymbolicLinkObjects[VolumeLetter];
+    if Assigned(Result) and (aHandle = Result.RootDirectoryHandle) then
       Exit;
   end;
 

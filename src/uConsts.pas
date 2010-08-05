@@ -158,6 +158,8 @@ const
   // Limits
   _RecentXbeLimit: Integer = 10;
 
+  DxbxDefaultXbeVolumeLetter = 'C'; // For now, assume 'C' is the default volume for an Xbe
+
 implementation
 
 end.

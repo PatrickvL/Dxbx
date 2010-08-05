@@ -257,6 +257,9 @@ var
   DxbxBasePath: string;
   DxbxBasePathHandle: Handle;
 
+  // Native folder for debug output files.
+  DxbxDebugFolder: string = 'C:\'; // TODO -oDxbx : Make this configurable (and put something more sane in here)
+
 const
   // Here we define the addresses of the native Windows timers :
   DxbxNtInterruptTime: PKSYSTEM_TIME = PKSYSTEM_TIME(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_INTERRUPT_TIME);

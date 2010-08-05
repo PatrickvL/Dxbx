@@ -33,6 +33,7 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uConsts,
   uTypes,
   uDxbxUtils,
   uLog,
@@ -1031,7 +1032,7 @@ procedure xLaunchDataPage_Init;
 begin
   xLaunchDataPage.Header.dwLaunchDataType := 2; // 2: dashboard, 0: title
   xLaunchDataPage.Header.dwTitleId := 0;
-  strcopy(PAnsiChar(@(xLaunchDataPage.Header.szLaunchPath[0])), 'D:\default.xbe'#0);
+  strcopy(PAnsiChar(@(xLaunchDataPage.Header.szLaunchPath[0])), DxbxDefaultXbeVolumeLetter +':\default.xbe'#0);
   xLaunchDataPage.Header.dwFlags := 0;
 end;
 

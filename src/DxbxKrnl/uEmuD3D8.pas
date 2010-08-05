@@ -2318,7 +2318,7 @@ begin
 
   { MARKED OUT BY CXBX
   kthx := 0;
-  sprintf(FileName, 'C:\Aaron\Textures\SourceSurface-%d.bmp', [kthx]); Inc(kthx);
+  sprintf(FileName, DxbxDebugFolder +'\Textures\SourceSurface-%d.bmp', [kthx]); Inc(kthx);
 
   D3DXSaveSurfaceToFileA(FileName, D3DXIFF_BMP, pSourceSurface.EmuSurface8, nil, nil);
   }
@@ -2478,7 +2478,7 @@ begin
          end;
 
         // Debug: Save this image temporarily
-        //D3DXSaveSurfaceToFileA('C:\Aaron\Textures\FrontBuffer.bmp', D3DXIFF_BMP, pBackBuffer.Emu.Surface8, NULL, NULL);
+        //D3DXSaveSurfaceToFileA(DxbxDebugFolder +'\Textures\FrontBuffer.bmp', D3DXIFF_BMP, pBackBuffer.Emu.Surface8, NULL, NULL);
      end;
 
     if (BackBuffer <> -1) then
@@ -3434,7 +3434,7 @@ begin
       if Assigned(pErrors) then
       begin
         ID3DXBuffer(pErrors)._Release();
-        pErrors := NULL;
+        pErrors := nil;
       end;
     end;
 
@@ -4079,12 +4079,12 @@ begin
     begin
         if (Stage = 0) then
         begin
-            if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy1.bmp', @pDummyTexture[Stage]) <> S_OK) then
+            if (D3DXCreateTextureFromFile(g_pD3DDevice8, DxbxDebugFolder +'\dummy1.bmp', @pDummyTexture[Stage]) <> S_OK) then
                 DxbxKrnlCleanup('Could not create dummy texture!');
         end
         else if (Stage = 1) then
         begin
-            if (D3DXCreateTextureFromFile(g_pD3DDevice8, 'C:\dummy2.bmp', @pDummyTexture[Stage]) <> S_OK) then
+            if (D3DXCreateTextureFromFile(g_pD3DDevice8, DxbxDebugFolder +'\dummy2.bmp', @pDummyTexture[Stage]) <> S_OK) then
                 DxbxKrnlCleanup('Could not create dummy texture!');
         end;
      end;
@@ -4093,7 +4093,7 @@ begin
   (* -- MARKED OUT BY CXBX
   int dwDumpTexture := 0;
   szBuffer: array [0..256-1] of _char;
-  sprintf(szBuffer, 'C:\Aaron\Textures\DummyTexture - %.03d (0x%.08X).bmp', [dwDumpTexture, pDummyTexture]); Inc(dwDumpTexture);
+  sprintf(szBuffer, DxbxDebugFolder +'\Textures\DummyTexture - %.03d (0x%.08X).bmp', [dwDumpTexture, pDummyTexture]); Inc(dwDumpTexture);
   pDummyTexture.UnlockRect(0);
   D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, pDummyTexture, 0);
   //*)
@@ -4201,7 +4201,7 @@ begin
 
          szBuffer: array [0..255-1] of _char;
 
-        sprintf(szBuffer, 'C:\Aaron\Textures\0x%.08X-SwitchTexture%.03d.bmp', [pTexture, dwDumpTexture]); Inc(dwDumpTexture);
+        sprintf(szBuffer, DxbxDebugFolder +'\Textures\0x%.08X-SwitchTexture%.03d.bmp', [pTexture, dwDumpTexture]); Inc(dwDumpTexture);
 
         pTexture.Emu.Texture8.UnlockRect(0);
 
@@ -5955,7 +5955,7 @@ begin
 
      szBuffer: array [0..255-1] of _char;
 
-     sprintf(szBuffer, 'C:\Aaron\Textures\Surface%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
+     sprintf(szBuffer, DxbxDebugFolder +'\Textures\Surface%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
 
      D3DXSaveSurfaceToFileA(szBuffer, D3DXIFF_BMP, pPixelContainer.Emu.Surface8, 0, 0);
     *)
@@ -5983,7 +5983,7 @@ begin
 
     szBuffer: array [0..255-1] of _char;
 
-    sprintf(szBuffer, 'C:\Aaron\Textures\GetDescTexture%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
+    sprintf(szBuffer, DxbxDebugFolder +'\Textures\GetDescTexture%.03d.bmp', [dwDumpTexture]); Inc(dwDumpTexture);
 
     D3DXSaveTextureToFileA(PAnsiChar(@szBuffer[0]), D3DXIFF_BMP, pPixelContainer.Emu.Texture8, 0);
     *)
