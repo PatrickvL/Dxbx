@@ -1371,7 +1371,7 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : RtlLowerChar(%c)', [Character]);
+  DbgPrintf('EmuKrnl : RtlLowerChar(%c);', [Character]);
 {$ENDIF}
 
   Result := tolower(Character);

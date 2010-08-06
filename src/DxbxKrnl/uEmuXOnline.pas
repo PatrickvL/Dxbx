@@ -36,6 +36,14 @@ uses
 
 implementation
 
+const
+  lfUnit = lfCxbx or lfXOnline;
+
+function LogBegin(const aSymbolName: string): PLogStack;
+begin
+  Result := uLog.LogBegin(aSymbolName, {Category=}'XOnline');
+end;
+
 function XTL_EmuWSAStartup
 (
   wVersionRequested: WORD;
@@ -47,12 +55,11 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('XOnline : EmuWSAStartup').
-    _(wVersionRequested, 'wVersionRequested').
-    _(lpWSAData, 'lpWSAData').
-    LogEnd;
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuWSAStartup').
+      _(wVersionRequested, 'wVersionRequested').
+      _(lpWSAData, 'lpWSAData').
+    LogEnd();
 
   ret := WSAStartup(wVersionRequested, {var}lpWSAData^);
 
@@ -69,11 +76,10 @@ function XTL_EmuXNetStartup
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('XOnline : EmuXNetStartup').
-    _(pDummy, 'pDummy').
-    LogEnd;
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXNetStartup').
+      _(pDummy, 'pDummy').
+    LogEnd();
 
   EmuSwapFS(fsXbox);
 
@@ -86,9 +92,11 @@ function XTL_EmuXNetGetEthernetLinkStatus(): DWORD; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
-{$IFDEF DEBUG}
-  DbgPrintf('XOnline : EmuXNetGetEthernetLinkStatus();');
-{$ENDIF}
+
+  if MayLog(lfUnit) then
+    LogBegin('EmuXNetGetEthernetLinkStatus').
+    LogEnd();
+
   EmuSwapFS(fsXbox);
 
   // Cxbx : for now, no ethernet connection is available
@@ -106,16 +114,13 @@ SOCKET XTL.EmuThis.Emusocket
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-    DbgPrintf('XOnline : EmuThis.Emusocket' +
-        #13#10'(' +
-        #13#10'   this                : 0x%.08X' +
-        #13#10'   af                  : 0x%.08X' +
-        #13#10'   ctype               : 0x%.08X' +
-        #13#10'   protocol            : 0x%.08X' +
-        #13#10');',
-        [this, af, ctype, protocol);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuThis.Emusocket').
+      _(this, 'this').
+      _(af, 'af').
+      _(ctype, 'ctype').
+      _(protocol, 'protocol').
+    LogEnd();
 
     SOCKET ret = socket(af, ctype, protocol);
 
@@ -129,16 +134,13 @@ function XTL.EmuThis.Emubind(s: SOCKET; var sockaddrFARname: struct; namelen: In
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-    DbgPrintf('XOnline : EmuThis.Emubind' +
-        #13#10'(' +
-        #13#10'   this                : 0x%.08X' +
-        #13#10'   s                   : 0x%.08X' +
-        #13#10'   name                : 0x%.08X' +
-        #13#10'   namelen             : 0x%.08X' +
-        #13#10');',
-        [this, s, name, namelen);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuThis.Emubind').
+      _(this, 'this').
+      _(s, 's').
+      _(name, 'name').
+      _(namelen, 'namelen').
+    LogEnd();
 
     // TODO -oCXBX:: Host-To-Network order if necessary (probably not?)
 
@@ -154,15 +156,12 @@ function XTL.EmuThis.Emulisten(s: SOCKET; backlog: Integer): Integer;
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-    DbgPrintf('XOnline : EmuThis.Emulisten' +
-        #13#10'(' +
-        #13#10'   this                : 0x%.08X' +
-        #13#10'   s                   : 0x%.08X' +
-        #13#10'   listen              : 0x%.08X' +
-        #13#10');',
-        [this, s, backlog);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuThis.Emulisten').
+      _(this, 'this').
+      _(s, 's').
+      _(listen, 'listen').
+    LogEnd();
 
     // TODO -oCXBX: Host-To-Network order if necessary (probably not?)
 
@@ -178,16 +177,13 @@ function XTL.EmuThis.Emuioctlsocket(s: SOCKET; cmd: LongInt; var FARargp: u_long
 begin
     EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-    DbgPrintf('XOnline : EmuThis.Emuioctlsocket' +
-        #13#10'(' +
-        #13#10'   this                : 0x%.08X' +
-        #13#10'   s                   : 0x%.08X' +
-        #13#10'   cmd                 : 0x%.08X' +
-        #13#10'   argp                : 0x%.08X' +
-        #13#10');',
-        [this, s, cmd, argp]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuThis.Emuioctlsocket').
+      _(this, 'this').
+      _(s, 's').
+      _(cmd, 'cmd').
+      _(argp, 'argp').
+    LogEnd();
 
     Integer ret := ioctlsocket(s, cmd, argp);
 
@@ -206,12 +202,12 @@ function XTL_EmuXOnlineLaunchNewImage
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('XOnline : EmuXOnlineLaunchNewImage').
-    _(UIntPtr(lpImagePath), 'lpImagePath').
-    _(pLaunchData, 'pLaunchData').
-    LogEnd;
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXOnlineLaunchNewImage').
+      _(UIntPtr(lpImagePath), 'lpImagePath').
+      _(pLaunchData, 'pLaunchData').
+    LogEnd();
+
   // TODO -oCXBX: Launch another .xbe from Cxbx someday?
 
   EmuSwapFS(fsXbox);

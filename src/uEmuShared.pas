@@ -77,7 +77,10 @@ type EmuShared = object(Mutex)
     m_XBController: XBController;
     m_XBVideo: XBVideo;
     m_XbePath: array [0..DXBX_MAX_PATH - 1] of _char;
-  end; // size = 7164 (as in Cxbx)
+  public
+    m_ActiveLogFlags: TLogFlags;
+    m_DisabledLogFlags: TLogFlags;
+  end; // size = 7164 (as in Cxbx) + 8 (Dxxb addition)
   PEmuShared = ^EmuShared;
 
 procedure SetXbePath(const Path: PAnsiChar); stdcall;
@@ -193,6 +196,13 @@ procedure EmuShared.Load;
 begin
   m_XBController.Load(PAnsiChar('Software\Dxbx\XBController'));
   m_XBVideo.Load(PAnsiChar('Software\Dxbx\XBVideo'));
+
+(* TODO -oDxbx : Once we have a configuration interface for these flags,
+   we can make them available to MayLog (and thus let them influence the
+   logging behaviour) like this :
+  uLog.pActiveLogFlags := @m_ActiveLogFlags;
+  uLog.pDisabledLogFlags := @m_DisabledLogFlags;
+*)
 end;
 
 procedure EmuShared.Save;
@@ -254,7 +264,7 @@ end;
 procedure EmuShared.SetXbePath(const Path: AnsiString);
 // Branch:shogun  Revision:20100412  Translator:PatrickvL  Done:100
 begin
-  WriteLog('EmuShared.SetXbePath(' + string(Path) + ')');
+  WriteLog('EmuShared.SetXbePath(' + string(Path) + ');');
   Lock();
   CopyMemory(@({shared}m_XbePath[0]), PAnsiChar(Path), Length(Path) + 1);
   Unlock();
