@@ -48,12 +48,10 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('XOnline : EmuWSAStartup' +
-      #13#10'(' +
-      #13#10'   wVersionRequested   : 0x%.08X' +
-      #13#10'   lpWSAData           : 0x%.08X' +
-      #13#10');',
-      [wVersionRequested, lpWSAData]);
+  LogBegin('XOnline : EmuWSAStartup').
+    _(wVersionRequested, 'wVersionRequested').
+    _(lpWSAData, 'lpWSAData').
+    LogEnd;
 {$ENDIF}
 
   ret := WSAStartup(wVersionRequested, {var}lpWSAData^);
@@ -72,11 +70,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('XOnline : EmuXNetStartup' +
-    #13#10'(' +
-    #13#10'   pDummy              : 0x%.08X' +
-    #13#10');',
-    [pDummy]);
+  LogBegin('XOnline : EmuXNetStartup').
+    _(pDummy, 'pDummy').
+    LogEnd;
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
@@ -211,12 +207,10 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('XOnline : EmuXOnlineLaunchNewImage' +
-      #13#10'(' +
-      #13#10'   lpImagePath           : 0x%.08X' +
-      #13#10'   pLaunchData           : 0x%.08X' +
-      #13#10');',
-      [UIntPtr(lpImagePath), pLaunchData]);
+  LogBegin('XOnline : EmuXOnlineLaunchNewImage').
+    _(UIntPtr(lpImagePath), 'lpImagePath').
+    _(pLaunchData, 'pLaunchData').
+    LogEnd;
 {$ENDIF}
   // TODO -oCXBX: Launch another .xbe from Cxbx someday?
 

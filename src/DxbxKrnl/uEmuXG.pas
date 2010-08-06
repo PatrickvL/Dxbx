@@ -74,11 +74,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF _DEBUG_TRACE}
-  DbgPrintf('EmuXapi : EmuXGIsSwizzledFormat' +
-      #13#10'(' +
-      #13#10'   Format              : 0x%.08X' +
-      #13#10');',
-      [Ord(Format)]);
+  LogBegin('EmuXapi : EmuXGIsSwizzledFormat').
+    _(Format, 'Format').
+    LogEnd;
 {$ENDIF}
 
   Result := False;
@@ -108,19 +106,16 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXGSwizzleRect' +
-     #13#10'(' +
-     #13#10'   pSource             : 0x%.08X' +
-     #13#10'   Pitch               : 0x%.08X' +
-     #13#10'   pRect               : 0x%.08X' +
-     #13#10'   pDest               : 0x%.08X' +
-     #13#10'   Width               : 0x%.08X' +
-     #13#10'   Height              : 0x%.08X' +
-     #13#10'   pPoint              : 0x%.08X' +
-     #13#10'   BytesPerPixel       : 0x%.08X' +
-     #13#10');',
-     [pSource, Pitch, pRect, pDest, Width, Height,
-      pPoint, BytesPerPixel]);
+  LogBegin('EmuXapi : EmuXGSwizzleRect').
+    _(pSource, 'pSource').
+    _(Pitch, 'Pitch').
+    _(pRect, 'pRect').
+    _(pDest, 'pDest').
+    _(Width, 'Width').
+    _(Height, 'Height').
+    _(pPoint, 'pPoint').
+    _(BytesPerPixel, 'BytesPerPixel').
+    LogEnd;
 {$ENDIF}
 
   if (pRect = NULL) and (pPoint = NULL) and (Pitch = 0) then
@@ -159,7 +154,6 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
-
 procedure XTL_EmuXGSwizzleBox
 (
     pSource: LPCVOID;
@@ -185,21 +179,18 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXGSwizzleBox' +
-      #13#10'(' +
-      #13#10'   pSource             : 0x%.08X' +
-      #13#10'   RowPitch            : 0x%.08X' +
-      #13#10'   SlicePitch          : 0x%.08X' +
-      #13#10'   pBox                : 0x%.08X' +
-      #13#10'   pDest               : 0x%.08X' +
-      #13#10'   Width               : 0x%.08X' +
-      #13#10'   Height              : 0x%.08X' +
-      #13#10'   Depth               : 0x%.08X' +
-      #13#10'   pPoint              : 0x%.08X' +
-      #13#10'   BytesPerPixel       : 0x%.08X' +
-      #13#10');',
-      [pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
-       Depth, pPoint, BytesPerPixel]);
+  LogBegin('EmuXapi : EmuXGSwizzleBox').
+    _(pSource, 'pSource').
+    _(RowPitch, 'RowPitch').
+    _(SlicePitch, 'SlicePitch').
+    _(pBox, 'pBox').
+    _(pDest, 'pDest').
+    _(Width, 'Width').
+    _(Height, 'Height').
+    _(Depth, 'Depth').
+    _(pPoint, 'pPoint').
+    _(BytesPerPixel, 'BytesPerPixel').
+    LogEnd;
 {$ENDIF}
 
   if (pDest <> LPVOID($80000000)) then

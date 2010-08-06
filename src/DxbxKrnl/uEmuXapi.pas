@@ -1275,12 +1275,10 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DXBX_DEBUG}
-  DbgPrintf('EmuXapi : EmuXapiThreadStartup' +
-      #13#10'(' +
-      #13#10'   StartRoutine        : 0x%.08X' +
-      #13#10'   StartContext        : 0x%.08X' +
-      #13#10')',
-      [Addr(StartRoutine), StartContext]);
+  LogBegin('EmuXapi : EmuXapiThreadStartup').
+    _(Addr(StartRoutine), 'StartRoutine').
+    _(StartContext, 'StartContext').
+    LogEnd;
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
@@ -1343,13 +1341,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXapiBootToDash' +
-      #13#10'(' +
-      #13#10'   UnknownA            : 0x%.08X' +
-      #13#10'   UnknownB            : 0x%.08X' +
-      #13#10'   UnknownC            : 0x%.08X' +
-      #13#10');',
-      [UnknownA, UnknownB, UnknownC]);
+  LogBegin('EmuXapi : EmuXapiBootToDash').
+    _(UnknownA, 'UnknownA').
+    _(UnknownB, 'UnknownB').
+    _(UnknownC, 'UnknownC').
+    LogEnd;
 {$ENDIF}
 
   DxbxKrnlCleanup('Emulation Terminated (XapiBootToDash)');
@@ -1425,13 +1421,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuCreateFiber' +
-      #13#10'(' +
-      #13#10'   dwStackSize         : 0x%.08X' +
-      #13#10'   lpStartRoutine      : 0x%.08X' +
-      #13#10'   lpParameter         : 0x%.08X' +
-      #13#10');',
-      [dwStackSize, lpStartRoutine, lpParameter]);
+  LogBegin('EmuXapi : EmuCreateFiber').
+    _(dwStackSize, 'dwStackSize').
+    _(lpStartRoutine, 'lpStartRoutine').
+    _(lpParameter, 'lpParameter').
+    LogEnd;
 {$ENDIF}
 
   Result := CreateFiber(dwStackSize, lpStartRoutine, lpParameter);
@@ -1450,11 +1444,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuDeleteFiber' +
-      #13#10'(' +
-      #13#10'  lpFiber            : 0x%.08X' +
-      #13#10');',
-      [lpFiber]);
+  LogBegin('EmuXapi : EmuDeleteFiber').
+    _(lpFiber, 'lpFiber').
+    LogEnd;
 {$ENDIF}
 
   DeleteFiber(lpFiber);
@@ -1506,11 +1498,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXLoadSectionByHandle' +
-      #13#10'(' +
-      #13#10'   hSection           : 0x%.08X' +
-      #13#10');',
-      [hSection]);
+  LogBegin('EmuXapi : EmuXLoadSectionByHandle').
+    _(hSection, 'hSection').
+    LogEnd;
 {$ENDIF}
 
   // The handle should contain the address of this section by the hack
@@ -1549,11 +1539,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuXapi : EmuXFreeSectionByHandle' +
-      #13#10'(' +
-      #13#10'   hSection           : 0x%.08X' +
-      #13#10');',
-      [hSection]);
+  LogBegin('EmuXapi : EmuXFreeSectionByHandle').
+    _(hSection, 'hSection').
+    LogEnd;
 {$ENDIF}
 
   // TODO : We should probably use a lock here, to make access to the SectionHeader thread-safe
@@ -1667,11 +1655,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfHeap) then
-    DbgPrintf('EmuXapi : EmuRtlDestroyHeap' +
-      #13#10'(' +
-      #13#10'   HeapHandle         : 0x%.08X' +
-      #13#10');',
-      [HeapHandle]);
+    LogBegin('EmuXapi : EmuRtlDestroyHeap').
+      _(HeapHandle, 'HeapHandle').
+      LogEnd;
 
   HANDLE(Result) := JwaNative.RtlDestroyHeap(HeapHandle);
 
@@ -1693,13 +1679,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmuQueueUserAPC' +
-      #13#10'(' +
-      #13#10'   pfnAPC           : 0x%.08X' +
-      #13#10'   hThread          : 0x%.08X' +
-      #13#10'   dwData           : 0x%.08X' +
-      #13#10');',
-      [Addr(pfnAPC), hThread, dwData]);
+    LogBegin('EmuXapi : EmuQueueUserAPC').
+      _(Addr(pfnAPC), 'pfnAPC').
+      _(hThread, 'hThread').
+      _(dwData, 'dwData').
+      LogEnd;
 
   // dwRet := 0;
 
@@ -1830,12 +1814,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmuXGetLaunchInfo' +
-      #13#10'(' +
-      #13#10'   pdwLaunchDataType : 0x%.08X' +
-      #13#10'   pLaunchData       : 0x%.08X' +
-      #13#10');',
-      [pdwLaunchDataType, pLaunchData]);
+    LogBegin('EmuXapi : EmuXGetLaunchInfo').
+      _(pdwLaunchDataType, 'pdwLaunchDataType').
+      _(pLaunchData, 'pLaunchData').
+      LogEnd;
 
   dwRet := ERROR_LAUNCHDATA_NOT_FOUND; // Dxbx note : Cxbx incorrectly uses E_FAIL here!
 
@@ -1902,11 +1884,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmuXSetProcessQuantumLength' +
-      #13#10'(' +
-      #13#10'   dwMilliseconds    : 0x%.08X' +
-      #13#10');',
-      [dwMilliseconds]);
+    LogBegin('EmuXapi : EmuXSetProcessQuantumLength').
+      _(dwMilliseconds, 'dwMilliseconds').
+      LogEnd;
 
   // TODO -oCXBX: Implement?
   EmuWarning('XSetProcessQuantumLength is being ignored!');
@@ -2040,15 +2020,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmutimeSetEvent' +
-      #13#10'(' +
-      #13#10'   uDelay            : 0x%.08X' +
-      #13#10'   uResolution       : 0x%.08X' +
-      #13#10'   fptc              : 0x%.08X' +
-      #13#10'   dwUser            : 0x%.08X' +
-      #13#10'   fuEvent           : 0x%.08X' +
-      #13#10');',
-      [uDelay, uResolution, Addr(fptc), dwUser, fuEvent]);
+    LogBegin('EmuXapi : EmutimeSetEvent').
+      _(uDelay, 'uDelay').
+      _(uResolution, 'uResolution').
+      _(Addr(fptc), 'fptc').
+      _(dwUser, 'dwUser').
+      _(fuEvent, 'fuEvent').
+      LogEnd;
 
   Result := timeSetEvent(uDelay, uResolution, fptc, DWORD_PTR(dwUser), fuEvent);
 
@@ -2065,11 +2043,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmutimeKillEvent' +
-      #13#10'(' +
-      #13#10'   uTimerID          : 0x%.08X' +
-      #13#10');',
-      [uTimerID]);
+    LogBegin('EmuXapi : EmutimeKillEvent').
+      _(uTimerID, 'uTimerID').
+      LogEnd;
 
   Result := timeKillEvent(uTimerID);
 
@@ -2089,14 +2065,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuXapi : EmuRaiseException' +
-      #13#10'(' +
-      #13#10'   dwExceptionCode   : 0x%.08X' +
-      #13#10'   dwExceptionFlags  : 0x%.08X' +
-      #13#10'   nNumberOfArguments: 0x%.08X' +
-      #13#10'   lpArguments       : 0x%.08X' +
-      #13#10');',
-      [dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments]);
+    LogBegin('EmuXapi : EmuRaiseException').
+      _(dwExceptionCode, 'dwExceptionCode').
+      _(dwExceptionFlags, 'dwExceptionFlags').
+      _(nNumberOfArguments, 'nNumberOfArguments').
+      _(lpArguments, 'lpArguments').
+      LogEnd;
 
   // TODO -oCXBX: Implement or not?
 //  RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
