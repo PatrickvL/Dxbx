@@ -588,12 +588,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfDxbx or lfKernel) then
-    DbgPrintf('EmuKrnl : NtCancelTimer' +
-      #13#10'(' +
-      #13#10'   pTimerHandle        : 0x%.08X' +
-      #13#10'   pbPreviousState     : 0x%.08X' +
-      #13#10');',
-      [hTimerHandle, pbPreviousState]);
+    LogBegin('EmuKrnl : NtCancelTimer').
+      _(hTimerHandle, 'pTimerHandle').
+      _(pbPreviousState, 'pbPreviousState').
+      LogEnd;
 
   Result := JwaNative.NtCancelTimer(hTimerHandle, pbPreviousState);
 
@@ -612,11 +610,9 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtClearEvent' +
-      #13#10'(' +
-      #13#10'   EventHandle         : 0x%.8x' +
-      #13#10');',
-      [EventHandle]);
+    LogBegin('EmuKrnl : NtClearEvent').
+      _(EventHandle, 'EventHandle').
+      LogEnd;
 
   Result := JwaNative.NtClearEvent(EventHandle);
   // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
@@ -1061,23 +1057,18 @@ function xboxkrnl_NtDeviceIoControlFile(
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : NtDeviceIoControlFile' +
-      #13#10'(' +
-      #13#10'   FileHandle          : 0x%.08X' +
-      #13#10'   Event               : 0x%.08X' +
-      #13#10'   ApcRoutine          : 0x%.08X' +
-      #13#10'   ApcContext          : 0x%.08X' +
-      #13#10'   IoStatusBlock       : 0x%.08X' +
-      #13#10'   IoControlCode       : 0x%.08X' +
-      #13#10'   InputBuffer         : 0x%.08X' +
-      #13#10'   InputBufferLength   : 0x%.08X' +
-      #13#10'   OutputBuffer        : 0x%.08X' +
-      #13#10'   OutputBufferLength  : 0x%.08X' +
-      #13#10');',
-      [FileHandle, Event, Addr(ApcRoutine), ApcContext,
-       IoStatusBlock, IoControlCode,
-       InputBuffer, InputBufferLength,
-       OutputBuffer, OutputBufferLength]);
+  LogBegin('EmuKrnl : NtDeviceIoControlFile').
+    _(FileHandle, 'FileHandle').
+    _(Event, 'Event').
+    _(Addr(ApcRoutine), 'ApcRoutine').
+    _(ApcContext, 'ApcContext').
+    _(IoStatusBlock, 'IoStatusBlock').
+    _(IoControlCode, 'IoControlCode').
+    _(InputBuffer, 'InputBuffer').
+    _(InputBufferLength, 'InputBufferLength').
+    _(OutputBuffer, 'OutputBuffer').
+    _(OutputBufferLength, 'OutputBufferLength').
+    LogEnd;
 
   Result := JwaNative.NtDeviceIoControlFile(
     FileHandle,
@@ -1112,13 +1103,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtDuplicateObject' +
-      #13#10'(' +
-      #13#10'   SourceHandle        : 0x%.08X' +
-      #13#10'   TargetHandle        : 0x%.08X' +
-      #13#10'   Options             : 0x%.08X' +
-      #13#10');',
-      [SourceHandle, TargetHandle, Options]);
+  LogBegin('EmuKrnl : NtDuplicateObject').
+    _(SourceHandle, 'SourceHandle').
+    _(TargetHandle, 'TargetHandle').
+    _(Options, 'Options').
+    LogEnd;
 {$ENDIF}
 
   DesiredAccess := 0; // TODO -oDxbx : Should be set if Options <> DUPLICATE_SAME_ACCESS
@@ -1162,12 +1151,10 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtFlushBuffersFile' +
-      #13#10'(' +
-      #13#10'   FileHandle          : 0x%.08X' +
-      #13#10'   IoStatusBlock       : 0x%.08X' +
-      #13#10');',
-      [FileHandle, IoStatusBlock]);
+  LogBegin('EmuKrnl : NtFlushBuffersFile').
+    _(FileHandle, 'FileHandle').
+    _(IoStatusBlock, 'IoStatusBlock').
+    LogEnd;
 {$ENDIF}
 
   Result := JwaNative.NtFlushBuffersFile(FileHandle, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock));
@@ -1193,13 +1180,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtFreeVirtualMemory' +
-      #13#10'(' +
-      #13#10'   BaseAddress         : 0x%.08X' +
-      #13#10'   FreeSize            : 0x%.08X' +
-      #13#10'   FreeType            : 0x%.08X' +
-      #13#10');',
-      [BaseAddress, FreeSize, FreeType]);
+  LogBegin('EmuKrnl : NtFreeVirtualMemory').
+    _(BaseAddress, 'BaseAddress').
+    _(FreeSize, 'FreeSize').
+    _(FreeType, 'FreeType').
+    LogEnd;
 {$ENDIF}
 
   Result := JwaNative.NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
@@ -1223,24 +1208,18 @@ function xboxkrnl_NtFsControlFile(
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuKrnl : NtFsControlFile' +
-      #13#10'(' +
-      #13#10'   FileHandle          : 0x%.08X' +
-      #13#10'   Event               : 0x%.08X' +
-      #13#10'   ApcRoutine          : 0x%.08X' +
-      #13#10'   ApcContext          : 0x%.08X' +
-      #13#10'   IoStatusBlock       : 0x%.08X' +
-      #13#10'   FsControlCode       : 0x%.08X' +
-      #13#10'   InputBuffer         : 0x%.08X' +
-      #13#10'   InputBufferLength   : 0x%.08X' +
-      #13#10'   OutputBuffer        : 0x%.08X' +
-      #13#10'   OutputBufferLength  : 0x%.08X' +
-      #13#10');',
-      [FileHandle, Event,
-       Addr(ApcRoutine), ApcContext,
-       IoStatusBlock, FsControlCode,
-       InputBuffer, InputBufferLength,
-       OutputBuffer, OutputBufferLength]);
+  LogBegin('EmuKrnl : NtFsControlFile').
+    _(FileHandle, 'FileHandle').
+    _(Event, 'Event').
+    _(Addr(ApcRoutine), 'ApcRoutine').
+    _(ApcContext, 'ApcContext').
+    _(IoStatusBlock, 'IoStatusBlock').
+    _(FsControlCode, 'FsControlCode').
+    _(InputBuffer, 'InputBuffer').
+    _(InputBufferLength, 'InputBufferLength').
+    _(OutputBuffer, 'OutputBuffer').
+    _(OutputBufferLength, 'OutputBufferLength').
+    LogEnd;
 
   Result := JwaNative.NtFsControlFile(
     FileHandle,
@@ -1272,12 +1251,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfDxbx or lfKernel or lfFile) then
-    DbgPrintf('EmuKrnl : NtOpenDirectoryObject' +
-        #13#10'(' +
-        #13#10'   DirectoryHandle     : 0x%.08X' +
-        #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-        #13#10');',
-        [DirectoryHandle, ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes)]);
+    LogBegin('EmuKrnl : NtOpenDirectoryObject').
+      _(DirectoryHandle, 'DirectoryHandle').
+      _(ObjectAttributes, 'ObjectAttributes').
+      LogEnd;
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtOpenDirectoryObject');
@@ -1809,12 +1786,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtQuerySemaphore' +
-      #13#10'(' +
-      #13#10'   SemaphoreHandle     : 0x%.8x' +
-      #13#10'   SemaphoreInformation: 0x%.8x' +
-      #13#10');',
-      [SemaphoreHandle, SemaphoreInformation]);
+    LogBegin('EmuKrnl : NtQuerySemaphore').
+      _(SemaphoreHandle, 'SemaphoreHandle').
+      _(SemaphoreInformation, 'SemaphoreInformation').
+      LogEnd;
 
   Result := JwaNative.NtQuerySemaphore(SemaphoreHandle, SemaphoreBasicInformation, SemaphoreInformation, SizeOf(SemaphoreInformation^), @ResultLength);
 
@@ -1837,13 +1812,11 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : NtQuerySymbolicLinkObject' +
-    #13#10'(' +
-    #13#10'   LinkHandle          : 0x%.08X' +
-    #13#10'   LinkTarget          : 0x%.08X' +
-    #13#10'   ReturnedLength      : 0x%.08X' +
-    #13#10');',
-    [LinkHandle, LinkHandle, ReturnedLength]);
+  LogBegin('EmuKrnl : NtQuerySymbolicLinkObject').
+    _(LinkHandle, 'LinkHandle').
+    _(LinkTarget, 'LinkTarget').
+    _(ReturnedLength, 'ReturnedLength').
+    LogEnd;
 {$ENDIF}
 
   // Check that we actually got an EmuHandle :
@@ -1888,15 +1861,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfDxbx or lfKernel) then
-    DbgPrintf('EmuKrnl : NtQueryTimer' +
-      #13#10'(' +
-      #13#10'   hTimerHandle           : 0x%.08X' +
-      #13#10'   TimerInformationClass  : 0x%.08X' +
-      #13#10'   pTimerInformation      : 0x%.08X' +
-      #13#10'   TimerInformationLength : 0x%.08X' +
-      #13#10'   ResultLength           : 0x%.08X' +
-      #13#10');',
-      [hTimerHandle, Ord(TimerInformationClass), pTimerInformation, TimerInformationLength, ResultLength]);
+    LogBegin('EmuKrnl : NtQueryTimer').
+      _(hTimerHandle, 'hTimerHandle').
+      _(Ord(TimerInformationClass), 'TimerInformationClass').
+      _(pTimerInformation, 'pTimerInformation').
+      _(TimerInformationLength, 'TimerInformationLength').
+      _(ResultLength, 'ResultLength').
+      LogEnd;
 
   Result := JwaNative.NtQueryTimer(hTimerHandle, TimerInformationClass, pTimerInformation, TimerInformationLength, ResultLength);
 
@@ -1918,12 +1889,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtQueryVirtualMemory' +
-     #13#10'(' +
-     #13#10'   BaseAddress         : 0x%.08X' +
-     #13#10'   Buffer              : 0x%.08X' +
-     #13#10');',
-     [BaseAddress, Buffer]);
+    LogBegin('EmuKrnl : NtQueryVirtualMemory').
+      _(BaseAddress, 'BaseAddress').
+      _(Buffer, 'Buffer').
+      LogEnd;
 
   Result := JwaNative.NtQueryVirtualMemory
   (
@@ -2124,12 +2093,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtReleaseMutant' +
-      #13#10'(' +
-      #13#10'   MutantHandle         : 0x%.08X' +
-      #13#10'   PreviousCount        : 0x%.08X' +
-      #13#10');',
-      [MutantHandle, PreviousCount]);
+    LogBegin('EmuKrnl : NtReleaseMutant').
+      _(MutantHandle, 'MutantHandle').
+      _(PreviousCount, 'PreviousCount').
+      LogEnd;
 
   // redirect to Win2k/XP
   Result := JwaNative.NtReleaseMutant(MutantHandle, PreviousCount);
@@ -2151,13 +2118,11 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtReleaseSemaphore' +
-     #13#10'(' +
-     #13#10'   SemaphoreHandle      : 0x%.08X' +
-     #13#10'   ReleaseCount         : 0x%.08X' +
-     #13#10'   PreviousCount        : 0x%.08X' +
-     #13#10');',
-     [SemaphoreHandle, ReleaseCount, PreviousCount]);
+    LogBegin('EmuKrnl : NtReleaseSemaphore').
+      _(SemaphoreHandle, 'SemaphoreHandle').
+      _(ReleaseCount, 'ReleaseCount').
+      _(PreviousCount, 'PreviousCount').
+      LogEnd;
 
   Result := JwaNative.NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PLONG(PreviousCount));
 
@@ -2212,12 +2177,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtResumeThread' +
-      #13#10'(' +
-      #13#10'   ThreadHandle         : 0x%.08X' +
-      #13#10'   PreviousSuspendCount : 0x%.08X' +
-      #13#10');',
-      [ThreadHandle, PreviousSuspendCount]);
+    LogBegin('EmuKrnl : NtResumeThread').
+      _(ThreadHandle, 'ThreadHandle').
+      _(PreviousSuspendCount, 'PreviousSuspendCount').
+      LogEnd;
 
   Result := JwaNative.NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
@@ -2239,12 +2202,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfTrace) then
-    DbgPrintf('EmuKrnl : NtSetEvent' +
-      #13#10'(' +
-      #13#10'   EventHandle          : 0x%.08X' +
-      #13#10'   PreviousState        : 0x%.08X' +
-      #13#10');',
-      [EventHandle, PreviousState]);
+    LogBegin('EmuKrnl : NtSetEvent').
+      _(EventHandle, 'EventHandle').
+      _(PreviousState, 'PreviousState').
+      LogEnd;
 
   Result := JwaNative.NtSetEvent(EventHandle, PULONG(PreviousState));
   // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
@@ -2445,12 +2406,10 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtSuspendThread' +
-      #13#10'(' +
-      #13#10'   ThreadHandle         : 0x%.08X' +
-      #13#10'   PreviousSuspendCount : 0x%.08X' +
-      #13#10');',
-      [ThreadHandle, PreviousSuspendCount]);
+    LogBegin('EmuKrnl : NtSuspendThread').
+      _(ThreadHandle, 'ThreadHandle').
+      _(PreviousSuspendCount, 'PreviousSuspendCount').
+      LogEnd;
 
   Result := JwaNative.NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
@@ -2482,13 +2441,11 @@ begin
 
   if MayLog(lfUnit) then
   begin
-    DbgPrintf('EmuKrnl : NtUserIoApcDispatcher' +
-        #13#10'(' +
-        #13#10'   ApcContext           : 0x%.08X' +
-        #13#10'   IoStatusBlock        : 0x%.08X' +
-        #13#10'   Reserved             : 0x%.08X' +
-        #13#10');',
-        [ApcContext, IoStatusBlock, Reserved]);
+    LogBegin('EmuKrnl : NtUserIoApcDispatcher').
+      _(ApcContext, 'ApcContext').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(Reserved, 'Reserved').
+      LogEnd;
 
     DbgPrintf('IoStatusBlock->Pointer     : 0x%.08X' +
       #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.Status, IoStatusBlock.Information]);
