@@ -108,12 +108,12 @@ function XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis: PX_D3DTexture;
 
 function XTL_EmuIDirect3DPalette8_Lock2(pThis: PX_D3DPalette; Flags: DWORD): PD3DCOLOR; stdcall;
 function XTL_EmuIDirect3DDevice8_CreatePalette2(Size: X_D3DPALETTESIZE): PX_D3DPalette; stdcall;
-procedure XTL_EmuIDirect3DDevice8_EnableOverlay(Enable: BOOL); stdcall;
-procedure XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
+function XTL_EmuIDirect3DDevice8_EnableOverlay(Enable: BOOL): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_UpdateOverlay(pSurface: PX_D3DSurface;
   SrcRect: PRECT;
   DstRect: PRECT;
   EnableColorKey: BOOL;
-  ColorKey: D3DCOLOR); stdcall;
+  ColorKey: D3DCOLOR): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_CreateVertexBuffer2(Length: UINT): PX_D3DVertexBuffer; stdcall;
 procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple_Internal(
   State: D3DRenderStateType;
@@ -1679,7 +1679,7 @@ begin
   Result := g_bIsBusy; // Dxbx note : We read a boolean that's only true while inside Present()
 end; // XTL_EmuIDirect3DDevice8_IsBusy
 
-procedure XTL_EmuIDirect3DDevice8_GetCreationParameters(pParameters: PD3DDEVICE_CREATION_PARAMETERS); stdcall;
+function XTL_EmuIDirect3DDevice8_GetCreationParameters(pParameters: PD3DDEVICE_CREATION_PARAMETERS): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1696,6 +1696,8 @@ begin
   pParameters.DeviceType := D3DDEVTYPE_HAL;
   pParameters.hFocusWindow := 0;
   pParameters.BehaviorFlags := D3DCREATE_HARDWARE_VERTEXPROCESSING;
+
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3DDevice8_GetCreationParameters
@@ -1741,7 +1743,7 @@ begin
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3D8_CheckDeviceFormat
 
-procedure XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus(pFieldStatus: PX_D3DFIELD_STATUS); stdcall;
+function XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus(pFieldStatus: PX_D3DFIELD_STATUS): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1759,6 +1761,7 @@ begin
   pFieldStatus.Field := X_D3DFIELD_PROGRESSIVE;
   pFieldStatus.VBlankCount := 0;
 
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3DDevice8_GetDisplayFieldStatus
@@ -1779,7 +1782,7 @@ begin
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3DDevice8_BeginPush
 
-procedure XTL_EmuIDirect3DDevice8_EndPush(pPush: PDWORD); stdcall;
+function XTL_EmuIDirect3DDevice8_EndPush(pPush: PDWORD): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1792,6 +1795,8 @@ begin
 
   Free(g_pPrimaryPB); // Cxbc: delete[]
   g_pPrimaryPB := nil;
+
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end; // XTL_EmuIDirect3DDevice8_EndPush
@@ -1829,11 +1834,11 @@ begin
   Result := S_OK;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetBackBufferScale
+function XTL_EmuIDirect3DDevice8_SetBackBufferScale
 (
   x: FLOAT;
   y: FLOAT
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -1848,6 +1853,8 @@ begin
 {$ENDIF}
 
   EmuWarning('SetBackBufferScale ignored');
+
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -3142,12 +3149,12 @@ begin
   Result := hRet;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_SetPixelShaderConstant
+function XTL_EmuIDirect3DDevice8_SetPixelShaderConstant
 (
   Register_: DWORD;
   {CONST} pConstantData: PVOID;
   ConstantCount: DWORD
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -3162,14 +3169,14 @@ begin
     [Register_, pConstantData, ConstantCount]);
 {$ENDIF}
 
-(* Dxbx note : Is this what's needed?
-  {hRet :=} IDirect3DDevice8(g_pD3DDevice8).SetPixelShaderConstant
+// Dxbx note : Is this what's needed?
+  IDirect3DDevice8(g_pD3DDevice8).SetPixelShaderConstant
   (
     Register_,
     {untyped const}pConstantData^,
     ConstantCount
   );
-*)
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -6552,10 +6559,10 @@ begin
   Result := pD3DVertexBuffer;
 end;
 
-procedure XTL_EmuIDirect3DDevice8_EnableOverlay
+function XTL_EmuIDirect3DDevice8_EnableOverlay
 (
   Enable: BOOL
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   ddsd2: DDSURFACEDESC2;
@@ -6623,17 +6630,19 @@ begin
     end;
   end;
 
+  Result := D3D_OK;
+
   EmuSwapFS(fsXbox);
 end;
 
-procedure XTL_EmuIDirect3DDevice8_UpdateOverlay
+Function XTL_EmuIDirect3DDevice8_UpdateOverlay
 (
   pSurface: PX_D3DSurface;
   SrcRect: PRECT;
   DstRect: PRECT;
   EnableColorKey: BOOL;
   ColorKey: D3DCOLOR
-); stdcall;
+): HRESULT; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
   ddsd2: DDSURFACEDESC2;
@@ -6862,6 +6871,8 @@ begin
   begin
     EmuWarning('pSurface == NULL!');
   end;
+
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
