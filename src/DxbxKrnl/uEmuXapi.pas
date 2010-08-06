@@ -1303,7 +1303,7 @@ begin
       #13#10'(' +
       #13#10'   PartitionName       : 0x%.08X ("%s")' +
       #13#10'   BytesPerCluster     : 0x%.08X' +
-      #13#10')',
+      #13#10');',
       [PartitionName, PSTRING_String(PartitionName), BytesPerCluster]);
 {$ENDIF}
 
