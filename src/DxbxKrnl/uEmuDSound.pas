@@ -4933,14 +4933,12 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuDSound : XAudioDownloadEffectsImage' +
-      #13#10'(' +
-      #13#10'   pszImageName        : 0x%.08X ("%s")' +
-      #13#10'   pImageLoc           : 0x%.08X' +
-      #13#10'   dwFlags             : 0x%.08X' +
-      #13#10'   ppImageDesc         : 0x%.08X' +
-      #13#10');',
-      [UIntPtr(pszImageName), PAnsiChar(pszImageName), pImageLoc, dwFlags, ppImageDesc]);
+    LogBegin('EmuDSound : XAudioDownloadEffectsImage').
+      _(pszImageName, 'pszImageName').
+      _(pImageLoc, 'pImageLoc').
+      _(dwFlags, 'dwFlags').
+      _(ppImageDesc, 'ppImageDesc').
+    LogEnd();
 
    EmuSwapFS(fsXbox);
 

@@ -404,13 +404,11 @@ function XTL_EmuXGWriteSurfaceOrTextureToXPR
 begin
   EmuSwapFS(fsWindows);
 
-  DbgPrintf('EmuXapi : EmuXGWriteSurfaceOrTextureToXPR' +
-      #13#10'(' +
-      #13#10'   pResource              : 0x%.08X' +
-      #13#10'   cPath                  : 0x%.08X' +
-      #13#10'   bWriteSurfaceAsTexture : 0x%.08X' +
-      #13#10');',
-      [pResource, cPath, bWriteSurfaceAsTexture]);
+  LogBegin('EmuXapi : EmuXGWriteSurfaceOrTextureToXPR').
+    _(pResource, 'pResource').
+    _(cPath, 'cPath').
+    _(bWriteSurfaceAsTexture, 'bWriteSurfaceAsTexture').
+  LogEnd();
 
   // TODO -oCXBX: If necessary, either reverse the .xbx and .xpr file formats
   // and write the surface/texture to a file, or output a generic .xbx

@@ -564,15 +564,13 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit) then
-    DbgPrintf('EmuKrnl : NtAllocateVirtualMemory' +
-      #13#10'(' +
-      #13#10'   BaseAddress         : 0x%.8x (0x%.8x)' +
-      #13#10'   ZeroBits            : 0x%.8x' +
-      #13#10'   AllocationSize      : 0x%.8x (0x%.8x)' +
-      #13#10'   AllocationType      : 0x%.8x' +
-      #13#10'   Protect             : 0x%.8x' +
-      #13#10');',
-      [BaseAddress, BaseAddress^, ZeroBits, AllocationSize, AllocationSize^, AllocationType, Protect]);
+    LogBegin('EmuKrnl : NtAllocateVirtualMemory').
+      _(BaseAddress, 'BaseAddress'). // Show BaseAddress^ ?
+      _(ZeroBits, 'ZeroBits').
+      _(AllocationSize, 'AllocationSize'). // Show AllocationSize^ ?
+      _(AllocationType, 'AllocationType').
+      _(Protect, 'Protect').
+    LogEnd();
 
   Result := JwaNative.NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
 
@@ -2018,20 +2016,16 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfFile) then
-    DbgPrintf('EmuKrnl : NtReadFile' +
-        #13#10'(' +
-        #13#10'   FileHandle          : 0x%.08X' +
-        #13#10'   Event               : 0x%.08X' +
-        #13#10'   ApcRoutine          : 0x%.08X' +
-        #13#10'   ApcContext          : 0x%.08X' +
-        #13#10'   IoStatusBlock       : 0x%.08X' +
-        #13#10'   Buffer              : 0x%.08X' +
-        #13#10'   Length              : 0x%.08X' +
-        #13#10'   ByteOffset          : 0x%.08X (%d)' +
-        #13#10');',
-        [FileHandle, Event, Addr(ApcRoutine),
-         ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
-
+    LogBegin('EmuKrnl : NtReadFile').
+      _(FileHandle, 'FileHandle').
+      _(Event, 'Event').
+      _(Addr(ApcRoutine), 'ApcRoutine').
+      _(ApcContext, 'ApcContext').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(Buffer, 'Buffer').
+      _(Length, 'Length').
+      _(ByteOffset, 'ByteOffset').
+    LogEnd();
 {$IFDEF GAME_HACKS_ENABLED}
 // Halo...
 //    if Assigned(ByteOffset) and (ByteOffset.QuadPart = $00120800) then
@@ -2675,19 +2669,16 @@ begin
   EmuSwapFS(fsWindows);
 
   if MayLog(lfUnit or lfFile) then
-    DbgPrintf('EmuKrnl : NtWriteFile' +
-       #13#10'(' +
-       #13#10'   FileHandle          : 0x%.08X' +
-       #13#10'   Event               : 0x%.08X' +
-       #13#10'   ApcRoutine          : 0x%.08X' +
-       #13#10'   ApcContext          : 0x%.08X' +
-       #13#10'   IoStatusBlock       : 0x%.08X' +
-       #13#10'   Buffer              : 0x%.08X' +
-       #13#10'   Length              : 0x%.08X' +
-       #13#10'   ByteOffset          : 0x%.08X (%d)' +
-       #13#10');',
-       [FileHandle, Event, Addr(ApcRoutine),
-       ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, QuadPart(ByteOffset)]);
+    LogBegin('EmuKrnl : NtWriteFile').
+      _(FileHandle, 'FileHandle').
+      _(Event, 'Event').
+      _(Addr(ApcRoutine), 'ApcRoutine').
+      _(ApcContext, 'ApcContext').
+      _(IoStatusBlock, 'IoStatusBlock').
+      _(Buffer, 'Buffer').
+      _(Length, 'Length').
+      _(ByteOffset, 'ByteOffset').
+    LogEnd();
 
 {$IFDEF GAME_HACKS_ENABLED}
   // Halo..
