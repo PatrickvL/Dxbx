@@ -439,29 +439,18 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : IoCreateFile' +
-     #13#10'(' +
-     #13#10'   FileHandle          : 0x%.08X' +
-     #13#10'   DesiredAccess       : 0x%.08X (%s)' +
-     #13#10'   ObjectAttributes    : 0x%.08X ("%s")' +
-     #13#10'   IoStatusBlock       : 0x%.08X' +
-     #13#10'   AllocationSize      : 0x%.08X (%d)' +
-     #13#10'   FileAttributes      : 0x%.08X (%s)' +
-     #13#10'   ShareAccess         : 0x%.08X (%s)' +
-     #13#10'   Disposition         : 0x%.08X (%s)' +
-     #13#10'   CreateOptions       : 0x%.08X (%s)' +
-     #13#10'   Options             : 0x%.08X' +
-     #13#10');',
-     [FileHandle,
-      DesiredAccess, AccessMaskToString(DesiredAccess),
-      ObjectAttributes, POBJECT_ATTRIBUTES_String(ObjectAttributes),
-      IoStatusBlock,
-      AllocationSize, QuadPart(AllocationSize),
-      FileAttributes, FileAttributesToString(FileAttributes),
-      ShareAccess, AccessMaskToString(ShareAccess),
-      Disposition, CreateDispositionToString(Disposition),
-      CreateOptions, CreateOptionsToString(CreateOptions),
-      Options]);
+  LogBegin('EmuKrnl : IoCreateFile').
+    _(FileHandle, 'FileHandle').
+    _ACCESS_MASK(DesiredAccess, 'DesiredAccess').
+    _(ObjectAttributes, 'ObjectAttributes').
+    _(IoStatusBlock, 'IoStatusBlock').
+    _(AllocationSize, 'AllocationSize').
+    _FileAttributes(FileAttributes, 'FileAttributes').
+    _ACCESS_MASK(ShareAccess, 'ShareAccess').
+    _CreateDisposition(Disposition, 'Disposition').
+    _CreateOptions(CreateOptions, 'CreateOptions').
+    _(Options, 'Options').
+  LogEnd();
 {$ENDIF}
 
   Result := STATUS_SUCCESS;
@@ -488,13 +477,10 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : IoCreateSymbolicLink' +
-     #13#10'(' +
-     #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' + // "\??\E:"
-     #13#10'   DeviceName          : 0x%.08X ("%s")' + // "\Device\Harddisk0\Partition1"
-     #13#10');',
-     [SymbolicLinkName, PSTRING_String(SymbolicLinkName),
-     DeviceName, PSTRING_String(DeviceName)]);
+  LogBegin('EmuKrnl : IoCreateSymbolicLink').
+    _(SymbolicLinkName, 'SymbolicLinkName').
+    _(DeviceName, 'DeviceName').
+  LogEnd();
 {$ENDIF}
 
   Result := DxbxCreateSymbolicLink(PSTRING_String(SymbolicLinkName), PSTRING_String(DeviceName));
@@ -528,11 +514,9 @@ begin
   EmuSwapFS(fsWindows);
 
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : IoDeleteSymbolicLink' +
-      #13#10'(' +
-      #13#10'   SymbolicLinkName    : 0x%.08X ("%s")' + // "\??\E:"
-      #13#10');',
-      [SymbolicLinkName, PSTRING_String(SymbolicLinkName)]);
+  LogBegin('EmuKrnl : IoDeleteSymbolicLink').
+    _(SymbolicLinkName, 'SymbolicLinkName').
+  LogEnd();
 {$ENDIF}
 
   EmuNtSymbolicLinkObject := FindNtSymbolicLinkObjectByName(PSTRING_String(SymbolicLinkName));
@@ -731,11 +715,9 @@ function xboxkrnl_IoDismountVolumeByName
 begin
   EmuSwapFS(fsWindows);
 {$IFDEF DEBUG}
-  DbgPrintf('EmuKrnl : IoDismountVolumeByName' +
-      #13#10'(' +
-      #13#10'   VolumeName        : 0x%.08X ("%s")' +
-      #13#10');',
-      [VolumeName, PSTRING_String(VolumeName)]);
+  LogBegin('EmuKrnl : IoDismountVolumeByName').
+    _(VolumeName, 'VolumeName').
+  LogEnd();
 {$ENDIF}
 
   // TODO -oCXBX: Anything?

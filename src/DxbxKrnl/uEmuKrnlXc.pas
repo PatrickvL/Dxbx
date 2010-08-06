@@ -71,14 +71,15 @@ implementation
 procedure xboxkrnl_XcSHAInit(
   pbSHAContext: PUCHAR
   ); stdcall;
-// Source:shogun  Branch:163  Translator:JoaoHadouken  Done:100
+// Source:shogun  Branch:163  Translator:JoaoHadouken  Done:0
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : XcSHAInit' +
-      #13#10'(' +
-      #13#10'   pbSHAContext        : 0x%.08X' +
-      #13#10');',
-      [pbSHAContext]);
+  LogBegin('EmuKrnl : XcSHAInit').
+    _(pbSHAContext, 'pbSHAContext').
+  LogEnd();
+
+  Unimplemented('XcSHAInit');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -87,16 +88,17 @@ procedure xboxkrnl_XcSHAUpdate(
   pbInput: PUCHAR;
   dwInputLength: ULONG
   ); stdcall;
-// Source:shogun  Branch:163  Translator:JoaoHadouken  Done:100
+// Source:shogun  Branch:163  Translator:JoaoHadouken  Done:0
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : XcSHAUpdate' +
-      #13#10'(' +
-      #13#10'   pbSHAContext        : 0x%.08X' +
-      #13#10'   pbInput             : 0x%.08X' +
-      #13#10'   dwInputLength       : 0x%.08X' +
-      #13#10');',
-      [pbSHAContext, pbInput, dwInputLength]);
+  LogBegin('EmuKrnl : XcSHAUpdate').
+    _(pbSHAContext, 'pbSHAContext').
+    _(pbInput, 'pbInput').
+    _(dwInputLength, 'dwInputLength').
+  LogEnd();
+
+  Unimplemented('XcSHAUpdate');
+
   EmuSwapFS(fsXbox);
 end;
 
@@ -109,12 +111,10 @@ var
   v: int;
 begin
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuKrnl : XcSHAFinal' +
-      #13#10'(' +
-      #13#10'    pbSHAContext        : 0x%.08X' +
-      #13#10'    pbDigest            : 0x%.08X' +
-      #13#10');',
-      [pbSHAContext, pbDigest]);
+  LogBegin('EmuKrnl : XcSHAFinal').
+    _(pbSHAContext, 'pbSHAContext').
+    _(pbDigest, 'pbDigest').
+  LogEnd();
 
   if Assigned(pbDigest) then
     // for now, we dont care about the digest
