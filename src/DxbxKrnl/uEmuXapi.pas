@@ -1800,9 +1800,9 @@ begin
     // MARKED OUT CXBX
     {if (g_bXInputOpenCalled)
     begin
-      EmuSwapFS(fsWindows);
+      EmuSwapFS(fsXbox);
       XTL_EmuXInputOpen( NULL, 0, 0, NULL );
-      EmuSwapFS(fsXbox)
+      EmuSwapFS(fsWindows)
     end;}
 
     dwRet := ERROR_SUCCESS;

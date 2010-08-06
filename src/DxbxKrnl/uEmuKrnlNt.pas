@@ -2465,7 +2465,7 @@ begin
   end;
 
   if bWasXboxFS then // Dxbx addition : Swap back only here, if necessary
-    EmuSwapFS(fsXbox);   // Xbox FS
+    EmuSwapFS(fsXbox);
 
   (*
   // ~XDK 3911??
@@ -2507,7 +2507,7 @@ begin
 
   if MayLog(lfUnit or lfTrace) then
   begin
-    EmuSwapFS(fsWindows);   // Win2k/XP FS
+    EmuSwapFS(fsWindows);
     DbgPrintf('EmuKrnl : NtUserIoApcDispatcher Completed');
     if bWasXboxFS then // Dxbx addition : Swap back only here, if necessary
     EmuSwapFS(fsXbox);
