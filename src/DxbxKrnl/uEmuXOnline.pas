@@ -215,14 +215,42 @@ begin
   Result := E_FAIL;
 end;
 
+function XTL_EmuXOnlineLogon
+(
+    pUsers: PVOID;
+    pdwServiceIDs: PDWORD;
+    dwServices: DWORD;
+    hEvent: HANDLE;
+    pHandle: HANDLE
+): HRESULT; stdcall;
+begin
+	EmuSwapFS(fsWindows);	// Win2k/XP FS
+  if MayLog(lfUnit) then
+    LogBegin('EmuXOnlineLogon').
+      _(pUsers, 'pUsers').
+      _(pdwServiceIDs, 'pdwServiceIDs').
+      _(dwServices, 'dwServices').
+      _(hEvent, 'hEvent').
+      _(pHandle, 'pHandle').
+    LogEnd();
+
+	// TODO: What will it take to log on to Xbox Live?
+
+	EmuSwapFS(fsXbox);	// Xbox FS
+
+	Result := HResult($80151000);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
+end;
+
+
 
 exports
   XTL_EmuWSAStartup,
 
   XTL_EmuXNetGetEthernetLinkStatus,
   XTL_EmuXNetStartup, //: DXBX marked out for better logging
+  XTL_EmuXOnlineLaunchNewImage,
+  XTL_EmuXOnlineLogon;
 
-  XTL_EmuXOnlineLaunchNewImage;
 
 end.
 
