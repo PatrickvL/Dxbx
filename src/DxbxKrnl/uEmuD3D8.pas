@@ -4305,7 +4305,7 @@ begin
       _(Register_, 'Register').
       _(a, 'a').
       _(b, 'b').
-    LogEnd;
+    LogEnd();
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -4343,7 +4343,7 @@ begin
     _(Register_, 'Register').
     _(a, 'a').
     _(b, 'b').
-  LogEnd;
+  LogEnd();
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -4388,7 +4388,7 @@ begin
     _(c, 'c').
     _(d, 'd').
 //    _(g_IVBTblOffs, '## g_IVBTblOffs ##'). // test - show counter
-  LogEnd;
+  LogEnd();
 
   hRet := S_OK;
 
@@ -4569,7 +4569,7 @@ begin
     _(b, 'b').
     _(c, 'c').
     _(d, 'd').
-  LogEnd;
+  LogEnd();
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -4609,7 +4609,7 @@ begin
     _(b, 'b').
     _(c, 'c').
     _(d, 'd').
-  LogEnd;
+  LogEnd();
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -4645,7 +4645,7 @@ begin
   LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexDataColor >>').
     _(Register_, 'Register').
     _(Color, 'Color').
-  LogEnd;
+  LogEnd();
   EmuSwapFS(fsXbox);
 {$ENDIF}
 

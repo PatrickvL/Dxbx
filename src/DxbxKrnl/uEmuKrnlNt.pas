@@ -591,7 +591,7 @@ begin
     LogBegin('EmuKrnl : NtCancelTimer').
       _(hTimerHandle, 'pTimerHandle').
       _(pbPreviousState, 'pbPreviousState').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtCancelTimer(hTimerHandle, pbPreviousState);
 
@@ -612,7 +612,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuKrnl : NtClearEvent').
       _(EventHandle, 'EventHandle').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtClearEvent(EventHandle);
   // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
@@ -641,7 +641,7 @@ begin
   if MayLog(lfUnit) then
     LogBegin('EmuKrnl : NtClose').
       _(Handle, 'Handle').
-    LogEnd;
+    LogEnd();
 
   // Check for 'special' handles :
   if IsEmuHandle(Handle) then
@@ -782,7 +782,7 @@ begin
       _ACCESS_MASK(ShareAccess, 'ShareAccess').
       _CreateDisposition(CreateDisposition).
       _CreateOptions(CreateOptions).
-    LogEnd;
+    LogEnd();
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtCreateFile');
@@ -1068,7 +1068,7 @@ begin
     _(InputBufferLength, 'InputBufferLength').
     _(OutputBuffer, 'OutputBuffer').
     _(OutputBufferLength, 'OutputBufferLength').
-    LogEnd;
+    LogEnd();
 
   Result := JwaNative.NtDeviceIoControlFile(
     FileHandle,
@@ -1107,7 +1107,7 @@ begin
     _(SourceHandle, 'SourceHandle').
     _(TargetHandle, 'TargetHandle').
     _(Options, 'Options').
-    LogEnd;
+    LogEnd();
 {$ENDIF}
 
   DesiredAccess := 0; // TODO -oDxbx : Should be set if Options <> DUPLICATE_SAME_ACCESS
@@ -1154,7 +1154,7 @@ begin
   LogBegin('EmuKrnl : NtFlushBuffersFile').
     _(FileHandle, 'FileHandle').
     _(IoStatusBlock, 'IoStatusBlock').
-    LogEnd;
+    LogEnd();
 {$ENDIF}
 
   Result := JwaNative.NtFlushBuffersFile(FileHandle, JwaNative.PIO_STATUS_BLOCK(IoStatusBlock));
@@ -1184,7 +1184,7 @@ begin
     _(BaseAddress, 'BaseAddress').
     _(FreeSize, 'FreeSize').
     _(FreeType, 'FreeType').
-    LogEnd;
+    LogEnd();
 {$ENDIF}
 
   Result := JwaNative.NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
@@ -1219,7 +1219,7 @@ begin
     _(InputBufferLength, 'InputBufferLength').
     _(OutputBuffer, 'OutputBuffer').
     _(OutputBufferLength, 'OutputBufferLength').
-    LogEnd;
+    LogEnd();
 
   Result := JwaNative.NtFsControlFile(
     FileHandle,
@@ -1254,7 +1254,7 @@ begin
     LogBegin('EmuKrnl : NtOpenDirectoryObject').
       _(DirectoryHandle, 'DirectoryHandle').
       _(ObjectAttributes, 'ObjectAttributes').
-      LogEnd;
+      LogEnd();
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtOpenDirectoryObject');
@@ -1305,7 +1305,7 @@ begin
       _(IoStatusBlock, 'IoStatusBlock').
       _ACCESS_MASK(ShareAccess, 'ShareAccess').
       _CreateOptions(OpenOptions, 'OpenOptions').
-    LogEnd;
+    LogEnd();
 
   // initialize object attributes
   Result := DxbxObjectAttributesToNT(ObjectAttributes, {var}NativeObjectAttributes, 'NtOpenFile');
@@ -1789,7 +1789,7 @@ begin
     LogBegin('EmuKrnl : NtQuerySemaphore').
       _(SemaphoreHandle, 'SemaphoreHandle').
       _(SemaphoreInformation, 'SemaphoreInformation').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtQuerySemaphore(SemaphoreHandle, SemaphoreBasicInformation, SemaphoreInformation, SizeOf(SemaphoreInformation^), @ResultLength);
 
@@ -1816,7 +1816,7 @@ begin
     _(LinkHandle, 'LinkHandle').
     _(LinkTarget, 'LinkTarget').
     _(ReturnedLength, 'ReturnedLength').
-    LogEnd;
+    LogEnd();
 {$ENDIF}
 
   // Check that we actually got an EmuHandle :
@@ -1867,7 +1867,7 @@ begin
       _(pTimerInformation, 'pTimerInformation').
       _(TimerInformationLength, 'TimerInformationLength').
       _(ResultLength, 'ResultLength').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtQueryTimer(hTimerHandle, TimerInformationClass, pTimerInformation, TimerInformationLength, ResultLength);
 
@@ -1892,7 +1892,7 @@ begin
     LogBegin('EmuKrnl : NtQueryVirtualMemory').
       _(BaseAddress, 'BaseAddress').
       _(Buffer, 'Buffer').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtQueryVirtualMemory
   (
@@ -2096,7 +2096,7 @@ begin
     LogBegin('EmuKrnl : NtReleaseMutant').
       _(MutantHandle, 'MutantHandle').
       _(PreviousCount, 'PreviousCount').
-      LogEnd;
+      LogEnd();
 
   // redirect to Win2k/XP
   Result := JwaNative.NtReleaseMutant(MutantHandle, PreviousCount);
@@ -2122,7 +2122,7 @@ begin
       _(SemaphoreHandle, 'SemaphoreHandle').
       _(ReleaseCount, 'ReleaseCount').
       _(PreviousCount, 'PreviousCount').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PLONG(PreviousCount));
 
@@ -2180,7 +2180,7 @@ begin
     LogBegin('EmuKrnl : NtResumeThread').
       _(ThreadHandle, 'ThreadHandle').
       _(PreviousSuspendCount, 'PreviousSuspendCount').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
@@ -2205,7 +2205,7 @@ begin
     LogBegin('EmuKrnl : NtSetEvent').
       _(EventHandle, 'EventHandle').
       _(PreviousState, 'PreviousState').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtSetEvent(EventHandle, PULONG(PreviousState));
   // TODO : Instead of the above, we should consider using the Ke*Event APIs, but
@@ -2409,7 +2409,7 @@ begin
     LogBegin('EmuKrnl : NtSuspendThread').
       _(ThreadHandle, 'ThreadHandle').
       _(PreviousSuspendCount, 'PreviousSuspendCount').
-      LogEnd;
+      LogEnd();
 
   Result := JwaNative.NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
@@ -2445,7 +2445,7 @@ begin
       _(ApcContext, 'ApcContext').
       _(IoStatusBlock, 'IoStatusBlock').
       _(Reserved, 'Reserved').
-      LogEnd;
+      LogEnd();
 
     DbgPrintf('IoStatusBlock->Pointer     : 0x%.08X' +
       #13#10'IoStatusBlock->Information : 0x%.08X', [IoStatusBlock.Status, IoStatusBlock.Information]);

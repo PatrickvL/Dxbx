@@ -89,16 +89,21 @@ const
     lfSound         = $00010000; //
     lfGraphics      = $00020000; //
     lfThreading     = $00040000; //
+    lfXOnline       = $00080000;
 
 // Note : Some units declare (and use) lfUnit, a variable that best describes the logging in these units.
 
 
 type TLogFlags = DWORD; // 'set of TLogFlag' prevents inlining of MayLog
+  PLogFlags = ^TLogFlags;
 
 var
   // This field indicates all logging flags that are currently active :
   g_ActiveLogFlags: TLogFlags = lfAlways or lfDebug or lfCxbx or lfDxbx or lfKernel or lfPatch or lfSymbolScan;
   g_DisabledLogFlags: TLogFlags = lfHeap or lfExtreme;
+
+  pActiveLogFlags: PLogFlags = @g_ActiveLogFlags;
+  pDisabledLogFlags: PLogFlags = @g_DisabledLogFlags;
 
 function MayLog(const aFlags: TLogFlags): Boolean; inline;
 
@@ -134,10 +139,10 @@ type
     function _CreateOptions(const aValue: ULONG; const aName: string = ''): PLogStack;
 {$ENDIF}
 
-    procedure LogEnd;
+    procedure LogEnd();
   end;
 
-  function LogBegin(const aSymbolName: string): PLogStack;
+  function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
 
 procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); inline; overload;
 procedure Log(const aFlags: TLogFlags; const aLogMsg: string); inline; overload;
@@ -217,8 +222,8 @@ var
 // TODO -oDxbx: Apply this to all DbgPrintf calls, and put those in inline methods to speed things up
 function MayLog(const aFlags: TLogFlags): Boolean; // inline;
 begin
-  Result := ((aFlags or g_ActiveLogFlags) > 0)
-        and ((aFlags and g_DisabledLogFlags) = 0);
+  Result := ((aFlags or pActiveLogFlags^) > 0)
+        and ((aFlags and pDisabledLogFlags^) = 0);
 end;
 
 procedure Log(const aFlags: TLogFlags; const aLogProc: TLogProc); // inline;
@@ -752,12 +757,13 @@ begin
   end;
 end;
 
-function LogBegin(const aSymbolName: string): PLogStack;
+function LogBegin(const aSymbolName: string; const aCategory: string = ''): PLogStack;
 begin
   // Start the chain with a new entry that points to itself :
   Result := GetLogEntry(nil);
   Result.LogRoot := Result;
-  // Set the symbolname and return the next entry to be filled (or finished) :
+  // Set the Category and SymbolName and return the next entry to be filled (or finished) :
+  Result.SetValue(aCategory);
   Result := Result.SetName(aSymbolName, '');
 end;
 
@@ -892,26 +898,38 @@ end;
 
 {$ENDIF DXBX_DLL}
 
-procedure RLogStack.LogEnd;
+procedure RLogStack.LogEnd();
 var
   Loop: PLogStack;
-  Prefix: string;
   Str: string;
+  NameWidth: Integer;
 begin
   // This LogStackEntry won't be processed, but instead it prints the entire stack :
   // First start with the header (accesible via LogRoot) :
-  Str := LogRoot.LogName;
+  Str := LogRoot.LogName + '(';
+  if LogRoot.LogValue <> '' then
+    Str := LogRoot.LogValue + ' : ' + Str;
+
   Loop := LogRoot.Next;
   if Loop = @Self then
-    Str := Str + '();'
+    Str := Str + ');'
   else
   begin
-    // Print the complete stack of arguments :
-    Prefix := '('#13#10'   ';
+    // Determine how wide the name should be (and give it a minimum width, to keep the layout relatively steady) :
+    NameWidth := 18;
     while Loop <> @Self do
     begin
-      Str := Str + Format('%s%-30s: %s', [Prefix, Loop.LogName, Loop.LogValue]);
-      Prefix := ','#13#10'   ';
+      if NameWidth < Length(Loop.LogName) then
+        NameWidth := Length(Loop.LogName);
+
+      Loop := Loop.Next;
+    end;
+
+    // Print the complete stack of arguments :
+    Loop := LogRoot.Next;
+    while Loop <> @Self do
+    begin
+      Str := Str + Format(#13#10'   %-*s : %s', [NameWidth, Loop.LogName, Loop.LogValue]);
       Loop := Loop.Next;
     end;
     Str := Str + #13#10');'
