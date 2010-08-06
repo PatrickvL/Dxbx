@@ -236,7 +236,7 @@ begin
     #13#10'   pXBEHeader          : 0x%.8x' +
     #13#10'   dwXBEHeaderSize     : 0x%.8x' +
     #13#10'   Entry               : 0x%.8x' +
-    #13#10')', [
+    #13#10');', [
       @DxbxKrnlInit,
       hwndParent,
       pTLSData,

@@ -442,7 +442,7 @@ begin
   DbgPrintf('EmuKrnl : PsTerminateSystemThread' +
       #13#10'(' +
       #13#10'   ExitStatus          : 0x%.08X' +
-      #13#10')',
+      #13#10');',
       [ExitStatus]);
 
   // call thread notification routine(s)

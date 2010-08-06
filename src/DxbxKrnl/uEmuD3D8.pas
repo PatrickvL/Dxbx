@@ -10078,7 +10078,7 @@ begin
   DbgPrintf('EmuD3D8 : EmuD3DDevice_SetStateVB' +
       #13#10'(' +
       #13#10'   Unknown1                  : 0x%.08X' +
-      #13#10')',
+      #13#10');',
     [Unknown1]);
 {$ENDIF}
 
@@ -10114,7 +10114,7 @@ begin
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetStipple' +
       #13#10'(' +
       #13#10'   pPattern                  : 0x%.08X' +
-      #13#10')',
+      #13#10');',
       [pPattern]);
 {$ENDIF}
 

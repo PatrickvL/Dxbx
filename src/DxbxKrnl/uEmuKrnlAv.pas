@@ -114,7 +114,7 @@ begin
   DbgPrintf('EmuKrnl : AvSetSavedDataAddress' +
     #13#10'(' +
     #13#10'  Address          : 0x%.8x' +
-    #13#10')', [
+    #13#10');', [
     Address
     ]);
   EmuSwapFS(fsXbox);
