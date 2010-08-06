@@ -38,6 +38,8 @@ const
 
   NULL = nil;
 
+  NIBBLES_PER_BYTE = 2;
+
   HexNibble: string = '0123456789ABCDEF';
 
 type

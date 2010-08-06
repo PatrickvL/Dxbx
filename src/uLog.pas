@@ -117,7 +117,7 @@ type
     LogValue: string;
     function SetName(const aName, aType: string): PLogStack;
     procedure SetValue(const aValue: string; aDetails: string = ''); overload;
-    procedure SetValue(const aValue: IntPtr; aDetails: string = ''); overload;
+    procedure SetValue(const aValue: UIntPtr; aDetails: string = ''); overload;
   public
     function _(const aValue: AnsiString; const aName: string = ''): PLogStack; overload;
     function _(const aValue: UnicodeString; const aName: string = ''): PLogStack; overload;
@@ -128,9 +128,11 @@ type
     function _(const aValue: DWORD; const aName: string = ''): PLogStack; overload;
     function _(const aValue: BOOL; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PVOID; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: LPCSTR; const aName: string = ''): PLogStack; overload;
     function _(const aValue: LARGE_INTEGER; const aName: string = ''): PLogStack; overload;
 {$IFDEF DXBX_DLL}
     function _(const aValue: PLARGE_INTEGER; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: PANSI_STRING; const aName: string = ''): PLogStack; overload;
     function _(const aValue: POBJECT_ATTRIBUTES; const aName: string = ''): PLogStack; overload;
 
     function _ACCESS_MASK(const aValue: ACCESS_MASK; const aName: string = ''): PLogStack;
@@ -693,27 +695,43 @@ end; // WriteLog
 
 { RLogStack }
 
+const
+  LOG_MAX_STRING_LENGTH = 50;
+
 var
   LogEntryPool: PLogStack = nil;
   LogEntryPoolCount: Integer = 0;
 
 // Get an entry from the pool (or create an entry is the pool is currently empty).
 function GetLogEntry(const aLogRoot: PLogStack): PLogStack;
+var
+  CurrentRoot: PLogStack;
 begin
   // We use a loop here, to make sure we're doing this thread-safe :
   repeat
     // First, let's see if we the pool contains anything at all :
     Result := LogEntryPool;
-    if (Result = nil) then
-    begin
-      // If not, allocate a new entry and continue with the initialization :
-      New(Result);
-      InterlockedIncrement({var}LogEntryPoolCount);
+    if Result = nil then
       Break;
-    end;
 
-    // Try to remove the head of the chain in a thread-safe way, retry if this fails :
-  until InterlockedCompareExchangePointer({var}Pointer(LogEntryPool), {Exchange}Result.Next, {Comperand}Result) = Result;
+    // Prevent other threads from acessing the pool, by nilling it out for a short while :
+  until (InterlockedCompareExchangePointer({var}Pointer(LogEntryPool), {Exchange}nil, {Comperand}Result) = Result);
+
+  // See if the above action gave us an entry :
+  if Assigned(Result) then
+  begin
+    // We use a loop here, to make sure we're doing this thread-safe :
+    repeat
+      // We got an entry, so return the rest of the chain after it to the pool as fast as we can :
+      CurrentRoot := LogEntryPool;
+    until (InterlockedCompareExchangePointer({var}Pointer(LogEntryPool), {Exchange}Result.Next, {Comperand}CurrentRoot) = CurrentRoot);
+  end
+  else
+  begin
+    // If the pool was empty (or temporarily unavailable), allocate a new entry and continue with the initialization :
+    New(Result);
+    InterlockedIncrement({var}LogEntryPoolCount);
+  end;
 
   Result.LogRoot := aLogRoot;
   // Clean out the other variables :
@@ -734,10 +752,10 @@ begin
   repeat
     // Read the current root of the chain, and assume that will follow after this chain :
     CurrentRoot := LogEntryPool;
-    aEntry.Next := LogEntryPool;
+    aEntry.Next := CurrentRoot;
 
     // Try to put this entry's Root as the head of the list, retry if this fails :
-  until InterlockedCompareExchangePointer({var}Pointer(LogEntryPool), {Exchange}aEntry.LogRoot, {Comperand}CurrentRoot) = CurrentRoot;
+  until (InterlockedCompareExchangePointer({var}Pointer(LogEntryPool), {Exchange}aEntry.LogRoot, {Comperand}CurrentRoot) = CurrentRoot);
 end;
 
 procedure FreeLogEntryPool;
@@ -787,9 +805,9 @@ begin
     LogValue := aValue;
 end;
 
-procedure RLogStack.SetValue(const aValue: IntPtr; aDetails: string = '');
+procedure RLogStack.SetValue(const aValue: UIntPtr; aDetails: string = '');
 begin
-  SetValue('$' + IntToHex(aValue, SizeOf(IntPtr) * 2), aDetails);
+  SetValue('0x' + IntToHex(aValue, SizeOf(UIntPtr) * NIBBLES_PER_BYTE), aDetails);
 end;
 
 function RLogStack._(const aValue: AnsiString; const aName: string = ''): PLogStack;
@@ -807,7 +825,7 @@ end;
 function RLogStack._(const aValue: int; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'int');
-  SetValue(IntPtr(aValue), IntToStr(aValue));
+  SetValue(UIntPtr(aValue), IntToStr(aValue));
 end;
 
 function RLogStack._(const aValue: float; const aName: string = ''): PLogStack;
@@ -819,19 +837,19 @@ end;
 function RLogStack._(const aValue: SHORT; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'SHORT');
-  SetValue('$' + IntToHex(aValue, SizeOf(aValue) * 2));
+  SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE), IntToStr(aValue));
 end;
 
 function RLogStack._(const aValue: WORD; const aName: string): PlogStack;
 begin
   Result := SetName(aName, 'WORD');
-  SetValue(IntPtr(aValue));
+  SetValue('0x' + IntToHex(aValue, SizeOf(aValue) * NIBBLES_PER_BYTE));
 end;
 
 function RLogStack._(const aValue: DWORD; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'DWORD');
-  SetValue(IntPtr(aValue));
+  SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: BOOL; const aName: string = ''): PLogStack;
@@ -849,7 +867,13 @@ end;
 function RLogStack._(const aValue: PVOID; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'PVOID');
-  SetValue(IntPtr(aValue));
+  SetValue(UIntPtr(aValue));
+end;
+
+function RLogStack._(const aValue: LPCSTR; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'LPCSTR');
+  SetValue(UIntPtr(aValue), '"' + string(PAnsiCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
 end;
 
 {$IFDEF DXBX_DLL}
@@ -858,42 +882,51 @@ function RLogStack._(const aValue: PLARGE_INTEGER; const aName: string = ''): PL
 begin
   Result := SetName(aName, 'PLARGE_INTEGER');
   if Assigned(aValue) then
-    SetValue(IntPtr(aValue), IntToStr(aValue.QuadPart))
+    SetValue(UIntPtr(aValue), IntToStr(aValue.QuadPart))
   else
-    SetValue(IntPtr(aValue));
+    SetValue(UIntPtr(aValue));
+end;
+
+function RLogStack._(const aValue: PANSI_STRING; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'PANSI_STRING');
+  if Assigned(aValue) then
+    SetValue(UIntPtr(aValue), '"' + string(PSTRING_String(aValue)) + '"')
+  else
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: POBJECT_ATTRIBUTES; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'POBJECT_ATTRIBUTES');
   if Assigned(aValue) then
-    SetValue(IntPtr(aValue), '"' + string(POBJECT_ATTRIBUTES_String(aValue)) + '"')
+    SetValue(UIntPtr(aValue), '"' + string(POBJECT_ATTRIBUTES_String(aValue)) + '"')
   else
-    SetValue(IntPtr(aValue));
+    SetValue(UIntPtr(aValue));
 end;
 
 function RLogStack._ACCESS_MASK(const aValue: ACCESS_MASK; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'ACCESS_MASK');
-  SetValue(IntPtr(aValue), AccessMaskToString(aValue));
+  SetValue(UIntPtr(aValue), AccessMaskToString(aValue));
 end;
 
 function RLogStack._FileAttributes(const aValue: ULONG; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'FileAttributes');
-  SetValue(IntPtr(aValue), FileAttributesToString(aValue));
+  SetValue(UIntPtr(aValue), FileAttributesToString(aValue));
 end;
 
 function RLogStack._CreateDisposition(const aValue: ULONG; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'CreateDisposition');
-  SetValue(IntPtr(aValue), CreateDispositionToString(aValue));
+  SetValue(UIntPtr(aValue), CreateDispositionToString(aValue));
 end;
 
 function RLogStack._CreateOptions(const aValue: ULONG; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'CreateOptions');
-  SetValue(IntPtr(aValue), CreateOptionsToString(aValue));
+  SetValue(UIntPtr(aValue), CreateOptionsToString(aValue));
 end;
 
 {$ENDIF DXBX_DLL}
@@ -906,7 +939,7 @@ var
 begin
   // This LogStackEntry won't be processed, but instead it prints the entire stack :
   // First start with the header (accesible via LogRoot) :
-  Str := LogRoot.LogName + '(';
+  Str := LogRoot.LogName + '('; // TODO : Handle redirects (marked with '>>') better
   if LogRoot.LogValue <> '' then
     Str := LogRoot.LogValue + ' : ' + Str;
 
