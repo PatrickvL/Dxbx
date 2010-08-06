@@ -472,6 +472,7 @@ begin
   //_endthreadex(ExitStatus);
   ExitThread(ExitStatus);
 
+  EmuSwapFS(fsXbox); // Not really necessary - thread already terminated
 end;
 
 end.

@@ -4257,7 +4257,7 @@ begin
 
 {$IFDEF DEBUG}
   LogBegin('EmuD3D8 : EmuIDirect3DDevice8_Begin').
-    _(Ord(PrimitiveType), 'PrimitiveType').
+    _(Int(PrimitiveType), 'PrimitiveType').
   LogEnd();
 {$ENDIF}
 
@@ -6104,7 +6104,7 @@ begin
   //if(nil=pThis.Emu.Surface8) or (pThis.Emu.Surface8 = XTL_PIDirect3DSurface8($00000004)) then
   //begin
   //  EmuWarning('Invalid Surface!');
-  //  EmuSwapFS(fsWindows);
+  //  EmuSwapFS(fsXbox);
   //  Result := E_FAIL; Exit;
   //end;
 
@@ -10166,7 +10166,7 @@ begin
   // TODO -oCXBX: Implement
   EmuWarning('PrimeVertexCache is not supported!');
 
-  EmuSwapFS(fsWindows);
+  EmuSwapFS(fsXbox);
 
   Result := S_OK;
 end;

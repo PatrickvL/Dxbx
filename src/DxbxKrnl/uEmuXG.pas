@@ -76,7 +76,7 @@ begin
 {$IFDEF _DEBUG_TRACE}
   LogBegin('EmuXapi : EmuXGIsSwizzledFormat').
     _(Format, 'Format').
-    LogEnd();
+  LogEnd();
 {$ENDIF}
 
   Result := False;
@@ -115,7 +115,7 @@ begin
     _(Height, 'Height').
     _(pPoint, 'pPoint').
     _(BytesPerPixel, 'BytesPerPixel').
-    LogEnd();
+  LogEnd();
 {$ENDIF}
 
   if (pRect = NULL) and (pPoint = NULL) and (Pitch = 0) then
@@ -190,7 +190,7 @@ begin
     _(Depth, 'Depth').
     _(pPoint, 'pPoint').
     _(BytesPerPixel, 'BytesPerPixel').
-    LogEnd();
+  LogEnd();
 {$ENDIF}
 
   if (pDest <> LPVOID($80000000)) then
