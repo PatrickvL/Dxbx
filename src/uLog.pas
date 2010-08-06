@@ -119,6 +119,7 @@ type
     function _(const aValue: int; const aName: string = ''): PLogStack; overload;
     function _(const aValue: float; const aName: string = ''): PLogStack; overload;
     function _(const aValue: SHORT; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: WORD; const aName: string = ''): PlogStack; overload;
     function _(const aValue: DWORD; const aName: string = ''): PLogStack; overload;
     function _(const aValue: BOOL; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PVOID; const aName: string = ''): PLogStack; overload;
@@ -813,6 +814,12 @@ function RLogStack._(const aValue: SHORT; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'SHORT');
   SetValue('$' + IntToHex(aValue, SizeOf(aValue) * 2));
+end;
+
+function RLogStack._(const aValue: WORD; const aName: string): PlogStack;
+begin
+  Result := SetName(aName, 'WORD');
+  SetValue(IntPtr(aValue));
 end;
 
 function RLogStack._(const aValue: DWORD; const aName: string = ''): PLogStack;
