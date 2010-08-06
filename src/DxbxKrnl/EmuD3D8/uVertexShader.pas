@@ -1970,8 +1970,8 @@ begin
     pStreamPatch.NbrTypes := pPatchData.TypePatchData.NbrTypes;
     pStreamPatch.NeedPatch := pPatchData.NeedPatching;
     // 2010/01/12 - revel8n - fixed allocated data size and type
-    pStreamPatch.pTypes := PUINTs(DxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(UINT))); //VSH_TYPE_PATCH_DATA)));
-    memcpy(pStreamPatch.pTypes, @(pPatchData.TypePatchData.Types[0]), pPatchData.TypePatchData.NbrTypes * sizeof(UINT));//VSH_TYPE_PATCH_DATA));
+    pStreamPatch.pTypes := PUINTs(DxbxMalloc(pPatchData.TypePatchData.NbrTypes * sizeof(UINT)));
+    memcpy(pStreamPatch.pTypes, @(pPatchData.TypePatchData.Types[0]), pPatchData.TypePatchData.NbrTypes * sizeof(UINT));
 
     Result := TRUE;
     Exit;

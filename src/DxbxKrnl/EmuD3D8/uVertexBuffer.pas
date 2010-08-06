@@ -846,6 +846,7 @@ begin
        end;
     end;
   end;
+
   if (nil = pPatchDesc.pVertexStreamZeroData) then
   begin
     if Assigned(pNewVertexBuffer) then // Dxbx addition
@@ -906,6 +907,9 @@ var
   dwTexN: DWORD;
   uiVertex: uint32;
 begin
+  // Dxbx addition :
+  // Assert(VshHandleIsFVF(pPatchDesc.hVertexShader), 'This function is only meant for FVF cases!');
+
   // Check for active linear textures.
   bHasLinearTex := false;
   pStream := nil; // DXBX - pstream might not have been initialized
@@ -1152,7 +1156,7 @@ begin
 
     // This is a list of squares/rectangles, so we convert it to a list of triangles
     dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride;
-    dwNewSize       := (pPatchDesc.dwVertexCount * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD div VERTICES_PER_QUAD) * pStream.uiOrigStride;
+    dwNewSize       := pPatchDesc.dwVertexCount * pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD div VERTICES_PER_QUAD;
   end
   // Line loop
   else if (pPatchDesc.PrimitiveType = X_D3DPT_LINELOOP) then
@@ -1160,8 +1164,8 @@ begin
     Inc(pPatchDesc.dwPrimitiveCount, 1);
 
     // We will add exactly one more line
-    dwOriginalSize  := pPatchDesc.dwVertexCount * pStream.uiOrigStride;
-    dwNewSize       := dwOriginalSize + pStream.uiOrigStride;
+    dwOriginalSize  :=  pPatchDesc.dwVertexCount      * pStream.uiOrigStride;
+    dwNewSize       := (pPatchDesc.dwVertexCount + 1) * pStream.uiNewStride;
   end;
 
   if(pPatchDesc.pVertexStreamZeroData = nil) then
@@ -1229,9 +1233,9 @@ begin
   if (pPatchDesc.PrimitiveType = X_D3DPT_QUADLIST) then
   begin
     // Calculate where the new vertices should go :
-    pPatch012 := @pPatchedVertexData[ pPatchDesc.dwOffset      * pStream.uiOrigStride];
-    pPatch34 :=  @pPatchedVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiOrigStride];
-    pPatch5 :=   @pPatchedVertexData[(pPatchDesc.dwOffset + 5) * pStream.uiOrigStride];
+    pPatch012 := @pPatchedVertexData[ pPatchDesc.dwOffset      * pStream.uiNewStride];
+    pPatch34 :=  @pPatchedVertexData[(pPatchDesc.dwOffset + 3) * pStream.uiNewStride];
+    pPatch5 :=   @pPatchedVertexData[(pPatchDesc.dwOffset + 5) * pStream.uiNewStride];
 
     // Calculate where the original vertices come from :
     pOrig012 := @pOrigVertexData[ pPatchDesc.dwOffset      * pStream.uiOrigStride];
@@ -1250,22 +1254,23 @@ begin
       memcpy(pPatch5,   pOrig012, pStream.uiOrigStride);     // Vertex             T2_V2 := Vertex Q_V0
       // Dxbx note : Cxbx copies in four steps (0,1,2 + 2 + 3 + 0), but it can be done in three (0,1,2 + 2,3 + 0)!
 
-      if (pPatchDesc.hVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW then
+      if  (VshHandleIsFVF(pPatchDesc.hVertexShader)) // Dxbx addition - check if we're actually working with an FVF
+      and ((pPatchDesc.hVertexShader and D3DFVF_POSITION_MASK) = D3DFVF_XYZRHW) then
       begin
         for z := 0 to (VERTICES_PER_TRIANGLE*TRIANGLES_PER_QUAD)-1 do
         begin
           // For all vertices, change the z and rhw component to 1.0 if they are equal to 0.0 :
           // TODO : Explain why this is needed...?
-          if (PFLOATs(@pPatch012[z * pStream.uiOrigStride])[2] = 0.0) then
-              PFLOATs(@pPatch012[z * pStream.uiOrigStride])[2] := 1.0;
-          if (PFLOATs(@pPatch012[z * pStream.uiOrigStride])[3] = 0.0) then
-              PFLOATs(@pPatch012[z * pStream.uiOrigStride])[3] := 1.0;
+          if (PFLOATs(@pPatch012[z * pStream.uiNewStride])[2] = 0.0) then
+              PFLOATs(@pPatch012[z * pStream.uiNewStride])[2] := 1.0;
+          if (PFLOATs(@pPatch012[z * pStream.uiNewStride])[3] = 0.0) then
+              PFLOATs(@pPatch012[z * pStream.uiNewStride])[3] := 1.0;
         end;
       end;
 
-      Inc(pPatch012, pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
-      Inc(pPatch34,  pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
-      Inc(pPatch5,   pStream.uiOrigStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
+      Inc(pPatch012, pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
+      Inc(pPatch34,  pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
+      Inc(pPatch5,   pStream.uiNewStride * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD);
 
       Inc(pOrig012, pStream.uiOrigStride * VERTICES_PER_QUAD);
       Inc(pOrig23,  pStream.uiOrigStride * VERTICES_PER_QUAD);
@@ -1288,15 +1293,16 @@ begin
 
   if (pPatchDesc.pVertexStreamZeroData = nil) then
   begin
-    if (pStream.pOriginalStream <> nil) then // Dxbx addition
+    if (pStream.pOriginalStream <> nil) then // Dxbx addition - release the lock we got earlier
       IDirect3DVertexBuffer8(pStream.pOriginalStream).Unlock();
 
-    if (pStream.pPatchedStream <> nil) then // Dxbx addition
+    if (pStream.pPatchedStream <> nil) then // Dxbx addition - release the lock we got earlier
       IDirect3DVertexBuffer8(pStream.pPatchedStream).Unlock();
 
-    IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiOrigStride);
+    IDirect3DDevice8(g_pD3DDevice8).SetStreamSource(0, IDirect3DVertexBuffer8(pStream.pPatchedStream), pStream.uiNewStride);
   end;
 
+  pPatchDesc.uiVertexStreamZeroStride := pStream.uiNewStride; // Only usefull if changed (which it isn't)
   m_bPatched := true;
 
   Result := true;
@@ -1419,8 +1425,6 @@ begin
   // so we populate g_pIVBVertexBuffer instead :
   pdwVB := PDWORD(g_pIVBVertexBuffer);
 
-  uiStride := 0;
-
   // Parse IVB table with current FVF shader if possible.
   bFVF := VshHandleIsFVF(g_CurrentVertexShader);
 
@@ -1458,11 +1462,6 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].Rhw;        Inc(PFLOAT(pdwVB));
 
-      if(v = 0) then
-      begin
-        Inc(uiStride, (sizeof(FLOAT)*4));
-      end;
-
       DbgPrintf('IVB Position := {%f, %f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw]);
     end
     else // XYZRHW cannot be combined with NORMAL, but the other XYZ formats can :
@@ -1473,11 +1472,6 @@ begin
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
 
-        if(v = 0) then
-        begin
-          Inc(uiStride, (sizeof(FLOAT)*3));
-        end;
-
         DbgPrintf('IVB Position := {%f, %f, %f}', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z]);
 
       end
@@ -1487,11 +1481,6 @@ begin
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.y; Inc(PFLOAT(pdwVB));
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Position.z; Inc(PFLOAT(pdwVB));
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Blend1;     Inc(PFLOAT(pdwVB));
-
-        if(v = 0) then
-        begin
-          Inc(uiStride, (sizeof(FLOAT)*4));
-        end;
 
         DbgPrintf('IVB Position := {%f, %f, %f, %f', [g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1]);
       end
@@ -1506,11 +1495,6 @@ begin
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.y; Inc(PFLOAT(pdwVB));
         PFLOATs(pdwVB)[0] := g_IVBTable[v].Normal.z; Inc(PFLOAT(pdwVB));
 
-        if(v = 0) then
-        begin
-          Inc(uiStride, (sizeof(FLOAT)*3));
-        end;
-
         DbgPrintf('IVB Normal := {%f, %f, %f}', [g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z]);
       end;
     end;
@@ -1519,22 +1503,12 @@ begin
     begin
       PDWORDs(pdwVB)[0] := g_IVBTable[v].dwDiffuse; Inc(PDWORD(pdwVB));
 
-      if(v = 0) then
-      begin
-        Inc(uiStride, sizeof(DWORD));
-      end;
-
       DbgPrintf('IVB Diffuse := 0x%.08X', [g_IVBTable[v].dwDiffuse]);
     end;
 
     if(dwCurFVF and D3DFVF_SPECULAR) > 0 then
     begin
       PDWORDs(pdwVB)[0] := g_IVBTable[v].dwSpecular; Inc(PDWORD(pdwVB));
-
-      if(v = 0) then
-      begin
-        Inc(uiStride, sizeof(DWORD));
-      end;
 
       DbgPrintf('IVB Specular := 0x%.08X', [g_IVBTable[v].dwSpecular]);
     end;
@@ -1544,11 +1518,6 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord1.y; Inc(PFLOAT(pdwVB));
 
-      if(v = 0) then
-      begin
-        Inc(uiStride, sizeof(FLOAT)*2);
-      end;
-
       DbgPrintf('IVB TexCoord1 := {%f, %f}', [g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y]);
 //    end;
 
@@ -1556,11 +1525,6 @@ begin
     begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord2.y; Inc(PFLOAT(pdwVB));
-
-      if(v = 0) then
-      begin
-        Inc(uiStride, sizeof(FLOAT)*2);
-      end;
 
       DbgPrintf('IVB TexCoord2 := {%f, %f}', [g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y]);
 //    end;
@@ -1570,11 +1534,6 @@ begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord3.y; Inc(PFLOAT(pdwVB));
 
-      if(v = 0) then
-      begin
-        Inc(uiStride, sizeof(FLOAT)*2);
-      end;
-
       DbgPrintf('IVB TexCoord3 := {%f, %f}', [g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y]);
 //    end;
 
@@ -1582,11 +1541,6 @@ begin
     begin
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.x; Inc(PFLOAT(pdwVB));
       PFLOATs(pdwVB)[0] := g_IVBTable[v].TexCoord4.y; Inc(PFLOAT(pdwVB));
-
-      if(v = 0) then
-      begin
-        Inc(uiStride, sizeof(FLOAT)*2);
-      end;
 
       DbgPrintf('IVB TexCoord4 := {%f, %f}', [g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y]);
     end;
@@ -1597,18 +1551,27 @@ begin
 
   VPDesc.VertexPatchDesc(); // Dxbx addition : explicit initializer
 
+  // Dxbx note : Instead of calculating this above (when v=0),
+  // we use a tooling function to determine the vertex stride :
+  uiStride := DxbxFVFToVertexSizeInBytes(dwCurFVF);
+
   VPDesc.PrimitiveType := g_IVBPrimitiveType;
   VPDesc.dwVertexCount := g_IVBTblOffs;
   VPDesc.dwOffset := 0;
   VPDesc.pVertexStreamZeroData := g_pIVBVertexBuffer;
   VPDesc.uiVertexStreamZeroStride := uiStride;
-  VPDesc.hVertexShader := g_CurrentVertexShader;
+  VPDesc.hVertexShader := dwCurFVF; // TODO -oDxbx : Why does Cxbx use g_CurrentVertexShader ?
 
   VertPatch.VertexPatcher(); // Dxbx addition : explicit initializer
 
   {bPatched := }VertPatch.Apply(@VPDesc, NULL);
 
-  bFVF := True; // This fixes jumping triangles on Nvidia chipsets, as suggested by Defiance
+  // Disable this 'fix', as it doesn't really help; On ATI, it isn't needed (and causes missing
+  // textures if enabled). On Nvidia, it stops the jumping (but also removes the font from view).
+  // So I think it's better to keep this bug visible, as a motivation for a real fix, and better
+  // rendering on ATI chipsets...
+
+//  bFVF := True; // This fixes jumping triangles on Nvidia chipsets, as suggested by Defiance
   // As a result however, this change also seems to remove the texture of the fonts in XSokoban!?!
 
   if(bFVF) then
