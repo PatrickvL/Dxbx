@@ -75,7 +75,7 @@ uses
   uEmuXG;
 
 function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boolean;
-function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: boolean): uint;
+function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: Boolean = True): uint;
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 
 procedure XTL_EmuD3DInit(XbeHeader: PXBEIMAGE_HEADER; XbeHeaderSize: UInt32); {NOPATCH}
@@ -348,7 +348,7 @@ begin
   end;
 end;
 
-function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: boolean): uint;
+function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: Boolean = True): uint;
 begin
 (*
   X_D3DFVF_POSITION_MASK    = $00E; // Dec  /2  #fl
@@ -1663,7 +1663,7 @@ begin
   Result := g_EmuCDPD.hRet;
 end; // XTL_EmuIDirect3D8_CreateDevice
 
-function XTL_EmuIDirect3DDevice8_IsBusy: BOOL; stdcall;
+function XTL_EmuIDirect3DDevice8_IsBusy(): BOOL; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 begin
   EmuSwapFS(fsWindows);
@@ -3654,13 +3654,13 @@ begin
     // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
     New({var PX_D3DTexture}ppTexture^);
 
-    ppTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-    ppTexture^.Emu.Lock := dwPtr;
     ppTexture^.Format := X_D3DFMT_YUY2;
-
     ppTexture^.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
                     or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
                     or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
+    ppTexture^.Common := 0;
+    ppTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+    ppTexture^.Emu.Lock := dwPtr;
 
     g_YuvSurface := PX_D3DSurface(ppTexture^);
 
@@ -3762,13 +3762,13 @@ begin
     pRefCount^ := 1;
 
     // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
+    ppVolumeTexture^.Format := X_D3DFMT_YUY2;
+    ppVolumeTexture^.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
+                          or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
+                          or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
+    ppVolumeTexture^.Common := 0;
     ppVolumeTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
     ppVolumeTexture^.Emu.Lock := dwPtr;
-    ppVolumeTexture^.Format := X_D3DFMT_YUY2;
-
-    ppVolumeTexture^.Size  := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
-                           or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
-                           or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
 
     hRet := S_OK;
   end;
@@ -4301,13 +4301,11 @@ begin
 {$IFDEF _DEBUG_TRACE}
   begin
     EmuSwapFS(fsWindows);
-    DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData2f >>' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   a                         : %f' +
-      #13#10'   b                         : %f' +
-      #13#10');',
-      [Register_, a, b]);
+    LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData2f >>').
+      _(Register_, 'Register').
+      _(a, 'a').
+      _(b, 'b').
+    LogEnd;
     EmuSwapFS(fsXbox);
   end;
 {$ENDIF}
@@ -4341,13 +4339,11 @@ var
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData2s >>' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   a                         : %d' +
-      #13#10'   b                         : %d' +
-      #13#10');',
-      [Register_, a, b]);
+  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData2s >>').
+    _(Register_, 'Register').
+    _(a, 'a').
+    _(b, 'b').
+  LogEnd;
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -4385,17 +4381,14 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4f' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   a                         : %f' +
-      #13#10'   b                         : %f' +
-      #13#10'   c                         : %f' +
-      #13#10'   d                         : %f' +
-      #13#10');',
-    [Register_, a, b, c, d]);
-{$ENDIF}
+  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4f').
+    _(Register_, 'Register').
+    _(a, 'a').
+    _(b, 'b').
+    _(c, 'c').
+    _(d, 'd').
+//    _(g_IVBTblOffs, '## g_IVBTblOffs ##'). // test - show counter
+  LogEnd;
 
   hRet := S_OK;
 
@@ -4570,15 +4563,13 @@ var
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4ub >>' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   a                         : %d' +
-      #13#10'   b                         : %d' +
-      #13#10'   c                         : %d' +
-      #13#10'   d                         : %d' +
-      #13#10');',
-      [Register_, a, b, c, d]);
+  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4ub >>').
+    _(Register_, 'Register').
+    _(a, 'a').
+    _(b, 'b').
+    _(c, 'c').
+    _(d, 'd').
+  LogEnd;
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -4612,15 +4603,13 @@ var
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4s >>' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   a                         : %d' +
-      #13#10'   b                         : %d' +
-      #13#10'   c                         : %d' +
-      #13#10'   d                         : %d' +
-      #13#10');',
-      [Register_, a, b, c, d]);
+  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexData4s >>').
+    _(Register_, 'Register').
+    _(a, 'a').
+    _(b, 'b').
+    _(c, 'c').
+    _(d, 'd').
+  LogEnd;
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -4653,12 +4642,10 @@ var
 begin
 {$IFDEF _DEBUG_TRACE}
   EmuSwapFS(fsWindows);
-  DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_SetVertexDataColor >>' +
-      #13#10'(' +
-      #13#10'   Register                  : 0x%.08X' +
-      #13#10'   Color                     : 0x%.08X' +
-      #13#10');',
-    [Register_, Color]);
+  LogBegin('EmuD3D8 : EmuIDirect3DDevice8_SetVertexDataColor >>').
+    _(Register_, 'Register').
+    _(Color, 'Color').
+  LogEnd;
   EmuSwapFS(fsXbox);
 {$ENDIF}
 
@@ -5266,13 +5253,13 @@ begin
         pRefCount^ := 1;
 
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-        pPixelContainer.Emu.Lock := dwPtr;
         pPixelContainer.Format := X_D3DFMT_YUY2;
-
         pPixelContainer.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
                              or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
                              or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
+        pPixelContainer.Common := 0;
+        pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+        pPixelContainer.Emu.Lock := dwPtr;
       end
       else // X_Format <> X_D3DFMT_YUY2
       begin
@@ -6063,12 +6050,12 @@ begin
   if IsSpecialResource(pThis.Data) and ((pThis.Data and X_D3DRESOURCE_DATA_FLAG_YUVSURF) > 0) then
   begin
     pDesc.Format := X_D3DFMT_YUY2; // EmuPC2XB_D3DFormat(D3DFMT_YUY2);
-    pDesc.Height := g_dwOverlayH;
-    pDesc.Width := g_dwOverlayW;
-    pDesc.MultiSampleType := X_D3DMULTISAMPLE_TYPE(0);
-    pDesc.Size := g_dwOverlayP * g_dwOverlayH;
     pDesc.Type_ := X_D3DRTYPE_SURFACE;
     pDesc.Usage := 0;
+    pDesc.Size := g_dwOverlayP * g_dwOverlayH;
+    pDesc.MultiSampleType := X_D3DMULTISAMPLE_TYPE(0);
+    pDesc.Height := g_dwOverlayH;
+    pDesc.Width := g_dwOverlayW;
 
     Result := S_OK;
   end
@@ -6375,12 +6362,12 @@ begin
     pTexture8 := pThis.Emu.Texture8;
 
     New({var}ppSurfaceLevel^); // Cxbx : new X_D3DSurface();
+    // TODO -oDxbx : When should this be cleared? Isn't this a memory leak otherwise?
 
-    ppSurfaceLevel^.Data := $B00BBABE;
-    ppSurfaceLevel^.Common := 0;
     ppSurfaceLevel^.Format := 0;
     ppSurfaceLevel^.Size := 0;
-
+    ppSurfaceLevel^.Common := 0;
+    ppSurfaceLevel^.Data := $B00BBABE;
     hRet := IDirect3DTexture8(pTexture8).GetSurfaceLevel(Level, @(ppSurfaceLevel^.Emu.Surface8));
 
     if (FAILED(hRet)) then
@@ -6559,6 +6546,8 @@ begin
 
   New({PX_D3DVertexBuffer}pD3DVertexBuffer);
 
+  pD3DVertexBuffer.Common := 0; // ??
+  pD3DVertexBuffer.Data := 0; // ??
   hRet := IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer(
     NewLength,
     0,
@@ -8808,8 +8797,8 @@ begin
   New({var PX_D3DPalette}pPalette);
 
   pPalette.Common := 0;
-  pPalette.Emu.Lock := $8000BEEF; // emulated reference count for palettes
   pPalette.Data := DWORD(AllocMem(lk[Size] * sizeof(uint08)));
+  pPalette.Emu.Lock := $8000BEEF; // emulated reference count for palettes
 
   EmuSwapFS(fsXbox);
 

@@ -160,6 +160,7 @@ function GetLastErrorString: string;
 function GetErrorString(const aError: DWord): string;
 
 function PointerToString(const aPointer: Pointer): string;
+function FloatToString(const aValue: float): string;
 
 function QuadPart(const aValue: PLARGE_INTEGER): Int64;
 
@@ -264,14 +265,6 @@ const
   // Here we define the addresses of the native Windows timers :
   DxbxNtInterruptTime: PKSYSTEM_TIME = PKSYSTEM_TIME(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_INTERRUPT_TIME);
   DxbxNtSystemTime: PKSYSTEM_TIME = PKSYSTEM_TIME(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_SYSTEM_TIME);
-  DxbxNtTickCountLowDeprecated: PDWORD = PDWORD(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT_LOW_DEPRECATED);
-  DxbxNtTickCount: PKSYSTEM_TIME = PKSYSTEM_TIME(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT);
-
-var
-  // These two variables should stay constant, so they are determined just once
-  // by calling DxbxGetTimerResultions() during unit initialization :
-  DxbxMinimumResolution: ULONG;
-  DxbxMaximumResolution: ULONG;
 
 procedure ReadSystemTimeIntoLargeInteger(const aSystemTime: PKSYSTEM_TIME; const aLargeInteger: PLARGE_INTEGER);
 
@@ -311,14 +304,6 @@ begin
     aLargeInteger.HighPart := aSystemTime.High1Time;
     aLargeInteger.LowPart := aSystemTime.LowPart;
   until aLargeInteger.HighPart = aSystemTime.High2Time;
-end;
-
-procedure DxbxGetTimerResultions;
-// See http://www.digiater.nl/openvms/decus/vmslt97a/ntstuff/timer.txt
-var
-  CurrentResolution: ULONG;
-begin
-  NtQueryTimerResolution(@DxbxMinimumResolution, @DxbxMaximumResolution, @CurrentResolution);
 end;
 
 {$STACKFRAMES ON}
@@ -944,7 +929,12 @@ end;
 
 function PointerToString(const aPointer: Pointer): string;
 begin
-  Result := IntToHex(Integer(aPointer), 8);
+  Result := IntToHex(IntPtr(aPointer), SizeOf(IntPtr) * 2);
+end;
+
+function FloatToString(const aValue: float): string;
+begin
+  Result := FormatFloat('0.0', aValue); // TODO : Speed this up by avoiding Single>Extended cast & generic render code.
 end;
 
 function QuadPart(const aValue: PLARGE_INTEGER): Int64;
@@ -1547,10 +1537,6 @@ begin
   MyDump('d', AsSingle(2));
 end;
 *)
-
-initialization
-
-  DxbxGetTimerResultions;
 
 end.
 

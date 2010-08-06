@@ -117,6 +117,8 @@ type
     function _(const aValue: AnsiString; const aName: string = ''): PLogStack; overload;
     function _(const aValue: UnicodeString; const aName: string = ''): PLogStack; overload;
     function _(const aValue: int; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: float; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: SHORT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: DWORD; const aName: string = ''): PLogStack; overload;
     function _(const aValue: BOOL; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PVOID; const aName: string = ''): PLogStack; overload;
@@ -780,7 +782,7 @@ end;
 
 procedure RLogStack.SetValue(const aValue: IntPtr; aDetails: string = '');
 begin
-  SetValue('$' + IntToHex(aValue, 8), aDetails);
+  SetValue('$' + IntToHex(aValue, SizeOf(IntPtr) * 2), aDetails);
 end;
 
 function RLogStack._(const aValue: AnsiString; const aName: string = ''): PLogStack;
@@ -799,6 +801,18 @@ function RLogStack._(const aValue: int; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'int');
   SetValue(IntPtr(aValue), IntToStr(aValue));
+end;
+
+function RLogStack._(const aValue: float; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'float');
+  SetValue(FloatToString(aValue));
+end;
+
+function RLogStack._(const aValue: SHORT; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'SHORT');
+  SetValue('$' + IntToHex(aValue, SizeOf(aValue) * 2));
 end;
 
 function RLogStack._(const aValue: DWORD; const aName: string = ''): PLogStack;
