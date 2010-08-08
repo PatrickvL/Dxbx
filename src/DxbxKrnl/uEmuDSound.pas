@@ -547,6 +547,8 @@ type
     EmuPlayFlags: DWORD;
     EmuFlags: DWORD;
     EmuListener: XTL_PIDirectSoundListener; // Dxbx addition - to support 3D sound emulation through IDirectSound3DListener
+
+  // EmuDirectSound3DBuffer8: XTL_PIDirectSound3DBuffer; // TODO : Initialize this
   end;
 
   XTL_PIDirectSoundStream = type PInterface;
@@ -4301,6 +4303,7 @@ begin
       [Self, pds3db, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetAllParameters(pds3db, dwApply);
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -4326,6 +4329,7 @@ begin
       [Self, dwInsideConeAngle, dwOutsideConeAngle, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -4353,6 +4357,7 @@ begin
       [Self, x, y, z, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOrientation(x, y, z, dwApply);
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -4376,6 +4381,7 @@ begin
       [Self, lConeOutsideVolume, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetConeOutsideVolume(lConeOutsideVolume, dwApply);
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -4399,6 +4405,7 @@ begin
       [Self, flMaxDistance, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMaxDistance(flMaxDistance, dwApply);
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -4422,6 +4429,7 @@ begin
       [Self, flMinDistance, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetMinDistance(flMinDistance, dwApply);
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -4474,6 +4482,7 @@ begin
       [Self, x, y, z, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetPosition(x, y, z, dwApply);
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
@@ -4501,6 +4510,8 @@ begin
       [Self, x, y, z, dwApply]);
 
   // TODO -oCXBX: Actually implement this
+  // Result := IDirectSound3DBuffer(Self.EmuDirectSound3DBuffer8).SetVelocity(x, y, z, dwApply);
+
   EmuSwapFS(fsXbox);
   Result := DS_OK;
 end;
