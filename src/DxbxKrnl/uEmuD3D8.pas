@@ -403,6 +403,30 @@ begin
   until Result = UINT(S_OK);
 end;
 
+procedure DxbxInitializePixelContainerYUY2(const pPixelContainer: PX_D3DPixelContainer);
+var
+  dwSize: DWORD;
+  dwPtr: DWORD;
+  pRefCount: PDWORD;
+begin
+  dwSize := g_dwOverlayP * g_dwOverlayH;
+  dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
+
+  pRefCount := PDWORD(dwPtr + dwSize);
+
+  // initialize ref count
+  pRefCount^ := 1;
+
+  pPixelContainer.Format := X_D3DFMT_YUY2;
+  pPixelContainer.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
+                       or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
+                       or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
+  pPixelContainer.Common := 0;
+  // Because YUY2 is not supported in hardware (in Direct3D8?), we'll actually mark this as a special fake texture (set highest bit)
+  pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+  pPixelContainer.Emu.Lock := dwPtr;
+end;
+
 const
   MillisecondsPerSecond = 1000;
 
@@ -3529,9 +3553,6 @@ var
   PCUsage: DWORD;
   PCPool: D3DPOOL;
   LockedRect: D3DLOCKED_RECT;
-  dwSize: DWORD;
-  dwPtr: DWORD;
-  pRefCount: PDWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3576,7 +3597,17 @@ begin
     g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
   end;
 
-  if (PCFormat <> D3DFMT_YUY2) then
+  New({var PX_D3DTexture}ppTexture^);
+
+  if (PCFormat = D3DFMT_YUY2) then
+  begin
+    DxbxInitializePixelContainerYUY2(ppTexture^);
+
+    g_YuvSurface := PX_D3DSurface(ppTexture^);
+
+    Result := S_OK;
+  end
+  else // PCFormat <> D3DFMT_YUY2
   begin
 //    PCUsage := Usage and (D3DUSAGE_RENDERTARGET);
     PCUsage := Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL);
@@ -3586,8 +3617,6 @@ begin
     begin
       EmuAdjustPower2(@Width, @Height);
     end;
-
-    New({var PX_D3DTexture}ppTexture^);
 
     if (Usage and (D3DUSAGE_RENDERTARGET or D3DUSAGE_DEPTHSTENCIL)) > 0 then
 //    if (Usage and (D3DUSAGE_RENDERTARGET)) > 0 then
@@ -3634,7 +3663,7 @@ begin
     end
     else
     begin
-      // Dxbx addition : Check if LockRect actually succeeds :
+      // TODO -oDxbx: Check if LockRect actually succeeds :
       IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(0, {out}LockedRect, NULL, 0);
       ppTexture^.Data := DWORD(LockedRect.pBits);
       ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
@@ -3647,31 +3676,6 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuD3D8 : Created Texture: 0x%.08X (0x%.08X)', [ppTexture^, ppTexture^.Emu.Texture8]);
 {$ENDIF}
-  end
-  else
-  begin
-    dwSize := g_dwOverlayP * g_dwOverlayH;
-    dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
-
-    pRefCount := PDWORD(dwPtr + dwSize);
-
-    // initialize ref count
-    pRefCount^ := 1;
-
-    // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-    New({var PX_D3DTexture}ppTexture^);
-
-    ppTexture^.Format := X_D3DFMT_YUY2;
-    ppTexture^.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
-                    or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
-                    or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
-    ppTexture^.Common := 0;
-    ppTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-    ppTexture^.Emu.Lock := dwPtr;
-
-    g_YuvSurface := PX_D3DSurface(ppTexture^);
-
-    Result := S_OK;
   end;
 
   EmuSwapFS(fsXbox);
@@ -3692,9 +3696,6 @@ function XTL_EmuIDirect3DDevice8_CreateVolumeTexture
 var
   hRet: HRESULT;
   PCFormat: D3DFORMAT;
-  dwSize: DWORD;
-  dwPtr: DWORD;
-  pRefCount: PDWORD;
 begin
   EmuSwapFS(fsWindows);
 
@@ -3738,11 +3739,17 @@ begin
     g_dwOverlayP := RoundUp(g_dwOverlayW, 64)*2;
   end;
 
-  if (PCFormat <> D3DFMT_YUY2) then
+  New({PX_D3DVolumeTexture}ppVolumeTexture^);
+
+  if (PCFormat = D3DFMT_YUY2) then
+  begin
+    DxbxInitializePixelContainerYUY2(ppVolumeTexture^);
+
+    hRet := S_OK;
+  end
+  else // PCFormat <> D3DFMT_YUY2
   begin
     EmuAdjustPower2(@Width, @Height);
-
-    New({PX_D3DVolumeTexture}ppVolumeTexture^);
 
     hRet := IDirect3DDevice8_CreateVolumeTexture(g_pD3DDevice8,
         Width, Height, Depth, Levels,
@@ -3755,27 +3762,6 @@ begin
 {$IFDEF DEBUG}
     DbgPrintf('EmuD3D8 : Created Volume Texture: 0x%.08X (0x%.08X)', [@ppVolumeTexture, ppVolumeTexture^.Emu.VolumeTexture8]);
 {$ENDIF}
-  end
-  else
-  begin
-    dwSize := g_dwOverlayP * g_dwOverlayH;
-    dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
-
-    pRefCount := PDWORD(dwPtr + dwSize);
-
-    // initialize ref count
-    pRefCount^ := 1;
-
-    // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-    ppVolumeTexture^.Format := X_D3DFMT_YUY2;
-    ppVolumeTexture^.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
-                          or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
-                          or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
-    ppVolumeTexture^.Common := 0;
-    ppVolumeTexture^.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-    ppVolumeTexture^.Emu.Lock := dwPtr;
-
-    hRet := S_OK;
   end;
 
   EmuSwapFS(fsXbox);
@@ -4871,7 +4857,7 @@ var
   pRefCount: PDWORD;
   pData: PBYTE;
   X_Format: X_D3DFORMAT;
-  Format: D3DFORMAT;
+  PCFormat: D3DFORMAT;
   CacheFormat: D3DFORMAT;
   dwWidth: DWORD;
   dwHeight: DWORD;
@@ -5110,7 +5096,7 @@ begin
       pPixelContainer := PX_D3DPixelContainer(pResource);
 
       X_Format := X_D3DFORMAT((pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT);
-      Format := EmuXB2PC_D3DFormat(X_Format);
+      PCFormat := EmuXB2PC_D3DFormat(X_Format);
       CacheFormat := {XTL.}D3DFORMAT(0);
       // TODO -oCXBX: check for dimensions
 
@@ -5119,14 +5105,14 @@ begin
       begin
         {DxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D24S8 not yet supported!');
         X_Format := X_D3DFMT_LIN_A8R8G8B8; // = $12
-        Format := D3DFMT_A8R8G8B8;
+        PCFormat := D3DFMT_A8R8G8B8;
       end;
 
       if(X_Format = X_D3DFMT_LIN_D16) then // = 0x30
       begin
         {DxbxKrnlCleanup}EmuWarning('D3DFMT_LIN_D16 not yet supported!');
         X_Format := X_D3DFMT_LIN_R5G6B5; // = 0x11;
-        Format := D3DFMT_R5G6B5;
+        PCFormat := D3DFMT_R5G6B5;
       end;
 
       dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
@@ -5223,34 +5209,13 @@ begin
 
       if (X_Format = X_D3DFMT_YUY2) then
       begin
-        //
         // cache the overlay size
-        //
-
         g_dwOverlayW := dwWidth;
         g_dwOverlayH := dwHeight;
         g_dwOverlayP := RoundUp(g_dwOverlayW, 64) * 2;
 
-        //
         // create texture resource
-        //
-
-        dwSize := g_dwOverlayP * g_dwOverlayH;
-        dwPtr := DWORD(DxbxMalloc(dwSize + sizeof(DWORD)));
-
-        pRefCount := PDWORD(dwPtr + dwSize);
-
-        // initialize ref count
-        pRefCount^ := 1;
-
-        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        pPixelContainer.Format := X_D3DFMT_YUY2;
-        pPixelContainer.Size := (g_dwOverlayW and X_D3DSIZE_WIDTH_MASK)
-                             or (g_dwOverlayH shl X_D3DSIZE_HEIGHT_SHIFT)
-                             or (g_dwOverlayP shl X_D3DSIZE_PITCH_SHIFT);
-        pPixelContainer.Common := 0;
-        pPixelContainer.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-        pPixelContainer.Emu.Lock := dwPtr;
+        DxbxInitializePixelContainerYUY2(pPixelContainer);
       end
       else // X_Format <> X_D3DFMT_YUY2
       begin
@@ -5276,7 +5241,7 @@ begin
           hRet := IDirect3DDevice8_CreateImageSurface(g_pD3DDevice8,
             dwWidth,
             dwHeight,
-            Format,
+            PCFormat,
             @(pResource.Emu.Surface8)
           );
 
@@ -5285,7 +5250,7 @@ begin
 
 {$IFDEF DEBUG}
           DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created ImageSurface(0x%.08X, 0x%.08X)', [pResource, pResource.Emu.Surface8]);
-          DbgPrintf('EmuIDirect3DResource8_Register: Width:%d, Height:%d, Format:%d', [dwWidth, dwHeight, Ord(Format)]);
+          DbgPrintf('EmuIDirect3DResource8_Register: Width:%d, Height:%d, Format:%d', [dwWidth, dwHeight, Ord(PCFormat)]);
 {$ENDIF}
 
         end
@@ -5313,23 +5278,23 @@ begin
           // Since most modern graphics cards does not support
           // palette based textures we need to expand it to
           // ARGB texture format
-          if (Format = D3DFMT_P8) then //Palette
+          if (PCFormat = D3DFMT_P8) then //Palette
           begin
             EmuWarning('D3DFMT_P8 -> D3DFMT_A8R8G8B8');
 
-            CacheFormat := Format; // Save this for later
-            Format := D3DFMT_A8R8G8B8; // ARGB
+            CacheFormat := PCFormat; // Save this for later
+            PCFormat := D3DFMT_A8R8G8B8; // ARGB
           end;
 
           if (bCubemap) then
           begin
 {$IFDEF DEBUG}
             DbgPrintf('CreateCubeTexture(%d,%d, 0,%d, D3DPOOL_MANAGED, 0x%.08X)',
-              [dwWidth, dwMipMapLevels, Ord(Format), pResource.Emu.Texture8]);
+              [dwWidth, dwMipMapLevels, Ord(PCFormat), pResource.Emu.Texture8]);
 {$ENDIF}
 
             hRet := IDirect3DDevice8_CreateCubeTexture(g_pD3DDevice8,
-              dwWidth, dwMipMapLevels, 0, Format,
+              dwWidth, dwMipMapLevels, 0, PCFormat,
               D3DPOOL_MANAGED, @(pResource.Emu.CubeTexture8));
 
             if (FAILED(hRet)) then
@@ -5343,11 +5308,11 @@ begin
           begin
 {$IFDEF DEBUG}
             DbgPrintf('CreateTexture(%d,%d,%d, 0,%d, D3DPOOL_MANAGED, 0x%.08X)',
-              [dwWidth, dwHeight, dwMipMapLevels, Ord(Format), @(pResource.Emu.Texture8)]);
+              [dwWidth, dwHeight, dwMipMapLevels, Ord(PCFormat), @(pResource.Emu.Texture8)]);
 {$ENDIF}
 
             hRet := IDirect3DDevice8_CreateTexture(g_pD3DDevice8,
-              dwWidth, dwHeight, dwMipMapLevels, 0, Format,
+              dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
               D3DPOOL_MANAGED, @(pResource.Emu.Texture8)
               );
 
@@ -9677,7 +9642,11 @@ begin
   LogEnd();
 {$ENDIF}
 
-  Result := IDirect3DVertexBuffer8(pThis).GetDesc(pDesc^);
+  Result := IDirect3DVertexBuffer8(pThis).GetDesc({out}pDesc^);
+
+  // Dxbx addition : Convert Format (PC->Xbox, in-place)
+  X_D3DFORMAT(pDesc.Format) := EmuPC2XB_D3DFormat(pDesc.Format);
+//  pDesc.Type_ := X_D3DRESOURCETYPE(pDesc._Type);
 
   EmuSwapFS(fsXbox);
 end;
