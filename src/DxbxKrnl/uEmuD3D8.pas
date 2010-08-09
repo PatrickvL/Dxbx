@@ -1150,15 +1150,19 @@ function EmuThreadHandleVBlank(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:Dxbx Translator:PatrickvL  Done:100
 var
   UpdateTimer: DxbxTimer;
+  pCertificate: PXBE_CERTIFICATE;
 begin
 {$IFDEF DEBUG}
   DbgPrintf('EmuD3D8 : VBlank handling thread is running.');
 {$ENDIF}
 
+  pCertificate := PXBE_CERTIFICATE(DxbxKrnl_XbeHeader.dwCertificateAddr);
+
+
   // since callbacks come from here
   EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
-  UpdateTimer.InitFPS(g_XBVideo.GetVBlankHertz);
+  UpdateTimer.InitFPS(pCertificate.dwGameRegion);
 
   while True do // TODO -oDxbx: When do we break out of this while loop ?
   begin
@@ -1188,7 +1192,7 @@ begin
 
       // TODO -oCxbx: Recalculate this for PAL version if necessary.
       // Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
-      g_SwapData.TimeBetweenSwapVBlanks := 0; //MillisecondsPerSecond div g_XBVideo.GetVBlankHertz;
+      g_SwapData.TimeBetweenSwapVBlanks := MillisecondsPerSecond div pCertificate.dwGameRegion;
     end;
   end; // while True
 end; // EmuThreadHandleVBlank
