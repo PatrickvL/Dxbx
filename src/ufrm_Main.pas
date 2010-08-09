@@ -40,7 +40,6 @@ uses
   uDxbxUtils,
   uFileSystem,
   uXbe,
-  uXbVideo,
   uEmuShared,
   uDxbxXml,
   uData,
@@ -177,8 +176,6 @@ type
   private
     MyXBEList: TStringList;
     ApplicationDir: string;
-    FXBVideo : XBVideo;
-
     EnabledItems: array of TXbeInfo;
     procedure UpdateFilter;
     function InsertXBEInfo(const aXbeInfo: TXBEInfo{; const aPreventDuplicates: Boolean}): Boolean;
@@ -1525,12 +1522,6 @@ begin
       PChar(m_szAsciiTitle),
       m_XBE.m_Certificate.dwTitleId,
       GameRegionToString(m_XBE.m_Certificate.dwGameRegion)]);
-
-
-    // Publish the XBVideo settings via shared memory :
-    g_EmuShared.SetXBVideo(@FXBVideo);
-    FXBVideo.SetVBlankHertz(GameDisplayFrequency(m_XBE.m_Certificate.dwGameRegion));
-    g_EmuShared.SetXBVideo(@FXBVideo);
 
     // Add library versions (TODO : Sort them alfabetically)
     for i := 0 to Integer(m_XBE.m_Header.dwLibraryVersions) - 1 do
