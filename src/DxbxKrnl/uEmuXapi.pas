@@ -240,7 +240,7 @@ uses
   // Dxbx
   uEmuKrnlPs; // g_pfnThreadNotification
 
-const lfUnit = lfCxbx or lfKernel;
+const lfUnit = lfCxbx or lfXapi;
 
 function LogBegin(const aSymbolName: string): PLogStack;
 begin

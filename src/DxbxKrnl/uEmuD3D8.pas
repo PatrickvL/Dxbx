@@ -74,7 +74,7 @@ uses
   uEmuXapi, // PXINPUT_FEEDBACK
   uEmuXG;
 
-function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boolean;
+function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0; iFace: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X) - 1): Boolean;
 function DxbxFVFToVertexSizeInBytes(dwVertexShader: DWORD; bIncludeTextures: Boolean = True): uint;
 function DxbxPresent(pSourceRect: PRECT; pDestRect: PRECT; pDummy1: HWND; pDummy2: PVOID): UINT;
 
@@ -248,6 +248,8 @@ uses
   uDxbxKrnl
   , uXboxLibraryUtils; // Should not be here, but needed for DxbxKrnlRegisterThread
 
+const lfUnit = lfCxbx or lfGraphics;
+
 procedure DxbxResetGlobals;
 begin
   g_pD3DDevice8 := NULL;
@@ -318,7 +320,7 @@ end;
 // Dxbx Note : As suggested by StrikerX3, we should call this for any resource
 // that's locked while it shouldn't be anymore; So call this before Lock() itself,
 // before SetTexture(), SetStreamSource(), SetIndices() and maybe other calls too.
-function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0): Boolean;
+function DxbxUnlockD3DResource(pResource: PX_D3DResource; uiLevel: int = 0; iFace: int = Ord(D3DCUBEMAP_FACE_POSITIVE_X) - 1): Boolean;
 begin
   Result := Assigned(pResource) and Assigned(pResource.Emu.Resource8);
   if not Result then
@@ -326,7 +328,6 @@ begin
 
   if IsSpecialResource(pResource.Data) then
     Exit;
-
 
   case (IDirect3DResource8(pResource.Emu.Resource8).GetType()) of
     D3DRTYPE_SURFACE:
@@ -345,12 +346,21 @@ begin
 
     D3DRTYPE_CUBETEXTURE:
     begin
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) = S_OK;
-      repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) = S_OK;
+      if iFace >= Ord(D3DCUBEMAP_FACE_POSITIVE_X) then
+      begin
+        // Only one face given, so unlock only that one :
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(TD3DCubeMapFaces(iFace), uiLevel) = S_OK;
+      end
+      else
+      begin
+        // No face given, so unlock all faces (just to be sure) :
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) = S_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) = S_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) = S_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) = S_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) = S_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) = S_OK;
+      end;
     end;
 
     D3DRTYPE_VERTEXBUFFER:
@@ -3688,9 +3698,6 @@ begin
       PCFormat, PCPool, @(ppTexture^.Emu.Texture8)
     );
 
-    DbgPrintf('Texture created @ 0x%08X [hRet = 0x%08X]: %dx%d, %d levels, usage = 0x%08X, format = 0x%08X', [
-            ppTexture^.Emu.Texture8, Result, Width, Height, Levels, Ord(PCUsage), Ord(PCFormat)]);
-
     if (FAILED(Result)) then
     begin
       EmuWarning('CreateTexture Failed!');
@@ -3698,14 +3705,29 @@ begin
     end
     else
     begin
-      // TODO -oDxbx: Check if LockRect actually succeeds :
-      IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(0, {out}LockedRect, NULL, 0);
-      ppTexture^.Data := DWORD(LockedRect.pBits);
-      ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
+      // Dxbx addition : Request how many where created (as Levels could be 0) :
+      Levels := IDirect3DTexture8(ppTexture^.Emu.Texture8).GetLevelCount();
+      DbgPrintf('Texture created @ 0x%08X [hRet = 0x%08X]: %dx%d, %d levels, usage = 0x%08X, format = 0x%08X', [
+            ppTexture^.Emu.Texture8, Result, Width, Height, Levels, Ord(PCUsage), Ord(PCFormat)]);
 
-      g_DataToTexture.insert(ppTexture^.Data, ppTexture^);
+      // Dxbx addition : Register all levels :
+      while Levels > 0 do
+      begin
+        Dec(Levels);
+        // Dxbx addition : Check if LockRect actually succeeds :
+        if IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(Levels, {out}LockedRect, NULL, 0) = S_OK then
+        begin
+          if Levels = 0 then
+          begin
+            ppTexture^.Data := DWORD(LockedRect.pBits);
+            ppTexture^.Format := Ord(Format) shl X_D3DFORMAT_FORMAT_SHIFT;
+          end;
 
-      IDirect3DTexture8(ppTexture^.Emu.Texture8).UnlockRect(0);
+          g_DataToTexture.insert(DWORD(LockedRect.pBits), ppTexture^);
+
+          IDirect3DTexture8(ppTexture^.Emu.Texture8).UnlockRect(Levels);
+        end;
+      end;
     end;
 
 {$IFDEF DEBUG}
@@ -5585,20 +5607,20 @@ procedure XTL_EmuLock2DSurface
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  DbgPrintf('EmuD3D8 : EmuLock2DSurface' +
-      #13#10'(' +
-      #13#10'   pPixelContainer           : 0x%.08X' +
-      #13#10'   FaceType                  : 0x%.08X' +
-      #13#10'   Level                     : 0x%.08X' +
-      #13#10'   pLockedRect               : 0x%.08X' +
-      #13#10'   pRect                     : 0x%.08X' +
-      #13#10'   Flags                     : 0x%.08X' +
-      #13#10');',
-      [pPixelContainer, Ord(FaceType), Level, pLockedRect, pRect, Flags]);
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuD3D8 : EmuLock2DSurface').
+      _(pPixelContainer, 'pPixelContainer').
+      _(Ord(FaceType), 'FaceType').
+      _(Level, 'Level').
+      _(pLockedRect, 'pLockedRect').
+      _(pRect, 'pRect').
+      _(Flags, 'Flags').
+    LogEnd();
 
   EmuVerifyResourceIsRegistered(pPixelContainer);
+
+  // Dxbx addition : Remove old lock(s) :
+  IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).UnlockRect(FaceType, Level);
 
   {ignore hRet:=}IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).LockRect(FaceType, Level, {out}pLockedRect^, pRect, Flags);
 
@@ -5998,6 +6020,7 @@ begin
     else
 {$ENDIF}
     begin
+      // Remove old lock(s)
       IDirect3DTexture8(pTexture8).UnlockRect(Level);
 
       hRet := IDirect3DTexture8(pTexture8).LockRect(Level, {out}pLockedRect^, pRect, NewFlags);
@@ -6147,6 +6170,9 @@ begin
 {$ENDIF}
 
   EmuVerifyResourceIsRegistered(pThis);
+
+  // Dxbx addition : Remove old lock(s) :
+  IDirect3DCubeTexture8(pThis.Emu.CubeTexture8).UnlockRect(FaceType, Level);
 
   Result := IDirect3DCubeTexture8(pThis.Emu.CubeTexture8).LockRect(FaceType, Level, {out}pLockedBox^, pRect, Flags);
 
@@ -6559,8 +6585,10 @@ begin
         end;
 
         IDirect3DSurface8(pBackBuffer).UnlockRect();
-        IDirect3DSurface8(pBackBuffer)._Release;
       end;
+
+      if (hRet = S_OK) then
+        IDirect3DSurface8(pBackBuffer)._Release;
 
       // Update overlay if present was not called since the last call to
       // EmuIDirect3DDevice8_UpdateOverlay.

@@ -90,6 +90,7 @@ const
     lfGraphics      = $00020000; //
     lfThreading     = $00040000; //
     lfXOnline       = $00080000;
+    lfXapi          = $00100000;
 
 // Note : Some units declare (and use) lfUnit, a variable that best describes the logging in these units.
 
@@ -129,6 +130,8 @@ type
     function _(const aValue: BOOL; const aName: string = ''): PLogStack; overload;
     function _(const aValue: PVOID; const aName: string = ''): PLogStack; overload;
     function _(const aValue: LPCSTR; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: PPOINT; const aName: string = ''): PLogStack; overload;
+    function _(const aValue: PRECT; const aName: string = ''): PLogStack; overload;
     function _(const aValue: LARGE_INTEGER; const aName: string = ''): PLogStack; overload;
 {$IFDEF DXBX_DLL}
     function _(const aValue: PLARGE_INTEGER; const aName: string = ''): PLogStack; overload;
@@ -874,6 +877,24 @@ function RLogStack._(const aValue: LPCSTR; const aName: string = ''): PLogStack;
 begin
   Result := SetName(aName, 'LPCSTR');
   SetValue(UIntPtr(aValue), '"' + string(PAnsiCharMaxLenToString(aValue, LOG_MAX_STRING_LENGTH)) + '"');
+end;
+
+function RLogStack._(const aValue: PPOINT; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'PPOINT');
+  if Assigned(aValue) then
+    SetValue(UIntPtr(aValue), Format('%d,%d', [aValue.X, aValue.Y]))
+  else
+    SetValue(UIntPtr(aValue));
+end;
+
+function RLogStack._(const aValue: PRECT; const aName: string = ''): PLogStack;
+begin
+  Result := SetName(aName, 'PRECT');
+  if Assigned(aValue) then
+    SetValue(UIntPtr(aValue), Format('%d,%d %d,%d', [aValue.Left, aValue.Top, aValue.Right, aValue.Bottom]))
+  else
+    SetValue(UIntPtr(aValue));
 end;
 
 {$IFDEF DXBX_DLL}
