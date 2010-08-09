@@ -1819,6 +1819,9 @@ begin
     if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
     for level := 0 to dwMipMapLevels - 1 do
     begin
+      // Dxbx addition : Remove old lock(s) :
+      DxbxUnlockD3DResource(pPixelContainer, level, face);
+
       // copy over data (deswizzle if necessary)
       if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
         hRet := IDirect3DSurface8(pPixelContainer.Emu.Surface8).LockRect(LockedRect, NULL, 0)
@@ -1831,17 +1834,17 @@ begin
       end;
 
       // Dxbx addition : Mirror the behaviour in EmuUnswizzleActiveTexture :
-      if (FAILED(hRet)) then
+      if hRet <> S_OK then
         continue;
 
       pSrc := PBYTE(pPixelContainer.Data);
+      pDest := LockedRect.pBits;
 
       if (IsSpecialResource(pPixelContainer.Data) and ((pPixelContainer.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0)) then
       begin
         EmuWarning('Attempt to registered to another resource''s data (eww!)');
 
         // TODO -oCXBX: handle this horrible situation
-        pDest := LockedRect.pBits;
         if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
         for v := 0 to dwMipHeight - 1 do
         begin
@@ -1868,7 +1871,7 @@ begin
               //
               // create texture resource
               //
-              pPixelData := LockedRect.pBits;
+              pPixelData := pDest;
               dwDataSize := dwMipWidth * dwMipHeight * 4;
               dwPaletteSize := 256 * 4; // Note: This is not allways true, it can be 256- 128- 64- or 32*4
 
@@ -1879,7 +1882,7 @@ begin
               // First we need to unswizzle the texture data
               EmuXGUnswizzleRect
               (
-                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
+                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pPixelData,
                 LockedRect.Pitch, iRect, iPoint, dwBPP
               );
 
@@ -1920,7 +1923,7 @@ begin
             begin
               EmuXGUnswizzleRect
               (
-                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
+                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, pDest,
                 LockedRect.Pitch, iRect, iPoint, dwBPP
               );
             end;
@@ -1929,14 +1932,12 @@ begin
         else if (bCompressed) then
         begin
           // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
-          memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize shr (level * 2));
+          memcpy(pDest, pSrc + dwCompressedOffset, dwCompressedSize shr (level * 2));
 
           Inc(dwCompressedOffset, (dwCompressedSize shr (level * 2)));
         end
         else
         begin
-          pDest := LockedRect.pBits;
-
           if (DWORD(LockedRect.Pitch) = dwMipPitch) and (dwMipPitch = dwMipWidth * dwBPP) then
           begin
             // TODO -oDxbx: This crashes on "minimario2ddemo", even though all arguments seem alright,
@@ -1958,17 +1959,9 @@ begin
         end;
       end;
 
-      if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
-        IDirect3DSurface8(pPixelContainer.Emu.Surface8).UnlockRect()
-      else
-      begin
-        if (bCubemap) then
-          IDirect3DCubeTexture8(pPixelContainer.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACES(face), 0)
-        else
-          IDirect3DTexture8(pPixelContainer.Emu.Texture8).UnlockRect(level);
-      end;
+      DxbxUnlockD3DResource(pPixelContainer, level, face);
 
-      Inc(dwMipOffs, dwMipWidth * dwMipHeight * dwBPP); // TODO -oDxbx : Should we increase with dwMipPitch * dwMipHeight instead?
+      Inc(dwMipOffs, dwMipPitch * dwMipHeight);
 
       dwMipWidth := dwMipWidth div 2;
       dwMipHeight := dwMipHeight div 2;

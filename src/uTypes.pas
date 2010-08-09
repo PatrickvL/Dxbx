@@ -155,6 +155,8 @@ type
   wchar_t = JwaWinType.wchar_t; // = WideChar;
   FLOAT = JwaWinType.FLOAT;
 
+  LPPOINT = PPoint;
+
   pwchar_t = PWideChar;
 
   PFILE = ^THandle;

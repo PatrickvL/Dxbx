@@ -136,10 +136,6 @@ begin
     if (not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
       Exit;
 
-    // remove lock
-    IDirect3DTexture8(pPixelContainer.Emu.Texture8).UnlockRect(0);
-    pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
-
     // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
 
     //
@@ -154,6 +150,9 @@ begin
       if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
       for v := 0 to dwLevelCount - 1 do
       begin
+        // Dxbx addition : Remove lock for each level separately :
+        IDirect3DTexture8(pTexture).UnlockRect(v);
+
         hRet := IDirect3DTexture8(pTexture).GetLevelDesc(v, {out}SurfaceDesc);
 
         if (FAILED(hRet)) then
@@ -181,7 +180,7 @@ begin
           iRect := Classes.Rect(0,0,0,0);
           iPoint := Classes.Point(0,0);
 
-          pTemp := malloc(dwHeight*dwPitch);
+          pTemp := malloc(dwHeight * dwPitch);
 
           EmuXGUnswizzleRect
           (
@@ -189,9 +188,9 @@ begin
               pTemp, dwPitch, iRect, iPoint, dwBPP
           );
 
-          memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
+          memcpy(LockedRect.pBits, pTemp, dwPitch * dwHeight);
 
-          IDirect3DTexture8(pTexture).UnlockRect(0);
+          IDirect3DTexture8(pTexture).UnlockRect(v); // Dxbx fix : Cxbx unlocks level 0 each time!
 
           free(pTemp);
         end;
@@ -201,6 +200,9 @@ begin
       DbgPrintf('Active texture was unswizzled');
 {$ENDIF}
     end;
+
+    // Dxbx note : Only set this _after_ processing all levels :
+    pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
   end;
 end;
 

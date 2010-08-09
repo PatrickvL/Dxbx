@@ -63,6 +63,8 @@ procedure EmuXGUnswizzleRect
 
 implementation
 
+const lfUnit = lfCxbx or lfXapi;
+
 // From EmuXG.cpp :
 
 function XTL_EmuXGIsSwizzledFormat
@@ -73,11 +75,10 @@ function XTL_EmuXGIsSwizzledFormat
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF _DEBUG_TRACE}
-  LogBegin('EmuXapi : EmuXGIsSwizzledFormat').
-    _(Format, 'Format').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXapi : EmuXGIsSwizzledFormat').
+      _(Format, 'Format').
+    LogEnd();
 
   Result := False;
 
@@ -105,22 +106,21 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXapi : EmuXGSwizzleRect').
-    _(pSource, 'pSource').
-    _(Pitch, 'Pitch').
-    _(pRect, 'pRect').
-    _(pDest, 'pDest').
-    _(Width, 'Width').
-    _(Height, 'Height').
-    _(pPoint, 'pPoint').
-    _(BytesPerPixel, 'BytesPerPixel').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXapi : EmuXGSwizzleRect').
+      _(pSource, 'pSource').
+      _(Pitch, 'Pitch').
+      _(pRect, 'pRect').
+      _(pDest, 'pDest').
+      _(Width, 'Width').
+      _(Height, 'Height').
+      _(pPoint, 'pPoint').
+      _(BytesPerPixel, 'BytesPerPixel').
+    LogEnd();
 
   if (pRect = NULL) and (pPoint = NULL) and (Pitch = 0) then
   begin
-    memcpy(pDest, pSource, Width*Height*BytesPerPixel);
+    memcpy(pDest, pSource, Width * Height * BytesPerPixel);
   end
   else
   begin
@@ -178,26 +178,25 @@ var
 begin
   EmuSwapFS(fsWindows);
 
-{$IFDEF DEBUG}
-  LogBegin('EmuXapi : EmuXGSwizzleBox').
-    _(pSource, 'pSource').
-    _(RowPitch, 'RowPitch').
-    _(SlicePitch, 'SlicePitch').
-    _(pBox, 'pBox').
-    _(pDest, 'pDest').
-    _(Width, 'Width').
-    _(Height, 'Height').
-    _(Depth, 'Depth').
-    _(pPoint, 'pPoint').
-    _(BytesPerPixel, 'BytesPerPixel').
-  LogEnd();
-{$ENDIF}
+  if MayLog(lfUnit) then
+    LogBegin('EmuXapi : EmuXGSwizzleBox').
+      _(pSource, 'pSource').
+      _(RowPitch, 'RowPitch').
+      _(SlicePitch, 'SlicePitch').
+      _(pBox, 'pBox').
+      _(pDest, 'pDest').
+      _(Width, 'Width').
+      _(Height, 'Height').
+      _(Depth, 'Depth').
+      _(pPoint, 'pPoint').
+      _(BytesPerPixel, 'BytesPerPixel').
+    LogEnd();
 
-  if (pDest <> LPVOID($80000000)) then
+  if (DWORD(pDest) < $80000000) then
   begin
     if (pBox = NULL) and (pPoint = NULL) and (RowPitch = 0) and (SlicePitch = 0) then
     begin
-      memcpy(pDest, pSource, Width*Height*Depth*BytesPerPixel);
+      memcpy(pDest, pSource, Width * Height * Depth * BytesPerPixel);
     end
     else
     begin
@@ -404,11 +403,12 @@ function XTL_EmuXGWriteSurfaceOrTextureToXPR
 begin
   EmuSwapFS(fsWindows);
 
-  LogBegin('EmuXapi : EmuXGWriteSurfaceOrTextureToXPR').
-    _(pResource, 'pResource').
-    _(cPath, 'cPath').
-    _(bWriteSurfaceAsTexture, 'bWriteSurfaceAsTexture').
-  LogEnd();
+  if MayLog(lfUnit) then
+    LogBegin('EmuXapi : EmuXGWriteSurfaceOrTextureToXPR').
+      _(pResource, 'pResource').
+      _(cPath, 'cPath').
+      _(bWriteSurfaceAsTexture, 'bWriteSurfaceAsTexture').
+    LogEnd();
 
   // TODO -oCXBX: If necessary, either reverse the .xbx and .xpr file formats
   // and write the surface/texture to a file, or output a generic .xbx
