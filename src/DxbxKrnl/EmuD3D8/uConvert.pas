@@ -57,6 +57,7 @@ function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
 function EmuXB2PC_D3DTEXTUREOP(Value: X_D3DTEXTUREOP): DWORD;
 function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
 function EmuXB2PC_D3DWRAP(Value: DWORD): DWORD;
+function EmuXB2PC_D3DCULL(Value: DWORD): D3DCULL;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
@@ -650,7 +651,10 @@ end;
 function EmuXB2PC_D3DFILLMODE(Value: X_D3DFILLMODE): D3DFILLMODE; inline;
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100
 begin
-  Result := D3DFILLMODE((Value and $F) + 1);
+  if ((Value and $FF00) = $1B00) then
+    Result := D3DFILLMODE((Value and $F) + 1)
+  else
+    Result := D3DFILL_SOLID;
 end;
 
 // convert from xbox to pc shade modes
@@ -785,6 +789,24 @@ begin
   if (Value and X_D3DWRAP_V) > 0 then Result := Result or D3DWRAP_V;
   if (Value and X_D3DWRAP_W) > 0 then Result := Result or D3DWRAP_W;
 end;
+
+function EmuXB2PC_D3DCULL(Value: DWORD): D3DCULL;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  // TODO -oCXBX: XDK-Specific Tables? So far they are the same
+  case (Value) of
+    X_D3DCULL_NONE: // 0
+      Result := D3DCULL_NONE;
+    X_D3DCULL_CW: // $900
+      Result := D3DCULL_CW;
+    X_D3DCULL_CCW: // $901
+      Result := D3DCULL_CCW;
+  else
+    DxbxKrnlCleanup('Unknown Cullmode (%d)', [Value]);
+    Result := D3DCULL(Value);
+  end;
+end;
+
 
 // convert from vertex count to primitive count (Xbox)
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
