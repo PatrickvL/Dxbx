@@ -56,6 +56,7 @@ function EmuXB2PC_D3DVERTEXBLENDFLAGS(Value: X_D3DVERTEXBLENDFLAGS): D3DVERTEXBL
 function EmuXB2PC_D3DCOLORWRITEENABLE(Value: X_D3DCOLORWRITEENABLE): DWORD;
 function EmuXB2PC_D3DTEXTUREOP(Value: X_D3DTEXTUREOP): DWORD;
 function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
+function EmuXB2PC_D3DWRAP(Value: DWORD): DWORD;
 
 function EmuD3DVertex2PrimitiveCount(PrimitiveType: X_D3DPRIMITIVETYPE; VertexCount: int): INT; inline;
 function EmuD3DPrimitive2VertexCount(PrimitiveType: X_D3DPRIMITIVETYPE; PrimitiveCount: int): int; inline;
@@ -760,6 +761,7 @@ begin
 end;
 
 function EmuXB2PC_D3DCLEAR_FLAGS(Value: DWORD): DWORD;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
 begin
   Result := 0;
 
@@ -773,6 +775,15 @@ begin
     Result := Result or D3DCLEAR_ZBUFFER;
   if (Value and X_D3DCLEAR_STENCIL) > 0 then
     Result := Result or D3DCLEAR_STENCIL;
+end;
+
+function EmuXB2PC_D3DWRAP(Value: DWORD): DWORD;
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+begin
+  Result := 0;
+  if (Value and X_D3DWRAP_U) > 0 then Result := Result or D3DWRAP_U;
+  if (Value and X_D3DWRAP_V) > 0 then Result := Result or D3DWRAP_V;
+  if (Value and X_D3DWRAP_W) > 0 then Result := Result or D3DWRAP_W;
 end;
 
 // convert from vertex count to primitive count (Xbox)

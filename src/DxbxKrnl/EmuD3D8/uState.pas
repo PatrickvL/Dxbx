@@ -111,32 +111,28 @@ begin
       IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_RANGEFOGENABLE, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_RANGEFOGENABLE]);
 
     if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP0] <> X_D3DRS_UNK) then
-    begin
-      dwConv := 0;
-
-      if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP0] and X_D3DWRAP_U) > 0 then dwConv := dwConv or D3DWRAP_U;
-      if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP0] and X_D3DWRAP_V) > 0 then dwConv := dwConv or D3DWRAP_V;
-      if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP0] and X_D3DWRAP_W) > 0 then dwConv := dwConv or D3DWRAP_W;
-
-      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_WRAP0, dwConv);
-    end;
+      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_WRAP0, EmuXB2PC_D3DWRAP(XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP0]));
 
     if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP1] <> X_D3DRS_UNK) then
-    begin
-      dwConv := 0;
+      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_WRAP1, EmuXB2PC_D3DWRAP(XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP1]));
 
-      if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP1] and X_D3DWRAP_U) > 0 then dwConv := dwConv or D3DWRAP_U;
-      if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP1] and X_D3DWRAP_V) > 0 then dwConv := dwConv or D3DWRAP_V;
-      if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP1] and X_D3DWRAP_W) > 0 then dwConv := dwConv or D3DWRAP_W;
+    // Dxbx addition :
+    if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP2] <> X_D3DRS_UNK) then
+      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_WRAP2, EmuXB2PC_D3DWRAP(XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP2]));
 
-      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_WRAP1, dwConv);
-    end;
+    // Dxbx addition :
+    if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP3] <> X_D3DRS_UNK) then
+      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_WRAP3, EmuXB2PC_D3DWRAP(XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_WRAP3]));
 
     if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_LIGHTING] <> X_D3DRS_UNK) then
       IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_LIGHTING, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_LIGHTING]);
 
     if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_SPECULARENABLE] <> X_D3DRS_UNK) then
       IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_SPECULARENABLE, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_SPECULARENABLE]);
+
+    // Dxbx addition :
+    if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_LOCALVIEWER] <> X_D3DRS_UNK) then
+      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_LOCALVIEWER, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_LOCALVIEWER]);
 
     if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_COLORVERTEX] <> X_D3DRS_UNK) then
       IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_COLORVERTEX, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_COLORVERTEX]);
@@ -176,6 +172,10 @@ begin
 
     if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_POINTSIZE_MAX] <> X_D3DRS_UNK) then
       IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_POINTSIZE_MAX, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_POINTSIZE_MAX]);
+
+    // Dxbx addition :
+    if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_PATCHEDGESTYLE] <> X_D3DRS_UNK) then
+      IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_PATCHEDGESTYLE, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_PATCHEDGESTYLE]);
 
     if (XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_PATCHSEGMENTS] <> X_D3DRS_UNK) then
       IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_PATCHSEGMENTS, XTL_EmuD3DDeferredRenderState[X_D3DRS_DEFERRED_PATCHSEGMENTS]);
