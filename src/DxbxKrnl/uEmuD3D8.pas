@@ -9078,7 +9078,7 @@ begin
 
     Inc(dwRet, PAGE_SIZE - dwRet mod PAGE_SIZE);
 
-    g_AlignCache.insert(dwRet, Result);
+    g_AlignCache.insert({uiKey=}dwRet, {pResource=}Result);
 
     Result := PVOID(dwRet);
   end;

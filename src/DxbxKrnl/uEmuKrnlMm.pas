@@ -155,7 +155,7 @@ begin
   begin
     dwRet := DWORD(pRet);
     Inc(dwRet, PAGE_SIZE - (dwRet mod PAGE_SIZE));
-    g_AlignCache.insert(dwRet, pRet);
+    g_AlignCache.insert({uiKey=}dwRet, {pResource=}pRet);
     pRet := PVOID(dwRet);
   end;
 
@@ -211,7 +211,7 @@ begin
   begin
     dwRet := DWORD(pRet);
     Inc(dwRet, PAGE_SIZE - (dwRet mod PAGE_SIZE));
-    g_AlignCache.insert(dwRet, pRet);
+    g_AlignCache.insert({uiKey=}dwRet, {pResource=}pRet);
     pRet := PVOID(dwRet);
   end;
 
@@ -338,13 +338,9 @@ begin
       [BaseAddress]);
 {$ENDIF}
 
-  OrigBaseAddress := BaseAddress;
-
-  if(g_AlignCache.exists(BaseAddress)) then
-  begin
-    OrigBaseAddress := g_AlignCache.get(BaseAddress);
-    g_AlignCache.remove(BaseAddress);
-  end;
+  OrigBaseAddress := g_AlignCache.remove({uiKey=}uint32(BaseAddress));
+  if OrigBaseAddress = nil then
+    OrigBaseAddress := BaseAddress;
 
   if(OrigBaseAddress <> @xLaunchDataPage) then
   begin
@@ -356,6 +352,11 @@ begin
     DbgPrintf('Ignored MmFreeContiguousMemory(&xLaunchDataPage)');
 {$ENDIF}
   end;
+
+  // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
+  // Tracing in assembly shows the crash takes place quite a while further, so it's probably
+  // not related to this call per-se. The strangest thing is, that if we let the debugger step
+  // all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
 
   EmuSwapFS(fsXbox);
 end;

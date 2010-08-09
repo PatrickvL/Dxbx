@@ -59,7 +59,7 @@ type ResourceTracker = object(Mutex)
     procedure remove(pResource: Pvoid); overload;
 
     // remove a ptr using an explicit key
-    procedure remove(uiKey: uint32); overload;
+    function remove(uiKey: uint32): Pvoid; overload;
 
     // check for existance of ptr using the pResource pointer as key
     function exists(pResource: Pvoid): _bool; overload;
@@ -172,7 +172,7 @@ begin
   remove(uint32(pResource));
 end;
 
-procedure ResourceTracker.remove(uiKey: uint32);
+function ResourceTracker.remove(uiKey: uint32): Pvoid;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
   pre: PRTNode;
@@ -198,6 +198,7 @@ begin
           m_tail := nil;
       end;
 
+      Result := cur.pResource;
       Dispose(cur);
 
       self.Unlock();
@@ -209,6 +210,8 @@ begin
     cur := cur.pNext;
   end;
   Self.Unlock();
+
+  Result := nil;
 end;
 
 function ResourceTracker.exists(pResource: Pvoid): _bool;
