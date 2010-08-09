@@ -4437,6 +4437,10 @@ begin
 
     // default values
     ZeroMemory(@g_IVBTable[g_IVBTblOffs], sizeof(_D3DIVB)*128);
+
+    // Make sure we also copy the last vertex to the next, at resize time :
+    if g_IVBTblOffs > 0 then
+      g_IVBTable[g_IVBTblOffs] := g_IVBTable[g_IVBTblOffs - 1];
   end;
 
   case Cardinal(Register_) of
