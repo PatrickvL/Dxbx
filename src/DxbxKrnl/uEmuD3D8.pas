@@ -6928,17 +6928,14 @@ begin
     [Value]);
 {$ENDIF}
 
-  if ((Value and $FF00) = $1B00) then
-  begin
-    case g_iWireframe of
-      0: dwFillMode := EmuXB2PC_D3DFILLMODE(Value);
-      1: dwFillMode := D3DFILL_WIREFRAME;
-    else dwFillMode := D3DFILL_POINT;
-    end;
-
-    DbgPrintf('D3DRS_FILLMODE := 0x%.08X', [dwFillMode]); // Dxbx addition
-    IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_FILLMODE, dwFillMode);
+  case g_iWireframe of
+    0: dwFillMode := EmuXB2PC_D3DFILLMODE(Value);
+    1: dwFillMode := D3DFILL_WIREFRAME;
+  else dwFillMode := D3DFILL_POINT;
   end;
+
+  DbgPrintf('D3DRS_FILLMODE := 0x%.08X', [dwFillMode]); // Dxbx addition
+  IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_FILLMODE, dwFillMode);
 
   EmuSwapFS(fsXbox);
 end;
@@ -7255,19 +7252,10 @@ begin
 {$ENDIF}
 
   // convert from Xbox D3D to PC D3D enumeration
-  // TODO -oCXBX: XDK-Specific Tables? So far they are the same
-  case (Value) of
-    X_D3DCULL_NONE: // 0
-      Value := D3DCULL_NONE;
-    X_D3DCULL_CW: // $900
-      Value := D3DCULL_CW;
-    X_D3DCULL_CCW: // $901
-      Value := D3DCULL_CCW;
-  else
-    DxbxKrnlCleanup('EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)', [Value]);
-  end;
+  Value := EmuXB2PC_D3DCULL(Value);
 
   DbgPrintf('D3DRS_CULLMODE := 0x%.08X', [Value]); // Dxbx addition
+
   IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_CULLMODE, Value);
 
   EmuSwapFS(fsXbox);
