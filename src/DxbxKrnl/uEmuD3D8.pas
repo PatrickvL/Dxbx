@@ -1468,6 +1468,8 @@ begin
 //        if Assigned(g_pCachedZStencilSurface.Emu.Surface8) then
 //          PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface := g_pCachedZStencilSurface;
 
+        // Dxbx addition : HACK! I [PatrickvL] don't know how to reliably to test if a ZBuffer
+        // exists, so for now, I set this flag in XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable :
         DxbxHack_HadZEnable := False;
 
         IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer
@@ -3455,6 +3457,7 @@ begin
   // redirect to windows d3d
   Result := S_OK;
 
+  g_bFakePixelShaderLoaded := FALSE; // Dxbx fix : Always reset this
   // Fake Programmable Pipeline
   if (Handle = X_PIXELSHADER_FAKE_HANDLE) then
   begin
@@ -3505,7 +3508,6 @@ begin
   // Fixed Pipeline, or Recompiled Programmable Pipeline
   else if (Handle = HNULL) then
   begin
-    g_bFakePixelShaderLoaded := FALSE;
     IDirect3DDevice8(g_pD3DDevice8).SetPixelShader(Handle);
   end;
 
@@ -7080,7 +7082,7 @@ procedure XTL_EmuIDirect3DDevice8_SetRenderState_Simple_Internal(
   ); {NOPATCH}
 // Branch:Dxbx  Translator:Shadow_Tj  Done:100
 begin
-  case _D3DRENDERSTATETYPE(State) of
+  case State of
     D3DRS_COLORWRITEENABLE:
       begin
         Value := EmuXB2PC_D3DCOLORWRITEENABLE(Value);

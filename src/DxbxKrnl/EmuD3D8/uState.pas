@@ -376,13 +376,13 @@ begin
     IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
 
     // programmable pipeline
-    //*
+    (* Dxbx note : If the following is enabled, Sokoban loses it's textures, so disable it for now :
     for v:=0 to X_D3DTS_STAGECOUNT-1 do
     begin
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
       IDirect3DDevice8(g_pD3DDevice8).SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
     end;
-    //*/
+    *)
 
     // fixed pipeline
     (* Cxbx has this disabled :
