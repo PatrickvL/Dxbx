@@ -459,10 +459,11 @@ end; // GetDwordVal
 function GameDisplayFrequency(const aGameRegion: Cardinal): int;
 begin
   Result := 60;
-  if (aGameRegion and XBEIMAGE_GAME_REGION_RESTOFWORLD) > 0 then
+  if (aGameRegion and XBEIMAGE_GAME_REGION_ALL) = XBEIMAGE_GAME_REGION_RESTOFWORLD then
     Result := 50;
 end;
 
+//------------------------------------------------------------------------------
 
 function GameRegionToString(const aGameRegion: Cardinal): string;
 begin
