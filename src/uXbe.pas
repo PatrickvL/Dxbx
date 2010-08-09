@@ -342,7 +342,6 @@ var
   dwSizeOfOpenXDK: uint32;
 
 function GetDWordVal(aBuffer: MathPtr; i: Integer): DWord;
-function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
 
 function BetterTime(x_timeDate: uint32): string;
 
@@ -457,27 +456,11 @@ end; // GetDwordVal
 
 //------------------------------------------------------------------------------
 
-function GetWordVal(aBuffer: MathPtr; i: Integer): Word;
-begin
-  Result := (Ord(aBuffer[i + 0]) shl 0)
-          + (Ord(aBuffer[i + 1]) shl 8);
-end; // GetWordVal
-
 function GameDisplayFrequency(const aGameRegion: Cardinal): int;
 begin
-  if (aGameRegion and XBEIMAGE_GAME_REGION_ALL) = XBEIMAGE_GAME_REGION_ALL then
-    Result := 60
-  else
-  begin
-    if (aGameRegion and XBEIMAGE_GAME_REGION_JAPAN) > 0 then
-      Result := 60;
-
-    if (aGameRegion and XBEIMAGE_GAME_REGION_US_CANADA) > 0 then
-      Result := 60;
-
-    if (aGameRegion and XBEIMAGE_GAME_REGION_RESTOFWORLD) > 0 then
-      Result := 50;
-  end;
+  Result := 60;
+  if (aGameRegion and XBEIMAGE_GAME_REGION_RESTOFWORLD) > 0 then
+    Result := 50;
 end;
 
 

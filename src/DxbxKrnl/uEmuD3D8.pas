@@ -1190,7 +1190,6 @@ begin
       // TODO -oCxbx: This can't be accurate...
       g_SwapData.TimeUntilSwapVBlank := 0;
 
-      // TODO -oCxbx: Recalculate this for PAL version if necessary.
       // Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
       g_SwapData.TimeBetweenSwapVBlanks := MillisecondsPerSecond div pCertificate.dwGameRegion;
     end;
