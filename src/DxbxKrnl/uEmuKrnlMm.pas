@@ -34,9 +34,11 @@ uses
   // OpenXDK
   XboxKrnl,
   // Dxbx
+  uConsts,
   uTypes,
   uLog,
   uResourceTracker,
+  uDxbxKrnlUtils,
   uEmuAlloc,
   uEmuFS,
   uEmu,
@@ -215,11 +217,12 @@ begin
     pRet := PVOID(dwRet);
   end;
 
-{$IFDEF GAME_HACKS_ENABLED}
-  if Count < 4 then
-    g_HaloHack[Count] := uint32(pRet);
-  Inc(Count);
-{$ENDIF}
+  if IsRunning(TITLEID_Halo) then
+  begin
+    if Count < 4 then
+      g_HaloHack[Count] := uint32(pRet);
+    Inc(Count);
+  end;
 
 {$IFDEF DEBUG}
   DbgPrintf('EmuKrnl : MmAllocateContiguousEx returned 0x%.08X', [pRet]);
@@ -565,15 +568,16 @@ begin
       [BaseAddress, NumberOfBytes, NewProtect]);
 {$ENDIF}
 
-{$IFDEF GAME_HACKS_ENABLED}
-  // Halo Hack
-  if(BaseAddress = PVOID($80366000)) then
+  if IsRunning(TITLEID_Halo) then
   begin
-    BaseAddress := PVOID((g_HaloHack[0] + ($80366000 - $80061000)));
+    // Halo Hack
+    if(BaseAddress = PVOID($80366000)) then
+    begin
+      BaseAddress := PVOID((g_HaloHack[0] + ($80366000 - $80061000)));
 
-    DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
+      DbgPrintf('EmuKrnl : Halo Access Adjust 3 was applied! (0x%.08X)', [BaseAddress]);
+    end;
   end;
-{$ENDIF}
 
   if(not VirtualProtect(BaseAddress, NumberOfBytes, NewProtect and (not PAGE_WRITECOMBINE), @dwOldProtect)) then
     EmuWarning('VirtualProtect Failed!');

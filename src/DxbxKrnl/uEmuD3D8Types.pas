@@ -310,6 +310,9 @@ type _X_D3DPIXELSHADERDEF = record // <- blueshogun 10/1/07
     PSTextureModes: DWORD;                   // Texture addressing modes
     PSDotMapping: DWORD;                     // Input mapping for dot product modes
     PSInputTexture: DWORD;                   // Texture source for some texture modes
+
+    // These last three DWORDs are used to define how Direct3D8 pixel shader constants map to the constant
+    // registers in each combiner stage. They are used by the Direct3D run-time software but not by the hardware.
     PSC0Mapping: DWORD;                      // Mapping of c0 regs to D3D constants
     PSC1Mapping: DWORD;                      // Mapping of c1 regs to D3D constants
     PSFinalCombinerConstants: DWORD;         // Final combiner constant mapping

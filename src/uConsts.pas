@@ -160,6 +160,21 @@ const
 
   DxbxDefaultXbeVolumeLetter = 'C'; // For now, assume 'C' is the default volume for an Xbe
 
+  // TitleIDs - you can find these at http://www.xbox-games.org/ :
+  TITLEID_Azurik = $4D530007;
+  TITLEID_CrazyTaxi = $53450004;
+  TITLEID_DeadToRights_NTSC = $4E4D0005;
+  TITLEID_DeadToRights_PAL = $4541002C;
+  TITLEID_Halo = $4D530004;
+  TITLEID_Halo2 = $4D530064;
+  TITLEID_UnrealChampionship = $49470024;
+  TITLEID_UnrealChampionship2 = $4D570021;
+  TITLEID_UnrealII = $4947003C;
+
+  // Aliases, used in code
+  TITLEID_DeadToRights = TITLEID_DeadToRights_NTSC; // Caustic/Blueshogun probably used the NTSC version
+  TITLEID_Unreal = TITLEID_UnrealII; // ??
+
 implementation
 
 end.

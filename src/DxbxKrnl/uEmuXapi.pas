@@ -1685,6 +1685,7 @@ function XTL_EmuXLaunchNewImage
 var
   dwRet: DWORD;
   fp: PFILE;
+  start: Puint32;
 begin
   EmuSwapFS(fsWindows);
 
@@ -1725,14 +1726,14 @@ begin
 
   g_bXLaunchNewImageCalled := true;
 
-{$IFDEF GAME_HACKS_ENABLED}
-  // Temporary Hack (Unreal): Jump back to the entry point
-  Puint32(start) := Puint32($21C13B);
-{$ENDIF}
-
   EmuSwapFS(fsXbox);
 
-//  __asm jmp start;
+  if IsRunning(TITLEID_Unreal) then
+  begin
+    // Temporary Hack (Unreal): Jump back to the entry point
+    start := Puint32($21C13B);
+    asm jmp start; end;
+  end;
 
   Result := dwRet;
 end;
