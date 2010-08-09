@@ -1162,7 +1162,7 @@ begin
   // since callbacks come from here
   EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
-  UpdateTimer.InitFPS(pCertificate.dwGameRegion);
+  UpdateTimer.InitFPS(GameDisplayFrequency(pCertificate.dwGameRegion));
 
   while True do // TODO -oDxbx: When do we break out of this while loop ?
   begin
@@ -1191,7 +1191,6 @@ begin
       g_SwapData.TimeUntilSwapVBlank := 0;
 
       // TODO -oCxbx: we should check the D3DPRESENT_INTERVAL value for accurracy.
-      // Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
       g_SwapData.TimeBetweenSwapVBlanks := MillisecondsPerSecond div GameDisplayFrequency(pCertificate.dwGameRegion);
     end;
   end; // while True
