@@ -56,6 +56,7 @@ type
   XTL_PIDirect3DVolumeTexture8 = type PInterface;
   XTL_PIDirect3DCubeTexture8 = type PInterface;
   XTL_PIDirect3DSurface8 = type PInterface;
+  XTL_PIDirect3DVolume8 = type PInterface;
   XTL_PIDirect3DVertexBuffer8 = type PInterface;
   XTL_PIDirect3DIndexBuffer8 = type PInterface;
 
@@ -370,6 +371,7 @@ type X_D3DResource = object
     6: ({Emu}Surface8: XTL_PIDirect3DSurface8);
     7: ({Emu}VertexBuffer8: XTL_PIDirect3DVertexBuffer8);
     8: ({Emu}IndexBuffer8: XTL_PIDirect3DIndexBuffer8);
+    9: ({Emu}Volume8: XTL_PIDirect3DVolume8); // Dxbx addition
     end; // union
   end; // size = 12 (as in Cxbx)
   PX_D3DResource = ^X_D3DResource;
@@ -519,6 +521,12 @@ type X_D3DTexture = object(X_D3DBaseTexture)
   end; // size = 20 (as in Cxbx)
   PX_D3DTexture = ^X_D3DTexture;
   PPX_D3DTexture = ^PX_D3DTexture;
+
+type X_D3DVolume = object(X_D3DBaseTexture) // Dxbx addition
+// Branch:Dxbx  Translator:PatrickvL  Done:100
+  end; // size = 20 (doesn't exist in Cxbx)
+  PX_D3DVolume = ^X_D3DVolume;
+  PPX_D3DVolume = ^PX_D3DVolume;
 
 type X_D3DVolumeTexture = object(X_D3DBaseTexture)
 // Branch:shogun  Revision:162  Translator:PatrickvL  Done:100

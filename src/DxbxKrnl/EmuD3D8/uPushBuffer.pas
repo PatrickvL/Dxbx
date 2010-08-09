@@ -124,85 +124,84 @@ var
 begin
   for Stage := 0 to X_D3DTS_STAGECOUNT-1 do
   begin
-  // for current usages, we're always on stage 0
-  pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[Stage]);
+    // for current usages, we're always on stage 0
+    pPixelContainer := PX_D3DPixelContainer(g_EmuD3DActiveTexture[Stage]);
 
-  if (pPixelContainer = NULL) or (0 = (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
-    Exit;
+    if (pPixelContainer = NULL) or (0 = (pPixelContainer.Common and X_D3DCOMMON_ISLOCKED)) then
+      Exit;
 
-  XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
-  dwBPP := 0;
+    XBFormat := (pPixelContainer.Format and X_D3DFORMAT_FORMAT_MASK) shr X_D3DFORMAT_FORMAT_SHIFT;
+    dwBPP := 0;
 
-  if (not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
-    Exit;
+    if (not EmuXBFormatIsSwizzled(XBFormat, @dwBPP)) then
+      Exit;
 
-  // remove lock
-  IDirect3DTexture8(pPixelContainer.Emu.Texture8).UnlockRect(0);
-  pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
+    // remove lock
+    IDirect3DTexture8(pPixelContainer.Emu.Texture8).UnlockRect(0);
+    pPixelContainer.Common := pPixelContainer.Common and (not X_D3DCOMMON_ISLOCKED);
 
-  // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
+    // TODO -oCXBX: potentially CRC to see if this surface was actually modified..
 
-  //
-  // unswizzle texture
-  //
+    //
+    // unswizzle texture
+    //
 
-  begin
-    pTexture := pPixelContainer.Emu.Texture8;
-
-    dwLevelCount := IDirect3DTexture8(pTexture).GetLevelCount();
-
-    if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
-    for v := 0 to dwLevelCount - 1 do
     begin
-      hRet := IDirect3DTexture8(pTexture).GetLevelDesc(v, {out}SurfaceDesc);
+      pTexture := pPixelContainer.Emu.Texture8;
 
-      if (FAILED(hRet)) then
-        continue;
+      dwLevelCount := IDirect3DTexture8(pTexture).GetLevelCount();
 
-      //
-      // perform unswizzle
-      //
-
+      if dwLevelCount > 0 then // Dxbx addition, to prevent underflow
+      for v := 0 to dwLevelCount - 1 do
       begin
-        // Cxbx has this commented out :
-        //if (SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8) then
-        //  break;
-        //DxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
-
-        hRet := IDirect3DTexture8(pTexture).LockRect(v, {out}LockedRect, NULL, 0);
+        hRet := IDirect3DTexture8(pTexture).GetLevelDesc(v, {out}SurfaceDesc);
 
         if (FAILED(hRet)) then
           continue;
 
-        dwWidth := SurfaceDesc.Width;
-        dwHeight := SurfaceDesc.Height;
-        dwDepth := 1;
-        dwPitch := LockedRect.Pitch;
-        iRect := Classes.Rect(0,0,0,0);
-        iPoint := Classes.Point(0,0);
+        //
+        // perform unswizzle
+        //
 
-        pTemp := malloc(dwHeight*dwPitch);
+        begin
+          // Cxbx has this commented out :
+          //if (SurfaceDesc.Format <> XTL_D3DFMT_A8R8G8B8) then
+          //  break;
+          //DxbxKrnlCleanup('Temporarily unsupported format for active texture unswizzle (0x%.08X)', [SurfaceDesc.Format]);
 
-        EmuXGUnswizzleRect
-        (
-            LockedRect.pBits, dwWidth, dwHeight, dwDepth,
-            pTemp, dwPitch, iRect, iPoint, dwBPP
-        );
+          hRet := IDirect3DTexture8(pTexture).LockRect(v, {out}LockedRect, NULL, 0);
 
-        memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
+          if (FAILED(hRet)) then
+            continue;
 
-        IDirect3DTexture8(pTexture).UnlockRect(0);
+          dwWidth := SurfaceDesc.Width;
+          dwHeight := SurfaceDesc.Height;
+          dwDepth := 1;
+          dwPitch := LockedRect.Pitch;
+          iRect := Classes.Rect(0,0,0,0);
+          iPoint := Classes.Point(0,0);
 
-        free(pTemp);
+          pTemp := malloc(dwHeight*dwPitch);
+
+          EmuXGUnswizzleRect
+          (
+              LockedRect.pBits, dwWidth, dwHeight, dwDepth,
+              pTemp, dwPitch, iRect, iPoint, dwBPP
+          );
+
+          memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
+
+          IDirect3DTexture8(pTexture).UnlockRect(0);
+
+          free(pTemp);
+        end;
       end;
-    end;
 
 {$IFDEF DEBUG}
-    DbgPrintf('Active texture was unswizzled');
+      DbgPrintf('Active texture was unswizzled');
 {$ENDIF}
+    end;
   end;
-  end;
-
 end;
 
 {static} var pIndexBuffer: XTL_LPDIRECT3DINDEXBUFFER8 = nil; // = XTL_PIDirect3DIndexBuffer8
