@@ -86,6 +86,7 @@ procedure {002} xboxkrnl_AvSendTVEncoderOption(
 begin
   EmuSwapFS(fsWindows);
   Unimplemented('AvSendTVEncoderOption');
+  // "Run Like Hell" (5233) calls this from a routine at 0x11FCD0 - See XTL_EmuIDirect3DDevice8_Unknown1
   EmuSwapFS(fsXbox);
 end;
 

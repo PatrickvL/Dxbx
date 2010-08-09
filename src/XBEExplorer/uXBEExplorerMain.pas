@@ -201,7 +201,7 @@ begin
   if PageControl.ActivePage.Controls[0] is TImage then
   begin
     SavePictureDialog.FileName := FixInvalidFilePath(
-      WideCharToString(MyXBE.m_Certificate.wszTitleName) + '_' + PageControl.ActivePage.Caption
+      GetReadableTitle(@(MyXBE.m_Certificate)) + '_' + PageControl.ActivePage.Caption
       ) + '.bmp';
     if SavePictureDialog.Execute then
     begin

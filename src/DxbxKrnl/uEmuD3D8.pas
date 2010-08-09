@@ -88,8 +88,8 @@ function XTL_EmuIDirect3DDevice8_SetVertexData4f(Register_: Integer;
   a, b, c, d: FLOAT): HRESULT; stdcall; // forward
 function XTL_EmuIDirect3DDevice8_GetVertexShader({CONST} pHandle: PDWORD): HRESULT; stdcall; // forward
 
-function XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource;
-  pBase: PVOID): HRESULT; stdcall;
+procedure XTL_EmuIDirect3DResource8_Register(pThis: PX_D3DResource;
+  pBase: PVOID); stdcall;
 function XTL_EmuIDirect3DDevice8_CreateTexture(Width: UINT; Height: UINT;
     Levels: UINT; Usage: DWORD; Format: X_D3DFORMAT; Pool: D3DPOOL; ppTexture: PPX_D3DTexture): HRESULT; stdcall;
 function XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width: UINT; Height: UINT;
@@ -102,6 +102,21 @@ function XTL_EmuIDirect3DDevice8_CreateCubeTexture(
     Format: X_D3DFORMAT;
     Pool: D3DPOOL;
     ppCubeTexture: PPX_D3DCubeTexture): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_CreateVertexBuffer(
+    Length: UINT;
+    Usage: DWORD;
+    FVF: DWORD;
+    Pool: D3DPOOL;
+    ppVertexBuffer: PPX_D3DVertexBuffer): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_CreateIndexBuffer(
+    Length: UINT;
+    Usage: DWORD;
+    Format: X_D3DFORMAT;
+    Pool: D3DPOOL;
+    ppIndexBuffer: PPX_D3DIndexBuffer): HRESULT; stdcall;
+function XTL_EmuIDirect3DDevice8_CreatePalette(
+    Size: X_D3DPALETTESIZE;
+    ppPalette: PPX_D3DPalette): HRESULT; stdcall;
 function XTL_EmuIDirect3DTexture8_GetSurfaceLevel(pThis: PX_D3DTexture;
     Level: UINT;
     ppSurfaceLevel: PPX_D3DSurface): HRESULT; stdcall;
@@ -760,22 +775,9 @@ begin
 
   // retrieve Xbe title (if possible)
   begin
-    AsciiTitle := 'Unknown';
-
     CertAddr := g_XbeHeader.dwCertificateAddr - g_XbeHeader.dwBaseAddr;
-
-    // TODO -oDXBX: These $0C and 40 values should become a suiteably named constant :
-    // (They represent the offset and length of the XBE_CERTIFICATE.wszTitleName field)
-    if DWORD(CertAddr + $0C + 40) < g_XbeHeaderSize then
-    begin
-      IntPtr(XbeCert) := IntPtr(g_XbeHeader) + CertAddr;
-
-      // SetLocaleInfo(LC_ALL, 'English'); // Not neccesary, Delphi has this by default
-
-      AsciiTitle := string(PWideCharMaxLenToString(XbeCert.wszTitleName, XBE_TITLENAME_MAXLENGTH));
-    end;
-
-    AsciiTitle := 'Dxbx: Emulating ' + AsciiTitle;
+    IntPtr(XbeCert) := IntPtr(g_XbeHeader) + CertAddr;
+    AsciiTitle := 'Dxbx: Emulating ' + GetReadableTitle(XbeCert);
   end;
 
   // create the window
@@ -2395,12 +2397,13 @@ begin
   New({var PX_D3DSurface}ppBackBuffer^);
 
   PCFormat := EmuXB2PC_D3DFormat(Format);
-  
+
   Result := IDirect3DDevice8_CreateImageSurface(g_pD3DDevice8,
     Width,
     Height,
     PCFormat,
     PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface8)));
+
   DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
         ppBackBuffer^.Emu.Surface8,
         Result,
@@ -2415,6 +2418,7 @@ begin
       Height,
       D3DFMT_A8R8G8B8,
       PIDirect3DSurface8(@(ppBackBuffer^.Emu.Surface8)));
+
     DbgPrintf('Created image surface @ 0x%08X [hRet = 0x%08X]: %dx%d, format = 0x%08X', [
         ppBackBuffer^.Emu.Surface8,
         Result,
@@ -3516,25 +3520,56 @@ function XTL_EmuIDirect3DDevice8_CreateTexture2
 ): PX_D3DResource; stdcall;
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:Shadow_Tj  Done:100
 var
+  hRes: HRESULT;
   pTexture: PX_D3DTexture;
 begin
   // Dxbx note : No EmuSwapFS needed here
 
+  // Dxbx addition : Prevent multiplications ending up zero (or less) :
+  if Width <= 0 then Width := 1;
+  if Height <= 0 then Height := 1;
+  if Depth <= 0 then Depth := 1;
+  if Levels <= 0 then Levels := 1;
+
+  hRes := S_OK-1; // TODO -oDxbx : What error code should we return?
   case D3DResource of
-     X_D3DRTYPE_TEXTURE: // 3
-        XTL_EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-     X_D3DRTYPE_VOLUMETEXTURE: // 4
-        XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-     X_D3DRTYPE_CUBETEXTURE: // 5
-       // TODO -oDxbx : Check what the actual EdgeLength value should be
-       XTL_EmuIDirect3DDevice8_CreateCubeTexture({EdgeLength=?}Width, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
-  else
+    X_D3DRTYPE_SURFACE: // 1
+      hRes := XTL_EmuIDirect3DDevice8_CreateImageSurface(Width, Height, Format, @pTexture); // Dxbx addition
+
+    X_D3DRTYPE_TEXTURE: // 3
+      hRes := XTL_EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
+
+    X_D3DRTYPE_VOLUMETEXTURE: // 4
+      hRes := XTL_EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
+
+    X_D3DRTYPE_CUBETEXTURE: // 5
+      // TODO -oDxbx : Check what the actual EdgeLength value should be
+      hRes := XTL_EmuIDirect3DDevice8_CreateCubeTexture({EdgeLength=?}Width, Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture);
+(*
+    X_D3DRTYPE_VERTEXBUFFER: // 6
+      // TODO -oDxbx : Check what the actual Length and FVF values should be :
+      hRes := XTL_EmuIDirect3DDevice8_CreateVertexBuffer({Length=}Width * Height * Depth * Levels, Usage, {FVF=?}Format, D3DPOOL_MANAGED, @pTexture); // Dxbx addition
+
+    X_D3DRTYPE_INDEXBUFFER: // 7
+      // TODO -oDxbx : Check what the actual Length value should be :
+      hRes := XTL_EmuIDirect3DDevice8_CreateIndexBuffer({Length=}Width * Height * Depth * Levels, Usage, Format, D3DPOOL_MANAGED, @pTexture); // Dxbx addition
+
+    X_D3DRTYPE_PALETTE: // 9
+      // TODO -oDxbx : Check what the actual Size value should be :
+      // Choose D3DPALETTE_256 / D3DPALETTE_128 / D3DPALETTE_64 / D3DPALETTE_32 or D3DPALETTE_MAX,
+      // based on Width, Height, Depth or Levels
+      // XTL_EmuIDirect3DDevice8_CreatePalette({Size=}?, @pTexture); // Dxbx addition
+*)
+  else // X_D3DRTYPE_NONE{=0}, X_D3DRTYPE_VOLUME{=2}, X_D3DRTYPE_PUSHBUFFER{=8}, X_D3DRTYPE_FIXUP{=10} :
     EmuSwapFS(fsWindows);
     DxbxKrnlCleanup('D3DResource := %d is not supported!', [Ord(D3DResource)]);
     EmuSwapFS(fsXbox);
   end;
-  
-  Result := pTexture;
+
+  if hRes = S_OK then
+    Result := pTexture
+  else
+    Result := nil;
 end;
 
 function XTL_EmuIDirect3DDevice8_CreateTexture
@@ -3832,7 +3867,7 @@ begin
 {$ENDIF}
 
   if (FAILED(Result)) then
-      EmuWarning('CreateCubeTexture Failed!');
+    EmuWarning('CreateCubeTexture Failed!');
 
   EmuSwapFS(fsXbox);
 end;
@@ -4837,11 +4872,11 @@ begin
   Result := XTL_EmuIDirect3DDevice8_Present(nil, nil, nil, nil);
 end;
 
-function XTL_EmuIDirect3DResource8_Register
+procedure XTL_EmuIDirect3DResource8_Register
 (
-    pThis: PX_D3DResource; 
+    pThis: PX_D3DResource;
     pBase: PVOID
-): HRESULT; stdcall;
+); stdcall;
 // Branch:shogun  Revision:162  Translator:Shadow_Tj  Done:100
 var
   hRet: HRESULT;
@@ -4853,8 +4888,6 @@ var
   pPixelContainer: PX_D3DPixelContainer;
   pFixup: PX_D3DFixup;
   dwSize: DWORD;
-  dwPtr: DWORD;
-  pRefCount: PDWORD;
   pData: PBYTE;
   X_Format: X_D3DFORMAT;
   PCFormat: D3DFORMAT;
@@ -4869,40 +4902,14 @@ var
   bCompressed: BOOL_;
   dwCompressedSize: DWORD;
   bCubemap: BOOL_;
-  w: uint32;
-  h: uint32;
-  v: uint32;
-  c: uint32;
-  p: Byte;
-  y: DWORD;
 
   pPalette: PX_D3DPalette;
 
-  stop: uint32;
-  r: uint32;
-  dwCompressedOffset: DWORD;
-  dwMipOffs: DWORD;
-  dwMipWidth: DWORD;
-  dwMipHeight: DWORD;
-  dwMipPitch: DWORD;
-  level: uint;
-  LockedRect: D3DLOCKED_RECT;
-  iRect: TRect;
-  iPoint: TPOINT;
-  pSrc: PByte;
-  pDest: PByte;
-  pPixelData: PByte;
-  dwDataSize: DWORD;
-  dwPaletteSize: DWORD;
-  pTextureCache: PBytes;
-  pExpandedTexture: PBytes;
-  pTexturePalette: PBytes;
-
-  dummy: Pointer;
 {$IFDEF GAME_HACKS_ENABLED}
   szString: string;
 {$ENDIF}
 {$IFDEF _DEBUG_DUMP_TEXTURE_REGISTER}
+  v: uint32;
   dwDumpSurface: int;
   szBuffer: array [0..255 - 1] of _char;
   dwDumpCube: Integer;
@@ -4922,7 +4929,7 @@ begin
     [pThis, pThis.Data, pBase]);
 {$ENDIF}
 
-  hRet := S_OK;
+//  hRet := S_OK;
 
   pResource := pThis;
 
@@ -4972,7 +4979,7 @@ begin
 {$ENDIF}
           EmuSwapFS(fsXbox);
 
-          Result := hRet;
+//          Result := hRet;
           Exit;
         end;
 
@@ -5115,97 +5122,9 @@ begin
         PCFormat := D3DFMT_R5G6B5;
       end;
 
-      dwWidth := 1; dwHeight := 1; dwBPP := 1; dwDepth := 1; dwPitch := 0; dwMipMapLevels := 1;
-      bSwizzled := FALSE; bCompressed := FALSE; dwCompressedSize := 0;
-      bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
-
-      // Interpret Width/Height/BPP
-      if (X_Format = X_D3DFMT_X8R8G8B8) or (X_Format = X_D3DFMT_A8R8G8B8) then
-      begin
-        bSwizzled := TRUE;
-
-        // Swizzled 32 Bit
-        dwWidth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-        dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-        dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-        dwDepth  := 1;// HACK? 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
-        dwPitch  := dwWidth*4;
-        dwBPP := 4;
-      end else
-      if (X_Format = X_D3DFMT_R5G6B5) or (X_Format = X_D3DFMT_A4R4G4B4)
-      or (X_Format = X_D3DFMT_A1R5G5B5)
-      or (X_Format = $28 { X_D3DFMT_G8B8 }) then
-      begin
-        bSwizzled := TRUE;
-
-        // Swizzled 16 Bit
-        dwWidth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-        dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-        dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-        dwDepth  := 1;// HACK? 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
-        dwPitch  := dwWidth*2;
-        dwBPP := 2;
-      end else
-      if (X_Format = X_D3DFMT_L8) or (X_Format = X_D3DFMT_P8)
-      or (X_Format = X_D3DFMT_AL8) or (X_Format = X_D3DFMT_A8L8)
-      or (X_Format = X_D3DFMT_A8) then
-      begin
-        bSwizzled := TRUE;
-
-        // Swizzled 8 Bit
-        dwWidth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-        dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-        dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-        dwDepth  := 1;// HACK? 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
-        dwPitch  := dwWidth;
-        dwBPP := 1;
-      end else
-      if (X_Format = X_D3DFMT_LIN_X8R8G8B8) or (X_Format = X_D3DFMT_LIN_A8R8G8B8)
-      or (X_Format = X_D3DFMT_LIN_D24S8) or (X_Format = X_D3DFMT_LIN_A8B8G8R8) then
-      begin
-        // Linear 32 Bit
-        dwWidth  := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
-        dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
-        dwPitch  := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
-        dwBPP := 4;
-      end
-      else if (X_Format = X_D3DFMT_LIN_R5G6B5) then
-      begin
-        // Linear 16 Bit
-        dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
-        dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
-        dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
-        dwBPP := 2;
-      end
-      else if (X_Format = X_D3DFMT_DXT1) or (X_Format = X_D3DFMT_DXT3) or (X_Format = X_D3DFMT_DXT5) then
-      begin
-        bCompressed := TRUE;
-
-        // Compressed
-        dwWidth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_USIZE_MASK) shr X_D3DFORMAT_USIZE_SHIFT);
-        dwHeight := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_VSIZE_MASK) shr X_D3DFORMAT_VSIZE_SHIFT);
-        dwDepth  := 1 shl ((pPixelContainer.Format and X_D3DFORMAT_PSIZE_MASK) shr X_D3DFORMAT_PSIZE_SHIFT);
-        dwMipMapLevels := (pPixelContainer.Format and X_D3DFORMAT_MIPMAP_MASK) shr X_D3DFORMAT_MIPMAP_SHIFT;
-
-        // D3DFMT_DXT2...D3DFMT_DXT5: 128bits per block/per 16 texels
-        dwCompressedSize := dwWidth * dwHeight;
-
-        if (X_Format = X_D3DFMT_DXT1) then // 64bits per block/per 16 texels
-          dwCompressedSize := dwCompressedSize div 2;
-
-        dwBPP := 1;
-      end 
-      else if (X_Format = X_D3DFMT_YUY2) then
-      begin
-        // Linear 32 Bit
-        dwWidth := (pPixelContainer.Size and X_D3DSIZE_WIDTH_MASK) + 1;
-        dwHeight := ((pPixelContainer.Size and X_D3DSIZE_HEIGHT_MASK) shr X_D3DSIZE_HEIGHT_SHIFT) + 1;
-        dwPitch := (((pPixelContainer.Size and X_D3DSIZE_PITCH_MASK) shr X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
-      end
-      else
-      begin
-        DxbxKrnlCleanup('0x%.08X is not a supported format!', [X_Format]);
-      end;
+      DxbxGetFormatRelatedVariables(pPixelContainer, X_Format,
+        {var}dwWidth, {var}dwHeight, {var}dwBPP, {var}dwDepth, {var}dwPitch, {var}dwMipMapLevels,
+        {var}bSwizzled, {var}bCompressed, {var}dwCompressedSize);
 
       if (X_Format = X_D3DFMT_YUY2) then
       begin
@@ -5219,21 +5138,7 @@ begin
       end
       else // X_Format <> X_D3DFMT_YUY2
       begin
-        if (bSwizzled or bCompressed) then
-        begin
-          w := dwWidth;
-          h := dwHeight;
-
-          if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
-          for v := 0 to dwMipMapLevels - 1 do
-          begin
-            if (((1 shl v) >= w) or ((1 shl v) >= h)) then
-            begin
-              dwMipMapLevels := v + 1;
-              break;
-            end;
-          end;
-        end;
+        bCubemap := (pPixelContainer.Format and X_D3DFORMAT_CUBEMAP) > 0;
 
         // create the happy little texture
         if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
@@ -5325,177 +5230,11 @@ begin
           end;
         end;
 
-        stop := ifThen(bCubemap, 6, 1);
+        pThis.Data := DWORD(pBase);
 
-        for r := 0 to stop - 1 do
-        begin
-          // as we iterate through mipmap levels, we'll adjust the source resource offset
-          dwCompressedOffset := 0;
-
-          dwMipOffs := 0;
-          dwMipWidth := dwWidth;
-          dwMipHeight := dwHeight;
-          dwMipPitch := dwPitch;
-
-          // iterate through the number of mipmap levels
-          if dwMipMapLevels > 0 then // Dxbx addition, to prevent underflow
-          for level := 0 to dwMipMapLevels - 1 do
-          begin
-            // copy over data (deswizzle if necessary)
-            if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
-              hRet := IDirect3DSurface8(pResource.Emu.Surface8).LockRect(LockedRect, NULL, 0)
-            else
-            begin
-              if (bCubemap) then
-                hRet := IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).LockRect(D3DCUBEMAP_FACES(r), 0, LockedRect, NULL, 0)
-              else
-                hRet := IDirect3DTexture8(pResource.Emu.Texture8).LockRect(level, {out}LockedRect, NULL, 0);
-            end;
-
-            iRect := Classes.Rect(0, 0, 0, 0);
-            iPoint := Classes.Point(0, 0);
-
-            pSrc := pBase;
-            pThis.Data := DWORD(pSrc);
-
-            if (IsSpecialResource(pResource.Data) and ((pResource.Data and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0))
-            or (IsSpecialResource(DWORD(pBase)) and ((DWORD(pBase) and X_D3DRESOURCE_DATA_FLAG_SURFACE) > 0)) then
-            begin
-              EmuWarning('Attempt to registered to another resource''s data (eww!)');
-
-              // TODO -oCXBX: handle this horrible situation
-              pDest := LockedRect.pBits;
-              if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
-              for v := 0 to dwMipHeight - 1 do
-              begin
-                memset(pDest, 0, dwMipWidth * dwBPP);
-
-                Inc(pDest, LockedRect.Pitch);
-                // Inc(pSrc, dwMipPitch); // Dxbx note : Unused
-              end;
-            end
-            else
-            begin
-              if (bSwizzled) then
-              begin
-                if (DWORD(pSrc) = $80000000) then
-                begin
-                  // TODO -oCXBX: Fix or handle this situation..?
-                end
-                else
-                begin
-                  if (CacheFormat = D3DFMT_P8) then //Palette
-                  begin
-                    EmuWarning('Unsupported texture format D3DFMT_P8, expanding to D3DFMT_A8R8G8B8');
-
-                    //
-                    // create texture resource
-                    //
-                    pPixelData := LockedRect.pBits;
-                    dwDataSize := dwMipWidth * dwMipHeight * 4;
-                    dwPaletteSize := 256 * 4; // Note: This is not allways true, it can be 256- 128- 64- or 32*4
-
-                    pTextureCache := DxbxMalloc(dwDataSize);
-                    pExpandedTexture := DxbxMalloc(dwDataSize);
-                    pTexturePalette := DxbxMalloc(256 * 4);
-
-                    // First we need to unswizzle the texture data
-                    EmuXGUnswizzleRect
-                    (
-                      Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
-                      LockedRect.Pitch, iRect, iPoint, dwBPP
-                    );
-
-                    // Copy the unswizzled data to a temporary buffer
-                    memcpy(pTextureCache, pPixelData, dwDataSize);
-
-                    // Copy the currently selected palette's data to the buffer
-                    memcpy(pTexturePalette, g_pCurrentPalette, dwPaletteSize);
-
-                    w := 0;
-                    c := 0;
-                    //p := 0;
-                    if (dwDataSize div 4) > 0 then // Dxbx addition, to prevent underflow
-                    for y := 0 to (dwDataSize div 4) - 1 do
-                    begin
-                      if (c = dwMipWidth) then
-                      begin
-                        w := w + dwMipWidth * 3;
-                        c := 0;
-                      end;
-                      p := Byte(pTextureCache[w]);
-                      pExpandedTexture[y * 4 + 0] := pTexturePalette[p * 4 + 0];
-                      pExpandedTexture[y * 4 + 1] := pTexturePalette[p * 4 + 1];
-                      pExpandedTexture[y * 4 + 2] := pTexturePalette[p * 4 + 2];
-                      pExpandedTexture[y * 4 + 3] := pTexturePalette[p * 4 + 3];
-                      w := w + 1;
-                      c := c + 1;
-                    end;
-
-                    // Copy the expanded texture back to the buffer
-                    memcpy(pPixelData, pExpandedTexture, dwDataSize);
-
-                    // Flush unused data buffers
-                    DxbxFree(pTexturePalette); // pTexturePalette := nil;
-                    DxbxFree(pExpandedTexture); // pExpandedTexture := nil;
-                    DxbxFree(pTextureCache); // pTextureCache := nil;
-                  end
-                  else
-                  begin
-                    EmuXGUnswizzleRect
-                    (
-                      Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
-                      LockedRect.Pitch, iRect, iPoint, dwBPP
-                    );
-                  end;
-                end;
-              end
-              else if (bCompressed) then
-              begin
-                // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
-                dummy := Pointer(DWORD(pSrc) + dwCompressedOffset); // TODO -oDXBX: Do without dummy!
-                memcpy(LockedRect.pBits, dummy, dwCompressedSize shr (level * 2));
-                Inc(dwCompressedOffset, (dwCompressedSize shr (level * 2)));
-              end
-              else
-              begin
-                pDest := LockedRect.pBits;
-                if (DWORD(LockedRect.Pitch) = dwMipPitch) and (dwMipPitch = dwMipWidth * dwBPP) then
-                begin
-                  memcpy(pDest, Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth * dwMipHeight * dwBPP);
-                end
-                else
-                begin
-                  if dwMipHeight > 0 then // Dxbx addition, to prevent underflow
-                  for v := 0 to dwMipHeight - 1 do
-                  begin
-                    memcpy(pDest, Pointer(DWORD(pSrc) + dwMipOffs), dwMipWidth * dwBPP);
-
-                    pDest := Pointer(DWORD(pDest) + DWORD(LockedRect.Pitch));
-                    pSrc := Pointer(DWORD(pSrc) + dwMipPitch);
-                  end;
-                end;
-              end;
-            end;
-
-            if (dwCommonType = X_D3DCOMMON_TYPE_SURFACE) then
-              IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect()
-            else
-            begin
-              if (bCubemap) then
-                IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACES(r), 0)
-              else
-                IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(level);
-            end;
-
-            Inc(dwMipOffs, dwMipWidth * dwMipHeight * dwBPP);
-
-            dwMipWidth := dwMipWidth div 2;
-            dwMipHeight := dwMipHeight div 2;
-            dwMipPitch := dwMipPitch div 2;
-          end;
-        end;
-
+        DxbxUpdatePixelContainer(pPixelContainer, dwCommonType,
+          dwWidth, dwHeight, dwBPP, dwDepth, dwPitch, dwMipMapLevels,
+          bSwizzled, bCompressed, dwCompressedSize, bCubemap, CacheFormat);
 
         // Debug Texture Dumping
 {$IFDEF _DEBUG_DUMP_TEXTURE_REGISTER}
@@ -5586,7 +5325,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := hRet;
+//  Result := hRet;
 end;
 
 function XTL_EmuIDirect3DResource8_AddRef
@@ -8361,7 +8100,7 @@ begin
     hRet := IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8).Lock(0, dwSize, {out}pData, 0);
 
     if (FAILED(hRet)) then
-        DxbxKrnlCleanup('IndexBuffer Lock Failed!');
+      DxbxKrnlCleanup('IndexBuffer Lock Failed!');
 
     memcpy(pData, Pvoid(g_pIndexBuffer.Data), dwSize);
 
@@ -8372,7 +8111,7 @@ begin
     hRet := IDirect3DDevice8(g_pD3DDevice8).SetIndices(IDirect3DIndexBuffer8(g_pIndexBuffer.Emu.IndexBuffer8), g_dwBaseVertexIndex);
 
     if (FAILED(hRet)) then
-        DxbxKrnlCleanup('SetIndices Failed!');
+      DxbxKrnlCleanup('SetIndices Failed!');
   end;
 
   XTL_EmuUpdateDeferredStates();
@@ -9305,6 +9044,7 @@ begin
   EmuSwapFS(fsXbox);
 end;
 
+(* No need to patch, as our kernel implements MmAllocateContiguousMemory(Ex) already
 function XTL_EmuIDirect3D8_AllocContiguousMemory
 (
   dwSize: SIZE_T;
@@ -9351,6 +9091,7 @@ begin
 
   EmuSwapFS(fsXbox);
 end;
+*)
 
 function XTL_EmuIDirect3DTexture8_GetLevelDesc
 (
@@ -9419,6 +9160,7 @@ begin
   PCSurfaceFormat := EmuXB2PC_D3DFormat(SurfaceFormat);
 
   // TODO -oCXBX: HACK: Devices that don't support this should somehow emulate it!
+  // TODO -oDxbx: Non-supported formats should be emulated in a generic way
   if (PCSurfaceFormat = D3DFMT_D16) then
   begin
     EmuWarning('D3DFMT_D16 is an unsupported texture format!');
@@ -9571,6 +9313,7 @@ begin
 {$ENDIF}
 
   // TODO -oCXBX: Implement
+//  while g_bIsBusy do Sleep(1); //??
 
   EmuSwapFS(fsXbox);
 end;
@@ -10607,23 +10350,41 @@ begin
   EmuSwapFS(fsXbox);
 end; *)
 
-(*function XTL_EmuIDirect3DVolume_LockBox
+(*
+function XTL_EmuIDirect3DVolume_LockBox
 (
   pThis: PX_D3DVolume;
   pLockedVolume: PD3DLOCKED_BOX;
   {CONST}pBox: PD3DBOX;
   Flags: DWORD
 ): HRESULT; stdcall;
-// Branch:DXBX  Translator:Shadow_Tj  Done:0
+// Branch:DXBX  Translator:PatrickvL  Done:100
 var
-  pVolumeTexture8: XTL_PIDirect3DVolumeTexture8;
+  pVolume8: XTL_PIDirect3DVolume8;
 begin
   EmuSwapFS(fsWindows);
 
-  Unimplemented('XTL_EmuIDirect3DVolume_LockBox');
+//  Unimplemented('XTL_EmuIDirect3DVolume_LockBox');
+
+  LogBegin('EmuD3D8 : EmuIDirect3DVolume8_LockBox').
+    _(pThis, 'pThis').
+    _(pLockedVolume, 'pLockedVolume').
+    _(pBox, 'pBox').
+    _(Flags, 'Flags').
+  LogEnd();
+
+  EmuVerifyResourceIsRegistered(pThis);
+
+  pVolume8 := pThis.Emu.Volume8;
+
+  Result := IDirect3DVolume8(pVolume8).LockBox({out}pLockedVolume^, pBox, Flags);
+
+  if (FAILED(Result)) then
+    EmuWarning('LockBox Failed!');
 
   EmuSwapFS(fsXbox);
-end; *)
+end;
+*)
 
 (*function XTL_EmuIDirect3DDevice8_CreateSurface
 (
@@ -10637,6 +10398,23 @@ begin
 
   EmuSwapFS(fsXbox);
 end; *)
+
+
+(*
+function XTL_EmuIDirect3DDevice8_CreateSurface2(
+  Width: DWORD;
+  Height: DWORD;
+  Usage: DWORD;
+  Format: X_D3DFORMAT): PX_D3DSurface; stdcall;
+// Branch:DXBX  Translator:Patrick  Done:0
+begin
+  EmuSwapFS(fsWindows);
+
+  Unimplemented('XTL_EmuIDirect3DDevice8_CreateSurface2');
+
+  EmuSwapFS(fsXbox);
+end;
+*)
 
 (*function XTL_EmuIDirect3DSurface8_GetContainer2
 (
@@ -10977,7 +10755,7 @@ exports
 
   XTL_EmuIDevice3D8_KickOff name PatchPrefix + '?KickOff@CDevice@D3D@@QAEXXZ',
 
-  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // better for dxbx logging
+//  XTL_EmuIDirect3D8_AllocContiguousMemory name PatchPrefix + 'D3D_AllocContiguousMemory@8', // better for dxbx logging
   XTL_EmuIDirect3D8_CheckDeviceFormat name PatchPrefix + 'Direct3D_CheckDeviceFormat',
   XTL_EmuIDirect3D8_CheckDeviceMultiSampleType name PatchPrefix + 'Direct3D_CheckDeviceMultiSampleType',
   XTL_EmuIDirect3D8_CreateDevice name PatchPrefix + 'Direct3D_CreateDevice',
@@ -11013,6 +10791,7 @@ exports
   XTL_EmuIDirect3DDevice8_CreatePixelShader name PatchPrefix + 'D3DDevice_CreatePixelShader@8',
   XTL_EmuIDirect3DDevice8_CreateStateBlock name PatchPrefix + 'D3DDevice_CreateStateBlock',
 (*  XTL_EmuIDirect3DDevice8_CreateSurface name PatchPrefix + 'D3DDevice_CreateSurface', *)  // TODO -oDXBX: NOT YET IMPLEMENTED
+(*  XTL_EmuIDirect3DDevice8_CreateSurface2 name PatchPrefix + 'D3DDevice_CreateSurface2', *)  // TODO -oDXBX: NOT YET IMPLEMENTED
   XTL_EmuIDirect3DDevice8_CreateTexture name PatchPrefix + 'D3DDevice_CreateTexture',
   XTL_EmuIDirect3DDevice8_CreateTexture2 name PatchPrefix + 'D3DDevice_CreateTexture2',
   XTL_EmuIDirect3DDevice8_CreateVertexBuffer name PatchPrefix + 'D3DDevice_CreateVertexBuffer',

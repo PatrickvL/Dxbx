@@ -95,7 +95,6 @@ exports
   *)
 
 var
-  g_Xbe_XbePath: string; // The path of the running Xbe, as seen from Windows
   g_EmuXbePath: AnsiString; // The path of the running Xbe, as seen from Xbox1 (including \Device\Harddisk0\Partition1\)
 
   g_CPUXbox: DWORD_PTR;

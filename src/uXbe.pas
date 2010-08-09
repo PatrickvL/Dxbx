@@ -336,6 +336,7 @@ type _XBE_SECTIONHEADER = packed record
   end;
 
 var
+  g_Xbe_XbePath: string; // The path of the running Xbe, as seen from Windows
   // OpenXDK logo bitmap (used by cxbe by default)
   OpenXDK: array of uint08;
   dwSizeOfOpenXDK: uint32;
@@ -348,6 +349,7 @@ function BetterTime(x_timeDate: uint32): string;
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
 
 procedure XbeLoaded;
+function GetReadableTitle(const pCertificate: PXBE_CERTIFICATE): string;
 function GameRegionToString(const aGameRegion: Cardinal): string;
 
 procedure LoadSymbolsFromCache(const aStringList: TStringList; const aCacheFile: string);
@@ -407,6 +409,20 @@ end;
 procedure XbeLoaded;
 begin
   WriteLog(DxbxFormat('DXBX: %s loaded.', [m_szAsciiTitle]));
+end;
+
+function GetReadableTitle(const pCertificate: PXBE_CERTIFICATE): string;
+begin
+  // Use Title, or when that's empty, the parent folder name :
+  Result := Trim(PWideCharMaxLenToString(pCertificate.wszTitleName, XBE_TITLENAME_MAXLENGTH));
+  if Result = '' then
+  begin
+    Result := ExtractFileName(g_Xbe_XbePath);
+    if SameText(Result, 'default.xbe') then
+      Result := ExtractFileName(ExtractFileDir(g_Xbe_XbePath))
+    else
+      Result := ChangeFileExt(Result, '');
+  end;
 end;
 
 function OpenXbe(aFileName: string; var aXbe: TXbe{; var aExeFileName, aXbeFileName: string}): Boolean;
@@ -525,6 +541,7 @@ begin
 
   MyFile := TMemoryStream.Create;
 
+  g_Xbe_XbePath := aFileName;
   FileHandle := Drive.FileSystem.Open(FileName);
   try
     MyFile.Size := Drive.FileSystem.Seek(FileHandle, 0, soFromEnd);
@@ -588,19 +605,8 @@ begin
 
   WriteLog('DXBX: Reading Certificate...OK');
 
-  m_szAsciiTitle := Trim(PWideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH));
-  if m_szAsciiTitle <> '' then
-    WriteLog('DXBX: Title identified as ' + m_szAsciiTitle)
-  else
-  begin
-    m_szAsciiTitle := ExtractFileName(aFileName);
-    if SameText(m_szAsciiTitle, 'default.xbe') then
-      m_szAsciiTitle := ExtractFileName(ExtractFileDir(aFileName))
-    else
-      m_szAsciiTitle := ChangeFileExt(m_szAsciiTitle, '');
-
-    WriteLog('DXBX: Title chosen as ' + m_szAsciiTitle);
-  end;
+  m_szAsciiTitle := GetReadableTitle(@m_Certificate);
+  WriteLog('DXBX: Title = ' + m_szAsciiTitle);
 
   // read xbe section headers
   begin
@@ -757,10 +763,7 @@ end; // TXbe.GetTLSData
 
 function TXbe.DetermineDumpFileName: string;
 begin
-  // Use Title, or when that's empty, the parent folder name : 
-  Result := PWideCharMaxLenToString(m_Certificate.wszTitleName, XBE_TITLENAME_MAXLENGTH);
-  if Result = '' then
-    Result := 'xbe';
+  Result := GetReadableTitle(@m_Certificate);
 
   // Fixup invalid filename characters :
   Result := FixInvalidFilePath(Result);
