@@ -239,7 +239,7 @@ type EmuD3D8CreateDeviceProxyData = packed record
 var g_EmuCDPD: EmuD3D8CreateDeviceProxyData;
 
 var
-  DxbxHack_HadZEnable: Boolean = False;
+  DxbxFix_HasZBuffer: Boolean = False;
 
 implementation
 
@@ -331,43 +331,43 @@ begin
 
   case (IDirect3DResource8(pResource.Emu.Resource8).GetType()) of
     D3DRTYPE_SURFACE:
-      repeat until IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect() = S_OK;
+      repeat until IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect() = D3D_OK;
 
     D3DRTYPE_VOLUME:
       // TODO -oDxbx : Totally untested! Volume's aren't used yet!
-      repeat until IDirect3DVolume8(pResource.Emu.Resource8).UnlockBox() = S_OK;
+      repeat until IDirect3DVolume8(pResource.Emu.Resource8).UnlockBox() = D3D_OK;
 
     D3DRTYPE_TEXTURE:
-      repeat until IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(uiLevel) = S_OK;
+      repeat until IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(uiLevel) = D3D_OK;
 
     D3DRTYPE_VOLUMETEXTURE:
       // TODO -oDxbx : Totally untested! VolumeTexture's aren't used yet!?
-      repeat until IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture8).UnlockBox(uiLevel) = S_OK;
+      repeat until IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture8).UnlockBox(uiLevel) = D3D_OK;
 
     D3DRTYPE_CUBETEXTURE:
     begin
       if iFace >= Ord(D3DCUBEMAP_FACE_POSITIVE_X) then
       begin
         // Only one face given, so unlock only that one :
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(TD3DCubeMapFaces(iFace), uiLevel) = S_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(TD3DCubeMapFaces(iFace), uiLevel) = D3D_OK;
       end
       else
       begin
         // No face given, so unlock all faces (just to be sure) :
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) = S_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) = S_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) = S_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) = S_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) = S_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) = S_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) = D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) = D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) = D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) = D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) = D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) = D3D_OK;
       end;
     end;
 
     D3DRTYPE_VERTEXBUFFER:
-      repeat until IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock() = S_OK;
+      repeat until IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock() = D3D_OK;
 
     D3DRTYPE_INDEXBUFFER:
-      repeat until IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Unlock() = S_OK;
+      repeat until IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Unlock() = D3D_OK;
   else
     Result := False;
   end;
@@ -414,7 +414,7 @@ begin
   g_bIsBusy := BOOL_TRUE;
   Result := IDirect3DDevice8(g_pD3DDevice8).Present(pSourceRect, pDestRect, pDummy1, pDummy2);
   g_bIsBusy := BOOL_FALSE;
-  if Result = S_OK then
+  if Result = D3D_OK then
     Exit;
 
   if Result = UINT(D3DERR_DEVICELOST) then
@@ -425,7 +425,7 @@ begin
     else
       if(Result = UINT(D3DERR_DEVICENOTRESET)) then //Lost but we can reset it now
         Result := IDirect3DDevice8(g_pD3DDevice8).Reset({const}g_EmuCDPD.NativePresentationParameters);
-  until Result = UINT(S_OK);
+  until Result = UINT(D3D_OK);
 end;
 
 procedure DxbxInitializePixelContainerYUY2(const pPixelContainer: PX_D3DPixelContainer);
@@ -892,7 +892,7 @@ begin
     DxbxKrnlCleanup('');
   end;
 
-  Result := S_OK;
+  Result := D3D_OK;
 end; // EmuThreadRenderWindow
 
 // simple helper function
@@ -954,7 +954,7 @@ begin
       begin
         DeleteObject(g_hBgBrush);
         PostQuitMessage(0);
-        Result := S_OK;
+        Result := D3D_OK;
         Exit;
       end;
 
@@ -1051,7 +1051,7 @@ begin
         if (g_XBVideo.GetFullscreen() or g_bIsFauxFullscreen) then
         begin
           SetCursor(0);
-          Result := S_OK;
+          Result := D3D_OK;
           Exit;
         end;
 
@@ -1063,7 +1063,7 @@ begin
     Exit;
   end;
 
-  Result := S_OK;
+  Result := D3D_OK;
 end; // EmuMsgProc
 
 // timing thread procedure
@@ -1453,15 +1453,15 @@ begin
         New({var}g_pCachedZStencilSurface);
         g_pCachedZStencilSurface.Common := 0;
         g_pCachedZStencilSurface.Data := X_D3DRESOURCE_DATA_FLAG_SPECIAL or X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
-        IDirect3DDevice8_GetDepthStencilSurface(g_pD3DDevice8, @(g_pCachedZStencilSurface.Emu.Surface8));
+        if IDirect3DDevice8_GetDepthStencilSurface(g_pD3DDevice8, @(g_pCachedZStencilSurface.Emu.Surface8)) = D3D_OK then
+          // Dxbx addition : Test if a ZBuffer exists, to fix invalid arguments to XTL_EmuIDirect3DDevice8_Clear :
+          DxbxFix_HasZBuffer := True
+        else
+          DxbxFix_HasZBuffer := False;
 
 //        // Dxbx addition : Put the DepthStencilSurface in the PresentParameters structure too :
 //        if Assigned(g_pCachedZStencilSurface.Emu.Surface8) then
 //          PX_D3DPRESENT_PARAMETERS(g_EmuCDPD.pPresentationParameters).DepthStencilSurface := g_pCachedZStencilSurface;
-
-        // Dxbx addition : HACK! I [PatrickvL] don't know how to reliably to test if a ZBuffer
-        // exists, so for now, I set this flag in XTL_EmuIDirect3DDevice8_SetRenderState_ZEnable :
-        DxbxHack_HadZEnable := False;
 
         IDirect3DDevice8(g_pD3DDevice8).CreateVertexBuffer
         (
@@ -1529,7 +1529,7 @@ begin
     Sleep(1); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
   end; // while true
 
-  Result := S_OK;
+  Result := D3D_OK;
 end; // EmuThreadCreateDeviceProxy
 
 // check if a resource has been registered yet (if not, register it)
@@ -1829,7 +1829,7 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_EndVisibilityTest
@@ -1852,7 +1852,7 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetBackBufferScale
@@ -1908,7 +1908,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_GetDeviceCaps
@@ -1966,7 +1966,7 @@ begin
   end;
 
   EmuSwapFS(fsXbox);
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SelectVertexShader
@@ -2014,7 +2014,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3D8_GetAdapterModeCount
@@ -2040,7 +2040,7 @@ begin
   if ret > 0 then // Dxbx addition, to prevent underflow
   for v := 0 to ret - 1 do
   begin
-    if (IDirect3D8(g_pD3D8).EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, {out}Mode) <> S_OK) then
+    if (IDirect3D8(g_pD3D8).EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, {out}Mode) <> D3D_OK) then
       break;
 
     if (Mode.Width <> 640) or (Mode.Height <> 480) then
@@ -2119,7 +2119,7 @@ begin
         #13#10');',
         [Adapter, Mode, pMode]);
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   if (Mode = 0) then
     ModeAdder := 0;
@@ -2127,14 +2127,14 @@ begin
   while true do
   begin
     Result := IDirect3D8(g_pD3D8).EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, D3DDISPLAYMODE(PCMode));
-    if (Result <> S_OK) or (PCMode.Width = 640) and (PCMode.Height = 480) then
+    if (Result <> D3D_OK) or (PCMode.Width = 640) and (PCMode.Height = 480) then
       break;
 
     Inc(ModeAdder);
   end;
 
   // make adjustments to parameters to make sense with windows direct3d
-  if (Result = S_OK) then
+  if (Result = D3D_OK) then
   begin
     //
     // NOTE: WARNING: PC D3DDISPLAYMODE is different than Xbox D3DDISPLAYMODE!
@@ -2463,7 +2463,7 @@ begin
 
 
 { unsafe, somehow  -- MARKED OUT BY CXBX --
-    HRESULT hRet := S_OK;
+    HRESULT hRet := D3D_OK;
 
     X_D3DSurface *pBackBuffer := new X_D3DSurface();
 
@@ -2507,7 +2507,7 @@ begin
 
   hRet := IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, @(pBackBuffer.Emu.Surface8));
 
-  if (hRet <> S_OK) then
+  if (hRet <> D3D_OK) then
     DxbxKrnlCleanup('Unable to retrieve back buffer');
 
   // update data pointer
@@ -2547,7 +2547,7 @@ begin
   begin
     ppBackBuffer^ := XTL_EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer);
 
-    Result := S_OK;
+    Result := D3D_OK;
   end;
 end;
 
@@ -2627,7 +2627,7 @@ begin
   if FAILED(Result) then
   begin
     EmuWarning('Unable to set viewport!');
-    Result := S_OK;
+    Result := D3D_OK;
   end;
 
   EmuSwapFS(fsXbox);
@@ -2653,7 +2653,7 @@ begin
   if FAILED(Result) then
   begin
     EmuWarning('Unable to get viewport!');
-    Result := S_OK;
+    Result := D3D_OK;
   end;
 
   EmuSwapFS(fsXbox);
@@ -2739,7 +2739,7 @@ begin
   g_VertexShaderConstantMode := Mode;
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -2763,7 +2763,7 @@ begin
   EmuWarning('Device Reset is being utterly ignored');
 
   EmuSwapFS(fsXbox);
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_GetRenderTarget
@@ -2796,7 +2796,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_GetRenderTarget2(): PX_D3DSurface; stdcall;
@@ -2850,7 +2850,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_GetDepthStencilSurface2(): PX_D3DSurface; stdcall;
@@ -2898,7 +2898,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetTileNoWait
@@ -2923,7 +2923,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 {$ifdef _DEBUG_TRACK_VS}
@@ -2986,7 +2986,7 @@ begin
   begin
     pHandle^ := HNULL;
     EmuSwapFS(fsXbox);
-    Result := S_OK;
+    Result := D3D_OK;
     Exit;
   end;
 
@@ -3015,7 +3015,7 @@ begin
     begin
       pRecompiledFunction := NULL;
       EmuWarning('Couldn''t recompile vertex shader function.' );
-      hRet := S_OK; // Try using a fixed function vertex shader instead
+      hRet := D3D_OK; // Try using a fixed function vertex shader instead
     end;
   end;
 
@@ -3130,7 +3130,7 @@ begin
       Inc(FailedShaderCount);
     end;
 {$endif}
-    //hRet := S_OK;    // marked out cxbx
+    //hRet := D3D_OK;    // marked out cxbx
   end;
 
   EmuSwapFS(fsXbox);
@@ -3227,7 +3227,7 @@ begin
   begin
     EmuWarning('We''re lying about setting a vertex shader constant!');
 
-    hRet := S_OK;
+    hRet := D3D_OK;
   end;
 
   EmuSwapFS(fsXbox);
@@ -3366,7 +3366,7 @@ begin
   begin
     pHandle^ := X_PIXELSHADER_FAKE_HANDLE;
     EmuWarning('We''re lying about the creation of a pixel shader!');
-    Result := S_OK;
+    Result := D3D_OK;
   end;
 
   EmuSwapFS(fsXbox);
@@ -3397,7 +3397,7 @@ begin
       [Handle]);
 
   // redirect to windows d3d
-  Result := S_OK;
+  Result := D3D_OK;
 
   g_bFakePixelShaderLoaded := FALSE; // Dxbx fix : Always reset this
   // Fake Programmable Pipeline
@@ -3412,12 +3412,13 @@ begin
       pErrors := nil;
 
       // assemble the shader
-      D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader), {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
+      Result := D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader), {Flags=}0, {ppConstants=}NULL, {ppCompiledShader=}@pShader, {ppCompilationErrors}@pErrors);
 
       if Assigned(pShader) then
       begin
-        // create the shader device handle
-        Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
+        if (Result = D3D_OK) then
+          // create the shader device handle
+          Result := IDirect3DDevice8(g_pD3DDevice8).CreatePixelShader(ID3DXBuffer(pShader).GetBufferPointer(), {out}dwHandle);
 
         // Dxbx note : We must release pShader here, else we would have a resource leak!
         ID3DXBuffer(pShader)._Release;
@@ -3457,7 +3458,7 @@ begin
   begin
     EmuWarning('We''re lying about setting a pixel shader!');
 
-    Result := S_OK;
+    Result := D3D_OK;
   end;
 
   EmuSwapFS(fsXbox);
@@ -3486,7 +3487,7 @@ begin
   if Depth <= 0 then Depth := 1;
   if Levels <= 0 then Levels := 1;
 
-  hRes := S_OK-1; // TODO -oDxbx : What error code should we return?
+  hRes := D3D_OK-1; // TODO -oDxbx : What error code should we return?
   case D3DResource of
     X_D3DRTYPE_SURFACE: // 1
       hRes := XTL_EmuIDirect3DDevice8_CreateImageSurface(Width, Height, Format, @pTexture); // Dxbx addition
@@ -3521,7 +3522,7 @@ begin
     EmuSwapFS(fsXbox);
   end;
 
-  if hRes = S_OK then
+  if hRes = D3D_OK then
     Result := pTexture
   else
     Result := nil;
@@ -3594,7 +3595,7 @@ begin
 
     g_YuvSurface := PX_D3DSurface(ppTexture^);
 
-    Result := S_OK;
+    Result := D3D_OK;
   end
   else // PCFormat <> D3DFMT_YUY2
   begin
@@ -3659,7 +3660,7 @@ begin
       begin
         Dec(Levels);
         // Dxbx addition : Check if LockRect actually succeeds :
-        if IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(Levels, {out}LockedRect, NULL, 0) = S_OK then
+        if IDirect3DTexture8(ppTexture^.Emu.Texture8).LockRect(Levels, {out}LockedRect, NULL, 0) = D3D_OK then
         begin
           if Levels = 0 then
           begin
@@ -3744,7 +3745,7 @@ begin
   begin
     DxbxInitializePixelContainerYUY2(ppVolumeTexture^);
 
-    hRet := S_OK;
+    hRet := D3D_OK;
   end
   else // PCFormat <> D3DFMT_YUY2
   begin
@@ -3935,7 +3936,7 @@ begin
   end;
   }
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   if (pIndexData <> NULL) then
     DbgPrintf('EmuIDirect3DDevice8_SetIndices(): pIndexData->EmuIndexBuffer8:= 0x%.08X', [pIndexData.Emu.IndexBuffer8]);
@@ -3945,21 +3946,23 @@ begin
   if (pIndexData <> nil) then
   begin
     g_pIndexBuffer := pIndexData;
-{$IFDEF GAME_HACKS_ENABLED}
-    // HACK: Halo Hack
-    if (pIndexData.Emu.Lock = $00840863) then
+
+    if IsRunning(TITLEID_Halo) then // HACK: Halo Hack
+      if (pIndexData.Emu.Lock = $00840863) then
         pIndexData.Emu.Lock := 0;
-{$ENDIF}
+
     EmuVerifyResourceIsRegistered(pIndexData);
-{$IFDEF GAME_HACKS_ENABLED}
-    // HACK: Unreal Championship
-    if ((pIndexData.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexData.Emu.Lock and $F0000000) <> $00000000) or
-        (pIndexData.Emu.Lock = $10) then
+
+    if IsRunning(TITLEID_UnrealChampionship) then // HACK: Unreal Championship
     begin
-      Result := E_FAIL;
-      goto fail;
+      if ((pIndexData.Emu.Lock and $FFFF0000) = $00490000) or ((pIndexData.Emu.Lock and $F0000000) <> $00000000) or
+          (pIndexData.Emu.Lock = $10) then
+      begin
+        Result := E_FAIL;
+        goto fail;
+      end;
     end;
-{$ENDIF}
+
     pIndexBuffer := pIndexData.Emu.IndexBuffer8;
     DxbxUnlockD3DResource(pIndexData); // Dxbx addition
     if (pIndexData.Emu.Lock <> X_D3DRESOURCE_LOCK_FLAG_NOSIZE) then
@@ -4063,12 +4066,12 @@ begin
     begin
         if (Stage = 0) then
         begin
-            if (D3DXCreateTextureFromFile(g_pD3DDevice8, DxbxDebugFolder +'\dummy1.bmp', @pDummyTexture[Stage]) <> S_OK) then
+            if (D3DXCreateTextureFromFile(g_pD3DDevice8, DxbxDebugFolder +'\dummy1.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                 DxbxKrnlCleanup('Could not create dummy texture!');
         end
         else if (Stage = 1) then
         begin
-            if (D3DXCreateTextureFromFile(g_pD3DDevice8, DxbxDebugFolder +'\dummy2.bmp', @pDummyTexture[Stage]) <> S_OK) then
+            if (D3DXCreateTextureFromFile(g_pD3DDevice8, DxbxDebugFolder +'\dummy2.bmp', @pDummyTexture[Stage]) <> D3D_OK) then
                 DxbxKrnlCleanup('Could not create dummy texture!');
         end;
      end;
@@ -4252,7 +4255,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexData2f
@@ -4355,7 +4358,7 @@ begin
 //    _(g_IVBTblOffs, '## g_IVBTblOffs ##'). // test - show counter
   LogEnd();
 
-  hRet := S_OK;
+  hRet := D3D_OK;
 
   // Check if g_IVBTable has enough space for the current g_IVBTblOffs
   // (and one extra for the "Copy current color to next vertex" case) :
@@ -4653,7 +4656,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_RunPushBuffer
@@ -4711,7 +4714,7 @@ begin
     PCFlags := EmuXB2PC_D3DCLEAR_FLAGS(Flags);
 
     // Only clear ZBuffer if we actually have one :
-    if not DxbxHack_HadZEnable then
+    if not DxbxFix_HasZBuffer then
       PCFlags := PCFlags and (not D3DCLEAR_ZBUFFER);
 
     // Only clear Stencil buffer if there actually is one :
@@ -4725,7 +4728,7 @@ begin
   if PCFlags > 0 then
     Result := IDirect3DDevice8(g_pD3DDevice8).Clear(Count, pRects, PCFlags, Color, Z, Stencil)
   else
-    Result := S_OK;
+    Result := D3D_OK;
 
   DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_Clear returns 0x%.08X', [Result]);
   EmuSwapFS(fsXbox);
@@ -4757,7 +4760,7 @@ begin
 
   // release back buffer lock
   begin
-    if IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer) = S_OK then
+    if IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer) = D3D_OK then
     begin
       IDirect3DSurface8(pBackBuffer).UnlockRect();
       IDirect3DSurface8(pBackBuffer)._Release;
@@ -4857,9 +4860,7 @@ var
 
   pPalette: PX_D3DPalette;
 
-{$IFDEF GAME_HACKS_ENABLED}
   szString: string;
-{$ENDIF}
 {$IFDEF _DEBUG_DUMP_TEXTURE_REGISTER}
   v: uint32;
   dwDumpSurface: int;
@@ -4880,7 +4881,7 @@ begin
         #13#10');',
       [pThis, pThis.Data, pBase]);
 
-//  hRet := S_OK;
+//  hRet := D3D_OK;
 
   pResource := pThis;
 
@@ -4918,15 +4919,17 @@ begin
 
         if (FAILED(hRet)) then
         begin
-{$IFDEF GAME_HACKS_ENABLED}
-          // TODO -oCXBX: Hack for Crazy Taxi 3?
-          szString := SysUtils.Format('CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
+          if IsRunning(TITLEID_CrazyTaxi) then
+          begin
+            // TODO -oCXBX: Hack for Crazy Taxi 3?
+            szString := SysUtils.Format('CreateVertexBuffer Failed!'#13#10'   VB Size = 0x%X', [dwSize]);
 
-          if ( dwSize <> 0 ) then
-            DxbxKrnlCleanup( szString )
-          else
-            EmuWarning( szString );
-{$ENDIF}
+            if ( dwSize <> 0 ) then
+              DxbxKrnlCleanup( szString )
+            else
+              EmuWarning( szString );
+          end;
+
           EmuSwapFS(fsXbox);
 
 //          Result := hRet;
@@ -5240,9 +5243,7 @@ begin
         pResource.Data := ULONG(pBase);
       end;
 
-{$IFDEF DEBUG}
-(*      DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pResource.Data, pResource.Size, pResource.AllocationSize]);*)
-{$ENDIF}
+      //DbgPrintf('EmuIDirect3DResource8_Register: Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)', [pPalette.Data, dwSize, pPalette.AllocationSize]);
     end;
 
 
@@ -5685,7 +5686,7 @@ begin
     pDesc.Height := g_dwOverlayH;
     pDesc.Width := g_dwOverlayW;
 
-    Result := S_OK;
+    Result := D3D_OK;
   end
   else
   begin
@@ -5758,7 +5759,7 @@ begin
     pLockedRect.Pitch := g_dwOverlayP;
     pLockedRect.pBits := PVOID(pThis.Emu.Lock);
 
-    hRet := S_OK;
+    hRet := D3D_OK;
   end
   else
   begin
@@ -5900,7 +5901,7 @@ begin
     pLockedRect.Pitch := g_dwOverlayP;
     pLockedRect.pBits := PVOID(pThis.Emu.Lock);
 
-    hRet := S_OK;
+    hRet := D3D_OK;
   end
   else
   begin
@@ -5918,16 +5919,14 @@ begin
     if (Flags and (not X_D3DLOCK_ALL_SUPPORTED)) > 0 then
       DxbxKrnlCleanup('EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)', [Flags and (not X_D3DLOCK_ALL_SUPPORTED)]);
 
-{$IFDEF GAME_HACKS_ENABLED}
-    // Remove old lock(s)
-    if (Level = 6) or (Level = 7) or (Level = 8) or (Level = 9) then
+    if IsRunning(TITLEID_UnrealChampionship)
+    and ((Level = 6) or (Level = 7) or (Level = 8) or (Level = 9)) then
     begin
       // HACK: Unreal Championship crashes when the texture level reaches 9...
       EmuWarning('Unreal Championship texture hack applied!');
       hRet := D3DERR_INVALIDCALL;
     end
     else
-{$ENDIF}
     begin
       // Remove old lock(s)
       IDirect3DTexture8(pTexture8).UnlockRect(Level);
@@ -5981,7 +5980,7 @@ begin
 
     ppSurfaceLevel^ := PX_D3DSurface(pThis);
 
-    hRet := S_OK;
+    hRet := D3D_OK;
   end
   else
   begin
@@ -6135,7 +6134,7 @@ begin
   // Dxbx note : No EmuSwapFS needed here
 
   ppVertexBuffer^ := XTL_EmuIDirect3DDevice8_CreateVertexBuffer2(Length);
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_CreateVertexBuffer2
@@ -6410,7 +6409,7 @@ begin
       hRet := IDirect3DDevice8(g_pD3DDevice8).GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, @pBackBuffer);
 
       // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-      if (hRet = S_OK) and (IDirect3DSurface8(pBackBuffer).LockRect({out}LockedRectDest, NULL, 0) = S_OK) then
+      if (hRet = D3D_OK) and (IDirect3DSurface8(pBackBuffer).LockRect({out}LockedRectDest, NULL, 0) = D3D_OK) then
       begin
         pCurByte := Puint08(pSurface.Emu.Lock);
 
@@ -6488,7 +6487,7 @@ begin
         IDirect3DSurface8(pBackBuffer).UnlockRect();
       end;
 
-      if (hRet = S_OK) then
+      if (hRet = D3D_OK) then
         IDirect3DSurface8(pBackBuffer)._Release;
 
       // Update overlay if present was not called since the last call to
@@ -7318,10 +7317,6 @@ begin
 //  if Value > 0 then // Dxbx addition - prevent change when recieving 0 value
     IDirect3DDevice8(g_pD3DDevice8).SetRenderState(D3DRS_ZENABLE, Value);
 
-  // Dxbx addition : HACK! Remember if we saw ZEnable True, so clear knows it may clear the ZBuffer :
-  if Value > 0 then
-    DxbxHack_HadZEnable := True;
-
   EmuSwapFS(fsXbox);
 end;
 
@@ -7742,7 +7737,7 @@ begin
         #13#10');',
       [Handle]);
 
-  // Result := S_OK;
+  // Result := D3D_OK;
 
   g_CurrentVertexShader := Handle;
 
@@ -8091,7 +8086,7 @@ begin
   VertPatch.Restore();
 
   EmuSwapFS(fsXbox);
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_DrawIndexedVerticesUP
@@ -8322,7 +8317,7 @@ begin
   // Dxbx note : No EmuSwapFS needed here
 
   ppPalette^ := XTL_EmuIDirect3DDevice8_CreatePalette2(Size);
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -8385,7 +8380,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_SetFlickerFilter
@@ -8442,7 +8437,7 @@ begin
         ppColors^
         ]);*)
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DPalette8_Lock2
@@ -8500,7 +8495,7 @@ begin
       pSize^ := 0;
     end;
 
-    Result := S_OK;
+    Result := D3D_OK;
   end
   else
     Result := D3DERR_INVALIDCALL;
@@ -8616,7 +8611,7 @@ begin
   and VshHandleIsValidShader(g_CurrentVertexShader) then
   begin
     pHandle^ := g_CurrentVertexShader;
-    Result := S_OK;
+    Result := D3D_OK;
   end
   else
     Result := D3DERR_INVALIDCALL;
@@ -8683,7 +8678,7 @@ begin
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_GetVertexShaderInput
@@ -8710,7 +8705,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexShaderInput
@@ -8736,7 +8731,7 @@ begin
 {$ENDIF}
 
   EmuSwapFS(fsXbox);
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DDevice8_RunVertexStateShader
@@ -8841,12 +8836,12 @@ begin
     if (pSizeOfData^ < pVertexShader.DeclarationSize) or (not Assigned(pData)) then
     begin
       pSizeOfData^ := pVertexShader.DeclarationSize;
-      Result := ifThen(Assigned(pData), D3DERR_MOREDATA, S_OK);
+      Result := ifThen(Assigned(pData), D3DERR_MOREDATA, D3D_OK);
     end
     else
     begin
       memcpy(pData, pVertexShader.pDeclaration, pVertexShader.DeclarationSize);
-      Result := S_OK;
+      Result := D3D_OK;
     end;
   end;
 
@@ -8883,12 +8878,12 @@ begin
     if (pSizeOfData^ < pVertexShader.FunctionSize) or (not Assigned(pData)) then
     begin
       pSizeOfData^ := pVertexShader.FunctionSize;
-      Result := ifThen(Assigned(pData), D3DERR_MOREDATA, S_OK);
+      Result := ifThen(Assigned(pData), D3DERR_MOREDATA, D3D_OK);
     end
     else
     begin
       memcpy(pData, pVertexShader.pFunction, pVertexShader.FunctionSize);
-      Result := S_OK;
+      Result := D3D_OK;
     end;
   end;
 
@@ -8967,7 +8962,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3D8_CheckDeviceMultiSampleType
@@ -9085,7 +9080,7 @@ begin
   LogEnd();
 {$ENDIF}
 
-  Result := S_OK; // This is a Xbox extension, meaning there is no pc counterpart.
+  Result := D3D_OK; // This is a Xbox extension, meaning there is no pc counterpart.
   
   EmuSwapFS(fsXbox);
 end;
@@ -9178,7 +9173,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DResource8_GetPrivateData
@@ -9196,7 +9191,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuIDirect3DResource8_FreePrivateData
@@ -9258,7 +9253,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetScreenSpaceOffset
@@ -9280,7 +9275,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -9320,7 +9315,7 @@ begin
 
   {hRet := }XTL_EmuIDirect3DDevice8_SetPixelShader(dwHandle);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_CreateStateBlock
@@ -9466,7 +9461,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 //#pragma warning(default:4244)
 
@@ -9495,7 +9490,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -9533,7 +9528,7 @@ begin
       _(pTexture, 'pTexture').
     LogEnd();
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   // TODO -oCXBX: I'm sure there is a better way to handle this.
 
@@ -9657,7 +9652,7 @@ begin
   if MayLog(lfUnit) then
     DbgPrintf('EmuD3D8 : EmuIDirect3DDevice8_PersistDisplay();');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
 {$IFDEF GAME_HACKS_ENABLED}
   // TODO -oCXBX: If this functionality is ever really needed, an idea for
@@ -9718,7 +9713,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetRenderState_SampleAlpha
@@ -9740,7 +9735,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 (* Dxbx note : Disabled, as we DO have EmuD3DDeferredRenderState pin-pointed correctly
@@ -9860,7 +9855,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_SetVertexBlendModelView
@@ -9878,7 +9873,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -9911,7 +9906,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DDevice8_EndPushBuffer(): HRESULT; stdcall;
@@ -9924,7 +9919,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 procedure XTL_EmuXMETAL_StartPush
@@ -10012,7 +10007,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 
@@ -10066,7 +10061,7 @@ begin
 
   EmuSwapFS(fsXbox);
 
-  Result := S_OK;
+  Result := D3D_OK;
 end;
 
 function XTL_EmuIDirect3DVolumeTexture8_GetLevelDesc
@@ -10269,11 +10264,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*  D3DPushBuffer_SetModelView(pPushBuffer, Offset, pModelView, pInverseModelView, pComposite);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetModelView');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10292,11 +10287,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*  D3DPushBuffer_SetVertexBlendModelView(pPushBuffer, Offset, Count, pModelViews, pInverseModelViews, pProjectionViewport);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetVertexBlendModelView');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10331,11 +10326,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*  D3DPushBuffer_SetPalette(pPushBuffer, Offset, Stage, pPalette);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetPalette');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10353,11 +10348,11 @@ begin
   EmuSwapFS(fsWindows);
 
 (*D3DPushBuffer_SetVertexShaderConstant(pPushBuffer, Offset, Register, pConstantData, ConstantCount);
-  return S_OK; *)
+  return D3D_OK; *)
 
   Unimplemented('XTL_EmuIDirect3DPushBuffer8_SetVertexShaderConstant');
 
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10401,7 +10396,7 @@ begin
       _(Value, 'Value').
     LogEnd();
 
-  Result := S_OK;
+  Result := D3D_OK;
   if (State < XTL_EmuD3DDeferredRenderState_Start) then
   begin
     // Simple states - Just pass them on to our helper :
@@ -10533,7 +10528,7 @@ begin
     LogEnd();
 
   IDirect3DDevice8(g_pD3DDevice8).GetPixelShaderConstant(Register_, pConstantData, ConstantCount);
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;
@@ -10554,7 +10549,7 @@ begin
     LogEnd();
 
 //  IDirect3DDevice8(g_pD3DDevice8).GetPixelShaderFunction(Handle, pData);
-  Result := S_OK;
+  Result := D3D_OK;
 
   EmuSwapFS(fsXbox);
 end;

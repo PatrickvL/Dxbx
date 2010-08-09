@@ -64,13 +64,11 @@ var g_bEmuException: _bool = false;
 var g_bEmuSuspended: _bool = false;
 var g_bPrintfOn: _boolean = true;
 
-{$IFDEF GAME_HACKS_ENABLED}
 // global exception patching address
 var g_HaloHack: array [0..4-1] of uint32; // = {0};
 
 // Dead to Rights hack
-var g_DeadToRightsHack: array [0..2-1] of uint32; // = {0};
-{$ENDIF}
+//var g_DeadToRightsHack: array [0..2-1] of uint32; // = {0};
 
 // global exception patching address
 var funcExclude: array [0..2048-1] of uint32;

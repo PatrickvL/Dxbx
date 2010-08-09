@@ -39,6 +39,7 @@ uses
   uXBE; // PXBE_TLS
 
 function XBE_FindSectionHeaderByName(pSectionName: PAnsiChar): PXBE_SECTIONHEADER;
+function IsRunning(const aTitleID: DWORD): Boolean;
 
 {$IF NOT DECLARED(YieldProcessor)}
 procedure YieldProcessor;
@@ -101,6 +102,11 @@ begin
   end;
 
   Result := nil;
+end;
+
+function IsRunning(const aTitleID: DWORD): Boolean;
+begin
+  Result := PXBE_CERTIFICATE(DxbxKrnl_XbeHeader.dwCertificateAddr).dwTitleId = aTitleID;
 end;
 
 procedure YieldProcessor;

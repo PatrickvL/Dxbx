@@ -36,6 +36,7 @@ uses
   , Direct3D8
   , D3DX8
   // Dxbx
+  , uConsts
   , uTypes // CLOCKS_PER_SEC, clock()
   , uLog
   , uDxbxKrnlUtils
@@ -1463,14 +1464,15 @@ begin
   begin
     dwCurFVF := g_CurrentVertexShader;
 
-{$IFDEF GAME_HACKS_ENABLED}
-    // HACK: Halo...
-    if(dwCurFVF = 0) then
+    if IsRunning(TITLEID_Halo) then
     begin
-      EmuWarning('EmuFlushIVB(): using g_IVBFVF instead of current FVF!');
-      dwCurFVF := g_IVBFVF;
+      // HACK: Halo...
+      if(dwCurFVF = 0) then
+      begin
+        EmuWarning('EmuFlushIVB(): using g_IVBFVF instead of current FVF!');
+        dwCurFVF := g_IVBFVF;
+      end;
     end;
-{$ENDIF}
   end
   else
   begin

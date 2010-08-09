@@ -24,8 +24,10 @@ uses
   // Delphi
   Windows,
   // Dxbx
+  uConsts, // TITLEID_AZURIK
   uTypes,
   uDxbxUtils, // iif
+  uDxbxKrnlUtils, // IsRunning
   uLog,
   uEmuD3D8Types,
   uEmuD3D8Utils,
@@ -452,7 +454,7 @@ end;
 // From PixelShader.cpp -----------------------------------------------------------
 
 // PS Texture Modes
-const PS_TextureModesStr: array [0..$1f] of P_char =
+const PS_TextureModesStr: array [{PS_TEXTUREMODES=}0..32-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_TEXTUREMODES_NONE',                 // 0x00
@@ -490,7 +492,7 @@ const PS_TextureModesStr: array [0..$1f] of P_char =
 );
 
 // PS DotMapping
-const PS_DotMappingStr: array [0..7] of P_char =
+const PS_DotMappingStr: array [{PS_DOTMAPPING=}0..8-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_DOTMAPPING_ZERO_TO_ONE',      // 0x00
@@ -503,9 +505,8 @@ const PS_DotMappingStr: array [0..7] of P_char =
     'PS_DOTMAPPING_HILO_HEMISPHERE'   // 0x07
 );
 
-(*
 // PS CompareMode
-const PS_CompareModeStr: array [PS_COMPAREMODE] of P_char =
+const PS_CompareModeStr: array [{PS_COMPAREMODE=}0..8-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_COMPAREMODE_S_LT', // 0x00L
@@ -520,10 +521,9 @@ const PS_CompareModeStr: array [PS_COMPAREMODE] of P_char =
     'PS_COMPAREMODE_Q_LT', // 0x00L
     'PS_COMPAREMODE_Q_GE'  // 0x08L
 );
-*)
 
 // PS CombinerCountFlags
-const PS_CombinerCountFlagsStr: array [0..6-1] of P_char =
+const PS_CombinerCountFlagsStr: array [{PS_COMBINERCOUNT=}0..6-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_COMBINERCOUNT_MUX_LSB',    // 0x0000L, // mux on r0.a lsb
@@ -536,9 +536,8 @@ const PS_CombinerCountFlagsStr: array [0..6-1] of P_char =
     'PS_COMBINERCOUNT_UNIQUE_C1'   // 0x0100L  // c1 unique in each stage
 );
 
-(*
 // PS InputMapping
-const PS_InputMappingStr: array [PS_INPUTMAPPING] of P_char =
+const PS_InputMappingStr: array [{PS_INPUTMAPPING=}0..8-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_INPUTMAPPING_UNSIGNED_IDENTITY',  // 0x00L, // max(0,x)         OK for final combiner
@@ -552,7 +551,7 @@ const PS_InputMappingStr: array [PS_INPUTMAPPING] of P_char =
 );
 
 // PS Register
-const PS_RegisterStr: array [PS_REGISTER] of P_char =
+const PS_RegisterStr: array [{PS_REGISTER=}0..19-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_REGISTER_ZERO',     // 0x00L, // r
@@ -578,7 +577,7 @@ const PS_RegisterStr: array [PS_REGISTER] of P_char =
 );
 
 // PS Channel
-const PS_ChannelStr: array [PS_CHANNEL] of P_char =
+const PS_ChannelStr: array [{PS_CHANNEL=}0..3-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_CHANNEL_RGB',   // 0x00, // used as RGB source
@@ -587,7 +586,7 @@ const PS_ChannelStr: array [PS_CHANNEL] of P_char =
 );
 
 // PS FinalCombinerSetting
-const PS_FinalCombinerSettingStr: array [PS_FINALCOMBINERSETTING] of P_char =
+const PS_FinalCombinerSettingStr: array [{PS_FINALCOMBINERSETTING=}0..3-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_FINALCOMBINERSETTING_CLAMP_SUM'  ,    // 0x80, // V1+R0 sum clamped to [0,1]
@@ -598,7 +597,7 @@ const PS_FinalCombinerSettingStr: array [PS_FINALCOMBINERSETTING] of P_char =
 );
 
 // PS CombineOutput
-const PS_CombineOutputStr: array [PS_COMBINEROUTPUT] of P_char =
+const PS_CombineOutputStr: array [{PS_COMBINEROUTPUT=}0..14-1] of P_char =
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 (
     'PS_COMBINEROUTPUT_IDENTITY',          // 0x00L, // y := x
@@ -621,7 +620,6 @@ const PS_CombineOutputStr: array [PS_COMBINEROUTPUT] of P_char =
     'PS_COMBINEROUTPUT_AB_CD_SUM',         // 0x00L, // 3rd output is AB+CD
     'PS_COMBINEROUTPUT_AB_CD_MUX'          // 0x04L, // 3rd output is MUX(AB,CD) based on R0.a
 );
-*)
 
 // PS GlobalFlags
 const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of P_char =
@@ -632,7 +630,7 @@ const PS_GlobalFlagsStr: array [PS_GLOBALFLAGS] of P_char =
 );
 
 
-{static}var PshNumber: int = 0;  // Keep track of how many pixel shaders we've attemted to convert.
+{static}var PshNumber: int = 0;  // Keep track of how many pixel shaders we've attempted to convert.
 procedure XTL_DumpPixelShaderDefToFile(pPSDef: PX_D3DPIXELSHADERDEF);
 // Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
 var
@@ -715,11 +713,16 @@ var
   dwPSCCMux: DWORD;
   dwPSCCC0: DWORD;
   dwPSCCC1: DWORD;
+
+  dwPSFCIA: DWORD;
+  dwPSFCIB: DWORD;
+  dwPSFCIC: DWORD;
+  dwPSFCID: DWORD;
 begin
   // Show the contents to the user
   if Assigned(pPSDef) then
   begin
-    DbgPshPrintf(#13#10'-----PixelShader Def Contents-----'#13#10);
+    DbgPshPrintf(#13#10'-----PixelShader Def Contents-----');
 
     if (pPSDef.PSTextureModes > 0) then
     begin
@@ -728,11 +731,11 @@ begin
       dwPSTexMode2 := (pPSDef.PSTextureModes shr 10) and $1F;
       dwPSTexMode3 := (pPSDef.PSTextureModes shr 15) and $1F;
 
-      DbgPshPrintf('PSTextureModes ->'#13#10);
-      DbgPshPrintf('Stage 0: %s'#13#10, [PS_TextureModesStr[dwPSTexMode0]]);
-      DbgPshPrintf('Stage 1: %s'#13#10, [PS_TextureModesStr[dwPSTexMode1]]);
-      DbgPshPrintf('Stage 2: %s'#13#10, [PS_TextureModesStr[dwPSTexMode2]]);
-      DbgPshPrintf('Stage 3: %s'#13#10, [PS_TextureModesStr[dwPSTexMode3]]);
+      DbgPshPrintf('PSTextureModes ->');
+      DbgPshPrintf('Stage 0: %s', [PS_TextureModesStr[dwPSTexMode0]]);
+      DbgPshPrintf('Stage 1: %s', [PS_TextureModesStr[dwPSTexMode1]]);
+      DbgPshPrintf('Stage 2: %s', [PS_TextureModesStr[dwPSTexMode2]]);
+      DbgPshPrintf('Stage 3: %s', [PS_TextureModesStr[dwPSTexMode3]]);
     end;
 
     if (pPSDef.PSDotMapping > 0) then
@@ -741,10 +744,10 @@ begin
       dwPSDMStage2 := (pPSDef.PSDotMapping shr 4) and $7;
       dwPSDMStage3 := (pPSDef.PSDotMapping shr 8) and $7;
 
-      DbgPshPrintf('PSDotMapping ->'#13#10);
-      DbgPshPrintf('Stage 1: %s'#13#10, [PS_DotMappingStr[dwPSDMStage1]]);
-      DbgPshPrintf('Stage 2: %s'#13#10, [PS_DotMappingStr[dwPSDMStage2]]);
-      DbgPshPrintf('Stage 3: %s'#13#10, [PS_DotMappingStr[dwPSDMStage3]]);
+      DbgPshPrintf('PSDotMapping ->');
+      DbgPshPrintf('Stage 1: %s', [PS_DotMappingStr[dwPSDMStage1]]);
+      DbgPshPrintf('Stage 2: %s', [PS_DotMappingStr[dwPSDMStage2]]);
+      DbgPshPrintf('Stage 3: %s', [PS_DotMappingStr[dwPSDMStage3]]);
     end;
 
     if (pPSDef.PSCompareMode > 0) then
@@ -754,11 +757,11 @@ begin
       dwPSCMStage2 := (pPSDef.PSCompareMode shr 8) and $F;
       dwPSCMStage3 := (pPSDef.PSCompareMode shr 12) and $F;
 
-      DbgPshPrintf('PSCompareMode ->'#13#10);
-      DbgPshPrintf('Stage 0: %s'#13#10, [PS_TextureModesStr[iif(dwPSCMStage0 = 0, 0, 1)]]);
-      DbgPshPrintf('Stage 1: %s'#13#10, [PS_TextureModesStr[iif(dwPSCMStage1 = 0, 2, 3)]]);
-      DbgPshPrintf('Stage 2: %s'#13#10, [PS_TextureModesStr[iif(dwPSCMStage2 = 0, 4, 5)]]);
-      DbgPshPrintf('Stage 3: %s'#13#10, [PS_TextureModesStr[iif(dwPSCMStage3 = 0, 6, 7)]]);
+      DbgPshPrintf('PSCompareMode ->');
+      DbgPshPrintf('Stage 0: %s', [PS_CompareModeStr[iif(dwPSCMStage0 = 0, 0, 1)]]);
+      DbgPshPrintf('Stage 1: %s', [PS_CompareModeStr[iif(dwPSCMStage1 = 0, 2, 3)]]);
+      DbgPshPrintf('Stage 2: %s', [PS_CompareModeStr[iif(dwPSCMStage2 = 0, 4, 5)]]);
+      DbgPshPrintf('Stage 3: %s', [PS_CompareModeStr[iif(dwPSCMStage3 = 0, 6, 7)]]);
     end;
 
     if (pPSDef.PSInputTexture > 0) then
@@ -766,9 +769,9 @@ begin
       dwPSITStage2 := (pPSDef.PSInputTexture shr 16) and $1;
       dwPSITStage3 := (pPSDef.PSInputTexture shr 20) and $3;
 
-      DbgPshPrintf('PSInputTexture ->'#13#10);
-      DbgPshPrintf('Stage 2: %s'#13#10, [PS_TextureModesStr[dwPSITStage2]]);
-      DbgPshPrintf('Stage 3: %s'#13#10, [PS_TextureModesStr[dwPSITStage3]]);
+      DbgPshPrintf('PSInputTexture ->');
+      DbgPshPrintf('Stage 2: %s', [PS_TextureModesStr[dwPSITStage2]]);
+      DbgPshPrintf('Stage 3: %s', [PS_TextureModesStr[dwPSITStage3]]);
     end;
 
     if (pPSDef.PSCombinerCount > 0) then
@@ -778,11 +781,56 @@ begin
       dwPSCCC0 := (pPSDef.PSCombinerCount shr 12) and $1;
       dwPSCCC1 := (pPSDef.PSCombinerCount shr 16) and $1;
 
-      DbgPshPrintf('PSCombinerCount ->'#13#10);
-      DbgPshPrintf('Combiners: %d'#13#10, [dwPSCCNumCombiners]);
-      DbgPshPrintf('Mux:       %s'#13#10, [PS_CombinerCountFlagsStr[dwPSCCMux]]);
-      DbgPshPrintf('C0:        %s'#13#10, [PS_CombinerCountFlagsStr[iif(dwPSCCC0 = 0, 2, 3)]]);
-      DbgPshPrintf('C1:        %s'#13#10, [PS_CombinerCountFlagsStr[iif(dwPSCCC1 = 0, 4, 5)]]);
+      DbgPshPrintf('PSCombinerCount ->');
+      DbgPshPrintf('Combiners: %d', [dwPSCCNumCombiners]);
+      DbgPshPrintf('Mux:       %s', [PS_CombinerCountFlagsStr[dwPSCCMux]]);
+      DbgPshPrintf('C0:        %s', [PS_CombinerCountFlagsStr[iif(dwPSCCC0 = 0, 2, 3)]]);
+      DbgPshPrintf('C1:        %s', [PS_CombinerCountFlagsStr[iif(dwPSCCC1 = 0, 4, 5)]]);
+    end;
+
+    if (pPSDef.PSFinalCombinerInputsABCD > 0) then
+    begin
+      dwPSFCIA := (pPSDef.PSFinalCombinerInputsABCD shr 0) and $FF;
+      dwPSFCIB := (pPSDef.PSFinalCombinerInputsABCD shr 8) and $FF;
+      dwPSFCIC := (pPSDef.PSFinalCombinerInputsABCD shr 16) and $FF;
+      dwPSFCID := (pPSDef.PSFinalCombinerInputsABCD shr 24) and $FF;
+
+      DbgPshPrintf('PSFinalCombinerInputsABCD ->');
+      if dwPSFCIA and $F = Ord(PS_REGISTER_ZERO) then
+        DbgPshPrintf('Input A: PS_REGISTER_ZERO')
+      else
+        DbgPshPrintf('Input A: %s | %s | %s', [
+          PS_RegisterStr[(dwPSFCIA and $F) + 1],
+          PS_InputMappingStr[dwPSFCIA shr 5],
+          PS_ChannelStr[iif((dwPSFCIA and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
+          ]);
+
+      if dwPSFCIB and $F = Ord(PS_REGISTER_ZERO) then
+        DbgPshPrintf('Input B: PS_REGISTER_ZERO')
+      else
+        DbgPshPrintf('Input B: %s | %s | %s', [
+          PS_RegisterStr[(dwPSFCIB and $F) + 1],
+          PS_InputMappingStr[dwPSFCIB shr 5],
+          PS_ChannelStr[iif((dwPSFCIB and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
+          ]);
+
+      if dwPSFCIC and $F = Ord(PS_REGISTER_ZERO) then
+        DbgPshPrintf('Input C: PS_REGISTER_ZERO')
+      else
+        DbgPshPrintf('Input C: %s | %s | %s', [
+          PS_RegisterStr[(dwPSFCIC and $F) + 1],
+          PS_InputMappingStr[dwPSFCIC shr 5],
+          PS_ChannelStr[iif((dwPSFCIC and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
+          ]);
+
+      if dwPSFCID and $F = Ord(PS_REGISTER_ZERO) then
+        DbgPshPrintf('Input D: PS_REGISTER_ZERO')
+      else
+        DbgPshPrintf('Input D: %s | %s | %s', [
+          PS_RegisterStr[(dwPSFCID and $F) + 1],
+          PS_InputMappingStr[dwPSFCID shr 5],
+          PS_ChannelStr[iif((dwPSFCID and Ord(PS_CHANNEL_ALPHA)) > 0, 2, 0)]
+          ]);
     end;
 
     (*for(int i := 0; i > 7; i++)
@@ -802,11 +850,17 @@ begin
   if MayLog(lfUnit) then
     XTL_DumpPixelShaderDefToFile(pPSDef);
 
-{$IFDEF GAME_HACKS_ENABLED}
-  // Azurik like to create and destroy the same shader every frame! O_o
-{$ENDIF}
-  if MayLog(lfUnit or lfExtreme) then
-    XTL_PrintPixelShaderDefContents(pPSDef);
+  if IsRunning(TITLEID_AZURIK) then
+  begin
+    // Azurik likes to create and destroy the same shader every frame! O_o
+    if MayLog(lfUnit or lfExtreme) then
+      XTL_PrintPixelShaderDefContents(pPSDef);
+  end
+  else
+  begin
+    if MayLog(lfUnit) then
+      XTL_PrintPixelShaderDefContents(pPSDef);
+  end;
 
   // First things first, set the pixel shader version
   // TODO -oCXBX: ps.1.1 might be a better idea...
