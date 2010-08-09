@@ -1148,8 +1148,6 @@ end; // EmuThreadPollInput
 // thread dedicated to updating VBlank
 function EmuThreadHandleVBlank(lpVoid: LPVOID): DWORD; stdcall;
 // Branch:Dxbx Translator:PatrickvL  Done:100
-const
-  VBlankHertz = 60; // TODO -oDxbx : Make VBlankHertz dependant on PAL (50 Hz) or NTSC (60 Hz) emulation
 var
   UpdateTimer: DxbxTimer;
 begin
@@ -1160,7 +1158,7 @@ begin
   // since callbacks come from here
   EmuGenerateFS(DxbxKrnl_TLS, DxbxKrnl_TLSData);
 
-  UpdateTimer.InitFPS(VBlankHertz);
+  UpdateTimer.InitFPS(g_XBVideo.GetVBlankHertz);
 
   while True do // TODO -oDxbx: When do we break out of this while loop ?
   begin
@@ -1190,7 +1188,7 @@ begin
 
       // TODO -oCxbx: Recalculate this for PAL version if necessary.
       // Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
-      g_SwapData.TimeBetweenSwapVBlanks := 0; //MillisecondsPerSecond div VBlankHertz;
+      g_SwapData.TimeBetweenSwapVBlanks := 0; //MillisecondsPerSecond div g_XBVideo.GetVBlankHertz;
     end;
   end; // while True
 end; // EmuThreadHandleVBlank

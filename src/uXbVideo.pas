@@ -44,6 +44,7 @@ type
     m_bFullscreen: BOOL;
     m_bVSync: BOOL;
     m_bHardwareYUV: BOOL;
+    m_VBlankHertz: Int;
   public
     procedure Initialize;
     procedure Finalize;
@@ -75,6 +76,11 @@ type
     // Hardware YUV Toggling
     procedure SetHardwareYUV(bHardwareYUV: _BOOL);
     function GetHardwareYUV: _BOOL;
+
+    // Frequency display
+    procedure SetVBlankHertz(vVBlankHertz: Int);
+    function GetVBlankHertz: Int;
+
   end; // size = 128 (as in Cxbx)
   PXBVideo = ^XBVideo;
 
@@ -184,9 +190,19 @@ begin
   Result := m_dwDisplayAdapter;
 end;
 
+procedure XBVideo.SetVBlankHertz(vVBlankHertz: Int);
+begin
+  m_VBlankHertz := vVBlankHertz;
+end;
+
 procedure XBVideo.SetVideoResolution(szBuffer: P_char);
 begin
   strcpy(@m_szVideoResolution[0], szBuffer);
+end;
+
+function XBVideo.GetVBlankHertz: Int;
+begin
+  Result := m_VBlankHertz;
 end;
 
 function XBVideo.GetVideoResolution: P_char;
