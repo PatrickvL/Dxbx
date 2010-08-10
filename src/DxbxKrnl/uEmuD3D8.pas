@@ -331,43 +331,43 @@ begin
 
   case (IDirect3DResource8(pResource.Emu.Resource8).GetType()) of
     D3DRTYPE_SURFACE:
-      repeat until IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect() = D3D_OK;
+      repeat until IDirect3DSurface8(pResource.Emu.Surface8).UnlockRect() <= D3D_OK;
 
     D3DRTYPE_VOLUME:
       // TODO -oDxbx : Totally untested! Volume's aren't used yet!
-      repeat until IDirect3DVolume8(pResource.Emu.Resource8).UnlockBox() = D3D_OK;
+      repeat until IDirect3DVolume8(pResource.Emu.Resource8).UnlockBox() <= D3D_OK;
 
     D3DRTYPE_TEXTURE:
-      repeat until IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(uiLevel) = D3D_OK;
+      repeat until IDirect3DTexture8(pResource.Emu.Texture8).UnlockRect(uiLevel) <= D3D_OK;
 
     D3DRTYPE_VOLUMETEXTURE:
       // TODO -oDxbx : Totally untested! VolumeTexture's aren't used yet!?
-      repeat until IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture8).UnlockBox(uiLevel) = D3D_OK;
+      repeat until IDirect3DVolumeTexture8(pResource.Emu.VolumeTexture8).UnlockBox(uiLevel) <= D3D_OK;
 
     D3DRTYPE_CUBETEXTURE:
     begin
       if iFace >= Ord(D3DCUBEMAP_FACE_POSITIVE_X) then
       begin
         // Only one face given, so unlock only that one :
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(TD3DCubeMapFaces(iFace), uiLevel) = D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(TD3DCubeMapFaces(iFace), uiLevel) <= D3D_OK;
       end
       else
       begin
         // No face given, so unlock all faces (just to be sure) :
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) = D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) = D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) = D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) = D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) = D3D_OK;
-        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) = D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_X, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Y, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Y, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_POSITIVE_Z, uiLevel) <= D3D_OK;
+        repeat until IDirect3DCubeTexture8(pResource.Emu.CubeTexture8).UnlockRect(D3DCUBEMAP_FACE_NEGATIVE_Z, uiLevel) <= D3D_OK;
       end;
     end;
 
     D3DRTYPE_VERTEXBUFFER:
-      repeat until IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock() = D3D_OK;
+      repeat until IDirect3DVertexBuffer8(pResource.Emu.VertexBuffer8).Unlock() <= D3D_OK;
 
     D3DRTYPE_INDEXBUFFER:
-      repeat until IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Unlock() = D3D_OK;
+      repeat until IDirect3DIndexBuffer8(pResource.Emu.IndexBuffer8).Unlock() <= D3D_OK;
   else
     Result := False;
   end;
